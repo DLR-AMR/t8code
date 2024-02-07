@@ -837,7 +837,7 @@ t8_forest_get_tree_vertices (t8_forest_t forest, t8_locidx_t ltreeid)
 }
 
 t8_element_array_t *
-t8_forest_tree_get_leafs (const t8_forest_t forest, const t8_locidx_t ltree_id)
+t8_forest_tree_get_leaves (const t8_forest_t forest, const t8_locidx_t ltree_id)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (0 <= ltree_id && ltree_id < t8_forest_get_num_local_trees (forest));

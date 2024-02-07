@@ -17,7 +17,7 @@ t8code_googletest_programs = \
   test/t8_schemes/t8_gtest_nca \
   test/t8_schemes/t8_gtest_pyra_connectivity \
   test/t8_schemes/t8_gtest_face_neigh \
-  test/t8_geometry/t8_gtest_geometry_occ \
+  test/t8_geometry/t8_geometry_implementations/t8_gtest_geometry_occ \
   test/t8_gtest_eclass \
   test/t8_gtest_vec \
   test/t8_gtest_mat \
@@ -29,7 +29,7 @@ t8code_googletest_programs = \
   test/t8_schemes/t8_gtest_ancestor \
   test/t8_cmesh/t8_gtest_hypercube \
   test/t8_cmesh/t8_gtest_cmesh_copy \
-  test/t8_schemes/t8_gtest_element_count_leafs \
+  test/t8_schemes/t8_gtest_element_count_leaves \
   test/t8_schemes/t8_gtest_element_ref_coords \
   test/t8_geometry/t8_gtest_geometry \
   test/t8_schemes/t8_gtest_descendant \
@@ -37,6 +37,7 @@ t8code_googletest_programs = \
   test/t8_schemes/t8_gtest_equal \
   test/t8_cmesh/t8_gtest_cmesh_face_is_boundary \
   test/t8_cmesh/t8_gtest_cmesh_partition \
+  test/t8_cmesh/t8_gtest_cmesh_copy \
   test/t8_cmesh/t8_gtest_cmesh_set_partition_offsets \
   test/t8_cmesh/t8_gtest_cmesh_set_join_by_vertices \
   test/t8_forest/t8_gtest_element_volume \
@@ -88,9 +89,9 @@ test_t8_schemes_t8_gtest_face_neigh_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_schemes/t8_gtest_face_neigh.cxx
 
-test_t8_geometry_t8_gtest_geometry_occ_SOURCES = \
+test_t8_geometry_t8_geometry_implementations_t8_gtest_geometry_occ_SOURCES = \
   test/t8_gtest_main.cxx \
-  test/t8_geometry/t8_gtest_geometry_occ.cxx
+  test/t8_geometry/t8_geometry_implementations/t8_gtest_geometry_occ.cxx
 
 test_t8_gtest_eclass_SOURCES = \
   test/t8_gtest_main.cxx \
@@ -140,9 +141,9 @@ test_t8_cmesh_t8_gtest_cmesh_set_join_by_vertices_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_cmesh/t8_gtest_cmesh_set_join_by_vertices.cxx 
 
-test_t8_schemes_t8_gtest_element_count_leafs_SOURCES = \
+test_t8_schemes_t8_gtest_element_count_leaves_SOURCES = \
   test/t8_gtest_main.cxx \
-  test/t8_schemes/t8_gtest_element_count_leafs.cxx
+  test/t8_schemes/t8_gtest_element_count_leaves.cxx
 
 test_t8_schemes_t8_gtest_element_ref_coords_SOURCES = \
   test/t8_gtest_main.cxx \
@@ -171,6 +172,10 @@ test_t8_cmesh_t8_gtest_cmesh_face_is_boundary_SOURCES = \
 test_t8_cmesh_t8_gtest_cmesh_partition_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_cmesh/t8_gtest_cmesh_partition.cxx
+
+test_t8_cmesh_t8_gtest_cmesh_copy_SOURCES = \
+  test/t8_gtest_main.cxx \
+  test/t8_cmesh/t8_gtest_cmesh_copy.cxx
 
 test_t8_cmesh_t8_gtest_cmesh_set_partition_offsets_SOURCES = \
   test/t8_gtest_main.cxx \
@@ -308,9 +313,9 @@ test_t8_schemes_t8_gtest_face_neigh_LDADD = $(t8_gtest_target_ld_add)
 test_t8_schemes_t8_gtest_face_neigh_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_schemes_t8_gtest_face_neigh_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
-test_t8_geometry_t8_gtest_geometry_occ_LDADD = $(t8_gtest_target_ld_add)
-test_t8_geometry_t8_gtest_geometry_occ_LDFLAGS = $(t8_gtest_target_ld_flags)
-test_t8_geometry_t8_gtest_geometry_occ_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+test_t8_geometry_t8_geometry_implementations_t8_gtest_geometry_occ_LDADD = $(t8_gtest_target_ld_add)
+test_t8_geometry_t8_geometry_implementations_t8_gtest_geometry_occ_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_geometry_t8_geometry_implementations_t8_gtest_geometry_occ_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
 test_t8_gtest_eclass_LDADD = $(t8_gtest_target_ld_add)
 test_t8_gtest_eclass_LDFLAGS = $(t8_gtest_target_ld_flags)
@@ -360,9 +365,9 @@ test_t8_cmesh_t8_gtest_cmesh_set_join_by_vertices_LDADD = $(t8_gtest_target_ld_a
 test_t8_cmesh_t8_gtest_cmesh_set_join_by_vertices_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_cmesh_t8_gtest_cmesh_set_join_by_vertices_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
-test_t8_schemes_t8_gtest_element_count_leafs_LDADD = $(t8_gtest_target_ld_add)
-test_t8_schemes_t8_gtest_element_count_leafs_LDFLAGS = $(t8_gtest_target_ld_flags)
-test_t8_schemes_t8_gtest_element_count_leafs_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+test_t8_schemes_t8_gtest_element_count_leaves_LDADD = $(t8_gtest_target_ld_add)
+test_t8_schemes_t8_gtest_element_count_leaves_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_schemes_t8_gtest_element_count_leaves_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
 test_t8_schemes_t8_gtest_element_ref_coords_LDADD = $(t8_gtest_target_ld_add)
 test_t8_schemes_t8_gtest_element_ref_coords_LDFLAGS = $(t8_gtest_target_ld_flags)
@@ -391,6 +396,10 @@ test_t8_cmesh_t8_gtest_cmesh_face_is_boundary_CPPFLAGS = $(t8_gtest_target_cpp_f
 test_t8_cmesh_t8_gtest_cmesh_partition_LDADD = $(t8_gtest_target_ld_add)
 test_t8_cmesh_t8_gtest_cmesh_partition_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_cmesh_t8_gtest_cmesh_partition_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+
+test_t8_cmesh_t8_gtest_cmesh_copy_LDADD = $(t8_gtest_target_ld_add)
+test_t8_cmesh_t8_gtest_cmesh_copy_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_cmesh_t8_gtest_cmesh_copy_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
 test_t8_cmesh_t8_gtest_cmesh_set_partition_offsets_LDADD = $(t8_gtest_target_ld_add)
 test_t8_cmesh_t8_gtest_cmesh_set_partition_offsets_LDFLAGS = $(t8_gtest_target_ld_flags)
@@ -515,7 +524,7 @@ test_t8_gtest_cmesh_bcast_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_nca_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_pyra_connectivity_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_face_neigh_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
-test_t8_geometry_t8_gtest_geometry_occ_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_geometry_t8_geometry_implementations_t8_gtest_geometry_occ_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_gtest_eclass_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_gtest_vec_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_gtest_mat_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
@@ -528,7 +537,7 @@ test_t8_schemes_t8_gtest_ancestor_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_hypercube_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_cmesh_copy_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_cmesh_set_join_by_vertices_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
-test_t8_schemes_t8_gtest_element_count_leafs_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_schemes_t8_gtest_element_count_leaves_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_element_ref_coords_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_geometry_t8_gtest_geometry_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_descendant_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
@@ -536,6 +545,7 @@ test_t8_schemes_t8_gtest_find_parent_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags
 test_t8_schemes_t8_gtest_equal_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_cmesh_face_is_boundary_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_cmesh_partition_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_cmesh_t8_gtest_cmesh_copy_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_cmesh_set_partition_offsets_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_t8_gtest_element_volume_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_multiple_attributes_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
