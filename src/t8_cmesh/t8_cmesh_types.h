@@ -95,11 +95,7 @@ typedef struct t8_cmesh
   int face_knowledge; /**< If partitioned the level of face knowledge that is expected. \ref t8_mesh_set_partitioned;
                             see \ref t8_cmesh_set_partition.
 */
-  /* TODO: Define a maximum allowed refinemet level */
-  int8_t set_refine_level; /**< If the cmesh is derived from a second cmesh, a refinement level is specified here.
-                                      \ref t8_cmesh_set_derive \ref t8_cmesh_set_refine. */
-  t8_scheme_cxx_t *set_refine_scheme;    /**< If the cmesh is to be refined, the scheme that describes the
-                                           refinement pattern. See \ref t8_cmesh_set_refine. */
+
   t8_scheme_cxx_t *set_partition_scheme; /**< If the cmesh is to be partitioned according to a uniform level,
                                                 the scheme that describes the refinement pattern. See \ref t8_cmesh_set_partition. */
   int8_t set_partition_level;  /**< Non-negative if the cmesh should be partitioned from an already existing cmesh

@@ -28,6 +28,8 @@
 #ifndef T8_GEOMETRY_WITH_VERTICES_H
 #define T8_GEOMETRY_WITH_VERTICES_H
 
+#include <t8_cmesh.h>
+
 T8_EXTERN_C_BEGIN ();
 
 /** Set the vertex coordinates of a tree in the cmesh.
