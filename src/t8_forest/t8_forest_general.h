@@ -448,6 +448,21 @@ t8_forest_get_eclass (const t8_forest_t forest, const t8_locidx_t ltreeid);
 t8_locidx_t
 t8_forest_get_local_id (const t8_forest_t forest, const t8_gloidx_t gtreeid);
 
+/** Given a global tree id compute the forest local id of this tree.
+ * If the tree is a local tree, then the local id is between 0 and the number
+ * of local trees. If the tree is a ghost, then the local id is between num_local_trees and
+ * num_local_trees + num_ghost_trees.
+ * If the tree is neither a local tree nor a ghost tree, a negative number is returned.
+ * \param [in]      forest The forest.
+ * \param [in]      gtreeid The global id of a tree.
+ * \return                 The tree's local id in \a forest, if it is a local tree.
+ *                         num_local_trees + the ghosts id, if it is a ghost tree.
+ *                         A negative number if not.
+ * \see https://github.com/DLR-AMR/t8code/wiki/Tree-indexing for more details about tree indexing.
+ */
+t8_locidx_t
+t8_forest_get_local_or_ghost_id (const t8_forest_t forest, const t8_gloidx_t gtreeid);
+
 /** Given the local id of a tree in a forest, compute the tree's local id in the associated cmesh.
  * \param [in] forest    The forest.
  * \param [in] ltreeid   The local id of a tree or ghost in the forest.
@@ -505,6 +520,12 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8
                                t8_element_t **pneighbor_leaves[], int face, int *dual_faces[], int *num_neighbors,
                                t8_locidx_t **pelement_indices, t8_eclass_scheme_c **pneigh_scheme,
                                int forest_is_balanced);
+
+void
+t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf,
+                                   t8_element_t **pneighbor_leaves[], int face, int *dual_faces[], int *num_neighbors,
+                                   t8_locidx_t **pelement_indices, t8_eclass_scheme_c **pneigh_scheme,
+                                   int forest_is_balanced, t8_gloidx_t *gneigh_tree);
 
 /** Exchange ghost information of user defined element data.
  * \param[in] forest       The forest. Must be committed.
