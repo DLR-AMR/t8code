@@ -34,10 +34,10 @@
  */
 
 /* Note: This test currently fails on many cmeshes and is thus deavtivated.
- * See: https://github.com/DLR-AMR/t8code/issues/920*/
-* /
+ * See: https://github.com/DLR-AMR/t8code/issues/920
+ */
 
-  class t8_cmesh_copy: public testing::TestWithParam<int> {
+class t8_cmesh_copy: public testing::TestWithParam<int> {
  protected:
   void
   SetUp () override
@@ -83,5 +83,5 @@ TEST_P (t8_cmesh_copy, test_cmesh_copy)
   EXPECT_TRUE (t8_cmesh_is_equal (cmesh, cmesh_original));
 }
 
-/* Test all cmeshes over all different inputs we get through their id */
+/* Test all cmeshes over all different inputs */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_copy, t8_cmesh_copy, AllCmeshs);
