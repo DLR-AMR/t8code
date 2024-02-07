@@ -35,13 +35,12 @@ namespace cmesh_params
 std::string
 comm_to_string (const sc_MPI_Comm& comm)
 {
-  switch (comm) {
-  case sc_MPI_COMM_WORLD:
+  int mpi_ret;
+  sc_MPI_Comm_compare (comm, sc_MPI_COMM_WORLD, &mpi_ret);
+  if (mpi_ret == sc_MPI_SUCCESS) {
     return std::string ("sc_MPI_COMM_WORLD");
-
-  default:
-    return std::string ("No_String_for_this_communicator");
   }
+  return std::string ("No_String_for_this_communicator");
 }
 
 std::vector<sc_MPI_Comm> my_comms = { sc_MPI_COMM_WORLD };
