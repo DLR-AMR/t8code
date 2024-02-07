@@ -22,10 +22,6 @@
 
 #include <t8_cmesh_vtk_writer.h>
 
-#include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
-#include "test/t8_cmesh_generator/t8_gtest_cmesh_sum_of_sets.hxx"
-#include <iostream>
-
 /* Create a coarse mesh that is partitioned across two processes
  * (if mpisize >= 2).
  *

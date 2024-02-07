@@ -27,9 +27,6 @@
 #include "t8_cmesh/t8_cmesh_partition.h"
 #include <test/t8_gtest_macros.hxx>
 
-#include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
-#include "test/t8_cmesh_generator/t8_gtest_cmesh_cartestian_product.hxx"
-
 /* We create and commit a cmesh, then derive a new cmesh
  * from it without any changes.
  * We test whether the new and original cmesh are equal.
@@ -39,15 +36,15 @@
  * See: https://github.com/DLR-AMR/t8code/issues/920
  */
 
-class t8_cmesh_copy: public testing::TestWithParam<base_example *> {
+class t8_cmesh_copy: public testing::TestWithParam<int> {
  protected:
   void
   SetUp () override
   {
     /* Skip test since cmesh copy is not yet working. See https://github.com/DLR-AMR/t8code/issues/920 */
     GTEST_SKIP ();
-    cmesh_creator = GetParam ();
-    cmesh_original = cmesh_creator->cmesh_create ();
+    cmesh_id = GetParam ();
+    cmesh_original = t8_test_create_cmesh (cmesh_id);
 
     /* Initialized test cmesh that we derive in the test */
     t8_cmesh_init (&cmesh);
@@ -62,9 +59,9 @@ class t8_cmesh_copy: public testing::TestWithParam<base_example *> {
     t8_cmesh_unref (&cmesh);
   }
 
+  int cmesh_id;
   t8_cmesh_t cmesh;
   t8_cmesh_t cmesh_original;
-  base_example *cmesh_creator;
 };
 
 static void
@@ -85,10 +82,4 @@ TEST_P (t8_cmesh_copy, test_cmesh_copy)
 }
 
 /* Test all cmeshes over all different inputs*/
-INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_copy, t8_cmesh_copy, AllCmeshsParam,
-                          [] (const testing::TestParamInfo<t8_cmesh_copy::ParamType> &info) {
-                            std::string name;
-                            base_example *tmp = (base_example *) info.param;
-                            tmp->param_to_string (name);
-                            return name;
-                          });
+INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_copy, t8_cmesh_copy, AllCmeshs);
