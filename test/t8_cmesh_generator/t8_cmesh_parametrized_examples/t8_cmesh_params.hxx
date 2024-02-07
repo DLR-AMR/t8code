@@ -37,10 +37,10 @@ comm_to_string (const sc_MPI_Comm& comm)
 {
   switch (comm) {
   case sc_MPI_COMM_WORLD:
-    return std::string ("MPICommWorld");
+    return std::string ("sc_MPI_COMM_WORLD");
 
   default:
-    return std::string ("Other comms than sc_MPI_COMM_WORLD arent used currently");
+    return std::string ("No_String_for_this_communicator");
   }
 }
 

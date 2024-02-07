@@ -34,7 +34,9 @@ namespace new_from_class
 std::string
 make_param_string (const t8_eclass_t &eclass, const sc_MPI_Comm &comm)
 {
-  std::string params = std::string (t8_eclass_to_string[eclass]) + cmesh_params::comm_to_string (comm);
+  std::string delimiter = std::string ("_");
+  std::string params
+    = delimiter + std::string (t8_eclass_to_string[eclass]) + delimiter + cmesh_params::comm_to_string (comm);
   return params;
 }
 
@@ -47,7 +49,7 @@ example_parameter_combinator *cmesh_example
                                                                         decltype (cmesh_params::my_comms.begin ())> (
     std::make_pair (cmesh_params::eclasses.begin (), cmesh_params::eclasses.end ()),
     std::make_pair (cmesh_params::my_comms.begin (), cmesh_params::my_comms.end ()), new_from_class_wrapper,
-    print_function, "CmeshNewFromClass");
+    print_function, "t8_cmesh_new_from_class_");
 
 }  // namespace new_from_class
 
