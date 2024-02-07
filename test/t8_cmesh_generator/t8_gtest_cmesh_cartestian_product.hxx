@@ -30,6 +30,20 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <vector>
 #include <string>
 
+class base_example {
+ public:
+  base_example (std::string name): name (name) {};
+
+  virtual t8_cmesh_t
+  cmesh_create ()
+    = 0;
+
+  virtual void
+  param_to_string (std::string& out)
+    = 0;
+
+  std::string name;
+};
 /**
  * A base class to create the cartesian product of parameters that can be passed to 
  * a function that creates a cmesh.
@@ -37,78 +51,37 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  */
 class parameter_cartesian_product {
  public:
-  /** Increase the index counter to get the next tuple of parameters*/
-  virtual bool
-  next ()
-    = 0;
-
-  /**
-   * Copy \a other to \a this. Necessary, because the copy constructor depends
-   * on the tuples 
-   * 
-   * \param[in] other another set of parameters
-   */
-  virtual void
-  copy (const parameter_cartesian_product* other)
-    = 0;
-  /**
-   * Create a new object that can hold tuples of parameters of the same type as 
-   * \a this. 
-   * 
-   * \return parameter_cartesian_product* 
-   */
-  virtual parameter_cartesian_product*
-  create ()
-    = 0;
-
   /**
    * Generate a cmesh according to a function
    * 
    * \return t8_cmesh_t 
    */
+  std::vector<base_example*> example_all_combination;
+};
+
+template <class... Args>
+class cmesh_example: base_example {
+ public:
+  cmesh_example (std::function<t8_cmesh_t (Args...)> function, std::tuple<Args...> parameter,
+                 std::function<std::string (const Args&...)> parameter_to_string, std::string name)
+    : base_example (name), cmesh_function (function), parameter (parameter),
+      parameter_to_string (parameter_to_string) {};
+
   virtual t8_cmesh_t
-  gen_cmesh ()
-    = 0;
+  cmesh_create ()
+  {
+    return std::apply (cmesh_function, parameter);
+  }
 
-  /**
-   * Set the index to the first parameter-tuple. 
-   * 
-   */
   virtual void
-  set_to_first ()
-    = 0;
+  param_to_string (std::string& out)
+  {
+    out = name + std::apply (parameter_to_string, parameter);
+  }
 
-  /**
-   * Set the index to the last parameter-tuple. 
-   * 
-   */
-  virtual void
-  set_to_end ()
-    = 0;
-
-  /**
-   * Compare two objects regarding the current index. 
-   * 
-   * \param other 
-   * \return true
-   * \return false 
-   */
-  virtual bool
-  operator< (const parameter_cartesian_product& other)
-    = 0;
-
-  /**
-   * A function that describes how Parameters should be printed. 
-   * Needed for pretty GoogleTest-output
-   * 
-   * \param[out] out 
-   */
-  virtual void
-  name_and_current_params_to_string (std::string& out)
-    = 0;
-
-  size_t index = 0;
-  std::string name = "";
+  std::function<t8_cmesh_t (Args...)> cmesh_function;
+  std::tuple<Args...> parameter;
+  std::function<std::string (const Args&...)> parameter_to_string;
 };
 
 /**
@@ -203,76 +176,18 @@ class cmesh_parameter_combinations: parameter_cartesian_product {
 
   cmesh_parameter_combinations (std::pair<Iter, Iter>... ranges,
                                 std::function<t8_cmesh_t (typename Iter::value_type...)> cmesh_function,
-                                std::string example_name)
-    : cmesh_example (cmesh_function)
+                                std::function<std::string (const typename Iter::value_type&...)> param_to_string,
+                                std::string name)
   {
+    std::vector<std::tuple<typename Iter::value_type...>> cart_prod;
     cartesian_product (std::back_inserter (cart_prod), ranges...);
-    name = example_name;
-  }
-
-  virtual void
-  copy (const parameter_cartesian_product* other)
-  {
-    const cmesh_parameter_combinations<Iter...>* tmp = (cmesh_parameter_combinations<Iter...>*) other;
-    T8_ASSERT (tmp != NULL);
-    index = tmp->index;
-    cmesh_example = tmp->cmesh_example;
-    cart_prod = tmp->cart_prod;
-    name = other->name;
-  }
-
-  virtual parameter_cartesian_product*
-  create ()
-  {
-    return (parameter_cartesian_product*) new cmesh_parameter_combinations<Iter...> ();
-  }
-
-  virtual t8_cmesh_t
-  gen_cmesh ()
-  {
-    return std::apply (cmesh_example, cart_prod[index]);
-  }
-
-  virtual void
-  set_to_first ()
-  {
-    index = 0;
-  }
-
-  virtual void
-  set_to_end ()
-  {
-    index = cart_prod.size ();
-  }
-
-  virtual bool
-  next ()
-  {
-    ++index;
-    if (index >= cart_prod.size ()) {
-      return false;
-    }
-    else {
-      return true;
+    for (int iparam_set = 0; (long unsigned int) iparam_set < cart_prod.size (); iparam_set++) {
+      std::tuple<typename Iter::value_type...> param = cart_prod[iparam_set];
+      base_example* next_example = (base_example*) new cmesh_example<typename Iter::value_type...> (
+        cmesh_function, param, param_to_string, name);
+      example_all_combination.push_back (next_example);
     }
   }
-
-  virtual bool
-  operator< (const parameter_cartesian_product& other)
-  {
-    return index < other.index;
-  }
-
-  virtual void
-  name_and_current_params_to_string (std::string& out)
-  {
-    std::stringstream ss;
-    ss << name << index;
-    out = ss.str ();
-  }
-
-  std::function<t8_cmesh_t (typename Iter::value_type...)> cmesh_example;
-  std::vector<std::tuple<typename Iter::value_type...>> cart_prod;
 };
 
 #endif /* T8_GTEST_CMESH_CREATOR_BASE_HXX */

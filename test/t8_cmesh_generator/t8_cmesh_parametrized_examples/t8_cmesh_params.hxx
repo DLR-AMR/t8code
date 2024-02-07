@@ -32,6 +32,17 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 namespace cmesh_params
 {
+std::string
+comm_to_string (const sc_MPI_Comm& comm)
+{
+  switch (comm) {
+  case sc_MPI_COMM_WORLD:
+    return "sc_MPI_COMM_WORLD";
+
+  default:
+    return "Other comms than sc_MPI_COMM_WORLD arent used currently";
+  }
+}
 
 std::vector<sc_MPI_Comm> my_comms = { sc_MPI_COMM_WORLD };
 std::vector<t8_eclass_t> eclasses = { T8_ECLASS_VERTEX, T8_ECLASS_LINE, T8_ECLASS_QUAD,  T8_ECLASS_TRIANGLE,

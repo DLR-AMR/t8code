@@ -27,6 +27,12 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_eclass.h>
 #include <test/t8_gtest_macros.hxx>
+
+#include "test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_prism_cake_param.hxx"
+#include "test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_from_class_param.hxx"
+#include "test/t8_cmesh_generator/t8_gtest_cmesh_cartestian_product.hxx"
+#include "test/t8_cmesh_generator/t8_gtest_cmesh_sum_of_sets.hxx"
+
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
 
 /* Test if a cmesh is committed properly and perform the face consistency check. */
@@ -37,7 +43,7 @@ class cmesh_copy_equality: public testing::TestWithParam<cmesh_sum_of_sets> {
   SetUp () override
   {
     cmesh_gen = GetParam ();
-    cmesh_original = cmesh_gen.get_cmesh ();
+    cmesh_original = cmesh_gen.cmesh_create ();
     /* Set up the cmesh copy */
     t8_cmesh_init (&cmesh_copy);
     /* We need the original cmesh later, so we ref it */
@@ -73,11 +79,18 @@ TEST_P (cmesh_copy_equality, check_equality_of_copied_cmesh_with_original)
   EXPECT_TRUE (t8_cmesh_is_equal (cmesh_original, cmesh_copy));
 }
 
+std::vector<parameter_cartesian_product *> cart_prod_vec1
+  = { new_from_class::cmesh_example, new_prism_cake::cmesh_example };
+
+cmesh_sum_of_sets cmesh_sums1 (cart_prod_vec1);
+cmesh_sum_of_sets::Iterator zip = cmesh_sums1.begin ();
+cmesh_sum_of_sets::Iterator zipzip = cmesh_sums1.end ();
+
 /* Test all cmeshes over all different inputs we get through their id */
-INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_copy, cmesh_copy_equality, AllCmeshsParam,
+INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_copy, cmesh_copy_equality, ::testing::ValuesIn (::zip, ::zipzip),
                           [] (const testing::TestParamInfo<cmesh_copy_equality::ParamType> &info) {
                             std::string name;
-                            cmesh_sum_of_sets tmp = (cmesh_sum_of_sets) info.param;
+                            cmesh_sum_of_sets &tmp = (cmesh_sum_of_sets &) info.param;
                             tmp.print_info (name);
                             return name;
                           });

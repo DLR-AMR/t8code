@@ -33,136 +33,106 @@ T8_EXTERN_C_BEGIN ();
  */
 class cmesh_sum_of_sets {
  public:
-  /**
-   * Construct a new cmesh_sum_of_sets object
-   * 
-   */
   cmesh_sum_of_sets () {};
-
   /**
    * Construct a new cmesh sum of sets object, that will generate cmeshes given by \ref cmesh_cart_prods
    * 
    * \param[in] cmesh_cart_prods A vector of \ref parameter_cartesian_product 
    */
-  cmesh_sum_of_sets (std::vector<parameter_cartesian_product *> cmesh_cart_prods): current_generator (0)
+  cmesh_sum_of_sets (std::vector<parameter_cartesian_product *> cmesh_cart_prods)
   {
     for (size_t icreator = 0; icreator < cmesh_cart_prods.size (); icreator++) {
-      cmesh_prod.push_back (cmesh_cart_prods[icreator]);
+      cmesh_examples.insert (cmesh_examples.end (), cmesh_cart_prods[icreator]->example_all_combination.begin (),
+                             cmesh_cart_prods[icreator]->example_all_combination.end ());
     }
   }
 
-  /**
-   * Copy-constructor
-   * 
-   * \param other[in] cmesh_sum_of_sets to copy from
-   */
-  cmesh_sum_of_sets (const cmesh_sum_of_sets &other): current_generator (other.current_generator)
+  cmesh_sum_of_sets (cmesh_sum_of_sets *other): index (other->index), cmesh_examples (other->cmesh_examples)
   {
-    for (size_t icreator = 0; icreator < other.cmesh_prod.size (); icreator++) {
-      parameter_cartesian_product *copy_cart = other.cmesh_prod[icreator]->create ();
-      copy_cart->copy (other.cmesh_prod[icreator]);
-      cmesh_prod.push_back (copy_cart);
-    }
   }
 
-  /**
-   * Get the cmesh of the current generator
-   * 
-   * \return The cmesh of the current generator. 
-   */
   t8_cmesh_t
-  get_cmesh ()
+  cmesh_create ()
   {
-    return cmesh_prod[current_generator]->gen_cmesh ();
+    return cmesh_examples[index]->cmesh_create ();
   }
 
-  /**
-   * Compare two cmesh_sum_of_sets. If the current_generator is equal, the generators are compared. 
-   * If not, the object with the smaller current_generator is considered smaller. 
-   * 
-   * \param[in] other the cmesh_sum_of_sets to compare with.
-   * \return true if both are equal
-   * \return false ow
-   */
-  bool
-  operator< (const cmesh_sum_of_sets &other)
+  struct Iterator
   {
-    if (current_generator == other.current_generator) {
-      return cmesh_prod[current_generator]->index < other.cmesh_prod[current_generator]->index;
-    }
-    else {
-      return current_generator < other.current_generator;
-    }
-  }
+    using iterator_category = std::forward_iterator_tag;
+    using difference_type = std::ptrdiff_t;
+    using value_type = cmesh_sum_of_sets;
+    using pointer = value_type *;
+    using reference = value_type &;
 
-  /**
-   * + operator to be able to use ::testing:Range from the GoogleTestSuite. 
-   * 
-   * \param[in] step cmesh_sum_of_sets describing by how far to step forward
-   * \return cmesh_sum_of_sets 
-   */
-  cmesh_sum_of_sets
-  operator+ (const cmesh_sum_of_sets &step)
-  {
-    cmesh_sum_of_sets tmp (*this);
-    if (!tmp.cmesh_prod[tmp.current_generator]->next ()
-        && (long unsigned int) tmp.current_generator < tmp.cmesh_prod.size () - 1) {
-      tmp.current_generator++;
-      tmp.cmesh_prod[tmp.current_generator]->set_to_first ();
+    Iterator (pointer ptr): cmesh_sets (ptr)
+    {
+      cmesh_sets->cmesh_examples = ptr->cmesh_examples;
+      cmesh_sets->index = ptr->index;
     }
-    return tmp;
-  }
 
-  /**
-   * Use the first generator and the first tuple of parameters of that generator
-   * 
-   * \return cmesh_sum_of_sets 
-   */
-  cmesh_sum_of_sets
+    reference
+    operator* () const
+    {
+      return *cmesh_sets;
+    }
+    pointer
+    operator->()
+    {
+      return cmesh_sets;
+    }
+
+    Iterator &
+    operator++ ()
+    {
+      this->cmesh_sets->index++;
+      return *this;
+    }
+
+    Iterator
+    operator++ (int)
+    {
+      cmesh_sum_of_sets *tmp = new cmesh_sum_of_sets (cmesh_sets);
+      cmesh_sets->index++;
+      return Iterator (tmp);
+    }
+
+    friend bool
+    operator== (const Iterator &iter_a, const Iterator &iter_b)
+    {
+      return iter_a.cmesh_sets->index == iter_b.cmesh_sets->index;
+    }
+
+    friend bool
+    operator!= (const Iterator &iter_a, const Iterator &iter_b)
+    {
+      return iter_a.cmesh_sets->index != iter_b.cmesh_sets->index;
+    }
+
+    pointer cmesh_sets;
+  };
+
+  Iterator
   begin ()
   {
-
-    cmesh_sum_of_sets tmp (*this);
-    tmp.current_generator = 0;
-    tmp.cmesh_prod[tmp.current_generator]->set_to_first ();
-
-    return tmp;
+    cmesh_sum_of_sets *tmp = new cmesh_sum_of_sets (*this);
+    tmp->index = 0;
+    return Iterator (tmp);
   }
 
-  /**
-   * Use the last generator and the last tuple of parameters of that generator
-   * 
-   * \return cmesh_sum_of_sets 
-   */
-  cmesh_sum_of_sets
+  Iterator
   end ()
   {
-
-    cmesh_sum_of_sets tmp (*this);
-    tmp.current_generator = cmesh_prod.size () - 1;
-    tmp.cmesh_prod[tmp.current_generator]->set_to_end ();
-    return tmp;
+    cmesh_sum_of_sets *tmp = new cmesh_sum_of_sets (*this);
+    tmp->index = cmesh_examples.size ();
+    return Iterator (tmp);
   }
 
-  /*Create a step */
-  cmesh_sum_of_sets
-  step ()
-  {
-
-    return cmesh_sum_of_sets (*this);
-  }
-
-  /**
-   * Print the name and the current parameters of the current cmesh example. 
-   * 
-   * @param out 
-   */
   void
   print_info (std::string &out)
   {
-    cmesh_prod[current_generator]->name_and_current_params_to_string (out);
+    cmesh_examples[index]->param_to_string (out);
   }
-
   /**
    * Destroy the cmesh generator cxx object
    * 
@@ -171,8 +141,9 @@ class cmesh_sum_of_sets {
   {
   }
 
-  int current_generator = 0;
-  std::vector<parameter_cartesian_product *> cmesh_prod;
+ public:
+  size_t index = 0;
+  std::vector<base_example *> cmesh_examples;
 };
 
 T8_EXTERN_C_END ();

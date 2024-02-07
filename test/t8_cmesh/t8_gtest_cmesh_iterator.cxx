@@ -3,7 +3,7 @@ This file is part of t8code.
 t8code is a C library to manage a collection (a forest) of multiple
 connected adaptive space-trees of general element classes in parallel.
 
-Copyright (C) 2023 the developers
+Copyright (C) 2024 the developers
 
 t8code is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -20,31 +20,32 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#ifndef T8_GTEST_CMESH_COMM_CREATOR_HXX
-#define T8_GTEST_CMESH_COMM_CREATOR_HXX
+#include <t8.h>
+#include <gtest/gtest.h>
 
-#include <vector>
-
-#include "test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_prism_cake_param.hxx"
-#include "test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_from_class_param.hxx"
-#include "test/t8_cmesh_generator/t8_gtest_cmesh_cartestian_product.hxx"
+#include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
 #include "test/t8_cmesh_generator/t8_gtest_cmesh_sum_of_sets.hxx"
 
-T8_EXTERN_C_BEGIN ();
-
-namespace cmesh_list
+TEST (t8_gtest_cmesh_iterator, begin_end_not_equal)
 {
-std::vector<parameter_cartesian_product *> cart_prod_vec = {
-  new_from_class::cmesh_example
-  //, new_prism_cake::cmesh_example
-};
+  EXPECT_NE (cmesh_list::cmesh_sums.begin (), cmesh_list::cmesh_sums.end ());
+}
 
-cmesh_sum_of_sets cmesh_sums (cart_prod_vec);
+TEST (t8_gtest_cmesh_iterator, test_iteration)
+{
+  for (cmesh_sum_of_sets::Iterator iter = cmesh_list::cmesh_sums.begin (); iter != cmesh_list::cmesh_sums.end ();
+       iter++) {
+    std::string out;
+    (*iter).print_info (out);
+    EXPECT_FALSE (out.empty ());
+  }
+}
 
-}  // namespace cmesh_list
-
-#define AllCmeshsParam ::testing::ValuesIn (cmesh_list::cmesh_sums.begin (), cmesh_list::cmesh_sums.end ())
-
-T8_EXTERN_C_END ();
-
-#endif /* T8_GTEST_CMESH_COMM_CREATOR_HXX */
+TEST (t8_gtest_cmesh_iterator, test_iteration_with_stl)
+{
+  std::for_each (cmesh_list::cmesh_sums.begin (), cmesh_list::cmesh_sums.end (), [] (cmesh_sum_of_sets& elem) {
+    std::string out;
+    elem.print_info (out);
+    EXPECT_FALSE (out.empty ());
+  });
+}
