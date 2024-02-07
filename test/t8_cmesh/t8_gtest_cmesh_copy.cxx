@@ -37,13 +37,13 @@
 
 /* Test if a cmesh is committed properly and perform the face consistency check. */
 
-class cmesh_copy_equality: public testing::TestWithParam<cmesh_sum_of_sets> {
+class cmesh_copy_equality: public testing::TestWithParam<base_example *> {
  protected:
   void
   SetUp () override
   {
     cmesh_gen = GetParam ();
-    cmesh_original = cmesh_gen.cmesh_create ();
+    cmesh_original = cmesh_gen->cmesh_create ();
     /* Set up the cmesh copy */
     t8_cmesh_init (&cmesh_copy);
     /* We need the original cmesh later, so we ref it */
@@ -60,7 +60,7 @@ class cmesh_copy_equality: public testing::TestWithParam<cmesh_sum_of_sets> {
 
   t8_cmesh_t cmesh_original;
   t8_cmesh_t cmesh_copy;
-  cmesh_sum_of_sets cmesh_gen;
+  base_example *cmesh_gen;
 };
 
 /* Test wheater the original cmaeh and its copy are committed and face consistent. Test will fail, if one of these is false. */
@@ -79,18 +79,11 @@ TEST_P (cmesh_copy_equality, check_equality_of_copied_cmesh_with_original)
   EXPECT_TRUE (t8_cmesh_is_equal (cmesh_original, cmesh_copy));
 }
 
-std::vector<parameter_cartesian_product *> cart_prod_vec1
-  = { new_from_class::cmesh_example, new_prism_cake::cmesh_example };
-
-cmesh_sum_of_sets cmesh_sums1 (cart_prod_vec1);
-cmesh_sum_of_sets::Iterator zip = cmesh_sums1.begin ();
-cmesh_sum_of_sets::Iterator zipzip = cmesh_sums1.end ();
-
 /* Test all cmeshes over all different inputs we get through their id */
-INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_copy, cmesh_copy_equality, ::testing::ValuesIn (::zip, ::zipzip),
+INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_copy, cmesh_copy_equality, AllCmeshsParam,
                           [] (const testing::TestParamInfo<cmesh_copy_equality::ParamType> &info) {
                             std::string name;
-                            cmesh_sum_of_sets &tmp = (cmesh_sum_of_sets &) info.param;
-                            tmp.print_info (name);
+                            base_example *tmp = (base_example *) info.param;
+                            tmp->param_to_string (name);
                             return name;
                           });

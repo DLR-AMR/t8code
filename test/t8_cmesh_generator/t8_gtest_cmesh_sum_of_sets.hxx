@@ -39,7 +39,7 @@ class cmesh_sum_of_sets {
    * 
    * \param[in] cmesh_cart_prods A vector of \ref parameter_cartesian_product 
    */
-  cmesh_sum_of_sets (std::vector<parameter_cartesian_product *> cmesh_cart_prods)
+  cmesh_sum_of_sets (std::vector<parameter_cartesian_product*> cmesh_cart_prods)
   {
     for (size_t icreator = 0; icreator < cmesh_cart_prods.size (); icreator++) {
       cmesh_examples.insert (cmesh_examples.end (), cmesh_cart_prods[icreator]->example_all_combination.begin (),
@@ -47,92 +47,81 @@ class cmesh_sum_of_sets {
     }
   }
 
-  cmesh_sum_of_sets (cmesh_sum_of_sets *other): index (other->index), cmesh_examples (other->cmesh_examples)
+  cmesh_sum_of_sets (cmesh_sum_of_sets* other): cmesh_examples (other->cmesh_examples)
   {
-  }
-
-  t8_cmesh_t
-  cmesh_create ()
-  {
-    return cmesh_examples[index]->cmesh_create ();
   }
 
   struct Iterator
   {
     using iterator_category = std::forward_iterator_tag;
     using difference_type = std::ptrdiff_t;
-    using value_type = cmesh_sum_of_sets;
-    using pointer = value_type *;
-    using reference = value_type &;
+    using value_type = base_example*;
+    using pointer = value_type*;
+    using reference = value_type&;
 
-    Iterator (pointer ptr): cmesh_sets (ptr)
+    Iterator (pointer ptr): m_ptr (ptr)
     {
-      cmesh_sets->cmesh_examples = ptr->cmesh_examples;
-      cmesh_sets->index = ptr->index;
     }
 
     reference
     operator* () const
     {
-      return *cmesh_sets;
+      return *m_ptr;
     }
     pointer
     operator->()
     {
-      return cmesh_sets;
+      return m_ptr;
     }
 
-    Iterator &
+    Iterator&
     operator++ ()
     {
-      this->cmesh_sets->index++;
+      m_ptr++;
       return *this;
     }
 
     Iterator
     operator++ (int)
     {
-      cmesh_sum_of_sets *tmp = new cmesh_sum_of_sets (cmesh_sets);
-      cmesh_sets->index++;
-      return Iterator (tmp);
+      Iterator tmp = *this;
+      ++(*this);
+      return tmp;
     }
 
     friend bool
-    operator== (const Iterator &iter_a, const Iterator &iter_b)
+    operator== (const Iterator& iter_a, const Iterator& iter_b)
     {
-      return iter_a.cmesh_sets->index == iter_b.cmesh_sets->index;
+      return iter_a.m_ptr == iter_b.m_ptr;
     }
 
     friend bool
-    operator!= (const Iterator &iter_a, const Iterator &iter_b)
+    operator!= (const Iterator& iter_a, const Iterator& iter_b)
     {
-      return iter_a.cmesh_sets->index != iter_b.cmesh_sets->index;
+      return iter_a.m_ptr != iter_b.m_ptr;
+    }
+    void
+    print_info (std::string& out)
+    {
+      (*m_ptr)->param_to_string (out);
     }
 
-    pointer cmesh_sets;
+    pointer m_ptr;
   };
 
   Iterator
   begin ()
   {
-    cmesh_sum_of_sets *tmp = new cmesh_sum_of_sets (*this);
-    tmp->index = 0;
-    return Iterator (tmp);
+    return Iterator ((&cmesh_examples[0]));
   }
 
   Iterator
   end ()
   {
-    cmesh_sum_of_sets *tmp = new cmesh_sum_of_sets (*this);
-    tmp->index = cmesh_examples.size ();
-    return Iterator (tmp);
+    const size_t end = cmesh_examples.size ();
+    return Iterator (&cmesh_examples[end]);
   }
 
-  void
-  print_info (std::string &out)
-  {
-    cmesh_examples[index]->param_to_string (out);
-  }
   /**
    * Destroy the cmesh generator cxx object
    * 
@@ -142,8 +131,7 @@ class cmesh_sum_of_sets {
   }
 
  public:
-  size_t index = 0;
-  std::vector<base_example *> cmesh_examples;
+  std::vector<base_example*> cmesh_examples;
 };
 
 T8_EXTERN_C_END ();

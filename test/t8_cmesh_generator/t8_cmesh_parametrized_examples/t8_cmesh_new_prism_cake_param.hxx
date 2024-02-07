@@ -34,7 +34,7 @@ std::function<t8_cmesh_t (sc_MPI_Comm, int)> prism_cake = t8_cmesh_new_prism_cak
 std::string
 make_param_string (const sc_MPI_Comm &comm, const int &num_prisms)
 {
-  std::string params = "(" + cmesh_params::comm_to_string (comm) + ", " + std::to_string (num_prisms) + ")";
+  std::string params = cmesh_params::comm_to_string (comm) + std::to_string (num_prisms);
   return params;
 }
 
@@ -45,7 +45,7 @@ parameter_cartesian_product *cmesh_example
                                                                      decltype (cmesh_params::num_prisms.begin ())> (
     std::make_pair (cmesh_params::my_comms.begin (), cmesh_params::my_comms.end ()),
     std::make_pair (cmesh_params::num_prisms.begin (), cmesh_params::num_prisms.end ()), prism_cake,
-    make_param_string_wrapper, "t8_cmesh_new_prism_cake");
+    make_param_string_wrapper, "CmeshNewPrismCake");
 }  // namespace new_prism_cake
 
 #endif /* T8_CMESH_NEW_PRISM_CAKE_PARAM_HXX */

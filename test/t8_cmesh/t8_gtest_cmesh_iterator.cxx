@@ -28,7 +28,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 TEST (t8_gtest_cmesh_iterator, begin_end_not_equal)
 {
-  EXPECT_NE (cmesh_list::cmesh_sums.begin (), cmesh_list::cmesh_sums.end ());
+  EXPECT_TRUE (cmesh_list::cmesh_sums.begin () != cmesh_list::cmesh_sums.end ());
 }
 
 TEST (t8_gtest_cmesh_iterator, test_iteration)
@@ -36,16 +36,16 @@ TEST (t8_gtest_cmesh_iterator, test_iteration)
   for (cmesh_sum_of_sets::Iterator iter = cmesh_list::cmesh_sums.begin (); iter != cmesh_list::cmesh_sums.end ();
        iter++) {
     std::string out;
-    (*iter).print_info (out);
+    (*iter)->param_to_string (out);
     EXPECT_FALSE (out.empty ());
   }
 }
 
 TEST (t8_gtest_cmesh_iterator, test_iteration_with_stl)
 {
-  std::for_each (cmesh_list::cmesh_sums.begin (), cmesh_list::cmesh_sums.end (), [] (cmesh_sum_of_sets& elem) {
+  std::for_each (cmesh_list::cmesh_sums.begin (), cmesh_list::cmesh_sums.end (), [] (base_example *elem) {
     std::string out;
-    elem.print_info (out);
+    elem->param_to_string (out);
     EXPECT_FALSE (out.empty ());
   });
 }

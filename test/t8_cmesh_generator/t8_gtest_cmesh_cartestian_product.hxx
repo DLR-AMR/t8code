@@ -42,6 +42,13 @@ class base_example {
   param_to_string (std::string& out)
     = 0;
 
+  virtual bool
+  operator== (const base_example& other)
+    = 0;
+  virtual bool
+  operator!= (const base_example& other)
+    = 0;
+
   std::string name;
 };
 /**
@@ -77,6 +84,22 @@ class cmesh_example: base_example {
   param_to_string (std::string& out)
   {
     out = name + std::apply (parameter_to_string, parameter);
+  }
+
+  virtual bool
+  operator== (const base_example& other)
+  {
+    const cmesh_example& compare = (const cmesh_example&) other;
+
+    return parameter == compare.parameter;
+  }
+
+  virtual bool
+  operator!= (const base_example& other)
+  {
+    const cmesh_example& compare = (const cmesh_example&) other;
+
+    return parameter != compare.parameter;
   }
 
   std::function<t8_cmesh_t (Args...)> cmesh_function;
