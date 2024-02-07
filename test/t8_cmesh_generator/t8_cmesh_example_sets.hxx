@@ -34,7 +34,7 @@ T8_EXTERN_C_BEGIN ();
 
 namespace cmesh_list
 {
-std::vector<parameter_cartesian_product *> cart_prod_vec
+std::vector<example_parameter_combinator *> cart_prod_vec
   = { new_from_class::cmesh_example, new_prism_cake::cmesh_example };
 
 cmesh_sum_of_sets cmesh_sums (cart_prod_vec);

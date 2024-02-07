@@ -40,9 +40,9 @@ make_param_string (const sc_MPI_Comm &comm, const int &num_prisms)
 
 std::function<std::string (const sc_MPI_Comm &, const int &)> make_param_string_wrapper = make_param_string;
 
-parameter_cartesian_product *cmesh_example
-  = (parameter_cartesian_product *) new cmesh_parameter_combinations<decltype (cmesh_params::my_comms.begin ()),
-                                                                     decltype (cmesh_params::num_prisms.begin ())> (
+example_parameter_combinator *cmesh_example
+  = (example_parameter_combinator *) new cmesh_cartesian_product_params<decltype (cmesh_params::my_comms.begin ()),
+                                                                        decltype (cmesh_params::num_prisms.begin ())> (
     std::make_pair (cmesh_params::my_comms.begin (), cmesh_params::my_comms.end ()),
     std::make_pair (cmesh_params::num_prisms.begin (), cmesh_params::num_prisms.end ()), prism_cake,
     make_param_string_wrapper, "CmeshNewPrismCake");

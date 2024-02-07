@@ -39,7 +39,7 @@ class cmesh_sum_of_sets {
    * 
    * \param[in] cmesh_cart_prods A vector of \ref parameter_cartesian_product 
    */
-  cmesh_sum_of_sets (std::vector<parameter_cartesian_product*> cmesh_cart_prods)
+  cmesh_sum_of_sets (std::vector<example_parameter_combinator*> cmesh_cart_prods)
   {
     for (size_t icreator = 0; icreator < cmesh_cart_prods.size (); icreator++) {
       cmesh_examples.insert (cmesh_examples.end (), cmesh_cart_prods[icreator]->example_all_combination.begin (),

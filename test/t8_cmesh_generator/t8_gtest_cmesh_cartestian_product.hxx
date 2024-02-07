@@ -30,42 +30,72 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <vector>
 #include <string>
 
+/**
+ * A base class for cmesh examples.
+ * An example must be comparable to another via == and !=. 
+ * 
+ * For pretty debug output a function to translate the parameters of the example to a string should be provided. 
+ * 
+ * The
+ * 
+ */
 class base_example {
  public:
+  /**
+   * Construct a new base example. An example must have at least have a name. 
+   * 
+   * \param name 
+   */
   base_example (std::string name): name (name) {};
 
+  /**
+   * A function to create a cmesh. The class should not own the cmesh.
+   * 
+   * \return t8_cmesh_t 
+   */
   virtual t8_cmesh_t
   cmesh_create ()
     = 0;
 
+  /**
+   * Copy the name and the parameters of this example into a string
+   * 
+   * \param out 
+   */
   virtual void
   param_to_string (std::string& out)
     = 0;
 
+  /**
+   * Check if to examples are equal
+   * 
+   * \param other Another example
+   * \return true if this and \ref other are the same
+   * \return false ow
+   */
   virtual bool
   operator== (const base_example& other)
     = 0;
+
+  /**
+   * Check if to examples are not equal
+   * 
+   * \param other Another example
+   * \return true if this and \ref other are different
+   * \return false ow
+   */
   virtual bool
   operator!= (const base_example& other)
     = 0;
 
   std::string name;
 };
-/**
- * A base class to create the cartesian product of parameters that can be passed to 
- * a function that creates a cmesh.
- * 
- */
-class parameter_cartesian_product {
- public:
-  /**
-   * Generate a cmesh according to a function
-   * 
-   * \return t8_cmesh_t 
-   */
-  std::vector<base_example*> example_all_combination;
-};
 
+/**
+ * Class to hold cmesh example created by function with parameters as input
+ * 
+ * @tparam Args 
+ */
 template <class... Args>
 class cmesh_example: base_example {
  public:
@@ -105,6 +135,20 @@ class cmesh_example: base_example {
   std::function<t8_cmesh_t (Args...)> cmesh_function;
   std::tuple<Args...> parameter;
   std::function<std::string (const Args&...)> parameter_to_string;
+};
+
+/**
+ * A base class to hold sets of examples that can be created in various ways. 
+ * 
+ */
+class example_parameter_combinator {
+ public:
+  /**
+   * Generate a cmesh according to a function
+   * 
+   * \return t8_cmesh_t 
+   */
+  std::vector<base_example*> example_all_combination;
 };
 
 /**
@@ -187,20 +231,20 @@ cartesian_product (OutputIterator out, std::pair<Iter, Iter>... ranges)
 }
 
 /**
- * Variadic template class that holds tuples of parameters and enables us to create the cartesian
- * product of parameter combinations. 
+ * Variadic template class that creates \ref base_example based on the cartesian product
+ * of the input parameters. 
  * 
  * @tparam Iter 
  */
 template <class... Iter>
-class cmesh_parameter_combinations: parameter_cartesian_product {
+class cmesh_cartesian_product_params: example_parameter_combinator {
  public:
-  cmesh_parameter_combinations () {};
+  cmesh_cartesian_product_params () {};
 
-  cmesh_parameter_combinations (std::pair<Iter, Iter>... ranges,
-                                std::function<t8_cmesh_t (typename Iter::value_type...)> cmesh_function,
-                                std::function<std::string (const typename Iter::value_type&...)> param_to_string,
-                                std::string name)
+  cmesh_cartesian_product_params (std::pair<Iter, Iter>... ranges,
+                                  std::function<t8_cmesh_t (typename Iter::value_type...)> cmesh_function,
+                                  std::function<std::string (const typename Iter::value_type&...)> param_to_string,
+                                  std::string name)
   {
     std::vector<std::tuple<typename Iter::value_type...>> cart_prod;
     cartesian_product (std::back_inserter (cart_prod), ranges...);
