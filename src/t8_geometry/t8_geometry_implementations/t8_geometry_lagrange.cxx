@@ -103,6 +103,14 @@ t8_geometry_lagrange::t8_geom_compute_basis (const double *ref_coords) const
 }
 
 const std::vector<double>
+t8_geometry_lagrange::t8_geom_s2_basis (const double *ref_point) const
+{
+  const double xi = ref_point[0];
+  const std::vector<double> basis_functions = { 1 - xi, xi };
+  return basis_functions;
+}
+
+const std::vector<double>
 t8_geometry_lagrange::t8_geom_t3_basis (const double *ref_point) const
 {
   const double xi = ref_point[0];

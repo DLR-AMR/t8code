@@ -132,6 +132,18 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
   t8_geom_map (const double *ref_point, double *mapped_point) const;
 
   /**
+   * Basis functions of a 2-node segment.
+   * \verbatim
+      x --------- x
+     0             1
+     \endverbatim
+   * \param ref_point  Point in the reference space.
+   * \return  Basis functions evaluated at the reference point.
+   */
+  const std::vector<double>
+  t8_geom_s2_basis (const double *ref_point) const;
+
+  /**
    * Basis functions of a 3-node triangle element.
    * \verbatim
                    2
