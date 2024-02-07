@@ -133,8 +133,8 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix, double sc
         fprintf (vtufile, "          %16.8e %16.8e %16.8e\n", x, y, z);
 #endif
       }
-      } /* end tree loop */
-      if (write_ghosts) {
+    } /* end tree loop */
+    if (write_ghosts) {
 
       /* Write the vertices of the ghost trees */
       num_ghosts = t8_cmesh_get_num_ghosts (cmesh);
