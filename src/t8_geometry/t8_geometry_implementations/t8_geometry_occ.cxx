@@ -733,7 +733,6 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
       T8_ASSERT (surface_parameters != NULL);
 
       for (size_t coord = 0; coord < num_coords; ++coord) {
-        const int offset_2d = coord * 2;
         const int offset_3d = coord * 3;
 
         double face_displacement_from_edges[3] = { 0 };

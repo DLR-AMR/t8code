@@ -401,7 +401,8 @@ t8_forest_element_from_ref_coords_ext (t8_forest_t forest, t8_locidx_t ltreeid, 
   const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
   const t8_gloidx_t gtreeid = t8_forest_global_tree_id (forest, ltreeid);
 
-  double *tree_ref_coords = T8_ALLOC (double, tree_dim *num_coords);
+  //double *tree_ref_coords = T8_ALLOC (double, tree_dim * num_coords);
+  double tree_ref_coords[tree_dim * num_coords];
 
   if (stretch_factors != NULL) {
 #if T8_ENABLE_DEBUG
@@ -423,7 +424,8 @@ t8_forest_element_from_ref_coords_ext (t8_forest_t forest, t8_locidx_t ltreeid, 
   }
 
   t8_geometry_evaluate (cmesh, gtreeid, tree_ref_coords, num_coords, coords_out);
-  T8_FREE (tree_ref_coords);
+
+  //T8_FREE (tree_ref_coords);
 }
 
 void
