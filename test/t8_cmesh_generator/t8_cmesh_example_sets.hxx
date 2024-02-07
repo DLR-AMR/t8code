@@ -41,7 +41,8 @@ cmesh_sum_of_sets cmesh_sums (cart_prod_vec);
 
 }  // namespace cmesh_list
 
-#define AllCmeshsParam ::testing::ValuesIn (cmesh_list::cmesh_sums.begin (), cmesh_list::cmesh_sums.end ())
+#define AllCmeshsParam \
+  ::testing::ValuesIn (cmesh_list::cmesh_sums.cmesh_examples.begin (), cmesh_list::cmesh_sums.cmesh_examples.end ())
 
 T8_EXTERN_C_END ();
 

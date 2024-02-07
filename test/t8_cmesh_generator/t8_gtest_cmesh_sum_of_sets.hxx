@@ -47,81 +47,14 @@ class cmesh_sum_of_sets {
     }
   }
 
+  /**
+   * Copy constructor
+   * 
+   * \param[in] other Another cmesh_sum_of_sets
+   */
   cmesh_sum_of_sets (cmesh_sum_of_sets* other): cmesh_examples (other->cmesh_examples)
   {
   }
-
-  struct Iterator
-  {
-    using iterator_category = std::forward_iterator_tag;
-    using difference_type = std::ptrdiff_t;
-    using value_type = base_example*;
-    using pointer = value_type*;
-    using reference = value_type&;
-
-    Iterator (pointer ptr): m_ptr (ptr)
-    {
-    }
-
-    reference
-    operator* () const
-    {
-      return *m_ptr;
-    }
-    pointer
-    operator->()
-    {
-      return m_ptr;
-    }
-
-    Iterator&
-    operator++ ()
-    {
-      m_ptr++;
-      return *this;
-    }
-
-    Iterator
-    operator++ (int)
-    {
-      Iterator tmp = *this;
-      ++(*this);
-      return tmp;
-    }
-
-    friend bool
-    operator== (const Iterator& iter_a, const Iterator& iter_b)
-    {
-      return iter_a.m_ptr == iter_b.m_ptr;
-    }
-
-    friend bool
-    operator!= (const Iterator& iter_a, const Iterator& iter_b)
-    {
-      return iter_a.m_ptr != iter_b.m_ptr;
-    }
-    void
-    print_info (std::string& out)
-    {
-      (*m_ptr)->param_to_string (out);
-    }
-
-    pointer m_ptr;
-  };
-
-  Iterator
-  begin ()
-  {
-    return Iterator ((&cmesh_examples[0]));
-  }
-
-  Iterator
-  end ()
-  {
-    const size_t end = cmesh_examples.size ();
-    return Iterator (&cmesh_examples[end]);
-  }
-
   /**
    * Destroy the cmesh generator cxx object
    * 
