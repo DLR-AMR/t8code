@@ -37,7 +37,38 @@
 #include <t8_geometry/t8_geometry_with_vertices.hxx>
 #include <t8_geometry/t8_geometry_with_vertices.h>
 
-/* Mapping with Lagrange basis functions */
+/**
+ * Mapping with Lagrange basis functions
+ * 
+ * The enumeration of the nodal basis functions depends on the node numbering
+ * scheme. While this is a convention, we came up with the following rules to
+ * guide us when constructing new mappings:
+ * 1. Be compatible with lower degree elements. It means that when we read the
+ * first \a n nodes, it gives a valid lower-degree element. This rule is made
+ * attainable by the fact that the nodes spanning the Lagrange basis are
+ * equidistant. As an example, consider a degree four segment element whose
+ * five nodes in increasing coordinate direction are numbered as 0-3-2-4-1.
+ * Reading the first two nodes gives us a valid linear segment, while reading
+ * two first three nodes provides a valid quadratic segment. In general, we
+ * need to find for an element of degree \a d which nodes coincide with the
+ * nodes of elements with degree lower than \a d. Those nodes must be numbered
+ * first.
+ * 2. Faces are oriented outwards the volume (3D) or the plane (2D). This is
+ * just a convention to ensure that the node numbering be consistent.
+ * 3. The mapping by the Lagrange geometry falls back to the linear geometry
+ * for degree one. It means that the starting point for the node number
+ * assignment is the numbering defined in the \a t8_element.c file.
+ * 4. The node numbering is performed in increasing spatial dimension, which
+ * results in a hierarchical construction of elements. The node numbers are
+ * assigned based on increasing face IDs, then increasing edge IDs, then
+ * increasing vertex IDs. For volume elements, the volume nodes are assigned
+ * lastly. This hierarchical construction satisfies rule 1 at the mesh level.
+ * 
+ * You can verify these rules by checking the documentation of the
+ * \a t8_geom_xxx_basis methods of this class
+ * (e.g. t8_geometry_lagrange::t8_geom_t6_basis).
+ * 
+ */
 struct t8_geometry_lagrange: public t8_geometry_with_vertices
 {
  public:
