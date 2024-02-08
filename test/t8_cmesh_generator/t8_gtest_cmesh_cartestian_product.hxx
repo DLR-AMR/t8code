@@ -54,7 +54,7 @@ class base_example {
    * \return t8_cmesh_t 
    */
   virtual t8_cmesh_t
-  cmesh_create ()
+  cmesh_create () const
     = 0;
 
   /**
@@ -63,29 +63,7 @@ class base_example {
    * \param out 
    */
   virtual void
-  param_to_string (std::string& out)
-    = 0;
-
-  /**
-   * Check if to examples are equal
-   * 
-   * \param other Another example
-   * \return true if this and \ref other are the same
-   * \return false ow
-   */
-  virtual bool
-  operator== (const base_example& other)
-    = 0;
-
-  /**
-   * Check if to examples are not equal
-   * 
-   * \param other Another example
-   * \return true if this and \ref other are different
-   * \return false ow
-   */
-  virtual bool
-  operator!= (const base_example& other)
+  param_to_string (std::string& out) const
     = 0;
 
   std::string name;
@@ -105,31 +83,15 @@ class cmesh_example: base_example {
       parameter_to_string (parameter_to_string) {};
 
   virtual t8_cmesh_t
-  cmesh_create ()
+  cmesh_create () const
   {
     return std::apply (cmesh_function, parameter);
   }
 
   virtual void
-  param_to_string (std::string& out)
+  param_to_string (std::string& out) const
   {
     out = name + std::apply (parameter_to_string, parameter);
-  }
-
-  virtual bool
-  operator== (const base_example& other)
-  {
-    const cmesh_example& compare = (const cmesh_example&) other;
-
-    return parameter == compare.parameter;
-  }
-
-  virtual bool
-  operator!= (const base_example& other)
-  {
-    const cmesh_example& compare = (const cmesh_example&) other;
-
-    return parameter != compare.parameter;
   }
 
   std::function<t8_cmesh_t (Args...)> cmesh_function;
@@ -160,7 +122,7 @@ class example_parameter_combinator {
  */
 template <typename Args>
 auto
-vector_to_iter_pair (std::vector<Args> vec)
+vector_to_iter_pair (const std::vector<Args>& vec)
 {
   return std::make_pair (vec.begin (), vec.end ());
 }

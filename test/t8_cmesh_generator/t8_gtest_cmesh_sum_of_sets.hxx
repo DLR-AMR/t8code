@@ -39,7 +39,7 @@ class cmesh_sum_of_sets {
    * 
    * \param[in] cmesh_cart_prods A vector of \ref parameter_cartesian_product 
    */
-  cmesh_sum_of_sets (std::vector<example_parameter_combinator*> cmesh_cart_prods)
+  cmesh_sum_of_sets (std::vector<example_parameter_combinator *> cmesh_cart_prods)
   {
     for (size_t icreator = 0; icreator < cmesh_cart_prods.size (); icreator++) {
       cmesh_examples.insert (cmesh_examples.end (), cmesh_cart_prods[icreator]->example_all_combination.begin (),
@@ -47,14 +47,6 @@ class cmesh_sum_of_sets {
     }
   }
 
-  /**
-   * Copy constructor
-   * 
-   * \param[in] other Another cmesh_sum_of_sets
-   */
-  cmesh_sum_of_sets (cmesh_sum_of_sets* other): cmesh_examples (other->cmesh_examples)
-  {
-  }
   /**
    * Destroy the cmesh generator cxx object
    * 
@@ -64,7 +56,7 @@ class cmesh_sum_of_sets {
   }
 
  public:
-  std::vector<base_example*> cmesh_examples;
+  std::vector<base_example *> cmesh_examples;
 };
 
 T8_EXTERN_C_END ();
