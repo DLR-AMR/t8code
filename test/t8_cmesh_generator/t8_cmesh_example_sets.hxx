@@ -27,15 +27,26 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include "test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_prism_cake_param.hxx"
 #include "test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_from_class_param.hxx"
+#include "test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_bigmesh_param.hxx"
 #include "test/t8_cmesh_generator/t8_gtest_cmesh_cartestian_product.hxx"
 #include "test/t8_cmesh_generator/t8_gtest_cmesh_sum_of_sets.hxx"
 
 T8_EXTERN_C_BEGIN ();
 
+/**
+ * lambda to pass to an INSTANTIATE_TEST_SUITE_P to print the current base_example
+ * 
+ */
+auto pretty_print_base_example = [] (const testing::TestParamInfo<base_example *> &info) {
+  std::string name;
+  info.param->param_to_string (name);
+  return name;
+};
+
 namespace cmesh_list
 {
 std::vector<example_parameter_combinator *> cart_prod_vec
-  = { new_from_class::cmesh_example, new_prism_cake::cmesh_example };
+  = { new_from_class::cmesh_example, new_prism_cake::cmesh_example, new_bigmesh::cmesh_example };
 
 cmesh_sum_of_sets cmesh_sums (cart_prod_vec);
 

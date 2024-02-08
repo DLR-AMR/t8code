@@ -187,6 +187,7 @@ void
 cartesian_product (OutputIterator out, std::pair<Iter, Iter>... ranges)
 {
   const auto begins = std::make_tuple (ranges.first...);
+  out = { *ranges.first... };
   while (!increment (begins, ranges...)) {
     out = { *ranges.first... };
   }

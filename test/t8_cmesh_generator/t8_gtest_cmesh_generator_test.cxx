@@ -23,6 +23,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <gtest/gtest.h>
 
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
+#include "test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_bigmesh_param.hxx"
 #include "test/t8_cmesh_generator/t8_gtest_cmesh_cartestian_product.hxx"
 
 class t8_cmesh_iter: public testing::TestWithParam<base_example *> {
@@ -56,10 +57,12 @@ TEST_P (t8_cmesh_iter, print_string)
   EXPECT_FALSE (cmesh_param_string.empty ());
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_create_cmeshes, t8_cmesh_iter, AllCmeshsParam,
-                          [] (const testing::TestParamInfo<t8_cmesh_iter::ParamType> &info) {
-                            std::string name;
-                            base_example *tmp = (base_example *) info.param;
-                            tmp->param_to_string (name);
-                            return name;
-                          });
+TEST (param_generator, check_num_parameters_combination)
+{
+  const size_t num_combs_generated = new_bigmesh::cmesh_example->example_all_combination.size ();
+  const size_t num_expected
+    = cmesh_params::large_mesh.size () * cmesh_params::my_comms.size () * cmesh_params::eclasses.size ();
+  EXPECT_EQ (num_combs_generated, num_expected);
+}
+
+INSTANTIATE_TEST_SUITE_P (t8_gtest_create_cmeshes, t8_cmesh_iter, AllCmeshsParam, pretty_print_base_example);
