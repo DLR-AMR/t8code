@@ -232,4 +232,19 @@ t8_vec_tri_normal (const double p1[3], const double p2[3], const double p3[3], d
   t8_vec_cross (a, b, normal);
 }
 
+/** Swap the components of two vectors.
+ * \param [in,out]  p1  A 3D vector.
+ * \param [in,out]  p2  A 3D vector.
+ */
+static inline void
+t8_vec_swap (double p1[3], double p2[3])
+{
+  double tmp;
+  for (int i = 0; i < 3; i++) {
+    tmp = p1[i];
+    p1[i] = p2[i];
+    p2[i] = tmp;
+  }
+}
+
 #endif /* !T8_VEC_H! */

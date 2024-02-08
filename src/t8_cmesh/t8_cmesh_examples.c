@@ -3130,6 +3130,19 @@ t8_cmesh_new_spherical_shell (t8_eclass_t eclass, t8_geometry_c *geometry,
         t8_forest_element_coordinate (forest, itree_local, element, ivert, elem_vertices_2d + ivert * 3);
       }
 
+      {
+        /* Here, we check if the face normal vector of the 2D element points
+         * outward with respect to the sphere's center. If not, the node ordering is flipped.
+         * Note, this works for triangles and quads.
+         */
+        double normal[3]; 
+        t8_vec_tri_normal (elem_vertices_2d, elem_vertices_2d + 3, elem_vertices_2d + 6, normal);
+      
+        if (t8_vec_dot (elem_vertices_2d, normal) < 0.0) {
+          t8_vec_swap (elem_vertices_2d + 3, elem_vertices_2d + 6);
+        }
+      }
+
       /* Transfer the coordinates from the 2D forest mesh to the cmesh via stacking 3D elements along radial direction. */
       for (int istack = 0; istack < num_layers; istack++) {
         const double iscale = 1.0 + istack * shell_thickness / inner_radius / num_layers;
