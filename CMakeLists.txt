@@ -35,11 +35,9 @@ if( T8CODE_ENABLE_MPI )
     set( mpi ON ) # This is very dirty, we should consider fixing this in the p4est repo
 endif()
 
-add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/sc EXCLUDE_FROM_ALL )
-add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/p4est EXCLUDE_FROM_ALL )
+add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/sc )
+add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/p4est )
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/src )
-
-install( TARGETS T8 DESTINATION ${CMAKE_INSTALL_PREFIX}/lib )
 
 if ( T8CODE_BUILD_TESTS )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/test )
