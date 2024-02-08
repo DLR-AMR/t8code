@@ -1,8 +1,8 @@
 # Conditionally adding new sources to the main T8 target as in the original BS looked wrong...
-add_library( T8ex )
-target_sources( T8ex PRIVATE common/t8_example_common.cxx common/t8_example_common_functions.cxx )
-target_include_directories( T8ex PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. )
-target_link_libraries( T8ex PRIVATE T8 )
+add_library( t8example )
+target_sources( t8example PRIVATE common/t8_example_common.cxx common/t8_example_common_functions.cxx )
+target_include_directories( t8example PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. )
+target_link_libraries( t8example PRIVATE T8 )
 
 function( add_t8_example )
     set( options "" )
@@ -11,7 +11,7 @@ function( add_t8_example )
     cmake_parse_arguments( ADD_T8_EXAMPLE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
     add_executable( ${ADD_T8_EXAMPLE_NAME} ${ADD_T8_EXAMPLE_SOURCES} )
-    target_link_libraries( ${ADD_T8_EXAMPLE_NAME} PRIVATE T8 T8ex SC::SC )
+    target_link_libraries( ${ADD_T8_EXAMPLE_NAME} PRIVATE T8 t8example SC::SC )
     target_include_directories( ${ADD_T8_EXAMPLE_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. )
 endfunction()
 
