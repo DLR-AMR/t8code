@@ -105,6 +105,11 @@ t8_geometry_lagrange::t8_geom_compute_basis (const double *ref_coords) const
     case 2:
       return t8_geometry_lagrange::t8_geom_q9_basis (ref_coords);
     }
+  case T8_ECLASS_HEX:
+    switch (*degree) {
+    case 1:
+      return t8_geometry_lagrange::t8_geom_h8_basis (ref_coords);
+    }
   default:
     SC_ABORTF ("Error: Lagrange geometry for degree %i %s not yet implemented. \n", *degree,
                t8_eclass_to_string[active_tree_class]);
@@ -171,6 +176,19 @@ t8_geometry_lagrange::t8_geom_q9_basis (const double *ref_point) const
                                                 -8 * xi * (eta - 1) * (eta - 0.5) * (xi - 1),
                                                 -8 * eta * xi * (eta - 0.5) * (xi - 1),
                                                 16 * eta * xi * (eta - 1) * (xi - 1) };
+  return basis_functions;
+}
+
+const std::vector<double>
+t8_geometry_lagrange::t8_geom_h8_basis (const double *ref_point) const
+{
+  const double xi = ref_point[0];
+  const double eta = ref_point[1];
+  const double zeta = ref_point[2];
+  const std::vector<double> basis_functions = {
+    (1 - xi) * (1 - eta) * (1 - zeta), xi * (1 - eta) * (1 - zeta), (1 - xi) * eta * (1 - zeta), xi * eta * (1 - zeta),
+    (1 - xi) * (1 - eta) * zeta,       xi * (1 - eta) * zeta,       (1 - xi) * eta * zeta,       xi * eta * zeta
+  };
   return basis_functions;
 }
 
