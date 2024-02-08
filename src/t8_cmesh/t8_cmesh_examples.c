@@ -2931,6 +2931,11 @@ t8_cmesh_new_triangulated_spherical_surface_icosahedron (const double radius, sc
     t8_mat_mult_vec (rot_mat, vertices_bot + 3, vertices_bot + 6);
   }
 
+  /* Create the cmesh in 5 bands of 4 triangles.
+   * Rotate the initial top and bottom triangle around the z axis. 
+   * The two triangles on the "belly" that are connecting the top and bottom triangle share vertices
+   * with the top and bottom triangle, so we can construct them in one go as well.
+   */
   int itree = -1;
   for (int turn = 0; turn < 5; turn++) {
     double rot_mat[3][3];
@@ -2959,6 +2964,7 @@ t8_cmesh_new_triangulated_spherical_surface_icosahedron (const double radius, sc
       belly_bot[6 + icoord] = rot_vertices_top[3 * 2 + icoord];
     }
 
+    /* Set the tree vertices and gather all vertices, so that the facejoins can in the end be deduced from global vertices */
     t8_cmesh_set_tree_vertices (cmesh, ++itree, rot_vertices_top, nverts);
     for (int ivert = 0; ivert < nverts; ivert++) {
       for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
