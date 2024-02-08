@@ -47,7 +47,6 @@
 #define T8_VTK_FLOAT_TYPE double
 #endif
 
-#define T8_VTK_ASCII 1
 #define T8_VTK_FORMAT_STRING "ascii"
 
 #if T8_WITH_VTK
