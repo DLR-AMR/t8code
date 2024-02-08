@@ -2959,6 +2959,7 @@ t8_cmesh_new_triangulated_spherical_surface_icosahedron (const double radius, sc
       belly_bot[6 + icoord] = rot_vertices_top[3 * 2 + icoord];
     }
 
+    /* Set the tree vertices and gather all vertices, so that the facejoins can in the end be deduced from global vertices */
     t8_cmesh_set_tree_vertices (cmesh, ++itree, rot_vertices_top, nverts);
     for (int ivert = 0; ivert < nverts; ivert++) {
       for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
