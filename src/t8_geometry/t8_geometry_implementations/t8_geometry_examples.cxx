@@ -158,7 +158,7 @@ t8_map_triangle_to_sphere (const double *active_tree_vertices, const double sphe
     t8_vec_rescale (pos, sphere_radius);
 
     for (size_t i = 0; i < 3; i++) {
-      out_coords[offset + i] = out_coords[offset + i] + pos[i] * (1.0/3.0);
+      out_coords[offset + i] = out_coords[offset + i] + pos[i] * (1.0 / 3.0);
     }
   }
 }

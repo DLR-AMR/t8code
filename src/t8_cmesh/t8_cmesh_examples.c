@@ -3141,9 +3141,9 @@ t8_cmesh_new_spherical_shell (t8_eclass_t eclass, t8_geometry_c *geometry,
          * outward with respect to the sphere's center. If not, the node ordering is flipped.
          * Note, this works for triangles and quads.
          */
-        double normal[3]; 
+        double normal[3];
         t8_vec_tri_normal (elem_vertices_2d, elem_vertices_2d + 3, elem_vertices_2d + 6, normal);
-      
+
         if (t8_vec_dot (elem_vertices_2d, normal) < 0.0) {
           t8_vec_swap (elem_vertices_2d + 3, elem_vertices_2d + 6);
         }
