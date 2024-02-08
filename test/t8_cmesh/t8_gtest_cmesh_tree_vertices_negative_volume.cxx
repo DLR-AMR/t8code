@@ -38,6 +38,9 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 static void
 get_vertices_ids (const t8_eclass_t eclass, int vertices_ids[T8_ECLASS_MAX_CORNERS])
 {
+  /* For Hex, Quads and Lines we set the remaining vertices by
+   * not breaking at the end of the case. 
+   * The same is done for Prisms and Triangles. */
   switch (eclass) {
   case T8_ECLASS_HEX:
     vertices_ids[4] = 4;
@@ -73,12 +76,13 @@ get_vertices_ids (const t8_eclass_t eclass, int vertices_ids[T8_ECLASS_MAX_CORNE
     vertices_ids[2] = 0;
     vertices_ids[3] = 2;
     vertices_ids[4] = 7;
+    break;
   default:
     break;
   }
 }
 
-class tree_vertices_negative_volume: public testing::TestWithParam<t8_eclass> {
+class tree_vertices_negative_volume: public testing::TestWithParam<t8_eclass_t> {
  protected:
   void
   SetUp () override
