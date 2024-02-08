@@ -86,6 +86,13 @@ const std::vector<double>
 t8_geometry_lagrange::t8_geom_compute_basis (const double *ref_coords) const
 {
   switch (active_tree_class) {
+  case T8_ECLASS_LINE:
+    switch (*degree) {
+    case 1:
+      return t8_geometry_lagrange::t8_geom_s2_basis (ref_coords);
+    case 2:
+      return t8_geometry_lagrange::t8_geom_s3_basis (ref_coords);
+    }
   case T8_ECLASS_TRIANGLE:
     switch (*degree) {
     case 2:
@@ -95,6 +102,8 @@ t8_geometry_lagrange::t8_geom_compute_basis (const double *ref_coords) const
     switch (*degree) {
     case 1:
       return t8_geometry_lagrange::t8_geom_q4_basis (ref_coords);
+    case 2:
+      return t8_geometry_lagrange::t8_geom_q9_basis (ref_coords);
     }
   default:
     SC_ABORTF ("Error: Lagrange geometry for degree %i %s not yet implemented. \n", *degree,
@@ -107,6 +116,14 @@ t8_geometry_lagrange::t8_geom_s2_basis (const double *ref_point) const
 {
   const double xi = ref_point[0];
   const std::vector<double> basis_functions = { 1 - xi, xi };
+  return basis_functions;
+}
+
+const std::vector<double>
+t8_geometry_lagrange::t8_geom_s3_basis (const double *ref_point) const
+{
+  const double xi = ref_point[0];
+  const std::vector<double> basis_functions = { (1 - xi) * (1 - 2 * xi), xi * (2 * xi - 1), 4 * xi * (1 - xi) };
   return basis_functions;
 }
 
@@ -137,6 +154,23 @@ t8_geometry_lagrange::t8_geom_q4_basis (const double *ref_point) const
   const double xi = ref_point[0];
   const double eta = ref_point[1];
   const std::vector<double> basis_functions = { (1 - xi) * (1 - eta), xi * (1 - eta), eta * (1 - xi), xi * eta };
+  return basis_functions;
+}
+
+const std::vector<double>
+t8_geometry_lagrange::t8_geom_q9_basis (const double *ref_point) const
+{
+  const double xi = ref_point[0];
+  const double eta = ref_point[1];
+  const std::vector<double> basis_functions = { 4 * (eta - 1) * (eta - 0.5) * (xi - 1) * (xi - 0.5),
+                                                4 * xi * (eta - 1) * (eta - 0.5) * (xi - 0.5),
+                                                4 * eta * (eta - 0.5) * (xi - 1) * (xi - 0.5),
+                                                4 * eta * xi * (eta - 0.5) * (xi - 0.5),
+                                                -8 * eta * (eta - 1) * (xi - 1) * (xi - 0.5),
+                                                -8 * eta * xi * (eta - 1) * (xi - 0.5),
+                                                -8 * xi * (eta - 1) * (eta - 0.5) * (xi - 1),
+                                                -8 * eta * xi * (eta - 0.5) * (xi - 1),
+                                                16 * eta * xi * (eta - 1) * (xi - 1) };
   return basis_functions;
 }
 

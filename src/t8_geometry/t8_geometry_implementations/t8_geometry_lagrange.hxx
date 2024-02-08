@@ -175,6 +175,18 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
   t8_geom_s2_basis (const double *ref_point) const;
 
   /**
+   * Basis functions of a 3-node segment.
+   * \verbatim
+      x ----x---- x
+     0      2      1
+     \endverbatim
+   * \param ref_point  Point in the reference space.
+   * \return  Basis functions evaluated at the reference point.
+   */
+  const std::vector<double>
+  t8_geom_s3_basis (const double *ref_point) const;
+
+  /**
    * Basis functions of a 3-node triangle element.
    * \verbatim
                    2
@@ -230,6 +242,25 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
    */
   const std::vector<double>
   t8_geom_q4_basis (const double *ref_point) const;
+
+  /**
+   * Basis functions of a 9-node quadrilateral element.
+   * \verbatim
+     2      7      3
+      x ----x---- x
+      |           |
+      |     8     |
+     4x     x     x5
+      |           |
+      |           |
+      x ----x---- x
+     0      6      1
+     \endverbatim
+   * \param ref_point  Point in the reference space.
+   * \return  Basis functions evaluated at the reference point.
+   */
+  const std::vector<double>
+  t8_geom_q9_basis (const double *ref_point) const;
 
   /** Polynomial degree of the interpolation. */
   const int *degree;
