@@ -3,8 +3,9 @@ project( T8CODE DESCRIPTION "Parallel algorithms and data structures for tree-ba
 include( CTest )
 
 
-option( T8CODE_ENABLE_MPI "Enable t8code's MPI support" ON )
-option( T8CODE_ENABLE_DYNAMIC_LINKAGE "Build t8code as a dynamic library" ON )
+option( T8CODE_ENABLE_MPI "Enable t8code's MPI dependant features" ON )
+option( T8CODE_ENABLE_VTK "Enable t8code's VTK dependant features" OFF )
+option( T8CODE_ENABLE_DYNAMIC_LINKAGE "Build t8code as a shared library" ON )
 
 option( T8CODE_BUILD_TESTS "Build t8code's automated tests" ON )
 option( T8CODE_BUILD_TUTORIALS "Build t8code's tutorials" ON )
@@ -33,6 +34,10 @@ if( T8CODE_ENABLE_MPI )
     endif()
     set( SC_ENABLE_MPI ON )
     set( mpi ON ) # This is very dirty, we should consider fixing this in the p4est repo
+endif()
+
+if( T8CODE_ENABLE_VTK )
+    find_package( VTK REQUIRED )
 endif()
 
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/sc )

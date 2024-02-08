@@ -31,6 +31,11 @@ if ( T8CODE_ENABLE_MPI )
     target_link_libraries( T8 PUBLIC MPI::MPI_C )
 endif()
 
+if( T8CODE_ENABLE_VTK )
+    target_include_directories( T8 PUBLIC ${VTK_INCLUDE_DIRS} )
+    target_link_libraries( T8 PUBLIC ${VTK_LIBRARY_DIRS} )
+endif()
+
 target_sources( T8 PRIVATE 
     t8.c 
     t8_eclass.c 
