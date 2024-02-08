@@ -2892,7 +2892,7 @@ t8_cmesh_new_triangulated_spherical_surface_icosahedron (const double radius, sc
     all_eclasses[itree] = T8_ECLASS_TRIANGLE;
   }
 
-  const double alpha = 63.43494882292201 / 180.0 * M_PI; /* Icasohedral angle. */
+  const double alpha = 63.43494882292201 / 180.0 * M_PI; /* Icosahedral angle. */
 
   double vertices_top[3 * 3];
   double vertices_bot[3 * 3];

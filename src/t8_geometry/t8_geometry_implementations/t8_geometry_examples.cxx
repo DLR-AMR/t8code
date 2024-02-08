@@ -158,7 +158,7 @@ t8_map_triangle_to_sphere (const double *active_tree_vertices, const double sphe
     t8_vec_rescale (pos, sphere_radius);
 
     for (size_t i = 0; i < 3; i++) {
-      out_coords[offset + i] = out_coords[offset + i] + pos[i];
+      out_coords[offset + i] = out_coords[offset + i] + pos[i] * (1.0/3.0);
     }
   }
 }
@@ -177,7 +177,7 @@ t8_geom_evaluate_sphere_tri_prism (const double *active_tree_vertices, const t8_
 
   /* We derive the sphere's radius from the first corner of the triangle/prism.
    * The averaging factor `1/3` is already included here. */
-  const double sphere_radius = t8_vec_norm (active_tree_vertices) / 3.0;
+  const double sphere_radius = t8_vec_norm (active_tree_vertices);
 
   {
     /* Reference coordinates from first triangle corner. */
