@@ -13,6 +13,8 @@ function( add_t8_example )
     add_executable( ${ADD_T8_EXAMPLE_NAME} ${ADD_T8_EXAMPLE_SOURCES} )
     target_link_libraries( ${ADD_T8_EXAMPLE_NAME} PRIVATE T8 t8example SC::SC )
     target_include_directories( ${ADD_T8_EXAMPLE_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. )
+
+    install( TARGETS ${ADD_T8_EXAMPLE_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/example )
 endfunction()
 
 add_t8_example( NAME t8_advection                       SOURCES advect/t8_advection.cxx )

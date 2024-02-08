@@ -7,6 +7,8 @@ function( add_t8_tutorial )
     add_executable( ${ADD_T8_TUTORIAL_NAME} ${ADD_T8_TUTORIAL_SOURCES} )
     target_link_libraries( ${ADD_T8_TUTORIAL_NAME} PRIVATE T8 SC::SC )
     target_include_directories( ${ADD_T8_TUTORIAL_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. )
+
+    install( TARGETS ${ADD_T8_TUTORIAL_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/tutorials )
 endfunction()
 
 add_t8_tutorial( NAME t8_step0_helloworld               SOURCES general/t8_step0_helloworld.cxx )
