@@ -299,7 +299,7 @@ t8_forest_element_owners_bounds (t8_forest_t forest, t8_gloidx_t gtreeid, const 
                                  t8_eclass_t eclass, int *lower, int *upper);
 
 /** Constant time algorithm to compute lower and upper bounds for the owner
- * processes of the face leafs of a given element.
+ * processes of the face leaves of a given element.
  * \param [in]     forest  The forest.
  * \param [in]     gtreeid The global id of the tree in which the element lies.
  * \param [in]     element The element to look for.
@@ -381,8 +381,8 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, 
                                        t8_element_t *neighs[], t8_eclass_scheme_c *neigh_scheme, int face,
                                        int num_neighs, int dual_faces[]);
 
-/** Iterate over all leafs of a forest and for each face compute the face neighbor
- * leafs with \ref t8_forest_leaf_face_neighbors and print their local element ids.
+/** Iterate over all leaves of a forest and for each face compute the face neighbor
+ * leaves with \ref t8_forest_leaf_face_neighbors and print their local element ids.
  * This function is meant for debugging only.
  * \param [in]    forest The forest.
  * \note Currently \a forest must be balanced.
