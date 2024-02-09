@@ -32,21 +32,20 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 /**
  * A base class for cmesh examples.
- * An example must be comparable to another via == and !=. 
  * 
  * For pretty debug output a function to translate the parameters of the example to a string should be provided. 
  * 
  * The
  * 
  */
-class base_example {
+class cmesh_example_base {
  public:
   /**
    * Construct a new base example. An example must have at least have a name. 
    * 
    * \param name 
    */
-  base_example (std::string name): name (name) {};
+  cmesh_example_base (std::string name): name (name) {};
 
   /**
    * A function to create a cmesh. The class should not own the cmesh.
@@ -75,11 +74,11 @@ class base_example {
  * @tparam Args 
  */
 template <class... Args>
-class cmesh_example: base_example {
+class cmesh_example: cmesh_example_base {
  public:
   cmesh_example (std::function<t8_cmesh_t (Args...)> function, std::tuple<Args...> parameter,
                  std::function<std::string (const Args&...)> parameter_to_string, std::string name)
-    : base_example (name), cmesh_function (function), parameter (parameter),
+    : cmesh_example_base (name), cmesh_function (function), parameter (parameter),
       parameter_to_string (parameter_to_string) {};
 
   virtual t8_cmesh_t
@@ -110,7 +109,7 @@ class example_parameter_combinator {
    * 
    * \return t8_cmesh_t 
    */
-  std::vector<base_example*> example_all_combination;
+  std::vector<cmesh_example_base*> example_all_combination;
 };
 
 /**
@@ -213,7 +212,7 @@ class cmesh_cartesian_product_params: example_parameter_combinator {
     cartesian_product (std::back_inserter (cart_prod), ranges...);
     for (int iparam_set = 0; (long unsigned int) iparam_set < cart_prod.size (); iparam_set++) {
       std::tuple<typename Iter::value_type...> param = cart_prod[iparam_set];
-      base_example* next_example = (base_example*) new cmesh_example<typename Iter::value_type...> (
+      cmesh_example_base* next_example = (cmesh_example_base*) new cmesh_example<typename Iter::value_type...> (
         cmesh_function, param, param_to_string, name);
       example_all_combination.push_back (next_example);
     }

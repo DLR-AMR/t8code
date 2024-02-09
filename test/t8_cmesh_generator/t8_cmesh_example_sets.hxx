@@ -34,10 +34,10 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 T8_EXTERN_C_BEGIN ();
 
 /**
- * lambda to pass to an INSTANTIATE_TEST_SUITE_P to print the current base_example
+ * lambda to pass to an INSTANTIATE_TEST_SUITE_P to print the current cmesh_example_base
  * 
  */
-auto pretty_print_base_example = [] (const testing::TestParamInfo<base_example *> &info) {
+auto pretty_print_base_example = [] (const testing::TestParamInfo<cmesh_example_base *> &info) {
   std::string name;
   info.param->param_to_string (name);
   return name;

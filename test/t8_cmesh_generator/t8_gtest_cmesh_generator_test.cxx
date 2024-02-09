@@ -26,7 +26,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include "test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_bigmesh_param.hxx"
 #include "test/t8_cmesh_generator/t8_gtest_cmesh_cartestian_product.hxx"
 
-class t8_cmesh_iter: public testing::TestWithParam<base_example *> {
+class t8_cmesh_iter: public testing::TestWithParam<cmesh_example_base *> {
  protected:
   void
   SetUp () override
@@ -43,7 +43,7 @@ class t8_cmesh_iter: public testing::TestWithParam<base_example *> {
     t8_cmesh_unref (&cmesh);
   }
   t8_cmesh_t cmesh;
-  base_example *cmesh_creator;
+  cmesh_example_base *cmesh_creator;
   std::string cmesh_param_string;
 };
 

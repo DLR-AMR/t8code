@@ -56,7 +56,7 @@ class cmesh_sum_of_sets {
   }
 
  public:
-  std::vector<base_example *> cmesh_examples;
+  std::vector<cmesh_example_base *> cmesh_examples;
 };
 
 T8_EXTERN_C_END ();
