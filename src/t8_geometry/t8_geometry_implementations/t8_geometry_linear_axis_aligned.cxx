@@ -82,7 +82,7 @@ t8_geometry_linear_axis_aligned::t8_geom_point_batch_inside_element (t8_forest_t
   return;
 }
 
-int
+bool
 t8_geometry_linear_axis_aligned::t8_geom_tree_negative_volume (const t8_cmesh_t cmesh) const
 {
   return active_tree_vertices[3] < active_tree_vertices[0] && active_tree_vertices[4] < active_tree_vertices[1]

@@ -371,7 +371,7 @@ t8_geometry_get_type (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
   return geom_handler->active_geometry->t8_geom_get_type ();
 }
 
-int
+bool
 t8_geometry_tree_negative_volume (const t8_cmesh_t cmesh, const t8_locidx_t ltree_id)
 {
   /* The cmesh must be committed */

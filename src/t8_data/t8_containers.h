@@ -187,7 +187,7 @@ t8_element_array_get_scheme (t8_element_array_t *element_array);
  * \return                     The number of elements stored in \a element_array.
  */
 size_t
-t8_element_array_get_count (t8_element_array_t *element_array);
+t8_element_array_get_count (const t8_element_array_t *element_array);
 /** Return the data size of elements stored in a t8_element_array_t.
  * \param [in]  element_array  Array structure.
  * \return                     The size (in bytes) of a single element in \a element_array.

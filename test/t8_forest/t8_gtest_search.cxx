@@ -61,12 +61,13 @@ class forest_search: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
  * If this function is called for a leaf, it sets the corresponding entry to 1.
  */
 static int
-t8_test_search_all_fn (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, const int is_leaf,
-                       t8_element_array_t *leaf_elements, t8_locidx_t tree_leaf_index, void *query, size_t query_index)
+t8_test_search_all_fn (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element, const int is_leaf,
+                       const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index, void *queries,
+                       sc_array_t *query_indices, int *query_matches, const size_t num_active_queries)
 {
-  EXPECT_TRUE (query == NULL) << "Search callback must not be called with query argument.";
+  EXPECT_TRUE (queries == NULL) << "Search callback must not be called with query argument.";
 
-  sc_array_t *matched_leafs = (sc_array_t *) t8_forest_get_user_data (forest);
+  sc_array_t *matched_leaves = (sc_array_t *) t8_forest_get_user_data (forest);
   if (is_leaf) {
     t8_locidx_t tree_offset;
     t8_locidx_t test_ltreeid;
@@ -77,7 +78,7 @@ t8_test_search_all_fn (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element
 
     tree_offset = t8_forest_get_tree_element_offset (forest, ltreeid);
     /* Set the corresponding entry to 1 */
-    *(int *) t8_sc_array_index_locidx (matched_leafs, tree_offset + tree_leaf_index) = 1;
+    *(int *) t8_sc_array_index_locidx (matched_leaves, tree_offset + tree_leaf_index) = 1;
     /* Test whether tree_leaf_index is actually the index of the element */
     test_element = t8_forest_get_element (forest, tree_offset + tree_leaf_index, &test_ltreeid);
 
@@ -89,28 +90,30 @@ t8_test_search_all_fn (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element
 
 static int
 t8_test_search_query_all_fn (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, const int is_leaf,
-                             t8_element_array_t *leaf_elements, t8_locidx_t tree_leaf_index, void *query,
-                             size_t query_index)
+                             const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index, void *queries,
+                             sc_array_t *query_indices, int *query_matches, const size_t num_active_queries)
 {
-  /* The query callback is always called with a query */
-  EXPECT_TRUE (query != NULL) << "query callback must be called with query argument.";
-  /* The query is an int with value 42 (see below) */
-  EXPECT_EQ (*(int *) query, 42) << "Wrong query argument passed to query callback.";
-  /* The query index gives the position of the query in the queries array
-   * of the calling search forest_search. Since there is only one query in the
-   * array in this test, the index must always be 0. */
-  EXPECT_EQ ((int) query_index, 0) << "Wrong query index passed to query callback.";
-  if (is_leaf) {
-    /* Test whether tree_leaf_index is actually the index of the element */
-    t8_locidx_t test_ltreeid;
-    t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
-    t8_eclass_scheme_c *ts;
-    ts = t8_forest_get_eclass_scheme (forest, tree_class);
+  EXPECT_TRUE (queries != NULL) << "query callback must be called with queries argument. ";
+  EXPECT_EQ (num_active_queries, (long unsigned int) 1) << "Wrong number of active queries passed to query callback.";
+  for (size_t iquery = 0; iquery < num_active_queries; iquery++) {
+    void *query = sc_array_index_int ((sc_array_t *) queries, iquery);
+    /* The query callback is always called with a query */
+    EXPECT_TRUE (query != NULL) << "query " << iquery << " is NULL.";
+    /* The query is an int with value 42 (see below) */
+    EXPECT_EQ (*(int *) query, 42) << "Wrong query argument passed to query callback.";
+    if (is_leaf) {
+      /* Test whether tree_leaf_index is actually the index of the element */
+      t8_locidx_t test_ltreeid;
+      t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
+      t8_eclass_scheme_c *ts;
+      ts = t8_forest_get_eclass_scheme (forest, tree_class);
 
-    t8_locidx_t tree_offset = t8_forest_get_tree_element_offset (forest, ltreeid);
-    t8_element_t *test_element = t8_forest_get_element (forest, tree_offset + tree_leaf_index, &test_ltreeid);
-    EXPECT_ELEM_EQ (ts, element, test_element);
-    EXPECT_EQ (ltreeid, test_ltreeid) << "Tree mismatch in search.";
+      t8_locidx_t tree_offset = t8_forest_get_tree_element_offset (forest, ltreeid);
+      t8_element_t *test_element = t8_forest_get_element (forest, tree_offset + tree_leaf_index, &test_ltreeid);
+      EXPECT_ELEM_EQ (ts, element, test_element);
+      EXPECT_EQ (ltreeid, test_ltreeid) << "Tree mismatch in search.";
+    }
+    query_matches[iquery] = 1;
   }
   return 1;
 }
@@ -119,7 +122,7 @@ TEST_P (forest_search, test_search_one_query_matches_all)
 {
   const int query = 42;
   sc_array_t queries;
-  sc_array_t matched_leafs;
+  sc_array_t matched_leaves;
 
   /* set up a single query containing our query */
   sc_array_init_size (&queries, sizeof (int), 1);
@@ -128,27 +131,27 @@ TEST_P (forest_search, test_search_one_query_matches_all)
   t8_locidx_t num_elements = t8_forest_get_local_num_elements (forest);
   /* set up an array in which we flag whether an element was matched in the
    * search */
-  sc_array_init_size (&matched_leafs, sizeof (int), num_elements);
+  sc_array_init_size (&matched_leaves, sizeof (int), num_elements);
   /* write 0 in every entry */
   for (t8_locidx_t ielement = 0; ielement < num_elements; ++ielement) {
-    *(int *) t8_sc_array_index_locidx (&matched_leafs, ielement) = 0;
+    *(int *) t8_sc_array_index_locidx (&matched_leaves, ielement) = 0;
   }
 
   /* Set the array as user data so that we can access it in the search callback */
-  t8_forest_set_user_data (forest, &matched_leafs);
+  t8_forest_set_user_data (forest, &matched_leaves);
   /* Call search. This search matches all elements. After this call we expect
-   * all entries in the matched_leafs array to be set to 1. */
+   * all entries in the matched_leaves array to be set to 1. */
 
   t8_forest_search (forest, t8_test_search_all_fn, t8_test_search_query_all_fn, &queries);
 
-  /* Check whether matched_leafs entries are all 1 */
+  /* Check whether matched_leaves entries are all 1 */
   for (t8_locidx_t ielement = 0; ielement < num_elements; ++ielement) {
-    ASSERT_TRUE (*(int *) t8_sc_array_index_locidx (&matched_leafs, ielement))
-      << "Search did not match all leafs. First mismatch at leaf " << ielement;
+    ASSERT_TRUE (*(int *) t8_sc_array_index_locidx (&matched_leaves, ielement))
+      << "Search did not match all leaves. First mismatch at leaf " << ielement;
   }
 
   t8_forest_unref (&forest);
-  sc_array_reset (&matched_leafs);
+  sc_array_reset (&matched_leaves);
   sc_array_reset (&queries);
 }
 

@@ -113,7 +113,7 @@ struct t8_geometry_linear_axis_aligned: public t8_geometry_with_vertices
    * \param[in] cmesh       The cmesh containing the tree to check
    * \return                True (non-zero) if the tree with id \ref ltree_id has a negative volume. 0 otherwise.  
    */
-  virtual int
+  virtual bool
   t8_geom_tree_negative_volume (const t8_cmesh_t cmesh) const;
 };
 
