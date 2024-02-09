@@ -60,7 +60,7 @@ class face_neigh: public testing::TestWithParam<t8_eclass_t> {
   t8_eclass_scheme_c *ts;
   t8_eclass_t eclass;
 
-#ifdef T8_ENABLE_DEBUG
+#ifdef T8_ENABLE_LESS_TESTS
   const int maxlvl = 3;
 #else
   const int maxlvl = 4;
