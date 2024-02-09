@@ -552,7 +552,9 @@ t8_cmesh_no_negative_volume (t8_cmesh_t cmesh)
     }
     return !res;
   }
-  return true;
+  else {
+    return true;
+  }
 }
 #endif
 
