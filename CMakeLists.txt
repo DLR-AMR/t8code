@@ -3,13 +3,13 @@ project( T8CODE DESCRIPTION "Parallel algorithms and data structures for tree-ba
 include( CTest )
 
 
-option( T8CODE_ENABLE_MPI "Enable t8code's MPI dependant features" ON )
-option( T8CODE_ENABLE_VTK "Enable t8code's VTK dependant features" OFF )
-option( T8CODE_ENABLE_DYNAMIC_LINKAGE "Build t8code as a shared library" ON )
-
+option( T8CODE_BUILD_AS_SHARED_LIBRARY "Whether t8code should be built as a shared or a static library" ON )
 option( T8CODE_BUILD_TESTS "Build t8code's automated tests" ON )
 option( T8CODE_BUILD_TUTORIALS "Build t8code's tutorials" ON )
 option( T8CODE_BUILD_EXAMPLES "Build t8code's examples" ON )
+
+option( T8CODE_ENABLE_MPI "Enable t8code's features which rely on MPI" ON )
+option( T8CODE_ENABLE_VTK "Enable t8code's features which rely on VTK" OFF )
 
 
 if( NOT CMAKE_BUILD_TYPE )
@@ -30,7 +30,7 @@ list( APPEND CMAKE_CXX_FLAGS "-Wall" )
 if( T8CODE_ENABLE_MPI )
     find_package( MPI COMPONENTS C REQUIRED )
     if( NOT MPIEXEC_EXECUTABLE )
-        message( FATAL_ERROR "MPIEXEC is missing, MPI will not work properly" )
+        message( FATAL_ERROR "MPIEXEC was not found" )
     endif()
     set( SC_ENABLE_MPI ON )
     set( mpi ON ) # This is very dirty, we should consider fixing this in the p4est repo

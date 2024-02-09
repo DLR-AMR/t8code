@@ -1,4 +1,4 @@
-if ( ${T8CODE_ENABLE_DYNAMIC_LINKAGE} )
+if ( ${T8CODE_BUILD_AS_SHARED_LIBRARY} )
     add_library( T8 SHARED )
     set_target_properties( T8 PROPERTIES POSITION_INDEPENDENT_CODE ON )
 else()
@@ -13,7 +13,7 @@ target_compile_definitions( T8 PUBLIC T8_CFLAGS="${CMAKE_C_FLAGS}" )
 target_compile_definitions( T8 PUBLIC T8_CPP="${CMAKE_CXX_COMPILER}" )
 target_compile_definitions( T8 PUBLIC T8_CPPFLAGS="${CMAKE_CXX_FLAGS}" )
 target_compile_definitions( T8 PUBLIC T8_LDFLAGS="${CMAKE_SHARED_LINKER_FLAGS}" )
-target_compile_definitions( T8 PUBLIC T8_LIBS="???" )
+target_compile_definitions( T8 PUBLIC T8_LIBS="???" ) # Not sure what this flag is supposed to be...
 
 # There has to be an elegant solution to embed the version and commit here...
 target_compile_definitions( T8 PUBLIC T8_PACKAGE_STRING="t8 1.6.1.???" )
