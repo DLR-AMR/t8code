@@ -45,7 +45,7 @@ auto pretty_print_base_example = [] (const testing::TestParamInfo<cmesh_example_
 
 namespace cmesh_list
 {
-std::vector<example_parameter_combinator *> cart_prod_vec
+std::vector<example_set *> cart_prod_vec
   = { new_from_class::cmesh_example, new_prism_cake::cmesh_example, new_bigmesh::cmesh_example };
 
 cmesh_sum_of_sets cmesh_sums (cart_prod_vec);

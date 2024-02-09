@@ -35,15 +35,15 @@ class cmesh_sum_of_sets {
  public:
   cmesh_sum_of_sets () {};
   /**
-   * Construct a new cmesh sum of sets object, that will generate cmeshes given by \ref cmesh_cart_prods
+   * Construct a new cmesh sum of sets object, that will generate cmeshes given by \ref cmesh_set
    * 
-   * \param[in] cmesh_cart_prods A vector of \ref parameter_cartesian_product 
+   * \param[in] cmesh_set A vector of \ref parameter_cartesian_product 
    */
-  cmesh_sum_of_sets (std::vector<example_parameter_combinator *> cmesh_cart_prods)
+  cmesh_sum_of_sets (std::vector<example_set *> cmesh_set)
   {
-    for (size_t icreator = 0; icreator < cmesh_cart_prods.size (); icreator++) {
-      cmesh_examples.insert (cmesh_examples.end (), cmesh_cart_prods[icreator]->example_all_combination.begin (),
-                             cmesh_cart_prods[icreator]->example_all_combination.end ());
+    for (size_t icreator = 0; icreator < cmesh_set.size (); icreator++) {
+      cmesh_examples.insert (cmesh_examples.end (), cmesh_set[icreator]->example_all_combination.begin (),
+                             cmesh_set[icreator]->example_all_combination.end ());
     }
   }
 

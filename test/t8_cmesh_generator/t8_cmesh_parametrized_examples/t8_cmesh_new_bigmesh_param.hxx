@@ -44,10 +44,10 @@ make_param_string (const t8_eclass_t eclass, const int num_trees, const sc_MPI_C
 std::function<std::string (const t8_eclass_t, const int, const sc_MPI_Comm)> make_param_string_wrapper
   = make_param_string;
 
-example_parameter_combinator *cmesh_example
-  = (example_parameter_combinator *) new cmesh_cartesian_product_params<decltype (cmesh_params::eclasses.begin ()),
-                                                                        decltype (cmesh_params::large_mesh.begin ()),
-                                                                        decltype (cmesh_params::my_comms.begin ())> (
+example_set *cmesh_example
+  = (example_set *) new cmesh_cartesian_product_params<decltype (cmesh_params::eclasses.begin ()),
+                                                       decltype (cmesh_params::large_mesh.begin ()),
+                                                       decltype (cmesh_params::my_comms.begin ())> (
     std::make_pair (cmesh_params::eclasses.begin (), cmesh_params::eclasses.end ()),
     std::make_pair (cmesh_params::large_mesh.begin (), cmesh_params::large_mesh.end ()),
     std::make_pair (cmesh_params::my_comms.begin (), cmesh_params::my_comms.end ()), bigmesh, make_param_string_wrapper,

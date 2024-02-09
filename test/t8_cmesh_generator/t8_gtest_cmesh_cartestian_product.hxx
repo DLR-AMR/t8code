@@ -74,10 +74,10 @@ class cmesh_example_base {
  * @tparam Args 
  */
 template <class... Args>
-class cmesh_example: cmesh_example_base {
+class cmesh_example_with_parameter: cmesh_example_base {
  public:
-  cmesh_example (std::function<t8_cmesh_t (Args...)> function, std::tuple<Args...> parameter,
-                 std::function<std::string (const Args&...)> parameter_to_string, std::string name)
+  cmesh_example_with_parameter (std::function<t8_cmesh_t (Args...)> function, std::tuple<Args...> parameter,
+                                std::function<std::string (const Args&...)> parameter_to_string, std::string name)
     : cmesh_example_base (name), cmesh_function (function), parameter (parameter),
       parameter_to_string (parameter_to_string) {};
 
@@ -102,7 +102,7 @@ class cmesh_example: cmesh_example_base {
  * A base class to hold sets of examples that can be created in various ways. 
  * 
  */
-class example_parameter_combinator {
+class example_set {
  public:
   /**
    * Generate a cmesh according to a function
@@ -199,7 +199,7 @@ cartesian_product (OutputIterator out, std::pair<Iter, Iter>... ranges)
  * @tparam Iter 
  */
 template <class... Iter>
-class cmesh_cartesian_product_params: example_parameter_combinator {
+class cmesh_cartesian_product_params: example_set {
  public:
   cmesh_cartesian_product_params () {};
 
@@ -212,8 +212,9 @@ class cmesh_cartesian_product_params: example_parameter_combinator {
     cartesian_product (std::back_inserter (cart_prod), ranges...);
     for (int iparam_set = 0; (long unsigned int) iparam_set < cart_prod.size (); iparam_set++) {
       std::tuple<typename Iter::value_type...> param = cart_prod[iparam_set];
-      cmesh_example_base* next_example = (cmesh_example_base*) new cmesh_example<typename Iter::value_type...> (
-        cmesh_function, param, param_to_string, name);
+      cmesh_example_base* next_example
+        = (cmesh_example_base*) new cmesh_example_with_parameter<typename Iter::value_type...> (cmesh_function, param,
+                                                                                                param_to_string, name);
       example_all_combination.push_back (next_example);
     }
   }

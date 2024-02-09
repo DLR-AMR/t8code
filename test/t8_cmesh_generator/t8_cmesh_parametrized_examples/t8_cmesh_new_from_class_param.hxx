@@ -44,9 +44,9 @@ std::function<std::string (const t8_eclass_t &, const sc_MPI_Comm &)> print_func
 
 std::function<t8_cmesh_t (t8_eclass_t, sc_MPI_Comm)> new_from_class_wrapper = t8_cmesh_new_from_class;
 
-example_parameter_combinator *cmesh_example
-  = (example_parameter_combinator *) new cmesh_cartesian_product_params<decltype (cmesh_params::eclasses.begin ()),
-                                                                        decltype (cmesh_params::my_comms.begin ())> (
+example_set *cmesh_example
+  = (example_set *) new cmesh_cartesian_product_params<decltype (cmesh_params::eclasses.begin ()),
+                                                       decltype (cmesh_params::my_comms.begin ())> (
     std::make_pair (cmesh_params::eclasses.begin (), cmesh_params::eclasses.end ()),
     std::make_pair (cmesh_params::my_comms.begin (), cmesh_params::my_comms.end ()), new_from_class_wrapper,
     print_function, "t8_cmesh_new_from_class_");
