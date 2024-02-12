@@ -15,12 +15,19 @@ target_compile_definitions( T8 PUBLIC T8_CPPFLAGS="${CMAKE_CXX_FLAGS}" )
 target_compile_definitions( T8 PUBLIC T8_LDFLAGS="${CMAKE_SHARED_LINKER_FLAGS}" )
 target_compile_definitions( T8 PUBLIC T8_LIBS="???" ) # Not sure what this flag is supposed to be...
 
-# There has to be an elegant solution to embed the version and commit here...
-target_compile_definitions( T8 PUBLIC T8_PACKAGE_STRING="t8 1.6.1.???" )
-target_compile_definitions( T8 PUBLIC T8_VERSION="1.6.1.???" )
-target_compile_definitions( T8 PUBLIC T8_VERSION_MAJOR=1 )
-target_compile_definitions( T8 PUBLIC T8_VERSION_MINOR=6 )
-target_compile_definitions( T8 PUBLIC T8_VERSION_POINT=1.??? )
+
+find_package( Git REQUIRED )
+execute_process( COMMAND ${GIT_EXECUTABLE} describe --tags COMMAND cut -c 2- OUTPUT_VARIABLE T8CODE_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE )
+execute_process( COMMAND echo ${T8CODE_VERSION} COMMAND cut -d. -f1 OUTPUT_VARIABLE T8CODE_VERSION_MAJOR OUTPUT_STRIP_TRAILING_WHITESPACE )
+execute_process( COMMAND echo ${T8CODE_VERSION} COMMAND cut -d. -f2 OUTPUT_VARIABLE T8CODE_VERSION_MINOR OUTPUT_STRIP_TRAILING_WHITESPACE )
+execute_process( COMMAND echo ${T8CODE_VERSION} COMMAND cut -d. -f3 OUTPUT_VARIABLE T8CODE_VERSION_POINT OUTPUT_STRIP_TRAILING_WHITESPACE )
+
+target_compile_definitions( T8 PUBLIC T8_PACKAGE_STRING="t8 ${T8CODE_VERSION}" )
+target_compile_definitions( T8 PUBLIC T8_VERSION="${T8CODE_VERSION}" )
+target_compile_definitions( T8 PUBLIC T8_VERSION_MAJOR=${T8CODE_VERSION_MAJOR} )
+target_compile_definitions( T8 PUBLIC T8_VERSION_MINOR=${T8CODE_VERSION_MINOR} )
+target_compile_definitions( T8 PUBLIC T8_VERSION_POINT=${T8CODE_VERSION_POINT} )
+
 
 target_include_directories( T8 PUBLIC ${CMAKE_CURRENT_LIST_DIR} )
 target_link_libraries( T8 PUBLIC P4EST::P4EST SC::SC )
