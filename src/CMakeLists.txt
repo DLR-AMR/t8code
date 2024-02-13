@@ -17,10 +17,23 @@ target_compile_definitions( T8 PUBLIC T8_LIBS="???" ) # Not sure what this flag 
 
 
 find_package( Git REQUIRED )
-execute_process( COMMAND ${GIT_EXECUTABLE} describe --tags COMMAND cut -c 2- OUTPUT_VARIABLE T8CODE_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE )
-execute_process( COMMAND echo ${T8CODE_VERSION} COMMAND cut -d. -f1 OUTPUT_VARIABLE T8CODE_VERSION_MAJOR OUTPUT_STRIP_TRAILING_WHITESPACE )
-execute_process( COMMAND echo ${T8CODE_VERSION} COMMAND cut -d. -f2 OUTPUT_VARIABLE T8CODE_VERSION_MINOR OUTPUT_STRIP_TRAILING_WHITESPACE )
-execute_process( COMMAND echo ${T8CODE_VERSION} COMMAND cut -d. -f3 OUTPUT_VARIABLE T8CODE_VERSION_POINT OUTPUT_STRIP_TRAILING_WHITESPACE )
+execute_process( COMMAND ${GIT_EXECUTABLE} describe --tags 
+                 COMMAND cut -c 2- 
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+                 OUTPUT_VARIABLE T8CODE_VERSION 
+                 OUTPUT_STRIP_TRAILING_WHITESPACE )
+execute_process( COMMAND echo ${T8CODE_VERSION} 
+                 COMMAND cut -d. -f1 
+                 OUTPUT_VARIABLE T8CODE_VERSION_MAJOR 
+                 OUTPUT_STRIP_TRAILING_WHITESPACE )
+execute_process( COMMAND echo ${T8CODE_VERSION} 
+                 COMMAND cut -d. -f2 
+                 OUTPUT_VARIABLE T8CODE_VERSION_MINOR 
+                 OUTPUT_STRIP_TRAILING_WHITESPACE )
+execute_process( COMMAND echo ${T8CODE_VERSION} 
+                 COMMAND cut -d. -f3 
+                 OUTPUT_VARIABLE T8CODE_VERSION_POINT 
+                 OUTPUT_STRIP_TRAILING_WHITESPACE )
 
 target_compile_definitions( T8 PUBLIC T8_PACKAGE_STRING="t8 ${T8CODE_VERSION}" )
 target_compile_definitions( T8 PUBLIC T8_VERSION="${T8CODE_VERSION}" )
