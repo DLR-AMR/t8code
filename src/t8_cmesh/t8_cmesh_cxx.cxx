@@ -311,7 +311,7 @@ t8_cmesh_partition_from_unpartioned (t8_cmesh_t cmesh, const t8_gloidx_t local_n
   const t8_gloidx_t last_child
     = t8_cmesh_get_first_element_of_process (cmesh->mpirank + 1, cmesh->mpisize, local_num_children) - 1;
   /* Can't we optimize this linear loop by using a binary search?
-     * -> No, we cannot. Since we need in any case compute the t8_element_count_leafs_from_root
+     * -> No, we cannot. Since we need in any case compute the t8_element_count_leaves_from_root
      *    for each tree.
      */
   t8_gloidx_t current_tree_element_offset = 0;
