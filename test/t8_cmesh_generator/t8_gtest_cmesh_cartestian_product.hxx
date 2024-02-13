@@ -218,6 +218,25 @@ class cmesh_cartesian_product_params: example_set {
       example_all_combination.push_back (next_example);
     }
   }
+
+  cmesh_cartesian_product_params (std::pair<Iter, Iter>... ranges,
+                                  std::vector<std::function<t8_cmesh_t (typename Iter::value_type...)>> cmesh_functions,
+                                  std::function<std::string (const typename Iter::value_type&...)> param_to_string,
+                                  std::vector<std::string> names)
+  {
+    std::vector<std::tuple<typename Iter::value_type...>> cart_prod;
+    cartesian_product (std::back_inserter (cart_prod), ranges...);
+    T8_ASSERT (cmesh_functions.size () == names.size ());
+    for (int ifunction = 0; (long unsigned int) ifunction < cmesh_functions.size (); ifunction++) {
+      for (int iparam_set = 0; (long unsigned int) iparam_set < cart_prod.size (); iparam_set++) {
+        std::tuple<typename Iter::value_type...> param = cart_prod[iparam_set];
+        cmesh_example_base* next_example
+          = (cmesh_example_base*) new cmesh_example_with_parameter<typename Iter::value_type...> (
+            cmesh_functions[ifunction], param, param_to_string, names[ifunction]);
+        example_all_combination.push_back (next_example);
+      }
+    }
+  }
 };
 
 #endif /* T8_GTEST_CMESH_CREATOR_BASE_HXX */
