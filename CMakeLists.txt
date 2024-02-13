@@ -40,6 +40,9 @@ if( T8CODE_ENABLE_VTK )
     find_package( VTK REQUIRED )
 endif()
 
+# Overide default for this libsc option
+set( BUILD_SHARED_LIBS ON CACHE BOOL "Build libsc as a shared library" )
+
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/sc )
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/p4est )
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/src )
