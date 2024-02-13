@@ -119,7 +119,7 @@ t8_cmesh_no_negative_volume (t8_cmesh_t cmesh);
  */
 /* TODO: write a test for this function */
 int
-t8_cmesh_tree_vertices_negative_volume (t8_eclass_t eclass, double *vertices, int num_vertices);
+t8_cmesh_tree_vertices_negative_volume (const t8_eclass_t eclass, const double *vertices, const int num_vertices);
 
 /* TODO: Currently it is not possible to destroy set_from before
  *       cmesh is destroyed. */
@@ -671,7 +671,7 @@ t8_cmesh_get_attribute (const t8_cmesh_t cmesh, const int package_id, const int 
  * \param [in]     package_id   The identifier of a valid software package. \see sc_package_register
  * \param [in]     key          A key used to identify the attribute under all
  *                              attributes of this tree with the same \a package_id.
- * \param [in]     tree_id      The local number of the tree.
+ * \param [in]     ltree_id     The local number of the tree.
  * \param [in]     data_count   The number of entries in the array that are requested. 
  *                              This must be smaller or equal to the \a data_count parameter
  *                              of the corresponding call to \ref t8_cmesh_set_attribute_gloidx_array
