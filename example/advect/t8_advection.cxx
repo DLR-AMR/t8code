@@ -1631,7 +1631,7 @@ main (int argc, char *argv[])
     cmesh = t8_advect_create_cmesh (sc_MPI_COMM_WORLD, cube_type, mshfile, level, dim, use_occ_geometry);
     u = t8_advect_choose_flow (flow_arg);
     if (!no_vtk) {
-      t8_cmesh_vtk_write_file (cmesh, "advection_cmesh", 1.0);
+      t8_cmesh_vtk_write_file (cmesh, "advection_cmesh");
     }
     /* Computation */
     t8_advect_solve (cmesh, u, t8_levelset_sphere, &ls_data, level, level + reflevel, T, cfl, sc_MPI_COMM_WORLD,
