@@ -339,7 +339,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh, t8_gloidx_t gt
          * Then scale it and add the scaled displacement to the result. */
         for (int dim = 0; dim < 3; ++dim) {
           const double displacement = pnt.Coord (dim + 1) - glob_intersection[dim];
-          const double scaled_displacement = displacement * scaling_factor;
+          const double scaled_displacement = displacement * scaling_factor * scaling_factor;
           out_coords[dim] += scaled_displacement;
         }
       }
