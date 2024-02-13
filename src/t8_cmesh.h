@@ -738,10 +738,11 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *ts, t8_gl
  * \param [in] comm         The communicator 
  */
 void
-t8_cmesh_uniform_bounds_hybrid (const t8_cmesh_t cmesh, const int level, const t8_scheme_cxx_t *scheme,
-                                t8_gloidx_t *first_local_tree, t8_gloidx_t *child_in_tree_begin,
-                                t8_gloidx_t *last_local_tree, t8_gloidx_t *child_in_tree_end, int8_t *first_tree_shared,
-                                sc_MPI_Comm comm);
+t8_cmesh_uniform_bounds_for_irregular_refinement (const t8_cmesh_t cmesh, const int level,
+                                                  const t8_scheme_cxx_t *scheme, t8_gloidx_t *first_local_tree,
+                                                  t8_gloidx_t *child_in_tree_begin, t8_gloidx_t *last_local_tree,
+                                                  t8_gloidx_t *child_in_tree_end, int8_t *first_tree_shared,
+                                                  sc_MPI_Comm comm);
 
 /** Increase the reference counter of a cmesh.
  * \param [in,out] cmesh        On input, this cmesh must exist with positive
