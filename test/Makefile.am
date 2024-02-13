@@ -28,7 +28,6 @@ t8code_googletest_programs = \
   test/t8_gtest_basics \
   test/t8_schemes/t8_gtest_ancestor \
   test/t8_cmesh/t8_gtest_hypercube \
-  test/t8_cmesh/t8_gtest_cmesh_copy \
   test/t8_schemes/t8_gtest_element_count_leaves \
   test/t8_schemes/t8_gtest_element_ref_coords \
   test/t8_geometry/t8_gtest_geometry \
@@ -133,10 +132,6 @@ test_t8_schemes_t8_gtest_ancestor_SOURCES = \
 test_t8_cmesh_t8_gtest_hypercube_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_cmesh/t8_gtest_hypercube.cxx
-
-test_t8_cmesh_t8_gtest_cmesh_copy_SOURCES = \
-  test/t8_gtest_main.cxx \
-  test/t8_cmesh/t8_gtest_cmesh_copy.cxx 
 
 test_t8_cmesh_t8_gtest_cmesh_set_join_by_vertices_SOURCES = \
   test/t8_gtest_main.cxx \
@@ -362,10 +357,6 @@ test_t8_cmesh_t8_gtest_hypercube_LDADD = $(t8_gtest_target_ld_add)
 test_t8_cmesh_t8_gtest_hypercube_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_cmesh_t8_gtest_hypercube_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
-test_t8_cmesh_t8_gtest_cmesh_copy_LDADD = $(t8_gtest_target_ld_add)
-test_t8_cmesh_t8_gtest_cmesh_copy_LDFLAGS = $(t8_gtest_target_ld_flags)
-test_t8_cmesh_t8_gtest_cmesh_copy_CPPFLAGS = $(t8_gtest_target_cpp_flags)
-
 test_t8_cmesh_t8_gtest_cmesh_set_join_by_vertices_LDADD = $(t8_gtest_target_ld_add)
 test_t8_cmesh_t8_gtest_cmesh_set_join_by_vertices_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_cmesh_t8_gtest_cmesh_set_join_by_vertices_CPPFLAGS = $(t8_gtest_target_cpp_flags)
@@ -544,7 +535,6 @@ test_t8_schemes_t8_gtest_init_linear_id_CPPFLAGS += $(t8_gtest_target_mpi_cpp_fl
 test_t8_gtest_basics_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_ancestor_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_hypercube_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
-test_t8_cmesh_t8_gtest_cmesh_copy_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_cmesh_set_join_by_vertices_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_element_count_leaves_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_element_ref_coords_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)

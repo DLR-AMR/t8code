@@ -140,14 +140,14 @@ t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, int level, t8_sch
   for (tree_class = T8_ECLASS_ZERO; tree_class < T8_ECLASS_COUNT; ++tree_class) {
     /* Get the number of children on level of the first tree class that is used*/
     if (cmesh->num_trees_per_eclass[tree_class] > 0) {
-      children_per_tree_check = ts->eclass_schemes[tree_class]->t8_element_count_leafs_from_root (level);
+      children_per_tree_check = ts->eclass_schemes[tree_class]->t8_element_count_leaves_from_root (level);
       break;
     }
   }
   /* Compare it to the other used tree classes*/
   for (tree_class = T8_ECLASS_ZERO; tree_class < T8_ECLASS_COUNT; ++tree_class) {
     if (cmesh->num_trees_per_eclass[tree_class] > 0) {
-      T8_ASSERT (children_per_tree_check == ts->eclass_schemes[tree_class]->t8_element_count_leafs_from_root (level));
+      T8_ASSERT (children_per_tree_check == ts->eclass_schemes[tree_class]->t8_element_count_leaves_from_root (level));
     }
   }
 
@@ -321,7 +321,7 @@ t8_cmesh_partition_from_unpartioned (t8_cmesh_t cmesh, const t8_gloidx_t local_n
     /* TODO: We can optimize by buffering the elem_in_tree value. Thus, if 
          the computation is expensive (may be for non-morton-type schemes),
          we do it only once. */
-    const t8_gloidx_t elem_in_tree = tree_scheme->t8_element_count_leafs_from_root (level);
+    const t8_gloidx_t elem_in_tree = tree_scheme->t8_element_count_leaves_from_root (level);
     /* Check if the first element is on the current tree */
     if (current_tree_element_offset <= first_child && first_child < current_tree_element_offset + elem_in_tree) {
       if (child_in_tree_begin != NULL) {
@@ -408,14 +408,14 @@ t8_cmesh_uniform_bounds_hybrid (const t8_cmesh_t cmesh, const int level, const t
   for (int ieclass = T8_ECLASS_ZERO; ieclass < T8_ECLASS_COUNT; ieclass++) {
     const t8_eclass_scheme_c *tree_scheme = scheme->eclass_schemes[ieclass];
     local_num_children
-      += cmesh->num_local_trees_per_eclass[ieclass] * tree_scheme->t8_element_count_leafs_from_root (level);
+      += cmesh->num_local_trees_per_eclass[ieclass] * tree_scheme->t8_element_count_leaves_from_root (level);
   }
 
   /* Do not consider shared trees */
   if (cmesh->first_tree_shared && cmesh->set_partition) {
     const int ieclass = t8_cmesh_get_tree_class (cmesh, 0);
     const t8_eclass_scheme_c *tree_scheme = scheme->eclass_schemes[ieclass];
-    local_num_children -= tree_scheme->t8_element_count_leafs_from_root (level);
+    local_num_children -= tree_scheme->t8_element_count_leaves_from_root (level);
   }
 
   /* 
@@ -477,7 +477,7 @@ t8_cmesh_uniform_bounds_hybrid (const t8_cmesh_t cmesh, const int level, const t
       const int ieclass = t8_cmesh_get_tree_class (cmesh, igtree);
       const t8_eclass_scheme_c *tree_scheme = scheme->eclass_schemes[ieclass];
       /* Set the first element of the next tree by adding the number of element of the current tree. */
-      *first_element_of_next_tree = *first_element_of_tree + tree_scheme->t8_element_count_leafs_from_root (level);
+      *first_element_of_next_tree = *first_element_of_tree + tree_scheme->t8_element_count_leaves_from_root (level);
     }
 
     /* Check that the last tree + 1 stores as offset the start of the next process */
