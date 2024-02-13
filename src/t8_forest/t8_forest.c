@@ -65,33 +65,13 @@ t8_forest_init (t8_forest_t *pforest)
 int
 t8_forest_is_initialized (t8_forest_t forest)
 {
-  if (!(forest != NULL && t8_refcount_is_active (&forest->rc) && !forest->committed)) {
-    return 0;
-  }
-
-#ifdef T8_ENABLE_DEBUG
-  /* TODO: check conditions that must always hold after init and before commit */
-  if (0) {
-    return 0;
-  }
-#endif
-
-  return 1;
+  return forest != NULL && t8_refcount_is_active (&forest->rc) && !forest->committed;
 }
 
 int
 t8_forest_is_committed (const t8_forest_t forest)
 {
-  if (!(forest != NULL && t8_refcount_is_active (&forest->rc) && forest->committed)) {
-    return 0;
-  }
-#ifdef T8_ENABLE_DEBUG
-  /* TODO: check more conditions that must always hold after commit */
-  if (0) {
-    return 0;
-  }
-#endif
-  return 1;
+  return forest != NULL && t8_refcount_is_active (&forest->rc) && forest->committed;
 }
 
 static void
@@ -773,7 +753,7 @@ t8_forest_get_tree_vertices (t8_forest_t forest, t8_locidx_t ltreeid)
 }
 
 t8_element_array_t *
-t8_forest_tree_get_leafs (const t8_forest_t forest, const t8_locidx_t ltree_id)
+t8_forest_tree_get_leaves (const t8_forest_t forest, const t8_locidx_t ltree_id)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (0 <= ltree_id && ltree_id < t8_forest_get_num_local_trees (forest));
@@ -994,6 +974,29 @@ t8_forest_get_local_id (const t8_forest_t forest, const t8_gloidx_t gtreeid)
     return ltreeid;
   }
   else {
+    return -1;
+  }
+}
+t8_locidx_t
+t8_forest_get_local_or_ghost_id (const t8_forest_t forest, const t8_gloidx_t gtreeid)
+{
+  t8_gloidx_t ltreeid;
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (0 <= gtreeid && gtreeid < t8_forest_get_num_global_trees (forest));
+
+  /* If the tree is local then its local id is the global id minus the
+   * first global tree id on this forest. If this number is not in the
+   * range of local tree ids then the tree is not local. */
+  /* we use a gloidx for ltreeid to prevent overflow and false positives */
+  ltreeid = gtreeid - t8_forest_get_first_local_tree_id (forest);
+  /* Check if this tree is a local tree and if so return its local id */
+  if (0 <= ltreeid && ltreeid < t8_forest_get_num_local_trees (forest)) {
+    return ltreeid;
+  }
+  else {
+    t8_locidx_t ghost_id = t8_forest_ghost_get_ghost_treeid (forest, gtreeid);
+    if (ghost_id >= 0)
+      return t8_forest_get_num_local_trees (forest) + ghost_id;
     return -1;
   }
 }

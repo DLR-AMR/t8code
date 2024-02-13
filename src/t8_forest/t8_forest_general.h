@@ -448,6 +448,21 @@ t8_forest_get_eclass (const t8_forest_t forest, const t8_locidx_t ltreeid);
 t8_locidx_t
 t8_forest_get_local_id (const t8_forest_t forest, const t8_gloidx_t gtreeid);
 
+/** Given a global tree id compute the forest local id of this tree.
+ * If the tree is a local tree, then the local id is between 0 and the number
+ * of local trees. If the tree is a ghost, then the local id is between num_local_trees and
+ * num_local_trees + num_ghost_trees.
+ * If the tree is neither a local tree nor a ghost tree, a negative number is returned.
+ * \param [in]      forest The forest.
+ * \param [in]      gtreeid The global id of a tree.
+ * \return                 The tree's local id in \a forest, if it is a local tree.
+ *                         num_local_trees + the ghosts id, if it is a ghost tree.
+ *                         A negative number if not.
+ * \see https://github.com/DLR-AMR/t8code/wiki/Tree-indexing for more details about tree indexing.
+ */
+t8_locidx_t
+t8_forest_get_local_or_ghost_id (const t8_forest_t forest, const t8_gloidx_t gtreeid);
+
 /** Given the local id of a tree in a forest, compute the tree's local id in the associated cmesh.
  * \param [in] forest    The forest.
  * \param [in] ltreeid   The local id of a tree or ghost in the forest.
@@ -482,29 +497,35 @@ t8_forest_get_coarse_tree (t8_forest_t forest, t8_locidx_t ltreeid);
  * \param [in]    forest  The forest. Must have a valid ghost layer.
  * \param [in]    ltreeid A local tree id.
  * \param [in]    leaf    A leaf in tree \a ltreeid of \a forest.
- * \param [out]   neighbor_leafs Unallocated on input. On output the neighbor
- *                        leafs are stored here.
+ * \param [out]   neighbor_leaves Unallocated on input. On output the neighbor
+ *                        leaves are stored here.
  * \param [in]    face    The index of the face across which the face neighbors
  *                        are searched.
  * \param [out]   dual_face On output the face id's of the neighboring elements' faces.
- * \param [out]   num_neighbors On output the number of neighbor leafs.
+ * \param [out]   num_neighbors On output the number of neighbor leaves.
  * \param [out]   pelement_indices Unallocated on input. On output the element indices
- *                        of the neighbor leafs are stored here.
- *                        0, 1, ... num_local_el - 1 for local leafs and
+ *                        of the neighbor leaves are stored here.
+ *                        0, 1, ... num_local_el - 1 for local leaves and
  *                        num_local_el , ... , num_local_el + num_ghosts - 1 for ghosts.
  * \param [out]   pneigh_scheme On output the eclass scheme of the neighbor elements.
  * \param [in]    forest_is_balanced True if we know that \a forest is balanced, false
  *                        otherwise.
- * \note If there are no face neighbors, then *neighbor_leafs = NULL, num_neighbors = 0,
+ * \note If there are no face neighbors, then *neighbor_leaves = NULL, num_neighbors = 0,
  * and *pelement_indices = NULL on output.
  * \note Currently \a forest must be balanced.
  * \note \a forest must be committed before calling this function.
  */
 void
 t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf,
-                               t8_element_t **pneighbor_leafs[], int face, int *dual_faces[], int *num_neighbors,
+                               t8_element_t **pneighbor_leaves[], int face, int *dual_faces[], int *num_neighbors,
                                t8_locidx_t **pelement_indices, t8_eclass_scheme_c **pneigh_scheme,
                                int forest_is_balanced);
+
+void
+t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf,
+                                   t8_element_t **pneighbor_leaves[], int face, int *dual_faces[], int *num_neighbors,
+                                   t8_locidx_t **pelement_indices, t8_eclass_scheme_c **pneigh_scheme,
+                                   int forest_is_balanced, t8_gloidx_t *gneigh_tree);
 
 /** Exchange ghost information of user defined element data.
  * \param[in] forest       The forest. Must be committed.
@@ -610,7 +631,7 @@ t8_forest_get_tree_vertices (t8_forest_t forest, t8_locidx_t ltreeid);
  *                              of this tree.
  */
 t8_element_array_t *
-t8_forest_tree_get_leafs (const t8_forest_t forest, const t8_locidx_t ltree_id);
+t8_forest_tree_get_leaves (const t8_forest_t forest, const t8_locidx_t ltree_id);
 
 /** Return a cmesh associated to a forest.
  * \param [in]      forest      The forest.
