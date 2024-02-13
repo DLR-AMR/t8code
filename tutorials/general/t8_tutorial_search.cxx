@@ -373,7 +373,7 @@ main (int argc, char **argv)
   /* The uniform refinement level of the forest. */
   const int level = 5;
   /* The number of particles to generate. */
-  const size_t num_particles = 200000;
+  const size_t num_particles = 2000;
   /* The seed for the random number generator. */
   const unsigned seed = 0;
 
