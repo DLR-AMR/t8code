@@ -246,7 +246,6 @@ void
 t8_geom_get_ref_intersection (int edge_index, const double *ref_coords, double ref_intersection[2])
 {
   double ref_slope;
-  double ref_help_point[2];
   const t8_eclass_t eclass = T8_ECLASS_TRIANGLE;
   /* The opposite vertex of an edge always has the same index as the edge (see picture below). */
   const double *ref_opposite_vertex = t8_element_corner_ref_coords[eclass][edge_index];
@@ -300,18 +299,15 @@ t8_geom_get_ref_intersection (int edge_index, const double *ref_coords, double r
     }
     else {
       /* To find the ref_intersection for edge 1, we calculate the intersection of edge 1 with a stright line from
-       * vertex 1, through the reference point and reaching until x = 0. The line is constrained by vertex 1 and
-       * the ref_help_point. */
-      ref_help_point[0] = 0;
-      ref_help_point[1] = -ref_slope;
-
-      /* Since the the ref_intersection lies on edge 1, which has a slope of 1,
+       * vertex 1, through the reference point and reaching until x = 0. The y-axis intersect for that line is at
+       * slope * (-1).
+       * Since the the ref_intersection lies on edge 1, which has a slope of 1,
        * the x and y coordinates have to be the same.
        * The intersection is calculated via the line equations:
        * edge 1:  y = ax + c
        * line:    y = bx + d
        * intersection: (d - c) / (a - b) */
-      ref_intersection[0] = ref_intersection[1] = (ref_help_point[1] - 0) / (1 - ref_slope);
+      ref_intersection[0] = ref_intersection[1] = -ref_slope / (1 - ref_slope);
       break;
     }
   case 2: /* edge 2 */
