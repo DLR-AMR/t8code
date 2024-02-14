@@ -298,19 +298,16 @@ t8_geom_get_ref_intersection (int edge_index, const double *ref_coords, double r
       break;
     }
     else {
-      /* intersectionX = (x1y2-y1x2)(x3-x4)-(x1-x2)(x3y4-y3x4)
-       *                 /(x1-x2)(y3-y4)-(y1-y2)(x3-x4)
-       * intersectionY = (x1y2-y1x2)(y3-y4)-(y1-y2)(x3y4-y3x4)
-       *                 /(x1-x2)(y3-y4)-(y1-y2)(x3-x4)
-       * 
-       * x1=0 y1=0 x2=1 y2=1 x3=ref_coords[0] y3=ref_coords[1] x4=ref_opposite_vertex[0] y4=ref_opposite_vertex[1]
-       * 
-       * Since the intersection point lies on edge 2, which has a slope of 1, the x and the y value has to be equal
-       */
-      ref_intersection[0] = ref_intersection[1]
-        = ((ref_coords[0] * ref_opposite_vertex[1] - ref_coords[1] * ref_opposite_vertex[0])
-             / -(ref_coords[1] - ref_opposite_vertex[1])
-           + (ref_coords[0] - ref_opposite_vertex[0]));
+      /* To find the ref_intersection for edge 1, we calculate the intersection of edge 1 with a stright line from
+       * vertex 1, through the reference point and reaching until x = 0. The y-axis intersect for that line is at
+       * slope * (-1).
+       * Since the the ref_intersection lies on edge 1, which has a slope of 1,
+       * the x and y coordinates have to be the same.
+       * The intersection is calculated via the line equations:
+       * edge 1:  y = ax + c
+       * line:    y = bx + d
+       * intersection: (d - c) / (a - b) */
+      ref_intersection[0] = ref_intersection[1] = -ref_slope / (1 - ref_slope);
       break;
     }
   case 2: /* edge 2 */

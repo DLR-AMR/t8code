@@ -254,7 +254,7 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix, sc_MPI_C
       snprintf (forest_vtu, BUFSIZ, "%s_forest_partition_%03d", vtu_prefix, time_step);
       snprintf (cmesh_vtu, BUFSIZ, "%s_cmesh_partition_%03d", vtu_prefix, time_step);
       t8_forest_write_vtk (forest_partition, forest_vtu);
-      t8_cmesh_vtk_write_file (t8_forest_get_cmesh (forest_partition), cmesh_vtu, 1.0);
+      t8_cmesh_vtk_write_file (t8_forest_get_cmesh (forest_partition), cmesh_vtu);
       t8_debugf ("Wrote partitioned forest and cmesh\n");
     }
     if (cmesh_is_partitioned) {
