@@ -59,11 +59,10 @@ t8_geometry_with_vertices::t8_geom_tree_negative_volume (const t8_cmesh_t cmesh)
     /* Only three dimensional eclass do have a volume */
     return false;
   }
-  const int num_vertices = t8_eclass_num_vertices[active_tree_class];
   T8_ASSERT (active_tree_class == T8_ECLASS_TET || active_tree_class == T8_ECLASS_HEX
              || active_tree_class == T8_ECLASS_PRISM || active_tree_class == T8_ECLASS_PYRAMID);
 
-  T8_ASSERT (num_vertices >= 4);
+  T8_ASSERT (t8_eclass_num_vertices[active_tree_class] >= 4);
   /*
    *      6 ______  7  For Hexes and pyramids, if the vertex 4 is below the 0-1-2-3 plane,
    *       /|     /     the volume is negative. This is the case if and only if
