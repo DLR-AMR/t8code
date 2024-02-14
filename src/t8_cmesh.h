@@ -671,7 +671,7 @@ t8_cmesh_get_attribute (const t8_cmesh_t cmesh, const int package_id, const int 
  * \param [in]     package_id   The identifier of a valid software package. \see sc_package_register
  * \param [in]     key          A key used to identify the attribute under all
  *                              attributes of this tree with the same \a package_id.
- * \param [in]     tree_id      The local number of the tree.
+ * \param [in]     ltree_id     The local number of the tree.
  * \param [in]     data_count   The number of entries in the array that are requested. 
  *                              This must be smaller or equal to the \a data_count parameter
  *                              of the corresponding call to \ref t8_cmesh_set_attribute_gloidx_array

@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2024 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,13 +20,12 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_geometry_linear_axis_aligned.h
- * This header provides the C interface to create a linear, axis-aligned
- * geometry.
+/** \file t8_geometry_zero.h
+ * This header provides the C interface to create a zero geometry.
  */
 
-#ifndef T8_GEOMETRY_LINEAR_AXIS_ALIGNED_H
-#define T8_GEOMETRY_LINEAR_AXIS_ALIGNED_H
+#ifndef T8_GEOMETRY_zero_H
+#define T8_GEOMETRY_zero_H
 
 #include <t8.h>
 #include <t8_geometry/t8_geometry.h>
@@ -34,26 +33,24 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/** 
- * Create a new linear, axis-aligned geometry of a given dimension.
- * The geometry is only viable for line/quad/hex elements and uses two
- * vertices (min and max coords) per tree. The vertices are saved via
- * the \ref t8_cmesh_set_tree_vertices function.
+/**
+ * Create a new zero geometry of a given dimension.
+ * The geometry is only all tree types and as many vertices as the tree type
+ * has. The vertices are saved via the \ref t8_cmesh_set_tree_vertices function.
+ * Sets the dimension and the name to "t8_geom_zero_{dim}"
  * \param [in] dim  0 <= \a dimension <= 3. The dimension.
- * \return          A pointer to an allocated t8_geometry_linear_axis_aligned
- *                  struct, as if the t8_geometry_linear_axis_aligned
- *                  (int dimension) constructor was called.
+ * \return          A pointer to an allocated t8_geometry_zero struct, as
+ *                  if the \ref t8_geometry_zero (int dim) constructor was called.
  */
 t8_geometry_c *
-t8_geometry_linear_axis_aligned_new (int dim);
+t8_geometry_zero_new (int dim);
 
-/** Destroy a linear, axis-aligned geometry that was created with
- * \ref t8_geometry_linear_axis_aligned_new.
- * \param [in,out] geom A linear, axis-aligned geometry. Set to NULL on output.
+/** Destroy a zero geometry that was created with \ref t8_geometry_zero_new.
+ * \param [in,out] geom A zero geometry. Set to NULL on output.
  */
 void
-t8_geometry_linear_axis_aligned_destroy (t8_geometry_c **geom);
+t8_geometry_zero_destroy (t8_geometry_c **geom);
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_GEOMETRY_LINEAR_AXIS_ALIGNED_H! */
+#endif /* !T8_GEOMETRY_zero_H! */

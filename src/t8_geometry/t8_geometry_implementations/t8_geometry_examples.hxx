@@ -75,13 +75,6 @@ struct t8_geometry_squared_disk: public t8_geometry_with_vertices
     SC_ABORT_NOT_REACHED ();
   }
 
-  /* Load tree data is empty since we have no tree data.
-   * We need to provide an implementation anyways. */
-  void
-  t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
-  {
-    SC_ABORT_NOT_REACHED ();
-  }
   /**
    * Get the type of this geometry.
    * \return The type.

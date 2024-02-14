@@ -67,7 +67,8 @@ t8code_googletest_programs = \
   test/t8_forest_incomplete/t8_gtest_empty_global_tree \
   test/t8_cmesh/t8_gtest_cmesh_tree_vertices_negative_volume \
   test/t8_schemes/t8_gtest_default \
-  test/t8_schemes/t8_gtest_child_parent_face
+  test/t8_schemes/t8_gtest_child_parent_face \
+  test/t8_cmesh_generator/t8_gtest_cmesh_generator_test
 
 test_t8_IO_t8_gtest_vtk_reader_SOURCES = \
   test/t8_gtest_main.cxx \
@@ -168,10 +169,6 @@ test_t8_cmesh_t8_gtest_cmesh_face_is_boundary_SOURCES = \
 test_t8_cmesh_t8_gtest_cmesh_partition_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_cmesh/t8_gtest_cmesh_partition.cxx
-
-test_t8_cmesh_t8_gtest_cmesh_copy_SOURCES = \
-  test/t8_gtest_main.cxx \
-  test/t8_cmesh/t8_gtest_cmesh_copy.cxx
 
 test_t8_cmesh_t8_gtest_cmesh_set_partition_offsets_SOURCES = \
   test/t8_gtest_main.cxx \
@@ -289,6 +286,14 @@ test_t8_schemes_t8_gtest_child_parent_face_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_schemes/t8_gtest_child_parent_face.cxx 
 
+test_t8_cmesh_generator_t8_gtest_cmesh_generator_test_SOURCES = \
+  test/t8_gtest_main.cxx \
+  test/t8_cmesh_generator/t8_gtest_cmesh_generator_test.cxx
+
+test_t8_cmesh_t8_gtest_cmesh_copy_SOURCES = \
+  test/t8_gtest_main.cxx \
+  test/t8_cmesh/t8_gtest_cmesh_copy.cxx
+
 #define ld and cpp flags for all targets
 t8_gtest_target_ld_add = $(LDADD) test/libgtest.la
 t8_gtest_target_ld_flags = $(AM_LDFLAGS) -pthread
@@ -392,10 +397,6 @@ test_t8_cmesh_t8_gtest_cmesh_face_is_boundary_CPPFLAGS = $(t8_gtest_target_cpp_f
 test_t8_cmesh_t8_gtest_cmesh_partition_LDADD = $(t8_gtest_target_ld_add)
 test_t8_cmesh_t8_gtest_cmesh_partition_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_cmesh_t8_gtest_cmesh_partition_CPPFLAGS = $(t8_gtest_target_cpp_flags)
-
-test_t8_cmesh_t8_gtest_cmesh_copy_LDADD = $(t8_gtest_target_ld_add)
-test_t8_cmesh_t8_gtest_cmesh_copy_LDFLAGS = $(t8_gtest_target_ld_flags)
-test_t8_cmesh_t8_gtest_cmesh_copy_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
 test_t8_cmesh_t8_gtest_cmesh_set_partition_offsets_LDADD = $(t8_gtest_target_ld_add)
 test_t8_cmesh_t8_gtest_cmesh_set_partition_offsets_LDFLAGS = $(t8_gtest_target_ld_flags)
@@ -517,6 +518,14 @@ test_t8_schemes_t8_gtest_child_parent_face_LDADD = $(t8_gtest_target_ld_add)
 test_t8_schemes_t8_gtest_child_parent_face_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_schemes_t8_gtest_child_parent_face_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
+test_t8_cmesh_generator_t8_gtest_cmesh_generator_test_LDADD = $(t8_gtest_target_ld_add)
+test_t8_cmesh_generator_t8_gtest_cmesh_generator_test_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_cmesh_generator_t8_gtest_cmesh_generator_test_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+
+test_t8_cmesh_t8_gtest_cmesh_copy_LDADD = $(t8_gtest_target_ld_add)
+test_t8_cmesh_t8_gtest_cmesh_copy_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_cmesh_t8_gtest_cmesh_copy_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+
 # If we did not configure t8code with MPI we need to build Googletest
 # without MPI support.
 if !T8_ENABLE_MPI
@@ -544,7 +553,6 @@ test_t8_schemes_t8_gtest_find_parent_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags
 test_t8_schemes_t8_gtest_equal_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_cmesh_face_is_boundary_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_cmesh_partition_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
-test_t8_cmesh_t8_gtest_cmesh_copy_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_cmesh_set_partition_offsets_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_t8_gtest_element_volume_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_multiple_attributes_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
@@ -575,6 +583,9 @@ test_t8_forest_incomplete_t8_gtest_empty_global_tree_CPPFLAGS += $(t8_gtest_targ
 test_t8_cmesh_t8_gtest_cmesh_tree_vertices_negative_volume_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_default_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_child_parent_face_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_cmesh_generator_t8_gtest_cmesh_generator_test_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_cmesh_t8_gtest_cmesh_copy_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+
 endif
 
 # Build Googletest library
