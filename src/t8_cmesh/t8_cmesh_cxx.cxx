@@ -258,7 +258,6 @@ t8_cmesh_determine_partition (sc_array_t *first_element_tree, size_t pure_local_
   const t8_gloidx_t mirror_element_index = query_data->global_num_elements - element_index - 1;
   int first_proc_rank;
 
-  t8_debugf ("[H] tree %li el %li mirror %li\n", pure_local_tree, element_index, mirror_element_index);
   if (element_index == query_data->global_num_elements) {
     return query_data->num_procs - query_data->process_offset;
   }
@@ -267,13 +266,10 @@ t8_cmesh_determine_partition (sc_array_t *first_element_tree, size_t pure_local_
       = query_data->num_procs - 1
         - t8_A_times_B_over_C_intA (query_data->num_procs, mirror_element_index, query_data->global_num_elements);
 
-    //       (int)(((long double)mirror_element_index/query_data->global_num_elements)*query_data->num_procs);
-
     /* If this is called by array split, we need to adjust for relative processes starting
      * add the first process. */
     first_proc_adjusted = first_proc_rank - query_data->process_offset;
   }
-  t8_debugf ("[H] ptree %zd, first element %li, on proc %zd\n", pure_local_tree, element_index, first_proc_adjusted);
 
   /* Safety checks */
 #ifdef T8_ENABLE_DEBUG
@@ -522,7 +518,6 @@ t8_cmesh_uniform_bounds_for_irregular_refinement (const t8_cmesh_t cmesh, const 
      * These tree indices will be stored in offset_partition. */
     sc_array_split (&first_element_tree, &offset_partition, (size_t) num_procs_we_send_to + 1,
                     t8_cmesh_determine_partition, (void *) &data);
-    // TODO: Is determination of last proc we send to wrong?
 
     /* We know: Lowest process and highest process we need to send trees to
        Tree0 Tree1         TreeN
