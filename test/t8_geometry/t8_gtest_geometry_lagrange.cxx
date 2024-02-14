@@ -207,11 +207,87 @@ t8_cmesh_create_points (t8_eclass_t eclass, int degree)
   return std::make_tuple (ref_points, mapped_points);
 };
 
+class Boundary1D {
+ public:
+  /**
+  * Construct a new Boundary1D object.
+  * 
+  * \param degree  Polynomial degree.
+  */
+  Boundary1D (uint degree): degree (degree)
+  {
+    /* Generate the equidistant nodes adhering to the numbering convention */
+    switch (degree) {
+    case 1:
+      parametric_nodes = { 0, 0, 0, 1, 0, 0 };
+      break;
+    case 2:
+      parametric_nodes = { 0, 0, 0, 1, 0, 0, 0.5, 0, 0 };
+      break;
+    default:
+      SC_ABORTF ("Degree must be in [1, 2].\n");
+    }
+  };
+
+  /**
+   * Set the nodes of the boundary curve.
+   * 
+   * \param nodes  Coordinates in the real space, {x1, y1, z1, x2, ...}.
+   */
+  void
+  setNodes (std::vector<double> &nodes)
+  {
+    if (nodes.size () != parametric_nodes.size ())
+      SC_ABORTF ("Provide the 3 coordinates of the nodes.\n");
+    /* Create a cmesh with a single line element */
+    t8_geometry_c *geometry = new t8_geometry_lagrange (1);
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_LAGRANGE_POLY_DEGREE, &degree, sizeof (int), 1);
+    t8_cmesh_register_geometry (cmesh, geometry);
+    t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_LINE);
+    t8_cmesh_set_tree_vertices (cmesh, 0, nodes.data (), nodes.size ());
+    t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
+  };
+
+  /**
+   * ...
+   * 
+   * \param  sampling_points  Parametric coordinates of the points to be mapped.
+   * \return                  Mapped sampling points.
+   */
+  std::vector<double>
+  sample (const std::vector<double> &sampling_points)
+  {
+    size_t n_point = sampling_points.size ();
+    std::vector<double> mapped (n_point, 0);
+    for (size_t i = 0; i < n_point; ++i) {
+      double point = sampling_points[i];
+      double ref_point[3] = { point, 0, 0 };
+      double mapped_point[3];
+      t8_geometry_evaluate (cmesh, 0, ref_point, 1, mapped_point);
+      for (size_t j = 0; j < 3; j++)
+        mapped[3 * i + j] = mapped_point[j];
+    }
+    return mapped;
+  };
+
+  ~Boundary1D ()
+  {
+    std::cout << "Destructor called.\n";
+    t8_cmesh_destroy (&cmesh);
+  }
+
+ private:
+  uint degree;
+  std::vector<double> parametric_nodes;
+  t8_cmesh_t cmesh;
+};
+
 /**
  * Common resources for all the tests.
  * 
  */
-class class_ref_coords: public testing::TestWithParam<std::tuple<t8_eclass_t, int>> {
+class LagrangeCmesh: public testing::TestWithParam<std::tuple<t8_eclass_t, int>> {
  protected:
   void
   SetUp () override
@@ -240,7 +316,7 @@ class class_ref_coords: public testing::TestWithParam<std::tuple<t8_eclass_t, in
  * Main test to check the correctness of the Lagrange geometries.
  * 
  */
-TEST_P (class_ref_coords, lagrange_mapping)
+TEST_P (LagrangeCmesh, lagrange_mapping)
 {
   t8_errorf ("\n-------------------\nEclass: %s, degree: %d\n-------------------\n", t8_eclass_to_string[eclass],
              degree);
@@ -253,9 +329,21 @@ TEST_P (class_ref_coords, lagrange_mapping)
     ASSERT_DOUBLE_EQ (mapped_points[coord], expected[coord]);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_geometry_lagrange, class_ref_coords,
-                          testing::Combine (testing::Range (T8_ECLASS_LINE, T8_ECLASS_HEX),
+INSTANTIATE_TEST_SUITE_P (t8_gtest_geometry_lagrange, LagrangeCmesh,
+                          testing::Combine (testing::Range (T8_ECLASS_LINE, T8_ECLASS_TRIANGLE),
                                             testing::Range (1, MAX_POLYNOMIAL_DEGREE + 1)));
 
 // TODO: use name_generator (http://google.github.io/googletest/reference/testing.html#INSTANTIATE_TEST_SUITE_P)
 // to create test names like this: (EclassName_degree{degree}), e.g triangle_degree2, quad_degree3
+
+TEST (foo, bar)
+{
+  t8_errorf ("\n-------------------\nFoo\n-------------------\n");
+  std::vector<double> sp { 0.1, 1 };
+  std::vector<double> nodes { 0, 0, 0, 0, 1, 0 };
+  Boundary1D boundary (1);
+  boundary.setNodes (nodes);
+  auto pts = boundary.sample (sp);
+  for (auto &i : pts)
+    std::cout << i << ", ";
+}

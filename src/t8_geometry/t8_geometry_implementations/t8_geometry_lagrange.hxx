@@ -265,7 +265,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
   /**
    * Basis functions of an 8-node hexahedron element.
    * \verbatim
-     y
+     z
       ^   6           7
       |  x ----------x
         /|          /|
