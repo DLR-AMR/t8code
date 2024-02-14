@@ -132,6 +132,53 @@ double
 t8_geom_get_triangle_scaling_factor (int edge_index, const double *tree_vertices, const double *glob_intersection,
                                      const double *glob_ref_point);
 
+/** Check if a point lies inside a vertex
+ * 
+ * \param[in] vertex_coords The coordinates of the vertex
+ * \param[in] point         The coordinates of the point to check
+ * \param[in] tolerance     A double > 0 defining the tolerance
+ * \return                  0 if the point is outside, 1 otherwise.  
+ */
+int
+t8_vertex_point_inside (const double vertex_coords[3], const double point[3], const double tolerance);
+
+/**
+ * Check if a point is inside a line that is defined by a starting point \a p_0
+ * and a vector \a vec
+ * 
+ * \param[in] p_0         Starting point of the line
+ * \param[in] vec         Direction of the line (not normalized)
+ * \param[in] point       The coordinates of the point to check
+ * \param[in] tolerance   A double > 0 defining the tolerance
+ * \return                0 if the point is outside, 1 otherwise.  
+ */
+int
+t8_line_point_inside (const double *p_0, const double *vec, const double *point, const double tolerance);
+
+/**
+ * Check if a point is inside of a triangle described by a point \a p_0 and two vectors \a v and \a w. 
+ * 
+ * \param[in] p_0         The first vertex of a triangle
+ * \param[in] v           The vector from p_0 to p_1 (second vertex in the triangle)
+ * \param[in] w           The vector from p_0 to p_2 (third vertex in the triangle)
+ * \param[in] point       The coordinates of the point to check
+ * \param[in] tolerance   A double > 0 defining the tolerance
+ * \return                0 if the point is outside, 1 otherwise.  
+ */
+int
+t8_triangle_point_inside (const double p_0[3], const double v[3], const double w[3], const double point[3],
+                          const double tolerance);
+
+/** Check if a point lays on the inner side of a plane of a bilinearly interpolated volume element. 
+ * the plane is described by a point and the normal of the face. 
+ * \param[in] point_on_face   A point on the plane
+ * \param[in] face_normal     The normal of the face
+ * \param[in] point           The point to check
+ * \return                    0 if the point is outside, 1 otherwise.                   
+ */
+int
+t8_plane_point_inside (const double point_on_face[3], const double face_normal[3], const double point[3]);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_GEOMETRY_HELPERS_H! */
