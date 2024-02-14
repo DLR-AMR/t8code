@@ -497,7 +497,6 @@ t8_cmesh_uniform_bounds_for_irregular_refinement (const t8_cmesh_t cmesh, const 
     if (!cmesh->first_tree_shared && t8_cmesh_get_global_id (cmesh, 0) == 0) {
       /* If our first tree is 0 and not shared, then we need to send to all processes
        * below the start process. Even if their partition is empty. */
-      t8_debugf ("LLL: Would have set send_first to 0, instead: %li", send_first_nonempty);
       send_first = send_first_nonempty;
     }
     else {
