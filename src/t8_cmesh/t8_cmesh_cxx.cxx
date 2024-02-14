@@ -488,16 +488,7 @@ t8_cmesh_uniform_bounds_for_irregular_refinement (const t8_cmesh_t cmesh, const 
     data.process_offset = 0;
     /* Compute the process that will own the first element of our first tree. */
 
-    const t8_gloidx_t send_first_nonempty = (t8_gloidx_t) t8_cmesh_determine_partition (&first_element_tree, 0, &data);
-    t8_gloidx_t send_first;
-    if (!cmesh->first_tree_shared && t8_cmesh_get_global_id (cmesh, 0) == 0) {
-      /* If our first tree is 0 and not shared, then we need to send to all processes
-       * below the start process. Even if their partition is empty. */
-      send_first = send_first_nonempty;
-    }
-    else {
-      send_first = send_first_nonempty;
-    }
+    const t8_gloidx_t send_first = (t8_gloidx_t) t8_cmesh_determine_partition (&first_element_tree, 0, &data);
 
     /* Compute the process that may own the last element of our first tree. */
     t8_gloidx_t send_last = (t8_gloidx_t) t8_cmesh_determine_partition (&first_element_tree, pure_local_trees, &data);
