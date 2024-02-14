@@ -118,7 +118,7 @@ t8_basic_hybrid (const int level, int endlvl, const int do_vtk)
   snprintf (cmesh_file, BUFSIZ, "cmesh_hybrid");
   snprintf (vtuname, BUFSIZ, "cmesh_hybrid");
   t8_cmesh_save (cmesh, cmesh_file);
-  if (t8_cmesh_vtk_write_file (cmesh, vtuname, 1.0) == 0) {
+  if (t8_cmesh_vtk_write_file (cmesh, vtuname) == 0) {
     t8_debugf ("Output to %s\n", vtuname);
   }
   else {
