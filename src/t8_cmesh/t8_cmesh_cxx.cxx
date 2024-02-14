@@ -291,10 +291,10 @@ t8_cmesh_determine_partition (sc_array_t *first_element_tree, size_t pure_local_
   return first_proc_adjusted;
 }
 void
-t8_cmesh_partition_from_unpartioned (t8_cmesh_t cmesh, const t8_gloidx_t local_num_children, const int level,
-                                     const t8_scheme_cxx_t *scheme, t8_gloidx_t *first_local_tree,
-                                     t8_gloidx_t *child_in_tree_begin, t8_gloidx_t *last_local_tree,
-                                     t8_gloidx_t *child_in_tree_end, int8_t *first_tree_shared)
+t8_cmesh_uniform_bounds_from_unpartioned (t8_cmesh_t cmesh, const t8_gloidx_t local_num_children, const int level,
+                                          const t8_scheme_cxx_t *scheme, t8_gloidx_t *first_local_tree,
+                                          t8_gloidx_t *child_in_tree_begin, t8_gloidx_t *last_local_tree,
+                                          t8_gloidx_t *child_in_tree_end, int8_t *first_tree_shared)
 {
   const t8_gloidx_t num_trees = t8_cmesh_get_num_trees (cmesh);
   t8_debugf ("Cmesh is not partitioned.\n");
@@ -362,77 +362,16 @@ t8_cmesh_partition_from_unpartioned (t8_cmesh_t cmesh, const t8_gloidx_t local_n
   return;
 }
 
-/* TODO: Shared trees, binary search in offset-array to avoid recv_any,
- * use partition_given to partition the cmesh*/
 void
-t8_cmesh_uniform_bounds_for_irregular_refinement (const t8_cmesh_t cmesh, const int level,
-                                                  const t8_scheme_cxx_t *scheme, t8_gloidx_t *first_local_tree,
-                                                  t8_gloidx_t *child_in_tree_begin, t8_gloidx_t *last_local_tree,
-                                                  t8_gloidx_t *child_in_tree_end, int8_t *first_tree_shared,
-                                                  sc_MPI_Comm comm)
+t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_children, const int level,
+                                        const t8_scheme_cxx_t *scheme, t8_gloidx_t *first_local_tree,
+                                        t8_gloidx_t *child_in_tree_begin, t8_gloidx_t *last_local_tree,
+                                        t8_gloidx_t *child_in_tree_end, int8_t *first_tree_shared, sc_MPI_Comm comm)
 {
-  T8_ASSERT (cmesh != NULL);
 #ifdef T8_ENABLE_DEBUG
   int num_received_start_messages = 0;
   int num_received_end_messages = 0;
 #endif
-
-  /* TODO: Clean up size_t and gloidx_t data types, ensure that each variables has the 
-   *          matching type. */
-
-  t8_debugf ("Into t8_cmesh_uniform_bounds_hybrid.\n");
-
-  if (t8_cmesh_is_empty (cmesh)) {
-    t8_cmesh_uniform_set_return_parameters_to_empty (first_local_tree, child_in_tree_begin, last_local_tree,
-                                                     child_in_tree_end, first_tree_shared);
-    return;
-  }
-
-#ifdef T8_ENABLE_DEBUG
-  {
-    /* Check that comm matches mpirank and size stored in cmesh */
-    int mpirank, mpisize;
-    int mpiret = sc_MPI_Comm_rank (comm, &mpirank);
-    SC_CHECK_MPI (mpiret);
-    mpiret = sc_MPI_Comm_size (comm, &mpisize);
-    SC_CHECK_MPI (mpiret);
-    T8_ASSERT (mpirank == cmesh->mpirank);
-    T8_ASSERT (mpisize == cmesh->mpisize);
-  }
-#endif
-  t8_gloidx_t local_num_children = 0;
-  /*Compute number of local elements. Ignore shared trees */
-  for (int ieclass = T8_ECLASS_ZERO; ieclass < T8_ECLASS_COUNT; ieclass++) {
-    const t8_eclass_scheme_c *tree_scheme = scheme->eclass_schemes[ieclass];
-    local_num_children
-      += cmesh->num_local_trees_per_eclass[ieclass] * tree_scheme->t8_element_count_leaves_from_root (level);
-  }
-
-  /* Do not consider shared trees */
-  if (cmesh->first_tree_shared && cmesh->set_partition) {
-    const int ieclass = t8_cmesh_get_tree_class (cmesh, 0);
-    const t8_eclass_scheme_c *tree_scheme = scheme->eclass_schemes[ieclass];
-    local_num_children -= tree_scheme->t8_element_count_leaves_from_root (level);
-  }
-
-  /* 
-   *
-   *  Cmesh is not partitioned
-   * 
-   */
-  /* If the initial cmesh is not partitioned, every process knows "everything" and we do not
-   * need any communication.*/
-  if (!cmesh->set_partition) {
-    t8_cmesh_partition_from_unpartioned (cmesh, local_num_children, level, scheme, first_local_tree,
-                                         child_in_tree_begin, last_local_tree, child_in_tree_end, first_tree_shared);
-    return;
-  }
-
-  /* 
-   *
-   *  Cmesh is partitioned
-   * 
-   */
   t8_shmem_array_t offset_array;
   t8_shmem_array_init (&offset_array, sizeof (t8_gloidx_t), cmesh->mpisize + 1, comm);
   /* Fill the offset array for each process with the global index of its first element in
@@ -895,4 +834,79 @@ t8_cmesh_uniform_bounds_for_irregular_refinement (const t8_cmesh_t cmesh, const 
 
   t8_debugf ("Done with t8_cmesh_uniform_bounds_hybrid.\n");
   return;
+}
+
+/* TODO: Shared trees, binary search in offset-array to avoid recv_any,
+ * use partition_given to partition the cmesh*/
+void
+t8_cmesh_uniform_bounds_for_irregular_refinement (const t8_cmesh_t cmesh, const int level,
+                                                  const t8_scheme_cxx_t *scheme, t8_gloidx_t *first_local_tree,
+                                                  t8_gloidx_t *child_in_tree_begin, t8_gloidx_t *last_local_tree,
+                                                  t8_gloidx_t *child_in_tree_end, int8_t *first_tree_shared,
+                                                  sc_MPI_Comm comm)
+{
+  T8_ASSERT (cmesh != NULL);
+
+  /* TODO: Clean up size_t and gloidx_t data types, ensure that each variables has the 
+   *          matching type. */
+
+  t8_debugf ("Into t8_cmesh_uniform_bounds_hybrid.\n");
+
+  if (t8_cmesh_is_empty (cmesh)) {
+    t8_cmesh_uniform_set_return_parameters_to_empty (first_local_tree, child_in_tree_begin, last_local_tree,
+                                                     child_in_tree_end, first_tree_shared);
+    return;
+  }
+
+#ifdef T8_ENABLE_DEBUG
+  {
+    /* Check that comm matches mpirank and size stored in cmesh */
+    int mpirank, mpisize;
+    int mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Comm_size (comm, &mpisize);
+    SC_CHECK_MPI (mpiret);
+    T8_ASSERT (mpirank == cmesh->mpirank);
+    T8_ASSERT (mpisize == cmesh->mpisize);
+  }
+#endif
+  t8_gloidx_t local_num_children = 0;
+  /*Compute number of local elements. Ignore shared trees */
+  for (int ieclass = T8_ECLASS_ZERO; ieclass < T8_ECLASS_COUNT; ieclass++) {
+    const t8_eclass_scheme_c *tree_scheme = scheme->eclass_schemes[ieclass];
+    local_num_children
+      += cmesh->num_local_trees_per_eclass[ieclass] * tree_scheme->t8_element_count_leaves_from_root (level);
+  }
+
+  /* Do not consider shared trees */
+  if (cmesh->first_tree_shared && cmesh->set_partition) {
+    const int ieclass = t8_cmesh_get_tree_class (cmesh, 0);
+    const t8_eclass_scheme_c *tree_scheme = scheme->eclass_schemes[ieclass];
+    local_num_children -= tree_scheme->t8_element_count_leaves_from_root (level);
+  }
+
+  /* 
+   *
+   *  Cmesh is not partitioned
+   * 
+   */
+  /* If the initial cmesh is not partitioned, every process knows "everything" and we do not
+   * need any communication.*/
+  if (!cmesh->set_partition) {
+    t8_cmesh_uniform_bounds_from_unpartioned (cmesh, local_num_children, level, scheme, first_local_tree,
+                                              child_in_tree_begin, last_local_tree, child_in_tree_end,
+                                              first_tree_shared);
+    return;
+  }
+  else {
+    /* 
+    *
+    *  Cmesh is partitioned
+    * 
+    */
+    t8_cmesh_uniform_bounds_from_partition (cmesh, local_num_children, level, scheme, first_local_tree,
+                                            child_in_tree_begin, last_local_tree, child_in_tree_end, first_tree_shared,
+                                            comm);
+    return;
+  }
 }
