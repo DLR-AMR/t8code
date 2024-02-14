@@ -485,13 +485,6 @@ t8_triangle_point_inside (const double p_0[3], const double v[3], const double w
   return 1;
 }
 
-/** Check if a point lays on the inner side of a plane of a bilinearly interpolated volume element. 
- * the plane is described by a point and the normal of the face. 
- * \param[in] point_on_face   A point on the plane
- * \param[in] face_normal     The normal of the face
- * \param[in] point           The point to check
- * \return                    0 if the point is outside, 1 otherwise.                   
- */
 int
 t8_plane_point_inside (const double point_on_face[3], const double face_normal[3], const double point[3])
 {

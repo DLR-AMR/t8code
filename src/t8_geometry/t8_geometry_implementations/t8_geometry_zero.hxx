@@ -31,6 +31,7 @@
 
 #include <t8.h>
 #include <t8_geometry/t8_geometry_base.hxx>
+#include <t8_geometry/t8_geometry_helpers.h>
 
 struct t8_geometry_zero: public t8_geometry
 {
@@ -100,12 +101,11 @@ struct t8_geometry_zero: public t8_geometry
                                       const double *points, const int num_points, int *is_inside,
                                       const double tolerance)
   {
-const int zeros[3] = { 0 }; 
-for (int i_point = 0; i_point < num_points; ++i_point)
-{
-  const int offset = i_point * T8_ECLASS_MAX_DIM;
-  is_inside[i_point] = t8_vertex_point_inside(zeros, points + offset, tolerance)
-}
+    const double zeros[3] = { 0 };
+    for (int i_point = 0; i_point < num_points; ++i_point) {
+      const int offset = i_point * T8_ECLASS_MAX_DIM;
+      is_inside[i_point] = t8_vertex_point_inside (zeros, points + offset, tolerance);
+    }
   }
 
   /** Update a possible internal data buffer for per tree data.
