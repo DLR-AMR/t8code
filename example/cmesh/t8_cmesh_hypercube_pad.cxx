@@ -55,7 +55,7 @@ main (int argc, char **argv)
   t8_global_productionf (" [step1] Local number of trees:\t%i\n", local_num_trees);
   t8_global_productionf (" [step1] Global number of trees:\t%li\n", global_num_trees);
 
-  t8_cmesh_vtk_write_file (cmesh, prefix, 1.0);
+  t8_cmesh_vtk_write_file (cmesh, prefix);
 
   t8_cmesh_destroy (&cmesh);
 
