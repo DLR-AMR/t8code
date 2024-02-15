@@ -20,8 +20,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#ifndef T8_CMESH_NEW_HYPERCUBE_PAD_PARAM_HXX
-#define T8_CMESH_NEW_HYPERCUBE_PAD_PARAM_HXX
+#ifndef T8_CMESH_NEW_HYPERCUBE_PARAM_HXX
+#define T8_CMESH_NEW_HYPERCUBE_PARAM_HXX
 
 #include <t8_eclass.h>
 #include "test/t8_cmesh_generator/t8_gtest_cmesh_cartestian_product.hxx"
@@ -77,4 +77,4 @@ example_set *cmesh_example_pyra = (example_set *) new cmesh_cartesian_product_pa
   "t8_cmesh_new_hypercube_");
 }  // namespace new_hypercube_cmesh
 
-#endif /* T8_CMESH_NEW_HYPERCUBE_PAD_PARAM_HXX */
+#endif /* T8_CMESH_NEW_HYPERCUBE_PARAM_HXX */
