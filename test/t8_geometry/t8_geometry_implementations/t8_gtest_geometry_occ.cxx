@@ -433,8 +433,8 @@ TEST_P (class_2d_element_linear_occ_curve, t8_check_2d_element_linear_occ_curve)
   t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces, sizeof (int), 0);
   t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges,
                           2 * num_vertices * sizeof (int), 0);
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + 2,
-                          params, 2 * sizeof (double), 0);
+  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + 2, params,
+                          2 * sizeof (double), 0);
 
   /* Register the geometry */
   t8_cmesh_register_geometry (cmesh, geometry_occ);
@@ -457,8 +457,7 @@ TEST_P (class_2d_element_linear_occ_curve, t8_check_2d_element_linear_occ_curve)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_check_2d_element_linear_occ_curve, class_2d_element_linear_occ_curve,
-                          AllEclasses2D);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_check_2d_element_linear_occ_curve, class_2d_element_linear_occ_curve, AllEclasses2D);
 
 #endif /* T8_WITH_OCC */
 
@@ -525,8 +524,8 @@ TEST_P (class_2d_element_curved_occ_curve, t8_check_2d_element_curved_occ_curve)
   t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces, sizeof (int), 0);
   t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges,
                           2 * num_vertices * sizeof (int), 0);
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + 2,
-                          params, 2 * sizeof (double), 0);
+  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + 2, params,
+                          2 * sizeof (double), 0);
 
   /* Register the geometry */
   t8_cmesh_register_geometry (cmesh, geometry_occ);
@@ -548,8 +547,7 @@ TEST_P (class_2d_element_curved_occ_curve, t8_check_2d_element_curved_occ_curve)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_check_2d_element_curved_occ_curve, class_2d_element_curved_occ_curve,
-                          AllEclasses2D);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_check_2d_element_curved_occ_curve, class_2d_element_curved_occ_curve, AllEclasses2D);
 
 #endif /* T8_WITH_OCC */
 
@@ -676,7 +674,7 @@ class class_2d_element_curved_occ_surface: public testing::TestWithParam<t8_ecla
     *   |
     *   v v-parameter
     * 
-    *   x -> shifted point to create curved suface
+    *   x -> shifted point to create curved surface
     *
     *     point_array  1       2       3
     *                          x
@@ -688,7 +686,7 @@ class class_2d_element_curved_occ_surface: public testing::TestWithParam<t8_ecla
     *                  |               |
     *         3        -----------------
     *                          x
-    */                    
+    */
 
     point_array (1, 1) = gp_Pnt (0.0, 1.0, 0.0);
     point_array (2, 1) = gp_Pnt (0.5, 1.2, 0.0);
@@ -753,9 +751,8 @@ TEST_P (class_2d_element_curved_occ_surface, t8_check_2d_element_curved_occ_surf
   /* First 6 ref_coords for triangle and all 9 ref_coords for quad */
   double test_ref_coords_in[27] = { 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 1.0,
                                     0.0, 0.0, 0.5, 0.0, 0.5, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.5, 0.0 };
-  double test_ref_coords_out[27] = { 0.0, 0.0, 0.0, 0.5, -0.2, 0.0, 1.0, 0.0, 0.0, 0.5, 0.5, 0.2, 0.0, 1.0,
-                                     0.0, -0.2, 0.5, 0.0, 0.5, 1.2, 0.0, 1.0, 1.0, 0.0, 1.2, 0.5, 0.0 };
-
+  double test_ref_coords_out[27] = { 0.0, 0.0,  0.0, 0.5, -0.2, 0.0, 1.0, 0.0, 0.0, 0.5, 0.5, 0.2, 0.0, 1.0,
+                                     0.0, -0.2, 0.5, 0.0, 0.5,  1.2, 0.0, 1.0, 1.0, 0.0, 1.2, 0.5, 0.0 };
 
   double out_coords[3];
 
