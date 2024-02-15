@@ -362,34 +362,33 @@ t8_cmesh_uniform_bounds_from_unpartioned (t8_cmesh_t cmesh, const t8_gloidx_t lo
   return;
 }
 
-int
-t8_cmesh_uniform_bounds_send_start (t8_cmesh_t cmesh, const long int iproc, const int proc_is_empty,
-                                    const t8_locidx_t first_puretree_of_current_proc, const int first_tree_shared_shift,
-                                    sc_array_t send_requests, sc_array_t send_buffer, t8_gloidx_t *first_local_tree,
-                                    const t8_gloidx_t first_element_in_tree_index_of_current_proc,
-                                    int8_t *first_tree_shared, t8_gloidx_t *child_in_tree_begin,
-                                    t8_cmesh_partition_query_t *data, sc_MPI_Comm comm,
-
-#if T8_ENABLE_DEBUG
-                                    int *num_received_start_messages
+void
+t8_cmesh_bounds_send_start (t8_cmesh_t cmesh, const int proc_is_empty, const t8_locidx_t first_puretree_of_current_proc,
+                            const int first_tree_shared_shift, const t8_gloidx_t iproc, sc_array *send_requests,
+                            sc_array *send_buffer, int *current_pos_in_send_buffer,
+                            const t8_gloidx_t first_element_in_tree_index_of_current_proc,
+                            t8_gloidx_t *first_local_tree, int8_t *first_tree_shared, t8_gloidx_t *child_in_tree_begin,
+                            int *expect_start_message, t8_cmesh_partition_query_t *data, sc_MPI_Comm comm
+#ifdef T8_ENABLE_DEBUG
+                            ,
+                            int *num_received_start_messages
 #endif
 )
 {
   const t8_gloidx_t global_id_of_first_tree
     = proc_is_empty ? -1 : first_puretree_of_current_proc + t8_cmesh_get_first_treeid (cmesh) + first_tree_shared_shift;
-  int current_pos_in_send_buffer = 0;
-  int expect_start_message = 1;
+
   if (iproc != cmesh->mpirank) {
     const int num_entries = 2;
     t8_gloidx_t *message;
     /* Allocate a new request */
-    sc_MPI_Request *request = (sc_MPI_Request *) sc_array_push (&send_requests);
+    sc_MPI_Request *request = (sc_MPI_Request *) sc_array_push (send_requests);
 
     /* Grow total send buffer */
-    sc_array_push_count (&send_buffer, num_entries);
+    sc_array_push_count (send_buffer, num_entries);
     /* Set message to current position in the buffer. */
-    message = (t8_gloidx_t *) sc_array_index_int (&send_buffer, current_pos_in_send_buffer);
-    current_pos_in_send_buffer += num_entries;
+    message = (t8_gloidx_t *) sc_array_index_int (send_buffer, *current_pos_in_send_buffer);
+    *current_pos_in_send_buffer += num_entries;
     /* Send the global id of the first tree of this process */
     message[0] = global_id_of_first_tree;
     /* The index in the tree is the index of the element minus the offset of the tree. */
@@ -423,12 +422,11 @@ t8_cmesh_uniform_bounds_send_start (t8_cmesh_t cmesh, const long int iproc, cons
       *child_in_tree_begin = first_element_in_tree_index_of_current_proc;
     }
     /* We do not expect this message from another proc */
-    expect_start_message = 0;
+    *expect_start_message = 0;
 #ifdef T8_ENABLE_DEBUG
     (*num_received_start_messages)++;
 #endif
   }
-  return expect_start_message;
 }
 
 void
@@ -695,71 +693,16 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
       /* Post the start message, we send the first tree id of the process
        * and (if desired) the index of the first element in this tree. */
       if (send_start_message) {
-        expect_start_message = t8_cmesh_uniform_bounds_send_start (
-          cmesh, iproc, proc_is_empty, first_puretree_of_current_proc, first_tree_shared_shift, send_requests,
-          send_buffer, first_local_tree, first_element_in_tree_index_of_current_proc, first_tree_shared,
-          child_in_tree_begin, &data, comm,
-#if T8_ENABLE_DEBUG
-          &num_received_start_messages
+        t8_cmesh_bounds_send_start (cmesh, proc_is_empty, first_puretree_of_current_proc, first_tree_shared_shift,
+                                    iproc, &send_requests, &send_buffer, &current_pos_in_send_buffer,
+                                    first_element_in_tree_index_of_current_proc, first_local_tree, first_tree_shared,
+                                    child_in_tree_begin, &expect_start_message, &data, comm
+#ifdef T8_ENABLE_DEBUG
+                                    ,
+                                    &num_received_start_messages
 
 #endif
         );
-#if 0
-        const t8_gloidx_t global_id_of_first_tree
-          = proc_is_empty
-              ? -1
-              : first_puretree_of_current_proc + t8_cmesh_get_first_treeid (cmesh) + first_tree_shared_shift;
-
-        if (iproc != cmesh->mpirank) {
-          const int num_entries = 2;
-          t8_gloidx_t *message;
-          /* Allocate a new request */
-          sc_MPI_Request *request = (sc_MPI_Request *) sc_array_push (&send_requests);
-
-          /* Grow total send buffer */
-          sc_array_push_count (&send_buffer, num_entries);
-          /* Set message to current position in the buffer. */
-          message = (t8_gloidx_t *) sc_array_index_int (&send_buffer, current_pos_in_send_buffer);
-          current_pos_in_send_buffer += num_entries;
-          /* Send the global id of the first tree of this process */
-          message[0] = global_id_of_first_tree;
-          /* The index in the tree is the index of the element minus the offset of the tree. */
-          message[1] = first_element_in_tree_index_of_current_proc;
-
-          const int mpiret = sc_MPI_Isend (message, num_entries, T8_MPI_GLOIDX, iproc,
-                                           T8_MPI_CMESH_UNIFORM_BOUNDS_START, comm, request);
-          SC_CHECK_MPI (mpiret);
-          t8_debugf ("Sending start message (%li, %li) to %li (global num el %li)\n", message[0], message[1], iproc,
-                     data.global_num_elements);
-
-          T8_ASSERT (proc_is_empty || (0 <= message[0] && message[0] < t8_cmesh_get_num_trees (cmesh)));
-          T8_ASSERT (proc_is_empty || (0 <= message[1] && message[1] < data.global_num_elements));
-          T8_ASSERT (!(proc_is_empty && message[0] != -1));
-          T8_ASSERT (!(proc_is_empty && message[1] != -1));
-        }
-        else { /* We are the current proc, so we just copy the data. */
-          *first_local_tree = global_id_of_first_tree;
-          if (first_element_in_tree_index_of_current_proc > 0) {
-            /* The first tree is shared */
-            if (first_tree_shared != NULL) {
-              *first_tree_shared = 1;
-            }
-          }
-          else {
-            if (first_tree_shared != NULL) {
-              *first_tree_shared = 0;
-            }
-          }
-          if (child_in_tree_begin != NULL) {
-            *child_in_tree_begin = first_element_in_tree_index_of_current_proc;
-          }
-          /* We do not expect this message from another proc */
-          expect_start_message = 0;
-#ifdef T8_ENABLE_DEBUG
-          num_received_start_messages++;
-#endif
-        }
-#endif
       } /* End sending of start message */
 
       t8_debugf ("End message: %i\n", send_end_message);
@@ -926,7 +869,6 @@ t8_cmesh_uniform_bounds_for_irregular_refinement (const t8_cmesh_t cmesh, const 
                                                   sc_MPI_Comm comm)
 {
   T8_ASSERT (cmesh != NULL);
-
   /* TODO: Clean up size_t and gloidx_t data types, ensure that each variables has the 
    *          matching type. */
 
