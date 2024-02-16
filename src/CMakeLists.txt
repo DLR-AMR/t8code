@@ -53,7 +53,7 @@ endif()
 
 if( T8CODE_ENABLE_VTK )
     target_include_directories( T8 PUBLIC ${VTK_INCLUDE_DIRS} )
-    target_link_libraries( T8 PUBLIC ${VTK_LIBRARY_DIRS} )
+    target_link_libraries( T8 PUBLIC ${VTK_LIBRARIES} )
 endif()
 
 target_sources( T8 PRIVATE 
