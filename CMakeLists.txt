@@ -43,6 +43,9 @@ endif()
 # Override default for this libsc option
 set( BUILD_SHARED_LIBS ON CACHE BOOL "Build libsc as a shared library" )
 
+# Prevent `libsc` and `p4est` from overwriting the default install prefix.
+set(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT FALSE)
+
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/sc )
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/p4est )
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/src )
