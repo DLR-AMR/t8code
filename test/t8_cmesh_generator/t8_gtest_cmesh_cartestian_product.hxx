@@ -254,4 +254,32 @@ class cmesh_cartesian_product_params: example_set {
   }
 };
 
+/**
+ * Variadic template class that creates \ref base_example based on the cartesian product
+ * of the input parameters. 
+ * 
+ * @tparam Iter 
+ */
+template <class... Iter>
+class cmesh_cartesian_product_with_rules: example_set {
+ public:
+  cmesh_cartesian_product_with_rules () {};
+
+  cmesh_cartesian_product_with_rules (std::pair<Iter, Iter>... ranges,
+                                      std::function<t8_cmesh_t (typename Iter::value_type...)> cmesh_function,
+                                      std::function<std::string (const typename Iter::value_type&...)> param_to_string,
+                                      std::function<bool (typename Iter::value_type...)> rule, std::string name)
+  {
+    std::vector<std::tuple<typename Iter::value_type...>> cart_prod;
+    cartesian_product (std::back_inserter (cart_prod), rule, ranges...);
+    for (int iparam_set = 0; (long unsigned int) iparam_set < cart_prod.size (); iparam_set++) {
+      std::tuple<typename Iter::value_type...> param = cart_prod[iparam_set];
+      cmesh_example_base* next_example
+        = (cmesh_example_base*) new cmesh_example_with_parameter<typename Iter::value_type...> (cmesh_function, param,
+                                                                                                param_to_string, name);
+      example_all_combination.push_back (next_example);
+    }
+  }
+};
+
 #endif /* T8_GTEST_CMESH_CREATOR_BASE_HXX */
