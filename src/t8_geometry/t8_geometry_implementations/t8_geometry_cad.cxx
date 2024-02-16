@@ -60,7 +60,7 @@ t8_geometry_cad::t8_geometry_cad (int dim, const char *fileprefix, const char *n
     SC_ABORTF ("Could not read brep file or brep file contains no shape. "
                "The cad file may be written with a newer cad version. "
                "Linked cad version: %s",
-               cad_VERSION_COMPLETE);
+               OCC_VERSION_COMPLETE);
   }
   TopExp::MapShapes (cad_shape, TopAbs_VERTEX, cad_shape_vertex_map);
   TopExp::MapShapes (cad_shape, TopAbs_EDGE, cad_shape_edge_map);
