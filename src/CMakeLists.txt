@@ -52,6 +52,8 @@ if ( T8CODE_ENABLE_MPI )
 endif()
 
 if( T8CODE_ENABLE_VTK )
+    target_compile_definitions( T8 PUBLIC T8_VTK_VERSION_USED="${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}" )
+    target_compile_definitions( T8 PUBLIC T8_WITH_VTK=1 )
     target_include_directories( T8 PUBLIC ${VTK_INCLUDE_DIRS} )
     target_link_libraries( T8 PUBLIC ${VTK_LIBRARIES} )
 endif()
