@@ -13,7 +13,7 @@ target_compile_definitions( T8 PUBLIC T8_CFLAGS="${CMAKE_C_FLAGS}" )
 target_compile_definitions( T8 PUBLIC T8_CPP="${CMAKE_CXX_COMPILER}" )
 target_compile_definitions( T8 PUBLIC T8_CPPFLAGS="${CMAKE_CXX_FLAGS}" )
 target_compile_definitions( T8 PUBLIC T8_LDFLAGS="${CMAKE_SHARED_LINKER_FLAGS}" )
-target_compile_definitions( T8 PUBLIC T8_LIBS="???" ) # Not sure what this flag is supposed to be...
+target_compile_definitions( T8 PUBLIC T8_LIBS="Not available with CMake builds" )
 
 
 find_package( Git REQUIRED )
