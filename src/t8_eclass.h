@@ -21,7 +21,7 @@
 */
 
 /** \file t8_eclass.h
- * We define all possible element classes that occur in hybrid meshes.
+ * We define all possible element classes that cadur in hybrid meshes.
  *
  * Notable examples are triangles, tetrahedra, quadrilaterals and hexahedra.
  * We cover all dimensions between zero and three, so it is in principal

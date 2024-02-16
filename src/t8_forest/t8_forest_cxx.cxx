@@ -1352,7 +1352,7 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
      * We return true otherwise */
     return ret;
   }
-  SC_ABORT ("An error has occurred. It is unclear whether the tree is shared.");
+  SC_ABORT ("An error has cadurred. It is unclear whether the tree is shared.");
 #endif
   return 0;
 }

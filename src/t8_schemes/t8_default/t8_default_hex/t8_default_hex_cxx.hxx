@@ -75,7 +75,7 @@ struct t8_default_scheme_hex_c: public t8_default_scheme_common_c
    * \param [in] called_new True if the elements in \a elem were created by a call
    *                       to \ref t8_element_new. False if no element in \a elem
    *                       was created in this way. The case that only some elements
-   *                       were created by \ref t8_element_new should never occur.
+   *                       were created by \ref t8_element_new should never cadur.
    * \note In debugging mode, an element that was passed to \ref t8_element_init
    * must pass \ref t8_element_is_valid.
    * \note If an element was created by \ref t8_element_new then \ref t8_element_init
@@ -575,7 +575,7 @@ struct t8_default_scheme_hex_c: public t8_default_scheme_common_c
    * \note            An element for which \ref t8_element_init was called must pass
    *                  this test.
    * \note            This function is used for debugging to catch certain errors.
-   *                  These can for example occur when an element points to a region
+   *                  These can for example cadur when an element points to a region
    *                  of memory which should not be interpreted as an element.
    * \note            We recommend to use the assertion T8_ASSERT (t8_element_is_valid (elem))
    *                  in the implementation of each of the functions in this file.

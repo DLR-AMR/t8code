@@ -859,7 +859,7 @@ t8_dpyramid_tree_face (const t8_dpyramid_t *p, const int face)
       return face;
     }
     else {
-      /*p is a tet and in some occasions p shares a face with its tree */
+      /*p is a tet and in some cadasions p shares a face with its tree */
       if (face == 0 && (p->pyramid.type == 3 || p->pyramid.type == 2)) {
         return 3;
       }

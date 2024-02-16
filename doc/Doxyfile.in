@@ -19,7 +19,7 @@
 
 # This tag specifies the encoding used for all characters in the configuration
 # file that follow. The default is UTF-8 which is also the encoding used for all
-# text before the first occurrence of this tag. Doxygen uses libiconv (or the
+# text before the first cadurrence of this tag. Doxygen uses libiconv (or the
 # iconv built into libc) for the transcoding. See
 # https://www.gnu.org/software/libiconv/ for the list of possible encodings.
 # The default value is: UTF-8.
@@ -1878,7 +1878,7 @@ USE_PDFLATEX           = YES
 
 # If the LATEX_BATCHMODE tag is set to YES, doxygen will add the \batchmode
 # command to the generated LaTeX files. This will instruct LaTeX to keep running
-# if errors occur, instead of asking the user for help. This option is also used
+# if errors cadur, instead of asking the user for help. This option is also used
 # when generating formulas in HTML.
 # The default value is: NO.
 # This tag requires that the tag GENERATE_LATEX is set to YES.
@@ -2207,7 +2207,7 @@ INCLUDE_FILE_PATTERNS  =
 PREDEFINED             = @PACKAGE_PREFIX@_DOXYGEN \
                          T8_ENABLE_DEBUG \
                          T8_WITH_VTK \
-                         T8_WITH_OCC \
+                         T8_WITH_cad \
                          T8_WITH_NETCDF \
                          T8_WITH_NETCDF_PAR
 

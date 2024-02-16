@@ -64,7 +64,7 @@ class t8_forest_volume: public testing::TestWithParam<std::tuple<t8_eclass_t, in
  * Compute the volume of a pyramid descending of a root-pyramid with volume 1/3
  * Pyramids need a special handling of the control-volume computation, because
  * they subdivide into pyramids and tetrahedra. Therefore in every refinement three 
- * types of elements occur:
+ * types of elements cadur:
  * 
  * 1. A pyramid with 1/8 of its parents volume
  * 2. A tetrahedron with a pyramid parent, having 1/16th of its parents volume.

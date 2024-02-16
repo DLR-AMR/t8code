@@ -103,7 +103,7 @@ jobs:
       run: echo No cache found or cache will be ignored. SC_IGNORE_CACHE=$SC_IGNORE_CACHE
     - name: if ignore cache, delete folders
       if: ${{ env.SC_IGNORE_CACHE == 1 }}
-      # The true at the end is to ignore errors that i.e. occur when the folders do not exist
+      # The true at the end is to ignore errors that i.e. cadur when the folders do not exist
       run: rm -r $SC_DEBUG $SC_RELEASE $SC_SERIAL_DEBUG $SC_SERIAL_RELEASE || true
     - name: make folders
       run: mkdir $SC_DEBUG && mkdir $SC_RELEASE && mkdir $SC_SERIAL_DEBUG && mkdir $SC_SERIAL_RELEASE
@@ -197,7 +197,7 @@ jobs:
       if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     - name: if ignore cache, delete folders
       if: ${{ env.P4EST_IGNORE_CACHE == 1 }}
-      # The true at the end is to ignore errors that i.e. occur when the folders do not exist      
+      # The true at the end is to ignore errors that i.e. cadur when the folders do not exist      
       run: rm -r $P4EST_DEBUG $P4EST_RELEASE $P4EST_SERIAL_DEBUG $P4EST_SERIAL_RELEASE || true 
     - name: make folders
       run: mkdir $P4EST_DEBUG && mkdir $P4EST_RELEASE && mkdir $P4EST_SERIAL_RELEASE

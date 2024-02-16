@@ -25,11 +25,11 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_vtk.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <test/t8_gtest_macros.hxx>
 
-#if T8_WITH_OCC
+#if T8_WITH_cad
 #include <GeomAPI_PointsToBSpline.hxx>
 #include <GeomAPI_PointsToBSplineSurface.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
@@ -57,7 +57,7 @@
  *  - jacobian:     Checks the resulting jacobian of an identity.
  */
 
-#if T8_WITH_OCC
+#if T8_WITH_cad
 /** Euler rotation around intrinsic zxz. 
  * \param [in] pos_vec                Position vector of three dimensional points to rotate.
  * \param [in] rot_vec                Three dimensional rotation vector around z, x and z in rad.
@@ -98,12 +98,12 @@ t8_euler_rotation (double *pos_vec, double *rot_vec, double *res_vec, double *ro
   }
 }
 
-/** Constructs an occ surface for testing purposes. Surface is build between vertex 0, 1, 4 and 5 of a unit hexahedron.
+/** Constructs an cad surface for testing purposes. Surface is build between vertex 0, 1, 4 and 5 of a unit hexahedron.
  * Saves the surface in the geometry shape.
  * \return                            The geometry.
  */
-t8_geometry_occ *
-t8_create_occ_surface_geometry ()
+t8_geometry_cad *
+t8_create_cad_surface_geometry ()
 {
   Handle_Geom_Surface surface;
   TopoDS_Shape shape;
@@ -123,16 +123,16 @@ t8_create_occ_surface_geometry ()
 
   surface = GeomAPI_PointsToBSplineSurface (point_array).Surface ();
   shape = BRepBuilderAPI_MakeFace (surface, 1e-6).Face ();
-  t8_geometry_occ *geometry = new t8_geometry_occ (3, shape, "occ dim=3");
+  t8_geometry_cad *geometry = new t8_geometry_cad (3, shape, "cad dim=3");
   return geometry;
 }
 
-/** Constructs an occ curve for testing purpsoes. Curve is build between vertex 0, 1, 4 and 5 of a unit hexahedron.
+/** Constructs an cad curve for testing purpsoes. Curve is build between vertex 0, 1, 4 and 5 of a unit hexahedron.
  * Saves the curve in the geometry shape.
- * \return                            The occ geometry.
+ * \return                            The cad geometry.
  */
-t8_geometry_occ *
-t8_create_occ_curve_geometry ()
+t8_geometry_cad *
+t8_create_cad_curve_geometry ()
 {
   Handle_Geom_Curve curve;
   TopoDS_Shape shape;
@@ -146,12 +146,12 @@ t8_create_occ_curve_geometry ()
 
   curve = GeomAPI_PointsToBSpline (point_array).Curve ();
   shape = BRepBuilderAPI_MakeEdge (curve).Edge ();
-  t8_geometry_occ *geometry = new t8_geometry_occ (3, shape, "occ dim=3");
+  t8_geometry_cad *geometry = new t8_geometry_cad (3, shape, "cad dim=3");
   return geometry;
 }
-#endif /* T8_WITH_OCC */
+#endif /* T8_WITH_cad */
 
-/** Constructs a cmesh with an occ geometry linked hypercube.
+/** Constructs a cmesh with an cad geometry linked hypercube.
  * \param [in] rot_vec                The rotation vector to rotate the cube before linking a geometry to it.
  * \param [in] face                   The index of the face to link a surface to. -1 for no face.
  * \param [in] edge                   The index of the edge to link a curve to. -1 for no edge.
@@ -159,15 +159,15 @@ t8_create_occ_curve_geometry ()
  * \return                            A valid cmesh, as if _init and _commit had been called.
  */
 t8_cmesh_t
-t8_create_occ_hypercube (double *rot_vec, int face, int edge, double *parameters)
+t8_create_cad_hypercube (double *rot_vec, int face, int edge, double *parameters)
 {
-#if T8_WITH_OCC
+#if T8_WITH_cad
   if (edge >= 0 && face >= 0) {
     SC_ABORTF ("Please specify only an edge or a face.");
   }
 
   t8_cmesh_t cmesh;
-  t8_geometry_occ *geometry = NULL;
+  t8_geometry_cad *geometry = NULL;
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
 
@@ -183,35 +183,35 @@ t8_create_occ_hypercube (double *rot_vec, int face, int edge, double *parameters
   T8_ASSERT (face < 0 || edge < 0);
   if (face >= 0) {
     faces[face] = 1;
-    geometry = t8_create_occ_surface_geometry ();
-    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY + face,
+    geometry = t8_create_cad_surface_geometry ();
+    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_cad_FACE_PARAMETERS_ATTRIBUTE_KEY + face,
                             parameters, 8 * sizeof (double), 0);
   }
   else if (edge >= 0) {
     edges[edge] = 1;
-    geometry = t8_create_occ_curve_geometry ();
-    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + edge,
+    geometry = t8_create_cad_curve_geometry ();
+    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_cad_EDGE_PARAMETERS_ATTRIBUTE_KEY + edge,
                             parameters, 2 * sizeof (double), 0);
   }
   else {
     /* Even if we do not want to link any geometry to the edges or faces, 
-     * we have to create a geometry. Hence an occ geometry can only be created
+     * we have to create a geometry. Hence an cad geometry can only be created
      * with an actual shape, we just create a geometry with a curve and do not
      * link the curve to any edge. */
-    geometry = t8_create_occ_curve_geometry ();
+    geometry = t8_create_cad_curve_geometry ();
   }
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces, 6 * sizeof (int), 0);
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges, 24 * sizeof (int), 0);
+  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_cad_FACE_ATTRIBUTE_KEY, faces, 6 * sizeof (int), 0);
+  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_cad_EDGE_ATTRIBUTE_KEY, edges, 24 * sizeof (int), 0);
   t8_cmesh_register_geometry (cmesh, geometry);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   return cmesh;
 
-#else  /* !T8_WITH_OCC */
-  SC_ABORTF ("OCC not linked");
-#endif /* T8_WITH_OCC */
+#else  /* !T8_WITH_cad */
+  SC_ABORTF ("cad not linked");
+#endif /* T8_WITH_cad */
 }
 
-/** Tests the occ geometry functions for hexahedra.
+/** Tests the cad geometry functions for hexahedra.
  * \param [in] rot_vec                The rotation vector to rotate the hypercube.
  * \param [in] face                   The face to test. -1 for no face.
  * \param [in] edge                   The edge to test. -1 for no edge.
@@ -222,16 +222,16 @@ t8_create_occ_hypercube (double *rot_vec, int face, int edge, double *parameters
  * \return                            Returns 1 if passed, 0 if failed.
  */
 void
-t8_test_geometry_occ (double *rot_vec, int face, int edge, double *parameters, double *test_ref_coords,
+t8_test_geometry_cad (double *rot_vec, int face, int edge, double *parameters, double *test_ref_coords,
                       double *test_return_coords)
 {
-#if T8_WITH_OCC
+#if T8_WITH_cad
   double out_coords[3];
   double rotated_test_ref_coords[24];
   double rotation_origin[3] = { 0.5, 0.5, 0.5 };
   double inversed_rot_vec[3];
   double tol = T8_PRECISION_EPS > 1e-10 ? T8_PRECISION_EPS : 1e-10;
-  t8_cmesh_t cmesh = t8_create_occ_hypercube (rot_vec, face, edge, parameters);
+  t8_cmesh_t cmesh = t8_create_cad_hypercube (rot_vec, face, edge, parameters);
 
   for (int i_coord = 0; i_coord < 3; ++i_coord) {
     inversed_rot_vec[2 - i_coord] = -rot_vec[i_coord];
@@ -245,13 +245,13 @@ t8_test_geometry_occ (double *rot_vec, int face, int edge, double *parameters, d
   }
   t8_cmesh_destroy (&cmesh);
 
-#else  /* !T8_WITH_OCC */
-  SC_ABORTF ("OCC not linked");
-#endif /* T8_WITH_OCC */
+#else  /* !T8_WITH_cad */
+  SC_ABORTF ("cad not linked");
+#endif /* T8_WITH_cad */
 }
 
-#if T8_WITH_OCC
-TEST (t8_gtest_geometry_occ, linked_faces)
+#if T8_WITH_cad
+TEST (t8_gtest_geometry_cad, linked_faces)
 {
   /* clang-format off */
   double test_ref_coords[24] = { 0.1, 0.1, 0.1, 
@@ -289,12 +289,12 @@ TEST (t8_gtest_geometry_occ, linked_faces)
     0, 0, 0, 1, 1, 0, 1, 1   /* Face 5 */
   };
   for (int i_faces = 0; i_faces < 6; ++i_faces) {
-    t8_test_geometry_occ (surface_rot_vecs + i_faces * 3, i_faces, -1, surface_parameters + i_faces * 8,
+    t8_test_geometry_cad (surface_rot_vecs + i_faces * 3, i_faces, -1, surface_parameters + i_faces * 8,
                           test_ref_coords, surface_test_return_coords);
   }
 }
 
-TEST (t8_gtest_geometry_occ, linked_edges)
+TEST (t8_gtest_geometry_cad, linked_edges)
 {
   /* clang-format off */
   double test_ref_coords[24] = { 0.1, 0.1, 0.1, 
@@ -344,14 +344,14 @@ TEST (t8_gtest_geometry_occ, linked_edges)
     0, 1   // Edge 11
   };
   for (int i_edges = 0; i_edges < 12; ++i_edges) {
-    t8_test_geometry_occ (curve_rot_vecs + i_edges * 3, -1, i_edges, curve_parameters + i_edges * 2, test_ref_coords,
+    t8_test_geometry_cad (curve_rot_vecs + i_edges * 3, -1, i_edges, curve_parameters + i_edges * 2, test_ref_coords,
                           curve_test_return_coords);
   }
 }
-#endif /* T8_WITH_OCC */
+#endif /* T8_WITH_cad */
 
-#if T8_WITH_OCC
-TEST (t8_gtest_geometry_occ, jacobian)
+#if T8_WITH_cad
+TEST (t8_gtest_geometry_cad, jacobian)
 {
   t8_cmesh_t cmesh;
   double jacobian[9], rot_vec[3] = { 0, 0, 0 }, ref_coords[3] = { 0.5, 0.5, 0.5 };
@@ -360,26 +360,26 @@ TEST (t8_gtest_geometry_occ, jacobian)
                                 0, 1, 0, 
                                 0, 0, 1 };
   /* clang-format on */
-  cmesh = t8_create_occ_hypercube (rot_vec, -1, -1, NULL);
+  cmesh = t8_create_cad_hypercube (rot_vec, -1, -1, NULL);
   t8_geometry_jacobian (cmesh, 0, ref_coords, 1, jacobian);
   for (int i = 0; i < 9; ++i) {
     EXPECT_FLOAT_EQ (jacobian[i], jacobian_expect[i]);
   }
   t8_cmesh_destroy (&cmesh);
 }
-#endif /* T8_WITH_OCC */
+#endif /* T8_WITH_cad */
 
-#if T8_WITH_OCC
+#if T8_WITH_cad
 /* The test checks if the mapping algorithms for curved 2d elements do not shift values on a surface which is not curved.
- * In that case, the occ geometry should output the same out_coords as the linear geometry function. */
-class class_2d_element_linear_occ_surface: public testing::TestWithParam<t8_eclass_t> {
+ * In that case, the cad geometry should output the same out_coords as the linear geometry function. */
+class class_2d_element_linear_cad_surface: public testing::TestWithParam<t8_eclass_t> {
  protected:
   void
   SetUp () override
   {
     eclass = GetParam ();
     T8_ASSERT (0 <= eclass && eclass < T8_ECLASS_COUNT);
-    Handle_Geom_Surface occ_surface;
+    Handle_Geom_Surface cad_surface;
     TColgp_Array2OfPnt point_array (1, 2, 1, 2);
     TopoDS_Shape shape;
 
@@ -404,10 +404,10 @@ class class_2d_element_linear_occ_surface: public testing::TestWithParam<t8_ecla
     point_array (1, 2) = gp_Pnt (0.0, 0.0, 0.0);
     point_array (2, 2) = gp_Pnt (1.0, 0.0, 0.0);
 
-    occ_surface = GeomAPI_PointsToBSplineSurface (point_array).Surface ();
-    shape = BRepBuilderAPI_MakeFace (occ_surface, 1e-6).Face ();
+    cad_surface = GeomAPI_PointsToBSplineSurface (point_array).Surface ();
+    shape = BRepBuilderAPI_MakeFace (cad_surface, 1e-6).Face ();
 
-    geometry_occ = new t8_geometry_occ (2, shape, "occ surface dim=2");
+    geometry_cad = new t8_geometry_cad (2, shape, "cad surface dim=2");
 
     t8_cmesh_init (&cmesh);
     t8_cmesh_set_tree_class (cmesh, 0, eclass);
@@ -420,13 +420,13 @@ class class_2d_element_linear_occ_surface: public testing::TestWithParam<t8_ecla
   }
   t8_cmesh_t cmesh;
   t8_eclass_t eclass;
-  t8_geometry_occ *geometry_occ;
+  t8_geometry_cad *geometry_cad;
   /* The arrays prescribe the linkage of the element. The face of the element is linked and all edges are not */
   int faces[1] = { 1 };
   int edges[8] = { 0 };
 };
 
-TEST_P (class_2d_element_linear_occ_surface, t8_check_2d_element_linear_occ_surface)
+TEST_P (class_2d_element_linear_cad_surface, t8_check_2d_element_linear_cad_surface)
 {
   /* Saving the corner vertices for the given element class. */
   const int num_vertices = t8_eclass_num_vertices[eclass];
@@ -441,14 +441,14 @@ TEST_P (class_2d_element_linear_occ_surface, t8_check_2d_element_linear_occ_surf
   double params_tri[6] = { 0, 1, 1, 1, 1, 0 };
 
   /* Passing of the attributes to the element */
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces, sizeof (int), 0);
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges,
+  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_cad_FACE_ATTRIBUTE_KEY, faces, sizeof (int), 0);
+  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_cad_EDGE_ATTRIBUTE_KEY, edges,
                           2 * num_vertices * sizeof (int), 0);
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY,
+  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_cad_FACE_PARAMETERS_ATTRIBUTE_KEY,
                           (eclass == T8_ECLASS_QUAD ? params_quad : params_tri), 2 * num_vertices * sizeof (double), 0);
 
   /* Register the geometry */
-  t8_cmesh_register_geometry (cmesh, geometry_occ);
+  t8_cmesh_register_geometry (cmesh, geometry_cad);
   /* Commit the cmesh */
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 
@@ -470,7 +470,7 @@ TEST_P (class_2d_element_linear_occ_surface, t8_check_2d_element_linear_occ_surf
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_check_2d_element_linear_occ_surface, class_2d_element_linear_occ_surface,
+INSTANTIATE_TEST_SUITE_P (t8_gtest_check_2d_element_linear_cad_surface, class_2d_element_linear_cad_surface,
                           AllEclasses2D);
 
-#endif /* T8_WITH_OCC */
+#endif /* T8_WITH_cad */

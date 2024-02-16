@@ -20,22 +20,22 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_geometry_occ.hxx
+/** \file t8_geometry_cad.hxx
  * This geometry implements OpenCASCADE geometries. It enables the option to link different 
- * 1 and 2 dimensional occ geometries to the edges and faces of refinement trees. 
+ * 1 and 2 dimensional cad geometries to the edges and faces of refinement trees. 
  * The geometry of the refinement tree is extended into the volume accordingly.
  */
 
-#ifndef T8_GEOMETRY_OCC_HXX
-#define T8_GEOMETRY_OCC_HXX
+#ifndef T8_GEOMETRY_cad_HXX
+#define T8_GEOMETRY_cad_HXX
 
 #include <t8.h>
 #include <t8_geometry/t8_geometry_with_vertices.hxx>
 #include <t8_geometry/t8_geometry_with_vertices.h>
 #include <t8_cmesh/t8_cmesh_types.h>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.h>
 
-#if T8_WITH_OCC
+#if T8_WITH_cad
 
 #include <TopoDS_Shape.hxx>
 #include <TopExp.hxx>
@@ -43,11 +43,11 @@
 #include <Geom_Curve.hxx>
 #include <Geom_Surface.hxx>
 
-struct t8_geometry_occ: public t8_geometry_with_vertices
+struct t8_geometry_cad: public t8_geometry_with_vertices
 {
  public:
   /**
-   * Constructor of the occ geometry with a given dimension. The geometry
+   * Constructor of the cad geometry with a given dimension. The geometry
    * is currently viable with quad/hex and triangle trees. Tets will be supported soon.
    * The geometry uses as many vertices as the tree type has, as well as
    * additional geometry information, which is extracted from a .brep file.
@@ -55,30 +55,30 @@ struct t8_geometry_occ: public t8_geometry_with_vertices
    * Since the internals of this geometry are finely tuned to the .brep file
    * it is recommended to only use it with the \ref t8_cmesh_readmshfile function.
    * \param [in] dim        The dimension of this geometry.
-   * \param [in] fileprefix Prefix of a .brep file from which to extract an occ geometry.
+   * \param [in] fileprefix Prefix of a .brep file from which to extract an cad geometry.
    * \param [in] name       The name to give this geometry.
    */
-  t8_geometry_occ (int dim, const char *fileprefix, const char *name);
+  t8_geometry_cad (int dim, const char *fileprefix, const char *name);
 
   /**
-   * Constructor of the occ geometry with a given dimension. The geometry
+   * Constructor of the cad geometry with a given dimension. The geometry
    * is currently viable with quad/hex and triangle trees. Tets will be supported soon.
    * The geometry uses as many vertices as the tree type has, as well as
-   * additional geometry information, which is given via the \a occ_shape.
+   * additional geometry information, which is given via the \a cad_shape.
    * The vertices are saved via the \ref t8_cmesh_set_tree_vertices function.
    * This constructor can be used in short scripts or in combination with a
    * mesh generator, to omit the file IO of the 
-   * \ref t8_geometry_occ (int dim, const char *fileprefix, const char *name) constructor.
+   * \ref t8_geometry_cad (int dim, const char *fileprefix, const char *name) constructor.
    * \param [in] dim        The dimension of this geometry.
-   * \param [in] occ_shape  Occ shape geometry.
+   * \param [in] cad_shape  cad shape geometry.
    * \param [in] name       The name to give this geometry.
    */
-  t8_geometry_occ (int dim, const TopoDS_Shape occ_shape, const char *name);
+  t8_geometry_cad (int dim, const TopoDS_Shape cad_shape, const char *name);
 
   /** The destructor. 
    * Clears the allocated memory.
    */
-  virtual ~t8_geometry_occ ()
+  virtual ~t8_geometry_cad ()
   {
     /* Nothing to do. */
   }
@@ -90,7 +90,7 @@ struct t8_geometry_occ: public t8_geometry_with_vertices
   inline t8_geometry_type_t
   t8_geom_get_type () const
   {
-    return T8_GEOMETRY_TYPE_OCC;
+    return T8_GEOMETRY_TYPE_cad;
   };
 
   /**
@@ -128,123 +128,123 @@ struct t8_geometry_occ: public t8_geometry_with_vertices
   virtual void
   t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 
-  /** Check if a occ_curve is a line.
-   * \param [in] curve_index      The index of the occ_curve.
+  /** Check if a cad_curve is a line.
+   * \param [in] curve_index      The index of the cad_curve.
    * \return                      1 if curve is a line, 0 if curve is not a line.
    */
   int
   t8_geom_is_line (const int curve_index) const;
 
-  /** Check if a occ_surface is a plane.
-   * \param [in] surface_index      The index of the occ_surface.
+  /** Check if a cad_surface is a plane.
+   * \param [in] surface_index      The index of the cad_surface.
    * \return                        1 if surface is a plane linear, 0 if surface is not a plane.
    */
   int
   t8_geom_is_plane (const int surface_index) const;
 
-  /** Get an occ point from the occ_shape.
-   * \param [in] index      The index of the point in the occ_shape.
-   * \return                The occ point.
+  /** Get an cad point from the cad_shape.
+   * \param [in] index      The index of the point in the cad_shape.
+   * \return                The cad point.
    */
   const gp_Pnt
-  t8_geom_get_occ_point (const int index) const;
+  t8_geom_get_cad_point (const int index) const;
 
-  /** Get an occ curve from the occ_shape.
-   * \param [in] index      The index of the curve in the occ_shape.
-   * \return                The occ curve.
+  /** Get an cad curve from the cad_shape.
+   * \param [in] index      The index of the curve in the cad_shape.
+   * \return                The cad curve.
    */
   const Handle_Geom_Curve
-  t8_geom_get_occ_curve (const int index) const;
+  t8_geom_get_cad_curve (const int index) const;
 
-  /** Get an occ surface from the occ_shape.
-   * \param [in] index      The index of the surface in the occ_shape.
-   * \return                The occ surface.
+  /** Get an cad surface from the cad_shape.
+   * \param [in] index      The index of the surface in the cad_shape.
+   * \return                The cad surface.
    */
   const Handle_Geom_Surface
-  t8_geom_get_occ_surface (const int index) const;
+  t8_geom_get_cad_surface (const int index) const;
 
-  /** Get the occ_shape_vertex2edge_map.
-   * \return                The occ_shape_vertex_map.
+  /** Get the cad_shape_vertex2edge_map.
+   * \return                The cad_shape_vertex_map.
    */
   const TopTools_IndexedMapOfShape
-  t8_geom_get_occ_shape_vertex_map () const;
+  t8_geom_get_cad_shape_vertex_map () const;
 
-  /** Get the occ_shape_edge2face_map.
-   * \return                The occ_shape_edge_map.
+  /** Get the cad_shape_edge2face_map.
+   * \return                The cad_shape_edge_map.
    */
   const TopTools_IndexedMapOfShape
-  t8_geom_get_occ_shape_edge_map () const;
+  t8_geom_get_cad_shape_edge_map () const;
 
-  /** Get the occ_shape_face_map.
-   * \return                The occ_shape_face_map.
+  /** Get the cad_shape_face_map.
+   * \return                The cad_shape_face_map.
    */
   const TopTools_IndexedMapOfShape
-  t8_geom_get_occ_shape_face_map () const;
+  t8_geom_get_cad_shape_face_map () const;
 
-  /** Check if two occ points share a common occ edge.
-   * \param [in]  vertex1_index  The index of the first occ point.
-   * \param [in]  vertex2_index  The index of the second occ point.
+  /** Check if two cad points share a common cad edge.
+   * \param [in]  vertex1_index  The index of the first cad point.
+   * \param [in]  vertex2_index  The index of the second cad point.
    * \return                    Index of the shared edge. 0 if there is no shared edge.
    */
   int
   t8_geom_get_common_edge (const int vertex1_index, const int vertex2_index) const;
 
-  /** Check if two occ edges share a common occ face.
-   * \param [in]  edge1_index    The index of the first occ edge.
-   * \param [in]  edge2_index    The index of the second occ edge.
+  /** Check if two cad edges share a common cad face.
+   * \param [in]  edge1_index    The index of the first cad edge.
+   * \param [in]  edge2_index    The index of the second cad edge.
    * \return                    Index of the shared face. 0 if there is no shared face.
    */
   int
   t8_geom_get_common_face (const int edge1_index, const int edge2_index) const;
 
-  /** Check if a occ vertex lies on an occ edge.
-   * \param [in]  vertex_index   The index of the occ vertex.
-   * \param [in]  edge_index     The index of the occ edge.
+  /** Check if a cad vertex lies on an cad edge.
+   * \param [in]  vertex_index   The index of the cad vertex.
+   * \param [in]  edge_index     The index of the cad edge.
    * \return                    1 if vertex lies on edge, otherwise 0.
    */
   int
   t8_geom_is_vertex_on_edge (const int vertex_index, const int edge_index) const;
 
-  /** Check if a occ vertex lies on an occ edge.
-   * \param [in]  edge_index     The index of the occ vertex.
-   * \param [in]  face_index     The index of the occ edge.
+  /** Check if a cad vertex lies on an cad edge.
+   * \param [in]  edge_index     The index of the cad vertex.
+   * \param [in]  face_index     The index of the cad edge.
    * \return                    1 if vertex lies on edge, otherwise 0.
    */
   int
   t8_geom_is_edge_on_face (const int edge_index, const int face_index) const;
 
-  /** Check if a occ vertex lies on an occ face.
-   * \param [in]  vertex_index   The index of the occ vertex.
-   * \param [in]  face_index     The index of the occ face.
+  /** Check if a cad vertex lies on an cad face.
+   * \param [in]  vertex_index   The index of the cad vertex.
+   * \param [in]  face_index     The index of the cad face.
    * \return                    1 if vertex lies on face, otherwise 0.
    */
   int
   t8_geom_is_vertex_on_face (const int vertex_index, const int face_index) const;
 
-  /** Retrieves the parameter of an occ vertex on an occ edge.
+  /** Retrieves the parameter of an cad vertex on an cad edge.
    *  The vertex has to lie on the edge.
-   * \param [in]  vertex_index   The index of the occ vertex.
-   * \param [in]  edge_index     The index of the occ edge.
+   * \param [in]  vertex_index   The index of the cad vertex.
+   * \param [in]  edge_index     The index of the cad edge.
    * \param [out] edge_param     The parameter of the vertex on the edge.
    */
   void
   t8_geom_get_parameter_of_vertex_on_edge (const int vertex_index, const int edge_index, double *edge_param) const;
 
-  /** Retrieves the parameters of an occ vertex on a occ face.
+  /** Retrieves the parameters of an cad vertex on a cad face.
    *  The vertex has to lie on the face.
-   * \param [in]  vertex_index   The index of the occ vertex.
-   * \param [in]  face_index     The index of the occ face.
+   * \param [in]  vertex_index   The index of the cad vertex.
+   * \param [in]  face_index     The index of the cad face.
    * \param [out] face_params    The parameters of the vertex on the face.
    */
   void
   t8_geom_get_parameters_of_vertex_on_face (const int vertex_index, const int face_index, double *face_params) const;
 
-  /** Converts the parameters of an occ edge to the corresponding parameters on an occ face.
+  /** Converts the parameters of an cad edge to the corresponding parameters on an cad face.
    * The edge has to lie on the face.
    * For the conversion of edge parameters of mesh elements to topological face parameters of a closed surface, it is additionally
    * checked, whether the conversion was correct, to prevent disorted elements. 
-   * \param [in]  edge_index     The index of the occ edge, which parameters should be converted to face parameters.
-   * \param [in]  face_index     The index of the occ face, on to which the edge parameters should be converted.
+   * \param [in]  edge_index     The index of the cad edge, which parameters should be converted to face parameters.
+   * \param [in]  face_index     The index of the cad face, on to which the edge parameters should be converted.
    * \param [in]  num_face_nodes The number of the face nodes of the evaluated element. Only needed for closed surface check, otherwise NULL.
    * \param [in]  edge_param     The parameter on the edge.
    * \param [in]  surface_param  The parameters of the surface nodes.
@@ -258,16 +258,16 @@ struct t8_geometry_occ: public t8_geometry_with_vertices
                                              const double edge_param, const double *surface_params,
                                              double *face_params) const;
 
-  /** Finds the parametric bounds of an occ face.
-   * \param [in]  face_index   The index of the occ face.
-   * \param [out] bounds          The parametric bounds of the occ face.
+  /** Finds the parametric bounds of an cad face.
+   * \param [in]  face_index   The index of the cad face.
+   * \param [out] bounds          The parametric bounds of the cad face.
    */
   void
   t8_geom_get_face_parametric_bounds (const int surface_index, double *bounds) const;
 
-  /** Finds the parametric bounds of an occ edge.
-   * \param [in]  edge_index   The index of the occ edge.
-   * \param [out] bounds       The parametric bounds of the occ edge.
+  /** Finds the parametric bounds of an cad edge.
+   * \param [in]  edge_index   The index of the cad edge.
+   * \param [out] bounds       The parametric bounds of the cad edge.
    */
   void
   t8_geom_get_edge_parametric_bounds (const int edge_index, double *bounds) const;
@@ -298,7 +298,7 @@ struct t8_geometry_occ: public t8_geometry_with_vertices
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
+  t8_geom_evaluate_cad_triangle (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
                                  const size_t num_coords, double *out_coords) const;
 
   /**
@@ -310,7 +310,7 @@ struct t8_geometry_occ: public t8_geometry_with_vertices
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+  t8_geom_evaluate_cad_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
                              double *out_coords) const;
 
   /**
@@ -322,21 +322,21 @@ struct t8_geometry_occ: public t8_geometry_with_vertices
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+  t8_geom_evaluate_cad_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
                             double *out_coords) const;
 
   const int *edges;                                /**< The linked edges of the currently active tree. */
   const int *faces;                                /**< The linked faces of the currently active tree. */
-  TopoDS_Shape occ_shape;                          /**< Occ geometry */
-  TopTools_IndexedMapOfShape occ_shape_vertex_map; /**< Map of all TopoDS_Vertex in shape. */
-  TopTools_IndexedMapOfShape occ_shape_edge_map;   /**< Map of all TopoDS_Edge in shape. */
-  TopTools_IndexedMapOfShape occ_shape_face_map;   /**< Map of all TopoDS_Face in shape. */
+  TopoDS_Shape cad_shape;                          /**< cad geometry */
+  TopTools_IndexedMapOfShape cad_shape_vertex_map; /**< Map of all TopoDS_Vertex in shape. */
+  TopTools_IndexedMapOfShape cad_shape_edge_map;   /**< Map of all TopoDS_Edge in shape. */
+  TopTools_IndexedMapOfShape cad_shape_face_map;   /**< Map of all TopoDS_Face in shape. */
   TopTools_IndexedDataMapOfShapeListOfShape
-    occ_shape_vertex2edge_map; /**< Maps all TopoDS_Vertex of shape to all its connected TopoDS_Edge */
+    cad_shape_vertex2edge_map; /**< Maps all TopoDS_Vertex of shape to all its connected TopoDS_Edge */
   TopTools_IndexedDataMapOfShapeListOfShape
-    occ_shape_edge2face_map; /**< Maps all TopoDS_Edge of shape to all its connected TopoDS_Face */
+    cad_shape_edge2face_map; /**< Maps all TopoDS_Edge of shape to all its connected TopoDS_Face */
 };
 
-#endif /* T8_WITH_OCC */
+#endif /* T8_WITH_cad */
 
-#endif /* !T8_GEOMETRY_OCC_HXX! */
+#endif /* !T8_GEOMETRY_cad_HXX! */

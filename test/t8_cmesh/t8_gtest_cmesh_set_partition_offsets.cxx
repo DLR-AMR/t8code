@@ -162,7 +162,7 @@ TEST_P (cmesh_set_partition_offsets_commit, test_set_offsets)
   const t8_locidx_t expected_num_local_trees = mpirank == main_process ? inum_trees : 0;
 
   if (mpirank == main_process) {
-    /* Double check that no overflow from converting gloidx to locidx occurred. */
+    /* Double check that no overflow from converting gloidx to locidx cadurred. */
     ASSERT_EQ (expected_num_local_trees, inum_trees);
   }
 

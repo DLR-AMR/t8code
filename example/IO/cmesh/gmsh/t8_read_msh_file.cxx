@@ -96,7 +96,7 @@ t8_read_msh_file_build_cmesh (const char *prefix, int do_partition, int dim, int
     return cmesh;
   }
   else {
-    t8_global_productionf ("An error occurred while reading %s.msh file.\n", prefix);
+    t8_global_productionf ("An error cadurred while reading %s.msh file.\n", prefix);
     return NULL;
   }
 }

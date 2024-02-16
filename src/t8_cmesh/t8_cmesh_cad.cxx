@@ -20,16 +20,16 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_occ.cxx
+/** \file t8_cmesh_cad.cxx
  *
  * TODO: document this file
  */
 
-#include <t8_cmesh/t8_cmesh_occ.hxx>
+#include <t8_cmesh/t8_cmesh_cad.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
 
-#if T8_WITH_OCC
+#if T8_WITH_cad
 #include <gp_Pnt.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
@@ -48,16 +48,16 @@
 
 t8_cmesh_t
 t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees, int num_axial_trees, int num_radial_trees,
-                              int with_occ_geometry)
+                              int with_cad_geometry)
 {
   /* Create the cmesh and the geometry */
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_profiling (cmesh, 1);
 
-  if (with_occ_geometry) {
-#if T8_WITH_OCC
-    /* Create the two occ cylinder surfaces */
+  if (with_cad_geometry) {
+#if T8_WITH_cad
+    /* Create the two cad cylinder surfaces */
     const double radius_inner = 0.25;
     const double radius_outer = 0.5;
     const gp_Pnt origin (0, 0, 0);
@@ -75,28 +75,28 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees, int nu
     const TopoDS_Face face_inner = TopoDS::Face (BRepPrimAPI_MakePrism (edge_inner, height));
     const Handle_Geom_Surface cylinder_inner = BRep_Tool::Surface (face_inner);
 
-    /* Fill a shape with cylinders and register an occ geometry with this shape. */
+    /* Fill a shape with cylinders and register an cad geometry with this shape. */
     TopoDS_Shape shape;
     shape = BRepBuilderAPI_MakeFace (cylinder_outer, 1e-6).Face ();
     shape = BRepAlgoAPI_Fuse (shape, BRepBuilderAPI_MakeFace (cylinder_inner, 1e-6).Face ());
-    t8_geometry_occ *geometry_occ = new t8_geometry_occ (3, shape, "occ surface dim=3");
+    t8_geometry_cad *geometry_cad = new t8_geometry_cad (3, shape, "cad surface dim=3");
 
-    t8_cmesh_register_geometry (cmesh, geometry_occ);
+    t8_cmesh_register_geometry (cmesh, geometry_cad);
 
-#else  /* !T8_WITH_OCC */
-    SC_ABORTF ("OCC not linked");
-#endif /* T8_WITH_OCC */
+#else  /* !T8_WITH_cad */
+    SC_ABORTF ("cad not linked");
+#endif /* T8_WITH_cad */
   }
   else {
     t8_geometry_c *geometry_linear = t8_geometry_linear_new (3);
     t8_cmesh_register_geometry (cmesh, geometry_linear);
   }
 
-#if T8_WITH_OCC
+#if T8_WITH_cad
   /* Save the indices of the cylinders inside the shape for later usage. 
    * The indices start with 1 and are in the same order as we put in the cylinders. */
   int cylinder_outer_index = 1, cylinder_inner_index = 2;
-#endif /* T8_WITH_OCC */
+#endif /* T8_WITH_cad */
 
   /* Start the construction of the actual cylindrical cmesh. We are going to use three loops
    * to iterate over the three dimensions of cylinder coordinates. */
@@ -105,13 +105,13 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees, int nu
   const double dphi = 2.0 * M_PI / num_tangential_trees;
   const double dh = 1.0 / num_axial_trees;
   /* Allocate memory for saving the node coordinates 
-   * and in case of usage of the occ geometry, the node parameters */
+   * and in case of usage of the cad geometry, the node parameters */
   double *vertices;
   vertices = T8_ALLOC (double, num_tangential_trees *num_axial_trees *num_radial_trees * 24);
-#if T8_WITH_OCC
+#if T8_WITH_cad
   double *parameters;
   parameters = T8_ALLOC (double, num_tangential_trees *num_axial_trees * 8);
-#endif /* T8_WITH_OCC */
+#endif /* T8_WITH_cad */
 
   /* Compute vertex coordinates and parameters */
   for (int i_tangential_trees = 0; i_tangential_trees < num_tangential_trees; ++i_tangential_trees) {
@@ -164,9 +164,9 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees, int nu
           vertices + ((i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees) * 24,
           24);
 
-        /* Assign parameters if occ is enabled */
-#if T8_WITH_OCC
-        if (with_occ_geometry) {
+        /* Assign parameters if cad is enabled */
+#if T8_WITH_cad
+        if (with_cad_geometry) {
           /* Calculate parameters if cell lies on boundary */
           const int current_tree_parameters = (i_tangential_trees * num_axial_trees + i_axial_trees) * 8;
           if (i_radial_trees == 0 || i_radial_trees == num_radial_trees - 1) {
@@ -185,66 +185,66 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees, int nu
             = (i_tangential_trees * num_axial_trees + i_axial_trees) * num_radial_trees + i_radial_trees;
           /* If geometry on both sides of cell */
           if (num_radial_trees == 1) {
-            /* Assign occ geometries to the corresponding faces */
+            /* Assign cad geometries to the corresponding faces */
             int faces[6] = { 0 };
             faces[0] = cylinder_outer_index;
             faces[1] = cylinder_inner_index;
 
             /* Assign attributes to cmesh cells */
-            t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (), T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces,
+            t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (), T8_CMESH_cad_FACE_ATTRIBUTE_KEY, faces,
                                     6 * sizeof (int), 0);
-            t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (), T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges,
+            t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (), T8_CMESH_cad_EDGE_ATTRIBUTE_KEY, edges,
                                     24 * sizeof (int), 0);
             t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (),
-                                    T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY + 0,
+                                    T8_CMESH_cad_FACE_PARAMETERS_ATTRIBUTE_KEY + 0,
                                     parameters + current_tree_parameters, 8 * sizeof (double), 1);
             t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (),
-                                    T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY + 1,
+                                    T8_CMESH_cad_FACE_PARAMETERS_ATTRIBUTE_KEY + 1,
                                     parameters + current_tree_parameters, 8 * sizeof (double), 1);
           }
           /* If geometry only on face 1 */
           else if (i_radial_trees == 0) {
-            /* Assign occ geometries to the corresponding faces */
+            /* Assign cad geometries to the corresponding faces */
             int faces[6] = { 0 };
             faces[1] = cylinder_inner_index;
 
             /* Assign attributes to cmesh cells */
-            t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (), T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces,
+            t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (), T8_CMESH_cad_FACE_ATTRIBUTE_KEY, faces,
                                     6 * sizeof (int), 0);
-            t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (), T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges,
+            t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (), T8_CMESH_cad_EDGE_ATTRIBUTE_KEY, edges,
                                     24 * sizeof (int), 0);
             t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (),
-                                    T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY + 1,
+                                    T8_CMESH_cad_FACE_PARAMETERS_ATTRIBUTE_KEY + 1,
                                     parameters + current_tree_parameters, 8 * sizeof (double), 1);
           }
           /* If geometry only on face 0 */
           else if (i_radial_trees == num_radial_trees - 1) {
-            /* Assign occ geometries to the corresponding faces */
+            /* Assign cad geometries to the corresponding faces */
             int faces[6] = { 0 };
             faces[0] = cylinder_outer_index;
 
             /* Assign attributes to cmesh cells */
-            t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (), T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces,
+            t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (), T8_CMESH_cad_FACE_ATTRIBUTE_KEY, faces,
                                     6 * sizeof (int), 0);
-            t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (), T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges,
+            t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (), T8_CMESH_cad_EDGE_ATTRIBUTE_KEY, edges,
                                     24 * sizeof (int), 0);
             t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (),
-                                    T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY + 0,
+                                    T8_CMESH_cad_FACE_PARAMETERS_ATTRIBUTE_KEY + 0,
                                     parameters + current_tree_parameters, 8 * sizeof (double), 1);
           }
           /* If there is no geometry */
           else {
-            /* Assign occ geometries to the corresponding faces */
+            /* Assign cad geometries to the corresponding faces */
             int faces[6] = { 0 };
 
             /* Assign attributes to cmesh cells */
-            t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (), T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces,
+            t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (), T8_CMESH_cad_FACE_ATTRIBUTE_KEY, faces,
                                     6 * sizeof (int), 0);
-            t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (), T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges,
+            t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (), T8_CMESH_cad_EDGE_ATTRIBUTE_KEY, edges,
                                     24 * sizeof (int), 0);
           }
         }
-#endif /* T8_WITH_OCC */
+#endif /* T8_WITH_cad */
         /* Join radial neighbors */
         if (i_radial_trees > 0) {
           t8_cmesh_set_join (
@@ -287,8 +287,8 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees, int nu
   /* Commit the cmesh and free allocated memory. */
   t8_cmesh_commit (cmesh, comm);
   T8_FREE (vertices);
-#if T8_WITH_OCC
+#if T8_WITH_cad
   T8_FREE (parameters);
-#endif /* T8_WITH_OCC */
+#endif /* T8_WITH_cad */
   return cmesh;
 }
