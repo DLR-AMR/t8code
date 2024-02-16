@@ -28,6 +28,7 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <test/t8_gtest_macros.hxx>
+#include <test/t8_gtest_custom_assertion.hxx>
 
 #if T8_WITH_OCC
 #include <GeomAPI_PointsToBSpline.hxx>
@@ -451,9 +452,7 @@ TEST_P (class_2d_element_linear_occ_curve, t8_check_2d_element_linear_occ_curve)
   for (size_t i_coord = 0; i_coord < 3; ++i_coord) {
     t8_geometry_evaluate (cmesh, 0, test_ref_coords + i_coord * 3, 1, out_coords);
 
-    EXPECT_NEAR (test_ref_coords[0 + i_coord * 3], out_coords[0], T8_PRECISION_EPS);
-    EXPECT_NEAR (test_ref_coords[1 + i_coord * 3], out_coords[1], T8_PRECISION_EPS);
-    EXPECT_NEAR (test_ref_coords[2 + i_coord * 3], out_coords[2], T8_PRECISION_EPS);
+    EXPECT_VEC3_EQ (test_ref_coords + i_coord * 3, out_coords, T8_PRECISION_EPS);
   }
 }
 
@@ -541,9 +540,7 @@ TEST_P (class_2d_element_curved_occ_curve, t8_check_2d_element_curved_occ_curve)
   for (size_t i_coord = 0; i_coord < 3; ++i_coord) {
     t8_geometry_evaluate (cmesh, 0, test_ref_coords_in + i_coord * 3, 1, out_coords);
 
-    EXPECT_NEAR (test_ref_coords_out[0 + i_coord * 3], out_coords[0], T8_PRECISION_EPS);
-    EXPECT_NEAR (test_ref_coords_out[1 + i_coord * 3], out_coords[1], T8_PRECISION_EPS);
-    EXPECT_NEAR (test_ref_coords_out[2 + i_coord * 3], out_coords[2], T8_PRECISION_EPS);
+    EXPECT_VEC3_EQ (test_ref_coords_out + i_coord * 3, out_coords, T8_PRECISION_EPS);
   }
 }
 
@@ -646,9 +643,7 @@ TEST_P (class_2d_element_linear_occ_surface, t8_check_2d_element_linear_occ_surf
   for (size_t i_coord = 0; i_coord < (eclass == T8_ECLASS_QUAD ? 9 : 6); ++i_coord) {
     t8_geometry_evaluate (cmesh, 0, test_ref_coords + i_coord * 3, 1, out_coords);
 
-    EXPECT_NEAR (test_ref_coords[0 + i_coord * 3], out_coords[0], T8_PRECISION_EPS);
-    EXPECT_NEAR (test_ref_coords[1 + i_coord * 3], out_coords[1], T8_PRECISION_EPS);
-    EXPECT_NEAR (test_ref_coords[2 + i_coord * 3], out_coords[2], T8_PRECISION_EPS);
+    EXPECT_VEC3_EQ (test_ref_coords + i_coord * 3, out_coords, T8_PRECISION_EPS);
   }
 }
 
@@ -760,9 +755,7 @@ TEST_P (class_2d_element_curved_occ_surface, t8_check_2d_element_curved_occ_surf
   for (size_t i_coord = 0; i_coord < (eclass == T8_ECLASS_QUAD ? 9 : 6); ++i_coord) {
     t8_geometry_evaluate (cmesh, 0, test_ref_coords_in + i_coord * 3, 1, out_coords);
 
-    EXPECT_NEAR (test_ref_coords_out[0 + i_coord * 3], out_coords[0], T8_PRECISION_EPS);
-    EXPECT_NEAR (test_ref_coords_out[1 + i_coord * 3], out_coords[1], T8_PRECISION_EPS);
-    EXPECT_NEAR (test_ref_coords_out[2 + i_coord * 3], out_coords[2], T8_PRECISION_EPS);
+    EXPECT_VEC3_EQ (test_ref_coords_out + i_coord * 3, out_coords, T8_PRECISION_EPS);
   }
 }
 
