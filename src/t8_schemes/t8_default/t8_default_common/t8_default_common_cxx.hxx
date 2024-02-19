@@ -28,27 +28,20 @@
 #define T8_DEFAULT_COMMON_CXX_HXX
 
 #include <t8_element_cxx.hxx>
+#include <t8_schemes/t8_scheme_mempool_cxx.hxx>
 
 /* Macro to check whether a pointer (VAR) to a base class, comes from an
  * implementation of a child class (TYPE). */
 #define T8_COMMON_IS_TYPE(VAR, TYPE) ((dynamic_cast<TYPE> (VAR)) != NULL)
 
-class t8_default_scheme_common_c: public t8_eclass_scheme_c {
+class t8_default_scheme_common_c: public t8_scheme_mempool_c {
  public:
-  /** Destructor for all default schemes */
-  virtual ~t8_default_scheme_common_c ();
+  /* Call parent constructor */
+  t8_default_scheme_common_c (t8_eclass_t eclass, int elem_size): t8_scheme_mempool_c (eclass, elem_size) {};
 
   /** Compute the number of corners of a given element. */
   virtual int
   t8_element_num_corners (const t8_element_t *elem) const;
-
-  /** Allocate space for a bunch of elements. */
-  virtual void
-  t8_element_new (int length, t8_element_t **elem) const;
-
-  /** Deallocate space for a bunch of elements. */
-  virtual void
-  t8_element_destroy (int length, t8_element_t **elem) const;
 
   /** Return the shape of an element */
   virtual t8_element_shape_t
@@ -81,19 +74,6 @@ class t8_default_scheme_common_c: public t8_eclass_scheme_c {
    */
   virtual t8_gloidx_t
   t8_element_count_leaves_from_root (int level) const;
-
-  /** The common implementation of the general function for the default scheme
-   * has no effect. This function literally does nothing.
-   * The tri, tet and prism scheme override this implementation with a function that
-   * stores the type of the element in \a outdata.
-   *  \param [in] elem A valid element
-   *  \param [in] indata Is ignored. Can be NULL.
-   *  \param [out] outdata Is ignored. Can be NULL.
-   * \note Calling this function has no effect. See the specialized implementations in
-   * t8_default_tri_cxx.hxx, t8_default_tet_cxx.hxx and t8_default_prism_cxx.hxx.
-   */
-  virtual void
-  t8_element_general_function (const t8_element_t *elem, const void *indata, void *outdata) const;
 
   /** Compute the integer coordinates of a given element vertex.
    * The default scheme implements the Morton type SFCs. In these SFCs the
@@ -137,10 +117,6 @@ class t8_default_scheme_common_c: public t8_eclass_scheme_c {
   virtual void
   t8_element_anchor (const t8_element_t *elem, int anchor[3]) const
     = 0;
-#if T8_ENABLE_DEBUG
-  virtual void
-  t8_element_debug_print (const t8_element_t *elem) const;
-#endif
 };
 
 #endif /* !T8_DEFAULT_COMMON_CXX_HXX */
