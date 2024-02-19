@@ -33,7 +33,7 @@ T8_EXTERN_C_BEGIN ();
 #ifdef T8_ENABLE_DEBUG
 /* Query whether an element array is initialized properly. */
 static int
-t8_element_array_is_valid (t8_element_array_t *element_array)
+t8_element_array_is_valid (const t8_element_array_t *element_array)
 {
   int is_valid;
 
@@ -240,7 +240,7 @@ t8_element_array_get_scheme (t8_element_array_t *element_array)
 }
 
 size_t
-t8_element_array_get_count (t8_element_array_t *element_array)
+t8_element_array_get_count (const t8_element_array_t *element_array)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
   return element_array->array.elem_count;

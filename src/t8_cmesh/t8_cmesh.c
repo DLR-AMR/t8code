@@ -24,6 +24,7 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_geometry.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
 #include <t8_refcount.h>
 #include <t8_data/t8_shmem.h>
 #include <t8_vec.h>
@@ -84,7 +85,7 @@ t8_cmesh_check_trees_per_eclass (t8_cmesh_t cmesh)
 #endif
 
 int
-t8_cmesh_is_committed (t8_cmesh_t cmesh)
+t8_cmesh_is_committed (const t8_cmesh_t cmesh)
 {
   static int is_checking = 0;
 
@@ -148,7 +149,6 @@ t8_cmesh_init (t8_cmesh_t *pcmesh)
   t8_refcount_init (&cmesh->rc);
 
   /* sensible (hard error) defaults */
-  cmesh->set_refine_level = 0; /*< sensible default TODO document */
   cmesh->set_partition_level = -1;
   cmesh->dimension = -1; /*< ok; force user to select dimension */
   cmesh->mpirank = -1;
@@ -269,17 +269,6 @@ t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, int element_level, t8_scheme_c
   }
 }
 
-void
-t8_cmesh_set_refine (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *scheme)
-{
-  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
-  T8_ASSERT (level >= 0);
-  T8_ASSERT (scheme != NULL);
-
-  cmesh->set_refine_level = level;
-  cmesh->set_refine_scheme = scheme;
-}
-
 t8_gloidx_t
 t8_cmesh_get_first_treeid (t8_cmesh_t cmesh)
 {
@@ -354,8 +343,7 @@ void
 t8_cmesh_set_attribute (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int package_id, int key, void *data, size_t data_size,
                         int data_persists)
 {
-  T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (!cmesh->committed);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 
   t8_stash_add_attribute (cmesh->stash, gtree_id, package_id, key, data_size, data, !data_persists);
 }
@@ -363,8 +351,7 @@ t8_cmesh_set_attribute (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int package_id, 
 void
 t8_cmesh_set_attribute_string (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int package_id, int key, const char *string)
 {
-  T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (!cmesh->committed);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 
   /* The size is the string's length + the terminating '\0' */
   size_t size = strlen (string) + 1;
@@ -372,28 +359,42 @@ t8_cmesh_set_attribute_string (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int packa
   t8_cmesh_set_attribute (cmesh, gtree_id, package_id, key, (void *) string, size, 0);
 }
 
+void
+t8_cmesh_set_attribute_gloidx_array (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int package_id, int key,
+                                     const t8_gloidx_t *data, size_t data_count, int data_persists)
+{
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+
+  const size_t data_size = data_count * sizeof (*data);
+  t8_stash_add_attribute (cmesh->stash, gtree_id, package_id, key, data_size, (void *) data, !data_persists);
+}
+
 double *
 t8_cmesh_get_tree_vertices (t8_cmesh_t cmesh, t8_locidx_t ltreeid)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
-  T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, ltreeid));
+  T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, ltreeid) || t8_cmesh_treeid_is_ghost (cmesh, ltreeid));
 
   return (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_VERTICES_ATTRIBUTE_KEY, ltreeid);
 }
 
 void *
-t8_cmesh_get_attribute (t8_cmesh_t cmesh, int package_id, int key, t8_locidx_t ltree_id)
+t8_cmesh_get_attribute (const t8_cmesh_t cmesh, const int package_id, const int key, const t8_locidx_t ltree_id)
 {
-  int is_ghost;
-
-  T8_ASSERT (cmesh->committed);
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
   T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, ltree_id) || t8_cmesh_treeid_is_ghost (cmesh, ltree_id));
-  is_ghost = t8_cmesh_treeid_is_ghost (cmesh, ltree_id);
+  const int is_ghost = t8_cmesh_treeid_is_ghost (cmesh, ltree_id);
 
-  if (is_ghost) {
-    ltree_id = t8_cmesh_ltreeid_to_ghostid (cmesh, ltree_id);
-  }
-  return t8_cmesh_trees_get_attribute (cmesh->trees, ltree_id, package_id, key, NULL, is_ghost);
+  return t8_cmesh_trees_get_attribute (
+    cmesh->trees, is_ghost ? t8_cmesh_ltreeid_to_ghostid (cmesh, ltree_id) : ltree_id, package_id, key, NULL, is_ghost);
+}
+
+t8_gloidx_t *
+t8_cmesh_get_attribute_gloidx_array (const t8_cmesh_t cmesh, const int package_id, const int key,
+                                     const t8_locidx_t ltree_id, const size_t data_count)
+{
+  T8_ASSERT (0 <= data_count);
+  return (t8_gloidx_t *) t8_cmesh_get_attribute (cmesh, package_id, key, ltree_id);
 }
 
 t8_shmem_array_t
@@ -452,7 +453,7 @@ t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, t8_eclass_t tre
  * coordinates does have negative volume.
  */
 int
-t8_cmesh_tree_vertices_negative_volume (t8_eclass_t eclass, double *vertices, int num_vertices)
+t8_cmesh_tree_vertices_negative_volume (const t8_eclass_t eclass, const double *vertices, const int num_vertices)
 {
   double v_1[3], v_2[3], v_j[3], cross[3], sc_prod;
   int i, j;
@@ -533,7 +534,14 @@ t8_cmesh_no_negative_volume (t8_cmesh_t cmesh)
     if (vertices != NULL) {
       /* Vertices are set */
       eclass = t8_cmesh_get_tree_class (cmesh, itree);
-      ret = t8_cmesh_tree_vertices_negative_volume (eclass, vertices, t8_eclass_num_vertices[eclass]);
+      const t8_gloidx_t gtree_id = t8_cmesh_get_global_id (cmesh, itree);
+      if (t8_geometry_get_type (cmesh, gtree_id) == T8_GEOMETRY_TYPE_LINEAR_AXIS_ALIGNED) {
+        /* Tree has negative volume if the diagonal goes from v_max to v_min and not vice versa */
+        ret = vertices[3] < vertices[0] && vertices[4] < vertices[1] && vertices[5] < vertices[2];
+      }
+      else {
+        ret = t8_cmesh_tree_vertices_negative_volume (eclass, vertices, t8_eclass_num_vertices[eclass]);
+      }
       if (ret) {
         t8_debugf ("Detected negative volume in tree %li\n", (long) itree);
       }
@@ -545,7 +553,8 @@ t8_cmesh_no_negative_volume (t8_cmesh_t cmesh)
 #endif
 
 void
-t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, double *vertices, int num_vertices)
+t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, const t8_gloidx_t gtree_id, const double *vertices,
+                            const int num_vertices)
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (vertices != NULL);
@@ -744,7 +753,6 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
     cmesh_out->face_knowledge = meta_info.cmesh.face_knowledge;
     cmesh_out->set_partition = meta_info.cmesh.set_partition;
     cmesh_out->set_partition_level = meta_info.cmesh.set_partition_level;
-    cmesh_out->set_refine_level = meta_info.cmesh.set_refine_level;
     cmesh_out->num_trees = meta_info.cmesh.num_trees;
     cmesh_out->num_local_trees = cmesh_out->num_trees;
     cmesh_out->first_tree = 0;
@@ -1183,11 +1191,6 @@ t8_cmesh_reset (t8_cmesh_t *pcmesh)
   }
   if (cmesh->profile != NULL) {
     T8_FREE (cmesh->profile);
-  }
-
-  /* unref the refine scheme (if set) */
-  if (cmesh->set_refine_scheme != NULL) {
-    t8_scheme_cxx_unref (&cmesh->set_refine_scheme);
   }
 
   /* unref the partition scheme (if set) */
