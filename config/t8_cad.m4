@@ -1,29 +1,29 @@
-dnl T8_CHECK_cad
+dnl T8_CHECK_OCC
 dnl Check for OpenCASCADE support and link a test program
 dnl
 dnl This macro tries to link to the OpenCASCADE library.
 dnl Use the LIBS variable on the configure line to specify a different library
-dnl or use --with-cad=<LIBRARY>
+dnl or use --with-occ=<LIBRARY>
 dnl
-dnl Using --with-cad without any argument defaults to 
+dnl Using --with-occ without any argument defaults to 
 dnl   -lTKTopAlgo -lTKGeomAlgo -lTKBRep -lTKMath 
 dnl   -lTKernel -lTKPrim -lTKBO
 dnl
-AC_DEFUN([T8_CHECK_cad], [
+AC_DEFUN([T8_CHECK_OCC], [
 	AC_MSG_CHECKING([for OpenCASCADE library])
 
-T8_ARG_WITH([cad],
-  [OpenCASCADE library (optionally use --with-cad=<cad_LIBS>)],
-  [cad])
-  if test "x$T8_WITH_cad" != xno ; then
-    T8_cad_LIBS="-lTKernel -lTKMath -lTKG3d -lTKGeomAlgo -lTKTopAlgo -lTKBRep \
+T8_ARG_WITH([occ],
+  [OpenCASCADE library (optionally use --with-occ=<OCC_LIBS>)],
+  [OCC])
+  if test "x$T8_WITH_OCC" != xno ; then
+    T8_OCC_LIBS="-lTKernel -lTKMath -lTKG3d -lTKGeomAlgo -lTKTopAlgo -lTKBRep \
      -lTKPrim -lTKBO"
-    if test "x$T8_WITH_cad" != xyes ; then
-      T8_cad_LIBS="$T8_WITH_cad"
-      dnl AC_MSG_ERROR([Please provide --with-cad without arguments])
+    if test "x$T8_WITH_OCC" != xyes ; then
+      T8_OCC_LIBS="$T8_WITH_OCC"
+      dnl AC_MSG_ERROR([Please provide --with-occ without arguments])
     fi
-    PRE_cad_LIBS="$LIBS"
-    LIBS="$LIBS $T8_cad_LIBS"
+    PRE_OCC_LIBS="$LIBS"
+    LIBS="$LIBS $T8_OCC_LIBS"
 
 
   dnl OpenCASCADE is a C++ library, so we need to ensure the test is
@@ -39,7 +39,7 @@ T8_ARG_WITH([cad],
   dnl Disable default C++ compilation again
   AC_LANG_POP([C++])
 dnl Keep the variables changed as done above
-dnl LIBS="$PRE_cad_LIBS"
+dnl LIBS="$PRE_OCC_LIBS"
 
   AC_MSG_RESULT([successful])
 else

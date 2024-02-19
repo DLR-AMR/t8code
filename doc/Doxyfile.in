@@ -2207,7 +2207,7 @@ INCLUDE_FILE_PATTERNS  =
 PREDEFINED             = @PACKAGE_PREFIX@_DOXYGEN \
                          T8_ENABLE_DEBUG \
                          T8_WITH_VTK \
-                         T8_WITH_cad \
+                         T8_WITH_OCC \
                          T8_WITH_NETCDF \
                          T8_WITH_NETCDF_PAR
 
