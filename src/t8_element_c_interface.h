@@ -626,7 +626,7 @@ t8_element_general_function (const t8_eclass_scheme_c *ts, const t8_element_t *e
    * \note            An element for which \ref t8_element_init was called must pass
    *                  this test.
    * \note            This function is used for debugging to catch certain errors.
-   *                  These can for example cadur when an element points to a region
+   *                  These can for example occur when an element points to a region
    *                  of memory which should not be interpreted as an element.
    * \note            We recommend to use the assertion T8_ASSERT (t8_element_is_valid (elem))
    *                  in the implementation of each of the functions in this file.

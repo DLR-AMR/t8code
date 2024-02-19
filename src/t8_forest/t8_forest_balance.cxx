@@ -98,7 +98,7 @@ t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_
   return 0;
 }
 
-/* Collective function to compute the maximum cadurring refinement level in a forest */
+/* Collective function to compute the maximum occurring refinement level in a forest */
 static void
 t8_forest_compute_max_element_level (t8_forest_t forest)
 {
@@ -107,7 +107,7 @@ t8_forest_compute_max_element_level (t8_forest_t forest)
   t8_eclass_scheme_c *scheme;
   int local_max_level = 0, elem_level;
 
-  /* Iterate over all local trees and all local elements and comupte the maximum cadurring level */
+  /* Iterate over all local trees and all local elements and comupte the maximum occurring level */
   num_trees = t8_forest_get_num_local_trees (forest);
   for (itree = 0; itree < num_trees; itree++) {
     elem_in_tree = t8_forest_get_tree_num_elements (forest, itree);
@@ -161,9 +161,9 @@ t8_forest_balance (t8_forest_t forest, int repartition)
     }
   }
 
-  /* Compute the maximum cadurring refinement level in the forest */
+  /* Compute the maximum occurring refinement level in the forest */
   t8_forest_compute_max_element_level (forest->set_from);
-  t8_global_productionf ("Computed maximum cadurring level:\t%i\n", forest->set_from->maxlevel_existing);
+  t8_global_productionf ("Computed maximum occurring level:\t%i\n", forest->set_from->maxlevel_existing);
   /* Use set_from as the first forest to adapt */
   forest_from = forest->set_from;
   /* This function is reference neutral regarding forest_from */
@@ -180,7 +180,7 @@ t8_forest_balance (t8_forest_t forest, int repartition)
     T8_ASSERT (forest_from->maxlevel_existing >= 0);
     /* Initialize the temp forest to be adapted from forest_from */
     t8_forest_init (&forest_temp);
-    /* Update the maximum cadurring level */
+    /* Update the maximum occurring level */
     forest_temp->maxlevel_existing = forest_from->maxlevel_existing;
     /* Adapt the forest */
     t8_forest_set_adapt (forest_temp, forest_from, t8_forest_balance_adapt, 0);
@@ -225,7 +225,7 @@ t8_forest_balance (t8_forest_t forest, int repartition)
     if (repartition && !done_global) {
       /* If repartitioning is used, we partition the forest */
       t8_forest_init (&forest_partition);
-      /* Update the maximum cadurring level */
+      /* Update the maximum occurring level */
       forest_partition->maxlevel_existing = forest_temp->maxlevel_existing;
       t8_forest_set_partition (forest_partition, forest_temp, 0);
       t8_forest_set_ghost (forest_partition, 1, T8_GHOST_FACES);

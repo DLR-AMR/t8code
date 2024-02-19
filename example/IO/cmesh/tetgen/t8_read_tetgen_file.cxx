@@ -71,7 +71,7 @@ t8_read_tetgen_file_build_cmesh (const char *prefix, int do_dup, int do_partitio
     t8_cmesh_unref (&cmesh);
   }
   else {
-    t8_debugf ("An error cadurred while reading %s files.\n", prefix);
+    t8_debugf ("An error occurred while reading %s files.\n", prefix);
   }
   fflush (stdout);
 }

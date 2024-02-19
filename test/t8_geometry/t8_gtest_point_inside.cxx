@@ -65,7 +65,7 @@ TEST (t8_point_inside, test_point_inside_specific_triangle)
   t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), 0, 0, sc_MPI_COMM_WORLD);
 
   if (t8_forest_get_local_num_elements (forest) <= 0) {
-    /* Skip empty forests (can cadur when executed in parallel) */
+    /* Skip empty forests (can occur when executed in parallel) */
     t8_forest_unref (&forest);
     GTEST_SKIP ();
   }
@@ -108,7 +108,7 @@ TEST (t8_point_inside, test_point_inside_specific_quad)
   t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), 0, 0, sc_MPI_COMM_WORLD);
 
   if (t8_forest_get_local_num_elements (forest) <= 0) {
-    /* Skip empty forests (can cadur when executed in parallel) */
+    /* Skip empty forests (can occur when executed in parallel) */
     t8_forest_unref (&forest);
     GTEST_SKIP ();
   }

@@ -222,7 +222,7 @@ t8_element_array_reset (t8_element_array_t *element_array);
  * \param [in,out]  element_array  Element array structure to be truncated.
  * \note This is intended to allow an t8_element_array to be used as a reusable
  * buffer, where the "high water mark" of the buffer is preserved, so that
- * O(log (max n)) reallocs cadur over the life of the buffer.
+ * O(log (max n)) reallocs occur over the life of the buffer.
  */
 void
 t8_element_array_truncate (t8_element_array_t *element_array);

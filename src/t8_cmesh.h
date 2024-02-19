@@ -49,7 +49,7 @@ typedef struct t8_cmesh *t8_cmesh_t;
 #include <t8_eclass.h>
 
 /* TODO: make it legal to call cmesh_set functions multiple times,
- *       just overwrite the previous setting if no inconsistency can cadur.
+ *       just overwrite the previous setting if no inconsistency can occur.
  *       edit: This should be achieved now.
  */
 

@@ -312,7 +312,7 @@ t8_msh_file_2_read_nodes (FILE *fp, t8_locidx_t *num_nodes, sc_mempool_t **node_
     /* Insert the node in the hash table */
     retval = sc_hash_insert_unique (node_table, Node, NULL);
     /* If retval is zero then the node was already in the hash table.
-     * This case should not cadur. */
+     * This case should not occur. */
     T8_ASSERT (retval);
     last_index = Node->index;
   }
@@ -322,7 +322,7 @@ t8_msh_file_2_read_nodes (FILE *fp, t8_locidx_t *num_nodes, sc_mempool_t **node_
   return node_table;
   /* If everything went well, the function ends here. */
 
-  /* This code is execute when a read/write error cadurs */
+  /* This code is execute when a read/write error occurs */
 die_node:
   /* If we allocated the hash table, destroy it */
   if (node_table != NULL) {
@@ -467,7 +467,7 @@ t8_msh_file_4_read_nodes (FILE *fp, t8_locidx_t *num_nodes, sc_mempool_t **node_
       /* Insert the node in the hash table */
       retval = sc_hash_insert_unique (node_table, Node, NULL);
       /* If retval is zero then the node was already in the hash table.
-       * This case should not cadur. */
+       * This case should not occur. */
       T8_ASSERT (retval);
       last_index = Node->index;
     }
@@ -478,7 +478,7 @@ t8_msh_file_4_read_nodes (FILE *fp, t8_locidx_t *num_nodes, sc_mempool_t **node_
   return node_table;
   /* If everything went well, the function ends here. */
 
-  /* This code is execute when a read/write error cadurs */
+  /* This code is execute when a read/write error occurs */
 die_node:
   /* If we allocated the hash table, destroy it */
   if (node_table != NULL) {
