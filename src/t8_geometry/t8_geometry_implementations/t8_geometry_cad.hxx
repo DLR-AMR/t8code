@@ -26,8 +26,8 @@
  * The geometry of the refinement tree is extended into the volume accordingly.
  */
 
-#ifndef T8_GEOMETRY_cad_HXX
-#define T8_GEOMETRY_cad_HXX
+#ifndef T8_GEOMETRY_CAD_HXX
+#define T8_GEOMETRY_CAD_HXX
 
 #include <t8.h>
 #include <t8_geometry/t8_geometry_with_vertices.hxx>
@@ -35,7 +35,7 @@
 #include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.h>
 
-#if T8_WITH_cad
+#if T8_WITH_CAD
 
 #include <TopoDS_Shape.hxx>
 #include <TopExp.hxx>
@@ -90,7 +90,7 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
   inline t8_geometry_type_t
   t8_geom_get_type () const
   {
-    return T8_GEOMETRY_TYPE_cad;
+    return T8_GEOMETRY_TYPE_CAD;
   };
 
   /**
@@ -337,6 +337,6 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
     cad_shape_edge2face_map; /**< Maps all TopoDS_Edge of shape to all its connected TopoDS_Face */
 };
 
-#endif /* T8_WITH_cad */
+#endif /* T8_WITH_CAD */
 
-#endif /* !T8_GEOMETRY_cad_HXX! */
+#endif /* !T8_GEOMETRY_CAD_HXX! */

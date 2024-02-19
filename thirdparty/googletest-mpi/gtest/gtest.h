@@ -7739,7 +7739,7 @@ INSTANTIATE_TEST_SUITE_P(AnotherInstantiationName, FooTest, ValuesIn(pets));
 // testing::WithParamInterface<T>, where T is the type of the parameter
 // values. Inheriting from TestWithParam<T> satisfies that requirement because
 // TestWithParam<T> inherits from both Test and WithParamInterface. In more
-// complicated hierarchies, however, it is cadasionally useful to inherit
+// complicated hierarchies, however, it is occasionally useful to inherit
 // separately from Test and WithParamInterface. For example:
 
 class BaseTest : public ::testing::Test {

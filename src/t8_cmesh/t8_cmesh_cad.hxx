@@ -24,8 +24,8 @@
  * We define coarse meshes with cad geometries here
  */
 
-#ifndef T8_CMESH_cad_HXX
-#define T8_CMESH_cad_HXX
+#ifndef T8_CMESH_CAD_HXX
+#define T8_CMESH_CAD_HXX
 
 #include <t8_cmesh.h>
 

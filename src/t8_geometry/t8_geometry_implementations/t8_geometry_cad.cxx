@@ -26,7 +26,7 @@
 #include <t8_eclass.h>
 #include <t8_geometry/t8_geometry_helpers.h>
 
-#if T8_WITH_cad
+#if T8_WITH_CAD
 
 #include <BRep_Builder.hxx>
 #include <BRep_Tool.hxx>
@@ -141,8 +141,8 @@ inline void
 t8_geometry_cad::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 {
   t8_geometry_with_vertices::t8_geom_load_tree_data (cmesh, gtreeid);
-  edges = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_cad_EDGE_ATTRIBUTE_KEY, gtreeid);
-  faces = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_cad_FACE_ATTRIBUTE_KEY, gtreeid);
+  edges = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, gtreeid);
+  faces = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, gtreeid);
   T8_ASSERT (edges != NULL);
   T8_ASSERT (faces != NULL);
 }
@@ -192,7 +192,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_triangle (t8_cmesh_t cmesh, t8_gloidx_t gt
 #endif /* T8_ENABLE_DEBUG */
     /* Retrieve surface parameters */
     const double *face_parameters = (double *) t8_cmesh_get_attribute (
-      cmesh, t8_get_package_id (), T8_CMESH_cad_FACE_PARAMETERS_ATTRIBUTE_KEY, ltreeid);
+      cmesh, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY, ltreeid);
     T8_ASSERT (face_parameters != NULL);
 
     /* Retrieve surface_parameter in global space by triangular interpolation from ref_coords to global space */
@@ -210,7 +210,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_triangle (t8_cmesh_t cmesh, t8_gloidx_t gt
                                          glob_intersection);
         /* Get parameters of the current edge if the edge is curved */
         const double *edge_parameters = (double *) t8_cmesh_get_attribute (
-          cmesh, t8_get_package_id (), T8_CMESH_cad_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_edge, ltreeid);
+          cmesh, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_edge, ltreeid);
         T8_ASSERT (edge_parameters != NULL);
 
         /* Linear interpolation between parameters */
@@ -280,7 +280,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_triangle (t8_cmesh_t cmesh, t8_gloidx_t gt
       if (edges[i_edge] > 0 || edges[i_edge + num_edges] > 0) {
         /* Get parameters of the current edge if the edge is curved */
         const double *parameters = (double *) t8_cmesh_get_attribute (
-          cmesh, t8_get_package_id (), T8_CMESH_cad_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_edge, ltreeid);
+          cmesh, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_edge, ltreeid);
         T8_ASSERT (parameters != NULL);
 
         double ref_intersection[2];
@@ -371,7 +371,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
 #endif /* T8_ENABLE_DEBUG */
     /* Retrieve surface parameters */
     const double *face_parameters = (double *) t8_cmesh_get_attribute (
-      cmesh, t8_get_package_id (), T8_CMESH_cad_FACE_PARAMETERS_ATTRIBUTE_KEY, ltreeid);
+      cmesh, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY, ltreeid);
     T8_ASSERT (face_parameters != NULL);
 
     /* Interpolate between surface parameters */
@@ -396,7 +396,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
         const int edge_direction = 1 - edge_orthogonal_direction;
         /* Retrieve edge parameters and interpolate */
         const double *edge_parameters = (double *) t8_cmesh_get_attribute (
-          cmesh, t8_get_package_id (), T8_CMESH_cad_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_edge, ltreeid);
+          cmesh, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_edge, ltreeid);
         T8_ASSERT (edge_parameters != NULL);
         T8_ASSERT (edges[i_edge] <= cad_shape_edge_map.Size ());
 
@@ -483,7 +483,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
         t8_geom_linear_interpolation (&ref_coords[edge_direction], temp_edge_vertices, 3, 1, interpolated_coords);
         /* Interpolate parameters between edge vertices. Same procedure as above. */
         const double *parameters = (double *) t8_cmesh_get_attribute (
-          cmesh, t8_get_package_id (), T8_CMESH_cad_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_edge, ltreeid);
+          cmesh, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_edge, ltreeid);
         T8_ASSERT (parameters != NULL);
         /* Curves have only one parameter u, surfaces have two, u and v.
          * Therefore, we have to distinguish if the edge has a curve or surface linked to it. */
@@ -588,7 +588,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
       t8_geom_linear_interpolation (&ref_coords[edge_direction], temp_edge_vertices, 3, 1, interpolated_coords);
       /* Interpolate parameters between edge vertices. Same procedure as above. */
       const double *parameters = (double *) t8_cmesh_get_attribute (
-        cmesh, t8_get_package_id (), T8_CMESH_cad_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_edge, ltreeid);
+        cmesh, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_edge, ltreeid);
       T8_ASSERT (parameters != NULL);
       /* Curves have only one parameter u, surfaces have two, u and v.
        * Therefore, we have to distinguish if the edge has a curve or surface linked to it. */
@@ -670,7 +670,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
              surface_parameters_from_curve[2] = { 0 };
       /* Retrieve surface parameters of nodes */
       const double *surface_parameters = (double *) t8_cmesh_get_attribute (
-        cmesh, t8_get_package_id (), T8_CMESH_cad_FACE_PARAMETERS_ATTRIBUTE_KEY + i_faces, ltreeid);
+        cmesh, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + i_faces, ltreeid);
       T8_ASSERT (surface_parameters != NULL);
       /* Iterate over each edge of face */
       for (int i_face_edge = 0; i_face_edge < 4; ++i_face_edge) {
@@ -695,7 +695,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
           /* Retrieve parameters of nodes und curve */
           const double *curve_parameters = (double *) t8_cmesh_get_attribute (
             cmesh, t8_get_package_id (),
-            T8_CMESH_cad_EDGE_PARAMETERS_ATTRIBUTE_KEY + t8_face_edge_to_tree_edge[T8_ECLASS_HEX][i_faces][i_face_edge],
+            T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + t8_face_edge_to_tree_edge[T8_ECLASS_HEX][i_faces][i_face_edge],
             ltreeid);
           T8_ASSERT (curve_parameters != NULL);
           /* Interpolate linearly between the parameters of the two nodes on the curve */
@@ -1084,4 +1084,4 @@ t8_geometry_cad_destroy (t8_geometry_cad_c **geom)
 
 T8_EXTERN_C_END ();
 
-#endif /* T8_WITH_cad */
+#endif /* T8_WITH_CAD */

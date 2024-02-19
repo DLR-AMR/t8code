@@ -868,7 +868,7 @@ t8_cmesh_partition_copy_data (char *send_buffer, t8_cmesh_t cmesh, const struct 
         /* Get the current attribute info */
         attr_info = T8_GHOST_ATTR_INFO (ghost_cpy, iatt);
         /* The new attribute offset is the offset from the first att_info to the data.
-         * Thus, the count of the bytes cadupied by the att_info (ghosts_attr_info_bytes)
+         * Thus, the count of the bytes occupied by the att_info (ghosts_attr_info_bytes)
          * plus the count of all attributes before this attribute (this_data_temp_offset).*/
         /* all att info from this ghost and after. + all attributes before this attribute  */
         attr_info->attribute_offset = ghost_attr_info_bytes - ghost_attr_info_bytes_sofar + temp_offset_ghost_data;
