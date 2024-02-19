@@ -26,7 +26,7 @@
 #include <t8_eclass.h>
 #include <t8_geometry/t8_geometry_helpers.h>
 
-#if T8_WITH_CAD
+#if T8_WITH_OCC
 
 #include <BRep_Builder.hxx>
 #include <BRep_Tool.hxx>
@@ -1084,4 +1084,4 @@ t8_geometry_cad_destroy (t8_geometry_cad_c **geom)
 
 T8_EXTERN_C_END ();
 
-#endif /* T8_WITH_CAD */
+#endif /* T8_WITH_OCC */
