@@ -63,6 +63,15 @@ std::vector<t8_eclass_t> all_eclasses
   = { T8_ECLASS_ZERO, T8_ECLASS_VERTEX, T8_ECLASS_LINE,    T8_ECLASS_QUAD,  T8_ECLASS_TRIANGLE, T8_ECLASS_HEX,
       T8_ECLASS_TET,  T8_ECLASS_PRISM,  T8_ECLASS_PYRAMID, T8_ECLASS_COUNT, T8_ECLASS_INVALID };
 
+std::vector<int> do_bcast = { 0, 1 };
+std::vector<int> partition = { 0, 1 };
+/* Currently a dummy vector for examples that have partition argument but not fully support it yet */
+std::vector<int> no_partition = { 0 };
+
+std::vector<int> periodic = { 0, 1 };
+/* Currently a dummy vector for examples that have periodic argument but not fully support it yet */
+std::vector<int> no_periodic = { 0 };
+
 std::vector<int> num_prisms = filled_vector (50, 3);
 }  // namespace cmesh_params
 
