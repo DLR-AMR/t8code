@@ -29,7 +29,7 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <test/t8_gtest_macros.hxx>
 
-#if T8_WITH_CAD
+#if T8_WITH_OCC
 #include <GeomAPI_PointsToBSpline.hxx>
 #include <GeomAPI_PointsToBSplineSurface.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
@@ -57,7 +57,7 @@
  *  - jacobian:     Checks the resulting jacobian of an identity.
  */
 
-#if T8_WITH_CAD
+#if T8_WITH_OCC
 /** Euler rotation around intrinsic zxz. 
  * \param [in] pos_vec                Position vector of three dimensional points to rotate.
  * \param [in] rot_vec                Three dimensional rotation vector around z, x and z in rad.
@@ -149,7 +149,7 @@ t8_create_cad_curve_geometry ()
   t8_geometry_cad *geometry = new t8_geometry_cad (3, shape, "cad dim=3");
   return geometry;
 }
-#endif /* T8_WITH_CAD */
+#endif /* T8_WITH_OCC */
 
 /** Constructs a cmesh with an cad geometry linked hypercube.
  * \param [in] rot_vec                The rotation vector to rotate the cube before linking a geometry to it.
@@ -161,7 +161,7 @@ t8_create_cad_curve_geometry ()
 t8_cmesh_t
 t8_create_cad_hypercube (double *rot_vec, int face, int edge, double *parameters)
 {
-#if T8_WITH_CAD
+#if T8_WITH_OCC
   if (edge >= 0 && face >= 0) {
     SC_ABORTF ("Please specify only an edge or a face.");
   }
@@ -206,9 +206,9 @@ t8_create_cad_hypercube (double *rot_vec, int face, int edge, double *parameters
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   return cmesh;
 
-#else  /* !T8_WITH_CAD */
+#else  /* !T8_WITH_OCC */
   SC_ABORTF ("cad not linked");
-#endif /* T8_WITH_CAD */
+#endif /* T8_WITH_OCC */
 }
 
 /** Tests the cad geometry functions for hexahedra.
@@ -225,7 +225,7 @@ void
 t8_test_geometry_cad (double *rot_vec, int face, int edge, double *parameters, double *test_ref_coords,
                       double *test_return_coords)
 {
-#if T8_WITH_CAD
+#if T8_WITH_OCC
   double out_coords[3];
   double rotated_test_ref_coords[24];
   double rotation_origin[3] = { 0.5, 0.5, 0.5 };
@@ -245,12 +245,12 @@ t8_test_geometry_cad (double *rot_vec, int face, int edge, double *parameters, d
   }
   t8_cmesh_destroy (&cmesh);
 
-#else  /* !T8_WITH_CAD */
+#else  /* !T8_WITH_OCC */
   SC_ABORTF ("cad not linked");
-#endif /* T8_WITH_CAD */
+#endif /* T8_WITH_OCC */
 }
 
-#if T8_WITH_CAD
+#if T8_WITH_OCC
 TEST (t8_gtest_geometry_cad, linked_faces)
 {
   /* clang-format off */
@@ -348,9 +348,9 @@ TEST (t8_gtest_geometry_cad, linked_edges)
                           curve_test_return_coords);
   }
 }
-#endif /* T8_WITH_CAD */
+#endif /* T8_WITH_OCC */
 
-#if T8_WITH_CAD
+#if T8_WITH_OCC
 TEST (t8_gtest_geometry_cad, jacobian)
 {
   t8_cmesh_t cmesh;
@@ -367,9 +367,9 @@ TEST (t8_gtest_geometry_cad, jacobian)
   }
   t8_cmesh_destroy (&cmesh);
 }
-#endif /* T8_WITH_CAD */
+#endif /* T8_WITH_OCC */
 
-#if T8_WITH_CAD
+#if T8_WITH_OCC
 /* The test checks if the mapping algorithms for curved 2d elements do not shift values on a surface which is not curved.
  * In that case, the cad geometry should output the same out_coords as the linear geometry function. */
 class class_2d_element_linear_cad_surface: public testing::TestWithParam<t8_eclass_t> {
@@ -473,4 +473,4 @@ TEST_P (class_2d_element_linear_cad_surface, t8_check_2d_element_linear_cad_surf
 INSTANTIATE_TEST_SUITE_P (t8_gtest_check_2d_element_linear_cad_surface, class_2d_element_linear_cad_surface,
                           AllEclasses2D);
 
-#endif /* T8_WITH_CAD */
+#endif /* T8_WITH_OCC */

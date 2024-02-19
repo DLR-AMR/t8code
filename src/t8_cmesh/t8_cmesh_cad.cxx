@@ -29,7 +29,7 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
 
-#if T8_WITH_CAD
+#if T8_WITH_OCC
 #include <gp_Pnt.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
@@ -56,7 +56,7 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees, int nu
   t8_cmesh_set_profiling (cmesh, 1);
 
   if (with_cad_geometry) {
-#if T8_WITH_CAD
+#if T8_WITH_OCC
     /* Create the two cad cylinder surfaces */
     const double radius_inner = 0.25;
     const double radius_outer = 0.5;
@@ -83,20 +83,20 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees, int nu
 
     t8_cmesh_register_geometry (cmesh, geometry_cad);
 
-#else  /* !T8_WITH_CAD */
+#else  /* !T8_WITH_OCC */
     SC_ABORTF ("cad not linked");
-#endif /* T8_WITH_CAD */
+#endif /* T8_WITH_OCC */
   }
   else {
     t8_geometry_c *geometry_linear = t8_geometry_linear_new (3);
     t8_cmesh_register_geometry (cmesh, geometry_linear);
   }
 
-#if T8_WITH_CAD
+#if T8_WITH_OCC
   /* Save the indices of the cylinders inside the shape for later usage. 
    * The indices start with 1 and are in the same order as we put in the cylinders. */
   int cylinder_outer_index = 1, cylinder_inner_index = 2;
-#endif /* T8_WITH_CAD */
+#endif /* T8_WITH_OCC */
 
   /* Start the construction of the actual cylindrical cmesh. We are going to use three loops
    * to iterate over the three dimensions of cylinder coordinates. */
@@ -108,10 +108,10 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees, int nu
    * and in case of usage of the cad geometry, the node parameters */
   double *vertices;
   vertices = T8_ALLOC (double, num_tangential_trees *num_axial_trees *num_radial_trees * 24);
-#if T8_WITH_CAD
+#if T8_WITH_OCC
   double *parameters;
   parameters = T8_ALLOC (double, num_tangential_trees *num_axial_trees * 8);
-#endif /* T8_WITH_CAD */
+#endif /* T8_WITH_OCC */
 
   /* Compute vertex coordinates and parameters */
   for (int i_tangential_trees = 0; i_tangential_trees < num_tangential_trees; ++i_tangential_trees) {
@@ -165,7 +165,7 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees, int nu
           24);
 
         /* Assign parameters if cad is enabled */
-#if T8_WITH_CAD
+#if T8_WITH_OCC
         if (with_cad_geometry) {
           /* Calculate parameters if cell lies on boundary */
           const int current_tree_parameters = (i_tangential_trees * num_axial_trees + i_axial_trees) * 8;
@@ -244,7 +244,7 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees, int nu
                                     24 * sizeof (int), 0);
           }
         }
-#endif /* T8_WITH_CAD */
+#endif /* T8_WITH_OCC */
         /* Join radial neighbors */
         if (i_radial_trees > 0) {
           t8_cmesh_set_join (
@@ -287,8 +287,8 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees, int nu
   /* Commit the cmesh and free allocated memory. */
   t8_cmesh_commit (cmesh, comm);
   T8_FREE (vertices);
-#if T8_WITH_CAD
+#if T8_WITH_OCC
   T8_FREE (parameters);
-#endif /* T8_WITH_CAD */
+#endif /* T8_WITH_OCC */
   return cmesh;
 }
