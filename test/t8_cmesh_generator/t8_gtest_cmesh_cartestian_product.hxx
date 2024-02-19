@@ -186,7 +186,7 @@ no_rule (Args... params)
  * @tparam OutputIterator 
  * @tparam Iter 
  * \param[in, out] out An OutputIterator that will be filled
- * \param[in] rule  A function that returns true if a parameter combination is permissible, false othwerise
+ * \param[in] rule  A function that returns true if a parameter combination is permissible, false otherwise
  * \param[in] ranges Pairs of ranges 
  */
 template <typename OutputIterator, typename... Iter>
