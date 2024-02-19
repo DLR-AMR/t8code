@@ -27,7 +27,7 @@
  * The refinement is such that large differences between the element levels
  * are created.
  * Additionally all possible neighbor relations of levels
- * should cadur in the mesh. I.e. for any two level l, l' with
+ * should occur in the mesh. I.e. for any two level l, l' with
  * L <= l <= l' <= L+r there should be two face-neighboring elements
  * in the mesh with levels l and l'.
  * (This property is not tested).

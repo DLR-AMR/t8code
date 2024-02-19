@@ -3079,7 +3079,7 @@ class GTEST_API_ String {
   static bool CStringEquals(const char* lhs, const char* rhs);
 
   // Converts a wide C string to a String using the UTF-8 encoding.
-  // NULL will be converted to "(null)".  If an error cadurred during
+  // NULL will be converted to "(null)".  If an error occurred during
   // the conversion, "(failed to convert from wide string)" is
   // returned.
   static std::string ShowWideCString(const wchar_t* wide_c_str);
@@ -3287,7 +3287,7 @@ class GTEST_API_ FilePath {
   // For example, "bar///foo" becomes "bar/foo". Does not eliminate other
   // redundancies that might be in a pathname involving "." or "..".
   //
-  // A pathname with multiple consecutive separators may cadur either through
+  // A pathname with multiple consecutive separators may occur either through
   // user error or as a result of some scripts or APIs that generate a pathname
   // with a trailing separator. On other platforms the same API or script
   // may NOT generate a pathname with a trailing "/". Then elsewhere that
@@ -3305,7 +3305,7 @@ class GTEST_API_ FilePath {
 
   void Normalize();
 
-  // Returns a pointer to the last cadurence of a valid path separator in
+  // Returns a pointer to the last occurence of a valid path separator in
   // the FilePath. On Windows, for example, both '/' and '\' are valid path
   // separators. Returns NULL if no path separator was found.
   const char* FindLastPathSeparator() const;
@@ -7381,9 +7381,9 @@ GTEST_API_ bool InDeathTestChild();
 //     \\W   matches any character that \\w doesn't match
 //     \\c   matches any literal character c, which must be a punctuation
 //     .     matches any single character except \n
-//     A?    matches 0 or 1 cadurrences of A
-//     A*    matches 0 or many cadurrences of A
-//     A+    matches 1 or many cadurrences of A
+//     A?    matches 0 or 1 occurrences of A
+//     A*    matches 0 or many occurrences of A
+//     A+    matches 1 or many occurrences of A
 //     ^     matches the beginning of a string (not that of each line)
 //     $     matches the end of a string (not that of each line)
 //     xy    matches x followed by y

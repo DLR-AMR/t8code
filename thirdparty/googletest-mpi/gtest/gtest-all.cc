@@ -4093,7 +4093,7 @@ void ReportFailureInUnknownLocation(TestPartResult::Type result_type,
   // AddTestPartResult.
   UnitTest::GetInstance()->AddTestPartResult(
       result_type,
-      nullptr,  // No info about the source file where the exception cadurred.
+      nullptr,  // No info about the source file where the exception occurred.
       -1,       // We have no info on which line caused the exception.
       message,
       "");  // No stack trace, either.
@@ -10147,7 +10147,7 @@ FilePath FilePath::RemoveExtension(const char* extension) const {
   return *this;
 }
 
-// Returns a pointer to the last cadurrence of a valid path separator in
+// Returns a pointer to the last occurrence of a valid path separator in
 // the FilePath. On Windows, for example, both '/' and '\' are valid path
 // separators. Returns NULL if no path separator was found.
 const char* FilePath::FindLastPathSeparator() const {
