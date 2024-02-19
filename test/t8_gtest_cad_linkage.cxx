@@ -29,14 +29,14 @@
 
 #include <t8.h>
 #include <gtest/gtest.h>
-#if T8_WITH_cad
+#if T8_WITH_CAD
 #include <gp_Pnt.hxx>
 #endif
 
 /* Check whether we can successfully execute VTK code */
 TEST (t8_test_cad_linkage, test_gp_Pnt)
 {
-#if T8_WITH_cad
+#if T8_WITH_CAD
 
   EXPECT_NO_THROW (gp_Pnt pnt = gp_Pnt (); pnt.SetX (1););
   t8_global_productionf ("Successfully created cad gp_Pnt object.\n");

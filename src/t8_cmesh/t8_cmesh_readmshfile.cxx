@@ -689,7 +689,7 @@ die_ele:
   return -1;
 }
 
-#if T8_WITH_cad
+#if T8_WITH_CAD
 /** Corrects the parameters on closed geometries to prevent disorted elements.
  * \param [in]      geometry_dim    The dimension of the geometry.
  *                                  1 for edges, 2 for surfaces.
@@ -791,7 +791,7 @@ t8_cmesh_correct_parameters_on_closed_geometry (const int geometry_dim, const in
     break;
   }
 }
-#endif /* T8_WITH_cad */
+#endif /* T8_WITH_CAD */
 
 /* fp should be set after the Nodes section, right before the tree section.
  * If vertex_indices is not NULL, it is allocated and will store
@@ -812,9 +812,9 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
   t8_gloidx_t tree_count;
   t8_eclass_t eclass;
   t8_msh_file_node_parametric_t Node, **found_node, tree_nodes[T8_ECLASS_MAX_CORNERS];
-#if T8_WITH_cad
+#if T8_WITH_CAD
   t8_msh_file_node_parametric_t face_nodes[T8_ECLASS_MAX_CORNERS_2D], edge_nodes[2];
-#endif /* T8_WITH_cad */
+#endif /* T8_WITH_CAD */
   long lnum_trees, lnum_blocks, entity_tag;
   int retval, i;
   int ele_type;
@@ -1012,8 +1012,8 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
         }
         else {
           /* Calculate the parametric geometries of the tree */
-#if T8_WITH_cad
-          T8_ASSERT (cad_geometry_base->t8_geom_get_type () == T8_GEOMETRY_TYPE_cad);
+#if T8_WITH_CAD
+          T8_ASSERT (cad_geometry_base->t8_geom_get_type () == T8_GEOMETRY_TYPE_CAD);
           const t8_geometry_cad_c *cad_geometry = dynamic_cast<const t8_geometry_cad_c *> (cad_geometry_base);
           /* Check for right element class */
           if (eclass != T8_ECLASS_TRIANGLE && eclass != T8_ECLASS_QUAD && eclass != T8_ECLASS_HEX) {
@@ -1207,7 +1207,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
               }
 
               t8_cmesh_set_attribute (cmesh, tree_count, t8_get_package_id (),
-                                      T8_CMESH_cad_FACE_PARAMETERS_ATTRIBUTE_KEY + i_tree_faces, parameters,
+                                      T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + i_tree_faces, parameters,
                                       num_face_nodes * 2 * sizeof (double), 0);
             }
           }
@@ -1369,7 +1369,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
               }
 
               t8_cmesh_set_attribute (cmesh, tree_count, t8_get_package_id (),
-                                      T8_CMESH_cad_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_tree_edges, parameters,
+                                      T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_tree_edges, parameters,
                                       2 * sizeof (double), 0);
             }
             /* If we have found a surface we can look for the parameters. 
@@ -1438,7 +1438,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
               }
 
               t8_cmesh_set_attribute (cmesh, tree_count, t8_get_package_id (),
-                                      T8_CMESH_cad_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_tree_edges, parameters,
+                                      T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_tree_edges, parameters,
                                       4 * sizeof (double), 0);
             }
           }
@@ -1448,9 +1448,9 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
               edge_geometries[i_edge] = 0;
             }
           }
-          t8_cmesh_set_attribute (cmesh, tree_count, t8_get_package_id (), T8_CMESH_cad_FACE_ATTRIBUTE_KEY,
+          t8_cmesh_set_attribute (cmesh, tree_count, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY,
                                   face_geometries, num_faces * sizeof (int), 0);
-          t8_cmesh_set_attribute (cmesh, tree_count, t8_get_package_id (), T8_CMESH_cad_EDGE_ATTRIBUTE_KEY,
+          t8_cmesh_set_attribute (cmesh, tree_count, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY,
                                   edge_geometries, 2 * num_edges * sizeof (int), 0);
 
           /* Now we set the tree geometry according to the tree linkage status. */
@@ -1463,9 +1463,9 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
           }
           t8_debugf ("Registering tree %li with geometry %s \n", tree_count, geom_name);
           t8_cmesh_set_tree_geometry (cmesh, tree_count, geom_name);
-#else  /* !T8_WITH_cad */
+#else  /* !T8_WITH_CAD */
           SC_ABORTF ("cad not linked");
-#endif /* T8_WITH_cad */
+#endif /* T8_WITH_CAD */
         }
       }
     }
@@ -1741,11 +1741,11 @@ t8_cmesh_from_msh_file_register_geometries (t8_cmesh_t cmesh, const int use_cad_
   t8_cmesh_register_geometry (cmesh, linear_geom);
   *linear_geometry = linear_geom;
   if (use_cad_geometry) {
-#if T8_WITH_cad
+#if T8_WITH_CAD
     const t8_geometry_c *cad_geom = t8_geometry_cad_new (dim, fileprefix, "brep_geometry");
     t8_cmesh_register_geometry (cmesh, cad_geom);
     *cad_geometry = cad_geom;
-#else /* !T8_WITH_cad */
+#else /* !T8_WITH_CAD */
     *cad_geometry = NULL;
     return 0;
 #endif
