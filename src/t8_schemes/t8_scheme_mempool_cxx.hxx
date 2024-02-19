@@ -36,28 +36,30 @@
 #define T8_SCHEME_IS_TYPE(VAR, TYPE) ((dynamic_cast<TYPE> (VAR)) != NULL)
 
 class t8_scheme_mempool_c: public t8_eclass_scheme_c {
+ private:
+  sc_mempool_t *mempool;
+
  public:
   /** Destructor for all default schemes */
   virtual ~t8_scheme_mempool_c ()
   {
-    T8_ASSERT (ts_context != NULL);
-    SC_ASSERT (((sc_mempool_t *) ts_context)->elem_count == 0);
-    sc_mempool_destroy ((sc_mempool_t *) ts_context);
+    T8_ASSERT (mempool != NULL);
+    SC_ASSERT (mempool->elem_count == 0);
+    sc_mempool_destroy (mempool);
   }
   t8_scheme_mempool_c (t8_eclass_t eclass_in, int elem_size)
   {
     element_size = elem_size;
-    ts_context = sc_mempool_new (element_size);
+    mempool = sc_mempool_new (element_size);
     eclass = eclass_in;
   }
 
   virtual void
   t8_element_new (int length, t8_element_t **elem) const
   {
-    T8_ASSERT (ts_context != NULL);
+    T8_ASSERT (mempool != NULL);
     T8_ASSERT (0 <= length);
     T8_ASSERT (elem != NULL);
-    sc_mempool_t *mempool = (sc_mempool_t *) this->ts_context;
     for (int i = 0; i < length; ++i) {
       elem[i] = (t8_element_t *) sc_mempool_alloc (mempool);
     }
@@ -66,10 +68,9 @@ class t8_scheme_mempool_c: public t8_eclass_scheme_c {
   virtual void
   t8_element_destroy (int length, t8_element_t **elem) const
   {
-    T8_ASSERT (ts_context != NULL);
+    T8_ASSERT (mempool != NULL);
     T8_ASSERT (0 <= length);
     T8_ASSERT (elem != NULL);
-    sc_mempool_t *mempool = (sc_mempool_t *) this->ts_context;
     for (int i = 0; i < length; ++i) {
       sc_mempool_free (mempool, elem[i]);
     }
