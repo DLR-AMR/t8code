@@ -12,6 +12,11 @@ function( add_t8_test )
     add_test( NAME ${ADD_T8_TEST_NAME} COMMAND ./${ADD_T8_TEST_NAME} )
 endfunction()
 
+# Copy test files to build folder so that the t8_test programs can find them.
+function( copy_test_file TEST_FILE_NAME )
+    configure_file(${CMAKE_CURRENT_LIST_DIR}/testfiles/${TEST_FILE_NAME} ${CMAKE_CURRENT_BINARY_DIR}/test/testfiles/${TEST_FILE_NAME} COPYONLY)
+endfunction()
+
 add_t8_test( NAME t8_gtest_cmesh_bcast       SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_bcast.cxx )
 add_t8_test( NAME t8_gtest_eclass            SOURCES t8_gtest_main.cxx t8_gtest_eclass.cxx )
 add_t8_test( NAME t8_gtest_vec               SOURCES t8_gtest_main.cxx t8_gtest_vec.cxx )
