@@ -196,10 +196,10 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees, int nu
             t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges,
                                     24 * sizeof (int), 0);
             t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (),
-                                    T8_CMESH_cad_FACE_PARAMETERS_ATTRIBUTE_KEY + 0,
+                                    T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + 0,
                                     parameters + current_tree_parameters, 8 * sizeof (double), 1);
             t8_cmesh_set_attribute (cmesh, current_tree, t8_get_package_id (),
-                                    T8_CMESH_cad_FACE_PARAMETERS_ATTRIBUTE_KEY + 1,
+                                    T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + 1,
                                     parameters + current_tree_parameters, 8 * sizeof (double), 1);
           }
           /* If geometry only on face 1 */

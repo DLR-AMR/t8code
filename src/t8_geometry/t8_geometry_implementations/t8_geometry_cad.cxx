@@ -1076,7 +1076,7 @@ void
 t8_geometry_cad_destroy (t8_geometry_cad_c **geom)
 {
   T8_ASSERT (geom != NULL);
-  T8_ASSERT ((*geom)->t8_geom_get_type () == T8_GEOMETRY_TYPE_cad);
+  T8_ASSERT ((*geom)->t8_geom_get_type () == T8_GEOMETRY_TYPE_CAD);
 
   delete *geom;
   *geom = NULL;
