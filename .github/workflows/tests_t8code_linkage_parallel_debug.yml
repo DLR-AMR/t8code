@@ -205,7 +205,7 @@ jobs:
     - name: check OpenCASCADE
       run: echo "Checking OpenCASCADE with MPI in debugging mode"
     - name: configure MPI OpenCASCADE debug
-      run: mkdir build_cad && cd build_cad && ../configure $CONFIG_DEBUG --with-cad CFLAGS="$CFLAGS_var -I/usr/include/opencascade" CXXFLAGS="$CXXFLAGS_var -I/usr/include/opencascade"
+      run: mkdir build_cad && cd build_cad && ../configure $CONFIG_DEBUG --with-occ CFLAGS="$CFLAGS_var -I/usr/include/opencascade" CXXFLAGS="$CXXFLAGS_var -I/usr/include/opencascade"
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
