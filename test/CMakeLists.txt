@@ -77,3 +77,10 @@ add_t8_test( NAME t8_gtest_boundary_extrude      SOURCES t8_gtest_main.cxx t8_sc
 add_t8_test( NAME t8_gtest_face_descendant       SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_face_descendant.cxx )
 add_t8_test( NAME t8_gtest_default               SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_default.cxx )
 add_t8_test( NAME t8_gtest_child_parent_face     SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_child_parent_face.cxx )
+
+copy_test_file( test_cube_unstructured_1.inp )
+copy_test_file( test_cube_unstructured_2.inp )
+copy_test_file( test_vtk_tri.vtu )
+copy_test_file( test_vtk_cube.vtp )
+copy_test_file( test_parallel_file.pvtu )
+copy_test_file( test_polydata.pvtp )
