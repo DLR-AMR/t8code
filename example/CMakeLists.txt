@@ -3,6 +3,7 @@ add_library( t8example )
 target_sources( t8example PRIVATE common/t8_example_common.cxx common/t8_example_common_functions.cxx )
 target_include_directories( t8example PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. )
 target_link_libraries( t8example PRIVATE T8 )
+install( TARGETS t8example DESTINATION ${CMAKE_INSTALL_PREFIX}/lib )
 
 function( add_t8_example )
     set( options "" )
