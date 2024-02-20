@@ -99,6 +99,9 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const 
   case T8_ECLASS_HEX:
     t8_geometry_occ::t8_geom_evaluate_occ_hex (cmesh, gtreeid, ref_coords, num_coords, out_coords);
     break;
+  case T8_ECLASS_PRISM:
+    t8_geometry_occ::t8_geom_evaluate_occ_prism (cmesh, gtreeid, ref_coords, 1, out_coords);
+    break;
   default:
     SC_ABORTF ("Error: Curved %s geometry not yet implemented. \n", t8_eclass_to_string[active_tree_class]);
   }
@@ -906,6 +909,83 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
     }
   }
   T8_FREE (interpolated_coords);
+}
+
+void
+t8_geometry_occ::t8_geom_evaluate_occ_prism (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
+                                             const size_t num_coords, double *out_coords) const
+{
+  T8_ASSERT (active_tree_class == T8_ECLASS_PRISM);
+
+  /* Compute coordinates in global space from ref_coords in order to shift them afterwards */
+  t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, num_coords, out_coords);
+
+  const t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
+  const int num_edges = t8_eclass_num_edges[active_tree_class];
+  const int num_faces = t8_eclass_num_faces[active_tree_class];
+  double interpolated_coords[3], interpolated_curve_param, interpolated_surface_params[2], cur_delta[3];
+  gp_Pnt pnt;
+  double interpolation_coeffs[3], temp_face_vertices[T8_ECLASS_MAX_CORNERS_2D * 3], temp_edge_vertices[2 * 3];
+  Handle_Geom_Curve curve;
+  Handle_Geom_Surface surface;
+  Standard_Real first, last;
+
+  /* Check each edge for a geometry. */
+  for (int i_edge = 0; i_edge < num_edges; ++i_edge) {
+    /* We have to check for curves as well as surfaces. Linked curves are stored 
+     * in the first half of the array, surfaces in the second. 
+     * If a curve is connected to this edge we have to also check, 
+     * if a surface is connected to at least one of the two adjacent faces. */
+    if (edges[i_edge] > 0 || edges[i_edge + num_edges] > 0) {
+      /* Check if only a surface or a curve is present. Abort if both is true. */
+      T8_ASSERT (!(edges[i_edge] > 0) != !(edges[i_edge + num_edges] > 0));
+
+      /*
+       *     z     y
+       *     |  _-                _-4
+       *     |_-                _- / \
+       *     0----x           _-  /   \
+       *                    _-   /     \
+       *                  E6   E5      E3 
+       *                _-     /         \ 
+       *              _-      /           \ 
+       *            _-      _3-----E4----_-5
+       *           1      _-           _-
+       *          / \   E8           _-
+       *         /   \ -           E7
+       *       E1   _-\          _-
+       *       /  _-   \       _-
+       *      / _-     E0    _-
+       *     /_-         \ _-
+       *    0-----E1------2
+       */
+
+      /* Save the edge vertices temporarily. */
+      t8_geom_get_edge_vertices (active_tree_class, active_tree_vertices, i_edge, 3, temp_edge_vertices);
+
+      /* interpolation coefficient ? */
+
+      /* Interpolate between them */
+      for (size_t coord = 0; coord < num_coords; ++coord) {
+        const int offset_3d = coord * 3;
+        t8_geom_linear_interpolation (&ref_coords[/*interpolation coefficient*/], temp_edge_vertices, 3, 1,
+                                      interpolated_coords + offset_3d);
+      }
+
+      /* Interpolate parameters between edge vertices. Same procedure as above. */
+      const double *parameters = (double *) t8_cmesh_get_attribute (
+        cmesh, t8_get_package_id (), T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_edge, ltreeid);
+      T8_ASSERT (parameters != NULL);
+
+      for (size_t coord = 0; coord < num_coords; ++coord) {
+        const int offset_3d = coord * 3;
+        /* Curves have only one parameter u, surfaces have two, u and v.
+        * Therefore, we have to distinguish if the edge has a curve or surface linked to it. */
+        if (edges[i_edge] > 0) {
+        }
+      }
+    }
+  }
 }
 
 int
