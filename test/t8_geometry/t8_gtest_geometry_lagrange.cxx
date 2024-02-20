@@ -258,15 +258,12 @@ class Boundary1D {
   std::vector<double>
   sample (const std::vector<double> &sampling_points)
   {
-    size_t n_point = sampling_points.size ();
-    std::vector<double> mapped (n_point, 0);
+    const size_t n_point = sampling_points.size ();
+    std::vector<double> mapped (n_point * 3, 0);
     for (size_t i = 0; i < n_point; ++i) {
       double point = sampling_points[i];
-      double ref_point[3] = { point, 0, 0 };
-      double mapped_point[3];
-      t8_geometry_evaluate (cmesh, 0, ref_point, 1, mapped_point);
-      for (size_t j = 0; j < 3; j++)
-        mapped[3 * i + j] = mapped_point[j];
+      std::array<double, 3> ref_point = { point, 0, 0 };
+      t8_geometry_evaluate (cmesh, 0, ref_point.data(), 1, mapped.data() + 3 * i);
     }
     return mapped;
   };
