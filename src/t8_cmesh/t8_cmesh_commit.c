@@ -546,8 +546,6 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     /* If present use the set geometry handler, otherwise take
      * over the handler from set_from. */
     if (cmesh->geometry_handler == NULL) {
-      /* Reference and copy the geometry handler. */
-      t8_geom_handler_ref (cmesh->set_from->geometry_handler);
       cmesh->geometry_handler = cmesh->set_from->geometry_handler;
       /* Mark that we do not have to commit the geometry handler. */
       commit_geom_handler = 0;
@@ -567,11 +565,6 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   } /* End set_from != NULL */
   else {
     t8_cmesh_commit_from_stash (cmesh, comm);
-    /* If no geometry was registered, we need to initialize a geometry handler
-     * (which will then be empty). */
-    if (cmesh->geometry_handler == NULL) {
-      t8_geom_handler_init (&cmesh->geometry_handler);
-    }
     /* We also need to commit the handler. */
     commit_geom_handler = 1;
   }

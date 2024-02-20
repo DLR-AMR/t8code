@@ -565,9 +565,9 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_QUAD);
     /* Note that we have to register both geometries to the cmesh. The cylinder geometry is
      * stored in the "geometry" pointer and registered later, right before the cmesh is committed. */
+    t8_cmesh_set_tree_geometry (cmesh, 0, geometry);
+    t8_cmesh_set_tree_geometry (cmesh, 1, geometry_sincos);
     t8_cmesh_register_geometry (cmesh, geometry_sincos);
-    t8_cmesh_set_tree_geometry (cmesh, 0, geometry->t8_geom_get_name ());
-    t8_cmesh_set_tree_geometry (cmesh, 1, geometry_sincos->t8_geom_get_name ());
     snprintf (vtuname, BUFSIZ, "forest_cylinder_and_sincos_lvl_%i", level);
     break;
   case T8_GEOM_CIRCLE:

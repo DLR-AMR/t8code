@@ -55,116 +55,18 @@ typedef enum t8_geometry_type {
  */
 typedef struct t8_geometry t8_geometry_c;
 
+/** This typedef holds virtual functions for the geometry handler.
+ * We need it so that we can use t8_geometry_handler_c pointers in .c files
+ * without them seeing the actual C++ code (and then not compiling)
+ * TODO: Delete this when the cmesh is a proper cpp class.
+ */
+typedef struct t8_geometry_handler t8_geometry_handler_c;
+
 /* The t8_geometry_c type must be know to cmesh.h, thus we
  * include it after the typedef. */
 #include <t8_cmesh.h>
 
-typedef struct t8_geometry_handler
-{
-  sc_array_t registered_geometries;
-  /**< Stores all geometries that are handled by this geometry_handler. */
-  t8_geometry_c *active_geometry;
-  /**< Points to the currently loaded geometry (the geometry that was used last and is likely to be used next). */
-  t8_gloidx_t active_tree;
-  /**< The global tree id of the last tree for which geometry was used. */
-  int is_committed;
-  /**< If true, no new geometries can be registered. */
-  t8_refcount_t rc;
-  /**< The reference count of the geometry handler. */
-} t8_geometry_handler_t;
-
 T8_EXTERN_C_BEGIN ();
-
-/** 
- * Initialize a geometry handler. This will allocate memory.
- * \param [in,out]  pgeom_handler On input a pointer to unallocated memory.
- *                                On output this will point to an initialized geometry handler.
- */
-void
-t8_geom_handler_init (t8_geometry_handler_t **pgeom_handler);
-
-/** 
- * Increase the reference counter of a geometry handler.
- * \param [in] geom_handler An initialized geometry handler.
- */
-void
-t8_geom_handler_ref (t8_geometry_handler_t *geom_handler);
-
-/**
- * Decrease the reference count of a geometry handler, if the refcount
- * reaches 0, the handler will get destroyed.
- * \param [in,out] pgeom_handler Pointer to an initialized geometry handler.
- *                               If the refcount reaches 0, will point to NULL afterwards.
- */
-void
-t8_geom_handler_unref (t8_geometry_handler_t **pgeom_handler);
-
-/**
- * Destroy a geometry handler and free its memory. 
- * This is only valid if its reference count is 1.
- * If you are unsure, call \ref t8_geom_handler_unref instead.
- * \param [in,out] pgeom_handler Pointer to an initialized geometry handler.
- *                               Will point to NULL afterwards.
- */
-void
-t8_geom_handler_destroy (t8_geometry_handler_t **pgeom_handler);
-
-/**
- * Add a geometry to the geometry handler.
- * \param [in,out] geom_handler An initialized but not committed geometry handler.
- * \param [in]     geometry     The geometry to add.
- */
-void
-t8_geom_handler_register_geometry (t8_geometry_handler_t *geom_handler, const t8_geometry_c *geometry);
-
-/**
- * Commit a geometry handler. This specifies that no geometries will
- * be added to it and makes it ready to be used.
- * \param [in,out] geom_handler An initialized but not committed geometry handler.
- */
-void
-t8_geom_handler_commit (t8_geometry_handler_t *geom_handler);
-
-/* Check if a geometry handler was committed. */
-int
-t8_geom_handler_is_committed (const t8_geometry_handler_t *geom_handler);
-
-/** Return the number of registered geometries.
- * \param [in] geom_handler A geometry handler (must be initialized and may or may not be committed).
- * \return  The number of registered geometries in \a geom_handler.
- */
-size_t
-t8_geom_handler_get_num_geometries (const t8_geometry_handler_t *geom_handler);
-
-/** If a geometry handler only has one registered geometry, get a pointer to
- *  this geometry.
- * \param [in] geom_handler Must be committed and have exactly one geometry registered.
- * \return     The only registered geometry of \a geom_handler.
- * \note  Most cmeshes will have only one geometry and this function is an optimization
- *        for that special case. It is used for example in \ref t8_cmesh_get_tree_geometry.
- */
-const t8_geometry_c *
-t8_geom_handler_get_unique_geometry (const t8_geometry_handler_t *geom_handler);
-
-/**
- * Deactivate the current active tree. Can be used to reload data, after it has been moved, for example by the
- * partition-algorithm
- * 
- * \param[in,out] geom_handler The geometry handler, where the tree has to be deactivated.
- * \note \a geom_handler must be committed before calling this function.
- */
-void
-t8_geom_handler_deactivate_tree (t8_geometry_handler_t *geom_handler);
-
-/**
- * Given a geometry's name find that geometry in the geometry handler
- * and return it.
- * \param [in] geom_handler A committed geometry handler.
- * \param [in] name         The name of a geometry.
- * \return                  A pointer to the geometry or NULL if it was not found.
- */
-t8_geometry_c *
-t8_geom_handler_find_geometry (const t8_geometry_handler_t *geom_handler, const char *name);
 
 void
 t8_geometry_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,

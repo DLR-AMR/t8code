@@ -91,7 +91,6 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm, int set_part
   int use_offset;
   int8_t ttf;
   p4est_topidx_t ttt;
-  t8_geometry_c *linear_geom = t8_geometry_linear_new (dim);
 
   /* Make sure that p4est is properly initialized. If not, do it here
    * and raise a warning. */
@@ -117,8 +116,8 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm, int set_part
   num_faces = dim == 2 ? 4 : 6;
   /* basic setup */
   t8_cmesh_init (&cmesh);
-  /* We use linear geometry */
-  t8_cmesh_register_geometry (cmesh, linear_geom);
+  /* We use the linear geometry */
+  t8_geometry_c *linear_geom = t8_cmesh_register_geometry (cmesh, t8_geometry_linear_new (dim));
   /* Add each tree to cmesh and get vertex information for each tree */
   for (ltree = 0; ltree < _T8_CMESH_P48_CONN (num_trees); ltree++) { /* loop over each tree */
     t8_cmesh_set_tree_class (cmesh, ltree + offset, dim == 2 ? T8_ECLASS_QUAD : T8_ECLASS_HEX);

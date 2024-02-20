@@ -20,6 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <t8_geometry/t8_geometry.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
 #include <t8_geometry/t8_geometry_helpers.h>
@@ -27,17 +28,12 @@
 t8_geometry_linear_axis_aligned::t8_geometry_linear_axis_aligned (int dim): t8_geometry_with_vertices (dim, "")
 {
   T8_ASSERT (0 <= dim && dim <= 3);
-  size_t num_chars = 100;
-  char *name_tmp = T8_ALLOC (char, num_chars);
-
-  snprintf (name_tmp, num_chars, "t8_geom_linear_axis_aligned_%i", dim);
-  name = name_tmp;
+  name = (t8_geometry_type_names[T8_GEOMETRY_TYPE_LINEAR_AXIS_ALIGNED] + std::to_string (dim)).c_str ();
   dimension = dim;
 }
 
 t8_geometry_linear_axis_aligned::~t8_geometry_linear_axis_aligned ()
 {
-  T8_FREE ((char *) name);
 }
 
 void

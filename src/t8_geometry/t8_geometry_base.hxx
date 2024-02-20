@@ -110,10 +110,16 @@ struct t8_geometry
    * Get the name of this geometry.
    * \return The name.
    */
-  inline const char *
+  inline const std::string
   t8_geom_get_name () const
   {
     return name;
+  }
+
+  inline const size_t
+  t8_geom_get_hash () const
+  {
+    return std::hash<std::string> {}(name);
   }
 
   /**
@@ -125,10 +131,10 @@ struct t8_geometry
     = 0;
 
  protected:
-  int dimension;
+  const int dimension;
   /**< The dimension of reference space for which this is a geometry. */
 
-  const char *name;
+  const std::string name;
   /**< The name of this geometry. */
 };
 

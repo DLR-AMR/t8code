@@ -24,7 +24,7 @@ libt8_installed_headers = \
   src/t8.h src/t8_eclass.h src/t8_mesh.h \
   src/t8_element_cxx.hxx src/t8_element.h \
   src/t8_element_c_interface.h \
-  src/t8_refcount.h src/t8_cmesh.h src/t8_cmesh_triangle.h \
+  src/t8_refcount.h src/t8_cmesh.hxx src/t8_cmesh.h src/t8_cmesh_triangle.h \
   src/t8_cmesh_tetgen.h src/t8_cmesh_readmshfile.h \
   src/t8_cmesh_vtk_writer.h \
   src/t8_cmesh_vtk_reader.hxx \
@@ -86,6 +86,7 @@ libt8_installed_headers_default_tet =
 libt8_installed_headers_default_prism =
 libt8_installed_headers_default_pyramid =
 libt8_internal_headers = \
+  src/t8_geometry/t8_geometry_handler.hxx \
   src/t8_cmesh/t8_cmesh_stash.h src/t8_cmesh/t8_cmesh_trees.h \
   src/t8_cmesh/t8_cmesh_types.h src/t8_cmesh/t8_cmesh_partition.h \
   src/t8_cmesh/t8_cmesh_copy.h \
@@ -120,6 +121,7 @@ libt8_compiled_sources = \
   src/t8_cmesh/t8_cmesh_offset.c src/t8_cmesh/t8_cmesh_readmshfile.cxx \
   src/t8_forest/t8_forest.c src/t8_forest/t8_forest_adapt.cxx \
   src/t8_geometry/t8_geometry.cxx \
+  src/t8_geometry/t8_geometry_handler.cxx \
   src/t8_geometry/t8_geometry_helpers.c \
   src/t8_geometry/t8_geometry_base.cxx \
   src/t8_geometry/t8_geometry_with_vertices.cxx \
