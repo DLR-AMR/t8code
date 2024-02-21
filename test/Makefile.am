@@ -17,12 +17,12 @@ t8code_googletest_programs = \
   test/t8_schemes/t8_gtest_nca \
   test/t8_schemes/t8_gtest_pyra_connectivity \
   test/t8_schemes/t8_gtest_face_neigh \
-  test/t8_geometry/t8_geometry_implementations/t8_gtest_geometry_occ \
+  test/t8_geometry/t8_geometry_implementations/t8_gtest_geometry_cad \
   test/t8_gtest_eclass \
   test/t8_gtest_vec \
   test/t8_gtest_mat \
   test/t8_gtest_refcount \
-  test/t8_gtest_occ_linkage \
+  test/t8_gtest_cad_linkage \
   test/t8_gtest_version \
   test/t8_schemes/t8_gtest_init_linear_id \
   test/t8_gtest_basics \
@@ -90,9 +90,9 @@ test_t8_schemes_t8_gtest_face_neigh_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_schemes/t8_gtest_face_neigh.cxx
 
-test_t8_geometry_t8_geometry_implementations_t8_gtest_geometry_occ_SOURCES = \
+test_t8_geometry_t8_geometry_implementations_t8_gtest_geometry_cad_SOURCES = \
   test/t8_gtest_main.cxx \
-  test/t8_geometry/t8_geometry_implementations/t8_gtest_geometry_occ.cxx
+  test/t8_geometry/t8_geometry_implementations/t8_gtest_geometry_cad.cxx
 
 test_t8_gtest_eclass_SOURCES = \
   test/t8_gtest_main.cxx \
@@ -110,9 +110,9 @@ test_t8_gtest_refcount_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_gtest_refcount.cxx
 
-test_t8_gtest_occ_linkage_SOURCES = \
+test_t8_gtest_cad_linkage_SOURCES = \
   test/t8_gtest_main.cxx \
-  test/t8_gtest_occ_linkage.cxx
+  test/t8_gtest_cad_linkage.cxx
 
 test_t8_gtest_version_SOURCES = \
   test/t8_gtest_main.cxx \
@@ -133,10 +133,6 @@ test_t8_schemes_t8_gtest_ancestor_SOURCES = \
 test_t8_cmesh_t8_gtest_hypercube_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_cmesh/t8_gtest_hypercube.cxx
-
-test_t8_cmesh_t8_gtest_cmesh_copy_SOURCES = \
-  test/t8_gtest_main.cxx \
-  test/t8_cmesh/t8_gtest_cmesh_copy.cxx 
 
 test_t8_cmesh_t8_gtest_cmesh_set_join_by_vertices_SOURCES = \
   test/t8_gtest_main.cxx \
@@ -294,6 +290,10 @@ test_t8_cmesh_generator_t8_gtest_cmesh_generator_test_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_cmesh_generator/t8_gtest_cmesh_generator_test.cxx
 
+test_t8_cmesh_t8_gtest_cmesh_copy_SOURCES = \
+  test/t8_gtest_main.cxx \
+  test/t8_cmesh/t8_gtest_cmesh_copy.cxx
+
 #define ld and cpp flags for all targets
 t8_gtest_target_ld_add = $(LDADD) test/libgtest.la
 t8_gtest_target_ld_flags = $(AM_LDFLAGS) -pthread
@@ -318,9 +318,9 @@ test_t8_schemes_t8_gtest_face_neigh_LDADD = $(t8_gtest_target_ld_add)
 test_t8_schemes_t8_gtest_face_neigh_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_schemes_t8_gtest_face_neigh_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
-test_t8_geometry_t8_geometry_implementations_t8_gtest_geometry_occ_LDADD = $(t8_gtest_target_ld_add)
-test_t8_geometry_t8_geometry_implementations_t8_gtest_geometry_occ_LDFLAGS = $(t8_gtest_target_ld_flags)
-test_t8_geometry_t8_geometry_implementations_t8_gtest_geometry_occ_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+test_t8_geometry_t8_geometry_implementations_t8_gtest_geometry_cad_LDADD = $(t8_gtest_target_ld_add)
+test_t8_geometry_t8_geometry_implementations_t8_gtest_geometry_cad_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_geometry_t8_geometry_implementations_t8_gtest_geometry_cad_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
 test_t8_gtest_eclass_LDADD = $(t8_gtest_target_ld_add)
 test_t8_gtest_eclass_LDFLAGS = $(t8_gtest_target_ld_flags)
@@ -338,9 +338,9 @@ test_t8_gtest_refcount_LDADD = $(t8_gtest_target_ld_add)
 test_t8_gtest_refcount_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_gtest_refcount_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
-test_t8_gtest_occ_linkage_LDADD = $(t8_gtest_target_ld_add)
-test_t8_gtest_occ_linkage_LDFLAGS = $(t8_gtest_target_ld_flags)
-test_t8_gtest_occ_linkage_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+test_t8_gtest_cad_linkage_LDADD = $(t8_gtest_target_ld_add)
+test_t8_gtest_cad_linkage_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_gtest_cad_linkage_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
 test_t8_gtest_version_LDADD = $(t8_gtest_target_ld_add)
 test_t8_gtest_version_LDFLAGS = $(t8_gtest_target_ld_flags)
@@ -361,10 +361,6 @@ test_t8_schemes_t8_gtest_ancestor_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 test_t8_cmesh_t8_gtest_hypercube_LDADD = $(t8_gtest_target_ld_add)
 test_t8_cmesh_t8_gtest_hypercube_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_cmesh_t8_gtest_hypercube_CPPFLAGS = $(t8_gtest_target_cpp_flags)
-
-test_t8_cmesh_t8_gtest_cmesh_copy_LDADD = $(t8_gtest_target_ld_add)
-test_t8_cmesh_t8_gtest_cmesh_copy_LDFLAGS = $(t8_gtest_target_ld_flags)
-test_t8_cmesh_t8_gtest_cmesh_copy_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
 test_t8_cmesh_t8_gtest_cmesh_set_join_by_vertices_LDADD = $(t8_gtest_target_ld_add)
 test_t8_cmesh_t8_gtest_cmesh_set_join_by_vertices_LDFLAGS = $(t8_gtest_target_ld_flags)
@@ -526,6 +522,10 @@ test_t8_cmesh_generator_t8_gtest_cmesh_generator_test_LDADD = $(t8_gtest_target_
 test_t8_cmesh_generator_t8_gtest_cmesh_generator_test_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_cmesh_generator_t8_gtest_cmesh_generator_test_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
+test_t8_cmesh_t8_gtest_cmesh_copy_LDADD = $(t8_gtest_target_ld_add)
+test_t8_cmesh_t8_gtest_cmesh_copy_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_cmesh_t8_gtest_cmesh_copy_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+
 # If we did not configure t8code with MPI we need to build Googletest
 # without MPI support.
 if !T8_ENABLE_MPI
@@ -533,18 +533,17 @@ test_t8_gtest_cmesh_bcast_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_nca_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_pyra_connectivity_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_face_neigh_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
-test_t8_geometry_t8_geometry_implementations_t8_gtest_geometry_occ_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_geometry_t8_geometry_implementations_t8_gtest_geometry_cad_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_gtest_eclass_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_gtest_vec_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_gtest_mat_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_gtest_refcount_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
-test_t8_gtest_occ_linkage_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_gtest_cad_linkage_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_gtest_version_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_init_linear_id_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_gtest_basics_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_ancestor_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_hypercube_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
-test_t8_cmesh_t8_gtest_cmesh_copy_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_cmesh_set_join_by_vertices_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_element_count_leaves_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_element_ref_coords_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
@@ -585,6 +584,7 @@ test_t8_cmesh_t8_gtest_cmesh_tree_vertices_negative_volume_CPPFLAGS += $(t8_gtes
 test_t8_schemes_t8_gtest_default_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_child_parent_face_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_generator_t8_gtest_cmesh_generator_test_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_cmesh_t8_gtest_cmesh_copy_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 
 endif
 
