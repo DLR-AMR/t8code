@@ -67,7 +67,7 @@ target_sources( T8 PRIVATE
     t8_element_c_interface.cxx 
     t8_refcount.c 
     t8_cmesh/t8_cmesh.c 
-    t8_cmesh/t8_cmesh_occ.cxx 
+    t8_cmesh/t8_cmesh_cad.cxx 
     t8_cmesh/t8_cmesh_cxx.cxx 
     t8_cmesh/t8_cmesh_triangle.c 
     t8_cmesh/t8_cmesh_vtk_writer.c 
