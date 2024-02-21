@@ -44,6 +44,8 @@ class vtk_reader: public testing::TestWithParam<std::tuple<int, int, int>> {
     SC_CHECK_MPI (mpiret);
     mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
     SC_CHECK_MPI (mpiret);
+
+    /* `mpisize` must match with the number of files that are read in. */
     if (mpisize != T8_VTK_TEST_NUM_PROCS) {
       GTEST_SKIP ();
     }
