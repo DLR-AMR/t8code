@@ -185,7 +185,7 @@ set( T8_PUBLIC_HEADERS
     t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h
     t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx
     t8_geometry/t8_geometry_implementations/t8_geometry_examples.h
-    t8_geometry/t8_geometry_implementations/t8_geometry_occ.h
+    t8_geometry/t8_geometry_implementations/t8_geometry_cad.h
     t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx
     t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx
     t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx
