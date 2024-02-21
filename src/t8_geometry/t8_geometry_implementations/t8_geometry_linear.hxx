@@ -90,6 +90,20 @@ struct t8_geometry_linear: public t8_geometry_with_vertices
   t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
                              double *jacobian) const;
 
+  /**
+   * \param[in] forest            The forest of the element.
+   * \param[in] ltreeid           The local tree id of the element's tree
+   * \param[in] element           The element
+   * \param[in] points            points to check
+   * \param[in] num_points        Number of points to check
+   * \param[in, out] is_inside    Array to fill with flags whether the point is inside or not
+   * \param[in] tolerance         Tolerance of the inside-check
+   */
+  virtual void
+  t8_geom_point_batch_inside_element (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
+                                      const double *points, const int num_points, int *is_inside,
+                                      const double tolerance) const;
+
   /* Load tree data is inherited from t8_geometry_with_vertices. */
 };
 

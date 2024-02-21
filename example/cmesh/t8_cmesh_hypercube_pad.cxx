@@ -46,7 +46,7 @@ main (int argc, char **argv)
   t8_init (SC_LP_PRODUCTION);
 
   /* Add hypercube with given element class. */
-  t8_cmesh_t cmesh = t8_cmesh_new_hypercube_pad (T8_ECLASS_HEX, sc_MPI_COMM_WORLD, boundary_coords, 3, 3, 3);
+  t8_cmesh_t cmesh = t8_cmesh_new_hypercube_pad (T8_ECLASS_HEX, sc_MPI_COMM_WORLD, boundary_coords, 3, 3, 3, 0);
 
   /* Compute local and global number of trees. */
   local_num_trees = t8_cmesh_get_num_local_trees (cmesh);
@@ -55,7 +55,7 @@ main (int argc, char **argv)
   t8_global_productionf (" [step1] Local number of trees:\t%i\n", local_num_trees);
   t8_global_productionf (" [step1] Global number of trees:\t%li\n", global_num_trees);
 
-  t8_cmesh_vtk_write_file (cmesh, prefix, 1.0);
+  t8_cmesh_vtk_write_file (cmesh, prefix);
 
   t8_cmesh_destroy (&cmesh);
 

@@ -28,7 +28,7 @@
 #include <t8_geometry/t8_geometry_base.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_analytic.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
 #include <t8_geometry/t8_geometry_helpers.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 
@@ -64,10 +64,10 @@ typedef enum {
   T8_GEOM_3D,
   T8_GEOM_MOVING,
   T8_GEOM_ANALYTIC_QUAD_TO_SPHERE,
-  T8_GEOM_OCC_TRIANGLE,
-  T8_GEOM_OCC_CURVE_CUBE,
-  T8_GEOM_OCC_SURFACE_CUBES,
-  T8_GEOM_OCC_SURFACE_CYLINDER,
+  T8_GEOM_CAD_TRIANGLE,
+  T8_GEOM_CAD_CURVE_CUBE,
+  T8_GEOM_CAD_SURFACE_CUBES,
+  T8_GEOM_CAD_SURFACE_CYLINDER,
   T8_GEOM_COUNT
 } t8_example_geom_type;
 
@@ -77,7 +77,8 @@ typedef enum {
  * 
  * This geometry does not provide a jacobian.
  */
-class t8_geometry_sincos: public t8_geometry {
+struct t8_geometry_sincos: public t8_geometry
+{
  public:
   /* Basic constructor that sets the dimension and the name. */
   t8_geometry_sincos (): t8_geometry (2, "t8_sincos_geometry")
@@ -144,7 +145,8 @@ class t8_geometry_sincos: public t8_geometry {
  * It inherits from the w_vertices geometry since we use the tree's vertex coordinates.
  * This geometry does not provide a jacobian.
  */
-class t8_geometry_moebius: public t8_geometry_with_vertices {
+struct t8_geometry_moebius: public t8_geometry_with_vertices
+{
  public:
   /* Basic constructor that sets the dimension and the name. */
   t8_geometry_moebius (): t8_geometry_with_vertices (2, "t8_moebius_geometry")
@@ -209,7 +211,8 @@ class t8_geometry_moebius: public t8_geometry_with_vertices {
  * 
  * This geometry does not provide a jacobian.
  */
-class t8_geometry_cylinder: public t8_geometry {
+struct t8_geometry_cylinder: public t8_geometry
+{
  public:
   /* Basic constructor that sets the dimension and the name. */
   t8_geometry_cylinder (): t8_geometry (2, "t8_cylinder_geometry")
@@ -270,7 +273,8 @@ class t8_geometry_cylinder: public t8_geometry {
  * 
  * This geometry does not provide a jacobian.
  */
-class t8_geometry_circle: public t8_geometry_with_vertices {
+struct t8_geometry_circle: public t8_geometry_with_vertices
+{
  public:
   /* Basic constructor that sets the dimension and the name. */
   t8_geometry_circle (): t8_geometry_with_vertices (2, "t8_circle_geometry")
@@ -340,7 +344,8 @@ class t8_geometry_circle: public t8_geometry_with_vertices {
  * The geometry can only be used with single tree cmeshes (unit square).
  */
 
-class t8_geometry_moving: public t8_geometry {
+struct t8_geometry_moving: public t8_geometry
+{
  public:
   /* Basic constructor that sets the dimension the name and the time pointer. */
   t8_geometry_moving (const double *time): t8_geometry (2, "t8_moving_geometry"), ptime (time)
@@ -416,7 +421,8 @@ class t8_geometry_moving: public t8_geometry {
  * in z direction.
  * Can be used with 1 tree unit cube cmesh only.
  */
-class t8_geometry_cube_zdistorted: public t8_geometry {
+struct t8_geometry_cube_zdistorted: public t8_geometry
+{
  public:
   /* Basic constructor that sets the dimension and the name. */
   t8_geometry_cube_zdistorted (): t8_geometry (3, "t8_cube_zdistorted_geometry")
@@ -616,12 +622,12 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
 
     snprintf (vtuname, BUFSIZ, "forest_quad_to_sphere");
     break;
-  case T8_GEOM_OCC_TRIANGLE: {
+  case T8_GEOM_CAD_TRIANGLE: {
 #if T8_WITH_OCC
-    t8_global_productionf ("Creating uniform level %i forests with an occ triangle geometry.\n", level);
+    t8_global_productionf ("Creating uniform level %i forests with an cad triangle geometry.\n", level);
 
     /* Constructing a triangle with one curved edge (f2) */
-    Handle_Geom_BSplineCurve occ_curve;
+    Handle_Geom_BSplineCurve cad_curve;
     TColgp_Array1OfPnt point_array (1, 3);
     TopoDS_Shape shape;
 
@@ -631,17 +637,17 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     point_array (3) = gp_Pnt (1.0, 2.0, 0.0);
 
     /* Generate bsplines from arrays. */
-    occ_curve = GeomAPI_PointsToBSpline (point_array).Curve ();
+    cad_curve = GeomAPI_PointsToBSpline (point_array).Curve ();
 
     /* Fill shape with bsplines so that we can create a geometry with this shape. */
-    shape = BRepBuilderAPI_MakeEdge (occ_curve).Edge ();
+    shape = BRepBuilderAPI_MakeEdge (cad_curve).Edge ();
 
-    /* Create an occ geometry. */
-    t8_geometry_occ *geometry_occ = new t8_geometry_occ (3, shape, "occ curve dim=3");
+    /* Create an cad geometry. */
+    t8_geometry_cad *geometry_cad = new t8_geometry_cad (3, shape, "cad curve dim=3");
 
     /* The arrays indicate which face/edge carries a geometry. 
        * 0 means no geometry and any other number indicates the position of the geometry 
-       * in the global geometry array. Here edge 1 carries the created occ_curve. */
+       * in the global geometry array. Here edge 1 carries the created cad_curve. */
     int faces[1] = { 0 };
     int edges[6] = { 0, 1, 0, 0, 0, 0 };
     /* Create tree 0 */
@@ -654,28 +660,28 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
 
     /* Give the tree information about its curves and the parameters of the vertices. 
        * Each parameter set is given to the tree via its attribute key + the edge or face index it corresponds with. */
-    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces, 1 * sizeof (int),
+    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, faces, 1 * sizeof (int),
                             0);
-    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges, 6 * sizeof (int),
+    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges, 6 * sizeof (int),
                             0);
-    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + 1,
+    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + 1,
                             parameters_edge, 2 * sizeof (double), 0);
 
-    geometry = geometry_occ;
-    snprintf (vtuname, BUFSIZ, "forest_occ_triangle_lvl_%i", level);
+    geometry = geometry_cad;
+    snprintf (vtuname, BUFSIZ, "forest_cad_triangle_lvl_%i", level);
     break;
 #else  /* !T8_WITH_OCC */
     SC_ABORTF ("OCC not linked");
 #endif /* T8_WITH_OCC */
   }
-  case T8_GEOM_OCC_CURVE_CUBE: {
+  case T8_GEOM_CAD_CURVE_CUBE: {
 #if T8_WITH_OCC
-    t8_global_productionf ("Creating uniform level %i forests with occ curve geometries.\n", level);
+    t8_global_productionf ("Creating uniform level %i forests with cad curve geometries.\n", level);
 
-    /* Create two occ bsplines which oscillate along the x-axis. 
+    /* Create two cad bsplines which oscillate along the x-axis. 
        * For this we need to define two arrays from which we create the bsplines. */
-    Handle_Geom_Curve occ_curve0;
-    Handle_Geom_Curve occ_curve1;
+    Handle_Geom_Curve cad_curve0;
+    Handle_Geom_Curve cad_curve1;
     TColgp_Array1OfPnt point_array0 (1, 5);
     TColgp_Array1OfPnt point_array1 (1, 5);
     TopoDS_Shape shape;
@@ -694,19 +700,19 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     point_array1 (5) = gp_Pnt (1, 1, 1);
 
     /* Generate bsplines from arrays. */
-    occ_curve0 = GeomAPI_PointsToBSpline (point_array0).Curve ();
-    occ_curve1 = GeomAPI_PointsToBSpline (point_array1).Curve ();
+    cad_curve0 = GeomAPI_PointsToBSpline (point_array0).Curve ();
+    cad_curve1 = GeomAPI_PointsToBSpline (point_array1).Curve ();
 
     /* Fill shape with bsplines so that we can create a geometry with this shape. */
-    shape = BRepBuilderAPI_MakeEdge (occ_curve0).Edge ();
-    shape = BRepAlgoAPI_Fuse (shape, BRepBuilderAPI_MakeEdge (occ_curve1).Edge ());
+    shape = BRepBuilderAPI_MakeEdge (cad_curve0).Edge ();
+    shape = BRepAlgoAPI_Fuse (shape, BRepBuilderAPI_MakeEdge (cad_curve1).Edge ());
 
-    /* Create an occ geometry. */
-    t8_geometry_occ *geometry_occ = new t8_geometry_occ (3, shape, "occ curve dim=3");
+    /* Create an cad geometry. */
+    t8_geometry_cad *geometry_cad = new t8_geometry_cad (3, shape, "cad curve dim=3");
 
     /* The arrays indicate which face/edge carries a geometry. 
      * 0 means no geometry and any other number indicates the position of the geometry 
-     * in the global geometry array. Here edge 0 carries occ_curve0 and edge 3 carries occ_curve1.
+     * in the global geometry array. Here edge 0 carries cad_curve0 and edge 3 carries cad_curve1.
      * We add them in the next step. */
     int faces[6] = { 0, 0, 0, 0, 0, 0 };
     int edges[24] = { 1, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -722,28 +728,28 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
 
     /* Give the tree information about its curves and the parameters of the vertices. 
        * Each parameter set is given to the tree via its attribute key + the edge or face index it corresponds with. */
-    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces, 6 * sizeof (int),
+    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, faces, 6 * sizeof (int),
                             0);
-    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges, 24 * sizeof (int),
+    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges, 24 * sizeof (int),
                             0);
-    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + 0, parameters,
+    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + 0, parameters,
                             2 * sizeof (double), 0);
-    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + 3, parameters,
+    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + 3, parameters,
                             2 * sizeof (double), 0);
 
-    geometry = geometry_occ;
-    snprintf (vtuname, BUFSIZ, "forest_occ_curve_cube_lvl_%i", level);
+    geometry = geometry_cad;
+    snprintf (vtuname, BUFSIZ, "forest_cad_curve_cube_lvl_%i", level);
     break;
-#else  /* !T8_WITH_OCC */
+#else  /* !T8_WITH_cad */
     SC_ABORTF ("OCC not linked");
-#endif /* T8_WITH_OCC */
+#endif /* T8_WITH_cad */
   }
-  case T8_GEOM_OCC_SURFACE_CUBES: {
+  case T8_GEOM_CAD_SURFACE_CUBES: {
 #if T8_WITH_OCC
-    t8_global_productionf ("Creating uniform level %i forests with a occ surface geometry.\n", level);
+    t8_global_productionf ("Creating uniform level %i forests with a cad surface geometry.\n", level);
 
-    /* Create a occ bspline surface with 2D array of knots */
-    Handle_Geom_Surface occ_surface;
+    /* Create a cad bspline surface with 2D array of knots */
+    Handle_Geom_Surface cad_surface;
     TColgp_Array2OfPnt point_array (1, 5, 1, 3);
     TopoDS_Shape shape;
 
@@ -793,8 +799,8 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
 
     /* Generate bspline surface from array and fill shape with it
      * so that we can create a geometry with this shape. */
-    occ_surface = GeomAPI_PointsToBSplineSurface (point_array).Surface ();
-    shape = BRepBuilderAPI_MakeFace (occ_surface, 1e-6).Face ();
+    cad_surface = GeomAPI_PointsToBSplineSurface (point_array).Surface ();
+    shape = BRepBuilderAPI_MakeFace (cad_surface, 1e-6).Face ();
 
     /* The arrays indicate which face/edge carries a geometry. 
      * 0 means no geometry and any other number indicates the position of the geometry 
@@ -803,8 +809,8 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     int faces[6] = { 0, 0, 0, 0, 0, 1 };
     int edges[24] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-    /* Create occ geometry. */
-    t8_geometry_occ *geometry_occ = new t8_geometry_occ (3, shape, "occ surface dim=3");
+    /* Create cad geometry. */
+    t8_geometry_cad *geometry_cad = new t8_geometry_cad (3, shape, "cad surface dim=3");
 
     /* Create tree 0 */
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
@@ -823,11 +829,11 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     /* Give tree 0 information about its surface and the parameters of the vertices. 
      * Each parameter set is given to the tree via its attribute key + the edge or face index it corresponds with. 
      */
-    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces, 6 * sizeof (int),
+    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, faces, 6 * sizeof (int),
                             0);
-    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges, 24 * sizeof (int),
+    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges, 24 * sizeof (int),
                             0);
-    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY + 5, parameters0,
+    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + 5, parameters0,
                             8 * sizeof (double), 0);
 
     /* Create tree 1 */
@@ -847,28 +853,28 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     /* Give tree 1 information about its surface and the parameters of the vertices. 
      *  Each parameter set is given to the tree via its attribute key + the edge or face index it corresponds with. 
      *  We can use the same edges and faces array, because we link the surface to the same face on tree 1. */
-    t8_cmesh_set_attribute (cmesh, 1, t8_get_package_id (), T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces, 6 * sizeof (int),
+    t8_cmesh_set_attribute (cmesh, 1, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, faces, 6 * sizeof (int),
                             0);
-    t8_cmesh_set_attribute (cmesh, 1, t8_get_package_id (), T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges, 24 * sizeof (int),
+    t8_cmesh_set_attribute (cmesh, 1, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges, 24 * sizeof (int),
                             0);
-    t8_cmesh_set_attribute (cmesh, 1, t8_get_package_id (), T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY + 5, parameters1,
+    t8_cmesh_set_attribute (cmesh, 1, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + 5, parameters1,
                             8 * sizeof (double), 0);
 
     /* Join tree 0 and tree 1 together */
     t8_cmesh_set_join (cmesh, 0, 1, 1, 0, 0);
 
-    geometry = geometry_occ;
-    snprintf (vtuname, BUFSIZ, "forest_occ_surface_cubes_lvl_%i", level);
+    geometry = geometry_cad;
+    snprintf (vtuname, BUFSIZ, "forest_cad_surface_cubes_lvl_%i", level);
     break;
 #else  /* !T8_WITH_OCC */
     SC_ABORTF ("OCC not linked");
 #endif /* T8_WITH_OCC */
   }
-  case T8_GEOM_OCC_SURFACE_CYLINDER: {
+  case T8_GEOM_CAD_SURFACE_CYLINDER: {
 #if T8_WITH_OCC
-    t8_global_productionf ("Creating uniform level %i forests with an occ cylinder geometry.\n", level);
+    t8_global_productionf ("Creating uniform level %i forests with an cad cylinder geometry.\n", level);
 
-    /* Create occ cylinder surfaces. We use an outer radius of 0.5 to get a diameter of 1. */
+    /* Create cad cylinder surfaces. We use an outer radius of 0.5 to get a diameter of 1. */
     double radius_inner = 0.25;
     double radius_outer = 0.5;
 
@@ -901,8 +907,8 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     int faces[6] = { 1, 2, 0, 0, 0, 0 };
     int edges[24] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-    /* Create occ geometry. */
-    t8_geometry_occ *geometry_occ = new t8_geometry_occ (3, shape, "occ surface dim=3");
+    /* Create cad geometry. */
+    t8_geometry_cad *geometry_cad = new t8_geometry_cad (3, shape, "cad surface dim=3");
 
     /* Create corresponding trees and parameters. 
      * Here we create num trees by a coordinate transformation from cylinder to cartesian coordinates. */
@@ -953,24 +959,24 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
       /* Give the trees information about their surfaces and the parameters of the vertices. 
        * Each parameter set is given to the tree via its attribute key + face index it corresponds with. 
        * We can use the same edges and faces array, because we link the surface to the same faces on every tree.*/
-      t8_cmesh_set_attribute (cmesh, i, t8_get_package_id (), T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces, 6 * sizeof (int),
+      t8_cmesh_set_attribute (cmesh, i, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, faces, 6 * sizeof (int),
                               1);
-      t8_cmesh_set_attribute (cmesh, i, t8_get_package_id (), T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges, 24 * sizeof (int),
+      t8_cmesh_set_attribute (cmesh, i, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges, 24 * sizeof (int),
                               1);
-      t8_cmesh_set_attribute (cmesh, i, t8_get_package_id (), T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY + 0,
+      t8_cmesh_set_attribute (cmesh, i, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + 0,
                               parameters + i * 8, 8 * sizeof (double), 0);
-      t8_cmesh_set_attribute (cmesh, i, t8_get_package_id (), T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY + 1,
+      t8_cmesh_set_attribute (cmesh, i, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + 1,
                               parameters + i * 8, 8 * sizeof (double), 0);
     }
 
-    geometry = geometry_occ;
+    geometry = geometry_cad;
     T8_FREE (vertices);
     T8_FREE (parameters);
     snprintf (vtuname, BUFSIZ, "forest_geometry_cylinder_lvl_%i", level);
     break;
-#else  /* !T8_WITH_OCC */
+#else  /* !T8_WITH_cad */
     SC_ABORTF ("OCC not linked");
-#endif /* T8_WITH_OCC */
+#endif /* T8_WITH_cad */
   }
   default:
     SC_ABORT_NOT_REACHED ();
@@ -1088,10 +1094,10 @@ main (int argc, char **argv)
                       "\t\t5 - A cube that is distorted in z-direction with one 3D cube tree.\n"
                       "\t\t6 - A moving mesh consisting of a single 2D quad tree.\n"
                       "\t\t7 - A quad morphed into a sphere.\n"
-                      "\t\t8 - A curved triangle with an occ curve.\n"
-                      "\t\t9 - A cube with two occ curves as edges.\n"
-                      "\t\t10 - Two cubes with one occ surface as face.\n"
-                      "\t\t11 - A hollow cylinder with a occ surface on the in- and outside.\n");
+                      "\t\t8 - A curved triangle with an cad curve.\n"
+                      "\t\t9 - A cube with two cad curves as edges.\n"
+                      "\t\t10 - Two cubes with one cad surface as face.\n"
+                      "\t\t11 - A hollow cylinder with a cad surface on the in- and outside.\n");
 
   parsed = sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (helpme) {
