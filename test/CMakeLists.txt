@@ -56,7 +56,7 @@ add_t8_test( NAME t8_gtest_iterate_replace   SOURCES t8_gtest_main.cxx t8_forest
 add_t8_test( NAME t8_gtest_empty_local_tree  SOURCES t8_gtest_main.cxx t8_forest_incomplete/t8_gtest_empty_local_tree.cxx )
 add_t8_test( NAME t8_gtest_empty_global_tree SOURCES t8_gtest_main.cxx t8_forest_incomplete/t8_gtest_empty_global_tree.cxx )
 
-add_t8_test( NAME t8_gtest_geometry_occ  SOURCES t8_gtest_main.cxx t8_geometry/t8_geometry_implementations/t8_gtest_geometry_occ.cxx )
+add_t8_test( NAME t8_gtest_geometry_cad  SOURCES t8_gtest_main.cxx t8_geometry/t8_geometry_implementations/t8_gtest_geometry_cad.cxx )
 add_t8_test( NAME t8_gtest_geometry      SOURCES t8_gtest_main.cxx t8_geometry/t8_gtest_geometry.cxx )
 add_t8_test( NAME t8_gtest_point_inside  SOURCES t8_gtest_main.cxx t8_geometry/t8_gtest_point_inside.cxx )
 
