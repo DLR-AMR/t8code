@@ -22,7 +22,7 @@ add_t8_test( NAME t8_gtest_eclass            SOURCES t8_gtest_main.cxx t8_gtest_
 add_t8_test( NAME t8_gtest_vec               SOURCES t8_gtest_main.cxx t8_gtest_vec.cxx )
 add_t8_test( NAME t8_gtest_mat               SOURCES t8_gtest_main.cxx t8_gtest_mat.cxx )
 add_t8_test( NAME t8_gtest_refcount          SOURCES t8_gtest_main.cxx t8_gtest_refcount.cxx )
-add_t8_test( NAME t8_gtest_occ_linkage       SOURCES t8_gtest_main.cxx t8_gtest_occ_linkage.cxx )
+add_t8_test( NAME t8_gtest_cad_linkage       SOURCES t8_gtest_main.cxx t8_gtest_cad_linkage.cxx )
 add_t8_test( NAME t8_gtest_version           SOURCES t8_gtest_main.cxx t8_gtest_version.cxx )
 add_t8_test( NAME t8_gtest_basics            SOURCES t8_gtest_main.cxx t8_gtest_basics.cxx )
 add_t8_test( NAME t8_gtest_netcdf_linkage    SOURCES t8_gtest_main.cxx t8_gtest_netcdf_linkage.cxx )
