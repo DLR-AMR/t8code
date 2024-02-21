@@ -28,12 +28,13 @@
 #define T8_DEFAULT_COMMON_CXX_HXX
 
 #include <t8_element_cxx.hxx>
+#include <t8_schemes/t8_scheme_face_not_implemented_cxx.hxx>
 
 /* Macro to check whether a pointer (VAR) to a base class, comes from an
  * implementation of a child class (TYPE). */
 #define T8_COMMON_IS_TYPE(VAR, TYPE) ((dynamic_cast<TYPE> (VAR)) != NULL)
 
-class t8_default_scheme_common_c: public t8_eclass_scheme_c {
+class t8_default_scheme_common_c: public t8_scheme_face_not_implemented_c {
  public:
   /** Destructor for all default schemes */
   virtual ~t8_default_scheme_common_c ();
