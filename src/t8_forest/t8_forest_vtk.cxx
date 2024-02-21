@@ -1278,9 +1278,6 @@ t8_forest_vtk_write_file (t8_forest_t forest, const char *fileprefix, const int 
   }
   T8_ASSERT (forest->ghosts != NULL || !write_ghosts);
 
-  /* Currently we only support output in ascii format, not binary */
-  T8_ASSERT (T8_VTK_ASCII == 1);
-
   /* process 0 creates the .pvtu file */
   if (forest->mpirank == 0) {
     if (t8_write_pvtu (fileprefix, forest->mpisize, write_treeid, write_mpirank, write_level, write_element_id,

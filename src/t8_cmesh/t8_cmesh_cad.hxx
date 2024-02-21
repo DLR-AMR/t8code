@@ -20,28 +20,28 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_occ.hxx
- * We define coarse meshes with occ geometries here
+/** \file t8_cmesh_cad.hxx
+ * We define coarse meshes with cad geometries here
  */
 
-#ifndef T8_CMESH_OCC_HXX
-#define T8_CMESH_OCC_HXX
+#ifndef T8_CMESH_CAD_HXX
+#define T8_CMESH_CAD_HXX
 
 #include <t8_cmesh.h>
 
 /** Construct a hollow cylinder out of hexes with an inner diameter of 0.5, 
  * an outer diameter of 1 and a height of 1. The number of cells used in each direction can be specified.
- * A cylindrical occ surface can be linked to the inner and outer faces of the cylinder trees, to use the
- * occ geometry.
+ * A cylindrical cad surface can be linked to the inner and outer faces of the cylinder trees, to use the
+ * cad geometry.
  * \param [in] comm                   The mpi communicator to use.
  * \param [in] num_tangential_trees   Number of trees distributed around the cylinder.
  * \param [in] num_axial_trees        Number of trees distributed along the height of the cylinder.
  * \param [in] num_radial_trees       Number of trees distributed along the thickness of the cylinder.
- * \param [in] with_occ_geometry      Link the cylinder to a occ geometry, 0 or 1.
+ * \param [in] with_cad_geometry      Link the cylinder to a cad geometry, 0 or 1.
  * \return                            A valid cmesh, as if _init and _commit had been called.
  */
 t8_cmesh_t
 t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees, int num_axial_trees, int num_radial_trees,
-                              int with_occ_geometry);
+                              int with_cad_geometry);
 
 #endif /* !T8_CMESH_H */

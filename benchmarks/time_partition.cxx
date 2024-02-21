@@ -132,7 +132,7 @@ t8_time_cmesh_partition_brick (int x, int y, int z, sc_MPI_Comm comm, int no_vtk
 
     mpiret = sc_MPI_Comm_rank (comm, &mpirank);
     SC_CHECK_MPI (mpiret);
-    t8_cmesh_vtk_write_file (cmesh_partition, "cmesh_box_partition", 1.0);
+    t8_cmesh_vtk_write_file (cmesh_partition, "cmesh_box_partition");
   }
   /* memory clean-up */
   t8_cmesh_destroy (&cmesh_partition);
