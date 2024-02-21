@@ -162,7 +162,7 @@ set( T8_PUBLIC_HEADERS
     t8_cmesh/t8_cmesh_examples.h 
     t8_cmesh/t8_cmesh_geometry.h 
     t8_cmesh/t8_cmesh_helpers.h 
-    t8_cmesh/t8_cmesh_occ.hxx
+    t8_cmesh/t8_cmesh_cad.hxx
     t8_data/t8_shmem.h 
     t8_data/t8_containers.h
     t8_forest/t8_forest.h
