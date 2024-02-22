@@ -63,7 +63,7 @@
 /* Variable type for (tree_id, tree_vertex_id) pair */
 using t8_cmesh_tree_vertex_pair = std::pair<t8_locidx_t, int>;
 
-/* list of tree vertex pairs, echo global vertex id maps to 
+/* list of tree vertex pairs, each global vertex id maps to 
    * such a list. */
 using t8_cmesh_tree_vertex_list = std::vector<t8_cmesh_tree_vertex_pair>;
 
