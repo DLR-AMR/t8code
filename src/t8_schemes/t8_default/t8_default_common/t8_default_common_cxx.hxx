@@ -28,16 +28,16 @@
 #define T8_DEFAULT_COMMON_CXX_HXX
 
 #include <t8_element_cxx.hxx>
-#include <t8_schemes/t8_scheme_mempool_cxx.hxx>
+#include <t8_schemes/t8_scheme_common_cxx.hxx>
 
 /* Macro to check whether a pointer (VAR) to a base class, comes from an
  * implementation of a child class (TYPE). */
 #define T8_COMMON_IS_TYPE(VAR, TYPE) ((dynamic_cast<TYPE> (VAR)) != NULL)
 
-class t8_default_scheme_common_c: public t8_scheme_mempool_c {
+class t8_default_scheme_common_c: public t8_scheme_common_c {
  public:
   /* Call parent constructor */
-  t8_default_scheme_common_c (t8_eclass_t eclass, int elem_size): t8_scheme_mempool_c (eclass, elem_size) {};
+  t8_default_scheme_common_c (t8_eclass_t eclass, int elem_size): t8_scheme_common_c (eclass, elem_size) {};
 
   /** Compute the number of corners of a given element. */
   virtual int
