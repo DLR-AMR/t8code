@@ -243,8 +243,8 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
     const double boundary_coords[24] = { 1, 0, 0, 4, 0, 0, 0, 6, 0, 5, 5, 0, -1, -2, 8, 9, 0, 10, 0, 8, 9, 10, 10, 10 };
 
     t8_eclass_t eclass = T8_ECLASS_HEX;
-    t8_geometry_c *geometry = new t8_geometry_linear (3);
-    t8_cmesh_t cmesh = t8_cmesh_new_hypercube_pad (eclass, comm, boundary_coords, 2, 2, 2, geometry);
+    const int use_axis_aligned = 0;
+    t8_cmesh_t cmesh = t8_cmesh_new_hypercube_pad (eclass, comm, boundary_coords, 2, 2, 2, use_axis_aligned);
     test_with_cmesh (cmesh);
     t8_cmesh_destroy (&cmesh);
   }
