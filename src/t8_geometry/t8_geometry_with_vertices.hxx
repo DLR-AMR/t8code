@@ -54,21 +54,6 @@ struct t8_geometry_with_vertices: public t8_geometry
     active_tree = -1;
   }
 
-  /* Copy constructor */
-  t8_geometry_with_vertices (const t8_geometry_with_vertices& other)
-    : t8_geometry (other), active_tree (other.active_tree), active_tree_class (other.active_tree_class),
-      active_tree_vertices (other.active_tree_vertices)
-  {
-  }
-
-  /* Move constructor */
-  t8_geometry_with_vertices (t8_geometry_with_vertices&& other)
-    : t8_geometry (std::move (other)), active_tree (std::move (other.active_tree)),
-      active_tree_class (std::move (other.active_tree_class)),
-      active_tree_vertices (std::move (other.active_tree_vertices))
-  {
-  }
-
   /** The destructor. It does nothing but has to be defined since
    * we may want to delete geometry that is actually inherited
    * and providing an implementation

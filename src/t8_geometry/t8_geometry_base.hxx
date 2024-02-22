@@ -56,17 +56,6 @@ struct t8_geometry
   {
   }
 
-  // Copy constructor
-  t8_geometry (const t8_geometry &other): dimension (other.dimension), name (other.name), hash (other.hash)
-  {
-  }
-
-  // Move constructor
-  t8_geometry (t8_geometry &&other) noexcept
-    : dimension (std::move (other.dimension)), name (std::move (other.name)), hash (std::move (other.hash))
-  {
-  }
-
   /** The destructor. It does nothing but has to be defined since
    * we may want to delete geometry that is actually inherited
    * and providing an implementation

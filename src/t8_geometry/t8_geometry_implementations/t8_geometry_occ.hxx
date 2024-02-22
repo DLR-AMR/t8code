@@ -75,32 +75,6 @@ struct t8_geometry_occ: public t8_geometry_with_vertices
    */
   t8_geometry_occ (int dim, const TopoDS_Shape occ_shape, std::string name = "t8_geom_cad");
 
-  /**
-   * Copy constructor.
-   * \param [in] other The geometry to copy.
-   */
-  t8_geometry_occ (const t8_geometry_occ &other)
-    : t8_geometry_with_vertices (other), occ_shape (other.occ_shape), occ_shape_vertex_map (other.occ_shape_vertex_map),
-      occ_shape_edge_map (other.occ_shape_edge_map), occ_shape_face_map (other.occ_shape_face_map),
-      occ_shape_vertex2edge_map (other.occ_shape_vertex2edge_map),
-      occ_shape_edge2face_map (other.occ_shape_edge2face_map)
-  {
-  }
-
-  /**
-   * Move constructor.
-   * \param [in] other The geometry to move.
-   */
-  t8_geometry_occ (t8_geometry_occ &&other)
-    : t8_geometry_with_vertices (std::move (other)), occ_shape (std::move (other.occ_shape)),
-      occ_shape_vertex_map (std::move (other.occ_shape_vertex_map)),
-      occ_shape_edge_map (std::move (other.occ_shape_edge_map)),
-      occ_shape_face_map (std::move (other.occ_shape_face_map)),
-      occ_shape_vertex2edge_map (std::move (other.occ_shape_vertex2edge_map)),
-      occ_shape_edge2face_map (std::move (other.occ_shape_edge2face_map))
-  {
-  }
-
   /** The destructor. */
   virtual ~t8_geometry_occ ()
   {
