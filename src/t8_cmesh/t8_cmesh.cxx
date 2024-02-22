@@ -23,6 +23,7 @@
 #include <sc_statistics.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_geometry.h>
+#include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_refcount.h>
 #include <t8_data/t8_shmem.h>
@@ -34,7 +35,7 @@
 #endif
 #include "t8_cmesh_trees.h"
 
-/** \file t8_cmesh.c
+/** \file t8_cmesh.cxx
  *
  * TODO: document this file
  */
@@ -156,10 +157,7 @@ t8_cmesh_init (t8_cmesh_t *pcmesh)
   cmesh->first_tree_shared = -1;
   cmesh->face_knowledge = 3; /*< sensible default TODO document */
   t8_stash_init (&cmesh->stash);
-  /* Set the geometry handler to NULL.
-   * It will get initialized either when a geometry is registered
-   * or when the cmesh gets committed. */
-  cmesh->geometry_handler = NULL;
+  cmesh->geometry_handler = new t8_geometry_handler ();
 
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 }
@@ -721,7 +719,7 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
      * We cannot broadcast the geometries, since they are pointers to derived 
      * classes that we cannot know of on the receiving process.
      * Geometries must therefore be added after broadcasting. */
-    SC_CHECK_ABORT (cmesh_in->geometry_handler == NULL,
+    SC_CHECK_ABORT (cmesh_in->geometry_handler->get_num_geometries () == 0,
                     "Error: Broadcasting a cmesh with registered geometries is not possible.\n"
                     "We recommend to broadcast first and register the geometries after.\n");
     memcpy (&meta_info.cmesh, cmesh_in, sizeof (*cmesh_in));
@@ -1232,6 +1230,7 @@ void
 t8_cmesh_destroy (t8_cmesh_t *pcmesh)
 {
   T8_ASSERT (pcmesh != NULL && *pcmesh != NULL && t8_refcount_is_last (&(*pcmesh)->rc));
+  (*pcmesh)->geometry_handler->~t8_geometry_handler ();
   t8_cmesh_unref (pcmesh);
   T8_ASSERT (*pcmesh == NULL);
 }

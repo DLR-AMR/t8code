@@ -68,10 +68,6 @@ t8_geometry_occ::t8_geometry_occ (int dim, std::string fileprefix, std::string n
 t8_geometry_occ::t8_geometry_occ (int dim, const TopoDS_Shape occ_shape, std::string name_in)
   : t8_geometry_with_vertices (dim, name_in + "_" + std::to_string (dim))
 {
-  T8_ASSERT (0 <= dim && dim <= 3);
-
-  name = name_in;
-  dimension = dim;
   if (occ_shape.IsNull ()) {
     SC_ABORTF ("Shape is null. \n");
   }
@@ -80,6 +76,11 @@ t8_geometry_occ::t8_geometry_occ (int dim, const TopoDS_Shape occ_shape, std::st
   TopExp::MapShapes (occ_shape, TopAbs_FACE, occ_shape_face_map);
   TopExp::MapShapesAndUniqueAncestors (occ_shape, TopAbs_VERTEX, TopAbs_EDGE, occ_shape_vertex2edge_map);
   TopExp::MapShapesAndUniqueAncestors (occ_shape, TopAbs_EDGE, TopAbs_FACE, occ_shape_edge2face_map);
+}
+
+t8_geometry_occ::t8_geometry_occ (int dim): t8_geometry_with_vertices (dim, "t8_geom_cad_" + std::to_string (dim))
+{
+  occ_shape.Nullify ();
 }
 
 void

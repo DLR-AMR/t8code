@@ -397,7 +397,7 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm);
  *       registered \a after the bcast operation, not before.
  */
 void
-t8_cmesh_register_geometry_c (t8_cmesh_t cmesh, t8_geometry_c **geometry);
+t8_cmesh_register_geometry (t8_cmesh_t cmesh, t8_geometry_c **geometry);
 
 /** Set the geometry for a tree, thus specify which geometry to use for this tree.
  * \param [in] cmesh     A non-committed cmesh.

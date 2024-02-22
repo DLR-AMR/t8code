@@ -161,7 +161,6 @@ t8_create_occ_hypercube (double *rot_vec, int face, int edge, double *parameters
   }
 
   t8_cmesh_t cmesh;
-  t8_geometry_occ *geometry = NULL;
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
 

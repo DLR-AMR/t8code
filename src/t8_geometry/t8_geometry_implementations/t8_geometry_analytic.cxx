@@ -22,15 +22,24 @@
 
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx>
 
-t8_geometry_analytic::t8_geometry_analytic (int dim, std::string name_in, t8_geom_analytic_fn analytical,
+t8_geometry_analytic::t8_geometry_analytic (int dim, std::string name, t8_geom_analytic_fn analytical,
                                             t8_geom_analytic_jacobian_fn jacobian_in,
                                             t8_geom_load_tree_data_fn load_tree_data_in, const void *user_data_in)
-  : t8_geometry (dim, name_in + "_" + std::to_string (dim))
+  : t8_geometry (dim, name + "_" + std::to_string (dim))
 {
   analytical_function = analytical;
   jacobian = jacobian_in;
   load_tree_data = load_tree_data_in;
   user_data = user_data_in;
+}
+
+t8_geometry_analytic::t8_geometry_analytic (int dim, std::string name)
+  : t8_geometry (dim, name + "_" + std::to_string (dim))
+{
+  analytical_function = NULL;
+  jacobian = NULL;
+  load_tree_data = NULL;
+  user_data = NULL;
 }
 
 void

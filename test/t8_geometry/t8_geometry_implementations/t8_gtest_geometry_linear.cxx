@@ -79,7 +79,7 @@ TEST_P (geometry_test, cmesh_geometry_linear)
   cmesh_geom = t8_cmesh_get_tree_geometry (cmesh, 0);
   ASSERT_TRUE (cmesh_geom != NULL) << "Could not get cmesh's geometry.";
   int has_same_name = cmesh_geom->t8_geom_get_name () == linear_geom.t8_geom_get_name ();
-  ASSERT_EQ (has_same_name, 0) << "cmesh's geometry is not the linear geometry.";
+  ASSERT_EQ (has_same_name, 1) << "cmesh's geometry is not the linear geometry.";
 
   srand (seed);
   for (int ipoint = 0; ipoint < num_points; ++ipoint) {

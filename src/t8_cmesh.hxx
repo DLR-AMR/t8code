@@ -34,7 +34,7 @@
  * Create and register a geometry with the coarse mesh. The coarse mesh takes the ownership of the geometry.
  * @tparam geometry_type 
  * \param [in,out] cmesh The cmesh.
- * \param [in,out] geometry An rvalue to the geometry.
+ * \param [in,out] args The constructor arguments of the geometry.
  * \return A pointer to the geometry.
  */
 

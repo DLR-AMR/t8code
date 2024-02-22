@@ -35,23 +35,8 @@
 #include <algorithm>
 #include <memory>
 
-template <typename geometry_type, typename... _args>
-geometry_type *
-t8_geometry_handler::register_geometry (_args &&...args)
-{
-  std::unique_ptr<t8_geometry> geom = std::make_unique<geometry_type> (std::forward<_args> (args)...);
-  const size_t hash = geom->t8_geom_get_hash ();
-  if (registered_geometries.find (hash) == registered_geometries.end ()) {
-    registered_geometries.emplace (hash, geom);
-  }
-  if (registered_geometries.size () == 1) {
-    active_geometry = registered_geometries.at (hash).get ();
-  }
-  return registered_geometries.at (hash).get ();
-}
-
 void
-t8_geometry_handler::register_geometry_c (t8_geometry_c **geom)
+t8_geometry_handler::register_geometry (t8_geometry_c **geom)
 {
   const size_t hash = (*geom)->t8_geom_get_hash ();
   if (registered_geometries.find (hash) == registered_geometries.end ()) {
@@ -77,11 +62,11 @@ t8_geometry_handler::update_tree (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
     if (num_geoms > 1) {
       /* Find and load the geometry of that tree. 
        * Only necessary if we have more than one geometry. */
-      const std::string geom_name (t8_cmesh_get_tree_geom_name (cmesh, gtreeid));
-      active_geometry = get_geometry (geom_name);
+      const size_t geom_hash = t8_cmesh_get_tree_geom_hash (cmesh, gtreeid);
+      active_geometry = get_geometry (geom_hash);
       SC_CHECK_ABORTF (active_geometry != nullptr,
-                       "Could not find geometry with name %s or tree %ld has no registered geometry.",
-                       geom_name.c_str (), gtreeid);
+                       "Could not find geometry with hash %zu or tree %ld has no registered geometry.", geom_hash,
+                       gtreeid);
     }
     /* Get the user data for this geometry and this tree. */
     active_geometry->t8_geom_load_tree_data (cmesh, gtreeid);

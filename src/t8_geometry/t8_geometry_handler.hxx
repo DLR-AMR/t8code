@@ -48,13 +48,25 @@ struct t8_geometry_handler
 
   /**
    * Register a geometry with the geometry handler.
-   * The handler will take ownership of the geometry.
-   * \param [in]  geometry  The geometry to register as an rvalue.
-   * \return            A pointer to the registered geometry.
+   * @tparam geometry_type The type of the geometry to register.
+   * @tparam _args
+   * \param [in] args The constructor arguments of the geometry.
+   * \return A pointer to the geometry.
    */
   template <typename geometry_type, typename... _args>
   geometry_type *
-  register_geometry (_args &&...args);
+  register_geometry (_args &&...args)
+  {
+    std::unique_ptr<t8_geometry> geom = std::make_unique<geometry_type> (std::forward<_args> (args)...);
+    const size_t hash = geom->t8_geom_get_hash ();
+    if (registered_geometries.find (hash) == registered_geometries.end ()) {
+      registered_geometries.emplace (hash, std::move (geom));
+    }
+    if (registered_geometries.size () == 1) {
+      active_geometry = registered_geometries.at (hash).get ();
+    }
+    return static_cast<geometry_type *> (registered_geometries.at (hash).get ());
+  }
 
   /**
    * Register a geometry with the geometry handler.
@@ -62,7 +74,7 @@ struct t8_geometry_handler
    * \param [in]  geom  The geometry to register.
    */
   void
-  register_geometry_c (t8_geometry_c **geom);
+  register_geometry (t8_geometry **geom);
 
   /**
    * Find a geometry by its name.

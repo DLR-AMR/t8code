@@ -82,6 +82,13 @@ struct t8_geometry_analytic: public t8_geometry
                         t8_geom_analytic_jacobian_fn jacobian, t8_geom_load_tree_data_fn load_tree_data,
                         const void *user_data);
 
+  /**
+   * Constructor of the analytic geometry for testing purposes.
+   * \param [in] dim        The dimension of this geometry.
+   * \param [in] name       The name to give this geometry.
+   */
+  t8_geometry_analytic (int dim, std::string name);
+
   /** The destructor. 
    */
   virtual ~t8_geometry_analytic ()

@@ -75,6 +75,12 @@ struct t8_geometry_occ: public t8_geometry_with_vertices
    */
   t8_geometry_occ (int dim, const TopoDS_Shape occ_shape, std::string name = "t8_geom_cad");
 
+  /**
+   * Constructor of the occ geometry for testing purposes. Sets an invalid occ_shape.
+   * \param [in] dim        The dimension of this geometry.
+   */
+  t8_geometry_occ (int dim);
+
   /** The destructor. */
   virtual ~t8_geometry_occ ()
   {
