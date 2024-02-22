@@ -92,6 +92,7 @@ libt8_internal_headers = \
   src/t8_cmesh/t8_cmesh_offset.h \
   src/t8_cmesh/t8_cmesh_vertex_connectivity.hxx \
   src/t8_cmesh/t8_cmesh_vertex_conn_tree_to_vertex.hxx \
+  src/t8_cmesh/t8_cmesh_vertex_conn_vertex_to_tree.hxx \
   src/t8_vtk/t8_vtk_polydata.hxx \
   src/t8_vtk/t8_vtk_unstructured.hxx \
   src/t8_vtk/t8_vtk_parallel.hxx \
@@ -114,6 +115,7 @@ libt8_compiled_sources = \
   src/t8_cmesh/t8_cmesh_netcdf.c \
   src/t8_cmesh/t8_cmesh_trees.c src/t8_cmesh/t8_cmesh_commit.c \
   src/t8_cmesh/t8_cmesh_vertex_conn_tree_to_vertex.cxx \
+  src/t8_cmesh/t8_cmesh_vertex_conn_vertex_to_tree.cxx \
   src/t8_cmesh/t8_cmesh_partition.c src/t8_cmesh/t8_cmesh_refine.cxx \
   src/t8_cmesh/t8_cmesh_copy.c src/t8_data/t8_shmem.c \
   src/t8_cmesh/t8_cmesh_geometry.cxx \
