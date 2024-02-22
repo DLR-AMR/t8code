@@ -87,7 +87,7 @@ struct t8_geometry_quadrangulated_disk: public t8_geometry_with_vertices
   /* Load tree data is inherited from t8_geometry_with_vertices. */
 };
 
-/** This geometry maps the faces of an octahedron/icasohedron to a spherical surface.
+/** This geometry maps the faces of an octahedron/icosahedron to a spherical surface.
  */
 struct t8_geometry_triangulated_spherical_surface: public t8_geometry_with_vertices
 {
@@ -98,7 +98,7 @@ struct t8_geometry_triangulated_spherical_surface: public t8_geometry_with_verti
   }
 
   /**
-   * Map the faces of an octahedron/icasohedron to a spherical surface.
+   * Map the faces of an octahedron/icosahedron to a spherical surface.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying a point in /f$ [0,1]^\mathrm{dim} /f$.
@@ -106,7 +106,7 @@ struct t8_geometry_triangulated_spherical_surface: public t8_geometry_with_verti
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    *
    * This routine expects an input mesh of triangles arranged into an
-   * octahedron/icasohedron.
+   * octahedron/icosahedron.
    *
    */
   void

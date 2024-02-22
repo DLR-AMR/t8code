@@ -987,7 +987,6 @@ t8_cmesh_set_vertices_2D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
    */
   for (t8_locidx_t quad_y_id = 0; quad_y_id < quads_y; quad_y_id++) {
     for (t8_locidx_t quad_x_id = 0; quad_x_id < quads_x; quad_x_id++) {
-
       memcpy (vertices, box, 3 * sizeof (double));    /* Vertex 0 */
       t8_vec_axpyz (box, box_dir, vertices + 6, 1.0); /* Vertex 2 */
 
@@ -1259,7 +1258,7 @@ t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
 
 t8_cmesh_t
 t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass, sc_MPI_Comm comm, const double *boundary, t8_locidx_t polygons_x,
-                            t8_locidx_t polygons_y, t8_locidx_t polygons_z, const t8_geometry_c *geometry)
+                            t8_locidx_t polygons_y, t8_locidx_t polygons_z, const int use_axis_aligned)
 {
   SC_CHECK_ABORT (eclass != T8_ECLASS_PYRAMID, "Pyramids are not yet supported.");
   const int dim = t8_eclass_to_dimension[eclass];
@@ -1280,7 +1279,7 @@ t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass, sc_MPI_Comm comm, const do
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
 
-  const int is_axis_aligned = t8_geom_get_type (geometry) == T8_GEOMETRY_TYPE_LINEAR_AXIS_ALIGNED;
+  t8_geometry_c *geometry = use_axis_aligned ? t8_geometry_linear_axis_aligned_new (dim) : t8_geometry_linear_new (dim);
 
   t8_cmesh_register_geometry (cmesh, geometry);
 
@@ -1296,11 +1295,11 @@ t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass, sc_MPI_Comm comm, const do
   /* Set the vertices of all trees. */
   if (dim == 3) {
     T8_ASSERT (eclass == T8_ECLASS_HEX || eclass == T8_ECLASS_TET || eclass == T8_ECLASS_PRISM);
-    t8_cmesh_set_vertices_3D (cmesh, eclass, boundary, polygons_x, polygons_y, polygons_z, is_axis_aligned);
+    t8_cmesh_set_vertices_3D (cmesh, eclass, boundary, polygons_x, polygons_y, polygons_z, use_axis_aligned);
   }
   else if (dim == 2) {
     T8_ASSERT (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_TRIANGLE);
-    t8_cmesh_set_vertices_2D (cmesh, eclass, boundary, polygons_x, polygons_y, is_axis_aligned);
+    t8_cmesh_set_vertices_2D (cmesh, eclass, boundary, polygons_x, polygons_y, use_axis_aligned);
   }
   else if (dim == 1) {
     T8_ASSERT (eclass == T8_ECLASS_LINE);
@@ -1316,9 +1315,9 @@ t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass, sc_MPI_Comm comm, const do
 
     double vertices[6];
     /* Set first vertex to lower end of line */
-    t8_vec_axy (boundary, vertices, 1.0);
+    memcpy (vertices, boundary, 3 * sizeof (double));
     /* Set second vertex to lower end of line + line_dir */
-    t8_vec_axpyz (vertices + 3, boundary, line_dir, 1.0);
+    t8_vec_axpyz (line_dir, boundary, vertices + 3, 1.0);
 
     for (t8_gloidx_t tree_x = 0; tree_x < polygons_x; tree_x++) {
       t8_cmesh_set_tree_vertices (cmesh, tree_x, vertices, 2);
@@ -2871,7 +2870,7 @@ t8_cmesh_new_triangulated_spherical_surface_octahedron (const double radius, sc_
 }
 
 t8_cmesh_t
-t8_cmesh_new_triangulated_spherical_surface_icasohedron (const double radius, sc_MPI_Comm comm)
+t8_cmesh_new_triangulated_spherical_surface_icosahedron (const double radius, sc_MPI_Comm comm)
 {
   /* Initialization of the mesh */
   t8_cmesh_t cmesh;
@@ -2881,8 +2880,8 @@ t8_cmesh_new_triangulated_spherical_surface_icasohedron (const double radius, sc
 
   t8_cmesh_register_geometry (cmesh, geometry); /* Use linear geometry */
 
-  const int ntrees = 20; /* Number of cmesh elements resp. trees. */
-  const int nverts = 3;  /* Number of cmesh element vertices. */
+  const int ntrees = 20; /* Number of cmesh elements resp. trees, i.e. number of triangles in an icosahedron. */
+  const int nverts = 3;  /* Number of cmesh element vertices,. */
 
   /* Arrays for the face connectivity computations via vertices. */
   double all_verts[ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM];
@@ -2894,13 +2893,13 @@ t8_cmesh_new_triangulated_spherical_surface_icasohedron (const double radius, sc
     all_eclasses[itree] = T8_ECLASS_TRIANGLE;
   }
 
-  const double alpha = 63.43494882292201 / 180.0 * M_PI; /* Icasohedral angle. */
+  const double alpha = 63.43494882292201 / 180.0 * M_PI; /* Icosahedral angle. */
 
   double vertices_top[3 * 3];
   double vertices_bot[3 * 3];
 
   {
-    /* Prepare initial triangle on top top of the icosahedron. */
+    /* Prepare initial triangle on the top of the icosahedron. */
     double rot_mat[3][3];
 
     vertices_top[0] = 0.0;
@@ -2933,6 +2932,11 @@ t8_cmesh_new_triangulated_spherical_surface_icasohedron (const double radius, sc
     t8_mat_mult_vec (rot_mat, vertices_bot + 3, vertices_bot + 6);
   }
 
+  /* Create the cmesh in 5 bands of 4 triangles.
+   * Rotate the initial top and bottom triangle around the z axis. 
+   * The two triangles on the "belly" that are connecting the top and bottom triangle share vertices
+   * with the top and bottom triangle, so we can construct them in one go as well.
+   */
   int itree = -1;
   for (int turn = 0; turn < 5; turn++) {
     double rot_mat[3][3];
@@ -2961,6 +2965,7 @@ t8_cmesh_new_triangulated_spherical_surface_icasohedron (const double radius, sc
       belly_bot[6 + icoord] = rot_vertices_top[3 * 2 + icoord];
     }
 
+    /* Set the tree vertices and gather all vertices, so that the facejoins can in the end be deduced from global vertices */
     t8_cmesh_set_tree_vertices (cmesh, ++itree, rot_vertices_top, nverts);
     for (int ivert = 0; ivert < nverts; ivert++) {
       for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
@@ -3132,6 +3137,19 @@ t8_cmesh_new_spherical_shell (t8_eclass_t eclass, t8_geometry_c *geometry,
         t8_forest_element_coordinate (forest, itree_local, element, ivert, elem_vertices_2d + ivert * 3);
       }
 
+      {
+        /* Here, we check if the face normal vector of the 2D element points
+         * outward with respect to the sphere's center. If not, the node ordering is flipped.
+         * Note, this works for triangles and quads.
+         */
+        double normal[3];
+        t8_vec_tri_normal (elem_vertices_2d, elem_vertices_2d + 3, elem_vertices_2d + 6, normal);
+
+        if (t8_vec_dot (elem_vertices_2d, normal) < 0.0) {
+          t8_vec_swap (elem_vertices_2d + 3, elem_vertices_2d + 6);
+        }
+      }
+
       /* Transfer the coordinates from the 2D forest mesh to the cmesh via stacking 3D elements along radial direction. */
       for (int istack = 0; istack < num_layers; istack++) {
         const double iscale = 1.0 + istack * shell_thickness / inner_radius / num_layers;
@@ -3182,7 +3200,7 @@ t8_cmesh_new_prismed_spherical_shell_icosahedron (const double inner_radius, con
                                                   const int num_levels, const int num_layers, sc_MPI_Comm comm)
 {
   return t8_cmesh_new_spherical_shell (T8_ECLASS_PRISM, t8_geometry_prismed_spherical_shell_new (),
-                                       t8_cmesh_new_triangulated_spherical_surface_icasohedron, inner_radius,
+                                       t8_cmesh_new_triangulated_spherical_surface_icosahedron, inner_radius,
                                        shell_thickness, num_levels, num_layers, comm);
 }
 

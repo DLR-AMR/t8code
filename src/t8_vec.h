@@ -195,7 +195,19 @@ t8_vec_diff (const double vec_x[3], const double vec_y[3], double diff[3])
 static inline int
 t8_vec_eq (const double vec_x[3], const double vec_y[3], const double eps)
 {
-  return fabs (vec_x[0] - vec_y[0]) < eps && fabs (vec_x[1] - vec_y[1]) < eps && fabs (vec_x[2] - vec_y[2]) < eps;
+  T8_ASSERT (eps > 0);
+  return fabs (vec_x[0] - vec_y[0]) <= eps && fabs (vec_x[1] - vec_y[1]) <= eps && fabs (vec_x[2] - vec_y[2]) <= eps;
+}
+
+/** Rescale a vector to a new length.
+ * \param [in,out] vec  A 3D vector.
+ * \param [in]  new_length  New length of the vector.
+ */
+static inline void
+t8_vec_rescale (double vec[3], const double new_length)
+{
+  t8_vec_normalize (vec);
+  t8_vec_ax (vec, new_length);
 }
 
 /** Compute the normal of a triangle given by its three vertices.
@@ -219,6 +231,21 @@ t8_vec_tri_normal (const double p1[3], const double p2[3], const double p3[3], d
   b[2] = p3[2] - p1[2];
 
   t8_vec_cross (a, b, normal);
+}
+
+/** Swap the components of two vectors.
+ * \param [in,out]  p1  A 3D vector.
+ * \param [in,out]  p2  A 3D vector.
+ */
+static inline void
+t8_vec_swap (double p1[3], double p2[3])
+{
+  double tmp;
+  for (int i = 0; i < 3; i++) {
+    tmp = p1[i];
+    p1[i] = p2[i];
+    p2[i] = tmp;
+  }
 }
 
 #endif /* !T8_VEC_H! */
