@@ -349,7 +349,7 @@ t8_geometry_cubed_sphere::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreei
       out_coords[offset + 1] = p[1];
       out_coords[offset + 2] = p[2];
     }
-    
+
     return;
   }
 
@@ -358,9 +358,9 @@ t8_geometry_cubed_sphere::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreei
   n[2] = active_tree_vertices[0 + 2];
   t8_vec_normalize (n);
 
-  r[0] = active_tree_vertices[7*3 + 0];
-  r[1] = active_tree_vertices[7*3 + 1];
-  r[2] = active_tree_vertices[7*3 + 2];
+  r[0] = active_tree_vertices[7 * 3 + 0];
+  r[1] = active_tree_vertices[7 * 3 + 1];
+  r[2] = active_tree_vertices[7 * 3 + 2];
   t8_vec_normalize (r);
 
   for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
@@ -374,8 +374,8 @@ t8_geometry_cubed_sphere::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreei
       double corr_ref_coords[3];
 
       /* Correction in order to rectify elements near the corners. */
-      corr_ref_coords[0] = tan (0.25*M_PI * x_ref);
-      corr_ref_coords[1] = tan (0.25*M_PI * y_ref);
+      corr_ref_coords[0] = tan (0.25 * M_PI * x_ref);
+      corr_ref_coords[1] = tan (0.25 * M_PI * y_ref);
       corr_ref_coords[2] = z_ref;
 
       /* Compute and normalize vector `s`. */
