@@ -3241,8 +3241,8 @@ t8_cmesh_new_cubed_sphere (const double radius, sc_MPI_Comm comm)
   const double zi = xi;
 
   const double xo = ro / SQRT3;
-  const double yo = yo;
-  const double zo = yo;
+  const double yo = xo;
+  const double zo = xo;
 
   const int nhexs = 4; /* Number of hexs in the front-upper-right octant. */
   const int nzturns = 4; /* Number of turns around z-axis. */
@@ -3253,7 +3253,7 @@ t8_cmesh_new_cubed_sphere (const double radius, sc_MPI_Comm comm)
 
   /* Fine tuning parameter to expand the center squares a bit for more equal
    * element sizes. */
-  const double s = 1.0;
+  const double s = 1.2;
 
   /* Arrays for the face connectivity computations via vertices. */
   double all_verts[ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM];
