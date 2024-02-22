@@ -492,9 +492,9 @@ t8_tutorial_build_cmesh_main (int argc, char **argv)
   t8_global_productionf ("[tutorial] A 3D hybrid cmesh (in style of a gate) has been created.\n");
 
   /* Output the meshes to vtu files. */
-  t8_cmesh_vtk_write_file (cmesh_2D, prefix_2D, 1.0);
+  t8_cmesh_vtk_write_file (cmesh_2D, prefix_2D);
   t8_global_productionf ("[tutorial] Wrote the 2D cmesh to vtu files.\n");
-  t8_cmesh_vtk_write_file (cmesh_3D, prefix_3D, 1.0);
+  t8_cmesh_vtk_write_file (cmesh_3D, prefix_3D);
   t8_global_productionf ("[tutorial] Wrote the 3D cmesh to vtu files.\n");
 
   /*
