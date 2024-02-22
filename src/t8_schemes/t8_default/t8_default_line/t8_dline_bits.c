@@ -173,7 +173,7 @@ t8_dline_face_parent_face (const t8_dline_t *l, int face)
 int
 t8_dline_child_id (const t8_dline_t *elem)
 {
-  T8_ASSERT (elem->level < T8_DLINE_MAXLEVEL);
+  T8_ASSERT (elem->level <= T8_DLINE_MAXLEVEL);
   /* bitshifting the Levelbit to first position & check if it is 1 or 0 */
   return ((elem->x >> (T8_DLINE_MAXLEVEL - elem->level)) & 1);
 }
