@@ -41,6 +41,8 @@
 #include <TopoDS_Face.hxx>
 #include <Standard_Version.hxx>
 
+const int t8_interpolation_coefficient_prism_edge[9] = { 2, 0, 0, 2, 0, 0, 1, 1, 1 };
+
 t8_geometry_cad::t8_geometry_cad (int dim, const char *fileprefix, const char *name_in)
 {
   T8_ASSERT (0 <= dim && dim <= 3);
@@ -953,9 +955,9 @@ t8_geometry_cad::t8_geom_evaluate_cad_prism (t8_cmesh_t cmesh, t8_gloidx_t gtree
        *           1      _-           _-
        *          / \   E8           _-
        *         /   \ -           E7
-       *       E1   _-\          _-
-       *       /  _-   \       _-
-       *      / _-     E0    _-
+       *        /   _-\          _-
+       *      E2  _-  E0       _-
+       *      / _-      \    _-
        *     /_-         \ _-
        *    0-----E1------2
        */
@@ -963,13 +965,11 @@ t8_geometry_cad::t8_geom_evaluate_cad_prism (t8_cmesh_t cmesh, t8_gloidx_t gtree
       /* Save the edge vertices temporarily. */
       t8_geom_get_edge_vertices (active_tree_class, active_tree_vertices, i_edge, 3, temp_edge_vertices);
 
-      /* interpolation coefficient ? */
-
-      /* Interpolate between them */
-      for (size_t coord = 0; coord < num_coords; ++coord) {
-        const int offset_3d = coord * 3;
-        t8_geom_linear_interpolation (&ref_coords[/*interpolation coefficient*/], temp_edge_vertices, 3, 1,
-                                      interpolated_coords + offset_3d);
+      for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
+        const int offset_3d = i_coord * 3;
+        /* Interpolate between the edge vertices */
+        t8_geom_linear_interpolation (&ref_coords[t8_interpolation_coefficient_prism_edge[i_edge] + offset_3d],
+                                      temp_edge_vertices, 3, 1, interpolated_coords + offset_3d);
       }
 
       /* Interpolate parameters between edge vertices. Same procedure as above. */
@@ -977,39 +977,44 @@ t8_geometry_cad::t8_geom_evaluate_cad_prism (t8_cmesh_t cmesh, t8_gloidx_t gtree
         cmesh, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_edge, ltreeid);
       T8_ASSERT (parameters != NULL);
 
-      if (edges[i_edge] > 0) {
-        /* Linear interpolation between parameters */
-        t8_geom_linear_interpolation (&ref_coords[/*interpolation coefficient*/], parameters, 1, 1,
-                                      &interpolated_curve_param);
+      for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
+        const int offset_3d = i_coord * 3;
+        /* Curves have only one parameter u, surfaces have two, u and v.
+        * Therefore, we have to distinguish if the edge has a curve or surface linked to it. */
+        if (edges[i_edge] > 0) {
+          /* Linear interpolation between parameters */
+          t8_geom_linear_interpolation (&ref_coords[t8_interpolation_coefficient_prism_edge[i_edge] + offset_3d],
+                                        parameters, 1, 1, &interpolated_curve_param);
 
-        T8_ASSERT (edges[i_edge] <= cad_shape_edge_map.Size ());
-        curve = BRep_Tool::Curve (TopoDS::Edge (cad_shape_edge_map.FindKey (edges[i_edge])), first, last);
+          T8_ASSERT (edges[i_edge] <= cad_shape_edge_map.Size ());
+          curve = BRep_Tool::Curve (TopoDS::Edge (cad_shape_edge_map.FindKey (edges[i_edge])), first, last);
 
-        /* Check if curve are valid */
-        T8_ASSERT (!curve.IsNull ());
+          /* Check if curve are valid */
+          T8_ASSERT (!curve.IsNull ());
 
-        /* Calculate point on curve with interpolated parameters. */
-        curve->D0 (interpolated_curve_param, pnt);
+          /* Calculate point on curve with interpolated parameters. */
+          curve->D0 (interpolated_curve_param, pnt);
+        }
+        else {
+          /* Linear interpolation between parameters */
+          t8_geom_linear_interpolation (&ref_coords[t8_interpolation_coefficient_prism_edge[i_edge] + offset_3d],
+                                        parameters, 2, 1, interpolated_surface_params);
+
+          T8_ASSERT (edges[i_edge + num_edges] <= cad_shape_face_map.Size ());
+          surface = BRep_Tool::Surface (TopoDS::Face (cad_shape_face_map.FindKey (edges[i_edge + num_edges])));
+
+          /* Check if surface is valid */
+          T8_ASSERT (!surface.IsNull ());
+
+          /* Compute point on surface with interpolated parameters */
+          surface->D0 (interpolated_surface_params[0], interpolated_surface_params[1], pnt);
+        }
+
+        /* Compute displacement between vertex interpolation and curve evaluation with interpolated parameters */
+        cur_delta[0] = pnt.X () - interpolated_coords[offset_3d];
+        cur_delta[1] = pnt.Y () - interpolated_coords[offset_3d + 1];
+        cur_delta[2] = pnt.Z () - interpolated_coords[offset_3d + 2];
       }
-      else {
-        /* Linear interpolation between parameters */
-        t8_geom_linear_interpolation (&ref_coords[/*interpolation coefficient*/], parameters, 2, 1,
-                                      interpolated_surface_params);
-
-        T8_ASSERT (edges[i_edge + num_edges] <= cad_shape_face_map.Size ());
-        surface = BRep_Tool::Surface (TopoDS::Face (cad_shape_face_map.FindKey (edges[i_edge + num_edges])));
-
-        /* Check if surface is valid */
-        T8_ASSERT (!surface.IsNull ());
-
-        /* Compute point on surface with interpolated parameters */
-        surface->D0 (interpolated_surface_params[0], interpolated_surface_params[1], pnt);
-      }
-
-      /* Compute displacement between vertex interpolation and curve evaluation with interpolated parameters */
-      cur_delta[0] = pnt.X () - interpolated_coords[0];
-      cur_delta[1] = pnt.Y () - interpolated_coords[1];
-      cur_delta[2] = pnt.Z () - interpolated_coords[2];
     }
   }
 }
