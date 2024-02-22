@@ -94,7 +94,8 @@ main (int argc, char **argv)
   /* Initialize the sc library, has to happen before we initialize t8code. */
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_PRODUCTION);
   /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
-  t8_init (SC_LP_PRODUCTION);
+  // t8_init (SC_LP_PRODUCTION);
+  t8_init (SC_LP_DEBUG);
 
   /* We will use MPI_COMM_WORLD as a communicator. */
   sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
@@ -244,6 +245,26 @@ main (int argc, char **argv)
 
     t8_cmesh_t cmesh
       = t8_cmesh_new_prismed_spherical_shell_icosahedron (inner_radius, shell_thickness, num_levels, num_layers, comm);
+
+    t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), uniform_level, 0, comm);
+
+    t8_cmesh_vtk_write_file (cmesh, prefix_cmesh);
+    t8_global_productionf ("Wrote %s.\n", prefix_cmesh);
+
+    t8_write_forest_to_vtu (forest, prefix_forest);
+    t8_global_productionf ("Wrote %s.\n\n", prefix_forest);
+
+    t8_forest_unref (&forest);
+  }
+
+  {
+    const char *prefix_cmesh = "t8_cubed_sphere_cmesh";
+    const char *prefix_forest = "t8_cubed_sphere_forest";
+
+    const int uniform_level = 2;
+    const double radius = 1.0;
+
+    t8_cmesh_t cmesh = t8_cmesh_new_cubed_sphere (radius, comm);
 
     t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), uniform_level, 0, comm);
 

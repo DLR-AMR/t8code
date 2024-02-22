@@ -68,6 +68,12 @@ t8_geometry_cubed_spherical_shell_new ();
 t8_geometry_c *
 t8_geometry_prismed_spherical_shell_new ();
 
+/** Create a new cubed sphere geometry.
+ * \return          A pointer to an allocated geometry struct.
+ */
+t8_geometry_c *
+t8_geometry_cubed_sphere_new ();
+
 T8_EXTERN_C_END ();
 
 #endif /* T8_GEOMETRY_EXAMPLE_H */

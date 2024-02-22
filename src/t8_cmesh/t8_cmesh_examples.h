@@ -382,6 +382,14 @@ t8_cmesh_t
 t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shell_thickness, const int num_levels,
                                     const int num_layers, sc_MPI_Comm comm);
 
+/** Construct a cubed sphere of given radius.
+ * \param [in] inner_radius       Radius of the inner side of the shell.
+ * \param [in] comm               The MPI communicator used to commit the cmesh
+ * \return                        A cmesh representing the spherical surface.
+ */
+t8_cmesh_t
+t8_cmesh_new_cubed_sphere (const double radius, sc_MPI_Comm comm);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_EXAMPLES */

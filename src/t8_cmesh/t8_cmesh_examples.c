@@ -2730,13 +2730,16 @@ t8_cmesh_new_quadrangulated_disk (const double radius, sc_MPI_Comm comm)
   const double ro = radius;
 
   const double xi = ri / M_SQRT2;
-  const double yi = ri / M_SQRT2;
+  const double yi = xi;
 
   const double xo = ro / M_SQRT2;
-  const double yo = ro / M_SQRT2;
+  const double yo = xo;
 
-  const int ntrees = 4 * 3; /* Number of cmesh elements resp. trees. */
-  const int nverts = 4;     /* Number of vertices per cmesh element. */
+  const int nquads = 3; /* Number of quads in the upper-right quadrant. */
+  const int nyturns = 4; /* Number of turns around y-axis. */
+
+  const int ntrees = nyturns * nquads; /* Number of cmesh elements resp. trees. */
+  const int nverts = t8_eclass_num_vertices[T8_ECLASS_QUAD];
 
   /* Fine tuning parameter to expand the center squares a bit for more equal
    * element sizes. */
@@ -2790,7 +2793,7 @@ t8_cmesh_new_quadrangulated_disk (const double radius, sc_MPI_Comm comm)
       }
     }
 
-    itree = itree + 3;
+    itree = itree + nquads;
   }
 
   /* Face connectivity. */
@@ -3220,4 +3223,116 @@ t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shel
   return t8_cmesh_new_spherical_shell (T8_ECLASS_HEX, t8_geometry_cubed_spherical_shell_new (),
                                        t8_cmesh_new_quadrangulated_spherical_surface, inner_radius, shell_thickness,
                                        num_levels, num_layers, comm);
+}
+
+t8_cmesh_t
+t8_cmesh_new_cubed_sphere (const double radius, sc_MPI_Comm comm)
+{
+  /* Initialization of the mesh */
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+
+  const double ri = 0.6 * radius;
+  const double ro = radius;
+
+  const double SQRT3 = 1.7320508075688772;
+  const double xi = ri / SQRT3;
+  const double yi = xi;
+  const double zi = xi;
+
+  const double xo = ro / SQRT3;
+  const double yo = yo;
+  const double zo = yo;
+
+  const int nhexs = 4; /* Number of hexs in the front-upper-right octant. */
+  const int nzturns = 4; /* Number of turns around z-axis. */
+  const int nyturns = 2; /* Number of turns around y-axis. */
+
+  const int ntrees = nyturns * nzturns * nhexs; /* Number of cmesh elements resp. trees. */
+  const int nverts = t8_eclass_num_vertices[T8_ECLASS_HEX];
+
+  /* Fine tuning parameter to expand the center squares a bit for more equal
+   * element sizes. */
+  const double s = 1.0;
+
+  /* Arrays for the face connectivity computations via vertices. */
+  double all_verts[ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM];
+  t8_eclass_t all_eclasses[ntrees];
+
+  t8_geometry_c *geometry = t8_geometry_cubed_sphere_new ();
+  t8_cmesh_register_geometry (cmesh, geometry);
+
+  /* Defitition of the tree class. */
+  for (int itree = 0; itree < ntrees; itree++) {
+    t8_cmesh_set_tree_class (cmesh, itree, T8_ECLASS_HEX);
+    all_eclasses[itree] = T8_ECLASS_HEX;
+  }
+
+  const double vertices_mid[8][3] = { { 0.0, 0.0, 0.0 }, { s*xi, 0.0, 0.0 }, { 0.0, s*yi, 0.0 }, { xi, yi, 0.0 },
+                                      { 0.0, 0.0, s*zi }, { xi, 0.0,  zi }, { 0.0, yi,  zi }, { xi, yi,  zi } };
+  const double vertices_top[8][3] = { { 0.0, s*yi, 0.0 }, { xi, yi, 0.0 }, { 0.0, yi,  zi }, { xi, yi,  zi },
+                                      { 0.0, yo, 0.0 }, { xo, yo, 0.0 }, { 0.0, yo,  zo }, { xo, yo,  zo} };
+  const double vertices_bot[8][3] = { { s*xi, 0.0, 0.0 }, { xi, yi, 0.0 }, { xi, 0.0,  zi }, { xi, yi,  zi},
+                                      { xo, 0.0, 0.0 }, { xo, yo, 0.0 }, { xo, 0.0,  zo }, { xo, yo,  zo} };
+  const double vertices_zen[8][3] = { { 0.0, 0.0, s*zi }, { xi, 0.0,  zi }, { 0.0, yi,  zi }, { xi, yi,  zi },
+                                      { 0.0, 0.0,  zo }, { xo, 0.0,  zo }, { 0.0, yo,  zo }, { xo, yo,  zo } };
+
+  int itree = 0;
+  for (int yturn = 0; yturn < nyturns; yturn++) {
+    double yrot_mat[3][3];
+    t8_mat_init_yrot (yrot_mat, yturn * M_PI);
+
+    for (int zturn = 0; zturn < nzturns; zturn++) {
+      double zrot_mat[3][3];
+
+      double tmp_vertices_mid[8][3];
+      double tmp_vertices_top[8][3];
+      double tmp_vertices_bot[8][3];
+      double tmp_vertices_zen[8][3];
+
+      double rot_vertices_mid[8][3];
+      double rot_vertices_top[8][3];
+      double rot_vertices_bot[8][3];
+      double rot_vertices_zen[8][3];
+
+      t8_mat_init_zrot (zrot_mat, -zturn * 0.5 * M_PI);
+
+      for (int i = 0; i < 8; i++) {
+        t8_mat_mult_vec (zrot_mat, &(vertices_mid[i][0]), &(tmp_vertices_mid[i][0]));
+        t8_mat_mult_vec (zrot_mat, &(vertices_top[i][0]), &(tmp_vertices_top[i][0]));
+        t8_mat_mult_vec (zrot_mat, &(vertices_bot[i][0]), &(tmp_vertices_bot[i][0]));
+        t8_mat_mult_vec (zrot_mat, &(vertices_zen[i][0]), &(tmp_vertices_zen[i][0]));
+      }
+
+      for (int i = 0; i < 8; i++) {
+        t8_mat_mult_vec (yrot_mat, &(tmp_vertices_mid[i][0]), &(rot_vertices_mid[i][0]));
+        t8_mat_mult_vec (yrot_mat, &(tmp_vertices_top[i][0]), &(rot_vertices_top[i][0]));
+        t8_mat_mult_vec (yrot_mat, &(tmp_vertices_bot[i][0]), &(rot_vertices_bot[i][0]));
+        t8_mat_mult_vec (yrot_mat, &(tmp_vertices_zen[i][0]), &(rot_vertices_zen[i][0]));
+      }
+
+      t8_cmesh_set_tree_vertices (cmesh, itree + 0, (double *) rot_vertices_mid, 8);
+      t8_cmesh_set_tree_vertices (cmesh, itree + 1, (double *) rot_vertices_top, 8);
+      t8_cmesh_set_tree_vertices (cmesh, itree + 2, (double *) rot_vertices_bot, 8);
+      t8_cmesh_set_tree_vertices (cmesh, itree + 3, (double *) rot_vertices_zen, 8);
+
+      for (int ivert = 0; ivert < nverts; ivert++) {
+        for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
+          all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree+0, ivert, icoord)] = rot_vertices_mid[ivert][icoord];
+          all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree+1, ivert, icoord)] = rot_vertices_top[ivert][icoord];
+          all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree+2, ivert, icoord)] = rot_vertices_bot[ivert][icoord];
+          all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree+2, ivert, icoord)] = rot_vertices_zen[ivert][icoord];
+        }
+      }
+
+      itree = itree + nhexs;
+    }
+  }
+
+  /* Face connectivity. */
+  t8_cmesh_set_join_by_vertices (cmesh, ntrees, all_eclasses, all_verts, NULL, 0);
+
+  /* Commit the mesh */
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
 }
