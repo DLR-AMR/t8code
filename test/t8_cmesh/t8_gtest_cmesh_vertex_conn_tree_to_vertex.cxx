@@ -28,6 +28,8 @@
 
 /* Test if multiple attributes are partitioned correctly. */
 
+/* TODO: write test case without existing cmesh to test before attribute bug is fixed */
+
 #define T8_ATTRIBUTE_TEST_MAX_NUM_ENTRIES 1000
 
 class cmesh_vertex_conn_ttv: public testing::TestWithParam<int> {

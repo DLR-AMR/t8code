@@ -29,6 +29,35 @@
 
 #include <t8_cmesh.h>
 
+/*
+ *  notes during development
+ * 
+ * This class stores the lookup
+ * 
+ * global_vertex_id -> List of (tree, tree_local_vertex) 
+ * 
+ * for a cmesh.
+ * It is the opposite lookup as t8_cmesh_vertex_conn_tree_to_vertex_c
+ * 
+ * The global vertex ids must not be contiguous, that is, we have some set
+ * 
+ * {I_0 < I_1 < ...< I_N} of natural numbers corresponding to the N+1 vertices.
+ * 
+ * I_0 does not have to be 0 and I_N does not have to be N.
+ * 
+ * 
+ * So we need lookup: I_i -> i
+ *  store this in a hash table.
+ * 
+ * dattypes:
+ * 
+ * global id: t8_gloidx_t
+ * (tree_id, tree_vertex): std::pair<t8_locidx_t, int> = TV_PAIR
+ * List of (tree_id, tree_vertex): std::vector<PAIR> = TV_LIST
+ * Table global_id -> TV_LIST: std::unordered_map<t8_gloidx_t, TV_LIST>
+ * 
+*/
+
 typedef struct t8_cmesh_vertex_conn_vertex_to_tree_c
 {
  public:
@@ -45,13 +74,21 @@ typedef struct t8_cmesh_vertex_conn_vertex_to_tree_c
   get_tree_list_of_vertex (t8_gloidx_t vertex_id);
 
  private:
-  /* Vector of vectors: For each vertex one list of trees */
-  vector<vector<t8_locidx_t>> vertex_to_tree_list;
+  /* Variable type for (tree_id, tree_vertex_id) pair */
+  using tree_vertex_pair = std::pair<t8_locidx_t, int>;
+
+  /* list of tree vertex pairs, echo global vertex id maps to 
+   * such a list. */
+  using tree_vertex_list = std::vector<tree_vertex_pair>;
+
+  /* The actual data storage mapping global vertex ids to a list
+   * local trees and tree vertices. */
+  std::unordered_map<t8_gloidx_t, tree_vertex_list> vertex_to_tree;
 
   /* Setter functions */
   /* A single value is added to the vertex_to_tree_list */
   void
-  set_value_vertex_to_tree_list (t8_gloidx_t vertex_id, t8_locidx_t treeid);
+  set_value_vertex_to_tree_list (t8_gloidx_t global_vertex_id, t8_locidx_t treeid, int tree_vertex);
 
 } t8_cmesh_vertex_conn_vertex_to_tree_c;
 
