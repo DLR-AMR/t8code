@@ -3228,7 +3228,7 @@ t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shel
 t8_cmesh_t
 t8_cmesh_new_cubed_sphere (const double radius, sc_MPI_Comm comm)
 {
-  /* Initialization of the mesh */
+  /* Initialization of the mesh. */
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
 
@@ -3251,7 +3251,7 @@ t8_cmesh_new_cubed_sphere (const double radius, sc_MPI_Comm comm)
   const int ntrees = nyturns * nzturns * nhexs; /* Number of cmesh elements resp. trees. */
   const int nverts = t8_eclass_num_vertices[T8_ECLASS_HEX];
 
-  /* Fine tuning parameter to expand the center squares a bit for more equal
+  /* Fine tuning parameter to expand the center hex a bit for more equal
    * element sizes. */
   const double s = 1.2;
 
