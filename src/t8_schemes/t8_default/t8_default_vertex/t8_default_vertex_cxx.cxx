@@ -202,43 +202,6 @@ t8_default_scheme_vertex_c::t8_element_is_root_boundary (const t8_element_t *ele
 }
 
 void
-t8_default_scheme_vertex_c::t8_element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id) const
-{
-  T8_ASSERT (0 <= level && level <= T8_DVERTEX_MAXLEVEL);
-  T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << 3 * level);
-  T8_ASSERT (t8_element_is_valid (elem));
-
-  t8_dvertex_init_linear_id ((t8_dvertex_t *) elem, level, id);
-}
-
-t8_linearidx_t
-t8_default_scheme_vertex_c::t8_element_get_linear_id (const t8_element_t *elem, int level) const
-{
-  T8_ASSERT (t8_element_is_valid (elem));
-  T8_ASSERT (0 <= level && level <= T8_DVERTEX_MAXLEVEL);
-
-  return t8_dvertex_linear_id ((const t8_dvertex_t *) elem, level);
-}
-
-void
-t8_default_scheme_vertex_c::t8_element_first_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const
-{
-  T8_ASSERT (t8_element_is_valid (elem));
-  T8_ASSERT (t8_element_is_valid (desc));
-  T8_ASSERT (0 <= level && level <= T8_DVERTEX_MAXLEVEL);
-  t8_dvertex_first_descendant ((const t8_dvertex_t *) elem, (t8_dvertex_t *) desc, level);
-}
-
-void
-t8_default_scheme_vertex_c::t8_element_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const
-{
-  T8_ASSERT (t8_element_is_valid (elem));
-  T8_ASSERT (t8_element_is_valid (desc));
-  T8_ASSERT (0 <= level && level <= T8_DVERTEX_MAXLEVEL);
-  t8_dvertex_last_descendant ((const t8_dvertex_t *) elem, (t8_dvertex_t *) desc, level);
-}
-
-void
 t8_default_scheme_vertex_c::t8_element_anchor (const t8_element_t *elem, int anchor[3]) const
 {
   T8_ASSERT (t8_element_is_valid (elem));

@@ -496,55 +496,6 @@ struct t8_default_scheme_vertex_c: public t8_default_scheme_common_c
     return 0; /* prevents compiler warning */
   }
 
-  /** Initialize the entries of an allocated element according to a
-   *  given linear id in a uniform refinement.
-   * \param [in,out] elem The element whose entries will be set.
-   * \param [in] level    The level of the uniform refinement to consider.
-   * \param [in] id       The linear id.
-   *                      id must fulfil 0 <= id < 'number of leaves in the uniform refinement'
-   */
-  virtual void
-  t8_element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id) const;
-
-  /** Compute the linear id of a given element in a hypothetical uniform
-   * refinement of a given level.
-   * \param [in] elem     The element whose id we compute.
-   * \param [in] level    The level of the uniform refinement to consider.
-   * \return              The linear id of the element.
-   */
-  virtual t8_linearidx_t
-  t8_element_get_linear_id (const t8_element_t *elem, int level) const;
-
-  /** Compute the first descendant of a given element.
-   * \param [in] elem     The element whose descendant is computed.
-   * \param [out] desc    The first element in a uniform refinement of \a elem
-   *                      of the given level.
-   * \param [in] level    The level, at which the descendant is computed.
-   */
-  virtual void
-  t8_element_first_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
-
-  /** Compute the last descendant of a given element.
-   * \param [in] elem     The element whose descendant is computed.
-   * \param [out] desc    The last element in a uniform refinement of \a elem
-   *                      of the given level.
-   * \param [in] level    The level, at which the descendant is computed.
-   */
-  virtual void
-  t8_element_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
-
-  /** Construct the successor in a uniform refinement of a given element.
-   * \param [in] elem1    The element whose successor should be constructed.
-   * \param [in,out] elem2  The element whose entries will be set.
-   * \param [in] level    The level of the uniform refinement to consider.
-   */
-  virtual void
-  t8_element_successor (const t8_element_t *t, t8_element_t *s, int level) const
-  {
-    SC_ABORT ("Not implemented.\n");
-    return; /* prevents compiler warning */
-  }
-
   /** Get the integer coordinates of the anchor node of an element.
    * The default scheme implements the Morton type SFCs. In these SFCs the
    * elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and 

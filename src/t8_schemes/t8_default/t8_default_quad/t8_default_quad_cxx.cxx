@@ -250,56 +250,6 @@ t8_default_scheme_quad_c::t8_element_is_family (t8_element_t **fam) const
 }
 
 void
-t8_default_scheme_quad_c::t8_element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id) const
-{
-  T8_ASSERT (t8_element_is_valid (elem));
-  T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
-  T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << P4EST_DIM * level);
-
-  p4est_quadrant_set_morton ((p4est_quadrant_t *) elem, level, id);
-  T8_QUAD_SET_TDIM ((p4est_quadrant_t *) elem, 2);
-}
-
-t8_linearidx_t
-t8_default_scheme_quad_c::t8_element_get_linear_id (const t8_element_t *elem, int level) const
-{
-  T8_ASSERT (t8_element_is_valid (elem));
-  T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
-
-  return p4est_quadrant_linear_id ((p4est_quadrant_t *) elem, level);
-}
-
-void
-t8_default_scheme_quad_c::t8_element_first_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const
-{
-  T8_ASSERT (t8_element_is_valid (elem));
-  T8_ASSERT (t8_element_is_valid (desc));
-  T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
-  p4est_quadrant_first_descendant ((p4est_quadrant_t *) elem, (p4est_quadrant_t *) desc, level);
-  T8_QUAD_SET_TDIM ((p4est_quadrant_t *) desc, 2);
-}
-
-void
-t8_default_scheme_quad_c::t8_element_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const
-{
-  T8_ASSERT (t8_element_is_valid (elem));
-  T8_ASSERT (t8_element_is_valid (desc));
-  T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
-  p4est_quadrant_last_descendant ((p4est_quadrant_t *) elem, (p4est_quadrant_t *) desc, level);
-  T8_QUAD_SET_TDIM ((p4est_quadrant_t *) desc, 2);
-}
-
-void
-t8_default_scheme_quad_c::t8_element_successor (const t8_element_t *elem1, t8_element_t *elem2, int level) const
-{
-  T8_ASSERT (t8_element_is_valid (elem1));
-  T8_ASSERT (t8_element_is_valid (elem2));
-  T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
-  p4est_quadrant_successor ((p4est_quadrant_t *) elem1, (p4est_quadrant_t *) elem2);
-  t8_element_copy_surround ((const p4est_quadrant_t *) elem1, (p4est_quadrant_t *) elem2);
-}
-
-void
 t8_default_scheme_quad_c::t8_element_nca (const t8_element_t *elem1, const t8_element_t *elem2, t8_element_t *nca) const
 {
   const p4est_quadrant_t *q1 = (const p4est_quadrant_t *) elem1;

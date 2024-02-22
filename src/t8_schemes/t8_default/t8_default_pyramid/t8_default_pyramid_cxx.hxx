@@ -142,22 +142,6 @@ struct t8_default_scheme_pyramid_c: public t8_default_scheme_common_c
   virtual int
   t8_element_num_siblings (const t8_element_t *elem) const;
 
-  /** Compute a specific sibling of a given pyramid element \b elem and store it in \b sibling.
-   * \b sibling needs to be an existing element. No memory is allocated by this function.
-   * \b elem and \b sibling can point to the same element, then the entries of
-   * \b elem are overwritten by the ones of its \b sibid -th sibling.
-   * \param [in] elem         The element whose sibling will be computed.
-   * \param [in] sibid        The id of the sibling computed.
-   * \param [in,out] sibling  This element's entries will be overwritten by those of \b elem's sibid-th sibling.
-   *                          The storage for this element must exist and match the element class of the sibling.
-   */
-  virtual void
-  t8_element_sibling (const t8_element_t *elem, int sibid, t8_element_t *sibling) const
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return; /* suppresses compiler warning */
-  }
-
   /** Compute the number of faces of a given element.
    * \param [in] elem The element.
    * \return          The number of faces of \a elem.
@@ -443,47 +427,6 @@ struct t8_default_scheme_pyramid_c: public t8_default_scheme_common_c
    */
   virtual int
   t8_element_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face, int *neigh_face) const;
-
-  /** Initialize the entries of an allocated element according to a given linear id in a uniform refinement.
-   * \param [in,out] elem The element whose entries will be set.
-   * \param [in] level    The level of the uniform refinement to consider.
-   * \param [in] id       The linear id.
-   *                      id must fulfil 0 <= id < 'number of leaves in the uniform refinement'
-   */
-  virtual void
-  t8_element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id) const;
-
-  /** Compute the linear id of a given element in a hypothetical uniform refinement of a given level.
-   * \param [in] elem     The element whose id we compute.
-   * \param [in] level    The level of the uniform refinement to consider.
-   * \return              The linear id of the element.
-   */
-  virtual t8_linearidx_t
-  t8_element_get_linear_id (const t8_element_t *elem, int level) const;
-
-  /** Compute the first descendant of a given element.
-   * \param [in] elem     The element whose descendant is computed.
-   * \param [out] desc    The first element in a uniform refinement of \a elem of the given level.
-   * \param [in] level    The level, at which the descendant is computed.
-   */
-  virtual void
-  t8_element_first_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
-
-  /** Compute the last descendant of a given element.
-   * \param [in] elem     The element whose descendant is computed.
-   * \param [out] desc    The last element in a uniform refinement of \a elem of the given level.
-   * \param [in] level    The level, at which the descendant is computed.
-   */
-  virtual void
-  t8_element_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
-
-  /** Construct the successor in a uniform refinement of a given element.
-   * \param [in] elem1    The element whose successor should be constructed.
-   * \param [in,out] elem2  The element whose entries will be set.
-   * \param [in] level    The level of the uniform refinement to consider.
-   */
-  virtual void
-  t8_element_successor (const t8_element_t *t, t8_element_t *s, int level) const;
 
   /** Get the integer coordinates of the anchor node of an element. The default scheme implements the Morton type SFCs. 
    * In these SFCs the elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and L the maximum 

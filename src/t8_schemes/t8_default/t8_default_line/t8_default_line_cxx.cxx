@@ -248,45 +248,6 @@ t8_default_scheme_line_c::t8_element_face_neighbor_inside (const t8_element_t *e
 }
 
 void
-t8_default_scheme_line_c::t8_element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id) const
-{
-  T8_ASSERT (t8_element_is_valid (elem));
-  T8_ASSERT (0 <= level && level <= T8_DLINE_MAXLEVEL);
-  T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << level);
-
-  t8_dline_init_linear_id ((t8_default_line_t *) elem, level, id);
-}
-
-void
-t8_default_scheme_line_c::t8_element_successor (const t8_element_t *elem1, t8_element_t *elem2, int level) const
-{
-  T8_ASSERT (t8_element_is_valid (elem1));
-  T8_ASSERT (t8_element_is_valid (elem2));
-  T8_ASSERT (1 <= level && level <= T8_DLINE_MAXLEVEL);
-
-  t8_dline_successor ((const t8_default_line_t *) elem1, (t8_default_line_t *) elem2, level);
-}
-
-void
-t8_default_scheme_line_c::t8_element_first_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const
-{
-  T8_ASSERT (t8_element_is_valid (elem));
-  T8_ASSERT (t8_element_is_valid (desc));
-
-  T8_ASSERT (0 <= level && level <= T8_DLINE_MAXLEVEL);
-  t8_dline_first_descendant ((const t8_dline_t *) elem, (t8_dline_t *) desc, level);
-}
-
-void
-t8_default_scheme_line_c::t8_element_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const
-{
-  T8_ASSERT (t8_element_is_valid (elem));
-  T8_ASSERT (t8_element_is_valid (desc));
-  T8_ASSERT (0 <= level && level <= T8_DLINE_MAXLEVEL);
-  t8_dline_last_descendant ((const t8_dline_t *) elem, (t8_dline_t *) desc, level);
-}
-
-void
 t8_default_scheme_line_c::t8_element_vertex_coords (const t8_element_t *elem, int vertex, int coords[]) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
@@ -308,15 +269,6 @@ t8_default_scheme_line_c::t8_element_reference_coords (const t8_element_t *elem,
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (ref_coords != NULL);
   t8_dline_compute_reference_coords ((const t8_dline_t *) elem, ref_coords, num_coords, 0, out_coords);
-}
-
-t8_linearidx_t
-t8_default_scheme_line_c::t8_element_get_linear_id (const t8_element_t *elem, int level) const
-{
-  T8_ASSERT (t8_element_is_valid (elem));
-  T8_ASSERT (0 <= level && level <= T8_DLINE_MAXLEVEL);
-
-  return t8_dline_linear_id ((const t8_dline_t *) elem, level);
 }
 
 int

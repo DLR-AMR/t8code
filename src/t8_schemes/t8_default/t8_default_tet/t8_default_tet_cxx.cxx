@@ -396,53 +396,6 @@ t8_default_scheme_tet_c::t8_element_face_neighbor_inside (const t8_element_t *el
 }
 
 void
-t8_default_scheme_tet_c::t8_element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id) const
-{
-  T8_ASSERT (0 <= level && level <= T8_DTET_MAXLEVEL);
-  T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << 3 * level);
-  T8_ASSERT (t8_element_is_valid (elem));
-
-  t8_dtet_init_linear_id ((t8_default_tet_t *) elem, id, level);
-}
-
-t8_linearidx_t
-t8_default_scheme_tet_c::t8_element_get_linear_id (const t8_element_t *elem, int level) const
-{
-  T8_ASSERT (t8_element_is_valid (elem));
-  T8_ASSERT (0 <= level && level <= T8_DTET_MAXLEVEL);
-
-  return t8_dtet_linear_id ((t8_default_tet_t *) elem, level);
-}
-
-void
-t8_default_scheme_tet_c::t8_element_successor (const t8_element_t *elem1, t8_element_t *elem2, int level) const
-{
-  T8_ASSERT (0 <= level && level <= T8_DTET_MAXLEVEL);
-  T8_ASSERT (t8_element_is_valid (elem1));
-  T8_ASSERT (t8_element_is_valid (elem2));
-
-  t8_dtet_successor ((const t8_default_tet_t *) elem1, (t8_default_tet_t *) elem2, level);
-}
-
-void
-t8_default_scheme_tet_c::t8_element_first_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const
-{
-  T8_ASSERT (t8_element_is_valid (elem));
-  T8_ASSERT (t8_element_is_valid (desc));
-  T8_ASSERT (0 <= level && level <= T8_DTET_MAXLEVEL);
-  t8_dtet_first_descendant ((t8_dtet_t *) elem, (t8_dtet_t *) desc, level);
-}
-
-void
-t8_default_scheme_tet_c::t8_element_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const
-{
-  T8_ASSERT (t8_element_is_valid (elem));
-  T8_ASSERT (t8_element_is_valid (desc));
-  T8_ASSERT (0 <= level && level <= T8_DTET_MAXLEVEL);
-  t8_dtet_last_descendant ((t8_dtet_t *) elem, (t8_dtet_t *) desc, level);
-}
-
-void
 t8_default_scheme_tet_c::t8_element_anchor (const t8_element_t *elem, int anchor[3]) const
 {
   t8_dtet_t *tet = (t8_dtet_t *) elem;
