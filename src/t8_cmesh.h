@@ -387,19 +387,17 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 /* TODO: think about a sensible interface for a parmetis reordering. */
 #endif
 
-/** Register a geometry in the cmesh. The cmesh takes ownership of the geometry and
- *  returns a new pointer to it.
+/** Register a geometry in the cmesh. The cmesh takes ownership of the geometry.
  * \param [in,out] cmesh        The cmesh.
  * \param [in]     geometry     The geometry to register.
- * \return                      A pointer to the registered geometry.
  * 
  * If no geometry is registered and cmesh is modified from another cmesh then
  * the other cmesh's geometries are used.
  * \note If you need to use \ref t8_cmesh_bcast, then all geometries must be
  *       registered \a after the bcast operation, not before.
  */
-t8_geometry_c *
-t8_cmesh_register_geometry (t8_cmesh_t cmesh, const t8_geometry_c *geometry);
+void
+t8_cmesh_register_geometry_c (t8_cmesh_t cmesh, t8_geometry_c **geometry);
 
 /** Set the geometry for a tree, thus specify which geometry to use for this tree.
  * \param [in] cmesh     A non-committed cmesh.

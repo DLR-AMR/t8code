@@ -58,7 +58,7 @@ struct t8_geometry_occ: public t8_geometry_with_vertices
    * \param [in] fileprefix Prefix of a .brep file from which to extract an occ geometry.
    * \param [in] name       The name to give this geometry.
    */
-  t8_geometry_occ (int dim, const char *fileprefix, const char *name);
+  t8_geometry_occ (int dim, std::string fileprefix, std::string name = "t8_geom_cad");
 
   /**
    * Constructor of the occ geometry with a given dimension. The geometry
@@ -68,16 +68,40 @@ struct t8_geometry_occ: public t8_geometry_with_vertices
    * The vertices are saved via the \ref t8_cmesh_set_tree_vertices function.
    * This constructor can be used in short scripts or in combination with a
    * mesh generator, to omit the file IO of the 
-   * \ref t8_geometry_occ (int dim, const char *fileprefix, const char *name) constructor.
+   * \ref t8_geometry_occ (int dim, std::string fileprefix,  std::string name) constructor.
    * \param [in] dim        The dimension of this geometry.
    * \param [in] occ_shape  Occ shape geometry.
    * \param [in] name       The name to give this geometry.
    */
-  t8_geometry_occ (int dim, const TopoDS_Shape occ_shape, const char *name);
+  t8_geometry_occ (int dim, const TopoDS_Shape occ_shape, std::string name = "t8_geom_cad");
 
-  /** The destructor. 
-   * Clears the allocated memory.
+  /**
+   * Copy constructor.
+   * \param [in] other The geometry to copy.
    */
+  t8_geometry_occ (const t8_geometry_occ &other)
+    : t8_geometry_with_vertices (other), occ_shape (other.occ_shape), occ_shape_vertex_map (other.occ_shape_vertex_map),
+      occ_shape_edge_map (other.occ_shape_edge_map), occ_shape_face_map (other.occ_shape_face_map),
+      occ_shape_vertex2edge_map (other.occ_shape_vertex2edge_map),
+      occ_shape_edge2face_map (other.occ_shape_edge2face_map)
+  {
+  }
+
+  /**
+   * Move constructor.
+   * \param [in] other The geometry to move.
+   */
+  t8_geometry_occ (t8_geometry_occ &&other)
+    : t8_geometry_with_vertices (std::move (other)), occ_shape (std::move (other.occ_shape)),
+      occ_shape_vertex_map (std::move (other.occ_shape_vertex_map)),
+      occ_shape_edge_map (std::move (other.occ_shape_edge_map)),
+      occ_shape_face_map (std::move (other.occ_shape_face_map)),
+      occ_shape_vertex2edge_map (std::move (other.occ_shape_vertex2edge_map)),
+      occ_shape_edge2face_map (std::move (other.occ_shape_edge2face_map))
+  {
+  }
+
+  /** The destructor. */
   virtual ~t8_geometry_occ ()
   {
     /* Nothing to do. */

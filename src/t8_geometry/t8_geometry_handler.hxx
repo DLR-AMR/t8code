@@ -29,15 +29,9 @@
 #include <t8.h>
 #include <t8_geometry/t8_geometry.h>
 #include <t8_geometry/t8_geometry_base.hxx>
-#include <array>
-#include <vector>
-#include <optional>
 #include <memory>
 #include <string>
 #include <unordered_map>
-
-const std::array<std::string, T8_GEOMETRY_TYPE_COUNT> t8_geometry_type_names
-  = { "t8_geom_zero_", "t8_geom_linear_", "t8_geom_linear_axis_aligned_", "t8_geom_analytic_", "t8_geom_occ_" };
 
 struct t8_geometry_handler
 {
@@ -45,31 +39,30 @@ struct t8_geometry_handler
   /**
    * Constructor.
    */
-  t8_geometry_handler ();
+  t8_geometry_handler (): active_geometry (nullptr), active_tree (-1) {};
 
   /**
    * Destructor.
    */
-  ~t8_geometry_handler ();
+  ~t8_geometry_handler () {};
 
   /**
    * Register a geometry with the geometry handler.
    * The handler will take ownership of the geometry.
-   * \param [in]  args  The arguments to pass to the geometry constructor.
-   * \return            A reference to the registered geometry.
+   * \param [in]  geometry  The geometry to register as an rvalue.
+   * \return            A pointer to the registered geometry.
    */
-  template <typename geometry, typename... args>
-  t8_geometry &
-  register_geometry (args &&...args);
+  template <typename geometry_type, typename... _args>
+  geometry_type *
+  register_geometry (_args &&...args);
 
   /**
    * Register a geometry with the geometry handler.
    * The handler will take ownership of the geometry.
    * \param [in]  geom  The geometry to register.
-   * \return            A reference to the registered geometry.
    */
-  t8_geometry &
-  t8_geometry_handler::register_geometry (t8_geometry &geom);
+  void
+  register_geometry_c (t8_geometry_c **geom);
 
   /**
    * Find a geometry by its name.
@@ -77,7 +70,11 @@ struct t8_geometry_handler
    * \return            An iterator to the geometry if found, NULL otherwise.
    */
   inline t8_geometry *
-  get_geometry (const std::string &name);
+  get_geometry (const std::string &name)
+  {
+    const size_t hash = std::hash<std::string> {}(name);
+    return t8_geometry_handler::get_geometry (hash);
+  }
 
   /**
    * Find a geometry by its hash.
@@ -85,7 +82,14 @@ struct t8_geometry_handler
    * \return            An iterator to the geometry if found, NULL otherwise.
    */
   inline t8_geometry *
-  get_geometry (const size_t hash);
+  get_geometry (const size_t hash)
+  {
+    auto found = registered_geometries.find (hash);
+    if (found != registered_geometries.end ()) {
+      return found->second.get ();
+    }
+    return nullptr;
+  }
 
   /**
    * Get the number of registered geometries.
@@ -104,7 +108,11 @@ struct t8_geometry_handler
    *        for that special case. It is used for example in \ref t8_cmesh_get_tree_geometry.
    */
   inline t8_geometry *
-  get_unique_geometry ();
+  get_unique_geometry ()
+  {
+    T8_ASSERT (registered_geometries.size () == 1);
+    return active_geometry;
+  }
 
   /**
    * Deactivate the current active tree. Can be used to reload data,
@@ -123,18 +131,34 @@ struct t8_geometry_handler
    * \return The geometry of the tree.
    */
   inline t8_geometry *
-  get_tree_geometry (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
+  get_tree_geometry (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
+  {
+    update_tree (cmesh, gtreeid);
+    return active_geometry;
+  }
 
   inline void
   evaluate_tree_geometry (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                          double *out_coords);
+                          double *out_coords)
+  {
+    update_tree (cmesh, gtreeid);
+    active_geometry->t8_geom_evaluate (cmesh, gtreeid, ref_coords, num_coords, out_coords);
+  }
 
   inline void
   evaluate_tree_geometry_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                   const size_t num_coords, double *out_coords);
+                                   const size_t num_coords, double *out_coords)
+  {
+    update_tree (cmesh, gtreeid);
+    active_geometry->t8_geom_evaluate_jacobian (cmesh, gtreeid, ref_coords, num_coords, out_coords);
+  }
 
   inline t8_geometry_type_t
-  get_tree_geometry_type (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
+  get_tree_geometry_type (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
+  {
+    update_tree (cmesh, gtreeid);
+    return active_geometry->t8_geom_get_type ();
+  }
 
  private:
   /**

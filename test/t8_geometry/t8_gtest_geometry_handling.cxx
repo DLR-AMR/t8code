@@ -92,20 +92,21 @@ TEST (test_geometry, cmesh_geometry)
   t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_TRIANGLE);
   /* Register the linear geometry and zero geometry to this cmesh. */
   auto linear_geom = t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, 2);
+  ;
   auto zero_geom = t8_cmesh_register_geometry<t8_geometry_zero> (cmesh, 2);
   /* Set the id geometry for the trees. */
-  t8_cmesh_set_tree_geometry (cmesh, 0, &linear_geom);
-  t8_cmesh_set_tree_geometry (cmesh, 1, &zero_geom);
+  t8_cmesh_set_tree_geometry (cmesh, 0, linear_geom);
+  t8_cmesh_set_tree_geometry (cmesh, 1, zero_geom);
   /* Commit the cmesh */
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 
   /* Check that we can get the geometry back over the tree id. */
   const t8_geometry *found_geom = t8_cmesh_get_tree_geometry (cmesh, 0);
-  ASSERT_EQ (found_geom->t8_geom_get_hash (), linear_geom.t8_geom_get_hash ())
+  ASSERT_EQ (found_geom->t8_geom_get_hash (), linear_geom->t8_geom_get_hash ())
     << "Could not find linear tree geometry at tree 0.";
 
   found_geom = t8_cmesh_get_tree_geometry (cmesh, 1);
-  ASSERT_EQ (found_geom->t8_geom_get_hash (), zero_geom.t8_geom_get_hash ())
+  ASSERT_EQ (found_geom->t8_geom_get_hash (), zero_geom->t8_geom_get_hash ())
     << "Could not find linear tree geometry at tree 1.";
   /* clean-up */
   t8_cmesh_destroy (&cmesh);
@@ -122,6 +123,7 @@ TEST (test_geometry, cmesh_geometry_unique)
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
   /* Register the linear_geometry to this cmesh. */
   auto provided_geom = t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, 2);
+  ;
   /* Commit the cmesh */
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 
@@ -130,7 +132,7 @@ TEST (test_geometry, cmesh_geometry_unique)
    * this tree. Since we only have one geometry. */
   auto found_geom = t8_cmesh_get_tree_geometry (cmesh, 0);
   ASSERT_TRUE (found_geom != nullptr) << "Could not find any geometry.";
-  ASSERT_EQ (found_geom->t8_geom_get_hash (), provided_geom.t8_geom_get_hash ())
+  ASSERT_EQ (found_geom->t8_geom_get_hash (), provided_geom->t8_geom_get_hash ())
     << "Could not find cmesh tree geometry.";
 
   /* clean-up */
@@ -147,9 +149,8 @@ TEST (test_geometry, geom_handler_register)
   /* For each dimension build the zero geometry and register it.
    * We then commit the handler and check that we can find the geometries. */
   for (int idim = 0; idim <= 3; ++idim) {
-    t8_geometry_zero zero_geom (idim);
     /* Register the geometry. */
-    geom_handler.register_geometry (zero_geom);
+    geom_handler.register_geometry<t8_geometry_zero> (idim);
   }
 
   /* Check find geometry. */

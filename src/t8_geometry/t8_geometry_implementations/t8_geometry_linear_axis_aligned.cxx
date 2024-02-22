@@ -25,11 +25,9 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
 #include <t8_geometry/t8_geometry_helpers.h>
 
-t8_geometry_linear_axis_aligned::t8_geometry_linear_axis_aligned (int dim): t8_geometry_with_vertices (dim, "")
+t8_geometry_linear_axis_aligned::t8_geometry_linear_axis_aligned (int dim)
+  : t8_geometry_with_vertices (dim, "t8_geom_linear_axis_aligned_" + std::to_string (dim))
 {
-  T8_ASSERT (0 <= dim && dim <= 3);
-  name = (t8_geometry_type_names[T8_GEOMETRY_TYPE_LINEAR_AXIS_ALIGNED] + std::to_string (dim)).c_str ();
-  dimension = dim;
 }
 
 t8_geometry_linear_axis_aligned::~t8_geometry_linear_axis_aligned ()

@@ -39,8 +39,7 @@ struct t8_geometry_with_vertices: public t8_geometry
 {
  public:
   /* Basic constructor that sets the dimension, the name, and the name for the attribute. */
-  t8_geometry_with_vertices (int dimension, const char *name, const char *attribute_name = NULL)
-    : t8_geometry (dimension, name, attribute_name)
+  t8_geometry_with_vertices (int dimension, std::string name): t8_geometry (dimension, name)
   {
     active_tree_vertices = NULL;
     active_tree = -1;
@@ -53,6 +52,21 @@ struct t8_geometry_with_vertices: public t8_geometry
   {
     active_tree_vertices = NULL;
     active_tree = -1;
+  }
+
+  /* Copy constructor */
+  t8_geometry_with_vertices (const t8_geometry_with_vertices& other)
+    : t8_geometry (other), active_tree (other.active_tree), active_tree_class (other.active_tree_class),
+      active_tree_vertices (other.active_tree_vertices)
+  {
+  }
+
+  /* Move constructor */
+  t8_geometry_with_vertices (t8_geometry_with_vertices&& other)
+    : t8_geometry (std::move (other)), active_tree (std::move (other.active_tree)),
+      active_tree_class (std::move (other.active_tree_class)),
+      active_tree_vertices (std::move (other.active_tree_vertices))
+  {
   }
 
   /** The destructor. It does nothing but has to be defined since
@@ -88,7 +102,7 @@ struct t8_geometry_with_vertices: public t8_geometry
  protected:
   t8_gloidx_t active_tree;            /*< The tree of which currently vertices are loaded. */
   t8_eclass_t active_tree_class;      /*< The class of the currently active tree. */
-  const double *active_tree_vertices; /*< The vertices of the currently active tree. */
+  const double* active_tree_vertices; /*< The vertices of the currently active tree. */
 };
 
 T8_EXTERN_C_END ();

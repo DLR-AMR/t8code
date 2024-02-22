@@ -36,7 +36,7 @@ struct t8_geometry_squared_disk: public t8_geometry_with_vertices
 {
  public:
   /* Basic constructor that sets the dimension and the name. */
-  t8_geometry_squared_disk (): t8_geometry_with_vertices (2, "t8_squared_disk")
+  t8_geometry_squared_disk (): t8_geometry_with_vertices (2, "t8_squared_disk_")
   {
   }
 
@@ -94,7 +94,7 @@ struct t8_geometry_triangulated_spherical_surface: public t8_geometry_with_verti
 {
  public:
   /* Basic constructor that sets the dimension and the name. */
-  t8_geometry_triangulated_spherical_surface (): t8_geometry_with_vertices (2, "t8_triangulated_spherical_surface")
+  t8_geometry_triangulated_spherical_surface (): t8_geometry_with_vertices (2, "t8_triangulated_spherical_surface_")
   {
   }
 
@@ -132,7 +132,7 @@ struct t8_geometry_triangulated_spherical_surface: public t8_geometry_with_verti
 class t8_geometry_quadrangulated_spherical_surface: public t8_geometry_with_vertices {
  public:
   /* Basic constructor that sets the dimension and the name. */
-  t8_geometry_quadrangulated_spherical_surface (): t8_geometry_with_vertices (2, "t8_quadrangulated_spherical_surface")
+  t8_geometry_quadrangulated_spherical_surface (): t8_geometry_with_vertices (2, "t8_quadrangulated_spherical_surface_")
   {
   }
 
@@ -167,7 +167,7 @@ class t8_geometry_quadrangulated_spherical_surface: public t8_geometry_with_vert
 class t8_geometry_cubed_spherical_shell: public t8_geometry_with_vertices {
  public:
   /* Basic constructor that sets the dimension and the name. */
-  t8_geometry_cubed_spherical_shell (): t8_geometry_with_vertices (3, "t8_cubed_spherical_shell")
+  t8_geometry_cubed_spherical_shell (): t8_geometry_with_vertices (3, "t8_cubed_spherical_shell_")
   {
   }
 

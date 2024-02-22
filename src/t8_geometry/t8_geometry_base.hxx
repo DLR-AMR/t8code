@@ -34,18 +34,36 @@
 
 T8_EXTERN_C_BEGIN ();
 
+/**
+ * The base class for all geometries.
+ * This class provides a general template for all geometries.
+ * It is a pure virtual class and has to be inherited by a concrete
+ * geometry implementation.
+ */
 struct t8_geometry
 {
  public:
   /* Basic constructor that sets the dimension, the name, and the name for the attribute. */
-  t8_geometry (int dimension, const char *name, const char *attribute_name = NULL): dimension (dimension), name (name)
+  t8_geometry (int dim, std::string name): dimension (dim), name (name), hash (std::hash<std::string> {}(name))
   {
+    T8_ASSERT (0 <= dim && dim <= T8_ECLASS_MAX_DIM);
   }
 
   /* Base constructor with no arguments. We need this since it
    * is called from derived class constructors.
    * Sets dimension and name to invalid values. */
   t8_geometry (): t8_geometry (-1, "Invalid")
+  {
+  }
+
+  // Copy constructor
+  t8_geometry (const t8_geometry &other): dimension (other.dimension), name (other.name), hash (other.hash)
+  {
+  }
+
+  // Move constructor
+  t8_geometry (t8_geometry &&other) noexcept
+    : dimension (std::move (other.dimension)), name (std::move (other.name)), hash (std::move (other.hash))
   {
   }
 
@@ -119,7 +137,7 @@ struct t8_geometry
   inline const size_t
   t8_geom_get_hash () const
   {
-    return std::hash<std::string> {}(name);
+    return hash;
   }
 
   /**
@@ -131,11 +149,14 @@ struct t8_geometry
     = 0;
 
  protected:
-  const int dimension;
+  int dimension;
   /**< The dimension of reference space for which this is a geometry. */
 
-  const std::string name;
+  std::string name;
   /**< The name of this geometry. */
+
+  size_t hash;
+  /**< The hash of the name of this geometry. */
 };
 
 T8_EXTERN_C_END ();

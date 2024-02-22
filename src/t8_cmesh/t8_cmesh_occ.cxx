@@ -25,8 +25,9 @@
  * TODO: document this file
  */
 
+#include <t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_occ.hxx>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx>
 
 #if T8_WITH_OCC
@@ -79,17 +80,16 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees, int nu
     TopoDS_Shape shape;
     shape = BRepBuilderAPI_MakeFace (cylinder_outer, 1e-6).Face ();
     shape = BRepAlgoAPI_Fuse (shape, BRepBuilderAPI_MakeFace (cylinder_inner, 1e-6).Face ());
-    t8_geometry_occ *geometry_occ = new t8_geometry_occ (3, shape, "occ surface dim=3");
 
-    t8_cmesh_register_geometry (cmesh, geometry_occ);
+    t8_cmesh_register_geometry<t8_geometry_occ> (cmesh, 3, shape, "occ surface");
 
 #else  /* !T8_WITH_OCC */
     SC_ABORTF ("OCC not linked");
 #endif /* T8_WITH_OCC */
   }
   else {
-    t8_geometry_c *geometry_linear = t8_geometry_linear_new (3);
-    t8_cmesh_register_geometry (cmesh, geometry_linear);
+    t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, 3);
+    ;
   }
 
 #if T8_WITH_OCC

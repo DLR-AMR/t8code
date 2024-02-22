@@ -54,7 +54,6 @@ struct t8_geometry_linear_axis_aligned: public t8_geometry_with_vertices
   }
 
   /** The destructor. 
-   * Clears the allocated memory.
    */
   virtual ~t8_geometry_linear_axis_aligned ();
 

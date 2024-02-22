@@ -27,10 +27,20 @@
 #pragma once
 
 #include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_geometry/t8_geometry_handler.hxx>
 
-template <typename geometry, typename... args>
-inline t8_geometry &
-t8_cmesh_register_geometry (t8_cmesh_t cmesh, args &&...args)
+/**
+ * Create and register a geometry with the coarse mesh. The coarse mesh takes the ownership of the geometry.
+ * @tparam geometry_type 
+ * \param [in,out] cmesh The cmesh.
+ * \param [in,out] geometry An rvalue to the geometry.
+ * \return A pointer to the geometry.
+ */
+
+template <typename geometry_type, typename... _args>
+inline geometry_type *
+t8_cmesh_register_geometry (t8_cmesh_t cmesh, _args &&...args)
 {
-  return cmesh->geometry_handler.register_geometry<geometry> (std::forward<args> (args)...);
+  return cmesh->geometry_handler->register_geometry<geometry_type> (std::forward<_args> (args)...);
 }

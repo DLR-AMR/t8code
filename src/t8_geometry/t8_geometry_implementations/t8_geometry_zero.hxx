@@ -44,8 +44,7 @@ struct t8_geometry_zero: public t8_geometry
    */
   t8_geometry_zero (int dimension);
 
-  /** The destructor. 
-   * Clears the allocated memory.
+  /** The destructor.
    */
   virtual ~t8_geometry_zero ();
 

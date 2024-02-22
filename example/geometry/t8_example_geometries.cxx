@@ -567,7 +567,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
      * stored in the "geometry" pointer and registered later, right before the cmesh is committed. */
     t8_cmesh_set_tree_geometry (cmesh, 0, geometry);
     t8_cmesh_set_tree_geometry (cmesh, 1, geometry_sincos);
-    t8_cmesh_register_geometry (cmesh, geometry_sincos);
+    t8_cmesh_register_geometry_c (cmesh, &geometry_sincos);
     snprintf (vtuname, BUFSIZ, "forest_cylinder_and_sincos_lvl_%i", level);
     break;
   case T8_GEOM_CIRCLE:
@@ -955,7 +955,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     SC_ABORT_NOT_REACHED ();
   }
   /* Register the geometry */
-  t8_cmesh_register_geometry (cmesh, geometry);
+  t8_cmesh_register_geometry_c (cmesh, &geometry);
   /* Commit the cmesh */
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 

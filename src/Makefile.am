@@ -106,16 +106,16 @@ libt8_compiled_sources = \
   src/t8_element_c_interface.cxx \
   src/t8_refcount.c src/t8_cmesh/t8_cmesh.c \
   src/t8_cmesh/t8_cmesh_occ.cxx \
-  src/t8_cmesh/t8_cmesh_cxx.cxx src/t8_cmesh/t8_cmesh_triangle.c \
+  src/t8_cmesh/t8_cmesh_cxx.cxx src/t8_cmesh/t8_cmesh_triangle.cxx \
   src/t8_cmesh/t8_cmesh_vtk_writer.c src/t8_cmesh/t8_cmesh_stash.c \
   src/t8_cmesh/t8_cmesh_vtk_reader.cxx \
-  src/t8_cmesh/t8_cmesh_save.c \
+  src/t8_cmesh/t8_cmesh_save.cxx \
   src/t8_cmesh/t8_cmesh_netcdf.c \
-  src/t8_cmesh/t8_cmesh_trees.c src/t8_cmesh/t8_cmesh_commit.c \
-  src/t8_cmesh/t8_cmesh_partition.c\
+  src/t8_cmesh/t8_cmesh_trees.c src/t8_cmesh/t8_cmesh_commit.cxx \
+  src/t8_cmesh/t8_cmesh_partition.cxx\
   src/t8_cmesh/t8_cmesh_copy.c src/t8_data/t8_shmem.c \
   src/t8_cmesh/t8_cmesh_geometry.cxx \
-  src/t8_cmesh/t8_cmesh_examples.c \
+  src/t8_cmesh/t8_cmesh_examples.cxx \
   src/t8_cmesh/t8_cmesh_helpers.c \
   src/t8_data/t8_containers.cxx \
   src/t8_cmesh/t8_cmesh_offset.c src/t8_cmesh/t8_cmesh_readmshfile.cxx \

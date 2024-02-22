@@ -24,22 +24,22 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_geometry.h>
+#include <t8_geometry/t8_geometry.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_examples.hxx>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx>
+
 #include <algorithm>
+#include <memory>
 
-t8_geometry_handler::t8_geometry_handler (): active_geometry (nullptr), active_tree (-1)
+template <typename geometry_type, typename... _args>
+geometry_type *
+t8_geometry_handler::register_geometry (_args &&...args)
 {
-}
-
-t8_geometry_handler::~t8_geometry_handler ()
-{
-  /* Nothing to do */
-}
-
-template <typename geometry, typename... args>
-t8_geometry &
-t8_geometry_handler::register_geometry (args &&...args)
-{
-  std::unique_ptr<t8_geometry> geom = std::make_unique<geometry> (std::forward<Args> (args)...);
+  std::unique_ptr<t8_geometry> geom = std::make_unique<geometry_type> (std::forward<_args> (args)...);
   const size_t hash = geom->t8_geom_get_hash ();
   if (registered_geometries.find (hash) == registered_geometries.end ()) {
     registered_geometries.emplace (hash, geom);
@@ -47,74 +47,21 @@ t8_geometry_handler::register_geometry (args &&...args)
   if (registered_geometries.size () == 1) {
     active_geometry = registered_geometries.at (hash).get ();
   }
-  return *registered_geometries.at (hash).get ();
+  return registered_geometries.at (hash).get ();
 }
 
-t8_geometry &
-t8_geometry_handler::register_geometry (t8_geometry &geom)
+void
+t8_geometry_handler::register_geometry_c (t8_geometry_c **geom)
 {
-  const size_t hash = geom.t8_geom_get_hash ();
+  const size_t hash = (*geom)->t8_geom_get_hash ();
   if (registered_geometries.find (hash) == registered_geometries.end ()) {
-    registered_geometries.emplace (hash, std::make_unique<t8_geometry> (std::move (geom)));
+    std::unique_ptr<t8_geometry> unique_geom = std::unique_ptr<t8_geometry> (std::move (*geom));
+    registered_geometries.emplace (hash, std::move (unique_geom));
   }
   if (registered_geometries.size () == 1) {
     active_geometry = registered_geometries.at (hash).get ();
   }
-  return *registered_geometries.at (hash).get ();
-}
-
-inline t8_geometry *
-t8_geometry_handler::get_geometry (const std::string &name)
-{
-  const size_t hash = std::hash<std::string> {}(name);
-  return t8_geometry_handler::get_geometry (hash);
-}
-
-inline t8_geometry *
-t8_geometry_handler::get_geometry (const size_t hash)
-{
-  auto found = registered_geometries.find (hash);
-  if (found != registered_geometries.end ()) {
-    return found->second.get ();
-  }
-  return nullptr;
-}
-
-inline t8_geometry *
-t8_geometry_handler::get_unique_geometry ()
-{
-  T8_ASSERT (registered_geometries.size () == 1);
-  return active_geometry;
-}
-
-inline t8_geometry *
-t8_geometry_handler::get_tree_geometry (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
-{
-  update_tree (cmesh, gtreeid);
-  return active_geometry;
-}
-
-inline void
-t8_geometry_handler::evaluate_tree_geometry (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                             const size_t num_coords, double *out_coords)
-{
-  update_tree (cmesh, gtreeid);
-  active_geometry->t8_geom_evaluate (cmesh, gtreeid, ref_coords, num_coords, out_coords);
-}
-
-inline void
-t8_geometry_handler::evaluate_tree_geometry_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                                      const size_t num_coords, double *out_coords)
-{
-  update_tree (cmesh, gtreeid);
-  active_geometry->t8_geom_evaluate_jacobian (cmesh, gtreeid, ref_coords, num_coords, out_coords);
-}
-
-inline t8_geometry_type_t
-t8_geometry_handler::get_tree_geometry_type (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
-{
-  update_tree (cmesh, gtreeid);
-  return active_geometry->t8_geom_get_type ();
+  *geom = registered_geometries.at (hash).get ();
 }
 
 void
@@ -133,7 +80,7 @@ t8_geometry_handler::update_tree (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
       const std::string geom_name (t8_cmesh_get_tree_geom_name (cmesh, gtreeid));
       active_geometry = get_geometry (geom_name);
       SC_CHECK_ABORTF (active_geometry != nullptr,
-                       "Could not find geometry with name %s or tree %d has no registered geometry.",
+                       "Could not find geometry with name %s or tree %ld has no registered geometry.",
                        geom_name.c_str (), gtreeid);
     }
     /* Get the user data for this geometry and this tree. */

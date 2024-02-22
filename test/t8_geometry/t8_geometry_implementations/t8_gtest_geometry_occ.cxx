@@ -21,7 +21,7 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_vtk.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
@@ -95,11 +95,11 @@ t8_euler_rotation (double *pos_vec, double *rot_vec, double *res_vec, double *ro
 }
 
 /** Constructs an occ surface for testing purposes. Surface is build between vertex 0, 1, 4 and 5 of a unit hexahedron.
- * Saves the surface in the geometry shape.
- * \return                            The geometry.
+ * Saves the surface in the shape.
+ * \return                            The shape.
  */
-t8_geometry_occ *
-t8_create_occ_surface_geometry ()
+TopoDS_Shape
+t8_create_occ_surface_shape ()
 {
   Handle_Geom_Surface surface;
   TopoDS_Shape shape;
@@ -119,16 +119,15 @@ t8_create_occ_surface_geometry ()
 
   surface = GeomAPI_PointsToBSplineSurface (point_array).Surface ();
   shape = BRepBuilderAPI_MakeFace (surface, 1e-6).Face ();
-  t8_geometry_occ *geometry = new t8_geometry_occ (3, shape, "occ dim=3");
-  return geometry;
+  return shape;
 }
 
-/** Constructs an occ curve for testing purpsoes. Curve is build between vertex 0, 1, 4 and 5 of a unit hexahedron.
- * Saves the curve in the geometry shape.
- * \return                            The occ geometry.
+/** Constructs an occ curve for testing purposes. Curve is build between vertex 0, 1, 4 and 5 of a unit hexahedron.
+ * Saves the curve in the shape.
+ * \return                            The occ shape.
  */
-t8_geometry_occ *
-t8_create_occ_curve_geometry ()
+TopoDS_Shape
+t8_create_occ_curve_shape ()
 {
   Handle_Geom_Curve curve;
   TopoDS_Shape shape;
@@ -142,8 +141,7 @@ t8_create_occ_curve_geometry ()
 
   curve = GeomAPI_PointsToBSpline (point_array).Curve ();
   shape = BRepBuilderAPI_MakeEdge (curve).Edge ();
-  t8_geometry_occ *geometry = new t8_geometry_occ (3, shape, "occ dim=3");
-  return geometry;
+  return shape;
 }
 #endif /* T8_WITH_OCC */
 
@@ -179,13 +177,13 @@ t8_create_occ_hypercube (double *rot_vec, int face, int edge, double *parameters
   T8_ASSERT (face < 0 || edge < 0);
   if (face >= 0) {
     faces[face] = 1;
-    geometry = t8_create_occ_surface_geometry ();
+    t8_cmesh_register_geometry<t8_geometry_occ> (cmesh, 3, t8_create_occ_surface_shape ());
     t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY + face,
                             parameters, 8 * sizeof (double), 0);
   }
   else if (edge >= 0) {
     edges[edge] = 1;
-    geometry = t8_create_occ_curve_geometry ();
+    t8_cmesh_register_geometry<t8_geometry_occ> (cmesh, 3, t8_create_occ_curve_shape ());
     t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + edge,
                             parameters, 2 * sizeof (double), 0);
   }
@@ -194,11 +192,10 @@ t8_create_occ_hypercube (double *rot_vec, int face, int edge, double *parameters
      * we have to create a geometry. Hence an occ geometry can only be created
      * with an actual shape, we just create a geometry with a curve and do not
      * link the curve to any edge. */
-    geometry = t8_create_occ_curve_geometry ();
+    t8_cmesh_register_geometry<t8_geometry_occ> (cmesh, 3, t8_create_occ_curve_shape ());
   }
   t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces, 6 * sizeof (int), 0);
   t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges, 24 * sizeof (int), 0);
-  t8_cmesh_register_geometry (cmesh, geometry);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   return cmesh;
 

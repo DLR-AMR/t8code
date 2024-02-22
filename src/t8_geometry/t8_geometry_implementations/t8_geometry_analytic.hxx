@@ -78,12 +78,31 @@ struct t8_geometry_analytic: public t8_geometry
    * \param [in] jacobian   The jacobian of \a analytical.
    * \param [in] load_tree_data The function that is used to load a tree's data.
    */
-  t8_geometry_analytic (int dim, const char *name, t8_geom_analytic_fn analytical,
+  t8_geometry_analytic (int dim, std::string name, t8_geom_analytic_fn analytical,
                         t8_geom_analytic_jacobian_fn jacobian, t8_geom_load_tree_data_fn load_tree_data,
                         const void *user_data);
 
+  /**
+   * Copy constructor.
+   * \param [in] other The geometry to copy from.
+   */
+  t8_geometry_analytic (const t8_geometry_analytic &other)
+    : t8_geometry (other), analytical_function (other.analytical_function), jacobian (other.jacobian),
+      load_tree_data (other.load_tree_data), tree_data (other.tree_data), user_data (other.user_data)
+  {
+  }
+
+  /**
+   * Move constructor.
+   * \param [in] other The geometry to move from.
+   */
+  t8_geometry_analytic (t8_geometry_analytic &&other) noexcept
+    : t8_geometry (std::move (other)), analytical_function (other.analytical_function), jacobian (other.jacobian),
+      load_tree_data (other.load_tree_data), tree_data (other.tree_data), user_data (other.user_data)
+  {
+  }
+
   /** The destructor. 
-   * Clears the allocated memory.
    */
   virtual ~t8_geometry_analytic ()
   {

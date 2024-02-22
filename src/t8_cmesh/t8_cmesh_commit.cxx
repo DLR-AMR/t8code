@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_commit.c
+/** \file t8_cmesh_commit.cxx
  *
  * TODO: document this file
  */
@@ -518,7 +518,6 @@ void
 t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
   int mpiret;
-  int commit_geom_handler = 0;
 
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (comm != sc_MPI_COMM_NULL);
@@ -547,12 +546,6 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
      * over the handler from set_from. */
     if (cmesh->geometry_handler == NULL) {
       cmesh->geometry_handler = cmesh->set_from->geometry_handler;
-      /* Mark that we do not have to commit the geometry handler. */
-      commit_geom_handler = 0;
-    }
-    else {
-      /* Set flag that we need to commit the geometry handler. */
-      commit_geom_handler = 1;
     }
 
     if (cmesh->set_partition) {
@@ -565,13 +558,6 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   } /* End set_from != NULL */
   else {
     t8_cmesh_commit_from_stash (cmesh, comm);
-    /* We also need to commit the handler. */
-    commit_geom_handler = 1;
-  }
-
-  if (commit_geom_handler) {
-    /* Commit the geometry handler. */
-    t8_geom_handler_commit (cmesh->geometry_handler);
   }
   cmesh->committed = 1;
 
