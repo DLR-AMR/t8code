@@ -27,6 +27,8 @@
 #ifndef T8_CMESH_VERTEX_CONN_VERTEX_TO_TREE_HXX
 #define T8_CMESH_VERTEX_CONN_VERTEX_TO_TREE_HXX
 
+#include <vector>
+#include <unordered_map>
 #include <t8_cmesh.h>
 
 /*
@@ -58,6 +60,13 @@
  * 
 */
 
+/* Variable type for (tree_id, tree_vertex_id) pair */
+using t8_cmesh_tree_vertex_pair = std::pair<t8_locidx_t, int>;
+
+/* list of tree vertex pairs, echo global vertex id maps to 
+   * such a list. */
+using t8_cmesh_tree_vertex_list = std::vector<t8_cmesh_tree_vertex_pair>;
+
 typedef struct t8_cmesh_vertex_conn_vertex_to_tree_c
 {
  public:
@@ -70,25 +79,18 @@ typedef struct t8_cmesh_vertex_conn_vertex_to_tree_c
   void
   set_vertex_to_tree_list (const t8_cmesh_t cmesh);
 
-  vector<t8_locidx_t>
-  get_tree_list_of_vertex (t8_gloidx_t vertex_id);
+  t8_cmesh_tree_vertex_list&
+  get_tree_list_of_vertex (t8_gloidx_t global_vertex_id);
 
  private:
-  /* Variable type for (tree_id, tree_vertex_id) pair */
-  using tree_vertex_pair = std::pair<t8_locidx_t, int>;
-
-  /* list of tree vertex pairs, echo global vertex id maps to 
-   * such a list. */
-  using tree_vertex_list = std::vector<tree_vertex_pair>;
-
   /* The actual data storage mapping global vertex ids to a list
    * local trees and tree vertices. */
-  std::unordered_map<t8_gloidx_t, tree_vertex_list> vertex_to_tree;
+  std::unordered_map<t8_gloidx_t, t8_cmesh_tree_vertex_list> vertex_to_tree;
 
   /* Setter functions */
   /* A single value is added to the vertex_to_tree_list */
   void
-  set_value_vertex_to_tree_list (t8_gloidx_t global_vertex_id, t8_locidx_t treeid, int tree_vertex);
+  set_value_vertex_to_tree_list (t8_cmesh_t cmesh, t8_gloidx_t global_vertex_id, t8_locidx_t ltreeid, int tree_vertex);
 
 } t8_cmesh_vertex_conn_vertex_to_tree_c;
 
