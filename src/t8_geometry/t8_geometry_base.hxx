@@ -33,6 +33,8 @@
 #include <t8_forest/t8_forest.h>
 #include <t8_geometry/t8_geometry.h>
 
+#include <string>
+
 T8_EXTERN_C_BEGIN ();
 
 /**
