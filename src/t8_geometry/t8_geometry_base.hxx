@@ -34,6 +34,7 @@
 #include <t8_geometry/t8_geometry.h>
 
 #include <string>
+#include <functional>
 
 T8_EXTERN_C_BEGIN ();
 
