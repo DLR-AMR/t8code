@@ -142,9 +142,10 @@ t8_geometry_cad::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreei
 inline void
 t8_geometry_cad::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 {
+  const t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
   t8_geometry_with_vertices::t8_geom_load_tree_data (cmesh, gtreeid);
-  edges = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, gtreeid);
-  faces = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, gtreeid);
+  edges = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, ltreeid);
+  faces = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, ltreeid);
   T8_ASSERT (edges != NULL);
   T8_ASSERT (faces != NULL);
 }
