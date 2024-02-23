@@ -40,11 +40,6 @@ class t8_cmesh_partition_class: public testing::TestWithParam<int> {
   SetUp () override
   {
     cmesh_id = GetParam ();
-
-    if (cmesh_id == 89 || (237 <= cmesh_id && cmesh_id <= 256)) {
-      GTEST_SKIP ();
-    }
-
     cmesh_original = t8_test_create_cmesh (cmesh_id);
   }
 
