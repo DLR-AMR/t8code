@@ -30,7 +30,7 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh_vtk_writer.h>
 #include <t8_cmesh/t8_cmesh_partition.h>
-#include <t8_cmesh/t8_cmesh_occ.hxx>
+#include <t8_cmesh/t8_cmesh_cad.hxx>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>
@@ -254,7 +254,7 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix, sc_MPI_C
       snprintf (forest_vtu, BUFSIZ, "%s_forest_partition_%03d", vtu_prefix, time_step);
       snprintf (cmesh_vtu, BUFSIZ, "%s_cmesh_partition_%03d", vtu_prefix, time_step);
       t8_forest_write_vtk (forest_partition, forest_vtu);
-      t8_cmesh_vtk_write_file (t8_forest_get_cmesh (forest_partition), cmesh_vtu, 1.0);
+      t8_cmesh_vtk_write_file (t8_forest_get_cmesh (forest_partition), cmesh_vtu);
       t8_debugf ("Wrote partitioned forest and cmesh\n");
     }
     if (cmesh_is_partitioned) {
@@ -288,7 +288,7 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix, sc_MPI_C
  * file and mesh_dim must be specified. */
 t8_cmesh_t
 t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim, const char *cmesh_file, int num_files,
-                             sc_MPI_Comm comm, int init_level, int stride, int use_occ)
+                             sc_MPI_Comm comm, int init_level, int stride, int use_cad)
 {
   t8_cmesh_t cmesh;
   t8_cmesh_t cmesh_partition;
@@ -297,7 +297,7 @@ t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim, const char *cme
   T8_ASSERT (msh_file == NULL || cmesh_file == NULL);
 
   if (msh_file != NULL) {
-    if (use_occ) {
+    if (use_cad) {
       partition = 0;
       t8_global_productionf ("The cmesh is not partitioned due to the usage of the curved mesh option. \n"
                              "Timing will not be comparable to non-curved meshes. \n");
@@ -306,7 +306,7 @@ t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim, const char *cme
       partition = 1;
     }
     /* Create a cmesh from the given mesh files */
-    cmesh = t8_cmesh_from_msh_file ((char *) msh_file, partition, comm, mesh_dim, 0, use_occ);
+    cmesh = t8_cmesh_from_msh_file ((char *) msh_file, partition, comm, mesh_dim, 0, use_cad);
   }
   else {
     T8_ASSERT (cmesh_file != NULL);
@@ -337,9 +337,9 @@ main (int argc, char *argv[])
   int mpiret, mpisize;
   int first_argc;
   int level, level_diff;
-  int help = 0, no_vtk, do_ghost, do_balance, use_occ;
+  int help = 0, no_vtk, do_ghost, do_balance, use_cad;
   int dim, num_files;
-  int test_tet, test_linear_cylinder, test_occ_cylinder;
+  int test_tet, test_linear_cylinder, test_cad_cylinder;
   int stride;
   int cmesh_level;
   double T, delta_t, cfl;
@@ -384,16 +384,16 @@ main (int argc, char *argv[])
                          "Use a cmesh that tests all tet face-to-face connections."
                          " If this option is used -o is enabled automatically. Not allowed with -f and -c.");
   sc_options_add_switch (opt, 'L', "test-linear-cylinder", &test_linear_cylinder,
-                         "Use a linear cmesh to compare linear and occ geometry performance."
+                         "Use a linear cmesh to compare linear and cad geometry performance."
                          " If this option is used -o is enabled automatically. Not allowed with -f and -c.");
-  sc_options_add_switch (opt, 'O', "test-occ-cylinder", &test_occ_cylinder,
-                         "Use a occ cmesh to compare linear and occ geometry performance."
+  sc_options_add_switch (opt, 'O', "test-cad-cylinder", &test_cad_cylinder,
+                         "Use a cad cmesh to compare linear and cad geometry performance."
                          " If this option is used -o is enabled automatically. Not allowed with -f and -c.");
   sc_options_add_int (opt, 'l', "level", &level, 0, "The initial uniform refinement level of the forest.");
   sc_options_add_int (opt, 'r', "rlevel", &level_diff, 1,
                       "The number of levels that the forest is refined from the initial level.");
   sc_options_add_int (opt, '\0', "cmesh-level", &cmesh_level, -1,
-                      "Starting level of the linear or occ cmesh, default is 0. Only viable with -L or -O.");
+                      "Starting level of the linear or cad cmesh, default is 0. Only viable with -L or -O.");
   sc_options_add_double (opt, 'x', "xmin", x_min_max, 0, "The minimum x coordinate in the mesh.");
   sc_options_add_double (opt, 'X', "xmax", x_min_max + 1, 1, "The maximum x coordinate in the mesh.");
   sc_options_add_double (opt, 'T', "time", &T, 1,
@@ -406,20 +406,20 @@ main (int argc, char *argv[])
                          "Overwrites any other delta_t setting.");
   sc_options_add_switch (opt, 'g', "ghost", &do_ghost, "Create ghost elements.");
   sc_options_add_switch (opt, 'b', "balance", &do_balance, "Establish a 2:1 balance in the forest.");
-  sc_options_add_switch (opt, 'z', "use_occ", &use_occ,
+  sc_options_add_switch (opt, 'z', "use_cad", &use_cad,
                          "If used, meshes will be curved to original geometries (msh- and brep-files necessary).");
 
   /* parse command line options */
   first_argc = sc_options_parse (t8_get_package_id (), SC_LP_DEFAULT, opt, argc, argv);
   /* check for wrong usage of arguments */
   if (first_argc < 0 || first_argc != argc || dim < 2 || dim > 3
-      || (cmeshfileprefix == NULL && mshfileprefix == NULL && test_tet == 0 && test_occ_cylinder == 0
+      || (cmeshfileprefix == NULL && mshfileprefix == NULL && test_tet == 0 && test_cad_cylinder == 0
           && test_linear_cylinder == 0)
       || stride <= 0 || (num_files - 1) * stride >= mpisize || cfl < 0 || T <= 0
-      || test_tet + test_linear_cylinder + test_occ_cylinder > 1
-      || (cmesh_level >= 0 && (!test_linear_cylinder && !test_occ_cylinder))
-      || ((mshfileprefix != NULL || cmeshfileprefix != NULL) && (test_linear_cylinder || test_occ_cylinder || test_tet))
-      || (mshfileprefix == NULL && use_occ)) {
+      || test_tet + test_linear_cylinder + test_cad_cylinder > 1
+      || (cmesh_level >= 0 && (!test_linear_cylinder && !test_cad_cylinder))
+      || ((mshfileprefix != NULL || cmeshfileprefix != NULL) && (test_linear_cylinder || test_cad_cylinder || test_tet))
+      || (mshfileprefix == NULL && use_cad)) {
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
     return 1;
   }
@@ -438,25 +438,25 @@ main (int argc, char *argv[])
     }
     t8_global_productionf ("Using delta_t = %f\n", delta_t);
     if (mshfileprefix != NULL) {
-      cmesh = t8_time_forest_create_cmesh (mshfileprefix, dim, NULL, -1, sc_MPI_COMM_WORLD, level, stride, use_occ);
+      cmesh = t8_time_forest_create_cmesh (mshfileprefix, dim, NULL, -1, sc_MPI_COMM_WORLD, level, stride, use_cad);
       vtu_prefix = mshfileprefix;
     }
     else if (test_tet) {
       cmesh = t8_cmesh_new_tet_orientation_test (sc_MPI_COMM_WORLD);
       vtu_prefix = "test_tet";
     }
-    else if (test_linear_cylinder || test_occ_cylinder) {
+    else if (test_linear_cylinder || test_cad_cylinder) {
       if (cmesh_level < 0) {
         cmesh_level = 0;
       }
       cmesh = t8_cmesh_new_hollow_cylinder (sc_MPI_COMM_WORLD, 4 * sc_intpow (2, cmesh_level),
-                                            sc_intpow (2, cmesh_level), sc_intpow (2, cmesh_level), test_occ_cylinder);
-      test_linear_cylinder ? vtu_prefix = "test_linear_cylinder" : vtu_prefix = "test_occ_cylinder";
+                                            sc_intpow (2, cmesh_level), sc_intpow (2, cmesh_level), test_cad_cylinder);
+      test_linear_cylinder ? vtu_prefix = "test_linear_cylinder" : vtu_prefix = "test_cad_cylinder";
     }
     else {
       T8_ASSERT (cmeshfileprefix != NULL);
       cmesh
-        = t8_time_forest_create_cmesh (NULL, -1, cmeshfileprefix, num_files, sc_MPI_COMM_WORLD, level, stride, use_occ);
+        = t8_time_forest_create_cmesh (NULL, -1, cmeshfileprefix, num_files, sc_MPI_COMM_WORLD, level, stride, use_cad);
       vtu_prefix = cmeshfileprefix;
     }
     t8_time_forest_cmesh_mshfile (cmesh, vtu_prefix, sc_MPI_COMM_WORLD, level, level + level_diff, no_vtk, x_min_max, T,

@@ -29,6 +29,7 @@
 #define T8_GEOMETRY_WITH_VERTICES_HXX
 
 #include <t8_cmesh.h>
+#include <t8_forest/t8_forest.h>
 #include <t8_geometry/t8_geometry_base.hxx>
 #include <t8_geometry/t8_geometry_base.h>
 #include <t8_geometry/t8_geometry_with_vertices.h>

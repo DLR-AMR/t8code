@@ -41,8 +41,8 @@ typedef enum t8_geometry_type {
   T8_GEOMETRY_TYPE_LINEAR_AXIS_ALIGNED,
   /** The analytic geometry uses a user-defined analytic function to map into the physical domain. */
   T8_GEOMETRY_TYPE_ANALYTIC,
-  /** The OCC geometry uses OCC CAD shapes to map trees exactly to the underlying CAD model. */
-  T8_GEOMETRY_TYPE_OCC,
+  /** The opencascade geometry uses CAD shapes to map trees exactly to the underlying CAD model. */
+  T8_GEOMETRY_TYPE_CAD,
   /** This is no geometry type but can be used as the number of geometry types. */
   T8_GEOMETRY_TYPE_COUNT,
   /** This is no geometry type but is used for every geometry, where no type is defined */
