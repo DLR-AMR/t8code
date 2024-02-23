@@ -29,6 +29,7 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_analytic.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx>
 #include <t8_geometry/t8_geometry_helpers.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 
@@ -616,7 +617,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
   case T8_GEOM_ANALYTIC_QUAD_TO_SPHERE:
     t8_global_productionf ("Wrapping a quad around a sphere.\n");
 
-    geometry = t8_geometry_analytic_new (3, "geom_quad_to_sphere", quad_to_sphere_callback, NULL, NULL, NULL);
+    geometry = new t8_geometry_analytic (3, "geom_quad_to_sphere", quad_to_sphere_callback, NULL, NULL, NULL);
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
     t8_cmesh_set_join (cmesh, 0, 0, 1, 0, 0);
 
