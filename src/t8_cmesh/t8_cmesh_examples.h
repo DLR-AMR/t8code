@@ -131,7 +131,7 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
  */
 t8_cmesh_t
 t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass, sc_MPI_Comm comm, const double *boundary, t8_locidx_t polygons_x,
-                            t8_locidx_t polygons_y, t8_locidx_t polygons_z, const t8_geometry_c *geometry);
+                            t8_locidx_t polygons_y, t8_locidx_t polygons_z, const int use_axis_aligned);
 
 /** Hybercube with 6 Tets, 6 Prism, 4 Hex. 
  * \param [in]  comm            The mpi communicator to be used.
