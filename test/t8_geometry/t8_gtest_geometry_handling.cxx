@@ -39,24 +39,19 @@
 
 /* In this file we collect tests for t8code's cmesh geometry module.
  * These tests are
- *  - geometry.geometry_linear:  Check that linear geometry has correct name and dimension.
- *  - geometry.geometry_zero:    Check that zero geometry has correct name and dimension.
- *  - test_geometry.cmesh_geometry: 
+ *  - test_geometry.test_geometry_handler_register: Tests the geometry_handler register and find interface.
+ *  - test_geometry.cmesh_two_trees_and_geometries: Register two geometries for two trees and check that we can access them.
  *  - test_geometry.cmesh_geometry_unique: Check that we can access the geometry via the tree id if
  *                                   we only use one geometry and did not specify tree ids for it.
  *                                   In this case t8code should automatically associate this geometry to all trees.
- *  - test_geometry.geom_handler_register: Tests the geometry_handler register and find interface.
  */
-/* TODO: 
-  * - Add a test for the jacobian, as soon as its implemented in parameterized test geometry.cmesh_geometry_linear.
-  */
 
 TEST (test_geometry, test_geometry_handler_register)
 {
   t8_geometry_handler geom_handler;
 
   t8_debugf ("Testing geometry handler register and get geometry.\n");
-
+  /* Throw every implemented geometry at the handler and let it search for it. */
   std::vector<t8_geometry *> geometries;
   for (int idim = 0; idim <= T8_ECLASS_MAX_DIM; ++idim) {
 
@@ -110,7 +105,7 @@ TEST (test_geometry, test_geometry_handler_register)
   ASSERT_TRUE (found_geom == nullptr) << "Found a geometry that should not exist.";
 }
 
-TEST (test_geometry, cmesh_geometry)
+TEST (test_geometry, cmesh_two_trees_and_geometries)
 {
   t8_cmesh_t cmesh;
 
