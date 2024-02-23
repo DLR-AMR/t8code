@@ -87,11 +87,11 @@ t8_geometry_analytic_new (int dim, const char *name, t8_geom_analytic_fn analyti
 }
 
 void
-t8_geom_load_tree_data_vertices (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const void **vertices_out)
+t8_geom_load_tree_data_vertices (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const void **user_data)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
-  *vertices_out = t8_cmesh_get_tree_vertices (cmesh, ltreeid);
+  *user_data = t8_cmesh_get_tree_vertices (cmesh, ltreeid);
 }
 
 T8_EXTERN_C_END ();

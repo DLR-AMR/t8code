@@ -89,7 +89,7 @@ t8_geometry_analytic_new (int dim, const char *name, t8_geom_analytic_fn analyti
  * \param [out] vertex_out  The load tree vertices.
  */
 void
-t8_geom_load_tree_data_vertices (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const void **vertices_out);
+t8_geom_load_tree_data_vertices (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const void **user_data);
 
 T8_EXTERN_C_END ();
 
