@@ -70,6 +70,10 @@ using t8_cmesh_tree_vertex_list = std::vector<t8_cmesh_tree_vertex_pair>;
 typedef struct t8_cmesh_vertex_conn_vertex_to_tree_c
 {
  public:
+  t8_cmesh_vertex_conn_vertex_to_tree_c (): state (INITIALIZED)
+  {
+  }
+
   /* Setter functions */
   /* Given a cmesh, build up the vertex_to_tree.
    * \return: some error value to be specified.
@@ -84,12 +88,25 @@ typedef struct t8_cmesh_vertex_conn_vertex_to_tree_c
 
   /* Setter functions */
   /* A single value is added to the vertex_to_tree_list.
-   * \a cmesh must not be committed. */
+   * \a cmesh must be committed. */
   void
   add_vertex_to_tree (t8_cmesh_t cmesh, t8_gloidx_t global_vertex_id, t8_locidx_t ltreeid, int tree_vertex);
 
- private:
+  /* Mark as ready for commit. Meaning that all 
+   * global vertex ids have been added.
+   * After commit, no vertex ids can be added anymore. */
+  void
+  commit (t8_cmesh_t cmesh);
 
+  /**
+   * @brief Check whether this instance is committed.
+   * 
+   * @return int True if committed. Thus all entries have been set.
+   */
+  int
+  is_committed ();
+
+ private:
   /* For each global vertex id sort the list of
    * (tree_id, tree_vertex) pairs according to
    * tree_id and tree_vertex index.
@@ -102,6 +119,8 @@ typedef struct t8_cmesh_vertex_conn_vertex_to_tree_c
   /* The actual data storage mapping global vertex ids to a list
    * local trees and tree vertices. */
   std::unordered_map<t8_gloidx_t, t8_cmesh_tree_vertex_list> vertex_to_tree;
+
+  enum { INITIALIZED, COMMITTED } state;
 
 } t8_cmesh_vertex_conn_vertex_to_tree_c;
 

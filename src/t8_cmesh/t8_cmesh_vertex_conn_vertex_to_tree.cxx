@@ -30,9 +30,10 @@
  *  This file implements the routines for the t8_cmesh_conn_vertex_to_tree_c struct.
  */
 
-t8_cmesh_tree_vertex_list &
+t8_cmesh_tree_vertex_list&
 t8_cmesh_vertex_conn_vertex_to_tree_c::get_tree_list_of_vertex (t8_gloidx_t global_vertex_id)
 {
+  T8_ASSERT (is_committed ());
   T8_ASSERT (0 <= global_vertex_id);
 
   /* Use at() to look for the vertex entry.
@@ -41,16 +42,35 @@ t8_cmesh_vertex_conn_vertex_to_tree_c::get_tree_list_of_vertex (t8_gloidx_t glob
 
   try {
     return vertex_to_tree.at (global_vertex_id);
-  } catch (const std::out_of_range &e) {
+  } catch (const std::out_of_range& e) {
     t8_errorf ("ERROR: Could not find vertex %li for cmesh.\n", global_vertex_id);
     SC_ABORTF ("Caught exception 'out of range': %s\n", e.what ());
   }
+}
+
+int
+t8_cmesh_vertex_conn_vertex_to_tree_c::is_committed ()
+{
+  return state == COMMITTED;
+}
+
+/* Mark as ready for commit. Meaning that all 
+  * global vertex ids have been added.
+  * After commit, no vertex ids can be added anymore. */
+void
+t8_cmesh_vertex_conn_vertex_to_tree_c::commit (t8_cmesh_t cmesh)
+{
+  /* TODO: In debugging mode, check whether all local trees have a global id. */
+  /* Sort the entries of the global ids. */
+  sort_list_by_tree_id ();
+  state = COMMITTED;
 }
 
 void
 t8_cmesh_vertex_conn_vertex_to_tree_c::add_vertex_to_tree (t8_cmesh_t cmesh, t8_gloidx_t global_vertex_id,
                                                            t8_locidx_t ltreeid, int tree_vertex)
 {
+  T8_ASSERT (!is_committed ());
   T8_ASSERT (0 <= global_vertex_id);
   T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, ltreeid) || t8_cmesh_treeid_is_ghost (cmesh, ltreeid));
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
@@ -60,9 +80,12 @@ t8_cmesh_vertex_conn_vertex_to_tree_c::add_vertex_to_tree (t8_cmesh_t cmesh, t8_
   int num_tree_vertices = t8_eclass_num_vertices[tree_class];
   T8_ASSERT (0 <= tree_vertex && tree_vertex < num_tree_vertices);
 #endif
+  if (state != INITIALIZED) {
+    SC_ABORTF ("Trying to add vertex to committed vertex to tree structure.\n");
+  }
 
   t8_cmesh_tree_vertex_pair pair (ltreeid, tree_vertex);
-  t8_cmesh_tree_vertex_list &list_of_globalid = vertex_to_tree[global_vertex_id];
+  t8_cmesh_tree_vertex_list& list_of_globalid = vertex_to_tree[global_vertex_id];
 
   list_of_globalid.push_back (pair);
 }
