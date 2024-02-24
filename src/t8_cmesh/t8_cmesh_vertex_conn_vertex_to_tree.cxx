@@ -30,7 +30,7 @@
  *  This file implements the routines for the t8_cmesh_conn_vertex_to_tree_c struct.
  */
 
-t8_cmesh_tree_vertex_list&
+t8_cmesh_vertex_conn_vertex_to_tree_c::tree_vertex_list&
 t8_cmesh_vertex_conn_vertex_to_tree_c::get_tree_list_of_vertex (t8_gloidx_t global_vertex_id)
 {
   T8_ASSERT (is_committed ());
@@ -84,8 +84,8 @@ t8_cmesh_vertex_conn_vertex_to_tree_c::add_vertex_to_tree (t8_cmesh_t cmesh, t8_
     SC_ABORTF ("Trying to add vertex to committed vertex to tree structure.\n");
   }
 
-  t8_cmesh_tree_vertex_pair pair (ltreeid, tree_vertex);
-  t8_cmesh_tree_vertex_list& list_of_globalid = vertex_to_tree[global_vertex_id];
+  tree_vertex_pair pair (ltreeid, tree_vertex);
+  tree_vertex_list& list_of_globalid = vertex_to_tree[global_vertex_id];
 
   list_of_globalid.push_back (pair);
 }
@@ -96,7 +96,8 @@ t8_cmesh_vertex_conn_vertex_to_tree_c::add_vertex_to_tree (t8_cmesh_t cmesh, t8_
  *  tree_id_A < tree_id_B or
  *  tree_id_A == tree_id_B and vertex_id_A < vertex_id_B */
 static int
-t8_cmesh_tree_vertex_pair_compare (t8_cmesh_tree_vertex_pair const& pair_a, t8_cmesh_tree_vertex_pair const& pair_b)
+t8_cmesh_tree_vertex_pair_compare (t8_cmesh_vertex_conn_vertex_to_tree_c::tree_vertex_pair const& pair_a,
+                                   t8_cmesh_vertex_conn_vertex_to_tree_c::tree_vertex_pair const& pair_b)
 {
   return pair_a.first == pair_b.first ?                              /* if tree_id_A == tree_id_B  */
            pair_a.second < pair_b.second                             /* then check vertex_id_A < vertex_id_B */

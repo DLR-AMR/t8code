@@ -60,19 +60,21 @@
  * 
 */
 
-/* Variable type for (tree_id, tree_vertex_id) pair */
-using t8_cmesh_tree_vertex_pair = std::pair<t8_locidx_t, int>;
-
-/* list of tree vertex pairs, each global vertex id maps to 
-   * such a list. */
-using t8_cmesh_tree_vertex_list = std::vector<t8_cmesh_tree_vertex_pair>;
-
 typedef struct t8_cmesh_vertex_conn_vertex_to_tree_c
 {
  public:
   t8_cmesh_vertex_conn_vertex_to_tree_c (): state (INITIALIZED)
   {
   }
+
+  /* Variable type for (tree_id, tree_vertex_id) pair */
+  using tree_vertex_pair = std::pair<t8_locidx_t, int>;
+
+  /* list of tree vertex pairs, each global vertex id maps to 
+    * such a list. */
+  using tree_vertex_list = std::vector<tree_vertex_pair>;
+
+  using vtt_storage_type = std::unordered_map<t8_gloidx_t, tree_vertex_list>;
 
   /* Setter functions */
   /* Given a cmesh, build up the vertex_to_tree.
@@ -83,7 +85,7 @@ typedef struct t8_cmesh_vertex_conn_vertex_to_tree_c
   void
   set_vertex_to_tree_list (const t8_cmesh_t cmesh);
 
-  t8_cmesh_tree_vertex_list&
+  tree_vertex_list&
   get_tree_list_of_vertex (t8_gloidx_t global_vertex_id);
 
   /* Setter functions */
@@ -118,7 +120,7 @@ typedef struct t8_cmesh_vertex_conn_vertex_to_tree_c
 
   /* The actual data storage mapping global vertex ids to a list
    * local trees and tree vertices. */
-  std::unordered_map<t8_gloidx_t, t8_cmesh_tree_vertex_list> vertex_to_tree;
+  vtt_storage_type vertex_to_tree;
 
   enum { INITIALIZED, COMMITTED } state;
 
