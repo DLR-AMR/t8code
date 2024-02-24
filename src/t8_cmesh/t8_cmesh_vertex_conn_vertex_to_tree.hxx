@@ -108,6 +108,19 @@ typedef struct t8_cmesh_vertex_conn_vertex_to_tree_c
   int
   is_committed ();
 
+  typedef vtt_storage_type::const_iterator const_iterator;
+
+  const_iterator
+  begin () const
+  {
+    return vertex_to_tree.begin ();
+  }
+  const_iterator
+  end () const
+  {
+    return vertex_to_tree.end ();
+  }
+
  private:
   /* For each global vertex id sort the list of
    * (tree_id, tree_vertex) pairs according to
