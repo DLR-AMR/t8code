@@ -58,8 +58,8 @@ t8_cmesh_vertex_conn_vertex_to_tree_c::t8_cmesh_vertex_conn_vertex_to_tree_c (
   state = COMMITTED;
 }
 
-t8_cmesh_vertex_conn_vertex_to_tree_c::tree_vertex_list&
-t8_cmesh_vertex_conn_vertex_to_tree_c::get_tree_list_of_vertex (t8_gloidx_t global_vertex_id)
+const t8_cmesh_vertex_conn_vertex_to_tree_c::tree_vertex_list&
+t8_cmesh_vertex_conn_vertex_to_tree_c::get_tree_list_of_vertex (t8_gloidx_t global_vertex_id) const
 {
   T8_ASSERT (is_committed ());
   T8_ASSERT (0 <= global_vertex_id);
@@ -77,7 +77,7 @@ t8_cmesh_vertex_conn_vertex_to_tree_c::get_tree_list_of_vertex (t8_gloidx_t glob
 }
 
 int
-t8_cmesh_vertex_conn_vertex_to_tree_c::is_committed ()
+t8_cmesh_vertex_conn_vertex_to_tree_c::is_committed () const
 {
   return state == COMMITTED;
 }

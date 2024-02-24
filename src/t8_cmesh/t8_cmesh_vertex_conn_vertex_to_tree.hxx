@@ -100,8 +100,8 @@ typedef struct t8_cmesh_vertex_conn_vertex_to_tree_c
   void
   set_vertex_to_tree_list (const t8_cmesh_t cmesh);
 
-  tree_vertex_list &
-  get_tree_list_of_vertex (t8_gloidx_t global_vertex_id);
+  const tree_vertex_list &
+  get_tree_list_of_vertex (t8_gloidx_t global_vertex_id) const;
 
   /* Setter functions */
   /* A single value is added to the vertex_to_tree_list.
@@ -121,7 +121,7 @@ typedef struct t8_cmesh_vertex_conn_vertex_to_tree_c
    * @return int True if committed. Thus all entries have been set.
    */
   int
-  is_committed ();
+  is_committed () const;
 
   typedef vtt_storage_type::const_iterator const_iterator;
 
