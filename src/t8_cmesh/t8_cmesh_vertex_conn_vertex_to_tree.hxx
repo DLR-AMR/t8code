@@ -89,6 +89,16 @@ typedef struct t8_cmesh_vertex_conn_vertex_to_tree_c
   add_vertex_to_tree (t8_cmesh_t cmesh, t8_gloidx_t global_vertex_id, t8_locidx_t ltreeid, int tree_vertex);
 
  private:
+
+  /* For each global vertex id sort the list of
+   * (tree_id, tree_vertex) pairs according to
+   * tree_id and tree_vertex index.
+   * Example: (1, 3), (0, 0), (1, 0)
+   * becomes: (0, 0), (1, 0), (1, 3)
+   */
+  void
+  sort_list_by_tree_id ();
+
   /* The actual data storage mapping global vertex ids to a list
    * local trees and tree vertices. */
   std::unordered_map<t8_gloidx_t, t8_cmesh_tree_vertex_list> vertex_to_tree;

@@ -21,6 +21,7 @@
 */
 
 #include <stdexcept>
+#include <algorithm>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
@@ -64,4 +65,32 @@ t8_cmesh_vertex_conn_vertex_to_tree_c::add_vertex_to_tree (t8_cmesh_t cmesh, t8_
   t8_cmesh_tree_vertex_list &list_of_globalid = vertex_to_tree[global_vertex_id];
 
   list_of_globalid.push_back (pair);
+}
+
+/* Compare two tree vertex pairs. 
+ * (tree_id_A, vertex_id_A) is consider smaller than
+ * (tree_id_B, vertex_id_B) if either
+ *  tree_id_A < tree_id_B or
+ *  tree_id_A == tree_id_B and vertex_id_A < vertex_id_B */
+static int
+t8_cmesh_tree_vertex_pair_compare (t8_cmesh_tree_vertex_pair const& pair_a, t8_cmesh_tree_vertex_pair const& pair_b)
+{
+  return pair_a.first == pair_b.first ?                              /* if tree_id_A == tree_id_B  */
+           pair_a.second < pair_b.second                             /* then check vertex_id_A < vertex_id_B */
+                                      : pair_a.first < pair_b.first; /* else check tree_id_A < tree_id_B */
+}
+
+void
+t8_cmesh_vertex_conn_vertex_to_tree_c::sort_list_by_tree_id ()
+{
+  T8_ASSERT (!is_committed ());
+
+  /* Iterate over each global vertex */
+  for (auto& [global_id, tree_vertex_list] : vertex_to_tree) {
+    /* Check that the list contains at least one entry. */
+    T8_ASSERT (tree_vertex_list.size () > 0);
+    /* Sort the list of local tree vertices according to their 
+     * local tree id. */
+    std::sort (tree_vertex_list.begin (), tree_vertex_list.end (), t8_cmesh_tree_vertex_pair_compare);
+  }
 }
