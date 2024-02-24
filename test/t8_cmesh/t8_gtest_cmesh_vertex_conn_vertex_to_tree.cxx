@@ -107,7 +107,7 @@ class t8_test_cmesh_vertex_conn_vtt: public testing::TestWithParam<int> {
 };
 
 /** Check stored global ids for the case with a single global vertex. */
-TEST_P (cmesh_vertex_conn_vtt, check_all_to_one)
+TEST_P (t8_test_cmesh_vertex_conn_vtt, check_all_to_one)
 {
   const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
   const t8_locidx_t num_ghost_trees = t8_cmesh_get_num_ghosts (cmesh);
@@ -121,7 +121,7 @@ TEST_P (cmesh_vertex_conn_vtt, check_all_to_one)
   }
 
   /* Get the list of the single vertex. */
-  t8_cmesh_tree_vertex_list &tree_list = vtt_all_to_one.get_tree_list_of_vertex (global_vertex_id);
+  auto &tree_list = vtt_all_to_one.get_tree_list_of_vertex (global_vertex_id);
 
   /* Asserting that the number of entries matches the computed number.
    * If it does not, we cannot continue, therefore ASSERT instead of EXPECT. */
@@ -154,7 +154,7 @@ TEST_P (cmesh_vertex_conn_vtt, check_all_to_one)
 }
 
 /* Check stored global ids for the case with multiple global ids. */
-TEST_P (cmesh_vertex_conn_vtt, check_multiple_ids)
+TEST_P (t8_test_cmesh_vertex_conn_vtt, check_multiple_ids)
 {
   /* We need to check that each local tree/ghost and each vertex 
    * exists exactly once in the list. 
@@ -176,18 +176,16 @@ TEST_P (cmesh_vertex_conn_vtt, check_multiple_ids)
     vertex_counts[itree] = num_tree_vertices;
   }
 
-#if 0
   /* Iterate over all entries in vtt.
    * Each entry corresponds to a global vertex id and
    * gives its list of tree indices and vertices. */
-  for (auto &[global_vertex, tree_vertex_list] : vtt.) 
-  {
+  for (auto &[global_vertex, tree_vertex_list] : vtt) {
     /* Iterate over the list of tree indices and vertices of this global vertex. */
     for (auto &[tree_index, tree_vertex] : tree_vertex_list) {
       const t8_locidx_t num_vertices = t8_compute_tree_num_vertices (cmesh, tree_index);
       const t8_locidx_t hash_value = t8_compute_global_vertex_hash (tree_index, tree_vertex, num_local_trees);
 
-      /* Check that the global index matches our computed hash value. */      
+      /* Check that the global index matches our computed hash value. */
       EXPECT_EQ (global_vertex, hash_value);
       /* 0 <= tree_vertex < num_vertices */
       EXPECT_GE (tree_vertex, 0);
@@ -199,7 +197,6 @@ TEST_P (cmesh_vertex_conn_vtt, check_multiple_ids)
       EXPECT_GE (vertex_counts[tree_index], 0);
     }
   }
-#endif
   /* After we have checked all global ids, we must have matched all tree
    * vertices exactly once. If and only if this is the case, vertex_counts[i] is 0
    * for each tree. */
@@ -208,4 +205,4 @@ TEST_P (cmesh_vertex_conn_vtt, check_multiple_ids)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_vertex_vertex_to_tree, cmesh_vertex_conn_vtt, AllCmeshs);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_vertex_vertex_to_tree, t8_test_cmesh_vertex_conn_vtt, AllCmeshs);
