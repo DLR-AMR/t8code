@@ -47,11 +47,12 @@ t8_cmesh_vertex_conn_vertex_to_tree_c::get_tree_list_of_vertex (t8_gloidx_t glob
 }
 
 void
-t8_cmesh_vertex_conn_vertex_to_tree_c::set_value_vertex_to_tree_list (t8_cmesh_t cmesh, t8_gloidx_t global_vertex_id,
-                                                                      t8_locidx_t ltreeid, int tree_vertex)
+t8_cmesh_vertex_conn_vertex_to_tree_c::add_vertex_to_tree (t8_cmesh_t cmesh, t8_gloidx_t global_vertex_id,
+                                                           t8_locidx_t ltreeid, int tree_vertex)
 {
   T8_ASSERT (0 <= global_vertex_id);
   T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, ltreeid) || t8_cmesh_treeid_is_ghost (cmesh, ltreeid));
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
 
 #if T8_ENABLE_DEBUG
   t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, ltreeid);

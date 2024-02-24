@@ -82,15 +82,16 @@ typedef struct t8_cmesh_vertex_conn_vertex_to_tree_c
   t8_cmesh_tree_vertex_list&
   get_tree_list_of_vertex (t8_gloidx_t global_vertex_id);
 
+  /* Setter functions */
+  /* A single value is added to the vertex_to_tree_list.
+   * \a cmesh must not be committed. */
+  void
+  add_vertex_to_tree (t8_cmesh_t cmesh, t8_gloidx_t global_vertex_id, t8_locidx_t ltreeid, int tree_vertex);
+
  private:
   /* The actual data storage mapping global vertex ids to a list
    * local trees and tree vertices. */
   std::unordered_map<t8_gloidx_t, t8_cmesh_tree_vertex_list> vertex_to_tree;
-
-  /* Setter functions */
-  /* A single value is added to the vertex_to_tree_list */
-  void
-  set_value_vertex_to_tree_list (t8_cmesh_t cmesh, t8_gloidx_t global_vertex_id, t8_locidx_t ltreeid, int tree_vertex);
 
 } t8_cmesh_vertex_conn_vertex_to_tree_c;
 
