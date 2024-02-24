@@ -26,18 +26,13 @@
 #include <t8_cmesh/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
-/* Test if multiple attributes are partitioned correctly. */
-
 /* TODO: write test case without existing cmesh to test before attribute bug is fixed */
-
-#define T8_ATTRIBUTE_TEST_MAX_NUM_ENTRIES 1000
 
 class cmesh_vertex_conn_ttv: public testing::TestWithParam<int> {
  protected:
   void
   SetUp () override
   {
-    /* Build a cmesh with one QUAD tree and one TRIANGLE tree. */
     const int cmesh_id = GetParam ();
     const t8_cmesh_t committed_cmesh = t8_test_create_cmesh (cmesh_id);
     T8_ASSERT (t8_cmesh_is_committed (committed_cmesh));
