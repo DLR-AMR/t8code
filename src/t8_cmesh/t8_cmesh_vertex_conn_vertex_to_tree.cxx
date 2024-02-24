@@ -32,7 +32,7 @@
 
 /* Constructor from existing tree to vertex list. */
 t8_cmesh_vertex_conn_vertex_to_tree_c::t8_cmesh_vertex_conn_vertex_to_tree_c (
-  t8_cmesh_t cmesh, t8_cmesh_vertex_conn_tree_to_vertex_c& ttv)
+  const t8_cmesh_t cmesh, t8_cmesh_vertex_conn_tree_to_vertex_c& ttv)
 {
   /* Call standard constructor */
   t8_cmesh_vertex_conn_tree_to_vertex ();
@@ -86,16 +86,16 @@ t8_cmesh_vertex_conn_vertex_to_tree_c::is_committed () const
   * global vertex ids have been added.
   * After commit, no vertex ids can be added anymore. */
 void
-t8_cmesh_vertex_conn_vertex_to_tree_c::commit (t8_cmesh_t cmesh)
+t8_cmesh_vertex_conn_vertex_to_tree_c::commit (const t8_cmesh_t cmesh)
 {
-  /* TODO: In debugging mode, check whether all local trees have a global id. */
-  /* Sort the entries of the global ids. */
   sort_list_by_tree_id ();
   state = COMMITTED;
+
+  T8_ASSERT (contains_all_vertices (cmesh));
 }
 
 void
-t8_cmesh_vertex_conn_vertex_to_tree_c::add_vertex_to_tree (t8_cmesh_t cmesh, t8_gloidx_t global_vertex_id,
+t8_cmesh_vertex_conn_vertex_to_tree_c::add_vertex_to_tree (const t8_cmesh_t cmesh, t8_gloidx_t global_vertex_id,
                                                            t8_locidx_t ltreeid, int tree_vertex)
 {
   T8_ASSERT (!is_committed ());
@@ -145,4 +145,66 @@ t8_cmesh_vertex_conn_vertex_to_tree_c::sort_list_by_tree_id ()
      * local tree id. */
     std::sort (tree_vertex_list.begin (), tree_vertex_list.end (), t8_cmesh_tree_vertex_pair_compare);
   }
+}
+
+int
+t8_cmesh_vertex_conn_vertex_to_tree_c::contains_all_vertices (const t8_cmesh_t cmesh) const
+{
+  /* We need to check that each local tree/ghost and each vertex 
+   * exists exactly once in the list. 
+   * We do so by setting up an indicator array storing the
+   * number of vertices for each tree and count down for each occurrence.
+   * At the end the values must be zero. */
+
+  T8_ASSERT (is_committed ());
+
+  const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
+  const t8_locidx_t num_ghost_trees = t8_cmesh_get_num_ghosts (cmesh);
+  const t8_locidx_t num_trees_and_ghosts = num_local_trees + num_ghost_trees;
+
+  std::vector<int> vertex_counts (num_trees_and_ghosts);
+  /* Fill each entry with the number of vertices. */
+  for (t8_locidx_t itree = 0; itree < num_trees_and_ghosts; ++itree) {
+    /* Compute number of vertices of this tree. */
+    /* Get the trees class depending on whether it is a local tree or ghost. */
+    const t8_eclass_t tree_class = itree < num_local_trees ? t8_cmesh_get_tree_class (cmesh, itree)
+                                                           : t8_cmesh_get_ghost_class (cmesh, itree - num_local_trees);
+
+    const int num_tree_vertices = t8_eclass_num_vertices[tree_class];
+
+    /* Set the entry to the number of vertices. */
+    vertex_counts[itree] = num_tree_vertices;
+  }
+
+  /* Iterate over all entries in vtt.
+   * Each entry corresponds to a global vertex id and
+   * gives its list of tree indices and vertices. */
+  for (auto& [global_vertex, tree_vertex_list] : vertex_to_tree) {
+    /* Iterate over the list of tree indices and vertices of this global vertex. */
+    for (auto& [tree_index, tree_vertex] : tree_vertex_list) {
+      SC_CHECK_ABORT (0 <= tree_index && tree_index < num_trees_and_ghosts,
+                      "Invalid tree id stored in vertex to tree list.");
+      const t8_eclass_t tree_class = tree_index < num_local_trees
+                                       ? t8_cmesh_get_tree_class (cmesh, tree_index)
+                                       : t8_cmesh_get_ghost_class (cmesh, tree_index - num_local_trees);
+
+      const int num_tree_vertices = t8_eclass_num_vertices[tree_class];
+
+      SC_CHECK_ABORT (0 <= tree_vertex && tree_vertex < num_tree_vertices,
+                      "Invalid vertex id stored in vertex to tree list.");
+
+      /* remove this tree_vertex from the vertex_count */
+      vertex_counts[tree_index]--;
+      /* Count must be >= 0 */
+      T8_ASSERT (vertex_counts[tree_index] >= 0);
+    }
+  }
+
+  /* Now all entries must be set to 0 */
+  for (int& entry : vertex_counts) {
+    if (entry != 0) {
+      return 0;
+    }
+  }
+  return 1;
 }

@@ -80,7 +80,7 @@ typedef struct t8_cmesh_vertex_conn_vertex_to_tree_c
    * \param [in] cmesh A committed cmesh with set tree to vertex entries.
    * \param [in] ttv A filled tree to vertex list for \a cmesh.
   */
-  t8_cmesh_vertex_conn_vertex_to_tree_c (t8_cmesh_t cmesh, t8_cmesh_vertex_conn_tree_to_vertex_c &ttv);
+  t8_cmesh_vertex_conn_vertex_to_tree_c (const t8_cmesh_t cmesh, t8_cmesh_vertex_conn_tree_to_vertex_c &ttv);
 
   /* Variable type for (tree_id, tree_vertex_id) pair */
   using tree_vertex_pair = std::pair<t8_locidx_t, int>;
@@ -107,13 +107,13 @@ typedef struct t8_cmesh_vertex_conn_vertex_to_tree_c
   /* A single value is added to the vertex_to_tree_list.
    * \a cmesh must be committed. */
   void
-  add_vertex_to_tree (t8_cmesh_t cmesh, t8_gloidx_t global_vertex_id, t8_locidx_t ltreeid, int tree_vertex);
+  add_vertex_to_tree (const t8_cmesh_t cmesh, t8_gloidx_t global_vertex_id, t8_locidx_t ltreeid, int tree_vertex);
 
   /* Mark as ready for commit. Meaning that all 
    * global vertex ids have been added.
    * After commit, no vertex ids can be added anymore. */
   void
-  commit (t8_cmesh_t cmesh);
+  commit (const t8_cmesh_t cmesh);
 
   /**
    * @brief Check whether this instance is committed.
@@ -145,6 +145,15 @@ typedef struct t8_cmesh_vertex_conn_vertex_to_tree_c
    */
   void
   sort_list_by_tree_id ();
+
+  /**
+   * @brief Check that all local trees and vertices of a given cmesh are mapped to a global id.
+   * 
+   * @param cmesh A committed cmesh.
+   * @return int True if and only if each local tree and vertex of \a cmesh is associated with a global id.
+   */
+  int
+  contains_all_vertices (const t8_cmesh_t cmesh) const;
 
   /* The actual data storage mapping global vertex ids to a list
    * local trees and tree vertices. */
