@@ -35,14 +35,17 @@ class cmesh_vertex_conn_vtt: public testing::TestWithParam<int> {
     const t8_cmesh_t cmesh = t8_test_create_cmesh (cmesh_id);
     T8_ASSERT (t8_cmesh_is_committed (cmesh));
     const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
+    const t8_locidx_t num_ghost_trees = t8_cmesh_get_num_ghosts (cmesh);
 
     t8_debugf ("Starting test with cmesh of dim %i and %li global, %i local trees.\n", cmesh->dimension,
                t8_cmesh_get_num_trees (cmesh), num_local_trees);
 
     /* look over all local trees */
-    for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree) {
+    for (t8_locidx_t itree = 0; itree < num_local_trees + num_ghost_trees; ++itree) {
 
-      const t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, itree);
+      /* Get the trees class depending on whether it is a local tree or ghost. */
+      const t8_eclass_t tree_class = itree < num_local_trees ? t8_cmesh_get_tree_class (cmesh, itree)
+        : t8_cmesh_get_ghost_class (cmesh, itree - num_local_trees);
       const int num_tree_vertices = t8_eclass_num_vertices[tree_class];
 
       /* loop over all vertices of this tree */
