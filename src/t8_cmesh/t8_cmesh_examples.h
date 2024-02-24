@@ -30,6 +30,7 @@
 #include <t8_cmesh.h>
 #include <p4est_connectivity.h>
 #include <p8est_connectivity.h>
+#include <t8_cmesh/t8_cmesh_geometry.h>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -103,6 +104,7 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
  *                          Only required if \a eclass is 2D or 3D.
  * \param [in] polygons_z   The number of polygons along the z-axis.
  *                          Only required if \a eclass is 3D.
+ * \param [in] geometry     The geometry to use. If the geometry is axis_aligned only two points per tree are stored
  * \return                  A committed t8_cmesh structure with 
  *                          \a polygons_x * \a polygons_z * \a polygons_y many 
  *                          sub-hypercubes of class \a eclass.
@@ -129,7 +131,7 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
  */
 t8_cmesh_t
 t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass, sc_MPI_Comm comm, const double *boundary, t8_locidx_t polygons_x,
-                            t8_locidx_t polygons_y, t8_locidx_t polygons_z);
+                            t8_locidx_t polygons_y, t8_locidx_t polygons_z, const int use_axis_aligned);
 
 /** Hybercube with 6 Tets, 6 Prism, 4 Hex. 
  * \param [in]  comm            The mpi communicator to be used.
@@ -319,13 +321,66 @@ t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees, const int set_attributes, cons
 t8_cmesh_t
 t8_cmesh_new_squared_disk (const double radius, sc_MPI_Comm comm);
 
-/** Construct a triangulated spherical surface of given radius.
+/** Construct a triangulated spherical surface of given radius: octahedron version.
  * \param [in] radius        Radius of the sphere.
  * \param [in] comm          The MPI communicator used to commit the cmesh
  * \return                   A cmesh representing the spherical surface.
  */
 t8_cmesh_t
-t8_cmesh_new_triangulated_spherical_surface (const double radius, sc_MPI_Comm comm);
+t8_cmesh_new_triangulated_spherical_surface_octahedron (const double radius, sc_MPI_Comm comm);
+
+/** Construct a triangulated spherical surface of given radius: icosahedron version.
+ * \param [in] radius        Radius of the sphere.
+ * \param [in] comm          The MPI communicator used to commit the cmesh
+ * \return                   A cmesh representing the spherical surface.
+ */
+t8_cmesh_t
+t8_cmesh_new_triangulated_spherical_surface_icosahedron (const double radius, sc_MPI_Comm comm);
+
+/** Construct a quadrangulated spherical surface of given radius.
+ * \param [in] radius        Radius of the sphere.
+ * \param [in] comm          The MPI communicator used to commit the cmesh
+ * \return                   A cmesh representing the spherical surface.
+ */
+t8_cmesh_t
+t8_cmesh_new_quadrangulated_spherical_surface (const double radius, sc_MPI_Comm comm);
+
+/** Construct a spherical shell discretized by prisms of given inner radius and thickness: octahedron version.
+ * \param [in] inner_radius       Radius of the inner side of the shell.
+ * \param [in] shell_thickness    Thickness of the shell.
+ * \param [in] num_levels         Refinement level per patch in longitudinal and latitudinal direction.
+ * \param [in] num_layers         Number of layers of the shell.
+ * \param [in] comm               The MPI communicator used to commit the cmesh
+ * \return                        A cmesh representing the spherical surface.
+ */
+t8_cmesh_t
+t8_cmesh_new_prismed_spherical_shell_octahedron (const double inner_radius, const double shell_thickness,
+                                                 const int num_levels, const int num_layers, sc_MPI_Comm comm);
+
+/** Construct a spherical shell discretized by prisms of given inner radius and thickness: icosahedron version.
+ * \param [in] inner_radius       Radius of the inner side of the shell.
+ * \param [in] shell_thickness    Thickness of the shell.
+ * \param [in] num_levels         Refinement level per patch in longitudinal and latitudinal direction.
+ * \param [in] num_layers         Number of layers of the shell.
+ * \param [in] comm               The MPI communicator used to commit the cmesh
+ * \return                        A cmesh representing the spherical surface.
+ */
+t8_cmesh_t
+t8_cmesh_new_prismed_spherical_shell_icosahedron (const double inner_radius, const double shell_thickness,
+                                                  const int num_levels, const int num_layers, sc_MPI_Comm comm);
+
+/** Construct a cubed spherical shell of given inner radius and thickness.
+ * \param [in] inner_radius       Radius of the inner side of the shell.
+ * \param [in] shell_thickness    Thickness of the shell.
+ * \param [in] num_levels         Number of trees per patch in longitudinal and latitudinal direction
+                                  given as level of refinement: 4^num_levels.
+ * \param [in] num_layers         Number of layers of the shell.
+ * \param [in] comm               The MPI communicator used to commit the cmesh
+ * \return                        A cmesh representing the spherical surface.
+ */
+t8_cmesh_t
+t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shell_thickness, const int num_levels,
+                                    const int num_layers, sc_MPI_Comm comm);
 
 T8_EXTERN_C_END ();
 

@@ -21,7 +21,7 @@
 */
 
 /** \file t8_geometry_with_vertices.hxx
- * Implements the inherited class t8_geometry_with_vertices, which can be 
+ * Implements the inherited struct t8_geometry_with_vertices, which can be 
  * used for geometries that use vertex coordinate information of the cmesh.
  */
 
@@ -29,13 +29,15 @@
 #define T8_GEOMETRY_WITH_VERTICES_HXX
 
 #include <t8_cmesh.h>
+#include <t8_forest/t8_forest.h>
 #include <t8_geometry/t8_geometry_base.hxx>
 #include <t8_geometry/t8_geometry_base.h>
 #include <t8_geometry/t8_geometry_with_vertices.h>
 
 T8_EXTERN_C_BEGIN ();
 
-class t8_geometry_with_vertices: public t8_geometry {
+struct t8_geometry_with_vertices: public t8_geometry
+{
  public:
   /* Basic constructor that sets the dimension, the name, and the name for the attribute. */
   t8_geometry_with_vertices (int dimension, const char *name, const char *attribute_name = NULL)

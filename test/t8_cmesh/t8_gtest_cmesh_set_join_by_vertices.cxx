@@ -27,6 +27,7 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh/t8_cmesh_helpers.h>
 #include <t8_cmesh/t8_cmesh_testcases.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <test/t8_gtest_macros.hxx>
 
 #include <p8est_geometry.h>
@@ -242,7 +243,8 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
     const double boundary_coords[24] = { 1, 0, 0, 4, 0, 0, 0, 6, 0, 5, 5, 0, -1, -2, 8, 9, 0, 10, 0, 8, 9, 10, 10, 10 };
 
     t8_eclass_t eclass = T8_ECLASS_HEX;
-    t8_cmesh_t cmesh = t8_cmesh_new_hypercube_pad (eclass, comm, boundary_coords, 2, 2, 2);
+    const int use_axis_aligned = 0;
+    t8_cmesh_t cmesh = t8_cmesh_new_hypercube_pad (eclass, comm, boundary_coords, 2, 2, 2, use_axis_aligned);
     test_with_cmesh (cmesh);
     t8_cmesh_destroy (&cmesh);
   }

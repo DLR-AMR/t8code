@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2024 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -24,16 +24,25 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_types.h>
 
-/* Test if multiple attributes are partitioned correctly. */
+/* Test the t8_cmesh_set_attribute_gloidx_array and t8_cmesh_get_attribute_gloidx_array functions.
+ * We create a cmesh with two trees and add an array with N entries to each tree.
+ * The first tree has data_persists = 0, the second data_persists = 1.
+ * Then we get the array and check whether it's entries are correct.
+ * We parametrize the test over the number of entries N and the treeid (0 or 1).
+ * Thus for each element count N, we do one test for the first tree and one for the second tree.
+ */
 
 #define T8_ATTRIBUTE_TEST_MAX_NUM_ENTRIES 1000
 
-class cmesh_attribute_gloidx_array: public testing::TestWithParam<int> {
+class cmesh_attribute_gloidx_array: public testing::TestWithParam<std::tuple<int, int>> {
  protected:
+  /* in Setup we build a two tree cmesh, fill an array with entries
+   * and set the array as attribute for both trees with different data_persists settings. */
   void
   SetUp () override
   {
-    num_entries = GetParam ();
+    num_entries = std::get<0> (GetParam ());
+    check_tree_id = std::get<1> (GetParam ());
 
     /* Build a cmesh with one QUAD tree and one TRIANGLE tree. */
     t8_cmesh_init (&cmesh);
@@ -77,26 +86,26 @@ class cmesh_attribute_gloidx_array: public testing::TestWithParam<int> {
 
   t8_cmesh_t cmesh;
   t8_locidx_t num_entries;
+  t8_locidx_t check_tree_id;
   t8_gloidx_t *entries;
   t8_gloidx_t *get_entries;
 };
 
-/** Check attribute values of cmeshes against reference values. */
-TEST_P (cmesh_attribute_gloidx_array, check_values_data_not_persist)
+/** Check attribute values of the trees against reference values. */
+TEST_P (cmesh_attribute_gloidx_array, check_values_data)
 {
-  const t8_locidx_t tree_id = 0;
-  get_entries = t8_cmesh_get_attribute_gloidx_array (cmesh, t8_get_package_id (), T8_CMESH_NEXT_POSSIBLE_KEY, tree_id,
-                                                     num_entries);
+  get_entries = t8_cmesh_get_attribute_gloidx_array (cmesh, t8_get_package_id (), T8_CMESH_NEXT_POSSIBLE_KEY,
+                                                     check_tree_id, num_entries);
 
   /* If we did not store any values, we except to get the NULL pointer back. */
   if (entries == NULL) {
-    EXPECT_TRUE (get_entries == NULL);
+    EXPECT_EQ (get_entries, nullptr);
     /* Number of entries must be < 0 in that case and we cannot continue the test otherwise. */
     ASSERT_EQ (num_entries, 0);
   }
   else {
     /* Otherwise it must not be NULL and we abort the test if it is. */
-    ASSERT_TRUE (get_entries != NULL);
+    ASSERT_NE (get_entries, nullptr);
   }
 
   /* Check for equality of the values. */
@@ -105,31 +114,8 @@ TEST_P (cmesh_attribute_gloidx_array, check_values_data_not_persist)
   }
 }
 
-/** Check attribute values of cmeshes against reference values. */
-TEST_P (cmesh_attribute_gloidx_array, check_values_data_persist)
-{
-  const t8_locidx_t tree_id = 1;
-  get_entries = t8_cmesh_get_attribute_gloidx_array (cmesh, t8_get_package_id (), T8_CMESH_NEXT_POSSIBLE_KEY, tree_id,
-                                                     num_entries);
-
-  /* If we did not store any values, we except to get the NULL pointer back. */
-  if (entries == NULL) {
-    EXPECT_TRUE (get_entries == NULL);
-    /* Number of entries must be < 0 in that case and we cannot continue the test otherwise. */
-    ASSERT_EQ (num_entries, 0);
-  }
-  else {
-    /* Otherwise it must not be NULL and we abort the test if it is. */
-    ASSERT_TRUE (get_entries != NULL);
-  }
-
-  /* Check for equality of the values. */
-  for (t8_locidx_t ientry = 0; ientry < num_entries; ++ientry) {
-    EXPECT_EQ (get_entries[ientry], ientry);
-  }
-}
-
-/* Test for different number of entries.
+/* Test for different number of entries and trees 0 and 1.
  * 0, 100, 200, ... T8_ATTRIBUTE_TEST_MAX_NUM_ENTRIES */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_attribute_gloidx_array, cmesh_attribute_gloidx_array,
-                          testing::Range (0, T8_ATTRIBUTE_TEST_MAX_NUM_ENTRIES + 1, 100));
+                          testing::Combine (testing::Range (0, T8_ATTRIBUTE_TEST_MAX_NUM_ENTRIES + 1, 100),
+                                            testing::Range (0, 2)));
