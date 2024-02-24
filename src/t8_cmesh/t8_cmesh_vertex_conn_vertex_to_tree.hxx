@@ -150,7 +150,11 @@ typedef struct t8_cmesh_vertex_conn_vertex_to_tree_c
    * local trees and tree vertices. */
   vtt_storage_type vertex_to_tree;
 
-  enum { INITIALIZED, COMMITTED } state;
+  /** Stores the state of this instance. */
+  enum {
+    INITIALIZED, /*< Can currently be filled with entries. */
+    COMMITTED    /*< Is filled and cannot be changed. */
+  } state;
 
 } t8_cmesh_vertex_conn_vertex_to_tree_c;
 
