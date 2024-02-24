@@ -32,7 +32,7 @@ class cmesh_vertex_conn_vtt: public testing::TestWithParam<int> {
   SetUp () override
   {
     const int cmesh_id = GetParam ();
-    const t8_cmesh_t cmesh = t8_test_create_cmesh (cmesh_id);
+    cmesh = t8_test_create_cmesh (cmesh_id);
     T8_ASSERT (t8_cmesh_is_committed (cmesh));
     const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
     const t8_locidx_t num_ghost_trees = t8_cmesh_get_num_ghosts (cmesh);
@@ -52,13 +52,16 @@ class cmesh_vertex_conn_vtt: public testing::TestWithParam<int> {
       /* loop over all vertices of this tree */
       for (int ivertex = 0; ivertex < num_tree_vertices; ++ivertex) {
         /* Set global id of this tree and this vertex to 1 */
-        vtt_all_to_one.add_vertex_to_tree (cmesh, 1, itree, ivertex);
+        vtt_all_to_one.add_vertex_to_tree (cmesh, global_vertex_id, itree, ivertex);
         /* We assign a arbitrary but computable global id to this vertex.
          * We comput the id to be (tree_index * vertex_index) mod num_local_trees + 1 */
         const t8_gloidx_t global_id = (itree * ivertex) % (num_local_trees + 1);
         vtt.add_vertex_to_tree (cmesh, global_id, itree, ivertex);
       }
     }
+    /* We added all vertices, so we commit. */
+    vtt.commit (cmesh);
+    vtt_all_to_one.commit (cmesh);
   }
 
   void
@@ -69,6 +72,10 @@ class cmesh_vertex_conn_vtt: public testing::TestWithParam<int> {
 
   t8_cmesh_t cmesh;
 
+  /* The single global vertex that everything is assigned to for
+   * vtt_all_to_one. */
+  const t8_gloidx_t global_vertex_id = 1;
+
   t8_cmesh_vertex_conn_vertex_to_tree_c vtt_all_to_one; /* all vertices get global id 1 */
   t8_cmesh_vertex_conn_vertex_to_tree_c vtt;            /* multiple global vertex ids */
 };
@@ -77,12 +84,25 @@ class cmesh_vertex_conn_vtt: public testing::TestWithParam<int> {
 TEST_P (cmesh_vertex_conn_vtt, check_all_to_one)
 {
   const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
+  const t8_locidx_t num_ghost_trees = t8_cmesh_get_num_ghosts (cmesh);
 
-  t8_cmesh_tree_vertex_list &tree_list = vtt_all_to_one.get_tree_list_of_vertex (1);
+  /* Count the number of entries (for each local tree its number of vertices). */
+  size_t num_entries = 0;
+  for (t8_locidx_t itree = 0; itree < num_local_trees + num_ghost_trees; ++itree) {
+    /* Get the trees class depending on whether it is a local tree or ghost. */
+    const t8_eclass_t tree_class = itree < num_local_trees ? t8_cmesh_get_tree_class (cmesh, itree)
+                                                           : t8_cmesh_get_ghost_class (cmesh, itree - num_local_trees);
+    const int num_tree_vertices = t8_eclass_num_vertices[tree_class];
 
-  /* Asserting that the number of entries matches the number of local
-   * trees. If it does not, we cannot continue, therefore ASSERT instead of EXPECT. */
-  ASSERT_EQ (tree_list.size (), (size_t) num_local_trees);
+    num_entries += num_tree_vertices;
+  }
+
+  /* Get the list of the single vertex. */
+  t8_cmesh_tree_vertex_list &tree_list = vtt_all_to_one.get_tree_list_of_vertex (global_vertex_id);
+
+  /* Asserting that the number of entries matches the computed number.
+   * If it does not, we cannot continue, therefore ASSERT instead of EXPECT. */
+  ASSERT_EQ (tree_list.size (), num_entries);
 
   /* Iterate over all entries of the tree list.
    * We expect that this single list stores all local trees, ghost trees and
@@ -107,7 +127,7 @@ TEST_P (cmesh_vertex_conn_vtt, check_all_to_one)
      * the vertex counter and advance the tree counter. */
     if (check_vertex >= num_tree_vertices) {
       check_vertex = 0;
-      check_local_tree = 0;
+      check_local_tree++;
     }
   }
 }
