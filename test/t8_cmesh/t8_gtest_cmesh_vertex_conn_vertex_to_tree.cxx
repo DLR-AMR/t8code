@@ -26,7 +26,38 @@
 #include <t8_cmesh/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
-class cmesh_vertex_conn_vtt: public testing::TestWithParam<int> {
+/* In this file we test the t8_cmesh_vertex_conn_vertex_to_tree_c
+ * class of the cmesh global vertex list.
+ * We iterate over all cmeshes and for each case we
+ * construct two global id lists.
+ * 1. A single global vertex that maps to all local vertices.
+ * 2. Multiple global vertices in a non geometric/semi-random pattern. 
+ * 
+ * We add the information to the list and then check whether
+ * this information is maintained with the getter functions. */
+
+static int
+t8_compute_tree_num_vertices (t8_cmesh_t cmesh, t8_locidx_t ltreeid)
+{
+  const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
+
+  /* Get the trees class depending on whether it is a local tree or ghost. */
+  const t8_eclass_t tree_class = ltreeid < num_local_trees
+                                   ? t8_cmesh_get_tree_class (cmesh, ltreeid)
+                                   : t8_cmesh_get_ghost_class (cmesh, ltreeid - num_local_trees);
+  return t8_eclass_num_vertices[tree_class];
+}
+
+/* Given a tree id and a vertex of that tree compute a (pseudo random)
+ * hash value. We use this value to assign a global vertex id.
+ * This is just a number that we thought of for testing purpose. */
+static t8_locidx_t
+t8_compute_global_vertex_hash (t8_locidx_t itree, t8_locidx_t ivertex, t8_locidx_t num_local_trees)
+{
+  return (itree * ivertex) % (num_local_trees + 1);
+}
+
+class t8_test_cmesh_vertex_conn_vtt: public testing::TestWithParam<int> {
  protected:
   void
   SetUp () override
@@ -42,12 +73,7 @@ class cmesh_vertex_conn_vtt: public testing::TestWithParam<int> {
 
     /* look over all local trees */
     for (t8_locidx_t itree = 0; itree < num_local_trees + num_ghost_trees; ++itree) {
-
-      /* Get the trees class depending on whether it is a local tree or ghost. */
-      const t8_eclass_t tree_class = itree < num_local_trees
-                                       ? t8_cmesh_get_tree_class (cmesh, itree)
-                                       : t8_cmesh_get_ghost_class (cmesh, itree - num_local_trees);
-      const int num_tree_vertices = t8_eclass_num_vertices[tree_class];
+      const int num_tree_vertices = t8_compute_tree_num_vertices (cmesh, itree);
 
       /* loop over all vertices of this tree */
       for (int ivertex = 0; ivertex < num_tree_vertices; ++ivertex) {
@@ -55,7 +81,7 @@ class cmesh_vertex_conn_vtt: public testing::TestWithParam<int> {
         vtt_all_to_one.add_vertex_to_tree (cmesh, global_vertex_id, itree, ivertex);
         /* We assign a arbitrary but computable global id to this vertex.
          * We comput the id to be (tree_index * vertex_index) mod num_local_trees + 1 */
-        const t8_gloidx_t global_id = (itree * ivertex) % (num_local_trees + 1);
+        const t8_gloidx_t global_id = t8_compute_global_vertex_hash (itree, ivertex, num_local_trees);
         vtt.add_vertex_to_tree (cmesh, global_id, itree, ivertex);
       }
     }
@@ -89,10 +115,7 @@ TEST_P (cmesh_vertex_conn_vtt, check_all_to_one)
   /* Count the number of entries (for each local tree its number of vertices). */
   size_t num_entries = 0;
   for (t8_locidx_t itree = 0; itree < num_local_trees + num_ghost_trees; ++itree) {
-    /* Get the trees class depending on whether it is a local tree or ghost. */
-    const t8_eclass_t tree_class = itree < num_local_trees ? t8_cmesh_get_tree_class (cmesh, itree)
-                                                           : t8_cmesh_get_ghost_class (cmesh, itree - num_local_trees);
-    const int num_tree_vertices = t8_eclass_num_vertices[tree_class];
+    const int num_tree_vertices = t8_compute_tree_num_vertices (cmesh, itree);
 
     num_entries += num_tree_vertices;
   }
@@ -120,15 +143,68 @@ TEST_P (cmesh_vertex_conn_vtt, check_all_to_one)
     /* increase check vertex */
     ++check_vertex;
 
-    /* Get the number of vertices of this tree. */
-    const t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, check_local_tree);
-    const int num_tree_vertices = t8_eclass_num_vertices[tree_class];
+    const int num_tree_vertices = t8_compute_tree_num_vertices (cmesh, check_local_tree);
     /* If we reached the end of this tree's vertices, we reset
      * the vertex counter and advance the tree counter. */
     if (check_vertex >= num_tree_vertices) {
       check_vertex = 0;
       check_local_tree++;
     }
+  }
+}
+
+/* Check stored global ids for the case with multiple global ids. */
+TEST_P (cmesh_vertex_conn_vtt, check_multiple_ids)
+{
+  /* We need to check that each local tree/ghost and each vertex 
+   * exists exactly once in the list. 
+   * We do so by setting up an indicator array storing the
+   * number of vertices for each tree and count down for each occurrence.
+   * At the end the values must be zero. */
+
+  const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
+  const t8_locidx_t num_ghost_trees = t8_cmesh_get_num_ghosts (cmesh);
+  const t8_locidx_t num_trees_and_ghosts = num_local_trees + num_ghost_trees;
+
+  std::vector<int> vertex_counts (num_trees_and_ghosts);
+  /* Fill each entry with the number of vertices. */
+  for (t8_locidx_t itree = 0; itree < num_trees_and_ghosts; ++itree) {
+    /* Compute number of vertices of this tree. */
+    const int num_tree_vertices = t8_compute_tree_num_vertices (cmesh, itree);
+
+    /* Set the number of vertices to the entry. */
+    vertex_counts[itree] = num_tree_vertices;
+  }
+
+#if 0
+  /* Iterate over all entries in vtt.
+   * Each entry corresponds to a global vertex id and
+   * gives its list of tree indices and vertices. */
+  for (auto &[global_vertex, tree_vertex_list] : vtt.) 
+  {
+    /* Iterate over the list of tree indices and vertices of this global vertex. */
+    for (auto &[tree_index, tree_vertex] : tree_vertex_list) {
+      const t8_locidx_t num_vertices = t8_compute_tree_num_vertices (cmesh, tree_index);
+      const t8_locidx_t hash_value = t8_compute_global_vertex_hash (tree_index, tree_vertex, num_local_trees);
+
+      /* Check that the global index matches our computed hash value. */      
+      EXPECT_EQ (global_vertex, hash_value);
+      /* 0 <= tree_vertex < num_vertices */
+      EXPECT_GE (tree_vertex, 0);
+      EXPECT_LT (tree_vertex, num_vertices);
+
+      /* remove this tree_vertex from the vertex_count */
+      vertex_counts[tree_index]--;
+      /* Count must be >= 0 */
+      EXPECT_GE (vertex_counts[tree_index], 0);
+    }
+  }
+#endif
+  /* After we have checked all global ids, we must have matched all tree
+   * vertices exactly once. If and only if this is the case, vertex_counts[i] is 0
+   * for each tree. */
+  for (auto &vertex_count : vertex_counts) {
+    EXPECT_EQ (vertex_count, 0);
   }
 }
 
