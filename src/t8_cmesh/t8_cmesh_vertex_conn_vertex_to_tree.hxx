@@ -30,6 +30,7 @@
 #include <vector>
 #include <unordered_map>
 #include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
 
 /*
  *  notes during development
@@ -63,9 +64,23 @@
 typedef struct t8_cmesh_vertex_conn_vertex_to_tree_c
 {
  public:
+  /** Standard constructor. 
+   * Initializes the class and allows setting vertex entries 
+   * via \ref add_vertex_to_tree
+   */
   t8_cmesh_vertex_conn_vertex_to_tree_c (): state (INITIALIZED)
   {
   }
+
+  /** Constructor from t8_cmesh_vertex_conn_tree_to_vertex_c
+   * Sets all global ids and associated tree vertices from
+   * the given input class.
+   * Afterwards, the class is set to committed and can be used.
+   * 
+   * \param [in] cmesh A committed cmesh with set tree to vertex entries.
+   * \param [in] ttv A filled tree to vertex list for \a cmesh.
+  */
+  t8_cmesh_vertex_conn_vertex_to_tree_c (t8_cmesh_t cmesh, t8_cmesh_vertex_conn_tree_to_vertex_c &ttv);
 
   /* Variable type for (tree_id, tree_vertex_id) pair */
   using tree_vertex_pair = std::pair<t8_locidx_t, int>;
@@ -85,7 +100,7 @@ typedef struct t8_cmesh_vertex_conn_vertex_to_tree_c
   void
   set_vertex_to_tree_list (const t8_cmesh_t cmesh);
 
-  tree_vertex_list&
+  tree_vertex_list &
   get_tree_list_of_vertex (t8_gloidx_t global_vertex_id);
 
   /* Setter functions */

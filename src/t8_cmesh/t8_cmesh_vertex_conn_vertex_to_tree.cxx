@@ -30,6 +30,34 @@
  *  This file implements the routines for the t8_cmesh_conn_vertex_to_tree_c struct.
  */
 
+/* Constructor from existing tree to vertex list. */
+t8_cmesh_vertex_conn_vertex_to_tree_c::t8_cmesh_vertex_conn_vertex_to_tree_c (
+  t8_cmesh_t cmesh, t8_cmesh_vertex_conn_tree_to_vertex_c& ttv)
+{
+  /* Call standard constructor */
+  t8_cmesh_vertex_conn_tree_to_vertex ();
+
+  const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
+  const t8_locidx_t num_ghosts = t8_cmesh_get_num_ghosts (cmesh);
+  const t8_locidx_t num_local_trees_and_ghosts = num_local_trees + num_ghosts;
+
+  for (t8_locidx_t itree = 0; itree < num_local_trees_and_ghosts; ++itree) {
+    const t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, itree);
+    const int num_tree_vertices = t8_eclass_num_vertices[tree_class];
+
+    /* Get the global vertex ids of this tree. */
+    const t8_gloidx_t* global_indices = ttv.get_global_vertices (cmesh, itree, num_tree_vertices);
+
+    /* Iterate over all local tree vertices and add the global id to the list. */
+    for (int ivertex = 0; ivertex < num_tree_vertices; ++ivertex) {
+      add_vertex_to_tree (cmesh, global_indices[ivertex], itree, ivertex);
+    }
+  }
+
+  /* Set state to committed. */
+  state = COMMITTED;
+}
+
 t8_cmesh_vertex_conn_vertex_to_tree_c::tree_vertex_list&
 t8_cmesh_vertex_conn_vertex_to_tree_c::get_tree_list_of_vertex (t8_gloidx_t global_vertex_id)
 {
