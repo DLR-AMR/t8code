@@ -32,6 +32,9 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
 
+/* forward declaration of ttv class needed since the two class headers include each other. */
+struct t8_cmesh_vertex_conn_tree_to_vertex_c;
+
 /*
  *  notes during development
  * 
@@ -80,7 +83,7 @@ typedef struct t8_cmesh_vertex_conn_vertex_to_tree_c
    * \param [in] cmesh A committed cmesh with set tree to vertex entries.
    * \param [in] ttv A filled tree to vertex list for \a cmesh.
   */
-  t8_cmesh_vertex_conn_vertex_to_tree_c (const t8_cmesh_t cmesh, t8_cmesh_vertex_conn_tree_to_vertex_c &ttv);
+  t8_cmesh_vertex_conn_vertex_to_tree_c (const t8_cmesh_t cmesh, const t8_cmesh_vertex_conn_tree_to_vertex_c &ttv);
 
   /* Variable type for (tree_id, tree_vertex_id) pair */
   using tree_vertex_pair = std::pair<t8_locidx_t, int>;

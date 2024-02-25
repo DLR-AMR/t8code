@@ -40,11 +40,33 @@
 #ifndef T8_CMESH_VERTEX_CONN_TREE_TO_VERTEX_HXX
 #define T8_CMESH_VERTEX_CONN_TREE_TO_VERTEX_HXX
 
+#include <algorithm>
 #include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
 
-typedef struct t8_cmesh_vertex_conn_tree_to_vertex
+/* forward declaration of ttv class needed since the two class headers include each other. */
+struct t8_cmesh_vertex_conn_vertex_to_tree_c;
+
+typedef struct t8_cmesh_vertex_conn_tree_to_vertex_c
 {
  public:
+  /** Standard constructor. Does nothing. */
+  t8_cmesh_vertex_conn_tree_to_vertex_c () {};
+
+  /** Constructor from a cmesh where all the attributes are set. */
+  t8_cmesh_vertex_conn_tree_to_vertex_c (const t8_cmesh_t cmesh)
+  {
+    SC_ABORT ("not implemented.");
+  }
+
+  /** Constructor from a cmesh and a given vertex to tree connectivity.
+   * 
+   * \note \a cmesh must not be committed.
+   * \note \a vtt must be committed.
+   */
+  t8_cmesh_vertex_conn_tree_to_vertex_c (const t8_cmesh_t cmesh_from, const t8_cmesh_t cmesh,
+                                         const struct t8_cmesh_vertex_conn_vertex_to_tree_c &vtt);
+
   /* Setter functions */
   /** Set all global vertex ids of a local tree. 
    * \param[in] cmesh The considered cmesh
@@ -52,7 +74,7 @@ typedef struct t8_cmesh_vertex_conn_tree_to_vertex
    * \param[in] global_vertex_id The ids of the global vertices in order of \a local_tree's vertices.
    * \param[in] num_vertices Must match the number of vertices of \a local_tree
    * 
-   * \note Cmesh must not be committed.
+   * \note \a cmesh must not be committed.
   */
   void
   set_global_vertex_ids_of_tree_vertices (const t8_cmesh_t, const t8_gloidx_t global_tree,
@@ -60,10 +82,10 @@ typedef struct t8_cmesh_vertex_conn_tree_to_vertex
 
   t8_gloidx_t
   get_global_vertex (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int local_tree_vertex,
-                     const int num_tree_vertices);
+                     const int num_tree_vertices) const;
 
   const t8_gloidx_t *
-  get_global_vertices (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int num_vertices);
+  get_global_vertices (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int num_vertices) const;
 
  private:
 } t8_cmesh_vertex_conn_tree_to_vertex_c;

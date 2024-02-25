@@ -32,10 +32,10 @@
 
 /* Constructor from existing tree to vertex list. */
 t8_cmesh_vertex_conn_vertex_to_tree_c::t8_cmesh_vertex_conn_vertex_to_tree_c (
-  const t8_cmesh_t cmesh, t8_cmesh_vertex_conn_tree_to_vertex_c& ttv)
+  const t8_cmesh_t cmesh, const t8_cmesh_vertex_conn_tree_to_vertex_c& ttv)
 {
   /* Call standard constructor */
-  t8_cmesh_vertex_conn_tree_to_vertex ();
+  t8_cmesh_vertex_conn_tree_to_vertex_c ();
 
   const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
   const t8_locidx_t num_ghosts = t8_cmesh_get_num_ghosts (cmesh);
