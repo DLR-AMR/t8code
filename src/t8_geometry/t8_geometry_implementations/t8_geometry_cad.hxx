@@ -31,7 +31,6 @@
 
 #include <t8.h>
 #include <t8_geometry/t8_geometry_with_vertices.hxx>
-#include <t8_geometry/t8_geometry_with_vertices.h>
 #include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.h>
 
