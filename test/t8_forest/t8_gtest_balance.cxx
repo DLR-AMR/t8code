@@ -40,32 +40,30 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <vector>
 #include <algorithm>
 
-class gtest_balance: public testing::TestWithParam<t8_eclass_t> {
+class gtest_balance: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
 public:
-  constexpr static int kNumTrees = 4;
+  static const int kNumTrees = 4;
  protected:
   void
   SetUp () override
   {
-    ieclass = GetParam ();
+    ieclass = std::get<0> (GetParam ());
+    ilevel = std::get<1> (GetParam ());
   }
   t8_eclass_t ieclass;
+  int ilevel;
 };
 
 /**
  * \brief This test confirms that the function 't8_forest_is_balanced' recognizes uniform forests as balanced.
  */
 TEST_P(gtest_balance, confirm_is_balanced_check_for_uniform_forests)
-{
-  const int level = 3;
-  
+{ 
   t8_scheme_cxx_t *default_scheme = t8_scheme_new_default_cxx ();
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube (ieclass, sc_MPI_COMM_WORLD, 0, 0, 0);
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, default_scheme, level, 0, sc_MPI_COMM_WORLD);
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, default_scheme, ilevel, 0, sc_MPI_COMM_WORLD);
 
-  const int is_balanced = t8_forest_is_balanced (forest);
-
-  EXPECT_EQ (is_balanced, 1);
+  EXPECT_EQ (t8_forest_is_balanced (forest), 1);
 
   t8_forest_unref(&forest);
 }
@@ -123,9 +121,7 @@ t8_gtest_obtain_forest_for_balance_tests(const std::vector<t8_gloidx_t>& trees_t
 {
   const double boundary_coords[12] = { 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0 };
 
-  t8_geometry_c *geometry = new t8_geometry_linear (2);
-
-  t8_cmesh_t cmesh = t8_cmesh_new_hypercube_pad (T8_ECLASS_QUAD, sc_MPI_COMM_WORLD, boundary_coords, 2, 2, 1, geometry);
+  t8_cmesh_t cmesh = t8_cmesh_new_hypercube_pad (T8_ECLASS_QUAD, sc_MPI_COMM_WORLD, boundary_coords, 2, 2, 1, 0);
 
   t8_forest_t forest;
   t8_forest_init(&forest);
@@ -244,4 +240,4 @@ TEST(gtest_balance, balance_consistency_test)
   t8_forest_unref(&already_balanced_forest);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_balance, gtest_balance, AllEclasses);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_balance, gtest_balance, testing::Combine (AllEclasses, testing::Range (0, 5)));
