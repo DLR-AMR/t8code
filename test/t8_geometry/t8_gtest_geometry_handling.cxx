@@ -58,7 +58,9 @@ TEST (test_geometry, test_geometry_handler_register)
     /* Register the geometries with dimension. */
     geometries.push_back (geom_handler.register_geometry<t8_geometry_linear> (idim));
     geometries.push_back (geom_handler.register_geometry<t8_geometry_zero> (idim));
+#if T8_WITH_OCC
     geometries.push_back (geom_handler.register_geometry<t8_geometry_cad> (idim));
+#endif /* T8_WITH_OCC */
     geometries.push_back (geom_handler.register_geometry<t8_geometry_analytic> (idim, "analytic_geom"));
     geometries.push_back (geom_handler.register_geometry<t8_geometry_linear_axis_aligned> (idim));
   }
