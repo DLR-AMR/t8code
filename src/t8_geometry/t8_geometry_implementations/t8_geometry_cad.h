@@ -24,8 +24,8 @@
  * This header provides the C interface to create a cad geometry.
  */
 
-#ifndef T8_GEOMETRY_cad_H
-#define T8_GEOMETRY_cad_H
+#ifndef T8_GEOMETRY_CAD_H
+#define T8_GEOMETRY_CAD_H
 
 #include <t8.h>
 #include <t8_geometry/t8_geometry.h>
@@ -66,4 +66,4 @@ t8_geometry_cad_destroy (t8_geometry_cad_c **geom);
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_GEOMETRY_cad_H! */
+#endif /* !T8_GEOMETRY_CAD_H! */
