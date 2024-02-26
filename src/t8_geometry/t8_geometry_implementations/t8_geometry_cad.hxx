@@ -42,6 +42,10 @@
 #include <Geom_Curve.hxx>
 #include <Geom_Surface.hxx>
 
+/**
+ * This geometry uses OpenCASCADE CAD geometries to curve
+ * the trees to the actual shape of the underlying domain.
+ */
 struct t8_geometry_cad: public t8_geometry_with_vertices
 {
  public:
