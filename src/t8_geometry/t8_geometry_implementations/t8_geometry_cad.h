@@ -31,6 +31,8 @@
 #include <t8_geometry/t8_geometry.h>
 #include <t8_geometry/t8_geometry_with_vertices.h>
 
+#if T8_WITH_OCC
+
 /** This typedef holds virtual functions for a particular geometry.
  * We need it so that we can use t8_geometry_cad_c pointers in .c files
  * without them seeing the actual C++ code (and then not compiling)
@@ -66,4 +68,6 @@ t8_geometry_cad_destroy (t8_geometry_cad_c **geom);
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_GEOMETRY_CAD_H! */
+#endif /* T8_WITH_OCC */
+
+#endif /* !T8_GEOMETRY_CAD_H */
