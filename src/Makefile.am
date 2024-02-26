@@ -65,6 +65,7 @@ libt8_installed_headers_geometry_impl = \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx \
+  src/t8_geometry/t8_geometry_implementations/t8_geometry_analytic.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_examples.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_cad.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx \
