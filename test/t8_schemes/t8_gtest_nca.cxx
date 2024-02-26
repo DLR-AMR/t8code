@@ -263,7 +263,7 @@ TEST_P (nca, recursive_check_higher_level)
   t8_element_t *correct_nca_high_level;
   int num_children;
   int i, k, l;
-  t8_gloidx_t leafs_on_level;
+  t8_gloidx_t leaves_on_level;
   EXPECT_TRUE (max_lvl - recursion_depth >= 0);
 
   ts->t8_element_new (1, &parent_a);
@@ -272,9 +272,9 @@ TEST_P (nca, recursive_check_higher_level)
 
   /* Test on different levels around the middle of the refinement tree */
   for (i = recursion_depth; i < max_lvl; i++) {
-    leafs_on_level = ts->t8_element_count_leafs (correct_nca, i - recursion_depth);
-    /* middle = leafs/2 */
-    ts->t8_element_set_linear_id (correct_nca_high_level, i - recursion_depth, leafs_on_level / 2);
+    leaves_on_level = ts->t8_element_count_leaves (correct_nca, i - recursion_depth);
+    /* middle = leaves/2 */
+    ts->t8_element_set_linear_id (correct_nca_high_level, i - recursion_depth, leaves_on_level / 2);
 
     /* Initialization for recursive_nca_check */
     num_children = ts->t8_element_num_children (correct_nca_high_level);

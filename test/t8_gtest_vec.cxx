@@ -250,3 +250,11 @@ TEST (t8_gtest_vec, cross)
   t8_vec_cross (e2, e3, cross);
   EXPECT_VEC3_EQ (cross, e1, T8_PRECISION_EPS);
 }
+
+TEST (t8_gtest_vec, check_less_or_equal)
+{
+  const t8_test_vec one = { 1.0, 1.0, 1.0 };
+  const t8_test_vec one_minus_eps = { 1.0 - T8_PRECISION_EPS, 1.0 - T8_PRECISION_EPS, 1.0 - T8_PRECISION_EPS };
+
+  EXPECT_VEC3_EQ (one, one_minus_eps, T8_PRECISION_EPS);
+}

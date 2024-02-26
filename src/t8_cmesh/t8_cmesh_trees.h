@@ -66,9 +66,9 @@ T8_EXTERN_C_BEGIN ();
  *
  * Tree faces:
  *
- * The data of Tree faces looks for each tree:
+ * For each tree the data of the tree faces (where F is the number of faces of the tree) looks like this:
  *
- * | Treeid1 Treeid2  ... | ttf1 ttf2 ... | padding |
+ * | Treeid1 Treeid2  ... TreeidF | ttf1 ttf2 ... ttfN | padding |
  *
  * Where padding is a number of unused bytes that makes the whole block a multiple
  * of 4 Bytes.
@@ -80,7 +80,7 @@ T8_EXTERN_C_BEGIN ();
  *
  * Ghost faces:
  *
- * | Treeid1 Treeid2 ... | ttf1 ttf2 ... | padding |
+ * | Treeid1 Treeid2 ... TreeidF | ttf1 ttf2 ... ttfF | padding |
  *
  * Where padding is a number of unused bytes that makes the whole block a multiple
  * of sizeof (void*) Bytes.
@@ -90,14 +90,15 @@ T8_EXTERN_C_BEGIN ();
  * class of the tree.
  * Tree attributes:
  *
- * The data of Tree attributes looks like:
+ * The data of Tree attributes looks like, where N is the total number of attributes:
+ * The Attributes do not necessarily need to be sorted in a particular way, as they are
+ * accessed by offsets in the Att_descr.
  *
- * TODO: This description seems incomplete. Why is it not Attij_data?
- *
- * | Att00_descr | Att01_descr | ... | Att10_descr | ... | Attrend_descr | Att1_data | Att2_data | ... |
+ * | Att00_descr | Att01_descr | ... Att0 A_0_descr| Att10_descr | ... | AttrT A_T | Att0_data | Att2_data | ... AttN_data|
  *                TODO: maybe insert padding here ||
  * Where Attij_descr is a descriptor of the j-th attribute data of tree i storing
- * - an offset to Atti_data starting from Atti0_descr
+ * - an offset to Attk_data starting from Attij_descr, where k is the index in the dataarray.
+ *    The actual data is put there in the order of the attribute descriptors, but this is not necessitated by the layout.
  * - package id of the attribute (int)
  * - key of the attribute (int)
  * The data type is t8_attribute_info_struct_t

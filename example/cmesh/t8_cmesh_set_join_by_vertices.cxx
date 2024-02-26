@@ -197,10 +197,10 @@ main (int argc, char **argv)
     const int dim = 3;
     const int main_proc = 0;
     const int partition = 0;
-    const int use_occ_geometry = 0;
+    const int use_cad_geometry = 0;
 
     t8_cmesh_t cmesh
-      = t8_cmesh_from_msh_file (meshfile, partition, sc_MPI_COMM_WORLD, dim, main_proc, use_occ_geometry);
+      = t8_cmesh_from_msh_file (meshfile, partition, sc_MPI_COMM_WORLD, dim, main_proc, use_cad_geometry);
 
     test_with_cmesh (cmesh);
 
