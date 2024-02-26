@@ -186,4 +186,4 @@ struct t8_geometry_analytic: public t8_geometry
 void
 t8_geom_load_tree_data_vertices (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const void **vertices_out);
 
-#endif /* !T8_GEOMETRY_ANALYTICAL_HXX! */
+#endif /* !T8_GEOMETRY_ANALYTICAL_HXX */

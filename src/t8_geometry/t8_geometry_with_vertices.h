@@ -49,4 +49,4 @@ t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, const t8_gloidx_t gtree_id, const 
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_GEOMETRY_WITH_VERTICES_H! */
+#endif /* !T8_GEOMETRY_WITH_VERTICES_H */

@@ -200,4 +200,4 @@ struct t8_geometry
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_GEOMETRY_BASE_HXX! */
+#endif /* !T8_GEOMETRY_BASE_HXX */

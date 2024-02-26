@@ -81,4 +81,4 @@ t8_geometry_get_type (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_GEOMETRY_H! */
+#endif /* !T8_GEOMETRY_H */

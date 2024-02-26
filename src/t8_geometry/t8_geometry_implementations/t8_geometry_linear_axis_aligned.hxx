@@ -107,4 +107,4 @@ struct t8_geometry_linear_axis_aligned: public t8_geometry_with_vertices
                                       const double tolerance) const;
 };
 
-#endif /* !T8_GEOMETRY_LINEAR_AXIS_ALIGNED_HXX! */
+#endif /* !T8_GEOMETRY_LINEAR_AXIS_ALIGNED_HXX */

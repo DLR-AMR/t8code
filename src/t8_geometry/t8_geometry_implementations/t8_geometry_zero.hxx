@@ -118,4 +118,4 @@ struct t8_geometry_zero: public t8_geometry
   t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 };
 
-#endif /* !T8_GEOMETRY_ZERO_HXX! */
+#endif /* !T8_GEOMETRY_ZERO_HXX */

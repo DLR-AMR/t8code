@@ -346,4 +346,4 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
 
 #endif /* T8_WITH_OCC */
 
-#endif /* !T8_GEOMETRY_CAD_HXX! */
+#endif /* !T8_GEOMETRY_CAD_HXX */

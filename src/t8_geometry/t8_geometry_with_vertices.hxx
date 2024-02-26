@@ -93,4 +93,4 @@ struct t8_geometry_with_vertices: public t8_geometry
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_GEOMETRY_WITH_VERTICES_HXX! */
+#endif /* !T8_GEOMETRY_WITH_VERTICES_HXX */
