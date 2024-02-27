@@ -119,6 +119,7 @@ t8_dprism_child_id (const t8_dprism_t *p)
   int tri_child_id = t8_dtri_child_id (&p->tri);
   int line_child_id = t8_dline_child_id (&p->line);
   T8_ASSERT (p->line.level == p->tri.level);
+  T8_ASSERT (p->line.level > 0);
   /*Prism in lower plane has the same id as the triangle, in the upper plane
    * it's a shift by the number of children a triangle has*/
   return tri_child_id + T8_DTRI_CHILDREN * line_child_id;

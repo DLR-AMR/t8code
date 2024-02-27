@@ -70,6 +70,9 @@ t8_test_adapt_balance (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t 
 
   /* we set a maximum refinement level as forest user data */
   int maxlevel = *(int *) t8_forest_get_user_data (forest);
+  if (level == 0){
+    return 1;
+  }
   if (level >= maxlevel) {
     /* Do not refine after the maxlevel */
     return 0;

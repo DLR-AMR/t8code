@@ -1660,6 +1660,7 @@ t8_dtri_ancestor_id (const t8_dtri_t *t, int level)
 int
 t8_dtri_child_id (const t8_dtri_t *t)
 {
+  T8_ASSERT(t->level > 0);
   return t8_dtri_type_cid_to_Iloc[t->type][compute_cubeid (t, t->level)];
 }
 
