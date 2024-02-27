@@ -42,5 +42,9 @@ template <typename geometry_type, typename... _args>
 inline geometry_type *
 t8_cmesh_register_geometry (t8_cmesh_t cmesh, _args &&...args)
 {
+  if (cmesh->geometry_handler == NULL) {
+    /* The handler was not constructed, do it now. */
+    cmesh->geometry_handler = new t8_geometry_handler ();
+  }
   return cmesh->geometry_handler->register_geometry<geometry_type> (std::forward<_args> (args)...);
 }
