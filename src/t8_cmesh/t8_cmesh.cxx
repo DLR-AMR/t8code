@@ -515,11 +515,19 @@ t8_cmesh_tree_vertices_negative_volume (const t8_eclass_t eclass, const double *
 
 #ifdef T8_ENABLE_DEBUG
 /* After a cmesh is committed, check whether all trees in a cmesh do have positive volume.
- * Returns true if all trees have positive volume.
+ * Returns true if all trees have positive volume. Returns also true if no geometries are
+ * registered yet, since the volume computation depends on the used geometry.
  */
 int
 t8_cmesh_no_negative_volume (t8_cmesh_t cmesh)
 {
+  if (cmesh->geometry_handler == NULL) {
+    return 1;
+  }
+  if (cmesh->geometry_handler->get_num_geometries () == 0) {
+    return 1;
+  }
+
   t8_locidx_t itree;
   double *vertices;
   t8_eclass_t eclass;
