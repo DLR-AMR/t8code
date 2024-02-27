@@ -57,15 +57,8 @@ struct t8_geometry_handler
   geometry_type *
   register_geometry (_args &&...args)
   {
-    std::unique_ptr<t8_geometry> geom = std::make_unique<geometry_type> (std::forward<_args> (args)...);
-    const size_t hash = geom->t8_geom_get_hash ();
-    if (registered_geometries.find (hash) == registered_geometries.end ()) {
-      registered_geometries.emplace (hash, std::move (geom));
-    }
-    if (registered_geometries.size () == 1) {
-      active_geometry = registered_geometries.at (hash).get ();
-    }
-    return static_cast<geometry_type *> (registered_geometries.at (hash).get ());
+    std::unique_ptr<t8_geometry> geom_ptr = std::make_unique<geometry_type> (std::forward<_args> (args)...);
+    return add_geometry<geometry_type> (std::move (geom_ptr));
   }
 
   /**
@@ -173,6 +166,27 @@ struct t8_geometry_handler
   }
 
  private:
+  /**
+   * Add a geometry to the geometry handler.
+   * @tparam geometry_type The type of the geometry to add.
+   * \param [in,out] geom The geometry to add.
+   * \return A pointer to the geometry.
+   */
+  template <typename geometry_type>
+  inline geometry_type *
+  add_geometry (std::unique_ptr<t8_geometry> geom)
+  {
+    t8_debugf ("Registering geometry with name %s\n", geom->t8_geom_get_name ().c_str ());
+    const size_t hash = geom->t8_geom_get_hash ();
+    if (registered_geometries.find (hash) == registered_geometries.end ()) {
+      registered_geometries.emplace (hash, std::move (geom));
+    }
+    if (registered_geometries.size () == 1) {
+      active_geometry = registered_geometries.at (hash).get ();
+    }
+    return static_cast<geometry_type *> (registered_geometries.at (hash).get ());
+  }
+
   /**
    * Update the active tree.
    * \param [in]  cmesh    The cmesh.

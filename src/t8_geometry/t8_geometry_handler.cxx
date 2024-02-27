@@ -38,23 +38,19 @@
 void
 t8_geometry_handler::register_geometry (t8_geometry_c **geom)
 {
-  const size_t hash = (*geom)->t8_geom_get_hash ();
-  if (registered_geometries.find (hash) == registered_geometries.end ()) {
-    std::unique_ptr<t8_geometry> unique_geom = std::unique_ptr<t8_geometry> (std::move (*geom));
-    registered_geometries.emplace (hash, std::move (unique_geom));
-  }
-  if (registered_geometries.size () == 1) {
-    active_geometry = registered_geometries.at (hash).get ();
-  }
-  *geom = registered_geometries.at (hash).get ();
+  std::unique_ptr<t8_geometry> geom_ptr = std::unique_ptr<t8_geometry> (std::move (*geom));
+  *geom = add_geometry<t8_geometry> (std::move (geom_ptr));
 }
 
 void
 t8_geometry_handler::update_tree (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 {
   T8_ASSERT (0 <= gtreeid && gtreeid < t8_cmesh_get_num_trees (cmesh));
+  const int num_geoms = get_num_geometries ();
+  SC_CHECK_ABORTF (num_geoms > 0,
+                   "The geometry of the tree could not be loaded, because no geometries were registered.");
+  T8_ASSERT (active_geometry != nullptr);
   if (active_tree != gtreeid) {
-    const int num_geoms = get_num_geometries ();
     /* This tree is not the active tree. We need to update the 
      * active tree, its geometry and its data. */
     /* Set the new tree as active. */
@@ -71,5 +67,4 @@ t8_geometry_handler::update_tree (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
     /* Get the user data for this geometry and this tree. */
     active_geometry->t8_geom_load_tree_data (cmesh, gtreeid);
   }
-  T8_ASSERT (active_geometry != nullptr);
 }
