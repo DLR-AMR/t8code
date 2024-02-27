@@ -1594,7 +1594,9 @@ t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   t8_cmesh_partition_given (cmesh, cmesh->set_from, tree_offsets, comm);
   /* Deactivate the active tree. Tree related data (such as vertices) might have been moved by the new partition and 
    * has to be loaded again if needed. */
-  cmesh->geometry_handler->deactivate_tree ();
+  if (cmesh->geometry_handler != NULL) {
+    cmesh->geometry_handler->deactivate_tree ();
+  }
   /* If profiling is enabled, we measure the runtime of this routine. */
   if (cmesh->profile) {
     /* Runtime = current_time - start_time */
