@@ -1194,6 +1194,10 @@ t8_cmesh_reset (t8_cmesh_t *pcmesh)
     T8_FREE (cmesh->profile);
   }
 
+  if (cmesh->geometry_handler != NULL) {
+    cmesh->geometry_handler->~t8_geometry_handler ();
+  }
+
   /* unref the partition scheme (if set) */
   if (cmesh->set_partition_scheme != NULL) {
     t8_scheme_cxx_unref (&cmesh->set_partition_scheme);
@@ -1226,7 +1230,6 @@ void
 t8_cmesh_destroy (t8_cmesh_t *pcmesh)
 {
   T8_ASSERT (pcmesh != NULL && *pcmesh != NULL && t8_refcount_is_last (&(*pcmesh)->rc));
-  (*pcmesh)->geometry_handler->~t8_geometry_handler ();
   t8_cmesh_unref (pcmesh);
   T8_ASSERT (*pcmesh == NULL);
 }

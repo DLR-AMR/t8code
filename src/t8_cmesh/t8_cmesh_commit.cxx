@@ -534,7 +534,6 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_rank (comm, &cmesh->mpirank);
   SC_CHECK_MPI (mpiret);
-
   if (cmesh->set_from != NULL) {
     cmesh->dimension = cmesh->set_from->dimension;
     if (cmesh->face_knowledge == -1) {
@@ -546,6 +545,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
      * over the handler from set_from. */
     if (cmesh->geometry_handler == NULL) {
       cmesh->geometry_handler = cmesh->set_from->geometry_handler;
+      cmesh->set_from->geometry_handler = NULL;
     }
 
     if (cmesh->set_partition) {

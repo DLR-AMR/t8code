@@ -29,12 +29,8 @@ t8_geometry_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_c
                       double *out_coords)
 {
   double start_wtime = 0; /* Used for profiling. */
-  /* The cmesh must be committed */
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
   /* The geometries do not expect the in- and output vector to be the same */
   T8_ASSERT (ref_coords != out_coords);
-  /* Get the geometry handler of the cmesh. */
-  t8_geometry_handler *geom_handler = cmesh->geometry_handler;
 
   if (cmesh->profile != NULL) {
     /* Measure the runtime of geometry evaluation.
@@ -43,7 +39,7 @@ t8_geometry_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_c
   }
 
   /* Evaluate the geometry. */
-  geom_handler->evaluate_tree_geometry (cmesh, gtreeid, ref_coords, num_coords, out_coords);
+  cmesh->geometry_handler->evaluate_tree_geometry (cmesh, gtreeid, ref_coords, num_coords, out_coords);
 
   if (cmesh->profile != NULL) {
     /* If profiling is enabled, add the runtime to the profiling
@@ -57,23 +53,13 @@ void
 t8_geometry_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
                       double *jacobian)
 {
-  /* The cmesh must be committed */
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
-  /* Get the geometry handler of the cmesh of the forest. */
-  t8_geometry_handler *geom_handler = cmesh->geometry_handler;
-
   /* Evaluate the jacobian. */
-  geom_handler->evaluate_tree_geometry_jacobian (cmesh, gtreeid, ref_coords, num_coords, jacobian);
+  cmesh->geometry_handler->evaluate_tree_geometry_jacobian (cmesh, gtreeid, ref_coords, num_coords, jacobian);
 }
 
 t8_geometry_type_t
 t8_geometry_get_type (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 {
-  /* The cmesh must be committed */
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
-  /* Get the geometry handler of the cmesh of the forest. */
-  t8_geometry_handler *geom_handler = cmesh->geometry_handler;
-
   /* Return the type. */
-  return geom_handler->get_tree_geometry_type (cmesh, gtreeid);
+  return cmesh->geometry_handler->get_tree_geometry_type (cmesh, gtreeid);
 }
