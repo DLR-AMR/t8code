@@ -205,4 +205,34 @@ TEST_P (t8_test_cmesh_vertex_conn_vtt, check_multiple_ids)
   }
 }
 
+/* Check stored global ids for the case with multiple global ids. */
+TEST_P (t8_test_cmesh_vertex_conn_vtt, convert_to_ttv_and_back)
+{
+  t8_cmesh_t derived_cmesh_A, derived_cmesh_B;
+  t8_cmesh_init (&derived_cmesh_A);
+  t8_cmesh_init (&derived_cmesh_B);
+  /* The original cmesh must survive this test to be destroyed during TearDown and
+   * to be used in other tests. 
+   * Hence we need to ref it twice, once for each new cmesh. */
+  t8_cmesh_ref (cmesh);
+  t8_cmesh_ref (cmesh);
+  t8_cmesh_set_derive (derived_cmesh_A, cmesh);
+  t8_cmesh_set_derive (derived_cmesh_B, cmesh);
+  /* Construct ttv connectivities from the two vtt connectivities. */
+  t8_cmesh_vertex_conn_tree_to_vertex_c ttv (cmesh, derived_cmesh_A, vtt);
+  t8_cmesh_vertex_conn_tree_to_vertex_c ttv_all_to_one (cmesh, derived_cmesh_B, vtt_all_to_one);
+  /* Commit the cmeshes to actually build the ttv connectivities. */
+  t8_cmesh_commit (derived_cmesh_A, sc_MPI_COMM_WORLD);
+  t8_cmesh_commit (derived_cmesh_B, sc_MPI_COMM_WORLD);
+
+  /* Now we can build vtt conns from the ttv conns.
+   * They should match the original connectivities. */
+  t8_cmesh_vertex_conn_vertex_to_tree_c vtt_new (derived_cmesh_A, ttv);
+  t8_cmesh_vertex_conn_vertex_to_tree_c vtt_new_all_to_one (derived_cmesh_B, ttv_all_to_one);
+
+  /* Check for equality. */
+  EXPECT_EQ (vtt, vtt_new);
+  EXPECT_EQ (vtt_all_to_one, vtt_new_all_to_one);
+}
+
 INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_vertex_vertex_to_tree, t8_test_cmesh_vertex_conn_vtt, AllCmeshs);
