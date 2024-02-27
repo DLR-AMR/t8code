@@ -1494,7 +1494,6 @@ t8_cmesh_new_periodic_tri (sc_MPI_Comm comm)
   t8_cmesh_init (&cmesh);
   /* Use linear geometry */
   t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, 2);
-  ;
 
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
   t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_TRIANGLE);
