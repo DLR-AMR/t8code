@@ -90,6 +90,8 @@ TEST_P (geometry, geometry_zero)
     << "Linear geometry of dim " << dim << "has wrong dimension: " << zero_geom.t8_geom_get_dimension () << ".";
 }
 
+INSTANTIATE_TEST_SUITE_P (t8_gtest_geometry, geometry, testing::Range (0, 4));
+
 TEST (test_geometry, cmesh_geometry)
 {
   t8_cmesh_t cmesh;
