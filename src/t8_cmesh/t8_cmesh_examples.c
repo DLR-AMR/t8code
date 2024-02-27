@@ -1420,7 +1420,7 @@ t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass, sc_MPI_Comm comm, const do
         if (eclass == T8_ECLASS_HEX) {
           const t8_locidx_t tree_id_0 = poly_id_0;
           const t8_locidx_t tree_id_1 = poly_id_0 + polygons_y * polygons_x;
-          t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 5, 4, 4);
+          t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 5, 4, 0);
         }
         else if (eclass == T8_ECLASS_TET) {
           t8_locidx_t tree_id_0 = poly_id_0 * 6 + 5;

@@ -45,6 +45,10 @@ target_compile_definitions( T8 PUBLIC T8_VERSION_POINT=${T8CODE_VERSION_POINT} )
 target_include_directories( T8 PUBLIC ${CMAKE_CURRENT_LIST_DIR} )
 target_link_libraries( T8 PUBLIC P4EST::P4EST SC::SC )
 
+if ( CMAKE_BUILD_TYPE STREQUAL "Debug" )
+    target_compile_definitions( T8 PUBLIC T8_ENABLE_DEBUG )
+endif()
+
 if ( T8CODE_ENABLE_MPI )
     target_compile_definitions( T8 PUBLIC T8_ENABLE_MPI )
     target_compile_definitions( T8 PUBLIC T8_ENABLE_MPIIO )
