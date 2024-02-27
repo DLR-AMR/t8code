@@ -849,7 +849,6 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
   /* We need to set the geometry after broadcasting, since we
    * cannot bcast the geometries. */
   t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, dim);
-  ;
 
   /* Check whether the cmesh will be partitioned */
   if (do_partition) {
