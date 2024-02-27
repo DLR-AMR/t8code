@@ -82,6 +82,20 @@ t8_cmesh_vertex_conn_vertex_to_tree_c::is_committed () const
   return state == COMMITTED;
 }
 
+bool
+t8_cmesh_vertex_conn_vertex_to_tree_c::operator== (const t8_cmesh_vertex_conn_vertex_to_tree_c& other) const
+{
+  return is_equal (other);
+}
+
+int
+t8_cmesh_vertex_conn_vertex_to_tree_c::is_equal (const t8_cmesh_vertex_conn_vertex_to_tree_c& other) const
+{
+  /* Two instances are equal if and only if their
+   * states are equal and the stored vertices are equal. */
+  return state == other.state && vertex_to_tree == other.vertex_to_tree;
+}
+
 /* Mark as ready for commit. Meaning that all 
   * global vertex ids have been added.
   * After commit, no vertex ids can be added anymore. */

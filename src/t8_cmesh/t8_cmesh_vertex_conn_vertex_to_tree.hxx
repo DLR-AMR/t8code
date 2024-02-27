@@ -126,6 +126,26 @@ typedef struct t8_cmesh_vertex_conn_vertex_to_tree_c
   int
   is_committed () const;
 
+  /**
+   * @brief Compare with another instance of this class.
+   * 
+   * @param other 
+   * @return int True if and only if the stored vertex indices match.
+   */
+  int
+  is_equal (const t8_cmesh_vertex_conn_vertex_to_tree_c& other) const;
+
+  /**
+   * @brief Equality operator. Implement
+   * 
+   * @param other 
+   * @return true 
+   * @return false 
+   */
+  bool
+  operator== (const t8_cmesh_vertex_conn_vertex_to_tree_c& other) const;
+
+  /** Typedef for the iterator type */
   typedef vtt_storage_type::const_iterator const_iterator;
 
   const_iterator
