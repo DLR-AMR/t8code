@@ -341,30 +341,23 @@ t8_geometry_cubed_sphere::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreei
   /* Center hex. */
   if (gtreeid % 4 == 0) {
     for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
-      size_t offset = 3 * i_coord;
-
+      const size_t offset = 3 * i_coord;
       t8_geom_linear_interpolation (ref_coords + offset, active_tree_vertices, 3, 3, p);
-
-      out_coords[offset + 0] = p[0];
-      out_coords[offset + 1] = p[1];
-      out_coords[offset + 2] = p[2];
+      t8_vec_copy (p, out_coords + offset);
     }
-
     return;
   }
 
-  n[0] = active_tree_vertices[0 + 0];
-  n[1] = active_tree_vertices[0 + 1];
-  n[2] = active_tree_vertices[0 + 2];
+  t8_vec_copy (active_tree_vertices, n);
   t8_vec_normalize (n);
 
-  r[0] = active_tree_vertices[7 * 3 + 0];
-  r[1] = active_tree_vertices[7 * 3 + 1];
-  r[2] = active_tree_vertices[7 * 3 + 2];
+  t8_vec_copy (active_tree_vertices + 7 * 3, r);
   t8_vec_normalize (r);
 
+  const double inv_denominator = 1.0 / t8_vec_dot (r, n);
+
   for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
-    size_t offset = 3 * i_coord;
+    const size_t offset = 3 * i_coord;
 
     const double x_ref = ref_coords[offset + 0];
     const double y_ref = ref_coords[offset + 1];
@@ -373,7 +366,9 @@ t8_geometry_cubed_sphere::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreei
     {
       double corr_ref_coords[3];
 
-      /* Correction in order to rectify elements near the corners. */
+      /* Correction in order to rectify elements near the corners. Note, this
+       * is probably not the most accurate correction but it does a decent enough job.
+       */
       corr_ref_coords[0] = tan (0.25 * M_PI * x_ref);
       corr_ref_coords[1] = tan (0.25 * M_PI * y_ref);
       corr_ref_coords[2] = z_ref;
@@ -386,11 +381,11 @@ t8_geometry_cubed_sphere::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreei
     t8_geom_linear_interpolation (ref_coords + offset, active_tree_vertices, 3, 3, p);
 
     /* Compute intersection of line with a plane. */
-    const double R = (p[0] * n[0] + p[1] * n[1] + p[2] * n[2]) / (r[0] * n[0] + r[1] * n[1] + r[2] * n[2]);
+    const double out_radius = t8_vec_dot (p, n) * inv_denominator;
 
-    out_coords[offset + 0] = (1.0 - z_ref) * p[0] + z_ref * R * s[0];
-    out_coords[offset + 1] = (1.0 - z_ref) * p[1] + z_ref * R * s[1];
-    out_coords[offset + 2] = (1.0 - z_ref) * p[2] + z_ref * R * s[2];
+    /* Linear blend from flat to curved: `out_coords = (1.0 - z_ref)*p + z_ref_ * out_radius * s`. */
+    t8_vec_axy (p, out_coords + offset, 1.0 - z_ref);
+    t8_vec_axpy (s, out_coords + offset, z_ref * out_radius);
   }
 }
 
