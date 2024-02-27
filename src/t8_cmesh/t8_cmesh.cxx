@@ -723,9 +723,11 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
      * We cannot broadcast the geometries, since they are pointers to derived 
      * classes that we cannot know of on the receiving process.
      * Geometries must therefore be added after broadcasting. */
-    SC_CHECK_ABORT (cmesh_in->geometry_handler->get_num_geometries () == 0,
-                    "Error: Broadcasting a cmesh with registered geometries is not possible.\n"
-                    "We recommend to broadcast first and register the geometries after.\n");
+    if (cmesh_in->geometry_handler != NULL) {
+      SC_CHECK_ABORT (cmesh_in->geometry_handler->get_num_geometries () == 0,
+                      "Error: Broadcasting a cmesh with registered geometries is not possible.\n"
+                      "We recommend to broadcast first and register the geometries after.\n");
+    }
     memcpy (&meta_info.cmesh, cmesh_in, sizeof (*cmesh_in));
     for (iclass = 0; iclass < T8_ECLASS_COUNT; iclass++) {
       meta_info.num_trees_per_eclass[iclass] = cmesh_in->num_trees_per_eclass[iclass];
