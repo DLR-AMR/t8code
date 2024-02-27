@@ -41,7 +41,6 @@ t8_geometry_testing_tree_from_class (const t8_eclass_t eclass)
   t8_cmesh_t cmesh;
   t8_geometry_c *geometry = new t8_geometry_linear_axis_aligned (t8_eclass_to_dimension[eclass]);
   t8_cmesh_init (&cmesh);
-  const size_t num_vertices = t8_eclass_num_vertices[eclass];
   std::vector<double> vertices (2 * T8_ECLASS_MAX_DIM, 0.0);
   std::fill (vertices.begin () + 3, vertices.end () - (T8_ECLASS_MAX_DIM - t8_eclass_to_dimension[eclass]), 1.0);
   t8_cmesh_set_tree_class (cmesh, 0, eclass);
