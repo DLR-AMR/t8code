@@ -98,7 +98,7 @@ t8_adapt_refine_first (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t 
   }
   const int level_max = ts->t8_element_maxlevel ();
   const int child_id = ts->t8_element_child_id (elements[0]);
-  if (child_id == 0 && level < 2) {
+  if (child_id == 0 && level < (int) (0.2 * level_max)) {
     return 1;
   }
   return 0;
@@ -137,20 +137,14 @@ t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn, int recurs
 
 TEST_P (recursive_tree, test_recursive)
 {
-  t8_debugf("adapt forest t8_adapt_refine_first rec\n");
   forest = t8_adapt_forest (forest, t8_adapt_refine_first, 1);
-  t8_debugf("adapt forest t8_adapt_remove_but_last_first rec\n");
   forest = t8_adapt_forest (forest, t8_adapt_remove_but_last_first, 0);
-  t8_debugf("adapt forest t8_adapt_refine_all rec\n");
   forest = t8_adapt_forest (forest, t8_adapt_refine_all, 0);
-  t8_debugf("adapt forest t8_adapt_remove_but_last_first rec\n");
   forest = t8_adapt_forest (forest, t8_adapt_remove_but_last_first, 1);
-  t8_debugf("adapt forest t8_adapt_coarse_all rec\n");
   forest = t8_adapt_forest (forest, t8_adapt_coarse_all, 1);
 
   /* The adaptet forest should only contain root elements as forest_base */
   ASSERT_TRUE (t8_forest_is_equal (forest, forest_base));
 }
 
-// INSTANTIATE_TEST_SUITE_P (t8_gtest_recursive, recursive_tree, testing::Range (T8_ECLASS_LINE, T8_ECLASS_COUNT));
-INSTANTIATE_TEST_SUITE_P (t8_gtest_recursive, recursive_tree, testing::Values (T8_ECLASS_TRIANGLE));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_recursive, recursive_tree, testing::Range (T8_ECLASS_LINE, T8_ECLASS_COUNT));
