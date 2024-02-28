@@ -33,7 +33,7 @@
 class class_test_pack: public TestDFS {
   virtual void
 
-  /* pack the element, send to ourself, unpack and check if it is the same element */
+  /* pack the element and its children, send to ourself, unpack and check if it is the same element */
   check_element ()
   {
     size_t count = 1;
@@ -41,12 +41,17 @@ class class_test_pack: public TestDFS {
 
     /* Compute pack size and allocate send buffer */
     int pack_size;
+    int num_children = ts->t8_element_num_children (element);
     ts->t8_element_MPI_Pack_size (count, comm, &pack_size);
-
+    pack_size *= (num_children + 1);
     char *sendbuf = T8_ALLOC (char, pack_size);
 
     /* pack data */
-    ts->t8_element_MPI_Pack (element, count, sendbuf, pack_size, &position, comm);
+    ts->t8_element_MPI_Pack (&element, count, sendbuf, pack_size, &position, comm);
+    t8_element_t **children = T8_ALLOC (t8_element_t *, num_children);
+    ts->t8_element_new (num_children, children);
+    ts->t8_element_children (element, num_children, children);
+    ts->t8_element_MPI_Pack (children, num_children, sendbuf, pack_size, &position, comm);
 
     int recvBufferSize = pack_size;
     char *recvbuf = T8_ALLOC (char, recvBufferSize);
@@ -73,7 +78,10 @@ class class_test_pack: public TestDFS {
 #endif
     /* Unpack data */
     position = 0;
-    ts->t8_element_MPI_Unpack (recvbuf, recvBufferSize, &position, element_compare, count, comm);
+    ts->t8_element_MPI_Unpack (recvbuf, recvBufferSize, &position, &element_compare, count, comm);
+    t8_element_t **children_compare = T8_ALLOC (t8_element_t *, num_children);
+    ts->t8_element_new (num_children, children_compare);
+    ts->t8_element_MPI_Unpack (recvbuf, recvBufferSize, &position, children_compare, num_children, comm);
 
     /* free buffers */
     T8_FREE (sendbuf);
@@ -81,6 +89,13 @@ class class_test_pack: public TestDFS {
 
     /* Check that data was sent and received correctly */
     EXPECT_ELEM_EQ (ts, element, element_compare);
+    for (int ichild = 0; ichild < num_children; ichild++) {
+      EXPECT_ELEM_EQ (ts, children[ichild], children_compare[ichild]);
+    }
+    ts->t8_element_destroy (num_children, children);
+    ts->t8_element_destroy (num_children, children_compare);
+    T8_FREE (children);
+    T8_FREE (children_compare);
   }
 
  protected:
