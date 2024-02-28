@@ -313,13 +313,13 @@ t8_cmesh_new_long_brick_pyramid (sc_MPI_Comm comm, int num_cubes);
 t8_cmesh_t
 t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees, const int set_attributes, const int do_partition, sc_MPI_Comm comm);
 
-/** Construct a squared disk of given radius.
+/** Construct a quadrangulated disk of given radius.
  * \param [in] radius        Radius of the sphere.
  * \param [in] comm          The MPI communicator used to commit the cmesh
  * \return                   A cmesh representing the spherical surface.
  */
 t8_cmesh_t
-t8_cmesh_new_squared_disk (const double radius, sc_MPI_Comm comm);
+t8_cmesh_new_quadrangulated_disk (const double radius, sc_MPI_Comm comm);
 
 /** Construct a triangulated spherical surface of given radius: octahedron version.
  * \param [in] radius        Radius of the sphere.
@@ -381,6 +381,14 @@ t8_cmesh_new_prismed_spherical_shell_icosahedron (const double inner_radius, con
 t8_cmesh_t
 t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shell_thickness, const int num_levels,
                                     const int num_layers, sc_MPI_Comm comm);
+
+/** Construct a cubed sphere of given radius.
+ * \param [in] inner_radius       Radius of the inner side of the shell.
+ * \param [in] comm               The MPI communicator used to commit the cmesh
+ * \return                        A cmesh representing the spherical surface.
+ */
+t8_cmesh_t
+t8_cmesh_new_cubed_sphere (const double radius, sc_MPI_Comm comm);
 
 T8_EXTERN_C_END ();
 
