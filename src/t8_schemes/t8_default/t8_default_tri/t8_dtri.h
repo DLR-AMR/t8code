@@ -20,8 +20,8 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#ifndef T8_DTRI
-#define T8_DTRI
+#ifndef T8_DTRI_H
+#define T8_DTRI_H
 
 /** \file t8_dtri.h
  * TODO: document this.
@@ -44,7 +44,7 @@ T8_EXTERN_C_BEGIN ();
 #define T8_DTRI_CORNERS 3
 
 /** The maximum refinement level allowed for a triangle. */
-#define T8_DTRI_MAXLEVEL 3
+#define T8_DTRI_MAXLEVEL 29
 
 /** The length of the root triangle in integer coordinates. */
 #define T8_DTRI_ROOT_LEN (1 << (T8_DTRI_MAXLEVEL))
@@ -71,4 +71,4 @@ typedef struct t8_dtri
 
 T8_EXTERN_C_END ();
 
-#endif /* T8_DTRI */
+#endif /* T8_DTRI_H */

@@ -209,7 +209,6 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid, t8_l
   int num_siblings;
   {
     const t8_element_t *element = t8_element_array_index_locidx (telements, *el_inserted - 1);
-    ts->t8_element_debug_print(element);
     T8_ASSERT (ts->t8_element_level (element) > 0);
     num_siblings = ts->t8_element_num_siblings (element);
   }
@@ -221,7 +220,6 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid, t8_l
   t8_locidx_t pos = t8_forest_pos (forest, ts, telements, *el_inserted - 1);
 
   while (is_family && pos >= el_coarsen && pos < elements_in_array) {
-    t8_debugf("el_coarsen %i, pos %i, elements_in_array %i\n", el_coarsen, pos, elements_in_array);
     t8_locidx_t ielement; /* Loop running variable */
                           /* Get all elements at indices pos, pos + 1, ... ,pos + num_siblings - 1 */
 #if T8_ENABLE_DEBUG
@@ -240,9 +238,7 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid, t8_l
     }
     else if (forest->set_from->incomplete_trees) {
       /* We will pass a (in)complete family to the adapt callback */
-      t8_debugf("incomplete: el_in: %i, pos: %i\n", *el_inserted, pos);
       num_elements_to_adapt_callback = (int) (*el_inserted - pos);
-//      if( tscheme->t8_element_level() )
       T8_ASSERT (0 < num_elements_to_adapt_callback);
       T8_ASSERT (num_elements_to_adapt_callback <= num_siblings);
     }
@@ -254,7 +250,6 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid, t8_l
       is_family = 0;
       num_elements_to_adapt_callback = 1;
     }
-    t8_debugf("is_fam %i, num %i\n", is_family, num_elements_to_adapt_callback);
 #if T8_ENABLE_DEBUG
     /* If is_family is true, the set fam must be a family. */
     if (forest->set_from->incomplete_trees) {
@@ -530,7 +525,6 @@ t8_forest_adapt (t8_forest_t forest)
           refine = 0;
         }
         if (refine == 1) {
-          t8_debugf("adapt refine:\n");
           /* The first element is to be refined */
           num_children = tscheme->t8_element_num_children (elements_from[0]);
           if (num_children > curr_size_elements) {
@@ -563,7 +557,6 @@ t8_forest_adapt (t8_forest_t forest)
           el_considered++;
         }
         else if (refine == -1) {
-          t8_debugf("adapt coarsen:\n");
           /* The elements form a family and are to be coarsened. */
           /* Make room for one more new element. */
           elements[0] = t8_element_array_push (telements);
@@ -596,7 +589,6 @@ t8_forest_adapt (t8_forest_t forest)
           el_considered += (t8_locidx_t) num_elements_to_adapt_callback;
         }
         else if (refine == 0) {
-          t8_debugf("adapt nothing:\n");
           /* The considered elements are neither to be coarsened nor is the first
            * one to be refined.
            * We copy the element to the new element array. */
