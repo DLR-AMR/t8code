@@ -778,8 +778,8 @@ struct t8_eclass_scheme
    * \param [in] comm MPI Communicator
   */
   virtual void
-  t8_element_MPI_Pack (const t8_element_t *elements, const int count, void *send_buffer, int buffer_size, int *position,
-                       sc_MPI_Comm comm) const
+  t8_element_MPI_Pack (t8_element_t **const elements, const int count, void *send_buffer, int buffer_size,
+                       int *position, sc_MPI_Comm comm) const
     = 0;
 
   /** Determine an upper bound for the size of the packed message of \b count elements
@@ -800,7 +800,7 @@ struct t8_eclass_scheme
    * \param [in] comm MPI Communicator
   */
   virtual void
-  t8_element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t *elements, const int count,
+  t8_element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements, const int count,
                          sc_MPI_Comm comm) const
     = 0;
 };

@@ -447,15 +447,16 @@ t8_default_scheme_pyramid_c::~t8_default_scheme_pyramid_c ()
 
 /* each pyramid is packed as a tet and the switch_shape_at_level marker */
 void
-t8_default_scheme_pyramid_c::t8_element_MPI_Pack (const t8_element_t *elements, const int count, void *send_buffer,
+t8_default_scheme_pyramid_c::t8_element_MPI_Pack (t8_element_t **const elements, const int count, void *send_buffer,
                                                   const int buffer_size, int *position, sc_MPI_Comm comm) const
 {
-  t8_default_pyramid_t *pyramids = (t8_default_pyramid_t *) elements;
+  t8_default_pyramid_t **pyramids = (t8_default_pyramid_t **) elements;
   for (int ielem = 0; ielem < count; ielem++) {
-    t8_dtet_element_pack (&pyramids[ielem].pyramid, 1, send_buffer, buffer_size, position, comm);
+    t8_dtet_t *p = &pyramids[ielem]->pyramid;
+    t8_dtet_element_pack (&p, 1, send_buffer, buffer_size, position, comm);
 
-    SC_CHECK_MPI (
-      sc_MPI_Pack (&pyramids[ielem].switch_shape_at_level, 1, sc_MPI_INT8_T, send_buffer, buffer_size, position, comm));
+    SC_CHECK_MPI (sc_MPI_Pack (&pyramids[ielem]->switch_shape_at_level, 1, sc_MPI_INT8_T, send_buffer, buffer_size,
+                               position, comm));
   }
 }
 
@@ -478,15 +479,16 @@ t8_default_scheme_pyramid_c::t8_element_MPI_Pack_size (const int count, sc_MPI_C
 /* each pyramid is packed as a tet and the switch_shape_at_level marker */
 void
 t8_default_scheme_pyramid_c::t8_element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position,
-                                                    t8_element_t *elements, const int count, sc_MPI_Comm comm) const
+                                                    t8_element_t **elements, const int count, sc_MPI_Comm comm) const
 {
   int mpiret;
-  t8_default_pyramid_t *pyramids = (t8_default_pyramid_t *) elements;
+  t8_default_pyramid_t **pyramids = (t8_default_pyramid_t **) elements;
   for (int ielem = 0; ielem < count; ielem++) {
-    t8_dtet_element_unpack (recvbuf, buffer_size, position, &pyramids[ielem].pyramid, 1, comm);
+    t8_dtet *p = &pyramids[ielem]->pyramid;
+    t8_dtet_element_unpack (recvbuf, buffer_size, position, &p, 1, comm);
 
     mpiret
-      = sc_MPI_Unpack (recvbuf, buffer_size, position, &pyramids[ielem].switch_shape_at_level, 1, sc_MPI_INT8_T, comm);
+      = sc_MPI_Unpack (recvbuf, buffer_size, position, &pyramids[ielem]->switch_shape_at_level, 1, sc_MPI_INT8_T, comm);
     SC_CHECK_MPI (mpiret);
   }
 }

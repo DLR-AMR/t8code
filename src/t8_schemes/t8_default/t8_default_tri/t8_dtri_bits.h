@@ -405,14 +405,14 @@ t8_dtri_init (t8_dtri_t *t);
 #endif
 
 void
-t8_dtri_element_pack (const t8_dtri_t *elements, int count, void *send_buffer, int buffer_size, int *position,
+t8_dtri_element_pack (t8_dtri_t **const elements, int count, void *send_buffer, int buffer_size, int *position,
                       sc_MPI_Comm comm);
 
 void
 t8_dtri_element_pack_size (int count, sc_MPI_Comm comm, int *pack_size);
 
 void
-t8_dtri_element_unpack (void *recvbuf, int buffer_size, int *position, t8_dtri_t *elements, int count,
+t8_dtri_element_unpack (void *recvbuf, int buffer_size, int *position, t8_dtri_t **elements, int count,
                         sc_MPI_Comm comm);
 
 T8_EXTERN_C_END ();

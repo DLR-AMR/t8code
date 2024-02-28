@@ -549,8 +549,8 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
    * \param [in] comm MPI Communicator
   */
   virtual void
-  t8_element_MPI_Pack (const t8_element_t *elements, const int count, void *send_buffer, int buffer_size, int *position,
-                       sc_MPI_Comm comm) const;
+  t8_element_MPI_Pack (t8_element_t **const elements, const int count, void *send_buffer, int buffer_size,
+                       int *position, sc_MPI_Comm comm) const;
 
   /** Determine an upper bound for the size of the packed message of \b count elements
    * \param [in] count Number of elements to pack
@@ -569,7 +569,7 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
    * \param [in] comm MPI Communicator
   */
   virtual void
-  t8_element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t *elements, int count,
+  t8_element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements, int count,
                          sc_MPI_Comm comm) const;
 };
 
