@@ -1738,7 +1738,6 @@ t8_cmesh_from_msh_file_register_geometries (t8_cmesh_t cmesh, const int use_cad_
 {
   /* Register linear geometry */
   *linear_geometry = t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, dim);
-  ;
   if (use_cad_geometry) {
 #if T8_WITH_OCC
     *cad_geometry = t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, dim, std::string (fileprefix));

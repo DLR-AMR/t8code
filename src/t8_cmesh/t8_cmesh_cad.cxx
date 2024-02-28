@@ -89,7 +89,6 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees, int nu
   }
   else {
     t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, 3);
-    ;
   }
 
 #if T8_WITH_OCC

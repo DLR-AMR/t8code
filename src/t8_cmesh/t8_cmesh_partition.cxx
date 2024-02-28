@@ -337,7 +337,7 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from, int *send
       some_owner = -1; /* Reset some_owner, since we do not know an owner of last_tree */
                        /* Parse the new owners from the top and stop at the first process
        * that did not own last_tree */
-      ;
+
       sendlast = t8_offset_last_owner_of_tree (cmesh->mpisize, last_tree, offset_to, &some_owner);
       while (sendlast >= 0 && flag == 0) {
         if (sendlast == cmesh->mpirank || t8_offset_empty (sendlast, offset_from)
