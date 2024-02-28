@@ -630,6 +630,8 @@ struct t8_default_scheme_vertex_c: public t8_default_scheme_common_c
   virtual void
   t8_element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const;
 #endif
+  void
+  t8_element_root (t8_element_t *elem) const;
 };
 
 #endif /* !T8_DEFAULT_VERTEX_H */

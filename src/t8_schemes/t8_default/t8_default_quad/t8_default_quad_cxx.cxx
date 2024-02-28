@@ -792,5 +792,12 @@ t8_default_scheme_quad_c::~t8_default_scheme_quad_c ()
    * However we need to provide an implementation of the destructor
    * and hence this empty function. */
 }
-
+void
+t8_default_scheme_quad_c::t8_element_root (t8_element_t *elem) const
+{
+  t8_dquad_t *quad = (t8_dquad_t *) elem;
+  quad->level = 0;
+  quad->x = 0;
+  quad->y = 0;
+}
 T8_EXTERN_C_END ();
