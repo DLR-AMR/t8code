@@ -138,7 +138,7 @@ t8_default_scheme_common_c::t8_element_count_leaves (const t8_element_t *t, int 
 int
 t8_default_scheme_common_c::t8_element_num_siblings (const t8_element_t *elem) const
 {
-  T8_ASSERT(t8_element_level(elem)>0);
+  T8_ASSERT (t8_element_level (elem) > 0);
   const int dim = t8_eclass_to_dimension[eclass];
   T8_ASSERT (eclass != T8_ECLASS_PYRAMID);
   return sc_intpow (2, dim);

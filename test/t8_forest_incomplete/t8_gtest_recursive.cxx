@@ -76,7 +76,7 @@ t8_adapt_remove_but_last_first (t8_forest_t forest, t8_forest_t forest_from, t8_
                                 t8_locidx_t lelement_id, t8_eclass_scheme_c *ts, const int is_family,
                                 const int num_elements, t8_element_t *elements[])
 {
-  if (ts->t8_element_level(elements[0]) == 0){
+  if (ts->t8_element_level (elements[0]) == 0) {
     return 0;
   }
   const int num_children = ts->t8_element_num_siblings (elements[0]);
@@ -93,7 +93,7 @@ t8_adapt_refine_first (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t 
                        t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
 {
   const int level = ts->t8_element_level (elements[0]);
-  if (level == 0){
+  if (level == 0) {
     return 1;
   }
   const int level_max = ts->t8_element_maxlevel ();
