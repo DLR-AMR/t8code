@@ -301,7 +301,7 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
 
   /*  Definition of the geometry */
   t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, 3);
-  ; /* Use linear geometry */
+  /* Use linear geometry */
 
   /* Defitition of the classes of the different trees */
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TET);

@@ -490,9 +490,9 @@ t8_gloidx_t
 t8_cmesh_get_first_treeid (t8_cmesh_t cmesh);
 
 /** Get the geometry of a tree.
- * \param [in] cmesh The cmesh.
+ * \param [in] cmesh   The cmesh.
  * \param [in] gtreeid The global tree id of the tree for which the geometry should be returned.
- * \return The geometry of the tree.
+ * \return             The geometry of the tree.
  */
 const t8_geometry_c *
 t8_cmesh_get_tree_geometry (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);

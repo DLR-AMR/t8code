@@ -533,7 +533,7 @@ t8_cmesh_save (t8_cmesh_t cmesh, const char *fileprefix)
   }
   if (!has_linear_geom) {
     /* This cmesh does not have the linear geometry for all trees. */
-    t8_errorf ("Error when saving cmesh. Cmesh jas more than one geometry or the geometry is not linear.\n");
+    t8_errorf ("Error when saving cmesh. Cmesh has more than one geometry or the geometry is not linear.\n");
     return 0;
   }
 
