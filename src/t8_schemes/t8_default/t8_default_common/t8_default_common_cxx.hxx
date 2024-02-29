@@ -39,6 +39,11 @@ class t8_default_scheme_common_c: public t8_scheme_common_c {
   /* Call parent constructor */
   t8_default_scheme_common_c (t8_eclass_t eclass, int elem_size): t8_scheme_common_c (eclass, elem_size) {};
 
+  /* provide empty virtual destructor*/
+  virtual ~t8_default_scheme_common_c ()
+  {
+  }
+
   /** Compute the number of corners of a given element. */
   virtual int
   t8_element_num_corners (const t8_element_t *elem) const;
