@@ -594,14 +594,7 @@ struct t8_default_scheme_hex_c: public t8_default_scheme_common_c
   t8_element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const;
 #endif
   void
-  t8_element_root (t8_element_t *elem) const
-  {
-    t8_dhex_t *hex = (t8_dhex_t *) elem;
-    hex->level = 0;
-    hex->x = 0;
-    hex->y = 0;
-    hex->z = 0;
-  }
+  t8_element_root (t8_element_t *elem) const;
 };
 
 #endif /* !T8_DEFAULT_HEX_HXX */

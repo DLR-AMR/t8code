@@ -452,6 +452,6 @@ t8_default_scheme_pyramid_c::t8_element_root (t8_element_t *elem) const
   pyramid->pyramid.y = 0;
   pyramid->pyramid.z = 0;
   pyramid->pyramid.type = T8_DPYRAMID_ROOT_TYPE;
-  pyramid->switch_shape_at_level = 0;
+  pyramid->switch_shape_at_level = -1;
 }
 T8_EXTERN_C_END ();
