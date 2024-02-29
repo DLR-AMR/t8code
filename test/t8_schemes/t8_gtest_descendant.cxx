@@ -41,7 +41,7 @@ class class_schemes_descendant: public testing::TestWithParam<t8_eclass_t> {
     ts->t8_element_new (1, &elem);
     ts->t8_element_new (1, &desc);
     ts->t8_element_new (1, &test);
-    ts->t8_element_set_linear_id (elem, 0, 0);
+    ts->t8_element_root (elem);
   }
   void
   TearDown () override
