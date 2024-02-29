@@ -67,4 +67,4 @@ TEST_P (root, equals_linear_id_0_0)
   ts->t8_element_destroy (1, &root_compare);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_root, root, testing::Values (T8_ECLASS_PYRAMID));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_root, root, testing::Values (T8_ECLASS_PYRAMID), print_eclass);
