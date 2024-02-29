@@ -320,7 +320,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
   }
 
   virtual t8_gloidx_t
-  t8_element_count_leaves_from_root (int level)
+  t8_element_count_leaves_from_root (int level) const override
   {
     t8_element_t *root;
     t8_element_new (1, &root);
