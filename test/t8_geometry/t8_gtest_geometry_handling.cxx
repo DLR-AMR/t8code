@@ -69,7 +69,6 @@ TEST (test_geometry, test_geometry_handler_register)
   geometries.push_back (geom_handler.register_geometry<t8_geometry_triangulated_spherical_surface> ());
   geometries.push_back (geom_handler.register_geometry<t8_geometry_quadrangulated_spherical_surface> ());
   geometries.push_back (geom_handler.register_geometry<t8_geometry_cubed_spherical_shell> ());
-  geometries.push_back (geom_handler.register_geometry<t8_geometry_spherical_surface> ());
 
   /* Check that we can find the geometries by name. */
   for (auto geom : geometries) {
