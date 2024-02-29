@@ -58,4 +58,12 @@ TEST_P (root, has_level_zero)
   EXPECT_EQ (ts->t8_element_level (element), 0);
 }
 
+TEST_P (root, has_level_zero)
+{
+  t8_element_t *root_compare;
+  ts->t8_element_new (1, &root_compare);
+  ts->t8_element_set_linear_id (root_compare, 0, 0);
+  EXPECT_ELEM_EQ (ts, element, root_compare);
+}
+
 INSTANTIATE_TEST_SUITE_P (t8_gtest_root, root, testing::Values (T8_ECLASS_PYRAMID));
