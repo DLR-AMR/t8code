@@ -485,6 +485,7 @@ t8_default_scheme_prism_c::t8_element_root (t8_element_t *elem) const
   prism->tri.x = 0;
   prism->tri.x = 0;
   prism->tri.type = 0;
+  prism->tri.level = 0;
 }
 
 T8_EXTERN_C_END ();
