@@ -286,6 +286,16 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
     }
   }
 
+  virtual int
+  t8_element_num_siblings (const t8_element_t *elem) const override
+  {
+    T8_ASSERT (t8_element_is_valid (elem));
+    t8_element_t *parent;
+    t8_element_new (1, &parent);
+    t8_element_parent (elem, parent);
+    return t8_element_num_children (parent);
+  }
+
   virtual void
   t8_element_sibling (const t8_element_t *elem, int sibid, t8_element_t *sibling) const override
   {
@@ -309,6 +319,16 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
     return id1 < id2 ? -1 : (id1 > id2 ? 1 : (level1 < level2 ? -1 : (level1 > level2 ? 1 : 0)));
   }
 
+  virtual t8_gloidx_t
+  t8_element_count_leaves_from_root (int level)
+  {
+    t8_element_t *root;
+    t8_element_new (1, &root);
+    t8_element_root (root);
+    t8_gloidx_t num_leaves = t8_element_count_leaves (root, level);
+    t8_element_destroy (1, &root);
+    return num_leaves;
+  }
   /** Return SC_ABORT for all */
 };
 
