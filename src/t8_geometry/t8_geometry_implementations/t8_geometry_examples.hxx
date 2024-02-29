@@ -97,6 +97,11 @@ struct t8_geometry_triangulated_spherical_surface: public t8_geometry_with_verti
   {
   }
 
+  /* The destrucor. */
+  virtual ~t8_geometry_triangulated_spherical_surface ()
+  {
+  }
+
   /**
    * Map the faces of an octahedron/icosahedron to a spherical surface.
    * \param [in]  cmesh      The cmesh in which the point lies.
@@ -126,10 +131,16 @@ struct t8_geometry_triangulated_spherical_surface: public t8_geometry_with_verti
 
 /** This geometry maps general 2D faces to a spherical surface.
  */
-class t8_geometry_spherical_surface: public t8_geometry_with_vertices {
+struct t8_geometry_spherical_surface: public t8_geometry_with_vertices
+{
  public:
   /* Basic constructor that sets the dimension and the name. */
   t8_geometry_spherical_surface (): t8_geometry_with_vertices (2, "t8_spherical_surface")
+  {
+  }
+
+  /* The destrucor. */
+  virtual ~t8_geometry_spherical_surface ()
   {
   }
 
@@ -169,6 +180,11 @@ struct t8_geometry_quadrangulated_spherical_surface: public t8_geometry_with_ver
   {
   }
 
+  /* The destrucor. */
+  virtual ~t8_geometry_quadrangulated_spherical_surface ()
+  {
+  }
+
   /**
    * Map the faces of a cube to a spherical surface.
    * \param [in]  cmesh      The cmesh in which the point lies.
@@ -205,6 +221,11 @@ struct t8_geometry_cubed_spherical_shell: public t8_geometry_with_vertices
   {
   }
 
+  /* The destrucor. */
+  virtual ~t8_geometry_cubed_spherical_shell ()
+  {
+  }
+
   /**
    * Map the faces of a cube to a spherical surface.
    * \param [in]  cmesh      The cmesh in which the point lies.
@@ -233,10 +254,16 @@ struct t8_geometry_cubed_spherical_shell: public t8_geometry_with_vertices
 
 /** This geometry maps prisms arranged as octahedron (or similar) to a spherical shell.
  */
-class t8_geometry_prismed_spherical_shell: public t8_geometry_with_vertices {
+struct t8_geometry_prismed_spherical_shell: public t8_geometry_with_vertices
+{
  public:
   /* Basic constructor that sets the dimension and the name. */
   t8_geometry_prismed_spherical_shell (): t8_geometry_with_vertices (3, "t8_prismed_spherical_shell")
+  {
+  }
+
+  /* The destrucor. */
+  virtual ~t8_geometry_prismed_spherical_shell ()
   {
   }
 
@@ -268,10 +295,16 @@ class t8_geometry_prismed_spherical_shell: public t8_geometry_with_vertices {
 
 /** This geometry maps specifically arranged hexahedrons to a sphere.
  */
-class t8_geometry_cubed_sphere: public t8_geometry_with_vertices {
+struct t8_geometry_cubed_sphere: public t8_geometry_with_vertices
+{
  public:
   /* Basic constructor that sets the dimension and the name. */
   t8_geometry_cubed_sphere (): t8_geometry_with_vertices (3, "t8_geometry_cubed_sphere")
+  {
+  }
+
+  /* The destrucor. */
+  virtual ~t8_geometry_cubed_sphere ()
   {
   }
 
