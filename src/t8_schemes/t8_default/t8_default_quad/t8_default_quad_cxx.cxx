@@ -796,10 +796,7 @@ void
 t8_default_scheme_quad_c::t8_element_root (t8_element_t *elem) const
 {
   t8_pquad_t *quad = (t8_pquad_t *) elem;
-  quad->level = 0;
-  quad->x = 0;
-  quad->y = 0;
-  T8_QUAD_SET_TDIM (quad, 2);
+  p4est_quadrant_set_morton (quad, 0, 0);
   T8_ASSERT (p4est_quadrant_is_extended (quad));
 }
 T8_EXTERN_C_END ();

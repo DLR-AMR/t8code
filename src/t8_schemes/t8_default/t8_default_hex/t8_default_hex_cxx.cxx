@@ -665,10 +665,7 @@ void
 t8_default_scheme_hex_c::t8_element_root (t8_element_t *elem) const
 {
   p8est_quadrant_t *hex = (p8est_quadrant_t *) elem;
-  hex->level = 0;
-  hex->x = 0;
-  hex->y = 0;
-  T8_QUAD_SET_TDIM (hex, 3);
+  p8est_quadrant_set_morton (hex, 0, 0);
   T8_ASSERT (p8est_quadrant_is_extended (hex));
 }
 
