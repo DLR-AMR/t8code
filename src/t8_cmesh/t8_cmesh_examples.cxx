@@ -3229,8 +3229,7 @@ t8_cmesh_new_cubed_sphere (const double radius, sc_MPI_Comm comm)
   double all_verts[ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM];
   t8_eclass_t all_eclasses[ntrees];
 
-  t8_geometry_c *geometry = t8_geometry_cubed_sphere_new ();
-  t8_cmesh_register_geometry (cmesh, geometry);
+  t8_cmesh_register_geometry<t8_geometry_cubed_sphere> (cmesh);
 
   /* Defitition of the tree class. */
   for (int itree = 0; itree < ntrees; itree++) {
