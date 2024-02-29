@@ -767,6 +767,13 @@ struct t8_eclass_scheme
   virtual void
   t8_element_destroy (int length, t8_element_t **elem) const
     = 0;
+
+  /** create the root element
+   * \param [in,out] elem The element that is filled with the root
+   */
+  virtual void
+  t8_element_root (t8_element_t *elem) const
+    = 0;
 };
 
 /** Destroy an implementation of a particular element class. 

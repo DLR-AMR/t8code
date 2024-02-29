@@ -441,5 +441,15 @@ t8_default_scheme_pyramid_c::~t8_default_scheme_pyramid_c ()
    * However we need to provide an implementation of the destructor
    * and hence this empty function. */
 }
-
+void
+t8_default_scheme_pyramid_c::t8_element_root (t8_element_t *elem) const
+{
+  t8_dpyramid_t *pyramid = (t8_dpyramid_t *) elem;
+  pyramid->pyramid.level = 0;
+  pyramid->pyramid.x = 0;
+  pyramid->pyramid.y = 0;
+  pyramid->pyramid.z = 0;
+  pyramid->pyramid.type = T8_DPYRAMID_ROOT_TYPE;
+  pyramid->switch_shape_at_level = -1;
+}
 T8_EXTERN_C_END ();

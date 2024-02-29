@@ -455,4 +455,11 @@ t8_default_scheme_line_c::~t8_default_scheme_line_c ()
    * and hence this empty function. */
 }
 
+void
+t8_default_scheme_line_c::t8_element_root (t8_element_t *elem) const
+{
+  t8_dline_t *line = (t8_dline_t *) elem;
+  line->level = 0;
+  line->x = 0;
+}
 T8_EXTERN_C_END ();

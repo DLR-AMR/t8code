@@ -352,5 +352,10 @@ t8_default_scheme_vertex_c::~t8_default_scheme_vertex_c ()
    * However we need to provide an implementation of the destructor
    * and hence this empty function. */
 }
-
+void
+t8_default_scheme_vertex_c::t8_element_root (t8_element_t *elem) const
+{
+  t8_dvertex_t *vertex = (t8_dvertex_t *) elem;
+  vertex->level = 0;
+}
 T8_EXTERN_C_END ();
