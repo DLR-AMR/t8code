@@ -24,6 +24,21 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
 #include <t8_geometry/t8_geometry_helpers.h>
 
+/**
+ * Check that the two points of the geometry are ordered correctly, that is
+ * p1_x <= p2_x, p1_y <= p2_y and p1_z <= p2_z
+ * 
+ * \param[in] tree_vertices The vertices of a tree
+ * \return true if the points are ordered correctly
+ * \return false ow
+ */
+static bool
+correct_point_order (const double tree_vertices[6])
+{
+  return tree_vertices[0] <= tree_vertices[3] && tree_vertices[1] <= tree_vertices[4]
+         && tree_vertices[2] <= tree_vertices[5];
+}
+
 t8_geometry_linear_axis_aligned::t8_geometry_linear_axis_aligned (int dim): t8_geometry_with_vertices (dim, "")
 {
   T8_ASSERT (0 <= dim && dim <= 3);
@@ -44,6 +59,7 @@ void
 t8_geometry_linear_axis_aligned::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
                                                    const size_t num_coords, double *out_coords) const
 {
+  T8_ASSERT (correct_point_order (active_tree_vertices));
   t8_geom_compute_linear_axis_aligned_geometry (active_tree_class, active_tree_vertices, ref_coords, num_coords,
                                                 out_coords);
 }
@@ -85,8 +101,8 @@ t8_geometry_linear_axis_aligned::t8_geom_point_batch_inside_element (t8_forest_t
 bool
 t8_geometry_linear_axis_aligned::t8_geom_tree_negative_volume (const t8_cmesh_t cmesh) const
 {
-  return active_tree_vertices[3] < active_tree_vertices[0] || active_tree_vertices[4] < active_tree_vertices[1]
-         || active_tree_vertices[5] < active_tree_vertices[2];
+  T8_ASSERT (correct_point_order (active_tree_vertices));
+  return false;
 }
 
 T8_EXTERN_C_BEGIN ();
