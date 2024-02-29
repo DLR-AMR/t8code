@@ -176,7 +176,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
   virtual void
   t8_element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id) const override
   {
-    t8_element_init (1, elem, 0); /* TODO: replace by t8_element_root */
+    t8_element_root (elem);
     t8_element_init_linear_id_recursive (elem, level, id);
   }
 
