@@ -32,12 +32,14 @@
  * \return true if the points are ordered correctly
  * \return false ow
  */
+#if T8_ENABLE_DEBUG
 static bool
 correct_point_order (const double tree_vertices[6])
 {
   return tree_vertices[0] <= tree_vertices[3] && tree_vertices[1] <= tree_vertices[4]
          && tree_vertices[2] <= tree_vertices[5];
 }
+#endif
 
 t8_geometry_linear_axis_aligned::t8_geometry_linear_axis_aligned (int dim): t8_geometry_with_vertices (dim, "")
 {
