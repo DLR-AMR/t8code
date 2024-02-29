@@ -84,6 +84,10 @@ t8_geometry_linear_axis_aligned::t8_geom_point_batch_inside_element (t8_forest_t
   /*Geometry is fully described by v_min and v_max*/
   t8_forest_element_coordinate (forest, ltreeid, element, 0, v_min);
   t8_forest_element_coordinate (forest, ltreeid, element, 1, v_max);
+#if T8_ENABLE_DEBUG
+  const double coords[6] = { v_min[0], v_min[1], v_min[2], v_max[0], v_max[1], v_max[2] };
+  T8_ASSERT (correct_point_order (coords));
+#endif
 
   for (int ipoint = 0; ipoint < num_points; ipoint++) {
     /* A point is inside if it is inbetween the x/y/z-coordinates of v_min and v_max */
