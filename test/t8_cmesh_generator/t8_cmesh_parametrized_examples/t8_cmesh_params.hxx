@@ -83,6 +83,8 @@ std::vector<int> periodic = { 0, 1 };
 /* Currently a dummy vector for examples that have periodic argument but not fully support it yet */
 std::vector<int> no_periodic = { 0 };
 
+std::vector<int> dims = { 1, 2, 3 };
+
 std::vector<int> num_prisms = filled_vector (50, 3);
 }  // namespace cmesh_params
 
