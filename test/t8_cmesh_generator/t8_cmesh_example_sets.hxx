@@ -28,6 +28,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include "test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_prism_cake_param.hxx"
 #include "test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_from_class_param.hxx"
 #include "test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_bigmesh_param.hxx"
+#include "test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_disjoint_bricks_param.hxx"
 #include "test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_comm.hxx"
 #include "test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_hypercube_pad.hxx"
 #include "test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_hypercube_param.hxx"
@@ -49,9 +50,9 @@ auto pretty_print_base_example = [] (const testing::TestParamInfo<cmesh_example_
 namespace cmesh_list
 {
 std::vector<example_set *> cart_prod_vec
-  = { new_from_class::cmesh_example,          new_prism_cake::cmesh_example,    new_bigmesh::cmesh_example,
-      new_cmesh_comm::cmesh_example,          new_hypercube_pad::cmesh_example, new_hypercube_cmesh::cmesh_example,
-      new_hypercube_cmesh::cmesh_example_pyra };
+  = { new_from_class::cmesh_example,           new_prism_cake::cmesh_example,     new_bigmesh::cmesh_example,
+      new_cmesh_comm::cmesh_example,           new_hypercube_pad::cmesh_example,  new_hypercube_cmesh::cmesh_example,
+      new_hypercube_cmesh::cmesh_example_pyra, new_disjoint_bricks::cmesh_example };
 
 cmesh_sum_of_sets cmesh_sums (cart_prod_vec);
 
