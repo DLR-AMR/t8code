@@ -147,9 +147,9 @@ t8_geometry_lagrange::t8_geom_t6_basis (const double *ref_point) const
   const double xi = ref_point[0];
   const double eta = ref_point[1];
   const std::vector<double> basis_functions
-    = { 1 - 3 * xi + 2 * xi * xi,      -xi + eta + 2 * xi * xi + 2 * eta * eta - 4 * xi * eta,
-        -eta + 2 * eta * eta,          4 * xi - 4 * eta - 4 * xi * xi + 4 * xi * eta,
-        -4 * eta * eta + 4 * xi * eta, 4 * eta - 4 * xi * eta };
+    = { 1 - 3 * xi + 2 * xi * xi, -xi + eta + 2 * xi * xi + 2 * eta * eta - 4 * xi * eta,
+        -eta + 2 * eta * eta,     -4 * eta * eta + 4 * xi * eta,
+        4 * eta - 4 * xi * eta,   4 * xi - 4 * eta - 4 * xi * xi + 4 * xi * eta };
   return basis_functions;
 }
 

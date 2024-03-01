@@ -212,11 +212,11 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
                   x
                 / |
               /   |
-          5 x     x 4
+          4 x     x 3
           /       |
         /         |
       x --- x --- x
-     0      3      1
+     0      5      1
      \endverbatim
    * \param ref_point  Point in the reference space.
    * \return  Basis functions evaluated at the reference point.
