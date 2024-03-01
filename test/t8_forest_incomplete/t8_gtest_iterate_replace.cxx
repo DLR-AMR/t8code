@@ -23,7 +23,7 @@
 #include <gtest/gtest.h>
 #include <t8.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include "t8_cmesh/t8_cmesh_testcases.h"
+#include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
 #include <t8_forest/t8_forest.h>
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
@@ -35,23 +35,28 @@
  * t8_forest_iterate_replace if it is passed the correct values.
  */
 
-class forest_iterate: public testing::TestWithParam<int> {
+class forest_iterate: public testing::TestWithParam<cmesh_example_base *> {
  protected:
   void
   SetUp () override
   {
-    cmesh_id = GetParam ();
-
-    forest
-      = t8_forest_new_uniform (t8_test_create_cmesh (cmesh_id), t8_scheme_new_default_cxx (), 4, 0, sc_MPI_COMM_WORLD);
+    cmesh = GetParam ()->cmesh_create ();
+    if (t8_cmesh_is_empty (cmesh)) {
+      GTEST_SKIP ();
+    }
+    forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), 4, 0, sc_MPI_COMM_WORLD);
   }
   void
   TearDown () override
   {
-    t8_forest_unref (&forest);
+    if (t8_cmesh_is_empty (cmesh)) {
+      t8_cmesh_unref (&cmesh);
+    }
+    else {
+      t8_forest_unref (&forest);
+    }
   }
-
-  int cmesh_id;
+  t8_cmesh_t cmesh;
   t8_forest_t forest;
 };
 
@@ -239,4 +244,4 @@ TEST_P (forest_iterate, test_iterate_replace)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_iterate_replace, forest_iterate, AllCmeshs);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_iterate_replace, forest_iterate, AllCmeshsParam, pritty_print_base_example);

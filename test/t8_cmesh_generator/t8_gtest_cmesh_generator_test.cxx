@@ -65,4 +65,4 @@ TEST (param_generator, check_num_parameters_combination)
   EXPECT_EQ (num_combs_generated, num_expected);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_create_cmeshes, t8_cmesh_iter, AllCmeshsParam, pretty_print_base_example);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_create_cmeshes, t8_cmesh_iter, AllCmeshsParam, pritty_print_base_example);

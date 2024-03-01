@@ -26,7 +26,7 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh/t8_cmesh_helpers.h>
-#include <t8_cmesh/t8_cmesh_testcases.h>
+#include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <test/t8_gtest_macros.hxx>
 
@@ -365,25 +365,17 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
   }
 }
 
-class t8_cmesh_set_join_by_vertices_class: public testing::TestWithParam<int> {
+class t8_cmesh_set_join_by_vertices_class: public testing::TestWithParam<cmesh_example_base *> {
  protected:
   void
   SetUp () override
   {
-    cmesh_id = GetParam ();
 
-    int first_id_new_bigmesh
-      = t8_get_number_of_comm_only_cmesh_testcases () + t8_get_number_of_new_hypercube_cmesh_testcases ()
-        + t8_get_number_of_new_empty_cmesh_testcases () + t8_get_number_of_new_from_class_cmesh_testcases ()
-        + t8_get_number_of_new_hypercube_hybrid_cmesh_testcases () + t8_get_number_of_new_periodic_cmesh_testcases ();
-
-    int last_id_new_bigmesh = first_id_new_bigmesh + t8_get_number_of_new_bigmesh_cmesh_testcases () - 1;
-
-    if (cmesh_id >= first_id_new_bigmesh && cmesh_id <= last_id_new_bigmesh) {
+    if (GetParam ()->name.find (std::string ("bigmesh"))) {
       GTEST_SKIP ();
     }
 
-    cmesh = t8_test_create_cmesh (cmesh_id);
+    cmesh = GetParam ()->cmesh_create ();
   }
 
   void
@@ -404,4 +396,5 @@ TEST_P (t8_cmesh_set_join_by_vertices_class, test_cmesh_set_join_by_vertices_par
 }
 
 /* Test all cmeshes over all different inputs we get through their id */
-INSTANTIATE_TEST_SUITE_P (t8_cmesh_set_join_by_vertices, t8_cmesh_set_join_by_vertices_class, AllCmeshs);
+INSTANTIATE_TEST_SUITE_P (t8_cmesh_set_join_by_vertices, t8_cmesh_set_join_by_vertices_class, AllCmeshsParam,
+                          pritty_print_base_example);
