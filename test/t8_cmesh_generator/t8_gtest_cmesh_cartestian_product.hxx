@@ -172,23 +172,36 @@ increment (const B& begins, std::pair<T, T>& r, std::pair<TT, TT>&... rr)
   return false;
 }
 
+template <typename... Args>
+inline bool
+no_rule (Args... params)
+{
+  return true;
+}
+
 /**
  * Fill a vector with tuples, based on pairs of iterators. The iterators are used
  * to create the tuples according to the cartesian product. 
  * 
  * @tparam OutputIterator 
  * @tparam Iter 
- * \param out An OutputIterator that will be filled
- * \param ranges Pairs of ranges 
+ * \param[in, out] out An OutputIterator that will be filled
+ * \param[in] rule  A function that returns true if a parameter combination is permissible, false otherwise
+ * \param[in] ranges Pairs of ranges 
  */
 template <typename OutputIterator, typename... Iter>
 void
-cartesian_product (OutputIterator out, std::pair<Iter, Iter>... ranges)
+cartesian_product (OutputIterator out, std::function<bool (typename Iter::value_type...)> rule,
+                   std::pair<Iter, Iter>... ranges)
 {
   const auto begins = std::make_tuple (ranges.first...);
-  out = { *ranges.first... };
-  while (!increment (begins, ranges...)) {
+  if (rule (*ranges.first...)) {
     out = { *ranges.first... };
+  }
+  while (!increment (begins, ranges...)) {
+    if (rule (*ranges.first...)) {
+      out = { *ranges.first... };
+    }
   }
 }
 
@@ -208,8 +221,57 @@ class cmesh_cartesian_product_params: example_set {
                                   std::function<std::string (const typename Iter::value_type&...)> param_to_string,
                                   std::string name)
   {
+    std::function<bool (typename Iter::value_type...)> no_rule_wrapper = no_rule<typename Iter::value_type...>;
     std::vector<std::tuple<typename Iter::value_type...>> cart_prod;
-    cartesian_product (std::back_inserter (cart_prod), ranges...);
+    cartesian_product (std::back_inserter (cart_prod), no_rule_wrapper, ranges...);
+    for (int iparam_set = 0; (long unsigned int) iparam_set < cart_prod.size (); iparam_set++) {
+      std::tuple<typename Iter::value_type...> param = cart_prod[iparam_set];
+      cmesh_example_base* next_example
+        = (cmesh_example_base*) new cmesh_example_with_parameter<typename Iter::value_type...> (cmesh_function, param,
+                                                                                                param_to_string, name);
+      example_all_combination.push_back (next_example);
+    }
+  }
+
+  cmesh_cartesian_product_params (std::pair<Iter, Iter>... ranges,
+                                  std::vector<std::function<t8_cmesh_t (typename Iter::value_type...)>> cmesh_functions,
+                                  std::function<std::string (const typename Iter::value_type&...)> param_to_string,
+                                  std::vector<std::string> names)
+  {
+    std::function<bool (typename Iter::value_type...)> no_rule_wrapper = no_rule<typename Iter::value_type...>;
+    std::vector<std::tuple<typename Iter::value_type...>> cart_prod;
+    cartesian_product (std::back_inserter (cart_prod), no_rule_wrapper, ranges...);
+    T8_ASSERT (cmesh_functions.size () == names.size ());
+    for (int ifunction = 0; (long unsigned int) ifunction < cmesh_functions.size (); ifunction++) {
+      for (int iparam_set = 0; (long unsigned int) iparam_set < cart_prod.size (); iparam_set++) {
+        std::tuple<typename Iter::value_type...> param = cart_prod[iparam_set];
+        cmesh_example_base* next_example
+          = (cmesh_example_base*) new cmesh_example_with_parameter<typename Iter::value_type...> (
+            cmesh_functions[ifunction], param, param_to_string, names[ifunction]);
+        example_all_combination.push_back (next_example);
+      }
+    }
+  }
+};
+
+/**
+ * Variadic template class that creates \ref base_example based on the cartesian product
+ * of the input parameters. 
+ * 
+ * @tparam Iter 
+ */
+template <class... Iter>
+class cmesh_cartesian_product_with_rules: example_set {
+ public:
+  cmesh_cartesian_product_with_rules () {};
+
+  cmesh_cartesian_product_with_rules (std::pair<Iter, Iter>... ranges,
+                                      std::function<t8_cmesh_t (typename Iter::value_type...)> cmesh_function,
+                                      std::function<std::string (const typename Iter::value_type&...)> param_to_string,
+                                      std::function<bool (typename Iter::value_type...)> rule, std::string name)
+  {
+    std::vector<std::tuple<typename Iter::value_type...>> cart_prod;
+    cartesian_product (std::back_inserter (cart_prod), rule, ranges...);
     for (int iparam_set = 0; (long unsigned int) iparam_set < cart_prod.size (); iparam_set++) {
       std::tuple<typename Iter::value_type...> param = cart_prod[iparam_set];
       cmesh_example_base* next_example

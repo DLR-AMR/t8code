@@ -49,13 +49,13 @@ std::function<std::string (const t8_gloidx_t, const t8_gloidx_t, const t8_gloidx
   make_param_string_wrapper = make_param_string;
 
 example_set *cmesh_example = (example_set *) new cmesh_cartesian_product_params<
-  decltype (cmesh_params::num_trees_per_dir.begin ()), decltype (cmesh_params::num_trees_per_dir.begin ()),
-  decltype (cmesh_params::num_trees_per_dir.begin ()), decltype (cmesh_params::periodic.begin ()),
+  decltype (cmesh_params::elems_per_dim.begin ()), decltype (cmesh_params::elems_per_dim.begin ()),
+  decltype (cmesh_params::elems_per_dim.begin ()), decltype (cmesh_params::periodic.begin ()),
   decltype (cmesh_params::periodic.begin ()), decltype (cmesh_params::periodic.begin ()),
   decltype (cmesh_params::my_comms.begin ())> (
-  std::make_pair (cmesh_params::num_trees_per_dir.begin (), cmesh_params::num_trees_per_dir.end ()),
-  std::make_pair (cmesh_params::num_trees_per_dir.begin (), cmesh_params::num_trees_per_dir.end ()),
-  std::make_pair (cmesh_params::num_trees_per_dir.begin (), cmesh_params::num_trees_per_dir.end ()),
+  std::make_pair (cmesh_params::elems_per_dim.begin (), cmesh_params::elems_per_dim.end ()),
+  std::make_pair (cmesh_params::elems_per_dim.begin (), cmesh_params::elems_per_dim.end ()),
+  std::make_pair (cmesh_params::elems_per_dim.begin (), cmesh_params::elems_per_dim.end ()),
   std::make_pair (cmesh_params::periodic.begin (), cmesh_params::periodic.end ()),
   std::make_pair (cmesh_params::periodic.begin (), cmesh_params::periodic.end ()),
   std::make_pair (cmesh_params::periodic.begin (), cmesh_params::periodic.end ()),
