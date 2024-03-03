@@ -45,6 +45,25 @@ t8_geometry_handler::register_geometry (t8_geometry_c **geom)
 void
 t8_geometry_handler::update_tree (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 {
+#if T8_ENABLE_DEBUG
+static int num_recursive_invocations = 0;
+  /*******************************************************/
+  /* We ran into a bug, where t8_cmesh_is_committed called update_tree for a different tree,
+   * so that at the end of this function the tree with gtreeid actually was not loaded.
+   * The do_not_update_tree variable lives beyond of this function call and is used to
+   * alarm if the update_tree function is being called recursively. */
+  T8_ASSERT(t8_cmesh_is_committed(cmesh));
+  static int do_not_update_tree = false;
+  static bool is_checking = false; /* This variable lives beyond of the scope of this function and prevents t8_cmesh_is_committed from executing */
+  t8_debugf ("update_tree called %i times recursively\n", num_recursive_invocations++);
+  t8_debugf ("is_checking: %i\n", is_checking);
+  t8_debugf ("do_not_update_tree: %i\n", do_not_update_tree);
+  T8_ASSERT (!do_not_update_tree); /* If this assertion is triggers, the update_tree function is being called recursively. */
+  do_not_update_tree = true;
+  const bool former_state_of_is_checking = is_checking;
+  is_checking = true;
+  /*******************************************************/
+#endif /* T8_ENABLE_DEBUG */
   T8_ASSERT (0 <= gtreeid && gtreeid < t8_cmesh_get_num_trees (cmesh));
   const int num_geoms = get_num_geometries ();
   SC_CHECK_ABORTF (num_geoms > 0,
@@ -67,4 +86,9 @@ t8_geometry_handler::update_tree (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
     /* Get the user data for this geometry and this tree. */
     active_geometry->t8_geom_load_tree_data (cmesh, gtreeid);
   }
+#if T8_ENABLE_DEBUG
+  is_checking = former_state_of_is_checking;
+  do_not_update_tree = false;
+  num_recursive_invocations = 0;
+#endif /* T8_ENABLE_DEBUG */
 }
