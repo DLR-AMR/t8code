@@ -81,7 +81,6 @@ int
 t8_cmesh_is_initialized (t8_cmesh_t cmesh);
 
 /** Check whether a cmesh is not NULL, initialized and committed.
- * In addition, it asserts that the cmesh is consistent as much as possible.
  * \param [in] cmesh            This cmesh is examined.  May be NULL.
  * \return                      True if cmesh is not NULL and
  *                              \ref t8_cmesh_init has been called on it
@@ -90,6 +89,13 @@ t8_cmesh_is_initialized (t8_cmesh_t cmesh);
  */
 int
 t8_cmesh_is_committed (const t8_cmesh_t cmesh);
+
+/** Test if a cmesh is valid as much as possible.
+ * \param [in] cmesh            The cmesh to be validated.
+ * \return                      True if th cmesh is valid.
+ */
+int
+t8_cmesh_validate (const t8_cmesh_t cmesh);
 
 #ifdef T8_ENABLE_DEBUG
 /** After a cmesh is committed, check whether all trees in a cmesh do have positive volume.

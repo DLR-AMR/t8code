@@ -87,6 +87,13 @@ t8_cmesh_check_trees_per_eclass (t8_cmesh_t cmesh)
 int
 t8_cmesh_is_committed (const t8_cmesh_t cmesh)
 {
+  return cmesh != NULL && t8_refcount_is_active (&cmesh->rc) && cmesh->committed;
+}
+
+int
+t8_cmesh_validate (const t8_cmesh_t cmesh)
+{
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
   static int is_checking = 0;
 
   /* We run into a stackoverflow if routines that we call here,
