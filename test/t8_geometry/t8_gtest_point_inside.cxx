@@ -132,7 +132,6 @@ class geometry_point_inside: public testing::TestWithParam<std::tuple<t8_eclass,
     eclass = std::get<0> (GetParam ());
     level = std::get<1> (GetParam ());
     use_axis_aligned_geom = std::get<2> (GetParam ());
-    const int dim = t8_eclass_to_dimension[eclass];
 
     /* Construct a cube coarse mesh */
     if (use_axis_aligned_geom && (eclass == T8_ECLASS_LINE || eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX)) {
@@ -148,8 +147,7 @@ class geometry_point_inside: public testing::TestWithParam<std::tuple<t8_eclass,
         1, 1, 1 
       };
       /* clang-format on */
-      geometry = new t8_geometry_linear_axis_aligned (dim);
-      cmesh = t8_cmesh_new_hypercube_pad (eclass, sc_MPI_COMM_WORLD, boundaries, 1, 1, 1, geometry);
+      cmesh = t8_cmesh_new_hypercube_pad (eclass, sc_MPI_COMM_WORLD, boundaries, 1, 1, 1, use_axis_aligned_geom);
     }
     else {
       cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
@@ -162,7 +160,6 @@ class geometry_point_inside: public testing::TestWithParam<std::tuple<t8_eclass,
   t8_eclass_t eclass;
   int level;
   int use_axis_aligned_geom;
-  t8_geometry_c *geometry;
   t8_cmesh_t cmesh;
 };
 

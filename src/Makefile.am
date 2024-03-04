@@ -65,6 +65,7 @@ libt8_installed_headers_geometry_impl = \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx \
+  src/t8_geometry/t8_geometry_implementations/t8_geometry_analytic.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_examples.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_cad.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx \
@@ -156,9 +157,13 @@ src_libt8_la_CPPFLAGS = $(AM_CPPFLAGS) $(T8_CPPFLAGS)
 ## This is the official API versioning scheme of libtool.  Please see:
 ## Read https://www.gnu.org/software/libtool/manual/libtool.html#Versioning
 src_libt8_la_LDFLAGS = -version-info 2:0:0
-src_libt8_la_LIBADD = @T8_P4EST_LDADD@ @T8_SC_LDADD@
+src_libt8_la_LIBADD = @T8_P4EST_LIBADD@ @T8_SC_LIBADD@
+EXTRA_src_libt8_la_DEPENDENCIES = @T8_SC_EDEPS@
+
+AM_LDFLAGS =
+AM_LDFLAGS += @T8_SC_RPATH@
 LDADD += src/libt8.la @T8_P4EST_LDADD@ @T8_SC_LDADD@
-EXTRA_src_libt8_la_DEPENDENCIES = @T8_P4EST_LDADD@ @T8_SC_LDADD@
+
 
 nodist_include_HEADERS += $(libt8_generated_headers)
 dist_include_HEADERS = $(libt8_installed_headers)
