@@ -929,7 +929,8 @@ t8_geometry_cad::t8_geom_evaluate_cad_prism (t8_cmesh_t cmesh, t8_gloidx_t gtree
   const int num_faces = t8_eclass_num_faces[active_tree_class];
   double interpolated_curve_param, interpolated_surface_params[2], cur_delta[3];
   gp_Pnt pnt;
-  double interpolated_coords[3], interpolation_coeffs[3], temp_face_vertices[T8_ECLASS_MAX_CORNERS_2D * 3], temp_edge_vertices[2 * 3];
+  double interpolated_coords[3], interpolation_coeffs[3], temp_face_vertices[T8_ECLASS_MAX_CORNERS_2D * 3],
+    temp_edge_vertices[2 * 3];
   Handle_Geom_Curve curve;
   Handle_Geom_Surface surface;
   Standard_Real first, last;
@@ -1048,22 +1049,19 @@ t8_geometry_cad::t8_geom_evaluate_cad_prism (t8_cmesh_t cmesh, t8_gloidx_t gtree
         double face_displacement_from_edges[3] = { 0 };
 
         /* Iterate over each edge of face */
-        for (int i_face_edge = 0; i_face_edge < t8_eclass_num_vertices[t8_eclass_face_types[active_tree_class][i_faces]]; ++i_face_edge) {
+        for (int i_face_edge = 0;
+             i_face_edge < t8_eclass_num_vertices[t8_eclass_face_types[active_tree_class][i_faces]]; ++i_face_edge) {
 
           const int i_tree_edge = t8_face_edge_to_tree_edge[active_tree_class][i_faces][i_face_edge];
-          const int interpolation_coeff
-            = t8_interpolation_coefficient_prism_edge[i_tree_edge];
+          const int interpolation_coeff = t8_interpolation_coefficient_prism_edge[i_tree_edge];
 
           /* Check if curve is present */
           if (edges[i_tree_edge] > 0) {
             /* Convert global tree id to local tree id, for receiving cmesh attributes. */
             t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
             /* Retrieve parameters of nodes of the curve */
-            const double *curve_parameters
-              = (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
-                                                   T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY
-                                                     + i_tree_edge,
-                                                   ltreeid);
+            const double *curve_parameters = (double *) t8_cmesh_get_attribute (
+              cmesh, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_tree_edge, ltreeid);
             T8_ASSERT (curve_parameters != NULL);
 
             /* Interpolate linearly between the parameters of the two nodes on the curve */
@@ -1078,11 +1076,8 @@ t8_geometry_cad::t8_geom_evaluate_cad_prism (t8_cmesh_t cmesh, t8_gloidx_t gtree
                                           interpolated_edge_coordinates);
 
             /* Retrieve the curve of the edge */
-            T8_ASSERT (edges[i_tree_edge]
-                       <= cad_shape_edge_map.Size ());
-            curve = BRep_Tool::Curve (TopoDS::Edge (cad_shape_edge_map.FindKey (
-                                        edges[i_tree_edge])),
-                                      first, last);
+            T8_ASSERT (edges[i_tree_edge] <= cad_shape_edge_map.Size ());
+            curve = BRep_Tool::Curve (TopoDS::Edge (cad_shape_edge_map.FindKey (edges[i_tree_edge])), first, last);
             /* Check if curve is valid */
             T8_ASSERT (!curve.IsNull ());
             /* Calculate point on curve with interpolated parameters */
@@ -1099,7 +1094,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_prism (t8_cmesh_t cmesh, t8_gloidx_t gtree
             }
           }
         }
-        
+
         interpolation_coeffs[0] = ref_coords[t8_interpolation_coefficients_prism_face[i_faces][0] + offset_3d];
         interpolation_coeffs[1] = ref_coords[t8_interpolation_coefficients_prism_face[i_faces][1] + offset_3d];
 
