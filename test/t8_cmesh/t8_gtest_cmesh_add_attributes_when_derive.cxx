@@ -30,12 +30,11 @@
  * cmesh is working.
  * This test is currently disabled, see https://github.com/DLR-AMR/t8code/issues/923 */
 
-class t8_cmesh_add_attributes: public testing::TestWithParam<int> {
+class DISABLED_t8_cmesh_add_attributes: public testing::TestWithParam<int> {
  protected:
   void
   SetUp () override
   {
-    GTEST_SKIP ();
     const int cmesh_id = GetParam ();
     cmesh = t8_test_create_cmesh (cmesh_id);
 
@@ -63,7 +62,6 @@ class t8_cmesh_add_attributes: public testing::TestWithParam<int> {
   void
   TearDown () override
   {
-    GTEST_SKIP ();
     t8_cmesh_destroy (&cmesh_derived);
   }
 
@@ -73,7 +71,7 @@ class t8_cmesh_add_attributes: public testing::TestWithParam<int> {
 };
 
 /** Check attribute values of cmeshes against reference values. */
-TEST_P (t8_cmesh_add_attributes, check_attributes)
+TEST_P (DISABLED_t8_cmesh_add_attributes, check_attributes)
 {
   const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (cmesh_derived);
   const t8_locidx_t num_ghost_trees = t8_cmesh_get_num_ghosts (cmesh_derived);
@@ -92,4 +90,4 @@ TEST_P (t8_cmesh_add_attributes, check_attributes)
 }
 
 /* Test for different number of trees. */
-INSTANTIATE_TEST_SUITE_P (t8_gtest_add_attributes_when_derive, t8_cmesh_add_attributes, AllCmeshs);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_add_attributes_when_derive, DISABLED_t8_cmesh_add_attributes, AllCmeshs);
