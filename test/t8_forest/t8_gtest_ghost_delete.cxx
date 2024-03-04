@@ -54,7 +54,7 @@ test_adapt_holes (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which
   return 0;
 }
 
-class forest_ghost_exchange_holes: public testing::Test {
+class DISABLED_forest_ghost_exchange_holes: public testing::Test {
  protected:
   void
   SetUp () override
@@ -103,12 +103,11 @@ class forest_ghost_exchange_holes: public testing::Test {
   t8_cmesh_t cmesh;
 };
 
-TEST_F (forest_ghost_exchange_holes, errorTest)
+TEST_F (DISABLED_forest_ghost_exchange_holes, errorTest)
 {
   /* This test tests the functionality described in Issue: https://github.com/DLR-AMR/t8code/issues/825
-  * Remove the GTEST_SKIP() macros when you start working on the issue.
+  * Remove the DISABLED_ macros when you start working on the issue or us --gtest_also_run_disabled_tests
   */
-  GTEST_SKIP ();
   if (comm != sc_MPI_COMM_NULL) {
     const int level = 1;
     const int execute_ghost = 1;

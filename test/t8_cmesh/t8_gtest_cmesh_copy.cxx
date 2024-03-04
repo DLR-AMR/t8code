@@ -38,13 +38,13 @@
  * See: https://github.com/DLR-AMR/t8code/issues/920
  */
 
-class t8_cmesh_copy: public testing::TestWithParam<cmesh_example_base *> {
+class DISABLED_t8_cmesh_copy: public testing::TestWithParam<cmesh_example_base *> {
  protected:
   void
   SetUp () override
   {
     /* Skip test since cmesh copy is not yet working. See https://github.com/DLR-AMR/t8code/issues/920 */
-    GTEST_SKIP ();
+
     cmesh_original = GetParam ()->cmesh_create ();
 
     /* Initialized test cmesh that we derive in the test */
@@ -55,7 +55,7 @@ class t8_cmesh_copy: public testing::TestWithParam<cmesh_example_base *> {
   TearDown () override
   {
     /* Skip test since cmesh copy is not yet working. See https://github.com/DLR-AMR/t8code/issues/920 */
-    GTEST_SKIP ();
+
     /* Unref both cmeshes */
     t8_cmesh_unref (&cmesh);
   }
@@ -71,7 +71,7 @@ test_cmesh_committed (t8_cmesh_t cmesh)
   ASSERT_TRUE (t8_cmesh_trees_is_face_consistent (cmesh, cmesh->trees)) << "Cmesh face consistency failed.";
 }
 
-TEST_P (t8_cmesh_copy, test_cmesh_copy)
+TEST_P (DISABLED_t8_cmesh_copy, test_cmesh_copy)
 {
   t8_cmesh_set_derive (cmesh, cmesh_original);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
@@ -82,4 +82,4 @@ TEST_P (t8_cmesh_copy, test_cmesh_copy)
 }
 
 /* Test all cmeshes over all different inputs*/
-INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_copy, t8_cmesh_copy, AllCmeshsParam, pretty_print_base_example);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_copy, DISABLED_t8_cmesh_copy, AllCmeshsParam, pretty_print_base_example);

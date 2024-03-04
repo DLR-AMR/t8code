@@ -37,7 +37,10 @@
  * The two resulting forests must be equal.
  * */
 
-class global_tree: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
+/* 
+ * Remove `DISABLED_` from the name of the Test(suite) or use `--gtest_also_run_disabled_tests` when you start working on the issue. 
+ */
+class DISABLED_global_tree: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
  protected:
   void
   SetUp () override
@@ -46,8 +49,6 @@ class global_tree: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
     testcase = std::get<1> (GetParam ());
     forest = t8_forest_new_uniform (t8_cmesh_new_bigmesh (eclass, 3, sc_MPI_COMM_WORLD), t8_scheme_new_default_cxx (),
                                     0, 0, sc_MPI_COMM_WORLD);
-    /* Remove if partitioning empty trees from processes with no elements works */
-    GTEST_SKIP ();
   }
   void
   TearDown () override
@@ -128,7 +129,7 @@ t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn, int do_ada
   return forest_new;
 }
 
-TEST_P (global_tree, test_empty_global_tree)
+TEST_P (DISABLED_global_tree, test_empty_global_tree)
 {
   ASSERT_TRUE (!forest->incomplete_trees);
 
@@ -168,5 +169,5 @@ TEST_P (global_tree, test_empty_global_tree)
   t8_forest_unref (&forest_adapt_b);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_empty_global_tree, global_tree,
+INSTANTIATE_TEST_SUITE_P (t8_gtest_empty_global_tree, DISABLED_global_tree,
                           testing::Combine (AllEclasses, testing::Range (0, 6)));
