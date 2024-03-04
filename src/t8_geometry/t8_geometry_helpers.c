@@ -378,17 +378,29 @@ t8_geom_get_scaling_factor_of_edge_on_face_prism (const int edge, const int face
   double orthogonal_direction;
   double max_orthogonal_direction;
   double scaling_factor;
-
+  /* Save the orthogonal direction and the maximum of that direction
+   * of an edge in reference space on one of the neighbouring faces. 
+   *           /|
+   *          / |
+   *         /  |
+   *        /   |
+   *       /    |--edge
+   *      /   --|--face
+   *     /      |
+   *    /    <~~| orthogonal direction
+   *   /<----o--| maximum othogonal direction
+   *  /_________|
+   */
   switch (edge) {
   case 0:
     switch (face) {
     case 0:
-      orthogonal_direction = ref_coords[1];
+      orthogonal_direction = ref_coords[2];
       max_orthogonal_direction = 1;
       break;
     case 3:
       orthogonal_direction = 1 - ref_coords[0];
-      max_orthogonal_direction = 1 - ref_coords[2];
+      max_orthogonal_direction = 1 - ref_coords[1];
       break;
     default:
       SC_ABORT_NOT_REACHED ();
@@ -398,11 +410,11 @@ t8_geom_get_scaling_factor_of_edge_on_face_prism (const int edge, const int face
   case 1:
     switch (face) {
     case 1:
-      orthogonal_direction = ref_coords[1];
+      orthogonal_direction = ref_coords[2];
       max_orthogonal_direction = 1;
       break;
     case 3:
-      orthogonal_direction = ref_coords[2];
+      orthogonal_direction = ref_coords[0] - ref_coords[1];
       max_orthogonal_direction = ref_coords[0];
       break;
     default:
@@ -413,11 +425,11 @@ t8_geom_get_scaling_factor_of_edge_on_face_prism (const int edge, const int face
   case 2:
     switch (face) {
     case 2:
-      orthogonal_direction = ref_coords[1];
+      orthogonal_direction = ref_coords[2];
       max_orthogonal_direction = 1;
       break;
     case 3:
-      orthogonal_direction = ref_coords[0] - ref_coords[2];
+      orthogonal_direction = ref_coords[1];
       max_orthogonal_direction = ref_coords[0];
       break;
     default:
@@ -428,12 +440,12 @@ t8_geom_get_scaling_factor_of_edge_on_face_prism (const int edge, const int face
   case 3:
     switch (face) {
     case 0:
-      orthogonal_direction = 1 - ref_coords[1];
+      orthogonal_direction = 1 - ref_coords[2];
       max_orthogonal_direction = 1;
       break;
     case 4:
       orthogonal_direction = 1 - ref_coords[0];
-      max_orthogonal_direction = 1 - ref_coords[2];
+      max_orthogonal_direction = 1 - ref_coords[1];
       break;
     default:
       SC_ABORT_NOT_REACHED ();
@@ -443,11 +455,11 @@ t8_geom_get_scaling_factor_of_edge_on_face_prism (const int edge, const int face
   case 4:
     switch (face) {
     case 1:
-      orthogonal_direction = 1 - ref_coords[1];
+      orthogonal_direction = 1 - ref_coords[2];
       max_orthogonal_direction = 1;
       break;
     case 4:
-      orthogonal_direction = ref_coords[2];
+      orthogonal_direction = ref_coords[0] - ref_coords[1];
       max_orthogonal_direction = ref_coords[0];
       break;
     default:
@@ -458,11 +470,11 @@ t8_geom_get_scaling_factor_of_edge_on_face_prism (const int edge, const int face
   case 5:
     switch (face) {
     case 2:
-      orthogonal_direction = 1 - ref_coords[1];
+      orthogonal_direction = 1 - ref_coords[2];
       max_orthogonal_direction = 1;
       break;
     case 4:
-      orthogonal_direction = ref_coords[0] - ref_coords[2];
+      orthogonal_direction = ref_coords[1];
       max_orthogonal_direction = ref_coords[0];
       break;
     default:
@@ -473,7 +485,7 @@ t8_geom_get_scaling_factor_of_edge_on_face_prism (const int edge, const int face
   case 6:
     switch (face) {
     case 0:
-      orthogonal_direction = 1 - ref_coords[2];
+      orthogonal_direction = ref_coords[1];
       max_orthogonal_direction = 1;
       break;
     case 2:
@@ -488,7 +500,7 @@ t8_geom_get_scaling_factor_of_edge_on_face_prism (const int edge, const int face
   case 7:
     switch (face) {
     case 0:
-      orthogonal_direction = ref_coords[2];
+      orthogonal_direction = 1 - ref_coords[1];
       max_orthogonal_direction = 1;
       break;
     case 1:
@@ -540,11 +552,11 @@ t8_geom_get_scaling_factor_face_through_volume_prism (const int face, const doub
 
   switch (face) {
   case 0:
-    if (ref_coords[2] == 1) {
+    if (ref_coords[1] == 1) {
       scaling_factor = 0;
     }
     else {
-      scaling_factor = 1 - ((1 - ref_coords[0]) / (1 - ref_coords[2]));
+      scaling_factor = 1 - ((1 - ref_coords[0]) / (1 - ref_coords[1]));
     }
     break;
   case 1:
@@ -552,7 +564,7 @@ t8_geom_get_scaling_factor_face_through_volume_prism (const int face, const doub
       scaling_factor = 0;
     }
     else {
-      scaling_factor = 1 - (ref_coords[2] / ref_coords[0]);
+      scaling_factor = 1 - ((ref_coords[0] - ref_coords[1]) / ref_coords[0]);
     }
     break;
   case 2:
@@ -560,14 +572,14 @@ t8_geom_get_scaling_factor_face_through_volume_prism (const int face, const doub
       scaling_factor = 0;
     }
     else {
-      scaling_factor = 1 - ((ref_coords[0] - ref_coords[2]) / ref_coords[0]);
+      scaling_factor = 1 - (ref_coords[1] / ref_coords[0]);
     }
     break;
   case 3:
-    scaling_factor = 1 - ref_coords[1];
+    scaling_factor = 1 - ref_coords[2];
     break;
   case 4:
-    scaling_factor = ref_coords[1];
+    scaling_factor = 1 - (1 - ref_coords[2]);
     break;
   default:
     SC_ABORT_NOT_REACHED ();
