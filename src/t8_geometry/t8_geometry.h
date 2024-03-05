@@ -69,23 +69,43 @@ typedef struct t8_geometry_handler t8_geometry_handler_c;
 
 T8_EXTERN_C_BEGIN ();
 
+/**
+ * Evaluates the geometry of a tree at a given reference point.
+ * \param [in] cmesh The cmesh
+ * \param [in] gtreeid The global id of the tree
+ * \param [in] ref_coords The reference coordinates at which to evaluate the geometry
+ * \param [in] num_coords The number of reference coordinates
+ * \param [out] out_coords The evaluated coordinates
+ */
 void
 t8_geometry_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
                       double *out_coords);
 
+/** Evaluates the jacobian of a tree at a given reference point.
+ * \param[in] cmesh       The cmesh
+ * \param[in] gtreeid     The global id of the tree
+ * \param[in] ref_coords  The reference coordinates at which to evaluate the jacobian
+ * \param[in] num_coords  The number of reference coordinates
+ * \param[out] jacobian   The jacobian at the reference coordinates
+ */
 void
 t8_geometry_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
                       double *jacobian);
 
+/** This function returns the geometry type of a tree.
+ * \param[in] cmesh       The cmesh
+ * \param[in] gtreeid     The global id of the tree
+ * \return                The geometry type of the tree with id \ref gtreeid
+ */
 t8_geometry_type_t
 t8_geometry_get_type (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 
 /**
  * Check if a tree has a negative volume
  * 
- * \param[in] cmesh       The cmesh containing the tree to check
+ * \param[in] cmesh       The cmesh to check
  * \param[in] gtreeid     The global id of the tree
- * \return                True if the tree with id \ref ltree_id has a negative volume. False otherwise.  
+ * \return                True if the tree with id \ref gtreeid has a negative volume. False otherwise.  
  */
 bool
 t8_geometry_tree_negative_volume (const t8_cmesh_t cmesh, const t8_gloidx_t gtreeid);

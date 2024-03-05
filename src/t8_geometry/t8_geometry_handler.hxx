@@ -142,6 +142,14 @@ struct t8_geometry_handler
     return active_geometry;
   }
 
+  /**
+   * Evaluate the geometry of the provided tree at the given reference coordinates.
+   * \param [in,out] cmesh The cmesh.
+   * \param [in,out] gtreeid The global tree id of the tree for which the geometry should be evaluated.
+   * \param [in] ref_coords The reference coordinates at which to evaluate the geometry.
+   * \param [in] num_coords The number of reference coordinates.
+   * \param [out] out_coords The evaluated coordinates.
+   */
   inline void
   evaluate_tree_geometry (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
                           double *out_coords)
@@ -150,6 +158,14 @@ struct t8_geometry_handler
     active_geometry->t8_geom_evaluate (cmesh, gtreeid, ref_coords, num_coords, out_coords);
   }
 
+  /**
+   * Evaluate the Jacobian of the geometry of the provided tree at the given reference coordinates.
+   * \param [in,out] cmesh The cmesh.
+   * \param [in,out] gtreeid The global tree id of the tree for which the geometry should be evaluated.
+   * \param [in] ref_coords The reference coordinates at which to evaluate the geometry.
+   * \param [in] num_coords The number of reference coordinates.
+   * \param [out] out_coords The evaluated Jacobian coordinates.
+   */
   inline void
   evaluate_tree_geometry_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
                                    const size_t num_coords, double *out_coords)
@@ -158,6 +174,12 @@ struct t8_geometry_handler
     active_geometry->t8_geom_evaluate_jacobian (cmesh, gtreeid, ref_coords, num_coords, out_coords);
   }
 
+  /**
+   * Get the geometry type of the provided tree.
+   * \param [in,out] cmesh The cmesh.
+   * \param [in,out] gtreeid The global tree id of the tree for which the geometry type should be returned.
+   * \return The geometry type of the tree.
+   */
   inline t8_geometry_type_t
   get_tree_geometry_type (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
   {
