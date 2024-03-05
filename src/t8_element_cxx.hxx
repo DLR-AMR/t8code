@@ -127,6 +127,16 @@ struct t8_eclass_scheme
   t8_element_compare (const t8_element_t *elem1, const t8_element_t *elem2) const
     = 0;
 
+  /** Check if two elements are equal.
+  * \param [in] ts     Implementation of a class scheme.
+  * \param [in] elem1  The first element.
+  * \param [in] elem2  The second element.
+  * \return            1 if the elements are equal, 0 if they are not equal
+  */
+  virtual int
+  t8_element_equal (const t8_element_t *elem1, const t8_element_t *elem2) const
+    = 0;
+
   /** Compute the parent of a given element \b elem and store it in \b parent.
    *  \b parent needs to be an existing element. No memory is allocated by this function.
    *  \b elem and \b parent can point to the same element, then the entries of
@@ -494,20 +504,6 @@ struct t8_eclass_scheme
   t8_element_last_descendant_face (const t8_element_t *elem, int face, t8_element_t *last_desc, int level) const
     = 0;
 
-  /* TODO:  Do we need this function at all?
-   *        If not remove it. If so, what to do with prisms and pyramids?
-   *        Here the boundary elements are of different eclasses, so we cannot
-   *        store them in an array...
-   */
-  /** Construct all codimension-one boundary elements of a given element.
-   * \param [in] elem     The input element.
-   * \param [in] face     A face of \a elem.
-   * \return              True if \a face is a subface of the element's root element.
-   */
-  virtual void
-  t8_element_boundary (const t8_element_t *elem, int min_dim, int length, t8_element_t **boundary) const
-    = 0;
-
   /** Compute whether a given element shares a given face with its root tree.
    * \param [in] elem     The input element.
    * \param [in] face     A face of \a elem.
@@ -551,7 +547,7 @@ struct t8_eclass_scheme
    * \param [in,out] elem The element whose entries will be set.
    * \param [in] level    The level of the uniform refinement to consider.
    * \param [in] id       The linear id.
-   *                      id must fulfil 0 <= id < 'number of leafs in the uniform refinement'
+   *                      id must fulfil 0 <= id < 'number of leaves in the uniform refinement'
    */
   virtual void
   t8_element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id) const
@@ -594,16 +590,6 @@ struct t8_eclass_scheme
    */
   virtual void
   t8_element_successor (const t8_element_t *t, t8_element_t *s, int level) const
-    = 0;
-
-  /* TODO: This function should be removed, since root length is not a general concept that exists for all possible elements. */
-  /** Compute the root length of a given element, that is the length of
-   * its level 0 ancestor.
-   * \param [in] elem     The element whose root length should be computed.
-   * \return              The root length of \a elem
-   */
-  virtual int
-  t8_element_root_len (const t8_element_t *elem) const
     = 0;
 
   /** Compute the coordinates of a given element vertex inside a reference tree
@@ -655,19 +641,19 @@ struct t8_eclass_scheme
    *  Thus, if \a t's level is 0, and \a level = 3, the return value is 2^3 = 8.
    */
   virtual t8_gloidx_t
-  t8_element_count_leafs (const t8_element_t *t, int level) const
+  t8_element_count_leaves (const t8_element_t *t, int level) const
     = 0;
 
   /** Count how many leaf descendants of a given uniform level the root element will produce.
    * \param [in] level A refinement level.
-   * \return The value of \ref t8_element_count_leafs if the input element
+   * \return The value of \ref t8_element_count_leaves if the input element
    *      is the root (level 0) element.
    *
    * This is a convenience function, and can be implemented via
-   * \ref t8_element_count_leafs.
+   * \ref t8_element_count_leaves.
    */
   virtual t8_gloidx_t
-  t8_element_count_leafs_from_root (int level) const
+  t8_element_count_leaves_from_root (int level) const
     = 0;
 
   /** This function has no defined effect but each implementation is free to
@@ -715,6 +701,16 @@ struct t8_eclass_scheme
  */
   virtual void
   t8_element_debug_print (const t8_element_t *elem) const
+    = 0;
+
+  /**
+ * \brief Fill a string with readable information about the element
+ * 
+ * \param[in] elem The element to translate into human-readable information
+ * \param[in, out] debug_string The string to fill. 
+ */
+  virtual void
+  t8_element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const
     = 0;
 #endif
 

@@ -22,9 +22,10 @@
 
 #include <gtest/gtest.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <test/t8_gtest_macros.hxx>
 
 /*
- * In this file we test whether the t8_element_count_leafs{_from_root}
+ * In this file we test whether the t8_element_count_leaves{_from_root}
  * function return the correct values for the default scheme.
  * This value should be  2^(dim * (level - element_level)) for
  * level >= element_level (for eclass != T8_ECLASS_PYRAMID).
@@ -33,7 +34,7 @@
 
 /* Tests whether the leaf count for one additional level matches the number of children */
 
-class class_element_leafs: public testing::TestWithParam<t8_eclass> {
+class class_element_leaves: public testing::TestWithParam<t8_eclass> {
  protected:
   void
   SetUp () override
@@ -52,7 +53,7 @@ class class_element_leafs: public testing::TestWithParam<t8_eclass> {
   t8_scheme_cxx_t *ts = t8_scheme_new_default_cxx ();
 };
 
-TEST_P (class_element_leafs, test_element_count_leafs_root)
+TEST_P (class_element_leaves, test_element_count_leaves_root)
 {
   const int maxlevel = class_scheme->t8_element_maxlevel ();
   t8_gloidx_t compare_value = 1;
@@ -60,7 +61,7 @@ TEST_P (class_element_leafs, test_element_count_leafs_root)
   t8_gloidx_t sum2 = 1;
 
   for (int level = 0; level <= maxlevel; ++level) {
-    const t8_gloidx_t leaf_count = class_scheme->t8_element_count_leafs_from_root (level);
+    const t8_gloidx_t leaf_count = class_scheme->t8_element_count_leaves_from_root (level);
     ASSERT_EQ (leaf_count, compare_value)
       << "Incorrect leaf count " << leaf_count << " at eclass " << t8_eclass_to_string[eclass] << " and level " << level
       << " (expecting " << compare_value << ")";
@@ -80,7 +81,7 @@ TEST_P (class_element_leafs, test_element_count_leafs_root)
 
 /* Tests whether the leaf count for the same level is equal to 1
  * and for smaller levels is 0 */
-TEST_P (class_element_leafs, test_element_count_leafs_less_level)
+TEST_P (class_element_leaves, test_element_count_leaves_less_level)
 {
   t8_element_t *element;
   const int maxlevel = class_scheme->t8_element_maxlevel ();
@@ -90,14 +91,14 @@ TEST_P (class_element_leafs, test_element_count_leafs_less_level)
   for (int level = 0; level <= maxlevel; ++level) {
     /* Create the first element on this level */
     class_scheme->t8_element_set_linear_id (element, level, 0);
-    /* Count the leafs of this element */
-    const t8_gloidx_t leaf_count_same_level = class_scheme->t8_element_count_leafs (element, level);
+    /* Count the leaves of this element */
+    const t8_gloidx_t leaf_count_same_level = class_scheme->t8_element_count_leaves (element, level);
     /* Check if equals 1 */
     ASSERT_EQ (leaf_count_same_level, 1);
     int lower_levels;
     for (lower_levels = level - 1; lower_levels >= 0; --lower_levels) {
-      /* Count the leafs of this element on the lower levels */
-      const t8_gloidx_t leaf_count = class_scheme->t8_element_count_leafs (element, lower_levels);
+      /* Count the leaves of this element on the lower levels */
+      const t8_gloidx_t leaf_count = class_scheme->t8_element_count_leaves (element, lower_levels);
       /* Check if equals 0 */
       ASSERT_EQ (leaf_count, 0) << "Incorrect leaf count " << leaf_count << " at eclass " << t8_eclass_to_string[eclass]
                                 << " and level " << level << " for element level " << lower_levels << "(expecting 0)";
@@ -109,7 +110,7 @@ TEST_P (class_element_leafs, test_element_count_leafs_less_level)
 }
 
 /* Tests whether the leaf count for one additional level matches the number of children */
-TEST_P (class_element_leafs, test_element_count_leafs_one_level)
+TEST_P (class_element_leaves, test_element_count_leaves_one_level)
 {
   t8_element_t *element;
   const int maxlevel = class_scheme->t8_element_maxlevel ();
@@ -118,8 +119,8 @@ TEST_P (class_element_leafs, test_element_count_leafs_one_level)
   for (int level = 1; level < maxlevel; ++level) {
     /* Create the first element on the previous level */
     class_scheme->t8_element_set_linear_id (element, level - 1, 0);
-    /* Count the leafs of this element */
-    const t8_gloidx_t leaf_count = class_scheme->t8_element_count_leafs (element, level);
+    /* Count the leaves of this element */
+    const t8_gloidx_t leaf_count = class_scheme->t8_element_count_leaves (element, level);
     /* Compute the number of children of the element */
     const int number_of_children = class_scheme->t8_element_num_children (element);
     /* Check both values for equality */
@@ -130,5 +131,4 @@ TEST_P (class_element_leafs, test_element_count_leafs_one_level)
   class_scheme->t8_element_destroy (1, &element);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_element_count_leafs, class_element_leafs,
-                          testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_element_count_leaves, class_element_leaves, AllEclasses);

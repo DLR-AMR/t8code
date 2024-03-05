@@ -1013,7 +1013,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
         else {
           /* Calculate the parametric geometries of the tree */
 #if T8_WITH_OCC
-          T8_ASSERT (t8_geom_is_occ (occ_geometry_base));
+          T8_ASSERT (occ_geometry_base->t8_geom_get_type () == T8_GEOMETRY_TYPE_OCC);
           const t8_geometry_occ_c *occ_geometry = dynamic_cast<const t8_geometry_occ_c *> (occ_geometry_base);
           /* Check for right element class */
           if (eclass != T8_ECLASS_TRIANGLE && eclass != T8_ECLASS_QUAD && eclass != T8_ECLASS_TET
@@ -1253,6 +1253,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
               continue;
             }
 
+<<<<<<< HEAD
             /* If one node lies on a surface and the other on an edge, the edge has to lie on the surface. */
             if ((edge_nodes[0].entity_dim == 2 && edge_nodes[1].entity_dim == 1
                  && !occ_geometry->t8_geom_is_edge_on_face (edge_nodes[1].entity_tag, edge_nodes[0].entity_tag))
@@ -1275,6 +1276,35 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
                 || (edge_nodes[1].entity_dim == 1 && edge_nodes[0].entity_dim == 0
                     && !occ_geometry->t8_geom_is_vertex_on_edge (edge_nodes[0].entity_tag, edge_nodes[1].entity_tag))) {
               continue;
+=======
+            /* If one vertex lies on a geometry of a higher dim as the other, we have to check,
+             * if the geometry of lower dimension is on that geometry. */
+            {
+              int is_on_geom = 1;
+              for (int i_edge = 0; i_edge < 2; ++i_edge) {
+                if (edge_geometry_dim == 2 && edge_nodes[i_edge].entity_dim == 1) {
+                  if (!occ_geometry->t8_geom_is_edge_on_face (edge_nodes[i_edge].entity_tag, edge_geometry_tag)) {
+                    is_on_geom = 0;
+                    break;
+                  }
+                }
+                else if (edge_geometry_dim == 2 && edge_nodes[i_edge].entity_dim == 0) {
+                  if (!occ_geometry->t8_geom_is_vertex_on_face (edge_nodes[i_edge].entity_tag, edge_geometry_tag)) {
+                    is_on_geom = 0;
+                    break;
+                  }
+                }
+                else if (edge_geometry_dim == 1 && edge_nodes[i_edge].entity_dim == 0) {
+                  if (!occ_geometry->t8_geom_is_vertex_on_edge (edge_nodes[i_edge].entity_tag, edge_geometry_tag)) {
+                    is_on_geom = 0;
+                    break;
+                  }
+                }
+              }
+              if (!is_on_geom) {
+                continue;
+              }
+>>>>>>> origin/main
             }
 
             /* If both nodes are on a vertex we still got no edge. 

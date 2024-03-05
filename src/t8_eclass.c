@@ -117,7 +117,7 @@ const int t8_eclass_face_orientation[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES] = {
   { 0, 1, 1, 0, 0, 1 },      /* hex */
   { 0, 1, 0, 1, -1, -1 },    /* tet */
   { 1, 0, 1, 0, 1, -1 },     /* prism */
-  { 0, 1, 0, 1, 0, -1 }      /* pyramid */
+  { 0, 1, 1, 0, 0, -1 }      /* pyramid */
 };
 
 const int t8_face_normal_tet[T8_ECLASS_MAX_FACES][3] = { { -1, 0, 0 }, { 1, 0, -1 }, { 0, -1, 1 }, { 0, 1, 0 } };

@@ -78,7 +78,7 @@ t8_test_fiterate (t8_forest_t forest)
   t8_locidx_t itree, num_trees;
   t8_eclass_t eclass;
   t8_eclass_scheme_c *ts;
-  t8_element_t *first_el, *last_el, *nca;
+  t8_element_t *nca;
   t8_element_array_t *leaf_elements;
   t8_test_fiterate_udata_t udata;
   int iface;
@@ -87,11 +87,12 @@ t8_test_fiterate (t8_forest_t forest)
   for (itree = 0; itree < num_trees; itree++) {
     eclass = t8_forest_get_tree_class (forest, itree);
     ts = t8_forest_get_eclass_scheme (forest, eclass);
-    first_el = t8_forest_get_element_in_tree (forest, itree, 0);
-    last_el = t8_forest_get_element_in_tree (forest, itree, t8_forest_get_tree_num_elements (forest, itree) - 1);
+    const t8_element_t *first_el = t8_forest_get_element_in_tree (forest, itree, 0);
+    const t8_element_t *last_el
+      = t8_forest_get_element_in_tree (forest, itree, t8_forest_get_tree_num_elements (forest, itree) - 1);
     ts->t8_element_new (1, &nca);
     ts->t8_element_nca (first_el, last_el, nca);
-    leaf_elements = t8_forest_tree_get_leafs (forest, itree);
+    leaf_elements = t8_forest_tree_get_leaves (forest, itree);
 
     for (iface = 0; iface < ts->t8_element_num_faces (nca); iface++) {
       udata.count = 0;

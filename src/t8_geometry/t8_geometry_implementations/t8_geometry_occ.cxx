@@ -309,7 +309,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh, t8_gloidx_t gt
             t8_geom_linear_interpolation (&ref_intersection[0], parameters, 1, 1, &interpolated_curve_parameter);
           }
           /* Retrieve curve */
-          T8_ASSERT (edges[i_edge] <= occ_shape_face_map.Size ());
+          T8_ASSERT (edges[i_edge] <= occ_shape_edge_map.Size ());
           curve = BRep_Tool::Curve (TopoDS::Edge (occ_shape_edge_map.FindKey (edges[i_edge])), first, last);
           /* Check if curve is valid */
           T8_ASSERT (!curve.IsNull ());
@@ -1327,28 +1327,12 @@ t8_geometry_occ_new (int dimension, const char *fileprefix, const char *name_in)
 void
 t8_geometry_occ_destroy (t8_geometry_occ_c **geom)
 {
-#ifdef T8_ENABLE_DEBUG
-  t8_geometry_occ_c *pgeom = *geom;
-  T8_ASSERT (dynamic_cast<t8_geometry_occ *> (pgeom) != NULL);
-#endif
+  T8_ASSERT (geom != NULL);
+  T8_ASSERT ((*geom)->t8_geom_get_type () == T8_GEOMETRY_TYPE_OCC);
 
   delete *geom;
   *geom = NULL;
 }
-
-#if T8_ENABLE_DEBUG
-int
-t8_geom_is_occ (const t8_geometry_c *geometry)
-{
-  /* Try to dynamic cast the geometry into occ geometry. This is only successful if
-   * geometry points to a t8_geometry_occ.
-   * If successful, then is_occ_geom will be true.
-   */
-  const int is_occ_geom = (dynamic_cast<const t8_geometry_occ *> (geometry) != NULL);
-
-  return is_occ_geom;
-}
-#endif
 
 T8_EXTERN_C_END ();
 

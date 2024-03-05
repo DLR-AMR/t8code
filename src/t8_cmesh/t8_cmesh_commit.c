@@ -33,7 +33,6 @@
 #include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_partition.h>
-#include <t8_cmesh/t8_cmesh_refine.h>
 #include <t8_cmesh/t8_cmesh_copy.h>
 #include <t8_cmesh/t8_cmesh_geometry.h>
 
@@ -207,7 +206,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   sc_mempool_t *ghost_facejoin_mempool;
   t8_ghost_facejoin_t *ghost_facejoin = NULL, *temp_facejoin, **facejoin_pp;
   size_t joinfaces_it, iz;
-  t8_gloidx_t last_tree = cmesh->num_local_trees + cmesh->first_tree - 1, id1, id2;
+  t8_gloidx_t id1, id2;
   t8_locidx_t temp_local_id = 0;
   t8_locidx_t num_hashes;
   t8_gloidx_t *face_neigh_g, *face_neigh_g2;
@@ -251,6 +250,10 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   /* The first_tree and first_tree_shared entries must be set by now */
   T8_ASSERT (cmesh->first_tree >= 0);
   T8_ASSERT (cmesh->first_tree_shared >= 0);
+
+  /* Compute the global id of the cmeshes last_tree.
+   * This must happen after cmesh->first_tree is computed. */
+  const t8_gloidx_t last_tree = cmesh->num_local_trees + cmesh->first_tree - 1;
 
   num_hashes = cmesh->num_local_trees > 0 ? cmesh->num_local_trees : 10;
   ghost_facejoin_mempool = sc_mempool_new (sizeof (t8_ghost_facejoin_t));
@@ -504,67 +507,6 @@ t8_cmesh_commit_from_stash (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   }
 }
 
-/* Refine a cmesh to an arbitrary level >= 0.
- * The function t8_cmesh_refine can only refine a cmesh one level,
- * so we use intermediate cmeshes for the higher levels.
- * If the level is 0 then we only copy the cmesh. */
-static void
-t8_cmesh_commit_refine (t8_cmesh_t cmesh, sc_MPI_Comm comm)
-{
-  int level, il;
-  t8_cmesh_t cmesh_temp[2], cmesh_from;
-  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
-  T8_ASSERT (!cmesh->committed);
-  T8_ASSERT (t8_cmesh_is_committed (cmesh->set_from));
-  T8_ASSERT (cmesh->set_refine_level >= 0);
-
-  cmesh_from = cmesh->set_from;
-  level = cmesh->set_refine_level;
-
-  if (level == 0) {
-    t8_cmesh_copy (cmesh, cmesh_from, comm);
-    return;
-  }
-
-  if (level > 1) {
-    /* We need cmesh_from later, therefore we ref it before
-     * a temporary cmesh is derived from it */
-    t8_cmesh_ref (cmesh_from);
-    cmesh_temp[1] = cmesh_from;
-  }
-
-  /* This loop is only executed if level > 1 */
-  for (il = 0; il < level - 1; il++) {
-    /* cmesh_temp[0] and cmesh_temp[1] are successively refined from each other,
-     * starting with cmesh_temp[1] = cmesh_from */
-    t8_cmesh_init (&cmesh_temp[il % 2]);
-    t8_cmesh_set_derive (cmesh_temp[il % 2], cmesh_temp[1 - il % 2]);
-    /* Since we need the scheme to refine cmesh, we ref it */
-    t8_scheme_cxx_ref (cmesh->set_refine_scheme);
-    t8_cmesh_set_refine (cmesh_temp[il % 2], 1, cmesh->set_refine_scheme);
-    t8_cmesh_commit (cmesh_temp[il % 2], comm);
-    t8_debugf ("[%i] committed %i\n", level, il % 2);
-  }
-  if (level > 1) {
-    /* Refine from the last temporary cmesh */
-    cmesh->set_from = cmesh_temp[1 - il % 2];
-    /* t8_cmesh_refine only accepts refinement level 1, so we
-     * set it temporarily. */
-    cmesh->set_refine_level = 1;
-  }
-  t8_cmesh_refine (cmesh);
-  if (level > 1) {
-    /* reset the refinement level and
-     * cmesh_from. */
-    cmesh->set_refine_level = level;
-    /* Clean-up memory and restore old cmesh_from */
-    if (cmesh->set_from != cmesh_from) {
-      t8_cmesh_destroy (&cmesh->set_from);
-      cmesh->set_from = cmesh_from;
-    }
-  }
-}
-
 /* TODO: set boundary face connections here.
  *       not trivial if replicated and not level 3 face_knowledg
  *       Edit: boundary face is default. If no face-connection is added then
@@ -576,7 +518,6 @@ void
 t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
   int mpiret;
-  t8_cmesh_t cmesh_temp;
   int commit_geom_handler = 0;
 
   T8_ASSERT (cmesh != NULL);
@@ -618,76 +559,14 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
     if (cmesh->set_partition) {
       /* The cmesh should be partitioned */
-      if (cmesh->set_refine_level > 0) {
-        /* The cmesh should also be refined.
-         * We create a temporary cmesh, partition it and refine it to
-         * create the new cmesh. */
-        t8_cmesh_init (&cmesh_temp);
-        t8_cmesh_set_derive (cmesh_temp, cmesh->set_from);
-        /* TODO: This code is duplicated below and may also be shorter */
-        if (cmesh->tree_offsets != NULL) {
-          t8_cmesh_set_partition_offsets (cmesh_temp, cmesh->tree_offsets);
-        }
-        else if (cmesh->set_partition_level) {
-          T8_ASSERT (cmesh->set_partition_scheme != NULL);
-          t8_cmesh_set_partition_uniform (cmesh_temp, cmesh->set_partition_level, cmesh->set_partition_scheme);
-        }
-        else {
-          t8_gloidx_t first_tree;
-          T8_ASSERT (cmesh->first_tree >= 0 && cmesh->num_local_trees >= 0);
-          if (cmesh->first_tree_shared) {
-            first_tree = -cmesh->first_tree - 1;
-          }
-          else {
-            first_tree = cmesh->first_tree;
-          }
-          t8_cmesh_set_partition_range (cmesh_temp, cmesh->face_knowledge, first_tree,
-                                        cmesh->num_local_trees + cmesh->first_tree);
-        }
-        t8_cmesh_partition (cmesh_temp, comm);
-        t8_cmesh_set_derive (cmesh, cmesh_temp);
-        t8_cmesh_commit_refine (cmesh, comm);
-      }
-      else {
-        /* cmesh should only be partitioned and not refined */
-        t8_cmesh_partition (cmesh, comm);
-      }
+      t8_cmesh_partition (cmesh, comm);
     }
     else {
-      /* cmesh should only be refined and not partitioned */
-      t8_cmesh_commit_refine (cmesh, comm);
+      t8_cmesh_copy (cmesh, cmesh->set_from, comm);
     }
   } /* End set_from != NULL */
   else {
-    /* cmesh is constructed from a stash */
-    if (cmesh->set_refine_level > 0) {
-      /* cmesh should be refined */
-      t8_cmesh_init (&cmesh_temp);
-      cmesh_temp->stash = cmesh->stash;
-      cmesh->stash = NULL;
-      /* TODO: This code is duplicated above and may also be shorter */
-      if (cmesh->set_partition) {
-        if (cmesh->tree_offsets) {
-          t8_cmesh_set_partition_offsets (cmesh_temp, cmesh->tree_offsets);
-        }
-        else if (cmesh->set_partition_level) {
-          T8_ASSERT (cmesh->set_partition_scheme != NULL);
-          t8_cmesh_set_partition_uniform (cmesh_temp, cmesh->set_partition_level, cmesh->set_partition_scheme);
-        }
-        else {
-          T8_ASSERT (cmesh->first_tree >= 0 && cmesh->num_local_trees >= 0);
-          t8_cmesh_set_partition_range (cmesh_temp, cmesh->face_knowledge, cmesh->first_tree,
-                                        cmesh->num_local_trees + cmesh->first_tree);
-        }
-      }
-      t8_cmesh_commit_from_stash (cmesh_temp, comm);
-      t8_cmesh_set_derive (cmesh, cmesh_temp);
-      t8_cmesh_commit_refine (cmesh, comm);
-    }
-    else {
-      /* cmesh should not be refined. Partitioned or replicated commit from stash */
-      t8_cmesh_commit_from_stash (cmesh, comm);
-    }
+    t8_cmesh_commit_from_stash (cmesh, comm);
     /* If no geometry was registered, we need to initialize a geometry handler
      * (which will then be empty). */
     if (cmesh->geometry_handler == NULL) {

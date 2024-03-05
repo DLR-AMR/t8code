@@ -160,6 +160,15 @@ struct t8_default_scheme_quad_c: public t8_default_scheme_common_c
   virtual int
   t8_element_compare (const t8_element_t *elem1, const t8_element_t *elem2) const;
 
+  /** Check if two elements are equal.
+  * \param [in] ts     Implementation of a class scheme.
+  * \param [in] elem1  The first element.
+  * \param [in] elem2  The second element.
+  * \return            1 if the elements are equal, 0 if they are not equal
+  */
+  virtual int
+  t8_element_equal (const t8_element_t *elem1, const t8_element_t *elem2) const;
+
   /** Compute the parent of a given element \b elem and store it in \b parent.
    *  \b parent needs to be an existing element. No memory is allocated by this function.
    *  \b elem and \b parent can point to the same element, then the entries of
@@ -459,14 +468,6 @@ struct t8_default_scheme_quad_c: public t8_default_scheme_common_c
   t8_element_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
                             const t8_eclass_scheme_c *boundary_scheme) const;
 
-  /** Construct all codimension-one boundary elements of a given element.
-   * \param [in] elem     The input element.
-   * \param [in] face     A face of \a elem.
-   * \return              True if \a face is a subface of the element's root element.
-   */
-  virtual void
-  t8_element_boundary (const t8_element_t *elem, int min_dim, int length, t8_element_t **boundary) const;
-
   /** Compute whether a given element shares a given face with its root tree.
    * \param [in] elem     The input element.
    * \param [in] face     A face of \a elem.
@@ -498,7 +499,7 @@ struct t8_default_scheme_quad_c: public t8_default_scheme_common_c
    * \param [in,out] elem The element whose entries will be set.
    * \param [in] level    The level of the uniform refinement to consider.
    * \param [in] id       The linear id.
-   *                      id must fulfil 0 <= id < 'number of leafs in the uniform refinement'
+   *                      id must fulfil 0 <= id < 'number of leaves in the uniform refinement'
    */
   virtual void
   t8_element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id) const;
@@ -550,14 +551,6 @@ struct t8_default_scheme_quad_c: public t8_default_scheme_common_c
    */
   virtual void
   t8_element_anchor (const t8_element_t *elem, int anchor[3]) const;
-
-  /** Compute the root length of a given element, that is the length of
-   * its level 0 ancestor.
-   * \param [in] elem     The element whose root length should be computed.
-   * \return              The root length of \a elem
-   */
-  virtual int
-  t8_element_root_len (const t8_element_t *elem) const;
 
   /** Compute the integer coordinates of a given element vertex.
    * The default scheme implements the Morton type SFCs. In these SFCs the
@@ -629,7 +622,7 @@ struct t8_default_scheme_quad_c: public t8_default_scheme_common_c
   * \param [in]        elem  The element to print
   */
   virtual void
-  t8_element_debug_print (const t8_element_t *elem) const;
+  t8_element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const;
 #endif
 };
 

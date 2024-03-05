@@ -84,6 +84,16 @@ struct t8_geometry_occ: public t8_geometry_with_vertices
   }
 
   /**
+   * Get the type of this geometry.
+   * \return The type.
+   */
+  inline t8_geometry_type_t
+  t8_geom_get_type () const
+  {
+    return T8_GEOMETRY_TYPE_OCC;
+  };
+
+  /**
    * Maps points in the reference space \f$ [0,1]^\mathrm{dim} \to \mathbb{R}^3 \f$.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.

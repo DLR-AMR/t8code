@@ -49,6 +49,12 @@ P4EST_CHECK_LIBRARIES([T8])
 T8_CHECK_LIBRARIES([T8])
 
 echo "o---------------------------------------"
+echo "| Checking C++ standard"
+echo "o---------------------------------------"
+
+T8_CHECK_CPPSTD()
+
+echo "o---------------------------------------"
 echo "| Checking headers"
 echo "o---------------------------------------"
 

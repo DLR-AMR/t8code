@@ -32,6 +32,7 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
+#include <test/t8_gtest_macros.hxx>
 
 class forest_find_owner: public testing::TestWithParam<t8_eclass> {
  protected:
@@ -169,4 +170,4 @@ TEST_P (forest_find_owner, find_multiple_owners)
   sc_array_reset (&owners);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_find_owner, forest_find_owner, testing::Range (T8_ECLASS_VERTEX, T8_ECLASS_COUNT));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_find_owner, forest_find_owner, AllEclasses);

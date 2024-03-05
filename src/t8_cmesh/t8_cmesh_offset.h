@@ -44,7 +44,7 @@ T8_EXTERN_C_BEGIN ();
  *                      of \a proc in the partition \a offset.
  */
 t8_gloidx_t
-t8_offset_first (int proc, const t8_gloidx_t *offset);
+t8_offset_first (const int proc, const t8_gloidx_t *offset);
 
 /** Given the global tree id of the first local tree of a process and
  * the flag whether it is shared or not, compute the entry in the offset array.
@@ -58,7 +58,7 @@ t8_offset_first (int proc, const t8_gloidx_t *offset);
  *                              - \a first_tree - 1 if \a shared != 0
  */
 t8_gloidx_t
-t8_offset_first_tree_to_entry (t8_gloidx_t first_tree, int shared);
+t8_offset_first_tree_to_entry (const t8_gloidx_t first_tree, const int shared);
 
 /** The number of trees of a given process in a partition.
  * \param [in] proc     A mpi rank.
@@ -67,7 +67,7 @@ t8_offset_first_tree_to_entry (t8_gloidx_t first_tree, int shared);
  *                      in the partition \a offset.
  */
 t8_gloidx_t
-t8_offset_num_trees (int proc, const t8_gloidx_t *offset);
+t8_offset_num_trees (const int proc, const t8_gloidx_t *offset);
 
 /** Return the last local tree of a given process in a partition.
  * \param [in] proc     A mpi rank.
@@ -76,7 +76,7 @@ t8_offset_num_trees (int proc, const t8_gloidx_t *offset);
  *                      \a proc in \a offset.
  */
 t8_gloidx_t
-t8_offset_last (int proc, const t8_gloidx_t *offset);
+t8_offset_last (const int proc, const t8_gloidx_t *offset);
 
 /** Check whether a given process has no local trees in a given partition.
  * \param [in] proc     A mpi rank.
@@ -85,7 +85,7 @@ t8_offset_last (int proc, const t8_gloidx_t *offset);
  *                      0 otherwise.
  */
 int
-t8_offset_empty (int proc, const t8_gloidx_t *offset);
+t8_offset_empty (const int proc, const t8_gloidx_t *offset);
 
 /** Find the next higher rank that is not empty.
  * returns mpisize if this rank does not exist.
@@ -99,7 +99,7 @@ t8_offset_empty (int proc, const t8_gloidx_t *offset);
  *                      If no such \a q exists, \a mpisize is returned.
  */
 int
-t8_offset_next_nonempty_rank (int rank, int mpisize, const t8_gloidx_t *offset);
+t8_offset_next_nonempty_rank (const int rank, const int mpisize, const t8_gloidx_t *offset);
 
 #if T8_ENABLE_DEBUG
 /** Check whether a given offset array represents a valid
@@ -116,7 +116,7 @@ t8_offset_next_nonempty_rank (int rank, int mpisize, const t8_gloidx_t *offset);
  *                        0 if not.
  */
 int
-t8_offset_consistent (int mpisize, const t8_shmem_array_t offset_shmem, t8_gloidx_t num_trees);
+t8_offset_consistent (const int mpisize, const t8_shmem_array_t offset_shmem, const t8_gloidx_t num_trees);
 #endif
 
 /** Determine whether a given global tree id is a local tree of
@@ -128,7 +128,7 @@ t8_offset_consistent (int mpisize, const t8_shmem_array_t offset_shmem, t8_gloid
  *                      0 if it is not.
  */
 int
-t8_offset_in_range (t8_gloidx_t tree_id, int proc, const t8_gloidx_t *offset);
+t8_offset_in_range (const t8_gloidx_t tree_id, const int proc, const t8_gloidx_t *offset);
 
 /** Find any process that has a given tree as local tree.
  * \param [in] mpisize    The number of MPI ranks, also the number of entries in \a offset minus 1.
@@ -137,7 +137,18 @@ t8_offset_in_range (t8_gloidx_t tree_id, int proc, const t8_gloidx_t *offset);
  * \return                An MPI rank that has \a gtree as a local tree.
  */
 int
-t8_offset_any_owner_of_tree (int mpisize, t8_gloidx_t gtree, const t8_gloidx_t *offset);
+t8_offset_any_owner_of_tree (const int mpisize, const t8_gloidx_t gtree, const t8_gloidx_t *offset);
+
+/** Find any process that has a given tree as local tree.
+ * \param [in] mpisize    The number of MPI ranks, also the number of entries in \a offset minus 1.
+ * \param [in] start_proc    The mpirank to start the search with. 
+ * \param [in] gtree      The global id of a tree.
+ * \param [in] offset     The partition to be considered.
+ * \return                An MPI rank that has \a gtree as a local tree.
+ */
+int
+t8_offset_any_owner_of_tree_ext (const int mpisize, const int start_proc, const t8_gloidx_t gtree,
+                                 const t8_gloidx_t *offset);
 
 /** Find the smallest process that has a given tree as local tree.
  * To increase the runtime, an arbitrary process having this tree as local tree
@@ -153,7 +164,7 @@ t8_offset_any_owner_of_tree (int mpisize, t8_gloidx_t gtree, const t8_gloidx_t *
  * \return                The smallest rank that has \a gtree as a local tree.
  */
 int
-t8_offset_first_owner_of_tree (int mpisize, t8_gloidx_t gtree, const t8_gloidx_t *offset, int *some_owner);
+t8_offset_first_owner_of_tree (const int mpisize, const t8_gloidx_t gtree, const t8_gloidx_t *offset, int *some_owner);
 
 /** Find the biggest process that has a given tree as local tree.
  * To increase the runtime, an arbitrary process having this tree as local tree
@@ -169,7 +180,7 @@ t8_offset_first_owner_of_tree (int mpisize, t8_gloidx_t gtree, const t8_gloidx_t
  * \return                The biggest rank that has \a gtree as a local tree.
  */
 int
-t8_offset_last_owner_of_tree (int mpisize, t8_gloidx_t gtree, const t8_gloidx_t *offset, int *some_owner);
+t8_offset_last_owner_of_tree (const int mpisize, const t8_gloidx_t gtree, const t8_gloidx_t *offset, int *some_owner);
 
 /** Given a process current_owner that has the tree gtree as local tree,
  * find the next bigger rank that also has this tree as local tree.
@@ -182,7 +193,7 @@ t8_offset_last_owner_of_tree (int mpisize, t8_gloidx_t gtree, const t8_gloidx_t 
  *                        -1 if non such rank exists.
  */
 int
-t8_offset_next_owner_of_tree (int mpisize, t8_gloidx_t gtree, const t8_gloidx_t *offset, int current_owner);
+t8_offset_next_owner_of_tree (const int mpisize, const t8_gloidx_t gtree, const t8_gloidx_t *offset, int current_owner);
 
 /** Given a process current_owner that has the tree gtree as local tree,
  * find the next smaller rank that also has this tree as local tree.
@@ -195,7 +206,8 @@ t8_offset_next_owner_of_tree (int mpisize, t8_gloidx_t gtree, const t8_gloidx_t 
  *                        -1 if non such rank exists.
  */
 int
-t8_offset_prev_owner_of_tree (int mpisize, t8_gloidx_t gtree, const t8_gloidx_t *offset, int current_owner);
+t8_offset_prev_owner_of_tree (const int mpisize, const t8_gloidx_t gtree, const t8_gloidx_t *offset,
+                              const int current_owner);
 
 /** Compute a list of all processes that own a specific tree.n \a offset minus 1.
  * \param [in] mpisize    The number of MPI ranks, also the number of entries in \a offset minus 1.
@@ -206,7 +218,8 @@ t8_offset_prev_owner_of_tree (int mpisize, t8_gloidx_t gtree, const t8_gloidx_t 
  *                        \a gtree as a local tree in \a offset.
  */
 void
-t8_offset_all_owners_of_tree (int mpisize, t8_gloidx_t gtree, const t8_gloidx_t *offset, sc_array_t *owners);
+t8_offset_all_owners_of_tree (const int mpisize, const t8_gloidx_t gtree, const t8_gloidx_t *offset,
+                              sc_array_t *owners);
 
 /** Query whether in a repartition setting a given process
  *  does send any of its local trees to any other process (including itself)

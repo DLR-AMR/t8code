@@ -86,6 +86,14 @@ t8_element_compare (const t8_eclass_scheme_c *ts, const t8_element_t *elem1, con
   return ts->t8_element_compare (elem1, elem2);
 }
 
+int
+t8_element_equal (const t8_eclass_scheme_c *ts, const t8_element_t *elem1, const t8_element_t *elem2)
+{
+  T8_ASSERT (ts != NULL);
+
+  return ts->t8_element_equal (elem1, elem2);
+}
+
 void
 t8_element_parent (const t8_eclass_scheme_c *ts, const t8_element_t *elem, t8_element_t *parent)
 {
@@ -365,14 +373,6 @@ t8_element_successor (const t8_eclass_scheme_c *ts, const t8_element_t *elem1, t
   ts->t8_element_successor (elem1, elem2, level);
 }
 
-int
-t8_element_root_len (const t8_eclass_scheme_c *ts, const t8_element_t *elem)
-{
-  T8_ASSERT (ts != NULL);
-
-  return ts->t8_element_root_len (elem);
-}
-
 void
 t8_element_vertex_reference_coords (const t8_eclass_scheme_c *ts, const t8_element_t *t, const int vertex,
                                     double coords[])
@@ -383,19 +383,19 @@ t8_element_vertex_reference_coords (const t8_eclass_scheme_c *ts, const t8_eleme
 }
 
 t8_gloidx_t
-t8_element_count_leafs (const t8_eclass_scheme_c *ts, const t8_element_t *t, int level)
+t8_element_count_leaves (const t8_eclass_scheme_c *ts, const t8_element_t *t, int level)
 {
   T8_ASSERT (ts != NULL);
 
-  return ts->t8_element_count_leafs (t, level);
+  return ts->t8_element_count_leaves (t, level);
 }
 
 t8_gloidx_t
-t8_element_count_leafs_from_root (const t8_eclass_scheme_c *ts, int level)
+t8_element_count_leaves_from_root (const t8_eclass_scheme_c *ts, int level)
 {
   T8_ASSERT (ts != NULL);
 
-  return ts->t8_element_count_leafs_from_root (level);
+  return ts->t8_element_count_leaves_from_root (level);
 }
 
 void
@@ -421,6 +421,15 @@ t8_element_debug_print (const t8_eclass_scheme_c *ts, const t8_element_t *elem)
   T8_ASSERT (ts != NULL);
 
   return ts->t8_element_debug_print (elem);
+}
+
+void
+t8_element_to_string (const t8_eclass_scheme_c *ts, const t8_element_t *elem, char *debug_string, const int string_size)
+{
+  T8_ASSERT (ts != NULL);
+  T8_ASSERT (debug_string != NULL);
+
+  ts->t8_element_to_string (elem, debug_string, string_size);
 }
 #endif
 
