@@ -165,6 +165,19 @@ struct t8_geometry_handler
     return active_geometry->t8_geom_get_type ();
   }
 
+  /**
+   * Check if the volume of a tree is negative.
+   * \param [in] cmesh   The cmesh.
+   * \param [in] gtreeid The global tree id of the tree to check.
+   * \return True if the volume of the tree is negative, false otherwise.
+   */
+  inline bool
+  tree_negative_volume (const t8_cmesh_t cmesh, const t8_gloidx_t gtreeid)
+  {
+    update_tree (cmesh, gtreeid);
+    return active_geometry->t8_geom_tree_negative_volume ();
+  }
+
  private:
   /**
    * Add a geometry to the geometry handler.

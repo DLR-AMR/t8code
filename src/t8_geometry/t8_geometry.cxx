@@ -63,3 +63,9 @@ t8_geometry_get_type (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
   /* Return the type. */
   return cmesh->geometry_handler->get_tree_geometry_type (cmesh, gtreeid);
 }
+
+bool
+t8_geometry_tree_negative_volume (const t8_cmesh_t cmesh, const t8_gloidx_t gtreeid)
+{
+  return cmesh->geometry_handler->tree_negative_volume (cmesh, gtreeid);
+}

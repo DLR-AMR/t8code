@@ -108,8 +108,7 @@ t8_cmesh_is_committed (const t8_cmesh_t cmesh)
 
 #ifdef T8_ENABLE_DEBUG
     /* TODO: check more conditions that must always hold after commit */
-    if ((!t8_cmesh_trees_is_face_consistent (cmesh, cmesh->trees)) || (!t8_cmesh_no_negative_volume (cmesh))
-        || (!t8_cmesh_check_trees_per_eclass (cmesh))) {
+    if ((!t8_cmesh_trees_is_face_consistent (cmesh, cmesh->trees)) || (!t8_cmesh_check_trees_per_eclass (cmesh))) {
       is_checking = 0;
       return 0;
     }
@@ -122,6 +121,18 @@ t8_cmesh_is_committed (const t8_cmesh_t cmesh)
   }
   return 1;
 }
+
+#ifdef T8_ENABLE_DEBUG
+bool
+t8_cmesh_validate_geometry (const t8_cmesh_t cmesh)
+{
+  /* Geometry handler is not built yet */
+  if (cmesh->geometry_handler == NULL) {
+    return 1;
+  }
+  return t8_cmesh_no_negative_volume (cmesh);
+}
+#endif /* T8_ENABLE_DEBUG */
 
 /* Check whether a given communicator assigns the same rank and mpisize
  * as stored in a given cmesh. */
@@ -518,46 +529,28 @@ t8_cmesh_tree_vertices_negative_volume (const t8_eclass_t eclass, const double *
  * Returns true if all trees have positive volume. Returns also true if no geometries are
  * registered yet, since the volume computation depends on the used geometry.
  */
-int
+bool
 t8_cmesh_no_negative_volume (t8_cmesh_t cmesh)
 {
-  if (cmesh->geometry_handler == NULL) {
-    return 1;
-  }
-  if (cmesh->geometry_handler->get_num_geometries () == 0) {
-    return 1;
-  }
-
-  t8_locidx_t itree;
-  double *vertices;
-  t8_eclass_t eclass;
-  int ret, res = 0;
+  bool res = false;
 
   if (cmesh == NULL) {
     return 0;
   }
-  /* Iterate over all trees, get their vertices and check the volume */
-  for (itree = 0; itree < cmesh->num_local_trees; itree++) {
-    vertices = t8_cmesh_get_tree_vertices (cmesh, itree);
-    ret = 1;
-    if (vertices != NULL) {
-      /* Vertices are set */
-      eclass = t8_cmesh_get_tree_class (cmesh, itree);
-      const t8_gloidx_t gtree_id = t8_cmesh_get_global_id (cmesh, itree);
-      if (t8_geometry_get_type (cmesh, gtree_id) == T8_GEOMETRY_TYPE_LINEAR_AXIS_ALIGNED) {
-        /* Tree has negative volume if the diagonal goes from v_max to v_min and not vice versa */
-        ret = vertices[3] < vertices[0] && vertices[4] < vertices[1] && vertices[5] < vertices[2];
-      }
-      else {
-        ret = t8_cmesh_tree_vertices_negative_volume (eclass, vertices, t8_eclass_num_vertices[eclass]);
-      }
+  if (cmesh->geometry_handler->get_num_geometries () > 0) {
+    /* Iterate over all trees, get their vertices and check the volume */
+    for (t8_locidx_t itree = 0; itree < cmesh->num_local_trees; itree++) {
+      const int ret = cmesh->geometry_handler->tree_negative_volume (cmesh, t8_cmesh_get_global_id (cmesh, itree));
       if (ret) {
         t8_debugf ("Detected negative volume in tree %li\n", (long) itree);
       }
       res |= ret; /* res is true if one ret value is true */
     }
+    return !res;
   }
-  return !res;
+  else {
+    return true;
+  }
 }
 #endif
 
@@ -1014,7 +1007,7 @@ t8_cmesh_get_ghost_class (t8_cmesh_t cmesh, t8_locidx_t lghost_id)
 }
 
 t8_gloidx_t
-t8_cmesh_get_global_id (t8_cmesh_t cmesh, t8_locidx_t local_id)
+t8_cmesh_get_global_id (const t8_cmesh_t cmesh, const t8_locidx_t local_id)
 {
   T8_ASSERT (0 <= local_id && local_id < cmesh->num_ghosts + cmesh->num_local_trees);
   if (local_id < cmesh->num_local_trees) {

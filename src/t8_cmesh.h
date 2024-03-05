@@ -92,6 +92,13 @@ int
 t8_cmesh_is_committed (const t8_cmesh_t cmesh);
 
 #ifdef T8_ENABLE_DEBUG
+/** Check the geometry of the mesh for validity.
+ * \param [in] cmesh            This cmesh is examined.
+ * \return                      True if the geometry of the cmesh is valid.
+ */
+bool
+t8_cmesh_validate_geometry (const t8_cmesh_t cmesh);
+
 /** After a cmesh is committed, check whether all trees in a cmesh do have positive volume.
  * Returns true if all trees have positive volume.
  * \param [in]  cmesh           This cmesh is examined. May be NULL.
@@ -100,7 +107,7 @@ t8_cmesh_is_committed (const t8_cmesh_t cmesh);
  *                              was called, do have positive geometric volume.
  *                              False otherwise.
  */
-int
+bool
 t8_cmesh_no_negative_volume (t8_cmesh_t cmesh);
 #endif
 
