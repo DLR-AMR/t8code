@@ -285,6 +285,29 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
   const std::vector<double>
   t8_geom_h8_basis (const double *ref_point) const;
 
+  /**
+   * Basis functions of a 27-node hexahedron element.
+   * \verbatim
+          z = 0                     z = 0.5                   z = 1
+     y                         y                         y
+      ^                         ^                         ^
+      |                         |                         |
+     2     21     3            8     23      14          6     22      7
+      x ----x---- x             x ----x---- x             x ----x---- x
+      |           |             |           |             |           |
+      |    24     |             |    26     |             |    25     |
+    10x     x     x15         12x     x     x17         11x     x     x16
+      |           |             |           |             |           |
+      |           |    x        |           |    x        |           |    x
+      x ----x---- x  -->        x ----x---- x  -->        x ----x---- x  -->
+     0     18     1            9     20      13          4     19      5
+     \endverbatim
+   * \param ref_point  Point in the reference space.
+   * \return  Basis functions evaluated at the reference point.
+   */
+  const std::vector<double>
+  t8_geom_h27_basis (const double *ref_point) const;
+
   /** Polynomial degree of the interpolation. */
   const int *degree;
 };

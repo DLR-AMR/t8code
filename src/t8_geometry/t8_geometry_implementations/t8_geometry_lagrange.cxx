@@ -95,6 +95,8 @@ t8_geometry_lagrange::t8_geom_compute_basis (const double *ref_coords) const
     }
   case T8_ECLASS_TRIANGLE:
     switch (*degree) {
+    case 1:
+      return t8_geometry_lagrange::t8_geom_t3_basis (ref_coords);
     case 2:
       return t8_geometry_lagrange::t8_geom_t6_basis (ref_coords);
     }
@@ -109,6 +111,8 @@ t8_geometry_lagrange::t8_geom_compute_basis (const double *ref_coords) const
     switch (*degree) {
     case 1:
       return t8_geometry_lagrange::t8_geom_h8_basis (ref_coords);
+    case 2:
+      return t8_geometry_lagrange::t8_geom_h27_basis (ref_coords);
     }
   default:
     SC_ABORTF ("Error: Lagrange geometry for degree %i %s not yet implemented. \n", *degree,
@@ -189,6 +193,43 @@ t8_geometry_lagrange::t8_geom_h8_basis (const double *ref_point) const
     (1 - xi) * (1 - eta) * (1 - zeta), xi * (1 - eta) * (1 - zeta), (1 - xi) * eta * (1 - zeta), xi * eta * (1 - zeta),
     (1 - xi) * (1 - eta) * zeta,       xi * (1 - eta) * zeta,       (1 - xi) * eta * zeta,       xi * eta * zeta
   };
+  return basis_functions;
+}
+
+const std::vector<double>
+t8_geometry_lagrange::t8_geom_h27_basis (const double *ref_point) const
+{
+  const double xi = ref_point[0];
+  const double eta = ref_point[1];
+  const double zeta = ref_point[2];
+  const std::vector<double> basis_functions
+    = { 8 * (eta - 1) * (eta - 0.5) * (xi - 1) * (xi - 0.5) * (zeta - 1) * (zeta - 0.5),
+        8 * xi * (eta - 1) * (eta - 0.5) * (xi - 0.5) * (zeta - 1) * (zeta - 0.5),
+        8 * eta * (eta - 0.5) * (xi - 1) * (xi - 0.5) * (zeta - 1) * (zeta - 0.5),
+        8 * eta * xi * (eta - 0.5) * (xi - 0.5) * (zeta - 1) * (zeta - 0.5),
+        8 * zeta * (eta - 1) * (eta - 0.5) * (xi - 1) * (xi - 0.5) * (zeta - 0.5),
+        8 * xi * zeta * (eta - 1) * (eta - 0.5) * (xi - 0.5) * (zeta - 0.5),
+        8 * eta * zeta * (eta - 0.5) * (xi - 1) * (xi - 0.5) * (zeta - 0.5),
+        8 * eta * xi * zeta * (eta - 0.5) * (xi - 0.5) * (zeta - 0.5),
+        -16 * eta * zeta * (eta - 0.5) * (xi - 1) * (xi - 0.5) * (zeta - 1),
+        -16 * zeta * (eta - 1) * (eta - 0.5) * (xi - 1) * (xi - 0.5) * (zeta - 1),
+        -16 * eta * (eta - 1) * (xi - 1) * (xi - 0.5) * (zeta - 1) * (zeta - 0.5),
+        -16 * eta * zeta * (eta - 1) * (xi - 1) * (xi - 0.5) * (zeta - 0.5),
+        32 * eta * zeta * (eta - 1) * (xi - 1) * (xi - 0.5) * (zeta - 1),
+        -16 * xi * zeta * (eta - 1) * (eta - 0.5) * (xi - 0.5) * (zeta - 1),
+        -16 * eta * xi * zeta * (eta - 0.5) * (xi - 0.5) * (zeta - 1),
+        -16 * eta * xi * (eta - 1) * (xi - 0.5) * (zeta - 1) * (zeta - 0.5),
+        -16 * eta * xi * zeta * (eta - 1) * (xi - 0.5) * (zeta - 0.5),
+        32 * eta * xi * zeta * (eta - 1) * (xi - 0.5) * (zeta - 1),
+        -16 * xi * (eta - 1) * (eta - 0.5) * (xi - 1) * (zeta - 1) * (zeta - 0.5),
+        -16 * xi * zeta * (eta - 1) * (eta - 0.5) * (xi - 1) * (zeta - 0.5),
+        32 * xi * zeta * (eta - 1) * (eta - 0.5) * (xi - 1) * (zeta - 1),
+        -16 * eta * xi * (eta - 0.5) * (xi - 1) * (zeta - 1) * (zeta - 0.5),
+        -16 * eta * xi * zeta * (eta - 0.5) * (xi - 1) * (zeta - 0.5),
+        32 * eta * xi * zeta * (eta - 0.5) * (xi - 1) * (zeta - 1),
+        32 * eta * xi * (eta - 1) * (xi - 1) * (zeta - 1) * (zeta - 0.5),
+        32 * eta * xi * zeta * (eta - 1) * (xi - 1) * (zeta - 0.5),
+        -64 * eta * xi * zeta * (eta - 1) * (xi - 1) * (zeta - 1) };
   return basis_functions;
 }
 
