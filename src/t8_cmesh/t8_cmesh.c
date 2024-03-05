@@ -107,8 +107,7 @@ t8_cmesh_is_committed (const t8_cmesh_t cmesh)
 
 #ifdef T8_ENABLE_DEBUG
     /* TODO: check more conditions that must always hold after commit */
-    if ((!t8_cmesh_trees_is_face_consistent (cmesh, cmesh->trees)) || (!t8_cmesh_no_negative_volume (cmesh))
-        || (!t8_cmesh_check_trees_per_eclass (cmesh))) {
+    if ((!t8_cmesh_trees_is_face_consistent (cmesh, cmesh->trees)) || (!t8_cmesh_check_trees_per_eclass (cmesh))) {
       is_checking = 0;
       return 0;
     }
@@ -121,6 +120,18 @@ t8_cmesh_is_committed (const t8_cmesh_t cmesh)
   }
   return 1;
 }
+
+#ifdef T8_ENABLE_DEBUG
+bool
+t8_cmesh_validate_geometry (const t8_cmesh_t cmesh)
+{
+  /* Geometry handler is not constructed yet */
+  if (cmesh->geometry_handler == NULL) {
+    return 1;
+  }
+  return t8_cmesh_no_negative_volume (cmesh);
+}
+#endif /* T8_ENABLE_DEBUG */
 
 /* Check whether a given communicator assigns the same rank and mpisize
  * as stored in a given cmesh. */
