@@ -38,6 +38,7 @@
  * See: https://github.com/DLR-AMR/t8code/issues/920
  */
 
+/* Remove `DISABLED_` from the name of the Test(suite) or use `--gtest_also_run_disabled_tests` when you start working on the issue. */
 class DISABLED_t8_cmesh_copy: public testing::TestWithParam<cmesh_example_base *> {
  protected:
   void

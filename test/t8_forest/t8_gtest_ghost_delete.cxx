@@ -106,7 +106,6 @@ class DISABLED_forest_ghost_exchange_holes: public testing::Test {
 TEST_F (DISABLED_forest_ghost_exchange_holes, errorTest)
 {
   /* This test tests the functionality described in Issue: https://github.com/DLR-AMR/t8code/issues/825
-  * Remove the DISABLED_ macros when you start working on the issue or us --gtest_also_run_disabled_tests
   */
   if (comm != sc_MPI_COMM_NULL) {
     const int level = 1;

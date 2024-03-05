@@ -37,9 +37,7 @@
  * The two resulting forests must be equal.
  * */
 
-/* 
- * Remove `DISABLED_` from the name of the Test(suite) or use `--gtest_also_run_disabled_tests` when you start working on the issue. 
- */
+/* Remove `DISABLED_` from the name of the Test(suite) or use `--gtest_also_run_disabled_tests` when you start working on the issue. */
 class DISABLED_global_tree: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
  protected:
   void
