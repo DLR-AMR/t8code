@@ -298,8 +298,8 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate_cad_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                 const size_t num_coords, double *out_coords) const;
+  t8_geom_evaluate_cad_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                            double *out_coords) const;
 
   /**
    * Maps points in the reference space \f$ [0,1]^2 \f$ to \f$ \mathbb{R}^3 \f$. Only for quad trees.
