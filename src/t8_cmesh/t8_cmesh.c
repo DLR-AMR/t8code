@@ -125,7 +125,7 @@ t8_cmesh_is_committed (const t8_cmesh_t cmesh)
 bool
 t8_cmesh_validate_geometry (const t8_cmesh_t cmesh)
 {
-  /* Geometry handler is not built yet */
+  /* Geometry handler is not constructed yet */
   if (cmesh->geometry_handler == NULL) {
     return 1;
   }
