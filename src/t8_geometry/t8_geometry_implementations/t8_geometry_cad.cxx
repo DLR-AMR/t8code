@@ -591,7 +591,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_tet (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
       /* Get the interpolation coefficients for the current edge */
       double interpolation_coeff = ref_coords[t8_interpolation_coefficient_tet_edge[i_edge]];
 
-      /* Iterpolate between the edge vertices with the interpolation_coeff of the current edge */
+      /* Interpolate between the edge vertices with the interpolation_coeff of the current edge */
       t8_geom_linear_interpolation (&interpolation_coeff, temp_edge_vertices, 3, 1, interpolated_coords);
 
       /* Retrieve edge parameters of the current edge */
