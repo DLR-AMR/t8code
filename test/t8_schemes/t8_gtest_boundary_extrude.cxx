@@ -24,6 +24,7 @@
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
+#include <test/t8_gtest_macros.hxx>
 #include "t8_gtest_dfs_base.hxx"
 #include <test/t8_gtest_macros.hxx>
 
@@ -87,4 +88,4 @@ TEST_P (class_test_boundary_extrude, test_boundary_extrude_dfs)
   check_recursive_dfs_to_max_lvl (maxlvl);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_boundary_extrude, AllEclasses);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_boundary_extrude, AllEclasses, print_eclass);

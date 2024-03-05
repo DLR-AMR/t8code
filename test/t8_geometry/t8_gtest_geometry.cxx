@@ -27,6 +27,7 @@
 #include <t8_geometry/t8_geometry.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx>
+#include <test/t8_gtest_macros.hxx>
 
 /* In this file we collect tests for t8code's cmesh geometry module.
  * These tests are

@@ -64,7 +64,7 @@ TEST_P (cmesh_face_boundary_one_tree, check_face_is_boundary_one_tree)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_face_boundary, cmesh_face_boundary_one_tree, AllEclasses);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_face_boundary, cmesh_face_boundary_one_tree, AllEclasses, print_eclass);
 
 /* For a two tree cmesh, compute a parallel distribution of the trees.
  * If we have more than 1 process, the first half of process (rank < size/2)
