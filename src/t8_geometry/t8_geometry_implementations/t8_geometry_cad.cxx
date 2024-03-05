@@ -97,7 +97,7 @@ t8_geometry_cad::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const 
     SC_ABORT ("Error: Batch computation of geometry not yet supported.");
   switch (active_tree_class) {
   case T8_ECLASS_TRIANGLE:
-    t8_geometry_cad::t8_geom_evaluate_cad_triangle (cmesh, gtreeid, ref_coords, 1, out_coords);
+    t8_geometry_cad::t8_geom_evaluate_cad_tri (cmesh, gtreeid, ref_coords, 1, out_coords);
     break;
   case T8_ECLASS_QUAD:
     t8_geometry_cad::t8_geom_evaluate_cad_quad (cmesh, gtreeid, ref_coords, 1, out_coords);
@@ -156,7 +156,7 @@ t8_geometry_cad::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 }
 
 void
-t8_geometry_cad::t8_geom_evaluate_cad_triangle (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
+t8_geometry_cad::t8_geom_evaluate_cad_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
                                                 const size_t num_coords, double *out_coords) const
 {
   T8_ASSERT (active_tree_class == T8_ECLASS_TRIANGLE);
