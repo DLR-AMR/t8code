@@ -792,5 +792,11 @@ t8_default_scheme_quad_c::~t8_default_scheme_quad_c ()
    * However we need to provide an implementation of the destructor
    * and hence this empty function. */
 }
-
+void
+t8_default_scheme_quad_c::t8_element_root (t8_element_t *elem) const
+{
+  t8_pquad_t *quad = (t8_pquad_t *) elem;
+  p4est_quadrant_set_morton (quad, 0, 0);
+  T8_ASSERT (p4est_quadrant_is_extended (quad));
+}
 T8_EXTERN_C_END ();
