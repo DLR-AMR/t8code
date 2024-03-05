@@ -464,6 +464,6 @@ TEST_P (class_2d_element_linear_cad_surface, t8_check_2d_element_linear_cad_surf
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_check_2d_element_linear_cad_surface, class_2d_element_linear_cad_surface,
-                          AllEclasses2D);
+                          AllEclasses2D, print_eclass);
 
 #endif /* T8_WITH_OCC */
