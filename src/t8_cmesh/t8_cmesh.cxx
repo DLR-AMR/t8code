@@ -537,6 +537,9 @@ t8_cmesh_no_negative_volume (t8_cmesh_t cmesh)
   if (cmesh == NULL) {
     return 0;
   }
+  if (cmesh->geometry_handler == NULL) {
+    return 0;
+  }
   if (cmesh->geometry_handler->get_num_geometries () > 0) {
     /* Iterate over all trees, get their vertices and check the volume */
     for (t8_locidx_t itree = 0; itree < cmesh->num_local_trees; itree++) {
