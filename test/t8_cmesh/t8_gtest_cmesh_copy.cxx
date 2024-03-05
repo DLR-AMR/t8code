@@ -25,8 +25,9 @@
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include "t8_cmesh/t8_cmesh_trees.h"
 #include "t8_cmesh/t8_cmesh_partition.h"
-#include <t8_cmesh/t8_cmesh_testcases.h>
 #include <test/t8_gtest_macros.hxx>
+
+#include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
 
 /* We create and commit a cmesh, then derive a new cmesh
  * from it without any changes.
@@ -37,17 +38,16 @@
  * See: https://github.com/DLR-AMR/t8code/issues/920
  */
 
-class t8_cmesh_copy: public testing::TestWithParam<int> {
+/* Remove `DISABLED_` from the name of the Test(suite) or use `--gtest_also_run_disabled_tests` when you start working on the issue. */
+class DISABLED_t8_cmesh_copy: public testing::TestWithParam<cmesh_example_base *> {
  protected:
   void
   SetUp () override
   {
     /* Skip test since cmesh copy is not yet working. See https://github.com/DLR-AMR/t8code/issues/920 */
-    GTEST_SKIP ();
-    cmesh_id = GetParam ();
 
-    /* Create cmesh from cmesh_id */
-    cmesh_original = t8_test_create_cmesh (cmesh_id);
+    cmesh_original = GetParam ()->cmesh_create ();
+
     /* Initialized test cmesh that we derive in the test */
     t8_cmesh_init (&cmesh);
   }
@@ -56,12 +56,11 @@ class t8_cmesh_copy: public testing::TestWithParam<int> {
   TearDown () override
   {
     /* Skip test since cmesh copy is not yet working. See https://github.com/DLR-AMR/t8code/issues/920 */
-    GTEST_SKIP ();
+
     /* Unref both cmeshes */
     t8_cmesh_unref (&cmesh);
   }
 
-  int cmesh_id;
   t8_cmesh_t cmesh;
   t8_cmesh_t cmesh_original;
 };
@@ -73,7 +72,7 @@ test_cmesh_committed (t8_cmesh_t cmesh)
   ASSERT_TRUE (t8_cmesh_trees_is_face_consistent (cmesh, cmesh->trees)) << "Cmesh face consistency failed.";
 }
 
-TEST_P (t8_cmesh_copy, test_cmesh_copy)
+TEST_P (DISABLED_t8_cmesh_copy, test_cmesh_copy)
 {
   t8_cmesh_set_derive (cmesh, cmesh_original);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
@@ -83,5 +82,5 @@ TEST_P (t8_cmesh_copy, test_cmesh_copy)
   EXPECT_TRUE (t8_cmesh_is_equal (cmesh, cmesh_original));
 }
 
-/* Test all cmeshes over all different inputs */
-INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_copy, t8_cmesh_copy, AllCmeshs);
+/* Test all cmeshes over all different inputs*/
+INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_copy, DISABLED_t8_cmesh_copy, AllCmeshsParam, pretty_print_base_example);

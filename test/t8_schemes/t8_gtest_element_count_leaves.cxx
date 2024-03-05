@@ -131,4 +131,4 @@ TEST_P (class_element_leaves, test_element_count_leaves_one_level)
   class_scheme->t8_element_destroy (1, &element);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_element_count_leaves, class_element_leaves, AllEclasses);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_element_count_leaves, class_element_leaves, AllEclasses, print_eclass);

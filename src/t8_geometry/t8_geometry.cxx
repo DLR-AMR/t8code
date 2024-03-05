@@ -260,7 +260,7 @@ t8_geom_handler_get_unique_geometry (const t8_geometry_handler_t *geom_handler)
   T8_ASSERT (t8_geom_handler_get_num_geometries (geom_handler) == 1);
   sc_array *geometries = (sc_array *) &geom_handler->registered_geometries;
 
-  return *(const t8_geometry_c **) sc_array_index_int (geometries, 0);
+  return *(t8_geometry_c **) sc_array_index_int (geometries, 0);
 }
 
 void
@@ -369,4 +369,24 @@ t8_geometry_get_type (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 
   /* Return the type. */
   return geom_handler->active_geometry->t8_geom_get_type ();
+}
+
+bool
+t8_geometry_tree_negative_volume (const t8_cmesh_t cmesh, const t8_locidx_t ltree_id)
+{
+  /* The cmesh must be committed */
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  /* Get the geometry handler of the cmesh of the forest. */
+  t8_geometry_handler_t *geom_handler = cmesh->geometry_handler;
+  if (!t8_geom_handler_is_initialized (geom_handler)) {
+    return 0;
+  }
+  /* The handler must be committed. */
+  T8_ASSERT (t8_geom_handler_is_committed (geom_handler));
+
+  /* Detect whether we call this function for the first time in a row for 
+   * this tree and if so update the active tree and geometry. */
+  t8_geom_handler_update_tree (geom_handler, cmesh, t8_cmesh_get_global_id (cmesh, ltree_id));
+
+  return geom_handler->active_geometry->t8_geom_tree_negative_volume (cmesh);
 }

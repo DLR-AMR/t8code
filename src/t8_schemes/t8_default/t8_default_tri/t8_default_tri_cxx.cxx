@@ -573,5 +573,13 @@ t8_default_scheme_tri_c::~t8_default_scheme_tri_c ()
    * However we need to provide an implementation of the destructor
    * and hence this empty function. */
 }
-
+void
+t8_default_scheme_tri_c::t8_element_root (t8_element_t *elem) const
+{
+  t8_dtri_t *tri = (t8_dtri_t *) elem;
+  tri->level = 0;
+  tri->x = 0;
+  tri->y = 0;
+  tri->type = 0;
+}
 T8_EXTERN_C_END ();

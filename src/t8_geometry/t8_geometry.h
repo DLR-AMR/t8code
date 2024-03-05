@@ -30,6 +30,7 @@
 
 #include <t8.h>
 #include <t8_refcount.h>
+#include <stdbool.h>
 
 /** This enumeration contains all possible geometries. */
 typedef enum t8_geometry_type {
@@ -41,8 +42,8 @@ typedef enum t8_geometry_type {
   T8_GEOMETRY_TYPE_LINEAR_AXIS_ALIGNED,
   /** The analytic geometry uses a user-defined analytic function to map into the physical domain. */
   T8_GEOMETRY_TYPE_ANALYTIC,
-  /** The OCC geometry uses OCC CAD shapes to map trees exactly to the underlying CAD model. */
-  T8_GEOMETRY_TYPE_OCC,
+  /** The opencascade geometry uses CAD shapes to map trees exactly to the underlying CAD model. */
+  T8_GEOMETRY_TYPE_CAD,
   /** This is no geometry type but can be used as the number of geometry types. */
   T8_GEOMETRY_TYPE_COUNT,
   /** This is no geometry type but is used for every geometry, where no type is defined */
@@ -176,6 +177,16 @@ t8_geometry_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_c
 
 t8_geometry_type_t
 t8_geometry_get_type (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
+
+/**
+ * Check if a tree has a negative volume
+ * 
+ * \param[in] cmesh       The cmesh containing the tree to check
+ * \param[in] ltree_id    The local id of the tree
+ * \return                True if the tree with id \ref ltree_id has a negative volume. False otherwise.  
+ */
+bool
+t8_geometry_tree_negative_volume (const t8_cmesh_t cmesh, const t8_locidx_t ltree_id);
 
 T8_EXTERN_C_END ();
 

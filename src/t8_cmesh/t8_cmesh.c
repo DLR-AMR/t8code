@@ -24,6 +24,7 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_geometry.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
 #include <t8_refcount.h>
 #include <t8_data/t8_shmem.h>
 #include <t8_vec.h>
@@ -388,22 +389,6 @@ t8_cmesh_get_attribute (const t8_cmesh_t cmesh, const int package_id, const int 
     cmesh->trees, is_ghost ? t8_cmesh_ltreeid_to_ghostid (cmesh, ltree_id) : ltree_id, package_id, key, NULL, is_ghost);
 }
 
-/* Return the attribute pointer of a tree for a gloidx_t array.
- * \param [in]     cmesh        The cmesh.
- * \param [in]     package_id   The identifier of a valid software package. \see sc_package_register
- * \param [in]     key          A key used to identify the attribute under all
- *                              attributes of this tree with the same \a package_id.
- * \param [in]     tree_id      The local number of the tree.
- * \param [out]    data_count   The number of entries in the array that are requested. 
- *                              This must be smaller or equal to the \a data_count parameter
- *                              of the corresponding call to \ref t8_cmesh_set_attribute_gloidx_array
- * \return         The attribute pointer of the tree \a ltree_id or NULL if the attribute is not found.
- * \note \a cmesh must be committed before calling this function.
- * \note No check is performed whether the attribute actually stored \a data_count many entries since
- *       we do not store the number of data entries of the attribute array.
- *       You can keep track of the data count yourself by using another attribute.
- * \see t8_cmesh_set_attribute_gloidx_array
- */
 t8_gloidx_t *
 t8_cmesh_get_attribute_gloidx_array (const t8_cmesh_t cmesh, const int package_id, const int key,
                                      const t8_locidx_t ltree_id, const size_t data_count)
@@ -468,7 +453,7 @@ t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, t8_eclass_t tre
  * coordinates does have negative volume.
  */
 int
-t8_cmesh_tree_vertices_negative_volume (t8_eclass_t eclass, double *vertices, int num_vertices)
+t8_cmesh_tree_vertices_negative_volume (const t8_eclass_t eclass, const double *vertices, const int num_vertices)
 {
   double v_1[3], v_2[3], v_j[3], cross[3], sc_prod;
   int i, j;
@@ -531,32 +516,28 @@ t8_cmesh_tree_vertices_negative_volume (t8_eclass_t eclass, double *vertices, in
 /* After a cmesh is committed, check whether all trees in a cmesh do have positive volume.
  * Returns true if all trees have positive volume.
  */
-int
+bool
 t8_cmesh_no_negative_volume (t8_cmesh_t cmesh)
 {
-  t8_locidx_t itree;
-  double *vertices;
-  t8_eclass_t eclass;
-  int ret, res = 0;
+  bool res = false;
 
   if (cmesh == NULL) {
     return 0;
   }
-  /* Iterate over all trees, get their vertices and check the volume */
-  for (itree = 0; itree < cmesh->num_local_trees; itree++) {
-    vertices = t8_cmesh_get_tree_vertices (cmesh, itree);
-    ret = 1;
-    if (vertices != NULL) {
-      /* Vertices are set */
-      eclass = t8_cmesh_get_tree_class (cmesh, itree);
-      ret = t8_cmesh_tree_vertices_negative_volume (eclass, vertices, t8_eclass_num_vertices[eclass]);
+  if (t8_geom_handler_get_num_geometries (cmesh->geometry_handler) > 0) {
+    /* Iterate over all trees, get their vertices and check the volume */
+    for (t8_locidx_t itree = 0; itree < cmesh->num_local_trees; itree++) {
+      const int ret = t8_geometry_tree_negative_volume (cmesh, itree);
       if (ret) {
         t8_debugf ("Detected negative volume in tree %li\n", (long) itree);
       }
       res |= ret; /* res is true if one ret value is true */
     }
+    return !res;
   }
-  return !res;
+  else {
+    return true;
+  }
 }
 #endif
 
@@ -1011,7 +992,7 @@ t8_cmesh_get_ghost_class (t8_cmesh_t cmesh, t8_locidx_t lghost_id)
 }
 
 t8_gloidx_t
-t8_cmesh_get_global_id (t8_cmesh_t cmesh, t8_locidx_t local_id)
+t8_cmesh_get_global_id (const t8_cmesh_t cmesh, const t8_locidx_t local_id)
 {
   T8_ASSERT (0 <= local_id && local_id < cmesh->num_ghosts + cmesh->num_local_trees);
   if (local_id < cmesh->num_local_trees) {

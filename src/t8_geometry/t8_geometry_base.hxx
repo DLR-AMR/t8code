@@ -30,6 +30,7 @@
 
 #include <t8.h>
 #include <t8_cmesh.h>
+#include <t8_forest/t8_forest.h>
 #include <t8_geometry/t8_geometry.h>
 
 T8_EXTERN_C_BEGIN ();
@@ -95,6 +96,43 @@ struct t8_geometry
   virtual void
   t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
     = 0;
+
+  /** Query whether a batch of points lies inside an element. 
+ * \param [in]      forest      The forest.
+ * \param [in]      ltree_id    The forest local id of the tree in which the element is.
+ * \param [in]      element     The element.
+ * \param [in]      points      3-dimensional coordinates of the points to check
+ * \param [in]      num_points  The number of points to check
+ * \param [in, out] is_inside   An array of length \a num_points, filled with 0/1 on output. True (non-zero) if a \a point 
+ *                              lies within an \a element, false otherwise. The return value is also true if the point 
+ *                              lies on the element boundary. Thus, this function may return true for different leaf 
+ *                              elements, if they are neighbors and the point lies on the common boundary.
+ * \param [in]      tolerance   Tolerance that we allow the point to not exactly match the element.
+ *                              If this value is larger we detect more points.
+ *                              If it is zero we probably do not detect points even if they are inside
+ *                              due to rounding errors.
+ */
+  virtual void
+  t8_geom_point_batch_inside_element (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
+                                      const double *points, const int num_points, int *is_inside,
+                                      const double tolerance) const
+  {
+    SC_ABORTF ("Function not yet implemented");
+  };
+
+  /**
+   * Check if  the currently active tree has a negative volume
+   * 
+   * \param[in] cmesh       The cmesh containing the tree to check
+   * \return                True (non-zero) if the tree with id \ref ltree_id has a negative volume. 0 otherwise.  
+   */
+  virtual bool
+  t8_geom_tree_negative_volume (const t8_cmesh_t cmesh) const
+  {
+    SC_ABORTF ("Function not implemented yet");
+    /* To compress compiler warnings. */
+    return 0;
+  };
 
   /**
    * Get the dimension of this geometry.

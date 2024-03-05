@@ -29,6 +29,7 @@
 #define T8_GEOMETRY_WITH_VERTICES_HXX
 
 #include <t8_cmesh.h>
+#include <t8_forest/t8_forest.h>
 #include <t8_geometry/t8_geometry_base.hxx>
 #include <t8_geometry/t8_geometry_base.h>
 #include <t8_geometry/t8_geometry_with_vertices.h>
@@ -74,6 +75,15 @@ struct t8_geometry_with_vertices: public t8_geometry
    */
   virtual void
   t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
+
+  /**
+   * Check that the currently active tree has no negative volume.
+   * 
+   * \param[in] cmesh       The cmesh containing the tree to check
+   * \return                True (non-zero) if the tree with id \ref ltree_id has a negative volume. 0 otherwise.  
+   */
+  virtual bool
+  t8_geom_tree_negative_volume (const t8_cmesh_t cmesh) const;
 
   /**
    * Get the type of this geometry.
