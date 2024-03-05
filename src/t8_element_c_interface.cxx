@@ -448,3 +448,11 @@ t8_element_destroy (const t8_eclass_scheme_c *ts, int length, t8_element_t **ele
 
   ts->t8_element_destroy (length, elems);
 }
+
+void
+t8_element_root (const t8_eclass_scheme_c *ts, t8_element_t *elem)
+{
+  T8_ASSERT (ts != NULL);
+
+  ts->t8_element_root (elem);
+}
