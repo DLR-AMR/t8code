@@ -100,7 +100,7 @@ t8_cmesh_is_committed (const t8_cmesh_t cmesh);
  *                              was called, do have positive geometric volume.
  *                              False otherwise.
  */
-int
+bool
 t8_cmesh_no_negative_volume (t8_cmesh_t cmesh);
 #endif
 
