@@ -129,7 +129,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
     t8_linearidx_t parent_id = 0;
     for (int ichild = 0; ichild < childid; ichild++) {
       t8_element_child (elem, ichild, elem);
-     const t8_linearidx_t num_child_descendants = t8_element_count_leaves (elem, level);
+      const t8_linearidx_t num_child_descendants = t8_element_count_leaves (elem, level);
       t8_element_parent (elem, elem);
       parent_id += num_child_descendants;
     }
