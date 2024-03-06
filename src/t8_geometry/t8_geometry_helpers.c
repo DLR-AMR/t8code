@@ -389,19 +389,16 @@ t8_geom_get_scaling_factor_of_edge_on_face_tet (const int edge, const int face, 
    */
 
   const double orthogonal_direction[6][4]
-    = { {0, 0, ref_coords[1], ref_coords[2]},
-        {0, ref_coords[1], 0, (ref_coords[0] - ref_coords[2])},
-        {0, (ref_coords[0] - ref_coords[1]), (ref_coords[0] - ref_coords[2]), 0},
-        {ref_coords[1], 0, 0, (1 - ref_coords[0])},
-        {(ref_coords[2] - ref_coords[1]), 0, (1 - ref_coords[0]), 0},
-        {(1 - ref_coords[2]), (1 - ref_coords[0]), 0, 0} };
+    = { { 0, 0, ref_coords[1], ref_coords[2] },
+        { 0, ref_coords[1], 0, (ref_coords[0] - ref_coords[2]) },
+        { 0, (ref_coords[0] - ref_coords[1]), (ref_coords[0] - ref_coords[2]), 0 },
+        { ref_coords[1], 0, 0, (1 - ref_coords[0]) },
+        { (ref_coords[2] - ref_coords[1]), 0, (1 - ref_coords[0]), 0 },
+        { (1 - ref_coords[2]), (1 - ref_coords[0]), 0, 0 } };
   const double max_orthogonal_direction[6][4]
-    = { {0, 0, ref_coords[0], ref_coords[0]},
-        {0, ref_coords[0], 0, ref_coords[0]},
-        {0, ref_coords[0], ref_coords[0], 0},
-        {ref_coords[2], 0, 0, (1 - ref_coords[2])},
-        {ref_coords[2], 0, (1 - ref_coords[2]), 0},
-        {(1 - ref_coords[1]), (1 - ref_coords[1]), 0, 0} };
+    = { { 0, 0, ref_coords[0], ref_coords[0] },       { 0, ref_coords[0], 0, ref_coords[0] },
+        { 0, ref_coords[0], ref_coords[0], 0 },       { ref_coords[2], 0, 0, (1 - ref_coords[2]) },
+        { ref_coords[2], 0, (1 - ref_coords[2]), 0 }, { (1 - ref_coords[1]), (1 - ref_coords[1]), 0, 0 } };
 
   /* If the maximum orthogonal direction is 0 or 1, the reference coordinate lies on
    * one of the edge nodes and the scaling factor is therefore 0, because the displacement
