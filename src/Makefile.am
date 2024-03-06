@@ -41,7 +41,9 @@ libt8_installed_headers_cmesh = \
   src/t8_cmesh/t8_cmesh_examples.h \
   src/t8_cmesh/t8_cmesh_geometry.h \
   src/t8_cmesh/t8_cmesh_helpers.h \
-  src/t8_cmesh/t8_cmesh_cad.hxx
+  src/t8_cmesh/t8_cmesh_cad.hxx \
+  src/t8_cmesh/t8_cmesh_types.h \
+  src/t8_cmesh/t8_cmesh_stash.h
 libt8_installed_headers_data = \
   src/t8_data/t8_shmem.h src/t8_data/t8_containers.h
 libt8_installed_headers_forest = \
