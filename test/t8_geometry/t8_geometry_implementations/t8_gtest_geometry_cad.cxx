@@ -192,7 +192,7 @@ t8_create_cad_hypercube (double *rot_vec, int face, int edge, double *parameters
   }
   else {
     /* Even if we do not want to link any geometry to the edges or faces, 
-     * we have to create a geometry. Hence an cad geometry can only be created
+     * we have to create a geometry. Hence a cad geometry can only be created
      * with an actual shape, we just create a geometry with a curve and do not
      * link the curve to any edge. */
     t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, t8_create_cad_curve_shape ());
