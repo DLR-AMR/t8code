@@ -42,9 +42,6 @@
 #include <Standard_Version.hxx>
 #include <t8_schemes/t8_default/t8_default_prism/t8_dprism.h>
 
-const int t8_interpolation_coefficient_prism_edge[9] = { 1, 0, 0, 1, 0, 0, 2, 2, 2 };
-const int t8_interpolation_coefficients_prism_face[5][2] = { { 1, 2 }, { 0, 2 }, { 0, 2 }, { 0, 1 }, { 0, 1 } };
-
 t8_geometry_cad::t8_geometry_cad (int dim, const char *fileprefix, const char *name_in)
 {
   T8_ASSERT (0 <= dim && dim <= 3);
@@ -921,12 +918,13 @@ t8_geometry_cad::t8_geom_evaluate_cad_prism (t8_cmesh_t cmesh, t8_gloidx_t gtree
                                              const size_t num_coords, double *out_coords) const
 {
   T8_ASSERT (active_tree_class == T8_ECLASS_PRISM);
+  const int t8_interpolation_coefficient_prism_edge[9] = { 1, 0, 0, 1, 0, 0, 2, 2, 2 };
+  const int t8_interpolation_coefficients_prism_face[5][2] = { { 1, 2 }, { 0, 2 }, { 0, 2 }, { 0, 1 }, { 0, 1 } };
 
   /* Compute coordinates in global space from ref_coords in order to shift them afterwards */
   t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, num_coords, out_coords);
 
   const t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
-  const int num_edges = t8_eclass_num_edges[active_tree_class];
   double interpolated_curve_param, interpolated_surface_params[2], cur_delta[3];
   gp_Pnt pnt;
   double interpolated_coords[3], interpolation_coeffs[3], temp_face_vertices[T8_ECLASS_MAX_CORNERS_2D * 3],
@@ -936,14 +934,14 @@ t8_geometry_cad::t8_geom_evaluate_cad_prism (t8_cmesh_t cmesh, t8_gloidx_t gtree
   Standard_Real first, last;
 
   /* Check each edge for a geometry. */
-  for (int i_edge = 0; i_edge < num_edges; ++i_edge) {
+  for (int i_edge = 0; i_edge < T8_DPRISM_EDGES; ++i_edge) {
     /* We have to check for curves as well as surfaces. Linked curves are stored 
      * in the first half of the array, surfaces in the second. 
      * If a curve is connected to this edge we have to also check, 
      * if a surface is connected to at least one of the two adjacent faces. */
-    if (edges[i_edge] > 0 || edges[i_edge + num_edges] > 0) {
+    if (edges[i_edge] > 0 || edges[i_edge + T8_DPRISM_EDGES] > 0) {
       /* Check if only a surface or a curve is present. Abort if both is true. */
-      T8_ASSERT (!(edges[i_edge] > 0) != !(edges[i_edge + num_edges] > 0));
+      T8_ASSERT (!(edges[i_edge] > 0) != !(edges[i_edge + T8_DPRISM_EDGES] > 0));
       /*
        *     z     y
        *     |  _-                _-4
@@ -1000,8 +998,8 @@ t8_geometry_cad::t8_geom_evaluate_cad_prism (t8_cmesh_t cmesh, t8_gloidx_t gtree
           t8_geom_linear_interpolation (&ref_coords[t8_interpolation_coefficient_prism_edge[i_edge] + offset_3d],
                                         parameters, 2, 1, interpolated_surface_params);
 
-          T8_ASSERT (edges[i_edge + num_edges] <= cad_shape_face_map.Size ());
-          surface = BRep_Tool::Surface (TopoDS::Face (cad_shape_face_map.FindKey (edges[i_edge + num_edges])));
+          T8_ASSERT (edges[i_edge + T8_DPRISM_EDGES] <= cad_shape_face_map.Size ());
+          surface = BRep_Tool::Surface (TopoDS::Face (cad_shape_face_map.FindKey (edges[i_edge + T8_DPRISM_EDGES])));
 
           /* Check if surface is valid */
           T8_ASSERT (!surface.IsNull ());
