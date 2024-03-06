@@ -40,9 +40,10 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
   virtual ~t8_scheme_common_c ()
   {
     T8_ASSERT (mempool != NULL);
-    SC_ASSERT (mempool->elem_count == 0);
+    T8_ASSERT (mempool->elem_count == 0);
     sc_mempool_destroy (mempool);
   }
+  /* Constructor */
   t8_scheme_common_c (t8_eclass_t eclass_in, int elem_size)
   {
     element_size = elem_size;
@@ -57,8 +58,8 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
     T8_ASSERT (mempool != NULL);
     T8_ASSERT (0 <= length);
     T8_ASSERT (elem != NULL);
-    for (int i = 0; i < length; ++i) {
-      elem[i] = (t8_element_t *) sc_mempool_alloc (mempool);
+    for (int ielem = 0; ielem < length; ++ielem) {
+      elem[ielem] = (t8_element_t *) sc_mempool_alloc (mempool);
     }
   }
 
