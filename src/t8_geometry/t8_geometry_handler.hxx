@@ -51,7 +51,7 @@ struct t8_geometry_handler
    * @tparam geometry_type The type of the geometry to register.
    * @tparam _args
    * \param [in] args The constructor arguments of the geometry.
-   * \return A pointer to the geometry.
+   * \return     A pointer to the geometry.
    */
   template <typename geometry_type, typename... _args>
   geometry_type *
@@ -131,9 +131,9 @@ struct t8_geometry_handler
 
   /**
    * Get the geometry of the provided tree.
-   * \param [in,out] cmesh The cmesh.
+   * \param [in,out] cmesh   The cmesh.
    * \param [in,out] gtreeid The global tree id of the tree for which the geometry should be returned.
-   * \return The geometry of the tree.
+   * \return         The geometry of the tree.
    */
   inline t8_geometry *
   get_tree_geometry (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)

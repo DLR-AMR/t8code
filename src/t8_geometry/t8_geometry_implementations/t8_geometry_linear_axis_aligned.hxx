@@ -107,7 +107,7 @@ struct t8_geometry_linear_axis_aligned: public t8_geometry_with_vertices
                                       const double tolerance) const;
 
   /**
-   * Check if  the currently active tree has a negative volume
+   * Check if the currently active tree has a negative volume
    * \return                True (non-zero) if the currently loaded tree has a negative volume. 0 otherwise.  
    */
   virtual bool

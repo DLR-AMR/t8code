@@ -35,7 +35,7 @@
  * @tparam geometry_type 
  * \param [in,out] cmesh The cmesh.
  * \param [in,out] args The constructor arguments of the geometry.
- * \return A pointer to the geometry.
+ * \return         A pointer to the geometry.
  */
 
 template <typename geometry_type, typename... _args>

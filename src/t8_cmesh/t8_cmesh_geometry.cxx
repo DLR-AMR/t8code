@@ -46,8 +46,7 @@ void
 t8_cmesh_set_tree_geometry (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const t8_geometry_c *geom)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
-  /* Add the name of the geometry as an attribute to the tree.
-   * We will copy the string. */
+  /* Add the hash of the geometry as an attribute to the tree. */
   size_t hash = geom->t8_geom_get_hash ();
   t8_cmesh_set_attribute (cmesh, gtreeid, t8_get_package_id (), T8_CMESH_GEOMETRY_ATTRIBUTE_KEY, &hash, sizeof (size_t),
                           0);
@@ -61,7 +60,7 @@ t8_cmesh_get_tree_geometry (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 
   if (geom_handler->get_num_geometries () == 1) {
     /* The geometry handler only has one geometry and the trees 
-     * thus do not need to store their geometry's name 
+     * thus do not need to store their geometry's hash
      * (we assume all trees have this geometry).
      */
     return geom_handler->get_unique_geometry ();
@@ -85,7 +84,7 @@ t8_cmesh_get_tree_geom_hash (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
      * NULL or the hash of the unique geometry. */
 
     t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
-    /* Look up the name of the geometry in the attributes. */
+    /* Look up the hash of the geometry in the attributes. */
     const size_t *geom_hash
       = (const size_t *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_GEOMETRY_ATTRIBUTE_KEY, ltreeid);
     T8_ASSERT (geom_hash == NULL || *geom_hash == geom->t8_geom_get_hash ());
@@ -94,7 +93,7 @@ t8_cmesh_get_tree_geom_hash (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
   }
 
   t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
-  /* Look up the name of the geometry in the attributes. */
+  /* Look up the hash of the geometry in the attributes. */
   const size_t *hash
     = (const size_t *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_GEOMETRY_ATTRIBUTE_KEY, ltreeid);
   if (hash == nullptr) {

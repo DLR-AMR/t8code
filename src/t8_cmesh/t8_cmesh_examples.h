@@ -101,13 +101,13 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
  * \param [in] boundary     The vertices, that define the hypercube boundary.
  * \param [in] polygons_x   The number of polygons along the x-axis.
  * \param [in] polygons_y   The number of polygons along the y-axis.
- *                          Only required if \a eclass is 2D or 3D.
- * \param [in] polygons_z   The number of polygons along the z-axis.
- *                          Only required if \a eclass is 3D.
+ *                              Only required if \a eclass is 2D or 3D.
+ * \param [in] polygons_z       The number of polygons along the z-axis.
+ *                              Only required if \a eclass is 3D.
  * \param [in] use_axis_aligned Use the axis-aligned geometry. If used, only two points per tree are stored.
- * \return                  A committed t8_cmesh structure with 
- *                          \a polygons_x * \a polygons_z * \a polygons_y many 
- *                          sub-hypercubes of class \a eclass.
+ * \return                      A committed t8_cmesh structure with 
+ *                              \a polygons_x * \a polygons_z * \a polygons_y many 
+ *                              sub-hypercubes of class \a eclass.
  * \note \a boundary must point to an array with 3*8 (3D), 3*4 (2D), 3*2 (1D), or 3 (0D) entries.
  * \note Every sub-hypercube contains different number of trees depending on \a eclass.
  * \note If \a eclass == T8_ECLASS_VERTEX, _LINE, _QUAD or _HEX every sub-hypercube contains

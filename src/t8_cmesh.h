@@ -409,7 +409,7 @@ t8_cmesh_register_geometry (t8_cmesh_t cmesh, t8_geometry_c **geometry);
 /** Set the geometry for a tree, thus specify which geometry to use for this tree.
  * \param [in] cmesh     A non-committed cmesh.
  * \param [in] gtreeid   A global tree id in \a cmesh.
- * \param [in] geom     The geometry to use for this tree.
+ * \param [in] geom      The geometry to use for this tree.
  * See also \ref t8_cmesh_get_tree_geometry
  */
 void

@@ -76,7 +76,7 @@ struct t8_geometry_with_vertices: public t8_geometry
   t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 
   /**
-   * Check if  the currently active tree has a negative volume
+   * Check if the currently active tree has a negative volume
    * \return                True (non-zero) if the currently loaded tree has a negative volume. 0 otherwise.  
    */
   virtual bool
