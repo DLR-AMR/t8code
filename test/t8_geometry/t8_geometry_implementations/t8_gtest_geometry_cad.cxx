@@ -98,7 +98,7 @@ t8_euler_rotation (double *pos_vec, double *rot_vec, double *res_vec, double *ro
   }
 }
 
-/** Constructs an cad surface for testing purposes. Surface is build between vertex 0, 1, 4 and 5 of a unit hexahedron.
+/** Constructs a cad surface for testing purposes. Surface is build between vertex 0, 1, 4 and 5 of a unit hexahedron.
  * Saves the surface in the shape.
  * \return                            The shape.
  */
