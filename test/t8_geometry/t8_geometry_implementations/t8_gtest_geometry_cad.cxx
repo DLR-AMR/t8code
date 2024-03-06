@@ -126,7 +126,7 @@ t8_create_cad_surface_shape ()
   return shape;
 }
 
-/** Constructs an cad curve for testing purposes. Curve is build between vertex 0, 1, 4 and 5 of a unit hexahedron.
+/** Constructs a cad curve for testing purposes. Curve is build between vertex 0, 1, 4 and 5 of a unit hexahedron.
  * Saves the curve in the shape.
  * \return                            The cad shape.
  */
