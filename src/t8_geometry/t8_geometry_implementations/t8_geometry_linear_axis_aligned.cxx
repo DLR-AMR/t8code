@@ -83,9 +83,14 @@ t8_geometry_linear_axis_aligned::t8_geom_point_batch_inside_element (t8_forest_t
   double v_min[3];
   double v_max[3];
 
+  const t8_eclass_t elem_class = t8_forest_get_tree_class (forest, ltreeid);
+  T8_ASSERT (elem_class == T8_ECLASS_LINE || elem_class == T8_ECLASS_HEX || elem_class == T8_ECLASS_QUAD);
+
+  const int max_corner_id = (elem_class == T8_ECLASS_LINE) ? 1 : (elem_class == T8_ECLASS_QUAD) ? 3 : 7;
+
   /*Geometry is fully described by v_min and v_max*/
   t8_forest_element_coordinate (forest, ltreeid, element, 0, v_min);
-  t8_forest_element_coordinate (forest, ltreeid, element, 1, v_max);
+  t8_forest_element_coordinate (forest, ltreeid, element, max_corner_id, v_max);
 #if T8_ENABLE_DEBUG
   const double coords[6] = { v_min[0], v_min[1], v_min[2], v_max[0], v_max[1], v_max[2] };
   T8_ASSERT (correct_point_order (coords));
