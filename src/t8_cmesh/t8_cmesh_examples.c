@@ -28,6 +28,7 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_examples.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_zero.h>
 #include <t8_vec.h>
 #include <t8_mat.h>
 #include <t8_eclass.h>
@@ -1647,7 +1648,11 @@ t8_cmesh_new_bigmesh (t8_eclass_t eclass, int num_trees, sc_MPI_Comm comm)
   t8_cmesh_t cmesh;
   int i;
 
+  t8_geometry_c *zero_geom = t8_geometry_zero_new (t8_eclass_to_dimension[eclass]);
+
   t8_cmesh_init (&cmesh);
+  t8_cmesh_register_geometry (cmesh, zero_geom);
+
   for (i = 0; i < num_trees; i++) {
     t8_cmesh_set_tree_class (cmesh, i, eclass);
     if (cmesh->dimension > 0) {

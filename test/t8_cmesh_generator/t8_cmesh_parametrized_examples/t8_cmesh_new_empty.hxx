@@ -23,8 +23,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #ifndef T8_CMESH_NEW_EMPTY_HXX
 #define T8_CMESH_NEW_EMPTY_HXX
 
-#include "test/t8_cmesh_generator/t8_gtest_cmesh_cartestian_product.hxx"
-#include "test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_params.hxx"
+#include <test/t8_cmesh_generator/t8_gtest_cmesh_cartestian_product.hxx>
+#include <test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_params.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_eclass.h>
 
@@ -53,6 +53,6 @@ example_set *cmesh_example
     std::make_pair (cmesh_params::partition.begin (), cmesh_params::partition.end ()),
     std::make_pair (cmesh_params::do_bcast.begin (), cmesh_params::do_bcast.end ()), new_from_class_wrapper,
     print_function, "t8_cmesh_new_empty_");
-}  // namespace new_empty
+} /* namespace new_empty */
 
 #endif /* T8_CMESH_NEW_EMPTY_HXX */
