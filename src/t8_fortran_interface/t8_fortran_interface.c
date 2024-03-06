@@ -39,6 +39,10 @@ t8_fortran_init_all_ (sc_MPI_Comm * comm)
   printf ("t8 init\n");
 }
 
+void t8_fortran_cmesh_commit(t8_cmesh_t cmesh, sc_MPI_Comm* comm){
+	t8_cmesh_commit(cmesh, *comm);
+}
+
 void
 t8_fortran_init_all (sc_MPI_Comm * comm)
 {
@@ -50,6 +54,7 @@ t8_fortran_init_all (sc_MPI_Comm * comm)
     sc_MPI_Comm_rank (*comm, &rank);
     printf ("rank = %i\n", rank);
   }
+  printf ("Init all end %lu\n", (long unsigned) comm);
 
 }
 
@@ -85,7 +90,6 @@ t8_fortran_MPI_Comm_new (
    * yet. */
   sc_MPI_Comm        *Ccomm = (sc_MPI_Comm *) malloc (sizeof (*Ccomm));
   *Ccomm = MPI_Comm_f2c (Fcomm);
-  printf ("Created comm %lu\n", (long unsigned) Ccomm);
   return Ccomm;
 }
 
