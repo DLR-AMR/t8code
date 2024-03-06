@@ -95,7 +95,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
   }
 
   virtual int
-  t8_element_is_family (const t8_element_t **fam) const override
+  t8_element_is_family (t8_element_t **fam) const override
   {
     if (t8_element_level (fam[0]) == 0)
       return 0;
