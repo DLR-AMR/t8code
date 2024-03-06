@@ -372,7 +372,7 @@ t8_geom_get_triangle_scaling_factor (int edge_index, const double *tree_vertices
 }
 
 double
-t8_geom_get_scaling_factor_of_edge_on_face (const int edge, const int face, const double *ref_coords)
+t8_geom_get_scaling_factor_of_edge_on_face_tet (const int edge, const int face, const double *ref_coords)
 {
   /* Save the orthogonal direction and the maximum of that direction
    * of a tetrahedron edge in reference space on one of the neighbouring faces. 
@@ -385,119 +385,33 @@ t8_geom_get_scaling_factor_of_edge_on_face (const int edge, const int face, cons
    *     /      |
    *    /    <~~| orthogonal direction
    *   /<----o--| maximum othogonal direction
-   *  /_________|*/
-  double orthogonal_direction;
-  double max_orthogonal_direction;
-  double scaling_factor;
+   *  /_________|
+   */
 
-  switch (edge) { /* Check for edge of tetrahedron */
-  case 0:
-    switch (face) { /* Check for neighbouring face of edge 0 */
-    case 2:
-      orthogonal_direction = ref_coords[1];
-      max_orthogonal_direction = ref_coords[0];
-      break;
-    case 3:
-      orthogonal_direction = ref_coords[2];
-      max_orthogonal_direction = ref_coords[0];
-      break;
-    default:
-      SC_ABORT_NOT_REACHED ();
-      break;
-    }
-    break;
-  case 1:
-    switch (face) { /* Check for neighbouring face of edge 1 */
-    case 1:
-      orthogonal_direction = ref_coords[1];
-      max_orthogonal_direction = ref_coords[0];
-      break;
-    case 3:
-      orthogonal_direction = ref_coords[0] - ref_coords[2];
-      max_orthogonal_direction = ref_coords[0];
-      break;
-    default:
-      SC_ABORT_NOT_REACHED ();
-      break;
-    }
-    break;
-  case 2:
-    switch (face) { /* Check for neighbouring face of edge 2 */
-    case 1:
-      orthogonal_direction = ref_coords[0] - ref_coords[1];
-      max_orthogonal_direction = ref_coords[0];
-      break;
-    case 2:
-      orthogonal_direction = ref_coords[0] - ref_coords[2];
-      max_orthogonal_direction = ref_coords[0];
-      break;
-    default:
-      SC_ABORT_NOT_REACHED ();
-      break;
-    }
-    break;
-  case 3:
-    switch (face) { /* Check for neighbouring face of edge 3 */
-    case 0:
-      orthogonal_direction = ref_coords[1];
-      max_orthogonal_direction = ref_coords[2];
-      break;
-    case 3:
-      orthogonal_direction = 1 - ref_coords[0];
-      max_orthogonal_direction = 1 - ref_coords[2];
-      break;
-    default:
-      SC_ABORT_NOT_REACHED ();
-      break;
-    }
-    break;
-  case 4:
-    switch (face) { /* Check for neighbouring face of edge 4 */
-    case 0:
-      orthogonal_direction = ref_coords[2] - ref_coords[1];
-      max_orthogonal_direction = ref_coords[2];
-      break;
-    case 2:
-      orthogonal_direction = 1 - ref_coords[0];
-      max_orthogonal_direction = 1 - ref_coords[2];
-      break;
-    default:
-      SC_ABORT_NOT_REACHED ();
-      break;
-    }
-    break;
-  case 5:
-    switch (face) { /* Check for neighbouring face of edge 5 */
-    case 0:
-      orthogonal_direction = 1 - ref_coords[2];
-      max_orthogonal_direction = 1 - ref_coords[1];
-      break;
-    case 1:
-      orthogonal_direction = 1 - ref_coords[0];
-      max_orthogonal_direction = 1 - ref_coords[1];
-      break;
-    default:
-      SC_ABORT_NOT_REACHED ();
-      break;
-    }
-    break;
-  default:
-    SC_ABORT_NOT_REACHED ();
-    break;
-  }
+  const double orthogonal_direction[6][4]
+    = { {0, 0, ref_coords[1], ref_coords[2]},
+        {0, ref_coords[1], 0, (ref_coords[0] - ref_coords[2])},
+        {0, (ref_coords[0] - ref_coords[1]), (ref_coords[0] - ref_coords[2]), 0},
+        {ref_coords[1], 0, 0, (1 - ref_coords[0])},
+        {(ref_coords[2] - ref_coords[1]), 0, (1 - ref_coords[0]), 0},
+        {(1 - ref_coords[2]), (1 - ref_coords[0]), 0, 0} };
+  const double max_orthogonal_direction[6][4]
+    = { {0, 0, ref_coords[0], ref_coords[0]},
+        {0, ref_coords[0], 0, ref_coords[0]},
+        {0, ref_coords[0], ref_coords[0], 0},
+        {ref_coords[2], 0, 0, (1 - ref_coords[2])},
+        {ref_coords[2], 0, (1 - ref_coords[2]), 0},
+        {(1 - ref_coords[1]), (1 - ref_coords[1]), 0, 0} };
 
   /* If the maximum orthogonal direction is 0 or 1, the reference coordinate lies on
    * one of the edge nodes and the scaling factor is therefore 0, because the displacement
    * at the nodes is always 0.
    * In all other cases the scaling factor is determined with one minus the relation of the orthogonal direction
    * to the maximum orthogonal direction. */
-  if (max_orthogonal_direction == 0 || max_orthogonal_direction == 1) {
-    scaling_factor = 0;
+  if (max_orthogonal_direction[edge][face] == 0 || max_orthogonal_direction[edge][face] == 1) {
+    return 0;
   }
-  else {
-    scaling_factor = 1 - (orthogonal_direction / max_orthogonal_direction);
-  }
-  return scaling_factor;
+  return (1.0 - (orthogonal_direction[edge][face] / max_orthogonal_direction[edge][face]));
 }
 
 void

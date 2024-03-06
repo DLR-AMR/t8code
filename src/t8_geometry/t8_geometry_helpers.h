@@ -140,7 +140,7 @@ t8_geom_get_triangle_scaling_factor (int edge_index, const double *tree_vertices
  *                                         at the point of the reference coordinates.
  */
 double
-t8_geom_get_scaling_factor_of_edge_on_face (int edge_index, int face_index, const double *ref_coords);
+t8_geom_get_scaling_factor_of_edge_on_face_tet (int edge_index, int face_index, const double *ref_coords);
 
 /** Calculates the face intersection of a ray passing trough the reference coordinates and the
  *  opposite vertex of that face for a tetrahedron. The coordinates of the face intersection are
