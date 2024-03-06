@@ -25,6 +25,7 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <test/t8_gtest_macros.hxx>
 
 /* In this test, we recursively constructs a mesh containing only the first 
  * and last elements of a family. Furthermore, for every two elements 
@@ -141,4 +142,5 @@ TEST_P (recursive_tree, test_recursive)
   ASSERT_TRUE (t8_forest_is_equal (forest, forest_base));
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_recursive, recursive_tree, testing::Range (T8_ECLASS_LINE, T8_ECLASS_COUNT));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_recursive, recursive_tree, testing::Range (T8_ECLASS_LINE, T8_ECLASS_COUNT),
+                          print_eclass);

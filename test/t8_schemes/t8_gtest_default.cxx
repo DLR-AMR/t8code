@@ -88,4 +88,4 @@ TEST_P (gtest_default_scheme, is_default)
   EXPECT_TRUE (t8_eclass_scheme_is_default (eclass_scheme));
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_default_scheme, gtest_default_scheme, AllEclasses);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_default_scheme, gtest_default_scheme, AllEclasses, print_eclass);
