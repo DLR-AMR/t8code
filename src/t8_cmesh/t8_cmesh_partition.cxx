@@ -28,10 +28,10 @@
 #include <t8_data/t8_shmem.h>
 #include <t8_cmesh.h>
 #include <t8_element.h>
-#include "t8_cmesh_types.h"
-#include "t8_cmesh_trees.h"
-#include "t8_cmesh_partition.h"
-#include "t8_cmesh_offset.h"
+#include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh_trees.h>
+#include <t8_cmesh/t8_cmesh_partition.h>
+#include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_geometry/t8_geometry_handler.hxx>
 
 /* Change the neighbor entry of a tree to match the new partition.
