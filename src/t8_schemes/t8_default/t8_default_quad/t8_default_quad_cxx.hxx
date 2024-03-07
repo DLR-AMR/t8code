@@ -125,7 +125,7 @@ struct t8_default_scheme_quad_c: public t8_default_scheme_common_c
    * \see t8_element_is_valid
    */
   virtual void
-  t8_element_init (int length, t8_element_t *elem, int called_new) const;
+  t8_element_init (int length, t8_element_t *elem) const;
 
   /** Return the refinement level of an element.
    * \param [in] elem    The element whose level should be returned.

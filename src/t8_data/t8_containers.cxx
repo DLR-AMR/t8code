@@ -108,7 +108,7 @@ t8_element_array_init_size (t8_element_array_t *element_array, t8_eclass_scheme_
   if (num_elements > 0) {
     /* Call t8_element_init for the elements */
     first_element = (t8_element_t *) sc_array_index (&element_array->array, 0);
-    scheme->t8_element_init (num_elements, first_element, 0);
+    scheme->t8_element_init (num_elements, first_element);
   }
   T8_ASSERT (t8_element_array_is_valid (element_array));
 }
@@ -174,16 +174,15 @@ t8_element_array_resize (t8_element_array_t *element_array, size_t new_count)
   T8_ASSERT (t8_element_array_is_valid (element_array));
   /* Store the old number of elements */
   old_count = t8_element_array_get_count (element_array);
-  /* resize the data array */
-  sc_array_resize (&element_array->array, new_count);
-  /* if the new_count is larger than the previous count, we need to
-   * call t8_element_init on the newly allocated elements. */
   if (old_count < new_count) {
+    /* if the new_count is larger than the previous count, we need to
+    * call t8_element_init on the newly allocated elements. */
+    sc_array_resize (&element_array->array, new_count);
     t8_element_t *first_new_elem;
     /* Get the first newly allocated element */
     first_new_elem = t8_element_array_index_locidx (element_array, old_count);
     /* Call t8_element_init on all new elements */
-    element_array->scheme->t8_element_init (new_count - old_count, first_new_elem, 0);
+    element_array->scheme->t8_element_init (new_count - old_count, first_new_elem);
   }
 }
 
@@ -202,7 +201,7 @@ t8_element_array_push (t8_element_array_t *element_array)
   t8_element_t *new_element;
   T8_ASSERT (t8_element_array_is_valid (element_array));
   new_element = (t8_element_t *) sc_array_push (&element_array->array);
-  element_array->scheme->t8_element_init (1, new_element, 0);
+  element_array->scheme->t8_element_init (1, new_element);
   return new_element;
 }
 
@@ -214,7 +213,7 @@ t8_element_array_push_count (t8_element_array_t *element_array, size_t count)
   /* grow the array */
   new_elements = (t8_element_t *) sc_array_push_count (&element_array->array, count);
   /* initialize the elements */
-  element_array->scheme->t8_element_init (count, new_elements, 0);
+  element_array->scheme->t8_element_init (count, new_elements);
   return new_elements;
 }
 

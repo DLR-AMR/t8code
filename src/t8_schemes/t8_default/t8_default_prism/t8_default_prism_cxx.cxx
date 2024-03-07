@@ -40,24 +40,22 @@ t8_default_scheme_prism_c::t8_element_new (int length, t8_element_t **elem) cons
   {
     int i;
     for (i = 0; i < length; i++) {
-      t8_element_init (1, elem[i], 0);
+      t8_element_root (elem[i]);
     }
   }
 #endif
 }
 
 void
-t8_default_scheme_prism_c::t8_element_init (int length, t8_element_t *elem, int new_called) const
+t8_default_scheme_prism_c::t8_element_init (int length, t8_element_t *elem) const
 {
 #ifdef T8_ENABLE_DEBUG
-  if (!new_called) {
-    int i;
-    t8_dprism_t *prism = (t8_dprism_t *) elem;
-    /* Set all values to 0 */
-    for (i = 0; i < length; i++) {
-      t8_dprism_init_linear_id (prism + i, 0, 0);
-      T8_ASSERT (t8_dprism_is_valid (prism + i));
-    }
+  int i;
+  t8_dprism_t *prism = (t8_dprism_t *) elem;
+  /* Set all values to 0 */
+  for (i = 0; i < length; i++) {
+    t8_dprism_init_linear_id (prism + i, 0, 0);
+    T8_ASSERT (t8_dprism_is_valid (prism + i));
   }
 #endif
 }

@@ -514,22 +514,20 @@ t8_default_scheme_tet_c::t8_element_new (int length, t8_element_t **elem) const
   {
     int i;
     for (i = 0; i < length; i++) {
-      t8_element_init (1, elem[i], 0);
+      t8_element_root (elem[i]);
     }
   }
 #endif
 }
 
 void
-t8_default_scheme_tet_c::t8_element_init (int length, t8_element_t *elem, int new_called) const
+t8_default_scheme_tet_c::t8_element_init (int length, t8_element_t *elem) const
 {
 #ifdef T8_ENABLE_DEBUG
-  if (!new_called) {
-    int i;
-    t8_dtet_t *tets = (t8_dtet_t *) elem;
-    for (i = 0; i < length; i++) {
-      t8_dtet_init (tets + i);
-    }
+  int i;
+  t8_dtet_t *tets = (t8_dtet_t *) elem;
+  for (i = 0; i < length; i++) {
+    t8_dtet_init (tets + i);
   }
 #endif
 }

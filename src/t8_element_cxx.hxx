@@ -691,21 +691,16 @@ struct t8_eclass_scheme
    * \param [in] length   The number of elements to be initialized.
    * \param [in,out] elems On input an array of \b length many allocated
    *                       elements.
-   * \param [in] called_new True if the elements in \a elem were created by a call
-   *                       to \ref t8_element_new. False if no element in \a elem
-   *                       was created in this way. The case that only some elements
-   *                       were created by \ref t8_element_new should never occur.
    * \note In debugging mode, an element that was passed to \ref t8_element_init
    * must pass \ref t8_element_is_valid.
    * \note If an element was created by \ref t8_element_new then \ref t8_element_init
    * may not be called for it. Thus, \ref t8_element_new should initialize an element
    * in the same way as a call to \ref t8_element_init would.
-   * Thus, if \a called_new is true this function should usually do nothing.
    * \see t8_element_new
    * \see t8_element_is_valid
    */
   virtual void
-  t8_element_init (int length, t8_element_t *elem, int called_new) const
+  t8_element_init (int length, t8_element_t *elem) const
     = 0;
 
   /** Deallocate an array of elements.
