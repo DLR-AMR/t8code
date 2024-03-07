@@ -413,17 +413,6 @@ t8_default_scheme_prism_c::t8_element_reference_coords (const t8_element_t *elem
   t8_dprism_compute_reference_coords ((const t8_dprism_t *) elem, ref_coords, num_coords, out_coords);
 }
 
-void
-t8_default_scheme_prism_c::t8_element_general_function (const t8_element_t *elem, const void *indata,
-                                                        void *outdata) const
-{
-  T8_ASSERT (outdata != NULL);
-  T8_ASSERT (t8_element_is_valid (elem));
-  *((int8_t *) outdata) = ((const t8_dprism_t *) elem)->tri.type;
-  /* Safety check to catch datatype conversion errors */
-  T8_ASSERT (*((int8_t *) outdata) == ((const t8_dprism_t *) elem)->tri.type);
-}
-
 t8_linearidx_t
 t8_default_scheme_prism_c::t8_element_get_linear_id (const t8_element_t *elem, int level) const
 {

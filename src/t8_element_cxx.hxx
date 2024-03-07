@@ -36,16 +36,9 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/* TODO: Implement a set of rules that have to hold between different eclass,
- *       i.e. lines must have a greater or equal maxlevel than quads and triangles.
- *       Check whether this rules are fulfilled in the construction of a scheme.
- */
-/* TODO: Implement a test that boundary and extrude leads to the original element. */
-
 /** This struct holds virtual functions for a particular element class. */
 struct t8_eclass_scheme
 {
-  /** This scheme defines the operations for a particular element class. */
  protected:
   size_t element_size; /**< The size in bytes of an element of class \a eclass */
   void *ts_context;    /**< Anonymous implementation context. */
@@ -86,15 +79,6 @@ struct t8_eclass_scheme
    */
   virtual int
   t8_element_maxlevel (void) const
-    = 0;
-
-  /** Return the type of each child in the ordering of the implementation.
-   * \param [in] childid  Must be between 0 and the number of children (exclusive).
-   *                      The number of children is defined in \a t8_element_num_children.
-   * \return              The type for the given child.
-   */
-  virtual t8_eclass_t
-  t8_element_child_eclass (int childid) const
     = 0;
 
   /** Return the level of a particular element.
@@ -262,14 +246,9 @@ struct t8_eclass_scheme
   /** Construct the child element of a given number.
    * \param [in] elem     This must be a valid element, bigger than maxlevel.
    * \param [in] childid  The number of the child to construct.
-   * \param [in,out] child        The storage for this element must exist
-   *                              and match the element class of the child.
-   *                              For a pyramid, for example, it may be either a
-   *                              tetrahedron or a pyramid depending on \a childid.
-   *                              This can be checked by \a t8_element_child_eclass.
+   * \param [in,out] child        The storage for this element must exist.
    *                              On output, a valid element.
    * It is valid to call this function with elem = child.
-   * \see t8_element_child_eclass
    */
   virtual void
   t8_element_child (const t8_element_t *elem, int childid, t8_element_t *child) const
@@ -279,12 +258,10 @@ struct t8_eclass_scheme
    * \param [in] elem     This must be a valid element, bigger than maxlevel.
    * \param [in] length   The length of the output array \a c must match
    *                      the number of children.
-   * \param [in,out] c    The storage for these \a length elements must exist
-   *                      and match the element class in the children's ordering.
+   * \param [in,out] c    The storage for these \a length elements must exist.
    *                      On output, all children are valid.
    * It is valid to call this function with elem = c[0].
    * \see t8_element_num_children
-   * \see t8_element_child_eclass
    */
   virtual void
   t8_element_children (const t8_element_t *elem, int length, t8_element_t *c[]) const
@@ -618,17 +595,6 @@ struct t8_eclass_scheme
                                double *out_coords) const
     = 0;
 
-  /* TODO: deactivate */
-  /** Return a pointer to a t8_element in an array indexed by a size_t.
-   * \param [in] array    The \ref sc_array storing \t t8_element_t pointers.
-   * \param [in] it       The index of the element that should be returned.
-   * \return              A pointer to the it-th element in \b array.
-   * We provide a default implementation of this routine that should suffice
-   * for most use cases.
-   */
-  virtual t8_element_t *
-  t8_element_array_index (sc_array_t *array, size_t it) const;
-
   /** Count how many leaf descendants of a given uniform level an element would produce.
    * \param [in] t     The element to be checked.
    * \param [in] level A refinement level.
@@ -654,21 +620,6 @@ struct t8_eclass_scheme
    */
   virtual t8_gloidx_t
   t8_element_count_leaves_from_root (int level) const
-    = 0;
-
-  /** This function has no defined effect but each implementation is free to
-   *  provide its own meaning of it. Thus this function can be used to compute or
-   *  lookup very scheme implementation specific data.
-   *  \param [in] elem An valid element
-   *  \param [in] indata Pointer to input data
-   *  \param [out] outdata Pointer to output data.
-   *  For the correct usage of \a indata and \a outdata see the specific implementations
-   *  of the scheme.
-   *  For example the default scheme triangle and tetrahedron implementations use 
-   *  this function to return the type of a tri/tet to the caller.
-   */
-  virtual void
-  t8_element_general_function (const t8_element_t *elem, const void *indata, void *outdata) const
     = 0;
 
 #ifdef T8_ENABLE_DEBUG

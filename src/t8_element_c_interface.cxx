@@ -54,14 +54,6 @@ t8_element_maxlevel (const t8_eclass_scheme_c *ts)
   return ts->t8_element_maxlevel ();
 }
 
-t8_eclass_t
-t8_element_child_eclass (const t8_eclass_scheme_c *ts, int childid)
-{
-  T8_ASSERT (ts != NULL);
-
-  return ts->t8_element_child_eclass (childid);
-}
-
 int
 t8_element_level (const t8_eclass_scheme_c *ts, const t8_element_t *elem)
 {
@@ -396,14 +388,6 @@ t8_element_count_leaves_from_root (const t8_eclass_scheme_c *ts, int level)
   T8_ASSERT (ts != NULL);
 
   return ts->t8_element_count_leaves_from_root (level);
-}
-
-void
-t8_element_general_function (const t8_eclass_scheme_c *ts, const t8_element_t *elem, const void *indata, void *outdata)
-{
-  T8_ASSERT (ts != NULL);
-
-  ts->t8_element_general_function (elem, indata, outdata);
 }
 
 #ifdef T8_ENABLE_DEBUG

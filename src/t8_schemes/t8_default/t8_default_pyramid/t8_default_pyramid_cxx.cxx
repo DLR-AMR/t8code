@@ -395,17 +395,6 @@ t8_default_scheme_pyramid_c::t8_element_refines_irregular () const
   return 1;
 }
 
-void
-t8_default_scheme_pyramid_c::t8_element_general_function (const t8_element_t *elem, const void *indata,
-                                                          void *outdata) const
-{
-  T8_ASSERT (outdata != NULL);
-  T8_ASSERT (t8_element_is_valid (elem));
-  *((int8_t *) outdata) = ((const t8_dpyramid_t *) elem)->pyramid.type;
-  /* Safety check to catch datatype conversion errors */
-  T8_ASSERT (*((int8_t *) outdata) == ((const t8_dpyramid_t *) elem)->pyramid.type);
-}
-
 #ifdef T8_ENABLE_DEBUG
 int
 t8_default_scheme_pyramid_c::t8_element_is_valid (const t8_element_t *elem) const

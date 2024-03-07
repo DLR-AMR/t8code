@@ -39,14 +39,6 @@ t8_default_scheme_hex_c::t8_element_maxlevel (void) const
   return HEX_REFINE_MAXLEVEL;
 }
 
-t8_eclass_t
-t8_default_scheme_hex_c::t8_element_child_eclass (int childid) const
-{
-  T8_ASSERT (0 <= childid && childid < P8EST_CHILDREN);
-
-  return T8_ECLASS_HEX;
-}
-
 int
 t8_default_scheme_hex_c::t8_element_level (const t8_element_t *elem) const
 {

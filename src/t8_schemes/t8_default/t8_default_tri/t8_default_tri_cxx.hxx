@@ -194,26 +194,13 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
   virtual int
   t8_element_get_corner_face (const t8_element_t *element, int corner, int face) const;
 
-  /** Return the type of each child in the ordering of the implementation.
-   * \param [in] childid  Must be between 0 and the number of children (exclusive).
-   *                      The number of children is defined in \a t8_element_num_children.
-   * \return              The type for the given child.
-   */
-  virtual t8_eclass_t
-  t8_element_child_eclass (int childid) const
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return T8_ECLASS_ZERO; /* suppresses compiler warning */
-  }
-
   /** Construct the child element of a given number.
    * \param [in] elem      This must be a valid element, bigger than maxlevel.
    * \param [in] childid   The number of the child to construct.
    * \param [in,out] child The storage for this element must exist and match the element class of the child.
    *                       On output, a valid element.
    * It is valid to call this function with elem = child.
-   * \see t8_element_child_eclass
-   */
+     */
   virtual void
   t8_element_child (const t8_element_t *elem, int childid, t8_element_t *child) const;
 
@@ -224,8 +211,7 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
    *                    children's ordering. On output, all children are valid.
    * It is valid to call this function with elem = c[0].
    * \see t8_element_num_children
-   * \see t8_element_child_eclass
-   */
+     */
   virtual void
   t8_element_children (const t8_element_t *elem, int length, t8_element_t *c[]) const;
 
@@ -470,15 +456,6 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
    */
   virtual void
   t8_element_vertex_coords (const t8_element_t *elem, int vertex, int coords[]) const;
-
-  /** The tetrahedron schemes uses the general function to return the type of a tetrahedron.
-   *  \param [in] elem An valid element
-   *  \param [in] indata Is ignored. Can be NULL.
-   *  \param [out] outdata Pointer to an int8_t. The type of \a elem will be stored here.
-   *  On output the type of the tetrahedron will be stored in \a outdata
-   */
-  virtual void
-  t8_element_general_function (const t8_element_t *elem, const void *indata, void *outdata) const;
 
   /** Compute the coordinates of a given element vertex inside a reference tree that is embedded into 
    * [0,1]^d (d = dimension).

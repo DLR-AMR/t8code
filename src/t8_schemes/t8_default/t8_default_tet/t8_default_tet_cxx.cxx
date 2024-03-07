@@ -461,16 +461,6 @@ t8_default_scheme_tet_c::t8_element_vertex_coords (const t8_element_t *elem, int
 }
 
 void
-t8_default_scheme_tet_c::t8_element_general_function (const t8_element_t *elem, const void *indata, void *outdata) const
-{
-  T8_ASSERT (t8_element_is_valid (elem));
-  T8_ASSERT (outdata != NULL);
-  *((int8_t *) outdata) = ((const t8_dtet_t *) elem)->type;
-  /* Safety check to catch datatype conversion errors */
-  T8_ASSERT (*((int8_t *) outdata) == ((const t8_dtet_t *) elem)->type);
-}
-
-void
 t8_default_scheme_tet_c::t8_element_vertex_reference_coords (const t8_element_t *elem, const int vertex,
                                                              double coords[]) const
 {

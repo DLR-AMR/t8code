@@ -40,13 +40,6 @@ t8_default_scheme_vertex_c::t8_element_level (const t8_element_t *elem) const
   return t8_dvertex_get_level ((const t8_dvertex_t *) elem);
 }
 
-t8_eclass_t
-t8_default_scheme_vertex_c::t8_element_child_eclass (int childid) const
-{
-  T8_ASSERT (childid == 0);
-  return T8_ECLASS_VERTEX;
-}
-
 void
 t8_default_scheme_vertex_c::t8_element_copy (const t8_element_t *source, t8_element_t *dest) const
 {

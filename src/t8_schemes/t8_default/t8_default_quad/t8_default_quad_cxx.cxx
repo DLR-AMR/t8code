@@ -43,15 +43,6 @@ t8_default_scheme_quad_c::t8_element_maxlevel (void) const
   return P4EST_QMAXLEVEL;
 }
 
-t8_eclass_t
-t8_default_scheme_quad_c::t8_element_child_eclass (int childid) const
-
-{
-  T8_ASSERT (0 <= childid && childid < P4EST_CHILDREN);
-
-  return T8_ECLASS_QUAD;
-}
-
 int
 t8_default_scheme_quad_c::t8_element_level (const t8_element_t *elem) const
 {
