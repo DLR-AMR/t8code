@@ -264,7 +264,7 @@ struct t8_default_scheme_line_c: public t8_default_scheme_common_c
    * \note level 0 elements do not form a family.
    */
   virtual int
-  t8_element_is_family (t8_element_t **fam) const;
+  t8_element_is_family (t8_element_t *const *fam) const;
 
   /** Compute the nearest common ancestor of two elements. That is,
    * the element with highest level that still has both given elements as

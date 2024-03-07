@@ -174,7 +174,7 @@ t8_default_scheme_tri_c::t8_element_ancestor_id (const t8_element_t *elem, int l
 }
 
 int
-t8_default_scheme_tri_c::t8_element_is_family (t8_element_t **fam) const
+t8_default_scheme_tri_c::t8_element_is_family (t8_element_t *const *fam) const
 {
 #ifdef T8_ENABLE_DEBUG
   {

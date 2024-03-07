@@ -292,7 +292,7 @@ struct t8_eclass_scheme
    * \note level 0 elements do not form a family.
    */
   virtual int
-  t8_element_is_family (t8_element_t **fam) const
+  t8_element_is_family (t8_element_t *const *fam) const
     = 0;
 
   /* TODO: This could be problematic for pyramids, since elem1 and elem2

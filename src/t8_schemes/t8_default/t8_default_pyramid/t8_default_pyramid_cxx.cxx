@@ -245,7 +245,7 @@ t8_default_scheme_pyramid_c::t8_element_set_linear_id (t8_element_t *elem, int l
 }
 
 int
-t8_default_scheme_pyramid_c::t8_element_is_family (t8_element_t **fam) const
+t8_default_scheme_pyramid_c::t8_element_is_family (t8_element_t *const *fam) const
 {
 #if T8_ENABLE_DEBUG
   int num_siblings = t8_element_num_siblings (fam[0]);
