@@ -31,6 +31,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <vector>
 
 #include <gtest/gtest.h>
+#include <test/t8_gtest_macros.hxx>
 #include <t8_eclass.h>
 #include <t8_vec.h>
 #include <t8_element_cxx.hxx>
@@ -40,7 +41,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_forest/t8_forest.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.hxx>
-#include <test/t8_gtest_macros.hxx>
 
 #define MAX_POLYNOMIAL_DEGREE 2
 
@@ -614,6 +614,8 @@ class LagrangeCmesh: public testing::TestWithParam<std::tuple<t8_eclass_t, int>>
     std::tuple<t8_eclass, int> params = GetParam ();
     eclass = std::get<0> (params);
     degree = std::get<1> (params);
+    if (eclass != T8_ECLASS_TRIANGLE && eclass != T8_ECLASS_QUAD && eclass != T8_ECLASS_HEX)
+      GTEST_SKIP () << "Element type not yet implemented.\n";
   }
 
   t8_eclass_t eclass;
@@ -647,8 +649,7 @@ TEST_P (LagrangeCmesh, lagrange_mapping)
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_geometry_lagrange, LagrangeCmesh,
-                          testing::Combine (testing::Range (T8_ECLASS_QUAD, T8_ECLASS_TET),
-                                            testing::Range (1, MAX_POLYNOMIAL_DEGREE + 1)),
+                          testing::Combine (AllEclasses, testing::Range (1, MAX_POLYNOMIAL_DEGREE + 1)),
                           [] (const testing::TestParamInfo<LagrangeCmesh::ParamType> &info) {
                             std::ostringstream test_name;
                             test_name << t8_eclass_to_string[std::get<0> (info.param)] << "_degree"
