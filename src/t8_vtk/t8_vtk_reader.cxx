@@ -20,11 +20,11 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include "t8_vtk_reader.hxx"
-#include "t8_vtk_unstructured.hxx"
-#include "t8_vtk_polydata.hxx"
-#include "t8_vtk_parallel.hxx"
-#include "t8_vtk_types.h"
+#include <t8_vtk/t8_vtk_reader.hxx>
+#include <t8_vtk/t8_vtk_unstructured.hxx>
+#include <t8_vtk/t8_vtk_polydata.hxx>
+#include <t8_vtk/t8_vtk_parallel.hxx>
+#include <t8_vtk/t8_vtk_types.h>
 #include <t8_cmesh.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 
