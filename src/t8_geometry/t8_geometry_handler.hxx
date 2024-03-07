@@ -48,10 +48,10 @@ struct t8_geometry_handler
 
   /**
    * Register a geometry with the geometry handler.
-   * @tparam geometry_type The type of the geometry to register.
-   * @tparam _args
-   * \param [in] args The constructor arguments of the geometry.
-   * \return     A pointer to the geometry.
+   * @tparam      geometry_type The type of the geometry to register.
+   * @tparam      _args         The constructor arguments of the geometry.
+   * \param [in]  args          The constructor arguments of the geometry.
+   * \return                    A pointer to the geometry.
    */
   template <typename geometry_type, typename... _args>
   geometry_type *
@@ -131,9 +131,9 @@ struct t8_geometry_handler
 
   /**
    * Get the geometry of the provided tree.
-   * \param [in,out] cmesh   The cmesh.
-   * \param [in,out] gtreeid The global tree id of the tree for which the geometry should be returned.
-   * \return         The geometry of the tree.
+   * \param [in] cmesh   The cmesh.
+   * \param [in] gtreeid The global tree id of the tree for which the geometry should be returned.
+   * \return             The geometry of the tree.
    */
   inline t8_geometry *
   get_tree_geometry (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
@@ -144,10 +144,10 @@ struct t8_geometry_handler
 
   /**
    * Evaluate the geometry of the provided tree at the given reference coordinates.
-   * \param [in,out] cmesh The cmesh.
-   * \param [in,out] gtreeid The global tree id of the tree for which the geometry should be evaluated.
-   * \param [in] ref_coords The reference coordinates at which to evaluate the geometry.
-   * \param [in] num_coords The number of reference coordinates.
+   * \param [in]  cmesh      The cmesh.
+   * \param [in]  gtreeid    The global tree id of the tree for which the geometry should be evaluated.
+   * \param [in]  ref_coords The reference coordinates at which to evaluate the geometry.
+   * \param [in]  num_coords The number of reference coordinates.
    * \param [out] out_coords The evaluated coordinates.
    */
   inline void
@@ -160,10 +160,10 @@ struct t8_geometry_handler
 
   /**
    * Evaluate the Jacobian of the geometry of the provided tree at the given reference coordinates.
-   * \param [in,out] cmesh The cmesh.
-   * \param [in,out] gtreeid The global tree id of the tree for which the geometry should be evaluated.
-   * \param [in] ref_coords The reference coordinates at which to evaluate the geometry.
-   * \param [in] num_coords The number of reference coordinates.
+   * \param [in]  cmesh      The cmesh.
+   * \param [in]  gtreeid    The global tree id of the tree for which the geometry should be evaluated.
+   * \param [in]  ref_coords The reference coordinates at which to evaluate the geometry.
+   * \param [in]  num_coords The number of reference coordinates.
    * \param [out] out_coords The evaluated Jacobian coordinates.
    */
   inline void
@@ -176,9 +176,9 @@ struct t8_geometry_handler
 
   /**
    * Get the geometry type of the provided tree.
-   * \param [in,out] cmesh The cmesh.
-   * \param [in,out] gtreeid The global tree id of the tree for which the geometry type should be returned.
-   * \return The geometry type of the tree.
+   * \param [in] cmesh   The cmesh.
+   * \param [in] gtreeid The global tree id of the tree for which the geometry type should be returned.
+   * \return             The geometry type of the tree.
    */
   inline t8_geometry_type_t
   get_tree_geometry_type (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
@@ -191,7 +191,7 @@ struct t8_geometry_handler
    * Check if the volume of a tree is negative.
    * \param [in] cmesh   The cmesh.
    * \param [in] gtreeid The global tree id of the tree to check.
-   * \return True if the volume of the tree is negative, false otherwise.
+   * \return             True if the volume of the tree is negative, false otherwise.
    */
   inline bool
   tree_negative_volume (const t8_cmesh_t cmesh, const t8_gloidx_t gtreeid)
@@ -203,9 +203,9 @@ struct t8_geometry_handler
  private:
   /**
    * Add a geometry to the geometry handler.
-   * @tparam geometry_type The type of the geometry to add.
-   * \param [in,out] geom The geometry to add.
-   * \return A pointer to the geometry.
+   * @tparam     geometry_type The type of the geometry to add.
+   * \param [in] geom          The geometry to add.
+   * \return                   A pointer to the geometry.
    */
   template <typename geometry_type>
   inline geometry_type *
