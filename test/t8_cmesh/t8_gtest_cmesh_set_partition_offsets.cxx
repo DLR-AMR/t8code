@@ -79,11 +79,8 @@ class cmesh_set_partition_offsets_commit: public testing::TestWithParam<std::tup
     ieclass = std::get<0> (GetParam ());
     inum_trees = std::get<1> (GetParam ());
 
-    t8_geometry_c *zero_geom = t8_geometry_zero_new (t8_eclass_to_dimension[ieclass]);
-
     /* Initialize the cmesh */
     t8_cmesh_init (&cmesh);
-    t8_cmesh_register_geometry (cmesh, zero_geom);
 
     /* Specify a dimension */
     const int dim = t8_eclass_to_dimension[ieclass];

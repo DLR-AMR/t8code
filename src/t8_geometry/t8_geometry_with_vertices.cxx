@@ -53,7 +53,7 @@ t8_geometry_with_vertices::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t
 }
 
 bool
-t8_geometry_with_vertices::t8_geom_tree_negative_volume (const t8_cmesh_t cmesh) const
+t8_geometry_with_vertices::t8_geom_tree_negative_volume () const
 {
   if (t8_eclass_to_dimension[active_tree_class] <= 2) {
     /* Only three dimensional eclass do have a volume */

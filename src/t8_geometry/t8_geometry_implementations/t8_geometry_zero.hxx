@@ -47,12 +47,10 @@ struct t8_geometry_zero: public t8_geometry
 
   /**
    * Check if  the currently active tree has a negative volume
-   * 
-   * \param[in] cmesh       The cmesh containing the tree to check
-   * \return                True (non-zero) if the tree with id \ref ltree_id has a negative volume. 0 otherwise.  
+   * \return                True (non-zero) if the currently loaded tree has a negative volume. 0 otherwise.  
    */
-  bool
-  t8_geom_tree_negative_volume (const t8_cmesh_t cmesh) const
+  virtual bool
+  t8_geom_tree_negative_volume () const
   {
     return 0;
   };
@@ -131,4 +129,4 @@ struct t8_geometry_zero: public t8_geometry
   t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 };
 
-#endif /* !T8_GEOMETRY_ZERO_HXX! */
+#endif /* !T8_GEOMETRY_ZERO_HXX */

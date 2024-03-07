@@ -59,4 +59,4 @@ t8_geom_get_type (const t8_geometry_c *geom);
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_GEOMETRY_BASE_H! */
+#endif /* !T8_GEOMETRY_BASE_H */
