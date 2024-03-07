@@ -25,7 +25,7 @@
 
 /*********GETTER******/
 
-/** The length of a element at a given level in integer coordinates */
+/** The length of an element at a given level in integer coordinates */
 template <t8_eclass_t eclass_T>
 t8_element_coord_t
 t8_sele_get_len (t8_element_level_t level)
