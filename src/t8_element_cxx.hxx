@@ -703,6 +703,18 @@ struct t8_eclass_scheme
   t8_element_init (int length, t8_element_t *elem) const
     = 0;
 
+  /** Deinitialize an array of allocated elements.
+   * \param [in] length   The number of elements to be deinitialized.
+   * \param [in,out] elems On input an array of \b length many allocated
+   *                       and initialized elements, on output an array of
+   *                       \b length many allocated, but not initialized elements.
+   * \note Call this function if you called t8_element_init on the element pointers.
+   * \see t8_element_init
+   */
+  virtual void
+  t8_element_deinit (int length, t8_element_t *elem) const
+    = 0;
+
   /** Deallocate an array of elements.
    * \param [in] length   The number of elements in the array.
    * \param [in,out] elems On input an array of \b length many allocated

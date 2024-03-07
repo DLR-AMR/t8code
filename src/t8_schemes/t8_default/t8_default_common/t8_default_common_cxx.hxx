@@ -38,6 +38,9 @@ class t8_default_scheme_common_c: public t8_eclass_scheme_c {
   /** Destructor for all default schemes */
   virtual ~t8_default_scheme_common_c ();
 
+  virtual void
+  t8_element_deinit (int length, t8_element_t *elem) const override;
+
   /** Compute the number of corners of a given element. */
   virtual int
   t8_element_num_corners (const t8_element_t *elem) const;

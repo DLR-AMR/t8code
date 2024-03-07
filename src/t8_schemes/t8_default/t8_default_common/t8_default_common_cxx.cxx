@@ -163,4 +163,9 @@ t8_default_scheme_common_c::t8_element_debug_print (const t8_element_t *elem) co
 }
 #endif
 
+void
+t8_default_scheme_common_c::t8_element_deinit (int length, t8_element_t *elem) const
+{
+}
+
 T8_EXTERN_C_END ();

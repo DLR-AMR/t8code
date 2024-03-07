@@ -184,6 +184,18 @@ t8_element_array_resize (t8_element_array_t *element_array, size_t new_count)
     /* Call t8_element_init on all new elements */
     element_array->scheme->t8_element_init (new_count - old_count, first_new_elem);
   }
+  else if (old_count > new_count) {
+    t8_element_t *first_old_elem;
+    /* Get the first element to deinit */
+    first_old_elem = t8_element_array_index_locidx (element_array, new_count);
+    element_array->scheme->t8_element_deinit (old_count - new_count, first_old_elem);
+    sc_array_resize (&element_array->array, new_count);
+  }
+  else {
+    T8_ASSERT (new_count == element_array->array.elem_count);
+    /* Free the allocated, but unused memory. */
+    sc_array_resize (&element_array->array, new_count);
+  }
 }
 
 void
@@ -277,6 +289,9 @@ void
 t8_element_array_reset (t8_element_array_t *element_array)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
+  t8_element_t *first_elem = t8_element_array_index_locidx (element_array, 0);
+  size_t count = t8_element_array_get_count (element_array);
+  element_array->scheme->t8_element_deinit (count, first_elem);
   sc_array_reset (&element_array->array);
 }
 
@@ -284,6 +299,9 @@ void
 t8_element_array_truncate (t8_element_array_t *element_array)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
+  t8_element_t *first_elem = t8_element_array_index_locidx (element_array, 0);
+  size_t count = t8_element_array_get_count (element_array);
+  element_array->scheme->t8_element_deinit (count, first_elem);
   sc_array_truncate (&element_array->array);
 }
 
