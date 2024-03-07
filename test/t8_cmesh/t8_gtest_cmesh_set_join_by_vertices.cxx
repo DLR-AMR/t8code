@@ -370,8 +370,8 @@ class t8_cmesh_set_join_by_vertices_class: public testing::TestWithParam<cmesh_e
   void
   SetUp () override
   {
-
-    if (GetParam ()->name.find (std::string ("bigmesh"))) {
+    size_t found = GetParam ()->name.find (std::string ("bigmesh"));
+    if (found != std::string::npos) {
       GTEST_SKIP ();
     }
 
@@ -397,4 +397,4 @@ TEST_P (t8_cmesh_set_join_by_vertices_class, test_cmesh_set_join_by_vertices_par
 
 /* Test all cmeshes over all different inputs we get through their id */
 INSTANTIATE_TEST_SUITE_P (t8_cmesh_set_join_by_vertices, t8_cmesh_set_join_by_vertices_class, AllCmeshsParam,
-                          pritty_print_base_example);
+                          pretty_print_base_example);

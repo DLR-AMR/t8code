@@ -244,4 +244,4 @@ TEST_P (forest_iterate, test_iterate_replace)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_iterate_replace, forest_iterate, AllCmeshsParam, pritty_print_base_example);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_iterate_replace, forest_iterate, AllCmeshsParam, pretty_print_base_example);
