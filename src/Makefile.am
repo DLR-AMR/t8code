@@ -36,7 +36,6 @@ libt8_installed_headers = \
   src/t8_element_shape.h \
   src/t8_netcdf.h
 libt8_installed_headers_cmesh = \
-  src/t8_cmesh/t8_cmesh_testcases.h \
   src/t8_cmesh/t8_cmesh_save.h \
   src/t8_cmesh/t8_cmesh_examples.h \
   src/t8_cmesh/t8_cmesh_geometry.h \
@@ -139,7 +138,6 @@ libt8_compiled_sources = \
   src/t8_forest/t8_forest_netcdf.cxx \
   src/t8_element_shape.c \
   src/t8_netcdf.c \
-  src/t8_cmesh/t8_cmesh_testcases.c \
   src/t8_vtk/t8_vtk_polydata.cxx \
   src/t8_vtk/t8_vtk_unstructured.cxx \
   src/t8_vtk/t8_vtk_parallel.cxx \
