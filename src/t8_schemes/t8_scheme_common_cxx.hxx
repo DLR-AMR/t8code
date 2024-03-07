@@ -21,7 +21,26 @@
 */
 
 /** \file t8_scheme_common_cxx.hxx
- * We provide some functions that are useful across schemes.
+ * This class is a helper class for implementing new schemes.
+ * It provides the following functionalities:
+ * - Mempool allocator for t8_element_new/destroy
+ * - standard implementation of dependent interface functionality.
+ *   These can be overridden by derived schemes with a more efficient implementation.
+ *   Additionally, the pure virtual face connectivity functions are implemented by an 
+ *   SC_ABORT
+ *
+ * The user basically needs to implement the following functions, to obtain a scheme that can
+ * be used to construct (NEW), refine and coarsen (ADAPT), distribute onto multiple ranks (PARTITION),
+ * and (SEARCH) a refinement tree or a forest of those:
+ * - num_children/child/parent/childid
+ * - level / maxlevel
+ * - is_regular/shape/count_leaves ()
+ * - valid/equal/to_string/copy/init
+ * 
+ * In order to use geometry information for (ADAPT), (SEARCH) and (VISUALIZE),
+ * these functions need to be implemented
+ *   - num_corners
+ *   - t8_element_vertex_reference_coords, t8_element_reference_coords
  */
 
 #ifndef T8_SCHEME_COMMON_CXX
@@ -237,7 +256,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
       t8_element_sibling (elem1, child_id + 1, elem2);
     }
   }
-  /*****/
+
   virtual int
   t8_element_ancestor_id (const t8_element_t *elem, const int level) const override
   {
@@ -264,11 +283,13 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
     t8_element_copy (elem1, anc1);
     t8_element_copy (elem2, anc2);
 
+    /* bring both elements on the same level */
     while (t8_element_level (anc1) > t8_element_level (anc2))
       t8_element_parent (anc1, anc1);
     while (t8_element_level (anc1) < t8_element_level (anc2))
       t8_element_parent (anc2, anc2);
 
+    /* Replace both elements by their parent until they are equal. */
     while (!t8_element_equal (anc1, anc2)) {
       t8_element_parent (anc1, anc1);
       t8_element_parent (anc2, anc2);
@@ -281,6 +302,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
   virtual void
   t8_element_children (const t8_element_t *elem, const int length, t8_element_t *children[]) const override
   {
+    /* iterate over all childids */
     T8_ASSERT (length == t8_element_num_children (elem));
     for (int ichild = 0; ichild < length; ichild++) {
       t8_element_child (elem, ichild, children[ichild]);
@@ -290,11 +312,14 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
   virtual int
   t8_element_num_siblings (const t8_element_t *elem) const override
   {
+    /* return the number of children of the parent element */
     T8_ASSERT (t8_element_is_valid (elem));
     t8_element_t *parent;
     t8_element_new (1, &parent);
     t8_element_parent (elem, parent);
-    return t8_element_num_children (parent);
+    int num_children = t8_element_num_children (parent);
+    t8_element_destroy (1, &parent);
+    return num_children;
   }
 
   virtual void
@@ -339,7 +364,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
   virtual int
   t8_element_num_faces (const t8_element_t *elem) const
   {
-    SC_ABORT ("not yet implemented");
+    SC_ABORT ("Not implemented in baseclass. Needs to be implemented in derived class.");
   }
 
   /** Compute the maximum number of faces of a given element and all of its
@@ -350,7 +375,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
   virtual int
   t8_element_max_num_faces (const t8_element_t *elem) const
   {
-    SC_ABORT ("not yet implemented");
+    SC_ABORT ("Not implemented in baseclass. Needs to be implemented in derived class.");
   }
 
   /** Return the number of children of an element's face when the element is refined.
@@ -361,7 +386,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
   virtual int
   t8_element_num_face_children (const t8_element_t *elem, int face) const
   {
-    SC_ABORT ("not yet implemented");
+    SC_ABORT ("Not implemented in baseclass. Needs to be implemented in derived class.");
   }
 
   /** Return the corner number of an element's face corner.
@@ -386,7 +411,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
   virtual int
   t8_element_get_face_corner (const t8_element_t *element, int face, int corner) const
   {
-    SC_ABORT ("not yet implemented");
+    SC_ABORT ("Not implemented in baseclass. Needs to be implemented in derived class.");
   }
 
   /** Return the face numbers of the faces sharing an element's corner.
@@ -404,7 +429,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
   virtual int
   t8_element_get_corner_face (const t8_element_t *element, int corner, int face) const
   {
-    SC_ABORT ("not yet implemented");
+    SC_ABORT ("Not implemented in baseclass. Needs to be implemented in derived class.");
   }
 
   /** Compute the shape of the face of an element.
@@ -418,7 +443,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
   virtual t8_element_shape_t
   t8_element_face_shape (const t8_element_t *elem, int face) const
   {
-    SC_ABORT ("not yet implemented");
+    SC_ABORT ("Not implemented in baseclass. Needs to be implemented in derived class.");
   }
 
   /** Given an element and a face of the element, compute all children of
@@ -439,7 +464,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
   t8_element_children_at_face (const t8_element_t *elem, int face, t8_element_t *children[], int num_children,
                                int *child_indices) const
   {
-    SC_ABORT ("not yet implemented");
+    SC_ABORT ("Not implemented in baseclass. Needs to be implemented in derived class.");
   }
 
   /** Given a face of an element and a child number of a child of that face, return the face number
@@ -464,7 +489,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
   virtual int
   t8_element_face_child_face (const t8_element_t *elem, int face, int face_child) const
   {
-    SC_ABORT ("not yet implemented");
+    SC_ABORT ("Not implemented in baseclass. Needs to be implemented in derived class.");
   }
 
   /** Given a face of an element return the face number
@@ -479,7 +504,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
   virtual int
   t8_element_face_parent_face (const t8_element_t *elem, int face) const
   {
-    SC_ABORT ("not yet implemented");
+    SC_ABORT ("Not implemented in baseclass. Needs to be implemented in derived class.");
   }
 
   /** Given an element and a face of this element. If the face lies on the
@@ -498,7 +523,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
   virtual int
   t8_element_tree_face (const t8_element_t *elem, int face) const
   {
-    SC_ABORT ("not yet implemented");
+    SC_ABORT ("Not implemented in baseclass. Needs to be implemented in derived class.");
   }
 
   /** Suppose we have two trees that share a common face f.
@@ -526,7 +551,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
   t8_element_transform_face (const t8_element_t *elem1, t8_element_t *elem2, int orientation, int sign,
                              int is_smaller_face) const
   {
-    SC_ABORT ("not yet implemented");
+    SC_ABORT ("Not implemented in baseclass. Needs to be implemented in derived class.");
   }
 
   /** Given a boundary face inside a root tree's face construct
@@ -546,7 +571,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
   t8_element_extrude_face (const t8_element_t *face, const t8_eclass_scheme_c *face_scheme, t8_element_t *elem,
                            int root_face) const
   {
-    SC_ABORT ("not yet implemented");
+    SC_ABORT ("Not implemented in baseclass. Needs to be implemented in derived class.");
   }
 
   /** Construct the boundary element at a specific face.
@@ -564,7 +589,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
   t8_element_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
                             const t8_eclass_scheme_c *boundary_scheme) const
   {
-    SC_ABORT ("not yet implemented");
+    SC_ABORT ("Not implemented in baseclass. Needs to be implemented in derived class.");
   }
 
   /** Construct the first descendant of an element at a given level that touches a given face.
@@ -578,7 +603,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
   virtual void
   t8_element_first_descendant_face (const t8_element_t *elem, int face, t8_element_t *first_desc, int level) const
   {
-    SC_ABORT ("not yet implemented");
+    SC_ABORT ("Not implemented in baseclass. Needs to be implemented in derived class.");
   }
 
   /** Construct the last descendant of an element at a given level that touches a given face.
@@ -592,7 +617,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
   virtual void
   t8_element_last_descendant_face (const t8_element_t *elem, int face, t8_element_t *last_desc, int level) const
   {
-    SC_ABORT ("not yet implemented");
+    SC_ABORT ("Not implemented in baseclass. Needs to be implemented in derived class.");
   }
 
   /** Compute whether a given element shares a given face with its root tree.
@@ -604,7 +629,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
   virtual int
   t8_element_is_root_boundary (const t8_element_t *elem, int face) const
   {
-    SC_ABORT ("not yet implemented");
+    SC_ABORT ("Not implemented in baseclass. Needs to be implemented in derived class.");
   }
 
   /** Construct the face neighbor of a given element if this face neighbor
@@ -625,7 +650,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
   virtual int
   t8_element_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face, int *neigh_face) const
   {
-    SC_ABORT ("not yet implemented");
+    SC_ABORT ("Not implemented in baseclass. Needs to be implemented in derived class.");
   }
 };
 
