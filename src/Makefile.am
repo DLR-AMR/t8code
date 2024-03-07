@@ -19,6 +19,7 @@ defaulttetincludedir = $(schemesdefaultincludedir)/t8_default_tet
 defaultprismincludedir = $(schemesdefaultincludedir)/t8_default_prism
 defaultpyramidincludedir = $(schemesdefaultincludedir)/t8_default_pyramid
 schemesstandaloneincludedir = $(includedir)/t8_schemes/t8_standalone
+schemessubelementsincludedir = $(includedir)/t8_schemes/t8_subelements
 
 libt8_generated_headers = src/t8_config.h
 libt8_installed_headers = \
@@ -179,5 +180,6 @@ dist_defaulttetinclude_HEADERS = $(libt8_installed_headers_default_tet)
 dist_defaultprisminclude_HEADERS = $(libt8_installed_headers_default_prism)
 dist_defaultpyramidinclude_HEADERS = $(libt8_installed_headers_default_pyramid)
 dist_schemesstandaloneinclude_HEADERS = $(libt8_installed_headers_schemes_standalone)
+dist_schemessubelementsinclude_HEADERS = $(libt8_installed_headers_schemes_subelements)
 
 AM_CPPFLAGS += -I@top_srcdir@/src @T8_SC_CPPFLAGS@ @T8_P4EST_CPPFLAGS@
