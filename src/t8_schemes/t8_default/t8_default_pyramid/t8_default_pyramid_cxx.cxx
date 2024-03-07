@@ -335,10 +335,10 @@ t8_default_scheme_pyramid_c::t8_element_parent (const t8_element_t *elem, t8_ele
 }
 
 void
-t8_default_scheme_pyramid_c::t8_element_successor (const t8_element_t *elem, t8_element_t *s, int level) const
+t8_default_scheme_pyramid_c::t8_element_successor (const t8_element_t *elem, t8_element_t *s) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
-  t8_dpyramid_successor ((const t8_dpyramid_t *) elem, (t8_dpyramid_t *) s, level);
+  t8_dpyramid_successor ((const t8_dpyramid_t *) elem, (t8_dpyramid_t *) s, t8_element_level (elem));
   T8_ASSERT (t8_element_is_valid (s));
 }
 

@@ -563,10 +563,9 @@ struct t8_eclass_scheme
   /** Construct the successor in a uniform refinement of a given element.
    * \param [in] elem1    The element whose successor should be constructed.
    * \param [in,out] elem2  The element whose entries will be set.
-   * \param [in] level    The level of the uniform refinement to consider.
    */
   virtual void
-  t8_element_successor (const t8_element_t *t, t8_element_t *s, int level) const
+  t8_element_successor (const t8_element_t *t, t8_element_t *s) const
     = 0;
 
   /** Compute the coordinates of a given element vertex inside a reference tree

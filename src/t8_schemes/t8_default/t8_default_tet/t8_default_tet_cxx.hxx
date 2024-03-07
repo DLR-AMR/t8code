@@ -440,7 +440,7 @@ struct t8_default_scheme_tet_c: public t8_default_scheme_common_c
    * \param [in] level    The level of the uniform refinement to consider.
    */
   virtual void
-  t8_element_successor (const t8_element_t *t, t8_element_t *s, int level) const;
+  t8_element_successor (const t8_element_t *elem, t8_element_t *succ) const;
 
   /** Get the integer coordinates of the anchor node of an element. The default scheme implements the Morton type SFCs.
    * In these SFCs the elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and L the maximum 

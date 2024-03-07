@@ -447,13 +447,13 @@ t8_default_scheme_tri_c::t8_element_last_descendant (const t8_element_t *elem, t
 }
 
 void
-t8_default_scheme_tri_c::t8_element_successor (const t8_element_t *elem1, t8_element_t *elem2, int level) const
+t8_default_scheme_tri_c::t8_element_successor (const t8_element_t *elem1, t8_element_t *elem2) const
 {
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
-  T8_ASSERT (0 <= level && level <= T8_DTRI_MAXLEVEL);
+  T8_ASSERT (0 <= t8_element_level (elem1) && t8_element_level (elem1) <= T8_DTRI_MAXLEVEL);
 
-  t8_dtri_successor ((const t8_dtri_t *) elem1, (t8_dtri_t *) elem2, level);
+  t8_dtri_successor ((const t8_dtri_t *) elem1, (t8_dtri_t *) elem2, t8_element_level (elem1));
 }
 
 void

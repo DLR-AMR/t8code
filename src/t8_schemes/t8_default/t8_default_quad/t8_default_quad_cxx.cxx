@@ -281,11 +281,11 @@ t8_default_scheme_quad_c::t8_element_last_descendant (const t8_element_t *elem, 
 }
 
 void
-t8_default_scheme_quad_c::t8_element_successor (const t8_element_t *elem1, t8_element_t *elem2, int level) const
+t8_default_scheme_quad_c::t8_element_successor (const t8_element_t *elem1, t8_element_t *elem2) const
 {
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
-  T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
+  T8_ASSERT (0 <= t8_element_level (elem1) && t8_element_level (elem1) <= P4EST_QMAXLEVEL);
   p4est_quadrant_successor ((p4est_quadrant_t *) elem1, (p4est_quadrant_t *) elem2);
   t8_element_copy_surround ((const p4est_quadrant_t *) elem1, (p4est_quadrant_t *) elem2);
 }

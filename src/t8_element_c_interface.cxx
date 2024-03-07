@@ -358,11 +358,11 @@ t8_element_last_descendant (const t8_eclass_scheme_c *ts, const t8_element_t *el
 }
 
 void
-t8_element_successor (const t8_eclass_scheme_c *ts, const t8_element_t *elem1, t8_element_t *elem2, int level)
+t8_element_successor (const t8_eclass_scheme_c *ts, const t8_element_t *elem1, t8_element_t *elem2)
 {
   T8_ASSERT (ts != NULL);
 
-  ts->t8_element_successor (elem1, elem2, level);
+  ts->t8_element_successor (elem1, elem2);
 }
 
 void

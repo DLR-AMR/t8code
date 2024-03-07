@@ -353,12 +353,12 @@ t8_default_scheme_prism_c::t8_element_set_linear_id (t8_element_t *elem, int lev
 }
 
 void
-t8_default_scheme_prism_c::t8_element_successor (const t8_element_t *elem, t8_element_t *s, int level) const
+t8_default_scheme_prism_c::t8_element_successor (const t8_element_t *elem, t8_element_t *s) const
 {
-  T8_ASSERT (1 <= level && level <= T8_DPRISM_MAXLEVEL);
+  T8_ASSERT (1 <= t8_element_level (elem) && t8_element_level (elem) <= T8_DPRISM_MAXLEVEL);
   T8_ASSERT (t8_element_is_valid (elem));
 
-  t8_dprism_successor ((const t8_default_prism_t *) elem, (t8_default_prism_t *) s, level);
+  t8_dprism_successor ((const t8_default_prism_t *) elem, (t8_default_prism_t *) s, t8_element_level (elem));
   T8_ASSERT (t8_element_is_valid (s));
 }
 

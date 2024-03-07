@@ -528,7 +528,7 @@ t8_element_last_descendant (const t8_eclass_scheme_c *ts, const t8_element_t *el
  * \param [in] level      The level of the uniform refinement to consider.
  */
 void
-t8_element_successor (const t8_eclass_scheme_c *ts, const t8_element_t *elem1, t8_element_t *elem2, int level);
+t8_element_successor (const t8_eclass_scheme_c *ts, const t8_element_t *elem1, t8_element_t *elem2);
 
 /** Compute the coordinates of a given element vertex inside a reference tree
  *  that is embedded into [0,1]^d (d = dimension).

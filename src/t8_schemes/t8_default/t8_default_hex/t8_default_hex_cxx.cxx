@@ -513,11 +513,11 @@ t8_default_scheme_hex_c::t8_element_last_descendant (const t8_element_t *elem, t
 }
 
 void
-t8_default_scheme_hex_c::t8_element_successor (const t8_element_t *elem1, t8_element_t *elem2, int level) const
+t8_default_scheme_hex_c::t8_element_successor (const t8_element_t *elem1, t8_element_t *elem2) const
 {
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
-  T8_ASSERT (0 <= level && level <= HEX_REFINE_MAXLEVEL);
+  T8_ASSERT (0 <= t8_element_level (elem1) && t8_element_level (elem1) <= HEX_REFINE_MAXLEVEL);
   p8est_quadrant_successor ((p8est_quadrant_t *) elem1, (p8est_quadrant_t *) elem2);
 }
 
