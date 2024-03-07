@@ -22,20 +22,12 @@
 
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx>
 
-t8_geometry_zero::t8_geometry_zero (int dim)
+t8_geometry_zero::t8_geometry_zero (int dim): t8_geometry (dim, "t8_geom_zero_" + std::to_string (dim))
 {
-  T8_ASSERT (0 <= dim && dim <= 3);
-  size_t num_chars = 100;
-  char *name_tmp = T8_ALLOC (char, num_chars);
-
-  snprintf (name_tmp, num_chars, "t8_geom_zero_%i", dim);
-  name = name_tmp;
-  dimension = dim;
 }
 
 t8_geometry_zero::~t8_geometry_zero ()
 {
-  T8_FREE ((char *) name);
 }
 
 void

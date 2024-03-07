@@ -38,4 +38,4 @@ T8_EXTERN_C_BEGIN ();
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_FOREST_CXX_H! */
+#endif /* !T8_FOREST_CXX_H */

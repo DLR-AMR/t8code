@@ -823,7 +823,6 @@ t8_forest_write_user_netcdf_data (t8_forest_t forest, t8_forest_netcdf_context_t
     /* Counters which imply the position in the NetCDF-variable where the data will be written, */
     start_ptr = (size_t) t8_forest_get_first_local_element_id (forest);
     count_ptr = (size_t) t8_forest_get_local_num_elements (forest);
-    ;
 
     /* Iterate over the amount of user-defined variables */
     for (i = 0; i < num_extern_netcdf_vars; i++) {
