@@ -71,10 +71,10 @@ T8_EXTERN_C_BEGIN ();
 
 /**
  * Evaluates the geometry of a tree at a given reference point.
- * \param [in] cmesh The cmesh
- * \param [in] gtreeid The global id of the tree
- * \param [in] ref_coords The reference coordinates at which to evaluate the geometry
- * \param [in] num_coords The number of reference coordinates
+ * \param [in]  cmesh      The cmesh
+ * \param [in]  gtreeid    The global id of the tree
+ * \param [in]  ref_coords The reference coordinates at which to evaluate the geometry
+ * \param [in]  num_coords The number of reference coordinates
  * \param [out] out_coords The evaluated coordinates
  */
 void
@@ -82,10 +82,10 @@ t8_geometry_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_c
                       double *out_coords);
 
 /** Evaluates the jacobian of a tree at a given reference point.
- * \param[in] cmesh       The cmesh
- * \param[in] gtreeid     The global id of the tree
- * \param[in] ref_coords  The reference coordinates at which to evaluate the jacobian
- * \param[in] num_coords  The number of reference coordinates
+ * \param[in]  cmesh      The cmesh
+ * \param[in]  gtreeid    The global id of the tree
+ * \param[in]  ref_coords The reference coordinates at which to evaluate the jacobian
+ * \param[in]  num_coords The number of reference coordinates
  * \param[out] jacobian   The jacobian at the reference coordinates
  */
 void
