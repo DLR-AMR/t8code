@@ -26,7 +26,6 @@
 #include <test/t8_gtest_macros.hxx>
 #include "t8_gtest_dfs_base.hxx"
 
-#define T8_PACK_TEST_TAG 52305
 /** Use DFS to check for all elements, if packing them, sending them to ourself and unpacking them results in the same element
  * Here, each element is sent individually.
  */
@@ -58,7 +57,7 @@ class class_test_pack: public TestDFS {
 #if T8_ENABLE_MPI
     /* Send data */
     sc_MPI_Request request;
-    mpiret = sc_MPI_Isend (sendbuf, position, sc_MPI_PACKED, rank, T8_PACK_TEST_TAG, comm, &request);
+    mpiret = sc_MPI_Isend (sendbuf, position, sc_MPI_PACKED, rank, T8_MPI_TEST_ELEMENT_PACK_TAG, comm, &request);
     SC_CHECK_MPI (mpiret);
 
     /* Probe size and allocate */
@@ -66,7 +65,8 @@ class class_test_pack: public TestDFS {
     sc_MPI_Probe (rank, T8_PACK_TEST_TAG, comm, &status);
 
     /* receive data */
-    mpiret = sc_MPI_Recv (recvbuf, position, sc_MPI_PACKED, rank, T8_PACK_TEST_TAG, comm, sc_MPI_STATUS_IGNORE);
+    mpiret
+      = sc_MPI_Recv (recvbuf, position, sc_MPI_PACKED, rank, T8_MPI_TEST_ELEMENT_PACK_TAG, comm, sc_MPI_STATUS_IGNORE);
     SC_CHECK_MPI (mpiret);
 
     /* Finalize non-blocking send communication */
