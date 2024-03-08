@@ -253,7 +253,7 @@ t8_dpyramid_last_descendant_face (const t8_dpyramid_t *p, const int face, t8_dpy
  * \param [out] coords An array of 3 t8_dpyramid_coord_t that will be filled with the coordinates of the vertex.
  */
 void
-t8_dpyramid_compute_coords (const t8_dpyramid_t *elem, const int vertex, int coords[]);
+t8_dpyramid_compute_integer_coords (const t8_dpyramid_t *elem, const int vertex, int coords[]);
 
 /** Compute the parent of a given pyramid
  * \param [in] p        Input pyramid.

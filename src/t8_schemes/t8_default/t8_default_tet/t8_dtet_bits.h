@@ -41,7 +41,7 @@ T8_EXTERN_C_BEGIN ();
  * \param [out] coordinates An array of 3 t8_dtet_coord_t that will be filled with the coordinates of the vertex.
  */
 void
-t8_dtet_compute_coords (const t8_dtet_t *elem, int vertex, t8_dtet_coord_t coordinates[3]);
+t8_dtet_compute_integer_coords (const t8_dtet_t *elem, int vertex, t8_dtet_coord_t coordinates[3]);
 
 /** Compute the coordinates of a vertex of a tetrahedron when the 
  * tree (level 0 tetrahedron) is embedded in \f$ [0,1]^3 \f$.

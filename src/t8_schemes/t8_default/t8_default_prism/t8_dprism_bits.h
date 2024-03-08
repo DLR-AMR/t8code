@@ -284,7 +284,7 @@ t8_dprism_corner_descendant (const t8_dprism_t *p, t8_dprism_t *s, int corner, i
  * \param [out] coordinates An array of 3 t8_dprism_coord_t that will be filled with the coordinates of the vertex.
  */
 void
-t8_dprism_vertex_coords (const t8_dprism_t *elem, int vertex, int coords[3]);
+t8_dprism_vertex_integer_coords (const t8_dprism_t *elem, int vertex, int coords[3]);
 
 /** Compute the reference coordinates of a vertex of a prism when the 
  * tree (level 0) is embedded in \f$ [0,1]^3 \f$.

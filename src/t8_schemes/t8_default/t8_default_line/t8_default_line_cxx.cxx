@@ -287,13 +287,6 @@ t8_default_scheme_line_c::t8_element_last_descendant (const t8_element_t *elem, 
 }
 
 void
-t8_default_scheme_line_c::t8_element_vertex_coords (const t8_element_t *elem, int vertex, int coords[]) const
-{
-  T8_ASSERT (t8_element_is_valid (elem));
-  t8_dline_vertex_coords ((const t8_dline_t *) elem, vertex, coords);
-}
-
-void
 t8_default_scheme_line_c::t8_element_vertex_reference_coords (const t8_element_t *elem, const int vertex,
                                                               double coords[]) const
 {
