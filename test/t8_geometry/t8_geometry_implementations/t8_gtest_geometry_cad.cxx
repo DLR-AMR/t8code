@@ -43,7 +43,8 @@
 #include <TopoDS_Edge.hxx>
 #include <t8_element.h>
 #include <t8_cmesh_vtk_writer.h>
-#endif
+#include <t8_schemes/t8_default/t8_default_hex/t8_dhex.h>
+#endif /* T8_WITH_OCC */
 
 /* In this file we collect tests for t8code's OpenCASCADE geometry module.
  * These tests are
@@ -368,15 +369,15 @@ TEST (t8_gtest_geometry_cad, jacobian)
 
 #if T8_WITH_OCC
 /* The test checks if the mapping algorithms for curved 2d elements do not shift values on an edge which is not curved.
- * In that case, the occ geometry should output the same out_coords as the linear geometry function. */
-class class_2d_element_linear_occ_curve: public testing::TestWithParam<t8_eclass_t> {
+ * In that case, the cad geometry should output the same out_coords as the linear geometry function. */
+class class_2d_element_linear_cad_curve: public testing::TestWithParam<t8_eclass_t> {
  protected:
   void
   SetUp () override
   {
     eclass = GetParam ();
     T8_ASSERT (0 <= eclass && eclass < T8_ECLASS_COUNT);
-    Handle_Geom_Curve occ_curve;
+    Handle_Geom_Curve cad_curve;
     TColgp_Array1OfPnt point_array (1, 3);
     TopoDS_Shape shape;
 
@@ -392,10 +393,12 @@ class class_2d_element_linear_occ_curve: public testing::TestWithParam<t8_eclass
     point_array (2) = gp_Pnt (0.5, 0.0, 0.0);
     point_array (3) = gp_Pnt (1.0, 0.0, 0.0);
 
-    occ_curve = GeomAPI_PointsToBSpline (point_array).Curve ();
-    shape = BRepBuilderAPI_MakeEdge (occ_curve).Edge ();
+    cad_curve = GeomAPI_PointsToBSpline (point_array).Curve ();
+    shape = BRepBuilderAPI_MakeEdge (cad_curve).Edge ();
 
-    geometry_occ = new t8_geometry_occ (3, shape, "occ curve dim=3");
+    geometry_cad = new t8_geometry_cad (3, shape, "cad curve dim=3");
+
+    geometry = geometry_cad;
 
     t8_cmesh_init (&cmesh);
     t8_cmesh_set_tree_class (cmesh, 0, eclass);
@@ -408,13 +411,14 @@ class class_2d_element_linear_occ_curve: public testing::TestWithParam<t8_eclass
   }
   t8_cmesh_t cmesh;
   t8_eclass_t eclass;
-  t8_geometry_occ *geometry_occ;
+  t8_geometry_cad *geometry_cad;
+  t8_geometry_c *geometry;
   /* The arrays prescribe the linkage of the element. Edge 2 of the element is linked and the face is unlinked. */
   int faces[1] = { 0 };
   int edges[8] = { 0, 0, 1, 0, 0, 0, 0, 0 };
 };
 
-TEST_P (class_2d_element_linear_occ_curve, t8_check_2d_element_linear_occ_curve)
+TEST_P (class_2d_element_linear_cad_curve, t8_check_2d_element_linear_cad_curve)
 {
   /* Saving the corner vertices for the given element class. */
   const int num_vertices = t8_eclass_num_vertices[eclass];
@@ -427,14 +431,14 @@ TEST_P (class_2d_element_linear_occ_curve, t8_check_2d_element_linear_occ_curve)
   double params[2] = { 0, 1 };
 
   /* Passing of the attributes to the element */
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces, sizeof (int), 0);
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges,
+  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, faces, sizeof (int), 0);
+  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges,
                           2 * num_vertices * sizeof (int), 0);
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + 2, params,
+  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + 2, params,
                           2 * sizeof (double), 0);
 
   /* Register the geometry */
-  t8_cmesh_register_geometry (cmesh, geometry_occ);
+  t8_cmesh_register_geometry (cmesh, &geometry);
   /* Commit the cmesh */
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 
@@ -452,20 +456,20 @@ TEST_P (class_2d_element_linear_occ_curve, t8_check_2d_element_linear_occ_curve)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_check_2d_element_linear_occ_curve, class_2d_element_linear_occ_curve, AllEclasses2D);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_check_2d_element_linear_cad_curve, class_2d_element_linear_cad_curve, AllEclasses2D);
 
 #endif /* T8_WITH_OCC */
 
 #if T8_WITH_OCC
-/* The test checks if the mapping algorithms for curved 2d elements shift values on a curved occ curve correctly. */
-class class_2d_element_curved_occ_curve: public testing::TestWithParam<t8_eclass_t> {
+/* The test checks if the mapping algorithms for curved 2d elements shift values on a curved cad curve correctly. */
+class class_2d_element_curved_cad_curve: public testing::TestWithParam<t8_eclass_t> {
  protected:
   void
   SetUp () override
   {
     eclass = GetParam ();
     T8_ASSERT (0 <= eclass && eclass < T8_ECLASS_COUNT);
-    Handle_Geom_Curve occ_curve;
+    Handle_Geom_Curve cad_curve;
     TColgp_Array1OfPnt point_array (1, 3);
     TopoDS_Shape shape;
 
@@ -481,10 +485,12 @@ class class_2d_element_curved_occ_curve: public testing::TestWithParam<t8_eclass
     point_array (2) = gp_Pnt (0.5, -0.2, 0.0);
     point_array (3) = gp_Pnt (1.0, 0.0, 0.0);
 
-    occ_curve = GeomAPI_PointsToBSpline (point_array).Curve ();
-    shape = BRepBuilderAPI_MakeEdge (occ_curve).Edge ();
+    cad_curve = GeomAPI_PointsToBSpline (point_array).Curve ();
+    shape = BRepBuilderAPI_MakeEdge (cad_curve).Edge ();
 
-    geometry_occ = new t8_geometry_occ (3, shape, "occ curve dim=3");
+    geometry_cad = new t8_geometry_cad (3, shape, "cad curve dim=3");
+
+    geometry = geometry_cad;
 
     t8_cmesh_init (&cmesh);
     t8_cmesh_set_tree_class (cmesh, 0, eclass);
@@ -497,13 +503,15 @@ class class_2d_element_curved_occ_curve: public testing::TestWithParam<t8_eclass
   }
   t8_cmesh_t cmesh;
   t8_eclass_t eclass;
-  t8_geometry_occ *geometry_occ;
+  t8_geometry_cad *geometry_cad;
+  t8_geometry_c *geometry;
+
   /* The arrays prescribe the linkage of the element. Edge 2 of the element is linked and the face is unlinked. */
   int faces[1] = { 0 };
   int edges[8] = { 0, 0, 1, 0, 0, 0, 0, 0 };
 };
 
-TEST_P (class_2d_element_curved_occ_curve, t8_check_2d_element_curved_occ_curve)
+TEST_P (class_2d_element_curved_cad_curve, t8_check_2d_element_curved_cad_curve)
 {
   /* Saving the corner vertices for the given element class. */
   const int num_vertices = t8_eclass_num_vertices[eclass];
@@ -516,14 +524,14 @@ TEST_P (class_2d_element_curved_occ_curve, t8_check_2d_element_curved_occ_curve)
   double params[2] = { 0, 1 };
 
   /* Passing of the attributes to the element */
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces, sizeof (int), 0);
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges,
+  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, faces, sizeof (int), 0);
+  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges,
                           2 * num_vertices * sizeof (int), 0);
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY + 2, params,
+  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + 2, params,
                           2 * sizeof (double), 0);
 
   /* Register the geometry */
-  t8_cmesh_register_geometry (cmesh, geometry_occ);
+  t8_cmesh_register_geometry (cmesh, &geometry);
   /* Commit the cmesh */
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 
@@ -540,7 +548,7 @@ TEST_P (class_2d_element_curved_occ_curve, t8_check_2d_element_curved_occ_curve)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_check_2d_element_curved_occ_curve, class_2d_element_curved_occ_curve, AllEclasses2D);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_check_2d_element_curved_cad_curve, class_2d_element_curved_cad_curve, AllEclasses2D);
 
 #endif /* T8_WITH_OCC */
 
@@ -647,14 +655,14 @@ INSTANTIATE_TEST_SUITE_P (t8_gtest_check_2d_element_linear_cad_surface, class_2d
 
 #if T8_WITH_OCC
 /* The test checks if the mapping algorithms for curved 2d elements shift values on a curved surface correctly. */
-class class_2d_element_curved_occ_surface: public testing::TestWithParam<t8_eclass_t> {
+class class_2d_element_curved_cad_surface: public testing::TestWithParam<t8_eclass_t> {
  protected:
   void
   SetUp () override
   {
     eclass = GetParam ();
     T8_ASSERT (0 <= eclass && eclass < T8_ECLASS_COUNT);
-    Handle_Geom_Surface occ_surface;
+    Handle_Geom_Surface cad_surface;
     TColgp_Array2OfPnt point_array (1, 3, 1, 3);
     TopoDS_Shape shape;
 
@@ -688,10 +696,12 @@ class class_2d_element_curved_occ_surface: public testing::TestWithParam<t8_ecla
     point_array (2, 3) = gp_Pnt (0.5, -0.2, 0.0);
     point_array (3, 3) = gp_Pnt (1.0, 0.0, 0.0);
 
-    occ_surface = GeomAPI_PointsToBSplineSurface (point_array).Surface ();
-    shape = BRepBuilderAPI_MakeFace (occ_surface, 1e-6).Face ();
+    cad_surface = GeomAPI_PointsToBSplineSurface (point_array).Surface ();
+    shape = BRepBuilderAPI_MakeFace (cad_surface, 1e-6).Face ();
 
-    geometry_occ = new t8_geometry_occ (3, shape, "occ surface dim=3");
+    geometry_cad = new t8_geometry_cad (3, shape, "cad surface dim=3");
+
+    geometry = geometry_cad;
 
     t8_cmesh_init (&cmesh);
     t8_cmesh_set_tree_class (cmesh, 0, eclass);
@@ -704,13 +714,14 @@ class class_2d_element_curved_occ_surface: public testing::TestWithParam<t8_ecla
   }
   t8_cmesh_t cmesh;
   t8_eclass_t eclass;
-  t8_geometry_occ *geometry_occ;
+  t8_geometry_cad *geometry_cad;
+  t8_geometry_c *geometry;
   /* The arrays prescribe the linkage of the element. The face of the element is linked and all edges are not */
   int faces[1] = { 1 };
   int edges[8] = { 0 };
 };
 
-TEST_P (class_2d_element_curved_occ_surface, t8_check_2d_element_curved_occ_surface)
+TEST_P (class_2d_element_curved_cad_surface, t8_check_2d_element_curved_cad_surface)
 {
   /* Saving the corner vertices for the given element class. */
   const int num_vertices = t8_eclass_num_vertices[eclass];
@@ -725,14 +736,14 @@ TEST_P (class_2d_element_curved_occ_surface, t8_check_2d_element_curved_occ_surf
   double params_tri[6] = { 0, 1, 1, 1, 1, 0 };
 
   /* Passing of the attributes to the element */
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_FACE_ATTRIBUTE_KEY, faces, sizeof (int), 0);
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY, edges,
+  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, faces, sizeof (int), 0);
+  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges,
                           2 * num_vertices * sizeof (int), 0);
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY,
+  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY,
                           (eclass == T8_ECLASS_QUAD ? params_quad : params_tri), 2 * num_vertices * sizeof (double), 0);
 
   /* Register the geometry */
-  t8_cmesh_register_geometry (cmesh, geometry_occ);
+  t8_cmesh_register_geometry (cmesh, &geometry);
   /* Commit the cmesh */
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 
@@ -752,7 +763,133 @@ TEST_P (class_2d_element_curved_occ_surface, t8_check_2d_element_curved_occ_surf
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_check_2d_element_curved_occ_surface, class_2d_element_curved_occ_surface,
+INSTANTIATE_TEST_SUITE_P (t8_gtest_check_2d_element_curved_cad_surface, class_2d_element_curved_cad_surface,
                           AllEclasses2D);
+
+#endif /* T8_WITH_OCC */
+
+#if T8_WITH_OCC
+
+// Function to rotate a point around the x-axis
+void
+rotateX (double &y, double &z, double angle)
+{
+  double oldY = y;
+  y = cos (angle) * y - sin (angle) * z;
+  z = cos (angle) * z + sin (angle) * oldY;
+}
+
+/* The test checks if the mapping algorithms for curved 2d elements shift values on a curved surface correctly. */
+TEST (t8_gtest_geometry_cad, hex_curved_cad_surface)
+{
+  Handle_Geom_Surface cad_surface;
+  TColgp_Array2OfPnt point_array (1, 3, 1, 3);
+  TopoDS_Shape shape;
+  t8_cmesh_t cmesh;
+  t8_geometry_cad *geometry_cad;
+  t8_geometry_c *geometry;
+
+  /*  x--> u-parameter
+   *   |
+   *   v v-parameter
+   * 
+   *   x -> shifted point to create curved surface
+   *
+   *     point_array  1       2       3
+   *                          x
+   *         1        -----------------
+   *                  |               |
+   *                  |               |
+   *         2      x |       x       | x
+   *                  |               |
+   *                  |               |
+   *         3        -----------------
+   *                          x
+  */
+
+  point_array (1, 1) = gp_Pnt (0.0, 1.0, 0.0);
+  point_array (2, 1) = gp_Pnt (0.5, 1.2, 0.0);
+  point_array (3, 1) = gp_Pnt (1.0, 1.0, 0.0);
+
+  point_array (1, 2) = gp_Pnt (-0.2, 0.5, 0.0);
+  point_array (2, 2) = gp_Pnt (0.5, 0.5, 0.2);
+  point_array (3, 2) = gp_Pnt (1.2, 0.5, 0.0);
+
+  point_array (1, 3) = gp_Pnt (0.0, 0.0, 0.0);
+  point_array (2, 3) = gp_Pnt (0.5, -0.2, 0.0);
+  point_array (3, 3) = gp_Pnt (1.0, 0.0, 0.0);
+
+  cad_surface = GeomAPI_PointsToBSplineSurface (point_array).Surface ();
+  shape = BRepBuilderAPI_MakeFace (cad_surface, 1e-6).Face ();
+
+  geometry_cad = new t8_geometry_cad (3, shape, "cad surface dim=3");
+
+  geometry = geometry_cad;
+
+  /* The array prescribes the linkage of the element. All edges are not linked.
+   * The linkage of the face is set in the actual test. */
+  int edges[24] = { 0 };
+  int faces[6] = { 0, 0, 0, 0, 1, 0 };
+
+  /* Surfaces are parametrized in two parameters u and v. The arrays contain the parameters
+   * each vertex of the element has on the linked surface. The parameters are stored in
+   * u0, v0, u1, v1... in order of the element vertices. */
+  double params_hex[8] = { 0, 1, 1, 1, 0, 0, 1, 0 };
+
+  /* Saving the corner vertices for the given element class. */
+  const double *vertices = &(t8_element_corner_ref_coords[T8_ECLASS_HEX][0][0]);
+  double temp_vertices[T8_ECLASS_MAX_CORNERS * 3];
+  memcpy (temp_vertices, vertices, sizeof (double) * 3 * T8_DHEX_VERTICES);
+
+  for (int i_faces = 0; i_faces < T8_DHEX_VERTICES; ++i_faces) {
+
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
+    t8_cmesh_set_tree_vertices (cmesh, 0, vertices, T8_DHEX_VERTICES);
+
+    // double rotation_angle_hex = M_PI / 2;
+
+    // /* Rotate each vertex of the cube */
+    // for (int i = 0; i < (T8_ECLASS_MAX_CORNERS * 3); i += 3) {
+    //     /* Rotate around x-axis */
+    //     rotateX(temp_vertices[i + 1], temp_vertices[i + 2], rotation_angle_hex);
+    //     // // Rotate around y-axis
+    //     // rotateY(vertices[i], vertices[i + 2], rotation);
+    //     // // Rotate around z-axis
+    //     // rotateZ(vertices[i], vertices[i + 1], theta);
+    // }
+
+    /* Passing of the attributes to the element */
+    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, faces, 6 * sizeof (int),
+                            0);
+    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges, 24 * sizeof (int),
+                            0);
+    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + 4, params_hex,
+                            8 * sizeof (double), 0);
+
+    /* Register the geometry */
+    t8_cmesh_register_geometry (cmesh, &geometry);
+    /* Commit the cmesh */
+    t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
+
+    /* Input ref_coords */
+    double test_ref_coords_in[27] = { 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 1.0,
+                                      0.0, 0.0, 0.5, 0.0, 0.5, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.5, 0.0 };
+    /* Priscribed out_coords */
+    double test_ref_coords_out[27] = { 0.0, 0.0,  0.0, 0.5, -0.2, 0.0, 1.0, 0.0, 0.0, 0.5, 0.5, 0.2, 0.0, 1.0,
+                                       0.0, -0.2, 0.5, 0.0, 0.5,  1.2, 0.0, 1.0, 1.0, 0.0, 1.2, 0.5, 0.0 };
+
+    double out_coords[3];
+
+    /* `out_coords` should be equal to the `test_ref_coords_out`. */
+    for (size_t i_coord = 0; i_coord < 9; ++i_coord) {
+      t8_geometry_evaluate (cmesh, 0, test_ref_coords_in + i_coord * 3, 1, out_coords);
+
+      EXPECT_VEC3_EQ (test_ref_coords_out + i_coord * 3, out_coords, T8_PRECISION_EPS);
+    }
+
+    t8_cmesh_destroy (&cmesh);
+  }
+}
 
 #endif /* T8_WITH_OCC */
