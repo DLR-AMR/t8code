@@ -45,6 +45,16 @@ struct t8_geometry_zero: public t8_geometry
    */
   t8_geometry_zero (int dimension);
 
+  /**
+   * Check if  the currently active tree has a negative volume
+   * \return                True (non-zero) if the currently loaded tree has a negative volume. 0 otherwise.  
+   */
+  virtual bool
+  t8_geom_tree_negative_volume () const
+  {
+    return 0;
+  };
+
   /** The destructor. 
    * Clears the allocated memory.
    */
@@ -119,4 +129,4 @@ struct t8_geometry_zero: public t8_geometry
   t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 };
 
-#endif /* !T8_GEOMETRY_ZERO_HXX! */
+#endif /* !T8_GEOMETRY_ZERO_HXX */

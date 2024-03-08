@@ -104,4 +104,4 @@ t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_fo
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_FOREST_ITERATE_H! */
+#endif /* !T8_FOREST_ITERATE_H */

@@ -1,9 +1,9 @@
 /*
   This file is part of t8code.
   t8code is a C library to manage a collection (a forest) of multiple
-  connected adaptive space-trees of general element types in parallel.
+  connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2024 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,27 +20,28 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* In this test we create an occ gp_Pnt object.
- * The purpose of this test is to check whether t8code successfully links
- * against occ.
- * If t8code was not configured with --with-occ then this test
- * does nothing and is always passed.
+/** \file t8_gtest_geometry_macros.hxx
+ * This file contains macros and base classes for geometry tests.
  */
 
-#include <t8.h>
 #include <gtest/gtest.h>
-#if T8_WITH_OCC
-#include <gp_Pnt.hxx>
-#endif
+#include <t8_eclass.h>
 
-/* Check whether we can successfully execute VTK code */
-TEST (t8_test_occ_linkage, test_gp_Pnt)
-{
-#if T8_WITH_OCC
-
-  EXPECT_NO_THROW (gp_Pnt pnt = gp_Pnt (); pnt.SetX (1););
-  t8_global_productionf ("Successfully created occ gp_Pnt object.\n");
+class geometry_test: public testing::TestWithParam<t8_eclass_t> {
+ protected:
+  void
+  SetUp () override
+  {
+    eclass = GetParam ();
+  }
+  void
+  TearDown () override
+  {
+  }
+  t8_eclass_t eclass;
+#ifdef T8_ENABLE_LESS_TESTS
+  const int num_points = 1000;
 #else
-  t8_global_productionf ("This version of t8code is not compiled with occ support.\n");
+  const int num_points = 10000;
 #endif
-}
+};

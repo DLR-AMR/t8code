@@ -23,7 +23,7 @@
 #include <t8_vec.h>
 #include <t8_eclass.h>
 #include <t8_geometry/t8_geometry_helpers.h>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.h>
 
 void
 t8_geom_linear_interpolation (const double *coefficients, const double *corner_values, const int corner_value_dim,

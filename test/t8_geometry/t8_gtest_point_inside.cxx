@@ -24,7 +24,7 @@
 #include <gtest/gtest.h>
 #include <sc_functions.h>
 #include <t8_eclass.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
@@ -53,14 +53,12 @@ TEST (t8_point_inside, test_point_inside_specific_triangle)
   /* clang-format on */
   double test_point[3] = { 0.3, 0.3, 1 };
   const double tolerance = 1e-12; /* Numerical tolerance that we allow for the point inside check */
-  t8_geometry_c *linear_geom = new t8_geometry_linear (2);
 
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 3);
   /* We use standard linear geometry */
-  t8_cmesh_register_geometry (cmesh, linear_geom);
-
+  t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, 2);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), 0, 0, sc_MPI_COMM_WORLD);
 
@@ -96,14 +94,12 @@ TEST (t8_point_inside, test_point_inside_specific_quad)
   /* clang-format on */
   double test_point[3] = { 0.3, 0.3, 1 };
   const double tolerance = 1e-12; /* Numerical tolerance that we allow for the point inside check */
-  t8_geometry_c *linear_geom = new t8_geometry_linear (2);
 
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 4);
   /* We use standard linear geometry */
-  t8_cmesh_register_geometry (cmesh, linear_geom);
-
+  t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, 2);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), 0, 0, sc_MPI_COMM_WORLD);
 
@@ -132,7 +128,6 @@ class geometry_point_inside: public testing::TestWithParam<std::tuple<t8_eclass,
     eclass = std::get<0> (GetParam ());
     level = std::get<1> (GetParam ());
     use_axis_aligned_geom = std::get<2> (GetParam ());
-    const int dim = t8_eclass_to_dimension[eclass];
 
     /* Construct a cube coarse mesh */
     if (use_axis_aligned_geom && (eclass == T8_ECLASS_LINE || eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX)) {
@@ -148,8 +143,7 @@ class geometry_point_inside: public testing::TestWithParam<std::tuple<t8_eclass,
         1, 1, 1 
       };
       /* clang-format on */
-      geometry = new t8_geometry_linear_axis_aligned (dim);
-      cmesh = t8_cmesh_new_hypercube_pad (eclass, sc_MPI_COMM_WORLD, boundaries, 1, 1, 1, geometry);
+      cmesh = t8_cmesh_new_hypercube_pad (eclass, sc_MPI_COMM_WORLD, boundaries, 1, 1, 1, use_axis_aligned_geom);
     }
     else {
       cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
@@ -162,7 +156,6 @@ class geometry_point_inside: public testing::TestWithParam<std::tuple<t8_eclass,
   t8_eclass_t eclass;
   int level;
   int use_axis_aligned_geom;
-  t8_geometry_c *geometry;
   t8_cmesh_t cmesh;
 };
 

@@ -545,6 +545,12 @@ struct t8_default_scheme_tet_c: public t8_default_scheme_common_c
   virtual void
   t8_element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const;
 #endif
+
+  /** Fills an element with the root element.
+ * \param [in,out] elem   The element to be filled with root.
+ */
+  void
+  t8_element_root (t8_element_t *elem) const;
 };
 
 #endif /* !T8_DEFAULT_TET_H */
