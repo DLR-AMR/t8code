@@ -47,10 +47,11 @@ comm_to_string (const sc_MPI_Comm &comm)
   return std::string ("No_String_for_this_communicator");
 }
 
-std::vector<int>
-filled_vector (const size_t size, int start)
+template <typename T>
+std::vector<T>
+filled_vector (const size_t size, T start)
 {
-  std::vector<int> tmp (size);
+  std::vector<T> tmp (size);
   std::iota (tmp.begin (), tmp.end (), start);
   return tmp;
 }
@@ -63,7 +64,7 @@ std::vector<int> use_axis_aligned = { 0, 1 };
 
 std::vector<int> large_mesh = filled_vector (20, 500);
 
-std::vector<int> elems_per_dim = filled_vector (5, 1);
+std::vector<int> elems_per_dim = filled_vector (3, 1);
 
 std::vector<sc_MPI_Comm> my_comms = { sc_MPI_COMM_WORLD };
 std::vector<t8_eclass_t> eclasses = { T8_ECLASS_VERTEX, T8_ECLASS_LINE, T8_ECLASS_QUAD,  T8_ECLASS_TRIANGLE,
@@ -81,6 +82,8 @@ std::vector<int> no_partition = { 0 };
 std::vector<int> periodic = { 0, 1 };
 /* Currently a dummy vector for examples that have periodic argument but not fully support it yet */
 std::vector<int> no_periodic = { 0 };
+
+std::vector<int> dims = { 1, 2, 3 };
 
 std::vector<int> num_prisms = filled_vector (50, 3);
 }  // namespace cmesh_params

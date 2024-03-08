@@ -583,6 +583,12 @@ struct t8_default_scheme_prism_c: public t8_default_scheme_common_c
   t8_element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const;
 #endif
 
+  /** Fills an element with the root element.
+ * \param [in,out] elem   The element to be filled with root.
+ */
+  void
+  t8_element_root (t8_element_t *elem) const;
+
   /** Pack multiple elements into contiguous memory, so they can be sent via MPI.
    * \param [in] elements Array of elements that are to be packed
    * \param [in] count Number of elements to pack

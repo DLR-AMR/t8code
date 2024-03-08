@@ -450,6 +450,14 @@ t8_element_destroy (const t8_eclass_scheme_c *ts, int length, t8_element_t **ele
 }
 
 void
+t8_element_root (const t8_eclass_scheme_c *ts, t8_element_t *elem)
+{
+  T8_ASSERT (ts != NULL);
+
+  ts->t8_element_root (elem);
+}
+
+void
 t8_element_MPI_Pack (const t8_eclass_scheme_c *ts, t8_element_t **const elements, const int count, void *send_buffer,
                      const int buffer_size, int *position, sc_MPI_Comm comm)
 {

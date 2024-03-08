@@ -769,6 +769,13 @@ struct t8_eclass_scheme
   t8_element_destroy (int length, t8_element_t **elem) const
     = 0;
 
+  /** create the root element
+   * \param [in,out] elem The element that is filled with the root
+   */
+  virtual void
+  t8_element_root (t8_element_t *elem) const
+    = 0;
+
   /** Pack multiple elements into contiguous memory, so they can be sent via MPI.
    * \param [in] elements Array of elements that are to be packed
    * \param [in] count Number of elements to pack

@@ -42,7 +42,7 @@ class face_neigh: public testing::TestWithParam<t8_eclass_t> {
     ts->t8_element_new (1, &element);
     ts->t8_element_new (1, &child);
     ts->t8_element_new (1, &neigh);
-    ts->t8_element_set_linear_id (element, 0, 0);
+    ts->t8_element_root (element);
   }
 
   void
@@ -205,6 +205,4 @@ TEST_P (face_neigh, recursive_check_diff)
   t8_recursive_check_diff (child, element, neigh, ts, maxlvl, level);
 }
 
-/* *INDENT-OFF* */
-INSTANTIATE_TEST_SUITE_P (t8_gtest_face_neigh, face_neigh, AllEclasses);
-/* *INDENT-ON* */
+INSTANTIATE_TEST_SUITE_P (t8_gtest_face_neigh, face_neigh, AllEclasses, print_eclass);

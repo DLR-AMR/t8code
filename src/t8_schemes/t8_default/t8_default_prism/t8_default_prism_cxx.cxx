@@ -476,6 +476,17 @@ t8_default_scheme_prism_c::~t8_default_scheme_prism_c ()
    * However we need to provide an implementation of the destructor
    * and hence this empty function. */
 }
+void
+t8_default_scheme_prism_c::t8_element_root (t8_element_t *elem) const
+{
+  t8_dprism_t *prism = (t8_dprism_t *) elem;
+  prism->line.level = 0;
+  prism->line.x = 0;
+  prism->tri.x = 0;
+  prism->tri.y = 0;
+  prism->tri.type = 0;
+  prism->tri.level = 0;
+}
 /* each prism is packed as x (line.x), y (tri.x), z(tri.y) coordinates, type and the level */
 void
 t8_default_scheme_prism_c::t8_element_MPI_Pack (t8_element_t **const elements, const int count, void *send_buffer,

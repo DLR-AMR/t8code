@@ -684,13 +684,44 @@ t8_element_new (const t8_eclass_scheme_c *ts, int length, t8_element_t **elems);
 void
 t8_element_destroy (const t8_eclass_scheme_c *ts, int length, t8_element_t **elems);
 
+/** Fills an element with the root element.
+ * \param [in] ts         Implementation of a class scheme.
+ * \param [in,out] elem   The element to be filled with root.
+ */
+void
+t8_element_root (const t8_eclass_scheme_c *ts, t8_element_t *elem);
+
+/** Pack multiple elements into contiguous memory, so they can be sent via MPI.
+ * \param [in] ts         Implementation of a class scheme.
+ * \param [in] elements Array of elements that are to be packed
+ * \param [in] count Number of elements to pack
+ * \param [in,out] send_buffer Buffer in which to pack the elements
+ * \param [in] buffer_size size of the buffer (in order to check that we don't access out of range)
+ * \param [in, out] position the position of the first byte that is not already packed
+ * \param [in] comm MPI Communicator
+*/
 void
 t8_element_MPI_Pack (const t8_eclass_scheme_c *ts, t8_element_t **const elements, const int count, void *send_buffer,
                      const int buffer_size, int *position, sc_MPI_Comm comm);
 
+/** Determine an upper bound for the size of the packed message of \b count elements
+ * \param [in] ts         Implementation of a class scheme.
+ * \param [in] count Number of elements to pack
+ * \param [in] comm MPI Communicator
+ * \param [out] pack_size upper bound on the message size
+*/
 void
 t8_element_MPI_Pack_size (const t8_eclass_scheme_c *ts, const int count, sc_MPI_Comm comm, int *pack_size);
 
+/** Unpack multiple elements from contiguous memory that was received via MPI.
+ * \param [in] ts         Implementation of a class scheme.
+ * \param [in] recvbuf Buffer from which to unpack the elements
+ * \param [in] buffer_size size of the buffer (in order to check that we don't access out of range)
+ * \param [in, out] position the position of the first byte that is not already packed
+ * \param [in] elements Array of initialised elements that is to be filled from the message
+ * \param [in] count Number of elements to unpack
+ * \param [in] comm MPI Communicator
+*/
 void
 t8_element_MPI_Unpack (const t8_eclass_scheme_c *ts, void *recvbuf, const int buffer_size, int *position,
                        t8_element_t **elements, const int count, sc_MPI_Comm comm);

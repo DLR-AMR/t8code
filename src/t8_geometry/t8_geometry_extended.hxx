@@ -64,4 +64,4 @@ struct t8_geometry_extended: t8_geometry
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_GEOMETRY_H! */
+#endif /* !T8_GEOMETRY_H */

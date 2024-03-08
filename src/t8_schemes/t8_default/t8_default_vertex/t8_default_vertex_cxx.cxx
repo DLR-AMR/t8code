@@ -354,7 +354,12 @@ t8_default_scheme_vertex_c::~t8_default_scheme_vertex_c ()
    * However we need to provide an implementation of the destructor
    * and hence this empty function. */
 }
-
+void
+t8_default_scheme_vertex_c::t8_element_root (t8_element_t *elem) const
+{
+  t8_dvertex_t *vertex = (t8_dvertex_t *) elem;
+  vertex->level = 0;
+}
 /* vertices are packed as the level */
 void
 t8_default_scheme_vertex_c::t8_element_MPI_Pack (t8_element_t **const elements, const int count, void *send_buffer,

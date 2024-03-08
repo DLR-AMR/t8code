@@ -506,4 +506,11 @@ t8_default_scheme_line_c::t8_element_MPI_Unpack (void *recvbuf, const int buffer
   }
 }
 
+void
+t8_default_scheme_line_c::t8_element_root (t8_element_t *elem) const
+{
+  t8_dline_t *line = (t8_dline_t *) elem;
+  line->level = 0;
+  line->x = 0;
+}
 T8_EXTERN_C_END ();

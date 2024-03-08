@@ -95,9 +95,9 @@ TEST_P (class_forest_face_normal, back_and_forth)
           t8_locidx_t lneightree = t8_forest_get_local_or_ghost_id (forest, gneightree);
           double neigh_face_normal[3];
           t8_forest_element_face_normal (forest, lneightree, neighbors[ineigh], dual_faces[ineigh], neigh_face_normal);
-          EXPECT_NEAR (face_normal[0], -neigh_face_normal[0], 10 * T8_PRECISION_EPS);
-          EXPECT_NEAR (face_normal[1], -neigh_face_normal[1], 10 * T8_PRECISION_EPS);
-          EXPECT_NEAR (face_normal[2], -neigh_face_normal[2], 10 * T8_PRECISION_EPS);
+          EXPECT_NEAR (face_normal[0], -neigh_face_normal[0], T8_PRECISION_SQRT_EPS);
+          EXPECT_NEAR (face_normal[1], -neigh_face_normal[1], T8_PRECISION_SQRT_EPS);
+          EXPECT_NEAR (face_normal[2], -neigh_face_normal[2], T8_PRECISION_SQRT_EPS);
         }
 
         if (num_neighbors > 0) {
