@@ -23,6 +23,7 @@
 #include <sstream>
 
 #include <t8_geometry/t8_geometry_base.hxx>
+#include <t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.h>
@@ -31,20 +32,13 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>
 
-t8_geometry_lagrange::t8_geometry_lagrange (int dim): t8_geometry_with_vertices (dim, "")
+t8_geometry_lagrange::t8_geometry_lagrange (int dim)
+  : t8_geometry_with_vertices (dim, "t8_geom_lagrange_" + std::to_string (dim))
 {
-  T8_ASSERT (0 <= dim && dim <= 3);
-  size_t num_chars = 100;
-  char *name_tmp = T8_ALLOC (char, num_chars);
-
-  snprintf (name_tmp, num_chars, "t8_geom_lagrange_%i", dim);
-  name = name_tmp;
-  dimension = dim;
 }
 
 t8_geometry_lagrange::~t8_geometry_lagrange ()
 {
-  T8_FREE ((char *) name);
 }
 
 void
@@ -282,10 +276,9 @@ LagrangeElement::LagrangeElement (t8_eclass_t eclass, uint degree, std::vector<d
   //   SC_ABORTF ("Provide the 3 coordinates of the nodes.\n");
   /* Create a cmesh with a single element */
   int dim = t8_eclass_to_dimension[eclass];
-  t8_geometry_c *geometry = new t8_geometry_lagrange (dim);  // TODO: do it with a smart pointer or using RAII
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_LAGRANGE_POLY_DEGREE, &degree, sizeof (int), 1);
-  t8_cmesh_register_geometry (cmesh, geometry);
+  t8_cmesh_register_geometry<t8_geometry_lagrange> (cmesh, dim);
   t8_cmesh_set_tree_class (cmesh, 0, eclass);
   t8_cmesh_set_tree_vertices (cmesh, 0, nodes.data (), nodes.size ());
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
