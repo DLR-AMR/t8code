@@ -260,4 +260,4 @@ t8_vec_swap (double p1[3], double p2[3])
   }
 }
 
-#endif /* !T8_VEC_H! */
+#endif /* !T8_VEC_H */

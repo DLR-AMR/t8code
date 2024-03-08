@@ -54,7 +54,6 @@ struct t8_geometry_linear_axis_aligned: public t8_geometry_with_vertices
   }
 
   /** The destructor. 
-   * Clears the allocated memory.
    */
   virtual ~t8_geometry_linear_axis_aligned ();
 
@@ -108,13 +107,11 @@ struct t8_geometry_linear_axis_aligned: public t8_geometry_with_vertices
                                       const double tolerance) const;
 
   /**
-   * Check if the currently active tree has a negative volume. 
-   * 
-   * \param[in] cmesh       The cmesh containing the tree to check
-   * \return                True (non-zero) if the tree with id \ref ltree_id has a negative volume. 0 otherwise.  
+   * Check if the currently active tree has a negative volume
+   * \return                True (non-zero) if the currently loaded tree has a negative volume. 0 otherwise.  
    */
   virtual bool
-  t8_geom_tree_negative_volume (const t8_cmesh_t cmesh) const;
+  t8_geom_tree_negative_volume () const;
 };
 
-#endif /* !T8_GEOMETRY_LINEAR_AXIS_ALIGNED_HXX! */
+#endif /* !T8_GEOMETRY_LINEAR_AXIS_ALIGNED_HXX */

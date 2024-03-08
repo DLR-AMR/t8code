@@ -424,7 +424,6 @@ t8_dprism_extrude_face (const t8_element_t *face, t8_element_t *elem, const int 
     p->line.level = q->level;
     p->tri.level = q->level;
     p->tri.x = ((int64_t) q->x * T8_DTRI_ROOT_LEN) / P4EST_ROOT_LEN;
-    ;
     p->tri.y = 0;
     p->line.x = ((int64_t) q->y * T8_DLINE_ROOT_LEN) / P4EST_ROOT_LEN;
     break;

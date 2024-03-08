@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2024 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,28 +20,28 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_geometry.h
- * Internal functions that we need for the cmesh geometry.
- * TODO: document this file
+/** \file t8_gtest_geometry_macros.hxx
+ * This file contains macros and base classes for geometry tests.
  */
 
-#ifndef T8_CMESH_GEOMETRY_H
-#define T8_CMESH_GEOMETRY_H
+#include <gtest/gtest.h>
+#include <t8_eclass.h>
 
-#include <t8.h>
-#include <t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_types.h>
-
-T8_EXTERN_C_BEGIN ();
-
-/** Get the hash of the geometry stored for a tree in a cmesh.
- * \param [in] cmesh   A committed cmesh.
- * \param [in] gtreeid A global tree in \a cmesh.
- * \return             The hash of the tree's geometry or if only one geometry exists, its hash.
- */
-size_t
-t8_cmesh_get_tree_geom_hash (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
-
-T8_EXTERN_C_END ();
-
-#endif /* !T8_CMESH_GEOMETRY_H */
+class geometry_test: public testing::TestWithParam<t8_eclass_t> {
+ protected:
+  void
+  SetUp () override
+  {
+    eclass = GetParam ();
+  }
+  void
+  TearDown () override
+  {
+  }
+  t8_eclass_t eclass;
+#ifdef T8_ENABLE_LESS_TESTS
+  const int num_points = 1000;
+#else
+  const int num_points = 10000;
+#endif
+};
