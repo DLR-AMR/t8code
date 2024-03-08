@@ -485,7 +485,7 @@ class LagrangeElement {
    * \return         x,y,z coordinates of the mapped point.
    */
   std::array<double, 3>
-  mapOnFace (t8_eclass eclass, const uint face_id, const std::array<double, 3> &coord) const;
+  mapOnFace (t8_eclass eclass, const int face_id, const std::array<double, 3> &coord) const;
 
   /**
    * Save the geometry into a VTK file.

@@ -70,9 +70,9 @@ t8_geometry_lagrange::t8_geom_map (const double *ref_point, double *mapped_point
 {
   const auto basis_functions = t8_geometry_lagrange::t8_geom_compute_basis (ref_point);
   const size_t n_vertex = basis_functions.size ();
-  for (int i_component = 0; i_component < T8_ECLASS_MAX_DIM; i_component++) {
+  for (size_t i_component = 0; i_component < T8_ECLASS_MAX_DIM; i_component++) {
     double inner_product = 0;
-    for (int j_vertex = 0; j_vertex < n_vertex; j_vertex++) {
+    for (size_t j_vertex = 0; j_vertex < n_vertex; j_vertex++) {
       const double coordinate = active_tree_vertices[j_vertex * T8_ECLASS_MAX_DIM + i_component];
       const double basis_function = basis_functions[j_vertex];
       inner_product += basis_function * coordinate;
@@ -266,7 +266,7 @@ LagrangeElement::create_uniform_forest (t8_cmesh_t cmesh, uint level) const
   t8_forest_t forest;
   forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0, sc_MPI_COMM_WORLD);
   return forest;
-};
+}
 
 LagrangeElement::LagrangeElement (t8_eclass_t eclass, uint degree, std::vector<double> &nodes)
   : eclass (eclass), degree (degree), nodes (nodes)
@@ -305,7 +305,7 @@ LagrangeElement::getFaceNodes () const
     else if (degree == 2)
       face_nodes = { { 0 }, { 1 }, { 2 } };
     else
-      SC_ABORTF (invalid_degree.str ().c_str ());
+      SC_ABORT (invalid_degree.str ().c_str ());
     break;
   case T8_ECLASS_TRIANGLE:
     if (degree == 1)
@@ -313,7 +313,7 @@ LagrangeElement::getFaceNodes () const
     else if (degree == 2)
       face_nodes = { { 1, 2, 3 }, { 2, 0, 4 }, { 0, 1, 5 } };
     else
-      SC_ABORTF (invalid_degree.str ().c_str ());
+      SC_ABORT (invalid_degree.str ().c_str ());
     break;
   case T8_ECLASS_QUAD:
     if (degree == 1) {
@@ -322,7 +322,7 @@ LagrangeElement::getFaceNodes () const
     else if (degree == 2)
       face_nodes = { { 2, 0, 4 }, { 1, 3, 5 }, { 0, 1, 6 }, { 3, 2, 7 } };
     else
-      SC_ABORTF (invalid_degree.str ().c_str ());
+      SC_ABORT (invalid_degree.str ().c_str ());
     break;
   case T8_ECLASS_HEX:
     if (degree == 1) {
@@ -334,7 +334,7 @@ LagrangeElement::getFaceNodes () const
             { 3, 2, 7, 6, 14, 8, 21, 22, 23 }, { 2, 3, 0, 1, 10, 15, 21, 18, 24 }, { 4, 5, 6, 7, 11, 16, 19, 22, 25 } };
     }
     else
-      SC_ABORTF (invalid_degree.str ().c_str ());
+      SC_ABORT (invalid_degree.str ().c_str ());
     break;
   default:
     SC_ABORTF ("Invalid element class %d.\n", eclass);
@@ -420,7 +420,7 @@ LagrangeElement::evaluate (const std::array<double, 3> &ref_point) const
 }
 
 std::array<double, 3>
-LagrangeElement::mapOnFace (t8_eclass map_onto, const uint face_id, const std::array<double, 3> &coord) const
+LagrangeElement::mapOnFace (t8_eclass map_onto, const int face_id, const std::array<double, 3> &coord) const
 {
   /* Error messages for input validation */
   std::ostringstream unsupported_element;
@@ -441,7 +441,6 @@ LagrangeElement::mapOnFace (t8_eclass map_onto, const uint face_id, const std::a
   std::array<double, 3> mapped_coord;
   double xi = coord[0];
   double eta = coord[1];
-  double zeta = coord[2];
   switch (eclass) {
   case T8_ECLASS_LINE:
     if (map_onto == T8_ECLASS_TRIANGLE) {
