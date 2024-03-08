@@ -29,11 +29,13 @@
 #ifndef T8_GEOMETRY_LAGRANGE_HXX
 #define T8_GEOMETRY_LAGRANGE_HXX
 
+#include <array>
 #include <string>
 #include <vector>
 
 #include <t8.h>
 #include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_forest/t8_forest_general.h>
 #include <t8_geometry/t8_geometry_with_vertices.hxx>
 #include <t8_geometry/t8_geometry_with_vertices.h>
 
@@ -310,6 +312,205 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
 
   /** Polynomial degree of the interpolation. */
   const int *degree;
+};
+
+/**
+ * Flatten a vector of vector into a single vector.
+ * 
+ * \tparam T   Template parameter of a vector.
+ * \param vec  Nested vector to be flattened.
+ * \return     Flattened vector.
+ */
+template <typename T>
+std::vector<T>
+flatten (const std::vector<std::vector<T>> &vec)
+{
+  std::vector<T> flattened;
+  for (auto const &v : vec) {
+    flattened.insert (flattened.end (), v.begin (), v.end ());
+  }
+  return flattened;
+}
+
+/**
+ * A single coarse mesh cell with Lagrange geometry.
+ * 
+ * This class is essentially a wrapper around a cmesh.
+ * By having a single element instead of a mesh, understanding and
+ * testing is made easier. Several topological utilities are provided,
+ * some specific to the Lagrange geometry, some valid for all the
+ * geometries in t8code.
+ */
+class LagrangeElement {
+ public:
+  /**
+   * Construct a new LagrangeElement object.
+   * 
+   * \param eclass  Element class (line, quad, etc.)
+   * \param degree  Polynomial degree (1, 2, ...)
+   * \param nodes   x,y,z coordinates of the nodes, adhering to the numbering
+   *                convention.
+   */
+  LagrangeElement (t8_eclass_t eclass, uint degree, std::vector<double> &nodes);
+
+  /**
+   * Destroy the LagrangeElement object.
+   * 
+   * The cmesh wrapped by this class is also destroyed.
+   * 
+   */
+  ~LagrangeElement ()
+  {
+    t8_cmesh_destroy (&cmesh);
+  };
+
+  /**
+   * Get the type of the element.
+   * 
+   * \return  Element class of the element.
+   */
+  t8_eclass_t
+  getType () const;
+
+  /**
+   * Element classes of the faces of this element.
+   * 
+   * Sandro: Not specific to the Lagrange geometry, may go into t8code base?
+   * 
+   * \return  Element classes of the faces, enumerated according to the face
+   * ordering conventions of t8code.
+   */
+  std::vector<t8_eclass_t>
+  faceClasses () const;
+
+  /**
+   * Coordinates of the specified node.
+   * 
+   * \param node  Node label. Node numbering starts at 0.
+   * \return      x,y,z coordinates of the node.
+   */
+  std::vector<double>
+  getNodeCoords (uint node) const;
+
+  /**
+   * Coordinates of the specified nodes.
+   * 
+   * \param nodes  Node labels. Node numbering starts at 0.
+   * \return       x,y,z coordinates of the nodes.
+   */
+  std::vector<std::vector<double>>
+  getNodeCoords (std::vector<uint> &nodes) const;
+
+  /**
+   * Node labels on the faces of the element.
+   * 
+   * Sandro: What about making this function part of t8_geometry_lagrange?
+   * 
+   * \return  Node labels on each face of the element.
+   */
+  std::vector<std::vector<uint>>
+  getFaceNodes () const;
+
+  /**
+   * Decompose the element into its faces.
+   * 
+   * LagrangeElement()-s of codimension 1 are created. The original element
+   * is not modified and the decomposition is not recursive.
+   * The faces can further be decomposed by calling this method on them.
+   * 
+   * \return  Lagrange elements from the faces.
+   * 
+   * Sandro: If you find this decomposition useful, I could move it to
+   * `t8_geometry_lagrange.hxx/cxx`.
+   */
+  std::vector<LagrangeElement>
+  decompose () const;
+
+  /**
+   * Physical coordinates of a point given in the reference domain.
+   * 
+   * \param point  Parametric coordinates of the point to be mapped.
+   *               For 2D elements, only the first two coordinates are
+   *               considered. For the 1D line element, only the first.
+   * \return       Coordinates in the physical space.
+   */
+  std::array<double, 3>
+  evaluate (const std::array<double, 3> &ref_point) const;
+
+  /**
+   * Sample random points in the reference domain.
+   * 
+   * \param n_point  Number of points to generate.
+   * \return         Coordinates of the points, given in x,y,z.
+   */
+  std::vector<std::array<double, 3>>
+  sample (uint n_point) const;
+
+  /**
+   * Map this element on the face of a higher-dimensional element.
+   * \verbatim
+    Example to map a line element onto the left face of a quad element.
+
+      Code: mapOnFace (T8_ECLASS_QUAD, 0, std::vector<double> { 0.6 })
+
+      o : vertices of the elements
+      + : point to map
+                                y ^
+                   x              |   face 3
+    o------+--o  -->             2             3
+          0.6                     o ----<---- o          faces (=edges in 2D)
+                                  |           |          with CCW orientation
+                                  |           |
+                          face 0  v           ^  face 1
+                                  + (0, 0.4)  |
+                                  |           |   x
+                                  o ---->---- o  -->
+                                 0             1
+                                      face 2
+     \endverbatim
+   * Sandro: If you find this mapping feauture useful, I could move it to
+   * `t8_geometry_lagrange.hxx/cxx` and make it a public method (or a function).
+   * 
+   * \param eclass   Element class of the element onto which we map.
+   *                 d-dimensional elements can only be mapped to the faces of
+   *                 d+1-dimensional elements.
+   * \param face_id  Face ID of the element onto which we map.
+   *                 Faces in an element are numbered according to the t8code
+   *                 conventions. The selected face must have the same type as
+   *                 the element from which we map. For instance, an element of
+   *                 type T8_ECLASS_QUAD can only be mapped onto face 4 of a
+   *                 T8_ECLASS_PYRAMID, since the other faces of a pyramidal
+   *                 element are triangles.
+   * \param coord    x,y,z coordinates of the point in this element.
+   * \return         x,y,z coordinates of the mapped point.
+   */
+  std::array<double, 3>
+  mapOnFace (t8_eclass eclass, const uint face_id, const std::array<double, 3> &coord) const;
+
+  /**
+   * Save the geometry into a VTK file.
+   *
+   * \remark Note that the geometry is exported as a linear cell for now,
+   * so the exported result is accurate for \a degree 1 only.
+   *
+   */
+  void
+  write () const;
+
+ private:
+  /** Lagrange elements have the same element class as the linear ones. */
+  t8_eclass_t eclass;
+  /** Polynomial degree of the geometrical mapping. */
+  const uint degree;
+  /** Points in the physical space, which span the geometry of the element. */
+  const std::vector<double> nodes;
+  /** Coarse mesh, wrapped by this class. */
+  t8_cmesh_t cmesh;
+  /** Number of nodes in the Lagrange element of a given class and degree */
+  static constexpr uint lagrange_nodes[T8_ECLASS_COUNT][2] = { { 1, 1 }, { 2, 3 }, { 4, 9 }, { 3, 6 }, { 8, 27 } };
+
+  t8_forest_t
+  create_uniform_forest (t8_cmesh_t cmesh, uint level) const;
 };
 
 #endif /* !T8_GEOMETRY_LAGRANGE_HXX! */
