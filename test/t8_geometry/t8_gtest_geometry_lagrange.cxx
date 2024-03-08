@@ -182,8 +182,6 @@ class LagrangeElement {
   /**
    * Element classes of the faces of this element.
    * 
-   * Sandro: Not specific to the Lagrange geometry, may go into t8code base?
-   * 
    * \return  Element classes of the faces, enumerated according to the face
    * ordering conventions of t8code.
    */
@@ -254,8 +252,6 @@ class LagrangeElement {
   /**
    * Node labels on the faces of the element.
    * 
-   * Sandro: What about making this function part of t8_geometry_lagrange?
-   * 
    * \return  Node labels on each face of the element.
    */
   std::vector<std::vector<uint>>
@@ -316,9 +312,6 @@ class LagrangeElement {
    * The faces can further be decomposed by calling this method on them.
    * 
    * \return  Lagrange elements from the faces.
-   * 
-   * Sandro: If you find this decomposition useful, I could move it to
-   * `t8_geometry_lagrange.hxx/cxx`.
    */
   std::vector<LagrangeElement>
   decompose () const
@@ -414,8 +407,6 @@ class LagrangeElement {
                                  0             1
                                       face 2
      \endverbatim
-   * Sandro: If you find this mapping feauture useful, I could move it to
-   * `t8_geometry_lagrange.hxx/cxx` and make it a public method (or a function).
    * 
    * \param eclass   Element class of the element onto which we map.
    *                 d-dimensional elements can only be mapped to the faces of
