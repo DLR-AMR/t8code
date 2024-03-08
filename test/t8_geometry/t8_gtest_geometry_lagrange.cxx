@@ -186,10 +186,9 @@ create_sample_element (t8_eclass_t eclass, int degree)
       vertices = perturb (vertices, 1 / 5.0 * (1 / degree));
       break;
     case 2:
-      vertices = { 0,   0, 0,   1,   0,   0,   0,   1,   0,   1,   1,   0,   0,   0,   1, 1,   0,   1,   0,   1, 1,
-                   1,   1, 1,   0,   1,   0.5, 0,   0,   0.5, 0,   0.5, 0,   0,   0.5, 1, 0,   0.5, 0.5, 1,   0, 0.5,
-                   1,   1, 0.5, 1,   0.5, 0,   1,   0.5, 1,   1,   0.5, 0.5, 0.5, 0,   0, 0.5, 0,   1,   0.5, 0, 0.5,
-                   0.5, 1, 0,   0.5, 1,   1,   0.5, 1,   0.5, 0.5, 0.5, 0,   0.5, 0.5, 1, 0.5, 0.5, 0.5 };
+      /* clang-format off */
+      vertices = { 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0.5, 0, 0, 0.5, 0, 0.5, 0, 0, 0.5, 1, 0, 0.5, 0.5, 1,   0, 0.5, 1, 1, 0.5, 1, 0.5, 0, 1, 0.5, 1, 1, 0.5, 0.5, 0.5, 0, 0, 0.5, 0, 1, 0.5, 0, 0.5, 0.5, 1, 0, 0.5, 1, 1, 0.5, 1, 0.5, 0.5, 0.5, 0, 0.5, 0.5, 1, 0.5, 0.5, 0.5 };
+      /* clang-format off */
       vertices = perturb (vertices, 1 / 5.0 * (1 / degree));
       break;
     default:
@@ -249,11 +248,12 @@ TEST_P (LagrangeCmesh, lagrange_mapping)
   }
 }
 
+/* clang-format off */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_geometry_lagrange, LagrangeCmesh,
-                          testing::Combine (AllEclasses, testing::Range (1, MAX_POLYNOMIAL_DEGREE + 1)),
-                          [] (const testing::TestParamInfo<LagrangeCmesh::ParamType> &info) {
-                            std::ostringstream test_name;
-                            test_name << t8_eclass_to_string[std::get<0> (info.param)] << "_degree"
-                                      << std::get<1> (info.param);
-                            return test_name.str ();
-                          });
+  testing::Combine (AllEclasses, testing::Range (1, MAX_POLYNOMIAL_DEGREE + 1)),
+  [] (const testing::TestParamInfo<LagrangeCmesh::ParamType> &info) {
+    std::ostringstream test_name;
+    test_name << t8_eclass_to_string[std::get<0> (info.param)]
+              << "_degree" << std::get<1> (info.param);
+    return test_name.str ();});
+/* clang-format on */

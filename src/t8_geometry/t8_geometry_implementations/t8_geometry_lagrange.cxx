@@ -137,7 +137,12 @@ std::vector<double>
 t8_geometry_lagrange::t8_geom_s3_basis (const double *ref_point) const
 {
   const double xi = ref_point[0];
-  const std::vector<double> basis_functions = { (1 - xi) * (1 - 2 * xi), xi * (2 * xi - 1), 4 * xi * (1 - xi) };
+  /* clang-format off */
+  const std::vector<double> basis_functions = {
+    (1 - xi) * (1 - 2 * xi),
+    xi * (2 * xi - 1),
+    4 * xi * (1 - xi) };
+  /* clang-format on */
   return basis_functions;
 }
 
@@ -155,10 +160,15 @@ t8_geometry_lagrange::t8_geom_t6_basis (const double *ref_point) const
 {
   const double xi = ref_point[0];
   const double eta = ref_point[1];
-  const std::vector<double> basis_functions
-    = { 1 - 3 * xi + 2 * xi * xi, -xi + eta + 2 * xi * xi + 2 * eta * eta - 4 * xi * eta,
-        -eta + 2 * eta * eta,     -4 * eta * eta + 4 * xi * eta,
-        4 * eta - 4 * xi * eta,   4 * xi - 4 * eta - 4 * xi * xi + 4 * xi * eta };
+  /* clang-format off */
+  const std::vector<double> basis_functions = {
+    1 - 3 * xi + 2 * xi * xi,
+    -xi + eta + 2 * xi * xi + 2 * eta * eta - 4 * xi * eta,
+    -eta + 2 * eta * eta,
+    -4 * eta * eta + 4 * xi * eta,
+    4 * eta - 4 * xi * eta,
+    4 * xi - 4 * eta - 4 * xi * xi + 4 * xi * eta };
+  /* clang-format on */
   return basis_functions;
 }
 
@@ -167,7 +177,13 @@ t8_geometry_lagrange::t8_geom_q4_basis (const double *ref_point) const
 {
   const double xi = ref_point[0];
   const double eta = ref_point[1];
-  const std::vector<double> basis_functions = { (1 - xi) * (1 - eta), xi * (1 - eta), eta * (1 - xi), xi * eta };
+  /* clang-format off */
+  const std::vector<double> basis_functions = {
+    (1 - xi) * (1 - eta),
+    xi * (1 - eta),
+    eta * (1 - xi),
+    xi * eta };
+  /* clang-format on */
   return basis_functions;
 }
 
@@ -176,15 +192,18 @@ t8_geometry_lagrange::t8_geom_q9_basis (const double *ref_point) const
 {
   const double xi = ref_point[0];
   const double eta = ref_point[1];
-  const std::vector<double> basis_functions = { 4 * (eta - 1) * (eta - 0.5) * (xi - 1) * (xi - 0.5),
-                                                4 * xi * (eta - 1) * (eta - 0.5) * (xi - 0.5),
-                                                4 * eta * (eta - 0.5) * (xi - 1) * (xi - 0.5),
-                                                4 * eta * xi * (eta - 0.5) * (xi - 0.5),
-                                                -8 * eta * (eta - 1) * (xi - 1) * (xi - 0.5),
-                                                -8 * eta * xi * (eta - 1) * (xi - 0.5),
-                                                -8 * xi * (eta - 1) * (eta - 0.5) * (xi - 1),
-                                                -8 * eta * xi * (eta - 0.5) * (xi - 1),
-                                                16 * eta * xi * (eta - 1) * (xi - 1) };
+  /* clang-format off */
+  const std::vector<double> basis_functions = {
+    4 * (eta - 1) * (eta - 0.5) * (xi - 1) * (xi - 0.5),
+    4 * xi * (eta - 1) * (eta - 0.5) * (xi - 0.5),
+    4 * eta * (eta - 0.5) * (xi - 1) * (xi - 0.5),
+    4 * eta * xi * (eta - 0.5) * (xi - 0.5),
+    -8 * eta * (eta - 1) * (xi - 1) * (xi - 0.5),
+    -8 * eta * xi * (eta - 1) * (xi - 0.5),
+    -8 * xi * (eta - 1) * (eta - 0.5) * (xi - 1),
+    -8 * eta * xi * (eta - 0.5) * (xi - 1),
+    16 * eta * xi * (eta - 1) * (xi - 1) };
+  /* clang-format on */
   return basis_functions;
 }
 
@@ -194,10 +213,17 @@ t8_geometry_lagrange::t8_geom_h8_basis (const double *ref_point) const
   const double xi = ref_point[0];
   const double eta = ref_point[1];
   const double zeta = ref_point[2];
+  /* clang-format off */
   const std::vector<double> basis_functions = {
-    (1 - xi) * (1 - eta) * (1 - zeta), xi * (1 - eta) * (1 - zeta), (1 - xi) * eta * (1 - zeta), xi * eta * (1 - zeta),
-    (1 - xi) * (1 - eta) * zeta,       xi * (1 - eta) * zeta,       (1 - xi) * eta * zeta,       xi * eta * zeta
-  };
+    (1 - xi) * (1 - eta) * (1 - zeta),
+    xi * (1 - eta) * (1 - zeta),
+    (1 - xi) * eta * (1 - zeta),
+    xi * eta * (1 - zeta),
+    (1 - xi) * (1 - eta) * zeta,
+    xi * (1 - eta) * zeta,
+    (1 - xi) * eta * zeta,
+    xi * eta * zeta };
+  /* clang-format on */
   return basis_functions;
 }
 
@@ -207,34 +233,36 @@ t8_geometry_lagrange::t8_geom_h27_basis (const double *ref_point) const
   const double xi = ref_point[0];
   const double eta = ref_point[1];
   const double zeta = ref_point[2];
-  const std::vector<double> basis_functions
-    = { 8 * (eta - 1) * (eta - 0.5) * (xi - 1) * (xi - 0.5) * (zeta - 1) * (zeta - 0.5),
-        8 * xi * (eta - 1) * (eta - 0.5) * (xi - 0.5) * (zeta - 1) * (zeta - 0.5),
-        8 * eta * (eta - 0.5) * (xi - 1) * (xi - 0.5) * (zeta - 1) * (zeta - 0.5),
-        8 * eta * xi * (eta - 0.5) * (xi - 0.5) * (zeta - 1) * (zeta - 0.5),
-        8 * zeta * (eta - 1) * (eta - 0.5) * (xi - 1) * (xi - 0.5) * (zeta - 0.5),
-        8 * xi * zeta * (eta - 1) * (eta - 0.5) * (xi - 0.5) * (zeta - 0.5),
-        8 * eta * zeta * (eta - 0.5) * (xi - 1) * (xi - 0.5) * (zeta - 0.5),
-        8 * eta * xi * zeta * (eta - 0.5) * (xi - 0.5) * (zeta - 0.5),
-        -16 * eta * zeta * (eta - 0.5) * (xi - 1) * (xi - 0.5) * (zeta - 1),
-        -16 * zeta * (eta - 1) * (eta - 0.5) * (xi - 1) * (xi - 0.5) * (zeta - 1),
-        -16 * eta * (eta - 1) * (xi - 1) * (xi - 0.5) * (zeta - 1) * (zeta - 0.5),
-        -16 * eta * zeta * (eta - 1) * (xi - 1) * (xi - 0.5) * (zeta - 0.5),
-        32 * eta * zeta * (eta - 1) * (xi - 1) * (xi - 0.5) * (zeta - 1),
-        -16 * xi * zeta * (eta - 1) * (eta - 0.5) * (xi - 0.5) * (zeta - 1),
-        -16 * eta * xi * zeta * (eta - 0.5) * (xi - 0.5) * (zeta - 1),
-        -16 * eta * xi * (eta - 1) * (xi - 0.5) * (zeta - 1) * (zeta - 0.5),
-        -16 * eta * xi * zeta * (eta - 1) * (xi - 0.5) * (zeta - 0.5),
-        32 * eta * xi * zeta * (eta - 1) * (xi - 0.5) * (zeta - 1),
-        -16 * xi * (eta - 1) * (eta - 0.5) * (xi - 1) * (zeta - 1) * (zeta - 0.5),
-        -16 * xi * zeta * (eta - 1) * (eta - 0.5) * (xi - 1) * (zeta - 0.5),
-        32 * xi * zeta * (eta - 1) * (eta - 0.5) * (xi - 1) * (zeta - 1),
-        -16 * eta * xi * (eta - 0.5) * (xi - 1) * (zeta - 1) * (zeta - 0.5),
-        -16 * eta * xi * zeta * (eta - 0.5) * (xi - 1) * (zeta - 0.5),
-        32 * eta * xi * zeta * (eta - 0.5) * (xi - 1) * (zeta - 1),
-        32 * eta * xi * (eta - 1) * (xi - 1) * (zeta - 1) * (zeta - 0.5),
-        32 * eta * xi * zeta * (eta - 1) * (xi - 1) * (zeta - 0.5),
-        -64 * eta * xi * zeta * (eta - 1) * (xi - 1) * (zeta - 1) };
+  /* clang-format off */
+  const std::vector<double> basis_functions = {
+    8 * (eta - 1) * (eta - 0.5) * (xi - 1) * (xi - 0.5) * (zeta - 1) * (zeta - 0.5),
+    8 * xi * (eta - 1) * (eta - 0.5) * (xi - 0.5) * (zeta - 1) * (zeta - 0.5),
+    8 * eta * (eta - 0.5) * (xi - 1) * (xi - 0.5) * (zeta - 1) * (zeta - 0.5),
+    8 * eta * xi * (eta - 0.5) * (xi - 0.5) * (zeta - 1) * (zeta - 0.5),
+    8 * zeta * (eta - 1) * (eta - 0.5) * (xi - 1) * (xi - 0.5) * (zeta - 0.5),
+    8 * xi * zeta * (eta - 1) * (eta - 0.5) * (xi - 0.5) * (zeta - 0.5),
+    8 * eta * zeta * (eta - 0.5) * (xi - 1) * (xi - 0.5) * (zeta - 0.5),
+    8 * eta * xi * zeta * (eta - 0.5) * (xi - 0.5) * (zeta - 0.5),
+    -16 * eta * zeta * (eta - 0.5) * (xi - 1) * (xi - 0.5) * (zeta - 1),
+    -16 * zeta * (eta - 1) * (eta - 0.5) * (xi - 1) * (xi - 0.5) * (zeta - 1),
+    -16 * eta * (eta - 1) * (xi - 1) * (xi - 0.5) * (zeta - 1) * (zeta - 0.5),
+    -16 * eta * zeta * (eta - 1) * (xi - 1) * (xi - 0.5) * (zeta - 0.5),
+    32 * eta * zeta * (eta - 1) * (xi - 1) * (xi - 0.5) * (zeta - 1),
+    -16 * xi * zeta * (eta - 1) * (eta - 0.5) * (xi - 0.5) * (zeta - 1),
+    -16 * eta * xi * zeta * (eta - 0.5) * (xi - 0.5) * (zeta - 1),
+    -16 * eta * xi * (eta - 1) * (xi - 0.5) * (zeta - 1) * (zeta - 0.5),
+    -16 * eta * xi * zeta * (eta - 1) * (xi - 0.5) * (zeta - 0.5),
+    32 * eta * xi * zeta * (eta - 1) * (xi - 0.5) * (zeta - 1),
+    -16 * xi * (eta - 1) * (eta - 0.5) * (xi - 1) * (zeta - 1) * (zeta - 0.5),
+    -16 * xi * zeta * (eta - 1) * (eta - 0.5) * (xi - 1) * (zeta - 0.5),
+    32 * xi * zeta * (eta - 1) * (eta - 0.5) * (xi - 1) * (zeta - 1),
+    -16 * eta * xi * (eta - 0.5) * (xi - 1) * (zeta - 1) * (zeta - 0.5),
+    -16 * eta * xi * zeta * (eta - 0.5) * (xi - 1) * (zeta - 0.5),
+    32 * eta * xi * zeta * (eta - 0.5) * (xi - 1) * (zeta - 1),
+    32 * eta * xi * (eta - 1) * (xi - 1) * (zeta - 1) * (zeta - 0.5),
+    32 * eta * xi * zeta * (eta - 1) * (xi - 1) * (zeta - 0.5),
+    -64 * eta * xi * zeta * (eta - 1) * (xi - 1) * (zeta - 1) };
+  /* clang-format on */
   return basis_functions;
 }
 
