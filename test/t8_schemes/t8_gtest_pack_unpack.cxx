@@ -62,7 +62,7 @@ class class_test_pack: public TestDFS {
 
     /* Probe size and allocate */
     sc_MPI_Status status;
-    sc_MPI_Probe (rank, T8_PACK_TEST_TAG, comm, &status);
+    sc_MPI_Probe (rank, T8_MPI_TEST_ELEMENT_PACK_TAG, comm, &status);
 
     /* receive data */
     mpiret

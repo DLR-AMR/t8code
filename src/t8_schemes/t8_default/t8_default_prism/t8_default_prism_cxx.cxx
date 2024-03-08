@@ -518,25 +518,15 @@ t8_default_scheme_prism_c::t8_element_MPI_Pack_size (const int count, sc_MPI_Com
   int datasize = 0;
   int mpiret;
 
+  /*x,y,z*/
   mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &datasize);
   SC_CHECK_MPI (mpiret);
-  singlesize += datasize;
+  singlesize += 3 * datasize;
 
-  mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &datasize);
-  SC_CHECK_MPI (mpiret);
-  singlesize += datasize;
-
-  mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &datasize);
-  SC_CHECK_MPI (mpiret);
-  singlesize += datasize;
-
+  /*type, level*/
   mpiret = sc_MPI_Pack_size (1, sc_MPI_INT8_T, comm, &datasize);
   SC_CHECK_MPI (mpiret);
-  singlesize += datasize;
-
-  mpiret = sc_MPI_Pack_size (1, sc_MPI_INT8_T, comm, &datasize);
-  SC_CHECK_MPI (mpiret);
-  singlesize += datasize;
+  singlesize += 2 * datasize;
 
   *pack_size = count * singlesize;
 }

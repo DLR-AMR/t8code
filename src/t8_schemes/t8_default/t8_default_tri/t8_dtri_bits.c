@@ -1744,27 +1744,21 @@ t8_dtri_element_pack_size (int count, sc_MPI_Comm comm, int *pack_size)
   int singlesize = 0;
   int datasize = 0;
   int mpiret;
+
+  /* coords */
   mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &datasize);
   SC_CHECK_MPI (mpiret);
-  singlesize += datasize;
-
-  mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &datasize);
-  SC_CHECK_MPI (mpiret);
-  singlesize += datasize;
-
 #ifdef T8_DTRI_TO_DTET
-  mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &datasize);
-  SC_CHECK_MPI (mpiret);
-  singlesize += datasize;
+  int coord_count = 3;
+#else
+  int coord_count = 2;
 #endif
+  singlesize += coord_count * datasize;
 
+  /* type, level*/
   mpiret = sc_MPI_Pack_size (1, sc_MPI_INT8_T, comm, &datasize);
   SC_CHECK_MPI (mpiret);
-  singlesize += datasize;
-
-  mpiret = sc_MPI_Pack_size (1, sc_MPI_INT8_T, comm, &datasize);
-  SC_CHECK_MPI (mpiret);
-  singlesize += datasize;
+  singlesize += 2 * datasize;
 
   *pack_size = count * singlesize;
 }

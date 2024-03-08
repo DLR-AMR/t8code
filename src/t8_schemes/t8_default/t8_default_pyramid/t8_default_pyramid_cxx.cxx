@@ -480,6 +480,7 @@ t8_default_scheme_pyramid_c::t8_element_MPI_Pack_size (const int count, sc_MPI_C
   t8_dtet_element_pack_size (1, comm, &datasize);
   singlesize += datasize;
 
+  /* switch shape at level */
   SC_CHECK_MPI (sc_MPI_Pack_size (1, sc_MPI_INT8_T, comm, &datasize));
   singlesize += datasize;
 

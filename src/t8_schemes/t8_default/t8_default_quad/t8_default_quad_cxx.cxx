@@ -824,14 +824,12 @@ t8_default_scheme_quad_c::t8_element_MPI_Pack_size (const int count, sc_MPI_Comm
   int datasize = 0;
   int mpiret;
 
+  /* x,y */
   mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &datasize);
   SC_CHECK_MPI (mpiret);
-  singlesize += datasize;
+  singlesize += 2 * datasize;
 
-  mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &datasize);
-  SC_CHECK_MPI (mpiret);
-  singlesize += datasize;
-
+  /* level */
   mpiret = sc_MPI_Pack_size (1, sc_MPI_INT8_T, comm, &datasize);
   SC_CHECK_MPI (mpiret);
   singlesize += datasize;
