@@ -27,6 +27,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <gtest/gtest.h>
 #include <test/t8_gtest_custom_assertion.hxx>
+#include <test/t8_gtest_macros.hxx>
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
@@ -107,10 +108,10 @@ TEST_P (ancestor, multi_level_recursive_check)
   ts->t8_element_new (1, &parent);
   ts->t8_element_new (1, &correct_anc_high_level);
 
-  t8_gloidx_t leafs_on_level;
+  t8_gloidx_t leaves_on_level;
   for (i = recursion_depth; i < max_lvl; i++) {
-    leafs_on_level = ts->t8_element_count_leafs (correct_anc, i - recursion_depth);
-    ts->t8_element_set_linear_id (correct_anc_high_level, i - recursion_depth, leafs_on_level / 2);
+    leaves_on_level = ts->t8_element_count_leaves (correct_anc, i - recursion_depth);
+    ts->t8_element_set_linear_id (correct_anc_high_level, i - recursion_depth, leaves_on_level / 2);
     ts->t8_element_copy (correct_anc_high_level, parent);
     t8_recursive_ancestor (correct_anc, desc_a, parent, check, ts, i);
   }
@@ -118,4 +119,4 @@ TEST_P (ancestor, multi_level_recursive_check)
   ts->t8_element_destroy (1, &correct_anc_high_level);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_ancestor, ancestor, testing::Values (T8_ECLASS_PYRAMID));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_ancestor, ancestor, testing::Values (T8_ECLASS_PYRAMID), print_eclass);

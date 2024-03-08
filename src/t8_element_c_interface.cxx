@@ -383,19 +383,19 @@ t8_element_vertex_reference_coords (const t8_eclass_scheme_c *ts, const t8_eleme
 }
 
 t8_gloidx_t
-t8_element_count_leafs (const t8_eclass_scheme_c *ts, const t8_element_t *t, int level)
+t8_element_count_leaves (const t8_eclass_scheme_c *ts, const t8_element_t *t, int level)
 {
   T8_ASSERT (ts != NULL);
 
-  return ts->t8_element_count_leafs (t, level);
+  return ts->t8_element_count_leaves (t, level);
 }
 
 t8_gloidx_t
-t8_element_count_leafs_from_root (const t8_eclass_scheme_c *ts, int level)
+t8_element_count_leaves_from_root (const t8_eclass_scheme_c *ts, int level)
 {
   T8_ASSERT (ts != NULL);
 
-  return ts->t8_element_count_leafs_from_root (level);
+  return ts->t8_element_count_leaves_from_root (level);
 }
 
 void
@@ -447,4 +447,12 @@ t8_element_destroy (const t8_eclass_scheme_c *ts, int length, t8_element_t **ele
   T8_ASSERT (ts != NULL);
 
   ts->t8_element_destroy (length, elems);
+}
+
+void
+t8_element_root (const t8_eclass_scheme_c *ts, t8_element_t *elem)
+{
+  T8_ASSERT (ts != NULL);
+
+  ts->t8_element_root (elem);
 }

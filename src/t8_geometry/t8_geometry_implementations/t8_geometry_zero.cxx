@@ -22,20 +22,12 @@
 
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx>
 
-t8_geometry_zero::t8_geometry_zero (int dim)
+t8_geometry_zero::t8_geometry_zero (int dim): t8_geometry (dim, "t8_geom_zero_" + std::to_string (dim))
 {
-  T8_ASSERT (0 <= dim && dim <= 3);
-  size_t num_chars = 100;
-  char *name_tmp = T8_ALLOC (char, num_chars);
-
-  snprintf (name_tmp, num_chars, "t8_geom_zero_%i", dim);
-  name = name_tmp;
-  dimension = dim;
 }
 
 t8_geometry_zero::~t8_geometry_zero ()
 {
-  T8_FREE ((char *) name);
 }
 
 void
@@ -63,3 +55,26 @@ t8_geometry_zero::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 {
   /* Do nothing. */
 }
+
+T8_EXTERN_C_BEGIN ();
+
+/* Satisfy the C interface from t8_geometry_zero.h.
+ * Create a new geometry with given dimension. */
+t8_geometry_c *
+t8_geometry_zero_new (int dimension)
+{
+  t8_geometry_zero *geom = new t8_geometry_zero (dimension);
+  return (t8_geometry_c *) geom;
+}
+
+void
+t8_geometry_zero_destroy (t8_geometry_c **geom)
+{
+  T8_ASSERT (geom != NULL);
+  T8_ASSERT ((*geom)->t8_geom_get_type () == T8_GEOMETRY_TYPE_ZERO);
+
+  delete *geom;
+  *geom = NULL;
+}
+
+T8_EXTERN_C_END ();

@@ -468,7 +468,7 @@ struct t8_default_scheme_hex_c: public t8_default_scheme_common_c
    * \param [in,out] elem The element whose entries will be set.
    * \param [in] level    The level of the uniform refinement to consider.
    * \param [in] id       The linear id.
-   *                      id must fulfil 0 <= id < 'number of leafs in the uniform refinement'
+   *                      id must fulfil 0 <= id < 'number of leaves in the uniform refinement'
    */
   virtual void
   t8_element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id) const;
@@ -593,6 +593,12 @@ struct t8_default_scheme_hex_c: public t8_default_scheme_common_c
   virtual void
   t8_element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const;
 #endif
+
+  /** Fills an element with the root element.
+ * \param [in,out] elem   The element to be filled with root.
+ */
+  void
+  t8_element_root (t8_element_t *elem) const;
 };
 
 #endif /* !T8_DEFAULT_HEX_HXX */

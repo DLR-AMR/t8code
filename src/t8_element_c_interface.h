@@ -507,7 +507,7 @@ t8_element_shape (const t8_eclass_scheme_c *ts, const t8_element_t *elem);
  * \param [in,out] elem The element whose entries will be set.
  * \param [in] level    The level of the uniform refinement to consider.
  * \param [in] id       The linear id.
- *                      id must fulfil 0 <= id < 'number of leafs in the uniform refinement'
+ *                      id must fulfil 0 <= id < 'number of leaves in the uniform refinement'
  */
 void
 t8_element_set_linear_id (const t8_eclass_scheme_c *ts, t8_element_t *elem, int level, t8_linearidx_t id);
@@ -584,19 +584,19 @@ t8_element_vertex_reference_coords (const t8_eclass_scheme_c *ts, const t8_eleme
  *  Thus, if \a t's level is 0, and \a level = 3, the return value is 2^3 = 8.
  */
 t8_gloidx_t
-t8_element_count_leafs (const t8_eclass_scheme_c *ts, const t8_element_t *t, int level);
+t8_element_count_leaves (const t8_eclass_scheme_c *ts, const t8_element_t *t, int level);
 
 /** Count how many leaf descendants of a given uniform level the root element will produce.
  * \param [in] ts    Implementation of a class scheme.
  * \param [in] level A refinement level.
- * \return The value of \ref t8_element_count_leafs if the input element
+ * \return The value of \ref t8_element_count_leaves if the input element
  *      is the root (level 0) element.
  *
  * This is a convenience function, and can be implemented via
- * \ref t8_element_count_leafs.
+ * \ref t8_element_count_leaves.
  */
 t8_gloidx_t
-t8_element_count_leafs_from_root (const t8_eclass_scheme_c *ts, int level);
+t8_element_count_leaves_from_root (const t8_eclass_scheme_c *ts, int level);
 
 /** This function has no defined effect but each implementation is free to
  *  provide its own meaning of it. Thus this function can be used to compute or
@@ -683,6 +683,13 @@ t8_element_new (const t8_eclass_scheme_c *ts, int length, t8_element_t **elems);
  */
 void
 t8_element_destroy (const t8_eclass_scheme_c *ts, int length, t8_element_t **elems);
+
+/** Fills an element with the root element.
+ * \param [in] ts         Implementation of a class scheme.
+ * \param [in,out] elem   The element to be filled with root.
+ */
+void
+t8_element_root (const t8_eclass_scheme_c *ts, t8_element_t *elem);
 
 T8_EXTERN_C_END ();
 

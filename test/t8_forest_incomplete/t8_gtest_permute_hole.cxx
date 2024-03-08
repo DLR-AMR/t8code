@@ -176,4 +176,4 @@ TEST_P (forest_permute, test_permute_hole)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_permute_hole, forest_permute, AllEclasses);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_permute_hole, forest_permute, AllEclasses, print_eclass);

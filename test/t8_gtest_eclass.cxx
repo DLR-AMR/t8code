@@ -152,4 +152,4 @@ TEST (gtest_eclass, eclass_order)
   EXPECT_EQ (t8_eclass_compare (T8_ECLASS_HEX, T8_ECLASS_TET), 1);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_eclass, gtest_eclass, AllEclasses);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_eclass, gtest_eclass, AllEclasses, print_eclass);

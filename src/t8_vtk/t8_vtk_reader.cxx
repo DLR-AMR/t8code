@@ -20,12 +20,13 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include "t8_vtk_reader.hxx"
-#include "t8_vtk_unstructured.hxx"
-#include "t8_vtk_polydata.hxx"
-#include "t8_vtk_parallel.hxx"
-#include "t8_vtk_types.h"
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
+#include <t8_vtk/t8_vtk_reader.hxx>
+#include <t8_vtk/t8_vtk_unstructured.hxx>
+#include <t8_vtk/t8_vtk_polydata.hxx>
+#include <t8_vtk/t8_vtk_parallel.hxx>
+#include <t8_vtk/t8_vtk_types.h>
+#include <t8_cmesh.hxx>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 
 #if T8_WITH_VTK
 #include <vtkCellIterator.h>
@@ -371,8 +372,7 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer<vtkDataSet> vtkGrid, const int partition, c
   t8_cmesh_set_dimension (cmesh, dim_buf);
 
   /* Set the geometry. */
-  t8_geometry_c *linear_geom = t8_geometry_linear_new (dim_buf);
-  t8_cmesh_register_geometry (cmesh, linear_geom);
+  t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, dim_buf);
 
   /* Global-id of the first local tree */
   t8_gloidx_t first_tree = 0;
