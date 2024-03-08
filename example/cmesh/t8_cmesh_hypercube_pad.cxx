@@ -24,8 +24,6 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh_vtk_writer.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_vtk.h>
@@ -33,7 +31,7 @@ int
 main (int argc, char **argv)
 {
   /* The prefix for our output files. */
-  const char prefix[BUFSIZ] = "t8_cmesh_hypercube_pad";
+  const char prefix[BUFSIZ] = "t8_forest_hypercube_pad";
   t8_locidx_t local_num_trees;
   t8_gloidx_t global_num_trees;
 
@@ -47,7 +45,6 @@ main (int argc, char **argv)
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
   t8_init (SC_LP_PRODUCTION);
-  t8_geometry_c *axis_aligned = t8_geometry_linear_new (3);
   /* Add hypercube with given element class. */
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube_pad (T8_ECLASS_HEX, sc_MPI_COMM_WORLD, boundary_coords, 3, 3, 3, true);
 
@@ -59,7 +56,7 @@ main (int argc, char **argv)
   t8_global_productionf (" [step1] Global number of trees:\t%li\n", global_num_trees);
   t8_scheme_cxx *scheme = t8_scheme_new_default_cxx ();
   t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, 0, 0, sc_MPI_COMM_WORLD);
-  t8_forest_vtk_write_file (forest, "forest", 1, 1, 1, 1, 0, 0, NULL);
+  t8_forest_vtk_write_file (forest, prefix, 1, 1, 1, 1, 0, 0, NULL);
   t8_forest_unref (&forest);
 
   sc_finalize ();
