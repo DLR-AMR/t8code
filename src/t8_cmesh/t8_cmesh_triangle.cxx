@@ -20,9 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <t8_cmesh.hxx>
 #include <t8_cmesh_triangle.h>
 #include <t8_cmesh_tetgen.h>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include "t8_cmesh_types.h"
 #include "t8_cmesh_stash.h"
 
@@ -527,11 +528,10 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_C
   {
     int retval, corner_offset = 0;
     char current_file[BUFSIZ];
-    t8_geometry_c *linear_geom = t8_geometry_linear_new (dim);
 
     t8_cmesh_init (&cmesh);
     /* We will use linear geometry. */
-    t8_cmesh_register_geometry (cmesh, linear_geom);
+    t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, dim);
     /* read .node file */
     snprintf (current_file, BUFSIZ, "%s.node", fileprefix);
     retval = t8_cmesh_triangle_read_nodes (cmesh, current_file, &vertices, &num_vertices, dim);
@@ -656,10 +656,9 @@ t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix, int partition, sc_
   }
 
   if (cmesh != NULL) {
-    /* Use linear geometry */
-    t8_geometry_c *linear_geom = t8_geometry_linear_new (dim);
-    /* We need to set the geometry after the broadcast. */
-    t8_cmesh_register_geometry (cmesh, linear_geom);
+    /* Use linear geometry.
+     * We need to set the geometry after the broadcast. */
+    t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, dim);
     if (partition) {
       first_tree = (mpirank * cmesh->num_trees) / mpisize;
       last_tree = ((mpirank + 1) * cmesh->num_trees) / mpisize - 1;

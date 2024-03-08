@@ -37,6 +37,7 @@ t8code_googletest_programs = \
   test/t8_schemes/t8_gtest_descendant \
   test/t8_schemes/t8_gtest_find_parent \
   test/t8_schemes/t8_gtest_equal \
+  test/t8_schemes/t8_gtest_root \
   test/t8_cmesh/t8_gtest_cmesh_face_is_boundary \
   test/t8_cmesh/t8_gtest_cmesh_partition \
   test/t8_cmesh/t8_gtest_cmesh_copy \
@@ -62,6 +63,8 @@ t8code_googletest_programs = \
   test/t8_forest/t8_gtest_ghost_exchange \
   test/t8_forest/t8_gtest_ghost_delete \
   test/t8_forest/t8_gtest_ghost_and_owner \
+  test/t8_forest/t8_gtest_forest_commit \
+  test/t8_forest/t8_gtest_balance \
   test/t8_IO/t8_gtest_vtk_reader \
   test/t8_forest_incomplete/t8_gtest_permute_hole \
   test/t8_forest_incomplete/t8_gtest_recursive \
@@ -173,6 +176,10 @@ test_t8_schemes_t8_gtest_equal_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_schemes/t8_gtest_equal.cxx
 
+test_t8_schemes_t8_gtest_root_SOURCES = \
+  test/t8_gtest_main.cxx \
+  test/t8_schemes/t8_gtest_root.cxx
+
 test_t8_cmesh_t8_gtest_cmesh_face_is_boundary_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_cmesh/t8_gtest_cmesh_face_is_boundary.cxx
@@ -264,6 +271,14 @@ test_t8_forest_t8_gtest_ghost_delete_SOURCES = \
 test_t8_forest_t8_gtest_ghost_and_owner_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_forest/t8_gtest_ghost_and_owner.cxx
+
+test_t8_forest_t8_gtest_forest_commit_SOURCES = \
+  test/t8_gtest_main.cxx \
+  test/t8_forest/t8_gtest_forest_commit.cxx
+
+test_t8_forest_t8_gtest_balance_SOURCES = \
+  test/t8_gtest_main.cxx \
+  test/t8_forest/t8_gtest_balance.cxx
 
 test_t8_forest_incomplete_t8_gtest_permute_hole_SOURCES = \
   test/t8_gtest_main.cxx \
@@ -409,6 +424,10 @@ test_t8_schemes_t8_gtest_equal_LDADD = $(t8_gtest_target_ld_add)
 test_t8_schemes_t8_gtest_equal_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_schemes_t8_gtest_equal_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
+test_t8_schemes_t8_gtest_root_LDADD = $(t8_gtest_target_ld_add)
+test_t8_schemes_t8_gtest_root_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_schemes_t8_gtest_root_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+
 test_t8_cmesh_t8_gtest_cmesh_face_is_boundary_LDADD = $(t8_gtest_target_ld_add)
 test_t8_cmesh_t8_gtest_cmesh_face_is_boundary_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_cmesh_t8_gtest_cmesh_face_is_boundary_CPPFLAGS = $(t8_gtest_target_cpp_flags)
@@ -501,6 +520,14 @@ test_t8_forest_t8_gtest_ghost_and_owner_LDADD = $(t8_gtest_target_ld_add)
 test_t8_forest_t8_gtest_ghost_and_owner_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_forest_t8_gtest_ghost_and_owner_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
+test_t8_forest_t8_gtest_forest_commit_LDADD = $(t8_gtest_target_ld_add)
+test_t8_forest_t8_gtest_forest_commit_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_forest_t8_gtest_forest_commit_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+
+test_t8_forest_t8_gtest_balance_LDADD = $(t8_gtest_target_ld_add)
+test_t8_forest_t8_gtest_balance_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_forest_t8_gtest_balance_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+
 test_t8_IO_t8_gtest_vtk_reader_LDADD = $(t8_gtest_target_ld_add)
 test_t8_IO_t8_gtest_vtk_reader_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_IO_t8_gtest_vtk_reader_CPPFLAGS = $(t8_gtest_target_cpp_flags)
@@ -572,6 +599,7 @@ test_t8_geometry_t8_gtest_geometry_handling_CPPFLAGS += $(t8_gtest_target_mpi_cp
 test_t8_schemes_t8_gtest_descendant_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_find_parent_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_equal_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_schemes_t8_gtest_root_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_cmesh_face_is_boundary_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_cmesh_partition_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_cmesh_set_partition_offsets_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
@@ -595,6 +623,8 @@ test_t8_forest_t8_gtest_transform_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_t8_gtest_ghost_exchange_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_t8_gtest_ghost_delete_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_t8_gtest_ghost_and_owner_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_forest_t8_gtest_forest_commit_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_forest_t8_gtest_balance_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_IO_t8_gtest_vtk_reader_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_incomplete_t8_gtest_permute_hole_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_incomplete_t8_gtest_recursive_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)

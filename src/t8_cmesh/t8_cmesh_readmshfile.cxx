@@ -22,6 +22,7 @@
 
 #include <t8_eclass.h>
 #include <t8_cmesh_readmshfile.h>
+#include <t8_cmesh.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.h>
@@ -1007,8 +1008,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
           /* Set the geometry of the tree to be linear.
            * If we use an cad geometry, we set the geometry in accordance,
            * if the tree is linked to a geometry or not */
-          const char *geom_name = linear_geometry_base->t8_geom_get_name ();
-          t8_cmesh_set_tree_geometry (cmesh, tree_count, geom_name);
+          t8_cmesh_set_tree_geometry (cmesh, tree_count, linear_geometry_base);
         }
         else {
           /* Calculate the parametric geometries of the tree */
@@ -1454,15 +1454,16 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
                                   edge_geometries, 2 * num_edges * sizeof (int), 0);
 
           /* Now we set the tree geometry according to the tree linkage status. */
-          const char *geom_name;
           if (tree_is_linked) {
-            geom_name = cad_geometry_base->t8_geom_get_name ();
+            t8_cmesh_set_tree_geometry (cmesh, tree_count, cad_geometry_base);
+            t8_debugf ("Registering tree %li with geometry %s \n", tree_count,
+                       cad_geometry_base->t8_geom_get_name ().c_str ());
           }
           else {
-            geom_name = linear_geometry_base->t8_geom_get_name ();
+            t8_cmesh_set_tree_geometry (cmesh, tree_count, linear_geometry_base);
+            t8_debugf ("Registering tree %li with geometry %s \n", tree_count,
+                       linear_geometry_base->t8_geom_get_name ().c_str ());
           }
-          t8_debugf ("Registering tree %li with geometry %s \n", tree_count, geom_name);
-          t8_cmesh_set_tree_geometry (cmesh, tree_count, geom_name);
 #else  /* !T8_WITH_OCC */
           SC_ABORTF ("OCC not linked");
 #endif /* T8_WITH_OCC */
@@ -1735,16 +1736,11 @@ t8_cmesh_from_msh_file_register_geometries (t8_cmesh_t cmesh, const int use_cad_
                                             const char *fileprefix, const t8_geometry_c **linear_geometry,
                                             const t8_geometry_c **cad_geometry)
 {
-
-  const t8_geometry_c *linear_geom = new t8_geometry_linear (dim);
   /* Register linear geometry */
-  t8_cmesh_register_geometry (cmesh, linear_geom);
-  *linear_geometry = linear_geom;
+  *linear_geometry = t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, dim);
   if (use_cad_geometry) {
 #if T8_WITH_OCC
-    const t8_geometry_c *cad_geom = t8_geometry_cad_new (dim, fileprefix, "brep_geometry");
-    t8_cmesh_register_geometry (cmesh, cad_geom);
-    *cad_geometry = cad_geom;
+    *cad_geometry = t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, dim, std::string (fileprefix));
 #else /* !T8_WITH_OCC */
     *cad_geometry = NULL;
     return 0;

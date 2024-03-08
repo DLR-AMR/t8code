@@ -41,18 +41,14 @@
 #include <TopoDS_Face.hxx>
 #include <Standard_Version.hxx>
 
-t8_geometry_cad::t8_geometry_cad (int dim, const char *fileprefix, const char *name_in)
+t8_geometry_cad::t8_geometry_cad (int dim, std::string fileprefix, std::string name_in)
+  : t8_geometry_with_vertices (dim, name_in + "_" + std::to_string (dim))
 {
-  T8_ASSERT (0 <= dim && dim <= 3);
-
-  name = name_in;
-  dimension = dim;
-
   BRep_Builder builder;
   std::string current_file (fileprefix);
   std::ifstream is (current_file + ".brep");
   if (is.is_open () == false) {
-    SC_ABORTF ("Cannot find the file %s.brep.\n", fileprefix);
+    SC_ABORTF ("Cannot find the file %s.brep.\n", fileprefix.c_str ());
   }
   BRepTools::Read (cad_shape, is, builder);
   is.close ();
@@ -69,12 +65,9 @@ t8_geometry_cad::t8_geometry_cad (int dim, const char *fileprefix, const char *n
   TopExp::MapShapesAndUniqueAncestors (cad_shape, TopAbs_EDGE, TopAbs_FACE, cad_shape_edge2face_map);
 }
 
-t8_geometry_cad::t8_geometry_cad (int dim, const TopoDS_Shape cad_shape, const char *name_in)
+t8_geometry_cad::t8_geometry_cad (int dim, const TopoDS_Shape cad_shape, std::string name_in)
+  : t8_geometry_with_vertices (dim, name_in + "_" + std::to_string (dim))
 {
-  T8_ASSERT (0 <= dim && dim <= 3);
-
-  name = name_in;
-  dimension = dim;
   if (cad_shape.IsNull ()) {
     SC_ABORTF ("Shape is null. \n");
   }
@@ -83,6 +76,11 @@ t8_geometry_cad::t8_geometry_cad (int dim, const TopoDS_Shape cad_shape, const c
   TopExp::MapShapes (cad_shape, TopAbs_FACE, cad_shape_face_map);
   TopExp::MapShapesAndUniqueAncestors (cad_shape, TopAbs_VERTEX, TopAbs_EDGE, cad_shape_vertex2edge_map);
   TopExp::MapShapesAndUniqueAncestors (cad_shape, TopAbs_EDGE, TopAbs_FACE, cad_shape_edge2face_map);
+}
+
+t8_geometry_cad::t8_geometry_cad (int dim): t8_geometry_with_vertices (dim, "t8_geom_cad_" + std::to_string (dim))
+{
+  cad_shape.Nullify ();
 }
 
 void

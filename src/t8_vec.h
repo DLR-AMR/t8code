@@ -57,6 +57,18 @@ t8_vec_normalize (double vec[3])
   }
 }
 
+/** Make a copy of a vector.
+ * \param [in]  vec_in
+ * \param [out] vec_out
+ */
+static inline void
+t8_vec_copy (const double vec_in[3], double vec_out[3])
+{
+  for (int i = 0; i < 3; i++) {
+    vec_out[i] = vec_in[i];
+  }
+}
+
 /** Euclidean distance of X and Y.
  * \param [in]  vec_x  A 3D vector.
  * \param [in]  vec_y  A 3D vector.
@@ -248,4 +260,4 @@ t8_vec_swap (double p1[3], double p2[3])
   }
 }
 
-#endif /* !T8_VEC_H! */
+#endif /* !T8_VEC_H */

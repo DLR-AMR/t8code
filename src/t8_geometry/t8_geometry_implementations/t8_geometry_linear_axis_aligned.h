@@ -56,4 +56,4 @@ t8_geometry_linear_axis_aligned_destroy (t8_geometry_c **geom);
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_GEOMETRY_LINEAR_AXIS_ALIGNED_H! */
+#endif /* !T8_GEOMETRY_LINEAR_AXIS_ALIGNED_H */

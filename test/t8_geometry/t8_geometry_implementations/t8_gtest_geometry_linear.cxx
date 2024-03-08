@@ -28,7 +28,7 @@
 #include <test/t8_geometry/t8_gtest_geometry_macros.hxx>
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_geometry/t8_geometry.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
@@ -38,7 +38,6 @@ t8_cmesh_t
 t8_geometry_testing_tree_from_class (const t8_eclass_t eclass)
 {
   t8_cmesh_t cmesh;
-  t8_geometry_c *geometry = new t8_geometry_linear (t8_eclass_to_dimension[eclass]);
   t8_cmesh_init (&cmesh);
   const int num_vertices = t8_eclass_num_vertices[eclass];
   double *vertices = T8_ALLOC (double, T8_ECLASS_MAX_DIM *num_vertices);
@@ -48,7 +47,7 @@ t8_geometry_testing_tree_from_class (const t8_eclass_t eclass)
     }
   }
   t8_cmesh_set_tree_class (cmesh, 0, eclass);
-  t8_cmesh_register_geometry (cmesh, geometry);
+  t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, t8_eclass_to_dimension[eclass]);
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices, t8_eclass_num_vertices[eclass]);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   T8_FREE (vertices);
@@ -79,8 +78,8 @@ TEST_P (geometry_test, cmesh_geometry_linear)
   /* Double check that the geometry is the linear geometry. */
   cmesh_geom = t8_cmesh_get_tree_geometry (cmesh, 0);
   ASSERT_TRUE (cmesh_geom != NULL) << "Could not get cmesh's geometry.";
-  int has_same_name = strcmp (cmesh_geom->t8_geom_get_name (), linear_geom.t8_geom_get_name ());
-  ASSERT_EQ (has_same_name, 0) << "cmesh's geometry is not the linear geometry.";
+  int has_same_name = cmesh_geom->t8_geom_get_name () == linear_geom.t8_geom_get_name ();
+  ASSERT_EQ (has_same_name, 1) << "cmesh's geometry is not the linear geometry.";
 
   srand (seed);
   for (int ipoint = 0; ipoint < num_points; ++ipoint) {

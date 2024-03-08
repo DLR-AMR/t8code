@@ -26,20 +26,13 @@
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_vec.h>
 
-t8_geometry_linear::t8_geometry_linear (int dim): t8_geometry_with_vertices (dim, "")
+t8_geometry_linear::t8_geometry_linear (int dim)
+  : t8_geometry_with_vertices (dim, "t8_geom_linear_" + std::to_string (dim))
 {
-  T8_ASSERT (0 <= dim && dim <= 3);
-  size_t num_chars = 100;
-  char *name_tmp = T8_ALLOC (char, num_chars);
-
-  snprintf (name_tmp, num_chars, "t8_geom_linear_%i", dim);
-  name = name_tmp;
-  dimension = dim;
 }
 
 t8_geometry_linear::~t8_geometry_linear ()
 {
-  T8_FREE ((char *) name);
 }
 
 void
