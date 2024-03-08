@@ -70,7 +70,7 @@ void
 t8_geometry_lagrange::t8_geom_map (const double *ref_point, double *mapped_point) const
 {
   const auto basis_functions = t8_geometry_lagrange::t8_geom_compute_basis (ref_point);
-  const int n_vertex = basis_functions.size ();
+  const size_t n_vertex = basis_functions.size ();
   for (int i_component = 0; i_component < T8_ECLASS_MAX_DIM; i_component++) {
     double inner_product = 0;
     for (int j_vertex = 0; j_vertex < n_vertex; j_vertex++) {
@@ -82,7 +82,7 @@ t8_geometry_lagrange::t8_geom_map (const double *ref_point, double *mapped_point
   }
 }
 
-const std::vector<double>
+std::vector<double>
 t8_geometry_lagrange::t8_geom_compute_basis (const double *ref_coords) const
 {
   switch (active_tree_class) {
@@ -120,7 +120,7 @@ t8_geometry_lagrange::t8_geom_compute_basis (const double *ref_coords) const
   }
 }
 
-const std::vector<double>
+std::vector<double>
 t8_geometry_lagrange::t8_geom_s2_basis (const double *ref_point) const
 {
   const double xi = ref_point[0];
@@ -128,7 +128,7 @@ t8_geometry_lagrange::t8_geom_s2_basis (const double *ref_point) const
   return basis_functions;
 }
 
-const std::vector<double>
+std::vector<double>
 t8_geometry_lagrange::t8_geom_s3_basis (const double *ref_point) const
 {
   const double xi = ref_point[0];
@@ -136,7 +136,7 @@ t8_geometry_lagrange::t8_geom_s3_basis (const double *ref_point) const
   return basis_functions;
 }
 
-const std::vector<double>
+std::vector<double>
 t8_geometry_lagrange::t8_geom_t3_basis (const double *ref_point) const
 {
   const double xi = ref_point[0];
@@ -145,7 +145,7 @@ t8_geometry_lagrange::t8_geom_t3_basis (const double *ref_point) const
   return basis_functions;
 }
 
-const std::vector<double>
+std::vector<double>
 t8_geometry_lagrange::t8_geom_t6_basis (const double *ref_point) const
 {
   const double xi = ref_point[0];
@@ -157,7 +157,7 @@ t8_geometry_lagrange::t8_geom_t6_basis (const double *ref_point) const
   return basis_functions;
 }
 
-const std::vector<double>
+std::vector<double>
 t8_geometry_lagrange::t8_geom_q4_basis (const double *ref_point) const
 {
   const double xi = ref_point[0];
@@ -166,7 +166,7 @@ t8_geometry_lagrange::t8_geom_q4_basis (const double *ref_point) const
   return basis_functions;
 }
 
-const std::vector<double>
+std::vector<double>
 t8_geometry_lagrange::t8_geom_q9_basis (const double *ref_point) const
 {
   const double xi = ref_point[0];
@@ -183,7 +183,7 @@ t8_geometry_lagrange::t8_geom_q9_basis (const double *ref_point) const
   return basis_functions;
 }
 
-const std::vector<double>
+std::vector<double>
 t8_geometry_lagrange::t8_geom_h8_basis (const double *ref_point) const
 {
   const double xi = ref_point[0];
@@ -196,7 +196,7 @@ t8_geometry_lagrange::t8_geom_h8_basis (const double *ref_point) const
   return basis_functions;
 }
 
-const std::vector<double>
+std::vector<double>
 t8_geometry_lagrange::t8_geom_h27_basis (const double *ref_point) const
 {
   const double xi = ref_point[0];

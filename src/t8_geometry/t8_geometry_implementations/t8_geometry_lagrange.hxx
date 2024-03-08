@@ -142,7 +142,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
    * Evaluates the basis functions of the current tree type at a point.
    * \param [in]  ref_point  Array of \a dimension entries, specifying the point in the reference space.
    */
-  const std::vector<double>
+  std::vector<double>
   t8_geom_compute_basis (const double *ref_point) const;
 
   /**
@@ -171,7 +171,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
    * \param ref_point  Point in the reference space.
    * \return  Basis functions evaluated at the reference point.
    */
-  const std::vector<double>
+  std::vector<double>
   t8_geom_s2_basis (const double *ref_point) const;
 
   /**
@@ -183,7 +183,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
    * \param ref_point  Point in the reference space.
    * \return  Basis functions evaluated at the reference point.
    */
-  const std::vector<double>
+  std::vector<double>
   t8_geom_s3_basis (const double *ref_point) const;
 
   /**
@@ -202,7 +202,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
    * \param ref_point  Point in the reference space.
    * \return  Basis functions evaluated at the reference point.
    */
-  const std::vector<double>
+  std::vector<double>
   t8_geom_t3_basis (const double *ref_point) const;
 
   /**
@@ -221,7 +221,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
    * \param ref_point  Point in the reference space.
    * \return  Basis functions evaluated at the reference point.
    */
-  const std::vector<double>
+  std::vector<double>
   t8_geom_t6_basis (const double *ref_point) const;
 
   /**
@@ -240,7 +240,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
    * \param ref_point  Point in the reference space.
    * \return  Basis functions evaluated at the reference point.
    */
-  const std::vector<double>
+  std::vector<double>
   t8_geom_q4_basis (const double *ref_point) const;
 
   /**
@@ -259,7 +259,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
    * \param ref_point  Point in the reference space.
    * \return  Basis functions evaluated at the reference point.
    */
-  const std::vector<double>
+  std::vector<double>
   t8_geom_q9_basis (const double *ref_point) const;
 
   /**
@@ -282,7 +282,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
    * \param ref_point  Point in the reference space.
    * \return  Basis functions evaluated at the reference point.
    */
-  const std::vector<double>
+  std::vector<double>
   t8_geom_h8_basis (const double *ref_point) const;
 
   /**
@@ -305,7 +305,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
    * \param ref_point  Point in the reference space.
    * \return  Basis functions evaluated at the reference point.
    */
-  const std::vector<double>
+  std::vector<double>
   t8_geom_h27_basis (const double *ref_point) const;
 
   /** Polynomial degree of the interpolation. */
