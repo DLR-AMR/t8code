@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_partition.c
+/** \file t8_cmesh_partition.cxx
  *
  * TODO: document this file
  */
@@ -28,10 +28,11 @@
 #include <t8_data/t8_shmem.h>
 #include <t8_cmesh.h>
 #include <t8_element.h>
-#include "t8_cmesh_types.h"
-#include "t8_cmesh_trees.h"
-#include "t8_cmesh_partition.h"
-#include "t8_cmesh_offset.h"
+#include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh_trees.h>
+#include <t8_cmesh/t8_cmesh_partition.h>
+#include <t8_cmesh/t8_cmesh_offset.h>
+#include <t8_geometry/t8_geometry_handler.hxx>
 
 /* Change the neighbor entry of a tree to match the new partition.
  * Input: A face_neighbor entry in cmesh_from and a process to which the corresponding tree will be send
@@ -336,7 +337,7 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from, int *send
       some_owner = -1; /* Reset some_owner, since we do not know an owner of last_tree */
                        /* Parse the new owners from the top and stop at the first process
        * that did not own last_tree */
-      ;
+
       sendlast = t8_offset_last_owner_of_tree (cmesh->mpisize, last_tree, offset_to, &some_owner);
       while (sendlast >= 0 && flag == 0) {
         if (sendlast == cmesh->mpirank || t8_offset_empty (sendlast, offset_from)
@@ -1593,7 +1594,9 @@ t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   t8_cmesh_partition_given (cmesh, cmesh->set_from, tree_offsets, comm);
   /* Deactivate the active tree. Tree related data (such as vertices) might have been moved by the new partition and 
    * has to be loaded again if needed. */
-  t8_geom_handler_deactivate_tree (cmesh->geometry_handler);
+  if (cmesh->geometry_handler != NULL) {
+    cmesh->geometry_handler->deactivate_tree ();
+  }
   /* If profiling is enabled, we measure the runtime of this routine. */
   if (cmesh->profile) {
     /* Runtime = current_time - start_time */

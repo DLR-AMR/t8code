@@ -564,5 +564,14 @@ t8_default_scheme_tet_c::~t8_default_scheme_tet_c ()
    * However we need to provide an implementation of the destructor
    * and hence this empty function. */
 }
-
+void
+t8_default_scheme_tet_c::t8_element_root (t8_element_t *elem) const
+{
+  t8_dtet_t *tet = (t8_dtet_t *) elem;
+  tet->level = 0;
+  tet->x = 0;
+  tet->y = 0;
+  tet->z = 0;
+  tet->type = 0;
+}
 T8_EXTERN_C_END ();

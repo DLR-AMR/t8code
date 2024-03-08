@@ -23,7 +23,7 @@
 #include <t8_vec.h>
 #include <t8_eclass.h>
 #include <t8_geometry/t8_geometry_helpers.h>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.h>
 
 void
 t8_geom_linear_interpolation (const double *coefficients, const double *corner_values, const int corner_value_dim,
@@ -298,19 +298,16 @@ t8_geom_get_ref_intersection (int edge_index, const double *ref_coords, double r
       break;
     }
     else {
-      /* intersectionX = (x1y2-y1x2)(x3-x4)-(x1-x2)(x3y4-y3x4)
-       *                 /(x1-x2)(y3-y4)-(y1-y2)(x3-x4)
-       * intersectionY = (x1y2-y1x2)(y3-y4)-(y1-y2)(x3y4-y3x4)
-       *                 /(x1-x2)(y3-y4)-(y1-y2)(x3-x4)
-       * 
-       * x1=0 y1=0 x2=1 y2=1 x3=ref_coords[0] y3=ref_coords[1] x4=ref_opposite_vertex[0] y4=ref_opposite_vertex[1]
-       * 
-       * Since the intersection point lies on edge 2, which has a slope of 1, the x and the y value has to be equal
-       */
-      ref_intersection[0] = ref_intersection[1]
-        = ((ref_coords[0] * ref_opposite_vertex[1] - ref_coords[1] * ref_opposite_vertex[0])
-             / -(ref_coords[1] - ref_opposite_vertex[1])
-           + (ref_coords[0] - ref_opposite_vertex[0]));
+      /* To find the ref_intersection for edge 1, we calculate the intersection of edge 1 with a stright line from
+       * vertex 1, through the reference point and reaching until x = 0. The y-axis intersect for that line is at
+       * slope * (-1).
+       * Since the the ref_intersection lies on edge 1, which has a slope of 1,
+       * the x and y coordinates have to be the same.
+       * The intersection is calculated via the line equations:
+       * edge 1:  y = ax + c
+       * line:    y = bx + d
+       * intersection: (d - c) / (a - b) */
+      ref_intersection[0] = ref_intersection[1] = -ref_slope / (1 - ref_slope);
       break;
     }
   case 2: /* edge 2 */
@@ -372,4 +369,130 @@ t8_geom_get_triangle_scaling_factor (int edge_index, const double *tree_vertices
   /* The closer the reference point is to the intersection, the bigger is the scaling factor. */
   double scaling_factor = dist_ref / dist_intersection;
   return scaling_factor;
+}
+
+int
+t8_vertex_point_inside (const double vertex_coords[3], const double point[3], const double tolerance)
+{
+  T8_ASSERT (tolerance > 0);
+  if (t8_vec_dist (vertex_coords, point) > tolerance) {
+    return 0;
+  }
+  return 1;
+}
+
+int
+t8_line_point_inside (const double *p_0, const double *vec, const double *point, const double tolerance)
+{
+  T8_ASSERT (tolerance > 0);
+  double b[3];
+  /* b = p - p_0 */
+  t8_vec_axpyz (p_0, point, b, -1);
+  double x = 0; /* Initialized to prevent compiler warning. */
+  int i;
+  /* So x is the solution to
+  * vec * x = b.
+  * We can compute it as
+  * x = b[i] / vec[i]
+  * if any vec[i] is not 0.
+  *
+  * Otherwise the line is degenerated (which should not happen).
+  */
+  for (i = 0; i < 3; ++i) {
+    if (vec[i] != 0) {
+      x = b[i] / vec[i];
+      break; /* found a non-zero coordinate. We can stop now. */
+    }
+  }
+
+  /* If i == 3 here, then vec = 0 and hence the line is degenerated. */
+  SC_CHECK_ABORT (i < 3, "Degenerated line element. Both endpoints are the same.");
+
+  if (x < -tolerance || x > 1 + tolerance) {
+    /* x is not an admissible solution. */
+    return 0;
+  }
+
+  /* we can check whether x gives us a solution by
+     * checking whether
+     *  vec * x = b
+     * is actually true.
+     */
+  double vec_check[3] = { vec[0], vec[1], vec[2] };
+  t8_vec_ax (vec_check, x);
+  if (t8_vec_dist (vec_check, b) > tolerance) {
+    /* Point does not lie on the line. */
+    return 0;
+  }
+  /* The point is on the line. */
+  return 1;
+}
+
+int
+t8_triangle_point_inside (const double p_0[3], const double v[3], const double w[3], const double point[3],
+                          const double tolerance)
+{
+  /* A point p is inside the triangle that is spanned
+   * by the point p_0 and vectors v and w if and only if the linear system
+   * vx + wy = point - p_0
+   * has a solution with 0 <= x,y and x + y <= 1.
+   *
+   * We check whether such a solution exists by computing
+   * certain determinants of 2x2 submatrizes of the 3x3 matrix
+   *
+   *  | v w e_3 | with v = p_1 - p_0, w = p_2 - p_0, and e_3 = (0 0 1)^t (third unit vector)
+   */
+
+  T8_ASSERT (tolerance > 0); /* negative values and zero are not allowed */
+  double b[3];
+  /* b = point - p_0 */
+  t8_vec_axpyz (p_0, point, b, -1);
+
+  /* Let d = det (v w e_3) */
+  const double det_vwe3 = v[0] * w[1] - v[1] * w[0];
+
+  /* The system has a solution, we need to compute it and
+   * check whether 0 <= x,y and x + y <= 1 */
+  /* x = det (b w e_3) / d
+   * y = det (v b e_3) / d
+   */
+  const double x = (b[0] * w[1] - b[1] * w[0]) / det_vwe3;
+  const double y = (v[0] * b[1] - v[1] * b[0]) / det_vwe3;
+
+  if (x < -tolerance || y < -tolerance || x + y > 1 + tolerance) {
+    /* The solution is not admissible.
+     * x < 0 or y < 0 or x + y > 1 */
+    return 0;
+  }
+  /* The solution may be admissible, but we have to
+   * check whether the result of
+   *  (p_1 - p_0)x + (p_2 - p_0)y ( = vx + wy)
+   * is actually p - p_0.
+   * Since the system of equations is overrepresented (3 equations, 2 variables)
+   * this may actually break.
+   * If it breaks, it will break in the z coordinate of the result.
+   */
+  const double z = v[2] * x + w[2] * y;
+  /* Must match the last coordinate of b = p - p_0 */
+  if (fabs (z - b[2]) > tolerance) {
+    /* Does not match. Point lies outside. */
+    return 0;
+  }
+  /* All checks passed. Point lies inside. */
+  return 1;
+}
+
+int
+t8_plane_point_inside (const double point_on_face[3], const double face_normal[3], const double point[3])
+{
+  /* Set x = x - p */
+  double pof[3] = { point_on_face[0], point_on_face[1], point_on_face[2] };
+  t8_vec_axpy (point, pof, -1);
+  /* Compute <x-p,n> */
+  const double dot_product = t8_vec_dot (pof, face_normal);
+  if (dot_product < 0) {
+    /* The point is on the wrong side of the plane */
+    return 0;
+  }
+  return 1;
 }

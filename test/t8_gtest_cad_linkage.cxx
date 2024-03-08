@@ -1,7 +1,7 @@
 /*
   This file is part of t8code.
   t8code is a C library to manage a collection (a forest) of multiple
-  connected adaptive space-trees of general element classes in parallel.
+  connected adaptive space-trees of general element types in parallel.
 
   Copyright (C) 2015 the developers
 
@@ -20,27 +20,27 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_default_hex.h
+/* In this test we create an cad gp_Pnt object.
+ * The purpose of this test is to check whether t8code successfully links
+ * against cad.
+ * If t8code was not configured with --with-cad then this test
+ * does nothing and is always passed.
  */
 
-#ifndef T8_DEFAULT_HEX_H
-#define T8_DEFAULT_HEX_H
+#include <t8.h>
+#include <gtest/gtest.h>
+#if T8_WITH_OCC
+#include <gp_Pnt.hxx>
+#endif
 
-#include <p8est.h>
-#include <t8_element.h>
+/* Check whether we can successfully execute VTK code */
+TEST (t8_test_cad_linkage, test_gp_Pnt)
+{
+#if T8_WITH_OCC
 
-T8_EXTERN_C_BEGIN ();
-
-/** The structure holding a hexahedral element in the default scheme.
- * We make this definition public for interoperability of element classes.
- * We might want to put this into a private, scheme-specific header file.
- */
-typedef p8est_quadrant_t t8_phex_t;
-
-/** Provide an implementation for the hexahedral element class. */
-t8_eclass_scheme_t*
-t8_default_scheme_new_hex (void);
-
-T8_EXTERN_C_END ();
-
-#endif /* !T8_DEFAULT_HEX_H */
+  EXPECT_NO_THROW (gp_Pnt pnt = gp_Pnt (); pnt.SetX (1););
+  t8_global_productionf ("Successfully created cad gp_Pnt object.\n");
+#else
+  t8_global_productionf ("This version of t8code is not compiled with cad support.\n");
+#endif
+}

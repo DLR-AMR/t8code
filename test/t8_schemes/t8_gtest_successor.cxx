@@ -25,6 +25,7 @@
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
+#include <test/t8_gtest_macros.hxx>
 
 class class_successor: public testing::TestWithParam<t8_eclass_t> {
  protected:
@@ -41,7 +42,9 @@ class class_successor: public testing::TestWithParam<t8_eclass_t> {
     ts->t8_element_new (1, &child);
     ts->t8_element_new (1, &last);
 
-    ts->t8_element_set_linear_id (element, 0, 0);
+    ts->t8_element_root (element);
+    if (eclass == T8_ECLASS_VERTEX)
+      GTEST_SKIP ();
   }
   void
   TearDown () override
@@ -149,4 +152,4 @@ TEST_P (class_successor, test_recursive_and_deep_successor)
   t8_deep_successor (element, successor, last, ts);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_successor, class_successor, testing::Range (T8_ECLASS_LINE, T8_ECLASS_COUNT));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_successor, class_successor, AllEclasses, print_eclass);

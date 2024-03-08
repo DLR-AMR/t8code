@@ -65,8 +65,6 @@ TEST_P (class_element_leaves, test_element_count_leaves_root)
     ASSERT_EQ (leaf_count, compare_value)
       << "Incorrect leaf count " << leaf_count << " at eclass " << t8_eclass_to_string[eclass] << " and level " << level
       << " (expecting " << compare_value << ")";
-    ;
-
     /* Multiply the compare_value with 2^dim (= number of children per element) */
     if (eclass == T8_ECLASS_PYRAMID) {
       sum1 *= 8;
@@ -102,7 +100,6 @@ TEST_P (class_element_leaves, test_element_count_leaves_less_level)
       /* Check if equals 0 */
       ASSERT_EQ (leaf_count, 0) << "Incorrect leaf count " << leaf_count << " at eclass " << t8_eclass_to_string[eclass]
                                 << " and level " << level << " for element level " << lower_levels << "(expecting 0)";
-      ;
     }
   }
   /* Free the element's memory */
@@ -131,4 +128,4 @@ TEST_P (class_element_leaves, test_element_count_leaves_one_level)
   class_scheme->t8_element_destroy (1, &element);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_element_count_leaves, class_element_leaves, AllEclasses);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_element_count_leaves, class_element_leaves, AllEclasses, print_eclass);

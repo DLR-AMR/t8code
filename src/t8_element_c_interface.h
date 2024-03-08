@@ -684,6 +684,13 @@ t8_element_new (const t8_eclass_scheme_c *ts, int length, t8_element_t **elems);
 void
 t8_element_destroy (const t8_eclass_scheme_c *ts, int length, t8_element_t **elems);
 
+/** Fills an element with the root element.
+ * \param [in] ts         Implementation of a class scheme.
+ * \param [in,out] elem   The element to be filled with root.
+ */
+void
+t8_element_root (const t8_eclass_scheme_c *ts, t8_element_t *elem);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_ELEMENT_C_INTERFACE_H */
