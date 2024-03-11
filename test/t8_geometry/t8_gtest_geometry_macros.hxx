@@ -39,6 +39,7 @@ class geometry_test: public testing::TestWithParam<t8_eclass_t> {
   {
   }
   t8_eclass_t eclass;
+  const int seed = time (NULL); /* RNG seed */
 #ifdef T8_ENABLE_LESS_TESTS
   const int num_points = 1000;
 #else
