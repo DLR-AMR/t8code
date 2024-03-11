@@ -117,8 +117,8 @@ main (int argc, char **argv)
                          "Repartition the forest after each level of refinement/coarsening.\n");
   sc_options_add_int (opt, 'm', "modus", &mode_int, 0,
                       "The adaptation modus to use\n"
-                      "\t\t0 - refine modus: We start with level 0 and refine until the final forest ist constructed.\n"
-                      "\t\t1 - coarsen modus: We start with the final uniform level and coarsen elements until the final forest ist constructed.\n");
+                      "\t\t0 - refine modus: We start with level 0 and refine until the final forest is constructed.\n"
+                      "\t\t1 - coarsen modus: We start with the final uniform level and coarsen elements until the final forest is constructed.\n");
 
   parsed =
     sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
