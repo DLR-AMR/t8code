@@ -506,7 +506,7 @@ t8_reanalysis_build_forest (const char *mesh_filename, double radius,
     t8_cmesh_from_msh_file (mesh_filename, 0, comm, dimension, 0, 0);
   if (cmesh == NULL) {
     /* cmesh could not be built */
-    t8_global_errorf ("Error when openening file %s\n", mesh_filename);
+    t8_global_errorf ("Error when opening file %s\n", mesh_filename);
     return NULL;
   }
   /* build a uniform forest from the coarse mesh */
@@ -522,7 +522,7 @@ t8_reanalysis_build_forest (const char *mesh_filename, double radius,
     t8_forest_write_vtk (forest, output_file_prefix);
   }
 
-  /* return sucess */
+  /* return success */
   return forest;
 }
 
