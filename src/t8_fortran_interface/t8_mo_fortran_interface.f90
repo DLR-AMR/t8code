@@ -86,43 +86,43 @@ module t8_mo_fortran_interface
       end Interface
 
       Interface
-            subroutine t8_fortran_geometry_linear_new_f (dimension) &
+            type (c_ptr) function t8_fortran_geometry_linear_new_f (dimension) &
                                     bind (c, name = 't8_geometry_linear_new')
-                  use, intrinsic :: ISO_C_BINDING, only: c_int
+                  use, intrinsic :: ISO_C_BINDING, only: c_int, c_ptr
                   IMPLICIT NONE
                   integer (c_int), value :: dimension
-            end subroutine t8_fortran_geometry_linear_new_f
+            end function t8_fortran_geometry_linear_new_f
       end Interface
 
       Interface
-            type (c_ptr) function t8_fortran_cmesh_register_geometry_f (cmesh, geometry) &
+            subroutine t8_fortran_cmesh_register_geometry_f (cmesh, geometry) &
                                     bind (c, name = 't8_cmesh_register_geometry')
                   use, intrinsic :: ISO_C_BINDING, only: c_ptr
                   IMPLICIT NONE
                   type (c_ptr), value :: cmesh
-                  type (c_ptr) :: geometry
-            end function t8_fortran_cmesh_register_geometry_f
+                  type (c_ptr), value :: geometry
+            end subroutine t8_fortran_cmesh_register_geometry_f
       end Interface
 
       Interface
             subroutine t8_fortran_cmesh_set_tree_class_f (cmesh, gtree_id, tree_class) &
                                     bind (c, name = 't8_cmesh_set_tree_class')
-                  use, intrinsic :: ISO_C_BINDING, only: c_ptr
+                  use, intrinsic :: ISO_C_BINDING, only: c_ptr, c_int64_t, c_int
                   IMPLICIT NONE
                   type (c_ptr), value :: cmesh
-                  type (c_ptr), value :: gtree_id
-                  type (c_ptr), value :: tree_class
+                  integer (c_int64_t), value :: gtree_id
+                  integer (c_int), value :: tree_class
             end subroutine t8_fortran_cmesh_set_tree_class_f
       end Interface
 
       Interface
             subroutine t8_fortran_cmesh_set_tree_vertices_f (cmesh, ltree_id, vertices, num_vertices) &
                                     bind (c, name = 't8_cmesh_set_tree_vertices')
-                  use, intrinsic :: ISO_C_BINDING, only: c_ptr, c_int, c_double
+                  use, intrinsic :: ISO_C_BINDING, only: c_ptr, c_int, c_int64_t
                   IMPLICIT NONE
                   type (c_ptr), value :: cmesh
-                  type (c_ptr), value :: ltree_id
-                  real (c_double) :: vertices
+                  integer (c_int64_t), value :: ltree_id
+                  type(c_ptr),value :: vertices
                   integer (c_int), value :: num_vertices
             end subroutine t8_fortran_cmesh_set_tree_vertices_f
       end Interface
@@ -130,20 +130,34 @@ module t8_mo_fortran_interface
       Interface
             subroutine t8_fortran_cmesh_set_join_f (cmesh, gtree1, gtree2, face1, face2, orientation) &
                                     bind (c, name = 't8_cmesh_set_join')
-                  use, intrinsic :: ISO_C_BINDING, only: c_ptr, c_int
+                  use, intrinsic :: ISO_C_BINDING, only: c_ptr, c_int, c_int64_t
                   IMPLICIT NONE
                   type (c_ptr), value :: cmesh
-                  type (c_ptr), value :: gtree1
-                  type (c_ptr), value :: gtree2
+                  integer (c_int64_t), value :: gtree1
+                  integer (c_int64_t), value :: gtree2
                   integer (c_int), value :: face1
                   integer (c_int), value :: face2
                   integer (c_int), value :: orientation
             end subroutine t8_fortran_cmesh_set_join_f
       end Interface
+	  
+	  Interface
+            subroutine t8_fortran_cmesh_set_join_by_vertices_f (cmesh, ntrees, eclasses, vertices, connectivity, do_both_directions) &
+                                    bind (c, name = 't8_cmesh_set_join_by_vertices')
+                  use, intrinsic :: ISO_C_BINDING, only: c_ptr, c_int
+                  IMPLICIT NONE
+                  type (c_ptr), value :: cmesh
+                  integer (c_int), value :: ntrees
+                  type (c_ptr), value :: eclasses
+                  type (c_ptr), value :: vertices
+                  type (c_ptr) :: connectivity
+                  integer (c_int), value :: do_both_directions
+            end subroutine t8_fortran_cmesh_set_join_by_vertices_f
+      end Interface
 
       Interface
             subroutine t8_fortran_cmesh_commit_f (cmesh, Ccom) &
-                                    bind (c, name = 't8_cmesh_commit')
+                                    bind (c, name = 't8_fortran_cmesh_commit')
                   use, intrinsic :: ISO_C_BINDING, only: c_ptr
                   IMPLICIT NONE
                   type (c_ptr), value :: cmesh

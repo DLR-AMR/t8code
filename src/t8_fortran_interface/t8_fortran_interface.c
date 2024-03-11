@@ -39,6 +39,10 @@ t8_fortran_init_all_ (sc_MPI_Comm * comm)
   printf ("t8 init\n");
 }
 
+void t8_fortran_cmesh_commit(t8_cmesh_t cmesh, sc_MPI_Comm* comm){
+	t8_cmesh_commit(cmesh, *comm);
+}
+
 void
 t8_fortran_init_all (sc_MPI_Comm * comm)
 {
