@@ -41,7 +41,7 @@
  *       - move some netcdf routines to internal netcdf header
  *       - Point search needs a range in which to look, since the geometry of
  *         the forest does not exactly match the input geometry -> tolerance of point search as parameter
- *       - Do not store the point coordinates explicitely but pass longitude and
+ *       - Do not store the point coordinates explicitly but pass longitude and
  *         latitude to the search and compute the point coordinates when needed.
  *       - u10 and v10 veocities are tangential to longitude and latitude, we need to transform these
  *         into cartesian bases if we want to use our advection solver
@@ -55,7 +55,7 @@
  *       - Add tolerance to search_data
  *       - Stop refining if we copied the data in the step before.
  *       - Refine when v10/u10 is large
- *       - seperate data loading and data to mesh
+ *       - separate data loading and data to mesh
  */
 
 /* Convert longitude and latitude coordinates to x,y,z coordinates */
@@ -340,7 +340,7 @@ t8_netcdf_open_file (const char *filename, const double radius,
     t8_netcdf_read_dimensions (filename, ncid, &number_of_dims,
                                &dimension_names, &dimension_lengths);
   if (retval) {
-    /* An error occured and was printed,
+    /* An error occurred and was printed,
      * the file is closed and we exit. */
     free (dimension_names);
     T8_FREE (dimension_lengths);
@@ -369,7 +369,7 @@ t8_netcdf_open_file (const char *filename, const double radius,
                          (void **) &latitude_data, sizeof (float), NULL,
                          NULL);
   if (retval) {
-    /* An error occured and was printed,
+    /* An error occurred and was printed,
      * the file is closed and we exit. */
     free (dimension_names);
     T8_FREE (dimension_lengths);
@@ -383,7 +383,7 @@ t8_netcdf_open_file (const char *filename, const double radius,
                          (void **) &longitude_data, sizeof (float), NULL,
                          NULL);
   if (retval) {
-    /* An error occured and was printed,
+    /* An error occurred and was printed,
      * the file is closed and we exit. */
     free (dimension_names);
     T8_FREE (dimension_lengths);
@@ -396,7 +396,7 @@ t8_netcdf_open_file (const char *filename, const double radius,
                          dimension_lengths + 2, (void **) &time,
                          sizeof (int), NULL, NULL);
   if (retval) {
-    /* An error occured and was printed,
+    /* An error occurred and was printed,
      * the file is closed and we exit. */
     free (dimension_names);
     T8_FREE (dimension_lengths);
