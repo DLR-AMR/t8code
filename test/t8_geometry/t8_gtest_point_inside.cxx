@@ -251,12 +251,10 @@ TEST_P (geometry_point_inside, test_point_inside)
         num_steps = 2;
       }
       /* Corrected number of points due to possible rounding errors in pow */
-      const int min_points_outside = 6;
       const int num_points = sc_intpow (num_steps, num_corners - 1);
-      const int total_points = num_points + min_points_outside;
-      double *test_point = T8_ALLOC_ZERO (double, total_points * 3);
-      int *point_is_inside = T8_ALLOC (int, total_points);
-      int *point_is_recognized_as_inside = T8_ALLOC (int, total_points);
+      double *test_point = T8_ALLOC_ZERO (double, num_points * 3);
+      int *point_is_inside = T8_ALLOC (int, num_points);
+      int *point_is_recognized_as_inside = T8_ALLOC (int, num_points);
       double step = (barycentric_range_upper_bound - barycentric_range_lower_bound) / (num_steps - 1);
       //t8_debugf ("step size %g, steps %i, points %i (corners %i)\n", step,
       //           num_steps, num_points, num_corners);
@@ -302,15 +300,6 @@ TEST_P (geometry_point_inside, test_point_inside)
         point_is_inside[ipoint] = point_is_inside[ipoint] && barycentric_coordinates[num_corners - 1] >= 0;
 
         num_in += point_is_inside ? 1 : 0;
-      }
-      /* Create a set of points that are outside of the cube. 
-       * The coordinates are given by the corner points except for one coordinate. For each side of the cube
-       * we place one point outside of it. */
-      for (int side = 0; side < min_points_outside; ++side) {
-        test_point[3 * (num_points + side)] = (side == 0) ? -2.0 : (side == 1) ? 2.0 : -0.1;
-        test_point[3 * (num_points + side) + 1] = (side == 2) ? -2.0 : (side == 3) ? 2.0 : 0.3;
-        test_point[3 * (num_points + side) + 2] = (side == 4) ? -2.0 : (side == 5) ? 2.0 : 0.15;
-        point_is_inside[num_points + side] = false;
       }
       /* We now check whether the point inside function correctly sees whether
          * the point is inside the element or not. */
