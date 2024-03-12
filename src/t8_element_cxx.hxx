@@ -664,25 +664,27 @@ struct t8_eclass_scheme
     = 0;
 #endif
 
-  /** Allocate memory for an array of elements of a given class and initialize them.
+  /** Allocate memory for \b length many elements of a given class and initialize them,
+   * and put pointers to the elements in the provided array.
    * \param [in] length   The number of elements to be allocated.
-   * \param [in,out] elems On input an array of \b length many unallocated
-   *                      element pointers.
+   * \param [in,out] elems On input an array of \b length many element pointers.
    *                      On output all these pointers will point to an allocated
    *                      and initialized element.
-   * \note Not every element that is created in t8code will be created by a call
-   * to this function. However, if an element is not created using \ref t8_element_new,
-   * then it is guaranteed that \ref t8_element_init is called on it.
+   * \note There are two ways to create multiple elements of the same type. Create an
+   * array of element pointers and fill it with t8_element_new, or allocate memory
+   * for \b length times \b element_size many bytes, and fill them with t8_element_init.
+   * To access a specific element, offset calculation needs to be done manually, as
+   * t8_element_t is incomplete.
    * \note In debugging mode, an element that was created with \ref t8_element_new
-   * must pass \ref t8_element_is_valid.
+   * must pass \ref t8_element_is_valid (for example the root element).
    * \note If an element was created by \ref t8_element_new then \ref t8_element_init
    * may not be called for it. Thus, \ref t8_element_new should initialize an element
    * in the same way as a call to \ref t8_element_init would.
+   * \note Every call to \ref t8_element_new must be matched by a call to \ref t8_element_destroy
+   * \see t8_element_destroy
    * \see t8_element_init
    * \see t8_element_is_valid
    */
-  /* TODO: would it be better to directly allocate an array of elements,
-   *       not element pointers? */
   virtual void
   t8_element_new (int length, t8_element_t **elem) const
     = 0;
@@ -694,8 +696,10 @@ struct t8_eclass_scheme
    * \note In debugging mode, an element that was passed to \ref t8_element_init
    * must pass \ref t8_element_is_valid.
    * \note If an element was created by \ref t8_element_new then \ref t8_element_init
-   * may not be called for it. Thus, \ref t8_element_new should initialize an element
-   * in the same way as a call to \ref t8_element_init would.
+   * may not be called for it. Thus, \ref t8_element_init should initialize an element
+   * in the same way as a call to \ref t8_element_new would.
+   * \note Every call to \ref t8_element_init must be matched by a call to \ref t8_element_deinit
+   * \see t8_element_deinit
    * \see t8_element_new
    * \see t8_element_is_valid
    */
@@ -717,10 +721,11 @@ struct t8_eclass_scheme
 
   /** Deallocate an array of elements.
    * \param [in] length   The number of elements in the array.
-   * \param [in,out] elems On input an array of \b length many allocated
+   * \param [in,out] elem On input an array of \b length many allocated
    *                      element pointers.
    *                      On output all these pointers will be freed.
    *                      \b elem itself will not be freed by this function.
+   * \see t8_element_new
    */
   virtual void
   t8_element_destroy (int length, t8_element_t **elem) const
