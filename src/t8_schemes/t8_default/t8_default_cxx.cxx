@@ -53,6 +53,25 @@ t8_scheme_new_default_cxx (void)
   s->eclass_schemes[T8_ECLASS_PRISM] = new t8_default_scheme_prism_c ();
   s->eclass_schemes[T8_ECLASS_PYRAMID] = new t8_default_scheme_pyramid_c ();
 
+  T8_ASSERT (s->eclass_schemes[T8_ECLASS_VERTEX]->t8_element_maxlevel ()
+             >= s->eclass_schemes[T8_ECLASS_LINE]->t8_element_maxlevel ());
+  T8_ASSERT (s->eclass_schemes[T8_ECLASS_LINE]->t8_element_maxlevel ()
+             >= s->eclass_schemes[T8_ECLASS_QUAD]->t8_element_maxlevel ());
+  T8_ASSERT (s->eclass_schemes[T8_ECLASS_LINE]->t8_element_maxlevel ()
+             >= s->eclass_schemes[T8_ECLASS_TRIANGLE]->t8_element_maxlevel ());
+  T8_ASSERT (s->eclass_schemes[T8_ECLASS_TRIANGLE]->t8_element_maxlevel ()
+             >= s->eclass_schemes[T8_ECLASS_TET]->t8_element_maxlevel ());
+  T8_ASSERT (s->eclass_schemes[T8_ECLASS_TRIANGLE]->t8_element_maxlevel ()
+             >= s->eclass_schemes[T8_ECLASS_PRISM]->t8_element_maxlevel ());
+  T8_ASSERT (s->eclass_schemes[T8_ECLASS_TRIANGLE]->t8_element_maxlevel ()
+             >= s->eclass_schemes[T8_ECLASS_PYRAMID]->t8_element_maxlevel ());
+  T8_ASSERT (s->eclass_schemes[T8_ECLASS_QUAD]->t8_element_maxlevel ()
+             >= s->eclass_schemes[T8_ECLASS_HEX]->t8_element_maxlevel ());
+  T8_ASSERT (s->eclass_schemes[T8_ECLASS_QUAD]->t8_element_maxlevel ()
+             >= s->eclass_schemes[T8_ECLASS_PRISM]->t8_element_maxlevel ());
+  T8_ASSERT (s->eclass_schemes[T8_ECLASS_QUAD]->t8_element_maxlevel ()
+             >= s->eclass_schemes[T8_ECLASS_PYRAMID]->t8_element_maxlevel ());
+
   return s;
 }
 
