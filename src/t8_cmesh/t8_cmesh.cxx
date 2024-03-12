@@ -23,6 +23,7 @@
 #include <sc_statistics.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_geometry.h>
+#include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
 #include <t8_refcount.h>
@@ -35,7 +36,7 @@
 #endif
 #include "t8_cmesh_trees.h"
 
-/** \file t8_cmesh.c
+/** \file t8_cmesh.cxx
  *
  * TODO: document this file
  */
@@ -525,7 +526,8 @@ t8_cmesh_tree_vertices_negative_volume (const t8_eclass_t eclass, const double *
 
 #ifdef T8_ENABLE_DEBUG
 /* After a cmesh is committed, check whether all trees in a cmesh do have positive volume.
- * Returns true if all trees have positive volume.
+ * Returns true if all trees have positive volume. Returns also true if no geometries are
+ * registered yet, since the volume computation depends on the used geometry.
  */
 bool
 t8_cmesh_no_negative_volume (t8_cmesh_t cmesh)
@@ -535,10 +537,13 @@ t8_cmesh_no_negative_volume (t8_cmesh_t cmesh)
   if (cmesh == NULL) {
     return 0;
   }
-  if (t8_geom_handler_get_num_geometries (cmesh->geometry_handler) > 0) {
+  if (cmesh->geometry_handler == NULL) {
+    return 0;
+  }
+  if (cmesh->geometry_handler->get_num_geometries () > 0) {
     /* Iterate over all trees, get their vertices and check the volume */
     for (t8_locidx_t itree = 0; itree < cmesh->num_local_trees; itree++) {
-      const int ret = t8_geometry_tree_negative_volume (cmesh, itree);
+      const int ret = cmesh->geometry_handler->tree_negative_volume (cmesh, t8_cmesh_get_global_id (cmesh, itree));
       if (ret) {
         t8_debugf ("Detected negative volume in tree %li\n", (long) itree);
       }
@@ -714,9 +719,11 @@ t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
      * We cannot broadcast the geometries, since they are pointers to derived 
      * classes that we cannot know of on the receiving process.
      * Geometries must therefore be added after broadcasting. */
-    SC_CHECK_ABORT (cmesh_in->geometry_handler == NULL,
-                    "Error: Broadcasting a cmesh with registered geometries is not possible.\n"
-                    "We recommend to broadcast first and register the geometries after.\n");
+    if (cmesh_in->geometry_handler != NULL) {
+      SC_CHECK_ABORT (cmesh_in->geometry_handler->get_num_geometries () == 0,
+                      "Error: Broadcasting a cmesh with registered geometries is not possible.\n"
+                      "We recommend to broadcast first and register the geometries after.\n");
+    }
     memcpy (&meta_info.cmesh, cmesh_in, sizeof (*cmesh_in));
     for (iclass = 0; iclass < T8_ECLASS_COUNT; iclass++) {
       meta_info.num_trees_per_eclass[iclass] = cmesh_in->num_trees_per_eclass[iclass];
@@ -1193,14 +1200,13 @@ t8_cmesh_reset (t8_cmesh_t *pcmesh)
     T8_FREE (cmesh->profile);
   }
 
+  if (cmesh->geometry_handler != NULL) {
+    cmesh->geometry_handler->~t8_geometry_handler ();
+  }
+
   /* unref the partition scheme (if set) */
   if (cmesh->set_partition_scheme != NULL) {
     t8_scheme_cxx_unref (&cmesh->set_partition_scheme);
-  }
-
-  /* Unref the geometry handler. */
-  if (cmesh->geometry_handler != NULL) {
-    t8_geom_handler_unref (&cmesh->geometry_handler);
   }
 
   T8_FREE (cmesh);

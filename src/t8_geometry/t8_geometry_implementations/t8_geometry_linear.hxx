@@ -107,4 +107,4 @@ struct t8_geometry_linear: public t8_geometry_with_vertices
   /* Load tree data is inherited from t8_geometry_with_vertices. */
 };
 
-#endif /* !T8_GEOMETRY_LINEAR_HXX! */
+#endif /* !T8_GEOMETRY_LINEAR_HXX */

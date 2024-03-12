@@ -55,9 +55,10 @@ add_t8_test( NAME t8_gtest_iterate_replace   SOURCES t8_gtest_main.cxx t8_forest
 add_t8_test( NAME t8_gtest_empty_local_tree  SOURCES t8_gtest_main.cxx t8_forest_incomplete/t8_gtest_empty_local_tree.cxx )
 add_t8_test( NAME t8_gtest_empty_global_tree SOURCES t8_gtest_main.cxx t8_forest_incomplete/t8_gtest_empty_global_tree.cxx )
 
-add_t8_test( NAME t8_gtest_geometry_cad  SOURCES t8_gtest_main.cxx t8_geometry/t8_geometry_implementations/t8_gtest_geometry_cad.cxx )
-add_t8_test( NAME t8_gtest_geometry      SOURCES t8_gtest_main.cxx t8_geometry/t8_gtest_geometry.cxx )
-add_t8_test( NAME t8_gtest_point_inside  SOURCES t8_gtest_main.cxx t8_geometry/t8_gtest_point_inside.cxx )
+add_t8_test( NAME t8_gtest_geometry_cad         SOURCES t8_gtest_main.cxx t8_geometry/t8_geometry_implementations/t8_gtest_geometry_cad.cxx )
+add_t8_test( NAME t8_gtest_geometry_linear      SOURCES t8_gtest_main.cxx t8_geometry/t8_geometry_implementations/t8_gtest_geometry_linear.cxx )
+add_t8_test( NAME t8_gtest_geometry_handling    SOURCES t8_gtest_main.cxx t8_geometry/t8_gtest_geometry_handling.cxx )
+add_t8_test( NAME t8_gtest_point_inside         SOURCES t8_gtest_main.cxx t8_geometry/t8_gtest_point_inside.cxx )
 
 add_t8_test( NAME t8_gtest_vtk_reader SOURCES t8_gtest_main.cxx t8_IO/t8_gtest_vtk_reader.cxx )
 

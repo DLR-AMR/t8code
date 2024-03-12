@@ -33,14 +33,24 @@
 #include <t8_forest/t8_forest.h>
 #include <t8_geometry/t8_geometry.h>
 
+#include <string>
+#include <functional>
+
 T8_EXTERN_C_BEGIN ();
 
+/**
+ * The base class for all geometries.
+ * This class provides a general template for all geometries.
+ * It is a pure virtual class and has to be inherited by a concrete
+ * geometry implementation.
+ */
 struct t8_geometry
 {
  public:
   /* Basic constructor that sets the dimension, the name, and the name for the attribute. */
-  t8_geometry (int dimension, const char *name, const char *attribute_name = NULL): dimension (dimension), name (name)
+  t8_geometry (int dim, std::string name): dimension (dim), name (name), hash (std::hash<std::string> {}(name))
   {
+    T8_ASSERT (0 <= dim && dim <= T8_ECLASS_MAX_DIM);
   }
 
   /* Base constructor with no arguments. We need this since it
@@ -122,15 +132,13 @@ struct t8_geometry
 
   /**
    * Check if  the currently active tree has a negative volume
-   * 
-   * \param[in] cmesh       The cmesh containing the tree to check
-   * \return                True (non-zero) if the tree with id \ref ltree_id has a negative volume. 0 otherwise.  
+   * \return                True (non-zero) if the currently loaded tree has a negative volume. 0 otherwise.  
    */
   virtual bool
-  t8_geom_tree_negative_volume (const t8_cmesh_t cmesh) const
+  t8_geom_tree_negative_volume () const
   {
     SC_ABORTF ("Function not implemented yet");
-    /* To compress compiler warnings. */
+    /* To suppress compiler warnings. */
     return 0;
   };
 
@@ -148,10 +156,16 @@ struct t8_geometry
    * Get the name of this geometry.
    * \return The name.
    */
-  inline const char *
+  inline const std::string
   t8_geom_get_name () const
   {
     return name;
+  }
+
+  inline const size_t
+  t8_geom_get_hash () const
+  {
+    return hash;
   }
 
   /**
@@ -166,10 +180,13 @@ struct t8_geometry
   int dimension;
   /**< The dimension of reference space for which this is a geometry. */
 
-  const char *name;
+  std::string name;
   /**< The name of this geometry. */
+
+  size_t hash;
+  /**< The hash of the name of this geometry. */
 };
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_GEOMETRY_BASE_HXX! */
+#endif /* !T8_GEOMETRY_BASE_HXX */
