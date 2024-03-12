@@ -724,10 +724,9 @@ void
 t8_default_scheme_quad_c::t8_element_init (int length, t8_element_t *elem) const
 {
 #ifdef T8_ENABLE_DEBUG
-  int i;
   p4est_quadrant_t *quads = (p4est_quadrant_t *) elem;
   /* Set all values to 0 */
-  for (i = 0; i < length; i++) {
+  for (int i = 0; i < length; i++) {
     p4est_quadrant_set_morton (quads + i, 0, 0);
     T8_QUAD_SET_TDIM (quads + i, 2);
     T8_ASSERT (p4est_quadrant_is_extended (quads + i));

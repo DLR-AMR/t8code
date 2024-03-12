@@ -536,9 +536,8 @@ void
 t8_default_scheme_tri_c::t8_element_init (int length, t8_element_t *elem) const
 {
 #ifdef T8_ENABLE_DEBUG
-  int i;
   t8_dtri_t *tris = (t8_dtri_t *) elem;
-  for (i = 0; i < length; i++) {
+  for (int i = 0; i < length; i++) {
     t8_dtri_init (tris + i);
   }
 #endif

@@ -50,10 +50,9 @@ void
 t8_default_scheme_prism_c::t8_element_init (int length, t8_element_t *elem) const
 {
 #ifdef T8_ENABLE_DEBUG
-  int i;
   t8_dprism_t *prism = (t8_dprism_t *) elem;
   /* Set all values to 0 */
-  for (i = 0; i < length; i++) {
+  for (int i = 0; i < length; i++) {
     t8_dprism_init_linear_id (prism + i, 0, 0);
     T8_ASSERT (t8_dprism_is_valid (prism + i));
   }

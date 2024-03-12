@@ -320,9 +320,8 @@ void
 t8_default_scheme_vertex_c::t8_element_init (int length, t8_element_t *elem) const
 {
 #ifdef T8_ENABLE_DEBUG
-  int i;
   t8_dvertex_t *vertexs = (t8_dvertex_t *) elem;
-  for (i = 0; i < length; i++) {
+  for (int i = 0; i < length; i++) {
     t8_dvertex_init (vertexs + i);
   }
 #endif

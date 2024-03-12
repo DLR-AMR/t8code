@@ -604,9 +604,8 @@ void
 t8_default_scheme_hex_c::t8_element_init (int length, t8_element_t *elem) const
 {
 #ifdef T8_ENABLE_DEBUG
-  int i;
   p8est_quadrant_t *quads = (p8est_quadrant_t *) elem;
-  for (i = 0; i < length; i++) {
+  for (int i = 0; i < length; i++) {
     p8est_quadrant_set_morton (quads + i, 0, 0);
     T8_QUAD_SET_TDIM (quads + i, 3);
     T8_ASSERT (p8est_quadrant_is_extended (quads + i));
