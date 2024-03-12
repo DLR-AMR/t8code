@@ -202,9 +202,8 @@ t8_tutorial_search_query_callback (t8_forest_t forest, const t8_locidx_t ltreeid
   T8_ASSERT (particles_per_element != NULL);
   T8_ASSERT (query != NULL);
 
-  /* Test whether this particle is inside this element. */
+  /* Test whether the particles are inside this element. */
   t8_forest_element_points_inside (forest, ltreeid, element, coords, num_active_queries, query_matches, tolerance);
-
   T8_FREE (coords);
   for (size_t matches_id = 0; matches_id < num_active_queries; matches_id++) {
     if (query_matches[matches_id]) {

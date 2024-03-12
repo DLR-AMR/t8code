@@ -27,6 +27,7 @@
 #include "t8_cmesh/t8_cmesh_trees.h"
 #include "t8_cmesh/t8_cmesh_partition.h"
 #include <t8_cmesh/t8_cmesh_testcases.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_zero.h>
 
 /* At the time of this writing (November 15 2023) t8_cmesh_offset_concentrate
  * has a comment stating it does not work with non-derived cmeshes.

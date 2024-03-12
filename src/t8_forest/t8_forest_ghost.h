@@ -187,4 +187,4 @@ t8_forest_ghost_create_topdown (t8_forest_t forest);
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_FOREST_GHOST_H! */
+#endif /* !T8_FOREST_GHOST_H */
