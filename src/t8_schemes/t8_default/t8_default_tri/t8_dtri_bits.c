@@ -1712,3 +1712,75 @@ t8_dtri_init (t8_dtri_t *t)
 #endif
 #endif
 }
+
+/* triangles (tets) are packed as x,y (,z) coordinates, type and level */
+void
+t8_dtri_element_pack (t8_dtri_t **const elements, const unsigned int count, void *send_buffer, const int buffer_size,
+                      int *position, sc_MPI_Comm comm)
+{
+  int mpiret;
+  for (unsigned int ielem = 0; ielem < count; ielem++) {
+    mpiret = sc_MPI_Pack (&(elements[ielem]->x), 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Pack (&elements[ielem]->y, 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
+    SC_CHECK_MPI (mpiret);
+
+#ifdef T8_DTRI_TO_DTET
+    mpiret = sc_MPI_Pack (&elements[ielem]->z, 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
+    SC_CHECK_MPI (mpiret);
+#endif
+
+    mpiret = sc_MPI_Pack (&elements[ielem]->type, 1, sc_MPI_INT8_T, send_buffer, buffer_size, position, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Pack (&elements[ielem]->level, 1, sc_MPI_INT8_T, send_buffer, buffer_size, position, comm);
+    SC_CHECK_MPI (mpiret);
+  }
+}
+
+/* triangles (tets) are packed as x,y (,z) coordinates, type and level */
+void
+t8_dtri_element_pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size)
+{
+  int singlesize = 0;
+  int datasize = 0;
+  int mpiret;
+
+  /* coords */
+  mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &datasize);
+  SC_CHECK_MPI (mpiret);
+#ifdef T8_DTRI_TO_DTET
+  int coord_count = 3;
+#else
+  int coord_count = 2;
+#endif
+  singlesize += coord_count * datasize;
+
+  /* type, level*/
+  mpiret = sc_MPI_Pack_size (1, sc_MPI_INT8_T, comm, &datasize);
+  SC_CHECK_MPI (mpiret);
+  singlesize += 2 * datasize;
+
+  *pack_size = count * singlesize;
+}
+
+/* triangles (tets) are packed as x,y (,z) coordinates, type and level */
+void
+t8_dtri_element_unpack (void *recvbuf, const int buffer_size, int *position, t8_dtri_t **elements,
+                        const unsigned int count, sc_MPI_Comm comm)
+{
+  int mpiret;
+  for (unsigned int ielem = 0; ielem < count; ielem++) {
+    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(elements[ielem]->x), 1, sc_MPI_INT, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(elements[ielem]->y), 1, sc_MPI_INT, comm);
+    SC_CHECK_MPI (mpiret);
+#ifdef T8_DTRI_TO_DTET
+    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(elements[ielem]->z), 1, sc_MPI_INT, comm);
+    SC_CHECK_MPI (mpiret);
+#endif
+    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(elements[ielem]->type), 1, sc_MPI_INT8_T, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(elements[ielem]->level), 1, sc_MPI_INT8_T, comm);
+    SC_CHECK_MPI (mpiret);
+  }
+}
