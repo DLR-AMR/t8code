@@ -29,6 +29,9 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <test/t8_gtest_macros.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
+#include <t8_element.h>
+#include <t8_cmesh_vtk_writer.h>
+#include <t8_schemes/t8_default/t8_default_hex/t8_dhex.h>
 
 #if T8_WITH_OCC
 #include <GeomAPI_PointsToBSpline.hxx>
@@ -41,9 +44,6 @@
 #include <Geom_BSplineSurface.hxx>
 #include <TopoDS_Face.hxx>
 #include <TopoDS_Edge.hxx>
-#include <t8_element.h>
-#include <t8_cmesh_vtk_writer.h>
-#include <t8_schemes/t8_default/t8_default_hex/t8_dhex.h>
 #endif /* T8_WITH_OCC */
 
 /* In this file we collect tests for t8code's OpenCASCADE geometry module.
@@ -398,7 +398,7 @@ class class_2d_element_linear_cad_curve: public testing::TestWithParam<t8_eclass
 
     t8_cmesh_init (&cmesh);
     t8_cmesh_set_tree_class (cmesh, 0, eclass);
-    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, shape);
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 2, shape);
   }
 
   void
@@ -411,6 +411,9 @@ class class_2d_element_linear_cad_curve: public testing::TestWithParam<t8_eclass
   /* The arrays prescribe the linkage of the element. Edge 2 of the element is linked and the face is unlinked. */
   int faces[1] = { 0 };
   int edges[8] = { 0, 0, 1, 0, 0, 0, 0, 0 };
+
+  const double test_ref_coords[9] = { 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0 };
+  /* TODO: use randomised test_ref_coords (should lie on linked curve), because the out_coords should be the same, no matter the test_ref_coord. */
 };
 
 TEST_P (class_2d_element_linear_cad_curve, t8_check_2d_element_linear_cad_curve)
@@ -434,10 +437,6 @@ TEST_P (class_2d_element_linear_cad_curve, t8_check_2d_element_linear_cad_curve)
 
   /* Commit the cmesh */
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
-
-  double test_ref_coords[9] = { 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0 };
-
-  /* TODO: use randomised test_ref_coords (should lie on linked curve), because the out_coords should be the same, no matter the test_ref_coord. */
 
   double out_coords[3];
 
@@ -483,7 +482,7 @@ class class_2d_element_curved_cad_curve: public testing::TestWithParam<t8_eclass
 
     t8_cmesh_init (&cmesh);
     t8_cmesh_set_tree_class (cmesh, 0, eclass);
-    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, shape);
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 2, shape);
   }
 
   void
@@ -498,7 +497,8 @@ class class_2d_element_curved_cad_curve: public testing::TestWithParam<t8_eclass
   int faces[1] = { 0 };
   int edges[8] = { 0, 0, 1, 0, 0, 0, 0, 0 };
 
-  double test_ref_coords_out[9] = { 0.0, 0.0, 0.0, 0.5, -0.2, 0.0, 1.0, 0.0, 0.0 };
+  const double test_ref_coords_out[9] = { 0.0, 0.0, 0.0, 0.5, -0.2, 0.0, 1.0, 0.0, 0.0 };
+  const double test_ref_coords_in[9] = { 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0 };
 };
 
 TEST_P (class_2d_element_curved_cad_curve, t8_check_2d_element_curved_cad_curve)
@@ -523,12 +523,9 @@ TEST_P (class_2d_element_curved_cad_curve, t8_check_2d_element_curved_cad_curve)
   /* Commit the cmesh */
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 
-  double test_ref_coords_in[9] = { 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0 };
-  double test_ref_coords_out[9] = { 0.0, 0.0, 0.0, 0.5, -0.2, 0.0, 1.0, 0.0, 0.0 };
-
   double out_coords[3];
 
-  /* `out_coords` should be equal to the input `ref_coords`. */
+  /* out_coords should be equal to the input ref_coords. */
   for (size_t i_coord = 0; i_coord < 3; ++i_coord) {
     t8_geometry_evaluate (cmesh, 0, test_ref_coords_in + i_coord * 3, 1, out_coords);
 
@@ -592,6 +589,10 @@ class class_2d_element_linear_cad_surface: public testing::TestWithParam<t8_ecla
   /* The arrays prescribe the linkage of the element. The face of the element is linked and all edges are not */
   int faces[1] = { 1 };
   int edges[8] = { 0 };
+  /* First 6 ref_coords for triangle and all 9 ref_coords for quad */
+  const double test_ref_coords[27] = { 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 1.0,
+                                       0.0, 0.0, 0.5, 0.0, 0.5, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.5, 0.0 };
+  /* TODO: use randomised test_ref_coords, because the out_coords should be the same, no matter the test_ref_coord. */
 };
 
 TEST_P (class_2d_element_linear_cad_surface, t8_check_2d_element_linear_cad_surface)
@@ -619,12 +620,6 @@ TEST_P (class_2d_element_linear_cad_surface, t8_check_2d_element_linear_cad_surf
   t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 2, shape);
   /* Commit the cmesh */
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
-
-  /* First 6 ref_coords for triangle and all 9 ref_coords for quad */
-  double test_ref_coords[27] = { 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 1.0,
-                                 0.0, 0.0, 0.5, 0.0, 0.5, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.5, 0.0 };
-
-  /* TODO: use randomised test_ref_coords, because the out_coords should be the same, no matter the test_ref_coord. */
 
   double out_coords[3];
 
@@ -689,7 +684,7 @@ class class_2d_element_curved_cad_surface: public testing::TestWithParam<t8_ecla
 
     t8_cmesh_init (&cmesh);
     t8_cmesh_set_tree_class (cmesh, 0, eclass);
-    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, shape);
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 2, shape);
   }
 
   void
@@ -704,8 +699,11 @@ class class_2d_element_curved_cad_surface: public testing::TestWithParam<t8_ecla
   int faces[1] = { 1 };
   int edges[8] = { 0 };
 
-  double test_ref_coords_out[27] = { 0.0, 0.0,  0.0, 0.5, -0.2, 0.0, 1.0, 0.0, 0.0, 0.5, 0.5, 0.2, 0.0, 1.0,
-                                     0.0, -0.2, 0.5, 0.0, 0.5,  1.2, 0.0, 1.0, 1.0, 0.0, 1.2, 0.5, 0.0 };
+  /* First 6 ref_coords for triangle and all 9 ref_coords for quad */
+  const double test_ref_coords_out[27] = { 0.0, 0.0,  0.0, 0.5, -0.2, 0.0, 1.0, 0.0, 0.0, 0.5, 0.5, 0.2, 0.0, 1.0,
+                                           0.0, -0.2, 0.5, 0.0, 0.5,  1.2, 0.0, 1.0, 1.0, 0.0, 1.2, 0.5, 0.0 };
+  const double test_ref_coords_in[27] = { 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 1.0,
+                                          0.0, 0.0, 0.5, 0.0, 0.5, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.5, 0.0 };
 };
 
 TEST_P (class_2d_element_curved_cad_surface, t8_check_2d_element_curved_cad_surface)
@@ -732,15 +730,9 @@ TEST_P (class_2d_element_curved_cad_surface, t8_check_2d_element_curved_cad_surf
   /* Commit the cmesh */
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 
-  /* First 6 ref_coords for triangle and all 9 ref_coords for quad */
-  double test_ref_coords_in[27] = { 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 1.0,
-                                    0.0, 0.0, 0.5, 0.0, 0.5, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.5, 0.0 };
-  double test_ref_coords_out[27] = { 0.0, 0.0,  0.0, 0.5, -0.2, 0.0, 1.0, 0.0, 0.0, 0.5, 0.5, 0.2, 0.0, 1.0,
-                                     0.0, -0.2, 0.5, 0.0, 0.5,  1.2, 0.0, 1.0, 1.0, 0.0, 1.2, 0.5, 0.0 };
-
   double out_coords[3];
 
-  /* `out_coords` should be equal to the input `ref_coords`. */
+  /* out_coords should be equal to the input ref_coords. */
   for (size_t i_coord = 0; i_coord < (eclass == T8_ECLASS_QUAD ? 9 : 6); ++i_coord) {
     t8_geometry_evaluate (cmesh, 0, test_ref_coords_in + i_coord * 3, 1, out_coords);
 
