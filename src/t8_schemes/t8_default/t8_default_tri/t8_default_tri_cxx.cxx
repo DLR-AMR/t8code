@@ -584,15 +584,16 @@ t8_default_scheme_tri_c::t8_element_root (t8_element_t *elem) const
 }
 /* use macro tri functionality */
 void
-t8_default_scheme_tri_c::t8_element_MPI_Pack (t8_element_t **const elements, const int count, void *send_buffer,
-                                              const int buffer_size, int *position, sc_MPI_Comm comm) const
+t8_default_scheme_tri_c::t8_element_MPI_Pack (t8_element_t **const elements, const unsigned int count,
+                                              void *send_buffer, const int buffer_size, int *position,
+                                              sc_MPI_Comm comm) const
 {
   t8_dtri_element_pack ((t8_dtri_t **) elements, count, send_buffer, buffer_size, position, comm);
 }
 
 /* use macro tri functionality */
 void
-t8_default_scheme_tri_c::t8_element_MPI_Pack_size (const int count, sc_MPI_Comm comm, int *pack_size) const
+t8_default_scheme_tri_c::t8_element_MPI_Pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size) const
 {
   t8_dtri_element_pack_size (count, comm, pack_size);
 }
@@ -600,7 +601,8 @@ t8_default_scheme_tri_c::t8_element_MPI_Pack_size (const int count, sc_MPI_Comm 
 /* use macro tri functionality */
 void
 t8_default_scheme_tri_c::t8_element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position,
-                                                t8_element_t **elements, const int count, sc_MPI_Comm comm) const
+                                                t8_element_t **elements, const unsigned int count,
+                                                sc_MPI_Comm comm) const
 {
   t8_dtri_element_unpack (recvbuf, buffer_size, position, (t8_dtri_t **) elements, count, comm);
 }

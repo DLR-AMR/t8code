@@ -701,8 +701,8 @@ t8_element_root (const t8_eclass_scheme_c *ts, t8_element_t *elem);
  * \param [in] comm MPI Communicator
 */
 void
-t8_element_MPI_Pack (const t8_eclass_scheme_c *ts, t8_element_t **const elements, const int count, void *send_buffer,
-                     const int buffer_size, int *position, sc_MPI_Comm comm);
+t8_element_MPI_Pack (const t8_eclass_scheme_c *ts, t8_element_t **const elements, const unsigned int count,
+                     void *send_buffer, const int buffer_size, int *position, sc_MPI_Comm comm);
 
 /** Determine an upper bound for the size of the packed message of \b count elements
  * \param [in] ts         Implementation of a class scheme.
@@ -711,7 +711,7 @@ t8_element_MPI_Pack (const t8_eclass_scheme_c *ts, t8_element_t **const elements
  * \param [out] pack_size upper bound on the message size
 */
 void
-t8_element_MPI_Pack_size (const t8_eclass_scheme_c *ts, const int count, sc_MPI_Comm comm, int *pack_size);
+t8_element_MPI_Pack_size (const t8_eclass_scheme_c *ts, const unsigned int count, sc_MPI_Comm comm, int *pack_size);
 
 /** Unpack multiple elements from contiguous memory that was received via MPI.
  * \param [in] ts         Implementation of a class scheme.
@@ -724,7 +724,7 @@ t8_element_MPI_Pack_size (const t8_eclass_scheme_c *ts, const int count, sc_MPI_
 */
 void
 t8_element_MPI_Unpack (const t8_eclass_scheme_c *ts, void *recvbuf, const int buffer_size, int *position,
-                       t8_element_t **elements, const int count, sc_MPI_Comm comm);
+                       t8_element_t **elements, const unsigned int count, sc_MPI_Comm comm);
 
 T8_EXTERN_C_END ();
 

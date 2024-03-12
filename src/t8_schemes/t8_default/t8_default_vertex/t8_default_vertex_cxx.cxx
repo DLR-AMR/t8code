@@ -362,12 +362,13 @@ t8_default_scheme_vertex_c::t8_element_root (t8_element_t *elem) const
 }
 /* vertices are packed as the level */
 void
-t8_default_scheme_vertex_c::t8_element_MPI_Pack (t8_element_t **const elements, const int count, void *send_buffer,
-                                                 const int buffer_size, int *position, sc_MPI_Comm comm) const
+t8_default_scheme_vertex_c::t8_element_MPI_Pack (t8_element_t **const elements, const unsigned int count,
+                                                 void *send_buffer, const int buffer_size, int *position,
+                                                 sc_MPI_Comm comm) const
 {
   int mpiret;
   t8_dvertex_t **vertices = (t8_dvertex_t **) elements;
-  for (int ielem = 0; ielem < count; ielem++) {
+  for (unsigned int ielem = 0; ielem < count; ielem++) {
     mpiret = sc_MPI_Pack (&vertices[ielem]->level, 1, sc_MPI_INT8_T, send_buffer, buffer_size, position, comm);
     SC_CHECK_MPI (mpiret);
   }
@@ -375,7 +376,7 @@ t8_default_scheme_vertex_c::t8_element_MPI_Pack (t8_element_t **const elements, 
 
 /* vertices are packed as the level */
 void
-t8_default_scheme_vertex_c::t8_element_MPI_Pack_size (const int count, sc_MPI_Comm comm, int *pack_size) const
+t8_default_scheme_vertex_c::t8_element_MPI_Pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size) const
 {
   int singlesize = 0;
   int datasize = 0;
@@ -391,11 +392,12 @@ t8_default_scheme_vertex_c::t8_element_MPI_Pack_size (const int count, sc_MPI_Co
 /* vertices are packed as the level */
 void
 t8_default_scheme_vertex_c::t8_element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position,
-                                                   t8_element_t **elements, const int count, sc_MPI_Comm comm) const
+                                                   t8_element_t **elements, const unsigned int count,
+                                                   sc_MPI_Comm comm) const
 {
   int mpiret;
   t8_dvertex_t **vertices = (t8_dvertex_t **) elements;
-  for (int ielem = 0; ielem < count; ielem++) {
+  for (unsigned int ielem = 0; ielem < count; ielem++) {
     mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(vertices[ielem]->level), 1, sc_MPI_INT8_T, comm);
     SC_CHECK_MPI (mpiret);
   }

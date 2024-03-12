@@ -785,7 +785,7 @@ struct t8_eclass_scheme
    * \param [in] comm MPI Communicator
   */
   virtual void
-  t8_element_MPI_Pack (t8_element_t **const elements, const int count, void *send_buffer, int buffer_size,
+  t8_element_MPI_Pack (t8_element_t **const elements, const unsigned int count, void *send_buffer, int buffer_size,
                        int *position, sc_MPI_Comm comm) const
     = 0;
 
@@ -795,7 +795,7 @@ struct t8_eclass_scheme
    * \param [out] pack_size upper bound on the message size
   */
   virtual void
-  t8_element_MPI_Pack_size (const int count, sc_MPI_Comm comm, int *pack_size) const
+  t8_element_MPI_Pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size) const
     = 0;
 
   /** Unpack multiple elements from contiguous memory that was received via MPI.
@@ -807,8 +807,8 @@ struct t8_eclass_scheme
    * \param [in] comm MPI Communicator
   */
   virtual void
-  t8_element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements, const int count,
-                         sc_MPI_Comm comm) const
+  t8_element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements,
+                         const unsigned int count, sc_MPI_Comm comm) const
     = 0;
 };
 

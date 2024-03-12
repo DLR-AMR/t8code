@@ -1719,7 +1719,7 @@ t8_dtri_element_pack (t8_dtri_t **const elements, int count, void *send_buffer, 
                       sc_MPI_Comm comm)
 {
   int mpiret;
-  for (int ielem = 0; ielem < count; ielem++) {
+  for (unsigned int ielem = 0; ielem < count; ielem++) {
     mpiret = sc_MPI_Pack (&(elements[ielem]->x), 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
     SC_CHECK_MPI (mpiret);
     mpiret = sc_MPI_Pack (&elements[ielem]->y, 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
@@ -1769,7 +1769,7 @@ t8_dtri_element_unpack (void *recvbuf, int buffer_size, int *position, t8_dtri_t
                         sc_MPI_Comm comm)
 {
   int mpiret;
-  for (int ielem = 0; ielem < count; ielem++) {
+  for (unsigned int ielem = 0; ielem < count; ielem++) {
     mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(elements[ielem]->x), 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
     mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(elements[ielem]->y), 1, sc_MPI_INT, comm);

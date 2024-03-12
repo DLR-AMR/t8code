@@ -457,11 +457,12 @@ t8_default_scheme_pyramid_c::t8_element_root (t8_element_t *elem) const
 }
 /* each pyramid is packed as a tet and the switch_shape_at_level marker */
 void
-t8_default_scheme_pyramid_c::t8_element_MPI_Pack (t8_element_t **const elements, const int count, void *send_buffer,
-                                                  const int buffer_size, int *position, sc_MPI_Comm comm) const
+t8_default_scheme_pyramid_c::t8_element_MPI_Pack (t8_element_t **const elements, const unsigned int count,
+                                                  void *send_buffer, const int buffer_size, int *position,
+                                                  sc_MPI_Comm comm) const
 {
   t8_default_pyramid_t **pyramids = (t8_default_pyramid_t **) elements;
-  for (int ielem = 0; ielem < count; ielem++) {
+  for (unsigned int ielem = 0; ielem < count; ielem++) {
     t8_dtet_t *p = &pyramids[ielem]->pyramid;
     t8_dtet_element_pack (&p, 1, send_buffer, buffer_size, position, comm);
 
@@ -472,7 +473,7 @@ t8_default_scheme_pyramid_c::t8_element_MPI_Pack (t8_element_t **const elements,
 
 /* each pyramid is packed as a tet and the switch_shape_at_level marker */
 void
-t8_default_scheme_pyramid_c::t8_element_MPI_Pack_size (const int count, sc_MPI_Comm comm, int *pack_size) const
+t8_default_scheme_pyramid_c::t8_element_MPI_Pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size) const
 {
   int singlesize = 0;
   int datasize = 0;
@@ -490,11 +491,12 @@ t8_default_scheme_pyramid_c::t8_element_MPI_Pack_size (const int count, sc_MPI_C
 /* each pyramid is packed as a tet and the switch_shape_at_level marker */
 void
 t8_default_scheme_pyramid_c::t8_element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position,
-                                                    t8_element_t **elements, const int count, sc_MPI_Comm comm) const
+                                                    t8_element_t **elements, const unsigned int count,
+                                                    sc_MPI_Comm comm) const
 {
   int mpiret;
   t8_default_pyramid_t **pyramids = (t8_default_pyramid_t **) elements;
-  for (int ielem = 0; ielem < count; ielem++) {
+  for (unsigned int ielem = 0; ielem < count; ielem++) {
     t8_dtet *p = &pyramids[ielem]->pyramid;
     t8_dtet_element_unpack (recvbuf, buffer_size, position, &p, 1, comm);
 

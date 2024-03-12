@@ -801,12 +801,13 @@ t8_default_scheme_quad_c::t8_element_root (t8_element_t *elem) const
 }
 /* each quad is packed as x,y coordinates and the level */
 void
-t8_default_scheme_quad_c::t8_element_MPI_Pack (t8_element_t **const elements, const int count, void *send_buffer,
-                                               const int buffer_size, int *position, sc_MPI_Comm comm) const
+t8_default_scheme_quad_c::t8_element_MPI_Pack (t8_element_t **const elements, const unsigned int count,
+                                               void *send_buffer, const int buffer_size, int *position,
+                                               sc_MPI_Comm comm) const
 {
   int mpiret;
   p4est_quadrant_t **quads = (p4est_quadrant_t **) elements;
-  for (int ielem = 0; ielem < count; ielem++) {
+  for (unsigned int ielem = 0; ielem < count; ielem++) {
     mpiret = sc_MPI_Pack (&(quads[ielem]->x), 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
     SC_CHECK_MPI (mpiret);
     mpiret = sc_MPI_Pack (&quads[ielem]->y, 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
@@ -818,7 +819,7 @@ t8_default_scheme_quad_c::t8_element_MPI_Pack (t8_element_t **const elements, co
 
 /* each quad is packed as x,y coordinates and the level */
 void
-t8_default_scheme_quad_c::t8_element_MPI_Pack_size (const int count, sc_MPI_Comm comm, int *pack_size) const
+t8_default_scheme_quad_c::t8_element_MPI_Pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size) const
 {
   int singlesize = 0;
   int datasize = 0;
@@ -840,11 +841,12 @@ t8_default_scheme_quad_c::t8_element_MPI_Pack_size (const int count, sc_MPI_Comm
 /* each quad is packed as x,y coordinates and the level */
 void
 t8_default_scheme_quad_c::t8_element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position,
-                                                 t8_element_t **elements, const int count, sc_MPI_Comm comm) const
+                                                 t8_element_t **elements, const unsigned int count,
+                                                 sc_MPI_Comm comm) const
 {
   int mpiret;
   p4est_quadrant_t **quads = (p4est_quadrant_t **) elements;
-  for (int ielem = 0; ielem < count; ielem++) {
+  for (unsigned int ielem = 0; ielem < count; ielem++) {
     mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem]->x), 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
     mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem]->y), 1, sc_MPI_INT, comm);
