@@ -81,7 +81,8 @@ class geometry_test: public testing::TestWithParam<std::tuple<int, t8_eclass>> {
     default:
       break;
     }
-    t8_cmesh_set_tree_vertices (cmesh, 0, vertices, t8_eclass_num_vertices[eclass]);
+    t8_cmesh_set_tree_vertices (cmesh, 0, vertices,
+                                geom_int == T8_GEOMETRY_TYPE_LINEAR ? t8_eclass_num_vertices[eclass] : 2);
     t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
     T8_FREE (vertices);
   }
