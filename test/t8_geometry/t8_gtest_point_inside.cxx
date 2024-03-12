@@ -303,6 +303,9 @@ TEST_P (geometry_point_inside, test_point_inside)
 
         num_in += point_is_inside ? 1 : 0;
       }
+      /* Create a set of points that are outside of the cube. 
+       * The coordinates are given by the corner points except for one coordinate. For each side of the cube
+       * we place one point outside of it. */
       for (int side = 0; side < min_points_outside; ++side) {
         test_point[3 * (num_points + side)] = (side == 0) ? -2.0 : (side == 1) ? 2.0 : -0.1;
         test_point[3 * (num_points + side) + 1] = (side == 2) ? -2.0 : (side == 3) ? 2.0 : 0.3;
