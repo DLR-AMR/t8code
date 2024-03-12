@@ -42,6 +42,7 @@
 #include <TopoDS_Edge.hxx>
 #include <t8_element.h>
 #include <t8_cmesh_vtk_writer.h>
+#include <test/t8_gtest_custom_assertion.hxx>
 #endif
 
 /* In this file we collect tests for t8code's OpenCASCADE geometry module.
@@ -98,7 +99,7 @@ t8_euler_rotation (double *pos_vec, double *rot_vec, double *res_vec, double *ro
   }
 }
 
-/** Constructs a cad surface for testing purposes. Surface is build between vertex 0, 1, 4 and 5 of a unit hexahedron.
+/** Constructs a cad surface for testing purposes. Surface is build on the x-z-plane and ranges from 0 to 1 in its dimensions.
  * Saves the surface in the shape.
  * \return                            The shape.
  */
@@ -126,7 +127,7 @@ t8_create_cad_surface_shape ()
   return shape;
 }
 
-/** Constructs a cad curve for testing purposes. Curve is build between vertex 0, 1, 4 and 5 of a unit hexahedron.
+/** Constructs a cad curve for testing purposes. Curve is build around the x-axis between 0 and 1.
  * Saves the curve in the shape.
  * \return                            The cad shape.
  */
@@ -218,8 +219,8 @@ t8_create_cad_hypercube (double *rot_vec, int face, int edge, double *parameters
  * \return                            Returns 1 if passed, 0 if failed.
  */
 void
-t8_test_geometry_cad (double *rot_vec, int face, int edge, double *parameters, double *test_ref_coords,
-                      double *test_return_coords)
+t8_test_geometry_cad_hex (double *rot_vec, int face, int edge, double *parameters, double *test_ref_coords,
+                          double *test_return_coords)
 {
 #if T8_WITH_OCC
   double out_coords[3];
@@ -247,7 +248,7 @@ t8_test_geometry_cad (double *rot_vec, int face, int edge, double *parameters, d
 }
 
 #if T8_WITH_OCC
-TEST (t8_gtest_geometry_cad, linked_faces)
+TEST (t8_gtest_geometry_cad_hex, linked_faces)
 {
   /* clang-format off */
   double test_ref_coords[24] = { 0.1, 0.1, 0.1, 
@@ -285,12 +286,12 @@ TEST (t8_gtest_geometry_cad, linked_faces)
     0, 0, 0, 1, 1, 0, 1, 1   /* Face 5 */
   };
   for (int i_faces = 0; i_faces < 6; ++i_faces) {
-    t8_test_geometry_cad (surface_rot_vecs + i_faces * 3, i_faces, -1, surface_parameters + i_faces * 8,
+    t8_test_geometry_cad_hex (surface_rot_vecs + i_faces * 3, i_faces, -1, surface_parameters + i_faces * 8,
                           test_ref_coords, surface_test_return_coords);
   }
 }
 
-TEST (t8_gtest_geometry_cad, linked_edges)
+TEST (t8_gtest_geometry_cad_hex, linked_edges)
 {
   /* clang-format off */
   double test_ref_coords[24] = { 0.1, 0.1, 0.1, 
@@ -340,10 +341,177 @@ TEST (t8_gtest_geometry_cad, linked_edges)
     0, 1   // Edge 11
   };
   for (int i_edges = 0; i_edges < 12; ++i_edges) {
-    t8_test_geometry_cad (curve_rot_vecs + i_edges * 3, -1, i_edges, curve_parameters + i_edges * 2, test_ref_coords,
-                          curve_test_return_coords);
+    t8_test_geometry_cad_hex (curve_rot_vecs + i_edges * 3, -1, i_edges, curve_parameters + i_edges * 2,
+                              test_ref_coords, curve_test_return_coords);
   }
 }
+#endif /* T8_WITH_OCC */
+
+/** Constructs a cmesh with an cad geometry linked hypercube.
+ * \param [in] rot_vec                The rotation vector to rotate the cube before linking a geometry to it.
+ * \param [in] face                   The index of the face to link a surface to. -1 for no face.
+ * \param [in] edge                   The index of the edge to link a curve to. -1 for no edge.
+ * \param [in] parameters             Parameters of the curve/surface.
+ * \return                            A valid cmesh, as if _init and _commit had been called.
+ */
+t8_cmesh_t
+t8_create_cad_reference_tet (double *rot_vec, int face, int edge, double *parameters)
+{
+#if T8_WITH_OCC
+  if (edge >= 0 && face >= 0) {
+    SC_ABORTF ("Please specify only an edge or a face.");
+  }
+
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TET);
+
+  double rotated_vertices[12], vertices[12] = { 0, 0, 0, 1, 0, 0, 1, 0, 1, 1, 1, 1 };
+  double rotation_origin[3] = { 0.75, 0.25, 0.5 };
+
+  t8_euler_rotation (vertices, rot_vec, rotated_vertices, rotation_origin, 4);
+  t8_cmesh_set_tree_vertices (cmesh, 0, rotated_vertices, 18);
+
+  int faces[4] = { 0 };
+  int edges[12] = { 0 };
+  T8_ASSERT (face < 0 || edge < 0);
+  if (face >= 0) {
+    faces[face] = 1;
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, t8_create_cad_surface_shape ());
+    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + face,
+                            parameters, 8 * sizeof (double), 0);
+  }
+  else if (edge >= 0) {
+    edges[edge] = 1;
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, t8_create_cad_curve_shape ());
+    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + edge,
+                            parameters, 2 * sizeof (double), 0);
+  }
+  else {
+    /* Even if we do not want to link any geometry to the edges or faces, 
+     * we have to create a geometry. Hence a cad geometry can only be created
+     * with an actual shape, we just create a geometry with a curve and do not
+     * link the curve to any edge. */
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, t8_create_cad_curve_shape ());
+  }
+  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, faces, 4 * sizeof (int), 0);
+  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges, 12 * sizeof (int), 0);
+  t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
+  return cmesh;
+
+#else  /* !T8_WITH_OCC */
+  SC_ABORTF ("OCC not linked");
+#endif /* T8_WITH_OCC */
+}
+
+/** Tests the cad geometry functions for tetrahedra.
+ * \param [in] rot_vec                The rotation vector to rotate the tetrahedron.
+ * \param [in] face                   The face to test. -1 for no face.
+ * \param [in] edge                   The edge to test. -1 for no edge.
+ * \param [in] parameters             The parameters of the curve/surface.
+ * \param [in] test_ref_coords        List of 6 coordinates to test.
+ * \param [in] test_return_coords     List of 6 expected output coordinates.
+ * \param [in] comm                   The mpi communicator to use.
+ * \return                            Returns 1 if passed, 0 if failed.
+ */
+void
+t8_test_geometry_cad_tet (double *rot_vec, int face, int edge, double *parameters, double *test_ref_coords,
+                          double *test_return_coords)
+{
+#if T8_WITH_OCC
+  double out_coords[3];
+  double rotated_test_ref_coords[18];
+  double rotation_origin[3] = { 0.75, 0.25, 0.5 };
+  double inversed_rot_vec[3];
+  double tol = T8_PRECISION_EPS > 1e-10 ? T8_PRECISION_EPS : 1e-10;
+  t8_cmesh_t cmesh = t8_create_cad_reference_tet (rot_vec, face, edge, parameters);
+
+  for (int i_coord = 0; i_coord < 3; ++i_coord) {
+    inversed_rot_vec[2 - i_coord] = -rot_vec[i_coord];
+  }
+  t8_euler_rotation (test_ref_coords, inversed_rot_vec, rotated_test_ref_coords, rotation_origin, 8);
+  for (int i_coord = 0; i_coord < 8; ++i_coord) {
+    t8_geometry_evaluate (cmesh, 0, rotated_test_ref_coords + i_coord * 3, 1, out_coords);
+
+    EXPECT_VEC3_EQ (out_coords, test_return_coords + i_coord * 3, tol);
+  }
+  t8_cmesh_destroy (&cmesh);
+
+#else  /* !T8_WITH_OCC */
+  SC_ABORTF ("OCC not linked");
+#endif /* T8_WITH_OCC */
+}
+
+#if T8_WITH_OCC
+TEST (t8_gtest_geometry_cad_tet, linked_faces)
+{
+  /* clang-format off */
+  double test_ref_coords[9] = { 0.0, 0.0, 0.0,  
+                                1.0, 0.0, 0.0, 
+                                1.0, 0.0, 1.0 };
+  double surface_test_return_coords[9] = { 0.0, 0.0, 0.0,  
+                                           1.0, 0.0, 0.0, 
+                                           1.0, 0.0, 1.0 };
+
+  /* clang-format off */
+  double surface_rot_vecs[12] = {
+    M_PI / 2, M_PI, 0,     /* Face 0 */
+    0, M_PI / 2, M_PI / 4, /* Face 1 */
+    0, M_PI / 4, 0,        /* Face 2 */
+    0, 0, 0,               /* Face 3 */
+  };
+  double surface_parameters[24] = {
+    1, 1, 0, 1, 0, 0,  /* Face 0 */
+    0, 0, 0, 1, 1, 1,  /* Face 1 */
+    0, 0, 0, 1, 1, 1,  /* Face 2 */
+    0, 0, 0, 1, 1, 1,  /* Face 3 */
+  };
+  for (int i_faces = 0; i_faces < 4; ++i_faces) {
+    t8_test_geometry_cad_tet (surface_rot_vecs + i_faces * 3, i_faces, -1, surface_parameters + i_faces * 8,
+                          test_ref_coords, surface_test_return_coords);
+  }
+}
+
+// TEST (t8_gtest_geometry_cad_tet, linked_edges)
+// {
+//   /* clang-format off */
+//   double test_ref_coords[18] = { 0.1, 0.1, 0.1, 
+//                                  0.8, 0.1,  0.1,  
+//                                  0.15, 0.9, 0.1, 
+//                                  0.9,  0.9,  0.3,
+//                                  0.3, 0.1, 0.7, 
+//                                  0.9, 0.25, 0.95 };
+//   double curve_test_return_coords[24] = { 0.0955204602, 0.2235162028, 0.1217553783, 
+//                                           0.7995278713, -0.0659838746, 0.2083328730, 
+//                                           0.1494299582, 0.9170222805, 0.1069555502, 
+//                                           0.8999105642, 0.8892289094, 0.3015732294, 
+//                                           0.2987855815, 0.1481519479, 0.7726155646,
+//                                           0.8999520880, 0.2442297729, 0.9508428015, 
+//                                           0.0999446970, 0.9015248914, 0.9002685849, 
+//                                           0.9499697383, 0.8472575225, 0.7998496263 };
+//   /* clang-format on */
+
+//   double curve_rot_vecs[18] = {
+//     0,         0,         0,          // Edge 0
+//     0,         -M_PI / 2, 0,          // Edge 1
+//     0,         M_PI / 2,  0,          // Edge 2
+//     0,         M_PI,      0,          // Edge 3
+//     M_PI / 2,  0,         0,          // Edge 4
+//     -M_PI / 2, 0,         0,          // Edge 5
+//   };
+//   double curve_parameters[12] = {
+//     0, 1,  // Edge 0
+//     0, 1,  // Edge 1
+//     0, 1,  // Edge 2
+//     0, 1,  // Edge 3
+//     1, 0,  // Edge 4
+//     0, 1,  // Edge 5
+//   };
+//   for (int i_edges = 0; i_edges < 6; ++i_edges) {
+//     t8_test_geometry_cad_tet (curve_rot_vecs + i_edges * 3, -1, i_edges, curve_parameters + i_edges * 2, test_ref_coords,
+//                           curve_test_return_coords);
+//   }
+// }
 #endif /* T8_WITH_OCC */
 
 #if T8_WITH_OCC
