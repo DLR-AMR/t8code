@@ -215,14 +215,7 @@ struct t8_eclass_scheme
    * \param [in] face     A face index for \a element.
    * \param [in] corner   A corner index for the face 0 <= \a corner < num_face_corners.
    * \return              The corner number of the \a corner-th vertex of \a face.
-   *
-   * The order in which the corners must be given is determined by the eclass of \a element:
-   * LINE/QUAD/TRIANGLE:  No specific order.
-   * HEX               :  In Z-order of the face starting with the lowest corner number.
-   * TET               :  Starting with the lowest corner number counterclockwise as seen from
-   *                      'outside' of the element.
    */
-  /* TODO: Prism order, Pyramid order. */
   virtual int
   t8_element_get_face_corner (const t8_element_t *element, int face, int corner) const
     = 0;
@@ -295,8 +288,6 @@ struct t8_eclass_scheme
   t8_element_is_family (t8_element_t *const *fam) const
     = 0;
 
-  /* TODO: This could be problematic for pyramids, since elem1 and elem2
-   *       could be of different classes. Would need two eclass_schemes as input */
   /** Compute the nearest common ancestor of two elements. That is,
    * the element with highest level that still has both given elements as
    * descendants.
