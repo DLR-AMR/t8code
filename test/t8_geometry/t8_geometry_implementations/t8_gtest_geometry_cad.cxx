@@ -396,12 +396,9 @@ class class_2d_element_linear_cad_curve: public testing::TestWithParam<t8_eclass
     cad_curve = GeomAPI_PointsToBSpline (point_array).Curve ();
     shape = BRepBuilderAPI_MakeEdge (cad_curve).Edge ();
 
-    geometry_cad = new t8_geometry_cad (3, shape, "cad curve dim=3");
-
-    geometry = geometry_cad;
-
     t8_cmesh_init (&cmesh);
     t8_cmesh_set_tree_class (cmesh, 0, eclass);
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, shape);
   }
 
   void
@@ -411,8 +408,6 @@ class class_2d_element_linear_cad_curve: public testing::TestWithParam<t8_eclass
   }
   t8_cmesh_t cmesh;
   t8_eclass_t eclass;
-  t8_geometry_cad *geometry_cad;
-  t8_geometry_c *geometry;
   /* The arrays prescribe the linkage of the element. Edge 2 of the element is linked and the face is unlinked. */
   int faces[1] = { 0 };
   int edges[8] = { 0, 0, 1, 0, 0, 0, 0, 0 };
@@ -437,8 +432,6 @@ TEST_P (class_2d_element_linear_cad_curve, t8_check_2d_element_linear_cad_curve)
   t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + 2, params,
                           2 * sizeof (double), 0);
 
-  /* Register the geometry */
-  t8_cmesh_register_geometry (cmesh, &geometry);
   /* Commit the cmesh */
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 
@@ -481,19 +474,16 @@ class class_2d_element_curved_cad_curve: public testing::TestWithParam<t8_eclass
     *  0               0.5              1
     */
 
-    point_array (1) = gp_Pnt (0.0, 0.0, 0.0);
-    point_array (2) = gp_Pnt (0.5, -0.2, 0.0);
-    point_array (3) = gp_Pnt (1.0, 0.0, 0.0);
+    point_array (1) = gp_Pnt (test_ref_coords_out[0], test_ref_coords_out[1], test_ref_coords_out[2]);
+    point_array (2) = gp_Pnt (test_ref_coords_out[3], test_ref_coords_out[4], test_ref_coords_out[5]);
+    point_array (3) = gp_Pnt (test_ref_coords_out[6], test_ref_coords_out[7], test_ref_coords_out[8]);
 
     cad_curve = GeomAPI_PointsToBSpline (point_array).Curve ();
     shape = BRepBuilderAPI_MakeEdge (cad_curve).Edge ();
 
-    geometry_cad = new t8_geometry_cad (3, shape, "cad curve dim=3");
-
-    geometry = geometry_cad;
-
     t8_cmesh_init (&cmesh);
     t8_cmesh_set_tree_class (cmesh, 0, eclass);
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, shape);
   }
 
   void
@@ -503,12 +493,12 @@ class class_2d_element_curved_cad_curve: public testing::TestWithParam<t8_eclass
   }
   t8_cmesh_t cmesh;
   t8_eclass_t eclass;
-  t8_geometry_cad *geometry_cad;
-  t8_geometry_c *geometry;
 
   /* The arrays prescribe the linkage of the element. Edge 2 of the element is linked and the face is unlinked. */
   int faces[1] = { 0 };
   int edges[8] = { 0, 0, 1, 0, 0, 0, 0, 0 };
+
+  double test_ref_coords_out[9] = { 0.0, 0.0, 0.0, 0.5, -0.2, 0.0, 1.0, 0.0, 0.0 };
 };
 
 TEST_P (class_2d_element_curved_cad_curve, t8_check_2d_element_curved_cad_curve)
@@ -530,8 +520,6 @@ TEST_P (class_2d_element_curved_cad_curve, t8_check_2d_element_curved_cad_curve)
   t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + 2, params,
                           2 * sizeof (double), 0);
 
-  /* Register the geometry */
-  t8_cmesh_register_geometry (cmesh, &geometry);
   /* Commit the cmesh */
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 
@@ -684,27 +672,24 @@ class class_2d_element_curved_cad_surface: public testing::TestWithParam<t8_ecla
     *                          x
     */
 
-    point_array (1, 1) = gp_Pnt (0.0, 1.0, 0.0);
-    point_array (2, 1) = gp_Pnt (0.5, 1.2, 0.0);
-    point_array (3, 1) = gp_Pnt (1.0, 1.0, 0.0);
+    point_array (1, 1) = gp_Pnt (test_ref_coords_out[12], test_ref_coords_out[13], test_ref_coords_out[14]);
+    point_array (2, 1) = gp_Pnt (test_ref_coords_out[18], test_ref_coords_out[19], test_ref_coords_out[20]);
+    point_array (3, 1) = gp_Pnt (test_ref_coords_out[21], test_ref_coords_out[22], test_ref_coords_out[23]);
 
-    point_array (1, 2) = gp_Pnt (-0.2, 0.5, 0.0);
-    point_array (2, 2) = gp_Pnt (0.5, 0.5, 0.2);
-    point_array (3, 2) = gp_Pnt (1.2, 0.5, 0.0);
+    point_array (1, 2) = gp_Pnt (test_ref_coords_out[15], test_ref_coords_out[16], test_ref_coords_out[17]);
+    point_array (2, 2) = gp_Pnt (test_ref_coords_out[9], test_ref_coords_out[10], test_ref_coords_out[11]);
+    point_array (3, 2) = gp_Pnt (test_ref_coords_out[24], test_ref_coords_out[25], test_ref_coords_out[26]);
 
-    point_array (1, 3) = gp_Pnt (0.0, 0.0, 0.0);
-    point_array (2, 3) = gp_Pnt (0.5, -0.2, 0.0);
-    point_array (3, 3) = gp_Pnt (1.0, 0.0, 0.0);
+    point_array (1, 3) = gp_Pnt (test_ref_coords_out[0], test_ref_coords_out[1], test_ref_coords_out[2]);
+    point_array (2, 3) = gp_Pnt (test_ref_coords_out[3], test_ref_coords_out[4], test_ref_coords_out[5]);
+    point_array (3, 3) = gp_Pnt (test_ref_coords_out[6], test_ref_coords_out[7], test_ref_coords_out[8]);
 
     cad_surface = GeomAPI_PointsToBSplineSurface (point_array).Surface ();
     shape = BRepBuilderAPI_MakeFace (cad_surface, 1e-6).Face ();
 
-    geometry_cad = new t8_geometry_cad (3, shape, "cad surface dim=3");
-
-    geometry = geometry_cad;
-
     t8_cmesh_init (&cmesh);
     t8_cmesh_set_tree_class (cmesh, 0, eclass);
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, shape);
   }
 
   void
@@ -714,11 +699,13 @@ class class_2d_element_curved_cad_surface: public testing::TestWithParam<t8_ecla
   }
   t8_cmesh_t cmesh;
   t8_eclass_t eclass;
-  t8_geometry_cad *geometry_cad;
-  t8_geometry_c *geometry;
+
   /* The arrays prescribe the linkage of the element. The face of the element is linked and all edges are not */
   int faces[1] = { 1 };
   int edges[8] = { 0 };
+
+  double test_ref_coords_out[27] = { 0.0, 0.0,  0.0, 0.5, -0.2, 0.0, 1.0, 0.0, 0.0, 0.5, 0.5, 0.2, 0.0, 1.0,
+                                     0.0, -0.2, 0.5, 0.0, 0.5,  1.2, 0.0, 1.0, 1.0, 0.0, 1.2, 0.5, 0.0 };
 };
 
 TEST_P (class_2d_element_curved_cad_surface, t8_check_2d_element_curved_cad_surface)
@@ -742,8 +729,6 @@ TEST_P (class_2d_element_curved_cad_surface, t8_check_2d_element_curved_cad_surf
   t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY,
                           (eclass == T8_ECLASS_QUAD ? params_quad : params_tri), 2 * num_vertices * sizeof (double), 0);
 
-  /* Register the geometry */
-  t8_cmesh_register_geometry (cmesh, &geometry);
   /* Commit the cmesh */
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 
