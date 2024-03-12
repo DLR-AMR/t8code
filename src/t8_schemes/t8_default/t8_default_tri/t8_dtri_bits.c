@@ -1715,8 +1715,8 @@ t8_dtri_init (t8_dtri_t *t)
 
 /* triangles (tets) are packed as x,y (,z) coordinates, type and level */
 void
-t8_dtri_element_pack (t8_dtri_t **const elements, int count, void *send_buffer, int buffer_size, int *position,
-                      sc_MPI_Comm comm)
+t8_dtri_element_pack (t8_dtri_t **const elements, const unsigned int count, void *send_buffer, const int buffer_size,
+                      int *position, sc_MPI_Comm comm)
 {
   int mpiret;
   for (unsigned int ielem = 0; ielem < count; ielem++) {
@@ -1739,7 +1739,7 @@ t8_dtri_element_pack (t8_dtri_t **const elements, int count, void *send_buffer, 
 
 /* triangles (tets) are packed as x,y (,z) coordinates, type and level */
 void
-t8_dtri_element_pack_size (int count, sc_MPI_Comm comm, int *pack_size)
+t8_dtri_element_pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size)
 {
   int singlesize = 0;
   int datasize = 0;
@@ -1765,8 +1765,8 @@ t8_dtri_element_pack_size (int count, sc_MPI_Comm comm, int *pack_size)
 
 /* triangles (tets) are packed as x,y (,z) coordinates, type and level */
 void
-t8_dtri_element_unpack (void *recvbuf, int buffer_size, int *position, t8_dtri_t **elements, int count,
-                        sc_MPI_Comm comm)
+t8_dtri_element_unpack (void *recvbuf, const int buffer_size, int *position, t8_dtri_t **elements,
+                        const unsigned int count, sc_MPI_Comm comm)
 {
   int mpiret;
   for (unsigned int ielem = 0; ielem < count; ielem++) {
