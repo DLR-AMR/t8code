@@ -136,7 +136,15 @@ t8_subelement_scheme_c<eclass_T>::t8_element_subelement_values_are_valid (const
                                                                  t8_element_t *
                                                                  elem) const
 {
-  //TODO
+  const t8_element_with_subelements *sub =
+    (const t8_element_with_subelements *) elem;
+
+  return ((sub->transition_type >= 0 &&
+           sub->transition_type <= 10 ) //TODO: T8_MAX_SUBELEMENT_TYPE[eclass_T])
+          || sub->transition_type == 0) &&
+    ((sub->subelement_id >= 0 &&
+      sub->subelement_id <= 10) //TODO: T8_MAX_SUBELEMENT_ID[eclass_T])
+     || sub->subelement_id == 0);
 }
 
 template <t8_eclass_t eclass_T>
@@ -179,7 +187,26 @@ template <t8_eclass_t eclass_T>
 void
 t8_subelement_scheme_c<eclass_T>::t8_element_parent (const t8_element_t *elem, t8_element_t *parent) const
 {
-  //TODO
+  const t8_element_with_subelements *sub_elem =
+    (const t8_element_with_subelements *) elem;
+  t8_element_with_subelements *sub_parent =
+    (t8_element_with_subelements *) parent;
+
+  const t8_element_t *q = sub_elem->elem;
+  t8_element_t *r = sub_parent->elem;
+
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (t8_element_is_valid (parent));
+
+  if (t8_element_is_subelement (elem)) {
+    standalone->t8_element_copy(sub_parent->elem, sub_elem->elem);
+  }
+  else {
+    standalone->t8_element_parent (q, r);
+  }
+
+  /* the parent of any element will never be a subelement */
+  t8_element_reset_subelement_values (parent);
 }
 
 template <t8_eclass_t eclass_T>
@@ -254,7 +281,10 @@ template <t8_eclass_t eclass_T>
 void
 t8_subelement_scheme_c<eclass_T>::t8_element_child (const t8_element_t *elem, int childid, t8_element_t *child) const
 {
-  //TODO
+  /* this function is not implemented for subelements */
+  T8_ASSERT (!t8_element_is_subelement (elem));
+
+  standalone->t8_element_child( elem, childid, child );
 }
 
 template <t8_eclass_t eclass_T>
@@ -324,7 +354,12 @@ void
 t8_subelement_scheme_c<eclass_T>::t8_element_nca (const t8_element_t *elem1, const t8_element_t *elem2,
                                                   t8_element_t *nca) const
 {
- //TODO
+  T8_ASSERT (t8_element_is_valid (elem1));
+  T8_ASSERT (t8_element_is_valid (elem2));
+
+  /* In case of subelements, we use the parent quadrant and construct nca of the parent quadrant */
+  t8_element_reset_subelement_values (nca);
+  standalone->t8_element_nca (( (t8_element_with_subelements *) elem1 )->elem, ( (t8_element_with_subelements *) elem2 )->elem, ( (t8_element_with_subelements *) nca )->elem);
 }
 
 template <t8_eclass_t eclass_T>
@@ -462,6 +497,7 @@ t8_subelement_scheme_c<eclass_T>::t8_element_boundary_face (const t8_element_t *
                                                             const t8_eclass_scheme_c *boundary_scheme) const
 {
   //TODO
+  SC_ABORT ("Not implemented\n");
 }
 
 template <t8_eclass_t eclass_T>
@@ -491,7 +527,7 @@ t8_subelement_scheme_c<eclass_T>::t8_element_boundary (const t8_element_t *elem,
                                                        t8_element_t **boundary) const
 {
   if( t8_element_is_subelement( elem ) ) {
-    //TODO
+    SC_ABORT ("Not implemented for subelements yet.\n");
   }
   else {
     standalone->t8_element_boundary( elem, min_dim, length, boundary );
@@ -522,7 +558,12 @@ int
 t8_subelement_scheme_c<eclass_T>::t8_element_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh,
                                                                    int face, int *neigh_face) const
 {
-  //TODO
+  if( t8_element_is_subelement( elem ) ) {
+    SC_ABORT ("Not implemented for subelements yet.\n");
+  }
+  else {
+    return standalone->t8_element_face_neighbor_inside( ( (t8_element_with_subelements *) elem )->elem, neigh, face, neigh_face );
+  }
 }
 
 template <t8_eclass_t eclass_T>
@@ -702,7 +743,7 @@ template <t8_eclass_t eclass_T>
 void
 t8_subelement_scheme_c<eclass_T>::t8_element_destroy (int length, t8_element_t **elem) const
 {
-  //TODO
+  //TODO - subelement values
   for( int i= 0; i<length; i++ )
   {
     standalone->t8_element_destroy( 1, &( (t8_element_with_subelements *) elem )->elem ) ; 
