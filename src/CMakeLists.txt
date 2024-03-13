@@ -114,7 +114,6 @@ target_sources( T8 PRIVATE
     t8_forest/t8_forest_netcdf.cxx 
     t8_element_shape.c 
     t8_netcdf.c 
-    t8_cmesh/t8_cmesh_testcases.c 
     t8_vtk/t8_vtk_polydata.cxx 
     t8_vtk/t8_vtk_unstructured.cxx 
     t8_vtk/t8_vtk_parallel.cxx 
@@ -161,7 +160,6 @@ set( T8_PUBLIC_HEADERS
     t8_forest_netcdf.h 
     t8_element_shape.h 
     t8_netcdf.h
-    t8_cmesh/t8_cmesh_testcases.h
     t8_cmesh/t8_cmesh_save.h
     t8_cmesh/t8_cmesh_examples.h 
     t8_cmesh/t8_cmesh_geometry.h 
