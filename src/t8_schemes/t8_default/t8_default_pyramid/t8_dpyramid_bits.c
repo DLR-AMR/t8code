@@ -483,9 +483,6 @@ t8_dpyramid_init_linear_id (t8_dpyramid_t *p, const int level, t8_linearidx_t id
       p->pyramid.type = type;
       p->pyramid.level = i;
       p->switch_shape_at_level = i - 1;
-#if T8_ENABLE_DEBUG
-      ((t8_dtet_t *) p)->eclass_int8 = T8_ECLASS_TET;
-#endif
       t8_dtet_init_linear_id_with_level (&(p->pyramid), id, i, level, type);
       T8_ASSERT (p->switch_shape_at_level == t8_dpyramid_compute_switch_shape_at_level (p));
       return;

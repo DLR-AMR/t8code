@@ -42,26 +42,23 @@ t8_default_scheme_pyramid_c::t8_element_new (int length, t8_element_t **elem) co
   {
     int i;
     for (i = 0; i < length; i++) {
-      t8_element_init (1, elem[i], 0);
+      t8_element_root (elem[i]);
     }
   }
 #endif
 }
 
 void
-t8_default_scheme_pyramid_c::t8_element_init (int length, t8_element_t *elem, int called_new) const
+t8_default_scheme_pyramid_c::t8_element_init (int length, t8_element_t *elem) const
 {
 #ifdef T8_ENABLE_DEBUG
-  if (!called_new) {
-    int i;
-    t8_dpyramid_t *pyramid = (t8_dpyramid_t *) elem;
-    /* Set all values to 0 */
-    for (i = 0; i < length; i++) {
-      t8_dpyramid_init_linear_id (pyramid + i, 0, 0);
-      T8_ASSERT (t8_dpyramid_is_valid (pyramid + i));
-    }
-    pyramid->pyramid.type = 6;
+  t8_dpyramid_t *pyramid = (t8_dpyramid_t *) elem;
+  /* Set all values to 0 */
+  for (int i = 0; i < length; i++) {
+    t8_dpyramid_init_linear_id (pyramid + i, 0, 0);
+    T8_ASSERT (t8_dpyramid_is_valid (pyramid + i));
   }
+  pyramid->pyramid.type = 6;
 #endif
 }
 
@@ -246,7 +243,7 @@ t8_default_scheme_pyramid_c::t8_element_set_linear_id (t8_element_t *elem, int l
 }
 
 int
-t8_default_scheme_pyramid_c::t8_element_is_family (t8_element_t **fam) const
+t8_default_scheme_pyramid_c::t8_element_is_family (t8_element_t *const *fam) const
 {
 #if T8_ENABLE_DEBUG
   int num_siblings = t8_element_num_siblings (fam[0]);
@@ -336,10 +333,10 @@ t8_default_scheme_pyramid_c::t8_element_parent (const t8_element_t *elem, t8_ele
 }
 
 void
-t8_default_scheme_pyramid_c::t8_element_successor (const t8_element_t *elem, t8_element_t *s, int level) const
+t8_default_scheme_pyramid_c::t8_element_successor (const t8_element_t *elem, t8_element_t *s) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
-  t8_dpyramid_successor ((const t8_dpyramid_t *) elem, (t8_dpyramid_t *) s, level);
+  t8_dpyramid_successor ((const t8_dpyramid_t *) elem, (t8_dpyramid_t *) s, t8_element_level (elem));
   T8_ASSERT (t8_element_is_valid (s));
 }
 
@@ -394,17 +391,6 @@ t8_default_scheme_pyramid_c::t8_element_refines_irregular () const
 {
   /*Pyramids do not refine regularly */
   return 1;
-}
-
-void
-t8_default_scheme_pyramid_c::t8_element_general_function (const t8_element_t *elem, const void *indata,
-                                                          void *outdata) const
-{
-  T8_ASSERT (outdata != NULL);
-  T8_ASSERT (t8_element_is_valid (elem));
-  *((int8_t *) outdata) = ((const t8_dpyramid_t *) elem)->pyramid.type;
-  /* Safety check to catch datatype conversion errors */
-  T8_ASSERT (*((int8_t *) outdata) == ((const t8_dpyramid_t *) elem)->pyramid.type);
 }
 
 #ifdef T8_ENABLE_DEBUG
