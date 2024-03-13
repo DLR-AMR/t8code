@@ -46,6 +46,7 @@ class forest_ghost_owner: public testing::TestWithParam<cmesh_example_base *> {
     /* Construct a cmesh */
     cmesh = GetParam ()->cmesh_create ();
     if (t8_cmesh_is_empty (cmesh)) {
+      /* empty cmeshes are currently not supported */
       GTEST_SKIP ();
     }
   }
