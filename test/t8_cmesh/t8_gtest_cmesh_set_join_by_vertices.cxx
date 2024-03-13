@@ -372,6 +372,7 @@ class t8_cmesh_set_join_by_vertices_class: public testing::TestWithParam<cmesh_e
   {
     size_t found = GetParam ()->name.find (std::string ("bigmesh"));
     if (found != std::string::npos) {
+      /* skip bigmeshes as they get to large */
       GTEST_SKIP ();
     }
 
