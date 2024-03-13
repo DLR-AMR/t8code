@@ -167,8 +167,8 @@ TEST_P (geometry_point_inside, test_point_inside)
   /* Numerical tolerance that we allow in the point inside check */
   const double tolerance = 1e-12;
   const int num_points_to_generate = 64; /* Desired number of test points per element. 
-                                                         * The actual number is computed to be close to this and
-                                                         * will always be >= 2^num_corners (thus >= 128 for hex). */
+                                          * The actual number is computed to be close to this and
+                                          * will always be >= 2^num_corners (thus >= 128 for hex). */
 
   t8_debugf ("Testing eclass %s, uniform level %i with approx. %i points per element.\n", t8_eclass_to_string[eclass],
              level, num_points_to_generate);
@@ -195,7 +195,6 @@ TEST_P (geometry_point_inside, test_point_inside)
       t8_cmesh_translate_coordinates (tree_vertices + 3, tree_vertices + 3, 1, translate_points_0_1);
     }
   }
-
   /* Build a uniform forest */
   t8_forest_t forest = t8_forest_new_uniform (cmesh, default_scheme, level, 1, sc_MPI_COMM_WORLD);
 
@@ -314,7 +313,7 @@ TEST_P (geometry_point_inside, test_point_inside)
       }
       /* We now check whether the point inside function correctly sees whether
          * the point is inside the element or not. */
-      t8_forest_element_points_inside (forest, 0, element, test_point, num_points, point_is_recognized_as_inside,
+      t8_forest_element_points_inside (forest, 0, element, test_point, total_points, point_is_recognized_as_inside,
                                        tolerance);
       for (int ipoint = 0; ipoint < num_points; ipoint++) {
         ASSERT_EQ (!point_is_recognized_as_inside[ipoint], !point_is_inside[ipoint])
@@ -333,13 +332,27 @@ TEST_P (geometry_point_inside, test_point_inside)
   t8_log_indent_pop ();
 }
 
+auto print_test_case = [] (const testing::TestParamInfo<std::tuple<t8_eclass, int, int>> &info) {
+  const t8_eclass_t eclass = std::get<0> (info.param);
+  const int level = std::get<1> (info.param);
+  const int use_axis_aligned_geom = std::get<2> (info.param);
+
+  const std::string geom = use_axis_aligned_geom ? std::string ("LinearAxisAligned") : std::string ("Linear");
+  const std::string delim = std::string ("_");
+
+  std::string name = std::string (t8_eclass_to_string[eclass]) + delim + std::to_string (level) + delim + geom;
+  return name;
+};
+
 #if T8_ENABLE_LESS_TESTS
 INSTANTIATE_TEST_SUITE_P (t8_gtest_point_inside, geometry_point_inside,
                           testing::Combine (testing::Range (T8_ECLASS_LINE, T8_ECLASS_COUNT), testing::Range (0, 4),
-                                            testing::Range (0, 2)));
+                                            testing::Range (0, 2)),
+                          print_test_case);
 
 #else
 INSTANTIATE_TEST_SUITE_P (t8_gtest_point_inside, geometry_point_inside,
                           testing::Combine (testing::Range (T8_ECLASS_LINE, T8_ECLASS_COUNT), testing::Range (0, 6),
-                                            testing::Range (0, 2)));
+                                            testing::Range (0, 2)),
+                          print_test_case);
 #endif
