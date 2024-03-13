@@ -92,6 +92,17 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
       sc_mempool_free (mempool, elem[ielem]);
     }
   }
+
+  virtual void
+  t8_element_init (const t8_locidx_t length, t8_element_t *elem) const override
+  {
+  }
+
+  virtual void
+  t8_element_deinit (const t8_locidx_t length, t8_element_t *elem) const override
+  {
+  }
+
 #if T8_ENABLE_DEBUG
   virtual void
   t8_element_debug_print (const t8_element_t *elem) const
@@ -114,7 +125,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
   }
 
   virtual int
-  t8_element_is_family (t8_element_t **fam) const override
+  t8_element_is_family (t8_element_t *const *fam) const override
   {
     if (t8_element_level (fam[0]) == 0)
       return 0;
@@ -242,14 +253,13 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
   }
 
   virtual void
-  t8_element_successor (const t8_element_t *elem1, t8_element_t *elem2, const int level) const override
+  t8_element_successor (const t8_element_t *elem1, t8_element_t *elem2) const override
   {
-    T8_ASSERT (level != 0);
-    T8_ASSERT (level == t8_element_level (elem1)); /* TODO: if this is true, do we need level in interface? */
+    T8_ASSERT (t8_element_level (elem1) != 0);
     const int child_id = t8_element_child_id (elem1);
     if (child_id + 1 == t8_element_num_siblings (elem1)) {
       t8_element_parent (elem1, elem2);
-      t8_element_successor (elem2, elem2, level - 1);
+      t8_element_successor (elem2, elem2);
       t8_element_child (elem2, 0, elem2);
     }
     else {

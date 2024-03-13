@@ -160,7 +160,7 @@ t8_default_scheme_tet_c::t8_element_ancestor_id (const t8_element_t *elem, int l
 }
 
 int
-t8_default_scheme_tet_c::t8_element_is_family (t8_element_t **fam) const
+t8_default_scheme_tet_c::t8_element_is_family (t8_element_t *const *fam) const
 {
 #ifdef T8_ENABLE_DEBUG
   int i;
@@ -256,9 +256,6 @@ t8_default_scheme_tet_c::t8_element_extrude_face (const t8_element_t *face, cons
   T8_ASSERT (face_scheme->t8_element_is_valid (face));
   T8_ASSERT (0 <= root_face && root_face < T8_DTET_FACES);
   t->level = b->level;
-#ifdef T8_ENABLE_DEBUG
-  t->eclass_int8 = T8_ECLASS_TET;
-#endif
   switch (root_face) {
     /* Since the root triangle may have a different scale then the
      * root tetrahedron, we have to rescale the coordinates. */
@@ -415,13 +412,13 @@ t8_default_scheme_tet_c::t8_element_get_linear_id (const t8_element_t *elem, int
 }
 
 void
-t8_default_scheme_tet_c::t8_element_successor (const t8_element_t *elem1, t8_element_t *elem2, int level) const
+t8_default_scheme_tet_c::t8_element_successor (const t8_element_t *elem1, t8_element_t *elem2) const
 {
-  T8_ASSERT (0 <= level && level <= T8_DTET_MAXLEVEL);
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
+  T8_ASSERT (0 <= t8_element_level (elem1) && t8_element_level (elem1) <= T8_DTET_MAXLEVEL);
 
-  t8_dtet_successor ((const t8_default_tet_t *) elem1, (t8_default_tet_t *) elem2, level);
+  t8_dtet_successor ((const t8_default_tet_t *) elem1, (t8_default_tet_t *) elem2, t8_element_level (elem1));
 }
 
 void
@@ -458,16 +455,6 @@ t8_default_scheme_tet_c::t8_element_vertex_coords (const t8_element_t *elem, int
 {
   T8_ASSERT (t8_element_is_valid (elem));
   t8_dtet_compute_coords ((const t8_default_tet_t *) elem, vertex, coords);
-}
-
-void
-t8_default_scheme_tet_c::t8_element_general_function (const t8_element_t *elem, const void *indata, void *outdata) const
-{
-  T8_ASSERT (t8_element_is_valid (elem));
-  T8_ASSERT (outdata != NULL);
-  *((int8_t *) outdata) = ((const t8_dtet_t *) elem)->type;
-  /* Safety check to catch datatype conversion errors */
-  T8_ASSERT (*((int8_t *) outdata) == ((const t8_dtet_t *) elem)->type);
 }
 
 void
@@ -527,22 +514,19 @@ t8_default_scheme_tet_c::t8_element_new (int length, t8_element_t **elem) const
   {
     int i;
     for (i = 0; i < length; i++) {
-      t8_element_init (1, elem[i], 0);
+      t8_element_root (elem[i]);
     }
   }
 #endif
 }
 
 void
-t8_default_scheme_tet_c::t8_element_init (int length, t8_element_t *elem, int new_called) const
+t8_default_scheme_tet_c::t8_element_init (int length, t8_element_t *elem) const
 {
 #ifdef T8_ENABLE_DEBUG
-  if (!new_called) {
-    int i;
-    t8_dtet_t *tets = (t8_dtet_t *) elem;
-    for (i = 0; i < length; i++) {
-      t8_dtet_init (tets + i);
-    }
+  t8_dtet_t *tets = (t8_dtet_t *) elem;
+  for (int i = 0; i < length; i++) {
+    t8_dtet_init (tets + i);
   }
 #endif
 }

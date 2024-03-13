@@ -43,15 +43,6 @@ t8_default_scheme_quad_c::t8_element_maxlevel (void) const
   return P4EST_QMAXLEVEL;
 }
 
-t8_eclass_t
-t8_default_scheme_quad_c::t8_element_child_eclass (int childid) const
-
-{
-  T8_ASSERT (0 <= childid && childid < P4EST_CHILDREN);
-
-  return T8_ECLASS_QUAD;
-}
-
 int
 t8_default_scheme_quad_c::t8_element_level (const t8_element_t *elem) const
 {
@@ -238,7 +229,7 @@ t8_default_scheme_quad_c::t8_element_ancestor_id (const t8_element_t *elem, int 
 }
 
 int
-t8_default_scheme_quad_c::t8_element_is_family (t8_element_t **fam) const
+t8_default_scheme_quad_c::t8_element_is_family (t8_element_t *const *fam) const
 {
 #ifdef T8_ENABLE_DEBUG
   int i;
@@ -290,11 +281,11 @@ t8_default_scheme_quad_c::t8_element_last_descendant (const t8_element_t *elem, 
 }
 
 void
-t8_default_scheme_quad_c::t8_element_successor (const t8_element_t *elem1, t8_element_t *elem2, int level) const
+t8_default_scheme_quad_c::t8_element_successor (const t8_element_t *elem1, t8_element_t *elem2) const
 {
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
-  T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
+  T8_ASSERT (0 <= t8_element_level (elem1) && t8_element_level (elem1) <= P4EST_QMAXLEVEL);
   p4est_quadrant_successor ((p4est_quadrant_t *) elem1, (p4est_quadrant_t *) elem2);
   t8_element_copy_surround ((const p4est_quadrant_t *) elem1, (p4est_quadrant_t *) elem2);
 }
@@ -723,25 +714,22 @@ t8_default_scheme_quad_c::t8_element_new (int length, t8_element_t **elem) const
   {
     int i;
     for (i = 0; i < length; i++) {
-      t8_element_init (1, elem[i], 0);
+      t8_element_root (elem[i]);
       T8_QUAD_SET_TDIM ((p4est_quadrant_t *) elem[i], 2);
     }
   }
 }
 
 void
-t8_default_scheme_quad_c::t8_element_init (int length, t8_element_t *elem, int new_called) const
+t8_default_scheme_quad_c::t8_element_init (int length, t8_element_t *elem) const
 {
 #ifdef T8_ENABLE_DEBUG
-  if (!new_called) {
-    int i;
-    p4est_quadrant_t *quads = (p4est_quadrant_t *) elem;
-    /* Set all values to 0 */
-    for (i = 0; i < length; i++) {
-      p4est_quadrant_set_morton (quads + i, 0, 0);
-      T8_QUAD_SET_TDIM (quads + i, 2);
-      T8_ASSERT (p4est_quadrant_is_extended (quads + i));
-    }
+  p4est_quadrant_t *quads = (p4est_quadrant_t *) elem;
+  /* Set all values to 0 */
+  for (int i = 0; i < length; i++) {
+    p4est_quadrant_set_morton (quads + i, 0, 0);
+    T8_QUAD_SET_TDIM (quads + i, 2);
+    T8_ASSERT (p4est_quadrant_is_extended (quads + i));
   }
 #endif
 }

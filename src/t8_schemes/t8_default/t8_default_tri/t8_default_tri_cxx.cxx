@@ -174,7 +174,7 @@ t8_default_scheme_tri_c::t8_element_ancestor_id (const t8_element_t *elem, int l
 }
 
 int
-t8_default_scheme_tri_c::t8_element_is_family (t8_element_t **fam) const
+t8_default_scheme_tri_c::t8_element_is_family (t8_element_t *const *fam) const
 {
 #ifdef T8_ENABLE_DEBUG
   {
@@ -447,13 +447,13 @@ t8_default_scheme_tri_c::t8_element_last_descendant (const t8_element_t *elem, t
 }
 
 void
-t8_default_scheme_tri_c::t8_element_successor (const t8_element_t *elem1, t8_element_t *elem2, int level) const
+t8_default_scheme_tri_c::t8_element_successor (const t8_element_t *elem1, t8_element_t *elem2) const
 {
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
-  T8_ASSERT (0 <= level && level <= T8_DTRI_MAXLEVEL);
+  T8_ASSERT (0 <= t8_element_level (elem1) && t8_element_level (elem1) <= T8_DTRI_MAXLEVEL);
 
-  t8_dtri_successor ((const t8_dtri_t *) elem1, (t8_dtri_t *) elem2, level);
+  t8_dtri_successor ((const t8_dtri_t *) elem1, (t8_dtri_t *) elem2, t8_element_level (elem1));
 }
 
 void
@@ -472,16 +472,6 @@ t8_default_scheme_tri_c::t8_element_vertex_coords (const t8_element_t *elem, int
 {
   T8_ASSERT (t8_element_is_valid (elem));
   t8_dtri_compute_coords ((const t8_dtri_t *) elem, vertex, coords);
-}
-
-void
-t8_default_scheme_tri_c::t8_element_general_function (const t8_element_t *elem, const void *indata, void *outdata) const
-{
-  T8_ASSERT (t8_element_is_valid (elem));
-  T8_ASSERT (outdata != NULL);
-  *((int8_t *) outdata) = ((const t8_dtri_t *) elem)->type;
-  /* Safety check to catch datatype conversion errors */
-  T8_ASSERT (*((int8_t *) outdata) == ((const t8_dtri_t *) elem)->type);
 }
 
 void
@@ -536,22 +526,19 @@ t8_default_scheme_tri_c::t8_element_new (int length, t8_element_t **elem) const
   {
     int i;
     for (i = 0; i < length; i++) {
-      t8_element_init (1, elem[i], 0);
+      t8_element_root (elem[i]);
     }
   }
 #endif
 }
 
 void
-t8_default_scheme_tri_c::t8_element_init (int length, t8_element_t *elem, int new_called) const
+t8_default_scheme_tri_c::t8_element_init (int length, t8_element_t *elem) const
 {
 #ifdef T8_ENABLE_DEBUG
-  if (!new_called) {
-    int i;
-    t8_dtri_t *tris = (t8_dtri_t *) elem;
-    for (i = 0; i < length; i++) {
-      t8_dtri_init (tris + i);
-    }
+  t8_dtri_t *tris = (t8_dtri_t *) elem;
+  for (int i = 0; i < length; i++) {
+    t8_dtri_init (tris + i);
   }
 #endif
 }

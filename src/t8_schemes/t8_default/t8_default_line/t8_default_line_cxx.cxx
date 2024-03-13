@@ -258,13 +258,13 @@ t8_default_scheme_line_c::t8_element_set_linear_id (t8_element_t *elem, int leve
 }
 
 void
-t8_default_scheme_line_c::t8_element_successor (const t8_element_t *elem1, t8_element_t *elem2, int level) const
+t8_default_scheme_line_c::t8_element_successor (const t8_element_t *elem1, t8_element_t *elem2) const
 {
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
-  T8_ASSERT (1 <= level && level <= T8_DLINE_MAXLEVEL);
+  T8_ASSERT (1 <= t8_element_level (elem1) && t8_element_level (elem1) <= T8_DLINE_MAXLEVEL);
 
-  t8_dline_successor ((const t8_default_line_t *) elem1, (t8_default_line_t *) elem2, level);
+  t8_dline_successor ((const t8_default_line_t *) elem1, (t8_default_line_t *) elem2, t8_element_level (elem1));
 }
 
 void
@@ -373,7 +373,7 @@ t8_default_scheme_line_c::t8_element_ancestor_id (const t8_element_t *elem, int 
 }
 
 int
-t8_default_scheme_line_c::t8_element_is_family (t8_element_t **fam) const
+t8_default_scheme_line_c::t8_element_is_family (t8_element_t *const *fam) const
 {
 #ifdef T8_ENABLE_DEBUG
   int i;
@@ -420,22 +420,19 @@ t8_default_scheme_line_c::t8_element_new (int length, t8_element_t **elem) const
   {
     int i;
     for (i = 0; i < length; i++) {
-      t8_element_init (1, elem[i], 0);
+      t8_element_root (elem[i]);
     }
   }
 #endif
 }
 
 void
-t8_default_scheme_line_c::t8_element_init (int length, t8_element_t *elem, int new_called) const
+t8_default_scheme_line_c::t8_element_init (int length, t8_element_t *elem) const
 {
 #ifdef T8_ENABLE_DEBUG
-  if (!new_called) {
-    int i;
-    t8_dline_t *lines = (t8_dline_t *) elem;
-    for (i = 0; i < length; i++) {
-      t8_dline_init (lines + i);
-    }
+  t8_dline_t *lines = (t8_dline_t *) elem;
+  for (int i = 0; i < length; i++) {
+    t8_dline_init (lines + i);
   }
 #endif
 }

@@ -41,7 +41,6 @@ add_t8_test( NAME t8_gtest_shmem SOURCES t8_gtest_main.cxx t8_data/t8_gtest_shme
 
 add_t8_test( NAME t8_gtest_element_volume            SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_element_volume.cxx )
 add_t8_test( NAME t8_gtest_search                    SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_search.cxx )
-add_t8_test( NAME t8_gtest_element_general_function  SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_element_general_function.cxx )
 add_t8_test( NAME t8_gtest_half_neighbors            SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_half_neighbors.cxx )
 add_t8_test( NAME t8_gtest_find_owner                SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_find_owner.cxx )
 add_t8_test( NAME t8_gtest_user_data                 SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_user_data.cxx )
