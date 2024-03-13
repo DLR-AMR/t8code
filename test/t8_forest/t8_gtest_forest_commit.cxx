@@ -46,6 +46,7 @@ class forest_commit: public testing::TestWithParam<cmesh_example_base *> {
     /* Construct a cmesh */
     cmesh = GetParam ()->cmesh_create ();
     if (t8_cmesh_is_empty (cmesh)) {
+      /* forest_commit does not support empty cmeshes*/
       GTEST_SKIP ();
     }
   }
