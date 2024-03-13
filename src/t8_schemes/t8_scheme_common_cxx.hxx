@@ -72,7 +72,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
 
   /** Use a mempool to get allocate */
   virtual void
-  t8_element_new (const t8_locidx_t length, t8_element_t **elem) const
+  t8_element_new (const t8_locidx_t length, t8_element_t **elem) const override
   {
     T8_ASSERT (mempool != NULL);
     T8_ASSERT (0 <= length);
@@ -83,7 +83,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
   }
 
   virtual void
-  t8_element_destroy (const t8_locidx_t length, t8_element_t **elem) const
+  t8_element_destroy (const t8_locidx_t length, t8_element_t **elem) const override
   {
     T8_ASSERT (mempool != NULL);
     T8_ASSERT (0 <= length);
@@ -105,24 +105,13 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
 
 #if T8_ENABLE_DEBUG
   virtual void
-  t8_element_debug_print (const t8_element_t *elem) const
+  t8_element_debug_print (const t8_element_t *elem) const override
   {
     char debug_string[BUFSIZ];
     t8_element_to_string (elem, debug_string, BUFSIZ);
     t8_debugf ("%s\n", debug_string);
   }
 #endif
-
-  virtual void
-  t8_element_general_function (const t8_element_t *elem, const void *indata, void *outdata) const
-  {
-  }
-
-  virtual t8_eclass_t
-  t8_element_child_eclass (const int childid) const
-  {
-    return eclass;
-  }
 
   virtual int
   t8_element_is_family (t8_element_t *const *fam) const override
@@ -372,7 +361,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
    * \return          The number of faces of \a elem.
    */
   virtual int
-  t8_element_num_faces (const t8_element_t *elem) const
+  t8_element_num_faces (const t8_element_t *elem) const override
   {
     SC_ABORT ("Not implemented in baseclass. Needs to be implemented in derived class.");
   }
@@ -383,7 +372,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
    * \return          The maximum number of faces of \a elem and its descendants.
    */
   virtual int
-  t8_element_max_num_faces (const t8_element_t *elem) const
+  t8_element_max_num_faces (const t8_element_t *elem) const override
   {
     SC_ABORT ("Not implemented in baseclass. Needs to be implemented in derived class.");
   }
@@ -394,7 +383,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
    * \return            The number of children of \a face if \a elem is to be refined.
    */
   virtual int
-  t8_element_num_face_children (const t8_element_t *elem, int face) const
+  t8_element_num_face_children (const t8_element_t *elem, int face) const override
   {
     SC_ABORT ("Not implemented in baseclass. Needs to be implemented in derived class.");
   }
@@ -419,7 +408,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
    */
   /* TODO: Prism order, Pyramid order. */
   virtual int
-  t8_element_get_face_corner (const t8_element_t *element, int face, int corner) const
+  t8_element_get_face_corner (const t8_element_t *element, int face, int corner) const override
   {
     SC_ABORT ("Not implemented in baseclass. Needs to be implemented in derived class.");
   }
@@ -437,7 +426,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
    * \return              The face number of the \a face-th face at \a corner.
    */
   virtual int
-  t8_element_get_corner_face (const t8_element_t *element, int corner, int face) const
+  t8_element_get_corner_face (const t8_element_t *element, int corner, int face) const override
   {
     SC_ABORT ("Not implemented in baseclass. Needs to be implemented in derived class.");
   }
@@ -451,7 +440,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
    *      T8_ECLASS_TRIANGLE for prisms.
    */
   virtual t8_element_shape_t
-  t8_element_face_shape (const t8_element_t *elem, int face) const
+  t8_element_face_shape (const t8_element_t *elem, int face) const override
   {
     SC_ABORT ("Not implemented in baseclass. Needs to be implemented in derived class.");
   }
@@ -472,7 +461,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
    */
   virtual void
   t8_element_children_at_face (const t8_element_t *elem, int face, t8_element_t *children[], int num_children,
-                               int *child_indices) const
+                               int *child_indices) const override
   {
     SC_ABORT ("Not implemented in baseclass. Needs to be implemented in derived class.");
   }
@@ -497,7 +486,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
    *                      that coincides with \a face_child.
    */
   virtual int
-  t8_element_face_child_face (const t8_element_t *elem, int face, int face_child) const
+  t8_element_face_child_face (const t8_element_t *elem, int face, int face_child) const override
   {
     SC_ABORT ("Not implemented in baseclass. Needs to be implemented in derived class.");
   }
@@ -512,7 +501,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
      * \note For the root element this function always returns \a face.
      */
   virtual int
-  t8_element_face_parent_face (const t8_element_t *elem, int face) const
+  t8_element_face_parent_face (const t8_element_t *elem, int face) const override
   {
     SC_ABORT ("Not implemented in baseclass. Needs to be implemented in derived class.");
   }
@@ -531,7 +520,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
    *   the element does not lie on the root boundary.
    */
   virtual int
-  t8_element_tree_face (const t8_element_t *elem, int face) const
+  t8_element_tree_face (const t8_element_t *elem, int face) const override
   {
     SC_ABORT ("Not implemented in baseclass. Needs to be implemented in derived class.");
   }
@@ -559,7 +548,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
    */
   virtual void
   t8_element_transform_face (const t8_element_t *elem1, t8_element_t *elem2, int orientation, int sign,
-                             int is_smaller_face) const
+                             int is_smaller_face) const override
   {
     SC_ABORT ("Not implemented in baseclass. Needs to be implemented in derived class.");
   }
@@ -579,7 +568,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
    */
   virtual int
   t8_element_extrude_face (const t8_element_t *face, const t8_eclass_scheme_c *face_scheme, t8_element_t *elem,
-                           int root_face) const
+                           int root_face) const override
   {
     SC_ABORT ("Not implemented in baseclass. Needs to be implemented in derived class.");
   }
@@ -597,7 +586,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
    */
   virtual void
   t8_element_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
-                            const t8_eclass_scheme_c *boundary_scheme) const
+                            const t8_eclass_scheme_c *boundary_scheme) const override
   {
     SC_ABORT ("Not implemented in baseclass. Needs to be implemented in derived class.");
   }
@@ -611,7 +600,8 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
    * \param [in] level     The level, at which the first descendant is constructed
    */
   virtual void
-  t8_element_first_descendant_face (const t8_element_t *elem, int face, t8_element_t *first_desc, int level) const
+  t8_element_first_descendant_face (const t8_element_t *elem, int face, t8_element_t *first_desc,
+                                    int level) const override
   {
     SC_ABORT ("Not implemented in baseclass. Needs to be implemented in derived class.");
   }
@@ -625,7 +615,8 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
    * \param [in] level     The level, at which the last descendant is constructed
    */
   virtual void
-  t8_element_last_descendant_face (const t8_element_t *elem, int face, t8_element_t *last_desc, int level) const
+  t8_element_last_descendant_face (const t8_element_t *elem, int face, t8_element_t *last_desc,
+                                   int level) const override
   {
     SC_ABORT ("Not implemented in baseclass. Needs to be implemented in derived class.");
   }
@@ -637,7 +628,7 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
    * \note You can compute the corresponding face number of the tree via \ref t8_element_tree_face.
    */
   virtual int
-  t8_element_is_root_boundary (const t8_element_t *elem, int face) const
+  t8_element_is_root_boundary (const t8_element_t *elem, int face) const override
   {
     SC_ABORT ("Not implemented in baseclass. Needs to be implemented in derived class.");
   }
@@ -658,7 +649,8 @@ class t8_scheme_common_c: public t8_eclass_scheme_c {
    *                  on output.
    */
   virtual int
-  t8_element_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face, int *neigh_face) const
+  t8_element_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face,
+                                   int *neigh_face) const override
   {
     SC_ABORT ("Not implemented in baseclass. Needs to be implemented in derived class.");
   }
