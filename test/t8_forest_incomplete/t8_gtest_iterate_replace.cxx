@@ -42,6 +42,7 @@ class forest_iterate: public testing::TestWithParam<cmesh_example_base *> {
   {
     cmesh = GetParam ()->cmesh_create ();
     if (t8_cmesh_is_empty (cmesh)) {
+      /* empty cmeshes are currently not supported */
       GTEST_SKIP ();
     }
     forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), 4, 0, sc_MPI_COMM_WORLD);
