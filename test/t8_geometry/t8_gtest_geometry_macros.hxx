@@ -27,6 +27,12 @@
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
 
+#ifdef T8_ENABLE_LESS_TESTS 
+#define T8_NUM_SAMPLE_POINTS 1000
+#else 
+#define T8_NUM_SAMPLE_POINTS 10000
+#endif
+
 class geometry_test: public testing::TestWithParam<t8_eclass_t> {
  protected:
   void
@@ -39,9 +45,4 @@ class geometry_test: public testing::TestWithParam<t8_eclass_t> {
   {
   }
   t8_eclass_t eclass;
-#ifdef T8_ENABLE_LESS_TESTS
-  const int num_points = 1000;
-#else
-  const int num_points = 10000;
-#endif
 };
