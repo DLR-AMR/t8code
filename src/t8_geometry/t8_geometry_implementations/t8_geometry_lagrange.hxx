@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2023 the developers
+  Copyright (C) 2024 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -38,6 +38,8 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_geometry/t8_geometry_with_vertices.hxx>
 #include <t8_geometry/t8_geometry_with_vertices.h>
+
+#define MAX_POLYNOMIAL_DEGREE 2
 
 /**
  * Mapping with Lagrange basis functions
@@ -105,11 +107,23 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
 
   /**
    * Maps points from the reference space to the physical space \f$ \mathbb{R}^3 \f$.
+   * 
    * For linear elements, it gives the same result as \ref t8_geom_compute_linear_geometry.
+   * 
+   * The mapping is performed via Lagrange interpolation according to
+   * 
+   * \f$ \mathbf{x}(\vec{\xi}) = \sum\limits_{i=1}^{N_{\mathrm{vertex}}} \psi_i(\vec{\xi}) \mathbf{x}_i \f$
+   * 
+   * where \f$ \vec{\xi} \f$ is the point in the reference space to be mapped, \f$ \mathbf{x} \f$ is the mapped point we search,
+   * \f$ \psi_i(\vec{\xi}) \f$ are the basis functions associated with the vertices, and \f$ \mathbf{x}_i \f$ are the
+   * vertices of the current tree in the physical space.
+   * The basis functions are specific to the tree type, see e.g. \ref t8_geom_t6_basis.
+   * The vertices of the current tree were set with \ref t8_cmesh_set_tree_vertices.
+   * 
    * \param [in]  cmesh       The cmesh in which the point lies.
    * \param [in]  gtreeid     The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords  Array of \a dimension x \a num_points entries, specifying points in the reference space.
-   * \param [in]  num_points  Number of points to map.
+   * \param [in]  num_points  Number of points to map. Currently, only one point is supported.
    * \param [out] out_coords  Coordinates of the mapped points in physical space of \a ref_coords. The length is \a num_points * 3.
    */
   void
@@ -144,25 +158,8 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
    * Evaluates the basis functions of the current tree type at a point.
    * \param [in]  ref_point  Array of \a dimension entries, specifying the point in the reference space.
    */
-  std::vector<double>
+  inline std::vector<double>
   t8_geom_compute_basis (const double *ref_point) const;
-
-  /**
-   * Map a point from the reference space to the physical space.
-   * The mapping is performed via Lagrange interpolation according to
-   * 
-   * \f$ \mathbf{x}(\vec{\xi}) = \sum\limits_{i=1}^{N_{\mathrm{vertex}}} \psi_i(\vec{\xi}) \mathbf{x}_i \f$
-   * 
-   * where \f$ \vec{\xi} \f$ is the point in the reference space to be mapped, \f$ \mathbf{x} \f$ is the mapped point we search,
-   * \f$ \psi_i(\vec{\xi}) \f$ are the basis functions associated with the vertices, and \f$ \mathbf{x}_i \f$ are the
-   * vertices of the current tree in the physical space.
-   * The basis functions are specific to the tree type, see e.g. \ref t8_geom_t6_basis.
-   * The vertices of the current tree were set with \ref t8_cmesh_set_tree_vertices.
-   * \param [in]  ref_point     Array of \a dimension entries, specifying the coordinates of \f$ \vec{\xi} \f$.
-   * \param [out] mapped_point  Array of 3 entries, specifying the coordinates of \f$ \mathbf{x} \f$.
-   */
-  void
-  t8_geom_map (const double *ref_point, double *mapped_point) const;
 
   /**
    * Basis functions of a 2-node segment.
@@ -173,7 +170,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
    * \param ref_point  Point in the reference space.
    * \return  Basis functions evaluated at the reference point.
    */
-  std::vector<double>
+  inline std::vector<double>
   t8_geom_s2_basis (const double *ref_point) const;
 
   /**
@@ -185,7 +182,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
    * \param ref_point  Point in the reference space.
    * \return  Basis functions evaluated at the reference point.
    */
-  std::vector<double>
+  inline std::vector<double>
   t8_geom_s3_basis (const double *ref_point) const;
 
   /**
@@ -204,7 +201,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
    * \param ref_point  Point in the reference space.
    * \return  Basis functions evaluated at the reference point.
    */
-  std::vector<double>
+  inline std::vector<double>
   t8_geom_t3_basis (const double *ref_point) const;
 
   /**
@@ -223,7 +220,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
    * \param ref_point  Point in the reference space.
    * \return  Basis functions evaluated at the reference point.
    */
-  std::vector<double>
+  inline std::vector<double>
   t8_geom_t6_basis (const double *ref_point) const;
 
   /**
@@ -242,7 +239,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
    * \param ref_point  Point in the reference space.
    * \return  Basis functions evaluated at the reference point.
    */
-  std::vector<double>
+  inline std::vector<double>
   t8_geom_q4_basis (const double *ref_point) const;
 
   /**
@@ -261,7 +258,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
    * \param ref_point  Point in the reference space.
    * \return  Basis functions evaluated at the reference point.
    */
-  std::vector<double>
+  inline std::vector<double>
   t8_geom_q9_basis (const double *ref_point) const;
 
   /**
@@ -284,7 +281,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
    * \param ref_point  Point in the reference space.
    * \return  Basis functions evaluated at the reference point.
    */
-  std::vector<double>
+  inline std::vector<double>
   t8_geom_h8_basis (const double *ref_point) const;
 
   /**
@@ -307,7 +304,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
    * \param ref_point  Point in the reference space.
    * \return  Basis functions evaluated at the reference point.
    */
-  std::vector<double>
+  inline std::vector<double>
   t8_geom_h27_basis (const double *ref_point) const;
 
   /** Polynomial degree of the interpolation. */
@@ -341,25 +338,25 @@ flatten (const std::vector<std::vector<T>> &vec)
  * some specific to the Lagrange geometry, some valid for all the
  * geometries in t8code.
  */
-class LagrangeElement {
+class t8_lagrange_element {
  public:
   /**
-   * Construct a new LagrangeElement object.
+   * Construct a new t8_lagrange_element object.
    * 
    * \param eclass  Element class (line, quad, etc.)
    * \param degree  Polynomial degree (1, 2, ...)
    * \param nodes   x,y,z coordinates of the nodes, adhering to the numbering
    *                convention.
    */
-  LagrangeElement (t8_eclass_t eclass, uint degree, std::vector<double> &nodes);
+  t8_lagrange_element (t8_eclass_t eclass, uint degree, std::vector<double> &nodes);
 
   /**
-   * Destroy the LagrangeElement object.
+   * Destroy the t8_lagrange_element object.
    * 
    * The cmesh wrapped by this class is also destroyed.
    * 
    */
-  ~LagrangeElement ()
+  ~t8_lagrange_element ()
   {
     t8_cmesh_destroy (&cmesh);
   };
@@ -370,7 +367,7 @@ class LagrangeElement {
    * \return  Element class of the element.
    */
   t8_eclass_t
-  getType () const;
+  get_type () const;
 
   /**
    * Element classes of the faces of this element.
@@ -379,7 +376,7 @@ class LagrangeElement {
    * ordering conventions of t8code.
    */
   std::vector<t8_eclass_t>
-  faceClasses () const;
+  face_classes () const;
 
   /**
    * Coordinates of the specified node.
@@ -388,7 +385,7 @@ class LagrangeElement {
    * \return      x,y,z coordinates of the node.
    */
   std::vector<double>
-  getNodeCoords (uint node) const;
+  get_node_coords (uint node) const;
 
   /**
    * Coordinates of the specified nodes.
@@ -397,7 +394,7 @@ class LagrangeElement {
    * \return       x,y,z coordinates of the nodes.
    */
   std::vector<std::vector<double>>
-  getNodeCoords (std::vector<uint> &nodes) const;
+  get_node_coords (std::vector<uint> &nodes) const;
 
   /**
    * Node labels on the faces of the element.
@@ -405,18 +402,18 @@ class LagrangeElement {
    * \return  Node labels on each face of the element.
    */
   std::vector<std::vector<uint>>
-  getFaceNodes () const;
+  get_face_nodes () const;
 
   /**
    * Decompose the element into its faces.
    * 
-   * LagrangeElement()-s of codimension 1 are created. The original element
+   * t8_lagrange_element()-s of codimension 1 are created. The original element
    * is not modified and the decomposition is not recursive.
    * The faces can further be decomposed by calling this method on them.
    * 
    * \return  Lagrange elements from the faces.
    */
-  std::vector<LagrangeElement>
+  std::vector<t8_lagrange_element>
   decompose () const;
 
   /**
@@ -427,8 +424,8 @@ class LagrangeElement {
    *               considered. For the 1D line element, only the first.
    * \return       Coordinates in the physical space.
    */
-  std::array<double, 3>
-  evaluate (const std::array<double, 3> &ref_point) const;
+  std::array<double, T8_ECLASS_MAX_DIM>
+  evaluate (const std::array<double, T8_ECLASS_MAX_DIM> &ref_point) const;
 
   /**
    * Sample random points in the reference domain.
@@ -436,7 +433,7 @@ class LagrangeElement {
    * \param n_point  Number of points to generate.
    * \return         Coordinates of the points, given in x,y,z.
    */
-  std::vector<std::array<double, 3>>
+  std::vector<std::array<double, T8_ECLASS_MAX_DIM>>
   sample (uint n_point) const;
 
   /**
@@ -475,8 +472,8 @@ class LagrangeElement {
    * \param coord    x,y,z coordinates of the point in this element.
    * \return         x,y,z coordinates of the mapped point.
    */
-  std::array<double, 3>
-  mapOnFace (t8_eclass eclass, const int face_id, const std::array<double, 3> &coord) const;
+  std::array<double, T8_ECLASS_MAX_DIM>
+  map_on_face (t8_eclass eclass, const int face_id, const std::array<double, T8_ECLASS_MAX_DIM> &coord) const;
 
   /**
    * Save the geometry into a VTK file.

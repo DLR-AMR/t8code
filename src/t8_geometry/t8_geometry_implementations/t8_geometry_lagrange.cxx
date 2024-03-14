@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2023 the developers
+  Copyright (C) 2024 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -47,7 +47,17 @@ t8_geometry_lagrange::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, c
 {
   if (num_points != 1)
     SC_ABORT ("Error: Batch computation of geometry not yet supported.");
-  t8_geometry_lagrange::t8_geom_map (ref_coords, out_coords);
+  const auto basis_functions = t8_geometry_lagrange::t8_geom_compute_basis (ref_coords);
+  const size_t n_vertex = basis_functions.size ();
+  for (size_t i_component = 0; i_component < T8_ECLASS_MAX_DIM; i_component++) {
+    double inner_product = 0;
+    for (size_t j_vertex = 0; j_vertex < n_vertex; j_vertex++) {
+      const double coordinate = active_tree_vertices[j_vertex * T8_ECLASS_MAX_DIM + i_component];
+      const double basis_function = basis_functions[j_vertex];
+      inner_product += basis_function * coordinate;
+    }
+    out_coords[i_component] = inner_product;
+  }
 }
 
 void
@@ -65,23 +75,7 @@ t8_geometry_lagrange::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtre
   T8_ASSERT (degree != NULL);
 }
 
-void
-t8_geometry_lagrange::t8_geom_map (const double *ref_point, double *mapped_point) const
-{
-  const auto basis_functions = t8_geometry_lagrange::t8_geom_compute_basis (ref_point);
-  const size_t n_vertex = basis_functions.size ();
-  for (size_t i_component = 0; i_component < T8_ECLASS_MAX_DIM; i_component++) {
-    double inner_product = 0;
-    for (size_t j_vertex = 0; j_vertex < n_vertex; j_vertex++) {
-      const double coordinate = active_tree_vertices[j_vertex * T8_ECLASS_MAX_DIM + i_component];
-      const double basis_function = basis_functions[j_vertex];
-      inner_product += basis_function * coordinate;
-    }
-    mapped_point[i_component] = inner_product;
-  }
-}
-
-std::vector<double>
+inline std::vector<double>
 t8_geometry_lagrange::t8_geom_compute_basis (const double *ref_coords) const
 {
   switch (active_tree_class) {
@@ -119,7 +113,7 @@ t8_geometry_lagrange::t8_geom_compute_basis (const double *ref_coords) const
   }
 }
 
-std::vector<double>
+inline std::vector<double>
 t8_geometry_lagrange::t8_geom_s2_basis (const double *ref_point) const
 {
   const double xi = ref_point[0];
@@ -127,7 +121,7 @@ t8_geometry_lagrange::t8_geom_s2_basis (const double *ref_point) const
   return basis_functions;
 }
 
-std::vector<double>
+inline std::vector<double>
 t8_geometry_lagrange::t8_geom_s3_basis (const double *ref_point) const
 {
   const double xi = ref_point[0];
@@ -140,7 +134,7 @@ t8_geometry_lagrange::t8_geom_s3_basis (const double *ref_point) const
   return basis_functions;
 }
 
-std::vector<double>
+inline std::vector<double>
 t8_geometry_lagrange::t8_geom_t3_basis (const double *ref_point) const
 {
   const double xi = ref_point[0];
@@ -149,7 +143,7 @@ t8_geometry_lagrange::t8_geom_t3_basis (const double *ref_point) const
   return basis_functions;
 }
 
-std::vector<double>
+inline std::vector<double>
 t8_geometry_lagrange::t8_geom_t6_basis (const double *ref_point) const
 {
   const double xi = ref_point[0];
@@ -166,7 +160,7 @@ t8_geometry_lagrange::t8_geom_t6_basis (const double *ref_point) const
   return basis_functions;
 }
 
-std::vector<double>
+inline std::vector<double>
 t8_geometry_lagrange::t8_geom_q4_basis (const double *ref_point) const
 {
   const double xi = ref_point[0];
@@ -181,7 +175,7 @@ t8_geometry_lagrange::t8_geom_q4_basis (const double *ref_point) const
   return basis_functions;
 }
 
-std::vector<double>
+inline std::vector<double>
 t8_geometry_lagrange::t8_geom_q9_basis (const double *ref_point) const
 {
   const double xi = ref_point[0];
@@ -201,7 +195,7 @@ t8_geometry_lagrange::t8_geom_q9_basis (const double *ref_point) const
   return basis_functions;
 }
 
-std::vector<double>
+inline std::vector<double>
 t8_geometry_lagrange::t8_geom_h8_basis (const double *ref_point) const
 {
   const double xi = ref_point[0];
@@ -221,7 +215,7 @@ t8_geometry_lagrange::t8_geom_h8_basis (const double *ref_point) const
   return basis_functions;
 }
 
-std::vector<double>
+inline std::vector<double>
 t8_geometry_lagrange::t8_geom_h27_basis (const double *ref_point) const
 {
   const double xi = ref_point[0];
@@ -261,14 +255,14 @@ t8_geometry_lagrange::t8_geom_h27_basis (const double *ref_point) const
 }
 
 t8_forest_t
-LagrangeElement::create_uniform_forest (t8_cmesh_t cmesh, uint level) const
+t8_lagrange_element::create_uniform_forest (t8_cmesh_t cmesh, uint level) const
 {
   t8_forest_t forest;
   forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0, sc_MPI_COMM_WORLD);
   return forest;
 }
 
-LagrangeElement::LagrangeElement (t8_eclass_t eclass, uint degree, std::vector<double> &nodes)
+t8_lagrange_element::t8_lagrange_element (t8_eclass_t eclass, uint degree, std::vector<double> &nodes)
   : eclass (eclass), degree (degree), nodes (nodes)
 {
   // TODO: Check if the number of nodes corresponds to the element type and degree.
@@ -284,16 +278,16 @@ LagrangeElement::LagrangeElement (t8_eclass_t eclass, uint degree, std::vector<d
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 }
 
-const uint LagrangeElement::lagrange_nodes[T8_ECLASS_COUNT][2];
+const uint t8_lagrange_element::lagrange_nodes[T8_ECLASS_COUNT][2];
 
 t8_eclass_t
-LagrangeElement::getType () const
+t8_lagrange_element::get_type () const
 {
   return eclass;
 }
 
 std::vector<std::vector<uint>>
-LagrangeElement::getFaceNodes () const
+t8_lagrange_element::get_face_nodes () const
 {
   std::ostringstream invalid_degree;
   invalid_degree << "Invalid degree " << degree << ".\n";
@@ -343,7 +337,7 @@ LagrangeElement::getFaceNodes () const
 }
 
 std::vector<t8_eclass_t>
-LagrangeElement::faceClasses () const
+t8_lagrange_element::face_classes () const
 {
   std::vector<t8_eclass_t> face_classes;
   switch (eclass) {
@@ -375,14 +369,14 @@ LagrangeElement::faceClasses () const
 }
 
 std::vector<double>
-LagrangeElement::getNodeCoords (uint node) const
+t8_lagrange_element::get_node_coords (uint node) const
 {
   const double *v = t8_cmesh_get_tree_vertices (cmesh, 0);
   return std::vector<double> (v + 3 * node, v + 3 * node + 3);
 }
 
 std::vector<std::vector<double>>
-LagrangeElement::getNodeCoords (std::vector<uint> &nodes) const
+t8_lagrange_element::get_node_coords (std::vector<uint> &nodes) const
 {
   const double *v = t8_cmesh_get_tree_vertices (cmesh, 0);
   size_t n_node = nodes.size ();
@@ -394,33 +388,34 @@ LagrangeElement::getNodeCoords (std::vector<uint> &nodes) const
   return node_coords;
 }
 
-std::vector<LagrangeElement>
-LagrangeElement::decompose () const
+std::vector<t8_lagrange_element>
+t8_lagrange_element::decompose () const
 {
   /* Get the node numbers of the faces */
-  std::vector<t8_eclass_t> fc = faceClasses ();
-  std::vector<std::vector<uint>> fn = getFaceNodes ();
+  std::vector<t8_eclass_t> fc = face_classes ();
+  std::vector<std::vector<uint>> fn = get_face_nodes ();
   /* Create a new Lagrange element from each face */
-  std::vector<LagrangeElement> faces;
+  std::vector<t8_lagrange_element> faces;
   const uint n_face = t8_eclass_num_faces[eclass];
   faces.reserve (n_face);
   for (size_t i_face = 0; i_face < n_face; ++i_face) {
-    auto nc = flatten<double> (getNodeCoords (fn[i_face]));
+    auto nc = flatten<double> (get_node_coords (fn[i_face]));
     faces.emplace_back (fc[i_face], degree, nc);
   }
   return faces;
 }
 
-std::array<double, 3>
-LagrangeElement::evaluate (const std::array<double, 3> &ref_point) const
+std::array<double, T8_ECLASS_MAX_DIM>
+t8_lagrange_element::evaluate (const std::array<double, T8_ECLASS_MAX_DIM> &ref_point) const
 {
-  std::array<double, 3> mapped;
+  std::array<double, T8_ECLASS_MAX_DIM> mapped;
   t8_geometry_evaluate (cmesh, 0, ref_point.data (), 1, mapped.data ());
   return mapped;
 }
 
-std::array<double, 3>
-LagrangeElement::mapOnFace (t8_eclass map_onto, const int face_id, const std::array<double, 3> &coord) const
+std::array<double, T8_ECLASS_MAX_DIM>
+t8_lagrange_element::map_on_face (t8_eclass map_onto, const int face_id,
+                                  const std::array<double, T8_ECLASS_MAX_DIM> &coord) const
 {
   /* Error messages for input validation */
   std::ostringstream unsupported_element;
@@ -438,7 +433,7 @@ LagrangeElement::mapOnFace (t8_eclass map_onto, const int face_id, const std::ar
     SC_ABORT (too_many_faces.str ().c_str ());
 
   /* Actual mapping, case by case */
-  std::array<double, 3> mapped_coord;
+  std::array<double, T8_ECLASS_MAX_DIM> mapped_coord;
   double xi = coord[0];
   double eta = coord[1];
   switch (eclass) {
@@ -489,7 +484,7 @@ LagrangeElement::mapOnFace (t8_eclass map_onto, const int face_id, const std::ar
 }
 
 void
-LagrangeElement::write () const
+t8_lagrange_element::write () const
 {
   /* A cmesh cannot be exported, only a forest.
        So we create one tree element per coarse mesh element */

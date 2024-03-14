@@ -3,7 +3,7 @@ This file is part of t8code.
 t8code is a C library to manage a collection (a forest) of multiple
 connected adaptive space-trees of general element classes in parallel.
 
-Copyright (C) 2023 the developers
+Copyright (C) 2024 the developers
 
 t8code is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -41,8 +41,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_forest/t8_forest.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.hxx>
-
-#define MAX_POLYNOMIAL_DEGREE 2
 
 /**
  * Generate a random double precision number in [0, 1].
@@ -84,13 +82,10 @@ perturb (const std::vector<double> &vec, const double max_amplitude)
  */
 template <typename U, typename V>
 bool
-allclose (const U &a, const V &b, double tol = 1e-8)
+allclose (const U &a, const V &b, double tol = T8_PRECISION_SQRT_EPS)
 {
-  size_t size_a = a.size ();
-  size_t size_b = b.size ();
-  if (size_a != size_b)
-    return false;
-  for (size_t i = 0; i < size_a; ++i)
+  T8_ASSERT (a.size () == b.size ());
+  for (size_t i = 0; i < a.size (); ++i)
     if (fabs (a[i] - b[i]) > tol)
       return false;
   return true;
@@ -103,11 +98,11 @@ allclose (const U &a, const V &b, double tol = 1e-8)
  * \param n_point  Number of points to generate.
  * \return         Coordinates of the points, given in x,y,z.
  */
-std::vector<std::array<double, 3>>
+std::vector<std::array<double, T8_ECLASS_MAX_DIM>>
 sample (t8_eclass_t eclass, uint n_point)
 {
   std::srand (time (NULL));
-  std::vector<std::array<double, 3>> points (n_point);
+  std::vector<std::array<double, T8_ECLASS_MAX_DIM>> points (n_point);
   switch (eclass) {
   case T8_ECLASS_LINE:
     for (auto &pt : points) {
@@ -137,16 +132,16 @@ sample (t8_eclass_t eclass, uint n_point)
 }
 
 /**
- * Create a sample LagrangeElement.
+ * Create a sample t8_lagrange_element.
  * 
- * The goal of this function is to quickly instantiate a LagrangeElement
+ * The goal of this function is to quickly instantiate a t8_lagrange_element
  * for the purpose of testing.
  * 
  * \param eclass  Element class of the element.
  * \param degree  Polynomial degree.
- * \return        LagrangeElement.
+ * \return        t8_lagrange_element.
  */
-LagrangeElement
+t8_lagrange_element
 create_sample_element (t8_eclass_t eclass, int degree)
 {
   std::ostringstream invalid_degree;
@@ -198,7 +193,7 @@ create_sample_element (t8_eclass_t eclass, int degree)
   default:
     SC_ABORTF ("Not implemented for %s elements.\n", t8_eclass_to_string[eclass]);
   }
-  return LagrangeElement (eclass, degree, vertices);
+  return t8_lagrange_element (eclass, degree, vertices);
 }
 
 /**
@@ -220,6 +215,11 @@ class LagrangeCmesh: public testing::TestWithParam<std::tuple<t8_eclass_t, int>>
 
   t8_eclass_t eclass;
   int degree;
+  #ifdef T8_ENABLE_LESS_TESTS
+    const int num_points = 1000;
+  #else
+    const int num_points = 10000;
+  #endif
 };
 
 /**
@@ -230,18 +230,18 @@ TEST_P (LagrangeCmesh, lagrange_mapping)
 {
   /* Create a coarse mesh consisting of one single element
    * (one element is sufficient: we want to test the mapping) */
-  LagrangeElement lag = create_sample_element (eclass, degree);
+  t8_lagrange_element lag = create_sample_element (eclass, degree);
   lag.write ();
   t8_errorf ("\n-------------------\nEclass: %s, degree: %d\n-------------------\n", t8_eclass_to_string[eclass],
              degree);
   /* Compare the mappings on each boundary face of the Lagrange element */
-  std::vector<LagrangeElement> faces = lag.decompose ();
+  std::vector<t8_lagrange_element> faces = lag.decompose ();
   uint i_face = 0;
   for (const auto &face : faces) {
-    auto points_on_face = sample (face.getType (), 5);
+    auto points_on_face = sample (face.get_type (), num_points);
     for (const auto &point : points_on_face) {
       auto mapped1 = face.evaluate (point);
-      auto mapped2 = lag.evaluate (face.mapOnFace (lag.getType (), i_face, point));
+      auto mapped2 = lag.evaluate (face.map_on_face (lag.get_type (), i_face, point));
       ASSERT_TRUE (allclose (mapped1, mapped2));
     }
     ++i_face;
