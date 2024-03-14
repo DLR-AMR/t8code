@@ -246,7 +246,7 @@ TEST_P (LagrangeCmesh, lagrange_mapping)
 
 /* clang-format off */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_geometry_lagrange, LagrangeCmesh,
-  testing::Combine (AllEclasses, testing::Range (1, MAX_POLYNOMIAL_DEGREE + 1)),
+  testing::Combine (AllEclasses, testing::Range (1, T8_GEOMETRY_MAX_POLYNOMIAL_DEGREE + 1)),
   [] (const testing::TestParamInfo<LagrangeCmesh::ParamType> &info) {
     std::ostringstream test_name;
     test_name << t8_eclass_to_string[std::get<0> (info.param)]

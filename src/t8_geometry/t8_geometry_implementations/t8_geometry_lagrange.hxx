@@ -39,7 +39,7 @@
 #include <t8_geometry/t8_geometry_with_vertices.hxx>
 #include <t8_geometry/t8_geometry_with_vertices.h>
 
-#define MAX_POLYNOMIAL_DEGREE 2
+#define T8_GEOMETRY_MAX_POLYNOMIAL_DEGREE 2
 
 /**
  * Mapping with Lagrange basis functions
