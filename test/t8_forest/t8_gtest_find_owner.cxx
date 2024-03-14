@@ -170,4 +170,4 @@ TEST_P (forest_find_owner, find_multiple_owners)
   sc_array_reset (&owners);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_find_owner, forest_find_owner, AllEclasses);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_find_owner, forest_find_owner, AllEclasses, print_eclass);

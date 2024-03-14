@@ -47,12 +47,18 @@ struct t8_geometry_analytic: public t8_geometry
    * \param [in] jacobian   The jacobian of \a analytical.
    * \param [in] load_tree_data The function that is used to load a tree's data.
    */
-  t8_geometry_analytic (int dim, const char *name, t8_geom_analytic_fn analytical,
+  t8_geometry_analytic (int dim, std::string name, t8_geom_analytic_fn analytical,
                         t8_geom_analytic_jacobian_fn jacobian, t8_geom_load_tree_data_fn load_tree_data,
                         const void *user_data);
 
+  /**
+   * Constructor of the analytic geometry for testing purposes.
+   * \param [in] dim        The dimension of this geometry.
+   * \param [in] name       The name to give this geometry.
+   */
+  t8_geometry_analytic (int dim, std::string name);
+
   /** The destructor. 
-   * Clears the allocated memory.
    */
   virtual ~t8_geometry_analytic ()
   {
@@ -145,4 +151,4 @@ struct t8_geometry_analytic: public t8_geometry
                                          * and modified via \ref t8_geom_analytic_get_user_data. */
 };
 
-#endif /* !T8_GEOMETRY_ANALYTICAL_HXX! */
+#endif /* !T8_GEOMETRY_ANALYTICAL_HXX */

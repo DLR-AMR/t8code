@@ -345,7 +345,6 @@ t8_construct_fractal (int level_initial, int level_end, const int iterative, con
 
   sc_stats_accumulate (&times[0], time_refine);
   sc_stats_accumulate (&times[1], time_coarse);
-  ;
   sc_stats_compute (sc_MPI_COMM_WORLD, 2, times);
   sc_stats_print (t8_get_package_id (), SC_LP_ESSENTIAL, 2, times, 1, 1);
 
