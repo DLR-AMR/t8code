@@ -45,7 +45,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #else
 #define T8_CMESH_MAX_NUM_OF_TREES 10
 #define T8_CMESH_MAX_NUM_OF_PRISMS 10
-#define T8_CMESH_MAX_NUM_XYZ_TREES 5
+#define T8_CMESH_MAX_NUM_XYZ_TREES 4
 #endif
 
 namespace cmesh_params
