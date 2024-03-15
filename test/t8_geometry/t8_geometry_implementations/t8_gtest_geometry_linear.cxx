@@ -82,7 +82,7 @@ TEST_P (geometry_test, cmesh_geometry_linear)
   ASSERT_EQ (has_same_name, 1) << "cmesh's geometry is not the linear geometry.";
 
   srand (seed);
-  for (int ipoint = 0; ipoint < num_points; ++ipoint) {
+  for (int ipoint = 0; ipoint < T8_NUM_SAMPLE_POINTS; ++ipoint) {
     /* Compute random coordinates in [0,1].
      * These are seen as reference coordinates in the single
      * cmesh tree. Our geometry will map them into the physical

@@ -65,6 +65,7 @@ libt8_installed_headers_geometry = \
 libt8_installed_headers_geometry_impl = \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h \
+  src/t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_analytic.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_examples.h \
@@ -72,6 +73,7 @@ libt8_installed_headers_geometry_impl = \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx \
+  src/t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_examples.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.h
@@ -131,6 +133,7 @@ libt8_compiled_sources = \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_cad.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.cxx \
+  src/t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_examples.cxx \
   src/t8_forest/t8_forest_partition.cxx src/t8_forest/t8_forest_cxx.cxx \
