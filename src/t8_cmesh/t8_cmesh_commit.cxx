@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_commit.c
+/** \file t8_cmesh_commit.cxx
  *
  * TODO: document this file
  */
@@ -518,7 +518,6 @@ void
 t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
   int mpiret;
-  int commit_geom_handler = 0;
 
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (comm != sc_MPI_COMM_NULL);
@@ -535,7 +534,6 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_rank (comm, &cmesh->mpirank);
   SC_CHECK_MPI (mpiret);
-
   if (cmesh->set_from != NULL) {
     cmesh->dimension = cmesh->set_from->dimension;
     if (cmesh->face_knowledge == -1) {
@@ -546,15 +544,8 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     /* If present use the set geometry handler, otherwise take
      * over the handler from set_from. */
     if (cmesh->geometry_handler == NULL) {
-      /* Reference and copy the geometry handler. */
-      t8_geom_handler_ref (cmesh->set_from->geometry_handler);
       cmesh->geometry_handler = cmesh->set_from->geometry_handler;
-      /* Mark that we do not have to commit the geometry handler. */
-      commit_geom_handler = 0;
-    }
-    else {
-      /* Set flag that we need to commit the geometry handler. */
-      commit_geom_handler = 1;
+      cmesh->set_from->geometry_handler = NULL;
     }
 
     if (cmesh->set_partition) {
@@ -567,18 +558,6 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   } /* End set_from != NULL */
   else {
     t8_cmesh_commit_from_stash (cmesh, comm);
-    /* If no geometry was registered, we need to initialize a geometry handler
-     * (which will then be empty). */
-    if (cmesh->geometry_handler == NULL) {
-      t8_geom_handler_init (&cmesh->geometry_handler);
-    }
-    /* We also need to commit the handler. */
-    commit_geom_handler = 1;
-  }
-
-  if (commit_geom_handler) {
-    /* Commit the geometry handler. */
-    t8_geom_handler_commit (cmesh->geometry_handler);
   }
   cmesh->committed = 1;
 

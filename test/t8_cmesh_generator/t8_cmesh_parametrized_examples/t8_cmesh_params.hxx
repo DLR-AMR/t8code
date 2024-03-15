@@ -34,6 +34,20 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx>
 
+#define T8_CMESH_TEST_NUM_COMMS 1
+#define T8_CMESH_BINARY 2
+#define T8_CMESH_DIM_RANGE 4 /* this is the dim range for hypercube hybrid and empty cmesh */
+#define T8_CMESH_MAX_TEST_DIMS 3
+#ifdef T8_ENABLE_LESS_TESTS
+#define T8_CMESH_MAX_NUM_OF_TREES 5
+#define T8_CMESH_MAX_NUM_OF_PRISMS 5
+#define T8_CMESH_MAX_NUM_XYZ_TREES 2
+#else
+#define T8_CMESH_MAX_NUM_OF_TREES 10
+#define T8_CMESH_MAX_NUM_OF_PRISMS 10
+#define T8_CMESH_MAX_NUM_XYZ_TREES 3
+#endif
+
 namespace cmesh_params
 {
 std::string
@@ -62,9 +76,9 @@ std::vector<const double *> boundaries = { cube_bounds };
 
 std::vector<int> use_axis_aligned = { 0, 1 };
 
-std::vector<int> large_mesh = filled_vector (20, 500);
+std::vector<int> large_mesh = filled_vector (T8_CMESH_MAX_NUM_OF_TREES, 1);
 
-std::vector<int> elems_per_dim = filled_vector (3, 1);
+std::vector<int> elems_per_dim = filled_vector (T8_CMESH_MAX_NUM_XYZ_TREES, 1);
 
 std::vector<sc_MPI_Comm> my_comms = { sc_MPI_COMM_WORLD };
 std::vector<t8_eclass_t> eclasses = { T8_ECLASS_VERTEX, T8_ECLASS_LINE, T8_ECLASS_QUAD,  T8_ECLASS_TRIANGLE,
@@ -85,7 +99,7 @@ std::vector<int> no_periodic = { 0 };
 
 std::vector<int> dims = { 1, 2, 3 };
 
-std::vector<int> num_prisms = filled_vector (50, 3);
+std::vector<int> num_prisms = filled_vector (T8_CMESH_MAX_NUM_OF_PRISMS, 3);
 }  // namespace cmesh_params
 
 #endif /* T8_CMESH_PARAMS_HXX */

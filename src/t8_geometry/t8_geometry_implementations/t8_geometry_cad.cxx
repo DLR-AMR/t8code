@@ -42,18 +42,14 @@
 #include <Standard_Version.hxx>
 #include <t8_schemes/t8_default/t8_default_prism/t8_dprism.h>
 
-t8_geometry_cad::t8_geometry_cad (int dim, const char *fileprefix, const char *name_in)
+t8_geometry_cad::t8_geometry_cad (int dim, std::string fileprefix, std::string name_in)
+  : t8_geometry_with_vertices (dim, name_in + "_" + std::to_string (dim))
 {
-  T8_ASSERT (0 <= dim && dim <= 3);
-
-  name = name_in;
-  dimension = dim;
-
   BRep_Builder builder;
   std::string current_file (fileprefix);
   std::ifstream is (current_file + ".brep");
   if (is.is_open () == false) {
-    SC_ABORTF ("Cannot find the file %s.brep.\n", fileprefix);
+    SC_ABORTF ("Cannot find the file %s.brep.\n", fileprefix.c_str ());
   }
   BRepTools::Read (cad_shape, is, builder);
   is.close ();
@@ -70,12 +66,9 @@ t8_geometry_cad::t8_geometry_cad (int dim, const char *fileprefix, const char *n
   TopExp::MapShapesAndUniqueAncestors (cad_shape, TopAbs_EDGE, TopAbs_FACE, cad_shape_edge2face_map);
 }
 
-t8_geometry_cad::t8_geometry_cad (int dim, const TopoDS_Shape cad_shape, const char *name_in)
+t8_geometry_cad::t8_geometry_cad (int dim, const TopoDS_Shape cad_shape, std::string name_in)
+  : t8_geometry_with_vertices (dim, name_in + "_" + std::to_string (dim))
 {
-  T8_ASSERT (0 <= dim && dim <= 3);
-
-  name = name_in;
-  dimension = dim;
   if (cad_shape.IsNull ()) {
     SC_ABORTF ("Shape is null. \n");
   }
@@ -84,6 +77,11 @@ t8_geometry_cad::t8_geometry_cad (int dim, const TopoDS_Shape cad_shape, const c
   TopExp::MapShapes (cad_shape, TopAbs_FACE, cad_shape_face_map);
   TopExp::MapShapesAndUniqueAncestors (cad_shape, TopAbs_VERTEX, TopAbs_EDGE, cad_shape_vertex2edge_map);
   TopExp::MapShapesAndUniqueAncestors (cad_shape, TopAbs_EDGE, TopAbs_FACE, cad_shape_edge2face_map);
+}
+
+t8_geometry_cad::t8_geometry_cad (int dim): t8_geometry_with_vertices (dim, "t8_geom_cad_" + std::to_string (dim))
+{
+  cad_shape.Nullify ();
 }
 
 void
@@ -104,7 +102,8 @@ t8_geometry_cad::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const 
     t8_geometry_cad::t8_geom_evaluate_cad_prism (cmesh, gtreeid, ref_coords, num_coords, out_coords);
     break;
   default:
-    SC_ABORTF ("Error: Curved %s geometry not yet implemented. \n", t8_eclass_to_string[active_tree_class]);
+    SC_ABORTF ("Error: Curved cad geometry for element type %s not yet implemented. \n",
+               t8_eclass_to_string[active_tree_class]);
   }
 }
 

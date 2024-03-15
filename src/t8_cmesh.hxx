@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2024 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,28 +20,31 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_geometry.h
- * Internal functions that we need for the cmesh geometry.
- * TODO: document this file
+/** \file t8_cmesh.hxx
+ * We define the coarse mesh of trees in this file.
  */
 
-#ifndef T8_CMESH_GEOMETRY_H
-#define T8_CMESH_GEOMETRY_H
+#pragma once
 
-#include <t8.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_geometry/t8_geometry_handler.hxx>
 
-T8_EXTERN_C_BEGIN ();
-
-/** Get the hash of the geometry stored for a tree in a cmesh.
- * \param [in] cmesh   A committed cmesh.
- * \param [in] gtreeid A global tree in \a cmesh.
- * \return             The hash of the tree's geometry or if only one geometry exists, its hash.
+/**
+ * Create and register a geometry with the coarse mesh. The coarse mesh takes the ownership of the geometry.
+ * @tparam geometry_type 
+ * \param [in,out] cmesh The cmesh.
+ * \param [in,out] args The constructor arguments of the geometry.
+ * \return         A pointer to the geometry.
  */
-size_t
-t8_cmesh_get_tree_geom_hash (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 
-T8_EXTERN_C_END ();
-
-#endif /* !T8_CMESH_GEOMETRY_H */
+template <typename geometry_type, typename... _args>
+inline geometry_type *
+t8_cmesh_register_geometry (t8_cmesh_t cmesh, _args &&...args)
+{
+  if (cmesh->geometry_handler == NULL) {
+    /* The handler was not constructed, do it now. */
+    cmesh->geometry_handler = new t8_geometry_handler ();
+  }
+  return cmesh->geometry_handler->register_geometry<geometry_type> (std::forward<_args> (args)...);
+}

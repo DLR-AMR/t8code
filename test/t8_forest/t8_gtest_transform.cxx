@@ -142,12 +142,10 @@ t8_test_transform_element (t8_eclass_scheme_c *ts, const t8_element_t *elem, t8_
     ts->t8_element_transform_face (transform, transform, 3, 0, 1);
     ts->t8_element_transform_face (transform, transform, 1, 0, 1);
     EXPECT_ELEM_EQ (ts, elem, transform);
-    ;
     /* or = 2 sign = 0, then or = 1 sign = 0 */
     ts->t8_element_transform_face (transform, transform, 2, 0, 1);
     ts->t8_element_transform_face (transform, transform, 1, 0, 1);
     EXPECT_ELEM_EQ (ts, elem, transform);
-    ;
     /* TODO: Add tests */
   }
 

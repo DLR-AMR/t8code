@@ -24,7 +24,7 @@ libt8_installed_headers = \
   src/t8.h src/t8_eclass.h src/t8_mesh.h \
   src/t8_element_cxx.hxx src/t8_element.h \
   src/t8_element_c_interface.h \
-  src/t8_refcount.h src/t8_cmesh.h src/t8_cmesh_triangle.h \
+  src/t8_refcount.h src/t8_cmesh.hxx src/t8_cmesh.h src/t8_cmesh_triangle.h \
   src/t8_cmesh_tetgen.h src/t8_cmesh_readmshfile.h \
   src/t8_cmesh_vtk_writer.h \
   src/t8_cmesh_vtk_reader.hxx \
@@ -36,12 +36,13 @@ libt8_installed_headers = \
   src/t8_element_shape.h \
   src/t8_netcdf.h
 libt8_installed_headers_cmesh = \
-  src/t8_cmesh/t8_cmesh_testcases.h \
   src/t8_cmesh/t8_cmesh_save.h \
   src/t8_cmesh/t8_cmesh_examples.h \
   src/t8_cmesh/t8_cmesh_geometry.h \
   src/t8_cmesh/t8_cmesh_helpers.h \
-  src/t8_cmesh/t8_cmesh_cad.hxx
+  src/t8_cmesh/t8_cmesh_cad.hxx \
+  src/t8_cmesh/t8_cmesh_types.h \
+  src/t8_cmesh/t8_cmesh_stash.h
 libt8_installed_headers_data = \
   src/t8_data/t8_shmem.h src/t8_data/t8_containers.h
 libt8_installed_headers_forest = \
@@ -88,8 +89,8 @@ libt8_installed_headers_default_tet =
 libt8_installed_headers_default_prism =
 libt8_installed_headers_default_pyramid =
 libt8_internal_headers = \
-  src/t8_cmesh/t8_cmesh_stash.h src/t8_cmesh/t8_cmesh_trees.h \
-  src/t8_cmesh/t8_cmesh_types.h src/t8_cmesh/t8_cmesh_partition.h \
+  src/t8_cmesh/t8_cmesh_trees.h src/t8_cmesh/t8_cmesh_partition.h \
+  src/t8_geometry/t8_geometry_handler.hxx \
   src/t8_cmesh/t8_cmesh_copy.h \
   src/t8_cmesh/t8_cmesh_offset.h \
   src/t8_vtk/t8_vtk_polydata.hxx \
@@ -105,23 +106,24 @@ libt8_compiled_sources = \
   src/t8.c src/t8_eclass.c src/t8_mesh.c \
   src/t8_element.c src/t8_element_cxx.cxx \
   src/t8_element_c_interface.cxx \
-  src/t8_refcount.c src/t8_cmesh/t8_cmesh.c \
+  src/t8_refcount.c src/t8_cmesh/t8_cmesh.cxx \
   src/t8_cmesh/t8_cmesh_cad.cxx \
-  src/t8_cmesh/t8_cmesh_cxx.cxx src/t8_cmesh/t8_cmesh_triangle.c \
+  src/t8_cmesh/t8_cmesh_cxx.cxx src/t8_cmesh/t8_cmesh_triangle.cxx \
   src/t8_cmesh/t8_cmesh_vtk_writer.c src/t8_cmesh/t8_cmesh_stash.c \
   src/t8_cmesh/t8_cmesh_vtk_reader.cxx \
-  src/t8_cmesh/t8_cmesh_save.c \
+  src/t8_cmesh/t8_cmesh_save.cxx \
   src/t8_cmesh/t8_cmesh_netcdf.c \
-  src/t8_cmesh/t8_cmesh_trees.c src/t8_cmesh/t8_cmesh_commit.c \
-  src/t8_cmesh/t8_cmesh_partition.c\
+  src/t8_cmesh/t8_cmesh_trees.c src/t8_cmesh/t8_cmesh_commit.cxx \
+  src/t8_cmesh/t8_cmesh_partition.cxx\
   src/t8_cmesh/t8_cmesh_copy.c src/t8_data/t8_shmem.c \
   src/t8_cmesh/t8_cmesh_geometry.cxx \
-  src/t8_cmesh/t8_cmesh_examples.c \
+  src/t8_cmesh/t8_cmesh_examples.cxx \
   src/t8_cmesh/t8_cmesh_helpers.c \
   src/t8_data/t8_containers.cxx \
   src/t8_cmesh/t8_cmesh_offset.c src/t8_cmesh/t8_cmesh_readmshfile.cxx \
   src/t8_forest/t8_forest.c src/t8_forest/t8_forest_adapt.cxx \
   src/t8_geometry/t8_geometry.cxx \
+  src/t8_geometry/t8_geometry_handler.cxx \
   src/t8_geometry/t8_geometry_helpers.c \
   src/t8_geometry/t8_geometry_base.cxx \
   src/t8_geometry/t8_geometry_with_vertices.cxx \
@@ -139,7 +141,6 @@ libt8_compiled_sources = \
   src/t8_forest/t8_forest_netcdf.cxx \
   src/t8_element_shape.c \
   src/t8_netcdf.c \
-  src/t8_cmesh/t8_cmesh_testcases.c \
   src/t8_vtk/t8_vtk_polydata.cxx \
   src/t8_vtk/t8_vtk_unstructured.cxx \
   src/t8_vtk/t8_vtk_parallel.cxx \
