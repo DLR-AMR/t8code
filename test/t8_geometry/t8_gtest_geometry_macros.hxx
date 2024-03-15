@@ -27,9 +27,9 @@
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
 
-#ifdef T8_ENABLE_LESS_TESTS 
+#ifdef T8_ENABLE_LESS_TESTS
 #define T8_NUM_SAMPLE_POINTS 1000
-#else 
+#else
 #define T8_NUM_SAMPLE_POINTS 10000
 #endif
 
