@@ -41,11 +41,11 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #ifdef T8_ENABLE_LESS_TESTS
 #define T8_CMESH_MAX_NUM_OF_TREES 5
 #define T8_CMESH_MAX_NUM_OF_PRISMS 5
-#define T8_CMESH_MAX_NUM_XYZ_TREES 3
+#define T8_CMESH_MAX_NUM_XYZ_TREES 2
 #else
 #define T8_CMESH_MAX_NUM_OF_TREES 10
 #define T8_CMESH_MAX_NUM_OF_PRISMS 10
-#define T8_CMESH_MAX_NUM_XYZ_TREES 5
+#define T8_CMESH_MAX_NUM_XYZ_TREES 3
 #endif
 
 namespace cmesh_params

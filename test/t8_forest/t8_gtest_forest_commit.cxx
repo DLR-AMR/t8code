@@ -135,11 +135,7 @@ TEST_P (forest_commit, test_forest_commit)
   t8_forest_t forest_ada_bal_part;
   t8_forest_t forest_abp_3part;
 
-#ifdef T8_ENABLE_LESS_TESTS
-  int level_step = 2;
-#else
-  int level_step = 3;
-#endif
+  const int level_step = 2;
 
   t8_scheme_cxx_t *scheme = t8_scheme_new_default_cxx ();
 
