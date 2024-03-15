@@ -127,7 +127,7 @@ struct t8_geometry
                                       const double *points, const int num_points, int *is_inside,
                                       const double tolerance) const
   {
-    SC_ABORTF ("Function not yet implemented");
+    SC_ABORTF ("Point batch inside element function not implemented");
   };
 
   /**
@@ -137,7 +137,7 @@ struct t8_geometry
   virtual bool
   t8_geom_tree_negative_volume () const
   {
-    SC_ABORTF ("Function not implemented yet");
+    SC_ABORTF ("Tree negative volume function not implemented");
     /* To suppress compiler warnings. */
     return 0;
   };
