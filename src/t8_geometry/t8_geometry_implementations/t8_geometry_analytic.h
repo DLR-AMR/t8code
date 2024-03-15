@@ -66,6 +66,11 @@ typedef void (*t8_geom_analytic_jacobian_fn) (t8_cmesh_t cmesh, t8_gloidx_t gtre
  */
 typedef void (*t8_geom_load_tree_data_fn) (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const void **tree_data);
 
+/**
+ * Definition for the negative volume function.
+ */
+typedef bool (*t8_geom_tree_negative_volume_fn) ();
+
 T8_EXTERN_C_BEGIN ();
 
 /** Destroy a geometry analytic object.
@@ -80,7 +85,7 @@ t8_geometry_analytic_destroy (t8_geometry_c **geom);
 t8_geometry_c *
 t8_geometry_analytic_new (int dim, const char *name, t8_geom_analytic_fn analytical,
                           t8_geom_analytic_jacobian_fn jacobian, t8_geom_load_tree_data_fn load_tree_data,
-                          const void *user_data);
+                          t8_geom_tree_negative_volume_fn tree_negative_volume, const void *user_data);
 
 /**
  * Load vertex data from given tree. 
