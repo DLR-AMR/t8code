@@ -36,6 +36,7 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_examples.hxx>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.hxx>
 
 /* In this file we collect tests for t8code's cmesh geometry module.
  * These tests are
@@ -63,6 +64,7 @@ TEST (test_geometry, test_geometry_handler_register)
 #endif /* T8_WITH_OCC */
     geometries.push_back (geom_handler.register_geometry<t8_geometry_analytic> (idim, "analytic_geom"));
     geometries.push_back (geom_handler.register_geometry<t8_geometry_linear_axis_aligned> (idim));
+    geometries.push_back (geom_handler.register_geometry<t8_geometry_lagrange> (idim));
   }
   /* Register the geometries without dimension.  */
   geometries.push_back (geom_handler.register_geometry<t8_geometry_quadrangulated_disk> ());

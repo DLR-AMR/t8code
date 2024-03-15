@@ -501,4 +501,4 @@ class t8_lagrange_element {
   create_uniform_forest (t8_cmesh_t cmesh, uint level) const;
 };
 
-#endif /* !T8_GEOMETRY_LAGRANGE_HXX! */
+#endif /* !T8_GEOMETRY_LAGRANGE_HXX */
