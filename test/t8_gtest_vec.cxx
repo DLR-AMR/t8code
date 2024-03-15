@@ -25,6 +25,7 @@
 
 #include <gtest/gtest.h>
 #include <t8_vec.h>
+#include <test/t8_gtest_custom_assertion.hxx>
 
 /* Wrapper for 3D vector dataype */
 typedef double t8_test_vec[3];
@@ -54,9 +55,8 @@ TEST (t8_gtest_vec, dist)
   const t8_test_vec arbitrary = { -.05, 3.14159, 42 };
   const double distzeroonetwothree = sqrt (1 + 4 + 9);
   const double distarbitraryonetwothree = 39.030830477;
-
-  EXPECT_EQ (t8_vec_dist (zero, zero), 0);
-  EXPECT_EQ (t8_vec_dist (onetwothree, onetwothree), 0);
+  EXPECT_VEC3_EQ (zero, zero, T8_PRECISION_EPS);
+  EXPECT_VEC3_EQ (onetwothree, onetwothree, T8_PRECISION_EPS);
   EXPECT_NEAR (t8_vec_dist (onetwothree, zero), distzeroonetwothree, epsilon);
   EXPECT_NEAR (t8_vec_dist (zero, onetwothree), distzeroonetwothree, epsilon);
   EXPECT_NEAR (t8_vec_dist (arbitrary, onetwothree), distarbitraryonetwothree, epsilon);
@@ -244,12 +244,17 @@ TEST (t8_gtest_vec, cross)
 
   /* e1 x e2 = e3 */
   t8_vec_cross (e1, e2, cross);
-  for (int i = 0; i < 3; ++i) {
-    EXPECT_NEAR (cross[i], e3[i], epsilon);
-  }
+  EXPECT_VEC3_EQ (cross, e3, T8_PRECISION_EPS);
+
   /* e2 x e3 = e1 */
   t8_vec_cross (e2, e3, cross);
-  for (int i = 0; i < 3; ++i) {
-    EXPECT_NEAR (cross[i], e1[i], epsilon);
-  }
+  EXPECT_VEC3_EQ (cross, e1, T8_PRECISION_EPS);
+}
+
+TEST (t8_gtest_vec, check_less_or_equal)
+{
+  const t8_test_vec one = { 1.0, 1.0, 1.0 };
+  const t8_test_vec one_minus_eps = { 1.0 - T8_PRECISION_EPS, 1.0 - T8_PRECISION_EPS, 1.0 - T8_PRECISION_EPS };
+
+  EXPECT_VEC3_EQ (one, one_minus_eps, T8_PRECISION_EPS);
 }

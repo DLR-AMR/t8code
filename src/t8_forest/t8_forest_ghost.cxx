@@ -249,7 +249,7 @@ t8_forest_ghost_get_proc_info (t8_forest_t forest, int remote)
 
 /* return the number of trees in a ghost */
 t8_locidx_t
-t8_forest_ghost_num_trees (t8_forest_t forest)
+t8_forest_ghost_num_trees (const t8_forest_t forest)
 {
   if (forest->ghosts == NULL) {
     return 0;
@@ -265,7 +265,7 @@ t8_forest_ghost_num_trees (t8_forest_t forest)
 
 /* Given an index into the ghost_trees array return the ghost tree */
 static t8_ghost_tree_t *
-t8_forest_ghost_get_tree (t8_forest_t forest, t8_locidx_t lghost_tree)
+t8_forest_ghost_get_tree (const t8_forest_t forest, const t8_locidx_t lghost_tree)
 {
   t8_ghost_tree_t *ghost_tree;
   t8_forest_ghost_t ghost;
@@ -281,7 +281,7 @@ t8_forest_ghost_get_tree (t8_forest_t forest, t8_locidx_t lghost_tree)
 }
 
 t8_locidx_t
-t8_forest_ghost_get_tree_element_offset (t8_forest_t forest, t8_locidx_t lghost_tree)
+t8_forest_ghost_get_tree_element_offset (const t8_forest_t forest, const t8_locidx_t lghost_tree)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   return t8_forest_ghost_get_tree (forest, lghost_tree)->element_offset;
@@ -300,7 +300,7 @@ t8_forest_ghost_tree_num_elements (t8_forest_t forest, t8_locidx_t lghost_tree)
 }
 
 t8_element_array_t *
-t8_forest_ghost_get_tree_elements (t8_forest_t forest, t8_locidx_t lghost_tree)
+t8_forest_ghost_get_tree_elements (const t8_forest_t forest, const t8_locidx_t lghost_tree)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (forest->ghosts != NULL);
@@ -330,7 +330,7 @@ t8_forest_ghost_get_ghost_treeid (t8_forest_t forest, t8_gloidx_t gtreeid)
 
 /* Given an index in the ghost_tree array, return this tree's element class */
 t8_eclass_t
-t8_forest_ghost_get_tree_class (t8_forest_t forest, t8_locidx_t lghost_tree)
+t8_forest_ghost_get_tree_class (const t8_forest_t forest, const t8_locidx_t lghost_tree)
 {
   t8_ghost_tree_t *ghost_tree;
   T8_ASSERT (t8_forest_is_committed (forest));
@@ -341,7 +341,7 @@ t8_forest_ghost_get_tree_class (t8_forest_t forest, t8_locidx_t lghost_tree)
 
 /* Given an index in the ghost_tree array, return this tree's global id */
 t8_gloidx_t
-t8_forest_ghost_get_global_treeid (t8_forest_t forest, t8_locidx_t lghost_tree)
+t8_forest_ghost_get_global_treeid (const t8_forest_t forest, const t8_locidx_t lghost_tree)
 {
   t8_ghost_tree_t *ghost_tree;
   T8_ASSERT (t8_forest_is_committed (forest));
@@ -458,7 +458,7 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int remote_ran
     int elem_count = t8_element_array_get_count (&remote_tree->elements);
     for (ielem = 0; ielem < elem_count - 1; ielem++) {
       test_el = t8_element_array_index_int (&remote_tree->elements, ielem);
-      SC_CHECK_ABORTF (ts->t8_element_compare (test_el, elem), "Local element %i already in remote ghosts at pos %i\n",
+      SC_CHECK_ABORTF (!ts->t8_element_equal (test_el, elem), "Local element %i already in remote ghosts at pos %i\n",
                        element_index, ielem);
     }
   }
@@ -506,8 +506,9 @@ typedef struct
 
 static int
 t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                 const int is_leaf, t8_element_array_t *leafs, t8_locidx_t tree_leaf_index, void *query,
-                                 size_t query_index)
+                                 const int is_leaf, const t8_element_array_t *leaves, const t8_locidx_t tree_leaf_index,
+                                 void *query, sc_array_t *query_indices, int *query_matches,
+                                 const size_t num_active_queries)
 {
   t8_forest_ghost_boundary_data_t *data = (t8_forest_ghost_boundary_data_t *) t8_forest_get_user_data (forest);
   int num_faces, iface, faces_totally_owned, level;
@@ -595,7 +596,7 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const 
       new_bounds[iface * 2] = lower;
       new_bounds[iface * 2 + 1] = upper;
       if (lower == upper && lower == forest->mpirank) {
-        /* All neighbor leafs at this face are owned by the current rank */
+        /* All neighbor leaves at this face are owned by the current rank */
         faces_totally_owned = faces_totally_owned && 1;
       }
       else {
@@ -624,7 +625,7 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const 
      * We do not continue the search */
 #ifdef T8_ENABLE_DEBUG
     if (tree_leaf_index < 0) {
-      data->left_out += t8_element_array_get_count (leafs);
+      data->left_out += t8_element_array_get_count (leaves);
     }
 #endif
     return 0;
@@ -1398,6 +1399,14 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
   T8_ASSERT (t8_forest_is_committed (forest));
 
   t8_global_productionf ("Into t8_forest_ghost with %i local elements.\n", t8_forest_get_local_num_elements (forest));
+
+  /* In parallel, check forest for deleted elements. The ghost algorithm currently
+  * does not work on forests with deleted elements.
+  * See also: https://github.com/DLR-AMR/t8code/issues/825
+  * See also the test case: TODO Add a test case that currently fails. */
+  SC_CHECK_ABORT (
+    !forest->incomplete_trees || forest->mpisize == 1,
+    "ERROR: Cannot compute ghost layer for forest with deleted elements (incomplete trees/holes in the mesh).\n");
 
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of ghost_create */

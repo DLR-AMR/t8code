@@ -65,33 +65,13 @@ t8_forest_init (t8_forest_t *pforest)
 int
 t8_forest_is_initialized (t8_forest_t forest)
 {
-  if (!(forest != NULL && t8_refcount_is_active (&forest->rc) && !forest->committed)) {
-    return 0;
-  }
-
-#ifdef T8_ENABLE_DEBUG
-  /* TODO: check conditions that must always hold after init and before commit */
-  if (0) {
-    return 0;
-  }
-#endif
-
-  return 1;
+  return forest != NULL && t8_refcount_is_active (&forest->rc) && !forest->committed;
 }
 
 int
-t8_forest_is_committed (t8_forest_t forest)
+t8_forest_is_committed (const t8_forest_t forest)
 {
-  if (!(forest != NULL && t8_refcount_is_active (&forest->rc) && forest->committed)) {
-    return 0;
-  }
-#ifdef T8_ENABLE_DEBUG
-  /* TODO: check more conditions that must always hold after commit */
-  if (0) {
-    return 0;
-  }
-#endif
-  return 1;
+  return forest != NULL && t8_refcount_is_active (&forest->rc) && forest->committed;
 }
 
 static void
@@ -306,7 +286,7 @@ t8_forest_set_user_data (t8_forest_t forest, void *data)
 }
 
 void *
-t8_forest_get_user_data (t8_forest_t forest)
+t8_forest_get_user_data (const t8_forest_t forest)
 {
   return forest->user_data;
 }
@@ -695,7 +675,7 @@ t8_forest_commit (t8_forest_t forest)
 }
 
 t8_locidx_t
-t8_forest_get_local_num_elements (t8_forest_t forest)
+t8_forest_get_local_num_elements (const t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -703,7 +683,7 @@ t8_forest_get_local_num_elements (t8_forest_t forest)
 }
 
 t8_gloidx_t
-t8_forest_get_global_num_elements (t8_forest_t forest)
+t8_forest_get_global_num_elements (const t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -711,7 +691,7 @@ t8_forest_get_global_num_elements (t8_forest_t forest)
 }
 
 t8_locidx_t
-t8_forest_get_num_ghosts (t8_forest_t forest)
+t8_forest_get_num_ghosts (const t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -772,14 +752,14 @@ t8_forest_partition_cmesh (t8_forest_t forest, sc_MPI_Comm comm, int set_profili
 }
 
 sc_MPI_Comm
-t8_forest_get_mpicomm (t8_forest_t forest)
+t8_forest_get_mpicomm (const t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   return forest->mpicomm;
 }
 
 t8_gloidx_t
-t8_forest_get_first_local_tree_id (t8_forest_t forest)
+t8_forest_get_first_local_tree_id (const t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -787,7 +767,7 @@ t8_forest_get_first_local_tree_id (t8_forest_t forest)
 }
 
 t8_locidx_t
-t8_forest_get_num_ghost_trees (t8_forest_t forest)
+t8_forest_get_num_ghost_trees (const t8_forest_t forest)
 {
   if (forest->ghosts != NULL) {
     return t8_forest_ghost_num_trees (forest);
@@ -798,7 +778,7 @@ t8_forest_get_num_ghost_trees (t8_forest_t forest)
 }
 
 t8_locidx_t
-t8_forest_get_num_local_trees (t8_forest_t forest)
+t8_forest_get_num_local_trees (const t8_forest_t forest)
 {
   t8_locidx_t num_trees;
 
@@ -813,7 +793,7 @@ t8_forest_get_num_local_trees (t8_forest_t forest)
 }
 
 t8_gloidx_t
-t8_forest_get_num_global_trees (t8_forest_t forest)
+t8_forest_get_num_global_trees (const t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -821,7 +801,7 @@ t8_forest_get_num_global_trees (t8_forest_t forest)
 }
 
 t8_gloidx_t
-t8_forest_global_tree_id (t8_forest_t forest, t8_locidx_t ltreeid)
+t8_forest_global_tree_id (const t8_forest_t forest, const t8_locidx_t ltreeid)
 {
   t8_locidx_t num_local_trees;
   T8_ASSERT (t8_forest_is_committed (forest));
@@ -843,7 +823,7 @@ t8_forest_global_tree_id (t8_forest_t forest, t8_locidx_t ltreeid)
  * forest is only partially committed. Thus, we cannot check whether the
  * forest is committed here. */
 t8_tree_t
-t8_forest_get_tree (t8_forest_t forest, t8_locidx_t ltree_id)
+t8_forest_get_tree (const t8_forest_t forest, const t8_locidx_t ltree_id)
 {
   T8_ASSERT (forest->trees != NULL);
   T8_ASSERT (0 <= ltree_id && ltree_id < t8_forest_get_num_local_trees (forest));
@@ -857,7 +837,7 @@ t8_forest_get_tree_vertices (t8_forest_t forest, t8_locidx_t ltreeid)
 }
 
 t8_element_array_t *
-t8_forest_tree_get_leafs (t8_forest_t forest, t8_locidx_t ltree_id)
+t8_forest_tree_get_leaves (const t8_forest_t forest, const t8_locidx_t ltree_id)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (0 <= ltree_id && ltree_id < t8_forest_get_num_local_trees (forest));
@@ -866,7 +846,7 @@ t8_forest_tree_get_leafs (t8_forest_t forest, t8_locidx_t ltree_id)
 }
 
 t8_cmesh_t
-t8_forest_get_cmesh (t8_forest_t forest)
+t8_forest_get_cmesh (const t8_forest_t forest)
 {
   return forest->cmesh;
 }
@@ -957,7 +937,7 @@ t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id, t8_locidx_t 
   return NULL;
 }
 
-t8_element_t *
+const t8_element_t *
 t8_forest_get_element_in_tree (t8_forest_t forest, t8_locidx_t ltreeid, t8_locidx_t leid_in_tree)
 {
   t8_tree_t tree;
@@ -969,7 +949,7 @@ t8_forest_get_element_in_tree (t8_forest_t forest, t8_locidx_t ltreeid, t8_locid
 }
 
 t8_locidx_t
-t8_forest_get_tree_element_offset (t8_forest_t forest, t8_locidx_t ltreeid)
+t8_forest_get_tree_element_offset (const t8_forest_t forest, const t8_locidx_t ltreeid)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -998,7 +978,7 @@ t8_forest_get_tree_num_elements (t8_forest_t forest, t8_locidx_t ltreeid)
 }
 
 t8_eclass_t
-t8_forest_get_tree_class (t8_forest_t forest, t8_locidx_t ltreeid)
+t8_forest_get_tree_class (const t8_forest_t forest, const t8_locidx_t ltreeid)
 {
   t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
 
@@ -1026,7 +1006,7 @@ t8_forest_get_first_local_element_id (t8_forest_t forest)
 }
 
 t8_scheme_cxx_t *
-t8_forest_get_scheme (t8_forest_t forest)
+t8_forest_get_scheme (const t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (forest->scheme_cxx != NULL);
@@ -1035,7 +1015,7 @@ t8_forest_get_scheme (t8_forest_t forest)
 }
 
 t8_eclass_scheme_c *
-t8_forest_get_eclass_scheme (t8_forest_t forest, t8_eclass_t eclass)
+t8_forest_get_eclass_scheme (const t8_forest_t forest, const t8_eclass_t eclass)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (forest->scheme_cxx != NULL);
@@ -1055,14 +1035,14 @@ t8_forest_get_eclass_scheme_before_commit (t8_forest_t forest, t8_eclass_t eclas
 }
 
 t8_eclass_t
-t8_forest_get_eclass (t8_forest_t forest, t8_locidx_t ltreeid)
+t8_forest_get_eclass (const t8_forest_t forest, const t8_locidx_t ltreeid)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   return t8_forest_get_tree (forest, ltreeid)->eclass;
 }
 
 t8_locidx_t
-t8_forest_get_local_id (t8_forest_t forest, t8_gloidx_t gtreeid)
+t8_forest_get_local_id (const t8_forest_t forest, const t8_gloidx_t gtreeid)
 {
   t8_gloidx_t ltreeid;
   T8_ASSERT (t8_forest_is_committed (forest));
@@ -1078,6 +1058,29 @@ t8_forest_get_local_id (t8_forest_t forest, t8_gloidx_t gtreeid)
     return ltreeid;
   }
   else {
+    return -1;
+  }
+}
+t8_locidx_t
+t8_forest_get_local_or_ghost_id (const t8_forest_t forest, const t8_gloidx_t gtreeid)
+{
+  t8_gloidx_t ltreeid;
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (0 <= gtreeid && gtreeid < t8_forest_get_num_global_trees (forest));
+
+  /* If the tree is local then its local id is the global id minus the
+   * first global tree id on this forest. If this number is not in the
+   * range of local tree ids then the tree is not local. */
+  /* we use a gloidx for ltreeid to prevent overflow and false positives */
+  ltreeid = gtreeid - t8_forest_get_first_local_tree_id (forest);
+  /* Check if this tree is a local tree and if so return its local id */
+  if (0 <= ltreeid && ltreeid < t8_forest_get_num_local_trees (forest)) {
+    return ltreeid;
+  }
+  else {
+    t8_locidx_t ghost_id = t8_forest_ghost_get_ghost_treeid (forest, gtreeid);
+    if (ghost_id >= 0)
+      return t8_forest_get_num_local_trees (forest) + ghost_id;
     return -1;
   }
 }

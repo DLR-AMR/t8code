@@ -144,6 +144,14 @@ t8_dpyramid_extrude_face (const t8_element_t *face, t8_dpyramid_t *p, const int 
 int
 t8_dpyramid_compare (const t8_dpyramid_t *p1, const t8_dpyramid_t *p2);
 
+/** Check if two elements are equal.
+* \param [in] elem1  The first element.
+* \param [in] elem2  The second element.
+* \return            1 if the elements are equal, 0 if they are not equal
+*/
+int
+t8_dpyramid_equal (const t8_dpyramid_t *elem1, const t8_dpyramid_t *elem2);
+
 /** Check whether a collection of 10 pyramids is a family in Morton order.
  * \param [in]  fam A collection of pyramids
  * \return      Nonzero if \a fam is a family of pyramids
@@ -377,13 +385,6 @@ t8_dpyramid_nearest_common_ancestor (const t8_dpyramid_t *pyra1, const t8_dpyram
  */
 int
 t8_dpyramid_is_valid (const t8_dpyramid_t *p);
-
-/**
- * Print the coordinates, the level and the type of a pyramid
- * \param[in] p        The pyramid to print
- */
-void
-t8_dpyramid_debug_print (const t8_dpyramid_t *p);
 
 T8_EXTERN_C_END ();
 
