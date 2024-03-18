@@ -84,8 +84,7 @@ TEST_P (DISABLED_t8_cmesh_add_attributes, check_attributes)
     const char *check_string_attribute = (const char *) t8_cmesh_get_attribute (cmesh_derived, t8_get_package_id (),
                                                                                 T8_CMESH_NEXT_POSSIBLE_KEY + 1, itree);
     EXPECT_EQ (itree, check_locidx_attribute);
-    EXPECT_EQ (strcmp (check_string_attribute, string_attribute), 0)
-      << check_string_attribute << " != " << string_attribute;
+    EXPECT_STREQ (check_string_attribute, string_attribute);
   }
 }
 
