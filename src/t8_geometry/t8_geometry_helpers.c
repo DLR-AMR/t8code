@@ -388,14 +388,13 @@ t8_geom_get_scaling_factor_of_edge_on_face_tet (const int edge, const int face, 
    *  /_________|
    */
 
-  const double orthogonal_direction[6][4]
-    = { { 0, 0, ref_coords[1], ref_coords[2] },
-        { 0, ref_coords[1], 0, (ref_coords[0] - ref_coords[2]) },
-        { 0, (ref_coords[0] - ref_coords[1]), (ref_coords[0] - ref_coords[2]), 0 },
-        { ref_coords[1], 0, 0, (1 - ref_coords[0]) },
-        { (ref_coords[2] - ref_coords[1]), 0, (1 - ref_coords[0]), 0 },
-        { (1 - ref_coords[2]), (1 - ref_coords[0]), 0, 0 } };
-  const double max_orthogonal_direction[6][4]
+  const double orthogonal_vector[6][4] = { { 0, 0, ref_coords[1], ref_coords[2] },
+                                           { 0, ref_coords[1], 0, (ref_coords[0] - ref_coords[2]) },
+                                           { 0, (ref_coords[0] - ref_coords[1]), (ref_coords[0] - ref_coords[2]), 0 },
+                                           { ref_coords[1], 0, 0, (1 - ref_coords[0]) },
+                                           { (ref_coords[2] - ref_coords[1]), 0, (1 - ref_coords[0]), 0 },
+                                           { (1 - ref_coords[2]), (1 - ref_coords[0]), 0, 0 } };
+  const double max_orthogonal_vector[6][4]
     = { { 0, 0, ref_coords[0], ref_coords[0] },       { 0, ref_coords[0], 0, ref_coords[0] },
         { 0, ref_coords[0], ref_coords[0], 0 },       { ref_coords[2], 0, 0, (1 - ref_coords[2]) },
         { ref_coords[2], 0, (1 - ref_coords[2]), 0 }, { (1 - ref_coords[1]), (1 - ref_coords[1]), 0, 0 } };
@@ -405,10 +404,10 @@ t8_geom_get_scaling_factor_of_edge_on_face_tet (const int edge, const int face, 
    * at the nodes is always 0.
    * In all other cases the scaling factor is determined with one minus the relation of the orthogonal direction
    * to the maximum orthogonal direction. */
-  if (max_orthogonal_direction[edge][face] == 0 || max_orthogonal_direction[edge][face] == 1) {
+  if (max_orthogonal_vector[edge][face] == 0 || max_orthogonal_vector[edge][face] == 1) {
     return 0;
   }
-  return (1.0 - (orthogonal_direction[edge][face] / max_orthogonal_direction[edge][face]));
+  return (1.0 - (orthogonal_vector[edge][face] / max_orthogonal_vector[edge][face]));
 }
 
 void
@@ -428,17 +427,12 @@ t8_geom_get_tet_face_intersection (const int face, const double *ref_coords, dou
   const double *ref_opposite_vertex = t8_element_corner_ref_coords[T8_ECLASS_TET][face];
 
   /* Save the normal of the current face */
-  double normal[3];
-  for (int dim = 0; dim < 3; ++dim) {
-    normal[dim] = t8_face_normal_tet[face][dim];
-  }
+  const int *normal = t8_reference_face_normal_tet[face];
 
   /* Calculate the vector from the opposite vertex to the
    * reference coordinate in reference space */
-  double vector[3];
-  for (int dim = 0; dim < 3; ++dim) {
-    vector[dim] = ref_coords[dim] - ref_opposite_vertex[dim];
-  }
+  double vector[3] = { 0 };
+  t8_vec_diff (ref_coords, ref_opposite_vertex, vector);
 
   /* Calculate t to get the point on the ray (extension of vector), which lies on the face.
    * The vector will later be multiplied by t to get the exact distance from the opposite vertex to the face intersection. 
@@ -456,9 +450,7 @@ t8_geom_get_tet_face_intersection (const int face, const double *ref_coords, dou
    * the intersection is equal to one of the ref_face_vertex_coords. */
   if (ref_coords[0] == ref_opposite_vertex[0] && ref_coords[1] == ref_opposite_vertex[1]
       && ref_coords[2] == ref_opposite_vertex[2]) {
-    for (int dim = 0; dim < 3; ++dim) {
-      face_intersection[dim] = ref_face_vertex_coords[dim];
-    }
+    memcpy (face_intersection, ref_face_vertex_coords, 3 * sizeof (double));
   }
   else {
     for (int dim = 0; dim < 3; ++dim) {
@@ -466,6 +458,7 @@ t8_geom_get_tet_face_intersection (const int face, const double *ref_coords, dou
     }
   }
 }
+
 int
 t8_vertex_point_inside (const double vertex_coords[3], const double point[3], const double tolerance)
 {

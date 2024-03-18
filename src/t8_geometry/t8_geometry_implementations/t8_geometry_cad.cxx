@@ -41,8 +41,12 @@
 #include <TopoDS_Face.hxx>
 #include <Standard_Version.hxx>
 
+/* The lookup table contains the coordinate of each edge of a tetrahedron,
+ * which is used for the interpolation.
+ * For example: On edges 0, 1, and 2 the x coordinates is used to interpolate */
 const int t8_interpolation_coefficient_tet_edge[6] = { 0, 0, 0, 2, 2, 1 };
-
+/* The lookup table contains the coordinates of each face of a tetrahedron.
+ * For example: face 0 is described by coordinates z and y. */
 const int t8_face_ref_coords_tet[4][2] = { { 2, 1 }, { 0, 1 }, { 0, 1 }, { 0, 2 } };
 
 t8_geometry_cad::t8_geometry_cad (int dim, const char *fileprefix, const char *name_in)
@@ -543,7 +547,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
 
 void
 t8_geometry_cad::t8_geom_evaluate_cad_tet (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                           const size_t num_coords, double out_coords[3]) const
+                                           const size_t num_coords, double *out_coords) const
 {
   T8_ASSERT (active_tree_class == T8_ECLASS_TET);
 
@@ -571,7 +575,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_tet (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
     if (edges[i_edge] > 0 || edges[i_edge + num_edges] > 0) {
 
       /* Check if only a surface or a curve is present. Abort if both is true. */
-      T8_ASSERT (!(edges[i_edge] > 0) != !(edges[i_edge + num_edges] > 0));
+      T8_ASSERT (!(edges[i_edge] > 0 && edges[i_edge + num_edges] > 0));
 
       /* 
        *             _0
@@ -609,10 +613,8 @@ t8_geometry_cad::t8_geom_evaluate_cad_tet (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
         T8_ASSERT (edges[i_edge] <= cad_shape_edge_map.Size ());
 
         /* Retrieve the curve and check if curve is valid */
-        /* *INDENT-OFF* */
         curve = BRep_Tool::Curve (TopoDS::Edge (cad_shape_edge_map.FindKey (edges[i_edge])), first, last);
         T8_ASSERT (!curve.IsNull ());
-        /* *INDENT-ON* */
 
         /* Calculate point on curve with the interpolated parameter */
         curve->D0 (interpolated_curve_param, pnt);
@@ -705,16 +707,16 @@ t8_geometry_cad::t8_geom_evaluate_cad_tet (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
           T8_ASSERT (curve_parameters != NULL);
 
           /* Get the interpolation coefficients for the current edge */
-          double interpolation_coeff = face_intersection[t8_interpolation_coefficient_tet_edge[i_tree_edge]];
+          const double *interpolation_coeff = &face_intersection[t8_interpolation_coefficient_tet_edge[i_tree_edge]];
 
           /* Interpolate linearly between the parameters of the two nodes on the curve */
-          t8_geom_linear_interpolation (&interpolation_coeff, curve_parameters, 1, 1, &interpolated_curve_param);
+          t8_geom_linear_interpolation (interpolation_coeff, curve_parameters, 1, 1, &interpolated_curve_param);
 
           /* Do the same interpolation but this time between the coordinates of the same two nodes as above */
           double interpolated_edge_coordinates[3];
           double edge_vertices_on_face[6];
           t8_geom_get_edge_vertices (active_tree_class, active_tree_vertices, i_tree_edge, 3, edge_vertices_on_face);
-          t8_geom_linear_interpolation (&interpolation_coeff, edge_vertices_on_face, 3, 1,
+          t8_geom_linear_interpolation (interpolation_coeff, edge_vertices_on_face, 3, 1,
                                         interpolated_edge_coordinates);
 
           /* Retrieve the curve of the edge and check if it is valid */
@@ -750,11 +752,9 @@ t8_geometry_cad::t8_geom_evaluate_cad_tet (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
       }
 
       /* Retrieve the surface and check if it is valid */
-      /* *INDENT-OFF* */
       T8_ASSERT (faces[i_faces] <= cad_shape_face_map.Size ());
       surface = BRep_Tool::Surface (TopoDS::Face (cad_shape_face_map.FindKey (faces[i_faces])));
       T8_ASSERT (!surface.IsNull ());
-      /* *INDENT-ON* */
 
       /* Compute point on surface with interpolated surface parameters */
       surface->D0 (interpolated_surface_parameters[0], interpolated_surface_parameters[1], pnt);
