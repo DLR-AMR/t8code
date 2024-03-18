@@ -417,17 +417,18 @@ class class_2d_element_linear_cad_curve: public testing::TestWithParam<t8_eclass
                                      0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0 };
   /* Edges are parametrized in one parameter u. The array contains the parameters
    * each vertex of the edge has on the linked curve. */
-  int params_tri[6] = { 0, 1, 1, 0, 0, 1 };
-  int params_quad[8] = { 0, 1, 1, 0, 1, 0, 0, 1 };
+  double params_tri[6] = { 0, 1, 1, 0, 0, 1 };
+  double params_quad[8] = { 0, 1, 1, 0, 1, 0, 0, 1 };
   /* The array prescribes the linkage of the element. No face is linked. */
   std::array<int, 1> faces = { 0 };
-  std::array<int, 8> edges;
+  std::array<int, 8> edges = { 0 };
 
   const double test_ref_coords_tri_in[27] = { 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.5, 0.5,
                                               0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.5, 0.0, 1.0, 1.0, 0.0 };
   const double test_ref_coords_quad_in[36]
     = { 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0,
         1.0, 1.0, 0.0, 0.5, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.5, 0.0, 1.0, 1.0, 0.0 };
+  const double test_ref_coords_out[9] = { 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0 };
 };
 
 TEST_P (class_2d_element_linear_cad_curve, t8_check_2d_element_linear_cad_curve)
@@ -444,8 +445,6 @@ TEST_P (class_2d_element_linear_cad_curve, t8_check_2d_element_linear_cad_curve)
       = (eclass == T8_ECLASS_QUAD ? linked_edge_quad[i_orientation] : linked_edge_tri[i_orientation]);
     edges[linked_edge] = 1;
 
-    printf ("linked_edge: %d\n", linked_edge);
-
     t8_cmesh_init (&cmesh);
     t8_cmesh_set_tree_class (cmesh, 0, eclass);
     t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 2, shape);
@@ -460,7 +459,7 @@ TEST_P (class_2d_element_linear_cad_curve, t8_check_2d_element_linear_cad_curve)
                             2 * num_vertices * sizeof (int), 0);
     t8_cmesh_set_attribute (
       cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + linked_edge,
-      (eclass == T8_ECLASS_QUAD ? params_quad + 2 * i_orientation : params_tri + 2 * i_orientation),
+      (eclass == T8_ECLASS_QUAD ? (params_quad + 2 * i_orientation) : (params_tri + 2 * i_orientation)),
       2 * sizeof (double), 0);
 
     /* Commit the cmesh */
@@ -475,9 +474,7 @@ TEST_P (class_2d_element_linear_cad_curve, t8_check_2d_element_linear_cad_curve)
                               + i_coord * T8_ECLASS_MAX_DIM + i_orientation * 9,
                             1, out_coords);
 
-      EXPECT_VEC3_EQ ((eclass == T8_ECLASS_QUAD ? test_ref_coords_quad_in : test_ref_coords_tri_in)
-                        + i_coord * T8_ECLASS_MAX_DIM + i_orientation * 9,
-                      out_coords, T8_PRECISION_EPS);
+      EXPECT_VEC3_EQ (test_ref_coords_out + i_coord * T8_ECLASS_MAX_DIM, out_coords, T8_PRECISION_EPS);
     }
     t8_cmesh_destroy (&cmesh);
   }
