@@ -47,12 +47,18 @@ struct t8_geometry_analytic: public t8_geometry
    * \param [in] jacobian   The jacobian of \a analytical.
    * \param [in] load_tree_data The function that is used to load a tree's data.
    */
-  t8_geometry_analytic (int dim, const char *name, t8_geom_analytic_fn analytical,
+  t8_geometry_analytic (int dim, std::string name, t8_geom_analytic_fn analytical,
                         t8_geom_analytic_jacobian_fn jacobian, t8_geom_load_tree_data_fn load_tree_data,
-                        const void *user_data);
+                        t8_geom_tree_negative_volume_fn tree_negative_volume_in, const void *user_data);
+
+  /**
+   * Constructor of the analytic geometry for testing purposes.
+   * \param [in] dim        The dimension of this geometry.
+   * \param [in] name       The name to give this geometry.
+   */
+  t8_geometry_analytic (int dim, std::string name);
 
   /** The destructor. 
-   * Clears the allocated memory.
    */
   virtual ~t8_geometry_analytic ()
   {
@@ -115,6 +121,13 @@ struct t8_geometry_analytic: public t8_geometry
     SC_ABORTF ("Function not yet implemented");
   }
 
+  /**
+   * Check if the currently active tree has a negative volume
+   * \return                True (non-zero) if the currently loaded tree has a negative volume. 0 otherwise.  
+   */
+  virtual bool
+  t8_geom_tree_negative_volume () const;
+
   /** Update a possible internal data buffer for per tree data.
    * This function is called before the first coordinates in a new tree are
    * evaluated. You can use it for example to load the vertex coordinates of the 
@@ -138,6 +151,8 @@ struct t8_geometry_analytic: public t8_geometry
 
   t8_geom_load_tree_data_fn load_tree_data; /**< The function to load the tree data. */
 
+  t8_geom_tree_negative_volume_fn tree_negative_volume; /**< The function to check for negative volumes. */
+
   const void *tree_data; /** Tree data pointer that can be set in \a load_tree_data and 
                                            is passed onto \a analytical_function and \a jacobian. */
 
@@ -145,4 +160,4 @@ struct t8_geometry_analytic: public t8_geometry
                                          * and modified via \ref t8_geom_analytic_get_user_data. */
 };
 
-#endif /* !T8_GEOMETRY_ANALYTICAL_HXX! */
+#endif /* !T8_GEOMETRY_ANALYTICAL_HXX */

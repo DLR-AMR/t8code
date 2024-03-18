@@ -26,7 +26,6 @@
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include "t8_cmesh/t8_cmesh_trees.h"
 #include "t8_cmesh/t8_cmesh_partition.h"
-#include <t8_cmesh/t8_cmesh_testcases.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_zero.h>
 
 /* At the time of this writing (November 15 2023) t8_cmesh_offset_concentrate
@@ -79,11 +78,8 @@ class cmesh_set_partition_offsets_commit: public testing::TestWithParam<std::tup
     ieclass = std::get<0> (GetParam ());
     inum_trees = std::get<1> (GetParam ());
 
-    t8_geometry_c *zero_geom = t8_geometry_zero_new (t8_eclass_to_dimension[ieclass]);
-
     /* Initialize the cmesh */
     t8_cmesh_init (&cmesh);
-    t8_cmesh_register_geometry (cmesh, zero_geom);
 
     /* Specify a dimension */
     const int dim = t8_eclass_to_dimension[ieclass];

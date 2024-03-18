@@ -31,7 +31,6 @@
 
 #include <t8.h>
 #include <t8_geometry/t8_geometry_with_vertices.hxx>
-#include <t8_geometry/t8_geometry_with_vertices.h>
 #include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.h>
 
@@ -43,6 +42,10 @@
 #include <Geom_Curve.hxx>
 #include <Geom_Surface.hxx>
 
+/**
+ * This geometry uses OpenCASCADE CAD geometries to curve
+ * the trees to the actual shape of the underlying domain.
+ */
 struct t8_geometry_cad: public t8_geometry_with_vertices
 {
  public:
@@ -58,7 +61,7 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
    * \param [in] fileprefix Prefix of a .brep file from which to extract an cad geometry.
    * \param [in] name       The name to give this geometry.
    */
-  t8_geometry_cad (int dim, const char *fileprefix, const char *name);
+  t8_geometry_cad (int dim, std::string fileprefix, std::string name = "t8_geom_cad");
 
   /**
    * Constructor of the cad geometry with a given dimension. The geometry
@@ -68,16 +71,20 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
    * The vertices are saved via the \ref t8_cmesh_set_tree_vertices function.
    * This constructor can be used in short scripts or in combination with a
    * mesh generator, to omit the file IO of the 
-   * \ref t8_geometry_cad (int dim, const char *fileprefix, const char *name) constructor.
+   * \ref t8_geometry_cad (int dim, std::string fileprefix,  std::string name) constructor.
    * \param [in] dim        The dimension of this geometry.
    * \param [in] cad_shape  cad shape geometry.
    * \param [in] name       The name to give this geometry.
    */
-  t8_geometry_cad (int dim, const TopoDS_Shape cad_shape, const char *name);
+  t8_geometry_cad (int dim, const TopoDS_Shape cad_shape, std::string name = "t8_geom_cad");
 
-  /** The destructor. 
-   * Clears the allocated memory.
+  /**
+   * Constructor of the cad geometry for testing purposes. Sets an invalid cad_shape.
+   * \param [in] dim        The dimension of this geometry.
    */
+  t8_geometry_cad (int dim);
+
+  /** The destructor. */
   virtual ~t8_geometry_cad ()
   {
     /* Nothing to do. */
@@ -351,4 +358,4 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
 
 #endif /* T8_WITH_OCC */
 
-#endif /* !T8_GEOMETRY_CAD_HXX! */
+#endif /* !T8_GEOMETRY_CAD_HXX */

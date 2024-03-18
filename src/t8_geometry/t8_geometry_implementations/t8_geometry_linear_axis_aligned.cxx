@@ -20,6 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <t8_geometry/t8_geometry.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
 #include <t8_geometry/t8_geometry_helpers.h>
@@ -41,20 +42,13 @@ correct_point_order (const double tree_vertices[6])
 }
 #endif
 
-t8_geometry_linear_axis_aligned::t8_geometry_linear_axis_aligned (int dim): t8_geometry_with_vertices (dim, "")
+t8_geometry_linear_axis_aligned::t8_geometry_linear_axis_aligned (int dim)
+  : t8_geometry_with_vertices (dim, "t8_geom_linear_axis_aligned_" + std::to_string (dim))
 {
-  T8_ASSERT (0 <= dim && dim <= 3);
-  size_t num_chars = 100;
-  char *name_tmp = T8_ALLOC (char, num_chars);
-
-  snprintf (name_tmp, num_chars, "t8_geom_linear_axis_aligned_%i", dim);
-  name = name_tmp;
-  dimension = dim;
 }
 
 t8_geometry_linear_axis_aligned::~t8_geometry_linear_axis_aligned ()
 {
-  T8_FREE ((char *) name);
 }
 
 void
@@ -105,7 +99,7 @@ t8_geometry_linear_axis_aligned::t8_geom_point_batch_inside_element (t8_forest_t
 }
 
 bool
-t8_geometry_linear_axis_aligned::t8_geom_tree_negative_volume (const t8_cmesh_t cmesh) const
+t8_geometry_linear_axis_aligned::t8_geom_tree_negative_volume () const
 {
   T8_ASSERT (correct_point_order (active_tree_vertices));
   return false;

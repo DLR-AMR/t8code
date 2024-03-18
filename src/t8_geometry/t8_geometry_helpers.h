@@ -201,4 +201,4 @@ t8_plane_point_inside (const double point_on_face[3], const double face_normal[3
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_GEOMETRY_HELPERS_H! */
+#endif /* !T8_GEOMETRY_HELPERS_H */

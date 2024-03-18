@@ -922,16 +922,12 @@ void
 t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int face,
                                double normal[3])
 {
-  t8_eclass_t tree_class;
-  t8_element_shape_t face_shape;
-  t8_eclass_scheme_c *ts;
-
   T8_ASSERT (t8_forest_is_committed (forest));
   /* get the eclass of the forest */
-  tree_class = t8_forest_get_tree_class (forest, ltreeid);
+  const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
   /* get the element's scheme and the face scheme */
-  ts = t8_forest_get_eclass_scheme (forest, tree_class);
-  face_shape = ts->t8_element_face_shape (element, face);
+  const t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest, tree_class);
+  const t8_element_shape_t face_shape = ts->t8_element_face_shape (element, face);
 
   switch (face_shape) {
   case T8_ECLASS_VERTEX:
@@ -978,11 +974,11 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
      *    |      |
      *    x ---- x 0
      *
-     *   Since V,C in R^3, we need N perpendicular to V and N in space (C,V)
+     *   Since V,C in R^3, we need N perpendicular to V and C in space (C,V)
      *   This N is given by N = C - <C,V>/<V,V> V
      *   <.,.> being the dot product.
      *   Since in general the corner is not 0, we consider the affine problem
-     *   with corner vectoy V_a and V_b, and shift it by -V_a.
+     *   with corner vector V_a and V_b, and shift it by -V_a.
      */
     /* Compute the two endnotes of the face line */
     corner_a = ts->t8_element_get_face_corner (element, face, 0);
@@ -1213,7 +1209,8 @@ t8_forest_populate (t8_forest_t forest)
       count_elements++;
       for (et = start + 1; et < end; et++, count_elements++) {
         element_succ = t8_element_array_index_locidx (telements, et - start);
-        eclass_scheme->t8_element_successor (element, element_succ, forest->set_level);
+        T8_ASSERT (eclass_scheme->t8_element_level (element) == forest->set_level);
+        eclass_scheme->t8_element_successor (element, element_succ);
         /* TODO: process elements here */
         element = element_succ;
       }
