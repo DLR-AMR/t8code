@@ -134,4 +134,4 @@ t8_mat_mult_mat (const double A[3][3], const double B[3][3], double C[3][3])
   }
 }
 
-#endif /* !T8_MAT_H! */
+#endif /* !T8_MAT_H */
