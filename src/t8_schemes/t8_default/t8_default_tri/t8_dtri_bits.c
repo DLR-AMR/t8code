@@ -143,12 +143,6 @@ t8_dtri_parent (const t8_dtri_t *t, t8_dtri_t *parent)
 
   T8_ASSERT (t->level > 0);
 
-#ifdef T8_ENABLE_DEBUG
-#ifdef T8_DTRI_TO_DTET
-  parent->eclass_int8 = t->eclass_int8;
-#endif
-#endif
-
   h = T8_DTRI_LEN (t->level);
   /* Compute type of parent */
   cid = compute_cubeid (t, t->level);
@@ -1688,11 +1682,6 @@ t8_dtri_is_valid (const t8_dtri_t *t)
   is_valid = is_valid && -T8_DTRI_ROOT_LEN <= t->y && t->y <= max_coord;
 #ifdef T8_DTRI_TO_DTET
   is_valid = is_valid && -T8_DTRI_ROOT_LEN <= t->z && t->z <= max_coord;
-
-#ifdef T8_ENABLE_DEBUG
-  /* for tets the eclass is set. */
-  is_valid = is_valid && t->eclass_int8 == T8_ECLASS_TET;
-#endif
 #endif
   /* Its type is in the valid range */
   is_valid = is_valid && 0 <= t->type && t->type < T8_DTRI_NUM_TYPES;
@@ -1705,12 +1694,6 @@ t8_dtri_init (t8_dtri_t *t)
 {
   /* Set all values to zero */
   memset (t, 0, sizeof (*t));
-#ifdef T8_DTRI_TO_DTET
-#ifdef T8_ENABLE_DEBUG
-  /* For tets, set the eclass */
-  t->eclass_int8 = T8_ECLASS_TET;
-#endif
-#endif
 }
 
 /* triangles (tets) are packed as x,y (,z) coordinates, type and level */

@@ -85,7 +85,7 @@ struct t8_default_scheme_line_c: public t8_default_scheme_common_c
    * \see t8_element_is_valid
    */
   virtual void
-  t8_element_init (int length, t8_element_t *elem, int called_new) const;
+  t8_element_init (int length, t8_element_t *elem) const;
 
   /** Return the refinement level of an element.
    * \param [in] elem    The element whose level should be returned.
@@ -217,18 +217,6 @@ struct t8_default_scheme_line_c: public t8_default_scheme_common_c
     return 0; /* prevents compiler warning */
   }
 
-  /** Return the type of each child in the ordering of the implementation.
-   * \param [in] childid  Must be between 0 and the number of children (exclusive).
-   *                      The number of children is defined in \a t8_element_num_children.
-   * \return              The type for the given child.
-   */
-  virtual t8_eclass_t
-  t8_element_child_eclass (int childid) const
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return T8_ECLASS_ZERO; /* suppresses compiler warning */
-  }
-
   /** Construct the child element of a given number.
    * \param [in] elem     This must be a valid element, bigger than maxlevel.
    * \param [in] childid  The number of the child to construct.
@@ -236,8 +224,7 @@ struct t8_default_scheme_line_c: public t8_default_scheme_common_c
    *                              and match the element class of the child.
    *                              On output, a valid element.
    * It is valid to call this function with elem = child.
-   * \see t8_element_child_eclass
-   */
+     */
   virtual void
   t8_element_child (const t8_element_t *elem, int childid, t8_element_t *child) const;
 
@@ -250,8 +237,7 @@ struct t8_default_scheme_line_c: public t8_default_scheme_common_c
    *                      On output, all children are valid.
    * It is valid to call this function with elem = c[0].
    * \see t8_element_num_children
-   * \see t8_element_child_eclass
-   */
+     */
   virtual void
   t8_element_children (const t8_element_t *elem, int length, t8_element_t *c[]) const;
 
@@ -278,7 +264,7 @@ struct t8_default_scheme_line_c: public t8_default_scheme_common_c
    * \note level 0 elements do not form a family.
    */
   virtual int
-  t8_element_is_family (t8_element_t **fam) const;
+  t8_element_is_family (t8_element_t *const *fam) const;
 
   /** Compute the nearest common ancestor of two elements. That is,
    * the element with highest level that still has both given elements as
@@ -513,7 +499,7 @@ struct t8_default_scheme_line_c: public t8_default_scheme_common_c
    * \param [in] level    The level of the uniform refinement to consider.
    */
   virtual void
-  t8_element_successor (const t8_element_t *t, t8_element_t *s, int level) const;
+  t8_element_successor (const t8_element_t *elem, t8_element_t *succ) const;
 
   /** Get the integer coordinates of the anchor node of an element.
    * The default scheme implements the Morton type SFCs. In these SFCs the

@@ -40,24 +40,21 @@ t8_default_scheme_prism_c::t8_element_new (int length, t8_element_t **elem) cons
   {
     int i;
     for (i = 0; i < length; i++) {
-      t8_element_init (1, elem[i], 0);
+      t8_element_root (elem[i]);
     }
   }
 #endif
 }
 
 void
-t8_default_scheme_prism_c::t8_element_init (int length, t8_element_t *elem, int new_called) const
+t8_default_scheme_prism_c::t8_element_init (int length, t8_element_t *elem) const
 {
 #ifdef T8_ENABLE_DEBUG
-  if (!new_called) {
-    int i;
-    t8_dprism_t *prism = (t8_dprism_t *) elem;
-    /* Set all values to 0 */
-    for (i = 0; i < length; i++) {
-      t8_dprism_init_linear_id (prism + i, 0, 0);
-      T8_ASSERT (t8_dprism_is_valid (prism + i));
-    }
+  t8_dprism_t *prism = (t8_dprism_t *) elem;
+  /* Set all values to 0 */
+  for (int i = 0; i < length; i++) {
+    t8_dprism_init_linear_id (prism + i, 0, 0);
+    T8_ASSERT (t8_dprism_is_valid (prism + i));
   }
 #endif
 }
@@ -243,7 +240,7 @@ t8_default_scheme_prism_c::t8_element_extrude_face (const t8_element_t *face, co
 }
 
 int
-t8_default_scheme_prism_c::t8_element_is_family (t8_element_t **fam) const
+t8_default_scheme_prism_c::t8_element_is_family (t8_element_t *const *fam) const
 {
 #ifdef T8_ENABLE_DEBUG
   int i;
@@ -353,12 +350,12 @@ t8_default_scheme_prism_c::t8_element_set_linear_id (t8_element_t *elem, int lev
 }
 
 void
-t8_default_scheme_prism_c::t8_element_successor (const t8_element_t *elem, t8_element_t *s, int level) const
+t8_default_scheme_prism_c::t8_element_successor (const t8_element_t *elem, t8_element_t *s) const
 {
-  T8_ASSERT (1 <= level && level <= T8_DPRISM_MAXLEVEL);
+  T8_ASSERT (1 <= t8_element_level (elem) && t8_element_level (elem) <= T8_DPRISM_MAXLEVEL);
   T8_ASSERT (t8_element_is_valid (elem));
 
-  t8_dprism_successor ((const t8_default_prism_t *) elem, (t8_default_prism_t *) s, level);
+  t8_dprism_successor ((const t8_default_prism_t *) elem, (t8_default_prism_t *) s, t8_element_level (elem));
   T8_ASSERT (t8_element_is_valid (s));
 }
 
@@ -411,17 +408,6 @@ t8_default_scheme_prism_c::t8_element_reference_coords (const t8_element_t *elem
 {
   T8_ASSERT (t8_element_is_valid (elem));
   t8_dprism_compute_reference_coords ((const t8_dprism_t *) elem, ref_coords, num_coords, out_coords);
-}
-
-void
-t8_default_scheme_prism_c::t8_element_general_function (const t8_element_t *elem, const void *indata,
-                                                        void *outdata) const
-{
-  T8_ASSERT (outdata != NULL);
-  T8_ASSERT (t8_element_is_valid (elem));
-  *((int8_t *) outdata) = ((const t8_dprism_t *) elem)->tri.type;
-  /* Safety check to catch datatype conversion errors */
-  T8_ASSERT (*((int8_t *) outdata) == ((const t8_dprism_t *) elem)->tri.type);
 }
 
 t8_linearidx_t

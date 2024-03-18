@@ -100,7 +100,8 @@ t8_geometry_cad::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const 
     t8_geometry_cad::t8_geom_evaluate_cad_hex (cmesh, gtreeid, ref_coords, 1, out_coords);
     break;
   default:
-    SC_ABORTF ("Error: Curved %s geometry not yet implemented. \n", t8_eclass_to_string[active_tree_class]);
+    SC_ABORTF ("Error: Curved cad geometry for element type %s not yet implemented. \n",
+               t8_eclass_to_string[active_tree_class]);
   }
 }
 
