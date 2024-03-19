@@ -24,19 +24,18 @@
 #include <test/t8_gtest_macros.hxx>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_types.h>
-#include <t8_cmesh/t8_cmesh_testcases.h>
+#include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
 
 /* Test if adding attributes to a cmesh when deriving it from another
  * cmesh is working.
  * This test is currently disabled, see https://github.com/DLR-AMR/t8code/issues/923 */
 
-class DISABLED_t8_cmesh_add_attributes: public testing::TestWithParam<int> {
+class DISABLED_t8_cmesh_add_attributes: public testing::TestWithParam<cmesh_example_base *> {
  protected:
   void
   SetUp () override
   {
-    const int cmesh_id = GetParam ();
-    cmesh = t8_test_create_cmesh (cmesh_id);
+    cmesh = GetParam ()->cmesh_create ();
 
     t8_cmesh_init (&cmesh_derived);
     t8_cmesh_set_derive (cmesh_derived, cmesh);
@@ -89,4 +88,5 @@ TEST_P (DISABLED_t8_cmesh_add_attributes, check_attributes)
 }
 
 /* Test for different number of trees. */
-INSTANTIATE_TEST_SUITE_P (t8_gtest_add_attributes_when_derive, DISABLED_t8_cmesh_add_attributes, AllCmeshs);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_add_attributes_when_derive, DISABLED_t8_cmesh_add_attributes, AllCmeshsParam,
+                          pretty_print_base_example);
