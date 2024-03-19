@@ -24,6 +24,7 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <test/t8_gtest_macros.hxx>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_zero.h>
 
 /* Test for one tree */
 class cmesh_face_boundary_one_tree: public testing::TestWithParam<t8_eclass> {
@@ -63,7 +64,7 @@ TEST_P (cmesh_face_boundary_one_tree, check_face_is_boundary_one_tree)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_face_boundary, cmesh_face_boundary_one_tree, AllEclasses);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_face_boundary, cmesh_face_boundary_one_tree, AllEclasses, print_eclass);
 
 /* For a two tree cmesh, compute a parallel distribution of the trees.
  * If we have more than 1 process, the first half of process (rank < size/2)

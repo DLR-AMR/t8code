@@ -153,13 +153,6 @@ t8_default_scheme_common_c::t8_element_count_leaves_from_root (int level) const
   return count_leaves_from_level (0, level, dim);
 }
 
-void
-t8_default_scheme_common_c::t8_element_general_function (const t8_element_t *elem, const void *indata,
-                                                         void *outdata) const
-{
-  /* This function is intentionally left blank. */
-}
-
 #if T8_ENABLE_DEBUG
 void
 t8_default_scheme_common_c::t8_element_debug_print (const t8_element_t *elem) const
@@ -169,5 +162,10 @@ t8_default_scheme_common_c::t8_element_debug_print (const t8_element_t *elem) co
   t8_debugf ("%s\n", debug_string);
 }
 #endif
+
+void
+t8_default_scheme_common_c::t8_element_deinit (int length, t8_element_t *elem) const
+{
+}
 
 T8_EXTERN_C_END ();

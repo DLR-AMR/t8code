@@ -90,4 +90,4 @@ t8_forest_partition_test_boundary_element (const t8_forest_t forest);
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_FOREST_PARTITION_H! */
+#endif /* !T8_FOREST_PARTITION_H */

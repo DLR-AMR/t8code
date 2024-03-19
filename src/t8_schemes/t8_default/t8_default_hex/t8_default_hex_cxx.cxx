@@ -39,14 +39,6 @@ t8_default_scheme_hex_c::t8_element_maxlevel (void) const
   return HEX_REFINE_MAXLEVEL;
 }
 
-t8_eclass_t
-t8_default_scheme_hex_c::t8_element_child_eclass (int childid) const
-{
-  T8_ASSERT (0 <= childid && childid < P8EST_CHILDREN);
-
-  return T8_ECLASS_HEX;
-}
-
 int
 t8_default_scheme_hex_c::t8_element_level (const t8_element_t *elem) const
 {
@@ -183,7 +175,7 @@ t8_default_scheme_hex_c::t8_element_ancestor_id (const t8_element_t *elem, int l
 }
 
 int
-t8_default_scheme_hex_c::t8_element_is_family (t8_element_t **fam) const
+t8_default_scheme_hex_c::t8_element_is_family (t8_element_t *const *fam) const
 {
 #ifdef T8_ENABLE_DEBUG
   {
@@ -521,11 +513,11 @@ t8_default_scheme_hex_c::t8_element_last_descendant (const t8_element_t *elem, t
 }
 
 void
-t8_default_scheme_hex_c::t8_element_successor (const t8_element_t *elem1, t8_element_t *elem2, int level) const
+t8_default_scheme_hex_c::t8_element_successor (const t8_element_t *elem1, t8_element_t *elem2) const
 {
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
-  T8_ASSERT (0 <= level && level <= HEX_REFINE_MAXLEVEL);
+  T8_ASSERT (0 <= t8_element_level (elem1) && t8_element_level (elem1) <= HEX_REFINE_MAXLEVEL);
   p8est_quadrant_successor ((p8est_quadrant_t *) elem1, (p8est_quadrant_t *) elem2);
 }
 
@@ -601,7 +593,7 @@ t8_default_scheme_hex_c::t8_element_new (int length, t8_element_t **elem) const
   {
     int i;
     for (i = 0; i < length; i++) {
-      t8_element_init (1, elem[i], 0);
+      t8_element_root (elem[i]);
       T8_QUAD_SET_TDIM ((p8est_quadrant_t *) elem[i], 3);
     }
   }
@@ -609,17 +601,14 @@ t8_default_scheme_hex_c::t8_element_new (int length, t8_element_t **elem) const
 }
 
 void
-t8_default_scheme_hex_c::t8_element_init (int length, t8_element_t *elem, int new_called) const
+t8_default_scheme_hex_c::t8_element_init (int length, t8_element_t *elem) const
 {
 #ifdef T8_ENABLE_DEBUG
-  if (!new_called) {
-    int i;
-    p8est_quadrant_t *quads = (p8est_quadrant_t *) elem;
-    for (i = 0; i < length; i++) {
-      p8est_quadrant_set_morton (quads + i, 0, 0);
-      T8_QUAD_SET_TDIM (quads + i, 3);
-      T8_ASSERT (p8est_quadrant_is_extended (quads + i));
-    }
+  p8est_quadrant_t *quads = (p8est_quadrant_t *) elem;
+  for (int i = 0; i < length; i++) {
+    p8est_quadrant_set_morton (quads + i, 0, 0);
+    T8_QUAD_SET_TDIM (quads + i, 3);
+    T8_ASSERT (p8est_quadrant_is_extended (quads + i));
   }
 #endif
 }
@@ -660,6 +649,74 @@ t8_default_scheme_hex_c::~t8_default_scheme_hex_c ()
    * suffices to destroy the quad_scheme.
    * However we need to provide an implementation of the destructor
    * and hence this empty function. */
+}
+void
+t8_default_scheme_hex_c::t8_element_root (t8_element_t *elem) const
+{
+  p8est_quadrant_t *hex = (p8est_quadrant_t *) elem;
+  p8est_quadrant_set_morton (hex, 0, 0);
+  T8_ASSERT (p8est_quadrant_is_extended (hex));
+}
+
+/* each hex is packed as x,y,z coordinates and the level */
+void
+t8_default_scheme_hex_c::t8_element_MPI_Pack (t8_element_t **const elements, const unsigned int count,
+                                              void *send_buffer, const int buffer_size, int *position,
+                                              sc_MPI_Comm comm) const
+{
+  int mpiret;
+  p8est_quadrant_t **quads = (p8est_quadrant_t **) elements;
+  for (unsigned int ielem = 0; ielem < count; ielem++) {
+    mpiret = sc_MPI_Pack (&(quads[ielem]->x), 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Pack (&quads[ielem]->y, 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Pack (&quads[ielem]->z, 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Pack (&quads[ielem]->level, 1, sc_MPI_INT8_T, send_buffer, buffer_size, position, comm);
+    SC_CHECK_MPI (mpiret);
+  }
+}
+
+/* each hex is packed as x,y,z coordinates and the level */
+void
+t8_default_scheme_hex_c::t8_element_MPI_Pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size) const
+{
+  int singlesize = 0;
+  int datasize = 0;
+  int mpiret;
+
+  /* x,y,z */
+  mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &datasize);
+  SC_CHECK_MPI (mpiret);
+  singlesize += 3 * datasize;
+
+  /* level */
+  mpiret = sc_MPI_Pack_size (1, sc_MPI_INT8_T, comm, &datasize);
+  SC_CHECK_MPI (mpiret);
+  singlesize += datasize;
+
+  *pack_size = count * singlesize;
+}
+
+/* each hex is packed as x,y,z coordinates and the level */
+void
+t8_default_scheme_hex_c::t8_element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position,
+                                                t8_element_t **elements, const unsigned int count,
+                                                sc_MPI_Comm comm) const
+{
+  int mpiret;
+  p8est_quadrant_t **quads = (p8est_quadrant_t **) elements;
+  for (unsigned int ielem = 0; ielem < count; ielem++) {
+    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem]->x), 1, sc_MPI_INT, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem]->y), 1, sc_MPI_INT, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem]->z), 1, sc_MPI_INT, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem]->level), 1, sc_MPI_INT8_T, comm);
+    SC_CHECK_MPI (mpiret);
+  }
 }
 
 T8_EXTERN_C_END ();

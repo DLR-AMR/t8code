@@ -408,4 +408,4 @@ t8_forest_element_has_leaf_desc (t8_forest_t forest, t8_gloidx_t gtreeid, const 
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_FOREST_PRIVATE_H! */
+#endif /* !T8_FOREST_PRIVATE_H */

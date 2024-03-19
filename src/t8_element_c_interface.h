@@ -56,19 +56,6 @@ t8_element_refines_irregular (const t8_eclass_scheme_c *ts);
 int
 t8_element_maxlevel (const t8_eclass_scheme_c *ts);
 
-/** Return the type of each child in the ordering of the implementation.
- * \param [in] ts       Implementation of a class scheme.
- * \param [in] childid  Must be between 0 and the number of children (exclusive).
- *                      The number of children is defined in \a t8_element_num_children.
- * \return              The type for the given child.
- */
-t8_eclass_t
-t8_element_child_eclass (const t8_eclass_scheme_c *ts, int childid);
-/** Return the level of a particular element.
- * \param [in] ts      Implementation of a class scheme.
- * \param [in] elem    The element whose level should be returned.
- * \return             The level of \b elem.
- */
 int
 t8_element_level (const t8_eclass_scheme_c *ts, const t8_element_t *elem);
 
@@ -226,14 +213,9 @@ t8_element_get_corner_face (const t8_eclass_scheme_c *ts, const t8_element_t *el
  * \param [in] ts             Implementation of a class scheme.
  * \param [in] elem     This must be a valid element, bigger than maxlevel.
  * \param [in] childid  The number of the child to construct.
- * \param [in,out] child        The storage for this element must exist
- *                              and match the element class of the child.
- *                              For a pyramid, for example, it may be either a
- *                              tetrahedron or a pyramid depending on \a childid.
- *                              This can be checked by \a t8_element_child_eclass.
+ * \param [in,out] child        The storage for this element must exist.
  *                              On output, a valid element.
  * It is valid to call this function with elem = child.
- * \see t8_element_child_eclass
  */
 void
 t8_element_child (const t8_eclass_scheme_c *ts, const t8_element_t *elem, int childid, t8_element_t *child);
@@ -248,7 +230,6 @@ t8_element_child (const t8_eclass_scheme_c *ts, const t8_element_t *elem, int ch
  *                      On output, all children are valid.
  * It is valid to call this function with elem = c[0].
  * \see t8_element_num_children
- * \see t8_element_child_eclass
  */
 void
 t8_element_children (const t8_eclass_scheme_c *ts, const t8_element_t *elem, int length, t8_element_t *c[]);
@@ -278,7 +259,7 @@ t8_element_ancestor_id (const t8_eclass_scheme_c *ts, const t8_element_t *elem, 
  * \return              Zero if \b fam is not a family, nonzero if it is.
  */
 int
-t8_element_is_family (const t8_eclass_scheme_c *ts, t8_element_t **fam);
+t8_element_is_family (const t8_eclass_scheme_c *ts, t8_element_t *const *fam);
 
 /** Compute the nearest common ancestor of two elements. That is,
  * the element with highest level that still has both given elements as
@@ -547,7 +528,7 @@ t8_element_last_descendant (const t8_eclass_scheme_c *ts, const t8_element_t *el
  * \param [in] level      The level of the uniform refinement to consider.
  */
 void
-t8_element_successor (const t8_eclass_scheme_c *ts, const t8_element_t *elem1, t8_element_t *elem2, int level);
+t8_element_successor (const t8_eclass_scheme_c *ts, const t8_element_t *elem1, t8_element_t *elem2);
 
 /** Compute the coordinates of a given element vertex inside a reference tree
  *  that is embedded into [0,1]^d (d = dimension).
@@ -560,16 +541,6 @@ t8_element_successor (const t8_eclass_scheme_c *ts, const t8_element_t *elem1, t
 void
 t8_element_vertex_reference_coords (const t8_eclass_scheme_c *ts, const t8_element_t *t, const int vertex,
                                     double coords[]);
-
-/* TODO: deactivate */
-/** Return a pointer to a t8_element in an array indexed by a size_t.
- * \param [in] array    The \ref sc_array storing \t t8_element_t pointers.
- * \param [in] it       The index of the element that should be returned.
- * \return              A pointer to the it-th element in \b array.
- * We provide a default implementation of this routine that should suffice
- * for most use cases.
- */
-/* t8_element_t *t8_element_array_index (sc_array_t *array, size_t it); */
 
 /** Count how many leaf descendants of a given uniform level an element would produce.
  * \param [in] ts     Implementation of a class scheme.
@@ -597,21 +568,6 @@ t8_element_count_leaves (const t8_eclass_scheme_c *ts, const t8_element_t *t, in
  */
 t8_gloidx_t
 t8_element_count_leaves_from_root (const t8_eclass_scheme_c *ts, int level);
-
-/** This function has no defined effect but each implementation is free to
- *  provide its own meaning of it. Thus this function can be used to compute or
- *  lookup very scheme implementation specific data.
- *  \param [in] ts        Implementation of a class scheme.
- *  \param [in] elem      An valid element
- *  \param [in] indata    Pointer to input data
- *  \param [out] outdata  Pointer to output data.
- *  For the correct usage of \a indata and \a outdata see the specific implementations
- *  of the scheme.
- *  For example the default scheme triangle and tetrahedron implementations use 
- *  this function to return the type of a tri/tet to the caller.
- */
-void
-t8_element_general_function (const t8_eclass_scheme_c *ts, const t8_element_t *elem, const void *indata, void *outdata);
 
 #ifdef T8_ENABLE_DEBUG
 /** Query whether a given element can be considered as 'valid' and it is
@@ -683,6 +639,48 @@ t8_element_new (const t8_eclass_scheme_c *ts, int length, t8_element_t **elems);
  */
 void
 t8_element_destroy (const t8_eclass_scheme_c *ts, int length, t8_element_t **elems);
+
+/** Fills an element with the root element.
+ * \param [in] ts         Implementation of a class scheme.
+ * \param [in,out] elem   The element to be filled with root.
+ */
+void
+t8_element_root (const t8_eclass_scheme_c *ts, t8_element_t *elem);
+
+/** Pack multiple elements into contiguous memory, so they can be sent via MPI.
+ * \param [in] ts         Implementation of a class scheme.
+ * \param [in] elements Array of elements that are to be packed
+ * \param [in] count Number of elements to pack
+ * \param [in,out] send_buffer Buffer in which to pack the elements
+ * \param [in] buffer_size size of the buffer (in order to check that we don't access out of range)
+ * \param [in, out] position the position of the first byte that is not already packed
+ * \param [in] comm MPI Communicator
+*/
+void
+t8_element_MPI_Pack (const t8_eclass_scheme_c *ts, t8_element_t **const elements, const unsigned int count,
+                     void *send_buffer, const int buffer_size, int *position, sc_MPI_Comm comm);
+
+/** Determine an upper bound for the size of the packed message of \b count elements
+ * \param [in] ts         Implementation of a class scheme.
+ * \param [in] count Number of elements to pack
+ * \param [in] comm MPI Communicator
+ * \param [out] pack_size upper bound on the message size
+*/
+void
+t8_element_MPI_Pack_size (const t8_eclass_scheme_c *ts, const unsigned int count, sc_MPI_Comm comm, int *pack_size);
+
+/** Unpack multiple elements from contiguous memory that was received via MPI.
+ * \param [in] ts         Implementation of a class scheme.
+ * \param [in] recvbuf Buffer from which to unpack the elements
+ * \param [in] buffer_size size of the buffer (in order to check that we don't access out of range)
+ * \param [in, out] position the position of the first byte that is not already packed
+ * \param [in] elements Array of initialised elements that is to be filled from the message
+ * \param [in] count Number of elements to unpack
+ * \param [in] comm MPI Communicator
+*/
+void
+t8_element_MPI_Unpack (const t8_eclass_scheme_c *ts, void *recvbuf, const int buffer_size, int *position,
+                       t8_element_t **elements, const unsigned int count, sc_MPI_Comm comm);
 
 T8_EXTERN_C_END ();
 

@@ -41,7 +41,6 @@ add_t8_test( NAME t8_gtest_shmem SOURCES t8_gtest_main.cxx t8_data/t8_gtest_shme
 
 add_t8_test( NAME t8_gtest_element_volume            SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_element_volume.cxx )
 add_t8_test( NAME t8_gtest_search                    SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_search.cxx )
-add_t8_test( NAME t8_gtest_element_general_function  SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_element_general_function.cxx )
 add_t8_test( NAME t8_gtest_half_neighbors            SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_half_neighbors.cxx )
 add_t8_test( NAME t8_gtest_find_owner                SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_find_owner.cxx )
 add_t8_test( NAME t8_gtest_user_data                 SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_user_data.cxx )
@@ -56,9 +55,10 @@ add_t8_test( NAME t8_gtest_iterate_replace   SOURCES t8_gtest_main.cxx t8_forest
 add_t8_test( NAME t8_gtest_empty_local_tree  SOURCES t8_gtest_main.cxx t8_forest_incomplete/t8_gtest_empty_local_tree.cxx )
 add_t8_test( NAME t8_gtest_empty_global_tree SOURCES t8_gtest_main.cxx t8_forest_incomplete/t8_gtest_empty_global_tree.cxx )
 
-add_t8_test( NAME t8_gtest_geometry_cad  SOURCES t8_gtest_main.cxx t8_geometry/t8_geometry_implementations/t8_gtest_geometry_cad.cxx )
-add_t8_test( NAME t8_gtest_geometry      SOURCES t8_gtest_main.cxx t8_geometry/t8_gtest_geometry.cxx )
-add_t8_test( NAME t8_gtest_point_inside  SOURCES t8_gtest_main.cxx t8_geometry/t8_gtest_point_inside.cxx )
+add_t8_test( NAME t8_gtest_geometry_cad         SOURCES t8_gtest_main.cxx t8_geometry/t8_geometry_implementations/t8_gtest_geometry_cad.cxx )
+add_t8_test( NAME t8_gtest_geometry_linear      SOURCES t8_gtest_main.cxx t8_geometry/t8_geometry_implementations/t8_gtest_geometry_linear.cxx )
+add_t8_test( NAME t8_gtest_geometry_handling    SOURCES t8_gtest_main.cxx t8_geometry/t8_gtest_geometry_handling.cxx )
+add_t8_test( NAME t8_gtest_point_inside         SOURCES t8_gtest_main.cxx t8_geometry/t8_gtest_point_inside.cxx )
 
 add_t8_test( NAME t8_gtest_vtk_reader SOURCES t8_gtest_main.cxx t8_IO/t8_gtest_vtk_reader.cxx )
 

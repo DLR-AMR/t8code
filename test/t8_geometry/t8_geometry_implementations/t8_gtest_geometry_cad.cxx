@@ -21,7 +21,7 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_vtk.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
@@ -98,12 +98,12 @@ t8_euler_rotation (double *pos_vec, double *rot_vec, double *res_vec, double *ro
   }
 }
 
-/** Constructs an cad surface for testing purposes. Surface is build between vertex 0, 1, 4 and 5 of a unit hexahedron.
- * Saves the surface in the geometry shape.
- * \return                            The geometry.
+/** Constructs a cad surface for testing purposes. Surface is build between vertex 0, 1, 4 and 5 of a unit hexahedron.
+ * Saves the surface in the shape.
+ * \return                            The shape.
  */
-t8_geometry_cad *
-t8_create_cad_surface_geometry ()
+TopoDS_Shape
+t8_create_cad_surface_shape ()
 {
   Handle_Geom_Surface surface;
   TopoDS_Shape shape;
@@ -123,16 +123,15 @@ t8_create_cad_surface_geometry ()
 
   surface = GeomAPI_PointsToBSplineSurface (point_array).Surface ();
   shape = BRepBuilderAPI_MakeFace (surface, 1e-6).Face ();
-  t8_geometry_cad *geometry = new t8_geometry_cad (3, shape, "cad dim=3");
-  return geometry;
+  return shape;
 }
 
-/** Constructs an cad curve for testing purpsoes. Curve is build between vertex 0, 1, 4 and 5 of a unit hexahedron.
- * Saves the curve in the geometry shape.
- * \return                            The cad geometry.
+/** Constructs a cad curve for testing purposes. Curve is build between vertex 0, 1, 4 and 5 of a unit hexahedron.
+ * Saves the curve in the shape.
+ * \return                            The cad shape.
  */
-t8_geometry_cad *
-t8_create_cad_curve_geometry ()
+TopoDS_Shape
+t8_create_cad_curve_shape ()
 {
   Handle_Geom_Curve curve;
   TopoDS_Shape shape;
@@ -146,8 +145,7 @@ t8_create_cad_curve_geometry ()
 
   curve = GeomAPI_PointsToBSpline (point_array).Curve ();
   shape = BRepBuilderAPI_MakeEdge (curve).Edge ();
-  t8_geometry_cad *geometry = new t8_geometry_cad (3, shape, "cad dim=3");
-  return geometry;
+  return shape;
 }
 #endif /* T8_WITH_OCC */
 
@@ -167,7 +165,6 @@ t8_create_cad_hypercube (double *rot_vec, int face, int edge, double *parameters
   }
 
   t8_cmesh_t cmesh;
-  t8_geometry_cad *geometry = NULL;
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
 
@@ -183,26 +180,25 @@ t8_create_cad_hypercube (double *rot_vec, int face, int edge, double *parameters
   T8_ASSERT (face < 0 || edge < 0);
   if (face >= 0) {
     faces[face] = 1;
-    geometry = t8_create_cad_surface_geometry ();
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, t8_create_cad_surface_shape ());
     t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + face,
                             parameters, 8 * sizeof (double), 0);
   }
   else if (edge >= 0) {
     edges[edge] = 1;
-    geometry = t8_create_cad_curve_geometry ();
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, t8_create_cad_curve_shape ());
     t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + edge,
                             parameters, 2 * sizeof (double), 0);
   }
   else {
     /* Even if we do not want to link any geometry to the edges or faces, 
-     * we have to create a geometry. Hence an cad geometry can only be created
+     * we have to create a geometry. Hence a cad geometry can only be created
      * with an actual shape, we just create a geometry with a curve and do not
      * link the curve to any edge. */
-    geometry = t8_create_cad_curve_geometry ();
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, t8_create_cad_curve_shape ());
   }
   t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, faces, 6 * sizeof (int), 0);
   t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges, 24 * sizeof (int), 0);
-  t8_cmesh_register_geometry (cmesh, geometry);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   return cmesh;
 
@@ -381,7 +377,6 @@ class class_2d_element_linear_cad_surface: public testing::TestWithParam<t8_ecla
     T8_ASSERT (0 <= eclass && eclass < T8_ECLASS_COUNT);
     Handle_Geom_Surface cad_surface;
     TColgp_Array2OfPnt point_array (1, 2, 1, 2);
-    TopoDS_Shape shape;
 
     /*  x--> u-parameter
     *  |
@@ -407,8 +402,6 @@ class class_2d_element_linear_cad_surface: public testing::TestWithParam<t8_ecla
     cad_surface = GeomAPI_PointsToBSplineSurface (point_array).Surface ();
     shape = BRepBuilderAPI_MakeFace (cad_surface, 1e-6).Face ();
 
-    geometry_cad = new t8_geometry_cad (2, shape, "cad surface dim=2");
-
     t8_cmesh_init (&cmesh);
     t8_cmesh_set_tree_class (cmesh, 0, eclass);
   }
@@ -420,7 +413,7 @@ class class_2d_element_linear_cad_surface: public testing::TestWithParam<t8_ecla
   }
   t8_cmesh_t cmesh;
   t8_eclass_t eclass;
-  t8_geometry_cad *geometry_cad;
+  TopoDS_Shape shape;
   /* The arrays prescribe the linkage of the element. The face of the element is linked and all edges are not */
   int faces[1] = { 1 };
   int edges[8] = { 0 };
@@ -448,7 +441,7 @@ TEST_P (class_2d_element_linear_cad_surface, t8_check_2d_element_linear_cad_surf
                           (eclass == T8_ECLASS_QUAD ? params_quad : params_tri), 2 * num_vertices * sizeof (double), 0);
 
   /* Register the geometry */
-  t8_cmesh_register_geometry (cmesh, geometry_cad);
+  t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 2, shape);
   /* Commit the cmesh */
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 
@@ -471,6 +464,6 @@ TEST_P (class_2d_element_linear_cad_surface, t8_check_2d_element_linear_cad_surf
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_check_2d_element_linear_cad_surface, class_2d_element_linear_cad_surface,
-                          AllEclasses2D);
+                          AllEclasses2D, print_eclass);
 
 #endif /* T8_WITH_OCC */
