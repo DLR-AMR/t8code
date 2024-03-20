@@ -94,11 +94,6 @@ class geometry_test: public testing::TestWithParam<std::tuple<int, t8_eclass>> {
   t8_eclass_t eclass;
   t8_geometry_with_vertices *geom;
   t8_cmesh_t cmesh;
-#ifdef T8_ENABLE_LESS_TESTS
-  const int num_points = 1000;
-#else
-  const int num_points = 10000;
-#endif
 };
 
 int geometry_test::seed;
@@ -123,7 +118,7 @@ TEST_P (geometry_test, cmesh_geometry)
     << "cmesh's geometry is not the expected geometry.";
 
   srand (seed);
-  for (int ipoint = 0; ipoint < num_points; ++ipoint) {
+  for (int ipoint = 0; ipoint < T8_NUM_SAMPLE_POINTS; ++ipoint) {
     double point[3] = { 0 };
     /* Compute random coordinates in [0,1].
      * These are seen as reference coordinates in the single
