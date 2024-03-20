@@ -557,10 +557,12 @@ struct t8_default_scheme_quad_c: public t8_default_scheme_common_c
 
   /** Compute the coordinates of a given element vertex inside a reference tree
    *  that is embedded into [0,1]^d (d = dimension).
-   *   \param [in] elem    The element.
-   *   \param [in] vertex  The id of the vertex whose coordinates shall be computed.
+   *   \param [in] elem   The element to be considered.
+   *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
    *   \param [out] coords An array of at least as many doubles as the element's dimension
    *                      whose entries will be filled with the coordinates of \a vertex.
+   *   \warning           coords should be zero-initialized, as only the first d coords will be set, but when used elsewhere
+   *                      all coords might be used. 
    */
   virtual void
   t8_element_vertex_reference_coords (const t8_element_t *elem, const int vertex, double coords[]) const;

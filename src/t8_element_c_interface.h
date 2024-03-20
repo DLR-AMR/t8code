@@ -531,13 +531,14 @@ void
 t8_element_successor (const t8_eclass_scheme_c *ts, const t8_element_t *elem1, t8_element_t *elem2);
 
 /** Compute the coordinates of a given element vertex inside a reference tree
- *  that is embedded into [0,1]^d (d = dimension).
- * \param [in] ts       Implementation of a class scheme.
- * \param [in] t        The element to be considered.
- * \param [in] vertex   The id of the vertex whose coordinates shall be computed.
- * \param [out] coords  An array of at least as many doubles as the element's dimension
- *                      whose entries will be filled with the coordinates of \a vertex.
- */
+   *  that is embedded into [0,1]^d (d = dimension).
+   *   \param [in] t      The element to be considered.
+   *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
+   *   \param [out] coords An array of at least as many doubles as the element's dimension
+   *                      whose entries will be filled with the coordinates of \a vertex.
+   *   \warning           coords should be zero-initialized, as only the first d coords will be set, but when used elsewhere
+   *                      all coords might be used. 
+   */
 void
 t8_element_vertex_reference_coords (const t8_eclass_scheme_c *ts, const t8_element_t *t, const int vertex,
                                     double coords[]);
