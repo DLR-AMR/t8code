@@ -175,7 +175,7 @@ t8_geom_compute_linear_geometry (t8_eclass_t tree_class, const double *tree_vert
 }
 
 void
-t8_geom_compute_linear_axis_aligned_geometry (t8_eclass_t tree_class, const double *tree_vertices,
+t8_geom_compute_linear_axis_aligned_geometry (const t8_eclass_t tree_class, const double *tree_vertices,
                                               const double *ref_coords, const size_t num_coords, double *out_coords)
 {
   if (tree_class != T8_ECLASS_LINE && tree_class != T8_ECLASS_QUAD && tree_class != T8_ECLASS_HEX) {
@@ -204,11 +204,14 @@ t8_geom_compute_linear_axis_aligned_geometry (t8_eclass_t tree_class, const doub
   /* Compute vector between both points */
   double vector[3];
   t8_vec_diff (tree_vertices + T8_ECLASS_MAX_DIM, tree_vertices, vector);
+  t8_productionf ("[D] tvertices %f %f %f\n", tree_vertices[0], tree_vertices[1], tree_vertices[2]);
 
   /* Compute the coordinates of the reference point. */
   for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
     const size_t offset_tree_dim = i_coord * dimension;
     const size_t offset_domain_dim = i_coord * T8_ECLASS_MAX_DIM;
+    t8_productionf ("[D] ref_coord: %f %f %f\n", ref_coords[offset_tree_dim], ref_coords[offset_tree_dim + 1],
+                    ref_coords[offset_tree_dim + 2]);
     for (int i_dim = 0; i_dim < T8_ECLASS_MAX_DIM; ++i_dim) {
       out_coords[offset_domain_dim + i_dim] = tree_vertices[i_dim];
       out_coords[offset_domain_dim + i_dim] += ref_coords[offset_tree_dim + i_dim] * vector[i_dim];
