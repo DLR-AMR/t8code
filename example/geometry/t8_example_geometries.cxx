@@ -180,7 +180,6 @@ struct t8_geometry_moebius: public t8_geometry_with_vertices
     double phi;
 
     /* Compute the linear coordinates (in [0,1]^2) of the reference vertex and store in out_coords. */
-    /* No idea why, but indent insert a lot of newlines here */
     t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, num_coords, out_coords);
 
     for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
