@@ -32,7 +32,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <gtest/gtest.h>
 #include <test/t8_gtest_macros.hxx>
-#include <test/t8_geometry/t8_gtest_geometry_macros.hxx>
 #include <t8_eclass.h>
 #include <t8_vec.h>
 #include <t8_element_cxx.hxx>
@@ -216,6 +215,11 @@ class LagrangeCmesh: public testing::TestWithParam<std::tuple<t8_eclass_t, int>>
 
   t8_eclass_t eclass;
   int degree;
+  #ifdef T8_ENABLE_LESS_TESTS
+  const int num_points = 1000;
+  #else
+  const int num_points = 10000;
+  #endif
 };
 
 /**
@@ -234,7 +238,7 @@ TEST_P (LagrangeCmesh, lagrange_mapping)
   std::vector<t8_lagrange_element> faces = lag.decompose ();
   uint i_face = 0;
   for (const auto &face : faces) {
-    auto points_on_face = sample (face.get_type (), T8_NUM_SAMPLE_POINTS);
+    auto points_on_face = sample (face.get_type (), num_points);
     for (const auto &point : points_on_face) {
       auto mapped1 = face.evaluate (point);
       auto mapped2 = lag.evaluate (face.map_on_face (lag.get_type (), i_face, point));

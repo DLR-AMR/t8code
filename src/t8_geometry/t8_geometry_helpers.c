@@ -175,7 +175,7 @@ t8_geom_compute_linear_geometry (t8_eclass_t tree_class, const double *tree_vert
 }
 
 void
-t8_geom_compute_linear_axis_aligned_geometry (t8_eclass_t tree_class, const double *tree_vertices,
+t8_geom_compute_linear_axis_aligned_geometry (const t8_eclass_t tree_class, const double *tree_vertices,
                                               const double *ref_coords, const size_t num_coords, double *out_coords)
 {
   if (tree_class != T8_ECLASS_LINE && tree_class != T8_ECLASS_QUAD && tree_class != T8_ECLASS_HEX) {
@@ -211,7 +211,7 @@ t8_geom_compute_linear_axis_aligned_geometry (t8_eclass_t tree_class, const doub
     const size_t offset_domain_dim = i_coord * T8_ECLASS_MAX_DIM;
     for (int i_dim = 0; i_dim < T8_ECLASS_MAX_DIM; ++i_dim) {
       out_coords[offset_domain_dim + i_dim] = tree_vertices[i_dim];
-      out_coords[offset_domain_dim + i_dim] += ref_coords[offset_tree_dim] * vector[i_dim];
+      out_coords[offset_domain_dim + i_dim] += ref_coords[offset_tree_dim + i_dim] * vector[i_dim];
     }
   }
 }
