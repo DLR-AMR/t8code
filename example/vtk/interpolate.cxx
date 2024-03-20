@@ -144,7 +144,7 @@ void MeshAdapter::Initialize(vtkSmartPointer<vtkDataSet> input, bool newDataSet)
         /* Create Cmesh with correct eclass */
         mpiret = sc_MPI_Bcast(t8Bounds, 24, sc_MPI_DOUBLE, 0, mpiComm);
         t8_cmesh_t cmesh =
-            t8_cmesh_new_hypercube_pad(eclass, mpiComm, t8Bounds, this->divisionFactorX, this->divisionFactorY, this->divisionFactorZ);
+            t8_cmesh_new_hypercube_pad(eclass, mpiComm, t8Bounds, this->divisionFactorX, this->divisionFactorY, this->divisionFactorZ, true);
         //t8_cmesh_vtk_write_file(cmesh, "visplore_test", 1.0);
         T8_FREE(t8Bounds);
    
@@ -309,7 +309,7 @@ void MeshAdapter::Initialize(vtkSmartPointer<vtkDataSet> input, bool newDataSet)
                 int *point_inside = T8_ALLOC_ZERO(int, num_global_points);
                 const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
 
-                t8_forest_element_point_batch_inside(forest, itree, element, point_coords, num_global_points, point_inside, tolerance);
+                t8_forest_element_points_inside(forest, itree, element, point_coords, num_global_points, point_inside, tolerance);
                 // Check if the points were in element
                 for (int ipoint = 0; ipoint < num_global_points; ipoint++)
                 {
@@ -326,6 +326,7 @@ void MeshAdapter::Initialize(vtkSmartPointer<vtkDataSet> input, bool newDataSet)
                 T8_FREE(point_inside);
             }
         }
+        T8_FREE(point_coords);
 
         int *current_point_ids = T8_ALLOC(int, num_global_points);
         int *min_rank = T8_ALLOC(int, num_global_points);

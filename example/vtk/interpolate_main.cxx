@@ -62,26 +62,27 @@ t8_pipeline (vtkSmartPointer < vtkDataSet >data, sc_MPI_Comm comm)
 
   test->WritePVTU (first_data, data_name, types);
 
-  for (int i = 0; i < 6; i++) {
-    t8_debugf("----------- Round %i -------------\n", i);
-
-    test->Adapt (t8Callbacks::t8_adapt_callback_non_empty, 
-                t8Callbacks::t8_itertate_replace_pointids, 0);
-    t8_debugf("----------- Adapt %i -------------\n", i);
-
-    test->Partition ();
-    t8_debugf("----------- Partition %i -------------\n", i);
-
-    test->SetElements ();
-    t8_debugf("----------- SetElements %i -------------\n", i);
-
-    char                fileprefix[12];
-    snprintf (fileprefix, BUFSIZ, "%s_%i", filename, i + 1);
-    test->WritePVTU (fileprefix, data_name, types);
-    t8_debugf("----------- WritePvtu %i -------------\n", i);
-
-  }
-  t8_debugf ("[D] wrote vtk file\n");
+//  for (int i = 0; i < 6; i++) {
+//    t8_debugf("----------- Round %i -------------\n", i);
+//
+//    test->Adapt (t8Callbacks::t8_adapt_callback_non_empty, 
+//                t8Callbacks::t8_itertate_replace_pointids, 0);
+//    t8_debugf("----------- Adapt %i -------------\n", i);
+//
+//    test->Partition ();
+//    t8_debugf("----------- Partition %i -------------\n", i);
+//
+//    test->SetElements ();
+//    t8_debugf("----------- SetElements %i -------------\n", i);
+//
+//    char                fileprefix[12];
+//    snprintf (fileprefix, BUFSIZ, "%s_%i", filename, i + 1);
+//    test->WritePVTU (fileprefix, data_name, types);
+//    t8_debugf("----------- WritePvtu %i -------------\n", i);
+//
+//  }
+//  t8_debugf ("[D] wrote vtk file\n");
+delete(test);
   return;
 }
 

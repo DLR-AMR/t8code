@@ -203,7 +203,7 @@ void t8Callbacks::t8_itertate_replace_pointids(t8_forest_t forest_old,
                                    first_incoming_data + ielem);
 
       const double tolerance = 1e-7;
-      t8_forest_element_point_batch_inside(forest_new, which_tree, elem, point_coords, num_outgoing_points, point_inside, tolerance);
+      t8_forest_element_points_inside(forest_new, which_tree, elem, point_coords, num_outgoing_points, point_inside, tolerance);
 
       // Check if the points were in element
       for (int ipoint = 0; ipoint < num_outgoing_points; ipoint++)
