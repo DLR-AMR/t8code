@@ -36,6 +36,16 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  */
 auto print_eclass = [] (const testing::TestParamInfo<t8_eclass> &info) { return t8_eclass_to_string[info.param]; };
 
+/**
+ * Number of points to use in tests
+ * 
+ */
+#ifdef T8_ENABLE_LESS_TESTS
+#define T8_NUM_SAMPLE_POINTS 1000
+#else
+#define T8_NUM_SAMPLE_POINTS 10000
+#endif
+
 #define AllEclasses testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT)
 #define AllEclasses2D testing::Values (T8_ECLASS_QUAD, T8_ECLASS_TRIANGLE)
 
