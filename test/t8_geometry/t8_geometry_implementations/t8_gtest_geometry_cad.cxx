@@ -423,6 +423,9 @@ class class_2d_element_linear_cad_curve: public testing::TestWithParam<t8_eclass
   std::array<int, 1> faces = { 0 };
   std::array<int, 8> edges = { 0 };
 
+  const int linked_edge_tri[3] = { 2, 1, 0 };
+  const int linked_edge_quad[4] = { 2, 0, 3, 1 };
+
   const double test_ref_coords_tri_in[27] = { 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.5, 0.5,
                                               0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.5, 0.0, 1.0, 1.0, 0.0 };
   const double test_ref_coords_quad_in[36]
@@ -433,8 +436,6 @@ class class_2d_element_linear_cad_curve: public testing::TestWithParam<t8_eclass
 
 TEST_P (class_2d_element_linear_cad_curve, t8_check_2d_element_linear_cad_curve)
 {
-  const int linked_edge_tri[3] = { 2, 1, 0 };
-  const int linked_edge_quad[4] = { 2, 0, 3, 1 };
 
   for (size_t i_orientation = 0; i_orientation < num_vertices; ++i_orientation) {
     const int orientation = i_orientation * num_vertices * T8_ECLASS_MAX_DIM;
@@ -496,7 +497,6 @@ class class_2d_element_curved_cad_curve: public testing::TestWithParam<t8_eclass
     T8_ASSERT (0 <= eclass && eclass < T8_ECLASS_COUNT);
     Handle_Geom_Curve cad_curve;
     TColgp_Array1OfPnt point_array (1, 3);
-    TopoDS_Shape shape;
 
     /*  x--> u-parameter
     *   
@@ -513,56 +513,87 @@ class class_2d_element_curved_cad_curve: public testing::TestWithParam<t8_eclass
     cad_curve = GeomAPI_PointsToBSpline (point_array).Curve ();
     shape = BRepBuilderAPI_MakeEdge (cad_curve).Edge ();
 
-    t8_cmesh_init (&cmesh);
-    t8_cmesh_set_tree_class (cmesh, 0, eclass);
-    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 2, shape);
+    num_vertices = t8_eclass_num_vertices[eclass];
   }
 
   void
   TearDown () override
   {
-    t8_cmesh_destroy (&cmesh);
+    /* The cmesh is destroyed in the test itself. */
   }
   t8_cmesh_t cmesh;
   t8_eclass_t eclass;
+  TopoDS_Shape shape;
+  /* Saving the corner vertices for the given element class. */
+  size_t num_vertices;
+  const double vertices_tri[27] = { 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0,
+                                    0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0 };
+  const double vertices_quad[48] = { 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0,
+                                     1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0,
+                                     0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0 };
+  /* Edges are parametrized in one parameter u. The array contains the parameters
+   * each vertex of the edge has on the linked curve. */
+  double params_tri[6] = { 0, 1, 1, 0, 0, 1 };
+  double params_quad[8] = { 0, 1, 1, 0, 1, 0, 0, 1 };
+  /* The array prescribes the linkage of the element. No face is linked. */
+  std::array<int, 1> faces = { 0 };
+  std::array<int, 8> edges = { 0 };
 
-  /* The arrays prescribe the linkage of the element. Edge 2 of the element is linked and the face is unlinked. */
-  int faces[1] = { 0 };
-  int edges[8] = { 0, 0, 1, 0, 0, 0, 0, 0 };
+  const int linked_edge_tri[3] = { 2, 1, 0 };
+  const int linked_edge_quad[4] = { 2, 0, 3, 1 };
+
+  const double test_ref_coords_tri_in[27] = { 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.5, 0.5,
+                                              0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.5, 0.0, 1.0, 1.0, 0.0 };
+  const double test_ref_coords_quad_in[36]
+    = { 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0,
+        1.0, 1.0, 0.0, 0.5, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.5, 0.0, 1.0, 1.0, 0.0 };
 
   const double test_ref_coords_out[9] = { 0.0, 0.0, 0.0, 0.5, -0.2, 0.0, 1.0, 0.0, 0.0 };
-  const double test_ref_coords_in[9] = { 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0 };
 };
 
 TEST_P (class_2d_element_curved_cad_curve, t8_check_2d_element_curved_cad_curve)
 {
-  /* Saving the corner vertices for the given element class. */
-  const int num_vertices = t8_eclass_num_vertices[eclass];
-  const double *vertices = &(t8_element_corner_ref_coords[eclass][0][0]);
+  for (size_t i_orientation = 0; i_orientation < num_vertices; ++i_orientation) {
+    const int orientation = i_orientation * num_vertices * T8_ECLASS_MAX_DIM;
 
-  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, num_vertices);
+    edges.fill (0);
 
-  /* Edges are parametrized in one parameter u. The arrays contain the parameters
-   * each vertex of the element has on the linked curve. */
-  double params[2] = { 0, 1 };
+    const int linked_edge
+      = (eclass == T8_ECLASS_QUAD ? linked_edge_quad[i_orientation] : linked_edge_tri[i_orientation]);
+    edges[linked_edge] = 1;
 
-  /* Passing of the attributes to the element */
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, faces, sizeof (int), 0);
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges,
-                          2 * num_vertices * sizeof (int), 0);
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + 2, params,
-                          2 * sizeof (double), 0);
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_set_tree_class (cmesh, 0, eclass);
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 2, shape);
 
-  /* Commit the cmesh */
-  t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
+    t8_cmesh_set_tree_vertices (
+      cmesh, 0, (eclass == T8_ECLASS_QUAD ? vertices_quad + orientation : vertices_tri + orientation), num_vertices);
 
-  double out_coords[3];
+    /* Passing of the attributes to the element */
+    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, faces.data (),
+                            sizeof (int), 0);
+    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges.data (),
+                            2 * num_vertices * sizeof (int), 0);
+    t8_cmesh_set_attribute (
+      cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + linked_edge,
+      (eclass == T8_ECLASS_QUAD ? (params_quad + 2 * i_orientation) : (params_tri + 2 * i_orientation)),
+      2 * sizeof (double), 0);
 
-  /* out_coords should be equal to the input ref_coords. */
-  for (size_t i_coord = 0; i_coord < 3; ++i_coord) {
-    t8_geometry_evaluate (cmesh, 0, test_ref_coords_in + i_coord * 3, 1, out_coords);
+    /* Commit the cmesh */
+    t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 
-    EXPECT_VEC3_EQ (test_ref_coords_out + i_coord * 3, out_coords, T8_PRECISION_EPS);
+    double out_coords[3];
+
+    /* out_coords should be equal to the input ref_coords. */
+    for (size_t i_coord = 0; i_coord < T8_ECLASS_MAX_DIM; ++i_coord) {
+      t8_geometry_evaluate (cmesh, 0,
+                            (eclass == T8_ECLASS_QUAD ? test_ref_coords_quad_in : test_ref_coords_tri_in)
+                              + i_coord * T8_ECLASS_MAX_DIM + i_orientation * 9,
+                            1, out_coords);
+
+      EXPECT_VEC3_EQ (test_ref_coords_out + i_coord * T8_ECLASS_MAX_DIM, out_coords, T8_PRECISION_EPS);
+    }
+    t8_cmesh_destroy (&cmesh);
   }
 }
 
