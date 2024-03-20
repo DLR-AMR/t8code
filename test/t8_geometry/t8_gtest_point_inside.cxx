@@ -317,7 +317,7 @@ TEST_P (geometry_point_inside, test_point_inside)
       t8_forest_element_points_inside (forest, 0, element, test_point, total_points, point_is_recognized_as_inside,
                                        tolerance);
       for (int ipoint = 0; ipoint < num_points; ipoint++) {
-        ASSERT_EQ (!point_is_recognized_as_inside[ipoint], !point_is_inside[ipoint])
+        ASSERT_EQ (point_is_recognized_as_inside[ipoint], point_is_inside[ipoint])
           << "Testing point #" << ipoint << "(" << test_point[0] << "," << test_point[1] << "," << test_point[2]
           << ") should " << (point_is_inside[ipoint] ? "" : "not ") << "be inside the " << t8_eclass_to_string[eclass]
           << " element, but is not detected as such.";
