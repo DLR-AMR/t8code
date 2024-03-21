@@ -373,132 +373,29 @@ TEST (t8_gtest_geometry_cad, jacobian)
 #if T8_WITH_OCC
 /* The test checks if the mapping algorithms for curved 2d elements do not shift values on an edge which is not curved.
  * In that case, the cad geometry should output the same out_coords as the linear geometry function. */
-class class_2d_element_linear_cad_curve: public testing::TestWithParam<t8_eclass_t> {
+class class_2d_element_cad_curve: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
  protected:
   void
   SetUp () override
   {
-    eclass = GetParam ();
+    eclass = std::get<0> (GetParam ());
+    /* curvature prescibes if the linear of curved curve is used */
+    curvature = std::get<1> (GetParam ());
     T8_ASSERT (0 <= eclass && eclass < T8_ECLASS_COUNT);
-    Handle_Geom_Curve cad_curve;
-    TColgp_Array1OfPnt point_array (1, 2);
+    Handle_Geom_Curve cad_curve_linear, cad_curve_curved;
+    TColgp_Array1OfPnt point_array_linear (1, 2);
+    TColgp_Array1OfPnt point_array_curved (1, 3);
 
-    /*  x--> u-parameter
+    /* LINEAR  
+    *  x--> u-parameter
     *   
     *                 curve
     *  ----------------------------------
     * 
     *  0                                1
-    */
-
-    point_array (1) = gp_Pnt (vertices_quad[0], vertices_quad[1], vertices_quad[2]);
-    point_array (2) = gp_Pnt (vertices_quad[3], vertices_quad[4], vertices_quad[5]);
-
-    cad_curve = GeomAPI_PointsToBSpline (point_array).Curve ();
-    shape = BRepBuilderAPI_MakeEdge (cad_curve).Edge ();
-
-    num_vertices = t8_eclass_num_vertices[eclass];
-  }
-
-  void
-  TearDown () override
-  {
-    /* The cmesh is destroyed in the test itself. */
-  }
-  t8_cmesh_t cmesh;
-  t8_eclass_t eclass;
-  TopoDS_Shape shape;
-  /* Saving the corner vertices for the given element class. */
-  size_t num_vertices;
-  const double vertices_tri[27] = { 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0,
-                                    0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0 };
-  const double vertices_quad[48] = { 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0,
-                                     1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0,
-                                     0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0 };
-  /* Edges are parametrized in one parameter u. The array contains the parameters
-   * each vertex of the edge has on the linked curve. */
-  double params_tri[6] = { 0, 1, 1, 0, 0, 1 };
-  double params_quad[8] = { 0, 1, 1, 0, 1, 0, 0, 1 };
-  /* The array prescribes the linkage of the element. No face is linked. */
-  std::array<int, 1> faces = { 0 };
-  std::array<int, 8> edges = { 0 };
-
-  const int linked_edge_tri[3] = { 2, 1, 0 };
-  const int linked_edge_quad[4] = { 2, 0, 3, 1 };
-
-  const double test_ref_coords_tri_in[27] = { 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.5, 0.5,
-                                              0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.5, 0.0, 1.0, 1.0, 0.0 };
-  const double test_ref_coords_quad_in[36]
-    = { 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0,
-        1.0, 1.0, 0.0, 0.5, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.5, 0.0, 1.0, 1.0, 0.0 };
-  const double test_ref_coords_out[9] = { 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0 };
-};
-
-TEST_P (class_2d_element_linear_cad_curve, t8_check_2d_element_linear_cad_curve)
-{
-
-  for (size_t i_orientation = 0; i_orientation < num_vertices; ++i_orientation) {
-    const int orientation = i_orientation * num_vertices * T8_ECLASS_MAX_DIM;
-
-    edges.fill (0);
-
-    const int linked_edge
-      = (eclass == T8_ECLASS_QUAD ? linked_edge_quad[i_orientation] : linked_edge_tri[i_orientation]);
-    edges[linked_edge] = 1;
-
-    t8_cmesh_init (&cmesh);
-    t8_cmesh_set_tree_class (cmesh, 0, eclass);
-    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 2, shape);
-
-    t8_cmesh_set_tree_vertices (
-      cmesh, 0, (eclass == T8_ECLASS_QUAD ? vertices_quad + orientation : vertices_tri + orientation), num_vertices);
-
-    /* Passing of the attributes to the element */
-    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, faces.data (),
-                            sizeof (int), 0);
-    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges.data (),
-                            2 * num_vertices * sizeof (int), 0);
-    t8_cmesh_set_attribute (
-      cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + linked_edge,
-      (eclass == T8_ECLASS_QUAD ? (params_quad + 2 * i_orientation) : (params_tri + 2 * i_orientation)),
-      2 * sizeof (double), 0);
-
-    /* Commit the cmesh */
-    t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
-
-    double out_coords[3];
-
-    /* out_coords should be equal to the input ref_coords. */
-    for (size_t i_coord = 0; i_coord < T8_ECLASS_MAX_DIM; ++i_coord) {
-      t8_geometry_evaluate (cmesh, 0,
-                            (eclass == T8_ECLASS_QUAD ? test_ref_coords_quad_in : test_ref_coords_tri_in)
-                              + i_coord * T8_ECLASS_MAX_DIM + i_orientation * 9,
-                            1, out_coords);
-
-      EXPECT_VEC3_EQ (test_ref_coords_out + i_coord * T8_ECLASS_MAX_DIM, out_coords, T8_PRECISION_EPS);
-    }
-    t8_cmesh_destroy (&cmesh);
-  }
-}
-
-INSTANTIATE_TEST_SUITE_P (t8_gtest_check_2d_element_linear_cad_curve, class_2d_element_linear_cad_curve, AllEclasses2D,
-                          print_eclass);
-
-#endif /* T8_WITH_OCC */
-
-#if T8_WITH_OCC
-/* The test checks if the mapping algorithms for curved 2d elements shift values on a curved cad curve correctly. */
-class class_2d_element_curved_cad_curve: public testing::TestWithParam<t8_eclass_t> {
- protected:
-  void
-  SetUp () override
-  {
-    eclass = GetParam ();
-    T8_ASSERT (0 <= eclass && eclass < T8_ECLASS_COUNT);
-    Handle_Geom_Curve cad_curve;
-    TColgp_Array1OfPnt point_array (1, 3);
-
-    /*  x--> u-parameter
+    * 
+    *  CURVED
+    *  x--> u-parameter
     *   
     *  ----____       curve       ____----
     *           ----_________----
@@ -506,12 +403,20 @@ class class_2d_element_curved_cad_curve: public testing::TestWithParam<t8_eclass
     *  0               0.5              1
     */
 
-    point_array (1) = gp_Pnt (test_ref_coords_out[0], test_ref_coords_out[1], test_ref_coords_out[2]);
-    point_array (2) = gp_Pnt (test_ref_coords_out[3], test_ref_coords_out[4], test_ref_coords_out[5]);
-    point_array (3) = gp_Pnt (test_ref_coords_out[6], test_ref_coords_out[7], test_ref_coords_out[8]);
+    point_array_linear (1) = gp_Pnt (vertices_quad[0], vertices_quad[1], vertices_quad[2]);
+    point_array_linear (2) = gp_Pnt (vertices_quad[3], vertices_quad[4], vertices_quad[5]);
 
-    cad_curve = GeomAPI_PointsToBSpline (point_array).Curve ();
-    shape = BRepBuilderAPI_MakeEdge (cad_curve).Edge ();
+    point_array_curved (1)
+      = gp_Pnt (test_ref_coords_out_curved[0], test_ref_coords_out_curved[1], test_ref_coords_out_curved[2]);
+    point_array_curved (2)
+      = gp_Pnt (test_ref_coords_out_curved[3], test_ref_coords_out_curved[4], test_ref_coords_out_curved[5]);
+    point_array_curved (3)
+      = gp_Pnt (test_ref_coords_out_curved[6], test_ref_coords_out_curved[7], test_ref_coords_out_curved[8]);
+
+    cad_curve_linear = GeomAPI_PointsToBSpline (point_array_linear).Curve ();
+    cad_curve_curved = GeomAPI_PointsToBSpline (point_array_curved).Curve ();
+    shape_linear = BRepBuilderAPI_MakeEdge (cad_curve_linear).Edge ();
+    shape_curved = BRepBuilderAPI_MakeEdge (cad_curve_curved).Edge ();
 
     num_vertices = t8_eclass_num_vertices[eclass];
   }
@@ -523,7 +428,8 @@ class class_2d_element_curved_cad_curve: public testing::TestWithParam<t8_eclass
   }
   t8_cmesh_t cmesh;
   t8_eclass_t eclass;
-  TopoDS_Shape shape;
+  int curvature;
+  TopoDS_Shape shape_linear, shape_curved;
   /* Saving the corner vertices for the given element class. */
   size_t num_vertices;
   const double vertices_tri[27] = { 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0,
@@ -547,12 +453,13 @@ class class_2d_element_curved_cad_curve: public testing::TestWithParam<t8_eclass
   const double test_ref_coords_quad_in[36]
     = { 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0,
         1.0, 1.0, 0.0, 0.5, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.5, 0.0, 1.0, 1.0, 0.0 };
-
-  const double test_ref_coords_out[9] = { 0.0, 0.0, 0.0, 0.5, -0.2, 0.0, 1.0, 0.0, 0.0 };
+  const double test_ref_coords_out_linear[9] = { 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0 };
+  const double test_ref_coords_out_curved[9] = { 0.0, 0.0, 0.0, 0.5, -0.2, 0.0, 1.0, 0.0, 0.0 };
 };
 
-TEST_P (class_2d_element_curved_cad_curve, t8_check_2d_element_curved_cad_curve)
+TEST_P (class_2d_element_cad_curve, t8_check_2d_element_cad_curve)
 {
+
   for (size_t i_orientation = 0; i_orientation < num_vertices; ++i_orientation) {
     const int orientation = i_orientation * num_vertices * T8_ECLASS_MAX_DIM;
 
@@ -564,7 +471,7 @@ TEST_P (class_2d_element_curved_cad_curve, t8_check_2d_element_curved_cad_curve)
 
     t8_cmesh_init (&cmesh);
     t8_cmesh_set_tree_class (cmesh, 0, eclass);
-    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 2, shape);
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 2, (curvature == 0 ? shape_linear : shape_curved));
 
     t8_cmesh_set_tree_vertices (
       cmesh, 0, (eclass == T8_ECLASS_QUAD ? vertices_quad + orientation : vertices_tri + orientation), num_vertices);
@@ -591,14 +498,16 @@ TEST_P (class_2d_element_curved_cad_curve, t8_check_2d_element_curved_cad_curve)
                               + i_coord * T8_ECLASS_MAX_DIM + i_orientation * 9,
                             1, out_coords);
 
-      EXPECT_VEC3_EQ (test_ref_coords_out + i_coord * T8_ECLASS_MAX_DIM, out_coords, T8_PRECISION_EPS);
+      EXPECT_VEC3_EQ (
+        (curvature == 0 ? test_ref_coords_out_linear : test_ref_coords_out_curved) + i_coord * T8_ECLASS_MAX_DIM,
+        out_coords, T8_PRECISION_EPS);
     }
     t8_cmesh_destroy (&cmesh);
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_check_2d_element_curved_cad_curve, class_2d_element_curved_cad_curve, AllEclasses2D,
-                          print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_check_2d_element_cad_curve, class_2d_element_cad_curve,
+                          testing::Combine (AllEclasses2D, testing::Values (0, 1)));
 
 #endif /* T8_WITH_OCC */
 
