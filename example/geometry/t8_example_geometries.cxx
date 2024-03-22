@@ -180,7 +180,6 @@ struct t8_geometry_moebius: public t8_geometry_with_vertices
     double phi;
 
     /* Compute the linear coordinates (in [0,1]^2) of the reference vertex and store in out_coords. */
-    /* No idea why, but indent insert a lot of newlines here */
     t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, num_coords, out_coords);
 
     for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
@@ -662,7 +661,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
 #if T8_WITH_OCC
     t8_global_productionf ("Creating uniform level %i forests with an cad triangle geometry.\n", level);
 
-    /* Constructing a triangle with one curved edge (f2) */
+    /* Constructing a triangle with one curved edge (f1) */
     Handle_Geom_BSplineCurve cad_curve;
     TColgp_Array1OfPnt point_array (1, 3);
     TopoDS_Shape shape;
@@ -679,7 +678,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     shape = BRepBuilderAPI_MakeEdge (cad_curve).Edge ();
 
     /* Create a cad geometry. */
-    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, shape);
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 2, shape);
 
     /* The arrays indicate which face/edge carries a geometry. 
        * 0 means no geometry and any other number indicates the position of the geometry 
