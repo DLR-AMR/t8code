@@ -403,8 +403,10 @@ class class_2d_element_cad_curve: public testing::TestWithParam<std::tuple<t8_ec
     *  0               0.5              1
     */
 
-    point_array_linear (1) = gp_Pnt (vertices_quad[0], vertices_quad[1], vertices_quad[2]);
-    point_array_linear (2) = gp_Pnt (vertices_quad[3], vertices_quad[4], vertices_quad[5]);
+    point_array_linear (1)
+      = gp_Pnt (test_ref_coords_out_linear[0], test_ref_coords_out_linear[1], test_ref_coords_out_linear[2]);
+    point_array_linear (2)
+      = gp_Pnt (test_ref_coords_out_linear[6], test_ref_coords_out_linear[7], test_ref_coords_out_linear[8]);
 
     point_array_curved (1)
       = gp_Pnt (test_ref_coords_out_curved[0], test_ref_coords_out_curved[1], test_ref_coords_out_curved[2]);
