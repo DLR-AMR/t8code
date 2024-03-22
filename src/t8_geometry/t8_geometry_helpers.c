@@ -176,7 +176,7 @@ t8_geom_compute_linear_geometry (t8_eclass_t tree_class, const double *tree_vert
 }
 
 void
-t8_geom_compute_linear_axis_aligned_geometry (t8_eclass_t tree_class, const double *tree_vertices,
+t8_geom_compute_linear_axis_aligned_geometry (const t8_eclass_t tree_class, const double *tree_vertices,
                                               const double *ref_coords, const size_t num_coords, double *out_coords)
 {
   if (tree_class != T8_ECLASS_LINE && tree_class != T8_ECLASS_QUAD && tree_class != T8_ECLASS_HEX) {
@@ -212,7 +212,7 @@ t8_geom_compute_linear_axis_aligned_geometry (t8_eclass_t tree_class, const doub
     const size_t offset_domain_dim = i_coord * T8_ECLASS_MAX_DIM;
     for (int i_dim = 0; i_dim < T8_ECLASS_MAX_DIM; ++i_dim) {
       out_coords[offset_domain_dim + i_dim] = tree_vertices[i_dim];
-      out_coords[offset_domain_dim + i_dim] += ref_coords[offset_tree_dim] * vector[i_dim];
+      out_coords[offset_domain_dim + i_dim] += ref_coords[offset_tree_dim + i_dim] * vector[i_dim];
     }
   }
 }
@@ -370,6 +370,94 @@ t8_geom_get_triangle_scaling_factor (int edge_index, const double *tree_vertices
   /* The closer the reference point is to the intersection, the bigger is the scaling factor. */
   double scaling_factor = dist_ref / dist_intersection;
   return scaling_factor;
+}
+
+double
+t8_geom_get_scaling_factor_of_edge_on_face_tet (const int edge, const int face, const double *ref_coords)
+{
+  /* Save the orthogonal direction and the maximum of that direction
+   * of a tetrahedron edge in reference space on one of the neighbouring faces. 
+   *           /|
+   *          / |
+   *         /  |
+   *        /   |
+   *       /    |--edge
+   *      /   --|--face
+   *     /      |
+   *    /    <~~| orthogonal direction
+   *   /<----o--| maximum othogonal direction
+   *  /_________|
+   */
+
+  const double orthogonal_vector[6][4] = { { 0, 0, ref_coords[1], ref_coords[2] },
+                                           { 0, ref_coords[1], 0, (ref_coords[0] - ref_coords[2]) },
+                                           { 0, (ref_coords[0] - ref_coords[1]), (ref_coords[0] - ref_coords[2]), 0 },
+                                           { ref_coords[1], 0, 0, (1 - ref_coords[0]) },
+                                           { (ref_coords[2] - ref_coords[1]), 0, (1 - ref_coords[0]), 0 },
+                                           { (1 - ref_coords[2]), (1 - ref_coords[0]), 0, 0 } };
+  const double max_orthogonal_vector[6][4]
+    = { { 0, 0, ref_coords[0], ref_coords[0] },       { 0, ref_coords[0], 0, ref_coords[0] },
+        { 0, ref_coords[0], ref_coords[0], 0 },       { ref_coords[2], 0, 0, (1 - ref_coords[2]) },
+        { ref_coords[2], 0, (1 - ref_coords[2]), 0 }, { (1 - ref_coords[1]), (1 - ref_coords[1]), 0, 0 } };
+
+  /* If the maximum orthogonal direction is 0 or 1, the reference coordinate lies on
+   * one of the edge nodes and the scaling factor is therefore 0, because the displacement
+   * at the nodes is always 0.
+   * In all other cases the scaling factor is determined with one minus the relation of the orthogonal direction
+   * to the maximum orthogonal direction. */
+  if (max_orthogonal_vector[edge][face] == 0 || max_orthogonal_vector[edge][face] == 1) {
+    return 0;
+  }
+  return (1.0 - (orthogonal_vector[edge][face] / max_orthogonal_vector[edge][face]));
+}
+
+void
+t8_geom_get_tet_face_intersection (const int face, const double *ref_coords, double face_intersection[3])
+{
+  /* Save reference corner coordinates of the current face */
+  double ref_face_vertex_coords[9];
+  for (int i_face_vertex = 0; i_face_vertex < 3; ++i_face_vertex) {
+    for (int dim = 0; dim < 3; ++dim) {
+      const int i_tree_vertex = t8_face_vertex_to_tree_vertex[T8_ECLASS_TET][face][i_face_vertex];
+      ref_face_vertex_coords[i_face_vertex * 3 + dim] = t8_element_corner_ref_coords[T8_ECLASS_TET][i_tree_vertex][dim];
+    }
+  }
+
+  /* Save the opposite vertex of the face in reference space.
+   * Opposite vertex of a face has the same index as the face. */
+  const double *ref_opposite_vertex = t8_element_corner_ref_coords[T8_ECLASS_TET][face];
+
+  /* Save the normal of the current face */
+  const int *normal = t8_reference_face_normal_tet[face];
+
+  /* Calculate the vector from the opposite vertex to the
+   * reference coordinate in reference space */
+  double vector[3] = { 0 };
+  t8_vec_diff (ref_coords, ref_opposite_vertex, vector);
+
+  /* Calculate t to get the point on the ray (extension of vector), which lies on the face.
+   * The vector will later be multiplied by t to get the exact distance from the opposite vertex to the face intersection. 
+   * t = ((point on face - point on vector) * normal of face) / (vector * normal of face) */
+  double denominator = 0;
+  double numerator = 0;
+  for (int dim = 0; dim < 3; ++dim) {
+    denominator += (ref_face_vertex_coords[dim] - ref_opposite_vertex[dim]) * normal[dim];
+    numerator += vector[dim] * normal[dim];
+  }
+  double t = denominator / numerator;
+
+  /* Calculate face intersection by scaling vector with t.
+   * If the reference coordinate is equal to the opposite vertex,
+   * the intersection is equal to one of the ref_face_vertex_coords. */
+  if (ref_coords[0] == ref_opposite_vertex[0] && ref_coords[1] == ref_opposite_vertex[1]
+      && ref_coords[2] == ref_opposite_vertex[2]) {
+    memcpy (face_intersection, ref_face_vertex_coords, 3 * sizeof (double));
+  }
+  else {
+    for (int dim = 0; dim < 3; ++dim) {
+      face_intersection[dim] = ref_opposite_vertex[dim] + vector[dim] * t;
+    }
+  }
 }
 
 int

@@ -248,13 +248,6 @@ t8_default_scheme_vertex_c::t8_element_vertex_coords (const t8_element_t *elem, 
   t8_dvertex_vertex_coords ((const t8_dvertex_t *) elem, vertex, coords);
 }
 
-/** Compute the coordinates of a given element vertex inside a reference tree
-   *  that is embedded into [0,1]^d (d = dimension).
-   *   \param [in] elem    The element.
-   *   \param [in] vertex  The id of the vertex whose coordinates shall be computed.
-   *   \param [out] coords An array of at least as many doubles as the element's dimension
-   *                      whose entries will be filled with the coordinates of \a vertex.
-   */
 void
 t8_default_scheme_vertex_c::t8_element_vertex_reference_coords (const t8_element_t *elem, const int vertex,
                                                                 double coords[]) const

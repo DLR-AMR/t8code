@@ -25,88 +25,138 @@
  */
 
 #include <test/t8_gtest_macros.hxx>
-#include <test/t8_geometry/t8_gtest_geometry_macros.hxx>
+#include <test/t8_gtest_custom_assertion.hxx>
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
 #include <t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_geometry/t8_geometry.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx>
 #include <t8_element.h>
 
-t8_cmesh_t
-t8_geometry_testing_tree_from_class (const t8_eclass_t eclass)
-{
-  t8_cmesh_t cmesh;
-  t8_cmesh_init (&cmesh);
-  const int num_vertices = t8_eclass_num_vertices[eclass];
-  double *vertices = T8_ALLOC (double, T8_ECLASS_MAX_DIM *num_vertices);
-  for (int i_vertex = 0; i_vertex < num_vertices; ++i_vertex) {
-    for (int dim = 0; dim < T8_ECLASS_MAX_DIM; ++dim) {
-      vertices[i_vertex * T8_ECLASS_MAX_DIM + dim] = t8_element_corner_ref_coords[eclass][i_vertex][dim];
-    }
+class geometry_test: public testing::TestWithParam<std::tuple<int, t8_eclass>> {
+ public:
+  static void
+  SetUpTestSuite ()
+  {
+    seed = time (NULL); /* RNG seed */
   }
-  t8_cmesh_set_tree_class (cmesh, 0, eclass);
-  t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, t8_eclass_to_dimension[eclass]);
-  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, t8_eclass_num_vertices[eclass]);
-  t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
-  T8_FREE (vertices);
-  return cmesh;
-}
+  static int seed;
 
-/* Check whether the linear geometry map is correct.
- * We create a cmesh of one tree and unit element
+ protected:
+  void
+  SetUp () override
+  {
+    const int geom_int = std::get<0> (GetParam ());
+    eclass = std::get<1> (GetParam ());
+    t8_cmesh_init (&cmesh);
+    if (geom_int == T8_GEOMETRY_TYPE_LINEAR_AXIS_ALIGNED
+        && !(eclass == T8_ECLASS_LINE || eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX)) {
+      GTEST_SKIP ();
+    }
+
+    const int num_vertices = t8_eclass_num_vertices[eclass];
+    t8_cmesh_set_tree_class (cmesh, 0, eclass);
+    double *vertices = T8_ALLOC_ZERO (double, num_vertices *T8_ECLASS_MAX_DIM);
+    for (int i_vertex = 0; i_vertex < num_vertices; ++i_vertex) {
+      for (int dim = 0; dim < T8_ECLASS_MAX_DIM; ++dim) {
+        vertices[i_vertex * T8_ECLASS_MAX_DIM + dim] = t8_element_corner_ref_coords[eclass][i_vertex][dim];
+      }
+    }
+    switch (geom_int) {
+    case T8_GEOMETRY_TYPE_LINEAR:
+      geom = new t8_geometry_linear (t8_eclass_to_dimension[eclass]);
+      t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, t8_eclass_to_dimension[eclass]);
+      break;
+    case T8_GEOMETRY_TYPE_LINEAR_AXIS_ALIGNED:
+      geom = new t8_geometry_linear_axis_aligned (t8_eclass_to_dimension[eclass]);
+      /* Copy last vertex to the second position*/
+      vertices[3] = vertices[3 * (num_vertices - 1)];
+      vertices[4] = vertices[3 * (num_vertices - 1) + 1];
+      vertices[5] = vertices[3 * (num_vertices - 1) + 2];
+
+      t8_cmesh_register_geometry<t8_geometry_linear_axis_aligned> (cmesh, t8_eclass_to_dimension[eclass]);
+      break;
+    default:
+      break;
+    }
+    t8_cmesh_set_tree_vertices (cmesh, 0, vertices,
+                                geom_int == T8_GEOMETRY_TYPE_LINEAR ? t8_eclass_num_vertices[eclass] : 2);
+    t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
+    T8_FREE (vertices);
+  }
+  void
+  TearDown () override
+  {
+    t8_cmesh_unref (&cmesh);
+  }
+  t8_eclass_t eclass;
+  t8_geometry_with_vertices *geom;
+  t8_cmesh_t cmesh;
+};
+
+int geometry_test::seed;
+
+/* Check whether the linear axis aligned geometry map is correct.
+ * We create a cmesh of one tree and unit line, quad or hex
  * geometry. We then create random points in a reference tree and
  * check whether the evaluation is correct. */
-TEST_P (geometry_test, cmesh_geometry_linear)
+TEST_P (geometry_test, cmesh_geometry)
 {
   /* TODO: Add a test for the jacobian, as soon as its implemented. */
 
-  t8_debugf ("Testing linear geometry evaluation.\n");
-
   /* Create random points in [0,1]^d and check if they are mapped correctly. */
-  t8_geometry_linear linear_geom (t8_eclass_to_dimension[eclass]);
-  t8_cmesh_t cmesh;
 
-  double point[3];
   double point_mapped[3];
-  const int seed = 0; /* RNG seed */
   const t8_geometry_c *cmesh_geom;
 
-  cmesh = t8_geometry_testing_tree_from_class (eclass);
-
-  /* Double check that the geometry is the linear geometry. */
+  /* Double check that the geometry is the linear axis aligned geometry. */
   cmesh_geom = t8_cmesh_get_tree_geometry (cmesh, 0);
   ASSERT_TRUE (cmesh_geom != NULL) << "Could not get cmesh's geometry.";
-  int has_same_name = cmesh_geom->t8_geom_get_name () == linear_geom.t8_geom_get_name ();
-  ASSERT_EQ (has_same_name, 1) << "cmesh's geometry is not the linear geometry.";
+  ASSERT_EQ (cmesh_geom->t8_geom_get_hash (), geom->t8_geom_get_hash ())
+    << "cmesh's geometry is not the expected geometry.";
 
   srand (seed);
-  for (int ipoint = 0; ipoint < num_points; ++ipoint) {
+  for (int ipoint = 0; ipoint < T8_NUM_SAMPLE_POINTS; ++ipoint) {
+    double point[3] = { 0 };
     /* Compute random coordinates in [0,1].
      * These are seen as reference coordinates in the single
      * cmesh tree. Our geometry will map them into the physical
      * space. Since this space is also [0,1] and the cmesh only
      * has one tree, the mapped coordinates must be the same as the 
      * reference coordinates. */
-    point[0] = (double) rand () / RAND_MAX;
-    point[1] = (double) rand () / RAND_MAX;
-    point[2] = (double) rand () / RAND_MAX;
+    for (int idim = 0; idim < t8_eclass_to_dimension[eclass]; ++idim) {
+      point[idim] = (double) rand () / RAND_MAX;
+    }
 
     /* Evaluate the geometry */
     t8_geometry_evaluate (cmesh, 0, point, 1, point_mapped);
     /* Check that the first dim coordinates are the same */
-    int idim;
-    for (idim = 0; idim < t8_eclass_to_dimension[eclass]; ++idim) {
-      ASSERT_NEAR (point[idim], point_mapped[idim], T8_PRECISION_SQRT_EPS) << "Linear geometry computed wrong value.";
-    }
-    /* Check that the remaining entries are 0. */
-    for (; idim < 3; ++idim) {
-      ASSERT_EQ (point_mapped[idim], 0) << "Linear geometry computed wrong value.";
-    }
+    EXPECT_VEC3_EQ (point, point_mapped, T8_PRECISION_SQRT_EPS);
   }
-  /* Destroy the cmesh */
-  t8_cmesh_destroy (&cmesh);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_geometry, geometry_test, AllEclasses);
+auto print_test = [] (const testing::TestParamInfo<std::tuple<int, t8_eclass>> &info) {
+  std::string name;
+  const int geom_int = std::get<0> (info.param);
+  const t8_eclass_t eclass = std::get<1> (info.param);
+  switch (geom_int) {
+  case T8_GEOMETRY_TYPE_LINEAR:
+    name = std::string ("linear_geometry_");
+    break;
+  case T8_GEOMETRY_TYPE_LINEAR_AXIS_ALIGNED:
+    name = std::string ("linear_axis_aligned_geometry_");
+    break;
+  default:
+    name = std::string ("geometry_not_allowed_");
+    break;
+  }
+  name += std::string (t8_eclass_to_string[eclass]);
+  return name;
+};
+
+INSTANTIATE_TEST_SUITE_P (
+  t8_gtest_geometry, geometry_test,
+  ::testing::Combine (::testing::Values (T8_GEOMETRY_TYPE_LINEAR, T8_GEOMETRY_TYPE_LINEAR_AXIS_ALIGNED), AllEclasses),
+  print_test);
