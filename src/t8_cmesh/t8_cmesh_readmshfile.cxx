@@ -1017,7 +1017,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
           const t8_geometry_cad_c *cad_geometry = dynamic_cast<const t8_geometry_cad_c *> (cad_geometry_base);
           /* Check for right element class */
           if (eclass != T8_ECLASS_TRIANGLE && eclass != T8_ECLASS_QUAD && eclass != T8_ECLASS_HEX
-              && eclass != T8_ECLASS_PRISM) {
+              && eclass != T8_ECLASS_TET && eclass != T8_ECLASS_PRISM) {
             t8_errorf (
               "%s element detected. The cad geometry currently only supports quad, tri, hex and prism elements.",
               t8_eclass_to_string[eclass]);

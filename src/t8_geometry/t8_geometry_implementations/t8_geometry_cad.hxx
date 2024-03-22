@@ -321,7 +321,19 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
                              double *out_coords) const;
 
   /**
-   * Maps points in the reference space \f$ \f$ [0,1]^3 \f$ \f$ to \f$ \mathbb{R}^3 \f$. Only for hex trees.
+   * Map a point in the reference space $$[0,1]^3$$ to $$\mathbb R^3$$. Only for tet trees.
+   * \param [in]  cmesh      The cmesh in which the point lies.
+   * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
+   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  num_coords  The number of points to map.
+   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   */
+  void
+  t8_geom_evaluate_cad_tet (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                            double *out_coords) const;
+
+  /**
+   * Map a point in the reference space \f$ \f$ [0,1]^3 \f$ \f$ to \f$ \mathbb{R}^3 \f$. Only for hex trees.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.

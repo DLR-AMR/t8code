@@ -46,7 +46,7 @@ const int t8_face_edge_to_tree_edge[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES][T8_ECL
   { { 0 }, { 1 }, { 2 }, { 3 } },                                                                         /* quad */
   { { 0 }, { 1 }, { 2 } },                                                                                /* triangle */
   { { 8, 10, 4, 6 }, { 9, 11, 5, 7 }, { 8, 9, 0, 2 }, { 10, 11, 1, 3 }, { 4, 5, 0, 1 }, { 6, 7, 2, 3 } }, /* hex */
-  { { -1 } },                                                                                             /* tet */
+  { { 3, 4, 5 }, { 1, 2, 5 }, { 0, 2, 4 }, { 0, 1, 3 } },                                                 /* tet */
   { { 0, 7, 3, 6 }, { 1, 8, 4, 7 }, { 2, 6, 5, 8 }, { 0, 1, 2 }, { 3, 4, 5 } },                           /* prism */
   { { -1 } },                                                                                             /* pyramid */
 };
@@ -58,7 +58,7 @@ const int t8_face_to_edge_neighbor[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES][T8_ECLA
   { { 2, 3 }, { 2, 3 }, { 0, 1 }, { 0, 1 } },                                                             /* quad */
   { { 2, 1 }, { 2, 0 }, { 1, 0 } },                                                                       /* triangle */
   { { 0, 1, 2, 3 }, { 0, 1, 2, 3 }, { 4, 5, 6, 7 }, { 4, 5, 6, 7 }, { 8, 9, 10, 11 }, { 8, 9, 10, 11 } }, /* hex */
-  { { -1 } },                                                                                             /* tet */
+  { { 0, 1, 2 }, { 0, 3, 4 }, { 1, 3, 5 }, { 2, 4, 5 } },                                                 /* tet */
   { { 1, 2, 4, 5 }, { 0, 2, 3, 5 }, { 0, 1, 3, 4 }, { 6, 7, 8 }, { 6, 7, 8 } },                           /* prism */
   { { -1 } },                                                                                             /* pyramid */
 };
@@ -81,7 +81,7 @@ const int t8_edge_vertex_to_tree_vertex[T8_ECLASS_COUNT][T8_ECLASS_MAX_EDGES][2]
     { 1, 5 },
     { 2, 6 },
     { 3, 7 } },                                                                                 /* hex */
-  { { -1 } },                                                                                   /* tet */
+  { { 0, 1 }, { 0, 2 }, { 0, 3 }, { 1, 2 }, { 1, 3 }, { 2, 3 } },                               /* tet */
   { { 1, 2 }, { 0, 2 }, { 0, 1 }, { 4, 5 }, { 3, 5 }, { 3, 4 }, { 1, 4 }, { 2, 5 }, { 0, 3 } }, /* prism */
   { { -1 } },                                                                                   /* pyramid */
 };
@@ -104,7 +104,7 @@ const int t8_edge_to_face[T8_ECLASS_COUNT][T8_ECLASS_MAX_EDGES][2] = {
     { 1, 2 },
     { 0, 3 },
     { 1, 3 } },                                                                                 /* hex */
-  { { -1 } },                                                                                   /* tet */
+  { { 2, 3 }, { 1, 3 }, { 1, 2 }, { 0, 3 }, { 0, 2 }, { 0, 1 } },                               /* tet */
   { { 0, 3 }, { 1, 3 }, { 2, 3 }, { 0, 4 }, { 1, 4 }, { 2, 4 }, { 0, 2 }, { 0, 1 }, { 1, 2 } }, /* prism */
   { { -1 } },                                                                                   /* pyramid */
 };
@@ -119,6 +119,9 @@ const int t8_eclass_face_orientation[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES] = {
   { 1, 0, 1, 0, 1, -1 },     /* prism */
   { 0, 1, 1, 0, 0, -1 }      /* pyramid */
 };
+
+const int t8_reference_face_normal_tet[T8_ECLASS_MAX_FACES][3]
+  = { { -1, 0, 0 }, { 1, 0, -1 }, { 0, -1, 1 }, { 0, 1, 0 } };
 
 const int t8_eclass_num_vertices[T8_ECLASS_COUNT] = { 1, 2, 4, 3, 8, 4, 6, 5 };
 
