@@ -178,13 +178,14 @@ t8_get_number_of_vtk_nodes (const t8_element_shape_t eclass, const int curved_fl
 #if T8_WITH_VTK
 static void
 t8_forest_vtk_get_element_nodes (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, const int vertex,
-                                 double *out_coords)
+                                 const int curved_flag, double *out_coords)
 {
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
   const t8_eclass_scheme_c *scheme = t8_forest_get_eclass_scheme (forest, tree_class);
   const t8_element_shape_t element_shape = scheme->t8_element_shape (element);
   const double *ref_coords = t8_forest_vtk_point_to_element_ref_coords[element_shape][vertex];
-  t8_forest_element_from_ref_coords (forest, ltreeid, element, ref_coords, 1, out_coords);
+  const int num_node = t8_get_number_of_vtk_nodes (element_shape, curved_flag);
+  t8_forest_element_from_ref_coords (forest, ltreeid, element, ref_coords, num_node, out_coords);
 }
 
 /**
@@ -265,16 +266,18 @@ t8_forest_element_to_vtk_cell (
       SC_ABORT_NOT_REACHED ();
     }
   }
+  double *coordinates = T8_ALLOC (double, 3 * num_node);
+  /* Compute coordinates for all vertices inside the domain. */
+  t8_forest_vtk_get_element_nodes (forest, itree, element, 0, curved_flag, coordinates);
   /* For each element we iterate over all points */
-  double coordinates[3];
   for (int ivertex = 0; ivertex < num_node; ivertex++, (*point_id)++) {
-    /* Compute the vertex coordinates inside the domain. */
-    t8_forest_vtk_get_element_nodes (forest, itree, element, ivertex, coordinates);
+    const size_t offset_3d = 3 * ivertex;
     /* Insert point in the points array */
-    points->InsertNextPoint (coordinates[0], coordinates[1], coordinates[2]);
+    points->InsertNextPoint (coordinates[offset_3d], coordinates[offset_3d + 1], coordinates[offset_3d + 2]);
 
     pvtkCell->GetPointIds ()->SetId (ivertex, *point_id);
   }
+  T8_FREE (coordinates);
   /* We insert the next cell in the cell array */
   cellArray->InsertNextCell (pvtkCell);
   /*
