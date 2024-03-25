@@ -29,6 +29,7 @@ libt8_installed_headers = \
   src/t8_cmesh_vtk_writer.h \
   src/t8_cmesh_vtk_reader.hxx \
   src/t8_vec.h \
+  src/t8_mat.h \
   src/t8_version.h \
   src/t8_vtk.h \
   src/t8_cmesh_netcdf.h \
@@ -36,7 +37,6 @@ libt8_installed_headers = \
   src/t8_element_shape.h \
   src/t8_netcdf.h
 libt8_installed_headers_cmesh = \
-  src/t8_cmesh/t8_cmesh_testcases.h \
   src/t8_cmesh/t8_cmesh_save.h \
   src/t8_cmesh/t8_cmesh_examples.h \
   src/t8_cmesh/t8_cmesh_geometry.h \
@@ -66,6 +66,7 @@ libt8_installed_headers_geometry = \
 libt8_installed_headers_geometry_impl = \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h \
+  src/t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_analytic.h \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_examples.h \
@@ -73,6 +74,7 @@ libt8_installed_headers_geometry_impl = \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx \
+  src/t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_examples.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.h
@@ -101,7 +103,6 @@ libt8_internal_headers = \
   src/t8_forest/t8_forest_ghost.h \
   src/t8_forest/t8_forest_balance.h src/t8_forest/t8_forest_types.h \
   src/t8_forest/t8_forest_private.h \
-  src/t8_mat.h \
   src/t8_windows.h
 libt8_compiled_sources = \
   src/t8.c src/t8_eclass.c src/t8_mesh.c \
@@ -132,6 +133,7 @@ libt8_compiled_sources = \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_cad.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.cxx \
+  src/t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_examples.cxx \
   src/t8_forest/t8_forest_partition.cxx src/t8_forest/t8_forest_cxx.cxx \
@@ -142,7 +144,6 @@ libt8_compiled_sources = \
   src/t8_forest/t8_forest_netcdf.cxx \
   src/t8_element_shape.c \
   src/t8_netcdf.c \
-  src/t8_cmesh/t8_cmesh_testcases.c \
   src/t8_vtk/t8_vtk_polydata.cxx \
   src/t8_vtk/t8_vtk_unstructured.cxx \
   src/t8_vtk/t8_vtk_parallel.cxx \

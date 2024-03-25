@@ -1201,7 +1201,7 @@ t8_cmesh_reset (t8_cmesh_t *pcmesh)
   }
 
   if (cmesh->geometry_handler != NULL) {
-    cmesh->geometry_handler->~t8_geometry_handler ();
+    delete (cmesh->geometry_handler);
   }
 
   /* unref the partition scheme (if set) */

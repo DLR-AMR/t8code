@@ -29,7 +29,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
-#include <t8_cmesh/t8_cmesh_testcases.h>
 
 /**
  * lambda to pass to an INSTANTIATE_TEST_SUITE_P to print the current cmesh_example_base
@@ -37,8 +36,17 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  */
 auto print_eclass = [] (const testing::TestParamInfo<t8_eclass> &info) { return t8_eclass_to_string[info.param]; };
 
+/**
+ * Number of points to use in tests
+ * 
+ */
+#ifdef T8_ENABLE_LESS_TESTS
+#define T8_NUM_SAMPLE_POINTS 1000
+#else
+#define T8_NUM_SAMPLE_POINTS 10000
+#endif
+
 #define AllEclasses testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT)
 #define AllEclasses2D testing::Values (T8_ECLASS_QUAD, T8_ECLASS_TRIANGLE)
-#define AllCmeshs testing::Range (0, t8_get_number_of_all_testcases ())
 
 #endif /* T8_GTEST_MACROS_HXX */

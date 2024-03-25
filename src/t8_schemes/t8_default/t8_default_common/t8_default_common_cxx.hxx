@@ -38,6 +38,9 @@ class t8_default_scheme_common_c: public t8_eclass_scheme_c {
   /** Destructor for all default schemes */
   virtual ~t8_default_scheme_common_c ();
 
+  virtual void
+  t8_element_deinit (int length, t8_element_t *elem) const override;
+
   /** Compute the number of corners of a given element. */
   virtual int
   t8_element_num_corners (const t8_element_t *elem) const;
@@ -81,19 +84,6 @@ class t8_default_scheme_common_c: public t8_eclass_scheme_c {
    */
   virtual t8_gloidx_t
   t8_element_count_leaves_from_root (int level) const;
-
-  /** The common implementation of the general function for the default scheme
-   * has no effect. This function literally does nothing.
-   * The tri, tet and prism scheme override this implementation with a function that
-   * stores the type of the element in \a outdata.
-   *  \param [in] elem A valid element
-   *  \param [in] indata Is ignored. Can be NULL.
-   *  \param [out] outdata Is ignored. Can be NULL.
-   * \note Calling this function has no effect. See the specialized implementations in
-   * t8_default_tri_cxx.hxx, t8_default_tet_cxx.hxx and t8_default_prism_cxx.hxx.
-   */
-  virtual void
-  t8_element_general_function (const t8_element_t *elem, const void *indata, void *outdata) const;
 
   /** Compute the integer coordinates of a given element vertex.
    * The default scheme implements the Morton type SFCs. In these SFCs the
