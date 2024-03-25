@@ -69,7 +69,9 @@ typedef struct t8_forest
 {
   t8_refcount_t rc; /**< Reference counter. */
 
-  int set_level;          /**< Level to use in new construction. */
+  int set_level; /**< Level to use in new construction. */
+  int
+    set_initial_partition_according_to_cmesh; /** Decide whether to partition the elements according to a given cmesh without shared elements or equally */
   int set_for_coarsening; /**< Change partition to allow
                                                      for one round of coarsening */
 
