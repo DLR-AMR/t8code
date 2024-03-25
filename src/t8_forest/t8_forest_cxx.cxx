@@ -1231,8 +1231,6 @@ t8_forest_populate (t8_forest_t forest)
       || (!forest->set_initial_partition_according_to_cmesh && forest->first_local_tree == forest->last_local_tree
           && child_in_tree_begin >= child_in_tree_end);
 
-  t8_debugf ("first: %i, last: %i, is_empty: %i\n", forest->first_local_tree, forest->last_local_tree, is_empty);
-
   if (!is_empty && !forest->set_initial_partition_according_to_cmesh) {
     SC_CHECK_ABORT (forest->first_local_tree >= cmesh_first_tree && forest->last_local_tree <= cmesh_last_tree,
                     "cmesh partition does not match the planned uniform equally distributed forest partition");
@@ -1252,12 +1250,10 @@ t8_forest_populate (t8_forest_t forest)
   else {
     /* for each tree, allocate elements */
     t8_locidx_t num_local_trees = forest->last_local_tree - forest->first_local_tree + 1;
-    t8_debugf ("-----num_local_trees:%i\n", num_local_trees);
     forest->trees = sc_array_new_count (sizeof (t8_tree_struct_t), num_local_trees);
     t8_gloidx_t first_ctree = t8_cmesh_get_first_treeid (forest->cmesh);
     t8_locidx_t count_elements = 0;
     for (t8_gloidx_t jt = forest->first_local_tree; jt <= forest->last_local_tree; jt++) {
-      t8_debugf ("look at local tree %i\n", jt);
       t8_tree_t tree = (t8_tree_t) t8_sc_array_index_locidx (forest->trees, jt - forest->first_local_tree);
       t8_eclass_t tree_class = tree->eclass = t8_cmesh_get_tree_class (forest->cmesh, jt - first_ctree);
       tree->elements_offset = count_elements;
