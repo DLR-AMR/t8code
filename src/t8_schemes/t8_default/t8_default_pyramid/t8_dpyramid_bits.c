@@ -384,6 +384,13 @@ t8_dpyramid_copy (const t8_dpyramid_t *source, t8_dpyramid_t *dest)
 }
 
 int
+t8_dpyramid_equal (const t8_dpyramid_t *elem1, const t8_dpyramid_t *elem2)
+{
+  return t8_dtet_equal (&elem1->pyramid, &elem2->pyramid)
+         && elem1->switch_shape_at_level == elem2->switch_shape_at_level;
+}
+
+int
 t8_dpyramid_compare (const t8_dpyramid_t *p1, const t8_dpyramid_t *p2)
 {
   T8_ASSERT (p1->pyramid.x >= 0 && p1->pyramid.y >= 0 && p1->pyramid.z >= 0 && p1->pyramid.level >= 0
@@ -476,9 +483,6 @@ t8_dpyramid_init_linear_id (t8_dpyramid_t *p, const int level, t8_linearidx_t id
       p->pyramid.type = type;
       p->pyramid.level = i;
       p->switch_shape_at_level = i - 1;
-#if T8_ENABLE_DEBUG
-      ((t8_dtet_t *) p)->eclass_int8 = T8_ECLASS_TET;
-#endif
       t8_dtet_init_linear_id_with_level (&(p->pyramid), id, i, level, type);
       T8_ASSERT (p->switch_shape_at_level == t8_dpyramid_compute_switch_shape_at_level (p));
       return;
@@ -1394,7 +1398,7 @@ t8_dpyramid_get_face_corner (const t8_dpyramid_t *pyra, int face, int corner)
     return t8_dtet_face_corner[face][corner];
   }
   else {
-    int corner_number = t8_dpyramid_face_corner[face][corner];
+    const int corner_number = t8_dpyramid_face_corner[pyra->pyramid.type - T8_DPYRAMID_FIRST_TYPE][face][corner];
     T8_ASSERT (0 <= corner_number && corner_number < T8_DPYRAMID_FACES);
     return corner_number;
   }
@@ -1778,11 +1782,4 @@ t8_dpyramid_is_valid (const t8_dpyramid_t *p)
   }
 
   return is_valid;
-}
-
-void
-t8_dpyramid_debug_print (const t8_dpyramid_t *p)
-{
-  t8_debugf ("x: %i, y: %i, z: %i, type %i, level: %i, switches_shape_at_level: %i\n", p->pyramid.x, p->pyramid.y,
-             p->pyramid.z, p->pyramid.type, p->pyramid.level, p->switch_shape_at_level);
 }

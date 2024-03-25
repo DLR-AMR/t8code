@@ -44,6 +44,12 @@ t8_dprism_copy (const t8_dprism_t *p, t8_dprism_t *dest)
 }
 
 int
+t8_dprism_equal (const t8_dprism_t *elem1, const t8_dprism_t *elem2)
+{
+  return t8_dline_equal (&elem1->line, &elem2->line) && t8_dtri_equal (&elem1->tri, &elem2->tri);
+}
+
+int
 t8_dprism_compare (const t8_dprism_t *p1, const t8_dprism_t *p2)
 {
   int maxlvl;
@@ -389,15 +395,8 @@ t8_dprism_tree_face (const t8_dprism_t *p, int face)
   return face;
 }
 
-int
-t8_dprism_root_face_to_face (const t8_dprism_t *p, int root_face)
-{
-  T8_ASSERT (0 <= root_face && root_face < T8_DPRISM_FACES);
-  return root_face;
-}
-
 void
-t8_dprism_extrude_face (const t8_element_t *face, t8_element_t *elem, int root_face)
+t8_dprism_extrude_face (const t8_element_t *face, t8_element_t *elem, const int root_face)
 {
   t8_dprism_t *p = (t8_dprism_t *) elem;
   const t8_dtri_t *t = (const t8_dtri_t *) face;
@@ -425,7 +424,6 @@ t8_dprism_extrude_face (const t8_element_t *face, t8_element_t *elem, int root_f
     p->line.level = q->level;
     p->tri.level = q->level;
     p->tri.x = ((int64_t) q->x * T8_DTRI_ROOT_LEN) / P4EST_ROOT_LEN;
-    ;
     p->tri.y = 0;
     p->line.x = ((int64_t) q->y * T8_DLINE_ROOT_LEN) / P4EST_ROOT_LEN;
     break;
@@ -628,11 +626,4 @@ t8_dprism_is_valid (const t8_dprism_t *p)
   const t8_dtri_t *tri = &p->tri;
   const int same_level = line->level == tri->level;
   return t8_dtri_is_valid (tri) && t8_dline_is_valid (line) && same_level;
-}
-
-void
-t8_dprism_debug_print (const t8_dprism_t *p)
-{
-  t8_dtri_debug_print (&p->tri);
-  t8_dline_debug_print (&p->line);
 }

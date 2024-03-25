@@ -28,6 +28,8 @@
 #ifndef T8_GEOMETRY_WITH_VERTICES_H
 #define T8_GEOMETRY_WITH_VERTICES_H
 
+#include <t8_cmesh.h>
+
 T8_EXTERN_C_BEGIN ();
 
 /** Set the vertex coordinates of a tree in the cmesh.
@@ -36,14 +38,15 @@ T8_EXTERN_C_BEGIN ();
  * It is not allowed to call this function after \ref t8_cmesh_commit.
  * The eclass of the tree has to be set before calling this function.
  * \param [in,out] cmesh        The cmesh to be updated.
- * \param [in]     ltree_id     The local number of the tree.
+ * \param [in]     gtree_id     The global number of the tree.
  * \param [in]     vertices     An array of 3 doubles per tree vertex.
  * \param [in]     num_vertices The number of verticess in \a vertices. Must
  *                              match the number of corners of the tree.
  */
 void
-t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, t8_locidx_t ltree_id, double *vertices, int num_vertices);
+t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, const t8_gloidx_t gtree_id, const double *vertices,
+                            const int num_vertices);
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_GEOMETRY_WITH_VERTICES_H! */
+#endif /* !T8_GEOMETRY_WITH_VERTICES_H */

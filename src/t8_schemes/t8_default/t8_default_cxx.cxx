@@ -53,6 +53,25 @@ t8_scheme_new_default_cxx (void)
   s->eclass_schemes[T8_ECLASS_PRISM] = new t8_default_scheme_prism_c ();
   s->eclass_schemes[T8_ECLASS_PYRAMID] = new t8_default_scheme_pyramid_c ();
 
+  T8_ASSERT (s->eclass_schemes[T8_ECLASS_VERTEX]->t8_element_maxlevel ()
+             >= s->eclass_schemes[T8_ECLASS_LINE]->t8_element_maxlevel ());
+  T8_ASSERT (s->eclass_schemes[T8_ECLASS_LINE]->t8_element_maxlevel ()
+             >= s->eclass_schemes[T8_ECLASS_QUAD]->t8_element_maxlevel ());
+  T8_ASSERT (s->eclass_schemes[T8_ECLASS_LINE]->t8_element_maxlevel ()
+             >= s->eclass_schemes[T8_ECLASS_TRIANGLE]->t8_element_maxlevel ());
+  T8_ASSERT (s->eclass_schemes[T8_ECLASS_TRIANGLE]->t8_element_maxlevel ()
+             >= s->eclass_schemes[T8_ECLASS_TET]->t8_element_maxlevel ());
+  T8_ASSERT (s->eclass_schemes[T8_ECLASS_TRIANGLE]->t8_element_maxlevel ()
+             >= s->eclass_schemes[T8_ECLASS_PRISM]->t8_element_maxlevel ());
+  T8_ASSERT (s->eclass_schemes[T8_ECLASS_TRIANGLE]->t8_element_maxlevel ()
+             >= s->eclass_schemes[T8_ECLASS_PYRAMID]->t8_element_maxlevel ());
+  T8_ASSERT (s->eclass_schemes[T8_ECLASS_QUAD]->t8_element_maxlevel ()
+             >= s->eclass_schemes[T8_ECLASS_HEX]->t8_element_maxlevel ());
+  T8_ASSERT (s->eclass_schemes[T8_ECLASS_QUAD]->t8_element_maxlevel ()
+             >= s->eclass_schemes[T8_ECLASS_PRISM]->t8_element_maxlevel ());
+  T8_ASSERT (s->eclass_schemes[T8_ECLASS_QUAD]->t8_element_maxlevel ()
+             >= s->eclass_schemes[T8_ECLASS_PYRAMID]->t8_element_maxlevel ());
+
   return s;
 }
 
@@ -74,10 +93,10 @@ t8_eclass_scheme_is_default (t8_eclass_scheme_c *ts)
     return T8_COMMON_IS_TYPE (ts, t8_default_scheme_tet_c *);
   case T8_ECLASS_PRISM:
     return T8_COMMON_IS_TYPE (ts, t8_default_scheme_prism_c *);
+  case T8_ECLASS_PYRAMID:
+    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_pyramid_c *);
   default:
     SC_ABORT_NOT_REACHED ();
-    /* TODO: Add pyramid as soon as pyramid scheme is implemented */
-    /* TODO: Add a test for this function */
   }
   return 0; /* Default return value false */
 }

@@ -30,7 +30,9 @@
 #define T8_H
 
 /* include config headers */
+#ifndef T8_CMAKE_BUILD
 #include <t8_config.h>
+#endif
 #include <sc_config.h>
 #if (defined(T8_ENABLE_MPI) && !defined(SC_ENABLE_MPI)) || (!defined(T8_ENABLE_MPI) && defined(SC_ENABLE_MPI))
 #error "MPI configured differently in t8code and libsc"
@@ -115,6 +117,7 @@ typedef uint64_t t8_linearidx_t;
 
 /** Define precisions for computations */
 #define T8_PRECISION_EPS SC_EPS
+#define T8_PRECISION_SQRT_EPS sqrt (T8_PRECISION_EPS)
 
 /** Access multidimensional data on one-dimensional C arrays. */
 #define T8_1D_TO_1D(nx, i) (i)
@@ -129,6 +132,7 @@ typedef enum {
   T8_MPI_PARTITION_FOREST,              /**< Used for forest partitioning */
   T8_MPI_GHOST_FOREST,                  /**< Used for for ghost layer creation */
   T8_MPI_GHOST_EXC_FOREST,              /**< Used for ghost data exchange */
+  T8_MPI_TEST_ELEMENT_PACK_TAG,         /**< Used for testing mpi pack and unpack functionality */
   T8_MPI_TAG_LAST
 } t8_MPI_tag_t;
 

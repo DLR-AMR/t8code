@@ -27,7 +27,8 @@
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
-#include "t8_cmesh/t8_cmesh_testcases.h"
+#include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
+#include <test/t8_gtest_macros.hxx>
 
 /* In this test, we adapt, balance and partition a uniform forest.
  * We do this in two ways:
@@ -37,22 +38,23 @@
  * After these two forests are created, we check for equality.
  */
 
-class forest_commit: public testing::TestWithParam<int> {
+class forest_commit: public testing::TestWithParam<cmesh_example_base *> {
  protected:
   void
   SetUp () override
   {
-    cmesh_id = GetParam ();
-
     /* Construct a cmesh */
-    cmesh = t8_test_create_cmesh (cmesh_id);
+    cmesh = GetParam ()->cmesh_create ();
+    if (t8_cmesh_is_empty (cmesh)) {
+      /* forest_commit does not support empty cmeshes*/
+      GTEST_SKIP ();
+    }
   }
   void
   TearDown () override
   {
     t8_cmesh_destroy (&cmesh);
   }
-  int cmesh_id;
   t8_cmesh_t cmesh;
 };
 
@@ -133,13 +135,7 @@ TEST_P (forest_commit, test_forest_commit)
   t8_forest_t forest_ada_bal_part;
   t8_forest_t forest_abp_3part;
 
-#ifdef T8_ENABLE_DEBUG
-  int level_step = 2;
-#else
-  int level_step = 3;
-#endif
-
-  t8_debugf ("Testing forest commit with cmesh_id = %i\n", cmesh_id);
+  const int level_step = 2;
 
   t8_scheme_cxx_t *scheme = t8_scheme_new_default_cxx ();
 
@@ -170,4 +166,4 @@ TEST_P (forest_commit, test_forest_commit)
   t8_debugf ("Done testing forest commit.");
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_forest_commit, forest_commit, testing::Range (0, t8_get_number_of_all_testcases ()));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_forest_commit, forest_commit, AllCmeshsParam, pretty_print_base_example);
