@@ -29,12 +29,21 @@ void
 t8_nc_mesh_set_data_ordering_scheme (t8_nc_mesh_t mesh, const t8_nc_data_ordering data_ordering);
 
 void
-t8_nc_mesh_set_longitude_length (t8_nc_mesh_t mesh, const int lon_length);
+t8_nc_mesh_set_longitude_length (t8_nc_mesh_t mesh, const t8_gloidx_t lon_length);
 
 void
-t8_nc_mesh_set_latitude_length (t8_nc_mesh_t mesh, const int lat_length);
+t8_nc_mesh_set_latitude_length (t8_nc_mesh_t mesh, const t8_gloidx_t lat_length);
 
 void
-t8_nc_mesh_set_vertical_length (t8_nc_mesh_t mesh, const int vert_length);
+t8_nc_mesh_set_vertical_length (t8_nc_mesh_t mesh, const t8_gloidx_t vert_length);
+
+void
+t8_nc_mesh_set_longitude_start (t8_nc_mesh_t mesh, const t8_gloidx_t lon_start);
+
+void
+t8_nc_mesh_set_latitude_start (t8_nc_mesh_t mesh, const t8_gloidx_t lat_start);
+
+void
+t8_nc_mesh_set_vertical_start (t8_nc_mesh_t mesh, const t8_gloidx_t vert_start);
 
 #endif /* !T8_NC_MESH_H */

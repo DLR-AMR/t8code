@@ -9,11 +9,18 @@
 #include <t8_forest/t8_forest_io.h>
 #include <p4est.h>
 #include <p8est.h>
+#include <t8_netcdf/t8_nc_utilities.hxx>
 #include <array>
 #include <vector>
 #include <utility>
 #include <algorithm>
 #include <numeric>
+
+/**
+ * \file This file collects the methods for constructing a mesh for geo-spatial data. Therefore, internally, the dimensions are labelled, longitude, latitude, and eleveation.
+ * However, this context may not always applies, but regarding the functionality of this file: The 'longitude'-axis always resembles the x-axis,
+ * the 'latitude'-axis always resembles the y-axis and the 'elevation'-axis always represents the z-axis.
+ */
 
 /* Define a macro for an internal error */
 #define T8_NC_MESH_ERR -1
@@ -30,8 +37,11 @@ struct t8_nc_mesh
   t8_nc_data_ordering data_ordering { t8_nc_data_ordering::T8_LAYOUT_UNDEFINED };
   t8_forest_t forest { nullptr };
 
-  std::array<int, nc_mesh_coord_id::num_coords> coord_lengths { 0, 0, 0 };
-  std::array<int, nc_mesh_coord_id::num_coords> congruent_mesh_num_trees_per_dimension { 0, 0, 0 };
+  std::array<t8_gloidx_t, nc_mesh_coord_id::num_coords> coord_start { 0, 0, 0 };
+  std::array<t8_gloidx_t, nc_mesh_coord_id::num_coords> coord_count { 0, 0, 0 };
+  std::array<t8_gloidx_t, nc_mesh_coord_id::num_coords> congruent_mesh_num_trees_per_dimension { 0, 0, 0 };
+  /* For each tree, the start and count vectors are saved which describe the domain of the geo-spatial data covered by the tree */
+  std::vector<std::pair<std::vector<t8_gloidx_t>, std::vector<t8_gloidx_t>>> tree_domain_responsibilities;
 };
 
 t8_nc_mesh_t
@@ -49,29 +59,50 @@ t8_nc_mesh_destroy (t8_nc_mesh_t mesh)
 }
 
 void
-t8_nc_mesh_set_longitude_length (t8_nc_mesh_t mesh, const int lon_length)
+t8_nc_mesh_set_longitude_length (t8_nc_mesh_t mesh, const t8_gloidx_t lon_length)
 {
 #ifdef T8_WITH_NETCDF
-  //mesh->longitude_length = lon_length;
-  mesh->coord_lengths[nc_mesh_coord_id::lon] = lon_length;
+  mesh->coord_count[nc_mesh_coord_id::lon] = lon_length;
 #endif
 }
 
 void
-t8_nc_mesh_set_latitude_length (t8_nc_mesh_t mesh, const int lat_length)
+t8_nc_mesh_set_latitude_length (t8_nc_mesh_t mesh, const t8_gloidx_t lat_length)
 {
 #ifdef T8_WITH_NETCDF
-  //mesh->latitude_length = lat_length;
-  mesh->coord_lengths[nc_mesh_coord_id::lat] = lat_length;
+  mesh->coord_count[nc_mesh_coord_id::lat] = lat_length;
 #endif
 }
 
 void
-t8_nc_mesh_set_vertical_length (t8_nc_mesh_t mesh, const int vert_length)
+t8_nc_mesh_set_vertical_length (t8_nc_mesh_t mesh, const t8_gloidx_t vert_length)
 {
 #ifdef T8_WITH_NETCDF
-  //mesh->vertical_length = vert_length;
-  mesh->coord_lengths[nc_mesh_coord_id::lev] = vert_length;
+  mesh->coord_count[nc_mesh_coord_id::lev] = vert_length;
+#endif
+}
+
+void
+t8_nc_mesh_set_longitude_start (t8_nc_mesh_t mesh, const t8_gloidx_t lon_start)
+{
+#ifdef T8_WITH_NETCDF
+  mesh->coord_start[nc_mesh_coord_id::lon] = lon_start;
+#endif
+}
+
+void
+t8_nc_mesh_set_latitude_start (t8_nc_mesh_t mesh, const t8_gloidx_t lat_start)
+{
+#ifdef T8_WITH_NETCDF
+  mesh->coord_start[nc_mesh_coord_id::lat] = lat_start;
+#endif
+}
+
+void
+t8_nc_mesh_set_vertical_start (t8_nc_mesh_t mesh, const t8_gloidx_t vert_start)
+{
+#ifdef T8_WITH_NETCDF
+  mesh->coord_start[nc_mesh_coord_id::lev] = vert_start;
 #endif
 }
 
@@ -91,14 +122,14 @@ t8_nc_mesh_set_data_ordering_scheme (t8_nc_mesh_t mesh, const t8_nc_data_orderin
 #endif
 }
 
-static int
+static t8_gloidx_t
 t8_nc_mesh_calculate_rectangular_embedded_initial_refinement_level (t8_nc_mesh_t nc_mesh)
 {
 #ifdef T8_WITH_NETCDF
   /* Get the size of the 'longest' dimension of the data */
-  const int max_elem_per_direction = std::max (
-    nc_mesh->coord_lengths[nc_mesh_coord_id::lon],
-    std::max (nc_mesh->coord_lengths[nc_mesh_coord_id::lat], nc_mesh->coord_lengths[nc_mesh_coord_id::lev]));
+  const t8_gloidx_t max_elem_per_direction
+    = std::max (nc_mesh->coord_count[nc_mesh_coord_id::lon],
+                std::max (nc_mesh->coord_count[nc_mesh_coord_id::lat], nc_mesh->coord_count[nc_mesh_coord_id::lev]));
   /* Calculate the induced initial refinement level needed in order to build an embedding mesh */
   return static_cast<int> (std::ceil (std::log2 (max_elem_per_direction) + std::numeric_limits<double>::epsilon ()));
 #endif
@@ -132,6 +163,20 @@ t8_nc_build_initial_rectangular_embedded_uniform_mesh (t8_nc_mesh_t nc_mesh, sc_
 
   /* Save the initial forest */
   nc_mesh->forest = initial_forest;
+
+  /* Save the domain the tree is responsible for. (Since the embedded mesh only consists of a single tree, it automatically covers the whole geo-spatial data domain) */
+  /* Create the start offset */
+  std::vector<t8_gloidx_t> start_vals;
+  start_vals.reserve (nc_mesh_coord_id::num_coords);
+  std::copy (nc_mesh->coord_start.begin (), nc_mesh->coord_start.end (), std::back_inserter (start_vals));
+
+  /* Create the count */
+  std::vector<t8_gloidx_t> count_vals;
+  count_vals.reserve (nc_mesh_coord_id::num_coords);
+  std::copy (nc_mesh->coord_count.begin (), nc_mesh->coord_count.end (), std::back_inserter (count_vals));
+
+  /* Store the start and count for this tree */
+  nc_mesh->tree_domain_responsibilities.push_back (std::make_pair (std::move (start_vals), std::move (count_vals)));
 #endif
 }
 
@@ -236,8 +281,9 @@ t8_nc_mesh_all_elements_outside_rectangular_reference_geo_domain (t8_nc_mesh_t n
   /* Check the location of the element */
   for (int elem_id { 0 }; elem_id < num_elements; ++elem_id) {
     if (t8_nc_mesh_elem_inside_specific_rectangular_reference_geo_domain (
-          elements[elem_id], ts, nc_mesh, 0, nc_mesh->coord_lengths[nc_mesh_coord_id::lon], 0,
-          nc_mesh->coord_lengths[nc_mesh_coord_id::lat], 0, nc_mesh->coord_lengths[nc_mesh_coord_id::lev])) {
+          elements[elem_id], ts, nc_mesh, 0, static_cast<int> (nc_mesh->coord_count[nc_mesh_coord_id::lon]), 0,
+          static_cast<int> (nc_mesh->coord_count[nc_mesh_coord_id::lat]), 0,
+          static_cast<int> (nc_mesh->coord_count[nc_mesh_coord_id::lev]))) {
       /* If at least one element of the family lies within the "lat x lon x lev"-mesh */
       return false;
     }
@@ -336,45 +382,25 @@ t8_nc_build_initial_rectangular_embedded_minimal_mesh (t8_nc_mesh_t nc_mesh, sc_
   /* Coarsen the mesh outside of the actual geo-spatial domain and save the coarsened forest */
   nc_mesh->forest = t8_nc_mesh_coarsen_rectangular_embedded_uniform_mesh (nc_mesh, nc_mesh->forest);
 
+  t8_forest_write_vtk (nc_mesh->forest, "Example_embedded_forest");
+
   t8_global_productionf ("The coarsened embedded rectangular mesh contains %ld elements.\n",
                          t8_forest_get_global_num_elements (nc_mesh->forest));
-#endif
-}
 
-/**
- * \brief Using integer exponentiation by squaring
- * 
- * \param base The base value to be exponentiated
- * \param exponent The exponent
- * \return int The resulting value is the integer resulting from (base)^(exponent)
- * TODO: maybe check for overflow during computation
- */
-static int
-int_pow (int base, int exponent)
-{
-#ifdef T8_WITH_NETCDF
-  T8_ASSERT (exponent >= 0);
-  /* Declare the result variable */
-  int result = 1;
+  /* Save the domain the tree is responsible for. (Since the embedded mesh only consists of a single tree, it automatically covers the whole geo-spatial data domain) */
+  /* Create the start offset */
+  std::vector<t8_gloidx_t> start_vals;
+  start_vals.reserve (nc_mesh_coord_id::num_coords);
+  std::copy (nc_mesh->coord_start.begin (), nc_mesh->coord_start.end (), std::back_inserter (start_vals));
 
-  /* Perform exponentiation by squaring */
-  while (true) {
-    /* Check whether the (current) exponent is odd */
-    if (exponent & 1) {
-      /* Multiply the base */
-      result *= base;
-    }
-    /* Halve the exponent */
-    exponent >>= 1;
-    /* Check whether the exponentiation continues */
-    if (!exponent) {
-      break;
-    }
-    /* Square the base */
-    base *= base;
-  }
-  /* Return the result of the integer exponentiation */
-  return result;
+  /* Create the count */
+  std::vector<t8_gloidx_t> count_vals;
+  count_vals.reserve (nc_mesh_coord_id::num_coords);
+  std::copy (nc_mesh->coord_count.begin (), nc_mesh->coord_count.end (), std::back_inserter (count_vals));
+
+  /* Store the start and count for this tree */
+  nc_mesh->tree_domain_responsibilities.push_back (std::make_pair (std::move (start_vals), std::move (count_vals)));
+
 #endif
 }
 
@@ -418,17 +444,17 @@ t8_nc_congruate_mesh_calculate_minimum_number_of_trees (t8_nc_mesh_t nc_mesh)
   std::vector<int> max_refinement_level_per_tree_per_dimension;
   max_refinement_level_per_tree_per_dimension.reserve (nc_mesh->dimensionality);
 
-  for (auto coord_iter { nc_mesh->coord_lengths.begin () }; coord_iter != nc_mesh->coord_lengths.end (); ++coord_iter) {
+  for (auto coord_iter { nc_mesh->coord_count.begin () }; coord_iter != nc_mesh->coord_count.end (); ++coord_iter) {
     if (*coord_iter > 1) {
       bool continue_ctree_computation = true;
       int ref_lvl = 0;
 
       /* Make a box out of the dimension length */
-      const int coord_box = int_pow (*coord_iter, nc_mesh->dimensionality);
+      const t8_gloidx_t coord_box = int_pow (*coord_iter, static_cast<t8_gloidx_t> (nc_mesh->dimensionality));
 
       /* Check how many equally refined trees would fully cover the domain in the given coordinate dimension */
       while (continue_ctree_computation) {
-        if (coord_box % static_cast<int> (int_pow (num_children, ref_lvl + 1)) == 0) {
+        if (coord_box % static_cast<t8_gloidx_t> (int_pow (num_children, ref_lvl + 1)) == 0) {
           /* If the trees would be refined to the current ref_lvl + 1, they would cover the whole domain.
            * Therefore, we check if a further refined trees would still cover the domain (in this coordinate dimension) */
           /* Increment the refinement level */
@@ -461,8 +487,7 @@ t8_nc_congruate_mesh_calculate_minimum_number_of_trees (t8_nc_mesh_t nc_mesh)
   /* Check if the amount of data points is actually divisible by num_children */
   if (initial_refinement_level) {
     /* Calculate the number of trees per dimension given the minimum initial refinement level */
-    for (auto coord_iter { nc_mesh->coord_lengths.begin () }; coord_iter != nc_mesh->coord_lengths.end ();
-         ++coord_iter) {
+    for (auto coord_iter { nc_mesh->coord_count.begin () }; coord_iter != nc_mesh->coord_count.end (); ++coord_iter) {
       if (*coord_iter > 0) {
         /* Determine the number of trees for this dimension */
         num_procs_per_dimension.push_back (
@@ -475,7 +500,7 @@ t8_nc_congruate_mesh_calculate_minimum_number_of_trees (t8_nc_mesh_t nc_mesh)
   }
   else {
     /* In case the data points are not divisible by num_children, each data point has to became it's own tree */
-    std::copy (nc_mesh->coord_lengths.begin (), nc_mesh->coord_lengths.end (),
+    std::copy (nc_mesh->coord_count.begin (), nc_mesh->coord_count.end (),
                std::back_inserter (num_procs_per_dimension));
 
 /* Print a message indicating that this is not optimal */
@@ -519,5 +544,51 @@ t8_nc_build_initial_rectangular_congruent_mesh (t8_nc_mesh_t nc_mesh, sc_MPI_Com
     = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), congruent_mesh_specifications.second, 0, comm);
 
   t8_forest_write_vtk (nc_mesh->forest, "Example_congruent_forest");
+
+  /* Get the global id of the first tree */
+  t8_gloidx_t first_tree_id = t8_cmesh_get_first_treeid (t8_forest_get_cmesh (nc_mesh->forest));
+  /* Get the number of local trees */
+  const t8_gloidx_t num_local_trees = static_cast<t8_gloidx_t> (t8_forest_get_num_local_trees (nc_mesh->forest));
+
+  /* Calculate the number of elements per dimension per tree */
+  const t8_gloidx_t count_lon_per_tree
+    = nc_mesh->coord_count[nc_mesh_coord_id::lon] / congruent_mesh_specifications.first[nc_mesh_coord_id::lon];
+  const t8_gloidx_t count_lat_per_tree
+    = nc_mesh->coord_count[nc_mesh_coord_id::lat] / congruent_mesh_specifications.first[nc_mesh_coord_id::lat];
+  const t8_gloidx_t count_lev_per_tree = nc_mesh->coord_count[nc_mesh_coord_id::lev]
+                                         / (congruent_mesh_specifications.first[nc_mesh_coord_id::lev] > 0
+                                              ? congruent_mesh_specifications.first[nc_mesh_coord_id::lev]
+                                              : 1);
+
+  t8_productionf ("Counts: lon: %ld, lat: %ld, lev: %ld\n", count_lon_per_tree, count_lat_per_tree, count_lev_per_tree);
+  /* Calculate and store the domain each tree is responsible of */
+  for (t8_gloidx_t tree_id = 0; tree_id < num_local_trees; ++tree_id) {
+    /* Create a new pair of vector for this tree */
+    nc_mesh->tree_domain_responsibilities.push_back (
+      std::make_pair (std::vector<t8_gloidx_t> (nc_mesh_coord_id::num_coords, 0),
+                      std::vector<t8_gloidx_t> { count_lon_per_tree, count_lat_per_tree, count_lev_per_tree }));
+
+    /* Compute in which subdomain we are in */
+    //t8_gloidx_t z_id = tree_id / (congruent_mesh_specifications.first[nc_mesh_coord_id::lon] * congruent_mesh_specifications.first[nc_mesh_coord_id::lat]);
+    //t8_gloidx_t y_id = (tree_id - z_id * (congruent_mesh_specifications.first[nc_mesh_coord_id::lon] * congruent_mesh_specifications.first[nc_mesh_coord_id::lat])) / congruent_mesh_specifications.first[nc_mesh_coord_id::lat];
+    //t8_gloidx_t x_id = (tree_id - z_id * congruent_mesh_specifications.first[nc_mesh_coord_id::lon] * congruent_mesh_specifications.first[nc_mesh_coord_id::lat] - y_id * congruent_mesh_specifications.first[nc_mesh_coord_id::lat]) / congruent_mesh_specifications.first[nc_mesh_coord_id::lon];
+
+    t8_gloidx_t x_id = tree_id % congruent_mesh_specifications.first[nc_mesh_coord_id::lon];
+    t8_gloidx_t y_id = (tree_id - x_id) % congruent_mesh_specifications.first[nc_mesh_coord_id::lat];
+    t8_gloidx_t z_id = (tree_id - x_id - y_id * congruent_mesh_specifications.first[nc_mesh_coord_id::lat])
+                       / (congruent_mesh_specifications.first[nc_mesh_coord_id::lon]
+                          * congruent_mesh_specifications.first[nc_mesh_coord_id::lat]);
+
+    /* Calculate the start offsets */
+    nc_mesh->tree_domain_responsibilities.back ().first[nc_mesh_coord_id::lon] = x_id * count_lon_per_tree;
+    nc_mesh->tree_domain_responsibilities.back ().first[nc_mesh_coord_id::lat] = y_id * count_lat_per_tree;
+    nc_mesh->tree_domain_responsibilities.back ().first[nc_mesh_coord_id::lev] = z_id * count_lev_per_tree;
+
+    t8_productionf ("Lon start: %ld, Lat start: %ld, Lev start: %ld\n",
+                    nc_mesh->tree_domain_responsibilities.back ().first[nc_mesh_coord_id::lon],
+                    nc_mesh->tree_domain_responsibilities.back ().first[nc_mesh_coord_id::lat],
+                    nc_mesh->tree_domain_responsibilities.back ().first[nc_mesh_coord_id::lev]);
+  }
+
 #endif
 }

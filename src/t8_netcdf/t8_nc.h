@@ -63,7 +63,7 @@ t8_nc_set_hint_read_data_blockwise_in_parallel (t8_nc_data_t nc_data, const int 
                                                 int* num_processes_per_dimension);
 
 enum t8_nc_geo_mesh_type { T8_NC_GEO_MESH_TYPE_UNDEFINED = -1, T8_NC_EMBEDDED_MESH, T8_NC_CONGRUENT_MESH };
-enum t8_nc_geo_mesh_form { T8_NC_GEO_MESH_FORM_UNDEFINED = -1, T8_NC_RECTANGULAR, T8_NC_SPHERICAL };
+enum t8_nc_geo_mesh_form { T8_NC_GEO_MESH_FORM_UNDEFINED = -1, T8_NC_RECTANGULAR };
 enum t8_nc_geo_mesh_elements { T8_NC_GEO_MESH_ELEMENTS_UNDEFINED = -1, T8_NC_QUAD_ELEMENTS, T8_NC_HEX_ELEMENTS };
 
 void

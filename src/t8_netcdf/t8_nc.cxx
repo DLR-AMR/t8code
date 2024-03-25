@@ -75,6 +75,9 @@ struct t8_nc_data
   std::array<size_t, t8_coord_ids::T8_NUM_COORD_IDS> coord_lengths {
     1, 1, 1, 1
   };  //!< An array storing the length of each geo-spatial dimension
+  std::array<size_t, t8_coord_ids::T8_NUM_COORD_IDS> coord_starts {
+    0, 0, 0, 0
+  };  //!< An array storing the length of each geo-spatial dimension
   std::array<t8_geo_var_t, t8_coord_ids::T8_NUM_COORD_IDS> coordinates {
     nullptr, nullptr, nullptr, nullptr
   };  //!< An array holding the actual coordinate data of the coordinate variables
@@ -450,6 +453,8 @@ t8_nc_constrain_dimensions_to_given_hyperslab (t8_nc_data_t nc_data, const size_
                                                    start_ptr[dims] + count_ptr[dims] - 1);
         /* Set the coordinate length correspondingly */
         nc_data->coord_lengths[t8_coord_ids::T8_LON] = count_ptr[dims];
+        /* Save the start of the data */
+        nc_data->coord_starts[t8_coord_ids::T8_LON] = start_ptr[dims];
       }
     }
     else if (current_dim_id == nc_data->coord_dim_ids[t8_coord_ids::T8_LAT]) {
@@ -459,6 +464,8 @@ t8_nc_constrain_dimensions_to_given_hyperslab (t8_nc_data_t nc_data, const size_
                                                    start_ptr[dims] + count_ptr[dims] - 1);
         /* Set the coordinate length correspondingly */
         nc_data->coord_lengths[t8_coord_ids::T8_LAT] = count_ptr[dims];
+        /* Save the start of the data */
+        nc_data->coord_starts[t8_coord_ids::T8_LAT] = start_ptr[dims];
       }
     }
     else if (current_dim_id == nc_data->coord_dim_ids[t8_coord_ids::T8_LEV]) {
@@ -468,6 +475,8 @@ t8_nc_constrain_dimensions_to_given_hyperslab (t8_nc_data_t nc_data, const size_
                                                    start_ptr[dims] + count_ptr[dims] - 1);
         /* Set the coordinate length correspondingly */
         nc_data->coord_lengths[t8_coord_ids::T8_LEV] = count_ptr[dims];
+        /* Save the start of the data */
+        nc_data->coord_starts[t8_coord_ids::T8_LEV] = start_ptr[dims];
       }
     }
     else if (current_dim_id == nc_data->coord_dim_ids[t8_coord_ids::T8_TIME]) {
@@ -477,6 +486,8 @@ t8_nc_constrain_dimensions_to_given_hyperslab (t8_nc_data_t nc_data, const size_
                                                    start_ptr[dims] + count_ptr[dims] - 1);
         /* Set the coordinate length correspondingly */
         nc_data->coord_lengths[t8_coord_ids::T8_TIME] = count_ptr[dims];
+        /* Save the start of the data */
+        nc_data->coord_starts[t8_coord_ids::T8_TIME] = start_ptr[dims];
       }
     }
   }
@@ -935,9 +946,9 @@ t8_nc_inquire_variables_data (t8_nc_data_t nc_data, const size_t* start_ptr, con
     /* Get the netCDF specific variable data */
     t8_netcdf_var_data_t nc_var_data = static_cast<t8_netcdf_var_data*> (t8_nc_geo_variable_get_user_data (*iter));
 
-    /** Since all variables are defined by the same hyperslab, we can assume that the have the same axis-ordering 
-         * Therefore, we are computing the (reduced) axis-ordering only for the first variable and copy the ordering for all remaining variables.
-         */
+    /** Since all variables are defined by the same hyperslab, we can assume that the have the same axis-ordering. 
+     * Therefore, we are computing the (reduced) axis-ordering only for the first variable and copy the ordering for all remaining variables.
+     */
 
     /* Get the iterator to the first variable */
     auto iter_to_first_variable = nc_data->vars.begin ();
@@ -1155,10 +1166,19 @@ t8_nc_build_initial_mesh (t8_nc_data_t nc_data, const enum t8_nc_geo_mesh_type m
   t8_nc_mesh_set_data_ordering_scheme (nc_data->mesh,
                                        t8_nc_geo_variable_get_data_ordering_scheme (nc_data->vars.front ()));
 
+  /* Set the dimension starts of the data */
+  t8_nc_mesh_set_longitude_start (nc_data->mesh,
+                                  static_cast<t8_gloidx_t> (nc_data->coord_starts[t8_coord_ids::T8_LON]));
+  t8_nc_mesh_set_latitude_start (nc_data->mesh, static_cast<t8_gloidx_t> (nc_data->coord_starts[t8_coord_ids::T8_LAT]));
+  t8_nc_mesh_set_vertical_start (nc_data->mesh, static_cast<t8_gloidx_t> (nc_data->coord_starts[t8_coord_ids::T8_LEV]));
+
   /* Set the dimension lengths of the data */
-  t8_nc_mesh_set_longitude_length (nc_data->mesh, static_cast<int> (nc_data->coord_lengths[t8_coord_ids::T8_LON]));
-  t8_nc_mesh_set_latitude_length (nc_data->mesh, static_cast<int> (nc_data->coord_lengths[t8_coord_ids::T8_LAT]));
-  t8_nc_mesh_set_vertical_length (nc_data->mesh, static_cast<int> (nc_data->coord_lengths[t8_coord_ids::T8_LEV]));
+  t8_nc_mesh_set_longitude_length (nc_data->mesh,
+                                   static_cast<t8_gloidx_t> (nc_data->coord_lengths[t8_coord_ids::T8_LON]));
+  t8_nc_mesh_set_latitude_length (nc_data->mesh,
+                                  static_cast<t8_gloidx_t> (nc_data->coord_lengths[t8_coord_ids::T8_LAT]));
+  t8_nc_mesh_set_vertical_length (nc_data->mesh,
+                                  static_cast<t8_gloidx_t> (nc_data->coord_lengths[t8_coord_ids::T8_LEV]));
 
   /* Check first which mesh form should be built (Currently, only a rectangular mesh is possible) */
   switch (mesh_form) {
@@ -1178,9 +1198,6 @@ t8_nc_build_initial_mesh (t8_nc_data_t nc_data, const enum t8_nc_geo_mesh_type m
       t8_errorf ("A not supported mesh type has been selected for the geo-spatial netCDF data. Please, choose either "
                  "an 'embedded' or a 'congruent' mesh type.\n");
     }
-    break;
-  case t8_nc_geo_mesh_form::T8_NC_SPHERICAL:
-    t8_errorf ("Building a spherical mesh is not yet implemented. Please, choose a 'rectangular' mesh.\n");
     break;
   default:
     t8_errorf ("The shape of the cmesh has not been specified.\n");
