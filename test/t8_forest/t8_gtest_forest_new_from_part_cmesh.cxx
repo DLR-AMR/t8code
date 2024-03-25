@@ -69,7 +69,7 @@ TEST (t8_forest_new_from_partition, all_elems_on_root)
   t8_forest_unref (&forest);
 }
 
-TEST (t8_forest_new_from_partition, alternating_one_two)
+TEST (t8_forest_new_from_partition, alternating_two_one)
 {
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
@@ -79,7 +79,7 @@ TEST (t8_forest_new_from_partition, alternating_one_two)
   sc_MPI_Comm_size (comm, &mpisize);
   sc_MPI_Comm_rank (comm, &mpirank);
   int face_knowledge = 3;
-  int num_trees_before = 3 * ((mpirank - 1) / 2) + 2 * (mpirank % 2);
+  int num_trees_before = 3 * (mpirank / 2) + 2 * (mpirank % 2);
   t8_debugf ("num_trees_before:%i\n", num_trees_before);
   t8_gloidx_t first = num_trees_before;
   t8_gloidx_t second = num_trees_before + 1;
