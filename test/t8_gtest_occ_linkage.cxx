@@ -20,10 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* In this test we create an cad gp_Pnt object.
+/* In this test we create an occ gp_Pnt object.
  * The purpose of this test is to check whether t8code successfully links
- * against cad.
- * If t8code was not configured with --with-cad then this test
+ * against occ.
+ * If t8code was not configured with --with-occ then this test
  * does nothing and is always passed.
  */
 
@@ -34,13 +34,13 @@
 #endif
 
 /* Check whether we can successfully execute VTK code */
-TEST (t8_test_cad_linkage, test_gp_Pnt)
+TEST (t8_test_occ_linkage, test_gp_Pnt)
 {
 #if T8_WITH_OCC
 
   EXPECT_NO_THROW (gp_Pnt pnt = gp_Pnt (); pnt.SetX (1););
-  t8_global_productionf ("Successfully created cad gp_Pnt object.\n");
+  t8_global_productionf ("Successfully created occ gp_Pnt object.\n");
 #else
-  t8_global_productionf ("This version of t8code is not compiled with cad support.\n");
+  t8_global_productionf ("This version of t8code is not compiled with occ support.\n");
 #endif
 }
