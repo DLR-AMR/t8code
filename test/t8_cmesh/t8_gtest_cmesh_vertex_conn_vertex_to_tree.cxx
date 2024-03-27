@@ -120,35 +120,39 @@ TEST_P (t8_test_cmesh_vertex_conn_vtt, check_all_to_one)
     num_entries += num_tree_vertices;
   }
 
-  /* Get the list of the single vertex. */
-  auto &tree_list = vtt_all_to_one.get_tree_list_of_vertex (global_vertex_id);
+  /* We can only check for the values, if we have a non-zero number of vertices.
+   * Depending on the cmesh there do not have to be any vertices. */
+  if (num_entries > 0) {
+    /* Get the list of the single vertex. */
+    auto &tree_list = vtt_all_to_one.get_tree_list_of_vertex (global_vertex_id);
 
-  /* Asserting that the number of entries matches the computed number.
-   * If it does not, we cannot continue, therefore ASSERT instead of EXPECT. */
-  ASSERT_EQ (tree_list.size (), num_entries);
+    /* Asserting that the number of entries matches the computed number.
+    * If it does not, we cannot continue, therefore ASSERT instead of EXPECT. */
+    ASSERT_EQ (tree_list.size (), num_entries);
 
-  /* Iterate over all entries of the tree list.
-   * We expect that this single list stores all local trees, ghost trees and
-   * their vertices sorted by id.
-   */
-  t8_locidx_t check_local_tree = 0;
-  int check_vertex = 0;
-  for (auto &[tree_id, tree_vertex] : tree_list) {
-    T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, check_local_tree)
-               || t8_cmesh_treeid_is_ghost (cmesh, check_local_tree));
+    /* Iterate over all entries of the tree list.
+    * We expect that this single list stores all local trees, ghost trees and
+    * their vertices sorted by id.
+    */
+    t8_locidx_t check_local_tree = 0;
+    int check_vertex = 0;
+    for (auto &[tree_id, tree_vertex] : tree_list) {
+      T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, check_local_tree)
+                 || t8_cmesh_treeid_is_ghost (cmesh, check_local_tree));
 
-    /* Check that the current entry matches the local tree and tree vertex. */
-    EXPECT_EQ (tree_id, check_local_tree);
-    EXPECT_EQ (tree_vertex, check_vertex);
-    /* increase check vertex */
-    ++check_vertex;
+      /* Check that the current entry matches the local tree and tree vertex. */
+      EXPECT_EQ (tree_id, check_local_tree);
+      EXPECT_EQ (tree_vertex, check_vertex);
+      /* increase check vertex */
+      ++check_vertex;
 
-    const int num_tree_vertices = t8_compute_tree_num_vertices (cmesh, check_local_tree);
-    /* If we reached the end of this tree's vertices, we reset
-     * the vertex counter and advance the tree counter. */
-    if (check_vertex >= num_tree_vertices) {
-      check_vertex = 0;
-      check_local_tree++;
+      const int num_tree_vertices = t8_compute_tree_num_vertices (cmesh, check_local_tree);
+      /* If we reached the end of this tree's vertices, we reset
+      * the vertex counter and advance the tree counter. */
+      if (check_vertex >= num_tree_vertices) {
+        check_vertex = 0;
+        check_local_tree++;
+      }
     }
   }
 }
