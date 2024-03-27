@@ -71,7 +71,8 @@ inline void
 t8_geometry_lagrange::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 {
   t8_geometry_with_vertices::t8_geom_load_tree_data (cmesh, gtreeid);
-  degree = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_LAGRANGE_POLY_DEGREE, gtreeid);
+  t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
+  degree = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_LAGRANGE_POLY_DEGREE, ltreeid);
   T8_ASSERT (degree != NULL);
 }
 
