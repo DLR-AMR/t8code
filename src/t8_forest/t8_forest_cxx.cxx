@@ -370,7 +370,7 @@ void
 t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id, const t8_element_t *element, int corner_number,
                               double *coordinates)
 {
-  double vertex_coords[3];
+  double vertex_coords[3] = { 0.0 };
   t8_eclass_scheme_c *ts;
   t8_eclass_t tree_class;
   t8_gloidx_t gtreeid;
