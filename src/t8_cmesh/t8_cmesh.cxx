@@ -381,7 +381,7 @@ t8_cmesh_set_attribute_gloidx_array (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 
   const size_t data_size = data_count * sizeof (*data);
-  t8_stash_add_attribute (cmesh->stash, gtree_id, package_id, key, data_size, (void *) data, !data_persists);
+  t8_cmesh_set_attribute (cmesh, gtree_id, package_id, key, (void *) data, data_size, data_persists);
 }
 
 double *
