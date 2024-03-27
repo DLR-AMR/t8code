@@ -1,0 +1,12 @@
+<map id="t8_eclass_scheme" name="t8_eclass_scheme">
+<area shape="rect" id="node1" title="This struct holds virtual functions for a particular element class." alt="" coords="5,183,147,209"/>
+<area shape="rect" id="node2" href="$classt8__default__scheme__common__c.html" title=" " alt="" coords="195,183,419,209"/>
+<area shape="rect" id="node3" href="$structt8__default__scheme__hex__c.html" title=" " alt="" coords="482,5,673,32"/>
+<area shape="rect" id="node4" href="$structt8__default__scheme__line__c.html" title="Provide an implementation for the line element class." alt="" coords="482,56,673,83"/>
+<area shape="rect" id="node5" href="$structt8__default__scheme__prism__c.html" title="Provide an implementation for the prism element class." alt="" coords="475,107,679,133"/>
+<area shape="rect" id="node6" href="$structt8__default__scheme__pyramid__c.html" title="Provide an implementation for the pyramid element class." alt="" coords="467,157,688,184"/>
+<area shape="rect" id="node7" href="$structt8__default__scheme__quad__c.html" title=" " alt="" coords="478,208,677,235"/>
+<area shape="rect" id="node8" href="$structt8__default__scheme__tet__c.html" title=" " alt="" coords="485,259,670,285"/>
+<area shape="rect" id="node9" href="$structt8__default__scheme__tri__c.html" title=" " alt="" coords="487,309,668,336"/>
+<area shape="rect" id="node10" href="$structt8__default__scheme__vertex__c.html" title=" " alt="" coords="473,360,682,387"/>
+</map>

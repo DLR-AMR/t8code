@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	
+	<!-- TITLE OF SITE -->
+	<title>Showcase | t8code</title>
+
+
+	
+	<!-- META DATA -->
+    <meta name="description" content="t8code - Parallel algorithms and data structures for tree-based AMR with arbitrary element shapes."/>
+ 
+	<meta name="keywords" content="t8code, adaptive mesh refinement, amr, dlr, hpc, adaptive meshes, exascale, simulation, cpp, numerical, finite volume, discontinuous galerkin, Open Source">
+	<meta name="author" content="Deutsches Zentrum für Luft- und Raumfahrt e.V. (DLR)">
+
+	
+	<meta property="og:title" content="Showcase" />
+	<meta property="og:type" content="article" />
+	<meta property="og:image" content="https://dlr-amr.github.io/t8code/images/showcase/TrillionMeshHybridCube.PNG" />
+	<meta property="og:url" content="https://dlr-amr.github.io/t8code/pages/showcase.html" />
+	<meta property="og:description" content="Areas of application" />
+	<meta property="og:locale" content="C" />
+	<meta property="og:site_name" content="t8code" />
+	<meta property="article:published_time" content="2022-06-24" />
+	<meta property="article:section" content="pages" />
+
+	<!-- Mobile Specific Meta -->
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<!--[if IE]><meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'><![endif]-->
+ 
+   <!-- =========================
+      FAV AND TOUCH ICONS  
+    ============================== -->
+
+	<!-- ****** faviconit.com Favicons ****** -->
+	<link rel="shortcut icon" href="https://dlr-amr.github.io/t8code/theme/images/icon/t8code.ico">
+	<link rel="icon" sizes="16x16 32x32 64x64" href="https://dlr-amr.github.io/t8code/theme/images/icon/t8code.ico">
+	<link rel="icon" type="image/png" sizes="196x196" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-192.png">
+	<link rel="icon" type="image/png" sizes="160x160" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-160.png">
+	<link rel="icon" type="image/png" sizes="96x96" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-96.png">
+	<link rel="icon" type="image/png" sizes="64x64" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-64.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-16.png">
+	<link rel="apple-touch-icon" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-57.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-114.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-72.png">
+	<link rel="apple-touch-icon" sizes="144x144" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-144.png">
+	<link rel="apple-touch-icon" sizes="60x60" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-60.png">
+	<link rel="apple-touch-icon" sizes="120x120" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-120.png">
+	<link rel="apple-touch-icon" sizes="76x76" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-76.png">
+	<link rel="apple-touch-icon" sizes="152x152" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-152.png">
+	<link rel="apple-touch-icon" sizes="180x180" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-180.png">
+	<meta name="msapplication-TileColor" content="#FFFFFF">
+	<meta name="msapplication-TileImage" content="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-144.png">
+	<meta name="msapplication-config" content="https://dlr-amr.github.io/t8code/theme/browserconfig.xml">
+	<!-- ****** faviconit.com Favicons ****** -->
+
+    <!-- =========================
+       STYLESHEETS 
+    ============================== -->
+    <!-- PRELOADER -->
+    <link rel="stylesheet" href="https://dlr-amr.github.io/t8code/theme/css/preloader.css">
+	
+	<!-- Bootstrap v3.3.4 -->
+	<link href="https://dlr-amr.github.io/t8code/theme/css/bootstrap.min.css" rel="stylesheet">
+
+	<!-- icon fonts Font Awesome 4.3.0 -->
+	<link href="https://dlr-amr.github.io/t8code/theme/css/font-awesome.min.css" rel="stylesheet"> 
+	<!-- code highlighting from pygments -->
+	<link href="https://dlr-amr.github.io/t8code/theme/css/pygments.css" rel="stylesheet"> 
+	<!-- Plugins  -->
+	<link href="https://dlr-amr.github.io/t8code/theme/css/jquery.fs.boxer.css" rel="stylesheet" /> 
+	<link rel="stylesheet" href="https://dlr-amr.github.io/t8code/theme/css/owl.carousel.css"> 
+	
+	<!-- Import Custom Styles -->
+	<link href="https://dlr-amr.github.io/t8code/theme/css/style.css" rel="stylesheet"> 
+	
+</head>
+
+
+<body class="">
+	<!-- Pre Loader -->
+	<div class="pre-loader">
+		<div class="spinner"></div>
+	</div>
+	<span id="page-top"></span>
+	<!-- Main Menu -->
+	<div class="main-menu-container navbar-fixed-top-">
+		<div id="main-menu" class="navbar navbar-default" role="navigation">
+			<div class="container">
+
+				<div class="navbar-header">
+					<!-- responsive navigation -->
+					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+						<span class="sr-only">Toggle navigation</span>
+						<i class="fa fa-bars"></i>
+					</button> <!-- /.navbar-toggle -->
+					<!-- Logo -->
+					<h1 class="logo">
+						<a class="navbar-brand" href="https://dlr-amr.github.io/t8code/">
+							<img height="50px" src="https://dlr-amr.github.io/t8code/images/t8code_logo_small.png" alt="">
+						</a><!-- /.navbar-brand -->
+					</h1>
+				</div> <!-- /.navbar-header -->
+
+				<nav class="collapse navbar-collapse">
+					<!-- Main navigation -->
+					<ul id="mainNavigation" class="main-mav nav navbar-nav pull-right">
+						<li><a class="not-in-home"class="active" href="https://dlr-amr.github.io/t8code/#page-top">Home</a>
+						</li>
+
+
+					<!--	<li><a href="https://dlr-amr.github.io/t8code/#contents">What is TiGL?</a></li>   -->
+						
+						<li><a class="not-in-home" href="https://dlr-amr.github.io/t8code/#contents">About t8code</a></li>
+						<li><a class="not-in-home" href="https://dlr-amr.github.io/t8code/#news">News</a></li>
+
+ 
+            					<li class="active"><a class="not-in-home" href="https://dlr-amr.github.io/t8code/pages/showcase.html">Showcase</a></li>
+            					<li><a class="not-in-home" href="https://dlr-amr.github.io/t8code/pages/documentation.html">Documentation</a></li>
+            					<li><a class="not-in-home" href="https://dlr-amr.github.io/t8code/pages/contact.html">Contact</a></li>
+
+
+
+						<li><a class="donate red" href="https://dlr-amr.github.io/t8code/pages/download.html">Download</a></li>     
+					</ul> <!-- /#mainNavigation -->
+				</nav> <!-- /.navbar-collapse  -->
+			</div> <!-- /.container -->
+		</div><!-- /#main-menu -->
+	</div><!-- /.main-menu-container -->
+	<!-- Main Menu End -->
+
+<section id="content">
+
+	<div class="page-name background-bg page-name-bg">
+		<div class="overlay">
+			<div class="container">
+				<h2 class="page-title m0">
+					Showcase
+				</h2>
+				<div class="page-location">
+					<a href="https://dlr-amr.github.io/t8code/">Home</a> <span> Showcase </span>
+				</div>
+			</div><!-- /.container -->
+		</div><!-- /.overlay -->
+	</div><!-- /.page-name -->
+
+
+
+	<section id="team"> 
+		<div id="contents"> 
+			<div class="container section-padding"> 
+				<h2 class="section-title">Showcase</h2>
+				
+		<!--<section id="success-story">
+			<div class="success-story background-bg"> 
+				<div class="overlay subsection-padding"> 
+					<div class="container">
+						<div class="row">
+							<div class="col-md-6">
+								<h2 class="title">
+									Something about data reduction
+								</h2>
+								<p>Isn't it great to do something you can't fail at? If you do too much it's going to lose its effectiveness. The only prerequisite is that it makes you happy. If it makes you happy then it's good. No pressure. Just relax and watch it happen.</p>
+                                <p>We spend so much of our life looking - but never seeing. This is the time to get out all your flustrations, much better than kicking the dog around the house or taking it out on your spouse. That easy. I really believe that if you practice enough you could paint the 'Mona Lisa' with a two-inch brush. I will take some magic white, and a little bit of Vandyke brown and a little touch of yellow.</p>
+                                <p>This is truly an almighty mountain. Anytime you learn something your time and energy are not wasted. All you need to paint is a few tools, a little instruction, and a vision in your mind. Anyone can paint.</p>
+							</div>--><!-- /.col-md-6 -->
+	
+							<!--<div class="galerry-item">
+                                <img src="images/showcase/data_reduction.gif" alt="img 1">
+                                <a href="images/showcase/data_reduction.gif" class="boxer"><span class="item-title">This picture shows data reduction</span></a>
+                            </div>-->
+						<!--</div>--><!-- /.row -->
+					<!--</div>--><!-- /.container -->
+				<!--</div>--><!-- /.overlay -->
+			<!--</div>--><!-- /.background-bg -->
+		<!--</section>--><!-- /#success-story -->
+
+        <section id="success-story">
+			<div class="success-story background-bg"> 
+				<div class="overlay subsection-padding"> 
+					<div class="container">
+						<div class="row">
+							<div class="col-md-6">
+								<h2 class="title">
+									Exceeding 1 Trillion mesh elements
+								</h2>
+								<p>To demonstrate the exceptional efficiency of t8code, we used the full JUWELS supercomputer (ca. 100k processes) to create and manage a massive mesh of 1.1 Trillion elements.
+								In this examples we used a hybrid mesh of hexahedra, tetrahedra and prisms. Even with such large numbers, t8code only takes seconds to perform parallel mesh management tasks: Computing the Ghost layer was done in 1.4 seconds and load-balancing in 0.3.</p>
+								<p> For more details see our <a href="https://epubs.siam.org/doi/abs/10.1137/20M1383033" target="_blank">paper on a Ghost algorithm for hybrid meshes</a>. </p>
+
+							</div><!-- /.col-md-6 -->
+	
+			<div class="galerry-item">
+                                <img src="images/showcase/TrillionMeshHybridCube.PNG" alt="img 1">
+                                <a href="images/showcase/TrillionMeshHybridCube.PNG" class="boxer"><span class="item-title">The hybrid mesh used in the 1 Trillion element example</span></a>
+                            </div>
+						</div><!-- /.row -->
+					</div><!-- /.container -->
+				</div><!-- /.overlay -->
+			</div><!-- /.background-bg -->
+		</section><!-- /#success-story -->
+		<section id="success-story">
+			<div class="success-story background-bg"> 
+				<div class="overlay subsection-padding"> 
+					<div class="container">
+						<div class="row">
+							<div class="col-md-6">
+								<h2 class="title">
+									Generating pictures using png2mesh
+								</h2>
+								<p>The png2mesh library can convert .png images into adaptive meshes. In order to do so, it uses the t8code library to build a mesh and refine it at the positions of dark pixels in the original image. You can choose between a quad mesh, triangle mesh, or a hybrid mesh containing both shapes. For more details see <a href="https://github.com/DLR-AMR/png2mesh" target="_blank"> the png2mesh github page.</a></p>
+								<p> In this example our t8code logo was used to generate an adaptive mesh. On the left side, a hybrid mesh with a maximal level of 7 was used. On the right side, the logo was converted with a transparent background using a quad mesh. </p>
+							</div><!-- /.col-md-6 -->
+	
+							<div class="galerry-item">
+                                <img src="images/showcase/png2mesh.png" alt="img png2mesh">
+                                <a href="images/showcase/png2mesh.png" class="boxer"><span class="item-title">Picture generated using png2mesh.</span></a>
+                            </div>
+						</div><!-- /.row -->
+					</div><!-- /.container -->
+				</div><!-- /.overlay -->
+			</div><!-- /.background-bg -->
+		</section><!-- /#success-story -->
+        <section id="success-story">
+			<div class="success-story background-bg"> 
+				<div class="overlay subsection-padding"> 
+					<div class="container">
+						<div class="row">
+							<div class="col-md-6">
+								<h2 class="title">
+									Our submissions to the International Meshing Roundtable (IMR) 2022
+								</h2>
+								<p>
+									The International Meshing Roundtable 2022 was held as part of the SIAM Conference on Parallel Processing for Scientific Computing 2022 (PP22). Following their call for entries to the meshing contest IMR, we constructed this mesh of the famous Seattle Space Needle. Our submission demonstrates the capability of t8code to manage very large hybrid meshes. 
+								</p>
+								<p>
+									The mesh representing the Space Needle is embedded into a cubic mesh made out of all supported 3D mesh elements (hex, tets, prisms and pyramids). 
+								</p>
+								<p>
+									Every element of the cubic mesh that intersects a line of the Space Needle mesh is refined - producing 81 million elements in 11.6 seconds on 56 cores.  The mesh also visualizes the huge difference in size that elements can have. On the coarsest level the elements have a diameter of up to 10m while the finest level divides the elements into elements that are 2cm small. 
+								</p>
+								<p>
+									Have a look at our other submissions to the SIAM PP22:
+									<br>
+									<publication> 
+										Johannes Holke and David Knapp, The Space Filling Curve Needle, Presentation at the International Meshing Roundtable 2022,
+										<a href="https://www.researchgate.net/publication/360889231_The_Space_Filling_Curve_Needle" target="_blank">Presentation available</a>
+									</publication>
+									<br>
+									<publication> 
+										David Knapp and Johannes Holke and Carsten Burstedde, Enabling hybrid tree-based Adaptive Mesh Refinement using Pyramids, Presentation at the SIAM Conference on Parallel Processing for Scientific Computing  2022,
+										<a href="https://www.researchgate.net/publication/360890127_Enabling_hybrid_tree-based_Adaptive_Mesh_Refinement_using_Pyramids" target="_blank">Presentation available</a>
+									</publication>
+									<br>
+									<publication> 
+										Sandro Elsweijer and Johannes Holke and Jan Kleinert and Dirk Reith, Constructing a Volume Geometry Map for Hexahedra with Curved Boundary Geometries, Research note a the International Meshing Roundtable  2022,
+										<a href="https://elib.dlr.de/186570/" target="_blank">Research note available</a>
+									</publication>
+
+                </div><!-- /.col-md-6 -->
+
+                            <div class="galerry-item">
+                                <img src="images/showcase/imr22_reduced.png" alt="img 1">
+                                <a href="images/showcase/imr22.png" class="boxer"><span class="item-title">The Space (Filling Curve) Needle</span></a>
+                            </div>
+						</div><!-- /.row -->
+					</div><!-- /.container -->
+				</div><!-- /.overlay -->
+			</div><!-- /.background-bg -->
+		</section><!-- /#success-story -->
+
+
+    <section id="success-story">
+			<div class="success-story background-bg"> 
+				<div class="overlay subsection-padding"> 
+					<div class="container">
+						<div class="row">
+							<div class="col-md-6">
+								<h2 class="title">
+                  Collaboration with Trixi.jl - a numerical simulation framework for hyperbolic conservation laws written in Julia
+								</h2>
+
+                <p> <a href="https://trixi-framework.github.io/Trixi.jl" target="_blank">Trixi.jl</a> is a numerical simulation framework for a
+                  huge variety of hyperbolic conservation laws and is written in <a href="https://julialang.org" target="_blank"> Julia </a>.  Key objective is to
+                  pave the way for dynamical-adaptive, hybrid, curvilinear meshes in Trixi.jl by
+                  interfacing with t8code. Scalable management of hybrid meshes - the combination of
+                  different element types (triangles, quadrilaterals, tetraeders, hexaeders,
+                  pyramids, etc.) into one single datastructure - is a unique feature of t8code,
+                  which is not provided by other meshing libraries. Hybrid meshes allow for a
+                  flexible and robust high-order approximation of complex geometries typically
+                  found in many engineering applications. The project is still work-in-progress.
+                  </p>
+
+							</div><!-- /.col-md-6 -->
+	
+							<div class="galerry-item">
+                                <img src="images/showcase/khi-trixi-t8code.png" alt="img 1">
+                                <a href="images/showcase/khi-trixi-t8code.png" class="boxer"><span class="item-title">
+          Snapshot of a Kelvin-Helmholtz-Instability simulation computed with Trixi.jl and a dynamically-adaptive, curvilinear mesh managed by t8code </span></a>
+                            </div>
+						</div><!-- /.row -->
+					</div><!-- /.container -->
+				</div><!-- /.overlay -->
+			</div><!-- /.background-bg -->
+		</section><!-- /#success-story -->
+
+
+
+
+        <!--<section id="success-story">
+			<div class="success-story background-bg"> 
+				<div class="overlay subsection-padding"> 
+					<div class="container">
+						<div class="row">
+							<div class="col-md-6">
+								<h2 class="title">
+									Something about Juwels
+								</h2>
+								<p>If these lines aren't straight, your water's going to run right out of your painting and get your floor wet. We'll throw some happy little limbs on this tree. A tree needs to be your friend if you're going to paint him. There it is. Just think about these things in your mind and drop em' on canvas. We'll put some happy little leaves here and there.</p>
+                                <p>Now, we're going to fluff this cloud. We touch the canvas, the canvas takes what it wants. But we're not there yet, so we don't need to worry about it.</p>
+                                <p>I like to beat the brush. This is your creation - and it's just as unique and special as you are. Talk to trees, look at the birds. Whatever it takes. Work on one thing at a time. Don't get carried away - we have plenty of time. Just pretend you are a whisper floating across a mountain. Exercising the imagination, experimenting with talents, being creative; these things, to me, are truly the windows to your soul.</p>
+                                </div>--><!-- /.col-md-6 -->
+
+                            <!--<div class="galerry-item">
+                                <img src="images/dummy.png" alt="img 1">
+                                <a href="images/dummy.png" class="boxer"><span class="item-title">This picture shows something about juwels</span></a>
+                            </div>-->
+						<!--</div>--><!-- /.row -->
+					<!--</div>--><!-- /.container -->
+				<!--</div>--><!-- /.overlay -->
+			<!--</div>--><!-- /.background-bg -->
+		<!--</section>--><!-- /#success-story -->
+
+<!--        <section id="success-story">
+			<div class="success-story background-bg"> 
+				<div class="overlay subsection-padding"> 
+					<div class="container">
+						<div class="row">
+							<div class="col-md-6">
+								<h2 class="title">
+									<a href="https://github.com/lukasdreyer/t8dg"> t8dg</a>
+								</h2>
+								<p> <a href="https://github.com/lukasdreyer/t8dg"> t8dg</a> is a Discontinuous Galerkin Solver for the advection and diffusion of a concentration in a flow field. It uses t8code as a grid and data management library for adaptive meshes. It currently supports quadrilateral and hexahedral elements.</p>
+								<p> In the picture, a simulation of the advection and diffusion of a point source in a rotational flow field is shown.</p>
+                                </div>--> <!-- /.col-md-6 -->
+
+                            <!--<div class="galerry-item">
+                                <img src="images/t8dg_simulation.png" alt="img 1">
+                                <a href="images/t8dg_simulation.png" class="boxer"><span class="item-title">This picture shows an advection diffusion simulation on a cylindrical mesh with a rotational flow field from t8dg</span></a>
+                            </div>-->
+						<!--</div>--> <!-- /.row -->
+					<!--</div>--> <!-- /.container -->
+				<!--</div>--> <!-- /.overlay -->
+			<!--</div>--> <!-- /.background-bg -->
+		<!--</section>--><!-- /#success-story -->
+
+    
+			</div><!-- /.container -->
+		</div>
+	</section><!-- /#team -->
+
+
+	
+
+
+</section><!-- /#content -->
+
+    <div class="footer-area ">
+
+	<footer class="section-padding">
+		<div class="social-btn footer-social text-center">
+			<!--<a href="https://twitter.com" class="twitter"><i class="fa fa-twitter"></i></a>-->
+			<!--<a href="https://www.youtube.com" class="youtube"><i class="fa fa-youtube"></i></a>-->
+			<a href="https://github.com/DLR-AMR/t8code" class="github"><i class="fa fa-github"></i></a>
+		</div>
+
+
+		<div class="site-info text-center">
+			 &copy; 2022 <a href="http://www.DLR.de">Deutsches Zentrum für Luft- und Raumfahrt e.V.</a>
+
+                	&nbsp;&sdot;&nbsp;<a href="http://www.dlr.de/sc">Institute for Software Technology</a></li>
+                	&nbsp;&sdot;&nbsp;<a href="https://dlr-amr.github.io/t8code/pages/imprint.html">Imprint</a></li>
+                	&nbsp;&sdot;&nbsp;<a href="https://dlr-amr.github.io/t8code/pages/privacy.html">Privacy</a></li>
+                	&nbsp;&sdot;&nbsp;<a href="https://dlr-amr.github.io/t8code/pages/terms-of-use.html">Terms of use</a></li>
+                	&nbsp;&sdot;&nbsp;<a href="https://dlr-amr.github.io/t8code/pages/accessibility.html">Accessibility</a></li>
+
+		</div>
+
+		<div id="go-top-top">
+			  <span><i class="fa fa-chevron-up"></i></span>
+		</div>
+	</footer>
+
+	</div><!-- /footer-area -->
+
+	<!-- Include modernizr-2.8.0.min.js -->
+	<script src="https://dlr-amr.github.io/t8code/theme/js/modernizr.js"></script>
+
+	<!-- Include jquery.min.js plugin -->
+	<script src="https://dlr-amr.github.io/t8code/theme/js/jquery-2.1.0.min.js"></script>
+	<script src="https://dlr-amr.github.io/t8code/theme/js/plugins.js"></script>
+	<script src="https://dlr-amr.github.io/t8code/theme/js/onePage-nav.js"></script>
+	<script src="https://dlr-amr.github.io/t8code/theme/js/jquery.ajaxchimp.min.js"></script> 
+	<script src="https://dlr-amr.github.io/t8code/theme/js/custom.js"></script>
+
+	<script>
+	(function($) {
+		"use strict";
+		
+	        $(window).on("load",function(e){
+	        	// Main menu
+	        	$('#main-menu #mainNavigation').onePageNav({
+	        		currentClass: 'active',
+	        		changeHash: false,
+	        		scrollSpeed: 750,
+	        		scrollThreshold: 0.5,
+	        		scrollOffset: 84,
+	        		filter: ':not(.sub-menu a, .not-in-home, .donate)',
+	        		easing: 'swing'
+	        	});  
+	        });
+		$(window).on('scroll', function (){ 
+			if ($(window).scrollTop() >$(window).height()-110){
+				$('#main-menu').addClass('navbar-fixed-top'); 
+			} else {
+				$('#main-menu').removeClass('navbar-fixed-top'); 
+			} 
+		});
+	 })(jQuery);
+	</script>
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-134418253-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+
+</body>
+</html>

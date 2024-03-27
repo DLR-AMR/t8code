@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	
+	<!-- TITLE OF SITE -->
+	<title>t8code - Articles by Johannes Holke and David Knapp</title>
+
+
+	
+	<!-- META DATA -->
+    <meta name="description" content="t8code - Parallel algorithms and data structures for tree-based AMR with arbitrary element shapes."/>
+ 
+	<meta name="keywords" content="t8code, adaptive mesh refinement, amr, dlr, hpc, adaptive meshes, exascale, simulation, cpp, numerical, finite volume, discontinuous galerkin, Open Source">
+	<meta name="author" content="Deutsches Zentrum für Luft- und Raumfahrt e.V. (DLR)">
+
+	
+
+	<!-- Mobile Specific Meta -->
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<!--[if IE]><meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'><![endif]-->
+ 
+   <!-- =========================
+      FAV AND TOUCH ICONS  
+    ============================== -->
+
+	<!-- ****** faviconit.com Favicons ****** -->
+	<link rel="shortcut icon" href="https://dlr-amr.github.io/t8code/theme/images/icon/t8code.ico">
+	<link rel="icon" sizes="16x16 32x32 64x64" href="https://dlr-amr.github.io/t8code/theme/images/icon/t8code.ico">
+	<link rel="icon" type="image/png" sizes="196x196" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-192.png">
+	<link rel="icon" type="image/png" sizes="160x160" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-160.png">
+	<link rel="icon" type="image/png" sizes="96x96" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-96.png">
+	<link rel="icon" type="image/png" sizes="64x64" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-64.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-16.png">
+	<link rel="apple-touch-icon" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-57.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-114.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-72.png">
+	<link rel="apple-touch-icon" sizes="144x144" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-144.png">
+	<link rel="apple-touch-icon" sizes="60x60" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-60.png">
+	<link rel="apple-touch-icon" sizes="120x120" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-120.png">
+	<link rel="apple-touch-icon" sizes="76x76" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-76.png">
+	<link rel="apple-touch-icon" sizes="152x152" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-152.png">
+	<link rel="apple-touch-icon" sizes="180x180" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-180.png">
+	<meta name="msapplication-TileColor" content="#FFFFFF">
+	<meta name="msapplication-TileImage" content="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-144.png">
+	<meta name="msapplication-config" content="https://dlr-amr.github.io/t8code/theme/browserconfig.xml">
+	<!-- ****** faviconit.com Favicons ****** -->
+
+    <!-- =========================
+       STYLESHEETS 
+    ============================== -->
+    <!-- PRELOADER -->
+    <link rel="stylesheet" href="https://dlr-amr.github.io/t8code/theme/css/preloader.css">
+	
+	<!-- Bootstrap v3.3.4 -->
+	<link href="https://dlr-amr.github.io/t8code/theme/css/bootstrap.min.css" rel="stylesheet">
+
+	<!-- icon fonts Font Awesome 4.3.0 -->
+	<link href="https://dlr-amr.github.io/t8code/theme/css/font-awesome.min.css" rel="stylesheet"> 
+	<!-- code highlighting from pygments -->
+	<link href="https://dlr-amr.github.io/t8code/theme/css/pygments.css" rel="stylesheet"> 
+	<!-- Plugins  -->
+	<link href="https://dlr-amr.github.io/t8code/theme/css/jquery.fs.boxer.css" rel="stylesheet" /> 
+	<link rel="stylesheet" href="https://dlr-amr.github.io/t8code/theme/css/owl.carousel.css"> 
+	
+	<!-- Import Custom Styles -->
+	<link href="https://dlr-amr.github.io/t8code/theme/css/style.css" rel="stylesheet"> 
+	
+</head>
+
+
+<body class="">
+	<!-- Pre Loader -->
+	<div class="pre-loader">
+		<div class="spinner"></div>
+	</div>
+	<span id="page-top"></span>
+	<!-- Main Menu -->
+	<div class="main-menu-container navbar-fixed-top-">
+		<div id="main-menu" class="navbar navbar-default" role="navigation">
+			<div class="container">
+
+				<div class="navbar-header">
+					<!-- responsive navigation -->
+					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+						<span class="sr-only">Toggle navigation</span>
+						<i class="fa fa-bars"></i>
+					</button> <!-- /.navbar-toggle -->
+					<!-- Logo -->
+					<h1 class="logo">
+						<a class="navbar-brand" href="https://dlr-amr.github.io/t8code/">
+							<img height="50px" src="https://dlr-amr.github.io/t8code/images/t8code_logo_small.png" alt="">
+						</a><!-- /.navbar-brand -->
+					</h1>
+				</div> <!-- /.navbar-header -->
+
+				<nav class="collapse navbar-collapse">
+					<!-- Main navigation -->
+					<ul id="mainNavigation" class="main-mav nav navbar-nav pull-right">
+						<li><a class="not-in-home"class="active" href="https://dlr-amr.github.io/t8code/#page-top">Home</a>
+						</li>
+
+
+					<!--	<li><a href="https://dlr-amr.github.io/t8code/#contents">What is TiGL?</a></li>   -->
+						
+						<li><a class="not-in-home" href="https://dlr-amr.github.io/t8code/#contents">About t8code</a></li>
+						<li><a class="not-in-home" href="https://dlr-amr.github.io/t8code/#news">News</a></li>
+
+ 
+            					<li><a class="not-in-home" href="https://dlr-amr.github.io/t8code/pages/showcase.html">Showcase</a></li>
+            					<li><a class="not-in-home" href="https://dlr-amr.github.io/t8code/pages/documentation.html">Documentation</a></li>
+            					<li><a class="not-in-home" href="https://dlr-amr.github.io/t8code/pages/contact.html">Contact</a></li>
+
+
+
+						<li><a class="donate red" href="https://dlr-amr.github.io/t8code/pages/download.html">Download</a></li>     
+					</ul> <!-- /#mainNavigation -->
+				</nav> <!-- /.navbar-collapse  -->
+			</div> <!-- /.container -->
+		</div><!-- /#main-menu -->
+	</div><!-- /.main-menu-container -->
+	<!-- Main Menu End -->
+
+<section id="content">
+
+
+	<section id="home-slider">
+		<div class="top-section image-slide">
+			<div id="top-carousel" class="carousel slide top-slider-container v2" data-ride="carousel">
+				<div class="carousel-inner">
+					<div class="item active">
+						<div id="home-slide-1" class="slide-img-bg"> 
+							<div class="slide-contents overlay"> 
+								<div class="container">
+									<div class="top-headings">
+										<h2 class="top-heading-1"> 
+											Exascale ready adaptive mesh refinement 
+											for all element shapes!
+										</h2> 
+									</div><!-- /.top-headings -->
+									<p class="top-sec-txt">
+										Don't worry about your mesh data! t8code provides fast mesh and data management with excellent scaling properties and was tested on up to 1 million cores with up to 1.1 trillion elements.
+									</p>
+									<!--<div class="button-container">
+										<a href="https://dlr-amr.github.io/t8code/pages/features.html">
+											<button type="button" class="btn top-sec-btn">Features</button>
+										</a>-->
+										<!--<a class="video-link" href="https://www.youtube-nocookie.com/embed/0OfmtIhmozY"><span class="icon"><i class="fa fa-play-circle-o"></i></span> Graphical User Interface - Fly Through </a>-->
+									<!--</div--><!-- /.button-container -->
+								</div><!-- /.container -->
+							</div><!-- /.slide-contents --> 
+						</div><!-- /.background-bg -->
+					</div><!-- /.item -->
+
+					<div class="item">
+						<div id="home-slide-2" class="slide-img-bg"> 
+							<div class="slide-contents overlay"> 
+								<div class="container">
+									<div class="top-headings">
+										<h2 class="top-heading-1"> 
+											YOUR IMAGINATION IS THE LIMIT	
+										</h2> 
+									</div><!-- /.top-headings -->
+									<p class="top-sec-txt">
+										Due to the low and high level functions t8code is straightforward to use, while being highly versatile.
+										Take a look at our showcase for examples!
+									</p>
+									<div class="button-container">
+										<a href="https://dlr-amr.github.io/t8code/pages/showcase.html">
+											<button type="button" class="btn top-sec-btn">Showcase</button> 
+										</a>
+									</div><!-- /.button-container -->
+								</div>
+							</div><!-- /.slide-contents --> 
+						</div><!-- /.background-bg -->
+					</div><!-- /.item -->
+
+					<div class="item">
+						<div id="home-slide-3" class="slide-img-bg">  
+							<div class="slide-contents overlay"> 
+								<div class="container">
+									<div class="top-headings">
+										<h2 class="top-heading-1"> 
+											DIRECT SUPPORT
+										</h2> 
+									</div><!-- /.top-headings -->
+									<p class="top-sec-txt">
+										If you have any questions about t8code, its usage or any ideas, feel free to contact the developers.
+									</p>
+									<div class="button-container">
+										<a href="https://dlr-amr.github.io/t8code/pages/contact.html" target="_blank">
+											<button type="button" class="btn top-sec-btn">Contact us</button>
+										</a>
+									</div><!-- /.button-container -->
+								</div>
+							</div><!-- /.slide-contents --> 
+						</div><!-- /.background-bg -->
+					</div><!-- /.item -->
+					
+					
+
+				</div><!-- /.carousel-inner --> 
+				<!-- Controls -->
+				<a class="left slide-nav" href="#top-carousel" role="button" data-slide="prev">
+					<i class="fa fa-angle-left"></i>
+					<span class="sr-only">Previous</span>
+				</a>
+				<a class="right slide-nav" href="#top-carousel" role="button" data-slide="next">
+					<i class="fa fa-angle-right"></i>
+					<span class="sr-only">Next</span>
+				</a>
+			</div><!-- /#top-carousel /.top-carousel-container --> 
+		</div><!-- /.top-section -->
+	</section>
+
+
+
+	<div id="contents"> 
+		<div class="container">
+			<section class="row about-us section-padding pb0">
+				<div class="col-md-6">
+					<h2 class="section-title">About</h2>
+					<p>  		
+						t8code (spoken as "tetcode") is a C/C++ library to manage parallel adaptive meshes with various element types.
+						t8code uses a collection (a forest) of multiple connected adaptive space-trees in parallel and scales to at least one million MPI ranks and over 1 Trillion mesh elements.
+					</p>
+					<p>
+						t8code is intended to be used as a thirdparty library for numerical simulation codes or any other applications that require meshes.
+					</p>
+					<p>
+						<a href="https://elib.dlr.de/194377/1/t8code_overview_IMR2023.pdf" target="_blank">Here</a>, you can find a description of the interface, functionality and features of t8code version 1.0.
+					</p>
+				</div><!-- /.col-md-6 -->
+				<div class="col-md-6">
+					<div class="feature-image">
+						<img src="pages/images/home/AirplaneWithTetMesh.png"/>
+
+					</div>
+				</div><!-- /.col-md-6 -->
+			</section><!-- /.about-us -->
+			<section class="row about-us section-padding pb0">
+				<div class="col-md-6">
+					<h2 class="section-title">Key-features</h2>
+					<p>
+						Among other features, t8code offers the following functionalities:
+						<!-- TODO: Insert line break -->
+
+						<!-- TODO: Make these bullet points -->
+						<ul>
+						<li>Managing distributed adaptive meshes over complex domain geometries</li>
+						<li>Adapting meshes according to user given refinement/coarsening criteria</li>
+						<li>Establishing a 2:1 balance condition</li>
+						<li>(Re-)partitioning/load-balancing a mesh (and associated data) among MPI ranks</li>
+						<li>Managing ghost (halo) elements and data</li>
+						<li>Searching the mesh efficiently</li>
+						<li>Supporting curved meshes</li>
+						</ul>
+					</p>
+
+				</div><!-- /.col-md-6 -->
+			</section><!-- /.about-us -->
+			
+			<section class="row about-us section-padding pb0">
+				<div class="col-md-6">
+					<h2 class="section-title">Getting started</h2>
+					<p>
+						Get started using t8code now. We have a collection of <a href="https://github.com/DLR-AMR/t8code/wiki/Tutorial---Overview" target="_blank">Tutorials</a>
+						that help you understand the data structures and algorithms of t8code and how to best connect it to your application.
+						Additionally our large collection of <a href="https://github.com/DLR-AMR/t8code/tree/main/example" target="_blank">examples</a> demonstrates the features of t8code.					</p>
+
+				</div><!-- /.col-md-6 -->
+			</section><!-- /.about-us -->
+
+			<section class="row about-us section-padding pb0">
+				<div class="col-md-12 md-bm-50">
+					<h2 class="section-title">Publications</h2>
+						<p>
+							<publication>
+								Johannes Holke, Scalable algorithms for parallel tree-based adaptive mesh refinement with general element types, PhD thesis at University of Bonn, 2018,
+								<a href="https://bonndoc.ulb.uni-bonn.de/xmlui/handle/20.500.11811/7661" target="_blank">Full text available</a>
+							</publication>
+							<br>
+							<publication>
+								Carsten Burstedde and Johannes Holke, A Tetrahedral Space-Filling Curve for Nonconforming Adaptive Meshes, SIAM Journal on Scientific Computing, 2016, 
+								<a href="https://doi.org/10.1137/15M1040049" target="_blank">10.1137/15M1040049</a>
+							</publication>
+							<br>
+							<publication>
+								Carsten Burstedde and Johannes Holke, Coarse mesh partitioning for tree-based AMR, SIAM Journal on Scientific Computing, 2017, 
+								<a href="https://doi.org/10.1137/16M1103518" target="_blank">10.1137/16M1103518</a>
+							</publication>
+							<br>
+							<publication>
+								Johannes Holke and David Knapp and Carsten Burstedde, An Optimized, Parallel Computation of the Ghost Layer for Adaptive Hybrid Forest Meshes, SIAM Journal on Scientific Computing, 2021, 
+								<a href="https://epubs.siam.org/doi/abs/10.1137/20M1383033" target="_blank">10.1137/20M1383033</a>
+							</publication>
+							<publication> 
+								Sandro Elsweijer and Johannes Holke and Jan Kleinert and Dirk Reith, Constructing a Volume Geometry Map for Hexahedra with Curved Boundary Geometries, Research note a the International Meshing Roundtable  2022,
+								<a href="https://elib.dlr.de/186570/" target="_blank">Research note available</a>
+							</publication>
+
+						</p>
+					</dl>
+				</div><!-- /.col-md-12 -->
+			</section><!-- /.about-us -->
+			
+			<section class="row about-us section-padding pb0">
+				<div class="col-md-12 md-bm-50">
+					<h2 class="section-title">Cite &amp; Acknowledge</h2>
+					<p>
+						If you use t8code in any of your publications, please cite the <a href="https://github.com/DLR-AMR/t8code/">github repository</a> and [1]. For publications specifically related to 
+					</p>
+					<ul>
+					<li>the TM index, please cite [2].</li>
+					<li>coarse mesh partitioning, please cite [3].</li>
+					<li>construction and handling of the ghost layer, please cite [4].</li>
+					</ul>
+				</div><!-- /.col-md-12 -->
+			</section><!-- /.about-us -->
+
+			<section id="news" class="news row section-padding pb0">
+				<!-- <div class="row"> -->
+					<div class="col-md-9">
+						<div class="blog-page"> 
+
+
+							<article class="type-post single-news single-post">
+										 
+
+								<h2 class="post-title">
+									<a href="https://dlr-amr.github.io/t8code/t8code-100-released.html">t8code-1.0.0 released</a>
+								</h2> 
+
+								<footer class="entry-meta">
+									<span class="author">
+										<a href="https://dlr-amr.github.io/t8code/author/johannes-holke-and-david-knapp.html" rel="author">
+											<i class="fa fa-user"></i>
+											Johannes Holke and David Knapp
+										</a> 
+									</span>
+									<span class="entry-date">
+										<i class="fa fa-calendar-o"></i>
+										<span class="date">Thu 22 September 2022</span>
+
+									</span>
+									<span class="comments-link">
+										<a href="https://dlr-amr.github.io/t8code/t8code-100-released.html" rel="link">
+											<i class="fa fa-link"></i>
+											Permalink
+										</a>
+									</span>
+									<!--
+									<span class="comments-link">
+										<i class="fa fa-comment-o"></i>
+										<a href="#" title="comment on Saving Polar Bears" >3 Comments </a>
+									</span>
+									-->
+ 
+										<span class="cat-links">
+											<i class="fa fa-folder-o"></i>
+											<a href="https://dlr-amr.github.io/t8code/category/news.html">News</a>
+										</span>
+
+										
+
+
+								</footer><!-- /.entry-meta --> 
+								<div class="entry"> 
+									<p>
+										<p>We are finally releasing the <a href="https://github.com/DLR-AMR/t8code">first major version of t8code, v1.0</a>. t8code is a parallel adaptive mesh management library with support for hybrid meshes.
+t8code uses the efficient space-filling curve approach to store and manage meshes and extends it to all common element shapes.
+We have demonstrated its efficiency …</p>  
+								</div><!-- /.entry --> 
+								<div class="btn-container">
+									<a href="https://dlr-amr.github.io/t8code/t8code-100-released.html" class="read-more">
+										Learn more <i class="fa fa-arrow-circle-o-right"></i>
+									</a>
+								</div>
+
+							</article> 
+
+
+
+							<nav class="pagination paging-navigation" role="navigation">
+	    							<a class="prev disabled" href="#"><i class="fa fa-angle-double-left"></i></a>
+
+	    							<a class="page-numbers active" href="https://dlr-amr.github.io/t8code/author/johannes-holke-and-david-knapp.html">1</a>
+
+							    	<a class="next disabled" href="#"><i class="fa fa-angle-double-right"></i></a>
+							</nav><!-- /.paging-navigation -->
+
+
+
+
+						</div><!-- /.blog-page -->
+
+
+					</div><!-- /.col-md-9 -->
+
+			<!--	</div><!-- /.row --> 
+			</section><!-- /.news -->		
+
+		</div><!-- /.container --> 
+
+	</div><!-- /.contents -->
+
+
+
+</section><!-- /#content -->
+
+    <div class="footer-area ">
+
+	<footer class="section-padding">
+		<div class="social-btn footer-social text-center">
+			<!--<a href="https://twitter.com" class="twitter"><i class="fa fa-twitter"></i></a>-->
+			<!--<a href="https://www.youtube.com" class="youtube"><i class="fa fa-youtube"></i></a>-->
+			<a href="https://github.com/DLR-AMR/t8code" class="github"><i class="fa fa-github"></i></a>
+		</div>
+
+
+		<div class="site-info text-center">
+			 &copy; 2022 <a href="http://www.DLR.de">Deutsches Zentrum für Luft- und Raumfahrt e.V.</a>
+
+                	&nbsp;&sdot;&nbsp;<a href="http://www.dlr.de/sc">Institute for Software Technology</a></li>
+                	&nbsp;&sdot;&nbsp;<a href="https://dlr-amr.github.io/t8code/pages/imprint.html">Imprint</a></li>
+                	&nbsp;&sdot;&nbsp;<a href="https://dlr-amr.github.io/t8code/pages/privacy.html">Privacy</a></li>
+                	&nbsp;&sdot;&nbsp;<a href="https://dlr-amr.github.io/t8code/pages/terms-of-use.html">Terms of use</a></li>
+                	&nbsp;&sdot;&nbsp;<a href="https://dlr-amr.github.io/t8code/pages/accessibility.html">Accessibility</a></li>
+
+		</div>
+
+		<div id="go-top-top">
+			  <span><i class="fa fa-chevron-up"></i></span>
+		</div>
+	</footer>
+
+	</div><!-- /footer-area -->
+
+	<!-- Include modernizr-2.8.0.min.js -->
+	<script src="https://dlr-amr.github.io/t8code/theme/js/modernizr.js"></script>
+
+	<!-- Include jquery.min.js plugin -->
+	<script src="https://dlr-amr.github.io/t8code/theme/js/jquery-2.1.0.min.js"></script>
+	<script src="https://dlr-amr.github.io/t8code/theme/js/plugins.js"></script>
+	<script src="https://dlr-amr.github.io/t8code/theme/js/onePage-nav.js"></script>
+	<script src="https://dlr-amr.github.io/t8code/theme/js/jquery.ajaxchimp.min.js"></script> 
+	<script src="https://dlr-amr.github.io/t8code/theme/js/custom.js"></script>
+
+	<script>
+	(function($) {
+		"use strict";
+		
+	        $(window).on("load",function(e){
+	        	// Main menu
+	        	$('#main-menu #mainNavigation').onePageNav({
+	        		currentClass: 'active',
+	        		changeHash: false,
+	        		scrollSpeed: 750,
+	        		scrollThreshold: 0.5,
+	        		scrollOffset: 84,
+	        		filter: ':not(.sub-menu a, .not-in-home, .donate)',
+	        		easing: 'swing'
+	        	});  
+	        });
+		$(window).on('scroll', function (){ 
+			if ($(window).scrollTop() >$(window).height()-110){
+				$('#main-menu').addClass('navbar-fixed-top'); 
+			} else {
+				$('#main-menu').removeClass('navbar-fixed-top'); 
+			} 
+		});
+	 })(jQuery);
+	</script>
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-134418253-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+
+</body>
+</html>
