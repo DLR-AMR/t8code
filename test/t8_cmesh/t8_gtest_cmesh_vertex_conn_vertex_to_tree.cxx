@@ -239,4 +239,5 @@ TEST_P (t8_test_cmesh_vertex_conn_vtt, convert_to_ttv_and_back)
   EXPECT_EQ (vtt_all_to_one, vtt_new_all_to_one);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_vertex_vertex_to_tree, t8_test_cmesh_vertex_conn_vtt, AllCmeshsParam, pretty_print_base_example);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_vertex_vertex_to_tree, t8_test_cmesh_vertex_conn_vtt, AllCmeshsParam,
+                          pretty_print_base_example);
