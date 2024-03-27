@@ -25,6 +25,7 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <test/t8_cmesh_generator/t8_cmesh_example_sets.hxx>
 
 /* In this file we test the t8_cmesh_vertex_conn_vertex_to_tree_c
  * class of the cmesh global vertex list.
@@ -57,13 +58,12 @@ t8_compute_global_vertex_hash (t8_locidx_t itree, t8_locidx_t ivertex, t8_locidx
   return (itree * ivertex) % (num_local_trees + 1);
 }
 
-class t8_test_cmesh_vertex_conn_vtt: public testing::TestWithParam<int> {
+class t8_test_cmesh_vertex_conn_vtt: public testing::TestWithParam<cmesh_example_base *> {
  protected:
   void
   SetUp () override
   {
-    const int cmesh_id = GetParam ();
-    cmesh = t8_test_create_cmesh (cmesh_id);
+    cmesh = GetParam ()->cmesh_create ();
     T8_ASSERT (t8_cmesh_is_committed (cmesh));
     const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
     const t8_locidx_t num_ghost_trees = t8_cmesh_get_num_ghosts (cmesh);
@@ -235,4 +235,4 @@ TEST_P (t8_test_cmesh_vertex_conn_vtt, convert_to_ttv_and_back)
   EXPECT_EQ (vtt_all_to_one, vtt_new_all_to_one);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_vertex_vertex_to_tree, t8_test_cmesh_vertex_conn_vtt, AllCmeshs);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_vertex_vertex_to_tree, t8_test_cmesh_vertex_conn_vtt, AllCmeshsParam, pretty_print_base_example);
