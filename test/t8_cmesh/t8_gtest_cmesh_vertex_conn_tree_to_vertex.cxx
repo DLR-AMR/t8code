@@ -25,16 +25,16 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <test/t8_cmesh_generator/t8_cmesh_example_sets.hxx>
 
 /* TODO: write test case without existing cmesh to test before attribute bug is fixed */
 
-class cmesh_vertex_conn_ttv: public testing::TestWithParam<int> {
+class cmesh_vertex_conn_ttv: public testing::TestWithParam<cmesh_example_base *> {
  protected:
   void
   SetUp () override
   {
-    const int cmesh_id = GetParam ();
-    const t8_cmesh_t committed_cmesh = t8_test_create_cmesh (cmesh_id);
+    const t8_cmesh_t committed_cmesh = GetParam ()->cmesh_create ();
     T8_ASSERT (t8_cmesh_is_committed (committed_cmesh));
     t8_cmesh_init (&cmesh);
     t8_cmesh_set_derive (cmesh, committed_cmesh);
@@ -98,4 +98,5 @@ TEST_P (cmesh_vertex_conn_ttv, get_global)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_vertex_tree_to_vertex, cmesh_vertex_conn_ttv, AllCmeshs);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_vertex_tree_to_vertex, cmesh_vertex_conn_ttv, AllCmeshsParam,
+                          pretty_print_base_example);
