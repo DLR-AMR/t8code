@@ -10,9 +10,8 @@ t8code_googletest_installed_headers = \
 t8code_googletest_internal_headers = \
   thirdparty/googletest-mpi/gtest/gtest.h \
   test/t8_gtest_macros.hxx \
-  test/t8_schemes/t8_gtest_dfs_base.hxx \
-  test/t8_geometry/t8_gtest_geometry_macros.hxx
-
+  test/t8_schemes/t8_gtest_dfs_base.hxx
+  
 t8code_googletest_programs = \
   test/t8_geometry/t8_geometry_implementations/t8_gtest_geometry_lagrange \
   test/t8_gtest_cmesh_bcast \
@@ -25,7 +24,7 @@ t8code_googletest_programs = \
   test/t8_gtest_vec \
   test/t8_gtest_mat \
   test/t8_gtest_refcount \
-  test/t8_gtest_cad_linkage \
+  test/t8_gtest_occ_linkage \
   test/t8_gtest_version \
   test/t8_schemes/t8_gtest_init_linear_id \
   test/t8_gtest_basics \
@@ -125,9 +124,9 @@ test_t8_gtest_refcount_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_gtest_refcount.cxx
 
-test_t8_gtest_cad_linkage_SOURCES = \
+test_t8_gtest_occ_linkage_SOURCES = \
   test/t8_gtest_main.cxx \
-  test/t8_gtest_cad_linkage.cxx
+  test/t8_gtest_occ_linkage.cxx
 
 test_t8_gtest_version_SOURCES = \
   test/t8_gtest_main.cxx \
@@ -377,9 +376,9 @@ test_t8_gtest_refcount_LDADD = $(t8_gtest_target_ld_add)
 test_t8_gtest_refcount_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_gtest_refcount_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
-test_t8_gtest_cad_linkage_LDADD = $(t8_gtest_target_ld_add)
-test_t8_gtest_cad_linkage_LDFLAGS = $(t8_gtest_target_ld_flags)
-test_t8_gtest_cad_linkage_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+test_t8_gtest_occ_linkage_LDADD = $(t8_gtest_target_ld_add)
+test_t8_gtest_occ_linkage_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_gtest_occ_linkage_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
 test_t8_gtest_version_LDADD = $(t8_gtest_target_ld_add)
 test_t8_gtest_version_LDFLAGS = $(t8_gtest_target_ld_flags)
@@ -594,7 +593,7 @@ test_t8_gtest_eclass_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_gtest_vec_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_gtest_mat_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_gtest_refcount_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
-test_t8_gtest_cad_linkage_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_gtest_occ_linkage_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_gtest_version_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_init_linear_id_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_gtest_basics_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
