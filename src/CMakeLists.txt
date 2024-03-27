@@ -80,7 +80,7 @@ target_sources( T8 PRIVATE
     t8_cmesh/t8_cmesh_save.c 
     t8_cmesh/t8_cmesh_netcdf.c 
     t8_cmesh/t8_cmesh_trees.c 
-    t8_cmesh/t8_cmesh_commit.c 
+    t8_cmesh/t8_cmesh_commit.cxx
     t8_cmesh/t8_cmesh_partition.c 
     t8_cmesh/t8_cmesh_copy.c 
     t8_data/t8_shmem.c 
