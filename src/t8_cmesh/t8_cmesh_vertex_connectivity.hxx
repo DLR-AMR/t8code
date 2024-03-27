@@ -30,14 +30,11 @@
 
 #include <t8_cmesh.h>
 #include <t8_cmesh_vertex_conn_vertex_to_tree_c.hxx>
+#include <t8_cmesh_vertex_conn_tree_to_vertex.hxx>
 
 typedef struct t8_cmesh_vertex_connectivity
 {
  public:
-  /* Setter functions */
-  void
-  set_state (const t8_cmesh_vertex_connectivity_state_t state);
-
   /* Given a cmesh, build up the vertex_to_tree and tree_to_vertex members.
    * \return: some error value to be specified.
    * On error, \state will be set to ERROR. 
@@ -81,9 +78,9 @@ typedef struct t8_cmesh_vertex_connectivity
   /* Currently not used/equal to global number of vertices */
   t8_locidx_t local_number_of_vertices;
 
-  t8_cmesh_vertex_conn_vertex_to_tree_c vertex_to_tree;
+  struct t8_cmesh_vertex_conn_vertex_to_tree_c vertex_to_tree;
 
-  t8_cmesh_vertex_conn_tree_to_vertex_c tree_to_vertex;
+  struct t8_cmesh_vertex_conn_tree_to_vertex_c tree_to_vertex;
 
 } t8_cmesh_vertex_connectivity_c;
 
