@@ -41,7 +41,6 @@ struct t8_eclass_scheme
 {
  protected:
   size_t element_size; /**< The size in bytes of an element of class \a eclass */
-  void *ts_context;    /**< Anonymous implementation context. */
 
  public:
   t8_eclass_t eclass;

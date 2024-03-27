@@ -26,34 +26,6 @@
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
-/** This class independent function assumes an sc_mempool_t as context.
- * It is suitable as the elem_new callback in \ref t8_eclass_scheme_t.
- * We assume that the mempool has been created with the correct element size.
- * \param [in,out] ts_context   An element is allocated in this sc_mempool_t.
- * \param [in]     length       Non-negative number of elements to allocate.
- * \param [in,out] elem         Array of correct size whose members are filled.
- */
-static void
-t8_default_mempool_alloc (sc_mempool_t *ts_context, int length, t8_element_t **elem);
-
-/** This class independent function assumes an sc_mempool_t as context.
- * It is suitable as the elem_destroy callback in \ref t8_eclass_scheme_t.
- * We assume that the mempool has been created with the correct element size.
- * \param [in,out] ts_context   An element is returned to this sc_mempool_t.
- * \param [in]     length       Non-negative number of elements to destroy.
- * \param [in,out] elem         Array whose members are returned to the mempool.
- */
-static void
-t8_default_mempool_free (sc_mempool_t *ts_context, int length, t8_element_t **elem);
-
-/* Destructor */
-t8_default_scheme_common_c::~t8_default_scheme_common_c ()
-{
-  T8_ASSERT (ts_context != NULL);
-  SC_ASSERT (((sc_mempool_t *) ts_context)->elem_count == 0);
-  sc_mempool_destroy ((sc_mempool_t *) ts_context);
-}
-
 /** Compute the number of corners of a given element. */
 int
 t8_default_scheme_common_c::t8_element_num_corners (const t8_element_t *elem) const
@@ -61,46 +33,6 @@ t8_default_scheme_common_c::t8_element_num_corners (const t8_element_t *elem) co
   /* use the lookup table of the eclasses.
    * Pyramids should implement their own version of this function. */
   return t8_eclass_num_vertices[eclass];
-}
-
-void
-t8_default_scheme_common_c::t8_element_new (int length, t8_element_t **elem) const
-{
-  t8_default_mempool_alloc ((sc_mempool_t *) this->ts_context, length, elem);
-}
-
-void
-t8_default_scheme_common_c::t8_element_destroy (int length, t8_element_t **elem) const
-{
-  t8_default_mempool_free ((sc_mempool_t *) this->ts_context, length, elem);
-}
-
-static void
-t8_default_mempool_alloc (sc_mempool_t *ts_context, int length, t8_element_t **elem)
-{
-  int i;
-
-  T8_ASSERT (ts_context != NULL);
-  T8_ASSERT (0 <= length);
-  T8_ASSERT (elem != NULL);
-
-  for (i = 0; i < length; ++i) {
-    elem[i] = (t8_element_t *) sc_mempool_alloc (ts_context);
-  }
-}
-
-static void
-t8_default_mempool_free (sc_mempool_t *ts_context, int length, t8_element_t **elem)
-{
-  int i;
-
-  T8_ASSERT (ts_context != NULL);
-  T8_ASSERT (0 <= length);
-  T8_ASSERT (elem != NULL);
-
-  for (i = 0; i < length; ++i) {
-    sc_mempool_free (ts_context, elem[i]);
-  }
 }
 
 t8_element_shape_t
@@ -151,21 +83,6 @@ t8_default_scheme_common_c::t8_element_count_leaves_from_root (int level) const
   }
   int dim = t8_eclass_to_dimension[eclass];
   return count_leaves_from_level (0, level, dim);
-}
-
-#if T8_ENABLE_DEBUG
-void
-t8_default_scheme_common_c::t8_element_debug_print (const t8_element_t *elem) const
-{
-  char debug_string[BUFSIZ];
-  t8_element_to_string (elem, debug_string, BUFSIZ);
-  t8_debugf ("%s\n", debug_string);
-}
-#endif
-
-void
-t8_default_scheme_common_c::t8_element_deinit (int length, t8_element_t *elem) const
-{
 }
 
 T8_EXTERN_C_END ();
