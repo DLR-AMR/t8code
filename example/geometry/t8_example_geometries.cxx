@@ -26,11 +26,11 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_geometry/t8_geometry_base.hxx>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_analytic.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx>
 #include <t8_geometry/t8_geometry_helpers.h>
+#include <t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 
 #if T8_WITH_OCC
@@ -127,6 +127,13 @@ struct t8_geometry_sincos: public t8_geometry
   t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
   {
     /* Do nothing */
+  }
+
+  /** Check if  the currently active tree has a negative volume. In this case return zero. */
+  bool
+  t8_geom_tree_negative_volume () const
+  {
+    return 0;
   }
 
   /**
@@ -253,6 +260,13 @@ struct t8_geometry_cylinder: public t8_geometry
   t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
   {
     /* Do nothing */
+  }
+
+  /** Check if  the currently active tree has a negative volume. In this case return zero. */
+  bool
+  t8_geom_tree_negative_volume () const
+  {
+    return 0;
   }
 
   /**
@@ -404,6 +418,13 @@ struct t8_geometry_moving: public t8_geometry
     /* Do nothing */
   }
 
+  /** Check if  the currently active tree has a negative volume. In this case return zero. */
+  bool
+  t8_geom_tree_negative_volume () const
+  {
+    return 0;
+  }
+
   /**
    * Get the type of this geometry.
    * \return The type.
@@ -462,6 +483,13 @@ struct t8_geometry_cube_zdistorted: public t8_geometry
   t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
   {
     /* Do nothing */
+  }
+
+  /** Check if  the currently active tree has a negative volume. In this case return zero. */
+  bool
+  t8_geom_tree_negative_volume () const
+  {
+    return 0;
   }
 
   /**
@@ -535,9 +563,6 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
   t8_forest_t forest;
   t8_cmesh_t cmesh;
   char vtuname[BUFSIZ];
-  t8_geometry_c *geometry;
-  /* geometry_sincos is used for T8_GEOM_TWO_GEOMETRIES */
-  t8_geometry_c *geometry_sincos;
   int uniform_level;
   double time = 0; /* used for moving geometry */
   int sreturn;
@@ -549,7 +574,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
   case T8_GEOM_SINCOS:
     t8_global_productionf ("Creating uniform level %i forest with a sinus/cosinus geometry.\n", level);
     /* Sin/cos geometry. Has two quad trees. */
-    geometry = new t8_geometry_sincos;
+    t8_cmesh_register_geometry<t8_geometry_sincos> (cmesh);
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
     t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_QUAD);
     t8_cmesh_set_join (cmesh, 0, 1, 1, 0, 0);
@@ -558,7 +583,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
   case T8_GEOM_CYLINDER:
     t8_global_productionf ("Creating uniform level %i forest with a cylinder geometry.\n", level);
     /* Cylinder geometry. Has one quad tree that is periodic in x direction. */
-    geometry = new t8_geometry_cylinder;
+    t8_cmesh_register_geometry<t8_geometry_cylinder> (cmesh);
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
     t8_cmesh_set_join (cmesh, 0, 0, 0, 1, 0);
     snprintf (vtuname, BUFSIZ, "forest_cylinder_lvl_%i", level);
@@ -569,24 +594,23 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
       /* Moebius geometry on hybrid unit square. */
       t8_cmesh_t hybrid_square = t8_cmesh_new_periodic_hybrid (sc_MPI_COMM_WORLD);
       t8_cmesh_set_derive (cmesh, hybrid_square);
-      geometry = new t8_geometry_moebius;
+      t8_cmesh_register_geometry<t8_geometry_moebius> (cmesh);
       snprintf (vtuname, BUFSIZ, "forest_moebius_lvl_%i", level);
     }
     break;
   case T8_GEOM_TWO_GEOMETRIES:
     t8_global_productionf ("Creating uniform level %i forest with a cylinder and a sine cosine geometry.\n", level);
-    /* Cylinder geometry on tree 0. Sincos geometry on tree 1. */
-    geometry = new t8_geometry_cylinder;
-    geometry_sincos = new t8_geometry_sincos;
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
     /* Tree 0 is connected to itself to form a cylinder */
     t8_cmesh_set_join (cmesh, 0, 0, 0, 1, 0);
     t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_QUAD);
-    /* Note that we have to register both geometries to the cmesh. The cylinder geometry is
-     * stored in the "geometry" pointer and registered later, right before the cmesh is committed. */
-    t8_cmesh_register_geometry (cmesh, geometry_sincos);
-    t8_cmesh_set_tree_geometry (cmesh, 0, geometry->t8_geom_get_name ());
-    t8_cmesh_set_tree_geometry (cmesh, 1, geometry_sincos->t8_geom_get_name ());
+    /* Cylinder geometry on tree 0. Sincos geometry on tree 1. */
+    {
+      t8_geometry *geometry_cylinder = t8_cmesh_register_geometry<t8_geometry_cylinder> (cmesh);
+      t8_geometry *geometry_sincos = t8_cmesh_register_geometry<t8_geometry_sincos> (cmesh);
+      t8_cmesh_set_tree_geometry (cmesh, 0, geometry_cylinder);
+      t8_cmesh_set_tree_geometry (cmesh, 1, geometry_sincos);
+    }
     snprintf (vtuname, BUFSIZ, "forest_cylinder_and_sincos_lvl_%i", level);
     break;
   case T8_GEOM_CIRCLE:
@@ -596,28 +620,28 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
       /* Circle geometry on triangulated unit square. */
       t8_cmesh_t tri_square = t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, 0, 0, 0);
       t8_cmesh_set_derive (cmesh, tri_square);
-      geometry = new t8_geometry_circle;
+      t8_cmesh_register_geometry<t8_geometry_circle> (cmesh);
       snprintf (vtuname, BUFSIZ, "forest_circle_lvl_%i", level);
     }
     break;
   case T8_GEOM_3D:
     t8_global_productionf ("Creating uniform level %i forest with a 3D function graph geometry.\n", level);
     /* Cube geometry with sincos on top. Has one hexahedron tree. */
-    geometry = new t8_geometry_cube_zdistorted;
+    t8_cmesh_register_geometry<t8_geometry_cube_zdistorted> (cmesh);
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
     snprintf (vtuname, BUFSIZ, "forest_cube_3D_lvl_%i", level);
     break;
   case T8_GEOM_MOVING:
     t8_global_productionf ("Creating uniform level %i forest with a moving geometry.\n", level);
     /* Quad geometry that rotates with time. */
-    geometry = new t8_geometry_moving (&time);
+    t8_cmesh_register_geometry<t8_geometry_moving> (cmesh, &time);
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
     snprintf (vtuname, BUFSIZ, "forest_moving_lvl_%i", level);
     break;
   case T8_GEOM_ANALYTIC_QUAD_TO_SPHERE:
     t8_global_productionf ("Wrapping a quad around a sphere.\n");
-
-    geometry = new t8_geometry_analytic (3, "geom_quad_to_sphere", quad_to_sphere_callback, NULL, NULL, NULL);
+    t8_cmesh_register_geometry<t8_geometry_analytic> (cmesh, 3, "geom_quad_to_sphere", quad_to_sphere_callback, nullptr,
+                                                      nullptr, nullptr, nullptr);
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
     t8_cmesh_set_join (cmesh, 0, 0, 1, 0, 0);
 
@@ -643,8 +667,8 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     /* Fill shape with bsplines so that we can create a geometry with this shape. */
     shape = BRepBuilderAPI_MakeEdge (cad_curve).Edge ();
 
-    /* Create an cad geometry. */
-    t8_geometry_cad *geometry_cad = new t8_geometry_cad (3, shape, "cad curve dim=3");
+    /* Create a cad geometry. */
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, shape);
 
     /* The arrays indicate which face/edge carries a geometry. 
        * 0 means no geometry and any other number indicates the position of the geometry 
@@ -668,7 +692,6 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + 1,
                             parameters_edge, 2 * sizeof (double), 0);
 
-    geometry = geometry_cad;
     snprintf (vtuname, BUFSIZ, "forest_cad_triangle_lvl_%i", level);
     break;
 #else  /* !T8_WITH_OCC */
@@ -708,8 +731,8 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     shape = BRepBuilderAPI_MakeEdge (cad_curve0).Edge ();
     shape = BRepAlgoAPI_Fuse (shape, BRepBuilderAPI_MakeEdge (cad_curve1).Edge ());
 
-    /* Create an cad geometry. */
-    t8_geometry_cad *geometry_cad = new t8_geometry_cad (3, shape, "cad curve dim=3");
+    /* Create a cad geometry. */
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, shape);
 
     /* The arrays indicate which face/edge carries a geometry. 
      * 0 means no geometry and any other number indicates the position of the geometry 
@@ -738,7 +761,6 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + 3, parameters,
                             2 * sizeof (double), 0);
 
-    geometry = geometry_cad;
     snprintf (vtuname, BUFSIZ, "forest_cad_curve_cube_lvl_%i", level);
     break;
 #else  /* !T8_WITH_cad */
@@ -811,7 +833,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     int edges[24] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
     /* Create cad geometry. */
-    t8_geometry_cad *geometry_cad = new t8_geometry_cad (3, shape, "cad surface dim=3");
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, shape);
 
     /* Create tree 0 */
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
@@ -864,7 +886,6 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     /* Join tree 0 and tree 1 together */
     t8_cmesh_set_join (cmesh, 0, 1, 1, 0, 0);
 
-    geometry = geometry_cad;
     snprintf (vtuname, BUFSIZ, "forest_cad_surface_cubes_lvl_%i", level);
     break;
 #else  /* !T8_WITH_OCC */
@@ -908,8 +929,8 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     int faces[6] = { 1, 2, 0, 0, 0, 0 };
     int edges[24] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-    /* Create cad geometry. */
-    t8_geometry_cad *geometry_cad = new t8_geometry_cad (3, shape, "cad surface dim=3");
+    /* Create a cad geometry. */
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, shape);
 
     /* Create corresponding trees and parameters. 
      * Here we create num trees by a coordinate transformation from cylinder to cartesian coordinates. */
@@ -970,7 +991,6 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
                               parameters + i * 8, 8 * sizeof (double), 0);
     }
 
-    geometry = geometry_cad;
     T8_FREE (vertices);
     T8_FREE (parameters);
     snprintf (vtuname, BUFSIZ, "forest_geometry_cylinder_lvl_%i", level);
@@ -982,8 +1002,6 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
   default:
     SC_ABORT_NOT_REACHED ();
   }
-  /* Register the geometry */
-  t8_cmesh_register_geometry (cmesh, geometry);
   /* Commit the cmesh */
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 

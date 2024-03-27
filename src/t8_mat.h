@@ -104,7 +104,7 @@ t8_mat_init_zrot (double mat[3][3], const double angle)
  * \param [in,out]    b     3-vector.
  */
 static inline void
-t8_mat_mult_vec (double mat[3][3], const double a[3], double b[3])
+t8_mat_mult_vec (const double mat[3][3], const double a[3], double b[3])
 {
   b[0] = mat[0][0] * a[0] + mat[0][1] * a[1] + mat[0][2] * a[2];
   b[1] = mat[1][0] * a[0] + mat[1][1] * a[1] + mat[1][2] * a[2];
@@ -117,7 +117,7 @@ t8_mat_mult_vec (double mat[3][3], const double a[3], double b[3])
  * \param [int,out]   C     3x3-matrix.
  */
 static inline void
-t8_mat_mult_mat (double A[3][3], double B[3][3], double C[3][3])
+t8_mat_mult_mat (const double A[3][3], const double B[3][3], double C[3][3])
 {
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {
@@ -134,4 +134,4 @@ t8_mat_mult_mat (double A[3][3], double B[3][3], double C[3][3])
   }
 }
 
-#endif /* !T8_MAT_H! */
+#endif /* !T8_MAT_H */

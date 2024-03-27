@@ -31,7 +31,6 @@
 
 #include <t8.h>
 #include <t8_geometry/t8_geometry_with_vertices.hxx>
-#include <t8_geometry/t8_geometry_with_vertices.h>
 #include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.h>
 
@@ -43,6 +42,10 @@
 #include <Geom_Curve.hxx>
 #include <Geom_Surface.hxx>
 
+/**
+ * This geometry uses OpenCASCADE CAD geometries to curve
+ * the trees to the actual shape of the underlying domain.
+ */
 struct t8_geometry_cad: public t8_geometry_with_vertices
 {
  public:
@@ -58,7 +61,7 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
    * \param [in] fileprefix Prefix of a .brep file from which to extract an cad geometry.
    * \param [in] name       The name to give this geometry.
    */
-  t8_geometry_cad (int dim, const char *fileprefix, const char *name);
+  t8_geometry_cad (int dim, std::string fileprefix, std::string name = "t8_geom_cad");
 
   /**
    * Constructor of the cad geometry with a given dimension. The geometry
@@ -68,16 +71,20 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
    * The vertices are saved via the \ref t8_cmesh_set_tree_vertices function.
    * This constructor can be used in short scripts or in combination with a
    * mesh generator, to omit the file IO of the 
-   * \ref t8_geometry_cad (int dim, const char *fileprefix, const char *name) constructor.
+   * \ref t8_geometry_cad (int dim, std::string fileprefix,  std::string name) constructor.
    * \param [in] dim        The dimension of this geometry.
    * \param [in] cad_shape  cad shape geometry.
    * \param [in] name       The name to give this geometry.
    */
-  t8_geometry_cad (int dim, const TopoDS_Shape cad_shape, const char *name);
+  t8_geometry_cad (int dim, const TopoDS_Shape cad_shape, std::string name = "t8_geom_cad");
 
-  /** The destructor. 
-   * Clears the allocated memory.
+  /**
+   * Constructor of the cad geometry for testing purposes. Sets an invalid cad_shape.
+   * \param [in] dim        The dimension of this geometry.
    */
+  t8_geometry_cad (int dim);
+
+  /** The destructor. */
   virtual ~t8_geometry_cad ()
   {
     /* Nothing to do. */
@@ -298,8 +305,8 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate_cad_triangle (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                 const size_t num_coords, double *out_coords) const;
+  t8_geom_evaluate_cad_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                            double *out_coords) const;
 
   /**
    * Maps points in the reference space \f$ [0,1]^2 \f$ to \f$ \mathbb{R}^3 \f$. Only for quad trees.
@@ -314,7 +321,19 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
                              double *out_coords) const;
 
   /**
-   * Maps points in the reference space \f$ \f$ [0,1]^3 \f$ \f$ to \f$ \mathbb{R}^3 \f$. Only for hex trees.
+   * Map a point in the reference space $$[0,1]^3$$ to $$\mathbb R^3$$. Only for tet trees.
+   * \param [in]  cmesh      The cmesh in which the point lies.
+   * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
+   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  num_coords  The number of points to map.
+   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
+   */
+  void
+  t8_geom_evaluate_cad_tet (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                            double *out_coords) const;
+
+  /**
+   * Map a point in the reference space \f$ \f$ [0,1]^3 \f$ \f$ to \f$ \mathbb{R}^3 \f$. Only for hex trees.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
@@ -339,4 +358,4 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
 
 #endif /* T8_WITH_OCC */
 
-#endif /* !T8_GEOMETRY_CAD_HXX! */
+#endif /* !T8_GEOMETRY_CAD_HXX */
