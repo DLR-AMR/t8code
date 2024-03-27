@@ -21,8 +21,9 @@
 */
 
 #include <t8.h>
+#include <t8_version.h>
 
-static int          t8_package_id = -1;
+static int t8_package_id = -1;
 
 int
 t8_get_package_id (void)
@@ -39,7 +40,7 @@ t8_logv (int category, int priority, const char *fmt, va_list ap)
 void
 t8_logf (int category, int priority, const char *fmt, ...)
 {
-  va_list             ap;
+  va_list ap;
 
   va_start (ap, fmt);
   sc_logv ("unknown", -1, t8_package_id, category, priority, fmt, ap);
@@ -61,7 +62,7 @@ t8_log_indent_pop (void)
 void
 t8_global_errorf (const char *fmt, ...)
 {
-  va_list             ap;
+  va_list ap;
 
   va_start (ap, fmt);
   t8_logv (SC_LC_GLOBAL, SC_LP_ERROR, fmt, ap);
@@ -71,7 +72,7 @@ t8_global_errorf (const char *fmt, ...)
 void
 t8_global_essentialf (const char *fmt, ...)
 {
-  va_list             ap;
+  va_list ap;
 
   va_start (ap, fmt);
   t8_logv (SC_LC_GLOBAL, SC_LP_ESSENTIAL, fmt, ap);
@@ -81,7 +82,7 @@ t8_global_essentialf (const char *fmt, ...)
 void
 t8_global_productionf (const char *fmt, ...)
 {
-  va_list             ap;
+  va_list ap;
 
   va_start (ap, fmt);
   t8_logv (SC_LC_GLOBAL, SC_LP_PRODUCTION, fmt, ap);
@@ -91,7 +92,7 @@ t8_global_productionf (const char *fmt, ...)
 void
 t8_global_infof (const char *fmt, ...)
 {
-  va_list             ap;
+  va_list ap;
 
   va_start (ap, fmt);
   t8_logv (SC_LC_GLOBAL, SC_LP_INFO, fmt, ap);
@@ -101,7 +102,7 @@ t8_global_infof (const char *fmt, ...)
 void
 t8_infof (const char *fmt, ...)
 {
-  va_list             ap;
+  va_list ap;
 
   va_start (ap, fmt);
   t8_logv (SC_LC_NORMAL, SC_LP_INFO, fmt, ap);
@@ -109,19 +110,31 @@ t8_infof (const char *fmt, ...)
 }
 
 void
+t8_productionf (const char *fmt, ...)
+{
+  va_list ap;
+
+  va_start (ap, fmt);
+  t8_logv (SC_LC_NORMAL, SC_LP_PRODUCTION, fmt, ap);
+  va_end (ap);
+}
+
+void
 t8_debugf (const char *fmt, ...)
 {
-  va_list             ap;
+#ifdef T8_ENABLE_DEBUG
+  va_list ap;
 
   va_start (ap, fmt);
   t8_logv (SC_LC_NORMAL, SC_LP_DEBUG, fmt, ap);
   va_end (ap);
+#endif
 }
 
 void
 t8_errorf (const char *fmt, ...)
 {
-  va_list             ap;
+  va_list ap;
 
   va_start (ap, fmt);
   t8_logv (SC_LC_NORMAL, SC_LP_ERROR, fmt, ap);
@@ -131,13 +144,12 @@ t8_errorf (const char *fmt, ...)
 void
 t8_init (int log_threshold)
 {
-  int                 w;
+  int w;
 
-  t8_package_id = sc_package_register (NULL, log_threshold,
-                                       "t8", "Adaptive discretizations");
+  t8_package_id = sc_package_register (NULL, log_threshold, "t8", "Adaptive discretizations");
 
   w = 24;
-  t8_global_essentialf ("This is %s\n", T8_PACKAGE_STRING);
+  t8_global_essentialf ("This is %s\n", t8_get_package_string ());
   t8_global_productionf ("%-*s %s\n", w, "CPP", T8_CPP);
   t8_global_productionf ("%-*s %s\n", w, "CPPFLAGS", T8_CPPFLAGS);
   t8_global_productionf ("%-*s %s\n", w, "CC", T8_CC);
@@ -146,18 +158,10 @@ t8_init (int log_threshold)
   t8_global_productionf ("%-*s %s\n", w, "LIBS", T8_LIBS);
 }
 
-void               *
-t8_sc_array_index_topidx (sc_array_t * array, t8_topidx_t it)
+void *
+t8_sc_array_index_locidx (const sc_array_t *array, const t8_locidx_t it)
 {
-  P4EST_ASSERT (it >= 0 && (size_t) it < array->elem_count);
-
-  return array->array + array->elem_size * (size_t) it;
-}
-
-void               *
-t8_sc_array_index_locidx (sc_array_t * array, t8_locidx_t it)
-{
-  P4EST_ASSERT (it >= 0 && (size_t) it < array->elem_count);
+  T8_ASSERT (it >= 0 && (size_t) it < array->elem_count);
 
   return array->array + array->elem_size * (size_t) it;
 }

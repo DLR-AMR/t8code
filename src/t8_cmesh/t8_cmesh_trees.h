@@ -38,9 +38,9 @@ T8_EXTERN_C_BEGIN ();
  *
  * The layout is the same for replicated and partitioned meshes.
  * Each process stores a meta array of data arrays. In the replicated case this meta
- * array has only one entry wheras in the partitioned case there is one data array for
+ * array has only one entry whereas in the partitioned case there is one data array for
  * each processor from which local trees were received in the last partition step
- * (and only one meta array if the cmesh arised from a partitioned commit).
+ * (and only one meta array if the cmesh arose from a partitioned commit).
  *
  * Each dara arrays stores the local trees, the ghosts, face neighbor information
  * of the ghosts, face neihbor information of the trees and the attributes of the trees.
@@ -66,9 +66,9 @@ T8_EXTERN_C_BEGIN ();
  *
  * Tree faces:
  *
- * The data of Tree faces looks for each tree:
+ * For each tree the data of the tree faces (where F is the number of faces of the tree) looks like this:
  *
- * | Treeid1 Treeid2  ... | ttf1 ttf2 ... | padding |
+ * | Treeid1 Treeid2  ... TreeidF | ttf1 ttf2 ... ttfN | padding |
  *
  * Where padding is a number of unused bytes that makes the whole block a multiple
  * of 4 Bytes.
@@ -80,7 +80,7 @@ T8_EXTERN_C_BEGIN ();
  *
  * Ghost faces:
  *
- * | Treeid1 Treeid2 ... | ttf1 ttf2 ... | padding |
+ * | Treeid1 Treeid2 ... TreeidF | ttf1 ttf2 ... ttfF | padding |
  *
  * Where padding is a number of unused bytes that makes the whole block a multiple
  * of sizeof (void*) Bytes.
@@ -90,14 +90,15 @@ T8_EXTERN_C_BEGIN ();
  * class of the tree.
  * Tree attributes:
  *
- * The data of Tree attributes looks like:
+ * The data of Tree attributes looks like, where N is the total number of attributes:
+ * The Attributes do not necessarily need to be sorted in a particular way, as they are
+ * accessed by offsets in the Att_descr.
  *
- * TODO: This description seems incomplete. Why is it not Attij_data?
- *
- * | Att00_descr | Att01_descr | ... | Att10_descr | ... | Attrend_descr | Att1_data | Att2_data | ... |
+ * | Att00_descr | Att01_descr | ... Att0 A_0_descr| Att10_descr | ... | AttrT A_T | Att0_data | Att2_data | ... AttN_data|
  *                TODO: maybe insert padding here ||
  * Where Attij_descr is a descriptor of the j-th attribute data of tree i storing
- * - an offset to Atti_data starting from Atti0_descr
+ * - an offset to Attk_data starting from Attij_descr, where k is the index in the dataarray.
+ *    The actual data is put there in the order of the attribute descriptors, but this is not necessitated by the layout.
  * - package id of the attribute (int)
  * - key of the attribute (int)
  * The data type is t8_attribute_info_struct_t
@@ -120,36 +121,42 @@ T8_EXTERN_C_BEGIN ();
 /* TODO: document */
 
 /* Given a tree return the beginning of its attributes block */
-#define T8_TREE_FIRST_ATT(t) ((char *)(t) + (t)->att_offset)
+#define T8_TREE_FIRST_ATT(t) ((char *) (t) + (t)->att_offset)
+
 /* Given a tree and an index i return the i-th attribute index of that tree */
-#define T8_TREE_ATTR_INFO(t,i) ((t8_attribute_info_struct_t *) \
-  ((char*)(t) + (t)->att_offset + \
-  (i) * sizeof (t8_attribute_info_struct_t)))
+#define T8_TREE_ATTR_INFO(t, i) \
+  ((t8_attribute_info_struct_t *) ((char *) (t) + (t)->att_offset + (i) * sizeof (t8_attribute_info_struct_t)))
+
 /* Given a tree and an attribute info return the attribute */
-#define T8_TREE_ATTR(t,ai) (T8_TREE_FIRST_ATT(t) + (ai)->attribute_offset)
+#define T8_TREE_ATTR(t, ai) (T8_TREE_FIRST_ATT (t) + (ai)->attribute_offset)
+
 /* Given a tree return its face_neighbor array */
 #define T8_TREE_FACE(t) ((char *) (t) + (t)->neigh_offset)
+
 /* Given a tree return irs tree_to_face array */
-#define T8_TREE_TTF(t) (T8_TREE_FACE(t) + \
-  t8_eclass_num_faces[(t)->eclass] * sizeof(t8_locidx_t))
+#define T8_TREE_TTF(t) (T8_TREE_FACE (t) + t8_eclass_num_faces[(t)->eclass] * sizeof (t8_locidx_t))
+
 /* Given a ghost return the beginning of its attribute block */
 #define T8_GHOST_FIRST_ATT(g) T8_TREE_FIRST_ATT (g)
+
 /* Given a ghost and an index i return the i-th attribute index of that ghost */
-#define T8_GHOST_ATTR_INFO(g,i) T8_TREE_ATTR_INFO (g, i)
+#define T8_GHOST_ATTR_INFO(g, i) T8_TREE_ATTR_INFO (g, i)
+
 /* Given a ghost and an attribute info return the attribute */
-#define T8_GHOST_ATTR(g,ai) T8_TREE_ATTR(g,ai)
+#define T8_GHOST_ATTR(g, ai) T8_TREE_ATTR (g, ai)
+
 /* Given a ghost return its face_neighbor array */
-#define T8_GHOST_FACE(g) T8_TREE_FACE(g)
+#define T8_GHOST_FACE(g) T8_TREE_FACE (g)
+
 /* Given a ghost return its tree_to_face array */
-#define T8_GHOST_TTF(g) (int8_t *) (T8_GHOST_FACE(g) + \
-  t8_eclass_num_faces[(g)->eclass] * sizeof(t8_gloidx_t))
+#define T8_GHOST_TTF(g) (int8_t *) (T8_GHOST_FACE (g) + t8_eclass_num_faces[(g)->eclass] * sizeof (t8_gloidx_t))
 
 /** This struct is an entry of the trees global_id to local_id
  * hash table for ghost trees. */
 typedef struct
 {
-  t8_gloidx_t         global_id;/**< The global id */
-  t8_locidx_t         local_id; /**< The local id */
+  t8_gloidx_t global_id; /**< The global id */
+  t8_locidx_t local_id;  /**< The local id */
 } t8_trees_glo_lo_hash_t;
 
 /** Initialize a trees structure and allocate its parts.
@@ -164,25 +171,16 @@ typedef struct
  * \param [in]        num_ghosts The number of ghosts that will be stored in this
  *                              structure.
  */
-void                t8_cmesh_trees_init (t8_cmesh_trees_t * ptrees,
-                                         int num_procs, t8_locidx_t num_trees,
-                                         t8_locidx_t num_ghosts);
-
-#if 0
-void                t8_cmesh_trees_init_part (t8_cmesh_trees_t trees,
-                                              int proc,
-                                              t8_locidx_t first_tree,
-                                              t8_locidx_t last_tree,
-                                              t8_locidx_t num_ghosts);
-#endif
+void
+t8_cmesh_trees_init (t8_cmesh_trees_t *ptrees, int num_procs, t8_locidx_t num_trees, t8_locidx_t num_ghosts);
 
 /** Return one part of a specified tree array.
  * \param [in]        trees   The tree array to be queried
  * \param [in]        proc    An index specifying the part to be returned.
  * \return                    The part number \a proc of \a trees.
  */
-t8_part_tree_t      t8_cmesh_trees_get_part (t8_cmesh_trees_t trees,
-                                             int proc);
+t8_part_tree_t
+t8_cmesh_trees_get_part (const t8_cmesh_trees_t trees, const int proc);
 
 /* !!! This does only allocate memory for the trees and ghosts
  *     not yet for the face data and the attributes. See below !!!
@@ -203,19 +201,15 @@ t8_part_tree_t      t8_cmesh_trees_get_part (t8_cmesh_trees_t trees,
  *                          the number of trees and ghosts.
  *                          When a cmesh is copied we do not want this, so in we pass alloc = 0 then.
  */
-void                t8_cmesh_trees_start_part (t8_cmesh_trees_t trees,
-                                               int proc,
-                                               t8_locidx_t lfirst_tree,
-                                               t8_locidx_t num_trees,
-                                               t8_locidx_t lfirst_ghost,
-                                               t8_locidx_t num_ghosts,
-                                               int alloc);
+void
+t8_cmesh_trees_start_part (t8_cmesh_trees_t trees, int proc, t8_locidx_t lfirst_tree, t8_locidx_t num_trees,
+                           t8_locidx_t lfirst_ghost, t8_locidx_t num_ghosts, int alloc);
 
 /** After all classes of trees and ghosts have been set and after the
  * number of tree attributes  was set and their total size (per tree)
  * stored temporarily in the att_offset variable
  * we grow the part array by the needed amount of memory and set the
- * offsets appropiately.
+ * offsets appropriately.
  * The workflow should be: call \ref t8_cmesh_trees_start_part,
  * set tree and ghost classes maually via \ref t8_cmesh_trees_add_tree
  * and \ref t8_cmesh_trees_add_ghost, call
@@ -226,8 +220,8 @@ void                t8_cmesh_trees_start_part (t8_cmesh_trees_t trees,
  * \param [in,out]        trees The trees structure to be updated.
  * \param [in]            proc  The number of the part to be finished.
  */
-void                t8_cmesh_trees_finish_part (t8_cmesh_trees_t trees,
-                                                int proc);
+size_t
+t8_cmesh_trees_finish_part (t8_cmesh_trees_t trees, int proc);
 
 /** Copy the tree_to_proc and ghost_to_proc arrays of one tree structure to
  * another one.
@@ -236,10 +230,9 @@ void                t8_cmesh_trees_finish_part (t8_cmesh_trees_t trees,
  * \param [in]          lnum_trees    The total number of trees stored in \a trees_src.
  * \param [in]          lnum_ghosts    The total number of ghosts stored in \a trees_src.
  */
-void                t8_cmesh_trees_copy_toproc (t8_cmesh_trees_t trees_dest,
-                                                t8_cmesh_trees_t trees_src,
-                                                t8_locidx_t lnum_trees,
-                                                t8_locidx_t lnum_ghosts);
+void
+t8_cmesh_trees_copy_toproc (t8_cmesh_trees_t trees_dest, t8_cmesh_trees_t trees_src, t8_locidx_t lnum_trees,
+                            t8_locidx_t lnum_ghosts);
 
 /** Copy the trees array from one part to another.
  * \param [in,out]      trees_dest    The trees struct of the destination part.
@@ -250,10 +243,8 @@ void                t8_cmesh_trees_copy_toproc (t8_cmesh_trees_t trees_dest,
  *                                    Must be a valid part, thus \ref t8_cmesh_trees_finish_part
  *                                    must have been called.
  */
-void                t8_cmesh_trees_copy_part (t8_cmesh_trees_t trees_dest,
-                                              int part_dest,
-                                              t8_cmesh_trees_t trees_src,
-                                              int part_src);
+void
+t8_cmesh_trees_copy_part (t8_cmesh_trees_t trees_dest, int part_dest, t8_cmesh_trees_t trees_src, int part_src);
 
 /** Add a tree to a trees structure.
  * \param [in,out]  trees The trees structure to be updated.
@@ -262,9 +253,8 @@ void                t8_cmesh_trees_copy_part (t8_cmesh_trees_t trees_dest,
  *                        received.
  * \param [in]      eclass The tree's element class.
  */
-void                t8_cmesh_trees_add_tree (t8_cmesh_trees_t trees,
-                                             t8_locidx_t ltree_id, int proc,
-                                             t8_eclass_t eclass);
+void
+t8_cmesh_trees_add_tree (t8_cmesh_trees_t trees, t8_locidx_t ltree_id, int proc, t8_eclass_t eclass);
 
 /** Add a ghost to a trees structure.
  * \param [in,out]  trees The trees structure to be updated.
@@ -275,11 +265,9 @@ void                t8_cmesh_trees_add_tree (t8_cmesh_trees_t trees,
  * \param [in]      eclass The ghost's element class.
  * \param [in]      num_local_trees The number of local trees in the cmesh.
  */
-void                t8_cmesh_trees_add_ghost (t8_cmesh_trees_t trees,
-                                              t8_locidx_t lghost_index,
-                                              t8_gloidx_t gtree_id, int proc,
-                                              t8_eclass_t eclass,
-                                              t8_locidx_t num_local_trees);
+void
+t8_cmesh_trees_add_ghost (t8_cmesh_trees_t trees, t8_locidx_t lghost_index, t8_gloidx_t gtree_id, int proc,
+                          t8_eclass_t eclass, t8_locidx_t num_local_trees);
 
 /** Set all neighbor fields of all local trees and ghosts to boundary.
  * \param [in,out]  cmesh, The associated cmesh.
@@ -287,29 +275,26 @@ void                t8_cmesh_trees_add_ghost (t8_cmesh_trees_t trees,
  * A face f of tree t counts as boundary if the face-neighbor is also t
  * at face f.
  */
-void                t8_cmesh_trees_set_all_boundary (t8_cmesh_t cmesh,
-                                                     t8_cmesh_trees_t trees);
+void
+t8_cmesh_trees_set_all_boundary (t8_cmesh_t cmesh, t8_cmesh_trees_t trees);
 
-void                t8_cmesh_trees_get_part_data (t8_cmesh_trees_t trees,
-                                                  int proc,
-                                                  t8_locidx_t * first_tree,
-                                                  t8_locidx_t * num_trees,
-                                                  t8_locidx_t * first_ghost,
-                                                  t8_locidx_t * num_ghosts);
+void
+t8_cmesh_trees_get_part_data (t8_cmesh_trees_t trees, int proc, t8_locidx_t *first_tree, t8_locidx_t *num_trees,
+                              t8_locidx_t *first_ghost, t8_locidx_t *num_ghosts);
 
-/* TODO: This function return NULL if the tree is not present.
+/* TODO: This function returns NULL if the tree is not present.
  *       So far no error checking is done here. */
 /** Return a pointer to a specific tree in a trees struct.
  * \param [in]      trees The tress structure where the tree is to be looked up.
  * \param [in]      ltree  The local id of the tree.
  * \return                A pointer to the tree with local id \a tree.
  */
-t8_ctree_t          t8_cmesh_trees_get_tree (t8_cmesh_trees_t trees,
-                                             t8_locidx_t ltree);
+t8_ctree_t
+t8_cmesh_trees_get_tree (t8_cmesh_trees_t trees, t8_locidx_t ltree);
 
 /** Return a pointer to a specific tree in a trees struct plus pointers to
  * its face_neighbor and tree_to_face arrays.
- * \param [in]      trees The tress structure where the tree is to be looked up.
+ * \param [in]      trees The trees structure where the tree is to be looked up.
  * \param [in]      ltree_id  The local id of the tree.
  * \param [out]     face_neigh If not NULL a pointer to the trees face_neighbor
  *                             array is stored here on return.
@@ -317,27 +302,55 @@ t8_ctree_t          t8_cmesh_trees_get_tree (t8_cmesh_trees_t trees,
  *                             array is stored here on return.
  * \return                   A pointer to the tree with local id \a tree.
  */
-t8_ctree_t          t8_cmesh_trees_get_tree_ext (t8_cmesh_trees_t trees,
-                                                 t8_locidx_t ltree_id,
-                                                 t8_locidx_t ** face_neigh,
-                                                 int8_t ** ttf);
+t8_ctree_t
+t8_cmesh_trees_get_tree_ext (t8_cmesh_trees_t trees, t8_locidx_t ltree_id, t8_locidx_t **face_neigh, int8_t **ttf);
+
+/** Return the face neighbor of a tree at a given face and return the tree_to_face info
+ * \param [in]      trees The trees structure where the tree is to be looked up.
+ * \param [in]      ltreeid  The local id of the tree.
+ * \param [in]      face  A face of the tree.
+ * \param [out]     ttf   If not NULL the tree_to_face value of the face connection.
+ * \return          The face neighbor that is stored for this face
+ */
+t8_locidx_t
+t8_cmesh_trees_get_face_info (t8_cmesh_trees_t trees, t8_locidx_t ltreeid, int face, int8_t *ttf);
 
 /** Given a coarse tree and a face number, return the local id of the neighbor tree.
  * \param [in]      tree.     The coarse tree.
  * \param [in]      face.     The face number.
  * \return                    The local id of the neighbor tree. */
-t8_locidx_t         t8_cmesh_trees_get_face_neighbor (t8_ctree_t tree,
-                                                      int face);
+t8_locidx_t
+t8_cmesh_trees_get_face_neighbor (const t8_ctree_t tree, const int face);
 
-/* TODO: This function return NULL if the ghost is not present.
+/** Given a coarse tree and a face number, return the local id of the neighbor tree
+ * together with its tree-to-face info.
+ * \param [in]   tree         The coarse tree.
+ * \param [in]   face         The face number.
+ * \param [out]  ttf          If not NULL it is filled with the tree-to-face value
+ *                            for this face.
+ * \return                    The local id of the neighbor tree. */
+t8_locidx_t
+t8_cmesh_trees_get_face_neighbor_ext (const t8_ctree_t tree, const int face, int8_t *ttf);
+
+/** Given a coarse ghost and a face number, return the local id of the neighbor tree
+ * together with its tree-to-face info.
+ * \param [in]   ghost        The coarse ghost.
+ * \param [in]   face         The face number.
+ * \param [out]  ttf          If not NULL it is filled with the tree-to-face value
+ *                            for this face.
+ * \return                    The global id of the neighbor tree. */
+t8_gloidx_t
+t8_cmesh_trees_get_ghost_face_neighbor_ext (const t8_cghost_t ghost, const int face, int8_t *ttf);
+
+/* TODO: This function returns NULL if the ghost is not present.
  *       So far no error checking is done here. */
 /** Return a pointer to a specific ghost in a trees struct.
  * \param [in]      trees The tress structure where the tree is to be looked up.
  * \param [in]      lghost The local id of the ghost.
  * \return                A pointer to the ghost with local id \a ghost.
  */
-t8_cghost_t         t8_cmesh_trees_get_ghost (t8_cmesh_trees_t trees,
-                                              t8_locidx_t lghost);
+t8_cghost_t
+t8_cmesh_trees_get_ghost (t8_cmesh_trees_t trees, t8_locidx_t lghost);
 
 /** Return a pointer to a specific ghost in a trees struct plus pointers to
  * its face_neighbor and tree_to_face arrays.
@@ -349,10 +362,8 @@ t8_cghost_t         t8_cmesh_trees_get_ghost (t8_cmesh_trees_t trees,
  *                             array is stored here on return.
  * \return                   A pointer to the tree with local id \a tree.
  */
-t8_cghost_t         t8_cmesh_trees_get_ghost_ext (t8_cmesh_trees_t trees,
-                                                  t8_locidx_t lghost_id,
-                                                  t8_gloidx_t ** face_neigh,
-                                                  int8_t ** ttf);
+t8_cghost_t
+t8_cmesh_trees_get_ghost_ext (t8_cmesh_trees_t trees, t8_locidx_t lghost_id, t8_gloidx_t **face_neigh, int8_t **ttf);
 
 /** Given the global tree id of a ghost tree in a trees structure,
  * return its local ghost id.
@@ -363,12 +374,13 @@ t8_cghost_t         t8_cmesh_trees_get_ghost_ext (t8_cmesh_trees_t trees,
  *                          The local id is a number l with
  *                          num_local_trees <= \a l < num_local_trees + num_ghosts
  */
-t8_locidx_t         t8_cmesh_trees_get_ghost_local_id (t8_cmesh_trees_t trees,
-                                                       t8_gloidx_t global_id);
+t8_locidx_t
+t8_cmesh_trees_get_ghost_local_id (t8_cmesh_trees_t trees, t8_gloidx_t global_id);
 
 /* TODO: document.
  * returns the complete size in bytes needed to store all information */
-size_t              t8_cmesh_trees_size (t8_cmesh_trees_t trees);
+size_t
+t8_cmesh_trees_size (t8_cmesh_trees_t trees);
 
 /** For one tree in a trees structure set the number of attributes
  *  and temporarily store the total size of all of this tree's attributes.
@@ -379,21 +391,8 @@ size_t              t8_cmesh_trees_size (t8_cmesh_trees_t trees);
  * \param [in]            attr_bytes The total number of bytes of all attributes
  *                                   of this tree.
  */
-void                t8_cmesh_trees_init_attributes (t8_cmesh_trees_t trees,
-                                                    t8_locidx_t ltree_id,
-                                                    size_t num_attributes,
-                                                    size_t attr_bytes);
-
-#if 0
-/* TODO: document
- * TODO: Is this function needed?
- * sorts for each tree its attribute info objects, such that looking up
- * attributes is in O(log(A)) with A the number of attributes of that tree.
- * However, with this method we do not know the size of an attribute any longer,
- * this is something the user has to take care of */
-void                t8_cmesh_trees_attribute_info_sort (t8_cmesh_trees_t
-                                                        trees);
-#endif
+void
+t8_cmesh_trees_init_attributes (t8_cmesh_trees_t trees, t8_locidx_t ltree_id, size_t num_attributes, size_t attr_bytes);
 
 /** Return an attribute that is stored at a tree.
  *  \param [in]       trees   The trees structure.
@@ -408,39 +407,66 @@ void                t8_cmesh_trees_attribute_info_sort (t8_cmesh_trees_t
  *  \return           A pointer to the queried attribute, NULL if the attribute
  *                    does not exist.
  */
-void               *t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees,
-                                                  t8_locidx_t ltree_id,
-                                                  int package_id, int key,
-                                                  size_t * size,
-                                                  int is_ghost);
+void *
+t8_cmesh_trees_get_attribute (const t8_cmesh_trees_t trees, const t8_locidx_t ltree_id, const int package_id,
+                              const int key, size_t *size, int is_ghost);
 
 /** Return the total size of all attributes stored at a specified tree.
  * \param [in]        tree  A tree structure.
  * \return            The total size (in bytes) of the attributes of \a tree.
  */
-size_t              t8_cmesh_trees_attribute_size (t8_ctree_t tree);
+size_t
+t8_cmesh_trees_attribute_size (t8_ctree_t tree);
 
 /** Return the total size of all attributes stored at a specified ghost.
  * \param [in]        ghost A ghost structure.
  * \return            The total size (in bytes) of the attributes of \a ghost.
  */
-size_t              t8_cmesh_trees_ghost_attribute_size (t8_cghost_t ghost);
+size_t
+t8_cmesh_trees_ghost_attribute_size (t8_cghost_t ghost);
 
 /* TODO: Currently there is a bug that forces us to give each tree an attribute */
 /* TODO: this uses char * and cmesh_set_attribute uses void *. Unify! */
 /* attr_tree_index is index of attr in tree's attribute array.
  * We assume that the attributes are already sorted! */
-void                t8_cmesh_trees_add_attribute (t8_cmesh_trees_t trees,
-                                                  int proc,
-                                                  t8_stash_attribute_struct_t
-                                                  * attr, t8_locidx_t tree_id,
-                                                  size_t index);
+void
+t8_cmesh_trees_add_attribute (t8_cmesh_trees_t trees, int proc, t8_stash_attribute_struct_t *attr, t8_locidx_t tree_id,
+                              size_t index);
+
+void
+t8_cmesh_trees_add_ghost_attribute (t8_cmesh_trees_t trees, int proc, t8_stash_attribute_struct_t *attr,
+                                    t8_locidx_t local_ghost_id, size_t index, size_t *attribute_data_offset);
 
 /** Return the number of parts of a trees structure.
  * \param [in]        trees The trees structure.
  * \return            The number of parts in \a trees.
  */
-size_t              t8_cmesh_trees_get_numproc (t8_cmesh_trees_t trees);
+size_t
+t8_cmesh_trees_get_numproc (const t8_cmesh_trees_t trees);
+
+/** Compute the tree-to-face information given a face and orientation value
+ *  of a face connection.
+ * \param [in]        dimension The dimension of the corresponding eclasses.
+ * \param [in]        face      A face number
+ * \param [in]        orientation A face-to-face orientation.
+ * \return            The tree-to-face entry corresponding to the face/orientation combination.
+ * It is computed as t8_eclass_max_num_faces[dimension] * orientation + face
+ */
+int8_t
+t8_cmesh_tree_to_face_encode (const int dimension, const t8_locidx_t face, const int orientation);
+
+/** Given a tree-to-face value, get its encoded face number and orientation.
+ * \param [in]        dimension The dimension of the corresponding eclasses.
+ * \param [in]        tree_to_face A tree-to-face value
+ * \param [out]       face      On output filled with the stored face value.
+ * \param [out]       orientation On output filled with the stored orientation value.
+ * \note This function is the inverse operation of \ref t8_cmesh_tree_to_face_encode
+ * If F = t8_eclass_max_num_faces[dimension], we get
+ *  orientation = tree_to_face / F
+ *  face = tree_to_face % F
+ */
+void
+t8_cmesh_tree_to_face_decode (const int dimension, const int8_t tree_to_face, int *face, int *orientation);
 
 /* TODO: To fit to the interface a trees struct is given as parameter here,
  *       however we could just take the one associated to the cmesh given.*/
@@ -449,10 +475,10 @@ size_t              t8_cmesh_trees_get_numproc (t8_cmesh_trees_t trees);
  * \param [in]      cmesh A coarse mesh structure that must be committed.
  * \param [in]      trees The trees structure of \a cmesh.
  */
-void                t8_cmesh_trees_print (t8_cmesh_t cmesh,
-                                          t8_cmesh_trees_t trees);
+void
+t8_cmesh_trees_print (t8_cmesh_t cmesh, t8_cmesh_trees_t trees);
 
-/** Brodcast an existing valid trees structure from a root rank to
+/** Broadcast an existing valid trees structure from a root rank to
  * all other ranks.
  * The trees structure must belong to cmeshes whose meta_information is
  * already set. \ref t8_cmesh_bcast.
@@ -463,8 +489,8 @@ void                t8_cmesh_trees_print (t8_cmesh_t cmesh,
  *                              other ranks.
  * \param [in]      comm        MPI communicator to use.
  */
-void                t8_cmesh_trees_bcast (t8_cmesh_t cmesh_in, int root,
-                                          sc_MPI_Comm comm);
+void
+t8_cmesh_trees_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm);
 
 /** Check whether the face connection of a trees structure are consistent.
  * That is if tree1 lists tree2 as neighbor at face i with ttf entries (or,face j),
@@ -474,20 +500,19 @@ void                t8_cmesh_trees_bcast (t8_cmesh_t cmesh_in, int root,
  * \return          True if the face connections are consistent,
  *                  False if not.
  */
-int                 t8_cmesh_trees_is_face_consistend (t8_cmesh_t cmesh,
-                                                       t8_cmesh_trees_t
-                                                       trees);
+int
+t8_cmesh_trees_is_face_consistent (t8_cmesh_t cmesh, t8_cmesh_trees_t trees);
 
-int                 t8_cmesh_trees_is_equal (t8_cmesh_t cmesh,
-                                             t8_cmesh_trees_t trees_a,
-                                             t8_cmesh_trees_t trees_b);
+int
+t8_cmesh_trees_is_equal (t8_cmesh_t cmesh, t8_cmesh_trees_t trees_a, t8_cmesh_trees_t trees_b);
 
 /** Free all memory allocated with a trees structure.
  *  This means that all coarse trees and ghosts, their face neighbor entries
  *  and attributes and the additional structures of trees are freed.
  * \param [in,out]  trees The tree structure to be destroyed. Set to NULL on output.
  */
-void                t8_cmesh_trees_destroy (t8_cmesh_trees_t * trees);
+void
+t8_cmesh_trees_destroy (t8_cmesh_trees_t *trees);
 
 T8_EXTERN_C_END ();
 

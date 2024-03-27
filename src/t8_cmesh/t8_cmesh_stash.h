@@ -40,19 +40,19 @@ typedef struct t8_stash *t8_stash_t;
  */
 typedef struct t8_stash_class
 {
-  t8_gloidx_t         id;     /**< The global tree id */
-  t8_eclass_t         eclass; /**< The eclass of that tree */
+  t8_gloidx_t id;     /**< The global tree id */
+  t8_eclass_t eclass; /**< The eclass of that tree */
 } t8_stash_class_struct_t;
 
 /** The face-connection information that is stored before a cmesh is committed.
  */
 typedef struct t8_stash_joinface
 {
-  t8_gloidx_t         id1; /**< The global tree id of the first tree in the connection. */
-  t8_gloidx_t         id2; /**< The global tree id of the second tree. We ensure id1<=id2. */
-  int                 face1; /**< The face number of the first of the connected faces. */
-  int                 face2; /**< The face number of the second face. */
-  int                 orientation; /**< The orientation of the face connection. \see t8_cmesh_types.h. */
+  t8_gloidx_t id1; /**< The global tree id of the first tree in the connection. */
+  t8_gloidx_t id2; /**< The global tree id of the second tree. We ensure id1<=id2. */
+  int face1;       /**< The face number of the first of the connected faces. */
+  int face2;       /**< The face number of the second face. */
+  int orientation; /**< The orientation of the face connection. \see t8_cmesh_types.h. */
 } t8_stash_joinface_struct_t;
 
 /** The attribute information that is stored before a cmesh is committed.
@@ -61,27 +61,27 @@ typedef struct t8_stash_joinface
  */
 typedef struct t8_stash_attribute
 {
-  t8_gloidx_t         id;   /**< The global tree id */
-  size_t              attr_size; /**< The size (in bytes) of this attribute */
-  void               *attr_data; /**< Array of \a size bytes storing the attributes data. */
-  int                 is_owned; /**< True if the data was copied, false if the data is still owned by user. */
-  int                 package_id; /**< The id of the package that set this attribute. */
-  int                 key; /**< The key used by the package to identify this attribute. */
+  t8_gloidx_t id;   /**< The global tree id */
+  size_t attr_size; /**< The size (in bytes) of this attribute */
+  void *attr_data;  /**< Array of \a size bytes storing the attributes data. */
+  int is_owned;     /**< True if the data was copied, false if the data is still owned by user. */
+  int package_id;   /**< The id of the package that set this attribute. */
+  int key;          /**< The key used by the package to identify this attribute. */
 } t8_stash_attribute_struct_t;
 
 /** The stash data structure is used to store information about the cmesh
- *  before it is commited. In particular we store the eclasses of the trees,
+ *  before it is committed. In particular we store the eclasses of the trees,
  *  the face-connections and the tree attributes.
  *  Using the stash structure allows us to have a very flexible interface.  When constructing a new mesh, the
  *  user can specify all these mesh entities in arbitrary order.
- *  As soon as the cmesh is commited the information is copied from the stash
+ *  As soon as the cmesh is committed the information is copied from the stash
  *  to the cmesh in an order mannered.
  */
 typedef struct t8_stash
 {
-  sc_array_t          classes; /**< Stores the eclasses of the trees. \see t8_stash_class */
-  sc_array_t          joinfaces; /**< Stores the face-connections. \see t8_stash_joinface */
-  sc_array_t          attributes; /**< Stores the attributes. \see t8_stash_attribute */
+  sc_array_t classes;    /**< Stores the eclasses of the trees. \see t8_stash_class */
+  sc_array_t joinfaces;  /**< Stores the face-connections. \see t8_stash_joinface */
+  sc_array_t attributes; /**< Stores the attributes. \see t8_stash_attribute */
 } t8_stash_struct_t;
 
 T8_EXTERN_C_BEGIN ();
@@ -89,21 +89,23 @@ T8_EXTERN_C_BEGIN ();
 /** Initialize a stash data structure.
  * \param [in,out]  pstash  A pointer to the stash to be initialized.
  */
-void                t8_stash_init (t8_stash_t * pstash);
+void
+t8_stash_init (t8_stash_t *pstash);
 
 /** Free all memory associated in a stash structure.
  * \param [in,out]  pstash  A pointer to the stash to be destroyed.
  *                  The pointer is set to NULL after the function call.
  */
-void                t8_stash_destroy (t8_stash_t * pstash);
+void
+t8_stash_destroy (t8_stash_t *pstash);
 
 /** Set the eclass of a tree.
  * \param [in, out] stash The stash to be updated.
  * \param [in]      id    The global id of the tree whose eclass should be set.
  * \param [in]      eclass  The eclass of tree with id \a id.
  */
-void                t8_stash_add_class (t8_stash_t stash, t8_gloidx_t id,
-                                        t8_eclass_t eclass);
+void
+t8_stash_add_class (t8_stash_t stash, t8_gloidx_t id, t8_eclass_t eclass);
 
 /** Add a face connection to a stash.
  * \param [in, out] stash The stash to be updated.
@@ -113,15 +115,15 @@ void                t8_stash_add_class (t8_stash_t stash, t8_gloidx_t id,
  * \param [in]      face2 The face number of the face of the second tree.
  * \param [in]      orientation The orientation of the faces to each other.
  */
-void                t8_stash_add_facejoin (t8_stash_t stash, t8_gloidx_t gid1,
-                                           t8_gloidx_t gid2, int face1,
-                                           int face2, int orientation);
+void
+t8_stash_add_facejoin (t8_stash_t stash, t8_gloidx_t gid1, t8_gloidx_t gid2, int face1, int face2, int orientation);
 
-/** Sort then entries in the class array by the order given in
+/** Sort the entries in the class array by the order given in
  *  the enum definition of t8_eclass.
  *  \param [in,out] stash The stash whose class array is sorted.
  */
-void                t8_stash_class_sort (t8_stash_t stash);
+void
+t8_stash_class_sort (t8_stash_t stash);
 
 /** Search for an entry with a given tree index in the class-stash.
  *  The stash must be sorted beforehand.
@@ -131,13 +133,14 @@ void                t8_stash_class_sort (t8_stash_t stash);
  *                        of \a stash corresponding to \a tree_id.
  *                        -1 if not found.
  */
-ssize_t             t8_stash_class_bsearch (t8_stash_t stash,
-                                            t8_gloidx_t tree_id);
+ssize_t
+t8_stash_class_bsearch (t8_stash_t stash, t8_gloidx_t tree_id);
 
 /** Sort then entries in the facejoin array in order of the first treeid.
  *  \param [in,out] stash The stash whose facejoin array is sorted.
  */
-void                t8_stash_joinface_sort (t8_stash_t stash);
+void
+t8_stash_joinface_sort (t8_stash_t stash);
 
 /** Add an attribute to a tree.
  * \param [in] stash    The stash structure to be modified.
@@ -150,49 +153,48 @@ void                t8_stash_joinface_sort (t8_stash_t stash);
  *                      If false only the pointer \a attr is stored and the data is only copied
  *                      if the cmesh is committed. (More memory efficient).
  */
-void                t8_stash_add_attribute (t8_stash_t stash, t8_gloidx_t id,
-                                            int package_id, int key,
-                                            size_t size, void *attr,
-                                            int copy);
+void
+t8_stash_add_attribute (t8_stash_t stash, t8_gloidx_t id, int package_id, int key, size_t size, void *attr, int copy);
 
 /** Return the size (in bytes) of an attribute in the stash.
  * \param [in]   stash   The stash to be considered.
  * \param [in]   index   The index of the attribute in the attribute array of \a stash.
  * \return               The size in bytes of the attribute.
  */
-size_t              t8_stash_get_attribute_size (t8_stash_t stash,
-                                                 size_t index);
+size_t
+t8_stash_get_attribute_size (t8_stash_t stash, size_t index);
 
 /** Return the pointer to an attribute in the stash.
  * \param [in]   stash   The stash to be considered.
  * \param [in]   index   The index of the attribute in the attribute array of \a stash.
  * \return               A void pointer to the memory region where the attribute is stored.
  */
-void               *t8_stash_get_attribute (t8_stash_t stash, size_t index);
+void *
+t8_stash_get_attribute (t8_stash_t stash, size_t index);
 
 /** Return the id of the tree a given attribute belongs to.
  * \param [in]   stash   The stash to be considered.
  * \param [in]   index   The index of the attribute in the attribute array of \a stash.
  * \return               The tree id.
  */
-t8_gloidx_t         t8_stash_get_attribute_tree_id (t8_stash_t stash,
-                                                    size_t index);
+t8_gloidx_t
+t8_stash_get_attribute_tree_id (t8_stash_t stash, size_t index);
 
 /** Return the key of a given attribute.
  * \param [in]   stash   The stash to be considered.
  * \param [in]   index   The index of the attribute in the attribute array of \a stash.
  * \return               The attribute's key.
  */
-int                 t8_stash_get_attribute_key (t8_stash_t stash,
-                                                size_t index);
+int
+t8_stash_get_attribute_key (t8_stash_t stash, size_t index);
 
 /** Return the package_id of a given attribute.
  * \param [in]   stash   The stash to be considered.
  * \param [in]   index   The index of the attribute in the attribute array of \a stash.
  * \return               The attribute's package_id.
  */
-int                 t8_stash_get_attribute_id (t8_stash_t stash,
-                                               size_t index);
+int
+t8_stash_get_attribute_id (t8_stash_t stash, size_t index);
 
 /** Return true if an attribute in the stash is owned by the stash, that is,
  * it was copied in the call to \a t8_stash_add_attribute.
@@ -201,14 +203,15 @@ int                 t8_stash_get_attribute_id (t8_stash_t stash,
  * \param [in]   index   The index of the attribute in the attribute array of \a stash.
  * \return               True of false.
  */
-int                 t8_stash_attribute_is_owned (t8_stash_t stash,
-                                                 size_t index);
+int
+t8_stash_attribute_is_owned (t8_stash_t stash, size_t index);
 
 /** Sort the attributes array of a stash in the order
  * (treeid, packageid, key) *
  * \param [in,out]   stash   The stash to be considered.
  */
-void                t8_stash_attribute_sort (t8_stash_t stash);
+void
+t8_stash_attribute_sort (t8_stash_t stash);
 
 /** Broadcast a stash on the root process to all processes in a communicator.
  *  The number of entries in the classes, joinfaces and attributes arrays must
@@ -217,12 +220,12 @@ void                t8_stash_attribute_sort (t8_stash_t stash);
  *                          On the other process an initialized stash. Its entries will
  *                          get overwritten by the entries in the root stash.
  *  \param [in]     root    The mpirank of the root process.
- *  \param [in]     comm    The mpi communicator which is used fpr broadcast.
+ *  \param [in]     comm    The mpi communicator which is used for broadcast.
  *  \param [in]     elem_counts An array with three entries giving the number of
  *                  elements in the classes, joinfaces and attributes arrays.
  */
-t8_stash_t          t8_stash_bcast (t8_stash_t stash, int root,
-                                    sc_MPI_Comm comm, size_t elem_counts[]);
+t8_stash_t
+t8_stash_bcast (t8_stash_t stash, int root, sc_MPI_Comm comm, size_t elem_counts[3]);
 
 /* TODO: specify equivalence relation. is a different order of data allowed? */
 /** Check two stashes for equal content and return true if so.
@@ -231,8 +234,8 @@ t8_stash_t          t8_stash_bcast (t8_stash_t stash, int root,
  * \return                True if both stashes hold copies of the same data.
  *                        False otherwise.
  */
-int                 t8_stash_is_equal (t8_stash_t stash_a,
-                                       t8_stash_t stash_b);
+int
+t8_stash_is_equal (t8_stash_t stash_a, t8_stash_t stash_b);
 
 T8_EXTERN_C_END ();
 

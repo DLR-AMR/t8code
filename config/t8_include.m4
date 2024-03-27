@@ -47,8 +47,12 @@ dnl link to T8 to add appropriate options to LIBS.
 dnl
 AC_DEFUN([T8_CHECK_LIBRARIES],
 [
-T8_CHECK_CPPSTD([$1])
+T8_CHECK_NETCDF([$1])
+T8_CHECK_VTK([$1])
+T8_CHECK_OCC([$1])
+T8_CHECK_CPPSTDLIB([$1])
 ])
+AC_DEFUN([T8_CHECK_CPPSTD],[AX_CXX_COMPILE_STDCXX([17],[noext],[mandatory])])
 
 dnl T8_AS_SUBPACKAGE(PREFIX)
 dnl Call from a package that is using T8 as a subpackage.

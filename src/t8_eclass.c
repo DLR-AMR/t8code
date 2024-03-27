@@ -22,98 +22,165 @@
 
 #include <t8_eclass.h>
 
-/* *INDENT-OFF* */
-const int t8_eclass_to_dimension[T8_ECLASS_COUNT] =
-  { 0, 1, 2, 2, 3, 3, 3, 3 };
+const int t8_eclass_to_dimension[T8_ECLASS_COUNT] = { 0, 1, 2, 2, 3, 3, 3, 3 };
 
-const int t8_eclass_num_faces[T8_ECLASS_COUNT] =
-  { 0, 2, 4, 3, 6, 4, 5, 5 };
+const int t8_eclass_num_faces[T8_ECLASS_COUNT] = { 0, 2, 4, 3, 6, 4, 5, 5 };
 
-const int t8_eclass_max_num_faces[T8_ECLASS_MAX_DIM + 1] =
-  { 0, 2, 4, 6};
+const int t8_eclass_max_num_faces[T8_ECLASS_MAX_DIM + 1] = { 0, 2, 4, 6 };
 
-const int
-t8_face_vertex_to_tree_vertex[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_CORNERS_2D] =
-{
- {{-1}},   /* vertex */
- {{0},{1}},   /* line */
- {{0, 2},{1, 3},{0, 1}, {2, 3}},   /* quad */
- {{1,2},{0,2},{0,1}},   /* triangle */
- {{0,2,4,6},{1,3,5,7},{0,1,4,5},{2,3,6,7},{0,1,2,3},{4,5,6,7}},   /* hex */
- {{1,2,3},{0,2,3},{0,1,3},{0,1,2}},   /* tet */
- {{1,2,4,5},{0,2,3,5},{0,1,3,4},{0,1,2},{3,4,5}},   /* prism */
- {{0,2,4},{1,3,4},{0,1,4},{2,3,4},{0,1,2,3}}/* pyramid */
+const int t8_face_vertex_to_tree_vertex[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_CORNERS_2D] = {
+  { { -1 } },                                                                                         /* vertex */
+  { { 0 }, { 1 } },                                                                                   /* line */
+  { { 0, 2 }, { 1, 3 }, { 0, 1 }, { 2, 3 } },                                                         /* quad */
+  { { 1, 2 }, { 0, 2 }, { 0, 1 } },                                                                   /* triangle */
+  { { 0, 2, 4, 6 }, { 1, 3, 5, 7 }, { 0, 1, 4, 5 }, { 2, 3, 6, 7 }, { 0, 1, 2, 3 }, { 4, 5, 6, 7 } }, /* hex */
+  { { 1, 2, 3 }, { 0, 2, 3 }, { 0, 1, 3 }, { 0, 1, 2 } },                                             /* tet */
+  { { 1, 2, 4, 5 }, { 0, 2, 3, 5 }, { 0, 1, 3, 4 }, { 0, 1, 2 }, { 3, 4, 5 } },                       /* prism */
+  { { 0, 2, 4 }, { 1, 3, 4 }, { 0, 1, 4 }, { 2, 3, 4 }, { 0, 1, 2, 3 } }                              /* pyramid */
 };
 
-
-const int
-t8_eclass_face_orientation[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES] =
-{
-  {0},          /* vertex */
-  {0,0},        /* line */
-  {0,0,0,0},    /* quad */
-  {0,0,0},      /* triangle */
-  {0,1,0,1,0,1},/* hex */
-  {0,1,0,1},    /* tet */
-  {0,1,0,0,1},  /* prism */
-  {0,1,0,1,0}   /* pyramid */
+/* TODO: tet, prism, pyramid */
+const int t8_face_edge_to_tree_edge[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_EDGES_2D] = {
+  { { -1 } },                                                                                             /* vertex */
+  { { 0 } },                                                                                              /* line */
+  { { 0 }, { 1 }, { 2 }, { 3 } },                                                                         /* quad */
+  { { 0 }, { 1 }, { 2 } },                                                                                /* triangle */
+  { { 8, 10, 4, 6 }, { 9, 11, 5, 7 }, { 8, 9, 0, 2 }, { 10, 11, 1, 3 }, { 4, 5, 0, 1 }, { 6, 7, 2, 3 } }, /* hex */
+  { { 3, 4, 5 }, { 1, 2, 5 }, { 0, 2, 4 }, { 0, 1, 3 } },                                                 /* tet */
+  { { -1 } },                                                                                             /* prism */
+  { { -1 } },                                                                                             /* pyramid */
 };
 
-const int    t8_eclass_num_vertices[T8_ECLASS_COUNT] =
-  { 1, 2, 4, 3, 8, 4, 6, 5 };
+/* TODO: prism, pyramid */
+const int t8_face_to_edge_neighbor[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_CORNERS_2D] = {
+  { { -1 } },                                                                                             /* vertex */
+  { { -1 } },                                                                                             /* line */
+  { { 2, 3 }, { 2, 3 }, { 0, 1 }, { 0, 1 } },                                                             /* quad */
+  { { 2, 1 }, { 2, 0 }, { 1, 0 } },                                                                       /* triangle */
+  { { 0, 1, 2, 3 }, { 0, 1, 2, 3 }, { 4, 5, 6, 7 }, { 4, 5, 6, 7 }, { 8, 9, 10, 11 }, { 8, 9, 10, 11 } }, /* hex */
+  { { 0, 1, 2 }, { 0, 3, 4 }, { 1, 3, 5 }, { 2, 4, 5 } },                                                 /* tet */
+  { { -1 } },                                                                                             /* prism */
+  { { -1 } },                                                                                             /* pyramid */
+};
 
-const int t8_eclass_vtk_type[T8_ECLASS_COUNT] =
-  { 1, 3, 9, 5, 12, 10, 13, 14};
+/* TODO: prism, pyramid */
+const int t8_edge_vertex_to_tree_vertex[T8_ECLASS_COUNT][T8_ECLASS_MAX_EDGES][2] = {
+  { { -1 } },                                 /* vertex */
+  { { 0 }, { 1 } },                           /* line */
+  { { 0, 2 }, { 1, 3 }, { 0, 1 }, { 2, 3 } }, /* quad */
+  { { 1, 2 }, { 0, 2 }, { 0, 1 } },           /* triangle */
+  { { 0, 1 },
+    { 2, 3 },
+    { 4, 5 },
+    { 6, 7 },
+    { 0, 2 },
+    { 1, 3 },
+    { 4, 6 },
+    { 5, 7 },
+    { 0, 4 },
+    { 1, 5 },
+    { 2, 6 },
+    { 3, 7 } },                                                   /* hex */
+  { { 0, 1 }, { 0, 2 }, { 0, 3 }, { 1, 2 }, { 1, 3 }, { 2, 3 } }, /* tet */
+  { { -1 } },                                                     /* prism */
+  { { -1 } },                                                     /* pyramid */
+};
 
-const int t8_eclass_vtk_corner_number[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS] =
-{{  0, -1, -1, -1, -1, -1, -1, -1}, /* vertex */
- {  0,  1, -1, -1, -1, -1, -1, -1}, /* line */
- {  0,  1,  3,  2, -1, -1, -1, -1}, /* quad */
- {  0,  1,  2, -1, -1, -1, -1, -1}, /* triangle */
- {  0,  1,  3,  2,  4,  5,  7,  6}, /* hex */
- {  0,  2,  1,  3, -1, -1, -1, -1}, /* tet */
- {  0,  1,  2,  3,  4,  5, -1, -1}, /* prism */
- {  0,  1,  3,  2,  4, -1, -1, -1}}; /* pyramid */
+/* TODO: prism, pyramid */
+const int t8_edge_to_face[T8_ECLASS_COUNT][T8_ECLASS_MAX_EDGES][2] = {
+  { { -1 } },                     /* vertex */
+  { { 0 } },                      /* line */
+  { { 0 }, { 1 }, { 2 }, { 3 } }, /* quad */
+  { { 0 }, { 1 }, { 2 } },        /* triangle */
+  { { 2, 4 },
+    { 3, 4 },
+    { 2, 5 },
+    { 3, 5 },
+    { 0, 4 },
+    { 1, 4 },
+    { 0, 5 },
+    { 1, 5 },
+    { 0, 2 },
+    { 1, 2 },
+    { 0, 3 },
+    { 1, 3 } },                                                   /* hex */
+  { { 2, 3 }, { 1, 3 }, { 1, 2 }, { 0, 3 }, { 0, 2 }, { 0, 1 } }, /* tet */
+  { { -1 } },                                                     /* prism */
+  { { -1 } },                                                     /* pyramid */
+};
 
-const int t8_eclass_face_types[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES] =
-  {{ -1, -1, -1, -1, -1, -1 },  /* vertex */
-   {  0,  0, -1, -1, -1, -1 },  /* line */
-   {  1,  1,  1,  1, -1, -1 },  /* quad */
-   {  1,  1,  1, -1, -1, -1 },  /* triangle */
-   {  2,  2,  2,  2,  2,  2 },  /* hex */
-   {  3,  3,  3,  3, -1, -1 },  /* tet */
-   {  2,  2,  2,  3,  3, -1 },  /* prism */
-   {  3,  3,  3,  3,  2, -1 }};  /* pyramid */
+const int t8_eclass_face_orientation[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES] = {
+  { 0, -1, -1, -1, -1, -1 }, /* vertex */
+  { 0, 0, -1, -1, -1, -1 },  /* line */
+  { 0, 0, 0, 0, -1, -1 },    /* quad */
+  { 0, 0, 0, -1, -1, -1 },   /* triangle */
+  { 0, 1, 1, 0, 0, 1 },      /* hex */
+  { 0, 1, 0, 1, -1, -1 },    /* tet */
+  { 1, 0, 1, 0, 1, -1 },     /* prism */
+  { 0, 1, 1, 0, 0, -1 }      /* pyramid */
+};
 
-const int t8_eclass_boundary_count[T8_ECLASS_COUNT][T8_ECLASS_COUNT] =
-  {{ 0,  0, 0, 0, 0, 0, 0, 0 },  /* vertex */
-   { 2,  0, 0, 0, 0, 0, 0, 0 },  /* line */
-   { 4,  4, 0, 0, 0, 0, 0, 0 },  /* quad */
-   { 3,  3, 0, 0, 0, 0, 0, 0 },  /* triangle */
-   { 8, 12, 6, 0, 0, 0, 0, 0 },  /* hex */
-   { 4,  6, 0, 4, 0, 0, 0, 0 },  /* tet */
-   { 6,  9, 3, 2, 0, 0, 0, 0 },  /* prism */
-   { 5,  8, 1, 4, 0, 0, 0, 0 }};  /* pyramid */
+const int t8_reference_face_normal_tet[T8_ECLASS_MAX_FACES][3]
+  = { { -1, 0, 0 }, { 1, 0, -1 }, { 0, -1, 1 }, { 0, 1, 0 } };
 
-const char * t8_eclass_to_string[T8_ECLASS_COUNT] =
-     {"Vertex",
-      "Line",
-      "Quad",
-      "Triangle",
-      "Hex",
-      "Tet",
-      "Prism",
-      "Pyramid"};
-/* *INDENT-ON* */
+const int t8_eclass_num_vertices[T8_ECLASS_COUNT] = { 1, 2, 4, 3, 8, 4, 6, 5 };
+
+const int t8_eclass_num_edges[T8_ECLASS_COUNT] = { 0, 1, 4, 3, 12, 6, 9, 8 };
+
+const int t8_eclass_vtk_type[T8_ECLASS_COUNT] = { 1, 3, 9, 5, 12, 10, 13, 14 };
+
+const int t8_eclass_vtk_to_t8_corner_number[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS] = {
+  { 0, -1, -1, -1, -1, -1, -1, -1 }, /* vertex */
+  { 0, 1, -1, -1, -1, -1, -1, -1 },  /* line */
+  { 0, 1, 3, 2, -1, -1, -1, -1 },    /* quad */
+  { 0, 1, 2, -1, -1, -1, -1, -1 },   /* triangle */
+  { 0, 1, 3, 2, 4, 5, 7, 6 },        /* hex */
+  { 0, 2, 1, 3, -1, -1, -1, -1 },    /* tet */
+  { 0, 2, 1, 3, 5, 4, -1, -1 },      /* prism */
+  { 0, 1, 3, 2, 4, -1, -1, -1 }      /* pyramid */
+};
+
+const int t8_eclass_t8_to_vtk_corner_number[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS] = {
+  { 0, -1, -1, -1, -1, -1, -1, -1 }, /* vertex */
+  { 0, 1, -1, -1, -1, -1, -1, -1 },  /* line */
+  { 0, 1, 3, 2, -1, -1, -1, -1 },    /* quad */
+  { 0, 1, 2, -1, -1, -1, -1, -1 },   /* triangle */
+  { 0, 1, 3, 2, 4, 5, 7, 6 },        /* hex */
+  { 0, 2, 1, 3, -1, -1, -1, -1 },    /* tet */
+  { 0, 2, 1, 3, 5, 4, -1, -1 },      /* prism */
+  { 0, 1, 3, 2, 4, -1, -1, -1 }      /* pyramid */
+};
+
+const int t8_eclass_face_types[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES] = {
+  { -1, -1, -1, -1, -1, -1 }, /* vertex */
+  { 0, 0, -1, -1, -1, -1 },   /* line */
+  { 1, 1, 1, 1, -1, -1 },     /* quad */
+  { 1, 1, 1, -1, -1, -1 },    /* triangle */
+  { 2, 2, 2, 2, 2, 2 },       /* hex */
+  { 3, 3, 3, 3, -1, -1 },     /* tet */
+  { 2, 2, 2, 3, 3, -1 },      /* prism */
+  { 3, 3, 3, 3, 2, -1 }       /* pyramid */
+};
+
+const int t8_eclass_boundary_count[T8_ECLASS_COUNT][T8_ECLASS_COUNT] = {
+  { 0, 0, 0, 0, 0, 0, 0, 0 },  /* vertex */
+  { 2, 0, 0, 0, 0, 0, 0, 0 },  /* line */
+  { 4, 4, 0, 0, 0, 0, 0, 0 },  /* quad */
+  { 3, 3, 0, 0, 0, 0, 0, 0 },  /* triangle */
+  { 8, 12, 6, 0, 0, 0, 0, 0 }, /* hex */
+  { 4, 6, 0, 4, 0, 0, 0, 0 },  /* tet */
+  { 6, 9, 3, 2, 0, 0, 0, 0 },  /* prism */
+  { 5, 8, 1, 4, 0, 0, 0, 0 }   /* pyramid */
+};
+
+const char *t8_eclass_to_string[T8_ECLASS_COUNT]
+  = { "Vertex", "Line", "Quad", "Triangle", "Hex", "Tet", "Prism", "Pyramid" };
 
 int
 t8_eclass_count_boundary (t8_eclass_t theclass, int min_dim, int *per_eclass)
 {
-  int                 t;
-  int                 sum;
-
-  sum = 0;
-  for (t = 0; t < T8_ECLASS_COUNT; ++t) {
+  int sum = 0;
+  for (int t = T8_ECLASS_ZERO; t < T8_ECLASS_COUNT; ++t) {
     if (t8_eclass_to_dimension[t] >= min_dim) {
       sum += (per_eclass[t] = t8_eclass_boundary_count[theclass][t]);
     }
@@ -125,80 +192,6 @@ t8_eclass_count_boundary (t8_eclass_t theclass, int min_dim, int *per_eclass)
   return sum;
 }
 
-#ifdef T8_ENABLE_DEBUG
-
-static              t8_gloidx_t
-t8_eclass_count_pyramid (int level)
-{
-  /* We like to compute the number of leaves in a uniformly refined pyramid.
-   * If T_l is this number at level l, we make use of the recursion:
-   * T_{l + 2^i} =
-   *   6^{2^i} T_l +
-   *   4 ( \Prod_{j = 0}^{i - 1} (6^{2^j} + 8^{2^j}) ) 8^l
-   */
-
-  t8_gloidx_t         Tl = 1;
-  t8_gloidx_t         sixpow2i = 6, eightpow2i = 8;
-  t8_gloidx_t         prodsumpow = 1, eightpowl = 1;
-
-  T8_ASSERT (level >= 0);
-
-  while (level > 0) {
-    if (level & 1) {
-      Tl = sixpow2i * Tl + 4 * prodsumpow * eightpowl;
-      eightpowl *= eightpow2i;
-    }
-    prodsumpow *= (sixpow2i + eightpow2i);
-    sixpow2i *= sixpow2i;
-    eightpow2i *= eightpow2i;
-    level >>= 1;
-  }
-
-  return Tl;
-}
-
-#endif
-
-t8_gloidx_t
-t8_eclass_count_leaf (t8_eclass_t theclass, int level)
-{
-  T8_ASSERT (level >= 0);
-
-  if (theclass != T8_ECLASS_PYRAMID) {
-    /* For each eclass that is not the pyramid the number of leafs
-     * is dim^level.
-     */
-    return ((uint64_t) 1) << t8_eclass_to_dimension[theclass] * level;
-  }
-  else {
-    /* For the eclass pyramid the number of leafs is
-     * 6^level + 4 * \sum_{i=1}^l 6^{l-i}8^{i-1}
-     */
-    t8_gloidx_t         power_of_6 = 1;
-    t8_gloidx_t         six_to_level;
-    t8_gloidx_t         power_of_8 = 1;
-    t8_gloidx_t         number_of_leafs = 0;
-    int                 li;
-
-    /* compute 6^level */
-    for (li = 0; li < level; li++) {
-      power_of_6 *= 6;
-    }
-    six_to_level = power_of_6;
-    T8_ASSERT (six_to_level > 0);
-    for (li = 0; li < level; li++) {
-      power_of_6 /= 6;
-      number_of_leafs += power_of_8 * power_of_6;
-      power_of_8 *= 8;
-    }
-    number_of_leafs *= 4;
-    number_of_leafs += six_to_level;
-    T8_ASSERT (number_of_leafs > 0);
-    T8_ASSERT (number_of_leafs == t8_eclass_count_pyramid (level));
-    return number_of_leafs;
-  }
-}
-
 /* Compares two eclasses within the order
  * Tri < Quad
  * Tet < Hex < Prism < Pyramid
@@ -207,7 +200,7 @@ t8_eclass_count_leaf (t8_eclass_t theclass, int level)
 int
 t8_eclass_compare (t8_eclass_t eclass1, t8_eclass_t eclass2)
 {
-  int                 dim = t8_eclass_to_dimension[eclass1];
+  int dim = t8_eclass_to_dimension[eclass1];
   T8_ASSERT (dim == t8_eclass_to_dimension[eclass2]);
 
   if (eclass1 == eclass2) {
@@ -230,7 +223,16 @@ t8_eclass_compare (t8_eclass_t eclass1, t8_eclass_t eclass2)
       return eclass2 == T8_ECLASS_PYRAMID ? -1 : 1;
     default:
       T8_ASSERT (eclass1 == T8_ECLASS_PYRAMID);
-      return -1;
+      return 1;
     }
   }
+}
+
+int
+t8_eclass_is_valid (t8_eclass_t eclass)
+{
+  /* every eclass up to T8_ECLASS_COUNT is a valid class T8_ECLASS_COUNT 
+   * itself is invalid, every class higher than eclass count is considered 
+   * invalid.*/
+  return eclass < T8_ECLASS_COUNT;
 }

@@ -36,8 +36,7 @@
 T8_EXTERN_C_BEGIN ();
 
 /** This enumeration contains all possible element classes. */
-typedef enum t8_eclass
-{
+typedef enum t8_eclass {
   T8_ECLASS_ZERO = 0,
   /** The vertex is the only zero-dimensional element class. */
   T8_ECLASS_VERTEX = T8_ECLASS_ZERO,
@@ -56,16 +55,20 @@ typedef enum t8_eclass
   /** The pyramid has a quadrilateral as base and four triangles as sides. */
   T8_ECLASS_PYRAMID,
   /** This is no element class but can be used as the number of element classes. */
-  T8_ECLASS_COUNT
-}
-t8_eclass_t;
+  T8_ECLASS_COUNT,
+  /** This is no element class but can be used for the case a class of a third party library is not supported by t8code*/
+  T8_ECLASS_INVALID
+} t8_eclass_t;
 
 /** The MPI datatype used for t8_eclass_t */
-#define T8_MPI_ECLASS_TYPE (T8_ASSERT (sizeof (int) == sizeof (t8_eclass_t)),\
-  sc_MPI_INT)
+#define T8_MPI_ECLASS_TYPE (T8_ASSERT (sizeof (int) == sizeof (t8_eclass_t)), sc_MPI_INT)
 
 /** The maximum number of boundary faces an element class can have. */
 #define T8_ECLASS_MAX_FACES 6
+/** The maximum number of boundary edges an element class can have. */
+#define T8_ECLASS_MAX_EDGES 12
+/** The maximum number of boundary edges a 2D element class can have. */
+#define T8_ECLASS_MAX_EDGES_2D 4
 /** The maximum number of cornes a 2-dimensional element class can have. */
 #define T8_ECLASS_MAX_CORNERS_2D 4
 /** The maximum number of cornes an element class can have. */
@@ -74,19 +77,33 @@ t8_eclass_t;
 #define T8_ECLASS_MAX_DIM 3
 
 /** Map each of the element classes to its dimension. */
-extern const int    t8_eclass_to_dimension[T8_ECLASS_COUNT];
+extern const int t8_eclass_to_dimension[T8_ECLASS_COUNT];
 
 /** The number of codimension-one boundaries of an element class. */
-extern const int    t8_eclass_num_faces[T8_ECLASS_COUNT];
+extern const int t8_eclass_num_faces[T8_ECLASS_COUNT];
 
 /** For each dimension the maximum possible number of faces of an eclass of that dimension. */
-extern const int    t8_eclass_max_num_faces[T8_ECLASS_MAX_DIM + 1];
+extern const int t8_eclass_max_num_faces[T8_ECLASS_MAX_DIM + 1];
 
 /** For each eclass and each face f the entry i gives the vertex number
  * of f's i-th vertex within all vertices of the tree. */
-extern const int
-     t8_face_vertex_to_tree_vertex[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES]
-  [T8_ECLASS_MAX_CORNERS_2D];
+extern const int t8_face_vertex_to_tree_vertex[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_CORNERS_2D];
+
+/** For each eclass and each face f the entry i gives the edge number
+ * of f's i-th edge within all edges of the tree. */
+extern const int t8_face_edge_to_tree_edge[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_EDGES_2D];
+
+/** For each eclass, each face f and the face vertex v, we get the edge number
+ *  of the tree which is incident to vertex v but not part of f. */
+extern const int t8_face_to_edge_neighbor[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_CORNERS_2D];
+
+/** For each eclass and each edge e the entry i gives the vertex number
+ * of e's i-th vertex within all vertices of the tree. */
+extern const int t8_edge_vertex_to_tree_vertex[T8_ECLASS_COUNT][T8_ECLASS_MAX_EDGES][2];
+
+/** For each eclass and each edge e the entry i gives the face number
+ * of e's i-th incident face within all faces of the tree. */
+extern const int t8_edge_to_face[T8_ECLASS_COUNT][T8_ECLASS_MAX_EDGES][2];
 
 /** Each face is either 0 or 1 oriented, depending on the order of its vertices.
  * We say a face is 0 oriented, if its normal vector points inwards,
@@ -95,29 +112,34 @@ extern const int
  * v_i being the i-th vertex.
  * The faces of an eclass of dimension 2 or lower are all 0 oriented.
  */
-extern const int
-     t8_eclass_face_orientation[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES];
+extern const int t8_eclass_face_orientation[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES];
+
+/** The direction of the normal of each face of a tetrahedron. */
+extern const int t8_reference_face_normal_tet[T8_ECLASS_MAX_FACES][3];
 
 /** The number of vertices of an element class. */
-extern const int    t8_eclass_num_vertices[T8_ECLASS_COUNT];
+extern const int t8_eclass_num_vertices[T8_ECLASS_COUNT];
+
+/** The number of edges of an element class. */
+extern const int t8_eclass_num_edges[T8_ECLASS_COUNT];
 
 /** The vtk cell type for the eclass */
-extern const int    t8_eclass_vtk_type[T8_ECLASS_COUNT];
+extern const int t8_eclass_vtk_type[T8_ECLASS_COUNT];
+
+/** Map the vtk corner number to the t8 corner number */
+extern const int t8_eclass_vtk_to_t8_corner_number[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS];
 
 /** Map the t8code corner number to the vtk corner number */
-extern const int
-     t8_eclass_vtk_corner_number[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS];
+extern const int t8_eclass_t8_to_vtk_corner_number[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS];
 
 /** For each of the element classes, list the type of the faces. */
-extern const int
-     t8_eclass_face_types[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES];
+extern const int t8_eclass_face_types[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES];
 
 /** For each of the element classes, count the boundary points. */
-extern const int
-     t8_eclass_boundary_count[T8_ECLASS_COUNT][T8_ECLASS_COUNT];
+extern const int t8_eclass_boundary_count[T8_ECLASS_COUNT][T8_ECLASS_COUNT];
 
 /** For each eclass, the name of this class as a string */
-extern const char  *t8_eclass_to_string[T8_ECLASS_COUNT];
+extern const char *t8_eclass_to_string[T8_ECLASS_COUNT];
 
 /** Query the element class and count of boundary points.
  * \param [in] theclass         We query a point of this element class.
@@ -128,16 +150,8 @@ extern const char  *t8_eclass_to_string[T8_ECLASS_COUNT];
  *                              counted per each of the element classes.
  * \return                      The count over all boundary points.
  */
-int                 t8_eclass_count_boundary (t8_eclass_t theclass,
-                                              int min_dim, int *per_eclass);
-
-/** Compute the number of leafs in a uniform refinement of one tree at given level.
- * \param [in] theclass         We consider this element type.
- * \param [in] level            The refinement level to be considered.
- * \return                      The number of leafs in a uniform refinement
- *                              of the given level.
- */
-t8_gloidx_t         t8_eclass_count_leaf (t8_eclass_t theclass, int level);
+int
+t8_eclass_count_boundary (t8_eclass_t theclass, int min_dim, int *per_eclass);
 
 /** Compare two eclasses of the same dimension
  *  as necessary for face neighbor orientation.
@@ -148,9 +162,17 @@ t8_gloidx_t         t8_eclass_count_leaf (t8_eclass_t theclass, int level);
  *  \return 0 if the eclasses are equal, 1 if eclass1 > eclass2
  *            and -1 if eclass1 < eclass2
  */
-int                 t8_eclass_compare (t8_eclass_t eclass1,
-                                       t8_eclass_t eclass2);
+int
+t8_eclass_compare (t8_eclass_t eclass1, t8_eclass_t eclass2);
 
+/** Check whether a class is a valid class. Returns non-zero if it is a valid class,
+ *  returns zero, if the class is equal to T8_ECLASS_INVALID.
+ * 
+ * \param [in] eclass    The eclass to check.
+ * \return               Non-zero if \a eclass is valid, zero otherwise.
+*/
+int
+t8_eclass_is_valid (t8_eclass_t eclass);
 T8_EXTERN_C_END ();
 
 #endif /* !T8_ELEMENT_H */

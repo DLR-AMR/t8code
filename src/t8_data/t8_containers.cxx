@@ -30,11 +30,12 @@
 
 T8_EXTERN_C_BEGIN ();
 
+#ifdef T8_ENABLE_DEBUG
 /* Query whether an element array is initialized properly. */
 static int
-t8_element_array_is_valid (t8_element_array_t * element_array)
+t8_element_array_is_valid (const t8_element_array_t *element_array)
 {
-  int                 is_valid;
+  int is_valid;
 
   /* Check that all pointers are not NULL */
   is_valid = element_array != NULL && element_array->scheme != NULL;
@@ -45,15 +46,14 @@ t8_element_array_is_valid (t8_element_array_t * element_array)
 
   /* Check that the element size of the scheme matches the size of data elements
    * stored in the array. */
-  is_valid = is_valid
-    && element_array->scheme->t8_element_size () ==
-    element_array->array.elem_size;
+  is_valid = is_valid && element_array->scheme->t8_element_size () == element_array->array.elem_size;
 
   return is_valid;
 }
+#endif
 
 t8_element_array_t *
-t8_element_array_new (t8_eclass_scheme_c * scheme)
+t8_element_array_new (t8_eclass_scheme_c *scheme)
 {
   t8_element_array_t *new_array;
 
@@ -67,7 +67,7 @@ t8_element_array_new (t8_eclass_scheme_c * scheme)
 }
 
 t8_element_array_t *
-t8_element_array_new_count (t8_eclass_scheme_c * scheme, size_t num_elements)
+t8_element_array_new_count (t8_eclass_scheme_c *scheme, size_t num_elements)
 {
   t8_element_array_t *new_array;
 
@@ -81,10 +81,9 @@ t8_element_array_new_count (t8_eclass_scheme_c * scheme, size_t num_elements)
 }
 
 void
-t8_element_array_init (t8_element_array_t * element_array,
-                       t8_eclass_scheme_c * scheme)
+t8_element_array_init (t8_element_array_t *element_array, t8_eclass_scheme_c *scheme)
 {
-  size_t              elem_size;
+  size_t elem_size;
 
   T8_ASSERT (element_array != NULL);
 
@@ -97,30 +96,25 @@ t8_element_array_init (t8_element_array_t * element_array,
 }
 
 void
-t8_element_array_init_size (t8_element_array_t * element_array,
-                            t8_eclass_scheme_c * scheme, size_t num_elements)
+t8_element_array_init_size (t8_element_array_t *element_array, t8_eclass_scheme_c *scheme, size_t num_elements)
 {
-  t8_element_t       *first_element;
+  t8_element_t *first_element;
   T8_ASSERT (element_array != NULL);
 
   element_array->scheme = scheme;
   /* allocate the elements */
-  sc_array_init_size (&element_array->array, scheme->t8_element_size (),
-                      num_elements);
+  sc_array_init_size (&element_array->array, scheme->t8_element_size (), num_elements);
 
   if (num_elements > 0) {
     /* Call t8_element_init for the elements */
-    first_element =
-      (t8_element_t *) sc_array_index (&element_array->array, 0);
-    scheme->t8_element_init (num_elements, first_element, 0);
+    first_element = (t8_element_t *) sc_array_index (&element_array->array, 0);
+    scheme->t8_element_init (num_elements, first_element);
   }
   T8_ASSERT (t8_element_array_is_valid (element_array));
 }
 
 void
-t8_element_array_init_view (t8_element_array_t * view,
-                            t8_element_array_t * array,
-                            size_t offset, size_t length)
+t8_element_array_init_view (t8_element_array_t *view, t8_element_array_t *array, size_t offset, size_t length)
 {
   T8_ASSERT (t8_element_array_is_valid (array));
 
@@ -132,23 +126,20 @@ t8_element_array_init_view (t8_element_array_t * view,
 }
 
 void
-t8_element_array_init_data (t8_element_array_t * view, t8_element_t * base,
-                            t8_eclass_scheme_c * scheme, size_t elem_count)
+t8_element_array_init_data (t8_element_array_t *view, t8_element_t *base, t8_eclass_scheme_c *scheme, size_t elem_count)
 {
   /* Initialize the element array */
-  sc_array_init_data (&view->array, (void *) base, scheme->t8_element_size (),
-                      elem_count);
+  sc_array_init_data (&view->array, (void *) base, scheme->t8_element_size (), elem_count);
   /* set the scheme */
   view->scheme = scheme;
   T8_ASSERT (t8_element_array_is_valid (view));
 }
 
 void
-t8_element_array_init_copy (t8_element_array_t * element_array,
-                            t8_eclass_scheme_c * scheme,
-                            t8_element_t * data, size_t num_elements)
+t8_element_array_init_copy (t8_element_array_t *element_array, t8_eclass_scheme_c *scheme, t8_element_t *data,
+                            size_t num_elements)
 {
-  sc_array_t         *array;
+  sc_array_t *array;
   T8_ASSERT (element_array != NULL);
 
   t8_element_array_init (element_array, scheme);
@@ -157,48 +148,58 @@ t8_element_array_init_copy (t8_element_array_t * element_array,
 #ifdef T8_ENABLE_DEBUG
   /* Check if the elements in data are valid for scheme */
   {
-    size_t              ielem;
+    size_t ielem;
     const t8_element_t *element;
-    size_t              size;
+    size_t size;
 
     size = scheme->t8_element_size ();
     for (ielem = 0; ielem < num_elements; ielem++) {
-      /* data is of incomplete type, we thus have to manually set the adress
+      /* data is of incomplete type, we thus have to manually set the address
        * of the ielem-th t8_element */
       element = (const t8_element_t *) (((char *) data) + ielem * size);
       T8_ASSERT (scheme->t8_element_is_valid (element));
     }
   }
 #endif
-  /* Allocate enogh memory for the new elements */
+  /* Allocate enough memory for the new elements */
   sc_array_init_size (array, scheme->t8_element_size (), num_elements);
   /* Copy the elements in data */
   memcpy (array->array, data, num_elements * array->elem_size);
 }
 
 void
-t8_element_array_resize (t8_element_array_t * element_array, size_t new_count)
+t8_element_array_resize (t8_element_array_t *element_array, size_t new_count)
 {
-  size_t              old_count;
+  size_t old_count;
   T8_ASSERT (t8_element_array_is_valid (element_array));
   /* Store the old number of elements */
   old_count = t8_element_array_get_count (element_array);
-  /* resize the data array */
-  sc_array_resize (&element_array->array, new_count);
-  /* if the new_count is larger than the previous count, we need to
-   * call t8_element_init on the newly allocated elements. */
   if (old_count < new_count) {
-    t8_element_t       *first_new_elem;
+    /* if the new_count is larger than the previous count, we need to
+    * call t8_element_init on the newly allocated elements. */
+    sc_array_resize (&element_array->array, new_count);
+    t8_element_t *first_new_elem;
     /* Get the first newly allocated element */
     first_new_elem = t8_element_array_index_locidx (element_array, old_count);
     /* Call t8_element_init on all new elements */
-    element_array->scheme->t8_element_init (new_count - old_count,
-                                            first_new_elem, 0);
+    element_array->scheme->t8_element_init (new_count - old_count, first_new_elem);
+  }
+  else if (old_count > new_count) {
+    t8_element_t *first_old_elem;
+    /* Get the first element to deinit */
+    first_old_elem = t8_element_array_index_locidx (element_array, new_count);
+    element_array->scheme->t8_element_deinit (old_count - new_count, first_old_elem);
+    sc_array_resize (&element_array->array, new_count);
+  }
+  else {
+    T8_ASSERT (new_count == element_array->array.elem_count);
+    /* Free the allocated, but unused memory. */
+    sc_array_resize (&element_array->array, new_count);
   }
 }
 
 void
-t8_element_array_copy (t8_element_array_t * dest, t8_element_array_t * src)
+t8_element_array_copy (t8_element_array_t *dest, t8_element_array_t *src)
 {
   T8_ASSERT (t8_element_array_is_valid (dest));
   T8_ASSERT (t8_element_array_is_valid (src));
@@ -206,70 +207,65 @@ t8_element_array_copy (t8_element_array_t * dest, t8_element_array_t * src)
   sc_array_copy (&dest->array, &src->array);
 }
 
-t8_element_t       *
-t8_element_array_push (t8_element_array_t * element_array)
+t8_element_t *
+t8_element_array_push (t8_element_array_t *element_array)
 {
-  t8_element_t       *new_element;
+  t8_element_t *new_element;
   T8_ASSERT (t8_element_array_is_valid (element_array));
-  new_element = (t8_element_t *)
-    sc_array_push (&element_array->array);
-  element_array->scheme->t8_element_init (1, new_element, 0);
+  new_element = (t8_element_t *) sc_array_push (&element_array->array);
+  element_array->scheme->t8_element_init (1, new_element);
   return new_element;
 }
 
-t8_element_t
-  * t8_element_array_push_count
-  (t8_element_array_t * element_array, size_t count) {
-  t8_element_t       *new_elements;
+t8_element_t *
+t8_element_array_push_count (t8_element_array_t *element_array, size_t count)
+{
+  t8_element_t *new_elements;
   T8_ASSERT (t8_element_array_is_valid (element_array));
   /* grow the array */
-  new_elements = (t8_element_t *)
-    sc_array_push_count (&element_array->array, count);
+  new_elements = (t8_element_t *) sc_array_push_count (&element_array->array, count);
   /* initialize the elements */
-  element_array->scheme->t8_element_init (count, new_elements, 0);
+  element_array->scheme->t8_element_init (count, new_elements);
   return new_elements;
 }
 
-t8_element_t
-  * t8_element_array_index_locidx (t8_element_array_t * element_array,
-                                   t8_locidx_t index)
+t8_element_t *
+t8_element_array_index_locidx (t8_element_array_t *element_array, t8_locidx_t index)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
-  return (t8_element_t *)
-    t8_sc_array_index_locidx (&element_array->array, index);
+  return (t8_element_t *) t8_sc_array_index_locidx (&element_array->array, index);
 }
 
-t8_element_t
-  * t8_element_array_index_int (t8_element_array_t * element_array, int index)
+t8_element_t *
+t8_element_array_index_int (t8_element_array_t *element_array, int index)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
-  return (t8_element_t *)
-    sc_array_index_int (&element_array->array, index);
+  return (t8_element_t *) sc_array_index_int (&element_array->array, index);
 }
 
 t8_eclass_scheme_c *
-t8_element_array_get_scheme (t8_element_array_t * element_array)
+t8_element_array_get_scheme (t8_element_array_t *element_array)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
   return element_array->scheme;
 }
 
 size_t
-t8_element_array_get_count (t8_element_array_t * element_array)
+t8_element_array_get_count (const t8_element_array_t *element_array)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
   return element_array->array.elem_count;
 }
 
 size_t
-t8_element_array_get_size (t8_element_array_t * element_array)
+t8_element_array_get_size (t8_element_array_t *element_array)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
   return element_array->scheme->t8_element_size ();
 }
 
-t8_element_t       *
-t8_element_array_get_data (t8_element_array_t * element_array)
+t8_element_t *
+t8_element_array_get_data (t8_element_array_t *element_array)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
 
@@ -281,8 +277,8 @@ t8_element_array_get_data (t8_element_array_t * element_array)
   }
 }
 
-sc_array_t         *
-t8_element_array_get_array (t8_element_array_t * element_array)
+sc_array_t *
+t8_element_array_get_array (t8_element_array_t *element_array)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
 
@@ -290,16 +286,22 @@ t8_element_array_get_array (t8_element_array_t * element_array)
 }
 
 void
-t8_element_array_reset (t8_element_array_t * element_array)
+t8_element_array_reset (t8_element_array_t *element_array)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
+  t8_element_t *first_elem = t8_element_array_index_locidx (element_array, 0);
+  size_t count = t8_element_array_get_count (element_array);
+  element_array->scheme->t8_element_deinit (count, first_elem);
   sc_array_reset (&element_array->array);
 }
 
 void
-t8_element_array_truncate (t8_element_array_t * element_array)
+t8_element_array_truncate (t8_element_array_t *element_array)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
+  t8_element_t *first_elem = t8_element_array_index_locidx (element_array, 0);
+  size_t count = t8_element_array_get_count (element_array);
+  element_array->scheme->t8_element_deinit (count, first_elem);
   sc_array_truncate (&element_array->array);
 }
 

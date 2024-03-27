@@ -1,5 +1,5 @@
 
-dnl T8_CHECK_CPPSTD
+dnl T8_CHECK_CPPSTDLIB
 dnl Check for libstdc++ support and link a test program
 dnl
 dnl This macro tries to link to the standard c++ library.
@@ -8,7 +8,7 @@ dnl or use --enable-cppstd=<LIBRARY>
 dnl
 dnl Using --enable-cppstd without any argument defaults to -lstdc++.
 dnl
-AC_DEFUN([T8_CHECK_CPPSTD], [
+AC_DEFUN([T8_CHECK_CPPSTDLIB], [
 
 dnl This link test changes the LIBS variable in place for posterity
 dnl SAVE_LIBS="$LIBS"
@@ -36,7 +36,7 @@ if test "x$T8_ENABLE_CPPSTD" != xno ; then
 ]])],,
                  [AC_MSG_ERROR([Unable to link with c++ standard library])])
 dnl Keep the variables changed as done above
-dnl LIBS="$PRE_CPLUSPLUS_LIBS"
+dnl LIBS="$PRE_CPPSTD_LIBS"
 
   AC_MSG_RESULT([successful])
 else
