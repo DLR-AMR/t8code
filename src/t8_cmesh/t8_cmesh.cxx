@@ -191,6 +191,8 @@ t8_cmesh_set_derive (t8_cmesh_t cmesh, t8_cmesh_t set_from)
 
   if (set_from != NULL) {
     t8_cmesh_set_dimension (cmesh, set_from->dimension);
+    SC_CHECK_ABORT (cmesh->stash->attributes.elem_count == 0,
+                    "ERROR: Cannot add attributes to cmesh when deriving from another cmesh.\n");
   }
 }
 
@@ -356,6 +358,7 @@ t8_cmesh_set_attribute (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int package_id, 
                         int data_persists)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  SC_CHECK_ABORT (cmesh->set_from == NULL, "ERROR: Cannot add attributes to cmesh when deriving from another cmesh.\n");
 
   t8_stash_add_attribute (cmesh->stash, gtree_id, package_id, key, data_size, data, !data_persists);
 }
