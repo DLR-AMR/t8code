@@ -23,6 +23,8 @@
 /**
  * \file t8_nc_utilities.hxx This file collects some utility functions for convenient use within the t8code-netCDF functionality
  */
+#ifndef T8_NC_UTILITIES_HXX
+#define T8_NC_UTILITIES_HXX
 
 #include <t8.h>
 #include <type_traits>
@@ -64,3 +66,5 @@ int_pow (Integer base, Integer exponent) -> typename std::enable_if<std::is_inte
   return result;
 #endif
 }
+
+#endif /* !T8_NC_UTILITIES_HXX */

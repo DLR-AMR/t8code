@@ -2077,7 +2077,9 @@ t8_cmesh_new_brick_wall (t8_gloidx_t num_x, t8_gloidx_t num_y, t8_gloidx_t num_z
                                             (double) num_y,
                                             (double) num_z };
 
-  return t8_cmesh_new_hypercube_pad (elem_type, comm, boundary_vertices, num_x, num_y, num_z);
+  const int use_axis_aligned = 0;
+
+  return t8_cmesh_new_hypercube_pad (elem_type, comm, boundary_vertices, num_x, num_y, num_z, use_axis_aligned);
 }
 
 /* Construct a tetrahedral cmesh that has all possible face to face
