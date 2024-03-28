@@ -108,7 +108,7 @@ libt8_internal_headers = \
   src/t8_forest/t8_forest_ghost.h \
   src/t8_forest/t8_forest_balance.h src/t8_forest/t8_forest_types.h \
   src/t8_forest/t8_forest_private.h \
-  src/t8_netcdf/t8_nc_utilities.hxx
+  src/t8_netcdf/t8_nc_utilities.hxx \
   src/t8_windows.h
 libt8_compiled_sources = \
   src/t8.c src/t8_eclass.c src/t8_mesh.c \
