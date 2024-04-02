@@ -2709,14 +2709,14 @@ t8_cmesh_new_quadrangulated_disk (const double radius, sc_MPI_Comm comm)
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
 
-  const double ri = 0.6 * radius;
-  const double ro = radius;
+  const double inner_radius = 0.6 * radius;
+  const double outer_radius = radius;
 
-  const double xi = ri / M_SQRT2;
-  const double yi = xi;
+  const double inner_x = inner_radius / M_SQRT2;
+  const double inner_y = inner_x;
 
-  const double xo = ro / M_SQRT2;
-  const double yo = xo;
+  const double outer_x = outer_radius / M_SQRT2;
+  const double outer_y = outer_x;
 
   const int nquads = 3;  /* Number of quads in the upper-right quadrant. */
   const int nyturns = 4; /* Number of turns around y-axis. */
@@ -2726,7 +2726,7 @@ t8_cmesh_new_quadrangulated_disk (const double radius, sc_MPI_Comm comm)
 
   /* Fine tuning parameter to expand the center squares a bit for more equal
    * element sizes. */
-  const double s = 1.2;
+  const double center_square_tuning = 1.2;
 
   /* Arrays for the face connectivity computations via vertices. */
   double all_verts[ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM];
@@ -2741,9 +2741,18 @@ t8_cmesh_new_quadrangulated_disk (const double radius, sc_MPI_Comm comm)
   }
 
   /* Vertices of upper right quarter of the disk. */
-  const double vertices_mid[4][3] = { { 0.0, 0.0, 0.0 }, { s * xi, 0.0, 0.0 }, { 0.0, s * yi, 0.0 }, { xi, yi, 0.0 } };
-  const double vertices_top[4][3] = { { 0.0, s * yi, 0.0 }, { xi, yi, 0.0 }, { 0.0, yo, 0.0 }, { xo, yo, 0.0 } };
-  const double vertices_bot[4][3] = { { s * xi, 0.0, 0.0 }, { xi, yi, 0.0 }, { xo, 0.0, 0.0 }, { xo, yo, 0.0 } };
+  const double vertices_mid[4][3] = { { 0.0, 0.0, 0.0 },
+                                      { center_square_tuning * inner_x, 0.0, 0.0 },
+                                      { 0.0, center_square_tuning * inner_y, 0.0 },
+                                      { inner_x, inner_y, 0.0 } };
+  const double vertices_top[4][3] = { { 0.0, center_square_tuning * inner_y, 0.0 },
+                                      { inner_x, inner_y, 0.0 },
+                                      { 0.0, outer_y, 0.0 },
+                                      { outer_x, outer_y, 0.0 } };
+  const double vertices_bot[4][3] = { { center_square_tuning * inner_x, 0.0, 0.0 },
+                                      { inner_x, inner_y, 0.0 },
+                                      { outer_x, 0.0, 0.0 },
+                                      { outer_x, outer_y, 0.0 } };
 
   int itree = 0;
   for (int iturn = 0; iturn < 4; iturn++) {
