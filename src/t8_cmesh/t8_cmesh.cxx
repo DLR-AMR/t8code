@@ -568,8 +568,10 @@ t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, const t8_gloidx_t gtree_id, const 
   T8_ASSERT (vertices != NULL);
   T8_ASSERT (!cmesh->committed);
 
-  t8_stash_add_attribute (cmesh->stash, gtree_id, t8_get_package_id (), T8_CMESH_VERTICES_ATTRIBUTE_KEY,
-                          3 * num_vertices * sizeof (double), (void *) vertices, 1);
+  const size_t data_size = 3 * num_vertices * sizeof (double);
+
+  t8_cmesh_set_attribute (cmesh, gtree_id, t8_get_package_id (), T8_CMESH_VERTICES_ATTRIBUTE_KEY, (void *) vertices,
+                          data_size, 0);
 }
 
 void
