@@ -354,7 +354,7 @@ TEST (t8_gtest_geometry_cad_hex, linked_edges)
 }
 #endif /* T8_WITH_OCC */
 
-/** Constructs a cmesh with an cad geometry linked hypercube.
+/** Constructs a cmesh with an cad geometry linked tetrahedron.
  * \param [in] face                   The index of the face to link a surface to. -1 for no face.
  * \param [in] edge                   The index of the edge to link a curve to. -1 for no edge.
  * \param [in] parameters             Parameters of the curve/surface.
@@ -438,6 +438,8 @@ t8_test_geometry_cad_tet (int face, int edge, double *parameters, double *test_r
   double tol = T8_PRECISION_EPS > 1e-10 ? T8_PRECISION_EPS : 1e-10;
 
   t8_cmesh_t cmesh = t8_create_cad_reference_tet (face, edge, parameters);
+  /* 4 coords for face --> 3 vertices of face & element centroid
+   * 2 coords for edge --> 2 vertices of edge */
   for (int i_coord = 0; i_coord < (face >= 0 ? 4 : 2); ++i_coord) {
     t8_geometry_evaluate (cmesh, 0, test_ref_coords + i_coord * 3 + (face >= 0 ? face * 12 : edge * 6), 1, out_coords);
 
