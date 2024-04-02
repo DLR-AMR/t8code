@@ -298,7 +298,7 @@ t8_geom_get_ref_intersection (int edge_index, const double *ref_coords, double r
       break;
     }
     else {
-      /* To find the ref_intersection for edge 1, we calculate the intersection of edge 1 with a stright line from
+      /* To find the ref_intersection for edge 1, we calculate the intersection of edge 1 with a straight line from
        * vertex 1, through the reference point and reaching until x = 0. The y-axis intersect for that line is at
        * slope * (-1).
        * Since the the ref_intersection lies on edge 1, which has a slope of 1,
