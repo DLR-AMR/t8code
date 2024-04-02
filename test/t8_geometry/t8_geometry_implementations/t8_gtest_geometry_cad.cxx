@@ -386,8 +386,6 @@ t8_create_cad_reference_tet (int face, int edge, double *parameters)
                                1, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0,   /* linekd edge: 4 */
                                1, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0 }; /* linekd edge: 5 */
 
-  printf ("vertices: %s\n", (face >= 0 ? "face" : "edge"));
-
   t8_cmesh_set_tree_vertices (cmesh, 0, (face >= 0 ? vertices_face + face * 12 : vertices_edge + edge * 12),
                               num_vertices);
 
@@ -438,8 +436,6 @@ t8_test_geometry_cad_tet (int face, int edge, double *parameters, double *test_r
 #if T8_WITH_OCC
   double out_coords[3];
   double tol = T8_PRECISION_EPS > 1e-10 ? T8_PRECISION_EPS : 1e-10;
-
-  printf ("edge: %d\n", edge);
 
   t8_cmesh_t cmesh = t8_create_cad_reference_tet (face, edge, parameters);
   for (int i_coord = 0; i_coord < (face >= 0 ? 4 : 2); ++i_coord) {
