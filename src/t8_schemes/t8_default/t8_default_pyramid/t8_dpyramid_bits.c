@@ -168,7 +168,7 @@ t8_dpyramid_is_inside_pyra (const t8_dpyramid_t *tet, const t8_dpyramid_t *check
  * We can store the last tetrahedra ancestor in anc.
  * \param[in] tet   Inpute pyramid in the shape of a tet
  * \param[in] level the maximal level to check whether \a tet lies in a pyramid
- * \param[in] anc   Can be NULL or an allocated element. If allocated, it will be filled with the data of the last tetrahedral ancestor 
+ * \param[in] ancestor   Can be NULL or an allocated element. If allocated, it will be filled with the data of the last tetrahedral ancestor 
  * \return          0, if the pyramid is insed of a tetrahedron*/
 static int
 t8_dpyramid_is_inside_tet (const t8_dpyramid_t *tet, const int level, t8_dpyramid_t *ancestor)
