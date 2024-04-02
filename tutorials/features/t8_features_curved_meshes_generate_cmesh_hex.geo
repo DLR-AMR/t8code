@@ -164,7 +164,7 @@ Extrude {0, 0, 0.1} {
 
 /* Due to the indexing behavior if Gmsh, we have to save the .brep file
  * and reopen it again. */
-Save "naca6412.brep";
+Save "airfoil_windtunnel_hexahedra.brep";
 
 /* After creating the geometry we delete everything and start by loading
  * in the brep file. This is necessary because Gmsh gives the geometries its
@@ -172,7 +172,7 @@ Save "naca6412.brep";
  * numeration. */
 Delete All;
 /* We re-open our brep file. */
-Merge "naca6412.brep";
+Merge "airfoil_windtunnel_hexahedra.brep";
 
 /* With the new numeration, we can start to transfinite the curves of the
  * geometry. In Gmsh this is the first step of creating a structured mesh.
@@ -206,4 +206,4 @@ Mesh 3;
  * and the parametric option. */
 Mesh.MshFileVersion = 4.1;
 Mesh.SaveParametric = 1;
-Save "naca6412.msh";
+Save "airfoil_windtunnel_hexahedra.msh";

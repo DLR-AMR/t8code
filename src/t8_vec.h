@@ -57,6 +57,18 @@ t8_vec_normalize (double vec[3])
   }
 }
 
+/** Make a copy of a vector.
+ * \param [in]  vec_in
+ * \param [out] vec_out
+ */
+static inline void
+t8_vec_copy (const double vec_in[3], double vec_out[3])
+{
+  for (int i = 0; i < 3; i++) {
+    vec_out[i] = vec_in[i];
+  }
+}
+
 /** Euclidean distance of X and Y.
  * \param [in]  vec_x  A 3D vector.
  * \param [in]  vec_y  A 3D vector.
@@ -189,13 +201,14 @@ t8_vec_diff (const double vec_x[3], const double vec_y[3], double diff[3])
  * 
  * \param[in] vec_x 
  * \param[in] vec_y 
- * \param[in] eps 
- * \return true, if the vectors are equal up to \a eps 
+ * \param[in] tol 
+ * \return true, if the vectors are equal up to \a tol 
  */
 static inline int
-t8_vec_eq (const double vec_x[3], const double vec_y[3], const double eps)
+t8_vec_eq (const double vec_x[3], const double vec_y[3], const double tol)
 {
-  return fabs (vec_x[0] - vec_y[0]) < eps && fabs (vec_x[1] - vec_y[1]) < eps && fabs (vec_x[2] - vec_y[2]) < eps;
+  T8_ASSERT (tol > 0);
+  return fabs (vec_x[0] - vec_y[0]) <= tol && fabs (vec_x[1] - vec_y[1]) <= tol && fabs (vec_x[2] - vec_y[2]) <= tol;
 }
 
 /** Rescale a vector to a new length.
@@ -247,4 +260,4 @@ t8_vec_swap (double p1[3], double p2[3])
   }
 }
 
-#endif /* !T8_VEC_H! */
+#endif /* !T8_VEC_H */

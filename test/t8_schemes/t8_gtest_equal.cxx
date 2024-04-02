@@ -84,4 +84,4 @@ TEST_P (class_test_equal, test_equal_dfs)
   check_recursive_dfs_to_max_lvl (maxlvl);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_equal, AllEclasses);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_equal, AllEclasses, print_eclass);

@@ -92,6 +92,13 @@ int
 t8_cmesh_is_committed (const t8_cmesh_t cmesh);
 
 #ifdef T8_ENABLE_DEBUG
+/** Check the geometry of the mesh for validity.
+ * \param [in] cmesh            This cmesh is examined.
+ * \return                      True if the geometry of the cmesh is valid.
+ */
+bool
+t8_cmesh_validate_geometry (const t8_cmesh_t cmesh);
+
 /** After a cmesh is committed, check whether all trees in a cmesh do have positive volume.
  * Returns true if all trees have positive volume.
  * \param [in]  cmesh           This cmesh is examined. May be NULL.
@@ -100,7 +107,7 @@ t8_cmesh_is_committed (const t8_cmesh_t cmesh);
  *                              was called, do have positive geometric volume.
  *                              False otherwise.
  */
-int
+bool
 t8_cmesh_no_negative_volume (t8_cmesh_t cmesh);
 #endif
 
@@ -157,7 +164,7 @@ t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm);
  * This call is only valid when the cmesh is not yet committed via a call
  * to \ref t8_cmesh_commit.
  * \param [in,out] cmesh        The cmesh to be updated.
- * \parma [in]     set_face_knowledge   Several values are possible that define
+ * \param [in]     set_face_knowledge   Several values are possible that define
  *                              how much information is required on face connections,
  *                              specified by \ref t8_cmesh_set_join.
  *                              0: Expect face connection of local trees.
@@ -168,7 +175,7 @@ t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm);
  *                              3: Expect face connection of local and ghost trees.
  *                              Consistency of this requirement is checked on
  *                              \ref t8_cmesh_commit.
- *                             -1: Co not change the face_knowledge level but keep any
+ *                             -1: Do not change the face_knowledge level but keep any
  *                                 previously set ones. (Possibly by a previous call to \ref t8_cmesh_set_partition_range)
  * \param [in]     first_local_tree The global index ID of the first tree on this process.
  *                                  If this tree is also the last tree on the previous process,
@@ -387,23 +394,26 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 /* TODO: think about a sensible interface for a parmetis reordering. */
 #endif
 
-/* TODO: comment */
-/* If no geometry is registered and cmesh is modified from another cmesh then
+/** Register a geometry in the cmesh. The cmesh takes ownership of the geometry.
+ * \param [in,out] cmesh        The cmesh.
+ * \param [in]     geometry     The geometry to register.
+ * 
+ * If no geometry is registered and cmesh is modified from another cmesh then
  * the other cmesh's geometries are used.
  * \note If you need to use \ref t8_cmesh_bcast, then all geometries must be
  *       registered \a after the bcast operation, not before.
  */
 void
-t8_cmesh_register_geometry (t8_cmesh_t cmesh, const t8_geometry_c *geometry);
+t8_cmesh_register_geometry (t8_cmesh_t cmesh, t8_geometry_c **geometry);
 
 /** Set the geometry for a tree, thus specify which geometry to use for this tree.
  * \param [in] cmesh     A non-committed cmesh.
  * \param [in] gtreeid   A global tree id in \a cmesh.
- * \param [in] geom_name The name of the geometry to use for this tree.
+ * \param [in] geom      The geometry to use for this tree.
  * See also \ref t8_cmesh_get_tree_geometry
  */
 void
-t8_cmesh_set_tree_geometry (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const char *geom_name);
+t8_cmesh_set_tree_geometry (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const t8_geometry_c *geom);
 
 /** After allocating and adding properties to a cmesh, finish its construction.
  * TODO: this function is MPI collective.
@@ -486,7 +496,11 @@ t8_cmesh_get_num_ghosts (t8_cmesh_t cmesh);
 t8_gloidx_t
 t8_cmesh_get_first_treeid (t8_cmesh_t cmesh);
 
-/* TODO: Comment */
+/** Get the geometry of a tree.
+ * \param [in] cmesh   The cmesh.
+ * \param [in] gtreeid The global tree id of the tree for which the geometry should be returned.
+ * \return             The geometry of the tree.
+ */
 const t8_geometry_c *
 t8_cmesh_get_tree_geometry (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 

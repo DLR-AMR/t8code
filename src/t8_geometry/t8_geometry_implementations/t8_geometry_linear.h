@@ -53,4 +53,4 @@ t8_geometry_linear_destroy (t8_geometry_c **geom);
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_GEOMETRY_LINEAR_H! */
+#endif /* !T8_GEOMETRY_LINEAR_H */
