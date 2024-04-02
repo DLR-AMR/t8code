@@ -437,14 +437,15 @@ t8_test_geometry_cad_tet (int face, int edge, double *parameters, double *test_r
 {
 #if T8_WITH_OCC
   double out_coords[3];
+  double tol = T8_PRECISION_EPS > 1e-10 ? T8_PRECISION_EPS : 1e-10;
 
   printf ("edge: %d\n", edge);
 
   t8_cmesh_t cmesh = t8_create_cad_reference_tet (face, edge, parameters);
-  for (int i_coord = 0; i_coord < (face >= 0 ? 3 : 2); ++i_coord) {
-    t8_geometry_evaluate (cmesh, 0, test_ref_coords + i_coord * 3 + (face >= 0 ? face * 9 : edge * 6), 1, out_coords);
+  for (int i_coord = 0; i_coord < (face >= 0 ? 4 : 2); ++i_coord) {
+    t8_geometry_evaluate (cmesh, 0, test_ref_coords + i_coord * 3 + (face >= 0 ? face * 12 : edge * 6), 1, out_coords);
 
-    EXPECT_VEC3_EQ (out_coords, test_return_coords + i_coord * 3, T8_PRECISION_EPS);
+    EXPECT_VEC3_EQ (out_coords, test_return_coords + i_coord * 3, tol);
   }
   t8_cmesh_destroy (&cmesh);
 
@@ -456,13 +457,29 @@ t8_test_geometry_cad_tet (int face, int edge, double *parameters, double *test_r
 #if T8_WITH_OCC
 TEST (t8_gtest_geometry_cad_tet, linked_faces)
 {
-  double test_ref_coords[36]
-    = { 1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0,
-        1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0 };
+  /* clang-format off */
+  double test_ref_coords[48]
+    = { 1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0,    // face 0
+        0.75, 0.25, 0.5,                                // element centroid
+        0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0,    // face 1
+        0.75, 0.25, 0.5,                                // element centroid
+        1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0,    // face 2
+        0.75, 0.25, 0.5,                                // element centroid
+        0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0,    // face 3
+        0.75, 0.25, 0.5 };                              // element centroid
 
-  double surface_test_return_coords[9] = { 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0 };
+  double surface_test_return_coords[48]
+    = { 0.0, 0.0, 0.0,                      // face vertex 0
+        1.0, 0.0, 0.0,                      // face vertex 1
+        1.0, 0.0, 1.0,                      // face vertex 2
+        0.7953692655, 0.25, 0.4546307344};  // element centroid (shifted)
 
-  double surface_parameters[27] = { 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1 };
+  double surface_parameters[27]
+    = { 0, 1, 0, 0, 1, 1,   // face 0
+        0, 0, 0, 1, 1, 1,   // face 1
+        0, 1, 0, 0, 1, 1,   // face 2
+        0, 0, 0, 1, 1, 1 }; // face 3
+  /* clang-format on */
 
   for (int i_faces = 0; i_faces < 4; i_faces++) {
     t8_test_geometry_cad_tet (i_faces, -1, surface_parameters + i_faces * 6, test_ref_coords,
@@ -472,18 +489,26 @@ TEST (t8_gtest_geometry_cad_tet, linked_faces)
 
 TEST (t8_gtest_geometry_cad_tet, linked_edges)
 {
+  /* clang-format off */
   double test_ref_coords[36]
-    = { 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0,
-        1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0 };
-  double curve_test_return_coords[9] = { 0.0, 0.0, 0.0, 1.0, 0.0, 0.0 };
+    = { 0.0, 0.0, 0.0, 1.0, 0.0, 0.0,   // edge 0
+        1.0, 0.0, 1.0, 0.0, 0.0, 0.0,   // edge 1
+        1.0, 1.0, 1.0, 0.0, 0.0, 0.0,   // edge 2
+        1.0, 0.0, 0.0, 1.0, 0.0, 1.0,   // edge 3
+        1.0, 0.0, 0.0, 1.0, 1.0, 1.0,   // edge 4
+        1.0, 1.0, 1.0, 1.0, 0.0, 1.0 }; // edge 5
+  double curve_test_return_coords[6]
+    = { 0.0, 0.0, 0.0,    // edge vertex 0
+        1.0, 0.0, 0.0 };  // edge vertex 1
   double curve_parameters[12] = {
-    0, 1,  // Edge 0
-    1, 0,  // Edge 1
-    1, 0,  // Edge 2
-    0, 1,  // Edge 3
-    0, 1,  // Edge 4
-    1, 0,  // Edge 5
+    0, 1,  // edge 0
+    1, 0,  // edge 1
+    1, 0,  // edge 2
+    0, 1,  // edge 3
+    0, 1,  // edge 4
+    1, 0,  // edge 5
   };
+  /* clang-format on */
 
   for (int i_edges = 0; i_edges < 6; ++i_edges) {
     t8_test_geometry_cad_tet (-1, i_edges, curve_parameters + i_edges * 2, test_ref_coords, curve_test_return_coords);
