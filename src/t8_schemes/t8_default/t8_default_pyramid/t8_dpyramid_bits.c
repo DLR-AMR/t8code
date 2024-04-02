@@ -171,7 +171,7 @@ t8_dpyramid_is_inside_pyra (const t8_dpyramid_t *tet, const t8_dpyramid_t *check
  * \param[in] anc   Can be NULL or an allocated element. If allocated, it will be filled with the data of the last tetrahedral ancestor 
  * \return          0, if the pyramid is insed of a tetrahedron*/
 static int
-t8_dpyramid_is_inside_tet (const t8_dpyramid_t *tet, const int level, t8_dpyramid_t *anc)
+t8_dpyramid_is_inside_tet (const t8_dpyramid_t *tet, const int level, t8_dpyramid_t *ancestor)
 {
   T8_ASSERT (t8_dpyramid_shape (tet) == T8_ECLASS_TET);
   T8_ASSERT (tet->pyramid.type == 0 || tet->pyramid.type == 3);
@@ -191,8 +191,8 @@ t8_dpyramid_is_inside_tet (const t8_dpyramid_t *tet, const int level, t8_dpyrami
     pyra_at_level.pyramid.level = i;
     if (t8_dpyramid_is_inside_pyra (tet, &pyra_at_level) == 0) {
       /*tet is inside a tet */
-      if (anc != NULL) {
-        t8_dtet_ancestor (&(tet->pyramid), i, &(anc->pyramid));
+      if (ancestor != NULL) {
+        t8_dtet_ancestor (&(tet->pyramid), i, &(ancestor->pyramid));
       }
       return i;
     }
