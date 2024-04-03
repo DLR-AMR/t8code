@@ -1,1 +1,3 @@
 I place my contributions to t8code from 08/01/2017 to 03/31/2018 under the FreeBSD license. Johannes Holke (holke@ins.uni-bonn.de)
+
+I place my contributions to t8code starting from 14/05/2018 under the FreeBSD license. Johannes Holke (johannes.holke@dlr.de)

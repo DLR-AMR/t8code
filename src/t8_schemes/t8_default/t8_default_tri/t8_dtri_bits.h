@@ -48,6 +48,14 @@ t8_dtri_copy (const t8_dtri_t *t, t8_dtri_t *dest);
 int
 t8_dtri_compare (const t8_dtri_t *t1, const t8_dtri_t *t2);
 
+/** Check if two elements are equal.
+* \param [in] elem1  The first element.
+* \param [in] elem2  The second element.
+* \return            1 if the elements are equal, 0 if they are not equal
+*/
+int
+t8_dtri_equal (const t8_dtri_t *elem1, const t8_dtri_t *elem2);
+
 /** Compute the parent of a triangle.
  * \param [in]  elem Input triangle.
  * \param [in,out] parent Existing triangle whose data will be filled with the data of elem's parent.
@@ -74,8 +82,8 @@ t8_dtri_ancestor (const t8_dtri_t *t, int level, t8_dtri_t *ancestor);
 void
 t8_dtri_compute_coords (const t8_dtri_t *elem, const int vertex, t8_dtri_coord_t coordinates[2]);
 
-/** Compute the reference coordinates of a vertex of a triangle when the  tree (level 0 triangle) is embedded in 
- * [0,1]^2.
+/** Compute the reference coordinates of a vertex of a triangle when the 
+ * tree (level 0 triangle) is embedded in \f$ [0,1]^2 \f$.
  * \param [in] elem         Input triangle.
  * \param [in] vertex       The number of the vertex.
  * \param [out] coordinates An array of 2 double that will be filled with the reference coordinates of the vertex.
@@ -83,15 +91,23 @@ t8_dtri_compute_coords (const t8_dtri_t *elem, const int vertex, t8_dtri_coord_t
 void
 t8_dtri_compute_vertex_ref_coords (const t8_dtri_t *elem, const int vertex, double coordinates[2]);
 
-/** Convert a point in the reference space of a triangle element to a point in the reference space of the tree 
- * (level 0) embedded in [0,1]^2.
+/** Convert points in the reference space of a tri element to points in the
+ *  reference space of the tree (level 0) embedded in \f$ [0,1]^2 \f$.
  * \param [in]  elem       Input triangle.
- * \param [in]  ref_coords The reference coordinates inside the triangle element [0,1]^2
- * \param [out] out_coords An array of 2 doubles that will be filled with the reference coordinates in the tree of the 
- *                         triangle.
+ * \param [in]  ref_coords The reference coordinates in the triangle
+ *                         (\a num_coords times \f$ [0,1]^2 \f$)
+ * \param [in]  num_coords Number of coordinates to evaluate
+ * \param [in]  skip_coords Only used for batch computation of prisms.
+ *                          In all other cases 0.
+ *                          Skip coordinates in the \a ref_coords and
+ *                          \a out_coords array.
+ * \param [out] out_coords An array of \a num_coords x 2 x double that
+ * 		                     will be filled with the reference coordinates
+ *                         of the points on the triangle.
  */
 void
-t8_dtri_compute_reference_coords (const t8_dtri_t *elem, const double *ref_coords, double out_coords[2]);
+t8_dtri_compute_reference_coords (const t8_dtri_t *elem, const double *ref_coords, const size_t num_coords,
+                                  const size_t skip_coords, double *out_coords);
 
 /** Compute the coordinates of the four vertices of a triangle.
  * \param [in] elem         Input triangle.
@@ -380,12 +396,6 @@ t8_dtri_get_level (const t8_dtri_t *t);
 int
 t8_dtri_is_valid (const t8_dtri_t *t);
 
-/** Print a triangle
- * \param [in] t  triangle to be considered.
- */
-void
-t8_dtri_debug_print (const t8_dtri_t *t);
-
 #ifdef T8_ENABLE_DEBUG
 /** Set sensible default values for a triangle.
  * \param [in,out] t A triangle.
@@ -393,6 +403,17 @@ t8_dtri_debug_print (const t8_dtri_t *t);
 void
 t8_dtri_init (t8_dtri_t *t);
 #endif
+
+void
+t8_dtri_element_pack (t8_dtri_t **const elements, const unsigned int count, void *send_buffer, const int buffer_size,
+                      int *position, sc_MPI_Comm comm);
+
+void
+t8_dtri_element_pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size);
+
+void
+t8_dtri_element_unpack (void *recvbuf, const int buffer_size, int *position, t8_dtri_t **elements,
+                        const unsigned int count, sc_MPI_Comm comm);
 
 T8_EXTERN_C_END ();
 

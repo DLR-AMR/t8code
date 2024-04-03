@@ -54,6 +54,14 @@ t8_dvertex_copy (const t8_dvertex_t *v, t8_dvertex_t *dest);
 int
 t8_dvertex_compare (const t8_dvertex_t *l1, const t8_dvertex_t *l2);
 
+/** Check if two elements are equal.
+* \param [in] elem1  The first element.
+* \param [in] elem2  The second element.
+* \return            1 if the elements are equal, 0 if they are not equal
+*/
+int
+t8_dvertex_equal (const t8_dvertex_t *elem1, const t8_dvertex_t *elem2);
+
 /** Compute the parent of a vertex.
  * \param [in]  l   The input vertex.
  * \param [in,out] parent Existing vertex whose data will be filled with the parent
@@ -196,14 +204,19 @@ t8_dvertex_vertex_coords (const t8_dvertex_t *elem, int vertex, int coords[]);
 void
 t8_dvertex_vertex_ref_coords (const t8_dvertex_t *elem, int vertex, double coords[]);
 
-/** Compute the coordinates of a reference coordinate (always 0) inside the
- * [0,1]^0 reference space.
- * \param [in] elem         Vertex whose vertex is computed.
- * \param [in] ref_coords   The reference coordinate inside the vertex (must be 0).
- * \param [out] out_coords  The coordinates of the computed vertex, must have one entry (will be set to 0).
+/** Convert points in the reference space of a vertex element to points in the
+ *  reference space of the tree (level 0) embedded in \f$ [0,1]^1 \f$.
+ * \param [in]  elem       Input vertex.
+ * \param [in]  ref_coords The reference coordinates in the vertex
+ *                         (\a num_coords times \f$ [0,1]^1 \f$)
+ * \param [in]  num_coords Number of coordinates to evaluate
+ * \param [out] out_coords An array of \a num_coords x 1 x double that
+ * 		                     will be filled with the reference coordinates
+ *                         of the points on the vertex (will be set to 0).
  */
 void
-t8_dvertex_compute_reference_coords (const t8_dvertex_t *elem, const double *ref_coords, double *out_coords);
+t8_dvertex_compute_reference_coords (const t8_dvertex_t *elem, const double *ref_coords, const size_t num_coords,
+                                     double *out_coords);
 
 /** Computes the linear position of a vertex in an uniform grid.
  * \param [in] vertex  vertex whose id will be computed.

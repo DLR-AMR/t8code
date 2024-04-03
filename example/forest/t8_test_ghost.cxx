@@ -55,10 +55,10 @@ t8_refine_p8est (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_
 }
 
 /* Refine every third element. */
-/* TODO: rename */
 static int
-t8_basic_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+t8_adapt_every_third_element (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
+                              t8_locidx_t lelement_id, t8_eclass_scheme_c *ts, const int is_family,
+                              const int num_elements, t8_element_t *elements[])
 {
   int level;
   T8_ASSERT (!is_family || num_elements == ts->t8_element_num_children (elements[0]));
@@ -119,7 +119,7 @@ t8_test_ghost_refine_and_partition (t8_cmesh_t cmesh, const int level, sc_MPI_Co
   t8_forest_adapt_t adapt_fn;
 
   if (!no_vtk) {
-    t8_cmesh_vtk_write_file (cmesh, "test_ghost_cmesh0", 1.0);
+    t8_cmesh_vtk_write_file (cmesh, "test_ghost_cmesh0");
   }
   if (partition_cmesh) {
     /* partition the initial cmesh according to a uniform forest */
@@ -133,7 +133,7 @@ t8_test_ghost_refine_and_partition (t8_cmesh_t cmesh, const int level, sc_MPI_Co
     cmesh_partition = cmesh;
   }
   if (!no_vtk) {
-    t8_cmesh_vtk_write_file (cmesh_partition, "test_ghost_cmesh1", 1.0);
+    t8_cmesh_vtk_write_file (cmesh_partition, "test_ghost_cmesh1");
   }
   forest = t8_forest_new_uniform (cmesh_partition, t8_scheme_new_default_cxx (), level, 1, comm);
 
@@ -145,7 +145,7 @@ t8_test_ghost_refine_and_partition (t8_cmesh_t cmesh, const int level, sc_MPI_Co
     /* Chose refinement function */
     switch (refine_method) {
     case REFINE_THIRD:
-      adapt_fn = t8_basic_adapt;
+      adapt_fn = t8_adapt_every_third_element;
       break;
     case REFINE_P8:
       adapt_fn = t8_refine_p8est;

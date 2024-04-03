@@ -1,3 +1,31 @@
+/*
+  This file is part of t8code.
+  t8code is a C library to manage a collection (a forest) of multiple
+  connected adaptive space-trees of general element types in parallel.
+
+  Copyright (C) 2023 the developers
+
+  t8code is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  t8code is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with t8code; if not, write to the Free Software Foundation, Inc.,
+  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+*/
+
+/* This file is part of the step7 example of t8code.
+ * Showcase how to interpolate/project data during adaptation of a mesh.
+ * Uses a single datapoint on each element, that is replicated during refinement, and averaged during coarsening.
+ * Implementation of the t8_forest_replace callback, t8_forest_adapt callback
+ */
+
 #include <iostream>
 #include <t8.h>
 #include <t8_eclass.h>
@@ -10,7 +38,7 @@
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_forest/t8_forest_io.h>
-#include "t8_cmesh/t8_cmesh_testcases.h"
+
 #include <tutorials/general/t8_step3.h>
 
 #include <t8_forest/t8_forest_partition.h>
@@ -136,7 +164,7 @@ t8_step7_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_
  *                              or parents are plugged into the callback again recursively until the forest does not
  *                              change any more. If you use this you should ensure that refinement will stop eventually.
  *                              One way is to check the element's level against a given maximum level.
- * \param [in] user_data        User defined data array to store on the forest
+ * \param [in] user_data        User-defined data array to store on the forest
  */
 t8_forest_t
 t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn, int do_partition, int recursive, void *user_data)
@@ -219,7 +247,7 @@ t8_write_vtu (t8_forest_t forest, struct t8_step7_adapt_data *data, const char *
   /* We need to allocate a new array to store the volumes on their own.
    * This array has one entry per local element. */
   double *element_data = T8_ALLOC (double, num_elements);
-  /* The number of user defined data fields to write. */
+  /* The number of user-defined data fields to write. */
   int num_data = 1;
   t8_vtk_data_field_t vtk_data;
   vtk_data.type = T8_VTK_SCALAR;
@@ -230,8 +258,8 @@ t8_write_vtu (t8_forest_t forest, struct t8_step7_adapt_data *data, const char *
     element_data[ielem] = t8_element_get_value (data, ielem).values;
   }
 
-  /* To write user defined data, we need to extended output function t8_forest_vtk_write_file
-   * from t8_forest_vtk.h. Despite writin user data, it also offers more control over which 
+  /* To write user-defined data, we need to extend the output function t8_forest_vtk_write_file
+   * from t8_forest_vtk.h. Despite writing user data, it also offers more control over which 
    * properties of the forest to write. */
   int write_treeid = 1;
   int write_mpirank = 1;
@@ -243,7 +271,7 @@ t8_write_vtu (t8_forest_t forest, struct t8_step7_adapt_data *data, const char *
   T8_FREE (element_data);
 }
 
-/* In this function the interpolation is described. In a first step a 
+/* In this function the interpolation is described. As a first step a 
  * hypercubic cmesh and then a forest is created. 
  * We create a data array with the distance to the centroid of each cell.
  * The forest is adapted and the data array is interpolated corresponding to
@@ -312,7 +340,7 @@ t8_interpolation ()
   /* Build a second forest to store the adapted forest - keep the old one */
   t8_forest_ref (forest);
 
-  /* Adapt the forest corresponding tho the callback function (distance to the centroid) */
+  /* Adapt the forest corresponding to the callback function (distance to the centroid) */
   forest_adapt = t8_adapt_forest (forest, t8_step7_adapt_callback, 0, 0, data);
   /* Calculate/Interpolate the data array for the adapted forest */
 

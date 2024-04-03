@@ -55,6 +55,14 @@ t8_dline_copy (const t8_dline_t *l, t8_dline_t *dest);
 int
 t8_dline_compare (const t8_dline_t *l1, const t8_dline_t *l2);
 
+/** Check if two elements are equal.
+* \param [in] elem1  The first element.
+* \param [in] elem2  The second element.
+* \return            1 if the elements are equal, 0 if they are not equal
+*/
+int
+t8_dline_equal (const t8_dline_t *elem1, const t8_dline_t *elem2);
+
 /** Compute the parent of a line.
  * \param [in]  l   The input line.
  * \param [in,out] parent Existing line whose data will be filled with the parent
@@ -247,16 +255,23 @@ t8_dline_vertex_coords (const t8_dline_t *elem, const int vertex, int coords[]);
 void
 t8_dline_vertex_ref_coords (const t8_dline_t *elem, const int vertex, double coordinates[1]);
 
-/** Convert a point in the reference space of a line element to a point in the
+/** Convert points in the reference space of a line element to points in the
  *  reference space of the tree (level 0) embedded in [0,1]^1.
  * \param [in]  elem       Input line.
- * \param [in]  ref_coords The reference coordinate on the line [0, 1]^1
- * \param [out] out_coords An array of 1 double that
+ * \param [in]  ref_coords The reference coordinates in the line
+ *                         (\a num_coords times \f$ [0,1]^1 \f$)
+ * \param [in]  num_coords Number of coordinates to evaluate
+ * \param [in]  skip_coords Only used for batch computation of prisms.
+ *                          In all other cases 0.
+ *                          Skip coordinates in the \a ref_coords and
+ *                          \a out_coords array.
+ * \param [out] out_coords An array of \a num_coords x 1 x double that
  * 		                     will be filled with the reference coordinates
- *                         of the point on the line.
+ *                         of the points on the line.
  */
 void
-t8_dline_compute_reference_coords (const t8_dline_t *elem, const double *ref_coords, double *out_coords);
+t8_dline_compute_reference_coords (const t8_dline_t *elem, const double *ref_coords, const size_t num_coords,
+                                   const size_t skip_coords, double *out_coords);
 
 /** Computes the linear position of a line in an uniform grid.
  * \param [in] line  Line whose id will be computed.
@@ -273,12 +288,6 @@ t8_dline_linear_id (const t8_dline_t *elem, int level);
  */
 int
 t8_dline_is_valid (const t8_dline_t *l);
-
-/** Print a line
- * \param [in] l  line to be initialized 
- */
-void
-t8_dline_debug_print (const t8_dline_t *l);
 
 /** Set default values for a line, such that it passes \ref t8_dline_is_valid.
  * \param [in] l  line to be initialized

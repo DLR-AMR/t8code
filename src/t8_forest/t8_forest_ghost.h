@@ -54,7 +54,7 @@ t8_forest_ghost_init (t8_forest_ghost_t *pghost, t8_ghost_type_t ghost_type);
 /* TODO: document */
 /* returns 0 if ghost structure doesnt exist */
 t8_locidx_t
-t8_forest_ghost_num_trees (t8_forest_t forest);
+t8_forest_ghost_num_trees (const t8_forest_t forest);
 
 /** Return the element offset of a ghost tree.
  * \param [in]      forest      The forest with constructed ghost layer.
@@ -76,7 +76,7 @@ t8_forest_ghost_tree_num_elements (t8_forest_t forest, t8_locidx_t lghost_tree);
  * \a forest must be committed before calling this function.
  */
 t8_element_array_t *
-t8_forest_ghost_get_tree_elements (t8_forest_t forest, t8_locidx_t lghost_tree);
+t8_forest_ghost_get_tree_elements (const t8_forest_t forest, const t8_locidx_t lghost_tree);
 
 /** Given a global tree compute the ghost local tree id of it.
  * \param [in]  forest    The forest. Ghost layer must exist.
@@ -92,7 +92,7 @@ t8_forest_ghost_get_ghost_treeid (t8_forest_t forest, t8_gloidx_t gtreeid);
 
 /* TODO: document */
 t8_eclass_t
-t8_forest_ghost_get_tree_class (t8_forest_t forest, t8_locidx_t lghost_tree);
+t8_forest_ghost_get_tree_class (const t8_forest_t forest, const t8_locidx_t lghost_tree);
 
 /** Given a local ghost tree compute the global tree id of it.
  * \param [in]  forest    The forest. Ghost layer must exist.
@@ -102,7 +102,7 @@ t8_forest_ghost_get_tree_class (t8_forest_t forest, t8_locidx_t lghost_tree);
  * \see https://github.com/DLR-AMR/t8code/wiki/Tree-indexing for more details about tree indexing.
  */
 t8_gloidx_t
-t8_forest_ghost_get_global_treeid (t8_forest_t forest, t8_locidx_t lghost_tree);
+t8_forest_ghost_get_global_treeid (const t8_forest_t forest, const t8_locidx_t lghost_tree);
 
 /* TODO: document */
 t8_element_t *
@@ -187,4 +187,4 @@ t8_forest_ghost_create_topdown (t8_forest_t forest);
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_FOREST_GHOST_H! */
+#endif /* !T8_FOREST_GHOST_H */
