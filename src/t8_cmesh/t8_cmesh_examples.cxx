@@ -2709,14 +2709,14 @@ t8_cmesh_new_quadrangulated_disk (const double radius, sc_MPI_Comm comm)
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
 
-  const double ri = 0.6 * radius;
-  const double ro = radius;
+  const double inner_radius = 0.6 * radius;
+  const double outer_radius = radius;
 
-  const double xi = ri / M_SQRT2;
-  const double yi = xi;
+  const double inner_x = inner_radius / M_SQRT2;
+  const double inner_y = inner_x;
 
-  const double xo = ro / M_SQRT2;
-  const double yo = xo;
+  const double outer_x = outer_radius / M_SQRT2;
+  const double outer_y = outer_x;
 
   const int nquads = 3;  /* Number of quads in the upper-right quadrant. */
   const int nyturns = 4; /* Number of turns around y-axis. */
@@ -2726,7 +2726,7 @@ t8_cmesh_new_quadrangulated_disk (const double radius, sc_MPI_Comm comm)
 
   /* Fine tuning parameter to expand the center squares a bit for more equal
    * element sizes. */
-  const double s = 1.2;
+  const double center_square_tuning = 1.2;
 
   /* Arrays for the face connectivity computations via vertices. */
   double all_verts[ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM];
@@ -2741,9 +2741,18 @@ t8_cmesh_new_quadrangulated_disk (const double radius, sc_MPI_Comm comm)
   }
 
   /* Vertices of upper right quarter of the disk. */
-  const double vertices_mid[4][3] = { { 0.0, 0.0, 0.0 }, { s * xi, 0.0, 0.0 }, { 0.0, s * yi, 0.0 }, { xi, yi, 0.0 } };
-  const double vertices_top[4][3] = { { 0.0, s * yi, 0.0 }, { xi, yi, 0.0 }, { 0.0, yo, 0.0 }, { xo, yo, 0.0 } };
-  const double vertices_bot[4][3] = { { s * xi, 0.0, 0.0 }, { xi, yi, 0.0 }, { xo, 0.0, 0.0 }, { xo, yo, 0.0 } };
+  const double vertices_mid[4][3] = { { 0.0, 0.0, 0.0 },
+                                      { center_square_tuning * inner_x, 0.0, 0.0 },
+                                      { 0.0, center_square_tuning * inner_y, 0.0 },
+                                      { inner_x, inner_y, 0.0 } };
+  const double vertices_top[4][3] = { { 0.0, center_square_tuning * inner_y, 0.0 },
+                                      { inner_x, inner_y, 0.0 },
+                                      { 0.0, outer_y, 0.0 },
+                                      { outer_x, outer_y, 0.0 } };
+  const double vertices_bot[4][3] = { { center_square_tuning * inner_x, 0.0, 0.0 },
+                                      { inner_x, inner_y, 0.0 },
+                                      { outer_x, 0.0, 0.0 },
+                                      { outer_x, outer_y, 0.0 } };
 
   int itree = 0;
   for (int iturn = 0; iturn < 4; iturn++) {
@@ -3208,17 +3217,17 @@ t8_cmesh_new_cubed_sphere (const double radius, sc_MPI_Comm comm)
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
 
-  const double ri = 0.6 * radius;
-  const double ro = radius;
+  const double inner_radius = 0.6 * radius;
+  const double outer_radius = radius;
 
   const double SQRT3 = 1.7320508075688772;
-  const double xi = ri / SQRT3;
-  const double yi = xi;
-  const double zi = xi;
+  const double inner_x = inner_radius / SQRT3;
+  const double inner_y = inner_x;
+  const double inner_z = inner_x;
 
-  const double xo = ro / SQRT3;
-  const double yo = xo;
-  const double zo = xo;
+  const double outer_x = outer_radius / SQRT3;
+  const double outer_y = outer_x;
+  const double outer_z = outer_x;
 
   const int nhexs = 4;   /* Number of hexs in the front-upper-right octant. */
   const int nzturns = 4; /* Number of turns around z-axis. */
@@ -3229,7 +3238,7 @@ t8_cmesh_new_cubed_sphere (const double radius, sc_MPI_Comm comm)
 
   /* Fine tuning parameter to expand the center hex a bit for more equal
    * element sizes. */
-  const double s = 1.2;
+  const double center_hex_tuning = 1.2;
 
   /* Arrays for the face connectivity computations via vertices. */
   double all_verts[ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM];
@@ -3243,15 +3252,38 @@ t8_cmesh_new_cubed_sphere (const double radius, sc_MPI_Comm comm)
     all_eclasses[itree] = T8_ECLASS_HEX;
   }
 
-  const double vertices_mid[8][3]
-    = { { 0.0, 0.0, 0.0 },    { s * xi, 0.0, 0.0 }, { 0.0, s * yi, 0.0 }, { xi, yi, 0.0 },
-        { 0.0, 0.0, s * zi }, { xi, 0.0, zi },      { 0.0, yi, zi },      { xi, yi, zi } };
-  const double vertices_top[8][3] = { { 0.0, s * yi, 0.0 }, { xi, yi, 0.0 }, { 0.0, yi, zi }, { xi, yi, zi },
-                                      { 0.0, yo, 0.0 },     { xo, yo, 0.0 }, { 0.0, yo, zo }, { xo, yo, zo } };
-  const double vertices_bot[8][3] = { { s * xi, 0.0, 0.0 }, { xi, yi, 0.0 }, { xi, 0.0, zi }, { xi, yi, zi },
-                                      { xo, 0.0, 0.0 },     { xo, yo, 0.0 }, { xo, 0.0, zo }, { xo, yo, zo } };
-  const double vertices_zen[8][3] = { { 0.0, 0.0, s * zi }, { xi, 0.0, zi }, { 0.0, yi, zi }, { xi, yi, zi },
-                                      { 0.0, 0.0, zo },     { xo, 0.0, zo }, { 0.0, yo, zo }, { xo, yo, zo } };
+  const double vertices_mid[8][3] = { { 0.0, 0.0, 0.0 },
+                                      { center_hex_tuning * inner_x, 0.0, 0.0 },
+                                      { 0.0, center_hex_tuning * inner_y, 0.0 },
+                                      { inner_x, inner_y, 0.0 },
+                                      { 0.0, 0.0, center_hex_tuning * inner_z },
+                                      { inner_x, 0.0, inner_z },
+                                      { 0.0, inner_y, inner_z },
+                                      { inner_x, inner_y, inner_z } };
+  const double vertices_top[8][3] = { { 0.0, center_hex_tuning * inner_y, 0.0 },
+                                      { inner_x, inner_y, 0.0 },
+                                      { 0.0, inner_y, inner_z },
+                                      { inner_x, inner_y, inner_z },
+                                      { 0.0, outer_y, 0.0 },
+                                      { outer_x, outer_y, 0.0 },
+                                      { 0.0, outer_y, outer_z },
+                                      { outer_x, outer_y, outer_z } };
+  const double vertices_bot[8][3] = { { center_hex_tuning * inner_x, 0.0, 0.0 },
+                                      { inner_x, inner_y, 0.0 },
+                                      { inner_x, 0.0, inner_z },
+                                      { inner_x, inner_y, inner_z },
+                                      { outer_x, 0.0, 0.0 },
+                                      { outer_x, outer_y, 0.0 },
+                                      { outer_x, 0.0, outer_z },
+                                      { outer_x, outer_y, outer_z } };
+  const double vertices_zen[8][3] = { { 0.0, 0.0, center_hex_tuning * inner_z },
+                                      { inner_x, 0.0, inner_z },
+                                      { 0.0, inner_y, inner_z },
+                                      { inner_x, inner_y, inner_z },
+                                      { 0.0, 0.0, outer_z },
+                                      { outer_x, 0.0, outer_z },
+                                      { 0.0, outer_y, outer_z },
+                                      { outer_x, outer_y, outer_z } };
 
   int itree = 0;
   for (int yturn = 0; yturn < nyturns; yturn++) {
