@@ -303,6 +303,18 @@ t8_geometry_cad::t8_geom_evaluate_cad_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
           }
         }
       }
+      /* Retrieve surface */
+      T8_ASSERT (*faces <= cad_shape_face_map.Size ());
+      surface = BRep_Tool::Surface (TopoDS::Face (cad_shape_face_map.FindKey (*faces)));
+      /* Check if surface is valid */
+      T8_ASSERT (!surface.IsNull ());
+
+      /* Evaluate surface and save result */
+      surface->D0 (interpolated_surface_parameters[0], interpolated_surface_parameters[1], pnt);
+
+      for (int dim = 0; dim < 3; ++dim) {
+        out_coords[dim] = pnt.Coord (dim + 1);
+      }
     }
   }
   else {
