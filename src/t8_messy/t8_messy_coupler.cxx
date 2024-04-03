@@ -1338,5 +1338,4 @@ t8_messy_write_forest (t8_forest_t forest, const char *prefix,
   }
 
   T8_FREE (dim_data_array);
-
 }
