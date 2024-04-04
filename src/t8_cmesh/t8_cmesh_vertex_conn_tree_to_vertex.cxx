@@ -31,6 +31,7 @@
 /* constructor from a given vertex to tree list. */
 t8_cmesh_vertex_conn_tree_to_vertex_c::t8_cmesh_vertex_conn_tree_to_vertex_c (
   const t8_cmesh_t cmesh_from, t8_cmesh_t cmesh, const t8_cmesh_vertex_conn_vertex_to_tree_c &vtt)
+  : t8_cmesh_vertex_conn_tree_to_vertex_c ()
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh_from));
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
