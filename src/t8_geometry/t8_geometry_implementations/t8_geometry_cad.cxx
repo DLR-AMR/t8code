@@ -199,17 +199,8 @@ t8_geometry_cad::t8_geom_evaluate_cad_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
    * 
    */
 
-  printf ("ref_coords: [%f, %f, %f, %f, %f, %f]\n", ref_coords[0], ref_coords[1], ref_coords[2], ref_coords[3],
-          ref_coords[4], ref_coords[5]);
-  printf ("tree_vertices: [%f, %f, %f, %f, %f, %f, %f, %f, %f]\n", active_tree_vertices[0], active_tree_vertices[1],
-          active_tree_vertices[2], active_tree_vertices[3], active_tree_vertices[4], active_tree_vertices[5],
-          active_tree_vertices[6], active_tree_vertices[7], active_tree_vertices[8]);
-  printf ("num_coords: %ld\n", num_coords);
   /* Linear mapping from ref_coords to out_coords for each reference point */
   t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, num_coords, out_coords);
-
-  printf ("[Vor] out_coords: [%f, %f, %f, %f, %f, %f, %f, %f, %f]\n", out_coords[0], out_coords[1], out_coords[2],
-          out_coords[3], out_coords[4], out_coords[5], out_coords[6], out_coords[7], out_coords[8]);
 
   /* Check if face has a linked geometry */
   if (*faces > 0) {
