@@ -63,6 +63,7 @@ typedef struct t8_cmesh_vertex_conn_tree_to_vertex_c
    * 
    * \note \a cmesh must not be committed.
    * \note \a vtt must be committed.
+   * \note This does not work until issue #923 https://github.com/DLR-AMR/t8code/issues/923 is resolved.
    */
   t8_cmesh_vertex_conn_tree_to_vertex_c (const t8_cmesh_t cmesh_from, const t8_cmesh_t cmesh,
                                          const struct t8_cmesh_vertex_conn_vertex_to_tree_c &vtt);
