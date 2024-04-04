@@ -76,7 +76,7 @@ class cmesh_vertex_conn_ttv: public testing::TestWithParam<cmesh_example_base *>
 };
 
 /** Check attribute values of cmeshes against reference values. */
-TEST_P (cmesh_vertex_conn_ttv, get_global)
+TEST_P (cmesh_vertex_conn_ttv, DISABLED_get_global)
 {
   const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
   for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree) {
@@ -98,5 +98,87 @@ TEST_P (cmesh_vertex_conn_ttv, get_global)
   }
 }
 
+/* TODO: Remove the tests belonging to cmesh_vertex_conn_ttv_temp
+ *       as soon as we can enable the tests cmesh_vertex_conn_ttv.
+ *       That is as soon as we can add attributes to cmeshes while deriving. */
+
+#define VTT_TEST_MAX_NUM_TREES 100
+
+class cmesh_vertex_conn_ttv_temp: public testing::TestWithParam<std::tuple<t8_gloidx_t, t8_eclass_t>> {
+ protected:
+  void
+  SetUp () override
+  {
+    num_trees = std::get<0> (GetParam ());
+    const t8_eclass_t tree_class = std::get<1> (GetParam ());
+    t8_cmesh_init (&cmesh);
+
+    t8_debugf ("Testing cmesh with %li trees of class %s\n", num_trees, t8_eclass_to_string[tree_class]);
+
+    for (t8_locidx_t itree = 0; itree < num_trees; ++itree) {
+      /* Set this tree's class. */
+      t8_cmesh_set_tree_class (cmesh, itree, tree_class);
+      /* Allocate space for entries. */
+      const int num_tree_vertices = t8_eclass_num_vertices[tree_class];
+      t8_gloidx_t *global_indices = T8_ALLOC (t8_gloidx_t, num_tree_vertices);
+      /* Fill with i, i+1, i+2, i+3, ... */
+      const t8_gloidx_t start_index = itree * T8_ECLASS_MAX_CORNERS;
+      for (t8_locidx_t ientry = 0; ientry < num_tree_vertices; ++ientry) {
+        global_indices[ientry] = start_index + ientry;
+      }
+      ttv.set_global_vertex_ids_of_tree_vertices (cmesh, itree, global_indices, num_tree_vertices);
+      /* It is save to free the entries after commit, since the value got copied. */
+      T8_FREE (global_indices);
+    }
+
+    /* Commit the cmesh */
+    t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
+  }
+
+  void
+  TearDown () override
+  {
+    t8_cmesh_destroy (&cmesh);
+  }
+
+  t8_cmesh_t cmesh;
+  t8_gloidx_t num_trees;
+
+  t8_cmesh_vertex_conn_tree_to_vertex_c ttv;
+};
+
+/** Check attribute values of cmeshes against reference values. */
+#if 0
+// Reactive this line when we enable the tests with derived attributes
+TEST_P (cmesh_vertex_conn_ttv, DISABLED_get_global)
+#else
+// Delete this line and the cmesh_vertex_conn_ttv_temp class wehen we enable the tests with derived attributes
+TEST_P (cmesh_vertex_conn_ttv_temp, get_global)
+#endif
+{
+  const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
+  for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree) {
+
+    const t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, itree);
+    const int num_tree_vertices = t8_eclass_num_vertices[tree_class];
+
+    /* Get all vertices */
+    const t8_gloidx_t *global_vertices = ttv.get_global_vertices (cmesh, itree, num_tree_vertices);
+
+    const t8_gloidx_t global_tree_id = t8_cmesh_get_global_id (cmesh, itree);
+    const t8_gloidx_t start_index = global_tree_id * T8_ECLASS_MAX_CORNERS;
+    for (int ivertex = 0; ivertex < num_tree_vertices; ++ivertex) {
+      /* Get the stored global vertex id */
+      const t8_gloidx_t global_vertex = ttv.get_global_vertex (cmesh, itree, ivertex, num_tree_vertices);
+      /* Check value */
+      EXPECT_EQ (global_vertex, start_index + ivertex);
+      EXPECT_EQ (global_vertices[ivertex], start_index + ivertex);
+    }
+  }
+}
+
 INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_vertex_tree_to_vertex, cmesh_vertex_conn_ttv, AllCmeshsParam,
                           pretty_print_base_example);
+
+INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_vertex_tree_to_vertex, cmesh_vertex_conn_ttv_temp,
+                          testing::Combine (testing::Values (1, VTT_TEST_MAX_NUM_TREES + 1), AllEclasses));
