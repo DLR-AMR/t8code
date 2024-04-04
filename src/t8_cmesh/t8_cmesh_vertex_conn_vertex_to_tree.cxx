@@ -33,9 +33,10 @@
 /* Constructor from existing tree to vertex list. */
 t8_cmesh_vertex_conn_vertex_to_tree_c::t8_cmesh_vertex_conn_vertex_to_tree_c (
   const t8_cmesh_t cmesh, const t8_cmesh_vertex_conn_tree_to_vertex_c& ttv)
+  : t8_cmesh_vertex_conn_vertex_to_tree_c ()
 {
   /* Call standard constructor */
-  t8_cmesh_vertex_conn_tree_to_vertex_c ();
+  T8_ASSERT (state == INITIALIZED);
 
   const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
   const t8_locidx_t num_ghosts = t8_cmesh_get_num_ghosts (cmesh);
@@ -123,7 +124,7 @@ t8_cmesh_vertex_conn_vertex_to_tree_c::add_vertex_to_tree (const t8_cmesh_t cmes
   T8_ASSERT (0 <= tree_vertex && tree_vertex < num_tree_vertices);
 #endif
   if (state != INITIALIZED) {
-    SC_ABORTF ("Trying to add vertex to committed vertex to tree structure.\n");
+    SC_ABORTF ("%s:%i: Trying to add vertex to committed vertex to tree structure.\n", __FILE__, __LINE__);
   }
 
   tree_vertex_pair pair (ltreeid, tree_vertex);
