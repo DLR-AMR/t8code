@@ -24,6 +24,7 @@
 #include <test/t8_gtest_macros.hxx>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
+#include <t8_cmesh/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <test/t8_cmesh_generator/t8_cmesh_example_sets.hxx>
 
@@ -147,7 +148,7 @@ class cmesh_vertex_conn_ttv_temp: public testing::TestWithParam<std::tuple<t8_gl
   t8_cmesh_vertex_conn_tree_to_vertex_c ttv;
 };
 
-/** Check attribute values of cmeshes against reference values. */
+/** Check for correct ttv entries. */
 #if 0
 // Reactive this line when we enable the tests with derived attributes
 TEST_P (cmesh_vertex_conn_ttv, DISABLED_get_global)
@@ -173,6 +174,38 @@ TEST_P (cmesh_vertex_conn_ttv_temp, get_global)
       /* Check value */
       EXPECT_EQ (global_vertex, start_index + ivertex);
       EXPECT_EQ (global_vertices[ivertex], start_index + ivertex);
+    }
+  }
+}
+
+#if 0
+// Reactive this line when we enable the tests with derived attributes
+TEST_P (cmesh_vertex_conn_ttv, DISABLED_get_global)
+#else
+// Delete this line and the cmesh_vertex_conn_ttv_temp class wehen we enable the tests with derived attributes
+TEST_P (cmesh_vertex_conn_ttv_temp, convert_to_vtt)
+#endif
+{
+  /* create a vertex_to_tree list from ttv */
+  t8_cmesh_vertex_conn_vertex_to_tree_c vtt (cmesh, ttv);
+  /* Since global tree i is mapped to vertices:
+   *  i*T8_ECLASS_MAX_CORNERS, i*T8_ECLASS_MAX_CORNERS + 1, ... 
+   *  and this mapping is unique, we know that the list for vertex j
+   *  must contain 
+   *  global tree j / T8_ECLASS_MAX_CORNERS
+   *  with local vertex j % T8_ECLASS_MAX_CORNERS */
+  ASSERT_TRUE (vtt.is_committed ());
+
+  /* Iterate over all entries in vtt.
+   * Each entry corresponds to a global vertex id and
+   * gives its list of tree indices and vertices. */
+  for (auto &[global_vertex, tree_vertex_list] : vtt) {
+    /* Iterate over the list of tree indices and vertices of this global vertex. */
+    for (auto &[tree_index, tree_vertex] : tree_vertex_list) {
+      const t8_locidx_t expected_tree = global_vertex / T8_ECLASS_MAX_CORNERS;
+      const int expected_tree_vertex = global_vertex % T8_ECLASS_MAX_CORNERS;
+      EXPECT_EQ (tree_index, expected_tree);
+      EXPECT_EQ (tree_vertex, expected_tree_vertex);
     }
   }
 }
