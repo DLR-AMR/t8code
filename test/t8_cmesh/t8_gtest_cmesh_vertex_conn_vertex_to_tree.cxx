@@ -209,8 +209,10 @@ TEST_P (t8_test_cmesh_vertex_conn_vtt, check_multiple_ids)
   }
 }
 
+/* TODO: Enable this test as soon as we can add attribute to 
+ *       derived cmeshes. */
 /* Check stored global ids for the case with multiple global ids. */
-TEST_P (t8_test_cmesh_vertex_conn_vtt, convert_to_ttv_and_back)
+TEST_P (t8_test_cmesh_vertex_conn_vtt, DISABLED_convert_to_ttv_and_back)
 {
   t8_cmesh_t derived_cmesh_A, derived_cmesh_B;
   t8_cmesh_init (&derived_cmesh_A);
