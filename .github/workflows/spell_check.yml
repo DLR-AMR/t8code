@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - mainpp # temporarily while we are working on the C++ restructure
       - feature-*CI* # for testing this script, all feature branches with "CI" in their name
   pull_request:
   workflow_dispatch: # Be able to trigger this manually on github.com
