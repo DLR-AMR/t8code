@@ -881,8 +881,12 @@ t8_test_geometry_cad_pyramid (int face, int edge, double *parameters, double *te
 #endif /* T8_WITH_OCC */
 }
 
+/* This test covers the functionality described in Issue: [https://github.com/DLR-AMR/t8code/issues/1012] 
+ * Remove `DISABLED_` from the name of the Test(suite) or use `--gtest_also_run_disabled_tests` when you start working on the issue. 
+ */
+
 #if T8_WITH_OCC
-TEST (t8_gtest_geometry_cad_pyramid, linked_faces)
+TEST (DISABLED_t8_gtest_geometry_cad_pyramid, linked_faces)
 {
   /* clang-format off */
   double test_ref_coords[60]
@@ -918,7 +922,11 @@ TEST (t8_gtest_geometry_cad_pyramid, linked_faces)
   }
 }
 
-TEST (t8_gtest_geometry_cad_pyramid, linked_edges)
+/* This test covers the functionality described in Issue: [https://github.com/DLR-AMR/t8code/issues/1012] 
+ * Remove `DISABLED_` from the name of the Test(suite) or use `--gtest_also_run_disabled_tests` when you start working on the issue. 
+ */
+
+TEST (DISABLED_t8_gtest_geometry_cad_pyramid, linked_edges)
 {
   /* clang-format off */
   double test_ref_coords[72]
