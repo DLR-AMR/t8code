@@ -26,7 +26,7 @@
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include "t8_cmesh/t8_cmesh_trees.h"
 #include "t8_cmesh/t8_cmesh_partition.h"
-#include <t8_cmesh/t8_cmesh_testcases.h>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_zero.h>
 
 /* At the time of this writing (November 15 2023) t8_cmesh_offset_concentrate
  * has a comment stating it does not work with non-derived cmeshes.
@@ -112,7 +112,7 @@ TEST_P (cmesh_set_partition_offsets_nocommit, test_set_offsets)
 
   t8_debugf ("Testing t8_cmesh_set_partition_offset (no commit) with %li trees.\n", inum_trees);
 
-  /* Build a valid offset array. For this test it is onlt necessary that 
+  /* Build a valid offset array. For this test it is only necessary that 
    * the array corresponds to any valid partition.
    * We use the offset_concentrate function to build an offset array for a partition
    * that concentrates all trees at one process. */

@@ -66,10 +66,10 @@ void
 t8_forest_split_array (const t8_element_t *element, t8_element_array_t *leaf_elements, size_t *offsets);
 
 /* TODO: comment */
-/* Iterate over all leafs of an element that touch a given face of the element */
+/* Iterate over all leaves of an element that touch a given face of the element */
 /* Callback is called in each recursive step with element as input.
  * leaf_index is only not negative if element is a leaf, in which case it indicates
- * the index of the leaf in the leafs of the tree. If it is negative, it is
+ * the index of the leaf in the leaves of the tree. If it is negative, it is
  * - (index + 1) */
 /* Top-down iteration and callback is called on each intermediate level.
  * If it returns false, the current element is not traversed further */
@@ -104,4 +104,4 @@ t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_fo
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_FOREST_ITERATE_H! */
+#endif /* !T8_FOREST_ITERATE_H */

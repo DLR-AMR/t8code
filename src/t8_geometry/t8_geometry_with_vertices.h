@@ -44,8 +44,9 @@ T8_EXTERN_C_BEGIN ();
  *                              match the number of corners of the tree.
  */
 void
-t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, double *vertices, int num_vertices);
+t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, const t8_gloidx_t gtree_id, const double *vertices,
+                            const int num_vertices);
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_GEOMETRY_WITH_VERTICES_H! */
+#endif /* !T8_GEOMETRY_WITH_VERTICES_H */

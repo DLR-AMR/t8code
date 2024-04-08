@@ -24,13 +24,29 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 * Provide macros for instantiating parameterized tests
 */
 
-#include <gtest/gtest.h>
-#include <t8_eclass.h>
-
 #ifndef T8_GTEST_MACROS_HXX
 #define T8_GTEST_MACROS_HXX
 
+#include <gtest/gtest.h>
+#include <t8_eclass.h>
+
+/**
+ * lambda to pass to an INSTANTIATE_TEST_SUITE_P to print the current cmesh_example_base
+ * 
+ */
+auto print_eclass = [] (const testing::TestParamInfo<t8_eclass> &info) { return t8_eclass_to_string[info.param]; };
+
+/**
+ * Number of points to use in tests
+ * 
+ */
+#ifdef T8_ENABLE_LESS_TESTS
+#define T8_NUM_SAMPLE_POINTS 1000
+#else
+#define T8_NUM_SAMPLE_POINTS 10000
+#endif
+
 #define AllEclasses testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT)
-#define AllCmeshs testing::Range (0, t8_get_number_of_all_testcases ())
+#define AllEclasses2D testing::Values (T8_ECLASS_QUAD, T8_ECLASS_TRIANGLE)
 
 #endif /* T8_GTEST_MACROS_HXX */

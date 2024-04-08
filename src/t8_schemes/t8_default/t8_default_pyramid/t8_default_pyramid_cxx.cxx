@@ -24,6 +24,7 @@
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_tet/t8_default_tet_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.h>
+#include <t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.h>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.h>
 
 typedef t8_dpyramid_t t8_default_pyramid_t;
@@ -41,26 +42,23 @@ t8_default_scheme_pyramid_c::t8_element_new (int length, t8_element_t **elem) co
   {
     int i;
     for (i = 0; i < length; i++) {
-      t8_element_init (1, elem[i], 0);
+      t8_element_root (elem[i]);
     }
   }
 #endif
 }
 
 void
-t8_default_scheme_pyramid_c::t8_element_init (int length, t8_element_t *elem, int called_new) const
+t8_default_scheme_pyramid_c::t8_element_init (int length, t8_element_t *elem) const
 {
 #ifdef T8_ENABLE_DEBUG
-  if (!called_new) {
-    int i;
-    t8_dpyramid_t *pyramid = (t8_dpyramid_t *) elem;
-    /* Set all values to 0 */
-    for (i = 0; i < length; i++) {
-      t8_dpyramid_init_linear_id (pyramid + i, 0, 0);
-      T8_ASSERT (t8_dpyramid_is_valid (pyramid + i));
-    }
-    pyramid->pyramid.type = 6;
+  t8_dpyramid_t *pyramid = (t8_dpyramid_t *) elem;
+  /* Set all values to 0 */
+  for (int i = 0; i < length; i++) {
+    t8_dpyramid_init_linear_id (pyramid + i, 0, 0);
+    T8_ASSERT (t8_dpyramid_is_valid (pyramid + i));
   }
+  pyramid->pyramid.type = 6;
 #endif
 }
 
@@ -245,7 +243,7 @@ t8_default_scheme_pyramid_c::t8_element_set_linear_id (t8_element_t *elem, int l
 }
 
 int
-t8_default_scheme_pyramid_c::t8_element_is_family (t8_element_t **fam) const
+t8_default_scheme_pyramid_c::t8_element_is_family (t8_element_t *const *fam) const
 {
 #if T8_ENABLE_DEBUG
   int num_siblings = t8_element_num_siblings (fam[0]);
@@ -335,10 +333,10 @@ t8_default_scheme_pyramid_c::t8_element_parent (const t8_element_t *elem, t8_ele
 }
 
 void
-t8_default_scheme_pyramid_c::t8_element_successor (const t8_element_t *elem, t8_element_t *s, int level) const
+t8_default_scheme_pyramid_c::t8_element_successor (const t8_element_t *elem, t8_element_t *s) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
-  t8_dpyramid_successor ((const t8_dpyramid_t *) elem, (t8_dpyramid_t *) s, level);
+  t8_dpyramid_successor ((const t8_dpyramid_t *) elem, (t8_dpyramid_t *) s, t8_element_level (elem));
   T8_ASSERT (t8_element_is_valid (s));
 }
 
@@ -388,17 +386,6 @@ t8_default_scheme_pyramid_c::t8_element_refines_irregular () const
   return 1;
 }
 
-void
-t8_default_scheme_pyramid_c::t8_element_general_function (const t8_element_t *elem, const void *indata,
-                                                          void *outdata) const
-{
-  T8_ASSERT (outdata != NULL);
-  T8_ASSERT (t8_element_is_valid (elem));
-  *((int8_t *) outdata) = ((const t8_dpyramid_t *) elem)->pyramid.type;
-  /* Safety check to catch datatype conversion errors */
-  T8_ASSERT (*((int8_t *) outdata) == ((const t8_dpyramid_t *) elem)->pyramid.type);
-}
-
 #ifdef T8_ENABLE_DEBUG
 int
 t8_default_scheme_pyramid_c::t8_element_is_valid (const t8_element_t *elem) const
@@ -435,6 +422,67 @@ t8_default_scheme_pyramid_c::~t8_default_scheme_pyramid_c ()
    * suffices to destroy the quad_scheme.
    * However we need to provide an implementation of the destructor
    * and hence this empty function. */
+}
+void
+t8_default_scheme_pyramid_c::t8_element_root (t8_element_t *elem) const
+{
+  t8_dpyramid_t *pyramid = (t8_dpyramid_t *) elem;
+  pyramid->pyramid.level = 0;
+  pyramid->pyramid.x = 0;
+  pyramid->pyramid.y = 0;
+  pyramid->pyramid.z = 0;
+  pyramid->pyramid.type = T8_DPYRAMID_ROOT_TYPE;
+  pyramid->switch_shape_at_level = -1;
+}
+/* each pyramid is packed as a tet and the switch_shape_at_level marker */
+void
+t8_default_scheme_pyramid_c::t8_element_MPI_Pack (t8_element_t **const elements, const unsigned int count,
+                                                  void *send_buffer, const int buffer_size, int *position,
+                                                  sc_MPI_Comm comm) const
+{
+  t8_default_pyramid_t **pyramids = (t8_default_pyramid_t **) elements;
+  for (unsigned int ielem = 0; ielem < count; ielem++) {
+    t8_dtet_t *p = &pyramids[ielem]->pyramid;
+    t8_dtet_element_pack (&p, 1, send_buffer, buffer_size, position, comm);
+
+    SC_CHECK_MPI (sc_MPI_Pack (&pyramids[ielem]->switch_shape_at_level, 1, sc_MPI_INT8_T, send_buffer, buffer_size,
+                               position, comm));
+  }
+}
+
+/* each pyramid is packed as a tet and the switch_shape_at_level marker */
+void
+t8_default_scheme_pyramid_c::t8_element_MPI_Pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size) const
+{
+  int singlesize = 0;
+  int datasize = 0;
+
+  t8_dtet_element_pack_size (1, comm, &datasize);
+  singlesize += datasize;
+
+  /* switch shape at level */
+  SC_CHECK_MPI (sc_MPI_Pack_size (1, sc_MPI_INT8_T, comm, &datasize));
+  singlesize += datasize;
+
+  *pack_size = count * singlesize;
+}
+
+/* each pyramid is packed as a tet and the switch_shape_at_level marker */
+void
+t8_default_scheme_pyramid_c::t8_element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position,
+                                                    t8_element_t **elements, const unsigned int count,
+                                                    sc_MPI_Comm comm) const
+{
+  int mpiret;
+  t8_default_pyramid_t **pyramids = (t8_default_pyramid_t **) elements;
+  for (unsigned int ielem = 0; ielem < count; ielem++) {
+    t8_dtet *p = &pyramids[ielem]->pyramid;
+    t8_dtet_element_unpack (recvbuf, buffer_size, position, &p, 1, comm);
+
+    mpiret
+      = sc_MPI_Unpack (recvbuf, buffer_size, position, &pyramids[ielem]->switch_shape_at_level, 1, sc_MPI_INT8_T, comm);
+    SC_CHECK_MPI (mpiret);
+  }
 }
 
 T8_EXTERN_C_END ();

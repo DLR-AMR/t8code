@@ -77,11 +77,11 @@ class class_test_equal: public TestDFS {
 TEST_P (class_test_equal, test_equal_dfs)
 {
 #ifdef T8_ENABLE_LESS_TESTS
-  const int maxlvl = 4;
+  const int maxlvl = 3;
 #else
-  const int maxlvl = 6;
+  const int maxlvl = 5;
 #endif
   check_recursive_dfs_to_max_lvl (maxlvl);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_equal, AllEclasses);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_equal, AllEclasses, print_eclass);

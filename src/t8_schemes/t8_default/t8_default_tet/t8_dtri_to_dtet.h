@@ -108,6 +108,9 @@ T8_EXTERN_C_BEGIN ();
 #define t8_dtri_init_linear_id_with_level t8_dtet_init_linear_id_with_level
 #define t8_dtri_linear_id_with_level t8_dtet_linear_id_with_level
 #define t8_dtri_debug_print t8_dtet_debug_print
+#define t8_dtri_element_pack t8_dtet_element_pack
+#define t8_dtri_element_pack_size t8_dtet_element_pack_size
+#define t8_dtri_element_unpack t8_dtet_element_unpack
 
 T8_EXTERN_C_END ();
 
