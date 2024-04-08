@@ -676,11 +676,10 @@ t8_default_scheme_quad_c::t8_element_anchor (const t8_element_t *elem, int coord
 void
 t8_dquad_vertex_integer_coords (const p4est_quadrant_t *elem, int vertex, int coords[])
 {
-  int len;
 
   T8_ASSERT (0 <= vertex && vertex < 4);
   /* Get the length of the quadrant */
-  len = P4EST_QUADRANT_LEN (elem->level);
+  const int len = P4EST_QUADRANT_LEN (elem->level);
   /* Compute the x and y coordinates of the vertex depending on the
    * vertex number */
   coords[0] = elem->x + (vertex & 1 ? 1 : 0) * len;

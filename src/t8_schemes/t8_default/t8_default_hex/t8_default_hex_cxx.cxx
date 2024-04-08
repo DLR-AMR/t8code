@@ -544,11 +544,10 @@ t8_default_scheme_hex_c::t8_element_anchor (const t8_element_t *elem, int coord[
 static void
 t8_dhex_vertex_integer_coords (const p8est_quadrant_t *elem, int vertex, int coords[])
 {
-  int len;
 
   T8_ASSERT (0 <= vertex && vertex < 8);
   /* Get the length of the quadrant */
-  len = P8EST_QUADRANT_LEN (elem->level);
+  const int len = P8EST_QUADRANT_LEN (elem->level);
   /* Compute the x, y and z coordinates of the vertex depending on the
    * vertex number */
   coords[0] = elem->x + (vertex & 1 ? 1 : 0) * len;
