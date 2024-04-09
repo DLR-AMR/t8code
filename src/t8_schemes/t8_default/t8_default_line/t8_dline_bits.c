@@ -322,7 +322,7 @@ t8_dline_last_descendant (const t8_dline_t *l, t8_dline_t *s, int level)
 }
 
 void
-t8_dline_vertex_coords (const t8_dline_t *elem, const int vertex, int coords[])
+t8_dline_vertex_integer_coords (const t8_dline_t *elem, const int vertex, int coords[])
 {
   T8_ASSERT (vertex == 0 || vertex == 1);
   if (vertex == 0) {
@@ -341,7 +341,7 @@ t8_dline_vertex_ref_coords (const t8_dline_t *elem, const int vertex, double coo
   T8_ASSERT (vertex == 0 || vertex == 1);
 
   /* Compute integer coordinates and divide by root length. */
-  t8_dline_vertex_coords (elem, vertex, &coords_int);
+  t8_dline_vertex_integer_coords (elem, vertex, &coords_int);
   coordinates[0] = coords_int / (double) T8_DLINE_ROOT_LEN;
 }
 
