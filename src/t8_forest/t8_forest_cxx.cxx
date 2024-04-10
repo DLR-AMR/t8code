@@ -1689,16 +1689,17 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, 
   return neighbor_tree;
 }
 
-int 
-t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_eclass_scheme_c *ts, const t8_element_t *leaf, int face)
+int
+t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_eclass_scheme_c *ts,
+                                 const t8_element_t *leaf, int face)
 {
   int orientation = 0;
 
-  if (t8_element_is_root_boundary(ts, leaf, face)) {
-    t8_cmesh_t cmesh = t8_forest_get_cmesh(forest);
-    t8_locidx_t ltreeid_in_cmesh = t8_forest_ltreeid_to_cmesh_ltreeid(forest, ltreeid);
-    int iface_in_tree = t8_element_tree_face(ts, leaf, face);
-    t8_cmesh_get_face_neighbor(cmesh, ltreeid_in_cmesh, iface_in_tree, NULL, &orientation);
+  if (t8_element_is_root_boundary (ts, leaf, face)) {
+    t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
+    t8_locidx_t ltreeid_in_cmesh = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
+    int iface_in_tree = t8_element_tree_face (ts, leaf, face);
+    t8_cmesh_get_face_neighbor (cmesh, ltreeid_in_cmesh, iface_in_tree, NULL, &orientation);
   }
 
   return orientation;
@@ -1737,7 +1738,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
     ts = t8_forest_get_eclass_scheme (forest, eclass);
 
     if (orientation) {
-      *orientation = t8_forest_leaf_face_orientation(forest, ltreeid, ts, leaf, face);
+      *orientation = t8_forest_leaf_face_orientation (forest, ltreeid, ts, leaf, face);
     }
 
     /* At first we compute these children of the face neighbor elements of leaf. For this, we need the

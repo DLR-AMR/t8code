@@ -504,8 +504,9 @@ t8_forest_get_coarse_tree (t8_forest_t forest, t8_locidx_t ltreeid);
  *
  * For more information about the encoding of face orientation refer to \ref t8_cmesh_get_face_neighbor.
  */
-int 
-t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_eclass_scheme_c *ts, const t8_element_t *leaf, int face);
+int
+t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_eclass_scheme_c *ts,
+                                 const t8_element_t *leaf, int face);
 
 /** Compute the leaf face neighbors of a forest.
  * \param [in]    forest  The forest. Must have a valid ghost layer.
