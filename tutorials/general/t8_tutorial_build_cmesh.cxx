@@ -42,7 +42,7 @@
 #include <t8_forest/t8_forest_general.h>            /* forest definition and basic interface. */
 #include <t8_schemes/t8_default/t8_default_cxx.hxx> /* default refinement scheme. */
 #include <t8_cmesh_vtk_writer.h>                    /* write file in vtu file */
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx> /* linear geometry of the cmesh */
+#include <t8_geometry/t8_geometry_impl/t8_geometry_linear.hxx> /* linear geometry of the cmesh */
 
 T8_EXTERN_C_BEGIN ();
 

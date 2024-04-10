@@ -96,12 +96,12 @@ target_sources( T8 PRIVATE
     t8_geometry/t8_geometry_helpers.c 
     t8_geometry/t8_geometry_base.cxx 
     t8_geometry/t8_geometry_with_vertices.cxx 
-    t8_geometry/t8_geometry_implementations/t8_geometry_analytic.cxx 
-    t8_geometry/t8_geometry_implementations/t8_geometry_cad.cxx 
-    t8_geometry/t8_geometry_implementations/t8_geometry_linear.cxx 
-    t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.cxx 
-    t8_geometry/t8_geometry_implementations/t8_geometry_zero.cxx 
-    t8_geometry/t8_geometry_implementations/t8_geometry_examples.cxx 
+    t8_geometry/t8_geometry_impl/t8_geometry_analytic.cxx 
+    t8_geometry/t8_geometry_impl/t8_geometry_cad.cxx 
+    t8_geometry/t8_geometry_impl/t8_geometry_linear.cxx 
+    t8_geometry/t8_geometry_impl/t8_geometry_linear_axis_aligned.cxx 
+    t8_geometry/t8_geometry_impl/t8_geometry_zero.cxx 
+    t8_geometry/t8_geometry_impl/t8_geometry_examples.cxx 
     t8_forest/t8_forest_partition.cxx 
     t8_forest/t8_forest_cxx.cxx 
     t8_forest/t8_forest_private.c 
@@ -183,16 +183,16 @@ set( T8_PUBLIC_HEADERS
     t8_geometry/t8_geometry_with_vertices.hxx 
     t8_geometry/t8_geometry_with_vertices.h 
     t8_geometry/t8_geometry_helpers.h
-    t8_geometry/t8_geometry_implementations/t8_geometry_linear.h
-    t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h
-    t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx
-    t8_geometry/t8_geometry_implementations/t8_geometry_examples.h
-    t8_geometry/t8_geometry_implementations/t8_geometry_cad.h
-    t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx
-    t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx
-    t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx
-    t8_geometry/t8_geometry_implementations/t8_geometry_examples.hxx
-    t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx 
+    t8_geometry/t8_geometry_impl/t8_geometry_linear.h
+    t8_geometry/t8_geometry_impl/t8_geometry_linear_axis_aligned.h
+    t8_geometry/t8_geometry_impl/t8_geometry_analytic.hxx
+    t8_geometry/t8_geometry_impl/t8_geometry_examples.h
+    t8_geometry/t8_geometry_impl/t8_geometry_cad.h
+    t8_geometry/t8_geometry_impl/t8_geometry_cad.hxx
+    t8_geometry/t8_geometry_impl/t8_geometry_linear.hxx
+    t8_geometry/t8_geometry_impl/t8_geometry_linear_axis_aligned.hxx
+    t8_geometry/t8_geometry_impl/t8_geometry_examples.hxx
+    t8_geometry/t8_geometry_impl/t8_geometry_zero.hxx 
     t8_vtk/t8_vtk_reader.hxx 
     t8_vtk/t8_vtk_types.h
 )
