@@ -87,7 +87,7 @@ t8code_googletest_programs = \
   test/t8_schemes/t8_gtest_default \
   test/t8_schemes/t8_gtest_pack_unpack \
   test/t8_schemes/t8_gtest_child_parent_face \
-  test/t8_cmesh_generator/t8_gtest_cmesh_generator_test 
+  test/t8_cmesh_generator/t8_gtest_cmesh_generator_test
 
 test_t8_IO_t8_gtest_vtk_reader_SOURCES = \
   test/t8_gtest_main.cxx \
