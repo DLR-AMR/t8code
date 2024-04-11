@@ -192,8 +192,8 @@ jobs:
       if: failure()
       uses: actions/upload-artifact@v4
       with:
-        name: test-suite_vtk.log
-        path: build_vtk/test-suite.log
+        name: test-suite.log
+        path: build/test-suite.log
     - name: Install pandoc
       uses: pandoc/actions/setup@{main}
       with:
