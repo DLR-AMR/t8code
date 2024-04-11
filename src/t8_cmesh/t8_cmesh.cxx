@@ -24,8 +24,8 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_geometry.h>
 #include <t8_geometry/t8_geometry_handler.hxx>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
+#include <t8_geometry/t8_geometry_impl/t8_geometry_linear.h>
+#include <t8_geometry/t8_geometry_impl/t8_geometry_linear_axis_aligned.h>
 #include <t8_refcount.h>
 #include <t8_data/t8_shmem.h>
 #include <t8_vec.h>

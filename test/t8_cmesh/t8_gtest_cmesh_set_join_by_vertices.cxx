@@ -27,7 +27,7 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh/t8_cmesh_helpers.h>
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
+#include <t8_geometry/t8_geometry_impl/t8_geometry_linear.hxx>
 #include <test/t8_gtest_macros.hxx>
 
 #include <p8est_geometry.h>

@@ -37,8 +37,8 @@
 #include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_geometry/t8_geometry_base.hxx>
 #if T8_ENABLE_DEBUG
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
+#include <t8_geometry/t8_geometry_impl/t8_geometry_linear.h>
+#include <t8_geometry/t8_geometry_impl/t8_geometry_linear_axis_aligned.h>
 #endif
 
 /* We want to export the whole implementation to be callable from "C" */

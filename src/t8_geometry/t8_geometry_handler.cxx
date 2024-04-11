@@ -25,12 +25,12 @@
 #include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_geometry.h>
 #include <t8_geometry/t8_geometry.h>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_examples.hxx>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx>
+#include <t8_geometry/t8_geometry_impl/t8_geometry_zero.hxx>
+#include <t8_geometry/t8_geometry_impl/t8_geometry_linear_axis_aligned.hxx>
+#include <t8_geometry/t8_geometry_impl/t8_geometry_linear.hxx>
+#include <t8_geometry/t8_geometry_impl/t8_geometry_cad.hxx>
+#include <t8_geometry/t8_geometry_impl/t8_geometry_examples.hxx>
+#include <t8_geometry/t8_geometry_impl/t8_geometry_analytic.hxx>
 
 #include <algorithm>
 #include <memory>

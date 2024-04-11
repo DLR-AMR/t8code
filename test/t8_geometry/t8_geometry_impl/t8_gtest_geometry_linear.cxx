@@ -31,8 +31,8 @@
 #include <t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_geometry/t8_geometry.h>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx>
+#include <t8_geometry/t8_geometry_impl/t8_geometry_linear.hxx>
+#include <t8_geometry/t8_geometry_impl/t8_geometry_linear_axis_aligned.hxx>
 #include <t8_element.h>
 
 class geometry_test: public testing::TestWithParam<std::tuple<int, t8_eclass>> {

@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx>
+#include <t8_geometry/t8_geometry_impl/t8_geometry_analytic.hxx>
 
 t8_geometry_analytic::t8_geometry_analytic (int dim, std::string name, t8_geom_analytic_fn analytical,
                                             t8_geom_analytic_jacobian_fn jacobian_in,
