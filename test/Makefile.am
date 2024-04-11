@@ -5,7 +5,7 @@
 t8code_googletestincludedir=
 
 t8code_googletest_installed_headers = \
-  test/t8_gtest_custom_assertion.hxx 
+  test/t8_gtest_custom_assertion.hxx
 
 t8code_googletest_internal_headers = \
   thirdparty/googletest-mpi/gtest/gtest.h \
