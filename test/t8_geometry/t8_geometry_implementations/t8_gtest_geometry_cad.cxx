@@ -25,7 +25,7 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_vtk.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
-#include <t8_geometry/t8_geometry_impl/t8_geometry_cad.hxx>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <test/t8_gtest_macros.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>

@@ -26,9 +26,9 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_geometry/t8_geometry_base.hxx>
-#include <t8_geometry/t8_geometry_impl/t8_geometry_linear.hxx>
-#include <t8_geometry/t8_geometry_impl/t8_geometry_cad.hxx>
-#include <t8_geometry/t8_geometry_impl/t8_geometry_analytic.hxx>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx>
 #include <t8_geometry/t8_geometry_helpers.h>
 #include <t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>

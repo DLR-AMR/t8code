@@ -40,7 +40,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_forest/t8_forest.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_geometry/t8_geometry_impl/t8_geometry_lagrange.hxx>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.hxx>
 
 /**
  * Generate a random double precision number in [0, 1].
