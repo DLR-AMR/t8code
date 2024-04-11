@@ -35,15 +35,15 @@ env:
 
 
 on:
-push:
-  branches:
-    - main
-    - develop
-    - CI-*tarball* # for testing this script, all feature branches with "tarball" in their name
-pull_request:
-  branches:
-    - main
-    - develop
+  push:
+    branches:
+      - main
+      - develop
+      - CI-*tarball* # for testing this script, all feature branches with "tarball" in their name
+  pull_request:
+    branches:
+      - main
+      - develop
   workflow_dispatch: 
 
 jobs:
@@ -198,7 +198,7 @@ jobs:
       run: cd build && make dist |
             mkdir tarball
             mv *.tar.gz tarball
-      if: success()
+    - name: upload tarball
       uses: actions/upload-artifact@v4
       with:
         name: upload tarball
