@@ -70,7 +70,7 @@ jobs:
     - name: update submodules
       run: git submodule update
     - name: bootstrap
-      run: ./bootstrap#
+      run: ./bootstrap
 #       SC installation
 #
     - name: store sc folders in var
