@@ -31,8 +31,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <numeric>
 #include <algorithm>
 #include <t8_geometry/t8_geometry_base.hxx>
-#include <t8_geometry/t8_geometry_impl/t8_geometry_linear.hxx>
-#include <t8_geometry/t8_geometry_impl/t8_geometry_linear_axis_aligned.hxx>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx>
 
 #define T8_CMESH_TEST_NUM_COMMS 1
 #define T8_CMESH_BINARY 2

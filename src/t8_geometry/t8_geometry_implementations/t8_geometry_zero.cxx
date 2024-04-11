@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_geometry/t8_geometry_impl/t8_geometry_zero.hxx>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx>
 
 t8_geometry_zero::t8_geometry_zero (int dim): t8_geometry (dim, "t8_geom_zero_" + std::to_string (dim))
 {

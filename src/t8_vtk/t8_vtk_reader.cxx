@@ -26,7 +26,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_vtk/t8_vtk_parallel.hxx>
 #include <t8_vtk/t8_vtk_types.h>
 #include <t8_cmesh.hxx>
-#include <t8_geometry/t8_geometry_impl/t8_geometry_linear.hxx>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 
 #if T8_WITH_VTK
 #include <vtkCellIterator.h>

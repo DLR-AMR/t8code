@@ -13,13 +13,13 @@ t8code_googletest_internal_headers = \
   test/t8_schemes/t8_gtest_dfs_base.hxx
   
 t8code_googletest_programs = \
-  test/t8_geometry/t8_geometry_impl/t8_gtest_geometry_lagrange \
+  test/t8_geometry/t8_geometry_implementations/t8_gtest_geometry_lagrange \
   test/t8_gtest_cmesh_bcast \
   test/t8_schemes/t8_gtest_nca \
   test/t8_schemes/t8_gtest_pyra_connectivity \
   test/t8_schemes/t8_gtest_face_neigh \
-  test/t8_geometry/t8_geometry_impl/t8_gtest_geometry_linear \
-  test/t8_geometry/t8_geometry_impl/t8_gtest_geometry_cad \
+  test/t8_geometry/t8_geometry_implementations/t8_gtest_geometry_linear \
+  test/t8_geometry/t8_geometry_implementations/t8_gtest_geometry_cad \
   test/t8_gtest_eclass \
   test/t8_gtest_vec \
   test/t8_gtest_mat \
@@ -96,17 +96,17 @@ test_t8_schemes_t8_gtest_face_neigh_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_schemes/t8_gtest_face_neigh.cxx
 
-test_t8_geometry_t8_geometry_impl_t8_gtest_geometry_linear_SOURCES = \
+test_t8_geometry_t8_geometry_implementations_t8_gtest_geometry_linear_SOURCES = \
   test/t8_gtest_main.cxx \
-  test/t8_geometry/t8_geometry_impl/t8_gtest_geometry_linear.cxx
+  test/t8_geometry/t8_geometry_implementations/t8_gtest_geometry_linear.cxx
 
-test_t8_geometry_t8_geometry_impl_t8_gtest_geometry_cad_SOURCES = \
+test_t8_geometry_t8_geometry_implementations_t8_gtest_geometry_cad_SOURCES = \
   test/t8_gtest_main.cxx \
-  test/t8_geometry/t8_geometry_impl/t8_gtest_geometry_cad.cxx
+  test/t8_geometry/t8_geometry_implementations/t8_gtest_geometry_cad.cxx
 
-test_t8_geometry_t8_geometry_impl_t8_gtest_geometry_lagrange_SOURCES = \
+test_t8_geometry_t8_geometry_implementations_t8_gtest_geometry_lagrange_SOURCES = \
   test/t8_gtest_main.cxx \
-  test/t8_geometry/t8_geometry_impl/t8_gtest_geometry_lagrange.cxx
+  test/t8_geometry/t8_geometry_implementations/t8_gtest_geometry_lagrange.cxx
 
 test_t8_gtest_eclass_SOURCES = \
   test/t8_gtest_main.cxx \
@@ -348,17 +348,17 @@ test_t8_schemes_t8_gtest_face_neigh_LDADD = $(t8_gtest_target_ld_add)
 test_t8_schemes_t8_gtest_face_neigh_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_schemes_t8_gtest_face_neigh_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
-test_t8_geometry_t8_geometry_impl_t8_gtest_geometry_linear_LDADD = $(t8_gtest_target_ld_add)
-test_t8_geometry_t8_geometry_impl_t8_gtest_geometry_linear_LDFLAGS = $(t8_gtest_target_ld_flags)
-test_t8_geometry_t8_geometry_impl_t8_gtest_geometry_linear_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+test_t8_geometry_t8_geometry_implementations_t8_gtest_geometry_linear_LDADD = $(t8_gtest_target_ld_add)
+test_t8_geometry_t8_geometry_implementations_t8_gtest_geometry_linear_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_geometry_t8_geometry_implementations_t8_gtest_geometry_linear_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
-test_t8_geometry_t8_geometry_impl_t8_gtest_geometry_cad_LDADD = $(t8_gtest_target_ld_add)
-test_t8_geometry_t8_geometry_impl_t8_gtest_geometry_cad_LDFLAGS = $(t8_gtest_target_ld_flags)
-test_t8_geometry_t8_geometry_impl_t8_gtest_geometry_cad_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+test_t8_geometry_t8_geometry_implementations_t8_gtest_geometry_cad_LDADD = $(t8_gtest_target_ld_add)
+test_t8_geometry_t8_geometry_implementations_t8_gtest_geometry_cad_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_geometry_t8_geometry_implementations_t8_gtest_geometry_cad_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
-test_t8_geometry_t8_geometry_impl_t8_gtest_geometry_lagrange_LDADD = $(t8_gtest_target_ld_add)
-test_t8_geometry_t8_geometry_impl_t8_gtest_geometry_lagrange_LDFLAGS = $(t8_gtest_target_ld_flags)
-test_t8_geometry_t8_geometry_impl_t8_gtest_geometry_lagrange_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+test_t8_geometry_t8_geometry_implementations_t8_gtest_geometry_lagrange_LDADD = $(t8_gtest_target_ld_add)
+test_t8_geometry_t8_geometry_implementations_t8_gtest_geometry_lagrange_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_geometry_t8_geometry_implementations_t8_gtest_geometry_lagrange_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
 test_t8_gtest_eclass_LDADD = $(t8_gtest_target_ld_add)
 test_t8_gtest_eclass_LDFLAGS = $(t8_gtest_target_ld_flags)
@@ -587,8 +587,8 @@ test_t8_gtest_cmesh_bcast_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_nca_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_pyra_connectivity_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_face_neigh_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
-test_t8_geometry_t8_geometry_impl_t8_gtest_geometry_linear_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
-test_t8_geometry_t8_geometry_impl_t8_gtest_geometry_cad_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_geometry_t8_geometry_implementations_t8_gtest_geometry_linear_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_geometry_t8_geometry_implementations_t8_gtest_geometry_cad_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_gtest_eclass_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_gtest_vec_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_gtest_mat_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
