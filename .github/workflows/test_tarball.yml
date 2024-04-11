@@ -206,9 +206,9 @@ jobs:
   test-tarball:
     needs: build
     runs-on: ubuntu-20.04
-      container: dlramr/t8code-ubuntu:t8-dependencies
-      timeout-minutes: 90
-      steps: 
+    container: dlramr/t8code-ubuntu:t8-dependencies
+    timeout-minutes: 90
+    steps: 
       - name: Download tarball
         uses: actions/download-artifact@v4
         with:
@@ -252,11 +252,11 @@ jobs:
       - name: make check
         run: cd build_tar && make check $MAKEFLAGS CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
       - name: OnFailUploadLog
-      if: failure()
-      uses: actions/upload-artifact@v4
-      with:
-        name: build_tar.log
-        path: build_tar/test-suite.log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build_tar.log
+          path: build_tar/test-suite.log
 
 
     
