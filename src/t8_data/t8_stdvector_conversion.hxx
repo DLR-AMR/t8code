@@ -39,7 +39,7 @@ t8_create_sc_array_view_from_vector (const std::vector<T> &vector)
   sc_array_t *new_view = sc_array_new_data (vector_data, sizeof (T), vector.size ());
   return new_view;
 }
-
+/* Wrapper function for partition data */
 template <typename T>
 void t8_forest_partition_data_stdvector (t8_forest_t forest_from, t8_forest_t forest_to, 
                                          const std::vector<T>& data_in_vec, std::vector<T>& data_out_vec)
@@ -52,14 +52,14 @@ void t8_forest_partition_data_stdvector (t8_forest_t forest_from, t8_forest_t fo
 
   data_in_view = t8_create_sc_array_view_from_vector(data_in_vec);
   data_out_view = t8_create_sc_array_view_from_vector(data_out_vec);
-
+ /* calling the original function with the sc_array_t view */
   t8_forest_partition_data(forest_from, forest_to, data_in_view, data_out_view);
 
   /* Clean-up memory */
   sc_array_destroy (data_in_view);
   sc_array_destroy (data_out_view);
 }
-/* Wrapper function gor ghost exchange function */
+/* Wrapper function for ghost exchange function */
 template <typename T>
 void t8_forest_ghost_exchange_data_with_vector(t8_forest_t forest, const std::vector<T>& element_vector) {
     t8_debugf("Entering ghost_exchange_data_with_vector\n");
