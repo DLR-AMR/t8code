@@ -12,6 +12,8 @@ AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([config])
 AC_PREFIX_DEFAULT([$PWD/local])
 AX_PREFIX_CONFIG_H([src/t8_config.h])
+dnl "1.9 tar-pax" is necessary to support long file names when building the tarball
+dnl see also: https://noiselabs.io/tar-file-name-is-too-long-max-99/ 
 AM_INIT_AUTOMAKE([1.9 tar-pax parallel-tests subdir-objects])
 AM_SILENT_RULES
 AM_EXTRA_RECURSIVE_TARGETS([justlibs doxygen])
