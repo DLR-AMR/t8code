@@ -195,7 +195,9 @@ jobs:
         name: test-suite_vtk.log
         path: build_vtk/test-suite.log
     - name: Make tarball
-      run: cd build && make dist |
+      run: | 
+            cd build
+            make dist
             mkdir tarballs
             mv *.tar.gz tarballs
     - name: upload tarball
