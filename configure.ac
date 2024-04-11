@@ -4,7 +4,7 @@ dnl
 
 AC_INIT([t8],
         [m4_esyscmd([build-aux/git-version-gen .tarball-version])],
-        [johannes.holke@dlr.de, burstedde@ins.uni-bonn.de])
+        [https://github.com/dlr-amr/t8code])
 AC_PREREQ(2.61)
 AC_CONFIG_HEADERS([src/pre_config.h])
 AC_CONFIG_SRCDIR([src/t8.h])
