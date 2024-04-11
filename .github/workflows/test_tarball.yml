@@ -194,7 +194,7 @@ jobs:
         name: test-suite.log
         path: build/test-suite.log
     - name: Install pandoc
-      uses: pandoc/actions/setup@{main}
+      uses: pandoc/actions/setup@main
       with:
         version: 2.19
     - name: Test pandoc
