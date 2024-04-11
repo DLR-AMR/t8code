@@ -194,12 +194,12 @@ jobs:
       with:
         name: test-suite_vtk.log
         path: build_vtk/test-suite.log
-    - name: install pandoc
-    - uses: r-lib/actions/setup-pandoc@v2
+    - name: Install pandoc
+      uses: pandoc/actions/setup@{main}
       with:
-        pandoc-version: '3.1.11' # The pandoc version to download (if necessary) and use.
-    - name: test pandoc
-      run: echo "# Test" | pandoc -t html
+        version: 2.19
+    - name: Test pandoc
+      run: pandoc --version
     - name: Make tarball
       run: | 
             cd build
