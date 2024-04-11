@@ -39,7 +39,7 @@ push:
   branches:
     - main
     - develop
-    - CI-tarball-* # for testing this script, all feature branches with "CI" in their name
+    - *CI-tarball-* # for testing this script, all feature branches with "CI-tarball-" in their name
 pull_request:
   branches:
     - main
