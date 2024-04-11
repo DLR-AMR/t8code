@@ -1206,7 +1206,6 @@ t8_forest_partition (t8_forest_t forest)
   t8_global_productionf ("Done forest partition.\n");
 }
 
-
 void
 t8_forest_partition_data(t8_forest_t forest_from, t8_forest_t forest_to, const sc_array_t *data_in,
                           sc_array_t *data_out)
