@@ -60,11 +60,6 @@ authors:
     family-names: Becker
     email: F.Becker@dlr.de
     affiliation: "German Aerospace Center (DLR)"
-  - given-names: Michael
-    family-names: Schlottke-Lakemper
-    email: "m.schlottke-lakemper@acom.rwth-aachen.de"
-    affiliation: "RWTH Aachen"
-    orcid: "https://orcid.org/0000-0002-3195-2536"
   - given-names: Prasanna 
     family-names: Ponnusamy
     email: "Prasanna.Ponnusamy@dlr.de"
@@ -79,8 +74,8 @@ authors:
     family-names: Julia
     email: Julia.Weber@dlr.de
     affiliation: "German Aerospace Center (DLR)"
-  - given-names: Ackerschott 
-    family-names: Jonaes
+  - given-names: Jonas
+    family-names: Ackerschott
     email: jona.a99@gmail.com
   - given-names: Andreev 
     family-names: Evgenii
