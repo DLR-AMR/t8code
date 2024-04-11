@@ -29,7 +29,7 @@ name: Test if tarball can be build and code compiled from it
 #       in the "key:" entries of the sc and p4est steps or set the variables
 #       SC_IGNORE_CACHE and P4EST_IGNORE_CACHE to 1 in the respective steps.
 
-
+# adding a comment to make github rerun the actions
 env:
   MAKEFLAGS: "-j2 V=0"
 
