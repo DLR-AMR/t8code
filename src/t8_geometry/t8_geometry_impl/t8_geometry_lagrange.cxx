@@ -25,8 +25,8 @@
 #include <t8_geometry/t8_geometry_base.hxx>
 #include <t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_types.h>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.hxx>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.h>
+#include <t8_geometry/t8_geometry_impl/t8_geometry_lagrange.hxx>
+#include <t8_geometry/t8_geometry_impl/t8_geometry_lagrange.h>
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_forest/t8_forest_general.h>

@@ -23,9 +23,9 @@
 #include <t8_eclass.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_cmesh.hxx>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.h>
+#include <t8_geometry/t8_geometry_impl/t8_geometry_linear.hxx>
+#include <t8_geometry/t8_geometry_impl/t8_geometry_cad.hxx>
+#include <t8_geometry/t8_geometry_impl/t8_geometry_cad.h>
 #include "t8_cmesh_types.h"
 #include "t8_cmesh_stash.h"
 

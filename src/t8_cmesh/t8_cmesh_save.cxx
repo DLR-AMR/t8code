@@ -37,7 +37,7 @@
 #include <t8_geometry/t8_geometry.h>
 #include <t8_geometry/t8_geometry_base.h>
 #include <t8_geometry/t8_geometry_handler.hxx>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
+#include <t8_geometry/t8_geometry_impl/t8_geometry_linear.h>
 
 /* This macro is called to check a condition and if not fulfilled
  * close the file and exit the function */
