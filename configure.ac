@@ -12,7 +12,7 @@ AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([config])
 AC_PREFIX_DEFAULT([$PWD/local])
 AX_PREFIX_CONFIG_H([src/t8_config.h])
-AM_INIT_AUTOMAKE([parallel-tests subdir-objects])
+AM_INIT_AUTOMAKE([1.9 tar-pax parallel-tests subdir-objects])
 AM_SILENT_RULES
 AM_EXTRA_RECURSIVE_TARGETS([justlibs doxygen])
 SC_VERSION([T8])
