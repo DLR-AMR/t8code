@@ -194,6 +194,8 @@ jobs:
       with:
         name: test-suite_vtk.log
         path: build_vtk/test-suite.log
+    - name: install pandoc
+      run: sudo apt install pandoc
     - name: Make tarball
       run: | 
             cd build
