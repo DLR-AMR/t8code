@@ -120,21 +120,24 @@ jobs:
       uses: nikeee/setup-pandoc@v1
     - name: Test pandoc
       run: pandoc --version
-    - name: make distcheck
-      run: |
-            cd build
-            make distcheck
+# Build the tarball
     - name: Make tarball
       run: | 
             cd build
             make dist
             mkdir tarballs
             mv *.tar.gz tarballs
+# Upload the tarball
     - name: upload tarball
       uses: actions/upload-artifact@v4
       with:
         name: upload tarballs
         path: build/dist/tarballs
+ # Perform a make distcheck to check the distribution locally
+    - name: make distcheck
+      run: |
+            cd build
+            make distcheck
   test-tarball:
     needs: build
     runs-on: ubuntu-20.04
