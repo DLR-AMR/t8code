@@ -193,6 +193,7 @@ jobs:
       with:
         name: test-suite.log
         path: build/test-suite.log
+# Start building tarball
     - name: Install pandoc
       uses: nikeee/setup-pandoc@v1
       with:
