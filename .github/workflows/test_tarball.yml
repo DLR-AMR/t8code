@@ -123,8 +123,6 @@ jobs:
     - name: make distcheck
       run: |
             cd build
-            mkdir distcheck
-            cd distcheck
             make distcheck
     - name: Make tarball
       run: | 
