@@ -83,7 +83,7 @@ const int t8_edge_vertex_to_tree_vertex[T8_ECLASS_COUNT][T8_ECLASS_MAX_EDGES][2]
     { 3, 7 } },                                                                      /* hex */
   { { 0, 1 }, { 0, 2 }, { 0, 3 }, { 1, 2 }, { 1, 3 }, { 2, 3 } },                    /* tet */
   { { -1 } },                                                                        /* prism */
-  { { 0, 2 }, { 1, 3 }, { 0, 1 }, { 2, 3 }, { 0, 4 }, { 1, 4 }, { 2, 4 }, { 3, 4 } } /* pyramid */
+  { { 0, 2 }, { 1, 3 }, { 0, 1 }, { 2, 3 }, { 0, 4 }, { 1, 4 }, { 3, 4 }, { 2, 4 } } /* pyramid */
 };
 
 /* TODO: prism, pyramid */
