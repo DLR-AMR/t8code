@@ -137,7 +137,7 @@ Curve Loop(2) = {1, 2};
 Plane Surface(1) = {1, 2};
 /* Due to the indexing behavior if Gmsh, we have to save the .brep file
  * and reopen it again. */
-Save "naca6412_2d.brep";
+Save "airfoil_windtunnel_quadrilaterals.brep";
 
 /* After creating the geometry we delete and start by loading
  * in the brep file. This is necessary because Gmsh gives the geometries its
@@ -145,7 +145,7 @@ Save "naca6412_2d.brep";
  * numeration. */
 Delete All;
 /* We re-open our brep file. */
-Merge "naca6412_2d.brep";
+Merge "airfoil_windtunnel_quadrilaterals.brep";
 
 /* We want a full-quad mesh and therefore have to use the right meshing algorithms.
  * Here we use the Frontal-Delaunay 2D meshing algorithm and the 
@@ -173,4 +173,4 @@ Mesh 2;
  * and the parametric option. */
 Mesh.MshFileVersion = 4.1;
 Mesh.SaveParametric = 1;
-Save "naca6412_2d.msh";
+Save "airfoil_windtunnel_quadrilaterals.msh";

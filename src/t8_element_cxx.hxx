@@ -565,6 +565,8 @@ struct t8_eclass_scheme
    *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
    *   \param [out] coords An array of at least as many doubles as the element's dimension
    *                      whose entries will be filled with the coordinates of \a vertex.
+   *   \warning           coords should be zero-initialized, as only the first d coords will be set, but when used elsewhere
+   *                      all coords might be used. 
    */
   virtual void
   t8_element_vertex_reference_coords (const t8_element_t *t, const int vertex, double coords[]) const

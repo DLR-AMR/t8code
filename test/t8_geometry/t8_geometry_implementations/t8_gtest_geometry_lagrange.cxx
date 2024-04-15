@@ -32,7 +32,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <gtest/gtest.h>
 #include <test/t8_gtest_macros.hxx>
-#include <test/t8_geometry/t8_gtest_geometry_macros.hxx>
 #include <t8_eclass.h>
 #include <t8_vec.h>
 #include <t8_element_cxx.hxx>
@@ -227,9 +226,6 @@ TEST_P (LagrangeCmesh, lagrange_mapping)
   /* Create a coarse mesh consisting of one single element
    * (one element is sufficient: we want to test the mapping) */
   t8_lagrange_element lag = create_sample_element (eclass, degree);
-  lag.write ();
-  t8_errorf ("\n-------------------\nEclass: %s, degree: %d\n-------------------\n", t8_eclass_to_string[eclass],
-             degree);
   /* Compare the mappings on each boundary face of the Lagrange element */
   std::vector<t8_lagrange_element> faces = lag.decompose ();
   uint i_face = 0;
