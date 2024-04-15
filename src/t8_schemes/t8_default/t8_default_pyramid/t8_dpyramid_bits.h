@@ -253,7 +253,7 @@ t8_dpyramid_last_descendant_face (const t8_dpyramid_t *p, const int face, t8_dpy
  * \param [out] coords An array of 3 t8_dpyramid_coord_t that will be filled with the coordinates of the vertex.
  */
 void
-t8_dpyramid_compute_coords (const t8_dpyramid_t *elem, const int vertex, int coords[]);
+t8_dpyramid_compute_integer_coords (const t8_dpyramid_t *elem, const int vertex, int coords[]);
 
 /** Compute the parent of a given pyramid
  * \param [in] p        Input pyramid.
@@ -316,10 +316,10 @@ t8_dpyramid_ancestor_id (const t8_dpyramid_t *p, const int level);
  * Compute the ancestor of \a pyra at a given level
  * \param[in] pyra      Input pyramid
  * \param[in] level     Level of the ancestor to compute
- * \param[in, out] anc  Allocated element that will be filled with the data of the ancestor.
+ * \param[in, out] ancestor  Allocated element that will be filled with the data of the ancestor.
  */
 void
-t8_dpyramid_ancestor (const t8_dpyramid_t *pyra, const int level, t8_dpyramid_t *anc);
+t8_dpyramid_ancestor (const t8_dpyramid_t *pyra, const int level, t8_dpyramid_t *ancestor);
 
 /** Compute the type of a pyramid at a given level. Starting from its own level, we iterate over the levels and 
  * compute the type of this level. If p is a tetrahedron, we compute it in a tetrahedral fashion up unto the last 
