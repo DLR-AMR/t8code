@@ -141,19 +141,18 @@ module t8_mo_fortran_interface
             end subroutine t8_fortran_cmesh_set_join_f
       end Interface
 	  
-	!Interface
-      !      subroutine t8_fortran_cmesh_set_join_by_vertices_f (cmesh, ntrees, eclasses, vertices, connectivity, do_both_directions) &
-      !                              bind (c, name = 't8_cmesh_set_join_by_vertices')
-      !            use, intrinsic :: ISO_C_BINDING, only: c_ptr, c_int
-      !            IMPLICIT NONE
-      !            type (c_ptr), value :: cmesh
-      !            integer (c_int), value :: ntrees
-      !            type (c_ptr), value :: eclasses
-      !            type (c_ptr), value :: vertices
-      !            type (c_ptr) :: connectivity
-      !            integer (c_int), value :: do_both_directions
-      !      end subroutine t8_fortran_cmesh_set_join_by_vertices_f
-      !end Interface
+	Interface
+            subroutine t8_fortran_cmesh_set_join_by_vertices_noConn_f (cmesh, ntrees, eclasses, vertices, do_both_directions) &
+                                    bind (c, name = 't8_fortran_cmesh_set_join_by_vertices_noConn')
+                  use, intrinsic :: ISO_C_BINDING, only: c_ptr, c_int
+                  IMPLICIT NONE
+                  type (c_ptr), value :: cmesh
+                  integer (c_int), value :: ntrees
+                  type (c_ptr), value :: eclasses
+                  type (c_ptr), value :: vertices
+                  integer (c_int), value :: do_both_directions
+            end subroutine t8_fortran_cmesh_set_join_by_vertices_noConn_f
+      end Interface
 
       Interface
             subroutine t8_fortran_cmesh_commit_f (cmesh, Ccom) &

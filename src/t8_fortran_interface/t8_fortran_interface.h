@@ -62,6 +62,10 @@ void                t8_fortran_finalize ();
 */
 void				t8_fortran_cmesh_commit(t8_cmesh_t cmesh, sc_MPI_Comm* comm);
 
+/** This function calls t8_cmesh_set_join_by_vertices with connectivity = NULL.
+*/
+void t8_fortran_cmesh_set_join_by_vertices_noConn(t8_cmesh_t cmesh, const int ntrees, const t8_eclass_t *eclasses, const double *vertices, const int do_both_directions);
+
 /** Translate a fortran MPI communicator into a C MPI communicator
  * and return a pointer to it.
  * \param [in] Fcomm  Fortran MPI Communicator
