@@ -395,7 +395,6 @@ t8_latlon_data_apply_morton_order (t8_forest_t forest,
   int                 old;
   t8_gloidx_t         x, y, index;
 
-  t8_element_t       *elem;
   t8_default_scheme_quad_c quad_scheme;
 
   t8_debugf ("num_data_elements: %d, num_element: %d \n", num_data_elements,
@@ -406,7 +405,7 @@ t8_latlon_data_apply_morton_order (t8_forest_t forest,
     T8_ALLOC_ZERO (t8_linearidx_t, num_elements);
 
   for (index = 0; index < num_elements; ++index) {
-    elem = t8_forest_get_element_in_tree (forest, 0, index);
+    const t8_element_t *elem = t8_forest_get_element_in_tree (forest, 0, index);
     quad_scheme.t8_element_vertex_coords (elem, 0, coords);
 
     x = coords[0] >> (P4EST_MAXLEVEL - data_chunk->level);
