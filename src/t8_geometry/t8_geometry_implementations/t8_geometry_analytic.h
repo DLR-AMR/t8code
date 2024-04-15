@@ -69,7 +69,7 @@ typedef void (*t8_geom_load_tree_data_fn) (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
 /**
  * Definition for the negative volume function.
  */
-typedef bool (*t8_geom_tree_negative_volume_fn) ();
+typedef int (*t8_geom_tree_negative_volume_fn) ();
 
 T8_EXTERN_C_BEGIN ();
 
