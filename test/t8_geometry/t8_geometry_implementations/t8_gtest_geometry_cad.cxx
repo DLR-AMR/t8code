@@ -881,12 +881,8 @@ t8_test_geometry_cad_pyramid (int face, int edge, double *parameters, double *te
 #endif /* T8_WITH_OCC */
 }
 
-/* This test covers the functionality described in Issue: [https://github.com/DLR-AMR/t8code/issues/1012] 
- * Remove `DISABLED_` from the name of the Test(suite) or use `--gtest_also_run_disabled_tests` when you start working on the issue. 
- */
-
 #if T8_WITH_OCC
-TEST (DISABLED_t8_gtest_geometry_cad_pyramid, linked_faces)
+TEST (t8_gtest_geometry_cad_pyramid, linked_faces)
 {
   /* clang-format off */
   double test_ref_coords[60]
@@ -903,9 +899,9 @@ TEST (DISABLED_t8_gtest_geometry_cad_pyramid, linked_faces)
         0.0, 1.0, 0.0,    // face vertex 2
         1.0, 1.0, 0.0 };  // face vertex 3
   double surface_test_return_coords_tri[9]
-    = { 0.0, 0.0, 0.0,    // face vertex 0
-        1.0, 0.0, 0.0,    // face vertex 1
-        1.0, 0.0, 1.0 };  // face vertex 2
+    = { 1.0, 0.0, 0.0,    // face vertex 0
+        1.0, 1.0, 0.0,    // face vertex 1
+        1.0, 1.0, 1.0 };  // face vertex 2
 
   double surface_parameters[40]
     = { 0, 1, 0, 0, 1, 1, 2, 2,   // face 0
@@ -922,11 +918,7 @@ TEST (DISABLED_t8_gtest_geometry_cad_pyramid, linked_faces)
   }
 }
 
-/* This test covers the functionality described in Issue: [https://github.com/DLR-AMR/t8code/issues/1012] 
- * Remove `DISABLED_` from the name of the Test(suite) or use `--gtest_also_run_disabled_tests` when you start working on the issue. 
- */
-
-TEST (DISABLED_t8_gtest_geometry_cad_pyramid, linked_edges)
+TEST (t8_gtest_geometry_cad_pyramid, linked_edges)
 {
   /* clang-format off */
   double test_ref_coords[72]
@@ -940,14 +932,12 @@ TEST (DISABLED_t8_gtest_geometry_cad_pyramid, linked_edges)
         1.0, 1.0, 1.0, 0.5, 1.0, 0.5, 0.0, 1.0, 0.0 }; // edge 7
   double curve_test_return_coords[9]
     = { 0.0, 0.0, 0.0,    // edge vertex 0
-        0.5, 0.0, 0.0,    // center of edge
+        0.4999500215, 0.0000523914, 0.4000007585,    // center of edge
         1.0, 0.0, 0.0 };  // edge vertex 1
-
-  /* TODO: Adjust coordinates of center of edge after implementation of pyramid mapping algorithms */
   
   double curve_parameters[16] = {
     1, 0,  // edge 0
-    1, 0,  // edge 1
+    0, 1,  // edge 1
     0, 1,  // edge 2
     1, 0,  // edge 3
     1, 0,  // edge 4
@@ -956,7 +946,7 @@ TEST (DISABLED_t8_gtest_geometry_cad_pyramid, linked_edges)
     1, 0 };// edge 7
   /* clang-format on */
 
-  for (int i_edges = 0; i_edges < 9; ++i_edges) {
+  for (int i_edges = 0; i_edges < 8; ++i_edges) {
     t8_test_geometry_cad_pyramid (-1, i_edges, curve_parameters + i_edges * 2, test_ref_coords,
                                   curve_test_return_coords);
   }
