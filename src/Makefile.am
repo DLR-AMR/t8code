@@ -18,6 +18,7 @@ defaulthexincludedir = $(schemesdefaultincludedir)/t8_default_hex
 defaulttetincludedir = $(schemesdefaultincludedir)/t8_default_tet
 defaultprismincludedir = $(schemesdefaultincludedir)/t8_default_prism
 defaultpyramidincludedir = $(schemesdefaultincludedir)/t8_default_pyramid
+schemessubelementsincludedir = $(includedir)/t8_schemes/t8_subelements
 
 libt8_generated_headers = src/t8_config.h
 libt8_installed_headers = \
@@ -55,7 +56,8 @@ libt8_installed_headers_forest = \
   src/t8_forest/t8_forest_adapt.h \
   src/t8_forest/t8_forest_vtk.h \
   src/t8_forest/t8_forest_to_vtkUnstructured.hxx \
-  src/t8_forest/t8_forest_iterate.h src/t8_forest/t8_forest_partition.h
+  src/t8_forest/t8_forest_iterate.h src/t8_forest/t8_forest_partition.h \
+  src/t8_forest/t8_forest_subpatch.hxx
 libt8_installed_headers_geometry = \
   src/t8_geometry/t8_geometry.h \
   src/t8_geometry/t8_geometry_handler.hxx \
@@ -92,6 +94,9 @@ libt8_installed_headers_default_hex =
 libt8_installed_headers_default_tet =
 libt8_installed_headers_default_prism =
 libt8_installed_headers_default_pyramid =
+libt8_installed_headers_schemes_subelements = \
+  src/t8_schemes/t8_subelements/t8_subelements_cxx.hxx \
+  src/t8_schemes/t8_subelements/t8_subelements.hxx
 libt8_internal_headers = \
   src/t8_cmesh/t8_cmesh_trees.h src/t8_cmesh/t8_cmesh_partition.h \
   src/t8_cmesh/t8_cmesh_copy.h \
@@ -139,6 +144,7 @@ libt8_compiled_sources = \
   src/t8_forest/t8_forest_partition.cxx src/t8_forest/t8_forest_cxx.cxx \
   src/t8_forest/t8_forest_private.c src/t8_forest/t8_forest_vtk.cxx \
   src/t8_forest/t8_forest_ghost.cxx src/t8_forest/t8_forest_iterate.cxx \
+  src/t8_forest/t8_forest_subpatch.cxx \
   src/t8_version.c \
   src/t8_vtk.c src/t8_forest/t8_forest_balance.cxx \
   src/t8_forest/t8_forest_netcdf.cxx \
@@ -147,7 +153,8 @@ libt8_compiled_sources = \
   src/t8_vtk/t8_vtk_polydata.cxx \
   src/t8_vtk/t8_vtk_unstructured.cxx \
   src/t8_vtk/t8_vtk_parallel.cxx \
-  src/t8_vtk/t8_vtk_reader.cxx
+  src/t8_vtk/t8_vtk_reader.cxx \
+  src/t8_schemes/t8_subelements/t8_subelements_cxx.cxx 
 
 
 # this variable is used for headers that are not publicly installed
@@ -188,5 +195,6 @@ dist_defaulthexinclude_HEADERS = $(libt8_installed_headers_default_hex)
 dist_defaulttetinclude_HEADERS = $(libt8_installed_headers_default_tet)
 dist_defaultprisminclude_HEADERS = $(libt8_installed_headers_default_prism)
 dist_defaultpyramidinclude_HEADERS = $(libt8_installed_headers_default_pyramid)
+dist_schemessubelementsinclude_HEADERS = $(libt8_installed_headers_schemes_subelements)
 
 AM_CPPFLAGS += -I@top_srcdir@/src @T8_SC_CPPFLAGS@ @T8_P4EST_CPPFLAGS@
