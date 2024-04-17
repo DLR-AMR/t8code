@@ -127,6 +127,23 @@ class t8_default_scheme_common_c: public t8_eclass_scheme_c {
   virtual void
   t8_element_anchor (const t8_element_t *elem, int anchor[3]) const
     = 0;
+/*-----------------------------Functions for transition schemes---------------------------------*/
+
+  /** Return zero refine value for schemes that do not have a transition implementation.
+   *  \param [in] elem A valid element 
+   *  \return Integer, used as the refine value during transition adaptation.
+   */
+  virtual int         t8_element_get_transition_refine_identifier (void)
+    const;
+    
+  /** Check whether a given element is a subelement
+   *  \param [in] elem A valid element 
+   *  \return true if elem is a subelement 
+   */ 
+
+
+  virtual int         t8_element_is_subelement (const t8_element *
+                                                elem) const;
 #if T8_ENABLE_DEBUG
   virtual void
   t8_element_debug_print (const t8_element_t *elem) const;

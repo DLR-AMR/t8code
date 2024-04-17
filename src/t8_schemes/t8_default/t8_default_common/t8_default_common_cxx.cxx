@@ -168,4 +168,26 @@ t8_default_scheme_common_c::t8_element_deinit (int length, t8_element_t *elem) c
 {
 }
 
+/*----------------------------Functions for transition schemes--------------------------------------------*/
+int
+t8_default_scheme_common_c::t8_element_get_transition_refine_identifier () const
+{
+  /* This function will be called by the transition_entry function. It defaults to zero such that 
+   * the adapt routine will keep elem unchanged during the transition step. */
+  return 0;
+}
+
+int
+t8_default_scheme_common_c::t8_element_is_subelement (const t8_element * elem) const
+{
+  /* We implement this function since it is a "check" function and 
+   * should not abort the code even if no subelements are implemented in the given eclass.
+   * Schemes that support subelements must provide their own implementation of this function. */
+
+  /* No subelements are implemented and therefore we return false meaning "is no subelement". */
+  t8_debugf
+    ("This is the default_common implementation of the t8_element_is_subelement check.\n");
+  return 0;
+}
+
 T8_EXTERN_C_END ();

@@ -739,6 +739,21 @@ struct t8_eclass_scheme
    * \param [in, out] position the position of the first byte that is not already packed
    * \param [in] comm MPI Communicator
   */
+/*-----------------------------------Functions for transition schemes------------------------------------------------*/
+  /** Return zero refine value for schemes that do not have a transition implementation.
+   *  \param [in] elem A valid element 
+   *  \return Integer, used as the refine value during transition adaptation.
+   */
+  virtual int         t8_element_get_transition_refine_identifier (void) const
+    = 0;
+
+  /** Check whether a given element is a subelement
+   *  \param [in] elem A valid element 
+   *  \return true if elem is a subelement 
+   */
+  virtual int         t8_element_is_subelement (const t8_element *
+                                                elem) const = 0;
+
   virtual void
   t8_element_MPI_Pack (t8_element_t **const elements, const unsigned int count, void *send_buffer, int buffer_size,
                        int *position, sc_MPI_Comm comm) const
