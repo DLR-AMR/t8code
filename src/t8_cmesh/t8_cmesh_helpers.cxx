@@ -44,6 +44,7 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees, const t8_ecla
     conn[i] = -1;
   }
 
+  /* Compute minimum and maximum of the cmesh domain. */
   double min_coord = vertices[0];
   double max_coord = vertices[0];
 
@@ -67,10 +68,14 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees, const t8_ecla
     }
   }
 
-  std::multimap<unsigned int, std::pair<int,int>> faces;
+  /* Setup hash table `faces` mapping a hash key to a pair containing `(itree, iface)`. */
+  std::multimap<unsigned long, std::pair<int,int>> faces;
 
-  /* This should be more than enough: 1.0 / 2^(19) =~ 1.9e-6. */
-  const double eps = 1e-9;
+  /* `num_bins` should be more than enough for (almost) all cases.
+   * I.e., 2^P4EST_QMAXLEVEL =~ 1.073e9.
+   */
+  const double num_bins = 1e-9; /* Number of bins. */
+  const double inverse_bin_size = num_bins / (max_coord - min_coord);
 
   for (int itree = 0; itree < ntrees; itree++) {
     const t8_eclass_t eclass = eclasses[itree];
@@ -84,7 +89,9 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees, const t8_ecla
       /* Get the number of vertices per face of this element. */
       const int nface_verts = t8_eclass_num_vertices[t8_eclass_face_types[eclass][iface]];
 
-      unsigned int uintface = 0;
+      /* Compute the hash key. The idea is to convert the rescaled vertices of a tree face to
+       * long integers and add them up. We apply a bit of seeding by also adding `icoord`. See below. */
+      unsigned long hash = 0;
 
       /* Loop over the vertices of the current element's face. */
       for (int iface_vert = 0; iface_vert < nface_verts; iface_vert++) {
@@ -93,18 +100,17 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees, const t8_ecla
 
         for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
           const int index = T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree, ivert, icoord);
-          const double rescaled = (vertices[index] - min_coord) / (max_coord - min_coord) / eps;
-          const unsigned int uintvert = static_cast<unsigned int>(rescaled + 0.5);
+          const double rescaled = (vertices[index] - min_coord) * inverse_bin_size;
 
           /* Simple hash function. */
-          uintface = uintface + uintvert + icoord;
+          hash = hash + icoord + static_cast<unsigned long>(rescaled + 0.5);
         }
       }
 
-      auto range = faces.equal_range(uintface);
-
+      /* Loop over all pre-registered faces with the same hash. */
+      auto range = faces.equal_range(hash);
       for (auto it = range.first; it != range.second; ++it) {
-
+        /* Query potentially neighboring `itree` and `iface`. */
         const int neigh_itree = std::get<0>(it->second);
         const int neigh_iface = std::get<1>(it->second);
 
@@ -215,7 +221,8 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees, const t8_ecla
         }
       } /* Loop over faces with identical hash. */
 
-      faces.insert(std::make_pair(uintface, std::make_pair(itree,iface)));
+      /* Register the current pair of `itree` and `iface` with given `hash` in the hash table. */
+      faces.insert(std::make_pair(hash, std::make_pair(itree,iface)));
     } /* Loop over faces. */
   } /* Loop over trees. */
 
