@@ -178,7 +178,7 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees, const t8_ecla
           int orientation = -1;
           int smaller_bigger_face_condition = -1;
 
-          int compare = t8_eclass_compare (eclass, neigh_eclass);
+          const int compare = t8_eclass_compare (eclass, neigh_eclass);
           if (compare < 0) {
             /* This tree class is smaller than neigh. tree class. */
             smaller_bigger_face_condition = 1;
