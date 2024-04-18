@@ -55,7 +55,8 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees, const t8_ecla
 
     for (int ivert = 0; ivert < nverts; ivert++) {
       for (int icoord = 0; icoord < edim; icoord++) {
-        const double coord = vertices[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree, ivert, icoord)];
+        const double coord
+          = vertices[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree, ivert, icoord)];
 
         if (coord < min_coord) {
           min_coord = coord;
@@ -69,7 +70,7 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees, const t8_ecla
   }
 
   /* Setup hash table `faces` mapping a hash key to a pair containing `(itree, iface)`. */
-  std::multimap<unsigned long, std::pair<int,int>> faces;
+  std::multimap<unsigned long, std::pair<int, int>> faces;
 
   /* `num_bins` should be more than enough for (almost) all cases.
    * I.e., 2^P4EST_QMAXLEVEL =~ 1.073e9.
@@ -103,16 +104,16 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees, const t8_ecla
           const double rescaled = (vertices[index] - min_coord) * inverse_bin_size;
 
           /* Simple hash function. */
-          hash = hash + icoord + static_cast<unsigned long>(rescaled + 0.5);
+          hash = hash + icoord + static_cast<unsigned long> (rescaled + 0.5);
         }
       }
 
       /* Loop over all pre-registered faces with the same hash. */
-      auto range = faces.equal_range(hash);
+      auto range = faces.equal_range (hash);
       for (auto it = range.first; it != range.second; ++it) {
         /* Query potentially neighboring `itree` and `iface`. */
-        const int neigh_itree = std::get<0>(it->second);
-        const int neigh_iface = std::get<1>(it->second);
+        const int neigh_itree = std::get<0> (it->second);
+        const int neigh_iface = std::get<1> (it->second);
 
         /* Retrieve the potentially neighboring element class. */
         const t8_eclass_t neigh_eclass = eclasses[neigh_itree];
@@ -210,7 +211,7 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees, const t8_ecla
           conn[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_FACES, 3, itree, iface, 0)] = neigh_itree;
           conn[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_FACES, 3, itree, iface, 1)] = neigh_iface;
           conn[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_FACES, 3, itree, iface, 2)] = orientation;
- 
+
           if (do_both_directions) {
             conn[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_FACES, 3, neigh_itree, neigh_iface, 0)] = itree;
             conn[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_FACES, 3, neigh_itree, neigh_iface, 1)] = iface;
@@ -222,9 +223,9 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees, const t8_ecla
       } /* Loop over faces with identical hash. */
 
       /* Register the current pair of `itree` and `iface` with given `hash` in the hash table. */
-      faces.insert(std::make_pair(hash, std::make_pair(itree,iface)));
+      faces.insert (std::make_pair (hash, std::make_pair (itree, iface)));
     } /* Loop over faces. */
-  } /* Loop over trees. */
+  }   /* Loop over trees. */
 
   /* Transfer the computed face connectivity to the `cmesh` object. */
   if (cmesh != NULL) {
