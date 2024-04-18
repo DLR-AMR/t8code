@@ -74,7 +74,7 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees, const t8_ecla
   /* `num_bins` should be more than enough for (almost) all cases.
    * I.e., 2^P4EST_QMAXLEVEL =~ 1.073e9.
    */
-  const double num_bins = 1e-9; /* Number of bins. */
+  const double num_bins = 1e9; /* Number of bins. */
   const double inverse_bin_size = num_bins / (max_coord - min_coord);
 
   for (int itree = 0; itree < ntrees; itree++) {
