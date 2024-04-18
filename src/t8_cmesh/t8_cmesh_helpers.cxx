@@ -29,7 +29,6 @@
 #include <t8_cmesh.h>
 #include <t8_eclass.h>
 #include <t8_cmesh/t8_cmesh_helpers.h>
-#include <bits/stdc++.h>
 #include <map>
 
 T8_EXTERN_C_BEGIN ();
