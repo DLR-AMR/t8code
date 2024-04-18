@@ -69,6 +69,7 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees, const t8_ecla
 
   std::multimap<unsigned int, std::pair<int,int>> faces;
 
+  /* This should be more than enough: 1.0 / 2^(19) =~ 1.9e-6. */
   const double eps = 1e-9;
 
   for (int itree = 0; itree < ntrees; itree++) {
@@ -93,14 +94,12 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees, const t8_ecla
         for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
           const int index = T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree, ivert, icoord);
           const double rescaled = (vertices[index] - min_coord) / (max_coord - min_coord) / eps;
-          const unsigned int uintvert = static_cast<unsigned int>(rescaled);
+          const unsigned int uintvert = static_cast<unsigned int>(rescaled + 0.5);
 
           /* Simple hash function. */
-          uintface = uintface ^ (uintvert << icoord);
+          uintface = uintface + uintvert + icoord;
         }
       }
-
-      // t8_global_productionf ("itree = %d | iface = %d | uintface = %u | count = %ld\n", itree, iface, uintface, faces.count(uintface));
 
       auto range = faces.equal_range(uintface);
 
@@ -108,15 +107,6 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees, const t8_ecla
 
         const int neigh_itree = std::get<0>(it->second);
         const int neigh_iface = std::get<1>(it->second);
-
-        // t8_global_productionf ("itree = %d | iface = %d | uintface = %u\n", neigh_itree, neigh_iface, it->first);
-
-        /* If we already checked the two faces, we can
-         * skip the computations here since we only need the connectivity in one direction. */
-        if (!do_both_directions
-            && conn[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_FACES, 3, neigh_itree, neigh_iface, 0)] > -1) {
-          continue;
-        }
 
         /* Retrieve the potentially neighboring element class. */
         const t8_eclass_t neigh_eclass = eclasses[neigh_itree];
@@ -176,9 +166,6 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees, const t8_ecla
         /* If the number of matching face vertices is equal to the actual number of the face's vertices
          * we interpret this as a face-to-face connection between two elements. */
         if (match_count == nface_verts) {
-
-          // t8_global_productionf ("itree = (%d, %d) | iface = (%d, %d) | uintface = %u\n", itree, neigh_itree, iface, neigh_iface, uintface);
-
           /* Compute the orientation of the face-to-face connection.
            * Face corner 0 of the face with the lower face direction connects
            * to a corner of the other face. The number of this corner is the
@@ -214,19 +201,21 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees, const t8_ecla
           }
 
           /* Store the results. */
-
           conn[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_FACES, 3, itree, iface, 0)] = neigh_itree;
           conn[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_FACES, 3, itree, iface, 1)] = neigh_iface;
           conn[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_FACES, 3, itree, iface, 2)] = orientation;
+ 
+          if (do_both_directions) {
+            conn[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_FACES, 3, neigh_itree, neigh_iface, 0)] = itree;
+            conn[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_FACES, 3, neigh_itree, neigh_iface, 1)] = iface;
+            conn[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_FACES, 3, neigh_itree, neigh_iface, 2)] = orientation;
+          }
 
           break;
         }
       } /* Loop over faces with identical hash. */
 
       faces.insert(std::make_pair(uintface, std::make_pair(itree,iface)));
-
-      // t8_global_productionf ("itree = (%d, %d) | iface = (%d, %d) | uintface = %u\n", faces.itree, iface, uintface);
-      // t8_global_productionf ("itree = %d | iface = %d | uintface = %u\n", itree, iface, uintface);
     } /* Loop over faces. */
   } /* Loop over trees. */
 
