@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_helpers.c
+/** \file t8_cmesh_helpers.cxx
  *
  * Collection of cmesh helper routines.
  */
