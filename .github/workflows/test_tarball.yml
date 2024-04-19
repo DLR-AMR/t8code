@@ -128,7 +128,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: upload tarballs
-        path: build/dist/tarballs
+        path: build/tarballs
  # Perform a make distcheck to check the distribution locally
  #   - name: make distcheck
  #     run: |
