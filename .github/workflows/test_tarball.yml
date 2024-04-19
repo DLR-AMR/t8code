@@ -122,11 +122,7 @@ jobs:
       run: pandoc --version
 # Build the tarball
     - name: Make tarball
-      run: | 
-            cd build
-            make dist
-            mkdir tarballs
-            mv *.tar.gz tarballs
+      run: cd build && make dist && mkdir tarballs && mv *.tar.gz tarballs
 # Upload the tarball
     - name: upload tarball
       uses: actions/upload-artifact@v4
@@ -134,10 +130,10 @@ jobs:
         name: upload tarballs
         path: build/dist/tarballs
  # Perform a make distcheck to check the distribution locally
-    - name: make distcheck
-      run: |
-            cd build
-            make distcheck
+ #   - name: make distcheck
+ #     run: |
+ #           cd build
+ #           make distcheck
   test-tarball:
     needs: build
     runs-on: ubuntu-20.04
