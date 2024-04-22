@@ -93,12 +93,12 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm, int set_part
   int8_t ttf;
   p4est_topidx_t ttt;
 
-  /* Make sure that p4est is properly initialized. If not, do it here
-   * and raise a warning. */
-  if (!sc_package_is_registered (p4est_package_id)) {
-    t8_global_errorf ("WARNING: p4est is not yet initialized. Doing it now for you.\n");
-    p4est_init (NULL, SC_LP_ESSENTIAL);
-  }
+  // /* Make sure that p4est is properly initialized. If not, do it here
+  //  * and raise a warning. */
+  // if (!sc_package_is_registered (p4est_package_id)) {
+  //   t8_global_errorf ("WARNING: p4est is not yet initialized. Doing it now for you.\n");
+  //   p4est_init (NULL, SC_LP_ESSENTIAL);
+  // }
 
   T8_ASSERT (dim == 2 || dim == 3);
   T8_ASSERT (dim == 3 || p4est_connectivity_is_valid ((p4est_connectivity_t *) (conn)));
@@ -1974,10 +1974,10 @@ t8_cmesh_t
 t8_cmesh_new_disjoint_bricks (t8_gloidx_t num_x, t8_gloidx_t num_y, t8_gloidx_t num_z, int x_periodic, int y_periodic,
                               int z_periodic, sc_MPI_Comm comm)
 {
-  if (!sc_package_is_registered (p4est_package_id)) {
-    t8_global_errorf ("WARNING: p4est is not yet initialized. Doing it now for you.\n");
-    p4est_init (NULL, SC_LP_ESSENTIAL);
-  }
+  // if (!sc_package_is_registered (p4est_package_id)) {
+  //   t8_global_errorf ("WARNING: p4est is not yet initialized. Doing it now for you.\n");
+  //   p4est_init (NULL, SC_LP_ESSENTIAL);
+  // }
   p4est_connectivity_t *my_brick = NULL; /* pre-initialized to prevent compiler warning */
   p8est_connectivity_t *my_brick_3d = NULL;
   t8_cmesh_t cmesh;
