@@ -32,7 +32,7 @@ if( T8CODE_ENABLE_MPI )
     if( NOT MPIEXEC_EXECUTABLE )
         message( FATAL_ERROR "MPIEXEC was not found" )
     endif()
-    set( SC_ENABLE_MPI ON )
+    # set( SC_ENABLE_MPI ON )
     set( mpi ON ) # This is very dirty, we should consider fixing this in the p4est repo
 endif()
 
