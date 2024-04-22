@@ -36,7 +36,7 @@ if test ! -x "$LIBTOOLIZE" ; then LIBTOOLIZE=`which libtoolize` ; fi
 if test ! -x "$LIBTOOLIZE" ; then echo "bootstrap requires libtoolize" ; \
    exit 1 ; fi
 
-aclocal -Wall -I config -I "$SC_CONFIG" -I "$P4EST_CONFIG"
+aclocal -Wall -I config -I "$SC_CONFIG"
 autoconf -Wall --force
 autoheader -Wall --force
 "$LIBTOOLIZE" --install --copy
