@@ -51,7 +51,7 @@ set(CMAKE_INSTALL_NAME_DIR ${CMAKE_INSTALL_PREFIX}/lib)
 set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH true)
 
-add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/sc )
+# add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/sc )
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/p4est )
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/src )
 
