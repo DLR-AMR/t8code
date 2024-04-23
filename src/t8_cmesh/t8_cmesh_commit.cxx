@@ -35,6 +35,7 @@
 #include <t8_cmesh/t8_cmesh_partition.h>
 #include <t8_cmesh/t8_cmesh_copy.h>
 #include <t8_cmesh/t8_cmesh_geometry.h>
+#include <t8_geometry/t8_geometry_handler.hxx>
 
 typedef struct ghost_facejoins_struct
 {
@@ -545,7 +546,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
      * over the handler from set_from. */
     if (cmesh->geometry_handler == NULL) {
       cmesh->geometry_handler = cmesh->set_from->geometry_handler;
-      cmesh->set_from->geometry_handler = NULL;
+      cmesh->geometry_handler->ref ();
     }
 
     if (cmesh->set_partition) {
