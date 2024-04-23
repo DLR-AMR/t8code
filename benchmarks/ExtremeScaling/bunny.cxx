@@ -204,11 +204,11 @@ main (int argc, char **argv)
   sc_stats_set1 (&stats[6], snapshot.iwtime, "t8 forest p8 commit level 4");
 
   t8_forest_unref (&forest_p8);
-  // p8est_refine (p8est, 0,bunny_refine, NULL);
-  // p8est_refine (p8est, 0,bunny_refine, NULL);
+  p8est_refine (p8est, 0,bunny_refine, NULL);
+  p8est_refine (p8est, 0,bunny_refine, NULL);
 
-  //  sc_flops_shot (&fi, &snapshot);
-  //  sc_stats_set1 (&stats[5], snapshot.iwtime, "Refine 1 times");
+   sc_flops_shot (&fi, &snapshot);
+   sc_stats_set1 (&stats[5], snapshot.iwtime, "Refine 1 times");
 
   /*
   snprintf (afilename, BUFSIZ, "%s", "read_tetgen");
