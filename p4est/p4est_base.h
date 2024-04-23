@@ -37,9 +37,7 @@
 #define P4EST_BASE_H
 
 /* Set configs as given by the t8code build system. */
-#ifndef T8_CMAKE_BUILD
-#include <t8_config.h>
-#endif
+#include <t8.h>
 
 #if (defined(T8_ENABLE_MPI))
 # define P4EST_ENABLE_MPI T8_ENABLE_MPI
@@ -53,7 +51,7 @@
 # define P4EST_PACKAGE_VERSION "2.8.6"
 
 /* Emulating p4est package id with the t8code package id. */
-# define p4est_package_id t8_package_id
+# define p4est_package_id t8_get_package_id ()
 
 #include <sc_config.h>
 #if \
@@ -339,10 +337,6 @@ void                P4EST_LERRORF (const char *fmt, ...)
 #endif
 #define P4EST_NOTICE            P4EST_STATISTICS
 #define P4EST_NOTICEF           P4EST_STATISTICSF
-
-/* extern declarations */
-/** the libsc package id for p4est (set in p4est_init()) */
-extern int          p4est_package_id;
 
 static inline void
 p4est_log_indent_push (void)
