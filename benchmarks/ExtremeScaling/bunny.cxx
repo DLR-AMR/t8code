@@ -141,7 +141,7 @@ main (int argc, char **argv)
 
   SC_CHECK_ABORTF (ptg != NULL, "Failed to read tetgen %s", argbasename);
   SC_GLOBAL_STATISTICSF ("Read %d nodes and %d tets %s attributes\n", (int) ptg->nodes->elem_count / 3,
-                            (int) ptg->tets->elem_count / 4, ptg->tet_attributes != NULL ? "with" : "without");
+                         (int) ptg->tets->elem_count / 4, ptg->tet_attributes != NULL ? "with" : "without");
 
   /* flip orientation to right-handed */
   tnum_flips = p8est_tets_make_righthanded (ptg);
@@ -171,7 +171,7 @@ main (int argc, char **argv)
   sc_stats_set1 (&stats[3], snapshot.iwtime, "Connectivity complete");
 
   SC_GLOBAL_LDEBUGF ("Connectivity has %ld edges and %ld corners\n", (long) connectivity->num_edges,
-                        (long) connectivity->num_corners);
+                     (long) connectivity->num_corners);
   sc_flops_snap (&fi, &snapshot);
 
   cmesh_p8 = t8_cmesh_new_from_p8est (connectivity, sc_MPI_COMM_WORLD, 0);
@@ -204,11 +204,11 @@ main (int argc, char **argv)
   sc_stats_set1 (&stats[6], snapshot.iwtime, "t8 forest p8 commit level 4");
 
   t8_forest_unref (&forest_p8);
-  p8est_refine (p8est, 0,bunny_refine, NULL);
-  p8est_refine (p8est, 0,bunny_refine, NULL);
+  p8est_refine (p8est, 0, bunny_refine, NULL);
+  p8est_refine (p8est, 0, bunny_refine, NULL);
 
-   sc_flops_shot (&fi, &snapshot);
-   sc_stats_set1 (&stats[5], snapshot.iwtime, "Refine 1 times");
+  sc_flops_shot (&fi, &snapshot);
+  sc_stats_set1 (&stats[5], snapshot.iwtime, "Refine 1 times");
 
   /*
   snprintf (afilename, BUFSIZ, "%s", "read_tetgen");
