@@ -112,7 +112,6 @@ main (int argc, char **argv)
   mpiret = sc_MPI_Comm_rank (mpicomm, &mpirank);
 
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
-  // p4est_init (NULL, SC_LP_STATISTICS);
   t8_init (SC_LP_DEFAULT);
 
   if (argc != 2) {
