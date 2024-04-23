@@ -60,7 +60,6 @@ echo "| Checking libraries"
 echo "o---------------------------------------"
 
 SC_CHECK_LIBRARIES([T8])
-# P4EST_CHECK_LIBRARIES([T8])
 T8_CHECK_LIBRARIES([T8])
 
 echo "o---------------------------------------"
@@ -88,8 +87,6 @@ echo "o---------------------------------------"
 T8_DIST_DENY=
 T8_DISTCLEAN=
 SC_AS_SUBPACKAGE([T8])
-export P4EST_SC_SOURCE=../sc
-# P4EST_AS_SUBPACKAGE([T8])
 AM_CONDITIONAL([T8_DIST_DENY], [test "x$T8_DIST_DENY" != x])
 AC_SUBST([T8_DISTCLEAN])
 
@@ -161,5 +158,4 @@ AC_OUTPUT
 
 # Final messages.
 SC_FINAL_MESSAGES([T8])
-# P4EST_FINAL_MESSAGES([T8])
 T8_FINAL_MESSAGES([T8])
