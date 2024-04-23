@@ -27,9 +27,16 @@
  * General support types and functions
  */
 
+
+/* 
+ * Note, this file was sligthly adapted in order to integrate it into the
+ * t8code build system. Other than that no changes were made. The t8code authors.
+ */
+
 #ifndef P4EST_BASE_H
 #define P4EST_BASE_H
 
+/* Set configs as given by the t8code build system. */
 #ifndef T8_CMAKE_BUILD
 #include <t8_config.h>
 #endif
@@ -42,11 +49,12 @@
 # define P4EST_ENABLE_MPIIO T8_ENABLE_MPIIO
 # endif
 
-# define P4EST_PACKAGE_VERSION "2.0.0"
+/* Hard coding current p4est version as of 2024-04-23. */
+# define P4EST_PACKAGE_VERSION "2.8.6"
+
+/* Emulating p4est package id with the t8code package id. */
 # define p4est_package_id t8_get_package_id ()
 
-/* include config headers */
-/* #include <p4est_config.h> */
 #include <sc_config.h>
 #if \
   (defined (P4EST_ENABLE_MPI) && !defined (SC_ENABLE_MPI)) || \
