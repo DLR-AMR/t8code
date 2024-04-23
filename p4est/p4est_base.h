@@ -53,7 +53,7 @@
 # define P4EST_PACKAGE_VERSION "2.8.6"
 
 /* Emulating p4est package id with the t8code package id. */
-# define p4est_package_id t8_get_package_id ()
+# define p4est_package_id t8_package_id
 
 #include <sc_config.h>
 #if \
