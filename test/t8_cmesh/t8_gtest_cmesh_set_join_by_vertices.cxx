@@ -270,11 +270,6 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
    * Tests with 2D and 3D example meshes from `p4est`.
    */
 
-  // /* Make sure that p4est is properly initialized. If not, do it here. */
-  // if (!sc_package_is_registered (p4est_package_id)) {
-  //   p4est_init (NULL, SC_LP_ESSENTIAL);
-  // }
-
   {
     p4est_connectivity_t *p4_conn = p4est_connectivity_new_disk_nonperiodic ();
     t8_cmesh_t cmesh = t8_cmesh_new_from_p4est (p4_conn, comm, do_partition);
