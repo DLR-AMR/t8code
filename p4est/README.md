@@ -24,6 +24,6 @@ The authors thank the Texas Advanced
 Computing Center (TACC) for providing them with access to the Ranger
 supercomputer under NSF TeraGrid award MCA04N026, and the National Center for
 Computational Science (NCCS) for early-user access to the Jaguar Cray XT5
-supercomputer.  Any opinions, findings and conclusions or recomendations
+supercomputer.  Any opinions, findings and conclusions or recommendations 
 expressed in the source code and documentation are those of the authors and do
 not necessarily reflect the views of the National Science Foundation (NSF).

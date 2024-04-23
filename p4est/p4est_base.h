@@ -29,7 +29,7 @@
 
 
 /* 
- * Note, this file was sligthly adapted in order to integrate it into the
+ * Note, this file was slightly adapted in order to integrate it into the
  * t8code build system. Other than that no changes were made. The t8code authors.
  */
 
