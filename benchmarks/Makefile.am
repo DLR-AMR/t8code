@@ -19,4 +19,5 @@ benchmarks_t8_time_prism_adapt_SOURCES = benchmarks/t8_time_prism_adapt.cxx
 benchmarks_t8_time_fractal_SOURCES = benchmarks/t8_time_fractal.cxx
 benchmarks_t8_time_set_join_by_vertices_SOURCES = benchmarks/t8_time_set_join_by_vertices.cxx
 
+# TODO: Refactor or delete this application.
 # include benchmarks/ExtremeScaling/Makefile.am
