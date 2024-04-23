@@ -318,6 +318,19 @@ t8_forest_comm_global_num_elements (t8_forest_t forest)
   forest->global_num_elements = global_num_el;
 }
 
+void
+t8_forest_comm_global_num_subelements (t8_forest_t forest)
+{
+  int                 mpiret;
+  t8_gloidx_t         local_num_subel;
+  t8_gloidx_t         global_num_subel;
+
+  local_num_subel = (t8_gloidx_t) forest->local_num_subelements;
+  mpiret = sc_MPI_Allreduce (&local_num_subel, &global_num_subel, 1,
+                             T8_MPI_GLOIDX, sc_MPI_SUM, forest->mpicomm);
+  SC_CHECK_MPI (mpiret);
+  forest->global_num_subelements = global_num_subel;
+}
 /** Adapt callback function to refine every element in the forest.
  * It is merely used to build a new forest with pyramids. 
  * 

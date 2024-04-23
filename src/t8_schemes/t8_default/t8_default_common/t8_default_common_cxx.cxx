@@ -190,4 +190,27 @@ t8_default_scheme_common_c::t8_element_is_subelement (const t8_element * elem) c
   return 0;
 }
 
+int
+t8_default_scheme_common_c::t8_element_get_subelement_id (const
+                                                          t8_element * elem)
+{
+  SC_ABORT ("This function is not implemented for the given scheme.\n");
+}
+
+
+int
+t8_default_scheme_common_c::t8_element_get_number_of_subelements (int transition_type) const
+{
+  SC_ABORT ("This function is not implemented for the given scheme.\n");
+}
+
+void
+t8_default_scheme_common_c::t8_element_to_transition_cell (const t8_element_t
+                                                           *elem, int type,
+                                                           t8_element_t *c[])
+{
+  SC_ABORT ("This function is not implemented for the given scheme.\n");
+}
+
+
 T8_EXTERN_C_END ();
