@@ -24,52 +24,9 @@
 
 #include <p4est_base.h>
 
-int                 p4est_initialized = 0;
-
-void
-p4est_init (sc_log_handler_t log_handler, int log_threshold)
-{
-  int                 w;
-
-  p4est_package_id = sc_package_register (log_handler, log_threshold,
-                                          "p4est", "A forest of octrees");
-
-  w = 24;
-  P4EST_GLOBAL_ESSENTIALF ("This is %s\n", P4EST_PACKAGE_STRING);
-  P4EST_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "CPP", P4EST_CPP);
-  P4EST_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "CPPFLAGS", P4EST_CPPFLAGS);
-  P4EST_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "CC", P4EST_CC);
-#if 0
-  P4EST_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "C_VERSION", P4EST_C_VERSION);
-#endif
-  P4EST_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "CFLAGS", P4EST_CFLAGS);
-  P4EST_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "LDFLAGS", P4EST_LDFLAGS);
-  P4EST_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "LIBS", P4EST_LIBS);
-
-  p4est_initialized = 1;
-}
-
-int
-p4est_is_initialized (void)
-{
-  return p4est_initialized;
-}
-
-int
-p4est_have_zlib (void)
-{
-#ifndef P4EST_HAVE_ZLIB
-  return 0;
-#else
-  return sc_have_zlib ();
-#endif
-}
-
-int
-p4est_get_package_id (void)
-{
-  return p4est_package_id;
-}
+/* 
+ * Note, dispensible function signatures and includes were deleted. The t8code authors.
+ */
 
 #ifndef __cplusplus
 #undef P4EST_GLOBAL_LOGF
@@ -142,23 +99,3 @@ P4EST_LOG_IMP (PRODUCTION, PRODUCTION)
 P4EST_LOG_IMP (ESSENTIAL, ESSENTIAL)
 P4EST_LOG_IMP (LERROR, ERROR)
 /* *INDENT-ON* */
-
-const char         *
-p4est_version (void)
-{
-  return P4EST_VERSION;
-}
-
-int
-p4est_version_major (void)
-{
-  /* In rare cases SC_VERSION_MINOR may be a non-numerical string */
-  return sc_atoi (SC_TOSTRING (P4EST_VERSION_MAJOR));
-}
-
-int
-p4est_version_minor (void)
-{
-  /* In rare cases SC_VERSION_MAJOR may be a non-numerical string */
-  return sc_atoi (SC_TOSTRING (P4EST_VERSION_MINOR));
-}
