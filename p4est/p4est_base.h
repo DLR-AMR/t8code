@@ -49,9 +49,13 @@
 
 /* Hard coding current p4est version as of 2024-04-23. */
 # define P4EST_PACKAGE_VERSION "2.8.6"
+# define P4EST_VERSION "2.8.6"
+# define P4EST_VERSION_MAJOR 2
+# define P4EST_VERSION_MINOR 8
 
 /* Emulating p4est package id with the t8code package id. */
 # define p4est_package_id t8_get_package_id ()
+
 
 #include <sc_config.h>
 #if \

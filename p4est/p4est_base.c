@@ -24,7 +24,6 @@
 
 #include <p4est_base.h>
 
-int                 p4est_package_id = -1;
 int                 p4est_initialized = 0;
 
 void
