@@ -12,7 +12,7 @@ libt8_internal_headers += \
   p4est/bits.h \
   p4est/p8est_extended.h \
   p4est/p8est_connectivity.h \
-  p4est/p4est_to_p8test.h
+  p4est/p4est_to_p8est.h
 
 libt8_compiled_sources += \
   p4est/p4est_base.c \
