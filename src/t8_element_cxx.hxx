@@ -781,6 +781,11 @@ struct t8_eclass_scheme
   virtual void
   t8_element_to_transition_cell (const t8_element_t *elem, int type, t8_element_t *subelements[]) 
     = 0;
+
+  /** Return 1 if the eclass scheme has an implementation for subelements. Return 0 otherwise. */
+  virtual int
+  t8_element_scheme_supports_transitioning (void) = 0;
+
   /* --------------------------End functions of transition scheme---------------------*/                                              
 
   virtual void

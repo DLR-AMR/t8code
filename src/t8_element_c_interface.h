@@ -49,6 +49,10 @@ t8_element_size (const t8_eclass_scheme_c *ts);
 int
 t8_element_refines_irregular (const t8_eclass_scheme_c *ts);
 
+/** Returns true if the given eclass scheme has an implementation for subelements */
+int
+t8_element_scheme_supports_transitioning (t8_eclass_scheme_c *ts);
+
 /** Return the maximum allowed level for any element of a given class.
  * \param [in] ts     Implementation of a class scheme.
  * \return            The maximum allowed level for elements of class \b ts.

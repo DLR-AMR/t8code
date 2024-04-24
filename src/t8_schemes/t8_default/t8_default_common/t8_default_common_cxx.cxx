@@ -213,4 +213,12 @@ t8_default_scheme_common_c::t8_element_to_transition_cell (const t8_element_t
 }
 
 
+int
+t8_default_scheme_common_c::t8_element_scheme_supports_transitioning (void)
+{
+  /* Default implementation - current scheme is no transition scheme */
+  return 0;
+}
+
+
 T8_EXTERN_C_END ();

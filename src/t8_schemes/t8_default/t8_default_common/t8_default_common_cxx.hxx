@@ -119,8 +119,8 @@ class t8_default_scheme_common_c: public t8_eclass_scheme_c {
    *  \param [in] elem A valid element 
    *  \return Integer, used as the refine value during transition adaptation.
    */
-  virtual int         t8_element_get_transition_refine_identifier (void)
-    const;
+  virtual int
+  t8_element_get_transition_refine_identifier (void) const;
 
   /** Check whether a given element is a subelement
    *  \param [in] elem A valid element 
@@ -141,7 +141,8 @@ class t8_default_scheme_common_c: public t8_eclass_scheme_c {
    *  \param [in] elem A valid element 
    *  \return the subelement id of elem (0 if elem is no subelement)
    */
-  virtual int         t8_element_get_subelement_id (const t8_element * elem);
+  virtual int
+  t8_element_get_subelement_id (const t8_element * elem);
 
   /** This function refines a parent element into subelements.
    *  Depending on the subelement type, the number of subelements 
@@ -150,9 +151,13 @@ class t8_default_scheme_common_c: public t8_eclass_scheme_c {
    *  \param [in] type The subelement type
    *  \param [out] subelements An array of all subelements of the parent quad element elem
    */
-  virtual void        t8_element_to_transition_cell (const t8_element_t *elem,
-                                                     int type,
-                                                     t8_element_t *c[]);
+  virtual void
+  t8_element_to_transition_cell (const t8_element_t *elem, int type, t8_element_t *c[]);
+
+  /** Return 1 if the eclass scheme has an implementation for subelements. Return 0 otherwise. */
+  virtual int 
+  t8_element_scheme_supports_transitioning (void);
+
 
 #if T8_ENABLE_DEBUG
   virtual void
