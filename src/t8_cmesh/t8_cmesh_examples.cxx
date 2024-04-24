@@ -1960,8 +1960,8 @@ t8_cmesh_new_prism_geometry (sc_MPI_Comm comm)
  * partitioned and has all trees in conn as local trees.
  * The offsets on the different processes must add up! */
 static t8_cmesh_t
-t8_cmesh_new_brick_2d_ext (t8_gloidx_t num_x, t8_gloidx_t num_y, int x_periodic,
-int y_periodic, sc_MPI_Comm comm, int set_partition, t8_gloidx_t offset)
+t8_cmesh_new_brick_2d_ext (t8_gloidx_t num_x, t8_gloidx_t num_y, int x_periodic, int y_periodic, sc_MPI_Comm comm,
+                           int set_partition, t8_gloidx_t offset)
 {
   int use_offset;
   t8_cmesh_t cmesh;
@@ -1994,22 +1994,22 @@ int y_periodic, sc_MPI_Comm comm, int set_partition, t8_gloidx_t offset)
   /* Setting vertices. */
   for (t8_gloidx_t i = 0; i < num_x; i++) {
     for (t8_gloidx_t j = 0; j < num_y; j++) {
-      const t8_gloidx_t itree = i*num_y + j + offset;
+      const t8_gloidx_t itree = i * num_y + j + offset;
 
       vertices[0][0] = i;
-      vertices[0][1] = j; 
+      vertices[0][1] = j;
       vertices[0][2] = 0.0;
 
       vertices[1][0] = i + 1.0;
-      vertices[1][1] = j; 
+      vertices[1][1] = j;
       vertices[1][2] = 0.0;
 
       vertices[2][0] = i;
-      vertices[2][1] = j + 1.0; 
+      vertices[2][1] = j + 1.0;
       vertices[2][2] = 0.0;
 
       vertices[3][0] = i + 1.0;
-      vertices[3][1] = j + 1.0; 
+      vertices[3][1] = j + 1.0;
       vertices[3][2] = 0.0;
 
       t8_cmesh_set_tree_vertices (cmesh, itree, (double *) vertices, nverts);
@@ -2017,19 +2017,19 @@ int y_periodic, sc_MPI_Comm comm, int set_partition, t8_gloidx_t offset)
   }
 
   /* Setting face connectivity within the brick in x-direction. */
-  for (t8_gloidx_t i = 0; i < num_x-1; i++) {
+  for (t8_gloidx_t i = 0; i < num_x - 1; i++) {
     for (t8_gloidx_t j = 0; j < num_y; j++) {
-      const t8_gloidx_t itree = i*num_y + j + offset;
-      const t8_gloidx_t itree_neigh = (i+1)*num_y + j + offset;
+      const t8_gloidx_t itree = i * num_y + j + offset;
+      const t8_gloidx_t itree_neigh = (i + 1) * num_y + j + offset;
       t8_cmesh_set_join (cmesh, itree, itree_neigh, 1, 0, 0);
     }
   }
 
   /* Setting face connectivity within the brick in y-direction. */
   for (t8_gloidx_t i = 0; i < num_x; i++) {
-    for (t8_gloidx_t j = 0; j < num_y-1; j++) {
-      const t8_gloidx_t itree = i*num_y + j + offset;
-      const t8_gloidx_t itree_neigh = i*num_y + j + 1 + offset;
+    for (t8_gloidx_t j = 0; j < num_y - 1; j++) {
+      const t8_gloidx_t itree = i * num_y + j + offset;
+      const t8_gloidx_t itree_neigh = i * num_y + j + 1 + offset;
       t8_cmesh_set_join (cmesh, itree, itree_neigh, 3, 2, 0);
     }
   }
@@ -2037,7 +2037,7 @@ int y_periodic, sc_MPI_Comm comm, int set_partition, t8_gloidx_t offset)
   /* Setting face connectivity at boundary in x-direction. */
   if (x_periodic) {
     for (int j = 0; j < num_y; j++) {
-      const t8_gloidx_t itree = (num_x-1)*num_y + j + offset;
+      const t8_gloidx_t itree = (num_x - 1) * num_y + j + offset;
       const t8_gloidx_t itree_neigh = j + offset;
       t8_cmesh_set_join (cmesh, itree, itree_neigh, 1, 0, 0);
     }
@@ -2046,8 +2046,8 @@ int y_periodic, sc_MPI_Comm comm, int set_partition, t8_gloidx_t offset)
   /* Setting face connectivity at boundary in y-direction. */
   if (y_periodic) {
     for (int i = 0; i < num_x; i++) {
-      const t8_gloidx_t itree = i*num_y + num_y - 1 + offset;
-      const t8_gloidx_t itree_neigh = i*num_y + offset;
+      const t8_gloidx_t itree = i * num_y + num_y - 1 + offset;
+      const t8_gloidx_t itree_neigh = i * num_y + offset;
       t8_cmesh_set_join (cmesh, itree, itree_neigh, 3, 2, 0);
     }
   }
@@ -2104,8 +2104,8 @@ int y_periodic, sc_MPI_Comm comm, int set_partition, t8_gloidx_t offset)
  * partitioned and has all trees in conn as local trees.
  * The offsets on the different processes must add up! */
 static t8_cmesh_t
-t8_cmesh_new_brick_3d_ext (t8_gloidx_t num_x, t8_gloidx_t num_y, t8_gloidx_t num_z, int x_periodic,
-int y_periodic, int z_periodic, sc_MPI_Comm comm, int set_partition, t8_gloidx_t offset)
+t8_cmesh_new_brick_3d_ext (t8_gloidx_t num_x, t8_gloidx_t num_y, t8_gloidx_t num_z, int x_periodic, int y_periodic,
+                           int z_periodic, sc_MPI_Comm comm, int set_partition, t8_gloidx_t offset)
 {
   int use_offset;
   t8_cmesh_t cmesh;
@@ -2122,7 +2122,7 @@ int y_periodic, int z_periodic, sc_MPI_Comm comm, int set_partition, t8_gloidx_t
   T8_ASSERT (offset >= 0);
 
   const int dim = 3;
-  const t8_gloidx_t ntrees = num_x*num_y*num_z;
+  const t8_gloidx_t ntrees = num_x * num_y * num_z;
   const int nverts = 8; /* T8_ECLASS_HEX */
 
   t8_cmesh_init (&cmesh);
@@ -2139,38 +2139,38 @@ int y_periodic, int z_periodic, sc_MPI_Comm comm, int set_partition, t8_gloidx_t
   for (t8_gloidx_t i = 0; i < num_x; i++) {
     for (t8_gloidx_t j = 0; j < num_y; j++) {
       for (t8_gloidx_t k = 0; k < num_z; k++) {
-        const t8_gloidx_t itree = T8_3D_TO_1D(num_x, num_y, num_z, i, j, k) + offset;
+        const t8_gloidx_t itree = T8_3D_TO_1D (num_x, num_y, num_z, i, j, k) + offset;
 
         vertices[0][0] = i;
-        vertices[0][1] = j; 
+        vertices[0][1] = j;
         vertices[0][2] = k;
 
         vertices[1][0] = i + 1.0;
-        vertices[1][1] = j; 
+        vertices[1][1] = j;
         vertices[1][2] = k;
 
         vertices[2][0] = i;
-        vertices[2][1] = j + 1.0; 
+        vertices[2][1] = j + 1.0;
         vertices[2][2] = k;
 
         vertices[3][0] = i + 1.0;
-        vertices[3][1] = j + 1.0; 
+        vertices[3][1] = j + 1.0;
         vertices[3][2] = k;
 
         vertices[4][0] = i;
-        vertices[4][1] = j; 
+        vertices[4][1] = j;
         vertices[4][2] = k + 1.0;
 
         vertices[5][0] = i + 1.0;
-        vertices[5][1] = j; 
+        vertices[5][1] = j;
         vertices[5][2] = k + 1.0;
 
         vertices[6][0] = i;
-        vertices[6][1] = j + 1.0; 
+        vertices[6][1] = j + 1.0;
         vertices[6][2] = k + 1.0;
 
         vertices[7][0] = i + 1.0;
-        vertices[7][1] = j + 1.0; 
+        vertices[7][1] = j + 1.0;
         vertices[7][2] = k + 1.0;
 
         t8_cmesh_set_tree_vertices (cmesh, itree, (double *) vertices, nverts);
@@ -2179,11 +2179,11 @@ int y_periodic, int z_periodic, sc_MPI_Comm comm, int set_partition, t8_gloidx_t
   }
 
   /* Setting face connectivity within the brick in x-direction. */
-  for (t8_gloidx_t i = 0; i < num_x-1; i++) {
+  for (t8_gloidx_t i = 0; i < num_x - 1; i++) {
     for (t8_gloidx_t j = 0; j < num_y; j++) {
       for (t8_gloidx_t k = 0; k < num_z; k++) {
-        const t8_gloidx_t itree = T8_3D_TO_1D(num_x, num_y, num_z, i, j, k) + offset;
-        const t8_gloidx_t itree_neigh = T8_3D_TO_1D(num_x, num_y, num_z, i+1, j, k) + offset;
+        const t8_gloidx_t itree = T8_3D_TO_1D (num_x, num_y, num_z, i, j, k) + offset;
+        const t8_gloidx_t itree_neigh = T8_3D_TO_1D (num_x, num_y, num_z, i + 1, j, k) + offset;
         t8_cmesh_set_join (cmesh, itree, itree_neigh, 1, 0, 0);
       }
     }
@@ -2191,10 +2191,10 @@ int y_periodic, int z_periodic, sc_MPI_Comm comm, int set_partition, t8_gloidx_t
 
   /* Setting face connectivity within the brick in y-direction. */
   for (t8_gloidx_t i = 0; i < num_x; i++) {
-    for (t8_gloidx_t j = 0; j < num_y-1; j++) {
+    for (t8_gloidx_t j = 0; j < num_y - 1; j++) {
       for (t8_gloidx_t k = 0; k < num_z; k++) {
-        const t8_gloidx_t itree = T8_3D_TO_1D(num_x, num_y, num_z, i, j, k) + offset;
-        const t8_gloidx_t itree_neigh = T8_3D_TO_1D(num_x, num_y, num_z, i, j+1, k) + offset;
+        const t8_gloidx_t itree = T8_3D_TO_1D (num_x, num_y, num_z, i, j, k) + offset;
+        const t8_gloidx_t itree_neigh = T8_3D_TO_1D (num_x, num_y, num_z, i, j + 1, k) + offset;
         t8_cmesh_set_join (cmesh, itree, itree_neigh, 3, 2, 0);
       }
     }
@@ -2203,9 +2203,9 @@ int y_periodic, int z_periodic, sc_MPI_Comm comm, int set_partition, t8_gloidx_t
   /* Setting face connectivity within the brick in z-direction. */
   for (t8_gloidx_t i = 0; i < num_x; i++) {
     for (t8_gloidx_t j = 0; j < num_y; j++) {
-      for (t8_gloidx_t k = 0; k < num_z-1; k++) {
-        const t8_gloidx_t itree = T8_3D_TO_1D(num_x, num_y, num_z, i, j, k) + offset;
-        const t8_gloidx_t itree_neigh = T8_3D_TO_1D(num_x, num_y, num_z, i, j, k+1) + offset;
+      for (t8_gloidx_t k = 0; k < num_z - 1; k++) {
+        const t8_gloidx_t itree = T8_3D_TO_1D (num_x, num_y, num_z, i, j, k) + offset;
+        const t8_gloidx_t itree_neigh = T8_3D_TO_1D (num_x, num_y, num_z, i, j, k + 1) + offset;
         t8_cmesh_set_join (cmesh, itree, itree_neigh, 5, 4, 0);
       }
     }
@@ -2215,8 +2215,8 @@ int y_periodic, int z_periodic, sc_MPI_Comm comm, int set_partition, t8_gloidx_t
   if (x_periodic) {
     for (t8_gloidx_t j = 0; j < num_y; j++) {
       for (t8_gloidx_t k = 0; k < num_z; k++) {
-        const t8_gloidx_t itree = T8_3D_TO_1D(num_x, num_y, num_z, num_x-1, j, k) + offset;
-        const t8_gloidx_t itree_neigh = T8_3D_TO_1D(num_x, num_y, num_z, 0, j, k) + offset;
+        const t8_gloidx_t itree = T8_3D_TO_1D (num_x, num_y, num_z, num_x - 1, j, k) + offset;
+        const t8_gloidx_t itree_neigh = T8_3D_TO_1D (num_x, num_y, num_z, 0, j, k) + offset;
         t8_cmesh_set_join (cmesh, itree, itree_neigh, 1, 0, 0);
       }
     }
@@ -2226,8 +2226,8 @@ int y_periodic, int z_periodic, sc_MPI_Comm comm, int set_partition, t8_gloidx_t
   if (y_periodic) {
     for (t8_gloidx_t i = 0; i < num_x; i++) {
       for (t8_gloidx_t k = 0; k < num_z; k++) {
-        const t8_gloidx_t itree = T8_3D_TO_1D(num_x, num_y, num_z, i, num_y-1, k) + offset;
-        const t8_gloidx_t itree_neigh = T8_3D_TO_1D(num_x, num_y, num_z, i, 0, k) + offset;
+        const t8_gloidx_t itree = T8_3D_TO_1D (num_x, num_y, num_z, i, num_y - 1, k) + offset;
+        const t8_gloidx_t itree_neigh = T8_3D_TO_1D (num_x, num_y, num_z, i, 0, k) + offset;
         t8_cmesh_set_join (cmesh, itree, itree_neigh, 3, 2, 0);
       }
     }
@@ -2237,8 +2237,8 @@ int y_periodic, int z_periodic, sc_MPI_Comm comm, int set_partition, t8_gloidx_t
   if (z_periodic) {
     for (t8_gloidx_t i = 0; i < num_x; i++) {
       for (t8_gloidx_t j = 0; j < num_y; j++) {
-        const t8_gloidx_t itree = T8_3D_TO_1D(num_x, num_y, num_z, i, j, num_z-1) + offset;
-        const t8_gloidx_t itree_neigh = T8_3D_TO_1D(num_x, num_y, num_z, i, j, 0) + offset;
+        const t8_gloidx_t itree = T8_3D_TO_1D (num_x, num_y, num_z, i, j, num_z - 1) + offset;
+        const t8_gloidx_t itree_neigh = T8_3D_TO_1D (num_x, num_y, num_z, i, j, 0) + offset;
         t8_cmesh_set_join (cmesh, itree, itree_neigh, 5, 4, 0);
       }
     }
@@ -2294,15 +2294,14 @@ int y_periodic, int z_periodic, sc_MPI_Comm comm, int set_partition, t8_gloidx_t
 t8_cmesh_t
 t8_cmesh_new_brick_2d (t8_gloidx_t num_x, t8_gloidx_t num_y, int x_periodic, int y_periodic, sc_MPI_Comm comm)
 {
-  return t8_cmesh_new_brick_2d_ext (num_x, num_y, x_periodic,
-    y_periodic, comm, 0, 0);
+  return t8_cmesh_new_brick_2d_ext (num_x, num_y, x_periodic, y_periodic, comm, 0, 0);
 }
 
 t8_cmesh_t
-t8_cmesh_new_brick_3d (t8_gloidx_t num_x, t8_gloidx_t num_y, t8_gloidx_t num_z, int x_periodic,
-int y_periodic, int z_periodic, sc_MPI_Comm comm) {
-  return t8_cmesh_new_brick_3d_ext (num_x, num_y, num_z, x_periodic,
-    y_periodic, z_periodic, comm, 0, 0);
+t8_cmesh_new_brick_3d (t8_gloidx_t num_x, t8_gloidx_t num_y, t8_gloidx_t num_z, int x_periodic, int y_periodic,
+                       int z_periodic, sc_MPI_Comm comm)
+{
+  return t8_cmesh_new_brick_3d_ext (num_x, num_y, num_z, x_periodic, y_periodic, z_periodic, comm, 0, 0);
 }
 
 /* On each process, create a num_x by num_y (by num_z) brick connectivity and

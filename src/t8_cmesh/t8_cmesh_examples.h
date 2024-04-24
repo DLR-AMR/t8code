@@ -237,8 +237,7 @@ t8_cmesh_new_prism_geometry (sc_MPI_Comm comm);
  * \return                 A committed and partitioned cmesh.
  */
 t8_cmesh_t
-t8_cmesh_new_brick_2d (t8_gloidx_t num_x, t8_gloidx_t num_y, int x_periodic,
-int y_periodic, sc_MPI_Comm comm);
+t8_cmesh_new_brick_2d (t8_gloidx_t num_x, t8_gloidx_t num_y, int x_periodic, int y_periodic, sc_MPI_Comm comm);
 
 /** Create a cmesh of quads whose trees are given by a `num_x * num_y * num_z` brick connectivity.
  * \param [in] num_x       The number of trees in x-direction. Must be >= 0.
@@ -251,8 +250,8 @@ int y_periodic, sc_MPI_Comm comm);
  * \return                 A committed and partitioned cmesh.
  */
 t8_cmesh_t
-t8_cmesh_new_brick_3d (t8_gloidx_t num_x, t8_gloidx_t num_y, t8_gloidx_t num_z, int x_periodic,
-int y_periodic, int z_periodic, sc_MPI_Comm comm);
+t8_cmesh_new_brick_3d (t8_gloidx_t num_x, t8_gloidx_t num_y, t8_gloidx_t num_z, int x_periodic, int y_periodic,
+                       int z_periodic, sc_MPI_Comm comm);
 
 /** Create a partitioned cmesh of quads whose local trees are given by an
  * num_x by num_y brick connectivity from p4est
