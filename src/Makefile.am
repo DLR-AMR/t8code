@@ -87,7 +87,8 @@ libt8_installed_headers_netcdf = \
   src/t8_netcdf/t8_cmesh_netcdf.h \
   src/t8_netcdf/t8_forest_netcdf.h \
   src/t8_netcdf/t8_netcdf.h \
-  src/t8_netcdf/t8_nc_dimension_interval.hxx
+  src/t8_netcdf/t8_nc_dimension_interval.hxx \
+  src/t8_netcdf/t8_nc_hyperslab.hxx
 libt8_installed_headers_schemes_default =
 libt8_installed_headers_default_common =
 libt8_installed_headers_default_vertex =
@@ -157,7 +158,8 @@ libt8_compiled_sources = \
   src/t8_netcdf/t8_nc_mesh.cxx \
   src/t8_cmesh/t8_cmesh_netcdf.c \
   src/t8_forest/t8_forest_netcdf.cxx \
-  src/t8_netcdf/t8_netcdf.c 
+  src/t8_netcdf/t8_netcdf.c \
+  src/t8_netcdf/t8_nc_hyperslab.cxx
 
 
 # this variable is used for headers that are not publicly installed
