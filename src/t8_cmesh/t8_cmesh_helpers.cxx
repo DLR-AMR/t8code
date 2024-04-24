@@ -28,14 +28,15 @@
 #include <t8.h>
 #include <t8_cmesh.h>
 #include <t8_eclass.h>
+#include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh_stash.h>
 #include <t8_cmesh/t8_cmesh_helpers.h>
+#include <vector>
 #include <map>
 
-T8_EXTERN_C_BEGIN ();
-
 void
-t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees, const t8_eclass_t *eclasses, const double *vertices,
-                               int **connectivity, const int do_both_directions)
+t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const t8_gloidx_t ntrees, const t8_eclass_t *eclasses,
+                               const double *vertices, int **connectivity, const int do_both_directions)
 {
   /* If `connectivity` is NULL then the following array gets freed at the end of this routine. */
   int *conn = T8_ALLOC (int, ntrees *T8_ECLASS_MAX_FACES * 3);
@@ -252,4 +253,27 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees, const t8_ecla
   }
 }
 
-T8_EXTERN_C_END ();
+void
+t8_cmesh_set_join_by_stash (t8_cmesh_t cmesh, int **connectivity, const int do_both_directions)
+{
+  sc_array_t *classes = &(cmesh->stash->classes);
+  const t8_gloidx_t ntrees = classes->elem_count;
+  std::vector<t8_eclass_t> eclasses (ntrees);
+  for (t8_gloidx_t itree = 0; itree < ntrees; itree++) {
+    const t8_stash_class_struct_t *entry = (t8_stash_class_struct_t *) t8_sc_array_index_locidx (classes, itree);
+    eclasses[entry->id] = entry->eclass;
+  }
+
+  sc_array_t *attributes = &(cmesh->stash->attributes);
+  const size_t num_attributes = attributes->elem_count;
+  std::vector<double> vertices (ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM, 0.0);
+  for (size_t iattribute = 0; iattribute < num_attributes; iattribute++) {
+    const t8_stash_attribute_struct_t *entry
+      = (t8_stash_attribute_struct_t *) t8_sc_array_index_locidx (attributes, iattribute);
+    if (entry->key == T8_CMESH_VERTICES_ATTRIBUTE_KEY && entry->package_id == t8_get_package_id ()) {
+      const size_t index = T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, entry->id, 0, 0);
+      memcpy (&vertices[index], entry->attr_data, entry->attr_size);
+    }
+  }
+  t8_cmesh_set_join_by_vertices (cmesh, ntrees, eclasses.data (), vertices.data (), connectivity, do_both_directions);
+}
