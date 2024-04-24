@@ -268,6 +268,18 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
    * }
    */
 
+  {
+    t8_cmesh_t cmesh = t8_cmesh_new_brick_2d (3, 4, 1, 1, comm);
+    test_with_cmesh (cmesh);
+    t8_cmesh_destroy (&cmesh);
+  }
+
+  {
+    t8_cmesh_t cmesh = t8_cmesh_new_brick_3d (3, 4, 5, 1, 1, 1, comm);
+    test_with_cmesh (cmesh);
+    t8_cmesh_destroy (&cmesh);
+  }
+
   /* 
    * Tests with 2D and 3D example meshes from `p4est`.
    */
