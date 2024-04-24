@@ -1500,7 +1500,7 @@ t8_dpyramid_successor (const t8_dpyramid_t *elem, t8_dpyramid_t *succ, const int
 }
 
 void
-t8_dpyramid_compute_coords (const t8_dpyramid_t *elem, const int vertex, int coords[])
+t8_dpyramid_compute_integer_coords (const t8_dpyramid_t *elem, const int vertex, int coords[])
 {
   T8_ASSERT (0 <= vertex && vertex < T8_DPYRAMID_CORNERS);
 
@@ -1541,7 +1541,7 @@ t8_dpyramid_compute_coords (const t8_dpyramid_t *elem, const int vertex, int coo
   }
   else {
     T8_ASSERT (0 <= vertex && vertex < T8_DTET_CORNERS);
-    t8_dtet_compute_coords (&(elem->pyramid), vertex, coords);
+    t8_dtet_compute_integer_coords (&(elem->pyramid), vertex, coords);
   }
 }
 
@@ -1550,7 +1550,7 @@ t8_dpyramid_vertex_reference_coords (const t8_dpyramid_t *elem, const int vertex
 {
   int coords_int[3];
   T8_ASSERT (0 <= vertex && vertex < T8_DPYRAMID_CORNERS);
-  t8_dpyramid_compute_coords (elem, vertex, coords_int);
+  t8_dpyramid_compute_integer_coords (elem, vertex, coords_int);
   /*scale the coordinates onto the reference cube */
   coords[0] = coords_int[0] / (double) T8_DPYRAMID_ROOT_LEN;
   coords[1] = coords_int[1] / (double) T8_DPYRAMID_ROOT_LEN;

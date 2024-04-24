@@ -12,6 +12,8 @@ without warranty of any kind.
 Basic Installation
 ==================
 
+Note: We provide a short guide to install t8code in our Wiki [Installation guide](https://github.com/DLR-AMR/t8code/wiki/Installation).
+
    Briefly, the shell commands `./configure; make; make install' should
 configure, build, and install this package.  The following
 more-detailed instructions are generic; see the `README' file for
