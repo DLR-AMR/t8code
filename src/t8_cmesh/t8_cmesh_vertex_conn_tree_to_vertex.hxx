@@ -88,6 +88,8 @@ typedef struct t8_cmesh_vertex_conn_tree_to_vertex_c
   const t8_gloidx_t *
   get_global_vertices (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int num_vertices) const;
 
+  friend struct t8_cmesh_vertex_connectivity;
+
  private:
 } t8_cmesh_vertex_conn_tree_to_vertex_c;
 

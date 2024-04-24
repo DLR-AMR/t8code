@@ -23,6 +23,7 @@
 #include <gtest/gtest.h>
 #include <test/t8_gtest_macros.hxx>
 #include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity.hxx>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 
 /* In this file we test TODO: document */
@@ -65,10 +66,10 @@ class t8_test_cmesh_vertex_conn: public testing::Test {
     t8_cmesh_set_tree_class (cmesh, 1, tree_class);
     t8_cmesh_set_join (cmesh, 0, 1, 0, 1, 0);
     /* Define and set the global vertices of the trees */
-    const int global_vertices_of_tree_0 = {0, 1, 2};
-    const int global_vertices_of_tree_1 = {1, 3, 2};
-    t8_cmesh_set_global_vertices_of_tree (cmesh, 0, global_vertices_of_tree_0);
-    t8_cmesh_set_global_vertices_of_tree (cmesh, 1, global_vertices_of_tree_1);
+    constexpr t8_gloidx_t global_vertices_of_tree_0[testcase_num_vertices_per_tree] = {0, 1, 2};
+    constexpr t8_gloidx_t global_vertices_of_tree_1[testcase_num_vertices_per_tree] = {1, 3, 2};
+    t8_cmesh_set_global_vertices_of_tree (cmesh, 0, global_vertices_of_tree_0, testcase_num_vertices_per_tree);
+    t8_cmesh_set_global_vertices_of_tree (cmesh, 1, global_vertices_of_tree_1, testcase_num_vertices_per_tree);
     t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   }
 
@@ -79,8 +80,9 @@ class t8_test_cmesh_vertex_conn: public testing::Test {
   }
 
   /* This test cmesh has 2 trees and 4 global vertices. */
-  constexpr t8_gloidx_t testcase_num_global_trees = 2;
-  constexpr int testcase_num_global_vertices = 4;
+  static constexpr t8_gloidx_t testcase_num_global_trees = 2;
+  static constexpr int testcase_num_global_vertices = 4;
+  static constexpr int testcase_num_vertices_per_tree = 3;
 
   t8_cmesh_t cmesh;
 };
@@ -92,10 +94,8 @@ TEST_F (t8_test_cmesh_vertex_conn, check_tree_to_vertex)
   ASSERT_FALSE (t8_cmesh_is_partitioned (cmesh));
 
   /* Get the vertices of the trees and check their values. */
-  int *check_global_vertices_tree_0;
-  int *check_global_vertices_tree_1;
-  t8_cmesh_get_global_vertices_of_tree (cmesh, 0, check_global_vertices_tree_0);
-  t8_cmesh_get_global_vertices_of_tree (cmesh, 0, check_global_vertices_tree_1);
+  const t8_gloidx_t *check_global_vertices_tree_0 = t8_cmesh_get_global_vertices_of_tree (cmesh, 0, testcase_num_vertices_per_tree);
+  const t8_gloidx_t *check_global_vertices_tree_1 = t8_cmesh_get_global_vertices_of_tree (cmesh, 0, testcase_num_vertices_per_tree);
   EXPECT_EQ (check_global_vertices_tree_0[0], 0);
   EXPECT_EQ (check_global_vertices_tree_0[1], 1);
   EXPECT_EQ (check_global_vertices_tree_0[2], 2);
@@ -161,19 +161,14 @@ TEST_F (t8_test_cmesh_vertex_conn, check_vertex_to_tree)
   const int num_local_vertices = t8_cmesh_get_num_local_vertices (cmesh);
 
   for (int ivertex = 0;ivertex < num_local_vertices;++ivertex) {
-    auto &vertex_to_tree_list = t8_cmesh_get_vertex_to_tree (cmesh, ivertex);
+    auto &vertex_to_tree_list = t8_cmesh_get_vertex_to_tree_list (cmesh, ivertex);
     /* Check the values via the iterator */
     for (auto &[local_tree, local_vertex] : vertex_to_tree_list) {
       EXPECT_EQ (local_vertex, check_local_vertices[ivertex][local_tree]);
     }
 
-    /* Check the values via manually getting the local tree vertices. */
+    /* Check that the number of trees at the vertex is correct. */
     const t8_locidx_t num_trees_at_vertex = t8_cmesh_get_num_trees_at_vertex (cmesh, ivertex);
     EXPECT_EQ (num_trees_at_vertex, check_num_trees_at_vertex[ivertex]);
-    for (t8_locidx_t itree = 0;itree < num_trees_at_vertex;++itree) {
-      const int tree_local_vertex = t8_cmesh_get_tree_local_vertex (cmesh, ivertex, itree);
-      EXPECT_EQ (tree_local_vertex, check_local_vertices[ivertex][itree]);
-    }
   }
-
 }

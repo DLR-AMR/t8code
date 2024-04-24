@@ -159,6 +159,8 @@ typedef struct t8_cmesh_vertex_conn_vertex_to_tree_c
     return vertex_to_tree.end ();
   }
 
+  friend struct t8_cmesh_vertex_connectivity;
+
  private:
   /* For each global vertex id sort the list of
    * (tree_id, tree_vertex) pairs according to
