@@ -472,10 +472,11 @@ t8_geom_get_scaling_factor_face_through_volume_pyramid (const int face, const do
   const double orthogonal_direction[5] = { (ref_coords[0] - ref_coords[2]), (1 - ref_coords[0]),
                                            (ref_coords[1] - ref_coords[2]), (1 - ref_coords[1]), ref_coords[2] };
   const double max_orthogonal_direction[5]
-    = { (1 - ref_coords[2]), (1 - ref_coords[2]), (1 - ref_coords[2]), (1 - ref_coords[2]), ref_coords[1] };
+    = { (1 - ref_coords[2]), (1 - ref_coords[2]), (1 - ref_coords[2]), (1 - ref_coords[2]),
+        (ref_coords[0] >= ref_coords[1] ? ref_coords[1] : ref_coords[0]) };
 
   if (max_orthogonal_direction[face] == 0) {
-    return 0;
+    return 1.0;
   }
 
   return (1.0 - (orthogonal_direction[face] / max_orthogonal_direction[face]));
