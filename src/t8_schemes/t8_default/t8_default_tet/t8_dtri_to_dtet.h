@@ -72,7 +72,7 @@ T8_EXTERN_C_BEGIN ();
 #define t8_dtri_parent t8_dtet_parent
 #define t8_dtri_ancestor t8_dtet_ancestor
 #define t8_dtri_compute_all_coords t8_dtet_compute_all_coords
-#define t8_dtri_compute_coords t8_dtet_compute_coords
+#define t8_dtri_compute_integer_coords t8_dtet_compute_integer_coords
 #define t8_dtri_compute_vertex_ref_coords t8_dtet_compute_vertex_ref_coords
 #define t8_dtri_compute_reference_coords t8_dtet_compute_reference_coords
 #define t8_dtri_child t8_dtet_child

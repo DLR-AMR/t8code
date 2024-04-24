@@ -42,13 +42,13 @@ Among others, t8code offers the following functionalities:
 - (Re-)partition a mesh (and associated data) among MPI ranks
 - Manage ghost (halo) elements and data
 - Hierarchical search in the mesh
-
+- Curved mesh elements
 
 t8code uses space-filling curves (SFCs) to manage the adaptive refinement and efficiently store the mesh elements and associated data.
 A modular approach makes it possible to exchange the underlying SFC without changing the high-level algorithms.
 Thus, we can use and compare different refinement schemes and users can implement their own refinement rules if so desired.
 
-Currently, 
+Currently t8code offers the following implementations by default:
   - lines use a 1D Morton curve with 1:2 refinement
   - quadrilateral/hexahedral elements are inherited from the p4est submodule, using the Morton curve 1:4, 1:8 refinement; 
   - triangular/tetrahedral are implemented using the Tetrahedral Morton curve, 1:4, 1:8 refinement;
@@ -183,6 +183,13 @@ to install the package on your system.
   Lilikakis, Ioannis  (2022) *Algorithms for tree-based adaptive meshes with incomplete trees*.  Master's thesis, Universität zu Köln.    
  [Full text may be available in future](https://elib.dlr.de/191968/)
  
+  [J] **Curved tetrahedra**:
+  Fussbroich Jakob (2023) *Towards high-order, hybrid adaptive mesh refinement: Implementation and evaluation of curved unstructured mesh elements*. Master's thesis. Technische Hochschule Köln.
+  [Full text available](https://elib.dlr.de/200442/)
+
+  [K] **Hanging node resolution 3D**:
+  Tabea Leistikow (2024) *Derivation and implementation of a hanging nodes resolution scheme for hexahedral non-conforming meshes in t8code*. Master's thesis, Universität zu Köln.
+  Full text currently not available.
 
   ### Citing t8code
   
@@ -190,6 +197,7 @@ to install the package on your system.
 - **the tetrahedral index**, please cite [3].
 - **coarse mesh partitioning**, please cite [4].
 - **construction and handling of the ghost layer**, please cite [5].
-- **geometry controlled refinement**, please cite [6]
+- **geometry controlled refinement**, please cite [6] (general) and [J] (tetrahedral).
+- **hanging node resolution and/or subelements**, please cite [E] and [K].
 
 If you use any functionality described in the theses, we encourage you to cite them as well.

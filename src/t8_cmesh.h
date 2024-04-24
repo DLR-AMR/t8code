@@ -96,7 +96,7 @@ t8_cmesh_is_committed (const t8_cmesh_t cmesh);
  * \param [in] cmesh            This cmesh is examined.
  * \return                      True if the geometry of the cmesh is valid.
  */
-bool
+int
 t8_cmesh_validate_geometry (const t8_cmesh_t cmesh);
 
 /** After a cmesh is committed, check whether all trees in a cmesh do have positive volume.
@@ -107,7 +107,7 @@ t8_cmesh_validate_geometry (const t8_cmesh_t cmesh);
  *                              was called, do have positive geometric volume.
  *                              False otherwise.
  */
-bool
+int
 t8_cmesh_no_negative_volume (t8_cmesh_t cmesh);
 #endif
 
@@ -164,7 +164,7 @@ t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm);
  * This call is only valid when the cmesh is not yet committed via a call
  * to \ref t8_cmesh_commit.
  * \param [in,out] cmesh        The cmesh to be updated.
- * \parma [in]     set_face_knowledge   Several values are possible that define
+ * \param [in]     set_face_knowledge   Several values are possible that define
  *                              how much information is required on face connections,
  *                              specified by \ref t8_cmesh_set_join.
  *                              0: Expect face connection of local trees.
@@ -175,7 +175,7 @@ t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm);
  *                              3: Expect face connection of local and ghost trees.
  *                              Consistency of this requirement is checked on
  *                              \ref t8_cmesh_commit.
- *                             -1: Co not change the face_knowledge level but keep any
+ *                             -1: Do not change the face_knowledge level but keep any
  *                                 previously set ones. (Possibly by a previous call to \ref t8_cmesh_set_partition_range)
  * \param [in]     first_local_tree The global index ID of the first tree on this process.
  *                                  If this tree is also the last tree on the previous process,
