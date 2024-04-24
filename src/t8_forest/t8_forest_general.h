@@ -493,6 +493,21 @@ t8_forest_cmesh_ltreeid_to_ltreeid (t8_forest_t forest, t8_locidx_t lctreeid);
 t8_ctree_t
 t8_forest_get_coarse_tree (t8_forest_t forest, t8_locidx_t ltreeid);
 
+/** Compute the leaf face orientation at given face in a forest.
+ * \param [in]    forest  The forest. Must have a valid ghost layer.
+ * \param [in]    ltreeid A local tree id.
+ * \param [in]    ts      The eclass scheme of the element.
+ * \param [in]    leaf    A leaf in tree \a ltreeid of \a forest.
+ * \param [in]    face    The index of the face across which the face neighbors
+ *                        are searched.
+ * \return                Face orientation encoded as integer.
+ *
+ * For more information about the encoding of face orientation refer to \ref t8_cmesh_get_face_neighbor.
+ */
+int
+t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_eclass_scheme_c *ts,
+                                 const t8_element_t *leaf, int face);
+
 /** Compute the leaf face neighbors of a forest.
  * \param [in]    forest  The forest. Must have a valid ghost layer.
  * \param [in]    ltreeid A local tree id.
@@ -510,6 +525,7 @@ t8_forest_get_coarse_tree (t8_forest_t forest, t8_locidx_t ltreeid);
  * \param [out]   pneigh_scheme On output the eclass scheme of the neighbor elements.
  * \param [in]    forest_is_balanced True if we know that \a forest is balanced, false
  *                        otherwise.
+ * \param [out]   orientation If a pointer to an integer variable is given the face orientation is computed and stored there.
  * \note If there are no face neighbors, then *neighbor_leaves = NULL, num_neighbors = 0,
  * and *pelement_indices = NULL on output.
  * \note Currently \a forest must be balanced.
@@ -525,7 +541,7 @@ void
 t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf,
                                    t8_element_t **pneighbor_leaves[], int face, int *dual_faces[], int *num_neighbors,
                                    t8_locidx_t **pelement_indices, t8_eclass_scheme_c **pneigh_scheme,
-                                   int forest_is_balanced, t8_gloidx_t *gneigh_tree);
+                                   int forest_is_balanced, t8_gloidx_t *gneigh_tree, int *orientation);
 
 /** Exchange ghost information of user defined element data.
  * \param[in] forest       The forest. Must be committed.

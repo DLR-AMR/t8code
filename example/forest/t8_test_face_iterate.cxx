@@ -158,19 +158,13 @@ t8_test_fiterate_brick (int dim, int x, int y, int z, int periodic_x, int period
                         sc_MPI_Comm comm, int no_vtk)
 {
   t8_cmesh_t cmesh;
-  p4est_connectivity_t *conn4;
-  p8est_connectivity_t *conn8;
 
   if (dim == 2) {
-    conn4 = p4est_connectivity_new_brick (x, y, periodic_x, periodic_y);
-    cmesh = t8_cmesh_new_from_p4est (conn4, comm, 0);
-    p4est_connectivity_destroy (conn4);
+    cmesh = t8_cmesh_new_brick_2d (x, y, periodic_x, periodic_y, comm);
   }
   else {
     T8_ASSERT (dim == 3);
-    conn8 = p8est_connectivity_new_brick (x, y, z, periodic_x, periodic_y, periodic_z);
-    cmesh = t8_cmesh_new_from_p8est (conn8, comm, 0);
-    p8est_connectivity_destroy (conn8);
+    cmesh = t8_cmesh_new_brick_3d (x, y, z, periodic_x, periodic_y, periodic_z, comm);
   }
 
   t8_test_fiterate_refine_and_partition (cmesh, level, comm, 1, no_vtk);
