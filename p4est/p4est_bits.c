@@ -30,6 +30,8 @@
 #include <p4est_extended.h>
 #endif /* !P4_TO_P8 */
 
+#include <sc_uint128.h>
+
 /* Function declarations for 128 bit unsigned integers
  * are in p{4,8}est_extended.h. */
 int
