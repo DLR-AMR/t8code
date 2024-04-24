@@ -2070,7 +2070,7 @@ t8_cmesh_new_brick_2d_ext (t8_gloidx_t num_x, t8_gloidx_t num_y, int x_periodic,
       SC_CHECK_MPI (mpiret);
 
       /* First_tree and last_tree are the first and last trees of conn plus the offset */
-      const t8_gloidx_t num_local_trees = ntrees;
+      t8_gloidx_t num_local_trees = ntrees;
 
       /* First process-local tree-id */
       const t8_gloidx_t first_tree = offset;
@@ -2262,7 +2262,7 @@ t8_cmesh_new_brick_3d_ext (t8_gloidx_t num_x, t8_gloidx_t num_y, t8_gloidx_t num
       SC_CHECK_MPI (mpiret);
 
       /* First_tree and last_tree are the first and last trees of conn plus the offset */
-      const t8_gloidx_t num_local_trees = ntrees;
+      t8_gloidx_t num_local_trees = ntrees;
 
       /* First process-local tree-id */
       const t8_gloidx_t first_tree = offset;
