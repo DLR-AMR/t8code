@@ -86,7 +86,8 @@ libt8_installed_headers_netcdf = \
   src/t8_netcdf/t8_nc_mesh.h \
   src/t8_netcdf/t8_cmesh_netcdf.h \
   src/t8_netcdf/t8_forest_netcdf.h \
-  src/t8_netcdf/t8_netcdf.h
+  src/t8_netcdf/t8_netcdf.h \
+  src/t8_netcdf/t8_nc_dimension_interval.hxx
 libt8_installed_headers_schemes_default =
 libt8_installed_headers_default_common =
 libt8_installed_headers_default_vertex =
