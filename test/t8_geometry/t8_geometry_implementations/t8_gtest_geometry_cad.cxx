@@ -869,8 +869,8 @@ t8_test_geometry_cad_pyramid (int face, int edge, double *parameters, double *te
 
   t8_cmesh_t cmesh = t8_create_cad_reference_pyramid (face, edge, parameters);
 
-  for (int i_coord = 0; i_coord < (face >= 0 ? face_vertices : 3); ++i_coord) {
-    t8_geometry_evaluate (cmesh, 0, test_ref_coords + i_coord * 3 + (face >= 0 ? face * 12 : edge * 9), 1, out_coords);
+  for (int i_coord = 0; i_coord < (face >= 0 ? face_vertices + 1 : 3); ++i_coord) {
+    t8_geometry_evaluate (cmesh, 0, test_ref_coords + i_coord * 3 + (face >= 0 ? face * 15 : edge * 9), 1, out_coords);
 
     EXPECT_VEC3_EQ (out_coords, test_return_coords + i_coord * 3, tol);
   }
@@ -885,23 +885,26 @@ t8_test_geometry_cad_pyramid (int face, int edge, double *parameters, double *te
 TEST (t8_gtest_geometry_cad_pyramid, linked_faces)
 {
   /* clang-format off */
-  double test_ref_coords[60]
-    = { 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0,   // face 0
-        1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0,   // face 1
-        0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0,   // face 2
-        1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0,   // face 3
-        0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0 }; // face 4
+  /* Reference coordinates of each face vertex and the centroid of the pyramid */
+  double test_ref_coords[75]
+    = { 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.6, 0.6, 0.2, 2.0, 2.0, 2.0,   // face 0
+        1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.6, 0.6, 0.2, 2.0, 2.0, 2.0,   // face 1
+        0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.6, 0.6, 0.2, 2.0, 2.0, 2.0,   // face 2
+        1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.6, 0.6, 0.2, 2.0, 2.0, 2.0,   // face 3
+        0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.6, 0.6, 0.2 }; // face 4
     /* The 2.0's at face 0-3 are placeholders, because these faces only have 3 vertices. */
 
-  double surface_test_return_coords_quad[12]
+  double surface_test_return_coords_quad[15]
     = { 0.0, 0.0, 0.0,    // face vertex 0
         1.0, 0.0, 0.0,    // face vertex 1
         0.0, 1.0, 0.0,    // face vertex 2
-        1.0, 1.0, 0.0 };  // face vertex 3
-  double surface_test_return_coords_tri[9]
+        1.0, 1.0, 0.0,    // face vertex 3
+        0.6357349585, 0.6357349585, 0.1438333846 };  // shifted centroid of the pyramid
+  double surface_test_return_coords_tri[12]
     = { 1.0, 0.0, 0.0,    // face vertex 0
         1.0, 1.0, 0.0,    // face vertex 1
-        1.0, 1.0, 1.0 };  // face vertex 2
+        1.0, 1.0, 1.0,    // face vertex 2
+        0.6737526363, 0.5930049972, 0.1275036282 };  // shifted centroid of the pyramid
 
   double surface_parameters[40]
     = { 0, 1, 0, 0, 1, 1, 2, 2,   // face 0
