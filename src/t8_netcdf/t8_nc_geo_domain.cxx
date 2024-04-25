@@ -1,5 +1,7 @@
 #include <t8_netcdf/t8_nc_geo_domain.hxx>
 
+constexpr int T8_NC_GEO_DOMAIN_ERR = -1;
+
 void
 t8_nc_geo_domain_t::setup_dimension (const t8_nc_dimension_interval_t& dimension)
 {
@@ -79,6 +81,7 @@ t8_nc_geo_domain_t::get_dimension_length (const t8_nc_dimension_t dimension) con
     break;
   default:
     t8_errorf ("The dimension is cannot be considered.");
+    return T8_NC_GEO_DOMAIN_ERR;
   }
 }
 

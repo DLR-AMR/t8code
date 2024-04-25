@@ -81,8 +81,7 @@ libt8_installed_headers_vtk = \
   src/t8_vtk/t8_vtk_reader.hxx \
   src/t8_vtk/t8_vtk_types.h
 libt8_installed_headers_netcdf = \
-  src/t8_netcdf/t8_nc_data.hxx \
-  src/t8_netcdf/t8_nc.h \
+  src/t8_netcdf/t8_nc.hxx \
   src/t8_netcdf/t8_nc_mesh.hxx \
   src/t8_netcdf/t8_cmesh_netcdf.h \
   src/t8_netcdf/t8_forest_netcdf.h \
@@ -157,7 +156,6 @@ libt8_compiled_sources = \
   src/t8_vtk/t8_vtk_parallel.cxx \
   src/t8_vtk/t8_vtk_reader.cxx \
   src/t8_netcdf/t8_nc.cxx \
-  src/t8_netcdf/t8_nc_data.cxx \
   src/t8_netcdf/t8_nc_mesh.cxx \
   src/t8_cmesh/t8_cmesh_netcdf.c \
   src/t8_forest/t8_forest_netcdf.cxx \
