@@ -1689,11 +1689,27 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, 
   return neighbor_tree;
 }
 
+int
+t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_eclass_scheme_c *ts,
+                                 const t8_element_t *leaf, int face)
+{
+  int orientation = 0;
+
+  if (t8_element_is_root_boundary (ts, leaf, face)) {
+    t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
+    t8_locidx_t ltreeid_in_cmesh = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
+    int iface_in_tree = t8_element_tree_face (ts, leaf, face);
+    t8_cmesh_get_face_neighbor (cmesh, ltreeid_in_cmesh, iface_in_tree, NULL, &orientation);
+  }
+
+  return orientation;
+}
+
 void
 t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf,
                                    t8_element_t **pneighbor_leaves[], int face, int *dual_faces[], int *num_neighbors,
                                    t8_locidx_t **pelement_indices, t8_eclass_scheme_c **pneigh_scheme,
-                                   int forest_is_balanced, t8_gloidx_t *gneigh_tree)
+                                   int forest_is_balanced, t8_gloidx_t *gneigh_tree, int *orientation)
 {
   t8_eclass_t neigh_class, eclass;
   t8_gloidx_t gneigh_treeid;
@@ -1720,6 +1736,11 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
      * its parent or its children at the face. */
     eclass = t8_forest_get_tree_class (forest, ltreeid);
     ts = t8_forest_get_eclass_scheme (forest, eclass);
+
+    if (orientation) {
+      *orientation = t8_forest_leaf_face_orientation (forest, ltreeid, ts, leaf, face);
+    }
+
     /* At first we compute these children of the face neighbor elements of leaf. For this, we need the
      * neighbor tree's eclass, scheme, and tree id */
     neigh_class = t8_forest_element_neighbor_eclass (forest, ltreeid, leaf, face);
@@ -1931,7 +1952,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8
                                int forest_is_balanced)
 {
   t8_forest_leaf_face_neighbors_ext (forest, ltreeid, leaf, pneighbor_leaves, face, dual_faces, num_neighbors,
-                                     pelement_indices, pneigh_scheme, forest_is_balanced, NULL);
+                                     pelement_indices, pneigh_scheme, forest_is_balanced, NULL, NULL);
 }
 
 void
