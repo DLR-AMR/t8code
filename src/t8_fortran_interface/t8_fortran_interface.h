@@ -71,7 +71,7 @@ t8_fortran_cmesh_set_join_by_vertices_noConn (t8_cmesh_t cmesh, const int ntrees
 /** Translate a fortran MPI communicator into a C MPI communicator
  * and return a pointer to it.
  * \param [in] Fcomm  Fortran MPI Communicator
- * \return            Pointer to the corrensponding C MPI communicator.
+ * \return            Pointer to the corresponding C MPI communicator.
  * \note      This function allocated memory for the new C MPI communicator.
  *            Call \ref t8_fortran_MPI_Comm_delete to free this memory.
  * \note      t8code needs to be configured with MPI support to be able to use
