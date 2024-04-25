@@ -544,7 +544,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
     /* If present use the set geometry handler, otherwise take
      * over the handler from set_from. */
-    if (cmesh->geometry_handler == NULL) {
+    if (cmesh->geometry_handler == NULL && cmesh->set_from->geometry_handler != NULL) {
       cmesh->geometry_handler = cmesh->set_from->geometry_handler;
       cmesh->geometry_handler->ref ();
     }

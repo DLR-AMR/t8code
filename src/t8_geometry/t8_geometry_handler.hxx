@@ -42,12 +42,19 @@ struct t8_geometry_handler
   t8_geometry_handler (): active_geometry (nullptr), active_tree (-1)
   {
     t8_refcount_init (&rc);
+    t8_debugf ("Constructed the geometry_handler.\n");
   };
 
   /**
    * Destructor.
    */
-  ~t8_geometry_handler () {};
+  ~t8_geometry_handler ()
+  {
+    while (t8_refcount_is_active (&rc)) {
+      t8_refcount_unref (&rc);
+    }
+    t8_debugf ("Deleted the geometry_handler.\n");
+  };
 
   /**
    * Register a geometry with the geometry handler.
@@ -220,6 +227,7 @@ struct t8_geometry_handler
   unref ()
   {
     if (t8_refcount_unref (&rc)) {
+      t8_debugf ("Deleting the geometry_handler.\n");
       delete this;
     }
   }
