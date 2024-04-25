@@ -233,7 +233,7 @@ t8_forest_transition_entry (t8_forest_t forest,
                             const int is_family,
                             int num_elements, t8_element_t *elements[])
 {
-  T8_ASSERT (forest->set_subelements == 1);
+  //T8_ASSERT (forest->set_subelements == 1);
   T8_ASSERT (forest->is_transitioned == 0
              && forest->set_from->is_transitioned == 0);
 
@@ -287,6 +287,55 @@ t8_forest_transition (t8_forest_t forest)
 
   t8_global_productionf ("Done t8_forest_transition.\n");
 }                               /* end of t8_forest_transition */
+
+
+/* This is the entry function for all untransition a forest, called bei forest_adapt 
+ * in t8_forest_untransition.
+ */
+int
+t8_forest_untransition_entry (t8_forest_t forest,
+                            t8_forest_t forest_from,
+                            t8_locidx_t ltree_id,
+                            t8_locidx_t lelement_id,
+                            t8_eclass_scheme_c *ts,
+                            const int is_family,
+                            int num_elements, t8_element_t *elements[])
+{
+  T8_ASSERT (forest->is_transitioned == 1
+             && forest->set_from->is_transitioned == 1);
+
+  //Iterate through elements array and if an element is a subelement, return -1 for 
+  //coarsening this element in forest_adapt. All other elements remain unchanged. 
+  t8_element_t *element = elements[0];
+
+  if(ts->t8_element_is_subelement(element)){
+    return -1;
+  }
+  else{
+    return 0;
+  }
+
+}  
+
+
+void
+t8_forest_untransition (t8_forest_t forest)
+{
+  T8_ASSERT (forest->is_transitioned == 1
+             && forest->set_from->is_transitioned == 1);
+  /* In the following, we will call forest_adapt to coarsen all transition cells
+   * back to their regular parent element. So, forest->set_from is a transitioned forest and 
+   * forest will be non-transitioned. */
+
+  t8_global_productionf ("Into t8_forest_untransition.\n");
+
+  forest->set_adapt_fn = t8_forest_untransition_entry;
+  forest->set_adapt_recursive = 0;
+  t8_forest_copy_trees (forest, forest->set_from, 0);
+  t8_forest_adapt (forest);
+  forest->is_transitioned = 0;
+  t8_global_productionf ("Done t8_forest_untransition.\n");
+}                               
 
 /* Test whether the forest is transitioned.
  * Note 1) We allow non-committed forests in this implementation since this check is used in forest_commit() 

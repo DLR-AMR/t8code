@@ -70,6 +70,10 @@ int                 t8_forest_transition_adapt (t8_forest_t forest,
  * and the forest is adapted. */
 void                t8_forest_transition (t8_forest_t forest);
 
+/* This function is the point of entry in order to untransition a forest before adapting it. 
+ * Every transition cell gets coarsened back to its parent element. */
+void                t8_forest_untransition (t8_forest_t forest);
+
 /* Check whether the forest is transitioned, meaning that subelements exist. */
 int                 t8_forest_is_transitioned (t8_forest_t forest);
 

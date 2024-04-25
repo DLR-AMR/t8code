@@ -88,7 +88,7 @@ typedef struct t8_forest
                                              Once an element got removed, the flag sets to 1 (true) and stays. 
                                              For a committed forest this flag is either true on all ranks or
                                              false on all ranks. */
-
+  int is_transitioned;            /* Flag parameter that states whether the forest is transitioned or not */
   t8_forest_t set_from;           /**< Temporarily store source forest. */
   t8_forest_from_t from_method;   /**< Method to derive from \b set_from. */
   t8_forest_adapt_t set_adapt_fn; /**< refinement and coarsen function. Called when \b from_method
@@ -99,7 +99,7 @@ typedef struct t8_forest
                                              See \ref t8_forest_set_balance.
                                              If 0, no balance. If 1 balance with repartitioning, if 2 balance without
                                              repartitioning, \see t8_forest_balance */
-  int                 set_subelements;  /**< Flag to decide whether subelements should be used in the forest */
+  int set_subelements;  /**< Flag to decide whether subelements should be used in the forest */
   int do_ghost;                   /**< If True, a ghost layer will be created when the forest is committed. */
   t8_ghost_type_t ghost_type;     /**< If a ghost layer will be created, the type of neighbors that count as ghost. */
   int ghost_algorithm;            /**< Controls the algorithm used for ghost. 1 = balanced only. 2 = also unbalanced
@@ -139,7 +139,7 @@ typedef struct t8_forest
   t8_locidx_t local_num_subelements;  /**< Number of subelements on this processor. */
   t8_gloidx_t global_num_subelements; /**< Number of subelements on all processors. */
   t8_profile_t *profile;           /**< If not NULL, runtimes and statistics about forest_commit are stored here. */
-  int is_transitioned;             /* Flag parameter that states whether the forest is transitioned or not */
+
   sc_statinfo_t stats[T8_PROFILE_NUM_STATS];
   int stats_computed;
 } t8_forest_struct_t;

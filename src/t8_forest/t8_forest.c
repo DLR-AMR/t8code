@@ -77,7 +77,7 @@ t8_forest_is_initialized (t8_forest_t forest)
 int
 t8_forest_supports_transitioning (t8_forest_t forest)
 {
-  int                 supports_transition = 0;
+  int                 supports_transition = 1;
   int                 supports_transition_all_procs = 0;        /* Result over all procs */
   int                 int_eclass;
   int                 mpiret;
@@ -90,16 +90,15 @@ t8_forest_supports_transitioning (t8_forest_t forest)
      * eclass supports transitioning. */
     if (forest->cmesh->num_local_trees_per_eclass[int_eclass] > 0) {
       tscheme = forest->scheme_cxx->eclass_schemes[int_eclass];
-    //  supports_transition = supports_transition
-    //    || t8_element_scheme_supports_transitioning (tscheme);
-      supports_transition = t8_element_scheme_supports_transitioning (tscheme);
+      supports_transition = supports_transition
+        && t8_element_scheme_supports_transitioning (tscheme);
     }
   }
   /* Combine the process-local results via a logic or and distribute the
    * result over all procs (in the communicator).*/
   mpiret =
     sc_MPI_Allreduce (&supports_transition, &supports_transition_all_procs, 1,
-                      sc_MPI_INT, sc_MPI_LOR, forest->mpicomm);
+                      sc_MPI_INT, sc_MPI_LAND, forest->mpicomm);
   SC_CHECK_MPI (mpiret);
 
   return supports_transition_all_procs;
@@ -290,7 +289,8 @@ t8_forest_set_transition (t8_forest_t forest, const t8_forest_t set_from,
   }
 
   /* set the forests subelement flag, which is for example used by the LFN routine */
-  forest->set_subelements = 1;
+  //forest->set_subelements = 1;
+  forest->is_transitioned;
 }
 
 void
@@ -601,8 +601,13 @@ t8_forest_commit (t8_forest_t forest)
       SC_CHECK_ABORT (forest->set_adapt_fn != NULL, "No adapt function specified");
       forest->from_method -= T8_FOREST_FROM_ADAPT;
       if (forest->from_method > 0) {
-        /* The forest should also be partitioned/balanced.
-         * We first adapt the forest, then balance and then partition */
+        /* The forest should also be partitioned/balanced/transitioned.
+         * We first untransition the forest, then adapt the forest, then balance and then partition and then possibly transition the forest again*/
+        if (forest->is_transitioned){
+          t8_forest_untransition(forest);
+          T8_ASSERT (!t8_forest_is_transitioned (forest));
+        }
+        
         t8_forest_t forest_adapt;
 
         t8_forest_init (&forest_adapt);
@@ -627,6 +632,12 @@ t8_forest_commit (t8_forest_t forest)
       else {
         /* This forest should only be adapted */
         t8_forest_copy_trees (forest, forest->set_from, 0);
+        /* The input forest for forest_adapt() should always be a non-transitioned forest.*/
+        if (forest->is_transitioned){
+          t8_forest_untransition(forest);
+          T8_ASSERT (!t8_forest_is_transitioned (forest));
+        }
+        
         t8_forest_adapt (forest);
       }
     }
@@ -685,7 +696,16 @@ t8_forest_commit (t8_forest_t forest)
         t8_forest_balance (forest, 1);
       }
     }
-
+    if (forest->from_method & T8_FOREST_FROM_TRANSITION) {
+      forest->from_method -= T8_FOREST_FROM_TRANSITION;
+      /* this is the last from method that we execute,
+       * nothing should be left todo */
+      T8_ASSERT (forest->from_method == 0);
+      T8_ASSERT (t8_forest_is_balanced(forest));
+      /* use subelements */
+      t8_forest_transition (forest);
+      forest->is_transitioned = 1;
+    }
     if (forest_from != forest->set_from) {
       /* decrease reference count of intermediate input forest, possibly destroying it */
       t8_forest_unref (&forest->set_from);
