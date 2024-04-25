@@ -1,26 +1,20 @@
-#include <t8_netcdf/t8_nc_mesh.h>
-#include <t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_c_interface.h>
-#include <t8_schemes/t8_default/t8_default_quad/t8_default_quad_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_hex/t8_default_hex_cxx.hxx>
-#include <t8_element_c_interface.h>
-#include <t8_forest/t8_forest_io.h>
-#include <p4est.h>
-#include <p8est.h>
-#include <t8_netcdf/t8_nc_utilities.hxx>
-#include <array>
-#include <vector>
-#include <utility>
-#include <algorithm>
-#include <numeric>
+#include <t8_netcdf/t8_nc_mesh.hxx>
 
-/**
- * \file This file collects the methods for constructing a mesh for geo-spatial data. Therefore, internally, the dimensions are labelled, longitude, latitude, and eleveation.
- * However, this context may not always applies, but regarding the functionality of this file: The 'longitude'-axis always resembles the x-axis,
- * the 'latitude'-axis always resembles the y-axis and the 'elevation'-axis always represents the z-axis.
- */
+//Implement functions here
+
+//Some of the old code for comparison below
+
+#if 0
+
+void
+t8_nc_build_initial_rectangular_embedded_minimal_mesh (t8_nc_mesh_t mesh, sc_MPI_Comm comm);
+
+void
+t8_nc_build_initial_rectangular_embedded_uniform_mesh (t8_nc_mesh_t mesh, sc_MPI_Comm comm);
+
+void
+t8_nc_build_initial_rectangular_congruent_mesh (t8_nc_mesh_t nc_mesh, sc_MPI_Comm comm);
+
 
 /* Define a macro for an internal error */
 #define T8_NC_MESH_ERR -1
@@ -44,83 +38,6 @@ struct t8_nc_mesh
   std::vector<std::pair<std::vector<t8_gloidx_t>, std::vector<t8_gloidx_t>>> tree_domain_responsibilities;
 };
 
-t8_nc_mesh_t
-t8_nc_mesh_create ()
-{
-  return new t8_nc_mesh ();
-}
-
-void
-t8_nc_mesh_destroy (t8_nc_mesh_t mesh)
-{
-  if (mesh != nullptr) {
-    delete mesh;
-  }
-}
-
-void
-t8_nc_mesh_set_longitude_length (t8_nc_mesh_t mesh, const t8_gloidx_t lon_length)
-{
-#ifdef T8_WITH_NETCDF
-  mesh->coord_count[nc_mesh_coord_id::lon] = lon_length;
-#endif
-}
-
-void
-t8_nc_mesh_set_latitude_length (t8_nc_mesh_t mesh, const t8_gloidx_t lat_length)
-{
-#ifdef T8_WITH_NETCDF
-  mesh->coord_count[nc_mesh_coord_id::lat] = lat_length;
-#endif
-}
-
-void
-t8_nc_mesh_set_vertical_length (t8_nc_mesh_t mesh, const t8_gloidx_t vert_length)
-{
-#ifdef T8_WITH_NETCDF
-  mesh->coord_count[nc_mesh_coord_id::lev] = vert_length;
-#endif
-}
-
-void
-t8_nc_mesh_set_longitude_start (t8_nc_mesh_t mesh, const t8_gloidx_t lon_start)
-{
-#ifdef T8_WITH_NETCDF
-  mesh->coord_start[nc_mesh_coord_id::lon] = lon_start;
-#endif
-}
-
-void
-t8_nc_mesh_set_latitude_start (t8_nc_mesh_t mesh, const t8_gloidx_t lat_start)
-{
-#ifdef T8_WITH_NETCDF
-  mesh->coord_start[nc_mesh_coord_id::lat] = lat_start;
-#endif
-}
-
-void
-t8_nc_mesh_set_vertical_start (t8_nc_mesh_t mesh, const t8_gloidx_t vert_start)
-{
-#ifdef T8_WITH_NETCDF
-  mesh->coord_start[nc_mesh_coord_id::lev] = vert_start;
-#endif
-}
-
-void
-t8_nc_mesh_set_dimensionality (t8_nc_mesh_t mesh, const int dimensionality)
-{
-#ifdef T8_WITH_NETCDF
-  mesh->dimensionality = dimensionality;
-#endif
-}
-
-void
-t8_nc_mesh_set_data_ordering_scheme (t8_nc_mesh_t mesh, const t8_nc_data_ordering data_ordering)
-{
-#ifdef T8_WITH_NETCDF
-  mesh->data_ordering = data_ordering;
-#endif
-}
 
 static t8_gloidx_t
 t8_nc_mesh_calculate_rectangular_embedded_initial_refinement_level (t8_nc_mesh_t nc_mesh)
@@ -592,3 +509,5 @@ t8_nc_build_initial_rectangular_congruent_mesh (t8_nc_mesh_t nc_mesh, sc_MPI_Com
 
 #endif
 }
+
+#endif

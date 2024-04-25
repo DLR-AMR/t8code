@@ -83,12 +83,15 @@ libt8_installed_headers_vtk = \
 libt8_installed_headers_netcdf = \
   src/t8_netcdf/t8_nc_data.hxx \
   src/t8_netcdf/t8_nc.h \
-  src/t8_netcdf/t8_nc_mesh.h \
+  src/t8_netcdf/t8_nc_mesh.hxx \
   src/t8_netcdf/t8_cmesh_netcdf.h \
   src/t8_netcdf/t8_forest_netcdf.h \
   src/t8_netcdf/t8_netcdf.h \
   src/t8_netcdf/t8_nc_dimension_interval.hxx \
-  src/t8_netcdf/t8_nc_hyperslab.hxx
+  src/t8_netcdf/t8_nc_hyperslab.hxx \
+  src/t8_netcdf/t8_nc_geo_domain.hxx \
+  src/t8_netcdf/t8_nc_geo_utilities.hxx \
+  src/t8_netcdf/t8_nc_input_variable.hxx
 libt8_installed_headers_schemes_default =
 libt8_installed_headers_default_common =
 libt8_installed_headers_default_vertex =
@@ -159,7 +162,9 @@ libt8_compiled_sources = \
   src/t8_cmesh/t8_cmesh_netcdf.c \
   src/t8_forest/t8_forest_netcdf.cxx \
   src/t8_netcdf/t8_netcdf.c \
-  src/t8_netcdf/t8_nc_hyperslab.cxx
+  src/t8_netcdf/t8_nc_hyperslab.cxx \
+  src/t8_netcdf/t8_nc_geo_domain.cxx \
+  src/t8_netcdf/t8_nc_geo_utilities.cxx
 
 
 # this variable is used for headers that are not publicly installed

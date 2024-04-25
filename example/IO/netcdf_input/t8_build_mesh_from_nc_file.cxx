@@ -20,8 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_netcdf/t8_nc.h>
-#include <t8_netcdf/t8_nc_data.hxx>
+#include <t8_netcdf/t8_nc.hxx>
+#include <t8_netcdf/t8_nc_utilities.hxx>
+#include <t8_netcdf/t8_nc_hyperslab.hxx>
+#include <t8_netcdf/t8_nc_mesh.hxx>
 
 int
 main (int argc, char **argv)
@@ -36,33 +38,29 @@ main (int argc, char **argv)
 
   t8_global_essentialf ("NetCDF Input Example\n");
 
-  t8_universal_type_t uni;
+  /* Define the ought to be considered parts of all dimensions */
+  const t8_nc_dimension_interval_t lon_dimension (t8_nc_dimension_t::LON, 0, 96);
+  const t8_nc_dimension_interval_t lat_dimension (t8_nc_dimension_t::LAT, 0, 64);
+  const t8_nc_dimension_interval_t lev_dimension (t8_nc_dimension_t::LEV, 0, 1);
 
-  uni = static_cast<double> (2.0);
+  /* Make a hyperslab from all dimensions */
+  const t8_nc_hyperslab_t hyperslab (lon_dimension, lat_dimension, lev_dimension);
 
-  uni = static_cast<int32_t> (344);
+  /* Open a netCDF file for reading */
+  t8_nc_data_t nc_data ("../../data/test_nc4_file.nc", t8_nc_opening_mode_t::SERIAL);
 
-  t8_nc_data_t nc_data
-    = t8_nc_start ("../../data/test_nc4_file.nc", t8_nc_opening_mode::T8_NC_PARALLEL, sc_MPI_COMM_WORLD);
+  /* Inquire the data of the considered variables */
+  nc_data.inquire_variables (hyperslab, "p2t");
 
-  const char *var_names[] = { "p2t" };
-  const int num_variables = 1;
+  /* Close the file after the data has been read */
+  nc_data.close_file_handle ();
 
-  const size_t start_ptr[3] = { 0, 0, 0 };  //Example netCDF File
-  //const size_t count_ptr[3] = { 1, 73, 144 };  //Example netCDF File
-  const size_t count_ptr[3] = { 1, 64, 96 };  //Test count ptr
+  /* Seize the inquired data */
+  std::vector<InputVar> nc_variables = nc_data.transfer_data ();
+  t8_productionf ("Size of InputVar vector: %ld\n", nc_variables.size ());
 
-  const enum t8_nc_geo_mesh_type mesh_type = T8_NC_EMBEDDED_MESH;
-  const enum t8_nc_geo_mesh_form mesh_form = T8_NC_RECTANGULAR;
-  const enum t8_nc_geo_mesh_elements mesh_elems = T8_NC_QUAD_ELEMENTS;
-
-  //int num_procs_per_dim[3] = {1,1,2};
-  //t8_nc_set_hint_read_data_blockwise_in_parallel(nc_data, 3, num_procs_per_dim);
-
-  t8_nc_construct_mesh_for_variables (nc_data, num_variables, var_names, start_ptr, count_ptr, mesh_type, mesh_form,
-                                      mesh_elems);
-
-  t8_nc_finish (nc_data);
+  //auto [initial_embedded_forest, current_max_refinement_lvl_initial] = t8_nc_build_initial_embedded_mesh();
+  //auto [initial_congruent_forest, current_max_refinement_lvl_congruent] = t8_nc_build_initial_congruent_mesh();
 
   sc_finalize ();
 

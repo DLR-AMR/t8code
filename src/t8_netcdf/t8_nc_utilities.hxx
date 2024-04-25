@@ -27,7 +27,77 @@
 #define T8_NC_UTILITIES_HXX
 
 #include <t8.h>
+#include <t8_netcdf/t8_nc_dimension_interval.hxx>
+
 #include <type_traits>
+#include <variant>
+
+/* A typedef for a variant capable of holding different data types (if a variant is accessible) */
+typedef std::variant<unsigned char, int8_t, char, int16_t, int32_t, float, double, uint8_t, uint16_t, uint32_t, int64_t,
+                     uint64_t>
+  t8_universal_type_t;
+
+/* Enum for variable data types */
+enum t8_geo_data_type {
+  T8_GEO_DATA_UNDEFINED = -1,
+  T8_BYTE,
+  T8_INT8_T,
+  T8_CHAR,
+  T8_INT16_T,
+  T8_INT32_T,
+  T8_FLOAT,
+  T8_DOUBLE,
+  T8_UINT8_T,
+  T8_UINT16_T,
+  T8_UINT32_T,
+  T8_INT64_T,
+  T8_UINT64_T,
+  T8_GEO_DATA_NUM_TYPES
+};
+
+template <typename T>
+class t8_nc_coordinate_array_t {
+ public:
+  t8_nc_coordinate_array_t () = default;
+  t8_nc_coordinate_array_t (const T fill_value): coordinates { fill_value, fill_value, fill_value, fill_value } {};
+
+  T&
+  operator[] (int idx)
+  {
+    T8_ASSERT (idx < t8_nc_dimension_t::NUM_COORDINATES);
+    return coordinates[idx];
+  }
+  const T&
+  operator[] (int idx) const
+  {
+    T8_ASSERT (idx < t8_nc_dimension_t::NUM_COORDINATES);
+    return coordinates[idx];
+  }
+
+  typename std::array<T, t8_nc_dimension_t::NUM_COORDINATES>::iterator
+  begin ()
+  {
+    return coordinates.begin ();
+  }
+  typename std::array<T, t8_nc_dimension_t::NUM_COORDINATES>::iterator
+  end ()
+  {
+    return coordinates.end ();
+  }
+
+  typename std::array<T, t8_nc_dimension_t::NUM_COORDINATES>::const_iterator
+  begin () const
+  {
+    return coordinates.begin ();
+  }
+  typename std::array<T, t8_nc_dimension_t::NUM_COORDINATES>::const_iterator
+  end () const
+  {
+    return coordinates.end ();
+  }
+
+  std::array<T, t8_nc_dimension_t::NUM_COORDINATES> coordinates { 0, 0, 0, 0 };
+};
 
 /**
  * \brief Using integer exponentiation by squaring

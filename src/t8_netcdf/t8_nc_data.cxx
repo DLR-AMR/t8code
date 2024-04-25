@@ -24,6 +24,7 @@
 #include <vector>
 #include <t8.h>
 
+#if 0
 /**
  * \brief A struct describing and holding geo-spatial data
  * 
@@ -293,3 +294,4 @@ t8_nc_geo_variable_get_data_ordering_scheme (t8_geo_var_t var)
 {
   return var->data_ordering;
 }
+#endif

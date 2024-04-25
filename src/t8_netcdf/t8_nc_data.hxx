@@ -29,6 +29,7 @@
 #include <netcdf.h>
 #endif
 
+#if 0
 /* Enum for variable data types */
 enum t8_geo_data_type {
   T8_GEO_DATA_UNDEFINED = -1,
@@ -46,7 +47,9 @@ enum t8_geo_data_type {
   T8_UINT64_T,
   T8_GEO_DATA_NUM_TYPES
 };
+#endif
 
+#if 0
 /* Enum for the data layout of the variable */
 enum t8_geo_data_layout {
   T8_GEO_DATA_LAYOUT_UNDEFINED = -1,
@@ -284,6 +287,8 @@ t8_universal_type::operator= (T&& value) ->
 
   return *this;
 }
+#endif
+
 #endif
 
 #endif /* !T8_NC_DATA_HXX */
