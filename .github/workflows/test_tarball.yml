@@ -146,7 +146,7 @@ jobs:
           name: tarballs
           path: tarballs
       - name: debugging
-        run: ls
+        run: ls tarballs
       - name: Extract tarball
         run: |
             tar xzf tarballs/*.tar.gz -C $RUNNER_TEMP
