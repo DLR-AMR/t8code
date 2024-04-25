@@ -58,7 +58,7 @@ if test "x$T8_WITH_NETCDF" != xno ; then
 
   dnl Check whether serial netCDF routines should be enforced
   dnl or whether parallel routines are accessible 
-  if test "x$CMC_WITH_NETCDF" = xserial ; then
+  if test "x$T8_WITH_NETCDF" = xserial ; then
     AC_MSG_NOTICE([A serial netCDF usage was chosen])
   elif test "x$T8_ENABLE_MPI" != xno; then
     AC_CHECK_HEADER([netcdf_par.h],
