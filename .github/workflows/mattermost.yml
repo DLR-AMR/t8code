@@ -48,23 +48,24 @@ jobs:
         if: github.event.action == 'closed' && github.event.pull_request.merged == true
         run: |
           echo message_build=1 >> $GITHUB_ENV &&
-          echo "{\"text\":\"Pull request ${{ github.event.number }} has been merged. See ${{ github.event.pull_request.html_url }} for more details.\"}" > mattermost.json
+          echo message_content='Pull request ${{ github.event.number }} has been merged. See ${{ github.event.pull_request.html_url }} for more details.' >> $GITHUB_ENV
       - name: push_message
         if: github.event_name == 'push' && github.event.action != 'closed'
         run: |
           echo message_build=1 >> $GITHUB_ENV &&
-          echo "{\"text\":\"${{ github.event.pusher.name }} pushed into ${{ github.event.ref }}. See ${{ github.event.compare }} for more details.\"}" > mattermost.json
+          echo message_content='${{ github.event.pusher.name }} pushed into ${{ github.event.ref }}. See ${{ github.event.compare }} for more details.' >> $GITHUB_ENV
       - name: pull_request_message
         if: github.event_name == 'pull_request' && github.event.action != 'synchronize' && github.event.action != 'closed'
         run: |
           echo message_build=1 >> $GITHUB_ENV &&
-          echo "{\"text\":\"Pull request ${{ github.event.number }} has been ${{ github.event.action }}. See ${{ github.event.pull_request.html_url }} for more details.\"}" > mattermost.json
+          echo message_content='Pull request ${{ github.event.number }} has been ${{ github.event.action }}. See ${{ github.event.pull_request.html_url }} for more details.'  >> $GITHUB_ENV
       - name: debug_after_build
         run: echo ${{ env.message_build }}
       # if a message has been written send the message to the mattermost-channel described in the secrets
       - name: send_message
         if: ${{ env.message_build == 1 }}
         uses: mattermost/action-mattermost-notify@master
-        env:
+        with:
           MATTERMOST_WEBHOOK_URL: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
-          MATTERMOST_USERNAME: t8y
+          MATTERMOST_USERNAME: t8ddy
+          TEXT: ${{ env.message_content }}
