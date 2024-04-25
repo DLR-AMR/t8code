@@ -67,5 +67,5 @@ jobs:
         uses: mattermost/action-mattermost-notify@master
         with:
           MATTERMOST_WEBHOOK_URL: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
-          MATTERMOST_USERNAME: t8y
+          MATTERMOST_USERNAME: t8ddy
           TEXT: ${{ env.message_content }}
