@@ -149,6 +149,8 @@ jobs:
         run: |
             tar xzf tarballs/*.tar.gz -C $RUNNER_TEMP
             echo "TAR_DIR=$RUNNER_TEMP/`basename tarballs/*.tar.gz .tar.gz`" >>&GITHUB_ENV
+      - name: debugging
+        run: ls
 # build config vars
       - name: build CFLAGS and CXXFLAGS variables
         run: echo CFLAGS_var="-Wall -pedantic -O0" >> $GITHUB_ENV
