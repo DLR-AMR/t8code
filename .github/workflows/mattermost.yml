@@ -65,6 +65,6 @@ jobs:
       - name: send_message
         if: ${{ env.message_build == 1 }}
         uses: mattermost/action-mattermost-notify@master
-        env:
+        with:
           MATTERMOST_WEBHOOK_URL: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
           MATTERMOST_USERNAME: t8y
