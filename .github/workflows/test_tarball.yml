@@ -152,9 +152,9 @@ jobs:
       - name: debug tar
         run: echo "$RUNNER_TEMP/`basename tarballs/*.tar.gz .tar.gz`"
       - name: Extract tarball
-        run: |
-            tar xzf tarballs/*.tar.gz -C $RUNNER_TEMP
-            echo "TAR_DIR=$RUNNER_TEMP/`basename tarballs/*.tar.gz .tar.gz`" >>&GITHUB_ENV
+        run: tar xzf tarballs/*.tar.gz -C $RUNNER_TEMP
+      - name: update Github_env
+        run: echo "TAR_DIR=$RUNNER_TEMP/`basename tarballs/*.tar.gz .tar.gz`" >>&GITHUB_ENV
 # build config vars
       - name: build CFLAGS and CXXFLAGS variables
         run: echo CFLAGS_var="-Wall -pedantic -O0" >> $GITHUB_ENV
