@@ -28,30 +28,25 @@
 #define T8_DEFAULT_COMMON_CXX_HXX
 
 #include <t8_element_cxx.hxx>
+#include <t8_schemes/t8_scheme_common_cxx.hxx>
 
 /* Macro to check whether a pointer (VAR) to a base class, comes from an
  * implementation of a child class (TYPE). */
 #define T8_COMMON_IS_TYPE(VAR, TYPE) ((dynamic_cast<TYPE> (VAR)) != NULL)
 
-class t8_default_scheme_common_c: public t8_eclass_scheme_c {
+class t8_default_scheme_common_c: public t8_scheme_common_c {
  public:
-  /** Destructor for all default schemes */
-  virtual ~t8_default_scheme_common_c ();
+  /* Call parent constructor */
+  t8_default_scheme_common_c (t8_eclass_t eclass, int elem_size): t8_scheme_common_c (eclass, elem_size) {};
 
-  virtual void
-  t8_element_deinit (int length, t8_element_t *elem) const override;
+  /* provide empty virtual destructor*/
+  virtual ~t8_default_scheme_common_c ()
+  {
+  }
 
   /** Compute the number of corners of a given element. */
   virtual int
   t8_element_num_corners (const t8_element_t *elem) const;
-
-  /** Allocate space for a bunch of elements. */
-  virtual void
-  t8_element_new (int length, t8_element_t **elem) const;
-
-  /** Deallocate space for a bunch of elements. */
-  virtual void
-  t8_element_destroy (int length, t8_element_t **elem) const;
 
   /** Return the shape of an element */
   virtual t8_element_shape_t
@@ -113,10 +108,6 @@ class t8_default_scheme_common_c: public t8_eclass_scheme_c {
   virtual void
   t8_element_anchor (const t8_element_t *elem, int anchor[3]) const
     = 0;
-#if T8_ENABLE_DEBUG
-  virtual void
-  t8_element_debug_print (const t8_element_t *elem) const;
-#endif
 };
 
 #endif /* !T8_DEFAULT_COMMON_CXX_HXX */

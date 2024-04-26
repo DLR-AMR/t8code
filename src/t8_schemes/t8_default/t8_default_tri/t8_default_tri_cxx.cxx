@@ -538,10 +538,8 @@ t8_default_scheme_tri_c::t8_element_init (int length, t8_element_t *elem) const
 
 /* Constructor */
 t8_default_scheme_tri_c::t8_default_scheme_tri_c (void)
+  : t8_default_scheme_common_c (T8_ECLASS_TRIANGLE, sizeof (t8_dtri_t))
 {
-  eclass = T8_ECLASS_TRIANGLE;
-  element_size = sizeof (t8_dtri_t);
-  ts_context = sc_mempool_new (element_size);
 }
 
 /* Destructor */

@@ -763,10 +763,8 @@ t8_default_scheme_quad_c::t8_element_to_string (const t8_element_t *elem, char *
 
 /* Constructor */
 t8_default_scheme_quad_c::t8_default_scheme_quad_c (void)
+  : t8_default_scheme_common_c (T8_ECLASS_QUAD, sizeof (t8_pquad_t))
 {
-  eclass = T8_ECLASS_QUAD;
-  element_size = sizeof (t8_pquad_t);
-  ts_context = sc_mempool_new (element_size);
 }
 
 t8_default_scheme_quad_c::~t8_default_scheme_quad_c ()

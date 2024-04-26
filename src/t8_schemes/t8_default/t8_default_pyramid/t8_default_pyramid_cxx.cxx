@@ -409,10 +409,8 @@ t8_default_scheme_pyramid_c::t8_element_to_string (const t8_element_t *elem, cha
 
 /* Constructor */
 t8_default_scheme_pyramid_c::t8_default_scheme_pyramid_c (void)
+  : t8_default_scheme_common_c (T8_ECLASS_PYRAMID, sizeof (t8_default_pyramid_t))
 {
-  eclass = T8_ECLASS_PYRAMID;
-  element_size = sizeof (t8_default_pyramid_t);
-  ts_context = sc_mempool_new (element_size);
 }
 
 t8_default_scheme_pyramid_c::~t8_default_scheme_pyramid_c ()

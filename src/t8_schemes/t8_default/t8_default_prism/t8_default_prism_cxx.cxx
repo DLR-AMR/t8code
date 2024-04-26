@@ -441,10 +441,8 @@ t8_default_scheme_prism_c::t8_element_to_string (const t8_element_t *elem, char 
 
 /* Constructor */
 t8_default_scheme_prism_c::t8_default_scheme_prism_c (void)
+  : t8_default_scheme_common_c (T8_ECLASS_PRISM, sizeof (t8_default_prism_t))
 {
-  eclass = T8_ECLASS_PRISM;
-  element_size = sizeof (t8_default_prism_t);
-  ts_context = sc_mempool_new (element_size);
 }
 
 t8_default_scheme_prism_c::~t8_default_scheme_prism_c ()

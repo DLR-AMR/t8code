@@ -315,10 +315,8 @@ t8_default_scheme_vertex_c::t8_element_init (int length, t8_element_t *elem) con
 
 /* Constructor */
 t8_default_scheme_vertex_c::t8_default_scheme_vertex_c (void)
+  : t8_default_scheme_common_c (T8_ECLASS_VERTEX, sizeof (t8_dvertex_t))
 {
-  eclass = T8_ECLASS_VERTEX;
-  element_size = sizeof (t8_dvertex_t);
-  ts_context = sc_mempool_new (element_size);
 }
 
 /* Destructor */

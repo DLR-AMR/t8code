@@ -432,10 +432,8 @@ t8_default_scheme_line_c::t8_element_init (int length, t8_element_t *elem) const
 
 /* Constructor */
 t8_default_scheme_line_c::t8_default_scheme_line_c (void)
+  : t8_default_scheme_common_c (T8_ECLASS_LINE, sizeof (t8_default_line_t))
 {
-  eclass = T8_ECLASS_LINE;
-  element_size = sizeof (t8_default_line_t);
-  ts_context = sc_mempool_new (element_size);
 }
 
 t8_default_scheme_line_c::~t8_default_scheme_line_c ()
