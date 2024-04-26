@@ -140,61 +140,78 @@ jobs:
     container: dlramr/t8code-ubuntu:t8-dependencies
     timeout-minutes: 90
     steps: 
-      - name: Download tarball
-        uses: actions/download-artifact@v4
-        with:
+    #
+    # Setup and bootstrap
+    #
+    - uses: actions/checkout@v4
+      with: 
+        fetch-depth: 0
+    - name: Update packages
+      run: apt-get update && apt-get upgrade -y
+    # This seems to be necessary because of the docker container
+    - name: disable ownership checks
+      run: git config --global --add safe.directory '*'
+    - name: init submodules
+      run: git submodule init
+    - name: update submodules
+      run: git submodule update
+    - name: bootstrap
+      run: ./bootstrap
+    - name: Download tarball
+      uses: actions/download-artifact@v4
+      with:
           name: tarballs
           path: tarballs
-      - name: debugging
-        run: ls tarballs
-      - name: Debugg Runner_temp
-        run: echo $RUNNER_TEMP
-      - name: debug tar
-        run: echo "$RUNNER_TEMP/`basename tarballs/*.tar.gz .tar.gz`"
-      - name: Extract tarball
-        run: tar xzf tarballs/*.tar.gz -C $RUNNER_TEMP
-      - name: update Github_env
-        run: export TAR_DIR="$RUNNER_TEMP/`basename tarballs/*.tar.gz .tar.gz`" &&
-             echo TAR_DIR="$TAR_DIR" >>$GITHUB_ENV
+    - name: debugging
+      run: ls tarballs
+    - name: Debugg Runner_temp
+      run: echo $RUNNER_TEMP
+    - name: debug tar
+      run: echo "$RUNNER_TEMP/`basename tarballs/*.tar.gz .tar.gz`"
+    - name: Extract tarball
+      run: tar xzf tarballs/*.tar.gz -C $RUNNER_TEMP
+    - name: update Github_env
+      run: export TAR_DIR="$RUNNER_TEMP/`basename tarballs/*.tar.gz .tar.gz`" &&
+          echo TAR_DIR="$TAR_DIR" >>$GITHUB_ENV
 # build config vars
-      - name: build CFLAGS and CXXFLAGS variables
-        run: echo CFLAGS_var="-Wall -pedantic -O0" >> $GITHUB_ENV
-          && echo CXXFLAGS_var="-Wall -pedantic -O0" >> $GITHUB_ENV
+    - name: build CFLAGS and CXXFLAGS variables
+      run: echo CFLAGS_var="-Wall -pedantic -O0" >> $GITHUB_ENV
+           && echo CXXFLAGS_var="-Wall -pedantic -O0" >> $GITHUB_ENV
       # Note: We want to use '-Werror', but if we already provide it at the configure step
       #       we get errors in configure that we cannot remove (for example the autotools way
       #       of checking for libm results in a compiler warning).
       #       Thus, we add '-Werror' later at the make step.
-      - name: less-test-option
-        if: github.event_name == 'pull_request'
-        run: export LESS_TEST_OPTION="--enable-less-tests"
+    - name: less-test-option
+      if: github.event_name == 'pull_request'
+      run: export LESS_TEST_OPTION="--enable-less-tests"
             && echo LESS_TEST_OPTION="$LESS_TEST_OPTION" >> $GITHUB_ENV
-      - name: build config variables
-        run: export CONFIG_OPTIONS="--without-blas ${LESS_TEST_OPTION}"
+    - name: build config variables
+      run: export CONFIG_OPTIONS="--without-blas ${LESS_TEST_OPTION}"
             && export CONFIG_DEBUG="$CONFIG_OPTIONS --enable-debug --enable-mpi --with-sc=$SC_DEBUG/install --with-p4est=$P4EST_DEBUG/install"
             && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
             && echo CONFIG_DEBUG="$CONFIG_DEBUG" >> $GITHUB_ENV
-      - name: Check vars
-        run: echo "[$CONFIG_DEBUG]"
-      - name: configure from Tarball
-        run: mkdir build_tar && cd build_tar && $TAR_DIR/configure $CONFIG_DEBUG CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
-      - name: OnFailUploadLog
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build_tar.log
-          path: build_tar/config.log
-      - name: make
-        run: cd build_tar && make $MAKEFLAGS
-      - name: make install
-        run: cd build_tar && make install $MAKEFLAGS 
-      - name: make check
-        run: cd build_tar && make check $MAKEFLAGS CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
-      - name: OnFailUploadLog
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build_tar.log
-          path: build_tar/test-suite.log
+    - name: Check vars
+      run: echo "[$CONFIG_DEBUG]"
+    - name: configure from Tarball
+      run: mkdir build_tar && cd build_tar && $TAR_DIR/configure $CONFIG_DEBUG CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build_tar.log
+        path: build_tar/config.log
+    - name: make
+      run: cd build_tar && make $MAKEFLAGS
+    - name: make install
+      run: cd build_tar && make install $MAKEFLAGS 
+    - name: make check
+      run: cd build_tar && make check $MAKEFLAGS CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build_tar.log
+        path: build_tar/test-suite.log
 
 
     
