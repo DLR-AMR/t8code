@@ -187,7 +187,7 @@ jobs:
             && echo LESS_TEST_OPTION="$LESS_TEST_OPTION" >> $GITHUB_ENV
     - name: build config variables
       run: export CONFIG_OPTIONS="--without-blas ${LESS_TEST_OPTION}"
-            && export CONFIG_DEBUG="$CONFIG_OPTIONS --enable-debug --enable-mpi --with-sc=$SC_DEBUG/install --with-p4est=$P4EST_DEBUG/install"
+            && export CONFIG_DEBUG="$CONFIG_OPTIONS --enable-debug --enable-mpi"
             && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
             && echo CONFIG_DEBUG="$CONFIG_DEBUG" >> $GITHUB_ENV
     - name: Check vars
