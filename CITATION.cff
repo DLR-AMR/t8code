@@ -1,6 +1,6 @@
 title: t8code
-version: 2.0.0-alpha
-date-released: "2024-04-11"
+version: 2.0.0
+date-released: "2024-04-19"
 repository-code: "https://github.com/dlr-amr/t8code"
 url: "https://dlr-amr.github.io/t8code/"
 doi: "10.5281/zenodo.7034838"
