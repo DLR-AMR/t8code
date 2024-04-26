@@ -870,49 +870,47 @@ t8_geometry_cad::t8_geom_evaluate_cad_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
   Handle_Geom_Surface surface;
   Standard_Real first, last;
 
-  /* Check each edge for a geometry. */
-  for (int i_edge = 0; i_edge < num_edges; ++i_edge) {
-    /* We have to check for curves as well as surfaces. Linked curves are stored 
-     * in the first half of the array, surfaces in the second. 
-     * If a curve is connected to this edge we have to also check, 
-     * if a surface is connected to at least one of the two adjacent faces. */
-    if (edges[i_edge] > 0 || edges[i_edge + num_edges] > 0) {
-      /* Check if only a surface or a curve is present. Abort if both is true. */
-      T8_ASSERT (!(edges[i_edge] > 0) != !(edges[i_edge + num_edges] > 0));
+  for (size_t coord = 0; coord < num_coords; ++coord) {
+    const int offset_3d = coord * 3;
 
-      /* Interpolate coordinates between edge vertices. Due to the indices i_edge of the edges, the edges point in
-       * direction of ref_coord i_edge >> 2. Therefore, we can use ref_coords[i_edge >> 2] for the interpolation.
-       *          6 -------E3------- 7
-       *         /|                 /|
-       *       E6 |               E7 |
-       *       / E10              / E11
-       *      /   |              /   |          z y
-       *     4 -------E2------- 5    |          |/
-       *     |    |             |    |          x-- x
-       *     |    2 -------E1---|--- 3
-       *    E8   /             E9   /
-       *     |  E4              |  E5
-       *     | /                | /
-       *     |/                 |/
-       *     0 -------E0------- 1
-       *        
-       */
-      const int edge_direction = i_edge / 4;
-      /* Save the edge vertices temporarily. */
-      t8_geom_get_edge_vertices (active_tree_class, active_tree_vertices, i_edge, 3, temp_edge_vertices);
-      /* Interpolate between them. */
-      for (size_t coord = 0; coord < num_coords; ++coord) {
-        const int offset_3d = coord * 3;
+    /* Check each edge for a geometry. */
+    for (int i_edge = 0; i_edge < num_edges; ++i_edge) {
+      /* We have to check for curves as well as surfaces. Linked curves are stored 
+      * in the first half of the array, surfaces in the second. 
+      * If a curve is connected to this edge we have to also check, 
+      * if a surface is connected to at least one of the two adjacent faces. */
+      if (edges[i_edge] > 0 || edges[i_edge + num_edges] > 0) {
+        /* Check if only a surface or a curve is present. Abort if both is true. */
+        T8_ASSERT (!(edges[i_edge] > 0) != !(edges[i_edge + num_edges] > 0));
+
+        /* Interpolate coordinates between edge vertices. Due to the indices i_edge of the edges, the edges point in
+        * direction of ref_coord i_edge >> 2. Therefore, we can use ref_coords[i_edge >> 2] for the interpolation.
+        *          6 -------E3------- 7
+        *         /|                 /|
+        *       E6 |               E7 |
+        *       / E10              / E11
+        *      /   |              /   |          z y
+        *     4 -------E2------- 5    |          |/
+        *     |    |             |    |          x-- x
+        *     |    2 -------E1---|--- 3
+        *    E8   /             E9   /
+        *     |  E4              |  E5
+        *     | /                | /
+        *     |/                 |/
+        *     0 -------E0------- 1
+        *        
+        */
+        const int edge_direction = i_edge / 4;
+        /* Save the edge vertices temporarily. */
+        t8_geom_get_edge_vertices (active_tree_class, active_tree_vertices, i_edge, 3, temp_edge_vertices);
+        /* Interpolate between them. */
         t8_geom_linear_interpolation (&ref_coords[edge_direction + offset_3d], temp_edge_vertices, 3, 1,
                                       interpolated_coords + offset_3d);
-      }
-      /* Interpolate parameters between edge vertices. Same procedure as above. */
-      const double *parameters = (double *) t8_cmesh_get_attribute (
-        cmesh, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_edge, ltreeid);
-      T8_ASSERT (parameters != NULL);
+        /* Interpolate parameters between edge vertices. Same procedure as above. */
+        const double *parameters = (double *) t8_cmesh_get_attribute (
+          cmesh, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_edge, ltreeid);
+        T8_ASSERT (parameters != NULL);
 
-      for (size_t coord = 0; coord < num_coords; ++coord) {
-        const int offset_3d = coord * 3;
         /* Curves have only one parameter u, surfaces have two, u and v.
         * Therefore, we have to distinguish if the edge has a curve or surface linked to it. */
         if (edges[i_edge] > 0) {
@@ -985,24 +983,20 @@ t8_geometry_cad::t8_geom_evaluate_cad_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
         out_coords[offset_3d + 2] += cur_delta[2] * scaling_factor;
       }
     }
-  }
 
-  /* Iterate over each face to calculate the displacements generated by each face */
-  for (int i_faces = 0; i_faces < num_faces; ++i_faces) {
-    /* Check if face has a linked surface */
-    if (faces[i_faces] > 0) {
-      /* Allocate some variables and save the normal direction of the face and the face vertices 
-       * in a separate array for later usage. */
-      const int face_normal_direction = i_faces / 2;
-      t8_geom_get_face_vertices (T8_ECLASS_HEX, active_tree_vertices, i_faces, 3, temp_face_vertices);
+    /* Iterate over each face to calculate the displacements generated by each face */
+    for (int i_faces = 0; i_faces < num_faces; ++i_faces) {
+      /* Check if face has a linked surface */
+      if (faces[i_faces] > 0) {
+        /* Allocate some variables and save the normal direction of the face and the face vertices 
+        * in a separate array for later usage. */
+        const int face_normal_direction = i_faces / 2;
+        t8_geom_get_face_vertices (T8_ECLASS_HEX, active_tree_vertices, i_faces, 3, temp_face_vertices);
 
-      /* Retrieve surface parameters of nodes */
-      const double *surface_parameters = (double *) t8_cmesh_get_attribute (
-        cmesh, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + i_faces, ltreeid);
-      T8_ASSERT (surface_parameters != NULL);
-
-      for (size_t coord = 0; coord < num_coords; ++coord) {
-        const int offset_3d = coord * 3;
+        /* Retrieve surface parameters of nodes */
+        const double *surface_parameters = (double *) t8_cmesh_get_attribute (
+          cmesh, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + i_faces, ltreeid);
+        T8_ASSERT (surface_parameters != NULL);
 
         double face_displacement_from_edges[3] = { 0 };
         double surface_parameter_displacement_from_edges[2] = { 0 };
