@@ -147,8 +147,10 @@ jobs:
           path: tarballs
       - name: debugging
         run: ls tarballs
-             echo $RUNNER_TEMP
-             echo "$RUNNER_TEMP/`basename tarballs/*.tar.gz .tar.gz`"
+      - name: Debugg Runner_temp
+        run: echo $RUNNER_TEMP
+      - name: debug tar
+        run: echo "$RUNNER_TEMP/`basename tarballs/*.tar.gz .tar.gz`"
       - name: Extract tarball
         run: |
             tar xzf tarballs/*.tar.gz -C $RUNNER_TEMP
