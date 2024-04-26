@@ -175,10 +175,8 @@ jobs:
             && echo CONFIG_DEBUG="$CONFIG_DEBUG" >> $GITHUB_ENV
       - name: Check vars
         run: echo "[$CONFIG_DEBUG]"
-      - name: check TAR_DIR
-        run: ls $TAR_DIR
       - name: configure from Tarball
-        run: mkdir build_tar && cd build_tar && .{{$TAR_DIR}}/configure $CONFIG_DEBUG CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
+        run: mkdir build_tar && cd build_tar && $TAR_DIR/configure $CONFIG_DEBUG CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
       - name: OnFailUploadLog
         if: failure()
         uses: actions/upload-artifact@v4
