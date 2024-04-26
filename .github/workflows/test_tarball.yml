@@ -134,6 +134,8 @@ jobs:
  #     run: |
  #           cd build
  #           make distcheck
+
+
   test-tarball:
     needs: build
     runs-on: ubuntu-20.04
@@ -157,22 +159,19 @@ jobs:
       run: git submodule update
     - name: bootstrap
       run: ./bootstrap
+
+
     - name: Download tarball
       uses: actions/download-artifact@v4
       with:
           name: tarballs
           path: tarballs
-    - name: debugging
-      run: ls tarballs
-    - name: Debugg Runner_temp
-      run: echo $RUNNER_TEMP
-    - name: debug tar
-      run: echo "$RUNNER_TEMP/`basename tarballs/*.tar.gz .tar.gz`"
     - name: Extract tarball
       run: tar xzf tarballs/*.tar.gz -C $RUNNER_TEMP
     - name: update Github_env
       run: export TAR_DIR="$RUNNER_TEMP/`basename tarballs/*.tar.gz .tar.gz`" &&
           echo TAR_DIR="$TAR_DIR" >>$GITHUB_ENV
+          
 # build config vars
     - name: build CFLAGS and CXXFLAGS variables
       run: echo CFLAGS_var="-Wall -pedantic -O0" >> $GITHUB_ENV
