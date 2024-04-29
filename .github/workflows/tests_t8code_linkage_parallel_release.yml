@@ -23,12 +23,12 @@ name: t8code tests linkage parallel release
 
 #
 # This github CI script installs t8code and runs its tests for various configurations.
-# We compile sc and p4est as thirdparty libraries and use caching to only trigger a
+# We compile sc as a thirdparty library and use caching to only trigger a
 # new installation of them when their versions have changed in t8code.
 #
-# Note: To manually enforce sc and p4est installation, either increase the counter
-#       in the "key:" entries of the sc and p4est steps or set the variables
-#       SC_IGNORE_CACHE and P4EST_IGNORE_CACHE to 1 in the respective steps.
+# Note: To manually enforce sc either increase the counter
+#       in the "key:" entries of the sc step or set the variables
+#       SC_IGNORE_CACHE to 1 in the respective steps.
 
 env:
   MAKEFLAGS: "-j2 V=0"
@@ -114,47 +114,7 @@ jobs:
     - name: sc build release
       run: cd $SC_RELEASE && make $MAKEFLAGS && make $MAKEFLAGS install
       if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
-#
-# P4EST
-#
-    - name: store p4est folders in var
-      run: echo P4EST_RELEASE=$PWD/p4est/build_release >> $GITHUB_ENV
-    - name: Get p4est commit hash
-      run: hash=`git rev-parse HEAD:p4est` && echo p4est_commit=$hash >> $GITHUB_ENV
-    - name: Check cache for previous p4est installation
-      id: p4est_cache
-      uses: actions/cache@v4
-      with:
-        path: |
-          ${{ env.P4EST_RELEASE }}
-        # You can increase the counter at the end to force a new key and hence recomputing the cache
-        key: p4est-${{ env.p4est_commit }}-004
-    - name: Set ignore cache variable
-      # If this variable is set to 1 then the cache is ignored and p4est is installed regardless of cache.
-      # (set with i.e. P4EST_IGNORE_CACHE=1)
-      # We use this mostly for debugging this CI script.
-      run: echo P4EST_IGNORE_CACHE=0 >> $GITHUB_ENV
-    - name: Cache info
-      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
-      run: echo No cache found or cache will be ignored. P4EST_IGNORE_CACHE=$P4EST_IGNORE_CACHE
-    - name: install p4est
-      run: echo "Install p4est"
-      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
-    - name: if ignore cache, delete folders
-      if: ${{ env.P4EST_IGNORE_CACHE == 1 }}
-      # The true at the end is to ignore errors that i.e. occur when the folders do not exist      
-      run: rm -r $P4EST_RELEASE $P4EST_RELEASE $P4EST_SERIAL_RELEASE $P4EST_SERIAL_RELEASE || true 
-    - name: make folder
-      run: mkdir $P4EST_RELEASE
-    ## p4est release
-      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
-    - name: p4est configure release
-      run: cd $P4EST_RELEASE && ../configure --enable-mpi --prefix=$PWD/install --with-sc=$SC_RELEASE/install
-      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
-    - name: p4est build release
-      run: cd $P4EST_RELEASE && make $MAKEFLAGS && make $MAKEFLAGS install
-      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
-#  P4EST AND SC END
+#  SC END
 #
 #  T8CODE
 #
@@ -173,7 +133,7 @@ jobs:
            && echo LESS_TEST_OPTION="$LESS_TEST_OPTION" >> $GITHUB_ENV
     - name: build config variables
       run: export CONFIG_OPTIONS="--without-blas ${LESS_TEST_OPTION}"
-           && export CONFIG_RELEASE="$CONFIG_OPTIONS --enable-mpi --with-sc=$SC_RELEASE/install --with-p4est=$P4EST_RELEASE/install"
+           && export CONFIG_RELEASE="$CONFIG_OPTIONS --enable-mpi --with-sc=$SC_RELEASE/install"
            && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
            && echo CONFIG_RELEASE="$CONFIG_RELEASE" >> $GITHUB_ENV
     - name: Check vars

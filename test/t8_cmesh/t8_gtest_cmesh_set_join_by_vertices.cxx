@@ -30,8 +30,6 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <test/t8_gtest_macros.hxx>
 
-#include <p8est_geometry.h>
-
 /* In this file we test `t8_set_join_by_vertices` routine with a lot of example
  * meshes provided by t8code and p4est. The general idea is a follows: We first
  * retrieve all tree vertices from a given cmesh, construct the connectivity
@@ -268,14 +266,21 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
    * }
    */
 
+  {
+    t8_cmesh_t cmesh = t8_cmesh_new_brick_2d (3, 4, 1, 1, comm);
+    test_with_cmesh (cmesh);
+    t8_cmesh_destroy (&cmesh);
+  }
+
+  {
+    t8_cmesh_t cmesh = t8_cmesh_new_brick_3d (3, 4, 5, 1, 1, 1, comm);
+    test_with_cmesh (cmesh);
+    t8_cmesh_destroy (&cmesh);
+  }
+
   /* 
    * Tests with 2D and 3D example meshes from `p4est`.
    */
-
-  /* Make sure that p4est is properly initialized. If not, do it here. */
-  if (!sc_package_is_registered (p4est_package_id)) {
-    p4est_init (NULL, SC_LP_ESSENTIAL);
-  }
 
   {
     p4est_connectivity_t *p4_conn = p4est_connectivity_new_disk_nonperiodic ();

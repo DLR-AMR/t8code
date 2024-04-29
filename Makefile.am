@@ -3,12 +3,9 @@
 # Makefile.am in toplevel directory
 
 # include makefiles from installed subpackages
-ACLOCAL_AMFLAGS = -I config @T8_SC_AMFLAGS@ @T8_P4EST_AMFLAGS@
+ACLOCAL_AMFLAGS = -I config @T8_SC_AMFLAGS@
 if T8_SC_MK_USE
 @T8_SC_MK_INCLUDE@
-endif
-if T8_P4EST_MK_USE
-@T8_P4EST_MK_INCLUDE@
 endif
 
 # initialize empty variables
@@ -55,7 +52,7 @@ t8datadir = $(datadir)/t8code/data
 LOG_COMPILER = @T8_MPIRUN@ @T8_MPI_TEST_FLAGS@
 
 # recurse only into subpackages
-SUBDIRS = @T8_SC_SUBDIR@ @T8_P4EST_SUBDIR@
+SUBDIRS = @T8_SC_SUBDIR@
 DIST_SUBDIRS = $(SUBDIRS)
 
 # handle toplevel directory
@@ -72,6 +69,7 @@ DISTCLEANFILES += \
 # non-recursive build
 include src/Makefile.am
 include src/t8_schemes/t8_default/Makefile.am
+include p4est/Makefile.am
 include test/Makefile.am
 include example/Makefile.am
 include tutorials/Makefile.am

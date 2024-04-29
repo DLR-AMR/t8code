@@ -89,7 +89,7 @@ jobs:
     - name: build config variables
       if: ${{ env.MINOR_RELEASE == 'true' }}
       run: export CONFIG_OPTIONS="--without-blas ${LESS_TEST_OPTION}"
-           && export CONFIG_SERIAL_DEBUG="$CONFIG_OPTIONS --enable-debug --with-sc=$SC_SERIAL_DEBUG/install --with-p4est=$P4EST_SERIAL_DEBUG/install"
+           && export CONFIG_SERIAL_DEBUG="$CONFIG_OPTIONS --enable-debug --with-sc=$SC_SERIAL_DEBUG/install"
     - name: Check vars
       if: ${{ env.MINOR_RELEASE == 'true' }}
       run: echo "[$CONFIG_SERIAL_DEBUG]"

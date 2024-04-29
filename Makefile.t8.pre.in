@@ -8,7 +8,6 @@ exec_prefix = @exec_prefix@
 t8_sysconfdir = @sysconfdir@
 
 @T8_SC_MK_INCLUDE@
-@T8_P4EST_MK_INCLUDE@
 
 # T8_CC and T8_CFLAGS may not be necessary for your project
 T8_CC = @CC@
@@ -21,7 +20,7 @@ T8_PKG_LIBS = -lt8
 
 # These pull in everything needed by t8
 T8_CPPFLAGS = @CPPFLAGS@ \
-  $(SC_PKG_CPPFLAGS) $(P4EST_PKG_CPPFLAGS) $(T8_PKG_CPPFLAGS)
+  $(SC_PKG_CPPFLAGS) $(T8_PKG_CPPFLAGS)
 T8_LDFLAGS = @LDFLAGS@ \
-  $(SC_PKG_LDFLAGS) $(P4EST_PKG_LDFLAGS) $(T8_PKG_LDFLAGS)
-T8_LIBS = $(T8_PKG_LIBS) $(P4EST_PKG_LIBS) $(SC_PKG_LIBS) @LIBS@
+  $(SC_PKG_LDFLAGS) $(T8_PKG_LDFLAGS)
+T8_LIBS = $(T8_PKG_LIBS) $(SC_PKG_LIBS) @LIBS@

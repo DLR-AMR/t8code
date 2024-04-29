@@ -112,7 +112,6 @@ main (int argc, char **argv)
   mpiret = sc_MPI_Comm_rank (mpicomm, &mpirank);
 
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
-  p4est_init (NULL, SC_LP_STATISTICS);
   t8_init (SC_LP_DEFAULT);
 
   if (argc != 2) {
@@ -140,12 +139,12 @@ main (int argc, char **argv)
   sc_flops_snap (&fi, &snapshot);
 
   SC_CHECK_ABORTF (ptg != NULL, "Failed to read tetgen %s", argbasename);
-  P4EST_GLOBAL_STATISTICSF ("Read %d nodes and %d tets %s attributes\n", (int) ptg->nodes->elem_count / 3,
-                            (int) ptg->tets->elem_count / 4, ptg->tet_attributes != NULL ? "with" : "without");
+  SC_GLOBAL_STATISTICSF ("Read %d nodes and %d tets %s attributes\n", (int) ptg->nodes->elem_count / 3,
+                         (int) ptg->tets->elem_count / 4, ptg->tet_attributes != NULL ? "with" : "without");
 
   /* flip orientation to right-handed */
   tnum_flips = p8est_tets_make_righthanded (ptg);
-  P4EST_GLOBAL_STATISTICSF ("Performed %ld orientation flip(s)\n", (long) tnum_flips);
+  SC_GLOBAL_STATISTICSF ("Performed %ld orientation flip(s)\n", (long) tnum_flips);
 
   sc_flops_shot (&fi, &snapshot);
   sc_stats_set1 (&stats[1], snapshot.iwtime, "Right handed");
@@ -164,14 +163,14 @@ main (int argc, char **argv)
   sc_stats_set1 (&stats[2], snapshot.iwtime, "Bcast");
   sc_flops_snap (&fi, &snapshot);
 
-  P4EST_GLOBAL_LDEBUGF ("Created and broadcasted %s\n", "conn");
+  SC_GLOBAL_LDEBUGF ("Created and broadcasted %s\n", "conn");
 
   p8est_connectivity_complete (connectivity);
   sc_flops_shot (&fi, &snapshot);
   sc_stats_set1 (&stats[3], snapshot.iwtime, "Connectivity complete");
 
-  P4EST_GLOBAL_LDEBUGF ("Connectivity has %ld edges and %ld corners\n", (long) connectivity->num_edges,
-                        (long) connectivity->num_corners);
+  SC_GLOBAL_LDEBUGF ("Connectivity has %ld edges and %ld corners\n", (long) connectivity->num_edges,
+                     (long) connectivity->num_corners);
   sc_flops_snap (&fi, &snapshot);
 
   cmesh_p8 = t8_cmesh_new_from_p8est (connectivity, sc_MPI_COMM_WORLD, 0);
@@ -204,11 +203,11 @@ main (int argc, char **argv)
   sc_stats_set1 (&stats[6], snapshot.iwtime, "t8 forest p8 commit level 4");
 
   t8_forest_unref (&forest_p8);
-  // p8est_refine (p8est, 0,bunny_refine, NULL);
-  // p8est_refine (p8est, 0,bunny_refine, NULL);
+  p8est_refine (p8est, 0, bunny_refine, NULL);
+  p8est_refine (p8est, 0, bunny_refine, NULL);
 
-  //  sc_flops_shot (&fi, &snapshot);
-  //  sc_stats_set1 (&stats[5], snapshot.iwtime, "Refine 1 times");
+  sc_flops_shot (&fi, &snapshot);
+  sc_stats_set1 (&stats[5], snapshot.iwtime, "Refine 1 times");
 
   /*
   snprintf (afilename, BUFSIZ, "%s", "read_tetgen");
@@ -238,7 +237,7 @@ main (int argc, char **argv)
   p8est_tets_destroy (ptg);
 
   sc_stats_compute (sc_MPI_COMM_WORLD, 9, stats);
-  sc_stats_print (p4est_package_id, SC_LP_STATISTICS, 9, stats, 1, 1);
+  sc_stats_print (t8_package_id, SC_LP_STATISTICS, 9, stats, 1, 1);
 
   sc_finalize ();
   mpiret = sc_MPI_Finalize ();
