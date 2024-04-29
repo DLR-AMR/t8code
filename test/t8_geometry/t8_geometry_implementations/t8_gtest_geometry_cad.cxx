@@ -230,7 +230,8 @@ t8_test_geometry_cad_hex (double *rot_vec, int face, int edge, double *parameter
                           double *test_return_coords)
 {
 #if T8_WITH_OCC
-  double out_coords[3];
+  const int num_coords = 8; /* Number of reference coordinates to test */
+  double *out_coords = T8_ALLOC (double, num_coords * 3);
   double rotated_test_ref_coords[24];
   double rotation_origin[3] = { 0.5, 0.5, 0.5 };
   double inversed_rot_vec[3];
@@ -240,13 +241,13 @@ t8_test_geometry_cad_hex (double *rot_vec, int face, int edge, double *parameter
   for (int i_coord = 0; i_coord < 3; ++i_coord) {
     inversed_rot_vec[2 - i_coord] = -rot_vec[i_coord];
   }
-  t8_euler_rotation (test_ref_coords, inversed_rot_vec, rotated_test_ref_coords, rotation_origin, 8);
-  for (int i_coord = 0; i_coord < 8; ++i_coord) {
-    t8_geometry_evaluate (cmesh, 0, rotated_test_ref_coords + i_coord * 3, 1, out_coords);
-    EXPECT_NEAR (out_coords[0], test_return_coords[0 + i_coord * 3], tol);
-    EXPECT_NEAR (out_coords[1], test_return_coords[1 + i_coord * 3], tol);
-    EXPECT_NEAR (out_coords[2], test_return_coords[2 + i_coord * 3], tol);
+  t8_euler_rotation (test_ref_coords, inversed_rot_vec, rotated_test_ref_coords, rotation_origin, num_coords);
+  for (size_t coord = 0; coord < num_coords; ++coord) {
+    const int offset_3d = coord * 3;
+    t8_geometry_evaluate (cmesh, 0, rotated_test_ref_coords, num_coords, out_coords);
+    EXPECT_VEC3_EQ (out_coords + offset_3d, test_return_coords + offset_3d, tol);
   }
+  T8_FREE (out_coords);
   t8_cmesh_destroy (&cmesh);
 
 #else  /* !T8_WITH_OCC */
@@ -434,17 +435,22 @@ void
 t8_test_geometry_cad_tet (int face, int edge, double *parameters, double *test_ref_coords, double *test_return_coords)
 {
 #if T8_WITH_OCC
-  double out_coords[3];
+  /* 4 coords for face --> 3 vertices of face & element centroid
+   * 2 coords for edge --> 2 vertices of edge */
+  const int num_coords = (face >= 0 ? 4 : 2);
+  double *out_coords = T8_ALLOC (double, num_coords * 3);
   double tol = T8_PRECISION_EPS > 1e-10 ? T8_PRECISION_EPS : 1e-10;
 
   t8_cmesh_t cmesh = t8_create_cad_reference_tet (face, edge, parameters);
-  /* 4 coords for face --> 3 vertices of face & element centroid
-   * 2 coords for edge --> 2 vertices of edge */
-  for (int i_coord = 0; i_coord < (face >= 0 ? 4 : 2); ++i_coord) {
-    t8_geometry_evaluate (cmesh, 0, test_ref_coords + i_coord * 3 + (face >= 0 ? face * 12 : edge * 6), 1, out_coords);
 
-    EXPECT_VEC3_EQ (out_coords, test_return_coords + i_coord * 3, tol);
+  for (int i_coord = 0; i_coord < num_coords; ++i_coord) {
+    const int offset_3d = i_coord * 3;
+    t8_geometry_evaluate (cmesh, 0, test_ref_coords + offset_3d + (face >= 0 ? face * 12 : edge * 6), 1,
+                          out_coords + offset_3d);
+
+    EXPECT_VEC3_EQ (out_coords + offset_3d, test_return_coords + offset_3d, tol);
   }
+  T8_FREE (out_coords);
   t8_cmesh_destroy (&cmesh);
 
 #else  /* !T8_WITH_OCC */
