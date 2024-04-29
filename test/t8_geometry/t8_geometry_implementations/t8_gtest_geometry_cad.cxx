@@ -451,7 +451,7 @@ t8_create_cad_reference_tet (int face, int edge, double *parameters)
   T8_ASSERT (face < 0 || edge < 0);
   if (face >= 0) {
     faces[face] = 1;
-    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, t8_create_cad_surface_shape ());
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, t8_create_cad_surface_shape_x_z ());
     t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + face,
                             parameters, 6 * sizeof (double), 0);
   }
