@@ -256,24 +256,31 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const t8_gloidx_t ntrees, const
 void
 t8_cmesh_set_join_by_stash (t8_cmesh_t cmesh, int **connectivity, const int do_both_directions)
 {
-  sc_array_t *classes = &(cmesh->stash->classes);
+  /* Get some pointers to the cmesh's stash */
+  const sc_array_t *classes = &(cmesh->stash->classes);
+  const sc_array_t *attributes = &(cmesh->stash->attributes);
   const t8_gloidx_t ntrees = classes->elem_count;
+  const size_t num_attributes = attributes->elem_count;
   std::vector<t8_eclass_t> eclasses (ntrees);
+  std::vector<double> vertices (ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM, 0.0);
+
+  /* Retrieve the eclasses of the trees from the cmesh's stash */
   for (t8_gloidx_t itree = 0; itree < ntrees; itree++) {
     const t8_stash_class_struct_t *entry = (t8_stash_class_struct_t *) t8_sc_array_index_locidx (classes, itree);
     eclasses[entry->id] = entry->eclass;
   }
 
-  sc_array_t *attributes = &(cmesh->stash->attributes);
-  const size_t num_attributes = attributes->elem_count;
-  std::vector<double> vertices (ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM, 0.0);
+  /* Retrieve the vertices of the trees from the stash */
   for (size_t iattribute = 0; iattribute < num_attributes; iattribute++) {
     const t8_stash_attribute_struct_t *entry
       = (t8_stash_attribute_struct_t *) t8_sc_array_index_locidx (attributes, iattribute);
+    /* If the attribute is a vertex attribute, copy it into a separate vector */
     if (entry->key == T8_CMESH_VERTICES_ATTRIBUTE_KEY && entry->package_id == t8_get_package_id ()) {
       const size_t index = T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, entry->id, 0, 0);
       memcpy (&vertices[index], entry->attr_data, entry->attr_size);
     }
   }
+
+  /* Let t8_cmesh_set_join_by_vertices join the trees */
   t8_cmesh_set_join_by_vertices (cmesh, ntrees, eclasses.data (), vertices.data (), connectivity, do_both_directions);
 }
