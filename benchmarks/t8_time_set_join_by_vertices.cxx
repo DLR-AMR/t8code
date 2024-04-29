@@ -37,63 +37,6 @@
  * `t8_cmesh_readmshfile` routine. Up to now, the latter is much faster. In the
  * future, `t8_set_join_by_vertices` may be optimized to close up to the reader
  * in terms of speed.
- *
- * Example output with the `Space Needle` (~15 Mb file)
- *
- * The following timings are from before the performance optimization.
- *
- * [libsc] This is libsc 2.8.5-dirty
- * [t8] This is t8 1.3.0.98-3044
- * [t8] CPP                      mpicc -E
- * [t8] CPPFLAGS                 
- * [t8] CC                       mpicc
- * [t8] CFLAGS                   -O3
- * [t8] LDFLAGS                  
- * [t8] LIBS                     -lz -lm  -lstdc++
- * [t8] meshfile = spaceneedle_positive
- * [t8] Statistics for   t8_cmesh_from_msh_file
- * [t8]    Global number of values:       1
- * [t8]    Mean value (std. dev.):           0.172623 (0 = 0%)
- * [t8]    Minimum attained at rank       0: 0.172623
- * [t8]    Maximum attained at rank       0: 0.172623
- * [t8] Summary = [ 0.172623 ];
- * [t8] Maximum = [ 0.172623 ];
- * [t8] ntrees = 4496.
- * [t8] Statistics for   t8_cmesh_set_join_by_vertices
- * [t8]    Global number of values:       1
- * [t8]    Mean value (std. dev.):           4.97627 (0 = 0%)
- * [t8]    Minimum attained at rank       0: 4.97627
- * [t8]    Maximum attained at rank       0: 4.97627
- * [t8] Summary = [ 4.97627 ];
- * [t8] Maximum = [ 4.97627 ];
- *
- *
- * Now it looks like this:
- *
- * [libsc] This is libsc 2.8.5.406-2b20
- * [t8] This is t8 2.0.0-alpha.36-bd226-dirty
- * [t8] CPP                      mpicc -E
- * [t8] CPPFLAGS
- * [t8] CC                       mpicc
- * [t8] CFLAGS                   -g -O2
- * [t8] LDFLAGS
- * [t8] LIBS                     -lz -lm  -lstdc++
- * [t8] meshfile = spaceneedle_positive
- * [t8] Statistics for   t8_cmesh_from_msh_file
- * [t8]    Global number of values:       1
- * [t8]    Mean value (std. dev.):           0.14056 (0 = 0%)
- * [t8]    Minimum attained at rank       0: 0.14056
- * [t8]    Maximum attained at rank       0: 0.14056
- * [t8] Summary = [ 0.14056 ];
- * [t8] Maximum = [ 0.14056 ];
- * [t8] ntrees = 4496.
- * [t8] Statistics for   t8_cmesh_set_join_by_vertices
- * [t8]    Global number of values:       1
- * [t8]    Mean value (std. dev.):           0.0162496 (0 = 0%)
- * [t8]    Minimum attained at rank       0: 0.0162496
- * [t8]    Maximum attained at rank       0: 0.0162496
- * [t8] Summary = [ 0.0162496 ];
- * [t8] Maximum = [ 0.0162496 ];
  */
 
 static void
