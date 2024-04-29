@@ -99,7 +99,7 @@ allclose (const U &a, const V &b, double tol = T8_PRECISION_SQRT_EPS)
  * \return         Coordinates of the points, given in x,y,z.
  */
 std::vector<std::array<double, T8_ECLASS_MAX_DIM>>
-sample (t8_eclass_t eclass, uint n_point)
+sample (t8_eclass_t eclass, uint32_t n_point)
 {
   std::srand (time (NULL));
   std::vector<std::array<double, T8_ECLASS_MAX_DIM>> points (n_point);
@@ -228,7 +228,7 @@ TEST_P (LagrangeCmesh, lagrange_mapping)
   t8_lagrange_element lag = create_sample_element (eclass, degree);
   /* Compare the mappings on each boundary face of the Lagrange element */
   std::vector<t8_lagrange_element> faces = lag.decompose ();
-  uint i_face = 0;
+  uint32_t i_face = 0;
   for (const auto &face : faces) {
     auto points_on_face = sample (face.get_type (), T8_NUM_SAMPLE_POINTS);
     for (const auto &point : points_on_face) {
