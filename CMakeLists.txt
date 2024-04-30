@@ -33,8 +33,8 @@ if( T8CODE_ENABLE_MPI )
     if( NOT MPIEXEC_EXECUTABLE )
         message( FATAL_ERROR "MPIEXEC was not found" )
     endif()
-    # set( SC_ENABLE_MPI ON )
-    set( mpi ON ) # This is very dirty, we should consider fixing this in the p4est repo
+    set( mpi ON ) # This is very dirty and will be fixed in the libsc repo (https://github.com/cburstedde/libsc/pull/178)
+    # set( SC_ENABLE_MPI ON ) # When the fix gets merged, replace the previous line with this one
 endif()
 
 if( T8CODE_ENABLE_VTK )
