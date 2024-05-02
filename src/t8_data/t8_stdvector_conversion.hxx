@@ -27,7 +27,8 @@
 
 #ifndef T8_STDVECTOR_CONVERSION_H
 #define T8_STDVECTOR_CONVERSION_H
-
+#include<t8_forest/t8_forest_partition.h>
+#include<t8_forest/t8_forest_iterate.h>
 #include <vector>
 
 /* Template to create sc_array view from vector*/
@@ -65,12 +66,7 @@ void t8_forest_ghost_exchange_data_with_vector(t8_forest_t forest, const std::ve
     t8_debugf("Entering ghost_exchange_data_with_vector\n");
     T8_ASSERT(t8_forest_is_committed(forest));
 
-    if (forest->ghosts == NULL) {
-        /* This process has no ghosts*/ 
-        return;
-    }
-
-    /*Create sc_array_t view from the vector*/ 
+     /*Create sc_array_t view from the vector*/ 
     sc_array_t *element_data = t8_create_sc_array_view_from_vector(element_vector);
 
     /* calling the original function with the sc_array_t view */
