@@ -26,8 +26,6 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_element_cxx.hxx>
-
-
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
@@ -1207,7 +1205,6 @@ t8_forest_partition (t8_forest_t forest)
   t8_log_indent_pop ();
   t8_global_productionf ("Done forest partition.\n");
 }
-
 
 void
 t8_forest_partition_data(t8_forest_t forest_from, t8_forest_t forest_to, const sc_array_t *data_in,
