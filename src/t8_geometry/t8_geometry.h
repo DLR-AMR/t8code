@@ -30,7 +30,6 @@
 
 #include <t8.h>
 #include <t8_refcount.h>
-#include <stdbool.h>
 
 /** This enumeration contains all possible geometries. */
 typedef enum t8_geometry_type {
@@ -109,7 +108,7 @@ t8_geometry_get_type (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
  * \param[in] gtreeid     The global id of the tree
  * \return                True if the tree with id \ref gtreeid has a negative volume. False otherwise.  
  */
-bool
+int
 t8_geometry_tree_negative_volume (const t8_cmesh_t cmesh, const t8_gloidx_t gtreeid);
 
 T8_EXTERN_C_END ();

@@ -123,7 +123,7 @@ t8_cmesh_is_committed (const t8_cmesh_t cmesh)
 }
 
 #ifdef T8_ENABLE_DEBUG
-bool
+int
 t8_cmesh_validate_geometry (const t8_cmesh_t cmesh)
 {
   /* Geometry handler is not constructed yet */
@@ -532,7 +532,7 @@ t8_cmesh_tree_vertices_negative_volume (const t8_eclass_t eclass, const double *
  * Returns true if all trees have positive volume. Returns also true if no geometries are
  * registered yet, since the volume computation depends on the used geometry.
  */
-bool
+int
 t8_cmesh_no_negative_volume (t8_cmesh_t cmesh)
 {
   bool res = false;

@@ -159,7 +159,7 @@ t8_dvertex_last_descendant (const t8_dvertex_t *v, t8_dvertex_t *s, int level)
 }
 
 void
-t8_dvertex_vertex_coords (const t8_dvertex_t *elem, const int vertex, int coords[])
+t8_dvertex_vertex_integer_coords (const t8_dvertex_t *elem, const int vertex, int coords[])
 {
   T8_ASSERT (vertex == 0);
 
