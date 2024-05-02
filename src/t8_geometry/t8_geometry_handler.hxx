@@ -50,7 +50,8 @@ struct t8_geometry_handler
    */
   ~t8_geometry_handler ()
   {
-    while (t8_refcount_is_active (&rc)) {
+    if (sc_refcount_is_active (&rc)) {
+      T8_ASSERT (t8_refcount_is_last (&rc));
       t8_refcount_unref (&rc);
     }
     t8_debugf ("Deleted the geometry_handler.\n");
