@@ -42,6 +42,7 @@ t8code_googletest_programs = \
   test/t8_forest/t8_gtest_user_data \
   test/t8_forest/t8_gtest_transform \
   test/t8_forest/t8_gtest_ghost_exchange \
+  test/t8_forest/t8_gtest_ghost_exchange_stdvector \
   test/t8_forest/t8_gtest_ghost_and_owner \
   test/t8_IO/t8_gtest_vtk_reader \
   test/t8_forest_incomplete/t8_gtest_permute_hole \
@@ -209,6 +210,10 @@ test_t8_forest_t8_gtest_transform_SOURCES = \
 test_t8_forest_t8_gtest_ghost_exchange_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_forest/t8_gtest_ghost_exchange.cxx
+
+test_t8_forest_t8_gtest_ghost_exchange_stdvector_SOURCES = \
+  test/t8_gtest_main.cxx \
+  test/t8_forest/t8_gtest_ghost_exchange_stdvector.cxx
 
 test_t8_forest_t8_gtest_ghost_and_owner_SOURCES = \
   test/t8_gtest_main.cxx \
@@ -399,6 +404,10 @@ test_t8_forest_t8_gtest_ghost_exchange_LDADD = $(t8_gtest_target_ld_add)
 test_t8_forest_t8_gtest_ghost_exchange_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_forest_t8_gtest_ghost_exchange_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
+test_t8_forest_t8_gtest_ghost_exchange_stdvector_LDADD = $(t8_gtest_target_ld_add)
+test_t8_forest_t8_gtest_ghost_exchange_stdvector_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_forest_t8_gtest_ghost_exchange_stdvector_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+
 test_t8_forest_t8_gtest_ghost_and_owner_LDADD = $(t8_gtest_target_ld_add)
 test_t8_forest_t8_gtest_ghost_and_owner_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_forest_t8_gtest_ghost_and_owner_CPPFLAGS = $(t8_gtest_target_cpp_flags)
@@ -469,6 +478,7 @@ test_t8_geometry_t8_gtest_point_inside_CPPFLAGS += $(t8_gtest_target_mpi_cpp_fla
 test_t8_forest_t8_gtest_user_data_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_t8_gtest_transform_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_t8_gtest_ghost_exchange_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_forest_t8_gtest_ghost_exchange_stdvector_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_t8_gtest_ghost_and_owner_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_IO_t8_gtest_vtk_reader_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_incomplete_t8_gtest_permute_hole_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
