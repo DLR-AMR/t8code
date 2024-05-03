@@ -54,7 +54,7 @@ class cmesh_hypercube_trees: public testing::TestWithParam<std::tuple<t8_eclass,
   int partition;
 };
 
-/* Test wheater the created cmesh of a hypercube is committed and its are face consistent. Test will fail, if one of these is false. */
+/* Test whether the created cmesh of a hypercube is committed and its are face consistent. Test will fail, if one of these is false. */
 TEST_P (cmesh_hypercube_trees, check_cmesh_and_its_trees)
 {
 
