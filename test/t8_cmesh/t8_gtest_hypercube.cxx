@@ -60,6 +60,7 @@ TEST_P (cmesh_hypercube_trees, check_cmesh_and_its_trees)
 
   EXPECT_TRUE (t8_cmesh_is_committed (cmesh));
   EXPECT_TRUE (t8_cmesh_trees_is_face_consistent (cmesh, cmesh->trees));
+  ASSERT_EQ (t8_cmesh_get_dimension (cmesh), t8_eclass_to_dimension[eclass]) << "Wrong dimension set for cmesh.";
 }
 
 /* Use the testing range for eclass with [T8_ECLASS_ZERO, T8_ECLASS_COUNT]. For the generation of the cmesh with or withaout broadcast
