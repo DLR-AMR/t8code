@@ -2750,8 +2750,8 @@ t8_cmesh_new_quadrangulated_disk (const double radius, sc_MPI_Comm comm)
                                       { 0.0, outer_y, 0.0 },
                                       { outer_x, outer_y, 0.0 } };
   const double vertices_bot[4][3] = { { center_square_tuning * inner_x, 0.0, 0.0 },
-                                      { inner_x, inner_y, 0.0 },
                                       { outer_x, 0.0, 0.0 },
+                                      { inner_x, inner_y, 0.0 },
                                       { outer_x, outer_y, 0.0 } };
 
   int itree = 0;
@@ -3269,12 +3269,12 @@ t8_cmesh_new_cubed_sphere (const double radius, sc_MPI_Comm comm)
                                       { 0.0, outer_y, outer_z },
                                       { outer_x, outer_y, outer_z } };
   const double vertices_bot[8][3] = { { center_hex_tuning * inner_x, 0.0, 0.0 },
-                                      { inner_x, inner_y, 0.0 },
                                       { inner_x, 0.0, inner_z },
+                                      { inner_x, inner_y, 0.0 },
                                       { inner_x, inner_y, inner_z },
                                       { outer_x, 0.0, 0.0 },
-                                      { outer_x, outer_y, 0.0 },
                                       { outer_x, 0.0, outer_z },
+                                      { outer_x, outer_y, 0.0 },
                                       { outer_x, outer_y, outer_z } };
   const double vertices_zen[8][3] = { { 0.0, 0.0, center_hex_tuning * inner_z },
                                       { inner_x, 0.0, inner_z },
