@@ -1,6 +1,6 @@
 title: t8code
-version: 2.0.0-alpha
-date-released: "2024-04-11"
+version: 2.0.0
+date-released: "2024-04-19"
 repository-code: "https://github.com/dlr-amr/t8code"
 url: "https://dlr-amr.github.io/t8code/"
 doi: "10.5281/zenodo.7034838"
@@ -60,6 +60,7 @@ authors:
     family-names: Becker
     email: F.Becker@dlr.de
     affiliation: "German Aerospace Center (DLR)"
+    orcid: "https://orcid.org/0000-0002-8384-9282"
   - given-names: Prasanna 
     family-names: Ponnusamy
     email: "Prasanna.Ponnusamy@dlr.de"
@@ -107,7 +108,7 @@ authors:
   - given-names: Michael
     family-names: Schlottke-Lakemper
     email: m.schlottke-lakemper@acom.rwth-aachen.de
-    affiliation: :RWTH Aachen"
+    affiliation: "RWTH Aachen"
   - given-names: Kathrin
     family-names: Schoenlein
     email: kathrin.schoenlein@dlr.de
