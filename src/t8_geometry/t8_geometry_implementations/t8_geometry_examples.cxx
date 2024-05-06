@@ -53,9 +53,9 @@ t8_geometry_quadrangulated_disk::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t
   const double inv_denominator = 1.0 / t8_vec_dot (r, n);
 
   /* Radial reference coordinate index. */
-  const int r_coord = ((gtreeid - 2 ) % 3 == 0) ? 0 : 1;
+  const int r_coord = ((gtreeid - 2) % 3 == 0) ? 0 : 1;
   /* Angular reference coordinate idex. */
-  const int a_coord = ((gtreeid - 2 ) % 3 == 0) ? 1 : 0;
+  const int a_coord = ((gtreeid - 2) % 3 == 0) ? 1 : 0;
 
   for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
     const size_t offset = 3 * i_coord;

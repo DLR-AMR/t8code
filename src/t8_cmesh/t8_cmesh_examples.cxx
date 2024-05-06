@@ -3229,7 +3229,7 @@ t8_cmesh_new_cubed_sphere (const double radius, sc_MPI_Comm comm)
   const double outer_y = outer_x;
   const double outer_z = outer_x;
 
-  const int nhexs = 4;   /* Number of hexs in the front-upper-right octant. */
+  const int nhexs = 4; /* Number of hexs in the front-upper-right octant. */
 
   const int nzturns = 4; /* Number of turns around z-axis. */
   const int nyturns = 2; /* Number of turns around y-axis. */
