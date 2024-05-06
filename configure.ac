@@ -29,13 +29,26 @@ T8_ARG_ENABLE([debug], [enable debug mode (assertions and extra checks)],
 T8_ARG_ENABLE([less-tests], [uses a fraction of the test cases to speed up development (WARNING: use with care)],
                  [LESS_TESTS])
 
+T8_ARG_ENABLE([fortran], [build the Fortran interfaces and programs of t8code], [FORTRAN])
+
 echo "o---------------------------------------"
 echo "| Checking MPI and related programs"
 echo "o---------------------------------------"
 
-dnl A nonempty second/third argument causes to enable F77+F90/CXX, respectively.
-SC_MPI_CONFIG([T8], [], [yes])
+dnl Check for MPI
+if test "x$T8_ENABLE_FORTRAN" = xno; then
+dnl Enable C++ 
+  SC_MPI_CONFIG([T8], [], [yes])
+else
+dnl Enable C++ and Fortran
+  SC_MPI_CONFIG([T8], [yes], [yes])
+fi
+
 SC_MPI_ENGAGE([T8])
+
+dnl Check for all Fortran related options and features
+T8_CHECK_FORTRAN
+
 # This is needed for compatibility with automake >= 1.12
 m4_ifdef([AM_PROG_AR],[AM_PROG_AR])
 dnl SC_PROG_LINT
@@ -114,6 +127,14 @@ AC_DEFINE_UNQUOTED(CC,          ["${CC}"],          [C compiler])
 AC_DEFINE_UNQUOTED(CFLAGS,      ["${CFLAGS}"],      [C compiler flags])
 AC_DEFINE_UNQUOTED(LDFLAGS,     ["${LDFLAGS}"],     [Linker flags])
 AC_DEFINE_UNQUOTED(LIBS,        ["${LIBS}"],        [Libraries])
+AC_DEFINE_UNQUOTED(CXX,         ["${CXX}"],         [C++ Compiler])
+AC_DEFINE_UNQUOTED(CXXFLAGS,    ["${CXXFLAGS}"],    [C++ Compiler Flags])
+if test "x$T8_ENABLE_FORTRAN" != xno; then
+AC_DEFINE_UNQUOTED(FC,          ["${FC}"],          [FORTRAN Compiler])
+AC_DEFINE_UNQUOTED(F77,         ["${F77}"],         [F77 Compiler])
+AC_DEFINE_UNQUOTED(FFLAGS,      ["${FFLAGS}"],      [FORTRAN Compiler Flags])
+AC_DEFINE_UNQUOTED(FCFLAGS,     ["${FCFLAGS}"],     [FORTRAN Compiler Flags])
+fi
 
 echo "o----------------------------------"
 echo "| Results for t8code are"
@@ -122,6 +143,14 @@ echo "| CPP:         $CPP"
 echo "| CPPFLAGS:    $CPPFLAGS"
 echo "| CC:          $CC"
 echo "| CFLAGS:      $CFLAGS"
+echo "| CXX:         $CXX"
+echo "| CXXFLAGS:    $CXXFLAGS"
+if test "x$T8_ENABLE_FORTRAN" != xno; then
+echo "| FC:          $FC"
+echo "| F77:         $F77"
+echo "| FFLAGS:      $FFLAGS"
+echo "| FCFLAGS:     $FCFLAGS"
+fi
 echo "| LDFLAGS:     $LDFLAGS"
 echo "| LIBS:        $LIBS"
 echo "o----------------------------------"
