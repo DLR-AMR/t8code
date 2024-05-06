@@ -98,7 +98,7 @@ TEST_P (t8_forest_volume, volume_check)
   /* Vertices have a volume of 0. */
   const double control_volume = (eclass == T8_ECLASS_VERTEX) ? 0.0 : (1.0 / global_num_elements);
 
-  ASSERT_EQ (t8_forest_get_dimension(forest), t8_cmesh_get_dimension(t8_forest_get_cmesh(forest)));
+  ASSERT_EQ (t8_forest_get_dimension (forest), t8_cmesh_get_dimension (t8_forest_get_cmesh (forest)));
 
   const t8_locidx_t local_num_trees = t8_forest_get_num_local_trees (forest);
   /* Iterate over all elements. */
