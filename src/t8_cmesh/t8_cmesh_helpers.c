@@ -172,7 +172,6 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const int ntrees, const t8_ecla
             }
 
             /* Store the results. */
-
             conn[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_FACES, 3, itree, iface, 0)] = neigh_itree;
             conn[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_FACES, 3, itree, iface, 1)] = neigh_iface;
             conn[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_FACES, 3, itree, iface, 2)] = orientation;
