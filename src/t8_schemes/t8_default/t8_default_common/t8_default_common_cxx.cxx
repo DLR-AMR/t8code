@@ -191,8 +191,7 @@ t8_default_scheme_common_c::t8_element_is_subelement (const t8_element * elem) c
 }
 
 int
-t8_default_scheme_common_c::t8_element_get_subelement_id (const
-                                                          t8_element * elem)
+t8_default_scheme_common_c::t8_element_get_subelement_id (const t8_element * elem) const
 {
   SC_ABORT ("This function is not implemented for the given scheme.\n");
 }

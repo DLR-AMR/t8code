@@ -769,7 +769,7 @@ struct t8_eclass_scheme
    *  \return the subelement id of elem (0 if elem is no subelement)
    */
   virtual int
-  t8_element_get_subelement_id (const t8_element * elem) = 0;
+  t8_element_get_subelement_id (const t8_element * elem) const = 0;
 
     /** This function refines a parent element into subelements.
    *  Depending on the subelement type, the number of subelements 

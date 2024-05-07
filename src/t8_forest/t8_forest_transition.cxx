@@ -24,6 +24,7 @@
  * In this file, we define the call-back function that is used to construct transition cells.
  */
 
+
 #include "t8_eclass.h"
 #include <t8_forest/t8_forest_balance.h>
 #include <t8_forest/t8_forest_types.h>
@@ -233,7 +234,7 @@ t8_forest_transition_entry (t8_forest_t forest,
                             const int is_family,
                             int num_elements, t8_element_t *elements[])
 {
-  //T8_ASSERT (forest->set_subelements == 1);
+  T8_ASSERT (forest->set_subelements == 1);
   T8_ASSERT (forest->is_transitioned == 0
              && forest->set_from->is_transitioned == 0);
 

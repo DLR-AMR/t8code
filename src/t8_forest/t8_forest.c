@@ -289,7 +289,7 @@ t8_forest_set_transition (t8_forest_t forest, const t8_forest_t set_from,
   }
 
   /* set the forests subelement flag, which is for example used by the LFN routine */
-  //forest->set_subelements = 1;
+  forest->set_subelements = 1;
   forest->is_transitioned;
 }
 
@@ -482,7 +482,6 @@ t8_forest_populate_irregular (t8_forest_t forest)
   t8_forest_set_cmesh (forest_zero, forest->cmesh, forest->mpicomm);
   t8_forest_set_scheme (forest_zero, forest->scheme_cxx);
   t8_forest_commit (forest_zero);
-
   /* Up to the specified level we refine every element. */
   for (int i = 1; i <= forest->set_level; i++) {
     t8_forest_init (&forest_tmp);
@@ -637,7 +636,7 @@ t8_forest_commit (t8_forest_t forest)
           t8_forest_untransition(forest);
           T8_ASSERT (!t8_forest_is_transitioned (forest));
         }
-        
+
         t8_forest_adapt (forest);
       }
     }
@@ -1666,6 +1665,6 @@ t8_forest_unref (t8_forest_t *pforest)
   T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (forest != NULL);
   if (t8_refcount_unref (&forest->rc)) {
-    t8_forest_reset (pforest);
+      t8_forest_reset (pforest);
   }
 }
