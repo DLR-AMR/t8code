@@ -23,6 +23,7 @@
 #include <gtest/gtest.h>
 #include <test/t8_gtest_macros.hxx>
 #include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
@@ -56,7 +57,7 @@ class cmesh_vertex_conn_ttv: public testing::TestWithParam<cmesh_example_base *>
       for (t8_locidx_t ientry = start_index; ientry < num_tree_vertices; ++ientry) {
         global_indices[ientry] = ientry;
       }
-      ttv.set_global_vertex_ids_of_tree_vertices (cmesh, itree, global_indices, num_tree_vertices);
+      t8_cmesh_set_global_vertices_of_tree (cmesh, itree, global_indices, num_tree_vertices);
       /* It is save to free the entries after commit, since the value got copied. */
       T8_FREE (global_indices);
     }
@@ -86,12 +87,12 @@ TEST_P (cmesh_vertex_conn_ttv, DISABLED_get_global)
     const int num_tree_vertices = t8_eclass_num_vertices[tree_class];
 
     /* Get all vertices */
-    const t8_gloidx_t *global_vertices = ttv.get_global_vertices (cmesh, itree, num_tree_vertices);
+    const t8_gloidx_t *global_vertices = t8_cmesh_get_global_vertices_of_tree (cmesh, itree, num_tree_vertices);
 
     const t8_gloidx_t start_index = itree * T8_ECLASS_MAX_CORNERS;
     for (int ivertex = 0; ivertex < num_tree_vertices; ++ivertex) {
       /* Get the stored global vertex id */
-      const t8_gloidx_t global_vertex = ttv.get_global_vertex (cmesh, itree, ivertex, num_tree_vertices);
+      const t8_gloidx_t global_vertex = t8_cmesh_get_global_vertex_of_tree (cmesh, itree, ivertex, num_tree_vertices);
       /* Check value */
       EXPECT_EQ (global_vertex, start_index + ivertex);
       EXPECT_EQ (global_vertices[ivertex], start_index + ivertex);
@@ -127,7 +128,7 @@ class cmesh_vertex_conn_ttv_temp: public testing::TestWithParam<std::tuple<t8_gl
       for (t8_locidx_t ientry = 0; ientry < num_tree_vertices; ++ientry) {
         global_indices[ientry] = start_index + ientry;
       }
-      ttv.set_global_vertex_ids_of_tree_vertices (cmesh, itree, global_indices, num_tree_vertices);
+      t8_cmesh_set_global_vertices_of_tree (cmesh, itree, global_indices, num_tree_vertices);
       /* It is save to free the entries after commit, since the value got copied. */
       T8_FREE (global_indices);
     }
@@ -164,13 +165,13 @@ TEST_P (cmesh_vertex_conn_ttv_temp, get_global)
     const int num_tree_vertices = t8_eclass_num_vertices[tree_class];
 
     /* Get all vertices */
-    const t8_gloidx_t *global_vertices = ttv.get_global_vertices (cmesh, itree, num_tree_vertices);
+    const t8_gloidx_t *global_vertices = t8_cmesh_get_global_vertices_of_tree (cmesh, itree, num_tree_vertices);
 
     const t8_gloidx_t global_tree_id = t8_cmesh_get_global_id (cmesh, itree);
     const t8_gloidx_t start_index = global_tree_id * T8_ECLASS_MAX_CORNERS;
     for (int ivertex = 0; ivertex < num_tree_vertices; ++ivertex) {
       /* Get the stored global vertex id */
-      const t8_gloidx_t global_vertex = ttv.get_global_vertex (cmesh, itree, ivertex, num_tree_vertices);
+      const t8_gloidx_t global_vertex = t8_cmesh_get_global_vertex_of_tree (cmesh, itree, ivertex, num_tree_vertices);
       /* Check value */
       EXPECT_EQ (global_vertex, start_index + ivertex);
       EXPECT_EQ (global_vertices[ivertex], start_index + ivertex);
