@@ -38,8 +38,9 @@
 
 #include <t8_schemes/t8_transition/t8_transition_cxx.hxx>
 
-#include "t8_schemes/t8_default/t8_default_line/t8_default_line_cxx.hxx"
-#include "t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.hxx"
+#include <t8_schemes/t8_default/t8_default_line/t8_default_line_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_tri/t8_default_tri_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.hxx>
 
 /** The structure holding a quadrilateral element in the default scheme.
  * We make this definition public for interoperability of element classes.
@@ -120,7 +121,7 @@ typedef t8_quad_with_subelements t8_pquad_t;
 t8_eclass_scheme_t *t8_subelement_scheme_new_quad (void);
 #endif
 
-struct t8_subelement_scheme_quad_c:public t8_default_scheme_common_c
+struct t8_subelement_scheme_quad_c: public t8_default_scheme_common_c
 {
 public:
   /** The virtual table for a particular implementation of an element class. */
@@ -135,9 +136,6 @@ public:
    */
   virtual void        t8_element_new (int length, t8_element_t **elem) const;
 
-  /** Initialize an array of allocated elements. */
-  virtual void        t8_element_init (int length, t8_element_t *elem,
-                                       int called_new) const;
 
 /** Return the maximum level allowed for this element class. */
   virtual int         t8_element_maxlevel (void) const;
@@ -247,7 +245,7 @@ public:
                                               int level) const;
 
 /** Return nonzero if collection of elements is a family */
-  virtual int         t8_element_is_family (t8_element_t **fam) const;
+  virtual int         t8_element_is_family (t8_element_t *const *fam) const;
 
 /** Construct the nearest common ancestor of two elements in the same tree. */
   virtual void        t8_element_nca (const t8_element_t *elem1,
@@ -368,7 +366,7 @@ public:
 
 /** Compute s as a successor of t*/
   virtual void        t8_element_successor (const t8_element_t *t,
-                                            t8_element_t *s, int level) const;
+                                            t8_element_t *s) const;
 
 /** Get the integer coordinates of the anchor node of an element */
   virtual void        t8_element_anchor (const t8_element_t *elem,
@@ -392,10 +390,8 @@ public:
  * \param [in] user_data    User data.
  * \param [out] out_coords  The coordinates of the point in the reference space of the tree.
  */
-  virtual void        t8_element_reference_coords (const t8_element_t *elem,
-                                                   const double *ref_coords,
-                                                   const void *user_data,
-                                                   double *out_coords)
+  virtual void        t8_element_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
+                               double *out_coords)
     const;
 
 /** Construct a transition cell of type type */
@@ -417,7 +413,7 @@ public:
                                                       t8_element * elem);
 
 /** Get the subelement id of elem */
-  virtual int         t8_element_get_subelement_id (const t8_element * elem);
+  virtual int         t8_element_get_subelement_id (const t8_element * elem) const;
 
 /** Get the subelement id of the neighbor subelement of elem at face elem_face
  * that is a sibling of the subelement neigh. 
@@ -464,8 +460,42 @@ public:
    */
   virtual void        t8_element_vertex_reference_coords (const t8_element_t
                                                           *t, int vertex,
-                                                          double coords[])
-    const;
+                                                          double coords[]) const;
+
+    /** Check if two elements are equal.
+  * \param [in] ts     Implementation of a class scheme.
+  * \param [in] elem1  The first element.
+  * \param [in] elem2  The second element.
+  * \return            1 if the elements are equal, 0 if they are not equal
+  */
+  virtual int
+  t8_element_equal (const t8_element_t *elem1, const t8_element_t *elem2) const;
+
+   /** Fills an element with the root element.
+  * \param [in,out] elem   The element to be filled with root.
+  */
+  void
+  t8_element_root (t8_element_t *elem) const;
+
+  /** Initialize an array of allocated quads/subelements.
+   * \param [in] length   The number of hex to be initialized.
+   * \param [in,out] elems On input an array of \b length many allocated
+   *                       elements.
+   * \param [in] called_new True if the elements in \a elem were created by a call
+   *                       to \ref t8_element_new. False if no element in \a elem
+   *                       was created in this way. The case that only some elements
+   *                       were created by \ref t8_element_new should never occur.
+   * \note In debugging mode, an element that was passed to \ref t8_element_init
+   * must pass \ref t8_element_is_valid.
+   * \note If an element was created by \ref t8_element_new then \ref t8_element_init
+   * may not be called for it. Thus, \ref t8_element_new should initialize an element
+   * in the same way as a call to \ref t8_element_init would.
+   * Thus, if \a called_new is true this function should usually do nothing.
+   * \see t8_element_new
+   * \see t8_element_is_valid
+   */
+  virtual void
+  t8_element_init (int length, t8_element_t *elem) const;
 
 #ifdef T8_ENABLE_DEBUG
 /** TODO: this should be the new element_print_element funciton */
@@ -473,6 +503,17 @@ public:
 
 /** Query whether an element is valid */
   virtual int         t8_element_is_valid (const t8_element_t *t) const;
+
+    /**
+  * Print a given element. For a example for a triangle print the coordinates
+  * and the level of the triangle. This function is only available in the
+  * debugging configuration. 
+  * 
+  * \param [in]        elem  The element to print
+  */
+  virtual void
+  t8_element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const;
+  
 #endif
 
 protected:
@@ -530,6 +571,30 @@ protected:
    */
   void                t8_element_reset_subelement_values (t8_element_t *elem)
     const;
+
+  virtual void
+  t8_element_MPI_Pack (t8_element_t **const elements, const unsigned int count, void *send_buffer, int buffer_size,
+                       int *position, sc_MPI_Comm comm) const;
+
+  /** Determine an upper bound for the size of the packed message of \b count elements
+   * \param [in] count Number of elements to pack
+   * \param [in] comm MPI Communicator
+   * \param [out] pack_size upper bound on the message size
+  */
+  virtual void
+  t8_element_MPI_Pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size) const;
+
+  /** Unpack multiple elements from contiguous memory that was received via MPI.
+   * \param [in] recvbuf Buffer from which to unpack the elements
+   * \param [in] buffer_size size of the buffer (in order to check that we don't access out of range)
+   * \param [in, out] position the position of the first byte that is not already packed
+   * \param [in] elements Array of initialised elements that is to be filled from the message
+   * \param [in] count Number of elements to unpack
+   * \param [in] comm MPI Communicator
+  */
+  virtual void
+  t8_element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements,
+                         const unsigned int count, sc_MPI_Comm comm) const;
 
 #ifdef T8_ENABLE_DEBUG
   /** Query whether an elements subelement values are valid

@@ -555,7 +555,7 @@ t8_subelement_scheme_quad_c::t8_element_ancestor_id (const t8_element_t *elem,
 }
 
 int
-t8_subelement_scheme_quad_c::t8_element_is_family (t8_element_t **fam) const
+t8_subelement_scheme_quad_c::t8_element_is_family (t8_element_t *const *fam) const
 {
   /* Note that this test is very rudimentary, especially when there subelements are in fam */
   t8_quad_with_subelements **pquad_w_sub_family =
@@ -693,8 +693,7 @@ t8_subelement_scheme_quad_c::t8_element_last_descendant (const t8_element_t
 
 void
 t8_subelement_scheme_quad_c::t8_element_successor (const t8_element_t *elem1,
-                                                   t8_element_t *elem2,
-                                                   int level) const
+                                                   t8_element_t *elem2) const
 {
   const t8_quad_with_subelements *pquad_w_sub_elem1 =
     (const t8_quad_with_subelements *) elem1;
@@ -711,12 +710,12 @@ t8_subelement_scheme_quad_c::t8_element_successor (const t8_element_t *elem1,
 
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
-  T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
+  T8_ASSERT (0 <= t8_element_level (elem1) && t8_element_level (elem1) <= P4EST_QMAXLEVEL);
 
-  id = p4est_quadrant_linear_id (q, level);
-  T8_ASSERT (id + 1 < ((t8_linearidx_t) 1) << P4EST_DIM * level);
+  id = p4est_quadrant_linear_id (q, t8_element_level (elem1));
+  T8_ASSERT (id + 1 < ((t8_linearidx_t) 1) << P4EST_DIM * t8_element_level (elem1));
   t8_element_reset_subelement_values (elem2);
-  p4est_quadrant_set_morton (r, level, id + 1);
+  p4est_quadrant_set_morton (r, t8_element_level (elem1), id + 1);
   t8_element_copy_surround (q, r);
 }
 
@@ -1506,13 +1505,8 @@ t8_subelement_scheme_quad_c::t8_element_refines_irregular () const
 }
 
 void
-t8_subelement_scheme_quad_c::t8_element_reference_coords (const t8_element_t
-                                                          *elem,
-                                                          const double
-                                                          *ref_coords,
-                                                          const void
-                                                          *user_data,
-                                                          double *out_coords)
+t8_subelement_scheme_quad_c::t8_element_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
+                               double *out_coords)
   const
 {
   SC_ABORT ("This function is not implemented for the given scheme.\n");
@@ -1941,8 +1935,7 @@ t8_subelement_scheme_quad_c::t8_element_get_transition_type (const
 }
 
 int
-t8_subelement_scheme_quad_c::t8_element_get_subelement_id (const
-                                                           t8_element * elem)
+t8_subelement_scheme_quad_c::t8_element_get_subelement_id (const t8_element * elem) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
 
@@ -2338,15 +2331,14 @@ t8_subelement_scheme_quad_c::t8_element_new (int length, t8_element_t **elem) co
   for (elem_count = 0; elem_count < length; elem_count++) {
     t8_quad_with_subelements *pquad_w_sub =
       (t8_quad_with_subelements *) elem[elem_count];
-    t8_element_init (1, elem[elem_count], 0);
+    t8_element_init (1, elem[elem_count]);
     /* set dimension of quad to 2 */
     T8_QUAD_SET_TDIM ((p4est_quadrant_t *) & pquad_w_sub->p4q, 2);
   }
 }
 
 void
-t8_subelement_scheme_quad_c::t8_element_init (int length, t8_element_t *elem,
-                                              int new_called) const
+t8_subelement_scheme_quad_c::t8_element_init (int length, t8_element_t *elem) const
 {
   t8_quad_with_subelements *pquad_w_sub = (t8_quad_with_subelements *) elem;
 
@@ -2360,11 +2352,12 @@ t8_subelement_scheme_quad_c::t8_element_init (int length, t8_element_t *elem,
 #ifdef T8_ENABLE_DEBUG
     /* In debugging mode we iterate over all length many elements and 
      * set their quad to the level 0 quad with ID 0. */
-    if (!new_called) {
       p4est_quadrant_t   *quad = &pquad_w_sub[elem_count].p4q;
-      p4est_quadrant_set_morton (quad, 0, 0);
-      T8_QUAD_SET_TDIM (quad, 2);
-      T8_ASSERT (p4est_quadrant_is_extended (quad));
+  /* Set all values to 0 */
+    for (int i = 0; i < length; i++) {
+      p4est_quadrant_set_morton (quad + i, 0, 0);
+      T8_QUAD_SET_TDIM (quad + i, 2);
+      T8_ASSERT (p4est_quadrant_is_extended (quad + i));
     }
 #endif
   }
@@ -2381,6 +2374,85 @@ t8_subelement_scheme_quad_c::t8_element_transition_scheme_is_conformal (void)
 {
   return T8_QUAD_TRANSITION_SCHEME_IS_CONFORMAL;
 }
+
+int
+t8_subelement_scheme_quad_c::t8_element_equal (const t8_element_t *elem1, const t8_element_t *elem2) const{
+
+  if(t8_element_get_subelement_id((const t8_element_t * ) elem1) == t8_element_get_subelement_id((const t8_element_t *) elem2)){
+    return 1;
+  }
+else{
+  return 0;
+}
+}
+
+void
+t8_subelement_scheme_quad_c::t8_element_root (t8_element_t *elem) const {
+     SC_ABORT_NOT_REACHED();
+  }
+
+
+
+void
+t8_subelement_scheme_quad_c::t8_element_MPI_Pack (t8_element_t **const elements, const unsigned int count,
+                                               void *send_buffer, const int buffer_size, int *position,
+                                               sc_MPI_Comm comm) const
+{
+  SC_ABORT_NOT_REACHED();
+
+  // int mpiret;
+  // p4est_quadrant_t **quads = (p4est_quadrant_t **) elements;
+  // for (unsigned int ielem = 0; ielem < count; ielem++) {
+  //   mpiret = sc_MPI_Pack (&(quads[ielem]->x), 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
+  //   SC_CHECK_MPI (mpiret);
+  //   mpiret = sc_MPI_Pack (&quads[ielem]->y, 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
+  //   SC_CHECK_MPI (mpiret);
+  //   mpiret = sc_MPI_Pack (&quads[ielem]->level, 1, sc_MPI_INT8_T, send_buffer, buffer_size, position, comm);
+  //   SC_CHECK_MPI (mpiret);
+  // }
+}
+
+/* each quad is packed as x,y coordinates and the level */
+void
+t8_subelement_scheme_quad_c::t8_element_MPI_Pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size) const
+{
+  SC_ABORT_NOT_REACHED();
+  // int singlesize = 0;
+  // int datasize = 0;
+  // int mpiret;
+
+  // /* x,y */
+  // mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &datasize);
+  // SC_CHECK_MPI (mpiret);
+  // singlesize += 2 * datasize;
+
+  // /* level */
+  // mpiret = sc_MPI_Pack_size (1, sc_MPI_INT8_T, comm, &datasize);
+  // SC_CHECK_MPI (mpiret);
+  // singlesize += datasize;
+
+  // *pack_size = count * singlesize;
+}
+
+/* each quad is packed as x,y coordinates and the level */
+void
+t8_subelement_scheme_quad_c::t8_element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position,
+                                                 t8_element_t **elements, const unsigned int count,
+                                                 sc_MPI_Comm comm) const
+{
+  SC_ABORT_NOT_REACHED();
+  // int mpiret;
+  // p4est_quadrant_t **quads = (p4est_quadrant_t **) elements;
+  // for (unsigned int ielem = 0; ielem < count; ielem++) {
+  //   mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem]->x), 1, sc_MPI_INT, comm);
+  //   SC_CHECK_MPI (mpiret);
+  //   mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem]->y), 1, sc_MPI_INT, comm);
+  //   SC_CHECK_MPI (mpiret);
+  //   mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem]->level), 1, sc_MPI_INT8_T, comm);
+  //   SC_CHECK_MPI (mpiret);
+  // }
+}
+
 
 #ifdef T8_ENABLE_DEBUG
 void
@@ -2440,6 +2512,11 @@ t8_subelement_scheme_quad_c::t8_element_subelement_values_are_valid (const
     ((pquad_w_sub->subelement_id >= 0 &&
       pquad_w_sub->subelement_id <= T8_SUB_QUAD_MAX_SUBELEMENT_ID)
      || pquad_w_sub->subelement_id == 0);
+}
+
+void
+t8_subelement_scheme_quad_c::t8_element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const{
+  SC_ABORT_NOT_REACHED();
 }
 #endif
 

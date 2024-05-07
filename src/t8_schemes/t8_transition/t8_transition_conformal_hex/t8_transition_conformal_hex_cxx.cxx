@@ -1068,7 +1068,7 @@ t8_subelement_scheme_hex_c::t8_element_ancestor_id (const t8_element_t *elem,
 }
 
 int
-t8_subelement_scheme_hex_c::t8_element_is_family (t8_element_t **fam) const
+t8_subelement_scheme_hex_c::t8_element_is_family (t8_element_t *const *fam) const
 {
   /* Note that this test is very rudimentary, especially when there subelements are in fam */
   t8_hex_with_subelements **phex_w_sub_family =
@@ -1219,8 +1219,7 @@ t8_subelement_scheme_hex_c::t8_element_last_descendant (const t8_element_t
 
 void
 t8_subelement_scheme_hex_c::t8_element_successor (const t8_element_t *elem1,
-                                                   t8_element_t *elem2,
-                                                   int level) const
+                                                   t8_element_t *elem2) const
 {
   const t8_hex_with_subelements *phex_w_sub_elem1 =
     (const t8_hex_with_subelements *) elem1;
@@ -1237,7 +1236,7 @@ t8_subelement_scheme_hex_c::t8_element_successor (const t8_element_t *elem1,
 
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
-  T8_ASSERT (0 <= level && level <= P8EST_OLD_QMAXLEVEL);
+  T8_ASSERT (0 <= t8_element_level (elem1) && t8_element_level (elem1) <= P8EST_OLD_QMAXLEVEL);
   p8est_quadrant_successor ((p8est_quadrant_t *) elem1,
                             (p8est_quadrant_t *) elem2);
 }
@@ -2017,13 +2016,7 @@ t8_subelement_scheme_hex_c::t8_element_refines_irregular () const
 }
 
 void
-t8_subelement_scheme_hex_c::t8_element_reference_coords (const t8_element_t
-                                                          *elem,
-                                                          const double
-                                                          *ref_coords,
-                                                          const void
-                                                          *user_data,
-                                                          double *out_coords)
+t8_subelement_scheme_hex_c::t8_element_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords, double *out_coords)
   const
 {
   SC_ABORT ("This function is not implemented for the given scheme.\n");
@@ -2672,8 +2665,7 @@ t8_subelement_scheme_hex_c::t8_element_get_transition_type (const
 }
 
 int
-t8_subelement_scheme_hex_c::t8_element_get_subelement_id (const
-                                                           t8_element * elem)
+t8_subelement_scheme_hex_c::t8_element_get_subelement_id (const t8_element * elem) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
 
@@ -2728,7 +2720,10 @@ t8_subelement_scheme_hex_c::t8_element_find_neighbor_in_transition_cell
   /* Below are the cases in which the neighbor is no sibling. 
    * The idea is to fill a location array with the desired properties of the real neighbor. 
    * Togehter with the type of the transition cell of pseudo_neigh, we can then identify the sub_id of the right neighbor. */
-
+  /* get the location of elem */
+    int
+    location_elem[3] = { };     /* {face, is_split, number of subelement at face} */
+    t8_element_get_location_of_subelement (elem, location_elem);
   //Case 2: The element is  a subelement and we are looking for a face neighbor at face 4. 
   if (t8_element_is_subelement(elem)) {
 
@@ -2748,10 +2743,6 @@ t8_subelement_scheme_hex_c::t8_element_find_neighbor_in_transition_cell
      * We are searching for the subelement id of the real neighbor neigh. 
      * Note that both transition cells can have different levels. */
 
-    /* get the location of elem */
-    int
-    location_elem[3] = { };     /* {face, is_split, number of subelement at face} */
-    t8_element_get_location_of_subelement (elem, location_elem);
 
     /* Initialize the location array of the real neighbor. */
     int
@@ -2984,14 +2975,13 @@ t8_subelement_scheme_hex_c::t8_element_new (int length, t8_element_t **elem) con
   for (elem_count = 0; elem_count < length; elem_count++) {
     t8_hex_with_subelements *phex_w_sub =
       (t8_hex_with_subelements *) elem[elem_count];
-    t8_element_init (1, elem[elem_count], 0);
+    t8_element_init (1, elem[elem_count]);
      T8_QUAD_SET_TDIM ((p8est_quadrant_t *) & phex_w_sub->p8q, 3);
   }
 }
 
 void
-t8_subelement_scheme_hex_c::t8_element_init (int length, t8_element_t *elem,
-                                              int new_called) const
+t8_subelement_scheme_hex_c::t8_element_init (int length, t8_element_t *elem) const
 {
   t8_hex_with_subelements *phex_w_sub = (t8_hex_with_subelements *) elem;
 
@@ -3005,11 +2995,11 @@ t8_subelement_scheme_hex_c::t8_element_init (int length, t8_element_t *elem,
 #ifdef T8_ENABLE_DEBUG
     /* In debugging mode we iterate over all length many elements and 
      * set their hex to the level 0 hex with ID 0. */
-    if (!new_called) {
-      p8est_quadrant_t   *hex = &phex_w_sub[elem_count].p8q;
-      p8est_quadrant_set_morton (hex, 0, 0);
-      T8_QUAD_SET_TDIM (hex, 3);
-      T8_ASSERT (p8est_quadrant_is_extended (hex));
+    p8est_quadrant_t   *hex = &phex_w_sub[elem_count].p8q;
+    for (int i = 0; i < length; i++) {
+      p8est_quadrant_set_morton (hex + i, 0, 0);
+      T8_QUAD_SET_TDIM (hex + i, 3);
+      T8_ASSERT (p8est_quadrant_is_extended (hex + i));
     }
 #endif
   }
@@ -3027,6 +3017,27 @@ t8_subelement_scheme_hex_c::t8_element_transition_scheme_is_conformal (void)
   return T8_HEX_TRANSITION_SCHEME_IS_CONFORMAL;
 }
 
+int
+t8_subelement_scheme_hex_c::t8_element_equal (const t8_element_t *elem1, const t8_element_t *elem2) const{
+
+  if(t8_element_get_subelement_id((const t8_element * ) elem1) == t8_element_get_subelement_id((const t8_element * ) elem2)){
+    return 1;
+  }
+else{
+  return 0;
+}
+}
+
+void
+t8_subelement_scheme_hex_c::t8_element_root (t8_element_t *elem) const{
+    SC_ABORT_NOT_REACHED();
+  }
+
+
+// void
+// t8_subelement_scheme_hex_c::t8_element_init (int length, t8_element_t *elem) const{
+//   SC_ABORT_NOT_REACHED();
+// }
 #ifdef T8_ENABLE_DEBUG
 void
 t8_subelement_scheme_hex_c::t8_element_debug_print (const t8_element_t *elem) const
@@ -3068,6 +3079,7 @@ t8_subelement_scheme_hex_c::t8_element_is_valid (const t8_element_t * elem) cons
           && t8_element_subelement_values_are_valid (elem));
 }
 
+
 /* *INDENT-OFF* */
 /* indent bug, indent adds a second "const" modifier */
 int
@@ -3086,7 +3098,76 @@ t8_subelement_scheme_hex_c::t8_element_subelement_values_are_valid (const
     ((phex_w_sub->subelement_id >= 0 &&
       phex_w_sub->subelement_id <= T8_SUB_HEX_MAX_SUBELEMENT_ID)));
 }
+
+void
+t8_subelement_scheme_hex_c::t8_element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const{
+  SC_ABORT_NOT_REACHED();
+}
 #endif
+
+/* each hex is packed as x,y,z coordinates and the level */
+void
+t8_subelement_scheme_hex_c::t8_element_MPI_Pack (t8_element_t **const elements, const unsigned int count,
+                                              void *send_buffer, const int buffer_size, int *position,
+                                              sc_MPI_Comm comm) const
+{
+  SC_ABORT_NOT_REACHED();
+  // int mpiret;
+  // p8est_quadrant_t **quads = (p8est_quadrant_t **) elements;
+  // for (unsigned int ielem = 0; ielem < count; ielem++) {
+  //   mpiret = sc_MPI_Pack (&(quads[ielem]->x), 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
+  //   SC_CHECK_MPI (mpiret);
+  //   mpiret = sc_MPI_Pack (&quads[ielem]->y, 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
+  //   SC_CHECK_MPI (mpiret);
+  //   mpiret = sc_MPI_Pack (&quads[ielem]->z, 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
+  //   SC_CHECK_MPI (mpiret);
+  //   mpiret = sc_MPI_Pack (&quads[ielem]->level, 1, sc_MPI_INT8_T, send_buffer, buffer_size, position, comm);
+  //   SC_CHECK_MPI (mpiret);
+  // }
+}
+
+/* each hex is packed as x,y,z coordinates and the level */
+void
+t8_subelement_scheme_hex_c::t8_element_MPI_Pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size) const
+{
+  SC_ABORT_NOT_REACHED();
+  // int singlesize = 0;
+  // int datasize = 0;
+  // int mpiret;
+
+  // /* x,y,z */
+  // mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &datasize);
+  // SC_CHECK_MPI (mpiret);
+  // singlesize += 3 * datasize;
+
+  // /* level */
+  // mpiret = sc_MPI_Pack_size (1, sc_MPI_INT8_T, comm, &datasize);
+  // SC_CHECK_MPI (mpiret);
+  // singlesize += datasize;
+
+  // *pack_size = count * singlesize;
+}
+
+/* each hex is packed as x,y,z coordinates and the level */
+void
+t8_subelement_scheme_hex_c::t8_element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position,
+                                                t8_element_t **elements, const unsigned int count,
+                                                sc_MPI_Comm comm) const
+{
+  SC_ABORT_NOT_REACHED();
+  // int mpiret;
+  // p8est_quadrant_t **quads = (p8est_quadrant_t **) elements;
+  // for (unsigned int ielem = 0; ielem < count; ielem++) {
+  //   mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem]->x), 1, sc_MPI_INT, comm);
+  //   SC_CHECK_MPI (mpiret);
+  //   mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem]->y), 1, sc_MPI_INT, comm);
+  //   SC_CHECK_MPI (mpiret);
+  //   mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem]->z), 1, sc_MPI_INT, comm);
+  //   SC_CHECK_MPI (mpiret);
+  //   mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem]->level), 1, sc_MPI_INT8_T, comm);
+  //   SC_CHECK_MPI (mpiret);
+  // }
+}
 
 /* Constructor */
 t8_subelement_scheme_hex_c::t8_subelement_scheme_hex_c (void)
