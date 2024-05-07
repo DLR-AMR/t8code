@@ -88,7 +88,7 @@ typedef t8_hex_with_subelements t8_phex_sub_t;
 #define T8_HEX_TRANSITION_SCHEME_IS_CONFORMAL 1
 
 /** Return the toplevel dimension. */
-//#define T8_QUAD_GET_TDIM(quad) ((int) (quad)->pad8)
+#define T8_QUAD_GET_TDIM(quad) ((int) (quad)->pad8)
 
 /** Return the direction of the third dimension.
  * This is only valid to call if the toplevel dimension is three.
@@ -119,12 +119,11 @@ typedef t8_hex_with_subelements t8_phex_sub_t;
   do { (quad)->p.user_long = (long) (coord); } while (0)
 
 #if 0
-/** Provide an implementation for the HEXrilateral element class with subelements. */
+/** Provide an implementation for the hexahedral element class with subelements. */
 t8_eclass_scheme_t *t8_subelement_scheme_new_hex (void);
 #endif
 
 
-// Die Klasse t8_subelement_scheme_HEX_c erbt von der Klasse t8_default_scheme_common_c
 struct t8_subelement_scheme_hex_c:public t8_default_scheme_common_c
 {
 public:
@@ -139,10 +138,6 @@ public:
    * In debugging mode, ensure that all elements are valid \ref t8_element_is_valid.
    */
   virtual void        t8_element_new (int length, t8_element_t **elem) const;
-
-  // /** Initialize an array of allocated elements. */
-  // virtual void        t8_element_init (int length, t8_element_t *elem,
-  //                                      int called_new) const;
 
 /** Return the maximum level allowed for this element class. */
   virtual int         t8_element_maxlevel (void) const;

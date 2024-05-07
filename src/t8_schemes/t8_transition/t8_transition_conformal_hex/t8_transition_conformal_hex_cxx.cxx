@@ -364,8 +364,6 @@ t8_subelement_scheme_hex_c::t8_element_get_num_sibling_neighbors_at_face (const 
  const t8_hex_with_subelements *hex_w_sub =
     (const t8_hex_with_subelements *) elem;
 
-
-  const t8_element_t *elem2 = (const t8_element *) elem;
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_subelement (elem));
   T8_ASSERT (face == 0 || face == 1 || face == 2 || face == 3);
@@ -501,8 +499,6 @@ t8_subelement_scheme_hex_c::t8_element_get_sibling_neighbor_in_transition_cell_h
   //iterator variable
   int iter;
   //Get information about the location of the subelement.
-  int
-    num_siblings = t8_element_num_siblings (elem);
   int                 location[3] = { };
   // location[0] = face_number of transition cell, location[1] = if split or not ( 1 = split ), location[2] = sub_id
     t8_element_get_location_of_subelement (elem, location);
@@ -512,7 +508,6 @@ t8_subelement_scheme_hex_c::t8_element_get_sibling_neighbor_in_transition_cell_h
   int transition_type_tmp = 0;
   int amount_subelements = 0;
   int transition_type = t8_element_get_transition_type(elem);
-  int subelement_id = t8_element_get_subelement_id(elem);
   int neigh_hex_face;
   int hlp;
 
@@ -826,7 +821,7 @@ phex_w_sub_neighbor_at_face->subelement_id = subelement_id_tmp;
       neigh_face[0] = subelement_location_to_parent_dual_face[face];
       phex_w_sub_neighbor_at_face->subelement_id = subelement_id_tmp;
 
-if( hlp = 0 ){ //if the neighbor lies not on the same hex face as elem
+if(hlp == 0){ //if the neighbor lies not on the same hex face as elem
       //get hex_face_number of the face_neighbored subelement
       neigh_face[0] = subelement_face_dual[location[0]][face];
       
@@ -934,7 +929,7 @@ if( hlp = 0 ){ //if the neighbor lies not on the same hex face as elem
                 subelement_id_tmp = amount_subelements - 1;                     
                 }
             }
-            if(location[2] & 1 == 0){//down   
+            if((location[2] & 1) == 0){//down   
               if(location[0] == 2){ // we are at hex_face 2
                 subelement_id_tmp = amount_subelements - 4;                    
               }
@@ -955,21 +950,21 @@ if( hlp = 0 ){ //if the neighbor lies not on the same hex face as elem
         //same for face = 2
         if(face == 3 || face == 2){
             //We have to distinguish if the element is in the front or back.
-            if((location[2] & 4) == 1){//left
-              if(location[0] == 2){ // we are at hex_face 2
-                subelement_id_tmp = amount_subelements - 4;                     
-              }
-              if(location[0] == 3){
-                subelement_id_tmp = amount_subelements - 2;                     
-              }
-            }
-            else{//right
+            if((location[2] & 4) == 0){//right
               if(location[0] == 2){ // we are at hex_face 2
                 subelement_id_tmp = amount_subelements - 3;                     
                 }
               if(location[0] == 3){
                 subelement_id_tmp = amount_subelements - 1;                     
                 }
+            }
+            else{//left
+              if(location[0] == 2){ // we are at hex_face 2
+                subelement_id_tmp = amount_subelements - 4;                     
+              }
+              if(location[0] == 3){
+                subelement_id_tmp = amount_subelements - 2;                     
+              }
             }
               
           }  
@@ -1211,16 +1206,6 @@ void
 t8_subelement_scheme_hex_c::t8_element_successor (const t8_element_t *elem1,
                                                    t8_element_t *elem2) const
 {
-  const t8_hex_with_subelements *phex_w_sub_elem1 =
-    (const t8_hex_with_subelements *) elem1;
-  t8_hex_with_subelements *phex_w_sub_elem2 =
-    (t8_hex_with_subelements *) elem2;
-
-  const p8est_quadrant_t *q = &phex_w_sub_elem1->p8q;
-  p8est_quadrant_t   *r = &phex_w_sub_elem2->p8q;
-
-  t8_linearidx_t      id;
-
   /* this function is not implemented for subelements */
   T8_ASSERT (!t8_element_is_subelement (elem1));
 
@@ -2442,11 +2427,6 @@ t8_subelement_scheme_hex_c::t8_element_get_location_of_subelement (const
     binary_array[(P8EST_FACES - 1) - iface] = (type & (1 << iface)) >> iface;
   }                             /* we now got a binary representation of the transition type, bitwise stored in an array */
 
-  int                 binary_array_temp[P8EST_FACES] = { };
-
-  for (iface = 0; iface < P8EST_FACES; iface++) {       /* copying the binary array */
-    binary_array_temp[iface] = binary_array[iface];
-  }
   /* 3) use the rearranged binary representation, and the sub_id to determine the location of the subelement and store these information in an array */
   /*     3.1) location[0] -> the face_number, the subelement is adjacent to */
   /*     3.2) location[1] -> if the face is split or not */
