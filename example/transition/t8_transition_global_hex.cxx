@@ -22,7 +22,7 @@
 
 /* Description:
  * This is the example file for refinement with transitioning. In this testcase, we are able to
- *     (i)   refine a mesh according to some refinement criterion and use transiton cells to make the mesh conformal
+ *     (i)   refine a mesh according to some refinement criterion and use transition cells to make the mesh conformal
  *     (ii)  use multiple adaptation steps in which the refinement criterion changes (e.g. the geometry)
  *     (iii) decide, whether we want to check the LFN function for each mesh
  *     (iv)  decide, whether we want to get statistics printed out, regarding # of elements in the meshes and runtime infos of the several functions or other debugging information

@@ -66,7 +66,7 @@ t8_forest_transition_conformal_quad (t8_forest_t forest,
     num_faces = ts->t8_element_num_faces (element);
 
     /* We use a binary encoding (depending on the face enumeration), to determine which subelement type to use. 
-     * Every face has a flag parameter, wich is set to 1, if there is a neighbor with a higher level 
+     * Every face has a flag parameter, which is set to 1, if there is a neighbor with a higher level 
      * and to 0, if the level of the neighbor is at most the level of the element.   
      *             
      *              f0                         1
@@ -108,7 +108,7 @@ t8_forest_transition_conformal_quad (t8_forest_t forest,
         if (t8_forest_element_has_leaf_desc (forest_from, neighbor_tree,
                                              face_neighbor[0],
                                              neigh_scheme)) {
-          /* Compute transition type as the decimal represenation of the binary concatenation */
+          /* Compute transition type as the decimal representation of the binary concatenation */
           transition_type += 1 << ((num_faces - 1) - iface);
         }
       }
@@ -155,7 +155,7 @@ t8_forest_transition_conformal_hex (t8_forest_t forest,
 
     /* TODO: Update this comment to HEX. */
     /* We use a binary encoding (depending on the face enumeration), to determine which subelement type to use. 
-     * Every face has a flag parameter, wich is set to 1, if there is a neighbor with a higher level 
+     * Every face has a flag parameter, which is set to 1, if there is a neighbor with a higher level 
      * and to 0, if the level of the neighbor is at most the level of the element.   
      *             
      *              f0                         1
@@ -199,7 +199,7 @@ t8_forest_transition_conformal_hex (t8_forest_t forest,
         if (t8_forest_element_has_leaf_desc (forest_from, neighbor_tree,
                                              face_neighbor[0],
                                              neigh_scheme)) {
-          /* Compute transition type as the decimal represenation of the binary concatenation */
+          /* Compute transition type as the decimal representation of the binary concatenation */
           transition_type += 1 << ((num_faces - 1) - iface);
         }
       }

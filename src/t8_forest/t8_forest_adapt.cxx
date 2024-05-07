@@ -554,7 +554,7 @@ t8_forest_adapt (t8_forest_t forest)
          *                     0 if the element should remain as is
          *                    -1 if we passed a family and it should get coarsened
          *                    -2 if the element should be removed.
-         *                    >1 if the element should be refined into a transtion cell 
+         *                    >1 if the element should be refined into a transition cell 
          */
         refine = forest->set_adapt_fn (forest, forest->set_from, ltree_id, el_considered, tscheme, is_family,
                                        num_elements_to_adapt_callback, elements_from);
@@ -605,7 +605,7 @@ t8_forest_adapt (t8_forest_t forest)
         else if (refine > 1) {
         /* refinement into transition cell */
 
-        /* determing the number of subelements of the given type for memory allocation */
+        /* determine the number of subelements of the given type for memory allocation */
         num_subelements =
           tscheme->t8_element_get_number_of_subelements (refine - 1);
           

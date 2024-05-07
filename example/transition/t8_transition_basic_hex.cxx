@@ -27,7 +27,7 @@
  * 
  * The geometry (coarse mesh) is again a cube, this time modelled with
  * 6 tetrahedra, 6 prisms and 4 cubes.
- * We refine an element if its midpoint is whithin a sphere of given radius
+ * We refine an element if its midpoint is within a sphere of given radius
  * around the point (0.5, 0.5, 1) and we coarsen outside of a given radius.
  * We will use non-recursive refinement, that means that the refinement level
  * of any element will change by at most +-1.
@@ -122,7 +122,7 @@ t8_test_hex_local (t8_element_t *hex_element,
       class_scheme->t8_element_shape (children[child_id]);
 
     num_vertices = t8_eclass_num_vertices[shape];
-    t8_debugf ("Num verticies %i \n", num_vertices);
+    t8_debugf ("Num vertices %i \n", num_vertices);
     T8_ASSERT (num_vertices ==
                class_scheme->t8_element_num_corners (children[child_id]));
 
@@ -149,7 +149,7 @@ t8_test_hex_local (t8_element_t *hex_element,
   T8_FREE (children);
 
   t8_debugf
-    ("~~~~~~~~~~ The t8_test_hex_local function finshed successful ~~~~~~~~~~\n");
+    ("~~~~~~~~~~ The t8_test_hex_local function finished successful ~~~~~~~~~~\n");
 }
 
 
@@ -176,7 +176,7 @@ t8_transition_local (t8_eclass_t eclass)
   class_scheme->t8_element_set_linear_id (hex_element, 0, 0);
   T8_ASSERT (class_scheme->t8_element_is_valid (hex_element));
 
-  /* First, validate some element funcitons for this hex element */
+  /* First, validate some element functions for this hex element */
   t8_test_hex_local (hex_element, class_scheme);
 
   /* Make checks for all transition types */
@@ -256,7 +256,7 @@ t8_transition_local (t8_eclass_t eclass)
   t8_scheme_cxx_unref (&ts);
 
   t8_debugf
-    ("~~~~~~~~~~ The t8_transition_local function finshed successful ~~~~~~~~~~\n");
+    ("~~~~~~~~~~ The t8_transition_local function finished successful ~~~~~~~~~~\n");
 
 }                               /* end of t8_transition_local */
 

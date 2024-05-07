@@ -30,7 +30,7 @@
 
 #include <t8_element_cxx.hxx>
 
-/* This is the unique identifier for the transition fucntion. */
+/* This is the unique identifier for the transition function. */
 
 enum T8_TRANSITION_REFINE_IDENTIFIER {
   T8_TRANSITION_CONFORMAL_ZERO_REFINE_FUNCTION = 0,

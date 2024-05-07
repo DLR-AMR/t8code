@@ -37,7 +37,7 @@
 T8_EXTERN_C_BEGIN ();
 
 /* In this function, use a binary encoding (depending on the face enumeration), to determine which subelement type to use. 
- * Every face has a flag parameter, wich is set to 1, if there is a neighbour with a higher level 
+ * Every face has a flag parameter, which is set to 1, if there is a neighbour with a higher level 
  * and to 0, if the level of the neighbour is at most the level of the element.   
  *             
  *              f0                         1
