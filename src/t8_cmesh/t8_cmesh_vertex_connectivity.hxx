@@ -69,6 +69,9 @@ t8_cmesh_get_num_local_vertices (const t8_cmesh_t);
 const t8_gloidx_t *
 t8_cmesh_get_global_vertices_of_tree (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int num_vertices);
 
+const t8_gloidx_t
+t8_cmesh_get_global_vertex_of_tree (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int local_tree_vertex, const int num_vertices);
+
 const t8_cmesh_vertex_conn_vertex_to_tree_c::tree_vertex_list&
 t8_cmesh_get_vertex_to_tree_list (const t8_cmesh_t cmesh, const t8_gloidx_t global_vertex);
 
@@ -81,6 +84,16 @@ t8_cmesh_get_num_trees_at_vertex (const t8_cmesh_t cmesh, t8_gloidx_t global_ver
 struct t8_cmesh_vertex_connectivity
 {
  public:
+  /**
+   * Constructor.
+   */
+  t8_cmesh_vertex_connectivity (): vertex_to_tree (nullptr), tree_to_vertex (nullptr) {};
+
+  /**
+   * Destructor.
+   */
+  ~t8_cmesh_vertex_connectivity () {};
+
   /* Given a cmesh, build up the vertex_to_tree and tree_to_vertex members.
    * \return: some error value to be specified.
    * On error, \state will be set to ERROR. 
@@ -128,6 +141,14 @@ struct t8_cmesh_vertex_connectivity
   const t8_gloidx_t
   treevertex_to_vertex (t8_locidx_t ltree, t8_locidx_t ltree_vertex);
 
+  t8_cmesh_vertex_conn_vertex_to_tree_c get_vertex_to_tree () {
+    return *vertex_to_tree;
+  }
+
+  t8_cmesh_vertex_conn_tree_to_vertex_c get_tree_to_vertex () {
+    return *tree_to_vertex;
+  }
+
  private:
   t8_cmesh_vertex_connectivity_state_t state;
 
@@ -136,9 +157,9 @@ struct t8_cmesh_vertex_connectivity
   /* Currently not used/equal to global number of vertices */
   t8_locidx_t local_number_of_vertices;
 
-  struct t8_cmesh_vertex_conn_vertex_to_tree_c vertex_to_tree;
+  struct t8_cmesh_vertex_conn_vertex_to_tree_c *vertex_to_tree;
 
-  struct t8_cmesh_vertex_conn_tree_to_vertex_c tree_to_vertex;
+  struct t8_cmesh_vertex_conn_tree_to_vertex_c *tree_to_vertex;
 
 };
 
