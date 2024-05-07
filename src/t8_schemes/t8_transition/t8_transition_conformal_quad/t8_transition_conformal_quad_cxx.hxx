@@ -107,7 +107,7 @@ typedef t8_quad_with_subelements t8_pquad_t;
   do { T8_ASSERT ((dim) == 2 || (dim) == 3);                    \
        (quad)->pad8 = (int8_t) (dim); } while (0)
 
-/** Set the direction of the third demension. */
+/** Set the direction of the third dimension. */
 #define T8_QUAD_SET_TNORMAL(quad,normal)                        \
   do { T8_ASSERT ((normal) >= 0 && (normal) < 3);               \
        (quad)->pad16 = (int16_t) (normal); } while (0)
@@ -150,8 +150,8 @@ public:
   virtual void        t8_element_copy (const t8_element_t *source,
                                        t8_element_t *dest) const;
 
-/** Compare to elements. returns negativ if elem1 < elem2, zero if elem1 equals elem2
- *  and positiv if elem1 > elem2.
+/** Compare to elements. returns negative eif elem1 < elem2, zero if elem1 equals elem2
+ *  and positive if elem1 > elem2.
  *  If elem2 is a copy of elem1 then the elements are equal.
  *  If both elements are sibling subelements, return 0 if they are identical (same sub_id) and 1 otherwise.
  */
@@ -404,7 +404,7 @@ public:
                                                             transition_type)
     const;
 
-/** Test wheter a given element is a subelement or not */
+/** Test whether a given element is a subelement or not */
   virtual int         t8_element_is_subelement (const t8_element *
                                                 elem) const;
 
@@ -498,7 +498,7 @@ public:
   t8_element_init (int length, t8_element_t *elem) const;
 
 #ifdef T8_ENABLE_DEBUG
-/** TODO: this should be the new element_print_element funciton */
+/** TODO: this should be the new element_print_element function */
   virtual void        t8_element_debug_print (const t8_element_t *elem) const;
 
 /** Query whether an element is valid */
@@ -524,7 +524,7 @@ protected:
    *                 subelement. 
    * Note that subelements can have another number of vertices compared to the used
    * eclass scheme. For example, subelements that remove hanging nodes from the quad scheme
-   * are triangles with 3 instead of 4 verticies.           
+   * are triangles with 3 instead of 4 vertices.           
    */
   void                t8_element_vertex_coords_of_subelement (const
                                                               t8_element_t *t,
@@ -544,7 +544,7 @@ protected:
    *                      sub_face_id: if there is a hanging node at the face, it is important to know if the given 
    *                                   subelement is the first or the second subelement at this face
    *                                   (value 0 if it is the first and 1 if it is the second)
-   *  The information in the location can be used to automatically determine the verticies of any subelement.
+   *  The information in the location can be used to automatically determine the vertices of any subelement.
    *  Since this function is only used to determine the vertices of subelements, it can be declared as a private/protected function.
    */
   void                t8_element_get_location_of_subelement (const
@@ -567,7 +567,7 @@ protected:
     const;
 
   /** This function resets the subelement values of an element to the default value -1.
-   *  \param [in,out] elem A valid element, whose subelement values have been resetted. 
+   *  \param [in,out] elem A valid element, whose subelement values have been reset. 
    */
   void                t8_element_reset_subelement_values (t8_element_t *elem)
     const;

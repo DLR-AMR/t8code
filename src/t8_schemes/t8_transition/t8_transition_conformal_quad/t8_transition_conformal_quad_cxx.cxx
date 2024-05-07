@@ -787,7 +787,7 @@ t8_subelement_scheme_quad_c::t8_element_children_at_face (const t8_element_t
    *
    *      x - - x - - x           This picture shows a refined quadrant
    *      |     |     |           with child_ids and the label for the faces.
-   *      | 2   | 3   |           For examle for face 2 (bottom face) we see
+   *      | 2   | 3   |           For example for face 2 (bottom face) we see
    * 0    x - - x - - x   1       first_child = 0 and second_child = 1.
    *      |     |     |
    *      | 0   | 1   |
@@ -1618,7 +1618,7 @@ t8_subelement_scheme_quad_c::t8_element_vertex_coords_of_subelement (const
   coords[1] = q1->y;
 
   /* using the location data to determine vertex coordinates */
-  if (vertex == 0) {            /* vertex 0 (the first vertex allways equals the center of the element) */
+  if (vertex == 0) {            /* vertex 0 (the first vertex always equals the center of the element) */
     coords[0] += len / 2;
     coords[1] += len / 2;
   }                             /* end of vertex == 0 */
@@ -1794,7 +1794,7 @@ t8_subelement_scheme_quad_c::t8_element_get_location_of_subelement (const
    *     ii)  whether this face is split in half (values: {0,1}).
    *     iii) if the subelement is the first or second subelement at the face (values: {0,1}).
    * 
-   * These informations are then saved in the location array which will be used by the element_vertex function, 
+   * These information are then saved in the location array which will be used by the element_vertex function, 
    * to automatically determine the vertex coordinates of the given subelement. 
    * 
    * The location array for the above example would be {1,1,1} (upper face, split = true, second subelement at the upper face). */
@@ -1807,7 +1807,7 @@ t8_subelement_scheme_quad_c::t8_element_get_location_of_subelement (const
 
   for (iface = 0; iface < P4EST_FACES; iface++) {       /* need an array with 4 elements to store all subelement types of the quad scheme from 1 to 15 ({0,0,0,1} to {1,1,1,1}) */
     binary_array[(P4EST_FACES - 1) - iface] = (type & (1 << iface)) >> iface;
-  }                             /* we now got a binary represenation of the transition type, bitwise stored in an array */
+  }                             /* we now got a binary representation of the transition type, bitwise stored in an array */
 
   /* 2) rearrange the binary representation to be in clockwise order */
   int                 binary_array_temp[P4EST_FACES] = { };
@@ -2015,7 +2015,7 @@ t8_subelement_scheme_quad_c::t8_element_find_neighbor_in_transition_cell
   }
   /* Below are the cases in which the neighbor can not be identified as simple as above. 
    * The idea is to fill a location array with the desired properties of the real neighbor. 
-   * Togehter with the type of the transition cell of pseudo_neigh, we can then identify the sub_id of the right neighbor. */
+   * Together with the type of the transition cell of pseudo_neigh, we can then identify the sub_id of the right neighbor. */
 
   if (pquad_w_sub_elem->transition_type != 0 && elem_face == 1) {
     /* In this case, we have the following situation:
@@ -2202,7 +2202,7 @@ t8_subelement_scheme_quad_c::t8_element_find_neighbor_in_transition_cell
     }
     /* the pseudo_neigh tranaition cell has the same level as elem 
      * Note that the level of the trnasition cell can not be higher as the level of elem in this case, 
-     * since elem would then be a subelement in a transtion cell. */
+     * since elem would then be a subelement in a transition cell. */
     if (pquad_w_sub_pseudo_neigh->p4q.level == pquad_w_sub_elem->p4q.level) {
       if (elem_face == 0) {     /* left face */
         location_neigh[0] = 2;  /* face */
@@ -2345,7 +2345,7 @@ t8_subelement_scheme_quad_c::t8_element_init (int length, t8_element_t *elem) co
   int                 elem_count;
 
   for (elem_count = 0; elem_count < length; elem_count++) {
-    /* initalize subelement parameters */
+    /* initialize subelement parameters */
     pquad_w_sub[elem_count].transition_type = 0;
     pquad_w_sub[elem_count].subelement_id = 0;
 
