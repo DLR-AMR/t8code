@@ -29,7 +29,6 @@
 #include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity.hxx>
 
-
 /*
 Use case
 
@@ -56,18 +55,17 @@ global tree id -> vertex_list
 
 
  */
- 
- /* Setter functions */
-  
+
+/* Setter functions */
 
 void
 t8_cmesh_set_global_vertices_of_tree (const t8_cmesh_t cmesh, const t8_gloidx_t global_tree,
                                       const t8_gloidx_t *global_tree_vertices, const int num_vertices)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
-  cmesh->vertex_connectivity->get_tree_to_vertex().set_global_vertex_ids_of_tree_vertices (cmesh, global_tree, global_tree_vertices, num_vertices);
-}                                    
-
+  cmesh->vertex_connectivity->get_tree_to_vertex ().set_global_vertex_ids_of_tree_vertices (
+    cmesh, global_tree, global_tree_vertices, num_vertices);
+}
 
 t8_gloidx_t
 t8_cmesh_get_num_global_vertices (const t8_cmesh_t cmesh)
@@ -87,24 +85,24 @@ const t8_gloidx_t *
 t8_cmesh_get_global_vertices_of_tree (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int num_vertices)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
-  return cmesh->vertex_connectivity->get_tree_to_vertex().get_global_vertices (cmesh, local_tree, num_vertices);
+  return cmesh->vertex_connectivity->get_tree_to_vertex ().get_global_vertices (cmesh, local_tree, num_vertices);
 }
 
 const t8_gloidx_t
-t8_cmesh_get_global_vertex_of_tree (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int local_tree_vertex, const int num_vertices)
+t8_cmesh_get_global_vertex_of_tree (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int local_tree_vertex,
+                                    const int num_vertices)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   const t8_gloidx_t *vertices_of_tree = t8_cmesh_get_global_vertices_of_tree (cmesh, local_tree, num_vertices);
   return vertices_of_tree[local_tree_vertex];
 }
 
-
-const t8_cmesh_vertex_conn_vertex_to_tree_c::tree_vertex_list&
+const t8_cmesh_vertex_conn_vertex_to_tree_c::tree_vertex_list &
 t8_cmesh_get_vertex_to_tree_list (const t8_cmesh_t cmesh, const t8_gloidx_t global_vertex)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
 
-  return cmesh->vertex_connectivity->get_vertex_to_tree().get_tree_list_of_vertex (global_vertex);
+  return cmesh->vertex_connectivity->get_vertex_to_tree ().get_tree_list_of_vertex (global_vertex);
 }
 
 const int
@@ -112,5 +110,5 @@ t8_cmesh_get_num_trees_at_vertex (const t8_cmesh_t cmesh, t8_gloidx_t global_ver
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
 
-  return cmesh->vertex_connectivity->get_vertex_to_tree().get_tree_list_of_vertex(global_vertex).size();
+  return cmesh->vertex_connectivity->get_vertex_to_tree ().get_tree_list_of_vertex (global_vertex).size ();
 }

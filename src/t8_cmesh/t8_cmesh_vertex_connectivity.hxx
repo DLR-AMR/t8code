@@ -32,7 +32,6 @@
 #include <t8_cmesh/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
 
-
 /* This comment is a temporary todo list, remove later.
  *
   Functions to implement:
@@ -45,8 +44,8 @@ t8_cmesh_get_num_trees_at_vertex
 t8_cmesh_get_tree_local_vertex
 
  */
- /* cmesh setter functions */
-  /** Set all global vertex ids of a local tree. 
+/* cmesh setter functions */
+/** Set all global vertex ids of a local tree. 
    * \param[in] cmesh The considered cmesh
    * \param[in] local_tree A local tree id of \a cmesh
    * \param[in] global_vertex_id The ids of the global vertices in order of \a local_tree's vertices.
@@ -56,7 +55,7 @@ t8_cmesh_get_tree_local_vertex
   */
 void
 t8_cmesh_set_global_vertices_of_tree (const t8_cmesh_t, const t8_gloidx_t global_tree,
-                                    const t8_gloidx_t *global_tree_vertices, const int num_vertices);
+                                      const t8_gloidx_t *global_tree_vertices, const int num_vertices);
 
 /* cmesh getter functions */
 
@@ -70,11 +69,11 @@ const t8_gloidx_t *
 t8_cmesh_get_global_vertices_of_tree (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int num_vertices);
 
 const t8_gloidx_t
-t8_cmesh_get_global_vertex_of_tree (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int local_tree_vertex, const int num_vertices);
+t8_cmesh_get_global_vertex_of_tree (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int local_tree_vertex,
+                                    const int num_vertices);
 
-const t8_cmesh_vertex_conn_vertex_to_tree_c::tree_vertex_list&
+const t8_cmesh_vertex_conn_vertex_to_tree_c::tree_vertex_list &
 t8_cmesh_get_vertex_to_tree_list (const t8_cmesh_t cmesh, const t8_gloidx_t global_vertex);
-
 
 /* Note, if a tree is contained multiple times it is counted as multiple entries.
  * Example: A quad where all 4 vertices map to a single global vertex. This function will return 4. */
@@ -104,17 +103,18 @@ struct t8_cmesh_vertex_connectivity
   build (const t8_cmesh_t cmesh);
 
   const t8_gloidx_t
-  get_global_number_of_vertices () {
+  get_global_number_of_vertices ()
+  {
     return global_number_of_vertices;
   }
 
   const t8_gloidx_t
-  get_local_number_of_vertices () {
+  get_local_number_of_vertices ()
+  {
     return local_number_of_vertices;
   }
 
-  enum t8_cmesh_vertex_connectivity_state_t
-  {
+  enum t8_cmesh_vertex_connectivity_state_t {
     INITIALIZED,
     VERTEX_TO_TREE_VALID,
     TREE_TO_VERTEX_VALID,
@@ -128,12 +128,12 @@ struct t8_cmesh_vertex_connectivity
   get_state ();
 
   /* Given a global vertex id, return the list of trees that share this vertex */
-  const t8_cmesh_vertex_conn_vertex_to_tree_c::vtt_storage_type&
+  const t8_cmesh_vertex_conn_vertex_to_tree_c::vtt_storage_type &
   vertex_to_trees (t8_gloidx_t vertex_id);
 
   /* Given a local tree (or ghost) return the list of global vertices
    * this tree has (in order of its local vertices). */
-  const t8_locidx_t*
+  const t8_locidx_t *
   tree_to_vertices (t8_locidx_t ltree);
 
   /* Given a local tree (or ghost) and a local vertex of that tree
@@ -141,11 +141,15 @@ struct t8_cmesh_vertex_connectivity
   const t8_gloidx_t
   treevertex_to_vertex (t8_locidx_t ltree, t8_locidx_t ltree_vertex);
 
-  t8_cmesh_vertex_conn_vertex_to_tree_c get_vertex_to_tree () {
+  t8_cmesh_vertex_conn_vertex_to_tree_c
+  get_vertex_to_tree ()
+  {
     return *vertex_to_tree;
   }
 
-  t8_cmesh_vertex_conn_tree_to_vertex_c get_tree_to_vertex () {
+  t8_cmesh_vertex_conn_tree_to_vertex_c
+  get_tree_to_vertex ()
+  {
     return *tree_to_vertex;
   }
 
@@ -160,7 +164,6 @@ struct t8_cmesh_vertex_connectivity
   struct t8_cmesh_vertex_conn_vertex_to_tree_c *vertex_to_tree;
 
   struct t8_cmesh_vertex_conn_tree_to_vertex_c *tree_to_vertex;
-
 };
 
 #endif /* !T8_CMESH_VERTEX_CONNECTIVITY_HXX */

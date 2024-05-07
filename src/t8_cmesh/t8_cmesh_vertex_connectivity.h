@@ -28,6 +28,6 @@
 #ifndef T8_CMESH_VERTEX_CONNECTIVITY_H
 #define T8_CMESH_VERTEX_CONNECTIVITY_H
 
-typedef struct t8_cmesh_vertex_connectivity * t8_cmesh_vertex_connectivity_c;
+typedef struct t8_cmesh_vertex_connectivity *t8_cmesh_vertex_connectivity_c;
 
 #endif /* !T8_CMESH_VERTEX_CONNECTIVITY_H */

@@ -77,7 +77,6 @@ t8_cmesh_vertex_conn_vertex_to_tree_c::get_tree_list_of_vertex (t8_gloidx_t glob
   }
 }
 
-
 int
 t8_cmesh_vertex_conn_vertex_to_tree_c::is_committed () const
 {
