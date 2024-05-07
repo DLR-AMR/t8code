@@ -352,8 +352,9 @@ t8_dline_compute_reference_coords (const t8_dline_t *elem, const double *ref_coo
   T8_ASSERT (t8_dline_is_valid (elem));
   for (size_t coord = 0; coord < num_coords; ++coord) {
     const size_t offset = coord * (1 + skip_coords);
+    const size_t offset_3d = coord * 3;
     out_coords[offset] = elem->x;
-    out_coords[offset] += T8_DLINE_LEN (elem->level) * ref_coords[offset];
+    out_coords[offset] += T8_DLINE_LEN (elem->level) * ref_coords[offset_3d];
     out_coords[offset] /= (double) T8_DLINE_ROOT_LEN;
   }
 }

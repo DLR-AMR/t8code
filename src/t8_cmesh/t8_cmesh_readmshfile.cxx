@@ -1018,8 +1018,9 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
           /* Check for right element class */
           if (eclass != T8_ECLASS_TRIANGLE && eclass != T8_ECLASS_QUAD && eclass != T8_ECLASS_TET
               && eclass != T8_ECLASS_HEX) {
-            t8_errorf ("%s element detected. The occ geometry currently only supports quad, tri, tet and hex elements.",
-                       t8_eclass_to_string[eclass]);
+            t8_errorf (
+              "%s element detected. The cad geometry currently only supports quad, tri, tet and hex elements.\n",
+              t8_eclass_to_string[eclass]);
             goto die_ele;
           }
           int tree_is_linked = 0;

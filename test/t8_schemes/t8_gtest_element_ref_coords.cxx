@@ -105,10 +105,9 @@ void
 t8_get_batch_coords_for_element_type (const t8_element_shape_t shape, double *batch_coords)
 {
   const int num_vertices = t8_eclass_num_vertices[shape];
-  const int elem_dim = t8_eclass_to_dimension[shape];
   for (int i_vertex = 0; i_vertex < num_vertices; ++i_vertex) {
-    for (int dim = 0; dim < elem_dim; ++dim) {
-      batch_coords[i_vertex * elem_dim + dim] = t8_element_corner_ref_coords[shape][i_vertex][dim];
+    for (int dim = 0; dim < T8_ECLASS_MAX_DIM; ++dim) {
+      batch_coords[i_vertex * T8_ECLASS_MAX_DIM + dim] = t8_element_corner_ref_coords[shape][i_vertex][dim];
     }
   }
 }

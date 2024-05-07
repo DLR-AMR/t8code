@@ -396,11 +396,13 @@ t8_forest_element_from_ref_coords_ext (t8_forest_t forest, t8_locidx_t ltreeid, 
                                        const double *ref_coords, const size_t num_coords, double *coords_out,
                                        const double *stretch_factors)
 {
-  double tree_ref_coords[3] = { 0 };
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
+  const int tree_dim = t8_eclass_to_dimension[tree_class];
   const t8_eclass_scheme_c *scheme = t8_forest_get_eclass_scheme (forest, tree_class);
   const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
   const t8_gloidx_t gtreeid = t8_forest_global_tree_id (forest, ltreeid);
+
+  double *tree_ref_coords = T8_ALLOC (double, (tree_dim == 0 ? 1 : tree_dim) * num_coords);
 
   if (stretch_factors != NULL) {
 #if T8_ENABLE_DEBUG
@@ -415,13 +417,15 @@ t8_forest_element_from_ref_coords_ext (t8_forest_t forest, t8_locidx_t ltreeid, 
           = 0.5 + ((ref_coords[i_coord * tree_dim + dim] - 0.5) * stretch_factors[dim]);
       }
     }
-
     scheme->t8_element_reference_coords (element, stretched_ref_coords, num_coords, tree_ref_coords);
   }
   else {
     scheme->t8_element_reference_coords (element, ref_coords, num_coords, tree_ref_coords);
   }
+
   t8_geometry_evaluate (cmesh, gtreeid, tree_ref_coords, num_coords, coords_out);
+
+  T8_FREE (tree_ref_coords);
 }
 
 void
