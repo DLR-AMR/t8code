@@ -77,44 +77,14 @@ jobs:
 #     with p4est and sc as internal dependencies which is needed for make dist
 #
 #
-    # build config vars
-    - name: build CFLAGS and CXXFLAGS variables
-      run: echo CFLAGS_var="-Wall -pedantic -O0" >> $GITHUB_ENV
-        && echo CXXFLAGS_var="-Wall -pedantic -O0" >> $GITHUB_ENV
-    # Note: We want to use '-Werror', but if we already provide it at the configure step
-    #       we get errors in configure that we cannot remove (for example the autotools way
-    #       of checking for libm results in a compiler warning).
-    #       Thus, we add '-Werror' later at the make step.
-    - name: less-test-option
-      if: github.event_name == 'pull_request'
-      run: export LESS_TEST_OPTION="--enable-less-tests"
-           && echo LESS_TEST_OPTION="$LESS_TEST_OPTION" >> $GITHUB_ENV
-    - name: build config variables
-      run: export CONFIG_OPTIONS="--without-blas ${LESS_TEST_OPTION}"
-           && export CONFIG_DEBUG="$CONFIG_OPTIONS --enable-debug --enable-mpi"
-           && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
-           && echo CONFIG_DEBUG="$CONFIG_DEBUG" >> $GITHUB_ENV
-    - name: Check vars
-      run: echo "[$CONFIG_DEBUG]"
-    - name: configure debug
-      run: mkdir build && cd build && ../configure $CONFIG_DEBUG CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
+    - name: configure
+      run: mkdir build && cd build && ../configure
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
       with:
-        name: config_debug_MPI.log
+        name: config.log
         path: build/config.log
-    - name: make
-      run: cd build && make $MAKEFLAGS CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
-    - name: make install
-      run: cd build && make install $MAKEFLAGS
-  # Note: We do  not run the testsuite again. This is performed on another action
-    - name: OnFailUploadLog
-      if: failure()
-      uses: actions/upload-artifact@v4
-      with:
-        name: test-suite.log
-        path: build/test-suite.log
 # Start building tarball
     - name: Install pandoc
       uses: nikeee/setup-pandoc@v1
@@ -142,25 +112,9 @@ jobs:
     container: dlramr/t8code-ubuntu:t8-dependencies
     timeout-minutes: 90
     steps: 
-    #
-    # Setup and bootstrap
-    #
-    - uses: actions/checkout@v4
-      with: 
-        fetch-depth: 0
     - name: Update packages
       run: apt-get update && apt-get upgrade -y
     # This seems to be necessary because of the docker container
-    - name: disable ownership checks
-      run: git config --global --add safe.directory '*'
-    - name: init submodules
-      run: git submodule init
-    - name: update submodules
-      run: git submodule update
-    - name: bootstrap
-      run: ./bootstrap
-
-
     - name: Download tarball
       uses: actions/download-artifact@v4
       with:
