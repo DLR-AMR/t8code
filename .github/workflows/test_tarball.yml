@@ -21,9 +21,7 @@ name: Test if tarball can be build and code compiled from it
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 #
-# This github CI script installs t8code and runs its tests for various configurations.
-# We compile sc and p4est as thirdparty libraries and use caching to only trigger a
-# new installation of them when their versions have changed in t8code.
+# This github CI script constructs a tarball and checks if it is build correctly.
 #
 
 env:
