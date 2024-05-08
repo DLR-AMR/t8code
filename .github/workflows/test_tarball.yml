@@ -25,9 +25,6 @@ name: Test if tarball can be build and code compiled from it
 # We compile sc and p4est as thirdparty libraries and use caching to only trigger a
 # new installation of them when their versions have changed in t8code.
 #
-# Note: To manually enforce sc and p4est installation, either increase the counter
-#       in the "key:" entries of the sc and p4est steps or set the variables
-#       SC_IGNORE_CACHE and P4EST_IGNORE_CACHE to 1 in the respective steps.
 
 env:
   MAKEFLAGS: "-j2 V=0"
@@ -70,8 +67,6 @@ jobs:
       run: git submodule update
     - name: bootstrap
       run: ./bootstrap
-#       SC installation
-#
 #
 #  T8CODE 
 #     with p4est and sc as internal dependencies which is needed for make dist
@@ -166,5 +161,3 @@ jobs:
         name: build_tar.log
         path: build_tar/test-suite.log
 
-
-    
