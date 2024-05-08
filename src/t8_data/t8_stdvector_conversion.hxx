@@ -40,6 +40,7 @@ t8_create_sc_array_view_from_vector (const std::vector<T> &vector)
   sc_array_t *new_view = sc_array_new_data (vector_data, sizeof (T), vector.size ());
   return new_view;
 }
+
 /* Wrapper function for partition data */
 template <typename T>
 void t8_forest_partition_data_stdvector (t8_forest_t forest_from, t8_forest_t forest_to, 
