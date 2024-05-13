@@ -66,7 +66,7 @@
 
 typedef struct
 {
-  /* p4est quadrant */
+  /* p8est quadrant */
   p8est_quadrant_t    p8q;
   /* stores transition cell information (default for non-subelements is 0 and for subelements it is != 0 - is therefore used as a is_subelement check) */
   int                 transition_type;

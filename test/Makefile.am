@@ -11,6 +11,7 @@ t8code_googletest_internal_headers = \
   thirdparty/googletest-mpi/gtest/gtest.h \
   test/t8_gtest_macros.hxx \
   test/t8_schemes/t8_gtest_dfs_base.hxx \
+  test/t8_schemes_transition/t8_gtest_dfs_base.hxx \
   test/t8_cmesh_generator/t8_cmesh_example_sets.hxx \
   test/t8_cmesh_generator/t8_gtest_cmesh_cartestian_product.hxx \
   test/t8_cmesh_generator/t8_gtest_cmesh_sum_of_sets.hxx \
@@ -87,6 +88,7 @@ t8code_googletest_programs = \
   test/t8_schemes/t8_gtest_default \
   test/t8_schemes/t8_gtest_pack_unpack \
   test/t8_schemes/t8_gtest_child_parent_face \
+  test/t8_schemes_transition/t8_gtest_child_parent_face \
   test/t8_cmesh_generator/t8_gtest_cmesh_generator_test
 
 test_t8_IO_t8_gtest_vtk_reader_SOURCES = \
@@ -328,6 +330,10 @@ test_t8_schemes_t8_gtest_pack_unpack_SOURCES = \
 test_t8_schemes_t8_gtest_child_parent_face_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_schemes/t8_gtest_child_parent_face.cxx 
+
+test_t8_schemes_transition_t8_gtest_child_parent_face_SOURCES = \
+  test/t8_gtest_main.cxx \
+  test/t8_schemes_transition/t8_gtest_child_parent_face.cxx 
 
 test_t8_cmesh_generator_t8_gtest_cmesh_generator_test_SOURCES = \
   test/t8_gtest_main.cxx \
@@ -585,6 +591,10 @@ test_t8_schemes_t8_gtest_child_parent_face_LDADD = $(t8_gtest_target_ld_add)
 test_t8_schemes_t8_gtest_child_parent_face_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_schemes_t8_gtest_child_parent_face_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
+test_t8_schemes_transition_t8_gtest_child_parent_face_LDADD = $(t8_gtest_target_ld_add)
+test_t8_schemes_transition_t8_gtest_child_parent_face_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_schemes_transition_t8_gtest_child_parent_face_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+
 test_t8_cmesh_generator_t8_gtest_cmesh_generator_test_LDADD = $(t8_gtest_target_ld_add)
 test_t8_cmesh_generator_t8_gtest_cmesh_generator_test_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_cmesh_generator_t8_gtest_cmesh_generator_test_CPPFLAGS = $(t8_gtest_target_cpp_flags)
@@ -655,6 +665,7 @@ test_t8_cmesh_t8_gtest_cmesh_tree_vertices_negative_volume_CPPFLAGS += $(t8_gtes
 test_t8_schemes_t8_gtest_default_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_pack_unpack_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_child_parent_face_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_schemes_transition_t8_gtest_child_parent_face_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_generator_t8_gtest_cmesh_generator_test_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_cmesh_copy_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 
