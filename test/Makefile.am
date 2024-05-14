@@ -274,6 +274,10 @@ test_t8_schemes_t8_gtest_face_descendant_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_schemes/t8_gtest_face_descendant.cxx
 
+test_t8_schemes_transition_t8_gtest_face_descendant_SOURCES = \
+  test/t8_gtest_main.cxx \
+  test/t8_schemes_transition/t8_gtest_face_descendant.cxx
+
 test_t8_geometry_t8_gtest_point_inside_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_geometry/t8_gtest_point_inside.cxx
@@ -538,6 +542,10 @@ test_t8_schemes_t8_gtest_face_descendant_LDADD = $(t8_gtest_target_ld_add)
 test_t8_schemes_t8_gtest_face_descendant_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_schemes_t8_gtest_face_descendant_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
+test_t8_schemes_transition_t8_gtest_face_descendant_LDADD = $(t8_gtest_target_ld_add)
+test_t8_schemes_transition_t8_gtest_face_descendant_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_schemes_transition_t8_gtest_face_descendant_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+
 test_t8_geometry_t8_gtest_point_inside_LDADD = $(t8_gtest_target_ld_add)
 test_t8_geometry_t8_gtest_point_inside_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_geometry_t8_gtest_point_inside_CPPFLAGS = $(t8_gtest_target_cpp_flags)
@@ -668,6 +676,7 @@ test_t8_forest_t8_gtest_half_neighbors_CPPFLAGS += $(t8_gtest_target_mpi_cpp_fla
 test_t8_forest_t8_gtest_find_owner_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_t8_gtest_forest_face_normal_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_face_descendant_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_schemes_transition_t8_gtest_face_descendant_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_geometry_t8_gtest_point_inside_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_t8_gtest_user_data_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_t8_gtest_transform_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)

@@ -1496,8 +1496,6 @@ t8_subelement_scheme_hex_c::t8_element_tree_face (const t8_element_t *elem,
     /* For hex the face and the tree face number are the same. */
     return face;
   }
-
-  // SC_ABORT_NOT_REACHED();
 }
 
 /** Construct the first descendant of an element that touches a given face.   */
@@ -1511,29 +1509,22 @@ t8_subelement_scheme_hex_c::t8_element_first_descendant_face (const
                                                                int level)
   const
 {
-  const t8_hex_with_subelements *phex_w_sub_elem =
-    (const t8_hex_with_subelements *) elem;
-  t8_hex_with_subelements *phex_w_sub_first_desc =
-    (t8_hex_with_subelements *) first_desc;
-
-  const p8est_quadrant_t *q = &phex_w_sub_elem->p8q;
-  p8est_quadrant_t   *desc = &phex_w_sub_first_desc->p8q;
-
-  int                 first_face_corner;
-
   /* this function is not implemented for subelements */
   T8_ASSERT (!t8_element_is_subelement (elem));
+
+  const p8est_quadrant_t *q = (const p8est_quadrant_t *) elem;
+  p8est_quadrant_t *desc = (p8est_quadrant_t *) first_desc;
+  int first_face_corner;
+
   T8_ASSERT (0 <= face && face < P8EST_FACES);
-  T8_ASSERT (0 <= level && level <= P8EST_QMAXLEVEL);
+  T8_ASSERT (0 <= level && level <= P8EST_OLD_QMAXLEVEL);
 
   /* Get the first corner of q that belongs to face */
   first_face_corner = p8est_face_corners[face][0];
-  /* Construce the descendant in that corner */
+  /* Construct the descendant of q in this corner */
   p8est_quadrant_corner_descendant (q, desc, first_face_corner, level);
-  t8_element_reset_subelement_values (first_desc);
-
- 
 }
+
 
 /** Construct the last descendant of an element that touches a given face.   */
 void
@@ -1544,29 +1535,21 @@ t8_subelement_scheme_hex_c::t8_element_last_descendant_face (const
                                                               *last_desc,
                                                               int level) const
 {
-  const t8_hex_with_subelements *phex_w_sub_elem =
-    (const t8_hex_with_subelements *) elem;
-  t8_hex_with_subelements *phex_w_sub_last_desc =
-    (t8_hex_with_subelements *) last_desc;
-
-  const p8est_quadrant_t *q = &phex_w_sub_elem->p8q;
-  p8est_quadrant_t   *desc = &phex_w_sub_last_desc->p8q;
-
-  int                 last_face_corner;
-
   /* this function is not implemented for subelements */
   T8_ASSERT (!t8_element_is_subelement (elem));
   T8_ASSERT (!t8_element_is_subelement (last_desc));
+
+  const p8est_quadrant_t *q = (const p8est_quadrant_t *) elem;
+  p8est_quadrant_t *desc = (p8est_quadrant_t *) last_desc;
+  int last_face_corner;
+
   T8_ASSERT (0 <= face && face < P8EST_FACES);
-  T8_ASSERT (0 <= level && level <= P8EST_QMAXLEVEL);
+  T8_ASSERT (0 <= level && level <= P8EST_OLD_QMAXLEVEL);
 
   /* Get the last corner of q that belongs to face */
-  last_face_corner = p8est_face_corners[face][1];
-  /* Construce the descendant in that corner */
+  last_face_corner = p8est_face_corners[face][3];
+  /* Construct the descendant of q in this corner */
   p8est_quadrant_corner_descendant (q, desc, last_face_corner, level);
-  t8_element_reset_subelement_values (last_desc);
-
-  
 }
 
 void
@@ -3012,7 +2995,13 @@ t8_subelement_scheme_hex_c::t8_element_subelement_values_are_valid (const
 
 void
 t8_subelement_scheme_hex_c::t8_element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const{
-  SC_ABORT_NOT_REACHED();
+  T8_ASSERT (!t8_element_is_subelement(elem));
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (debug_string != NULL);
+  t8_hex_with_subelements *hex_with_sub = (t8_hex_with_subelements *) elem;
+  const p8est_quadrant_t *hex = &hex_with_sub->p8q;
+
+  snprintf (debug_string, string_size, "x: %i, y: %i, z: %i, level: %i", hex->x, hex->y, hex->z, hex->level);
 }
 #endif
 
