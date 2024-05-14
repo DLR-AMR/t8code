@@ -1228,18 +1228,15 @@ t8_subelement_scheme_hex_c::t8_element_nca (const t8_element_t *elem1,
 
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
-#if 0
-  /* TODO: This assertions throws an error since it expects a 3D hex.
-   *       this does not make sense. investigate. */
-  T8_ASSERT (t8_element_surround_matches (q1, q2));
-#endif
+// #if 0
+//   /* TODO: This assertions throws an error since it expects a 3D hex.
+//    *       this does not make sense. investigate. */
+//   T8_ASSERT (t8_element_surround_matches (q1, q2));
+// #endif
 
   /* In case of subelements, we use the parent quadrant and construct nca of the parent quadrant */
   t8_element_reset_subelement_values (nca);
   p8est_nearest_common_ancestor (q1, q2, r);
-  // t8_element_copy_surround (q1, r);
-
-  // SC_ABORT_NOT_REACHED();
 }
 
 //Nummerierung der Seiten(der Pyramiden) wie in Davids Masterarbeit
