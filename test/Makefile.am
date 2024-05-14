@@ -48,8 +48,10 @@ t8code_googletest_programs = \
   test/t8_schemes/t8_gtest_element_ref_coords \
   test/t8_geometry/t8_gtest_geometry_handling \
   test/t8_schemes/t8_gtest_descendant \
+  test/t8_schemes_transition/t8_gtest_descendant \
   test/t8_schemes/t8_gtest_find_parent \
   test/t8_schemes/t8_gtest_equal \
+  test/t8_schemes_transition/t8_gtest_equal \
   test/t8_schemes/t8_gtest_root \
   test/t8_cmesh/t8_gtest_cmesh_face_is_boundary \
   test/t8_cmesh/t8_gtest_cmesh_partition \
@@ -70,6 +72,7 @@ t8code_googletest_programs = \
   test/t8_forest/t8_gtest_find_owner \
   test/t8_forest/t8_gtest_forest_face_normal \
   test/t8_schemes/t8_gtest_face_descendant \
+  test/t8_schemes_transition/t8_gtest_face_descendant \
   test/t8_geometry/t8_gtest_point_inside \
   test/t8_forest/t8_gtest_user_data \
   test/t8_forest/t8_gtest_transform \
@@ -183,6 +186,10 @@ test_t8_schemes_t8_gtest_descendant_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_schemes/t8_gtest_descendant.cxx
 
+test_t8_schemes_transition_t8_gtest_descendant_SOURCES = \
+  test/t8_gtest_main.cxx \
+  test/t8_schemes_transition/t8_gtest_descendant.cxx
+
 test_t8_schemes_t8_gtest_find_parent_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_schemes/t8_gtest_find_parent.cxx
@@ -190,6 +197,10 @@ test_t8_schemes_t8_gtest_find_parent_SOURCES = \
 test_t8_schemes_t8_gtest_equal_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_schemes/t8_gtest_equal.cxx
+
+test_t8_schemes_transition_t8_gtest_equal_SOURCES = \
+  test/t8_gtest_main.cxx \
+  test/t8_schemes_transition/t8_gtest_equal.cxx
 
 test_t8_schemes_t8_gtest_root_SOURCES = \
   test/t8_gtest_main.cxx \
@@ -439,6 +450,10 @@ test_t8_schemes_t8_gtest_descendant_LDADD = $(t8_gtest_target_ld_add)
 test_t8_schemes_t8_gtest_descendant_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_schemes_t8_gtest_descendant_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
+test_t8_schemes_transition_t8_gtest_descendant_LDADD = $(t8_gtest_target_ld_add)
+test_t8_schemes_transition_t8_gtest_descendant_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_schemes_transition_t8_gtest_descendant_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+
 test_t8_schemes_t8_gtest_find_parent_LDADD = $(t8_gtest_target_ld_add)
 test_t8_schemes_t8_gtest_find_parent_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_schemes_t8_gtest_find_parent_CPPFLAGS = $(t8_gtest_target_cpp_flags)
@@ -446,6 +461,10 @@ test_t8_schemes_t8_gtest_find_parent_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 test_t8_schemes_t8_gtest_equal_LDADD = $(t8_gtest_target_ld_add)
 test_t8_schemes_t8_gtest_equal_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_schemes_t8_gtest_equal_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+
+test_t8_schemes_transition_t8_gtest_equal_LDADD = $(t8_gtest_target_ld_add)
+test_t8_schemes_transition_t8_gtest_equal_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_schemes_transition_t8_gtest_equal_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
 test_t8_schemes_t8_gtest_root_LDADD = $(t8_gtest_target_ld_add)
 test_t8_schemes_t8_gtest_root_LDFLAGS = $(t8_gtest_target_ld_flags)
@@ -627,8 +646,10 @@ test_t8_schemes_t8_gtest_element_count_leaves_CPPFLAGS += $(t8_gtest_target_mpi_
 test_t8_schemes_t8_gtest_element_ref_coords_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_geometry_t8_gtest_geometry_handling_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_descendant_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_schemes_transition_t8_gtest_descendant_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_find_parent_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_equal_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_schemes_transition_t8_gtest_equal_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_root_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_cmesh_face_is_boundary_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_cmesh_partition_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)

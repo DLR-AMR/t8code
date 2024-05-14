@@ -449,18 +449,9 @@ t8_subelement_scheme_hex_c::t8_element_child (const t8_element_t *elem,
 {
   /* this function is not implemented for subelements */
   T8_ASSERT (!t8_element_is_subelement (elem));
-  const t8_hex_with_subelements *phex_w_sub_elem =
-    (const t8_hex_with_subelements *) elem;
-  t8_hex_with_subelements *phex_w_sub_child =
-    (t8_hex_with_subelements *) child;
-
-  const p8est_quadrant_t *q = &phex_w_sub_elem->p8q;
-  p8est_quadrant_t   *r = &phex_w_sub_child->p8q;
-
+  const p8est_quadrant_t *q = (const p8est_quadrant_t *) elem;
   const p4est_qcoord_t shift = P8EST_QUADRANT_LEN (q->level + 1);
-
-  /* it should not be possible to construct a child of a subelement */
-  T8_ASSERT (!t8_element_is_subelement (elem));
+  p8est_quadrant_t *r = (p8est_quadrant_t *) child;
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (child));
@@ -475,6 +466,8 @@ t8_subelement_scheme_hex_c::t8_element_child (const t8_element_t *elem,
   if (q != r) {
     T8_ASSERT (p8est_quadrant_is_parent (q, r));
   }
+  t8_element_reset_subelement_values (child);
+
 }
 
 void
@@ -2938,13 +2931,10 @@ t8_subelement_scheme_hex_c::t8_element_transition_scheme_is_conformal (void)
 
 int
 t8_subelement_scheme_hex_c::t8_element_equal (const t8_element_t *elem1, const t8_element_t *elem2) const{
-
-  if(t8_element_get_subelement_id((const t8_element * ) elem1) == t8_element_get_subelement_id((const t8_element * ) elem2)){
-    return 1;
-  }
-else{
-  return 0;
+if (t8_element_get_subelement_id((const t8_element * ) elem1) != 0 ){
+  t8_productionf("--------------------------------\n  sub ID %i \n ------------------\n", t8_element_get_subelement_id((const t8_element * ) elem1));
 }
+  return (p8est_quadrant_is_equal ((const p8est_quadrant_t *) elem1, (const p8est_quadrant_t *) elem2)) && (t8_element_get_subelement_id((const t8_element * ) elem1) == t8_element_get_subelement_id((const t8_element * ) elem2));
 }
 
 void
