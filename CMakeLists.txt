@@ -9,6 +9,7 @@ option( T8CODE_BUILD_EXAMPLES "Build t8code's examples" ON )
 
 option( T8CODE_ENABLE_MPI "Enable t8code's features which rely on MPI" ON )
 option( T8CODE_ENABLE_VTK "Enable t8code's features which rely on VTK" OFF )
+option( T8CODE_ENABLE_OCC "Enable t8code's features which rely on OpenCASCADE" OFF )
 
 option( T8CODE_USE_SYSTEM_SC "Use system-installed sc library" OFF )
 option( T8CODE_USE_SYSTEM_P4EST "Use system-installed p4est library" OFF )
@@ -27,7 +28,6 @@ set( CMAKE_CXX_STANDARD_REQUIRED ON )
 set( CMAKE_CXX_EXTENSIONS OFF )
 list( APPEND CMAKE_CXX_FLAGS "-Wall" )
 
-
 if( T8CODE_ENABLE_MPI )
     find_package( MPI COMPONENTS C REQUIRED )
     if( NOT MPIEXEC_EXECUTABLE )
@@ -39,6 +39,10 @@ endif()
 
 if( T8CODE_ENABLE_VTK )
     find_package( VTK REQUIRED )
+endif()
+
+if( T8CODE_ENABLE_OCC )
+    find_package( OpenCASCADE REQUIRED )
 endif()
 
 # Override default for this libsc option
