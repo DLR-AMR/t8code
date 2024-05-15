@@ -117,8 +117,7 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *ts, t8_gl
     prev_last_tree = (first_global_child - 1) / children_per_tree;
     T8_ASSERT (cmesh->mpirank > 0 || prev_last_tree <= 0);
 #endif
-    if (!is_empty && cmesh->mpirank > 0 && child_in_tree_begin_temp > 0) {
-      /* We exclude empty partitions here, by def their first_tree_shared flag is zero */
+    if (cmesh->mpirank > 0 && child_in_tree_begin_temp > 0) {
       /* We also exclude that the previous partition was empty at the beginning of the
        * partitions array */
       /* We also exclude the case that we have the first global element but
@@ -138,15 +137,7 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *ts, t8_gl
     }
   }
   if (is_empty) {
-    /* This process is empty */
-    /* We now set the first local tree to the first local tree on the
-     * next nonempty rank, and the last local tree to first - 1 */
     *first_local_tree = last_global_child / children_per_tree;
-    if (first_global_child % children_per_tree != 0) {
-      /* The next nonempty process shares this tree. */
-      (*first_local_tree)++;
-    }
-
     *last_local_tree = *first_local_tree - 1;
   }
 }

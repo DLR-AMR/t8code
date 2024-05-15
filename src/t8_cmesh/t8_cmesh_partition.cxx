@@ -182,7 +182,6 @@ static void
 t8_cmesh_gather_treecount_ext (t8_cmesh_t cmesh, sc_MPI_Comm comm, int check_commit)
 {
   t8_gloidx_t tree_offset;
-  int is_empty, has_empty;
 
   if (check_commit) {
     T8_ASSERT (t8_cmesh_is_committed (cmesh));
@@ -201,33 +200,6 @@ t8_cmesh_gather_treecount_ext (t8_cmesh_t cmesh, sc_MPI_Comm comm, int check_com
       t8_shmem_array_set_gloidx (cmesh->tree_offsets, cmesh->mpisize, cmesh->num_trees);
     }
     t8_shmem_array_end_writing (cmesh->tree_offsets);
-
-    if (cmesh->num_local_trees <= 0) {
-      /* This process is empty */
-      is_empty = 1;
-    }
-    else {
-      is_empty = 0;
-    }
-    /* Communicate whether we have empty processes */
-    sc_MPI_Allreduce (&is_empty, &has_empty, 1, sc_MPI_INT, sc_MPI_LOR, comm);
-    if (has_empty) {
-      int next_nonempty;
-
-      const t8_gloidx_t *tree_offset_array = t8_shmem_array_get_gloidx_array (cmesh->tree_offsets);
-      /* there exist empty ranks, we have to recalculate the offset.
-       * Each empty rank stores the offset of the next nonempty rank */
-      if (is_empty) {
-        next_nonempty = t8_offset_next_nonempty_rank (cmesh->mpirank, cmesh->mpisize, tree_offset_array);
-        /* Set the tree offset to the first nonshared tree of the next rank */
-        tree_offset = t8_offset_first (next_nonempty, tree_offset_array);
-        if (tree_offset_array[next_nonempty] < 0) {
-          tree_offset++;
-        }
-      }
-      /* Communicate the new tree offsets */
-      t8_shmem_array_allgather (&tree_offset, 1, T8_MPI_GLOIDX, cmesh->tree_offsets, 1, T8_MPI_GLOIDX);
-    }
   }
 }
 
