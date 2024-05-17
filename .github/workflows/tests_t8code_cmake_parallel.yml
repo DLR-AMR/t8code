@@ -108,18 +108,15 @@ jobs:
       run: echo "Install sc"
       if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
       ## sc debug
-    - name: sc bootstrap
-      run: cd $SC_DEBUG && ./bootstrap
-      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
-    - name: sc configure debug
-      run: cd $SC_DEBUG && ../configure --enable-mpi --enable-debug --prefix=$PWD/install
+    - name: sc cmake debug
+      run: cd $SC_DEBUG && cmake ../ -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$PWD/install -Dmpi=ON
       if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
     - name: sc build debug
       run: cd $SC_DEBUG && make $MAKEFLAGS && make $MAKEFLAGS install
       if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
       ## sc release
-    - name: sc configure release
-      run: cd $SC_RELEASE && ../configure --enable-mpi --enable-debug --prefix=$PWD/install
+    - name: sc cmake release
+      run: cd $SC_RELEASE && cmake ../ -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/install -Dmpi=ON
       if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
     - name: sc build release
       run: cd $SC_RELEASE && make $MAKEFLAGS && make $MAKEFLAGS install
@@ -159,19 +156,15 @@ jobs:
     - name: make folder
       run: mkdir $P4EST_DEBUG
     ## p4est debug
-    - name: p4est bootstrap
-      run: cd $P4EST_DEBUG && ./bootstrap $SC_DEBUG/install/share/aclocal/
-      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
-      ## p4est debug
-    - name: p4est configure debug
-      run: cd $P4EST_DEBUG && ../configure --enable-mpi --enable-debug --prefix=$PWD/install --with-sc=$SC_DEBUG/install
+    - name: p4est cmake debug
+      run: cd $P4EST_DEBUG && cmake ../ -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$PWD/installN -DP4EST_USE_SYSTEM_SC=ON -DSC_DIR=$SC_DEBUG/install/cmake
       if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     - name: p4est build debug
       run: cd $P4EST_DEBUG && make $MAKEFLAGS && make $MAKEFLAGS install
       if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     ## p4est release
-    - name: p4est configure and build release
-      run: cd $P4EST_RELEASE && ../configure --enable-mpi --prefix=$PWD/install --with-sc=$SC_RELEASE/install
+    - name: p4est cmake release
+      run: cd $P4EST_RELEASE && cmake ../ -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/install -DP4EST_USE_SYSTEM_SC=ON -DSC_DIR=$SC_DEBUG/install/cmake
       if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     - name: p4est build release
       run: cd $P4EST_RELEASE && make $MAKEFLAGS && make $MAKEFLAGS install
@@ -189,8 +182,8 @@ jobs:
     - name: build config variables
       #TODO: Werror
       run: export CONFIG_OPTIONS="${LESS_TEST_OPTION}"
-           && export CONFIG_DEBUG="$CONFIG_OPTIONS -DCMAKE_BUILD_TYPE=Debug -DT8CODE_USE_SYSTEM_SC -DSC_DIR=$SC_DEBUG/install/cmake -DT8CODE_USE_SYSTEM_P4EST -DP4EST_DIR=$P4EST_DEBUG/install/cmake"
-           && export CONFIG_RELEASE="$CONFIG_OPTIONS -DCMAKE_BUILD_TYPE=Release -DT8CODE_USE_SYSTEM_SC -DSC_DIR=$SC_RELEASE/install/cmake -DT8CODE_USE_SYSTEM_P4EST -DP4EST_DIR=$P4EST_RELEASE/install/cmake"
+           && export CONFIG_DEBUG="$CONFIG_OPTIONS -DCMAKE_BUILD_TYPE=Debug -DT8CODE_USE_SYSTEM_SC=ON -DSC_DIR=$SC_DEBUG/install/cmake -DT8CODE_USE_SYSTEM_P4EST=ON -DP4EST_DIR=$P4EST_DEBUG/install/cmake"
+           && export CONFIG_RELEASE="$CONFIG_OPTIONS -DCMAKE_BUILD_TYPE=Release -DT8CODE_USE_SYSTEM_SC=ON -DSC_DIR=$SC_RELEASE/install/cmake -DT8CODE_USE_SYSTEM_P4EST=ON -DP4EST_DIR=$P4EST_RELEASE/install/cmake"
            && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
            && echo CONFIG_DEBUG="$CONFIG_DEBUG" >> $GITHUB_ENV
            && echo CONFIG_RELEASE="$CONFIG_RELEASE" >> $GITHUB_ENV
