@@ -668,7 +668,7 @@ t8_cmesh_partition_copy_data (char *send_buffer, t8_cmesh_t cmesh, const struct 
 
   /* Copy all trees to the send buffer */
   /* TODO: This is currently inefficient since we copy each tree for itself.
-   *       Best practive is to copy chunks of trees out of the different part
+   *       Best practice is to copy chunks of trees out of the different part
    *       arrays of cmesh_from */
   if (total_alloc == 0 || send_buffer == NULL) {
     t8_debugf ("No data to store in buffer.\n");

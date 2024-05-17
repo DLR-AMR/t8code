@@ -123,7 +123,7 @@ t8_cmesh_is_committed (const t8_cmesh_t cmesh)
 }
 
 #ifdef T8_ENABLE_DEBUG
-bool
+int
 t8_cmesh_validate_geometry (const t8_cmesh_t cmesh)
 {
   /* Geometry handler is not constructed yet */
@@ -191,6 +191,8 @@ t8_cmesh_set_derive (t8_cmesh_t cmesh, t8_cmesh_t set_from)
 
   if (set_from != NULL) {
     t8_cmesh_set_dimension (cmesh, set_from->dimension);
+    SC_CHECK_ABORT (cmesh->stash->attributes.elem_count == 0,
+                    "ERROR: Cannot add attributes to cmesh when deriving from another cmesh.\n");
   }
 }
 
@@ -356,6 +358,7 @@ t8_cmesh_set_attribute (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int package_id, 
                         int data_persists)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  SC_CHECK_ABORT (cmesh->set_from == NULL, "ERROR: Cannot add attributes to cmesh when deriving from another cmesh.\n");
 
   t8_stash_add_attribute (cmesh->stash, gtree_id, package_id, key, data_size, data, !data_persists);
 }
@@ -378,7 +381,7 @@ t8_cmesh_set_attribute_gloidx_array (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 
   const size_t data_size = data_count * sizeof (*data);
-  t8_stash_add_attribute (cmesh->stash, gtree_id, package_id, key, data_size, (void *) data, !data_persists);
+  t8_cmesh_set_attribute (cmesh, gtree_id, package_id, key, (void *) data, data_size, data_persists);
 }
 
 double *
@@ -529,7 +532,7 @@ t8_cmesh_tree_vertices_negative_volume (const t8_eclass_t eclass, const double *
  * Returns true if all trees have positive volume. Returns also true if no geometries are
  * registered yet, since the volume computation depends on the used geometry.
  */
-bool
+int
 t8_cmesh_no_negative_volume (t8_cmesh_t cmesh)
 {
   bool res = false;
@@ -565,8 +568,10 @@ t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, const t8_gloidx_t gtree_id, const 
   T8_ASSERT (vertices != NULL);
   T8_ASSERT (!cmesh->committed);
 
-  t8_stash_add_attribute (cmesh->stash, gtree_id, t8_get_package_id (), T8_CMESH_VERTICES_ATTRIBUTE_KEY,
-                          3 * num_vertices * sizeof (double), (void *) vertices, 1);
+  const size_t data_size = 3 * num_vertices * sizeof (double);
+
+  t8_cmesh_set_attribute (cmesh, gtree_id, t8_get_package_id (), T8_CMESH_VERTICES_ATTRIBUTE_KEY, (void *) vertices,
+                          data_size, 0);
 }
 
 void
@@ -1201,7 +1206,8 @@ t8_cmesh_reset (t8_cmesh_t *pcmesh)
   }
 
   if (cmesh->geometry_handler != NULL) {
-    delete (cmesh->geometry_handler);
+    cmesh->geometry_handler->unref ();
+    cmesh->geometry_handler = NULL;
   }
 
   /* unref the partition scheme (if set) */
