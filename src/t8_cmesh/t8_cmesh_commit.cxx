@@ -35,6 +35,7 @@
 #include <t8_cmesh/t8_cmesh_partition.h>
 #include <t8_cmesh/t8_cmesh_copy.h>
 #include <t8_cmesh/t8_cmesh_geometry.h>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity.hxx>
 
 typedef struct ghost_facejoins_struct
 {
@@ -568,6 +569,16 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     t8_cmesh_gather_treecount (cmesh, comm);
   }
   T8_ASSERT (cmesh->set_partition || cmesh->tree_offsets == NULL);
+
+  /* Build vertex_to_tree instance */
+  /* TODO: Throw an error and stop the program, if tree_to_vertex is empty. */
+  if (cmesh->vertex_connectivity->get_vertex_to_tree_state () == 1) {
+    t8_errorf("The vertex_to_tree instance has already been committed and cannot be changed.");
+    SC_ABORTF("Vertex_to_tree class cannot be changed after committing");
+  }  
+  else {
+    cmesh->vertex_connectivity->build_vertex_to_tree(cmesh);
+  }
 
 #if T8_ENABLE_DEBUG
   t8_debugf ("Cmesh is %spartitioned.\n", cmesh->set_partition ? "" : "not ");

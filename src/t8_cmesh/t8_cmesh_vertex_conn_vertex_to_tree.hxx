@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2024 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_vertex_conn_vertex_to_tree_c.hxx
+/** \file t8_cmesh_vertex_conn_vertex_to_tree.hxx
  * Class to save data structure for vertex_to_tree_lists
  */
 
@@ -33,7 +33,7 @@
 #include <t8_cmesh/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
 
 /* forward declaration of ttv class needed since the two class headers include each other. */
-struct t8_cmesh_vertex_conn_tree_to_vertex_c;
+class t8_cmesh_vertex_conn_tree_to_vertex;
 
 /*
  *  notes during development
@@ -43,7 +43,7 @@ struct t8_cmesh_vertex_conn_tree_to_vertex_c;
  * global_vertex_id -> List of (tree, tree_local_vertex) 
  * 
  * for a cmesh.
- * It is the opposite lookup as t8_cmesh_vertex_conn_tree_to_vertex_c
+ * It is the opposite lookup as t8_cmesh_vertex_conn_tree_to_vertex
  * 
  * The global vertex ids must not be contiguous, that is, we have some set
  * 
@@ -64,18 +64,18 @@ struct t8_cmesh_vertex_conn_tree_to_vertex_c;
  * 
 */
 
-typedef struct t8_cmesh_vertex_conn_vertex_to_tree_c
+class t8_cmesh_vertex_conn_vertex_to_tree
 {
  public:
   /** Standard constructor. 
    * Initializes the class and allows setting vertex entries 
    * via \ref add_vertex_to_tree
    */
-  t8_cmesh_vertex_conn_vertex_to_tree_c (): state (INITIALIZED)
+  t8_cmesh_vertex_conn_vertex_to_tree (): state (INITIALIZED)
   {
   }
 
-  /** Constructor from t8_cmesh_vertex_conn_tree_to_vertex_c
+  /** Funktion to fill vtt from cmesh and ttv information.
    * Sets all global ids and associated tree vertices from
    * the given input class.
    * Afterwards, the class is set to committed and can be used.
@@ -83,7 +83,9 @@ typedef struct t8_cmesh_vertex_conn_vertex_to_tree_c
    * \param [in] cmesh A committed cmesh with set tree to vertex entries.
    * \param [in] ttv A filled tree to vertex list for \a cmesh.
   */
-  t8_cmesh_vertex_conn_vertex_to_tree_c (const t8_cmesh_t cmesh, const t8_cmesh_vertex_conn_tree_to_vertex_c& ttv);
+
+  void
+  build_from_ttv (const t8_cmesh_t cmesh, t8_cmesh_vertex_conn_tree_to_vertex& ttv);
 
   /* Variable type for (tree_id, tree_vertex_id) pair */
   using tree_vertex_pair = std::pair<t8_locidx_t, int>;
@@ -105,6 +107,12 @@ typedef struct t8_cmesh_vertex_conn_vertex_to_tree_c
 
   const tree_vertex_list&
   get_tree_list_of_vertex (t8_gloidx_t global_vertex_id) const;
+
+  const int
+  get_state ()
+  {
+    return state;
+  }
 
   /* Setter functions */
   /* A single value is added to the vertex_to_tree_list.
@@ -133,7 +141,7 @@ typedef struct t8_cmesh_vertex_conn_vertex_to_tree_c
    * @return int True if and only if the stored vertex indices match.
    */
   int
-  is_equal (const t8_cmesh_vertex_conn_vertex_to_tree_c& other) const;
+  is_equal (const t8_cmesh_vertex_conn_vertex_to_tree& other) const;
 
   /**
    * @brief Equality operator. Implement
@@ -143,7 +151,7 @@ typedef struct t8_cmesh_vertex_conn_vertex_to_tree_c
    * @return false 
    */
   bool
-  operator== (const t8_cmesh_vertex_conn_vertex_to_tree_c& other) const;
+  operator== (const t8_cmesh_vertex_conn_vertex_to_tree& other) const;
 
   /** Typedef for the iterator type */
   typedef vtt_storage_type::const_iterator const_iterator;
@@ -190,6 +198,6 @@ typedef struct t8_cmesh_vertex_conn_vertex_to_tree_c
     COMMITTED    /*< Is filled and cannot be changed. */
   } state;
 
-} t8_cmesh_vertex_conn_vertex_to_tree_c;
+};
 
 #endif /* !T8_CMESH_VERTEX_CONN_VERTEX_TO_TREE_HXX */

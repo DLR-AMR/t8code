@@ -20,11 +20,11 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_vertex_conn_tree_to_vertex_c.hxx
+/** \file t8_cmesh_vertex_conn_tree_to_vertex.hxx
  * Class to save data structure for tree_to_vertex_lists of the cmesh.
  * When the cmesh stores global vertex numbers, we require a lookup that 
  * matches a tree and its local vertex to a global vertex id.
- * This lookup is encoded in the t8_cmesh_vertex_conn_tree_to_vertex_c struct.
+ * This lookup is encoded in the t8_cmesh_vertex_conn_tree_to_vertex struct.
  */
 
 /* TODO:
@@ -37,24 +37,23 @@
  * On the downside we will only have a "set all ids of a tree" function and no "set this single id for this tree and this vertex" function.
  */
 
-#ifndef T8_CMESH_VERTEX_CONN_TREE_TO_VERTEX_HXX
-#define T8_CMESH_VERTEX_CONN_TREE_TO_VERTEX_HXX
+#pragma once
 
 #include <algorithm>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
 
 /* forward declaration of ttv class needed since the two class headers include each other. */
-struct t8_cmesh_vertex_conn_vertex_to_tree_c;
+class t8_cmesh_vertex_conn_vertex_to_tree;
 
-typedef struct t8_cmesh_vertex_conn_tree_to_vertex_c
+class t8_cmesh_vertex_conn_tree_to_vertex
 {
  public:
   /** Standard constructor. Does nothing. */
-  t8_cmesh_vertex_conn_tree_to_vertex_c () {};
+  t8_cmesh_vertex_conn_tree_to_vertex () {};
 
   /** Constructor from a cmesh where all the attributes are set. */
-  t8_cmesh_vertex_conn_tree_to_vertex_c (const t8_cmesh_t cmesh)
+  t8_cmesh_vertex_conn_tree_to_vertex (const t8_cmesh_t cmesh)
   {
     SC_ABORT ("not implemented.");
   }
@@ -65,8 +64,8 @@ typedef struct t8_cmesh_vertex_conn_tree_to_vertex_c
    * \note \a vtt must be committed.
    * \note This does not work until issue #923 https://github.com/DLR-AMR/t8code/issues/923 is resolved.
    */
-  t8_cmesh_vertex_conn_tree_to_vertex_c (const t8_cmesh_t cmesh_from, const t8_cmesh_t cmesh,
-                                         const struct t8_cmesh_vertex_conn_vertex_to_tree_c &vtt);
+  t8_cmesh_vertex_conn_tree_to_vertex (const t8_cmesh_t cmesh_from, const t8_cmesh_t cmesh,
+                                         const struct t8_cmesh_vertex_conn_vertex_to_tree &vtt);
 
   /* Setter functions */
   /** Set all global vertex ids of a local tree. 
@@ -91,6 +90,5 @@ typedef struct t8_cmesh_vertex_conn_tree_to_vertex_c
   friend struct t8_cmesh_vertex_connectivity;
 
  private:
-} t8_cmesh_vertex_conn_tree_to_vertex_c;
+};
 
-#endif /* !T8_CMESH_VERTEX_CONN_TREE_TO_VERTEX_HXX */

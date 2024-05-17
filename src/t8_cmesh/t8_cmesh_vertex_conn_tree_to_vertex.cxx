@@ -29,9 +29,9 @@
  */
 
 /* constructor from a given vertex to tree list. */
-t8_cmesh_vertex_conn_tree_to_vertex_c::t8_cmesh_vertex_conn_tree_to_vertex_c (
-  const t8_cmesh_t cmesh_from, t8_cmesh_t cmesh, const t8_cmesh_vertex_conn_vertex_to_tree_c &vtt)
-  : t8_cmesh_vertex_conn_tree_to_vertex_c ()
+t8_cmesh_vertex_conn_tree_to_vertex::t8_cmesh_vertex_conn_tree_to_vertex (
+  const t8_cmesh_t cmesh_from, t8_cmesh_t cmesh, const t8_cmesh_vertex_conn_vertex_to_tree &vtt)
+  : t8_cmesh_vertex_conn_tree_to_vertex ()
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh_from));
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
@@ -101,10 +101,10 @@ t8_cmesh_vertex_conn_tree_to_vertex_c::t8_cmesh_vertex_conn_tree_to_vertex_c (
 * \note Cmesh must not be committed.
 */
 void
-t8_cmesh_vertex_conn_tree_to_vertex_c::set_global_vertex_ids_of_tree_vertices (const t8_cmesh_t cmesh,
-                                                                               const t8_gloidx_t global_tree,
-                                                                               const t8_gloidx_t *global_tree_vertices,
-                                                                               const int num_vertices)
+t8_cmesh_vertex_conn_tree_to_vertex::set_global_vertex_ids_of_tree_vertices (const t8_cmesh_t cmesh,
+                                                                             const t8_gloidx_t global_tree,
+                                                                             const t8_gloidx_t *global_tree_vertices,
+                                                                             const int num_vertices)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   T8_ASSERT (num_vertices >= 0);
@@ -126,8 +126,8 @@ t8_cmesh_vertex_conn_tree_to_vertex_c::set_global_vertex_ids_of_tree_vertices (c
 
 /* TODO: What if the attribute is not set? error handling */
 const t8_gloidx_t *
-t8_cmesh_vertex_conn_tree_to_vertex_c::get_global_vertices (const t8_cmesh_t cmesh, const t8_locidx_t local_tree,
-                                                            const int num_vertices) const
+t8_cmesh_vertex_conn_tree_to_vertex::get_global_vertices (const t8_cmesh_t cmesh, const t8_locidx_t local_tree,
+                                                          const int num_vertices) const
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
 
@@ -148,9 +148,8 @@ t8_cmesh_vertex_conn_tree_to_vertex_c::get_global_vertices (const t8_cmesh_t cme
 
 /* TODO: What if the attribute is not set? error handling */
 t8_gloidx_t
-t8_cmesh_vertex_conn_tree_to_vertex_c::get_global_vertex (const t8_cmesh_t cmesh, const t8_locidx_t local_tree,
-                                                          const int local_tree_vertex,
-                                                          const int num_tree_vertices) const
+t8_cmesh_vertex_conn_tree_to_vertex::get_global_vertex (const t8_cmesh_t cmesh, const t8_locidx_t local_tree,
+                                                        const int local_tree_vertex, const int num_tree_vertices) const
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
 

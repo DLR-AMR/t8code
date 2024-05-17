@@ -22,6 +22,7 @@
 
 #include <stdexcept>
 #include <algorithm>
+#include <memory>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
@@ -30,10 +31,10 @@
  *  This file implements the routines for the t8_cmesh_conn_vertex_to_tree_c struct.
  */
 
-/* Constructor from existing tree to vertex list. */
-t8_cmesh_vertex_conn_vertex_to_tree_c::t8_cmesh_vertex_conn_vertex_to_tree_c (
-  const t8_cmesh_t cmesh, const t8_cmesh_vertex_conn_tree_to_vertex_c& ttv)
-  : t8_cmesh_vertex_conn_vertex_to_tree_c ()
+/* Builds vertex_to_tree with existing tree_to_vertex list. */
+void
+t8_cmesh_vertex_conn_vertex_to_tree::build_from_ttv (
+  const t8_cmesh_t cmesh, t8_cmesh_vertex_conn_tree_to_vertex& ttv)
 {
   /* Call standard constructor */
   T8_ASSERT (state == INITIALIZED);
@@ -59,8 +60,8 @@ t8_cmesh_vertex_conn_vertex_to_tree_c::t8_cmesh_vertex_conn_vertex_to_tree_c (
   state = COMMITTED;
 }
 
-const t8_cmesh_vertex_conn_vertex_to_tree_c::tree_vertex_list&
-t8_cmesh_vertex_conn_vertex_to_tree_c::get_tree_list_of_vertex (t8_gloidx_t global_vertex_id) const
+const t8_cmesh_vertex_conn_vertex_to_tree::tree_vertex_list&
+t8_cmesh_vertex_conn_vertex_to_tree::get_tree_list_of_vertex (t8_gloidx_t global_vertex_id) const
 {
   T8_ASSERT (is_committed ());
   T8_ASSERT (0 <= global_vertex_id);
@@ -78,19 +79,19 @@ t8_cmesh_vertex_conn_vertex_to_tree_c::get_tree_list_of_vertex (t8_gloidx_t glob
 }
 
 int
-t8_cmesh_vertex_conn_vertex_to_tree_c::is_committed () const
+t8_cmesh_vertex_conn_vertex_to_tree::is_committed () const
 {
   return state == COMMITTED;
 }
 
 bool
-t8_cmesh_vertex_conn_vertex_to_tree_c::operator== (const t8_cmesh_vertex_conn_vertex_to_tree_c& other) const
+t8_cmesh_vertex_conn_vertex_to_tree::operator== (const t8_cmesh_vertex_conn_vertex_to_tree& other) const
 {
   return is_equal (other);
 }
 
 int
-t8_cmesh_vertex_conn_vertex_to_tree_c::is_equal (const t8_cmesh_vertex_conn_vertex_to_tree_c& other) const
+t8_cmesh_vertex_conn_vertex_to_tree::is_equal (const t8_cmesh_vertex_conn_vertex_to_tree& other) const
 {
   /* Two instances are equal if and only if their
    * states are equal and the stored vertices are equal. */
@@ -101,7 +102,7 @@ t8_cmesh_vertex_conn_vertex_to_tree_c::is_equal (const t8_cmesh_vertex_conn_vert
   * global vertex ids have been added.
   * After commit, no vertex ids can be added anymore. */
 void
-t8_cmesh_vertex_conn_vertex_to_tree_c::commit (const t8_cmesh_t cmesh)
+t8_cmesh_vertex_conn_vertex_to_tree::commit (const t8_cmesh_t cmesh)
 {
   sort_list_by_tree_id ();
   state = COMMITTED;
@@ -110,7 +111,7 @@ t8_cmesh_vertex_conn_vertex_to_tree_c::commit (const t8_cmesh_t cmesh)
 }
 
 void
-t8_cmesh_vertex_conn_vertex_to_tree_c::add_vertex_to_tree (const t8_cmesh_t cmesh, t8_gloidx_t global_vertex_id,
+t8_cmesh_vertex_conn_vertex_to_tree::add_vertex_to_tree (const t8_cmesh_t cmesh, t8_gloidx_t global_vertex_id,
                                                            t8_locidx_t ltreeid, int tree_vertex)
 {
   T8_ASSERT (!is_committed ());
@@ -139,8 +140,8 @@ t8_cmesh_vertex_conn_vertex_to_tree_c::add_vertex_to_tree (const t8_cmesh_t cmes
  *  tree_id_A < tree_id_B or
  *  tree_id_A == tree_id_B and vertex_id_A < vertex_id_B */
 static int
-t8_cmesh_tree_vertex_pair_compare (t8_cmesh_vertex_conn_vertex_to_tree_c::tree_vertex_pair const& pair_a,
-                                   t8_cmesh_vertex_conn_vertex_to_tree_c::tree_vertex_pair const& pair_b)
+t8_cmesh_tree_vertex_pair_compare (t8_cmesh_vertex_conn_vertex_to_tree::tree_vertex_pair const& pair_a,
+                                   t8_cmesh_vertex_conn_vertex_to_tree::tree_vertex_pair const& pair_b)
 {
   return pair_a.first == pair_b.first ?                              /* if tree_id_A == tree_id_B  */
            pair_a.second < pair_b.second                             /* then check vertex_id_A < vertex_id_B */
@@ -148,7 +149,7 @@ t8_cmesh_tree_vertex_pair_compare (t8_cmesh_vertex_conn_vertex_to_tree_c::tree_v
 }
 
 void
-t8_cmesh_vertex_conn_vertex_to_tree_c::sort_list_by_tree_id ()
+t8_cmesh_vertex_conn_vertex_to_tree::sort_list_by_tree_id ()
 {
   T8_ASSERT (!is_committed ());
 
@@ -163,7 +164,7 @@ t8_cmesh_vertex_conn_vertex_to_tree_c::sort_list_by_tree_id ()
 }
 
 int
-t8_cmesh_vertex_conn_vertex_to_tree_c::contains_all_vertices (const t8_cmesh_t cmesh) const
+t8_cmesh_vertex_conn_vertex_to_tree::contains_all_vertices (const t8_cmesh_t cmesh) const
 {
   /* We need to check that each local tree/ghost and each vertex 
    * exists exactly once in the list. 
