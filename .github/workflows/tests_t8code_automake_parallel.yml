@@ -1,11 +1,11 @@
-name: t8code tests parallel
+name: t8code automake tests parallel
 
 
 #  This file is part of t8code.
 #  t8code is a C library to manage a collection (a forest) of multiple
 #  connected adaptive space-trees of general element types in parallel.
 #
-#  Copyright (C) 2015 the developers
+#  Copyright (C) 2024 the developers
 #
 #  t8code is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -82,14 +82,14 @@ jobs:
     - name: Get sc commit hash
       run: hash=`git rev-parse HEAD:sc` && echo sc_commit=$hash >> $GITHUB_ENV
     - name: Check cache for previous sc installation
-      id: sc_cache
+      id: sc_automake_cache
       uses: actions/cache@v4
       with:
         path: |
           ${{ env.SC_DEBUG }}
           ${{ env.SC_RELEASE }}
         # You can increase the counter at the end to force a new key and hence recomputing the cache
-        key: sc-${{ env.sc_commit }}-004
+        key: sc-automake-${{ env.sc_commit }}-005
     - name: Set ignore cache variable
       # If this variable is set 1
       # (i.e. SC_IGNORE_CACHE=1) then the cache will be ignored and
@@ -132,14 +132,14 @@ jobs:
     - name: Get p4est commit hash
       run: hash=`git rev-parse HEAD:p4est` && echo p4est_commit=$hash >> $GITHUB_ENV
     - name: Check cache for previous p4est installation
-      id: p4est_cache
+      id: p4est_automake_cache
       uses: actions/cache@v4
       with:
         path: |
           ${{ env.P4EST_DEBUG }}
           ${{ env.P4EST_RELEASE }}
         # You can increase the counter at the end to force a new key and hence recomputing the cache
-        key: p4est-${{ env.p4est_commit }}-004
+        key: p4est-${{ env.p4est_commit }}-005
     - name: Set ignore cache variable
       # If this variable is set to 1 then the cache is ignored and p4est is installed regardless of cache.
       # (set with i.e. P4EST_IGNORE_CACHE=1)
