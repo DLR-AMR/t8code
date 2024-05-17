@@ -5,6 +5,8 @@ else()
     add_library( T8 STATIC )
 endif()
 
+add_library( T8CODE::T8 ALIAS T8 )
+
 set_target_properties( T8 PROPERTIES OUTPUT_NAME t8 )
 
 target_compile_definitions( T8 PUBLIC T8_CMAKE_BUILD )
