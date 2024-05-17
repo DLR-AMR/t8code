@@ -570,14 +570,12 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   }
   T8_ASSERT (cmesh->set_partition || cmesh->tree_offsets == NULL);
 
-  /* Build vertex_to_tree instance */
-  /* TODO: Throw an error and stop the program, if tree_to_vertex is empty. */
-  if (cmesh->vertex_connectivity->get_vertex_to_tree_state () == 1) {
-    t8_errorf("The vertex_to_tree instance has already been committed and cannot be changed.");
-    SC_ABORTF("Vertex_to_tree class cannot be changed after committing");
-  }  
-  else {
-    cmesh->vertex_connectivity->build_vertex_to_tree(cmesh);
+  /* Build vertex_to_tree instance from the cmesh and a tree_to_vertex instance,
+   * but only if the vertex_to_tree instance is not yet committed
+   * and if the tree_to_vertex instance is not empty.
+   */
+  if (cmesh->vertex_connectivity->get_vertex_to_tree_state () == 0 && cmesh->vertex_connectivity->get_tree_to_vertex_state () == 1) {
+    cmesh->vertex_connectivity->build_vertex_to_tree (cmesh);
   }
 
 #if T8_ENABLE_DEBUG

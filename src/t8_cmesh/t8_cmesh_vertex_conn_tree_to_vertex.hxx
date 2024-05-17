@@ -50,7 +50,9 @@ class t8_cmesh_vertex_conn_tree_to_vertex
 {
  public:
   /** Standard constructor. Does nothing. */
-  t8_cmesh_vertex_conn_tree_to_vertex () {};
+  t8_cmesh_vertex_conn_tree_to_vertex (): state (EMPTY)
+  {
+  }
 
   /** Constructor from a cmesh where all the attributes are set. */
   t8_cmesh_vertex_conn_tree_to_vertex (const t8_cmesh_t cmesh)
@@ -87,8 +89,19 @@ class t8_cmesh_vertex_conn_tree_to_vertex
   const t8_gloidx_t *
   get_global_vertices (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int num_vertices) const;
 
+  const int
+  get_state ()
+  {
+    return state;
+  }
+
   friend struct t8_cmesh_vertex_connectivity;
 
  private:
+
+  enum {
+    EMPTY, /*< Is initialized but empty. */
+    FILLED /*< Is filled with at least one entry. */
+  } state;
 };
 

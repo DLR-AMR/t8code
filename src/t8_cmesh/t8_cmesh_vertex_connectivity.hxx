@@ -200,6 +200,13 @@ struct t8_cmesh_vertex_connectivity
     return vertex_to_tree.get_state ();
   }
 
+  /* Get the current state of the tree_to_vertex instance */
+  inline const int
+  get_tree_to_vertex_state ()
+  {
+    return tree_to_vertex.get_state ();
+  }
+
  private:
   t8_cmesh_vertex_connectivity_state_t state;
 

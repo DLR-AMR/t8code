@@ -122,6 +122,7 @@ t8_cmesh_vertex_conn_tree_to_vertex::set_global_vertex_ids_of_tree_vertices (con
   t8_debugf ("Setting %i global vertices for global tree %li.\n", num_vertices, global_tree);
   t8_cmesh_set_attribute_gloidx_array (cmesh, global_tree, t8_get_package_id (), T8_CMESH_GLOBAL_VERTICES_ATTRIBUTE_KEY,
                                        global_tree_vertices, num_vertices, data_persists);
+  state = FILLED;
 }
 
 /* TODO: What if the attribute is not set? error handling */
