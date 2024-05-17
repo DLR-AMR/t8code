@@ -139,7 +139,7 @@ typedef struct t8_cmesh
 
   t8_geometry_handler_c *geometry_handler; /**< Handles all geometries that are used by trees in this cmesh. */
 
-  struct t8_cmesh_vertex_connectivity *vertex_connectivity;
+  struct t8_cmesh_vertex_connectivity *vertex_connectivity; /**< Structure that manages tree_to_vertex and vertex_to_tree connectivity. */
 
 #ifdef T8_ENABLE_DEBUG
   t8_locidx_t inserted_trees;  /**< Count the number of inserted trees to
