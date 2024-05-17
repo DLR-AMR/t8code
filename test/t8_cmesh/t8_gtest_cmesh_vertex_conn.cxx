@@ -25,6 +25,7 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity.hxx>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_cmesh/t8_cmesh_types.h>
 
 /* In this file we test TODO: document */
 
@@ -37,7 +38,7 @@ class t8_test_cmesh_vertex_conn: public testing::Test {
 
     /*
 
-    We build a replicated cmesh of 2 triangle trees that are coinnected via one face.
+    We build a replicated cmesh of 2 triangle trees that are connected via one face.
     The triangles are connected via faces 0 and 1 in positive orientation.
     The local vertex numbers look like this:
 
@@ -68,6 +69,10 @@ class t8_test_cmesh_vertex_conn: public testing::Test {
     constexpr t8_gloidx_t global_vertices_of_tree_1[testcase_num_vertices_per_tree] = { 1, 3, 2 };
     t8_cmesh_set_global_vertices_of_tree (cmesh, 0, global_vertices_of_tree_0, testcase_num_vertices_per_tree);
     t8_cmesh_set_global_vertices_of_tree (cmesh, 1, global_vertices_of_tree_1, testcase_num_vertices_per_tree);
+    /* TODO: When cmesh becomes a class implement a cmesh member function to do this instead: 
+    cmesh.set_global_vertices_of_tree (0, global_vertices_of_tree_0, testcase_num_vertices_per_tree);
+    cmesh.set_global_vertices_of_tree (1, global_vertices_of_tree_1, testcase_num_vertices_per_tree);
+    */
     t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   }
 
@@ -95,7 +100,7 @@ TEST_F (t8_test_cmesh_vertex_conn, check_tree_to_vertex)
   const t8_gloidx_t *check_global_vertices_tree_0
     = t8_cmesh_get_global_vertices_of_tree (cmesh, 0, testcase_num_vertices_per_tree);
   const t8_gloidx_t *check_global_vertices_tree_1
-    = t8_cmesh_get_global_vertices_of_tree (cmesh, 0, testcase_num_vertices_per_tree);
+    = t8_cmesh_get_global_vertices_of_tree (cmesh, 1, testcase_num_vertices_per_tree);
   EXPECT_EQ (check_global_vertices_tree_0[0], 0);
   EXPECT_EQ (check_global_vertices_tree_0[1], 1);
   EXPECT_EQ (check_global_vertices_tree_0[2], 2);
@@ -157,7 +162,7 @@ TEST_F (t8_test_cmesh_vertex_conn, check_vertex_to_tree)
   const int num_local_vertices = t8_cmesh_get_num_local_vertices (cmesh);
 
   for (int ivertex = 0; ivertex < num_local_vertices; ++ivertex) {
-    auto &vertex_to_tree_list = t8_cmesh_get_vertex_to_tree_list (cmesh, ivertex);
+    auto &vertex_to_tree_list = cmesh->vertex_connectivity->get_vertex_to_tree_list (cmesh, ivertex);
     /* Check the values via the iterator */
     for (auto &[local_tree, local_vertex] : vertex_to_tree_list) {
       EXPECT_EQ (local_vertex, check_local_vertices[ivertex][local_tree]);

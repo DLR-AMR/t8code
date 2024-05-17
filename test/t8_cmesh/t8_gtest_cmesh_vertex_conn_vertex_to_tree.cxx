@@ -27,7 +27,7 @@
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <test/t8_cmesh_generator/t8_cmesh_example_sets.hxx>
 
-/* In this file we test the t8_cmesh_vertex_conn_vertex_to_tree_c
+/* In this file we test the t8_cmesh_vertex_conn_vertex_to_tree
  * class of the cmesh global vertex list.
  * We iterate over all cmeshes and for each case we
  * construct two global id lists.
@@ -102,8 +102,8 @@ class t8_test_cmesh_vertex_conn_vtt: public testing::TestWithParam<cmesh_example
    * vtt_all_to_one. */
   const t8_gloidx_t global_vertex_id = 1;
 
-  t8_cmesh_vertex_conn_vertex_to_tree_c vtt_all_to_one; /* all vertices get global id 1 */
-  t8_cmesh_vertex_conn_vertex_to_tree_c vtt;            /* multiple global vertex ids */
+  t8_cmesh_vertex_conn_vertex_to_tree vtt_all_to_one; /* all vertices get global id 1 */
+  t8_cmesh_vertex_conn_vertex_to_tree vtt;            /* multiple global vertex ids */
 };
 
 /** Check stored global ids for the case with a single global vertex. */
@@ -225,16 +225,18 @@ TEST_P (t8_test_cmesh_vertex_conn_vtt, DISABLED_convert_to_ttv_and_back)
   t8_cmesh_set_derive (derived_cmesh_A, cmesh);
   t8_cmesh_set_derive (derived_cmesh_B, cmesh);
   /* Construct ttv connectivities from the two vtt connectivities. */
-  t8_cmesh_vertex_conn_tree_to_vertex_c ttv (cmesh, derived_cmesh_A, vtt);
-  t8_cmesh_vertex_conn_tree_to_vertex_c ttv_all_to_one (cmesh, derived_cmesh_B, vtt_all_to_one);
+  t8_cmesh_vertex_conn_tree_to_vertex ttv (cmesh, derived_cmesh_A, vtt);
+  t8_cmesh_vertex_conn_tree_to_vertex ttv_all_to_one (cmesh, derived_cmesh_B, vtt_all_to_one);
   /* Commit the cmeshes to actually build the ttv connectivities. */
   t8_cmesh_commit (derived_cmesh_A, sc_MPI_COMM_WORLD);
   t8_cmesh_commit (derived_cmesh_B, sc_MPI_COMM_WORLD);
 
   /* Now we can build vtt conns from the ttv conns.
    * They should match the original connectivities. */
-  t8_cmesh_vertex_conn_vertex_to_tree_c vtt_new (derived_cmesh_A, ttv);
-  t8_cmesh_vertex_conn_vertex_to_tree_c vtt_new_all_to_one (derived_cmesh_B, ttv_all_to_one);
+  t8_cmesh_vertex_conn_vertex_to_tree vtt_new;
+  vtt_new.build_from_ttv(derived_cmesh_A, ttv);
+  t8_cmesh_vertex_conn_vertex_to_tree vtt_new_all_to_one;
+  vtt_all_to_one.build_from_ttv(derived_cmesh_B, ttv_all_to_one);
 
   /* Check for equality. */
   EXPECT_EQ (vtt, vtt_new);

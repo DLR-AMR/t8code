@@ -73,7 +73,7 @@ class cmesh_vertex_conn_ttv_with_core_classes: public testing::TestWithParam<cme
 
   t8_cmesh_t cmesh;
 
-  t8_cmesh_vertex_conn_tree_to_vertex_c ttv;
+  t8_cmesh_vertex_conn_tree_to_vertex ttv;
 };
 
 /** Check attribute values of cmeshes against reference values. */
@@ -146,7 +146,7 @@ class cmesh_vertex_conn_ttv_with_core_classes_temp:
   t8_cmesh_t cmesh;
   t8_gloidx_t num_trees;
 
-  t8_cmesh_vertex_conn_tree_to_vertex_c ttv;
+  t8_cmesh_vertex_conn_tree_to_vertex ttv;
 };
 
 /** Check for correct ttv entries. */
@@ -188,7 +188,8 @@ TEST_P (cmesh_vertex_conn_ttv_with_core_classes_temp, convert_to_vtt)
 #endif
 {
   /* create a vertex_to_tree list from ttv */
-  t8_cmesh_vertex_conn_vertex_to_tree_c vtt (cmesh, ttv);
+  t8_cmesh_vertex_conn_vertex_to_tree vtt;
+  vtt.build_from_ttv(cmesh, ttv);
   /* Since global tree i is mapped to vertices:
    *  i*T8_ECLASS_MAX_CORNERS, i*T8_ECLASS_MAX_CORNERS + 1, ... 
    *  and this mapping is unique, we know that the list for vertex j
