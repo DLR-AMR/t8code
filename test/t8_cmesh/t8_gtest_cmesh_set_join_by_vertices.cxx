@@ -301,7 +301,9 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
     t8_cmesh_destroy (&cmesh);
   }
 
+#if !T8_ENABLE_DEBUG
   {
+    /* Note: This cmesh contains cells with negative volumes. In debug mode this test fails. */
     p4est_connectivity_t *p4_conn = p4est_connectivity_new_star ();
     t8_cmesh_t cmesh = t8_cmesh_new_from_p4est (p4_conn, comm, do_partition);
     p4est_connectivity_destroy (p4_conn);
@@ -310,6 +312,7 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
   }
 
   {
+    /* Note: This cmesh contains cells with negative volumes. In debug mode this test fails. */
     p4est_connectivity_t *p4_conn = p4est_connectivity_new_moebius ();
     t8_cmesh_t cmesh = t8_cmesh_new_from_p4est (p4_conn, comm, do_partition);
     p4est_connectivity_destroy (p4_conn);
@@ -318,12 +321,14 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
   }
 
   {
+    /* Note: This cmesh contains cells with negative volumes. In debug mode this test fails. */
     p4est_connectivity_t *p4_conn = p4est_connectivity_new_pillow ();
     t8_cmesh_t cmesh = t8_cmesh_new_from_p4est (p4_conn, comm, do_partition);
     p4est_connectivity_destroy (p4_conn);
     test_with_cmesh (cmesh);
     t8_cmesh_destroy (&cmesh);
   }
+#endif
 
   {
     p4est_connectivity_t *p4_conn = p4est_connectivity_new_corner ();
