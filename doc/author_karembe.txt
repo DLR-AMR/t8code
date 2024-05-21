@@ -1,0 +1,1 @@
+I place my contributions to t8code under the FreeBSD license. Mael Karembe (Mael.Karembe@dlr.de).
