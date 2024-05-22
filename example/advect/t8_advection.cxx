@@ -1546,7 +1546,7 @@ main (int argc, char *argv[])
                          "and be in ASCII format version 2. -d must be specified.");
   sc_options_add_int (opt, 'd', "dim", &dim, -1, "In combination with -f: The dimension of the mesh. 1 <= d <= 3.");
 
-  sc_options_add_switch (opt, 'O', "cad", &use_cad_geometry,
+  sc_options_add_switch (opt, 'c', "cad", &use_cad_geometry,
                          "In combination with -f: Use the cad geometry, only viable if a "
                          ".brep file of the same name is present.");
 

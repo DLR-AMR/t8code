@@ -121,7 +121,7 @@ libt8_compiled_sources = \
   src/t8_cmesh/t8_cmesh_copy.c src/t8_data/t8_shmem.c \
   src/t8_cmesh/t8_cmesh_geometry.cxx \
   src/t8_cmesh/t8_cmesh_examples.cxx \
-  src/t8_cmesh/t8_cmesh_helpers.c \
+  src/t8_cmesh/t8_cmesh_helpers.cxx \
   src/t8_data/t8_containers.cxx \
   src/t8_cmesh/t8_cmesh_offset.c src/t8_cmesh/t8_cmesh_readmshfile.cxx \
   src/t8_forest/t8_forest.c src/t8_forest/t8_forest_adapt.cxx \

@@ -31,12 +31,13 @@ t8_dquad_compute_reference_coords (const t8_dquad_t *elem, const double *ref_coo
 
   const p4est_qcoord_t h = P4EST_QUADRANT_LEN (q1->level);
 
-  for (size_t coord = 0; coord < num_coords; ++coord) {
-    const size_t offset = coord * 2;
-    out_coords[offset + 0] = q1->x + ref_coords[offset + 0] * h;
-    out_coords[offset + 1] = q1->y + ref_coords[offset + 1] * h;
+  for (size_t icoord = 0; icoord < num_coords; ++icoord) {
+    const size_t offset_2d = icoord * 2;
+    const size_t offset_3d = icoord * 3;
+    out_coords[offset_2d + 0] = q1->x + ref_coords[offset_3d + 0] * h;
+    out_coords[offset_2d + 1] = q1->y + ref_coords[offset_3d + 1] * h;
 
-    out_coords[offset + 0] /= (double) P4EST_ROOT_LEN;
-    out_coords[offset + 1] /= (double) P4EST_ROOT_LEN;
+    out_coords[offset_2d + 0] /= (double) P4EST_ROOT_LEN;
+    out_coords[offset_2d + 1] /= (double) P4EST_ROOT_LEN;
   }
 }
