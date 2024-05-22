@@ -81,5 +81,7 @@ if ( T8CODE_BUILD_EXAMPLES )
 endif()
 
 if ( BUILD_DOCUMENTATION ) 
+    # Add the cmake folder so the FindSphinx module is found
+    set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/doc )
 endif()
