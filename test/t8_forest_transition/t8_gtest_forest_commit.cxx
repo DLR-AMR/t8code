@@ -61,7 +61,7 @@ t8_test_adapt_balance (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t 
     return 0;
   }
   int child_id = ts->t8_element_child_id (elements[0]);
-  if (child_id == 1) {
+  if (child_id == 0) {
     return 1;
   }
   return 0;
@@ -79,7 +79,7 @@ t8_test_forest_commit_abp (t8_forest_t forest, int maxlevel)
   t8_forest_init (&forest_ada_bal_par);
   /* Set user data for adapt */
   t8_forest_set_user_data (forest_ada_bal_par, &maxlevel);
-  t8_forest_set_adapt (forest_ada_bal_par, forest, t8_test_adapt_balance, 1);
+  t8_forest_set_adapt (forest_ada_bal_par, forest, t8_test_adapt_balance, 0);
   t8_forest_set_balance (forest_ada_bal_par, NULL, 0);
   t8_forest_set_transition(forest_ada_bal_par, NULL, 0);
   t8_forest_set_partition (forest_ada_bal_par, NULL, 0);
@@ -123,28 +123,30 @@ TEST (forest_commit, test_forest_commit)
   t8_forest_t forest;
   t8_forest_t forest_ada_bal_part;
   t8_forest_t forest_abp_3part;
+  const char *prefix_transition = "forest_test_transition";
 
   const int level_step = 0;
   /* construct a single tree hex cmesh */
   cmesh = t8_cmesh_new_hypercube (T8_ECLASS_HEX, sc_MPI_COMM_WORLD, 0, 0, 0);
-   /* ref the cmesh since we reuse it */
-    t8_cmesh_ref (cmesh);
+  
 
   t8_scheme_cxx_t *scheme = t8_scheme_new_transition_hex_cxx ();
-  sizeof(t8_hex_with_subelements);
-    t8_debugf("size of p8est quadrant  %li \n",sizeof(p8est_quadrant_t) );
+  // sizeof(t8_hex_with_subelements);
+  //   t8_debugf("size of p8est quadrant  %li \n",sizeof(p8est_quadrant_t) );
 
-  t8_debugf("size of t8_hex_with_subelements %li \n",sizeof(t8_hex_with_subelements) );
-   t8_scheme_cxx_ref (scheme);
+  // t8_debugf("size of t8_hex_with_subelements %li \n",sizeof(t8_hex_with_subelements) );
+ 
 
   /* Compute the first level, such that no process is empty */
   // int min_level = t8_forest_min_nonempty_level (cmesh, scheme);
   // // /* Use one level with empty processes */
   // min_level = SC_MAX (min_level - 1, 0);
-   int maxlevel = 2;
+   int maxlevel = 5;
+
   for (int level = 0; level <= maxlevel; level++) {
+     /* ref the cmesh since we reuse it */
+  t8_cmesh_ref (cmesh);
     t8_debugf ("Testing forest commit level %i\n", level);
-   
    
     /* Create a uniformly refined forest */
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
@@ -152,18 +154,23 @@ TEST (forest_commit, test_forest_commit)
     // t8_forest_ref (forest);
     /* Adapt, balance and partition the forest */
     // forest_ada_bal_part = t8_test_forest_commit_abp (forest, maxlevel);
+    // if ( level == maxlevel){
+ 
+    //   t8_forest_write_vtk (forest_ada_bal_part, prefix_transition);
+    // }
     /* Adapt, balance and partition the forest using three separate steps */
     // forest_abp_3part = t8_test_forest_commit_abp_3step (forest, maxlevel);
 
     // ASSERT_TRUE (t8_forest_is_equal (forest_abp_3part, forest_ada_bal_part)) << "The forests are not equal";
-         t8_forest_unref (&forest);
+    t8_scheme_cxx_ref (scheme);
 
+    t8_forest_unref (&forest);
     // t8_forest_unref (&forest_ada_bal_part);
     // t8_forest_unref (&forest_abp_3part);
   }
+      t8_cmesh_unref(&cmesh);
 
   t8_scheme_cxx_unref (&scheme);
-  t8_cmesh_unref(&cmesh);
   t8_debugf ("Done testing forest commit.");
 }
 

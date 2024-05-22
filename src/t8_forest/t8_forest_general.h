@@ -386,6 +386,13 @@ t8_forest_comm_global_num_elements (t8_forest_t forest);
 void 
 t8_forest_comm_global_num_subelements (t8_forest_t forest);
 
+/** Return the number of global subelements in the forest.
+  * \param [in]  forest    A forest.
+  * \return                The number of subelements (summed over all processes) in \a forest.
+ * \a forest must be committed before calling this function.
+  */
+t8_gloidx_t         t8_forest_get_global_num_subelements (t8_forest_t forest);
+
 
 /** Set a source forest to use subelements during commit, that will remove hanging faces from the adapted mesh.
  * \param [in, out] forest  The forest.

@@ -21,6 +21,7 @@
 */
 
 #include <new>
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_schemes/t8_transition/t8_transition_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_line/t8_default_line_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_hex/t8_default_hex_cxx.hxx>
@@ -42,7 +43,7 @@ t8_scheme_new_transition_hex_cxx (void)
   t8_refcount_init (&s->rc);
 
   s->eclass_schemes[T8_ECLASS_VERTEX] = NULL;
-  s->eclass_schemes[T8_ECLASS_LINE] = NULL;  
+  s->eclass_schemes[T8_ECLASS_LINE] = new t8_default_scheme_line_c ();
   s->eclass_schemes[T8_ECLASS_QUAD] = new t8_default_scheme_quad_c ();
   s->eclass_schemes[T8_ECLASS_HEX] = new t8_subelement_scheme_hex_c ();
   s->eclass_schemes[T8_ECLASS_TRIANGLE] = new t8_default_scheme_tri_c ();  

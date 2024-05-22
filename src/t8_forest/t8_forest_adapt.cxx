@@ -744,7 +744,7 @@ t8_forest_adapt (t8_forest_t forest)
      * even if you do not want this output. It fixes a bug that occurred on JUQUEEN, where the
      * runtimes were computed to 0.
      * Only delete the line, if you know what you are doing. */
-    t8_global_productionf ("End adadpt %f %f\n", sc_MPI_Wtime (), forest->profile->adapt_runtime);
+    t8_global_productionf ("End adapt %f %f\n", sc_MPI_Wtime (), forest->profile->adapt_runtime);
   }
 }
 

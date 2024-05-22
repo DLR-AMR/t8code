@@ -130,7 +130,7 @@ t8_forest_partition_test_desc (t8_forest_t forest)
     /* This forest is empty, nothing to do */
     return;
   }
-
+  
   tree = t8_forest_get_tree (forest, 0);
   ts = t8_forest_get_eclass_scheme (forest, tree->eclass);
   /* Get the first descendant id of this rank */

@@ -1134,8 +1134,7 @@ t8_linearidx_t
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= P8EST_OLD_QMAXLEVEL);
 
-  // return p8est_quadrant_linear_id ((p8est_quadrant_t *) q, level);
-   return p8est_quadrant_linear_id ( q, level);
+  return p8est_quadrant_linear_id ((p8est_quadrant_t *) q, level);
 }
 
 void
@@ -1185,8 +1184,9 @@ t8_subelement_scheme_hex_c::t8_element_last_descendant (const t8_element_t
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (desc));
   T8_ASSERT (0 <= level && level <= P8EST_OLD_QMAXLEVEL);
+  // p8est_quadrant_last_descendant (q, r, level);
+  p8est_quadrant_last_descendant ((p8est_quadrant_t *) elem, (p8est_quadrant_t *) desc, level);
 
-  p8est_quadrant_last_descendant (q, r, level);
 
   /* We allow constructing a last descendant from a subelement. 
    * Keep in mind, that transforming a hex element to a subelement does not change the 
@@ -2863,12 +2863,11 @@ t8_subelement_scheme_hex_c::t8_element_new (int length, t8_element_t **elem) con
   /* allocate memory */
   t8_default_scheme_common_c::t8_element_new (length, elem);
 
-  int                 elem_count;
-  for (elem_count = 0; elem_count < length; elem_count++) {
+  for (int i = 0; i < length; i++) {
     t8_hex_with_subelements *phex_w_sub =
-      (t8_hex_with_subelements *) elem[elem_count];
-    t8_element_init (1, elem[elem_count]);
-     T8_QUAD_SET_TDIM ((p8est_quadrant_t *) & phex_w_sub->p8q, 3);
+      (t8_hex_with_subelements *) elem[i];
+    t8_element_init (1, elem[i]);
+    T8_QUAD_SET_TDIM ( (p8est_quadrant_t *) & phex_w_sub->p8q, 3);
   }
 }
 
@@ -2877,22 +2876,18 @@ t8_subelement_scheme_hex_c::t8_element_init (int length, t8_element_t *elem) con
 {
   t8_hex_with_subelements *phex_w_sub = (t8_hex_with_subelements *) elem;
 
-  int                 elem_count;
-
-  for (elem_count = 0; elem_count < length; elem_count++) {
+  for (int i = 0; i < length; i++) {
     /* initialize subelement parameters */
-    phex_w_sub[elem_count].transition_type = 0;
-    phex_w_sub[elem_count].subelement_id = 0;
-
+    phex_w_sub[i].transition_type = 0;
+    phex_w_sub[i].subelement_id = 0;
 #ifdef T8_ENABLE_DEBUG
     /* In debugging mode we iterate over all length many elements and 
      * set their hex to the level 0 hex with ID 0. */
-    p8est_quadrant_t   *hex = &phex_w_sub[elem_count].p8q;
-    for (int i = 0; i < length; i++) {
-      p8est_quadrant_set_morton (hex + i, 0, 0);
-      T8_QUAD_SET_TDIM (hex + i, 3);
-      T8_ASSERT (p8est_quadrant_is_extended (hex + i));
-    }
+      p8est_quadrant_t   *hex = &phex_w_sub[i].p8q;
+      p8est_quadrant_set_morton (hex, 0, 0);
+      T8_QUAD_SET_TDIM (hex, 3);
+      T8_ASSERT (p8est_quadrant_is_extended (hex));
+    
 #endif
   }
 }
@@ -2925,34 +2920,8 @@ t8_subelement_scheme_hex_c::t8_element_root (t8_element_t *elem) const{
   }
 
 
-// void
-// t8_subelement_scheme_hex_c::t8_element_init (int length, t8_element_t *elem) const{
-//   SC_ABORT_NOT_REACHED();
-// }
 #ifdef T8_ENABLE_DEBUG
-void
-t8_subelement_scheme_hex_c::t8_element_debug_print (const t8_element_t *elem) const
-{
-  const t8_hex_with_subelements *phex_w_sub =
-    (const t8_hex_with_subelements *) elem;
 
-  t8_productionf ("\n|------------ t8_element_debug_print: ------------|"
-                  "\n|    Transition Type:     %i"
-                  "\n|    Subelement ID:       %i"
-                  "\n|    Anchor (Morton):     (%i,%i,%i)"
-                  "\n|    Anchor (ref coords): (%lf,%lf,%lf)"
-                  "\n|    Level:               %i"
-                  "\n|-------------------------------------------------|\n",
-                  phex_w_sub->transition_type, phex_w_sub->subelement_id,
-                  phex_w_sub->p8q.x, phex_w_sub->p8q.y,phex_w_sub->p8q.z,
-                  (double) phex_w_sub->p8q.x / (double) P8EST_ROOT_LEN,
-                  (double) phex_w_sub->p8q.y / (double) P8EST_ROOT_LEN,
-                  (double) phex_w_sub->p8q.z / (double) P8EST_ROOT_LEN,
-                  phex_w_sub->p8q.level);
-
-  /* if the element is not valid, abort, but after printing */
-  T8_ASSERT (t8_element_is_valid (elem));
-}
 
 /* *INDENT-OFF* */
 /* indent bug, indent adds a second "const" modifier */
@@ -2986,8 +2955,8 @@ t8_subelement_scheme_hex_c::t8_element_subelement_values_are_valid (const
   return ((phex_w_sub->transition_type >= 0 &&
            phex_w_sub->transition_type <= T8_SUB_HEX_MAX_TRANSITION_TYPE)
          &&
-    ((phex_w_sub->subelement_id >= 0 &&
-      phex_w_sub->subelement_id <= T8_SUB_HEX_MAX_SUBELEMENT_ID)));
+    (phex_w_sub->subelement_id >= 0 &&
+      phex_w_sub->subelement_id <= T8_SUB_HEX_MAX_SUBELEMENT_ID));
 }
 
 void
@@ -3000,6 +2969,33 @@ t8_subelement_scheme_hex_c::t8_element_to_string (const t8_element_t *elem, char
 
   snprintf (debug_string, string_size, "x: %i, y: %i, z: %i, level: %i", hex->x, hex->y, hex->z, hex->level);
 }
+
+void
+t8_subelement_scheme_hex_c::t8_element_debug_print (const t8_element_t *elem) const
+{
+  const t8_hex_with_subelements *phex_w_sub =
+    (const t8_hex_with_subelements *) elem;
+
+  t8_productionf ("\n|------------ t8_element_debug_print: ------------|"
+                  "\n|    Transition Type:     %i"
+                  "\n|    Subelement ID:       %i"
+                  "\n|    Anchor (Morton):     (%i,%i,%i)"
+                  "\n|    Anchor (ref coords): (%lf,%lf,%lf)"
+                  "\n|    Level:               %i"
+                  "\n|-------------------------------------------------|\n",
+                  phex_w_sub->transition_type, phex_w_sub->subelement_id,
+                  phex_w_sub->p8q.x, phex_w_sub->p8q.y,phex_w_sub->p8q.z,
+                  (double) phex_w_sub->p8q.x / (double) P8EST_ROOT_LEN,
+                  (double) phex_w_sub->p8q.y / (double) P8EST_ROOT_LEN,
+                  (double) phex_w_sub->p8q.z / (double) P8EST_ROOT_LEN,
+                  phex_w_sub->p8q.level);
+
+  /* if the element is not valid, abort, but after printing */
+  T8_ASSERT (t8_element_is_valid (elem));
+
+}
+
+
 #endif
 
 /* each hex is packed as x,y,z coordinates, the subelement ID, transition type and the level */

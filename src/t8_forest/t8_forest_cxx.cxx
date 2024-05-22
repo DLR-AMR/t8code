@@ -31,6 +31,7 @@
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_balance.h>
+#include <t8_forest/t8_forest_transition.h>
 #include <t8_element_cxx.hxx>
 #include <t8_element_c_interface.h>
 #include <t8_cmesh/t8_cmesh_trees.h>
@@ -183,6 +184,8 @@ t8_forest_compute_maxlevel (t8_forest_t forest)
       /* If there are trees of this class, compute the maxlevel of the class */
       ts = t8_forest_get_eclass_scheme_before_commit (forest, (t8_eclass_t) eclass_it);
       maxlevel = ts->t8_element_maxlevel ();
+            
+
       /* Compute the minimum of this level and the stored maxlevel */
       if (forest->maxlevel == -1) {
         forest->maxlevel = maxlevel;
@@ -1155,7 +1158,7 @@ t8_forest_populate (t8_forest_t forest)
   t8_eclass_scheme_c *eclass_scheme;
   t8_gloidx_t cmesh_first_tree, cmesh_last_tree;
   int is_empty;
-
+  
   SC_CHECK_ABORT (forest->set_level <= forest->maxlevel, "Given refinement level exceeds the maximum.\n");
   /* TODO: create trees and quadrants according to uniform refinement */
   t8_cmesh_uniform_bounds (forest->cmesh, forest->set_level, forest->scheme_cxx, &forest->first_local_tree,
@@ -1411,6 +1414,7 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
     forest->local_num_elements = from->local_num_elements;
     forest->global_num_elements = from->global_num_elements;
     forest->incomplete_trees = from->incomplete_trees;
+    forest->is_transitioned = from->is_transitioned;
   }
   else {
     forest->local_num_elements = 0;
