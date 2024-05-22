@@ -764,13 +764,13 @@ t8_forest_commit (t8_forest_t forest)
              "global elements.\n\tTree range is from %lli to %lli.\n",
              (long) forest->local_num_elements, (long long) forest->global_num_elements,
              (long long) forest->first_local_tree, (long long) forest->last_local_tree);
-//ist gleich NULL wenn wir nur einen Baum haben 
+
   if (forest->tree_offsets == NULL) {
     /* Compute the tree offset array */
     t8_forest_partition_create_tree_offsets (forest);
 
   }
-  //ist gleich Null wenn wir nur einen Baum haben 
+
   if (forest->element_offsets == NULL) {
     /* Compute element offsets */
     t8_forest_partition_create_offsets (forest);
