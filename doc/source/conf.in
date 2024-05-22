@@ -29,3 +29,10 @@ html_static_path = ['_static']
 
 # Breathe Configuration
 breathe_default_project = "T8code"
+
+variables_to_export = [
+    "release"
+]
+frozen_locals = dict(locals())
+rst_epilog = '\n'.join(map(lambda x: f".. |{x}| replace:: {frozen_locals[x]}", variables_to_export))
+del frozen_locals

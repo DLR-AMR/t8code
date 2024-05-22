@@ -5,6 +5,7 @@
 
 Welcome to t8code's documentation!
 ==================================
+This is the documentation for t8code version |release|
 
 Author
 ======
@@ -68,3 +69,4 @@ Indices and tables
 Docs
 ====
 .. doxygenindex::
+.. doxygenclass::

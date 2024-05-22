@@ -2613,3 +2613,6 @@ GENERATE_LEGEND        = YES
 DOT_CLEANUP            = YES
 
 GENERATE_XML           = YES
+
+XML_OUTPUT             = xml
+
