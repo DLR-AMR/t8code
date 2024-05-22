@@ -343,7 +343,7 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
   void
   t8_geom_evaluate_cad_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
                             double *out_coords) const;
-  
+
   /**
    * Maps points in the reference space \f$ \f$ [0,1]^3 \f$ \f$ to \f$ \mathbb{R}^3 \f$. Only for prism trees.
    * \param [in]  cmesh      The cmesh in which the point lies.

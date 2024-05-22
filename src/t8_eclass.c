@@ -51,8 +51,8 @@ const int t8_face_edge_to_tree_edge[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES][T8_ECL
   { { -1 } },                                                                                             /* prism */
   { { 0, 4, 7 }, { 1, 5, 6 }, { 2, 4, 5 }, { 3, 6, 7 }, { 0, 1, 2, 3 } }                                  /* pyramid */
 =======
-  { { 0, 7, 3, 6 }, { 1, 8, 4, 7 }, { 2, 6, 5, 8 }, { 0, 1, 2 }, { 3, 4, 5 } },                           /* prism */
-  { { -1 } },                                                                                             /* pyramid */
+  { { 0, 7, 3, 6 }, { 1, 8, 4, 7 }, { 2, 6, 5, 8 }, { 0, 1, 2 }, { 3, 4, 5 } },                 /* prism */
+  { { -1 } },                                                                                   /* pyramid */
 >>>>>>> origin/main
 };
 
@@ -68,8 +68,8 @@ const int t8_face_to_edge_neighbor[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES][T8_ECLA
   { { -1 } },                                                                                             /* prism */
   { { 2, 3, 5, 6 }, { 2, 3, 4, 7 }, { 0, 1, 6, 7 }, { 0, 1, 4, 5 }, { 4, 5, 6, 7 } }                      /* pyramid */
 =======
-  { { 1, 2, 4, 5 }, { 0, 2, 3, 5 }, { 0, 1, 3, 4 }, { 6, 7, 8 }, { 6, 7, 8 } },                           /* prism */
-  { { -1 } },                                                                                             /* pyramid */
+  { { 1, 2, 4, 5 }, { 0, 2, 3, 5 }, { 0, 1, 3, 4 }, { 6, 7, 8 }, { 6, 7, 8 } },                 /* prism */
+  { { -1 } },                                                                                   /* pyramid */
 >>>>>>> origin/main
 };
 
