@@ -558,12 +558,15 @@ t8_forest_adapt (t8_forest_t forest)
          */
         refine = forest->set_adapt_fn (forest, forest->set_from, ltree_id, el_considered, tscheme, is_family,
                                        num_elements_to_adapt_callback, elements_from);
+         t8_debugf("refine value %i \n", refine );
+
         /* make adjustments of the refine value in the context of transitioned forests */
-       // if (forest->set_from->is_transitioned == 1 || forest->set_subelements == 1) {
-        if (forest->set_from->is_transitioned == 1){
-          t8_forest_adjust_refine_for_transitioned_forests (forest, tscheme,
-                                                            t8_element_array_index_locidx (telements_from, el_considered),
-                                                            ltree_id, &refine);}                                 
+      //  if (forest->set_from->is_transitioned == 1 || forest->set_subelements == 1) {
+        // if (forest->set_from->is_transitioned == 1){
+        //   t8_debugf("HIER\n");
+        //   t8_forest_adjust_refine_for_transitioned_forests (forest, tscheme,
+        //                                                     t8_element_array_index_locidx (telements_from, el_considered),
+        //                                                     ltree_id, &refine);}                                 
 
         T8_ASSERT (is_family || refine != -1);
         if (refine == 1 && tscheme->t8_element_level (elements_from[0]) >= forest->maxlevel) {

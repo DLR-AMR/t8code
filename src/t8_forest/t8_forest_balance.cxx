@@ -180,7 +180,6 @@ t8_forest_balance (t8_forest_t forest, int repartition)
     T8_ASSERT (forest_from->maxlevel_existing >= 0);
     /* Initialize the temp forest to be adapted from forest_from */
     t8_forest_init (&forest_temp);
-    t8_debugf("forest temp is transitioned %i und forest from is transitioned %i\n", forest_temp->is_transitioned, forest_from->is_transitioned);
     /* Update the maximum occurring level */
     forest_temp->maxlevel_existing = forest_from->maxlevel_existing;
     /* Adapt the forest */

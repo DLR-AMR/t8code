@@ -2906,9 +2906,7 @@ t8_subelement_scheme_hex_c::t8_element_transition_scheme_is_conformal (void)
 
 int
 t8_subelement_scheme_hex_c::t8_element_equal (const t8_element_t *elem1, const t8_element_t *elem2) const{
-if (t8_element_get_subelement_id((const t8_element * ) elem1) != 0 ){
-  t8_productionf("--------------------------------\n  sub ID %i \n ------------------\n", t8_element_get_subelement_id((const t8_element * ) elem1));
-}
+
   return (p8est_quadrant_is_equal ((const p8est_quadrant_t *) elem1, (const p8est_quadrant_t *) elem2)) && (t8_element_get_subelement_id((const t8_element * ) elem1) == t8_element_get_subelement_id((const t8_element * ) elem2));
 }
 

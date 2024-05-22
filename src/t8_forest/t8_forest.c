@@ -292,7 +292,7 @@ t8_forest_set_transition (t8_forest_t forest, const t8_forest_t set_from,
 
   /* set the forests subelement flag, which is for example used by the LFN routine */
   forest->set_subelements = 1;
-  forest->is_transitioned = 1;
+  // forest->is_transitioned = 1;
 }
 
 void
@@ -464,13 +464,11 @@ t8_forest_populate_irregular (t8_forest_t forest)
   t8_forest_t forest_tmp_partition;
   t8_cmesh_ref (forest->cmesh);
   t8_scheme_cxx_ref (forest->scheme_cxx);
-  t8_debugf("scheme adresse anfang populate irregular %p\n", forest->scheme_cxx);
   /* We start with a level 0 uniform refinement */
   t8_forest_init (&forest_zero);
   t8_forest_set_level (forest_zero, 0);
   t8_forest_set_cmesh (forest_zero, forest->cmesh, forest->mpicomm);
   t8_forest_set_scheme (forest_zero, forest->scheme_cxx);
-    t8_debugf("set level in populate irregular %i\n", forest->set_level);
 
   t8_forest_commit (forest_zero);
   /* Up to the specified level we refine every element. */
@@ -498,7 +496,6 @@ t8_forest_populate_irregular (t8_forest_t forest)
 void
 t8_forest_commit (t8_forest_t forest)
 {
-  t8_debugf("scheme adresse anfang commit %p\n", forest->scheme_cxx);
   int mpiret;
   int partitioned = 0;
   sc_MPI_Comm comm_dup;
@@ -554,9 +551,7 @@ t8_forest_commit (t8_forest_t forest)
     forest->incomplete_trees = 0;
     forest->is_transitioned = 0;
   }
-  else {               
-    t8_global_productionf("-----------set_from != NULL-------------\n");
-
+  else { 
                                    /* set_from != NULL */
     t8_forest_t forest_from = forest->set_from; /* temporarily store set_from, since we may overwrite it */
 
@@ -748,8 +743,6 @@ t8_forest_commit (t8_forest_t forest)
       /* decrease reference count of intermediate input forest, possibly destroying it */
       t8_forest_unref (&forest->set_from);
     }
-    t8_debugf(" forest_from == forest->set_from\n");
-
     /* reset forest->set_from */
     forest->set_from = forest_from;
     /* decrease reference count of input forest, possibly destroying it */
@@ -766,6 +759,7 @@ t8_forest_commit (t8_forest_t forest)
   forest->set_for_coarsening = 0;
   forest->set_from = NULL;
   forest->committed = 1;
+  t8_debugf("Forest is transitioned %i \n", forest->is_transitioned);
   t8_debugf ("Committed forest with %li local elements and %lli "
              "global elements.\n\tTree range is from %lli to %lli.\n",
              (long) forest->local_num_elements, (long long) forest->global_num_elements,
@@ -774,7 +768,6 @@ t8_forest_commit (t8_forest_t forest)
   if (forest->tree_offsets == NULL) {
     /* Compute the tree offset array */
     t8_forest_partition_create_tree_offsets (forest);
-          t8_debugf("Scheme nach forest->tree_offsets == NULL \n");
 
   }
   //ist gleich Null wenn wir nur einen Baum haben 
@@ -788,7 +781,6 @@ t8_forest_commit (t8_forest_t forest)
 
     /* Compute global first desc array */
     t8_forest_partition_create_first_desc (forest);
-                  // t8_debugf("Scheme nach global first desc == NULL %p\n", forest->scheme_cxx);
 
   }
 
@@ -827,8 +819,6 @@ t8_forest_commit (t8_forest_t forest)
 #ifdef T8_ENABLE_DEBUG
   t8_forest_partition_test_boundary_element (forest);
 #endif
-  t8_debugf("scheme adresse Ende commit %p\n", forest->scheme_cxx);
-
 }
 
 t8_locidx_t
@@ -1647,8 +1637,6 @@ t8_forest_free_trees (t8_forest_t forest)
   number_of_trees = forest->trees->elem_count;
   for (jt = 0; jt < number_of_trees; jt++) {
     tree = (t8_tree_t) t8_sc_array_index_locidx (forest->trees, jt);
-    t8_debugf("anzahl element in baum %i \n", t8_forest_get_tree_element_count (tree));
-    t8_debugf("anzahl bäume %i \n", number_of_trees);
 
     if (t8_forest_get_tree_element_count (tree) < 1) {
       /* if local tree is empty */
