@@ -85,6 +85,20 @@ class t8_default_scheme_common_c: public t8_eclass_scheme_c {
   virtual t8_gloidx_t
   t8_element_count_leaves_from_root (int level) const;
 
+  /** Compute the integer coordinates of a given element vertex.
+   * The default scheme implements the Morton type SFCs. In these SFCs the
+   * elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and 
+   * L the maximum refinement level. 
+   * All element vertices have integer coordinates in this cube.
+   *   \param [in] elem    The element.
+   *   \param [in] vertex  The id of the vertex whose coordinates shall be computed.
+   *   \param [out] coords An array of at least as many integers as the element's dimension
+   *                      whose entries will be filled with the coordinates of \a vertex.
+   */
+  virtual void
+  t8_element_vertex_integer_coords (const t8_element_t *elem, int vertex, int coords[]) const
+    = 0;
+
   /** Convert points in the reference space of an element to points in the
    *  reference space of the tree.
    * 

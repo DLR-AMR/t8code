@@ -531,6 +531,75 @@ t8_geom_get_tet_face_intersection (const int face, const double *ref_coords, dou
   }
 }
 
+double
+t8_geom_get_scaling_factor_of_edge_on_face_prism (const int edge, const int face, const double *ref_coords)
+{
+  /* Save the orthogonal direction and the maximum of that direction
+   * of an edge in reference space on one of the neighbouring faces. 
+   *           /|
+   *          / |
+   *         /  |
+   *        /   |
+   *       /    |--edge
+   *      /   --|--face
+   *     /      |
+   *    /    <~~| orthogonal direction
+   *   /<----o--| maximum othogonal direction
+   *  /_________|
+   */
+  const double orthogonal_direction[9][5] = { { ref_coords[2], 0, 0, (1 - ref_coords[0]), 0 },
+                                              { 0, ref_coords[2], 0, (ref_coords[0] - ref_coords[1]), 0 },
+                                              { 0, 0, ref_coords[2], ref_coords[1], 0 },
+                                              { (1 - ref_coords[2]), 0, 0, 0, (1 - ref_coords[0]) },
+                                              { 0, (1 - ref_coords[2]), 0, 0, (ref_coords[0] - ref_coords[1]) },
+                                              { 0, 0, (1 - ref_coords[2]), 0, ref_coords[1] },
+                                              { ref_coords[1], 0, (1 - ref_coords[0]), 0, 0 },
+                                              { (1 - ref_coords[1]), (1 - ref_coords[0]), 0, 0, 0 },
+                                              { 0, ref_coords[0], ref_coords[0], 0, 0 } };
+  const double max_orthogonal_direction[9][5] = { { 1, 0, 0, (1 - ref_coords[1]), 0 },
+                                                  { 0, 1, 0, ref_coords[0], 0 },
+                                                  { 0, 0, 1, ref_coords[0], 0 },
+                                                  { 1, 0, 0, 0, (1 - ref_coords[1]) },
+                                                  { 0, 1, 0, 0, ref_coords[0] },
+                                                  { 0, 0, 1, 0, ref_coords[0] },
+                                                  { 1, 0, 1, 0, 0 },
+                                                  { 1, 1, 0, 0, 0 },
+                                                  { 0, 1, 1, 0, 0 } };
+
+  /* Check that the combination of edge and face is valid */
+  T8_ASSERT (face == t8_edge_to_face[T8_ECLASS_PRISM][edge][0] || face == t8_edge_to_face[T8_ECLASS_PRISM][edge][1]);
+
+  /* If the maximum orthogonal direction is 1, the reference coordinate lies on
+   * one of the edge nodes and the scaling factor is therefore 0, because the displacement
+   * at the nodes is always 0.
+   * In all other cases the scaling factor is determined with one minus the relation of the orthogonal direction
+   * to the maximum orthogonal direction. */
+  if (max_orthogonal_direction[edge][face] == 0) {
+    return 0;
+  }
+  else {
+    return (1.0 - (orthogonal_direction[edge][face] / max_orthogonal_direction[edge][face]));
+  }
+}
+
+double
+t8_geom_get_scaling_factor_face_through_volume_prism (const int face, const double *ref_coords)
+{
+  /* The function computes the scaling factor of any displacement of a prism face, throughout the
+   * volume of the element. The scaling factor is calculated accordingly to 
+   * t8_geom_get_scaling_factor_of_edge_on_face_prism with 1 - (orthogonal_direction / max_orthogonal_direction) */
+
+  const double orthogonal_direction[5]
+    = { (1 - ref_coords[0]), (ref_coords[0] - ref_coords[1]), ref_coords[1], ref_coords[2], (1 - ref_coords[2]) };
+  const double max_orthogonal_direction[5] = { (1 - ref_coords[1]), ref_coords[0], ref_coords[0], 1, 1 };
+
+  if (max_orthogonal_direction[face] == 0) {
+    return 0;
+  }
+
+  return (1.0 - (orthogonal_direction[face] / max_orthogonal_direction[face]));
+}
+
 int
 t8_vertex_point_inside (const double vertex_coords[3], const double point[3], const double tolerance)
 {
