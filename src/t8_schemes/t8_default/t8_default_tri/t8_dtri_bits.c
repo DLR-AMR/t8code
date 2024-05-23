@@ -286,7 +286,7 @@ t8_dtri_ancestor (const t8_dtri_t *t, int level, t8_dtri_t *ancestor)
 
 /* Compute the coordinates of a given vertex of a triangle/tet */
 void
-t8_dtri_compute_coords (const t8_dtri_t *elem, const int vertex, t8_dtri_coord_t coordinates[T8_DTRI_DIM])
+t8_dtri_compute_integer_coords (const t8_dtri_t *elem, const int vertex, t8_dtri_coord_t coordinates[T8_DTRI_DIM])
 {
   /* Calculate the vertex coordinates of a triangle/tetrahedron in relation to its orientation. Orientations are 
    * described here: https://doi.org/10.1137/15M1040049
@@ -359,7 +359,7 @@ t8_dtri_compute_vertex_ref_coords (const t8_dtri_t *elem, const int vertex, doub
   int coords_int[T8_DTRI_DIM];
   T8_ASSERT (0 <= vertex && vertex < T8_DTRI_CORNERS);
 
-  t8_dtri_compute_coords (elem, vertex, coords_int);
+  t8_dtri_compute_integer_coords (elem, vertex, coords_int);
   /* Since the integer coordinates are coordinates w.r.t to
    * the embedding into [0,T8_DTRI_ROOT_LEN]^d, we just need
    * to divide them by the root length. */
@@ -513,13 +513,13 @@ t8_dtri_compute_all_coords (const t8_dtri_t *elem, t8_dtri_coord_t coordinates[T
 #endif
 #ifdef T8_ENABLE_DEBUG
   /* We check whether the results are the same as with the
-   * t8_dtri_compute_coords function.
+   * t8_dtri_compute_integer_coords function.
    */
   {
     int ivertex;
     t8_dtri_coord_t coords[T8_DTRI_DIM];
     for (ivertex = 0; ivertex < T8_DTRI_FACES; ivertex++) {
-      t8_dtri_compute_coords (elem, ivertex, coords);
+      t8_dtri_compute_integer_coords (elem, ivertex, coords);
       T8_ASSERT (coords[0] == coordinates[ivertex][0]);
       T8_ASSERT (coords[1] == coordinates[ivertex][1]);
 #ifdef T8_DTRI_TO_DTET
@@ -561,7 +561,7 @@ t8_dtri_child (const t8_dtri_t *t, int childid, t8_dtri_t *child)
     vertex = t8_dtri_beyid_to_vertex[Bey_cid];
     /* i-th anchor coordinate of child is (X_(0,i)+X_(vertex,i))/2
      * where X_(i,j) is the j-th coordinate of t's ith node */
-    t8_dtri_compute_coords (t, vertex, t_coordinates);
+    t8_dtri_compute_integer_coords (t, vertex, t_coordinates);
     c->x = (t->x + t_coordinates[0]) >> 1;
     c->y = (t->y + t_coordinates[1]) >> 1;
 #ifdef T8_DTRI_TO_DTET

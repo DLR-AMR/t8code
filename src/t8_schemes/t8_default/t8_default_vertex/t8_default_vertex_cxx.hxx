@@ -559,7 +559,7 @@ struct t8_default_scheme_vertex_c: public t8_default_scheme_common_c
    *                      whose entries will be filled with the coordinates of \a vertex.
    */
   virtual void
-  t8_element_vertex_coords (const t8_element_t *elem, int vertex, int coords[]) const;
+  t8_element_vertex_integer_coords (const t8_element_t *elem, int vertex, int coords[]) const;
 
   /** Compute the coordinates of a given element vertex inside a reference tree
    *  that is embedded into [0,1]^d (d = dimension).

@@ -384,20 +384,22 @@ struct t8_geometry_moving: public t8_geometry
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
                     double *out_coords) const
   {
+    double x, y, radius_sqr, phi, rho;
+    int sign;
     for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
       const int offset_3d = i_coord * 3;
       const int offset_2d = i_coord * 2;
-      double x = ref_coords[offset_2d] - .5;
-      double y = ref_coords[offset_2d + 1] - .5;
+      x = ref_coords[offset_2d] - .5;
+      y = ref_coords[offset_2d + 1] - .5;
       const double time = *ptime;
-      double radius_sqr = x * x + y * y;
-      double phi = radius_sqr * (time > 2 ? 4 - time : time);
+      radius_sqr = x * x + y * y;
+      phi = radius_sqr * (time > 2 ? 4 - time : time);
 
       /* Change gridlines by applying a 4th order polynomial mapping
       * [0,1]^2 -> [0,1]^2.
       * And then map this to [-0.5,-0.5]^2 */
-      int sign = x < 0 ? 1 : -1;
-      double rho = 0.5 - time / 10;
+      sign = x < 0 ? 1 : -1;
+      rho = 0.5 - time / 10;
       x = sign * (1 - exp (-fabs (-x) / rho)) / (2 * (1 - exp (-0.5 / rho)));
       sign = y < 0 ? 1 : -1;
       y = sign * (1 - exp (-fabs (-y) / rho)) / (2 * (1 - exp (-0.5 / rho)));

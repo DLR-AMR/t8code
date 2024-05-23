@@ -96,7 +96,7 @@ class t8_default_scheme_common_c: public t8_eclass_scheme_c {
    *                      whose entries will be filled with the coordinates of \a vertex.
    */
   virtual void
-  t8_element_vertex_coords (const t8_element_t *elem, int vertex, int coords[]) const
+  t8_element_vertex_integer_coords (const t8_element_t *elem, int vertex, int coords[]) const
     = 0;
 
   /** Convert points in the reference space of an element to points in the
