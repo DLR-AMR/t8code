@@ -1033,7 +1033,7 @@ t8_test_geometry_cad_pyramid (int face, int edge, double *parameters, double *te
 {
 #if T8_WITH_OCC
   double out_coords[3];
-  double tol = T8_PRECISION_EPS > 1e-10 ? T8_PRECISION_EPS : 1e-10;
+  double tol = T8_PRECISION_SQRT_EPS;
   const int face_vertices = (face < 4 ? 3 : 4);
 
   t8_cmesh_t cmesh = t8_create_cad_reference_pyramid (face, edge, parameters);
@@ -1056,12 +1056,12 @@ TEST (t8_gtest_geometry_cad_pyramid, linked_faces)
   /* clang-format off */
   /* Reference coordinates of each face vertex and the centroid of the pyramid */
   double test_ref_coords[75]
-    = { 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.6, 0.6, 0.2, 2.0, 2.0, 2.0,   // face 0
-        1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.6, 0.6, 0.2, 2.0, 2.0, 2.0,   // face 1
-        0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.6, 0.6, 0.2, 2.0, 2.0, 2.0,   // face 2
-        1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.6, 0.6, 0.2, 2.0, 2.0, 2.0,   // face 3
+    = { 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.6, 0.6, 0.2, -1.0, -1.0, -1.0,   // face 0
+        1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.6, 0.6, 0.2, -1.0, -1.0, -1.0,   // face 1
+        0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.6, 0.6, 0.2, -1.0, -1.0, -1.0,   // face 2
+        1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.6, 0.6, 0.2, -1.0, -1.0, -1.0,   // face 3
         0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.6, 0.6, 0.2 }; // face 4
-    /* The 2.0's at face 0-3 are placeholders, because these faces only have 3 vertices. */
+    /* The -1.0's at face 0-3 are placeholders, because these faces only have 3 vertices. */
 
   double surface_test_return_coords_quad[15]
     = { 0.0, 0.0, 0.0,    // face vertex 0
@@ -1076,12 +1076,12 @@ TEST (t8_gtest_geometry_cad_pyramid, linked_faces)
         0.6737526363, 0.5930049972, 0.1275036282 };  // shifted centroid of the pyramid
 
   double surface_parameters[40]
-    = { 0, 1, 0, 0, 1, 1, 2, 2,   // face 0
-        0, 0, 0, 1, 1, 1, 2, 2,   // face 1
-        0, 0, 0, 1, 1, 1, 2, 2,   // face 2
-        0, 1, 0, 0, 1, 1, 2, 2,   // face 3
+    = { 0, 1, 0, 0, 1, 1, -1, -1,   // face 0
+        0, 0, 0, 1, 1, 1, -1, -1,   // face 1
+        0, 0, 0, 1, 1, 1, -1, -1,   // face 2
+        0, 1, 0, 0, 1, 1, -1, -1,   // face 3
         0, 0, 0, 1, 1, 0, 1, 1 }; // face 4
-    /* The 2's of face 0-3 are placeholders, because these faces only have 3 vertices. */
+    /* The -1's of face 0-3 are placeholders, because these faces only have 3 vertices. */
   /* clang-format on */
 
   for (int i_faces = 0; i_faces < 5; i_faces++) {
