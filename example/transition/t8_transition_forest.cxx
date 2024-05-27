@@ -167,18 +167,12 @@ void t8_transition_commit ()
     // ASSERT_TRUE (t8_forest_is_equal (forest_abtp_3part, forest_ada_bal_tra_part)) << "The forests are not equal";
     t8_scheme_cxx_ref (scheme);
 
-    t8_debugf("ref count forest ada_bal_tra_part %i  \n", forest_ada_bal_tra_part->rc.refcount);
-    t8_debugf("ref count forest_abtp_3part %i  \n", forest_abtp_3part->rc.refcount);
-    t8_debugf("ref count scheme %i  \n", scheme->rc.refcount);
-    t8_debugf("ref count cmesh %i  \n", cmesh->rc.refcount);
     t8_forest_unref (&forest_ada_bal_tra_part);
     t8_forest_unref (&forest_abtp_3part);
-    t8_debugf("ref count scheme %i  \n", scheme->rc.refcount);
-    t8_debugf("ref count cmesh %i  \n", cmesh->rc.refcount);
+
 
   }
     t8_cmesh_unref(&cmesh);
-    t8_debugf("ref count scheme %i  \n", scheme->rc.refcount);
     t8_scheme_cxx_unref (&scheme);
     
 
