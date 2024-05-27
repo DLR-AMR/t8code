@@ -1505,6 +1505,11 @@ t8_subelement_scheme_quad_c::t8_element_refines_irregular () const
 }
 
 void
+t8_subelement_scheme_quad_c::t8_element_vertex_integer_coords (const t8_element_t *elem, int vertex, int coords[]) const
+  {
+  SC_ABORT ("This function is not implemented for the given scheme.\n");
+}
+void
 t8_subelement_scheme_quad_c::t8_element_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
                                double *out_coords)
   const

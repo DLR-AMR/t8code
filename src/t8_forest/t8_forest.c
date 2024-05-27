@@ -509,7 +509,6 @@ t8_forest_commit (t8_forest_t forest)
   }
 
   if (forest->set_from == NULL) {
-    t8_global_productionf("-----------set_from == NULL-------------\n");
     /* This forest is constructed solely from its cmesh as a uniform
      * forest */
     T8_ASSERT (forest->mpicomm != sc_MPI_COMM_NULL);
@@ -538,12 +537,10 @@ t8_forest_commit (t8_forest_t forest)
 
     /* populate a new forest with tree and quadrant objects */
     if (t8_forest_refines_irregular (forest) && forest->set_level > 0) {
-         t8_global_productionf("----------- refines irregular-------------\n");
       /* On root level we will also use the normal algorithm */
       t8_forest_populate_irregular (forest);
     }
     else {
-      t8_global_productionf("-----------refines regular-------------\n");
 
       t8_forest_populate (forest);
     }
