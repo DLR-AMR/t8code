@@ -26,9 +26,11 @@ exclude_patterns = []
 
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
+html_logo = '../../t8code_logo.png'
 
 # Breathe Configuration
 breathe_default_project = "T8code"
+breathe_implementation_filename_extensions = ['.c', '.cpp']
 
 variables_to_export = [
     "release"

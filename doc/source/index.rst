@@ -71,4 +71,3 @@ Docs
 
 .. doxygenindex::
    :allow-dot-graphs:
-.. doxygenpage:: dotgraphs
