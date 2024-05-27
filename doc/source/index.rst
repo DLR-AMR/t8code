@@ -68,5 +68,7 @@ Indices and tables
 
 Docs
 ====
+
 .. doxygenindex::
-.. doxygenclass::
+   :allow-dot-graphs:
+.. doxygenpage:: dotgraphs
