@@ -5,7 +5,7 @@
 
 Welcome to t8code's documentation!
 ==================================
-This is the documentation for t8code version |release|
+This is the documentation for t8code version |version|
 
 Author
 ======

@@ -9,7 +9,7 @@
 project = 't8code'
 copyright = '2024, Johannes Holke, David Knapp, Sandro Elsweijer, Ioannis Lilikakis, Lukas Dreyer, Jakob Fußbroich, Carsten Burstedde, Chiara Hergl, Johannes Markert, Niklas Boeing, Florian Becker, Prasanna Ponnusamy'
 author = 'Johannes Holke, David Knapp, Sandro Elsweijer, Ioannis Lilikakis, Lukas Dreyer, Jakob Fußbroich, Carsten Burstedde, Chiara Hergl, Johannes Markert, Niklas Boeing, Florian Becker, Prasanna Ponnusamy'
-release = '@VERSION@'
+version = '@VERSION@'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -31,10 +31,3 @@ html_logo = '../../t8code_logo.png'
 # Breathe Configuration
 breathe_default_project = "T8code"
 breathe_implementation_filename_extensions = ['.c', '.cpp']
-
-variables_to_export = [
-    "release"
-]
-frozen_locals = dict(locals())
-rst_epilog = '\n'.join(map(lambda x: f".. |{x}| replace:: {frozen_locals[x]}", variables_to_export))
-del frozen_locals
