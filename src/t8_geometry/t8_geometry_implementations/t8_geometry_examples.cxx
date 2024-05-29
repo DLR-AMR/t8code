@@ -28,16 +28,16 @@ void
 t8_geometry_quadrangulated_disk::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
                                                    const size_t num_coords, double *out_coords) const
 {
-  double n[3]; /* Normal vector. */
-  double r[3]; /* Radial vector. */
-  double s[3]; /* Radial vector for the corrected coordinates. */
-  double p[3]; /* Vector on the plane resp. quad. */
+  double n[3] = { 0.0 }; /* Normal vector. */
+  double r[3] = { 0.0 }; /* Radial vector. */
+  double s[3] = { 0.0 }; /* Radial vector for the corrected coordinates. */
+  double p[3] = { 0.0 }; /* Vector on the plane resp. quad. */
 
   /* Center quads. */
   if (gtreeid % 3 == 0) {
     for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
-      size_t offset_2d = 2 * i_coord;
-      size_t offset_3d = 3 * i_coord;
+      const size_t offset_2d = 2 * i_coord;
+      const size_t offset_3d = 3 * i_coord;
       t8_geom_linear_interpolation (ref_coords + offset_2d, active_tree_vertices, 3, 2, out_coords + offset_3d);
     }
     return;
@@ -333,10 +333,10 @@ void
 t8_geometry_cubed_sphere::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
                                             const size_t num_coords, double *out_coords) const
 {
-  double n[3]; /* Normal vector. */
-  double r[3]; /* Radial vector. */
-  double s[3]; /* Radial vector for the corrected coordinates. */
-  double p[3]; /* Vector on the plane resp. quad. */
+  double n[3] = { 0.0 }; /* Normal vector. */
+  double r[3] = { 0.0 }; /* Radial vector. */
+  double s[3] = { 0.0 }; /* Radial vector for the corrected coordinates. */
+  double p[3] = { 0.0 }; /* Vector on the plane resp. quad. */
 
   /* Center hex. */
   if (gtreeid % 4 == 0) {
