@@ -94,7 +94,7 @@ struct t8_geometry_sincos: public t8_geometry
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
-   * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [in]  num_coords Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
@@ -169,7 +169,7 @@ struct t8_geometry_moebius: public t8_geometry_with_vertices
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
-   * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [in]  num_coords Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
@@ -234,7 +234,7 @@ struct t8_geometry_cylinder: public t8_geometry
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
-   * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [in]  num_coords Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
@@ -305,7 +305,7 @@ struct t8_geometry_circle: public t8_geometry_with_vertices
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
-   * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [in]  num_coords Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
@@ -377,7 +377,7 @@ struct t8_geometry_moving: public t8_geometry
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
-   * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [in]  num_coords Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
@@ -464,7 +464,7 @@ struct t8_geometry_cube_zdistorted: public t8_geometry
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
-   * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [in]  num_coords Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
