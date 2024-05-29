@@ -36,8 +36,9 @@ t8_geometry_quadrangulated_disk::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t
   /* Center quads. */
   if (gtreeid % 3 == 0) {
     for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
-      size_t offset = 3 * i_coord;
-      t8_geom_linear_interpolation (ref_coords + offset, active_tree_vertices, 3, 2, out_coords + offset);
+      size_t offset_2d = 2 * i_coord;
+      size_t offset_3d = 3 * i_coord;
+      t8_geom_linear_interpolation (ref_coords + offset_2d, active_tree_vertices, 3, 2, out_coords + offset_3d);
     }
     return;
   }
@@ -58,10 +59,11 @@ t8_geometry_quadrangulated_disk::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t
   const int a_coord = ((gtreeid - 2) % 3 == 0) ? 1 : 0;
 
   for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
-    const size_t offset = 3 * i_coord;
+    const size_t offset_2d = 2 * i_coord;
+    const size_t offset_3d = 3 * i_coord;
 
-    const double r_ref = ref_coords[offset + r_coord];
-    const double a_ref = ref_coords[offset + a_coord];
+    const double r_ref = ref_coords[offset_2d + r_coord];
+    const double a_ref = ref_coords[offset_2d + a_coord];
 
     {
       double corr_ref_coords[3];
@@ -77,14 +79,14 @@ t8_geometry_quadrangulated_disk::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t
     }
 
     /* Correction in order to rectify elements near the corners. */
-    t8_geom_linear_interpolation (ref_coords + offset, active_tree_vertices, 3, 2, p);
+    t8_geom_linear_interpolation (ref_coords + offset_2d, active_tree_vertices, 3, 2, p);
 
     /* Compute intersection of line with a plane. */
     const double out_radius = t8_vec_dot (p, n) * inv_denominator;
 
     /* Linear blend from flat to curved: `out_coords = (1.0 - r_ref)*p + r_ref_ * out_radius * s`. */
-    t8_vec_axy (p, out_coords + offset, 1.0 - r_ref);
-    t8_vec_axpy (s, out_coords + offset, r_ref * out_radius);
+    t8_vec_axy (p, out_coords + offset_3d, 1.0 - r_ref);
+    t8_vec_axpy (s, out_coords + offset_3d, r_ref * out_radius);
   }
 }
 
