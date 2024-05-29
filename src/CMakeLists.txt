@@ -35,6 +35,10 @@ execute_process( COMMAND echo ${T8CODE_VERSION}
                  OUTPUT_VARIABLE T8CODE_VERSION_POINT 
                  OUTPUT_STRIP_TRAILING_WHITESPACE )
 
+#To reuse the version in other CMakeLists
+set(T8_VERSION ${T8CODE_VERSION} CACHE INTERNAL "")
+
+
 target_compile_definitions( T8 PUBLIC T8_PACKAGE_STRING="t8 ${T8CODE_VERSION}" )
 target_compile_definitions( T8 PUBLIC T8_VERSION="${T8CODE_VERSION}" )
 target_compile_definitions( T8 PUBLIC T8_VERSION_MAJOR=${T8CODE_VERSION_MAJOR} )

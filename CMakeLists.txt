@@ -13,6 +13,8 @@ option( T8CODE_ENABLE_VTK "Enable t8code's features which rely on VTK" OFF )
 option( T8CODE_USE_SYSTEM_SC "Use system-installed sc library" OFF )
 option( T8CODE_USE_SYSTEM_P4EST "Use system-installed p4est library" OFF )
 
+option( BUILD_DOCUMENTATION "Build t8code's documentation" ON)
+
 if( NOT CMAKE_BUILD_TYPE )
     set( CMAKE_BUILD_TYPE "Release" )
 endif()
@@ -76,4 +78,8 @@ endif()
 
 if ( T8CODE_BUILD_EXAMPLES )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/example )
+endif()
+
+if ( BUILD_DOCUMENTATION ) 
+    add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/doc )
 endif()
