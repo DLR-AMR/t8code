@@ -326,7 +326,43 @@ void
 t8_geometry_cubed_spherical_shell::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
                                                      const size_t num_coords, double *out_coords) const
 {
-  t8_geom_evaluate_sphere_quad_hex (active_tree_vertices, 3, ref_coords, num_coords, out_coords);
+  // t8_geom_evaluate_sphere_quad_hex (active_tree_vertices, 3, ref_coords, num_coords, out_coords);
+
+  double position[3]; /* Position vector in the element. */
+
+  const double inner_radius = t8_vec_norm (active_tree_vertices);
+  const double shell_thickness = t8_vec_norm (active_tree_vertices + 4) - inner_radius;
+
+  for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
+    const size_t offset = 3 * i_coord;
+
+    {
+      double corr_ref_coords[3]; /* Corrected reference coordinates. */
+
+      /* Shorthand for code readability. */
+      const double x = ref_coords[offset + 0];
+      const double y = ref_coords[offset + 1];
+      const double z = ref_coords[offset + 2];
+
+      /* tldr: Correction in order to rectify elements near the corners. 
+       * This is necessary, since due to the transformation from the unit cube
+       * to the sphere elements near the face centers expand while near the
+       * corners they shrink. Following correction alleviates this.
+       */
+      corr_ref_coords[0] = tan (0.5 * M_PI * (x - 0.5)) * 0.5 + 0.5;
+      corr_ref_coords[1] = tan (0.5 * M_PI * (y - 0.5)) * 0.5 + 0.5;
+      corr_ref_coords[2] = z;
+
+      t8_geom_linear_interpolation (corr_ref_coords, active_tree_vertices, 3, 3, position);
+      t8_vec_normalize (position);
+    }
+    
+    t8_vec_axy (position, out_coords + offset, radius + ref_coords[offset + 2] * shell_thickness);
+
+    out_coords[offset + 0] = radius * p[0];
+    out_coords[offset + 1] = radius * p[1];
+    out_coords[offset + 2] = radius * p[2];
+  }
 }
 
 void
