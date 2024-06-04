@@ -628,7 +628,8 @@ t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
         case T8_ECLASS_TRIANGLE:
         case T8_ECLASS_QUAD:
           /* We switch vertex 1 and vertex 2. */
-          num_switches = 1;
+          num_switches = 2;
+          switch_indices[0] = 0;
           switch_indices[1] = 2;
           break;
         case T8_ECLASS_TET:
@@ -960,7 +961,8 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
           case T8_ECLASS_TRIANGLE:
           case T8_ECLASS_QUAD:
             /* We switch vertex 1 and vertex 2. */
-            num_switches = 1;
+            num_switches = 2;
+            switch_indices[0] = 0;
             switch_indices[1] = 2;
             break;
           case T8_ECLASS_TET:

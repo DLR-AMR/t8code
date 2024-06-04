@@ -472,32 +472,30 @@ t8_cmesh_tree_vertices_negative_volume (const t8_eclass_t eclass, const double *
 {
   T8_ASSERT (num_vertices == t8_eclass_num_vertices[eclass]);
 
-  /* Points and lines do not have a volume. */
+  /* Points and lines do not have a volume orientation. */
   if (t8_eclass_to_dimension[eclass] < 2) {
     return 0;
   }
 
-  T8_ASSERT (active_tree_class == T8_ECLASS_TRIANGLE || active_tree_class == T8_ECLASS_QUAD
-             || active_tree_class == T8_ECLASS_TET || active_tree_class == T8_ECLASS_HEX
-             || active_tree_class == T8_ECLASS_PRISM || active_tree_class == T8_ECLASS_PYRAMID);
+  T8_ASSERT (eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_TET
+             || eclass == T8_ECLASS_HEX || eclass == T8_ECLASS_PRISM || eclass == T8_ECLASS_PYRAMID);
 
-  T8_ASSERT (t8_eclass_num_vertices[active_tree_class] >= 3);
-
-  /* Check for negative volume (orientation of face normal) of 2D elements only
-   * when z-coordinates are all zero. */
-  if (t8_eclass_to_dimension[active_tree_class] < 3) {
-    for (int ivert = 0; ivert < t8_eclass_num_vertices[active_tree_class]; ivert++) {
-      if (std::abs (active_tree_vertices[3 * ivert + 2]) > 10 * T8_PRECISION_EPS) {
+  /* Skip negative volume check (orientation of face normal) of 2D elements
+   * when z-coordinates are not (almost) zero. */
+  if (t8_eclass_to_dimension[eclass] < 3) {
+    for (int ivert = 0; ivert < num_vertices; ivert++) {
+      const double z_coordinate = vertices[3 * ivert + 2];
+      if (std::abs (z_coordinate) > 10 * T8_PRECISION_EPS) {
         return false;
-      };
+      }
     }
   }
 
   /*
-   *      z             For triangles and quads we enforce the right-hand-rule in terms
+   *      z             For 2D meshes we enforce the right-hand-rule in terms
    *      |             of node ordering. The volume is defined by the parallelepiped
    *      | 2- - -(3)   spanned by the vectors between nodes 0:1 and 0:2 as well as the
-   *      |/____ /      unit vector in z-direction. This works for both triangles and quads.
+   *      |/____ /      unit vector in z-direction. This definition works for both triangles and quads.
    *      0     1
    *
    *      6 ______  7   For Hexes and pyramids, if the vertex 4 is below the 0-1-2-3 plane,
@@ -521,10 +519,10 @@ t8_cmesh_tree_vertices_negative_volume (const t8_eclass_t eclass, const double *
   /* Build the vectors v_i as vertices_i - vertices_0. */
   double v_1[3], v_2[3], v_j[3], cross[3], sc_prod;
 
-  if (active_tree_class == T8_ECLASS_TRIANGLE || active_tree_class == T8_ECLASS_QUAD) {
+  if (eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_QUAD) {
     for (int i = 0; i < 3; i++) {
-      v_1[i] = active_tree_vertices[3 + i] - active_tree_vertices[i];
-      v_2[i] = active_tree_vertices[6 + i] - active_tree_vertices[i];
+      v_1[i] = vertices[3 + i] - vertices[i];
+      v_2[i] = vertices[6 + i] - vertices[i];
     }
 
     /* Unit vector in z-direction. */
