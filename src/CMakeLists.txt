@@ -5,6 +5,15 @@ else()
     add_library( T8 STATIC )
 endif()
 
+if( CMAKE_BUILD_TYPE STREQUAL "Release" )
+    target_compile_options( T8 PRIVATE -O3 )
+endif()
+
+if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
+    target_compile_options( T8 PUBLIC -g -O0 )
+    target_compile_definitions( T8 PUBLIC T8_ENABLE_DEBUG )
+endif()
+
 set_target_properties( T8 PROPERTIES OUTPUT_NAME t8 )
 
 target_compile_definitions( T8 PUBLIC T8_CMAKE_BUILD )
@@ -34,6 +43,10 @@ execute_process( COMMAND echo ${T8CODE_VERSION}
                  COMMAND cut -d. -f3 
                  OUTPUT_VARIABLE T8CODE_VERSION_POINT 
                  OUTPUT_STRIP_TRAILING_WHITESPACE )
+
+#To reuse the version in other CMakeLists
+set(T8_VERSION ${T8CODE_VERSION} CACHE INTERNAL "")
+
 
 target_compile_definitions( T8 PUBLIC T8_PACKAGE_STRING="t8 ${T8CODE_VERSION}" )
 target_compile_definitions( T8 PUBLIC T8_VERSION="${T8CODE_VERSION}" )
