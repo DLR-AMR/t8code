@@ -72,8 +72,14 @@ t8_write_forest_to_vtu (t8_forest_t forest, const char *prefix)
     const int write_level = 1;
     const int write_element_id = 1;
     const int write_ghosts = 0;
+#if T8_WITH_VTK
+    const int write_curved = 0;
+#else
+    const int write_curved = 1;
+#endif
+    const int do_not_use_api = 0;
     t8_forest_write_vtk_ext (forest, prefix, write_treeid, write_mpirank, write_level, write_element_id, write_ghosts,
-                             0, 0, num_data, vtk_data);
+                             write_curved, do_not_use_api, num_data, vtk_data);
   }
 
   T8_FREE (diameters);
