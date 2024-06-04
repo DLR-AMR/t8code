@@ -665,16 +665,18 @@ t8_default_scheme_quad_c::t8_element_anchor (const t8_element_t *elem, int coord
 }
 
 void
-t8_dquad_vertex_integer_coords (const p4est_quadrant_t *elem, int vertex, int coords[])
+t8_default_scheme_quad_c::t8_element_vertex_integer_coords (const t8_element_t *elem, int vertex, int coords[]) const
 {
+  const p4est_quadrant_t *q1 = (const p4est_quadrant_t *) elem;
 
+  T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= vertex && vertex < 4);
   /* Get the length of the quadrant */
-  const int len = P4EST_QUADRANT_LEN (elem->level);
+  const int len = P4EST_QUADRANT_LEN (q1->level);
   /* Compute the x and y coordinates of the vertex depending on the
    * vertex number */
-  coords[0] = elem->x + (vertex & 1 ? 1 : 0) * len;
-  coords[1] = elem->y + (vertex & 2 ? 1 : 0) * len;
+  coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len;
+  coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
 }
 
 void
@@ -685,7 +687,7 @@ t8_default_scheme_quad_c::t8_element_vertex_reference_coords (const t8_element_t
   T8_ASSERT (0 <= vertex && vertex < 4);
 
   int coords_int[2];
-  t8_dquad_vertex_integer_coords ((const p4est_quadrant_t *) elem, vertex, coords_int);
+  t8_element_vertex_integer_coords (elem, vertex, coords_int);
 
   /* We divide the integer coordinates by the root length of the quad
    * to obtain the reference coordinates. */

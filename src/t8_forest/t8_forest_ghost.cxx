@@ -361,7 +361,8 @@ t8_forest_ghost_get_element (t8_forest_t forest, t8_locidx_t lghost_tree, t8_loc
 
   ghost_tree = t8_forest_ghost_get_tree (forest, lghost_tree);
   T8_ASSERT (0 <= lelement && lelement < t8_forest_ghost_tree_num_elements (forest, lghost_tree));
-  return t8_element_array_index_locidx (&ghost_tree->elements, lelement);
+  /* TODO: In future, make return type const (and offer additional mutable version) and call t8_element_array_index_locidx (the const version). */
+  return t8_element_array_index_locidx_mutable (&ghost_tree->elements, lelement);
 }
 
 /* Initialize a t8_ghost_remote_tree_t */
@@ -454,10 +455,9 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int remote_ran
   {
     /* debugging assertion that the element is really not contained already */
     int ielem;
-    t8_element_t *test_el;
     int elem_count = t8_element_array_get_count (&remote_tree->elements);
     for (ielem = 0; ielem < elem_count - 1; ielem++) {
-      test_el = t8_element_array_index_int (&remote_tree->elements, ielem);
+      const t8_element_t * test_el = t8_element_array_index_int (&remote_tree->elements, ielem);
       SC_CHECK_ABORTF (!ts->t8_element_equal (test_el, elem), "Local element %i already in remote ghosts at pos %i\n",
                        element_index, ielem);
     }
@@ -467,7 +467,7 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int remote_ran
   level = ts->t8_element_level (elem);
   element_count = t8_element_array_get_count (&remote_tree->elements);
   if (element_count > 0) {
-    elem_copy = t8_element_array_index_locidx (&remote_tree->elements, element_count - 1);
+    elem_copy = t8_element_array_index_locidx_mutable (&remote_tree->elements, element_count - 1);
     copy_level = ts->t8_element_level (elem_copy);
   }
   /* Check if the element was not contained in the array.
@@ -687,7 +687,7 @@ t8_forest_ghost_fill_remote_v3 (t8_forest_t forest)
 static void
 t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int ghost_method)
 {
-  t8_element_t *elem, **half_neighbors = NULL;
+  t8_element_t **half_neighbors = NULL;
   t8_locidx_t num_local_trees, num_tree_elems;
   t8_locidx_t itree, ielem;
   t8_tree_t tree;
@@ -720,7 +720,7 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int gh
     num_tree_elems = t8_forest_get_tree_element_count (tree);
     for (ielem = 0; ielem < num_tree_elems; ielem++) {
       /* Get the element of the tree */
-      elem = t8_forest_get_tree_element (tree, ielem);
+      const t8_element_t *elem = t8_forest_get_tree_element (tree, ielem);
       num_faces = ts->t8_element_num_faces (elem);
       if (ts->t8_element_level (elem) == ts->t8_element_maxlevel ()) {
         /* flag to decide whether this element is at the maximum level */
@@ -1107,7 +1107,7 @@ t8_forest_ghost_parse_received_message (t8_forest_t forest, t8_forest_ghost_t gh
       /* Grow the elements array of the tree to fit the new elements */
       t8_element_array_resize (&ghost_tree->elements, old_elem_count + num_elements);
       /* Get a pointer to where the new elements are to be inserted */
-      element_insert = t8_element_array_index_locidx (&ghost_tree->elements, old_elem_count);
+      element_insert = t8_element_array_index_locidx_mutable (&ghost_tree->elements, old_elem_count);
     }
 
     if (itree == 0) {

@@ -929,7 +929,7 @@ t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id, t8_locidx_t 
   tree = t8_forest_get_tree (forest, ltree);
   if (tree->elements_offset <= lelement_id
       && lelement_id < tree->elements_offset + (t8_locidx_t) t8_element_array_get_count (&tree->elements)) {
-    return t8_element_array_index_locidx (&tree->elements, lelement_id - tree->elements_offset);
+    return t8_element_array_index_locidx_mutable (&tree->elements, lelement_id - tree->elements_offset);
   }
   /* The element was not found.
    * This case is covered by the first if and should therefore never happen. */

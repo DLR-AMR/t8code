@@ -39,12 +39,23 @@ struct t8_geometry_handler
   /**
    * Constructor.
    */
-  t8_geometry_handler (): active_geometry (nullptr), active_tree (-1) {};
+  t8_geometry_handler (): active_geometry (nullptr), active_tree (-1)
+  {
+    t8_refcount_init (&rc);
+    t8_debugf ("Constructed the geometry_handler.\n");
+  };
 
   /**
    * Destructor.
    */
-  ~t8_geometry_handler () {};
+  ~t8_geometry_handler ()
+  {
+    if (sc_refcount_is_active (&rc)) {
+      T8_ASSERT (t8_refcount_is_last (&rc));
+      t8_refcount_unref (&rc);
+    }
+    t8_debugf ("Deleted the geometry_handler.\n");
+  };
 
   /**
    * Register a geometry with the geometry handler.
@@ -200,6 +211,28 @@ struct t8_geometry_handler
     return active_geometry->t8_geom_tree_negative_volume ();
   }
 
+  /**
+   * Increase the reference count of the geometry handler.
+   */
+  inline void
+  ref ()
+  {
+    t8_refcount_ref (&rc);
+  }
+
+  /**
+   * Decrease the reference count of the geometry handler.
+   * If the reference count reaches zero, the geometry handler is deleted.
+   */
+  inline void
+  unref ()
+  {
+    if (t8_refcount_unref (&rc)) {
+      t8_debugf ("Deleting the geometry_handler.\n");
+      delete this;
+    }
+  }
+
  private:
   /**
    * Add a geometry to the geometry handler.
@@ -230,10 +263,12 @@ struct t8_geometry_handler
   void
   update_tree (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 
-  /**< Stores all geometries that are handled by this geometry_handler. */
+  /** Stores all geometries that are handled by this geometry_handler. */
   std::unordered_map<size_t, std::unique_ptr<t8_geometry>> registered_geometries;
-  /**< Points to the currently loaded geometry (the geometry that was used last and is likely to be used next). */
+  /** Points to the currently loaded geometry (the geometry that was used last and is likely to be used next). */
   t8_geometry *active_geometry;
-  /**< The global tree id of the last tree for which geometry was used. */
+  /** The global tree id of the last tree for which geometry was used. */
   t8_gloidx_t active_tree;
+  /** The reference count of the geometry handler. TODO: Replace by shared_ptr when cmesh becomes a class. */
+  t8_refcount_t rc;
 };
