@@ -45,7 +45,7 @@
 
 /* Adapt a forest such that always the first child of a
  * tree is refined and no other elements. This results in a highly
- * imbalanced forest. */
+ * inbalanced forest. */
 static int
 t8_test_adapt_balance (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
                        t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
@@ -60,15 +60,15 @@ t8_test_adapt_balance (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t 
   //   /* Do not refine after the maxlevel */
   //   return 0;
   // }
-  // int child_id = ts->t8_element_child_id (elements[0]);
-  // if (child_id == 1) {
-  //   return 1;
-  // }
-  // return 0;
-  if (lelement_id == 0){
+  int child_id = ts->t8_element_child_id (elements[0]);
+  if (child_id == 1) {
     return 1;
   }
-return 0;
+  return 0;
+  // if (lelement_id == 0 || lelement_id == 5){
+  //   return 1;
+  // }
+// return 0;
 }
 
 /* adapt, balance and partition a given forest in one step */
@@ -154,12 +154,9 @@ void t8_transition_commit ()
     /* We need to use forest twice, so we ref it */
     t8_forest_ref (forest);
     /* Adapt, balance, transition and partition the forest */
-            t8_debugf("ref count forest %i  \n", forest->rc.refcount);
 
     forest_ada_bal_tra_part = t8_test_forest_commit_abp (forest, maxlevel);
     t8_forest_write_vtk (forest_ada_bal_tra_part, "transition_forest");
-
-    t8_debugf("ref count forest %i  \n", forest->rc.refcount);
 
     /* Adapt, balance, transition and partition the forest using three separate steps */
     forest_abtp_3part = t8_test_forest_commit_abp_3step (forest, maxlevel);
