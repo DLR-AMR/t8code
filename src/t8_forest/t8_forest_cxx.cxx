@@ -2022,6 +2022,13 @@ t8_forest_print_all_leaf_neighbors (t8_forest_t forest)
   }
 }
 
+int
+t8_forest_tree_is_local (const t8_forest_t forest, const t8_locidx_t local_tree)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  return 0 <= local_tree && local_tree < t8_forest_get_num_local_trees (forest);
+}
+
 /* Check if an element is owned by a specific rank */
 int
 t8_forest_element_check_owner (t8_forest_t forest, t8_element_t *element, t8_gloidx_t gtreeid, t8_eclass_t eclass,
