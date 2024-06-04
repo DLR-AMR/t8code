@@ -622,7 +622,7 @@ t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
         int num_switches = 0;
         int switch_indices[4] = { 0 };
         int iswitch;
-        T8_ASSERT (t8_eclass_to_dimension[eclass] == 3);
+        T8_ASSERT (t8_eclass_to_dimension[eclass] > 1);
         t8_debugf ("Correcting negative volume of tree %li\n", tree_count);
         switch (eclass) {
         case T8_ECLASS_TRIANGLE:
@@ -955,7 +955,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
           int num_switches = 0;
           int switch_indices[4] = { 0 };
           int iswitch;
-          T8_ASSERT (t8_eclass_to_dimension[eclass] == 3);
+          T8_ASSERT (t8_eclass_to_dimension[eclass] > 1);
           t8_debugf ("Correcting negative volume of tree %li\n", tree_count);
           switch (eclass) {
           case T8_ECLASS_TRIANGLE:
