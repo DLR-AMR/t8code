@@ -1925,7 +1925,8 @@ t8_subelement_scheme_hex_c::t8_element_reference_coords (const t8_element_t *ele
 {
   T8_ASSERT (ref_coords != NULL);
   T8_ASSERT (t8_element_is_valid (elem));
-
+  
+   if(!t8_element_is_subelement(elem)){
     const p8est_quadrant_t *q1 = (const p8est_quadrant_t *) elem;
 
   /* Get the length of the quadrant */
@@ -1945,9 +1946,218 @@ t8_subelement_scheme_hex_c::t8_element_reference_coords (const t8_element_t *ele
     out_coords[offset + 1] /= (double) P8EST_ROOT_LEN;
     out_coords[offset + 2] /= (double) P8EST_ROOT_LEN;
   }
-  
-   
+
+   }
+   else{
+      t8_hex_with_subelements *phex_w_sub = (t8_hex_with_subelements *) elem;
+      p8est_quadrant_t *q1 = &phex_w_sub->p8q;
+      p4est_qcoord_t len = P8EST_QUADRANT_LEN (q1->level);
+        /* get location information of the given subelement */
+      int                 location[3] = { };
+      t8_element_get_location_of_subelement (elem, location);
+
+      for (int coord = 0; coord < num_coords; ++coord) {
+        const size_t offset = coord * 3;
+        out_coords[offset + 0] = q1->x + ref_coords[offset + 0] * len;
+        out_coords[offset + 1] = q1->y + ref_coords[offset + 1] * len;
+        out_coords[offset + 2] = q1->z + ref_coords[offset + 2] * len;
+
+
+    //Set the apex to the center of the transition cell 
+      if(ref_coords[0] == 1 && ref_coords[1] == 1 && ref_coords[2] == 1){
+        out_coords[offset + 0] -= ref_coords[offset + 0] * (len/2);
+        out_coords[offset + 1] -= ref_coords[offset + 1] * (len/2);
+        out_coords[offset + 2] -= ref_coords[offset + 2] * (len/2);
+      }
+      else{
+        if(location[0] == 0){
+          //face 0
+          //Add the x-coordinate to the z-coordinate in order to flip the base side of the pyramid to face f0
+          out_coords[offset + 2] += ref_coords[offset + 0] * len;
+          //set x-coordinate to zero
+          out_coords[offset + 0] -= ref_coords[offset + 0] * len;
+        }
+        if(location[0] == 1){
+          //Add one to the z-coordinate if the x-coordinate equals zero 
+          out_coords[offset + 2] += (1 - 1*ref_coords[offset + 0]) * len;
+          //set x-coordinate to one
+          out_coords[offset + 0] += (1 - 1*ref_coords[offset + 0]) * len;
+        }
+        if(location[0] == 2){
+          //Add one to the z-coordinate if the y-coordinate equals one 
+          out_coords[offset + 2] += (ref_coords[offset + 1]) * len;
+          //set y-coordinate to zero
+          out_coords[offset + 1] -= (ref_coords[offset + 1]) * len;          
+        }
+        if(location[0] == 3){
+          //Add one to the z-coordinate if the y-coordinate equals zero 
+          out_coords[offset + 2] += ( 1 - ref_coords[offset + 1]) * len;
+          //set y-coordinate to one
+          out_coords[offset + 1] += (1 - 1*ref_coords[offset + 1]) * len;          
+        }
+        //Nothing more to do for face 4
+        if(location[0] == 5){
+          //Add one to the z-coordinate 
+          out_coords[offset + 2] += len;         
+        }
+    //split
+      if(location[1] == 1){
+        if(location[0] == 0 ){
+          if((location[2] & 2) == 0){
+            //front
+            //scale the y coordinate if not zero     
+            out_coords[offset + 1] -= ref_coords[offset + 1] * (len/2);
+            }
+            else{
+              //back
+              //scale the y coordinate if zero     
+              out_coords[offset + 1] += (1 - ref_coords[offset + 1]) * (len/2);  
+            }
+          if((location[2] & 1) == 0){
+            //bottom
+            //scale the z coordinate if not zero and z is not zero if the x-coordinate of ref_coords is not zero.
+            out_coords[offset + 2] -= (ref_coords[offset + 0]) * (len/2);
+            }
+            else{
+              //up
+              //scale the z coordinate if zero     
+              out_coords[offset + 2] += (1 - 1*ref_coords[offset + 0]) * (len/2);  
+            }
+          }
+        if(location[0] == 1 ){
+          if((location[2] & 2) == 0){
+            //front
+            //scale the y coordinate if not zero     
+            out_coords[offset + 1] -= ref_coords[offset + 1] * (len/2);
+            }
+            else{
+              //back
+              //scale the y coordinate if zero     
+              out_coords[offset + 1] += (1 - ref_coords[offset + 1]) * (len/2);  
+            }
+          if((location[2] & 1) == 0){
+            //bottom
+            //scale the z coordinate if not zero and z is not zero if the x-coordinate of ref_coords is zero.
+            out_coords[offset + 2] -= (1 - ref_coords[offset + 0]) * (len/2);
+            }
+            else{
+              //up
+              //scale the z coordinate if zero     
+              out_coords[offset + 2] += (ref_coords[offset + 0]) * (len/2);  
+            }
+          }
+        if(location[0] == 2 ){
+          if((location[2] & 4) == 0){
+            //left
+            //scale the x coordinate if not zero     
+            out_coords[offset + 0] -= ref_coords[offset + 0] * (len/2);
+            }
+            else{
+            //right
+            //scale the x coordinate if  zero     
+            out_coords[offset + 0] += (1 - ref_coords[offset + 0] )* (len/2);
+            }
+          if((location[2] & 1) == 0){
+            //bottom
+            //scale the z coordinate if not zero 
+            out_coords[offset + 2] -= ref_coords[offset + 1] * (len/2);
+            }
+            else{
+              //up
+              //scale the z coordinate if  zero     
+            out_coords[offset + 2] += (1 - ref_coords[offset + 1] )* (len/2);
+
+            }
+          }
+        if(location[0] == 3){
+          if((location[2] & 4) == 0){
+            //left
+            //scale the x coordinate if not zero     
+            out_coords[offset + 0] -= ref_coords[offset + 0] * (len/2);
+            }
+            else{
+            //right
+            //scale the x coordinate if  zero     
+            out_coords[offset + 0] += (1 - ref_coords[offset + 0] )* (len/2);
+            }
+          if((location[2] & 1) == 0){
+            //bottom
+            //scale the z coordinate if not zero 
+            out_coords[offset + 2] -= (1 - ref_coords[offset + 1]) * (len/2);
+            }
+            else{
+              //up
+              //scale the z coordinate if  zero     
+            out_coords[offset + 2] += (ref_coords[offset + 1] )* (len/2);
+            }
+          }
+
+        if(location[0] == 4){
+          if((location[2] & 4) == 0){
+            //left
+            //scale the x coordinate if not zero     
+            out_coords[offset + 0] -= ref_coords[offset + 0] * (len/2);
+            }
+            else{
+            //right
+            //scale the x coordinate if  zero     
+            out_coords[offset + 0] += (1 - ref_coords[offset + 0] )* (len/2);
+            }
+            if((location[2] & 2) == 0){
+            //front
+            //scale the y coordinate if not zero     
+            out_coords[offset + 1] -= ref_coords[offset + 1] * (len/2);
+            }
+            else{
+              //back
+              //scale the y coordinate if zero     
+              out_coords[offset + 1] += (1 - 1*ref_coords[offset + 1]) * (len/2);  
+            }
+          
+          }
+          if(location[0] == 5){
+          if((location[2] & 4) == 0){
+            //left
+            //scale the x coordinate if not zero     
+            out_coords[offset + 0] -= ref_coords[offset + 0] * (len/2);
+            }
+            else{
+            //right
+            //scale the x coordinate if  zero     
+            out_coords[offset + 0] += (1 - ref_coords[offset + 0] )* (len/2);
+            }
+            if((location[2] & 2) == 0){
+            //front
+            //scale the y coordinate if not zero     
+            out_coords[offset + 1] -= ref_coords[offset + 1] * (len/2);
+            }
+            else{
+              //back
+              //scale the y coordinate if zero     
+              out_coords[offset + 1] += (1 - 1*ref_coords[offset + 1]) * (len/2);  
+            }
+          
+          }
 }
+        }
+
+
+    out_coords[offset + 0] /= (double) P8EST_ROOT_LEN;
+    out_coords[offset + 1] /= (double) P8EST_ROOT_LEN;
+    out_coords[offset + 2] /= (double) P8EST_ROOT_LEN;
+
+      }
+            
+   
+  }
+
+
+ 
+
+
+  }
+
+
 
 void
 t8_subelement_scheme_hex_c::t8_element_vertex_reference_coords (const
@@ -1989,8 +2199,7 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords (const t8_element_t
      * vertex number */
     coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len;
     coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
-    coords[2] = q1->z + (vertex & 4 ? 1 : 0) * len;
-    
+    coords[2] = q1->z + (vertex & 4 ? 1 : 0) * len;   
   }
   else {
     t8_element_vertex_coords_of_subelement (elem, vertex, coords);
@@ -2116,7 +2325,6 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
         if(face_number == 5){
           coords[2] += len;
         }
-
       }
 /* ----------- face 0 + 1 (split) --------------------*/
       else{
