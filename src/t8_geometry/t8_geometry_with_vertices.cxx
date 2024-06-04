@@ -62,14 +62,26 @@ t8_geometry_with_vertices::t8_geom_tree_negative_volume () const
     return false;
   }
 
+  /* Points and lines do not have a volume. */
   if (t8_eclass_to_dimension[active_tree_class] < 2) {
-    /* Points and lines do not have a volume. */
     return false;
   }
-  T8_ASSERT (active_tree_class == T8_ECLASS_TRIANGLE || active_tree_class == T8_ECLASS_QUAD || active_tree_class == T8_ECLASS_TET || active_tree_class == T8_ECLASS_HEX
+
+  T8_ASSERT (active_tree_class == T8_ECLASS_TRIANGLE || active_tree_class == T8_ECLASS_QUAD
+             || active_tree_class == T8_ECLASS_TET || active_tree_class == T8_ECLASS_HEX
              || active_tree_class == T8_ECLASS_PRISM || active_tree_class == T8_ECLASS_PYRAMID);
 
   T8_ASSERT (t8_eclass_num_vertices[active_tree_class] >= 3);
+
+  /* Check for negative volume (orientation of face normal) of 2D elements only
+   * when z-coordinates are all zero. */
+  if (t8_eclass_to_dimension[active_tree_class] < 3) {
+    for (int ivert = 0; ivert < t8_eclass_num_vertices[active_tree_class]; ivert++) {
+      if (std::abs (active_tree_vertices[3 * ivert + 2]) > 10 * T8_PRECISION_EPS) {
+        return false;
+      };
+    }
+  }
 
   /*
    *      z             For triangles and quads we enforce the right-hand-rule in terms
