@@ -310,7 +310,7 @@ t8_geometry_cubed_spherical_shell::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx
    * outward radial direction of the sphere. Hence the element height is equal to
    * the shell thickness. */
   const double inner_radius = t8_vec_norm (active_tree_vertices);
-  const double shell_thickness = t8_vec_norm (active_tree_vertices + 4*3) - inner_radius;
+  const double shell_thickness = t8_vec_norm (active_tree_vertices + 4 * 3) - inner_radius;
 
   for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
     const size_t offset = 3 * i_coord;
