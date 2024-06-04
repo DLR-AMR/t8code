@@ -2031,6 +2031,7 @@ t8_forest_element_is_leaf (const t8_forest_t forest, const t8_element_t *element
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (t8_forest_tree_is_local (forest, local_tree));
+  T8_ASSERT (element != NULL);
 
   /* We get the array of the tree's elements and then search in the array of elements for our 
    * element candidate. */
@@ -2048,7 +2049,7 @@ t8_forest_element_is_leaf (const t8_forest_t forest, const t8_element_t *element
    * The search returns the largest index i,
    * such that the element at position i has a smaller id than the given one.
    * If no such i exists, it returns -1. */
-  const t8_locidx_t search_result = t8_forest_bin_search_lower (t8_element_array_t *elements, t8_linearidx_t element_id, int maxlevel);
+  const t8_locidx_t search_result = t8_forest_bin_search_lower (elements, element_id, element_level);
   if (search_result < 0) {
     /* The element was not found. */
     return 0;
@@ -2066,7 +2067,7 @@ t8_forest_leaf_is_boundary (const t8_forest_t forest, t8_locidx_t local_tree, co
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (t8_forest_element_is_leaf (forest, leaf, local_tree));
-  T8_ASSERT (element != NULL);
+  T8_ASSERT (leaf != NULL);
 
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, local_tree);
   const t8_eclass_scheme_c *scheme = t8_forest_get_eclass_scheme (forest, tree_class);
@@ -2077,7 +2078,7 @@ t8_forest_leaf_is_boundary (const t8_forest_t forest, t8_locidx_t local_tree, co
   if (is_root_boundary) {
     /* This leaf is at a tree's boundary. It is*/
     const int cmesh_face = scheme->t8_element_tree_face (leaf, face);
-    const t8_cmesh_t = t8_forest_get_cmesh (forest);
+    const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
     const t8_locidx_t cmesh_local_tree = t8_forest_ltreeid_to_cmesh_ltreeid (forest, local_tree);
     int tree_boundary = t8_cmesh_tree_face_is_boundary (cmesh, cmesh_local_tree, cmesh_face);
     if (tree_boundary) {
@@ -2096,7 +2097,7 @@ t8_forest_leaf_is_boundary (const t8_forest_t forest, t8_locidx_t local_tree, co
   const int is_balanced = t8_forest_is_balanced (forest);
   int num_neighbors;
   t8_element_t **neighbor_leaves;
-  t8_locidx_t *pelelement_indices;
+  t8_locidx_t *pelement_indices;
   t8_eclass_scheme_c *pneigh_scheme;
   /* The forest has holes, the leaf could lie inside a tree but its neighbor was deleted. */
   t8_forest_leaf_face_neighbors (forest, local_tree, leaf, &neighbor_leaves, face, NULL, &num_neighbors, &pelement_indices, &pneigh_scheme, is_balanced);
@@ -2108,7 +2109,7 @@ t8_forest_leaf_is_boundary (const t8_forest_t forest, t8_locidx_t local_tree, co
   else {
     /* If neighbors were found, these arrays were allocated and need clean-up. */
     T8_FREE (neighbor_leaves);
-    T8_FREE (pelelement_indices);
+    T8_FREE (pelement_indices);
     /* This leaf is not a boundary leaf. */
     return 0;
   }
