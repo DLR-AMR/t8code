@@ -240,7 +240,8 @@ const t8_element_t *
 t8_element_array_index_int (const t8_element_array_t *element_array, int index)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
-  return (const t8_element_t *) sc_array_index_int ((sc_array_t*) &element_array->array, index); /* Need to convert element_array->array to non-const */
+  return (const t8_element_t *) sc_array_index_int ((sc_array_t *) &element_array->array,
+                                                    index); /* Need to convert element_array->array to non-const */
 }
 
 t8_element_t *
