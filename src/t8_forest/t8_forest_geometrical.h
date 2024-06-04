@@ -161,6 +161,17 @@ void
 t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int face,
                                double normal[3]);
 
+/** Compute whether a given face of a given leaf in a forest lies at the domain boundary.
+ * This includes inner boundaries if the forest has deleted elements.
+ * \param [in]      forest    The forest.
+ * \param [in]      local_tree A local tree of \a forest.
+ * \param [in]      leaf      A leaf element of \a local_tree in \a forest.
+ * \param [in]      face      The face number of a face of \a leaf to check.
+ * \return True (non-zero) if face \a face of \a leaf lies at the domain boundary.
+*/
+int
+t8_forest_leaf_is_boundary (const t8_forest_t forest, t8_locidx_t local_tree, const t8_element_t *leaf, int face);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_FOREST_GEOMETRICAL_H */
