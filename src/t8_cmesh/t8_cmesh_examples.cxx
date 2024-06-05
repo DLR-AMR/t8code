@@ -918,13 +918,14 @@ t8_resize_box (const int dim, double *box_corners, const double *box_dir, const 
  * \param [in] boundary     The boundary vertices of \a cmesh.
  * \param [in] quads_x      The number of quads along the x-axis.
  * \param [in] quads_y      The number of quads along the y-axis.
- * \param [in] use_axis_aligned_geom Flag if cmesh uses the axis_aligned_geometry. Only available for T8_ECLASS_QUAD
- * \note each quad of \a quads_x * \a quads_y quads in \a boundary contains one
+ * \param [in] use_axis_aligned_geom Flag if cmesh uses the axis_aligned_geometry. Only available for T8_ECLASS_QUAD.
+ * \param [in] offset       Offset for cmesh partitioning.
+ * \note Each quad of \a quads_x * \a quads_y quads in \a boundary contains one
  * tree of \a eclass T8_ECLASS_QUAD or two of T8_ECLASS_TRIANGLE.
  */
 static void
 t8_cmesh_set_vertices_2D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const double *boundary, const t8_locidx_t quads_x,
-                          const t8_locidx_t quads_y, const int use_axis_aligned_geom)
+                          const t8_locidx_t quads_y, const int use_axis_aligned_geom, const int offset)
 {
   T8_ASSERT (!t8_cmesh_is_committed (cmesh));
   T8_ASSERT (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_TRIANGLE);
@@ -995,12 +996,12 @@ t8_cmesh_set_vertices_2D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
       /* Map vertices of current quad on to respective trees inside. */
       if (eclass == T8_ECLASS_QUAD) {
         /* No mapping is required. */
-        const t8_gloidx_t tree_id = quad_y_id * quads_x + quad_x_id;
+        const t8_gloidx_t tree_id = quad_y_id * quads_x + quad_x_id + offset;
         t8_cmesh_set_tree_vertices (cmesh, tree_id, vertices, use_axis_aligned_geom ? 2 : 4);
       }
       else {
         T8_ASSERT (eclass == T8_ECLASS_TRIANGLE);
-        const t8_gloidx_t tree_id = (quad_y_id * quads_x + quad_x_id) * 2;
+        const t8_gloidx_t tree_id = (quad_y_id * quads_x + quad_x_id) * 2 + offset;
         double vertices_triangle[9];
         for (int i = 0; i < 3; i++) {
           vertices_triangle[i] = vertices[i];
@@ -1040,12 +1041,13 @@ t8_cmesh_set_vertices_2D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
  * \param [in] hexs_y       The number of hexs along the y-axis.
  * \param [in] hexs_z       The number of hexs along the z-axis.
  * \param [in] use_axis_aligned_geom Flag if cmesh uses the axis aligned_geometry. Only available for T8_ECLASS_QUAD
+ * \param [in] offset       Offset for cmesh partitioning.
  * \note each hex of \a hexs_x * \a hexs_y * \a hexs_z hexs in \a boundary 
  * contains several trees of class \a eclass.
  */
 static void
 t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const double *boundary, const t8_locidx_t hexs_x,
-                          const t8_locidx_t hexs_y, const t8_locidx_t hexs_z, const int use_axis_aligned_geom)
+                          const t8_locidx_t hexs_y, const t8_locidx_t hexs_z, const int use_axis_aligned_geom, const int offset)
 {
   T8_ASSERT (!t8_cmesh_is_committed (cmesh));
   /* x axes */
@@ -1155,13 +1157,13 @@ t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
         }
 
         /* Map vertices of current hex on to respective trees inside. */
-        const t8_gloidx_t hex_id = hex_z_id * hexs_y * hexs_x + hex_y_id * hexs_x + hex_x_id;
+        const t8_gloidx_t hex_id = hex_z_id * hexs_y * hexs_x + hex_y_id * hexs_x + hex_x_id + offset;
         if (eclass == T8_ECLASS_HEX) {
           /* No mapping is required. */
           t8_cmesh_set_tree_vertices (cmesh, hex_id, vertices, use_axis_aligned_geom ? 2 : 8);
         }
         else if (eclass == T8_ECLASS_TET) {
-          const t8_gloidx_t tree_id_0 = hex_id * 6;
+          const t8_gloidx_t tree_id_0 = hex_id * 6 + offset;
           double vertices_tet[12];
           for (int i = 0; i < 3; i++) {
             vertices_tet[i] = vertices[i];
@@ -1198,7 +1200,7 @@ t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
         }
         else {
           T8_ASSERT (eclass == T8_ECLASS_PRISM);
-          const t8_gloidx_t tree_id_0 = hex_id * 2;
+          const t8_gloidx_t tree_id_0 = hex_id * 2 + offset;
           double vertices_prism[18];
           for (int i = 0; i < 3; i++) {
             vertices_prism[i] = vertices[i];
@@ -1243,11 +1245,28 @@ t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
   T8_ASSERT (box_hexs[0] == hexs_x + 1);
 }
 
-t8_cmesh_t
-t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass, sc_MPI_Comm comm, const double *boundary, t8_locidx_t polygons_x,
-                            t8_locidx_t polygons_y, t8_locidx_t polygons_z, const int use_axis_aligned)
+static t8_cmesh_t
+t8_cmesh_new_hypercube_pad_ext (const t8_eclass_t eclass, sc_MPI_Comm comm, const double *boundary, t8_locidx_t polygons_x,
+                            t8_locidx_t polygons_y, t8_locidx_t polygons_z, const int periodic_x, const int periodic_y, const int periodic_z, const int use_axis_aligned, const int set_partition, t8_gloidx_t offset)
 {
   SC_CHECK_ABORT (eclass != T8_ECLASS_PYRAMID, "Pyramids are not yet supported.");
+
+  int use_offset;
+
+  /* Offset-1 is added to each tree_id, this is used in i.e. t8_cmesh_new_disjoint_bricks,
+   * If offset is nonzero, then set_partition must be true and the cmesh is
+   * partitioned and has all trees in conn as local trees.
+   * The offsets on the different processes must add up! */
+  T8_ASSERT (offset == 0 || set_partition);
+  if (offset) {
+    offset--;
+    use_offset = 1;
+  }
+  else {
+    use_offset = 0;
+  }
+  T8_ASSERT (offset >= 0);
+
   const int dim = t8_eclass_to_dimension[eclass];
   switch (dim) {
   case 0:
@@ -1276,20 +1295,21 @@ t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass, sc_MPI_Comm comm, const do
   /* Number of trees inside each polygon of given eclass. */
   const t8_locidx_t num_trees_for_single_hypercube[T8_ECLASS_COUNT] = { 1, 1, 1, 2, 1, 6, 2, -1 };
 
+  const t8_locidx_t num_trees = polygons_x * polygons_y * polygons_z * num_trees_for_single_hypercube[eclass];
+
   /* Set tree class for every tree. */
-  for (t8_locidx_t tree_id = 0; tree_id < polygons_x * polygons_y * polygons_z * num_trees_for_single_hypercube[eclass];
-       tree_id++) {
-    t8_cmesh_set_tree_class (cmesh, tree_id, eclass);
+  for (t8_locidx_t tree_id = 0; tree_id < num_trees; tree_id++) {
+    t8_cmesh_set_tree_class (cmesh, tree_id + offset, eclass);
   }
 
   /* Set the vertices of all trees. */
   if (dim == 3) {
     T8_ASSERT (eclass == T8_ECLASS_HEX || eclass == T8_ECLASS_TET || eclass == T8_ECLASS_PRISM);
-    t8_cmesh_set_vertices_3D (cmesh, eclass, boundary, polygons_x, polygons_y, polygons_z, use_axis_aligned);
+    t8_cmesh_set_vertices_3D (cmesh, eclass, boundary, polygons_x, polygons_y, polygons_z, use_axis_aligned, offset);
   }
   else if (dim == 2) {
     T8_ASSERT (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_TRIANGLE);
-    t8_cmesh_set_vertices_2D (cmesh, eclass, boundary, polygons_x, polygons_y, use_axis_aligned);
+    t8_cmesh_set_vertices_2D (cmesh, eclass, boundary, polygons_x, polygons_y, use_axis_aligned, offset);
   }
   else if (dim == 1) {
     T8_ASSERT (eclass == T8_ECLASS_LINE);
@@ -1310,7 +1330,7 @@ t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass, sc_MPI_Comm comm, const do
     t8_vec_axpyz (line_dir, boundary, vertices + 3, 1.0);
 
     for (t8_gloidx_t tree_x = 0; tree_x < polygons_x; tree_x++) {
-      t8_cmesh_set_tree_vertices (cmesh, tree_x, vertices, 2);
+      t8_cmesh_set_tree_vertices (cmesh, tree_x + offset, vertices, 2);
       /* Update vertices for next tree */
       t8_vec_axy (vertices, vertices + 3, 1.0);
       t8_vec_axpy (line_dir, vertices + 3, 1.0);
@@ -1322,7 +1342,7 @@ t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass, sc_MPI_Comm comm, const do
     double vertex[3];
     /* Vertex == boundary. */
     t8_vec_axy (boundary, vertex, 1.0);
-    t8_cmesh_set_tree_vertices (cmesh, 0, vertex, 1);
+    t8_cmesh_set_tree_vertices (cmesh, offset, vertex, 1);
   }
 
   /* Join the trees inside each cube */
@@ -1333,13 +1353,13 @@ t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass, sc_MPI_Comm comm, const do
         if (eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_PRISM) {
           const t8_locidx_t tree_id_0 = poly_id * 2;
           const t8_locidx_t tree_id_1 = poly_id * 2 + 1;
-          t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 1, 2, 0);
+          t8_cmesh_set_join (cmesh, tree_id_0 + offset, tree_id_1 + offset, 1, 2, 0);
         }
         else if (eclass == T8_ECLASS_TET) {
           for (int i = 0; i < 6; i++) {
             const t8_locidx_t tree_id_0 = poly_id * 6 + i;
             const t8_locidx_t tree_id_1 = poly_id * 6 + (i + 1) % 6;
-            t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 2, 1, 0);
+            t8_cmesh_set_join (cmesh, tree_id_0 + offset, tree_id_1 + offset, 2, 1, 0);
           }
         }
         else {
@@ -1349,92 +1369,250 @@ t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass, sc_MPI_Comm comm, const do
       }
     }
   }
+
   /* Join the trees along the x - axis */
   for (t8_locidx_t poly_z_id = 0; poly_z_id < polygons_z; poly_z_id++) {
     for (t8_locidx_t poly_y_id = 0; poly_y_id < polygons_y; poly_y_id++) {
-      for (t8_locidx_t poly_x_id = 0; poly_x_id < polygons_x - 1; poly_x_id++) {
-        const t8_locidx_t poly_id = poly_z_id * polygons_y * polygons_x + poly_y_id * polygons_x + poly_x_id;
+      for (t8_locidx_t poly_x_id = 0; poly_x_id < polygons_x - (periodic_x ? 0 : 1); poly_x_id++) {
+        const t8_locidx_t base_id = poly_z_id * polygons_y * polygons_x + poly_y_id * polygons_x;
+        const t8_locidx_t poly_id = base_id + poly_x_id;
         if (eclass == T8_ECLASS_LINE || eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX) {
           const t8_locidx_t tree_id_0 = poly_id;
-          const t8_locidx_t tree_id_1 = poly_id + 1;
-          t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 1, 0, 0);
+          const t8_locidx_t tree_id_1 = poly_x_id == polygons_x - 1 ? base_id : poly_id + 1;
+          t8_cmesh_set_join (cmesh, tree_id_0 + offset, tree_id_1 + offset, 1, 0, 0);
         }
         else if (eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_PRISM) {
           const t8_locidx_t tree_id_0 = poly_id * 2;
-          const t8_locidx_t tree_id_1 = poly_id * 2 + 3;
-          t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 0, 1, 0);
+          const t8_locidx_t tree_id_1 = poly_x_id == polygons_x - 1 ? base_id * 2 : poly_id * 2 + 3;
+          t8_cmesh_set_join (cmesh, tree_id_0 + offset, tree_id_1 + offset, 0, 1, 0);
         }
         else {
           T8_ASSERT (eclass == T8_ECLASS_TET);
           for (int i = 0; i < 2; i++) {
             const t8_locidx_t tree_id_0 = poly_id * 6 + i;
-            const t8_locidx_t tree_id_1 = poly_id * 6 + 10 - i;
-            t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 0, 3, i % 2 == 0 ? 0 : 2);
-          }
-        }
-      }
-    }
-  }
-  /* Join the trees along the y - axis */
-  for (t8_locidx_t poly_z_id = 0; poly_z_id < polygons_z; poly_z_id++) {
-    for (t8_locidx_t poly_y_id = 0; poly_y_id < polygons_y - 1; poly_y_id++) {
-      for (t8_locidx_t poly_x_id = 0; poly_x_id < polygons_x; poly_x_id++) {
-        const t8_locidx_t poly_id_0 = poly_z_id * polygons_y * polygons_x + poly_y_id * polygons_x + poly_x_id;
-        if (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX) {
-          const t8_locidx_t tree_id_0 = poly_id_0;
-          const t8_locidx_t tree_id_1 = poly_id_0 + polygons_x;
-          t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 3, 2, 0);
-        }
-        else if (eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_PRISM) {
-          const t8_locidx_t tree_id_0 = poly_id_0 * 2 + 1;
-          const t8_locidx_t tree_id_1 = (poly_id_0 + polygons_x) * 2;
-          t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 0, 2, 1);
-        }
-        else {
-          T8_ASSERT (eclass == T8_ECLASS_TET);
-          t8_locidx_t tree_id_0 = poly_id_0 * 6 + 2;
-          t8_locidx_t tree_id_1 = (poly_id_0 + polygons_x) * 6;
-          t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 0, 3, 0);
-          tree_id_0 = poly_id_0 * 6 + 3;
-          tree_id_1 = poly_id_0 * 6 + 6 * polygons_x + 5;
-          t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 0, 3, 2);
-        }
-      }
-    }
-  }
-  /* Join the trees along the z - axis */
-  for (t8_locidx_t poly_z_id = 0; poly_z_id < polygons_z - 1; poly_z_id++) {
-    for (t8_locidx_t poly_y_id = 0; poly_y_id < polygons_y; poly_y_id++) {
-      for (t8_locidx_t poly_x_id = 0; poly_x_id < polygons_x; poly_x_id++) {
-        const t8_locidx_t poly_id_0 = poly_z_id * polygons_y * polygons_x + poly_y_id * polygons_x + poly_x_id;
-        if (eclass == T8_ECLASS_HEX) {
-          const t8_locidx_t tree_id_0 = poly_id_0;
-          const t8_locidx_t tree_id_1 = poly_id_0 + polygons_y * polygons_x;
-          t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 5, 4, 0);
-        }
-        else if (eclass == T8_ECLASS_TET) {
-          t8_locidx_t tree_id_0 = poly_id_0 * 6 + 5;
-          t8_locidx_t tree_id_1 = (poly_id_0 + polygons_y * polygons_x) * 6 + 1;
-          t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 0, 3, 2);
-          tree_id_0 = poly_id_0 * 6 + 4;
-          tree_id_1 = (poly_id_0 + polygons_y * polygons_x) * 6 + 2;
-          t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 0, 3, 0);
-        }
-        else {
-          T8_ASSERT (eclass == T8_ECLASS_PRISM);
-          for (int i = 0; i < 2; i++) {
-            const t8_locidx_t tree_id_0 = poly_id_0 * 2 + i;
-            const t8_locidx_t tree_id_1 = (poly_id_0 + polygons_y * polygons_x) * 2 + i;
-            t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 4, 3, 0);
+            const t8_locidx_t tree_id_1 = poly_x_id == polygons_x - 1 ? base_id * 6 + i : poly_id * 6 + 10 - i;
+            t8_cmesh_set_join (cmesh, tree_id_0 + offset, tree_id_1 + offset, 0, 3, i % 2 == 0 ? 0 : 2);
           }
         }
       }
     }
   }
 
+  /* Join the trees along the y - axis */
+  for (t8_locidx_t poly_z_id = 0; poly_z_id < polygons_z; poly_z_id++) {
+    for (t8_locidx_t poly_y_id = 0; poly_y_id < polygons_y - (periodic_y ? 0 : 1); poly_y_id++) {
+      for (t8_locidx_t poly_x_id = 0; poly_x_id < polygons_x; poly_x_id++) {
+        const t8_locidx_t base_id = poly_z_id * polygons_y * polygons_x + poly_x_id;
+        const t8_locidx_t poly_id = poly_z_id * polygons_y * polygons_x + poly_y_id * polygons_x + poly_x_id;
+        if (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX) {
+          const t8_locidx_t tree_id_0 = poly_id;
+          const t8_locidx_t tree_id_1 = poly_y_id == polygons_y - 1 ? base_id : poly_id + polygons_x;
+          t8_cmesh_set_join (cmesh, tree_id_0 + offset, tree_id_1 + offset, 3, 2, 0);
+        }
+        else if (eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_PRISM) {
+          const t8_locidx_t tree_id_0 = poly_id * 2 + 1;
+          const t8_locidx_t tree_id_1 = poly_y_id == polygons_y - 1 ? base_id * 2 + 1 : (poly_id + polygons_x) * 2;
+          t8_cmesh_set_join (cmesh, tree_id_0 + offset, tree_id_1 + offset, 0, 2, 1);
+        }
+        else {
+          T8_ASSERT (eclass == T8_ECLASS_TET);
+          t8_locidx_t tree_id_0 = poly_id * 6 + 2;
+          t8_locidx_t tree_id_1 = poly_y_id == polygons_y - 1 ? base_id * 6 + 2 : (poly_id + polygons_x) * 6;
+          t8_cmesh_set_join (cmesh, tree_id_0 + offset, tree_id_1 + offset, 0, 3, 0);
+          tree_id_0 = poly_id * 6 + 3;
+          tree_id_1 = poly_y_id == polygons_y - 1 ? base_id * 6 + 3 : poly_id * 6 + 6 * polygons_x + 5;
+          t8_cmesh_set_join (cmesh, tree_id_0 + offset, tree_id_1 + offset, 0, 3, 2);
+        }
+      }
+    }
+  }
+
+  /* Join the trees along the z - axis */
+  for (t8_locidx_t poly_z_id = 0; poly_z_id < polygons_z - (periodic_z ? 0 : 1); poly_z_id++) {
+    for (t8_locidx_t poly_y_id = 0; poly_y_id < polygons_y; poly_y_id++) {
+      for (t8_locidx_t poly_x_id = 0; poly_x_id < polygons_x; poly_x_id++) {
+        const t8_locidx_t base_id = poly_y_id * polygons_x + poly_x_id;
+        const t8_locidx_t poly_id = poly_z_id * polygons_y * polygons_x + poly_y_id * polygons_x + poly_x_id;
+        if (eclass == T8_ECLASS_HEX) {
+          const t8_locidx_t tree_id_0 = poly_id;
+          const t8_locidx_t tree_id_1 = poly_z_id == polygons_z - 1 ? base_id : poly_id + polygons_y * polygons_x;
+          t8_cmesh_set_join (cmesh, tree_id_0 + offset, tree_id_1 + offset, 5, 4, 0);
+        }
+        else if (eclass == T8_ECLASS_TET) {
+          t8_locidx_t tree_id_0 = poly_id * 6 + 5;
+          t8_locidx_t tree_id_1 = poly_z_id == polygons_z - 1 ? base_id * 6 + 5 : (poly_id + polygons_y * polygons_x) * 6 + 1;
+          t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 0, 3, 2);
+          tree_id_0 = poly_id * 6 + 4;
+          tree_id_1 = poly_z_id == polygons_z - 1 ? base_id * 6 + 4 : (poly_id + polygons_y * polygons_x) * 6 + 2;
+          t8_cmesh_set_join (cmesh, tree_id_0 + offset, tree_id_1 + offset, 0, 3, 0);
+        }
+        else {
+          T8_ASSERT (eclass == T8_ECLASS_PRISM);
+          for (int i = 0; i < 2; i++) {
+            const t8_locidx_t tree_id_0 = poly_id * 2 + i;
+            const t8_locidx_t tree_id_1 = poly_z_id == polygons_z - 1 ? base_id * 2 + i : (poly_id + polygons_y * polygons_x) * 2 + i;
+            t8_cmesh_set_join (cmesh, tree_id_0 + offset, tree_id_1 + offset, 4, 3, 0);
+          }
+        }
+      }
+    }
+  }
+
+  /* Check whether the cmesh will be partitioned. */
+  if (set_partition) {
+    if (use_offset == 0) {
+      /* Set the partition (without offsets) */
+      t8_cmesh_examples_compute_and_set_partition_range (cmesh, num_trees, 3, comm);
+    }
+    else {
+      /* First_tree and last_tree are the first and last trees of conn plus the offset */
+      t8_gloidx_t num_local_trees = num_trees;
+
+      /* First process-local tree-id */
+      const t8_gloidx_t first_tree = offset;
+
+      /* Last process-local tree-id */
+      const t8_gloidx_t last_tree = offset + num_local_trees - 1;
+
+      /* Set the partition (with offsets) */
+      t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
+
+#ifdef T8_ENABLE_DEBUG
+      t8_gloidx_t num_global_trees;
+      /* The global number of trees is the sum over all numbers of trees in conn on each process */
+      int mpiret = sc_MPI_Allreduce (&num_local_trees, &num_global_trees, 1, T8_MPI_GLOIDX, sc_MPI_SUM, comm);
+      SC_CHECK_MPI (mpiret);
+
+      t8_debugf ("Generating partitioned cmesh from connectivity\n"
+                 "Has %li global and %li local trees.\n",
+                 num_global_trees, num_local_trees);
+#endif
+    }
+  }
+
   t8_cmesh_commit (cmesh, comm);
   return cmesh;
 }
+
+t8_cmesh_t
+t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass, sc_MPI_Comm comm, const double *boundary, t8_locidx_t polygons_x,
+                            t8_locidx_t polygons_y, t8_locidx_t polygons_z, const int use_axis_aligned)
+{
+  return t8_cmesh_new_hypercube_pad_ext (eclass, comm, boundary, polygons_x, polygons_y, polygons_z, 0, 0, 0, use_axis_aligned, 0, 0);
+}
+
+static t8_cmesh_t
+t8_cmesh_new_brick_2d_ext (const t8_gloidx_t num_x, const t8_gloidx_t num_y, const int periodic_x, const int periodic_y, sc_MPI_Comm comm,
+                           const int set_partition, const t8_gloidx_t offset)
+{
+  const double boundary[12] = {
+    0.0, 0.0, 0.0,
+    (double) num_x, 0.0, 0.0,
+    0.0, (double)num_y, 0.0,
+    (double) num_x, (double) num_y, 0.0
+  };
+
+  return t8_cmesh_new_hypercube_pad_ext (T8_ECLASS_QUAD, comm, boundary, num_x, num_y, 0,
+                            periodic_x, periodic_y, 0, 0, set_partition, offset);
+}
+
+static t8_cmesh_t
+t8_cmesh_new_brick_3d_ext (const t8_gloidx_t num_x, const t8_gloidx_t num_y, const t8_gloidx_t num_z, const int periodic_x, const int periodic_y,
+                           const int periodic_z, sc_MPI_Comm comm, const int set_partition, const t8_gloidx_t offset)
+{
+  const double boundary[24] = {
+    0.0, 0.0, 0.0,
+    (double) num_x, 0.0, 0.0,
+    0.0, (double) num_y, 0.0,
+    (double) num_x, (double) num_y, 0.0,
+    0.0, 0.0, (double) num_z,
+    (double) num_x, 0.0, (double) num_z,
+    0.0, (double) num_y, (double) num_z,
+    (double) num_x, (double) num_y, (double) num_z
+  };
+
+  return t8_cmesh_new_hypercube_pad_ext (T8_ECLASS_HEX, comm, boundary, num_x, num_y, num_z,
+                            periodic_x, periodic_y, periodic_z, 0, set_partition, offset);
+}
+
+t8_cmesh_t
+t8_cmesh_new_brick_2d (const t8_gloidx_t num_x, const t8_gloidx_t num_y, const int x_periodic, const int y_periodic, sc_MPI_Comm comm)
+{
+  return t8_cmesh_new_brick_2d_ext (num_x, num_y, x_periodic, y_periodic, comm, 0, 0);
+}
+
+t8_cmesh_t
+t8_cmesh_new_brick_3d (const t8_gloidx_t num_x, const t8_gloidx_t num_y, const t8_gloidx_t num_z, const int x_periodic, const int y_periodic,
+                       const int z_periodic, sc_MPI_Comm comm)
+{
+  return t8_cmesh_new_brick_3d_ext (num_x, num_y, num_z, x_periodic, y_periodic, z_periodic, comm, 0, 0);
+}
+
+/* On each process, create a num_x by num_y (by num_z) brick connectivity and
+ * make a cmesh connectivity from the disjoint union of those.
+ * Example: 2 processors,
+ * On the first  num_x = 1, num_y = 1
+ * On the second num_x = 2, num_y = 1
+ *                            _
+ * connectivity on first:    |_|
+ *
+ *                           _ _
+ * connectivity on second:  |_|_|
+ *
+ *                     _    _ _
+ * Leads to the cmesh |_|  |_|_|
+ * which is partitioned accordingly.
+ */
+t8_cmesh_t
+t8_cmesh_new_disjoint_bricks (t8_gloidx_t num_x, t8_gloidx_t num_y, t8_gloidx_t num_z, int x_periodic, int y_periodic,
+                              int z_periodic, sc_MPI_Comm comm)
+{
+  t8_cmesh_t cmesh;
+  t8_gloidx_t num_trees, offset;
+  int dim;
+
+  T8_ASSERT (num_x >= 0 && num_y >= 0 && num_z >= 0);
+  /* Set the dimension to 3 if num_z > 0 and 2 otherwise. */
+  if (num_z > 0) {
+    dim = 3;
+  }
+  else {
+    dim = 2;
+  }
+  num_trees = num_x * num_y;
+  if (dim == 3) {
+    num_trees *= num_z;
+  }
+
+  /* Calculate the x and y offset of trees */
+  sc_MPI_Scan (&num_trees, &offset, 1, T8_MPI_GLOIDX, sc_MPI_SUM, comm);
+  offset -= num_trees;
+
+  /* Create a brick connectivity on the process with
+   * num_x times num_y elements */
+  if (num_trees > 0) {
+    if (dim == 2) {
+      cmesh = t8_cmesh_new_brick_2d_ext (num_x, num_y, x_periodic, y_periodic, comm, 1, offset + 1);
+    }
+    else {
+      cmesh = t8_cmesh_new_brick_3d_ext (num_x, num_y, num_z, x_periodic, y_periodic, z_periodic, comm, 1, offset + 1);
+    }
+  }
+  else {
+    num_x = num_y = num_z = 0;
+    num_trees = 0;
+    offset = 0;
+
+    /* Create empty cmesh. */
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, dim);
+    t8_cmesh_commit (cmesh, comm);
+  }
+
+  return cmesh;
+}
+
+
 
 t8_cmesh_t
 t8_cmesh_new_periodic_line_more_trees (sc_MPI_Comm comm)
@@ -1952,419 +2130,6 @@ t8_cmesh_new_prism_geometry (sc_MPI_Comm comm)
     t8_cmesh_set_tree_vertices (cmesh, i, vertices + i * 18, 6);
   }
   t8_cmesh_commit (cmesh, comm);
-  return cmesh;
-}
-
-/* Offset-1 is added to each tree_id, this is used in i.e. t8_cmesh_new_disjoint_bricks,
- * If offset is nonzero, then set_partition must be true and the cmesh is
- * partitioned and has all trees in conn as local trees.
- * The offsets on the different processes must add up! */
-static t8_cmesh_t
-t8_cmesh_new_brick_2d_ext (t8_gloidx_t num_x, t8_gloidx_t num_y, int x_periodic, int y_periodic, sc_MPI_Comm comm,
-                           int set_partition, t8_gloidx_t offset)
-{
-  int use_offset;
-  t8_cmesh_t cmesh;
-
-  T8_ASSERT (num_x > 0 && num_y > 0);
-  T8_ASSERT (offset == 0 || set_partition);
-  if (offset) {
-    offset--;
-    use_offset = 1;
-  }
-  else {
-    use_offset = 0;
-  }
-  T8_ASSERT (offset >= 0);
-
-  const int dim = 2;
-  const t8_gloidx_t ntrees = num_x * num_y;
-  const int nverts = 4; /* T8_ECLASS_QUAD */
-
-  t8_cmesh_init (&cmesh);
-  t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, dim);
-
-  /* Setting eclass. */
-  for (t8_gloidx_t itree = 0; itree < ntrees; itree++) {
-    t8_cmesh_set_tree_class (cmesh, itree + offset, T8_ECLASS_QUAD);
-  }
-
-  double vertices[nverts][3];
-
-  /* Setting vertices. */
-  for (t8_gloidx_t i = 0; i < num_x; i++) {
-    for (t8_gloidx_t j = 0; j < num_y; j++) {
-      const t8_gloidx_t itree = i * num_y + j + offset;
-
-      vertices[0][0] = i;
-      vertices[0][1] = j;
-      vertices[0][2] = 0.0;
-
-      vertices[1][0] = i + 1.0;
-      vertices[1][1] = j;
-      vertices[1][2] = 0.0;
-
-      vertices[2][0] = i;
-      vertices[2][1] = j + 1.0;
-      vertices[2][2] = 0.0;
-
-      vertices[3][0] = i + 1.0;
-      vertices[3][1] = j + 1.0;
-      vertices[3][2] = 0.0;
-
-      t8_cmesh_set_tree_vertices (cmesh, itree, (double *) vertices, nverts);
-    }
-  }
-
-  /* Setting face connectivity within the brick in x-direction. */
-  for (t8_gloidx_t i = 0; i < num_x - 1; i++) {
-    for (t8_gloidx_t j = 0; j < num_y; j++) {
-      const t8_gloidx_t itree = i * num_y + j + offset;
-      const t8_gloidx_t itree_neigh = (i + 1) * num_y + j + offset;
-      t8_cmesh_set_join (cmesh, itree, itree_neigh, 1, 0, 0);
-    }
-  }
-
-  /* Setting face connectivity within the brick in y-direction. */
-  for (t8_gloidx_t i = 0; i < num_x; i++) {
-    for (t8_gloidx_t j = 0; j < num_y - 1; j++) {
-      const t8_gloidx_t itree = i * num_y + j + offset;
-      const t8_gloidx_t itree_neigh = i * num_y + j + 1 + offset;
-      t8_cmesh_set_join (cmesh, itree, itree_neigh, 3, 2, 0);
-    }
-  }
-
-  /* Setting face connectivity at boundary in x-direction. */
-  if (x_periodic) {
-    for (int j = 0; j < num_y; j++) {
-      const t8_gloidx_t itree = (num_x - 1) * num_y + j + offset;
-      const t8_gloidx_t itree_neigh = j + offset;
-      t8_cmesh_set_join (cmesh, itree, itree_neigh, 1, 0, 0);
-    }
-  }
-
-  /* Setting face connectivity at boundary in y-direction. */
-  if (y_periodic) {
-    for (int i = 0; i < num_x; i++) {
-      const t8_gloidx_t itree = i * num_y + num_y - 1 + offset;
-      const t8_gloidx_t itree_neigh = i * num_y + offset;
-      t8_cmesh_set_join (cmesh, itree, itree_neigh, 3, 2, 0);
-    }
-  }
-
-  /* Check whether the cmesh will be partitioned. */
-  if (set_partition) {
-    if (use_offset == 0) {
-      /* Set the partition (without offsets) */
-      t8_cmesh_examples_compute_and_set_partition_range (cmesh, ntrees, 3, comm);
-    }
-    else {
-      int mpirank, mpisize, mpiret;
-
-      /* Get the rank */
-      mpiret = sc_MPI_Comm_rank (comm, &mpirank);
-      SC_CHECK_MPI (mpiret);
-
-      /* Get the size of the communicator in which the cmesh will be partitioned */
-      mpiret = sc_MPI_Comm_size (comm, &mpisize);
-      SC_CHECK_MPI (mpiret);
-
-      /* First_tree and last_tree are the first and last trees of conn plus the offset */
-      t8_gloidx_t num_local_trees = ntrees;
-
-      /* First process-local tree-id */
-      const t8_gloidx_t first_tree = offset;
-
-      /* Last process-local tree-id */
-      const t8_gloidx_t last_tree = offset + num_local_trees - 1;
-
-      /* Set the partition (with offsets) */
-      t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
-
-#ifdef T8_ENABLE_DEBUG
-      t8_gloidx_t num_global_trees;
-      /* The global number of trees is the sum over all numbers of trees in conn on each process */
-      mpiret = sc_MPI_Allreduce (&num_local_trees, &num_global_trees, 1, T8_MPI_GLOIDX, sc_MPI_SUM, comm);
-      SC_CHECK_MPI (mpiret);
-
-      t8_debugf ("Generating partitioned cmesh from connectivity\n"
-                 "Has %li global and %li local trees.\n",
-                 num_global_trees, num_local_trees);
-#endif
-    }
-  }
-
-  t8_cmesh_commit (cmesh, comm);
-
-  return cmesh;
-}
-
-/* Offset-1 is added to each tree_id, this is used in i.e. t8_cmesh_new_disjoint_bricks,
- * If offset is nonzero, then set_partition must be true and the cmesh is
- * partitioned and has all trees in conn as local trees.
- * The offsets on the different processes must add up! */
-static t8_cmesh_t
-t8_cmesh_new_brick_3d_ext (t8_gloidx_t num_x, t8_gloidx_t num_y, t8_gloidx_t num_z, int x_periodic, int y_periodic,
-                           int z_periodic, sc_MPI_Comm comm, int set_partition, t8_gloidx_t offset)
-{
-  int use_offset;
-  t8_cmesh_t cmesh;
-
-  T8_ASSERT (num_x > 0 && num_y > 0);
-  T8_ASSERT (offset == 0 || set_partition);
-  if (offset) {
-    offset--;
-    use_offset = 1;
-  }
-  else {
-    use_offset = 0;
-  }
-  T8_ASSERT (offset >= 0);
-
-  const int dim = 3;
-  const t8_gloidx_t ntrees = num_x * num_y * num_z;
-  const int nverts = 8; /* T8_ECLASS_HEX */
-
-  t8_cmesh_init (&cmesh);
-  t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, dim);
-
-  /* Setting eclass. */
-  for (t8_gloidx_t itree = 0; itree < ntrees; itree++) {
-    t8_cmesh_set_tree_class (cmesh, itree + offset, T8_ECLASS_HEX);
-  }
-
-  double vertices[nverts][3];
-
-  /* Setting vertices. */
-  for (t8_gloidx_t i = 0; i < num_x; i++) {
-    for (t8_gloidx_t j = 0; j < num_y; j++) {
-      for (t8_gloidx_t k = 0; k < num_z; k++) {
-        const t8_gloidx_t itree = T8_3D_TO_1D (num_x, num_y, num_z, i, j, k) + offset;
-
-        vertices[0][0] = i;
-        vertices[0][1] = j;
-        vertices[0][2] = k;
-
-        vertices[1][0] = i + 1.0;
-        vertices[1][1] = j;
-        vertices[1][2] = k;
-
-        vertices[2][0] = i;
-        vertices[2][1] = j + 1.0;
-        vertices[2][2] = k;
-
-        vertices[3][0] = i + 1.0;
-        vertices[3][1] = j + 1.0;
-        vertices[3][2] = k;
-
-        vertices[4][0] = i;
-        vertices[4][1] = j;
-        vertices[4][2] = k + 1.0;
-
-        vertices[5][0] = i + 1.0;
-        vertices[5][1] = j;
-        vertices[5][2] = k + 1.0;
-
-        vertices[6][0] = i;
-        vertices[6][1] = j + 1.0;
-        vertices[6][2] = k + 1.0;
-
-        vertices[7][0] = i + 1.0;
-        vertices[7][1] = j + 1.0;
-        vertices[7][2] = k + 1.0;
-
-        t8_cmesh_set_tree_vertices (cmesh, itree, (double *) vertices, nverts);
-      }
-    }
-  }
-
-  /* Setting face connectivity within the brick in x-direction. */
-  for (t8_gloidx_t i = 0; i < num_x - 1; i++) {
-    for (t8_gloidx_t j = 0; j < num_y; j++) {
-      for (t8_gloidx_t k = 0; k < num_z; k++) {
-        const t8_gloidx_t itree = T8_3D_TO_1D (num_x, num_y, num_z, i, j, k) + offset;
-        const t8_gloidx_t itree_neigh = T8_3D_TO_1D (num_x, num_y, num_z, i + 1, j, k) + offset;
-        t8_cmesh_set_join (cmesh, itree, itree_neigh, 1, 0, 0);
-      }
-    }
-  }
-
-  /* Setting face connectivity within the brick in y-direction. */
-  for (t8_gloidx_t i = 0; i < num_x; i++) {
-    for (t8_gloidx_t j = 0; j < num_y - 1; j++) {
-      for (t8_gloidx_t k = 0; k < num_z; k++) {
-        const t8_gloidx_t itree = T8_3D_TO_1D (num_x, num_y, num_z, i, j, k) + offset;
-        const t8_gloidx_t itree_neigh = T8_3D_TO_1D (num_x, num_y, num_z, i, j + 1, k) + offset;
-        t8_cmesh_set_join (cmesh, itree, itree_neigh, 3, 2, 0);
-      }
-    }
-  }
-
-  /* Setting face connectivity within the brick in z-direction. */
-  for (t8_gloidx_t i = 0; i < num_x; i++) {
-    for (t8_gloidx_t j = 0; j < num_y; j++) {
-      for (t8_gloidx_t k = 0; k < num_z - 1; k++) {
-        const t8_gloidx_t itree = T8_3D_TO_1D (num_x, num_y, num_z, i, j, k) + offset;
-        const t8_gloidx_t itree_neigh = T8_3D_TO_1D (num_x, num_y, num_z, i, j, k + 1) + offset;
-        t8_cmesh_set_join (cmesh, itree, itree_neigh, 5, 4, 0);
-      }
-    }
-  }
-
-  /* Setting face connectivity at boundary in x-direction. */
-  if (x_periodic) {
-    for (t8_gloidx_t j = 0; j < num_y; j++) {
-      for (t8_gloidx_t k = 0; k < num_z; k++) {
-        const t8_gloidx_t itree = T8_3D_TO_1D (num_x, num_y, num_z, num_x - 1, j, k) + offset;
-        const t8_gloidx_t itree_neigh = T8_3D_TO_1D (num_x, num_y, num_z, 0, j, k) + offset;
-        t8_cmesh_set_join (cmesh, itree, itree_neigh, 1, 0, 0);
-      }
-    }
-  }
-
-  /* Setting face connectivity at boundary in y-direction. */
-  if (y_periodic) {
-    for (t8_gloidx_t i = 0; i < num_x; i++) {
-      for (t8_gloidx_t k = 0; k < num_z; k++) {
-        const t8_gloidx_t itree = T8_3D_TO_1D (num_x, num_y, num_z, i, num_y - 1, k) + offset;
-        const t8_gloidx_t itree_neigh = T8_3D_TO_1D (num_x, num_y, num_z, i, 0, k) + offset;
-        t8_cmesh_set_join (cmesh, itree, itree_neigh, 3, 2, 0);
-      }
-    }
-  }
-
-  /* Setting face connectivity at boundary in z-direction. */
-  if (z_periodic) {
-    for (t8_gloidx_t i = 0; i < num_x; i++) {
-      for (t8_gloidx_t j = 0; j < num_y; j++) {
-        const t8_gloidx_t itree = T8_3D_TO_1D (num_x, num_y, num_z, i, j, num_z - 1) + offset;
-        const t8_gloidx_t itree_neigh = T8_3D_TO_1D (num_x, num_y, num_z, i, j, 0) + offset;
-        t8_cmesh_set_join (cmesh, itree, itree_neigh, 5, 4, 0);
-      }
-    }
-  }
-
-  /* Check whether the cmesh will be partitioned. */
-  if (set_partition) {
-    if (use_offset == 0) {
-      /* Set the partition (without offsets) */
-      t8_cmesh_examples_compute_and_set_partition_range (cmesh, ntrees, 3, comm);
-    }
-    else {
-      int mpirank, mpisize, mpiret;
-
-      /* Get the rank */
-      mpiret = sc_MPI_Comm_rank (comm, &mpirank);
-      SC_CHECK_MPI (mpiret);
-
-      /* Get the size of the communicator in which the cmesh will be partitioned */
-      mpiret = sc_MPI_Comm_size (comm, &mpisize);
-      SC_CHECK_MPI (mpiret);
-
-      /* First_tree and last_tree are the first and last trees of conn plus the offset */
-      t8_gloidx_t num_local_trees = ntrees;
-
-      /* First process-local tree-id */
-      const t8_gloidx_t first_tree = offset;
-
-      /* Last process-local tree-id */
-      const t8_gloidx_t last_tree = offset + num_local_trees - 1;
-
-      /* Set the partition (with offsets) */
-      t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
-
-#ifdef T8_ENABLE_DEBUG
-      t8_gloidx_t num_global_trees;
-      /* The global number of trees is the sum over all numbers of trees in conn on each process */
-      mpiret = sc_MPI_Allreduce (&num_local_trees, &num_global_trees, 1, T8_MPI_GLOIDX, sc_MPI_SUM, comm);
-      SC_CHECK_MPI (mpiret);
-
-      t8_debugf ("Generating partitioned cmesh from connectivity\n"
-                 "Has %li global and %li local trees.\n",
-                 num_global_trees, num_local_trees);
-#endif
-    }
-  }
-
-  t8_cmesh_commit (cmesh, comm);
-
-  return cmesh;
-}
-
-t8_cmesh_t
-t8_cmesh_new_brick_2d (t8_gloidx_t num_x, t8_gloidx_t num_y, int x_periodic, int y_periodic, sc_MPI_Comm comm)
-{
-  return t8_cmesh_new_brick_2d_ext (num_x, num_y, x_periodic, y_periodic, comm, 0, 0);
-}
-
-t8_cmesh_t
-t8_cmesh_new_brick_3d (t8_gloidx_t num_x, t8_gloidx_t num_y, t8_gloidx_t num_z, int x_periodic, int y_periodic,
-                       int z_periodic, sc_MPI_Comm comm)
-{
-  return t8_cmesh_new_brick_3d_ext (num_x, num_y, num_z, x_periodic, y_periodic, z_periodic, comm, 0, 0);
-}
-
-/* On each process, create a num_x by num_y (by num_z) brick connectivity and
- * make a cmesh connectivity from the disjoint union of those.
- * Example: 2 processors,
- * On the first  num_x = 1, num_y = 1
- * On the second num_x = 2, num_y = 1
- *                            _
- * connectivity on first:    |_|
- *
- *                           _ _
- * connectivity on second:  |_|_|
- *
- *                     _    _ _
- * Leads to the cmesh |_|  |_|_|
- * which is partitioned accordingly.
- */
-t8_cmesh_t
-t8_cmesh_new_disjoint_bricks (t8_gloidx_t num_x, t8_gloidx_t num_y, t8_gloidx_t num_z, int x_periodic, int y_periodic,
-                              int z_periodic, sc_MPI_Comm comm)
-{
-  t8_cmesh_t cmesh;
-  t8_gloidx_t num_trees, offset;
-  int dim;
-
-  T8_ASSERT (num_x >= 0 && num_y >= 0 && num_z >= 0);
-  /* Set the dimension to 3 if num_z > 0 and 2 otherwise. */
-  if (num_z > 0) {
-    dim = 3;
-  }
-  else {
-    dim = 2;
-  }
-  num_trees = num_x * num_y;
-  if (dim == 3) {
-    num_trees *= num_z;
-  }
-
-  /* Calculate the x and y offset of trees */
-  sc_MPI_Scan (&num_trees, &offset, 1, T8_MPI_GLOIDX, sc_MPI_SUM, comm);
-  offset -= num_trees;
-
-  /* Create a brick connectivity on the process with
-   * num_x times num_y elements */
-  if (num_trees > 0) {
-    if (dim == 2) {
-      cmesh = t8_cmesh_new_brick_2d_ext (num_x, num_y, x_periodic, y_periodic, comm, 1, offset + 1);
-    }
-    else {
-      cmesh = t8_cmesh_new_brick_3d_ext (num_x, num_y, num_z, x_periodic, y_periodic, z_periodic, comm, 1, offset + 1);
-    }
-  }
-  else {
-    num_x = num_y = num_z = 0;
-    num_trees = 0;
-    offset = 0;
-
-    /* Create empty cmesh. */
-    t8_cmesh_init (&cmesh);
-    t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, dim);
-    t8_cmesh_commit (cmesh, comm);
-  }
-
   return cmesh;
 }
 
