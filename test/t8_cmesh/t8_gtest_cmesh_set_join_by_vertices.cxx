@@ -280,6 +280,62 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
     t8_cmesh_destroy (&cmesh);
   }
 
+  {
+    const int num_x = 3;
+    const int num_y = 4;
+
+    const int periodic_x = 1;
+    const int periodic_y = 1;
+
+    const double boundary[12]
+      = { 0.0, 0.0, 0.0, (double) num_x, 0.0, 0.0, 0.0, (double) num_y, 0.0, (double) num_x, (double) num_y, 0.0 };
+
+    t8_cmesh_t cmesh = t8_cmesh_new_hypercube_pad_ext (T8_ECLASS_TRIANGLE, comm, boundary, num_x, num_y, 0, periodic_x,
+                                                       periodic_y, 0, 0, 0, 0);
+    test_with_cmesh (cmesh);
+    t8_cmesh_destroy (&cmesh);
+  }
+
+  {
+    const int num_x = 3;
+    const int num_y = 4;
+    const int num_z = 5;
+
+    const int periodic_x = 1;
+    const int periodic_y = 1;
+    const int periodic_z = 1;
+
+    const double boundary[24] = { 0.0,
+                                  0.0,
+                                  0.0,
+                                  (double) num_x,
+                                  0.0,
+                                  0.0,
+                                  0.0,
+                                  (double) num_y,
+                                  0.0,
+                                  (double) num_x,
+                                  (double) num_y,
+                                  0.0,
+                                  0.0,
+                                  0.0,
+                                  (double) num_z,
+                                  (double) num_x,
+                                  0.0,
+                                  (double) num_z,
+                                  0.0,
+                                  (double) num_y,
+                                  (double) num_z,
+                                  (double) num_x,
+                                  (double) num_y,
+                                  (double) num_z };
+
+    t8_cmesh_t cmesh = t8_cmesh_new_hypercube_pad_ext (T8_ECLASS_PRISM, comm, boundary, num_x, num_y, num_z, periodic_x,
+                                                       periodic_y, periodic_z, 0, 0, 0);
+    test_with_cmesh (cmesh);
+    t8_cmesh_destroy (&cmesh);
+  }
+
   /* 
    * Tests with 2D and 3D example meshes from `p4est`.
    */

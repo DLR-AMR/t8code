@@ -1246,7 +1246,7 @@ t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
   T8_ASSERT (box_hexs[0] == hexs_x + 1);
 }
 
-static t8_cmesh_t
+t8_cmesh_t
 t8_cmesh_new_hypercube_pad_ext (const t8_eclass_t eclass, sc_MPI_Comm comm, const double *boundary,
                                 t8_locidx_t polygons_x, t8_locidx_t polygons_y, t8_locidx_t polygons_z,
                                 const int periodic_x, const int periodic_y, const int periodic_z,
