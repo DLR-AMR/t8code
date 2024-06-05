@@ -1207,7 +1207,7 @@ t8_forest_partition (t8_forest_t forest)
 }
 
 void
-t8_forest_partition_data(t8_forest_t forest_from, t8_forest_t forest_to, const sc_array_t *data_in,
+t8_forest_partition_data (t8_forest_t forest_from, t8_forest_t forest_to, const sc_array_t *data_in,
                           sc_array_t *data_out)
 {
   t8_forest_t save_set_from;
