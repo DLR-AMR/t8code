@@ -335,8 +335,8 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
     test_with_cmesh (cmesh);
     t8_cmesh_destroy (&cmesh);
 
-    cmesh = t8_cmesh_new_hypercube_pad_ext (T8_ECLASS_TET, comm, boundary, num_x, num_y, num_z, periodic_x,
-                                                       periodic_y, periodic_z, 0, 0, 0);
+    cmesh = t8_cmesh_new_hypercube_pad_ext (T8_ECLASS_TET, comm, boundary, num_x, num_y, num_z, periodic_x, periodic_y,
+                                            periodic_z, 0, 0, 0);
     test_with_cmesh (cmesh);
     t8_cmesh_destroy (&cmesh);
   }

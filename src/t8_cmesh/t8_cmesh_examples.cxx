@@ -1386,7 +1386,7 @@ t8_cmesh_new_hypercube_pad_ext (const t8_eclass_t eclass, sc_MPI_Comm comm, cons
         }
         else if (eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_PRISM) {
           const t8_locidx_t tree_id_0 = poly_id * 2;
-          const t8_locidx_t tree_id_1 = poly_x_id == polygons_x - 1 ? base_id * 2 + 1: poly_id * 2 + 3;
+          const t8_locidx_t tree_id_1 = poly_x_id == polygons_x - 1 ? base_id * 2 + 1 : poly_id * 2 + 3;
           t8_cmesh_set_join (cmesh, tree_id_0 + offset, tree_id_1 + offset, 0, 1, 0);
         }
         else {
