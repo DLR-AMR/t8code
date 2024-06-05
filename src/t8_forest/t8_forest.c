@@ -481,7 +481,6 @@ t8_forest_populate_irregular (t8_forest_t forest)
     t8_forest_init (&forest_tmp_partition);
     t8_forest_set_partition (forest_tmp_partition, forest_tmp, 0);
     t8_forest_commit (forest_tmp_partition);
-              t8_debugf("-------------end populate irregular ---------\n");
 
     forest_zero = forest_tmp_partition;
   }
@@ -490,7 +489,6 @@ t8_forest_populate_irregular (t8_forest_t forest)
   t8_forest_copy_trees (forest, forest_zero, 1);
 
   t8_forest_unref (&forest_tmp_partition);
-  t8_debugf("-------------end populate irregular ---------\n");
 }
 
 void
@@ -607,14 +605,15 @@ t8_forest_commit (t8_forest_t forest)
         if (forest->set_from->is_transitioned){
           T8_ASSERT(forest->is_transitioned == 0);
           t8_forest_untransition(forest);
-          T8_ASSERT (!t8_forest_is_transitioned (forest));
         }
         
         t8_forest_t forest_adapt;
 
-        t8_forest_init (&forest_adapt);
+        t8_forest_init (&forest_adapt);       
         /* forest_adapt should not change ownership of forest->set_from */
-        t8_forest_ref (forest->set_from);
+        if (forest_from == forest->set_from) {
+            t8_forest_ref (forest->set_from);
+         }
         /* set user data of forest to forest_adapt */
         t8_forest_set_user_data (forest_adapt, t8_forest_get_user_data (forest));
         /* Construct an intermediate, adapted forest */
@@ -634,14 +633,8 @@ t8_forest_commit (t8_forest_t forest)
       else {
         /* This forest should only be adapted */
         t8_forest_copy_trees (forest, forest->set_from, 0);
-        /* The input forest for forest_adapt() should always be a non-transitioned forest.*/
-        if (forest->set_from->is_transitioned){
-          t8_forest_untransition(forest);
-          T8_ASSERT (!t8_forest_is_transitioned (forest));
-        }
-
-        t8_forest_adapt (forest);
-        forest->is_transitioned = 0;
+        
+        t8_forest_adapt (forest);        
       }
     }
     if (forest->from_method & T8_FOREST_FROM_PARTITION) {
@@ -649,10 +642,9 @@ t8_forest_commit (t8_forest_t forest)
       partitioned = 1;
       /* Partition this forest */
       forest->from_method -= T8_FOREST_FROM_PARTITION;
-      //  t8_debugf("from method nach partition %i\n",forest->from_method );
 
       if (forest->from_method > 0) {
-        /* The forest should also be balanced after partition */
+        /* The forest should also be balanced/transitioned after partition */
         t8_forest_t forest_partition;
 
         t8_forest_init (&forest_partition);
@@ -699,17 +691,22 @@ t8_forest_commit (t8_forest_t forest)
           /* balance with repartition */
           flag_rep = 0;
         }
-        /* in this case, we will use subelements after balancing */
+        /* in this case, we will transition after balancing */
         t8_forest_t forest_balance;
         t8_forest_init (&forest_balance);
-        /* forest_adapt should not change ownership of forest->set_from */
+        /* forest_balance should not change ownership of forest->set_from */
+         if (forest_from == forest->set_from) {
+            t8_forest_ref (forest->set_from);
+         }
         t8_forest_set_balance (forest_balance, forest->set_from, flag_rep);
+        /* Set profiling if enabled */
+        t8_forest_set_profiling (forest_balance, forest->profile != NULL);
         t8_forest_commit (forest_balance);
-        /* The new forest will be partitioned/balanced from forest_adapt */
+        /* The new forest will be partitioned/transitioned from forest_balance */
         forest->set_from = forest_balance;
       }
       else{
-      /* TOnly execute t8_balance. It is possible to call t8_transition afterwards. */
+      /* Only execute t8_balance.*/
       T8_ASSERT (forest->from_method == 0);
 
       /* This forest should only be balanced */
@@ -721,9 +718,7 @@ t8_forest_commit (t8_forest_t forest)
         /* balance with repartition */
         t8_forest_balance (forest, 1);
       }
-       
       }
-      forest->is_transitioned = 0;
     }
     if (forest->from_method & T8_FOREST_FROM_TRANSITION) {
        t8_debugf("from method in transition %i\n",forest->from_method );
@@ -731,7 +726,6 @@ t8_forest_commit (t8_forest_t forest)
       /* this is the last from method that we execute,
        * nothing should be left todo */
       T8_ASSERT (forest->from_method == 0);
-      // T8_ASSERT (t8_forest_is_balanced(forest));
       /* use subelements */
       t8_forest_transition (forest);
       forest->is_transitioned = 1;
@@ -739,9 +733,11 @@ t8_forest_commit (t8_forest_t forest)
     if (forest_from != forest->set_from) {
       /* decrease reference count of intermediate input forest, possibly destroying it */
       t8_forest_unref (&forest->set_from);
+
     }
     /* reset forest->set_from */
     forest->set_from = forest_from;
+
     /* decrease reference count of input forest, possibly destroying it */
     t8_forest_unref (&forest->set_from);
   } /* end set_from != NULL */
@@ -772,13 +768,10 @@ t8_forest_commit (t8_forest_t forest)
     /* Compute element offsets */
     t8_forest_partition_create_offsets (forest);
 
-
   }
   if (forest->global_first_desc == NULL) {
-
     /* Compute global first desc array */
     t8_forest_partition_create_first_desc (forest);
-
   }
 
   if (forest->profile != NULL) {

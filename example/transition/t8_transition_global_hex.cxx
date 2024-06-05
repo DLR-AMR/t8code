@@ -30,6 +30,7 @@
 
 /* to switch between the default quad scheme and the transition implementation */
 #include "t8_eclass.h"
+#include "t8_forest/t8_forest_types.h"
 
 #include "t8_forest/t8_forest_general.h"
 #include <cstring>
@@ -56,18 +57,38 @@ t8_adapt_callback (t8_forest_t forest,
                     const int is_family,
                     const int num_elements, t8_element_t *elements[])
 {
-  double coords[3] = {0.0,0.0,0.0};
-  ts->t8_element_vertex_reference_coords(elements[0], 0, coords);
-  if (coords[0]* P8EST_ROOT_LEN < 0.5 ){
+  // double coords[3] = {0.0,0.0,0.0};
+  // ts->t8_element_vertex_reference_coords(elements[0], 0, coords);
+  // if (coords[0]* P8EST_ROOT_LEN < 0.5 ){
+  //   return 1;
+  // }
+    int child_id = ts->t8_element_child_id (elements[0]);
+  if (child_id == 1) {
     return 1;
   }
+  return 0;
 //   else if (coords[0] > 0.5){
 //     return -1;
 //  }
-  return 0;
+  // return 0;
 }
 
+/* adapt, balance, transition and partition a given forest in one step */
+static t8_forest_t
+t8_test_forest_commit_abpt (t8_forest_t forest)
+{
+  t8_forest_t forest_ada_bal_tra_par;
 
+  /* Adapt, balance and partition the uniform forest */
+  t8_forest_init (&forest_ada_bal_tra_par);
+  t8_forest_set_adapt (forest_ada_bal_tra_par, forest, t8_adapt_callback, 0);
+  t8_forest_set_balance (forest_ada_bal_tra_par, NULL, 0);
+  t8_forest_set_transition(forest_ada_bal_tra_par, NULL, 0);
+  t8_forest_set_partition (forest_ada_bal_tra_par, NULL, 0);
+  t8_forest_commit (forest_ada_bal_tra_par);
+
+  return forest_ada_bal_tra_par;
+}
 
 
 
@@ -92,23 +113,22 @@ t8_transition_global (void)
       /* Create a uniformly refined forest */
   forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
 
-  for (int adaptation_count = 1; adaptation_count <= 2; ++adaptation_count) {
-  t8_forest_init (&forest_adapt);
-  
-  t8_forest_set_adapt (forest_adapt, forest, t8_adapt_callback, 0);
-  t8_forest_set_balance (forest_adapt, forest, 0);  
-  t8_forest_set_partition(forest_adapt, forest,0); 
-  t8_forest_set_transition (forest_adapt, forest, 0);
-  t8_forest_commit (forest_adapt);
-  t8_debugf("---------------ROUND %i ---------------------------\n\n", adaptation_count);
-  // // t8_forest_commit (forest_adapt);    /* adapt the forest */
-  
-  // //snprintf (filename, BUFSIZ, "forest_REFINEMENT_half_element_adapted_mesh");
-  // //t8_forest_write_vtk (forest, filename);
-  forest = forest_adapt;
-  }
+  t8_forest_write_vtk (forest, "forest_global_hex" );
 
-  t8_forest_unref (&forest);
+
+  for (int adaptation_count = 1; adaptation_count <= 5; ++adaptation_count) {
+
+  forest_adapt = t8_test_forest_commit_abpt(forest);
+
+  t8_debugf("---------------ROUND %i ---------------------------\n\n", adaptation_count);
+
+  forest = forest_adapt;   
+
+  }
+    t8_forest_write_vtk (forest, "transition_global_hex" );
+
+    t8_forest_unref (&forest_adapt);
+
 }                               /* end of t8_transition_global */
 
 

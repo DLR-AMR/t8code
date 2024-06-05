@@ -1414,11 +1414,12 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
   }
   forest->first_local_tree = from->first_local_tree;
   forest->last_local_tree = from->last_local_tree;
+  forest->is_transitioned = from->is_transitioned;
+
   if (copy_elements) {
     forest->local_num_elements = from->local_num_elements;
     forest->global_num_elements = from->global_num_elements;
     forest->incomplete_trees = from->incomplete_trees;
-    forest->is_transitioned = from->is_transitioned;
   }
   else {
     forest->local_num_elements = 0;
