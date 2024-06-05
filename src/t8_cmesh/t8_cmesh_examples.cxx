@@ -1386,14 +1386,14 @@ t8_cmesh_new_hypercube_pad_ext (const t8_eclass_t eclass, sc_MPI_Comm comm, cons
         }
         else if (eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_PRISM) {
           const t8_locidx_t tree_id_0 = poly_id * 2;
-          const t8_locidx_t tree_id_1 = poly_x_id == polygons_x - 1 ? base_id * 2 : poly_id * 2 + 3;
+          const t8_locidx_t tree_id_1 = poly_x_id == polygons_x - 1 ? base_id * 2 + 1: poly_id * 2 + 3;
           t8_cmesh_set_join (cmesh, tree_id_0 + offset, tree_id_1 + offset, 0, 1, 0);
         }
         else {
           T8_ASSERT (eclass == T8_ECLASS_TET);
           for (int i = 0; i < 2; i++) {
             const t8_locidx_t tree_id_0 = poly_id * 6 + i;
-            const t8_locidx_t tree_id_1 = poly_x_id == polygons_x - 1 ? base_id * 6 + i : poly_id * 6 + 10 - i;
+            const t8_locidx_t tree_id_1 = poly_x_id == polygons_x - 1 ? base_id * 6 + 4 - i : poly_id * 6 + 10 - i;
             t8_cmesh_set_join (cmesh, tree_id_0 + offset, tree_id_1 + offset, 0, 3, i % 2 == 0 ? 0 : 2);
           }
         }
@@ -1414,16 +1414,16 @@ t8_cmesh_new_hypercube_pad_ext (const t8_eclass_t eclass, sc_MPI_Comm comm, cons
         }
         else if (eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_PRISM) {
           const t8_locidx_t tree_id_0 = poly_id * 2 + 1;
-          const t8_locidx_t tree_id_1 = poly_y_id == polygons_y - 1 ? base_id * 2 + 1 : (poly_id + polygons_x) * 2;
+          const t8_locidx_t tree_id_1 = poly_y_id == polygons_y - 1 ? base_id * 2 : (poly_id + polygons_x) * 2;
           t8_cmesh_set_join (cmesh, tree_id_0 + offset, tree_id_1 + offset, 0, 2, 1);
         }
         else {
           T8_ASSERT (eclass == T8_ECLASS_TET);
           t8_locidx_t tree_id_0 = poly_id * 6 + 2;
-          t8_locidx_t tree_id_1 = poly_y_id == polygons_y - 1 ? base_id * 6 + 2 : (poly_id + polygons_x) * 6;
+          t8_locidx_t tree_id_1 = poly_y_id == polygons_y - 1 ? base_id * 6 : (poly_id + polygons_x) * 6;
           t8_cmesh_set_join (cmesh, tree_id_0 + offset, tree_id_1 + offset, 0, 3, 0);
           tree_id_0 = poly_id * 6 + 3;
-          tree_id_1 = poly_y_id == polygons_y - 1 ? base_id * 6 + 3 : poly_id * 6 + 6 * polygons_x + 5;
+          tree_id_1 = poly_y_id == polygons_y - 1 ? base_id * 6 + 5 : poly_id * 6 + 6 * polygons_x + 5;
           t8_cmesh_set_join (cmesh, tree_id_0 + offset, tree_id_1 + offset, 0, 3, 2);
         }
       }
@@ -1444,10 +1444,10 @@ t8_cmesh_new_hypercube_pad_ext (const t8_eclass_t eclass, sc_MPI_Comm comm, cons
         else if (eclass == T8_ECLASS_TET) {
           t8_locidx_t tree_id_0 = poly_id * 6 + 5;
           t8_locidx_t tree_id_1
-            = poly_z_id == polygons_z - 1 ? base_id * 6 + 5 : (poly_id + polygons_y * polygons_x) * 6 + 1;
+            = poly_z_id == polygons_z - 1 ? base_id * 6 + 1 : (poly_id + polygons_y * polygons_x) * 6 + 1;
           t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 0, 3, 2);
           tree_id_0 = poly_id * 6 + 4;
-          tree_id_1 = poly_z_id == polygons_z - 1 ? base_id * 6 + 4 : (poly_id + polygons_y * polygons_x) * 6 + 2;
+          tree_id_1 = poly_z_id == polygons_z - 1 ? base_id * 6 + 2 : (poly_id + polygons_y * polygons_x) * 6 + 2;
           t8_cmesh_set_join (cmesh, tree_id_0 + offset, tree_id_1 + offset, 0, 3, 0);
         }
         else {
