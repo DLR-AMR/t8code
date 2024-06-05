@@ -77,6 +77,7 @@ void t8_forest_ghost_exchange_data_with_vector(t8_forest_t forest, const std::ve
     /*Clean up the sc_array_t view*/ 
     sc_array_destroy(element_data);
 }
+
 /*Wrapper function to handle std::vector directly for t8_forest_search*/ 
 template <typename T>
 void t8_forest_search_with_vector(t8_forest_t forest, t8_forest_search_query_fn search_fn, 
