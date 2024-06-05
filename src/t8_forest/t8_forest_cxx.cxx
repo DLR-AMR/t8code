@@ -1125,14 +1125,14 @@ t8_forest_compute_desc (t8_forest_t forest)
     /* get the eclass scheme associated to tree */
     ts = forest->scheme_cxx->eclass_schemes[itree->eclass];
     /* get a pointer to the first element of itree */
-    const t8_element_t * first_element = t8_element_array_index_locidx (&itree->elements, 0);
+    const t8_element_t *first_element = t8_element_array_index_locidx (&itree->elements, 0);
     /* get memory for the trees first descendant */
     ts->t8_element_new (1, &itree->first_desc);
     /* calculate the first descendant of the first element */
     ts->t8_element_first_descendant (first_element, itree->first_desc, forest->maxlevel);
     /* get a pointer to the last element of itree */
     num_elements = t8_element_array_get_count (&itree->elements);
-    const t8_element_t * last_element = t8_element_array_index_locidx (&itree->elements, num_elements - 1);
+    const t8_element_t *last_element = t8_element_array_index_locidx (&itree->elements, num_elements - 1);
     /* get memory for the trees first descendant */
     ts->t8_element_new (1, &itree->last_desc);
     /* calculate the last descendant of the first element */
@@ -1437,7 +1437,7 @@ t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_lineari
   const t8_eclass_scheme_c *ts = t8_element_array_get_scheme (elements);
   /* At first, we check whether any element has smaller id than the
    * given one. */
-  const t8_element_t * query = t8_element_array_index_int (elements, 0);
+  const t8_element_t *query = t8_element_array_index_int (elements, 0);
   query_id = ts->t8_element_get_linear_id (query, maxlevel);
   if (query_id > element_id) {
     /* No element has id smaller than the given one */
@@ -1902,7 +1902,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
        * This is either the local leaf array of the local tree or the corresponding leaf array in the ghost structure */
       if (owners[ineigh] == forest->mpirank) {
         /* The neighbor is a local leaf */
-        const t8_element_array_t * element_array = t8_forest_get_tree_element_array (forest, lneigh_treeid);
+        const t8_element_array_t *element_array = t8_forest_get_tree_element_array (forest, lneigh_treeid);
         /* Find the index of the neighbor in the array */
         element_indices[ineigh] = t8_forest_bin_search_lower (element_array, neigh_id, forest->maxlevel);
         T8_ASSERT (element_indices[ineigh] >= 0);
@@ -1920,7 +1920,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
       }
       else {
         /* The neighbor is a ghost */
-        const t8_element_array_t* element_array = t8_forest_ghost_get_tree_elements (forest, lghost_treeid);
+        const t8_element_array_t *element_array = t8_forest_ghost_get_tree_elements (forest, lghost_treeid);
         /* Find the index of the neighbor in the array */
         element_indices[ineigh] = t8_forest_bin_search_lower (element_array, neigh_id, forest->maxlevel);
 
@@ -2776,7 +2776,7 @@ t8_forest_element_has_leaf_desc (t8_forest_t forest, t8_gloidx_t gtreeid, const 
     if (index >= 0) {
       /* There exists an element in the array with id <= last_desc_id,
        * If also elem_id < id, then we found a true decsendant of element */
-      const t8_element_t * elem_found = t8_element_array_index_locidx (elements, index);
+      const t8_element_t *elem_found = t8_element_array_index_locidx (elements, index);
       elem_id = ts->t8_element_get_linear_id (elem_found, forest->maxlevel);
       level_found = ts->t8_element_level (elem_found);
       if (ts->t8_element_get_linear_id (element, forest->maxlevel) <= elem_id && level < level_found) {
@@ -2793,12 +2793,12 @@ t8_forest_element_has_leaf_desc (t8_forest_t forest, t8_gloidx_t gtreeid, const 
     ghost_treeid = t8_forest_ghost_get_ghost_treeid (forest, gtreeid);
     if (ghost_treeid >= 0) {
       /* The tree is a ghost tree */
-      const t8_element_array_t *elements  = t8_forest_ghost_get_tree_elements (forest, ghost_treeid);
+      const t8_element_array_t *elements = t8_forest_ghost_get_tree_elements (forest, ghost_treeid);
       index = t8_forest_bin_search_lower (elements, last_desc_id, forest->maxlevel);
       if (index >= 0) {
         /* There exists an element in the array with id <= last_desc_id,
          * If also elem_id < id, then we found a true decsendant of element */
-        const t8_element_t * elem_found = t8_element_array_index_int (elements, index);
+        const t8_element_t *elem_found = t8_element_array_index_int (elements, index);
         elem_id = ts->t8_element_get_linear_id (elem_found, forest->maxlevel);
         level_found = ts->t8_element_level (elem_found);
         if (ts->t8_element_get_linear_id (element, forest->maxlevel) <= elem_id && level < level_found) {

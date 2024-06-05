@@ -35,7 +35,7 @@ t8_forest_get_tree_element (t8_tree_t tree, t8_locidx_t elem_in_tree)
 t8_element_t*
 t8_forest_get_tree_element_mutable (t8_tree_t tree, t8_locidx_t elem_in_tree)
 {
-  return (t8_element_t *) t8_forest_get_tree_element (tree, elem_in_tree);
+  return (t8_element_t*) t8_forest_get_tree_element (tree, elem_in_tree);
 }
 
 const t8_element_array_t*
@@ -50,5 +50,5 @@ t8_forest_get_tree_element_array (const t8_forest_t forest, t8_locidx_t ltreeid)
 t8_element_array_t*
 t8_forest_get_tree_element_array_mutable (const t8_forest_t forest, t8_locidx_t ltreeid)
 {
-  return (t8_element_array_t *) t8_forest_get_tree_element_array (forest, ltreeid);
+  return (t8_element_array_t*) t8_forest_get_tree_element_array (forest, ltreeid);
 }

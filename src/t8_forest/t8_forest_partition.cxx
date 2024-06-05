@@ -633,7 +633,7 @@ t8_forest_partition_fill_buffer (t8_forest_t forest_from, char **send_buffer, in
     tree_info_pos += sizeof (t8_forest_partition_tree_info_t);
     /* We can now fill the send buffer with all elements of that tree */
     if (num_elements_send > 0) {
-      const t8_element_t * pfirst_element = t8_element_array_index_locidx (&tree->elements, first_tree_element);
+      const t8_element_t *pfirst_element = t8_element_array_index_locidx (&tree->elements, first_tree_element);
       elem_size = t8_element_array_get_size (&tree->elements);
       memcpy (*send_buffer + element_pos, (void *) pfirst_element, num_elements_send * elem_size);
       element_pos += num_elements_send * elem_size;
@@ -986,7 +986,7 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm, int proc
       new_num_elements = old_num_elements + tree_info->num_elements;
       /* Enlarge the elements array */
       t8_element_array_resize (&tree->elements, new_num_elements);
-      t8_element_t * first_new_element = t8_element_array_index_locidx_mutable (&tree->elements, old_num_elements);
+      t8_element_t *first_new_element = t8_element_array_index_locidx_mutable (&tree->elements, old_num_elements);
       /* Get the size of an element of the tree */
       eclass_scheme = t8_forest_get_eclass_scheme (forest->set_from, tree->eclass);
       element_size = eclass_scheme->t8_element_size ();
