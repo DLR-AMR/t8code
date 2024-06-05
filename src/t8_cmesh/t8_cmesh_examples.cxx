@@ -1047,7 +1047,8 @@ t8_cmesh_set_vertices_2D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
  */
 static void
 t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const double *boundary, const t8_locidx_t hexs_x,
-                          const t8_locidx_t hexs_y, const t8_locidx_t hexs_z, const int use_axis_aligned_geom, const int offset)
+                          const t8_locidx_t hexs_y, const t8_locidx_t hexs_z, const int use_axis_aligned_geom,
+                          const int offset)
 {
   T8_ASSERT (!t8_cmesh_is_committed (cmesh));
   /* x axes */
@@ -1246,8 +1247,10 @@ t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
 }
 
 static t8_cmesh_t
-t8_cmesh_new_hypercube_pad_ext (const t8_eclass_t eclass, sc_MPI_Comm comm, const double *boundary, t8_locidx_t polygons_x,
-                            t8_locidx_t polygons_y, t8_locidx_t polygons_z, const int periodic_x, const int periodic_y, const int periodic_z, const int use_axis_aligned, const int set_partition, t8_gloidx_t offset)
+t8_cmesh_new_hypercube_pad_ext (const t8_eclass_t eclass, sc_MPI_Comm comm, const double *boundary,
+                                t8_locidx_t polygons_x, t8_locidx_t polygons_y, t8_locidx_t polygons_z,
+                                const int periodic_x, const int periodic_y, const int periodic_z,
+                                const int use_axis_aligned, const int set_partition, t8_gloidx_t offset)
 {
   SC_CHECK_ABORT (eclass != T8_ECLASS_PYRAMID, "Pyramids are not yet supported.");
 
@@ -1440,7 +1443,8 @@ t8_cmesh_new_hypercube_pad_ext (const t8_eclass_t eclass, sc_MPI_Comm comm, cons
         }
         else if (eclass == T8_ECLASS_TET) {
           t8_locidx_t tree_id_0 = poly_id * 6 + 5;
-          t8_locidx_t tree_id_1 = poly_z_id == polygons_z - 1 ? base_id * 6 + 5 : (poly_id + polygons_y * polygons_x) * 6 + 1;
+          t8_locidx_t tree_id_1
+            = poly_z_id == polygons_z - 1 ? base_id * 6 + 5 : (poly_id + polygons_y * polygons_x) * 6 + 1;
           t8_cmesh_set_join (cmesh, tree_id_0, tree_id_1, 0, 3, 2);
           tree_id_0 = poly_id * 6 + 4;
           tree_id_1 = poly_z_id == polygons_z - 1 ? base_id * 6 + 4 : (poly_id + polygons_y * polygons_x) * 6 + 2;
@@ -1450,7 +1454,8 @@ t8_cmesh_new_hypercube_pad_ext (const t8_eclass_t eclass, sc_MPI_Comm comm, cons
           T8_ASSERT (eclass == T8_ECLASS_PRISM);
           for (int i = 0; i < 2; i++) {
             const t8_locidx_t tree_id_0 = poly_id * 2 + i;
-            const t8_locidx_t tree_id_1 = poly_z_id == polygons_z - 1 ? base_id * 2 + i : (poly_id + polygons_y * polygons_x) * 2 + i;
+            const t8_locidx_t tree_id_1
+              = poly_z_id == polygons_z - 1 ? base_id * 2 + i : (poly_id + polygons_y * polygons_x) * 2 + i;
             t8_cmesh_set_join (cmesh, tree_id_0 + offset, tree_id_1 + offset, 4, 3, 0);
           }
         }
@@ -1498,52 +1503,65 @@ t8_cmesh_t
 t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass, sc_MPI_Comm comm, const double *boundary, t8_locidx_t polygons_x,
                             t8_locidx_t polygons_y, t8_locidx_t polygons_z, const int use_axis_aligned)
 {
-  return t8_cmesh_new_hypercube_pad_ext (eclass, comm, boundary, polygons_x, polygons_y, polygons_z, 0, 0, 0, use_axis_aligned, 0, 0);
+  return t8_cmesh_new_hypercube_pad_ext (eclass, comm, boundary, polygons_x, polygons_y, polygons_z, 0, 0, 0,
+                                         use_axis_aligned, 0, 0);
 }
 
 static t8_cmesh_t
-t8_cmesh_new_brick_2d_ext (const t8_gloidx_t num_x, const t8_gloidx_t num_y, const int periodic_x, const int periodic_y, sc_MPI_Comm comm,
+t8_cmesh_new_brick_2d_ext (const t8_gloidx_t num_x, const t8_gloidx_t num_y, const int periodic_x, const int periodic_y,
+                           sc_MPI_Comm comm, const int set_partition, const t8_gloidx_t offset)
+{
+  const double boundary[12]
+    = { 0.0, 0.0, 0.0, (double) num_x, 0.0, 0.0, 0.0, (double) num_y, 0.0, (double) num_x, (double) num_y, 0.0 };
+
+  return t8_cmesh_new_hypercube_pad_ext (T8_ECLASS_QUAD, comm, boundary, num_x, num_y, 0, periodic_x, periodic_y, 0, 0,
+                                         set_partition, offset);
+}
+
+static t8_cmesh_t
+t8_cmesh_new_brick_3d_ext (const t8_gloidx_t num_x, const t8_gloidx_t num_y, const t8_gloidx_t num_z,
+                           const int periodic_x, const int periodic_y, const int periodic_z, sc_MPI_Comm comm,
                            const int set_partition, const t8_gloidx_t offset)
 {
-  const double boundary[12] = {
-    0.0, 0.0, 0.0,
-    (double) num_x, 0.0, 0.0,
-    0.0, (double)num_y, 0.0,
-    (double) num_x, (double) num_y, 0.0
-  };
+  const double boundary[24] = { 0.0,
+                                0.0,
+                                0.0,
+                                (double) num_x,
+                                0.0,
+                                0.0,
+                                0.0,
+                                (double) num_y,
+                                0.0,
+                                (double) num_x,
+                                (double) num_y,
+                                0.0,
+                                0.0,
+                                0.0,
+                                (double) num_z,
+                                (double) num_x,
+                                0.0,
+                                (double) num_z,
+                                0.0,
+                                (double) num_y,
+                                (double) num_z,
+                                (double) num_x,
+                                (double) num_y,
+                                (double) num_z };
 
-  return t8_cmesh_new_hypercube_pad_ext (T8_ECLASS_QUAD, comm, boundary, num_x, num_y, 0,
-                            periodic_x, periodic_y, 0, 0, set_partition, offset);
-}
-
-static t8_cmesh_t
-t8_cmesh_new_brick_3d_ext (const t8_gloidx_t num_x, const t8_gloidx_t num_y, const t8_gloidx_t num_z, const int periodic_x, const int periodic_y,
-                           const int periodic_z, sc_MPI_Comm comm, const int set_partition, const t8_gloidx_t offset)
-{
-  const double boundary[24] = {
-    0.0, 0.0, 0.0,
-    (double) num_x, 0.0, 0.0,
-    0.0, (double) num_y, 0.0,
-    (double) num_x, (double) num_y, 0.0,
-    0.0, 0.0, (double) num_z,
-    (double) num_x, 0.0, (double) num_z,
-    0.0, (double) num_y, (double) num_z,
-    (double) num_x, (double) num_y, (double) num_z
-  };
-
-  return t8_cmesh_new_hypercube_pad_ext (T8_ECLASS_HEX, comm, boundary, num_x, num_y, num_z,
-                            periodic_x, periodic_y, periodic_z, 0, set_partition, offset);
+  return t8_cmesh_new_hypercube_pad_ext (T8_ECLASS_HEX, comm, boundary, num_x, num_y, num_z, periodic_x, periodic_y,
+                                         periodic_z, 0, set_partition, offset);
 }
 
 t8_cmesh_t
-t8_cmesh_new_brick_2d (const t8_gloidx_t num_x, const t8_gloidx_t num_y, const int x_periodic, const int y_periodic, sc_MPI_Comm comm)
+t8_cmesh_new_brick_2d (const t8_gloidx_t num_x, const t8_gloidx_t num_y, const int x_periodic, const int y_periodic,
+                       sc_MPI_Comm comm)
 {
   return t8_cmesh_new_brick_2d_ext (num_x, num_y, x_periodic, y_periodic, comm, 0, 0);
 }
 
 t8_cmesh_t
-t8_cmesh_new_brick_3d (const t8_gloidx_t num_x, const t8_gloidx_t num_y, const t8_gloidx_t num_z, const int x_periodic, const int y_periodic,
-                       const int z_periodic, sc_MPI_Comm comm)
+t8_cmesh_new_brick_3d (const t8_gloidx_t num_x, const t8_gloidx_t num_y, const t8_gloidx_t num_z, const int x_periodic,
+                       const int y_periodic, const int z_periodic, sc_MPI_Comm comm)
 {
   return t8_cmesh_new_brick_3d_ext (num_x, num_y, num_z, x_periodic, y_periodic, z_periodic, comm, 0, 0);
 }
@@ -1611,8 +1629,6 @@ t8_cmesh_new_disjoint_bricks (t8_gloidx_t num_x, t8_gloidx_t num_y, t8_gloidx_t 
 
   return cmesh;
 }
-
-
 
 t8_cmesh_t
 t8_cmesh_new_periodic_line_more_trees (sc_MPI_Comm comm)
