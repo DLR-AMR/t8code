@@ -2036,12 +2036,12 @@ t8_forest_element_is_leaf (const t8_forest_t forest, const t8_element_t *element
   /* We get the array of the tree's elements and then search in the array of elements for our 
    * element candidate. */
   /* Get the array */
-  const t8_element_array_t * elements = t8_forest_get_tree_element_array (forest, local_tree);
+  const t8_element_array_t *elements = t8_forest_get_tree_element_array (forest, local_tree);
   T8_ASSERT (elements != NULL);
 
   /* In order to find the element, we need to compute its linear id.
    * To do so, we need the scheme and the level of the element. */
-  const t8_eclass_scheme_c * scheme = t8_element_array_get_scheme (elements);
+  const t8_eclass_scheme_c *scheme = t8_element_array_get_scheme (elements);
   const int element_level = scheme->t8_element_level (element);
   /* Compute the linear id. */
   const t8_linearidx_t element_id = scheme->t8_element_get_linear_id (element, element_level);
@@ -2049,14 +2049,15 @@ t8_forest_element_is_leaf (const t8_forest_t forest, const t8_element_t *element
    * The search returns the largest index i,
    * such that the element at position i has a smaller id than the given one.
    * If no such i exists, it returns -1. */
-  const t8_locidx_t search_result = t8_forest_bin_search_lower (elements, element_id, element_level);
+  const t8_locidx_t search_result
+    = t8_forest_bin_search_lower (t8_element_array_t * elements, t8_linearidx_t element_id, int maxlevel);
   if (search_result < 0) {
     /* The element was not found. */
     return 0;
   }
   /* An element was found but it may not be the candidate element. 
    * To identify whether the element was found, we compare these two. */
-  const t8_element_t * check_element = t8_element_array_index_locidx (elements, search_result);
+  const t8_element_t *check_element = t8_element_array_index_locidx (elements, search_result);
   T8_ASSERT (check_element != NULL);
   /* If the compare function returns 0, the elements are equal and we return true. */
   return (scheme->t8_element_compare (element, check_element) == 0);
@@ -2074,7 +2075,7 @@ t8_forest_leaf_is_boundary (const t8_forest_t forest, t8_locidx_t local_tree, co
 
   /* Check whether this leaf is at the boundary of its tree. */
   const int is_root_boundary = scheme->t8_element_is_root_boundary (leaf, face);
-  
+
   if (is_root_boundary) {
     /* This leaf is at a tree's boundary. It is*/
     const int cmesh_face = scheme->t8_element_tree_face (leaf, face);
@@ -2088,9 +2089,9 @@ t8_forest_leaf_is_boundary (const t8_forest_t forest, t8_locidx_t local_tree, co
 
   /* This leaf is not at the tree's boundary.
     * If the forest has holes, we need to check whether this leaf is at an internal boundary.*/
-  
+
   if (!forest->incomplete_trees) {
-  /* The forest has no holes, thus the leaf cannot be a boundary leaf. */
+    /* The forest has no holes, thus the leaf cannot be a boundary leaf. */
     return 0;
   }
   /* we need to compute the face neihgbors to know whether the element is a boundary element. */
@@ -2100,7 +2101,8 @@ t8_forest_leaf_is_boundary (const t8_forest_t forest, t8_locidx_t local_tree, co
   t8_locidx_t *pelement_indices;
   t8_eclass_scheme_c *pneigh_scheme;
   /* The forest has holes, the leaf could lie inside a tree but its neighbor was deleted. */
-  t8_forest_leaf_face_neighbors (forest, local_tree, leaf, &neighbor_leaves, face, NULL, &num_neighbors, &pelement_indices, &pneigh_scheme, is_balanced);
+  t8_forest_leaf_face_neighbors (forest, local_tree, leaf, &neighbor_leaves, face, NULL, &num_neighbors,
+                                 &pelement_indices, &pneigh_scheme, is_balanced);
 
   if (num_neighbors == 0) {
     /* The element has no neighbors, it is a boundary element. */
@@ -2113,7 +2115,6 @@ t8_forest_leaf_is_boundary (const t8_forest_t forest, t8_locidx_t local_tree, co
     /* This leaf is not a boundary leaf. */
     return 0;
   }
-  
 }
 
 /* Check if an element is owned by a specific rank */
