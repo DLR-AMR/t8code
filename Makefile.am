@@ -70,9 +70,9 @@ DISTCLEANFILES += \
 ## sourcescheck_DUMMY = dummy.cxx
 
 # non-recursive build
-include api/Makefile.am
 include src/Makefile.am
 include src/t8_schemes/t8_default/Makefile.am
+include api/Makefile.am
 include test/Makefile.am
 include example/Makefile.am
 include tutorials/Makefile.am
