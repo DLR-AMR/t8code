@@ -61,6 +61,7 @@ void t8_forest_partition_data_stdvector (t8_forest_t forest_from, t8_forest_t fo
   sc_array_destroy (data_in_view);
   sc_array_destroy (data_out_view);
 }
+
 /* Wrapper function for ghost exchange function */
 template <typename T>
 void t8_forest_ghost_exchange_data_with_vector(t8_forest_t forest, const std::vector<T>& element_vector) {
