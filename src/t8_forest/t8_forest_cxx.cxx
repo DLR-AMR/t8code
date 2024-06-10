@@ -1724,7 +1724,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
   int ineigh, *owners, different_owners, have_ghosts;
 
   T8_ASSERT (t8_forest_is_committed (forest));
-  T8_ASSERT (t8_forest_is_leaf (leaf));
+  T8_ASSERT (t8_forest_element_is_leaf (forest, leaf, ltreeid));
   T8_ASSERT (!forest_is_balanced || t8_forest_is_balanced (forest));
   SC_CHECK_ABORT (forest_is_balanced, "leaf face neighbors is not implemented "
                                       "for unbalanced forests.\n"); /* TODO: write version for unbalanced forests */
