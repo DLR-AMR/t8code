@@ -2048,8 +2048,7 @@ t8_forest_element_is_leaf (const t8_forest_t forest, const t8_element_t *element
    * The search returns the largest index i,
    * such that the element at position i has a smaller id than the given one.
    * If no such i exists, it returns -1. */
-  const t8_locidx_t search_result
-    = t8_forest_bin_search_lower (elements, element_id, element_level);
+  const t8_locidx_t search_result = t8_forest_bin_search_lower (elements, element_id, element_level);
   if (search_result < 0) {
     /* The element was not found. */
     return 0;
