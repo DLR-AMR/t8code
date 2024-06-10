@@ -2750,8 +2750,8 @@ t8_cmesh_new_quadrangulated_disk (const double radius, sc_MPI_Comm comm)
                                       { 0.0, outer_y, 0.0 },
                                       { outer_x, outer_y, 0.0 } };
   const double vertices_bot[4][3] = { { center_square_tuning * inner_x, 0.0, 0.0 },
-                                      { inner_x, inner_y, 0.0 },
                                       { outer_x, 0.0, 0.0 },
+                                      { inner_x, inner_y, 0.0 },
                                       { outer_x, outer_y, 0.0 } };
 
   int itree = 0;
@@ -3229,7 +3229,8 @@ t8_cmesh_new_cubed_sphere (const double radius, sc_MPI_Comm comm)
   const double outer_y = outer_x;
   const double outer_z = outer_x;
 
-  const int nhexs = 4;   /* Number of hexs in the front-upper-right octant. */
+  const int nhexs = 4; /* Number of hexs in the front-upper-right octant. */
+
   const int nzturns = 4; /* Number of turns around z-axis. */
   const int nyturns = 2; /* Number of turns around y-axis. */
 
@@ -3262,19 +3263,19 @@ t8_cmesh_new_cubed_sphere (const double radius, sc_MPI_Comm comm)
                                       { inner_x, inner_y, inner_z } };
   const double vertices_top[8][3] = { { 0.0, center_hex_tuning * inner_y, 0.0 },
                                       { inner_x, inner_y, 0.0 },
-                                      { 0.0, inner_y, inner_z },
-                                      { inner_x, inner_y, inner_z },
                                       { 0.0, outer_y, 0.0 },
                                       { outer_x, outer_y, 0.0 },
+                                      { 0.0, inner_y, inner_z },
+                                      { inner_x, inner_y, inner_z },
                                       { 0.0, outer_y, outer_z },
                                       { outer_x, outer_y, outer_z } };
   const double vertices_bot[8][3] = { { center_hex_tuning * inner_x, 0.0, 0.0 },
-                                      { inner_x, inner_y, 0.0 },
-                                      { inner_x, 0.0, inner_z },
-                                      { inner_x, inner_y, inner_z },
                                       { outer_x, 0.0, 0.0 },
+                                      { inner_x, inner_y, 0.0 },
                                       { outer_x, outer_y, 0.0 },
+                                      { inner_x, 0.0, inner_z },
                                       { outer_x, 0.0, outer_z },
+                                      { inner_x, inner_y, inner_z },
                                       { outer_x, outer_y, outer_z } };
   const double vertices_zen[8][3] = { { 0.0, 0.0, center_hex_tuning * inner_z },
                                       { inner_x, 0.0, inner_z },
@@ -3332,7 +3333,7 @@ t8_cmesh_new_cubed_sphere (const double radius, sc_MPI_Comm comm)
             = rot_vertices_top[ivert][icoord];
           all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree + 2, ivert, icoord)]
             = rot_vertices_bot[ivert][icoord];
-          all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree + 2, ivert, icoord)]
+          all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree + 3, ivert, icoord)]
             = rot_vertices_zen[ivert][icoord];
         }
       }
