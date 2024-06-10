@@ -53,23 +53,13 @@ authors:
   - given-names: Ioannis Lilikakis
     equal-contrib: true
     affiliation: 1
-  - given-names: Julia Weber
-    equal-contrib: true
-    affiliation: 1
-  - given-names: Sven Goldberg
-    orcid: 0009-0008-4419-3162
-    equal-contrib: true
-    affiliation: 1
-  - given-names: Veli Ünlü
-    equal-contrib: true
-    affiliation: 1
-  - given-names: Achim Basermann
-    orcid: 0000-0003-3637-3231
+  - name: Carsten Burstedde
+    orcid: 0000-0001-9843-1041
     affiliation: 1
 affiliations:
  - name: German Aerospace Center (DLR), Institute for Software Technology, Cologne, Germany
    index: 1
-date: 27 May 2024
+date: 10 June 2024
 bibliography: paper.bib
 
 # Optional fields if submitting to a AAS journal too, see this blog post:
