@@ -195,40 +195,66 @@ public:
   virtual int         t8_element_num_face_children (const t8_element_t *elem,
                                                     const int face) const;
 
-  /** Return the number of children of an element's face when the element is refined. */
+  /** 
+   * 
+   * \param [in] elem         The element.
+   * \param [in] face         A face of elem
+   * \return                  True if the neighbor of elems' face is a sibling
+   *                        
+   */
   virtual int         t8_element_neighbor_is_sibling (const t8_element_t
                                                       *elem, int face) const;
 
-  /** Return the number of sibling neighbors at a given face. */
+  /** 
+   * 
+   * \param [in] elem         The element.
+   * \param [in] face         A face of elem
+   * \return                  Number of sibling neighbors at face
+   *                        
+   */
   virtual int         t8_element_get_num_sibling_neighbors_at_face (const
                                                                     t8_element_t
                                                                     *elem,
                                                                     int face)
     const;
 
-  /** Return zero refine value for schemes that do not have a transition implementation. */
+  /** \return zero refine value for schemes that do not have a transition implementation. */
   virtual int         t8_element_get_transition_refine_identifier (void)
     const;
 
-  /** Return the corner number of an element's face corner. */
+    /** Return the corner number of an element's face corner.
+   * \param [in] element  The element.
+   * \param [in] face     A face index for \a element.
+   * \param [in] corner   A corner index for the face 0 <= \a corner < num_face_corners.
+   * \return              The corner number of the \a corner-th vertex of \a face.
+   */
   virtual int         t8_element_get_face_corner (const t8_element_t *element,
                                                   int face, int corner) const;
 
-  /** Return the face numbers of the faces sharing an element's corner. */
+    /** Return the face numbers of the faces sharing an element's corner.
+   * \param [in] element  The element.
+   * \param [in] corner   A corner index for the face.
+   * \param [in] face     A face index for \a corner.
+   * \return              The face number of the \a face-th face at \a corner.
+   */
   virtual int         t8_element_get_corner_face (const t8_element_t *element,
                                                   int corner, int face) const;
 
-  /** Construct the child element of a given number. */
+  /** Construct the child element of a given number.
+   * \param [in] elem     This must be a valid element, bigger than maxlevel.
+   * \param [in] childid  The number of the child to construct.
+   * \param [in,out] child        The storage for this element must exist
+   *                              and match the element class of the child.
+   *                              On output, a valid element.
+   * It is valid to call this function with elem = child.
+     */
   virtual void        t8_element_child (const t8_element_t *elem,
                                         int childid,
                                         t8_element_t *child) const;
 
   /** Construct all sibling neighbors of elem at face - it is required that sibling neighbors of elem at face exist */
   virtual void
-     
-     
-     
-     t8_element_get_sibling_neighbor_in_transition_cell_hex (const t8_element_t
+  t8_element_get_sibling_neighbor_in_transition_cell_hex (const t8_element_t
                                                          *elem,
                                                          const int face,
                                                          const int
@@ -409,18 +435,22 @@ public:
  * \param [in] user_data    User data.
  * \param [out] out_coords  The coordinates of the point in the reference space of the tree.
  */
-  virtual void        t8_element_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
-                               double *out_coords)
-    const;
+  virtual void 
+  t8_element_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
+                               double *out_coords) const;
 
-/** Construct a transition cell of type type */
-  virtual void        t8_element_to_transition_cell (const t8_element_t *elem,
-                                                     int type,
-                                                     t8_element_t *c[]);
+/** Construct a transition cell of type type 
+ * 
+ * \param [in] elem         The element.
+ * \param [in] type         The transition type
+ * \param [out] out_coords  The coordinates of the point in the reference space of the tree.
+ */
+  virtual void 
+  t8_element_to_transition_cell (const t8_element_t *elem, int type, t8_element_t *c[]);
 
 /** Determine the number of sibling subelements, of a transition cell of a specific type */
-  virtual int         t8_element_get_number_of_subelements (int
-                                                            transition_type)
+  virtual int
+  t8_element_get_number_of_subelements (int transition_type)
     const;
 
 /** Test whether a given element is a subelement or not */

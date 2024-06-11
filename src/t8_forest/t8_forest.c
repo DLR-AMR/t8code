@@ -586,7 +586,6 @@ t8_forest_commit (t8_forest_t forest)
 
     /* Compute the maximum allowed refinement level */
     t8_forest_compute_maxlevel (forest);
-    t8_debugf("Forest from method anfang commit %i\n", forest->from_method);
     if (forest->from_method == T8_FOREST_FROM_COPY) {
       SC_CHECK_ABORT (forest->set_from != NULL, "No forest to copy from was specified.");
       t8_forest_copy_trees (forest, forest->set_from, 1);
@@ -596,7 +595,6 @@ t8_forest_commit (t8_forest_t forest)
     /* T8_ASSERT (forest->from_method == T8_FOREST_FROM_COPY); */
     if (forest->from_method & T8_FOREST_FROM_ADAPT) {
       SC_CHECK_ABORT (forest->set_adapt_fn != NULL, "No adapt function specified");
-      t8_debugf("from method von forest in adapt %i\n",forest->from_method );
 
       forest->from_method -= T8_FOREST_FROM_ADAPT;
       if (forest->from_method > 0) {
@@ -638,7 +636,6 @@ t8_forest_commit (t8_forest_t forest)
       }
     }
     if (forest->from_method & T8_FOREST_FROM_PARTITION) {
-       t8_debugf("from method in partition %i\n",forest->from_method );
       partitioned = 1;
       /* Partition this forest */
       forest->from_method -= T8_FOREST_FROM_PARTITION;
@@ -678,7 +675,6 @@ t8_forest_commit (t8_forest_t forest)
       }
     }
     if (forest->from_method & T8_FOREST_FROM_BALANCE) {
-       t8_debugf("from method in balance %i\n",forest->from_method );
       /* balance the forest */
       forest->from_method -= T8_FOREST_FROM_BALANCE;
       if (forest->from_method > 0) {
@@ -721,7 +717,6 @@ t8_forest_commit (t8_forest_t forest)
       }
     }
     if (forest->from_method & T8_FOREST_FROM_TRANSITION) {
-       t8_debugf("from method in transition %i\n",forest->from_method );
       forest->from_method -= T8_FOREST_FROM_TRANSITION;
       /* this is the last from method that we execute,
        * nothing should be left todo */
@@ -733,7 +728,6 @@ t8_forest_commit (t8_forest_t forest)
     if (forest_from != forest->set_from) {
       /* decrease reference count of intermediate input forest, possibly destroying it */
       t8_forest_unref (&forest->set_from);
-
     }
     /* reset forest->set_from */
     forest->set_from = forest_from;

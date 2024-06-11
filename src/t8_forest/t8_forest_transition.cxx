@@ -194,7 +194,6 @@ t8_forest_transition_conformal_hex (t8_forest_t forest,
                                                        neigh_scheme,
                                                        iface, &neigh_face);
 
-      /* TODO: Update this code block for hex / sub-pyramids. */
       if (neighbor_tree >= 0) {
         if (t8_forest_element_has_leaf_desc (forest_from, neighbor_tree,
                                              face_neighbor[0],

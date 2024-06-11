@@ -1952,7 +1952,7 @@ t8_subelement_scheme_hex_c::t8_element_reference_coords (const t8_element_t *ele
       t8_hex_with_subelements *phex_w_sub = (t8_hex_with_subelements *) elem;
       p8est_quadrant_t *q1 = &phex_w_sub->p8q;
       p4est_qcoord_t len = P8EST_QUADRANT_LEN (q1->level);
-        /* get location information of the given subelement */
+      /* get location information of the given subelement */
       int                 location[3] = { };
       t8_element_get_location_of_subelement (elem, location);
 
@@ -2533,7 +2533,7 @@ t8_subelement_scheme_hex_c::t8_element_to_transition_cell (const t8_element_t
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (transition_type >= 0 && transition_type <= T8_SUB_HEX_MAX_TRANSITION_TYPE);
 
-  int                 num_subelements =
+  int num_subelements =
     t8_element_get_number_of_subelements (transition_type);
 
 #ifdef T8_ENABLE_DEBUG
@@ -2560,7 +2560,6 @@ t8_subelement_scheme_hex_c::t8_element_to_transition_cell (const t8_element_t
 
     phex_w_sub_subelement[sub_id_counter]->transition_type = transition_type;
 
-    //Überlegung  transition type umwandeln in subelement id--> nicht einfach counter
     phex_w_sub_subelement[sub_id_counter]->subelement_id = sub_id_counter;
     T8_ASSERT (t8_element_is_valid (c[sub_id_counter]));
 
