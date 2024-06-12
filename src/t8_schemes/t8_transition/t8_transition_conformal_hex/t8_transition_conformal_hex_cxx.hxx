@@ -369,7 +369,7 @@ struct t8_subelement_scheme_hex_c: public t8_default_scheme_common_c
 
   /** Calculate the linear id of an element */
   virtual t8_linearidx_t
-  t8_element_get_linear_id (constt8_element_t *elem, int level) const;
+  t8_element_get_linear_id (const t8_element_t *elem, int level) const;
 
   /** Calculate the first descendant of a given element e. That is, the
  *  first element in a uniform refinement of e of the maximal possible level.
