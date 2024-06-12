@@ -28,7 +28,6 @@
 #include "t8_gtest_dfs_base.hxx"
 #include <t8_schemes/t8_transition/t8_transition_cxx.hxx>
 
-
 class class_test_equal: public TestDFS {
   virtual void
   check_element ()

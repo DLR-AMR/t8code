@@ -24,7 +24,6 @@
  * In this file, we define the call-back function that is used to construct transition cells.
  */
 
-
 #include "t8_eclass.h"
 #include <t8_forest/t8_forest_balance.h>
 #include <t8_forest/t8_forest_types.h>
@@ -44,24 +43,18 @@ T8_EXTERN_C_BEGIN ();
  * It will return a values p>1 in order to exchange the current element with a transition cell of type p,
  * which is defined in the conformal_quad scheme. */
 int
-t8_forest_transition_conformal_quad (t8_forest_t forest,
-                                     t8_forest_t forest_from,
-                                     t8_locidx_t ltree_id,
-                                     t8_locidx_t lelement_id,
-                                     t8_eclass_scheme_c *ts,
-                                     const int is_family,
-                                     int num_elements,
-                                     t8_element_t *elements[])
+t8_forest_transition_conformal_quad (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t ltree_id,
+                                     t8_locidx_t lelement_id, t8_eclass_scheme_c *ts, const int is_family,
+                                     int num_elements, t8_element_t *elements[])
 {
-  int                 iface, num_faces, neigh_face, transition_type = 0;
-  t8_gloidx_t         neighbor_tree;
-  t8_eclass_t         neigh_class;
+  int iface, num_faces, neigh_face, transition_type = 0;
+  t8_gloidx_t neighbor_tree;
+  t8_eclass_t neigh_class;
   t8_eclass_scheme_c *neigh_scheme;
-  t8_element_t       *element = elements[0], **face_neighbor;
+  t8_element_t *element = elements[0], **face_neighbor;
 
   /* hanging faces can only exist at non-maxlevel elements */
-  if (forest_from->maxlevel_existing <= 0 ||
-      ts->t8_element_level (element) < forest_from->maxlevel) {
+  if (forest_from->maxlevel_existing <= 0 || ts->t8_element_level (element) < forest_from->maxlevel) {
 
     num_faces = ts->t8_element_num_faces (element);
 
@@ -86,9 +79,7 @@ t8_forest_transition_conformal_quad (t8_forest_t forest,
 
     for (iface = 0; iface < num_faces; iface++) {
       /* Get the element class and scheme of the face neighbor */
-      neigh_class = t8_forest_element_neighbor_eclass (forest_from,
-                                                       ltree_id, element,
-                                                       iface);
+      neigh_class = t8_forest_element_neighbor_eclass (forest_from, ltree_id, element, iface);
 
       neigh_scheme = t8_forest_get_eclass_scheme (forest_from, neigh_class);
 
@@ -98,16 +89,11 @@ t8_forest_transition_conformal_quad (t8_forest_t forest,
       neigh_scheme->t8_element_new (1, face_neighbor);
 
       /* Compute the virtual face neighbor of element at this face */
-      neighbor_tree = t8_forest_element_face_neighbor (forest_from, ltree_id,
-                                                       element,
-                                                       face_neighbor[0],
-                                                       neigh_scheme,
+      neighbor_tree = t8_forest_element_face_neighbor (forest_from, ltree_id, element, face_neighbor[0], neigh_scheme,
                                                        iface, &neigh_face);
 
       if (neighbor_tree >= 0) {
-        if (t8_forest_element_has_leaf_desc (forest_from, neighbor_tree,
-                                             face_neighbor[0],
-                                             neigh_scheme)) {
+        if (t8_forest_element_has_leaf_desc (forest_from, neighbor_tree, face_neighbor[0], neigh_scheme)) {
           /* Compute transition type as the decimal representation of the binary concatenation */
           transition_type += 1 << ((num_faces - 1) - iface);
         }
@@ -121,35 +107,29 @@ t8_forest_transition_conformal_quad (t8_forest_t forest,
     if (transition_type == 0) { /* no hanging faces in this case */
       return 0;
     }
-    else if (transition_type == 15) {   /* four hanging faces in this case */
+    else if (transition_type == 15) { /* four hanging faces in this case */
       return 1;
     }
-    else {                      /* use a transition cell of subelements and add 1 to every type, to avoid refine = 1 */
+    else { /* use a transition cell of subelements and add 1 to every type, to avoid refine = 1 */
       return transition_type + 1;
     }
   }
-  return 0;                     /* if elem has maxlevel then keep it unchanged since there will never be hanging faces */
-}                               /* end of t8_forest_transition_conformal_quad */
+  return 0; /* if elem has maxlevel then keep it unchanged since there will never be hanging faces */
+} /* end of t8_forest_transition_conformal_quad */
 
 int
-t8_forest_transition_conformal_hex (t8_forest_t forest,
-                                     t8_forest_t forest_from,
-                                     t8_locidx_t ltree_id,
-                                     t8_locidx_t lelement_id,
-                                     t8_eclass_scheme_c *ts,
-                                     const int is_family,
-                                     int num_elements,
-                                     t8_element_t *elements[])
+t8_forest_transition_conformal_hex (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t ltree_id,
+                                    t8_locidx_t lelement_id, t8_eclass_scheme_c *ts, const int is_family,
+                                    int num_elements, t8_element_t *elements[])
 {
-  int                 iface, num_faces, neigh_face, transition_type = 0;
-  t8_gloidx_t         neighbor_tree;
-  t8_eclass_t         neigh_class;
+  int iface, num_faces, neigh_face, transition_type = 0;
+  t8_gloidx_t neighbor_tree;
+  t8_eclass_t neigh_class;
   t8_eclass_scheme_c *neigh_scheme;
-  t8_element_t       *element = elements[0], **face_neighbor;
+  t8_element_t *element = elements[0], **face_neighbor;
 
   /* Hanging faces can only exist at non-maxlevel elements */
-  if (forest_from->maxlevel_existing <= 0 ||
-      ts->t8_element_level (element) < forest_from->maxlevel) {
+  if (forest_from->maxlevel_existing <= 0 || ts->t8_element_level (element) < forest_from->maxlevel) {
 
     num_faces = ts->t8_element_num_faces (element);
 
@@ -175,9 +155,7 @@ t8_forest_transition_conformal_hex (t8_forest_t forest,
 
     for (iface = 0; iface < num_faces; iface++) {
       /* Get the element class and scheme of the face neighbor */
-      neigh_class = t8_forest_element_neighbor_eclass (forest_from,
-                                                       ltree_id, element,
-                                                       iface);
+      neigh_class = t8_forest_element_neighbor_eclass (forest_from, ltree_id, element, iface);
 
       neigh_scheme = t8_forest_get_eclass_scheme (forest_from, neigh_class);
 
@@ -188,16 +166,11 @@ t8_forest_transition_conformal_hex (t8_forest_t forest,
       neigh_scheme->t8_element_new (1, face_neighbor);
 
       /* Compute the virtual face neighbor of element at this face */
-      neighbor_tree = t8_forest_element_face_neighbor (forest_from, ltree_id,
-                                                       element,
-                                                       face_neighbor[0],
-                                                       neigh_scheme,
+      neighbor_tree = t8_forest_element_face_neighbor (forest_from, ltree_id, element, face_neighbor[0], neigh_scheme,
                                                        iface, &neigh_face);
 
       if (neighbor_tree >= 0) {
-        if (t8_forest_element_has_leaf_desc (forest_from, neighbor_tree,
-                                             face_neighbor[0],
-                                             neigh_scheme)) {
+        if (t8_forest_element_has_leaf_desc (forest_from, neighbor_tree, face_neighbor[0], neigh_scheme)) {
           /* Compute transition type as the decimal representation of the binary concatenation */
           transition_type += 1 << ((num_faces - 1) - iface);
         }
@@ -211,31 +184,25 @@ t8_forest_transition_conformal_hex (t8_forest_t forest,
     if (transition_type == 0) { /* no hanging faces in this case */
       return 0;
     }
-    else if (transition_type == 63) {   /* Six hanging faces in this case */
+    else if (transition_type == 63) { /* Six hanging faces in this case */
       return 1;
     }
-    else {                      /* use a transition cell of subelements and add 1 to every type, to avoid refine = 1 */
+    else { /* use a transition cell of subelements and add 1 to every type, to avoid refine = 1 */
       return transition_type + 1;
     }
   }
-  return 0;                     /* if elem has maxlevel then keep it unchanged since there will never be hanging faces */
+  return 0; /* if elem has maxlevel then keep it unchanged since there will never be hanging faces */
 }
 
 /* This is the entry function for all transition schemes, called bei forest_adapt.
  * The eclass of the current element hands off to the specific refine implementation above.
  * Other schemes, for other eclasses can easily be added. */
 int
-t8_forest_transition_entry (t8_forest_t forest,
-                            t8_forest_t forest_from,
-                            t8_locidx_t ltree_id,
-                            t8_locidx_t lelement_id,
-                            t8_eclass_scheme_c *ts,
-                            const int is_family,
-                            int num_elements, t8_element_t *elements[])
+t8_forest_transition_entry (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t ltree_id, t8_locidx_t lelement_id,
+                            t8_eclass_scheme_c *ts, const int is_family, int num_elements, t8_element_t *elements[])
 {
   T8_ASSERT (forest->set_subelements == 1);
-  T8_ASSERT (forest->is_transitioned == 0
-             && forest->set_from->is_transitioned == 0);
+  T8_ASSERT (forest->is_transitioned == 0 && forest->set_from->is_transitioned == 0);
 
   /* TODO: there may be a better way for this than using switch statements and int functions */
 
@@ -249,25 +216,21 @@ t8_forest_transition_entry (t8_forest_t forest,
      * The default_common implementation of the above function returns 0. */
     return 0;
   case T8_TRANSITION_CONFORMAL_QUAD_REFINE_FUNCTION:
-    return t8_forest_transition_conformal_quad (forest, forest_from, ltree_id,
-                                                lelement_id, ts, is_family,
-                                                num_elements, elements);
-  case T8_TRANSITION_CONFORMAL_HEX_REFINE_FUNCTION:                                           
-    return t8_forest_transition_conformal_hex (forest, forest_from, ltree_id,
-                                                lelement_id, ts, is_family,
-                                                num_elements, elements);
+    return t8_forest_transition_conformal_quad (forest, forest_from, ltree_id, lelement_id, ts, is_family, num_elements,
+                                                elements);
+  case T8_TRANSITION_CONFORMAL_HEX_REFINE_FUNCTION:
+    return t8_forest_transition_conformal_hex (forest, forest_from, ltree_id, lelement_id, ts, is_family, num_elements,
+                                               elements);
   default:
-    SC_ABORT
-      ("The given eclass scheme must specify a valid transition refine function.");
+    SC_ABORT ("The given eclass scheme must specify a valid transition refine function.");
   }
-}                               /* end of t8_forest_transition_entry */
+} /* end of t8_forest_transition_entry */
 
 void
 t8_forest_transition (t8_forest_t forest)
 {
   T8_ASSERT (forest->set_subelements == 1);
-  T8_ASSERT (forest->is_transitioned == 0
-             && forest->set_from->is_transitioned == 0);
+  T8_ASSERT (forest->is_transitioned == 0 && forest->set_from->is_transitioned == 0);
   /* in the following, we will call forest_adapt to with the transition 
    * refinement function in order to transition the forest. The refinement is then
    * based on forest->set_from, which must be balanced. */
@@ -286,66 +249,56 @@ t8_forest_transition (t8_forest_t forest)
   t8_forest_adapt (forest);
 
   t8_global_productionf ("Done t8_forest_transition.\n");
-}                               /* end of t8_forest_transition */
-
+} /* end of t8_forest_transition */
 
 /* This is the entry function for all untransition a forest, called bei forest_adapt 
  * in t8_forest_untransition.
  */
 int
-t8_forest_untransition_entry (t8_forest_t forest,
-                            t8_forest_t forest_from,
-                            t8_locidx_t ltree_id,
-                            t8_locidx_t lelement_id,
-                            t8_eclass_scheme_c *ts,
-                            const int is_family,
-                            int num_elements, t8_element_t *elements[])
+t8_forest_untransition_entry (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t ltree_id,
+                              t8_locidx_t lelement_id, t8_eclass_scheme_c *ts, const int is_family, int num_elements,
+                              t8_element_t *elements[])
 {
-  T8_ASSERT(forest->set_from->is_transitioned == 1);
+  T8_ASSERT (forest->set_from->is_transitioned == 1);
 
-  //Iterate through elements array and if an element is a subelement, return -1 for 
-  //coarsening this element in forest_adapt. All other elements remain unchanged. 
+  //Iterate through elements array and if an element is a subelement, return -1 for
+  //coarsening this element in forest_adapt. All other elements remain unchanged.
   t8_element_t *element = elements[0];
 
-  if(ts->t8_element_is_subelement(element)){
+  if (ts->t8_element_is_subelement (element)) {
     return -1;
   }
-  else{
+  else {
     return 0;
   }
-
-}  
-
+}
 
 void
 t8_forest_untransition (t8_forest_t forest)
 {
   t8_global_productionf ("Into t8_forest_untransition.\n");
 
-  T8_ASSERT(forest->set_from->is_transitioned);
-  
+  T8_ASSERT (forest->set_from->is_transitioned);
+
   t8_forest_t forest_untransition;
 
-   t8_forest_init (&forest_untransition);
-    /* forest_untransition should not change ownership of forest->set_from */
-    t8_forest_ref (forest->set_from);
-    /* Construct an intermediate, untransitioned forest */
-    t8_forest_set_adapt (forest_untransition, forest->set_from, t8_forest_untransition_entry, 0);
+  t8_forest_init (&forest_untransition);
+  /* forest_untransition should not change ownership of forest->set_from */
+  t8_forest_ref (forest->set_from);
+  /* Construct an intermediate, untransitioned forest */
+  t8_forest_set_adapt (forest_untransition, forest->set_from, t8_forest_untransition_entry, 0);
 
-    t8_forest_commit (forest_untransition);
-    forest_untransition->is_transitioned = 0;
-    /* The new forest will be partitioned/balanced from forest_adapt */
-    forest->set_from = forest_untransition;
+  t8_forest_commit (forest_untransition);
+  forest_untransition->is_transitioned = 0;
+  /* The new forest will be partitioned/balanced from forest_adapt */
+  forest->set_from = forest_untransition;
 
-
-    t8_global_productionf ("Done t8_forest_untransition.\n");
-
+  t8_global_productionf ("Done t8_forest_untransition.\n");
 
   /* In the following, we will call forest_adapt to coarsen all transition cells
    * back to their regular parent element. So, forest->set_from is a transitioned forest and 
    * forest will be non-transitioned. */
-
-}                               
+}
 
 /* Test whether the forest is transitioned.
  * Note 1) We allow non-committed forests in this implementation since this check is used in forest_commit() 
@@ -355,10 +308,10 @@ int
 t8_forest_is_transitioned (t8_forest_t forest)
 {
   t8_eclass_scheme_c *tscheme;
-  t8_locidx_t         tree_count, num_trees;
-  t8_tree_t           current_tree;
+  t8_locidx_t tree_count, num_trees;
+  t8_tree_t current_tree;
   t8_element_array_t *telements;
-  t8_locidx_t         elem_count, num_elems;
+  t8_locidx_t elem_count, num_elems;
 
   /* iterate through the forest and check for subelements */
   num_trees = t8_forest_get_num_local_trees (forest);
@@ -367,8 +320,7 @@ t8_forest_is_transitioned (t8_forest_t forest)
     telements = &current_tree->elements;
     num_elems = (t8_locidx_t) t8_element_array_get_count (telements);
     for (elem_count = 0; elem_count < num_elems; elem_count++) {
-      t8_element_t       *current_element =
-        t8_element_array_index_locidx (telements, elem_count);
+      t8_element_t *current_element = t8_element_array_index_locidx (telements, elem_count);
       tscheme = forest->scheme_cxx->eclass_schemes[current_tree->eclass];
       if (tscheme->t8_element_is_subelement (current_element)) {
         /* subelement found -> return true */
@@ -379,6 +331,6 @@ t8_forest_is_transitioned (t8_forest_t forest)
 
   /* only return false if there is no subelement in the forest */
   return 0;
-}                               /* end of t8_forest_is_transitioned */
+} /* end of t8_forest_is_transitioned */
 
 T8_EXTERN_C_END ();

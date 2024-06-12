@@ -28,7 +28,6 @@
 #include <test/t8_gtest_macros.hxx>
 #include <t8_schemes/t8_transition/t8_transition_cxx.hxx>
 
-
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.h>
 
 /* *INDENT-OFF* */
@@ -207,4 +206,4 @@ TEST_P (face_neigh, recursive_check_diff)
   t8_recursive_check_diff (child, element, neigh, ts, maxlvl, level);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_face_neigh, face_neigh, testing::Values(T8_ECLASS_HEX), print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_face_neigh, face_neigh, testing::Values (T8_ECLASS_HEX), print_eclass);

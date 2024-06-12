@@ -193,7 +193,7 @@ t8_forest_balance (t8_forest_t forest, int repartition)
       t8_forest_set_profiling (forest_temp, 1);
     }
     t8_global_productionf ("Profiling: %i\n", forest->profile != NULL);
-    
+
     /* Adapt the forest */
     t8_forest_commit (forest_temp);
     /* Store the runtimes of adapt and ghost */

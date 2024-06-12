@@ -34,10 +34,10 @@
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
-t8_scheme_cxx_t    *
+t8_scheme_cxx_t *
 t8_scheme_new_transition_hex_cxx (void)
 {
-  t8_scheme_cxx_t    *s;
+  t8_scheme_cxx_t *s;
 
   s = T8_ALLOC_ZERO (t8_scheme_cxx_t, 1);
   t8_refcount_init (&s->rc);
@@ -46,10 +46,11 @@ t8_scheme_new_transition_hex_cxx (void)
   s->eclass_schemes[T8_ECLASS_LINE] = new t8_default_scheme_line_c ();
   s->eclass_schemes[T8_ECLASS_QUAD] = new t8_default_scheme_quad_c ();
   s->eclass_schemes[T8_ECLASS_HEX] = new t8_subelement_scheme_hex_c ();
-  s->eclass_schemes[T8_ECLASS_TRIANGLE] = new t8_default_scheme_tri_c ();  
+  s->eclass_schemes[T8_ECLASS_TRIANGLE] = new t8_default_scheme_tri_c ();
   s->eclass_schemes[T8_ECLASS_TET] = NULL;
   s->eclass_schemes[T8_ECLASS_PRISM] = NULL;
-  s->eclass_schemes[T8_ECLASS_PYRAMID] = new t8_default_scheme_pyramid_c ();       /* can be used for hybrid meshes - not conformal as long as no conformal transition pyr class exists */
+  s->eclass_schemes[T8_ECLASS_PYRAMID]
+    = new t8_default_scheme_pyramid_c (); /* can be used for hybrid meshes - not conformal as long as no conformal transition pyr class exists */
 
   return s;
 }

@@ -80,4 +80,5 @@ TEST_P (class_child_parent_face, t8_recursive_dfs_child_parent_face)
   check_recursive_dfs_to_max_lvl (maxlvl);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_child_parent_face, class_child_parent_face, testing::Values (T8_ECLASS_HEX), print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_child_parent_face, class_child_parent_face, testing::Values (T8_ECLASS_HEX),
+                          print_eclass);

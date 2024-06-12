@@ -739,7 +739,7 @@ struct t8_eclass_scheme
    * \param [in, out] position the position of the first byte that is not already packed
    * \param [in] comm MPI Communicator
   */
-/*-----------------------------------Functions for transition schemes------------------------------------------------*/
+  /*-----------------------------------Functions for transition schemes------------------------------------------------*/
   /** Return zero refine value for schemes that do not have a transition implementation.
    *  \param [in] elem A valid element 
    *  \return Integer, used as the refine value during transition adaptation.
@@ -752,8 +752,8 @@ struct t8_eclass_scheme
    *  \param [in] elem A valid element 
    *  \return true if elem is a subelement 
    */
-  virtual int 
-  t8_element_is_subelement (const t8_element *elem) const 
+  virtual int
+  t8_element_is_subelement (const t8_element *elem) const
     = 0;
 
   /** Return the number of subelements in a transition cell of type transition_type
@@ -761,7 +761,7 @@ struct t8_eclass_scheme
    *  \return the number of subelements, this transition cell consists of
    */
   virtual int
-  t8_element_get_number_of_subelements (int transition_type) const 
+  t8_element_get_number_of_subelements (int transition_type) const
     = 0;
 
   /** Return the subelement id of a given element. 
@@ -769,9 +769,10 @@ struct t8_eclass_scheme
    *  \return the subelement id of elem (0 if elem is no subelement)
    */
   virtual int
-  t8_element_get_subelement_id (const t8_element * elem) const = 0;
+  t8_element_get_subelement_id (const t8_element *elem) const
+    = 0;
 
-    /** This function refines a parent element into subelements.
+  /** This function refines a parent element into subelements.
    *  Depending on the subelement type, the number of subelements 
    *  to fill the parent element, can differ.
    *  \param [in] elem A valid element
@@ -779,14 +780,15 @@ struct t8_eclass_scheme
    *  \param [out] subelements An array of all subelements of the parent quad element elem
    */
   virtual void
-  t8_element_to_transition_cell (const t8_element_t *elem, int type, t8_element_t *subelements[]) 
+  t8_element_to_transition_cell (const t8_element_t *elem, int type, t8_element_t *subelements[])
     = 0;
 
   /** Return 1 if the eclass scheme has an implementation for subelements. Return 0 otherwise. */
   virtual int
-  t8_element_scheme_supports_transitioning (void) = 0;
+  t8_element_scheme_supports_transitioning (void)
+    = 0;
 
-  /* --------------------------End functions of transition scheme---------------------*/                                              
+  /* --------------------------End functions of transition scheme---------------------*/
 
   virtual void
   t8_element_MPI_Pack (t8_element_t **const elements, const unsigned int count, void *send_buffer, int buffer_size,

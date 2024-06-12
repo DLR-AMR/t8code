@@ -28,7 +28,6 @@
 #include <test/t8_gtest_macros.hxx>
 #include <t8_schemes/t8_transition/t8_transition_cxx.hxx>
 
-
 /* This program tests the descendant function of an element. */
 
 class class_schemes_descendant: public testing::TestWithParam<t8_eclass_t> {

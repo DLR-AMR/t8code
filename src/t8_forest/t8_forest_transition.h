@@ -36,8 +36,7 @@
 
 T8_EXTERN_C_BEGIN ();
 
-
- /**  In this function, use a binary encoding (depending on the face enumeration), to determine which subelement type to use. 
+/**  In this function, use a binary encoding (depending on the face enumeration), to determine which subelement type to use. 
  * Every face has a flag parameter, which is set to 1, if there is a neighbour with a higher level 
  * and to 0, if the level of the neighbour is at most the level of the element.   
  *             
@@ -68,18 +67,11 @@ T8_EXTERN_C_BEGIN ();
  * \return transition type + 1 (to avoid return value 1)
  */
 
-
 int
-t8_forest_transition_adapt (t8_forest_t forest,
-                            t8_forest_t forest_from,
-                            t8_locidx_t ltree_id, 
-                            t8_locidx_t lelement_id,
-                            t8_eclass_scheme_c *ts,
-                            int num_elements,
-                            t8_element_t *elements[]);
+t8_forest_transition_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t ltree_id, t8_locidx_t lelement_id,
+                            t8_eclass_scheme_c *ts, int num_elements, t8_element_t *elements[]);
 
-
- /** This function is the point of entry for the hanging-faces-removing subelements. 
+/** This function is the point of entry for the hanging-faces-removing subelements. 
  * In this function, the corresponding callback function for the refine value in forest_adapt is set
  * and the forest is adapted.
  * \param [in,out] forest       The input forest consists of hanging nodes on faces- 
@@ -87,7 +79,6 @@ t8_forest_transition_adapt (t8_forest_t forest,
  */
 void
 t8_forest_transition (t8_forest_t forest);
-
 
 /** This function is the point of entry in order to untransition a forest before adapting it. 
  * Every transition cell gets coarsened back to its parent element.
@@ -98,13 +89,13 @@ t8_forest_transition (t8_forest_t forest);
 void
 t8_forest_untransition (t8_forest_t forest);
 
- /** Check whether the forest is transitioned, meaning that subelements exist. 
+/** Check whether the forest is transitioned, meaning that subelements exist. 
  * \param [in] forest       The input forest that may or may not contains subelements
  * \return true if forest contains subelements or false if not. 
  *                             
  */
 
-int 
+int
 t8_forest_is_transitioned (t8_forest_t forest);
 
 T8_EXTERN_C_END ();

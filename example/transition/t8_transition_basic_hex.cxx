@@ -49,15 +49,15 @@
  *     Do not refine an element if it has reached the maximum level. (Hint: ts->t8_element_level)
  */
 
-#include <t8.h>                 /* General t8code header, always include this. */
-#include <t8_cmesh.h>           /* cmesh definition and basic interface. */
-#include <t8_cmesh/t8_cmesh_examples.h> /* A collection of exemplary cmeshes */
-#include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
-#include <t8_forest/t8_forest_io.h>     /* save forest */
-#include <t8_forest/t8_forest_geometrical.h>    /* geometrical information of the forest */
+#include <t8.h>                              /* General t8code header, always include this. */
+#include <t8_cmesh.h>                        /* cmesh definition and basic interface. */
+#include <t8_cmesh/t8_cmesh_examples.h>      /* A collection of exemplary cmeshes */
+#include <t8_forest/t8_forest_general.h>     /* forest definition and basic interface. */
+#include <t8_forest/t8_forest_io.h>          /* save forest */
+#include <t8_forest/t8_forest_geometrical.h> /* geometrical information of the forest */
 #include <t8_schemes/t8_transition/t8_transition_conformal_hex/t8_transition_conformal_hex_cxx.hxx>
 #include <t8_schemes/t8_transition/t8_transition_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>     /* default refinement scheme. */
+#include <t8_schemes/t8_default/t8_default_cxx.hxx> /* default refinement scheme. */
 #include <example/common/t8_example_common.h>
 #include "t8_eclass.h"
 #include <cmath>
@@ -71,10 +71,10 @@ t8_check_coordinates (double *coords)
 {
   /* The initial hex_element is the unit hex with vertices (0,0,0), (1,0,0), (0,1,0), (1,1,0), (0,0,1) ,(1,0,1), (0,1,1)  and (1,1,1).
    * We know that therefore, all children (even our subelements) will have vertices with coordinates 0, 0.5 or 1. */
-  double              eps = 1e-126;     /* testing up to float precision */
-  if ((fabs (coords[0] - 0.0) < eps || fabs (coords[0] - 0.5) < eps || fabs (coords[0] - 1.0) < eps) &&
-      (fabs (coords[1] - 0.0) < eps || fabs (coords[1] - 0.5) < eps || fabs (coords[1] - 1.0) < eps) && 
-      (fabs (coords[2] - 0.0) < eps || fabs (coords[2] - 0.5) < eps || fabs (coords[2] - 1.0) < eps)){
+  double eps = 1e-126; /* testing up to float precision */
+  if ((fabs (coords[0] - 0.0) < eps || fabs (coords[0] - 0.5) < eps || fabs (coords[0] - 1.0) < eps)
+      && (fabs (coords[1] - 0.0) < eps || fabs (coords[1] - 0.5) < eps || fabs (coords[1] - 1.0) < eps)
+      && (fabs (coords[2] - 0.0) < eps || fabs (coords[2] - 0.5) < eps || fabs (coords[2] - 1.0) < eps)) {
     return true;
   }
   return false;
@@ -82,19 +82,18 @@ t8_check_coordinates (double *coords)
 #endif
 
 static void
-t8_test_hex_local (t8_element_t *hex_element,
-                    t8_eclass_scheme_c *class_scheme)
+t8_test_hex_local (t8_element_t *hex_element, t8_eclass_scheme_c *class_scheme)
 {
   t8_debugf ("~~~~~~~~~~ Into the t8_test_hex_local function ~~~~~~~~~~\n");
 
-  t8_element_t       *parent;
-  int                 num_children, num_vertices;
-  int                 child_id;
-  double              coords[3];
+  t8_element_t *parent;
+  int num_children, num_vertices;
+  int child_id;
+  double coords[3];
 
   /* Allocate enough memory for hex children */
   num_children = class_scheme->t8_element_num_children (hex_element);
-  t8_element_t      **children = T8_ALLOC (t8_element_t *, num_children);
+  t8_element_t **children = T8_ALLOC (t8_element_t *, num_children);
   class_scheme->t8_element_new (num_children, children);
 
   /* Create all subelements for the given type from the initial hex element. */
@@ -103,9 +102,8 @@ t8_test_hex_local (t8_element_t *hex_element,
   /* transition cell must be a family of subelements */
   T8_ASSERT (class_scheme->t8_element_is_family (children));
 
-  t8_debugf
-    ("The children array consists of %i elements, whose IDs range from 0 to %i.\n",
-     num_children, num_children - 1);
+  t8_debugf ("The children array consists of %i elements, whose IDs range from 0 to %i.\n", num_children,
+             num_children - 1);
 
   /* Iterate through all subelements and determine their vertex coordinates */
   for (child_id = 0; child_id < num_children; ++child_id) {
@@ -118,25 +116,21 @@ t8_test_hex_local (t8_element_t *hex_element,
 #endif
 
     /* determine the shape of the subelement and use it to determine the number of vertices it has (pyramid -> 5 vertices) */
-    const t8_element_shape_t shape =
-      class_scheme->t8_element_shape (children[child_id]);
+    const t8_element_shape_t shape = class_scheme->t8_element_shape (children[child_id]);
 
     num_vertices = t8_eclass_num_vertices[shape];
     t8_debugf ("Num vertices %i \n", num_vertices);
-    T8_ASSERT (num_vertices ==
-               class_scheme->t8_element_num_corners (children[child_id]));
+    T8_ASSERT (num_vertices == class_scheme->t8_element_num_corners (children[child_id]));
 
     /* Iterate over all vertices of the subelement and determine their coordinates */
-    int                 vertex_count;
+    int vertex_count;
     for (vertex_count = 0; vertex_count < num_vertices; ++vertex_count) {
-      class_scheme->t8_element_vertex_reference_coords (children[child_id],
-                                                        vertex_count, coords);
-      t8_debugf
-        ("Child ID: %d; Vertex: %d; Ref cords in [0,1]^2: (%lf,%lf,%lf)\n",
-         child_id, vertex_count, coords[0], coords[1], coords[2]);
+      class_scheme->t8_element_vertex_reference_coords (children[child_id], vertex_count, coords);
+      t8_debugf ("Child ID: %d; Vertex: %d; Ref cords in [0,1]^2: (%lf,%lf,%lf)\n", child_id, vertex_count, coords[0],
+                 coords[1], coords[2]);
       T8_ASSERT (t8_check_coordinates (coords));
-    }                           /* end of vertex loop */
-  }                             /* end of subelement loop */
+    } /* end of vertex loop */
+  }   /* end of subelement loop */
 
   /* coarsen the transition cell back to its parent, which must be equal to the initial quad_element */
   class_scheme->t8_element_new (1, &parent);
@@ -148,27 +142,25 @@ t8_test_hex_local (t8_element_t *hex_element,
   class_scheme->t8_element_destroy (num_children, children);
   T8_FREE (children);
 
-  t8_debugf
-    ("~~~~~~~~~~ The t8_test_hex_local function finished successful ~~~~~~~~~~\n");
+  t8_debugf ("~~~~~~~~~~ The t8_test_hex_local function finished successful ~~~~~~~~~~\n");
 }
-
 
 static void
 t8_transition_local (t8_eclass_t eclass)
 {
   t8_debugf ("~~~~~~~~~~ Into the t8_transition_local function ~~~~~~~~~~\n");
 
-  t8_scheme_cxx_t    *ts = t8_scheme_new_transition_hex_cxx ();
+  t8_scheme_cxx_t *ts = t8_scheme_new_transition_hex_cxx ();
   t8_eclass_scheme_c *class_scheme;
-  t8_element_t       *hex_element, *parent;
-  int                 subelement_id;
-  double              coords[3];
-  int                 num_subelements;
-  int                 num_vertices;
+  t8_element_t *hex_element, *parent;
+  int subelement_id;
+  double coords[3];
+  int num_subelements;
+  int num_vertices;
 
   /* At the moment, subelements are only implemented for the quad and hex scheme. */
   T8_ASSERT (eclass = T8_ECLASS_HEX);
-  
+
   class_scheme = ts->eclass_schemes[eclass];
 
   /* Allocate memory for a new hex element and initialize it */
@@ -180,34 +172,29 @@ t8_transition_local (t8_eclass_t eclass)
   t8_test_hex_local (hex_element, class_scheme);
 
   /* Make checks for all transition types */
-  int                 type;
- for (type = 1; type <= T8_SUB_HEX_MAX_TRANSITION_TYPE; type++) {
+  int type;
+  for (type = 1; type <= T8_SUB_HEX_MAX_TRANSITION_TYPE; type++) {
     /* Allocate enough memory for subelements of the given type and initialize them */
 
-    num_subelements =
-      class_scheme->t8_element_get_number_of_subelements (type);
+    num_subelements = class_scheme->t8_element_get_number_of_subelements (type);
 
-    t8_element_t      **transition_cell =
-      T8_ALLOC (t8_element_t *, num_subelements);
+    t8_element_t **transition_cell = T8_ALLOC (t8_element_t *, num_subelements);
     class_scheme->t8_element_new (num_subelements, transition_cell);
 
     /* Create all subelements for the given type from the initial hex element. */
-    class_scheme->t8_element_to_transition_cell (hex_element, type,
-                                                 transition_cell);
+    class_scheme->t8_element_to_transition_cell (hex_element, type, transition_cell);
 
     /* transition cell must be a family of subelements */
     T8_ASSERT (class_scheme->t8_element_is_family (transition_cell));
 
     t8_debugf ("The given type is type %i.\n", type);
-    t8_debugf
-      ("The transition cell of type %i consists of %i subelements, whose IDs range from 0 to %i.\n",
-       type, num_subelements, num_subelements - 1);
+    t8_debugf ("The transition cell of type %i consists of %i subelements, whose IDs range from 0 to %i.\n", type,
+               num_subelements, num_subelements - 1);
 
     /* Iterate through all subelements and determine their vertex coordinates */
     for (subelement_id = 0; subelement_id < num_subelements; ++subelement_id) {
       /* All elements in a transition cell are subelements */
-      T8_ASSERT (class_scheme->t8_element_is_subelement
-                 (transition_cell[subelement_id]));
+      T8_ASSERT (class_scheme->t8_element_is_subelement (transition_cell[subelement_id]));
 
 #if T8_ENABLE_DEBUG
       /* Print the current subelement */
@@ -215,29 +202,20 @@ t8_transition_local (t8_eclass_t eclass)
 #endif
 
       /* determine the shape of the subelement and use it to determine the number of vertices it has (triangle -> 3 vertices) */
-      const t8_element_shape_t shape =
-        class_scheme->t8_element_shape (transition_cell[subelement_id]);
+      const t8_element_shape_t shape = class_scheme->t8_element_shape (transition_cell[subelement_id]);
       num_vertices = t8_eclass_num_vertices[shape];
-      T8_ASSERT (num_vertices ==
-                 class_scheme->t8_element_num_corners (transition_cell
-                                                       [subelement_id]));
-      T8_ASSERT (num_vertices ==
-                 class_scheme->t8_element_num_faces (transition_cell
-                                                     [subelement_id]));
+      T8_ASSERT (num_vertices == class_scheme->t8_element_num_corners (transition_cell[subelement_id]));
+      T8_ASSERT (num_vertices == class_scheme->t8_element_num_faces (transition_cell[subelement_id]));
 
       /* Iterate over all vertices of the subelement and determine their coordinates */
-      int                 vertex_count;
+      int vertex_count;
       for (vertex_count = 0; vertex_count < num_vertices; ++vertex_count) {
-        class_scheme->t8_element_vertex_reference_coords (transition_cell
-                                                          [subelement_id],
-                                                          vertex_count,
-                                                          coords);
-        t8_debugf
-          ("Subelement ID: %d; Vertex: %d; Ref cords in [0,1]^3: (%lf,%lf,%lf)\n",
-           subelement_id, vertex_count, coords[0], coords[1], coords[2]);
+        class_scheme->t8_element_vertex_reference_coords (transition_cell[subelement_id], vertex_count, coords);
+        t8_debugf ("Subelement ID: %d; Vertex: %d; Ref cords in [0,1]^3: (%lf,%lf,%lf)\n", subelement_id, vertex_count,
+                   coords[0], coords[1], coords[2]);
         T8_ASSERT (t8_check_coordinates (coords));
-      }                         /* end of vertex loop */
-    }                           /* end of subelement loop */
+      } /* end of vertex loop */
+    }   /* end of subelement loop */
 
     /* coarsen the transition cell back to its parent, which must be equal to the initial quad_element */
     class_scheme->t8_element_new (1, &parent);
@@ -249,25 +227,21 @@ t8_transition_local (t8_eclass_t eclass)
     class_scheme->t8_element_destroy (num_subelements, transition_cell);
     T8_FREE (transition_cell);
 
- }                             /* end of transition type loop */
+  } /* end of transition type loop */
 
   /* free more memory */
   class_scheme->t8_element_destroy (1, &hex_element);
   t8_scheme_cxx_unref (&ts);
 
-  t8_debugf
-    ("~~~~~~~~~~ The t8_transition_local function finished successful ~~~~~~~~~~\n");
+  t8_debugf ("~~~~~~~~~~ The t8_transition_local function finished successful ~~~~~~~~~~\n");
 
-}                               /* end of t8_transition_local */
-
-
-
+} /* end of t8_transition_local */
 
 int
 main (int argc, char **argv)
 {
-  int                 mpiret;
-/* Initialize MPI. This has to happen before we initialize sc or t8code. */
+  int mpiret;
+  /* Initialize MPI. This has to happen before we initialize sc or t8code. */
   mpiret = sc_MPI_Init (&argc, &argv);
 
   SC_CHECK_MPI (mpiret);
@@ -286,5 +260,3 @@ main (int argc, char **argv)
 
   return 0;
 }
-
-

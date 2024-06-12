@@ -58,14 +58,8 @@
  *     f_4 <-> f_4 (assuming a neighboring transition cell)       f_4 <-> f_4
  */
 
-const int           subelement_face_dual[6][5] = {
-  {0, 0, 0, 0, 4},
-  {1, 1, 1, 1, 4},
-  {0, 2, 0, 2, 4},
-  {1, 3, 3, 3, 4},
-  {2, 2, 2, 2, 4},
-  {3, 3, 3, 3, 4}
-  };
+const int subelement_face_dual[6][5] = { { 0, 0, 0, 0, 4 }, { 1, 1, 1, 1, 4 }, { 0, 2, 0, 2, 4 },
+                                         { 1, 3, 3, 3, 4 }, { 2, 2, 2, 2, 4 }, { 3, 3, 3, 3, 4 } };
 
 /* Connectivity of a subelements location within a transition cell 
  * and the parent hexs faces:
@@ -75,18 +69,14 @@ const int           subelement_face_dual[6][5] = {
  *     location[0] = 3 -> parents dual face = 2
  *     location[0] = 4 -> parents dual face = 5
  *     location[0] = 5 -> parents dual face = 4 */
-const int           subelement_location_to_parent_dual_face[6] = { 1, 0, 3, 2, 5, 4 };
+const int subelement_location_to_parent_dual_face[6] = { 1, 0, 3, 2, 5, 4 };
 
 /* Connectivity of a subelements location within a transition cell (only if the subelements are not split)
  *      --> gets subelement_duals
  */
-const int           subelement_face_to_dual_subelement[6][5] = {
-  { 2, 3, 4, 5, -1 },
-  { 2, 3, 4, 5, -1 },
-  { 0, 1, 4, 5, -1 },
-  { 0, 1, 4, 5, -1 },
-  { 0, 1, 2, 3, -1 },
-  { 0, 1, 2, 3, -1 },
+const int subelement_face_to_dual_subelement[6][5] = {
+  { 2, 3, 4, 5, -1 }, { 2, 3, 4, 5, -1 }, { 0, 1, 4, 5, -1 },
+  { 0, 1, 4, 5, -1 }, { 0, 1, 2, 3, -1 }, { 0, 1, 2, 3, -1 },
 };
 /* Connectivity of a subelements location within a transition cell 
  * and the parent hexs faces: Wie in mit Koordinatensystem in Davids Masterarbeit
@@ -98,7 +88,7 @@ const int           subelement_face_to_dual_subelement[6][5] = {
  *     location[0] = 4 (bottom) -> parents face = 4
  *     location[0] = 5 (up)     -> parents face = 5  
  */
-const int           subelement_location_to_parent_face[6] = { 0, 1, 2, 3, 4, 5};
+const int subelement_location_to_parent_face[6] = { 0, 1, 2, 3, 4, 5 };
 /* *INDENT-ON* */
 
 /* We want to export the whole implementation to be callable from "C" */
@@ -106,8 +96,8 @@ T8_EXTERN_C_BEGIN ();
 
 /* This function is used by other element functions and we thus need to
  * declare it up here */
-t8_linearidx_t      t8_element_get_linear_id (const t8_element_t *elem,
-                                              int level);
+t8_linearidx_t
+t8_element_get_linear_id (const t8_element_t *elem, int level);
 
 int
 t8_subelement_scheme_hex_c::t8_element_maxlevel (void) const
@@ -127,48 +117,37 @@ t8_subelement_scheme_hex_c::t8_element_child_eclass (int childid) const
 int
 t8_subelement_scheme_hex_c::t8_element_level (const t8_element_t *elem) const
 {
-  const t8_hex_with_subelements *phex_w_sub =
-    (const t8_hex_with_subelements *) elem;
+  const t8_hex_with_subelements *phex_w_sub = (const t8_hex_with_subelements *) elem;
   T8_ASSERT (t8_element_is_valid (elem));
   return (int) ((const t8_hex_with_subelements *) phex_w_sub)->p8q.level;
 }
 
 void
-t8_subelement_scheme_hex_c::t8_element_copy (const t8_element_t *source,
-                                              t8_element_t *dest) const
+t8_subelement_scheme_hex_c::t8_element_copy (const t8_element_t *source, t8_element_t *dest) const
 {
-  const t8_hex_with_subelements *phex_w_sub_source =
-    (const t8_hex_with_subelements *) source;
-  t8_hex_with_subelements *phex_w_sub_dest =
-    (t8_hex_with_subelements *) dest;
+  const t8_hex_with_subelements *phex_w_sub_source = (const t8_hex_with_subelements *) source;
+  t8_hex_with_subelements *phex_w_sub_dest = (t8_hex_with_subelements *) dest;
 
   const p8est_quadrant_t *q = &phex_w_sub_source->p8q;
-  p8est_quadrant_t   *r = &phex_w_sub_dest->p8q;
+  p8est_quadrant_t *r = &phex_w_sub_dest->p8q;
 
   T8_ASSERT (t8_element_is_valid (source));
   T8_ASSERT (t8_element_is_valid (dest));
-  if (q == r &&
-      phex_w_sub_source->transition_type ==
-      phex_w_sub_dest->transition_type &&
-      phex_w_sub_source->subelement_id == phex_w_sub_dest->subelement_id) {
+  if (q == r && phex_w_sub_source->transition_type == phex_w_sub_dest->transition_type
+      && phex_w_sub_source->subelement_id == phex_w_sub_dest->subelement_id) {
     /* Do nothing if they are already the same hexahedra. */
     return;
   }
   *r = *q;
 
   t8_element_copy_subelement_values (source, dest);
-
 }
 
 int
-t8_subelement_scheme_hex_c::t8_element_compare (const t8_element_t *elem1,
-                                                 const t8_element_t *elem2)
-  const
+t8_subelement_scheme_hex_c::t8_element_compare (const t8_element_t *elem1, const t8_element_t *elem2) const
 {
-  const t8_hex_with_subelements *phex_w_sub_elem1 =
-    (const t8_hex_with_subelements *) elem1;
-  const t8_hex_with_subelements *phex_w_sub_elem2 =
-    (const t8_hex_with_subelements *) elem2;
+  const t8_hex_with_subelements *phex_w_sub_elem1 = (const t8_hex_with_subelements *) elem1;
+  const t8_hex_with_subelements *phex_w_sub_elem2 = (const t8_hex_with_subelements *) elem2;
 
   const p8est_quadrant_t *q = &phex_w_sub_elem1->p8q;
   const p8est_quadrant_t *r = &phex_w_sub_elem2->p8q;
@@ -176,19 +155,15 @@ t8_subelement_scheme_hex_c::t8_element_compare (const t8_element_t *elem1,
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
 
-  int                 compare = p8est_quadrant_compare (q, r);
+  int compare = p8est_quadrant_compare (q, r);
 
-  if (compare == 0 && (t8_element_is_subelement (elem1)
-                       || t8_element_is_subelement (elem2))) {
-   // t8_debugf ("Caution, t8_element_compare is used with subelements.\n");
-    if (t8_element_is_subelement (elem1)
-        && t8_element_is_subelement (elem2)) {
+  if (compare == 0 && (t8_element_is_subelement (elem1) || t8_element_is_subelement (elem2))) {
+    // t8_debugf ("Caution, t8_element_compare is used with subelements.\n");
+    if (t8_element_is_subelement (elem1) && t8_element_is_subelement (elem2)) {
       /* Caution: The compare function is used for two subelements. */
 
-      if (phex_w_sub_elem1->transition_type ==
-          phex_w_sub_elem2->transition_type
-          && phex_w_sub_elem1->subelement_id ==
-          phex_w_sub_elem2->subelement_id) {
+      if (phex_w_sub_elem1->transition_type == phex_w_sub_elem2->transition_type
+          && phex_w_sub_elem1->subelement_id == phex_w_sub_elem2->subelement_id) {
         /* both subelements are identical */
         return 0;
       }
@@ -196,10 +171,10 @@ t8_subelement_scheme_hex_c::t8_element_compare (const t8_element_t *elem1,
       return 1;
     }
     else if (t8_element_is_subelement (elem1)) {
-      return -1;                /* elem1 is subelement and therefore smaller */
+      return -1; /* elem1 is subelement and therefore smaller */
     }
     else if (t8_element_is_subelement (elem2)) {
-      return 1;                 /* elem2 is subelement and therefore smaller */
+      return 1; /* elem2 is subelement and therefore smaller */
     }
   }
 
@@ -210,16 +185,13 @@ t8_subelement_scheme_hex_c::t8_element_compare (const t8_element_t *elem1,
 }
 
 void
-t8_subelement_scheme_hex_c::t8_element_parent (const t8_element_t *elem,
-                                                t8_element_t *parent) const
+t8_subelement_scheme_hex_c::t8_element_parent (const t8_element_t *elem, t8_element_t *parent) const
 {
-  const t8_hex_with_subelements *phex_w_sub_elem =
-    (const t8_hex_with_subelements *) elem;
-  t8_hex_with_subelements *phex_w_sub_parent =
-    (t8_hex_with_subelements *) parent;
+  const t8_hex_with_subelements *phex_w_sub_elem = (const t8_hex_with_subelements *) elem;
+  t8_hex_with_subelements *phex_w_sub_parent = (t8_hex_with_subelements *) parent;
 
   const p8est_quadrant_t *q = &phex_w_sub_elem->p8q;
-  p8est_quadrant_t   *r = &phex_w_sub_parent->p8q;
+  p8est_quadrant_t *r = &phex_w_sub_parent->p8q;
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (parent));
@@ -233,21 +205,16 @@ t8_subelement_scheme_hex_c::t8_element_parent (const t8_element_t *elem,
 
   /* the parent of any element will never be a subelement */
   t8_element_reset_subelement_values (parent);
-
 }
 
 void
-t8_subelement_scheme_hex_c::t8_element_sibling (const t8_element_t *elem,
-                                                 int sibid,
-                                                 t8_element_t *sibling) const
+t8_subelement_scheme_hex_c::t8_element_sibling (const t8_element_t *elem, int sibid, t8_element_t *sibling) const
 {
-  const t8_hex_with_subelements *phex_w_sub_elem =
-    (const t8_hex_with_subelements *) elem;
-  t8_hex_with_subelements *phex_w_sub_sibling =
-    (t8_hex_with_subelements *) sibling;
+  const t8_hex_with_subelements *phex_w_sub_elem = (const t8_hex_with_subelements *) elem;
+  t8_hex_with_subelements *phex_w_sub_sibling = (t8_hex_with_subelements *) sibling;
 
   const p8est_quadrant_t *q = &phex_w_sub_elem->p8q;
-  p8est_quadrant_t   *r = &phex_w_sub_sibling->p8q;
+  p8est_quadrant_t *r = &phex_w_sub_sibling->p8q;
 
   /* this function is not implemented for subelements */
   T8_ASSERT (!t8_element_is_subelement (elem));
@@ -266,13 +233,11 @@ t8_subelement_scheme_hex_c::t8_element_num_faces (const t8_element_t *elem) cons
 {
   T8_ASSERT (t8_element_is_valid (elem));
 
-  return (t8_element_is_subelement (elem) ? T8_HEX_SUBELEMENT_FACES :
-          P8EST_FACES);
+  return (t8_element_is_subelement (elem) ? T8_HEX_SUBELEMENT_FACES : P8EST_FACES);
 }
 
 int
-t8_subelement_scheme_hex_c::t8_element_max_num_faces (const t8_element_t
-                                                       *elem) const
+t8_subelement_scheme_hex_c::t8_element_max_num_faces (const t8_element_t *elem) const
 {
   /* this function is not implemented for subelements */
   T8_ASSERT (!t8_element_is_subelement (elem));
@@ -281,8 +246,7 @@ t8_subelement_scheme_hex_c::t8_element_max_num_faces (const t8_element_t
 }
 
 int
-t8_subelement_scheme_hex_c::t8_element_num_children (const t8_element_t
-                                                      *elem) const
+t8_subelement_scheme_hex_c::t8_element_num_children (const t8_element_t *elem) const
 {
   /* Note that children of subelements equal the children of the parent hexahedra. 
    * Therefore, the number of children of a subelement equals P8EST_CHILDREN */
@@ -293,54 +257,44 @@ t8_subelement_scheme_hex_c::t8_element_num_children (const t8_element_t
 /* *INDENT-OFF* */
 /* indent bug, indent adds a second "const" modifier */
 
-int   
-t8_subelement_scheme_hex_c::t8_element_num_siblings (const t8_element_t *
-                                                      elem) const
+int
+t8_subelement_scheme_hex_c::t8_element_num_siblings (const t8_element_t *elem) const
 
 {
-  const t8_hex_with_subelements *phex_w_sub =
-    (const t8_hex_with_subelements *) elem;
+  const t8_hex_with_subelements *phex_w_sub = (const t8_hex_with_subelements *) elem;
 
-  //no hanging nodes 
-  if (phex_w_sub->transition_type == 0){
+  //no hanging nodes
+  if (phex_w_sub->transition_type == 0) {
     return P8EST_CHILDREN;
   }
 
-  int                 num_hanging_faces = 0;
-  int                 iface;
-  for (iface = 0; iface < P8EST_FACES; iface++) {     
-   /* Count the number of ones of the binary transition type.
+  int num_hanging_faces = 0;
+  int iface;
+  for (iface = 0; iface < P8EST_FACES; iface++) {
+    /* Count the number of ones of the binary transition type.
     * This number equals the number of hanging faces. */
 
-   // binary shift << 1 Left-shift, d.h. *2¹ 
-   // Right shift >> 1 Right-shift, d.h. *2⁻¹
-    num_hanging_faces +=
-      (phex_w_sub->transition_type & (1 << iface)) >> iface;
+    // binary shift << 1 Left-shift, d.h. *2¹
+    // Right shift >> 1 Right-shift, d.h. *2⁻¹
+    num_hanging_faces += (phex_w_sub->transition_type & (1 << iface)) >> iface;
   }
-  return P8EST_FACES + 3*num_hanging_faces;
+  return P8EST_FACES + 3 * num_hanging_faces;
 }
 
 int
-t8_subelement_scheme_hex_c::t8_element_num_face_children (const t8_element_t
-                                                           *elem,
-                                                           int face) const
+t8_subelement_scheme_hex_c::t8_element_num_face_children (const t8_element_t *elem, int face) const
 {
   /* this function is not implemented for subelements */
- T8_ASSERT (!t8_element_is_subelement (elem));
+  T8_ASSERT (!t8_element_is_subelement (elem));
 
- T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (t8_element_is_valid (elem));
   /*  if we use hex scheme without set_transition, then we are only balanced 
   *   and four neighbors are possible */
   return 4;
-  
 }
 
 int
-t8_subelement_scheme_hex_c::t8_element_neighbor_is_sibling (const
-                                                             t8_element_t
-                                                             *elem,
-                                                             const int face)
-  const
+t8_subelement_scheme_hex_c::t8_element_neighbor_is_sibling (const t8_element_t *elem, const int face) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_subelement (elem));
@@ -352,97 +306,87 @@ t8_subelement_scheme_hex_c::t8_element_neighbor_is_sibling (const
   return 0;
 }
 
-
 int
 t8_subelement_scheme_hex_c::t8_element_get_num_sibling_neighbors_at_face (const t8_element_t *elem,
-                                                                           const int face) const
+                                                                          const int face) const
 {
- const t8_hex_with_subelements *hex_w_sub =
-    (const t8_hex_with_subelements *) elem;
+  const t8_hex_with_subelements *hex_w_sub = (const t8_hex_with_subelements *) elem;
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_subelement (elem));
   T8_ASSERT (face == 0 || face == 1 || face == 2 || face == 3);
 
-int                 location[3] = { };
+  int location[3] = {};
   //( location[0] = face_number of transition cell, location[1] = if split or not ( 1 = split ), location[2] = sub_id
-    t8_element_get_location_of_subelement (elem, location);
-    int split = location[1];
-    int hex_face = location[0];
-    int neigh_hex_face;
-    int transition_type;
-if( split == 1){
-  return 1;
-}
-else{
-neigh_hex_face = subelement_face_to_dual_subelement[hex_face][face];
-transition_type = hex_w_sub->transition_type;
+  t8_element_get_location_of_subelement (elem, location);
+  int split = location[1];
+  int hex_face = location[0];
+  int neigh_hex_face;
+  int transition_type;
+  if (split == 1) {
+    return 1;
+  }
+  else {
+    neigh_hex_face = subelement_face_to_dual_subelement[hex_face][face];
+    transition_type = hex_w_sub->transition_type;
 
-if ((transition_type & (int) pow(2, 5 - neigh_hex_face)) != 0 ){
-  return 2;
-}else{
-  return 1;
-}
-
-} 
+    if ((transition_type & (int) pow (2, 5 - neigh_hex_face)) != 0) {
+      return 2;
+    }
+    else {
+      return 1;
+    }
+  }
 }
 
 int
 t8_subelement_scheme_hex_c::t8_element_get_transition_refine_identifier () const
 {
-  
+
   return T8_TRANSITION_CONFORMAL_HEX_REFINE_FUNCTION;
 }
 /* *INDENT-ON* */
 
 int
-t8_subelement_scheme_hex_c::t8_element_get_face_corner (const t8_element_t
-                                                         *elem, int face,
-                                                         int corner) const
+t8_subelement_scheme_hex_c::t8_element_get_face_corner (const t8_element_t *elem, int face, int corner) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
 
   if (!t8_element_is_subelement (elem)) {
-   
-  //face has to be between 0 and 4
-  //Corner has to be between 0 and 4
-  T8_ASSERT (0 <= face && face < P8EST_FACES);
-  T8_ASSERT (0 <= corner && corner < 4);
+
+    //face has to be between 0 and 4
+    //Corner has to be between 0 and 4
+    T8_ASSERT (0 <= face && face < P8EST_FACES);
+    T8_ASSERT (0 <= corner && corner < 4);
 
     return p8est_face_corners[face][corner];
   }
   else {
-    int                 t8_face_corners_subelement[5][4] = {
-      {0, 2, 4 ,-1},  //f0
-      {1, 3, 4, -1},  //f1  
-      {0, 1, 4, -1},  //f2
-      {2, 3, 4, -1},  //f3
-      {0, 1, 2, 3}    //f4
+    int t8_face_corners_subelement[5][4] = {
+      { 0, 2, 4, -1 },  //f0
+      { 1, 3, 4, -1 },  //f1
+      { 0, 1, 4, -1 },  //f2
+      { 2, 3, 4, -1 },  //f3
+      { 0, 1, 2, 3 }    //f4
     };
     T8_ASSERT (0 <= face && face < T8_HEX_SUBELEMENT_FACES);
     T8_ASSERT (0 <= corner && corner < 5);
 
     return t8_face_corners_subelement[face][corner];
   }
-
 }
 
 int
-t8_subelement_scheme_hex_c::t8_element_get_corner_face (const t8_element_t
-                                                         *elem, int corner,
-                                                         int face) const
+t8_subelement_scheme_hex_c::t8_element_get_corner_face (const t8_element_t *elem, int corner, int face) const
 {
   /* this function is not implemented for subelements */
   T8_ASSERT (!t8_element_is_subelement (elem));
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0; 
+  SC_ABORT ("This function is not implemented yet.\n");
+  return 0;
 }
 
-
 void
-t8_subelement_scheme_hex_c::t8_element_child (const t8_element_t *elem,
-                                               int childid,
-                                               t8_element_t *child) const
+t8_subelement_scheme_hex_c::t8_element_child (const t8_element_t *elem, int childid, t8_element_t *child) const
 {
   /* this function is not implemented for subelements */
   T8_ASSERT (!t8_element_is_subelement (elem));
@@ -464,41 +408,34 @@ t8_subelement_scheme_hex_c::t8_element_child (const t8_element_t *elem,
     T8_ASSERT (p8est_quadrant_is_parent (q, r));
   }
   t8_element_reset_subelement_values (child);
-
 }
 
 void
-t8_subelement_scheme_hex_c::t8_element_get_sibling_neighbor_in_transition_cell_hex (const t8_element_t
-                                                                                 *elem, const int face,
-                                                                                 const int num_neighbors,
-                                                                                 t8_element_t
-                                                                                 *neighbor_at_face[],
-                                                                                 int *neigh_face)
+t8_subelement_scheme_hex_c::t8_element_get_sibling_neighbor_in_transition_cell_hex (
+  const t8_element_t *elem, const int face, const int num_neighbors, t8_element_t *neighbor_at_face[], int *neigh_face)
 {
   T8_ASSERT (t8_element_is_subelement (elem));
   T8_ASSERT (t8_element_neighbor_is_sibling (elem, face));
   T8_ASSERT ((num_neighbors == 1) || (num_neighbors == 2));
   T8_ASSERT (t8_element_is_valid (neighbor_at_face[0]));
- 
+
   /* source = elem, destination = neighbor at face. --> They have the same anchor node + Morton index + level.*/
   t8_element_copy (elem, neighbor_at_face[0]);
-/* Expand neighbor_at_face to a subelement (subelement_id + transititon_type) + copy it into phex_w_sub_neighbor_at_face*/
-  t8_hex_with_subelements *
-    phex_w_sub_neighbor_at_face =
-    (t8_hex_with_subelements *) neighbor_at_face[0];
-    
+  /* Expand neighbor_at_face to a subelement (subelement_id + transititon_type) + copy it into phex_w_sub_neighbor_at_face*/
+  t8_hex_with_subelements *phex_w_sub_neighbor_at_face = (t8_hex_with_subelements *) neighbor_at_face[0];
+
   //iterator variable
   int iter;
   //Get information about the location of the subelement.
-  int                 location[3] = { };
+  int location[3] = {};
   // location[0] = face_number of transition cell, location[1] = if split or not ( 1 = split ), location[2] = sub_id
-    t8_element_get_location_of_subelement (elem, location);
-  
+  t8_element_get_location_of_subelement (elem, location);
+
   //Create a temporary variable to store the possible subelement_id of the neighbor
   int subelement_id_tmp = 0;
   int transition_type_tmp = 0;
   int amount_subelements = 0;
-  int transition_type = t8_element_get_transition_type(elem);
+  int transition_type = t8_element_get_transition_type (elem);
   int neigh_hex_face;
   int hlp;
 
@@ -510,489 +447,461 @@ t8_subelement_scheme_hex_c::t8_element_get_sibling_neighbor_in_transition_cell_h
   */
 
   neigh_face[0] = subelement_face_dual[location[0]][face];
- 
+
   //First check if (the own) face is split.
-  if(location[1] == 0){ //Not split
+  if (location[1] == 0) {  //Not split
 
     //get hex_face_number of the face_neighbored subelement
     // neigh_hex_face is only correct, if the neighbor lies not at the same hex face.
-    neigh_hex_face = subelement_face_to_dual_subelement[location[0]][face];    
+    neigh_hex_face = subelement_face_to_dual_subelement[location[0]][face];
     /*Check if the dual subelement is split. If  it's split,the element has two neighbors 
     * as siblings (case 2). Then we always take the left, front or down (in this order) subelement (the subelement with the lower sub
     * element ID). If the transition type is = 1 at the hex_face, it's split.*/
 
-//-----------------------------CASE 1--------------------------------------------------------
-
-//make rightshift until only the bits for the faces before our neighbors face are left.
-    transition_type_tmp = transition_type >> (5 - neigh_hex_face);
-    
-    amount_subelements = 0;
-
-    
-    int i = (int) pow(2,5 - neigh_hex_face);
-
-    if((transition_type & i) == 0){ //neighbor not split
-
-        for(iter = 0 ; iter <=  neigh_hex_face ; iter++){
-        
-        //Count the elements until our neighbored hex_face.
-          if(((transition_type_tmp >> iter ) & 1) != 0 ){
-              amount_subelements += 4;
-          }
-          else{
-            amount_subelements += 1;
-          }
-        }
-
-
-      //The subelement_id of the neighbor is then the amount of subelements till then - 1
-      subelement_id_tmp = amount_subelements - 1 ;
-      phex_w_sub_neighbor_at_face->subelement_id = subelement_id_tmp;
-
-    }
-//-------------------------CASE 2--------------------------------------
-    else { //neighbor is split. We have to return 2 subelements. 
-    amount_subelements = 0;
-    int subelement_id_tmp2 = 0; // In here we store the second subelement ID in case 2 if elem has two neighbors 
-    /* For case 2 we need a second face neighbor */
-  
-    t8_hex_with_subelements *
-    phex_w_sub_neighbor_at_face2 =
-    (t8_hex_with_subelements *) neighbor_at_face[1];
-
-    t8_element_copy (elem, neighbor_at_face[1]);
-
-
+    //-----------------------------CASE 1--------------------------------------------------------
 
     //make rightshift until only the bits for the faces before our neighbors face are left.
-      transition_type_tmp = transition_type >> (5 - neigh_hex_face);
+    transition_type_tmp = transition_type >> (5 - neigh_hex_face);
 
-      for(iter = 0 ; iter <=  neigh_hex_face ; iter++){
-        
+    amount_subelements = 0;
+
+    int i = (int) pow (2, 5 - neigh_hex_face);
+
+    if ((transition_type & i) == 0) {  //neighbor not split
+
+      for (iter = 0; iter <= neigh_hex_face; iter++) {
+
         //Count the elements until our neighbored hex_face.
-          if(((transition_type_tmp >> iter ) & 1) != 0 ){
-              amount_subelements += 4;
-          }
-          else{
-            amount_subelements += 1;
-          }
+        if (((transition_type_tmp >> iter) & 1) != 0) {
+          amount_subelements += 4;
         }
-
-      
-      //If we know the hex_face_number of the neighbored element, we know which subelement_IDs to take.
-    if (location[0] == 0){ //For hex_face 0 its always the "front" two sub-ids 
-      subelement_id_tmp  = amount_subelements - 4;
-      subelement_id_tmp2 = amount_subelements - 2;
-    }
-    if (location[0] == 1){ //For hex_face 1 its always the right to sub-ids 
-      subelement_id_tmp  = amount_subelements - 3;
-      subelement_id_tmp2 = amount_subelements - 1;
-    }
-    if (location[0] == 2){ //for hex_face 2 its the "front" sub-ids 
-      if( ( face == 0 ) || ( face == 1 ) ){
-        subelement_id_tmp  = amount_subelements - 4;
-        subelement_id_tmp2 = amount_subelements - 2;
+        else {
+          amount_subelements += 1;
+        }
       }
-      if( ( face == 2 ) || ( face == 3 ) ){
-        subelement_id_tmp  = amount_subelements - 4;
-        subelement_id_tmp2 = amount_subelements - 3;
-      }   
+
+      //The subelement_id of the neighbor is then the amount of subelements till then - 1
+      subelement_id_tmp = amount_subelements - 1;
+      phex_w_sub_neighbor_at_face->subelement_id = subelement_id_tmp;
     }
-    if (location[0] == 3){ //for hex_face 3 its the "back" sub-ids 
-      if( ( face == 0 ) || ( face == 1 ) ){
-        subelement_id_tmp  = amount_subelements - 3;
-        subelement_id_tmp2 = amount_subelements - 1;
-      }
-      else if( ( face == 2 ) || ( face == 3 ) ){
-        subelement_id_tmp  = amount_subelements - 2;
-        subelement_id_tmp2 = amount_subelements - 1;
-      }      
-    } //for hex_face 4 its the "down" sub-ids 
-    if (location[0] == 4){
-      subelement_id_tmp  = amount_subelements - 4;
-      subelement_id_tmp2 = amount_subelements - 3;
-    }
-    if (location[0] == 5){ //for hex_face 5 its the "up" sub-ids
-      subelement_id_tmp  = amount_subelements - 2;
-      subelement_id_tmp2 = amount_subelements - 1;
-    } 
+    //-------------------------CASE 2--------------------------------------
+    else {  //neighbor is split. We have to return 2 subelements.
+      amount_subelements = 0;
+      int subelement_id_tmp2 = 0;  // In here we store the second subelement ID in case 2 if elem has two neighbors
+      /* For case 2 we need a second face neighbor */
 
-    phex_w_sub_neighbor_at_face->subelement_id = subelement_id_tmp;
-    phex_w_sub_neighbor_at_face2->subelement_id = subelement_id_tmp2;
-    
-  if ( neigh_face != NULL ){
-    neigh_face[1] = neigh_face[0];
-  }
-  }
-}
+      t8_hex_with_subelements *phex_w_sub_neighbor_at_face2 = (t8_hex_with_subelements *) neighbor_at_face[1];
 
+      t8_element_copy (elem, neighbor_at_face[1]);
 
-  //-------------------------CASE 3--------------------------------------
-    else{
-    //The own face is split
-    //get hex_face_number of the face_neighbored subelement
-   //Condition that the neighbor lies not on the same hex face:
-   hlp = 0;
-//hex face 0 and 1
-   if( location[0] == 0 || location[0] == 1){ 
-      if( ((location[2] & 2) == 0 ) && (face == 1)) {//front
-        hlp += 1 ; 
-        }
-      if( ((location[2] & 2) != 0 ) && (face == 0)) {//back
-        hlp += 1 ; 
-         }
-
-      if( ((location[2] & 1) == 0 ) && (face == 3)) {//bottom
-        hlp +=1 ; 
-        }
-      if( ((location[2] & 1) != 0 ) && (face == 2)) {//up
-        hlp +=1 ; 
-         }
-   }
-   //hex face 2 and 3
-   if( location[0] == 2 || location[0] == 3){ 
-      if( ((location[2] & 4) == 0 ) && (face == 1)) {//left
-        hlp +=1 ; 
-        }
-      if( ((location[2] & 4) != 0 ) && (face == 0)) {//right
-        hlp +=1 ; 
-         }
-
-      if( ((location[2] & 1) == 0 ) && (face == 3)) {//bottom
-        hlp +=1 ; 
-        }
-      if( ((location[2] & 1) != 0 ) && (face == 2)) {//up
-        hlp +=1 ; 
-         }
-   }
-
-      //hex face 4 and 5
-   if( location[0] == 4 || location[0] == 5){ 
-      if( ((location[2] & 4) == 0 ) && (face == 1)) {//left
-        hlp +=1 ; 
-        }
-      if( ((location[2] & 4) != 0 ) && (face == 0)) {//right
-        hlp +=1 ; 
-         }
-
-      if( ((location[2] & 2) == 0 ) && (face == 3)) {//front
-        hlp +=1 ; 
-        }
-      if( ((location[2] & 2) != 0 ) && (face == 2)) {//back
-        hlp +=1 ; 
-         }
-   }
-
-//if none of these conditions is true, we are in case 3 
-neigh_hex_face = subelement_face_to_dual_subelement[location[0]][face];
-if( (hlp == 0) && ((transition_type  & (int) pow(2,5 - neigh_hex_face)) == 0)){
-
-  if((transition_type  & (int) pow(2,5 - neigh_hex_face)) == 0){ //neighbor not split
-
-      //it's not possible, that the neighbor lies on the same hex face here, because the own face is split here and if the neighbor would lie on the same face
-      //its face would obviously be split too.
-      neigh_hex_face = subelement_face_to_dual_subelement[location[0]][face];
       //make rightshift until only the bits for the faces before our neighbors face are left.
       transition_type_tmp = transition_type >> (5 - neigh_hex_face);
 
-        for(iter = 0; iter <=  neigh_hex_face; iter++){
-          
+      for (iter = 0; iter <= neigh_hex_face; iter++) {
+
+        //Count the elements until our neighbored hex_face.
+        if (((transition_type_tmp >> iter) & 1) != 0) {
+          amount_subelements += 4;
+        }
+        else {
+          amount_subelements += 1;
+        }
+      }
+
+      //If we know the hex_face_number of the neighbored element, we know which subelement_IDs to take.
+      if (location[0] == 0) {  //For hex_face 0 its always the "front" two sub-ids
+        subelement_id_tmp = amount_subelements - 4;
+        subelement_id_tmp2 = amount_subelements - 2;
+      }
+      if (location[0] == 1) {  //For hex_face 1 its always the right to sub-ids
+        subelement_id_tmp = amount_subelements - 3;
+        subelement_id_tmp2 = amount_subelements - 1;
+      }
+      if (location[0] == 2) {  //for hex_face 2 its the "front" sub-ids
+        if ((face == 0) || (face == 1)) {
+          subelement_id_tmp = amount_subelements - 4;
+          subelement_id_tmp2 = amount_subelements - 2;
+        }
+        if ((face == 2) || (face == 3)) {
+          subelement_id_tmp = amount_subelements - 4;
+          subelement_id_tmp2 = amount_subelements - 3;
+        }
+      }
+      if (location[0] == 3) {  //for hex_face 3 its the "back" sub-ids
+        if ((face == 0) || (face == 1)) {
+          subelement_id_tmp = amount_subelements - 3;
+          subelement_id_tmp2 = amount_subelements - 1;
+        }
+        else if ((face == 2) || (face == 3)) {
+          subelement_id_tmp = amount_subelements - 2;
+          subelement_id_tmp2 = amount_subelements - 1;
+        }
+      }  //for hex_face 4 its the "down" sub-ids
+      if (location[0] == 4) {
+        subelement_id_tmp = amount_subelements - 4;
+        subelement_id_tmp2 = amount_subelements - 3;
+      }
+      if (location[0] == 5) {  //for hex_face 5 its the "up" sub-ids
+        subelement_id_tmp = amount_subelements - 2;
+        subelement_id_tmp2 = amount_subelements - 1;
+      }
+
+      phex_w_sub_neighbor_at_face->subelement_id = subelement_id_tmp;
+      phex_w_sub_neighbor_at_face2->subelement_id = subelement_id_tmp2;
+
+      if (neigh_face != NULL) {
+        neigh_face[1] = neigh_face[0];
+      }
+    }
+  }
+
+  //-------------------------CASE 3--------------------------------------
+  else {
+    //The own face is split
+    //get hex_face_number of the face_neighbored subelement
+    //Condition that the neighbor lies not on the same hex face:
+    hlp = 0;
+    //hex face 0 and 1
+    if (location[0] == 0 || location[0] == 1) {
+      if (((location[2] & 2) == 0) && (face == 1)) {  //front
+        hlp += 1;
+      }
+      if (((location[2] & 2) != 0) && (face == 0)) {  //back
+        hlp += 1;
+      }
+
+      if (((location[2] & 1) == 0) && (face == 3)) {  //bottom
+        hlp += 1;
+      }
+      if (((location[2] & 1) != 0) && (face == 2)) {  //up
+        hlp += 1;
+      }
+    }
+    //hex face 2 and 3
+    if (location[0] == 2 || location[0] == 3) {
+      if (((location[2] & 4) == 0) && (face == 1)) {  //left
+        hlp += 1;
+      }
+      if (((location[2] & 4) != 0) && (face == 0)) {  //right
+        hlp += 1;
+      }
+
+      if (((location[2] & 1) == 0) && (face == 3)) {  //bottom
+        hlp += 1;
+      }
+      if (((location[2] & 1) != 0) && (face == 2)) {  //up
+        hlp += 1;
+      }
+    }
+
+    //hex face 4 and 5
+    if (location[0] == 4 || location[0] == 5) {
+      if (((location[2] & 4) == 0) && (face == 1)) {  //left
+        hlp += 1;
+      }
+      if (((location[2] & 4) != 0) && (face == 0)) {  //right
+        hlp += 1;
+      }
+
+      if (((location[2] & 2) == 0) && (face == 3)) {  //front
+        hlp += 1;
+      }
+      if (((location[2] & 2) != 0) && (face == 2)) {  //back
+        hlp += 1;
+      }
+    }
+
+    //if none of these conditions is true, we are in case 3
+    neigh_hex_face = subelement_face_to_dual_subelement[location[0]][face];
+    if ((hlp == 0) && ((transition_type & (int) pow (2, 5 - neigh_hex_face)) == 0)) {
+
+      if ((transition_type & (int) pow (2, 5 - neigh_hex_face)) == 0) {  //neighbor not split
+
+        //it's not possible, that the neighbor lies on the same hex face here, because the own face is split here and if the neighbor would lie on the same face
+        //its face would obviously be split too.
+        neigh_hex_face = subelement_face_to_dual_subelement[location[0]][face];
+        //make rightshift until only the bits for the faces before our neighbors face are left.
+        transition_type_tmp = transition_type >> (5 - neigh_hex_face);
+
+        for (iter = 0; iter <= neigh_hex_face; iter++) {
+
           //Count the elements until our neighbored hex_face.
-          if(((transition_type_tmp >> iter ) & 1) != 0 ){
-              amount_subelements += 4;
+          if (((transition_type_tmp >> iter) & 1) != 0) {
+            amount_subelements += 4;
           }
-          else{
+          else {
             amount_subelements += 1;
           }
         }
 
-        subelement_id_tmp = amount_subelements - 1;    
+        subelement_id_tmp = amount_subelements - 1;
+      }
 
+      phex_w_sub_neighbor_at_face->subelement_id = subelement_id_tmp;
     }
 
-phex_w_sub_neighbor_at_face->subelement_id = subelement_id_tmp;
-}
+    //---------------------------CASE 4--------------------------------------
+    else {
+      //It's possible, that the neighbored subelement has the same face_hex number as the element itself
+      //
+      amount_subelements = 0;
+      subelement_id_tmp = 0;
+      hlp = 0;
 
-    
-//---------------------------CASE 4--------------------------------------
-   else{
-    //It's possible, that the neighbored subelement has the same face_hex number as the element itself 
-    //
-    amount_subelements = 0;
-    subelement_id_tmp = 0;
-    hlp = 0;
+      //Now we need the subelement_id_type (location[2]) to determine the exact location of the
+      //subelement in the transition cell
 
-
-//Now we need the subelement_id_type (location[2]) to determine the exact location of the 
-//subelement in the transition cell 
-
-    /* We have to go through all hex_faces
+      /* We have to go through all hex_faces
     */
-    if(location[0] == 0 || location[0] == 1){ // hex_face = 0/1
-      if((location[2] & 2) != 0 ){//back  
-          if(face == 0){ //then it's the element before.
+      if (location[0] == 0 || location[0] == 1) {  // hex_face = 0/1
+        if ((location[2] & 2) != 0) {              //back
+          if (face == 0) {                         //then it's the element before.
             subelement_id_tmp = phex_w_sub_neighbor_at_face->subelement_id - 1;
             hlp += 1;
-          } 
-      }
-      else{
-        if(face == 1){ //then it's the element after.
+          }
+        }
+        else {
+          if (face == 1) {  //then it's the element after.
             subelement_id_tmp = phex_w_sub_neighbor_at_face->subelement_id + 1;
             hlp += 1;
-          } 
-      }
-          if((location[2] & 1) != 0){//up
-            if(face == 2){ //then it's the element below
-              subelement_id_tmp = phex_w_sub_neighbor_at_face->subelement_id - 2;
-              hlp += 1;
-            }
           }
-          else{ //down
-            if(face == 3){// down
+        }
+        if ((location[2] & 1) != 0) {  //up
+          if (face == 2) {             //then it's the element below
+            subelement_id_tmp = phex_w_sub_neighbor_at_face->subelement_id - 2;
+            hlp += 1;
+          }
+        }
+        else {              //down
+          if (face == 3) {  // down
             subelement_id_tmp = phex_w_sub_neighbor_at_face->subelement_id + 2;
             hlp += 1;
-            }
-          } 
-      }
-
-    if(location[0] == 2 || location[0] == 3){ // hex_face = 2/3
-      if((location[2] & 4) != 0 ){ //right
-        if( face == 0){ //then it's the element before.
-              subelement_id_tmp = phex_w_sub_neighbor_at_face->subelement_id - 1;
-              hlp += 1;
-            }
-      }
-            else{ //left
-              if ( face == 1 ){ // then it's the next element
-                subelement_id_tmp = phex_w_sub_neighbor_at_face->subelement_id + 1;
-                hlp += 1;
-
-              }
-            }
-        if((location[2] & 1) != 0){//up
-            if(face == 2 ){ //then it's the element below
-              subelement_id_tmp = phex_w_sub_neighbor_at_face->subelement_id - 2;
-              hlp += 1;
-            }
           }
-          else{ //down
-            if(face == 3){//then its the element above
-            subelement_id_tmp = phex_w_sub_neighbor_at_face->subelement_id + 2;
-            hlp += 1;
-            }     
+        }
       }
-    }
 
-    if(location[0] == 4 || location[0] == 5){ // hex_face = 4/5
-      if((location[2] & 4) != 0 ){//right 
-          if(face == 0){ //then it's the element before.
+      if (location[0] == 2 || location[0] == 3) {  // hex_face = 2/3
+        if ((location[2] & 4) != 0) {              //right
+          if (face == 0) {                         //then it's the element before.
             subelement_id_tmp = phex_w_sub_neighbor_at_face->subelement_id - 1;
             hlp += 1;
-          } 
-          else{ //left
-            if(face == 1){ //then it's the next element.
-              subelement_id_tmp = phex_w_sub_neighbor_at_face->subelement_id + 1;
-              hlp += 1;
-          } 
           }
+        }
+        else {              //left
+          if (face == 1) {  // then it's the next element
+            subelement_id_tmp = phex_w_sub_neighbor_at_face->subelement_id + 1;
+            hlp += 1;
           }
-          if((location[2] & 2) != 0){//back
-            if(face == 2){ //then it's the element in front
-              subelement_id_tmp = phex_w_sub_neighbor_at_face->subelement_id - 2;
-              hlp += 1;
-            }
+        }
+        if ((location[2] & 1) != 0) {  //up
+          if (face == 2) {             //then it's the element below
+            subelement_id_tmp = phex_w_sub_neighbor_at_face->subelement_id - 2;
+            hlp += 1;
           }
-          else{ //front
-            if(face == 3){
+        }
+        else {              //down
+          if (face == 3) {  //then its the element above
             subelement_id_tmp = phex_w_sub_neighbor_at_face->subelement_id + 2;
             hlp += 1;
+          }
+        }
+      }
+
+      if (location[0] == 4 || location[0] == 5) {  // hex_face = 4/5
+        if ((location[2] & 4) != 0) {              //right
+          if (face == 0) {                         //then it's the element before.
+            subelement_id_tmp = phex_w_sub_neighbor_at_face->subelement_id - 1;
+            hlp += 1;
+          }
+          else {              //left
+            if (face == 1) {  //then it's the next element.
+              subelement_id_tmp = phex_w_sub_neighbor_at_face->subelement_id + 1;
+              hlp += 1;
             }
-          } 
+          }
+        }
+        if ((location[2] & 2) != 0) {  //back
+          if (face == 2) {             //then it's the element in front
+            subelement_id_tmp = phex_w_sub_neighbor_at_face->subelement_id - 2;
+            hlp += 1;
+          }
+        }
+        else {  //front
+          if (face == 3) {
+            subelement_id_tmp = phex_w_sub_neighbor_at_face->subelement_id + 2;
+            hlp += 1;
+          }
+        }
       }
       neigh_face[0] = subelement_location_to_parent_dual_face[face];
       phex_w_sub_neighbor_at_face->subelement_id = subelement_id_tmp;
 
-if(hlp == 0){ //if the neighbor lies not on the same hex face as elem
-      //get hex_face_number of the face_neighbored subelement
-      neigh_face[0] = subelement_face_dual[location[0]][face];
-      
-      neigh_hex_face = subelement_face_to_dual_subelement[location[0]][face];
+      if (hlp == 0) {  //if the neighbor lies not on the same hex face as elem
+        //get hex_face_number of the face_neighbored subelement
+        neigh_face[0] = subelement_face_dual[location[0]][face];
 
+        neigh_hex_face = subelement_face_to_dual_subelement[location[0]][face];
 
         //The neighbored element is not at the same hex face
         //First count the amount of subelements until the hex_face of the neighbored subelement is reached.
         //make rightshift until only the bits for the faces before our neighbors face are left.
         transition_type_tmp = transition_type >> (5 - neigh_hex_face);
 
-        for(iter = 0; iter <=  neigh_hex_face; iter++){
-          
+        for (iter = 0; iter <= neigh_hex_face; iter++) {
+
           //Count the elements until our neighbored hex_face.
-          if(((transition_type_tmp >> iter ) & 1) != 0 ){
-              amount_subelements += 4;
+          if (((transition_type_tmp >> iter) & 1) != 0) {
+            amount_subelements += 4;
           }
-          else{
+          else {
             amount_subelements += 1;
           }
         }
 
-
         //For the hex_faces 0 or 1 all possible neighbors will have a subelement_id that is greater than the own subelement_id
-        if( (location[0] == 0) || (location[0] == 1)){
-          if(face == 0){
+        if ((location[0] == 0) || (location[0] == 1)) {
+          if (face == 0) {
             subelement_id_tmp = amount_subelements - 4 + phex_w_sub_neighbor_at_face->subelement_id;
           }
-          if(face == 1){
+          if (face == 1) {
             subelement_id_tmp = amount_subelements - 5 + phex_w_sub_neighbor_at_face->subelement_id;
           }
-          if(face == 2 || face == 3){
+          if (face == 2 || face == 3) {
             //We have to distinguish if the element is in the front or back.
-            if((location[2] & 2) == 0){//front
-            subelement_id_tmp = amount_subelements - 4 + location[0];
+            if ((location[2] & 2) == 0) {  //front
+              subelement_id_tmp = amount_subelements - 4 + location[0];
             }
-            else{
-            subelement_id_tmp = amount_subelements - 2 + location[0];          
+            else {
+              subelement_id_tmp = amount_subelements - 2 + location[0];
             }
           }
         }
         /* Because all faces = 0 of subelements at hex face 2,3,4 and 5 touch the hex_face 0,
         *  all faces = 1 touch hex_face 1  and all faces = 2 touch the hex_face 4,
         *  and all faces = 3 touch hex_face 5, we can hardcode these cases */
-        else{
-          if( face == 0){
+        else {
+          if (face == 0) {
             //We have to distinguish if the element is in the front or back.
-            if(location[0] >= 4 ){
-              if((location[2] & 2) == 0){//front
-                if(location[0] == 4){ // we are at hex_face 4
-                  subelement_id_tmp = 0;                     
-              }
-              else{ //hex face 5
-                subelement_id_tmp = 2;                     
+            if (location[0] >= 4) {
+              if ((location[2] & 2) == 0) {  //front
+                if (location[0] == 4) {      // we are at hex_face 4
+                  subelement_id_tmp = 0;
+                }
+                else {  //hex face 5
+                  subelement_id_tmp = 2;
                 }
               }
 
-              else{//back
-              if(location[0] == 4){ // we are at hex_face 4
-                subelement_id_tmp = 1;                     
+              else {                     //back
+                if (location[0] == 4) {  // we are at hex_face 4
+                  subelement_id_tmp = 1;
                 }
-              if(location[0] == 5){
-                subelement_id_tmp = 4;                     
+                if (location[0] == 5) {
+                  subelement_id_tmp = 4;
                 }
+              }
             }
-            }
-            if (location[0] <= 3 ) { //only for hex faces 2 and the the subelements can be up or down 
+            if (location[0] <= 3) {  //only for hex faces 2 and the the subelements can be up or down
 
-          if((location[2] & 1) == 0){//down   
-              if(location[0] == 2){ // we are at hex_face 2
-                subelement_id_tmp = 0;                     
-              }
-              if(location[0] == 3){
-                subelement_id_tmp = 1;                     
-              }
-              else{ //up
-                if(location[0] == 2){ // we are at hex_face 2
-                  subelement_id_tmp = 2;                     
+              if ((location[2] & 1) == 0) {  //down
+                if (location[0] == 2) {      // we are at hex_face 2
+                  subelement_id_tmp = 0;
                 }
-                if(location[0] == 3){
-                  subelement_id_tmp = 3;                     
-                } 
-            }     
+                if (location[0] == 3) {
+                  subelement_id_tmp = 1;
+                }
+                else {                     //up
+                  if (location[0] == 2) {  // we are at hex_face 2
+                    subelement_id_tmp = 2;
+                  }
+                  if (location[0] == 3) {
+                    subelement_id_tmp = 3;
+                  }
+                }
+              }
+            }
           }
-
-            }  
-              
-        }
-        //same for face = 1
-        if(face == 1){
+          //same for face = 1
+          if (face == 1) {
             //We have to distinguish if the element is in the front or back.
-            if((location[2] & 2) == 0){//front
-              if(location[0] == 4){ // we are at hex_face 4
-                subelement_id_tmp = amount_subelements - 4;                     
+            if ((location[2] & 2) == 0) {  //front
+              if (location[0] == 4) {      // we are at hex_face 4
+                subelement_id_tmp = amount_subelements - 4;
               }
-              if(location[0] == 5){
-                subelement_id_tmp = amount_subelements - 2;                     
+              if (location[0] == 5) {
+                subelement_id_tmp = amount_subelements - 2;
               }
             }
-            else{//back
-              if(location[0] == 4){ // we are at hex_face 4
-                subelement_id_tmp = amount_subelements - 3;                     
-                }
-              if(location[0] == 5){
-                subelement_id_tmp = amount_subelements - 1;                     
-                }
+            else {                     //back
+              if (location[0] == 4) {  // we are at hex_face 4
+                subelement_id_tmp = amount_subelements - 3;
+              }
+              if (location[0] == 5) {
+                subelement_id_tmp = amount_subelements - 1;
+              }
             }
-            if((location[2] & 1) == 0){//down   
-              if(location[0] == 2){ // we are at hex_face 2
-                subelement_id_tmp = amount_subelements - 4;                    
+            if ((location[2] & 1) == 0) {  //down
+              if (location[0] == 2) {      // we are at hex_face 2
+                subelement_id_tmp = amount_subelements - 4;
               }
-              if(location[0] == 3){
-                subelement_id_tmp = amount_subelements - 3;                   
+              if (location[0] == 3) {
+                subelement_id_tmp = amount_subelements - 3;
               }
-              else{ //up
-                if(location[0] == 2){ // we are at hex_face 2
-                  subelement_id_tmp = amount_subelements - 2;                    
+              else {                     //up
+                if (location[0] == 2) {  // we are at hex_face 2
+                  subelement_id_tmp = amount_subelements - 2;
                 }
-                if(location[0] == 3){
-                  subelement_id_tmp = amount_subelements - 1;                  
-                } 
-            }     
+                if (location[0] == 3) {
+                  subelement_id_tmp = amount_subelements - 1;
+                }
+              }
+            }
           }
-          
-        }
-        //same for face = 2
-        if(face == 3 || face == 2){
+          //same for face = 2
+          if (face == 3 || face == 2) {
             //We have to distinguish if the element is in the front or back.
-            if((location[2] & 4) == 0){//right
-              if(location[0] == 2){ // we are at hex_face 2
-                subelement_id_tmp = amount_subelements - 3;                     
-                }
-              if(location[0] == 3){
-                subelement_id_tmp = amount_subelements - 1;                     
-                }
-            }
-            else{//left
-              if(location[0] == 2){ // we are at hex_face 2
-                subelement_id_tmp = amount_subelements - 4;                     
+            if ((location[2] & 4) == 0) {  //right
+              if (location[0] == 2) {      // we are at hex_face 2
+                subelement_id_tmp = amount_subelements - 3;
               }
-              if(location[0] == 3){
-                subelement_id_tmp = amount_subelements - 2;                     
+              if (location[0] == 3) {
+                subelement_id_tmp = amount_subelements - 1;
               }
             }
-              
-          }  
-             
+            else {                     //left
+              if (location[0] == 2) {  // we are at hex_face 2
+                subelement_id_tmp = amount_subelements - 4;
+              }
+              if (location[0] == 3) {
+                subelement_id_tmp = amount_subelements - 2;
+              }
+            }
+          }
+        }
+        phex_w_sub_neighbor_at_face->subelement_id = subelement_id_tmp;
       }
-      phex_w_sub_neighbor_at_face->subelement_id = subelement_id_tmp;
-    }   
-      }
-
-} 
- phex_w_sub_neighbor_at_face->subelement_id = subelement_id_tmp;
+    }
+  }
+  phex_w_sub_neighbor_at_face->subelement_id = subelement_id_tmp;
 }
 
-
-
-
 void
-t8_subelement_scheme_hex_c::t8_element_children (const t8_element_t *elem,
-                                                  int length,
-                                                  t8_element_t *c[]) const
+t8_subelement_scheme_hex_c::t8_element_children (const t8_element_t *elem, int length, t8_element_t *c[]) const
 {
   /* if elem is a subelement, then this function will construct the children of its parent p8est quadrant */
-  const t8_hex_with_subelements *phex_w_sub_elem =
-    (const t8_hex_with_subelements *) elem;
-  t8_hex_with_subelements **phex_w_sub_children =
-    (t8_hex_with_subelements **) c;
+  const t8_hex_with_subelements *phex_w_sub_elem = (const t8_hex_with_subelements *) elem;
+  t8_hex_with_subelements **phex_w_sub_children = (t8_hex_with_subelements **) c;
 
   const p8est_quadrant_t *q = &phex_w_sub_elem->p8q;
 
-  int                 ichild;
+  int ichild;
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (length == P8EST_CHILDREN);
 
 #ifdef T8_ENABLE_DEBUG
   {
-    int                 i;
+    int i;
     for (i = 0; i < P8EST_CHILDREN; i++) {
       T8_ASSERT (t8_element_is_valid (c[i]));
     }
@@ -1000,15 +909,9 @@ t8_subelement_scheme_hex_c::t8_element_children (const t8_element_t *elem,
 #endif
 
   /* set coordinates and levels of the children */
-  p8est_quadrant_children (q, &phex_w_sub_children[0]->p8q,
-                              &phex_w_sub_children[1]->p8q,
-                              &phex_w_sub_children[2]->p8q,
-                              &phex_w_sub_children[3]->p8q,
-                              &phex_w_sub_children[4]->p8q,
-                              &phex_w_sub_children[5]->p8q,
-                              &phex_w_sub_children[6]->p8q,
-                              &phex_w_sub_children[7]->p8q
-);
+  p8est_quadrant_children (q, &phex_w_sub_children[0]->p8q, &phex_w_sub_children[1]->p8q, &phex_w_sub_children[2]->p8q,
+                           &phex_w_sub_children[3]->p8q, &phex_w_sub_children[4]->p8q, &phex_w_sub_children[5]->p8q,
+                           &phex_w_sub_children[6]->p8q, &phex_w_sub_children[7]->p8q);
 
   for (ichild = 0; ichild < P8EST_CHILDREN; ++ichild) {
     t8_element_reset_subelement_values (c[ichild]);
@@ -1018,24 +921,18 @@ t8_subelement_scheme_hex_c::t8_element_children (const t8_element_t *elem,
 int
 t8_subelement_scheme_hex_c::t8_element_child_id (const t8_element_t *elem) const
 {
-  const t8_hex_with_subelements *phex_w_sub =
-    (const t8_hex_with_subelements *) elem;
+  const t8_hex_with_subelements *phex_w_sub = (const t8_hex_with_subelements *) elem;
   const p8est_quadrant_t *q = &phex_w_sub->p8q;
 
   T8_ASSERT (t8_element_is_valid (elem));
 
-  return (t8_element_is_subelement (elem) ? phex_w_sub->subelement_id :
-          p8est_quadrant_child_id (q));
-
-
+  return (t8_element_is_subelement (elem) ? phex_w_sub->subelement_id : p8est_quadrant_child_id (q));
 }
 
 int
-t8_subelement_scheme_hex_c::t8_element_ancestor_id (const t8_element_t *elem,
-                                                     int level) const
+t8_subelement_scheme_hex_c::t8_element_ancestor_id (const t8_element_t *elem, int level) const
 {
-  const t8_hex_with_subelements *phex_w_sub =
-    (const t8_hex_with_subelements *) elem;
+  const t8_hex_with_subelements *phex_w_sub = (const t8_hex_with_subelements *) elem;
   const p8est_quadrant_t *q = &phex_w_sub->p8q;
 
   /* this function is not implemented for subelements */
@@ -1048,13 +945,12 @@ int
 t8_subelement_scheme_hex_c::t8_element_is_family (t8_element_t *const *fam) const
 {
   /* Note that this test is very rudimentary, especially when there subelements are in fam */
-  t8_hex_with_subelements **phex_w_sub_family =
-    (t8_hex_with_subelements **) fam;
+  t8_hex_with_subelements **phex_w_sub_family = (t8_hex_with_subelements **) fam;
 
 #ifdef T8_ENABLE_DEBUG
   {
-    int                 i;
-    int                 num_siblings = t8_element_num_siblings (fam[0]);
+    int i;
+    int num_siblings = t8_element_num_siblings (fam[0]);
     for (i = 0; i < num_siblings; i++) {
       T8_ASSERT (t8_element_is_valid (fam[i]));
     }
@@ -1068,39 +964,28 @@ t8_subelement_scheme_hex_c::t8_element_is_family (t8_element_t *const *fam) cons
     return 1;
   }
   /* If the first element of fam is no subelement we check the following elements of fam */
-  else { 
+  else {
     /* If any of the following elements is a subelement, then they can not form a family */
-    if ((phex_w_sub_family[1]->transition_type != 0) ||
-        (phex_w_sub_family[2]->transition_type != 0) ||
-        (phex_w_sub_family[3]->transition_type != 0) ||
-        (phex_w_sub_family[4]->transition_type != 0) ||
-        (phex_w_sub_family[5]->transition_type != 0) ||
-        (phex_w_sub_family[6]->transition_type != 0) ||
-        (phex_w_sub_family[7]->transition_type != 0)) {
+    if ((phex_w_sub_family[1]->transition_type != 0) || (phex_w_sub_family[2]->transition_type != 0)
+        || (phex_w_sub_family[3]->transition_type != 0) || (phex_w_sub_family[4]->transition_type != 0)
+        || (phex_w_sub_family[5]->transition_type != 0) || (phex_w_sub_family[6]->transition_type != 0)
+        || (phex_w_sub_family[7]->transition_type != 0)) {
       return 0;
     }
     /* If all elements of fam are no subelements, then we can use the p8est check is_family */
     else {
-      return p8est_quadrant_is_family (&phex_w_sub_family[0]->p8q,
-                                       &phex_w_sub_family[1]->p8q,
-                                       &phex_w_sub_family[2]->p8q,
-                                       &phex_w_sub_family[3]->p8q,
-                                       &phex_w_sub_family[4]->p8q,
-                                       &phex_w_sub_family[5]->p8q,
-                                       &phex_w_sub_family[6]->p8q,
-                                       &phex_w_sub_family[7]->p8q);
+      return p8est_quadrant_is_family (
+        &phex_w_sub_family[0]->p8q, &phex_w_sub_family[1]->p8q, &phex_w_sub_family[2]->p8q, &phex_w_sub_family[3]->p8q,
+        &phex_w_sub_family[4]->p8q, &phex_w_sub_family[5]->p8q, &phex_w_sub_family[6]->p8q, &phex_w_sub_family[7]->p8q);
     }
   }
 }
 
 void
-t8_subelement_scheme_hex_c::t8_element_set_linear_id (t8_element_t *elem,
-                                                       int level,
-                                                       t8_linearidx_t id)
-  const
+t8_subelement_scheme_hex_c::t8_element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id) const
 {
   t8_hex_with_subelements *phex_w_sub = (t8_hex_with_subelements *) elem;
-  p8est_quadrant_t   *q = &phex_w_sub->p8q;
+  p8est_quadrant_t *q = &phex_w_sub->p8q;
 
   /* this function is not implemented for subelements */
   T8_ASSERT (!t8_element_is_subelement (elem));
@@ -1110,16 +995,13 @@ t8_subelement_scheme_hex_c::t8_element_set_linear_id (t8_element_t *elem,
   T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << P8EST_DIM * level);
 
   p8est_quadrant_set_morton (q, level, id);
-
 }
 
 t8_linearidx_t
-  t8_subelement_scheme_hex_c::t8_element_get_linear_id (const t8_element_t
-                                                         *elem,
-                                                         int level) const
+t8_subelement_scheme_hex_c::t8_element_get_linear_id (const t8_element_t *elem, int level) const
 {
   t8_hex_with_subelements *phex_w_sub = (t8_hex_with_subelements *) elem;
-  p8est_quadrant_t   *q = &phex_w_sub->p8q;
+  p8est_quadrant_t *q = &phex_w_sub->p8q;
 
   /* Note that the id of a subelement equals the id of its parent quadrant.
    * Therefore, the binary search (for example used in the leaf_face_neighbor function) 
@@ -1132,18 +1014,13 @@ t8_linearidx_t
 }
 
 void
-t8_subelement_scheme_hex_c::t8_element_first_descendant (const t8_element_t
-                                                          *elem,
-                                                          t8_element_t *desc,
-                                                          int level) const
+t8_subelement_scheme_hex_c::t8_element_first_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const
 {
-  const t8_hex_with_subelements *phex_w_sub_elem =
-    (const t8_hex_with_subelements *) elem;
-  t8_hex_with_subelements *phex_w_sub_desc =
-    (t8_hex_with_subelements *) desc;
+  const t8_hex_with_subelements *phex_w_sub_elem = (const t8_hex_with_subelements *) elem;
+  t8_hex_with_subelements *phex_w_sub_desc = (t8_hex_with_subelements *) desc;
 
   const p8est_quadrant_t *q = &phex_w_sub_elem->p8q;
-  p8est_quadrant_t   *r = &phex_w_sub_desc->p8q;
+  p8est_quadrant_t *r = &phex_w_sub_desc->p8q;
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (desc));
@@ -1157,29 +1034,22 @@ t8_subelement_scheme_hex_c::t8_element_first_descendant (const t8_element_t
    * hex element of the given subelement. Since the last descendant is not meant to be 
    * a subelement, we reset the corresponding subelement values. */
   t8_element_reset_subelement_values (desc);
-
 }
 
 void
-t8_subelement_scheme_hex_c::t8_element_last_descendant (const t8_element_t
-                                                         *elem,
-                                                         t8_element_t *desc,
-                                                         int level) const
+t8_subelement_scheme_hex_c::t8_element_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const
 {
-  const t8_hex_with_subelements *phex_w_sub_elem =
-    (const t8_hex_with_subelements *) elem;
-  t8_hex_with_subelements *phex_w_sub_desc =
-    (t8_hex_with_subelements *) desc;
+  const t8_hex_with_subelements *phex_w_sub_elem = (const t8_hex_with_subelements *) elem;
+  t8_hex_with_subelements *phex_w_sub_desc = (t8_hex_with_subelements *) desc;
 
   const p8est_quadrant_t *q = &phex_w_sub_elem->p8q;
-  p8est_quadrant_t   *r = &phex_w_sub_desc->p8q;
+  p8est_quadrant_t *r = &phex_w_sub_desc->p8q;
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (desc));
   T8_ASSERT (0 <= level && level <= P8EST_OLD_QMAXLEVEL);
   // p8est_quadrant_last_descendant (q, r, level);
   p8est_quadrant_last_descendant ((p8est_quadrant_t *) elem, (p8est_quadrant_t *) desc, level);
-
 
   /* We allow constructing a last descendant from a subelement. 
    * Keep in mind, that transforming a hex element to a subelement does not change the 
@@ -1190,8 +1060,7 @@ t8_subelement_scheme_hex_c::t8_element_last_descendant (const t8_element_t
 }
 
 void
-t8_subelement_scheme_hex_c::t8_element_successor (const t8_element_t *elem1,
-                                                   t8_element_t *elem2) const
+t8_subelement_scheme_hex_c::t8_element_successor (const t8_element_t *elem1, t8_element_t *elem2) const
 {
   /* this function is not implemented for subelements */
   T8_ASSERT (!t8_element_is_subelement (elem1));
@@ -1199,25 +1068,20 @@ t8_subelement_scheme_hex_c::t8_element_successor (const t8_element_t *elem1,
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
   T8_ASSERT (0 <= t8_element_level (elem1) && t8_element_level (elem1) <= P8EST_OLD_QMAXLEVEL);
-  p8est_quadrant_successor ((p8est_quadrant_t *) elem1,
-                            (p8est_quadrant_t *) elem2);
+  p8est_quadrant_successor ((p8est_quadrant_t *) elem1, (p8est_quadrant_t *) elem2);
 }
 
 void
-t8_subelement_scheme_hex_c::t8_element_nca (const t8_element_t *elem1,
-                                             const t8_element_t *elem2,
-                                             t8_element_t *nca) const
+t8_subelement_scheme_hex_c::t8_element_nca (const t8_element_t *elem1, const t8_element_t *elem2,
+                                            t8_element_t *nca) const
 {
-  const t8_hex_with_subelements *phex_w_sub_elem1 =
-    (const t8_hex_with_subelements *) elem1;
-  const t8_hex_with_subelements *phex_w_sub_elem2 =
-    (const t8_hex_with_subelements *) elem2;
-  t8_hex_with_subelements *phex_w_sub_nca =
-    (t8_hex_with_subelements *) nca;
+  const t8_hex_with_subelements *phex_w_sub_elem1 = (const t8_hex_with_subelements *) elem1;
+  const t8_hex_with_subelements *phex_w_sub_elem2 = (const t8_hex_with_subelements *) elem2;
+  t8_hex_with_subelements *phex_w_sub_nca = (t8_hex_with_subelements *) nca;
 
   const p8est_quadrant_t *q1 = &phex_w_sub_elem1->p8q;
   const p8est_quadrant_t *q2 = &phex_w_sub_elem2->p8q;
-  p8est_quadrant_t   *r = &phex_w_sub_nca->p8q;
+  p8est_quadrant_t *r = &phex_w_sub_nca->p8q;
 
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
@@ -1227,37 +1091,28 @@ t8_subelement_scheme_hex_c::t8_element_nca (const t8_element_t *elem1,
   p8est_nearest_common_ancestor (q1, q2, r);
 }
 
-
 t8_element_shape_t
-t8_subelement_scheme_hex_c::t8_element_face_shape (const t8_element_t *elem,
-                                                    int face) const
+t8_subelement_scheme_hex_c::t8_element_face_shape (const t8_element_t *elem, int face) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
- if( t8_element_is_subelement (elem)){
-    if(face == 4){
-        return T8_ECLASS_QUAD;
-      }
-      else{
-        return T8_ECLASS_TRIANGLE;
-      }
-
- }
- else{
-  return T8_ECLASS_QUAD;
- }  
+  if (t8_element_is_subelement (elem)) {
+    if (face == 4) {
+      return T8_ECLASS_QUAD;
+    }
+    else {
+      return T8_ECLASS_TRIANGLE;
+    }
+  }
+  else {
+    return T8_ECLASS_QUAD;
+  }
 }
 
-
 void
-t8_subelement_scheme_hex_c::t8_element_children_at_face (const t8_element_t
-                                                      *elem, int face,
-                                                      t8_element_t
-                                                      *children[],
-                                                      int num_children,
-                                                      int *child_indices)
-  const
+t8_subelement_scheme_hex_c::t8_element_children_at_face (const t8_element_t *elem, int face, t8_element_t *children[],
+                                                         int num_children, int *child_indices) const
 {
-  int                 child_ids_local[4], i, *child_ids;
+  int child_ids_local[4], i, *child_ids;
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (!t8_element_is_subelement (elem));
@@ -1265,7 +1120,7 @@ t8_subelement_scheme_hex_c::t8_element_children_at_face (const t8_element_t
 
 #ifdef T8_ENABLE_DEBUG
   {
-    int                 j;
+    int j;
     for (j = 0; j < P4EST_CHILDREN; j++) {
       T8_ASSERT (t8_element_is_valid (children[j]));
     }
@@ -1307,15 +1162,12 @@ t8_subelement_scheme_hex_c::t8_element_children_at_face (const t8_element_t
   }
 }
 
-
 int
-t8_subelement_scheme_hex_c::t8_element_face_child_face (const t8_element_t
-                                                         *elem, int face,
-                                                         int face_child) const
+t8_subelement_scheme_hex_c::t8_element_face_child_face (const t8_element_t *elem, int face, int face_child) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   /* For octants the face enumeration of children is the same as for the parent. */
-    if (t8_element_is_subelement (elem)) {
+  if (t8_element_is_subelement (elem)) {
     T8_ASSERT (face == 4);
     return t8_element_face_parent_face (elem, face);
   }
@@ -1323,22 +1175,18 @@ t8_subelement_scheme_hex_c::t8_element_face_child_face (const t8_element_t
     /* For quadrants the face enumeration of children is the same as for the parent. */
     return face;
   }
- 
 }
 
 int
-t8_subelement_scheme_hex_c::t8_element_face_parent_face (const t8_element_t
-                                                          *elem,
-                                                          int face) const
+t8_subelement_scheme_hex_c::t8_element_face_parent_face (const t8_element_t *elem, int face) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (face >= -1 && face < P8EST_FACES);
 
-  const t8_hex_with_subelements *phex_w_sub =
-    (const t8_hex_with_subelements *) elem;
+  const t8_hex_with_subelements *phex_w_sub = (const t8_hex_with_subelements *) elem;
   const p8est_quadrant_t *q = &phex_w_sub->p8q;
 
-  int                 child_id;
+  int child_id;
   if (face == -1) {
     return -1;
   }
@@ -1349,9 +1197,9 @@ t8_subelement_scheme_hex_c::t8_element_face_parent_face (const t8_element_t
     if (face == 4) {
       /* In this case the face is a subface of the parent. We use the location function in order
        * to determine which of the parents faces intersects the subelements face. */
-      int                 location[3] = { };
+      int location[3] = {};
       t8_element_get_location_of_subelement (elem, location);
-       
+
       return subelement_location_to_parent_face[location[0]];
     }
     else {
@@ -1365,42 +1213,30 @@ t8_subelement_scheme_hex_c::t8_element_face_parent_face (const t8_element_t
   /* Determine whether face is a subface of the parent.
    * This is the case if the child_id matches one of the faces corners */
   child_id = p8est_quadrant_child_id (q);
-  if (child_id == p8est_face_corners[face][0]
-      || child_id == p8est_face_corners[face][1]
-      || child_id == p8est_face_corners[face][2]
-      || child_id == p8est_face_corners[face][3]) {
+  if (child_id == p8est_face_corners[face][0] || child_id == p8est_face_corners[face][1]
+      || child_id == p8est_face_corners[face][2] || child_id == p8est_face_corners[face][3]) {
     return face;
-      }
+  }
   return -1;
-
 }
 
 void
-t8_subelement_scheme_hex_c::t8_element_transform_face (const t8_element_t
-                                                        *elem1,
-                                                        t8_element_t *elem2,
-                                                        int orientation,
-                                                        int sign,
-                                                        int is_smaller_face)
-  const
+t8_subelement_scheme_hex_c::t8_element_transform_face (const t8_element_t *elem1, t8_element_t *elem2, int orientation,
+                                                       int sign, int is_smaller_face) const
 {
   /* this function is not implemented for subelements */
   T8_ASSERT (!t8_element_is_subelement (elem1));
   SC_ABORT ("This function is not implemented yet.\n");
-    return;  
+  return;
 }
 
 int
-t8_subelement_scheme_hex_c::t8_element_extrude_face (const t8_element_t
-                                                      *face,
-                                                      const t8_eclass_scheme_c
-                                                      *face_scheme,
-                                                      t8_element_t *elem,
-                                                      int root_face) const
+t8_subelement_scheme_hex_c::t8_element_extrude_face (const t8_element_t *face, const t8_eclass_scheme_c *face_scheme,
+                                                     t8_element_t *elem, int root_face) const
 {
   /* build (extrude) elem from a given face element */
   t8_hex_with_subelements *phex_w_sub = (t8_hex_with_subelements *) elem;
-  p8est_quadrant_t   *q = &phex_w_sub->p8q;
+  p8est_quadrant_t *q = &phex_w_sub->p8q;
 
   const p4est_quadrant_t *b = (const p4est_quadrant_t *) face;
 
@@ -1464,8 +1300,7 @@ t8_subelement_scheme_hex_c::t8_element_extrude_face (const t8_element_t
 }
 
 int
-t8_subelement_scheme_hex_c::t8_element_tree_face (const t8_element_t *elem,
-                                                   int face) const
+t8_subelement_scheme_hex_c::t8_element_tree_face (const t8_element_t *elem, int face) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
 
@@ -1485,14 +1320,8 @@ t8_subelement_scheme_hex_c::t8_element_tree_face (const t8_element_t *elem,
 
 /** Construct the first descendant of an element that touches a given face.   */
 void
-t8_subelement_scheme_hex_c::t8_element_first_descendant_face (const
-                                                               t8_element_t
-                                                               *elem,
-                                                               int face,
-                                                               t8_element_t
-                                                               *first_desc,
-                                                               int level)
-  const
+t8_subelement_scheme_hex_c::t8_element_first_descendant_face (const t8_element_t *elem, int face,
+                                                              t8_element_t *first_desc, int level) const
 {
   /* this function is not implemented for subelements */
   T8_ASSERT (!t8_element_is_subelement (elem));
@@ -1510,15 +1339,10 @@ t8_subelement_scheme_hex_c::t8_element_first_descendant_face (const
   p8est_quadrant_corner_descendant (q, desc, first_face_corner, level);
 }
 
-
 /** Construct the last descendant of an element that touches a given face.   */
 void
-t8_subelement_scheme_hex_c::t8_element_last_descendant_face (const
-                                                              t8_element_t
-                                                              *elem, int face,
-                                                              t8_element_t
-                                                              *last_desc,
-                                                              int level) const
+t8_subelement_scheme_hex_c::t8_element_last_descendant_face (const t8_element_t *elem, int face,
+                                                             t8_element_t *last_desc, int level) const
 {
   /* this function is not implemented for subelements */
   T8_ASSERT (!t8_element_is_subelement (elem));
@@ -1538,18 +1362,13 @@ t8_subelement_scheme_hex_c::t8_element_last_descendant_face (const
 }
 
 void
-t8_subelement_scheme_hex_c::t8_element_boundary_face (const t8_element_t
-                                                       *elem, int face,
-                                                       t8_element_t *boundary,
-                                                       const
-                                                       t8_eclass_scheme_c
-                                                       *boundary_scheme) const
+t8_subelement_scheme_hex_c::t8_element_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
+                                                      const t8_eclass_scheme_c *boundary_scheme) const
 {
-  const t8_hex_with_subelements *phex_w_sub =
-    (const t8_hex_with_subelements *) elem;
+  const t8_hex_with_subelements *phex_w_sub = (const t8_hex_with_subelements *) elem;
   const p8est_quadrant_t *q = &phex_w_sub->p8q;
 
-  p4est_quadrant_t   *b = (p4est_quadrant_t *) boundary;
+  p4est_quadrant_t *b = (p4est_quadrant_t *) boundary;
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (boundary_scheme->eclass == T8_ECLASS_QUAD);
@@ -1578,10 +1397,9 @@ t8_subelement_scheme_hex_c::t8_element_boundary_face (const t8_element_t
    * We have to scale the coordinates since a root quadrant may have
    * different length than a root hex.
    */
-    b->x = (face >> 1 ? q->x : q->y) * ((t8_linearidx_t) P4EST_ROOT_LEN / P8EST_ROOT_LEN);        /* true if face >= 2 */
-    b->y = (face >> 2 ? q->y : q->z) * ((t8_linearidx_t) P4EST_ROOT_LEN / P8EST_ROOT_LEN);        /* true if face >= 4 */
-  T8_ASSERT (!p8est_quadrant_is_extended (q)
-             || p4est_quadrant_is_extended (b));
+    b->x = (face >> 1 ? q->x : q->y) * ((t8_linearidx_t) P4EST_ROOT_LEN / P8EST_ROOT_LEN); /* true if face >= 2 */
+    b->y = (face >> 2 ? q->y : q->z) * ((t8_linearidx_t) P4EST_ROOT_LEN / P8EST_ROOT_LEN); /* true if face >= 4 */
+    T8_ASSERT (!p8est_quadrant_is_extended (q) || p4est_quadrant_is_extended (b));
   }
   else {
     /* face number 4 is the only face of a subelement that points outward of the transition cell */
@@ -1590,50 +1408,46 @@ t8_subelement_scheme_hex_c::t8_element_boundary_face (const t8_element_t
      * for a split subelement, the boundary face has a higher level
      * for a non split element, the boundary face has the same level. 
      */
- /* location = {location of subelement (face number of transition cell), split, subelement type (left/right, front/back, bottom/up)} */
-    int                 location[3] = { };     
+    /* location = {location of subelement (face number of transition cell), split, subelement type (left/right, front/back, bottom/up)} */
+    int location[3] = {};
     t8_element_get_location_of_subelement (elem, location);
-    int                 split = location[1];
-    int                 subelement_type = location[2];
+    int split = location[1];
+    int subelement_type = location[2];
 
-    if (split) {                /* if the subelement lies at a split face */
+    if (split) { /* if the subelement lies at a split face */
       b->level = q->level + 1;
-      int                 len =
-        P8EST_QUADRANT_LEN (phex_w_sub->p8q.level + 1);
-        if ((location[0] == 0) || (location[0] == 1)) { /* left or right face */
-        if( (subelement_type & 2) != 0){ //back 
-            b->x = q->y + len;  
+      int len = P8EST_QUADRANT_LEN (phex_w_sub->p8q.level + 1);
+      if ((location[0] == 0) || (location[0] == 1)) { /* left or right face */
+        if ((subelement_type & 2) != 0) {             //back
+          b->x = q->y + len;
         }
-        else if((subelement_type & 1) != 0){ //up
-            b->y = q->z + len; 
-        } 
+        else if ((subelement_type & 1) != 0) {  //up
+          b->y = q->z + len;
         }
-        else if ((location[0] == 2) || (location[0] == 3)) {    /* front or back face */
-          if((subelement_type & 4) != 0){ //right
-              b->x = q->x + len;
-          }
-          else if ((subelement_type & 1) != 0) {    // up
-            b->y = q->z + len;
+      }
+      else if ((location[0] == 2) || (location[0] == 3)) { /* front or back face */
+        if ((subelement_type & 4) != 0) {                  //right
+          b->x = q->x + len;
         }
+        else if ((subelement_type & 1) != 0) {  // up
+          b->y = q->z + len;
         }
-        else if ((location[0] == 2) || (location[0] == 3)) {    /* bottom or up face */
-          if((subelement_type & 4) != 0){ //right
-              b->x = q->x + len;
-          }
-          else if ((subelement_type & 2) != 0) {    // back
-            b->y = q->y + len;
+      }
+      else if ((location[0] == 2) || (location[0] == 3)) { /* bottom or up face */
+        if ((subelement_type & 4) != 0) {                  //right
+          b->x = q->x + len;
+        }
+        else if ((subelement_type & 2) != 0) {  // back
+          b->y = q->y + len;
         }
       }
     }
-    
   }
 }
 
 void
-t8_subelement_scheme_hex_c::t8_element_boundary (const t8_element_t *elem,
-                                                  int min_dim, int length,
-                                                  t8_element_t **boundary)
-  const
+t8_subelement_scheme_hex_c::t8_element_boundary (const t8_element_t *elem, int min_dim, int length,
+                                                 t8_element_t **boundary) const
 {
   SC_ABORT ("Not implemented\n");
 #if 0
@@ -1653,17 +1467,14 @@ t8_subelement_scheme_hex_c::t8_element_boundary (const t8_element_t *elem,
 }
 
 int
-t8_subelement_scheme_hex_c::t8_element_is_root_boundary (const t8_element_t
-                                                          *elem,
-                                                          int face) const
+t8_subelement_scheme_hex_c::t8_element_is_root_boundary (const t8_element_t *elem, int face) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
 
-  const t8_hex_with_subelements *phex_w_sub =
-    (const t8_hex_with_subelements *) elem;
+  const t8_hex_with_subelements *phex_w_sub = (const t8_hex_with_subelements *) elem;
   const p8est_quadrant_t *q = &phex_w_sub->p8q;
 
-  p4est_qcoord_t      coord;
+  p4est_qcoord_t coord;
 
   /* In case of a subelement, we need to change its face number to the face number of the parent hex */
   if (t8_element_is_subelement (elem)) {
@@ -1671,7 +1482,7 @@ t8_subelement_scheme_hex_c::t8_element_is_root_boundary (const t8_element_t
       /* adjust face of subelement to face of parent */
       face = t8_element_face_parent_face (elem, face);
     }
-    else {                      /* in case of a subelement and face 0 or 2 the face is no subface of the root boundary */
+    else { /* in case of a subelement and face 0 or 2 the face is no subface of the root boundary */
       return 0;
     }
   }
@@ -1686,57 +1497,45 @@ t8_subelement_scheme_hex_c::t8_element_is_root_boundary (const t8_element_t
    * If face is 1,3 or 5 check against LAST_OFFSET */
   //  t8_debugf("t8 element is root boundary %i\n", coord == (face & 1 ? P8EST_LAST_OFFSET (q->level) : 0));
   return coord == (face & 1 ? P8EST_LAST_OFFSET (q->level) : 0);
-  
-  
 }
 
 int
-t8_subelement_scheme_hex_c::t8_element_face_neighbor_inside (const
-                                                              t8_element_t
-                                                              *elem,
-                                                              t8_element_t
-                                                              *neigh,
-                                                              int face,
-                                                              int *neigh_face)
-  const
+t8_subelement_scheme_hex_c::t8_element_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face,
+                                                             int *neigh_face) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (neigh));
   T8_ASSERT (0 <= face && face < P8EST_FACES);
 
-  const t8_hex_with_subelements *phex_w_sub_elem =
-    (const t8_hex_with_subelements *) elem;
-  t8_hex_with_subelements *phex_w_sub_neigh =
-    (t8_hex_with_subelements *) neigh;
+  const t8_hex_with_subelements *phex_w_sub_elem = (const t8_hex_with_subelements *) elem;
+  t8_hex_with_subelements *phex_w_sub_neigh = (t8_hex_with_subelements *) neigh;
 
   const p8est_quadrant_t *q = &phex_w_sub_elem->p8q;
-  p8est_quadrant_t   *n = &phex_w_sub_neigh->p8q;
+  p8est_quadrant_t *n = &phex_w_sub_neigh->p8q;
 
   // /* In case of a subelement one should construct the face neighbor of the face-corresponding child quadrant
   //  * of the subelements parent quadrant. Therefore we might want to adjust the level  and adapt the
   //  * anchor node. */
-  if (t8_element_is_subelement (elem)) {        /* if elem is a subelement */
+  if (t8_element_is_subelement (elem)) { /* if elem is a subelement */
     T8_ASSERT (0 <= face && face < T8_HEX_SUBELEMENT_FACES);
-int                 location[3] = { };
-      t8_element_get_location_of_subelement (elem, location);
-    if (face < 4) {            /* in this case the face neighbor of the subelement is a sibling */
+    int location[3] = {};
+    t8_element_get_location_of_subelement (elem, location);
+    if (face < 4) { /* in this case the face neighbor of the subelement is a sibling */
       /* level and anchor stay the same */
       n->x = q->x;
       n->y = q->y;
       n->z = q->z;
       n->level = q->level;
-      
+
       T8_ASSERT (face != 4);
-      SC_ABORT_NOT_REACHED();
+      SC_ABORT_NOT_REACHED ();
       /* return dual face with resprect to neighboring sibling subelement (note that the constructed neigh is NOT a subelement but the parent hex) */
       /* Compute the face number as seen from q.
        *  0 -> 2    2 -> 0
        */
       *neigh_face = subelement_face_dual[location[0]][face];
-
-
     }
-    else {            /* in this case the face neighbor is no sibling */
+    else { /* in this case the face neighbor is no sibling */
 
       /* setting the anchor node of the neighbor element */
       n->x = q->x;
@@ -1746,71 +1545,71 @@ int                 location[3] = { };
       /* half the side length of the transition cell of the subelement */
       const p4est_qcoord_t shift = P8EST_QUADRANT_LEN (q->level + 1);
 
-      int                 split = location[1];
-      int                 subelement_type = location[2];
-      
+      int split = location[1];
+      int subelement_type = location[2];
+
       /* we need to take into account whether the subelement is split or not */
-      if (split) {              /* split */
+      if (split) { /* split */
         /* increase the level by one */
         n->level = q->level + 1;
 
         /* adjust the anchor node of the neighbor of the subelement depending on its location */
         if (location[0] == 0) { /* left face */
           n->x = q->x - shift;
-          if ((subelement_type & 2) != 0 ) { //back
+          if ((subelement_type & 2) != 0) {  //back
             n->y = q->y + shift;
           }
-          if ((subelement_type & 1) != 0 ){ //up
+          if ((subelement_type & 1) != 0) {  //up
             n->z = q->z + shift;
           }
         }
-        else if (location[0] == 1) {    /* right face */
+        else if (location[0] == 1) { /* right face */
           n->x = q->x + 2 * shift;
-          if ((subelement_type & 2) != 0) { //back
+          if ((subelement_type & 2) != 0) {  //back
             n->y = q->y + shift;
           }
-          if ((subelement_type & 1) != 0 ){ //up
+          if ((subelement_type & 1) != 0) {  //up
             n->z = q->z + shift;
           }
         }
-        else if (location[0] == 2) {    /* front face */
+        else if (location[0] == 2) { /* front face */
           n->y = q->y - shift;
-          if ((subelement_type & 4) != 0) { //right
+          if ((subelement_type & 4) != 0) {  //right
             n->x = q->x + shift;
           }
-          if ((subelement_type & 1) != 0 ) {//up
+          if ((subelement_type & 1) != 0) {  //up
             n->z = q->z + shift;
           }
         }
-        else if (location[0] == 3){    //back face
+        else if (location[0] == 3) {  //back face
           n->y = q->y + 2 * shift;
-          if ((subelement_type & 4) != 0) { //right
+          if ((subelement_type & 4) != 0) {  //right
             n->x = q->x + shift;
           }
-          if((subelement_type & 1) != 0 ) {//up
+          if ((subelement_type & 1) != 0) {  //up
             n->z = q->z + shift;
           }
         }
-        else if (location[0] == 4){ //bottom face    
-          if ((subelement_type & 4) != 0) { //right
+        else if (location[0] == 4) {         //bottom face
+          if ((subelement_type & 4) != 0) {  //right
             n->x = q->x + shift;
           }
-          if ((subelement_type & 2) != 0 ) {//back
+          if ((subelement_type & 2) != 0) {  //back
             n->z = q->z + shift;
           }
         }
-        else if (location[0] == 5){ //upper face   
-          n->z = q->z + 2 * shift; 
-          if ((subelement_type & 4) != 0) { //right
+        else if (location[0] == 5) {  //upper face
+          n->z = q->z + 2 * shift;
+          if ((subelement_type & 4) != 0) {  //right
             n->x = q->x + shift;
           }
-          if ((subelement_type & 2) != 0 ) {//back
+          if ((subelement_type & 2) != 0) {  //back
             n->z = q->z + shift;
           }
-        } 
+        }
       }
 
-      else {                  /* not split */
+      else { /* not split */
         /* level stays the same */
         n->level = q->level;
 
@@ -1818,33 +1617,31 @@ int                 location[3] = { };
         if (location[0] == 0) { /* left face */
           n->x = q->x - 2 * shift;
         }
-        else if (location[0] == 1) {    /* right face */
+        else if (location[0] == 1) { /* right face */
           n->x = q->x + 2 * shift;
         }
-        else if (location[0] == 2) {    /* front face */
+        else if (location[0] == 2) { /* front face */
           n->y = q->y - 2 * shift;
         }
-        else if (location[0] == 3) {    /* back face */
+        else if (location[0] == 3) { /* back face */
           n->y = q->y + 2 * shift;
         }
-        else if (location[0] == 4) {    /* bottom face */
+        else if (location[0] == 4) { /* bottom face */
           n->z = q->z - 2 * shift;
         }
-        else if (location[0] == 5) {    /* upper face */
+        else if (location[0] == 5) { /* upper face */
           n->z = q->z + 2 * shift;
         }
       }
- 
+
       *neigh_face = subelement_location_to_parent_dual_face[location[0]];
     }
-
-
   }
-  else {                     /* if elem is no subelement */
+  else { /* if elem is no subelement */
 
-  /* Compute the face neighbor */
-  p8est_quadrant_face_neighbor (q, face, n);
-  /* Compute the face of q that coincides with face.
+    /* Compute the face neighbor */
+    p8est_quadrant_face_neighbor (q, face, n);
+    /* Compute the face of q that coincides with face.
    * face   neigh_face    face      neigh_face
    *   0        1           4           5
    *   1        0           5           4
@@ -1852,28 +1649,23 @@ int                 location[3] = { };
    *   3        2
    */
 
-  T8_ASSERT (neigh_face != NULL);
-  *neigh_face = p8est_face_dual[face];
-
+    T8_ASSERT (neigh_face != NULL);
+    *neigh_face = p8est_face_dual[face];
   }
   t8_element_reset_subelement_values (neigh);
 
-
-  if ( p8est_quadrant_is_inside_root(n) == 0){
+  if (p8est_quadrant_is_inside_root (n) == 0) {
   }
 
-
   /* return true if neigh is inside the root */
-   return p8est_quadrant_is_inside_root (n);
-
+  return p8est_quadrant_is_inside_root (n);
 }
 
 void
-t8_subelement_scheme_hex_c::t8_element_anchor (const t8_element_t *elem,
-                                                int coord[3]) const
+t8_subelement_scheme_hex_c::t8_element_anchor (const t8_element_t *elem, int coord[3]) const
 {
   t8_hex_with_subelements *phex_w_sub = (t8_hex_with_subelements *) elem;
-  p8est_quadrant_t   *q = &phex_w_sub->p8q;
+  p8est_quadrant_t *q = &phex_w_sub->p8q;
 
   /* this function is not implemented for subelements */
   T8_ASSERT (!t8_element_is_subelement (elem));
@@ -1883,7 +1675,6 @@ t8_subelement_scheme_hex_c::t8_element_anchor (const t8_element_t *elem,
   coord[0] = q->x;
   coord[1] = q->y;
   coord[2] = q->z;
-
 }
 
 int
@@ -1900,261 +1691,240 @@ t8_subelement_scheme_hex_c::t8_element_refines_irregular () const
 }
 
 void
-  t8_subelement_scheme_hex_c::t8_element_vertex_integer_coords (const t8_element_t *elem, int vertex, int coords[]) const
-  {
+t8_subelement_scheme_hex_c::t8_element_vertex_integer_coords (const t8_element_t *elem, int vertex, int coords[]) const
+{
   SC_ABORT ("This function is not implemented for the given scheme.\n");
 }
 
 void
-t8_subelement_scheme_hex_c::t8_element_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords, double *out_coords)
-  const
+t8_subelement_scheme_hex_c::t8_element_reference_coords (const t8_element_t *elem, const double *ref_coords,
+                                                         const size_t num_coords, double *out_coords) const
 {
   T8_ASSERT (ref_coords != NULL);
   T8_ASSERT (t8_element_is_valid (elem));
-  
-   if(!t8_element_is_subelement(elem)){
+
+  if (!t8_element_is_subelement (elem)) {
     const p8est_quadrant_t *q1 = (const p8est_quadrant_t *) elem;
 
-  /* Get the length of the quadrant */
-  const p4est_qcoord_t len = P8EST_QUADRANT_LEN (q1->level);
+    /* Get the length of the quadrant */
+    const p4est_qcoord_t len = P8EST_QUADRANT_LEN (q1->level);
 
-  for (size_t coord = 0; coord < num_coords; ++coord) {
-    const size_t offset = 3 * coord;
-    /* Compute the x, y and z coordinates of the point depending on the
+    for (size_t coord = 0; coord < num_coords; ++coord) {
+      const size_t offset = 3 * coord;
+      /* Compute the x, y and z coordinates of the point depending on the
      * reference coordinates */
-    out_coords[offset + 0] = q1->x + ref_coords[offset + 0] * len;
-    out_coords[offset + 1] = q1->y + ref_coords[offset + 1] * len;
-    out_coords[offset + 2] = q1->z + ref_coords[offset + 2] * len;
+      out_coords[offset + 0] = q1->x + ref_coords[offset + 0] * len;
+      out_coords[offset + 1] = q1->y + ref_coords[offset + 1] * len;
+      out_coords[offset + 2] = q1->z + ref_coords[offset + 2] * len;
 
-    /* We divide the integer coordinates by the root length of the hex
+      /* We divide the integer coordinates by the root length of the hex
      * to obtain the reference coordinates. */
-    out_coords[offset + 0] /= (double) P8EST_ROOT_LEN;
-    out_coords[offset + 1] /= (double) P8EST_ROOT_LEN;
-    out_coords[offset + 2] /= (double) P8EST_ROOT_LEN;
+      out_coords[offset + 0] /= (double) P8EST_ROOT_LEN;
+      out_coords[offset + 1] /= (double) P8EST_ROOT_LEN;
+      out_coords[offset + 2] /= (double) P8EST_ROOT_LEN;
+    }
   }
+  else {
+    t8_hex_with_subelements *phex_w_sub = (t8_hex_with_subelements *) elem;
+    p8est_quadrant_t *q1 = &phex_w_sub->p8q;
+    p4est_qcoord_t len = P8EST_QUADRANT_LEN (q1->level);
+    /* get location information of the given subelement */
+    int location[3] = {};
+    t8_element_get_location_of_subelement (elem, location);
 
-   }
-   else{
-      t8_hex_with_subelements *phex_w_sub = (t8_hex_with_subelements *) elem;
-      p8est_quadrant_t *q1 = &phex_w_sub->p8q;
-      p4est_qcoord_t len = P8EST_QUADRANT_LEN (q1->level);
-      /* get location information of the given subelement */
-      int                 location[3] = { };
-      t8_element_get_location_of_subelement (elem, location);
+    for (int coord = 0; coord < num_coords; ++coord) {
+      const size_t offset = coord * 3;
+      out_coords[offset + 0] = q1->x + ref_coords[offset + 0] * len;
+      out_coords[offset + 1] = q1->y + ref_coords[offset + 1] * len;
+      out_coords[offset + 2] = q1->z + ref_coords[offset + 2] * len;
 
-      for (int coord = 0; coord < num_coords; ++coord) {
-        const size_t offset = coord * 3;
-        out_coords[offset + 0] = q1->x + ref_coords[offset + 0] * len;
-        out_coords[offset + 1] = q1->y + ref_coords[offset + 1] * len;
-        out_coords[offset + 2] = q1->z + ref_coords[offset + 2] * len;
-
-
-    //Set the apex to the center of the transition cell 
-      if(ref_coords[0] == 1 && ref_coords[1] == 1 && ref_coords[2] == 1){
-        out_coords[offset + 0] -= ref_coords[offset + 0] * (len/2);
-        out_coords[offset + 1] -= ref_coords[offset + 1] * (len/2);
-        out_coords[offset + 2] -= ref_coords[offset + 2] * (len/2);
+      //Set the apex to the center of the transition cell
+      if (ref_coords[0] == 1 && ref_coords[1] == 1 && ref_coords[2] == 1) {
+        out_coords[offset + 0] -= ref_coords[offset + 0] * (len / 2);
+        out_coords[offset + 1] -= ref_coords[offset + 1] * (len / 2);
+        out_coords[offset + 2] -= ref_coords[offset + 2] * (len / 2);
       }
-      else{
-        if(location[0] == 0){
+      else {
+        if (location[0] == 0) {
           //face 0
           //Add the x-coordinate to the z-coordinate in order to flip the base side of the pyramid to face f0
           out_coords[offset + 2] += ref_coords[offset + 0] * len;
           //set x-coordinate to zero
           out_coords[offset + 0] -= ref_coords[offset + 0] * len;
         }
-        if(location[0] == 1){
-          //Add one to the z-coordinate if the x-coordinate equals zero 
-          out_coords[offset + 2] += (1 - 1*ref_coords[offset + 0]) * len;
+        if (location[0] == 1) {
+          //Add one to the z-coordinate if the x-coordinate equals zero
+          out_coords[offset + 2] += (1 - 1 * ref_coords[offset + 0]) * len;
           //set x-coordinate to one
-          out_coords[offset + 0] += (1 - 1*ref_coords[offset + 0]) * len;
+          out_coords[offset + 0] += (1 - 1 * ref_coords[offset + 0]) * len;
         }
-        if(location[0] == 2){
-          //Add one to the z-coordinate if the y-coordinate equals one 
+        if (location[0] == 2) {
+          //Add one to the z-coordinate if the y-coordinate equals one
           out_coords[offset + 2] += (ref_coords[offset + 1]) * len;
           //set y-coordinate to zero
-          out_coords[offset + 1] -= (ref_coords[offset + 1]) * len;          
+          out_coords[offset + 1] -= (ref_coords[offset + 1]) * len;
         }
-        if(location[0] == 3){
-          //Add one to the z-coordinate if the y-coordinate equals zero 
-          out_coords[offset + 2] += ( 1 - ref_coords[offset + 1]) * len;
+        if (location[0] == 3) {
+          //Add one to the z-coordinate if the y-coordinate equals zero
+          out_coords[offset + 2] += (1 - ref_coords[offset + 1]) * len;
           //set y-coordinate to one
-          out_coords[offset + 1] += (1 - 1*ref_coords[offset + 1]) * len;          
+          out_coords[offset + 1] += (1 - 1 * ref_coords[offset + 1]) * len;
         }
         //Nothing more to do for face 4
-        if(location[0] == 5){
-          //Add one to the z-coordinate 
-          out_coords[offset + 2] += len;         
+        if (location[0] == 5) {
+          //Add one to the z-coordinate
+          out_coords[offset + 2] += len;
         }
-    //split
-      if(location[1] == 1){
-        if(location[0] == 0 ){
-          if((location[2] & 2) == 0){
-            //front
-            //scale the y coordinate if not zero     
-            out_coords[offset + 1] -= ref_coords[offset + 1] * (len/2);
+        //split
+        if (location[1] == 1) {
+          if (location[0] == 0) {
+            if ((location[2] & 2) == 0) {
+              //front
+              //scale the y coordinate if not zero
+              out_coords[offset + 1] -= ref_coords[offset + 1] * (len / 2);
             }
-            else{
+            else {
               //back
-              //scale the y coordinate if zero     
-              out_coords[offset + 1] += (1 - ref_coords[offset + 1]) * (len/2);  
+              //scale the y coordinate if zero
+              out_coords[offset + 1] += (1 - ref_coords[offset + 1]) * (len / 2);
             }
-          if((location[2] & 1) == 0){
-            //bottom
-            //scale the z coordinate if not zero and z is not zero if the x-coordinate of ref_coords is not zero.
-            out_coords[offset + 2] -= (ref_coords[offset + 0]) * (len/2);
+            if ((location[2] & 1) == 0) {
+              //bottom
+              //scale the z coordinate if not zero and z is not zero if the x-coordinate of ref_coords is not zero.
+              out_coords[offset + 2] -= (ref_coords[offset + 0]) * (len / 2);
             }
-            else{
+            else {
               //up
-              //scale the z coordinate if zero     
-              out_coords[offset + 2] += (1 - 1*ref_coords[offset + 0]) * (len/2);  
+              //scale the z coordinate if zero
+              out_coords[offset + 2] += (1 - 1 * ref_coords[offset + 0]) * (len / 2);
             }
           }
-        if(location[0] == 1 ){
-          if((location[2] & 2) == 0){
-            //front
-            //scale the y coordinate if not zero     
-            out_coords[offset + 1] -= ref_coords[offset + 1] * (len/2);
+          if (location[0] == 1) {
+            if ((location[2] & 2) == 0) {
+              //front
+              //scale the y coordinate if not zero
+              out_coords[offset + 1] -= ref_coords[offset + 1] * (len / 2);
             }
-            else{
+            else {
               //back
-              //scale the y coordinate if zero     
-              out_coords[offset + 1] += (1 - ref_coords[offset + 1]) * (len/2);  
+              //scale the y coordinate if zero
+              out_coords[offset + 1] += (1 - ref_coords[offset + 1]) * (len / 2);
             }
-          if((location[2] & 1) == 0){
-            //bottom
-            //scale the z coordinate if not zero and z is not zero if the x-coordinate of ref_coords is zero.
-            out_coords[offset + 2] -= (1 - ref_coords[offset + 0]) * (len/2);
+            if ((location[2] & 1) == 0) {
+              //bottom
+              //scale the z coordinate if not zero and z is not zero if the x-coordinate of ref_coords is zero.
+              out_coords[offset + 2] -= (1 - ref_coords[offset + 0]) * (len / 2);
             }
-            else{
+            else {
               //up
-              //scale the z coordinate if zero     
-              out_coords[offset + 2] += (ref_coords[offset + 0]) * (len/2);  
+              //scale the z coordinate if zero
+              out_coords[offset + 2] += (ref_coords[offset + 0]) * (len / 2);
             }
           }
-        if(location[0] == 2 ){
-          if((location[2] & 4) == 0){
-            //left
-            //scale the x coordinate if not zero     
-            out_coords[offset + 0] -= ref_coords[offset + 0] * (len/2);
+          if (location[0] == 2) {
+            if ((location[2] & 4) == 0) {
+              //left
+              //scale the x coordinate if not zero
+              out_coords[offset + 0] -= ref_coords[offset + 0] * (len / 2);
             }
-            else{
-            //right
-            //scale the x coordinate if  zero     
-            out_coords[offset + 0] += (1 - ref_coords[offset + 0] )* (len/2);
+            else {
+              //right
+              //scale the x coordinate if  zero
+              out_coords[offset + 0] += (1 - ref_coords[offset + 0]) * (len / 2);
             }
-          if((location[2] & 1) == 0){
-            //bottom
-            //scale the z coordinate if not zero 
-            out_coords[offset + 2] -= ref_coords[offset + 1] * (len/2);
+            if ((location[2] & 1) == 0) {
+              //bottom
+              //scale the z coordinate if not zero
+              out_coords[offset + 2] -= ref_coords[offset + 1] * (len / 2);
             }
-            else{
+            else {
               //up
-              //scale the z coordinate if  zero     
-            out_coords[offset + 2] += (1 - ref_coords[offset + 1] )* (len/2);
+              //scale the z coordinate if  zero
+              out_coords[offset + 2] += (1 - ref_coords[offset + 1]) * (len / 2);
+            }
+          }
+          if (location[0] == 3) {
+            if ((location[2] & 4) == 0) {
+              //left
+              //scale the x coordinate if not zero
+              out_coords[offset + 0] -= ref_coords[offset + 0] * (len / 2);
+            }
+            else {
+              //right
+              //scale the x coordinate if  zero
+              out_coords[offset + 0] += (1 - ref_coords[offset + 0]) * (len / 2);
+            }
+            if ((location[2] & 1) == 0) {
+              //bottom
+              //scale the z coordinate if not zero
+              out_coords[offset + 2] -= (1 - ref_coords[offset + 1]) * (len / 2);
+            }
+            else {
+              //up
+              //scale the z coordinate if  zero
+              out_coords[offset + 2] += (ref_coords[offset + 1]) * (len / 2);
+            }
+          }
 
+          if (location[0] == 4) {
+            if ((location[2] & 4) == 0) {
+              //left
+              //scale the x coordinate if not zero
+              out_coords[offset + 0] -= ref_coords[offset + 0] * (len / 2);
             }
-          }
-        if(location[0] == 3){
-          if((location[2] & 4) == 0){
-            //left
-            //scale the x coordinate if not zero     
-            out_coords[offset + 0] -= ref_coords[offset + 0] * (len/2);
+            else {
+              //right
+              //scale the x coordinate if  zero
+              out_coords[offset + 0] += (1 - ref_coords[offset + 0]) * (len / 2);
             }
-            else{
-            //right
-            //scale the x coordinate if  zero     
-            out_coords[offset + 0] += (1 - ref_coords[offset + 0] )* (len/2);
+            if ((location[2] & 2) == 0) {
+              //front
+              //scale the y coordinate if not zero
+              out_coords[offset + 1] -= ref_coords[offset + 1] * (len / 2);
             }
-          if((location[2] & 1) == 0){
-            //bottom
-            //scale the z coordinate if not zero 
-            out_coords[offset + 2] -= (1 - ref_coords[offset + 1]) * (len/2);
-            }
-            else{
-              //up
-              //scale the z coordinate if  zero     
-            out_coords[offset + 2] += (ref_coords[offset + 1] )* (len/2);
-            }
-          }
-
-        if(location[0] == 4){
-          if((location[2] & 4) == 0){
-            //left
-            //scale the x coordinate if not zero     
-            out_coords[offset + 0] -= ref_coords[offset + 0] * (len/2);
-            }
-            else{
-            //right
-            //scale the x coordinate if  zero     
-            out_coords[offset + 0] += (1 - ref_coords[offset + 0] )* (len/2);
-            }
-            if((location[2] & 2) == 0){
-            //front
-            //scale the y coordinate if not zero     
-            out_coords[offset + 1] -= ref_coords[offset + 1] * (len/2);
-            }
-            else{
+            else {
               //back
-              //scale the y coordinate if zero     
-              out_coords[offset + 1] += (1 - 1*ref_coords[offset + 1]) * (len/2);  
+              //scale the y coordinate if zero
+              out_coords[offset + 1] += (1 - 1 * ref_coords[offset + 1]) * (len / 2);
             }
-          
           }
-          if(location[0] == 5){
-          if((location[2] & 4) == 0){
-            //left
-            //scale the x coordinate if not zero     
-            out_coords[offset + 0] -= ref_coords[offset + 0] * (len/2);
+          if (location[0] == 5) {
+            if ((location[2] & 4) == 0) {
+              //left
+              //scale the x coordinate if not zero
+              out_coords[offset + 0] -= ref_coords[offset + 0] * (len / 2);
             }
-            else{
-            //right
-            //scale the x coordinate if  zero     
-            out_coords[offset + 0] += (1 - ref_coords[offset + 0] )* (len/2);
+            else {
+              //right
+              //scale the x coordinate if  zero
+              out_coords[offset + 0] += (1 - ref_coords[offset + 0]) * (len / 2);
             }
-            if((location[2] & 2) == 0){
-            //front
-            //scale the y coordinate if not zero     
-            out_coords[offset + 1] -= ref_coords[offset + 1] * (len/2);
+            if ((location[2] & 2) == 0) {
+              //front
+              //scale the y coordinate if not zero
+              out_coords[offset + 1] -= ref_coords[offset + 1] * (len / 2);
             }
-            else{
+            else {
               //back
-              //scale the y coordinate if zero     
-              out_coords[offset + 1] += (1 - 1*ref_coords[offset + 1]) * (len/2);  
+              //scale the y coordinate if zero
+              out_coords[offset + 1] += (1 - 1 * ref_coords[offset + 1]) * (len / 2);
             }
-          
           }
-}
         }
-
-
-    out_coords[offset + 0] /= (double) P8EST_ROOT_LEN;
-    out_coords[offset + 1] /= (double) P8EST_ROOT_LEN;
-    out_coords[offset + 2] /= (double) P8EST_ROOT_LEN;
-
       }
-            
-   
+
+      out_coords[offset + 0] /= (double) P8EST_ROOT_LEN;
+      out_coords[offset + 1] /= (double) P8EST_ROOT_LEN;
+      out_coords[offset + 2] /= (double) P8EST_ROOT_LEN;
+    }
   }
-
-
- 
-
-
-  }
-
-
+}
 
 void
-t8_subelement_scheme_hex_c::t8_element_vertex_reference_coords (const
-                                                                 t8_element_t
-                                                                 *t,
-                                                                 int vertex,
-                                                                 double
-                                                                 coords[])
-  const
+t8_subelement_scheme_hex_c::t8_element_vertex_reference_coords (const t8_element_t *t, int vertex,
+                                                                double coords[]) const
 {
-  int                 coords_int[3] = { };
+  int coords_int[3] = {};
   t8_element_vertex_coords (t, vertex, coords_int);
 
   /* We divide the integer coordinates by the root length of the hex
@@ -2165,18 +1935,15 @@ t8_subelement_scheme_hex_c::t8_element_vertex_reference_coords (const
 }
 
 void
-t8_subelement_scheme_hex_c::t8_element_vertex_coords (const t8_element_t
-                                                       *elem, int vertex,
-                                                       int coords[]) const
+t8_subelement_scheme_hex_c::t8_element_vertex_coords (const t8_element_t *elem, int vertex, int coords[]) const
 {
-  const t8_hex_with_subelements *phex_w_sub =
-    (const t8_hex_with_subelements *) elem;
+  const t8_hex_with_subelements *phex_w_sub = (const t8_hex_with_subelements *) elem;
   const p8est_quadrant_t *q1 = &phex_w_sub->p8q;
 
   T8_ASSERT (t8_element_is_valid (elem));
 
   if (!t8_element_is_subelement (elem)) {
-    int                 len;
+    int len;
 
     //T8_ASSERT (0 <= vertex && vertex < 8);
     /* Get the length of the quadrant */
@@ -2185,332 +1952,318 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords (const t8_element_t
      * vertex number */
     coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len;
     coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
-    coords[2] = q1->z + (vertex & 4 ? 1 : 0) * len;   
+    coords[2] = q1->z + (vertex & 4 ? 1 : 0) * len;
   }
   else {
     t8_element_vertex_coords_of_subelement (elem, vertex, coords);
   }
-
 }
 
 void
-t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
-                                                                     t8_element_t
-                                                                     *elem,
-                                                                     int
-                                                                     vertex,
-                                                                     int
-                                                                     coords[])
-  const
+t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const t8_element_t *elem, int vertex,
+                                                                    int coords[]) const
 {
-  const t8_hex_with_subelements *phex_w_sub =
-    (const t8_hex_with_subelements *) elem;
+  const t8_hex_with_subelements *phex_w_sub = (const t8_hex_with_subelements *) elem;
   const p8est_quadrant_t *q1 = &phex_w_sub->p8q;
-  
-  int                 len;
+
+  int len;
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_subelement (elem));
-  T8_ASSERT (vertex >= 0 && vertex < T8_HEX_SUBELEMENT_FACES);      /* all subelements are pyramids so T8_HEX_SUBELEMENT_FACES = 5 */
+  T8_ASSERT (vertex >= 0
+             && vertex < T8_HEX_SUBELEMENT_FACES); /* all subelements are pyramids so T8_HEX_SUBELEMENT_FACES = 5 */
   /* get the length of the current quadrant */
   len = P8EST_QUADRANT_LEN (q1->level);
 
-
   /* get location information of the given subelement */
-  int                 location[3] = { };
+  int location[3] = {};
   t8_element_get_location_of_subelement (elem, location);
 
   /* the face number, the subelement is adjacent to */
-  int                 face_number = location[0];
+  int face_number = location[0];
   /* = 1, if the adjacent face is split and = 0, if not */
-  int                 split = location[1];
+  int split = location[1];
   /* subelement_id type. First bit (left) = 1 if right, = 0 if left, second bit( middle) = 1 if back , = 0 if front, third bit (right) = 0 if up and is = 1 if down 
 
    * second bit front = 0, back = 1, third bit 0 = bottom 1 = up. For example: 110 stands for right and back (so only hex face f_4 and f_5 are possible.)
    */
-  int                 sub_face_id = location[2];
+  int sub_face_id = location[2];
 
   /* Check, whether the get_location function provides meaningful location data */
-  T8_ASSERT ((face_number >=0) && face_number <= 5);
+  T8_ASSERT ((face_number >= 0) && face_number <= 5);
 
   coords[0] = q1->x;
   coords[1] = q1->y;
   coords[2] = q1->z;
 
-             
-    switch(vertex){
-     
-    case 4: //vertex 4 always equals the center of the hexahedron
-      coords[0] += (len / 2);
-      coords[1] += (len / 2);
-      coords[2] += (len / 2); 
+  switch (vertex) {
+
+  case 4:  //vertex 4 always equals the center of the hexahedron
+    coords[0] += (len / 2);
+    coords[1] += (len / 2);
+    coords[2] += (len / 2);
     break;
 
-    case 0:
-      if(split == 0){ //not split
-      //for face numbers 0,2 and 4 nothing happens 
-        if(face_number == 1){
-          coords[0] += len;
-        }
-        if(face_number == 3){
-          coords[1] += len;
-        }
-        if(face_number == 5){
-          coords[2] += len;
-        }
+  case 0:
+    if (split == 0) {  //not split
+                       //for face numbers 0,2 and 4 nothing happens
+      if (face_number == 1) {
+        coords[0] += len;
       }
-/* ----------- face 0 + 1 (split) --------------------*/
-      else{
-        if((face_number == 0) || (face_number == 1)){
-          if((sub_face_id & 1)!= 0){ // up
-            coords[2] += (len / 2);
-            }
-          if((sub_face_id & 2) != 0 ){ // back 
-            coords[1] += (len / 2);
-          }
-        
-        if(face_number == 1){
-          coords[0] += len;
-        }
-        }
-/* ----------- face 2 + 3 (split) --------------------*/
-        if((face_number == 2) || (face_number == 3)){
-          if((sub_face_id & 1) != 0){ // up
-            coords[2] += (len / 2);
-            }
-          if((sub_face_id & 4) != 0 ){ // right 
-            coords[0] += (len / 2);
-          }
-          if(face_number == 3){
-            coords[1] += len;
-          }
-        }
-/* ----------- face 4 + 5 (split) --------------------*/
-        if((face_number == 4) || (face_number == 5)){
-          if((sub_face_id & 2) != 0){ // back
-            coords[1] += len / 2;
-            }
-          if((sub_face_id & 4) != 0 ){ // right 
-            coords[0] += len / 2;
-          }
-          if(face_number == 5){
-            coords[2] += len;
-          }
-        }
+      if (face_number == 3) {
+        coords[1] += len;
       }
-      break;
-
-    case 1:
-    if(split == 0){
-        if((face_number == 0) || (face_number == 1 || (face_number == 3))){
-          coords[1] += len;
-        }
-        if(face_number > 0){
-          coords[0] += len;
-        }
-        if(face_number == 5){
-          coords[2] += len;
-        }
+      if (face_number == 5) {
+        coords[2] += len;
       }
-/* ----------- face 0 + 1 (split) --------------------*/
-      else{
-        if((face_number == 0) || (face_number == 1)){
-          if((sub_face_id & 1) != 0){ // up
-            coords[2] += len / 2;
-            }
-          if((sub_face_id & 2) != 0 ){ // back 
-          coords[1] += len;
-            
-          }
-          else if((sub_face_id & 2) == 0) { //front
-            coords[1] += len / 2;
-          }
-
-          if(face_number == 1){
-            coords[0] += len;
-          }
-        }
-/* ----------- face 2 + 3 (split) --------------------*/
-        if((face_number == 2) || (face_number == 3)){
-          if((sub_face_id & 1) != 0){ // up
-            coords[2] += len / 2;
-            }
-          if((sub_face_id & 4) != 0 ){ // right 
-            coords[0] += len;
-          }
-          else if((sub_face_id & 4) == 0){ //left
-            coords[0] += len / 2;
-          }
-          if(face_number == 3){
-            coords[1] += len;
-          }        
-          }
-
-/* ----------- face 4 + 5 (split) --------------------*/
-        if((face_number == 4) || (face_number == 5)){
-          if((sub_face_id & 2) != 0){ // back
-            coords[1] += (len / 2);
-            }
-          if((sub_face_id & 4) != 0){ // right 
-            coords[0] += len;
-          }
-          else if ((sub_face_id & 4) == 0){ //left
-            coords[0] += (len / 2);
-          }
-          if(face_number == 5){
-            coords[2] += len;
-          }
-        }
-      }
-   break;
-    case 2:
-    if(split == 0){
-        if(face_number != 4){
-          coords[2] += len;
-        }
-        if(face_number == 1){
-          coords[0] += len;
-        }
-        if(face_number > 2){
-          coords[1] += len;
-        }
-      }
-/* ----------- face 0 + 1 (split) --------------------*/
-      else{
-        if((face_number == 0) || (face_number == 1)){
-          if((sub_face_id & 2) != 0){ // back
-            coords[1] += len / 2;
-            }
-          if((sub_face_id & 1) != 0 ){ // up
-            coords[2] += len;
-          }
-          else if((sub_face_id & 1) == 0){ //bottom
-            coords[2] += len / 2;
-          }
-          if(face_number == 1){
-            coords[0] += len;
-          }
-        }
-
-/* ----------- face 2 + 3 (split) --------------------*/
-        if((face_number == 2) || (face_number == 3)){
-          if((sub_face_id & 1) != 0){ // up
-            coords[2] += len;
-            }
-          else if((sub_face_id & 1) == 0){
-            coords[2] += len / 2;
-          }
-          if((sub_face_id & 4) != 0 ){ // right 
-            coords[0] += len / 2;
-          }
-          if(face_number == 3){
-            coords[1] += len;
-          }
-        }  
-/* ----------- face 4 + 5 (split) --------------------*/
-
-        if((face_number == 4) || (face_number == 5)){
-          if((sub_face_id & 2) != 0){ // back
-            coords[1] += len;
-            }
-          else if((sub_face_id & 2) == 0){ //front
-            coords[1] += len / 2;
-          }
-          if((sub_face_id & 4) != 0){ // right 
-            coords[0] += len / 2;
-          }
-          if(face_number == 5){
-            coords[2] += len;
-          }
-        }
-      }
-
-     break;
-    case 3:
-    if(split == 0){
-        if(face_number != 2){
-          coords[1] += len;
-        }
-        if(face_number != 4){
-          coords[2] += len;
-        }
-        if(face_number > 0){
-          coords[0] += len;
-        }
     }
-      /* ----------- face 0 + 1 (split) --------------------*/
-      else{
-        if((face_number == 0) || (face_number == 1)){
-          if((sub_face_id & 2) != 0){ // back
-            coords[1] += len;
-            }
-          else if((sub_face_id & 2) == 0){ //front
-            coords[1] += len / 2;
-          }
-          if((sub_face_id & 1) != 0 ){ // up
-            coords[2] += len;
-          }
-          else if((sub_face_id & 1) == 0 ){ // bottom
-            coords[2] += len / 2;
-          }
-          if( face_number == 1){
-            coords[0] += len;
-          }
+    /* ----------- face 0 + 1 (split) --------------------*/
+    else {
+      if ((face_number == 0) || (face_number == 1)) {
+        if ((sub_face_id & 1) != 0) {  // up
+          coords[2] += (len / 2);
         }
-/* ----------- face 2 + 3 (split) --------------------*/
-        if((face_number == 2) || (face_number == 3)){
-          if((sub_face_id & 1) != 0){ // up
-            coords[2] += len;
-            }
-          else if((sub_face_id & 1) == 0){
-            coords[2] += len / 2;
-          }
-          if((sub_face_id & 4) != 0 ){ // right 
-            coords[0] += len;
-          }
-          else if((sub_face_id & 4) == 0 ){ // left 
-            coords[0] += len / 2;
-          }
-          if(face_number == 3){
-            coords[1] += len;
-          }
+        if ((sub_face_id & 2) != 0) {  // back
+          coords[1] += (len / 2);
         }
 
-/* ----------- face 4 + 5 (split) --------------------*/
-        if((face_number == 4) || (face_number == 5)){
-          if((sub_face_id & 2) != 0){ // back
+        if (face_number == 1) {
+          coords[0] += len;
+        }
+      }
+      /* ----------- face 2 + 3 (split) --------------------*/
+      if ((face_number == 2) || (face_number == 3)) {
+        if ((sub_face_id & 1) != 0) {  // up
+          coords[2] += (len / 2);
+        }
+        if ((sub_face_id & 4) != 0) {  // right
+          coords[0] += (len / 2);
+        }
+        if (face_number == 3) {
+          coords[1] += len;
+        }
+      }
+      /* ----------- face 4 + 5 (split) --------------------*/
+      if ((face_number == 4) || (face_number == 5)) {
+        if ((sub_face_id & 2) != 0) {  // back
+          coords[1] += len / 2;
+        }
+        if ((sub_face_id & 4) != 0) {  // right
+          coords[0] += len / 2;
+        }
+        if (face_number == 5) {
+          coords[2] += len;
+        }
+      }
+    }
+    break;
 
-            coords[1] += len;
-            }
-          else if((sub_face_id & 2) == 0){ //front
-            coords[1] += len / 2;
-          }
-          if((sub_face_id & 4) != 0 ){ // right 
-            coords[0] += len;
-          }
-          else if((sub_face_id & 4) == 0){ // left
-            coords[0] += len / 2;
-          }
-          if( face_number == 5){
-            coords[2] += len;
-          }
+  case 1:
+    if (split == 0) {
+      if ((face_number == 0) || (face_number == 1 || (face_number == 3))) {
+        coords[1] += len;
+      }
+      if (face_number > 0) {
+        coords[0] += len;
+      }
+      if (face_number == 5) {
+        coords[2] += len;
+      }
+    }
+    /* ----------- face 0 + 1 (split) --------------------*/
+    else {
+      if ((face_number == 0) || (face_number == 1)) {
+        if ((sub_face_id & 1) != 0) {  // up
+          coords[2] += len / 2;
+        }
+        if ((sub_face_id & 2) != 0) {  // back
+          coords[1] += len;
+        }
+        else if ((sub_face_id & 2) == 0) {  //front
+          coords[1] += len / 2;
+        }
+
+        if (face_number == 1) {
+          coords[0] += len;
+        }
+      }
+      /* ----------- face 2 + 3 (split) --------------------*/
+      if ((face_number == 2) || (face_number == 3)) {
+        if ((sub_face_id & 1) != 0) {  // up
+          coords[2] += len / 2;
+        }
+        if ((sub_face_id & 4) != 0) {  // right
+          coords[0] += len;
+        }
+        else if ((sub_face_id & 4) == 0) {  //left
+          coords[0] += len / 2;
+        }
+        if (face_number == 3) {
+          coords[1] += len;
         }
       }
 
-     break;
-      }   
-      
-} 
+      /* ----------- face 4 + 5 (split) --------------------*/
+      if ((face_number == 4) || (face_number == 5)) {
+        if ((sub_face_id & 2) != 0) {  // back
+          coords[1] += (len / 2);
+        }
+        if ((sub_face_id & 4) != 0) {  // right
+          coords[0] += len;
+        }
+        else if ((sub_face_id & 4) == 0) {  //left
+          coords[0] += (len / 2);
+        }
+        if (face_number == 5) {
+          coords[2] += len;
+        }
+      }
+    }
+    break;
+  case 2:
+    if (split == 0) {
+      if (face_number != 4) {
+        coords[2] += len;
+      }
+      if (face_number == 1) {
+        coords[0] += len;
+      }
+      if (face_number > 2) {
+        coords[1] += len;
+      }
+    }
+    /* ----------- face 0 + 1 (split) --------------------*/
+    else {
+      if ((face_number == 0) || (face_number == 1)) {
+        if ((sub_face_id & 2) != 0) {  // back
+          coords[1] += len / 2;
+        }
+        if ((sub_face_id & 1) != 0) {  // up
+          coords[2] += len;
+        }
+        else if ((sub_face_id & 1) == 0) {  //bottom
+          coords[2] += len / 2;
+        }
+        if (face_number == 1) {
+          coords[0] += len;
+        }
+      }
+
+      /* ----------- face 2 + 3 (split) --------------------*/
+      if ((face_number == 2) || (face_number == 3)) {
+        if ((sub_face_id & 1) != 0) {  // up
+          coords[2] += len;
+        }
+        else if ((sub_face_id & 1) == 0) {
+          coords[2] += len / 2;
+        }
+        if ((sub_face_id & 4) != 0) {  // right
+          coords[0] += len / 2;
+        }
+        if (face_number == 3) {
+          coords[1] += len;
+        }
+      }
+      /* ----------- face 4 + 5 (split) --------------------*/
+
+      if ((face_number == 4) || (face_number == 5)) {
+        if ((sub_face_id & 2) != 0) {  // back
+          coords[1] += len;
+        }
+        else if ((sub_face_id & 2) == 0) {  //front
+          coords[1] += len / 2;
+        }
+        if ((sub_face_id & 4) != 0) {  // right
+          coords[0] += len / 2;
+        }
+        if (face_number == 5) {
+          coords[2] += len;
+        }
+      }
+    }
+
+    break;
+  case 3:
+    if (split == 0) {
+      if (face_number != 2) {
+        coords[1] += len;
+      }
+      if (face_number != 4) {
+        coords[2] += len;
+      }
+      if (face_number > 0) {
+        coords[0] += len;
+      }
+    }
+    /* ----------- face 0 + 1 (split) --------------------*/
+    else {
+      if ((face_number == 0) || (face_number == 1)) {
+        if ((sub_face_id & 2) != 0) {  // back
+          coords[1] += len;
+        }
+        else if ((sub_face_id & 2) == 0) {  //front
+          coords[1] += len / 2;
+        }
+        if ((sub_face_id & 1) != 0) {  // up
+          coords[2] += len;
+        }
+        else if ((sub_face_id & 1) == 0) {  // bottom
+          coords[2] += len / 2;
+        }
+        if (face_number == 1) {
+          coords[0] += len;
+        }
+      }
+      /* ----------- face 2 + 3 (split) --------------------*/
+      if ((face_number == 2) || (face_number == 3)) {
+        if ((sub_face_id & 1) != 0) {  // up
+          coords[2] += len;
+        }
+        else if ((sub_face_id & 1) == 0) {
+          coords[2] += len / 2;
+        }
+        if ((sub_face_id & 4) != 0) {  // right
+          coords[0] += len;
+        }
+        else if ((sub_face_id & 4) == 0) {  // left
+          coords[0] += len / 2;
+        }
+        if (face_number == 3) {
+          coords[1] += len;
+        }
+      }
+
+      /* ----------- face 4 + 5 (split) --------------------*/
+      if ((face_number == 4) || (face_number == 5)) {
+        if ((sub_face_id & 2) != 0) {  // back
+
+          coords[1] += len;
+        }
+        else if ((sub_face_id & 2) == 0) {  //front
+          coords[1] += len / 2;
+        }
+        if ((sub_face_id & 4) != 0) {  // right
+          coords[0] += len;
+        }
+        else if ((sub_face_id & 4) == 0) {  // left
+          coords[0] += len / 2;
+        }
+        if (face_number == 5) {
+          coords[2] += len;
+        }
+      }
+    }
+
+    break;
+  }
+}
 
 void
-t8_subelement_scheme_hex_c::t8_element_to_transition_cell (const t8_element_t
-                                                            *elem, int transition_type,
-                                                            t8_element_t *c[])
+t8_subelement_scheme_hex_c::t8_element_to_transition_cell (const t8_element_t *elem, int transition_type,
+                                                           t8_element_t *c[])
 {
-  const t8_hex_with_subelements *phex_w_sub_elem =
-    (const t8_hex_with_subelements *) elem;
-  t8_hex_with_subelements **phex_w_sub_subelement =
-    (t8_hex_with_subelements **) c;
+  const t8_hex_with_subelements *phex_w_sub_elem = (const t8_hex_with_subelements *) elem;
+  t8_hex_with_subelements **phex_w_sub_subelement = (t8_hex_with_subelements **) c;
 
   const p8est_quadrant_t *q = &phex_w_sub_elem->p8q;
 
@@ -2519,12 +2272,11 @@ t8_subelement_scheme_hex_c::t8_element_to_transition_cell (const t8_element_t
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (transition_type >= 0 && transition_type <= T8_SUB_HEX_MAX_TRANSITION_TYPE);
 
-  int num_subelements =
-    t8_element_get_number_of_subelements (transition_type);
+  int num_subelements = t8_element_get_number_of_subelements (transition_type);
 
 #ifdef T8_ENABLE_DEBUG
   {
-    int                 j;
+    int j;
     for (j = 0; j < num_subelements; j++) {
       T8_ASSERT (t8_element_is_valid (c[j]));
     }
@@ -2532,12 +2284,12 @@ t8_subelement_scheme_hex_c::t8_element_to_transition_cell (const t8_element_t
 #endif
 
   /* get the length of a children-quadrant */
-  const int8_t        level = (int8_t) (q->level);
+  const int8_t level = (int8_t) (q->level);
 
   T8_ASSERT (p8est_quadrant_is_extended (q));
   T8_ASSERT (q->level < P8EST_OLD_QMAXLEVEL);
 
-  int                 sub_id_counter = 0;
+  int sub_id_counter = 0;
   for (sub_id_counter = 0; sub_id_counter < num_subelements; sub_id_counter++) {
     phex_w_sub_subelement[sub_id_counter]->p8q.x = q->x;
     phex_w_sub_subelement[sub_id_counter]->p8q.y = q->y;
@@ -2548,40 +2300,33 @@ t8_subelement_scheme_hex_c::t8_element_to_transition_cell (const t8_element_t
 
     phex_w_sub_subelement[sub_id_counter]->subelement_id = sub_id_counter;
     T8_ASSERT (t8_element_is_valid (c[sub_id_counter]));
-
   }
 }
 
 int
-t8_subelement_scheme_hex_c::t8_element_get_number_of_subelements (int
-                                                                   transition_type)
-  const
+t8_subelement_scheme_hex_c::t8_element_get_number_of_subelements (int transition_type) const
 {
   /* we could return 0 for transition type 0 but we will assert this case for safety reasons */
   T8_ASSERT (transition_type != 0);
 
   /* consider transition_type 16 = 010000 in base two -> there are 6 + (1)*3 = 9 subelements */
-  int                 num_hanging_faces = 0;
-  int                 ichild;
-  for (ichild = 0; ichild < P8EST_FACES; ichild++) {    /* Count the number of ones of the binary transition type. This number equals the number of hanging faces. */
+  int num_hanging_faces = 0;
+  int ichild;
+  for (
+    ichild = 0; ichild < P8EST_FACES;
+    ichild++) { /* Count the number of ones of the binary transition type. This number equals the number of hanging faces. */
     num_hanging_faces += (transition_type & (1 << ichild)) >> ichild;
   }
 
   /* The number of subelements equals the number of neighbours: */
   //t8_productionf("number subs %i\n",P8EST_FACES + num_hanging_faces*3);
-  return P8EST_FACES + num_hanging_faces*3;
+  return P8EST_FACES + num_hanging_faces * 3;
 }
 
 void
-t8_subelement_scheme_hex_c::t8_element_get_location_of_subelement (const
-                                                                    t8_element_t
-                                                                    *elem,
-                                                                    int
-                                                                    location
-                                                                    []) const
+t8_subelement_scheme_hex_c::t8_element_get_location_of_subelement (const t8_element_t *elem, int location[]) const
 {
-  const t8_hex_with_subelements *phex_w_sub =
-    (const t8_hex_with_subelements *) elem;
+  const t8_hex_with_subelements *phex_w_sub = (const t8_hex_with_subelements *) elem;
 
   /* this function only works for subelements */
   T8_ASSERT (t8_element_is_subelement (elem));
@@ -2612,41 +2357,39 @@ t8_subelement_scheme_hex_c::t8_element_get_location_of_subelement (const
    * 
 
   /* 1) convert the transition type from a decimal to a binary representation */
-  int                 type = phex_w_sub->transition_type;
-  int                 binary_array[P8EST_FACES] = { };
+  int type = phex_w_sub->transition_type;
+  int binary_array[P8EST_FACES] = {};
 
-  int                 iface;
+  int iface;
 
-   /* We need an array with 6 elements to store all subelement types of the hex scheme from 1 to 63 ({0, 0, 0, 0, 0, 1} to {1, 1, 1, 1, 1, 1}) */
-  for (iface = 0; iface < P8EST_FACES; iface++) {      
+  /* We need an array with 6 elements to store all subelement types of the hex scheme from 1 to 63 ({0, 0, 0, 0, 0, 1} to {1, 1, 1, 1, 1, 1}) */
+  for (iface = 0; iface < P8EST_FACES; iface++) {
     binary_array[(P8EST_FACES - 1) - iface] = (type & (1 << iface)) >> iface;
-  }                             /* we now got a binary representation of the transition type, bitwise stored in an array */
+  } /* we now got a binary representation of the transition type, bitwise stored in an array */
 
   /* 3) use the rearranged binary representation, and the sub_id to determine the location of the subelement and store these information in an array */
   /*     3.1) location[0] -> the face_number, the subelement is adjacent to */
   /*     3.2) location[1] -> if the face is split or not */
   /*     3.3) location[2] -> if the subelement is the left/right, front/back or bottom/up Same idea as with the transition type: first bit 0 = left, 1 = right,
   *                          second bit front = 0, back = 1, third bit 0 = bottom 1 = up. For example: 110 stands for right and back (so only hex face f_4 and f_5 are possible.)  */
-  T8_ASSERT (phex_w_sub->subelement_id <
-             t8_element_get_number_of_subelements
-             (phex_w_sub->transition_type));
+  T8_ASSERT (phex_w_sub->subelement_id < t8_element_get_number_of_subelements (phex_w_sub->transition_type));
 
-  int                 sub_id = phex_w_sub->subelement_id;
+  int sub_id = phex_w_sub->subelement_id;
 
-  int                 sub_face_id_array[3] = {0,0,0};
-  int                 sub_face_id = 0;
-  int                 face_number = -1;
-  int                 split;
+  int sub_face_id_array[3] = { 0, 0, 0 };
+  int sub_face_id = 0;
+  int face_number = -1;
+  int split;
 
-  int                 cum_neigh_array[P8EST_FACES] = { };
+  int cum_neigh_array[P8EST_FACES] = {};
 
   /* construct a cumulative array of the number of neighbors from face 0 to face 5 */
-  cum_neigh_array[0] = binary_array[0]*3 + 1;
-  cum_neigh_array[1] = cum_neigh_array[0] + binary_array[1]*3 + 1;
-  cum_neigh_array[2] = cum_neigh_array[1] + binary_array[2]*3 + 1;
-  cum_neigh_array[3] = cum_neigh_array[2] + binary_array[3]*3 + 1;
-  cum_neigh_array[4] = cum_neigh_array[3] + binary_array[4]*3 + 1;
-  cum_neigh_array[5] = cum_neigh_array[4] + binary_array[5]*3 + 1;
+  cum_neigh_array[0] = binary_array[0] * 3 + 1;
+  cum_neigh_array[1] = cum_neigh_array[0] + binary_array[1] * 3 + 1;
+  cum_neigh_array[2] = cum_neigh_array[1] + binary_array[2] * 3 + 1;
+  cum_neigh_array[3] = cum_neigh_array[2] + binary_array[3] * 3 + 1;
+  cum_neigh_array[4] = cum_neigh_array[3] + binary_array[4] * 3 + 1;
+  cum_neigh_array[5] = cum_neigh_array[4] + binary_array[5] * 3 + 1;
 
   /* 3.1) we can use the cumulative array to determine the face number of the given subelement */
   if (sub_id < cum_neigh_array[0]) {
@@ -2654,80 +2397,76 @@ t8_subelement_scheme_hex_c::t8_element_get_location_of_subelement (const
   }
   else {
     for (iface = 0; iface < P8EST_FACES - 1; ++iface) {
-      if (sub_id >= cum_neigh_array[iface]
-          && sub_id < cum_neigh_array[iface + 1]) {
+      if (sub_id >= cum_neigh_array[iface] && sub_id < cum_neigh_array[iface + 1]) {
         face_number = iface + 1;
         break;
       }
     }
   }
-  
+
   /* make sure that a face_number has been found */
   T8_ASSERT (face_number >= 0);
 
   /* 3.2) determine, whether the face is split or not */
   if (binary_array[face_number] == 0) {
-    split = 0;                  /* the face is not split */
+    split = 0; /* the face is not split */
   }
   else {
-    split = 1;                  /* the face is split */
+    split = 1; /* the face is split */
   }
-  if(split == 1){
+  if (split == 1) {
 
     /* 3.3) determine, whether the subelement is the left/right, front/back or bottom/up subelement at the face */
-  //First left/ right (only for face number 2, 3, 4, 5)
-  if( face_number > 1){
-    if (((sub_id + 1) == cum_neigh_array[face_number] ) || ((sub_id + 3) == cum_neigh_array[face_number])) {
-      sub_face_id_array[0] = 1;            /* right*/
+    //First left/ right (only for face number 2, 3, 4, 5)
+    if (face_number > 1) {
+      if (((sub_id + 1) == cum_neigh_array[face_number]) || ((sub_id + 3) == cum_neigh_array[face_number])) {
+        sub_face_id_array[0] = 1; /* right*/
+      }
+      else if (((sub_id + 2) == cum_neigh_array[face_number]) || ((sub_id + 4) == cum_neigh_array[face_number])) {
+        sub_face_id_array[0] = 0; /* left */
+      }
     }
-    else if (((sub_id + 2) == cum_neigh_array[face_number] ) || ((sub_id + 4) == cum_neigh_array[face_number])){
-      sub_face_id_array[0] = 0;           /* left */
-    } 
-  }
-  //Second check front or back (only for face numbers 0, 1, 4, 5)
-  if( face_number <= 1 ){
-    if (((sub_id + 1) == cum_neigh_array[face_number]) || ((sub_id + 3) == cum_neigh_array[face_number])) {
-      sub_face_id_array[1] = 1;            /* back subelement */
+    //Second check front or back (only for face numbers 0, 1, 4, 5)
+    if (face_number <= 1) {
+      if (((sub_id + 1) == cum_neigh_array[face_number]) || ((sub_id + 3) == cum_neigh_array[face_number])) {
+        sub_face_id_array[1] = 1; /* back subelement */
+      }
+      else if (((sub_id + 2) == cum_neigh_array[face_number]) || ((sub_id + 4) == cum_neigh_array[face_number])) {
+        sub_face_id_array[1] = 0; /* front subelement */
+      }
     }
-    else if (((sub_id + 2) == cum_neigh_array[face_number]) || ((sub_id + 4) == cum_neigh_array[face_number])){
-      sub_face_id_array[1] = 0;            /* front subelement */
-    } 
-  }
-  else if( face_number >= 4 ){ 
-    if (((sub_id + 1) == cum_neigh_array[face_number]) || ((sub_id + 2) == cum_neigh_array[face_number])) {
-      sub_face_id_array[1] = 1;            /* back subelement */
+    else if (face_number >= 4) {
+      if (((sub_id + 1) == cum_neigh_array[face_number]) || ((sub_id + 2) == cum_neigh_array[face_number])) {
+        sub_face_id_array[1] = 1; /* back subelement */
+      }
+      else if (((sub_id + 3) == cum_neigh_array[face_number]) || ((sub_id + 4) == cum_neigh_array[face_number])) {
+        sub_face_id_array[1] = 0; /* front subelement */
+      }
     }
-    else if(((sub_id + 3) == cum_neigh_array[face_number]) || ((sub_id + 4) == cum_neigh_array[face_number])){
-      sub_face_id_array[1] = 0;            /* front subelement */
-    } 
-  }
-  //Third check up or down (only for face numbers 0, 1, 2, 3)
-  if( face_number < 4 ){
-    if (((sub_id + 2) == cum_neigh_array[face_number] ) || ((sub_id + 1) == cum_neigh_array[face_number] )) {
-      sub_face_id_array[2] = 1;            /* up subelement */
+    //Third check up or down (only for face numbers 0, 1, 2, 3)
+    if (face_number < 4) {
+      if (((sub_id + 2) == cum_neigh_array[face_number]) || ((sub_id + 1) == cum_neigh_array[face_number])) {
+        sub_face_id_array[2] = 1; /* up subelement */
+      }
+      else if (((sub_id + 3) == cum_neigh_array[face_number]) || ((sub_id + 4) == cum_neigh_array[face_number])) {
+        sub_face_id_array[2] = 0; /* bottom subelement */
+      }
     }
-    else if (((sub_id + 3) == cum_neigh_array[face_number] ) || ((sub_id + 4) == cum_neigh_array[face_number] )){
-      sub_face_id_array[2] = 0;            /* bottom subelement */
-    } 
-  }
-  //Calculate the sub_face_id out of the sub_face_id_array
-  for(int i = 0; i < 3; i++ ){
-    if( sub_face_id_array[i] == 1){
-      sub_face_id += std::pow(2, 2-i);
+    //Calculate the sub_face_id out of the sub_face_id_array
+    for (int i = 0; i < 3; i++) {
+      if (sub_face_id_array[i] == 1) {
+        sub_face_id += std::pow (2, 2 - i);
+      }
     }
-  }
   }
 
   location[0] = face_number;
   location[1] = split;
   location[2] = sub_face_id;
-
-
 }
 
 void
-t8_subelement_scheme_hex_c::t8_element_reset_subelement_values (t8_element *
-                                                                 elem) const
+t8_subelement_scheme_hex_c::t8_element_reset_subelement_values (t8_element *elem) const
 {
   t8_hex_with_subelements *phex_w_sub = (t8_hex_with_subelements *) elem;
 
@@ -2736,28 +2475,19 @@ t8_subelement_scheme_hex_c::t8_element_reset_subelement_values (t8_element *
 }
 
 void
-t8_subelement_scheme_hex_c::t8_element_copy_subelement_values (const
-                                                                t8_element *
-                                                                source,
-                                                                t8_element *
-                                                                dest) const
+t8_subelement_scheme_hex_c::t8_element_copy_subelement_values (const t8_element *source, t8_element *dest) const
 {
-  const t8_hex_with_subelements *phex_w_sub_source =
-    (const t8_hex_with_subelements *) source;
-  t8_hex_with_subelements *phex_w_sub_dest =
-    (t8_hex_with_subelements *) dest;
- // phex_w_sub_dest->transition_type = phex_w_sub_source->transition_type;
+  const t8_hex_with_subelements *phex_w_sub_source = (const t8_hex_with_subelements *) source;
+  t8_hex_with_subelements *phex_w_sub_dest = (t8_hex_with_subelements *) dest;
+  // phex_w_sub_dest->transition_type = phex_w_sub_source->transition_type;
   phex_w_sub_dest->transition_type = phex_w_sub_source->transition_type;
   phex_w_sub_dest->subelement_id = phex_w_sub_source->subelement_id;
 }
 
 int
-t8_subelement_scheme_hex_c::t8_element_is_subelement (const
-                                                       t8_element *
-                                                       elem) const
+t8_subelement_scheme_hex_c::t8_element_is_subelement (const t8_element *elem) const
 {
-  const t8_hex_with_subelements *phex_w_sub =
-    (const t8_hex_with_subelements *) elem;
+  const t8_hex_with_subelements *phex_w_sub = (const t8_hex_with_subelements *) elem;
 
   T8_ASSERT (phex_w_sub->transition_type >= 0);
 
@@ -2768,22 +2498,18 @@ t8_subelement_scheme_hex_c::t8_element_is_subelement (const
 }
 
 int
-t8_subelement_scheme_hex_c::t8_element_get_transition_type (const
-                                                             t8_element *
-                                                             elem)
+t8_subelement_scheme_hex_c::t8_element_get_transition_type (const t8_element *elem)
 {
-  const t8_hex_with_subelements *phex_w_sub =
-    (const t8_hex_with_subelements *) elem;
+  const t8_hex_with_subelements *phex_w_sub = (const t8_hex_with_subelements *) elem;
   return phex_w_sub->transition_type;
 }
 
 int
-t8_subelement_scheme_hex_c::t8_element_get_subelement_id (const t8_element * elem) const
+t8_subelement_scheme_hex_c::t8_element_get_subelement_id (const t8_element *elem) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
 
-  const t8_hex_with_subelements *phex_w_sub =
-    (const t8_hex_with_subelements *) elem;
+  const t8_hex_with_subelements *phex_w_sub = (const t8_hex_with_subelements *) elem;
 
   return phex_w_sub->subelement_id;
 }
@@ -2792,8 +2518,7 @@ t8_element_shape_t
 t8_subelement_scheme_hex_c::t8_element_shape (const t8_element_t *elem) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
-  return (t8_element_is_subelement (elem) ? T8_ECLASS_PYRAMID :
-          T8_ECLASS_HEX);
+  return (t8_element_is_subelement (elem) ? T8_ECLASS_PYRAMID : T8_ECLASS_HEX);
 }
 
 int
@@ -2801,13 +2526,13 @@ t8_subelement_scheme_hex_c::t8_element_num_corners (const t8_element_t *elem) co
 {
   T8_ASSERT (t8_element_is_valid (elem));
 
-  return (t8_element_is_subelement (elem) ? T8_HEX_SUBELEMENT_FACES :
-          8);
+  return (t8_element_is_subelement (elem) ? T8_HEX_SUBELEMENT_FACES : 8);
 }
 
 int
-t8_subelement_scheme_hex_c::t8_element_find_neighbor_in_transition_cell
-  (const t8_element_t *elem, const t8_element_t *pseudo_neigh, int elem_face)
+t8_subelement_scheme_hex_c::t8_element_find_neighbor_in_transition_cell (const t8_element_t *elem,
+                                                                         const t8_element_t *pseudo_neigh,
+                                                                         int elem_face)
 {
   /* In this function, we assume pseudo_neigh to be a random subelement of a transition cell that includes
    * the real neighbor of elem at face elem_face. This function will output the subelement_id of the real neighbor of elem. */
@@ -2815,30 +2540,24 @@ t8_subelement_scheme_hex_c::t8_element_find_neighbor_in_transition_cell
   T8_ASSERT (t8_element_is_valid (pseudo_neigh));
   /* we expect neigh to be a element in a transition cell, thus to be a subelement */
   T8_ASSERT (t8_element_is_subelement (pseudo_neigh));
-//Case 1: the neighbor is ab sibling of elem --> function t8_element_get_sibling_neighbor_in_transition_cell
-//Thus, we expect elem_face = 4
+  //Case 1: the neighbor is ab sibling of elem --> function t8_element_get_sibling_neighbor_in_transition_cell
+  //Thus, we expect elem_face = 4
   T8_ASSERT (elem_face == 4);
 
-  const t8_hex_with_subelements *
-    phex_w_sub_elem = (const t8_hex_with_subelements *) elem;
-  const t8_hex_with_subelements *
-    phex_w_sub_pseudo_neigh =
-    (const t8_hex_with_subelements *) pseudo_neigh;
+  const t8_hex_with_subelements *phex_w_sub_elem = (const t8_hex_with_subelements *) elem;
+  const t8_hex_with_subelements *phex_w_sub_pseudo_neigh = (const t8_hex_with_subelements *) pseudo_neigh;
   // t8_debugf("\n~~~~~~~~~~~Into find neighbor in transition cell ~~~~~~~~~~~~~~~\n");
   /* In the following, all possible neighbor configurations are defined, such that subelement neighbors can be
    * identified in LFN_transitioned. */
-
-  
 
   /* Below are the cases in which the neighbor is no sibling. 
    * The idea is to fill a location array with the desired properties of the real neighbor. 
    * Together with the type of the transition cell of pseudo_neigh, we can then identify the sub_id of the right neighbor. */
   /* get the location of elem */
-    int
-    location_elem[3] = { };     /* {face, is_split, number of subelement at face} */
-    t8_element_get_location_of_subelement (elem, location_elem);
-  //Case 2: The element is  a subelement and we are looking for a face neighbor at face 4. 
-  if (t8_element_is_subelement(elem)) {
+  int location_elem[3] = {}; /* {face, is_split, number of subelement at face} */
+  t8_element_get_location_of_subelement (elem, location_elem);
+  //Case 2: The element is  a subelement and we are looking for a face neighbor at face 4.
+  if (t8_element_is_subelement (elem)) {
 
     /* In this case, we have the following examplary situation in the 2D quad case:
      * 
@@ -2856,68 +2575,63 @@ t8_subelement_scheme_hex_c::t8_element_find_neighbor_in_transition_cell
      * We are searching for the subelement id of the real neighbor neigh. 
      * Note that both transition cells can have different levels. */
 
-
     /* Initialize the location array of the real neighbor. */
-    int
-    location_neigh[3] = { -1, -1, 0 };  
+    int location_neigh[3] = { -1, -1, 0 };
 
     //Check if the neighbor has a lower level than the element
     if (phex_w_sub_pseudo_neigh->p8q.level < phex_w_sub_elem->p8q.level) {
 
       location_neigh[0] = subelement_location_to_parent_dual_face[location_elem[0]];
-    /* the pseudo_neigh transition cell has a lower level than the elem transition cell, so the second entry
+      /* the pseudo_neigh transition cell has a lower level than the elem transition cell, so the second entry
        of the location array has to be 1 (= split) */
-      location_neigh[1] = 1;        /* split */
+      location_neigh[1] = 1; /* split */
       /* First, check left/right face of transition cell */
-      if ((location_elem[0] == 0) || (location_elem[0] == 1)) {      
-        //If the y-coordinates differ, we can deviate that the neighbor lies in the back. 
+      if ((location_elem[0] == 0) || (location_elem[0] == 1)) {
+        //If the y-coordinates differ, we can deviate that the neighbor lies in the back.
         //Thus, we need to increment the subelement_type by 2^1
-        if (phex_w_sub_pseudo_neigh->p8q.y != phex_w_sub_elem->p8q.y) {   
-          location_neigh[2] = location_neigh[2] + (int) pow(2,1);        /* back*/
+        if (phex_w_sub_pseudo_neigh->p8q.y != phex_w_sub_elem->p8q.y) {
+          location_neigh[2] = location_neigh[2] + (int) pow (2, 1); /* back*/
         }
-        //Analogously: if the z-coordinates differ, we can deviate that the neighbor lies up. 
+        //Analogously: if the z-coordinates differ, we can deviate that the neighbor lies up.
         //Thus, we need to increment the subelement_type by 2^0
         if (phex_w_sub_pseudo_neigh->p8q.z != phex_w_sub_elem->p8q.z) {
-          location_neigh[2] = location_neigh[2] + (int) pow(2,0);        /* up */
+          location_neigh[2] = location_neigh[2] + (int) pow (2, 0); /* up */
         }
       }
       /* Second, check front/back face of transition cell */
-      if ((location_elem[0] == 2) || (location_elem[0] == 3)){ 
-        if (phex_w_sub_pseudo_neigh->p8q.x != phex_w_sub_elem->p8q.x) {  
-          location_neigh[2] = location_neigh[2] + (int) pow(2,2);        /* right */
+      if ((location_elem[0] == 2) || (location_elem[0] == 3)) {
+        if (phex_w_sub_pseudo_neigh->p8q.x != phex_w_sub_elem->p8q.x) {
+          location_neigh[2] = location_neigh[2] + (int) pow (2, 2); /* right */
         }
         if (phex_w_sub_pseudo_neigh->p8q.z != phex_w_sub_elem->p8q.z) {
-          location_neigh[2] = location_neigh[2] + (int) pow(2,0);        /* up */
+          location_neigh[2] = location_neigh[2] + (int) pow (2, 0); /* up */
         }
       }
       /*Third, check lower/up face of transition cell */
-      if ((location_elem[0] == 4) || (location_elem[0] == 5)) {      
+      if ((location_elem[0] == 4) || (location_elem[0] == 5)) {
         if (phex_w_sub_pseudo_neigh->p8q.x != phex_w_sub_elem->p8q.x) {
-          location_neigh[2] = location_neigh[2] + (int) pow(2,2);        /* right */
+          location_neigh[2] = location_neigh[2] + (int) pow (2, 2); /* right */
         }
         if (phex_w_sub_pseudo_neigh->p8q.y != phex_w_sub_elem->p8q.y) {
-          location_neigh[2] = location_neigh[2] + (int) pow(2,1);        /* back */
+          location_neigh[2] = location_neigh[2] + (int) pow (2, 1); /* back */
         }
       }
     }
     /* the pseudo_neigh transition cell has not a lower level than the elem transition cell, so it's face is not split  */
     else {
       location_neigh[0] = subelement_location_to_parent_dual_face[location_elem[0]];
-      location_neigh[1] = 0;  /* not split */
+      location_neigh[1] = 0; /* not split */
     }
 
     /* check, that a neighbor is found and the location array is adjusted */
-    T8_ASSERT (location_neigh[0] >= 0 && location_neigh[1] >= 0
-               && location_neigh[2] >= 0);
+    T8_ASSERT (location_neigh[0] >= 0 && location_neigh[1] >= 0 && location_neigh[2] >= 0);
 
     /* Depending on the location of elem, we have filled location_neigh with the data of the real neighbor.
      * This data will be used to determine the sub_id of the neighbor within the transition cell of pseudo_neigh. */
-    return
-      t8_element_get_id_from_location (t8_element_get_transition_type
-                                       (pseudo_neigh), location_neigh);
+    return t8_element_get_id_from_location (t8_element_get_transition_type (pseudo_neigh), location_neigh);
   }
   //Elem is no subelement.
-  else{
+  else {
     /* In this case, we have the following examplary situation for the 2D quad case:
      * 
      *      x - - - - - - - x - - - - - - - x
@@ -2935,36 +2649,36 @@ t8_subelement_scheme_hex_c::t8_element_find_neighbor_in_transition_cell
      * Note that the transition cell of pseudo_neigh and elem can have different levels. */
 
     /* Initialize the location array of the real neighbor. */
-    int
-    location_neigh[3] = { 0, 0, 0 };
+    int location_neigh[3] = { 0, 0, 0 };
 
     /* the pseudo_neigh transition cell has a lower level than elem */
-    if (phex_w_sub_pseudo_neigh->p8q.level < phex_w_sub_elem->p8q.level) { //actually same case as case 2 just without location array of elem
+    if (phex_w_sub_pseudo_neigh->p8q.level
+        < phex_w_sub_elem->p8q.level) {  //actually same case as case 2 just without location array of elem
       location_neigh[0] = subelement_location_to_parent_dual_face[location_elem[0]];
-      location_neigh[1] = 1;        /* split */
-    if ((elem_face == 0) || (elem_face == 1)) {      /* left/right face of transition cell */
-        if (phex_w_sub_pseudo_neigh->p8q.y != phex_w_sub_elem->p8q.y) {   
-          location_neigh[2] = location_neigh[2] + (int) pow(2,1);        /* back*/
+      location_neigh[1] = 1;                      /* split */
+      if ((elem_face == 0) || (elem_face == 1)) { /* left/right face of transition cell */
+        if (phex_w_sub_pseudo_neigh->p8q.y != phex_w_sub_elem->p8q.y) {
+          location_neigh[2] = location_neigh[2] + (int) pow (2, 1); /* back*/
         }
         if (phex_w_sub_pseudo_neigh->p8q.z != phex_w_sub_elem->p8q.z) {
-          location_neigh[2] = location_neigh[2] + (int) pow(2,0);        /* up */
+          location_neigh[2] = location_neigh[2] + (int) pow (2, 0); /* up */
         }
       }
-      if ((elem_face == 2) || (elem_face == 3) ){      /* front/back face of transition cell */
+      if ((elem_face == 2) || (elem_face == 3)) { /* front/back face of transition cell */
         if (phex_w_sub_pseudo_neigh->p8q.x != phex_w_sub_elem->p8q.x) {
-          
-          location_neigh[2] = location_neigh[2] + (int) pow(2,2);        /* right */
+
+          location_neigh[2] = location_neigh[2] + (int) pow (2, 2); /* right */
         }
         if (phex_w_sub_pseudo_neigh->p8q.z != phex_w_sub_elem->p8q.z) {
-          location_neigh[2] = location_neigh[2] + (int) pow(2,0);        /* up */
+          location_neigh[2] = location_neigh[2] + (int) pow (2, 0); /* up */
         }
       }
-      if ((elem_face == 4) || (elem_face == 5)) {      /* lower/up face of transition cell */
+      if ((elem_face == 4) || (elem_face == 5)) { /* lower/up face of transition cell */
         if (phex_w_sub_pseudo_neigh->p8q.x != phex_w_sub_elem->p8q.x) {
-          location_neigh[2] = location_neigh[2] + (int) pow(2,2);        /* right */
+          location_neigh[2] = location_neigh[2] + (int) pow (2, 2); /* right */
         }
         if (phex_w_sub_pseudo_neigh->p8q.y != phex_w_sub_elem->p8q.y) {
-          location_neigh[2] = location_neigh[2] + (int) pow(2,1);        /* back */
+          location_neigh[2] = location_neigh[2] + (int) pow (2, 1); /* back */
         }
       }
     }
@@ -2972,37 +2686,32 @@ t8_subelement_scheme_hex_c::t8_element_find_neighbor_in_transition_cell
      * Note that the level of the transition cell can not be higher as the level of elem in this case, 
      * since elem would then be a subelement in a transition cell. */
     if (phex_w_sub_pseudo_neigh->p8q.level == phex_w_sub_elem->p8q.level) {
-      location_neigh[1] = 0;  /* not split */
+      location_neigh[1] = 0; /* not split */
       location_neigh[2] = 0; /* default value */
       location_neigh[0] = subelement_location_to_parent_dual_face[elem_face];
     }
 
     /* check, that a neighbor is found and the location array is adjusted */
-    T8_ASSERT (location_neigh[0] >= 0 && location_neigh[1] >= 0
-               && location_neigh[2] >= 0);
+    T8_ASSERT (location_neigh[0] >= 0 && location_neigh[1] >= 0 && location_neigh[2] >= 0);
     /* Depending on the location of elem, we have filled location_neigh with the data of the real neighbor.
      * This data will be used to determine the sub_id of the neighbor within the transition cell of pseudo_neigh. */
-    return
-      t8_element_get_id_from_location (t8_element_get_transition_type
-                                       (pseudo_neigh), location_neigh);
+    return t8_element_get_id_from_location (t8_element_get_transition_type (pseudo_neigh), location_neigh);
   }
 
-  return -1;                    /* return negative if no neighbor element could be found */
-
+  return -1; /* return negative if no neighbor element could be found */
 }
 
 int
-t8_subelement_scheme_hex_c::t8_element_get_id_from_location (int type,
-                                                              int location[])
+t8_subelement_scheme_hex_c::t8_element_get_id_from_location (int type, int location[])
 {
   T8_ASSERT (type >= 0 && type <= T8_SUB_HEX_MAX_TRANSITION_TYPE);
 
-  int                 sub_id, subelements_count = 0;
-  double              type_temp = double (type);        // would work for ints but we use libc pow(double, double)
-  int                 binary_type[P8EST_FACES] = { };
+  int sub_id, subelements_count = 0;
+  double type_temp = double (type);  // would work for ints but we use libc pow(double, double)
+  int binary_type[P8EST_FACES] = {};
 
   /* get the type as a binary array */
-  int                 iface;
+  int iface;
   for (iface = 0; iface < P8EST_FACES; iface++) {
     if (type_temp >= pow (2.0, 6 - (iface + 1))) {
       binary_type[iface] = 1;
@@ -3013,61 +2722,58 @@ t8_subelement_scheme_hex_c::t8_element_get_id_from_location (int type,
     }
   }
 
-
   /* count the number of elements up to the given location */
-  int                 element_count;
+  int element_count;
   for (element_count = 0; element_count <= location[0]; element_count++) {
     if (element_count == location[0]) {
       if (location[1] == 0) {
         subelements_count += 1;
       }
-      else {        
-          subelements_count += 4;
-          if( location[0] == 0 || location[0] == 1){
-            
-            if ( (location[2] & 2) == 0 ) { // front
+      else {
+        subelements_count += 4;
+        if (location[0] == 0 || location[0] == 1) {
+
+          if ((location[2] & 2) == 0) {  // front
             subelements_count -= 1;
           }
-          if( (location[2] & 1) == 0 ) { //bottom 
+          if ((location[2] & 1) == 0) {  //bottom
             subelements_count -= 2;
           }
-          }
-          if( location[0] == 2 || location[0] == 3){
-      
-            if ( (location[2] & 4) == 0 ) { // left
+        }
+        if (location[0] == 2 || location[0] == 3) {
+
+          if ((location[2] & 4) == 0) {  // left
             subelements_count -= 1;
           }
-          if( (location[2] & 1) == 0 ) { //bottom 
+          if ((location[2] & 1) == 0) {  //bottom
             subelements_count -= 2;
           }
-          }
-          if( location[0] == 4 || location[0] == 5){
-            if ( (location[2] & 4) == 0 ) { // left
+        }
+        if (location[0] == 4 || location[0] == 5) {
+          if ((location[2] & 4) == 0) {  // left
             subelements_count -= 1;
           }
-          if( (location[2] & 2) == 0 ) { //front 
+          if ((location[2] & 2) == 0) {  //front
             subelements_count -= 2;
-          }
           }
         }
       }
-    
+    }
+
     else {
-      if(binary_type[element_count] == 1){
-        subelements_count +=  4;
-      }   
-    else{
-      subelements_count += 1;
+      if (binary_type[element_count] == 1) {
+        subelements_count += 4;
+      }
+      else {
+        subelements_count += 1;
+      }
     }
-    }
-    
   }
   /* get the sub_id */
   sub_id = subelements_count - 1;
 
   return sub_id;
 }
-
 
 void
 t8_subelement_scheme_hex_c::t8_element_new (int length, t8_element_t **elem) const
@@ -3076,10 +2782,9 @@ t8_subelement_scheme_hex_c::t8_element_new (int length, t8_element_t **elem) con
   t8_default_scheme_common_c::t8_element_new (length, elem);
 
   for (int i = 0; i < length; i++) {
-    t8_hex_with_subelements *phex_w_sub =
-      (t8_hex_with_subelements *) elem[i];
+    t8_hex_with_subelements *phex_w_sub = (t8_hex_with_subelements *) elem[i];
     t8_element_init (1, elem[i]);
-    T8_QUAD_SET_TDIM ( (p8est_quadrant_t *) & phex_w_sub->p8q, 3);
+    T8_QUAD_SET_TDIM ((p8est_quadrant_t *) &phex_w_sub->p8q, 3);
   }
 }
 
@@ -3095,11 +2800,11 @@ t8_subelement_scheme_hex_c::t8_element_init (int length, t8_element_t *elem) con
 #ifdef T8_ENABLE_DEBUG
     /* In debugging mode we iterate over all length many elements and 
      * set their hex to the level 0 hex with ID 0. */
-      p8est_quadrant_t   *hex = &phex_w_sub[i].p8q;
-      p8est_quadrant_set_morton (hex, 0, 0);
-      T8_QUAD_SET_TDIM (hex, 3);
-      T8_ASSERT (p8est_quadrant_is_extended (hex));
-    
+    p8est_quadrant_t *hex = &phex_w_sub[i].p8q;
+    p8est_quadrant_set_morton (hex, 0, 0);
+    T8_QUAD_SET_TDIM (hex, 3);
+    T8_ASSERT (p8est_quadrant_is_extended (hex));
+
 #endif
   }
 }
@@ -3111,61 +2816,56 @@ t8_subelement_scheme_hex_c::t8_element_scheme_supports_transitioning (void)
 }
 
 int
-t8_subelement_scheme_hex_c::t8_element_equal (const t8_element_t *elem1, const t8_element_t *elem2) const{
+t8_subelement_scheme_hex_c::t8_element_equal (const t8_element_t *elem1, const t8_element_t *elem2) const
+{
 
-  return (p8est_quadrant_is_equal ((const p8est_quadrant_t *) elem1, (const p8est_quadrant_t *) elem2)) && (t8_element_get_subelement_id((const t8_element * ) elem1) == t8_element_get_subelement_id((const t8_element * ) elem2));
+  return (p8est_quadrant_is_equal ((const p8est_quadrant_t *) elem1, (const p8est_quadrant_t *) elem2))
+         && (t8_element_get_subelement_id ((const t8_element *) elem1)
+             == t8_element_get_subelement_id ((const t8_element *) elem2));
 }
 
 void
-t8_subelement_scheme_hex_c::t8_element_root (t8_element_t *elem) const{
+t8_subelement_scheme_hex_c::t8_element_root (t8_element_t *elem) const
+{
   p8est_quadrant_t *hex = (p8est_quadrant_t *) elem;
   p8est_quadrant_set_morton (hex, 0, 0);
   T8_ASSERT (p8est_quadrant_is_extended (hex));
-  }
-
+}
 
 #ifdef T8_ENABLE_DEBUG
 
-
 /* *INDENT-OFF* */
 /* indent bug, indent adds a second "const" modifier */
 int
-t8_subelement_scheme_hex_c::t8_element_is_valid (const t8_element_t * elem) const 
+t8_subelement_scheme_hex_c::t8_element_is_valid (const t8_element_t *elem) const
 /* *INDENT-ON* */
 
 {
-  const t8_hex_with_subelements *phex_w_sub =
-    (const t8_hex_with_subelements *) elem;
+  const t8_hex_with_subelements *phex_w_sub = (const t8_hex_with_subelements *) elem;
   const p8est_quadrant_t *q = &phex_w_sub->p8q;
 
   /* the p8est quadrant AND the subelement values must be valid such that the whole element is valid */
-  return (p8est_quadrant_is_extended (q)
-          && t8_element_subelement_values_are_valid (elem));
+  return (p8est_quadrant_is_extended (q) && t8_element_subelement_values_are_valid (elem));
 }
-
 
 /* *INDENT-OFF* */
 /* indent bug, indent adds a second "const" modifier */
 int
-t8_subelement_scheme_hex_c::t8_element_subelement_values_are_valid (const
-                                                                 t8_element_t *
-                                                                 elem) const
+t8_subelement_scheme_hex_c::t8_element_subelement_values_are_valid (const t8_element_t *elem) const
 /* *INDENT-ON* */
 
 {
-  const t8_hex_with_subelements *phex_w_sub =
-    (const t8_hex_with_subelements *) elem;
+  const t8_hex_with_subelements *phex_w_sub = (const t8_hex_with_subelements *) elem;
 
-  return ((phex_w_sub->transition_type >= 0 &&
-           phex_w_sub->transition_type <= T8_SUB_HEX_MAX_TRANSITION_TYPE)
-         &&
-    (phex_w_sub->subelement_id >= 0 &&
-      phex_w_sub->subelement_id <= T8_SUB_HEX_MAX_SUBELEMENT_ID));
+  return ((phex_w_sub->transition_type >= 0 && phex_w_sub->transition_type <= T8_SUB_HEX_MAX_TRANSITION_TYPE)
+          && (phex_w_sub->subelement_id >= 0 && phex_w_sub->subelement_id <= T8_SUB_HEX_MAX_SUBELEMENT_ID));
 }
 
 void
-t8_subelement_scheme_hex_c::t8_element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const{
-  T8_ASSERT (!t8_element_is_subelement(elem));
+t8_subelement_scheme_hex_c::t8_element_to_string (const t8_element_t *elem, char *debug_string,
+                                                  const int string_size) const
+{
+  T8_ASSERT (!t8_element_is_subelement (elem));
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (debug_string != NULL);
   t8_hex_with_subelements *hex_with_sub = (t8_hex_with_subelements *) elem;
@@ -3177,8 +2877,7 @@ t8_subelement_scheme_hex_c::t8_element_to_string (const t8_element_t *elem, char
 void
 t8_subelement_scheme_hex_c::t8_element_debug_print (const t8_element_t *elem) const
 {
-  const t8_hex_with_subelements *phex_w_sub =
-    (const t8_hex_with_subelements *) elem;
+  const t8_hex_with_subelements *phex_w_sub = (const t8_hex_with_subelements *) elem;
 
   t8_productionf ("\n|------------ t8_element_debug_print: ------------|"
                   "\n|    Transition Type:     %i"
@@ -3187,26 +2886,22 @@ t8_subelement_scheme_hex_c::t8_element_debug_print (const t8_element_t *elem) co
                   "\n|    Anchor (ref coords): (%lf,%lf,%lf)"
                   "\n|    Level:               %i"
                   "\n|-------------------------------------------------|\n",
-                  phex_w_sub->transition_type, phex_w_sub->subelement_id,
-                  phex_w_sub->p8q.x, phex_w_sub->p8q.y,phex_w_sub->p8q.z,
-                  (double) phex_w_sub->p8q.x / (double) P8EST_ROOT_LEN,
+                  phex_w_sub->transition_type, phex_w_sub->subelement_id, phex_w_sub->p8q.x, phex_w_sub->p8q.y,
+                  phex_w_sub->p8q.z, (double) phex_w_sub->p8q.x / (double) P8EST_ROOT_LEN,
                   (double) phex_w_sub->p8q.y / (double) P8EST_ROOT_LEN,
-                  (double) phex_w_sub->p8q.z / (double) P8EST_ROOT_LEN,
-                  phex_w_sub->p8q.level);
+                  (double) phex_w_sub->p8q.z / (double) P8EST_ROOT_LEN, phex_w_sub->p8q.level);
 
   /* if the element is not valid, abort, but after printing */
   T8_ASSERT (t8_element_is_valid (elem));
-
 }
-
 
 #endif
 
 /* each hex is packed as x,y,z coordinates, the subelement ID, transition type and the level */
 void
 t8_subelement_scheme_hex_c::t8_element_MPI_Pack (t8_element_t **const elements, const unsigned int count,
-                                              void *send_buffer, const int buffer_size, int *position,
-                                              sc_MPI_Comm comm) const
+                                                 void *send_buffer, const int buffer_size, int *position,
+                                                 sc_MPI_Comm comm) const
 {
   int mpiret;
   p8est_quadrant_t **quads = (p8est_quadrant_t **) elements;
@@ -3218,9 +2913,11 @@ t8_subelement_scheme_hex_c::t8_element_MPI_Pack (t8_element_t **const elements, 
     SC_CHECK_MPI (mpiret);
     mpiret = sc_MPI_Pack (&(quads[ielem]->z), 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
     SC_CHECK_MPI (mpiret);
-    mpiret = sc_MPI_Pack (&quads_with_sub[ielem]->subelement_id, 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
+    mpiret
+      = sc_MPI_Pack (&quads_with_sub[ielem]->subelement_id, 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
     SC_CHECK_MPI (mpiret);
-    mpiret = sc_MPI_Pack (&quads_with_sub[ielem]->transition_type, 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
+    mpiret
+      = sc_MPI_Pack (&quads_with_sub[ielem]->transition_type, 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
     SC_CHECK_MPI (mpiret);
     mpiret = sc_MPI_Pack (&(quads[ielem]->level), 1, sc_MPI_INT8_T, send_buffer, buffer_size, position, comm);
     SC_CHECK_MPI (mpiret);
@@ -3251,8 +2948,8 @@ t8_subelement_scheme_hex_c::t8_element_MPI_Pack_size (const unsigned int count, 
 /* each hex is packed as x,y,z coordinates and the level */
 void
 t8_subelement_scheme_hex_c::t8_element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position,
-                                                t8_element_t **elements, const unsigned int count,
-                                                sc_MPI_Comm comm) const
+                                                   t8_element_t **elements, const unsigned int count,
+                                                   sc_MPI_Comm comm) const
 {
   int mpiret;
   p8est_quadrant_t **quads = (p8est_quadrant_t **) elements;
@@ -3265,9 +2962,11 @@ t8_subelement_scheme_hex_c::t8_element_MPI_Unpack (void *recvbuf, const int buff
     SC_CHECK_MPI (mpiret);
     mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem]->z), 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
-    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads_with_sub[ielem]->subelement_id), 1, sc_MPI_INT, comm);
+    mpiret
+      = sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads_with_sub[ielem]->subelement_id), 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
-    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads_with_sub[ielem]->transition_type), 1, sc_MPI_INT, comm);
+    mpiret
+      = sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads_with_sub[ielem]->transition_type), 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
     mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem]->level), 1, sc_MPI_INT8_T, comm);
     SC_CHECK_MPI (mpiret);

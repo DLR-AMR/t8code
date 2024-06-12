@@ -20,14 +20,14 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 #include <sc_refcount.h>
-#include <t8.h>  
+#include <t8.h>
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h> /* A collection of exemplary cmeshes */
 #include <t8_forest/t8_forest_general.h>
-#include <t8_forest/t8_forest_transition.h> 
-#include <t8_forest/t8_forest_geometrical.h>    /* geometrical information of the forest */
-#include <t8_forest/t8_forest_io.h>   
+#include <t8_forest/t8_forest_transition.h>
+#include <t8_forest/t8_forest_geometrical.h> /* geometrical information of the forest */
+#include <t8_forest/t8_forest_io.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
@@ -41,7 +41,6 @@
  *
  * After these two forests are created, we check for equality.
  */
-
 
 /* Adapt a forest such that always the first child of a
  * tree is refined and no other elements. This results in a highly
@@ -68,14 +67,14 @@ t8_test_adapt_balance (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t 
   // if (lelement_id == 0 || lelement_id == 5){
   //   return 1;
   // }
-// return 0;
+  // return 0;
 }
 
 /* adapt, balance and partition a given forest in one step */
 static t8_forest_t
 t8_test_forest_commit_abp (t8_forest_t forest, int maxlevel)
 {
-    t8_debugf("---------start t8_test_forest_commit_abp ---------------------\n");
+  t8_debugf ("---------start t8_test_forest_commit_abp ---------------------\n");
 
   t8_forest_t forest_ada_bal_par;
 
@@ -85,11 +84,11 @@ t8_test_forest_commit_abp (t8_forest_t forest, int maxlevel)
   t8_forest_set_user_data (forest_ada_bal_par, &maxlevel);
   t8_forest_set_adapt (forest_ada_bal_par, forest, t8_test_adapt_balance, 0);
   t8_forest_set_balance (forest_ada_bal_par, NULL, 0);
-  t8_forest_set_transition(forest_ada_bal_par, NULL, 0);
+  t8_forest_set_transition (forest_ada_bal_par, NULL, 0);
   t8_forest_set_partition (forest_ada_bal_par, NULL, 0);
   t8_forest_commit (forest_ada_bal_par);
 
-  t8_debugf("---------finsish t8_test_forest_commit_abp ---------------------\n");
+  t8_debugf ("---------finsish t8_test_forest_commit_abp ---------------------\n");
   return forest_ada_bal_par;
 }
 
@@ -97,7 +96,7 @@ t8_test_forest_commit_abp (t8_forest_t forest, int maxlevel)
 static t8_forest_t
 t8_test_forest_commit_abp_3step (t8_forest_t forest, int maxlevel)
 {
-    t8_debugf("---------start t8_test_forest_commit_abtp_3step ---------------------\n");
+  t8_debugf ("---------start t8_test_forest_commit_abtp_3step ---------------------\n");
 
   t8_forest_t forest_adapt;
   t8_forest_t forest_balance;
@@ -125,29 +124,29 @@ t8_test_forest_commit_abp_3step (t8_forest_t forest, int maxlevel)
   /* partrition the forest */
   t8_forest_set_partition (forest_partition, forest_transition, 0);
   t8_forest_commit (forest_partition);
-t8_debugf("---------finsish t8_test_forest_commit_abtp_3step ---------------------\n");
+  t8_debugf ("---------finsish t8_test_forest_commit_abtp_3step ---------------------\n");
   return forest_partition;
 }
 
-void t8_transition_commit ()
+void
+t8_transition_commit ()
 {
-  t8_cmesh_t  cmesh; 
+  t8_cmesh_t cmesh;
   t8_forest_t forest;
   t8_forest_t forest_ada_bal_tra_part;
   t8_forest_t forest_abtp_3part;
 
   /* construct a single tree hex cmesh */
   cmesh = t8_cmesh_new_hypercube (T8_ECLASS_HEX, sc_MPI_COMM_WORLD, 0, 0, 0);
-  
 
   t8_scheme_cxx_t *scheme = t8_scheme_new_transition_hex_cxx ();
 
-   int maxlevel = 2;
+  int maxlevel = 2;
   for (int level = 2; level <= maxlevel; level++) {
-     /* ref the cmesh since we reuse it */
+    /* ref the cmesh since we reuse it */
     t8_cmesh_ref (cmesh);
     t8_debugf ("Testing forest commit level %i\n", level);
-   
+
     /* Create a uniformly refined forest */
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
 
@@ -166,22 +165,18 @@ void t8_transition_commit ()
 
     t8_forest_unref (&forest_ada_bal_tra_part);
     t8_forest_unref (&forest_abtp_3part);
-
-
   }
-    t8_cmesh_unref(&cmesh);
-    t8_scheme_cxx_unref (&scheme);
-    
+  t8_cmesh_unref (&cmesh);
+  t8_scheme_cxx_unref (&scheme);
 
   t8_debugf ("Done testing forest commit.");
 }
 
-
 int
 main (int argc, char **argv)
 {
-  int                 mpiret;
-/* Initialize MPI. This has to happen before we initialize sc or t8code. */
+  int mpiret;
+  /* Initialize MPI. This has to happen before we initialize sc or t8code. */
   mpiret = sc_MPI_Init (&argc, &argv);
 
   SC_CHECK_MPI (mpiret);

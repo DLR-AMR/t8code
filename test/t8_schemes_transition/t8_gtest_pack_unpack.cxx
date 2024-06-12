@@ -27,7 +27,6 @@
 #include <test/t8_schemes_transition/t8_gtest_dfs_base.hxx>
 #include <t8_schemes/t8_transition/t8_transition_cxx.hxx>
 
-
 /** Use DFS to check for all elements, if packing them, sending them to ourself and unpacking them results in the same element
  * Here, each element is sent individually.
  */

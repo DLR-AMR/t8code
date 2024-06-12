@@ -78,28 +78,25 @@ t8_forest_is_initialized (t8_forest_t forest)
 int
 t8_forest_supports_transitioning (t8_forest_t forest)
 {
-  int                 supports_transition = 1;
-  int                 supports_transition_all_procs = 0;        /* Result over all procs */
-  int                 int_eclass;
-  int                 mpiret;
+  int supports_transition = 1;
+  int supports_transition_all_procs = 0; /* Result over all procs */
+  int int_eclass;
+  int mpiret;
   t8_eclass_scheme_c *tscheme;
 
   /* Iterate over all eclasses */
-  for (int_eclass = (int) T8_ECLASS_ZERO; int_eclass < (int) T8_ECLASS_COUNT;
-       int_eclass++) {
+  for (int_eclass = (int) T8_ECLASS_ZERO; int_eclass < (int) T8_ECLASS_COUNT; int_eclass++) {
     /* If the forest has trees of the current eclass, check if elements of this
      * eclass supports transitioning. */
     if (forest->cmesh->num_local_trees_per_eclass[int_eclass] > 0) {
       tscheme = forest->scheme_cxx->eclass_schemes[int_eclass];
-      supports_transition = supports_transition
-        && t8_element_scheme_supports_transitioning (tscheme);
+      supports_transition = supports_transition && t8_element_scheme_supports_transitioning (tscheme);
     }
   }
   /* Combine the process-local results via a logic or and distribute the
    * result over all procs (in the communicator).*/
-  mpiret =
-    sc_MPI_Allreduce (&supports_transition, &supports_transition_all_procs, 1,
-                      sc_MPI_INT, sc_MPI_LAND, forest->mpicomm);
+  mpiret = sc_MPI_Allreduce (&supports_transition, &supports_transition_all_procs, 1, sc_MPI_INT, sc_MPI_LAND,
+                             forest->mpicomm);
   SC_CHECK_MPI (mpiret);
 
   return supports_transition_all_procs;
@@ -256,17 +253,15 @@ t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from, int no_re
 }
 
 void
-t8_forest_set_transition (t8_forest_t forest, const t8_forest_t set_from,
-                          int set_transition_with_balance)
+t8_forest_set_transition (t8_forest_t forest, const t8_forest_t set_from, int set_transition_with_balance)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
 
   if (set_transition_with_balance) {
-    t8_debugf("-------------set transition with balance -------------\n");
+    t8_debugf ("-------------set transition with balance -------------\n");
     /* balance with repartition */
     t8_forest_set_balance (forest, set_from, 0);
   }
-
 
   if (set_from != NULL) {
     /* Note that it is possible to apply transitioning to a forest without transition implementation.
@@ -546,8 +541,8 @@ t8_forest_commit (t8_forest_t forest)
     forest->incomplete_trees = 0;
     forest->is_transitioned = 0;
   }
-  else { 
-                                   /* set_from != NULL */
+  else {
+    /* set_from != NULL */
     t8_forest_t forest_from = forest->set_from; /* temporarily store set_from, since we may overwrite it */
 
     T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
@@ -600,18 +595,18 @@ t8_forest_commit (t8_forest_t forest)
       if (forest->from_method > 0) {
         /* The forest should also be partitioned/balanced/transitioned.
          * We first untransition the forest, then adapt the forest, then balance and then partition and then possibly transition the forest again*/
-        if (forest->set_from->is_transitioned){
-          T8_ASSERT(forest->is_transitioned == 0);
-          t8_forest_untransition(forest);
+        if (forest->set_from->is_transitioned) {
+          T8_ASSERT (forest->is_transitioned == 0);
+          t8_forest_untransition (forest);
         }
-        
+
         t8_forest_t forest_adapt;
 
-        t8_forest_init (&forest_adapt);       
+        t8_forest_init (&forest_adapt);
         /* forest_adapt should not change ownership of forest->set_from */
         if (forest_from == forest->set_from) {
-            t8_forest_ref (forest->set_from);
-         }
+          t8_forest_ref (forest->set_from);
+        }
         /* set user data of forest to forest_adapt */
         t8_forest_set_user_data (forest_adapt, t8_forest_get_user_data (forest));
         /* Construct an intermediate, adapted forest */
@@ -631,8 +626,8 @@ t8_forest_commit (t8_forest_t forest)
       else {
         /* This forest should only be adapted */
         t8_forest_copy_trees (forest, forest->set_from, 0);
-        
-        t8_forest_adapt (forest);        
+
+        t8_forest_adapt (forest);
       }
     }
     if (forest->from_method & T8_FOREST_FROM_PARTITION) {
@@ -671,7 +666,6 @@ t8_forest_commit (t8_forest_t forest)
         forest->trees = sc_array_new (sizeof (t8_tree_struct_t));
         /* partition the forest */
         t8_forest_partition (forest);
-
       }
     }
     if (forest->from_method & T8_FOREST_FROM_BALANCE) {
@@ -691,9 +685,9 @@ t8_forest_commit (t8_forest_t forest)
         t8_forest_t forest_balance;
         t8_forest_init (&forest_balance);
         /* forest_balance should not change ownership of forest->set_from */
-         if (forest_from == forest->set_from) {
-            t8_forest_ref (forest->set_from);
-         }
+        if (forest_from == forest->set_from) {
+          t8_forest_ref (forest->set_from);
+        }
         t8_forest_set_balance (forest_balance, forest->set_from, flag_rep);
         /* Set profiling if enabled */
         t8_forest_set_profiling (forest_balance, forest->profile != NULL);
@@ -701,19 +695,19 @@ t8_forest_commit (t8_forest_t forest)
         /* The new forest will be partitioned/transitioned from forest_balance */
         forest->set_from = forest_balance;
       }
-      else{
-      /* Only execute t8_balance.*/
-      T8_ASSERT (forest->from_method == 0);
-
-      /* This forest should only be balanced */
-      if (forest->set_balance == T8_FOREST_BALANCE_NO_REPART) {
-        /* balance without repartition */
-        t8_forest_balance (forest, 0);
-      }
       else {
-        /* balance with repartition */
-        t8_forest_balance (forest, 1);
-      }
+        /* Only execute t8_balance.*/
+        T8_ASSERT (forest->from_method == 0);
+
+        /* This forest should only be balanced */
+        if (forest->set_balance == T8_FOREST_BALANCE_NO_REPART) {
+          /* balance without repartition */
+          t8_forest_balance (forest, 0);
+        }
+        else {
+          /* balance with repartition */
+          t8_forest_balance (forest, 1);
+        }
       }
     }
     if (forest->from_method & T8_FOREST_FROM_TRANSITION) {
@@ -746,7 +740,7 @@ t8_forest_commit (t8_forest_t forest)
   forest->set_for_coarsening = 0;
   forest->set_from = NULL;
   forest->committed = 1;
-  t8_debugf("Forest is transitioned %i \n", forest->is_transitioned);
+  t8_debugf ("Forest is transitioned %i \n", forest->is_transitioned);
   t8_debugf ("Committed forest with %li local elements and %lli "
              "global elements.\n\tTree range is from %lli to %lli.\n",
              (long) forest->local_num_elements, (long long) forest->global_num_elements,
@@ -755,13 +749,11 @@ t8_forest_commit (t8_forest_t forest)
   if (forest->tree_offsets == NULL) {
     /* Compute the tree offset array */
     t8_forest_partition_create_tree_offsets (forest);
-
   }
 
   if (forest->element_offsets == NULL) {
     /* Compute element offsets */
     t8_forest_partition_create_offsets (forest);
-
   }
   if (forest->global_first_desc == NULL) {
     /* Compute global first desc array */
@@ -833,13 +825,12 @@ t8_forest_get_global_num_subelements (t8_forest_t forest)
 void
 t8_forest_comm_global_num_subelements (t8_forest_t forest)
 {
-  int                 mpiret;
-  t8_gloidx_t         local_num_subel;
-  t8_gloidx_t         global_num_subel;
+  int mpiret;
+  t8_gloidx_t local_num_subel;
+  t8_gloidx_t global_num_subel;
 
   local_num_subel = (t8_gloidx_t) forest->local_num_subelements;
-  mpiret = sc_MPI_Allreduce (&local_num_subel, &global_num_subel, 1,
-                             T8_MPI_GLOIDX, sc_MPI_SUM, forest->mpicomm);
+  mpiret = sc_MPI_Allreduce (&local_num_subel, &global_num_subel, 1, T8_MPI_GLOIDX, sc_MPI_SUM, forest->mpicomm);
   SC_CHECK_MPI (mpiret);
   forest->global_num_subelements = global_num_subel;
 }
@@ -1495,7 +1486,7 @@ t8_forest_profile_get_balance (t8_forest_t forest, int *balance_rounds)
 void
 t8_forest_compute_elements_offset (t8_forest_t forest)
 {
- 
+
   t8_locidx_t itree, num_trees;
   t8_locidx_t current_offset;
   t8_tree_t tree;
@@ -1504,8 +1495,7 @@ t8_forest_compute_elements_offset (t8_forest_t forest)
 
   /* Get the number of local trees */
   num_trees = t8_forest_get_num_local_trees (forest);
- 
-  
+
   current_offset = 0;
   /* Iterate through all trees, sum up the element counts and set it as
    * the element_offsets */
@@ -1513,7 +1503,6 @@ t8_forest_compute_elements_offset (t8_forest_t forest)
     tree = t8_forest_get_tree (forest, itree);
     tree->elements_offset = current_offset;
     current_offset += t8_forest_get_tree_element_count (tree);
-
   }
   /* At the end, we counted all elements */
   T8_ASSERT (current_offset == forest->local_num_elements);
@@ -1574,7 +1563,7 @@ t8_forest_new_uniform (t8_cmesh_t cmesh, t8_scheme_cxx_t *scheme, const int leve
 
   /* Initialize the forest */
   t8_forest_init (&forest);
-  T8_ASSERT(t8_forest_is_initialized(forest));
+  T8_ASSERT (t8_forest_is_initialized (forest));
   /* Set the cmesh, scheme and level */
   t8_forest_set_cmesh (forest, cmesh, comm);
   t8_forest_set_scheme (forest, scheme);
@@ -1718,6 +1707,6 @@ t8_forest_unref (t8_forest_t *pforest)
   T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (forest != NULL);
   if (t8_refcount_unref (&forest->rc)) {
-      t8_forest_reset (pforest);
+    t8_forest_reset (pforest);
   }
 }

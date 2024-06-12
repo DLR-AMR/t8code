@@ -383,7 +383,7 @@ t8_forest_comm_global_num_elements (t8_forest_t forest);
  *  of the local subelement counts.
  *  \param [in] forest    The forest.
  */
-void 
+void
 t8_forest_comm_global_num_subelements (t8_forest_t forest);
 
 /** Return the number of global subelements in the forest.
@@ -391,8 +391,8 @@ t8_forest_comm_global_num_subelements (t8_forest_t forest);
   * \return                The number of subelements (summed over all processes) in \a forest.
  * \a forest must be committed before calling this function.
   */
-t8_gloidx_t         t8_forest_get_global_num_subelements (t8_forest_t forest);
-
+t8_gloidx_t
+t8_forest_get_global_num_subelements (t8_forest_t forest);
 
 /** Set a source forest to use subelements during commit, that will remove hanging faces from the adapted mesh.
  * \param [in, out] forest  The forest.
@@ -401,12 +401,8 @@ t8_gloidx_t         t8_forest_get_global_num_subelements (t8_forest_t forest);
  *                                               has been used before, then balance will still be set (0 does not unset balance).
  * \note This feature is currently only available for the 2D quad scheme. 
  */
-void               
-t8_forest_set_transition (t8_forest_t forest,
-                                              const t8_forest_t set_from,
-                                              int
-                                              set_transition_with_balance);
-
+void
+t8_forest_set_transition (t8_forest_t forest, const t8_forest_t set_from, int set_transition_with_balance);
 
 /** After allocating and adding properties to a forest, commit the changes.
  * This call sets up the internal state of the forest.

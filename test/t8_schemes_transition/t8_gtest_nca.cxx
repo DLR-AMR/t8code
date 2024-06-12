@@ -32,7 +32,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <test/t8_gtest_macros.hxx>
 #include <t8_schemes/t8_transition/t8_transition_cxx.hxx>
 
-
 class nca: public testing::TestWithParam<t8_eclass> {
  protected:
   void

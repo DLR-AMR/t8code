@@ -41,8 +41,10 @@ enum T8_TRANSITION_REFINE_IDENTIFIER {
 T8_EXTERN_C_BEGIN ();
 
 /** Return the subelement element implementations of t8code. */
-t8_scheme_cxx_t    *t8_scheme_new_transition_quad_cxx (void);
-t8_scheme_cxx_t    *t8_scheme_new_transition_hex_cxx (void);
+t8_scheme_cxx_t *
+t8_scheme_new_transition_quad_cxx (void);
+t8_scheme_cxx_t *
+t8_scheme_new_transition_hex_cxx (void);
 
 T8_EXTERN_C_END ();
 

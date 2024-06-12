@@ -156,4 +156,4 @@ TEST_P (class_successor, test_recursive_and_deep_successor)
   t8_deep_successor (element, successor, last, ts);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_successor, class_successor, testing::Values(T8_ECLASS_HEX), print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_successor, class_successor, testing::Values (T8_ECLASS_HEX), print_eclass);

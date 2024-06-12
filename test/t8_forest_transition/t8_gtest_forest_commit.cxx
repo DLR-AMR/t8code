@@ -24,7 +24,7 @@
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_forest/t8_forest_transition.h> 
+#include <t8_forest/t8_forest_transition.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
@@ -40,8 +40,6 @@
  *
  * After these two forests are created, we check for equality.
  */
-
-
 
 /* Adapt a forest such that always the first child of a
  * tree is refined and no other elements. This results in a highly
@@ -65,17 +63,17 @@ t8_test_adapt_balance (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t 
   //   return 1;
   // }
   // return 0;
-  if (lelement_id == 0){
+  if (lelement_id == 0) {
     return 1;
   }
-return 0;
+  return 0;
 }
 
 /* adapt, balance and partition a given forest in one step */
 static t8_forest_t
 t8_test_forest_commit_abp (t8_forest_t forest, int maxlevel)
 {
-    t8_debugf("---------start t8_test_forest_commit_abp ---------------------\n");
+  t8_debugf ("---------start t8_test_forest_commit_abp ---------------------\n");
 
   t8_forest_t forest_ada_bal_par;
 
@@ -85,11 +83,11 @@ t8_test_forest_commit_abp (t8_forest_t forest, int maxlevel)
   t8_forest_set_user_data (forest_ada_bal_par, &maxlevel);
   t8_forest_set_adapt (forest_ada_bal_par, forest, t8_test_adapt_balance, 0);
   t8_forest_set_balance (forest_ada_bal_par, NULL, 0);
-  t8_forest_set_transition(forest_ada_bal_par, NULL, 0);
+  t8_forest_set_transition (forest_ada_bal_par, NULL, 0);
   t8_forest_set_partition (forest_ada_bal_par, NULL, 0);
   t8_forest_commit (forest_ada_bal_par);
 
-  t8_debugf("---------finsish t8_test_forest_commit_abp ---------------------\n");
+  t8_debugf ("---------finsish t8_test_forest_commit_abp ---------------------\n");
   return forest_ada_bal_par;
 }
 
@@ -129,7 +127,7 @@ t8_test_forest_commit_abp_3step (t8_forest_t forest, int maxlevel)
 
 TEST (forest_commit, test_forest_commit)
 {
-  t8_cmesh_t  cmesh; 
+  t8_cmesh_t cmesh;
   t8_forest_t forest;
   t8_forest_t forest_ada_bal_tra_part;
   t8_forest_t forest_abtp_3part;
@@ -137,16 +135,15 @@ TEST (forest_commit, test_forest_commit)
   const int level_step = 0;
   /* construct a single tree hex cmesh */
   cmesh = t8_cmesh_new_hypercube (T8_ECLASS_HEX, sc_MPI_COMM_WORLD, 0, 0, 0);
-  
 
   t8_scheme_cxx_t *scheme = t8_scheme_new_transition_hex_cxx ();
 
-   int maxlevel = -1;
+  int maxlevel = -1;
   for (int level = 0; level <= maxlevel; level++) {
-     /* ref the cmesh since we reuse it */
+    /* ref the cmesh since we reuse it */
     t8_cmesh_ref (cmesh);
     t8_debugf ("Testing forest commit level %i\n", level);
-   
+
     /* Create a uniformly refined forest */
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
 
@@ -161,13 +158,11 @@ TEST (forest_commit, test_forest_commit)
     ASSERT_TRUE (t8_forest_is_equal (forest_abtp_3part, forest_ada_bal_tra_part)) << "The forests are not equal";
     t8_scheme_cxx_ref (scheme);
 
-
     t8_forest_unref (&forest_ada_bal_tra_part);
     t8_forest_unref (&forest_abtp_3part);
-
   }
-    t8_scheme_cxx_unref (&scheme);
-    t8_cmesh_unref(&cmesh);
+  t8_scheme_cxx_unref (&scheme);
+  t8_cmesh_unref (&cmesh);
 
   t8_debugf ("Done testing forest commit.");
 }

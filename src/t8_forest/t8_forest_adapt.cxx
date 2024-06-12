@@ -365,17 +365,12 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid, t8_lo
  * independent of the specific refine function that has been applied before. This function
  * checks if these rules are fulfilled and may change the refine value. */
 void
-t8_forest_adjust_refine_for_transitioned_forests (const t8_forest_t forest,
-                                                  t8_eclass_scheme_c *tscheme,
-                                                  const t8_element_t
-                                                  *current_element,
-                                                  const t8_locidx_t ltree_id,
+t8_forest_adjust_refine_for_transitioned_forests (const t8_forest_t forest, t8_eclass_scheme_c *tscheme,
+                                                  const t8_element_t *current_element, const t8_locidx_t ltree_id,
                                                   int *prefine)
 {
   /* refine values >1 are only allowed for eclass schemes that support transitioning */
-  T8_ASSERT (!
-             (tscheme->t8_element_get_transition_refine_identifier () == 0
-              && *prefine > 1));
+  T8_ASSERT (!(tscheme->t8_element_get_transition_refine_identifier () == 0 && *prefine > 1));
 
   /* Existing transition cells must be removed during adaptation.
    * We establish the rule to coarsen a transition cell back to its parent in case of refine = 0. */
@@ -418,8 +413,8 @@ t8_forest_adapt (t8_forest_t forest)
   int num_elements_to_adapt_callback;
   int zz;
   int ci;
-  unsigned int num_subelements;  /* This is only needed when transitioning is enabled. */
-  t8_locidx_t subel_inserted; /* This is only needed when transitioning is enabled. */
+  unsigned int num_subelements; /* This is only needed when transitioning is enabled. */
+  t8_locidx_t subel_inserted;   /* This is only needed when transitioning is enabled. */
   int refine;
   int is_family;
   int element_removed = 0;
@@ -557,7 +552,8 @@ t8_forest_adapt (t8_forest_t forest)
          *                    >1 if the element should be refined into a transition cell 
          */
         refine = forest->set_adapt_fn (forest, forest->set_from, ltree_id, el_considered, tscheme, is_family,
-                                       num_elements_to_adapt_callback, elements_from);        T8_ASSERT (is_family || refine != -1);
+                                       num_elements_to_adapt_callback, elements_from);
+        T8_ASSERT (is_family || refine != -1);
         if (refine == 1 && tscheme->t8_element_level (elements_from[0]) >= forest->maxlevel) {
           /* Only refine an element regularly if it does not exceed the maximum level */
           refine = 0;
@@ -595,29 +591,26 @@ t8_forest_adapt (t8_forest_t forest)
           el_considered++;
         }
         else if (refine > 1) {
-        /* refinement into transition cell */
+          /* refinement into transition cell */
 
-        /* determine the number of subelements of the given type for memory allocation */
-        num_subelements =
-          tscheme->t8_element_get_number_of_subelements (refine - 1);
-          
-        /* We need to reallocate memory for the transition cell */
-        elements = T8_REALLOC (elements, t8_element_t *, num_subelements);
+          /* determine the number of subelements of the given type for memory allocation */
+          num_subelements = tscheme->t8_element_get_number_of_subelements (refine - 1);
 
-        (void) t8_element_array_push_count (telements, num_subelements);
-        for (zz = 0; zz < num_subelements; zz++) {
-          elements[zz] =
-            t8_element_array_index_locidx (telements, el_inserted + zz);
-        }
-        tscheme->t8_element_to_transition_cell (elements_from[0], refine - 1,
-                                                elements);
-        el_inserted += num_subelements;
-        el_considered++;
+          /* We need to reallocate memory for the transition cell */
+          elements = T8_REALLOC (elements, t8_element_t *, num_subelements);
 
-        /* Each time we entry this case, a parent element is refined into subelements.
+          (void) t8_element_array_push_count (telements, num_subelements);
+          for (zz = 0; zz < num_subelements; zz++) {
+            elements[zz] = t8_element_array_index_locidx (telements, el_inserted + zz);
+          }
+          tscheme->t8_element_to_transition_cell (elements_from[0], refine - 1, elements);
+          el_inserted += num_subelements;
+          el_considered++;
+
+          /* Each time we entry this case, a parent element is refined into subelements.
          * We will count the global number of constructed subelements and give this number as additional output. */
-        subel_inserted += num_subelements;
-      }
+          subel_inserted += num_subelements;
+        }
         else if (refine == -1) {
           /* The elements form a family and are to be coarsened. */
           /* Make room for one more new element. */
@@ -699,7 +692,7 @@ t8_forest_adapt (t8_forest_t forest)
 
   /* We now adapted all local trees */
   /* Compute the new global number of elements */
- /* Compute the new global number of elements and subelements */
+  /* Compute the new global number of elements and subelements */
   t8_forest_comm_global_num_elements (forest);
 
   /* Updating other processes about local (in)complete trees.
@@ -720,14 +713,12 @@ t8_forest_adapt (t8_forest_t forest)
   t8_forest_comm_global_num_subelements (forest);
   /* If any subelement is constructed, give output this number as an additional information. */
   if (forest->global_num_subelements > 0) {
-    t8_global_productionf
-      ("Done t8_forest_adapt with %lld total elements, %li of which are subelements.\n",
-       (long long) forest->global_num_elements, forest->global_num_subelements);
+    t8_global_productionf ("Done t8_forest_adapt with %lld total elements, %li of which are subelements.\n",
+                           (long long) forest->global_num_elements, forest->global_num_subelements);
   }
   else {
-     t8_global_productionf ("Done t8_forest_adapt with %lld total elements\n", (long long) forest->global_num_elements);
+    t8_global_productionf ("Done t8_forest_adapt with %lld total elements\n", (long long) forest->global_num_elements);
   }
- 
 
   /* if profiling is enabled, measure runtime */
   if (forest->profile != NULL) {
