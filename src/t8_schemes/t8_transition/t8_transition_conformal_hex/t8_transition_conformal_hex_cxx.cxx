@@ -234,9 +234,6 @@ t8_subelement_scheme_hex_c::t8_element_parent (const t8_element_t *elem,
   /* the parent of any element will never be a subelement */
   t8_element_reset_subelement_values (parent);
 
-  // t8_element_copy_surround (q, r);
-
-  // SC_ABORT_NOT_REACHED();
 }
 
 void
@@ -1015,10 +1012,7 @@ t8_subelement_scheme_hex_c::t8_element_children (const t8_element_t *elem,
 
   for (ichild = 0; ichild < P8EST_CHILDREN; ++ichild) {
     t8_element_reset_subelement_values (c[ichild]);
-    // t8_element_copy_surround (q, &phex_w_sub_children[ichild]->p8q);
   }
-
-  // SC_ABORT_NOT_REACHED();
 }
 
 int
@@ -1164,7 +1158,6 @@ t8_subelement_scheme_hex_c::t8_element_first_descendant (const t8_element_t
    * a subelement, we reset the corresponding subelement values. */
   t8_element_reset_subelement_values (desc);
 
-  // SC_ABORT_NOT_REACHED();
 }
 
 void
@@ -1228,18 +1221,13 @@ t8_subelement_scheme_hex_c::t8_element_nca (const t8_element_t *elem1,
 
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
-// #if 0
-//   /* TODO: This assertions throws an error since it expects a 3D hex.
-//    *       this does not make sense. investigate. */
-//   T8_ASSERT (t8_element_surround_matches (q1, q2));
-// #endif
 
   /* In case of subelements, we use the parent quadrant and construct nca of the parent quadrant */
   t8_element_reset_subelement_values (nca);
   p8est_nearest_common_ancestor (q1, q2, r);
 }
 
-//Nummerierung der Seiten(der Pyramiden) wie in Davids Masterarbeit
+
 t8_element_shape_t
 t8_subelement_scheme_hex_c::t8_element_face_shape (const t8_element_t *elem,
                                                     int face) const
@@ -1749,8 +1737,6 @@ int                 location[3] = { };
 
     }
     else {            /* in this case the face neighbor is no sibling */
-      // int                 location[3] = { };
-      // t8_element_get_location_of_subelement (elem, location);
 
       /* setting the anchor node of the neighbor element */
       n->x = q->x;
@@ -2617,14 +2603,13 @@ t8_subelement_scheme_hex_c::t8_element_get_location_of_subelement (const
    * We will use the binary representation to determine the location of the given subelement. 
    * 
    * We need to know: 
-   *     i)   the face number of the first vertex (values: {0,1,2,3}).
+   *     i)   the face number of the first vertex (values: {0,1,2,3,4,5}).
    *     ii)  whether this face is split in half (values: {0,1}).
-   *     iii) if the subelement is the first or second subelement at the face (values: {0,1}).
+   *     iii) the subelement_id_type.
    * 
    * These information are then saved in the location array which will be used by the element_vertex function, 
    * to automatically determine the vertex coordinates of the given subelement. 
    * 
-   * The location array for the above example would be {1,1,1} (upper face, split = true, second subelement at the upper face). */
 
   /* 1) convert the transition type from a decimal to a binary representation */
   int                 type = phex_w_sub->transition_type;
@@ -2931,7 +2916,7 @@ t8_subelement_scheme_hex_c::t8_element_find_neighbor_in_transition_cell
       t8_element_get_id_from_location (t8_element_get_transition_type
                                        (pseudo_neigh), location_neigh);
   }
-  //Now, elem is no subelement.
+  //Elem is no subelement.
   else{
     /* In this case, we have the following examplary situation for the 2D quad case:
      * 
@@ -3077,21 +3062,12 @@ t8_subelement_scheme_hex_c::t8_element_get_id_from_location (int type,
     }
     
   }
-// t8_productionf("subelements count % i \n transition type %i, und location [0]= %i, location[1] = %i, location [2] = %i \n", subelements_count, type ,location[0] ,location[1] ,location[2] );
   /* get the sub_id */
   sub_id = subelements_count - 1;
 
   return sub_id;
 }
 
-int
-t8_subelement_scheme_hex_c::t8_element_get_face_number_of_hypotenuse (const
-                                                                       t8_element_t
-                                                                       *elem)
-{
- SC_ABORT_NOT_REACHED();
-
-}
 
 void
 t8_subelement_scheme_hex_c::t8_element_new (int length, t8_element_t **elem) const
@@ -3132,12 +3108,6 @@ int
 t8_subelement_scheme_hex_c::t8_element_scheme_supports_transitioning (void)
 {
   return T8_HEX_TRANSITION_IS_IMPLEMENTED;
-}
-
-int
-t8_subelement_scheme_hex_c::t8_element_transition_scheme_is_conformal (void)
-{
-  return T8_HEX_TRANSITION_SCHEME_IS_CONFORMAL;
 }
 
 int

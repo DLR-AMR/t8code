@@ -125,7 +125,7 @@ t8_transition_global (void)
   t8_forest_write_vtk (forest, "forest_global_hex" );
 
 
-  for (int adaptation_count = 1; adaptation_count <= 1; ++adaptation_count) {
+  for (int adaptation_count = 1; adaptation_count <= 2; ++adaptation_count) {
 
   forest_adapt = t8_test_forest_commit_abpt(forest);
 
