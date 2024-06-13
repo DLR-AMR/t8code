@@ -458,7 +458,7 @@ t8_subelement_scheme_hex_c::t8_element_get_sibling_neighbor_in_transition_cell_h
     * element ID). If the transition type is = 1 at the hex_face, it's split.*/
 
     //-----------------------------CASE 1--------------------------------------------------------
-        t8_debugf("CASE 1\n");
+    t8_debugf ("CASE 1\n");
 
     //make rightshift until only the bits for the faces before our neighbors face are left.
     transition_type_tmp = transition_type >> (5 - neigh_hex_face);
@@ -486,7 +486,7 @@ t8_subelement_scheme_hex_c::t8_element_get_sibling_neighbor_in_transition_cell_h
     }
     //-------------------------CASE 2--------------------------------------
     else {  //neighbor is split. We have to return 2 subelements.
-          t8_debugf("CASE 2\n");
+      t8_debugf ("CASE 2\n");
 
       amount_subelements = 0;
       int subelement_id_tmp2 = 0;  // In here we store the second subelement ID in case 2 if elem has two neighbors
@@ -559,8 +559,8 @@ t8_subelement_scheme_hex_c::t8_element_get_sibling_neighbor_in_transition_cell_h
 
   //-------------------------CASE 3--------------------------------------
   else {
-          t8_debugf("CASE 3\n");
-        t8_debugf("location[0] =   %i\n", location[0]);
+    t8_debugf ("CASE 3\n");
+    t8_debugf ("location[0] =   %i\n", location[0]);
 
     //The own face is split
     //get hex_face_number of the face_neighbored subelement
@@ -570,24 +570,20 @@ t8_subelement_scheme_hex_c::t8_element_get_sibling_neighbor_in_transition_cell_h
     if (location[0] == 0 || location[0] == 1) {
       if (((location[2] & 2) == 0) && (face == 1)) {  //front
         hlp += 1;
-        t8_debugf("hlp front  %i\n", hlp);
-
+        t8_debugf ("hlp front  %i\n", hlp);
       }
       if (((location[2] & 2) != 0) && (face == 0)) {  //back
         hlp += 1;
-        t8_debugf("hlp back %i\n", hlp);
-
+        t8_debugf ("hlp back %i\n", hlp);
       }
 
       if (((location[2] & 1) == 0) && (face == 3)) {  //bottom
         hlp += 1;
-        t8_debugf("hlp bottom %i\n", hlp);
-
+        t8_debugf ("hlp bottom %i\n", hlp);
       }
       if (((location[2] & 1) != 0) && (face == 2)) {  //up
         hlp += 1;
-        t8_debugf("hlp up %i\n", hlp);
-
+        t8_debugf ("hlp up %i\n", hlp);
       }
     }
     //hex face 2 and 3
@@ -611,24 +607,20 @@ t8_subelement_scheme_hex_c::t8_element_get_sibling_neighbor_in_transition_cell_h
     if (location[0] == 4 || location[0] == 5) {
       if (((location[2] & 4) == 0) && (face == 1)) {  //left
         hlp += 1;
-                t8_debugf("hlp left %i\n", hlp);
-
+        t8_debugf ("hlp left %i\n", hlp);
       }
       if (((location[2] & 4) != 0) && (face == 0)) {  //right
         hlp += 1;
-                t8_debugf("hlp right %i\n", hlp);
-
+        t8_debugf ("hlp right %i\n", hlp);
       }
 
       if (((location[2] & 2) == 0) && (face == 3)) {  //front
         hlp += 1;
-                t8_debugf("hlp front %i\n", hlp);
-
+        t8_debugf ("hlp front %i\n", hlp);
       }
       if (((location[2] & 2) != 0) && (face == 2)) {  //back
         hlp += 1;
-                t8_debugf("hlp back %i\n", hlp);
-
+        t8_debugf ("hlp back %i\n", hlp);
       }
     }
     //if none of these conditions is true, we are in case 3
@@ -662,7 +654,7 @@ t8_subelement_scheme_hex_c::t8_element_get_sibling_neighbor_in_transition_cell_h
 
     //---------------------------CASE 4--------------------------------------
     else {
-      t8_debugf("CASE 4\n");
+      t8_debugf ("CASE 4\n");
       //It's possible, that the neighbored subelement has the same face_hex number as the element itself
       //
       amount_subelements = 0;
@@ -703,19 +695,18 @@ t8_subelement_scheme_hex_c::t8_element_get_sibling_neighbor_in_transition_cell_h
 
       if (location[0] == 2 || location[0] == 3) {  // hex_face = 2/3
         if ((location[2] & 4) == 0) {              //left
-          if (face == 1) {  // then it's the next element
+          if (face == 1) {                         // then it's the next element
             subelement_id_tmp = phex_w_sub_neighbor_at_face->subelement_id + 1;
             hlp += 1;
           }
           else {              //right
-          if (face == 0) {                         //then it's the element before.
-            subelement_id_tmp = phex_w_sub_neighbor_at_face->subelement_id - 1;
-            hlp += 1;
+            if (face == 0) {  //then it's the element before.
+              subelement_id_tmp = phex_w_sub_neighbor_at_face->subelement_id - 1;
+              hlp += 1;
+            }
           }
         }
-          
-        }
-        
+
         if ((location[2] & 1) != 0) {  //up
           if (face == 2) {             //then it's the element below
             subelement_id_tmp = phex_w_sub_neighbor_at_face->subelement_id - 2;
@@ -731,15 +722,15 @@ t8_subelement_scheme_hex_c::t8_element_get_sibling_neighbor_in_transition_cell_h
       }
 
       if (location[0] == 4 || location[0] == 5) {  // hex_face = 4/5
-        
-        if ((location[2] & 4) != 0) {              //right
-          if (face == 0) {                         //then it's the element before.
+
+        if ((location[2] & 4) != 0) {  //right
+          if (face == 0) {             //then it's the element before.
             subelement_id_tmp = phex_w_sub_neighbor_at_face->subelement_id - 1;
             hlp += 1;
           }
         }
-        else{
-          if (face == 3){
+        else {
+          if (face == 1) {
             subelement_id_tmp = phex_w_sub_neighbor_at_face->subelement_id + 1;
             hlp += 1;
           }
@@ -907,7 +898,7 @@ t8_subelement_scheme_hex_c::t8_element_get_sibling_neighbor_in_transition_cell_h
     }
   }
   phex_w_sub_neighbor_at_face->subelement_id = subelement_id_tmp;
-  t8_debugf("subelement ID nach neighbor function %i\n", subelement_id_tmp);
+  t8_debugf ("subelement ID nach neighbor function %i\n", subelement_id_tmp);
 }
 
 void
@@ -2576,8 +2567,8 @@ t8_subelement_scheme_hex_c::t8_element_find_neighbor_in_transition_cell (const t
 
   //Case 2: The element is  a subelement and we are looking for a face neighbor at face 4.
   if (t8_element_is_subelement (elem)) {
-  int location_elem[3] = {}; /* {face, is_split, number of subelement at face} */
-  t8_element_get_location_of_subelement (elem, location_elem);
+    int location_elem[3] = {}; /* {face, is_split, number of subelement at face} */
+    t8_element_get_location_of_subelement (elem, location_elem);
     /* In this case, we have the following examplary situation in the 2D quad case:
      * 
      *      x - - - - - - - x - - - - - - - x
@@ -2857,7 +2848,6 @@ t8_subelement_scheme_hex_c::t8_element_transition_scheme_is_conformal (void)
 {
   return T8_HEX_TRANSITION_SCHEME_IS_CONFORMAL;
 }
-
 
 #ifdef T8_ENABLE_DEBUG
 

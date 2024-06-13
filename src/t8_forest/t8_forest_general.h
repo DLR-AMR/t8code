@@ -399,7 +399,8 @@ t8_forest_get_global_num_subelements (t8_forest_t forest);
   * \return                The number of subelements on this process in \a forest.
  * \a forest must be committed before calling this function.
   */
-t8_locidx_t         t8_forest_get_local_num_subelements (t8_forest_t forest);
+t8_locidx_t
+t8_forest_get_local_num_subelements (t8_forest_t forest);
 
 /** Set a source forest to use subelements during commit, that will remove hanging faces from the adapted mesh.
  * \param [in, out] forest  The forest.

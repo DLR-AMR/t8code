@@ -79,29 +79,29 @@ t8_test_forest_commit_abpt (t8_forest_t forest)
 void
 t8_LFN_test (t8_forest_t forest_adapt)
 {
-  t8_debugf ("~~~~~~~~~~ Into the LFN test fucntion. ~~~~~~~~~~\n");
+  t8_debugf ("~~~~~~~~~~ Into the LFN test function. ~~~~~~~~~~\n");
 
   /* Collecting data of the adapted forest */
-  const t8_element_t       *current_element;
-  t8_tree_t           current_tree;
-  t8_locidx_t         forest_is_balanced = 1;
-  t8_element_t      **neighbor_leafs;
-  t8_locidx_t        *element_indices;
+  const t8_element_t *current_element;
+  t8_tree_t current_tree;
+  t8_locidx_t forest_is_balanced = 1;
+  t8_element_t **neighbor_leafs;
+  t8_locidx_t *element_indices;
   t8_eclass_scheme_c *neigh_scheme;
-  t8_eclass_t         eclass;
+  t8_eclass_t eclass;
   t8_eclass_scheme_c *ts;
 
-  int                *dual_faces;
-  int                 num_neighbors;
-  int                 face_id;
-  int                 local_num_trees = t8_forest_get_num_local_trees (forest_adapt);   /* get the number of trees, this process knows about */
-  int                 current_tree_num_elements;
-  int                 subelement_count = 0;
-  int                 LFN_call_count = 0;
-  int                 tree_count;
-  int                 elem_count;
-  int                 neighbor_count;
-
+  int *dual_faces;
+  int num_neighbors;
+  int face_id;
+  int local_num_trees
+    = t8_forest_get_num_local_trees (forest_adapt); /* get the number of trees, this process knows about */
+  int current_tree_num_elements;
+  int subelement_count = 0;
+  int LFN_call_count = 0;
+  int tree_count;
+  int elem_count;
+  int neighbor_count;
 
   for (tree_count = 0; tree_count < local_num_trees; ++tree_count) {
     eclass = t8_forest_get_tree_class (forest_adapt, tree_count);
@@ -109,55 +109,45 @@ t8_LFN_test (t8_forest_t forest_adapt)
 
     /* get the number of elements in the current tree */
     current_tree = t8_forest_get_tree (forest_adapt, tree_count);
-    current_tree_num_elements =
-      t8_forest_get_tree_element_count (current_tree);
+    current_tree_num_elements = t8_forest_get_tree_element_count (current_tree);
 
     for (elem_count = 0; elem_count < current_tree_num_elements; ++elem_count) {
 
-      /* determing the current element according to the given tree id and element id within the tree */
-      current_element =
-        t8_forest_get_element_in_tree (forest_adapt, tree_count, elem_count);
+      /* determining the current element according to the given tree id and element id within the tree */
+      current_element = t8_forest_get_element_in_tree (forest_adapt, tree_count, elem_count);
 
       if (ts->t8_element_is_subelement (current_element)) {
         subelement_count++;
       }
 
- /* print current element */
+      /* print current element */
 #if T8_ENABLE_DEBUG
-        t8_productionf
-          ("\n\n________________"
-           "\nCurrent element: local elem index of this process: %i of %i (without ghosts)\n",
-           elem_count, t8_forest_get_local_num_elements (forest_adapt));
-        ts->t8_element_debug_print (current_element);
+      t8_productionf ("\n\n________________"
+                      "\nCurrent element: local elem index of this process: %i of %i (without ghosts)\n",
+                      elem_count, t8_forest_get_local_num_elements (forest_adapt));
+      ts->t8_element_debug_print (current_element);
 #endif
 
-      for (face_id = 0; face_id < ts->t8_element_num_faces (current_element);
-           ++face_id) {
+      for (face_id = 0; face_id < ts->t8_element_num_faces (current_element); ++face_id) {
         LFN_call_count++;
-        t8_forest_leaf_face_neighbors (forest_adapt, tree_count,
-                                       current_element, &neighbor_leafs,
-                                       face_id, &dual_faces, &num_neighbors,
-                                       &element_indices, &neigh_scheme,
-                                       forest_is_balanced);
+        t8_forest_leaf_face_neighbors (forest_adapt, tree_count, current_element, &neighbor_leafs, face_id, &dual_faces,
+                                       &num_neighbors, &element_indices, &neigh_scheme, forest_is_balanced);
         /* free memory if neighbors exist */
         if (num_neighbors > 0) {
 
-            /* print all neighbor elements */
-            for (neighbor_count = 0; neighbor_count < num_neighbors;
-                 neighbor_count++) {
+          /* print all neighbor elements */
+          for (neighbor_count = 0; neighbor_count < num_neighbors; neighbor_count++) {
 #if T8_ENABLE_DEBUG
-              t8_productionf ("\n_________"
-                              "\nNeighbor: %i of %i at face %i: (dual face: %i | local index %i of %i (with ghosts)  | ghost, if >= %i):\n",
-                              neighbor_count + 1, num_neighbors, face_id,
-                              dual_faces[neighbor_count],
-                              element_indices[neighbor_count],
-                              t8_forest_get_local_num_elements (forest_adapt)
-                              + t8_forest_get_num_ghosts (forest_adapt),
-                              t8_forest_get_local_num_elements (forest_adapt)
-                              - 1);
-              ts->t8_element_debug_print (neighbor_leafs[neighbor_count]);
+            t8_productionf ("\n_________"
+                            "\nNeighbor: %i of %i at face %i: (dual face: %i | local index %i of %i (with ghosts)  | "
+                            "ghost, if >= %i):\n",
+                            neighbor_count + 1, num_neighbors, face_id, dual_faces[neighbor_count],
+                            element_indices[neighbor_count],
+                            t8_forest_get_local_num_elements (forest_adapt) + t8_forest_get_num_ghosts (forest_adapt),
+                            t8_forest_get_local_num_elements (forest_adapt) - 1);
+            ts->t8_element_debug_print (neighbor_leafs[neighbor_count]);
 #endif
-            }
+          }
 
           neigh_scheme->t8_element_destroy (num_neighbors, neighbor_leafs);
 
@@ -167,26 +157,20 @@ t8_LFN_test (t8_forest_t forest_adapt)
         }
         else {
 #if T8_ENABLE_DEBUG
-            /* no neighbor in this case */
-            t8_productionf ("\n_________"
-                            "\nNeighbor: at face %i: There is no neighbor (domain boundary).\n",
-                            face_id);
+          /* no neighbor in this case */
+          t8_productionf ("\n_________"
+                          "\nNeighbor: at face %i: There is no neighbor (domain boundary).\n",
+                          face_id);
 #endif
         }
-      }                         /* end of face loop */
-    }                           /* end of element loop */
-  }                             /* end of tree loop */
+      } /* end of face loop */
+    }   /* end of element loop */
+  }     /* end of tree loop */
 
-  T8_ASSERT (subelement_count ==
-             t8_forest_get_local_num_subelements (forest_adapt));
+  T8_ASSERT (subelement_count == t8_forest_get_local_num_subelements (forest_adapt));
 
-  t8_debugf
-    ("~~~~~~~~~~ The LFN test function finshed successful ~~~~~~~~~~\n");
-}                               /* end of t8_LFN_test */
-
-
-
-
+  t8_debugf ("~~~~~~~~~~ The LFN test function finished successful ~~~~~~~~~~\n");
+} /* end of t8_LFN_test */
 
 /* Initializing, adapting balancing and transitioning a forest */
 static void
@@ -214,7 +198,7 @@ t8_transition_global (void)
   /* construct a multiple tree hex cmesh */
   // cmesh = t8_cmesh_new_hypercube_pad (eclass, sc_MPI_COMM_WORLD, boundary, polygons_x, polygons_y, polygons_z, 0);
 
-  cmesh = t8_cmesh_new_hypercube(eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
+  cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
   /* Create a uniformly refined forest */
   forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
 

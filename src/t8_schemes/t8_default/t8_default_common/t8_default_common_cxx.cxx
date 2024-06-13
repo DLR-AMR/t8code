@@ -170,60 +170,44 @@ t8_default_scheme_common_c::t8_element_deinit (int length, t8_element_t *elem) c
 
 /*----------------------------Functions for transition schemes--------------------------------------------*/
 int
-t8_default_scheme_common_c::t8_element_find_neighbor_in_transition_cell (const
-                                                                         t8_element_t
-                                                                         *elem,
-                                                                         const
-                                                                         t8_element_t
-                                                                         *neigh,
-                                                                         int
-                                                                         elem_face)
+t8_default_scheme_common_c::t8_element_find_neighbor_in_transition_cell (const t8_element_t *elem,
+                                                                         const t8_element_t *neigh, int elem_face)
 {
   SC_ABORT ("This function is not implemented for the given scheme.\n");
 }
 
 int
-t8_default_scheme_common_c::t8_element_get_transition_type (const
-                                                            t8_element * elem)
+t8_default_scheme_common_c::t8_element_get_transition_type (const t8_element *elem)
 {
   SC_ABORT ("This function is not implemented for the given scheme.\n");
 }
 
 int
-t8_default_scheme_common_c::t8_element_neighbor_is_sibling (const t8_element *
-                                                            elem,
-                                                            const int face) const
+t8_default_scheme_common_c::t8_element_neighbor_is_sibling (const t8_element *elem, const int face) const
 {
   /* No subelements are implemented and therefore we return false, 
    * meaning "the neighbor at face <face> is not a sibling of elem". */
-  t8_debugf
-    ("This is the default_common implementation of t8_element_neighbor_is_sibling.\n");
+  t8_debugf ("This is the default_common implementation of t8_element_neighbor_is_sibling.\n");
   return 0;
 }
 
 int
-t8_default_scheme_common_c::t8_element_get_num_sibling_neighbors_at_face (const t8_element * elem,
-                                                                          const int face) const
-     
+t8_default_scheme_common_c::t8_element_get_num_sibling_neighbors_at_face (const t8_element *elem, const int face) const
+
 {
   /* No subelements are implemented and therefore we return false meaning "the neighbor at face is not a sibling of elem". */
-  t8_debugf
-    ("This is the default_common implementation of t8_element_get_num_sibling_neighbors_at_face.\n");
+  t8_debugf ("This is the default_common implementation of t8_element_get_num_sibling_neighbors_at_face.\n");
   return 0;
 }
 void
-t8_default_scheme_common_c::t8_element_get_sibling_neighbor_in_transition_cell_hex (const t8_element_t *elem,
-                                                                                const int face,
-                                                                                const int num_neighbors,
-                                                                                t8_element_t *neighbor_at_face[],
-                                                                                int *neigh_face)
+t8_default_scheme_common_c::t8_element_get_sibling_neighbor_in_transition_cell_hex (
+  const t8_element_t *elem, const int face, const int num_neighbors, t8_element_t *neighbor_at_face[], int *neigh_face)
 {
   SC_ABORT ("This function is not implemented for the given scheme.\n");
 }
 void
 t8_default_scheme_common_c::t8_element_get_sibling_neighbor_in_transition_cell (const t8_element_t *elem,
-                                                                                const int face,
-                                                                                const int num_neighbors,
+                                                                                const int face, const int num_neighbors,
                                                                                 t8_element_t *neighbor_at_face[],
                                                                                 int *neigh_face[])
 {
