@@ -57,17 +57,19 @@ You find more information on t8code in the t8code Wiki.
    :maxdepth: 2
    :caption: Contents:
 
+   api/library_root
 
 
-Indices and tables
-==================
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+#Indices and tables
+#==================
 
-Docs
-====
+#* :ref:`genindex`
+#* :ref:`modindex`
+#* :ref:`search`
+
+#Docs
+#====
 
 .. doxygenindex::
    :allow-dot-graphs:
