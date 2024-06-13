@@ -85,7 +85,7 @@ t8_LFN_test (t8_forest_t forest_adapt)
   const t8_element_t *current_element;
   t8_tree_t current_tree;
   t8_locidx_t forest_is_balanced = 1;
-  t8_element_t **neighbor_leafs;
+  t8_element_t **neighbor_leaves;
   t8_locidx_t *element_indices;
   t8_eclass_scheme_c *neigh_scheme;
   t8_eclass_t eclass;
@@ -130,7 +130,7 @@ t8_LFN_test (t8_forest_t forest_adapt)
 
       for (face_id = 0; face_id < ts->t8_element_num_faces (current_element); ++face_id) {
         LFN_call_count++;
-        t8_forest_leaf_face_neighbors (forest_adapt, tree_count, current_element, &neighbor_leafs, face_id, &dual_faces,
+        t8_forest_leaf_face_neighbors (forest_adapt, tree_count, current_element, &neighbor_leaves, face_id, &dual_faces,
                                        &num_neighbors, &element_indices, &neigh_scheme, forest_is_balanced);
         /* free memory if neighbors exist */
         if (num_neighbors > 0) {
@@ -145,14 +145,14 @@ t8_LFN_test (t8_forest_t forest_adapt)
                             element_indices[neighbor_count],
                             t8_forest_get_local_num_elements (forest_adapt) + t8_forest_get_num_ghosts (forest_adapt),
                             t8_forest_get_local_num_elements (forest_adapt) - 1);
-            ts->t8_element_debug_print (neighbor_leafs[neighbor_count]);
+            ts->t8_element_debug_print (neighbor_leaves[neighbor_count]);
 #endif
           }
 
-          neigh_scheme->t8_element_destroy (num_neighbors, neighbor_leafs);
+          neigh_scheme->t8_element_destroy (num_neighbors, neighbor_leaves);
 
           T8_FREE (element_indices);
-          T8_FREE (neighbor_leafs);
+          T8_FREE (neighbor_leaves);
           T8_FREE (dual_faces);
         }
         else {
