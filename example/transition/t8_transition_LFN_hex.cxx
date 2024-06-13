@@ -130,8 +130,9 @@ t8_LFN_test (t8_forest_t forest_adapt)
 
       for (face_id = 0; face_id < ts->t8_element_num_faces (current_element); ++face_id) {
         LFN_call_count++;
-        t8_forest_leaf_face_neighbors (forest_adapt, tree_count, current_element, &neighbor_leaves, face_id, &dual_faces,
-                                       &num_neighbors, &element_indices, &neigh_scheme, forest_is_balanced);
+        t8_forest_leaf_face_neighbors (forest_adapt, tree_count, current_element, &neighbor_leaves, face_id,
+                                       &dual_faces, &num_neighbors, &element_indices, &neigh_scheme,
+                                       forest_is_balanced);
         /* free memory if neighbors exist */
         if (num_neighbors > 0) {
 
