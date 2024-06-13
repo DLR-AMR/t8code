@@ -2070,7 +2070,8 @@ t8_forest_leaf_face_neighbors_transitioned (t8_forest_t forest, t8_locidx_t ltre
         element_index += t8_forest_get_tree_element_offset (forest, lneigh_treeid);
       }
 
-      if ((neigh_scheme->t8_element_compare (ancestor, neighbor_leaves[0]) < 0) || ts->t8_element_is_subelement (leaf)) {
+      if ((neigh_scheme->t8_element_compare (ancestor, neighbor_leaves[0]) < 0)
+          || ts->t8_element_is_subelement (leaf)) {
 
         /* we expect only one neighbor (or a neighboring transition cell with possibly multiple
          * subelement neighbors if the transition scheme is not conformal) in this case */
