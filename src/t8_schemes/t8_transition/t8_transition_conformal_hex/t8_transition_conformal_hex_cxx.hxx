@@ -341,6 +341,9 @@ struct t8_subelement_scheme_hex_c: public t8_default_scheme_common_c
   virtual void
   t8_element_last_descendant_face (const t8_element_t *elem, int face, t8_element_t *last_desc, int level) const;
 
+/** Return 1 if the eclass scheme has an implementation for subelements. Return 0 otherwise. */
+  virtual int         t8_element_transition_scheme_is_conformal (void);
+  
   /** Construct the boundary element at a specific face. */
   virtual void
   t8_element_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,

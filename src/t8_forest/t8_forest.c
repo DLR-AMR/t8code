@@ -834,6 +834,14 @@ t8_forest_comm_global_num_subelements (t8_forest_t forest)
   SC_CHECK_MPI (mpiret);
   forest->global_num_subelements = global_num_subel;
 }
+t8_locidx_t
+t8_forest_get_local_num_subelements (t8_forest_t forest)
+{
+  T8_ASSERT (forest->local_num_subelements <= forest->local_num_elements);
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  return forest->local_num_subelements;
+}
 
 t8_locidx_t
 t8_forest_get_num_ghosts (const t8_forest_t forest)
