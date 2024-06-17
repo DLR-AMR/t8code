@@ -1241,7 +1241,7 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
   T8_ASSERT (first_or_last == 0 || first_or_last == 1);
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->first_local_tree > -1);
-  T8_ASSERT (forest->first_local_tree < forest->global_num_trees);
+  T8_ASSERT (forest->first_local_tree <= forest->global_num_trees);
   T8_ASSERT (forest->last_local_tree < forest->global_num_trees);
 #if T8_ENABLE_DEBUG
   if (forest->first_local_tree == 0 && forest->last_local_tree == -1) {
