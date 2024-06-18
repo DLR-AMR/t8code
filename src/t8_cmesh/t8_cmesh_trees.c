@@ -791,6 +791,7 @@ t8_cmesh_trees_get_attribute (const t8_cmesh_trees_t trees, const t8_locidx_t lt
 size_t
 t8_cmesh_trees_get_numproc (const t8_cmesh_trees_t trees)
 {
+  T8_ASSERT (trees != NULL);
   return trees->from_proc->elem_count;
 }
 
