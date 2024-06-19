@@ -221,7 +221,6 @@ t8_element_array_get_size (const t8_element_array_t *element_array);
 const t8_element_t *
 t8_element_array_get_data (const t8_element_array_t *element_array);
 
-
 /** Return a pointer to the real data array stored in a t8_element_array.
  * \param [in]  element_array  Array structure.
  * \return                     A pointer to the stored data. If the number of stored
