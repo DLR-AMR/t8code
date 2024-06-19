@@ -60,6 +60,8 @@ jobs:
 # Setup and bootstrap
 #
     - uses: actions/checkout@v4
+      with:
+          fetch-tags: true
     - name: install sudo
       run: apt update && apt install sudo
     # On the github Ubuntu 20.04, sudo is not available by default
