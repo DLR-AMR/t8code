@@ -148,13 +148,15 @@ TEST_P (element_is_leaf, element_is_leaf_adapt)
 
 /* Define a lambda to beatify gtest output for tuples <level, cmesh>.
  * This will set the correct level and cmesh name as part of the test case name. */
-auto pretty_print_level_and_cmesh_params = [] (const testing::TestParamInfo<std::tuple<int, cmesh_example_base *>> &info) {
-  std::string name = std::string ("Level_") + std::to_string (std::get<0> (info.param));
-  std::string cmesh_name;
-  std::get<1> (info.param)->param_to_string (cmesh_name);
-  name += std::string ("_") + cmesh_name;
-  return name;
-};
+auto pretty_print_level_and_cmesh_params
+  = [] (const testing::TestParamInfo<std::tuple<int, cmesh_example_base *>> &info) {
+      std::string name = std::string ("Level_") + std::to_string (std::get<0> (info.param));
+      std::string cmesh_name;
+      std::get<1> (info.param)->param_to_string (cmesh_name);
+      name += std::string ("_") + cmesh_name;
+      return name;
+    };
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_element_is_leaf, element_is_leaf,
-                          testing::Combine (testing::Range (0, T8_IS_LEAF_MAX_LVL), AllCmeshsParam), pretty_print_level_and_cmesh_params);
+                          testing::Combine (testing::Range (0, T8_IS_LEAF_MAX_LVL), AllCmeshsParam),
+                          pretty_print_level_and_cmesh_params);
