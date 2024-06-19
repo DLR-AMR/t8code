@@ -601,34 +601,34 @@ t8_cmesh_load (const char *filename, sc_MPI_Comm comm)
   t8_cmesh_init (&cmesh);
   /* Read all metadata of the cmesh */
   if (!t8_cmesh_load_header (cmesh, fp)) {
-    t8_errorf ("Error when opening file %s.\n", filename);
+    t8_errorf ("Error when loading header%s.\n", filename);
     t8_cmesh_destroy (&cmesh);
     return NULL;
   }
   /* Read all metadata of the trees */
   if (!t8_cmesh_load_trees (cmesh, fp)) {
-    t8_errorf ("Error when opening file %s.\n", filename);
+    t8_errorf ("Error when loading trees %s.\n", filename);
     t8_cmesh_destroy (&cmesh);
     return NULL;
   }
   if (cmesh->set_partition) {
     /* Write all ghost metadata */
     if (!t8_cmesh_load_ghosts (cmesh, fp)) {
-      t8_errorf ("Error when opening file %s.\n", filename);
+      t8_errorf ("Error when loading ghosts %s.\n", filename);
       t8_cmesh_destroy (&cmesh);
       return NULL;
     }
   }
   t8_cmesh_trees_finish_part (cmesh->trees, 0);
   if (!t8_cmesh_load_tree_attributes (cmesh, fp)) {
-    t8_errorf ("Error when opening file %s.\n", filename);
+    t8_errorf ("Error when loading tree attributes %s.\n", filename);
     t8_cmesh_destroy (&cmesh);
     return NULL;
   }
   if (cmesh->set_partition) {
     /* Write all ghost metadata */
     if (!t8_cmesh_load_ghost_attributes (cmesh, fp)) {
-      t8_errorf ("Error when opening file %s.\n", filename);
+      t8_errorf ("Error when loading ghost attributes %s.\n", filename);
       t8_cmesh_destroy (&cmesh);
       return NULL;
     }
