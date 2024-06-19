@@ -61,6 +61,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         path: t8code
+        fetch-tags: true
 
     - name: Install dependencies
       if: ${{ env.MINOR_RELEASE == 'true' }}
