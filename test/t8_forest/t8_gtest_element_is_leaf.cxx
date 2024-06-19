@@ -29,13 +29,11 @@
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
 #include <test/t8_gtest_macros.hxx>
 
-
 /* In this test we check the t8_forest_element_is_leaf function.
  * Iterating over all cmesh test cases, we creat a uniform and an adaptive forest.
  * For each forest, we check that for each leaf element t8_forest_element_is_leaf returns true
  * and that it returns false for the parent and the first child.
  */
-
 
 /* Maximum uniform level for forest. */
 #define T8_IS_LEAF_MAX_LVL 4
@@ -45,7 +43,8 @@
  * imbalanced forest. */
 static int
 t8_test_adapt_first_child (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                       t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+                           t8_eclass_scheme_c *ts, const int is_family, const int num_elements,
+                           t8_element_t *elements[])
 {
   T8_ASSERT (!is_family || (is_family && num_elements == ts->t8_element_num_children (elements[0])));
 
@@ -64,16 +63,14 @@ t8_test_adapt_first_child (t8_forest_t forest, t8_forest_t forest_from, t8_locid
   return 0;
 }
 
-
-class element_is_leaf: public testing::TestWithParam<std::tuple<int,cmesh_example_base *>> {
+class element_is_leaf: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>> {
  protected:
-
   void
   SetUp () override
   {
     /* Construct a cmesh */
-    const int level = std::get<0>(GetParam ());
-    cmesh = std::get<1>(GetParam ())->cmesh_create ();
+    const int level = std::get<0> (GetParam ());
+    cmesh = std::get<1> (GetParam ())->cmesh_create ();
     if (t8_cmesh_is_empty (cmesh)) {
       /* forest_commit does not support empty cmeshes, we skip this case */
       GTEST_SKIP ();
@@ -105,16 +102,15 @@ class element_is_leaf: public testing::TestWithParam<std::tuple<int,cmesh_exampl
   t8_scheme_cxx_t *scheme;
 };
 
-
 void
 t8_test_element_is_leaf_for_forest (t8_forest_t forest)
 {
   const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
 
-  for (t8_locidx_t itree = 0;itree < num_local_trees; ++itree) {
+  for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree) {
     const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
-    const t8_eclass_scheme_c * scheme = t8_forest_get_eclass_scheme (forest, tree_class);
+    const t8_eclass_scheme_c *scheme = t8_forest_get_eclass_scheme (forest, tree_class);
     /* Allocate memory to build a non-leaf element. */
     t8_element_t *not_leaf;
     scheme->t8_element_new (1, &not_leaf);
@@ -122,8 +118,8 @@ t8_test_element_is_leaf_for_forest (t8_forest_t forest)
      * is correctly identified by t8_forest_element_is_leaf,
      * build its parent and its first child (if they exist), and verify
      * that t8_forest_element_is_leaf returns false. */
-    for (t8_locidx_t ielement = 0;ielement < num_elements_in_tree;++ielement) {
-      const t8_element_t * leaf_element = t8_forest_get_element_in_tree (forest, itree, ielement);
+    for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement) {
+      const t8_element_t *leaf_element = t8_forest_get_element_in_tree (forest, itree, ielement);
       EXPECT_TRUE (t8_forest_element_is_leaf (forest, leaf_element, itree));
       /* Compute parent and first child of element and check that they are not in the tree */
       const int element_level = scheme->t8_element_level (leaf_element);
@@ -140,7 +136,6 @@ t8_test_element_is_leaf_for_forest (t8_forest_t forest)
   }
 }
 
-
 TEST_P (element_is_leaf, element_is_leaf)
 {
   t8_test_element_is_leaf_for_forest (forest);
@@ -151,5 +146,17 @@ TEST_P (element_is_leaf, element_is_leaf_adapt)
   t8_test_element_is_leaf_for_forest (forest_adapt);
 }
 
-/* TODO: Figure out how to do pretty printing for the cmesh examples when they are in a combined parameter. */
-INSTANTIATE_TEST_SUITE_P (t8_gtest_element_is_leaf, element_is_leaf, testing::Combine (testing::Range (0, T8_IS_LEAF_MAX_LVL), AllCmeshsParam));
+/* Define a lambda to beatify gtest output for tuples <level, cmesh>.
+ * This will set the correct level and cmesh name as part of the test case name. */
+auto pretty_print_level_and_cmesh_params
+  = [] (const testing::TestParamInfo<std::tuple<int, cmesh_example_base *>> &info) {
+      std::string name = std::string ("Level_") + std::to_string (std::get<0> (info.param));
+      std::string cmesh_name;
+      std::get<1> (info.param)->param_to_string (cmesh_name);
+      name += std::string ("_") + cmesh_name;
+      return name;
+    };
+
+INSTANTIATE_TEST_SUITE_P (t8_gtest_element_is_leaf, element_is_leaf,
+                          testing::Combine (testing::Range (0, T8_IS_LEAF_MAX_LVL), AllCmeshsParam),
+                          pretty_print_level_and_cmesh_params);

@@ -217,6 +217,15 @@ t8_forest_get_maxlevel (const t8_forest_t forest)
   return forest->maxlevel;
 }
 
+int
+t8_forest_get_dimension (const t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (0 <= forest->dimension && forest->dimension <= T8_ECLASS_MAX_DIM);
+
+  return forest->dimension;
+}
+
 /* Compute the minimum refinement level, such that a uniform forest on a cmesh
  * does not have empty processes */
 int
@@ -1240,7 +1249,7 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
   T8_ASSERT (first_or_last == 0 || first_or_last == 1);
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->first_local_tree > -1);
-  T8_ASSERT (forest->first_local_tree < forest->global_num_trees);
+  T8_ASSERT (forest->first_local_tree <= forest->global_num_trees);
   T8_ASSERT (forest->last_local_tree < forest->global_num_trees);
 #if T8_ENABLE_DEBUG
   if (forest->first_local_tree == 0 && forest->last_local_tree == -1) {
@@ -1723,8 +1732,8 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
   int num_children_at_face, at_maxlevel;
   int ineigh, *owners, different_owners, have_ghosts;
 
-  /* TODO: implement is_leaf check to apply to leaf */
   T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (t8_forest_element_is_leaf (forest, leaf, ltreeid));
   T8_ASSERT (!forest_is_balanced || t8_forest_is_balanced (forest));
   SC_CHECK_ABORT (forest_is_balanced, "leaf face neighbors is not implemented "
                                       "for unbalanced forests.\n"); /* TODO: write version for unbalanced forests */
@@ -2059,8 +2068,7 @@ t8_forest_element_is_leaf (const t8_forest_t forest, const t8_element_t *element
    * To identify whether the element was found, we compare these two. */
   const t8_element_t *check_element = t8_element_array_index_locidx (elements, search_result);
   T8_ASSERT (check_element != NULL);
-  /* If the compare function returns 0, the elements are equal and we return true. */
-  return (scheme->t8_element_compare (element, check_element) == 0);
+  return (scheme->t8_element_equal (element, check_element));
 }
 
 int
@@ -2783,6 +2791,7 @@ t8_forest_element_has_leaf_desc (t8_forest_t forest, t8_gloidx_t gtreeid, const 
       if (ts->t8_element_get_linear_id (element, forest->maxlevel) <= elem_id && level < level_found) {
         /* The element is a true descendant */
         T8_ASSERT (ts->t8_element_level (elem_found) > ts->t8_element_level (element));
+        T8_ASSERT (t8_forest_element_is_leaf (forest, elem_found, ltreeid));
         /* clean-up */
         ts->t8_element_destroy (1, &last_desc);
         return 1;

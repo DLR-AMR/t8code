@@ -635,7 +635,7 @@ t8_forest_partition_fill_buffer (t8_forest_t forest_from, char **send_buffer, in
     if (num_elements_send > 0) {
       const t8_element_t *pfirst_element = t8_element_array_index_locidx (&tree->elements, first_tree_element);
       elem_size = t8_element_array_get_size (&tree->elements);
-      memcpy (*send_buffer + element_pos, (void *) pfirst_element, num_elements_send * elem_size);
+      memcpy (*send_buffer + element_pos, (const void *) pfirst_element, num_elements_send * elem_size);
       element_pos += num_elements_send * elem_size;
     }
   }
