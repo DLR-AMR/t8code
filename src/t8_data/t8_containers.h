@@ -218,8 +218,17 @@ t8_element_array_get_size (const t8_element_array_t *element_array);
  * \return                     A pointer to the stored data. If the number of stored
  *                             elements is 0, then NULL is returned.
  */
-t8_element_t *
+const t8_element_t *
 t8_element_array_get_data (const t8_element_array_t *element_array);
+
+
+/** Return a pointer to the real data array stored in a t8_element_array.
+ * \param [in]  element_array  Array structure.
+ * \return                     A pointer to the stored data. If the number of stored
+ *                             elements is 0, then NULL is returned.
+ */
+t8_element_t *
+t8_element_array_get_data_mutable (t8_element_array_t *element_array);
 
 /** Return a const pointer to the sc_array stored in a t8_element_array.
  * \param [in]  element_array  Array structure.

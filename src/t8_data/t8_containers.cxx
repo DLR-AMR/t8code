@@ -277,7 +277,7 @@ t8_element_array_get_size (const t8_element_array_t *element_array)
   return element_array->scheme->t8_element_size ();
 }
 
-t8_element_t *
+const t8_element_t *
 t8_element_array_get_data (const t8_element_array_t *element_array)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
@@ -288,6 +288,14 @@ t8_element_array_get_data (const t8_element_array_t *element_array)
   else {
     return NULL;
   }
+}
+
+t8_element_t *
+t8_element_array_get_data_mutable (t8_element_array_t *element_array)
+{
+  T8_ASSERT (t8_element_array_is_valid (element_array));
+
+  return (t8_element_t *) t8_element_array_get_data (element_array);
 }
 
 const sc_array_t *
