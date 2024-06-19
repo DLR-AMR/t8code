@@ -28,50 +28,49 @@ void
 t8_geometry_quadrangulated_disk::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
                                                    const size_t num_coords, double *out_coords) const
 {
-  double n[3]; /* Normal vector. */
-  double r[3]; /* Radial vector. */
-  double s[3]; /* Radial vector for the corrected coordinates. */
-  double p[3]; /* Vector on the plane resp. quad. */
+  double n[3] = { 0.0 }; /* Normal vector. */
+  double r[3] = { 0.0 }; /* Radial vector. */
+  double s[3] = { 0.0 }; /* Radial vector for the corrected coordinates. */
+  double p[3] = { 0.0 }; /* Vector on the plane resp. quad. */
 
   /* Center quads. */
   if (gtreeid % 3 == 0) {
     for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
-      size_t offset = 3 * i_coord;
-
-      t8_geom_linear_interpolation (ref_coords + offset, active_tree_vertices, 3, 2, p);
-
-      out_coords[offset + 0] = p[0];
-      out_coords[offset + 1] = p[1];
-      out_coords[offset + 2] = 0.0;
+      const size_t offset_2d = 2 * i_coord;
+      const size_t offset_3d = 3 * i_coord;
+      t8_geom_linear_interpolation (ref_coords + offset_2d, active_tree_vertices, 3, 2, out_coords + offset_3d);
     }
-
     return;
   }
 
   /* Normal vector along one of the straight edges of the quad. */
-  n[0] = active_tree_vertices[0 + 0];
-  n[1] = active_tree_vertices[0 + 1];
-  n[2] = active_tree_vertices[0 + 2];
+  t8_vec_copy (active_tree_vertices, n);
   t8_vec_normalize (n);
 
   /* Radial vector parallel to one of the tilted edges of the quad. */
-  r[0] = active_tree_vertices[9 + 0];
-  r[1] = active_tree_vertices[9 + 1];
-  r[2] = active_tree_vertices[9 + 2];
+  t8_vec_copy (active_tree_vertices + 9, r);
   t8_vec_normalize (r);
 
-  for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
-    size_t offset = 3 * i_coord;
+  const double inv_denominator = 1.0 / t8_vec_dot (r, n);
 
-    const double x_ref = ref_coords[offset + 0];
-    const double y_ref = ref_coords[offset + 1];
+  /* Radial reference coordinate index. */
+  const int r_coord = ((gtreeid - 2) % 3 == 0) ? 0 : 1;
+  /* Angular reference coordinate idex. */
+  const int a_coord = ((gtreeid - 2) % 3 == 0) ? 1 : 0;
+
+  for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
+    const size_t offset_2d = 2 * i_coord;
+    const size_t offset_3d = 3 * i_coord;
+
+    const double r_ref = ref_coords[offset_2d + r_coord];
+    const double a_ref = ref_coords[offset_2d + a_coord];
 
     {
       double corr_ref_coords[3];
 
       /* Correction in order to rectify elements near the corners. */
-      corr_ref_coords[0] = tan (0.25 * M_PI * x_ref);
-      corr_ref_coords[1] = y_ref;
+      corr_ref_coords[r_coord] = r_ref;
+      corr_ref_coords[a_coord] = tan (0.25 * M_PI * a_ref);
       corr_ref_coords[2] = 0.0;
 
       /* Compute and normalize vector `s`. */
@@ -79,14 +78,15 @@ t8_geometry_quadrangulated_disk::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t
       t8_vec_normalize (s);
     }
 
-    t8_geom_linear_interpolation (ref_coords + offset, active_tree_vertices, 3, 2, p);
+    /* Correction in order to rectify elements near the corners. */
+    t8_geom_linear_interpolation (ref_coords + offset_2d, active_tree_vertices, 3, 2, p);
 
     /* Compute intersection of line with a plane. */
-    const double R = (p[0] * n[0] + p[1] * n[1]) / (r[0] * n[0] + r[1] * n[1]);
+    const double out_radius = t8_vec_dot (p, n) * inv_denominator;
 
-    out_coords[offset + 0] = (1.0 - y_ref) * p[0] + y_ref * R * s[0];
-    out_coords[offset + 1] = (1.0 - y_ref) * p[1] + y_ref * R * s[1];
-    out_coords[offset + 2] = 0.0;
+    /* Linear blend from flat to curved: `out_coords = (1.0 - r_ref)*p + r_ref_ * out_radius * s`. */
+    t8_vec_axy (p, out_coords + offset_3d, 1.0 - r_ref);
+    t8_vec_axpy (s, out_coords + offset_3d, r_ref * out_radius);
   }
 }
 
@@ -250,56 +250,6 @@ t8_geometry_prismed_spherical_shell::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloi
   t8_geom_evaluate_sphere_tri_prism (active_tree_vertices, T8_ECLASS_PRISM, ref_coords, num_coords, out_coords);
 }
 
-static inline void
-t8_geom_evaluate_sphere_quad_hex (const double *active_tree_vertices, const int ndims, const double *ref_coords,
-                                  const size_t num_coords, double *out_coords)
-{
-  double n[3]; /* Normal vector. */
-  double r[3]; /* Radial vector. */
-  double p[3]; /* Vector on the plane. */
-
-  t8_geom_linear_interpolation (t8_element_centroid_ref_coords[T8_ECLASS_QUAD], active_tree_vertices, 3, 2, n);
-  t8_vec_normalize (n);
-
-  r[0] = active_tree_vertices[0];
-  r[1] = active_tree_vertices[1];
-  r[2] = active_tree_vertices[2];
-
-  t8_vec_normalize (r);
-
-  for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
-    const size_t offset = 3 * i_coord;
-
-    {
-      double corr_ref_coords[3]; /* Corrected reference coordinates. */
-
-      /* Shorthand for code readability. */
-      const double x = ref_coords[offset + 0];
-      const double y = ref_coords[offset + 1];
-      const double z = ref_coords[offset + 2];
-
-      /* tldr: Correction in order to rectify elements near the corners. 
-       * This is necessary, since due to the transformation from the unit cube
-       * to the sphere elements near the face centers expand while near the
-       * corners they shrink. Following correction alleviates this.
-       */
-      corr_ref_coords[0] = tan (0.5 * M_PI * (x - 0.5)) * 0.5 + 0.5;
-      corr_ref_coords[1] = tan (0.5 * M_PI * (y - 0.5)) * 0.5 + 0.5;
-      corr_ref_coords[2] = z;
-
-      t8_geom_linear_interpolation (corr_ref_coords, active_tree_vertices, 3, ndims, p);
-    }
-
-    const double radius = t8_vec_dot (p, n) / t8_vec_dot (r, n);
-
-    t8_vec_normalize (p);
-
-    out_coords[offset + 0] = radius * p[0];
-    out_coords[offset + 1] = radius * p[1];
-    out_coords[offset + 2] = radius * p[2];
-  }
-}
-
 /**
  * Map the faces of a unit cube to a spherical surface.
  * \param [in]  cmesh      The cmesh in which the point lies.
@@ -312,7 +262,35 @@ t8_geometry_quadrangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh
                                                                 const double *ref_coords, const size_t num_coords,
                                                                 double *out_coords) const
 {
-  t8_geom_evaluate_sphere_quad_hex (active_tree_vertices, 2, ref_coords, num_coords, out_coords);
+  double position[3]; /* Position vector in the element. */
+
+  /* All elements are aligned such that the face normal follows the
+   * outward radial direction of the sphere. */
+  const double radius = t8_vec_norm (active_tree_vertices);
+
+  for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
+    const size_t offset_2d = 2 * i_coord;
+    const size_t offset_3d = 3 * i_coord;
+
+    double corr_ref_coords[3]; /* Corrected reference coordinates. */
+
+    /* Shorthand for code readability. `ref_coords` go from 0 to 1. */
+    const double x = ref_coords[offset_2d + 0];
+    const double y = ref_coords[offset_2d + 1];
+
+    /* tldr: Correction in order to rectify elements near the corners. 
+     * This is necessary, since due to the transformation from the unit cube
+     * to the sphere elements near the face centers expand while near the
+     * corners they shrink. Following correction alleviates this.
+     */
+    corr_ref_coords[0] = tan (0.5 * M_PI * (x - 0.5)) * 0.5 + 0.5;
+    corr_ref_coords[1] = tan (0.5 * M_PI * (y - 0.5)) * 0.5 + 0.5;
+    corr_ref_coords[2] = 0;
+
+    t8_geom_linear_interpolation (corr_ref_coords, active_tree_vertices, 3, 2, position);
+    t8_vec_normalize (position);
+    t8_vec_axy (position, out_coords + offset_3d, radius);
+  }
 }
 
 /**
@@ -326,24 +304,53 @@ void
 t8_geometry_cubed_spherical_shell::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
                                                      const size_t num_coords, double *out_coords) const
 {
-  t8_geom_evaluate_sphere_quad_hex (active_tree_vertices, 3, ref_coords, num_coords, out_coords);
+  double position[3]; /* Position vector in the element. */
+
+  /* All elements are aligned such that the reference z-direction follows the
+   * outward radial direction of the sphere. Hence the element height is equal to
+   * the shell thickness. */
+  const double inner_radius = t8_vec_norm (active_tree_vertices);
+  const double shell_thickness = t8_vec_norm (active_tree_vertices + 4 * 3) - inner_radius;
+
+  for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
+    const size_t offset = 3 * i_coord;
+
+    double corr_ref_coords[3]; /* Corrected reference coordinates. */
+
+    /* Shorthand for code readability. `ref_coords` go from 0 to 1. */
+    const double x = ref_coords[offset + 0];
+    const double y = ref_coords[offset + 1];
+    const double z = ref_coords[offset + 2];
+
+    /* tldr: Correction in order to rectify elements near the corners. 
+     * This is necessary, since due to the transformation from the unit cube
+     * to the sphere elements near the face centers expand while near the
+     * corners they shrink. Following correction alleviates this.
+     */
+    corr_ref_coords[0] = tan (0.5 * M_PI * (x - 0.5)) * 0.5 + 0.5;
+    corr_ref_coords[1] = tan (0.5 * M_PI * (y - 0.5)) * 0.5 + 0.5;
+    corr_ref_coords[2] = z;
+
+    t8_geom_linear_interpolation (corr_ref_coords, active_tree_vertices, 3, 3, position);
+    t8_vec_normalize (position);
+    t8_vec_axy (position, out_coords + offset, inner_radius + z * shell_thickness);
+  }
 }
 
 void
 t8_geometry_cubed_sphere::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
                                             const size_t num_coords, double *out_coords) const
 {
-  double n[3]; /* Normal vector. */
-  double r[3]; /* Radial vector. */
-  double s[3]; /* Radial vector for the corrected coordinates. */
-  double p[3]; /* Vector on the plane resp. quad. */
+  double n[3] = { 0.0 }; /* Normal vector. */
+  double r[3] = { 0.0 }; /* Radial vector. */
+  double s[3] = { 0.0 }; /* Radial vector for the corrected coordinates. */
+  double p[3] = { 0.0 }; /* Vector on the plane resp. quad. */
 
   /* Center hex. */
   if (gtreeid % 4 == 0) {
     for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
       const size_t offset = 3 * i_coord;
-      t8_geom_linear_interpolation (ref_coords + offset, active_tree_vertices, 3, 3, p);
-      t8_vec_copy (p, out_coords + offset);
+      t8_geom_linear_interpolation (ref_coords + offset, active_tree_vertices, 3, 3, out_coords + offset);
     }
     return;
   }
@@ -356,12 +363,22 @@ t8_geometry_cubed_sphere::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreei
 
   const double inv_denominator = 1.0 / t8_vec_dot (r, n);
 
+  /* Radial reference coordinate index. */
+  const int r_coord_lookup[4] = { -1, 1, 0, 2 };
+  const int r_coord = r_coord_lookup[gtreeid % 4];
+  /* Angular (theta) reference coordinate index. */
+  const int t_coord_lookup[4] = { -1, 0, 1, 0 };
+  const int t_coord = t_coord_lookup[gtreeid % 4];
+  /* Angular (phi) reference coordinate index. */
+  const int p_coord_lookup[4] = { -1, 2, 2, 1 };
+  const int p_coord = p_coord_lookup[gtreeid % 4];
+
   for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
     const size_t offset = 3 * i_coord;
 
-    const double x_ref = ref_coords[offset + 0];
-    const double y_ref = ref_coords[offset + 1];
-    const double z_ref = ref_coords[offset + 2];
+    const double r_ref = ref_coords[offset + r_coord]; /* radius */
+    const double t_ref = ref_coords[offset + t_coord]; /* theta */
+    const double p_ref = ref_coords[offset + p_coord]; /* phi */
 
     {
       double corr_ref_coords[3];
@@ -369,9 +386,9 @@ t8_geometry_cubed_sphere::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreei
       /* Correction in order to rectify elements near the corners. Note, this
        * is probably not the most accurate correction but it does a decent enough job.
        */
-      corr_ref_coords[0] = tan (0.25 * M_PI * x_ref);
-      corr_ref_coords[1] = tan (0.25 * M_PI * y_ref);
-      corr_ref_coords[2] = z_ref;
+      corr_ref_coords[r_coord] = r_ref;
+      corr_ref_coords[t_coord] = tan (0.25 * M_PI * t_ref);
+      corr_ref_coords[p_coord] = tan (0.25 * M_PI * p_ref);
 
       /* Compute and normalize vector `s`. */
       t8_geom_linear_interpolation (corr_ref_coords, active_tree_vertices, 3, 3, s);
@@ -383,9 +400,9 @@ t8_geometry_cubed_sphere::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreei
     /* Compute intersection of line with a plane. */
     const double out_radius = t8_vec_dot (p, n) * inv_denominator;
 
-    /* Linear blend from flat to curved: `out_coords = (1.0 - z_ref)*p + z_ref_ * out_radius * s`. */
-    t8_vec_axy (p, out_coords + offset, 1.0 - z_ref);
-    t8_vec_axpy (s, out_coords + offset, z_ref * out_radius);
+    /* Linear blend from flat to curved: `out_coords = (1.0 - r_ref)*p + r_ref_ * out_radius * s`. */
+    t8_vec_axy (p, out_coords + offset, 1.0 - r_ref);
+    t8_vec_axpy (s, out_coords + offset, r_ref * out_radius);
   }
 }
 
