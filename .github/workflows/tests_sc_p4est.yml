@@ -61,8 +61,8 @@ jobs:
 #
     - uses: actions/checkout@v4
     - name: Update packages
-      run: apt-get update && apt-get upgrade -y
-      # This seems to be necessary because of the docker container
+      run: sudo apt-get update && sudo apt-get upgrade -y
+    # This step is necessary to get the newest package data
     - name: disable ownership checks
       run: git config --global --add safe.directory '*'
     - name: init submodules

@@ -77,8 +77,9 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - name: Update packages
+        run: sudo apt-get update && sudo apt-get upgrade -y
+      # This step is necessary to get the newest package data
       - name: define sc var
         run: hash=`git rev-parse HEAD:sc` && echo sc_commit=$hash >> $GITHUB_ENV
       - name: define p4est var

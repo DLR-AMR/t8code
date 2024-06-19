@@ -45,6 +45,9 @@ jobs:
 # Setup and bootstrap
 #
     - uses: actions/checkout@v4
+    - name: Update packages
+      run: sudo apt-get update && sudo apt-get upgrade -y
+    # This step is necessary to get the newest package data
     - name: Install zlib
       run: sudo apt-get install libz-dev
     - name: Install doxygen
@@ -78,7 +81,6 @@ jobs:
       uses: actions/checkout@v4
       with:
         ref: ${{ github.head_ref }}
-        fetch-depth: 0
         repository: DLR-AMR/t8code-website
         path: t8code-website
         token: ${{ secrets.T8DDY_TOKEN }}
