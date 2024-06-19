@@ -77,6 +77,9 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-tags: true # required to get version tags
+          fetch-depth: 0    # required to get all history, especially the version tags      
       - name: install sudo
         run: apt update && apt install sudo
       # On the github Ubuntu 20.04, sudo is not available by default
