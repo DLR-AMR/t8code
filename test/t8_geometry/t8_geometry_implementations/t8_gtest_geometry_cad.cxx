@@ -111,7 +111,7 @@ t8_euler_rotation (double *pos_vec, double *rot_vec, double *res_vec, double *ro
  * \return                            The shape.
  */
 TopoDS_Shape
-t8_create_cad_surface_shape ()
+t8_create_cad_surface_shape_x_z ()
 {
   Handle_Geom_Surface surface;
   TopoDS_Shape shape;
@@ -134,7 +134,63 @@ t8_create_cad_surface_shape ()
   return shape;
 }
 
-/** Constructs a cad curve for testing purposes. Curve is build around the x-axis between 0 and 1.
+/** Constructs a cad surface for testing purposes. Surface is build on the x-y-plane in reference space.
+ * Saves the surface in the shape.
+ * \return                            The shape.
+ */
+TopoDS_Shape
+t8_create_cad_surface_shape_x_y ()
+{
+  Handle_Geom_Surface surface;
+  TopoDS_Shape shape;
+  TColgp_Array2OfPnt point_array (1, 3, 1, 3);
+
+  point_array (1, 1) = gp_Pnt (0, 0, 0);
+  point_array (2, 1) = gp_Pnt (-0.2, 0.5, 0.2);
+  point_array (3, 1) = gp_Pnt (0, 1, 0);
+
+  point_array (1, 2) = gp_Pnt (0.5, -0.2, 0.2);
+  point_array (2, 2) = gp_Pnt (0.5, 0.5, 0);
+  point_array (3, 2) = gp_Pnt (0.5, 1.2, -0.2);
+
+  point_array (1, 3) = gp_Pnt (1, 0, 0);
+  point_array (2, 3) = gp_Pnt (1.2, 0.5, -0.2);
+  point_array (3, 3) = gp_Pnt (1, 1, 0);
+
+  surface = GeomAPI_PointsToBSplineSurface (point_array).Surface ();
+  shape = BRepBuilderAPI_MakeFace (surface, 1e-6).Face ();
+  return shape;
+}
+
+/** Constructs a cad surface for testing purposes. Surface is build between vertex 0, 1, 4 and 5 of a unit hexahedron.
+ * Saves the surface in the shape.
+ * \return                            The shape.
+ */
+TopoDS_Shape
+t8_create_cad_surface_shape_y_z ()
+{
+  Handle_Geom_Surface surface;
+  TopoDS_Shape shape;
+  TColgp_Array2OfPnt point_array (1, 3, 1, 3);
+
+  point_array (1, 1) = gp_Pnt (1, 0, 0);
+  point_array (2, 1) = gp_Pnt (0.8, 0.2, 0.5);
+  point_array (3, 1) = gp_Pnt (1, 0, 1);
+
+  point_array (1, 2) = gp_Pnt (1.2, 0.5, -0.2);
+  point_array (2, 2) = gp_Pnt (1, 0.5, 0.5);
+  point_array (3, 2) = gp_Pnt (0.8, 0.5, 1.2);
+
+  point_array (1, 3) = gp_Pnt (1, 1, 0);
+  point_array (2, 3) = gp_Pnt (1.2, 0.8, 0.5);
+  point_array (3, 3) = gp_Pnt (1, 1, 1);
+
+  surface = GeomAPI_PointsToBSplineSurface (point_array).Surface ();
+  shape = BRepBuilderAPI_MakeFace (surface, 1e-6).Face ();
+  return shape;
+}
+
+/** Constructs a cad curve for testing purposes. Curve is build between vertex 0, 1, 4 and 5 of a unit hexahedron.
  * Saves the curve in the shape.
  * \return                            The cad shape.
  */
@@ -188,7 +244,7 @@ t8_create_cad_hypercube (double *rot_vec, int face, int edge, double *parameters
   T8_ASSERT (face < 0 || edge < 0);
   if (face >= 0) {
     faces[face] = 1;
-    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, t8_create_cad_surface_shape ());
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, t8_create_cad_surface_shape_x_z ());
     t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + face,
                             parameters, 8 * sizeof (double), 0);
   }
@@ -395,7 +451,7 @@ t8_create_cad_reference_tet (int face, int edge, double *parameters)
   T8_ASSERT (face < 0 || edge < 0);
   if (face >= 0) {
     faces[face] = 1;
-    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, t8_create_cad_surface_shape ());
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, t8_create_cad_surface_shape_x_z ());
     t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + face,
                             parameters, 6 * sizeof (double), 0);
   }
@@ -888,4 +944,183 @@ TEST_P (class_2d_element_curved_cad_surface, t8_check_2d_element_curved_cad_surf
 INSTANTIATE_TEST_SUITE_P (t8_gtest_check_2d_element_curved_cad_surface, class_2d_element_curved_cad_surface,
                           AllEclasses2D);
 
+#endif /* T8_WITH_OCC */
+
+/** Constructs a cmesh with an cad geometry linked pyramid.
+ * \param [in] face                   The index of the face to link a surface to. -1 for no face.
+ * \param [in] edge                   The index of the edge to link a curve to. -1 for no edge.
+ * \param [in] parameters             Parameters of the curve/surface.
+ * \return                            A valid cmesh, as if _init and _commit had been called.
+ */
+t8_cmesh_t
+t8_create_cad_reference_pyramid (int face, int edge, double *parameters)
+{
+#if T8_WITH_OCC
+  if (edge >= 0 && face >= 0) {
+    SC_ABORTF ("Please specify only an edge or a face.");
+  }
+
+  const int num_vertices = t8_eclass_num_vertices[T8_ECLASS_PYRAMID];
+  const int face_vertices = (face < 4 ? 3 : 4); /* The number of vertices of the pyramid face */
+
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_PYRAMID);
+
+  double vertices_face[75] = { 1, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1,   /* linked face: 0 */
+                               0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1,   /* linked face: 1 */
+                               1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1,   /* linked face: 2 */
+                               0, 1, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1,   /* linked face: 3 */
+                               0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1 }; /* linked face: 4 */
+
+  double vertices_edge[120] = { 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1,   /* linked edge: 0 */
+                                0, 1, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1,   /* linked edge: 1 */
+                                0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1,   /* linked edge: 2 */
+                                1, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1,   /* linked edge: 3 */
+                                1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0,   /* linked edge: 4 */
+                                1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0,   /* linked edge: 5 */
+                                1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0,   /* linked edge: 6 */
+                                1, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0 }; /* linked edge: 7 */
+
+  t8_cmesh_set_tree_vertices (cmesh, 0, (face >= 0 ? vertices_face + face * 15 : vertices_edge + edge * 15),
+                              num_vertices);
+
+  int faces[5] = { 0 };
+  int edges[16] = { 0 };
+  T8_ASSERT (face < 0 || edge < 0);
+  if (face >= 0) {
+    faces[face] = 1;
+    t8_cmesh_register_geometry<t8_geometry_cad> (
+      cmesh, 3, (face < 4 ? t8_create_cad_surface_shape_y_z () : t8_create_cad_surface_shape_x_y ()));
+    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + face,
+                            parameters, 2 * face_vertices * sizeof (double), 0);
+  }
+  else if (edge >= 0) {
+    edges[edge] = 1;
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, t8_create_cad_curve_shape ());
+    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + edge,
+                            parameters, 2 * sizeof (double), 0);
+  }
+  else {
+    /* Even if we do not want to link any geometry to the edges or faces, 
+     * we have to create a geometry. Hence a cad geometry can only be created
+     * with an actual shape, we just create a geometry with a curve and do not
+     * link the curve to any edge. */
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, t8_create_cad_curve_shape ());
+  }
+  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, faces, 5 * sizeof (int), 0);
+  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges, 16 * sizeof (int), 0);
+  t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
+  return cmesh;
+
+#else  /* !T8_WITH_OCC */
+  SC_ABORTF ("OCC not linked");
+#endif /* T8_WITH_OCC */
+}
+
+/** Tests the cad geometry functions for pyramids.
+ * \param [in] face                   The face to test. -1 for no face.
+ * \param [in] edge                   The edge to test. -1 for no edge.
+ * \param [in] parameters             The parameters of the curve/surface.
+ * \param [in] test_ref_coords        List of coordinates to test.
+ * \param [in] test_return_coords     List of expected output coordinates.
+ * \param [in] comm                   The mpi communicator to use.
+ * \return                            Returns 1 if passed, 0 if failed.
+ */
+void
+t8_test_geometry_cad_pyramid (int face, int edge, double *parameters, double *test_ref_coords,
+                              double *test_return_coords)
+{
+#if T8_WITH_OCC
+  double out_coords[3];
+  double tol = T8_PRECISION_SQRT_EPS;
+  const int face_vertices = (face < 4 ? 3 : 4);
+
+  t8_cmesh_t cmesh = t8_create_cad_reference_pyramid (face, edge, parameters);
+
+  for (int i_coord = 0; i_coord < (face >= 0 ? face_vertices + 1 : 3); ++i_coord) {
+    t8_geometry_evaluate (cmesh, 0, test_ref_coords + i_coord * 3 + (face >= 0 ? face * 15 : edge * 9), 1, out_coords);
+
+    EXPECT_VEC3_EQ (out_coords, test_return_coords + i_coord * 3, tol);
+  }
+  t8_cmesh_destroy (&cmesh);
+
+#else  /* !T8_WITH_OCC */
+  SC_ABORTF ("OCC not linked");
+#endif /* T8_WITH_OCC */
+}
+
+#if T8_WITH_OCC
+TEST (t8_gtest_geometry_cad_pyramid, linked_faces)
+{
+  /* clang-format off */
+  /* Reference coordinates of each face vertex and the centroid of the pyramid */
+  double test_ref_coords[75]
+    = { 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.6, 0.6, 0.2, -1.0, -1.0, -1.0,   // face 0
+        1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.6, 0.6, 0.2, -1.0, -1.0, -1.0,   // face 1
+        0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.6, 0.6, 0.2, -1.0, -1.0, -1.0,   // face 2
+        1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.6, 0.6, 0.2, -1.0, -1.0, -1.0,   // face 3
+        0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.6, 0.6, 0.2 }; // face 4
+    /* The -1.0's at face 0-3 are placeholders, because these faces only have 3 vertices. */
+
+  double surface_test_return_coords_quad[15]
+    = { 0.0, 0.0, 0.0,    // face vertex 0
+        1.0, 0.0, 0.0,    // face vertex 1
+        0.0, 1.0, 0.0,    // face vertex 2
+        1.0, 1.0, 0.0,    // face vertex 3
+        0.6357349585, 0.6357349585, 0.1438333846 };  // shifted centroid of the pyramid
+  double surface_test_return_coords_tri[12]
+    = { 1.0, 0.0, 0.0,    // face vertex 0
+        1.0, 1.0, 0.0,    // face vertex 1
+        1.0, 1.0, 1.0,    // face vertex 2
+        0.6737526363, 0.5930049972, 0.1275036282 };  // shifted centroid of the pyramid
+
+  double surface_parameters[40]
+    = { 0, 1, 0, 0, 1, 1, -1, -1,   // face 0
+        0, 0, 0, 1, 1, 1, -1, -1,   // face 1
+        0, 0, 0, 1, 1, 1, -1, -1,   // face 2
+        0, 1, 0, 0, 1, 1, -1, -1,   // face 3
+        0, 0, 0, 1, 1, 0, 1, 1 }; // face 4
+    /* The -1's of face 0-3 are placeholders, because these faces only have 3 vertices. */
+  /* clang-format on */
+
+  for (int i_faces = 0; i_faces < 5; i_faces++) {
+    t8_test_geometry_cad_pyramid (i_faces, -1, surface_parameters + i_faces * 8, test_ref_coords,
+                                  (i_faces < 4 ? surface_test_return_coords_tri : surface_test_return_coords_quad));
+  }
+}
+
+TEST (t8_gtest_geometry_cad_pyramid, linked_edges)
+{
+  /* clang-format off */
+  double test_ref_coords[72]
+    = { 0.0, 1.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0,   // edge 0
+        1.0, 0.0, 0.0, 1.0, 0.5, 0.0, 1.0, 1.0, 0.0,   // edge 1
+        0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0,   // edge 2
+        1.0, 1.0, 0.0, 0.5, 1.0, 0.0, 0.0, 1.0, 0.0,   // edge 3
+        1.0, 1.0, 1.0, 0.5, 0.5, 0.5, 0.0, 0.0, 0.0,   // edge 4
+        1.0, 1.0, 1.0, 1.0, 0.5, 0.5, 1.0, 0.0, 0.0,   // edge 5
+        1.0, 1.0, 1.0, 1.0, 1.0, 0.5, 1.0, 1.0, 0.0,   // edge 6
+        1.0, 1.0, 1.0, 0.5, 1.0, 0.5, 0.0, 1.0, 0.0 }; // edge 7
+  double curve_test_return_coords[9]
+    = { 0.0, 0.0, 0.0,    // edge vertex 0
+        0.4999500215, 0.0000523914, 0.4000007585,    // center of edge
+        1.0, 0.0, 0.0 };  // edge vertex 1
+  
+  double curve_parameters[16] = {
+    1, 0,  // edge 0
+    0, 1,  // edge 1
+    0, 1,  // edge 2
+    1, 0,  // edge 3
+    1, 0,  // edge 4
+    1, 0,  // edge 5
+    1, 0,  // edge 6
+    1, 0 };// edge 7
+  /* clang-format on */
+
+  for (int i_edges = 0; i_edges < 8; ++i_edges) {
+    t8_test_geometry_cad_pyramid (-1, i_edges, curve_parameters + i_edges * 2, test_ref_coords,
+                                  curve_test_return_coords);
+  }
+}
 #endif /* T8_WITH_OCC */
