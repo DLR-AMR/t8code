@@ -56,6 +56,7 @@ add_t8_test( NAME t8_gtest_balance                   SOURCES t8_gtest_main.cxx t
 add_t8_test( NAME t8_gtest_forest_commit             SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_forest_commit.cxx )
 add_t8_test( NAME t8_gtest_forest_face_normal        SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_forest_face_normal.cxx )
 add_t8_test( NAME t8_gtest_element_is_leaf           SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_element_is_leaf.cxx )
+add_t8_test( NAME t8_gtest_element_is_boudary        SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_element_is_boundary.cxx )
 
 add_t8_test( NAME t8_gtest_permute_hole      SOURCES t8_gtest_main.cxx t8_forest_incomplete/t8_gtest_permute_hole.cxx )
 add_t8_test( NAME t8_gtest_recursive         SOURCES t8_gtest_main.cxx t8_forest_incomplete/t8_gtest_recursive.cxx )
