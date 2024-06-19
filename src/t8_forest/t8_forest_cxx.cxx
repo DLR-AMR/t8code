@@ -2057,8 +2057,7 @@ t8_forest_element_is_leaf (const t8_forest_t forest, const t8_element_t *element
    * To identify whether the element was found, we compare these two. */
   const t8_element_t *check_element = t8_element_array_index_locidx (elements, search_result);
   T8_ASSERT (check_element != NULL);
-  /* If the compare function returns 0, the elements are equal and we return true. */
-  return (scheme->t8_element_compare (element, check_element) == 0);
+  return (scheme->t8_element_equal (element, check_element));
 }
 
 /* Check if an element is owned by a specific rank */
