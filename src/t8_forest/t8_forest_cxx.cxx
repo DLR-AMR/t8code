@@ -217,6 +217,15 @@ t8_forest_get_maxlevel (const t8_forest_t forest)
   return forest->maxlevel;
 }
 
+int
+t8_forest_get_dimension (const t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (0 <= forest->dimension && forest->dimension <= T8_ECLASS_MAX_DIM);
+
+  return forest->dimension;
+}
+
 /* Compute the minimum refinement level, such that a uniform forest on a cmesh
  * does not have empty processes */
 int
