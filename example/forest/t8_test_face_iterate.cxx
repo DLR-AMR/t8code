@@ -126,7 +126,7 @@ t8_test_fiterate_refine_and_partition (t8_cmesh_t cmesh, int level, sc_MPI_Comm 
   if (!no_vtk) {
     t8_cmesh_vtk_write_file (cmesh_partition, "test_fiterate_cmesh1");
   }
-  forest = t8_forest_new_uniform (cmesh_partition, t8_scheme_new_default_cxx (), level, 0, comm);
+  forest = t8_forest_new_uniform (cmesh_partition, t8_scheme_new_default_cxx (), level, 0, 0, comm);
 
   t8_test_fiterate (forest);
   t8_forest_init (&forest_adapt);

@@ -90,7 +90,7 @@ t8_step6_build_forest (sc_MPI_Comm comm, int dim, int level)
     0.7                /* Coarsen if outside this radius. */
   };
   /* Start with a uniform forest. */
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, 0, comm);
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, 0, 0, comm);
   t8_forest_t forest_apbg;
 
   /* Adapt, partition, balance and create ghost elements all in one go.

@@ -802,19 +802,20 @@ t8_forest_element_points_inside (t8_forest_t forest, t8_locidx_t ltreeid, const 
 /* TODO: if set level and partition/adapt/balance all give NULL, then
  * refine uniformly and partition/adapt/balance the unfiform forest. */
 /** Build a uniformly refined forest on a coarse mesh.
- * \param [in]      cmesh     A coarse mesh.
- * \param [in]      scheme    An eclass scheme.
- * \param [in]      level     An initial uniform refinement level.
+ * \param [in]      cmesh         A coarse mesh.
+ * \param [in]      scheme        An eclass scheme.
+ * \param [in]      level         An initial uniform refinement level.
  * \param [in]      do_face_ghost If true, a layer of ghost elements is created for the forest.
- * \param [in]      comm      MPI communicator to use.
- * \return                    A uniform forest with coarse mesh \a cmesh, eclass_scheme
- *                            \a scheme and refinement level \a level.
+ * \param [in]      multilevel    Run the SFC not just the leaves, but the whole tree.
+ * \param [in]      comm          MPI communicator to use.
+ * \return                        A uniform forest with coarse mesh \a cmesh, eclass_scheme
+ *                                \a scheme and refinement level \a level.
  * \note This is equivalent to calling \ref t8_forest_init, \ref t8_forest_set_cmesh,
  * \ref t8_forest_set_scheme, \ref t8_forest_set_level, and \ref t8_forest_commit.
  */
 t8_forest_t
 t8_forest_new_uniform (t8_cmesh_t cmesh, t8_scheme_cxx_t *scheme, const int level, const int do_face_ghost,
-                       sc_MPI_Comm comm);
+                       const int multilevel, sc_MPI_Comm comm);
 
 /** Build a adapted forest from another forest.
  * \param [in]    forest_from The forest to refine

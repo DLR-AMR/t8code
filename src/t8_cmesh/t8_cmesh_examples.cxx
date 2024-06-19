@@ -3204,7 +3204,7 @@ t8_cmesh_new_spherical_shell (t8_eclass_t eclass, t8_geometry_c *geometry,
 
   /* Create 2D quadrangulated spherical surface of given refinement level per patch. */
   t8_forest_t forest = t8_forest_new_uniform (inner_sphere_creator (inner_radius, local_comm),
-                                              t8_scheme_new_default_cxx (), num_levels, 0, local_comm);
+                                              t8_scheme_new_default_cxx (), num_levels, 0, 0, local_comm);
 
   /* clang-format off */
   const int ntrees = t8_forest_get_local_num_elements (forest) * num_layers; /* Number of 3D cmesh elements resp. trees. */

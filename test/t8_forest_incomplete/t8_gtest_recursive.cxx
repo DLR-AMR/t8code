@@ -53,9 +53,9 @@ class recursive_tree: public testing::TestWithParam<t8_eclass_t> {
     t8_cmesh_ref (cmesh);
 
     /* The forest to be adapted. */
-    forest = t8_forest_new_uniform (cmesh, scheme, 1, 0, sc_MPI_COMM_WORLD);
+    forest = t8_forest_new_uniform (cmesh, scheme, 1, 0, 0, sc_MPI_COMM_WORLD);
     /* The forest contains only root elements and serves as a comparison. */
-    forest_base = t8_forest_new_uniform (cmesh, scheme, 0, 0, sc_MPI_COMM_WORLD);
+    forest_base = t8_forest_new_uniform (cmesh, scheme, 0, 0, 0, sc_MPI_COMM_WORLD);
   }
   void
   TearDown () override

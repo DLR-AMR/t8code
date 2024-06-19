@@ -293,7 +293,7 @@ t8_interpolation ()
   t8_cmesh_t cmesh = t8_cmesh_new_from_class (T8_ECLASS_HEX, sc_MPI_COMM_WORLD);
 
   /* Construct a forest with one tree */
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, 0, 0, sc_MPI_COMM_WORLD);
 
   /* Build initial data array and set data for the local elements. */
   data = T8_ALLOC (t8_step7_adapt_data, 1);

@@ -89,7 +89,7 @@ TEST_P (forest_half_neighbors, test_half_neighbors)
   /* initialize the array of owners to store ints */
   sc_array_init (&owners, sizeof (int));
   /* Build a uniform forest */
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, default_scheme, level, 0, sc_MPI_COMM_WORLD);
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, default_scheme, level, 0, 0, sc_MPI_COMM_WORLD);
   t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest, eclass);
   /* iterate over all elements */
   for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++) {

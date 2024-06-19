@@ -407,7 +407,7 @@ main (int argc, char **argv)
   /* Build a cube cmesh with tet, hex, and prism trees. */
   cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
   /* Build a uniform forest on it. */
-  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0, comm);
+  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0, 0, comm);
 
   /* Adapt the forest. We can reuse the forest variable, since the new adapted
    * forest will take ownership of the old forest and destroy it.

@@ -45,7 +45,7 @@ class forest_iterate: public testing::TestWithParam<cmesh_example_base *> {
       /* empty cmeshes are currently not supported */
       GTEST_SKIP ();
     }
-    forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), 4, 0, sc_MPI_COMM_WORLD);
+    forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), 4, 0, 0, sc_MPI_COMM_WORLD);
   }
   void
   TearDown () override

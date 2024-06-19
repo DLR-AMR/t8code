@@ -44,7 +44,7 @@ class class_forest_face_normal: public testing::TestWithParam<std::tuple<t8_ecla
     scheme = t8_scheme_new_default_cxx ();
     t8_cmesh_t cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
     const int do_face_ghost = 1;
-    forest = t8_forest_new_uniform (cmesh, scheme, level, do_face_ghost, sc_MPI_COMM_WORLD);
+    forest = t8_forest_new_uniform (cmesh, scheme, level, do_face_ghost, 0, sc_MPI_COMM_WORLD);
   }
   void
   TearDown () override

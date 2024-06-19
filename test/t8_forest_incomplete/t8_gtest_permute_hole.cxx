@@ -71,7 +71,7 @@ class forest_permute: public testing::TestWithParam<t8_eclass_t> {
     level = eclass < 4 ? 2 : 1;
 #endif
     forest = t8_forest_new_uniform (t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD), t8_scheme_new_default_cxx (),
-                                    level, 0, sc_MPI_COMM_WORLD);
+                                    level, 0, 0, sc_MPI_COMM_WORLD);
 
     sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &MPI_size);
     if (MPI_size > 1) {

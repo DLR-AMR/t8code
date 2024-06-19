@@ -39,7 +39,7 @@ TEST (user_data, test_user_data)
   /* Build a forest */
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, 0, 0, 0);
   t8_scheme_cxx_t *scheme = t8_scheme_new_default_cxx ();
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, 1, 0, sc_MPI_COMM_WORLD);
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, 1, 0, 0, sc_MPI_COMM_WORLD);
   /* Define user data */
   double data = 42.42;
   double *get_data;
@@ -97,7 +97,7 @@ TEST (user_data, test_user_function)
   /* Build a forest */
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, 0, 0, 0);
   t8_scheme_cxx_t *scheme = t8_scheme_new_default_cxx ();
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, 1, 0, sc_MPI_COMM_WORLD);
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, 1, 0, 0, sc_MPI_COMM_WORLD);
 
   double (*funpointer) (int);
   void (*funpointer_second) (void);

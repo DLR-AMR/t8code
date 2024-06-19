@@ -145,7 +145,7 @@ TEST_P (forest_find_owner, find_multiple_owners)
   /* initialize the array of owners to store ints */
   sc_array_init (&owners, sizeof (int));
   /* Build a uniform forest */
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, default_scheme, level, 0, sc_MPI_COMM_WORLD);
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, default_scheme, level, 0, 0, sc_MPI_COMM_WORLD);
   t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest, eclass);
   /* Construct the root element */
   ts->t8_element_new (1, &root_element);

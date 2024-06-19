@@ -132,7 +132,7 @@ TEST_P (forest_ghost_owner, test_ghost_owner)
     /* ref the cmesh since we reuse it */
     t8_cmesh_ref (cmesh);
     /* Create a uniformly refined forest */
-    t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, 1, sc_MPI_COMM_WORLD);
+    t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, 1, 0, sc_MPI_COMM_WORLD);
     /* Check the owners of the ghost elements */
     t8_test_gao_check (forest);
     /* Adapt the forest and exchange data again */

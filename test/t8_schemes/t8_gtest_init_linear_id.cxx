@@ -79,7 +79,7 @@ TEST_P (linear_id, uniform_forest)
   /* Construct a forest with a single element of the current class*/
   cmesh = t8_cmesh_new_from_class (ts->eclass, comm);
   t8_cmesh_ref (cmesh);
-  forest = t8_forest_new_uniform (cmesh, scheme, 0, 0, comm);
+  forest = t8_forest_new_uniform (cmesh, scheme, 0, 0, 0, comm);
   t8_scheme_cxx_ref (scheme);
   for (int level = 0; level < maxlvl; level++) {
     /*Get the number of local trees*/

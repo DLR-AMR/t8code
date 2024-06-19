@@ -60,7 +60,7 @@ TEST (t8_point_inside, test_point_inside_specific_triangle)
   /* We use standard linear geometry */
   t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, 2);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), 0, 0, sc_MPI_COMM_WORLD);
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), 0, 0, 0, sc_MPI_COMM_WORLD);
 
   if (t8_forest_get_local_num_elements (forest) <= 0) {
     /* Skip empty forests (can occur when executed in parallel) */
@@ -101,7 +101,7 @@ TEST (t8_point_inside, test_point_inside_specific_quad)
   /* We use standard linear geometry */
   t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, 2);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), 0, 0, sc_MPI_COMM_WORLD);
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), 0, 0, 0, sc_MPI_COMM_WORLD);
 
   if (t8_forest_get_local_num_elements (forest) <= 0) {
     /* Skip empty forests (can occur when executed in parallel) */
@@ -197,7 +197,7 @@ TEST_P (geometry_point_inside, test_point_inside)
   }
 
   /* Build a uniform forest */
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, default_scheme, level, 1, sc_MPI_COMM_WORLD);
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, default_scheme, level, 1, 0, sc_MPI_COMM_WORLD);
 
   const t8_locidx_t num_trees = t8_forest_get_num_local_trees (forest);
   for (t8_locidx_t itree = 0; itree < num_trees; ++itree) {

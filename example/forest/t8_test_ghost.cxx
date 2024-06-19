@@ -135,7 +135,7 @@ t8_test_ghost_refine_and_partition (t8_cmesh_t cmesh, const int level, sc_MPI_Co
   if (!no_vtk) {
     t8_cmesh_vtk_write_file (cmesh_partition, "test_ghost_cmesh1");
   }
-  forest = t8_forest_new_uniform (cmesh_partition, t8_scheme_new_default_cxx (), level, 1, comm);
+  forest = t8_forest_new_uniform (cmesh_partition, t8_scheme_new_default_cxx (), level, 1, 0, comm);
 
   /* adapt (if desired), partition and create ghosts for the forest */
   t8_forest_init (&forest_ghost);

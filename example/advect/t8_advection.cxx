@@ -938,7 +938,7 @@ t8_advect_problem_init (t8_cmesh_t cmesh, t8_flow_function_3d_fn u, t8_example_l
   /* Construct uniform forest with ghosts */
   default_scheme = t8_scheme_new_default_cxx ();
 
-  problem->forest = t8_forest_new_uniform (cmesh, default_scheme, level, 1, comm);
+  problem->forest = t8_forest_new_uniform (cmesh, default_scheme, level, 1, 0, comm);
 
   /* Initialize the element array with num_local_elements + num_ghosts entries. */
 

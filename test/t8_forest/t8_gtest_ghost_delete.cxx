@@ -112,7 +112,7 @@ TEST_F (DISABLED_forest_ghost_exchange_holes, errorTest)
     const int execute_ghost = 1;
     t8_cmesh_ref (cmesh);
     t8_scheme_cxx_ref (scheme);
-    t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, 1, comm);
+    t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, 1, 0, comm);
     forest = t8_forest_new_adapt (forest, test_adapt_holes, 0, execute_ghost, NULL);
     forest = t8_forest_new_adapt (forest, test_adapt_holes, 0, execute_ghost, NULL);
     t8_forest_unref (&forest);
