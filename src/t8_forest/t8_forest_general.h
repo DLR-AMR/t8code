@@ -511,7 +511,7 @@ t8_forest_get_coarse_tree (t8_forest_t forest, t8_locidx_t ltreeid);
  * \param [in]  element   An element of a local tree in \a forest.
  * \param [in]  local_tree A local tree id of \a forest.
  * \return True (non-zero) if and only if \a element is a leaf in \a local_tree of \a forest.
- * \note This does not query for ghost leafs.
+ * \note This does not query for ghost leaves.
  * \note \a forest must be committed before calling this function.
  */
 int
