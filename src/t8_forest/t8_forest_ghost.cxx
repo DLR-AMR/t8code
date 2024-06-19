@@ -1084,7 +1084,7 @@ t8_forest_ghost_parse_received_message (t8_forest_t forest, t8_forest_ghost_t gh
       /* Initialize the element array */
       t8_element_array_init_size (&ghost_tree->elements, ts, num_elements);
       /* pointer to where the elements are to be inserted */
-      element_insert = t8_element_array_get_data (&ghost_tree->elements);
+      element_insert = t8_element_array_get_data_mutable (&ghost_tree->elements);
       /* Compute the element offset of this new tree by adding the offset
        * of the previous tree to the element count of the previous tree. */
       ghost_tree->element_offset = *current_element_offset;
