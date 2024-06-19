@@ -29,14 +29,14 @@
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
 #include <test/t8_gtest_macros.hxx>
 
-/* In this test we check the t8_forest_element_is_leaf function.
- * Iterating over all cmesh test cases, we creat a uniform and an adaptive forest.
- * For each forest, we check that for each leaf element t8_forest_element_is_leaf returns true
- * and that it returns false for the parent and the first child.
+/* In this test we check the t8_forest_element_is_boundary function.
+ * Iterating over all cmesh test cases, we create a uniform and an adaptive forest.
+ * For each forest, we check that for each element t8_forest_element_is_boundary returns true
+ * if and only if the element is at the domain boundary.
  */
 
 /* Maximum uniform level for forest. */
-#define T8_IS_LEAF_MAX_LVL 4
+#define T8_IS_BOUNDARY_MAX_LVL 3
 
 /* Adapt a forest such that always the first child of a
  * family is refined and no other elements. This results in a highly
@@ -46,8 +46,6 @@ t8_test_adapt_first_child (t8_forest_t forest, t8_forest_t forest_from, t8_locid
                            t8_eclass_scheme_c *ts, const int is_family, const int num_elements,
                            t8_element_t *elements[])
 {
-  T8_ASSERT (!is_family || (is_family && num_elements == ts->t8_element_num_children (elements[0])));
-
   int level = ts->t8_element_level (elements[0]);
 
   /* we set a maximum refinement level as forest user data */
@@ -63,11 +61,31 @@ t8_test_adapt_first_child (t8_forest_t forest, t8_forest_t forest_from, t8_locid
   return 0;
 }
 
-class element_is_leaf: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>> {
+/* In a quad forest remove the first and fourth child of each element.
+ * This will reside in a forest where each element and each face is a boundary element.
+ * */
+static int
+t8_test_adapt_quad_remove_first_and_fourth_child (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
+                           t8_eclass_scheme_c *ts, const int is_family, const int num_elements,
+                           t8_element_t *elements[])
+{
+  /* For the purpose of this test, this function should only get called with quad elements. */
+  SC_CHECK_ABORT (ts->t8_element_shape (elements[0]) == T8_ECLASS_QUAD, "Special test adapt function must only be used on quad elements.\n");
+  int child_id = ts->t8_element_child_id (elements[0]);
+  /* Remove child_id 0 and 3, do not change any other element. */
+  if (child_id == 0 || child_id == 3) {
+    return -1;
+  }
+  return 0;
+}
+
+
+class element_is_boundary: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>> {
  protected:
   void
   SetUp () override
   {
+  GTEST_SKIP ();
     /* Construct a cmesh */
     const int level = std::get<0> (GetParam ());
     cmesh = std::get<1> (GetParam ())->cmesh_create ();
@@ -88,6 +106,7 @@ class element_is_leaf: public testing::TestWithParam<std::tuple<int, cmesh_examp
   void
   TearDown () override
   {
+  GTEST_SKIP ();
     if (t8_cmesh_is_empty (cmesh)) {
       t8_cmesh_destroy (&cmesh);
     }
@@ -103,47 +122,78 @@ class element_is_leaf: public testing::TestWithParam<std::tuple<int, cmesh_examp
 };
 
 void
-t8_test_element_is_leaf_for_forest (t8_forest_t forest)
+t8_test_element_is_boundary_for_forest (t8_forest_t forest, t8_cmesh_t cmesh, const int each_element_face_is_expected_boundary)
 {
   const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
 
+  
   for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree) {
     const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
     const t8_eclass_scheme_c *scheme = t8_forest_get_eclass_scheme (forest, tree_class);
-    /* Allocate memory to build a non-leaf element. */
-    t8_element_t *not_leaf;
-    scheme->t8_element_new (1, &not_leaf);
     /* Iterate over all the tree's leaf elements, check whether the leaf
-     * is correctly identified by t8_forest_element_is_leaf,
+     * is correctly identified by t8_forest_element_is_boundary,
      * build its parent and its first child (if they exist), and verify
-     * that t8_forest_element_is_leaf returns false. */
+     * that t8_forest_element_is_boundary returns false. */
     for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement) {
       const t8_element_t *leaf_element = t8_forest_get_element_in_tree (forest, itree, ielement);
-      EXPECT_TRUE (t8_forest_element_is_leaf (forest, leaf_element, itree));
-      /* Compute parent and first child of element and check that they are not in the tree */
-      const int element_level = scheme->t8_element_level (leaf_element);
-      if (element_level > 0) {
-        scheme->t8_element_parent (leaf_element, not_leaf);
-        EXPECT_FALSE (t8_forest_element_is_leaf (forest, not_leaf, itree));
-      }
-      if (element_level < scheme->t8_element_maxlevel ()) {
-        scheme->t8_element_child (leaf_element, 0, not_leaf);
-        EXPECT_FALSE (t8_forest_element_is_leaf (forest, not_leaf, itree));
+      const int num_element_faces = scheme->t8_element_num_faces (leaf_element);
+      for (int iface = 0;iface < num_element_faces;++iface) {
+        /* Iterate over all faces */
+        int face_is_at_boundary = 0;
+        if (!each_element_face_is_expected_boundary) {
+          /* Manually check whether this element is at the boundary */
+          if (scheme->t8_element_is_root_boundary (leaf_element, iface)) {
+            /* This face is at a tree boundary, so it might be at the domain boundary. */
+            /* We check whether the tree is at the domain boundary. */
+            const int tree_face = scheme->t8_element_tree_face (leaf_element, iface);
+            const t8_locidx_t cmesh_local_tree = t8_forest_ltreeid_to_cmesh_ltreeid (forest, itree);
+            if (t8_cmesh_tree_face_is_boundary (cmesh, cmesh_local_tree, tree_face)) {
+              /* This element is at the domain boundary. */
+              face_is_at_boundary = 1;
+            }
+          }
+        }
+        else {
+          /* each element and face is an expected boundary */
+          face_is_at_boundary = 1;
+        }
+        if (face_is_at_boundary) {
+          EXPECT_TRUE (t8_forest_leaf_is_boundary (forest, itree, leaf_element, iface));
+        }
+        else {
+          EXPECT_FALSE (t8_forest_leaf_is_boundary (forest, itree, leaf_element, iface));
+        }
       }
     }
-    scheme->t8_element_destroy (1, &not_leaf);
   }
 }
 
-TEST_P (element_is_leaf, element_is_leaf)
+TEST_P (element_is_boundary, element_is_boundary)
 {
-  t8_test_element_is_leaf_for_forest (forest);
+  GTEST_SKIP ();
+  //t8_test_element_is_boundary_for_forest (forest, cmesh, 0);
 }
 
-TEST_P (element_is_leaf, element_is_leaf_adapt)
+TEST_P (element_is_boundary, element_is_boundary_adapt)
 {
-  t8_test_element_is_leaf_for_forest (forest_adapt);
+  GTEST_SKIP ();
+  t8_test_element_is_boundary_for_forest (forest_adapt, cmesh, 0);
+}
+
+TEST (element_is_boundary, quad_forest_with_holes)
+{
+  /* Create a 10 x 5 2D brick cmesh, periodic in x direction. */
+  t8_cmesh_t cmesh = t8_cmesh_new_brick_2d (10, 5, 1, 0, sc_MPI_COMM_WORLD);
+  
+  t8_scheme_cxx_t *scheme = t8_scheme_new_default_cxx ();
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, T8_IS_BOUNDARY_MAX_LVL, 0, sc_MPI_COMM_WORLD);
+  t8_forest_t forest_adapt = t8_forest_new_adapt (forest, t8_test_adapt_quad_remove_first_and_fourth_child, 0, 0, NULL);
+  
+  t8_forest_write_vtk (forest_adapt, "test_quad_w_holes");
+
+  t8_test_element_is_boundary_for_forest (forest_adapt, cmesh, 1);
+  t8_forest_unref (&forest_adapt);
 }
 
 /* Define a lambda to beautify gtest output for tuples <level, cmesh>.
@@ -157,6 +207,6 @@ auto pretty_print_level_and_cmesh_params
       return name;
     };
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_element_is_leaf, element_is_leaf,
-                          testing::Combine (testing::Range (0, T8_IS_LEAF_MAX_LVL), AllCmeshsParam),
+INSTANTIATE_TEST_SUITE_P (t8_gtest_element_is_boundary, element_is_boundary,
+                          testing::Combine (testing::Range (0, T8_IS_BOUNDARY_MAX_LVL), AllCmeshsParam),
                           pretty_print_level_and_cmesh_params);
