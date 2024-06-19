@@ -38,7 +38,7 @@ env:
   
 jobs:
   send_mm_message:
-    if: github.repository == 'DLR-AMR/t8code'
+    if: 0
     runs-on: ubuntu-20.04
     steps:
       - name: debug_before_build

@@ -10,6 +10,7 @@ on:
 
 jobs:
   typos-check:
+    if: 0
     name: Spell Check with Typos
     runs-on: ubuntu-latest
     steps:

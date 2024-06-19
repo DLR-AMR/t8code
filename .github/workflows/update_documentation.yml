@@ -36,7 +36,7 @@ on:
 
 jobs:
   update_dev_doc:
-
+    if: 0
     runs-on: ubuntu-22.04
 
     timeout-minutes: 10

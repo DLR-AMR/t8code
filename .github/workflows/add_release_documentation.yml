@@ -40,7 +40,7 @@ on:
   
 jobs:
   add_release_doc:
-
+    if: 0
     runs-on: ubuntu-22.04
 
     timeout-minutes: 10
