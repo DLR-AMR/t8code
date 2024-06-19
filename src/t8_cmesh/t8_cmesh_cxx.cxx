@@ -81,9 +81,6 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *ts, t8_gl
 
   if (cmesh->mpirank == 0) {
     first_global_child = 0;
-    if (child_in_tree_begin != NULL) {
-      *child_in_tree_begin = 0;
-    }
   }
   else {
     /* The first global child of processor p
