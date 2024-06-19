@@ -60,6 +60,8 @@ jobs:
 # Setup and bootstrap
 #
     - uses: actions/checkout@v4
+      with: 
+        fetch-tags: true
     - name: Update packages
       run: apt update && apt install sudo
     - name: Update packages
