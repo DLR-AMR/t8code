@@ -74,7 +74,7 @@ t8_test_adapt_quad_remove_first_and_fourth_child (t8_forest_t forest, t8_forest_
   int child_id = ts->t8_element_child_id (elements[0]);
   /* Remove child_id 0 and 3, do not change any other element. */
   if (child_id == 0 || child_id == 3) {
-    return -1;
+    return -2;
   }
   return 0;
 }
@@ -171,24 +171,28 @@ t8_test_element_is_boundary_for_forest (t8_forest_t forest, t8_cmesh_t cmesh, co
 
 TEST_P (element_is_boundary, element_is_boundary)
 {
-  GTEST_SKIP ();
-  //t8_test_element_is_boundary_for_forest (forest, cmesh, 0);
+  t8_test_element_is_boundary_for_forest (forest, cmesh, 0);
 }
 
 TEST_P (element_is_boundary, element_is_boundary_adapt)
 {
-  GTEST_SKIP ();
   t8_test_element_is_boundary_for_forest (forest_adapt, cmesh, 0);
 }
 
 TEST (element_is_boundary, quad_forest_with_holes)
 {
+  /* This test is deactivated as long as Ghost does not work in combination
+   * with deleted elements.
+   * Once this is fixed, reactivate this test.
+   * See https://github.com/DLR-AMR/t8code/issues/825
+   */
+  GTEST_SKIP ();
   /* Create a 10 x 5 2D brick cmesh, periodic in x direction. */
   t8_cmesh_t cmesh = t8_cmesh_new_brick_2d (10, 5, 1, 0, sc_MPI_COMM_WORLD);
   
   t8_scheme_cxx_t *scheme = t8_scheme_new_default_cxx ();
   t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, T8_IS_BOUNDARY_MAX_LVL, 0, sc_MPI_COMM_WORLD);
-  t8_forest_t forest_adapt = t8_forest_new_adapt (forest, t8_test_adapt_quad_remove_first_and_fourth_child, 0, 0, NULL);
+  t8_forest_t forest_adapt = t8_forest_new_adapt (forest, t8_test_adapt_quad_remove_first_and_fourth_child, 0, 1, NULL);
   
   t8_forest_write_vtk (forest_adapt, "test_quad_w_holes");
 
