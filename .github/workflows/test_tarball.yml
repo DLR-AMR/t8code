@@ -52,6 +52,10 @@ jobs:
 # Setup and bootstrap
 #
     - uses: actions/checkout@v4
+    - name: install sudo
+      run: apt update && apt install sudo
+    # On the github Ubuntu 20.04, sudo is not available by default
+    # we need it, however, to update/upgrade our packages.    
     - name: Update packages
       run: sudo apt-get update && sudo apt-get upgrade -y
     # This step is necessary to get the newest package data
@@ -102,7 +106,11 @@ jobs:
     runs-on: ubuntu-20.04
     container: dlramr/t8code-ubuntu:t8-dependencies
     timeout-minutes: 90
-    steps: 
+    steps:
+    - name: install sudo
+      run: apt update && apt install sudo
+    # On the github Ubuntu 20.04, sudo is not available by default
+    # we need it, however, to update/upgrade our packages.       
     - name: Update packages
       run: sudo apt-get update && sudo apt-get upgrade -y
     # This step is necessary to get the newest package data
