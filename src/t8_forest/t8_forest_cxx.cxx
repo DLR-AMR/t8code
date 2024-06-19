@@ -2727,6 +2727,7 @@ t8_forest_element_has_leaf_desc (t8_forest_t forest, t8_gloidx_t gtreeid, const 
       if (ts->t8_element_get_linear_id (element, forest->maxlevel) <= elem_id && level < level_found) {
         /* The element is a true descendant */
         T8_ASSERT (ts->t8_element_level (elem_found) > ts->t8_element_level (element));
+        T8_ASSERT (t8_forest_element_is_leaf (forest, elem_found, ltreeid));
         /* clean-up */
         ts->t8_element_destroy (1, &last_desc);
         return 1;

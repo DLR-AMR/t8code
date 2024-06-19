@@ -101,6 +101,7 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
     /* There is only one leaf left, we check whether it is the same as element
      * and if so call the callback function */
     const t8_element_t *leaf = t8_element_array_index_locidx (leaf_elements, 0);
+    T8_ASSERT (t8_forest_element_is_leaf (forest, leaf, ltreeid));
     if (ts->t8_element_equal (element, leaf)) {
       /* The element is the leaf, we are at the last stage of the recursion
        * and can call the callback. */
@@ -111,6 +112,7 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
 #ifdef T8_ENABLE_DEBUG
   /* Check whether element has greater level than the first leaf */
   const t8_element_t *leaf = t8_element_array_index_locidx (leaf_elements, 0);
+  T8_ASSERT (t8_forest_element_is_leaf (forest, leaf, ltreeid));
   T8_ASSERT (ts->t8_element_level (element) < ts->t8_element_level (leaf));
 #endif
 
@@ -200,6 +202,7 @@ t8_forest_search_recursion (t8_forest_t forest, const t8_locidx_t ltreeid, t8_el
     SC_CHECK_ABORT (ts->t8_element_level (element) <= ts->t8_element_level (leaf),
                     "Search: element level greater than leaf level\n");
     if (ts->t8_element_level (element) == ts->t8_element_level (leaf)) {
+      T8_ASSERT (t8_forest_element_is_leaf (forest, leaf, ltreeid));
       T8_ASSERT (ts->t8_element_equal (element, leaf));
       /* The element is the leaf */
       is_leaf = 1;
