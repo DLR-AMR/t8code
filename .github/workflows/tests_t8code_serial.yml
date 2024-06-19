@@ -63,7 +63,7 @@ jobs:
       with: 
         fetch-depth: 0
     - name: Update packages
-      run: apt-get update && apt-get upgrade -y
+      run: sudo apt-get update && sudo apt-get upgrade -y
       # This seems to be necessary because of the docker container
     - name: disable ownership checks
       run: git config --global --add safe.directory '*'
