@@ -1732,8 +1732,8 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
   int num_children_at_face, at_maxlevel;
   int ineigh, *owners, different_owners, have_ghosts;
 
-  /* TODO: implement is_leaf check to apply to leaf */
   T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (t8_forest_element_is_leaf (forest, leaf, ltreeid));
   T8_ASSERT (!forest_is_balanced || t8_forest_is_balanced (forest));
   SC_CHECK_ABORT (forest_is_balanced, "leaf face neighbors is not implemented "
                                       "for unbalanced forests.\n"); /* TODO: write version for unbalanced forests */
@@ -2026,6 +2026,47 @@ t8_forest_print_all_leaf_neighbors (t8_forest_t forest)
   if (allocate_el_offset) {
     t8_shmem_array_destroy (&forest->element_offsets);
   }
+}
+
+int
+t8_forest_tree_is_local (const t8_forest_t forest, const t8_locidx_t local_tree)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  return 0 <= local_tree && local_tree < t8_forest_get_num_local_trees (forest);
+}
+
+int
+t8_forest_element_is_leaf (const t8_forest_t forest, const t8_element_t *element, const t8_locidx_t local_tree)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (t8_forest_tree_is_local (forest, local_tree));
+
+  /* We get the array of the tree's elements and then search in the array of elements for our 
+   * element candidate. */
+  /* Get the array */
+  const t8_element_array_t *elements = t8_forest_get_tree_element_array (forest, local_tree);
+  T8_ASSERT (elements != NULL);
+
+  /* In order to find the element, we need to compute its linear id.
+   * To do so, we need the scheme and the level of the element. */
+  const t8_eclass_scheme_c *scheme = t8_element_array_get_scheme (elements);
+  const int element_level = scheme->t8_element_level (element);
+  /* Compute the linear id. */
+  const t8_linearidx_t element_id = scheme->t8_element_get_linear_id (element, element_level);
+  /* Search for the element.
+   * The search returns the largest index i,
+   * such that the element at position i has a smaller id than the given one.
+   * If no such i exists, it returns -1. */
+  const t8_locidx_t search_result = t8_forest_bin_search_lower (elements, element_id, element_level);
+  if (search_result < 0) {
+    /* The element was not found. */
+    return 0;
+  }
+  /* An element was found but it may not be the candidate element. 
+   * To identify whether the element was found, we compare these two. */
+  const t8_element_t *check_element = t8_element_array_index_locidx (elements, search_result);
+  T8_ASSERT (check_element != NULL);
+  return (scheme->t8_element_equal (element, check_element));
 }
 
 /* Check if an element is owned by a specific rank */
@@ -2694,6 +2735,7 @@ t8_forest_element_has_leaf_desc (t8_forest_t forest, t8_gloidx_t gtreeid, const 
       if (ts->t8_element_get_linear_id (element, forest->maxlevel) <= elem_id && level < level_found) {
         /* The element is a true descendant */
         T8_ASSERT (ts->t8_element_level (elem_found) > ts->t8_element_level (element));
+        T8_ASSERT (t8_forest_element_is_leaf (forest, elem_found, ltreeid));
         /* clean-up */
         ts->t8_element_destroy (1, &last_desc);
         return 1;
