@@ -686,7 +686,7 @@ t8_cmesh_trees_add_ghost_attribute (t8_cmesh_trees_t trees, int proc, t8_stash_a
   ghost = t8_part_tree_get_ghost (part, local_ghost_id);
 
   attr_info = T8_GHOST_ATTR_INFO (ghost, index);
-  attr_info->attribute_offset = *attribute_data_offset - local_ghost_id * sizeof (t8_attribute_info_struct_t);
+  attr_info->attribute_offset = *attribute_data_offset;
   new_attr_data = T8_GHOST_ATTR (ghost, attr_info);
 
   memcpy (new_attr_data, attr->attr_data, attr->attr_size);
@@ -697,6 +697,9 @@ t8_cmesh_trees_add_ghost_attribute (t8_cmesh_trees_t trees, int proc, t8_stash_a
   attr_info->attribute_size = attr->attr_size;
 
   *attribute_data_offset += attr->attr_size;
+  if (index == (size_t) ghost->num_attributes - 1) {
+    *attribute_data_offset -= ghost->num_attributes * sizeof (t8_attribute_info_struct_t);
+  }
 }
 
 /* gets a key_id_pair as first argument and an attribute as second */
