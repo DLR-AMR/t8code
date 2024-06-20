@@ -65,12 +65,13 @@ t8_test_adapt_first_child (t8_forest_t forest, t8_forest_t forest_from, t8_locid
  * This will reside in a forest where each element and each face is a boundary element.
  * */
 static int
-t8_test_adapt_quad_remove_first_and_fourth_child (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                           t8_eclass_scheme_c *ts, const int is_family, const int num_elements,
-                           t8_element_t *elements[])
+t8_test_adapt_quad_remove_first_and_fourth_child (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
+                                                  t8_locidx_t lelement_id, t8_eclass_scheme_c *ts, const int is_family,
+                                                  const int num_elements, t8_element_t *elements[])
 {
   /* For the purpose of this test, this function should only get called with quad elements. */
-  SC_CHECK_ABORT (ts->t8_element_shape (elements[0]) == T8_ECLASS_QUAD, "Special test adapt function must only be used on quad elements.\n");
+  SC_CHECK_ABORT (ts->t8_element_shape (elements[0]) == T8_ECLASS_QUAD,
+                  "Special test adapt function must only be used on quad elements.\n");
   int child_id = ts->t8_element_child_id (elements[0]);
   /* Remove child_id 0 and 3, do not change any other element. */
   if (child_id == 0 || child_id == 3) {
@@ -79,13 +80,12 @@ t8_test_adapt_quad_remove_first_and_fourth_child (t8_forest_t forest, t8_forest_
   return 0;
 }
 
-
 class element_is_boundary: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>> {
  protected:
   void
   SetUp () override
   {
-  GTEST_SKIP ();
+    GTEST_SKIP ();
     /* Construct a cmesh */
     const int level = std::get<0> (GetParam ());
     cmesh = std::get<1> (GetParam ())->cmesh_create ();
@@ -106,7 +106,7 @@ class element_is_boundary: public testing::TestWithParam<std::tuple<int, cmesh_e
   void
   TearDown () override
   {
-  GTEST_SKIP ();
+    GTEST_SKIP ();
     if (t8_cmesh_is_empty (cmesh)) {
       t8_cmesh_destroy (&cmesh);
     }
@@ -122,11 +122,11 @@ class element_is_boundary: public testing::TestWithParam<std::tuple<int, cmesh_e
 };
 
 void
-t8_test_element_is_boundary_for_forest (t8_forest_t forest, t8_cmesh_t cmesh, const int each_element_face_is_expected_boundary)
+t8_test_element_is_boundary_for_forest (t8_forest_t forest, t8_cmesh_t cmesh,
+                                        const int each_element_face_is_expected_boundary)
 {
   const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
 
-  
   for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree) {
     const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
@@ -138,7 +138,7 @@ t8_test_element_is_boundary_for_forest (t8_forest_t forest, t8_cmesh_t cmesh, co
     for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement) {
       const t8_element_t *leaf_element = t8_forest_get_element_in_tree (forest, itree, ielement);
       const int num_element_faces = scheme->t8_element_num_faces (leaf_element);
-      for (int iface = 0;iface < num_element_faces;++iface) {
+      for (int iface = 0; iface < num_element_faces; ++iface) {
         /* Iterate over all faces */
         int face_is_at_boundary = 0;
         if (!each_element_face_is_expected_boundary) {
@@ -189,11 +189,11 @@ TEST (element_is_boundary, quad_forest_with_holes)
   GTEST_SKIP ();
   /* Create a 10 x 5 2D brick cmesh, periodic in x direction. */
   t8_cmesh_t cmesh = t8_cmesh_new_brick_2d (10, 5, 1, 0, sc_MPI_COMM_WORLD);
-  
+
   t8_scheme_cxx_t *scheme = t8_scheme_new_default_cxx ();
   t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, T8_IS_BOUNDARY_MAX_LVL, 0, sc_MPI_COMM_WORLD);
   t8_forest_t forest_adapt = t8_forest_new_adapt (forest, t8_test_adapt_quad_remove_first_and_fourth_child, 0, 1, NULL);
-  
+
   t8_forest_write_vtk (forest_adapt, "test_quad_w_holes");
 
   t8_test_element_is_boundary_for_forest (forest_adapt, cmesh, 1);

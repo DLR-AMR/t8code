@@ -2058,8 +2058,7 @@ t8_forest_element_is_leaf (const t8_forest_t forest, const t8_element_t *element
    * The search returns the largest index i,
    * such that the element at position i has a smaller id than the given one.
    * If no such i exists, it returns -1. */
-  const t8_locidx_t search_result
-    = t8_forest_bin_search_lower (elements, element_id, element_level);
+  const t8_locidx_t search_result = t8_forest_bin_search_lower (elements, element_id, element_level);
   if (search_result < 0) {
     /* The element was not found. */
     return 0;
@@ -2103,7 +2102,8 @@ t8_forest_leaf_is_boundary (const t8_forest_t forest, t8_locidx_t local_tree, co
     return 0;
   }
   else {
-    SC_ABORT ("This forest has holes and a computation of boundary elements is not supported. Once https://github.com/DLR-AMR/t8code/issues/825 is resolved, the function will be available.\n");
+    SC_ABORT ("This forest has holes and a computation of boundary elements is not supported. Once "
+              "https://github.com/DLR-AMR/t8code/issues/825 is resolved, the function will be available.\n");
   }
   /* we need to compute the face neighbors to know whether the element is a boundary element. */
   const int is_balanced = t8_forest_is_balanced (forest);
