@@ -426,12 +426,21 @@ t8_cmesh_get_partition_table (t8_cmesh_t cmesh)
 }
 
 void
-t8_cmesh_set_dimension (t8_cmesh_t cmesh, int dim)
+t8_cmesh_set_dimension (t8_cmesh_t cmesh, const int dim)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   T8_ASSERT (0 <= dim && dim <= T8_ECLASS_MAX_DIM);
 
   cmesh->dimension = dim;
+}
+
+int
+t8_cmesh_get_dimension (const t8_cmesh_t cmesh)
+{
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (0 <= cmesh->dimension && cmesh->dimension <= T8_ECLASS_MAX_DIM);
+
+  return cmesh->dimension;
 }
 
 void
