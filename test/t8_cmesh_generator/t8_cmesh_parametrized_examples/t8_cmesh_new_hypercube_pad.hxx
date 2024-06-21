@@ -103,6 +103,9 @@ std::function<bool (const t8_eclass_t, sc_MPI_Comm, const double *, t8_locidx_t,
                     const int, const int, const int)>
   rule_wrapper = rule;
 
+/* We split the hypercube tests into two parts, one testing on non-periodic boundaries, the other one testing 
+ * with periodic boundaries but with fixed number of elements. That way we don't variate over all combinations
+ * of parameters, which would result in a very long runtime in our testsuite.  */
 example_set *cmesh_example_non_periodic_boundaries = (example_set *) new cmesh_cartesian_product_with_rules<
   decltype (cmesh_params::all_eclasses.begin ()), decltype (cmesh_params::my_comms.begin ()),
   decltype (cmesh_params::boundaries.begin ()), decltype (cmesh_params::elems_per_dim.begin ()),
