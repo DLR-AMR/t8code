@@ -103,7 +103,10 @@ std::function<bool (const t8_eclass_t, sc_MPI_Comm, const double *, t8_locidx_t,
                     const int, const int, const int)>
   rule_wrapper = rule;
 
-example_set *cmesh_example = (example_set *) new cmesh_cartesian_product_with_rules<
+/* We split the hypercube tests into two parts, one testing on non-periodic boundaries, the other one testing 
+ * with periodic boundaries but with fixed number of elements. That way we don't variate over all combinations
+ * of parameters, which would result in a very long runtime in our testsuite.  */
+example_set *cmesh_example_non_periodic_boundaries = (example_set *) new cmesh_cartesian_product_with_rules<
   decltype (cmesh_params::all_eclasses.begin ()), decltype (cmesh_params::my_comms.begin ()),
   decltype (cmesh_params::boundaries.begin ()), decltype (cmesh_params::elems_per_dim.begin ()),
   decltype (cmesh_params::elems_per_dim.begin ()), decltype (cmesh_params::elems_per_dim.begin ()),
@@ -115,11 +118,29 @@ example_set *cmesh_example = (example_set *) new cmesh_cartesian_product_with_ru
   std::make_pair (cmesh_params::elems_per_dim.begin (), cmesh_params::elems_per_dim.end ()),
   std::make_pair (cmesh_params::elems_per_dim.begin (), cmesh_params::elems_per_dim.end ()),
   std::make_pair (cmesh_params::elems_per_dim.begin (), cmesh_params::elems_per_dim.end ()),
+  std::make_pair (cmesh_params::periodic.begin (), cmesh_params::periodic.end () - 1),
+  std::make_pair (cmesh_params::periodic.begin (), cmesh_params::periodic.end () - 1),
+  std::make_pair (cmesh_params::periodic.begin (), cmesh_params::periodic.end () - 1),
+  std::make_pair (cmesh_params::use_axis_aligned.begin (), cmesh_params::use_axis_aligned.end ()), hyper_pad,
+  make_param_string_wrapper, rule_wrapper, "t8_cmesh_new_hypercube_pad_ext_non_periodic_boundaries");
+
+example_set *cmesh_example_periodic_boundaries = (example_set *) new cmesh_cartesian_product_with_rules<
+  decltype (cmesh_params::all_eclasses.begin ()), decltype (cmesh_params::my_comms.begin ()),
+  decltype (cmesh_params::boundaries.begin ()), decltype (cmesh_params::elems_per_dim.begin ()),
+  decltype (cmesh_params::elems_per_dim.begin ()), decltype (cmesh_params::elems_per_dim.begin ()),
+  decltype (cmesh_params::periodic.begin ()), decltype (cmesh_params::periodic.begin ()),
+  decltype (cmesh_params::periodic.begin ()), decltype (cmesh_params::use_axis_aligned.begin ())> (
+  std::make_pair (cmesh_params::eclasses.begin (), cmesh_params::eclasses.end ()),
+  std::make_pair (cmesh_params::my_comms.begin (), cmesh_params::my_comms.end ()),
+  std::make_pair (cmesh_params::boundaries.begin (), cmesh_params::boundaries.end ()),
+  std::make_pair (cmesh_params::elems_per_dim.begin (), cmesh_params::elems_per_dim.begin () + 1),
+  std::make_pair (cmesh_params::elems_per_dim.begin (), cmesh_params::elems_per_dim.begin () + 1),
+  std::make_pair (cmesh_params::elems_per_dim.begin (), cmesh_params::elems_per_dim.begin () + 1),
   std::make_pair (cmesh_params::periodic.begin (), cmesh_params::periodic.end ()),
   std::make_pair (cmesh_params::periodic.begin (), cmesh_params::periodic.end ()),
   std::make_pair (cmesh_params::periodic.begin (), cmesh_params::periodic.end ()),
   std::make_pair (cmesh_params::use_axis_aligned.begin (), cmesh_params::use_axis_aligned.end ()), hyper_pad,
-  make_param_string_wrapper, rule_wrapper, "t8_cmesh_new_hypercube_pad_ext_");
+  make_param_string_wrapper, rule_wrapper, "t8_cmesh_new_hypercube_pad_ext_periodic_boundaries");
 }  // namespace new_hypercube_pad
 
 #endif /* T8_CMESH_NEW_HYPERCUBE_PAD */
