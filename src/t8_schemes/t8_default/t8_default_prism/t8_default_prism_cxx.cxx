@@ -339,7 +339,8 @@ t8_default_scheme_prism_c::t8_element_face_neighbor_inside (const t8_element_t *
 }
 
 void
-t8_default_scheme_prism_c::t8_element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id) const
+t8_default_scheme_prism_c::t8_element_set_linear_id (t8_element_t *elem, const int level, const t8_linearidx_t id,
+                                                     const int multilevel) const
 {
   T8_ASSERT (0 <= level && level <= T8_DPRISM_MAXLEVEL);
   T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << 3 * level);

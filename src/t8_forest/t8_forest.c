@@ -107,6 +107,10 @@ t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh, sc_MPI_Comm comm)
   }
   if (cmesh != NULL) {
     T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
+    /* If the cmesh is set for partition check if it is partitioned for multilevel as well */
+    if (cmesh->set_partition_level > -1) {
+      T8_ASSERT (forest->multilevel == cmesh->set_partition_multilevel);
+    }
   }
   forest->cmesh = cmesh;
   do_dup = 0;
@@ -137,6 +141,18 @@ t8_forest_set_level (t8_forest_t forest, int level)
   T8_ASSERT (0 <= level);
 
   forest->set_level = level;
+}
+
+void
+t8_forest_set_multilevel (t8_forest_t forest)
+{
+  T8_ASSERT (forest != NULL);
+  T8_ASSERT (forest->rc.refcount > 0);
+  T8_ASSERT (!forest->committed);
+  T8_ASSERT (forest->set_from == NULL);
+  T8_ASSERT (forest->multilevel == 0);
+
+  forest->multilevel = 1;
 }
 
 void
@@ -454,6 +470,8 @@ t8_forest_commit (t8_forest_t forest)
     T8_ASSERT (forest->set_level <= forest->maxlevel);
     /* populate a new forest with tree and quadrant objects */
     if (t8_forest_refines_irregular (forest) && forest->set_level > 0) {
+      /* Multilevel is not yet compatible with irregular forests */
+      T8_ASSERT (forest->multilevel == 0);
       /* On root level we will also use the normal algorithm */
       t8_forest_populate_irregular (forest);
     }
@@ -499,6 +517,7 @@ t8_forest_commit (t8_forest_t forest)
     forest->cmesh = forest->set_from->cmesh;
     forest->scheme_cxx = forest->set_from->scheme_cxx;
     forest->global_num_trees = forest->set_from->global_num_trees;
+    forest->multilevel = forest->set_from->multilevel;
 
     /* Compute the maximum allowed refinement level */
     t8_forest_compute_maxlevel (forest);
@@ -1417,6 +1436,8 @@ t8_forest_new_uniform (t8_cmesh_t cmesh, t8_scheme_cxx_t *scheme, const int leve
   /* Initialize the forest */
   t8_forest_init (&forest);
   /* Set the cmesh, scheme and level */
+  if (multilevel)
+    t8_forest_set_multilevel (forest);
   t8_forest_set_cmesh (forest, cmesh, comm);
   t8_forest_set_scheme (forest, scheme);
   t8_forest_set_level (forest, level);

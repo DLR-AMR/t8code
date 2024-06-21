@@ -107,7 +107,7 @@ t8_partition (int level, int partition_from)
   /* We still need access to cmesh later */
   t8_cmesh_ref (cmesh);
   t8_cmesh_set_derive (cmesh_part, cmesh);
-  t8_cmesh_set_partition_uniform (cmesh_part, level, t8_scheme_new_default_cxx ());
+  t8_cmesh_set_partition_uniform (cmesh_part, level, 0, t8_scheme_new_default_cxx ());
   t8_cmesh_commit (cmesh_part, sc_MPI_COMM_WORLD);
   if (mpisize > 1 && 1) {
     t8_cmesh_init (&cmesh_part2);

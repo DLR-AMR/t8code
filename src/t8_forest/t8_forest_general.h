@@ -213,6 +213,14 @@ t8_forest_set_scheme (t8_forest_t forest, t8_scheme_cxx_t *scheme);
 void
 t8_forest_set_level (t8_forest_t forest, int level);
 
+/** Set the multilevel flag of a forest. This can only be done with an empty forest
+ * which is not derived from another forest. It cannot be reversed.
+ * The forest will now save all ancestors in the SFC as well as the leaves.
+ * \param [in, out] forest 
+ */
+void
+t8_forest_set_multilevel (t8_forest_t forest);
+
 /** Set a forest as source for copying on committing.
  * By default, the forest takes ownership of the source \b from such that it will
  * be destroyed on calling \ref t8_forest_commit.  To keep ownership of \b

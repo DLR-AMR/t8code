@@ -390,6 +390,14 @@ t8_element_count_leaves_from_root (const t8_eclass_scheme_c *ts, int level)
   return ts->t8_element_count_leaves_from_root (level);
 }
 
+t8_gloidx_t
+t8_element_count_elements_from_root (const t8_eclass_scheme_c *ts, int level)
+{
+  T8_ASSERT (ts != NULL);
+
+  return ts->t8_element_count_elements_from_root (level);
+}
+
 #ifdef T8_ENABLE_DEBUG
 int
 t8_element_is_valid (const t8_eclass_scheme_c *ts, const t8_element_t *elem)

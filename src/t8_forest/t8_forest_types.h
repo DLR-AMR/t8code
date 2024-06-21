@@ -82,25 +82,27 @@ typedef struct t8_forest
   int do_dup;                  /**< Communicator shall be duped. */
   int dimension;               /**< Dimension inferred from \b cmesh. */
   int incomplete_trees;        /**< Flag to check whether the forest has (potential) incomplete trees.
-                                             A tree is incomplete if an element has been removed from it.
-                                             Once an element got removed, the flag sets to 1 (true) and stays. 
-                                             For a committed forest this flag is either true on all ranks or
-                                             false on all ranks. */
+                                    A tree is incomplete if an element has been removed from it.
+                                    Once an element got removed, the flag sets to 1 (true) and stays. 
+                                    For a committed forest this flag is either true on all ranks or
+                                    false on all ranks. */
+  int multilevel;              /**< Flag to set the forest to multilevel. The forest will now save all
+                                    ancestors in the SFC. Cannot be reversed. */
 
   t8_forest_t set_from;           /**< Temporarily store source forest. */
   t8_forest_from_t from_method;   /**< Method to derive from \b set_from. */
   t8_forest_adapt_t set_adapt_fn; /**< refinement and coarsen function. Called when \b from_method
-                                             is set to T8_FOREST_FROM_ADAPT. */
+                                       is set to T8_FOREST_FROM_ADAPT. */
   int set_adapt_recursive;        /**< Flag to decide whether coarsen and refine
-                                                are carried out recursive */
+                                       are carried out recursive */
   int set_balance;                /**< Flag to decide whether to forest will be balance in \ref t8_forest_commit.
-                                             See \ref t8_forest_set_balance.
-                                             If 0, no balance. If 1 balance with repartitioning, if 2 balance without
-                                             repartitioning, \see t8_forest_balance */
+                                       See \ref t8_forest_set_balance.
+                                       If 0, no balance. If 1 balance with repartitioning, if 2 balance without
+                                       repartitioning, \see t8_forest_balance */
   int do_ghost;                   /**< If True, a ghost layer will be created when the forest is committed. */
   t8_ghost_type_t ghost_type;     /**< If a ghost layer will be created, the type of neighbors that count as ghost. */
   int ghost_algorithm;            /**< Controls the algorithm used for ghost. 1 = balanced only. 2 = also unbalanced
-                                             3 = top-down search and unbalanced. */
+                                       3 = top-down search and unbalanced. */
   void *user_data;                /**< Pointer for arbitrary user data. \see t8_forest_set_user_data. */
   void (*user_function) ();       /**< Pointer for arbitrary user function. \see t8_forest_set_user_function. */
   void *t8code_data;              /**< Pointer for arbitrary data that is used internally. */

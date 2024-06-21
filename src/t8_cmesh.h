@@ -211,12 +211,13 @@ t8_cmesh_set_partition_offsets (t8_cmesh_t cmesh, t8_shmem_array_t tree_offsets)
  * to \ref t8_cmesh_commit.
  * \param [in,out] cmesh          The cmesh to be updated.
  * \param [in]     element_level  The refinement_level.
+ * \param [in]     multilevel     Partition the cmesh for a multilevel forest.
  * \param [in]     ts             The element scheme describing the refinement pattern.
  *                                We take ownership. This can be prevented by
  *                                referencing \b ts before calling this function.
  */
 void
-t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, int element_level, t8_scheme_cxx_t *ts);
+t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, int element_level, const int multilevel, t8_scheme_cxx_t *ts);
 
 /** Refine the cmesh to a given level.
  * Thus split each tree into x^level subtrees
@@ -726,19 +727,20 @@ t8_cmesh_get_partition_table (t8_cmesh_t cmesh);
  * \param [in]    cmesh         The cmesh to be considered.
  * \param [in]    level         The uniform refinement level to be created.
  * \param [in]    ts            The element scheme for which to compute the bounds.
+ * \param [in]    multilevel    Flag if the ancestors will be saved as well.
  * \param [out]   first_local_tree  The first tree that contains elements belonging to the calling processor.
- * \param [out]   child_in_tree_begin The global index of the first element belonging to the calling processor. Not computed if NULL.
+ * \param [out]   element_in_tree_begin The global index of the first element belonging to the calling processor. Not computed if NULL.
  * \param [out]   last_local_tree  The last tree that contains elements belonging to the calling processor.
- * \param [out]   child_in_tree_end The global index of the first element that does not belonging to
+ * \param [out]   element_in_tree_end The global index of the first element that does not belonging to
  *                                  the calling processor anymore. Not computed if NULL.
  * \param [out]   first_tree_shared If not NULL, 1 or 0 is stored here depending on whether \a first_local_tree is the
  *                                 same as \a last_local_tree on the next process.
  * \a cmesh must be committed before calling this function. *
  */
 void
-t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *ts, t8_gloidx_t *first_local_tree,
-                         t8_gloidx_t *child_in_tree_begin, t8_gloidx_t *last_local_tree, t8_gloidx_t *child_in_tree_end,
-                         int8_t *first_tree_shared);
+t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *ts, const int multilevel,
+                         t8_gloidx_t *first_local_tree, t8_gloidx_t *element_in_tree_begin,
+                         t8_gloidx_t *last_local_tree, t8_gloidx_t *element_in_tree_end, int8_t *first_tree_shared);
 
 /** Increase the reference counter of a cmesh.
  * \param [in,out] cmesh        On input, this cmesh must exist with positive

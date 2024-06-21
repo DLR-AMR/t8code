@@ -241,7 +241,8 @@ t8_default_scheme_quad_c::t8_element_is_family (t8_element_t *const *fam) const
 }
 
 void
-t8_default_scheme_quad_c::t8_element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id) const
+t8_default_scheme_quad_c::t8_element_set_linear_id (t8_element_t *elem, const int level, const t8_linearidx_t id,
+                                                    const int multilevel) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);

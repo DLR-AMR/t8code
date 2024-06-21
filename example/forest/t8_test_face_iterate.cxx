@@ -116,7 +116,7 @@ t8_test_fiterate_refine_and_partition (t8_cmesh_t cmesh, int level, sc_MPI_Comm 
     /* partition the initial cmesh according to a uniform forest */
     t8_cmesh_init (&cmesh_partition);
     t8_cmesh_set_derive (cmesh_partition, cmesh);
-    t8_cmesh_set_partition_uniform (cmesh_partition, level, t8_scheme_new_default_cxx ());
+    t8_cmesh_set_partition_uniform (cmesh_partition, level, 0, t8_scheme_new_default_cxx ());
     t8_cmesh_commit (cmesh_partition, comm);
   }
   else {

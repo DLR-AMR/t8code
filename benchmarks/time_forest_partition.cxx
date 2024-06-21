@@ -323,7 +323,7 @@ t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim, const char *cme
     /* partition the cmesh uniformly */
     t8_cmesh_init (&cmesh_partition);
     t8_cmesh_set_derive (cmesh_partition, cmesh);
-    t8_cmesh_set_partition_uniform (cmesh_partition, init_level, t8_scheme_new_default_cxx ());
+    t8_cmesh_set_partition_uniform (cmesh_partition, init_level, 0, t8_scheme_new_default_cxx ());
     t8_cmesh_set_profiling (cmesh_partition, 1);
     t8_cmesh_commit (cmesh_partition, comm);
     return cmesh_partition;

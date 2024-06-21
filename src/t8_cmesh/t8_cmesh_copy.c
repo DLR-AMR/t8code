@@ -54,6 +54,7 @@ t8_cmesh_copy (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from, sc_MPI_Comm comm)
   cmesh->num_trees = cmesh_from->num_trees;
   cmesh->set_partition = cmesh_from->set_partition;
   cmesh->set_partition_level = cmesh_from->set_partition_level;
+  cmesh->set_partition_multilevel = cmesh_from->set_partition_multilevel;
   T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
 
   /* Copy the tree_offsets */

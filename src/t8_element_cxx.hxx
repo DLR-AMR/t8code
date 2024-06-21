@@ -512,13 +512,15 @@ struct t8_eclass_scheme
 
   /** Initialize the entries of an allocated element according to a
    *  given linear id in a uniform refinement.
-   * \param [in,out] elem The element whose entries will be set.
-   * \param [in] level    The level of the uniform refinement to consider.
-   * \param [in] id       The linear id.
+   * \param [in,out] elem   The element whose entries will be set.
+   * \param [in] level      The level of the uniform refinement to consider.
+   * \param [in] id         The linear id.
+   * \param [in] multilevel Shifts the linear id to make space for multiple levels.
    *                      id must fulfil 0 <= id < 'number of leaves in the uniform refinement'
    */
   virtual void
-  t8_element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id) const
+  t8_element_set_linear_id (t8_element_t *elem, const int level, const t8_linearidx_t id,
+                            const int multilevel = 0) const
     = 0;
 
   /** Compute the linear id of a given element in a hypothetical uniform
@@ -612,6 +614,18 @@ struct t8_eclass_scheme
    */
   virtual t8_gloidx_t
   t8_element_count_leaves_from_root (int level) const
+    = 0;
+
+  /** Count how many elements (including ancestors) of a given uniform level the root element will produce.
+   * \param [in] level A refinement level.
+   * \return The value of \ref t8_element_count_leaves if the input element
+   *      is the root (level 0) element.
+   *
+   * This is a convenience function, and can be implemented via
+   * \ref t8_element_count_leaves.
+   */
+  virtual t8_gloidx_t
+  t8_element_count_elements_from_root (int level) const
     = 0;
 
 #ifdef T8_ENABLE_DEBUG

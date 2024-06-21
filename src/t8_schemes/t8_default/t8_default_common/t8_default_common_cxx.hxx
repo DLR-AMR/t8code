@@ -85,6 +85,14 @@ class t8_default_scheme_common_c: public t8_eclass_scheme_c {
   virtual t8_gloidx_t
   t8_element_count_leaves_from_root (int level) const;
 
+  /** Count how many elements (including ancestors) of a given uniform level the root element will produce.
+   * \param [in] level A refinement level.
+   * \return The value of \ref t8_element_count_leaves if the input element
+   *      is the root (level 0) element.
+   */
+  virtual t8_gloidx_t
+  t8_element_count_elements_from_root (int level) const;
+
   /** Compute the integer coordinates of a given element vertex.
    * The default scheme implements the Morton type SFCs. In these SFCs the
    * elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and 

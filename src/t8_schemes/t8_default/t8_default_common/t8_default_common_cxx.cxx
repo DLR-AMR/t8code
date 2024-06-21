@@ -153,6 +153,18 @@ t8_default_scheme_common_c::t8_element_count_leaves_from_root (int level) const
   return count_leaves_from_level (0, level, dim);
 }
 
+t8_gloidx_t
+t8_default_scheme_common_c::t8_element_count_elements_from_root (int level) const
+{
+  /* Recursion of t8_element_count_leaves_from_root */
+  if (level > 0) {
+    return t8_element_count_leaves_from_root (level) + t8_element_count_elements_from_root (level - 1);
+  }
+  else {
+    return 1;
+  }
+}
+
 #if T8_ENABLE_DEBUG
 void
 t8_default_scheme_common_c::t8_element_debug_print (const t8_element_t *elem) const

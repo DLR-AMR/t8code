@@ -162,6 +162,7 @@ t8_cmesh_init (t8_cmesh_t *pcmesh)
 
   /* sensible (hard error) defaults */
   cmesh->set_partition_level = -1;
+  cmesh->set_partition_multilevel = 0;
   cmesh->dimension = -1; /*< ok; force user to select dimension */
   cmesh->mpirank = -1;
   cmesh->mpisize = -1;
@@ -263,7 +264,7 @@ t8_cmesh_set_partition_offsets (t8_cmesh_t cmesh, t8_shmem_array_t tree_offsets)
 }
 
 void
-t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, int element_level, t8_scheme_cxx_t *ts)
+t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, const int element_level, const int multilevel, t8_scheme_cxx_t *ts)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   T8_ASSERT (element_level >= -1);
@@ -271,6 +272,7 @@ t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, int element_level, t8_scheme_c
 
   cmesh->set_partition = 1;
   cmesh->set_partition_level = element_level;
+  cmesh->set_partition_multilevel = multilevel;
   cmesh->set_partition_scheme = ts;
   if (element_level >= 0) {
     /* We overwrite any previous partition settings */

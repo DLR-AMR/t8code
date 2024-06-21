@@ -570,6 +570,18 @@ t8_element_count_leaves (const t8_eclass_scheme_c *ts, const t8_element_t *t, in
 t8_gloidx_t
 t8_element_count_leaves_from_root (const t8_eclass_scheme_c *ts, int level);
 
+/** Count how many elements (including ancestors) of a given uniform level the root element will produce.
+   * \param [in] ts    Implementation of a class scheme.
+   * \param [in] level A refinement level.
+   * \return The value of \ref t8_element_count_leaves if the input element
+   *      is the root (level 0) element.
+   *
+   * This is a convenience function, and can be implemented via
+   * \ref t8_element_count_leaves.
+   */
+t8_gloidx_t
+t8_element_count_elements_from_root (const t8_eclass_scheme_c *ts, int level);
+
 #ifdef T8_ENABLE_DEBUG
 /** Query whether a given element can be considered as 'valid' and it is
    *  safe to perform any of the above algorithms on it.
