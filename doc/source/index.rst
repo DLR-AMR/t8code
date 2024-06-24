@@ -54,20 +54,7 @@ You find more information on t8code in the t8code Wiki.
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 5
    :caption: Contents:
 
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
-Docs
-====
-
-.. doxygenindex::
-   :allow-dot-graphs:
+   api/library_root

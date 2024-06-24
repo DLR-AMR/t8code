@@ -45,6 +45,8 @@ if (BUILD_SPHINX_DOCUMENTATION)
         set(CONF_FILE_IN ${SPHINX_SOURCE}/conf.in)
         set(CONF_FILE_OUT ${SPHINX_SOURCE}/conf.py)
 
+        set(top_srcdir ${PROJECT_SOURCE_DIR})
+
         configure_file(${CONF_FILE_IN} ${CONF_FILE_OUT} @ONLY)
 
         # Only regenerate Sphinx when:
