@@ -622,9 +622,16 @@ t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
         int num_switches = 0;
         int switch_indices[4] = { 0 };
         int iswitch;
-        T8_ASSERT (t8_eclass_to_dimension[eclass] == 3);
+        T8_ASSERT (t8_eclass_to_dimension[eclass] > 1);
         t8_debugf ("Correcting negative volume of tree %li\n", tree_count);
         switch (eclass) {
+        case T8_ECLASS_TRIANGLE:
+        case T8_ECLASS_QUAD:
+          /* We switch vertex 1 and vertex 2. */
+          num_switches = 2;
+          switch_indices[0] = 0;
+          switch_indices[1] = 2;
+          break;
         case T8_ECLASS_TET:
           /* We switch vertex 0 and vertex 3 */
           num_switches = 1;
@@ -948,11 +955,18 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
           int num_switches = 0;
           int switch_indices[4] = { 0 };
           int iswitch;
-          T8_ASSERT (t8_eclass_to_dimension[eclass] == 3);
+          T8_ASSERT (t8_eclass_to_dimension[eclass] > 1);
           t8_debugf ("Correcting negative volume of tree %li\n", tree_count);
           switch (eclass) {
+          case T8_ECLASS_TRIANGLE:
+          case T8_ECLASS_QUAD:
+            /* We switch vertex 1 and vertex 2. */
+            num_switches = 2;
+            switch_indices[0] = 0;
+            switch_indices[1] = 2;
+            break;
           case T8_ECLASS_TET:
-            /* We switch vertex 0 and vertex 3 */
+            /* We switch vertex 0 and vertex 3. */
             num_switches = 1;
             switch_indices[0] = 3;
             break;
@@ -1016,10 +1030,10 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
           T8_ASSERT (cad_geometry_base->t8_geom_get_type () == T8_GEOMETRY_TYPE_CAD);
           const t8_geometry_cad_c *cad_geometry = dynamic_cast<const t8_geometry_cad_c *> (cad_geometry_base);
           /* Check for right element class */
-          if (eclass != T8_ECLASS_TRIANGLE && eclass != T8_ECLASS_QUAD && eclass != T8_ECLASS_TET
-              && eclass != T8_ECLASS_HEX) {
+          if (eclass != T8_ECLASS_TRIANGLE && eclass != T8_ECLASS_QUAD && eclass != T8_ECLASS_HEX
+              && eclass != T8_ECLASS_TET && eclass != T8_ECLASS_PRISM) {
             t8_errorf (
-              "%s element detected. The cad geometry currently only supports quad, tri, tet and hex elements.\n",
+              "%s element detected. The cad geometry currently only supports quad, tri, hex and prism elements.",
               t8_eclass_to_string[eclass]);
             goto die_ele;
           }
