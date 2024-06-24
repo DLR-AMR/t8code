@@ -34,6 +34,9 @@
 /** The number of children that a prism is refined into. */
 #define T8_DPRISM_CHILDREN 8
 
+/** The number of edges of a prism. */
+#define T8_DPRISM_EDGES 9
+
 /** The number of faces of a prism. */
 #define T8_DPRISM_FACES 5
 

@@ -461,6 +461,13 @@ t8_cmesh_comm_is_valid (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 int
 t8_cmesh_is_partitioned (t8_cmesh_t cmesh);
 
+/** Get the dimension of a cmesh.
+ * \param [in]  cmesh   The cmesh.
+ * \a cmesh must be committed before calling this function.
+ */
+int
+t8_cmesh_get_dimension (const t8_cmesh_t cmesh);
+
 /** Return the global number of trees in a cmesh.
  * \param [in] cmesh       The cmesh to be considered.
  * \return                 The number of trees associated to \a cmesh.
