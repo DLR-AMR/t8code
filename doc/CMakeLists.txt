@@ -1,28 +1,73 @@
-find_package(Doxygen REQUIRED)
+if(BUILD_DOCUMENTATION)
+    find_package(Doxygen REQUIRED)
+    if (DOXYGEN_FOUND)
+        set(DOXYGEN_OUTPUT_DIR ${PROJECT_BINARY_DIR}/doc)
+        set(DOXYGEN_INDEX_FILE ${DOXYGEN_OUTPUT_DIR}/html/index.html)
+        set(DOXYFILE_IN ${PROJECT_SOURCE_DIR}/doc/Doxyfile.in)
+        set(DOXYFILE_OUT ${PROJECT_BINARY_DIR}/doc/Doxyfile)
 
-if (DOXYGEN_FOUND)
-    set(DOXYGEN_INDEX_FILE ${DOXYGEN_OUTPUT_DIR}/html/index.html)
-    set(DOXYFILE_IN ${PROJECT_SOURCE_DIR}/doc/Doxyfile.in)
-    set(DOXYFILE_OUT ${PROJECT_BINARY_DIR}/doc/Doxyfile)
+        #The following options are used inside the do
+        set(top_srcdir ${PROJECT_SOURCE_DIR})
+        set(top_builddir ${PROJECT_BINARY_DIR})
 
-    #The following options are used inside the do
-    set(top_srcdir ${PROJECT_SOURCE_DIR})
-    set(top_builddir ${PROJECT_BINARY_DIR})
-
-    set(PACKAGE_NAME ${PROJECT_NAME})
-    set(VERSION ${T8_VERSION})
+        set(PACKAGE_NAME ${PROJECT_NAME})
+        set(VERSION ${T8_VERSION})
 
 
-    #Replace variables inside @@ with the current values
+        #Replace variables inside @@ with the current values
+        configure_file(${DOXYFILE_IN} ${DOXYFILE_OUT} @ONLY)
+
+        add_custom_command( OUTPUT ${DOXYGEN_INDEX_FILE}
+                            DEPENDS ${T8_PUBLIC_HEADERS}
+                            COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYFILE_OUT} 
+                            MAIN_DEPENDENCY ${DOXYFILE_OUT} ${DOXYFILE_IN} 
+                            COMMENT "Generating documentation"
+                            VERBATIM)
+
+        add_custom_target(Doxygen ALL DEPENDS ${DOXYGEN_INDEX_FILE})
+
+    else (DOXYGEN_FOUND)
+        message(FATAL_ERROR "Doxygen need to be installed to generate the doxygen documentation")
+    endif (DOXYGEN_FOUND)
+endif(BUILD_DOCUMENTATION)
+
+if (BUILD_SPHINX_DOCUMENTATION)
+    set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+    find_package(Sphinx REQUIRED)
+    
     configure_file(${DOXYFILE_IN} ${DOXYFILE_OUT} @ONLY)
+    
+    if (SPHINX_FOUND)
+        set(SPHINX_SOURCE ${PROJECT_SOURCE_DIR}/doc/source)
+        set(SPHINX_BUILD ${PROJECT_BINARY_DIR}/doc/sphinx)
+        set(SPHINX_INDEX_FILE ${SPHINX_BUILD}/index.html)
 
-    add_custom_command( OUTPUT ${DOXYGEN_INDEX_FILE}
-                        DEPENDS ${T8_PUBLIC_HEADERS}
-                        COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYFILE_OUT} 
-                        MAIN_DEPENDENCY ${DOXYFILE_OUT} ${DOXYFILE_IN} 
-                        COMMENT "Generating documentation")
+        set(CONF_FILE_IN ${SPHINX_SOURCE}/conf.in)
+        set(CONF_FILE_OUT ${SPHINX_SOURCE}/conf.py)
 
-    add_custom_target(Doxygen ALL DEPENDS ${DOXYGEN_INDEX_FILE})
-else (DOXYGEN_FOUND)
-    message(FATAL_ERROR "Doxygen need to be installed to generate the doxygen documentation")
-endif (DOXYGEN_FOUND)
+        configure_file(${CONF_FILE_IN} ${CONF_FILE_OUT} @ONLY)
+
+        # Only regenerate Sphinx when:
+        # - Doxygen has rerun
+        # - Our doc files have been updated
+        # - The Sphinx config has been updated
+        add_custom_command( OUTPUT ${SPHINX_INDEX_FILE}
+                            COMMAND ${SPHINX_EXECUTABLE} -b html
+                            # Tell Breathe where to find the Doxygen output
+                            -Dbreathe_projects.T8code=${DOXYGEN_OUTPUT_DIR}/xml
+                            ${SPHINX_SOURCE} ${SPHINX_BUILD}
+                            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                            DEPENDS
+                            # Other docs files you want to track should go here (or in some variable)
+                            ${SPHINX_SOURCE}/index.rst
+                            ${DOXYGEN_INDEX_FILE}
+                            MAIN_DEPENDENCY ${SPHINX_SOURCE}/conf.py
+                            COMMENT "Generating documentation with Sphinx")
+
+        
+        # Nice named target so we can run the job easily
+        add_custom_target(Sphinx ALL DEPENDS ${SPHINX_INDEX_FILE})
+    else (SPHINX_FOUND)
+        message(FATAL_ERROR "Sphinx need to be installed to generate the doxygen documentation")
+    endif (SPHINX_FOUND)
+endif(BUILD_SPHINX_DOCUMENTATION)
