@@ -5,6 +5,8 @@ else()
     add_library( T8 STATIC )
 endif()
 
+add_library( T8CODE::T8 ALIAS T8 )
+
 if( CMAKE_BUILD_TYPE STREQUAL "Release" )
     target_compile_options( T8 PRIVATE -O3 )
 endif()
@@ -55,7 +57,11 @@ target_compile_definitions( T8 PUBLIC T8_VERSION_MINOR=${T8CODE_VERSION_MINOR} )
 target_compile_definitions( T8 PUBLIC T8_VERSION_POINT=${T8CODE_VERSION_POINT} )
 
 
-target_include_directories( T8 PUBLIC ${CMAKE_CURRENT_LIST_DIR} )
+target_include_directories( T8 PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include>
+)
+
 target_link_libraries( T8 PUBLIC P4EST::P4EST SC::SC )
 
 if ( CMAKE_BUILD_TYPE STREQUAL "Debug" )
@@ -214,3 +220,28 @@ set( T8_PUBLIC_HEADERS
 
 install( FILES ${T8_PUBLIC_HEADERS} DESTINATION ${CMAKE_INSTALL_PREFIX}/include )
 install( TARGETS T8 DESTINATION ${CMAKE_INSTALL_PREFIX}/lib )
+install( TARGETS T8 EXPORT ${PROJECT_NAME}-targets )
+
+include( CMakePackageConfigHelpers )
+
+configure_package_config_file( ${CMAKE_CURRENT_LIST_DIR}/config.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}Config.cmake
+INSTALL_DESTINATION cmake
+)
+
+write_basic_package_version_file(
+${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}ConfigVersion.cmake
+COMPATIBILITY SameMajorVersion
+VERSION 0.0.0
+)
+
+install( EXPORT ${PROJECT_NAME}-targets
+NAMESPACE ${PROJECT_NAME}::
+DESTINATION cmake
+)
+
+install( FILES
+${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}Config.cmake
+${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}ConfigVersion.cmake
+DESTINATION cmake
+)
