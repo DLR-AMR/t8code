@@ -138,7 +138,7 @@ t8_element_array_resize (t8_element_array_t *element_array, size_t new_count);
  * \param [in] src  Array used as source of new data, will not be changed.
  */
 void
-t8_element_array_copy (t8_element_array_t *dest, t8_element_array_t *src);
+t8_element_array_copy (t8_element_array_t *dest, const t8_element_array_t *src);
 
 /** Enlarge an array by one element.
  * \param [in, ou] element_array Array structure to be modified.
@@ -157,30 +157,48 @@ t8_element_array_push (t8_element_array_t *element_array);
 t8_element_t *
 t8_element_array_push_count (t8_element_array_t *element_array, size_t count);
 
-/** Return a given element in an array.
+/** Return a given element in an array. Const version.
  * \param [in]  element_array Array of elements.
  * \param [in]  index The index of an element within the array.
  * \return            A pointer to the element stored at position \a index in
  *                    \a element_array.
  */
-t8_element_t *
-t8_element_array_index_locidx (t8_element_array_t *element_array, t8_locidx_t index);
+const t8_element_t *
+t8_element_array_index_locidx (const t8_element_array_t *element_array, t8_locidx_t index);
 
-/** Return a given element in an array.
+/** Return a given element in an array. Const version.
+ * \param [in]  element_array Array of elements.
+ * \param [in]  index The index of an element within the array.
+ * \return            A pointer to the element stored at position \a index in
+ *                    \a element_array.
+ */
+const t8_element_t *
+t8_element_array_index_int (const t8_element_array_t *element_array, int index);
+
+/** Return a given element in an array. Mutable version.
  * \param [in]  element_array Array of elements.
  * \param [in]  index The index of an element within the array.
  * \return            A pointer to the element stored at position \a index in
  *                    \a element_array.
  */
 t8_element_t *
-t8_element_array_index_int (t8_element_array_t *element_array, int index);
+t8_element_array_index_locidx_mutable (t8_element_array_t *element_array, t8_locidx_t index);
+
+/** Return a given element in an array. Mutable version.
+ * \param [in]  element_array Array of elements.
+ * \param [in]  index The index of an element within the array.
+ * \return            A pointer to the element stored at position \a index in
+ *                    \a element_array.
+ */
+t8_element_t *
+t8_element_array_index_int_mutable (t8_element_array_t *element_array, int index);
 
 /** Return the eclass scheme associated to a t8_element_array.
  * \param [in]  element_array Array of elements.
  * \return      The eclass scheme stored at \a element_array.
  */
-t8_eclass_scheme_c *
-t8_element_array_get_scheme (t8_element_array_t *element_array);
+const t8_eclass_scheme_c *
+t8_element_array_get_scheme (const t8_element_array_t *element_array);
 
 /** Return the number of elements stored in a t8_element_array_t.
  * \param [in]  element_array  Array structure.
@@ -193,7 +211,15 @@ t8_element_array_get_count (const t8_element_array_t *element_array);
  * \return                     The size (in bytes) of a single element in \a element_array.
  */
 size_t
-t8_element_array_get_size (t8_element_array_t *element_array);
+t8_element_array_get_size (const t8_element_array_t *element_array);
+
+/** Return a const pointer to the real data array stored in a t8_element_array.
+ * \param [in]  element_array  Array structure.
+ * \return                     A pointer to the stored data. If the number of stored
+ *                             elements is 0, then NULL is returned.
+ */
+const t8_element_t *
+t8_element_array_get_data (const t8_element_array_t *element_array);
 
 /** Return a pointer to the real data array stored in a t8_element_array.
  * \param [in]  element_array  Array structure.
@@ -201,14 +227,23 @@ t8_element_array_get_size (t8_element_array_t *element_array);
  *                             elements is 0, then NULL is returned.
  */
 t8_element_t *
-t8_element_array_get_data (t8_element_array_t *element_array);
+t8_element_array_get_data_mutable (t8_element_array_t *element_array);
 
-/** Return a pointer to the sc_array stored in a t8_element_array.
+/** Return a const pointer to the sc_array stored in a t8_element_array.
+ * \param [in]  element_array  Array structure.
+ * \return                     A const pointer to the sc_array storing the data.
+ * \note The data cannot be modified.
+ */
+const sc_array_t *
+t8_element_array_get_array (const t8_element_array_t *element_array);
+
+/** Return a mutable pointer to the sc_array stored in a t8_element_array.
  * \param [in]  element_array  Array structure.
  * \return                     A pointer to the sc_array storing the data.
+ * \note The data can be modified.
  */
 sc_array_t *
-t8_element_array_get_array (t8_element_array_t *element_array);
+t8_element_array_get_array_mutable (t8_element_array_t *element_array);
 
 /** Sets the array count to zero and frees all elements.
  * \param [in,out]  element_array  Array structure to be reset.

@@ -64,8 +64,11 @@ t8_offset_num_trees (const int proc, const t8_gloidx_t *offset)
   T8_ASSERT (offset != NULL);
 
   num_global_trees = T8_GLOIDX_ABS (offset[proc + 1]) - t8_offset_first (proc, offset);
-  /* If num_global_trees < 0, we return 0 */
-  return num_global_trees >= 0 ? num_global_trees : 0;
+
+  /* Fails if both offset[proc] and offset[proc+1] are -1 */
+  T8_ASSERT (num_global_trees >= 0);
+
+  return num_global_trees;
 }
 
 /* The last local tree of a given process in a partition */

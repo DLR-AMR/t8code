@@ -426,12 +426,21 @@ t8_cmesh_get_partition_table (t8_cmesh_t cmesh)
 }
 
 void
-t8_cmesh_set_dimension (t8_cmesh_t cmesh, int dim)
+t8_cmesh_set_dimension (t8_cmesh_t cmesh, const int dim)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   T8_ASSERT (0 <= dim && dim <= T8_ECLASS_MAX_DIM);
 
   cmesh->dimension = dim;
+}
+
+int
+t8_cmesh_get_dimension (const t8_cmesh_t cmesh)
+{
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (0 <= cmesh->dimension && cmesh->dimension <= T8_ECLASS_MAX_DIM);
+
+  return cmesh->dimension;
 }
 
 void
@@ -470,22 +479,35 @@ t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, t8_eclass_t tre
 int
 t8_cmesh_tree_vertices_negative_volume (const t8_eclass_t eclass, const double *vertices, const int num_vertices)
 {
-  double v_1[3], v_2[3], v_j[3], cross[3], sc_prod;
-  int i, j;
-
   T8_ASSERT (num_vertices == t8_eclass_num_vertices[eclass]);
 
-  if (t8_eclass_to_dimension[eclass] <= 2) {
-    /* Only three dimensional eclass do have a volume */
+  /* Points and lines do not have a volume orientation. */
+  if (t8_eclass_to_dimension[eclass] < 2) {
     return 0;
   }
 
-  T8_ASSERT (eclass == T8_ECLASS_TET || eclass == T8_ECLASS_HEX || eclass == T8_ECLASS_PRISM
-             || eclass == T8_ECLASS_PYRAMID);
-  T8_ASSERT (num_vertices >= 4);
+  T8_ASSERT (eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_TET
+             || eclass == T8_ECLASS_HEX || eclass == T8_ECLASS_PRISM || eclass == T8_ECLASS_PYRAMID);
+
+  /* Skip negative volume check (orientation of face normal) of 2D elements
+   * when z-coordinates are not (almost) zero. */
+  if (t8_eclass_to_dimension[eclass] < 3) {
+    for (int ivert = 0; ivert < num_vertices; ivert++) {
+      const double z_coordinate = vertices[3 * ivert + 2];
+      if (std::abs (z_coordinate) > 10 * T8_PRECISION_EPS) {
+        return false;
+      }
+    }
+  }
 
   /*
-   *      6 ______  7  For Hexes and pyramids, if the vertex 4 is below the 0-1-2-3 plane,
+   *      z             For 2D meshes we enforce the right-hand-rule in terms
+   *      |             of node ordering. The volume is defined by the parallelepiped
+   *      | 2- - -(3)   spanned by the vectors between nodes 0:1 and 0:2 as well as the
+   *      |/____ /      unit vector in z-direction. This definition works for both triangles and quads.
+   *      0     1
+   *
+   *      6 ______  7   For Hexes and pyramids, if the vertex 4 is below the 0-1-2-3 plane,
    *       /|     /     the volume is negative. This is the case if and only if
    *    4 /_____5/|     the scalar product of v_4 with the cross product of v_1 and v_2 is
    *      | | _ |_|     smaller 0:
@@ -503,8 +525,30 @@ t8_cmesh_tree_vertices_negative_volume (const t8_eclass_t eclass, const double *
    *
    */
 
-  /* build the vectors v_i as vertices_i - vertices_0 */
+  /* Build the vectors v_i as vertices_i - vertices_0. */
+  double v_1[3], v_2[3], v_j[3], cross[3], sc_prod;
 
+  if (eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_QUAD) {
+    for (int i = 0; i < 3; i++) {
+      v_1[i] = vertices[3 + i] - vertices[i];
+      v_2[i] = vertices[6 + i] - vertices[i];
+    }
+
+    /* Unit vector in z-direction. */
+    v_j[0] = 0.0;
+    v_j[1] = 0.0;
+    v_j[2] = 1.0;
+
+    /* Compute cross = v_1 x v_2. */
+    t8_vec_cross (v_1, v_2, cross);
+    /* Compute sc_prod = <v_j, cross>. */
+    sc_prod = t8_vec_dot (v_j, cross);
+
+    T8_ASSERT (sc_prod != 0);
+    return sc_prod < 0;
+  }
+
+  int j;
   if (eclass == T8_ECLASS_TET || eclass == T8_ECLASS_PRISM) {
     /* In the tet/prism case, the third vector is v_3 */
     j = 3;
@@ -513,7 +557,7 @@ t8_cmesh_tree_vertices_negative_volume (const t8_eclass_t eclass, const double *
     /* For pyramids and Hexes, the third vector is v_4 */
     j = 4;
   }
-  for (i = 0; i < 3; i++) {
+  for (int i = 0; i < 3; i++) {
     v_1[i] = vertices[3 + i] - vertices[i];
     v_2[i] = vertices[6 + i] - vertices[i];
     v_j[i] = vertices[3 * j + i] - vertices[i];
