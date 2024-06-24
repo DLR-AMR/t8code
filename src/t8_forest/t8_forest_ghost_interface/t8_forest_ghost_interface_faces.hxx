@@ -27,7 +27,10 @@
 
 #include <t8_forest/t8_forest_ghost_interface/t8_forest_ghost_interface.hxx>
 
-
+/**
+ * Flags for first step function
+ * store in the flags which memory was allocated
+*/
 enum t8_ghost_interface_face_flag {
     CREATE_ELEMENT_ARRAY    = 1,
     CREATE_TREE_ARRAY       = 2,
@@ -37,7 +40,9 @@ enum t8_ghost_interface_face_flag {
 struct t8_forest_ghost_interface_faces : public t8_forest_ghost_interface
 {
     public:
-
+    /**
+     * Constru
+    */
     t8_forest_ghost_interface_faces();
 
     t8_forest_ghost_interface_faces(int version);

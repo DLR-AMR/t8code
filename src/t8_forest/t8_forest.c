@@ -219,6 +219,14 @@ t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from, int no_re
 }
 
 void
+t8_forest_set_ghost_ext_new (t8_forest_t forest, int do_ghost, t8_forest_ghost_interface_c * ghost_interface){
+  T8_ASSERT (t8_forest_is_initialized (forest));
+  SC_CHECK_ABORT (do_ghost == 0, "do_ghost == 0 in set_ghost_ext_new.\n");
+  SC_CHECK_ABORT (ghost_interface == NULL, "invalides ghost interface in set_ghost_ext_new\n");
+  forest->ghost_interface = ghost_interface;
+}
+
+void
 t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_type, int ghost_version)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
@@ -243,7 +251,7 @@ t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost
 void
 t8_forest_set_ghost (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_type)
 {
-  /* Use ghost version 3, top-down search and for unbalanced forests. */
+    /* Use ghost version 3, top-down search and for unbalanced forests. */
   t8_forest_set_ghost_ext (forest, do_ghost, ghost_type, 3);
 }
 
@@ -499,6 +507,12 @@ t8_forest_commit (t8_forest_t forest)
     forest->cmesh = forest->set_from->cmesh;
     forest->scheme_cxx = forest->set_from->scheme_cxx;
     forest->global_num_trees = forest->set_from->global_num_trees;
+
+    if (forest->ghost_interface == NULL && forest->set_from->ghost_interface != NULL) {
+      forest->ghost_interface = forest->set_from->ghost_interface;
+      t8_forest_ghost_interface_ref(forest->ghost_interface);
+      t8_debugf("t8_forest_commit: uebernehme ghost von set_from");
+    }
 
     /* Compute the maximum allowed refinement level */
     t8_forest_compute_maxlevel (forest);
@@ -1513,6 +1527,10 @@ t8_forest_reset (t8_forest_t *pforest)
   /* Destroy the ghost layer if it exists */
   if (forest->ghosts != NULL) {
     t8_forest_ghost_unref (&forest->ghosts);
+  }
+  /* Destroy the ghost_interface class if it exist */
+  if (forest->ghost_interface != NULL){
+    t8_forest_ghost_interface_unref(forest->ghost_interface);
   }
   /* we have taken ownership on calling t8_forest_set_* */
   if (forest->scheme_cxx != NULL) {

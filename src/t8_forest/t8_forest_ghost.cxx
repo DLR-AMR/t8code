@@ -31,6 +31,10 @@
 #include <t8_data/t8_containers.h>
 #include <sc_statistics.h>
 
+#include <t8_forest/t8_forest_ghost_interface/t8_forest_ghost_interface.h>
+#include <t8_forest/t8_forest_ghost_interface/t8_forest_ghost_interface.hxx>
+#include <t8_forest/t8_forest_ghost_interface/t8_forest_ghost_interface_faces.hxx>
+
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
@@ -1395,8 +1399,18 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
   sc_MPI_Request *requests;
   int create_tree_array = 0, create_gfirst_desc_array = 0;
   int create_element_array = 0;
+  t8_forest_ghost_interface_c * test_interface;
 
   T8_ASSERT (t8_forest_is_committed (forest));
+  // T8_ASSERT (forest->ghost_interface != NULL);
+
+  // if(forest->ghost_interface != NULL){
+  //   test_interface = forest->ghost_interface;
+  // } else{
+    // test_interface = t8_forest_ghost_interface_face_new( unbalanced_version<0 ? 3 : unbalanced_version+1); // nur vorlaufig um etwas zu testen, wird später wieder entfernt
+    forest->ghost_interface = t8_forest_ghost_interface_face_new(3);
+    T8_ASSERT(test_interface != NULL);
+  // }
 
   t8_global_productionf ("Into t8_forest_ghost with %i local elements.\n", t8_forest_get_local_num_elements (forest));
 
@@ -1417,6 +1431,10 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
      * Only delete the line, if you know what you are doing. */
     t8_global_productionf ("Start ghost at %f  %f\n", sc_MPI_Wtime (), forest->profile->ghost_runtime);
   }
+
+  // t8_global_productionf ("Befor step1\n");
+  // (forest->ghost_interface)->t8_ghost_step_1_allocate(forest);
+  // test_interface->t8_ghost_step_1_allocate(forest);
 
   if (forest->element_offsets == NULL) {
     /* create element offset array if not done already */
@@ -1447,6 +1465,10 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
     t8_forest_ghost_init (&forest->ghosts, forest->ghost_type);
     ghost = forest->ghosts;
 
+    // t8_global_productionf ("Befor step2\n");
+    // (forest->ghost_interface)->t8_ghost_step_2(forest);
+    // test_interface->t8_ghost_step_2(forest);
+    
     if (unbalanced_version == -1) {
       t8_forest_ghost_fill_remote_v3 (forest);
     }
@@ -1464,6 +1486,10 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
     /* End sending the remote elements */
     t8_forest_ghost_send_end (forest, ghost, send_info, requests);
   }
+
+  // t8_global_productionf ("Befor step1 clean up\n");
+  // (forest->ghost_interface)->t8_ghost_step_1_clean_up(forest);
+  // test_interface->t8_ghost_step_1_clean_up(forest);
 
   if (create_element_array) {
     /* Free the offset memory, if created */

@@ -32,6 +32,7 @@
 #include <t8_cmesh.h>
 #include <t8_element.h>
 #include <t8_data/t8_containers.h>
+#include <t8_forest/t8_forest_ghost_interface/t8_forest_ghost_interface.h>
 
 /** Opaque pointer to a forest implementation. */
 typedef struct t8_forest *t8_forest_t;
@@ -43,7 +44,8 @@ typedef enum {
   T8_GHOST_NONE = 0, /**< Do not create ghost layer. */
   T8_GHOST_FACES,    /**< Consider all face (codimension 1) neighbors. */
   T8_GHOST_EDGES,    /**< Consider all edge (codimension 2) and face neighbors. */
-  T8_GHOST_VERTICES  /**< Consider all vertex (codimension 3) and edge and face neighbors. */
+  T8_GHOST_VERTICES,  /**< Consider all vertex (codimension 3) and edge and face neighbors. */
+  T8_GHOST_USERDEFINED/** If the user define by his self a step_1 or step_2 function*/
 } t8_ghost_type_t;
 
 /** This typedef is needed as a helper construct to 
@@ -366,6 +368,9 @@ t8_forest_set_ghost (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_typ
  */
 void
 t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_type, int ghost_version);
+
+void
+t8_forest_set_ghost_ext_new (t8_forest_t forest, int do_ghost, t8_forest_ghost_interface_c * ghost_interface);
 
 /* TODO: use assertions and document that the forest_set (..., from) and
  *       set_load are mutually exclusive. */

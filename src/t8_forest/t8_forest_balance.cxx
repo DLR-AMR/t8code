@@ -25,6 +25,7 @@
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_ghost.h>
+#include <t8_forest/t8_forest_ghost_interface/t8_forest_ghost_interface_faces.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_profiling.h>
 #include <t8_element_cxx.hxx>
@@ -171,6 +172,8 @@ t8_forest_balance (t8_forest_t forest, int repartition)
 
   if (forest->set_from->ghosts == NULL) {
     forest->set_from->ghost_type = T8_GHOST_FACES;
+    // forest->set_from->ghost_algorithm = 3;
+    // forest->set_from->ghost_interface = t8_forest_ghost_interface_face_new(3);
     t8_forest_ghost_create_topdown (forest->set_from);
   }
 

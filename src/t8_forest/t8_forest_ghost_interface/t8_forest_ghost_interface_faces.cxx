@@ -34,7 +34,8 @@ t8_forest_ghost_interface_faces::t8_forest_ghost_interface_faces()
 t8_forest_ghost_interface_faces::t8_forest_ghost_interface_faces(int version)
     : t8_forest_ghost_interface(T8_GHOST_FACES), ghost_version(version), flag_step_1(0)
 {
-    // SC_CHECK_ABORT (1 <= ghost_version && ghost_version <= 3, "Invalid choice for ghost version. Choose 1, 2, or 3.\n");
+    T8_ASSERT( 1 <= version && version <= 3 );
+    SC_CHECK_ABORT (1 <= ghost_version && ghost_version <= 3, "Invalid choice for ghost version. Choose 1, 2, or 3.\n");
     // forest->ghost_type = ghost_type;
     // forest->ghost_algorithm = ghost_version;
 }
@@ -80,6 +81,13 @@ t8_forest_ghost_interface_faces::t8_ghost_step_1_clean_up(t8_forest_t forest)
     // }
 }
 
+
+/**
+ * algorithmus 1 : t8_forest_ghost_create_balanced_only --> t8_forest_ghost_create_ext (forest, 0);
+ * algorithmus 2 : t8_forest_ghost_create               --> t8_forest_ghost_create_ext (forest, 1);
+ * algorithmus 3 : t8_forest_ghost_create_topdown       --> t8_forest_ghost_create_ext (forest, -1);
+ * --> alg = unbalanced_version < 0 ? 3 : unbalanced_version + 1
+*/
 void
 t8_forest_ghost_interface_faces::t8_ghost_step_2(t8_forest_t forest)
 {
@@ -98,7 +106,10 @@ t8_forest_ghost_interface_faces::t8_ghost_step_2(t8_forest_t forest)
 
 
 
-t8_forest_ghost_interface_c * t8_forest_ghost_interface_face_new(int version){
+t8_forest_ghost_interface_c * 
+t8_forest_ghost_interface_face_new(int version){
+    t8_debugf ("Call t8_forest_ghost_interface_face_new.\n");
+    T8_ASSERT( 1 <= version && version <= 3 );
     t8_forest_ghost_interface_faces * ghost_interface = new t8_forest_ghost_interface_faces(version);
     return (t8_forest_ghost_interface_c *) ghost_interface;
 }

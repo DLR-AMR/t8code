@@ -35,6 +35,8 @@
 #include <t8_data/t8_containers.h>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_ghost_interface/t8_forest_ghost_interface.h>
+// #include <t8_forest/t8_forest_ghost_interface/t8_forest_ghost_interface.hxx>
 
 typedef struct t8_profile t8_profile_t;            /* Defined below */
 typedef struct t8_forest_ghost *t8_forest_ghost_t; /* Defined below */
@@ -101,6 +103,7 @@ typedef struct t8_forest
   t8_ghost_type_t ghost_type;     /**< If a ghost layer will be created, the type of neighbors that count as ghost. */
   int ghost_algorithm;            /**< Controls the algorithm used for ghost. 1 = balanced only. 2 = also unbalanced
                                              3 = top-down search and unbalanced. */
+  t8_forest_ghost_interface_c * ghost_interface;
   void *user_data;                /**< Pointer for arbitrary user data. \see t8_forest_set_user_data. */
   void (*user_function) ();       /**< Pointer for arbitrary user function. \see t8_forest_set_user_function. */
   void *t8code_data;              /**< Pointer for arbitrary data that is used internally. */
