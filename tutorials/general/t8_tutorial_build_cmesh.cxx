@@ -276,7 +276,7 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
    * t8_cmesh_set_join (cmesh, 1, 3, 0, 4, 0);
    * t8_cmesh_set_join (cmesh, 2, 5, 0, 0, 0);
    * t8_cmesh_set_join (cmesh, 3, 5, 1, 1, 0);
-   * t8_cmesh_set_join (cmesh, 4, 5, 4, 2, 0);
+   * t8_cmesh_set_join (cmesh, 4, 5, 4, 2, 2);
    *
    * // 7. Commit the mesh
    * t8_cmesh_commit (cmesh, comm);
@@ -316,7 +316,7 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
   t8_cmesh_set_join (cmesh, 1, 3, 0, 4, 0);
   t8_cmesh_set_join (cmesh, 2, 5, 0, 0, 0);
   t8_cmesh_set_join (cmesh, 3, 5, 1, 1, 0);
-  t8_cmesh_set_join (cmesh, 4, 5, 4, 2, 0);
+  t8_cmesh_set_join (cmesh, 4, 5, 4, 2, 2);
 
   /*
    * Definition of the first tree
