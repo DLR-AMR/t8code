@@ -89,7 +89,7 @@ void
 t8_forest_compute_maxlevel (t8_forest_t forest);
 
 /** Compute the minimum possible uniform refinement level on a cmesh such
- * that no process is empty.
+ * that no process is empty. Returns -1, if cmesh contains a vertex tree.
  * \param [in]  cmesh       The cmesh.
  * \param [in]  scheme      The element scheme for which refinement is considered.
  * \return                  The smallest refinement level l, such that a
