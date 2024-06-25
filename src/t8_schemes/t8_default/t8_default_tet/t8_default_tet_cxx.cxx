@@ -58,6 +58,12 @@ t8_default_scheme_tet_c::t8_element_compare (const t8_element_t *elem1, const t8
   return t8_dtet_compare ((const t8_dtet_t *) elem1, (const t8_dtet_t *) elem2);
 }
 
+int
+t8_default_scheme_tet_c::t8_element_equal (const t8_element_t *elem1, const t8_element_t *elem2) const
+{
+  return t8_dtet_equal ((const t8_dtet_t *) elem1, (const t8_dtet_t *) elem2);
+}
+
 void
 t8_default_scheme_tet_c::t8_element_parent (const t8_element_t *elem, t8_element_t *parent) const
 {
@@ -154,7 +160,7 @@ t8_default_scheme_tet_c::t8_element_ancestor_id (const t8_element_t *elem, int l
 }
 
 int
-t8_default_scheme_tet_c::t8_element_is_family (t8_element_t **fam) const
+t8_default_scheme_tet_c::t8_element_is_family (t8_element_t *const *fam) const
 {
 #ifdef T8_ENABLE_DEBUG
   int i;
@@ -250,9 +256,6 @@ t8_default_scheme_tet_c::t8_element_extrude_face (const t8_element_t *face, cons
   T8_ASSERT (face_scheme->t8_element_is_valid (face));
   T8_ASSERT (0 <= root_face && root_face < T8_DTET_FACES);
   t->level = b->level;
-#ifdef T8_ENABLE_DEBUG
-  t->eclass_int8 = T8_ECLASS_TET;
-#endif
   switch (root_face) {
     /* Since the root triangle may have a different scale then the
      * root tetrahedron, we have to rescale the coordinates. */
@@ -364,14 +367,6 @@ t8_default_scheme_tet_c::t8_element_boundary_face (const t8_element_t *elem, int
   }
 }
 
-void
-t8_default_scheme_tet_c::t8_element_boundary (const t8_element_t *elem, int min_dim, int length,
-                                              t8_element_t **boundary) const
-{
-  T8_ASSERT (t8_element_is_valid (elem));
-  SC_ABORT ("Not implemented\n");
-}
-
 int
 t8_default_scheme_tet_c::t8_element_is_root_boundary (const t8_element_t *elem, int face) const
 {
@@ -417,13 +412,13 @@ t8_default_scheme_tet_c::t8_element_get_linear_id (const t8_element_t *elem, int
 }
 
 void
-t8_default_scheme_tet_c::t8_element_successor (const t8_element_t *elem1, t8_element_t *elem2, int level) const
+t8_default_scheme_tet_c::t8_element_successor (const t8_element_t *elem1, t8_element_t *elem2) const
 {
-  T8_ASSERT (0 <= level && level <= T8_DTET_MAXLEVEL);
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
+  T8_ASSERT (0 <= t8_element_level (elem1) && t8_element_level (elem1) <= T8_DTET_MAXLEVEL);
 
-  t8_dtet_successor ((const t8_default_tet_t *) elem1, (t8_default_tet_t *) elem2, level);
+  t8_dtet_successor ((const t8_default_tet_t *) elem1, (t8_default_tet_t *) elem2, t8_element_level (elem1));
 }
 
 void
@@ -455,28 +450,11 @@ t8_default_scheme_tet_c::t8_element_anchor (const t8_element_t *elem, int anchor
   anchor[2] = tet->z;
 }
 
-int
-t8_default_scheme_tet_c::t8_element_root_len (const t8_element_t *elem) const
-{
-  T8_ASSERT (t8_element_is_valid (elem));
-  return T8_DTET_ROOT_LEN;
-}
-
 void
-t8_default_scheme_tet_c::t8_element_vertex_coords (const t8_element_t *elem, int vertex, int coords[]) const
+t8_default_scheme_tet_c::t8_element_vertex_integer_coords (const t8_element_t *elem, int vertex, int coords[]) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
-  t8_dtet_compute_coords ((const t8_default_tet_t *) elem, vertex, coords);
-}
-
-void
-t8_default_scheme_tet_c::t8_element_general_function (const t8_element_t *elem, const void *indata, void *outdata) const
-{
-  T8_ASSERT (t8_element_is_valid (elem));
-  T8_ASSERT (outdata != NULL);
-  *((int8_t *) outdata) = ((const t8_dtet_t *) elem)->type;
-  /* Safety check to catch datatype conversion errors */
-  T8_ASSERT (*((int8_t *) outdata) == ((const t8_dtet_t *) elem)->type);
+  t8_dtet_compute_integer_coords ((const t8_default_tet_t *) elem, vertex, coords);
 }
 
 void
@@ -514,10 +492,14 @@ t8_default_scheme_tet_c::t8_element_is_valid (const t8_element_t *t) const
 }
 
 void
-t8_default_scheme_tet_c::t8_element_debug_print (const t8_element_t *t) const
+t8_default_scheme_tet_c::t8_element_to_string (const t8_element_t *elem, char *debug_string,
+                                               const int string_size) const
 {
-  T8_ASSERT (t8_element_is_valid (t));
-  t8_dtet_debug_print ((const t8_dtet_t *) t);
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (debug_string != NULL);
+  t8_dtet_t *tet = (t8_dtet_t *) elem;
+  snprintf (debug_string, BUFSIZ, "x: %i, y: %i, z: %i, type: %i, level: %i", tet->x, tet->y, tet->z, tet->type,
+            tet->level);
 }
 #endif
 
@@ -532,22 +514,19 @@ t8_default_scheme_tet_c::t8_element_new (int length, t8_element_t **elem) const
   {
     int i;
     for (i = 0; i < length; i++) {
-      t8_element_init (1, elem[i], 0);
+      t8_element_root (elem[i]);
     }
   }
 #endif
 }
 
 void
-t8_default_scheme_tet_c::t8_element_init (int length, t8_element_t *elem, int new_called) const
+t8_default_scheme_tet_c::t8_element_init (int length, t8_element_t *elem) const
 {
 #ifdef T8_ENABLE_DEBUG
-  if (!new_called) {
-    int i;
-    t8_dtet_t *tets = (t8_dtet_t *) elem;
-    for (i = 0; i < length; i++) {
-      t8_dtet_init (tets + i);
-    }
+  t8_dtet_t *tets = (t8_dtet_t *) elem;
+  for (int i = 0; i < length; i++) {
+    t8_dtet_init (tets + i);
   }
 #endif
 }
@@ -568,6 +547,40 @@ t8_default_scheme_tet_c::~t8_default_scheme_tet_c ()
    * suffices to destroy the quad_scheme.
    * However we need to provide an implementation of the destructor
    * and hence this empty function. */
+}
+void
+t8_default_scheme_tet_c::t8_element_root (t8_element_t *elem) const
+{
+  t8_dtet_t *tet = (t8_dtet_t *) elem;
+  tet->level = 0;
+  tet->x = 0;
+  tet->y = 0;
+  tet->z = 0;
+  tet->type = 0;
+}
+/* use macro tri functionality */
+void
+t8_default_scheme_tet_c::t8_element_MPI_Pack (t8_element_t **const elements, const unsigned int count,
+                                              void *send_buffer, const int buffer_size, int *position,
+                                              sc_MPI_Comm comm) const
+{
+  t8_dtet_element_pack ((t8_dtet_t **) elements, count, send_buffer, buffer_size, position, comm);
+}
+
+/* use macro tri functionality */
+void
+t8_default_scheme_tet_c::t8_element_MPI_Pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size) const
+{
+  t8_dtet_element_pack_size (count, comm, pack_size);
+}
+
+/* use macro tri functionality */
+void
+t8_default_scheme_tet_c::t8_element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position,
+                                                t8_element_t **elements, const unsigned int count,
+                                                sc_MPI_Comm comm) const
+{
+  t8_dtet_element_unpack (recvbuf, buffer_size, position, (t8_dtet_t **) elements, count, comm);
 }
 
 T8_EXTERN_C_END ();

@@ -144,6 +144,14 @@ t8_dpyramid_extrude_face (const t8_element_t *face, t8_dpyramid_t *p, const int 
 int
 t8_dpyramid_compare (const t8_dpyramid_t *p1, const t8_dpyramid_t *p2);
 
+/** Check if two elements are equal.
+* \param [in] elem1  The first element.
+* \param [in] elem2  The second element.
+* \return            1 if the elements are equal, 0 if they are not equal
+*/
+int
+t8_dpyramid_equal (const t8_dpyramid_t *elem1, const t8_dpyramid_t *elem2);
+
 /** Check whether a collection of 10 pyramids is a family in Morton order.
  * \param [in]  fam A collection of pyramids
  * \return      Nonzero if \a fam is a family of pyramids
@@ -245,7 +253,7 @@ t8_dpyramid_last_descendant_face (const t8_dpyramid_t *p, const int face, t8_dpy
  * \param [out] coords An array of 3 t8_dpyramid_coord_t that will be filled with the coordinates of the vertex.
  */
 void
-t8_dpyramid_compute_coords (const t8_dpyramid_t *elem, const int vertex, int coords[]);
+t8_dpyramid_compute_integer_coords (const t8_dpyramid_t *elem, const int vertex, int coords[]);
 
 /** Compute the parent of a given pyramid
  * \param [in] p        Input pyramid.
@@ -308,10 +316,10 @@ t8_dpyramid_ancestor_id (const t8_dpyramid_t *p, const int level);
  * Compute the ancestor of \a pyra at a given level
  * \param[in] pyra      Input pyramid
  * \param[in] level     Level of the ancestor to compute
- * \param[in, out] anc  Allocated element that will be filled with the data of the ancestor.
+ * \param[in, out] ancestor  Allocated element that will be filled with the data of the ancestor.
  */
 void
-t8_dpyramid_ancestor (const t8_dpyramid_t *pyra, const int level, t8_dpyramid_t *anc);
+t8_dpyramid_ancestor (const t8_dpyramid_t *pyra, const int level, t8_dpyramid_t *ancestor);
 
 /** Compute the type of a pyramid at a given level. Starting from its own level, we iterate over the levels and 
  * compute the type of this level. If p is a tetrahedron, we compute it in a tetrahedral fashion up unto the last 
@@ -377,13 +385,6 @@ t8_dpyramid_nearest_common_ancestor (const t8_dpyramid_t *pyra1, const t8_dpyram
  */
 int
 t8_dpyramid_is_valid (const t8_dpyramid_t *p);
-
-/**
- * Print the coordinates, the level and the type of a pyramid
- * \param[in] p        The pyramid to print
- */
-void
-t8_dpyramid_debug_print (const t8_dpyramid_t *p);
 
 T8_EXTERN_C_END ();
 

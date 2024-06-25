@@ -39,7 +39,7 @@ t8_ghost_neighbor_test (t8_eclass_t eclass, sc_MPI_Comm comm, int hybrid)
   t8_forest_t forest;
   t8_element_t *elem, *neigh;
   t8_scheme_cxx_t *scheme;
-  t8_eclass_scheme_c *elem_scheme, *neigh_scheme;
+  t8_eclass_scheme_c *neigh_scheme;
   t8_default_scheme_common_c *common_scheme;
   int level = 1;
   t8_locidx_t element_id = 0, treeid;
@@ -75,12 +75,10 @@ t8_ghost_neighbor_test (t8_eclass_t eclass, sc_MPI_Comm comm, int hybrid)
   elem = t8_forest_get_element (forest, element_id, &treeid);
   /* Get the scheme corresponding to the element. */
   elem_eclass = t8_forest_get_tree_class (forest, treeid);
-  elem_scheme = t8_forest_get_eclass_scheme (forest, elem_eclass);
   T8_ASSERT (elem != NULL);
 
   /* Iterate over all faces and create the face neighbor */
 
-  t8_debugf ("root len = %i\n", elem_scheme->t8_element_root_len (elem));
   for (i = 0; i < t8_eclass_num_faces[elem_eclass]; i++) {
     /* Get the eclass of the face neighbor's tree */
     neighbor_class = t8_forest_element_neighbor_eclass (forest, treeid, elem, i);

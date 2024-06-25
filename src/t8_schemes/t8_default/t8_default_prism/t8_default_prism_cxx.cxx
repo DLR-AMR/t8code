@@ -40,24 +40,21 @@ t8_default_scheme_prism_c::t8_element_new (int length, t8_element_t **elem) cons
   {
     int i;
     for (i = 0; i < length; i++) {
-      t8_element_init (1, elem[i], 0);
+      t8_element_root (elem[i]);
     }
   }
 #endif
 }
 
 void
-t8_default_scheme_prism_c::t8_element_init (int length, t8_element_t *elem, int new_called) const
+t8_default_scheme_prism_c::t8_element_init (int length, t8_element_t *elem) const
 {
 #ifdef T8_ENABLE_DEBUG
-  if (!new_called) {
-    int i;
-    t8_dprism_t *prism = (t8_dprism_t *) elem;
-    /* Set all values to 0 */
-    for (i = 0; i < length; i++) {
-      t8_dprism_init_linear_id (prism + i, 0, 0);
-      T8_ASSERT (t8_dprism_is_valid (prism + i));
-    }
+  t8_dprism_t *prism = (t8_dprism_t *) elem;
+  /* Set all values to 0 */
+  for (int i = 0; i < length; i++) {
+    t8_dprism_init_linear_id (prism + i, 0, 0);
+    T8_ASSERT (t8_dprism_is_valid (prism + i));
   }
 #endif
 }
@@ -98,6 +95,12 @@ t8_default_scheme_prism_c::t8_element_compare (const t8_element_t *elem1, const 
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
   return t8_dprism_compare ((const t8_dprism_t *) elem1, (const t8_dprism_t *) elem2);
+}
+
+int
+t8_default_scheme_prism_c::t8_element_equal (const t8_element_t *elem1, const t8_element_t *elem2) const
+{
+  return t8_dprism_equal ((const t8_dprism_t *) elem1, (const t8_dprism_t *) elem2);
 }
 
 void
@@ -229,12 +232,15 @@ t8_default_scheme_prism_c::t8_element_extrude_face (const t8_element_t *face, co
   T8_ASSERT (0 <= root_face && root_face < T8_DPRISM_FACES);
   t8_dprism_extrude_face (face, elem, root_face);
   T8_ASSERT (t8_element_is_valid (elem));
-  /* TODO: Fix return value */
-  return t8_dprism_root_face_to_face ((const t8_dprism_t *) elem, root_face);
+  /* For the quad-faces of prisms it holds that only the corner-children touch the faces of the parent and
+   * their face-numbers coincide. 
+   * for the triangular-faces (bottom and top) the faces always have the same number and we can return the
+   * root face-number as well. */
+  return root_face;
 }
 
 int
-t8_default_scheme_prism_c::t8_element_is_family (t8_element_t **fam) const
+t8_default_scheme_prism_c::t8_element_is_family (t8_element_t *const *fam) const
 {
 #ifdef T8_ENABLE_DEBUG
   int i;
@@ -344,12 +350,12 @@ t8_default_scheme_prism_c::t8_element_set_linear_id (t8_element_t *elem, int lev
 }
 
 void
-t8_default_scheme_prism_c::t8_element_successor (const t8_element_t *elem, t8_element_t *s, int level) const
+t8_default_scheme_prism_c::t8_element_successor (const t8_element_t *elem, t8_element_t *s) const
 {
-  T8_ASSERT (1 <= level && level <= T8_DPRISM_MAXLEVEL);
+  T8_ASSERT (1 <= t8_element_level (elem) && t8_element_level (elem) <= T8_DPRISM_MAXLEVEL);
   T8_ASSERT (t8_element_is_valid (elem));
 
-  t8_dprism_successor ((const t8_default_prism_t *) elem, (t8_default_prism_t *) s, level);
+  t8_dprism_successor ((const t8_default_prism_t *) elem, (t8_default_prism_t *) s, t8_element_level (elem));
   T8_ASSERT (t8_element_is_valid (s));
 }
 
@@ -381,18 +387,11 @@ t8_default_scheme_prism_c::t8_element_anchor (const t8_element_t *elem, int anch
   anchor[2] = prism->line.x / T8_DLINE_ROOT_LEN * T8_DPRISM_ROOT_LEN;
 }
 
-int
-t8_default_scheme_prism_c::t8_element_root_len (const t8_element_t *elem) const
-{
-  T8_ASSERT (t8_element_is_valid (elem));
-  return T8_DPRISM_ROOT_LEN;
-}
-
 void
-t8_default_scheme_prism_c::t8_element_vertex_coords (const t8_element_t *elem, int vertex, int coords[]) const
+t8_default_scheme_prism_c::t8_element_vertex_integer_coords (const t8_element_t *elem, int vertex, int coords[]) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
-  t8_dprism_vertex_coords ((const t8_dprism_t *) elem, vertex, coords);
+  t8_dprism_vertex_integer_coords ((const t8_dprism_t *) elem, vertex, coords);
 }
 
 void
@@ -409,17 +408,6 @@ t8_default_scheme_prism_c::t8_element_reference_coords (const t8_element_t *elem
 {
   T8_ASSERT (t8_element_is_valid (elem));
   t8_dprism_compute_reference_coords ((const t8_dprism_t *) elem, ref_coords, num_coords, out_coords);
-}
-
-void
-t8_default_scheme_prism_c::t8_element_general_function (const t8_element_t *elem, const void *indata,
-                                                        void *outdata) const
-{
-  T8_ASSERT (outdata != NULL);
-  T8_ASSERT (t8_element_is_valid (elem));
-  *((int8_t *) outdata) = ((const t8_dprism_t *) elem)->tri.type;
-  /* Safety check to catch datatype conversion errors */
-  T8_ASSERT (*((int8_t *) outdata) == ((const t8_dprism_t *) elem)->tri.type);
 }
 
 t8_linearidx_t
@@ -446,11 +434,16 @@ t8_default_scheme_prism_c::t8_element_is_valid (const t8_element_t *elem) const
 }
 
 void
-t8_default_scheme_prism_c::t8_element_debug_print (const t8_element_t *elem) const
+t8_default_scheme_prism_c::t8_element_to_string (const t8_element_t *elem, char *debug_string,
+                                                 const int string_size) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
-  t8_dprism_debug_print ((const t8_dprism_t *) elem);
+  T8_ASSERT (debug_string != NULL);
+  t8_dprism_t *prism = (t8_dprism_t *) elem;
+  snprintf (debug_string, string_size, "x: %i, y: %i, z: %i, type: %i, level: %i", prism->tri.x, prism->tri.y,
+            prism->line.x, prism->tri.type, prism->tri.level);
 }
+
 #endif /* T8_ENABLE_DEBUG */
 
 /* Constructor */
@@ -468,6 +461,84 @@ t8_default_scheme_prism_c::~t8_default_scheme_prism_c ()
    * suffices to destroy the quad_scheme.
    * However we need to provide an implementation of the destructor
    * and hence this empty function. */
+}
+void
+t8_default_scheme_prism_c::t8_element_root (t8_element_t *elem) const
+{
+  t8_dprism_t *prism = (t8_dprism_t *) elem;
+  prism->line.level = 0;
+  prism->line.x = 0;
+  prism->tri.x = 0;
+  prism->tri.y = 0;
+  prism->tri.type = 0;
+  prism->tri.level = 0;
+}
+/* each prism is packed as x (line.x), y (tri.x), z(tri.y) coordinates, type and the level */
+void
+t8_default_scheme_prism_c::t8_element_MPI_Pack (t8_element_t **const elements, const unsigned int count,
+                                                void *send_buffer, const int buffer_size, int *position,
+                                                sc_MPI_Comm comm) const
+{
+  int mpiret;
+  t8_default_prism_t **prisms = (t8_default_prism_t **) elements;
+  for (unsigned int ielem = 0; ielem < count; ielem++) {
+    mpiret = sc_MPI_Pack (&(prisms[ielem]->line.x), 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Pack (&prisms[ielem]->tri.x, 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Pack (&prisms[ielem]->tri.y, 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Pack (&prisms[ielem]->tri.type, 1, sc_MPI_INT8_T, send_buffer, buffer_size, position, comm);
+    SC_CHECK_MPI (mpiret);
+
+    T8_ASSERT (prisms[ielem]->line.level == prisms[ielem]->tri.level);
+    mpiret = sc_MPI_Pack (&prisms[ielem]->line.level, 1, sc_MPI_INT8_T, send_buffer, buffer_size, position, comm);
+    SC_CHECK_MPI (mpiret);
+  }
+}
+
+/* each prism is packed as x (line.x), y (tri.x), z(tri.y) coordinates, type and the level */
+void
+t8_default_scheme_prism_c::t8_element_MPI_Pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size) const
+{
+  int singlesize = 0;
+  int datasize = 0;
+  int mpiret;
+
+  /*x,y,z*/
+  mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &datasize);
+  SC_CHECK_MPI (mpiret);
+  singlesize += 3 * datasize;
+
+  /*type, level*/
+  mpiret = sc_MPI_Pack_size (1, sc_MPI_INT8_T, comm, &datasize);
+  SC_CHECK_MPI (mpiret);
+  singlesize += 2 * datasize;
+
+  *pack_size = count * singlesize;
+}
+
+/* each prism is packed as x (line.x), y (tri.x), z(tri.y) coordinates, type and the level */
+void
+t8_default_scheme_prism_c::t8_element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position,
+                                                  t8_element_t **elements, const unsigned int count,
+                                                  sc_MPI_Comm comm) const
+{
+  int mpiret;
+  t8_default_prism_t **prisms = (t8_default_prism_t **) elements;
+  for (unsigned int ielem = 0; ielem < count; ielem++) {
+    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(prisms[ielem]->line.x), 1, sc_MPI_INT, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(prisms[ielem]->tri.x), 1, sc_MPI_INT, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(prisms[ielem]->tri.y), 1, sc_MPI_INT, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(prisms[ielem]->tri.type), 1, sc_MPI_INT8_T, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(prisms[ielem]->tri.level), 1, sc_MPI_INT8_T, comm);
+    SC_CHECK_MPI (mpiret);
+    prisms[ielem]->line.level = prisms[ielem]->tri.level;
+  }
 }
 
 T8_EXTERN_C_END ();

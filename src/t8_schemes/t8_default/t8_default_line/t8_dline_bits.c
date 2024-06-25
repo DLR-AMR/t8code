@@ -51,6 +51,12 @@ t8_dline_compare (const t8_dline_t *l1, const t8_dline_t *l2)
   return id1 < id2 ? -1 : id1 != id2;
 }
 
+int
+t8_dline_equal (const t8_dline_t *l1, const t8_dline_t *l2)
+{
+  return (l1->level == l2->level && l1->x == l2->x);
+}
+
 void
 t8_dline_parent (const t8_dline_t *l, t8_dline_t *parent)
 {
@@ -316,7 +322,7 @@ t8_dline_last_descendant (const t8_dline_t *l, t8_dline_t *s, int level)
 }
 
 void
-t8_dline_vertex_coords (const t8_dline_t *elem, const int vertex, int coords[])
+t8_dline_vertex_integer_coords (const t8_dline_t *elem, const int vertex, int coords[])
 {
   T8_ASSERT (vertex == 0 || vertex == 1);
   if (vertex == 0) {
@@ -335,7 +341,7 @@ t8_dline_vertex_ref_coords (const t8_dline_t *elem, const int vertex, double coo
   T8_ASSERT (vertex == 0 || vertex == 1);
 
   /* Compute integer coordinates and divide by root length. */
-  t8_dline_vertex_coords (elem, vertex, &coords_int);
+  t8_dline_vertex_integer_coords (elem, vertex, &coords_int);
   coordinates[0] = coords_int / (double) T8_DLINE_ROOT_LEN;
 }
 
@@ -346,8 +352,9 @@ t8_dline_compute_reference_coords (const t8_dline_t *elem, const double *ref_coo
   T8_ASSERT (t8_dline_is_valid (elem));
   for (size_t coord = 0; coord < num_coords; ++coord) {
     const size_t offset = coord * (1 + skip_coords);
+    const size_t offset_3d = coord * 3;
     out_coords[offset] = elem->x;
-    out_coords[offset] += T8_DLINE_LEN (elem->level) * ref_coords[offset];
+    out_coords[offset] += T8_DLINE_LEN (elem->level) * ref_coords[offset_3d];
     out_coords[offset] /= (double) T8_DLINE_ROOT_LEN;
   }
 }
@@ -374,12 +381,6 @@ t8_dline_is_valid (const t8_dline_t *l)
   /* A line is valid if its level and its x coordinates are in the
    * correct bounds of the root three and its left and right neighbor */
   return 0 <= l->level && l->level <= T8_DLINE_MAXLEVEL && -T8_DLINE_ROOT_LEN <= l->x && l->x <= max_coord;
-}
-
-void
-t8_dline_debug_print (const t8_dline_t *l)
-{
-  t8_debugf ("x: %i, level: %i\n", l->x, l->level);
 }
 
 void

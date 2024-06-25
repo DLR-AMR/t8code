@@ -27,7 +27,7 @@
  *
  * To keep the example short, we only create the connectivity and
  * do not equip this cmesh with coordinates.
- * See the other examples or the t8_cmesh_new_ function in t8_cmesh.c
+ * See the other examples or the t8_cmesh_new_function in t8_cmesh.cxx
  * for coordinate handling.
  */
 void

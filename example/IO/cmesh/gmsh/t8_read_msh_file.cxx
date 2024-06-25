@@ -40,7 +40,7 @@ t8_read_msh_file_vtk (t8_cmesh_t cmesh, const char *prefix)
   SC_CHECK_MPI (mpiret);
 
   snprintf (fileprefix, BUFSIZ, "%s_t8_msh", prefix);
-  if (!t8_cmesh_vtk_write_file (cmesh, fileprefix, 1.)) {
+  if (!t8_cmesh_vtk_write_file (cmesh, fileprefix)) {
     t8_debugf ("Wrote to file %s\n", fileprefix);
   }
   else {

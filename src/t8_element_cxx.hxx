@@ -36,16 +36,9 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/* TODO: Implement a set of rules that have to hold between different eclass,
- *       i.e. lines must have a greater or equal maxlevel than quads and triangles.
- *       Check whether this rules are fulfilled in the construction of a scheme.
- */
-/* TODO: Implement a test that boundary and extrude leads to the original element. */
-
 /** This struct holds virtual functions for a particular element class. */
 struct t8_eclass_scheme
 {
-  /** This scheme defines the operations for a particular element class. */
  protected:
   size_t element_size; /**< The size in bytes of an element of class \a eclass */
   void *ts_context;    /**< Anonymous implementation context. */
@@ -88,15 +81,6 @@ struct t8_eclass_scheme
   t8_element_maxlevel (void) const
     = 0;
 
-  /** Return the type of each child in the ordering of the implementation.
-   * \param [in] childid  Must be between 0 and the number of children (exclusive).
-   *                      The number of children is defined in \a t8_element_num_children.
-   * \return              The type for the given child.
-   */
-  virtual t8_eclass_t
-  t8_element_child_eclass (int childid) const
-    = 0;
-
   /** Return the level of a particular element.
    * \param [in] elem    The element whose level should be returned.
    * \return             The level of \b elem.
@@ -125,6 +109,16 @@ struct t8_eclass_scheme
    */
   virtual int
   t8_element_compare (const t8_element_t *elem1, const t8_element_t *elem2) const
+    = 0;
+
+  /** Check if two elements are equal.
+  * \param [in] ts     Implementation of a class scheme.
+  * \param [in] elem1  The first element.
+  * \param [in] elem2  The second element.
+  * \return            1 if the elements are equal, 0 if they are not equal
+  */
+  virtual int
+  t8_element_equal (const t8_element_t *elem1, const t8_element_t *elem2) const
     = 0;
 
   /** Compute the parent of a given element \b elem and store it in \b parent.
@@ -221,14 +215,7 @@ struct t8_eclass_scheme
    * \param [in] face     A face index for \a element.
    * \param [in] corner   A corner index for the face 0 <= \a corner < num_face_corners.
    * \return              The corner number of the \a corner-th vertex of \a face.
-   *
-   * The order in which the corners must be given is determined by the eclass of \a element:
-   * LINE/QUAD/TRIANGLE:  No specific order.
-   * HEX               :  In Z-order of the face starting with the lowest corner number.
-   * TET               :  Starting with the lowest corner number counterclockwise as seen from
-   *                      'outside' of the element.
    */
-  /* TODO: Prism order, Pyramid order. */
   virtual int
   t8_element_get_face_corner (const t8_element_t *element, int face, int corner) const
     = 0;
@@ -252,14 +239,9 @@ struct t8_eclass_scheme
   /** Construct the child element of a given number.
    * \param [in] elem     This must be a valid element, bigger than maxlevel.
    * \param [in] childid  The number of the child to construct.
-   * \param [in,out] child        The storage for this element must exist
-   *                              and match the element class of the child.
-   *                              For a pyramid, for example, it may be either a
-   *                              tetrahedron or a pyramid depending on \a childid.
-   *                              This can be checked by \a t8_element_child_eclass.
+   * \param [in,out] child        The storage for this element must exist.
    *                              On output, a valid element.
    * It is valid to call this function with elem = child.
-   * \see t8_element_child_eclass
    */
   virtual void
   t8_element_child (const t8_element_t *elem, int childid, t8_element_t *child) const
@@ -269,12 +251,10 @@ struct t8_eclass_scheme
    * \param [in] elem     This must be a valid element, bigger than maxlevel.
    * \param [in] length   The length of the output array \a c must match
    *                      the number of children.
-   * \param [in,out] c    The storage for these \a length elements must exist
-   *                      and match the element class in the children's ordering.
+   * \param [in,out] c    The storage for these \a length elements must exist.
    *                      On output, all children are valid.
    * It is valid to call this function with elem = c[0].
    * \see t8_element_num_children
-   * \see t8_element_child_eclass
    */
   virtual void
   t8_element_children (const t8_element_t *elem, int length, t8_element_t *c[]) const
@@ -305,11 +285,9 @@ struct t8_eclass_scheme
    * \note level 0 elements do not form a family.
    */
   virtual int
-  t8_element_is_family (t8_element_t **fam) const
+  t8_element_is_family (t8_element_t *const *fam) const
     = 0;
 
-  /* TODO: This could be problematic for pyramids, since elem1 and elem2
-   *       could be of different classes. Would need two eclass_schemes as input */
   /** Compute the nearest common ancestor of two elements. That is,
    * the element with highest level that still has both given elements as
    * descendants.
@@ -494,20 +472,6 @@ struct t8_eclass_scheme
   t8_element_last_descendant_face (const t8_element_t *elem, int face, t8_element_t *last_desc, int level) const
     = 0;
 
-  /* TODO:  Do we need this function at all?
-   *        If not remove it. If so, what to do with prisms and pyramids?
-   *        Here the boundary elements are of different eclasses, so we cannot
-   *        store them in an array...
-   */
-  /** Construct all codimension-one boundary elements of a given element.
-   * \param [in] elem     The input element.
-   * \param [in] face     A face of \a elem.
-   * \return              True if \a face is a subface of the element's root element.
-   */
-  virtual void
-  t8_element_boundary (const t8_element_t *elem, int min_dim, int length, t8_element_t **boundary) const
-    = 0;
-
   /** Compute whether a given element shares a given face with its root tree.
    * \param [in] elem     The input element.
    * \param [in] face     A face of \a elem.
@@ -551,7 +515,7 @@ struct t8_eclass_scheme
    * \param [in,out] elem The element whose entries will be set.
    * \param [in] level    The level of the uniform refinement to consider.
    * \param [in] id       The linear id.
-   *                      id must fulfil 0 <= id < 'number of leafs in the uniform refinement'
+   *                      id must fulfil 0 <= id < 'number of leaves in the uniform refinement'
    */
   virtual void
   t8_element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id) const
@@ -590,20 +554,9 @@ struct t8_eclass_scheme
   /** Construct the successor in a uniform refinement of a given element.
    * \param [in] elem1    The element whose successor should be constructed.
    * \param [in,out] elem2  The element whose entries will be set.
-   * \param [in] level    The level of the uniform refinement to consider.
    */
   virtual void
-  t8_element_successor (const t8_element_t *t, t8_element_t *s, int level) const
-    = 0;
-
-  /* TODO: This function should be removed, since root length is not a general concept that exists for all possible elements. */
-  /** Compute the root length of a given element, that is the length of
-   * its level 0 ancestor.
-   * \param [in] elem     The element whose root length should be computed.
-   * \return              The root length of \a elem
-   */
-  virtual int
-  t8_element_root_len (const t8_element_t *elem) const
+  t8_element_successor (const t8_element_t *t, t8_element_t *s) const
     = 0;
 
   /** Compute the coordinates of a given element vertex inside a reference tree
@@ -612,6 +565,8 @@ struct t8_eclass_scheme
    *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
    *   \param [out] coords An array of at least as many doubles as the element's dimension
    *                      whose entries will be filled with the coordinates of \a vertex.
+   *   \warning           coords should be zero-initialized, as only the first d coords will be set, but when used elsewhere
+   *                      all coords might be used. 
    */
   virtual void
   t8_element_vertex_reference_coords (const t8_element_t *t, const int vertex, double coords[]) const
@@ -632,17 +587,6 @@ struct t8_eclass_scheme
                                double *out_coords) const
     = 0;
 
-  /* TODO: deactivate */
-  /** Return a pointer to a t8_element in an array indexed by a size_t.
-   * \param [in] array    The \ref sc_array storing \t t8_element_t pointers.
-   * \param [in] it       The index of the element that should be returned.
-   * \return              A pointer to the it-th element in \b array.
-   * We provide a default implementation of this routine that should suffice
-   * for most use cases.
-   */
-  virtual t8_element_t *
-  t8_element_array_index (sc_array_t *array, size_t it) const;
-
   /** Count how many leaf descendants of a given uniform level an element would produce.
    * \param [in] t     The element to be checked.
    * \param [in] level A refinement level.
@@ -655,34 +599,19 @@ struct t8_eclass_scheme
    *  Thus, if \a t's level is 0, and \a level = 3, the return value is 2^3 = 8.
    */
   virtual t8_gloidx_t
-  t8_element_count_leafs (const t8_element_t *t, int level) const
+  t8_element_count_leaves (const t8_element_t *t, int level) const
     = 0;
 
   /** Count how many leaf descendants of a given uniform level the root element will produce.
    * \param [in] level A refinement level.
-   * \return The value of \ref t8_element_count_leafs if the input element
+   * \return The value of \ref t8_element_count_leaves if the input element
    *      is the root (level 0) element.
    *
    * This is a convenience function, and can be implemented via
-   * \ref t8_element_count_leafs.
+   * \ref t8_element_count_leaves.
    */
   virtual t8_gloidx_t
-  t8_element_count_leafs_from_root (int level) const
-    = 0;
-
-  /** This function has no defined effect but each implementation is free to
-   *  provide its own meaning of it. Thus this function can be used to compute or
-   *  lookup very scheme implementation specific data.
-   *  \param [in] elem An valid element
-   *  \param [in] indata Pointer to input data
-   *  \param [out] outdata Pointer to output data.
-   *  For the correct usage of \a indata and \a outdata see the specific implementations
-   *  of the scheme.
-   *  For example the default scheme triangle and tetrahedron implementations use 
-   *  this function to return the type of a tri/tet to the caller.
-   */
-  virtual void
-  t8_element_general_function (const t8_element_t *elem, const void *indata, void *outdata) const
+  t8_element_count_leaves_from_root (int level) const
     = 0;
 
 #ifdef T8_ENABLE_DEBUG
@@ -716,27 +645,39 @@ struct t8_eclass_scheme
   virtual void
   t8_element_debug_print (const t8_element_t *elem) const
     = 0;
+
+  /**
+ * \brief Fill a string with readable information about the element
+ * 
+ * \param[in] elem The element to translate into human-readable information
+ * \param[in, out] debug_string The string to fill. 
+ */
+  virtual void
+  t8_element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const
+    = 0;
 #endif
 
-  /** Allocate memory for an array of elements of a given class and initialize them.
+  /** Allocate memory for \b length many elements of a given class and initialize them,
+   * and put pointers to the elements in the provided array.
    * \param [in] length   The number of elements to be allocated.
-   * \param [in,out] elems On input an array of \b length many unallocated
-   *                      element pointers.
+   * \param [in,out] elems On input an array of \b length many element pointers.
    *                      On output all these pointers will point to an allocated
    *                      and initialized element.
-   * \note Not every element that is created in t8code will be created by a call
-   * to this function. However, if an element is not created using \ref t8_element_new,
-   * then it is guaranteed that \ref t8_element_init is called on it.
+   * \note There are two ways to create multiple elements of the same type. Create an
+   * array of element pointers and fill it with t8_element_new, or allocate memory
+   * for \b length times \b element_size many bytes, and fill them with t8_element_init.
+   * To access a specific element, offset calculation needs to be done manually, as
+   * t8_element_t is incomplete.
    * \note In debugging mode, an element that was created with \ref t8_element_new
-   * must pass \ref t8_element_is_valid.
+   * must pass \ref t8_element_is_valid (for example the root element).
    * \note If an element was created by \ref t8_element_new then \ref t8_element_init
    * may not be called for it. Thus, \ref t8_element_new should initialize an element
    * in the same way as a call to \ref t8_element_init would.
+   * \note Every call to \ref t8_element_new must be matched by a call to \ref t8_element_destroy
+   * \see t8_element_destroy
    * \see t8_element_init
    * \see t8_element_is_valid
    */
-  /* TODO: would it be better to directly allocate an array of elements,
-   *       not element pointers? */
   virtual void
   t8_element_new (int length, t8_element_t **elem) const
     = 0;
@@ -745,32 +686,84 @@ struct t8_eclass_scheme
    * \param [in] length   The number of elements to be initialized.
    * \param [in,out] elems On input an array of \b length many allocated
    *                       elements.
-   * \param [in] called_new True if the elements in \a elem were created by a call
-   *                       to \ref t8_element_new. False if no element in \a elem
-   *                       was created in this way. The case that only some elements
-   *                       were created by \ref t8_element_new should never occur.
    * \note In debugging mode, an element that was passed to \ref t8_element_init
    * must pass \ref t8_element_is_valid.
    * \note If an element was created by \ref t8_element_new then \ref t8_element_init
-   * may not be called for it. Thus, \ref t8_element_new should initialize an element
-   * in the same way as a call to \ref t8_element_init would.
-   * Thus, if \a called_new is true this function should usually do nothing.
+   * may not be called for it. Thus, \ref t8_element_init should initialize an element
+   * in the same way as a call to \ref t8_element_new would.
+   * \note Every call to \ref t8_element_init must be matched by a call to \ref t8_element_deinit
+   * \see t8_element_deinit
    * \see t8_element_new
    * \see t8_element_is_valid
    */
   virtual void
-  t8_element_init (int length, t8_element_t *elem, int called_new) const
+  t8_element_init (int length, t8_element_t *elem) const
+    = 0;
+
+  /** Deinitialize an array of allocated elements.
+   * \param [in] length   The number of elements to be deinitialized.
+   * \param [in,out] elems On input an array of \b length many allocated
+   *                       and initialized elements, on output an array of
+   *                       \b length many allocated, but not initialized elements.
+   * \note Call this function if you called t8_element_init on the element pointers.
+   * \see t8_element_init
+   */
+  virtual void
+  t8_element_deinit (int length, t8_element_t *elem) const
     = 0;
 
   /** Deallocate an array of elements.
    * \param [in] length   The number of elements in the array.
-   * \param [in,out] elems On input an array of \b length many allocated
+   * \param [in,out] elem On input an array of \b length many allocated
    *                      element pointers.
    *                      On output all these pointers will be freed.
    *                      \b elem itself will not be freed by this function.
+   * \see t8_element_new
    */
   virtual void
   t8_element_destroy (int length, t8_element_t **elem) const
+    = 0;
+
+  /** create the root element
+   * \param [in,out] elem The element that is filled with the root
+   */
+  virtual void
+  t8_element_root (t8_element_t *elem) const
+    = 0;
+
+  /** Pack multiple elements into contiguous memory, so they can be sent via MPI.
+   * \param [in] elements Array of elements that are to be packed
+   * \param [in] count Number of elements to pack
+   * \param [in,out] send_buffer Buffer in which to pack the elements
+   * \param [in] buffer_size size of the buffer (in order to check that we don't access out of range)
+   * \param [in, out] position the position of the first byte that is not already packed
+   * \param [in] comm MPI Communicator
+  */
+  virtual void
+  t8_element_MPI_Pack (t8_element_t **const elements, const unsigned int count, void *send_buffer, int buffer_size,
+                       int *position, sc_MPI_Comm comm) const
+    = 0;
+
+  /** Determine an upper bound for the size of the packed message of \b count elements
+   * \param [in] count Number of elements to pack
+   * \param [in] comm MPI Communicator
+   * \param [out] pack_size upper bound on the message size
+  */
+  virtual void
+  t8_element_MPI_Pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size) const
+    = 0;
+
+  /** Unpack multiple elements from contiguous memory that was received via MPI.
+   * \param [in] recvbuf Buffer from which to unpack the elements
+   * \param [in] buffer_size size of the buffer (in order to check that we don't access out of range)
+   * \param [in, out] position the position of the first byte that is not already packed
+   * \param [in] elements Array of initialised elements that is to be filled from the message
+   * \param [in] count Number of elements to unpack
+   * \param [in] comm MPI Communicator
+  */
+  virtual void
+  t8_element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements,
+                         const unsigned int count, sc_MPI_Comm comm) const
     = 0;
 };
 

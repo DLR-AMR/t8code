@@ -47,7 +47,9 @@
 #define T8_VERSION_H
 
 #include <t8.h>
+#ifndef T8_CMAKE_BUILD
 #include <t8_config.h>
+#endif
 
 /* In order to convert a macro to a string, we
  * need to pass it through these two helper macros. */

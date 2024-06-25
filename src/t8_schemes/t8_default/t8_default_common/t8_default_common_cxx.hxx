@@ -38,6 +38,9 @@ class t8_default_scheme_common_c: public t8_eclass_scheme_c {
   /** Destructor for all default schemes */
   virtual ~t8_default_scheme_common_c ();
 
+  virtual void
+  t8_element_deinit (int length, t8_element_t *elem) const override;
+
   /** Compute the number of corners of a given element. */
   virtual int
   t8_element_num_corners (const t8_element_t *elem) const;
@@ -63,7 +66,7 @@ class t8_default_scheme_common_c: public t8_eclass_scheme_c {
    * children.
    */
   virtual t8_gloidx_t
-  t8_element_count_leafs (const t8_element_t *t, int level) const;
+  t8_element_count_leaves (const t8_element_t *t, int level) const;
 
   /** Compute the number of siblings of an element. That is the number of 
    * Children of its parent.
@@ -76,24 +79,11 @@ class t8_default_scheme_common_c: public t8_eclass_scheme_c {
 
   /** Count how many leaf descendants of a given uniform level the root element will produce.
    * \param [in] level A refinement level.
-   * \return The value of \ref t8_element_count_leafs if the input element
+   * \return The value of \ref t8_element_count_leaves if the input element
    *      is the root (level 0) element.
    */
   virtual t8_gloidx_t
-  t8_element_count_leafs_from_root (int level) const;
-
-  /** The common implementation of the general function for the default scheme
-   * has no effect. This function literally does nothing.
-   * The tri, tet and prism scheme override this implementation with a function that
-   * stores the type of the element in \a outdata.
-   *  \param [in] elem A valid element
-   *  \param [in] indata Is ignored. Can be NULL.
-   *  \param [out] outdata Is ignored. Can be NULL.
-   * \note Calling this function has no effect. See the specialized implementations in
-   * t8_default_tri_cxx.hxx, t8_default_tet_cxx.hxx and t8_default_prism_cxx.hxx.
-   */
-  virtual void
-  t8_element_general_function (const t8_element_t *elem, const void *indata, void *outdata) const;
+  t8_element_count_leaves_from_root (int level) const;
 
   /** Compute the integer coordinates of a given element vertex.
    * The default scheme implements the Morton type SFCs. In these SFCs the
@@ -106,7 +96,7 @@ class t8_default_scheme_common_c: public t8_eclass_scheme_c {
    *                      whose entries will be filled with the coordinates of \a vertex.
    */
   virtual void
-  t8_element_vertex_coords (const t8_element_t *elem, int vertex, int coords[]) const
+  t8_element_vertex_integer_coords (const t8_element_t *elem, int vertex, int coords[]) const
     = 0;
 
   /** Convert points in the reference space of an element to points in the
@@ -137,6 +127,10 @@ class t8_default_scheme_common_c: public t8_eclass_scheme_c {
   virtual void
   t8_element_anchor (const t8_element_t *elem, int anchor[3]) const
     = 0;
+#if T8_ENABLE_DEBUG
+  virtual void
+  t8_element_debug_print (const t8_element_t *elem) const;
+#endif
 };
 
 #endif /* !T8_DEFAULT_COMMON_CXX_HXX */

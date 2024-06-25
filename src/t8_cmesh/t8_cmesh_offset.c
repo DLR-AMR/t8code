@@ -30,14 +30,14 @@
 /* Return -1 if A is smaller 0
  * Return 0 if not. */
 static int
-t8_glo_kl0 (t8_gloidx_t A)
+t8_glo_kl0 (const t8_gloidx_t A)
 {
   return A < 0 ? -1 : 0;
 }
 
 /* The first tree of a given process in a partition */
 t8_gloidx_t
-t8_offset_first (int proc, const t8_gloidx_t *offset)
+t8_offset_first (const int proc, const t8_gloidx_t *offset)
 {
   T8_ASSERT (proc >= 0);
   T8_ASSERT (offset != NULL);
@@ -50,27 +50,30 @@ t8_offset_first (int proc, const t8_gloidx_t *offset)
  * -first_tree - 1  if it is shared.
  */
 t8_gloidx_t
-t8_offset_first_tree_to_entry (t8_gloidx_t first_tree, int shared)
+t8_offset_first_tree_to_entry (const t8_gloidx_t first_tree, const int shared)
 {
   return shared ? -first_tree - 1 : first_tree;
 }
 
 /* The number of trees of a given process in a partition */
 t8_gloidx_t
-t8_offset_num_trees (int proc, const t8_gloidx_t *offset)
+t8_offset_num_trees (const int proc, const t8_gloidx_t *offset)
 {
   t8_gloidx_t num_global_trees;
   T8_ASSERT (proc >= 0);
   T8_ASSERT (offset != NULL);
 
   num_global_trees = T8_GLOIDX_ABS (offset[proc + 1]) - t8_offset_first (proc, offset);
-  /* If num_global_trees < 0, we return 0 */
-  return num_global_trees >= 0 ? num_global_trees : 0;
+
+  /* Fails if both offset[proc] and offset[proc+1] are -1 */
+  T8_ASSERT (num_global_trees >= 0);
+
+  return num_global_trees;
 }
 
 /* The last local tree of a given process in a partition */
 t8_gloidx_t
-t8_offset_last (int proc, const t8_gloidx_t *offset)
+t8_offset_last (const int proc, const t8_gloidx_t *offset)
 {
   T8_ASSERT (proc >= -1);
   T8_ASSERT (offset != NULL);
@@ -81,7 +84,7 @@ t8_offset_last (int proc, const t8_gloidx_t *offset)
 #ifdef T8_ENABLE_DEBUG
 /* Query whether a given global tree is in a valid range of a partition */
 static int
-t8_offset_valid_tree (t8_gloidx_t gtree, int mpisize, const t8_gloidx_t *offset)
+t8_offset_valid_tree (const t8_gloidx_t gtree, const int mpisize, const t8_gloidx_t *offset)
 {
   T8_ASSERT (offset != NULL);
 
@@ -92,9 +95,8 @@ t8_offset_valid_tree (t8_gloidx_t gtree, int mpisize, const t8_gloidx_t *offset)
 /* Return 1 if the process has no trees in the partition.
  * Return 0 if the process has at least one tree */
 int
-t8_offset_empty (int proc, const t8_gloidx_t *offset)
+t8_offset_empty (const int proc, const t8_gloidx_t *offset)
 {
-  /* TODO: Why dont we just compute the number of local trees? */
   T8_ASSERT (proc >= 0);
   T8_ASSERT (offset != NULL);
 
@@ -107,7 +109,7 @@ t8_offset_empty (int proc, const t8_gloidx_t *offset)
 /* Find the next higher rank that is not empty.
  * returns mpisize if this rank does not exist. */
 int
-t8_offset_next_nonempty_rank (int rank, int mpisize, const t8_gloidx_t *offset)
+t8_offset_next_nonempty_rank (const int rank, const int mpisize, const t8_gloidx_t *offset)
 {
   int next_nonempty = rank + 1;
 
@@ -121,7 +123,7 @@ t8_offset_next_nonempty_rank (int rank, int mpisize, const t8_gloidx_t *offset)
 /* Check whether a given offset array represents a valid
  * partition. */
 int
-t8_offset_consistent (int mpisize, const t8_shmem_array_t offset_shmem, t8_gloidx_t num_trees)
+t8_offset_consistent (const int mpisize, const t8_shmem_array_t offset_shmem, const t8_gloidx_t num_trees)
 {
   int i, ret = 1;
   t8_gloidx_t last_tree;
@@ -158,28 +160,26 @@ t8_offset_consistent (int mpisize, const t8_shmem_array_t offset_shmem, t8_gloid
 
 /* Determine whether a given global tree id is in the range of a given process */
 int
-t8_offset_in_range (t8_gloidx_t tree_id, int proc, const t8_gloidx_t *offset)
+t8_offset_in_range (const t8_gloidx_t tree_id, const int proc, const t8_gloidx_t *offset)
 {
   return t8_offset_first (proc, offset) <= tree_id && tree_id <= t8_offset_last (proc, offset);
 }
 
-/* Find any owner of a given tree.
- * TODO: In most cases the search should start with the current mpirank
- *       to optimize runtime.
- */
 int
-t8_offset_any_owner_of_tree (int mpisize, t8_gloidx_t gtree, const t8_gloidx_t *offset)
+t8_offset_any_owner_of_tree_ext (const int mpisize, const int start_proc, const t8_gloidx_t gtree,
+                                 const t8_gloidx_t *offset)
 {
-  int proc, range[2], found;
+  int proc = start_proc;
+  int range[2] = { 0, mpisize - 1 };
 
   range[0] = 0;
   range[1] = mpisize - 1;
   /* find any process that owns the tree with a binary search */
-  found = 0;
+  int found = 0;
   while (!found) {
-    proc = (range[0] + range[1]) / 2;
     if (t8_offset_in_range (gtree, proc, offset)) {
       found = 1;
+      break;
     }
     else if (t8_offset_last (proc, offset) < gtree) {
       /* look further right */
@@ -188,15 +188,23 @@ t8_offset_any_owner_of_tree (int mpisize, t8_gloidx_t gtree, const t8_gloidx_t *
     else {
       range[1] = proc - 1;
     }
+    proc = (range[0] + range[1]) / 2;
   }
   return proc;
+}
+/* Find any owner of a given tree.
+ */
+int
+t8_offset_any_owner_of_tree (const int mpisize, const t8_gloidx_t gtree, const t8_gloidx_t *offset)
+{
+  return t8_offset_any_owner_of_tree_ext (mpisize, (mpisize - 1) / 2, gtree, offset);
 }
 
 /* Find the smallest process that owns a given tree.
  * To increase the runtime, some_owner can be a process that
  * already owns the tree. Otherwise (some_owner < 0), the function will compute one. */
 int
-t8_offset_first_owner_of_tree (int mpisize, t8_gloidx_t gtree, const t8_gloidx_t *offset, int *some_owner)
+t8_offset_first_owner_of_tree (const int mpisize, const t8_gloidx_t gtree, const t8_gloidx_t *offset, int *some_owner)
 {
   int proc, proc_temp;
 
@@ -227,26 +235,25 @@ t8_offset_first_owner_of_tree (int mpisize, t8_gloidx_t gtree, const t8_gloidx_t
     T8_ASSERT (t8_offset_in_range (gtree, proc_temp, offset));
   }
   else {
-    /* TODO: This should never happen */
-    T8_ASSERT (1 == 0);
-    proc_temp = proc;
+    /* This should never happen */
+    SC_ABORT ("ERROR: proc_temp ran out of bounds");
   }
   proc = proc_temp;
   return proc;
 }
 
 static int
-t8_offset_next_prev_owner_of_tree (int mpisize, t8_gloidx_t gtree, const t8_gloidx_t *offset, int current_owner,
-                                   int search_dir)
+t8_offset_next_prev_owner_of_tree (const int mpisize, const t8_gloidx_t gtree, const t8_gloidx_t *offset,
+                                   const int current_owner, const int search_dir)
 {
   int proc;
 
-  search_dir = search_dir > 0 ? 1 : -1; /* Adjust search dir. Positive means next process,
+  int search_left_or_right = search_dir > 0 ? 1 : -1; /* Adjust search dir. Positive means next process,
                                            negative previous. */
-  proc = current_owner + search_dir;
+  proc = current_owner + search_left_or_right;
   while (proc >= 0 && proc < mpisize && t8_offset_empty (proc, offset)) {
     /* Skip empty processes */
-    proc += search_dir;
+    proc += search_left_or_right;
   }
   if (proc >= 0 && proc < mpisize && t8_offset_in_range (gtree, proc, offset)) {
     /* proc is still in the range and it owns gtree */
@@ -262,7 +269,8 @@ t8_offset_next_prev_owner_of_tree (int mpisize, t8_gloidx_t gtree, const t8_gloi
  * If none is found, we return -1.
  */
 int
-t8_offset_next_owner_of_tree (int mpisize, t8_gloidx_t gtree, const t8_gloidx_t *offset, int current_owner)
+t8_offset_next_owner_of_tree (const int mpisize, const t8_gloidx_t gtree, const t8_gloidx_t *offset,
+                              const int current_owner)
 {
   return t8_offset_next_prev_owner_of_tree (mpisize, gtree, offset, current_owner, +1);
 }
@@ -272,7 +280,8 @@ t8_offset_next_owner_of_tree (int mpisize, t8_gloidx_t gtree, const t8_gloidx_t 
  * If none is found, we return -1.
  */
 int
-t8_offset_prev_owner_of_tree (int mpisize, t8_gloidx_t gtree, const t8_gloidx_t *offset, int current_owner)
+t8_offset_prev_owner_of_tree (const int mpisize, const t8_gloidx_t gtree, const t8_gloidx_t *offset,
+                              const int current_owner)
 {
   return t8_offset_next_prev_owner_of_tree (mpisize, gtree, offset, current_owner, -1);
 }
@@ -281,7 +290,7 @@ t8_offset_prev_owner_of_tree (int mpisize, t8_gloidx_t gtree, const t8_gloidx_t 
  * To increase the runtime, some_owner can be a process that
  * already owns the tree. Otherwise (some_owner < 0), the function will compute one. */
 int
-t8_offset_last_owner_of_tree (int mpisize, t8_gloidx_t gtree, const t8_gloidx_t *offset, int *some_owner)
+t8_offset_last_owner_of_tree (const int mpisize, const t8_gloidx_t gtree, const t8_gloidx_t *offset, int *some_owner)
 {
   int proc, proc_temp;
 
@@ -312,9 +321,8 @@ t8_offset_last_owner_of_tree (int mpisize, t8_gloidx_t gtree, const t8_gloidx_t 
     T8_ASSERT (t8_offset_in_range (gtree, proc_temp, offset));
   }
   else {
-    /* TODO: This should never happen */
-    T8_ASSERT (1 == 0);
-    proc_temp = proc;
+    /* This should never happen */
+    SC_ABORT ("ERROR: proc_temp ran out of bounds");
   }
   proc = proc_temp;
   return proc;
@@ -324,7 +332,7 @@ t8_offset_last_owner_of_tree (int mpisize, t8_gloidx_t gtree, const t8_gloidx_t 
 /* Owners must be an initialized sc_array with int elements and
  * element count 0 */
 void
-t8_offset_all_owners_of_tree (int mpisize, t8_gloidx_t gtree, const t8_gloidx_t *offset, sc_array_t *owners)
+t8_offset_all_owners_of_tree (const int mpisize, const t8_gloidx_t gtree, const t8_gloidx_t *offset, sc_array_t *owners)
 {
   int proc;
   int *entry;

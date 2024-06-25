@@ -114,6 +114,9 @@ extern const int t8_edge_to_face[T8_ECLASS_COUNT][T8_ECLASS_MAX_EDGES][2];
  */
 extern const int t8_eclass_face_orientation[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES];
 
+/** The direction of the normal of each face of a tetrahedron. */
+extern const int t8_reference_face_normal_tet[T8_ECLASS_MAX_FACES][3];
+
 /** The number of vertices of an element class. */
 extern const int t8_eclass_num_vertices[T8_ECLASS_COUNT];
 

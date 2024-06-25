@@ -89,9 +89,16 @@ t8_cmesh_is_initialized (t8_cmesh_t cmesh);
  *                              False otherwise.
  */
 int
-t8_cmesh_is_committed (t8_cmesh_t cmesh);
+t8_cmesh_is_committed (const t8_cmesh_t cmesh);
 
 #ifdef T8_ENABLE_DEBUG
+/** Check the geometry of the mesh for validity.
+ * \param [in] cmesh            This cmesh is examined.
+ * \return                      True if the geometry of the cmesh is valid.
+ */
+int
+t8_cmesh_validate_geometry (const t8_cmesh_t cmesh);
+
 /** After a cmesh is committed, check whether all trees in a cmesh do have positive volume.
  * Returns true if all trees have positive volume.
  * \param [in]  cmesh           This cmesh is examined. May be NULL.
@@ -119,7 +126,7 @@ t8_cmesh_no_negative_volume (t8_cmesh_t cmesh);
  */
 /* TODO: write a test for this function */
 int
-t8_cmesh_tree_vertices_negative_volume (t8_eclass_t eclass, double *vertices, int num_vertices);
+t8_cmesh_tree_vertices_negative_volume (const t8_eclass_t eclass, const double *vertices, const int num_vertices);
 
 /* TODO: Currently it is not possible to destroy set_from before
  *       cmesh is destroyed. */
@@ -157,7 +164,7 @@ t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm);
  * This call is only valid when the cmesh is not yet committed via a call
  * to \ref t8_cmesh_commit.
  * \param [in,out] cmesh        The cmesh to be updated.
- * \parma [in]     set_face_knowledge   Several values are possible that define
+ * \param [in]     set_face_knowledge   Several values are possible that define
  *                              how much information is required on face connections,
  *                              specified by \ref t8_cmesh_set_join.
  *                              0: Expect face connection of local trees.
@@ -168,7 +175,7 @@ t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm);
  *                              3: Expect face connection of local and ghost trees.
  *                              Consistency of this requirement is checked on
  *                              \ref t8_cmesh_commit.
- *                             -1: Co not change the face_knowledge level but keep any
+ *                             -1: Do not change the face_knowledge level but keep any
  *                                 previously set ones. (Possibly by a previous call to \ref t8_cmesh_set_partition_range)
  * \param [in]     first_local_tree The global index ID of the first tree on this process.
  *                                  If this tree is also the last tree on the previous process,
@@ -184,8 +191,6 @@ void
 t8_cmesh_set_partition_range (t8_cmesh_t cmesh, int set_face_knowledge, t8_gloidx_t first_local_tree,
                               t8_gloidx_t last_local_tree);
 
-/* TODO: It is currently not possible to call this function for a non derived
- *       cmesh. Investigate. */
 /** Declare if the cmesh is understood as a partitioned cmesh and specify
  * the first local tree for each process.
  * This call is only valid when the cmesh is not yet committed via a call
@@ -212,8 +217,6 @@ t8_cmesh_set_partition_offsets (t8_cmesh_t cmesh, t8_shmem_array_t tree_offsets)
  */
 void
 t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, int element_level, t8_scheme_cxx_t *ts);
-
-/* TODO: This function is no longer needed.  Scavenge documentation if helpful. */
 
 /** Refine the cmesh to a given level.
  * Thus split each tree into x^level subtrees
@@ -281,9 +284,36 @@ t8_cmesh_set_attribute (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int package_id, 
  * \param [in]      string      The string to store as attribute.
  * \note You can also use \ref t8_cmesh_set_attribute, but we recommend using this
  *       specialized function for strings.
+ * \note If an attribute with the given package_id and key already exists, then it will get overwritten.
  */
 void
 t8_cmesh_set_attribute_string (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int package_id, int key, const char *string);
+
+/** Store an array of t8_gloidx_t as an attribute at a tree in a cmesh.
+ * \param [in, out] cmesh       The cmesh to be updated.
+ * \param [in]      gtree_id    The global id of the tree.
+ * \param [in]      package_id  Unique identifier of a valid software package. \see sc_package_register
+ * \param [in]      key         An integer key used to identify this attribute under all
+ *                              attributes with the same package_id.
+ *                              \a key must be a unique value for this tree and package_id.
+ * \param [in]      data        The array to store as attribute.
+ * \param [in]      data_count  The number of entries in \a data.
+ * \param [in]      data_persists This flag can be used to optimize memory. If true
+ *                              then t8code assumes that the attribute data is present at the
+ *                              memory that \a data points to when \ref t8_cmesh_commit is called
+ *                              (This is more memory efficient).
+ *                              If the flag is false an internal copy of the data is created
+ *                              immediately and this copy is used at commit.
+ *                              In both cases a copy of the data is used by t8_code after t8_cmesh_commit.
+ * \note You can also use \ref t8_cmesh_set_attribute, but we recommend using this
+ *       specialized function for arrays.
+ * \note If an attribute with the given package_id and key already exists, then it will get overwritten.
+ * \note We do not store the number of data entries \a data_count of the attribute array.
+ *       You can keep track of the data count yourself by using another attribute.
+ */
+void
+t8_cmesh_set_attribute_gloidx_array (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int package_id, int key,
+                                     const t8_gloidx_t *data, const size_t data_count, int data_persists);
 
 /** Insert a face-connection between two trees in a cmesh.
  * \param [in,out] cmesh        The cmesh to be updated.
@@ -364,23 +394,26 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 /* TODO: think about a sensible interface for a parmetis reordering. */
 #endif
 
-/* TODO: comment */
-/* If no geometry is registered and cmesh is modified from another cmesh then
+/** Register a geometry in the cmesh. The cmesh takes ownership of the geometry.
+ * \param [in,out] cmesh        The cmesh.
+ * \param [in]     geometry     The geometry to register.
+ * 
+ * If no geometry is registered and cmesh is modified from another cmesh then
  * the other cmesh's geometries are used.
  * \note If you need to use \ref t8_cmesh_bcast, then all geometries must be
  *       registered \a after the bcast operation, not before.
  */
 void
-t8_cmesh_register_geometry (t8_cmesh_t cmesh, const t8_geometry_c *geometry);
+t8_cmesh_register_geometry (t8_cmesh_t cmesh, t8_geometry_c **geometry);
 
 /** Set the geometry for a tree, thus specify which geometry to use for this tree.
  * \param [in] cmesh     A non-committed cmesh.
  * \param [in] gtreeid   A global tree id in \a cmesh.
- * \param [in] geom_name The name of the geometry to use for this tree.
+ * \param [in] geom      The geometry to use for this tree.
  * See also \ref t8_cmesh_get_tree_geometry
  */
 void
-t8_cmesh_set_tree_geometry (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const char *geom_name);
+t8_cmesh_set_tree_geometry (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const t8_geometry_c *geom);
 
 /** After allocating and adding properties to a cmesh, finish its construction.
  * TODO: this function is MPI collective.
@@ -428,6 +461,13 @@ t8_cmesh_comm_is_valid (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 int
 t8_cmesh_is_partitioned (t8_cmesh_t cmesh);
 
+/** Get the dimension of a cmesh.
+ * \param [in]  cmesh   The cmesh.
+ * \a cmesh must be committed before calling this function.
+ */
+int
+t8_cmesh_get_dimension (const t8_cmesh_t cmesh);
+
 /** Return the global number of trees in a cmesh.
  * \param [in] cmesh       The cmesh to be considered.
  * \return                 The number of trees associated to \a cmesh.
@@ -463,7 +503,11 @@ t8_cmesh_get_num_ghosts (t8_cmesh_t cmesh);
 t8_gloidx_t
 t8_cmesh_get_first_treeid (t8_cmesh_t cmesh);
 
-/* TODO: Comment */
+/** Get the geometry of a tree.
+ * \param [in] cmesh   The cmesh.
+ * \param [in] gtreeid The global tree id of the tree for which the geometry should be returned.
+ * \return             The geometry of the tree.
+ */
 const t8_geometry_c *
 t8_cmesh_get_tree_geometry (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 
@@ -636,13 +680,32 @@ t8_cmesh_get_tree_vertices (t8_cmesh_t cmesh, t8_locidx_t ltreeid);
  * \param [in]     key          A key used to identify the attribute under all
  *                              attributes of this tree with the same \a package_id.
  * \param [in]     tree_id      The local number of the tree.
- * \param [out]    data_size    The size of the attribute in bytes.
  * \return         The attribute pointer of the tree \a ltree_id or NULL if the attribute is not found.
- * \a cmesh must be committed before calling this function.
+ * \note \a cmesh must be committed before calling this function.
  * \see t8_cmesh_set_attribute
  */
 void *
-t8_cmesh_get_attribute (t8_cmesh_t cmesh, int package_id, int key, t8_locidx_t ltree_id);
+t8_cmesh_get_attribute (const t8_cmesh_t cmesh, const int package_id, const int key, const t8_locidx_t ltree_id);
+
+/** Return the attribute pointer of a tree for a gloidx_t array.
+ * \param [in]     cmesh        The cmesh.
+ * \param [in]     package_id   The identifier of a valid software package. \see sc_package_register
+ * \param [in]     key          A key used to identify the attribute under all
+ *                              attributes of this tree with the same \a package_id.
+ * \param [in]     ltree_id     The local number of the tree.
+ * \param [in]     data_count   The number of entries in the array that are requested. 
+ *                              This must be smaller or equal to the \a data_count parameter
+ *                              of the corresponding call to \ref t8_cmesh_set_attribute_gloidx_array
+ * \return         The attribute pointer of the tree \a ltree_id or NULL if the attribute is not found.
+ * \note \a cmesh must be committed before calling this function.
+ * \note No check is performed whether the attribute actually stored \a data_count many entries since
+ *       we do not store the number of data entries of the attribute array.
+ *       You can keep track of the data count yourself by using another attribute.
+ * \see t8_cmesh_set_attribute_gloidx_array
+ */
+t8_gloidx_t *
+t8_cmesh_get_attribute_gloidx_array (const t8_cmesh_t cmesh, const int package_id, const int key,
+                                     const t8_locidx_t ltree_id, const size_t data_count);
 
 /** Return the shared memory array storing the partition table of
  * a partitioned cmesh.

@@ -25,6 +25,7 @@
 #include <t8_forest/t8_forest_types.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
 #include <sc_options.h>
 #include <string>
 
@@ -49,8 +50,10 @@ t8_strip_of_quads (t8_gloidx_t num_trees, t8_gloidx_t empty_tree, const char **v
 {
 
   const double boundary_coords[12] = { 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0 };
+  const int use_axis_alined = 1;
 
-  t8_cmesh_t cmesh = t8_cmesh_new_hypercube_pad (T8_ECLASS_QUAD, sc_MPI_COMM_WORLD, boundary_coords, num_trees, 1, 0);
+  t8_cmesh_t cmesh
+    = t8_cmesh_new_hypercube_pad (T8_ECLASS_QUAD, sc_MPI_COMM_WORLD, boundary_coords, num_trees, 1, 0, use_axis_alined);
 
   t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), 0, 0, sc_MPI_COMM_WORLD);
 

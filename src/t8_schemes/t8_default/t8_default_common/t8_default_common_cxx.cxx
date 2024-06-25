@@ -109,16 +109,16 @@ t8_default_scheme_common_c::t8_element_shape (const t8_element_t *elem) const
   return eclass;
 }
 
-/* Given an element's level and dimension, return the number of leafs it
+/* Given an element's level and dimension, return the number of leaves it
  * produces at a given uniform refinement level */
 static inline t8_gloidx_t
-count_leafs_from_level (int element_level, int refinement_level, int dimension)
+count_leaves_from_level (int element_level, int refinement_level, int dimension)
 {
   return element_level > refinement_level ? 0 : sc_intpow64 (2, dimension * (refinement_level - element_level));
 }
 
 t8_gloidx_t
-t8_default_scheme_common_c::t8_element_count_leafs (const t8_element_t *t, int level) const
+t8_default_scheme_common_c::t8_element_count_leaves (const t8_element_t *t, int level) const
 {
 
   int element_level = t8_element_level (t);
@@ -129,7 +129,7 @@ t8_default_scheme_common_c::t8_element_count_leafs (const t8_element_t *t, int l
     int level_diff = level - element_level;
     return element_level > level ? 0 : 2 * sc_intpow64 (8, level_diff) - sc_intpow64 (6, level_diff);
   }
-  return count_leafs_from_level (element_level, level, dim);
+  return count_leaves_from_level (element_level, level, dim);
 }
 
 /* Count the number of siblings.
@@ -144,20 +144,28 @@ t8_default_scheme_common_c::t8_element_num_siblings (const t8_element_t *elem) c
 }
 
 t8_gloidx_t
-t8_default_scheme_common_c::t8_element_count_leafs_from_root (int level) const
+t8_default_scheme_common_c::t8_element_count_leaves_from_root (int level) const
 {
   if (eclass == T8_ECLASS_PYRAMID) {
     return 2 * sc_intpow64u (8, level) - sc_intpow64u (6, level);
   }
   int dim = t8_eclass_to_dimension[eclass];
-  return count_leafs_from_level (0, level, dim);
+  return count_leaves_from_level (0, level, dim);
 }
 
+#if T8_ENABLE_DEBUG
 void
-t8_default_scheme_common_c::t8_element_general_function (const t8_element_t *elem, const void *indata,
-                                                         void *outdata) const
+t8_default_scheme_common_c::t8_element_debug_print (const t8_element_t *elem) const
 {
-  /* This function is intentionally left blank. */
+  char debug_string[BUFSIZ];
+  t8_element_to_string (elem, debug_string, BUFSIZ);
+  t8_debugf ("%s\n", debug_string);
+}
+#endif
+
+void
+t8_default_scheme_common_c::t8_element_deinit (int length, t8_element_t *elem) const
+{
 }
 
 T8_EXTERN_C_END ();

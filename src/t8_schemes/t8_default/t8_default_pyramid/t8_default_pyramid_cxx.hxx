@@ -81,7 +81,7 @@ struct t8_default_scheme_pyramid_c: public t8_default_scheme_common_c
    * \see t8_element_is_valid
    */
   virtual void
-  t8_element_init (int length, t8_element_t *elem, int called_new) const;
+  t8_element_init (int length, t8_element_t *elem) const;
 
   /** Return the refinement level of an element.
    * \param [in] elem    The element whose level should be returned.
@@ -112,6 +112,15 @@ struct t8_default_scheme_pyramid_c: public t8_default_scheme_common_c
    */
   virtual int
   t8_element_compare (const t8_element_t *elem1, const t8_element_t *elem2) const;
+
+  /** Check if two elements are equal.
+  * \param [in] ts     Implementation of a class scheme.
+  * \param [in] elem1  The first element.
+  * \param [in] elem2  The second element.
+  * \return            1 if the elements are equal, 0 if they are not equal
+  */
+  virtual int
+  t8_element_equal (const t8_element_t *elem1, const t8_element_t *elem2) const;
 
   /** Compute the parent of a given element \b elem and store it in \b parent.
    * \b parent needs to be an existing element. No memory is allocated by this function.
@@ -206,26 +215,13 @@ struct t8_default_scheme_pyramid_c: public t8_default_scheme_common_c
     return 0; /* prevents compiler warning */
   }
 
-  /** Return the type of each child in the ordering of the implementation.
-   * \param [in] childid  Must be between 0 and the number of children (exclusive). The number of children is defined 
-   *                      in \a t8_element_num_children.
-   * \return              The type for the given child.
-   */
-  virtual t8_eclass_t
-  t8_element_child_eclass (int childid) const
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return T8_ECLASS_ZERO; /* suppresses compiler warning */
-  }
-
   /** Construct the child element of a given number.
    * \param [in] elem       This must be a valid element, bigger than maxlevel.
    * \param [in] childid    The number of the child to construct.
    * \param [in,out] child  The storage for this element must exist and match the element class of the child.
    *                        On output, a valid element. 
    * It is valid to call this function with elem = child.
-   * \see t8_element_child_eclass
-   */
+     */
   virtual void
   t8_element_child (const t8_element_t *elem, int childid, t8_element_t *child) const;
 
@@ -236,8 +232,7 @@ struct t8_default_scheme_pyramid_c: public t8_default_scheme_common_c
    *                    children's ordering. On output, all children are valid.
    * It is valid to call this function with elem = c[0].
    * \see t8_element_num_children
-   * \see t8_element_child_eclass
-   */
+     */
   virtual void
   t8_element_children (const t8_element_t *elem, int length, t8_element_t *c[]) const;
 
@@ -262,7 +257,7 @@ struct t8_default_scheme_pyramid_c: public t8_default_scheme_common_c
    * \note level 0 elements do not form a family.
    */
   virtual int
-  t8_element_is_family (t8_element_t **fam) const;
+  t8_element_is_family (t8_element_t *const *fam) const;
 
   /** Compute the nearest common ancestor of two elements. That is, the element with highest level that still has both 
    * given elements as descendants.
@@ -413,18 +408,6 @@ struct t8_default_scheme_pyramid_c: public t8_default_scheme_common_c
   t8_element_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
                             const t8_eclass_scheme_c *boundary_scheme) const;
 
-  /** Construct all codimension-one boundary elements of a given element.
-   * \param [in] elem     The input element.
-   * \param [in] face     A face of \a elem.
-   * \return              True if \a face is a subface of the element's root element.
-   */
-  virtual void
-  t8_element_boundary (const t8_element_t *elem, int min_dim, int length, t8_element_t **boundary) const
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return; /* suppresses compiler warning */
-  }
-
   /** Compute whether a given element shares a given face with its root tree.
    * \param [in] elem     The input element.
    * \param [in] face     A face of \a elem.
@@ -451,7 +434,7 @@ struct t8_default_scheme_pyramid_c: public t8_default_scheme_common_c
    * \param [in,out] elem The element whose entries will be set.
    * \param [in] level    The level of the uniform refinement to consider.
    * \param [in] id       The linear id.
-   *                      id must fulfil 0 <= id < 'number of leafs in the uniform refinement'
+   *                      id must fulfil 0 <= id < 'number of leaves in the uniform refinement'
    */
   virtual void
   t8_element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id) const;
@@ -486,7 +469,7 @@ struct t8_default_scheme_pyramid_c: public t8_default_scheme_common_c
    * \param [in] level    The level of the uniform refinement to consider.
    */
   virtual void
-  t8_element_successor (const t8_element_t *t, t8_element_t *s, int level) const;
+  t8_element_successor (const t8_element_t *elem, t8_element_t *succ) const;
 
   /** Get the integer coordinates of the anchor node of an element. The default scheme implements the Morton type SFCs. 
    * In these SFCs the elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and L the maximum 
@@ -498,13 +481,6 @@ struct t8_default_scheme_pyramid_c: public t8_default_scheme_common_c
   virtual void
   t8_element_anchor (const t8_element_t *elem, int anchor[3]) const;
 
-  /** Compute the root length of a given element, that is the length of its level 0 ancestor.
-   * \param [in] elem     The element whose root length should be computed.
-   * \return              The root length of \a elem
-   */
-  virtual int
-  t8_element_root_len (const t8_element_t *elem) const;
-
   /** Compute the integer coordinates of a given element vertex. The default scheme implements the Morton type SFCs. 
    * In these SFCs the elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and  L the maximum 
    * refinement level. All element vertices have integer coordinates in this cube.
@@ -514,23 +490,16 @@ struct t8_default_scheme_pyramid_c: public t8_default_scheme_common_c
    *                      whose entries will be filled with the coordinates of \a vertex.
    */
   virtual void
-  t8_element_vertex_coords (const t8_element_t *t, int vertex, int coords[]) const;
+  t8_element_vertex_integer_coords (const t8_element_t *t, int vertex, int coords[]) const;
 
-  /** The tetrahedron schemes uses the general function to return the type of a tetrahedron.
-   *  \param [in] elem An valid element
-   *  \param [in] indata Is ignored. Can be NULL.
-   *  \param [out] outdata Pointer to an int8_t. The type of \a elem will be stored here.
-   *  On output the type of the tetrahedron will be stored in \a outdata
-   */
-  virtual void
-  t8_element_general_function (const t8_element_t *elem, const void *indata, void *outdata) const;
-
-  /** Compute the coordinates of a given element vertex inside a reference tree that is embedded into [0,1]^d 
-   * (d = dimension).
-   *   \param [in] elem    The element to be considered.
-   *   \param [in] vertex  The id of the vertex whose coordinates shall be computed.
+  /** Compute the coordinates of a given element vertex inside a reference tree
+   *  that is embedded into [0,1]^d (d = dimension).
+   *   \param [in] elem   The element to be considered.
+   *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
    *   \param [out] coords An array of at least as many doubles as the element's dimension
    *                      whose entries will be filled with the coordinates of \a vertex.
+   *   \warning           coords should be zero-initialized, as only the first d coords will be set, but when used elsewhere
+   *                      all coords might be used. 
    */
   virtual void
   t8_element_vertex_reference_coords (const t8_element_t *elem, const int vertex, double coords[]) const;
@@ -582,8 +551,46 @@ struct t8_default_scheme_pyramid_c: public t8_default_scheme_common_c
   * \param [in]        elem  The element to print
   */
   virtual void
-  t8_element_debug_print (const t8_element_t *elem) const;
+  t8_element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const;
 #endif
+
+  /** Fills an element with the root element.
+ * \param [in,out] elem   The element to be filled with root.
+ */
+  void
+  t8_element_root (t8_element_t *elem) const;
+
+  /** Pack multiple elements into contiguous memory, so they can be sent via MPI.
+   * \param [in] elements Array of elements that are to be packed
+   * \param [in] count Number of elements to pack
+   * \param [in,out] send_buffer Buffer in which to pack the elements
+   * \param [in] buffer_size size of the buffer (in order to check that we don't access out of range)
+   * \param [in, out] position the position of the first byte that is not already packed
+   * \param [in] comm MPI Communicator
+  */
+  virtual void
+  t8_element_MPI_Pack (t8_element_t **const elements, const unsigned int count, void *send_buffer, int buffer_size,
+                       int *position, sc_MPI_Comm comm) const;
+
+  /** Determine an upper bound for the size of the packed message of \b count elements
+   * \param [in] count Number of elements to pack
+   * \param [in] comm MPI Communicator
+   * \param [out] pack_size upper bound on the message size
+  */
+  virtual void
+  t8_element_MPI_Pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size) const;
+
+  /** Unpack multiple elements from contiguous memory that was received via MPI.
+   * \param [in] recvbuf Buffer from which to unpack the elements
+   * \param [in] buffer_size size of the buffer (in order to check that we don't access out of range)
+   * \param [in, out] position the position of the first byte that is not already packed
+   * \param [in] elements Array of initialised elements that is to be filled from the message
+   * \param [in] count Number of elements to unpack
+   * \param [in] comm MPI Communicator
+  */
+  virtual void
+  t8_element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements,
+                         const unsigned int count, sc_MPI_Comm comm) const;
 };
 
 #endif /* !T8_DEFAULT_pyramid_CXX_HXX */

@@ -28,6 +28,8 @@
  */
 
 #include <gtest/gtest.h>
+#include <test/t8_gtest_custom_assertion.hxx>
+
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
@@ -78,9 +80,9 @@ t8_test_transform_element (t8_eclass_scheme_c *ts, const t8_element_t *elem, t8_
   ts->t8_element_new (1, &transform);
 
   ts->t8_element_transform_face (elem, transform, 0, 0, 0);
-  ASSERT_TRUE (!ts->t8_element_compare (elem, transform)) << "Elements are not equal";
+  EXPECT_ELEM_EQ (ts, elem, transform);
   ts->t8_element_transform_face (elem, transform, 0, 0, 1);
-  ASSERT_TRUE (!ts->t8_element_compare (elem, transform)) << "Elements are not equal";
+  EXPECT_ELEM_EQ (ts, elem, transform);
   if (eclass == T8_ECLASS_TRIANGLE) {
     /* For triangles we test:
      * 3 times ori = 1 sign = 0  == identity
@@ -94,23 +96,24 @@ t8_test_transform_element (t8_eclass_scheme_c *ts, const t8_element_t *elem, t8_
     for (int itimes = 0; itimes < 3; itimes++) {
       ts->t8_element_transform_face (transform, transform, 1, 0, 0);
     }
-    ASSERT_TRUE (!ts->t8_element_compare (elem, transform)) << "Elements are not equal";
+
+    EXPECT_ELEM_EQ (ts, elem, transform);
     /* or = 1 sign = 0, then or = 2 sign = 0 */
     ts->t8_element_transform_face (transform, transform, 1, 0, 0);
     ts->t8_element_transform_face (transform, transform, 2, 0, 0);
-    ASSERT_TRUE (!ts->t8_element_compare (elem, transform)) << "Elements are not equal";
+    EXPECT_ELEM_EQ (ts, elem, transform);
     /* or = 2 sign = 0, then or = 1 sign = 0 */
     ts->t8_element_transform_face (transform, transform, 2, 0, 0);
     ts->t8_element_transform_face (transform, transform, 1, 0, 0);
-    ASSERT_TRUE (!ts->t8_element_compare (elem, transform)) << "Elements are not equal";
+    EXPECT_ELEM_EQ (ts, elem, transform);
     /* or = 1 sign = 1, then or = 1 sign = 1 */
     ts->t8_element_transform_face (transform, transform, 1, 1, 0);
     ts->t8_element_transform_face (transform, transform, 1, 1, 0);
-    ASSERT_TRUE (!ts->t8_element_compare (elem, transform)) << "Elements are not equal";
+    EXPECT_ELEM_EQ (ts, elem, transform);
     /* or = 2 sign = 1, then or = 2 sign = 1 */
     ts->t8_element_transform_face (transform, transform, 2, 1, 0);
     ts->t8_element_transform_face (transform, transform, 2, 1, 0);
-    ASSERT_TRUE (!ts->t8_element_compare (elem, transform)) << "Elements are not equal";
+    EXPECT_ELEM_EQ (ts, elem, transform);
   }
   else {
     T8_ASSERT (eclass == T8_ECLASS_QUAD);
@@ -128,22 +131,21 @@ t8_test_transform_element (t8_eclass_scheme_c *ts, const t8_element_t *elem, t8_
     for (int itimes = 0; itimes < 4; itimes++) {
       ts->t8_element_transform_face (transform, transform, 1, 0, 1);
     }
-    ASSERT_TRUE (!ts->t8_element_compare (elem, transform)) << "Elements are not equal. Quad. 4 times or 1.";
+    EXPECT_ELEM_EQ (ts, elem, transform);
     /* 4 times or = 1 sign = 0, if not smaller face */
     for (int itimes = 0; itimes < 4; itimes++) {
       ts->t8_element_transform_face (transform, transform, 1, 0, 0);
     }
-    ASSERT_TRUE (!ts->t8_element_compare (elem, transform))
-      << "Elements are not equal. Quad. 4 times or 1 not smaller.";
+    EXPECT_ELEM_EQ (ts, elem, transform);
     /* or = 1 sign = 0, then or = 3 sign = 0, then ori = 1 sign = 0 */
     ts->t8_element_transform_face (transform, transform, 1, 0, 1);
     ts->t8_element_transform_face (transform, transform, 3, 0, 1);
     ts->t8_element_transform_face (transform, transform, 1, 0, 1);
-    ASSERT_TRUE (!ts->t8_element_compare (elem, transform)) << "Elements are not equal. Quad. or 1 then or 3";
+    EXPECT_ELEM_EQ (ts, elem, transform);
     /* or = 2 sign = 0, then or = 1 sign = 0 */
     ts->t8_element_transform_face (transform, transform, 2, 0, 1);
     ts->t8_element_transform_face (transform, transform, 1, 0, 1);
-    ASSERT_TRUE (!ts->t8_element_compare (elem, transform)) << "Elements are not equal. Quad. or 2 then or 1";
+    EXPECT_ELEM_EQ (ts, elem, transform);
     /* TODO: Add tests */
   }
 
@@ -152,14 +154,10 @@ t8_test_transform_element (t8_eclass_scheme_c *ts, const t8_element_t *elem, t8_
     for (int sign = 0; sign < 2; sign++) {
       ts->t8_element_transform_face (elem, transform, iorientation, sign, 1);
       ts->t8_element_transform_face (transform, transform, iorientation, sign, 0);
-      ASSERT_TRUE (!ts->t8_element_compare (elem, transform))
-        << "Elements are not equal. " << t8_eclass_to_string[eclass] << " back forth. Orientation " << iorientation
-        << " smaller sign " << sign;
+      EXPECT_ELEM_EQ (ts, elem, transform) << "Orientation " << iorientation << " smaller sign " << sign;
       ts->t8_element_transform_face (elem, transform, iorientation, sign, 0);
       ts->t8_element_transform_face (transform, transform, iorientation, sign, 1);
-      ASSERT_TRUE (!ts->t8_element_compare (elem, transform))
-        << "Elements are not equal. " << t8_eclass_to_string[eclass] << " back forth. Orientation " << iorientation
-        << " not smaller sign " << sign;
+      EXPECT_ELEM_EQ (ts, elem, transform) << "Orientation " << iorientation << " not smaller sign " << sign;
     }
   }
 

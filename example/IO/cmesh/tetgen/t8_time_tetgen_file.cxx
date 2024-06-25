@@ -24,7 +24,6 @@
 #include <t8.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh_tetgen.h>
-#include <t8_cmesh_vtk_writer.h>
 #include <sc_flops.h>
 #include <sc_statistics.h>
 #include <sc_options.h>

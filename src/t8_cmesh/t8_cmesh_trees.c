@@ -57,7 +57,7 @@ t8_cmesh_trees_glo_lo_hash_equal (const void *v1, const void *v2, const void *u)
 }
 
 t8_part_tree_t
-t8_cmesh_trees_get_part (t8_cmesh_trees_t trees, int proc)
+t8_cmesh_trees_get_part (const t8_cmesh_trees_t trees, const int proc)
 {
   T8_ASSERT (trees != NULL);
   return (t8_part_tree_t) sc_array_index_int (trees->from_proc, proc);
@@ -162,7 +162,7 @@ t8_cmesh_trees_get_num_procs (t8_cmesh_trees_t trees)
 
 /* Get a tree form a part given its local id */
 static t8_ctree_t
-t8_part_tree_get_tree (t8_part_tree_t P, t8_locidx_t tree_id)
+t8_part_tree_get_tree (const t8_part_tree_t P, const t8_locidx_t tree_id)
 {
   T8_ASSERT (0 <= tree_id);
   return ((t8_ctree_t) P->first_tree) + tree_id - P->first_tree_id;
@@ -725,8 +725,8 @@ t8_cmesh_trees_compare_keyattr (const void *A1, const void *A2)
 
 /* The size of the attribute is not returned, but would be accessible */
 void *
-t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_locidx_t ltree_id, int package_id, int key, size_t *size,
-                              int is_ghost)
+t8_cmesh_trees_get_attribute (const t8_cmesh_trees_t trees, const t8_locidx_t ltree_id, const int package_id,
+                              const int key, size_t *size, const int is_ghost)
 {
   int proc;
   t8_ctree_t tree;
@@ -789,7 +789,7 @@ t8_cmesh_trees_get_attribute (t8_cmesh_trees_t trees, t8_locidx_t ltree_id, int 
 }
 
 size_t
-t8_cmesh_trees_get_numproc (t8_cmesh_trees_t trees)
+t8_cmesh_trees_get_numproc (const t8_cmesh_trees_t trees)
 {
   return trees->from_proc->elem_count;
 }

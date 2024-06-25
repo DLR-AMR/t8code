@@ -28,6 +28,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
+#include <test/t8_gtest_macros.hxx>
 
 /**
  * This file tests the volume-computation of elements.
@@ -97,6 +98,8 @@ TEST_P (t8_forest_volume, volume_check)
   /* Vertices have a volume of 0. */
   const double control_volume = (eclass == T8_ECLASS_VERTEX) ? 0.0 : (1.0 / global_num_elements);
 
+  ASSERT_EQ (t8_forest_get_dimension (forest), t8_cmesh_get_dimension (t8_forest_get_cmesh (forest)));
+
   const t8_locidx_t local_num_trees = t8_forest_get_num_local_trees (forest);
   /* Iterate over all elements. */
   for (t8_locidx_t itree = 0; itree < local_num_trees; itree++) {
@@ -116,4 +119,4 @@ TEST_P (t8_forest_volume, volume_check)
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_element_volume, t8_forest_volume,
-                          testing::Combine (testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT), testing::Range (0, 4)));
+                          testing::Combine (AllEclasses, testing::Range (0, 4)));

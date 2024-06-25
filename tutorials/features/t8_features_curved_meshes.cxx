@@ -43,7 +43,7 @@
 #include <t8_forest/t8_forest_geometrical.h>        /* geometrical information of the forest */
 #include <t8_schemes/t8_default/t8_default_cxx.hxx> /* default refinement scheme. */
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx> /* Linear geometry calculation of trees */
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_occ.hxx>    /* Curved geometry calculation of trees */
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>    /* Curved geometry calculation of trees */
 #include <t8_cmesh_readmshfile.h>                                         /* msh file reader */
 #include <string>                                                         /* std::string */
 #include <array>                                                          /* std::array */
@@ -109,7 +109,7 @@ t8_naca_geometry_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8
       const int element_dim = t8_eclass_to_dimension[ts->eclass];
       /* We retrieve the geometry information of the tree.
        * In the 3D case, we look for linked surfaces, but in 2D, we look for linked edges. */
-      const int attribute_key = element_dim == 3 ? T8_CMESH_OCC_FACE_ATTRIBUTE_KEY : T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY;
+      const int attribute_key = element_dim == 3 ? T8_CMESH_CAD_FACE_ATTRIBUTE_KEY : T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY;
       const int *linked_geometries = (const int *) t8_cmesh_get_attribute (
         t8_forest_get_cmesh (forest), t8_get_package_id (), attribute_key, cmesh_ltreeid);
       /* If the tree face has a linked surface and it is in the list we refine it */
@@ -346,7 +346,7 @@ main (int argc, char **argv)
   int geometry;                  /** Activates the geometry refinement mode */
   int plane;                     /** Activates the plane refinement mode */
   int steps;                     /** The amount of time steps the plane makes */
-  int occ;                       /** Activates the curved mesh in the plane mode */
+  int cad;                       /** Activates the curved mesh in the plane mode */
   int dim;                       /** The dimension of the mesh */
   double xmin;                   /** The starting x-coordinate of the refinement plane */
   double xmax;                   /** The ending x-coordinate of the refinement plane */
@@ -414,8 +414,8 @@ main (int argc, char **argv)
   sc_options_add_int (opt, 'r', "plane_level", &rlevel_plane, 3, "The refinement level of the plane. Default: 3");
   sc_options_add_int (opt, 'n', "timesteps", &steps, 10,
                       "How many steps the plane takes to move through the airfoil. Default: 10");
-  sc_options_add_switch (opt, 'o', "occ", &occ,
-                         "Use the occ geometry. In the geometry mode this is enabled automatically.");
+  sc_options_add_switch (opt, 'o', "cad", &cad,
+                         "Use the cad geometry. In the geometry mode this is enabled automatically.");
   parsed = sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (helpme) {
     /* display help message and usage */
@@ -437,7 +437,7 @@ main (int argc, char **argv)
   else {
     std::string fp (fileprefix);
     /* Read in the naca mesh from the msh file and the naca geometry from the brep file */
-    cmesh = t8_cmesh_from_msh_file (fp.c_str (), 0, sc_MPI_COMM_WORLD, dim, 0, occ || geometry);
+    cmesh = t8_cmesh_from_msh_file (fp.c_str (), 0, sc_MPI_COMM_WORLD, dim, 0, cad || geometry);
     /* Construct a forest from the cmesh */
     forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0, comm);
     T8_ASSERT (t8_forest_is_committed (forest));
@@ -445,7 +445,7 @@ main (int argc, char **argv)
       t8_naca_geometry_refinement (forest, fp, level, rlevel_dorsal, rlevel_ventral, dim);
     }
     if (plane) {
-      t8_naca_plane_refinement (forest, fp, level, rlevel_plane, steps, thickness, xmin, xmax, occ);
+      t8_naca_plane_refinement (forest, fp, level, rlevel_plane, steps, thickness, xmin, xmax, cad);
     }
   }
   sc_options_destroy (opt);

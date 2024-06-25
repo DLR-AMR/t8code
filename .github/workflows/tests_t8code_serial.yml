@@ -30,6 +30,8 @@ name: t8code tests serial
 #       in the "key:" entries of the sc and p4est steps or set the variables
 #       SC_IGNORE_CACHE and P4EST_IGNORE_CACHE to 1 in the respective steps.
 
+env:
+  MAKEFLAGS: "-j2 V=0"
 
 on:
   push:
@@ -58,11 +60,16 @@ jobs:
 # Setup and bootstrap
 #
     - uses: actions/checkout@v4
-      with: 
-        fetch-depth: 0
+      with:
+        fetch-tags: true # required to get version tags
+        fetch-depth: 0    # required to get all history, especially the version tags
+    - name: install sudo
+      run: apt update && apt install sudo
+    # On the github Ubuntu 20.04, sudo is not available by default
+    # we need it, however, to update/upgrade our packages.
     - name: Update packages
-      run: apt-get update && apt-get upgrade -y
-      # This seems to be necessary because of the docker container
+      run: sudo apt-get update && sudo apt-get upgrade -y
+      # This step is necessary to get the newest package data
     - name: disable ownership checks
       run: git config --global --add safe.directory '*'
     - name: init submodules
@@ -81,7 +88,7 @@ jobs:
       run: hash=`git rev-parse HEAD:sc` && echo sc_commit=$hash >> $GITHUB_ENV
     - name: Check cache for previous sc installation
       id: sc_cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           ${{ env.SC_SERIAL_DEBUG }}
@@ -112,14 +119,14 @@ jobs:
       run: cd $SC_SERIAL_DEBUG && ../configure --enable-debug --prefix=$PWD/install
       if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
     - name: sc build serial debug
-      run: cd $SC_SERIAL_DEBUG && make -j V=0 && make -j V=0 install
+      run: cd $SC_SERIAL_DEBUG && make $MAKEFLAGS && make $MAKEFLAGS install
       if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
       ## sc serial release
     - name: sc configure and build serial release
       run: cd $SC_SERIAL_RELEASE && ../configure --prefix=$PWD/install
       if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
     - name: sc build release serial
-      run: cd $SC_SERIAL_RELEASE && make -j V=0 && make -j V=0 install
+      run: cd $SC_SERIAL_RELEASE && make $MAKEFLAGS && make $MAKEFLAGS install
       if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
 #
 # P4EST
@@ -131,7 +138,7 @@ jobs:
       run: hash=`git rev-parse HEAD:p4est` && echo p4est_commit=$hash >> $GITHUB_ENV
     - name: Check cache for previous p4est installation
       id: p4est_cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           ${{ env.P4EST_SERIAL_DEBUG }}
@@ -161,14 +168,14 @@ jobs:
       run: cd $P4EST_SERIAL_RELEASE && ../configure --prefix=$PWD/install --with-sc=$SC_SERIAL_RELEASE/install
       if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     - name: p4est build serial release
-      run: cd $P4EST_SERIAL_RELEASE && make -j V=0 && make -j V=0 install
+      run: cd $P4EST_SERIAL_RELEASE && make $MAKEFLAGS && make $MAKEFLAGS install
       if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     - name: p4est configure and build serial debug
     ## p4est serial debug
       run: cd $P4EST_SERIAL_DEBUG && ../configure --enable-debug --prefix=$PWD/install --with-sc=$SC_SERIAL_DEBUG/install
       if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     - name: p4est build serial debug
-      run: cd $P4EST_SERIAL_DEBUG && make -j V=0 && make -j V=0 install
+      run: cd $P4EST_SERIAL_DEBUG && make $MAKEFLAGS && make $MAKEFLAGS install
       if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
 #  P4EST AND SC END
 #
@@ -206,19 +213,19 @@ jobs:
       run: mkdir build_serial_release && cd build_serial_release && ../configure $CONFIG_SERIAL_RELEASE CFLAGS="$CFLAGS_var_release" CXXFLAGS="$CXXFLAGS_var_release"
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: config_release_serial.log
         path: build_serial_release/config.log
     - name: make
-      run: cd build_serial_release && make -j V=0 CFLAGS="$CFLAGS_var_release -Werror" CXXFLAGS="$CXXFLAGS_var_release -Werror"
+      run: cd build_serial_release && make $MAKEFLAGS CFLAGS="$CFLAGS_var_release -Werror" CXXFLAGS="$CXXFLAGS_var_release -Werror"
     - name: make install
-      run: cd build_serial_release && make install -j
+      run: cd build_serial_release && make install $MAKEFLAGS
     - name: make check
-      run: cd build_serial_release && make check -j V=0 CFLAGS="$CFLAGS_var_release -Werror" CXXFLAGS="$CXXFLAGS_var_release -Werror"
+      run: cd build_serial_release && make check $MAKEFLAGS CFLAGS="$CFLAGS_var_release -Werror" CXXFLAGS="$CXXFLAGS_var_release -Werror"
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: test-suite_release_serial.log
         path: build_serial_release/test-suite.log
@@ -229,19 +236,19 @@ jobs:
       run: mkdir build_serial_debug && cd build_serial_debug && ../configure $CONFIG_SERIAL_DEBUG CFLAGS="$CFLAGS_var_debug" CXXFLAGS="$CXXFLAGS_var_debug"
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: config_debug_serial.log
         path: build_serial_debug/config.log
     - name: make
-      run: cd build_serial_debug && make -j V=0 CFLAGS="$CFLAGS_var_debug -Werror" CXXFLAGS="$CXXFLAGS_var_debug -Werror"
+      run: cd build_serial_debug && make $MAKEFLAGS CFLAGS="$CFLAGS_var_debug -Werror" CXXFLAGS="$CXXFLAGS_var_debug -Werror"
     - name: make install
-      run: cd build_serial_debug && make install -j
+      run: cd build_serial_debug && make install $MAKEFLAGS
     - name: make check
-      run: cd build_serial_debug && make check -j V=0 CFLAGS="$CFLAGS_var_debug -Werror" CXXFLAGS="$CXXFLAGS_var_debug -Werror"
+      run: cd build_serial_debug && make check $MAKEFLAGS CFLAGS="$CFLAGS_var_debug -Werror" CXXFLAGS="$CXXFLAGS_var_debug -Werror"
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: test-suite_debug_serial.log
         path: build_serial_debug/test-suite.log

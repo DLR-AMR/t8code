@@ -34,13 +34,13 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/** Get the name of the geometry stored for a tree in a cmesh.
- * \param [in] cmesh  A committed cmesh.
+/** Get the hash of the geometry stored for a tree in a cmesh.
+ * \param [in] cmesh   A committed cmesh.
  * \param [in] gtreeid A global tree in \a cmesh.
- * \return            The name of the tree's geometry or NULL if no geometry is set for this tree.
+ * \return             The hash of the tree's geometry or if only one geometry exists, its hash.
  */
-const char*
-t8_cmesh_get_tree_geom_name (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
+size_t
+t8_cmesh_get_tree_geom_hash (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 
 T8_EXTERN_C_END ();
 

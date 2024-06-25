@@ -145,7 +145,7 @@ t8_ghost_large_level_diff (const char *prefix, int dim, int level, int refine, i
   t8_cmesh_set_partition_uniform (cmesh_partition, level, t8_scheme_new_default_cxx ());
   t8_cmesh_commit (cmesh_partition, comm);
   if (!no_vtk) {
-    t8_cmesh_vtk_write_file (cmesh_partition, "partitioned_cmesh", 1.0);
+    t8_cmesh_vtk_write_file (cmesh_partition, "partitioned_cmesh");
   }
 
   /* New */

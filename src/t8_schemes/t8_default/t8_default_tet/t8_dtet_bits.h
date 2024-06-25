@@ -41,7 +41,7 @@ T8_EXTERN_C_BEGIN ();
  * \param [out] coordinates An array of 3 t8_dtet_coord_t that will be filled with the coordinates of the vertex.
  */
 void
-t8_dtet_compute_coords (const t8_dtet_t *elem, int vertex, t8_dtet_coord_t coordinates[3]);
+t8_dtet_compute_integer_coords (const t8_dtet_t *elem, int vertex, t8_dtet_coord_t coordinates[3]);
 
 /** Compute the coordinates of a vertex of a tetrahedron when the 
  * tree (level 0 tetrahedron) is embedded in \f$ [0,1]^3 \f$.
@@ -87,6 +87,14 @@ t8_dtet_copy (const t8_dtet_t *t, t8_dtet_t *dest);
  */
 int
 t8_dtet_compare (const t8_dtet_t *t1, const t8_dtet_t *t2);
+
+/** Check if two elements are equal.
+* \param [in] elem1  The first element.
+* \param [in] elem2  The second element.
+* \return            1 if the elements are equal, 0 if they are not equal
+*/
+int
+t8_dtet_equal (const t8_dtet_t *elem1, const t8_dtet_t *elem2);
 
 /** Compute the parent of a tetrahedron.
  * \param [in]  elem Input tetrahedron.
@@ -364,14 +372,22 @@ t8_dtet_get_level (const t8_dtet_t *t);
 int
 t8_dtet_is_valid (const t8_dtet_t *t);
 
-void
-t8_dtet_debug_print (const t8_dtet_t *t);
-
 /** Set sensible default values for a tet.
  * \param [in,out] t A tet.
  */
 void
 t8_dtet_init (t8_dtet_t *t);
+
+void
+t8_dtet_element_pack (t8_dtet_t **const elements, const unsigned int count, void *send_buffer, const int buffer_size,
+                      int *position, sc_MPI_Comm comm);
+
+void
+t8_dtet_element_pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size);
+
+void
+t8_dtet_element_unpack (void *recvbuf, const int buffer_size, int *position, t8_dtet_t **elements,
+                        const unsigned int count, sc_MPI_Comm comm);
 
 T8_EXTERN_C_END ();
 
