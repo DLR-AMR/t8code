@@ -70,7 +70,7 @@ class element_is_leaf: public testing::TestWithParam<std::tuple<int, cmesh_examp
   {
     /* Construct a cmesh */
     const int level = std::get<0> (GetParam ());
-    cmesh = std::get<1> (GetParam ())->cmesh_create ();
+    t8_cmesh_t cmesh = std::get<1> (GetParam ())->cmesh_create ();
     if (t8_cmesh_is_empty (cmesh)) {
       /* forest_commit does not support empty cmeshes, we skip this case */
       GTEST_SKIP ();
