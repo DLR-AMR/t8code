@@ -97,8 +97,8 @@ class element_is_leaf: public testing::TestWithParam<std::tuple<int, cmesh_examp
     }
   }
 
-  t8_forest_t forest = NULL;
-  t8_forest_t forest_adapt = NULL;
+  t8_forest_t forest {NULL};
+  t8_forest_t forest_adapt {NULL};
   t8_scheme_cxx_t *scheme;
 };
 
