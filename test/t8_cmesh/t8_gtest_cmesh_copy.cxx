@@ -39,14 +39,6 @@ class t8_cmesh_copy: public testing::TestWithParam<cmesh_example_base *> {
   void
   SetUp () override
   {
-    if (GetParam ()->name == std::string { "t8_cmesh_new_disjoint_brick_" }) {
-      GTEST_SKIP ();
-    }
-    else {
-      std::cout << "name:" << std::endl;
-      std::cout << GetParam ()->name << std::endl;
-    }
-
     cmesh_original = GetParam ()->cmesh_create ();
 
     /* Initialized test cmesh that we derive in the test */
