@@ -318,9 +318,11 @@ void
 t8_element_array_reset (t8_element_array_t *element_array)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
-  t8_element_t *first_elem = t8_element_array_index_locidx_mutable (element_array, 0);
   size_t count = t8_element_array_get_count (element_array);
-  element_array->scheme->t8_element_deinit (count, first_elem);
+  if (count > 0) {
+    t8_element_t *first_elem = t8_element_array_index_locidx_mutable (element_array, 0);
+    element_array->scheme->t8_element_deinit (count, first_elem);
+  }
   sc_array_reset (&element_array->array);
 }
 
@@ -328,9 +330,11 @@ void
 t8_element_array_truncate (t8_element_array_t *element_array)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
-  t8_element_t *first_elem = t8_element_array_index_locidx_mutable (element_array, 0);
   size_t count = t8_element_array_get_count (element_array);
-  element_array->scheme->t8_element_deinit (count, first_elem);
+  if (count > 0) {
+    t8_element_t *first_elem = t8_element_array_index_locidx_mutable (element_array, 0);
+    element_array->scheme->t8_element_deinit (count, first_elem);
+  }
   sc_array_truncate (&element_array->array);
 }
 
