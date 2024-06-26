@@ -908,7 +908,7 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm, int proc
   size_t tree_cursor, element_cursor;
   t8_forest_partition_tree_info_t *tree_info;
   t8_tree_t tree, last_tree;
-  size_t element_size;
+  size_t element_size {};
   t8_eclass_scheme_c *eclass_scheme;
 
   if (proc != forest->mpirank) {
