@@ -40,21 +40,13 @@ class t8_cmesh_copy: public testing::TestWithParam<cmesh_example_base *> {
   SetUp () override
   {
     cmesh_original = GetParam ()->cmesh_create ();
-
-    /* Initialized test cmesh that we derive in the test */
-    t8_cmesh_init (&cmesh);
   }
 
   void
   TearDown () override
   {
-    /* Unref cmesh, if test was not skipped */
-    if (cmesh) {
-      t8_cmesh_unref (&cmesh);
-    }
+    t8_cmesh_unref (&cmesh_original);
   }
-
-  t8_cmesh_t cmesh;
   t8_cmesh_t cmesh_original;
 };
 
@@ -67,15 +59,16 @@ test_cmesh_committed (t8_cmesh_t cmesh)
 
 TEST_P (t8_cmesh_copy, test_cmesh_copy)
 {
+  t8_cmesh_t cmesh_copy;
+  t8_cmesh_init (&cmesh_copy);
   t8_cmesh_ref (cmesh_original);
-  t8_cmesh_set_derive (cmesh, cmesh_original);
-  t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
+  t8_cmesh_set_derive (cmesh_copy, cmesh_original);
+  t8_cmesh_commit (cmesh_copy, sc_MPI_COMM_WORLD);
 
-  test_cmesh_committed (cmesh);
-  EXPECT_TRUE (t8_cmesh_is_equal (cmesh, cmesh_original));
-  t8_cmesh_unref (&cmesh_original);
+  test_cmesh_committed (cmesh_copy);
+  EXPECT_TRUE (t8_cmesh_is_equal (cmesh_copy, cmesh_original));
+  t8_cmesh_unref (&cmesh_copy);
 }
 
 /* Test all cmeshes over all different inputs*/
-
 INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_copy, t8_cmesh_copy, AllCmeshsParam, pretty_print_base_example);
