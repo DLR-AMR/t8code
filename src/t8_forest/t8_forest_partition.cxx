@@ -425,14 +425,22 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
   SC_CHECK_MPI (mpiret);
 
   if (t8_shmem_array_start_writing (forest->element_offsets)) {
-    t8_gloidx_t *element_offsets = t8_shmem_array_get_gloidx_array_for_writing (forest->element_offsets);
-    for (i = 0; i < mpisize; i++) {
-      /* Calculate the first element index for each process. We convert to doubles to prevent overflow */
-      new_first_element_id = (((double) i * (long double) forest_from->global_num_elements) / (double) mpisize);
-      T8_ASSERT (0 <= new_first_element_id && new_first_element_id < forest_from->global_num_elements);
-      element_offsets[i] = new_first_element_id;
+    if (forest_from->global_num_elements) {
+      t8_gloidx_t *element_offsets = t8_shmem_array_get_gloidx_array_for_writing (forest->element_offsets);
+      for (i = 0; i < mpisize; i++) {
+        /* Calculate the first element index for each process. We convert to doubles to prevent overflow */
+        new_first_element_id = (((double) i * (long double) forest_from->global_num_elements) / (double) mpisize);
+        T8_ASSERT (0 <= new_first_element_id && new_first_element_id < forest_from->global_num_elements);
+        element_offsets[i] = new_first_element_id;
+      }
+      element_offsets[forest->mpisize] = forest->global_num_elements;
     }
-    element_offsets[forest->mpisize] = forest->global_num_elements;
+    else {
+      t8_gloidx_t *element_offsets = t8_shmem_array_get_gloidx_array_for_writing (forest->element_offsets);
+      for (i = 0; i <= mpisize; i++) {
+        element_offsets[i] = 0;
+      }
+    }
   }
   t8_shmem_array_end_writing (forest->element_offsets);
 }
@@ -986,13 +994,15 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm, int proc
       new_num_elements = old_num_elements + tree_info->num_elements;
       /* Enlarge the elements array */
       t8_element_array_resize (&tree->elements, new_num_elements);
-      t8_element_t *first_new_element = t8_element_array_index_locidx_mutable (&tree->elements, old_num_elements);
-      /* Get the size of an element of the tree */
-      eclass_scheme = t8_forest_get_eclass_scheme (forest->set_from, tree->eclass);
-      element_size = eclass_scheme->t8_element_size ();
-      T8_ASSERT (element_size == t8_element_array_get_size (&tree->elements));
-      /* Copy the elements from the receive buffer to the elements array */
-      memcpy ((void *) first_new_element, recv_buffer + element_cursor, tree_info->num_elements * element_size);
+      if (tree_info->num_elements > 0) {
+        t8_element_t *first_new_element = t8_element_array_index_locidx_mutable (&tree->elements, old_num_elements);
+        /* Get the size of an element of the tree */
+        eclass_scheme = t8_forest_get_eclass_scheme (forest->set_from, tree->eclass);
+        element_size = eclass_scheme->t8_element_size ();
+        T8_ASSERT (element_size == t8_element_array_get_size (&tree->elements));
+        /* Copy the elements from the receive buffer to the elements array */
+        memcpy ((void *) first_new_element, recv_buffer + element_cursor, tree_info->num_elements * element_size);
+      }
     }
 
     /* compute the new number of local elements */
