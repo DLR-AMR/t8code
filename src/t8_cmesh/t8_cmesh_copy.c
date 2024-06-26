@@ -60,7 +60,9 @@ t8_cmesh_copy (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from, sc_MPI_Comm comm)
   if (cmesh_from->tree_offsets != NULL) {
     T8_ASSERT (cmesh->tree_offsets == NULL);
     cmesh->tree_offsets = t8_cmesh_alloc_offsets (cmesh->mpisize, comm);
-    sc_shmem_memcpy (cmesh->tree_offsets, cmesh_from->tree_offsets, sizeof (t8_gloidx_t) * (cmesh->mpisize + 1), comm);
+    sc_shmem_memcpy (t8_shmem_array_get_array (cmesh->tree_offsets),
+                     t8_shmem_array_get_array (cmesh_from->tree_offsets), sizeof (t8_gloidx_t) * (cmesh->mpisize + 1),
+                     comm);
   }
   /* Copy the numbers of trees */
   memcpy (cmesh->num_trees_per_eclass, cmesh_from->num_trees_per_eclass, T8_ECLASS_COUNT * sizeof (t8_gloidx_t));
