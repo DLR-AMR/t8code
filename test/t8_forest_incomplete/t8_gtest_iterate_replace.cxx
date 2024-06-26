@@ -55,7 +55,7 @@ class forest_iterate: public testing::TestWithParam<cmesh_example_base *> {
       t8_forest_unref (&forest);
     }
   }
-  t8_forest_t forest {NULL};
+  t8_forest_t forest { NULL };
 };
 
 /** This structure contains an array with all return values of all
