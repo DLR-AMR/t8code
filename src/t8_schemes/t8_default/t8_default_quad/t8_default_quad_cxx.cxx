@@ -63,17 +63,9 @@ t8_element_copy_surround (const p4est_quadrant_t *q, p4est_quadrant_t *r)
 void
 t8_default_scheme_quad_c::t8_element_copy (const t8_element_t *source, t8_element_t *dest) const
 {
-  const p4est_quadrant_t *q = (const p4est_quadrant_t *) source;
-  p4est_quadrant_t *r = (p4est_quadrant_t *) dest;
-
   T8_ASSERT (t8_element_is_valid (source));
+  t8_dquad_copy ((const p4est_quadrant_t *) source, (p4est_quadrant_t *) dest);
   T8_ASSERT (t8_element_is_valid (dest));
-  if (r == q) {
-    /* Do nothing if they are already the same quadrant. */
-    return;
-  }
-  *r = *q;
-  t8_element_copy_surround (q, r);
 }
 
 int
@@ -94,25 +86,17 @@ t8_default_scheme_quad_c::t8_element_equal (const t8_element_t *elem1, const t8_
 void
 t8_default_scheme_quad_c::t8_element_parent (const t8_element_t *elem, t8_element_t *parent) const
 {
-  const p4est_quadrant_t *q = (const p4est_quadrant_t *) elem;
-  p4est_quadrant_t *r = (p4est_quadrant_t *) parent;
-
   T8_ASSERT (t8_element_is_valid (elem));
+  t8_dquad_parent ((const p4est_quadrant_t *) elem, (p4est_quadrant_t *) parent);
   T8_ASSERT (t8_element_is_valid (parent));
-  p4est_quadrant_parent (q, r);
-  t8_element_copy_surround (q, r);
 }
 
 void
 t8_default_scheme_quad_c::t8_element_sibling (const t8_element_t *elem, int sibid, t8_element_t *sibling) const
 {
-  const p4est_quadrant_t *q = (const p4est_quadrant_t *) elem;
-  p4est_quadrant_t *r = (p4est_quadrant_t *) sibling;
-
   T8_ASSERT (t8_element_is_valid (elem));
+  t8_dquad_sibling ((const p4est_quadrant_t *) elem, sibid, (p4est_quadrant_t *) sibling);
   T8_ASSERT (t8_element_is_valid (sibling));
-  p4est_quadrant_sibling (q, r, sibid);
-  t8_element_copy_surround (q, r);
 }
 
 int
@@ -172,24 +156,9 @@ t8_default_scheme_quad_c::t8_element_get_corner_face (const t8_element_t *elemen
 void
 t8_default_scheme_quad_c::t8_element_child (const t8_element_t *elem, int childid, t8_element_t *child) const
 {
-  const p4est_quadrant_t *q = (const p4est_quadrant_t *) elem;
-  const p4est_qcoord_t shift = P4EST_QUADRANT_LEN (q->level + 1);
-  p4est_quadrant_t *r = (p4est_quadrant_t *) child;
-
   T8_ASSERT (t8_element_is_valid (elem));
+  t8_dquad_child ((const p4est_quadrant_t *) elem, childid, (p4est_quadrant_t *) child);
   T8_ASSERT (t8_element_is_valid (child));
-  T8_ASSERT (p4est_quadrant_is_extended (q));
-  T8_ASSERT (q->level < P4EST_QMAXLEVEL);
-  T8_ASSERT (childid >= 0 && childid < P4EST_CHILDREN);
-
-  r->x = childid & 0x01 ? (q->x | shift) : q->x;
-  r->y = childid & 0x02 ? (q->y | shift) : q->y;
-  r->level = q->level + 1;
-
-  if (q != r) {
-    T8_ASSERT (p4est_quadrant_is_parent (q, r));
-  }
-  t8_element_copy_surround (q, r);
 }
 
 void
@@ -246,9 +215,28 @@ t8_default_scheme_quad_c::t8_element_set_linear_id (t8_element_t *elem, const in
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
-  T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << P4EST_DIM * level);
+  if (!multilevel) {
+    T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << P4EST_DIM * level);
+    p4est_quadrant_set_morton ((p4est_quadrant_t *) elem, level, id);
+  }
+  else {
+#ifdef T8_ENABLE_DEBUG
+    int id_max = 0;
+    for (int i_level = 0; i_level <= level; i_level++) {
+      id_max += ((t8_linearidx_t) 1) << P4EST_DIM * i_level;
+    }
+    T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << P4EST_DIM * id_max);
+#endif
+    /* The multilevel conversion happens via the following formula:
+     * #\f$\mathrm{id_{multilevel}} (\mathrm{id_{linear}, lvl}) = \mathrm{lvl} + \sum_{n = 0}^{\mathrm{lvl_{max}-1}} \lfloor \mathrm{id_{linear}} / 2^{n \cdot d} \rfloor \f$
+     */
+    t8_linearidx_t id_linear = 0;
+    for (int i_level = 0; i_level < level; i_level++) {
+      id_linear |= ((id - level) & (1 << i_level)) << i_level;
+    }
+    p4est_quadrant_set_morton ((p4est_quadrant_t *) elem, level, id_linear);
+  }
 
-  p4est_quadrant_set_morton ((p4est_quadrant_t *) elem, level, id);
   T8_QUAD_SET_TDIM ((p4est_quadrant_t *) elem, 2);
 }
 
@@ -259,7 +247,18 @@ t8_default_scheme_quad_c::t8_element_get_linear_id (const t8_element_t *elem, co
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
 
-  return p4est_quadrant_linear_id ((p4est_quadrant_t *) elem, level);
+  const t8_linearidx_t id = p4est_quadrant_linear_id ((p4est_quadrant_t *) elem, level);
+
+  if (multilevel) {
+    int id_multilevel = level;
+    for (int i_level = 0; i_level < P4EST_QMAXLEVEL; i_level++) {
+      id_multilevel += id >> (i_level * 2);
+    }
+    return id_multilevel;
+  }
+  else {
+    return id;
+  }
 }
 
 void
@@ -287,10 +286,9 @@ t8_default_scheme_quad_c::t8_element_successor (const t8_element_t *elem1, t8_el
                                                 const int multilevel) const
 {
   T8_ASSERT (t8_element_is_valid (elem1));
-  T8_ASSERT (t8_element_is_valid (elem2));
   T8_ASSERT (0 <= t8_element_level (elem1) && t8_element_level (elem1) <= P4EST_QMAXLEVEL);
-  p4est_quadrant_successor ((p4est_quadrant_t *) elem1, (p4est_quadrant_t *) elem2);
-  t8_element_copy_surround ((const p4est_quadrant_t *) elem1, (p4est_quadrant_t *) elem2);
+  t8_dquad_successor ((const p4est_quadrant_t *) elem1, (p4est_quadrant_t *) elem2, level, multilevel);
+  T8_ASSERT (t8_element_is_valid (elem2));
 }
 
 void

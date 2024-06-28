@@ -14,7 +14,8 @@ bin_PROGRAMS += \
 	tutorials/general/t8_step7_interpolation \
 	tutorials/general/t8_tutorial_build_cmesh \
 	tutorials/general/t8_tutorial_search \
-	tutorials/features/t8_features_curved_meshes
+	tutorials/features/t8_features_curved_meshes \
+	tutorials/features/t8_features_multilevel
 
 dist_t8data_DATA += \
   tutorials/features/t8_features_curved_meshes_generate_cmesh_hex.geo \
@@ -59,6 +60,8 @@ tutorials_general_t8_tutorial_search_SOURCES = \
 	tutorials/general/t8_step3_adapt_forest.cxx
 tutorials_features_t8_features_curved_meshes_SOURCES = \
   tutorials/features/t8_features_curved_meshes.cxx
+tutorials_features_t8_features_multilevel_SOURCES = \
+  tutorials/features/t8_features_multilevel.cxx
 
 libt8_installed_headers += \
         tutorials/general/t8_step3.h \

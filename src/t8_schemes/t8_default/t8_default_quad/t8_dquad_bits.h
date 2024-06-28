@@ -46,6 +46,49 @@ void
 t8_dquad_compute_reference_coords (const p4est_quadrant_t *elem, const double *ref_coords, const size_t num_coords,
                                    double *out_coords);
 
+/** Compute the childid-th child in Morton order of a quad.
+ * \param [in] elem       Input quad.
+ * \param [in] childid    The id of the child, in 0 - 3, in Morton order.
+ * \param [in,out] child  Existing quad whose data will be filled with the data of elem's childid-th child.
+ */
+void
+t8_dquad_child (const p4est_quadrant_t *elem, int childid, p4est_quadrant_t *child);
+
+/** Compute the parent of a quad.
+ * \param [in]  elem Input quad.
+ * \param [in,out] parent Existing quad whose data will
+ *                  be filled with the data of elem's parent.
+ * \note \a elem may point to the same quad as \a parent.
+ */
+void
+t8_dquad_parent (const p4est_quadrant_t *elem, p4est_quadrant_t *parent);
+
+/** Compute the sibid-th sibling in Morton order of a quad.
+ * \param [in] elem         Input quad.
+ * \param [in] sibid        The id of the sibling, in 0 - 3, in Morton order.
+ * \param [in,out] sibling  Existing quad whose data will be filled with the data of elem's sibid-th sibling.
+ */
+void
+t8_dquad_sibling (const p4est_quadrant_t *elem, int sibid, p4est_quadrant_t *sibling);
+
+/** Copy all values from one quad to another.
+ * \param [in] elem     The quad to be copied.
+ * \param [in,out] dest Existing quad whose data will be filled with the data
+ *                   of \a elem.
+ */
+void
+t8_dquad_copy (const p4est_quadrant_t *source, p4est_quadrant_t *dest);
+
+/** Computes the successor of a quad in a uniform grid of level \a level.
+ * \param [in] elem      Quad whose id will be computed.
+ * \param [in,out] succ  Existing quad whose data will be filled with the
+ *                       data of \a elem's successor on level \a level.
+ * \param [in] level     Level of uniform grid to be considered.
+ * \param [in] multilevel If \a multilevel is 1, ancestors can also be successors.
+ */
+void
+t8_dquad_successor (const p4est_quadrant_t *elem, p4est_quadrant_t *succ, const int level, const int multilevel);
+
 T8_EXTERN_C_END ();
 
 #endif /* T8_DQUAD_BITS_H */
