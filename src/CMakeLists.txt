@@ -81,6 +81,12 @@ if( T8CODE_ENABLE_VTK )
     target_link_libraries( T8 PUBLIC ${VTK_LIBRARIES} )
 endif()
 
+if( T8CODE_ENABLE_OCC )
+    target_compile_definitions( T8 PUBLIC T8_WITH_OCC=1 )
+    target_include_directories( T8 PUBLIC ${OpenCASCADE_INCLUDE_DIRS} )
+    target_link_libraries( T8 PUBLIC ${OpenCASCADE_LIBRARIES} )
+endif()
+
 target_sources( T8 PRIVATE 
     t8.c 
     t8_eclass.c 
