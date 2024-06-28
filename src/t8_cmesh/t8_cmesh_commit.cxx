@@ -248,6 +248,10 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     /* Get the number of local trees */
     cmesh->num_local_trees = t8_offset_num_trees (cmesh->mpirank, tree_offsets);
   }
+  else {
+    SC_CHECK_ABORT (cmesh->set_partition_level < 0,
+                    "Do not use t8_cmesh_set_partition_uniform when creating a cmesh from stash!\n");
+  }
   /* The first_tree and first_tree_shared entries must be set by now */
   T8_ASSERT (cmesh->first_tree >= 0);
   T8_ASSERT (cmesh->first_tree_shared >= 0);
