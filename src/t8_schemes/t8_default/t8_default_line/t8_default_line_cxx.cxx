@@ -259,13 +259,14 @@ t8_default_scheme_line_c::t8_element_set_linear_id (t8_element_t *elem, const in
 }
 
 void
-t8_default_scheme_line_c::t8_element_successor (const t8_element_t *elem1, t8_element_t *elem2) const
+t8_default_scheme_line_c::t8_element_successor (const t8_element_t *elem1, t8_element_t *elem2, const int level,
+                                                const int multilevel) const
 {
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
   T8_ASSERT (1 <= t8_element_level (elem1) && t8_element_level (elem1) <= T8_DLINE_MAXLEVEL);
 
-  t8_dline_successor ((const t8_default_line_t *) elem1, (t8_default_line_t *) elem2, t8_element_level (elem1));
+  t8_dline_successor ((const t8_default_line_t *) elem1, (t8_default_line_t *) elem2, level);
 }
 
 void
@@ -312,7 +313,8 @@ t8_default_scheme_line_c::t8_element_reference_coords (const t8_element_t *elem,
 }
 
 t8_linearidx_t
-t8_default_scheme_line_c::t8_element_get_linear_id (const t8_element_t *elem, int level) const
+t8_default_scheme_line_c::t8_element_get_linear_id (const t8_element_t *elem, const int level,
+                                                    const int multilevel) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= T8_DLINE_MAXLEVEL);

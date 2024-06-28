@@ -206,7 +206,8 @@ t8_default_scheme_vertex_c::t8_element_set_linear_id (t8_element_t *elem, const 
 }
 
 t8_linearidx_t
-t8_default_scheme_vertex_c::t8_element_get_linear_id (const t8_element_t *elem, int level) const
+t8_default_scheme_vertex_c::t8_element_get_linear_id (const t8_element_t *elem, const int level,
+                                                      const int multilevel) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= T8_DVERTEX_MAXLEVEL);

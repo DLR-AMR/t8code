@@ -22,6 +22,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
+#include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <sc_functions.h>
@@ -97,7 +98,7 @@ TEST_P (linear_id, uniform_forest)
         /*Get the current element*/
         const t8_element_t *element = t8_forest_get_element_in_tree (forest, tree_id, id_iter);
         /*Get the ID of the element at current level */
-        const t8_locidx_t id = ts->t8_element_get_linear_id (element, level);
+        const t8_locidx_t id = ts->t8_element_get_linear_id (element, level, forest->multilevel);
         /* Check the computed id*/
         EXPECT_EQ (id, id_iter + shift);
       }
@@ -131,7 +132,7 @@ TEST_P (linear_id, id_at_other_level)
       /* Set the child at the current level */
       ts->t8_element_set_linear_id (child, level, id);
       /* Compute the id of child at a higher level. */
-      const t8_linearidx_t id_at_lvl = ts->t8_element_get_linear_id (child, level + add_lvl);
+      const t8_linearidx_t id_at_lvl = ts->t8_element_get_linear_id (child, level + add_lvl, 0);
       /* Compute how many leaves/descendants child has at level level+add_lvl */
       const t8_linearidx_t child_desc = ts->t8_element_count_leaves (child, level + add_lvl);
       /* Iterate over all descendants */
@@ -140,7 +141,7 @@ TEST_P (linear_id, id_at_other_level)
          * leaf_id into the region of the descendants of child*/
         ts->t8_element_set_linear_id (test, level + add_lvl, id_at_lvl + leaf_id);
         /* Compute the id of the descendant (test) at the current level */
-        const t8_linearidx_t test_id = ts->t8_element_get_linear_id (test, level);
+        const t8_linearidx_t test_id = ts->t8_element_get_linear_id (test, level, 0);
         /* test_id and id should be equal. */
         EXPECT_EQ (id, test_id);
       }

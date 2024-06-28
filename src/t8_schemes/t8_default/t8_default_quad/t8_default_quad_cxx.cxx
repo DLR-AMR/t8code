@@ -31,7 +31,7 @@ T8_EXTERN_C_BEGIN ();
 /* This function is used by other element functions and we thus need to
  * declare it up here */
 t8_linearidx_t
-t8_element_get_linear_id (const t8_element_t *elem, int level);
+t8_element_get_linear_id (const t8_element_t *elem, const int level, const int multilevel);
 
 #ifdef T8_ENABLE_DEBUG
 
@@ -253,7 +253,8 @@ t8_default_scheme_quad_c::t8_element_set_linear_id (t8_element_t *elem, const in
 }
 
 t8_linearidx_t
-t8_default_scheme_quad_c::t8_element_get_linear_id (const t8_element_t *elem, int level) const
+t8_default_scheme_quad_c::t8_element_get_linear_id (const t8_element_t *elem, const int level,
+                                                    const int multilevel) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
@@ -282,7 +283,8 @@ t8_default_scheme_quad_c::t8_element_last_descendant (const t8_element_t *elem, 
 }
 
 void
-t8_default_scheme_quad_c::t8_element_successor (const t8_element_t *elem1, t8_element_t *elem2) const
+t8_default_scheme_quad_c::t8_element_successor (const t8_element_t *elem1, t8_element_t *elem2, const int level,
+                                                const int multilevel) const
 {
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));

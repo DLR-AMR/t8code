@@ -410,10 +410,11 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
   /** Compute the linear id of a given element in a hypothetical uniform refinement of a given level.
    * \param [in] elem     The element whose id we compute.
    * \param [in] level    The level of the uniform refinement to consider.
+   * \param [in] multilevel Shifts the linear id to make space for multiple levels.
    * \return              The linear id of the element.
    */
   virtual t8_linearidx_t
-  t8_element_get_linear_id (const t8_element_t *elem, int level) const;
+  t8_element_get_linear_id (const t8_element_t *elem, const int level, const int multilevel) const;
 
   /** Compute the first descendant of a given element.
    * \param [in] elem     The element whose descendant is computed.
@@ -432,12 +433,13 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
   t8_element_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
 
   /** Construct the successor in a uniform refinement of a given element.
-   * \param [in] elem1    The element whose successor should be constructed.
-   * \param [in,out] elem2  The element whose entries will be set.
-   * \param [in] level    The level of the uniform refinement to consider.
+   * \param [in] elem       The element whose successor should be constructed.
+   * \param [in,out] succ   The element whose entries will be set.
+   * \param [in] level      The level of the uniform refinement to consider.
+   * \param [in] multilevel Consider ancestors as successors.
    */
   virtual void
-  t8_element_successor (const t8_element_t *elem, t8_element_t *succ) const;
+  t8_element_successor (const t8_element_t *elem, t8_element_t *succ, const int level, const int multilevel) const;
 
   /** Get the integer coordinates of the anchor node of an element. The default scheme implements the Morton type SFCs.
    * In these SFCs the elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and  L the maximum 

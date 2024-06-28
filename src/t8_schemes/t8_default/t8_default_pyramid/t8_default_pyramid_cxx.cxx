@@ -302,7 +302,8 @@ t8_default_scheme_pyramid_c::t8_element_num_face_children (const t8_element_t *e
 }
 
 t8_linearidx_t
-t8_default_scheme_pyramid_c::t8_element_get_linear_id (const t8_element_t *elem, int level) const
+t8_default_scheme_pyramid_c::t8_element_get_linear_id (const t8_element_t *elem, const int level,
+                                                       const int multilevel) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   return t8_dpyramid_linear_id ((const t8_dpyramid_t *) elem, level);
@@ -334,10 +335,11 @@ t8_default_scheme_pyramid_c::t8_element_parent (const t8_element_t *elem, t8_ele
 }
 
 void
-t8_default_scheme_pyramid_c::t8_element_successor (const t8_element_t *elem, t8_element_t *s) const
+t8_default_scheme_pyramid_c::t8_element_successor (const t8_element_t *elem, t8_element_t *s, const int level,
+                                                   const int multilevel) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
-  t8_dpyramid_successor ((const t8_dpyramid_t *) elem, (t8_dpyramid_t *) s, t8_element_level (elem));
+  t8_dpyramid_successor ((const t8_dpyramid_t *) elem, (t8_dpyramid_t *) s, level);
   T8_ASSERT (t8_element_is_valid (s));
 }
 

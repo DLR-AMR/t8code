@@ -404,7 +404,8 @@ t8_default_scheme_tet_c::t8_element_set_linear_id (t8_element_t *elem, const int
 }
 
 t8_linearidx_t
-t8_default_scheme_tet_c::t8_element_get_linear_id (const t8_element_t *elem, int level) const
+t8_default_scheme_tet_c::t8_element_get_linear_id (const t8_element_t *elem, const int level,
+                                                   const int multilevel) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= T8_DTET_MAXLEVEL);
@@ -413,13 +414,14 @@ t8_default_scheme_tet_c::t8_element_get_linear_id (const t8_element_t *elem, int
 }
 
 void
-t8_default_scheme_tet_c::t8_element_successor (const t8_element_t *elem1, t8_element_t *elem2) const
+t8_default_scheme_tet_c::t8_element_successor (const t8_element_t *elem1, t8_element_t *elem2, const int level,
+                                               const int multilevel) const
 {
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
   T8_ASSERT (0 <= t8_element_level (elem1) && t8_element_level (elem1) <= T8_DTET_MAXLEVEL);
 
-  t8_dtet_successor ((const t8_default_tet_t *) elem1, (t8_default_tet_t *) elem2, t8_element_level (elem1));
+  t8_dtet_successor ((const t8_default_tet_t *) elem1, (t8_default_tet_t *) elem2, level);
 }
 
 void

@@ -85,7 +85,7 @@ t8_recursive_successor (t8_element_t *element, t8_element_t *successor, t8_eleme
     /*Check if the successor in this element is computed correctly */
     for (int ichild = 1; ichild < num_children; ichild++) {
       EXPECT_EQ (ts->t8_element_level (child), maxlvl);
-      ts->t8_element_successor (child, successor);
+      ts->t8_element_successor (child, successor, ts->t8_element_level (child), 0);
       ts->t8_element_child (element, ichild, child);
       EXPECT_ELEM_EQ (ts, child, successor);
     }
@@ -96,7 +96,7 @@ t8_recursive_successor (t8_element_t *element, t8_element_t *successor, t8_eleme
     /*Compute the next successor / "jump" out of the current element */
     else {
       EXPECT_EQ (ts->t8_element_level (child), maxlvl);
-      ts->t8_element_successor (child, successor);
+      ts->t8_element_successor (child, successor, ts->t8_element_level (child), 0);
     }
   }
   else {
@@ -129,7 +129,7 @@ t8_deep_successor (t8_element_t *element, t8_element_t *successor, t8_element_t 
       ASSERT_TRUE (ts->t8_element_equal (element, successor)) << "Wrong Successor at Maxlvl.\n";
       /* Compute the next successor. */
       EXPECT_EQ (ts->t8_element_level (successor), maxlvl);
-      ts->t8_element_successor (successor, successor);
+      ts->t8_element_successor (successor, successor, ts->t8_element_level (successor), 0);
     }
     ts->t8_element_parent (child, element);
   }

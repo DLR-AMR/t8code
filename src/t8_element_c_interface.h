@@ -488,20 +488,25 @@ t8_element_shape (const t8_eclass_scheme_c *ts, const t8_element_t *elem);
  * \param [in,out] elem The element whose entries will be set.
  * \param [in] level    The level of the uniform refinement to consider.
  * \param [in] id       The linear id.
+ * \param [in] multilevel If true, the linear id is considered a multilevel id.
  *                      id must fulfil 0 <= id < 'number of leaves in the uniform refinement'
+ *                      or 0 <= id < 'number of elements in the uniform refinement' if multilevel is true.
  */
 void
-t8_element_set_linear_id (const t8_eclass_scheme_c *ts, t8_element_t *elem, int level, t8_linearidx_t id);
+t8_element_set_linear_id (const t8_eclass_scheme_c *ts, t8_element_t *elem, const int level, const t8_linearidx_t id,
+                          const int multilevel);
 
 /** Compute the linear id of a given element in a hypothetical uniform
  * refinement of a given level.
- * \param [in] ts       Implementation of a class scheme.
- * \param [in] elem     The element whose id we compute.
- * \param [in] level    The level of the uniform refinement to consider.
- * \return              The linear id of the element.
+ * \param [in] ts          Implementation of a class scheme.
+ * \param [in] elem        The element whose id we compute.
+ * \param [in] level       The level of the uniform refinement to consider.
+ * \param [in] multilevel  If true, the linear id is transformed to a multilevel id.
+ * \return                 The linear id of the element.
  */
 t8_linearidx_t
-t8_element_get_linear_id (const t8_eclass_scheme_c *ts, const t8_element_t *elem, int level);
+t8_element_get_linear_id (const t8_eclass_scheme_c *ts, const t8_element_t *elem, const int level,
+                          const int multilevel);
 
 /** Compute the first descendant of a given element.
  * \param [in] ts       Implementation of a class scheme.
@@ -526,9 +531,11 @@ t8_element_last_descendant (const t8_eclass_scheme_c *ts, const t8_element_t *el
  * \param [in] elem1      The element whose successor should be constructed.
  * \param [in,out] elem2  The element whose entries will be set.
  * \param [in] level      The level of the uniform refinement to consider.
+ * \param [in] multilevel Consider ancestors as successors.
  */
 void
-t8_element_successor (const t8_eclass_scheme_c *ts, const t8_element_t *elem1, t8_element_t *elem2);
+t8_element_successor (const t8_eclass_scheme_c *ts, const t8_element_t *elem1, t8_element_t *elem2, const int level,
+                      const int multilevel);
 
 /** Compute the coordinates of a given element vertex inside a reference tree
    *  that is embedded into [0,1]^d (d = dimension).

@@ -301,11 +301,12 @@ t8_element_last_descendant_face (const t8_eclass_scheme_c *ts, const t8_element_
 }
 
 void
-t8_element_set_linear_id (const t8_eclass_scheme_c *ts, t8_element_t *elem, int level, t8_linearidx_t id)
+t8_element_set_linear_id (const t8_eclass_scheme_c *ts, t8_element_t *elem, const int level, const t8_linearidx_t id,
+                          const int multilevel)
 {
   T8_ASSERT (ts != NULL);
 
-  ts->t8_element_set_linear_id (elem, level, id);
+  ts->t8_element_set_linear_id (elem, level, id, multilevel);
 }
 
 int
@@ -334,11 +335,11 @@ t8_element_shape (const t8_eclass_scheme_c *ts, const t8_element_t *elem)
 }
 
 t8_linearidx_t
-t8_element_get_linear_id (const t8_eclass_scheme_c *ts, const t8_element_t *elem, int level)
+t8_element_get_linear_id (const t8_eclass_scheme_c *ts, const t8_element_t *elem, const int level, const int multilevel)
 {
   T8_ASSERT (ts != NULL);
 
-  return ts->t8_element_get_linear_id (elem, level);
+  return ts->t8_element_get_linear_id (elem, level, multilevel);
 }
 
 void
@@ -358,11 +359,12 @@ t8_element_last_descendant (const t8_eclass_scheme_c *ts, const t8_element_t *el
 }
 
 void
-t8_element_successor (const t8_eclass_scheme_c *ts, const t8_element_t *elem1, t8_element_t *elem2)
+t8_element_successor (const t8_eclass_scheme_c *ts, const t8_element_t *elem1, t8_element_t *elem2, const int level,
+                      const int multilevel)
 {
   T8_ASSERT (ts != NULL);
 
-  ts->t8_element_successor (elem1, elem2);
+  ts->t8_element_successor (elem1, elem2, level, multilevel);
 }
 
 void

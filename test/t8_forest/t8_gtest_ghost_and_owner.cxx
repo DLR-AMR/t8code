@@ -66,7 +66,7 @@ t8_test_gao_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t whic
 {
   /* refine every second element up to the maximum level */
   int level = ts->t8_element_level (elements[0]);
-  t8_linearidx_t eid = ts->t8_element_get_linear_id (elements[0], level);
+  t8_linearidx_t eid = ts->t8_element_get_linear_id (elements[0], level, forest->multilevel);
   int maxlevel = *(int *) t8_forest_get_user_data (forest);
 
   if (eid % 2 && level < maxlevel) {

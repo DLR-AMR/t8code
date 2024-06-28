@@ -144,7 +144,8 @@ t8_forest_partition_test_desc (t8_forest_t forest)
     level = ts->t8_element_level (elem_desc);
     T8_ASSERT (level == ts->t8_element_level (elem_desc));
     T8_ASSERT (level == forest->maxlevel);
-    T8_ASSERT (ts->t8_element_get_linear_id (elem_desc, level) >= first_desc_id);
+    if (!forest->multilevel)
+      T8_ASSERT (ts->t8_element_get_linear_id (elem_desc, level, forest->multilevel) >= first_desc_id);
   }
   ts->t8_element_destroy (1, &elem_desc);
 }
@@ -236,7 +237,7 @@ t8_forest_partition_test_boundary_element (const t8_forest_t forest)
   const int level = ts->t8_element_level (element_last_desc);
   T8_ASSERT (level == ts->t8_element_level (element_last_desc));
   T8_ASSERT (level == forest->maxlevel);
-  const t8_linearidx_t last_desc_id = ts->t8_element_get_linear_id (element_last_desc, level);
+  const t8_linearidx_t last_desc_id = ts->t8_element_get_linear_id (element_last_desc, level, forest->multilevel);
   /* Get the first descendant id of rank+1 */
   const t8_linearidx_t first_desc_id
     = *(t8_linearidx_t *) t8_shmem_array_index (forest->global_first_desc, forest->mpirank + 1);
@@ -299,7 +300,7 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
       ts->t8_element_new (1, &first_desc);
       ts->t8_element_first_descendant (first_element, first_desc, forest->maxlevel);
       /* Compute the linear id of the descendant. */
-      local_first_desc = ts->t8_element_get_linear_id (first_desc, forest->maxlevel);
+      local_first_desc = ts->t8_element_get_linear_id (first_desc, forest->maxlevel, forest->multilevel);
       ts->t8_element_destroy (1, &first_desc);
     }
   }

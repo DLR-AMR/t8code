@@ -487,7 +487,8 @@ t8_default_scheme_hex_c::t8_element_set_linear_id (t8_element_t *elem, const int
 }
 
 t8_linearidx_t
-t8_default_scheme_hex_c::t8_element_get_linear_id (const t8_element_t *elem, int level) const
+t8_default_scheme_hex_c::t8_element_get_linear_id (const t8_element_t *elem, const int level,
+                                                   const int multilevel) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= HEX_LINEAR_MAXLEVEL);
@@ -514,7 +515,8 @@ t8_default_scheme_hex_c::t8_element_last_descendant (const t8_element_t *elem, t
 }
 
 void
-t8_default_scheme_hex_c::t8_element_successor (const t8_element_t *elem1, t8_element_t *elem2) const
+t8_default_scheme_hex_c::t8_element_successor (const t8_element_t *elem1, t8_element_t *elem2, const int level,
+                                               const int multilevel) const
 {
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));

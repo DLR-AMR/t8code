@@ -530,7 +530,7 @@ struct t8_eclass_scheme
    * \return              The linear id of the element.
    */
   virtual t8_linearidx_t
-  t8_element_get_linear_id (const t8_element_t *elem, int level) const
+  t8_element_get_linear_id (const t8_element_t *elem, const int level, const int multilevel) const
     = 0;
 
   /** Compute the first descendant of a given element.
@@ -556,9 +556,11 @@ struct t8_eclass_scheme
   /** Construct the successor in a uniform refinement of a given element.
    * \param [in] elem1    The element whose successor should be constructed.
    * \param [in,out] elem2  The element whose entries will be set.
+   * \param [in] level      The level of the uniform refinement to consider.
+   * \param [in] multilevel Consider ancestors as successors.
    */
   virtual void
-  t8_element_successor (const t8_element_t *t, t8_element_t *s) const
+  t8_element_successor (const t8_element_t *t, t8_element_t *s, const int level, const int multilevel) const
     = 0;
 
   /** Compute the coordinates of a given element vertex inside a reference tree

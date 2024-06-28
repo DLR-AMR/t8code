@@ -150,7 +150,7 @@ t8_dprism_is_inside_root (t8_dprism_t *p);
 /** Compute the childid-th child in Morton order of a prism.
  * \param [in] p          Input prism.
  * \param [in] childid    The id of the child, in 0 - 7, in Morton order.
- * \param [in,out] child  Existing prism whose data will be filled with the date of p's childid-th child.
+ * \param [in,out] child  Existing prism whose data will be filled with the data of p's childid-th child.
  */
 void
 t8_dprism_child (const t8_dprism_t *p, int childid, t8_dprism_t *child);
