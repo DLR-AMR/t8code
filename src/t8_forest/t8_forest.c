@@ -1464,17 +1464,17 @@ t8_forest_free_trees (t8_forest_t forest)
   number_of_trees = forest->trees->elem_count;
   for (jt = 0; jt < number_of_trees; jt++) {
     tree = (t8_tree_t) t8_sc_array_index_locidx (forest->trees, jt);
-    if (t8_forest_get_tree_element_count (tree) < 1) {
-      /* if local tree is empty */
+    if (t8_forest_get_tree_element_count (tree) >= 1) {
+      /* destroy first and last descendant */
+      const t8_eclass_t eclass = t8_forest_get_tree_class (forest, jt);
+      const t8_eclass_scheme_c *scheme = forest->scheme_cxx->eclass_schemes[eclass];
+      t8_element_destroy (scheme, 1, &tree->first_desc);
+      t8_element_destroy (scheme, 1, &tree->last_desc);
+    }
+    else {
       T8_ASSERT (forest->incomplete_trees);
-      continue;
     }
     t8_element_array_reset (&tree->elements);
-    /* destroy first and last descendant */
-    const t8_eclass_t eclass = t8_forest_get_tree_class (forest, jt);
-    const t8_eclass_scheme_c *scheme = forest->scheme_cxx->eclass_schemes[eclass];
-    t8_element_destroy (scheme, 1, &tree->first_desc);
-    t8_element_destroy (scheme, 1, &tree->last_desc);
   }
   sc_array_destroy (forest->trees);
 }
