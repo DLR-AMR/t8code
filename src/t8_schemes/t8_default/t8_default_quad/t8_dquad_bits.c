@@ -20,22 +20,21 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <p4est_bits.h>
 #include <t8_schemes/t8_default/t8_default_quad/t8_dquad_bits.h>
 #include <p4est_bits.h>
 
 void
-t8_dquad_compute_reference_coords (const t8_dquad_t *elem, const double *ref_coords, const size_t num_coords,
+t8_dquad_compute_reference_coords (const p4est_quadrant_t *elem, const double *ref_coords, const size_t num_coords,
                                    double *out_coords)
 {
-  const p4est_quadrant_t *q1 = (const p4est_quadrant_t *) elem;
-
-  const p4est_qcoord_t h = P4EST_QUADRANT_LEN (q1->level);
+  const p4est_qcoord_t h = P4EST_QUADRANT_LEN (elem->level);
 
   for (size_t icoord = 0; icoord < num_coords; ++icoord) {
     const size_t offset_2d = icoord * 2;
     const size_t offset_3d = icoord * 3;
-    out_coords[offset_2d + 0] = q1->x + ref_coords[offset_3d + 0] * h;
-    out_coords[offset_2d + 1] = q1->y + ref_coords[offset_3d + 1] * h;
+    out_coords[offset_2d + 0] = elem->x + ref_coords[offset_3d + 0] * h;
+    out_coords[offset_2d + 1] = elem->y + ref_coords[offset_3d + 1] * h;
 
     out_coords[offset_2d + 0] /= (double) P4EST_ROOT_LEN;
     out_coords[offset_2d + 1] /= (double) P4EST_ROOT_LEN;

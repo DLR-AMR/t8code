@@ -703,7 +703,7 @@ t8_default_scheme_quad_c::t8_element_reference_coords (const t8_element_t *elem,
                                                        const size_t num_coords, double *out_coords) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
-  t8_dquad_compute_reference_coords ((const t8_dquad_t *) elem, ref_coords, num_coords, out_coords);
+  t8_dquad_compute_reference_coords ((const p4est_quadrant_t *) elem, ref_coords, num_coords, out_coords);
 }
 
 void
