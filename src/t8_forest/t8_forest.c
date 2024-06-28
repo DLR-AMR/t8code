@@ -1419,17 +1419,6 @@ t8_forest_new_uniform (t8_cmesh_t cmesh, t8_scheme_cxx_t *scheme, const int leve
   /* Initialize the forest */
   t8_forest_init (&forest);
   /* Set the cmesh, scheme and level */
-
-  if (cmesh->set_partition) {
-    t8_cmesh_t cmesh_uniform_partition;
-    t8_cmesh_init (&cmesh_uniform_partition);
-    t8_cmesh_set_derive (cmesh_uniform_partition, cmesh);
-    t8_scheme_cxx_ref (scheme);
-    t8_cmesh_set_partition_uniform (cmesh_uniform_partition, level, scheme);
-    t8_cmesh_commit (cmesh_uniform_partition, comm);
-    cmesh = cmesh_uniform_partition;
-  }
-
   t8_forest_set_cmesh (forest, cmesh, comm);
   t8_forest_set_scheme (forest, scheme);
   t8_forest_set_level (forest, level);
