@@ -1,6 +1,6 @@
 [submodule "p4est"]
 	path = p4est
-	url = https://github.com/cburstedde/p4est.git
+	url = https://github.com/sandro-elsweijer/p4est.git
 	ignore = dirty
 [submodule "sc"]
 	path = sc
