@@ -208,11 +208,11 @@ jobs:
         name: cmake_release_MPI.log
         path: build_release/config.log
     - name: make
-      run: cd build_release && make $MAKEFLAGS"
+      run: cd build_release && make $MAKEFLAGS
     - name: make install
       run: cd build_release && make install $MAKEFLAGS
     - name: make check
-      run: cd build_release && make check $MAKEFLAGS"
+      run: cd build_release && make check $MAKEFLAGS
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
@@ -231,11 +231,11 @@ jobs:
         name: cmake_debug_MPI.log
         path: build_debug/config.log
     - name: make
-      run: cd build_debug && make $MAKEFLAGS"
+      run: cd build_debug && make $MAKEFLAGS
     - name: make install
       run: cd build_debug && make install $MAKEFLAGS
     - name: make check
-      run: cd build_debug && make check $MAKEFLAGS"
+      run: cd build_debug && make check $MAKEFLAGS
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
