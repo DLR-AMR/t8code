@@ -29,6 +29,7 @@
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_ghost.h>
+#include <t8_forest/t8_forest_ghost_interface/t8_forest_ghost_interface_wrapper.h>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest/t8_forest_balance.h>
 #include <t8_forest/t8_forest_vtk.h>
@@ -221,8 +222,16 @@ t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from, int no_re
 void
 t8_forest_set_ghost_ext_new (t8_forest_t forest, int do_ghost, t8_forest_ghost_interface_c * ghost_interface){
   T8_ASSERT (t8_forest_is_initialized (forest));
-  SC_CHECK_ABORT (do_ghost == 0, "do_ghost == 0 in set_ghost_ext_new.\n");
-  SC_CHECK_ABORT (ghost_interface == NULL, "invalides ghost interface in set_ghost_ext_new\n");
+  SC_CHECK_ABORT (do_ghost != 0, "do_ghost == 0 in set_ghost_ext_new.\n");
+  SC_CHECK_ABORT (ghost_interface != NULL, "invalides ghost interface in set_ghost_ext_new\n");
+  if(forest->ghost_interface != NULL){
+    t8_forest_ghost_interface_unref(&(forest->ghost_interface));
+  }
+  forest->do_ghost = do_ghost;
+  forest->ghost_type = t8_forest_ghost_interface_get_type(ghost_interface);
+  if(forest->ghost_type == T8_GHOST_FACES){
+    forest->ghost_algorithm = t8_forest_ghost_interface_face_verison(ghost_interface);
+  }
   forest->ghost_interface = ghost_interface;
 }
 
@@ -245,13 +254,18 @@ t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost
   if (forest->do_ghost) {
     forest->ghost_type = ghost_type;
     forest->ghost_algorithm = ghost_version;
+    t8_forest_ghost_interface_c * ghost_interface = t8_forest_ghost_interface_face_new(ghost_version);
+    t8_forest_set_ghost_ext_new(forest, do_ghost, ghost_interface);
+  }
+  if(forest->ghost_interface != NULL){
+    t8_productionf("t8_set_ghost_ext aufgerufen, obwohl schon ghost_interface existiert.");
   }
 }
 
 void
 t8_forest_set_ghost (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_type)
 {
-    /* Use ghost version 3, top-down search and for unbalanced forests. */
+  /* Use ghost version 3, top-down search and for unbalanced forests. */
   t8_forest_set_ghost_ext (forest, do_ghost, ghost_type, 3);
 }
 
@@ -511,7 +525,8 @@ t8_forest_commit (t8_forest_t forest)
     if (forest->ghost_interface == NULL && forest->set_from->ghost_interface != NULL) {
       forest->ghost_interface = forest->set_from->ghost_interface;
       t8_forest_ghost_interface_ref(forest->ghost_interface);
-      t8_debugf("t8_forest_commit: uebernehme ghost von set_from");
+      t8_debugf("t8_forest_commit: uebernehme ghost von set_from\n");
+      t8_productionf("t8_forest_commit: uebernehme ghost von set_from\n");
     }
 
     /* Compute the maximum allowed refinement level */
@@ -667,6 +682,7 @@ t8_forest_commit (t8_forest_t forest)
     /* Construct a ghost layer, if desired */
     if (forest->do_ghost) {
       /* TODO: ghost type */
+      t8_productionf("t8_forest_commit: do_ghost\n");
       switch (forest->ghost_algorithm) {
       case 1:
         t8_forest_ghost_create_balanced_only (forest);
@@ -1402,10 +1418,12 @@ t8_forest_write_vtk_ext (t8_forest_t forest, const char *fileprefix, const int w
   do_not_use_API = 1;
 #endif
   if (!do_not_use_API) {
+    t8_productionf (" t8_forest_write_vtk_ext: t8_forest_vtk_write_file_via_API.\n");
     return t8_forest_vtk_write_file_via_API (forest, fileprefix, write_treeid, write_mpirank, write_level,
                                              write_element_id, write_ghosts, write_curved, num_data, data);
   }
   else {
+    t8_productionf (" t8_forest_write_vtk_ext: t8_forest_vtk_write_file.\n");
     T8_ASSERT (!write_curved);
     return t8_forest_vtk_write_file (forest, fileprefix, write_treeid, write_mpirank, write_level, write_element_id,
                                      write_ghosts, num_data, data);
@@ -1497,6 +1515,7 @@ t8_forest_free_trees (t8_forest_t forest)
 static void
 t8_forest_reset (t8_forest_t *pforest)
 {
+  t8_productionf("t8_forest_reset:\n");
   int mpiret;
   t8_forest_t forest;
 
@@ -1508,10 +1527,12 @@ t8_forest_reset (t8_forest_t *pforest)
   if (!forest->committed) {
     if (forest->set_from != NULL) {
       /* in this case we have taken ownership and not released it yet */
+      t8_productionf("set_from wird unref in t8_forest_reset\n");
       t8_forest_unref (&forest->set_from);
     }
   }
   else {
+    t8_productionf("forest hat kein set_from in t8_forest_reset\n");
     T8_ASSERT (forest->set_from == NULL);
   }
 
@@ -1530,7 +1551,7 @@ t8_forest_reset (t8_forest_t *pforest)
   }
   /* Destroy the ghost_interface class if it exist */
   if (forest->ghost_interface != NULL){
-    t8_forest_ghost_interface_unref(forest->ghost_interface);
+    t8_forest_ghost_interface_unref(&(forest->ghost_interface));
   }
   /* we have taken ownership on calling t8_forest_set_* */
   if (forest->scheme_cxx != NULL) {

@@ -35,24 +35,6 @@ T8_EXTERN_C_BEGIN ();
  */
 typedef struct t8_forest_ghost_interface t8_forest_ghost_interface_c;
 
-/**
- * Satisfy the C interface of forest
- * Create a new ghost_interface with given version
-*/
-t8_forest_ghost_interface_c * t8_forest_ghost_interface_face_new(int version);
-
-
-/** 
- * Satisfy the C interface of forest
- * Do a ref on the ghost_interface
-*/
-void t8_forest_ghost_interface_ref(t8_forest_ghost_interface_c * ghost_interface);
-
-/** 
- * Satisfy the C interface of forest
- * Do a unref on the ghost_interface
-*/
-void t8_forest_ghost_interface_unref(t8_forest_ghost_interface_c * ghost_interface);
 
 T8_EXTERN_C_END ();
 

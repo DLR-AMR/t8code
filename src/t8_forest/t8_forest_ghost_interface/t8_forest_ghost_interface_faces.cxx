@@ -22,6 +22,7 @@
 
 #include <t8_forest/t8_forest_ghost_interface/t8_forest_ghost_interface_faces.hxx>
 #include <t8_forest/t8_forest_ghost_interface/t8_forest_ghost_interface.h>
+#include <t8_forest/t8_forest_ghost_interface/t8_forest_ghost_interface_wrapper.h>
 
 
 t8_forest_ghost_interface_faces::t8_forest_ghost_interface_faces() 
@@ -112,4 +113,12 @@ t8_forest_ghost_interface_face_new(int version){
     T8_ASSERT( 1 <= version && version <= 3 );
     t8_forest_ghost_interface_faces * ghost_interface = new t8_forest_ghost_interface_faces(version);
     return (t8_forest_ghost_interface_c *) ghost_interface;
+}
+
+int 
+t8_forest_ghost_interface_face_verison(t8_forest_ghost_interface_c * ghost_interface){
+    T8_ASSERT(ghost_interface != NULL);
+    T8_ASSERT(ghost_interface->t8_ghost_get_type() == T8_GHOST_FACES);
+    t8_forest_ghost_interface_faces * carsted_ghost_interface = (t8_forest_ghost_interface_faces *) ghost_interface;
+    return carsted_ghost_interface->t8_ghost_get_version();
 }

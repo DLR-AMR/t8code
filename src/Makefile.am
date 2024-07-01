@@ -139,6 +139,8 @@ libt8_compiled_sources = \
   src/t8_forest/t8_forest_partition.cxx src/t8_forest/t8_forest_cxx.cxx \
   src/t8_forest/t8_forest_private.c src/t8_forest/t8_forest_vtk.cxx \
   src/t8_forest/t8_forest_ghost.cxx src/t8_forest/t8_forest_iterate.cxx \
+  src/t8_forest/t8_forest_ghost_interface/t8_forest_ghost_interface.cxx \
+  src/t8_forest/t8_forest_ghost_interface/t8_forest_ghost_interface_faces.cxx \
   src/t8_version.c \
   src/t8_vtk.c src/t8_forest/t8_forest_balance.cxx \
   src/t8_forest/t8_forest_netcdf.cxx \

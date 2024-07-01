@@ -22,8 +22,8 @@
 
 
 
-#ifndef T8_GHOST_INTERFACE__FACE_H
-#define T8_GHOST_INTERFACE__FACE_H
+#ifndef T8_GHOST_INTERFACE_FACE_H
+#define T8_GHOST_INTERFACE_FACE_H
 
 #include <t8_forest/t8_forest_ghost_interface/t8_forest_ghost_interface.hxx>
 
@@ -76,4 +76,4 @@ struct t8_forest_ghost_interface_faces : public t8_forest_ghost_interface
 };
 
 
-#endif /* !T8_GHOST_INTERFACE__FACE_H */
+#endif /* !T8_GHOST_INTERFACE_FACE_H */

@@ -26,12 +26,24 @@
 
 T8_EXTERN_C_BEGIN ();
 
+t8_ghost_type_t 
+t8_forest_ghost_interface_get_type(t8_forest_ghost_interface_c * ghost_interface){
+  T8_ASSERT (ghost_interface != NULL);
+  ghost_interface->t8_ghost_get_type();
+}
 
 void t8_forest_ghost_interface_ref(t8_forest_ghost_interface_c * ghost_interface){
+  T8_ASSERT (ghost_interface != NULL);
   ghost_interface->ref();
 }
 
-void t8_forest_ghost_interface_unref(t8_forest_ghost_interface_c * ghost_interface){
+void t8_forest_ghost_interface_unref(t8_forest_ghost_interface_c ** pghost_interface){
+  t8_forest_ghost_interface_c * ghost_interface;
+
+  T8_ASSERT (pghost_interface != NULL);
+  ghost_interface = *pghost_interface;
+  T8_ASSERT (ghost_interface != NULL);
+
   ghost_interface->unref();
 }
 

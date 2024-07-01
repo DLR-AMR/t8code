@@ -27,6 +27,7 @@
 #include <t8_forest/t8_forest_general.h>
 #include <memory>
 #include <t8_forest/t8_forest_ghost_interface/t8_forest_ghost_interface.h>
+#include <t8_forest/t8_forest_ghost_interface/t8_forest_ghost_interface_wrapper.h>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -52,6 +53,7 @@ struct t8_forest_ghost_interface
         t8_refcount_unref (&rc);
       }
       t8_debugf ("Deleted the ghost_interface.\n");
+      t8_productionf ("Deleted the ghost_interface.\n");
     }
 
     /**
@@ -82,6 +84,7 @@ struct t8_forest_ghost_interface
     {
       if (t8_refcount_unref (&rc)) {
         t8_debugf ("Deleting the ghost_interface.\n");
+        t8_productionf ("Deleting the ghost_interface.\n");
         delete this;
       }
     }
@@ -127,6 +130,7 @@ struct t8_forest_ghost_interface
     t8_forest_ghost_interface(t8_ghost_type_t g_type) : ghost_type(g_type) {
       t8_refcount_init (&rc);
       t8_debugf ("Constructed a ghost_interface.\n");
+      t8_productionf("Constructed a ghost_interface.\n");
     };
     /** type of the ghost_interface */
     t8_ghost_type_t ghost_type;
