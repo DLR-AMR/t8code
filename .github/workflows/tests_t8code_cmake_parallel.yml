@@ -154,7 +154,7 @@ jobs:
       # The true at the end is to ignore errors that i.e. occur when the folders do not exist      
       run: rm -r $P4EST_DEBUG $P4EST_RELEASE $P4EST_SERIAL_DEBUG $P4EST_SERIAL_RELEASE || true 
     - name: make folder
-      run: mkdir $P4EST_DEBUG
+      run: mkdir $P4EST_DEBUG $P4EST_RELEASE $P4EST_SERIAL_DEBUG $P4EST_SERIAL_RELEASE
     ## p4est debug
     - name: p4est cmake debug
       run: cd $P4EST_DEBUG && cmake ../ -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$PWD/installN -DP4EST_USE_SYSTEM_SC=ON -DSC_DIR=$SC_DEBUG/install/cmake
