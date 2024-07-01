@@ -200,7 +200,7 @@ jobs:
     - name: echo cmake line
       run: echo cmake $CONFIG_RELEASE
     - name: configure MPI release
-      run: mkdir build_release && cd build_release && cmake ../ $CONFIG_RELEASE"
+      run: mkdir build_release && cd build_release && cmake ../ $CONFIG_RELEASE
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
@@ -223,7 +223,7 @@ jobs:
     - name: check debugging mode
       run: echo "Checking debug mode"
     - name: cmake MPI debug
-      run: mkdir build_debug && cd build_debug && cmake ../ $CONFIG_DEBUG"
+      run: mkdir build_debug && cd build_debug && cmake ../ $CONFIG_DEBUG
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
