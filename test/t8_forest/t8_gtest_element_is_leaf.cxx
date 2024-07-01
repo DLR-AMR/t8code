@@ -70,9 +70,10 @@ class element_is_leaf: public testing::TestWithParam<std::tuple<int, cmesh_examp
   {
     /* Construct a cmesh */
     const int level = std::get<0> (GetParam ());
-    cmesh = std::get<1> (GetParam ())->cmesh_create ();
+    t8_cmesh_t cmesh = std::get<1> (GetParam ())->cmesh_create ();
     if (t8_cmesh_is_empty (cmesh)) {
       /* forest_commit does not support empty cmeshes, we skip this case */
+      t8_cmesh_unref (&cmesh);
       GTEST_SKIP ();
     }
     /* Build the default scheme (TODO: Test this with all schemes) */
@@ -88,17 +89,16 @@ class element_is_leaf: public testing::TestWithParam<std::tuple<int, cmesh_examp
   void
   TearDown () override
   {
-    if (t8_cmesh_is_empty (cmesh)) {
-      t8_cmesh_destroy (&cmesh);
-    }
-    else {
+    if (forest != NULL) {
       t8_forest_unref (&forest);
+    }
+    if (forest_adapt != NULL) {
       t8_forest_unref (&forest_adapt);
     }
   }
 
-  t8_cmesh_t cmesh;
-  t8_forest_t forest, forest_adapt;
+  t8_forest_t forest { NULL };
+  t8_forest_t forest_adapt { NULL };
   t8_scheme_cxx_t *scheme;
 };
 
