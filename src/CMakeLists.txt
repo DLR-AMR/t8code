@@ -1,5 +1,6 @@
 if ( ${T8CODE_BUILD_AS_SHARED_LIBRARY} )
     add_library( T8 SHARED )
+    set_target_properties( T8 PROPERTIES VERSION ${CMAKE_PROJECT_VERSION} SOVERSION ${T8CODE_VERSION_MAJOR})
     set_target_properties( T8 PROPERTIES POSITION_INDEPENDENT_CODE ON )
 else()
     add_library( T8 STATIC )
