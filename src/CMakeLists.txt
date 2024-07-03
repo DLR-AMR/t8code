@@ -215,7 +215,7 @@ INSTALL_DESTINATION cmake
 write_basic_package_version_file(
 ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}ConfigVersion.cmake
 COMPATIBILITY SameMajorVersion
-VERSION 0.0.0
+VERSION "${T8CODE_VERSION_MAJOR}.${T8CODE_VERSION_MINOR}"
 )
 
 install( EXPORT ${PROJECT_NAME}-targets

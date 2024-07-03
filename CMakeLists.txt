@@ -1,5 +1,11 @@
 cmake_minimum_required( VERSION 3.16 )
-project( T8CODE DESCRIPTION "Parallel algorithms and data structures for tree-based AMR with arbitrary element shapes." LANGUAGES C CXX )
+
+include(cmake/GitProjectVersion.cmake)
+
+project( T8CODE
+  DESCRIPTION "Parallel algorithms and data structures for tree-based AMR with arbitrary element shapes."
+  LANGUAGES C CXX
+  VERSION "${T8CODE_VERSION_MAJOR}.${T8CODE_VERSION_MINOR}" )
 include( CTest )
 
 option( T8CODE_BUILD_AS_SHARED_LIBRARY "Whether t8code should be built as a shared or a static library" ON )
