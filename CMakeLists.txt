@@ -15,6 +15,8 @@ option( T8CODE_USE_SYSTEM_SC "Use system-installed sc library" OFF )
 option( T8CODE_USE_SYSTEM_P4EST "Use system-installed p4est library" OFF )
 
 option( BUILD_DOCUMENTATION "Build t8code's documentation" ON)
+option( BUILD_SPHINX_DOCUMENTATION "Build t8code's documentation using sphinx" OFF)
+
 
 if( NOT CMAKE_BUILD_TYPE )
     set( CMAKE_BUILD_TYPE "Release" )
@@ -88,4 +90,8 @@ endif()
 
 if ( BUILD_DOCUMENTATION ) 
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/doc )
+endif()
+
+if ( BUILD_SPHINX_DOCUMENTATION )
+    set (BUILD_DOCUMENTATION 1)
 endif()
