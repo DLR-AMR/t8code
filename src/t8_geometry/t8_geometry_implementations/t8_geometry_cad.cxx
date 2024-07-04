@@ -112,6 +112,9 @@ t8_geometry_cad::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const 
   case T8_ECLASS_TET:
     t8_geometry_cad::t8_geom_evaluate_cad_tet (cmesh, gtreeid, ref_coords, num_coords, out_coords);
     break;
+  case T8_ECLASS_PYRAMID:
+    t8_geometry_cad::t8_geom_evaluate_cad_pyramid (cmesh, gtreeid, ref_coords, num_coords, out_coords);
+    break;
   default:
     SC_ABORTF ("Error: Curved cad geometry for element type %s not yet implemented. \n",
                t8_eclass_to_string[active_tree_class]);
@@ -1391,6 +1394,236 @@ t8_geometry_cad::t8_geom_evaluate_cad_prism (t8_cmesh_t cmesh, t8_gloidx_t gtree
         /* Compute the displacement between surface and interpolated coords, scale them with the appropriate scaling_factor 
          * and add them to the out_coords. */
         double scaling_factor = t8_geom_get_scaling_factor_face_through_volume_prism (i_faces, ref_coords + offset_3d);
+
+        out_coords[offset_3d] += (pnt.X () - interpolated_coords[0]) * scaling_factor;
+        out_coords[offset_3d + 1] += (pnt.Y () - interpolated_coords[1]) * scaling_factor;
+        out_coords[offset_3d + 2] += (pnt.Z () - interpolated_coords[2]) * scaling_factor;
+      }
+    }
+  }
+}
+
+void
+t8_geometry_cad::t8_geom_evaluate_cad_pyramid (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
+                                               const size_t num_coords, double *out_coords) const
+{
+  T8_ASSERT (active_tree_class == T8_ECLASS_PYRAMID);
+
+  /* The array contains the coordinate [x,y,z] to interpolate for each edge of a pyramid. 
+   * For example: On edge 0 the interpolation coordinate is y. */
+  const int t8_interpolation_coefficient_pyramid_edge[8] = { 1, 1, 0, 0, 2, 2, 2, 2 };
+  /* The array contains the coordinates [x,y,z] to interpolate for each face of a pyramid. 
+   * For example: On face 0 the interpolation coordinates are y and z. */
+  const int t8_interpolation_coefficients_pyramid_face[5][2] = { { 1, 2 }, { 1, 2 }, { 0, 2 }, { 0, 2 }, { 0, 1 } };
+
+  /* Compute coordinates in global space from ref_coords in order to shift them afterwards */
+  t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, num_coords, out_coords);
+
+  const t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
+  double interpolated_curve_param, interpolated_surface_params[2], cur_delta[3];
+  gp_Pnt pnt;
+  double interpolated_coords[3], interpolation_coeffs[3], temp_face_vertices[T8_ECLASS_MAX_CORNERS_2D * 3],
+    temp_edge_vertices[2 * 3];
+  Handle_Geom_Curve curve;
+  Handle_Geom_Surface surface;
+  Standard_Real first, last;
+
+  /* Check each edge for a geometry. */
+  for (int i_edge = 0; i_edge < t8_eclass_num_edges[active_tree_class]; ++i_edge) {
+    /* We have to check for curves as well as surfaces. Linked curves are stored 
+     * in the first half of the array, surfaces in the second. 
+     * If a curve is connected to this edge we have to also check, 
+     * if a surface is connected to at least one of the two adjacent faces. */
+    if (edges[i_edge] > 0 || edges[i_edge + t8_eclass_num_edges[active_tree_class]] > 0) {
+      /* Check if only a surface or a curve is present. Abort if both is true. */
+      T8_ASSERT (!(edges[i_edge] > 0) != !(edges[i_edge + t8_eclass_num_edges[active_tree_class]] > 0));
+      /*
+       *     z     y
+       *     |  _-  
+       *     |_-    
+       *     0----x                   4
+       *                           _- /\
+       *                         _-  / |\
+       *                       _-   /  | \
+       *                     E7    /   E6 \ 
+       *                   _-     /    |   \    
+       *                 _-     E4     |   E5
+       *               _-       /      |     \
+       *            2 -___E3__ /______ 3      \
+       *             \        /          -_    \
+       *              \      /             E1   \      
+       *               E0   /                -_  \
+       *                \  /                   -_ \
+       *                 0 ___________E2__________ 1
+       *    
+       */
+
+      /* Save the edge vertices temporarily. */
+      t8_geom_get_edge_vertices (active_tree_class, active_tree_vertices, i_edge, 3, temp_edge_vertices);
+
+      /* Loop for batch processing of reference points */
+      for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
+        const int offset_3d = i_coord * 3;
+        /* Interpolate between the edge vertices */
+        t8_geom_linear_interpolation (&ref_coords[t8_interpolation_coefficient_pyramid_edge[i_edge] + offset_3d],
+                                      temp_edge_vertices, 3, 1, interpolated_coords);
+
+        /* Get the parameters of the curve/surface linked to the current edge */
+        const double *parameters = (double *) t8_cmesh_get_attribute (
+          cmesh, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_edge, ltreeid);
+        T8_ASSERT (parameters != NULL);
+
+        /* Curves have only one parameter u, surfaces have two, u and v.
+        * Therefore, we have to distinguish if the edge has a curve or surface linked to it. */
+        if (edges[i_edge] > 0) {
+          /* Linear interpolation between parameters */
+          t8_geom_linear_interpolation (&ref_coords[t8_interpolation_coefficient_pyramid_edge[i_edge] + offset_3d],
+                                        parameters, 1, 1, &interpolated_curve_param);
+
+          T8_ASSERT (edges[i_edge] <= cad_shape_edge_map.Size ());
+          curve = BRep_Tool::Curve (TopoDS::Edge (cad_shape_edge_map.FindKey (edges[i_edge])), first, last);
+
+          /* Check if curve are valid */
+          T8_ASSERT (!curve.IsNull ());
+
+          /* Compute point on curve with interpolated parameters. */
+          curve->D0 (interpolated_curve_param, pnt);
+        }
+        else {
+          /* Linear interpolation between parameters */
+          t8_geom_linear_interpolation (&ref_coords[t8_interpolation_coefficient_pyramid_edge[i_edge] + offset_3d],
+                                        parameters, 2, 1, interpolated_surface_params);
+
+          T8_ASSERT (edges[i_edge + t8_eclass_num_edges[active_tree_class]] <= cad_shape_face_map.Size ());
+          surface = BRep_Tool::Surface (
+            TopoDS::Face (cad_shape_face_map.FindKey (edges[i_edge + t8_eclass_num_edges[active_tree_class]])));
+
+          /* Check if surface is valid */
+          T8_ASSERT (!surface.IsNull ());
+
+          /* Compute point on surface with interpolated parameters */
+          surface->D0 (interpolated_surface_params[0], interpolated_surface_params[1], pnt);
+        }
+
+        /* Compute displacement between vertex interpolation and curve evaluation with interpolated parameters */
+        cur_delta[0] = pnt.X () - interpolated_coords[0];
+        cur_delta[1] = pnt.Y () - interpolated_coords[1];
+        cur_delta[2] = pnt.Z () - interpolated_coords[2];
+
+        /* Save the scaling factor for both neighbouring faces of the current edge.
+         * The scaling factors scale the edge displacement orthogonal along the adjacent faces. */
+        double scaling_factor_neigh_face_1 = t8_geom_get_scaling_factor_of_edge_on_face_pyramid (
+          i_edge, t8_edge_to_face[active_tree_class][i_edge][0], ref_coords + offset_3d);
+        double scaling_factor_neigh_face_2 = t8_geom_get_scaling_factor_of_edge_on_face_pyramid (
+          i_edge, t8_edge_to_face[active_tree_class][i_edge][1], ref_coords + offset_3d);
+        double scaling_factor = scaling_factor_neigh_face_1 * scaling_factor_neigh_face_2;
+
+        /* Add edge displacements to out_coords */
+        out_coords[offset_3d + 0] += cur_delta[0] * scaling_factor;
+        out_coords[offset_3d + 1] += cur_delta[1] * scaling_factor;
+        out_coords[offset_3d + 2] += cur_delta[2] * scaling_factor;
+      }
+    }
+  }
+
+  /* Iterate over each face to calculate the displacements generated by each face */
+  for (int i_faces = 0; i_faces < t8_eclass_num_faces[active_tree_class]; ++i_faces) {
+    /* Check if face has a linked surface */
+    if (faces[i_faces] > 0) {
+      /* Save the face vertices for later usage */
+      t8_geom_get_face_vertices (active_tree_class, active_tree_vertices, i_faces, 3, temp_face_vertices);
+
+      /* Retrieve surface parameters of nodes */
+      const double *surface_parameters = (double *) t8_cmesh_get_attribute (
+        cmesh, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + i_faces, ltreeid);
+      T8_ASSERT (surface_parameters != NULL);
+
+      /* Loop for batch processing of reference points */
+      for (size_t coord = 0; coord < num_coords; ++coord) {
+        const int offset_3d = coord * 3;
+
+        double face_displacement_from_edges[3] = { 0 };
+
+        /* Iterate over each edge of face */
+        for (int i_face_edge = 0; i_face_edge < t8_eclass_num_edges[t8_eclass_face_types[active_tree_class][i_faces]];
+             ++i_face_edge) {
+
+          const int i_tree_edge = t8_face_edge_to_tree_edge[active_tree_class][i_faces][i_face_edge];
+          const int interpolation_coeff = t8_interpolation_coefficient_pyramid_edge[i_tree_edge];
+
+          /* Check if curve is present */
+          if (edges[i_tree_edge] > 0) {
+            /* Convert global tree id to local tree id, for receiving cmesh attributes. */
+            t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
+            /* Retrieve parameters of nodes of the curve */
+            const double *curve_parameters = (double *) t8_cmesh_get_attribute (
+              cmesh, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_tree_edge, ltreeid);
+            T8_ASSERT (curve_parameters != NULL);
+
+            /* Interpolate linearly between the parameters of the two nodes on the curve */
+            t8_geom_linear_interpolation (&ref_coords[interpolation_coeff + offset_3d], curve_parameters, 1, 1,
+                                          &interpolated_curve_param);
+
+            /* Do the same interpolation but this time between the coordinates of the same two nodes as above */
+            double interpolated_edge_coordinates[3];
+            double edge_vertices_on_face[6];
+            t8_geom_get_edge_vertices (active_tree_class, active_tree_vertices, i_tree_edge, 3, edge_vertices_on_face);
+            t8_geom_linear_interpolation (&ref_coords[interpolation_coeff + offset_3d], edge_vertices_on_face, 3, 1,
+                                          interpolated_edge_coordinates);
+
+            /* Retrieve the curve of the edge */
+            T8_ASSERT (edges[i_tree_edge] <= cad_shape_edge_map.Size ());
+            curve = BRep_Tool::Curve (TopoDS::Edge (cad_shape_edge_map.FindKey (edges[i_tree_edge])), first, last);
+            /* Check if curve is valid */
+            T8_ASSERT (!curve.IsNull ());
+            /* Calculate point on curve with interpolated parameters */
+            curve->D0 (interpolated_curve_param, pnt);
+
+            /* Compute the scaling_factor of the edge displacement on the current face */
+            double scaling_factor = t8_geom_get_scaling_factor_of_edge_on_face_pyramid (
+              t8_face_edge_to_tree_edge[active_tree_class][i_faces][i_face_edge], i_faces, ref_coords + offset_3d);
+
+            /* Save the calculated and scaled displacement */
+            for (int dim = 0; dim <= 2; ++dim) {
+              face_displacement_from_edges[dim]
+                += (pnt.Coord (dim + 1) - interpolated_edge_coordinates[dim]) * scaling_factor;
+            }
+          }
+        }
+
+        interpolation_coeffs[0] = ref_coords[t8_interpolation_coefficients_pyramid_face[i_faces][0] + offset_3d];
+        interpolation_coeffs[1] = ref_coords[t8_interpolation_coefficients_pyramid_face[i_faces][1] + offset_3d];
+
+        /* Do a bilinear interpolation between the nodes of the face and the parameters of the face */
+        if (i_faces == 4) {
+          t8_geom_linear_interpolation (interpolation_coeffs, temp_face_vertices, 3, 2, interpolated_coords);
+          t8_geom_linear_interpolation (interpolation_coeffs, surface_parameters, 2, 2, interpolated_surface_params);
+        }
+        else {
+          t8_geom_triangular_interpolation (interpolation_coeffs, temp_face_vertices, 3, 2, interpolated_coords);
+          t8_geom_triangular_interpolation (interpolation_coeffs, surface_parameters, 2, 2,
+                                            interpolated_surface_params);
+        }
+
+        for (int dim = 0; dim < T8_ECLASS_MAX_DIM; ++dim) {
+          /* Correct the interpolated coordinates with the displacement generated by the linked edges */
+          interpolated_coords[dim] += face_displacement_from_edges[dim];
+        }
+
+        /* Retrieve the surface of the edge */
+        T8_ASSERT (faces[i_faces] <= cad_shape_face_map.Size ());
+        surface = BRep_Tool::Surface (TopoDS::Face (cad_shape_face_map.FindKey (faces[i_faces])));
+
+        /* Check if surface is valid */
+        T8_ASSERT (!surface.IsNull ());
+
+        /* Compute point on surface with interpolated parameters */
+        surface->D0 (interpolated_surface_params[0], interpolated_surface_params[1], pnt);
+
+        /* Compute the displacement between surface and interpolated coords, scale them with the appropriate scaling_factor 
+         * and add them to the out_coords. */
+        double scaling_factor
+          = t8_geom_get_scaling_factor_face_through_volume_pyramid (i_faces, ref_coords + offset_3d);
 
         out_coords[offset_3d] += (pnt.X () - interpolated_coords[0]) * scaling_factor;
         out_coords[offset_3d + 1] += (pnt.Y () - interpolated_coords[1]) * scaling_factor;
