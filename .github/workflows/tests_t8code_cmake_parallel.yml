@@ -160,12 +160,12 @@ jobs:
     - name: if ignore cache, delete folders
       if: ${{ env.P4EST_IGNORE_CACHE == 1 }}
       # The true at the end is to ignore errors that i.e. occur when the folders do not exist      
-      run: rm -r $P4EST_DEBUG $P4EST_RELEASE $P4EST_SERIAL_DEBUG $P4EST_SERIAL_RELEASE || true 
+      run: rm -r $P4EST_DEBUG $P4EST_RELEASE || true 
     - name: make folder
-      run: mkdir $P4EST_DEBUG $P4EST_RELEASE $P4EST_SERIAL_DEBUG $P4EST_SERIAL_RELEASE
+      run: mkdir $P4EST_DEBUG $P4EST_RELEASE
     ## p4est debug
     - name: p4est cmake debug
-      run: cd $P4EST_DEBUG && cmake ../ -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$PWD/installN -DP4EST_USE_SYSTEM_SC=ON -DSC_DIR=$SC_DEBUG/install/cmake
+      run: cd $P4EST_DEBUG && cmake ../ -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$PWD/install -DP4EST_USE_SYSTEM_SC=ON -DSC_DIR=$SC_DEBUG/install/cmake
       if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     - name: p4est build debug
       run: cd $P4EST_DEBUG && make $MAKEFLAGS && make $MAKEFLAGS install
@@ -214,7 +214,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: cmake_release_MPI.log
-        path: build_release/config.log
+        path: build_release/CMakeFiles/CMakeOutput.log
     - name: make
       run: cd build_release && make $MAKEFLAGS
     - name: make install
@@ -237,7 +237,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: cmake_debug_MPI.log
-        path: build_debug/config.log
+        path: build_debug/CMakeFiles/CMakeOutput.log
     - name: make
       run: cd build_debug && make $MAKEFLAGS
     - name: make install
