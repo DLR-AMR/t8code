@@ -40,9 +40,10 @@ class forest_iterate: public testing::TestWithParam<cmesh_example_base *> {
   void
   SetUp () override
   {
-    cmesh = GetParam ()->cmesh_create ();
+    t8_cmesh_t cmesh = GetParam ()->cmesh_create ();
     if (t8_cmesh_is_empty (cmesh)) {
       /* empty cmeshes are currently not supported */
+      t8_cmesh_unref (&cmesh);
       GTEST_SKIP ();
     }
     forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), 4, 0, sc_MPI_COMM_WORLD);
@@ -50,15 +51,11 @@ class forest_iterate: public testing::TestWithParam<cmesh_example_base *> {
   void
   TearDown () override
   {
-    if (t8_cmesh_is_empty (cmesh)) {
-      t8_cmesh_unref (&cmesh);
-    }
-    else {
+    if (forest != NULL) {
       t8_forest_unref (&forest);
     }
   }
-  t8_cmesh_t cmesh;
-  t8_forest_t forest;
+  t8_forest_t forest { NULL };
 };
 
 /** This structure contains an array with all return values of all

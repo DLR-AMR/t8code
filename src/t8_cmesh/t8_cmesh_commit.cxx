@@ -41,6 +41,7 @@ typedef struct ghost_facejoins_struct
 {
   t8_gloidx_t ghost_id; /* The id of the ghost */
   t8_locidx_t local_id; /* The local id of the ghost */
+  t8_gloidx_t attr_id;  /* The current number of inserted ghost attributes */
 } t8_ghost_facejoin_t;
 
 static int
@@ -112,8 +113,9 @@ t8_cmesh_add_attributes (t8_cmesh_t cmesh, sc_hash_t *ghost_ids, size_t *attribu
       temp_facejoin->ghost_id = attribute->id;
       if (sc_hash_lookup (ghost_ids, temp_facejoin, (void ***) &facejoin_pp)) {
         /* attribute is on a ghost tree */
-        t8_cmesh_trees_add_ghost_attribute (cmesh->trees, 0, attribute, (*facejoin_pp)->local_id, sj,
-                                            attribute_data_offset);
+        t8_cmesh_trees_add_ghost_attribute (cmesh->trees, 0, attribute, (*facejoin_pp)->local_id,
+                                            (*facejoin_pp)->attr_id, attribute_data_offset);
+        (*facejoin_pp)->attr_id++;
       }
     }
   }
@@ -248,6 +250,10 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     /* Get the number of local trees */
     cmesh->num_local_trees = t8_offset_num_trees (cmesh->mpirank, tree_offsets);
   }
+  else {
+    SC_CHECK_ABORT (cmesh->set_partition_level < 0,
+                    "Do not use t8_cmesh_set_partition_uniform when creating a cmesh from stash!\n");
+  }
   /* The first_tree and first_tree_shared entries must be set by now */
   T8_ASSERT (cmesh->first_tree >= 0);
   T8_ASSERT (cmesh->first_tree_shared >= 0);
@@ -261,6 +267,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   ghost_ids = sc_hash_new (t8_ghost_hash, t8_ghost_facejoin_equal, &num_hashes, NULL);
 
   temp_facejoin = (t8_ghost_facejoin_t *) sc_mempool_alloc (ghost_facejoin_mempool);
+  temp_facejoin->attr_id = 0;
 
   cmesh->num_ghosts = 0;
   /* Parse joinfaces array and save all global id of local ghosts, and assign them a local id */
@@ -280,6 +287,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
           /* If we did not already stored id2 in the hash we do so and assign the next local ghost id */
           temp_facejoin->local_id = cmesh->num_ghosts++;
           temp_facejoin = (t8_ghost_facejoin_t *) sc_mempool_alloc (ghost_facejoin_mempool);
+          temp_facejoin->attr_id = 0;
         }
       }
       if (!id1_istree) {
@@ -290,6 +298,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
           /* If we did not already stored id1 in the hash we do so and assign the next local ghost id */
           temp_facejoin->local_id = cmesh->num_ghosts++;
           temp_facejoin = (t8_ghost_facejoin_t *) sc_mempool_alloc (ghost_facejoin_mempool);
+          temp_facejoin->attr_id = 0;
         }
       }
     }
