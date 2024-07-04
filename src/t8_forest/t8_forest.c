@@ -1400,12 +1400,10 @@ t8_forest_write_vtk_ext (t8_forest_t forest, const char *fileprefix, const int w
   do_not_use_API = 1;
 #endif
   if (!do_not_use_API) {
-    t8_productionf (" t8_forest_write_vtk_ext: t8_forest_vtk_write_file_via_API.\n");
     return t8_forest_vtk_write_file_via_API (forest, fileprefix, write_treeid, write_mpirank, write_level,
                                              write_element_id, write_ghosts, write_curved, num_data, data);
   }
   else {
-    t8_productionf (" t8_forest_write_vtk_ext: t8_forest_vtk_write_file.\n");
     T8_ASSERT (!write_curved);
     return t8_forest_vtk_write_file (forest, fileprefix, write_treeid, write_mpirank, write_level, write_element_id,
                                      write_ghosts, num_data, data);
