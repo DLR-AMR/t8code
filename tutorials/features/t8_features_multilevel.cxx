@@ -86,9 +86,9 @@ main (int argc, char **argv)
   /* Print a message on the root process. */
   t8_global_productionf (" [feature multilevel] \n");
   t8_global_productionf (" [feature multilevel] Hello, this is the multilevel example of t8code.\n");
-  t8_global_productionf (" [feature multilevel] In this example we will explain the multileel forest creation in more detail.\n");
   t8_global_productionf (
-    " [feature multilevel] We will create a uniform multilevel forest and partition it.\n");
+    " [feature multilevel] In this example we will explain the multilevel forest creation in more detail.\n");
+  t8_global_productionf (" [feature multilevel] We will create a uniform multilevel forest and partition it.\n");
   t8_global_productionf (" [feature multilevel] \n");
 
   /* We will use MPI_COMM_WORLD as a communicator. */
@@ -112,9 +112,9 @@ main (int argc, char **argv)
 
   /* Write forest to vtu files. */
   t8_forest_write_vtk (forest, prefix_uniform);
-  t8_global_productionf (" [feature multilevel] Wrote uniform level %i forest to vtu files: %s*\n", level, prefix_uniform);
+  t8_global_productionf (" [feature multilevel] Wrote uniform level %i forest to vtu files: %s*\n", level,
+                         prefix_uniform);
 
-  
   /*
    * Partition the forest.
    */
@@ -169,4 +169,3 @@ main (int argc, char **argv)
 
   return 0;
 }
-
