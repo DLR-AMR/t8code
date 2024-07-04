@@ -211,8 +211,8 @@ jobs:
       run: cd build_release && make $MAKEFLAGS
     - name: make install
       run: cd build_release && make install $MAKEFLAGS
-    - name: make check
-      run: cd build_release && make check $MAKEFLAGS
+    - name: make test
+      run: cd build_release && make test $MAKEFLAGS
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
@@ -234,8 +234,8 @@ jobs:
       run: cd build_debug && make $MAKEFLAGS
     - name: make install
       run: cd build_debug && make install $MAKEFLAGS
-    - name: make check
-      run: cd build_debug && make check $MAKEFLAGS
+    - name: make test
+      run: cd build_debug && make test $MAKEFLAGS
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
