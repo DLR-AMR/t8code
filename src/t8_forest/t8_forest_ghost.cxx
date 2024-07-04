@@ -1400,19 +1400,12 @@ t8_forest_ghost_create_ext (t8_forest_t forest)
   sc_MPI_Request *requests;
   // int create_tree_array = 0, create_gfirst_desc_array = 0;
   // int create_element_array = 0; // nicht mehr nötig da in ghost-interface ausgelagert
-  t8_forest_ghost_interface_c * test_interface = NULL;
+  t8_forest_ghost_interface_c * ghost_interface;
 
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (forest->ghost_interface != NULL);
 
-  if(forest->ghost_interface != NULL){
-    test_interface = forest->ghost_interface;
-  } else{
-    t8_productionf("no ghost_interface in t8_forest_ghost_create_ext\n");
-    // test_interface = t8_forest_ghost_interface_face_new( unbalanced_version<0 ? 3 : unbalanced_version+1); // nur vorlaufig um etwas zu testen, wird später wieder entfernt
-    // forest->ghost_interface = test_interface;
-    // T8_ASSERT(test_interface != NULL);
-  }
+  ghost_interface = forest->ghost_interface;
 
   t8_global_productionf ("Into t8_forest_ghost with %i local elements.\n", t8_forest_get_local_num_elements (forest));
 
@@ -1435,12 +1428,9 @@ t8_forest_ghost_create_ext (t8_forest_t forest)
   }
 
   /* step one */
-  if(test_interface != NULL){
-    t8_global_productionf ("Befor step1\n");
-    test_interface->t8_ghost_step_1_allocate(forest);
-  }
+  t8_global_productionf ("Befor step1\n");
+  ghost_interface->t8_ghost_step_1_allocate(forest);
 
-  // if (forest->element_offsets == NULL) {
   //   /* create element offset array if not done already */
   //   create_element_array = 1;
   //   t8_forest_partition_create_offsets (forest);
@@ -1457,24 +1447,20 @@ t8_forest_ghost_create_ext (t8_forest_t forest)
   // }
 
   if (t8_forest_get_local_num_elements (forest) > 0) {
-    if (t8_forest_ghost_interface_get_type(test_interface) == T8_GHOST_NONE) {
+    if (t8_forest_ghost_interface_get_type(ghost_interface) == T8_GHOST_NONE) {
       t8_debugf ("WARNING: Trying to construct ghosts with ghost_type NONE. "
                  "Ghost layer is not constructed.\n");
       return;
     }
 
     /* Initialize the ghost structure */
-    t8_forest_ghost_init (&forest->ghosts, t8_forest_ghost_interface_get_type(test_interface));
+    t8_forest_ghost_init (&forest->ghosts, t8_forest_ghost_interface_get_type(ghost_interface));
     ghost = forest->ghosts;
 
     /* step two */
-    if(test_interface != NULL){
-      t8_global_productionf ("Befor step2\n");
-      // (forest->ghost_interface)->t8_ghost_step_2(forest);
-      test_interface->t8_ghost_step_2(forest);
-    }
+    t8_global_productionf ("Befor step2\n");
+    ghost_interface->t8_ghost_step_2(forest);
     
-    // if (unbalanced_version == -1) {
     //   t8_global_productionf ("t8_forest_ghost_create_ext: t8_forest_ghost_fill_remote_v3(forest)\n");
     //   t8_forest_ghost_fill_remote_v3 (forest);
     // }
@@ -1496,13 +1482,9 @@ t8_forest_ghost_create_ext (t8_forest_t forest)
   }
 
   /* step one clean up */
-  if(test_interface != NULL){
-    t8_global_productionf ("Befor step1 clean up\n");
-    // (forest->ghost_interface)->t8_ghost_step_1_clean_up(forest);
-    test_interface->t8_ghost_step_1_clean_up(forest);
-  }
+  t8_global_productionf ("Befor step1 clean up\n");
+  ghost_interface->t8_ghost_step_1_clean_up(forest);
 
-  // if (create_element_array) {
   //   /* Free the offset memory, if created */
   //   t8_shmem_array_destroy (&forest->element_offsets);
   // }
