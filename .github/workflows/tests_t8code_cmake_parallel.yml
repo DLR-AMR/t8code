@@ -71,6 +71,14 @@ jobs:
       run: git submodule init
     - name: update submodules
       run: git submodule update
+    - name: alter p4est submodule remote
+      run: git submodule set-url p4est https://github.com/sandro-elsweijer/p4est.git
+    - name: Checkout p4est submodule
+      run: |
+        cd p4est
+        git fetch --all
+        git checkout aca63b37d2fc7b2aef601e320c30f92826248388
+        cd ..
 #
 #       SC installation
 #
