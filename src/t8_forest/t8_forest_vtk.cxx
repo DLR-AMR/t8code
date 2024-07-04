@@ -1273,6 +1273,10 @@ t8_forest_vtk_write_file (t8_forest_t forest, const char *fileprefix, const int 
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (fileprefix != NULL);
   if (forest->ghosts == NULL || forest->ghosts->num_ghosts_elements == 0) {
+    t8_productionf ("t8_forest_vtk_write_file: write_ghosts = %i\n", write_ghosts);
+    if(forest->ghosts != NULL){
+      t8_productionf ("t8_forest_vtk_write_file: num_ghosts_elements = %i\n", forest->ghosts->num_ghosts_elements);
+    }
     /* Never write ghost elements if there aren't any */
     write_ghosts = 0;
   }

@@ -177,7 +177,7 @@ t8_forest_ghost_init (t8_forest_ghost_t *pghost, t8_ghost_type_t ghost_type)
   t8_forest_ghost_t ghost;
 
   /* We currently only support face-neighbor ghosts */
-  T8_ASSERT (ghost_type == T8_GHOST_FACES);
+  T8_ASSERT (ghost_type == T8_GHOST_FACES); // TODO muss angepasst werden
 
   /* Allocate memory for ghost */
   ghost = *pghost = T8_ALLOC_ZERO (t8_forest_ghost_struct_t, 1);
@@ -644,7 +644,7 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const 
  * remote_ghosts array of ghost.
  * We also fill the remote_processes here.
  */
-static void
+void
 t8_forest_ghost_fill_remote_v3 (t8_forest_t forest)
 {
   t8_forest_ghost_boundary_data_t data;
@@ -688,7 +688,7 @@ t8_forest_ghost_fill_remote_v3 (t8_forest_t forest)
  * construct the remote processes by looking at the half neighbors of an element.
  * Otherwise, we use the owners_at_face method.
  */
-static void
+void
 t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int ghost_method)
 {
   t8_element_t *elem, **half_neighbors = NULL;
@@ -1392,23 +1392,23 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
  * for unbalanced_version = -1
  */
 void
-t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
+t8_forest_ghost_create_ext (t8_forest_t forest)
 {
-  t8_productionf("t8_forest_ghost_create_ext(forest, %i):\n", unbalanced_version);
+  t8_productionf("t8_forest_ghost_create_ext(forest):\n");
   t8_forest_ghost_t ghost = NULL;
   t8_ghost_mpi_send_info_t *send_info;
   sc_MPI_Request *requests;
-  int create_tree_array = 0, create_gfirst_desc_array = 0;
-  int create_element_array = 0;
+  // int create_tree_array = 0, create_gfirst_desc_array = 0;
+  // int create_element_array = 0; // nicht mehr nötig da in ghost-interface ausgelagert
   t8_forest_ghost_interface_c * test_interface = NULL;
 
   T8_ASSERT (t8_forest_is_committed (forest));
-  // T8_ASSERT (forest->ghost_interface != NULL);
+  T8_ASSERT (forest->ghost_interface != NULL);
 
   if(forest->ghost_interface != NULL){
     test_interface = forest->ghost_interface;
   } else{
-    t8_productionf("no ghost_interface ther\n");
+    t8_productionf("no ghost_interface in t8_forest_ghost_create_ext\n");
     // test_interface = t8_forest_ghost_interface_face_new( unbalanced_version<0 ? 3 : unbalanced_version+1); // nur vorlaufig um etwas zu testen, wird später wieder entfernt
     // forest->ghost_interface = test_interface;
     // T8_ASSERT(test_interface != NULL);
@@ -1434,56 +1434,57 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
     t8_global_productionf ("Start ghost at %f  %f\n", sc_MPI_Wtime (), forest->profile->ghost_runtime);
   }
 
+  /* step one */
   if(test_interface != NULL){
     t8_global_productionf ("Befor step1\n");
     test_interface->t8_ghost_step_1_allocate(forest);
   }
 
-  if (forest->element_offsets == NULL) {
-    /* create element offset array if not done already */
-    create_element_array = 1;
-    t8_forest_partition_create_offsets (forest);
-  }
-  if (forest->tree_offsets == NULL) {
-    /* Create tree offset array if not done already */
-    create_tree_array = 1;
-    t8_forest_partition_create_tree_offsets (forest);
-  }
-  if (forest->global_first_desc == NULL) {
-    /* Create global first desc array if not done already */
-    create_gfirst_desc_array = 1;
-    t8_forest_partition_create_first_desc (forest);
-  }
+  // if (forest->element_offsets == NULL) {
+  //   /* create element offset array if not done already */
+  //   create_element_array = 1;
+  //   t8_forest_partition_create_offsets (forest);
+  // }
+  // if (forest->tree_offsets == NULL) {
+  //   /* Create tree offset array if not done already */
+  //   create_tree_array = 1;
+  //   t8_forest_partition_create_tree_offsets (forest);
+  // }
+  // if (forest->global_first_desc == NULL) {
+  //   /* Create global first desc array if not done already */
+  //   create_gfirst_desc_array = 1;
+  //   t8_forest_partition_create_first_desc (forest);
+  // }
 
   if (t8_forest_get_local_num_elements (forest) > 0) {
-    if (forest->ghost_type == T8_GHOST_NONE) {
+    if (t8_forest_ghost_interface_get_type(test_interface) == T8_GHOST_NONE) {
       t8_debugf ("WARNING: Trying to construct ghosts with ghost_type NONE. "
                  "Ghost layer is not constructed.\n");
       return;
     }
-    /* Currently we only support face ghosts */
-    T8_ASSERT (forest->ghost_type == T8_GHOST_FACES);
 
     /* Initialize the ghost structure */
-    t8_forest_ghost_init (&forest->ghosts, forest->ghost_type);
+    t8_forest_ghost_init (&forest->ghosts, t8_forest_ghost_interface_get_type(test_interface));
     ghost = forest->ghosts;
 
+    /* step two */
     if(test_interface != NULL){
       t8_global_productionf ("Befor step2\n");
       // (forest->ghost_interface)->t8_ghost_step_2(forest);
       test_interface->t8_ghost_step_2(forest);
     }
     
-    if (unbalanced_version == -1) {
-      t8_global_productionf ("t8_forest_ghost_create_ext: t8_forest_ghost_fill_remote_v3(forest)\n");
-      t8_forest_ghost_fill_remote_v3 (forest);
-    }
-    else {
-      /* Construct the remote elements and processes. */
-      t8_global_productionf ("t8_forest_ghost_create_ext: t8_forest_ghost_fill_remote (forest, ghost, unbalanced_version != 0)\n");
-      t8_forest_ghost_fill_remote (forest, ghost, unbalanced_version != 0);
-    }
+    // if (unbalanced_version == -1) {
+    //   t8_global_productionf ("t8_forest_ghost_create_ext: t8_forest_ghost_fill_remote_v3(forest)\n");
+    //   t8_forest_ghost_fill_remote_v3 (forest);
+    // }
+    // else {
+    //   /* Construct the remote elements and processes. */
+    //   t8_global_productionf ("t8_forest_ghost_create_ext: t8_forest_ghost_fill_remote (forest, ghost, unbalanced_version != 0)\n");
+    //   t8_forest_ghost_fill_remote (forest, ghost, unbalanced_version != 0);
+    // }
 
+    /* Step three */
     /* Start sending the remote elements */
     send_info = t8_forest_ghost_send_start (forest, ghost, &requests);
 
@@ -1494,24 +1495,25 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
     t8_forest_ghost_send_end (forest, ghost, send_info, requests);
   }
 
+  /* step one clean up */
   if(test_interface != NULL){
     t8_global_productionf ("Befor step1 clean up\n");
     // (forest->ghost_interface)->t8_ghost_step_1_clean_up(forest);
     test_interface->t8_ghost_step_1_clean_up(forest);
   }
 
-  if (create_element_array) {
-    /* Free the offset memory, if created */
-    t8_shmem_array_destroy (&forest->element_offsets);
-  }
-  if (create_tree_array) {
-    /* Free the offset memory, if created */
-    t8_shmem_array_destroy (&forest->tree_offsets);
-  }
-  if (create_gfirst_desc_array) {
-    /* Free the offset memory, if created */
-    t8_shmem_array_destroy (&forest->global_first_desc);
-  }
+  // if (create_element_array) {
+  //   /* Free the offset memory, if created */
+  //   t8_shmem_array_destroy (&forest->element_offsets);
+  // }
+  // if (create_tree_array) {
+  //   /* Free the offset memory, if created */
+  //   t8_shmem_array_destroy (&forest->tree_offsets);
+  // }
+  // if (create_gfirst_desc_array) {
+  //   /* Free the offset memory, if created */
+  //   t8_shmem_array_destroy (&forest->global_first_desc);
+  // }
 
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of ghost_create */
@@ -1543,7 +1545,8 @@ t8_forest_ghost_create (t8_forest_t forest)
   T8_ASSERT (t8_forest_is_committed (forest));
   if (forest->mpisize > 1) {
     /* call unbalanced version of ghost algorithm */
-    t8_forest_ghost_create_ext (forest, 1);
+    T8_ASSERT(t8_forest_ghost_interface_face_verison(forest->ghost_interface) == 2);
+    t8_forest_ghost_create_ext (forest);
   }
 }
 
@@ -1554,7 +1557,8 @@ t8_forest_ghost_create_balanced_only (t8_forest_t forest)
   if (forest->mpisize > 1) {
     /* TODO: assert that forest is balanced */
     /* Call balanced version of ghost algorithm */
-    t8_forest_ghost_create_ext (forest, 0);
+    T8_ASSERT(t8_forest_ghost_interface_face_verison(forest->ghost_interface) == 1);
+    t8_forest_ghost_create_ext (forest);
   }
 }
 
@@ -1562,8 +1566,8 @@ void
 t8_forest_ghost_create_topdown (t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
-
-  t8_forest_ghost_create_ext (forest, -1);
+  T8_ASSERT(t8_forest_ghost_interface_face_verison(forest->ghost_interface) == 3);
+  t8_forest_ghost_create_ext (forest);
 }
 
 /** Return the array of remote ranks.

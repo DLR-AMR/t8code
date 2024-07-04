@@ -365,10 +365,19 @@ t8_forest_set_ghost (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_typ
  *                                If 2, the iterative algorithm for unbalanced forests.
  *                                If 3, the top-down search algorithm for unbalanced forests.
  * \see t8_forest_set_ghost
+ * \note this function creats an ghost_interface obcejct and call \ref t8_forest_set_ghost_ext_new
  */
 void
 t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_type, int ghost_version);
 
+/** Set a ghost_interface
+ * In application schoud only used if the user creats its own ghost_interface class (type = userderdefined)
+ * \param [in]    forest          the fores
+ * \param [in]    do_ghost        ---
+ * \param [in]    ghost_interface pointer to an object of the class ghost_interface or a derived class
+ *                                The forest takes ownership of the ghost_interface
+ * \note if the forest has alrady a ghost_interface, the old one will be unref and the new one will be set.
+*/
 void
 t8_forest_set_ghost_ext_new (t8_forest_t forest, int do_ghost, t8_forest_ghost_interface_c * ghost_interface);
 

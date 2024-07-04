@@ -23,7 +23,8 @@
 #include <t8_forest/t8_forest_ghost_interface/t8_forest_ghost_interface_faces.hxx>
 #include <t8_forest/t8_forest_ghost_interface/t8_forest_ghost_interface.h>
 #include <t8_forest/t8_forest_ghost_interface/t8_forest_ghost_interface_wrapper.h>
-
+#include <t8_forest/t8_forest_ghost.h>
+#include <t8_forest/t8_forest_partition.h>
 
 t8_forest_ghost_interface_faces::t8_forest_ghost_interface_faces() 
     : t8_forest_ghost_interface(T8_GHOST_FACES), ghost_version(3), flag_step_1(0)
@@ -46,21 +47,21 @@ void
 t8_forest_ghost_interface_faces::t8_ghost_step_1_allocate(t8_forest_t forest)
 {
     t8_global_productionf (" t8_forest_ghost_interface_faces::t8_ghost_step_1_allocate \n");
-    // if (forest->element_offsets == NULL) {
-    // /* create element offset array if not done already */
-    // flag_step_1 = flag_step_1 | CREATE_ELEMENT_ARRAY;
-    // t8_forest_partition_create_offsets (forest);
-    // }
-    // if (forest->tree_offsets == NULL) {
-    //     /* Create tree offset array if not done already */
-    //     flag_step_1 = flag_step_1 | CREATE_TREE_ARRAY;
-    //     t8_forest_partition_create_tree_offsets (forest);
-    // }
-    // if (forest->global_first_desc == NULL) {
-    //     /* Create global first desc array if not done already */
-    //     flag_step_1 = flag_step_1 | CREATE_GFIRST_DESC_ARRAY;
-    //     t8_forest_partition_create_first_desc (forest);
-    // }
+    if (forest->element_offsets == NULL) {
+    /* create element offset array if not done already */
+    flag_step_1 = flag_step_1 | CREATE_ELEMENT_ARRAY;
+    t8_forest_partition_create_offsets (forest);
+    }
+    if (forest->tree_offsets == NULL) {
+        /* Create tree offset array if not done already */
+        flag_step_1 = flag_step_1 | CREATE_TREE_ARRAY;
+        t8_forest_partition_create_tree_offsets (forest);
+    }
+    if (forest->global_first_desc == NULL) {
+        /* Create global first desc array if not done already */
+        flag_step_1 = flag_step_1 | CREATE_GFIRST_DESC_ARRAY;
+        t8_forest_partition_create_first_desc (forest);
+    }
 }
 
 
@@ -68,18 +69,18 @@ void
 t8_forest_ghost_interface_faces::t8_ghost_step_1_clean_up(t8_forest_t forest)
 {
     t8_global_productionf (" t8_forest_ghost_interface_faces::t8_ghost_step_1_clean_up \n");
-    // if (flag_step_1 & CREATE_GFIRST_DESC_ARRAY){
-    //     /* Free the offset memory, if created */
-    //     t8_shmem_array_destroy (&forest->element_offsets);
-    // }
-    // if (flag_step_1 & CREATE_TREE_ARRAY) {
-    //     /* Free the offset memory, if created */
-    //     t8_shmem_array_destroy (&forest->tree_offsets);
-    // }
-    // if (flag_step_1 & CREATE_GFIRST_DESC_ARRAY) {
-    //     /* Free the offset memory, if created */
-    //     t8_shmem_array_destroy (&forest->global_first_desc);
-    // }
+    if (flag_step_1 & CREATE_GFIRST_DESC_ARRAY){
+        /* Free the offset memory, if created */
+        t8_shmem_array_destroy (&forest->element_offsets);
+    }
+    if (flag_step_1 & CREATE_TREE_ARRAY) {
+        /* Free the offset memory, if created */
+        t8_shmem_array_destroy (&forest->tree_offsets);
+    }
+    if (flag_step_1 & CREATE_GFIRST_DESC_ARRAY) {
+        /* Free the offset memory, if created */
+        t8_shmem_array_destroy (&forest->global_first_desc);
+    }
 }
 
 
@@ -93,15 +94,17 @@ void
 t8_forest_ghost_interface_faces::t8_ghost_step_2(t8_forest_t forest)
 {
     t8_global_productionf (" t8_forest_ghost_interface_faces::t8_ghost_step_2 \n");
-    // T8_ASSERT( forest->ghosts != NULL);
-    // t8_forest_ghost_t ghost = forest->ghosts;
-    // if (ghost_version == -1) {
-    //     t8_forest_ghost_fill_remote_v3 (forest);
-    // }
-    // else {
-    //     /* Construct the remote elements and processes. */
-    //     t8_forest_ghost_fill_remote (forest, ghost, ghost_version != 0);
-    // }
+    T8_ASSERT( forest->ghosts != NULL);
+    t8_forest_ghost_t ghost = forest->ghosts;
+    if (ghost_version == 3) {
+        t8_global_productionf ("t8_forest_ghost_create_ext: t8_forest_ghost_fill_remote_v3(forest)\n");
+        t8_forest_ghost_fill_remote_v3 (forest);
+    }
+    else {
+        /* Construct the remote elements and processes. */
+        t8_global_productionf ("t8_forest_ghost_create_ext: t8_forest_ghost_fill_remote (forest, ghost, ghost_version != 1)\n");
+        t8_forest_ghost_fill_remote (forest, ghost, ghost_version != 1);
+    }
 }
 
 

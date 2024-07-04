@@ -228,10 +228,6 @@ t8_forest_set_ghost_ext_new (t8_forest_t forest, int do_ghost, t8_forest_ghost_i
     t8_forest_ghost_interface_unref(&(forest->ghost_interface));
   }
   forest->do_ghost = do_ghost;
-  forest->ghost_type = t8_forest_ghost_interface_get_type(ghost_interface);
-  if(forest->ghost_type == T8_GHOST_FACES){
-    forest->ghost_algorithm = t8_forest_ghost_interface_face_verison(ghost_interface);
-  }
   forest->ghost_interface = ghost_interface;
 }
 
@@ -252,8 +248,6 @@ t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost
     forest->do_ghost = (do_ghost != 0); /* True if and only if do_ghost != 0 */
   }
   if (forest->do_ghost) {
-    forest->ghost_type = ghost_type;
-    forest->ghost_algorithm = ghost_version;
     t8_forest_ghost_interface_c * ghost_interface = t8_forest_ghost_interface_face_new(ghost_version);
     t8_forest_set_ghost_ext_new(forest, do_ghost, ghost_interface);
   }
@@ -683,19 +677,7 @@ t8_forest_commit (t8_forest_t forest)
     if (forest->do_ghost) {
       /* TODO: ghost type */
       t8_productionf("t8_forest_commit: do_ghost\n");
-      switch (forest->ghost_algorithm) {
-      case 1:
-        t8_forest_ghost_create_balanced_only (forest);
-        break;
-      case 2:
-        t8_forest_ghost_create (forest);
-        break;
-      case 3:
-        t8_forest_ghost_create_topdown (forest);
-        break;
-      default:
-        SC_ABORT ("Invalid choice of ghost algorithm");
-      }
+      t8_forest_ghost_create_ext(forest);
     }
     forest->do_ghost = 0;
   }
