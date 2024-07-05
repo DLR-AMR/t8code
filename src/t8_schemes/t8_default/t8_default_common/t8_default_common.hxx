@@ -20,12 +20,11 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_default_common_cxx.hxx
+/** \file t8_default_common.hxx
  * We provide some functions that are useful across element classes.
  */
 
-#ifndef T8_DEFAULT_COMMON_CXX_HXX
-#define T8_DEFAULT_COMMON_CXX_HXX
+#pragma once
 
 #include <t8_element.hxx>
 
@@ -132,5 +131,3 @@ class t8_default_scheme_common_c: public t8_eclass_scheme_c {
   t8_element_debug_print (const t8_element_t *elem) const;
 #endif
 };
-
-#endif /* !T8_DEFAULT_COMMON_CXX_HXX */

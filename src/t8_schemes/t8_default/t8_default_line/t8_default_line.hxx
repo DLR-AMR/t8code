@@ -20,36 +20,34 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_default_hex.h
+/** \file t8_default_lines.h
+ * The default implementation for lines. Interface between the
+ * \file t8_default_common.hxx definitions and the element type specific
+ * implementations in \file t8_dline_bits.h
  */
 
-#ifndef T8_DEFAULT_HEX_HXX
-#define T8_DEFAULT_HEX_HXX
+#pragma once
 
-#include <p8est.h>
+#include <t8_element.h>
 #include <t8_element.hxx>
-#include <t8_schemes/t8_default/t8_default_hex/t8_dhex.h>
-#include <t8_schemes/t8_default/t8_default_hex/t8_dhex_bits.h>
-#include <t8_schemes/t8_default/t8_default_quad/t8_default_quad_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 
-/** The structure holding a hexahedral element in the default scheme.
- * We make this definition public for interoperability of element classes.
- * We might want to put this into a private, scheme-specific header file.
+/** Provide an implementation for the line element class.
+ * It is written as a self-contained library in the t8_dline_* files.
  */
-typedef p8est_quadrant_t t8_phex_t;
 
-struct t8_default_scheme_hex_c: public t8_default_scheme_common_c
+struct t8_default_scheme_line_c: public t8_default_scheme_common_c
 {
  public:
   /** The virtual table for a particular implementation of an element class. */
 
   /** Constructor. */
-  t8_default_scheme_hex_c ();
+  t8_default_scheme_line_c ();
 
-  ~t8_default_scheme_hex_c ();
+  ~t8_default_scheme_line_c ();
 
-  /** Allocate memory for an array of hexaedra and initialize them.
-   * \param [in] length   The number of hex to be allocated.
+  /** Allocate memory for an array of lines and initialize them.
+   * \param [in] length   The number of line elements to be allocated.
    * \param [in,out] elems On input an array of \b length many unallocated
    *                      element pointers.
    *                      On output all these pointers will point to an allocated
@@ -68,8 +66,8 @@ struct t8_default_scheme_hex_c: public t8_default_scheme_common_c
   virtual void
   t8_element_new (int length, t8_element_t **elem) const;
 
-  /** Initialize an array of allocated hexaedra.
-   * \param [in] length   The number of hex to be initialized.
+  /** Initialize an array of allocated line elements.
+   * \param [in] length   The number of line elements to be initialized.
    * \param [in,out] elems On input an array of \b length many allocated
    *                       elements.
    * \param [in] called_new True if the elements in \a elem were created by a call
@@ -112,12 +110,12 @@ struct t8_default_scheme_hex_c: public t8_default_scheme_common_c
   t8_element_copy (const t8_element_t *source, t8_element_t *dest) const;
 
   /** Compare two elements.
-    * \param [in] elem1  The first element.
-    * \param [in] elem2  The second element.
-    * \return       negative if elem1 < elem2, zero if elem1 equals elem2
-    *               and positive if elem1 > elem2.
-    *  If elem2 is a copy of elem1 then the elements are equal.
-    */
+   * \param [in] elem1  The first element.
+   * \param [in] elem2  The second element.
+   * \return       negative if elem1 < elem2, zero if elem1 equals elem2
+   *               and positive if elem1 > elem2.
+   *  If elem2 is a copy of elem1 then the elements are equal.
+   */
   virtual int
   t8_element_compare (const t8_element_t *elem1, const t8_element_t *elem2) const;
 
@@ -145,7 +143,7 @@ struct t8_default_scheme_hex_c: public t8_default_scheme_common_c
   virtual void
   t8_element_parent (const t8_element_t *elem, t8_element_t *parent) const;
 
-  /** Compute a specific sibling of a given hex element \b elem and store it in \b sibling.
+  /** Compute a specific sibling of a given line element \b elem and store it in \b sibling.
    *  \b sibling needs to be an existing element. No memory is allocated by this function.
    *  \b elem and \b sibling can point to the same element, then the entries of
    *  \b elem are overwritten by the ones of its \b sibid -th sibling.
@@ -157,7 +155,11 @@ struct t8_default_scheme_hex_c: public t8_default_scheme_common_c
    *                    and match the element class of the sibling.
    */
   virtual void
-  t8_element_sibling (const t8_element_t *elem, int sibid, t8_element_t *sibling) const;
+  t8_element_sibling (const t8_element_t *elem, int sibid, t8_element_t *sibling) const
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+    return; /* suppresses compiler warning */
+  }
 
   /** Compute the number of faces of a given element.
    * \param [in] elem The element.
@@ -195,7 +197,11 @@ struct t8_default_scheme_hex_c: public t8_default_scheme_common_c
    * \return              The corner number of the \a corner-th vertex of \a face.
    */
   virtual int
-  t8_element_get_face_corner (const t8_element_t *element, int face, int corner) const;
+  t8_element_get_face_corner (const t8_element_t *element, int face, int corner) const
+  {
+    SC_ABORT ("Not implemented.\n");
+    return 0; /* prevents compiler warning */
+  }
 
   /** Return the face numbers of the faces sharing an element's corner.
    * \param [in] element  The element.
@@ -206,8 +212,8 @@ struct t8_default_scheme_hex_c: public t8_default_scheme_common_c
   virtual int
   t8_element_get_corner_face (const t8_element_t *element, int corner, int face) const
   {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0; /* suppresses compiler warning */
+    SC_ABORT ("Not implemented.\n");
+    return 0; /* prevents compiler warning */
   }
 
   /** Construct the child element of a given number.
@@ -352,7 +358,7 @@ struct t8_default_scheme_hex_c: public t8_default_scheme_common_c
    *  element of the respective tree neighbor that logically coincides with e
    *  but lies in the coordinate system of the neighbor tree.
    *  \param [in] elem1     The face element.
-   *  \param [in,out] elem2 On return the face element  \a elem1 with respect
+   *  \param [in,out] elem2 On return the face element \a elem1 with respect
    *                        to the coordinate system of the other tree.
    *  \param [in] orientation The orientation of the tree-tree connection.
    *                        \see t8_cmesh_set_join
@@ -369,11 +375,7 @@ struct t8_default_scheme_hex_c: public t8_default_scheme_common_c
    */
   virtual void
   t8_element_transform_face (const t8_element_t *elem1, t8_element_t *elem2, int orientation, int sign,
-                             int is_smaller_face) const
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return; /* suppresses compiler warning */
-  }
+                             int is_smaller_face) const;
 
   /** Given a boundary face inside a root tree's face construct
    *  the element inside the root tree that has the given face as a
@@ -509,17 +511,21 @@ struct t8_default_scheme_hex_c: public t8_default_scheme_common_c
    * \param [out] anchor The integer coordinates of the anchor node in the cube [0,1]^(dL)
    */
   virtual void
-  t8_element_anchor (const t8_element_t *elem, int anchor[3]) const;
+  t8_element_anchor (const t8_element_t *elem, int anchor[3]) const
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+    return; /* suppresses compiler warning */
+  }
 
   /** Compute the integer coordinates of a given element vertex.
    * The default scheme implements the Morton type SFCs. In these SFCs the
    * elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and 
    * L the maximum refinement level. 
    * All element vertices have integer coordinates in this cube.
-   *   \param [in] elem   The element to be considered.
-   *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
+   *   \param [in] elem    The element to be considered.
+   *   \param [in] vertex  The id of the vertex whose coordinates shall be computed.
    *   \param [out] coords An array of at least as many integers as the element's dimension
-   *                      whose entries will be filled with the coordinates of \a vertex.
+   *                       whose entries will be filled with the coordinates of \a vertex.
    */
   virtual void
   t8_element_vertex_integer_coords (const t8_element_t *elem, int vertex, int coords[]) const;
@@ -552,7 +558,7 @@ struct t8_default_scheme_hex_c: public t8_default_scheme_common_c
 
   /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
    * Returns false otherwise.
-   * * \return           0, because hexs refine regularly
+   * * \return           0, because lines refine regularly
    */
   virtual int
   t8_element_refines_irregular (void) const;
@@ -585,7 +591,6 @@ struct t8_default_scheme_hex_c: public t8_default_scheme_common_c
   virtual void
   t8_element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const;
 #endif
-
   /** Fills an element with the root element.
  * \param [in,out] elem   The element to be filled with root.
  */
@@ -622,7 +627,5 @@ struct t8_default_scheme_hex_c: public t8_default_scheme_common_c
   */
   virtual void
   t8_element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements,
-                         const int unsigned count, sc_MPI_Comm comm) const;
+                         const unsigned int count, sc_MPI_Comm comm) const;
 };
-
-#endif /* !T8_DEFAULT_HEX_HXX */

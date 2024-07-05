@@ -26,16 +26,16 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 
-#include <t8_schemes/t8_default/t8_default_vertex/t8_default_vertex_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_line/t8_default_line_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_quad/t8_default_quad_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_hex/t8_default_hex_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_tri/t8_default_tri_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_tet/t8_default_tet_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_prism/t8_default_prism_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.hxx>
+#include <t8_schemes/t8_default/t8_default_line/t8_default_line.hxx>
+#include <t8_schemes/t8_default/t8_default_quad/t8_default_quad.hxx>
+#include <t8_schemes/t8_default/t8_default_hex/t8_default_hex.hxx>
+#include <t8_schemes/t8_default/t8_default_tri/t8_default_tri.hxx>
+#include <t8_schemes/t8_default/t8_default_tet/t8_default_tet.hxx>
+#include <t8_schemes/t8_default/t8_default_prism/t8_default_prism.hxx>
+#include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid.hxx>
 #include <test/t8_gtest_macros.hxx>
 
 class gtest_default_scheme: public testing::TestWithParam<t8_eclass_t> {

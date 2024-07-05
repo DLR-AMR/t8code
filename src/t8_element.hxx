@@ -27,8 +27,7 @@
  * For each element class, one implementation of the type and virtual table is required.
  */
 
-#ifndef T8_ELEMENT_HXX
-#define T8_ELEMENT_HXX
+#pragma once
 
 #include <sc_refcount.h>
 #include <t8_eclass.h>
@@ -773,5 +772,3 @@ void
 t8_scheme_cxx_destroy (t8_scheme_cxx_t *s);
 
 T8_EXTERN_C_END ();
-
-#endif /* !T8_ELEMENT_HXX */

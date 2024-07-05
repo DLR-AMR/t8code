@@ -22,17 +22,16 @@
 
 /** \file t8_default_vertex.h
  * The default implementation for vertices. Interface between the
- * \file t8_default_common_cxx.hxx definitions and the element type specific
+ * \file t8_default_common.hxx definitions and the element type specific
  * implementations in \file t8_dvertex_bits.h
  */
 
-#ifndef T8_DEFAULT_VERTEX_CXX_H
-#define T8_DEFAULT_VERTEX_CXX_H
+#pragma once
 
 #include <t8_element.h>
 #include <t8_element.hxx>
-#include <t8_schemes/t8_default/t8_default_tri/t8_default_tri_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_tri/t8_default_tri.hxx>
+#include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 
 struct t8_default_scheme_vertex_c: public t8_default_scheme_common_c
 {
@@ -661,5 +660,3 @@ struct t8_default_scheme_vertex_c: public t8_default_scheme_common_c
   t8_element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements,
                          const unsigned int count, sc_MPI_Comm comm) const;
 };
-
-#endif /* !T8_DEFAULT_VERTEX_H */
