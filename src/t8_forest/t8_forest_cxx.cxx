@@ -26,7 +26,6 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_types.h>
-#include <t8_forest/t8_forest_cxx.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_ghost.h>
