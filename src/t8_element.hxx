@@ -20,15 +20,15 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_element_cxx.hxx
+/** \file t8_element.hxx
  * This file defines basic operations on an element in a refinement tree.
  *
  * All operations work for all element classes by providing a virtual function table.
  * For each element class, one implementation of the type and virtual table is required.
  */
 
-#ifndef T8_ELEMENT_CXX_HXX
-#define T8_ELEMENT_CXX_HXX
+#ifndef T8_ELEMENT_HXX
+#define T8_ELEMENT_HXX
 
 #include <sc_refcount.h>
 #include <t8_eclass.h>
@@ -774,4 +774,4 @@ t8_scheme_cxx_destroy (t8_scheme_cxx_t *s);
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_ELEMENT_CXX_HXX */
+#endif /* !T8_ELEMENT_HXX */

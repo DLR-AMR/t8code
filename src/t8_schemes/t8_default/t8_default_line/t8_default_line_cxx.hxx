@@ -30,7 +30,7 @@
 #define T8_DEFAULT_LINE_CXX_HXX
 
 #include <t8_element.h>
-#include <t8_element_cxx.hxx>
+#include <t8_element.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.hxx>
 
 /** Provide an implementation for the line element class.

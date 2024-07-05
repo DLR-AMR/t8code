@@ -30,7 +30,7 @@
 #include <t8_data/t8_shmem.h>
 #include <t8_vec.h>
 #include <t8_eclass.h>
-#include <t8_element_cxx.hxx>
+#include <t8_element.hxx>
 #include "t8_cmesh_types.h"
 #ifdef T8_WITH_METIS
 #include <metis.h>
@@ -40,7 +40,7 @@
 
 /** \file t8_cmesh.cxx
  *  This file collects all general cmesh routines that need c++ compilation.
- *  Particularly those functions that use the element interface from \ref t8_element_cxx.hxx.
+ *  Particularly those functions that use the element interface from \ref t8_element.hxx.
  */
 
 int

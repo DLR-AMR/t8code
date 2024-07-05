@@ -29,7 +29,7 @@
 #ifndef T8_DEFAULT_PYRAMID_CXX_HXX
 #define T8_DEFAULT_PYRAMID_CXX_HXX
 
-#include <t8_element_cxx.hxx>
+#include <t8_element.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.hxx>
 
 /** Provide an implementation for the pyramid element class. It is written as a self-contained library in the 

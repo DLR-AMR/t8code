@@ -29,7 +29,7 @@
 #ifndef T8_DEFAULT_CXX_HXX
 #define T8_DEFAULT_CXX_HXX
 
-#include <t8_element_cxx.hxx>
+#include <t8_element.hxx>
 
 T8_EXTERN_C_BEGIN ();
 

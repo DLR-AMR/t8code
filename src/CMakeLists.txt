@@ -90,9 +90,8 @@ endif()
 target_sources( T8 PRIVATE 
     t8.c 
     t8_eclass.c 
-    t8_element.c 
     t8_element_shape.c
-    t8_element_cxx.cxx 
+    t8_element.cxx 
     t8_element_c_interface.cxx 
     t8_mesh.c
     t8_netcdf.c 
@@ -179,7 +178,7 @@ install( FILES
     t8_eclass.h
     t8_element.h
     t8_element_c_interface.h
-    t8_element_cxx.hxx
+    t8_element.hxx
     t8_element_shape.h
     t8_forest_netcdf.h
     t8_mat.h
