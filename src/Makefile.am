@@ -121,7 +121,7 @@ libt8_compiled_sources = \
   src/t8_cmesh/t8_cmesh_helpers.cxx \
   src/t8_data/t8_containers.cxx \
   src/t8_cmesh/t8_cmesh_offset.c src/t8_cmesh/t8_cmesh_readmshfile.cxx \
-  src/t8_forest/t8_forest.c src/t8_forest/t8_forest_adapt.cxx \
+  src/t8_forest/t8_forest_adapt.cxx \
   src/t8_geometry/t8_geometry.cxx \
   src/t8_geometry/t8_geometry_handler.cxx \
   src/t8_geometry/t8_geometry_helpers.c \
@@ -134,7 +134,7 @@ libt8_compiled_sources = \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_examples.cxx \
-  src/t8_forest/t8_forest_partition.cxx src/t8_forest/t8_forest_cxx.cxx \
+  src/t8_forest/t8_forest_partition.cxx src/t8_forest/t8_forest.cxx \
   src/t8_forest/t8_forest_private.c src/t8_forest/t8_forest_vtk.cxx \
   src/t8_forest/t8_forest_ghost.cxx src/t8_forest/t8_forest_iterate.cxx \
   src/t8_version.c \
