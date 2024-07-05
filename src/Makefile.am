@@ -109,8 +109,7 @@ libt8_compiled_sources = \
   src/t8_element.c src/t8_element_cxx.cxx \
   src/t8_element_c_interface.cxx \
   src/t8_refcount.c src/t8_cmesh/t8_cmesh.cxx \
-  src/t8_cmesh/t8_cmesh_cad.cxx \
-  src/t8_cmesh/t8_cmesh_cxx.cxx src/t8_cmesh/t8_cmesh_triangle.cxx \
+  src/t8_cmesh/t8_cmesh_cad.cxx src/t8_cmesh/t8_cmesh_triangle.cxx \
   src/t8_cmesh/t8_cmesh_vtk_writer.c src/t8_cmesh/t8_cmesh_stash.c \
   src/t8_cmesh/t8_cmesh_vtk_reader.cxx \
   src/t8_cmesh/t8_cmesh_save.cxx \

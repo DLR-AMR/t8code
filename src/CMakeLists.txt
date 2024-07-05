@@ -99,9 +99,8 @@ target_sources( T8 PRIVATE
     t8_refcount.c 
     t8_version.c 
     t8_vtk.c 
-    t8_cmesh/t8_cmesh.cxx
+    t8_cmesh/t8_cmesh.cxx 
     t8_cmesh/t8_cmesh_cad.cxx 
-    t8_cmesh/t8_cmesh_cxx.cxx 
     t8_cmesh/t8_cmesh_triangle.cxx 
     t8_cmesh/t8_cmesh_vtk_writer.c 
     t8_cmesh/t8_cmesh_stash.c 
