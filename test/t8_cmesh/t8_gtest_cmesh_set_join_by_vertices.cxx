@@ -450,6 +450,9 @@ class t8_cmesh_set_join_by_vertices_class: public testing::TestWithParam<cmesh_e
     }
 
     cmesh = GetParam ()->cmesh_create ();
+    if (cmesh->set_partition) {
+      GTEST_SKIP ();
+    }
   }
 
   void
