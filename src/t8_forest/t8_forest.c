@@ -938,7 +938,7 @@ t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id, t8_locidx_t 
   tree = t8_forest_get_tree (forest, ltree);
   if (tree->elements_offset <= lelement_id
       && lelement_id < tree->elements_offset + (t8_locidx_t) t8_element_array_get_count (&tree->elements)) {
-    return t8_element_array_index_locidx (&tree->elements, lelement_id - tree->elements_offset);
+    return t8_element_array_index_locidx_mutable (&tree->elements, lelement_id - tree->elements_offset);
   }
   /* The element was not found.
    * This case is covered by the first if and should therefore never happen. */
@@ -954,7 +954,9 @@ t8_forest_get_element_in_tree (t8_forest_t forest, t8_locidx_t ltreeid, t8_locid
   T8_ASSERT (0 <= ltreeid && ltreeid < t8_forest_get_num_local_trees (forest));
 
   tree = t8_forest_get_tree (forest, ltreeid);
-  return t8_forest_get_tree_element (tree, leid_in_tree);
+  const t8_element_t *element = t8_forest_get_tree_element (tree, leid_in_tree);
+  T8_ASSERT (t8_forest_element_is_leaf (forest, element, ltreeid));
+  return element;
 }
 
 t8_locidx_t

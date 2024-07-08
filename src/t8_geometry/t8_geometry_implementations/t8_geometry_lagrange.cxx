@@ -71,8 +71,8 @@ inline void
 t8_geometry_lagrange::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 {
   t8_geometry_with_vertices::t8_geom_load_tree_data (cmesh, gtreeid);
-  degree = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_LAGRANGE_POLY_DEGREE,
-                                                 t8_cmesh_get_local_id (cmesh, gtreeid));
+  t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
+  degree = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_LAGRANGE_POLY_DEGREE, ltreeid);
   T8_ASSERT (degree != NULL);
 }
 
@@ -256,14 +256,14 @@ t8_geometry_lagrange::t8_geom_h27_basis (const double *ref_point) const
 }
 
 t8_forest_t
-t8_lagrange_element::create_uniform_forest (t8_cmesh_t cmesh, uint level) const
+t8_lagrange_element::create_uniform_forest (t8_cmesh_t cmesh, uint32_t level) const
 {
   t8_forest_t forest;
   forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0, sc_MPI_COMM_WORLD);
   return forest;
 }
 
-t8_lagrange_element::t8_lagrange_element (t8_eclass_t eclass, uint degree, std::vector<double> &nodes)
+t8_lagrange_element::t8_lagrange_element (t8_eclass_t eclass, uint32_t degree, std::vector<double> &nodes)
   : eclass (eclass), degree (degree), nodes (nodes)
 {
   // TODO: Check if the number of nodes corresponds to the element type and degree.
@@ -279,7 +279,7 @@ t8_lagrange_element::t8_lagrange_element (t8_eclass_t eclass, uint degree, std::
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 }
 
-const uint t8_lagrange_element::lagrange_nodes[T8_ECLASS_COUNT][2];
+const uint32_t t8_lagrange_element::lagrange_nodes[T8_ECLASS_COUNT][2];
 
 t8_eclass_t
 t8_lagrange_element::get_type () const
@@ -287,12 +287,12 @@ t8_lagrange_element::get_type () const
   return eclass;
 }
 
-std::vector<std::vector<uint>>
+std::vector<std::vector<uint32_t>>
 t8_lagrange_element::get_face_nodes () const
 {
   std::ostringstream invalid_degree;
   invalid_degree << "Invalid degree " << degree << ".\n";
-  std::vector<std::vector<uint>> face_nodes;
+  std::vector<std::vector<uint32_t>> face_nodes;
   switch (eclass) {
   case T8_ECLASS_LINE:
     if (degree == 1)
@@ -370,20 +370,20 @@ t8_lagrange_element::face_classes () const
 }
 
 std::vector<double>
-t8_lagrange_element::get_node_coords (uint node) const
+t8_lagrange_element::get_node_coords (uint32_t node) const
 {
   const double *v = t8_cmesh_get_tree_vertices (cmesh, 0);
   return std::vector<double> (v + 3 * node, v + 3 * node + 3);
 }
 
 std::vector<std::vector<double>>
-t8_lagrange_element::get_node_coords (std::vector<uint> &nodes) const
+t8_lagrange_element::get_node_coords (std::vector<uint32_t> &nodes) const
 {
   const double *v = t8_cmesh_get_tree_vertices (cmesh, 0);
   size_t n_node = nodes.size ();
   std::vector<std::vector<double>> node_coords (n_node);
   for (size_t i = 0; i < n_node; ++i) {
-    uint i_node = nodes[i];
+    uint32_t i_node = nodes[i];
     node_coords[i] = std::vector<double> (v + 3 * i_node, v + 3 * i_node + 3);
   }
   return node_coords;
@@ -394,10 +394,10 @@ t8_lagrange_element::decompose () const
 {
   /* Get the node numbers of the faces */
   std::vector<t8_eclass_t> fc = face_classes ();
-  std::vector<std::vector<uint>> fn = get_face_nodes ();
+  std::vector<std::vector<uint32_t>> fn = get_face_nodes ();
   /* Create a new Lagrange element from each face */
   std::vector<t8_lagrange_element> faces;
-  const uint n_face = t8_eclass_num_faces[eclass];
+  const uint32_t n_face = t8_eclass_num_faces[eclass];
   faces.reserve (n_face);
   for (size_t i_face = 0; i_face < n_face; ++i_face) {
     auto nc = flatten<double> (get_node_coords (fn[i_face]));

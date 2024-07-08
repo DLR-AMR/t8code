@@ -10,7 +10,20 @@ t8code_googletest_installed_headers = \
 t8code_googletest_internal_headers = \
   thirdparty/googletest-mpi/gtest/gtest.h \
   test/t8_gtest_macros.hxx \
-  test/t8_schemes/t8_gtest_dfs_base.hxx
+  test/t8_schemes/t8_gtest_dfs_base.hxx \
+  test/t8_cmesh_generator/t8_cmesh_example_sets.hxx \
+  test/t8_cmesh_generator/t8_gtest_cmesh_cartestian_product.hxx \
+  test/t8_cmesh_generator/t8_gtest_cmesh_sum_of_sets.hxx \
+  test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_bigmesh_param.hxx \
+  test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_comm.hxx \
+  test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_disjoint_bricks_param.hxx \
+  test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_empty.hxx \
+  test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_from_class_param.hxx \
+  test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_hypercube_pad.hxx \
+  test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_hypercube_param.hxx \
+  test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_prism_cake_param.hxx \
+  test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_params.hxx \
+  test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_periodic.hxx
   
 t8code_googletest_programs = \
   test/t8_geometry/t8_geometry_implementations/t8_gtest_geometry_lagrange \
@@ -24,7 +37,7 @@ t8code_googletest_programs = \
   test/t8_gtest_vec \
   test/t8_gtest_mat \
   test/t8_gtest_refcount \
-  test/t8_gtest_cad_linkage \
+  test/t8_gtest_occ_linkage \
   test/t8_gtest_version \
   test/t8_schemes/t8_gtest_init_linear_id \
   test/t8_gtest_basics \
@@ -44,6 +57,7 @@ t8code_googletest_programs = \
   test/t8_cmesh/t8_gtest_cmesh_set_join_by_vertices \
   test/t8_forest/t8_gtest_element_volume \
   test/t8_cmesh/t8_gtest_multiple_attributes \
+  test/t8_cmesh/t8_gtest_cmesh_add_attributes_when_derive \
   test/t8_cmesh/t8_gtest_attribute_gloidx_array \
   test/t8_schemes/t8_gtest_successor \
   test/t8_schemes/t8_gtest_boundary_extrude \
@@ -64,6 +78,7 @@ t8code_googletest_programs = \
   test/t8_forest/t8_gtest_ghost_and_owner \
   test/t8_forest/t8_gtest_forest_commit \
   test/t8_forest/t8_gtest_balance \
+  test/t8_forest/t8_gtest_element_is_leaf \
   test/t8_IO/t8_gtest_vtk_reader \
   test/t8_forest_incomplete/t8_gtest_permute_hole \
   test/t8_forest_incomplete/t8_gtest_recursive \
@@ -124,9 +139,9 @@ test_t8_gtest_refcount_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_gtest_refcount.cxx
 
-test_t8_gtest_cad_linkage_SOURCES = \
+test_t8_gtest_occ_linkage_SOURCES = \
   test/t8_gtest_main.cxx \
-  test/t8_gtest_cad_linkage.cxx
+  test/t8_gtest_occ_linkage.cxx
 
 test_t8_gtest_version_SOURCES = \
   test/t8_gtest_main.cxx \
@@ -199,6 +214,10 @@ test_t8_forest_t8_gtest_element_volume_SOURCES = \
 test_t8_cmesh_t8_gtest_multiple_attributes_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_cmesh/t8_gtest_multiple_attributes.cxx
+
+test_t8_cmesh_t8_gtest_cmesh_add_attributes_when_derive_SOURCES = \
+  test/t8_gtest_main.cxx \
+  test/t8_cmesh/t8_gtest_cmesh_add_attributes_when_derive.cxx
 
 test_t8_cmesh_t8_gtest_attribute_gloidx_array_SOURCES = \
   test/t8_gtest_main.cxx \
@@ -279,6 +298,10 @@ test_t8_forest_t8_gtest_forest_commit_SOURCES = \
 test_t8_forest_t8_gtest_balance_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_forest/t8_gtest_balance.cxx
+
+test_t8_forest_t8_gtest_element_is_leaf_SOURCES = \
+  test/t8_gtest_main.cxx \
+  test/t8_forest/t8_gtest_element_is_leaf.cxx
 
 test_t8_forest_incomplete_t8_gtest_permute_hole_SOURCES = \
   test/t8_gtest_main.cxx \
@@ -376,9 +399,9 @@ test_t8_gtest_refcount_LDADD = $(t8_gtest_target_ld_add)
 test_t8_gtest_refcount_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_gtest_refcount_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
-test_t8_gtest_cad_linkage_LDADD = $(t8_gtest_target_ld_add)
-test_t8_gtest_cad_linkage_LDFLAGS = $(t8_gtest_target_ld_flags)
-test_t8_gtest_cad_linkage_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+test_t8_gtest_occ_linkage_LDADD = $(t8_gtest_target_ld_add)
+test_t8_gtest_occ_linkage_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_gtest_occ_linkage_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
 test_t8_gtest_version_LDADD = $(t8_gtest_target_ld_add)
 test_t8_gtest_version_LDFLAGS = $(t8_gtest_target_ld_flags)
@@ -451,6 +474,10 @@ test_t8_forest_t8_gtest_element_volume_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 test_t8_cmesh_t8_gtest_multiple_attributes_LDADD = $(t8_gtest_target_ld_add)
 test_t8_cmesh_t8_gtest_multiple_attributes_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_cmesh_t8_gtest_multiple_attributes_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+
+test_t8_cmesh_t8_gtest_cmesh_add_attributes_when_derive_LDADD = $(t8_gtest_target_ld_add)
+test_t8_cmesh_t8_gtest_cmesh_add_attributes_when_derive_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_cmesh_t8_gtest_cmesh_add_attributes_when_derive_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
 test_t8_cmesh_t8_gtest_attribute_gloidx_array_LDADD = $(t8_gtest_target_ld_add)
 test_t8_cmesh_t8_gtest_attribute_gloidx_array_LDFLAGS = $(t8_gtest_target_ld_flags)
@@ -532,6 +559,10 @@ test_t8_forest_t8_gtest_balance_LDADD = $(t8_gtest_target_ld_add)
 test_t8_forest_t8_gtest_balance_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_forest_t8_gtest_balance_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
+test_t8_forest_t8_gtest_element_is_leaf_LDADD = $(t8_gtest_target_ld_add)
+test_t8_forest_t8_gtest_element_is_leaf_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_forest_t8_gtest_element_is_leaf_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+
 test_t8_IO_t8_gtest_vtk_reader_LDADD = $(t8_gtest_target_ld_add)
 test_t8_IO_t8_gtest_vtk_reader_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_IO_t8_gtest_vtk_reader_CPPFLAGS = $(t8_gtest_target_cpp_flags)
@@ -593,7 +624,7 @@ test_t8_gtest_eclass_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_gtest_vec_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_gtest_mat_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_gtest_refcount_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
-test_t8_gtest_cad_linkage_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_gtest_occ_linkage_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_gtest_version_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_init_linear_id_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_gtest_basics_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
@@ -612,6 +643,7 @@ test_t8_cmesh_t8_gtest_cmesh_partition_CPPFLAGS += $(t8_gtest_target_mpi_cpp_fla
 test_t8_cmesh_t8_gtest_cmesh_set_partition_offsets_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_t8_gtest_element_volume_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_multiple_attributes_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_cmesh_t8_gtest_cmesh_add_attributes_when_derive_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_attribute_gloidx_array_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_successor_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_boundary_extrude_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
@@ -632,6 +664,7 @@ test_t8_forest_t8_gtest_ghost_delete_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags
 test_t8_forest_t8_gtest_ghost_and_owner_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_t8_gtest_forest_commit_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_t8_gtest_balance_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_forest_t8_gtest_element_is_leaf_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_IO_t8_gtest_vtk_reader_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_incomplete_t8_gtest_permute_hole_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_incomplete_t8_gtest_recursive_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)

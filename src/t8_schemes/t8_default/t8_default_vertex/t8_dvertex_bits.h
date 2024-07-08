@@ -194,7 +194,7 @@ t8_dvertex_last_descendant (const t8_dvertex_t *v, t8_dvertex_t *s, int level);
  * \param [out] coords   The coordinates of the computed vertex
  */
 void
-t8_dvertex_vertex_coords (const t8_dvertex_t *elem, int vertex, int coords[]);
+t8_dvertex_vertex_integer_coords (const t8_dvertex_t *elem, int vertex, int coords[]);
 
 /** Compute the coordinates of a vertex (always 0) inside the [0,1]^0 reference space.
  * \param [in] elem     vertex whose vertex is computed.

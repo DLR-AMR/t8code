@@ -44,7 +44,7 @@ struct t8_geometry_quadrangulated_disk: public t8_geometry_with_vertices
    * Map five quads to a disk.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying a point in /f$ [0,1]^\mathrm{dim} /f$.
+   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^\mathrm{dim} \f$.
    * \param [in]  num_coords  The number of points to map.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    *
@@ -97,7 +97,7 @@ struct t8_geometry_triangulated_spherical_surface: public t8_geometry_with_verti
   {
   }
 
-  /* The destrucor. */
+  /* The destructor. */
   virtual ~t8_geometry_triangulated_spherical_surface ()
   {
   }
@@ -106,7 +106,7 @@ struct t8_geometry_triangulated_spherical_surface: public t8_geometry_with_verti
    * Map the faces of an octahedron/icosahedron to a spherical surface.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying a point in /f$ [0,1]^\mathrm{dim} /f$.
+   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^\mathrm{dim} \f$.
    * \param [in]  num_coords  The number of points to map.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    *
@@ -139,7 +139,7 @@ struct t8_geometry_quadrangulated_spherical_surface: public t8_geometry_with_ver
   {
   }
 
-  /* The destrucor. */
+  /* The destructor. */
   virtual ~t8_geometry_quadrangulated_spherical_surface ()
   {
   }
@@ -148,7 +148,7 @@ struct t8_geometry_quadrangulated_spherical_surface: public t8_geometry_with_ver
    * Map the faces of a cube to a spherical surface.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying a point in /f$ [0,1]^\mathrm{dim} /f$.
+   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^\mathrm{dim} \f$.
    * \param [in]  num_coords  The number of points to map.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    *
@@ -180,7 +180,7 @@ struct t8_geometry_cubed_spherical_shell: public t8_geometry_with_vertices
   {
   }
 
-  /* The destrucor. */
+  /* The destructor. */
   virtual ~t8_geometry_cubed_spherical_shell ()
   {
   }
@@ -189,7 +189,7 @@ struct t8_geometry_cubed_spherical_shell: public t8_geometry_with_vertices
    * Map the faces of a cube to a spherical surface.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying a point in /f$ [0,1]^\mathrm{dim} /f$.
+   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^\mathrm{dim} \f$.
    * \param [in]  num_coords  The number of points to map.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    *
@@ -221,7 +221,7 @@ struct t8_geometry_prismed_spherical_shell: public t8_geometry_with_vertices
   {
   }
 
-  /* The destrucor. */
+  /* The destructor. */
   virtual ~t8_geometry_prismed_spherical_shell ()
   {
   }
@@ -230,7 +230,7 @@ struct t8_geometry_prismed_spherical_shell: public t8_geometry_with_vertices
    * Map prism arranged as octahedron (or similar) to a spherical shell.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying a point in /f$ [0,1]^\mathrm{dim} /f$.
+   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^\mathrm{dim} \f$.
    * \param [in]  num_coords  The number of points to map.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    *
@@ -262,7 +262,7 @@ struct t8_geometry_cubed_sphere: public t8_geometry_with_vertices
   {
   }
 
-  /* The destrucor. */
+  /* The destructor. */
   virtual ~t8_geometry_cubed_sphere ()
   {
   }
@@ -271,7 +271,7 @@ struct t8_geometry_cubed_sphere: public t8_geometry_with_vertices
    * Maps specifically arranged hexahedrons to a sphere.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying a point in /f$ [0,1]^\mathrm{dim} /f$.
+   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^\mathrm{dim} \f$.
    * \param [in]  num_coords  The number of points to map.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    *

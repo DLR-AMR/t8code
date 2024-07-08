@@ -48,7 +48,7 @@ typedef void (*t8_geom_analytic_fn) (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, cons
  * \param [in]  cmesh       The cmesh.
  * \param [in]  gtreeid     The global tree (of the cmesh) in which the reference point is.
  * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
- * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
+ * \param [in]  num_coords  Amount of points of \f$ \mathrm{dim} \f$ to map.
  * \param [out] jacobian    The jacobian at \a ref_coords. Array of size \f$ \mathrm{dim} \cdot 3 \f$ x \a num_coords. Indices \f$ 3 \cdot i\f$ , \f$ 3 \cdot i+1 \f$ , \f$ 3 \cdot i+2 \f$
  *                          correspond to the \f$ i \f$-th column of the jacobian (Entry \f$ 3 \cdot i + j \f$ is \f$ \frac{\partial f_j}{\partial x_i} \f$).
  * \param [in]  tree_data   The data of the current tree as loaded by a \ref t8_geom_load_tree_data_fn.
@@ -69,7 +69,7 @@ typedef void (*t8_geom_load_tree_data_fn) (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
 /**
  * Definition for the negative volume function.
  */
-typedef bool (*t8_geom_tree_negative_volume_fn) ();
+typedef int (*t8_geom_tree_negative_volume_fn) ();
 
 T8_EXTERN_C_BEGIN ();
 

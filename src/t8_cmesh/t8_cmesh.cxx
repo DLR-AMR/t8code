@@ -123,7 +123,7 @@ t8_cmesh_is_committed (const t8_cmesh_t cmesh)
 }
 
 #ifdef T8_ENABLE_DEBUG
-bool
+int
 t8_cmesh_validate_geometry (const t8_cmesh_t cmesh)
 {
   /* Geometry handler is not constructed yet */
@@ -191,6 +191,8 @@ t8_cmesh_set_derive (t8_cmesh_t cmesh, t8_cmesh_t set_from)
 
   if (set_from != NULL) {
     t8_cmesh_set_dimension (cmesh, set_from->dimension);
+    SC_CHECK_ABORT (cmesh->stash->attributes.elem_count == 0,
+                    "ERROR: Cannot add attributes to cmesh when deriving from another cmesh.\n");
   }
 }
 
@@ -356,6 +358,7 @@ t8_cmesh_set_attribute (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int package_id, 
                         int data_persists)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  SC_CHECK_ABORT (cmesh->set_from == NULL, "ERROR: Cannot add attributes to cmesh when deriving from another cmesh.\n");
 
   t8_stash_add_attribute (cmesh->stash, gtree_id, package_id, key, data_size, data, !data_persists);
 }
@@ -378,7 +381,7 @@ t8_cmesh_set_attribute_gloidx_array (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 
   const size_t data_size = data_count * sizeof (*data);
-  t8_stash_add_attribute (cmesh->stash, gtree_id, package_id, key, data_size, (void *) data, !data_persists);
+  t8_cmesh_set_attribute (cmesh, gtree_id, package_id, key, (void *) data, data_size, data_persists);
 }
 
 double *
@@ -423,12 +426,21 @@ t8_cmesh_get_partition_table (t8_cmesh_t cmesh)
 }
 
 void
-t8_cmesh_set_dimension (t8_cmesh_t cmesh, int dim)
+t8_cmesh_set_dimension (t8_cmesh_t cmesh, const int dim)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   T8_ASSERT (0 <= dim && dim <= T8_ECLASS_MAX_DIM);
 
   cmesh->dimension = dim;
+}
+
+int
+t8_cmesh_get_dimension (const t8_cmesh_t cmesh)
+{
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (0 <= cmesh->dimension && cmesh->dimension <= T8_ECLASS_MAX_DIM);
+
+  return cmesh->dimension;
 }
 
 void
@@ -467,22 +479,35 @@ t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, t8_eclass_t tre
 int
 t8_cmesh_tree_vertices_negative_volume (const t8_eclass_t eclass, const double *vertices, const int num_vertices)
 {
-  double v_1[3], v_2[3], v_j[3], cross[3], sc_prod;
-  int i, j;
-
   T8_ASSERT (num_vertices == t8_eclass_num_vertices[eclass]);
 
-  if (t8_eclass_to_dimension[eclass] <= 2) {
-    /* Only three dimensional eclass do have a volume */
+  /* Points and lines do not have a volume orientation. */
+  if (t8_eclass_to_dimension[eclass] < 2) {
     return 0;
   }
 
-  T8_ASSERT (eclass == T8_ECLASS_TET || eclass == T8_ECLASS_HEX || eclass == T8_ECLASS_PRISM
-             || eclass == T8_ECLASS_PYRAMID);
-  T8_ASSERT (num_vertices >= 4);
+  T8_ASSERT (eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_TET
+             || eclass == T8_ECLASS_HEX || eclass == T8_ECLASS_PRISM || eclass == T8_ECLASS_PYRAMID);
+
+  /* Skip negative volume check (orientation of face normal) of 2D elements
+   * when z-coordinates are not (almost) zero. */
+  if (t8_eclass_to_dimension[eclass] < 3) {
+    for (int ivert = 0; ivert < num_vertices; ivert++) {
+      const double z_coordinate = vertices[3 * ivert + 2];
+      if (std::abs (z_coordinate) > 10 * T8_PRECISION_EPS) {
+        return false;
+      }
+    }
+  }
 
   /*
-   *      6 ______  7  For Hexes and pyramids, if the vertex 4 is below the 0-1-2-3 plane,
+   *      z             For 2D meshes we enforce the right-hand-rule in terms
+   *      |             of node ordering. The volume is defined by the parallelepiped
+   *      | 2- - -(3)   spanned by the vectors between nodes 0:1 and 0:2 as well as the
+   *      |/____ /      unit vector in z-direction. This definition works for both triangles and quads.
+   *      0     1
+   *
+   *      6 ______  7   For Hexes and pyramids, if the vertex 4 is below the 0-1-2-3 plane,
    *       /|     /     the volume is negative. This is the case if and only if
    *    4 /_____5/|     the scalar product of v_4 with the cross product of v_1 and v_2 is
    *      | | _ |_|     smaller 0:
@@ -500,8 +525,30 @@ t8_cmesh_tree_vertices_negative_volume (const t8_eclass_t eclass, const double *
    *
    */
 
-  /* build the vectors v_i as vertices_i - vertices_0 */
+  /* Build the vectors v_i as vertices_i - vertices_0. */
+  double v_1[3], v_2[3], v_j[3], cross[3], sc_prod;
 
+  if (eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_QUAD) {
+    for (int i = 0; i < 3; i++) {
+      v_1[i] = vertices[3 + i] - vertices[i];
+      v_2[i] = vertices[6 + i] - vertices[i];
+    }
+
+    /* Unit vector in z-direction. */
+    v_j[0] = 0.0;
+    v_j[1] = 0.0;
+    v_j[2] = 1.0;
+
+    /* Compute cross = v_1 x v_2. */
+    t8_vec_cross (v_1, v_2, cross);
+    /* Compute sc_prod = <v_j, cross>. */
+    sc_prod = t8_vec_dot (v_j, cross);
+
+    T8_ASSERT (sc_prod != 0);
+    return sc_prod < 0;
+  }
+
+  int j;
   if (eclass == T8_ECLASS_TET || eclass == T8_ECLASS_PRISM) {
     /* In the tet/prism case, the third vector is v_3 */
     j = 3;
@@ -510,7 +557,7 @@ t8_cmesh_tree_vertices_negative_volume (const t8_eclass_t eclass, const double *
     /* For pyramids and Hexes, the third vector is v_4 */
     j = 4;
   }
-  for (i = 0; i < 3; i++) {
+  for (int i = 0; i < 3; i++) {
     v_1[i] = vertices[3 + i] - vertices[i];
     v_2[i] = vertices[6 + i] - vertices[i];
     v_j[i] = vertices[3 * j + i] - vertices[i];
@@ -529,7 +576,7 @@ t8_cmesh_tree_vertices_negative_volume (const t8_eclass_t eclass, const double *
  * Returns true if all trees have positive volume. Returns also true if no geometries are
  * registered yet, since the volume computation depends on the used geometry.
  */
-bool
+int
 t8_cmesh_no_negative_volume (t8_cmesh_t cmesh)
 {
   bool res = false;
@@ -565,8 +612,10 @@ t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, const t8_gloidx_t gtree_id, const 
   T8_ASSERT (vertices != NULL);
   T8_ASSERT (!cmesh->committed);
 
-  t8_stash_add_attribute (cmesh->stash, gtree_id, t8_get_package_id (), T8_CMESH_VERTICES_ATTRIBUTE_KEY,
-                          3 * num_vertices * sizeof (double), (void *) vertices, 1);
+  const size_t data_size = 3 * num_vertices * sizeof (double);
+
+  t8_cmesh_set_attribute (cmesh, gtree_id, t8_get_package_id (), T8_CMESH_VERTICES_ATTRIBUTE_KEY, (void *) vertices,
+                          data_size, 0);
 }
 
 void
@@ -1201,7 +1250,8 @@ t8_cmesh_reset (t8_cmesh_t *pcmesh)
   }
 
   if (cmesh->geometry_handler != NULL) {
-    delete (cmesh->geometry_handler);
+    cmesh->geometry_handler->unref ();
+    cmesh->geometry_handler = NULL;
   }
 
   /* unref the partition scheme (if set) */

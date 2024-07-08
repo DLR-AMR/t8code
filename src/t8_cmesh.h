@@ -96,7 +96,7 @@ t8_cmesh_is_committed (const t8_cmesh_t cmesh);
  * \param [in] cmesh            This cmesh is examined.
  * \return                      True if the geometry of the cmesh is valid.
  */
-bool
+int
 t8_cmesh_validate_geometry (const t8_cmesh_t cmesh);
 
 /** After a cmesh is committed, check whether all trees in a cmesh do have positive volume.
@@ -107,7 +107,7 @@ t8_cmesh_validate_geometry (const t8_cmesh_t cmesh);
  *                              was called, do have positive geometric volume.
  *                              False otherwise.
  */
-bool
+int
 t8_cmesh_no_negative_volume (t8_cmesh_t cmesh);
 #endif
 
@@ -120,7 +120,7 @@ t8_cmesh_no_negative_volume (t8_cmesh_t cmesh);
  *                              3 * \a num_vertices many doubles.
  *                              \a num_vertices must match \ref t8_eclass_num_vertices[\a eclass]
  * \return                      True if the geometric volume describe by \a vertices is negative.
- *                              Fals otherwise.
+ *                              False otherwise.
  * Returns true if a tree of the given eclass with the given vertex
  * coordinates does have negative volume.
  */
@@ -164,7 +164,7 @@ t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm);
  * This call is only valid when the cmesh is not yet committed via a call
  * to \ref t8_cmesh_commit.
  * \param [in,out] cmesh        The cmesh to be updated.
- * \parma [in]     set_face_knowledge   Several values are possible that define
+ * \param [in]     set_face_knowledge   Several values are possible that define
  *                              how much information is required on face connections,
  *                              specified by \ref t8_cmesh_set_join.
  *                              0: Expect face connection of local trees.
@@ -175,7 +175,7 @@ t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm);
  *                              3: Expect face connection of local and ghost trees.
  *                              Consistency of this requirement is checked on
  *                              \ref t8_cmesh_commit.
- *                             -1: Co not change the face_knowledge level but keep any
+ *                             -1: Do not change the face_knowledge level but keep any
  *                                 previously set ones. (Possibly by a previous call to \ref t8_cmesh_set_partition_range)
  * \param [in]     first_local_tree The global index ID of the first tree on this process.
  *                                  If this tree is also the last tree on the previous process,
@@ -205,10 +205,10 @@ t8_cmesh_set_partition_range (t8_cmesh_t cmesh, int set_face_knowledge, t8_gloid
 void
 t8_cmesh_set_partition_offsets (t8_cmesh_t cmesh, t8_shmem_array_t tree_offsets);
 
-/** Declare if the cmesh is understood as a partitioned cmesh where the partition
- * table is derived from an assumed uniform refinement of a given level.
+/** Declare if a derived cmesh should be partitioned according to a
+ * uniform refinement of a given level for the provided scheme.
  * This call is only valid when the cmesh is not yet committed via a call
- * to \ref t8_cmesh_commit.
+ * to \ref t8_cmesh_commit and when the cmesh will be derived.
  * \param [in,out] cmesh          The cmesh to be updated.
  * \param [in]     element_level  The refinement_level.
  * \param [in]     ts             The element scheme describing the refinement pattern.
@@ -460,6 +460,13 @@ t8_cmesh_comm_is_valid (t8_cmesh_t cmesh, sc_MPI_Comm comm);
  */
 int
 t8_cmesh_is_partitioned (t8_cmesh_t cmesh);
+
+/** Get the dimension of a cmesh.
+ * \param [in]  cmesh   The cmesh.
+ * \a cmesh must be committed before calling this function.
+ */
+int
+t8_cmesh_get_dimension (const t8_cmesh_t cmesh);
 
 /** Return the global number of trees in a cmesh.
  * \param [in] cmesh       The cmesh to be considered.

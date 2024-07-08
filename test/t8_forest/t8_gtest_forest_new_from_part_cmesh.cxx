@@ -108,7 +108,7 @@ TEST (t8_forest_new_from_partition, alternating_two_one)
   for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++) {
     t8_tree_t tree = t8_forest_get_tree (forest, itree);
     for (t8_locidx_t ielement = 0; ielement < t8_forest_get_tree_element_count (tree); ielement++) {
-      t8_element_t *element = t8_forest_get_tree_element (tree, ielement);
+      const t8_element_t *element = t8_forest_get_tree_element (tree, ielement);
       EXPECT_EQ (line_scheme->t8_element_level (element), level);
     }
   }
