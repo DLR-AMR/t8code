@@ -46,7 +46,6 @@ T8_EXTERN_C_BEGIN ();
  * This call is equivalent to
  *   sc_init (comm, 1, 1, NULL, SC_LP_ESSENTIAL);
  *   t8_init (SC_LP_DEFAULT);
- *
  * \param [in] comm The MPI communicator to use.
  */
 void
@@ -59,11 +58,24 @@ void
 t8_fortran_finalize ();
 
 /** Commit cmesh. This wraps cmesh_commit in order to use the dereferenced communicator.
+ * \param [in] Ccomm  Pointer to a C MPI communicator.
 */
 void
 t8_fortran_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm *comm);
 
 /** This function calls t8_cmesh_set_join_by_vertices with connectivity = NULL.
+ * \param[in,out]   cmesh               Pointer to a t8code cmesh object. If set to NULL this argument is ignored.
+ * \param[in]       ntrees              Number of coarse mesh elements resp. trees.
+ * \param[in]       eclasses            List of element classes of length [ntrees].
+ * \param[in]       vertices            List of per element vertices with dimensions
+ *                                      [ntrees,T8_ECLASS_MAX_CORNERS,T8_ECLASS_MAX_DIM].
+ * \param[in]       do_both_directions  Compute the connectivity from both neighboring sides.
+ *                                      Takes much longer to compute.
+ *
+ * \warning  This routine might be too expensive for very large meshes. In this case, 
+ *           consider to use a fully featured mesh generator.
+ *
+ * \note This routine does not detect periodic boundaries.
 */
 void
 t8_fortran_cmesh_set_join_by_vertices_noConn (t8_cmesh_t cmesh, const int ntrees, const t8_eclass_t *eclasses,
@@ -94,6 +106,9 @@ t8_fortran_MPI_Comm_new (
 void
 t8_fortran_MPI_Comm_delete (sc_MPI_Comm *Ccomm);
 
+/** Wraps t8_cmesh_new_periodic_tri, passing the MPI communicator as pointer instead of by value
+ * \param [in] Ccomm  Pointer to a C MPI communicator.
+ */
 t8_cmesh_t
 t8_cmesh_new_periodic_tri_wrap (sc_MPI_Comm *Ccomm);
 
@@ -110,9 +125,20 @@ t8_cmesh_new_periodic_tri_wrap (sc_MPI_Comm *Ccomm);
 t8_forest_t
 t8_forest_new_uniform_default (t8_cmesh_t cmesh, int level, int do_face_ghost, sc_MPI_Comm *comm);
 
+
+/** 
+ * \param [in, out] forest       The forest
+ * \param [in] recursive    A flag specifying whether adaptation is to be done recursively
+ *                          or not. If the value is zero, adaptation is not recursive
+ *                          and it is recursive otherwise.
+ * \param [in] callback     A pointer to a user defined function. t8code will never touch the function.
+ */
 t8_forest_t
 t8_forest_adapt_by_coordinates (t8_forest_t forest, int recursive, t8_fortran_adapt_coordinate_callback callback);
 
+/** Log a message on the root rank with priority SC_LP_PRODUCTION.
+ * \param [in] string         String to log.
+ */
 void
 t8_global_productionf_noargs (const char *string);
 
