@@ -25,7 +25,7 @@
 #include <t8_cmesh_vtk_writer.h>
 #include <t8_cmesh/t8_cmesh_partition.h>
 #include <t8_cmesh_readmshfile.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 
 /* Output a cmesh in .vtk format. Process i writes to the file
  * prefix_t8_msh_i.vtk
