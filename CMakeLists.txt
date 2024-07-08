@@ -9,11 +9,14 @@ option( T8CODE_BUILD_EXAMPLES "Build t8code's examples" ON )
 
 option( T8CODE_ENABLE_MPI "Enable t8code's features which rely on MPI" ON )
 option( T8CODE_ENABLE_VTK "Enable t8code's features which rely on VTK" OFF )
+option( T8CODE_ENABLE_OCC "Enable t8code's features which rely on OpenCASCADE" OFF )
 
 option( T8CODE_USE_SYSTEM_SC "Use system-installed sc library" OFF )
 option( T8CODE_USE_SYSTEM_P4EST "Use system-installed p4est library" OFF )
 
 option( BUILD_DOCUMENTATION "Build t8code's documentation" ON)
+option( BUILD_SPHINX_DOCUMENTATION "Build t8code's documentation using sphinx" OFF)
+
 
 if( NOT CMAKE_BUILD_TYPE )
     set( CMAKE_BUILD_TYPE "Release" )
@@ -42,6 +45,10 @@ endif()
 
 if( T8CODE_ENABLE_VTK )
     find_package( VTK REQUIRED )
+endif()
+
+if( T8CODE_ENABLE_OCC )
+    find_package( OpenCASCADE REQUIRED )
 endif()
 
 # Override default for this libsc option
@@ -83,4 +90,8 @@ endif()
 
 if ( BUILD_DOCUMENTATION ) 
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/doc )
+endif()
+
+if ( BUILD_SPHINX_DOCUMENTATION )
+    set (BUILD_DOCUMENTATION 1)
 endif()
