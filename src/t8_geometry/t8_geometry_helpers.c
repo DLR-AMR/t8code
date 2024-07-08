@@ -385,7 +385,7 @@ t8_geom_get_scaling_factor_of_edge_on_face_tet (const int edge, const int face, 
    *      /   --|--face
    *     /      |
    *    /    <~~| orthogonal direction
-   *   /<----o--| maximum othogonal direction
+   *   /<----o--| maximum orthogonal direction
    *  /_________|
    */
 
@@ -473,7 +473,7 @@ t8_geom_get_scaling_factor_of_edge_on_face_prism (const int edge, const int face
    *      /   --|--face
    *     /      |
    *    /    <~~| orthogonal direction
-   *   /<----o--| maximum othogonal direction
+   *   /<----o--| maximum orthogonal direction
    *  /_________|
    */
   const double orthogonal_direction[9][5] = { { ref_coords[2], 0, 0, (1 - ref_coords[0]), 0 },
