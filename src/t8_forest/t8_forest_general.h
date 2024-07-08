@@ -824,7 +824,7 @@ t8_forest_element_points_inside (t8_forest_t forest, t8_locidx_t ltreeid, const 
                                  const double *points, int num_points, int *is_inside, const double tolerance);
 
 /* TODO: if set level and partition/adapt/balance all give NULL, then
- * refine uniformly and partition/adapt/balance the unfiform forest. */
+ * refine uniformly and partition/adapt/balance the uniform forest. */
 /** Build a uniformly refined forest on a coarse mesh.
  * \param [in]      cmesh     A coarse mesh.
  * \param [in]      scheme    An eclass scheme.
