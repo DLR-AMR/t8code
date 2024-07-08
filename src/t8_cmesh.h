@@ -120,7 +120,7 @@ t8_cmesh_no_negative_volume (t8_cmesh_t cmesh);
  *                              3 * \a num_vertices many doubles.
  *                              \a num_vertices must match \ref t8_eclass_num_vertices[\a eclass]
  * \return                      True if the geometric volume describe by \a vertices is negative.
- *                              Fals otherwise.
+ *                              False otherwise.
  * Returns true if a tree of the given eclass with the given vertex
  * coordinates does have negative volume.
  */
