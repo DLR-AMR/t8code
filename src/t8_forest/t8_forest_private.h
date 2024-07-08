@@ -68,6 +68,9 @@ t8_forest_compute_desc (t8_forest_t forest);
 void
 t8_forest_populate (t8_forest_t forest);
 
+void
+t8_forest_populate_according_to_cmesh (t8_forest_t forest);
+
 /** Return the eclass scheme of a given element class associated to a forest.
  * This function does not check whether the given forest is committed, use with
  * caution and only if you are sure that the eclass_scheme was set.

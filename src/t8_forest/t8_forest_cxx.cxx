@@ -192,6 +192,9 @@ t8_forest_compute_maxlevel (t8_forest_t forest)
       }
     }
   }
+  int global_maxlevel;
+  sc_MPI_Allreduce (&forest->maxlevel, &global_maxlevel, 1, sc_MPI_INT, sc_MPI_MAX, forest->mpicomm);
+  forest->maxlevel = global_maxlevel;
   T8_ASSERT (forest->maxlevel >= 0);
   t8_debugf ("Computed maxlevel %i\n", forest->maxlevel);
 }
@@ -1153,45 +1156,20 @@ t8_forest_compute_desc (t8_forest_t forest)
   }
 }
 
-/* Create the elements on this process given a uniform partition of the coarse mesh. */
 void
-t8_forest_populate (t8_forest_t forest)
+t8_forest_populate_according_to_cmesh (t8_forest_t forest)
 {
-  t8_gloidx_t child_in_tree_begin;
-  t8_gloidx_t child_in_tree_end;
-  t8_locidx_t count_elements;
-  t8_locidx_t num_tree_elements;
-  t8_locidx_t num_local_trees;
-  t8_gloidx_t jt, first_ctree;
-  t8_gloidx_t start, end, et;
-  t8_tree_t tree;
-  t8_element_t *element, *element_succ;
-  t8_element_array_t *telements;
-  t8_eclass_t tree_class;
-  t8_eclass_scheme_c *eclass_scheme;
-  t8_gloidx_t cmesh_first_tree, cmesh_last_tree;
-  int is_empty;
-
-  SC_CHECK_ABORT (forest->set_level <= forest->maxlevel, "Given refinement level exceeds the maximum.\n");
-  /* TODO: create trees and quadrants according to uniform refinement */
-  t8_cmesh_uniform_bounds (forest->cmesh, forest->set_level, forest->scheme_cxx, &forest->first_local_tree,
-                           &child_in_tree_begin, &forest->last_local_tree, &child_in_tree_end, NULL);
-
-  /* True if the forest has no elements */
-  is_empty = forest->first_local_tree > forest->last_local_tree
-             || (forest->first_local_tree == forest->last_local_tree && child_in_tree_begin >= child_in_tree_end);
-
-  cmesh_first_tree = t8_cmesh_get_first_treeid (forest->cmesh);
-  cmesh_last_tree = cmesh_first_tree + t8_cmesh_get_num_local_trees (forest->cmesh) - 1;
-
-  if (!is_empty) {
-    SC_CHECK_ABORT (forest->first_local_tree >= cmesh_first_tree && forest->last_local_tree <= cmesh_last_tree,
-                    "cmesh partition does not match the planned forest partition");
-  }
+  SC_CHECK_ABORT (!forest->cmesh->first_tree_shared, "Cmesh needs to be partitioned without shared elements \n");
+  forest->first_local_tree = t8_cmesh_get_first_treeid (forest->cmesh);
+  int num_local_trees = t8_cmesh_get_num_local_trees (forest->cmesh);
+  forest->last_local_tree = forest->first_local_tree + num_local_trees - 1;
 
   forest->global_num_elements = forest->local_num_elements = 0;
+  int is_empty = (num_local_trees == 0);
+  t8_linearidx_t count_elements;
   /* create only the non-empty tree objects */
   if (is_empty) {
+    t8_debugf ("is empty\n");
     /* This processor is empty
      * we still set the tree array to store 0 as the number of trees here */
     forest->trees = sc_array_new (sizeof (t8_tree_struct_t));
@@ -1201,38 +1179,132 @@ t8_forest_populate (t8_forest_t forest)
     forest->first_local_tree = forest->last_local_tree + 1;
   }
   else {
+    t8_debugf ("has %i trees\n", num_local_trees);
     /* for each tree, allocate elements */
-    num_local_trees = forest->last_local_tree - forest->first_local_tree + 1;
+    T8_ASSERT (num_local_trees == forest->last_local_tree - forest->first_local_tree + 1);
+
     forest->trees = sc_array_new_count (sizeof (t8_tree_struct_t), num_local_trees);
-    first_ctree = t8_cmesh_get_first_treeid (forest->cmesh);
-    for (jt = forest->first_local_tree, count_elements = 0; jt <= forest->last_local_tree; jt++) {
-      tree = (t8_tree_t) t8_sc_array_index_locidx (forest->trees, jt - forest->first_local_tree);
-      tree_class = tree->eclass = t8_cmesh_get_tree_class (forest->cmesh, jt - first_ctree);
+    t8_gloidx_t first_ctree = t8_cmesh_get_first_treeid (forest->cmesh);
+    count_elements = 0; /** apparently this cannot be in the for loop initialisation. */
+    for (t8_gloidx_t jt = forest->first_local_tree; jt <= forest->last_local_tree; jt++) {
+      t8_tree_t tree = (t8_tree_t) t8_sc_array_index_locidx (forest->trees, jt - forest->first_local_tree);
+      t8_eclass_t tree_class = tree->eclass = t8_cmesh_get_tree_class (forest->cmesh, jt - first_ctree);
       tree->elements_offset = count_elements;
-      eclass_scheme = forest->scheme_cxx->eclass_schemes[tree_class];
+      t8_eclass_scheme_c *eclass_scheme = forest->scheme_cxx->eclass_schemes[tree_class];
       T8_ASSERT (eclass_scheme != NULL);
-      telements = &tree->elements;
+      t8_element_array_t *telements = &tree->elements;
       /* calculate first and last element on this tree */
-      start = (jt == forest->first_local_tree) ? child_in_tree_begin : 0;
-      end = (jt == forest->last_local_tree) ? child_in_tree_end
-                                            : eclass_scheme->t8_element_count_leaves_from_root (forest->set_level);
+      t8_locidx_t start = 0;
+      t8_locidx_t end = eclass_scheme->t8_element_count_leaves_from_root (forest->set_level);
+      t8_debugf ("end: %i\n", end);
+      /* Allocate elements for this processor. */
+      t8_element_array_init_size (telements, eclass_scheme, end - start);
+      t8_element_t *element = t8_element_array_index_locidx_mutable (telements, 0);
+      eclass_scheme->t8_element_set_linear_id (element, forest->set_level, start);
+      count_elements++;
+      for (t8_locidx_t et = start + 1; et < end; et++, count_elements++) {
+        t8_element_t *element_succ = t8_element_array_index_locidx_mutable (telements, et - start);
+        T8_ASSERT (eclass_scheme->t8_element_level (element) == forest->set_level);
+        eclass_scheme->t8_element_successor (element, element_succ);
+        element = element_succ;
+      }
+      t8_debugf ("count_elements in loop:%li\n", count_elements);
+    }
+    t8_debugf ("count_elements:%li\n", count_elements);
+  }
+  forest->local_num_elements = count_elements;
+  /* TODO: if no tree has pyramid type we can optimize this to global_num_elements = global_num_trees * 2^(dim*level) */
+  t8_forest_comm_global_num_elements (forest);
+  /* TODO: figure out global_first_position, global_first_quadrant without comm */
+}
+
+/* Create the elements on this process given a uniform partition of the coarse mesh. */
+void
+t8_forest_populate (t8_forest_t forest)
+{
+  SC_CHECK_ABORT (forest->set_level <= forest->maxlevel, "Given refinement level exceeds the maximum.\n");
+
+  t8_gloidx_t cmesh_first_tree = t8_cmesh_get_first_treeid (forest->cmesh);
+  t8_gloidx_t cmesh_last_tree = cmesh_first_tree + t8_cmesh_get_num_local_trees (forest->cmesh) - 1;
+  t8_gloidx_t
+    child_in_tree_begin; /** does not get filled when the cmesh does not contain any shared elements between processes */
+  t8_gloidx_t child_in_tree_end; /** see above*/
+
+  if (forest->set_initial_partition_according_to_cmesh) {
+    SC_CHECK_ABORT (!forest->cmesh->first_tree_shared, "Cmesh needs to be partitioned without shared elements for a "
+                                                       "forest that is partitioned in the same way as the cmesh \n");
+    forest->first_local_tree = cmesh_first_tree;
+    forest->last_local_tree = cmesh_last_tree;
+  }
+  else {
+    t8_cmesh_uniform_bounds (forest->cmesh, forest->set_level, forest->scheme_cxx, &forest->first_local_tree,
+                             &child_in_tree_begin, &forest->last_local_tree, &child_in_tree_end, NULL);
+  }
+
+  /* True if the forest has no elements */
+  int is_empty
+    = forest->first_local_tree > forest->last_local_tree
+      || (!forest->set_initial_partition_according_to_cmesh && forest->first_local_tree == forest->last_local_tree
+          && child_in_tree_begin >= child_in_tree_end);
+
+  if (!is_empty && !forest->set_initial_partition_according_to_cmesh) {
+    SC_CHECK_ABORT (forest->first_local_tree >= cmesh_first_tree && forest->last_local_tree <= cmesh_last_tree,
+                    "cmesh partition does not match the planned uniform equally distributed forest partition");
+  }
+
+  forest->global_num_elements = forest->local_num_elements = 0;
+  /* create only the non-empty tree objects */
+  if (is_empty) {
+    forest->local_num_elements = 0;
+    /* This processor is empty
+     * we still set the tree array to store 0 as the number of trees here */
+    forest->trees = sc_array_new (sizeof (t8_tree_struct_t));
+    /* Set the first local tree larger than the last local tree to
+     * indicate empty forest, this is sometimes used instead of the more accurate check that local_num_element = 0. TODO: check that line can be removed */
+    forest->first_local_tree = forest->last_local_tree + 1;
+  }
+  else {
+    /* for each tree, allocate elements */
+    t8_locidx_t num_local_trees = forest->last_local_tree - forest->first_local_tree + 1;
+    forest->trees = sc_array_new_count (sizeof (t8_tree_struct_t), num_local_trees);
+    t8_gloidx_t first_ctree = t8_cmesh_get_first_treeid (forest->cmesh);
+    t8_locidx_t count_elements = 0;
+    for (t8_gloidx_t jt = forest->first_local_tree; jt <= forest->last_local_tree; jt++) {
+      t8_tree_t tree = (t8_tree_t) t8_sc_array_index_locidx (forest->trees, jt - forest->first_local_tree);
+      t8_eclass_t tree_class = tree->eclass = t8_cmesh_get_tree_class (forest->cmesh, jt - first_ctree);
+      tree->elements_offset = count_elements;
+      t8_eclass_scheme_c *eclass_scheme = forest->scheme_cxx->eclass_schemes[tree_class];
+      T8_ASSERT (eclass_scheme != NULL);
+      t8_element_array_t *telements = &tree->elements;
+      /* calculate first and last element on this tree */
+      t8_locidx_t start, end, num_tree_elements;
+      if (forest->set_initial_partition_according_to_cmesh) {
+        start = 0;
+        end = eclass_scheme->t8_element_count_leaves_from_root (forest->set_level);
+      }
+      else {
+        start = (jt == forest->first_local_tree) ? child_in_tree_begin : 0;
+        end = (jt == forest->last_local_tree) ? child_in_tree_end
+                                              : eclass_scheme->t8_element_count_leaves_from_root (forest->set_level);
+      }
       num_tree_elements = end - start;
+      t8_debugf ("num_tree_elements: %i \n", num_tree_elements);
       T8_ASSERT (num_tree_elements > 0);
       /* Allocate elements for this processor. */
       t8_element_array_init_size (telements, eclass_scheme, num_tree_elements);
-      element = t8_element_array_index_locidx_mutable (telements, 0);
+      t8_element_t *element = t8_element_array_index_locidx_mutable (telements, 0);
       eclass_scheme->t8_element_set_linear_id (element, forest->set_level, start);
       count_elements++;
-      for (et = start + 1; et < end; et++, count_elements++) {
-        element_succ = t8_element_array_index_locidx_mutable (telements, et - start);
+      for (t8_locidx_t et = start + 1; et < end; et++, count_elements++) {
+        t8_element_t *element_succ = t8_element_array_index_locidx_mutable (telements, et - start);
         T8_ASSERT (eclass_scheme->t8_element_level (element) == forest->set_level);
         eclass_scheme->t8_element_successor (element, element_succ);
         /* TODO: process elements here */
         element = element_succ;
       }
     }
+    forest->local_num_elements = count_elements;
   }
-  forest->local_num_elements = count_elements;
   /* TODO: if no tree has pyramid type we can optimize this to global_num_elements = global_num_trees * 2^(dim*level) */
   t8_forest_comm_global_num_elements (forest);
   /* TODO: figure out global_first_position, global_first_quadrant without comm */

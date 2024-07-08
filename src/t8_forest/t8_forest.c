@@ -60,6 +60,7 @@ t8_forest_init (t8_forest_t *pforest)
   forest->maxlevel_existing = -1;
   forest->stats_computed = 0;
   forest->incomplete_trees = -1;
+  forest->set_initial_partition_according_to_cmesh = 0;
 }
 
 int
@@ -137,6 +138,13 @@ t8_forest_set_level (t8_forest_t forest, int level)
   T8_ASSERT (0 <= level);
 
   forest->set_level = level;
+}
+
+void
+t8_forest_set_uniform_partition_from_cmesh (t8_forest_t forest, t8_cmesh_t cmesh, sc_MPI_Comm comm)
+{
+  t8_forest_set_cmesh (forest, cmesh, comm);
+  forest->set_initial_partition_according_to_cmesh = 1;
 }
 
 void
@@ -381,11 +389,10 @@ t8_forest_refines_irregular (t8_forest_t forest)
  * \param[in] forest  The forest to populate
 */
 static void
-t8_forest_populate_irregular (t8_forest_t forest)
+t8_forest_populate_irregular (t8_forest_t forest, int repartition)
 {
   t8_forest_t forest_zero;
   t8_forest_t forest_tmp;
-  t8_forest_t forest_tmp_partition;
   t8_cmesh_ref (forest->cmesh);
   t8_scheme_cxx_ref (forest->scheme_cxx);
   /* We start with a level 0 uniform refinement */
@@ -400,16 +407,15 @@ t8_forest_populate_irregular (t8_forest_t forest)
     t8_forest_init (&forest_tmp);
     t8_forest_set_level (forest_tmp, i);
     t8_forest_set_adapt (forest_tmp, forest_zero, t8_forest_refine_everything, 0);
+    if (!forest->set_initial_partition_according_to_cmesh) {
+      t8_forest_set_partition (forest_tmp, forest_zero, 0);
+    }
     t8_forest_commit (forest_tmp);
-    /* Partition the forest to even the load */
-    t8_forest_init (&forest_tmp_partition);
-    t8_forest_set_partition (forest_tmp_partition, forest_tmp, 0);
-    t8_forest_commit (forest_tmp_partition);
-    forest_zero = forest_tmp_partition;
+    forest_zero = forest_tmp;
   }
   /* Copy all elements over to the original forest. */
   t8_forest_copy_trees (forest, forest_zero, 1);
-  t8_forest_unref (&forest_tmp_partition);
+  t8_forest_unref (&forest_tmp); /* same as forest zero */
 }
 
 void
@@ -450,12 +456,15 @@ t8_forest_commit (t8_forest_t forest)
     mpiret = sc_MPI_Comm_rank (forest->mpicomm, &forest->mpirank);
     SC_CHECK_MPI (mpiret);
     /* Compute the maximum allowed refinement level */
+    t8_debugf ("compute maxlevel of forest:\n");
     t8_forest_compute_maxlevel (forest);
+    t8_debugf ("computed maxlevel: %i\n", forest->maxlevel);
     T8_ASSERT (forest->set_level <= forest->maxlevel);
     /* populate a new forest with tree and quadrant objects */
     if (t8_forest_refines_irregular (forest) && forest->set_level > 0) {
       /* On root level we will also use the normal algorithm */
-      t8_forest_populate_irregular (forest);
+      t8_forest_populate_irregular (forest, 1);
+      //      t8_forest_populate_irregular (forest, !forest->set_initial_partition_according_to_cmesh);
     }
     else {
       t8_forest_populate (forest);
@@ -1425,6 +1434,34 @@ t8_forest_new_uniform (t8_cmesh_t cmesh, t8_scheme_cxx_t *scheme, const int leve
   if (do_face_ghost) {
     t8_forest_set_ghost (forest, 1, T8_GHOST_FACES);
   }
+  /* commit the forest */
+  t8_forest_commit (forest);
+  t8_global_productionf ("Constructed uniform forest with %lli global elements.\n",
+                         (long long) forest->global_num_elements);
+
+  return forest;
+}
+
+t8_forest_t
+t8_forest_new_uniform_with_cmesh_partition (t8_cmesh_t cmesh, t8_scheme_cxx_t *scheme, const int level,
+                                            const int do_face_ghost, sc_MPI_Comm comm)
+{
+  t8_forest_t forest;
+
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (scheme != NULL);
+  T8_ASSERT (0 <= level);
+
+  /* Initialize the forest */
+  t8_forest_init (&forest);
+  /* Set the cmesh, scheme and level */
+  t8_forest_set_uniform_partition_from_cmesh (forest, cmesh, comm);
+  t8_forest_set_scheme (forest, scheme);
+  t8_forest_set_level (forest, level);
+  if (do_face_ghost) {
+    t8_forest_set_ghost (forest, 1, T8_GHOST_FACES);
+  }
+
   /* commit the forest */
   t8_forest_commit (forest);
   t8_global_productionf ("Constructed uniform forest with %lli global elements.\n",

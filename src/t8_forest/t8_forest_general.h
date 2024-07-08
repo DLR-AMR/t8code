@@ -213,6 +213,9 @@ t8_forest_set_scheme (t8_forest_t forest, t8_scheme_cxx_t *scheme);
 void
 t8_forest_set_level (t8_forest_t forest, int level);
 
+void
+t8_forest_set_uniform_partition_from_cmesh (t8_forest_t forest, t8_cmesh_t cmesh, sc_MPI_Comm comm);
+
 /** Set a forest as source for copying on committing.
  * By default, the forest takes ownership of the source \b from such that it will
  * be destroyed on calling \ref t8_forest_commit.  To keep ownership of \b
@@ -839,6 +842,10 @@ t8_forest_element_points_inside (t8_forest_t forest, t8_locidx_t ltreeid, const 
 t8_forest_t
 t8_forest_new_uniform (t8_cmesh_t cmesh, t8_scheme_cxx_t *scheme, const int level, const int do_face_ghost,
                        sc_MPI_Comm comm);
+
+t8_forest_t
+t8_forest_new_uniform_with_cmesh_partition (t8_cmesh_t cmesh, t8_scheme_cxx_t *scheme, const int level,
+                                            const int do_face_ghost, sc_MPI_Comm comm);
 
 /** Build a adapted forest from another forest.
  * \param [in]    forest_from The forest to refine
