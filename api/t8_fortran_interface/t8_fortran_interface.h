@@ -83,12 +83,12 @@ t8_fortran_cmesh_set_join_by_vertices_noConn (t8_cmesh_t cmesh, const int ntrees
 
 /** Translate a fortran MPI communicator into a C MPI communicator
  * and return a pointer to it.
- * \param [in] Fcomm  Fortran MPI Communicator
- * \return            Pointer to the corresponding C MPI communicator.
- * \note      This function allocated memory for the new C MPI communicator.
- *            Call \ref t8_fortran_MPI_Comm_delete to free this memory.
- * \note      t8code needs to be configured with MPI support to be able to use
- *            this function.
+ * \param [in] Fcomm           Fortran MPI Communicator
+ * \return                     Pointer to the corresponding C MPI communicator.
+ * \note                       This function allocated memory for the new C MPI communicator.
+ *                             Call \ref t8_fortran_MPI_Comm_delete to free this memory.
+ * \note                       t8code needs to be configured with MPI support to be able to use
+ *                             this function.
  */
 sc_MPI_Comm *
 t8_fortran_MPI_Comm_new (
@@ -101,13 +101,14 @@ t8_fortran_MPI_Comm_new (
 
 /** Free the memory of a C MPI Communicator pointer that was created
  *  with \ref t8_fortran_MPI_Comm_new.
- * \param [in] Ccomm  Pointer to a C MPI communicator.
+ * \param [in] Ccomm           Pointer to a C MPI communicator.
  */
 void
 t8_fortran_MPI_Comm_delete (sc_MPI_Comm *Ccomm);
 
 /** Wraps t8_cmesh_new_periodic_tri, passing the MPI communicator as pointer instead of by value
- * \param [in] Ccomm  Pointer to a C MPI communicator.
+ * \param [in] Ccomm           Pointer to a C MPI communicator.
+ * \param [out]                Example cmesh
  */
 t8_cmesh_t
 t8_cmesh_new_periodic_tri_wrap (sc_MPI_Comm *Ccomm);
@@ -115,23 +116,23 @@ t8_cmesh_new_periodic_tri_wrap (sc_MPI_Comm *Ccomm);
 /** Wraps \ref t8_forest_new_uniform with the default scheme as scheme
  * and passes MPI communicator as pointer instead of by value.
  * Build a uniformly refined forest on a coarse mesh.
- * \param [in]      cmesh     A coarse mesh.
- * \param [in]      level     An initial uniform refinement level.
+ * \param [in]      cmesh      A coarse mesh.
+ * \param [in]      level      An initial uniform refinement level.
  * \param [in]      do_face_ghost If true, a layer of ghost elements is created for the forest.
- * \param [in]      comm      MPI communicator to use.
- * \return                    A uniform forest with coarse mesh \a cmesh, eclass_scheme
- *                            \a scheme and refinement level \a level.
+ * \param [in]      comm       MPI communicator to use.
+ * \return                     A uniform forest with coarse mesh \a cmesh, eclass_scheme
+ *                             \a scheme and refinement level \a level.
  */
 t8_forest_t
 t8_forest_new_uniform_default (t8_cmesh_t cmesh, int level, int do_face_ghost, sc_MPI_Comm *comm);
 
 
 /** 
- * \param [in, out] forest       The forest
- * \param [in] recursive    A flag specifying whether adaptation is to be done recursively
- *                          or not. If the value is zero, adaptation is not recursive
- *                          and it is recursive otherwise.
- * \param [in] callback     A pointer to a user defined function. t8code will never touch the function.
+ * \param [in, out] forest     The forest
+ * \param [in] recursive       A flag specifying whether adaptation is to be done recursively
+ *                             or not. If the value is zero, adaptation is not recursive
+ *                             and it is recursive otherwise.
+ * \param [in] callback        A pointer to a user defined function. t8code will never touch the function.
  */
 t8_forest_t
 t8_forest_adapt_by_coordinates (t8_forest_t forest, int recursive, t8_fortran_adapt_coordinate_callback callback);
