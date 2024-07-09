@@ -69,7 +69,7 @@ T8_EXTERN_C_BEGIN ();
 void
 t8_cmesh_init (t8_cmesh_t *pcmesh);
 
-/** Allocate a new un-commmited cmesh.
+/** Allocate a new un-committed cmesh.
  * \return                     A pointer to an un-committed t8_cmesh structure.
  */
 t8_cmesh_t
