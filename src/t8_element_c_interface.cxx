@@ -27,7 +27,7 @@
  */
 
 #include <t8_element.h>
-#include <t8_element_cxx.hxx>
+#include <t8_element.hxx>
 #include <t8_element_c_interface.h>
 
 size_t
@@ -54,14 +54,6 @@ t8_element_maxlevel (const t8_eclass_scheme_c *ts)
   return ts->t8_element_maxlevel ();
 }
 
-t8_eclass_t
-t8_element_child_eclass (const t8_eclass_scheme_c *ts, int childid)
-{
-  T8_ASSERT (ts != NULL);
-
-  return ts->t8_element_child_eclass (childid);
-}
-
 int
 t8_element_level (const t8_eclass_scheme_c *ts, const t8_element_t *elem)
 {
@@ -84,6 +76,14 @@ t8_element_compare (const t8_eclass_scheme_c *ts, const t8_element_t *elem1, con
   T8_ASSERT (ts != NULL);
 
   return ts->t8_element_compare (elem1, elem2);
+}
+
+int
+t8_element_equal (const t8_eclass_scheme_c *ts, const t8_element_t *elem1, const t8_element_t *elem2)
+{
+  T8_ASSERT (ts != NULL);
+
+  return ts->t8_element_equal (elem1, elem2);
 }
 
 void
@@ -199,7 +199,7 @@ t8_element_ancestor_id (const t8_eclass_scheme_c *ts, const t8_element_t *elem, 
 }
 
 int
-t8_element_is_family (const t8_eclass_scheme_c *ts, t8_element_t **fam)
+t8_element_is_family (const t8_eclass_scheme_c *ts, t8_element_t *const *fam)
 {
   T8_ASSERT (ts != NULL);
 
@@ -358,19 +358,11 @@ t8_element_last_descendant (const t8_eclass_scheme_c *ts, const t8_element_t *el
 }
 
 void
-t8_element_successor (const t8_eclass_scheme_c *ts, const t8_element_t *elem1, t8_element_t *elem2, int level)
+t8_element_successor (const t8_eclass_scheme_c *ts, const t8_element_t *elem1, t8_element_t *elem2)
 {
   T8_ASSERT (ts != NULL);
 
-  ts->t8_element_successor (elem1, elem2, level);
-}
-
-int
-t8_element_root_len (const t8_eclass_scheme_c *ts, const t8_element_t *elem)
-{
-  T8_ASSERT (ts != NULL);
-
-  return ts->t8_element_root_len (elem);
+  ts->t8_element_successor (elem1, elem2);
 }
 
 void
@@ -383,27 +375,19 @@ t8_element_vertex_reference_coords (const t8_eclass_scheme_c *ts, const t8_eleme
 }
 
 t8_gloidx_t
-t8_element_count_leafs (const t8_eclass_scheme_c *ts, const t8_element_t *t, int level)
+t8_element_count_leaves (const t8_eclass_scheme_c *ts, const t8_element_t *t, int level)
 {
   T8_ASSERT (ts != NULL);
 
-  return ts->t8_element_count_leafs (t, level);
+  return ts->t8_element_count_leaves (t, level);
 }
 
 t8_gloidx_t
-t8_element_count_leafs_from_root (const t8_eclass_scheme_c *ts, int level)
+t8_element_count_leaves_from_root (const t8_eclass_scheme_c *ts, int level)
 {
   T8_ASSERT (ts != NULL);
 
-  return ts->t8_element_count_leafs_from_root (level);
-}
-
-void
-t8_element_general_function (const t8_eclass_scheme_c *ts, const t8_element_t *elem, const void *indata, void *outdata)
-{
-  T8_ASSERT (ts != NULL);
-
-  ts->t8_element_general_function (elem, indata, outdata);
+  return ts->t8_element_count_leaves_from_root (level);
 }
 
 #ifdef T8_ENABLE_DEBUG
@@ -422,6 +406,15 @@ t8_element_debug_print (const t8_eclass_scheme_c *ts, const t8_element_t *elem)
 
   return ts->t8_element_debug_print (elem);
 }
+
+void
+t8_element_to_string (const t8_eclass_scheme_c *ts, const t8_element_t *elem, char *debug_string, const int string_size)
+{
+  T8_ASSERT (ts != NULL);
+  T8_ASSERT (debug_string != NULL);
+
+  ts->t8_element_to_string (elem, debug_string, string_size);
+}
 #endif
 
 void
@@ -438,4 +431,36 @@ t8_element_destroy (const t8_eclass_scheme_c *ts, int length, t8_element_t **ele
   T8_ASSERT (ts != NULL);
 
   ts->t8_element_destroy (length, elems);
+}
+
+void
+t8_element_root (const t8_eclass_scheme_c *ts, t8_element_t *elem)
+{
+  T8_ASSERT (ts != NULL);
+
+  ts->t8_element_root (elem);
+}
+
+void
+t8_element_MPI_Pack (const t8_eclass_scheme_c *ts, t8_element_t **const elements, const unsigned int count,
+                     void *send_buffer, const int buffer_size, int *position, sc_MPI_Comm comm)
+{
+  T8_ASSERT (ts != NULL);
+
+  return ts->t8_element_MPI_Pack (elements, count, send_buffer, buffer_size, position, comm);
+}
+
+void
+t8_element_MPI_Pack_size (const t8_eclass_scheme_c *ts, const unsigned int count, sc_MPI_Comm comm, int *pack_size)
+{
+  T8_ASSERT (ts != NULL);
+  return ts->t8_element_MPI_Pack_size (count, comm, pack_size);
+}
+
+void
+t8_element_MPI_Unpack (const t8_eclass_scheme_c *ts, void *recvbuf, const int buffer_size, int *position,
+                       t8_element_t **elements, const unsigned int count, sc_MPI_Comm comm)
+{
+  T8_ASSERT (ts != NULL);
+  return ts->t8_element_MPI_Unpack (recvbuf, buffer_size, position, elements, count, comm);
 }

@@ -23,7 +23,9 @@
 
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
+#include <test/t8_gtest_custom_assertion.hxx>
+#include <test/t8_gtest_macros.hxx>
 
 /* This program tests the descendant function of an element. */
 
@@ -39,7 +41,7 @@ class class_schemes_descendant: public testing::TestWithParam<t8_eclass_t> {
     ts->t8_element_new (1, &elem);
     ts->t8_element_new (1, &desc);
     ts->t8_element_new (1, &test);
-    ts->t8_element_set_linear_id (elem, 0, 0);
+    ts->t8_element_root (elem);
   }
   void
   TearDown () override
@@ -76,12 +78,12 @@ t8_recursive_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *t
     /* first child == first descendant. */
     if (ichild == 0) {
       ts->t8_element_first_descendant (elem, test, level + 1);
-      ASSERT_TRUE (!ts->t8_element_compare (desc, test)) << "wrong first descendant.\n";
+      EXPECT_ELEM_EQ (ts, desc, test);
     }
     /* last child == last descendant. */
     else if (ichild == num_children - 1) {
       ts->t8_element_last_descendant (elem, test, level + 1);
-      ASSERT_TRUE (!ts->t8_element_compare (desc, test)) << "Wrong last descendant.\n";
+      EXPECT_ELEM_EQ (ts, desc, test);
     }
     else if (level > maxlvl) {
       t8_recursive_descendant (desc, elem, test, ts, maxlvl);
@@ -104,7 +106,7 @@ t8_deep_first_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *
     ts->t8_element_copy (desc, test);
   }
   ts->t8_element_first_descendant (elem, test, level);
-  ASSERT_TRUE (!ts->t8_element_compare (desc, test)) << "Wrong deep first descendant.\n";
+  EXPECT_ELEM_EQ (ts, desc, test);
 }
 
 /* Test, if the last descendant of an element is computed correctly over a range
@@ -123,7 +125,7 @@ t8_deep_last_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *t
   }
   /* Check for equality. */
   ts->t8_element_last_descendant (elem, test, level);
-  ASSERT_TRUE (!ts->t8_element_compare (desc, test)) << "Wrong deep last descendant.\n";
+  EXPECT_ELEM_EQ (ts, desc, test);
 }
 
 /* Test if the first and last descendant of an element are computed correctly.
@@ -155,5 +157,4 @@ TEST_P (class_schemes_descendant, test_recursive_descendant)
   t8_large_step_descendant (elem, desc, test, ts, maxlvl);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_descendant, class_schemes_descendant,
-                          testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_descendant, class_schemes_descendant, AllEclasses, print_eclass);

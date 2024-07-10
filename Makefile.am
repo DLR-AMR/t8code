@@ -42,6 +42,7 @@ Makefile.t8.mk : Makefile.t8.pre
 # install t8code m4 macros in the correct directory
 t8aclocaldir = $(datadir)/aclocal
 dist_t8aclocal_DATA = config/t8_include.m4 \
+                      config/ax_cxx_compile_stdcxx.m4 \
                       config/t8_stdpp.m4 \
                       config/t8_netcdf.m4 \
                       config/t8_vtk.m4 \

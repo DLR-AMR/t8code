@@ -42,7 +42,7 @@ t8_read_tetgen_file_build_cmesh (const char *prefix, int do_dup, int do_partitio
     t8_debugf ("Successfully constructed cmesh from %s files.\n", prefix);
     t8_debugf ("cmesh has:\n\t%lli tetrahedra\n", (long long) t8_cmesh_get_num_trees (cmesh));
     snprintf (fileprefix, BUFSIZ, "%s_t8_tetgen", prefix);
-    if (!t8_cmesh_vtk_write_file (cmesh, fileprefix, 1.)) {
+    if (!t8_cmesh_vtk_write_file (cmesh, fileprefix)) {
       t8_debugf ("Wrote to file %s\n", fileprefix);
     }
     else {
@@ -60,7 +60,7 @@ t8_read_tetgen_file_build_cmesh (const char *prefix, int do_dup, int do_partitio
       t8_debugf ("Successfully partitioned %s.\n", "cmesh");
       t8_debugf ("cmesh has:\n\t%li local tetrahedra\n", (long) t8_cmesh_get_num_local_trees (cmesh_partitioned));
       snprintf (fileprefix, BUFSIZ, "%s_t8_tetgen_partitioned", prefix);
-      if (!t8_cmesh_vtk_write_file (cmesh_partitioned, fileprefix, 1.)) {
+      if (!t8_cmesh_vtk_write_file (cmesh_partitioned, fileprefix)) {
         t8_debugf ("Wrote to file %s\n", fileprefix);
       }
       else {

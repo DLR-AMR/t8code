@@ -22,10 +22,11 @@
 
 #include <gtest/gtest.h>
 #include <t8_cmesh.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include "t8_cmesh/t8_cmesh_trees.h"
 #include "t8_cmesh/t8_cmesh_partition.h"
-#include <t8_cmesh/t8_cmesh_testcases.h>
+#include <test/t8_gtest_macros.hxx>
+#include <test/t8_cmesh_generator/t8_cmesh_example_sets.hxx>
 
 /* We create a cmesh, partition it and repartition it several times.
  * At the end we result in the same partition as at the beginning and we
@@ -33,21 +34,27 @@
  * passed.
  */
 
-class t8_cmesh_partition_class: public testing::TestWithParam<int> {
+class t8_cmesh_partition_class: public testing::TestWithParam<cmesh_example_base *> {
  protected:
   void
   SetUp () override
   {
-    cmesh_id = GetParam ();
+    std::string name;
+    GetParam ()->param_to_string (name);
 
-    if (cmesh_id == 89 || (237 <= cmesh_id && cmesh_id <= 256)) {
+    size_t found = name.find (std::string ("t8_cmesh_new_from_class__Pyramid_sc_MPI_COMM_WORLD"));
+    if (found != std::string::npos) {
+      /* Test not working for pyramids */
+      GTEST_SKIP ();
+    }
+    found = GetParam ()->name.find (std::string ("empty"));
+    if (found != std::string::npos) {
+      /* Tests not working for empty cmeshes */
       GTEST_SKIP ();
     }
 
-    cmesh_original = t8_test_create_cmesh (cmesh_id);
+    cmesh_original = GetParam ()->cmesh_create ();
   }
-
-  int cmesh_id;
   t8_cmesh_t cmesh_original;
 };
 
@@ -129,5 +136,5 @@ TEST_P (t8_cmesh_partition_class, test_cmesh_partition_concentrate)
 }
 
 /* Test all cmeshes over all different inputs we get through their id */
-INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_partition, t8_cmesh_partition_class,
-                          testing::Range (0, t8_get_number_of_all_testcases ()));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_partition, t8_cmesh_partition_class, AllCmeshsParam,
+                          pretty_print_base_example);

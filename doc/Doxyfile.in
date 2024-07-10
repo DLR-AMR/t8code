@@ -44,8 +44,8 @@ PROJECT_NUMBER         = @VERSION@
 # for a project that appears at the top of each page and should give viewer a
 # quick idea about the purpose of the project. Keep the description short.
 
-PROJECT_BRIEF          = t8code is a C library to manage a forest of adaptive \
-                         space-trees of general element classes in parallel.
+PROJECT_BRIEF          = "t8code is a C library to manage a forest of adaptive \
+                         space-trees of general element classes in parallel."
 
 # With the PROJECT_LOGO tag one can specify a logo or an icon that is included
 # in the documentation. The maximum height of the logo should not exceed 55
@@ -1560,7 +1560,7 @@ EXT_LINKS_IN_WINDOW    = NO
 
 # If the HTML_FORMULA_FORMAT option is set to svg, doxygen will use the pdf2svg
 # tool (see https://github.com/dawbarton/pdf2svg) or inkscape (see
-# https://inkscape.org) to generate formulas as SVG images instead of PNGs for
+# https://inkscape.org) to generate formulas as SVG images instead of PNG for
 # the HTML output. These images will generally look nicer at scaled resolutions.
 # Possible values are: png (the default) and svg (looks nicer but requires the
 # pdf2svg or inkscape tool).
@@ -1579,7 +1579,7 @@ HTML_FORMULA_FORMAT    = png
 FORMULA_FONTSIZE       = 10
 
 # Use the FORMULA_TRANSPARENT tag to determine whether or not the images
-# generated for formulas are transparent PNGs. Transparent PNGs are not
+# generated for formulas are transparent PNG. Transparent PNG are not
 # supported properly for IE 6.0, but are supported on all modern browsers.
 #
 # Note that when changing this option you need to delete any form_*.png files in
@@ -2611,3 +2611,8 @@ GENERATE_LEGEND        = YES
 # The default value is: YES.
 
 DOT_CLEANUP            = YES
+
+GENERATE_XML           = YES
+
+XML_OUTPUT             = xml
+

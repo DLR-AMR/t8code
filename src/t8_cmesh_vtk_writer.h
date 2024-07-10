@@ -36,7 +36,7 @@ T8_EXTERN_C_BEGIN ();
 
 /* TODO: document this function */
 int
-t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix, double scale);
+t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix);
 
 T8_EXTERN_C_END ();
 

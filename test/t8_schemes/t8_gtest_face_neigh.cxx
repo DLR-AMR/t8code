@@ -21,9 +21,11 @@
 */
 
 #include <gtest/gtest.h>
+#include <test/t8_gtest_custom_assertion.hxx>
 #include <t8_eclass.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_element_c_interface.h>
+#include <test/t8_gtest_macros.hxx>
 
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.h>
 
@@ -40,7 +42,7 @@ class face_neigh: public testing::TestWithParam<t8_eclass_t> {
     ts->t8_element_new (1, &element);
     ts->t8_element_new (1, &child);
     ts->t8_element_new (1, &neigh);
-    ts->t8_element_set_linear_id (element, 0, 0);
+    ts->t8_element_root (element);
   }
 
   void
@@ -58,7 +60,7 @@ class face_neigh: public testing::TestWithParam<t8_eclass_t> {
   t8_eclass_scheme_c *ts;
   t8_eclass_t eclass;
 
-#ifdef T8_ENABLE_DEBUG
+#ifdef T8_ENABLE_LESS_TESTS
   const int maxlvl = 3;
 #else
   const int maxlvl = 4;
@@ -79,8 +81,8 @@ t8_test_face_neighbor_inside (int num_faces, t8_element_t *element, t8_element_t
     ts->t8_element_face_neighbor_inside (child, neigh, iface, &face_num);
     ts->t8_element_face_neighbor_inside (neigh, element, face_num, &check);
 
-    EXPECT_EQ (ts->t8_element_compare (child, element), 0) << "Got a false neighbor.";
-    EXPECT_EQ (check, iface) << "Wrong face.";
+    EXPECT_TRUE (ts->t8_element_equal (child, element)) << "Got a false neighbor.";
+    EXPECT_ELEM_EQ (ts, child, element);
   }
 }
 
@@ -203,6 +205,4 @@ TEST_P (face_neigh, recursive_check_diff)
   t8_recursive_check_diff (child, element, neigh, ts, maxlvl, level);
 }
 
-/* *INDENT-OFF* */
-INSTANTIATE_TEST_SUITE_P (t8_gtest_face_neigh, face_neigh, testing::Range (T8_ECLASS_VERTEX, T8_ECLASS_COUNT));
-/* *INDENT-ON* */
+INSTANTIATE_TEST_SUITE_P (t8_gtest_face_neigh, face_neigh, AllEclasses, print_eclass);

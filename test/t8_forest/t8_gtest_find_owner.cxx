@@ -25,13 +25,13 @@
 #include <t8_cmesh.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>
-#include <t8_forest/t8_forest_cxx.h>
 #include <t8_forest/t8_forest_types.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
+#include <test/t8_gtest_macros.hxx>
 
 class forest_find_owner: public testing::TestWithParam<t8_eclass> {
  protected:
@@ -85,7 +85,7 @@ TEST_P (forest_find_owner, find_owner)
   t8_eclass_scheme_c  ts = scheme->eclass_schemes[eclass];
   ts->t8_element_new (1, &element);
   /* Compute the number of elements per tree */
-  ts->t8_element_set_linear_id (element, 0, 0);
+  ts->t8_element_root (element);
   /* TODO: This computation fails with pyramids */
   t8_gloidx_t         elements_per_tree =
     pow (ts->t8_element_num_children (element), level);
@@ -169,4 +169,4 @@ TEST_P (forest_find_owner, find_multiple_owners)
   sc_array_reset (&owners);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_find_owner, forest_find_owner, testing::Range (T8_ECLASS_VERTEX, T8_ECLASS_COUNT));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_find_owner, forest_find_owner, AllEclasses, print_eclass);

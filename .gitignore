@@ -1,6 +1,7 @@
 sc/
 p4est/
 build-aux/
+build/
 
 .deps/
 .libs/
@@ -55,7 +56,6 @@ example/IO/forest/netcdf/t8_netcdf_compilation_status
 example/advect/t8_advection
 example/cmesh/t8_cmesh_create_partitioned
 example/cmesh/t8_cmesh_partition
-example/cmesh/t8_cmesh_refine
 example/forest/t8_face_neighbor
 example/forest/t8_test_face_iterate
 example/forest/t8_test_ghost
@@ -75,7 +75,6 @@ test/t8_cmesh/t8_test_cmesh_partition
 test/t8_cmesh/t8_test_cmesh_readmshfile
 test/t8_cmesh/t8_test_hypercube
 test/t8_data/t8_test_shmem
-test/t8_forest/t8_test_element_general_function
 test/t8_forest/t8_test_find_owner
 test/t8_forest/t8_test_forest_commit
 test/t8_forest/t8_test_ghost_and_owner
@@ -88,7 +87,7 @@ test/t8_geometry/t8_test_geometry
 test/t8_geometry/t8_test_point_inside
 test/t8_gtest_main
 test/t8_schemes/t8_test_descendant
-test/t8_schemes/t8_test_element_count_leafs
+test/t8_schemes/t8_test_element_count_leaves
 test/t8_schemes/t8_test_find_parent
 test/t8_schemes/t8_test_init_linear_id
 test/t8_schemes/t8_test_pyra_face_descendant

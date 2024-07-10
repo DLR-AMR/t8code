@@ -23,9 +23,10 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <sc_functions.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
+#include <test/t8_gtest_macros.hxx>
 
 class linear_id: public testing::TestWithParam<t8_eclass> {
  protected:
@@ -38,7 +39,7 @@ class linear_id: public testing::TestWithParam<t8_eclass> {
     ts->t8_element_new (1, &element);
     ts->t8_element_new (1, &child);
     ts->t8_element_new (1, &test);
-    ts->t8_element_set_linear_id (element, 0, 0);
+    ts->t8_element_root (element);
   }
   void
   TearDown () override
@@ -65,7 +66,7 @@ t8_test_init_linear_id_refine_everything (t8_forest_t forest, t8_forest_t forest
   return 1;
 }
 
-/* Iterate over the leafs of a uniformly refined forest and check the id*/
+/* Iterate over the leaves of a uniformly refined forest and check the id*/
 TEST_P (linear_id, uniform_forest)
 {
   t8_forest_t forest, forest_adapt;
@@ -90,7 +91,7 @@ TEST_P (linear_id, uniform_forest)
       /*Manually compute the id of the first element*/
       const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, tree_id);
       t8_eclass_scheme_c *tc_scheme = t8_forest_get_eclass_scheme (forest, tree_class);
-      const t8_locidx_t shift = tc_scheme->t8_element_count_leafs_from_root (level) - num_elements_in_tree;
+      const t8_locidx_t shift = tc_scheme->t8_element_count_leaves_from_root (level) - num_elements_in_tree;
       /*Iterate over elements */
       for (t8_locidx_t id_iter = 0; id_iter < num_elements_in_tree; id_iter++) {
         /*Get the current element*/
@@ -125,14 +126,14 @@ TEST_P (linear_id, id_at_other_level)
 #endif
   for (int level = 0; level < max_lvl; level++) {
     /* Compute the number of elements at the current level */
-    const t8_linearidx_t num_desc = ts->t8_element_count_leafs_from_root (level);
+    const t8_linearidx_t num_desc = ts->t8_element_count_leaves_from_root (level);
     for (t8_linearidx_t id = 0; id < num_desc; id++) {
       /* Set the child at the current level */
       ts->t8_element_set_linear_id (child, level, id);
       /* Compute the id of child at a higher level. */
       const t8_linearidx_t id_at_lvl = ts->t8_element_get_linear_id (child, level + add_lvl);
-      /* Compute how many leafs/descendants child has at level level+add_lvl */
-      const t8_linearidx_t child_desc = ts->t8_element_count_leafs (child, level + add_lvl);
+      /* Compute how many leaves/descendants child has at level level+add_lvl */
+      const t8_linearidx_t child_desc = ts->t8_element_count_leaves (child, level + add_lvl);
       /* Iterate over all descendants */
       for (t8_linearidx_t leaf_id = 0; leaf_id < child_desc; leaf_id++) {
         /* Set the descendant (test) at level of the descendants and shift the 
@@ -147,4 +148,4 @@ TEST_P (linear_id, id_at_other_level)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_test_init_linear_id, linear_id, testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT));
+INSTANTIATE_TEST_SUITE_P (t8_test_init_linear_id, linear_id, AllEclasses, print_eclass);

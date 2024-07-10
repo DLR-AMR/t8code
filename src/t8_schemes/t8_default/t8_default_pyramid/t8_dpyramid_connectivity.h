@@ -111,8 +111,8 @@ extern const int t8_dpyramid_tritype_rootface_to_face[2][4];
 extern const int t8_dtet_type_cid_to_pyramid_parenttype[6][8];
 
 /** The corner numbers of the face of a pyramid
- * corner_number = A(face, corner_number_at_face)
+ * corner_number = A(pyramid_type, face, corner_number_at_face)
 */
-extern const int t8_dpyramid_face_corner[5][4];
+extern const int t8_dpyramid_face_corner[2][5][4];
 
 #endif  // T8_DPYRAMID_CONNECTIVITY_H

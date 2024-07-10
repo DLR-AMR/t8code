@@ -31,121 +31,86 @@
 #include <t8.h>
 #include <t8_refcount.h>
 
+/** This enumeration contains all possible geometries. */
+typedef enum t8_geometry_type {
+  /** The zero geometry maps all points to zero. */
+  T8_GEOMETRY_TYPE_ZERO = 0,
+  /** The linear geometry uses linear interpolations to interpolate between the tree vertices. */
+  T8_GEOMETRY_TYPE_LINEAR,
+  /** The linear, axis aligned geometry uses only 2 vertices, since it is axis aligned. */
+  T8_GEOMETRY_TYPE_LINEAR_AXIS_ALIGNED,
+  /** The Lagrange geometry uses a mapping with Lagrange polynomials to approximate curved elements . */
+  T8_GEOMETRY_TYPE_LAGRANGE,
+  /** The analytic geometry uses a user-defined analytic function to map into the physical domain. */
+  T8_GEOMETRY_TYPE_ANALYTIC,
+  /** The opencascade geometry uses CAD shapes to map trees exactly to the underlying CAD model. */
+  T8_GEOMETRY_TYPE_CAD,
+  /** This is no geometry type but can be used as the number of geometry types. */
+  T8_GEOMETRY_TYPE_COUNT,
+  /** This is no geometry type but is used for every geometry, where no type is defined */
+  T8_GEOMETRY_TYPE_UNDEFINED
+} t8_geometry_type_t;
+
 /** This typedef holds virtual functions for a particular geometry.
  * We need it so that we can use t8_geometry_c pointers in .c files
  * without them seeing the actual C++ code (and then not compiling)
  */
 typedef struct t8_geometry t8_geometry_c;
 
+/** This typedef holds virtual functions for the geometry handler.
+ * We need it so that we can use t8_geometry_handler_c pointers in .c files
+ * without them seeing the actual C++ code (and then not compiling)
+ * TODO: Delete this when the cmesh is a proper cpp class.
+ */
+typedef struct t8_geometry_handler t8_geometry_handler_c;
+
 /* The t8_geometry_c type must be know to cmesh.h, thus we
  * include it after the typedef. */
 #include <t8_cmesh.h>
 
-typedef struct t8_geometry_handler
-{
-  sc_array_t registered_geometries;
-  /**< Stores all geometries that are handled by this geometry_handler. */
-  t8_geometry_c *active_geometry;
-  /**< Points to the currently loaded geometry (the geometry that was used last and is likely to be used next). */
-  t8_gloidx_t active_tree;
-  /**< The global tree id of the last tree for which geometry was used. */
-  int is_committed;
-  /**< If true, no new geometries can be registered. */
-  t8_refcount_t rc;
-  /**< The reference count of the geometry handler. */
-} t8_geometry_handler_t;
-
 T8_EXTERN_C_BEGIN ();
 
-/** 
- * Initialize a geometry handler. This will allocate memory.
- * \param [in,out]  pgeom_handler On input a pointer to unallocated memory.
- *                                On output this will point to an initialized geometry handler.
- */
-void
-t8_geom_handler_init (t8_geometry_handler_t **pgeom_handler);
-
-/** 
- * Increase the reference counter of a geometry handler.
- * \param [in] geom_handler An initialized geometry handler.
- */
-void
-t8_geom_handler_ref (t8_geometry_handler_t *geom_handler);
-
 /**
- * Decrease the reference count of a geometry handler, if the refcount
- * reaches 0, the handler will get destroyed.
- * \param [in,out] pgeom_handler Pointer to an initialized geometry handler.
- *                               If the refcount reaches 0, will point to NULL afterwards.
+ * Evaluates the geometry of a tree at a given reference point.
+ * \param [in]  cmesh      The cmesh
+ * \param [in]  gtreeid    The global id of the tree
+ * \param [in]  ref_coords The reference coordinates at which to evaluate the geometry
+ * \param [in]  num_coords The number of reference coordinates
+ * \param [out] out_coords The evaluated coordinates
  */
-void
-t8_geom_handler_unref (t8_geometry_handler_t **pgeom_handler);
-
-/**
- * Destroy a geometry handler and free its memory. 
- * This is only valid if its reference count is 1.
- * If you are unsure, call \ref t8_geom_handler_unref instead.
- * \param [in,out] pgeom_handler Pointer to an initialized geometry handler.
- *                               Will point to NULL afterwards.
- */
-void
-t8_geom_handler_destroy (t8_geometry_handler_t **pgeom_handler);
-
-/**
- * Add a geometry to the geometry handler.
- * \param [in,out] geom_handler An initialized but not committed geometry handler.
- * \param [in]     geometry     The geometry to add.
- */
-void
-t8_geom_handler_register_geometry (t8_geometry_handler_t *geom_handler, const t8_geometry_c *geometry);
-
-/**
- * Commit a geometry handler. This specifies that no geometries will
- * be added to it and makes it ready to be used.
- * \param [in,out] geom_handler An initialized but not committed geometry handler.
- */
-void
-t8_geom_handler_commit (t8_geometry_handler_t *geom_handler);
-
-/* Check if a geometry handler was committed. */
-int
-t8_geom_handler_is_committed (const t8_geometry_handler_t *geom_handler);
-
-/** Return the number of registered geometries.
- * \param [in] geom_handler A geometry handler (must be initialized and may or may not be committed).
- * \return  The number of registered geometries in \a geom_handler.
- */
-size_t
-t8_geom_handler_get_num_geometries (const t8_geometry_handler_t *geom_handler);
-
-/** If a geometry handler only has one registered geometry, get a pointer to
- *  this geometry.
- * \param [in] geom_handler Must be committed and have exactly one geometry registered.
- * \return     The only registered geometry of \a geom_handler.
- * \note  Most cmeshes will have only one geometry and this function is an optimization
- *        for that special case. It is used for example in \ref t8_cmesh_get_tree_geometry.
- */
-const t8_geometry_c *
-t8_geom_handler_get_unique_geometry (const t8_geometry_handler_t *geom_handler);
-
-/**
- * Given a geometry's name find that geometry in the geometry handler
- * and return it.
- * \param [in] geom_handler A committed geometry handler.
- * \param [in] name         The name of a geometry.
- * \return                  A pointer to the geometry or NULL if it was not found.
- */
-t8_geometry_c *
-t8_geom_handler_find_geometry (const t8_geometry_handler_t *geom_handler, const char *name);
-
 void
 t8_geometry_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
                       double *out_coords);
 
+/** Evaluates the jacobian of a tree at a given reference point.
+ * \param[in]  cmesh      The cmesh
+ * \param[in]  gtreeid    The global id of the tree
+ * \param[in]  ref_coords The reference coordinates at which to evaluate the jacobian
+ * \param[in]  num_coords The number of reference coordinates
+ * \param[out] jacobian   The jacobian at the reference coordinates
+ */
 void
 t8_geometry_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
                       double *jacobian);
 
+/** This function returns the geometry type of a tree.
+ * \param[in] cmesh       The cmesh
+ * \param[in] gtreeid     The global id of the tree
+ * \return                The geometry type of the tree with id \ref gtreeid
+ */
+t8_geometry_type_t
+t8_geometry_get_type (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
+
+/**
+ * Check if a tree has a negative volume
+ * 
+ * \param[in] cmesh       The cmesh to check
+ * \param[in] gtreeid     The global id of the tree
+ * \return                True if the tree with id \ref gtreeid has a negative volume. False otherwise.  
+ */
+int
+t8_geometry_tree_negative_volume (const t8_cmesh_t cmesh, const t8_gloidx_t gtreeid);
+
 T8_EXTERN_C_END ();
 
-#endif /* !T8_GEOMETRY_H! */
+#endif /* !T8_GEOMETRY_H */

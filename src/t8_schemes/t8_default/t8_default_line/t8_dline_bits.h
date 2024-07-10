@@ -55,6 +55,14 @@ t8_dline_copy (const t8_dline_t *l, t8_dline_t *dest);
 int
 t8_dline_compare (const t8_dline_t *l1, const t8_dline_t *l2);
 
+/** Check if two elements are equal.
+* \param [in] elem1  The first element.
+* \param [in] elem2  The second element.
+* \return            1 if the elements are equal, 0 if they are not equal
+*/
+int
+t8_dline_equal (const t8_dline_t *elem1, const t8_dline_t *elem2);
+
 /** Compute the parent of a line.
  * \param [in]  l   The input line.
  * \param [in,out] parent Existing line whose data will be filled with the parent
@@ -235,7 +243,7 @@ t8_dline_last_descendant (const t8_dline_t *l, t8_dline_t *s, int level);
  * \param [out] coords   The coordinates of the computed vertex
  */
 void
-t8_dline_vertex_coords (const t8_dline_t *elem, const int vertex, int coords[]);
+t8_dline_vertex_integer_coords (const t8_dline_t *elem, const int vertex, int coords[]);
 
 /** Compute the coordinates of a vertex of a line when the 
  * tree (level 0 line) is embedded in [0,1]^1.
@@ -280,12 +288,6 @@ t8_dline_linear_id (const t8_dline_t *elem, int level);
  */
 int
 t8_dline_is_valid (const t8_dline_t *l);
-
-/** Print a line
- * \param [in] l  line to be initialized 
- */
-void
-t8_dline_debug_print (const t8_dline_t *l);
 
 /** Set default values for a line, such that it passes \ref t8_dline_is_valid.
  * \param [in] l  line to be initialized

@@ -24,7 +24,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_vtk.h>
 
 #include <t8_forest/t8_forest.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 
 /**
  * Construct a cmesh read from a VTK-file type supported by our vtk-reader.
@@ -49,7 +49,7 @@ t8_forest_construct_from_vtk (const char *prefix, sc_MPI_Comm comm, const int va
   }
   char out_file[BUFSIZ];
   snprintf (out_file, BUFSIZ - 9, "%s_cmesh_in", out_prefix);
-  t8_cmesh_vtk_write_file (cmesh_in, out_file, 1.0);
+  t8_cmesh_vtk_write_file (cmesh_in, out_file);
   t8_cmesh_t cmesh;
 
   if (partition) {
@@ -58,7 +58,7 @@ t8_forest_construct_from_vtk (const char *prefix, sc_MPI_Comm comm, const int va
     t8_cmesh_set_partition_uniform (cmesh, 0, t8_scheme_new_default_cxx ());
     t8_cmesh_commit (cmesh, comm);
     snprintf (out_file, BUFSIZ - 16, "%s_cmesh_partition", out_prefix);
-    t8_cmesh_vtk_write_file (cmesh, out_file, 1.0);
+    t8_cmesh_vtk_write_file (cmesh, out_file);
   }
   else {
     cmesh = cmesh_in;

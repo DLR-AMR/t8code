@@ -52,7 +52,7 @@ T8_EXTERN_C_BEGIN ();
  *                  In the case of complete forests, the scheme based element 
  *                  function \see t8_element_is_family is recommended.
  * \note            If the element with id \a el_considered is not the first
- *                  family member, return 0. Therefore, if \return is x > 0, 
+ *                  family member, return 0. Therefore, if return is x > 0, 
  *                  the first x elements in \a elements form a family.
  */
 int
@@ -81,7 +81,7 @@ t8_eclass_scheme_c *
 t8_forest_get_eclass_scheme_before_commit (t8_forest_t forest, t8_eclass_t eclass);
 
 /** Compute the maximum possible refinement level in a forest.
- * This is the minimum over all maimum refinement level of the present element
+ * This is the minimum over all maximum refinement level of the present element
  * classes.
  * \param [in,out] forest The forest.
  */
@@ -89,7 +89,7 @@ void
 t8_forest_compute_maxlevel (t8_forest_t forest);
 
 /** Compute the minimum possible uniform refinement level on a cmesh such
- * that no process is empty.
+ * that no process is empty. Returns -1, if cmesh contains a vertex tree.
  * \param [in]  cmesh       The cmesh.
  * \param [in]  scheme      The element scheme for which refinement is considered.
  * \return                  The smallest refinement level l, such that a
@@ -159,23 +159,41 @@ t8_forest_get_coarse_tree_ext (t8_forest_t forest, t8_locidx_t ltreeid, t8_locid
 void
 t8_forest_compute_elements_offset (t8_forest_t forest);
 
-/** Return an element of a tree.
+/** Return an element of a tree. Const version.
+ * \param [in]  tree  The tree.
+ * \param [in]  elem_in_tree The index of the element within the tree.
+ * \return      Returns the element with index \a elem_in_tree of the
+ *              element array of \a tree.
+ */
+const t8_element_t *
+t8_forest_get_tree_element (t8_tree_t tree, t8_locidx_t elem_in_tree);
+
+/** Return an element of a tree. Mutable version.
  * \param [in]  tree  The tree.
  * \param [in]  elem_in_tree The index of the element within the tree.
  * \return      Returns the element with index \a elem_in_tree of the
  *              element array of \a tree.
  */
 t8_element_t *
-t8_forest_get_tree_element (t8_tree_t tree, t8_locidx_t elem_in_tree);
+t8_forest_get_tree_element_mutable (t8_tree_t tree, t8_locidx_t elem_in_tree);
 
-/** Return the array of elements of a tree.
+/** Return the array of elements of a tree. Const version.
+ * \param [in]  forest   The forest.
+ * \param [in]  ltreeid  The local id of a local tree. Must be a valid local tree id.
+ * \return      Returns the array of elements of the tree.
+ * \a forest must be committed before calling this function.
+ */
+const t8_element_array_t *
+t8_forest_get_tree_element_array (t8_forest_t forest, t8_locidx_t ltreeid);
+
+/** Return the array of elements of a tree. Mutable version.
  * \param [in]  forest   The forest.
  * \param [in]  ltreeid  The local id of a local tree. Must be a valid local tree id.
  * \return      Returns the array of elements of the tree.
  * \a forest must be committed before calling this function.
  */
 t8_element_array_t *
-t8_forest_get_tree_element_array (t8_forest_t forest, t8_locidx_t ltreeid);
+t8_forest_get_tree_element_array_mutable (const t8_forest_t forest, t8_locidx_t ltreeid);
 
 /** Find the owner process of a given element, deprecated version.
  * Use t8_forest_element_find_owner instead.
@@ -299,7 +317,7 @@ t8_forest_element_owners_bounds (t8_forest_t forest, t8_gloidx_t gtreeid, const 
                                  t8_eclass_t eclass, int *lower, int *upper);
 
 /** Constant time algorithm to compute lower and upper bounds for the owner
- * processes of the face leafs of a given element.
+ * processes of the face leaves of a given element.
  * \param [in]     forest  The forest.
  * \param [in]     gtreeid The global id of the tree in which the element lies.
  * \param [in]     element The element to look for.
@@ -381,8 +399,8 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, 
                                        t8_element_t *neighs[], t8_eclass_scheme_c *neigh_scheme, int face,
                                        int num_neighs, int dual_faces[]);
 
-/** Iterate over all leafs of a forest and for each face compute the face neighbor
- * leafs with \ref t8_forest_leaf_face_neighbors and print their local element ids.
+/** Iterate over all leaves of a forest and for each face compute the face neighbor
+ * leaves with \ref t8_forest_leaf_face_neighbors and print their local element ids.
  * This function is meant for debugging only.
  * \param [in]    forest The forest.
  * \note Currently \a forest must be balanced.
@@ -408,4 +426,4 @@ t8_forest_element_has_leaf_desc (t8_forest_t forest, t8_gloidx_t gtreeid, const 
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_FOREST_PRIVATE_H! */
+#endif /* !T8_FOREST_PRIVATE_H */

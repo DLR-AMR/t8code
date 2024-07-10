@@ -44,7 +44,7 @@
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_profiling.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 
 /* The refinement criterion
  * returns 1 if we refine the element, -1 if we coarsen,
@@ -64,7 +64,7 @@
  *  If the mesh is not 3D then no element is refined.
  *
  *  Warning: this refinement schemes only works with the default element
- *           scheme (see t8_scheme_new_default_cxx in t8_default/t8_default_cxx.hxx).
+ *           scheme (see t8_scheme_new_default_cxx in t8_default/t8_default.hxx).
  */
 static int
 t8_ghost_fractal_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
@@ -145,7 +145,7 @@ t8_ghost_large_level_diff (const char *prefix, int dim, int level, int refine, i
   t8_cmesh_set_partition_uniform (cmesh_partition, level, t8_scheme_new_default_cxx ());
   t8_cmesh_commit (cmesh_partition, comm);
   if (!no_vtk) {
-    t8_cmesh_vtk_write_file (cmesh_partition, "partitioned_cmesh", 1.0);
+    t8_cmesh_vtk_write_file (cmesh_partition, "partitioned_cmesh");
   }
 
   /* New */

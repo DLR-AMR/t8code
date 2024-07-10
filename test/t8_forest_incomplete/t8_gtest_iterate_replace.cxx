@@ -23,10 +23,11 @@
 #include <gtest/gtest.h>
 #include <t8.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include "t8_cmesh/t8_cmesh_testcases.h"
+#include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
 #include <t8_forest/t8_forest.h>
 #include <t8_forest/t8_forest_iterate.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
+#include <test/t8_gtest_macros.hxx>
 
 /* In this test, we first adapt a forest and store every callback return value.
  * In the next step, we call t8_forest_iterate_replace. Instead of interpolating
@@ -34,24 +35,27 @@
  * t8_forest_iterate_replace if it is passed the correct values.
  */
 
-class forest_iterate: public testing::TestWithParam<int> {
+class forest_iterate: public testing::TestWithParam<cmesh_example_base *> {
  protected:
   void
   SetUp () override
   {
-    cmesh_id = GetParam ();
-
-    forest
-      = t8_forest_new_uniform (t8_test_create_cmesh (cmesh_id), t8_scheme_new_default_cxx (), 4, 0, sc_MPI_COMM_WORLD);
+    t8_cmesh_t cmesh = GetParam ()->cmesh_create ();
+    if (t8_cmesh_is_empty (cmesh)) {
+      /* empty cmeshes are currently not supported */
+      t8_cmesh_unref (&cmesh);
+      GTEST_SKIP ();
+    }
+    forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), 4, 0, sc_MPI_COMM_WORLD);
   }
   void
   TearDown () override
   {
-    t8_forest_unref (&forest);
+    if (forest != NULL) {
+      t8_forest_unref (&forest);
+    }
   }
-
-  int cmesh_id;
-  t8_forest_t forest;
+  t8_forest_t forest { NULL };
 };
 
 /** This structure contains an array with all return values of all
@@ -95,17 +99,16 @@ t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
     ASSERT_EQ (num_incoming, 1);
 
     /* Begin check family */
-    t8_element_t *parent = t8_forest_get_element_in_tree (forest_new, which_tree, first_incoming);
-    t8_element_t *child;
+    const t8_element_t *parent = t8_forest_get_element_in_tree (forest_new, which_tree, first_incoming);
     t8_element_t *parent_compare;
     ts->t8_element_new (1, &parent_compare);
     int family_size = 1;
     t8_locidx_t tree_num_elements_old = t8_forest_get_tree_num_elements (forest_old, which_tree);
     for (t8_locidx_t elidx = 1;
          elidx < ts->t8_element_num_children (parent) && elidx + first_outgoing < tree_num_elements_old; elidx++) {
-      child = t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing + elidx);
+      const t8_element_t *child = t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing + elidx);
       ts->t8_element_parent (child, parent_compare);
-      if (!ts->t8_element_compare (parent, parent_compare)) {
+      if (ts->t8_element_equal (parent, parent_compare)) {
         family_size++;
       }
     }
@@ -128,7 +131,7 @@ t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
   /* Element got refined. */
   if (refine == 1) {
     ASSERT_EQ (num_outgoing, 1);
-    t8_element_t *element = t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing);
+    const t8_element_t *element = t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing);
     const t8_locidx_t family_size = ts->t8_element_num_children (element);
     ASSERT_EQ (num_incoming, family_size);
   }
@@ -239,5 +242,4 @@ TEST_P (forest_iterate, test_iterate_replace)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_iterate_replace, forest_iterate,
-                          testing::Range (0, t8_get_number_of_all_testcases ()));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_iterate_replace, forest_iterate, AllCmeshsParam, pretty_print_base_example);

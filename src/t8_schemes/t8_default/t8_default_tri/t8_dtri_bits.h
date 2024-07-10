@@ -48,6 +48,14 @@ t8_dtri_copy (const t8_dtri_t *t, t8_dtri_t *dest);
 int
 t8_dtri_compare (const t8_dtri_t *t1, const t8_dtri_t *t2);
 
+/** Check if two elements are equal.
+* \param [in] elem1  The first element.
+* \param [in] elem2  The second element.
+* \return            1 if the elements are equal, 0 if they are not equal
+*/
+int
+t8_dtri_equal (const t8_dtri_t *elem1, const t8_dtri_t *elem2);
+
 /** Compute the parent of a triangle.
  * \param [in]  elem Input triangle.
  * \param [in,out] parent Existing triangle whose data will be filled with the data of elem's parent.
@@ -72,7 +80,7 @@ t8_dtri_ancestor (const t8_dtri_t *t, int level, t8_dtri_t *ancestor);
  * \param [out] coordinates An array of 2 t8_dtri_coord_t that will be filled with the coordinates of the vertex.
  */
 void
-t8_dtri_compute_coords (const t8_dtri_t *elem, const int vertex, t8_dtri_coord_t coordinates[2]);
+t8_dtri_compute_integer_coords (const t8_dtri_t *elem, const int vertex, t8_dtri_coord_t coordinates[2]);
 
 /** Compute the reference coordinates of a vertex of a triangle when the 
  * tree (level 0 triangle) is embedded in \f$ [0,1]^2 \f$.
@@ -388,12 +396,6 @@ t8_dtri_get_level (const t8_dtri_t *t);
 int
 t8_dtri_is_valid (const t8_dtri_t *t);
 
-/** Print a triangle
- * \param [in] t  triangle to be considered.
- */
-void
-t8_dtri_debug_print (const t8_dtri_t *t);
-
 #ifdef T8_ENABLE_DEBUG
 /** Set sensible default values for a triangle.
  * \param [in,out] t A triangle.
@@ -401,6 +403,17 @@ t8_dtri_debug_print (const t8_dtri_t *t);
 void
 t8_dtri_init (t8_dtri_t *t);
 #endif
+
+void
+t8_dtri_element_pack (t8_dtri_t **const elements, const unsigned int count, void *send_buffer, const int buffer_size,
+                      int *position, sc_MPI_Comm comm);
+
+void
+t8_dtri_element_pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size);
+
+void
+t8_dtri_element_unpack (void *recvbuf, const int buffer_size, int *position, t8_dtri_t **elements,
+                        const unsigned int count, sc_MPI_Comm comm);
 
 T8_EXTERN_C_END ();
 

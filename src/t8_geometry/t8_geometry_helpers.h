@@ -132,6 +132,93 @@ double
 t8_geom_get_triangle_scaling_factor (int edge_index, const double *tree_vertices, const double *glob_intersection,
                                      const double *glob_ref_point);
 
+/** Calculates the scaling factor for the displacement of an edge over a face of a tetrahedral element.
+ * \param [in]         edge_index          Index of the edge, whose displacement should be scaled.
+ * \param [in]         face_index          Index of the face, the displacement should be scaled on.
+ * \param [in]         ref_coords          Array containing the coordinates of the reference point.
+ * \return                                 The scaling factor of the edge displacement on the face
+ *                                         at the point of the reference coordinates.
+ */
+double
+t8_geom_get_scaling_factor_of_edge_on_face_tet (int edge_index, int face_index, const double *ref_coords);
+
+/** Calculates the face intersection of a ray passing trough the reference coordinates and the
+ *  opposite vertex of that face for a tetrahedron. The coordinates of the face intersection are
+ *  reference coordinates: [0,1]^3.
+ * \param [in]         face_index          Index of the face, on which the intersection should be calculated.
+ * \param [in]         ref_coords          Array containing the coordinates of the reference point.
+ * \param [out]        face_intersection   Three dimensional array containing the intersection point on the face
+ *                                         in reference space.
+ */
+void
+t8_geom_get_tet_face_intersection (const int face_index, const double *ref_coords, double face_intersection[3]);
+
+/** Calculates the scaling factor for the displacement of an edge over a face of a prism element.
+ * \param [in]         edge_index          Index of the edge, whose displacement should be scaled.
+ * \param [in]         face_index          Index of the face, the displacement should be scaled on.
+ * \param [in]         ref_coords          Array containing the coordinates of the reference point.
+ * \return                                 The scaling factor of the edge displacement on the face
+ *                                         at the point of the reference coordinates.
+ */
+double
+t8_geom_get_scaling_factor_of_edge_on_face_prism (int edge_index, int face_index, const double *ref_coords);
+
+/** Calculates the scaling factor for the displacement of an face through the volume of a prism element.
+ * \param [in]         face_index          Index of the displaced face.
+ * \param [in]         ref_coords          Array containing the coordinates of the reference point.
+ * \return                                 The scaling factor of the face displacement
+ *                                         at the point of the reference coordinates inside the prism volume.
+ */
+double
+t8_geom_get_scaling_factor_face_through_volume_prism (const int face, const double *ref_coords);
+
+/** Check if a point lies inside a vertex
+ * 
+ * \param[in] vertex_coords The coordinates of the vertex
+ * \param[in] point         The coordinates of the point to check
+ * \param[in] tolerance     A double > 0 defining the tolerance
+ * \return                  0 if the point is outside, 1 otherwise.  
+ */
+int
+t8_vertex_point_inside (const double vertex_coords[3], const double point[3], const double tolerance);
+
+/**
+ * Check if a point is inside a line that is defined by a starting point \a p_0
+ * and a vector \a vec
+ * 
+ * \param[in] p_0         Starting point of the line
+ * \param[in] vec         Direction of the line (not normalized)
+ * \param[in] point       The coordinates of the point to check
+ * \param[in] tolerance   A double > 0 defining the tolerance
+ * \return                0 if the point is outside, 1 otherwise.  
+ */
+int
+t8_line_point_inside (const double *p_0, const double *vec, const double *point, const double tolerance);
+
+/**
+ * Check if a point is inside of a triangle described by a point \a p_0 and two vectors \a v and \a w. 
+ * 
+ * \param[in] p_0         The first vertex of a triangle
+ * \param[in] v           The vector from p_0 to p_1 (second vertex in the triangle)
+ * \param[in] w           The vector from p_0 to p_2 (third vertex in the triangle)
+ * \param[in] point       The coordinates of the point to check
+ * \param[in] tolerance   A double > 0 defining the tolerance
+ * \return                0 if the point is outside, 1 otherwise.  
+ */
+int
+t8_triangle_point_inside (const double p_0[3], const double v[3], const double w[3], const double point[3],
+                          const double tolerance);
+
+/** Check if a point lays on the inner side of a plane of a bilinearly interpolated volume element. 
+ * the plane is described by a point and the normal of the face. 
+ * \param[in] point_on_face   A point on the plane
+ * \param[in] face_normal     The normal of the face
+ * \param[in] point           The point to check
+ * \return                    0 if the point is outside, 1 otherwise.                   
+ */
+int
+t8_plane_point_inside (const double point_on_face[3], const double face_normal[3], const double point[3]);
+
 T8_EXTERN_C_END ();
 
-#endif /* !T8_GEOMETRY_HELPERS_H! */
+#endif /* !T8_GEOMETRY_HELPERS_H */
