@@ -24,16 +24,15 @@
  * Basic conversion routines for std::vector to t8code data types.
  */
 
-
 #ifndef T8_STDVECTOR_CONVERSION_H
 #define T8_STDVECTOR_CONVERSION_H
-#include<t8_forest/t8_forest_partition.h>
-#include<t8_forest/t8_forest_iterate.h>
+#include <t8_forest/t8_forest_partition.h>
+#include <t8_forest/t8_forest_iterate.h>
 #include <vector>
 
 /* Template to create sc_array view from vector*/
 template <typename T>
-sc_array_t*
+sc_array_t *
 t8_create_sc_array_view_from_vector (const std::vector<T> &vector)
 {
   void *vector_data = (void *) vector.data ();
@@ -43,8 +42,9 @@ t8_create_sc_array_view_from_vector (const std::vector<T> &vector)
 
 /* Wrapper function for partition data */
 template <typename T>
-void t8_forest_partition_data_stdvector (t8_forest_t forest_from, t8_forest_t forest_to, 
-                                         const std::vector<T>& data_in_vec, std::vector<T>& data_out_vec)
+void
+t8_forest_partition_data_stdvector (t8_forest_t forest_from, t8_forest_t forest_to, const std::vector<T> &data_in_vec,
+                                    std::vector<T> &data_out_vec)
 {
   /* Create temporary sc array. */
   sc_array_t *data_in_view, *data_out_view;
@@ -52,10 +52,10 @@ void t8_forest_partition_data_stdvector (t8_forest_t forest_from, t8_forest_t fo
   T8_ASSERT (data_in_vec.size () == forest_from->local_num_elements);
   T8_ASSERT (data_out_vec.size () == forest_to->local_num_elements);
 
-  data_in_view = t8_create_sc_array_view_from_vector(data_in_vec);
-  data_out_view = t8_create_sc_array_view_from_vector(data_out_vec);
- /* calling the original function with the sc_array_t view */
-  t8_forest_partition_data(forest_from, forest_to, data_in_view, data_out_view);
+  data_in_view = t8_create_sc_array_view_from_vector (data_in_vec);
+  data_out_view = t8_create_sc_array_view_from_vector (data_out_vec);
+  /* calling the original function with the sc_array_t view */
+  t8_forest_partition_data (forest_from, forest_to, data_in_view, data_out_view);
 
   /* Clean-up memory */
   sc_array_destroy (data_in_view);
@@ -64,34 +64,38 @@ void t8_forest_partition_data_stdvector (t8_forest_t forest_from, t8_forest_t fo
 
 /* Wrapper function for ghost exchange function */
 template <typename T>
-void t8_forest_ghost_exchange_data_with_vector(t8_forest_t forest, const std::vector<T>& element_vector) {
-    t8_debugf("Entering ghost_exchange_data_with_vector\n");
-    T8_ASSERT(t8_forest_is_committed(forest));
+void
+t8_forest_ghost_exchange_data_with_vector (t8_forest_t forest, const std::vector<T> &element_vector)
+{
+  t8_debugf ("Entering ghost_exchange_data_with_vector\n");
+  T8_ASSERT (t8_forest_is_committed (forest));
 
-     /*Create sc_array_t view from the vector*/ 
-    sc_array_t *element_data = t8_create_sc_array_view_from_vector(element_vector);
+  /*Create sc_array_t view from the vector*/
+  sc_array_t *element_data = t8_create_sc_array_view_from_vector (element_vector);
 
-    /* calling the original function with the sc_array_t view */
-    t8_forest_ghost_exchange_data(forest, element_data);
+  /* calling the original function with the sc_array_t view */
+  t8_forest_ghost_exchange_data (forest, element_data);
 
-    /*Clean up the sc_array_t view*/ 
-    sc_array_destroy(element_data);
+  /*Clean up the sc_array_t view*/
+  sc_array_destroy (element_data);
 }
 
-/*Wrapper function to handle std::vector directly for t8_forest_search*/ 
+/*Wrapper function to handle std::vector directly for t8_forest_search*/
 template <typename T>
-void t8_forest_search_with_vector(t8_forest_t forest, t8_forest_search_query_fn search_fn, 
-                                  t8_forest_search_query_fn query_fn, const std::vector<T>& query_vector) {
-    t8_debugf("Entering t8_forest_search_with_vector\n");
-    T8_ASSERT(t8_forest_is_committed(forest));
+void
+t8_forest_search_with_vector (t8_forest_t forest, t8_forest_search_query_fn search_fn,
+                              t8_forest_search_query_fn query_fn, const std::vector<T> &query_vector)
+{
+  t8_debugf ("Entering t8_forest_search_with_vector\n");
+  T8_ASSERT (t8_forest_is_committed (forest));
 
-    /*Create sc_array_t view from the vector*/
-    sc_array_t *queries = t8_create_sc_array_view_from_vector(query_vector);
+  /*Create sc_array_t view from the vector*/
+  sc_array_t *queries = t8_create_sc_array_view_from_vector (query_vector);
 
-    /*calling the original t8_forest_search function with the sc_array_t view */
-    t8_forest_search(forest, search_fn, query_fn, queries);
+  /*calling the original t8_forest_search function with the sc_array_t view */
+  t8_forest_search (forest, search_fn, query_fn, queries);
 
-    /* Clean up the sc_array_t view */
-    sc_array_destroy(queries);
+  /* Clean up the sc_array_t view */
+  sc_array_destroy (queries);
 }
-#endif // T8_STDVECTOR_CONVERSION_H
+#endif  // T8_STDVECTOR_CONVERSION_H

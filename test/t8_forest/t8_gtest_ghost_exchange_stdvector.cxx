@@ -93,7 +93,7 @@ t8_test_ghost_exchange_data_id (t8_forest_t forest)
   t8_locidx_t num_elements = t8_forest_get_local_num_elements (forest);
   t8_locidx_t num_ghosts = t8_forest_get_num_ghosts (forest);
   /* Initialize a vector of the required size */
-  std::vector<t8_linearidx_t> element_data(num_elements + num_ghosts);
+  std::vector<t8_linearidx_t> element_data (num_elements + num_ghosts);
 
   /* Fill the local element entries with their linear id */
   for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++) {
@@ -131,7 +131,6 @@ t8_test_ghost_exchange_data_id (t8_forest_t forest)
       array_pos++;
     }
   }
-
 }
 
 /* Construct a data array of ints for all elements and all ghosts,
@@ -141,13 +140,13 @@ t8_test_ghost_exchange_data_id (t8_forest_t forest)
 static void
 t8_test_ghost_exchange_data_int (t8_forest_t forest)
 {
-  
+
   t8_locidx_t num_elements = t8_forest_get_local_num_elements (forest);
   t8_locidx_t num_ghosts = t8_forest_get_num_ghosts (forest);
-  std::vector<t8_linearidx_t> element_data(num_elements+num_ghosts);
+  std::vector<t8_linearidx_t> element_data (num_elements + num_ghosts);
   /* Fill the local element entries with the integer 42 */
- std::fill(element_data.begin(), element_data.begin() + num_elements, 42);
-  
+  std::fill (element_data.begin (), element_data.begin () + num_elements, 42);
+
   /* Perform the ghost data exchange */
   t8_forest_ghost_exchange_data_with_vector (forest, element_data);
 
@@ -157,7 +156,6 @@ t8_test_ghost_exchange_data_int (t8_forest_t forest)
     int ghost_int = element_data[num_elements + ielem];
     ASSERT_EQ (ghost_int, 42) << "Error when exchanging ghost data. Received wrong data.\n";
   }
-  
 }
 
 TEST_P (forest_ghost_exchange, test_ghost_exchange)

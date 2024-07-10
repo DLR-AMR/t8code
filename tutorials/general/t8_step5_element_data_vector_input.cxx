@@ -53,7 +53,6 @@
 #include <vector>
 #include <t8_data/t8_stdvector_conversion.hxx>
 
-
 T8_EXTERN_C_BEGIN ();
 
 /* The data that we want to store for each element.
@@ -90,11 +89,11 @@ t8_step5_build_forest (sc_MPI_Comm comm, int level)
   return forest_apbg;
 }
 
-std::vector<t8_step5_data_per_element> t8_step5_create_element_data (t8_forest_t forest)
+std::vector<t8_step5_data_per_element>
+t8_step5_create_element_data (t8_forest_t forest)
 {
   t8_locidx_t num_local_elements;
   t8_locidx_t num_ghost_elements;
-  
 
   /* Check that forest is a committed, that is valid and usable, forest. */
   T8_ASSERT (t8_forest_is_committed (forest));
@@ -103,14 +102,14 @@ std::vector<t8_step5_data_per_element> t8_step5_create_element_data (t8_forest_t
   num_local_elements = t8_forest_get_local_num_elements (forest);
   /* Get the number of ghost elements of forest. */
   num_ghost_elements = t8_forest_get_num_ghosts (forest);
-std::vector<t8_step5_data_per_element> element_data (num_local_elements+num_ghost_elements);
+  std::vector<t8_step5_data_per_element> element_data (num_local_elements + num_ghost_elements);
   /* Now we need to build an array of our data that is as long as the number
    * of elements plus the number of ghosts. You can use any allocator such as
    * new, malloc or the t8code provide allocation macro T8_ALLOC. 
    * Note that in the latter case you need
    * to use T8_FREE in order to free the memory.
    */
-    /* Note: We will later need to associate this data with an sc_array in order to exchange the values for
+  /* Note: We will later need to associate this data with an sc_array in order to exchange the values for
    *       the ghost elements, which we can do with sc_array_new_data (see t8_step5_exchange_ghost_data).
    *       We could also have directly allocated the data here in an sc_array with
    *       sc_array_new_count (sizeof (struct data_per_element), num_local_elements + num_ghost_elements);
@@ -168,13 +167,13 @@ std::vector<t8_step5_data_per_element> element_data (num_local_elements+num_ghos
  * Calling this function will fill all the ghost entries of our element data array with the
  * value on the process that owns the corresponding element. */
 static void
-t8_step5_exchange_ghost_data (t8_forest_t forest, std::vector<t8_step5_data_per_element>& data)
+t8_step5_exchange_ghost_data (t8_forest_t forest, std::vector<t8_step5_data_per_element> &data)
 {
   sc_array *sc_array_wrapper;
-   
+
   /* t8_forest_ghost_exchange_data expects an sc_array (of length num_local_elements + num_ghosts).
    * We wrap our data array to an sc_array. */
-  sc_array_wrapper = t8_create_sc_array_view_from_vector(data);
+  sc_array_wrapper = t8_create_sc_array_view_from_vector (data);
 
   /* Carry out the data exchange. The entries with indices > num_local_elements will get overwritten.
    */
