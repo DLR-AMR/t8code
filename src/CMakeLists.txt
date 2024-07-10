@@ -58,21 +58,25 @@ if( T8CODE_ENABLE_VTK )
     target_link_libraries( T8 PUBLIC ${VTK_LIBRARIES} )
 endif()
 
+if( T8CODE_ENABLE_OCC )
+    target_compile_definitions( T8 PUBLIC T8_WITH_OCC=1 )
+    target_include_directories( T8 PUBLIC ${OpenCASCADE_INCLUDE_DIRS} )
+    target_link_libraries( T8 PUBLIC ${OpenCASCADE_LIBRARIES} )
+endif()
+
 target_sources( T8 PRIVATE 
     t8.c 
     t8_eclass.c 
-    t8_element.c 
     t8_element_shape.c
-    t8_element_cxx.cxx 
+    t8_element.cxx 
     t8_element_c_interface.cxx 
     t8_mesh.c
     t8_netcdf.c 
     t8_refcount.c 
     t8_version.c 
     t8_vtk.c 
-    t8_cmesh/t8_cmesh.cxx
+    t8_cmesh/t8_cmesh.cxx 
     t8_cmesh/t8_cmesh_cad.cxx 
-    t8_cmesh/t8_cmesh_cxx.cxx 
     t8_cmesh/t8_cmesh_triangle.cxx 
     t8_cmesh/t8_cmesh_vtk_writer.c 
     t8_cmesh/t8_cmesh_stash.c 
@@ -90,10 +94,9 @@ target_sources( T8 PRIVATE
     t8_cmesh/t8_cmesh_readmshfile.cxx 
     t8_data/t8_shmem.c 
     t8_data/t8_containers.cxx 
-    t8_forest/t8_forest.c 
     t8_forest/t8_forest_adapt.cxx 
     t8_forest/t8_forest_partition.cxx 
-    t8_forest/t8_forest_cxx.cxx 
+    t8_forest/t8_forest.cxx 
     t8_forest/t8_forest_private.c 
     t8_forest/t8_forest_vtk.cxx 
     t8_forest/t8_forest_ghost.cxx 
@@ -112,26 +115,26 @@ target_sources( T8 PRIVATE
     t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.cxx 
     t8_geometry/t8_geometry_implementations/t8_geometry_zero.cxx 
     t8_geometry/t8_geometry_implementations/t8_geometry_examples.cxx 
-    t8_schemes/t8_default/t8_default_cxx.cxx
-    t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.cxx
-    t8_schemes/t8_default/t8_default_hex/t8_default_hex_cxx.cxx
+    t8_schemes/t8_default/t8_default.cxx
+    t8_schemes/t8_default/t8_default_common/t8_default_common.cxx
+    t8_schemes/t8_default/t8_default_hex/t8_default_hex.cxx
     t8_schemes/t8_default/t8_default_hex/t8_dhex_bits.c
-    t8_schemes/t8_default/t8_default_line/t8_default_line_cxx.cxx
+    t8_schemes/t8_default/t8_default_line/t8_default_line.cxx
     t8_schemes/t8_default/t8_default_line/t8_dline_bits.c
-    t8_schemes/t8_default/t8_default_prism/t8_default_prism_cxx.cxx
+    t8_schemes/t8_default/t8_default_prism/t8_default_prism.cxx
     t8_schemes/t8_default/t8_default_prism/t8_dprism_bits.c
-    t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid_cxx.cxx
+    t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid.cxx
     t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.c
     t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_connectivity.c 
-    t8_schemes/t8_default/t8_default_quad/t8_default_quad_cxx.cxx
+    t8_schemes/t8_default/t8_default_quad/t8_default_quad.cxx
     t8_schemes/t8_default/t8_default_quad/t8_dquad_bits.c
-    t8_schemes/t8_default/t8_default_tet/t8_default_tet_cxx.cxx
+    t8_schemes/t8_default/t8_default_tet/t8_default_tet.cxx
     t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.c
     t8_schemes/t8_default/t8_default_tet/t8_dtet_connectivity.c
-    t8_schemes/t8_default/t8_default_tri/t8_default_tri_cxx.cxx
+    t8_schemes/t8_default/t8_default_tri/t8_default_tri.cxx
     t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.c
     t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.c
-    t8_schemes/t8_default/t8_default_vertex/t8_default_vertex_cxx.cxx
+    t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.cxx
     t8_schemes/t8_default/t8_default_vertex/t8_dvertex_bits.c
     t8_vtk/t8_vtk_polydata.cxx 
     t8_vtk/t8_vtk_unstructured.cxx 
@@ -152,7 +155,7 @@ install( FILES
     t8_eclass.h
     t8_element.h
     t8_element_c_interface.h
-    t8_element_cxx.hxx
+    t8_element.hxx
     t8_element_shape.h
     t8_forest_netcdf.h
     t8_mat.h

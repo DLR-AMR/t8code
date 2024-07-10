@@ -20,22 +20,28 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_forest_cxx.h
- * We define the forest routines that need access to the c++ element interface.
+/** \file t8_default.hxx
+ * This file is the point of entry for our default element implementation.
+ *
+ * This scheme points to a consistent implementation of all element classes.
  */
 
-/* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest_cxx */
+#pragma once
 
-#ifndef T8_FOREST_CXX_H
-#define T8_FOREST_CXX_H
-
-#include <t8.h>
-#include <t8_forest/t8_forest_general.h>
+#include <t8_element.hxx>
 
 T8_EXTERN_C_BEGIN ();
 
-/* TODO: document with doxygen */
+/** Return the default element implementation of t8code. */
+t8_scheme_cxx_t *
+t8_scheme_new_default_cxx (void);
+
+/** Check whether a given eclass_scheme is on of the default schemes.
+ * \param [in] ts   A (pointer to a) scheme
+ * \return          True (non-zero) if \a ts is one of the default schemes,
+ *                  false (zero) otherwise.
+ */
+int
+t8_eclass_scheme_is_default (t8_eclass_scheme_c *ts);
 
 T8_EXTERN_C_END ();
-
-#endif /* !T8_FOREST_CXX_H */

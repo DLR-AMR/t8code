@@ -20,10 +20,13 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <t8_element.hxx>
 #include <t8_element.h>
 
-/* clang-format off */ /* Empty line after this one keeps the clang comment from being interpreted as a docstring. */
+/* We want to export the whole implementation to be callable from "C" */
+T8_EXTERN_C_BEGIN ();
 
+/* clang-format off */
 const double t8_element_corner_ref_coords[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS][3] = {
   { { 0, 0, 0 } },                                        /* T8_ECLASS_VERTEX */
   { { 0, 0, 0 }, { 1, 0, 0 } },                           /* T8_ECLASS_LINE */
@@ -35,7 +38,6 @@ const double t8_element_corner_ref_coords[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS
   { { 0, 0, 0 }, { 1, 0, 0 }, { 1, 1, 0 }, { 0, 0, 1 }, { 1, 0, 1 }, { 1, 1, 1 } }, /* T8_ECLASS_PRISM */
   { { 0, 0, 0 }, { 1, 0, 0 }, { 0, 1, 0 }, { 1, 1, 0 }, { 1, 1, 1 } }               /* T8_ECLASS_PYRAMID */
 };
-/* clang-format on */
 
 const double t8_element_centroid_ref_coords[T8_ECLASS_COUNT][3] = {
   { 0, 0, 0 },               /* T8_ECLASS_VERTEX */
@@ -47,6 +49,7 @@ const double t8_element_centroid_ref_coords[T8_ECLASS_COUNT][3] = {
   { 2. / 3., 1. / 3., 0.5 }, /* T8_ECLASS_PRISM */
   { 0.6, 0.6, 0.2 }          /* T8_ECLASS_PYRAMID */
 };
+/* clang-format on */
 
 void
 t8_scheme_cxx_ref (t8_scheme_cxx_t *scheme)
@@ -70,3 +73,28 @@ t8_scheme_cxx_unref (t8_scheme_cxx_t **pscheme)
     *pscheme = NULL;
   }
 }
+
+void
+t8_scheme_cxx_destroy (t8_scheme_cxx_t *s)
+{
+  int t;
+
+  T8_ASSERT (s != NULL);
+  T8_ASSERT (s->rc.refcount == 0);
+
+  for (t = 0; t < T8_ECLASS_COUNT; ++t) {
+    if (s->eclass_schemes[t] != NULL) {
+      delete s->eclass_schemes[t];
+    }
+  }
+  T8_FREE (s);
+}
+
+/* Default implementation for the element size */
+size_t
+t8_eclass_scheme::t8_element_size () const
+{
+  return element_size;
+}
+
+T8_EXTERN_C_END ();
