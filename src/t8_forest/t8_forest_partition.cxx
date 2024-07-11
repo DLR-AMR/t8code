@@ -1025,7 +1025,7 @@ static void
 t8_forest_partition_recvloop (t8_forest_t forest, int recv_first, int recv_last, const int recv_data,
                               sc_array_t *data_out, char *sent_to_self, size_t byte_to_self)
 {
-  int iproc, num_receive, prev_recvd;
+  int iproc, prev_recvd;
   t8_locidx_t last_received_local_element = 0;
   t8_forest_t forest_from;
   int mpiret;
@@ -1045,7 +1045,6 @@ t8_forest_partition_recvloop (t8_forest_t forest, int recv_first, int recv_last,
 
   /* In order of their ranks, receive the trees and elements from the other processes. */
 
-  num_receive = 0;
   prev_recvd = 0;
   if (!recv_data) {
     forest->local_num_elements = 0;
@@ -1053,7 +1052,6 @@ t8_forest_partition_recvloop (t8_forest_t forest, int recv_first, int recv_last,
   for (iproc = recv_first; iproc <= recv_last; iproc++) {
     if (!t8_forest_partition_empty (offset_from, iproc)) {
       /* We receive from each nonempty rank between recv_first and recv_last */
-      num_receive++;
       if (iproc != forest->mpirank) {
         /* Probe for the message */
         mpiret = sc_MPI_Probe (iproc, T8_MPI_PARTITION_FOREST, comm, &status);
