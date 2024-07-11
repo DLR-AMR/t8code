@@ -25,6 +25,8 @@
  * TODO: document this file
  */
 
+#include <cstring>
+
 #include <t8_data/t8_shmem.h>
 #include <t8_cmesh.h>
 #include <t8_element.h>
