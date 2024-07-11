@@ -156,7 +156,7 @@ struct t8_geometry
    * Get the name of this geometry.
    * \return The name.
    */
-  inline const std::string
+  inline const std::string&
   t8_geom_get_name () const
   {
     return name;
