@@ -1410,7 +1410,7 @@ t8_cmesh_partition_debug_listprocs (const t8_cmesh_t cmesh, const t8_cmesh_t cme
     }
   }
   t8_debugf ("I send to: %s\n", out);
-  sprintf (out, " ");
+  std::strcpy(out, " ");
   if (cmesh_from->set_partition) {
     for (p = 0; p < mpisize; p++) {
       if (t8_offset_sendsto (p, mpirank, from, to)) {
