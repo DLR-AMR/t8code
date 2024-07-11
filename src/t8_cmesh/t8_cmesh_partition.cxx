@@ -387,7 +387,7 @@ t8_cmesh_partition_sendrange (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from, int *send
     ret--;
   }
 
-  t8_debugf ("%s_first = %i, %s_last = %i, last_tree = %li\n", "send", *send_first, "send", *send_last, ret);
+  t8_debugf ("%s_first = %i, %s_last = %i, last_tree = %li\n", "send", *send_first, "send", *send_last, static_cast<long>(ret));
 
   T8_ASSERT (*send_first >= 0);
   //TODO:reactivate  T8_ASSERT (*send_last >= 0);
