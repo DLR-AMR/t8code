@@ -41,10 +41,6 @@ target_include_directories( T8 PUBLIC
 
 target_link_libraries( T8 PUBLIC P4EST::P4EST SC::SC )
 
-if ( CMAKE_BUILD_TYPE STREQUAL "Debug" )
-    target_compile_definitions( T8 PUBLIC T8_ENABLE_DEBUG )
-endif()
-
 if ( T8CODE_ENABLE_MPI )
     target_compile_definitions( T8 PUBLIC T8_ENABLE_MPI )
     target_compile_definitions( T8 PUBLIC T8_ENABLE_MPIIO )
