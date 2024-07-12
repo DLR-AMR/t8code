@@ -604,7 +604,7 @@ t8_forest_adapt (t8_forest_t forest)
 
           (void) t8_element_array_push_count (telements, num_subelements);
           for (zz = 0; zz < num_subelements; zz++) {
-            elements[zz] = t8_element_array_index_locidx (telements, el_inserted + zz);
+            elements[zz] = t8_element_array_index_locidx_mutable (telements, el_inserted + zz);
           }
           tscheme->t8_element_to_transition_cell (elements_from[0], refine - 1, elements);
           el_inserted += num_subelements;

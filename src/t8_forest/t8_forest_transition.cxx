@@ -320,7 +320,7 @@ t8_forest_is_transitioned (t8_forest_t forest)
     telements = &current_tree->elements;
     num_elems = (t8_locidx_t) t8_element_array_get_count (telements);
     for (elem_count = 0; elem_count < num_elems; elem_count++) {
-      t8_element_t *current_element = t8_element_array_index_locidx (telements, elem_count);
+      const t8_element_t *current_element = t8_element_array_index_locidx (telements, elem_count);
       tscheme = forest->scheme_cxx->eclass_schemes[current_tree->eclass];
       if (tscheme->t8_element_is_subelement (current_element)) {
         /* subelement found -> return true */
