@@ -575,7 +575,8 @@ t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
     T8_ASSERT (eclass != T8_ECLASS_COUNT);
 
     if (t8_eclass_to_dimension[eclass] > dim) {
-      t8_errorf ("Warning: Encountered element which dimension is greater than %d. Did you set the correct dimension?\n", dim);
+      t8_errorf (
+        "Warning: Encountered element which dimension is greater than %d. Did you set the correct dimension?\n", dim);
     }
 
     /* Check if the tree is of the correct dimension */
@@ -893,7 +894,8 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
     T8_ASSERT (eclass != T8_ECLASS_COUNT);
 
     if (t8_eclass_to_dimension[eclass] > dim) {
-      t8_errorf ("Warning: Encountered element which dimension is greater than %d. Did you set the correct dimension?\n", dim);
+      t8_errorf (
+        "Warning: Encountered element which dimension is greater than %d. Did you set the correct dimension?\n", dim);
     }
 
     /* Check if the tree is of the correct dimension */
