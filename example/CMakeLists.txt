@@ -36,6 +36,8 @@ add_t8_example( NAME t8_example_geometries              SOURCES geometry/t8_exam
 add_t8_example( NAME t8_cmesh_load_save                 SOURCES IO/cmesh/t8_cmesh_load_save.cxx )
 add_t8_example( NAME t8_read_msh_file                   SOURCES IO/cmesh/gmsh/t8_read_msh_file.cxx )
 add_t8_example( NAME t8_load_and_refine_square_w_hole   SOURCES IO/cmesh/gmsh/t8_load_and_refine_square_w_hole.cxx )
+add_t8_example( NAME t8_gmsh_to_vtk                     SOURCES IO/forest/gmsh/t8_gmsh_to_vtk.cxx )
+
 add_t8_example( NAME t8_write_cmesh_netcdf              SOURCES IO/cmesh/netcdf/t8_write_cmesh_netcdf.cxx )
 add_t8_example( NAME t8_read_tetgen                     SOURCES IO/cmesh/tetgen/t8_read_tetgen_file.cxx )
 add_t8_example( NAME t8_time_tetgen                     SOURCES IO/cmesh/tetgen/t8_time_tetgen_file.cxx )
