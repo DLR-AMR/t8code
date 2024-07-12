@@ -1,7 +1,7 @@
 #include <sc_options.h>
 #include <t8.h>
 #include <t8_forest/t8_forest.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <t8_schemes/t8_transition/t8_transition_cxx.hxx>
 #include <t8_cmesh_readmshfile.h>
 #include <vector>
 #include <algorithm>
@@ -37,12 +37,12 @@ tabeamug_build_forest (const char *filename, int level, int maxlevel)
   const int partition = 0;
   const int dimension = 2;
   const int main_rank = 0;
-  const int use_cad = 1;
+  const int use_cad = 0;
   t8_cmesh_t cmesh = t8_cmesh_from_msh_file (filename, partition, comm, dimension, main_rank, use_cad);
 
   /* Build uniform forest */
-  t8_scheme_cxx_t *scheme = t8_scheme_new_default_cxx ();  // default adapt scheme.
-  const int do_face_ghost = 0;                             // No ghost needed.
+  t8_scheme_cxx_t *scheme = t8_scheme_new_transition_quad_cxx ();  // default adapt scheme.
+  const int do_face_ghost = 0;                                     // No ghost needed.
   t8_forest_t forest_uniform = t8_forest_new_uniform (cmesh, scheme, level, do_face_ghost, comm);
 
   /* Build adapted forest */
@@ -50,21 +50,37 @@ tabeamug_build_forest (const char *filename, int level, int maxlevel)
   /* Adapt the forest. We use the maximum refinement levet as user data. */
   t8_forest_t forest_adapt = t8_forest_new_adapt (forest_uniform, tabeamug_adapt, recursive, do_face_ghost, &maxlevel);
 
+  // vtk output of adapted forest
   char vtkname[BUFSIZ];
-
   snprintf (vtkname, BUFSIZ, "tabeamug_adapt_%i_%i", level, maxlevel);
-  t8_forest_write_vtk (forest_adapt, vtkname);
+  //t8_forest_write_vtk_ext (forest_adapt, vtkname, 1, 1, 1, 1, 1, 0, 1, 0, NULL);
+  //t8_forest_write_vtk (forest_adapt, vtkname);
 
+  // builde balanced forest
   t8_forest_t forest_balance;
   t8_forest_init (&forest_balance);
   const int no_repartition = 0;
   t8_forest_set_balance (forest_balance, forest_adapt, no_repartition);
   t8_forest_commit (forest_balance);
 
+  // vtk output of balanced forest
   snprintf (vtkname, BUFSIZ, "tabeamug_balance_%i_%i", level, maxlevel);
-  t8_forest_write_vtk (forest_balance, vtkname);
+  //t8_forest_write_vtk_ext (forest_adapt, vtkname, 1, 1, 1, 1, 1, 0, 1, 0, NULL);
+  //t8_forest_write_vtk (forest_balance, vtkname);
 
-  t8_forest_unref (&forest_balance);
+  // build transitioned (no hanging nodes) forest
+  t8_forest_t forest_transition;
+  t8_forest_init (&forest_transition);
+  int do_extra_balance = 0;  // not necessary since the input forest is balanced.
+  t8_forest_set_transition (forest_transition, forest_balance, do_extra_balance);
+  t8_forest_commit (forest_transition);
+
+  // vtk output of transitioned forest
+  snprintf (vtkname, BUFSIZ, "tabeamug_transition_%i_%i", level, maxlevel);
+  //t8_forest_write_vtk_ext (forest_transition, vtkname, 1, 1, 1, 1, 1, 0, 1, 0, NULL);
+  //t8_forest_write_vtk (forest_transition, vtkname);
+
+  t8_forest_unref (&forest_transition);
 }
 
 int
