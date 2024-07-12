@@ -16,3 +16,4 @@ include example/version/Makefile.am
 include example/remove/Makefile.am
 
 include example/transition/Makefile.am
+include example/tabeamug/Makefile.am
