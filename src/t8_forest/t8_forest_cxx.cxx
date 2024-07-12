@@ -1710,8 +1710,8 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, 
 /* This function does not need a declaration and is only called by LFN_transitioned.
  * When entering this function, a neighbor transition cell is found and some additional
  * subelement-specific functions are applied to return the right subelement neighbor of leaf. */
-void
-t8_forest_get_transition_cell_face_neighbor (t8_forest_t forest, t8_element_t *pseudo_neighbor,
+static void
+t8_forest_get_transition_cell_face_neighbor (t8_forest_t forest, const t8_element_t *pseudo_neighbor,
                                              const t8_element_t *leaf, t8_locidx_t element_index, int face,
                                              t8_locidx_t lneigh_treeid, t8_element_t **neighbor_leaves,
                                              t8_locidx_t **pelement_indices, int neighbor_is_ghost, int *owners,
@@ -1878,8 +1878,9 @@ t8_forest_leaf_face_neighbors_transitioned (t8_forest_t forest, t8_locidx_t ltre
   t8_locidx_t lneigh_treeid = -1;
   t8_locidx_t lghost_treeid = -1, *element_indices, element_index, subelement_neighbor_index, ghost_element_index = -1;
   t8_eclass_scheme_c *ts, *neigh_scheme;
-  t8_element_array_t *element_array;
-  t8_element_t *ancestor, **neighbor_leaves;
+
+  const t8_element_t *ancestor;
+  t8_element_t **neighbor_leaves;
   t8_linearidx_t neigh_id;
   int num_children_at_face, at_maxlevel;
   int ineigh, *owners, different_owners, have_ghosts, neighbor_is_ghost = 0;
@@ -1935,7 +1936,7 @@ t8_forest_leaf_face_neighbors_transitioned (t8_forest_t forest, t8_locidx_t ltre
         for (int neighbor_count = 0; neighbor_count < *num_neighbors; neighbor_count++) {
           t8_debugf ("num neighbors %i\n", *num_neighbors);
           neigh_id = ts->t8_element_get_linear_id (neighbor_leaves[neighbor_count], forest->maxlevel);
-          element_array = t8_forest_get_tree_element_array (forest, ltreeid);
+          const t8_element_array_t *element_array = t8_forest_get_tree_element_array (forest, ltreeid);
           subelement_neighbor_index = t8_forest_bin_search_lower (element_array, neigh_id, forest->maxlevel);
           element_indices[neighbor_count] = subelement_neighbor_index
                                             - ts->t8_element_get_subelement_id (t8_forest_get_tree_element (
@@ -2054,7 +2055,7 @@ t8_forest_leaf_face_neighbors_transitioned (t8_forest_t forest, t8_locidx_t ltre
       if (owners[0] != forest->mpirank) {
         /* The elements are ghost elements of the same owner */
         neighbor_is_ghost = 1;
-        element_array = t8_forest_ghost_get_tree_elements (forest, lghost_treeid);
+        const t8_element_array_t *element_array = t8_forest_ghost_get_tree_elements (forest, lghost_treeid);
         /* Find the index in element_array of the leaf ancestor of the first neighbor.
          * This is either the neighbor itself or its parent, or its grandparent */
         element_index = t8_forest_bin_search_lower (element_array, neigh_id, forest->maxlevel);
@@ -2070,7 +2071,7 @@ t8_forest_leaf_face_neighbors_transitioned (t8_forest_t forest, t8_locidx_t ltre
       }
       else {
         /* the elements are local elements */
-        element_array = t8_forest_get_tree_element_array (forest, lneigh_treeid);
+        const t8_element_array_t *element_array = t8_forest_get_tree_element_array (forest, lneigh_treeid);
         /* Find the index in element_array of the leaf ancestor of the first neighbor.
          * This is either the neighbor itself or its parent, or its grandparent */
         element_index = t8_forest_bin_search_lower (element_array, neigh_id, forest->maxlevel);
@@ -2168,7 +2169,7 @@ t8_forest_leaf_face_neighbors_transitioned (t8_forest_t forest, t8_locidx_t ltre
        * in the ghost structure */
       if (owners[ineigh] == forest->mpirank) {
         /* The neighbor is a local leaf */
-        element_array = t8_forest_get_tree_element_array (forest, lneigh_treeid);
+        const t8_element_array_t *element_array = t8_forest_get_tree_element_array (forest, lneigh_treeid);
         /* Find the index of the neighbor in the array */
         element_indices[ineigh] = t8_forest_bin_search_lower (element_array, neigh_id, forest->maxlevel);
         T8_ASSERT (element_indices[ineigh] >= 0);
@@ -2188,7 +2189,7 @@ t8_forest_leaf_face_neighbors_transitioned (t8_forest_t forest, t8_locidx_t ltre
       }
       else {
         /* The neighbor is a ghost */
-        element_array = t8_forest_ghost_get_tree_elements (forest, lghost_treeid);
+        const t8_element_array_t *element_array = t8_forest_ghost_get_tree_elements (forest, lghost_treeid);
         /* Find the index of the neighbor in the array */
         element_indices[ineigh] = t8_forest_bin_search_lower (element_array, neigh_id, forest->maxlevel);
 
