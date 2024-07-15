@@ -240,9 +240,10 @@ t8_forest_partition_test_boundary_element (const t8_forest_t forest)
   /* Get the first descendant id of rank+1 */
   const t8_linearidx_t first_desc_id
     = *(t8_linearidx_t *) t8_shmem_array_index (forest->global_first_desc, forest->mpirank + 1);
-  /* The following inequality must apply:
+  /* The following inequality must apply, if our last element is on the same tree :
    * last_desc_id of last element of rank < first_desc_id of first element of rank+1 */
-  T8_ASSERT (last_desc_id < first_desc_id);
+  /** TODO: This assertion might still be wrong, when our last element is the last element of the tree*/
+  T8_ASSERT (itree < num_local_trees - 1 || last_desc_id < first_desc_id);
   /* clean up */
   ts->t8_element_destroy (1, &element_last_desc);
 #endif
