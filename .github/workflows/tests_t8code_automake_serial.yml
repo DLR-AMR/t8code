@@ -82,7 +82,7 @@ jobs:
     - name: Get sc commit hash
       run: hash=`git rev-parse HEAD:sc` && echo sc_commit=$hash >> $GITHUB_ENV
     - name: Check cache for previous sc installation
-      id: sc_automake_cache
+      id: sc_automake_serial_cache
       uses: actions/cache@v4
       with:
         path: |
@@ -97,7 +97,7 @@ jobs:
       # We use this mostly for debugging this CI script.
       run: echo SC_IGNORE_CACHE=0 >> $GITHUB_ENV
     - name: Cache info
-      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' ||  env.SC_IGNORE_CACHE == 1 }}
+      if: ${{ steps.sc_automake_serial_cache.outputs.cache-hit != 'true' ||  env.SC_IGNORE_CACHE == 1 }}
       run: echo No cache found or cache will be ignored. SC_IGNORE_CACHE=$SC_IGNORE_CACHE
     - name: if ignore cache, delete folders
       if: ${{ env.SC_IGNORE_CACHE == 1 }}
@@ -105,24 +105,24 @@ jobs:
       run: rm -r $SC_DEBUG $SC_RELEASE $SC_SERIAL_DEBUG $SC_SERIAL_RELEASE || true
     - name: make folders
       run: mkdir $SC_SERIAL_DEBUG && mkdir $SC_SERIAL_RELEASE
-      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+      if: ${{ steps.sc_automake_serial_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
     - name: install sc
       run: echo "Install sc"
-      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+      if: ${{ steps.sc_automake_serial_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
       ## sc serial debug
     - name: sc configure and build serial debug
       run: cd $SC_SERIAL_DEBUG && ../configure --enable-debug --prefix=$PWD/install
-      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+      if: ${{ steps.sc_automake_serial_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
     - name: sc build serial debug
       run: cd $SC_SERIAL_DEBUG && make $MAKEFLAGS && make $MAKEFLAGS install
-      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+      if: ${{ steps.sc_automake_serial_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
       ## sc serial release
     - name: sc configure and build serial release
       run: cd $SC_SERIAL_RELEASE && ../configure --prefix=$PWD/install
-      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+      if: ${{ steps.sc_automake_serial_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
     - name: sc build release serial
       run: cd $SC_SERIAL_RELEASE && make $MAKEFLAGS && make $MAKEFLAGS install
-      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+      if: ${{ steps.sc_automake_serial_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
 #
 # P4EST
 #
@@ -132,7 +132,7 @@ jobs:
     - name: Get p4est commit hash
       run: hash=`git rev-parse HEAD:p4est` && echo p4est_commit=$hash >> $GITHUB_ENV
     - name: Check cache for previous p4est installation
-      id: p4est_automake_cache
+      id: p4est_automake_serial_cache
       uses: actions/cache@v4
       with:
         path: |
@@ -146,32 +146,32 @@ jobs:
       # We use this mostly for debugging this CI script.
       run: echo P4EST_IGNORE_CACHE=0 >> $GITHUB_ENV
     - name: Cache info
-      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+      if: ${{ steps.p4est_automake_serial_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
       run: echo No cache found or cache will be ignored. P4EST_IGNORE_CACHE=$P4EST_IGNORE_CACHE
     - name: install p4est
       run: echo "Install p4est"
-      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+      if: ${{ steps.p4est_automake_serial_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     - name: if ignore cache, delete folders
       if: ${{ env.P4EST_IGNORE_CACHE == 1 }}
       # The true at the end is to ignore errors that i.e. occur when the folders do not exist      
-      run: rm -r $P4EST_DEBUG $P4EST_RELEASE $P4EST_SERIAL_DEBUG $P4EST_SERIAL_RELEASE || true 
+      run: rm -r $P4EST_SERIAL_RELEASE $P4EST_SERIAL_DEBUG || true 
     - name: make folders
       run: mkdir $P4EST_SERIAL_RELEASE && mkdir $P4EST_SERIAL_DEBUG
-      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+      if: ${{ steps.p4est_automake_serial_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     ## p4est serial release
     - name: p4est configure and build serial release
       run: cd $P4EST_SERIAL_RELEASE && ../configure --prefix=$PWD/install --with-sc=$SC_SERIAL_RELEASE/install
-      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+      if: ${{ steps.p4est_automake_serial_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     - name: p4est build serial release
       run: cd $P4EST_SERIAL_RELEASE && make $MAKEFLAGS && make $MAKEFLAGS install
-      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+      if: ${{ steps.p4est_automake_serial_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     - name: p4est configure and build serial debug
     ## p4est serial debug
       run: cd $P4EST_SERIAL_DEBUG && ../configure --enable-debug --prefix=$PWD/install --with-sc=$SC_SERIAL_DEBUG/install
-      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+      if: ${{ steps.p4est_automake_serial_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     - name: p4est build serial debug
       run: cd $P4EST_SERIAL_DEBUG && make $MAKEFLAGS && make $MAKEFLAGS install
-      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+      if: ${{ steps.p4est_automake_serial_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
 #  P4EST AND SC END
 #
 #  T8CODE

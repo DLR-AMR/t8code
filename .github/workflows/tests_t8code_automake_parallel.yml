@@ -97,32 +97,32 @@ jobs:
       # We use this mostly for debugging this CI script.
       run: echo SC_IGNORE_CACHE=0 >> $GITHUB_ENV
     - name: Cache info
-      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' ||  env.SC_IGNORE_CACHE == 1 }}
+      if: ${{ steps.sc_automake_cache.outputs.cache-hit != 'true' ||  env.SC_IGNORE_CACHE == 1 }}
       run: echo No cache found or cache will be ignored. SC_IGNORE_CACHE=$SC_IGNORE_CACHE
     - name: if ignore cache, delete folders
       if: ${{ env.SC_IGNORE_CACHE == 1 }}
       # The true at the end is to ignore errors that i.e. occur when the folders do not exist
-      run: rm -r $SC_DEBUG $SC_RELEASE $SC_SERIAL_DEBUG $SC_SERIAL_RELEASE || true
+      run: rm -r $SC_DEBUG $SC_RELEASE || true
     - name: make folders
       run: mkdir $SC_DEBUG && mkdir $SC_RELEASE
-      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+      if: ${{ steps.sc_automake_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
     - name: install sc
       run: echo "Install sc"
-      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+      if: ${{ steps.sc_automake_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
       ## sc debug
     - name: sc configure debug
       run: cd $SC_DEBUG && ../configure --enable-mpi --enable-debug --prefix=$PWD/install
-      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+      if: ${{ steps.sc_automake_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
     - name: sc build debug
       run: cd $SC_DEBUG && make $MAKEFLAGS && make $MAKEFLAGS install
-      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+      if: ${{ steps.sc_automake_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
       ## sc release
     - name: sc configure and build release
       run: cd $SC_RELEASE && ../configure --enable-mpi --enable-debug --prefix=$PWD/install
-      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+      if: ${{ steps.sc_automake_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
     - name: sc build release
       run: cd $SC_RELEASE && make $MAKEFLAGS && make $MAKEFLAGS install
-      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
+      if: ${{ steps.sc_automake_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
 #
 # P4EST
 #
@@ -146,32 +146,32 @@ jobs:
       # We use this mostly for debugging this CI script.
       run: echo P4EST_IGNORE_CACHE=0 >> $GITHUB_ENV
     - name: Cache info
-      if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+      if: ${{ steps.p4est_automake_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
       run: echo No cache found or cache will be ignored. P4EST_IGNORE_CACHE=$P4EST_IGNORE_CACHE
     - name: install p4est
       run: echo "Install p4est"
-      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+      if: ${{ steps.p4est_automake_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     - name: if ignore cache, delete folders
       if: ${{ env.P4EST_IGNORE_CACHE == 1 }}
       # The true at the end is to ignore errors that i.e. occur when the folders do not exist      
-      run: rm -r $P4EST_DEBUG $P4EST_RELEASE $P4EST_SERIAL_DEBUG $P4EST_SERIAL_RELEASE || true 
+      run: rm -r $P4EST_DEBUG $P4EST_RELEASE || true 
     - name: make folders
       run: mkdir $P4EST_DEBUG && mkdir $P4EST_RELEASE
-      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+      if: ${{ steps.p4est_automake_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
       ## p4est debug
     - name: p4est configure debug
       run: cd $P4EST_DEBUG && ../configure --enable-mpi --enable-debug --prefix=$PWD/install --with-sc=$SC_DEBUG/install
-      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+      if: ${{ steps.p4est_automake_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     - name: p4est build debug
       run: cd $P4EST_DEBUG && make $MAKEFLAGS && make $MAKEFLAGS install
-      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+      if: ${{ steps.p4est_automake_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     ## p4est release
     - name: p4est configure and build release
       run: cd $P4EST_RELEASE && ../configure --enable-mpi --prefix=$PWD/install --with-sc=$SC_RELEASE/install
-      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+      if: ${{ steps.p4est_automake_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     - name: p4est build release
       run: cd $P4EST_RELEASE && make $MAKEFLAGS && make $MAKEFLAGS install
-      if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+      if: ${{ steps.p4est_automake_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
 #  P4EST AND SC END
 #
 #  T8CODE
