@@ -120,7 +120,7 @@ t8_cmesh_no_negative_volume (t8_cmesh_t cmesh);
  *                              3 * \a num_vertices many doubles.
  *                              \a num_vertices must match \ref t8_eclass_num_vertices[\a eclass]
  * \return                      True if the geometric volume describe by \a vertices is negative.
- *                              Fals otherwise.
+ *                              False otherwise.
  * Returns true if a tree of the given eclass with the given vertex
  * coordinates does have negative volume.
  */
@@ -736,7 +736,7 @@ t8_cmesh_get_partition_table (t8_cmesh_t cmesh);
  * \a cmesh must be committed before calling this function. *
  */
 void
-t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *ts, t8_gloidx_t *first_local_tree,
+t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level, const t8_scheme_cxx_t *ts, t8_gloidx_t *first_local_tree,
                          t8_gloidx_t *child_in_tree_begin, t8_gloidx_t *last_local_tree, t8_gloidx_t *child_in_tree_end,
                          int8_t *first_tree_shared);
 
@@ -797,7 +797,8 @@ t8_cmesh_coords_axb (const double *coords_in, double *coords_out, int num_vertic
  * \param[in]   translate         Translation of the vectors.
  */
 void
-t8_cmesh_translate_coordinates (const double *coords_in, double *coords_out, int num_vertices, double translate[3]);
+t8_cmesh_translate_coordinates (const double *coords_in, double *coords_out, const int num_vertices,
+                                const double translate[3]);
 
 /**TODO: Add proper documentation*/
 void

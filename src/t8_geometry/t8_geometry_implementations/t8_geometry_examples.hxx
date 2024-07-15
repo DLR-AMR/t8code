@@ -97,7 +97,7 @@ struct t8_geometry_triangulated_spherical_surface: public t8_geometry_with_verti
   {
   }
 
-  /* The destrucor. */
+  /* The destructor. */
   virtual ~t8_geometry_triangulated_spherical_surface ()
   {
   }
@@ -139,7 +139,7 @@ struct t8_geometry_quadrangulated_spherical_surface: public t8_geometry_with_ver
   {
   }
 
-  /* The destrucor. */
+  /* The destructor. */
   virtual ~t8_geometry_quadrangulated_spherical_surface ()
   {
   }
@@ -180,7 +180,7 @@ struct t8_geometry_cubed_spherical_shell: public t8_geometry_with_vertices
   {
   }
 
-  /* The destrucor. */
+  /* The destructor. */
   virtual ~t8_geometry_cubed_spherical_shell ()
   {
   }
@@ -221,7 +221,7 @@ struct t8_geometry_prismed_spherical_shell: public t8_geometry_with_vertices
   {
   }
 
-  /* The destrucor. */
+  /* The destructor. */
   virtual ~t8_geometry_prismed_spherical_shell ()
   {
   }
@@ -262,7 +262,7 @@ struct t8_geometry_cubed_sphere: public t8_geometry_with_vertices
   {
   }
 
-  /* The destrucor. */
+  /* The destructor. */
   virtual ~t8_geometry_cubed_sphere ()
   {
   }

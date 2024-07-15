@@ -1,5 +1,11 @@
 cmake_minimum_required( VERSION 3.16 )
-project( T8CODE DESCRIPTION "Parallel algorithms and data structures for tree-based AMR with arbitrary element shapes." LANGUAGES C CXX )
+
+include(cmake/GitProjectVersion.cmake)
+
+project( T8CODE
+  DESCRIPTION "Parallel algorithms and data structures for tree-based AMR with arbitrary element shapes."
+  LANGUAGES C CXX
+  VERSION "${T8CODE_VERSION_MAJOR}.${T8CODE_VERSION_MINOR}.${T8CODE_VERSION_PATCH}" )
 include( CTest )
 
 option( T8CODE_BUILD_AS_SHARED_LIBRARY "Whether t8code should be built as a shared or a static library" ON )
@@ -22,7 +28,7 @@ if( NOT CMAKE_BUILD_TYPE )
     set( CMAKE_BUILD_TYPE "Release" )
 endif()
 
-set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Release Debug)
+set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Release RelWithDebInfo Debug)
 
 set( CMAKE_C_STANDARD 11 )
 set( CMAKE_C_STANDARD_REQUIRED ON )
