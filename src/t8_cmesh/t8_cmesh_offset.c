@@ -364,7 +364,7 @@ t8_offset_all_owners_of_tree (const int mpisize, const t8_gloidx_t gtree, const 
 /* Return 1 if the process will not send any trees, that is if it is
  * empty or has only one shared tree. */
 int
-t8_offset_nosend (int proc, int mpisize, const t8_gloidx_t *offset_from, const t8_gloidx_t *offset_to)
+t8_offset_nosend (const int proc, const int mpisize, const t8_gloidx_t *offset_from, const t8_gloidx_t *offset_to)
 {
   t8_gloidx_t num_trees;
 
@@ -432,7 +432,7 @@ t8_offset_nosend (int proc, int mpisize, const t8_gloidx_t *offset_from, const t
 /* Return one if proca sends trees to procb when partitioning from
  * offset_from to offset_to */
 int
-t8_offset_sendsto (int proca, int procb, const t8_gloidx_t *t8_offset_from, const t8_gloidx_t *t8_offset_to)
+t8_offset_sendsto (const int proca, const int procb, const t8_gloidx_t *t8_offset_from, const t8_gloidx_t *t8_offset_to)
 {
   t8_gloidx_t proca_first, proca_last;
   t8_gloidx_t procb_first, procb_last;
@@ -476,7 +476,7 @@ t8_offset_sendsto (int proca, int procb, const t8_gloidx_t *t8_offset_from, cons
 /* Determine whether a process A will send a tree T to a process B.
  */
 int
-t8_offset_sendstree (int proc_send, int proc_to, t8_gloidx_t gtree, const t8_gloidx_t *offset_from,
+t8_offset_sendstree (const int proc_send, const int proc_to, const t8_gloidx_t gtree, const t8_gloidx_t *offset_from,
                      const t8_gloidx_t *offset_to)
 {
   /* If the tree is not the last tree on proc_send it is send if
@@ -512,7 +512,8 @@ t8_offset_sendstree (int proc_send, int proc_to, t8_gloidx_t gtree, const t8_glo
 /* Count the number of sending procs from start to end sending to mpirank
  * A process counts as sending if it has at least one non-shared local tree */
 int
-t8_offset_range_send (int start, int end, int mpirank, const t8_gloidx_t *offset_from, const t8_gloidx_t *offset_to)
+t8_offset_range_send (const int start, const int end, const int mpirank, const t8_gloidx_t *offset_from,
+                      const t8_gloidx_t *offset_to)
 {
   int count = 0, i;
 
@@ -525,7 +526,7 @@ t8_offset_range_send (int start, int end, int mpirank, const t8_gloidx_t *offset
 }
 
 void
-t8_offset_print (t8_shmem_array_t offset, sc_MPI_Comm comm)
+t8_offset_print (const t8_shmem_array_t offset, sc_MPI_Comm comm)
 {
 #if T8_ENABLE_DEBUG
   char buf[BUFSIZ] = "| ";
