@@ -28,7 +28,7 @@ if( NOT CMAKE_BUILD_TYPE )
     set( CMAKE_BUILD_TYPE "Release" )
 endif()
 
-set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Release Debug)
+set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Release RelWithDebInfo Debug)
 
 set( CMAKE_C_STANDARD 11 )
 set( CMAKE_C_STANDARD_REQUIRED ON )
