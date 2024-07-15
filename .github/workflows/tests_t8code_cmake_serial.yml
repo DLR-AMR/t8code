@@ -124,8 +124,7 @@ jobs:
       if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
       ## sc serial release
     - name: sc cmake and build serial release
-      run: cd $SC_SERIAL_RELEASE && ../configure --prefix=$PWD/install
-           cd $SC_SERIAL_RELEASE && cmake ../ -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/install
+      run: cd $SC_SERIAL_RELEASE && cmake ../ -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/install
       if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
     - name: sc build release serial
       run: cd $SC_SERIAL_RELEASE && make $MAKEFLAGS && make $MAKEFLAGS install
