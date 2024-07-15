@@ -64,12 +64,8 @@ t8_fortran_finalize ();
 void
 t8_fortran_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm *comm);
 
-/** This function calls t8_cmesh_set_join_by_vertices with connectivity = NULL.
+/** This function calls t8_cmesh_set_join_by_stash with connectivity = NULL.
  * \param[in,out]   cmesh               Pointer to a t8code cmesh object. If set to NULL this argument is ignored.
- * \param[in]       ntrees              Number of coarse mesh elements resp. trees.
- * \param[in]       eclasses            List of element classes of length [ntrees].
- * \param[in]       vertices            List of per element vertices with dimensions
- *                                      [ntrees,T8_ECLASS_MAX_CORNERS,T8_ECLASS_MAX_DIM].
  * \param[in]       do_both_directions  Compute the connectivity from both neighboring sides.
  *                                      Takes much longer to compute.
  *
@@ -79,8 +75,7 @@ t8_fortran_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm *comm);
  * \note This routine does not detect periodic boundaries.
 */
 void
-t8_fortran_cmesh_set_join_by_vertices_noConn (t8_cmesh_t cmesh, const int ntrees, const t8_eclass_t *eclasses,
-                                              const double *vertices, const int do_both_directions);
+t8_fortran_cmesh_set_join_by_stash_noConn (t8_cmesh_t cmesh, const int do_both_directions);
 
 /** Translate a fortran MPI communicator into a C MPI communicator
  * and return a pointer to it.
