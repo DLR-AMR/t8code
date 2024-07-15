@@ -58,7 +58,8 @@ void
 t8_fortran_finalize ();
 
 /** Commit cmesh. This wraps cmesh_commit in order to use the dereferenced communicator.
- * \param [in] Ccomm  Pointer to a C MPI communicator.
+ * \param [in, out] cmesh     Cmesh to commit
+ * \param [in] Ccomm          Pointer to a C MPI communicator.
 */
 void
 t8_fortran_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm *comm);
