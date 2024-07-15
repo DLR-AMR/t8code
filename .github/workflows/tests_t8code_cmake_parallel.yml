@@ -152,7 +152,7 @@ jobs:
     - name: if ignore cache, delete folders
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
       # The true at the end is to ignore errors that i.e. occur when the folders do not exist      
-      run: rm -r $P4EST_DEBUG $P4EST_RELEASE || true 
+      run: rm -r $P4EST_DEBUG $P4EST_RELEASE || true
     - name: make folders
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
       run: mkdir $P4EST_DEBUG $P4EST_RELEASE
