@@ -120,7 +120,7 @@ t8_cmesh_no_negative_volume (t8_cmesh_t cmesh);
  *                              3 * \a num_vertices many doubles.
  *                              \a num_vertices must match \ref t8_eclass_num_vertices[\a eclass]
  * \return                      True if the geometric volume describe by \a vertices is negative.
- *                              Fals otherwise.
+ *                              False otherwise.
  * Returns true if a tree of the given eclass with the given vertex
  * coordinates does have negative volume.
  */
@@ -205,10 +205,10 @@ t8_cmesh_set_partition_range (t8_cmesh_t cmesh, int set_face_knowledge, t8_gloid
 void
 t8_cmesh_set_partition_offsets (t8_cmesh_t cmesh, t8_shmem_array_t tree_offsets);
 
-/** Declare if the cmesh is understood as a partitioned cmesh where the partition
- * table is derived from an assumed uniform refinement of a given level.
+/** Declare if a derived cmesh should be partitioned according to a
+ * uniform refinement of a given level for the provided scheme.
  * This call is only valid when the cmesh is not yet committed via a call
- * to \ref t8_cmesh_commit.
+ * to \ref t8_cmesh_commit and when the cmesh will be derived.
  * \param [in,out] cmesh          The cmesh to be updated.
  * \param [in]     element_level  The refinement_level.
  * \param [in]     ts             The element scheme describing the refinement pattern.
@@ -460,6 +460,13 @@ t8_cmesh_comm_is_valid (t8_cmesh_t cmesh, sc_MPI_Comm comm);
  */
 int
 t8_cmesh_is_partitioned (t8_cmesh_t cmesh);
+
+/** Get the dimension of a cmesh.
+ * \param [in]  cmesh   The cmesh.
+ * \a cmesh must be committed before calling this function.
+ */
+int
+t8_cmesh_get_dimension (const t8_cmesh_t cmesh);
 
 /** Return the global number of trees in a cmesh.
  * \param [in] cmesh       The cmesh to be considered.
@@ -729,7 +736,7 @@ t8_cmesh_get_partition_table (t8_cmesh_t cmesh);
  * \a cmesh must be committed before calling this function. *
  */
 void
-t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *ts, t8_gloidx_t *first_local_tree,
+t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level, const t8_scheme_cxx_t *ts, t8_gloidx_t *first_local_tree,
                          t8_gloidx_t *child_in_tree_begin, t8_gloidx_t *last_local_tree, t8_gloidx_t *child_in_tree_end,
                          int8_t *first_tree_shared);
 
@@ -790,7 +797,8 @@ t8_cmesh_coords_axb (const double *coords_in, double *coords_out, int num_vertic
  * \param[in]   translate         Translation of the vectors.
  */
 void
-t8_cmesh_translate_coordinates (const double *coords_in, double *coords_out, int num_vertices, double translate[3]);
+t8_cmesh_translate_coordinates (const double *coords_in, double *coords_out, const int num_vertices,
+                                const double translate[3]);
 
 /**TODO: Add proper documentation*/
 void

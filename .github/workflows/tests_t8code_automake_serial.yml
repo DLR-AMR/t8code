@@ -60,11 +60,16 @@ jobs:
 # Setup and bootstrap
 #
     - uses: actions/checkout@v4
-      with: 
-        fetch-depth: 0
+      with:
+        fetch-tags: true # required to get version tags
+        fetch-depth: 0    # required to get all history, especially the version tags
+    - name: install sudo
+      run: apt update && apt install sudo
+    # On the github Ubuntu 20.04, sudo is not available by default
+    # we need it, however, to update/upgrade our packages.
     - name: Update packages
-      run: apt-get update && apt-get upgrade -y
-      # This seems to be necessary because of the docker container
+      run: sudo apt-get update && sudo apt-get upgrade -y
+      # This step is necessary to get the newest package data
     - name: disable ownership checks
       run: git config --global --add safe.directory '*'
     - name: init submodules

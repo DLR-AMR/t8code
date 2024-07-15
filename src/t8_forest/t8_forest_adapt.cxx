@@ -25,7 +25,7 @@
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_data/t8_containers.h>
-#include <t8_element_cxx.hxx>
+#include <t8_element.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -143,7 +143,7 @@ t8_forest_pos (t8_forest_t forest, t8_eclass_scheme_c *ts, t8_element_array_t *t
    * maximum number of member. */
   t8_locidx_t el_iter; /* Loop running variable */
   t8_locidx_t pos = -1;
-  t8_element_t *element_compare;
+  const t8_element_t *element_compare;
   for (el_iter = 1; el_iter < (t8_locidx_t) num_siblings && el_iter < elements_in_array; el_iter++) {
     pos = telements_pos - el_iter;
     T8_ASSERT (0 <= pos && pos < elements_in_array);
@@ -242,7 +242,8 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid, t8_l
     }
 #endif
     for (ielement = 0; ielement < (t8_locidx_t) num_siblings && pos + ielement < elements_in_array; ielement++) {
-      fam[ielement] = t8_element_array_index_locidx (telements, pos + ielement);
+      /* TODO: In a future version, fam[ielement] should be const and we should call t8_element_array_index_locidx (the const version). */
+      fam[ielement] = t8_element_array_index_locidx_mutable (telements, pos + ielement);
     }
 
     int num_elements_to_adapt_callback;
@@ -473,7 +474,8 @@ t8_forest_adapt (t8_forest_t forest)
         }
 #endif
         for (zz = 0; zz < num_siblings && el_considered + (t8_locidx_t) zz < num_el_from; zz++) {
-          elements_from[zz] = t8_element_array_index_locidx (telements_from, el_considered + (t8_locidx_t) zz);
+          /* TODO: In a future version elements_from[zz] should be const and we should call t8_element_array_index_locidx (the const version). */
+          elements_from[zz] = t8_element_array_index_locidx_mutable (telements_from, el_considered + (t8_locidx_t) zz);
           /* This is a quick check whether we build up a family here and could
            * abort early if not.
            * If the child id of the current element is not zz, then it cannot
@@ -553,7 +555,8 @@ t8_forest_adapt (t8_forest_t forest)
           else {
             (void) t8_element_array_push_count (telements, num_children);
             for (zz = 0; zz < num_children; zz++) {
-              elements[zz] = t8_element_array_index_locidx (telements, el_inserted + zz);
+              /* TODO: In a future version elements_from[zz] should be const and we should call t8_element_array_index_locidx (the const version). */
+              elements[zz] = t8_element_array_index_locidx_mutable (telements, el_inserted + zz);
             }
             tscheme->t8_element_children (elements_from[0], num_children, elements);
             el_inserted += (t8_locidx_t) num_children;

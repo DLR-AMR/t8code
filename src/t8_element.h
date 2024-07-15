@@ -87,7 +87,7 @@ t8_scheme_cxx_ref (t8_scheme_cxx_t *scheme);
 void
 t8_scheme_cxx_unref (t8_scheme_cxx_t **pscheme);
 
-/* TODO: document, see t8_element_cxx.hxx */
+/* TODO: document, see t8_element.hxx */
 extern void
 t8_scheme_cxx_destroy (t8_scheme_cxx_t *s);
 

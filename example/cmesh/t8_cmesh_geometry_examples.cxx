@@ -22,12 +22,12 @@
 
 /* Show-case several cmesh examples with curvilinear geometries. */
 
-#include <t8.h>                                     /* General t8code header, always include this. */
-#include <t8_cmesh.h>                               /* Cmesh definition and basic interface. */
-#include <t8_forest/t8_forest_general.h>            /* Forest definition and basic interface. */
-#include <t8_forest/t8_forest_geometrical.h>        /* Forest-related geometry operations. */
-#include <t8_schemes/t8_default/t8_default_cxx.hxx> /* Default refinement scheme. */
-#include <t8_cmesh_vtk_writer.h>                    /* Write file in vtu file */
+#include <t8.h>                                 /* General t8code header, always include this. */
+#include <t8_cmesh.h>                           /* Cmesh definition and basic interface. */
+#include <t8_forest/t8_forest_general.h>        /* Forest definition and basic interface. */
+#include <t8_forest/t8_forest_geometrical.h>    /* Forest-related geometry operations. */
+#include <t8_schemes/t8_default/t8_default.hxx> /* Default refinement scheme. */
+#include <t8_cmesh_vtk_writer.h>                /* Write file in vtu file */
 #include <t8_forest/t8_forest_io.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 
@@ -72,8 +72,14 @@ t8_write_forest_to_vtu (t8_forest_t forest, const char *prefix)
     const int write_level = 1;
     const int write_element_id = 1;
     const int write_ghosts = 0;
+#if T8_WITH_VTK
+    const int write_curved = 1;
+#else
+    const int write_curved = 0;
+#endif
+    const int do_not_use_api = 0;
     t8_forest_write_vtk_ext (forest, prefix, write_treeid, write_mpirank, write_level, write_element_id, write_ghosts,
-                             0, 0, num_data, vtk_data);
+                             write_curved, do_not_use_api, num_data, vtk_data);
   }
 
   T8_FREE (diameters);

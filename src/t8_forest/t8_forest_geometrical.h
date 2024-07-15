@@ -33,6 +33,15 @@
 #include <t8_cmesh.h>
 T8_EXTERN_C_BEGIN ();
 
+/** Return the dimension of a forest.
+ * \param [in]  forest    A forest.
+ * \return                The dimension.
+ * \a forest must be committed before calling this function.
+ * Note: The dimension is inferred from the associated \b cmesh.
+ */
+int
+t8_forest_get_dimension (const t8_forest_t forest);
+
 /** Compute the coordinates of a given vertex of an element if a geometry
  * for this tree is registered in the forest's cmesh.
  * \param [in]      forest     The forest.

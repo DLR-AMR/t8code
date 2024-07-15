@@ -37,11 +37,11 @@
  *   - Create an own mesh.
  *  */
 
-#include <t8.h>                                     /* General t8code header, always include this. */
-#include <t8_cmesh.hxx>                             /* cmesh definition and basic interface. */
-#include <t8_forest/t8_forest_general.h>            /* forest definition and basic interface. */
-#include <t8_schemes/t8_default/t8_default_cxx.hxx> /* default refinement scheme. */
-#include <t8_cmesh_vtk_writer.h>                    /* write file in vtu file */
+#include <t8.h>                                 /* General t8code header, always include this. */
+#include <t8_cmesh.hxx>                         /* cmesh definition and basic interface. */
+#include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
+#include <t8_schemes/t8_default/t8_default.hxx> /* default refinement scheme. */
+#include <t8_cmesh_vtk_writer.h>                /* write file in vtu file */
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx> /* linear geometry of the cmesh */
 
 T8_EXTERN_C_BEGIN ();
@@ -276,7 +276,7 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
    * t8_cmesh_set_join (cmesh, 1, 3, 0, 4, 0);
    * t8_cmesh_set_join (cmesh, 2, 5, 0, 0, 0);
    * t8_cmesh_set_join (cmesh, 3, 5, 1, 1, 0);
-   * t8_cmesh_set_join (cmesh, 4, 5, 4, 2, 0);
+   * t8_cmesh_set_join (cmesh, 4, 5, 4, 2, 2);
    *
    * // 7. Commit the mesh
    * t8_cmesh_commit (cmesh, comm);
@@ -316,7 +316,7 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
   t8_cmesh_set_join (cmesh, 1, 3, 0, 4, 0);
   t8_cmesh_set_join (cmesh, 2, 5, 0, 0, 0);
   t8_cmesh_set_join (cmesh, 3, 5, 1, 1, 0);
-  t8_cmesh_set_join (cmesh, 4, 5, 4, 2, 0);
+  t8_cmesh_set_join (cmesh, 4, 5, 4, 2, 2);
 
   /*
    * Definition of the first tree

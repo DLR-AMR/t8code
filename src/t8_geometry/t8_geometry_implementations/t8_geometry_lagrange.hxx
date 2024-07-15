@@ -61,7 +61,7 @@
  * just a convention to ensure that the node numbering be consistent.
  * 3. The mapping by the Lagrange geometry falls back to the linear geometry
  * for degree one. It means that the starting point for the node number
- * assignment is the numbering defined in the \a t8_element.c file.
+ * assignment is the numbering defined in the \a t8_element.cxx file.
  * 4. The node numbering is performed in increasing spatial dimension, which
  * results in a hierarchical construction of elements. The node numbers are
  * assigned based on increasing face IDs, then increasing edge IDs, then

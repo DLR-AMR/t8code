@@ -43,7 +43,7 @@ t8_cmesh_register_geometry (t8_cmesh_t cmesh, t8_geometry_c **geometry)
 }
 
 void
-t8_cmesh_set_tree_geometry (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const t8_geometry_c *geom)
+t8_cmesh_set_tree_geometry (t8_cmesh_t cmesh, const t8_gloidx_t gtreeid, const t8_geometry_c *geom)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   /* Add the hash of the geometry as an attribute to the tree. */
@@ -53,7 +53,7 @@ t8_cmesh_set_tree_geometry (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const t8_geom
 }
 
 const t8_geometry_c *
-t8_cmesh_get_tree_geometry (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
+t8_cmesh_get_tree_geometry (const t8_cmesh_t cmesh, const t8_gloidx_t gtreeid)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   t8_geometry_handler *geom_handler = cmesh->geometry_handler;
@@ -70,7 +70,7 @@ t8_cmesh_get_tree_geometry (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 }
 
 size_t
-t8_cmesh_get_tree_geom_hash (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
+t8_cmesh_get_tree_geom_hash (const t8_cmesh_t cmesh, const t8_gloidx_t gtreeid)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   t8_geometry_handler *geom_handler = cmesh->geometry_handler;

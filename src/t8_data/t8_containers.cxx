@@ -24,7 +24,7 @@
  * TODO: document this file
  */
 
-#include <t8_element_cxx.hxx>
+#include <t8_element.hxx>
 #include <sc_containers.h>
 #include <t8_data/t8_containers.h>
 
@@ -180,14 +180,14 @@ t8_element_array_resize (t8_element_array_t *element_array, size_t new_count)
     sc_array_resize (&element_array->array, new_count);
     t8_element_t *first_new_elem;
     /* Get the first newly allocated element */
-    first_new_elem = t8_element_array_index_locidx (element_array, old_count);
+    first_new_elem = t8_element_array_index_locidx_mutable (element_array, old_count);
     /* Call t8_element_init on all new elements */
     element_array->scheme->t8_element_init (new_count - old_count, first_new_elem);
   }
   else if (old_count > new_count) {
     t8_element_t *first_old_elem;
     /* Get the first element to deinit */
-    first_old_elem = t8_element_array_index_locidx (element_array, new_count);
+    first_old_elem = t8_element_array_index_locidx_mutable (element_array, new_count);
     element_array->scheme->t8_element_deinit (old_count - new_count, first_old_elem);
     sc_array_resize (&element_array->array, new_count);
   }
@@ -199,12 +199,12 @@ t8_element_array_resize (t8_element_array_t *element_array, size_t new_count)
 }
 
 void
-t8_element_array_copy (t8_element_array_t *dest, t8_element_array_t *src)
+t8_element_array_copy (t8_element_array_t *dest, const t8_element_array_t *src)
 {
   T8_ASSERT (t8_element_array_is_valid (dest));
   T8_ASSERT (t8_element_array_is_valid (src));
   T8_ASSERT (dest->scheme == src->scheme);
-  sc_array_copy (&dest->array, &src->array);
+  sc_array_copy (&dest->array, (sc_array_t *) &src->array); /* need to convert src->array to non-const */
 }
 
 t8_element_t *
@@ -229,22 +229,35 @@ t8_element_array_push_count (t8_element_array_t *element_array, size_t count)
   return new_elements;
 }
 
-t8_element_t *
-t8_element_array_index_locidx (t8_element_array_t *element_array, t8_locidx_t index)
+const t8_element_t *
+t8_element_array_index_locidx (const t8_element_array_t *element_array, t8_locidx_t index)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
-  return (t8_element_t *) t8_sc_array_index_locidx (&element_array->array, index);
+  return (const t8_element_t *) t8_sc_array_index_locidx (&element_array->array, index);
+}
+
+const t8_element_t *
+t8_element_array_index_int (const t8_element_array_t *element_array, int index)
+{
+  T8_ASSERT (t8_element_array_is_valid (element_array));
+  return (const t8_element_t *) sc_array_index_int ((sc_array_t *) &element_array->array,
+                                                    index); /* Need to convert element_array->array to non-const */
 }
 
 t8_element_t *
-t8_element_array_index_int (t8_element_array_t *element_array, int index)
+t8_element_array_index_locidx_mutable (t8_element_array_t *element_array, t8_locidx_t index)
 {
-  T8_ASSERT (t8_element_array_is_valid (element_array));
-  return (t8_element_t *) sc_array_index_int (&element_array->array, index);
+  return (t8_element_t *) t8_element_array_index_locidx (element_array, index);
 }
 
-t8_eclass_scheme_c *
-t8_element_array_get_scheme (t8_element_array_t *element_array)
+t8_element_t *
+t8_element_array_index_int_mutable (t8_element_array_t *element_array, int index)
+{
+  return (t8_element_t *) t8_element_array_index_int (element_array, index);
+}
+
+const t8_eclass_scheme_c *
+t8_element_array_get_scheme (const t8_element_array_t *element_array)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
   return element_array->scheme;
@@ -258,14 +271,14 @@ t8_element_array_get_count (const t8_element_array_t *element_array)
 }
 
 size_t
-t8_element_array_get_size (t8_element_array_t *element_array)
+t8_element_array_get_size (const t8_element_array_t *element_array)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
   return element_array->scheme->t8_element_size ();
 }
 
-t8_element_t *
-t8_element_array_get_data (t8_element_array_t *element_array)
+const t8_element_t *
+t8_element_array_get_data (const t8_element_array_t *element_array)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
 
@@ -277,8 +290,24 @@ t8_element_array_get_data (t8_element_array_t *element_array)
   }
 }
 
+t8_element_t *
+t8_element_array_get_data_mutable (t8_element_array_t *element_array)
+{
+  T8_ASSERT (t8_element_array_is_valid (element_array));
+
+  return (t8_element_t *) t8_element_array_get_data (element_array);
+}
+
+const sc_array_t *
+t8_element_array_get_array (const t8_element_array_t *element_array)
+{
+  T8_ASSERT (t8_element_array_is_valid (element_array));
+
+  return &element_array->array;
+}
+
 sc_array_t *
-t8_element_array_get_array (t8_element_array_t *element_array)
+t8_element_array_get_array_mutable (t8_element_array_t *element_array)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
 
@@ -289,7 +318,7 @@ void
 t8_element_array_reset (t8_element_array_t *element_array)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
-  t8_element_t *first_elem = t8_element_array_index_locidx (element_array, 0);
+  t8_element_t *first_elem = t8_element_array_index_locidx_mutable (element_array, 0);
   size_t count = t8_element_array_get_count (element_array);
   element_array->scheme->t8_element_deinit (count, first_elem);
   sc_array_reset (&element_array->array);
@@ -299,7 +328,7 @@ void
 t8_element_array_truncate (t8_element_array_t *element_array)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
-  t8_element_t *first_elem = t8_element_array_index_locidx (element_array, 0);
+  t8_element_t *first_elem = t8_element_array_index_locidx_mutable (element_array, 0);
   size_t count = t8_element_array_get_count (element_array);
   element_array->scheme->t8_element_deinit (count, first_elem);
   sc_array_truncate (&element_array->array);
