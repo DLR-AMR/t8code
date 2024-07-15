@@ -1,5 +1,9 @@
 # Conditionally adding new sources to the main T8 target as in the original BS looked wrong...
-add_library( t8example )
+if ( ${T8CODE_BUILD_AS_SHARED_LIBRARY} )
+    add_library( t8example SHARED )
+else()
+    add_library( t8example STATIC )
+endif()
 target_sources( t8example PRIVATE common/t8_example_common.cxx common/t8_example_common_functions.cxx )
 target_include_directories( t8example PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. )
 target_link_libraries( t8example PRIVATE T8 )
