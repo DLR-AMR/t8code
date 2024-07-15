@@ -84,10 +84,10 @@ t8_cmesh_set_shmem_type (sc_MPI_Comm comm)
 }
 
 static void
-t8_cmesh_add_attributes (t8_cmesh_t cmesh, sc_hash_t *ghost_ids, size_t *attribute_data_offset)
+t8_cmesh_add_attributes (const t8_cmesh_t cmesh, sc_hash_t *ghost_ids, size_t *attribute_data_offset)
 {
   t8_stash_attribute_struct_t *attribute;
-  t8_stash_t stash = cmesh->stash;
+  const t8_stash_t stash = cmesh->stash;
   t8_locidx_t ltree;
   size_t si, sj;
   t8_ghost_facejoin_t *temp_facejoin, **facejoin_pp; /* used to lookup global ghost ids in the hash */
