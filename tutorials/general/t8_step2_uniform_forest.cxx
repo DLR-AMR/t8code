@@ -32,7 +32,7 @@
  * Together with the cmesh, we also need a refinement scheme. This scheme tells the
  * forest how elements of each shape (t8_eclass_t) are refined, what their neighbor
  * are etc.
- * The default scheme in t8_schemes/t8_default/t8_default_cxx.hxx provides an implementation for
+ * The default scheme in t8_schemes/t8_default/t8_default.hxx provides an implementation for
  * all element shapes that t8code supports (with pyramids currently under construction).
  * 
  * How you can experiment here:
@@ -44,12 +44,12 @@
  *    forest (for example the number of local trees).
  */
 
-#include <t8.h>                                     /* General t8code header, always include this. */
-#include <t8_cmesh.h>                               /* cmesh definition and basic interface. */
-#include <t8_cmesh/t8_cmesh_examples.h>             /* A collection of exemplary cmeshes */
-#include <t8_forest/t8_forest_general.h>            /* forest definition and general interface. */
-#include <t8_forest/t8_forest_io.h>                 /* forest io interface. */
-#include <t8_schemes/t8_default/t8_default_cxx.hxx> /* default refinement scheme. */
+#include <t8.h>                                 /* General t8code header, always include this. */
+#include <t8_cmesh.h>                           /* cmesh definition and basic interface. */
+#include <t8_cmesh/t8_cmesh_examples.h>         /* A collection of exemplary cmeshes */
+#include <t8_forest/t8_forest_general.h>        /* forest definition and general interface. */
+#include <t8_forest/t8_forest_io.h>             /* forest io interface. */
+#include <t8_schemes/t8_default/t8_default.hxx> /* default refinement scheme. */
 
 /* Builds cmesh of 2 prisms that build up a unit cube. 
  * See step1 for a detailed description.
