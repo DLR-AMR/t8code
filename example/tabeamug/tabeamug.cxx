@@ -35,13 +35,13 @@ tabeamug_build_forest (const char *filename, int level, int maxlevel)
 
   /* Build the cmesh from meshfile using CAD. (requires files "filename.msh" and "filename.brep"). */
   const int partition = 0;
-  const int dimension = 2;
+  const int dimension = 3;
   const int main_rank = 0;
   const int use_cad = 0;
   t8_cmesh_t cmesh = t8_cmesh_from_msh_file (filename, partition, comm, dimension, main_rank, use_cad);
 
   /* Build uniform forest */
-  t8_scheme_cxx_t *scheme = t8_scheme_new_transition_quad_cxx ();  // default adapt scheme.
+  t8_scheme_cxx_t *scheme = t8_scheme_new_transition_hex_cxx ();  // default adapt scheme.
   const int do_face_ghost = 0;                                     // No ghost needed.
   t8_forest_t forest_uniform = t8_forest_new_uniform (cmesh, scheme, level, do_face_ghost, comm);
 
@@ -54,7 +54,7 @@ tabeamug_build_forest (const char *filename, int level, int maxlevel)
   char vtkname[BUFSIZ];
   snprintf (vtkname, BUFSIZ, "tabeamug_adapt_%i_%i", level, maxlevel);
   //t8_forest_write_vtk_ext (forest_adapt, vtkname, 1, 1, 1, 1, 1, 0, 1, 0, NULL);
-  //t8_forest_write_vtk (forest_adapt, vtkname);
+  t8_forest_write_vtk (forest_adapt, vtkname);
 
   // builde balanced forest
   t8_forest_t forest_balance;
@@ -78,7 +78,7 @@ tabeamug_build_forest (const char *filename, int level, int maxlevel)
   // vtk output of transitioned forest
   snprintf (vtkname, BUFSIZ, "tabeamug_transition_%i_%i", level, maxlevel);
   //t8_forest_write_vtk_ext (forest_transition, vtkname, 1, 1, 1, 1, 1, 0, 1, 0, NULL);
-  //t8_forest_write_vtk (forest_transition, vtkname);
+  t8_forest_write_vtk (forest_transition, vtkname);
 
   t8_forest_unref (&forest_transition);
 }
