@@ -1770,7 +1770,8 @@ t8_cmesh_offset_percent (const t8_cmesh_t cmesh, sc_MPI_Comm comm, const int per
   int created = 0;
 #if T8_ENABLE_DEBUG
   int total = 0;
-  sc_MPI_Allreduce (&percent, &total, 1, sc_MPI_INT, sc_MPI_SUM, comm);
+  int proc_perc = percent;
+  sc_MPI_Allreduce (&proc_perc, &total, 1, sc_MPI_INT, sc_MPI_SUM, comm);
   T8_ASSERT (total == 100);
 #endif
 
