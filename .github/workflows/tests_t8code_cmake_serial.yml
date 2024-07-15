@@ -166,14 +166,14 @@ jobs:
       if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     ## p4est serial debug
     - name: p4est cmake and build serial debug
-      run: cd $P4EST_SERIAL_DEBUG && cmake ../ -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$PWD/install -DP4EST_USE_SYSTEM_SC=ON -DSC_DIR=$SC_DEBUG/install/cmake
+      run: cd $P4EST_SERIAL_DEBUG && cmake ../ -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$PWD/install -DP4EST_USE_SYSTEM_SC=ON -DSC_DIR=$SC_SERIAL_DEBUG/install/cmake
       if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     - name: p4est build serial debug
       run: cd $P4EST_SERIAL_DEBUG && make $MAKEFLAGS && make $MAKEFLAGS install
       if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     ## p4est serial release
     - name: p4est cmake and build serial release
-      run: cd $P4EST_SERIAL_RELEASE && cmake ../ -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/install -DP4EST_USE_SYSTEM_SC=ON -DSC_DIR=$SC_DEBUG/install/cmake
+      run: cd $P4EST_SERIAL_RELEASE && cmake ../ -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/install -DP4EST_USE_SYSTEM_SC=ON -DSC_DIR=$SC_SERIAL_DEBUG/install/cmake
       if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     - name: p4est build serial release
       run: cd $P4EST_SERIAL_RELEASE && make $MAKEFLAGS && make $MAKEFLAGS install
@@ -191,8 +191,8 @@ jobs:
     - name: build config variables
       #TODO: Werror
       run: export CONFIG_OPTIONS="${LESS_TEST_OPTION}"
-           && export CONFIG_DEBUG="$CONFIG_OPTIONS -DCMAKE_BUILD_TYPE=Debug -DT8CODE_USE_SYSTEM_SC=ON -DSC_DIR=$SC_DEBUG/install/cmake -DT8CODE_USE_SYSTEM_P4EST=ON -DP4EST_DIR=$P4EST_DEBUG/install/cmake"
-           && export CONFIG_RELEASE="$CONFIG_OPTIONS -DCMAKE_BUILD_TYPE=Release -DT8CODE_USE_SYSTEM_SC=ON -DSC_DIR=$SC_RELEASE/install/cmake -DT8CODE_USE_SYSTEM_P4EST=ON -DP4EST_DIR=$P4EST_RELEASE/install/cmake"
+           && export CONFIG_DEBUG="$CONFIG_OPTIONS -DCMAKE_BUILD_TYPE=Debug -DT8CODE_USE_SYSTEM_SC=ON -DSC_DIR=$SC_SERIAL_DEBUG/install/cmake -DT8CODE_USE_SYSTEM_P4EST=ON -DP4EST_DIR=$P4EST_SERIAL_DEBUG/install/cmake"
+           && export CONFIG_RELEASE="$CONFIG_OPTIONS -DCMAKE_BUILD_TYPE=Release -DT8CODE_USE_SYSTEM_SC=ON -DSC_DIR=$SC_SERIAL_RELEASE/install/cmake -DT8CODE_USE_SYSTEM_P4EST=ON -DP4EST_DIR=$P4EST_SERIAL_RELEASE/install/cmake"
            && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
            && echo CONFIG_DEBUG="$CONFIG_DEBUG" >> $GITHUB_ENV
            && echo CONFIG_RELEASE="$CONFIG_RELEASE" >> $GITHUB_ENV
