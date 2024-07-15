@@ -32,8 +32,20 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
 
+#if T8_WITH_VTK
+#include <vtkUnstructuredGrid.h>
+#endif
+
 T8_EXTERN_C_BEGIN ();
 /* function declarations */
+
+#if T8_WITH_VTK
+void
+t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
+                                  const int write_treeid, const int write_mpirank, const int write_level,
+                                  const int write_element_id, const int write_ghosts, const int curved_flag,
+                                  const int num_data, t8_vtk_data_field_t *data);
+#endif
 
 /** Write the forest in .pvtu file format. Writes one .vtu file per
  * process and a meta .pvtu file.
