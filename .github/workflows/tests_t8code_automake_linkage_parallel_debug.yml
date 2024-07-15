@@ -98,7 +98,7 @@ jobs:
       if: ${{ steps.sc_automake_cache.outputs.cache-hit != 'true' ||  env.SC_IGNORE_CACHE == 1 }}
       run: echo No cache found or cache will be ignored. SC_IGNORE_CACHE=$SC_IGNORE_CACHE
     - name: if ignore cache, delete folders
-      if: ${{ env.SC_IGNORE_CACHE == 1 }}
+      if: ${{ steps.sc_automake_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
       # The true at the end is to ignore errors that i.e. occur when the folders do not exist
       run: rm -r $SC_DEBUG || true
     - name: make folder
@@ -141,13 +141,13 @@ jobs:
       run: echo "Install p4est"
       if: ${{ steps.p4est_automake_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     - name: if ignore cache, delete folders
-      if: ${{ env.P4EST_IGNORE_CACHE == 1 }}
       # The true at the end is to ignore errors that i.e. occur when the folders do not exist      
       run: rm -r $P4EST_DEBUG || true 
+      if: ${{ steps.p4est_automake_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     - name: make folder
       run: mkdir $P4EST_DEBUG
-    ## p4est debug
       if: ${{ steps.p4est_automake_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
+    ## p4est debug
     - name: p4est configure debug
       run: cd $P4EST_DEBUG && ../configure --enable-mpi --enable-debug --prefix=$PWD/install --with-sc=$SC_DEBUG/install
       if: ${{ steps.p4est_automake_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}

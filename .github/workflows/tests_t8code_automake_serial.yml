@@ -100,9 +100,9 @@ jobs:
       if: ${{ steps.sc_automake_serial_cache.outputs.cache-hit != 'true' ||  env.SC_IGNORE_CACHE == 1 }}
       run: echo No cache found or cache will be ignored. SC_IGNORE_CACHE=$SC_IGNORE_CACHE
     - name: if ignore cache, delete folders
-      if: ${{ env.SC_IGNORE_CACHE == 1 }}
+      if: ${{ steps.sc_automake_serial_cache.outputs.cache-hit != 'true' ||  env.SC_IGNORE_CACHE == 1 }}
       # The true at the end is to ignore errors that i.e. occur when the folders do not exist
-      run: rm -r $SC_DEBUG $SC_RELEASE $SC_SERIAL_DEBUG $SC_SERIAL_RELEASE || true
+      run: rm -r $SC_SERIAL_DEBUG $SC_SERIAL_RELEASE || true
     - name: make folders
       run: mkdir $SC_SERIAL_DEBUG && mkdir $SC_SERIAL_RELEASE
       if: ${{ steps.sc_automake_serial_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
@@ -152,7 +152,7 @@ jobs:
       run: echo "Install p4est"
       if: ${{ steps.p4est_automake_serial_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     - name: if ignore cache, delete folders
-      if: ${{ env.P4EST_IGNORE_CACHE == 1 }}
+      if: ${{ steps.p4est_automake_serial_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
       # The true at the end is to ignore errors that i.e. occur when the folders do not exist      
       run: rm -r $P4EST_SERIAL_RELEASE $P4EST_SERIAL_DEBUG || true 
     - name: make folders
