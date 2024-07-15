@@ -742,7 +742,7 @@ t8_cmesh_get_partition_table (t8_cmesh_t cmesh);
  * \a cmesh must be committed before calling this function. *
  */
 void
-t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *ts, t8_gloidx_t *first_local_tree,
+t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level, const t8_scheme_cxx_t *ts, t8_gloidx_t *first_local_tree,
                          t8_gloidx_t *child_in_tree_begin, t8_gloidx_t *last_local_tree, t8_gloidx_t *child_in_tree_end,
                          int8_t *first_tree_shared);
 
@@ -803,7 +803,8 @@ t8_cmesh_coords_axb (const double *coords_in, double *coords_out, int num_vertic
  * \param[in]   translate         Translation of the vectors.
  */
 void
-t8_cmesh_translate_coordinates (const double *coords_in, double *coords_out, int num_vertices, double translate[3]);
+t8_cmesh_translate_coordinates (const double *coords_in, double *coords_out, const int num_vertices,
+                                const double translate[3]);
 
 /**TODO: Add proper documentation*/
 void

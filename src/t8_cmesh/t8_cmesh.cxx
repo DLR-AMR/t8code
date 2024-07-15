@@ -139,7 +139,7 @@ t8_cmesh_validate_geometry (const t8_cmesh_t cmesh)
 /* Check whether a given communicator assigns the same rank and mpisize
  * as stored in a given cmesh. */
 int
-t8_cmesh_comm_is_valid (t8_cmesh_t cmesh, sc_MPI_Comm comm)
+t8_cmesh_comm_is_valid (const t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
   int mpiret, mpisize, mpirank;
 
@@ -188,7 +188,7 @@ t8_cmesh_new ()
 }
 
 void
-t8_cmesh_set_derive (t8_cmesh_t cmesh, t8_cmesh_t set_from)
+t8_cmesh_set_derive (const t8_cmesh_t cmesh, const t8_cmesh_t set_from)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   T8_ASSERT (set_from == NULL || t8_cmesh_is_committed (set_from));
@@ -223,8 +223,8 @@ t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm)
 }
 
 void
-t8_cmesh_set_partition_range (t8_cmesh_t cmesh, int set_face_knowledge, t8_gloidx_t first_local_tree,
-                              t8_gloidx_t last_local_tree)
+t8_cmesh_set_partition_range (t8_cmesh_t cmesh, const int set_face_knowledge, const t8_gloidx_t first_local_tree,
+                              const t8_gloidx_t last_local_tree)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 
@@ -273,7 +273,7 @@ t8_cmesh_set_partition_offsets (t8_cmesh_t cmesh, t8_shmem_array_t tree_offsets)
 }
 
 void
-t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, int element_level, t8_scheme_cxx_t *ts)
+t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, const int element_level, t8_scheme_cxx_t *ts)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   T8_ASSERT (element_level >= -1);
@@ -294,7 +294,7 @@ t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, int element_level, t8_scheme_c
 }
 
 t8_gloidx_t
-t8_cmesh_get_first_treeid (t8_cmesh_t cmesh)
+t8_cmesh_get_first_treeid (const t8_cmesh_t cmesh)
 {
   return cmesh->first_tree;
 }
@@ -329,7 +329,7 @@ t8_cmesh_ltreeid_to_ghostid (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid)
 /* TODO: should get a gloidx?
  *       place after commit */
 t8_ctree_t
-t8_cmesh_get_tree (t8_cmesh_t cmesh, t8_locidx_t ltree_id)
+t8_cmesh_get_tree (const t8_cmesh_t cmesh, const t8_locidx_t ltree_id)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, ltree_id));
@@ -341,7 +341,7 @@ t8_cmesh_get_tree (t8_cmesh_t cmesh, t8_locidx_t ltree_id)
  * Returns NULL if there are no local trees. */
 /* TODO: hide */
 t8_ctree_t
-t8_cmesh_get_first_tree (t8_cmesh_t cmesh)
+t8_cmesh_get_first_tree (const t8_cmesh_t cmesh)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
 
@@ -354,7 +354,7 @@ t8_cmesh_get_first_tree (t8_cmesh_t cmesh)
  * If the given tree is the last local tree, NULL is returned */
 /* TODO: hide */
 t8_ctree_t
-t8_cmesh_get_next_tree (t8_cmesh_t cmesh, t8_ctree_t tree)
+t8_cmesh_get_next_tree (const t8_cmesh_t cmesh, const t8_ctree_t tree)
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (tree != NULL);
@@ -364,8 +364,8 @@ t8_cmesh_get_next_tree (t8_cmesh_t cmesh, t8_ctree_t tree)
 }
 
 void
-t8_cmesh_set_attribute (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int package_id, int key, void *data, size_t data_size,
-                        int data_persists)
+t8_cmesh_set_attribute (t8_cmesh_t cmesh, const t8_gloidx_t gtree_id, const int package_id, const int key, void *data,
+                        const size_t data_size, const int data_persists)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   SC_CHECK_ABORT (cmesh->set_from == NULL, "ERROR: Cannot add attributes to cmesh when deriving from another cmesh.\n");
@@ -374,7 +374,8 @@ t8_cmesh_set_attribute (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int package_id, 
 }
 
 void
-t8_cmesh_set_attribute_string (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int package_id, int key, const char *string)
+t8_cmesh_set_attribute_string (t8_cmesh_t cmesh, const t8_gloidx_t gtree_id, const int package_id, const int key,
+                               const char *string)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 
@@ -395,7 +396,7 @@ t8_cmesh_set_attribute_gloidx_array (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int
 }
 
 double *
-t8_cmesh_get_tree_vertices (t8_cmesh_t cmesh, t8_locidx_t ltreeid)
+t8_cmesh_get_tree_vertices (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, ltreeid) || t8_cmesh_treeid_is_ghost (cmesh, ltreeid));
@@ -423,7 +424,7 @@ t8_cmesh_get_attribute_gloidx_array (const t8_cmesh_t cmesh, const int package_i
 }
 
 t8_shmem_array_t
-t8_cmesh_get_partition_table (t8_cmesh_t cmesh)
+t8_cmesh_get_partition_table (const t8_cmesh_t cmesh)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   if (!cmesh->set_partition) {
@@ -454,7 +455,7 @@ t8_cmesh_get_dimension (const t8_cmesh_t cmesh)
 }
 
 void
-t8_cmesh_set_tree_class (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, t8_eclass_t tree_class)
+t8_cmesh_set_tree_class (t8_cmesh_t cmesh, const t8_gloidx_t gtree_id, const t8_eclass_t tree_class)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   T8_ASSERT (gtree_id >= 0);
@@ -587,7 +588,7 @@ t8_cmesh_tree_vertices_negative_volume (const t8_eclass_t eclass, const double *
  * registered yet, since the volume computation depends on the used geometry.
  */
 int
-t8_cmesh_no_negative_volume (t8_cmesh_t cmesh)
+t8_cmesh_no_negative_volume (const t8_cmesh_t cmesh)
 {
   bool res = false;
 
@@ -629,7 +630,8 @@ t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, const t8_gloidx_t gtree_id, const 
 }
 
 void
-t8_cmesh_set_join (t8_cmesh_t cmesh, t8_gloidx_t gtree1, t8_gloidx_t gtree2, int face1, int face2, int orientation)
+t8_cmesh_set_join (t8_cmesh_t cmesh, const t8_gloidx_t gtree1, const t8_gloidx_t gtree2, const int face1,
+                   const int face2, const int orientation)
 {
   T8_ASSERT (0 <= orientation);
 
@@ -660,7 +662,7 @@ t8_cmesh_init_profile (t8_cmesh_t cmesh)
 }
 
 void
-t8_cmesh_set_profiling (t8_cmesh_t cmesh, int set_profiling)
+t8_cmesh_set_profiling (t8_cmesh_t cmesh, const int set_profiling)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 
@@ -677,7 +679,7 @@ t8_cmesh_set_profiling (t8_cmesh_t cmesh, int set_profiling)
 
 /* returns true if cmesh_a equals cmesh_b */
 int
-t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
+t8_cmesh_is_equal (const t8_cmesh_t cmesh_a, const t8_cmesh_t cmesh_b)
 /* TODO: rewrite */
 {
   int is_equal;
@@ -729,13 +731,13 @@ t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b)
 }
 
 int
-t8_cmesh_is_empty (t8_cmesh_t cmesh)
+t8_cmesh_is_empty (const t8_cmesh_t cmesh)
 {
   return cmesh->num_trees == 0;
 }
 
 t8_cmesh_t
-t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm)
+t8_cmesh_bcast (const t8_cmesh_t cmesh_in, const int root, sc_MPI_Comm comm)
 {
   int mpirank, mpisize, mpiret;
   int iclass;
@@ -973,7 +975,7 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 #endif
 
 int
-t8_cmesh_is_partitioned (t8_cmesh_t cmesh)
+t8_cmesh_is_partitioned (const t8_cmesh_t cmesh)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
 
@@ -981,7 +983,7 @@ t8_cmesh_is_partitioned (t8_cmesh_t cmesh)
 }
 
 t8_gloidx_t
-t8_cmesh_get_num_trees (t8_cmesh_t cmesh)
+t8_cmesh_get_num_trees (const t8_cmesh_t cmesh)
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->committed);
@@ -990,7 +992,7 @@ t8_cmesh_get_num_trees (t8_cmesh_t cmesh)
 }
 
 t8_locidx_t
-t8_cmesh_get_num_local_trees (t8_cmesh_t cmesh)
+t8_cmesh_get_num_local_trees (const t8_cmesh_t cmesh)
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
@@ -999,7 +1001,7 @@ t8_cmesh_get_num_local_trees (t8_cmesh_t cmesh)
 }
 
 t8_locidx_t
-t8_cmesh_get_num_ghosts (t8_cmesh_t cmesh)
+t8_cmesh_get_num_ghosts (const t8_cmesh_t cmesh)
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
@@ -1044,7 +1046,7 @@ t8_cmesh_tree_face_is_boundary (const t8_cmesh_t cmesh, const t8_locidx_t ltreei
 }
 
 t8_eclass_t
-t8_cmesh_get_tree_class (t8_cmesh_t cmesh, t8_locidx_t ltree_id)
+t8_cmesh_get_tree_class (const t8_cmesh_t cmesh, const t8_locidx_t ltree_id)
 {
   t8_ctree_t tree;
 
@@ -1056,7 +1058,7 @@ t8_cmesh_get_tree_class (t8_cmesh_t cmesh, t8_locidx_t ltree_id)
 }
 
 t8_eclass_t
-t8_cmesh_get_ghost_class (t8_cmesh_t cmesh, t8_locidx_t lghost_id)
+t8_cmesh_get_ghost_class (const t8_cmesh_t cmesh, const t8_locidx_t lghost_id)
 {
   t8_cghost_t ghost;
 
@@ -1081,7 +1083,7 @@ t8_cmesh_get_global_id (const t8_cmesh_t cmesh, const t8_locidx_t local_id)
 }
 
 t8_locidx_t
-t8_cmesh_get_local_id (t8_cmesh_t cmesh, t8_gloidx_t global_id)
+t8_cmesh_get_local_id (const t8_cmesh_t cmesh, const t8_gloidx_t global_id)
 {
   t8_gloidx_t temp_local_id;
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
@@ -1189,7 +1191,7 @@ t8_cmesh_get_face_neighbor (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid, c
 }
 
 void
-t8_cmesh_print_profile (t8_cmesh_t cmesh)
+t8_cmesh_print_profile (const t8_cmesh_t cmesh)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   if (cmesh->profile != NULL) {
@@ -1301,14 +1303,13 @@ t8_cmesh_destroy (t8_cmesh_t *pcmesh)
 }
 
 void
-t8_cmesh_translate_coordinates (const double *coords_in, double *coords_out, int num_vertices, double translate[3])
+t8_cmesh_translate_coordinates (const double *coords_in, double *coords_out, const int num_vertices,
+                                const double translate[3])
 {
-  int i;
-
-  for (i = 0; i < num_vertices; i++) {
-    coords_out[3 * i] = coords_in[3 * i] + translate[0];
-    coords_out[3 * i + 1] = coords_in[3 * i + 1] + translate[1];
-    coords_out[3 * i + 2] = coords_in[3 * i + 2] + translate[2];
+  for (int ivertex = 0; ivertex < num_vertices; ivertex++) {
+    coords_out[3 * ivertex] = coords_in[3 * ivertex] + translate[0];
+    coords_out[3 * ivertex + 1] = coords_in[3 * ivertex + 1] + translate[1];
+    coords_out[3 * ivertex + 2] = coords_in[3 * ivertex + 2] + translate[2];
   }
 }
 
@@ -1419,7 +1420,7 @@ t8_cmesh_debug_print_trees (const t8_cmesh_t cmesh, sc_MPI_Comm comm)
 }
 
 void
-t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *ts, t8_gloidx_t *first_local_tree,
+t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, const int level, const t8_scheme_cxx_t *ts, t8_gloidx_t *first_local_tree,
                          t8_gloidx_t *child_in_tree_begin, t8_gloidx_t *last_local_tree, t8_gloidx_t *child_in_tree_end,
                          int8_t *first_tree_shared)
 {
