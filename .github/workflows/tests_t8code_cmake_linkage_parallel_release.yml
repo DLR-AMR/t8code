@@ -159,14 +159,14 @@ jobs:
       run: mkdir $SC_DEBUG $P4EST_RELEASE
     ## p4est release
     - name: p4est cmake release
-      run: cd $P4EST_RELEASE && cmake ../ -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/install -DP4EST_USE_SYSTEM_SC=ON -DSC_DIR=$SC_RELEASE/install/cmake
+      run: cd $P4EST_RELEASE && cmake ../ -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/install -DP4EST_USE_SYSTEM_SC=ON -DSC_DIR=$SC_RELEASE/install/cmake -DP4EST_ENABLE_MPI=ON
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     - name: p4est build release
       run: cd $P4EST_RELEASE && make $MAKEFLAGS && make $MAKEFLAGS install
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     ## p4est release
     - name: p4est cmake release
-      run: cd $P4EST_RELEASE && cmake ../ -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/install -DP4EST_USE_SYSTEM_SC=ON -DSC_DIR=$SC_RELEASE/install/cmake
+      run: cd $P4EST_RELEASE && cmake ../ -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/install -DP4EST_USE_SYSTEM_SC=ON -DSC_DIR=$SC_RELEASE/install/cmake -DP4EST_ENABLE_MPI=ON
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     - name: p4est build release
       run: cd $P4EST_RELEASE && make $MAKEFLAGS && make $MAKEFLAGS install
