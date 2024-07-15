@@ -30,4 +30,4 @@ T8_ARG_WITH([test_mpi_num_processes],
       fi
     fi
   fi
-]
+])
