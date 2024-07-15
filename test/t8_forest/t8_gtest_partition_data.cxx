@@ -117,7 +117,6 @@ template <typename T>
 static void
 TestPartitionData (const t8_forest_t initial_forest, const t8_forest_t partitioned_forest)
 {
-  t8_debugf ("TestPartitionData\n\n\n");
   /* Define data which 'lives' on the forest. One datum per element */
   const t8_locidx_t in_forest_num_local_elems = t8_forest_get_local_num_elements (initial_forest);
 
