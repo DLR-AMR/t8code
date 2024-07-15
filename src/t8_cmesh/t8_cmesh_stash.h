@@ -225,7 +225,7 @@ t8_stash_attribute_sort (t8_stash_t stash);
  *                  elements in the classes, joinfaces and attributes arrays.
  */
 t8_stash_t
-t8_stash_bcast (t8_stash_t stash, int root, sc_MPI_Comm comm, size_t elem_counts[3]);
+t8_stash_bcast (t8_stash_t stash, int root, sc_MPI_Comm comm, const size_t elem_counts[3]);
 
 /* TODO: specify equivalence relation. is a different order of data allowed? */
 /** Check two stashes for equal content and return true if so.
