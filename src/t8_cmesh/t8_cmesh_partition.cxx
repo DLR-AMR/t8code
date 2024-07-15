@@ -1761,7 +1761,7 @@ t8_cmesh_offset_random (sc_MPI_Comm comm, const t8_gloidx_t num_trees, const int
 
 /* TODO: Check that percent is the same on each process */
 t8_shmem_array_t
-t8_cmesh_offset_percent (t8_cmesh_t cmesh, sc_MPI_Comm comm, int percent)
+t8_cmesh_offset_percent (const t8_cmesh_t cmesh, sc_MPI_Comm comm, const int percent)
 {
   t8_gloidx_t new_first_tree, old_first_tree;
   t8_locidx_t old_num_trees_pm1;
@@ -1826,7 +1826,7 @@ t8_cmesh_offset_percent (t8_cmesh_t cmesh, sc_MPI_Comm comm, int percent)
  * trees to the next process. The last process does not send any trees. */
 /* TODO: This function was not tested with shared trees yet. */
 t8_shmem_array_t
-t8_cmesh_offset_half (t8_cmesh_t cmesh, sc_MPI_Comm comm)
+t8_cmesh_offset_half (const t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
   return t8_cmesh_offset_percent (cmesh, comm, 50);
 }
