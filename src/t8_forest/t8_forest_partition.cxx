@@ -425,7 +425,7 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
   SC_CHECK_MPI (mpiret);
 
   if (t8_shmem_array_start_writing (forest->element_offsets)) {
-    if (forest_from->global_num_elements) {
+    if (forest_from->global_num_elements > 0) {
       t8_gloidx_t *element_offsets = t8_shmem_array_get_gloidx_array_for_writing (forest->element_offsets);
       for (i = 0; i < mpisize; i++) {
         /* Calculate the first element index for each process. We convert to doubles to prevent overflow */
