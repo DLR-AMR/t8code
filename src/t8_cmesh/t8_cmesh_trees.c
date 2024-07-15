@@ -460,7 +460,7 @@ t8_cmesh_trees_copy_part (t8_cmesh_trees_t trees_dest, int part_dest, t8_cmesh_t
 }
 
 t8_ctree_t
-t8_cmesh_trees_get_tree (t8_cmesh_trees_t trees, t8_locidx_t ltree)
+t8_cmesh_trees_get_tree (const t8_cmesh_trees_t trees, const t8_locidx_t ltree)
 {
   int proc;
   T8_ASSERT (trees != NULL);
