@@ -23,6 +23,7 @@ option( T8CODE_USE_SYSTEM_P4EST "Use system-installed p4est library" OFF )
 option( BUILD_DOCUMENTATION "Build t8code's documentation" ON)
 option( BUILD_SPHINX_DOCUMENTATION "Build t8code's documentation using sphinx" OFF)
 
+set(T8CODE_CUSTOM_TEST_COMMAND "" CACHE STRING "Define custom test command, e.g.: mpirun -n 4")
 
 if( NOT CMAKE_BUILD_TYPE )
     set( CMAKE_BUILD_TYPE "Release" )
