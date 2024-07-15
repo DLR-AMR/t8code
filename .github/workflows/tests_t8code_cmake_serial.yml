@@ -108,7 +108,7 @@ jobs:
     - name: if ignore cache, delete folders
       if: ${{ env.SC_IGNORE_CACHE == 1 }}
       # The true at the end is to ignore errors that i.e. occur when the folders do not exist
-      run: rm -r $SC_DEBUG $SC_RELEASE $SC_SERIAL_DEBUG $SC_SERIAL_RELEASE || true
+      run: rm -r $SC_SERIAL_DEBUG $SC_SERIAL_RELEASE || true
     - name: make folders
       run: mkdir $SC_SERIAL_DEBUG && mkdir $SC_SERIAL_RELEASE
       if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
@@ -145,7 +145,7 @@ jobs:
           ${{ env.P4EST_SERIAL_DEBUG }}
           ${{ env.P4EST_SERIAL_RELEASE }}
         # You can increase the counter at the end to force a new key and hence recomputing the cache
-        key: p4est-${{ env.p4est_commit }}-${{ env.sc_commit }}-005
+        key: p4est-cmake-${{ env.p4est_commit }}-${{ env.sc_commit }}-005
     - name: Set ignore cache variable
       # If this variable is set to 1 then the cache is ignored and p4est is installed regardless of cache.
       # (set with i.e. P4EST_IGNORE_CACHE=1)
