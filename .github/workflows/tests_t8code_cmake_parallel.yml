@@ -219,7 +219,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: test-suite_release_MPI.log
-        path: build_release/test-suite.log
+        path: build_release/Testing/Temporary/LastTest.log
 # configure and test with MPI (debug mode)
     - name: check debugging mode
       run: echo "Checking debug mode"
@@ -242,4 +242,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: test-suite_debug_MPI.log
-        path: build_debug/test-suite.log
+        path: build_debug/Testing/Temporary/LastTest.log

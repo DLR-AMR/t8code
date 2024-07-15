@@ -211,7 +211,7 @@ jobs:
 #      uses: actions/upload-artifact@v4
 #      with:
 #        name: test-suite_netcdf.log
-#        path: build_netcdf/test-suite.log
+#        path: build_netcdf/Testing/Temporary/LastTest.log
 # cmake and test with MPI and OpenCASCADE (debug mode)
     - name: check OpenCASCADE
       run: echo "Checking OpenCASCADE with MPI in debugging mode"
@@ -234,7 +234,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: test-suite_cad.log
-        path: build_cad/test-suite.log
+        path: build_cad/Testing/Temporary/LastTest.log
 # cmake and test with MPI and VTK (debug mode)
     - name: check VTK
       run: echo "Checking VTK with MPI in debugging mode"
@@ -257,4 +257,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: test-suite_vtk.log
-        path: build_vtk/test-suite.log
+        path: build_vtk/Testing/Temporary/LastTest.log

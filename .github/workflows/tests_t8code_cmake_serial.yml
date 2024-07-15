@@ -215,7 +215,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: test-suite_release_serial.log
-        path: build_serial_release/test-suite.log
+        path: build_serial_release/Testing/Temporary/LastTest.log
 # cmake and test serial (debug mode)
     - name: check serial debug
       run: echo "Checking debugging mode in serial"
@@ -238,4 +238,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: test-suite_debug_serial.log
-        path: build_serial_debug/test-suite.log
+        path: build_serial_debug/Testing/Temporary/LastTest.log
