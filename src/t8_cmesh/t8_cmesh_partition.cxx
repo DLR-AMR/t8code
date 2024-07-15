@@ -1755,7 +1755,6 @@ t8_cmesh_offset_random (sc_MPI_Comm comm, t8_gloidx_t num_trees, int shared, uns
   return shmem_array;
 }
 
-/* TODO: Check that percent is the same on each process */
 t8_shmem_array_t
 t8_cmesh_offset_percent (t8_cmesh_t cmesh, sc_MPI_Comm comm, int percent)
 {
@@ -1765,6 +1764,11 @@ t8_cmesh_offset_percent (t8_cmesh_t cmesh, sc_MPI_Comm comm, int percent)
   const t8_gloidx_t *old_partition;
   int mpirank, mpisize, mpiret;
   int created = 0;
+#if T8_ENABLE_DEBUG
+  int total = 0;
+  sc_MPI_Allgather (&percent, 1, sc_MPI_INT, &total, 1, sc_MPI_INT, comm);
+  T8_ASSERT (total == 100);
+#endif
 
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
