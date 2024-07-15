@@ -1,5 +1,6 @@
 if ( ${T8CODE_BUILD_AS_SHARED_LIBRARY} )
     add_library( T8 SHARED )
+    set_target_properties( T8 PROPERTIES VERSION ${CMAKE_PROJECT_VERSION} SOVERSION ${T8CODE_VERSION_RAW})
     set_target_properties( T8 PROPERTIES POSITION_INDEPENDENT_CODE ON )
 else()
     add_library( T8 STATIC )
@@ -26,35 +27,11 @@ target_compile_definitions( T8 PUBLIC T8_CPPFLAGS="${CMAKE_CXX_FLAGS}" )
 target_compile_definitions( T8 PUBLIC T8_LDFLAGS="${CMAKE_SHARED_LINKER_FLAGS}" )
 target_compile_definitions( T8 PUBLIC T8_LIBS="Not available with CMake builds" )
 
-
-find_package( Git REQUIRED )
-execute_process( COMMAND ${GIT_EXECUTABLE} describe --tags 
-                 COMMAND cut -c 2- 
-                 WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-                 OUTPUT_VARIABLE T8CODE_VERSION 
-                 OUTPUT_STRIP_TRAILING_WHITESPACE )
-execute_process( COMMAND echo ${T8CODE_VERSION} 
-                 COMMAND cut -d. -f1 
-                 OUTPUT_VARIABLE T8CODE_VERSION_MAJOR 
-                 OUTPUT_STRIP_TRAILING_WHITESPACE )
-execute_process( COMMAND echo ${T8CODE_VERSION} 
-                 COMMAND cut -d. -f2 
-                 OUTPUT_VARIABLE T8CODE_VERSION_MINOR 
-                 OUTPUT_STRIP_TRAILING_WHITESPACE )
-execute_process( COMMAND echo ${T8CODE_VERSION} 
-                 COMMAND cut -d. -f3 
-                 OUTPUT_VARIABLE T8CODE_VERSION_POINT 
-                 OUTPUT_STRIP_TRAILING_WHITESPACE )
-
-#To reuse the version in other CMakeLists
-set(T8_VERSION ${T8CODE_VERSION} CACHE INTERNAL "")
-
-
 target_compile_definitions( T8 PUBLIC T8_PACKAGE_STRING="t8 ${T8CODE_VERSION}" )
 target_compile_definitions( T8 PUBLIC T8_VERSION="${T8CODE_VERSION}" )
 target_compile_definitions( T8 PUBLIC T8_VERSION_MAJOR=${T8CODE_VERSION_MAJOR} )
 target_compile_definitions( T8 PUBLIC T8_VERSION_MINOR=${T8CODE_VERSION_MINOR} )
-target_compile_definitions( T8 PUBLIC T8_VERSION_POINT=${T8CODE_VERSION_POINT} )
+target_compile_definitions( T8 PUBLIC T8_VERSION_PATCH=${T8CODE_VERSION_PATCH} )
 
 
 target_include_directories( T8 PUBLIC
@@ -90,18 +67,16 @@ endif()
 target_sources( T8 PRIVATE 
     t8.c 
     t8_eclass.c 
-    t8_element.c 
     t8_element_shape.c
-    t8_element_cxx.cxx 
+    t8_element.cxx 
     t8_element_c_interface.cxx 
     t8_mesh.c
     t8_netcdf.c 
     t8_refcount.c 
     t8_version.c 
     t8_vtk.c 
-    t8_cmesh/t8_cmesh.cxx
+    t8_cmesh/t8_cmesh.cxx 
     t8_cmesh/t8_cmesh_cad.cxx 
-    t8_cmesh/t8_cmesh_cxx.cxx 
     t8_cmesh/t8_cmesh_triangle.cxx 
     t8_cmesh/t8_cmesh_vtk_writer.c 
     t8_cmesh/t8_cmesh_stash.c 
@@ -119,10 +94,9 @@ target_sources( T8 PRIVATE
     t8_cmesh/t8_cmesh_readmshfile.cxx 
     t8_data/t8_shmem.c 
     t8_data/t8_containers.cxx 
-    t8_forest/t8_forest.c 
     t8_forest/t8_forest_adapt.cxx 
     t8_forest/t8_forest_partition.cxx 
-    t8_forest/t8_forest_cxx.cxx 
+    t8_forest/t8_forest.cxx 
     t8_forest/t8_forest_private.c 
     t8_forest/t8_forest_vtk.cxx 
     t8_forest/t8_forest_ghost.cxx 
@@ -141,26 +115,26 @@ target_sources( T8 PRIVATE
     t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.cxx 
     t8_geometry/t8_geometry_implementations/t8_geometry_zero.cxx 
     t8_geometry/t8_geometry_implementations/t8_geometry_examples.cxx 
-    t8_schemes/t8_default/t8_default_cxx.cxx
-    t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.cxx
-    t8_schemes/t8_default/t8_default_hex/t8_default_hex_cxx.cxx
+    t8_schemes/t8_default/t8_default.cxx
+    t8_schemes/t8_default/t8_default_common/t8_default_common.cxx
+    t8_schemes/t8_default/t8_default_hex/t8_default_hex.cxx
     t8_schemes/t8_default/t8_default_hex/t8_dhex_bits.c
-    t8_schemes/t8_default/t8_default_line/t8_default_line_cxx.cxx
+    t8_schemes/t8_default/t8_default_line/t8_default_line.cxx
     t8_schemes/t8_default/t8_default_line/t8_dline_bits.c
-    t8_schemes/t8_default/t8_default_prism/t8_default_prism_cxx.cxx
+    t8_schemes/t8_default/t8_default_prism/t8_default_prism.cxx
     t8_schemes/t8_default/t8_default_prism/t8_dprism_bits.c
-    t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid_cxx.cxx
+    t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid.cxx
     t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.c
     t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_connectivity.c 
-    t8_schemes/t8_default/t8_default_quad/t8_default_quad_cxx.cxx
+    t8_schemes/t8_default/t8_default_quad/t8_default_quad.cxx
     t8_schemes/t8_default/t8_default_quad/t8_dquad_bits.c
-    t8_schemes/t8_default/t8_default_tet/t8_default_tet_cxx.cxx
+    t8_schemes/t8_default/t8_default_tet/t8_default_tet.cxx
     t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.c
     t8_schemes/t8_default/t8_default_tet/t8_dtet_connectivity.c
-    t8_schemes/t8_default/t8_default_tri/t8_default_tri_cxx.cxx
+    t8_schemes/t8_default/t8_default_tri/t8_default_tri.cxx
     t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.c
     t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.c
-    t8_schemes/t8_default/t8_default_vertex/t8_default_vertex_cxx.cxx
+    t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.cxx
     t8_schemes/t8_default/t8_default_vertex/t8_dvertex_bits.c
     t8_vtk/t8_vtk_polydata.cxx 
     t8_vtk/t8_vtk_unstructured.cxx 
@@ -181,7 +155,7 @@ install( FILES
     t8_eclass.h
     t8_element.h
     t8_element_c_interface.h
-    t8_element_cxx.hxx
+    t8_element.hxx
     t8_element_shape.h
     t8_forest_netcdf.h
     t8_mat.h
@@ -221,7 +195,7 @@ INSTALL_DESTINATION cmake
 write_basic_package_version_file(
 ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}ConfigVersion.cmake
 COMPATIBILITY SameMajorVersion
-VERSION 0.0.0
+VERSION "${T8CODE_VERSION_MAJOR}.${T8CODE_VERSION_MINOR}.${T8CODE_VERSION_PATCH}"
 )
 
 install( EXPORT ${PROJECT_NAME}-targets

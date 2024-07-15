@@ -29,7 +29,7 @@
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <sc_refcount.h>
 #include <sc_flops.h>
 #include <sc_statistics.h>
