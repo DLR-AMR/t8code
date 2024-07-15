@@ -154,7 +154,8 @@ t8_stash_joinface_sort (t8_stash_t stash);
  *                      if the cmesh is committed. (More memory efficient).
  */
 void
-t8_stash_add_attribute (t8_stash_t stash, t8_gloidx_t id, int package_id, int key, size_t size, void *attr, int copy);
+t8_stash_add_attribute (t8_stash_t stash, t8_gloidx_t id, int package_id, int key, size_t size, void *const attr,
+                        int copy);
 
 /** Return the size (in bytes) of an attribute in the stash.
  * \param [in]   stash   The stash to be considered.

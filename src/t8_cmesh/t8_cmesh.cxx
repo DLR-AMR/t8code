@@ -356,8 +356,8 @@ t8_cmesh_get_next_tree (const t8_cmesh_t cmesh, const t8_ctree_t tree)
 }
 
 void
-t8_cmesh_set_attribute (t8_cmesh_t cmesh, const t8_gloidx_t gtree_id, const int package_id, const int key, void *data,
-                        const size_t data_size, const int data_persists)
+t8_cmesh_set_attribute (t8_cmesh_t cmesh, const t8_gloidx_t gtree_id, const int package_id, const int key,
+                        void *const data, const size_t data_size, const int data_persists)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   SC_CHECK_ABORT (cmesh->set_from == NULL, "ERROR: Cannot add attributes to cmesh when deriving from another cmesh.\n");
