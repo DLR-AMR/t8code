@@ -270,9 +270,7 @@ t8_cmesh_tree_to_vtk_cell (t8_cmesh_t cmesh, const t8_locidx_t itree, const t8_g
   vtkSmartPointer<vtkCell> pvtkCell = NULL;
 
   const t8_element_shape_t element_shape = (t8_element_shape_t) t8_cmesh_get_tree_class (cmesh, itree);
-  t8_debugf ("[D] shape: %s, curved_flag: %i\n", t8_eclass_to_string[element_shape], curved_flag);
   const int num_node = t8_get_number_of_vtk_nodes (element_shape, curved_flag);
-  t8_debugf ("[D] num_node: %i\n", num_node);
   if (curved_flag == 0) {
     switch (element_shape) {
     case T8_ECLASS_VERTEX:
@@ -334,14 +332,14 @@ t8_cmesh_tree_to_vtk_cell (t8_cmesh_t cmesh, const t8_locidx_t itree, const t8_g
     }
   }
   double *coordinates = T8_ALLOC (double, 3 * num_node);
-  double *tree_vertices = t8_cmesh_get_tree_vertices (cmesh, itree);
-  t8_geometry_evaluate (cmesh, offset + itree, tree_vertices, num_node, coordinates);
+
+  const double *ref_coords = t8_forest_vtk_point_to_element_ref_coords[element_shape][curved_flag];
+  t8_geometry_evaluate (cmesh, offset + itree, ref_coords, num_node, coordinates);
 
   for (int ivertex = 0; ivertex < num_node; ivertex++, (*point_id)++) {
     const size_t offset_3d = 3 * ivertex;
     /* Insert point in the points array */
     points->InsertNextPoint (coordinates[offset_3d], coordinates[offset_3d + 1], coordinates[offset_3d + 2]);
-    t8_debugf ("[D] point_id: %i\n", *point_id);
     pvtkCell->GetPointIds ()->SetId (ivertex, *point_id);
   }
   T8_FREE (coordinates);
@@ -488,7 +486,6 @@ t8_grid_tree_to_vtk_cells<t8_cmesh_t> (const t8_cmesh_t cmesh, vtkSmartPointer<v
                                        vtkSmartPointer<vtkCellArray> cellArray, vtkSmartPointer<vtkPoints> points)
 {
   long int point_id = 0;
-  t8_debugf ("[D] curved_flag tree_to_cells: %i\n", curved_flag);
 
   const t8_gloidx_t offset = t8_cmesh_get_first_treeid (cmesh);
   t8_gloidx_t tree_id = offset;
@@ -529,7 +526,6 @@ t8_grid_to_vtkUnstructuredGrid (const grid_t grid, vtkSmartPointer<vtkUnstructur
                                 const int num_data, t8_vtk_data_field_t *data, sc_MPI_Comm comm)
 {
   T8_ASSERT (grid != NULL);
-  t8_debugf ("[D] curved_flag grid_to_unstructured: %i\n", curved_flag);
 
   vtkSmartPointer<vtkCellArray> cellArray = vtkSmartPointer<vtkCellArray>::New ();
   vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New ();
@@ -619,8 +615,6 @@ t8_write_vtk (const grid_t grid, std::string fileprefix, const int write_treeid,
   vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid = vtkSmartPointer<vtkUnstructuredGrid>::New ();
 
   std::string mpifilename = fileprefix + std::string (".pvtu");
-
-  t8_debugf ("[D] curved_flag write_vtk: %i\n", curved_flag);
 
   vtkSmartPointer<vtkXMLPUnstructuredGridWriter> pwriterObj = vtkSmartPointer<vtkXMLPUnstructuredGridWriter>::New ();
   t8_grid_to_vtkUnstructuredGrid<grid_t> (grid, unstructuredGrid, write_treeid, write_mpirank, write_level,
