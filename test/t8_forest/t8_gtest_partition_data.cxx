@@ -204,7 +204,7 @@ TEST (partition_data, test_partition_data)
   t8_forest_set_partition (partitioned_forest, initial_forest, partition_for_coarsening);
   t8_forest_commit (partitioned_forest);
 
-  /* Test the examplary partition_data with some arithmetic data types as well with a custom struct */
+  /* Test the examplary partition_data with some arithmetic data types as well as with a custom struct */
   TestPartitionData<int32_t> (initial_forest, partitioned_forest);
   TestPartitionData<float> (initial_forest, partitioned_forest);
   TestPartitionData<double> (initial_forest, partitioned_forest);
