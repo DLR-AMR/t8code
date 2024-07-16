@@ -386,59 +386,142 @@ grid_local_num_elements<t8_cmesh_t> (const t8_cmesh_t grid)
 }
 
 template <typename grid_t>
-int *
+t8_locidx_t
+grid_local_num_trees (const grid_t grid);
+
+template <>
+t8_locidx_t
+grid_local_num_trees<t8_forest_t> (const t8_forest_t grid)
+{
+  return t8_forest_get_num_local_trees (grid);
+}
+
+template <>
+t8_locidx_t
+grid_local_num_trees<t8_cmesh_t> (const t8_cmesh_t grid)
+{
+  return t8_cmesh_get_num_local_trees (grid);
+}
+
+template <typename grid_t>
+t8_locidx_t
+grid_local_num_ghost_trees (const grid_t grid);
+
+template <>
+t8_locidx_t
+grid_local_num_ghost_trees<t8_forest_t> (const t8_forest_t grid)
+{
+  return t8_forest_get_num_ghost_trees (grid);
+}
+
+template <>
+t8_locidx_t
+grid_local_num_ghost_trees<t8_cmesh_t> (const t8_cmesh_t grid)
+{
+  return t8_cmesh_get_num_ghosts (grid);
+}
+
+template <typename grid_t>
+t8_gloidx_t
+grid_first_local_id (const grid_t grid);
+
+template <>
+t8_gloidx_t
+grid_first_local_id<t8_forest_t> (const t8_forest_t grid)
+{
+  return t8_forest_get_first_local_element_id (grid);
+}
+
+template <>
+t8_gloidx_t
+grid_first_local_id<t8_cmesh_t> (const t8_cmesh_t grid)
+{
+  return t8_cmesh_get_first_treeid (grid);
+}
+
+template <typename grid_t>
+bool
+grid_do_ghosts (const grid_t grid, const int write_ghosts);
+
+template <>
+bool
+grid_do_ghosts<t8_forest_t> (const t8_forest_t grid, const int write_ghosts)
+{
+  bool ghosts = write_ghosts;
+  if (grid->ghosts == NULL || grid->ghosts->num_ghosts_elements == 0) {
+    /* Never write ghost elements if there aren't any */
+    ghosts = false;
+  }
+  T8_ASSERT (grid->ghosts != NULL || !ghosts);
+  return ghosts;
+}
+
+template <>
+bool
+grid_do_ghosts<t8_cmesh_t> (const t8_cmesh_t grid, const int write_ghosts)
+{
+  bool ghosts = write_ghosts;
+  if (t8_cmesh_get_num_ghosts (grid) == 0) {
+    /* Never write ghost elements if there aren't any */
+    ghosts = false;
+  }
+  return ghosts;
+}
+
+template <typename grid_t>
+t8_locidx_t
+num_cells_to_write (const grid_t grid, const int write_ghosts);
+
+template <>
+t8_locidx_t
+num_cells_to_write<t8_forest_t> (const t8_forest_t grid, const int write_ghosts)
+{
+  return grid_local_num_elements (grid) + (write_ghosts ? t8_forest_get_num_ghost_trees (grid) : 0);
+}
+
+template <>
+t8_locidx_t
+num_cells_to_write<t8_cmesh_t> (const t8_cmesh_t grid, const int write_ghosts)
+{
+  return grid_local_num_elements (grid) + (write_ghosts ? t8_cmesh_get_num_ghosts (grid) : 0);
+}
+
+template <typename grid_t>
+void
 t8_grid_tree_to_vtk_cells (const grid_t grid, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
                            const int write_treeid, const int write_mpirank, const int write_level,
-                           const int write_element_id, const int write_ghosts, const int curved_flag, sc_MPI_Comm comm,
+                           const int write_element_id, const int curved_flag, sc_MPI_Comm comm,
                            vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_treeid,
                            vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_mpirank,
                            vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_level,
                            vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_element_id,
-                           vtkSmartPointer<vtkCellArray> cellArray, vtkSmartPointer<vtkPoints> points);
+                           vtkSmartPointer<vtkCellArray> cellArray, vtkSmartPointer<vtkPoints> points, int *cellTypes,
+                           const t8_locidx_t num_local_trees, t8_gloidx_t *elem_id, long int *point_id,
+                           const t8_gloidx_t offset, const bool ghosts, const t8_locidx_t itree);
 
 template <>
-int *
-t8_grid_tree_to_vtk_cells<t8_forest_t> (const t8_forest_t forest, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
-                                        const int write_treeid, const int write_mpirank, const int write_level,
-                                        const int write_element_id, const int write_ghosts, const int curved_flag,
-                                        sc_MPI_Comm comm, vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_treeid,
-                                        vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_mpirank,
-                                        vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_level,
-                                        vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_element_id,
-                                        vtkSmartPointer<vtkCellArray> cellArray, vtkSmartPointer<vtkPoints> points)
+void
+t8_grid_tree_to_vtk_cells<t8_forest_t> (
+  const t8_forest_t forest, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid, const int write_treeid,
+  const int write_mpirank, const int write_level, const int write_element_id, const int curved_flag, sc_MPI_Comm comm,
+  vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_treeid, vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_mpirank,
+  vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_level, vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_element_id,
+  vtkSmartPointer<vtkCellArray> cellArray, vtkSmartPointer<vtkPoints> points, int *cellTypes,
+  const t8_locidx_t num_local_trees, t8_gloidx_t *elem_id, long int *point_id, const t8_gloidx_t offset,
+  const bool ghosts, const t8_locidx_t itree)
 {
-
-  long int point_id = 0; /* The id of the point in the points Object. */
-
-  const t8_gloidx_t offset = t8_forest_get_first_local_element_id (forest);
-  t8_gloidx_t elem_id = offset;
-
-  int ghosts = write_ghosts;
-  if (forest->ghosts == NULL || forest->ghosts->num_ghosts_elements == 0) {
-    /* Never write ghost elements if there aren't any */
-    ghosts = 0;
-  }
-  T8_ASSERT (forest->ghosts != NULL || !ghosts);
-
-  /* 
-   * The cellTypes Array stores the element types as integers(see vtk doc).
-   */
-  t8_locidx_t num_elements = t8_forest_get_local_num_elements (forest);
   if (ghosts) {
-    num_elements += t8_forest_get_num_ghosts (forest);
+    t8_eclass_scheme_c *scheme = t8_forest_get_eclass_scheme (forest, t8_forest_ghost_get_tree_class (forest, itree));
+    const t8_locidx_t num_ghosts = t8_forest_ghost_tree_num_elements (forest, itree);
+    for (t8_locidx_t ielem_ghost = 0; ielem_ghost < num_ghosts; ielem_ghost++) {
+      const t8_element_t *element = t8_forest_ghost_get_element (forest, itree, ielem_ghost);
+      t8_forest_element_to_vtk_cell (forest, element, scheme, itree + num_local_trees, offset, write_treeid,
+                                     write_mpirank, write_level, write_element_id, curved_flag, 1, *elem_id, point_id,
+                                     cellTypes, points, cellArray, vtk_treeid, vtk_mpirank, vtk_level, vtk_element_id);
+      (*elem_id)++;
+    }
   }
-  int *cellTypes = T8_ALLOC (int, num_elements);
-  T8_ASSERT (cellTypes != NULL);
-  const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
-
-  /* We iterate over all local trees*/
-  for (t8_locidx_t itree = 0; itree < num_local_trees; itree++) {
-    /* 
-     * We get the current tree, the scheme for this tree
-     * and the number of elements in this tree. We need the vertices of
-     * the tree to get the coordinates of the elements later. We need
-     * the number of elements in this tree to iterate over all of them.
-     */
+  else {
     t8_eclass_scheme_c *scheme = t8_forest_get_eclass_scheme (forest, t8_forest_get_tree_class (forest, itree));
     const t8_locidx_t elems_in_tree = t8_forest_get_tree_num_elements (forest, itree);
     /* We iterate over all elements in the tree */
@@ -447,75 +530,31 @@ t8_grid_tree_to_vtk_cells<t8_forest_t> (const t8_forest_t forest, vtkSmartPointe
       T8_ASSERT (element != NULL);
 
       t8_forest_element_to_vtk_cell (forest, element, scheme, itree, offset, write_treeid, write_mpirank, write_level,
-                                     write_element_id, curved_flag, 0, elem_id, &point_id, cellTypes, points, cellArray,
+                                     write_element_id, curved_flag, 0, *elem_id, point_id, cellTypes, points, cellArray,
                                      vtk_treeid, vtk_mpirank, vtk_level, vtk_element_id);
+      (*elem_id)++;
 
-      elem_id++;
     } /* end of loop over elements */
-    if (ghosts) {
-      /* Get number of ghost-trees */
-      const t8_locidx_t num_ghost_trees = t8_forest_ghost_num_trees (forest);
-      for (t8_locidx_t itree_ghost = 0; itree_ghost < num_ghost_trees; itree_ghost++) {
-        /* Get Tree scheme of the ghost tree */
-        t8_eclass_scheme_c *scheme
-          = t8_forest_get_eclass_scheme (forest, t8_forest_ghost_get_tree_class (forest, itree_ghost));
-        const t8_locidx_t num_ghosts = t8_forest_ghost_tree_num_elements (forest, itree_ghost);
-        for (t8_locidx_t ielem_ghost = 0; ielem_ghost < num_ghosts; ielem_ghost++) {
-          const t8_element_t *element = t8_forest_ghost_get_element (forest, itree_ghost, ielem_ghost);
-          t8_forest_element_to_vtk_cell (forest, element, scheme, itree_ghost + num_local_trees, offset, write_treeid,
-                                         write_mpirank, write_level, write_element_id, curved_flag, 1, elem_id,
-                                         &point_id, cellTypes, points, cellArray, vtk_treeid, vtk_mpirank, vtk_level,
-                                         vtk_element_id);
-          elem_id++;
-        }
-      }
-    }
   }
-  return cellTypes;
+  return;
 }
 
 template <>
-int *
-t8_grid_tree_to_vtk_cells<t8_cmesh_t> (const t8_cmesh_t cmesh, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
-                                       const int write_treeid, const int write_mpirank, const int write_level,
-                                       const int write_element_id, const int write_ghosts, const int curved_flag,
-                                       sc_MPI_Comm comm, vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_treeid,
-                                       vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_mpirank,
-                                       vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_level,
-                                       vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_element_id,
-                                       vtkSmartPointer<vtkCellArray> cellArray, vtkSmartPointer<vtkPoints> points)
+void
+t8_grid_tree_to_vtk_cells<t8_cmesh_t> (
+  const t8_cmesh_t cmesh, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid, const int write_treeid,
+  const int write_mpirank, const int write_level, const int write_element_id, const int curved_flag, sc_MPI_Comm comm,
+  vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_treeid, vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_mpirank,
+  vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_level, vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_element_id,
+  vtkSmartPointer<vtkCellArray> cellArray, vtkSmartPointer<vtkPoints> points, int *cellTypes,
+  const t8_locidx_t num_local_trees, t8_gloidx_t *elem_id, long int *point_id, const t8_gloidx_t offset,
+  const bool ghosts, const t8_locidx_t itree)
 {
-  long int point_id = 0;
-
-  const t8_gloidx_t offset = t8_cmesh_get_first_treeid (cmesh);
-  t8_gloidx_t tree_id = offset;
-
-  int ghosts = write_ghosts;
-  if (t8_cmesh_get_num_ghosts (cmesh) == 0) {
-    /* Never write ghost elements if there aren't any */
-    ghosts = 0;
-  }
-
-  t8_locidx_t num_trees = t8_cmesh_get_num_local_trees (cmesh);
-  int *cellTypes = T8_ALLOC (int, num_trees);
-  T8_ASSERT (cellTypes != NULL);
-
-  for (t8_locidx_t itree = 0; itree < num_trees; itree++) {
-    t8_cmesh_tree_to_vtk_cell (cmesh, itree, offset, write_treeid, write_mpirank, write_level, write_element_id,
-                               curved_flag, false, &point_id, cellTypes, points, cellArray, vtk_treeid, vtk_mpirank,
-                               comm);
-    tree_id++;
-  }
-  if (ghosts) {
-    const t8_locidx_t num_ghost_trees = t8_cmesh_get_num_ghosts (cmesh);
-    for (t8_locidx_t itree_ghost = 0; itree_ghost < num_ghost_trees; itree_ghost++) {
-      t8_cmesh_tree_to_vtk_cell (cmesh, itree_ghost, offset, write_treeid, write_mpirank, write_level, write_element_id,
-                                 curved_flag, false, &point_id, cellTypes, points, cellArray, vtk_treeid, vtk_mpirank,
-                                 comm);
-      tree_id++;
-    }
-  }
-  return cellTypes;
+  t8_cmesh_tree_to_vtk_cell (cmesh, itree, offset, write_treeid, write_mpirank, write_level, write_element_id,
+                             curved_flag, ghosts, point_id, cellTypes, points, cellArray, vtk_treeid, vtk_mpirank,
+                             comm);
+  (*elem_id)++;
+  return;
 }
 
 template <typename grid_t>
@@ -543,9 +582,32 @@ t8_grid_to_vtkUnstructuredGrid (const grid_t grid, vtkSmartPointer<vtkUnstructur
   vtkDoubleArray **dataArrays;
   dataArrays = T8_ALLOC (vtkDoubleArray *, num_data);
 
-  int *cellTypes = t8_grid_tree_to_vtk_cells (grid, unstructuredGrid, write_treeid, write_mpirank, write_level,
-                                              write_element_id, write_ghosts, curved_flag, comm, vtk_treeid,
-                                              vtk_mpirank, vtk_level, vtk_element_id, cellArray, points);
+  long int point_id = 0; /* The id of the point in the points Object. */
+  const t8_gloidx_t offset = grid_first_local_id (grid);
+  t8_gloidx_t elem_id = offset;
+
+  bool do_ghosts = grid_do_ghosts (grid, write_ghosts);
+  t8_locidx_t num_cells = num_cells_to_write (grid, do_ghosts);
+
+  int *cellTypes = T8_ALLOC (int, num_cells);
+  T8_ASSERT (cellTypes != NULL);
+
+  const t8_locidx_t num_local_trees = grid_local_num_trees (grid);
+  for (t8_locidx_t itree = 0; itree < num_local_trees; itree++) {
+    t8_grid_tree_to_vtk_cells (grid, unstructuredGrid, write_treeid, write_mpirank, write_level, write_element_id,
+                               write_ghosts, curved_flag, vtk_treeid, vtk_mpirank, vtk_level, vtk_element_id, cellArray,
+                               points, cellTypes, num_local_trees, &elem_id, &point_id, offset, false, itree);
+  }
+  if (do_ghosts) {
+    const t8_locidx_t num_ghost_trees = grid_local_num_ghost_trees (grid);
+    for (t8_locidx_t itree_ghost = 0; itree_ghost < num_ghost_trees; itree_ghost++) {
+      t8_grid_tree_to_vtk_cells (grid, unstructuredGrid, write_treeid, write_mpirank, write_level, write_element_id,
+                                 write_ghosts, curved_flag, vtk_treeid, vtk_mpirank, vtk_level, vtk_element_id,
+                                 cellArray, points, cellTypes, num_local_trees, &elem_id, &point_id, offset, true,
+                                 itree_ghost);
+    }
+  }
+
   T8_ASSERT (cellTypes != NULL);
   /* call grid specific function to translate to vtk*/
 

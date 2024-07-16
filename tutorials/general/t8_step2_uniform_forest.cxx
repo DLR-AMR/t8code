@@ -104,7 +104,8 @@ t8_step2_write_forest_vtk (t8_forest_t forest, const char *prefix)
 {
   sc_MPI_Comm comm = t8_forest_get_mpicomm (forest);
   //t8_forest_write_vtk (forest, prefix);
-  t8_write_vtk_via_API<t8_forest_t> (forest, std::string (prefix), 1, 1, 1, 1, 0, 1, 0, NULL, comm);
+  //t8_write_vtk_via_API<t8_forest_t> (forest, std::string (prefix), 1, 1, 1, 1, 0, 1, 0, NULL, comm);
+  t8_write_vtk_via_API (forest, std::string (prefix), 1, 1, 1, 1, 1, 1, 0, NULL, comm);
 }
 
 /* Destroy a forest. This will free all allocated memory.
@@ -142,7 +143,7 @@ main (int argc, char **argv)
   /* Initialize the sc library, has to happen before we initialize t8code. */
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
-  t8_init (SC_LP_PRODUCTION);
+  t8_init (SC_LP_DEBUG);
 
   /* Print a message on the root process. */
   t8_global_productionf (" [step2] \n");
