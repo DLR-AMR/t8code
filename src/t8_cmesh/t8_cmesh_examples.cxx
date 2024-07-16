@@ -3190,7 +3190,7 @@ t8_cmesh_new_spherical_shell (t8_eclass_t eclass, t8_geometry_c *geometry,
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
 
-  t8_cmesh_register_geometry (cmesh, &geometry);
+  t8_cmesh_register_geometry (cmesh, geometry);
 
   /* Here is what we do: Construct a 3D cmesh from a 2D forest. */
 
