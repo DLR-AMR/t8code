@@ -595,16 +595,15 @@ t8_grid_to_vtkUnstructuredGrid (const grid_t grid, vtkSmartPointer<vtkUnstructur
   const t8_locidx_t num_local_trees = grid_local_num_trees (grid);
   for (t8_locidx_t itree = 0; itree < num_local_trees; itree++) {
     t8_grid_tree_to_vtk_cells (grid, unstructuredGrid, write_treeid, write_mpirank, write_level, write_element_id,
-                               write_ghosts, curved_flag, vtk_treeid, vtk_mpirank, vtk_level, vtk_element_id, cellArray,
-                               points, cellTypes, num_local_trees, &elem_id, &point_id, offset, false, itree);
+                               curved_flag, comm, vtk_treeid, vtk_mpirank, vtk_level, vtk_element_id, cellArray, points,
+                               cellTypes, num_local_trees, &elem_id, &point_id, offset, false, itree);
   }
   if (do_ghosts) {
     const t8_locidx_t num_ghost_trees = grid_local_num_ghost_trees (grid);
     for (t8_locidx_t itree_ghost = 0; itree_ghost < num_ghost_trees; itree_ghost++) {
       t8_grid_tree_to_vtk_cells (grid, unstructuredGrid, write_treeid, write_mpirank, write_level, write_element_id,
-                                 write_ghosts, curved_flag, vtk_treeid, vtk_mpirank, vtk_level, vtk_element_id,
-                                 cellArray, points, cellTypes, num_local_trees, &elem_id, &point_id, offset, true,
-                                 itree_ghost);
+                                 curved_flag, comm, vtk_treeid, vtk_mpirank, vtk_level, vtk_element_id, cellArray,
+                                 points, cellTypes, num_local_trees, &elem_id, &point_id, offset, true, itree_ghost);
     }
   }
 
