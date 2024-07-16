@@ -26,33 +26,32 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_cmesh.h>
 #include <t8_vtk.h>
 #include <t8.h>
+#include "t8_vtk/t8_vtk_writer_impl.hxx"
 
 #if T8_WITH_VTK
 #include <vtkUnstructuredGrid.h>
 #endif
 
-#if T8_WITH_VTK
-/**
- * \brief 
- * 
- * \param[in] grid 
- * \param[in, out] unstructuredGrid 
- * \param[in] write_treeid 
- * \param[in] write_mpirank 
- * \param[in] write_level 
- * \param[in] write_element_id 
- * \param[in] write_ghosts 
- * \param[in] curved_flag 
- * \param[in] num_data 
- * \param[in] data 
- */
+/*
+ TODO: make this a class so we dont have to trace what we want to write out
+
 template <typename grid_t>
-void
-t8_grid_to_vtkUnstructuredGrid (const grid_t grid, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
-                                const int write_treeid, const int write_mpirank, const int write_level,
-                                const int write_element_id, const int write_ghosts, const int curved_flag,
-                                const int num_data, t8_vtk_data_field_t *data, sc_MPI_Comm comm);
-#endif
+class vtk_writer
+{
+public:
+
+private:
+
+    bool write_treeid;
+    bool write_mpirank;
+    bool write_level;
+    bool write_element_id;
+    bool write_ghosts;
+    bool curved_flag;
+    int num_data;
+    t8_vtk_data_field_t *data;
+    sc_MPI_Comm comm;
+}; */
 
 /**
  * \brief 
@@ -71,9 +70,13 @@ t8_grid_to_vtkUnstructuredGrid (const grid_t grid, vtkSmartPointer<vtkUnstructur
  * \return false 
  */
 template <typename grid_t>
-bool
+int
 t8_write_vtk_via_API (const grid_t grid, std::string fileprefix, const int write_treeid, const int write_mpirank,
                       const int write_level, const int write_element_id, const int curved_flag, const int write_ghosts,
-                      const int num_data, t8_vtk_data_field_t *data, sc_MPI_Comm comm);
+                      const int num_data, t8_vtk_data_field_t *data, sc_MPI_Comm comm)
+{
+  return t8_write_vtk (grid, fileprefix, write_treeid, write_mpirank, write_level, write_element_id, curved_flag,
+                       write_ghosts, num_data, data, comm);
+}
 
 #endif /* T8_VTK_WRITER_HXX */

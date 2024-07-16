@@ -44,12 +44,14 @@
  *    forest (for example the number of local trees).
  */
 
-#include <t8.h>                                 /* General t8code header, always include this. */
-#include <t8_cmesh.h>                           /* cmesh definition and basic interface. */
-#include <t8_cmesh/t8_cmesh_examples.h>         /* A collection of exemplary cmeshes */
-#include <t8_forest/t8_forest_general.h>        /* forest definition and general interface. */
-#include <t8_forest/t8_forest_io.h>             /* forest io interface. */
+#include <t8.h>                          /* General t8code header, always include this. */
+#include <t8_cmesh.h>                    /* cmesh definition and basic interface. */
+#include <t8_cmesh/t8_cmesh_examples.h>  /* A collection of exemplary cmeshes */
+#include <t8_forest/t8_forest_general.h> /* forest definition and general interface. */
+//#include <t8_forest/t8_forest_io.h>             /* forest io interface. */
 #include <t8_schemes/t8_default/t8_default.hxx> /* default refinement scheme. */
+#include <t8_vtk/t8_vtk_writer.hxx>
+#include <string>
 
 /* Builds cmesh of 2 prisms that build up a unit cube. 
  * See step1 for a detailed description.
@@ -100,7 +102,9 @@ t8_step2_build_uniform_forest (sc_MPI_Comm comm, t8_cmesh_t cmesh, int level)
 static void
 t8_step2_write_forest_vtk (t8_forest_t forest, const char *prefix)
 {
-  t8_forest_write_vtk (forest, prefix);
+  sc_MPI_Comm comm = t8_forest_get_mpicomm (forest);
+  //t8_forest_write_vtk (forest, prefix);
+  t8_write_vtk_via_API<t8_forest_t> (forest, std::string (prefix), 1, 1, 1, 1, 0, 1, 0, NULL, comm);
 }
 
 /* Destroy a forest. This will free all allocated memory.

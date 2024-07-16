@@ -103,7 +103,8 @@ libt8_internal_headers = \
   src/t8_forest/t8_forest_ghost.h \
   src/t8_forest/t8_forest_balance.h src/t8_forest/t8_forest_types.h \
   src/t8_forest/t8_forest_private.h \
-  src/t8_windows.h
+  src/t8_windows.h \
+  src/t8_vtk/t8_vtk_writer_impl.hxx
 libt8_compiled_sources = \
   src/t8.c src/t8_eclass.c src/t8_mesh.c \
   src/t8_element.cxx \
@@ -146,8 +147,7 @@ libt8_compiled_sources = \
   src/t8_vtk/t8_vtk_polydata.cxx \
   src/t8_vtk/t8_vtk_unstructured.cxx \
   src/t8_vtk/t8_vtk_parallel.cxx \
-  src/t8_vtk/t8_vtk_reader.cxx \
-  src/t8_vtk/t8_vtk_writer.cxx
+  src/t8_vtk/t8_vtk_reader.cxx
 
 
 # this variable is used for headers that are not publicly installed
