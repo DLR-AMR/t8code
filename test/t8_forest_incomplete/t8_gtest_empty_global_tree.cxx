@@ -37,6 +37,8 @@
  * The two resulting forests must be equal.
  * */
 
+#define NUMTREES 3
+
 /* Remove `DISABLED_` from the name of the Test(suite) or use `--gtest_also_run_disabled_tests` when you start working on the issue. */
 class DISABLED_global_tree: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
  protected:
@@ -45,8 +47,8 @@ class DISABLED_global_tree: public testing::TestWithParam<std::tuple<t8_eclass, 
   {
     eclass = std::get<0> (GetParam ());
     testcase = std::get<1> (GetParam ());
-    forest = t8_forest_new_uniform (t8_cmesh_new_bigmesh (eclass, 3, sc_MPI_COMM_WORLD), t8_scheme_new_default_cxx (),
-                                    0, 0, sc_MPI_COMM_WORLD);
+    forest = t8_forest_new_uniform (t8_cmesh_new_bigmesh (eclass, NUMTREES, sc_MPI_COMM_WORLD),
+                                    t8_scheme_new_default_cxx (), 0, 0, sc_MPI_COMM_WORLD);
   }
   void
   TearDown () override
@@ -66,34 +68,16 @@ t8_adapt_remove (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_
 {
   const int *testcase = (const int *) t8_forest_get_user_data (forest);
   const t8_gloidx_t global_tree_id = t8_forest_global_tree_id (forest_from, which_tree);
-  switch (*testcase) {
+  switch (*testcase / NUMTREES) {
   case 0:
-    if (global_tree_id == 0) {
+    /** Remove all elements in one tree */
+    if (global_tree_id == *testcase % NUMTREES) {
       return -2;
     }
     break;
   case 1:
-    if (global_tree_id == 1) {
-      return -2;
-    }
-    break;
-  case 2:
-    if (global_tree_id == 2) {
-      return -2;
-    }
-    break;
-  case 3:
-    if (global_tree_id != 0) {
-      return -2;
-    }
-    break;
-  case 4:
-    if (global_tree_id != 1) {
-      return -2;
-    }
-    break;
-  case 5:
-    if (global_tree_id != 2) {
+    /** Remove all elements in all but one tree */
+    if (global_tree_id != *testcase % NUMTREES) {
       return -2;
     }
     break;
@@ -144,11 +128,26 @@ TEST_P (DISABLED_global_tree, test_empty_global_tree)
   ASSERT_TRUE (!forest->incomplete_trees);
   forest_adapt_b = t8_adapt_forest (forest_adapt_b, NULL, 0, 1, NULL);
 
-  /* The number of trees and elements between forest_adapt_a and forest_adapt_b have to match. */
+  /* The number of trees needs to stay the same, as a tree should not disappear, even if there are no elements left in it. */
   /* Global */
-  ASSERT_EQ (t8_forest_get_num_global_trees (forest), t8_forest_get_num_global_trees (forest_adapt_a));
-  ASSERT_EQ (t8_forest_get_num_global_trees (forest_adapt_b), t8_forest_get_num_global_trees (forest_adapt_a));
-  ASSERT_EQ (t8_forest_get_global_num_elements (forest_adapt_b), t8_forest_get_global_num_elements (forest_adapt_a));
+  ASSERT_EQ (t8_forest_get_num_global_trees (forest), NUMTREES);
+  ASSERT_EQ (t8_forest_get_num_global_trees (forest_adapt_a), NUMTREES);
+  ASSERT_EQ (t8_forest_get_num_global_trees (forest_adapt_b), NUMTREES);
+
+  /** For the first NUMTREES testcases, only one tree is deleted,
+   * for the last NUMTREES testcases, all but one tree are deleted.
+   * Since all trees are level 0, the number of expected elements equals the number
+   * of not deleted trees. */
+  const int *testcase = (const int *) t8_forest_get_user_data (forest);
+  int expected_elements;
+  if (*testcase < NUMTREES) {
+    expected_elements = NUMTREES - 1;
+  }
+  else {
+    expected_elements = 1;
+  }
+  ASSERT_EQ (t8_forest_get_global_num_elements (forest_adapt_a), expected_elements);
+  ASSERT_EQ (t8_forest_get_global_num_elements (forest_adapt_b), expected_elements);
 
   /* Compare forest->global_num_trees with the sum of all local trees
    * on all processes. Those numbers must be equal, since every tree
@@ -158,7 +157,7 @@ TEST_P (DISABLED_global_tree, test_empty_global_tree)
   int mpiret
     = sc_MPI_Allreduce (&local_num_trees, &global_num_trees, 1, sc_MPI_LONG_LONG_INT, sc_MPI_SUM, sc_MPI_COMM_WORLD);
   SC_CHECK_MPI (mpiret);
-  ASSERT_EQ (global_num_trees, t8_forest_get_num_global_trees (forest));
+  ASSERT_EQ (global_num_trees, NUMTREES);
 
   /* Local */
   ASSERT_TRUE (t8_forest_is_equal (forest_adapt_b, forest_adapt_a));
@@ -168,4 +167,4 @@ TEST_P (DISABLED_global_tree, test_empty_global_tree)
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_empty_global_tree, DISABLED_global_tree,
-                          testing::Combine (AllEclasses, testing::Range (0, 6)));
+                          testing::Combine (AllEclasses, testing::Range (0, 2 * NUMTREES)));
