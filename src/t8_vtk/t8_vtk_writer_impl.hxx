@@ -270,7 +270,9 @@ t8_cmesh_tree_to_vtk_cell (t8_cmesh_t cmesh, const t8_locidx_t itree, const t8_g
   vtkSmartPointer<vtkCell> pvtkCell = NULL;
 
   const t8_element_shape_t element_shape = (t8_element_shape_t) t8_cmesh_get_tree_class (cmesh, itree);
+  t8_debugf ("[D] shape: %s, curved_flag: %i\n", t8_eclass_to_string[element_shape], curved_flag);
   const int num_node = t8_get_number_of_vtk_nodes (element_shape, curved_flag);
+  t8_debugf ("[D] num_node: %i\n", num_node);
   if (curved_flag == 0) {
     switch (element_shape) {
     case T8_ECLASS_VERTEX:
@@ -339,7 +341,7 @@ t8_cmesh_tree_to_vtk_cell (t8_cmesh_t cmesh, const t8_locidx_t itree, const t8_g
     const size_t offset_3d = 3 * ivertex;
     /* Insert point in the points array */
     points->InsertNextPoint (coordinates[offset_3d], coordinates[offset_3d + 1], coordinates[offset_3d + 2]);
-
+    t8_debugf ("[D] point_id: %i\n", *point_id);
     pvtkCell->GetPointIds ()->SetId (ivertex, *point_id);
   }
   T8_FREE (coordinates);
@@ -486,6 +488,7 @@ t8_grid_tree_to_vtk_cells<t8_cmesh_t> (const t8_cmesh_t cmesh, vtkSmartPointer<v
                                        vtkSmartPointer<vtkCellArray> cellArray, vtkSmartPointer<vtkPoints> points)
 {
   long int point_id = 0;
+  t8_debugf ("[D] curved_flag tree_to_cells: %i\n", curved_flag);
 
   const t8_gloidx_t offset = t8_cmesh_get_first_treeid (cmesh);
   t8_gloidx_t tree_id = offset;
@@ -510,7 +513,7 @@ t8_grid_tree_to_vtk_cells<t8_cmesh_t> (const t8_cmesh_t cmesh, vtkSmartPointer<v
     const t8_locidx_t num_ghost_trees = t8_cmesh_get_num_ghosts (cmesh);
     for (t8_locidx_t itree_ghost = 0; itree_ghost < num_ghost_trees; itree_ghost++) {
       t8_cmesh_tree_to_vtk_cell (cmesh, itree_ghost, offset, write_treeid, write_mpirank, write_level, write_element_id,
-                                 curved_flag, true, &point_id, cellTypes, points, cellArray, vtk_treeid, vtk_mpirank,
+                                 curved_flag, false, &point_id, cellTypes, points, cellArray, vtk_treeid, vtk_mpirank,
                                  comm);
       tree_id++;
     }
@@ -526,26 +529,10 @@ t8_grid_to_vtkUnstructuredGrid (const grid_t grid, vtkSmartPointer<vtkUnstructur
                                 const int num_data, t8_vtk_data_field_t *data, sc_MPI_Comm comm)
 {
   T8_ASSERT (grid != NULL);
+  t8_debugf ("[D] curved_flag grid_to_unstructured: %i\n", curved_flag);
 
   vtkSmartPointer<vtkCellArray> cellArray = vtkSmartPointer<vtkCellArray>::New ();
-
   vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New ();
-
-  /*
-   * We need the vertex coords array to be of the 
-   * correct dim. Since it is always the same
-   * in one mesh, we take the dim of one element.
-   * We add 1 if we look at a vertext(dim=0) because 
-   * an array of size 0 is not allowed. 
-   * Then we allocate memory, because we do not know
-   * beforehand how many entries the array needs.
-   */
-
-  /*
-   * We have to define the vtkTypeInt64Array that hold 
-   * metadata if wanted. 
-   */
-
   vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_treeid = vtkSmartPointer<t8_vtk_gloidx_array_type_t>::New ();
   vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_mpirank = vtkSmartPointer<t8_vtk_gloidx_array_type_t>::New ();
   vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_level = vtkSmartPointer<t8_vtk_gloidx_array_type_t>::New ();
@@ -633,9 +620,11 @@ t8_write_vtk (const grid_t grid, std::string fileprefix, const int write_treeid,
 
   std::string mpifilename = fileprefix + std::string (".pvtu");
 
+  t8_debugf ("[D] curved_flag write_vtk: %i\n", curved_flag);
+
   vtkSmartPointer<vtkXMLPUnstructuredGridWriter> pwriterObj = vtkSmartPointer<vtkXMLPUnstructuredGridWriter>::New ();
   t8_grid_to_vtkUnstructuredGrid<grid_t> (grid, unstructuredGrid, write_treeid, write_mpirank, write_level,
-                                          write_element_id, curved_flag, write_ghosts, num_data, data, comm);
+                                          write_element_id, write_ghosts, curved_flag, num_data, data, comm);
   /*
     * Get/Set whether the appended data section is base64 encoded. 
     * If encoded, reading and writing will be slower, but the file 
