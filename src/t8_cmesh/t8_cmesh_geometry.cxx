@@ -39,7 +39,7 @@ t8_cmesh_register_geometry (t8_cmesh_t cmesh, t8_geometry_c *geometry)
     /* The handler was not constructed, do it now. */
     cmesh->geometry_handler = new t8_geometry_handler ();
   }
-  cmesh->geometry_handler->register_geometry (&geometry);
+  cmesh->geometry_handler->register_geometry (geometry);
 }
 
 void
