@@ -28,10 +28,10 @@
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <test/t8_gtest_macros.hxx>
 
-/** In this test, we are given a forest with 3 global trees. 
- * We adapt the forest so that all 6 compositions of empty 
- * global trees are the result of it. 
- * Therefore, \a testcase runs from 0 to 5.
+/** In this test, we are given a forest with NUMTREES global trees.
+ * For the first NUMTREES testcases, we delete exactly one tree,
+ * for the next NUMTREES testcases, we delete all but one tree.
+ * Therefore, \a testcase runs from 0 to 2*NUM_TESTCASES-1.
  * We do this twice. Once we partition the forest in the same call. 
  * The second time, we do the adapting and partitioning separately.
  * The two resulting forests must be equal.
@@ -39,7 +39,8 @@
 
 #define NUMTREES 3
 
-/* Remove `DISABLED_` from the name of the Test(suite) or use `--gtest_also_run_disabled_tests` when you start working on the issue. */
+/** This test covers the functionality described in Issue: https://github.com/DLR-AMR/t8code/issues/1137
+ * Remove `DISABLED_` from the name of the Test(suite) or use `--gtest_also_run_disabled_tests` when you start working on the issue. */
 class DISABLED_global_tree: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
  protected:
   void
