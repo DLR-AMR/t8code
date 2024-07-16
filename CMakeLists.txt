@@ -17,6 +17,7 @@ option( T8CODE_BUILD_BENCHMARKS "Build t8code's benchmarks" ON )
 option( T8CODE_ENABLE_MPI "Enable t8code's features which rely on MPI" ON )
 option( T8CODE_ENABLE_VTK "Enable t8code's features which rely on VTK" OFF )
 option( T8CODE_ENABLE_OCC "Enable t8code's features which rely on OpenCASCADE" OFF )
+option( T8CODE_ENABLE_NETCDF "Enable t8code's features which rely on netCDF" OFF )
 
 option( T8CODE_USE_SYSTEM_SC "Use system-installed sc library" OFF )
 option( T8CODE_USE_SYSTEM_P4EST "Use system-installed p4est library" OFF )
@@ -56,6 +57,10 @@ endif()
 
 if( T8CODE_ENABLE_OCC )
     find_package( OpenCASCADE REQUIRED )
+endif()
+
+if( T8CODE_ENABLE_NETCDF )
+    find_package( netCDF REQUIRED )
 endif()
 
 # Override default for this libsc option

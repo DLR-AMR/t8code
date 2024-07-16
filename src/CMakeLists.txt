@@ -25,6 +25,13 @@ if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
     target_compile_definitions( T8 PUBLIC T8_ENABLE_DEBUG )
 endif()
 
+if( T8CODE_ENABLE_NETCDF )
+  target_link_libraries( T8 PUBLIC netCDF::netcdf )
+  target_compile_definitions(T8 PUBLIC
+    T8_WITH_NETCDF
+    $<$<BOOL:${T8CODE_ENABLE_MPI}>:T8_WITH_NETCDF_PAR> )
+endif()
+
 set_target_properties( T8 PROPERTIES OUTPUT_NAME t8 )
 
 target_include_directories( T8 PUBLIC
