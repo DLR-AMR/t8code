@@ -93,10 +93,12 @@ class t8_test_partition_data_t {
 
 template <typename T>
 auto
-gTestCompareEQ (const T& value1, const T& value2, T&& epsilon = 8 * std::numeric_limits<T>::epsilon ())
-  -> std::enable_if_t<std::is_floating_point_v<T>, bool>
+gTestCompareEQ (const T& value1, const T& value2) -> std::enable_if_t<std::is_floating_point_v<T>, bool>
 {
-  return (std::abs (value1 - value2) < epsilon ? true : false);
+  const testing::internal::FloatingPoint<T> val1 { value1 };
+  const testing::internal::FloatingPoint<T> val2 { value2 };
+
+  return val1.AlmostEquals (val2);
 }
 
 template <typename T>
