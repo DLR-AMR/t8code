@@ -429,7 +429,8 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
     for (i = 0; i < mpisize; i++) {
       /* Calculate the first element index for each process. We convert to doubles to prevent overflow */
       new_first_element_id = (((double) i * (long double) forest_from->global_num_elements) / (double) mpisize);
-      T8_ASSERT (0 <= new_first_element_id && new_first_element_id < forest_from->global_num_elements);
+      T8_ASSERT (forest_from->global_num_elements == 0
+                 || (0 <= new_first_element_id && new_first_element_id < forest_from->global_num_elements));
       element_offsets[i] = new_first_element_id;
     }
     element_offsets[forest->mpisize] = forest->global_num_elements;
