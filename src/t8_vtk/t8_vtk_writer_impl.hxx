@@ -259,6 +259,114 @@ t8_forest_element_to_vtk_cell (
   }
 }
 
+static void
+t8_cmesh_tree_to_vtk_cell (t8_cmesh_t cmesh, const t8_locidx_t itree, const t8_gloidx_t offset, const int write_treeid,
+                           const int write_mpirank, const int write_level, const int write_element_id,
+                           const int curved_flag, const int is_ghost, long int *point_id, int *cellTypes,
+                           vtkSmartPointer<vtkPoints> points, vtkSmartPointer<vtkCellArray> cellArray,
+                           vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_treeid,
+                           vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_mpirank, sc_MPI_Comm comm)
+{
+  vtkSmartPointer<vtkCell> pvtkCell = NULL;
+
+  const t8_element_shape_t element_shape = (t8_element_shape_t) t8_cmesh_get_tree_class (cmesh, itree);
+  const int num_node = t8_get_number_of_vtk_nodes (element_shape, curved_flag);
+  if (curved_flag == 0) {
+    switch (element_shape) {
+    case T8_ECLASS_VERTEX:
+      pvtkCell = vtkSmartPointer<vtkVertex>::New ();
+      break;
+    case T8_ECLASS_LINE:
+      pvtkCell = vtkSmartPointer<vtkLine>::New ();
+      break;
+    case T8_ECLASS_QUAD:
+      pvtkCell = vtkSmartPointer<vtkQuad>::New ();
+      break;
+    case T8_ECLASS_TRIANGLE:
+      pvtkCell = vtkSmartPointer<vtkTriangle>::New ();
+      break;
+    case T8_ECLASS_HEX:
+      pvtkCell = vtkSmartPointer<vtkHexahedron>::New ();
+      break;
+    case T8_ECLASS_TET:
+      pvtkCell = vtkSmartPointer<vtkTetra>::New ();
+      break;
+    case T8_ECLASS_PRISM:
+      pvtkCell = vtkSmartPointer<vtkWedge>::New ();
+      break;
+    case T8_ECLASS_PYRAMID:
+      pvtkCell = vtkSmartPointer<vtkPyramid>::New ();
+      break;
+    default:
+      SC_ABORT_NOT_REACHED ();
+    }
+  }
+  else { /* curved_flag != 0 */
+    switch (element_shape) {
+    case T8_ECLASS_VERTEX:
+      pvtkCell = vtkSmartPointer<vtkVertex>::New ();
+      break;
+    case T8_ECLASS_LINE:
+      pvtkCell = vtkSmartPointer<vtkQuadraticEdge>::New ();
+      break;
+    case T8_ECLASS_QUAD:
+      pvtkCell = vtkSmartPointer<vtkQuadraticQuad>::New ();
+      break;
+    case T8_ECLASS_TRIANGLE:
+      pvtkCell = vtkSmartPointer<vtkQuadraticTriangle>::New ();
+      break;
+    case T8_ECLASS_HEX:
+      pvtkCell = vtkSmartPointer<vtkQuadraticHexahedron>::New ();
+      break;
+    case T8_ECLASS_TET:
+      pvtkCell = vtkSmartPointer<vtkQuadraticTetra>::New ();
+      break;
+    case T8_ECLASS_PRISM:
+      pvtkCell = vtkSmartPointer<vtkQuadraticWedge>::New ();
+      break;
+    case T8_ECLASS_PYRAMID:
+      pvtkCell = vtkSmartPointer<vtkQuadraticPyramid>::New ();
+      break;
+    default:
+      SC_ABORT_NOT_REACHED ();
+    }
+  }
+  double *coordinates = T8_ALLOC (double, 3 * num_node);
+  double *tree_vertices = t8_cmesh_get_tree_vertices (cmesh, itree);
+  t8_geometry_evaluate (cmesh, offset + itree, tree_vertices, num_node, coordinates);
+
+  for (int ivertex = 0; ivertex < num_node; ivertex++, (*point_id)++) {
+    const size_t offset_3d = 3 * ivertex;
+    /* Insert point in the points array */
+    points->InsertNextPoint (coordinates[offset_3d], coordinates[offset_3d + 1], coordinates[offset_3d + 2]);
+
+    pvtkCell->GetPointIds ()->SetId (ivertex, *point_id);
+  }
+  T8_FREE (coordinates);
+  cellArray->InsertNextCell (pvtkCell);
+  if (curved_flag == 0) {
+    cellTypes[itree] = t8_eclass_vtk_type[element_shape];
+  }
+  else {
+    cellTypes[itree] = t8_curved_eclass_vtk_type[element_shape];
+  }
+  if (write_treeid == 1) {
+    const t8_gloidx_t gtree_id = t8_cmesh_get_global_id (cmesh, itree);
+    if (is_ghost) {
+      vtk_treeid->InsertNextValue (-1);
+    }
+    else {
+      vtk_treeid->InsertNextValue (gtree_id);
+    }
+  }
+  if (write_mpirank == 1) {
+    int mpirank;
+    int mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+    SC_CHECK_MPI (mpiret);
+    vtk_mpirank->InsertNextValue (mpirank);
+  }
+}
+
 template <typename grid_t>
 t8_locidx_t
 grid_local_num_elements (const grid_t grid);
@@ -361,6 +469,50 @@ t8_grid_tree_to_vtk_cells<t8_forest_t> (const t8_forest_t forest, vtkSmartPointe
           elem_id++;
         }
       }
+    }
+  }
+  return cellTypes;
+}
+
+template <>
+int *
+t8_grid_tree_to_vtk_cells<t8_cmesh_t> (const t8_cmesh_t cmesh, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
+                                       const int write_treeid, const int write_mpirank, const int write_level,
+                                       const int write_element_id, const int write_ghosts, const int curved_flag,
+                                       sc_MPI_Comm comm, vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_treeid,
+                                       vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_mpirank,
+                                       vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_level,
+                                       vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_element_id,
+                                       vtkSmartPointer<vtkCellArray> cellArray, vtkSmartPointer<vtkPoints> points)
+{
+  long int point_id = 0;
+
+  const t8_gloidx_t offset = t8_cmesh_get_first_treeid (cmesh);
+  t8_gloidx_t tree_id = offset;
+
+  int ghosts = write_ghosts;
+  if (t8_cmesh_get_num_ghosts (cmesh) == 0) {
+    /* Never write ghost elements if there aren't any */
+    ghosts = 0;
+  }
+
+  t8_locidx_t num_trees = t8_cmesh_get_num_local_trees (cmesh);
+  int *cellTypes = T8_ALLOC (int, num_trees);
+  T8_ASSERT (cellTypes != NULL);
+
+  for (t8_locidx_t itree = 0; itree < num_trees; itree++) {
+    t8_cmesh_tree_to_vtk_cell (cmesh, itree, offset, write_treeid, write_mpirank, write_level, write_element_id,
+                               curved_flag, false, &point_id, cellTypes, points, cellArray, vtk_treeid, vtk_mpirank,
+                               comm);
+    tree_id++;
+  }
+  if (ghosts) {
+    const t8_locidx_t num_ghost_trees = t8_cmesh_get_num_ghosts (cmesh);
+    for (t8_locidx_t itree_ghost = 0; itree_ghost < num_ghost_trees; itree_ghost++) {
+      t8_cmesh_tree_to_vtk_cell (cmesh, itree_ghost, offset, write_treeid, write_mpirank, write_level, write_element_id,
+                                 curved_flag, true, &point_id, cellTypes, points, cellArray, vtk_treeid, vtk_mpirank,
+                                 comm);
+      tree_id++;
     }
   }
   return cellTypes;
