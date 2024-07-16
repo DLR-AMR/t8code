@@ -138,9 +138,9 @@ t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
 }
 
 /** For each locale element: Remove, coarsen, leave untouched, or refine it depending on its index.
- *      if \a lelement_id mod 12 < 3  -> remove element
+ *      if \a lelement_id mod 12 < 3  -> leave element untouched
  * else if \a lelement_id mod 12 < 6  -> coarse element
- * else if \a lelement_id mod 12 < 9  -> leave element untouched
+ * else if \a lelement_id mod 12 < 9  -> remove element
  * else if \a lelement_id mod 12 < 12 -> refine element
 */
 int
@@ -150,27 +150,36 @@ t8_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t whic
   struct t8_return_data *return_data = (struct t8_return_data *) t8_forest_get_user_data (forest);
   T8_ASSERT (return_data != NULL);
 
-  int return_val = lelement_id % 12;
-  if (return_val < 3) {
-    return_val = -2;
-    if (t8_forest_get_eclass (forest_from, which_tree) == T8_ECLASS_VERTEX) {
-      return_val = 0;
-    }
+  const int id_mod_12 = lelement_id % 12;
+  int return_val;
+  switch (id_mod_12) {
+    case 0:
+    case 1:
+    case 2:
+    /* < 3 */
+      return_val = 0; // keep element
+      break;
+    case 3:
+    case 4:
+    case 5:
+    /* < 6 */
+      if (is_family) {
+        return_val = -1; // Coarsen family
+      } 
+      else {
+        return_val = 0; // keep if not part of a family
+      }
+      break;
+    case 6:
+    case 7:
+    case 8:
+      return_val = -2; // remove
+      break;
+    default:
+      return_val = 1; // refine
+      break;
   }
-  else if (return_val < 6) {
-    if (is_family) {
-      return_val = -1;
-    }
-    else {
-      return_val = 0;
-    }
-  }
-  else if (return_val < 9) {
-    return_val = 0;
-  }
-  else {
-    return_val = 1;
-  }
+
   T8_ASSERT (-3 < return_val);
   T8_ASSERT (return_val < 2);
 
