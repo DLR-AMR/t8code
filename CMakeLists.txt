@@ -13,6 +13,7 @@ option( T8CODE_BUILD_TESTS "Build t8code's automated tests" ON )
 option( T8CODE_BUILD_TUTORIALS "Build t8code's tutorials" ON )
 option( T8CODE_BUILD_EXAMPLES "Build t8code's examples" ON )
 option( T8CODE_BUILD_BENCHMARKS "Build t8code's benchmarks" ON )
+option( T8CODE_ENABLE_LESS_TESTS "Tests not as thoroughly to speed up the test suite. Tests the same functionality. (WARNING: Use with care.)" OFF )
 
 option( T8CODE_ENABLE_MPI "Enable t8code's features which rely on MPI" ON )
 option( T8CODE_ENABLE_VTK "Enable t8code's features which rely on VTK" OFF )
