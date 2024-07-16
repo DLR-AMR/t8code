@@ -105,7 +105,8 @@ t8_step2_write_forest_vtk (t8_forest_t forest, const char *prefix)
   sc_MPI_Comm comm = t8_forest_get_mpicomm (forest);
   //t8_forest_write_vtk (forest, prefix);
   //t8_write_vtk_via_API<t8_forest_t> (forest, std::string (prefix), 1, 1, 1, 1, 0, 1, 0, NULL, comm);
-  t8_write_vtk_via_API (forest, std::string (prefix), 1, 1, 1, 1, 1, 1, 0, NULL, comm);
+  vtk_writer<t8_forest_t> writer (true, true, true, true, true, false, std::string (prefix), 0, NULL, comm);
+  writer.write (forest);
 }
 
 /* Destroy a forest. This will free all allocated memory.
