@@ -12,6 +12,7 @@ option( T8CODE_BUILD_AS_SHARED_LIBRARY "Whether t8code should be built as a shar
 option( T8CODE_BUILD_TESTS "Build t8code's automated tests" ON )
 option( T8CODE_BUILD_TUTORIALS "Build t8code's tutorials" ON )
 option( T8CODE_BUILD_EXAMPLES "Build t8code's examples" ON )
+option( T8CODE_BUILD_BENCHMARKS "Build t8code's benchmarks" ON )
 
 option( T8CODE_ENABLE_MPI "Enable t8code's features which rely on MPI" ON )
 option( T8CODE_ENABLE_VTK "Enable t8code's features which rely on VTK" OFF )
@@ -92,6 +93,10 @@ endif()
 
 if ( T8CODE_BUILD_EXAMPLES )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/example )
+endif()
+
+if ( T8CODE_BUILD_BENCHMARKS )
+    add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/benchmarks )
 endif()
 
 if ( BUILD_DOCUMENTATION ) 
