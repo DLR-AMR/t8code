@@ -30,12 +30,12 @@ t8_fortran_init_all_ (sc_MPI_Comm * comm)
 {
   T8_ASSERT (comm != NULL);
   /* Initialize sc */
-  printf ("Sc init Start\n");
+  t8_debugf ("Sc init Start\n");
   sc_init (*comm, 1, 1, NULL, SC_LP_DEFAULT);
-  printf ("Sc init\n");
+  t8_debugf ("Sc init\n");
   /* Initialize t8code */
   t8_init (SC_LP_DEFAULT);
-  printf ("t8 init\n");
+  t8_debugf ("t8 init\n");
 }
 
 /* Wrapper around sc_finalize */
@@ -58,11 +58,11 @@ t8_fortran_init_all (sc_MPI_Comm * comm)
 {
   int                 rank;
 
-  printf ("Init all with comm %lu\n", (long unsigned) comm);
+  t8_debugf ("Init all with comm %lu\n", (long unsigned) comm);
   t8_fortran_init_all_ (comm);
   if (*comm != sc_MPI_COMM_NULL) {
     sc_MPI_Comm_rank (*comm, &rank);
-    printf ("rank = %i\n", rank);
+    t8_debugf ("rank = %i\n", rank);
   }
 
 }
@@ -92,7 +92,7 @@ t8_fortran_MPI_Comm_new (
    * yet. */
   sc_MPI_Comm        *Ccomm = (sc_MPI_Comm *) malloc (sizeof (*Ccomm));
   *Ccomm = MPI_Comm_f2c (Fcomm);
-  printf ("Created comm %lu\n", (long unsigned) Ccomm);
+  t8_debugf ("Created comm %lu\n", (long unsigned) Ccomm);
   return Ccomm;
 }
 
