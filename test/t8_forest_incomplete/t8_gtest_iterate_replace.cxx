@@ -153,31 +153,31 @@ t8_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t whic
   const int id_mod_12 = lelement_id % 12;
   int return_val;
   switch (id_mod_12) {
-    case 0:
-    case 1:
-    case 2:
+  case 0:
+  case 1:
+  case 2:
     /* < 3 */
-      return_val = 0; // keep element
-      break;
-    case 3:
-    case 4:
-    case 5:
+    return_val = 0;  // keep element
+    break;
+  case 3:
+  case 4:
+  case 5:
     /* < 6 */
-      if (is_family) {
-        return_val = -1; // Coarsen family
-      } 
-      else {
-        return_val = 0; // keep if not part of a family
-      }
-      break;
-    case 6:
-    case 7:
-    case 8:
-      return_val = -2; // remove
-      break;
-    default:
-      return_val = 1; // refine
-      break;
+    if (is_family) {
+      return_val = -1;  // Coarsen family
+    }
+    else {
+      return_val = 0;  // keep if not part of a family
+    }
+    break;
+  case 6:
+  case 7:
+  case 8:
+    return_val = -2;  // remove
+    break;
+  default:
+    return_val = 1;  // refine
+    break;
   }
 
   T8_ASSERT (-3 < return_val);
