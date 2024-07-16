@@ -632,9 +632,10 @@ t8_forest_adapt (t8_forest_t forest)
 
       /* It is not supported to delete all elements from a tree.
        * In this case, we will abort. */
-      SC_CHECK_ABORTF (el_inserted != 0, "ERROR: All elements of tree %i were removed. Removing all elements of a tree "
-      "is currently not supported. See also https://github.com/DLR-AMR/t8code/issues/1137.", ltree_id);
-
+      SC_CHECK_ABORTF (el_inserted != 0,
+                       "ERROR: All elements of tree %i were removed. Removing all elements of a tree "
+                       "is currently not supported. See also https://github.com/DLR-AMR/t8code/issues/1137.",
+                       ltree_id);
 
       /* clean up */
       T8_FREE (elements);
