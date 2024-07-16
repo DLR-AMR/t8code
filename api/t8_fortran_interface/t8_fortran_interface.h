@@ -50,6 +50,15 @@ T8_EXTERN_C_BEGIN ();
 void
 t8_fortran_init_all (sc_MPI_Comm *comm);
 
+/** Initialize sc and t8code with SC_MPI_COMM_NULL communicator
+ * and SC_LP_DEFAULT logging.
+ * This call is equivalent to
+ *   sc_init (comm, 1, 1, NULL, SC_LP_ESSENTIAL);
+ *   t8_init (SC_LP_DEFAULT);
+ */
+void
+t8_fortran_init_all_noMPI ()
+
 /** Finalize sc. This wraps sc_finalize in order to have consistent
  * naming with t8_fortran_init_all.
  */
