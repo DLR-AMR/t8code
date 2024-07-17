@@ -23,7 +23,9 @@ option( T8CODE_USE_SYSTEM_SC "Use system-installed sc library" OFF )
 option( T8CODE_USE_SYSTEM_P4EST "Use system-installed p4est library" OFF )
 
 option( T8CODE_BUILD_DOCUMENTATION "Build t8code's documentation" OFF )
-option( T8CODE_BUILD_DOCUMENTATION_SPHINX "Build t8code's documentation using sphinx" OFF )
+
+include(CMakeDependentOption)
+cmake_dependent_option( T8CODE_BUILD_DOCUMENTATION_SPHINX "Build t8code's documentation using sphinx" OFF "T8CODE_BUILD_DOCUMENTATION" OFF )
 
 set(T8CODE_CUSTOM_TEST_COMMAND "" CACHE STRING "Define custom test command, e.g.: mpirun -n 4")
 
@@ -103,8 +105,4 @@ endif()
 
 if ( T8CODE_BUILD_DOCUMENTATION )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/doc )
-endif()
-
-if ( T8CODE_BUILD_DOCUMENTATION_SPHINX )
-    set( T8CODE_BUILD_DOCUMENTATION 1 )
 endif()
