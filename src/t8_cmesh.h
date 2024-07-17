@@ -69,6 +69,12 @@ T8_EXTERN_C_BEGIN ();
 void
 t8_cmesh_init (t8_cmesh_t *pcmesh);
 
+/** Allocate a new un-committed cmesh.
+ * \return                     A pointer to an un-committed t8_cmesh structure.
+ */
+t8_cmesh_t
+t8_cmesh_new ();
+
 /** Check whether a cmesh is not NULL, initialized and not committed.
  * In addition, it asserts that the cmesh is consistent as much as possible.
  * \param [in] cmesh            This cmesh is examined.  May be NULL.
@@ -404,7 +410,7 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm);
  *       registered \a after the bcast operation, not before.
  */
 void
-t8_cmesh_register_geometry (t8_cmesh_t cmesh, t8_geometry_c **geometry);
+t8_cmesh_register_geometry (t8_cmesh_t cmesh, t8_geometry_c *geometry);
 
 /** Set the geometry for a tree, thus specify which geometry to use for this tree.
  * \param [in] cmesh     A non-committed cmesh.
