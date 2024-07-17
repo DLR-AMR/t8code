@@ -50,8 +50,8 @@ t8_forest_partition_data_stdvector (t8_forest_t forest_from, t8_forest_t forest_
   /* Create temporary sc array. */
   sc_array_t *data_in_view, *data_out_view;
 
-  T8_ASSERT (data_in_vec.size () == forest_from->local_num_elements);
-  T8_ASSERT (data_out_vec.size () == forest_to->local_num_elements);
+  T8_ASSERT (data_in_vec.size () == t8_forest_get_local_num_elements (forest_from));
+  T8_ASSERT (data_out_vec.size () == t8_forest_get_local_num_elements (forest_to));
 
   data_in_view = t8_create_sc_array_view_from_vector (data_in_vec);
   data_out_view = t8_create_sc_array_view_from_vector (data_out_vec);
