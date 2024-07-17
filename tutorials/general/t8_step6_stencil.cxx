@@ -373,12 +373,12 @@ t8_step6_main (int argc, char **argv)
   /* The uniform refinement level of the forest. */
   const int dim = 2;
 
-# if T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   /* Set lower refinement level. Otherwise the program is painfully slow. */
   const int level = 3;
-# else
+#else
   const int level = 6;
-# endif
+#endif
 
   /* The array that will hold our per element data. */
   data_per_element *data;
