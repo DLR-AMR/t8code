@@ -46,6 +46,11 @@ jobs:
   cmake_tests_parallel:
     needs: preparation
     timeout-minutes: 60
+    runs-on: ubuntu-latest
+    container: 
+      image: dlramr/t8code-ubuntu:t8-dependencies
+      volumes:
+        - docker_volume:/volume_mount
     steps:
     - name: get sc and p4est folders
       run: echo SC_DEBUG=${{ needs.preparation.outputs.SC_DEBUG }} >> $GITHUB_ENV
