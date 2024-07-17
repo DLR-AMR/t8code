@@ -217,7 +217,7 @@ jobs:
     - name: check OpenCASCADE
       run: echo "Checking OpenCASCADE with MPI in debugging mode"
     - name: cmake MPI OpenCASCADE debug
-      run: mkdir build_cad && cd build_cad && cmake ../ $CONFIG_DEBUG -DT8CODE_ENABLE_OCC=ON -DOpenCASCADE_DIR=/usr/include/opencascade
+      run: mkdir build_cad && cd build_cad && cmake ../ $CONFIG_DEBUG -DT8CODE_ENABLE_OCC=ON -DOpenCASCADE_DIR=/usr/local/lib/cmake/opencascade
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
@@ -240,7 +240,7 @@ jobs:
     - name: check VTK
       run: echo "Checking VTK with MPI in debugging mode"
     - name: cmake MPI VTK debug
-      run: mkdir build_vtk && cd build_vtk && cmake ../ $CONFIG_DEBUG -DT8CODE_ENABLE_VTK=ON -DVTK_DIR=/usr/local/include/vtk-9.1
+      run: mkdir build_vtk && cd build_vtk && cmake ../ $CONFIG_DEBUG -DT8CODE_ENABLE_VTK=ON -DVTK_DIR=/usr/local/lib/cmake/vtk-9.1
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
