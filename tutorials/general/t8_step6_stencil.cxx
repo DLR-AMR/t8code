@@ -214,10 +214,6 @@ t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_d
         t8_forest_leaf_face_neighbors (forest, itree, element, &neighbors, iface, &dual_faces, &num_neighbors,
                                        &neighids, &neigh_scheme, 1);
 
-
-        // t8_global_productionf (" itree = %d, ielement = %d, iface = %d, num_neigh = %d.\n", itree, ielement, iface, num_neighbors);
-
-
         /* Retrieve the `height` of the face neighbor. Account for two neighbors in case
            of a non-conforming interface by computing the average. */
         double height = 0.0;
