@@ -20,10 +20,12 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_fortran_interface/t8_fortran_interface.h>
-#include <t8_element_c_interface.h>
-#include <t8_schemes/t8_default.h>
+#include <api/t8_fortran_interface/t8_fortran_interface.h>
+#include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_geometrical.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
+#include <t8_cmesh/t8_cmesh_helpers.h>
+#include <t8_element_c_interface.h>
 
 void
 t8_fortran_init_all_ (sc_MPI_Comm * comm)
@@ -132,6 +134,7 @@ t8_fortran_adapt_by_coordinates_callback (t8_forest_t forest,
                                           t8_locidx_t which_tree,
                                           t8_locidx_t lelement_id,
                                           t8_eclass_scheme_c * ts,
+                                          const int is_family,
                                           int num_elements,
                                           t8_element_t * elements[])
 {
@@ -146,7 +149,7 @@ t8_fortran_adapt_by_coordinates_callback (t8_forest_t forest,
     callback (midpoint[0], midpoint[1], midpoint[2], num_elements > 0);
 
   /* Coarsen if a family was given and return value is negative. */
-  if (num_elements == t8_element_num_siblings (ts, elements[0])) {
+  if ( is_family ) {
     /* The elements form a family */
     T8_ASSERT (t8_element_is_family (ts, elements));
     /* Build the parent. */
