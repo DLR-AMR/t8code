@@ -95,6 +95,7 @@ class vtk_writer {
       write_ghosts (write_ghosts), curved_flag (curved_flag), fileprefix (fileprefix), num_data (num_data), data (data),
       comm (comm) {};
 
+#if T8_WITH_VTK
   /**
    * A vtk-writer function that uses the vtk API
    * 
@@ -103,12 +104,27 @@ class vtk_writer {
    * \return false 
    */
   bool
-  write (const grid_t grid)
+  write_with_API (const grid_t grid)
   {
     return write_vtk (grid);
   }
+#endif
+
+  /**
+   * A vtk-writer function that uses the vtk API
+   * 
+   * \param[in] grid The forest or cmesh that is translated
+   * \return true 
+   * \return false 
+   */
+  bool
+  write_ASCII (const grid_t grid)
+  {
+    return false;
+  }
 
  private:
+#if T8_WITH_VTK
   /**
  * Translate a single element from the forest into a vtkCell and fill the vtkArrays with
  * the data related to the element (not element_data).
@@ -385,6 +401,8 @@ class vtk_writer {
     return;
   }
 
+#endif
+
   /**
    * Write a vtk file given a forest or a cmesh
    * 
@@ -495,6 +513,7 @@ class vtk_writer {
   sc_MPI_Comm comm;
 };
 
+#if T8_WITH_VTK
 /**
  * \brief template specialization for forests. 
  * 
@@ -555,4 +574,6 @@ vtk_writer<t8_cmesh_t>::t8_grid_tree_to_vtk_cells (
   (*elem_id)++;
   return;
 }
+#endif
+
 #endif /* T8_VTK_WRITER_HXX */

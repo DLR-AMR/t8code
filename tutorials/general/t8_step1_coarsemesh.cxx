@@ -79,7 +79,7 @@ t8_step1_write_cmesh_vtk (t8_cmesh_t cmesh, const char *prefix)
   //t8_cmesh_vtk_write_file (cmesh, prefix);
   vtk_writer<t8_cmesh_t> writer (true, true, true, false, true, false, std::string (prefix), 0, NULL,
                                  sc_MPI_COMM_WORLD);
-  writer.write (cmesh);
+  writer.write_with_API (cmesh);
 }
 
 /* Destroy a cmesh. This will free all allocated memory.
