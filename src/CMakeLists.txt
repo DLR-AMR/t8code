@@ -60,7 +60,7 @@ endif()
 if( T8CODE_BUILD_PEDANTIC )
   # TODO: Add `-Wextra -Wpedantic`. As of now, t8code would not compile with this.
   target_compile_options( T8 PUBLIC -Wall -pedantic -Werror )
-  set (T8_CPPFLAGS "${T8_CPPFLAGS} -W -Wall -Wpedantic -Werror")
+  set (T8_CXXFLAGS "${T8_CXXFLAGS} -W -Wall -Wpedantic -Werror")
   set (T8_CFLAGS "${T8_CFLAGS} -W -Wall -Wpedantic -Werror")
 endif()
 
