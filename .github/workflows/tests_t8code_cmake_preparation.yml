@@ -52,8 +52,6 @@ on:
 
 jobs:
   reusable_cmake_preparation_workflow:
-    runs-on: ubuntu-latest
-    container: dlramr/t8code-ubuntu:t8-dependencies
     timeout-minutes: 20
     outputs:
       SC_DEBUG: ${{ steps.output_sc_folders.outputs.SC_DEBUG }}

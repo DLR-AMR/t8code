@@ -45,8 +45,6 @@ jobs:
   
   cmake_tests_parallel:
     needs: preparation
-    runs-on: ubuntu-latest
-    container: dlramr/t8code-ubuntu:t8-dependencies
     timeout-minutes: 60
     steps:
     - name: get sc and p4est folders
