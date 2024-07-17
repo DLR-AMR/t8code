@@ -559,7 +559,7 @@ t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, 
  *
  *   if (num_neighbors > 0) {
  *     eclass_scheme->t8_element_destroy (num_neighbors, neighbors);
- *     T8_FREE (neighbor_leaves);
+ *     T8_FREE (pneighbor_leaves);
  *     T8_FREE (pelement_indices);
  *     T8_FREE (dual_faces);
  *   }
