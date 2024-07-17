@@ -62,4 +62,17 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix)
   return writer.write_ASCII (cmesh);
 }
 
+#if T8_WITH_VTK
+void
+t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
+                                  const int write_treeid, const int write_mpirank, const int write_level,
+                                  const int write_element_id, const int write_ghosts, const int curved_flag,
+                                  const int num_data, t8_vtk_data_field_t *data)
+{
+    vtk_writer<t8_forest_t> writer (write_treeid, write_mpirank, write_element_id, write_ghosts, curved_flag,
+                                  std::string (fileprefix), num_data, data, t8_forest_get_mpicomm (forest));
+    writer.grid_to_vtkUnstructuredGrid(forest, unstructuredGrid);
+}
+#endif
+
 T8_EXTERN_C_END ();
