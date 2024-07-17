@@ -50,6 +50,9 @@ T8_EXTERN_C_BEGIN ();
 void
 t8_fortran_init_all (sc_MPI_Comm *comm);
 
+/** Finalize sc. This wraps sc_finalize in order to have consistent
+ * naming with t8_fortran_init_all.
+ */
 void
 t8_fortran_finalize ();
 
