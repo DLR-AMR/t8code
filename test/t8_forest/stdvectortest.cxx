@@ -59,7 +59,7 @@ TYPED_TEST_P (VectorTest, ElementComparisonTest)
 
 REGISTER_TYPED_TEST_SUITE_P (VectorTest, LengthTest, ElementComparisonTest);
 
-typedef ::testing::Types<int, double, float, char, short, long, long long, unsigned int, unsigned char, unsigned short,
-                         unsigned long, unsigned long long>
-  MyTypes;
-INSTANTIATE_TYPED_TEST_SUITE_P (MyVectorTests, VectorTest, MyTypes);
+using MyTypes = ::testing::Types<int, double, float, char, short, long, long long, unsigned int, unsigned char,
+                                 unsigned short, unsigned long, unsigned long long>;
+
+INSTANTIATE_TYPED_TEST_SUITE_P (MyVectorTests, VectorTest, MyTypes, );
