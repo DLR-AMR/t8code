@@ -52,7 +52,7 @@ jobs:
   build:
 
     if: 0
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     container: dlramr/t8code-ubuntu:t8-dependencies
     timeout-minutes: 90
     steps:
