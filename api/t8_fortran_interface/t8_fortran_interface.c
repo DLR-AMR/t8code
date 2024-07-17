@@ -185,7 +185,7 @@ t8_forest_adapt_by_coordinates (t8_forest_t forest,
 
   t8_debugf ("Starting t8_fortran_adapt_by_coordinates\n");
 
-  /* Initialze new forest */
+  /* Initialize new forest */
   t8_forest_init (&forest_new);
   /* Set the callback as user data */
   /* TODO: This is forbidden by ISO_C. We cannot pass a function pointer as a void *.
