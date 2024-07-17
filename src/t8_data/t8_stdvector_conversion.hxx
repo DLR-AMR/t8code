@@ -28,6 +28,7 @@
 #define T8_STDVECTOR_CONVERSION_H
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_iterate.h>
+#include <t8_forest/t8_forest_general.h>
 #include <vector>
 
 /* Template to create sc_array view from vector*/
