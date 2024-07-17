@@ -179,8 +179,7 @@ jobs:
     # build config vars
     - name: less-test-option
       if: github.event_name == 'pull_request'
-      #placeholder for future implementation of the less test option
-      run: export LESS_TEST_OPTION=""
+      run: export LESS_TEST_OPTION="-DT8CODE_ENABLE_LESS_TESTS=ON"
            && echo LESS_TEST_OPTION="$LESS_TEST_OPTION" >> $GITHUB_ENV
     - name: build config variables
       #TODO: Werror
