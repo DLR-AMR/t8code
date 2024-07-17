@@ -413,10 +413,8 @@ t8_step6_main (int argc, char **argv)
   /* Exchange the neighboring data at MPI process boundaries. */
   t8_step6_exchange_ghost_data (forest, data);
 
-  t8_global_productionf (" Before compute stencil.\n");
   /* Compute stencil. */
   t8_step6_compute_stencil (forest, data);
-  t8_global_productionf (" After compute stencil.\n");
 
   /* Output the data to vtu files. */
   t8_step6_output_data_to_vtu (forest, data, prefix_forest_with_data);
