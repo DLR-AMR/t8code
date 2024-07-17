@@ -53,6 +53,10 @@ if( T8CODE_ENABLE_OCC )
     target_link_libraries( T8 PUBLIC ${OpenCASCADE_LIBRARIES} )
 endif()
 
+if( T8CODE_ENABLE_LESS_TESTS )
+    target_compile_definitions( T8 PUBLIC T8_ENABLE_LESS_TESTS=1 )
+endif()
+
 target_sources( T8 PRIVATE 
     t8.c 
     t8_eclass.c 
