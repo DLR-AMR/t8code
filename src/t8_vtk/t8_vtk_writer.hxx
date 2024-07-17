@@ -109,6 +109,14 @@ class vtk_writer {
   {
   }
 
+#if T8_WITH_VTK
+  void
+  grid_to_vtkUnstructuredGrid (const grid_t grid, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid)
+  {
+    this->t8_grid_to_vtkUnstructuredGrid (grid, unstructuredGrid);
+  }
+#endif
+
   /**
    * A vtk-writer function that uses the vtk API
    * 
