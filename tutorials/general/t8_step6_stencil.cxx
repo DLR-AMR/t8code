@@ -214,6 +214,10 @@ t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_d
         t8_forest_leaf_face_neighbors (forest, itree, element, &neighbors, iface, &dual_faces, &num_neighbors,
                                        &neighids, &neigh_scheme, 1);
 
+
+        // t8_global_productionf (" itree = %d, ielement = %d, iface = %d, num_neigh = %d.\n", itree, ielement, iface, num_neighbors);
+
+
         /* Retrieve the `height` of the face neighbor. Account for two neighbors in case
            of a non-conforming interface by computing the average. */
         double height = 0.0;
@@ -244,10 +248,13 @@ t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_d
           break;
         }
 
-        /* Free allocated memory. */
-        T8_FREE (neighbors);
-        T8_FREE (dual_faces);
-        T8_FREE (neighids);
+        if (num_neighbors > 0) {
+          /* Free allocated memory. */
+          eclass_scheme->t8_element_destroy (num_neighbors, neighbors);
+          T8_FREE (neighbors);
+          T8_FREE (dual_faces);
+          T8_FREE (neighids);
+        }
       }
 
       /* Prepare finite difference computations. The code also accounts for non-conforming interfaces. */
@@ -369,7 +376,13 @@ t8_step6_main (int argc, char **argv)
 
   /* The uniform refinement level of the forest. */
   const int dim = 2;
+
+# if T8_ENABLE_DEBUG
+  /* Set lower refinement level. Otherwise the program is painfully slow. */
+  const int level = 3;
+# else
   const int level = 6;
+# endif
 
   /* The array that will hold our per element data. */
   data_per_element *data;
@@ -404,8 +417,10 @@ t8_step6_main (int argc, char **argv)
   /* Exchange the neighboring data at MPI process boundaries. */
   t8_step6_exchange_ghost_data (forest, data);
 
+  t8_global_productionf (" Before compute stencil.\n");
   /* Compute stencil. */
   t8_step6_compute_stencil (forest, data);
+  t8_global_productionf (" After compute stencil.\n");
 
   /* Output the data to vtu files. */
   t8_step6_output_data_to_vtu (forest, data, prefix_forest_with_data);
