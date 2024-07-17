@@ -82,7 +82,8 @@ libt8_installed_headers_geometry_impl = \
 libt8_installed_headers_vtk = \
   src/t8_vtk/t8_vtk_reader.hxx \
   src/t8_vtk/t8_vtk_writer.hxx \
-  src/t8_vtk/t8_vtk_types.h
+  src/t8_vtk/t8_vtk_types.h \
+  src/t8_vtk/t8_vtk_writer_c_interface.h
 libt8_installed_headers_schemes_default =
 libt8_installed_headers_default_common =
 libt8_installed_headers_default_vertex =
@@ -148,7 +149,8 @@ libt8_compiled_sources = \
   src/t8_vtk/t8_vtk_polydata.cxx \
   src/t8_vtk/t8_vtk_unstructured.cxx \
   src/t8_vtk/t8_vtk_parallel.cxx \
-  src/t8_vtk/t8_vtk_reader.cxx
+  src/t8_vtk/t8_vtk_reader.cxx \
+  src/t8_vtk/t8_vtk_writer_c_interface.ccc
 
 
 # this variable is used for headers that are not publicly installed
