@@ -76,7 +76,7 @@ target_sources( T8 PRIVATE
     t8_cmesh/t8_cmesh_vtk_reader.cxx 
     t8_cmesh/t8_cmesh_save.cxx 
     t8_cmesh/t8_cmesh_netcdf.c 
-    t8_cmesh/t8_cmesh_trees.c 
+    t8_cmesh/t8_cmesh_trees.cxx 
     t8_cmesh/t8_cmesh_commit.cxx 
     t8_cmesh/t8_cmesh_partition.cxx 
     t8_cmesh/t8_cmesh_copy.c 
