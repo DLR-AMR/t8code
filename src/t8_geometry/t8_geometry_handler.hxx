@@ -78,7 +78,7 @@ struct t8_geometry_handler
    * \param [in]  geom  The geometry to register.
    */
   void
-  register_geometry (t8_geometry **geom);
+  register_geometry (t8_geometry *geom);
 
   /**
    * Find a geometry by its name.

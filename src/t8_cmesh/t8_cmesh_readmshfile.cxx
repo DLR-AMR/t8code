@@ -498,7 +498,8 @@ die_node:
  * for each tree the indices of its vertices.
  * They are stored as arrays of long ints. */
 static int
-t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, sc_array_t **vertex_indices, int dim)
+t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, sc_array_t **vertex_indices,
+                               const int dim)
 {
   char *line = (char *) malloc (1024), *line_modify;
   char first_word[2048] = "\0";
@@ -809,8 +810,8 @@ t8_cmesh_correct_parameters_on_closed_geometry (const int geometry_dim, const in
  * We cannot access this geometry over the cmesh interface since the cmesh
  * is not committed yet. */
 static int
-t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, sc_array_t **vertex_indices, int dim,
-                               const t8_geometry_c *linear_geometry_base, const int use_cad_geometry,
+t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, sc_array_t **vertex_indices,
+                               const int dim, const t8_geometry_c *linear_geometry_base, const int use_cad_geometry,
                                const t8_geometry_c *cad_geometry_base)
 {
   char *line = (char *) malloc (1024), *line_modify;
@@ -1593,11 +1594,11 @@ t8_msh_file_face_set_boundary (void **face, const void *data)
 /* Given two faces and the classes of their volume trees,
  * compute the orientation of the faces to each other */
 static int
-t8_msh_file_face_orientation (t8_msh_file_face_t *Face_a, t8_msh_file_face_t *Face_b, t8_eclass_t tree_class_a,
-                              t8_eclass_t tree_class_b)
+t8_msh_file_face_orientation (const t8_msh_file_face_t *Face_a, const t8_msh_file_face_t *Face_b,
+                              const t8_eclass_t tree_class_a, const t8_eclass_t tree_class_b)
 {
   long vertex_zero; /* The number of the first vertex of the smaller face */
-  t8_msh_file_face_t *smaller_Face, *bigger_Face;
+  const t8_msh_file_face_t *smaller_Face, *bigger_Face;
   int compare, iv;
   t8_eclass_t bigger_class;
   int orientation = -1;
@@ -1648,7 +1649,7 @@ t8_msh_file_face_orientation (t8_msh_file_face_t *Face_a, t8_msh_file_face_t *Fa
 /* This routine does only find neighbors between local trees.
  * Use with care if cmesh is partitioned. */
 static void
-t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh, sc_array_t *vertex_indices)
+t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh, const sc_array_t *vertex_indices)
 {
   sc_hash_t *faces;
   t8_msh_file_face_t *Face, **pNeighbor, *Neighbor;
@@ -1766,8 +1767,8 @@ t8_cmesh_from_msh_file_register_geometries (t8_cmesh_t cmesh, const int use_cad_
 }
 
 t8_cmesh_t
-t8_cmesh_from_msh_file (const char *fileprefix, int partition, sc_MPI_Comm comm, int dim, int main_proc,
-                        int use_cad_geometry)
+t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm comm, const int dim,
+                        const int main_proc, const int use_cad_geometry)
 {
   int mpirank, mpisize, mpiret;
   t8_cmesh_t cmesh;
