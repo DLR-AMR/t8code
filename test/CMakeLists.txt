@@ -7,7 +7,6 @@ function( add_t8_test )
     set( multiValueArgs "SOURCES" )
     cmake_parse_arguments( ADD_T8_TEST "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
-    message("${T8CODE_CUSTOM_TEST_COMMAND_LIST}")
     add_executable( ${ADD_T8_TEST_NAME} ${ADD_T8_TEST_SOURCES} )
     target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 gtest )
 
