@@ -32,7 +32,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #if T8_WITH_VTK
 #include <vtkUnstructuredGrid.h>
 #endif
-template <typename grid_t>
 class vtk_writer {
  public:
   vtk_writer (const bool write_treeid, const bool write_mpirank, const bool write_level, const bool write_element_id,
@@ -42,6 +41,7 @@ class vtk_writer {
       write_ghosts (write_ghosts), curved_flag (curved_flag), fileprefix (fileprefix), num_data (num_data), data (data),
       comm (comm) {};
 
+  template <typename grid_t>
   bool
   write (const grid_t grid)
   {
@@ -55,6 +55,7 @@ class vtk_writer {
  * \param[in] grid a forest or a cmesh
  * \param[in, out] unstructuredGrid an unstructuredGrid that we want to fill with the data of \a grid
  */
+  template <typename grid_t>
   void
   t8_grid_to_vtkUnstructuredGrid (const grid_t grid, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid)
   {
@@ -155,6 +156,7 @@ class vtk_writer {
     return;
   }
 
+  template <typename grid_t>
   bool
   write_vtk (const grid_t grid)
   {
@@ -246,15 +248,15 @@ class vtk_writer {
 #endif
   }
 
-  bool write_treeid;
-  bool write_mpirank;
-  bool write_level;
-  bool write_element_id;
-  bool write_ghosts;
-  bool curved_flag;
+  bool write_treeid = false;
+  bool write_mpirank = false;
+  bool write_level = false;
+  bool write_element_id = false;
+  bool write_ghosts = false;
+  bool curved_flag = false;
   std::string fileprefix;
-  int num_data;
-  t8_vtk_data_field_t *data;
+  int num_data = 0;
+  t8_vtk_data_field_t *data = NULL;
   sc_MPI_Comm comm;
 };
 
