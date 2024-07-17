@@ -53,6 +53,10 @@ if( T8CODE_ENABLE_OCC )
     target_link_libraries( T8 PUBLIC ${OpenCASCADE_LIBRARIES} )
 endif()
 
+if( T8CODE_ENABLE_LESS_TESTS )
+    target_compile_definitions( T8 PUBLIC T8_ENABLE_LESS_TESTS=1 )
+endif()
+
 target_sources( T8 PRIVATE 
     t8.c 
     t8_eclass.c 
@@ -138,11 +142,12 @@ target_compile_definitions( T8 PUBLIC T8_CPP="${CMAKE_CXX_COMPILER}" )
 target_compile_definitions( T8 PUBLIC T8_CPPFLAGS="${T8_CPPFLAGS}" )
 target_compile_definitions( T8 PUBLIC T8_LDFLAGS="${CMAKE_SHARED_LINKER_FLAGS}" )
 
-target_compile_definitions( T8 PUBLIC T8_PACKAGE_STRING="t8 ${T8CODE_VERSION_RAW}" )
+target_compile_definitions( T8 PUBLIC T8_PACKAGE_STRING="t8 ${T8CODE_VERSION}" )
 target_compile_definitions( T8 PUBLIC T8_VERSION="${T8CODE_VERSION}" )
 target_compile_definitions( T8 PUBLIC T8_VERSION_MAJOR=${T8CODE_VERSION_MAJOR} )
 target_compile_definitions( T8 PUBLIC T8_VERSION_MINOR=${T8CODE_VERSION_MINOR} )
 target_compile_definitions( T8 PUBLIC T8_VERSION_PATCH=${T8CODE_VERSION_PATCH} )
+target_compile_definitions( T8 PUBLIC T8_VERSION_POINT=${T8CODE_VERSION_POINT} )
 
 get_target_property( T8_LIBS_LIST T8 LINK_LIBRARIES )
 string( REPLACE ";" " " T8_LIBS "${T8_LIBS_LIST}" )

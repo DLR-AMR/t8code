@@ -179,6 +179,14 @@ t8_cmesh_init (t8_cmesh_t *pcmesh)
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 }
 
+t8_cmesh_t
+t8_cmesh_new ()
+{
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  return cmesh;
+}
+
 void
 t8_cmesh_set_derive (const t8_cmesh_t cmesh, const t8_cmesh_t set_from)
 {
