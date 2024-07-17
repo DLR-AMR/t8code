@@ -27,6 +27,11 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_vtk.h>
 #include <t8_forest/t8_forest_types.h>
 
+#if T8_WITH_VTK
+#include <vtkUnstructuredGrid.h>
+#endif
+T8_EXTERN_C_BEGIN ();
+
 /** Write the forest in .pvtu file format. Writes one .vtu file per
  * process and a meta .pvtu file.
  * This function uses the vtk library. t8code must be configured with
@@ -115,4 +120,6 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest, vtkSmartPointer<vtkUnstruc
                                   const int write_element_id, const int write_ghosts, const int curved_flag,
                                   const int num_data, t8_vtk_data_field_t *data);
 #endif
+
+T8_EXTERN_C_END ();
 #endif /* T8_VTK_WRITER_C_INTERFACE_H */

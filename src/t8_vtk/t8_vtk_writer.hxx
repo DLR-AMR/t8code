@@ -30,13 +30,12 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8.h>
 #include "t8_forest/t8_forest_types.h"
 #include "t8_vtk/t8_vtk_writer_helper.hxx"
+#include "t8_vtk/t8_vtk_write_ASCII.hxx"
 
 #include <string>
 #include <t8_vtk.h>
 #include <t8_element.hxx>
 #include <t8_vec.h>
-#include <t8_cmesh_vtk_writer.h>
-#include <t8_forest/t8_forest_vtk.h>
 
 #if T8_WITH_VTK
 #include <vtkUnstructuredGrid.h>
@@ -600,16 +599,16 @@ template <>
 bool
 vtk_writer<t8_forest_t>::write_ASCII (const t8_forest_t forest)
 {
-  return t8_forest_vtk_write_file (forest, this->fileprefix.c_str (), this->write_treeid, this->write_mpirank,
-                                   this->write_level, this->write_element_id, this->write_ghosts, this->num_data,
-                                   this->data);
+  return t8_forest_vtk_write_ASCII (forest, this->fileprefix.c_str (), this->write_treeid, this->write_mpirank,
+                                    this->write_level, this->write_element_id, this->write_ghosts, this->num_data,
+                                    this->data);
 }
 
 template <>
 bool
 vtk_writer<t8_cmesh_t>::write_ASCII (const t8_cmesh_t forest)
 {
-  return t8_cmesh_vtk_write_file (forest, this->fileprefix.c_str ());
+  return t8_cmesh_vtk_write_ASCII (forest, this->fileprefix.c_str ());
 }
 
 #endif /* T8_VTK_WRITER_HXX */

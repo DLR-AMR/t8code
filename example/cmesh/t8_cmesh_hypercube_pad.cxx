@@ -22,11 +22,12 @@
 
 #include <t8.h>
 #include <t8_cmesh.h>
-#include <t8_cmesh_vtk_writer.h>
+#include <t8_vtk/t8_vtk_writer_c_interface.h>
+
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_forest/t8_forest_vtk.h>
+#include <t8_vtk/t8_vtk_writer_c_interface.h>
 int
 main (int argc, char **argv)
 {

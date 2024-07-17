@@ -33,7 +33,7 @@
 #include <example/common/t8_example_common.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh_readmshfile.h>
-#include <t8_cmesh_vtk_writer.h>
+#include <t8_vtk/t8_vtk_writer_c_interface.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_vec.h>
 

@@ -25,6 +25,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <t8.h>
 #include <t8_element.hxx>
+#include <t8_forest/t8_forest_geometrical.h>
 
 #define T8_FOREST_VTK_QUADRATIC_ELEMENT_MAX_CORNERS 20
 /** Lookup table for number of nodes for curved eclasses. */

@@ -23,6 +23,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_vtk/t8_vtk_writer_c_interface.h>
 #include <t8_vtk/t8_vtk_writer.hxx>
 #include <string>
+#include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_types.h>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -32,7 +34,7 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix, co
                                   const int curved_flag, const int write_ghosts, const int num_data,
                                   t8_vtk_data_field_t *data)
 {
-  vtk_writer<t8_forest_t> writer (write_treeid, write_mpirank, write_element_id, write_ghosts, curved_flag,
+  vtk_writer<t8_forest_t> writer (write_treeid, write_mpirank, write_level, write_element_id, write_ghosts, curved_flag,
                                   std::string (fileprefix), num_data, data, t8_forest_get_mpicomm (forest));
   return writer.write_with_API (forest);
 }
@@ -42,7 +44,7 @@ t8_forest_vtk_write_file (t8_forest_t forest, const char *fileprefix, const int 
                           const int write_level, const int write_element_id, int write_ghosts, const int num_data,
                           t8_vtk_data_field_t *data)
 {
-  vtk_writer<t8_forest_t> writer (write_treeid, write_mpirank, write_element_id, write_ghosts, curved_flag,
+  vtk_writer<t8_forest_t> writer (write_treeid, write_mpirank, write_level, write_element_id, write_ghosts, false,
                                   std::string (fileprefix), num_data, data, t8_forest_get_mpicomm (forest));
   return writer.write_ASCII (forest);
 }
@@ -69,9 +71,9 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest, vtkSmartPointer<vtkUnstruc
                                   const int write_element_id, const int write_ghosts, const int curved_flag,
                                   const int num_data, t8_vtk_data_field_t *data)
 {
-    vtk_writer<t8_forest_t> writer (write_treeid, write_mpirank, write_element_id, write_ghosts, curved_flag,
-                                  std::string (fileprefix), num_data, data, t8_forest_get_mpicomm (forest));
-    writer.grid_to_vtkUnstructuredGrid(forest, unstructuredGrid);
+  vtk_writer<t8_forest_t> writer (write_treeid, write_mpirank, write_level, write_element_id, write_ghosts, curved_flag,
+                                  std::string (""), num_data, data, t8_forest_get_mpicomm (forest));
+  writer.grid_to_vtkUnstructuredGrid (forest, unstructuredGrid);
 }
 #endif
 

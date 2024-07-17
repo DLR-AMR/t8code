@@ -34,10 +34,6 @@
 T8_EXTERN_C_BEGIN ();
 /* function declarations */
 
-/* TODO: document this function */
-int
-t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix);
-
 T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_VTK_H */
