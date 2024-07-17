@@ -59,6 +59,8 @@ t8_geometry_with_vertices::t8_geom_tree_negative_volume () const
     /* Only three dimensional eclass do have a volume */
     return false;
   }
+  T8_ASSERT (t8_eclass_to_dimension[active_tree_class]
+             == 3);  // Should we include 4 dimensional classes, we need to catch that here and implement it.
   T8_ASSERT (active_tree_class == T8_ECLASS_TET || active_tree_class == T8_ECLASS_HEX
              || active_tree_class == T8_ECLASS_PRISM || active_tree_class == T8_ECLASS_PYRAMID);
 
@@ -102,6 +104,11 @@ t8_geometry_with_vertices::t8_geom_tree_negative_volume () const
   t8_vec_cross (v_1, v_2, cross);
   /* Compute sc_prod = <v_j, cross> */
   sc_prod = t8_vec_dot (v_j, cross);
+
+  for (i = 0; i < 3; ++i) {
+    t8_debugf ("Vertex %i: %f %f %f\n", i, active_tree_vertices[3 * i], active_tree_vertices[3 * i + 1],
+               active_tree_vertices[3 * i + 2]);
+  }
 
   T8_ASSERT (sc_prod != 0);
   return active_tree_class == T8_ECLASS_TET ? sc_prod > 0 : sc_prod < 0;

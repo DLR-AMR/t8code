@@ -27,6 +27,7 @@
 
 #include <vector>
 #include <algorithm>
+#include <iostream>
 #include "t8_cmesh_stash.h"
 #include "t8_cmesh_trees.h"
 
@@ -272,9 +273,6 @@ t8_cmesh_trees_finish_part (const t8_cmesh_trees_t trees, const int proc)
   size_t tree_attr_bytes;
   size_t ghost_attr_bytes;
   size_t face_neigh_bytes;    /* count the total number of bytes needed for face_neighbor information */
-  size_t first_face;          /* offset of the first face neighbor information */
-  size_t first_tree;          /* offset of the first tree */
-  size_t first_ghost;         /* offset of the first ghost */
   size_t temp_offset;         /* offset of the currently looked at tree/ghost */
   size_t num_tree_attributes; /* total number of tree attributes */
   t8_attribute_info_struct_t *attr;
@@ -290,11 +288,11 @@ t8_cmesh_trees_finish_part (const t8_cmesh_trees_t trees, const int proc)
   num_tree_attributes = 0;
   tree_attr_bytes = ghost_attr_bytes = face_neigh_bytes = 0;
   /* The offset of the first tree */
-  first_tree = 0;
+  const size_t first_tree = 0;
   /* The offset of the first ghost */
-  first_ghost = first_tree + part->num_trees * sizeof (t8_ctree_struct_t);
+  const size_t first_ghost = first_tree + part->num_trees * sizeof (t8_ctree_struct_t);
   /* The offset of the first ghost face */
-  first_face = first_ghost + part->num_ghosts * sizeof (t8_cghost_struct_t);
+  const size_t first_face = first_ghost + part->num_ghosts * sizeof (t8_cghost_struct_t);
 
   /* First pass through ghosts to set the face neighbor offsets. */
   /* Additionally, we need to sort the number of attributes according to the global id in order
@@ -336,6 +334,13 @@ t8_cmesh_trees_finish_part (const t8_cmesh_trees_t trees, const int proc)
   /* We now need to sort the offset sum by local id again. */
   std::sort (num_attributes_of_ghosts.begin (), num_attributes_of_ghosts.end (), t8_compare_id_and_att_by_part_id);
 
+  t8_debugf ("Outputting vector: ");
+  for (const auto &att : num_attributes_of_ghosts) {
+    std::cout << att.global_id << ',';
+    std::cout << att.attribute_offset << ' ';
+  }
+
+  t8_debugf ("DONE\n");
   /* First pass through trees to set the face neighbor offsets */
   temp_offset = 0;
   for (it = 0; it < part->num_trees; it++) {
@@ -350,6 +355,7 @@ t8_cmesh_trees_finish_part (const t8_cmesh_trees_t trees, const int proc)
 
   /* Second pass through trees to set attribute offsets */
   temp_offset = 0;
+  size_t next_tree_offset = 0;  // Compute the offset of the next tree
   for (it = 0; it < part->num_trees; it++) {
     tree = t8_part_tree_get_tree (part, it + part->first_tree_id);
     tree_attr_bytes += tree->att_offset; /* att_offset temporarily stored the total size of the attributes */
@@ -357,22 +363,33 @@ t8_cmesh_trees_finish_part (const t8_cmesh_trees_t trees, const int proc)
      * bytes used by previous trees minus the temp_offset */
     tree->att_offset
       = first_face - temp_offset + face_neigh_bytes + num_tree_attributes * sizeof (t8_attribute_info_struct_t);
+    T8_ASSERT (it == 0 || tree->att_offset == next_tree_offset);
     num_tree_attributes += tree->num_attributes;
     temp_offset += sizeof (t8_ctree_struct_t);
+    t8_debugf ("Offset of tree %i is %i\n", it, tree->att_offset);
+    next_tree_offset
+      = tree->att_offset + tree->num_attributes * sizeof (t8_attribute_info_struct_t) - sizeof (t8_ctree_struct_t);
+    t8_debugf ("Size of tree attributes: %i\n", tree->num_attributes * sizeof (t8_attribute_info_struct_t));
   }
+  t8_debugf ("Size of tree: %i\n", sizeof (t8_ctree_struct_t));
   tree_attr_bytes += num_tree_attributes * sizeof (t8_attribute_info_struct_t);
 
   /* Second pass through ghosts to set attribute offsets */
-  temp_offset = first_ghost;
-  size_t num_ghost_attributes = 0; /* total number of ghost attributes */
+  temp_offset = 0;
+  size_t num_ghost_attributes = 0;               /* total number of ghost attributes */
+  size_t first_ghost_offset = next_tree_offset;  // Offset of the first Ghost attribute info
   for (it = 0; it < part->num_ghosts; it++) {
     ghost = t8_part_tree_get_ghost (part, it + part->first_ghost_id);
     ghost_attr_bytes += ghost->att_offset; /* att_offset temporarily stored the total size of the attributes */
-    /* The att_offset of the tree is the first_face plus the number of attribute
-     * bytes used by previous trees minus the temp_offset */
-    ghost->att_offset = first_face - temp_offset + face_neigh_bytes + tree_attr_bytes
-                        + num_attributes_of_ghosts[it].attribute_offset * sizeof (t8_attribute_info_struct_t);
+    /* The att_offset of the ghost is the offset of the first ghost + the attribute
+     * offset of this ghost minus the size of all previous ghosts. */
+    ghost->att_offset = first_ghost_offset
+                        + num_attributes_of_ghosts[it].attribute_offset * sizeof (t8_attribute_info_struct_t)
+                        - temp_offset;
     temp_offset += sizeof (t8_cghost_struct_t);
+    num_ghost_attributes += ghost->num_attributes;
+    t8_debugf ("Offset of ghost %i is %i\n", it, ghost->att_offset);
+    t8_debugf ("Size of ghost attributes is %i\n", ghost->num_attributes * sizeof (t8_attribute_info_struct_t));
   }
   ghost_attr_bytes += num_ghost_attributes * sizeof (t8_attribute_info_struct_t);
   size_t attr_bytes = tree_attr_bytes + ghost_attr_bytes;
