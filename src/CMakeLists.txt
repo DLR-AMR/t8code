@@ -9,17 +9,17 @@ endif()
 add_library( T8CODE::T8 ALIAS T8 )
 
 if( CMAKE_BUILD_TYPE STREQUAL "Release" )
-  set (T8_CPPFLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE}")
+  set (T8_CXXFLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE}")
   set (T8_CFLAGS "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_RELEASE}")
 endif()
 
 if( CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo" )
-  set (T8_CPPFLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+  set (T8_CXXFLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
   set (T8_CFLAGS "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_RELWITHDEBINFO}")
 endif()
 
 if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
-  set (T8_CPPFLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG}")
+  set (T8_CXXFLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG}")
   set (T8_CFLAGS "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_DEBUG}")
 
     target_compile_definitions( T8 PUBLIC T8_ENABLE_DEBUG )
@@ -138,8 +138,8 @@ target_sources( T8 PRIVATE
 target_compile_definitions( T8 PUBLIC T8_CMAKE_BUILD )
 target_compile_definitions( T8 PUBLIC T8_CC="${CMAKE_C_COMPILER}" )
 target_compile_definitions( T8 PUBLIC T8_CFLAGS="${T8_CFLAGS}" )
-target_compile_definitions( T8 PUBLIC T8_CPP="${CMAKE_CXX_COMPILER}" )
-target_compile_definitions( T8 PUBLIC T8_CPPFLAGS="${T8_CPPFLAGS}" )
+target_compile_definitions( T8 PUBLIC T8_CXX="${CMAKE_CXX_COMPILER}" )
+target_compile_definitions( T8 PUBLIC T8_CXXFLAGS="${T8_CXXFLAGS}" )
 target_compile_definitions( T8 PUBLIC T8_LDFLAGS="${CMAKE_SHARED_LINKER_FLAGS}" )
 
 target_compile_definitions( T8 PUBLIC T8_PACKAGE_STRING="t8 ${T8CODE_VERSION}" )
