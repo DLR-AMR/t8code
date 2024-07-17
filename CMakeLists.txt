@@ -9,6 +9,7 @@ project( T8CODE
 include( CTest )
 
 option( T8CODE_BUILD_AS_SHARED_LIBRARY "Whether t8code should be built as a shared or a static library" ON )
+option( T8CODE_BUILD_PEDANTIC "Compile t8code with `-Wall -pedantic -Werror` as done in the Github CI." OFF )
 option( T8CODE_BUILD_TESTS "Build t8code's automated tests" ON )
 option( T8CODE_BUILD_TUTORIALS "Build t8code's tutorials" ON )
 option( T8CODE_BUILD_EXAMPLES "Build t8code's examples" ON )
@@ -31,7 +32,7 @@ if( NOT CMAKE_BUILD_TYPE )
     set( CMAKE_BUILD_TYPE "Release" )
 endif()
 
-set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Release RelWithDebInfo Debug)
+set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Release RelWithDebInfo Debug Github-CI)
 
 set( CMAKE_C_STANDARD 11 )
 set( CMAKE_C_STANDARD_REQUIRED ON )

@@ -57,6 +57,13 @@ if( T8CODE_ENABLE_LESS_TESTS )
     target_compile_definitions( T8 PUBLIC T8_ENABLE_LESS_TESTS=1 )
 endif()
 
+if( T8CODE_BUILD_PEDANTIC )
+  # TODO: Add `-Wextra -Wpedantic`. As of now, t8code would not compile with this.
+  target_compile_options( T8 PUBLIC -Wall -pedantic -Werror )
+  set (T8_CPPFLAGS "${T8_CPPFLAGS} -W -Wall -Wpedantic -Werror")
+  set (T8_CFLAGS "${T8_CFLAGS} -W -Wall -Wpedantic -Werror")
+endif()
+
 target_sources( T8 PRIVATE 
     t8.c 
     t8_eclass.c 
