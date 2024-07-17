@@ -22,8 +22,8 @@ option( T8CODE_ENABLE_OCC "Enable t8code's features which rely on OpenCASCADE" O
 option( T8CODE_USE_SYSTEM_SC "Use system-installed sc library" OFF )
 option( T8CODE_USE_SYSTEM_P4EST "Use system-installed p4est library" OFF )
 
-option( T8CODE_BUILD_DOCUMENTATION "Build t8code's documentation" ON)
-option( T8CODE_BUILD_SPHINX_DOCUMENTATION "Build t8code's documentation using sphinx" OFF)
+option( T8CODE_BUILD_DOCUMENTATION "Build t8code's documentation" OFF )
+option( T8CODE_BUILD_SPHINX_DOCUMENTATION "Build t8code's documentation using sphinx" OFF )
 
 
 if( NOT CMAKE_BUILD_TYPE )
