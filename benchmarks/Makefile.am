@@ -8,7 +8,7 @@ bin_PROGRAMS += \
   benchmarks/t8_time_prism_adapt \
   benchmarks/t8_time_fractal \
   benchmarks/t8_time_set_join_by_vertices \
- benchmarks/t8_time_new_refine
+  benchmarks/t8_time_new_refine
  # benchmarks/t8_time_refine_type03
 
 benchmarks_t8_time_new_refine_SOURCES = benchmarks/time_new_refine.c
