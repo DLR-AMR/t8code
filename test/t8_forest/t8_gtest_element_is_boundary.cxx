@@ -158,12 +158,7 @@ t8_test_element_is_boundary_for_forest (t8_forest_t forest, t8_cmesh_t cmesh,
           /* each element and face is an expected boundary */
           face_is_at_boundary = 1;
         }
-        if (face_is_at_boundary) {
-          EXPECT_TRUE (t8_forest_leaf_is_boundary (forest, itree, leaf_element, iface));
-        }
-        else {
-          EXPECT_FALSE (t8_forest_leaf_is_boundary (forest, itree, leaf_element, iface));
-        }
+        EXPECT_EQ (t8_forest_leaf_is_boundary (forest, itree, leaf_element, iface), face_is_at_boundary);
       }
     }
   }
