@@ -43,6 +43,9 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
 #endif
+#include <t8_data/t8_element_array_iterator.hxx>
+
+#include <algorithm>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -1446,41 +1449,33 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
 static t8_locidx_t
 t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_linearidx_t element_id, const int maxlevel)
 {
-  t8_linearidx_t query_id;
-  t8_locidx_t low, high, guess;
-
   const t8_eclass_scheme_c *ts = t8_element_array_get_scheme (elements);
   /* At first, we check whether any element has smaller id than the
    * given one. */
   const t8_element_t *query = t8_element_array_index_int (elements, 0);
-  query_id = ts->t8_element_get_linear_id (query, maxlevel);
+  const t8_linearidx_t query_id = ts->t8_element_get_linear_id (query, maxlevel);
   if (query_id > element_id) {
     /* No element has id smaller than the given one */
     return -1;
   }
 
-  /* We now perform the binary search */
-  low = 0;
-  high = t8_element_array_get_count (elements) - 1;
-  while (low < high) {
-    guess = (low + high + 1) / 2;
-    query = t8_element_array_index_int (elements, guess);
-    query_id = ts->t8_element_get_linear_id (query, maxlevel);
-    if (query_id == element_id) {
-      /* we are done */
-      return guess;
-    }
-    else if (query_id > element_id) {
-      /* look further left */
-      high = guess - 1;
-    }
-    else {
-      /* look further right, but keep guess in the search range */
-      low = guess;
-    }
-  }
-  T8_ASSERT (low == high);
-  return low;
+  /* A typedef for the value type of the t8_element_array_t iterator */
+  using element_ptr_t = t8_element_t *;
+
+  /* We search for the first element in the array that is greater than the given element id */
+  auto elem_iter
+    = std::upper_bound (t8_element_array_begin (elements), t8_element_array_end (elements), element_id,
+                        [&maxlevel, &ts] (const t8_linearidx_t element_id_, const element_ptr_t &elem_ptr) {
+                          const t8_linearidx_t elem_id = ts->t8_element_get_linear_id (elem_ptr, maxlevel);
+                          return (element_id_ < elem_id);
+                        });
+
+  /* After we found the element with an id greater than the given one, we are able to jump one index back.
+   * This guarantees us that the element at (index - 1) is smaller or equal to the given element id.
+   * In case we do not find an element that is greater than the given element_id, we binary search returns
+   * the end-iterator of the element array. In that case, we want to return the last index from the element
+   * array. */
+  return elem_iter.GetArrayIndex () - 1;
 }
 
 t8_eclass_t
