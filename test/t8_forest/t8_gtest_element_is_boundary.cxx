@@ -24,7 +24,7 @@
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest_private.h>
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
 #include <test/t8_gtest_macros.hxx>
@@ -85,7 +85,6 @@ class element_is_boundary: public testing::TestWithParam<std::tuple<int, cmesh_e
   void
   SetUp () override
   {
-    GTEST_SKIP ();
     /* Construct a cmesh */
     const int level = std::get<0> (GetParam ());
     cmesh = std::get<1> (GetParam ())->cmesh_create ();
@@ -106,7 +105,6 @@ class element_is_boundary: public testing::TestWithParam<std::tuple<int, cmesh_e
   void
   TearDown () override
   {
-    GTEST_SKIP ();
     if (t8_cmesh_is_empty (cmesh)) {
       t8_cmesh_destroy (&cmesh);
     }
@@ -195,6 +193,46 @@ TEST (element_is_boundary, quad_forest_with_holes)
   t8_forest_unref (&forest_adapt);
 }
 
+/* This test class creates a single tree cmesh for each eclass and
+ * builds a uniform level 0 forest on it.
+ * For the single element in that forest all faces lie on the boundary. */
+class element_is_boundary_known_boundary: public testing::TestWithParam<t8_eclass_t> {
+protected:
+  void
+  SetUp () override
+  {
+    eclass = GetParam();
+    cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
+    t8_scheme_cxx_t *scheme = t8_scheme_new_default_cxx ();
+    forest = t8_forest_new_uniform (cmesh, scheme, 0, 0, sc_MPI_COMM_WORLD);
+  }
+
+  void
+  TearDown () override
+  {
+    t8_forest_unref (&forest);
+  }
+
+  t8_cmesh_t cmesh;
+  t8_forest_t forest;  
+  t8_eclass_t eclass;
+};
+
+/* For a level 0 forest of a single class cmesh all faces should
+ * be at the boundary. */
+TEST_P (element_is_boundary_known_boundary, level_0) {
+  const t8_locidx_t num_elements = t8_forest_get_local_num_elements (forest);
+  if (num_elements > 0) {
+    T8_ASSERT (num_elements == 1);
+    const t8_element_t * element = t8_forest_get_element_in_tree (forest, 0, 0);
+    const t8_eclass_scheme_c * scheme = t8_forest_get_eclass_scheme (forest, eclass);
+    const int num_faces = scheme->t8_element_num_faces (element);
+    for (int iface = 0;iface < num_faces;++iface) {
+      EXPECT_TRUE (t8_forest_leaf_is_boundary (forest, 0, element, iface));
+    }
+  }
+}
+
 /* Define a lambda to beautify gtest output for tuples <level, cmesh>.
  * This will set the correct level and cmesh name as part of the test case name. */
 auto pretty_print_level_and_cmesh_params
@@ -209,3 +247,7 @@ auto pretty_print_level_and_cmesh_params
 INSTANTIATE_TEST_SUITE_P (t8_gtest_element_is_boundary, element_is_boundary,
                           testing::Combine (testing::Range (0, T8_IS_BOUNDARY_MAX_LVL), AllCmeshsParam),
                           pretty_print_level_and_cmesh_params);
+
+
+INSTANTIATE_TEST_SUITE_P (t8_gtest_element_is_boundary, element_is_boundary_known_boundary,
+                          AllEclasses, print_eclass);
