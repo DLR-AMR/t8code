@@ -63,10 +63,12 @@ jobs:
       run: git config --global --add safe.directory '*'
     - name: Get input vars
       run: export MAKEFLAGS="${{ inputs.MAKEFLAGS }}"
+        && export MPI="${{ inputs.MPI }}"
         && export SC_DEBUG="${{ inputs.SC_DEBUG }}"
         && export SC_RELEASE="${{ inputs.SC_RELEASE }}"
         && export P4EST_DEBUG="${{ inputs.P4EST_DEBUG }}"
         && export P4EST_RELEASE="${{ inputs.P4EST_RELEASE }}"
+        && echo MPI="$MPI" >> $GITHUB_ENV
         && echo MAKEFLAGS="$MAKEFLAGS" >> $GITHUB_ENV
         && echo SC_DEBUG="$SC_DEBUG" >> $GITHUB_ENV
         && echo SC_RELEASE="$SC_RELEASE" >> $GITHUB_ENV
@@ -81,7 +83,7 @@ jobs:
       run: export LESS_TEST_OPTION="-DT8CODE_ENABLE_LESS_TESTS=ON"
         && echo LESS_TEST_OPTION="$LESS_TEST_OPTION" >> $GITHUB_ENV
     - name: build config variables
-      run: export CONFIG_OPTIONS="${LESS_TEST_OPTION} -DT8CODE_USE_SYSTEM_SC=ON -DT8CODE_USE_SYSTEM_P4EST=ON -DT8CODE_BUILD_PEDANTIC=ON"
+      run: export CONFIG_OPTIONS="${LESS_TEST_OPTION} -DT8CODE_USE_SYSTEM_SC=ON -DT8CODE_USE_SYSTEM_P4EST=ON -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_ENABLE_MPI=$MPI"
         && export CONFIG_DEBUG="$CONFIG_OPTIONS -DCMAKE_BUILD_TYPE=Debug -DSC_DIR=$SC_DEBUG/install/cmake -DP4EST_DIR=$P4EST_DEBUG/install/cmake"
         && export CONFIG_RELEASE="$CONFIG_OPTIONS -DCMAKE_BUILD_TYPE=Release -DSC_DIR=/install/cmake -DP4EST_DIR=$P4EST_RELEASE/install/cmake"
         && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV

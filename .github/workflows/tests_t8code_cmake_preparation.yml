@@ -55,7 +55,7 @@ on:
         value: ${{ jobs.cmake_preparation.outputs.USED_CACHE }}
 
 env:
-  USED_CACHE: ${{ inputs.IGNORE_CACHE }}
+  USED_CACHE: ${{ !inputs.IGNORE_CACHE }}
 
 jobs:
   cmake_preparation:
