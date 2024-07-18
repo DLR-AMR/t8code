@@ -101,6 +101,12 @@ jobs:
       run: echo "Checking release mode"
     - name: echo cmake line
       run: echo cmake $CONFIG_RELEASE
+    - name: debug
+      run: apt install tree -y
+    - name: debug2
+      run: tree
+    - name: debug3
+      run: ls && ls sc && ls $SC_DEBUG && ls $SC_DEBUG/install && ls $SC_DEBUG/install/cmake
     - name: cmake release
       run: mkdir build_release && cd build_release && cmake ../ $CONFIG_RELEASE
     - name: OnFailUploadLog
