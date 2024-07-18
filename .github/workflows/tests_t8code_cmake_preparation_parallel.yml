@@ -1,4 +1,4 @@
-name: CMake CI preparation
+name: Parallel CMake CI preparation
 
 
 #  This file is part of t8code.
@@ -21,48 +21,54 @@ name: CMake CI preparation
 #  along with t8code; if not, write to the Free Software Foundation, Inc.,
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-#
-# This github CI script installs t8code and runs its tests for various configurations.
-# We compile sc and p4est as thirdparty libraries and use caching to only trigger a
-# new installation of them when their versions have changed in t8code.
-#
-# Note: To manually enforce sc and p4est installation, either increase the counter
-#       in the "key:" entries of the sc and p4est steps or set the variables
-#       SC_IGNORE_CACHE and P4EST_IGNORE_CACHE to 1 in the respective steps.
-
 on:
   workflow_call:
     inputs:
       MAKEFLAGS:
         required: true
         type: string
+      IGNORE_CACHE:
+        required: false
+        type: boolean
+        default: false
+      CACHE_COUNTER:
+        required: true
+        type: string
     outputs:
       SC_DEBUG:
         description: "Path to the debug build of sc"
-        value: ${{ jobs.reusable_cmake_preparation_workflow.outputs.SC_DEBUG }}
+        value: ${{ jobs.reusable_cmake_preparation_workflow_parallel.outputs.SC_DEBUG }}
       SC_RELEASE:
         description: "Path to the release build of sc"
-        value: ${{ jobs.reusable_cmake_preparation_workflow.outputs.SC_RELEASE }}
+        value: ${{ jobs.reusable_cmake_preparation_workflow_parallel.outputs.SC_RELEASE }}
       P4EST_DEBUG:
         description: "Path to the debug build of p4est"
-        value: ${{ jobs.reusable_cmake_preparation_workflow.outputs.P4EST_DEBUG }}
+        value: ${{ jobs.reusable_cmake_preparation_workflow_parallel.outputs.P4EST_DEBUG }}
       P4EST_RELEASE:
         description: "Path to the release build of p4est"
-        value: ${{ jobs.reusable_cmake_preparation_workflow.outputs.P4EST_RELEASE }}
+        value: ${{ jobs.reusable_cmake_preparation_workflow_parallel.outputs.P4EST_RELEASE }}
+      SC_CACHE_HIT:
+        description: "Whether the sc cache was hit"
+        value: ${{ jobs.reusable_cmake_preparation_workflow_parallel.outputs.SC_CACHE_HIT }}
+      P4EST_CACHE_HIT:
+        description: "Whether the p4est cache was hit"
+        value: ${{ jobs.reusable_cmake_preparation_workflow_parallel.outputs.P4EST_CACHE_HIT }}
 
 jobs:
-  reusable_cmake_preparation_workflow:
+  reusable_cmake_preparation_workflow_parallel:
     runs-on: ubuntu-latest
     container: dlramr/t8code-ubuntu:t8-dependencies
-    timeout-minutes: 20
+    timeout-minutes: 10
     outputs:
       SC_DEBUG: ${{ steps.output_sc_folders.outputs.SC_DEBUG }}
       SC_RELEASE: ${{ steps.output_sc_folders.outputs.SC_RELEASE }}
       P4EST_DEBUG: ${{ steps.output_p4est_folders.outputs.P4EST_DEBUG }}
       P4EST_RELEASE: ${{ steps.output_p4est_folders.outputs.P4EST_RELEASE }}
+      SC_CACHE_HIT: ${{ steps.sc_cmake_cache.outputs.cache-hit }}
+      P4EST_CACHE_HIT: ${{ steps.p4est_cmake_cache.outputs.cache-hit }}
     steps:
 #
-# Setup and bootstrap
+# Setup
 #
     - uses: actions/checkout@v4
       with: 
@@ -96,13 +102,7 @@ jobs:
           ${{ env.SC_DEBUG }}
           ${{ env.SC_RELEASE }}
         # You can increase the counter at the end to force a new key and hence recomputing the cache
-        key: sc-cmake-${{ env.sc_commit }}-005
-    - name: Set ignore cache variable
-      # If this variable is set 1
-      # (i.e. SC_IGNORE_CACHE=1) then the cache will be ignored and
-      # sc is always build.
-      # We use this mostly for debugging this CI script.
-      run: echo SC_IGNORE_CACHE=0 >> $GITHUB_ENV
+        key: sc-cmake-${{ env.sc_commit }}-${{ env.CACHE_COUNTER }}
     - name: Cache info
       if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' ||  env.SC_IGNORE_CACHE == 1 }}
       run: echo No cache found or cache will be ignored. SC_IGNORE_CACHE=$SC_IGNORE_CACHE
@@ -150,7 +150,7 @@ jobs:
           ${{ env.P4EST_DEBUG }}
           ${{ env.P4EST_RELEASE }}
         # You can increase the counter at the end to force a new key and hence recomputing the cache
-        key: p4est-cmake-${{ env.p4est_commit }}-${{ env.sc_commit }}-005
+        key: p4est-cmake-${{ env.p4est_commit }}-${{ env.sc_commit }}-${{ env.CACHE_COUNTER }}
     - name: Set ignore cache variable
       # If this variable is set to 1 then the cache is ignored and p4est is installed regardless of cache.
       # (set with i.e. P4EST_IGNORE_CACHE=1)
@@ -188,6 +188,6 @@ jobs:
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: SC_P4EST_MPI
+        name: SC_P4EST_PARALLEL
         path: ./
-        retention-days: 5
+        retention-days: 1

@@ -27,8 +27,8 @@ name: t8code tests
 # new installation of them when their versions have changed in t8code.
 #
 # Note: To manually enforce sc and p4est installation, either increase the counter
-#       in the "key:" entries of the sc and p4est steps or set the variables
-#       SC_IGNORE_CACHE and P4EST_IGNORE_CACHE to 1 in the respective steps.
+#       in the "CACHE_COUNTER:" entries of the sc and p4est steps or set the variables
+#       IGNORE_CACHE to true in the respective steps.
 
 on:
   push:
@@ -46,8 +46,70 @@ on:
       - cron:  '10 1 * * *'
 
 jobs:
+  # Preparation step for serial tests. Repo is cloned and sc + p4est are compiled without MPI.
+  preparation_serial:
+    if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
+    uses: ./.github/workflows/tests_t8code_cmake_preparation_serial.yml
+    with:
+      MAKEFLAGS: -j2
+      IGNORE_CACHE: false
+      CACHE_COUNTER: 005
+  
+  # Run serial tests for sc and p4est
+  sc_p4est_tests_serial:
+    if: ((github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule') && needs.preparation_serial.outputs.SC_SERIAL_CACHE_HIT != 1 && needs.preparation_serial.outputs.P4EST_SERIAL_CACHE_HIT != 1)
+    needs: preparation_serial
+    uses: ./.github/workflows/tests_sc_p4est_cmake_serial.yml
+    with:
+      MAKEFLAGS: -j2
+      SC_SERIAL_DEBUG: ${{ needs.preparation_serial.outputs.SC_SERIAL_DEBUG }}
+      SC_SERIAL_RELEASE: ${{ needs.preparation_serial.outputs.SC_SERIAL_RELEASE }}
+      P4EST_SERIAL_DEBUG: ${{ needs.preparation_serial.outputs.P4EST_SERIAL_DEBUG }}
+      P4EST_SERIAL_RELEASE: ${{ needs.preparation_serial.outputs.P4EST_SERIAL_RELEASE }}
+  
+  # Run t8code tests for serial configuration
+  cmake_tests_serial:
+    if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
+    needs: preparation_serial
+    uses: ./.github/workflows/tests_t8code_cmake_serial.yml
+    with:
+      MAKEFLAGS: -j2
+      SC_SERIAL_DEBUG: ${{ needs.preparation_serial.outputs.SC_SERIAL_DEBUG }}
+      SC_SERIAL_RELEASE: ${{ needs.preparation_serial.outputs.SC_SERIAL_RELEASE }}
+      P4EST_SERIAL_DEBUG: ${{ needs.preparation_serial.outputs.P4EST_SERIAL_DEBUG }}
+      P4EST_SERIAL_RELEASE: ${{ needs.preparation_serial.outputs.P4EST_SERIAL_RELEASE }}
+
+
+  # Preparation step for parallel tests. Repo is cloned and sc + p4est are compiled with MPI.
+  preparation_parallel:
+    if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
+    uses: ./.github/workflows/tests_t8code_cmake_preparation_parallel.yml
+    with:
+      MAKEFLAGS: -j2
+      IGNORE_CACHE: false
+      CACHE_COUNTER: 005
+  
+    # Run parallel tests for sc and p4est
+  sc_p4est_tests_parallel:
+    if: ((github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule') && needs.preparation_parallel.outputs.SC_CACHE_HIT != 1 && needs.preparation_parallel.outputs.P4EST_CACHE_HIT != 1)
+    needs: preparation_parallel
+    uses: ./.github/workflows/tests_sc_p4est_cmake_parallel.yml
+    with:
+      MAKEFLAGS: -j2
+      SC_DEBUG: ${{ needs.preparation_parallel.outputs.SC_DEBUG }}
+      SC_RELEASE: ${{ needs.preparation_parallel.outputs.SC_RELEASE }}
+      P4EST_DEBUG: ${{ needs.preparation_parallel.outputs.P4EST_DEBUG }}
+      P4EST_RELEASE: ${{ needs.preparation_parallel.outputs.P4EST_RELEASE }}
+  
+  # Run t8code tests for parallel configuration
   cmake_tests_parallel:
     if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
+    needs: preparation_parallel
     uses: ./.github/workflows/tests_t8code_cmake_parallel.yml
     with:
       MAKEFLAGS: -j2
+      SC_DEBUG: ${{ needs.preparation_parallel.outputs.SC_DEBUG }}
+      SC_RELEASE: ${{ needs.preparation_parallel.outputs.SC_RELEASE }}
+      P4EST_DEBUG: ${{ needs.preparation_parallel.outputs.P4EST_DEBUG }}
+      P4EST_RELEASE: ${{ needs.preparation_parallel.outputs.P4EST_RELEASE }}
+

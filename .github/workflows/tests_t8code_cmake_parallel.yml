@@ -1,4 +1,4 @@
-name: t8code cmake tests parallel
+name: t8code serial CMake tests
 
 
 #  This file is part of t8code.
@@ -21,43 +21,38 @@ name: t8code cmake tests parallel
 #  along with t8code; if not, write to the Free Software Foundation, Inc.,
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-#
-# This github CI script installs t8code and runs its tests for various configurations.
-# We compile sc and p4est as thirdparty libraries and use caching to only trigger a
-# new installation of them when their versions have changed in t8code.
-#
-# Note: To manually enforce sc and p4est installation, either increase the counter
-#       in the "key:" entries of the sc and p4est steps or set the variables
-#       SC_IGNORE_CACHE and P4EST_IGNORE_CACHE to 1 in the respective steps.
-
 on:
   workflow_call:
     inputs:
       MAKEFLAGS:
         required: true
         type: string
+      SC_DEBUG:
+        required: true
+        type: string
+      SC_RELEASE:
+        required: true
+        type: string
+      P4EST_DEBUG:
+        required: true
+        type: string
+      P4EST_RELEASE:
+        required: true
+        type: string
 
-jobs:
-  preparation:
-    uses: ./.github/workflows/tests_t8code_cmake_preparation.yml
-    with:
-      MAKEFLAGS: ${{ inputs.MAKEFLAGS }}
-  
+jobs:  
   cmake_tests_parallel:
-    needs: preparation
-    timeout-minutes: 60
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     container: dlramr/t8code-ubuntu:t8-dependencies
     steps:
-    - name: get sc and p4est folders
-      run: echo SC_DEBUG=${{ needs.preparation.outputs.SC_DEBUG }} >> $GITHUB_ENV
-        && echo SC_RELEASE=${{ needs.preparation.outputs.SC_RELEASE }} >> $GITHUB_ENV
-        && echo P4EST_DEBUG=${{ needs.preparation.outputs.P4EST_DEBUG }} >> $GITHUB_ENV
-        && echo P4EST_RELEASE=${{ needs.preparation.outputs.P4EST_RELEASE }} >> $GITHUB_ENV
+#
+# Setup
+#
     - name: Download artifacts
       uses: actions/download-artifact@v4
       with:
-        name: SC_P4EST_MPI
+        name: SC_P4EST_PARALLEL
     - name: Update packages
       run: apt-get update && apt-get upgrade -y
       # This seems to be necessary because of the docker container
@@ -65,7 +60,6 @@ jobs:
       run: git config --global --add safe.directory '*'
 #
 #  T8CODE
-#
 #
     # build config vars
     - name: less-test-option

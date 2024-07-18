@@ -1,0 +1,111 @@
+name: sc and p4est serial CMake tests
+
+
+#  This file is part of t8code.
+#  t8code is a C library to manage a collection (a forest) of multiple
+#  connected adaptive space-trees of general element types in parallel.
+#
+#  Copyright (C) 2024 the developers
+#
+#  t8code is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  t8code is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with t8code; if not, write to the Free Software Foundation, Inc.,
+#  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+#
+# This github CI script installs t8code and runs its tests for various configurations.
+# We compile sc and p4est as thirdparty libraries and use caching to only trigger a
+# new installation of them when their versions have changed in t8code.
+#
+# Note: To manually enforce sc and p4est installation, either increase the counter
+#       in the "key:" entries of the sc and p4est steps or set the variables
+#       SC_IGNORE_CACHE and P4EST_IGNORE_CACHE to 1 in the respective steps.
+
+on:
+  workflow_call:
+    inputs:
+      MAKEFLAGS:
+        required: true
+        type: string
+      SC_SERIAL_DEBUG:
+        required: true
+        type: string
+      SC_SERIAL_RELEASE:
+        required: true
+        type: string
+      P4EST_SERIAL_DEBUG:
+        required: true
+        type: string
+      P4EST_SERIAL_RELEASE:
+        required: true
+        type: string
+
+jobs:
+  sc_p4est_cmake_tests_serial:
+    runs-on: ubuntu-latest
+    container: dlramr/t8code-ubuntu:t8-dependencies
+    timeout-minutes: 30
+    steps:
+#
+# Setup
+#
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: SC_P4EST_SERIAL
+    - name: Update packages
+      run: apt-get update && apt-get upgrade -y
+      # This seems to be necessary because of the docker container
+    - name: disable ownership checks
+      run: git config --global --add safe.directory '*'
+#
+# SC tests
+#
+      ## sc serial debug
+    - name: sc serial debug check
+      run: cd $SC_SERIAL_DEBUG && make test $MAKEFLAGS
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: sc_debug_serial.log
+        path: $SC_SERIAL_DEBUG/Testing/Temporary/LastTest.log
+      ## sc serial release
+    - name: sc serial release check
+      run: cd $SC_SERIAL_RELEASE && make test $MAKEFLAGS
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: sc_release_serial.log
+        path: $SC_SERIAL_RELEASE/Testing/Temporary/LastTest.log
+#
+# P4EST tests
+#
+      ## p4est serial debug
+    - name: p4est serial debug check
+      run: cd $P4EST_SERIAL_DEBUG && make test $MAKEFLAGS
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: sp4est_debug_serial.log
+        path: $P4EST_SERIAL_DEBUG/Testing/Temporary/LastTest.log
+      ## p4est serial release
+    - name: p4est serial release check
+      run: cd $P4EST_SERIAL_RELEASE && make test $MAKEFLAGS
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: sp4est_release_serial.log
+        path: $P4EST_SERIAL_RELEASE/Testing/Temporary/LastTest.log
