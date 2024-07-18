@@ -38,11 +38,7 @@ static int
 t8_basic_adapt_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
                        t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
 {
-#if 0
   int                 level;
-#endif
-  T8_ASSERT (!is_family || num_elements == t8_eclass_num_children[ts->eclass]);
-#if 0
   level = t8_element_level (ts, elements[0]);
   /* coarsen */
   if (num_elements > 1) {
@@ -50,7 +46,6 @@ t8_basic_adapt_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t 
       return -1;
     return 0;
   }
-#endif
   return 1;
 }
 
