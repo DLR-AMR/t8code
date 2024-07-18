@@ -189,7 +189,7 @@ t8_geom_compute_linear_axis_aligned_geometry (const t8_eclass_t tree_class, cons
      * axis-aligned. A quad needs one matching coordinate. */
     int n_equal_coords = 0;
     for (int i_dim = 0; i_dim < T8_ECLASS_MAX_DIM; ++i_dim) {
-      if (abs (tree_vertices[i_dim] - tree_vertices[T8_ECLASS_MAX_DIM + i_dim]) <= SC_EPS) {
+      if (fabs (tree_vertices[i_dim] - tree_vertices[T8_ECLASS_MAX_DIM + i_dim]) <= SC_EPS) {
         ++n_equal_coords;
       }
     }
@@ -385,7 +385,7 @@ t8_geom_get_scaling_factor_of_edge_on_face_tet (const int edge, const int face, 
    *      /   --|--face
    *     /      |
    *    /    <~~| orthogonal direction
-   *   /<----o--| maximum othogonal direction
+   *   /<----o--| maximum orthogonal direction
    *  /_________|
    */
 
@@ -473,7 +473,7 @@ t8_geom_get_scaling_factor_of_edge_on_face_prism (const int edge, const int face
    *      /   --|--face
    *     /      |
    *    /    <~~| orthogonal direction
-   *   /<----o--| maximum othogonal direction
+   *   /<----o--| maximum orthogonal direction
    *  /_________|
    */
   const double orthogonal_direction[9][5] = { { ref_coords[2], 0, 0, (1 - ref_coords[0]), 0 },

@@ -89,7 +89,9 @@ t8code_googletest_programs = \
   test/t8_schemes/t8_gtest_default \
   test/t8_schemes/t8_gtest_pack_unpack \
   test/t8_schemes/t8_gtest_child_parent_face \
-  test/t8_cmesh_generator/t8_gtest_cmesh_generator_test
+  test/t8_cmesh_generator/t8_gtest_cmesh_generator_test \
+  test/t8_forest/t8_gtest_partition_data
+
 
 test_t8_IO_t8_gtest_vtk_reader_SOURCES = \
   test/t8_gtest_main.cxx \
@@ -346,6 +348,10 @@ test_t8_cmesh_generator_t8_gtest_cmesh_generator_test_SOURCES = \
 test_t8_cmesh_t8_gtest_cmesh_copy_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_cmesh/t8_gtest_cmesh_copy.cxx
+
+test_t8_forest_t8_gtest_partition_data_SOURCES = \
+  test/t8_gtest_main.cxx \
+  test/t8_forest/t8_gtest_partition_data.cxx
 
 #define ld and cpp flags for all targets
 t8_gtest_target_ld_add = $(LDADD) test/libgtest.la
@@ -610,6 +616,10 @@ test_t8_cmesh_generator_t8_gtest_cmesh_generator_test_CPPFLAGS = $(t8_gtest_targ
 test_t8_cmesh_t8_gtest_cmesh_copy_LDADD = $(t8_gtest_target_ld_add)
 test_t8_cmesh_t8_gtest_cmesh_copy_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_cmesh_t8_gtest_cmesh_copy_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+
+test_t8_forest_t8_gtest_partition_data_LDADD = $(t8_gtest_target_ld_add)
+test_t8_forest_t8_gtest_partition_data_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_forest_t8_gtest_partition_data_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
 # If we did not configure t8code with MPI we need to build Googletest
 # without MPI support.

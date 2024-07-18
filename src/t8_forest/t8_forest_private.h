@@ -52,7 +52,7 @@ T8_EXTERN_C_BEGIN ();
  *                  In the case of complete forests, the scheme based element 
  *                  function \see t8_element_is_family is recommended.
  * \note            If the element with id \a el_considered is not the first
- *                  family member, return 0. Therefore, if \return is x > 0, 
+ *                  family member, return 0. Therefore, if return is x > 0, 
  *                  the first x elements in \a elements form a family.
  */
 int
@@ -81,7 +81,7 @@ t8_eclass_scheme_c *
 t8_forest_get_eclass_scheme_before_commit (t8_forest_t forest, t8_eclass_t eclass);
 
 /** Compute the maximum possible refinement level in a forest.
- * This is the minimum over all maimum refinement level of the present element
+ * This is the minimum over all maximum refinement level of the present element
  * classes.
  * \param [in,out] forest The forest.
  */
@@ -89,7 +89,7 @@ void
 t8_forest_compute_maxlevel (t8_forest_t forest);
 
 /** Compute the minimum possible uniform refinement level on a cmesh such
- * that no process is empty.
+ * that no process is empty. Returns -1, if cmesh contains a vertex tree.
  * \param [in]  cmesh       The cmesh.
  * \param [in]  scheme      The element scheme for which refinement is considered.
  * \return                  The smallest refinement level l, such that a
