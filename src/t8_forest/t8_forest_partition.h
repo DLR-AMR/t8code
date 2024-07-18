@@ -71,14 +71,15 @@ t8_forest_partition_create_first_desc (t8_forest_t forest);
 void
 t8_forest_partition_create_tree_offsets (t8_forest_t forest);
 
-/** Re-Partition an array accordingly to a partitioned forest. 
+/** \brief Re-Partition an array accordingly to a partitioned forest. 
+ * 
  * \param[in] forest_form The forest before the partitioning step.
- * \param[in] forest_to The partitioned forest of \a forest_from
- * \param[in] data_in A pointer to an sc_array_t holding data (one value per element) accordingly to \a forest_from
- * \param[in,out] data_out A pointer to an already allocated sc_array_t capable of holding data accordingly to \a forest_to
+ * \param[in] forest_to The partitioned forest of \a forest_from.
+ * \param[in] data_in A pointer to an sc_array_t holding data (one value per element) accordingly to \a forest_from.
+ * \param[in,out] data_out A pointer to an already allocated sc_array_t capable of holding data accordingly to \a forest_to.
  * 
  * \note \a data_in has to be of size equal to the number of local elements of \a forest_from
- * \a data_out has to be already allocated and has to be of size equal to the number of local elements of \a forest_to
+ * \a data_out has to be already allocated and has to be of size equal to the number of local elements of \a forest_to.
 */
 void
 t8_forest_partition_data (t8_forest_t forest_from, t8_forest_t forest_to, const sc_array_t *data_in,

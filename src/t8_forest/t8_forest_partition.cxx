@@ -658,27 +658,27 @@ t8_forest_partition_fill_buffer_data (t8_forest_t forest_from, char **send_buffe
 {
   void *data_entry;
 
-  /* Check dimensions of data */
+  /* Check dimensions of data. */
   T8_ASSERT (data != NULL);
   T8_ASSERT (data->elem_count == (size_t) forest_from->local_num_elements);
 
   /* Calculate the byte count */
   *buffer_alloc = (last_element_send - first_element_send + 1) * data->elem_size;
 
-  /* Allocate a multiple of the padding size capable of holding all bytes that will be sent */
+  /* Allocate a multiple of the padding size capable of holding all bytes that will be sent. */
   const int internal_buffer_alloc = *buffer_alloc + T8_ADD_PADDING (*buffer_alloc);
 
-  /* Must be a multiple of T8_PADDING_SIZE */
+  /* Must be a multiple of T8_PADDING_SIZE. */
   T8_ASSERT (T8_ADD_PADDING (internal_buffer_alloc) == 0);
 
   /* A negative amount of bytes ought to be send cannot exist and the amount of bytes that will be allocated
-   * has to be at least equal to or greater than the amount of bytes that will be sent */
+   * has to be at least equal to or greater than the amount of bytes that will be sent. */
   T8_ASSERT (*buffer_alloc >= 0 && *buffer_alloc <= internal_buffer_alloc);
 
-  /* Allocate the send buffer */
+  /* Allocate the send buffer. */
   *send_buffer = T8_ALLOC (char, internal_buffer_alloc);
 
-  /* Copy the data to the send_buffer */
+  /* Copy the data to the send_buffer. */
   data_entry = t8_sc_array_index_locidx ((sc_array_t *) data, first_element_send);
   memcpy (*send_buffer, data_entry, *buffer_alloc);
 }
