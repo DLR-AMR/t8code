@@ -1,6 +1,6 @@
 ---
 name: Question
-about: I have a question on how to use t8code
+about: I have a question about t8code
 title: ''
 labels: ''
 assignees: ''
