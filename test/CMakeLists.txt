@@ -9,7 +9,11 @@ function( add_t8_test )
 
     add_executable( ${ADD_T8_TEST_NAME} ${ADD_T8_TEST_SOURCES} )
     target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 gtest )
-    add_test( NAME ${ADD_T8_TEST_NAME} COMMAND ./${ADD_T8_TEST_NAME} )
+
+    # Split custom test command into a list by whitespace.
+    separate_arguments (T8CODE_CUSTOM_TEST_COMMAND_LIST NATIVE_COMMAND "${T8CODE_CUSTOM_TEST_COMMAND}")
+
+    add_test( NAME ${ADD_T8_TEST_NAME} COMMAND ${T8CODE_CUSTOM_TEST_COMMAND_LIST} ./${ADD_T8_TEST_NAME} )
 endfunction()
 
 # Copy test files to build folder so that the t8_test programs can find them.
