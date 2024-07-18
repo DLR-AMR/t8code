@@ -121,7 +121,7 @@ T8_EXTERN_C_BEGIN ();
 /* TODO: document */
 
 /* Given a tree return the beginning of its attributes block */
-#define T8_TREE_FIRST_ATT_INFO (t) ((char *) (t) + (t)->att_offset)
+#define T8_TREE_FIRST_ATT_INFO(t) ((char *) (t) + (t)->att_offset)
 
 /* Given a tree and an index i return the i-th attribute index of that tree */
 #define T8_TREE_ATTR_INFO(t, i) \
@@ -137,7 +137,7 @@ T8_EXTERN_C_BEGIN ();
 #define T8_TREE_TTF(t) (T8_TREE_FACE (t) + t8_eclass_num_faces[(t)->eclass] * sizeof (t8_locidx_t))
 
 /* Given a ghost return the beginning of its attribute block */
-#define T8_GHOST_FIRST_ATT_INFO (g) T8_TREE_FIRST_ATT_INFO (g)
+#define T8_GHOST_FIRST_ATT_INFO(g) T8_TREE_FIRST_ATT_INFO (g)
 
 /* Given a ghost and an index i return the i-th attribute index of that ghost */
 #define T8_GHOST_ATTR_INFO(g, i) T8_TREE_ATTR_INFO (g, i)
