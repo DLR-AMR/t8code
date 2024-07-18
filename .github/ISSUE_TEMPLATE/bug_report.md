@@ -25,6 +25,8 @@ A clear and concise description of what you expected to happen.
   - `CMakeCache.txt`
   - `CMakeFiles/CMakeError.log`
   - `CMakeFiles/CMakeOutput.log`
+  - `Testing/Temporary/FailedTest.log` (for failing tests)
+  - `Testing/Temporary/LastTestsFailed.log` (for failing tests)
 
 **Environment (please complete the following information):**
  - OS: [e.g. Ubuntu 22.04, Windows 11]
