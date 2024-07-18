@@ -2095,7 +2095,8 @@ t8_forest_leaf_is_boundary (const t8_forest_t forest, t8_locidx_t local_tree, co
      * If the respective tree face is at the domain boundary,
      * then the element is as well.
      * If the tree face is not at the domain boundary, the element's face
-     * could still be at an inner boundary. */    const int cmesh_face = scheme->t8_element_tree_face (leaf, face);
+     * could still be at an inner boundary. */
+    const int cmesh_face = scheme->t8_element_tree_face (leaf, face);
     const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
     const t8_locidx_t cmesh_local_tree = t8_forest_ltreeid_to_cmesh_ltreeid (forest, local_tree);
     int tree_boundary = t8_cmesh_tree_face_is_boundary (cmesh, cmesh_local_tree, cmesh_face);
