@@ -88,7 +88,7 @@ jobs:
 #
       ## sc debug
     - name: sc debug check
-      run: cd $SC_DEBUG && ctest $MAKEFLAGS
+      run: cd $SC_DEBUG && sudo ctest $MAKEFLAGS
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
@@ -97,7 +97,7 @@ jobs:
         path: $SC_DEBUG/Testing/Temporary/LastTest.log
       ## sc release
     - name: sc release check
-      run: cd $SC_RELEASE && ctest $MAKEFLAGS
+      run: cd $SC_RELEASE && sudo ctest $MAKEFLAGS
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
@@ -109,7 +109,7 @@ jobs:
 #
       ## p4est debug
     - name: p4est debug check
-      run: cd $P4EST_DEBUG && ctest $MAKEFLAGS
+      run: cd $P4EST_DEBUG && sudo ctest $MAKEFLAGS
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
@@ -118,7 +118,7 @@ jobs:
         path: $P4EST_DEBUG/Testing/Temporary/LastTest.log
       ## p4est release
     - name: p4est release check
-      run: cd $P4EST_RELEASE && ctest $MAKEFLAGS
+      run: cd $P4EST_RELEASE && sudo ctest $MAKEFLAGS
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
