@@ -61,6 +61,17 @@ jobs:
       # This seems to be necessary because of the docker container
     - name: disable ownership checks
       run: git config --global --add safe.directory '*'
+    - name: Get input vars
+      run: export MAKEFLAGS="${{ inputs.MAKEFLAGS }}"
+        && export SC_DEBUG="${{ inputs.SC_DEBUG }}"
+        && export SC_RELEASE="${{ inputs.SC_RELEASE }}"
+        && export P4EST_DEBUG="${{ inputs.P4EST_DEBUG }}"
+        && export P4EST_RELEASE="${{ inputs.P4EST_RELEASE }}"
+        && echo MAKEFLAGS="$MAKEFLAGS" >> $GITHUB_ENV
+        && echo SC_DEBUG="$SC_DEBUG" >> $GITHUB_ENV
+        && echo SC_RELEASE="$SC_RELEASE" >> $GITHUB_ENV
+        && echo P4EST_DEBUG="$P4EST_DEBUG" >> $GITHUB_ENV
+        && echo P4EST_RELEASE="$P4EST_RELEASE" >> $GITHUB_ENV
 #
 #  T8CODE
 #
@@ -68,33 +79,33 @@ jobs:
     - name: less-test-option
       if: github.event_name == 'pull_request'
       run: export LESS_TEST_OPTION="-DT8CODE_ENABLE_LESS_TESTS=ON"
-           && echo LESS_TEST_OPTION="$LESS_TEST_OPTION" >> $GITHUB_ENV
+        && echo LESS_TEST_OPTION="$LESS_TEST_OPTION" >> $GITHUB_ENV
     - name: build config variables
       run: export CONFIG_OPTIONS="${LESS_TEST_OPTION} -DT8CODE_USE_SYSTEM_SC=ON -DT8CODE_USE_SYSTEM_P4EST=ON -DT8CODE_BUILD_PEDANTIC=ON"
-           && export CONFIG_DEBUG="$CONFIG_OPTIONS -DCMAKE_BUILD_TYPE=Debug -DSC_DIR=$SC_DEBUG/install/cmake -DP4EST_DIR=$P4EST_DEBUG/install/cmake"
-           && export CONFIG_RELEASE="$CONFIG_OPTIONS -DCMAKE_BUILD_TYPE=Release -DSC_DIR=$SC_RELEASE/install/cmake -DP4EST_DIR=$P4EST_RELEASE/install/cmake"
-           && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
-           && echo CONFIG_DEBUG="$CONFIG_DEBUG" >> $GITHUB_ENV
-           && echo CONFIG_RELEASE="$CONFIG_RELEASE" >> $GITHUB_ENV
+        && export CONFIG_DEBUG="$CONFIG_OPTIONS -DCMAKE_BUILD_TYPE=Debug -DSC_DIR=$SC_DEBUG/install/cmake -DP4EST_DIR=$P4EST_DEBUG/install/cmake"
+        && export CONFIG_RELEASE="$CONFIG_OPTIONS -DCMAKE_BUILD_TYPE=Release -DSC_DIR=/install/cmake -DP4EST_DIR=$P4EST_RELEASE/install/cmake"
+        && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
+        && echo CONFIG_DEBUG="$CONFIG_DEBUG" >> $GITHUB_ENV
+        && echo CONFIG_RELEASE="$CONFIG_RELEASE" >> $GITHUB_ENV
     - name: Check vars
       run: echo "[$CONFIG_DEBUG]"
-            && echo "[$CONFIG_RELEASE]"
-# configure and test with MPI (release mode)
+        && echo "[$CONFIG_RELEASE]"
+# cmake and test in release mode
     - name: Printing MPI compiler info
       run: mpicc --version && mpirun --version
     - name: Printing GCC compiler info
       run: gcc --version && g++ --version
     - name: check release mode
-      run: echo "Checking release mode (MPI)"
+      run: echo "Checking release mode"
     - name: echo cmake line
       run: echo cmake $CONFIG_RELEASE
-    - name: configure MPI release
+    - name: cmake release
       run: mkdir build_release && cd build_release && cmake ../ $CONFIG_RELEASE
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
       with:
-        name: cmake_release_MPI.log
+        name: cmake_release_MPI_${{ inputs.MPI }}.log
         path: build_release/CMakeFiles/CMakeOutput.log
     - name: make
       run: cd build_release && make $MAKEFLAGS
@@ -106,18 +117,18 @@ jobs:
       if: failure()
       uses: actions/upload-artifact@v4
       with:
-        name: test-suite_release_MPI.log
+        name: test-suite_release_MPI_${{ inputs.MPI }}.log
         path: build_release/Testing/Temporary/LastTest.log
-# configure and test with MPI (debug mode)
+# cmake and test in debug mode
     - name: check debugging mode
       run: echo "Checking debug mode"
-    - name: cmake MPI debug
+    - name: cmake debug
       run: mkdir build_debug && cd build_debug && cmake ../ $CONFIG_DEBUG
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
       with:
-        name: cmake_debug_MPI.log
+        name: cmake_debug_MPI_${{ inputs.MPI }}.log
         path: build_debug/CMakeFiles/CMakeOutput.log
     - name: make
       run: cd build_debug && make $MAKEFLAGS
@@ -129,5 +140,5 @@ jobs:
       if: failure()
       uses: actions/upload-artifact@v4
       with:
-        name: test-suite_debug_MPI.log
+        name: test-suite_debug_MPI_${{ inputs.MPI }}.log
         path: build_debug/Testing/Temporary/LastTest.log

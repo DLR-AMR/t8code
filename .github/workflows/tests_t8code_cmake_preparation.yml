@@ -33,7 +33,7 @@ on:
         default: false
       CACHE_COUNTER:
         required: true
-        type: string
+        type: number
       MPI:
         required: true
         type: string
@@ -84,6 +84,15 @@ jobs:
       run: git submodule init
     - name: update submodules
       run: git submodule update
+    - name: Get input vars
+      run: export MAKEFLAGS="${{ inputs.MAKEFLAGS }}"
+        && export IGNORE_CACHE="${{ inputs.IGNORE_CACHE }}"
+        && export CACHE_COUNTER="${{ inputs.CACHE_COUNTER }}"
+        && export MPI="${{ inputs.MPI }}"
+        && echo MAKEFLAGS="$MAKEFLAGS" >> $GITHUB_ENV
+        && echo IGNORE_CACHE="$IGNORE_CACHE" >> $GITHUB_ENV
+        && echo CACHE_COUNTER="$CACHE_COUNTER" >> $GITHUB_ENV
+        && echo MPI="$MPI" >> $GITHUB_ENV
 #
 #       SC installation
 #

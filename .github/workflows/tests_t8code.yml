@@ -53,7 +53,7 @@ jobs:
     with:
       MAKEFLAGS: -j4
       IGNORE_CACHE: false
-      CACHE_COUNTER: 005
+      CACHE_COUNTER: 5
       MPI: OFF
   
   # Run serial tests for sc and p4est
@@ -90,7 +90,7 @@ jobs:
     with:
       MAKEFLAGS: -j4
       IGNORE_CACHE: false
-      CACHE_COUNTER: 005
+      CACHE_COUNTER: 5
       MPI: ON
   
     # Run parallel tests for sc and p4est
