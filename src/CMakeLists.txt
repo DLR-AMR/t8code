@@ -148,6 +148,7 @@ target_sources( T8 PRIVATE
     t8_vtk/t8_vtk_unstructured.cxx 
     t8_vtk/t8_vtk_parallel.cxx 
     t8_vtk/t8_vtk_reader.cxx 
+    t8_vtk/t8_vtk_writer.cxx
 )
 
 target_compile_definitions( T8 PUBLIC T8_CMAKE_BUILD )

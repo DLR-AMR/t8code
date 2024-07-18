@@ -109,6 +109,7 @@ class vtk_writer {
   }
 
  private:
+#if T8_WITH_VTK
   /**
  * Translate a single element from the forest into a vtkCell and fill the vtkArrays with
  * the data related to the element (not element_data).
@@ -384,6 +385,7 @@ class vtk_writer {
     T8_FREE (dataArrays);
     return;
   }
+#endif /* T8_WITH_VTK */
 
   /**
    * Write a vtk file given a forest or a cmesh
@@ -495,6 +497,7 @@ class vtk_writer {
   sc_MPI_Comm comm;
 };
 
+#if T8_WITH_VTK
 /**
  * \brief template specialization for forests. 
  * 
@@ -555,4 +558,6 @@ vtk_writer<t8_cmesh_t>::t8_grid_tree_to_vtk_cells (
   (*elem_id)++;
   return;
 }
+#endif /* T8_WITH_VTK */
+
 #endif /* T8_VTK_WRITER_HXX */
