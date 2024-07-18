@@ -47,16 +47,17 @@ jobs:
     needs: preparation
     timeout-minutes: 60
     runs-on: ubuntu-latest
-    container: 
-      image: dlramr/t8code-ubuntu:t8-dependencies
-      volumes:
-        - docker_volume:/volume_mount
+    container: dlramr/t8code-ubuntu:t8-dependencies
     steps:
     - name: get sc and p4est folders
       run: echo SC_DEBUG=${{ needs.preparation.outputs.SC_DEBUG }} >> $GITHUB_ENV
         && echo SC_RELEASE=${{ needs.preparation.outputs.SC_RELEASE }} >> $GITHUB_ENV
         && echo P4EST_DEBUG=${{ needs.preparation.outputs.P4EST_DEBUG }} >> $GITHUB_ENV
         && echo P4EST_RELEASE=${{ needs.preparation.outputs.P4EST_RELEASE }} >> $GITHUB_ENV
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: SC_P4EST_MPI
 #
 #  T8CODE
 #

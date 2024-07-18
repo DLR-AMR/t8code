@@ -53,10 +53,7 @@ on:
 jobs:
   reusable_cmake_preparation_workflow:
     runs-on: ubuntu-latest
-    container: 
-      image: dlramr/t8code-ubuntu:t8-dependencies
-      volumes:
-        - docker_volume:/volume_mount
+    container: dlramr/t8code-ubuntu:t8-dependencies
     timeout-minutes: 20
     outputs:
       SC_DEBUG: ${{ steps.output_sc_folders.outputs.SC_DEBUG }}
@@ -83,9 +80,8 @@ jobs:
 #       SC installation
 #
     - name: store sc folders in var
-      run: echo SC_DEBUG=docker_volume/sc/build_debug >> $GITHUB_ENV
-        && echo SC_RELEASE=docker_volume/sc/build_release >> $GITHUB_ENV
-        && echo SC_DIR=$PWD/sc >> $GITHUB_ENV
+      run: echo SC_DEBUG=$PWD/sc/build_debug >> $GITHUB_ENV
+        && echo SC_RELEASE=$PWD/sc/build_release >> $GITHUB_ENV
     - name: output sc folders
       id: output_sc_folders
       run: echo "SC_DEBUG=$SC_DEBUG" >> $GITHUB_OUTPUT
@@ -122,14 +118,14 @@ jobs:
       if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
       ## sc debug
     - name: sc cmake debug
-      run: cd $SC_DEBUG && cmake $SC_DIR -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$SC_DEBUG/install -Dmpi=ON
+      run: cd $SC_DEBUG && cmake ../ -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$SC_DEBUG/install -Dmpi=ON
       if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
     - name: sc build debug
       run: cd $SC_DEBUG && make $MAKEFLAGS && make $MAKEFLAGS install
       if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
       ## sc release
     - name: sc cmake release
-      run: cd $SC_RELEASE && cmake $SC_DIR -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$SC_RELEASE/install -Dmpi=ON
+      run: cd $SC_RELEASE && cmake ../ -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$SC_RELEASE/install -Dmpi=ON
       if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
     - name: sc build release
       run: cd $SC_RELEASE && make $MAKEFLAGS && make $MAKEFLAGS install
@@ -140,7 +136,6 @@ jobs:
     - name: store p4est folders in var
       run: echo P4EST_DEBUG=$PWD/p4est/build_debug >> $GITHUB_ENV
         && echo P4EST_RELEASE=$PWD/p4est/build_release >> $GITHUB_ENV
-        && echo P4EST_DIR=$PWD/p4est >> $GITHUB_ENV
     - name: output p4est folders
       id: output_p4est_folders
       run: echo "P4EST_DEBUG=$P4EST_DEBUG" >> $GITHUB_OUTPUT
@@ -176,16 +171,23 @@ jobs:
       run: mkdir $P4EST_DEBUG $P4EST_RELEASE
     ## p4est debug
     - name: p4est cmake debug
-      run: cd $P4EST_DEBUG && cmake $P4EST_DIR -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$P4EST_DEBUG/install -DP4EST_USE_SYSTEM_SC=ON -DSC_DIR=$SC_DEBUG/install/cmake -DP4EST_ENABLE_MPI=ON
+      run: cd $P4EST_DEBUG && cmake ../ -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$P4EST_DEBUG/install -DP4EST_USE_SYSTEM_SC=ON -DSC_DIR=$SC_DEBUG/install/cmake -DP4EST_ENABLE_MPI=ON
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     - name: p4est build debug
       run: cd $P4EST_DEBUG && make $MAKEFLAGS && make $MAKEFLAGS install
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     ## p4est release
     - name: p4est cmake release
-      run: cd $P4EST_RELEASE && cmake $P4EST_DIR -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$P4EST_RELEASE/install -DP4EST_USE_SYSTEM_SC=ON -DSC_DIR=$SC_DEBUG/install/cmake -DP4EST_ENABLE_MPI=ON
+      run: cd $P4EST_RELEASE && cmake ../ -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$P4EST_RELEASE/install -DP4EST_USE_SYSTEM_SC=ON -DSC_DIR=$SC_DEBUG/install/cmake -DP4EST_ENABLE_MPI=ON
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     - name: p4est build release
       run: cd $P4EST_RELEASE && make $MAKEFLAGS && make $MAKEFLAGS install
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
-#  P4EST AND SC END
+    
+    ## upload artifacts
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: SC_P4EST_MPI
+        path: ./
+        retention-days: 5
