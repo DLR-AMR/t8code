@@ -1443,7 +1443,6 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
  * such that the element at position i has a smaller id than the given one.
  * If no such i exists, return -1.
  */
-/* TODO: should return t8_locidx_t */
 static t8_locidx_t
 t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_linearidx_t element_id, const int maxlevel)
 {
