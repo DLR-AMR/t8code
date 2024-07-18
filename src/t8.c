@@ -150,8 +150,8 @@ t8_init (int log_threshold)
 
   w = 24;
   t8_global_essentialf ("This is %s\n", t8_get_package_string ());
-  t8_global_productionf ("%-*s %s\n", w, "CPP", T8_CPP);
-  t8_global_productionf ("%-*s %s\n", w, "CPPFLAGS", T8_CPPFLAGS);
+  t8_global_productionf ("%-*s %s\n", w, "CXX", T8_CXX);
+  t8_global_productionf ("%-*s %s\n", w, "CXXFLAGS", T8_CXXFLAGS);
   t8_global_productionf ("%-*s %s\n", w, "CC", T8_CC);
   t8_global_productionf ("%-*s %s\n", w, "CFLAGS", T8_CFLAGS);
   t8_global_productionf ("%-*s %s\n", w, "LDFLAGS", T8_LDFLAGS);
