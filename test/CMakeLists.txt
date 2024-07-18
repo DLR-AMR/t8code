@@ -9,7 +9,11 @@ function( add_t8_test )
 
     add_executable( ${ADD_T8_TEST_NAME} ${ADD_T8_TEST_SOURCES} )
     target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 gtest )
-    add_test( NAME ${ADD_T8_TEST_NAME} COMMAND ./${ADD_T8_TEST_NAME} )
+
+    # Split custom test command into a list by whitespace.
+    separate_arguments (T8CODE_CUSTOM_TEST_COMMAND_LIST NATIVE_COMMAND "${T8CODE_CUSTOM_TEST_COMMAND}")
+
+    add_test( NAME ${ADD_T8_TEST_NAME} COMMAND ${T8CODE_CUSTOM_TEST_COMMAND_LIST} ./${ADD_T8_TEST_NAME} )
 endfunction()
 
 # Copy test files to build folder so that the t8_test programs can find them.
@@ -56,6 +60,7 @@ add_t8_test( NAME t8_gtest_balance                   SOURCES t8_gtest_main.cxx t
 add_t8_test( NAME t8_gtest_forest_commit             SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_forest_commit.cxx )
 add_t8_test( NAME t8_gtest_forest_face_normal        SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_forest_face_normal.cxx )
 add_t8_test( NAME t8_gtest_element_is_leaf           SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_element_is_leaf.cxx )
+add_t8_test( NAME t8_gtest_partition_data            SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_partition_data.cxx )
 
 add_t8_test( NAME t8_gtest_permute_hole      SOURCES t8_gtest_main.cxx t8_forest_incomplete/t8_gtest_permute_hole.cxx )
 add_t8_test( NAME t8_gtest_recursive         SOURCES t8_gtest_main.cxx t8_forest_incomplete/t8_gtest_recursive.cxx )
