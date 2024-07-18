@@ -35,8 +35,8 @@
 #include <t8_forest/t8_forest_types.h> /* TODO: This file should not be included from an application */
 /* This function refines every element */
 static int
-t8_basic_adapt_refine (t8_forest_t forest, t8_locidx_t which_tree, t8_eclass_scheme_t *ts, const int is_family,
-                       const int num_elements, t8_element_t *elements[])
+t8_basic_adapt_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
+                       t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
 {
 #if 0
   int                 level;
@@ -56,8 +56,8 @@ t8_basic_adapt_refine (t8_forest_t forest, t8_locidx_t which_tree, t8_eclass_sch
 
 /* This function coarsens each element */
 static int
-t8_basic_adapt_coarsen (t8_forest_t forest, t8_locidx_t which_tree, t8_eclass_scheme_t *ts, const int is_family,
-                        int num_elements, t8_element_t *elements[])
+t8_basic_adapt_coarsen (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
+                        t8_eclass_scheme_c *ts, const int is_family, int num_elements, t8_element_t *elements[])
 {
   if (is_family) {
     return -1;
@@ -87,8 +87,8 @@ t8_timings_adapt (int start_l, int end_l, int runs, int dim)
   t8_forest_set_cmesh (forests[0],
                        t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0), 0);
 */
-  t8_forest_set_cmesh (forests[0], t8_cmesh_new_bigmesh (eclass, 512, sc_MPI_COMM_WORLD, 0), sc_MPI_COMM_WORLD);
-  t8_forest_set_scheme (forests[0], t8_scheme_new_default ());
+  t8_forest_set_cmesh (forests[0], t8_cmesh_new_bigmesh (eclass, 512, sc_MPI_COMM_WORLD), sc_MPI_COMM_WORLD);
+  t8_forest_set_scheme (forests[0], t8_scheme_new_default_cxx ());
   t8_forest_set_level (forests[0], start_l);
   t8_forest_commit (forests[0]);
 
@@ -137,7 +137,7 @@ t8_timings_new (int level, int dim)
 
   t8_forest_init (&forest);
   t8_forest_set_cmesh (forest, t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0), sc_MPI_COMM_WORLD);
-  t8_forest_set_scheme (forest, t8_scheme_new_default ());
+  t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
   t8_forest_set_level (forest, level);
   t8_forest_commit (forest);
 
