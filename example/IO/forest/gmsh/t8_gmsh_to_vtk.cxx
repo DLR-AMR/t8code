@@ -80,7 +80,7 @@ main (int argc, char **argv)
   sc_options_add_int (opt, 'l', "level", &level, 2, "The uniform refinement level. Default: 2");
   sc_options_add_int (opt, 'd', "dimension", &dim, 3, "The dimension of the mesh. Default: 3");
   sc_options_add_int (
-    opt, 'o', "use_cad", &use_cad, 0,
+    opt, 'c', "use_cad", &use_cad, 0,
     "Enable CAD-based curvilinear geometry. Needs a `.brep` file with the same file prefix. Default: 0");
   parsed = sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
 
