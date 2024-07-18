@@ -70,6 +70,19 @@ jobs:
       # This seems to be necessary because of the docker container
     - name: disable ownership checks
       run: git config --global --add safe.directory '*'
+    - name: Get input vars
+      run: export MAKEFLAGS="${{ inputs.MAKEFLAGS }}"
+        && export MPI="${{ inputs.MPI }}"
+        && export SC_DEBUG="${{ inputs.SC_DEBUG }}"
+        && export SC_RELEASE="${{ inputs.SC_RELEASE }}"
+        && export P4EST_DEBUG="${{ inputs.P4EST_DEBUG }}"
+        && export P4EST_RELEASE="${{ inputs.P4EST_RELEASE }}"
+        && echo MPI="$MPI" >> $GITHUB_ENV
+        && echo MAKEFLAGS="$MAKEFLAGS" >> $GITHUB_ENV
+        && echo SC_DEBUG="$SC_DEBUG" >> $GITHUB_ENV
+        && echo SC_RELEASE="$SC_RELEASE" >> $GITHUB_ENV
+        && echo P4EST_DEBUG="$P4EST_DEBUG" >> $GITHUB_ENV
+        && echo P4EST_RELEASE="$P4EST_RELEASE" >> $GITHUB_ENV
 #
 # SC tests
 #

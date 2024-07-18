@@ -114,7 +114,7 @@ jobs:
           ${{ env.SC_RELEASE }}
         # You can increase the counter at the end to force a new key and hence recomputing the cache
         key: sc-cmake-${{ env.sc_commit }}-${{ inputs.CACHE_COUNTER }}
-    - name: Log if cache was used
+    - name: Log that no cache was found
       run: echo USED_CACHE=0 >> $GITHUB_ENV
       if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' }}
     - name: Cache info
@@ -165,7 +165,7 @@ jobs:
           ${{ env.P4EST_RELEASE }}
         # You can increase the counter at the end to force a new key and hence recomputing the cache
         key: p4est-cmake-${{ env.p4est_commit }}-${{ env.sc_commit }}-${{ inputs.CACHE_COUNTER }}
-    - name: Log if cache was used
+    - name: Log that no cache was found
       run: echo USED_CACHE=0 >> $GITHUB_ENV
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' }}
     - name: Cache info

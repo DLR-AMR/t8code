@@ -85,7 +85,7 @@ jobs:
     - name: build config variables
       run: export CONFIG_OPTIONS="${LESS_TEST_OPTION} -DT8CODE_USE_SYSTEM_SC=ON -DT8CODE_USE_SYSTEM_P4EST=ON -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_ENABLE_MPI=$MPI"
         && export CONFIG_DEBUG="$CONFIG_OPTIONS -DCMAKE_BUILD_TYPE=Debug -DSC_DIR=$SC_DEBUG/install/cmake -DP4EST_DIR=$P4EST_DEBUG/install/cmake"
-        && export CONFIG_RELEASE="$CONFIG_OPTIONS -DCMAKE_BUILD_TYPE=Release -DSC_DIR=/install/cmake -DP4EST_DIR=$P4EST_RELEASE/install/cmake"
+        && export CONFIG_RELEASE="$CONFIG_OPTIONS -DCMAKE_BUILD_TYPE=Release -DSC_DIR=$SC_RELEASE/install/cmake -DP4EST_DIR=$P4EST_RELEASE/install/cmake"
         && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
         && echo CONFIG_DEBUG="$CONFIG_DEBUG" >> $GITHUB_ENV
         && echo CONFIG_RELEASE="$CONFIG_RELEASE" >> $GITHUB_ENV
@@ -101,12 +101,6 @@ jobs:
       run: echo "Checking release mode"
     - name: echo cmake line
       run: echo cmake $CONFIG_RELEASE
-    - name: debug
-      run: apt install tree -y
-    - name: debug2
-      run: tree
-    - name: debug3
-      run: ls && ls sc && ls $SC_DEBUG && ls $SC_DEBUG/install && ls $SC_DEBUG/install/cmake
     - name: cmake release
       run: mkdir build_release && cd build_release && cmake ../ $CONFIG_RELEASE
     - name: OnFailUploadLog
