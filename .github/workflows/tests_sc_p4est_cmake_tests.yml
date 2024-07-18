@@ -1,4 +1,4 @@
-name: sc and p4est serial CMake tests
+name: CMake CI sc and p4est tests
 
 
 #  This file is part of t8code.
@@ -36,21 +36,24 @@ on:
       MAKEFLAGS:
         required: true
         type: string
-      SC_SERIAL_DEBUG:
+      MPI:
         required: true
         type: string
-      SC_SERIAL_RELEASE:
+      SC_DEBUG:
         required: true
         type: string
-      P4EST_SERIAL_DEBUG:
+      SC_RELEASE:
         required: true
         type: string
-      P4EST_SERIAL_RELEASE:
+      P4EST_DEBUG:
+        required: true
+        type: string
+      P4EST_RELEASE:
         required: true
         type: string
 
 jobs:
-  sc_p4est_cmake_tests_serial:
+  sc_p4est_cmake_tests:
     runs-on: ubuntu-latest
     container: dlramr/t8code-ubuntu:t8-dependencies
     timeout-minutes: 30
@@ -61,7 +64,7 @@ jobs:
     - name: Download artifacts
       uses: actions/download-artifact@v4
       with:
-        name: SC_P4EST_SERIAL
+        name: SC_P4EST_MPI_${{ env.MPI }}
     - name: Update packages
       run: apt-get update && apt-get upgrade -y
       # This seems to be necessary because of the docker container
@@ -70,42 +73,42 @@ jobs:
 #
 # SC tests
 #
-      ## sc serial debug
-    - name: sc serial debug check
-      run: cd $SC_SERIAL_DEBUG && make test $MAKEFLAGS
+      ## sc debug
+    - name: sc debug check
+      run: cd $SC_DEBUG && make test $MAKEFLAGS
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
       with:
-        name: sc_debug_serial.log
-        path: $SC_SERIAL_DEBUG/Testing/Temporary/LastTest.log
-      ## sc serial release
-    - name: sc serial release check
-      run: cd $SC_SERIAL_RELEASE && make test $MAKEFLAGS
+        name: sc_debug_MPI_${{ env.MPI }}.log
+        path: $SC_DEBUG/Testing/Temporary/LastTest.log
+      ## sc release
+    - name: sc release check
+      run: cd $SC_RELEASE && make test $MAKEFLAGS
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
       with:
-        name: sc_release_serial.log
-        path: $SC_SERIAL_RELEASE/Testing/Temporary/LastTest.log
+        name: sc_release_MPI_${{ env.MPI }}.log
+        path: $SC_RELEASE/Testing/Temporary/LastTest.log
 #
 # P4EST tests
 #
-      ## p4est serial debug
-    - name: p4est serial debug check
-      run: cd $P4EST_SERIAL_DEBUG && make test $MAKEFLAGS
+      ## p4est debug
+    - name: p4est debug check
+      run: cd $P4EST_DEBUG && make test $MAKEFLAGS
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
       with:
-        name: sp4est_debug_serial.log
-        path: $P4EST_SERIAL_DEBUG/Testing/Temporary/LastTest.log
-      ## p4est serial release
-    - name: p4est serial release check
-      run: cd $P4EST_SERIAL_RELEASE && make test $MAKEFLAGS
+        name: sp4est_debug_MPI_${{ env.MPI }}.log
+        path: $P4EST_DEBUG/Testing/Temporary/LastTest.log
+      ## p4est release
+    - name: p4est release check
+      run: cd $P4EST_RELEASE && make test $MAKEFLAGS
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
       with:
-        name: sp4est_release_serial.log
-        path: $P4EST_SERIAL_RELEASE/Testing/Temporary/LastTest.log
+        name: sp4est_release_MPI_${{ env.MPI }}.log
+        path: $P4EST_RELEASE/Testing/Temporary/LastTest.log
