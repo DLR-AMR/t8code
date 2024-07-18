@@ -87,6 +87,8 @@ class vtk_writer_test: public testing::Test {
   SetUp () override
   {
     grid = make_grid<grid_t> ();
+    writer = new vtk_writer<grid_t> (true, true, true, true, true, true, std::string ("test_vtk"), 0, NULL,
+                                     sc_MPI_COMM_WORLD);
   }
 
   void
@@ -96,6 +98,7 @@ class vtk_writer_test: public testing::Test {
   }
 
   grid_t grid;
+  vtk_writer<grid_t> *writer;
 };
 
 TYPED_TEST_SUITE_P (vtk_writer_test);
@@ -106,8 +109,7 @@ TYPED_TEST_SUITE_P (vtk_writer_test);
  */
 TYPED_TEST_P (vtk_writer_test, write_vtk)
 {
-  int success
-    = t8_write_vtk_via_API (this->grid, std::string ("test_vtk"), 1, 1, 1, 1, 1, 1, 0, NULL, sc_MPI_COMM_WORLD);
+  int success = this->writer->write (this->grid);
 
 #if T8_WITH_VTK
   EXPECT_TRUE (success);
