@@ -64,7 +64,7 @@ jobs:
     - name: Download artifacts
       uses: actions/download-artifact@v4
       with:
-        name: SC_P4EST_MPI_${{ env.MPI }}
+        name: SC_P4EST_MPI_${{ inputs.MPI }}
     - name: Update packages
       run: apt-get update && apt-get upgrade -y
       # This seems to be necessary because of the docker container
@@ -80,7 +80,7 @@ jobs:
       if: failure()
       uses: actions/upload-artifact@v4
       with:
-        name: sc_debug_MPI_${{ env.MPI }}.log
+        name: sc_debug_MPI_${{ inputs.MPI }}.log
         path: $SC_DEBUG/Testing/Temporary/LastTest.log
       ## sc release
     - name: sc release check
@@ -89,7 +89,7 @@ jobs:
       if: failure()
       uses: actions/upload-artifact@v4
       with:
-        name: sc_release_MPI_${{ env.MPI }}.log
+        name: sc_release_MPI_${{ inputs.MPI }}.log
         path: $SC_RELEASE/Testing/Temporary/LastTest.log
 #
 # P4EST tests
@@ -101,7 +101,7 @@ jobs:
       if: failure()
       uses: actions/upload-artifact@v4
       with:
-        name: sp4est_debug_MPI_${{ env.MPI }}.log
+        name: sp4est_debug_MPI_${{ inputs.MPI }}.log
         path: $P4EST_DEBUG/Testing/Temporary/LastTest.log
       ## p4est release
     - name: p4est release check
@@ -110,5 +110,5 @@ jobs:
       if: failure()
       uses: actions/upload-artifact@v4
       with:
-        name: sp4est_release_MPI_${{ env.MPI }}.log
+        name: sp4est_release_MPI_${{ inputs.MPI }}.log
         path: $P4EST_RELEASE/Testing/Temporary/LastTest.log

@@ -55,7 +55,7 @@ on:
         value: ${{ jobs.cmake_preparation.outputs.USED_CACHE }}
 
 env:
-  USED_CACHE: $IGNORE_CACHE
+  USED_CACHE: ${{ inputs.IGNORE_CACHE }}
 
 jobs:
   cmake_preparation:
@@ -104,37 +104,37 @@ jobs:
           ${{ env.SC_DEBUG }}
           ${{ env.SC_RELEASE }}
         # You can increase the counter at the end to force a new key and hence recomputing the cache
-        key: sc-cmake-${{ env.sc_commit }}-${{ env.CACHE_COUNTER }}
+        key: sc-cmake-${{ env.sc_commit }}-${{ inputs.CACHE_COUNTER }}
     - name: Log if cache was used
       run: echo USED_CACHE=0 >> $GITHUB_ENV
       if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' }}
     - name: Cache info
-      if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' ||  env.IGNORE_CACHE == 1 }}
+      if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' ||  inputs.IGNORE_CACHE == 1 }}
       run: echo No cache found or cache will be ignored. IGNORE_CACHE=$IGNORE_CACHE
     - name: if ignore cache, delete folders
-      if: ${{ env.IGNORE_CACHE == 1 }}
+      if: ${{ inputs.IGNORE_CACHE == 1 }}
       # The true at the end is to ignore errors that i.e. occur when the folders do not exist
       run: rm -r $SC_DEBUG $SC_RELEASE || true
     - name: make folders
       run: mkdir $SC_DEBUG && mkdir $SC_RELEASE
-      if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || env.IGNORE_CACHE == 1 }}
+      if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
     - name: install sc
       run: echo "Install sc"
-      if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || env.IGNORE_CACHE == 1 }}
+      if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
       ## sc debug
     - name: sc cmake debug
       run: cd $SC_DEBUG && cmake ../ -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$SC_DEBUG/install -Dmpi=$MPI
-      if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || env.IGNORE_CACHE == 1 }}
+      if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
     - name: sc build debug
       run: cd $SC_DEBUG && make $MAKEFLAGS && make $MAKEFLAGS install
-      if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || env.IGNORE_CACHE == 1 }}
+      if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
       ## sc release
     - name: sc cmake release
       run: cd $SC_RELEASE && cmake ../ -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$SC_RELEASE/install -Dmpi=$MPI
-      if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || env.IGNORE_CACHE == 1 }}
+      if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
     - name: sc build release
       run: cd $SC_RELEASE && make $MAKEFLAGS && make $MAKEFLAGS install
-      if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || env.IGNORE_CACHE == 1 }}
+      if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
 #
 # P4EST
 #
@@ -155,37 +155,37 @@ jobs:
           ${{ env.P4EST_DEBUG }}
           ${{ env.P4EST_RELEASE }}
         # You can increase the counter at the end to force a new key and hence recomputing the cache
-        key: p4est-cmake-${{ env.p4est_commit }}-${{ env.sc_commit }}-${{ env.CACHE_COUNTER }}
+        key: p4est-cmake-${{ env.p4est_commit }}-${{ env.sc_commit }}-${{ inputs.CACHE_COUNTER }}
     - name: Log if cache was used
       run: echo USED_CACHE=0 >> $GITHUB_ENV
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' }}
     - name: Cache info
-      if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || env.IGNORE_CACHE == 1 }}
+      if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
       run: echo No cache found or cache will be ignored. IGNORE_CACHE=$IGNORE_CACHE
     - name: install p4est
       run: echo "Install p4est"
-      if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || env.IGNORE_CACHE == 1 }}
+      if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
     - name: if ignore cache, delete folders
-      if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || env.IGNORE_CACHE == 1 }}
+      if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
       # The true at the end is to ignore errors that i.e. occur when the folders do not exist      
       run: rm -r $P4EST_DEBUG $P4EST_RELEASE || true
     - name: make folders
-      if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || env.IGNORE_CACHE == 1 }}
+      if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
       run: mkdir $P4EST_DEBUG $P4EST_RELEASE
     ## p4est debug
     - name: p4est cmake debug
       run: cd $P4EST_DEBUG && cmake ../ -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$P4EST_DEBUG/install -DP4EST_USE_SYSTEM_SC=ON -DSC_DIR=$SC_DEBUG/install/cmake -DP4EST_ENABLE_MPI=$MPI
-      if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || env.IGNORE_CACHE == 1 }}
+      if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
     - name: p4est build debug
       run: cd $P4EST_DEBUG && make $MAKEFLAGS && make $MAKEFLAGS install
-      if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || env.IGNORE_CACHE == 1 }}
+      if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
     ## p4est release
     - name: p4est cmake release
       run: cd $P4EST_RELEASE && cmake ../ -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$P4EST_RELEASE/install -DP4EST_USE_SYSTEM_SC=ON -DSC_DIR=$SC_DEBUG/install/cmake -DP4EST_ENABLE_MPI=$MPI
-      if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || env.IGNORE_CACHE == 1 }}
+      if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
     - name: p4est build release
       run: cd $P4EST_RELEASE && make $MAKEFLAGS && make $MAKEFLAGS install
-      if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || env.IGNORE_CACHE == 1 }}
+      if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
     
     ## output cache info
     - name: output cache info
@@ -196,6 +196,6 @@ jobs:
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: SC_P4EST_MPI_${{ env.MPI }}
+        name: SC_P4EST_MPI_${{ inputs.MPI }}
         path: ./
         retention-days: 1

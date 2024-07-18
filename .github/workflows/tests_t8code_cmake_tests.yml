@@ -55,7 +55,7 @@ jobs:
     - name: Download artifacts
       uses: actions/download-artifact@v4
       with:
-        name: SC_P4EST_MPI_${{ env.MPI }}
+        name: SC_P4EST_MPI_${{ inputs.MPI }}
     - name: Update packages
       run: apt-get update && apt-get upgrade -y
       # This seems to be necessary because of the docker container

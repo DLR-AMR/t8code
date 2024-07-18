@@ -118,4 +118,3 @@ jobs:
       SC_RELEASE: ${{ needs.preparation_parallel.outputs.SC_RELEASE }}
       P4EST_DEBUG: ${{ needs.preparation_parallel.outputs.P4EST_DEBUG }}
       P4EST_RELEASE: ${{ needs.preparation_parallel.outputs.P4EST_RELEASE }}
-
