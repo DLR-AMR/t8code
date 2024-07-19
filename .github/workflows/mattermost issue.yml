@@ -45,12 +45,12 @@ jobs:
         run: echo ${{ env.message_build}}
       # build the message depending on different types of events and event actions. Message is written into mattermost.json
       - name: closed_message
-        if: github.event.action == 'closed' && github.event.issue.opened == true
+        if: github.event.issue.closed == true
         run: |
           echo message_build=1 >> $GITHUB_ENV &&
           echo message_content='Issue ${{ github.event.number }} has been closed by ${{ github.event.sender }}. See ${{ github.event.issue.html_url }} for more details.' >> $GITHUB_ENV
       - name: opened_message
-        if: (github.event_name == 'opened' || github.event_name == 'reopened') && github.event.action != 'closed'
+        if: github.event.issue.opened == true || github.event.issue.reopened == true
         run: |
           echo message_build=1 >> $GITHUB_ENV &&
           echo message_content='${{ github.event.sender }} opened issue ${{ github.event.number }}. See ${{ github.event.issue.html_url }} for more details.' >> $GITHUB_ENV
