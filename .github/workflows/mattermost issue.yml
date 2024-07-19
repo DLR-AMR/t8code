@@ -48,12 +48,12 @@ jobs:
         if: github.event.action == 'closed'
         run: |
           echo message_build=1 >> $GITHUB_ENV &&
-          echo message_content='Issue ${{ github.event.issue.number }} has been closed by ${{ github.event.issue.sender.name }}. See ${{ github.event.issue.html_url }} for more details.' >> $GITHUB_ENV
+          echo message_content='Issue ${{ github.event.issue.number }} has been closed by ${{ github.event.issue.user.name }}. See ${{ github.event.issue.html_url }} for more details.' >> $GITHUB_ENV
       - name: opened_message
         if: github.event.action == 'opened' || github.event.action == 'reopened'
         run: |
           echo message_build=1 >> $GITHUB_ENV &&
-          echo message_content='${{ github.event.issue.sender.name }} (re-)opened issue ${{ github.event.issue.number }}. See ${{ github.event.issue.html_url }} for more details.' >> $GITHUB_ENV
+          echo message_content='${{ github.event.issue.user.name }} (re-)opened issue ${{ github.event.issue.number }}. See ${{ github.event.issue.html_url }} for more details.' >> $GITHUB_ENV
       - name: debug_after_build
         run: echo ${{ env.message_build }}
       # if a message has been written send the message to the mattermost-channel described in the secrets
