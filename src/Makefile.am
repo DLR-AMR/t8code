@@ -103,7 +103,6 @@ libt8_internal_headers = \
   src/t8_forest/t8_forest_balance.h src/t8_forest/t8_forest_types.h \
   src/t8_forest/t8_forest_private.h \
   src/t8_windows.h \
-  src/t8_vtk/t8_vtk_writer_impl.hxx \
   src/t8_vtk/t8_vtk_writer_helper.hxx \
   src/t8_vtk/t8_vtk_write_ASCII.hxx
 libt8_compiled_sources = \
@@ -150,7 +149,8 @@ libt8_compiled_sources = \
   src/t8_vtk/t8_vtk_parallel.cxx \
   src/t8_vtk/t8_vtk_reader.cxx \
   src/t8_vtk/t8_vtk_writer_c_interface.cxx \
-  src/t8_vtk/t8_vtk_write_ASCII.cxx
+  src/t8_vtk/t8_vtk_write_ASCII.cxx \
+  src/t8_vtk/t8_vtk_writer_helper.cxx
 
 
 # this variable is used for headers that are not publicly installed

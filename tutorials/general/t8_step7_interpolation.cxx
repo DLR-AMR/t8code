@@ -35,7 +35,6 @@
 #include <t8_forest/t8_forest_geometrical.h> /* geometrical information of the forest */
 #include <t8_vec.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
-#include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_forest/t8_forest_io.h>
 

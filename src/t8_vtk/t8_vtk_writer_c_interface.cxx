@@ -26,10 +26,14 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_types.h>
 
+#if T8_WITH_VTK
+#include <vtkUnstructuredGrid.h>
+#endif
+
 T8_EXTERN_C_BEGIN ();
 
 int
-t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix, const int write_treeid,
+t8_forest_vtk_write_file_via_API (const t8_forest_t forest, const char *fileprefix, const int write_treeid,
                                   const int write_mpirank, const int write_level, const int write_element_id,
                                   const int curved_flag, const int write_ghosts, const int num_data,
                                   t8_vtk_data_field_t *data)
@@ -40,9 +44,9 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix, co
 }
 
 int
-t8_forest_vtk_write_file (t8_forest_t forest, const char *fileprefix, const int write_treeid, const int write_mpirank,
-                          const int write_level, const int write_element_id, int write_ghosts, const int num_data,
-                          t8_vtk_data_field_t *data)
+t8_forest_vtk_write_file (const t8_forest_t forest, const char *fileprefix, const int write_treeid,
+                          const int write_mpirank, const int write_level, const int write_element_id, int write_ghosts,
+                          const int num_data, t8_vtk_data_field_t *data)
 {
   vtk_writer<t8_forest_t> writer (write_treeid, write_mpirank, write_level, write_element_id, write_ghosts, false,
                                   std::string (fileprefix), num_data, data, t8_forest_get_mpicomm (forest));
@@ -50,14 +54,14 @@ t8_forest_vtk_write_file (t8_forest_t forest, const char *fileprefix, const int 
 }
 
 int
-t8_cmesh_vtk_write_file_via_API (t8_cmesh_t cmesh, const char *fileprefix, sc_MPI_Comm comm)
+t8_cmesh_vtk_write_file_via_API (const t8_cmesh_t cmesh, const char *fileprefix, sc_MPI_Comm comm)
 {
   vtk_writer<t8_cmesh_t> writer (std::string (fileprefix), comm);
   return writer.write_with_API (cmesh);
 }
 
 int
-t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix)
+t8_cmesh_vtk_write_file (const t8_cmesh_t cmesh, const char *fileprefix)
 {
   /* No mpi Communicator is needed for ASCII output*/
   vtk_writer<t8_cmesh_t> writer (std::string (fileprefix), sc_MPI_COMM_NULL);
@@ -66,7 +70,7 @@ t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix)
 
 #if T8_WITH_VTK
 void
-t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
+t8_forest_to_vtkUnstructuredGrid (const t8_forest_t forest, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
                                   const int write_treeid, const int write_mpirank, const int write_level,
                                   const int write_element_id, const int write_ghosts, const int curved_flag,
                                   const int num_data, t8_vtk_data_field_t *data)

@@ -30,6 +30,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #if T8_WITH_VTK
 #include <vtkUnstructuredGrid.h>
 #endif
+
 T8_EXTERN_C_BEGIN ();
 
 /** Write the forest in .pvtu file format. Writes one .vtu file per
