@@ -40,6 +40,24 @@ T8_EXTERN_C_BEGIN ();
 /* function declarations */
 
 #if T8_WITH_VTK
+/**
+ * Translate a forest into a vtkUnstructuredGrid with respect to the given flags. 
+ * This function uses the vtk library. t8code must be configured with
+ * "--with-vtk" in order to use it.
+ * \param [in]  forest    The forest.
+ * \param[in, out] unstructuredGrid 
+ * \param [in]  write_treeid If true, the global tree id is written for each element.
+ * \param [in]  write_mpirank If true, the mpirank is written for each element.
+ * \param [in]  write_level If true, the refinement level is written for each element.
+ * \param [in]  write_element_id If true, the global element id is written for each element.
+ * \param [in]  curved_flag If true, write the elements as curved element types from vtk.
+ * \param [in]  write_ghosts If true, write out ghost elements as well.
+ * \param [in]  num_data  Number of user defined double valued data fields to write.
+ * \param [in]  data      Array of t8_vtk_data_field_t of length \a num_data
+ *                        providing the user defined per element data.
+ *                        If scalar and vector fields are used, all scalar fields
+ *                        must come first in the array.
+ */
 void
 t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
                                   const int write_treeid, const int write_mpirank, const int write_level,
