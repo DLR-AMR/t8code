@@ -26,6 +26,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 
+#include <t8_vtk/t8_vtk_writer_c_interface.h>
+
 /**
  * Create a hybrid forest or a cmesh
  * 
@@ -109,12 +111,11 @@ TYPED_TEST_SUITE_P (vtk_writer_test);
  */
 TYPED_TEST_P (vtk_writer_test, write_vtk)
 {
-  int success = this->writer->write (this->grid);
 
 #if T8_WITH_VTK
-  EXPECT_TRUE (success);
+  EXPECT_TRUE (this->writer->write_with_API (this->grid));
 #else
-  EXPECT_FALSE (success);
+  EXPECT_TRUE (this->writer->write_ASCII (this->grid));
 #endif
 }
 

@@ -149,7 +149,7 @@ libt8_compiled_sources = \
   src/t8_vtk/t8_vtk_unstructured.cxx \
   src/t8_vtk/t8_vtk_parallel.cxx \
   src/t8_vtk/t8_vtk_reader.cxx \
-  src/t8_vtk/t8_vtk_writer_c_interface.ccc
+  src/t8_vtk/t8_vtk_writer_c_interface.cxx
 
 
 # this variable is used for headers that are not publicly installed

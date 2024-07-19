@@ -79,18 +79,6 @@ class vtk_writer {
    * Construct a new vtk writer object. All parameters are set to false by default. By default no data is used and
    * \a num_data is set to zero. A default \a fileprefix is NOT given. 
    * 
-<<<<<<< HEAD
-   * \param[in] write_treeid True, if we want to write the tree id of every element
-   * \param[in] write_mpirank True, if we want to write the mpirankof every element
-   * \param[in] write_level True, if we want to write the level of every element. Uses level 0 if used for a cmesh.
-   * \param[in] write_element_id True, if we want to write the element id of every element. Ignored if used for a cmesh.
-   * \param[in] write_ghosts True, if we want to write the ghost elements, too. 
-   * \param[in] curved_flag True, if we want to use quadratic vtk cells. Uses the geometry of the grid to evaluate points between corners. 
-   * \param[in] fileprefix The prefix of the output-file
-   * \param[in] num_data The number of data-fields to print
-   * \param[in] data The data to use
-   * \param[in] comm The communicator for parallel output
-=======
    * \param write_treeid True, if we want to write the tree id of every element.
    * \param write_mpirank True, if we want to write the mpirankof every element.
    * \param write_level True, if we want to write the level of every element. Uses level 0 if used for a cmesh.
@@ -101,7 +89,6 @@ class vtk_writer {
    * \param num_data The number of data-fields to print.
    * \param data The data to use.
    * \param comm The communicator for parallel output.
->>>>>>> more_const_cmesh_vtk_writer
    */
   vtk_writer (const bool write_treeid, const bool write_mpirank, const bool write_level, const bool write_element_id,
               const bool write_ghosts, const bool curved_flag, std::string fileprefix, const int num_data,
@@ -605,7 +592,7 @@ vtk_writer<t8_cmesh_t>::t8_grid_tree_to_vtk_cells (
   (*elem_id)++;
   return;
 }
-#endif
+#endif /* T8_VTK_WRITER_HXX */
 
 template <>
 bool
@@ -622,5 +609,3 @@ vtk_writer<t8_cmesh_t>::write_ASCII (const t8_cmesh_t forest)
 {
   return t8_cmesh_vtk_write_file (forest, this->fileprefix.c_str ());
 }
-
-#endif /* T8_VTK_WRITER_HXX */
