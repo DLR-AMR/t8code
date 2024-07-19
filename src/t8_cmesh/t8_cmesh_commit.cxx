@@ -113,7 +113,7 @@ t8_cmesh_add_attributes (const t8_cmesh_t cmesh, sc_hash_t *ghost_ids)
       T8_ASSERT (ghost_ids != NULL);
       temp_facejoin->ghost_id = attribute->id;
       if (sc_hash_lookup (ghost_ids, temp_facejoin, (void ***) &facejoin_pp)) {
-        T8_ASSERT (sj == (*facejoin_pp)->attr_id);
+        T8_ASSERT ((t8_locidx_t) sj == (t8_locidx_t) (*facejoin_pp)->attr_id);
         if (sj == 0) {
           ghosts_inserted++;
         }
