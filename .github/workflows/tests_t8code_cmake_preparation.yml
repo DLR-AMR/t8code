@@ -201,10 +201,14 @@ jobs:
       id: used_cache
       run: echo "USED_CACHE=$USED_CACHE" >> $GITHUB_OUTPUT
     
+    ## tar artifact to keep permissions: https://github.com/actions/upload-artifact?tab=readme-ov-file#permission-loss
+    - name: Tar files
+      run: tar -cvf artifact.tar .
+
     ## upload artifacts
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
         name: SC_P4EST_MPI_${{ inputs.MPI }}
-        path: ./
+        path: ./artifact.tar
         retention-days: 1
