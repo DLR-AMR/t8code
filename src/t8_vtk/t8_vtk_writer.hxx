@@ -269,9 +269,9 @@ class vtk_writer {
  * \param[in] num_local_trees The number of local trees.
  * \param[in, out] elem_id The id of the current element. Will be increased after the call, depending on the number of elements processed.
  * \param[in, out] point_id The id of the points. Will be increased after the call, depending on the number of elements processed.
- * \param[in] offset Ofset the ids by the number of elements/trees of the previous processes.
+ * \param[in] offset Offset the ids by the number of elements/trees of the previous processes.
  * \param[in] ghosts Flag to decide whether we write a ghost element or not.
- * \param[in] itree SThe local id of the current tree.
+ * \param[in] itree The local id of the current tree.
  */
   void
   t8_grid_tree_to_vtk_cells (const grid_t grid, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
