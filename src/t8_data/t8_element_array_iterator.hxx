@@ -74,12 +74,11 @@ class t8_element_array_iterator {
   ~t8_element_array_iterator () = default;
 
   /* Dereferencing operator of the iterator wrapper, returning a reference to const of the t8_element_t-pointer to the serialized bytes representing the actual serialized t8_element_t pointer. */
-  const reference
+  value_type
   operator* ()
   {
     T8_ASSERT (index_ >= 0 && static_cast<size_t> (index_) < array_->elem_count);
-    dref_element_ = static_cast<t8_element_t*> (t8_sc_array_index_locidx (array_, index_));
-    return dref_element_;
+    return static_cast<t8_element_t*> (t8_sc_array_index_locidx (array_, index_));
   };
 
   /* Pre- and Postfix increment */
@@ -124,8 +123,7 @@ class t8_element_array_iterator {
   GetLinearIDAtLevel (const int level)
   {
     T8_ASSERT (index_ >= 0 && static_cast<size_t> (index_) < array_->elem_count);
-    dref_element_ = static_cast<t8_element_t*> (t8_sc_array_index_locidx (array_, index_));
-    return scheme_->t8_element_get_linear_id (dref_element_, level);
+    return scheme_->t8_element_get_linear_id (*(*this), level);
   };
 
   /* Comparison operators */
@@ -159,7 +157,6 @@ class t8_element_array_iterator {
   const t8_eclass_scheme_c* scheme_; /*!< The scheme of the elements residing within the array. */
   const sc_array_t* array_;          /*!< A pointer to the actual serialized array of element pointers. */
   t8_locidx_t index_ { 0 };          /*!< The index the iterator currently points to. */
-  t8_element_t* dref_element_; /*!< A helper variable for de-serializing the actual element pointers in the array. */
 };
 
 /**
