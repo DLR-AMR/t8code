@@ -132,7 +132,7 @@ class vtk_writer_test: public testing::Test {
   int
   grid_c_interface ()
   {
-    return use_c_interface (grid, "test_vtk", 1, 1, 1, 1, 1, 1, 0, NULL, sc_MPI_COMM_WORLD);
+    return use_c_interface (grid, "test_vtk_c_interface", 1, 1, 1, 1, 1, 1, 0, NULL, sc_MPI_COMM_WORLD);
   }
 
   void
