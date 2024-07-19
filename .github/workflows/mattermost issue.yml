@@ -48,19 +48,23 @@ jobs:
         if: github.event.action == 'closed'
         run: |
           echo message_build=1 >> $GITHUB_ENV &&
-          echo message_content='Issue ${{ github.event.issue.number }} has been closed by ${{ github.event.issue.user.name }}. See ${{ github.event.issue.html_url }} for more details.' >> $GITHUB_ENV
+          echo message_content='Issue ${{ github.event.issue.number }} has been closed. See ${{ github.event.issue.html_url }} for more details.' >> $GITHUB_ENV
+# Would like to have this message read "User X closed issue ...".
+# How can we get the user name? Tried ${{ github.event.issue.user.name }} and others, did not work.
       - name: opened_message
         if: github.event.action == 'opened' || github.event.action == 'reopened'
         run: |
           echo message_build=1 >> $GITHUB_ENV &&
-          echo message_content='${{ github.event.issue.user.name }} (re-)opened issue ${{ github.event.issue.number }}. See ${{ github.event.issue.html_url }} for more details.' >> $GITHUB_ENV
+          echo message_content='Issue ${{ github.event.issue.number }} was (re-)opened. See ${{ github.event.issue.html_url }} for more details.' >> $GITHUB_ENV
+# Would like to have this message read "User X (re-)opened issue ...".
+# How can we get the user name? Tried ${{ github.event.issue.user.name }} and others, did not work.
       - name: debug_after_build
         run: echo ${{ env.message_build }}
       # if a message has been written send the message to the mattermost-channel described in the secrets
-#      - name: send_message
-#        if: ${{ env.message_build == 1 }}
-#        uses: mattermost/action-mattermost-notify@master
-#        with:
-#          MATTERMOST_WEBHOOK_URL: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
-#          MATTERMOST_USERNAME: t8ddy
-#          TEXT: ${{ env.message_content }}
+      - name: send_message
+        if: ${{ env.message_build == 1 }}
+        uses: mattermost/action-mattermost-notify@master
+        with:
+          MATTERMOST_WEBHOOK_URL: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
+          MATTERMOST_USERNAME: t8ddy
+          TEXT: ${{ env.message_content }}
