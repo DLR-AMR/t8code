@@ -47,6 +47,12 @@ T8_EXTERN_C_BEGIN ();
  *  reference of the element pointer residing in the underlying array. Therefore, read-only operations are possible.
  */
 class t8_element_array_iterator {
+ 
+ private:
+  const t8_eclass_scheme_c* scheme_; /*!< The scheme of the elements residing within the array. */
+  const sc_array_t* elements;          /*!< A pointer to the actual serialized array of element pointers. */
+  t8_locidx_t index_ { 0 };          /*!< The index the iterator currently points to. */
+  
  public:
   using iterator_category = std::bidirectional_iterator_tag;
   using difference_type = std::ptrdiff_t;
@@ -57,7 +63,7 @@ class t8_element_array_iterator {
   /* Constructors */
   t8_element_array_iterator () = delete;
   t8_element_array_iterator (const t8_element_array_t* element_array, const t8_locidx_t position)
-    : scheme_ { t8_element_array_get_scheme (element_array) }, array_ { t8_element_array_get_array (element_array) },
+    : scheme_ { t8_element_array_get_scheme (element_array) }, elements { t8_element_array_get_array (element_array) },
       index_ { position } {};
 
   /* Copy/Move Constructors/Assignment-Operators */
@@ -77,8 +83,8 @@ class t8_element_array_iterator {
   value_type
   operator* ()
   {
-    T8_ASSERT (index_ >= 0 && static_cast<size_t> (index_) < array_->elem_count);
-    return static_cast<t8_element_t*> (t8_sc_array_index_locidx (array_, index_));
+    T8_ASSERT (index_ >= 0 && static_cast<size_t> (index_) < elements->elem_count);
+    return static_cast<t8_element_t*> (t8_sc_array_index_locidx (elements, index_));
   };
 
   /* Pre- and Postfix increment */
@@ -122,7 +128,7 @@ class t8_element_array_iterator {
   t8_linearidx_t
   GetLinearIDAtLevel (const int level)
   {
-    T8_ASSERT (index_ >= 0 && static_cast<size_t> (index_) < array_->elem_count);
+    T8_ASSERT (index_ >= 0 && static_cast<size_t> (index_) < elements->elem_count);
     return scheme_->t8_element_get_linear_id (*(*this), level);
   };
 
@@ -130,12 +136,12 @@ class t8_element_array_iterator {
   friend bool
   operator== (const t8_element_array_iterator& iter1, const t8_element_array_iterator& iter2)
   {
-    return (iter1.array_->array == iter2.array_->array && iter1.index_ == iter2.index_);
+    return (iter1.elements->array == iter2.elements->array && iter1.index_ == iter2.index_);
   };
   friend bool
   operator!= (const t8_element_array_iterator& iter1, const t8_element_array_iterator& iter2)
   {
-    return (iter1.array_->array != iter2.array_->array || iter1.index_ != iter2.index_);
+    return (iter1.elements->array != iter2.elements->array || iter1.index_ != iter2.index_);
   };
 
   /* Arithmetic assignment operators */
@@ -152,11 +158,6 @@ class t8_element_array_iterator {
     T8_ASSERT (index_ < 0);
     return *this;
   }
-
- private:
-  const t8_eclass_scheme_c* scheme_; /*!< The scheme of the elements residing within the array. */
-  const sc_array_t* array_;          /*!< A pointer to the actual serialized array of element pointers. */
-  t8_locidx_t index_ { 0 };          /*!< The index the iterator currently points to. */
 };
 
 /**
