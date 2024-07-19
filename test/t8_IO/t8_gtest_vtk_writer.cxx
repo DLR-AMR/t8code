@@ -77,48 +77,6 @@ destroy_grid<t8_forest_t> (t8_forest_t *forest)
   t8_forest_unref (forest);
 }
 
-/**
- * Templated class to test the vtk writer for forests and cmeshes. 
- * 
- * @tparam grid_t 
- */
-template <typename grid_t>
-class vtk_writer_test: public testing::Test {
- protected:
-  void
-  SetUp () override
-  {
-    grid = make_grid<grid_t> ();
-    writer = new vtk_writer<grid_t> (true, true, true, true, true, true, std::string ("test_vtk"), 0, NULL,
-                                     sc_MPI_COMM_WORLD);
-  }
-
-  void
-  TearDown () override
-  {
-    destroy_grid (&grid);
-  }
-
-  grid_t grid;
-  vtk_writer<grid_t> *writer;
-};
-
-TYPED_TEST_SUITE_P (vtk_writer_test);
-
-/**
- * Test the API-writer and check if the output was created successfully. 
- * 
- */
-TYPED_TEST_P (vtk_writer_test, write_vtk)
-{
-
-#if T8_WITH_VTK
-  EXPECT_TRUE (this->writer->write_with_API (this->grid));
-#else
-  EXPECT_TRUE (this->writer->write_ASCII (this->grid));
-#endif
-}
-
 template <typename grid_t>
 int
 use_c_interface (const grid_t grid, const char *fileprefix, const int write_treeid, const int write_mpirank,
@@ -155,9 +113,56 @@ use_c_interface<t8_cmesh_t> (const t8_cmesh_t grid, const char *fileprefix, cons
 #endif
 }
 
+/**
+ * Templated class to test the vtk writer for forests and cmeshes. 
+ * 
+ * @tparam grid_t 
+ */
+template <typename grid_t>
+class vtk_writer_test: public testing::Test {
+ protected:
+  void
+  SetUp () override
+  {
+    grid = make_grid<grid_t> ();
+    writer = new vtk_writer<grid_t> (true, true, true, true, true, true, std::string ("test_vtk"), 0, NULL,
+                                     sc_MPI_COMM_WORLD);
+  }
+
+  int
+  grid_c_interface ()
+  {
+    return use_c_interface (grid, "test_vtk", 1, 1, 1, 1, 1, 1, 0, NULL, sc_MPI_COMM_WORLD);
+  }
+
+  void
+  TearDown () override
+  {
+    destroy_grid (&grid);
+  }
+
+  grid_t grid;
+  vtk_writer<grid_t> *writer;
+};
+
+TYPED_TEST_SUITE_P (vtk_writer_test);
+
+/**
+ * Test the API-writer and check if the output was created successfully. 
+ * 
+ */
+TYPED_TEST_P (vtk_writer_test, write_vtk)
+{
+#if T8_WITH_VTK
+  EXPECT_TRUE (this->writer->write_with_API (this->grid));
+#else
+  EXPECT_TRUE (this->writer->write_ASCII (this->grid));
+#endif
+}
+
 TYPED_TEST_P (vtk_writer_test, c_interface)
 {
-  use_c_interface (this->grid, std::string ("test_vtk"), 1, 1, 1, 1, 1, 1, 0, NULL);
+  EXPECT_TRUE (this->grid_c_interface ());
 }
 
 REGISTER_TYPED_TEST_SUITE_P (vtk_writer_test, write_vtk, c_interface);

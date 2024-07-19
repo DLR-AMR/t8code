@@ -86,7 +86,6 @@ target_sources( T8 PRIVATE
     t8_cmesh/t8_cmesh.cxx 
     t8_cmesh/t8_cmesh_cad.cxx 
     t8_cmesh/t8_cmesh_triangle.cxx 
-    t8_cmesh/t8_cmesh_vtk_writer.c 
     t8_cmesh/t8_cmesh_stash.c 
     t8_cmesh/t8_cmesh_vtk_reader.cxx 
     t8_cmesh/t8_cmesh_save.cxx 
@@ -178,7 +177,6 @@ install( FILES
     t8_cmesh_tetgen.h
     t8_cmesh_triangle.h
     t8_cmesh_vtk_reader.hxx
-    t8_cmesh_vtk_writer.h
     t8_eclass.h
     t8_element.h
     t8_element_c_interface.h

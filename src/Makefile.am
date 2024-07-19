@@ -26,7 +26,6 @@ libt8_installed_headers = \
   src/t8_element_c_interface.h \
   src/t8_refcount.h src/t8_cmesh.hxx src/t8_cmesh.h src/t8_cmesh_triangle.h \
   src/t8_cmesh_tetgen.h src/t8_cmesh_readmshfile.h \
-  src/t8_cmesh_vtk_writer.h \
   src/t8_cmesh_vtk_reader.hxx \
   src/t8_vec.h \
   src/t8_mat.h \
@@ -148,6 +147,7 @@ libt8_compiled_sources = \
   src/t8_vtk/t8_vtk_unstructured.cxx \
   src/t8_vtk/t8_vtk_parallel.cxx \
   src/t8_vtk/t8_vtk_reader.cxx \
+  src/t8_vtk/t8_vtk_writer.cxx \
   src/t8_vtk/t8_vtk_writer_c_interface.cxx \
   src/t8_vtk/t8_vtk_write_ASCII.cxx \
   src/t8_vtk/t8_vtk_writer_helper.cxx

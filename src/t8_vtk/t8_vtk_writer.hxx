@@ -63,8 +63,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <vtkMPI.h>
 #include <vtkMPICommunicator.h>
 #include <vtkMPIController.h>
-#endif
-#endif
+#endif /* T8_ENABLE_MPI */
+#endif /* T8_WITH_VTK */
 
 /**
  * A class that controls the writing of vtk files for cmeshes or forests. 
@@ -114,7 +114,7 @@ class vtk_writer {
   {
     this->t8_grid_to_vtkUnstructuredGrid (grid, unstructuredGrid);
   }
-#endif
+#endif /* T8_WITH_VTK */
 
   /**
    * A vtk-writer function that uses the vtk API.
@@ -419,8 +419,6 @@ class vtk_writer {
   }
 #endif /* T8_WITH_VTK */
 
-#endif
-
   /**
    * Write a vtk file given a forest or a cmesh.
    * 
@@ -476,7 +474,7 @@ class vtk_writer {
     vtk_mpi_ctrl->SetCommunicator (vtk_comm);
 
     pwriterObj->SetController (vtk_mpi_ctrl);
-#endif
+#endif /* T8_ENABLE_MPI */
     /*
     * We set the number of pieces as the number of mpi processes,
     * since we want to write a file for each process. We also
@@ -512,9 +510,9 @@ class vtk_writer {
     return false;
 
 #else
-  t8_global_errorf ("Warning: t8code is not linked against vtk library. Vtk output will not be generated.\n");
-  t8_global_productionf ("Consider calling 't8_forest_write_vtk' or 't8_forest_vtk_write_file' instead.\n");
-  return false;
+    t8_global_errorf ("Warning: t8code is not linked against vtk library. Vtk output will not be generated.\n");
+    t8_global_productionf ("Consider calling 't8_forest_write_vtk' or 't8_forest_vtk_write_file' instead.\n");
+    return false;
 #endif
   }
 
@@ -530,81 +528,4 @@ class vtk_writer {
   sc_MPI_Comm comm;
 };
 
-#if T8_WITH_VTK
-/**
- * \brief template specialization for forests. 
- * 
- */
-template <>
-void
-vtk_writer<t8_forest_t>::t8_grid_tree_to_vtk_cells (
-  const t8_forest_t forest, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
-  vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_treeid, vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_mpirank,
-  vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_level, vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_element_id,
-  vtkSmartPointer<vtkCellArray> cellArray, vtkSmartPointer<vtkPoints> points, int *cellTypes,
-  const t8_locidx_t num_local_trees, t8_gloidx_t *elem_id, long int *point_id, const t8_gloidx_t offset,
-  const bool ghosts, const t8_locidx_t itree)
-{
-  /* For both ghosts and pure-local trees iterate over all elements and translate them into a vtk cell. */
-  if (ghosts) {
-    const t8_locidx_t num_ghosts = t8_forest_ghost_tree_num_elements (forest, itree);
-    for (t8_locidx_t ielem_ghost = 0; ielem_ghost < num_ghosts; ielem_ghost++) {
-      const t8_element_t *element = t8_forest_ghost_get_element (forest, itree, ielem_ghost);
-      this->t8_grid_element_to_vtk_cell (forest, element, itree + num_local_trees, offset, true, *elem_id, point_id,
-                                         cellTypes, points, cellArray, vtk_treeid, vtk_mpirank, vtk_level,
-                                         vtk_element_id);
-      (*elem_id)++;
-    }
-  }
-  else {
-    const t8_locidx_t elems_in_tree = t8_forest_get_tree_num_elements (forest, itree);
-    /* We iterate over all elements in the tree */
-    for (t8_locidx_t ielement = 0; ielement < elems_in_tree; ielement++) {
-      const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
-      T8_ASSERT (element != NULL);
-      this->t8_grid_element_to_vtk_cell (forest, element, itree, offset, true, *elem_id, point_id, cellTypes, points,
-                                         cellArray, vtk_treeid, vtk_mpirank, vtk_level, vtk_element_id);
-      (*elem_id)++;
-
-    } /* end of loop over elements */
-  }
-  return;
-}
-
-/**
- * \brief template specialization for cmeshes. 
- * 
- */
-template <>
-void
-vtk_writer<t8_cmesh_t>::t8_grid_tree_to_vtk_cells (
-  const t8_cmesh_t cmesh, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
-  vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_treeid, vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_mpirank,
-  vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_level, vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_element_id,
-  vtkSmartPointer<vtkCellArray> cellArray, vtkSmartPointer<vtkPoints> points, int *cellTypes,
-  const t8_locidx_t num_local_trees, t8_gloidx_t *elem_id, long int *point_id, const t8_gloidx_t offset,
-  const bool ghosts, const t8_locidx_t itree)
-{
-  /* A cmesh does not have any further elements, we can call the translatore directly. */
-  this->t8_grid_element_to_vtk_cell (cmesh, NULL, itree, offset, ghosts, *elem_id, point_id, cellTypes, points,
-                                     cellArray, vtk_treeid, vtk_mpirank, vtk_level, vtk_element_id);
-  (*elem_id)++;
-  return;
-}
 #endif /* T8_VTK_WRITER_HXX */
-
-template <>
-bool
-vtk_writer<t8_forest_t>::write_ASCII (const t8_forest_t forest)
-{
-  return t8_forest_vtk_write_ASCII (forest, this->fileprefix.c_str (), this->write_treeid, this->write_mpirank,
-                                    this->write_level, this->write_element_id, this->write_ghosts, this->num_data,
-                                    this->data);
-}
-
-template <>
-bool
-vtk_writer<t8_cmesh_t>::write_ASCII (const t8_cmesh_t forest)
-{
-  return t8_cmesh_vtk_write_ASCII (forest, this->fileprefix.c_str ());
-}
