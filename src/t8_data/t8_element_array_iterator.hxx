@@ -38,21 +38,21 @@
 T8_EXTERN_C_BEGIN ();
 
 /**
- * @brief This struct resembles a bidirectional-iterator wrapper for the content of an \a t8_element_array_t.
+ * \brief This class resembles a bidirectional-iterator wrapper for the content of a \a t8_element_array_t.
  * The iterators can be dereferenced in order to receive an \a t8_element_t pointer to the corresponding index.
  * These iterators may be used in algorithms of the standard library (e.g. std::lower_bound,...) or to iterate
  * through an \a t8_element_array_t.
- * Since the actual data is serialized to char-bytes in the underlying array, we have to store an element pointer
- *  \a dref_element_ resembling the actual (serialized) element withint the iterator class and cannot return a real
- *  reference of the element pointer residing in the underlying array. Therefore, read-only operations are possible.
+ * Since the actual data is serialized to char-bytes in the underlying array, we reconstruct a \a t8_element_t pointer
+ * and let the dereference operator return it as a value_type. Therefore, read-only operations on the
+ * \a t8_element_array_t are possible.
  */
 class t8_element_array_iterator {
- 
+
  private:
   const t8_eclass_scheme_c* scheme; /*!< The scheme of the elements residing within the array. */
-  const sc_array_t* elements;          /*!< A pointer to the actual serialized array of element pointers. */
-  t8_locidx_t current_index { 0 };          /*!< The index the iterator currently points to. */
-  
+  const sc_array_t* elements;       /*!< A pointer to the actual serialized array of element pointers. */
+  t8_locidx_t current_index { 0 };  /*!< The index the iterator currently points to. */
+
  public:
   using iterator_category = std::bidirectional_iterator_tag;
   using difference_type = std::ptrdiff_t;
@@ -79,7 +79,8 @@ class t8_element_array_iterator {
   /* Destructor */
   ~t8_element_array_iterator () = default;
 
-  /* Dereferencing operator of the iterator wrapper, returning a reference to const of the t8_element_t-pointer to the serialized bytes representing the actual serialized t8_element_t pointer. */
+  /* Dereferencing operator of the iterator wrapper returning a value_type (a t8_element_t-pointer
+   * casted from the serialized char-bytes in the underlying sc_array_t). */
   value_type
   operator* ()
   {
@@ -173,7 +174,7 @@ t8_element_array_begin (const t8_element_array_t* element_array)
 }
 
 /**
- * \brief Get an bidirectional iterator to the one after the last element pointer within the array.
+ * \brief Get an bidirectional iterator to the one after the last element pointer within an element array.
  * 
  * \param[in] element_array The element array from which the end-bidirectional-iterator should be taken.
  * \return t8_element_array_iterator The iterator to the end of the element array.
