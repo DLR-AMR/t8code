@@ -49,7 +49,7 @@ T8_EXTERN_C_BEGIN ();
 class t8_element_array_iterator {
  
  private:
-  const t8_eclass_scheme_c* scheme_; /*!< The scheme of the elements residing within the array. */
+  const t8_eclass_scheme_c* scheme; /*!< The scheme of the elements residing within the array. */
   const sc_array_t* elements;          /*!< A pointer to the actual serialized array of element pointers. */
   t8_locidx_t current_index { 0 };          /*!< The index the iterator currently points to. */
   
@@ -63,7 +63,7 @@ class t8_element_array_iterator {
   /* Constructors */
   t8_element_array_iterator () = delete;
   t8_element_array_iterator (const t8_element_array_t* element_array, const t8_locidx_t position)
-    : scheme_ { t8_element_array_get_scheme (element_array) }, elements { t8_element_array_get_array (element_array) },
+    : scheme { t8_element_array_get_scheme (element_array) }, elements { t8_element_array_get_array (element_array) },
       current_index { position } {};
 
   /* Copy/Move Constructors/Assignment-Operators */
@@ -129,7 +129,7 @@ class t8_element_array_iterator {
   GetLinearIDAtLevel (const int level)
   {
     T8_ASSERT (current_index >= 0 && static_cast<size_t> (current_index) < elements->elem_count);
-    return scheme_->t8_element_get_linear_id (*(*this), level);
+    return scheme->t8_element_get_linear_id (*(*this), level);
   };
 
   /* Comparison operators */
