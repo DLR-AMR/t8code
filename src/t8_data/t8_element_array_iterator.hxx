@@ -21,7 +21,7 @@
 */
 
 /** \file t8_element_array_iterator.hxx
- * We define a pseudo-bidirectional-iterator for the t8_element_array that stores elements of a given
+ * We define a bidirectional-iterator for a \a t8_element_array_t that stores pointers to elements of a given
  * eclass scheme.
  */
 
