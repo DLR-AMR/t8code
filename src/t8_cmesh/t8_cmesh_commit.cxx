@@ -94,6 +94,7 @@ t8_cmesh_add_attributes (const t8_cmesh_t cmesh, sc_hash_t *ghost_ids)
 
   temp_facejoin = T8_ALLOC_ZERO (t8_ghost_facejoin_t, 1);
 
+  t8_locidx_t ghosts_inserted = 0;
   ltree = -1;
   for (si = 0, sj = 0; si < stash->attributes.elem_count; si++, sj++) {
     attribute = (t8_stash_attribute_struct_t *) sc_array_index (&stash->attributes, si);
@@ -112,8 +113,12 @@ t8_cmesh_add_attributes (const t8_cmesh_t cmesh, sc_hash_t *ghost_ids)
       T8_ASSERT (ghost_ids != NULL);
       temp_facejoin->ghost_id = attribute->id;
       if (sc_hash_lookup (ghost_ids, temp_facejoin, (void ***) &facejoin_pp)) {
+        T8_ASSERT (sj == (*facejoin_pp)->attr_id);
+        if (sj == 0) {
+          ghosts_inserted++;
+        }
         /* attribute is on a ghost tree */
-        t8_cmesh_trees_add_ghost_attribute (cmesh->trees, 0, attribute, (*facejoin_pp)->local_id,
+        t8_cmesh_trees_add_ghost_attribute (cmesh->trees, 0, attribute, (*facejoin_pp)->local_id, ghosts_inserted,
                                             (*facejoin_pp)->attr_id);
         (*facejoin_pp)->attr_id++;
       }

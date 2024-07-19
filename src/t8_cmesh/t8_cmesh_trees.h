@@ -433,9 +433,13 @@ void
 t8_cmesh_trees_add_attribute (const t8_cmesh_trees_t trees, int proc, const t8_stash_attribute_struct_t *attr,
                               t8_locidx_t tree_id, size_t index);
 
+/**
+ * 
+ * TODO: Document
+*/
 void
 t8_cmesh_trees_add_ghost_attribute (const t8_cmesh_trees_t trees, int proc, const t8_stash_attribute_struct_t *attr,
-                                    t8_locidx_t local_ghost_id, size_t index);
+                                    t8_locidx_t local_ghost_id, t8_locidx_t ghosts_inserted, size_t index);
 
 /** Return the number of parts of a trees structure.
  * \param [in]        trees The trees structure.
