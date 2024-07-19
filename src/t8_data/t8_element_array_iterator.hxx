@@ -51,7 +51,7 @@ class t8_element_array_iterator {
  private:
   const t8_eclass_scheme_c* scheme_; /*!< The scheme of the elements residing within the array. */
   const sc_array_t* elements;          /*!< A pointer to the actual serialized array of element pointers. */
-  t8_locidx_t index_ { 0 };          /*!< The index the iterator currently points to. */
+  t8_locidx_t current_index { 0 };          /*!< The index the iterator currently points to. */
   
  public:
   using iterator_category = std::bidirectional_iterator_tag;
@@ -64,7 +64,7 @@ class t8_element_array_iterator {
   t8_element_array_iterator () = delete;
   t8_element_array_iterator (const t8_element_array_t* element_array, const t8_locidx_t position)
     : scheme_ { t8_element_array_get_scheme (element_array) }, elements { t8_element_array_get_array (element_array) },
-      index_ { position } {};
+      current_index { position } {};
 
   /* Copy/Move Constructors/Assignment-Operators */
   t8_element_array_iterator (const t8_element_array_iterator& other) = default;
@@ -83,15 +83,15 @@ class t8_element_array_iterator {
   value_type
   operator* ()
   {
-    T8_ASSERT (index_ >= 0 && static_cast<size_t> (index_) < elements->elem_count);
-    return static_cast<t8_element_t*> (t8_sc_array_index_locidx (elements, index_));
+    T8_ASSERT (current_index >= 0 && static_cast<size_t> (current_index) < elements->elem_count);
+    return static_cast<t8_element_t*> (t8_sc_array_index_locidx (elements, current_index));
   };
 
   /* Pre- and Postfix increment */
   t8_element_array_iterator&
   operator++ ()
   {
-    ++index_;
+    ++current_index;
     return *this;
   };
   t8_element_array_iterator
@@ -106,7 +106,7 @@ class t8_element_array_iterator {
   t8_element_array_iterator&
   operator-- ()
   {
-    --index_;
+    --current_index;
     return *this;
   };
   t8_element_array_iterator
@@ -121,14 +121,14 @@ class t8_element_array_iterator {
   t8_locidx_t
   GetArrayIndex () const
   {
-    return index_;
+    return current_index;
   };
 
   /* Compute the linear id at a given level for the element the iterator points to. */
   t8_linearidx_t
   GetLinearIDAtLevel (const int level)
   {
-    T8_ASSERT (index_ >= 0 && static_cast<size_t> (index_) < elements->elem_count);
+    T8_ASSERT (current_index >= 0 && static_cast<size_t> (current_index) < elements->elem_count);
     return scheme_->t8_element_get_linear_id (*(*this), level);
   };
 
@@ -136,26 +136,26 @@ class t8_element_array_iterator {
   friend bool
   operator== (const t8_element_array_iterator& iter1, const t8_element_array_iterator& iter2)
   {
-    return (iter1.elements->array == iter2.elements->array && iter1.index_ == iter2.index_);
+    return (iter1.elements->array == iter2.elements->array && iter1.current_index == iter2.current_index);
   };
   friend bool
   operator!= (const t8_element_array_iterator& iter1, const t8_element_array_iterator& iter2)
   {
-    return (iter1.elements->array != iter2.elements->array || iter1.index_ != iter2.index_);
+    return (iter1.elements->array != iter2.elements->array || iter1.current_index != iter2.current_index);
   };
 
   /* Arithmetic assignment operators */
   t8_element_array_iterator&
   operator+= (const difference_type n)
   {
-    index_ += n;
+    current_index += n;
     return *this;
   }
   t8_element_array_iterator&
   operator-= (const difference_type n)
   {
-    index_ -= n;
-    T8_ASSERT (index_ < 0);
+    current_index -= n;
+    T8_ASSERT (current_index < 0);
     return *this;
   }
 };
