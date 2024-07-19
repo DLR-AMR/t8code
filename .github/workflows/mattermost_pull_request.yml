@@ -22,7 +22,7 @@
 # This is a workflow that posts messages in our Mattermost-Team concerning pull-requests and pushes
 # on the main, develop and feature-CI_mattermost_messages branch.
 
-name: Mattermost_message
+name: Mattermost_message_pull_request
 
 # Controls when the workflow will run
 on:
@@ -37,7 +37,7 @@ env:
   message_build: 0
   
 jobs:
-  send_mm_message:
+  send_mm_message_pr:
     if: github.repository == 'DLR-AMR/t8code'
     runs-on: ubuntu-20.04
     steps:
