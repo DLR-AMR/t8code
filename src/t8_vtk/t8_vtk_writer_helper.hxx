@@ -75,7 +75,7 @@ const double t8_forest_vtk_point_to_element_ref_coords[T8_ECLASS_COUNT][T8_FORES
         { -1, -1, -1 },  { -1, -1, -1 }, { -1, -1, -1 },  { -1, -1, -1 }, { -1, -1, -1 } } };
 
 /**
- * Get the number of vtk nodes for the eclass. If the flag curved_flag is activated we assume that the element is curved
+ * Get the number of vtk nodes for the eclass. If the flag \a curved_flag is activated we assume that the element is curved.
  * 
  * \param[in] eclass 
  * \param[in] curved_flag 
@@ -84,13 +84,23 @@ const double t8_forest_vtk_point_to_element_ref_coords[T8_ECLASS_COUNT][T8_FORES
 static int
 t8_get_number_of_vtk_nodes (const t8_element_shape_t eclass, const int curved_flag)
 {
-  /* use the lookup table of the eclasses. */
+  /* Use the lookup table of the eclasses. */
   if (curved_flag) {
     return t8_curved_eclass_num_nodes[eclass];
   }
   return t8_eclass_num_vertices[eclass];
 }
 
+/**
+ * Get the coordinates of an element to represent a vtk-cell. 
+ * 
+ * \param[in] forest The forest of \a element.
+ * \param[in] ltreeid The local id to the tree of \a element. 
+ * \param[in] element The element to process.
+ * \param[in] vertex The id of the vertex to evaluate. 
+ * \param[in] curved_flag Flag to tell if we use curved or linear cells. 
+ * \param[in, out] out_coords An array to fill with the coordinates of the vertex.
+ */
 static void
 t8_forest_vtk_get_element_nodes (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, const int vertex,
                                  const int curved_flag, double *out_coords)
@@ -104,11 +114,11 @@ t8_forest_vtk_get_element_nodes (t8_forest_t forest, t8_locidx_t ltreeid, const 
 }
 
 /**
- * Templated getter functions to use one call to get the local number of elements (trees) for a forest(cmesh)
+ * Templated getter functions to use one call to get the local number of elements (trees) for a forest(cmesh).
  * 
- * \tparam grid_t either a cmesh or a forest
- * \param[in] grid the forest/cmesh to use
- * \return number of local elements/trees 
+ * \tparam grid_t Either a cmesh or a forest.
+ * \param[in] grid The forest/cmesh to use.
+ * \return Number of local elements/trees.
  */
 template <typename grid_t>
 t8_locidx_t
@@ -129,11 +139,11 @@ grid_local_num_elements<t8_cmesh_t> (const t8_cmesh_t grid)
 }
 
 /**
- * Templated getter functions to use one call to get the local number of trees  for a forest(cmesh)
+ * Templated getter functions to use one call to get the local number of trees  for a forest(cmesh).
  * 
- * \tparam grid_t either a cmesh or a forest
- * \param[in] grid the forest/cmesh to use
- * \return number of local trees 
+ * \tparam grid_t Either a cmesh or a forest.
+ * \param[in] grid The forest/cmesh to use.
+ * \return Number of local trees.
  */
 template <typename grid_t>
 t8_locidx_t
@@ -154,11 +164,11 @@ grid_local_num_trees<t8_cmesh_t> (const t8_cmesh_t grid)
 }
 
 /**
- * Templated getter functions to use one call to get the local number of ghost trees  for a forest(cmesh)
+ * Templated getter functions to use one call to get the local number of ghost trees  for a forest(cmesh).
  * 
- * \tparam grid_t either a cmesh or a forest
- * \param[in] grid the forest/cmesh to use
- * \return number of local ghost trees 
+ * \tparam grid_t Either a cmesh or a forest.
+ * \param[in] grid The forest/cmesh to use.
+ * \return Number of local ghost trees.
  */
 template <typename grid_t>
 t8_locidx_t
@@ -179,11 +189,11 @@ grid_local_num_ghost_trees<t8_cmesh_t> (const t8_cmesh_t grid)
 }
 
 /**
- * Templated getter functions to use one call to get the id of the first local element (tree)  for a forest(cmesh)
+ * Templated getter functions to use one call to get the id of the first local element (tree)  for a forest(cmesh).
  * 
- * \tparam grid_t either a cmesh or a forest
- * \param[in] grid the forest/cmesh to use
- * \return the global id of the first local element/tree
+ * \tparam grid_t Either a cmesh or a forest.
+ * \param[in] grid The forest/cmesh to use.
+ * \return The global id of the first local element/tree.
  */
 template <typename grid_t>
 t8_gloidx_t
@@ -207,8 +217,8 @@ grid_first_local_id<t8_cmesh_t> (const t8_cmesh_t grid)
  * Templated getter functions to use one call to get the global tree id of a local tree id. 
  * 
  * \tparam grid_t 
- * \param[in] grid the forest/cmesh to use
- * \param[in] itree the local id of a tree
+ * \param[in] grid The forest/cmesh to use.
+ * \param[in] itree The local id of a tree.
  * \return t8_gloidx_t 
  */
 template <typename grid_t>
@@ -233,10 +243,10 @@ tree_local_to_global_id<t8_cmesh_t> (const t8_cmesh_t grid, t8_locidx_t ltree)
  * Templated getter functions to check if this proc has to write any ghosts or not. 
  * 
  * \tparam grid_t 
- * \param[in] grid the forest/cmesh to use
- * \param[in] write_ghosts does the user want to write ghosts in general?
- * \return true 
- * \return false 
+ * \param[in] grid the forest/cmesh to use.
+ * \param[in] write_ghosts Does the user want to write ghosts in general?
+ * \return true, if this process has to write ghosts. 
+ * \return false, otherwise.
  */
 template <typename grid_t>
 bool
@@ -268,12 +278,12 @@ grid_do_ghosts<t8_cmesh_t> (const t8_cmesh_t grid, const int write_ghosts)
 }
 
 /**
- * Compute the number of cells to write on this process
+ * Compute the number of cells to write on this process.
  * 
  * \tparam grid_t 
- * \param[in] grid the forest/cmesh to use
- * \param[in] write_ghosts flag if we write ghosts on this proc
- * \return the number of cells to write on this process
+ * \param[in] grid The forest/cmesh to use.
+ * \param[in] write_ghosts Flag if we write ghosts on this proc.
+ * \return The number of cells to write on this process.
  */
 template <typename grid_t>
 t8_locidx_t
@@ -298,10 +308,10 @@ num_cells_to_write<t8_cmesh_t> (const t8_cmesh_t grid, const int write_ghosts)
  * \a element is ignored. 
  * 
  * \tparam grid_t 
- * \param[in] grid the forest/cmesh to use
- * \param[in] itree the local if of the tree to use.
- * \param[in] element if \a grid is a forest an element in \a itree. 
- * \return the shape of the element 
+ * \param[in] grid The forest/cmesh to use.
+ * \param[in] itree The local if of the tree to use.
+ * \param[in] element If \a grid is a forest an element in \a itree. 
+ * \return The shape of the element.
  */
 template <typename grid_t>
 t8_element_shape_t
@@ -324,16 +334,16 @@ grid_element_shape<t8_cmesh_t> (const t8_cmesh_t grid, const t8_locidx_t itree, 
 }
 
 /**
- * @Compute the coordinates of the corners of an element in the grid. If the grid is a forest the input for element is ignored.
+ * Compute the coordinates of the corners of an element in the grid. If the grid is a forest the input for element is ignored.
  * 
  * \tparam grid_t 
- * \param[in] grid the forest/cmesh to use
- * \param[in] itree the local id of a tree in \a grid
- * \param[in] element an element in the tree with local id \a itree. If \a grid is cmesh the input is ignored. 
- * \param[in] curved_flag if true, we use quadratic elements to write. 
- * \param[in, out] coordinates an array with enough space to hold 3*num_node doubles. On output filled with the coordinate of the corners of the element/tree
- * \param[in] num_node the number of nodes to use to describe the element/tree
- * \param[in] shape the shape of the element/tree
+ * \param[in] grid The forest/cmesh to use.
+ * \param[in] itree The local id of a tree in \a grid.
+ * \param[in] element An element in the tree with local id \a itree. If \a grid is cmesh the input is ignored. 
+ * \param[in] curved_flag If true, we use quadratic elements to write. 
+ * \param[in, out] coordinates An array with enough space to hold 3*num_node doubles. On output filled with the coordinate of the corners of the element/tree
+ * \param[in] num_node The number of nodes to use to describe the element/tree.
+ * \param[in] shape The shape of the element/tree.
  */
 template <typename grid_t>
 void
@@ -364,10 +374,10 @@ grid_element_to_coords<t8_cmesh_t> (const t8_cmesh_t grid, const t8_locidx_t itr
  * Get the level of an element/tree. If \a grid is a cmesh we always return 0. 
  * 
  * \tparam grid_t 
- * \param[in] grid a forest/cmesh
- * \param[in] itree the local id of a tree in \a grid.
- * \param[in] element an element in the tree
- * \return the level of the element. 0, if \a grid is a cmesh 
+ * \param[in] grid A forest/cmesh
+ * \param[in] itree The local id of a tree in \a grid.
+ * \param[in] element An element in the tree.
+ * \return The level of the element. 0, if \a grid is a cmesh.
  */
 template <typename grid_t>
 int

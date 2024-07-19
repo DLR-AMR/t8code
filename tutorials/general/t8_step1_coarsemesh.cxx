@@ -37,7 +37,7 @@
 
 #include <t8.h>                         /* General t8code header, always include this. */
 #include <t8_cmesh.h>                   /* cmesh definition and basic interface. */
-#include <t8_vtk/t8_vtk_writer.hxx>     /* cmesh-writer interface. */
+#include <t8_cmesh_vtk_writer.h>        /* cmesh-writer interface. */
 #include <t8_cmesh/t8_cmesh_examples.h> /* A collection of exemplary cmeshes */
 
 /* Builds cmesh of 6 tetrahedra that build up a unit cube.
@@ -76,10 +76,7 @@ t8_step1_build_tetcube_coarse_mesh (sc_MPI_Comm comm)
 static void
 t8_step1_write_cmesh_vtk (t8_cmesh_t cmesh, const char *prefix)
 {
-  //t8_cmesh_vtk_write_file (cmesh, prefix);
-  vtk_writer<t8_cmesh_t> writer (true, true, true, false, true, false, std::string (prefix), 0, NULL,
-                                 sc_MPI_COMM_WORLD);
-  writer.write_with_API (cmesh);
+  t8_cmesh_vtk_write_file (cmesh, prefix);
 }
 
 /* Destroy a cmesh. This will free all allocated memory.
