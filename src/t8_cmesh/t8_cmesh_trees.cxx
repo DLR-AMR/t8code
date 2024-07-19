@@ -233,7 +233,7 @@ typedef struct
 bool
 t8_compare_id_and_att_by_global_id (t8_part_ghost_id_and_num_atts &id_A, t8_part_ghost_id_and_num_atts &id_B)
 {
-  return id_A.global_id - id_B.global_id;
+  return id_A.global_id < id_B.global_id;
 }
 
 /* Compare function for t8_part_ghost_id_and_num_atts to compare by local id.
@@ -245,7 +245,7 @@ t8_compare_id_and_att_by_global_id (t8_part_ghost_id_and_num_atts &id_A, t8_part
 bool
 t8_compare_id_and_att_by_part_id (t8_part_ghost_id_and_num_atts &id_A, t8_part_ghost_id_and_num_atts &id_B)
 {
-  return id_A.part_ghost_id - id_B.part_ghost_id;
+  return id_A.part_ghost_id < id_B.part_ghost_id;
 }
 
 static std::vector<t8_part_ghost_id_and_num_atts>
