@@ -437,8 +437,7 @@ t8_sele_parent (const t8_standalone_element_t<eclass_T> *p, t8_standalone_elemen
 
 template <t8_eclass_t eclass_T>
 void
-t8_sele_successor (const t8_standalone_element_t<eclass_T> *elem, t8_standalone_element_t<eclass_T> *succ,
-                   const int level)
+t8_sele_successor (const t8_standalone_element_t<eclass_T> *elem, t8_standalone_element_t<eclass_T> *succ, const int level)
 {
   T8_ASSERT (1 <= level && level <= T8_ELEMENT_MAXLEVEL[eclass_T]);
   t8_sele_copy (elem, succ);

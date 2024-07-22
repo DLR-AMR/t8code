@@ -29,8 +29,6 @@
 #ifndef T8_FOREST_IO_H
 #define T8_FOREST_IO_H
 
-/*TODO: Check if all headers are needed */
-#include <t8_cmesh.h>
 #include <t8_vtk.h>
 T8_EXTERN_C_BEGIN ();
 

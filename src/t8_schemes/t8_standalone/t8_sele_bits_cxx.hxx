@@ -128,6 +128,10 @@ template <t8_eclass_t eclass_T>
 int
 t8_sele_compare (const t8_standalone_element_t<eclass_T> *p1, const t8_standalone_element_t<eclass_T> *p2);
 
+template <t8_eclass_t eclass_T>
+int
+t8_sele_equal (const t8_standalone_element_t<eclass_T> *p1, const t8_standalone_element_t<eclass_T> *p2);
+
 /** Check whether a collection of 10 pyramids is a family in Morton order.
  * \param [in]  fam A collection of pyramids
  * \return      Nonzero if \a fam is a family of pyramids
@@ -393,7 +397,6 @@ t8_sele_shape (const t8_standalone_element_t<eclass_T> *p);
  * \param [in] elem  pyramid whose id will be computed.
  * \param [in,out] s Existing pyramid whose data will be filled with the
  *                data of \a l's successor on level \a level.
- * \param [in] level level of uniform grid to be considered.
  */
 template <t8_eclass_t eclass_T>
 void

@@ -22,14 +22,13 @@
 
 #include <t8.h>
 #include <t8_forest/t8_forest.h>
-#include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <sc_refcount.h>
 #include <sc_flops.h>
 #include <sc_statistics.h>
@@ -345,7 +344,6 @@ t8_construct_fractal (int level_initial, int level_end, const int iterative, con
 
   sc_stats_accumulate (&times[0], time_refine);
   sc_stats_accumulate (&times[1], time_coarse);
-  ;
   sc_stats_compute (sc_MPI_COMM_WORLD, 2, times);
   sc_stats_print (t8_get_package_id (), SC_LP_ESSENTIAL, 2, times, 1, 1);
 

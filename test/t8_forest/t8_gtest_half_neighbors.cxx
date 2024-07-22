@@ -21,17 +21,19 @@
 */
 
 #include <gtest/gtest.h>
+#include <test/t8_gtest_custom_assertion.hxx>
+
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_forest/t8_forest_cxx.h>
 #include <t8_forest/t8_forest_types.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone_cxx.hxx>
 #include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
+#include <test/t8_gtest_macros.hxx>
 
 class forest_half_neighbors: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
  protected:
@@ -92,7 +94,7 @@ TEST_P (forest_half_neighbors, test_half_neighbors)
   /* iterate over all elements */
   for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++) {
     for (t8_locidx_t ielement = 0; ielement < t8_forest_get_tree_num_elements (forest, itree); ielement++) {
-      t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
       /* iterate over the faces */
       for (int face = 0; face < ts->t8_element_num_faces (element); face++) {
         /* Get the eclass of the face neighbor and get the scheme */
@@ -117,9 +119,8 @@ TEST_P (forest_half_neighbors, test_half_neighbors)
                                                      child_ids);
           /* Check that the children at face of the neighbor are the half neighbors of the element */
           for (int ineigh = 0; ineigh < num_face_neighs; ineigh++) {
-            ASSERT_TRUE (!neigh_scheme->t8_element_compare (neighbor_face_children[ineigh], half_neighbors[ineigh]))
-              << "Half neighbor " << ineigh << " at face " << face << "is not equal to child" << ineigh
-              << "of the neighbor element.\n";
+            EXPECT_ELEM_EQ (neigh_scheme, neighbor_face_children[ineigh], half_neighbors[ineigh])
+              << "ineigh = " << ineigh << " face = " << face;
           }
           neigh_scheme->t8_element_destroy (num_face_neighs, neighbor_face_children);
           T8_FREE (child_ids);
@@ -136,4 +137,4 @@ TEST_P (forest_half_neighbors, test_half_neighbors)
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_half_neighbors, forest_half_neighbors,
-                          testing::Combine (testing::Range (T8_ECLASS_VERTEX, T8_ECLASS_COUNT), testing::Range (0, 3)));
+                          testing::Combine (AllEclasses, testing::Range (0, 3)));

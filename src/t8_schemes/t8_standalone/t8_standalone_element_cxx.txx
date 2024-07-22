@@ -91,6 +91,18 @@ t8_standalone_scheme_c<eclass_T>::t8_element_compare (const t8_element_t *elem1,
 }
 
 template <t8_eclass_t eclass_T>
+int
+t8_standalone_scheme_c<eclass_T>::t8_element_equal (const t8_element_t *elem1, const t8_element_t *elem2) const
+{
+  T8_ASSERT (t8_element_is_valid (elem1));
+  T8_ASSERT (t8_element_is_valid (elem2));
+  return t8_sele_equal<eclass_T> ((const t8_standalone_element_t<eclass_T> *) elem1,
+                                  (const t8_standalone_element_t<eclass_T> *) elem2);
+}
+
+
+
+template <t8_eclass_t eclass_T>
 void
 t8_standalone_scheme_c<eclass_T>::t8_element_parent (const t8_element_t *elem, t8_element_t *parent) const
 {
@@ -222,7 +234,7 @@ t8_standalone_scheme_c<eclass_T>::t8_element_ancestor_id (const t8_element_t *el
 
 template <t8_eclass_t eclass_T>
 int
-t8_standalone_scheme_c<eclass_T>::t8_element_is_family (t8_element_t **fam) const
+t8_standalone_scheme_c<eclass_T>::t8_element_is_family (t8_element_t *const*fam) const
 {
 #if T8_ENABLE_DEBUG
   int num_siblings = t8_element_num_siblings (fam[0]);
@@ -465,11 +477,10 @@ t8_standalone_scheme_c<eclass_T>::t8_element_last_descendant (const t8_element_t
 
 template <t8_eclass_t eclass_T>
 void
-t8_standalone_scheme_c<eclass_T>::t8_element_successor (const t8_element_t *t, t8_element_t *s, int level) const
+t8_standalone_scheme_c<eclass_T>::t8_element_successor (const t8_element_t *t, t8_element_t *s) const
 {
   T8_ASSERT (t8_element_is_valid (t));
-  t8_sele_successor<eclass_T> ((const t8_standalone_element_t<eclass_T> *) t, (t8_standalone_element_t<eclass_T> *) s,
-                               level);
+  t8_sele_successor<eclass_T> ((const t8_standalone_element_t<eclass_T> *) t, (t8_standalone_element_t<eclass_T> *) s, t8_element_level(t));
   T8_ASSERT (t8_element_is_valid (s));
 }
 
@@ -500,7 +511,7 @@ t8_standalone_scheme_c<eclass_T>::t8_element_reference_coords (const t8_element_
 
 template <t8_eclass_t eclass_T>
 t8_gloidx_t
-t8_standalone_scheme_c<eclass_T>::t8_element_count_leafs (const t8_element_t *elem, int level) const
+t8_standalone_scheme_c<eclass_T>::t8_element_count_leaves (const t8_element_t *elem, int level) const
 {
   return t8_sele_num_descendants_at_leveldiff<eclass_T> ((const t8_standalone_element_t<eclass_T> *) elem,
                                                          level - t8_element_level (elem));
@@ -508,7 +519,7 @@ t8_standalone_scheme_c<eclass_T>::t8_element_count_leafs (const t8_element_t *el
 
 template <t8_eclass_t eclass_T>
 t8_gloidx_t
-t8_standalone_scheme_c<eclass_T>::t8_element_count_leafs_from_root (int level) const
+t8_standalone_scheme_c<eclass_T>::t8_element_count_leaves_from_root (int level) const
 {
   T8_ASSERT (level >= 0);
   if constexpr (eclass_T == T8_ECLASS_PYRAMID) {
@@ -544,7 +555,27 @@ t8_standalone_scheme_c<eclass_T>::t8_element_debug_print (const t8_element_t *el
   t8_sele_debug_print<eclass_T> ((const t8_standalone_element_t<eclass_T> *) elem);
   T8_ASSERT (t8_element_is_valid (elem));
 }
+
+ /**
+ * \brief Fill a string with readable information about the element
+ * 
+ * \param[in] elem The element to translate into human-readable information
+ * \param[in, out] debug_string The string to fill. 
+ */
+template <t8_eclass_t eclass_T> void
+t8_standalone_scheme_c<eclass_T>::t8_element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const
+{
+  SC_ABORT("Not implemented \n");
+}
+
 #endif
+
+template <t8_eclass_t eclass_T>
+void
+t8_standalone_scheme_c<eclass_T>::t8_element_root (t8_element_t *elem) const {
+  t8_sele_root((t8_standalone_element_t<eclass_T> *)elem);
+}
+
 
 template <t8_eclass_t eclass_T>
 void
@@ -564,7 +595,7 @@ t8_standalone_scheme_c<eclass_T>::t8_element_new (int length, t8_element_t **ele
   {
     int i;
     for (i = 0; i < length; i++) {
-      t8_element_init (1, elem[i], 0);
+      t8_element_root (elem[i]);
     }
   }
 #endif
@@ -572,20 +603,21 @@ t8_standalone_scheme_c<eclass_T>::t8_element_new (int length, t8_element_t **ele
 
 template <t8_eclass_t eclass_T>
 void
-t8_standalone_scheme_c<eclass_T>::t8_element_init (int length, t8_element_t *elem, int called_new) const
+t8_standalone_scheme_c<eclass_T>::t8_element_init (int length, t8_element_t *elem) const
 {
-#ifdef T8_ENABLE_DEBUG
-  if (!called_new) {
-    int i;
-    t8_standalone_element_t<eclass_T> *el = (t8_standalone_element_t<eclass_T> *) elem;
-    /* Set all values to 0 */
-    for (i = 0; i < length; i++) {
-      t8_sele_init_linear_id<eclass_T> (el + i, 0, 0);
-      T8_ASSERT (t8_sele_is_valid<eclass_T> (el + i));
-    }
+  t8_standalone_element_t<eclass_T> *sele_array = (t8_standalone_element_t<eclass_T> *)elem;
+  for (int i = 0; i < length; i++) {
+    t8_sele_root(sele_array + i);
   }
-#endif
 }
+
+template <t8_eclass_t eclass_T>
+void
+t8_standalone_scheme_c<eclass_T>::t8_element_deinit (int length, t8_element_t *elem) const
+{
+}
+
+
 
 template <t8_eclass_t eclass_T>
 void
@@ -597,4 +629,27 @@ t8_standalone_scheme_c<eclass_T>::t8_element_destroy (int length, t8_element_t *
   for (int i = 0; i < length; ++i) {
     sc_mempool_free ((sc_mempool_t *) this->ts_context, elem[i]);
   }
+}
+
+template <t8_eclass_t eclass_T>
+void
+t8_standalone_scheme_c<eclass_T>::t8_element_MPI_Pack (t8_element_t **const elements, const unsigned int count, void *send_buffer, int buffer_size,
+                       int *position, sc_MPI_Comm comm) const
+{
+  SC_ABORT("Not implemented\n");
+}
+
+template <t8_eclass_t eclass_T>
+void
+t8_standalone_scheme_c<eclass_T>::t8_element_MPI_Pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size) const
+{
+  SC_ABORT("Not implemented\n");
+}
+
+template <t8_eclass_t eclass_T> 
+void
+t8_standalone_scheme_c<eclass_T>::t8_element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements,
+                         const unsigned int count, sc_MPI_Comm comm) const
+{
+  SC_ABORT("Not implemented\n");
 }

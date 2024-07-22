@@ -1,9 +1,17 @@
 # Contributing
 
-t8code is an open-source project and contributions from the community is much
+t8code is an open-source project and contributions from the community are much
 appreciated. Please feel free to open issues or submit patches (preferably as
-pull requests) any time. For larger contributions, it is often beneficial to
+pull requests) any time.
+For larger contributions, it is often beneficial to
 get in contact with one of the principal developers first.
+You can do so by opening a "feature request" issue.
+
+Please see our Wiki article on contributing for more details: https://github.com/DLR-AMR/t8code/wiki/Coding-Guideline#contributing 
+
+Contributors are required to put their contributions under the FreeBSD license. To do so, add a file `doc/author_NAME.txt` with the content "I place my contributions to t8code under the FreeBSD license. FIRSTNAME LASTNAME \<EMAIL\>"
+
+
 
 t8code and its direct contributions are licensed under the GPLv2 (see
 [COPYING](COPYING)). As a contributor, you certify that all your

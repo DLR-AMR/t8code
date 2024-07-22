@@ -26,7 +26,7 @@
 #include <t8_cmesh/t8_cmesh_partition.h>
 #include <t8_cmesh_tetgen.h>
 #include <t8_cmesh_vtk_writer.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>
 
@@ -45,7 +45,7 @@ t8_cmesh_from_tetgen (const char *prefix, int do_partition)
     t8_debugf ("Successfully constructed cmesh from %s files.\n", prefix);
     t8_debugf ("cmesh has:\n\t%lli tetrahedra\n", (long long) t8_cmesh_get_num_trees (cmesh));
     snprintf (fileprefix, BUFSIZ, "%s_t8_tetgen_%04d", prefix, mpirank);
-    if (!t8_cmesh_vtk_write_file (cmesh, fileprefix, 1.)) {
+    if (!t8_cmesh_vtk_write_file (cmesh, fileprefix)) {
       t8_debugf ("Wrote to file %s\n", fileprefix);
     }
     else {

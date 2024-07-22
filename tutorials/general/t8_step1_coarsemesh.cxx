@@ -76,7 +76,7 @@ t8_step1_build_tetcube_coarse_mesh (sc_MPI_Comm comm)
 static void
 t8_step1_write_cmesh_vtk (t8_cmesh_t cmesh, const char *prefix)
 {
-  t8_cmesh_vtk_write_file (cmesh, prefix, 1.0);
+  t8_cmesh_vtk_write_file (cmesh, prefix);
 }
 
 /* Destroy a cmesh. This will free all allocated memory.
@@ -106,7 +106,7 @@ main (int argc, char **argv)
   /* Initialize the sc library, has to happen before we initialize t8code. */
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
-  t8_init (SC_LP_PRODUCTION);
+  t8_init (SC_LP_DEBUG);
 
   /* Print a message on the root process. */
   t8_global_productionf (" [step1] \n");

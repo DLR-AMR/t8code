@@ -78,7 +78,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-tags: true # required to get version tags
+          fetch-depth: 0    # required to get all history, especially the version tags      
+      - name: install sudo
+        run: apt update && apt install sudo
+      # On the github Ubuntu 20.04, sudo is not available by default
+      # we need it, however, to update/upgrade our packages.      
+      - name: Update packages
+        run: sudo apt-get update && sudo apt-get upgrade -y
+      # This step is necessary to get the newest package data
       - name: define sc var
         run: hash=`git rev-parse HEAD:sc` && echo sc_commit=$hash >> $GITHUB_ENV
       - name: define p4est var
@@ -90,7 +98,7 @@ jobs:
         run: echo test_path=$PWD/test_path >> $GITHUB_ENV
       - name: Cache SC
         id: sc_cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             sc/build_test

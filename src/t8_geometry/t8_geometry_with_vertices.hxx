@@ -21,7 +21,7 @@
 */
 
 /** \file t8_geometry_with_vertices.hxx
- * Implements the inherited class t8_geometry_with_vertices, which can be 
+ * Implements the inherited struct t8_geometry_with_vertices, which can be 
  * used for geometries that use vertex coordinate information of the cmesh.
  */
 
@@ -29,17 +29,18 @@
 #define T8_GEOMETRY_WITH_VERTICES_HXX
 
 #include <t8_cmesh.h>
+#include <t8_forest/t8_forest.h>
 #include <t8_geometry/t8_geometry_base.hxx>
 #include <t8_geometry/t8_geometry_base.h>
 #include <t8_geometry/t8_geometry_with_vertices.h>
 
 T8_EXTERN_C_BEGIN ();
 
-class t8_geometry_with_vertices: public t8_geometry {
+struct t8_geometry_with_vertices: public t8_geometry
+{
  public:
   /* Basic constructor that sets the dimension, the name, and the name for the attribute. */
-  t8_geometry_with_vertices (int dimension, const char *name, const char *attribute_name = NULL)
-    : t8_geometry (dimension, name, attribute_name)
+  t8_geometry_with_vertices (int dimension, std::string name): t8_geometry (dimension, name)
   {
     active_tree_vertices = NULL;
     active_tree = -1;
@@ -74,12 +75,29 @@ class t8_geometry_with_vertices: public t8_geometry {
   virtual void
   t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 
+  /**
+   * Check if the currently active tree has a negative volume
+   * \return                True (non-zero) if the currently loaded tree has a negative volume. 0 otherwise.  
+   */
+  virtual bool
+  t8_geom_tree_negative_volume () const;
+
+  /**
+   * Get the type of this geometry.
+   * \return The type.
+   */
+  inline t8_geometry_type_t
+  t8_geom_get_type () const
+  {
+    return T8_GEOMETRY_TYPE_UNDEFINED;
+  };
+
  protected:
   t8_gloidx_t active_tree;            /*< The tree of which currently vertices are loaded. */
   t8_eclass_t active_tree_class;      /*< The class of the currently active tree. */
-  const double *active_tree_vertices; /*< The vertices of the currently active tree. */
+  const double* active_tree_vertices; /*< The vertices of the currently active tree. */
 };
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_GEOMETRY_WITH_VERTICES_HXX! */
+#endif /* !T8_GEOMETRY_WITH_VERTICES_HXX */

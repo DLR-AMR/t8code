@@ -28,10 +28,11 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
 #include <t8_vec.h>
-#include <t8_element_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_element.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
+#include <test/t8_gtest_macros.hxx>
 
 #if T8_ENABLE_LESS_TESTS
 #define MAX_LEVEL_REF_COORD_TEST 3
@@ -104,10 +105,9 @@ void
 t8_get_batch_coords_for_element_type (const t8_element_shape_t shape, double *batch_coords)
 {
   const int num_vertices = t8_eclass_num_vertices[shape];
-  const int elem_dim = t8_eclass_to_dimension[shape];
   for (int i_vertex = 0; i_vertex < num_vertices; ++i_vertex) {
-    for (int dim = 0; dim < elem_dim; ++dim) {
-      batch_coords[i_vertex * elem_dim + dim] = t8_element_corner_ref_coords[shape][i_vertex][dim];
+    for (int dim = 0; dim < T8_ECLASS_MAX_DIM; ++dim) {
+      batch_coords[i_vertex * T8_ECLASS_MAX_DIM + dim] = t8_element_corner_ref_coords[shape][i_vertex][dim];
     }
   }
 }
@@ -252,7 +252,7 @@ TEST_P (class_ref_coords, t8_check_elem_ref_coords)
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
     const t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest, tree_class);
     for (ielement = 0; ielement < t8_forest_get_tree_num_elements (forest, itree); ielement++) {
-      t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
       t8_test_coords (forest, itree, element, ts);
     }
   }
@@ -260,5 +260,4 @@ TEST_P (class_ref_coords, t8_check_elem_ref_coords)
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_element_ref_coords, class_ref_coords,
-                          testing::Combine (testing::Range (T8_ECLASS_VERTEX, T8_ECLASS_COUNT),
-                                            testing::Range (0, MAX_LEVEL_REF_COORD_TEST + 1)));
+                          testing::Combine (AllEclasses, testing::Range (0, MAX_LEVEL_REF_COORD_TEST + 1)));

@@ -52,15 +52,16 @@ typedef struct t8_cprofile t8_cprofile_t; /* Defined below */
  * T8_CMESH_NEXT_POSSIBLE_KEY is the first unused key, hence it can be repurposed for different attributes.*/
 #define T8_CMESH_VERTICES_ATTRIBUTE_KEY 0            /* Used to store vertex coordinates. */
 #define T8_CMESH_GEOMETRY_ATTRIBUTE_KEY 1            /* Used to store the name of a tree's geometry. */
-#define T8_CMESH_OCC_EDGE_ATTRIBUTE_KEY 2            /* Used to store which edge is linked to which geometry */
-#define T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY 3 /* Used to store edge parameters */
-#define T8_CMESH_OCC_FACE_ATTRIBUTE_KEY \
-  T8_CMESH_OCC_EDGE_PARAMETERS_ATTRIBUTE_KEY \
+#define T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY 2            /* Used to store which edge is linked to which geometry */
+#define T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY 3 /* Used to store edge parameters */
+#define T8_CMESH_CAD_FACE_ATTRIBUTE_KEY \
+  T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY \
   +T8_ECLASS_MAX_EDGES /* Used to store which face is linked to which surface */
-#define T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY \
-  T8_CMESH_OCC_FACE_ATTRIBUTE_KEY + 1 /* Used to store face parameters */
+#define T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY \
+  T8_CMESH_CAD_FACE_ATTRIBUTE_KEY + 1 /* Used to store face parameters */
+#define T8_CMESH_LAGRANGE_POLY_DEGREE T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + T8_ECLASS_MAX_FACES
 #define T8_CMESH_NEXT_POSSIBLE_KEY \
-  T8_CMESH_OCC_FACE_PARAMETERS_ATTRIBUTE_KEY + T8_ECLASS_MAX_FACES /* The next free value for a t8code attribute key */
+  T8_CMESH_LAGRANGE_POLY_DEGREE + 1 /* The next free value for a t8code attribute key */
 
 /** This structure holds the connectivity data of the coarse mesh.
  *  It can either be replicated, then each process stores a copy of the whole
@@ -94,11 +95,7 @@ typedef struct t8_cmesh
   int face_knowledge; /**< If partitioned the level of face knowledge that is expected. \ref t8_mesh_set_partitioned;
                             see \ref t8_cmesh_set_partition.
 */
-  /* TODO: Define a maximum allowed refinemet level */
-  int8_t set_refine_level; /**< If the cmesh is derived from a second cmesh, a refinement level is specified here.
-                                      \ref t8_cmesh_set_derive \ref t8_cmesh_set_refine. */
-  t8_scheme_cxx_t *set_refine_scheme;    /**< If the cmesh is to be refined, the scheme that describes the
-                                           refinement pattern. See \ref t8_cmesh_set_refine. */
+
   t8_scheme_cxx_t *set_partition_scheme; /**< If the cmesh is to be partitioned according to a uniform level,
                                                 the scheme that describes the refinement pattern. See \ref t8_cmesh_set_partition. */
   int8_t set_partition_level;  /**< Non-negative if the cmesh should be partitioned from an already existing cmesh
@@ -138,7 +135,7 @@ typedef struct t8_cmesh
                                         if the first tree on that process is shared.
                                         Since this is very memory consuming we only fill it when needed. */
 
-  t8_geometry_handler_t *geometry_handler; /**< Handles all geometries that are used by trees in this cmesh. */
+  t8_geometry_handler_c *geometry_handler; /**< Handles all geometries that are used by trees in this cmesh. */
 
 #ifdef T8_ENABLE_DEBUG
   t8_locidx_t inserted_trees;  /**< Count the number of inserted trees to

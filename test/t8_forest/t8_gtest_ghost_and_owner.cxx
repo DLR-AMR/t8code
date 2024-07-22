@@ -23,12 +23,13 @@
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
 #include <t8_schemes/t8_standalone/t8_standalone_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_private.h>
 #include <t8_cmesh.h>
-#include "t8_cmesh/t8_cmesh_testcases.h"
+#include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
+#include <test/t8_gtest_macros.hxx>
 
 /* This test program tests the forest ghost layer.
  * We adapt a forest and create its ghost layer. Afterwards, we
@@ -36,16 +37,19 @@
  * element is in face the owner that is stored in the ghost layer.
   */
 
-class forest_ghost_owner: public testing::TestWithParam<int> {
+class forest_ghost_owner: public testing::TestWithParam<cmesh_example_base *> {
  protected:
   void
   SetUp () override
   {
-    cmesh_id = GetParam ();
 
     scheme = t8_scheme_new_standalone_cxx ();
     /* Construct a cmesh */
-    cmesh = t8_test_create_cmesh (cmesh_id);
+    cmesh = GetParam ()->cmesh_create ();
+    if (t8_cmesh_is_empty (cmesh)) {
+      /* empty cmeshes are currently not supported */
+      GTEST_SKIP ();
+    }
   }
   void
   TearDown () override
@@ -53,7 +57,6 @@ class forest_ghost_owner: public testing::TestWithParam<int> {
     t8_cmesh_destroy (&cmesh);
     t8_scheme_cxx_unref (&scheme);
   }
-  int cmesh_id;
   t8_cmesh_t cmesh;
   t8_scheme_cxx_t *scheme;
 };
@@ -142,5 +145,4 @@ TEST_P (forest_ghost_owner, test_ghost_owner)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_and_owner, forest_ghost_owner,
-                          testing::Range (0, t8_get_number_of_all_testcases ()));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_and_owner, forest_ghost_owner, AllCmeshsParam, pretty_print_base_example);

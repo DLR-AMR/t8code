@@ -28,6 +28,11 @@
 # arguments tells clang-format to look for a *.clang-format file.
 FORMAT_OPTIONS="-i --style=file"
 
+# Required version of the clang format program.
+REQUIRED_VERSION_MAJOR="17"
+REQUIRED_VERSION_MINOR="0"
+REQUIRED_VERSION_PATCH="1"
+REQUIRED_VERSION_STRING="${REQUIRED_VERSION_MAJOR}.${REQUIRED_VERSION_MINOR}.${REQUIRED_VERSION_PATCH}"
 
 FORMAT=`which clang-format 2> /dev/null`
 
@@ -35,7 +40,7 @@ if [ -z "$FORMAT" ]
 then
   # Exit if the spell checking script was not found
   echo "ERROR: clang-format not found."
-  echo "Please install clang-format version 16.0.xyz"
+  echo "Please install clang-format version ${REQUIRED_VERSION_STRING}."
   echo "See https://github.com/ssciwr/clang-format-wheel"
   exit 1
 fi
@@ -47,8 +52,8 @@ MAJOR=`echo $VERSION | cut -d. -f1`
 MINOR=`echo $VERSION | cut -d. -f2`
 PATCH=`echo $VERSION | cut -d. -f3`
 
-if [[ "$MAJOR" != "17" || $MINOR != "0" || $PATCH != "1" ]]; then
-  echo "Please install clang-format version 17.0.1"
+if [[ "$MAJOR" != "$REQUIRED_VERSION_MAJOR" || $MINOR != "$REQUIRED_VERSION_MINOR" || $PATCH != "$REQUIRED_VERSION_PATCH" ]]; then
+  echo "Please install clang-format version $REQUIRED_VERSION_STRING"
   exit 1
 fi
 

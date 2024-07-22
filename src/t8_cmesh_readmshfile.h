@@ -87,14 +87,14 @@ T8_EXTERN_C_BEGIN ();
  *                                  dimension to read has to be set manually.
  * \param [in]    master            If partition is true, a valid MPI rank that will
  *                                  read the file and store all the trees alone.
- * \param [in]    use_occ_geometry  Read the parameters of a parametric msh file and use the
- *                                  occ geometry.
+ * \param [in]    use_cad_geometry  Read the parameters of a parametric msh file and use the
+ *                                  cad geometry.
  * \return        A committed cmesh holding the mesh of dimension \a dim in the
  *                specified .msh file.
  */
 t8_cmesh_t
 t8_cmesh_from_msh_file (const char *fileprefix, int partition, sc_MPI_Comm comm, int dim, int master,
-                        int use_occ_geometry);
+                        int use_cad_geometry);
 
 T8_EXTERN_C_END ();
 

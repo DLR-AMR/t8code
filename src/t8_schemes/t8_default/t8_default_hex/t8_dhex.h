@@ -35,6 +35,9 @@
 /** The number of faces of a hex. */
 #define T8_DHEX_FACES 6
 
+/** The number of vertices of a hex. */
+#define T8_DHEX_VERTICES 8
+
 /** The number of children at a face of a hex. */
 #define T8_DHEX_FACE_CHILDREN 4
 

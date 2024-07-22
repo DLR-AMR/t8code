@@ -30,6 +30,7 @@
 #include <t8_cmesh.h>
 #include <p4est_connectivity.h>
 #include <p8est_connectivity.h>
+#include <t8_cmesh/t8_cmesh_geometry.h>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -60,9 +61,6 @@ t8_cmesh_new_from_p4est (p4est_connectivity_t *conn, sc_MPI_Comm comm, int do_pa
 t8_cmesh_t
 t8_cmesh_new_from_p8est (p8est_connectivity_t *conn, sc_MPI_Comm comm, int do_partition);
 
-/* TODO: it could possibly be a problem that we do not set the dimension of
- * the cmesh. This could i.e. be difficult when we combine an empty cmesh with
- * a non-empty one. */
 /** Construct a cmesh that has no trees. We do not know a special use case,
  * this function is merely for debugging and to show the possibility.
  * \param [in]      comm       mpi communicator to be used with the new cmesh.
@@ -71,7 +69,7 @@ t8_cmesh_new_from_p8est (p8est_connectivity_t *conn, sc_MPI_Comm comm, int do_pa
  * \return                     A committed t8_cmesh structure that has no trees.
  */
 t8_cmesh_t
-t8_cmesh_new_empty (sc_MPI_Comm comm, int do_partition, int dimension);
+t8_cmesh_new_empty (sc_MPI_Comm comm, const int do_partition, const int dimension);
 
 /** Constructs a cmesh that consists only of one tree of a given element class.
  * \param [in]      eclass     The element class.
@@ -105,12 +103,13 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
  * \param [in] boundary     The vertices, that define the hypercube boundary.
  * \param [in] polygons_x   The number of polygons along the x-axis.
  * \param [in] polygons_y   The number of polygons along the y-axis.
- *                          Only required if \a eclass is 2D or 3D.
- * \param [in] polygons_z   The number of polygons along the z-axis.
- *                          Only required if \a eclass is 3D.
- * \return                  A committed t8_cmesh structure with 
- *                          \a polygons_x * \a polygons_z * \a polygons_y many 
- *                          sub-hypercubes of class \a eclass.
+ *                              Only required if \a eclass is 2D or 3D.
+ * \param [in] polygons_z       The number of polygons along the z-axis.
+ *                              Only required if \a eclass is 3D.
+ * \param [in] use_axis_aligned Use the axis-aligned geometry. If used, only two points per tree are stored.
+ * \return                      A committed t8_cmesh structure with 
+ *                              \a polygons_x * \a polygons_z * \a polygons_y many 
+ *                              sub-hypercubes of class \a eclass.
  * \note \a boundary must point to an array with 3*8 (3D), 3*4 (2D), 3*2 (1D), or 3 (0D) entries.
  * \note Every sub-hypercube contains different number of trees depending on \a eclass.
  * \note If \a eclass == T8_ECLASS_VERTEX, _LINE, _QUAD or _HEX every sub-hypercube contains
@@ -134,7 +133,51 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
  */
 t8_cmesh_t
 t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass, sc_MPI_Comm comm, const double *boundary, t8_locidx_t polygons_x,
-                            t8_locidx_t polygons_y, t8_locidx_t polygons_z);
+                            t8_locidx_t polygons_y, t8_locidx_t polygons_z, const int use_axis_aligned);
+
+/** Construct a hypercube forest from one primitive tree class.
+ * \param [in] eclass       This element class determines the dimension of the cube.
+ * \param [in] comm         The mpi communicator to be used.
+ * \param [in] boundary     The vertices, that define the hypercube boundary.
+ * \param [in] polygons_x   The number of polygons along the x-axis.
+ * \param [in] polygons_y   The number of polygons along the y-axis.
+ *                              Only required if \a eclass is 2D or 3D.
+ * \param [in] polygons_z       The number of polygons along the z-axis.
+ *                              Only required if \a eclass is 3D.
+ * \param [in] periodic_x   Connect opposite sides of the hypercube in x-direction.
+ * \param [in] periodic_y   Connect opposite sides of the hypercube in y-direction.
+ * \param [in] periodic_z   Connect opposite sides of the hypercube in z-direction.
+ * \param [in] use_axis_aligned Use the axis-aligned geometry. If used, only two points per tree are stored.
+ * \param [in] set_partition  If true, partition the cmesh.
+ * \param [in] offset         Offset of the local tree ids for a given partition.
+ * \return                      A committed t8_cmesh structure with 
+ *                              \a polygons_x * \a polygons_z * \a polygons_y many 
+ *                              sub-hypercubes of class \a eclass.
+ * \note \a boundary must point to an array with 3*8 (3D), 3*4 (2D), 3*2 (1D), or 3 (0D) entries.
+ * \note Every sub-hypercube contains different number of trees depending on \a eclass.
+ * \note If \a eclass == T8_ECLASS_VERTEX, _LINE, _QUAD or _HEX every sub-hypercube contains
+ *  one tree, if _TRIANGLE or _PRISM two trees and if _TET six trees.
+ *  This is done in the same way as in \see t8_cmesh_new_hypercube.
+ * \example let eclass = T8_ECLASS_TRIANGLE
+ *              boundary coordinates = a(0,0,0), b(3,0,0), c(0,2,0), d(3,2,0)
+ *              polygons_x, _y, _z = 3, 1, 0                 
+ *      
+ *    c--f--h--d     The hypercube defined by the boundary coordinates
+ *    |  |  |  |     is first split into 3 sub-hypercubes. The sub-hypercubes
+ *    |  |  |  |     are ordered from left to right (and top to bottom).
+ *    a--e--g--b     Coordinates e,f,g,h are (1,0,0),(1,2,0),(2,0,0),(2,2,0).
+ * 
+ *    c--f--h--d     Each sub-hypercube is the split into 2 triangle roots.
+ *    |1/|3/|5/|     The ordering is the same as in \see t8_cmesh_new_hypercube.
+ *    |/0|/2|/4|     Thus, we get 6 trees, which are ordered as shown in the picture. 
+ *    a--e--g--b     
+ *
+ */
+t8_cmesh_t
+t8_cmesh_new_hypercube_pad_ext (const t8_eclass_t eclass, sc_MPI_Comm comm, const double *boundary,
+                                t8_locidx_t polygons_x, t8_locidx_t polygons_y, t8_locidx_t polygons_z,
+                                const int periodic_x, const int periodic_y, const int periodic_z,
+                                const int use_axis_aligned, const int set_partition, t8_gloidx_t offset);
 
 /** Hybercube with 6 Tets, 6 Prism, 4 Hex. 
  * \param [in]  comm            The mpi communicator to be used.
@@ -231,6 +274,31 @@ t8_cmesh_new_prism_cake_funny_oriented (sc_MPI_Comm comm);
 t8_cmesh_t
 t8_cmesh_new_prism_geometry (sc_MPI_Comm comm);
 
+/** Create a cmesh of quads whose trees are given by a `num_x * num_y` brick connectivity.
+ * \param [in] num_x       The number of trees in x-direction. Must be >= 0.
+ * \param [in] num_y       The number of trees in y-direction. Must be >= 0.
+ * \param [in] x_periodic  If nonzero, the local brick connectivity is periodic in x direction.
+ * \param [in] y_periodic  If nonzero, the local brick connectivity is periodic in y direction.
+ * \param [in] comm        The MPI communicator used to commit the cmesh.
+ * \return                 A committed and partitioned cmesh.
+ */
+t8_cmesh_t
+t8_cmesh_new_brick_2d (t8_gloidx_t num_x, t8_gloidx_t num_y, int x_periodic, int y_periodic, sc_MPI_Comm comm);
+
+/** Create a cmesh of hexs whose trees are given by a `num_x * num_y * num_z` brick connectivity.
+ * \param [in] num_x       The number of trees in x-direction. Must be >= 0.
+ * \param [in] num_y       The number of trees in y-direction. Must be >= 0.
+ * \param [in] num_z       The number of trees in z-direction. Must be >= 0.
+ * \param [in] x_periodic  If nonzero, the local brick connectivity is periodic in x direction.
+ * \param [in] y_periodic  If nonzero, the local brick connectivity is periodic in y direction.
+ * \param [in] z_periodic  If nonzero, the local brick connectivity is periodic in z direction.
+ * \param [in] comm        The MPI communicator used to commit the cmesh.
+ * \return                 A committed and partitioned cmesh.
+ */
+t8_cmesh_t
+t8_cmesh_new_brick_3d (t8_gloidx_t num_x, t8_gloidx_t num_y, t8_gloidx_t num_z, int x_periodic, int y_periodic,
+                       int z_periodic, sc_MPI_Comm comm);
+
 /** Create a partitioned cmesh of quads whose local trees are given by an
  * num_x by num_y brick connectivity from p4est
  * or a num_x by num_y by num_z brick connectivity from p8est.
@@ -316,13 +384,82 @@ t8_cmesh_new_long_brick_pyramid (sc_MPI_Comm comm, int num_cubes);
 t8_cmesh_t
 t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees, const int set_attributes, const int do_partition, sc_MPI_Comm comm);
 
-/** Construct a squared disk of given radius.
+/** Construct a quadrangulated disk of given radius.
  * \param [in] radius        Radius of the sphere.
  * \param [in] comm          The MPI communicator used to commit the cmesh
  * \return                   A cmesh representing the spherical surface.
  */
 t8_cmesh_t
-t8_cmesh_new_squared_disk (const double radius, sc_MPI_Comm comm);
+t8_cmesh_new_quadrangulated_disk (const double radius, sc_MPI_Comm comm);
+
+/** Construct a triangulated spherical surface of given radius: octahedron version.
+ * \param [in] radius        Radius of the sphere.
+ * \param [in] comm          The MPI communicator used to commit the cmesh
+ * \return                   A cmesh representing the spherical surface.
+ */
+t8_cmesh_t
+t8_cmesh_new_triangulated_spherical_surface_octahedron (const double radius, sc_MPI_Comm comm);
+
+/** Construct a triangulated spherical surface of given radius: icosahedron version.
+ * \param [in] radius        Radius of the sphere.
+ * \param [in] comm          The MPI communicator used to commit the cmesh
+ * \return                   A cmesh representing the spherical surface.
+ */
+t8_cmesh_t
+t8_cmesh_new_triangulated_spherical_surface_icosahedron (const double radius, sc_MPI_Comm comm);
+
+/** Construct a quadrangulated spherical surface of given radius.
+ * \param [in] radius        Radius of the sphere.
+ * \param [in] comm          The MPI communicator used to commit the cmesh
+ * \return                   A cmesh representing the spherical surface.
+ */
+t8_cmesh_t
+t8_cmesh_new_quadrangulated_spherical_surface (const double radius, sc_MPI_Comm comm);
+
+/** Construct a spherical shell discretized by prisms of given inner radius and thickness: octahedron version.
+ * \param [in] inner_radius       Radius of the inner side of the shell.
+ * \param [in] shell_thickness    Thickness of the shell.
+ * \param [in] num_levels         Refinement level per patch in longitudinal and latitudinal direction.
+ * \param [in] num_layers         Number of layers of the shell.
+ * \param [in] comm               The MPI communicator used to commit the cmesh
+ * \return                        A cmesh representing the spherical surface.
+ */
+t8_cmesh_t
+t8_cmesh_new_prismed_spherical_shell_octahedron (const double inner_radius, const double shell_thickness,
+                                                 const int num_levels, const int num_layers, sc_MPI_Comm comm);
+
+/** Construct a spherical shell discretized by prisms of given inner radius and thickness: icosahedron version.
+ * \param [in] inner_radius       Radius of the inner side of the shell.
+ * \param [in] shell_thickness    Thickness of the shell.
+ * \param [in] num_levels         Refinement level per patch in longitudinal and latitudinal direction.
+ * \param [in] num_layers         Number of layers of the shell.
+ * \param [in] comm               The MPI communicator used to commit the cmesh
+ * \return                        A cmesh representing the spherical surface.
+ */
+t8_cmesh_t
+t8_cmesh_new_prismed_spherical_shell_icosahedron (const double inner_radius, const double shell_thickness,
+                                                  const int num_levels, const int num_layers, sc_MPI_Comm comm);
+
+/** Construct a cubed spherical shell of given inner radius and thickness.
+ * \param [in] inner_radius       Radius of the inner side of the shell.
+ * \param [in] shell_thickness    Thickness of the shell.
+ * \param [in] num_levels         Number of trees per patch in longitudinal and latitudinal direction
+                                  given as level of refinement: 4^num_levels.
+ * \param [in] num_layers         Number of layers of the shell.
+ * \param [in] comm               The MPI communicator used to commit the cmesh
+ * \return                        A cmesh representing the spherical surface.
+ */
+t8_cmesh_t
+t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shell_thickness, const int num_levels,
+                                    const int num_layers, sc_MPI_Comm comm);
+
+/** Construct a cubed sphere of given radius.
+ * \param [in] inner_radius       Radius of the inner side of the shell.
+ * \param [in] comm               The MPI communicator used to commit the cmesh
+ * \return                        A cmesh representing the spherical surface.
+ */
+t8_cmesh_t
+t8_cmesh_new_cubed_sphere (const double radius, sc_MPI_Comm comm);
 
 T8_EXTERN_C_END ();
 

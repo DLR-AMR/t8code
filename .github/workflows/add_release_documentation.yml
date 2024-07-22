@@ -34,7 +34,10 @@ on:
   release:
     types:
       - created
-
+  
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+  
 jobs:
   add_release_doc:
 
@@ -53,12 +56,17 @@ jobs:
 #
 # Setup and bootstrap
 #
+
+    - name: Update packages
+      run: sudo apt-get update && sudo apt-get upgrade -y
+    # This step is necessary to get the newest package data
     - name: checkout
       if: ${{ env.MINOR_RELEASE == 'true' }}
       uses: actions/checkout@v4
       with:
         path: t8code
-
+        fetch-tags: true
+        fetch-depth: 0
     - name: Install dependencies
       if: ${{ env.MINOR_RELEASE == 'true' }}
       run: sudo apt-get install libz-dev doxygen-latex
@@ -111,7 +119,6 @@ jobs:
       uses: actions/checkout@v4
       with:
         ref: ${{ github.head_ref }}
-        fetch-depth: 0
         repository: DLR-AMR/t8code-website
         path: t8code-website
         token: ${{ secrets.T8DDY_TOKEN }}
@@ -119,19 +126,27 @@ jobs:
       if: ${{ env.MINOR_RELEASE == 'true' }}
       run: |
         cd t8code-website/content
+        # Generate new folder for the newest documentation and copy documentation
         mkdir -p doc/$GITHUB_REF_NAME
         cp -r ../../t8code/build_debug/doc/html/* doc/$GITHUB_REF_NAME/
+        # Add a link to the newest documentation in the documentation webpage
         cd pages
         today=`date +'%Y-%m-%d %H:%M'`
         sed -i s/"^Date:.*"/"Date: $today"/g 4_Documentation.md
-        csplit -z 4_Documentation.md /"t8code dev"/+1
+        # Split documentation webpage after t8code latest and append newest documentation
+        csplit -z 4_Documentation.md /"t8code latest"/+1
         mv xx00 4_Documentation.md
         echo " - [t8code $GITHUB_REF_NAME](../doc/$GITHUB_REF_NAME/index.html)" >> 4_Documentation.md
         cat xx01 >> 4_Documentation.md
         rm xx01
+        # Refresh redirect to t8code latest
+        cd ../doc
+        echo '<meta http-equiv="refresh" content="0; URL=$GITHUB_REF_NAME/index.html" />' > latest.html
+        # Refresh redirections for complete latest documentation
+        ./generate_redirections.sh $GITHUB_REF_NAME
     - name: Create Pull Request at DLR-AMR/t8code-website
       if: ${{ env.MINOR_RELEASE == 'true' }}
-      uses: peter-evans/create-pull-request@v5
+      uses: peter-evans/create-pull-request@v6
       with:
         path: t8code-website
         title: Add documentation for t8code ${{ github.ref_name }}

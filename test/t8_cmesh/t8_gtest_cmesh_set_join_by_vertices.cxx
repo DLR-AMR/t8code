@@ -26,7 +26,9 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh/t8_cmesh_helpers.h>
-#include <t8_cmesh/t8_cmesh_testcases.h>
+#include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
+#include <test/t8_gtest_macros.hxx>
 
 #include <p8est_geometry.h>
 
@@ -241,7 +243,8 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
     const double boundary_coords[24] = { 1, 0, 0, 4, 0, 0, 0, 6, 0, 5, 5, 0, -1, -2, 8, 9, 0, 10, 0, 8, 9, 10, 10, 10 };
 
     t8_eclass_t eclass = T8_ECLASS_HEX;
-    t8_cmesh_t cmesh = t8_cmesh_new_hypercube_pad (eclass, comm, boundary_coords, 2, 2, 2);
+    const int use_axis_aligned = 0;
+    t8_cmesh_t cmesh = t8_cmesh_new_hypercube_pad (eclass, comm, boundary_coords, 2, 2, 2, use_axis_aligned);
     test_with_cmesh (cmesh);
     t8_cmesh_destroy (&cmesh);
   }
@@ -264,6 +267,79 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
    *   t8_cmesh_destroy (&cmesh);
    * }
    */
+
+  {
+    t8_cmesh_t cmesh = t8_cmesh_new_brick_2d (3, 4, 1, 1, comm);
+    test_with_cmesh (cmesh);
+    t8_cmesh_destroy (&cmesh);
+  }
+
+  {
+    t8_cmesh_t cmesh = t8_cmesh_new_brick_3d (3, 4, 5, 1, 1, 1, comm);
+    test_with_cmesh (cmesh);
+    t8_cmesh_destroy (&cmesh);
+  }
+
+  {
+    const int num_x = 3;
+    const int num_y = 4;
+
+    const int periodic_x = 1;
+    const int periodic_y = 1;
+
+    const double boundary[12]
+      = { 0.0, 0.0, 0.0, (double) num_x, 0.0, 0.0, 0.0, (double) num_y, 0.0, (double) num_x, (double) num_y, 0.0 };
+
+    t8_cmesh_t cmesh = t8_cmesh_new_hypercube_pad_ext (T8_ECLASS_TRIANGLE, comm, boundary, num_x, num_y, 0, periodic_x,
+                                                       periodic_y, 0, 0, 0, 0);
+    test_with_cmesh (cmesh);
+    t8_cmesh_destroy (&cmesh);
+  }
+
+  {
+    const int num_x = 3;
+    const int num_y = 4;
+    const int num_z = 5;
+
+    const int periodic_x = 1;
+    const int periodic_y = 1;
+    const int periodic_z = 1;
+
+    const double boundary[24] = { 0.0,
+                                  0.0,
+                                  0.0,
+                                  (double) num_x,
+                                  0.0,
+                                  0.0,
+                                  0.0,
+                                  (double) num_y,
+                                  0.0,
+                                  (double) num_x,
+                                  (double) num_y,
+                                  0.0,
+                                  0.0,
+                                  0.0,
+                                  (double) num_z,
+                                  (double) num_x,
+                                  0.0,
+                                  (double) num_z,
+                                  0.0,
+                                  (double) num_y,
+                                  (double) num_z,
+                                  (double) num_x,
+                                  (double) num_y,
+                                  (double) num_z };
+
+    t8_cmesh_t cmesh = t8_cmesh_new_hypercube_pad_ext (T8_ECLASS_PRISM, comm, boundary, num_x, num_y, num_z, periodic_x,
+                                                       periodic_y, periodic_z, 0, 0, 0);
+    test_with_cmesh (cmesh);
+    t8_cmesh_destroy (&cmesh);
+
+    cmesh = t8_cmesh_new_hypercube_pad_ext (T8_ECLASS_TET, comm, boundary, num_x, num_y, num_z, periodic_x, periodic_y,
+                                            periodic_z, 0, 0, 0);
+    test_with_cmesh (cmesh);
+    t8_cmesh_destroy (&cmesh);
+  }
 
   /* 
    * Tests with 2D and 3D example meshes from `p4est`.
@@ -362,25 +438,18 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
   }
 }
 
-class t8_cmesh_set_join_by_vertices_class: public testing::TestWithParam<int> {
+class t8_cmesh_set_join_by_vertices_class: public testing::TestWithParam<cmesh_example_base *> {
  protected:
   void
   SetUp () override
   {
-    cmesh_id = GetParam ();
-
-    int first_id_new_bigmesh
-      = t8_get_number_of_comm_only_cmesh_testcases () + t8_get_number_of_new_hypercube_cmesh_testcases ()
-        + t8_get_number_of_new_empty_cmesh_testcases () + t8_get_number_of_new_from_class_cmesh_testcases ()
-        + t8_get_number_of_new_hypercube_hybrid_cmesh_testcases () + t8_get_number_of_new_periodic_cmesh_testcases ();
-
-    int last_id_new_bigmesh = first_id_new_bigmesh + t8_get_number_of_new_bigmesh_cmesh_testcases () - 1;
-
-    if (cmesh_id >= first_id_new_bigmesh && cmesh_id <= last_id_new_bigmesh) {
+    size_t found = GetParam ()->name.find (std::string ("bigmesh"));
+    if (found != std::string::npos) {
+      /* skip bigmeshes as they get to large */
       GTEST_SKIP ();
     }
 
-    cmesh = t8_test_create_cmesh (cmesh_id);
+    cmesh = GetParam ()->cmesh_create ();
   }
 
   void
@@ -401,5 +470,5 @@ TEST_P (t8_cmesh_set_join_by_vertices_class, test_cmesh_set_join_by_vertices_par
 }
 
 /* Test all cmeshes over all different inputs we get through their id */
-INSTANTIATE_TEST_SUITE_P (t8_cmesh_set_join_by_vertices, t8_cmesh_set_join_by_vertices_class,
-                          testing::Range (0, t8_get_number_of_all_testcases ()));
+INSTANTIATE_TEST_SUITE_P (t8_cmesh_set_join_by_vertices, t8_cmesh_set_join_by_vertices_class, AllCmeshsParam,
+                          pretty_print_base_example);

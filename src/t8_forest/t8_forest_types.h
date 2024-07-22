@@ -216,4 +216,4 @@ typedef struct t8_forest_ghost
   sc_mempool_t *proc_offset_mempool;
 } t8_forest_ghost_struct_t;
 
-#endif /* ! T8_FOREST_TYPES_H! */
+#endif /* ! T8_FOREST_TYPES_H */

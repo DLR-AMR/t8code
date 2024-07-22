@@ -106,6 +106,16 @@ t8_dtri_copy (const t8_dtri_t *t, t8_dtri_t *dest)
 }
 
 int
+t8_dtri_equal (const t8_dtri_t *elem1, const t8_dtri_t *elem2)
+{
+  return (elem1->level == elem2->level && elem1->type == elem2->type && elem1->x == elem2->x && elem1->y == elem2->y
+#ifdef T8_DTRI_TO_DTET
+          && elem1->z == elem2->z
+#endif
+  );
+}
+
+int
 t8_dtri_compare (const t8_dtri_t *t1, const t8_dtri_t *t2)
 {
   int maxlvl;
@@ -132,12 +142,6 @@ t8_dtri_parent (const t8_dtri_t *t, t8_dtri_t *parent)
   t8_dtri_coord_t h;
 
   T8_ASSERT (t->level > 0);
-
-#ifdef T8_ENABLE_DEBUG
-#ifdef T8_DTRI_TO_DTET
-  parent->eclass_int8 = t->eclass_int8;
-#endif
-#endif
 
   h = T8_DTRI_LEN (t->level);
   /* Compute type of parent */
@@ -201,7 +205,6 @@ t8_dtri_ancestor (const t8_dtri_t *t, int level, t8_dtri_t *ancestor)
     ancestor->type = t->type;
   }
 
-  ancestor->n = t->n;
 #else
   /* The sign of each diff reduces the number of possible types
  * for the ancestor. At the end only one possible type is left,
@@ -283,7 +286,7 @@ t8_dtri_ancestor (const t8_dtri_t *t, int level, t8_dtri_t *ancestor)
 
 /* Compute the coordinates of a given vertex of a triangle/tet */
 void
-t8_dtri_compute_coords (const t8_dtri_t *elem, const int vertex, t8_dtri_coord_t coordinates[T8_DTRI_DIM])
+t8_dtri_compute_integer_coords (const t8_dtri_t *elem, const int vertex, t8_dtri_coord_t coordinates[T8_DTRI_DIM])
 {
   /* Calculate the vertex coordinates of a triangle/tetrahedron in relation to its orientation. Orientations are 
    * described here: https://doi.org/10.1137/15M1040049
@@ -356,7 +359,7 @@ t8_dtri_compute_vertex_ref_coords (const t8_dtri_t *elem, const int vertex, doub
   int coords_int[T8_DTRI_DIM];
   T8_ASSERT (0 <= vertex && vertex < T8_DTRI_CORNERS);
 
-  t8_dtri_compute_coords (elem, vertex, coords_int);
+  t8_dtri_compute_integer_coords (elem, vertex, coords_int);
   /* Since the integer coordinates are coordinates w.r.t to
    * the embedding into [0,T8_DTRI_ROOT_LEN]^d, we just need
    * to divide them by the root length. */
@@ -416,6 +419,7 @@ t8_dtri_compute_reference_coords (const t8_dtri_t *elem, const double *ref_coord
     /* offset defines, how many coordinates to skip in an iteration. */
 #ifndef T8_DTRI_TO_DTET
     const size_t offset = (2 + skip_coords) * coord;
+    const size_t offset_3d = 3 * coord;
 #else
     const size_t offset = 3 * coord;
 #endif
@@ -425,8 +429,8 @@ t8_dtri_compute_reference_coords (const t8_dtri_t *elem, const double *ref_coord
     out_coords[offset + 2] = elem->z;
 #endif
 #ifndef T8_DTRI_TO_DTET
-    out_coords[offset + tri_orientation] += h * ref_coords[offset + 0];
-    out_coords[offset + 1 - tri_orientation] += h * ref_coords[offset + 1];
+    out_coords[offset + tri_orientation] += h * ref_coords[offset_3d + 0];
+    out_coords[offset + 1 - tri_orientation] += h * ref_coords[offset_3d + 1];
 #else
     out_coords[offset + tet_orientation0] += h * ref_coords[offset + 0];
     out_coords[offset + tet_orientation1] += h * ref_coords[offset + 1];
@@ -509,13 +513,13 @@ t8_dtri_compute_all_coords (const t8_dtri_t *elem, t8_dtri_coord_t coordinates[T
 #endif
 #ifdef T8_ENABLE_DEBUG
   /* We check whether the results are the same as with the
-   * t8_dtri_compute_coords function.
+   * t8_dtri_compute_integer_coords function.
    */
   {
     int ivertex;
     t8_dtri_coord_t coords[T8_DTRI_DIM];
     for (ivertex = 0; ivertex < T8_DTRI_FACES; ivertex++) {
-      t8_dtri_compute_coords (elem, ivertex, coords);
+      t8_dtri_compute_integer_coords (elem, ivertex, coords);
       T8_ASSERT (coords[0] == coordinates[ivertex][0]);
       T8_ASSERT (coords[1] == coordinates[ivertex][1]);
 #ifdef T8_DTRI_TO_DTET
@@ -557,7 +561,7 @@ t8_dtri_child (const t8_dtri_t *t, int childid, t8_dtri_t *child)
     vertex = t8_dtri_beyid_to_vertex[Bey_cid];
     /* i-th anchor coordinate of child is (X_(0,i)+X_(vertex,i))/2
      * where X_(i,j) is the j-th coordinate of t's ith node */
-    t8_dtri_compute_coords (t, vertex, t_coordinates);
+    t8_dtri_compute_integer_coords (t, vertex, t_coordinates);
     c->x = (t->x + t_coordinates[0]) >> 1;
     c->y = (t->y + t_coordinates[1]) >> 1;
 #ifdef T8_DTRI_TO_DTET
@@ -1489,8 +1493,6 @@ t8_dtri_init_linear_id (t8_dtri_t *t, t8_linearidx_t id, int level)
   t->y = 0;
 #ifdef T8_DTRI_TO_DTET
   t->z = 0;
-#else
-  t->n = 0;
 #endif
   type = 0; /* This is the type of the root triangle */
   for (i = 1; i <= level; i++) {
@@ -1519,8 +1521,6 @@ t8_dtri_init_root (t8_dtri_t *t)
   t->y = 0;
 #ifdef T8_DTRI_TO_DTET
   t->z = 0;
-#else
-  t->n = 0;
 #endif
 }
 
@@ -1683,14 +1683,6 @@ t8_dtri_is_valid (const t8_dtri_t *t)
   is_valid = is_valid && -T8_DTRI_ROOT_LEN <= t->y && t->y <= max_coord;
 #ifdef T8_DTRI_TO_DTET
   is_valid = is_valid && -T8_DTRI_ROOT_LEN <= t->z && t->z <= max_coord;
-
-#ifdef T8_ENABLE_DEBUG
-  /* for tets the eclass is set. */
-  is_valid = is_valid && t->eclass_int8 == T8_ECLASS_TET;
-#endif
-#else
-  /* n is 0 (we currently do not use n) */
-  is_valid = is_valid && t->n == 0;
 #endif
   /* Its type is in the valid range */
   is_valid = is_valid && 0 <= t->type && t->type < T8_DTRI_NUM_TYPES;
@@ -1699,24 +1691,80 @@ t8_dtri_is_valid (const t8_dtri_t *t)
 }
 
 void
-t8_dtri_debug_print (const t8_dtri_t *t)
-{
-#ifdef T8_DTRI_TO_DTET
-  t8_debugf ("x: %i, y: %i, z: %i, type: %i, level: %i\n", t->x, t->y, t->z, t->type, t->level);
-#else
-  t8_debugf ("x: %i, y: %i, type: %i, level: %i\n", t->x, t->y, t->type, t->level);
-#endif /* T8_DTRI_TO_DTET */
-}
-
-void
 t8_dtri_init (t8_dtri_t *t)
 {
   /* Set all values to zero */
   memset (t, 0, sizeof (*t));
+}
+
+/* triangles (tets) are packed as x,y (,z) coordinates, type and level */
+void
+t8_dtri_element_pack (t8_dtri_t **const elements, const unsigned int count, void *send_buffer, const int buffer_size,
+                      int *position, sc_MPI_Comm comm)
+{
+  int mpiret;
+  for (unsigned int ielem = 0; ielem < count; ielem++) {
+    mpiret = sc_MPI_Pack (&(elements[ielem]->x), 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Pack (&elements[ielem]->y, 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
+    SC_CHECK_MPI (mpiret);
+
 #ifdef T8_DTRI_TO_DTET
-#ifdef T8_ENABLE_DEBUG
-  /* For tets, set the eclass */
-  t->eclass_int8 = T8_ECLASS_TET;
+    mpiret = sc_MPI_Pack (&elements[ielem]->z, 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
+    SC_CHECK_MPI (mpiret);
 #endif
+
+    mpiret = sc_MPI_Pack (&elements[ielem]->type, 1, sc_MPI_INT8_T, send_buffer, buffer_size, position, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Pack (&elements[ielem]->level, 1, sc_MPI_INT8_T, send_buffer, buffer_size, position, comm);
+    SC_CHECK_MPI (mpiret);
+  }
+}
+
+/* triangles (tets) are packed as x,y (,z) coordinates, type and level */
+void
+t8_dtri_element_pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size)
+{
+  int singlesize = 0;
+  int datasize = 0;
+  int mpiret;
+
+  /* coords */
+  mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &datasize);
+  SC_CHECK_MPI (mpiret);
+#ifdef T8_DTRI_TO_DTET
+  int coord_count = 3;
+#else
+  int coord_count = 2;
 #endif
+  singlesize += coord_count * datasize;
+
+  /* type, level*/
+  mpiret = sc_MPI_Pack_size (1, sc_MPI_INT8_T, comm, &datasize);
+  SC_CHECK_MPI (mpiret);
+  singlesize += 2 * datasize;
+
+  *pack_size = count * singlesize;
+}
+
+/* triangles (tets) are packed as x,y (,z) coordinates, type and level */
+void
+t8_dtri_element_unpack (void *recvbuf, const int buffer_size, int *position, t8_dtri_t **elements,
+                        const unsigned int count, sc_MPI_Comm comm)
+{
+  int mpiret;
+  for (unsigned int ielem = 0; ielem < count; ielem++) {
+    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(elements[ielem]->x), 1, sc_MPI_INT, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(elements[ielem]->y), 1, sc_MPI_INT, comm);
+    SC_CHECK_MPI (mpiret);
+#ifdef T8_DTRI_TO_DTET
+    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(elements[ielem]->z), 1, sc_MPI_INT, comm);
+    SC_CHECK_MPI (mpiret);
+#endif
+    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(elements[ielem]->type), 1, sc_MPI_INT8_T, comm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(elements[ielem]->level), 1, sc_MPI_INT8_T, comm);
+    SC_CHECK_MPI (mpiret);
+  }
 }

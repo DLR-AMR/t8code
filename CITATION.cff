@@ -1,6 +1,6 @@
 title: t8code
-version: 1.5.0
-date-released: "2023-08-25"
+version: 2.0.0
+date-released: "2024-04-19"
 repository-code: "https://github.com/dlr-amr/t8code"
 url: "https://dlr-amr.github.io/t8code/"
 doi: "10.5281/zenodo.7034838"
@@ -13,39 +13,45 @@ authors:
     email: Johannes.Holke@dlr.de
     affiliation: "German Aerospace Center (DLR)"
     orcid: "https://orcid.org/0000-0002-2783-3286"
-  - given-names: Carsten
-    family-names: Burstedde
-    email: burstedde@ins.uni-bonn.de
-    affiliation: "University of Bonn"
-    orcid: "https://orcid.org/0000-0001-9843-1041"
   - given-names: David
     family-names: Knapp
     email: David.Knapp@dlr.de
     affiliation: "German Aerospace Center (DLR)"
     orcid: "https://orcid.org/0000-0002-6305-1572"
-  - given-names: Lukas
-    family-names: Dreyer
-    email: Lukas.Dreyer@dlr.de
-    affiliation: "German Aerospace Center (DLR)"
-    orcid: "https://orcid.org/0000-0001-7484-3674"
   - given-names: Sandro
     family-names: Elsweijer
     email: Sandro.Elsweijer@dlr.de
     affiliation: "German Aerospace Center (DLR)"
     orcid: "https://orcid.org/0000-0002-2753-3873"
-  - given-names: Veli
-    family-names: Uenlue
-    email: Veli.Uenlue@dlr.de
+  - given-names: Ioannis
+    family-names: Lilikakis
+    email: i.Lilikakis@fz-juelich.de
+    affiliation: "Forschungszentrum Juelich (JSC)"
+  - given-names: Lukas
+    family-names: Dreyer
+    email: Lukas.Dreyer@dlr.de
     affiliation: "German Aerospace Center (DLR)"
+    orcid: "https://orcid.org/0000-0001-7484-3674"
+  - given-names: Jakob
+    family-names: Fußbroich
+    email: jakob.fussbroich@dlr.de
+    affiliation: "German Aerospace Center (DLR)"
+    orcid: "https://orcid.org/0000-0003-0784-2182"
+  - given-names: Carsten
+    family-names: Burstedde
+    email: burstedde@ins.uni-bonn.de
+    affiliation: "University of Bonn"
+    orcid: "https://orcid.org/0000-0001-9843-1041"
+  - given-names: Chiara
+    family-names: Hergl
+    email: Chiara.Hergl@dlr.de
+    affiliation: "German Aerospace Center (DLR)"
+    orcid: "https://orcid.org/0000-0002-4016-9113"
   - given-names: Johannes
     family-names: Markert
     email: Johannes.Markert@dlr.de
     affiliation: "German Aerospace Center (DLR)"
     orcid: "https://orcid.org/0000-0001-6297-9494"
-  - given-names: Ioannis
-    family-names: Lilikakis
-    email: Ioannis.Lilikakis@dlr.de
-    affiliation: "German Aerospace Center (DLR)"
   - given-names: Niklas
     family-names: Boeing
     email: Niklas.Boeing@dlr.de
@@ -54,27 +60,62 @@ authors:
     family-names: Becker
     email: F.Becker@dlr.de
     affiliation: "German Aerospace Center (DLR)"
-  - given-names: Jakob
-    family-names: Fußbroich
-    email: jakob.fussbroich@dlr.de
-    affiliation: "German Aerospace Center (DLR)"
-    orcid: "https://orcid.org/0000-0003-0784-2182"
-  - given-names: Chiara
-    family-names: Hergl
-    email: Chiara.Hergl@dlr.de
-    affiliation: "German Aerospace Center (DLR)"
-    orcid: "https://orcid.org/0000-0002-4016-9113"
-  - given-names: Michael
-    family-names: Schlottke-Lakemper
-    email: "m.schlottke-lakemper@acom.rwth-aachen.de"
-    affiliation: "RWTH Aachen"
-    orcid: "https://orcid.org/0000-0002-3195-2536"
+    orcid: "https://orcid.org/0000-0002-8384-9282"
   - given-names: Prasanna 
     family-names: Ponnusamy
     email: "Prasanna.Ponnusamy@dlr.de"
     affiliation: "German Aerospace Center (DLR)"
     orcid: "https://orcid.org/0000-0002-4950-7297"
-#Contributors
+  #Contributors
+  - given-names: Veli
+    family-names: Uenlue
+    email: Veli.Uenlue@dlr.de
+    affiliation: "German Aerospace Center (DLR)"
+  - given-names: Weber 
+    family-names: Julia
+    email: Julia.Weber@dlr.de
+    affiliation: "German Aerospace Center (DLR)"
+  - given-names: Jonas
+    family-names: Ackerschott
+    email: jona.a99@gmail.com
+  - given-names: Andreev 
+    family-names: Evgenii
+    email: edirab@yandex.ru
+  - given-names: Zoltan
+    family-names: Csati
+    email: csati@cerfacs.fr
+    affiliation: CERFACS
+  - given-names: Alexandra
+    family-names: Dutka
+    email: adutkat@cerfacs.fr
+    affiliation: CERFACS
+  - given-names: Benedict
+    family-names: Geihe
+    email: bgeihe@uni-koeln.de
+    affiliation: University of Cologne
+  - given-names: Pierre
+    family-names: Kestener
+    email: pierre.kestener@cea.fr
+    affiliation: CEA
+  - given-names: Andrew
+    family-names: Kirby
+    email: akriby@uwyo.edu
+    affiliation: "University of Wyoming"
+  - given-names: Hendrik
+    family-names: Ranocha
+    email: hendrik.ranocha@uni-hamburg.de
+    affiliation: "University of Hamburg"
+  - given-names: Michael
+    family-names: Schlottke-Lakemper
+    email: m.schlottke-lakemper@acom.rwth-aachen.de
+    affiliation: "RWTH Aachen"
+  - given-names: Kathrin
+    family-names: Schoenlein
+    email: kathrin.schoenlein@dlr.de
+    affiliation: "German Aerospace Center (DLR)"
+
+  
+
 cff-version: 1.2.0
 message: >-
   If you use this software, please cite it using the

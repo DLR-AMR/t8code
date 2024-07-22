@@ -32,7 +32,7 @@
  * \a cmesh must be committed before calling this function.
  */
 static t8_gloidx_t
-t8_cmesh_get_num_vertices (t8_cmesh_t cmesh, int count_ghosts)
+t8_cmesh_get_num_vertices (const t8_cmesh_t cmesh, const int count_ghosts)
 {
   int iclass;
   t8_eclass_t ghost_class;
@@ -55,14 +55,12 @@ t8_cmesh_get_num_vertices (t8_cmesh_t cmesh, int count_ghosts)
   return num_vertices;
 }
 
-/* TODO: implement for scale < 1 */
 static int
-t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix, double scale, int write_ghosts)
+t8_cmesh_vtk_write_file_ext (const t8_cmesh_t cmesh, const char *fileprefix, const int write_ghosts)
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   T8_ASSERT (fileprefix != NULL);
-  T8_ASSERT (scale == 1.); /* scale = 1 not implemented yet */
 
   if (cmesh->mpirank == 0) {
     /* Write the pvtu header file. */
@@ -103,9 +101,6 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix, double sc
     }
     fprintf (vtufile, "<?xml version=\"1.0\"?>\n");
     fprintf (vtufile, "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\"");
-#if defined T8_VTK_BINARY && defined T8_VTK_COMPRESSION
-    fprintf (vtufile, " compressor=\"vtkZLibDataCompressor\"");
-#endif
 #ifdef SC_IS_BIGENDIAN
     fprintf (vtufile, " byte_order=\"BigEndian\">\n");
 #else
@@ -122,7 +117,6 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix, double sc
              " NumberOfComponents=\"3\" format=\"%s\">\n",
              T8_VTK_FLOAT_NAME, T8_VTK_FORMAT_STRING);
 
-#ifdef T8_VTK_ASCII
     for (tree = t8_cmesh_get_first_tree (cmesh); tree != NULL; tree = t8_cmesh_get_next_tree (cmesh, tree)) {
       /*  TODO: Use new geometry here. Need cmesh_get_reference coords function. */
       vertices = t8_cmesh_get_tree_vertices (cmesh, tree->treeid);
@@ -163,9 +157,6 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix, double sc
         }
       } /* end ghost loop */
     }
-#else
-    SC_ABORT ("Binary vtk file not implemented\n");
-#endif /* T8_VTK_ASCII */
     fprintf (vtufile, "        </DataArray>\n");
     fprintf (vtufile, "      </Points>\n");
     fprintf (vtufile, "      <Cells>\n");
@@ -175,7 +166,6 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix, double sc
              "        <DataArray type=\"%s\" Name=\"connectivity\""
              " format=\"%s\">\n",
              T8_VTK_LOCIDX, T8_VTK_FORMAT_STRING);
-#ifdef T8_VTK_ASCII
     for (tree = t8_cmesh_get_first_tree (cmesh), count_vertices = 0; tree != NULL;
          tree = t8_cmesh_get_next_tree (cmesh, tree)) {
       fprintf (vtufile, "         ");
@@ -195,9 +185,6 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix, double sc
         fprintf (vtufile, "\n");
       }
     }
-#else
-    SC_ABORT ("Binary vtk file not implemented\n");
-#endif /* T8_VTK_ASCII */
     fprintf (vtufile, "        </DataArray>\n");
 
     /* write offset data */
@@ -205,7 +192,6 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix, double sc
              "        <DataArray type=\"%s\" Name=\"offsets\""
              " format=\"%s\">\n",
              T8_VTK_LOCIDX, T8_VTK_FORMAT_STRING);
-#ifdef T8_VTK_ASCII
     fprintf (vtufile, "         ");
     for (tree = t8_cmesh_get_first_tree (cmesh), sk = 1, offset = 0; tree != NULL;
          tree = t8_cmesh_get_next_tree (cmesh, tree), ++sk) {
@@ -225,16 +211,12 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix, double sc
       }
     }
     fprintf (vtufile, "\n");
-#else
-    SC_ABORT ("Binary vtk file not implemented\n");
-#endif /* T8_VTK_ASCII */
     fprintf (vtufile, "        </DataArray>\n");
     /* write type data */
     fprintf (vtufile,
              "        <DataArray type=\"UInt8\" Name=\"types\""
              " format=\"%s\">\n",
              T8_VTK_FORMAT_STRING);
-#ifdef T8_VTK_ASCII
     fprintf (vtufile, "         ");
     for (tree = t8_cmesh_get_first_tree (cmesh), sk = 1; tree != NULL;
          tree = t8_cmesh_get_next_tree (cmesh, tree), ++sk) {
@@ -252,9 +234,6 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix, double sc
       }
     }
     fprintf (vtufile, "\n");
-#else
-    SC_ABORT ("Binary vtk file not implemented\n");
-#endif /* T8_VTK_ASCII */
     fprintf (vtufile, "        </DataArray>\n");
     fprintf (vtufile, "      </Cells>\n");
     /* write treeif data */
@@ -263,7 +242,6 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix, double sc
              "        <DataArray type=\"%s\" Name=\"treeid\""
              " format=\"%s\">\n",
              T8_VTK_GLOIDX, T8_VTK_FORMAT_STRING);
-#ifdef T8_VTK_ASCII
     fprintf (vtufile, "         ");
     for (tree = t8_cmesh_get_first_tree (cmesh), sk = 1, offset = 0; tree != NULL;
          tree = t8_cmesh_get_next_tree (cmesh, tree), ++sk) {
@@ -292,16 +270,12 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix, double sc
       }
     }
     fprintf (vtufile, "\n");
-#else
-    SC_ABORT ("Binary vtk file not implemented\n");
-#endif /* T8_VTK_ASCII */
     fprintf (vtufile, "        </DataArray>\n");
     /* write mpirank data */
     fprintf (vtufile,
              "        <DataArray type=\"%s\" Name=\"mpirank\""
              " format=\"%s\">\n",
              "Int32", T8_VTK_FORMAT_STRING);
-#ifdef T8_VTK_ASCII
     fprintf (vtufile, "         ");
     for (tree = t8_cmesh_get_first_tree (cmesh), sk = 1, offset = 0; tree != NULL;
          tree = t8_cmesh_get_next_tree (cmesh, tree), ++sk) {
@@ -318,9 +292,6 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix, double sc
       }
     }
     fprintf (vtufile, "\n");
-#else
-    SC_ABORT ("Binary vtk file not implemented\n");
-#endif /* T8_VTK_ASCII */
     fprintf (vtufile, "        </DataArray>\n");
     fprintf (vtufile, "      </CellData>\n");
     /* write type data */
@@ -333,8 +304,7 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix, double sc
 }
 
 int
-t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix, double scale)
+t8_cmesh_vtk_write_file (const t8_cmesh_t cmesh, const char *fileprefix)
 {
-  T8_ASSERT (scale == 1.0);
-  return t8_cmesh_vtk_write_file_ext (cmesh, fileprefix, 1.0, 1);
+  return t8_cmesh_vtk_write_file_ext (cmesh, fileprefix, 1);
 }

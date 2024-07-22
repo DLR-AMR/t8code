@@ -24,8 +24,8 @@
 #include <sc_options.h>
 #include <sc_refcount.h>
 #include <t8_eclass.h>
-#include <t8_element_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_element.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_geometrical.h>
@@ -78,7 +78,7 @@ t8_test_fiterate (t8_forest_t forest)
   t8_locidx_t itree, num_trees;
   t8_eclass_t eclass;
   t8_eclass_scheme_c *ts;
-  t8_element_t *first_el, *last_el, *nca;
+  t8_element_t *nca;
   t8_element_array_t *leaf_elements;
   t8_test_fiterate_udata_t udata;
   int iface;
@@ -87,11 +87,12 @@ t8_test_fiterate (t8_forest_t forest)
   for (itree = 0; itree < num_trees; itree++) {
     eclass = t8_forest_get_tree_class (forest, itree);
     ts = t8_forest_get_eclass_scheme (forest, eclass);
-    first_el = t8_forest_get_element_in_tree (forest, itree, 0);
-    last_el = t8_forest_get_element_in_tree (forest, itree, t8_forest_get_tree_num_elements (forest, itree) - 1);
+    const t8_element_t *first_el = t8_forest_get_element_in_tree (forest, itree, 0);
+    const t8_element_t *last_el
+      = t8_forest_get_element_in_tree (forest, itree, t8_forest_get_tree_num_elements (forest, itree) - 1);
     ts->t8_element_new (1, &nca);
     ts->t8_element_nca (first_el, last_el, nca);
-    leaf_elements = t8_forest_tree_get_leafs (forest, itree);
+    leaf_elements = t8_forest_tree_get_leaves (forest, itree);
 
     for (iface = 0; iface < ts->t8_element_num_faces (nca); iface++) {
       udata.count = 0;
@@ -109,7 +110,7 @@ t8_test_fiterate_refine_and_partition (t8_cmesh_t cmesh, int level, sc_MPI_Comm 
   t8_cmesh_t cmesh_partition;
 
   if (!no_vtk) {
-    t8_cmesh_vtk_write_file (cmesh, "test_fiterate_cmesh0", 1.0);
+    t8_cmesh_vtk_write_file (cmesh, "test_fiterate_cmesh0");
   }
   if (partition_cmesh) {
     /* partition the initial cmesh according to a uniform forest */
@@ -123,7 +124,7 @@ t8_test_fiterate_refine_and_partition (t8_cmesh_t cmesh, int level, sc_MPI_Comm 
     cmesh_partition = cmesh;
   }
   if (!no_vtk) {
-    t8_cmesh_vtk_write_file (cmesh_partition, "test_fiterate_cmesh1", 1.0);
+    t8_cmesh_vtk_write_file (cmesh_partition, "test_fiterate_cmesh1");
   }
   forest = t8_forest_new_uniform (cmesh_partition, t8_scheme_new_default_cxx (), level, 0, comm);
 
@@ -157,19 +158,13 @@ t8_test_fiterate_brick (int dim, int x, int y, int z, int periodic_x, int period
                         sc_MPI_Comm comm, int no_vtk)
 {
   t8_cmesh_t cmesh;
-  p4est_connectivity_t *conn4;
-  p8est_connectivity_t *conn8;
 
   if (dim == 2) {
-    conn4 = p4est_connectivity_new_brick (x, y, periodic_x, periodic_y);
-    cmesh = t8_cmesh_new_from_p4est (conn4, comm, 0);
-    p4est_connectivity_destroy (conn4);
+    cmesh = t8_cmesh_new_brick_2d (x, y, periodic_x, periodic_y, comm);
   }
   else {
     T8_ASSERT (dim == 3);
-    conn8 = p8est_connectivity_new_brick (x, y, z, periodic_x, periodic_y, periodic_z);
-    cmesh = t8_cmesh_new_from_p8est (conn8, comm, 0);
-    p8est_connectivity_destroy (conn8);
+    cmesh = t8_cmesh_new_brick_3d (x, y, z, periodic_x, periodic_y, periodic_z, comm);
   }
 
   t8_test_fiterate_refine_and_partition (cmesh, level, comm, 1, no_vtk);

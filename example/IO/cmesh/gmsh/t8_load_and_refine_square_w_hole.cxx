@@ -27,13 +27,12 @@
 
 #include <sc_refcount.h>
 #include <t8_cmesh.h>
-#include <t8_cmesh_vtk_writer.h>
 #include <t8_cmesh/t8_cmesh_partition.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_geometrical.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 
 /* Simple 3 dimensional vector product */
 static double

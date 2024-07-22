@@ -57,6 +57,14 @@ t8_dprism_copy (const t8_dprism_t *p, t8_dprism_t *dest);
 int
 t8_dprism_compare (const t8_dprism_t *p1, const t8_dprism_t *p2);
 
+/** Check if two elements are equal.
+* \param [in] elem1  The first element.
+* \param [in] elem2  The second element.
+* \return            1 if the elements are equal, 0 if they are not equal
+*/
+int
+t8_dprism_equal (const t8_dprism_t *elem1, const t8_dprism_t *elem2);
+
 /** Initialize a prism as the prism with a given global id in a uniform
  *  refinement of a given level. *
  * \param [in,out] p  Existing prism whose data will be filled.
@@ -238,17 +246,6 @@ t8_dprism_face_parent_face (const t8_dprism_t *prism, int face);
 int
 t8_dprism_tree_face (const t8_dprism_t *p, int face);
 
-/** Given a prism and a face of the root prism. If the prism lies on the tree boundary, return the corresponding face 
- * number of the prism. If not the return value is arbitrary.
- * \param [in] p    The prism.
- * \param [in] face The index of a face of the root element.
- * \return          The index of the face of \a p that is a subface of \a face, if \a p is on the tree boundary.
- *                  Any arbitrary integer if \a p is not at a tree boundary.
- * \note For boundary prism, this function is the inverse of \ref t8_dprism_tree_face
- */
-int
-t8_dprism_root_face_to_face (const t8_dprism_t *p, int root_face);
-
 /** Given a boundary face inside a root tree's face construct the element inside the root tree that has the given face 
  * as a face.
  * \param [in] face       A face element.
@@ -258,7 +255,7 @@ t8_dprism_root_face_to_face (const t8_dprism_t *p, int root_face);
  * \param [in] root_face  The index of the face of the root tree in which \a face lies.
  */
 void
-t8_dprism_extrude_face (const t8_element_t *face, t8_element_t *elem, int root_face);
+t8_dprism_extrude_face (const t8_element_t *face, t8_element_t *elem, const int root_face);
 
 /** Compute the last descendant of a prism at a given level. This is the descendant of the prism in a uniform level 
  * refinement that has the largest id.
@@ -287,7 +284,7 @@ t8_dprism_corner_descendant (const t8_dprism_t *p, t8_dprism_t *s, int corner, i
  * \param [out] coordinates An array of 3 t8_dprism_coord_t that will be filled with the coordinates of the vertex.
  */
 void
-t8_dprism_vertex_coords (const t8_dprism_t *elem, int vertex, int coords[3]);
+t8_dprism_vertex_integer_coords (const t8_dprism_t *elem, int vertex, int coords[3]);
 
 /** Compute the reference coordinates of a vertex of a prism when the 
  * tree (level 0) is embedded in \f$ [0,1]^3 \f$.
@@ -327,13 +324,6 @@ t8_dprism_linear_id (const t8_dprism_t *p, int level);
  */
 int
 t8_dprism_is_valid (const t8_dprism_t *p);
-
-/**
- * Print the coordinates, the level and the type of a prism.
- * \param [in] p  prism to be considered.
- */
-void
-t8_dprism_debug_print (const t8_dprism_t *p);
 
 T8_EXTERN_C_END ();
 

@@ -24,8 +24,9 @@
 #include <t8.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <bitset>
+#include <test/t8_gtest_macros.hxx>
 
 #define MAX_NUM_ELEMENTS 32 /* number of digits for binary representation */
 
@@ -175,4 +176,4 @@ TEST_P (forest_permute, test_permute_hole)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_permute_hole, forest_permute, testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_permute_hole, forest_permute, AllEclasses, print_eclass);

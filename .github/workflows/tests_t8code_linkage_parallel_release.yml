@@ -30,6 +30,8 @@ name: t8code tests linkage parallel release
 #       in the "key:" entries of the sc and p4est steps or set the variables
 #       SC_IGNORE_CACHE and P4EST_IGNORE_CACHE to 1 in the respective steps.
 
+env:
+  MAKEFLAGS: "-j2 V=0"
 
 on:
   push:
@@ -50,7 +52,7 @@ jobs:
   build:
 
     if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     container: dlramr/t8code-ubuntu:t8-dependencies
     timeout-minutes: 90
     steps:
@@ -58,11 +60,16 @@ jobs:
 # Setup and bootstrap
 #
     - uses: actions/checkout@v4
-      with: 
-        fetch-depth: 0
+      with:
+          fetch-tags: true # required to get version tags
+          fetch-depth: 0    # required to get all history, especially the version tags
+    - name: install sudo
+      run: apt update && apt install sudo
+    # On the github Ubuntu 20.04, sudo is not available by default
+    # we need it, however, to update/upgrade our packages.    
     - name: Update packages
-      run: apt-get update && apt-get upgrade -y
-      # This seems to be necessary because of the docker container
+      run: sudo apt-get update && sudo apt-get upgrade -y
+    # This step is necessary to get the newest package data
     - name: disable ownership checks
       run: git config --global --add safe.directory '*'
     - name: init submodules
@@ -80,7 +87,7 @@ jobs:
       run: hash=`git rev-parse HEAD:sc` && echo sc_commit=$hash >> $GITHUB_ENV
     - name: Check cache for previous sc installation
       id: sc_cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           ${{ env.SC_RELEASE }}
@@ -110,7 +117,7 @@ jobs:
       run: cd $SC_RELEASE && ../configure --enable-mpi --prefix=$PWD/install
       if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
     - name: sc build release
-      run: cd $SC_RELEASE && make -j V=0 && make -j V=0 install
+      run: cd $SC_RELEASE && make $MAKEFLAGS && make $MAKEFLAGS install
       if: ${{ steps.sc_cache.outputs.cache-hit != 'true' || env.SC_IGNORE_CACHE == 1 }}
 #
 # P4EST
@@ -121,7 +128,7 @@ jobs:
       run: hash=`git rev-parse HEAD:p4est` && echo p4est_commit=$hash >> $GITHUB_ENV
     - name: Check cache for previous p4est installation
       id: p4est_cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           ${{ env.P4EST_RELEASE }}
@@ -150,7 +157,7 @@ jobs:
       run: cd $P4EST_RELEASE && ../configure --enable-mpi --prefix=$PWD/install --with-sc=$SC_RELEASE/install
       if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
     - name: p4est build release
-      run: cd $P4EST_RELEASE && make -j V=0 && make -j V=0 install
+      run: cd $P4EST_RELEASE && make $MAKEFLAGS && make $MAKEFLAGS install
       if: ${{ steps.p4est_cache.outputs.cache-hit != 'true' || env.P4EST_IGNORE_CACHE == 1 }}
 #  P4EST AND SC END
 #
@@ -183,19 +190,19 @@ jobs:
       run: mkdir build_netcdf && cd build_netcdf && ../configure $CONFIG_RELEASE --with-netcdf CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: config_netcdf_release_MPI.log
         path: build_netcdf/config.log
     - name: make
-      run: cd build_netcdf && make -j V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
+      run: cd build_netcdf && make $MAKEFLAGS CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
     - name: make install
-      run: cd build_netcdf && make install -j
+      run: cd build_netcdf && make install $MAKEFLAGS
     - name: make check
-      run: cd build_netcdf && make check -j8 V=0 CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
+      run: cd build_netcdf && make check $MAKEFLAGS CFLAGS="$CFLAGS_var -Werror" CXXFLAGS="$CXXFLAGS_var -Werror"
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: test-suite_netcdf.log
         path: build_netcdf/test-suite.log
@@ -203,25 +210,25 @@ jobs:
     - name: check OpenCASCADE
       run: echo "Checking OpenCASCADE with MPI in release mode"
     - name: configure MPI OpenCASCADE release
-      run: mkdir build_occ && cd build_occ && ../configure $CONFIG_RELEASE --with-occ CFLAGS="$CFLAGS_var -I/usr/include/opencascade" CXXFLAGS="$CXXFLAGS_var -I/usr/include/opencascade"
+      run: mkdir build_cad && cd build_cad && ../configure $CONFIG_RELEASE --with-cad CFLAGS="$CFLAGS_var -isystem/usr/local/include/opencascade" CXXFLAGS="$CXXFLAGS_var -I/usr/include/opencascade"
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: config_occ_release_MPI.log
-        path: build_occ/config.log
+        name: config_cad_release_MPI.log
+        path: build_cad/config.log
     - name: make
-      run: cd build_occ && make -j V=0 CFLAGS="$CFLAGS_var -Werror -I/usr/include/opencascade" CXXFLAGS="$CXXFLAGS_var -Werror -I/usr/include/opencascade"
+      run: cd build_cad && make $MAKEFLAGS CFLAGS="$CFLAGS_var -Werror -I/usr/include/opencascade" CXXFLAGS="$CXXFLAGS_var -Werror -isystem/usr/local/include/opencascade"
     - name: make install
-      run: cd build_occ && make install -j
+      run: cd build_cad && make install $MAKEFLAGS
     - name: make check
-      run: cd build_occ && make check -j8 V=0 CFLAGS="$CFLAGS_var -Werror -I/usr/include/opencascade" CXXFLAGS="$CXXFLAGS_var -Werror -I/usr/include/opencascade"
+      run: cd build_cad && make check $MAKEFLAGS CFLAGS="$CFLAGS_var -Werror -I/usr/include/opencascade" CXXFLAGS="$CXXFLAGS_var -Werror -isystem/usr/local/include/opencascade"
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: test-suite_occ.log
-        path: build_occ/test-suite.log
+        name: test-suite_cad.log
+        path: build_cad/test-suite.log
 # configure and test with MPI and VTK (release mode)
     - name: check VTK
       run: echo "Checking VTK with MPI in release mode"
@@ -229,19 +236,19 @@ jobs:
       run: mkdir build_vtk && cd build_vtk && ../configure $CONFIG_RELEASE --with-vtk --with-vtk_version_number=9.1 CFLAGS="$CFLAGS_var -isystem/usr/local/include/vtk-9.1" CXXFLAGS="$CXXFLAGS_var -isystem/usr/local/include/vtk-9.1"
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: config_vtk_release_MPI.log
         path: build_vtk/config.log
     - name: make
-      run: cd build_vtk && make -j V=0 CFLAGS="$CFLAGS_var -Werror -isystem/usr/local/include/vtk-9.1" CXXFLAGS="$CXXFLAGS_var -Werror -isystem/usr/local/include/vtk-9.1"
+      run: cd build_vtk && make $MAKEFLAGS CFLAGS="$CFLAGS_var -Werror -isystem/usr/local/include/vtk-9.1" CXXFLAGS="$CXXFLAGS_var -Werror -isystem/usr/local/include/vtk-9.1"
     - name: make install
-      run: cd build_vtk && make install -j
+      run: cd build_vtk && make install $MAKEFLAGS
     - name: make check
-      run: cd build_vtk && make check -j8 V=0 CFLAGS="$CFLAGS_var -Werror -isystem/usr/local/include/vtk-9.1" CXXFLAGS="$CXXFLAGS_var -Werror -isystem/usr/local/include/vtk-9.1"
+      run: cd build_vtk && make check $MAKEFLAGS CFLAGS="$CFLAGS_var -Werror -isystem/usr/local/include/vtk-9.1" CXXFLAGS="$CXXFLAGS_var -Werror -isystem/usr/local/include/vtk-9.1"
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: test-suite_vtk.log
         path: build_vtk/test-suite.log

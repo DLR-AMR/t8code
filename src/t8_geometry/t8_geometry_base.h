@@ -49,6 +49,14 @@ t8_geom_get_dimension (const t8_geometry_c *geom);
 const char *
 t8_geom_get_name (const t8_geometry_c *geom);
 
+/** Get the type of a geometry.
+ * 
+ * \param [in] geom  A geometry. 
+ * \return           The type of \a geom.
+ */
+t8_geometry_type_t
+t8_geom_get_type (const t8_geometry_c *geom);
+
 T8_EXTERN_C_END ();
 
-#endif /* !T8_GEOMETRY_BASE_H! */
+#endif /* !T8_GEOMETRY_BASE_H */

@@ -23,8 +23,10 @@
 
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
+#include <test/t8_gtest_custom_assertion.hxx>
+#include <test/t8_gtest_macros.hxx>
 
 class class_successor: public testing::TestWithParam<t8_eclass_t> {
  protected:
@@ -41,7 +43,9 @@ class class_successor: public testing::TestWithParam<t8_eclass_t> {
     ts->t8_element_new (1, &child);
     ts->t8_element_new (1, &last);
 
-    ts->t8_element_set_linear_id (element, 0, 0);
+    ts->t8_element_root (element);
+    if (eclass == T8_ECLASS_VERTEX)
+      GTEST_SKIP ();
   }
   void
   TearDown () override
@@ -78,20 +82,22 @@ t8_recursive_successor (t8_element_t *element, t8_element_t *successor, t8_eleme
      * of this element.
      */
     ts->t8_element_child (element, 0, child);
-    ASSERT_TRUE (!ts->t8_element_compare (child, successor)) << "Wrong Successor, Case1.\n";
+    EXPECT_ELEM_EQ (ts, child, successor);
     /*Check if the successor in this element is computed correctly */
     for (int ichild = 1; ichild < num_children; ichild++) {
-      ts->t8_element_successor (child, successor, maxlvl);
+      EXPECT_EQ (ts->t8_element_level (child), maxlvl);
+      ts->t8_element_successor (child, successor);
       ts->t8_element_child (element, ichild, child);
-      ASSERT_TRUE (!ts->t8_element_compare (child, successor)) << "Wrong Successor, Case2.\n";
+      EXPECT_ELEM_EQ (ts, child, successor);
     }
     /*If the iterator is the last element, the test can finish */
-    if (!ts->t8_element_compare (last, child)) {
+    if (ts->t8_element_equal (last, child)) {
       return;
     }
     /*Compute the next successor / "jump" out of the current element */
     else {
-      ts->t8_element_successor (child, successor, maxlvl);
+      EXPECT_EQ (ts->t8_element_level (child), maxlvl);
+      ts->t8_element_successor (child, successor);
     }
   }
   else {
@@ -121,9 +127,10 @@ t8_deep_successor (t8_element_t *element, t8_element_t *successor, t8_element_t 
     for (int jchild = 0; jchild < num_children_child; jchild++) {
       ts->t8_element_child (child, jchild, element);
       /* Check the computation of the successor. */
-      ASSERT_TRUE (!ts->t8_element_compare (element, successor)) << "Wrong Successor at Maxlvl.\n";
+      ASSERT_TRUE (ts->t8_element_equal (element, successor)) << "Wrong Successor at Maxlvl.\n";
       /* Compute the next successor. */
-      ts->t8_element_successor (successor, successor, maxlvl);
+      EXPECT_EQ (ts->t8_element_level (successor), maxlvl);
+      ts->t8_element_successor (successor, successor);
     }
     ts->t8_element_parent (child, element);
   }
@@ -131,7 +138,7 @@ t8_deep_successor (t8_element_t *element, t8_element_t *successor, t8_element_t 
 
 TEST_P (class_successor, test_recursive_and_deep_successor)
 {
-#ifdef T8_ENABLE_DEBUG
+#ifdef T8_ENABLE_LESS_TESTS
   const int maxlvl = 3;
 #else
   const int maxlvl = 4;
@@ -149,4 +156,4 @@ TEST_P (class_successor, test_recursive_and_deep_successor)
   t8_deep_successor (element, successor, last, ts);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_successor, class_successor, testing::Range (T8_ECLASS_LINE, T8_ECLASS_COUNT));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_successor, class_successor, AllEclasses, print_eclass);
