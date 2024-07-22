@@ -45,7 +45,6 @@ class t8_cmesh_partition_class: public testing::TestWithParam<cmesh_example_base
     size_t found = name.find (std::string ("t8_cmesh_new_from_class__Pyramid_sc_MPI_COMM_WORLD"));
     if (found != std::string::npos) {
       /* Test not working for pyramids */
-      //      GTEST_SKIP ();
     }
     found = GetParam ()->name.find (std::string ("empty"));
     if (found != std::string::npos) {

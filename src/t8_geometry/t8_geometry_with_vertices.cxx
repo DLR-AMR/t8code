@@ -105,11 +105,6 @@ t8_geometry_with_vertices::t8_geom_tree_negative_volume () const
   /* Compute sc_prod = <v_j, cross> */
   sc_prod = t8_vec_dot (v_j, cross);
 
-  for (i = 0; i < 3; ++i) {
-    t8_debugf ("Vertex %i: %f %f %f\n", i, active_tree_vertices[3 * i], active_tree_vertices[3 * i + 1],
-               active_tree_vertices[3 * i + 2]);
-  }
-
   T8_ASSERT (sc_prod != 0);
   return active_tree_class == T8_ECLASS_TET ? sc_prod > 0 : sc_prod < 0;
 }
