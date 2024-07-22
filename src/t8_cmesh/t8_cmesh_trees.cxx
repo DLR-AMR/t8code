@@ -226,9 +226,8 @@ typedef struct
 
 /* Compare function for t8_part_ghost_id_and_num_atts to compare by global id.
 *
-* Return < 0 if global_id of if_A < global_id of id_B
-* Return = 0 if equal
-* Return > 0 if >
+* Return True if global_id of if_A < global_id of id_B
+* Return False otherwise
 * */
 bool
 t8_compare_id_and_att_by_global_id (t8_part_ghost_id_and_num_atts &id_A, t8_part_ghost_id_and_num_atts &id_B)
@@ -238,9 +237,8 @@ t8_compare_id_and_att_by_global_id (t8_part_ghost_id_and_num_atts &id_A, t8_part
 
 /* Compare function for t8_part_ghost_id_and_num_atts to compare by local id.
 *
-* Return < 0 if local id of if_A < local id of id_B
-* Return = 0 if equal
-* Return > 0 if >
+* Return True if local id of if_A < local id of id_B
+* Return False otherwise
 * */
 bool
 t8_compare_id_and_att_by_part_id (t8_part_ghost_id_and_num_atts &id_A, t8_part_ghost_id_and_num_atts &id_B)
@@ -251,7 +249,6 @@ t8_compare_id_and_att_by_part_id (t8_part_ghost_id_and_num_atts &id_A, t8_part_g
 static std::vector<t8_part_ghost_id_and_num_atts>
 t8_cmesh_allocate_ghost_num_atts_array (t8_locidx_t part_num_ghosts)
 {
-  // The offset sum will start at 0 so we need one additional entry.
   std::vector<t8_part_ghost_id_and_num_atts> num_attributes_of_ghosts (part_num_ghosts);
   return num_attributes_of_ghosts;
 }
