@@ -7,11 +7,10 @@ For larger contributions, it is often beneficial to
 get in contact with one of the principal developers first.
 You can do so by opening a "feature request" issue.
 
-Please see our Wiki article on contributing for more details: https://github.com/DLR-AMR/t8code/wiki/Coding-Guideline#contributing 
-
 Contributors are required to put their contributions under the FreeBSD license. To do so, add a file `doc/author_NAME.txt` with the content "I place my contributions to t8code under the FreeBSD license. FIRSTNAME LASTNAME \<EMAIL\>"
 
-
+Please see our Wiki articles on [contributing](https://github.com/DLR-AMR/t8code/wiki/Coding-Guideline#contributing)
+and [coding guidelines](https://github.com/DLR-AMR/t8code/wiki/Coding-Guideline) for more details.
 
 t8code and its direct contributions are licensed under the GPLv2 (see
 [COPYING](COPYING)). As a contributor, you certify that all your
