@@ -35,8 +35,6 @@
 #include <cstddef>
 #include <iterator>
 
-T8_EXTERN_C_BEGIN ();
-
 /**
  * \brief This class resembles a bidirectional-iterator wrapper for the content of a \a t8_element_array_t.
  * The iterators can be dereferenced in order to receive an \a t8_element_t pointer to the corresponding index.
@@ -54,7 +52,7 @@ class t8_element_array_iterator {
   t8_locidx_t current_index { 0 };  /*!< The index the iterator currently points to. */
 
  public:
-  using iterator_category = std::bidirectional_iterator_tag;
+  using iterator_category = std::random_access_iterator_tag;
   using difference_type = std::ptrdiff_t;
   using pointer = t8_element_t**;
   using value_type = t8_element_t*;
@@ -88,6 +86,13 @@ class t8_element_array_iterator {
     return static_cast<t8_element_t*> (t8_sc_array_index_locidx (elements, current_index));
   };
 
+  value_type
+  operator[] (const difference_type n) const
+  {
+    T8_ASSERT (n >= 0 && static_cast<size_t> (n) < elements->elem_count);
+    return static_cast<t8_element_t*> (t8_sc_array_index_locidx (elements, n));
+  };
+
   /* Pre- and Postfix increment */
   t8_element_array_iterator&
   operator++ ()
@@ -118,18 +123,6 @@ class t8_element_array_iterator {
     return tmp_iterator;
   };
 
-  /* Comparison operators */
-  friend bool
-  operator== (const t8_element_array_iterator& iter1, const t8_element_array_iterator& iter2)
-  {
-    return (iter1.elements->array == iter2.elements->array && iter1.current_index == iter2.current_index);
-  };
-  friend bool
-  operator!= (const t8_element_array_iterator& iter1, const t8_element_array_iterator& iter2)
-  {
-    return (iter1.elements->array != iter2.elements->array || iter1.current_index != iter2.current_index);
-  };
-
   /* Arithmetic assignment operators */
   t8_element_array_iterator&
   operator+= (const difference_type n)
@@ -143,6 +136,67 @@ class t8_element_array_iterator {
     current_index -= n;
     T8_ASSERT (current_index < 0);
     return *this;
+  }
+
+  /* Comparison operators */
+  friend bool
+  operator== (const t8_element_array_iterator& iter1, const t8_element_array_iterator& iter2)
+  {
+    return (iter1.elements->array == iter2.elements->array && iter1.current_index == iter2.current_index);
+  };
+  friend bool
+  operator!= (const t8_element_array_iterator& iter1, const t8_element_array_iterator& iter2)
+  {
+    return (iter1.elements->array != iter2.elements->array || iter1.current_index != iter2.current_index);
+  };
+  friend bool
+  operator< (const t8_element_array_iterator& lhs, const t8_element_array_iterator& rhs)
+  {
+    T8_ASSERT (lhs.elements->array == rhs.elements->array);
+    return lhs.current_index < rhs.current_index;
+  }
+  friend bool
+  operator> (const t8_element_array_iterator& lhs, const t8_element_array_iterator& rhs)
+  {
+    T8_ASSERT (rhs.elements->array == lhs.elements->array);
+    return rhs.current_index < lhs.current_index;
+  }
+  friend bool
+  operator<= (const t8_element_array_iterator& lhs, const t8_element_array_iterator& rhs)
+  {
+    return !(rhs < lhs);
+  }
+  friend bool
+  operator>= (const t8_element_array_iterator& lhs, const t8_element_array_iterator& rhs)
+  {
+    return !(lhs < rhs);
+  }
+
+  /* Arithmetic operators */
+  friend t8_element_array_iterator
+  operator+ (const t8_element_array_iterator& iter, const difference_type n)
+  {
+    t8_element_array_iterator tmp_iterator (iter);
+    tmp_iterator += n;
+    return tmp_iterator;
+  }
+  friend t8_element_array_iterator
+  operator+ (const difference_type n, const t8_element_array_iterator& iter)
+  {
+    return iter + n;
+  }
+  friend t8_element_array_iterator
+  operator- (const t8_element_array_iterator& iter, const difference_type n)
+  {
+    t8_element_array_iterator tmp_iterator (iter);
+    tmp_iterator -= n;
+    return tmp_iterator;
+  }
+  friend difference_type
+  operator- (const t8_element_array_iterator& lhs, const t8_element_array_iterator& rhs)
+  {
+    T8_ASSERT (lhs.elements->array == rhs.elements->array);
+    return lhs.current_index - rhs.current_index;
   }
 
   /* Return the index within the array the iterator currently points to [0,...,size]. */
@@ -159,7 +213,6 @@ class t8_element_array_iterator {
     T8_ASSERT (current_index >= 0 && static_cast<size_t> (current_index) < elements->elem_count);
     return scheme->t8_element_get_linear_id (*(*this), level);
   };
-
 };
 
 /**
@@ -185,7 +238,5 @@ t8_element_array_end (const t8_element_array_t* element_array)
 {
   return t8_element_array_iterator (element_array, t8_element_array_get_count (element_array));
 }
-
-T8_EXTERN_C_END ();
 
 #endif /* !T8_ELEMENT_ARRAY_ITERATOR_HXX */
