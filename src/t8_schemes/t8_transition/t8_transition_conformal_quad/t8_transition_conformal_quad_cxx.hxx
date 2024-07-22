@@ -75,8 +75,6 @@ typedef struct
   int subelement_id;
 } t8_quad_with_subelements;
 
-typedef t8_quad_with_subelements t8_pquad_t;
-
 /** define some subelement related constants */
 #define T8_SUB_QUAD_MAX_TRANSITION_TYPE 15
 #define T8_SUB_QUAD_MAX_SUBELEMENT_ID 7
