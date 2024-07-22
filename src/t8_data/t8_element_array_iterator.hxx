@@ -21,7 +21,7 @@
 */
 
 /** \file t8_element_array_iterator.hxx
- * We define a bidirectional-iterator wrapping around a \a t8_element_array_t that stores pointers to elements of a given
+ * We define a Random-Access-Iterator wrapping around a \a t8_element_array_t that stores pointers to elements of a given
  * eclass scheme.
  */
 
@@ -36,10 +36,10 @@
 #include <iterator>
 
 /**
- * \brief This class resembles a bidirectional-iterator wrapper for the content of a \a t8_element_array_t.
- * The iterators can be dereferenced in order to receive an \a t8_element_t pointer to the corresponding index.
+ * \brief This class resembles a Random-Access-Iterator wrapper for the content of a \a t8_element_array_t.
+ * The iterator can be dereferenced in order to receive a \a t8_element_t pointer to the corresponding index.
  * These iterators may be used in algorithms of the standard library (e.g. std::lower_bound,...) or to iterate
- * through an \a t8_element_array_t.
+ * through a \a t8_element_array_t.
  * Since the actual data is serialized to char-bytes in the underlying array, we reconstruct a \a t8_element_t pointer
  * and let the dereference operator return it as a value_type. Therefore, read-only operations on the
  * \a t8_element_array_t are possible.
@@ -137,7 +137,6 @@ class t8_element_array_iterator {
     T8_ASSERT (current_index < 0);
     return *this;
   }
-
   /* Comparison operators */
   friend bool
   operator== (const t8_element_array_iterator& iter1, const t8_element_array_iterator& iter2)
@@ -216,9 +215,9 @@ class t8_element_array_iterator {
 };
 
 /**
- * \brief Get an bidirectional iterator to the first element pointer within an element array.
+ * \brief Get an Random-Access-Iterator to the first element pointer within an element array.
  * 
- * \param[in] element_array The element array from which the begin-bidirectional-iterator should be taken.
+ * \param[in] element_array The element array from which the begin()-Random-Access-Iterator should be taken.
  * \return t8_element_array_iterator The iterator to the start of the element array.
  */
 inline t8_element_array_iterator
@@ -228,9 +227,9 @@ t8_element_array_begin (const t8_element_array_t* element_array)
 }
 
 /**
- * \brief Get an bidirectional iterator to the one after the last element pointer within an element array.
+ * \brief Get an Random-Access-Iterator to the one after the last element pointer within an element array.
  * 
- * \param[in] element_array The element array from which the end-bidirectional-iterator should be taken.
+ * \param[in] element_array The element array from which the end()-Random-Access-Iterator should be taken.
  * \return t8_element_array_iterator The iterator to the end of the element array.
  */
 inline t8_element_array_iterator
