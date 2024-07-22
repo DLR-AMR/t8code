@@ -118,21 +118,6 @@ class t8_element_array_iterator {
     return tmp_iterator;
   };
 
-  /* Return the index within the array the iterator currently points to [0,...,size]. */
-  t8_locidx_t
-  GetCurrentIndex () const
-  {
-    return current_index;
-  };
-
-  /* Compute the linear id at a given level for the element the iterator points to. */
-  t8_linearidx_t
-  GetLinearIDAtLevel (const int level)
-  {
-    T8_ASSERT (current_index >= 0 && static_cast<size_t> (current_index) < elements->elem_count);
-    return scheme->t8_element_get_linear_id (*(*this), level);
-  };
-
   /* Comparison operators */
   friend bool
   operator== (const t8_element_array_iterator& iter1, const t8_element_array_iterator& iter2)
@@ -159,6 +144,22 @@ class t8_element_array_iterator {
     T8_ASSERT (current_index < 0);
     return *this;
   }
+
+  /* Return the index within the array the iterator currently points to [0,...,size]. */
+  t8_locidx_t
+  GetCurrentIndex () const
+  {
+    return current_index;
+  };
+
+  /* Compute the linear id at a given level for the element the iterator points to. */
+  t8_linearidx_t
+  GetLinearIDAtLevel (const int level)
+  {
+    T8_ASSERT (current_index >= 0 && static_cast<size_t> (current_index) < elements->elem_count);
+    return scheme->t8_element_get_linear_id (*(*this), level);
+  };
+  
 };
 
 /**
