@@ -120,7 +120,7 @@ class t8_element_array_iterator {
 
   /* Return the index within the array the iterator currently points to [0,...,size]. */
   t8_locidx_t
-  GetArrayIndex () const
+  GetCurrentIndex () const
   {
     return current_index;
   };
