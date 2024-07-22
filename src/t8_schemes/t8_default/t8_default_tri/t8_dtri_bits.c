@@ -1171,6 +1171,8 @@ t8_dtri_is_root_boundary (const t8_dtri_t *t, int face)
       return t->y == t->z;
     case 3:
       return t->y == 0;
+    default:
+      SC_ABORT_NOT_REACHED ();
     }
   case 1:
     /* type 1 tets are only boundary at face 0 */
@@ -1187,6 +1189,8 @@ t8_dtri_is_root_boundary (const t8_dtri_t *t, int face)
   case 5:
     /* type 5 tets are only boundary at face 3 */
     return face == 3 && t->y == 0;
+  default:
+    SC_ABORT_NOT_REACHED ();
   }
 #endif
   SC_ABORT_NOT_REACHED ();
