@@ -82,6 +82,7 @@ libt8_installed_headers_geometry_impl = \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.h
 libt8_installed_headers_vtk = \
   src/t8_vtk/t8_vtk_reader.hxx \
+  src/t8_vtk/t8_vtk_writer.hxx \
   src/t8_vtk/t8_vtk_types.h
 libt8_installed_headers_schemes_default =
 libt8_installed_headers_default_common =
@@ -103,7 +104,8 @@ libt8_internal_headers = \
   src/t8_forest/t8_forest_ghost.h \
   src/t8_forest/t8_forest_balance.h src/t8_forest/t8_forest_types.h \
   src/t8_forest/t8_forest_private.h \
-  src/t8_windows.h
+  src/t8_windows.h \
+  src/t8_vtk/t8_vtk_writer_helper.hxx
 libt8_compiled_sources = \
   src/t8.c src/t8_eclass.c src/t8_mesh.c \
   src/t8_element.cxx \
