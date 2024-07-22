@@ -23,7 +23,7 @@
 #include <t8_forest/t8_forest_to_vtkUnstructured.hxx>
 #include <t8_forest/t8_forest_vtk.h>
 #include <t8_vtk.h>
-#include <t8_element_cxx.hxx>
+#include <t8_element.hxx>
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_vec.h>
 #include "t8_forest_types.h"

@@ -26,16 +26,19 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_types.h>
-#include <t8_forest/t8_forest_cxx.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_balance.h>
 #include <t8_forest/t8_forest_transition.h>
-#include <t8_element_cxx.hxx>
+#include <t8_element.hxx>
 #include <t8_element_c_interface.h>
 #include <t8_cmesh/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
+#include <t8_forest/t8_forest_profiling.h>
+#include <t8_forest/t8_forest_io.h>
+#include <t8_forest/t8_forest_adapt.h>
+#include <t8_forest/t8_forest_vtk.h>
 #include <t8_geometry/t8_geometry_base.hxx>
 #if T8_ENABLE_DEBUG
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
@@ -3330,7 +3333,6 @@ t8_forest_is_initialized (t8_forest_t forest)
 
 /** Check whether at least one eclass scheme of forest supports transitioning
  * \param [in] forest           A forest
- * \return                      True if at least one eclass scheme in forest has an implementation for subelements
  */
 int
 t8_forest_supports_transitioning (t8_forest_t forest)
@@ -3360,8 +3362,6 @@ t8_forest_supports_transitioning (t8_forest_t forest)
 }
 
 int
-t8_forest_is_committed (const t8_forest_t forest)
-{
   return forest != NULL && t8_refcount_is_active (&forest->rc) && forest->committed;
 }
 
@@ -3721,7 +3721,6 @@ t8_forest_populate_irregular (t8_forest_t forest)
   t8_forest_set_level (forest_zero, 0);
   t8_forest_set_cmesh (forest_zero, forest->cmesh, forest->mpicomm);
   t8_forest_set_scheme (forest_zero, forest->scheme_cxx);
-
   t8_forest_commit (forest_zero);
   /* Up to the specified level we refine every element. */
   for (int i = 1; i <= forest->set_level; i++) {
@@ -3768,6 +3767,7 @@ t8_forest_commit (t8_forest_t forest)
     T8_ASSERT (forest->incomplete_trees == -1);
     T8_ASSERT (forest->set_subelements == 0);
     T8_ASSERT (forest->is_transitioned == 0);
+
     /* dup communicator if requested */
     if (forest->do_dup) {
       mpiret = sc_MPI_Comm_dup (forest->mpicomm, &comm_dup);
@@ -3775,23 +3775,21 @@ t8_forest_commit (t8_forest_t forest)
       forest->mpicomm = comm_dup;
     }
     forest->dimension = forest->cmesh->dimension;
+
     /* Set mpirank and mpisize */
     mpiret = sc_MPI_Comm_size (forest->mpicomm, &forest->mpisize);
     SC_CHECK_MPI (mpiret);
-
     mpiret = sc_MPI_Comm_rank (forest->mpicomm, &forest->mpirank);
     SC_CHECK_MPI (mpiret);
     /* Compute the maximum allowed refinement level */
     t8_forest_compute_maxlevel (forest);
     T8_ASSERT (forest->set_level <= forest->maxlevel);
-
     /* populate a new forest with tree and quadrant objects */
     if (t8_forest_refines_irregular (forest) && forest->set_level > 0) {
       /* On root level we will also use the normal algorithm */
       t8_forest_populate_irregular (forest);
     }
     else {
-
       t8_forest_populate (forest);
     }
     forest->global_num_trees = t8_cmesh_get_num_trees (forest->cmesh);
@@ -3883,7 +3881,6 @@ t8_forest_commit (t8_forest_t forest)
       else {
         /* This forest should only be adapted */
         t8_forest_copy_trees (forest, forest->set_from, 0);
-
         t8_forest_adapt (forest);
       }
     }
@@ -4007,7 +4004,6 @@ t8_forest_commit (t8_forest_t forest)
     /* Compute the tree offset array */
     t8_forest_partition_create_tree_offsets (forest);
   }
-
   if (forest->element_offsets == NULL) {
     /* Compute element offsets */
     t8_forest_partition_create_offsets (forest);
@@ -4753,7 +4749,6 @@ t8_forest_profile_get_balance (t8_forest_t forest, int *balance_rounds)
 void
 t8_forest_compute_elements_offset (t8_forest_t forest)
 {
-
   t8_locidx_t itree, num_trees;
   t8_locidx_t current_offset;
   t8_tree_t tree;
@@ -4762,7 +4757,6 @@ t8_forest_compute_elements_offset (t8_forest_t forest)
 
   /* Get the number of local trees */
   num_trees = t8_forest_get_num_local_trees (forest);
-
   current_offset = 0;
   /* Iterate through all trees, sum up the element counts and set it as
    * the element_offsets */
@@ -4878,17 +4872,17 @@ t8_forest_free_trees (t8_forest_t forest)
   for (jt = 0; jt < number_of_trees; jt++) {
     tree = (t8_tree_t) t8_sc_array_index_locidx (forest->trees, jt);
 
-    if (t8_forest_get_tree_element_count (tree) < 1) {
-      /* if local tree is empty */
+    if (t8_forest_get_tree_element_count (tree) >= 1) {
+      /* destroy first and last descendant */
+      const t8_eclass_t eclass = t8_forest_get_tree_class (forest, jt);
+      const t8_eclass_scheme_c *scheme = forest->scheme_cxx->eclass_schemes[eclass];
+      t8_element_destroy (scheme, 1, &tree->first_desc);
+      t8_element_destroy (scheme, 1, &tree->last_desc);
+    }
+    else {
       T8_ASSERT (forest->incomplete_trees);
-      continue;
     }
     t8_element_array_reset (&tree->elements);
-    /* destroy first and last descendant */
-    const t8_eclass_t eclass = t8_forest_get_tree_class (forest, jt);
-    const t8_eclass_scheme_c *scheme = forest->scheme_cxx->eclass_schemes[eclass];
-    t8_element_destroy (scheme, 1, &tree->first_desc);
-    t8_element_destroy (scheme, 1, &tree->last_desc);
   }
   sc_array_destroy (forest->trees);
 }
