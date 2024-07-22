@@ -69,6 +69,12 @@ T8_EXTERN_C_BEGIN ();
 void
 t8_cmesh_init (t8_cmesh_t *pcmesh);
 
+/** Allocate a new un-committed cmesh.
+ * \return                     A pointer to an un-committed t8_cmesh structure.
+ */
+t8_cmesh_t
+t8_cmesh_new ();
+
 /** Check whether a cmesh is not NULL, initialized and not committed.
  * In addition, it asserts that the cmesh is consistent as much as possible.
  * \param [in] cmesh            This cmesh is examined.  May be NULL.
@@ -404,7 +410,7 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm);
  *       registered \a after the bcast operation, not before.
  */
 void
-t8_cmesh_register_geometry (t8_cmesh_t cmesh, t8_geometry_c **geometry);
+t8_cmesh_register_geometry (t8_cmesh_t cmesh, t8_geometry_c *geometry);
 
 /** Set the geometry for a tree, thus specify which geometry to use for this tree.
  * \param [in] cmesh     A non-committed cmesh.
@@ -736,7 +742,7 @@ t8_cmesh_get_partition_table (t8_cmesh_t cmesh);
  * \a cmesh must be committed before calling this function. *
  */
 void
-t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *ts, t8_gloidx_t *first_local_tree,
+t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level, const t8_scheme_cxx_t *ts, t8_gloidx_t *first_local_tree,
                          t8_gloidx_t *child_in_tree_begin, t8_gloidx_t *last_local_tree, t8_gloidx_t *child_in_tree_end,
                          int8_t *first_tree_shared);
 
@@ -797,7 +803,8 @@ t8_cmesh_coords_axb (const double *coords_in, double *coords_out, int num_vertic
  * \param[in]   translate         Translation of the vectors.
  */
 void
-t8_cmesh_translate_coordinates (const double *coords_in, double *coords_out, int num_vertices, double translate[3]);
+t8_cmesh_translate_coordinates (const double *coords_in, double *coords_out, const int num_vertices,
+                                const double translate[3]);
 
 /**TODO: Add proper documentation*/
 void
