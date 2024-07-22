@@ -111,6 +111,7 @@ target_sources( T8 PRIVATE
     t8_forest/t8_forest_iterate.cxx 
     t8_forest/t8_forest_balance.cxx 
     t8_forest/t8_forest_netcdf.cxx 
+    t8_forest/t8_forest_transition.cxx 
     t8_geometry/t8_geometry.cxx 
     t8_geometry/t8_geometry_helpers.c 
     t8_geometry/t8_geometry_base.cxx 

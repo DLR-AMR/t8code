@@ -28,7 +28,7 @@
 #ifndef T8_TRANSITION_CXX_HXX
 #define T8_TRANSITION_CXX_HXX
 
-#include <t8_element_cxx.hxx>
+#include <t8_element.hxx>
 
 /* This is the unique identifier for the transition function. */
 
