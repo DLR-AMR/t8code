@@ -21,7 +21,7 @@
 */
 
 /** \file t8_element_array_iterator.hxx
- * We define a bidirectional-iterator for a \a t8_element_array_t that stores pointers to elements of a given
+ * We define a bidirectional-iterator wrapping around a \a t8_element_array_t that stores pointers to elements of a given
  * eclass scheme.
  */
 
@@ -159,7 +159,7 @@ class t8_element_array_iterator {
     T8_ASSERT (current_index >= 0 && static_cast<size_t> (current_index) < elements->elem_count);
     return scheme->t8_element_get_linear_id (*(*this), level);
   };
-  
+
 };
 
 /**
