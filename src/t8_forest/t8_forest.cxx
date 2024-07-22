@@ -3331,6 +3331,12 @@ t8_forest_is_initialized (t8_forest_t forest)
   return forest != NULL && t8_refcount_is_active (&forest->rc) && !forest->committed;
 }
 
+int
+t8_forest_is_committed (const t8_forest_t forest)
+{
+  return forest != NULL && t8_refcount_is_active (&forest->rc) && forest->committed;
+}
+
 /** Check whether at least one eclass scheme of forest supports transitioning
  * \param [in] forest           A forest
  */
@@ -3361,9 +3367,6 @@ t8_forest_supports_transitioning (t8_forest_t forest)
   return supports_transition_all_procs;
 }
 
-int
-  return forest != NULL && t8_refcount_is_active (&forest->rc) && forest->committed;
-}
 
 static void
 t8_forest_set_mpicomm (t8_forest_t forest, sc_MPI_Comm mpicomm, int do_dup)
