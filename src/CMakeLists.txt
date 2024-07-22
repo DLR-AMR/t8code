@@ -145,6 +145,10 @@ target_sources( T8 PRIVATE
     t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.c
     t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.cxx
     t8_schemes/t8_default/t8_default_vertex/t8_dvertex_bits.c
+    t8_schemes/t8_transition/t8_transition_conformal_hex/t8_transition_conformal_hex.cxx
+    t8_schemes/t8_transition/t8_transition_conformal_hex/t8_transition_conformal_hex_cxx.cxx
+    t8_schemes/t8_transition/t8_transition_conformal_quad/t8_transition_conformal_quad.cxx
+    t8_schemes/t8_transition/t8_transition_conformal_quad/t8_transition_conformal_quad_cxx.cxx
     t8_vtk/t8_vtk_polydata.cxx 
     t8_vtk/t8_vtk_unstructured.cxx 
     t8_vtk/t8_vtk_parallel.cxx 
