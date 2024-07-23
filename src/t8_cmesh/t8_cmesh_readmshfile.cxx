@@ -445,15 +445,19 @@ t8_msh_file_4_read_nodes (FILE *fp, t8_locidx_t *num_nodes, sc_mempool_t **node_
         case 1:
           retval = sscanf (line, "%lf %lf %lf %lf", &Node->coordinates[0], &Node->coordinates[1], &Node->coordinates[2],
                            &Node->parameters[0]);
-          if (retval == 4) {
-            break;
+          if (retval != 4) {
+            t8_global_errorf ("Error reading node file after node %li\n", (long) last_index);
+            goto die_node;
           }
+          break;
         case 2:
           retval = sscanf (line, "%lf %lf %lf %lf %lf", &Node->coordinates[0], &Node->coordinates[1],
                            &Node->coordinates[2], &Node->parameters[0], &Node->parameters[1]);
-          if (retval == 5) {
-            break;
+          if (retval != 5) {
+            t8_global_errorf ("Error reading node file after node %li\n", (long) last_index);
+            goto die_node;
           }
+          break;
         default:
           t8_global_errorf ("Error reading node file after node %li\n", (long) last_index);
           goto die_node;
