@@ -108,7 +108,7 @@ typedef int64_t t8_gloidx_t;
 /** A type for storing SFC indices */
 typedef uint64_t t8_linearidx_t;
 /** The MPI datatype of t8_linearidx_t */
-#define T8_MPI_LINEARIDX sc_MPI_UNSIGNED_LONG_LONG
+#define T8_MPI_LINEARIDX sc_MPI_LONG_LONG_INT
 
 #define T8_PADDING_SIZE (sizeof (void *))
 /** Compute the number of bytes that have to be added to a given byte_count
