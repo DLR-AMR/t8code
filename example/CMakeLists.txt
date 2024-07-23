@@ -49,6 +49,8 @@ add_t8_example( NAME t8_cmesh_read_from_vtk             SOURCES IO/cmesh/vtk/t8_
 add_t8_example( NAME t8_netcdf_compilation_status       SOURCES IO/forest/netcdf/t8_netcdf_status.c )
 add_t8_example( NAME t8_write_forest_netcdf             SOURCES IO/forest/netcdf/t8_write_forest_netcdf.cxx )
 
+add_t8_example( NAME t8_tabeamug                        SOURCES tabeamug/tabeamug.cxx )
+
 add_t8_example( NAME t8_example_spheres                 SOURCES remove/t8_example_spheres.cxx )
 add_t8_example( NAME t8_example_gauss_blob              SOURCES remove/t8_example_gauss_blob.cxx )
 add_t8_example( NAME t8_example_empty_trees             SOURCES remove/t8_example_empty_trees.cxx )
