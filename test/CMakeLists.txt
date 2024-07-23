@@ -75,6 +75,7 @@ add_t8_test( NAME t8_gtest_geometry_handling    SOURCES t8_gtest_main.cxx t8_geo
 add_t8_test( NAME t8_gtest_point_inside         SOURCES t8_gtest_main.cxx t8_geometry/t8_gtest_point_inside.cxx )
 
 add_t8_test( NAME t8_gtest_vtk_reader SOURCES t8_gtest_main.cxx t8_IO/t8_gtest_vtk_reader.cxx )
+add_t8_test( NAME t8_gtest_vtk_writer SOURCES t8_gtest_main.cxx t8_IO/t8_gtest_vtk_writer.cxx )
 
 add_t8_test( NAME t8_gtest_nca                   SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_nca.cxx )
 add_t8_test( NAME t8_gtest_pyra_connectivity     SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_pyra_connectivity.cxx )
