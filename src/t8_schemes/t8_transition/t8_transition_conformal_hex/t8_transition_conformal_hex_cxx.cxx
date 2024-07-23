@@ -28,7 +28,7 @@
 #include <p8est_bits.h>
 #include <p4est_bits.h>
 #include <t8_schemes/t8_default/t8_default_line/t8_dline_bits.h>
-#include <t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 #include "t8_transition_conformal_hex_cxx.hxx"
 #include <cmath>
 
