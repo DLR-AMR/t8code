@@ -24,8 +24,8 @@
 #include <t8_schemes/t8_transition/t8_transition_cxx.hxx>
 #include <t8_refcount.h>
 
-#include <t8_schemes/t8_default/t8_default_line/t8_default_line_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_tri/t8_default_tri_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_line/t8_default_line.hxx>
+#include <t8_schemes/t8_default/t8_default_tri/t8_default_tri.hxx>
 
 #include <t8_schemes/t8_transition/t8_transition_conformal_quad/t8_transition_conformal_quad_cxx.hxx>
 

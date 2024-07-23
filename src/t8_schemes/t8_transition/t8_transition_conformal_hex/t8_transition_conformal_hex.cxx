@@ -21,13 +21,13 @@
 */
 
 #include <new>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_schemes/t8_transition/t8_transition_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_line/t8_default_line_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_hex/t8_default_hex_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_tri/t8_default_tri_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_quad/t8_default_quad_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_line/t8_default_line.hxx>
+#include <t8_schemes/t8_default/t8_default_hex/t8_default_hex.hxx>
+#include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid.hxx>
+#include <t8_schemes/t8_default/t8_default_tri/t8_default_tri.hxx>
+#include <t8_schemes/t8_default/t8_default_quad/t8_default_quad.hxx>
 #include <t8_refcount.h>
 #include <t8_schemes/t8_transition/t8_transition_conformal_hex/t8_transition_conformal_hex_cxx.hxx>
 

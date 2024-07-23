@@ -25,8 +25,8 @@
 
 #include <p4est_bits.h>
 #include <t8_schemes/t8_default/t8_default_line/t8_dline_bits.h>
-#include <t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_quad/t8_default_quad_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
+#include <t8_schemes/t8_default/t8_default_quad/t8_default_quad.hxx>
 #include <t8_geometry/t8_geometry_helpers.h>
 #include "t8.h"
 #include "t8_transition_conformal_quad_cxx.hxx"
