@@ -1376,6 +1376,7 @@ t8_subelement_scheme_quad_c::t8_element_reference_coords (const t8_element_t *el
   T8_ASSERT (out_coords != NULL);
   T8_ASSERT (num_coords == 2);
   T8_ASSERT (t8_element_is_valid (elem));
+  t8_debugf ("in t8_element_reference_coords:  %f %f, num = %i\n", ref_coords[0], ref_coords[1], num_coords);
   static struct t8_default_scheme_quad_c default_quad_scheme;
 
   const t8_quad_with_subelements *element = (t8_quad_with_subelements *) elem;
@@ -1410,6 +1411,7 @@ t8_subelement_scheme_quad_c::t8_element_reference_coords (const t8_element_t *el
     }
     t8_geom_triangular_interpolation (barycentric_coeff, vertex_coords, 3, 2, out_coords);
   }
+  t8_debugf ("out: %f %f %f\n", out_coords[0], out_coords[1], out_coords[2]);
 }
 
 void

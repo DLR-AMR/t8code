@@ -111,6 +111,7 @@ t8_element_array_init_size (t8_element_array_t *element_array, t8_eclass_scheme_
     scheme->t8_element_init (num_elements, first_element);
   }
   T8_ASSERT (t8_element_array_is_valid (element_array));
+  t8_debugf ("initialized array %p sc arr %p\n", element_array, element_array->array.array);
 }
 
 void
