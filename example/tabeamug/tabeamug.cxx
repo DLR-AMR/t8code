@@ -2,6 +2,7 @@
 #include <t8.h>
 #include <t8_forest/t8_forest.h>
 #include <t8_schemes/t8_transition/t8_transition_cxx.hxx>
+#include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh_readmshfile.h>
 #include <vector>
 #include <algorithm>
@@ -11,7 +12,7 @@ tabeamug_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_t
                 t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
 {
   const int maxlevel = *(const int *) t8_forest_get_user_data (forest);
-  const t8_gloidx_t tree_boundariesA[] = { 10, 40 };
+  const t8_gloidx_t tree_boundariesA[] = {0, 1};//{ 10, 40 };
   const t8_gloidx_t tree_boundariesB[] = { 90, 120 };
 
   const int element_level = ts->t8_element_level (elements[0]);
@@ -38,24 +39,40 @@ tabeamug_build_forest (const char *filename, int level, int maxlevel)
   const int dimension = 2;
   const int main_rank = 0;
   const int use_cad = 0;
-  t8_cmesh_t cmesh = t8_cmesh_from_msh_file (filename, partition, comm, dimension, main_rank, use_cad);
+  t8_cmesh_t cmesh = t8_cmesh_new_from_class (T8_ECLASS_QUAD, comm);
+  //t8_cmesh_from_msh_file (filename, partition, comm, dimension, main_rank, use_cad);
 
   /* Build uniform forest */
   t8_scheme_cxx_t *scheme = t8_scheme_new_transition_quad_cxx ();  // default adapt scheme.
+
   const int do_face_ghost = 0;                                     // No ghost needed.
   t8_forest_t forest_uniform = t8_forest_new_uniform (cmesh, scheme, level, do_face_ghost, comm);
 
+  t8_forest_t forest_temp = forest_uniform;
+  t8_forest_t forest_adapt;
   /* Build adapted forest */
-  const int recursive = 1;  // We want to define multiple levels at once.
-  /* Adapt the forest. We use the maximum refinement levet as user data. */
-  t8_forest_t forest_adapt = t8_forest_new_adapt (forest_uniform, tabeamug_adapt, recursive, do_face_ghost, &maxlevel);
+  for (int ilevel = level + 1;ilevel <= maxlevel;++ilevel) {
+    const int recursive = 0;  // We want to define multiple levels at once.
+    /* Adapt the forest. We use the maximum refinement levet as user data. */
+    forest_adapt = t8_forest_new_adapt (forest_temp, tabeamug_adapt, recursive, do_face_ghost, &maxlevel);
+    forest_temp = forest_adapt;
+  }
+
+  t8_eclass_scheme_c *quad_scheme = t8_forest_get_eclass_scheme (forest_adapt, T8_ECLASS_QUAD);
+  const t8_element_t *elem = t8_forest_get_element (forest_adapt, 0, NULL);
+  double ref_coords[2] = {0, 0};
+  double out_coords[3];
+  quad_scheme->t8_element_reference_coords (elem, ref_coords, 3, out_coords);
+
+ 
 
   // vtk output of adapted forest
   char vtkname[BUFSIZ];
   snprintf (vtkname, BUFSIZ, "tabeamug_adapt_%i_%i", level, maxlevel);
   //t8_forest_write_vtk_ext (forest_adapt, vtkname, 1, 1, 1, 1, 1, 0, 1, 0, NULL);
   t8_forest_write_vtk (forest_adapt, vtkname);
-
+ t8_forest_unref (&forest_adapt);
+  return;
   // builde balanced forest
   t8_forest_t forest_balance;
   t8_forest_init (&forest_balance);
@@ -98,15 +115,21 @@ main (int argc, char *argv[])
                      "The program reads a .msh file and builds an adaptive mesh from it.\n"
                      "The mesh is refined on specifically defined trees.\n";
 
+#if T8_ENABLE_DEBUG
+printf ("=============DEBUG ON==============\n");
+#else
+printf ("=============DEBUG OFF=============\n");
+#endif
+
   /* Initialize MPI. This has to happen before we initialize sc or t8code. */
   mpiret = sc_MPI_Init (&argc, &argv);
   /* Error check the MPI return value. */
   SC_CHECK_MPI (mpiret);
 
   /* Initialize the sc library, has to happen before we initialize t8code. */
-  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-  /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the leg levels. */
-  t8_init (SC_LP_PRODUCTION);
+  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_TRACE);
+  /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
+  t8_init (SC_LP_TRACE);
 
   /* initialize command line argument parser */
   opt = sc_options_new (argv[0]);
