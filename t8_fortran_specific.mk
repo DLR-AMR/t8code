@@ -9,7 +9,7 @@ AM_FCFLAGS += @FCFLAGS@
 t8_current_moddir = 
 
 if T8_WITH_MODDIR
-# Updates for the module output and include path (if a seperate module directory has been specified)
+# Updates for the module output and include path (if a separate module directory has been specified)
 AM_FCFLAGS += $(FC_MODOUT)@T8_FORTRAN_MODULE_DIR@ $(FC_MODINC)@T8_FORTRAN_MODULE_DIR@
 AM_CPPFLAGS += -I@T8_FORTRAN_MODULE_DIR@
 
