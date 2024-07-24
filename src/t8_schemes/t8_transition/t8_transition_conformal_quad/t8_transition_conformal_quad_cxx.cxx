@@ -2352,7 +2352,7 @@ t8_subelement_scheme_quad_c::t8_element_to_string (const t8_element_t *elem, cha
 t8_subelement_scheme_quad_c::t8_subelement_scheme_quad_c (void)
 {
   eclass = T8_ECLASS_QUAD;
-  element_size = sizeof (t8_pquad_t);
+  element_size = sizeof (t8_quad_with_subelements);
   ts_context = sc_mempool_new (element_size);
 }
 
