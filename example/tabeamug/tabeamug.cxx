@@ -49,7 +49,7 @@ tabeamug_build_forest (const char *filename, int level, int maxlevel)
   t8_forest_t forest_uniform = t8_forest_new_uniform (cmesh, scheme, level, do_face_ghost, comm);
 
   t8_forest_t forest_temp = forest_uniform;
-  t8_forest_t forest_adapt;
+  t8_forest_t forest_adapt = forest_uniform;
   /* Build adapted forest */
   for (int ilevel = level + 1;ilevel <= maxlevel;++ilevel) {
     const int recursive = 0;  // We want to define multiple levels at once.
@@ -71,8 +71,7 @@ tabeamug_build_forest (const char *filename, int level, int maxlevel)
   snprintf (vtkname, BUFSIZ, "tabeamug_adapt_%i_%i", level, maxlevel);
   //t8_forest_write_vtk_ext (forest_adapt, vtkname, 1, 1, 1, 1, 1, 0, 1, 0, NULL);
   t8_forest_write_vtk (forest_adapt, vtkname);
- t8_forest_unref (&forest_adapt);
-  return;
+  
   // builde balanced forest
   t8_forest_t forest_balance;
   t8_forest_init (&forest_balance);
@@ -127,7 +126,7 @@ printf ("=============DEBUG OFF=============\n");
   SC_CHECK_MPI (mpiret);
 
   /* Initialize the sc library, has to happen before we initialize t8code. */
-  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_TRACE);
+  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_PRODUCTION);
   /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
   t8_init (SC_LP_TRACE);
 
