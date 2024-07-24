@@ -1374,7 +1374,6 @@ t8_subelement_scheme_quad_c::t8_element_reference_coords (const t8_element_t *el
 {
   T8_ASSERT (ref_coords != NULL);
   T8_ASSERT (out_coords != NULL);
-  T8_ASSERT (num_coords == 2);
   T8_ASSERT (t8_element_is_valid (elem));
   static struct t8_default_scheme_quad_c default_quad_scheme;
 
@@ -1401,14 +1400,21 @@ t8_subelement_scheme_quad_c::t8_element_reference_coords (const t8_element_t *el
      *
      * After that we use t8_geom_triangular_interpolation to compute the actual value.
      */
-    const double barycentric_coeff[3] = {0, ref_coords[0] - ref_coords[1], ref_coords[1]};
     constexpr int num_vertices = 3;  // Should use t8_eclass_num_vertices[T8_ECLASS_TRIANGLE]; but is not constexpr
     constexpr int num_vertex_coords = num_vertices * 3;
     double vertex_coords[num_vertex_coords]; // Stores the triangle's vertices
     for (int ivertex = 0;ivertex < num_vertices;++ivertex) {
       t8_element_vertex_reference_coords (elem, ivertex, vertex_coords + 3*ivertex);
     }
-    t8_geom_triangular_interpolation (barycentric_coeff, vertex_coords, 3, 2, out_coords);
+    constexpr int dim = 2;
+    constexpr int dim_out = 3;
+    // For each incoming coordinate compute the barycentric coordinates and do the interpolation
+    for (int i = 0;i < num_coords;++i) {
+      const double ref_x = ref_coords[0 + dim * num_coords];
+      const double ref_y = ref_coords[1 + dim * num_coords];
+      const double barycentric_coeff[3] = {0, ref_x - ref_y, ref_y};
+      t8_geom_triangular_interpolation (barycentric_coeff, vertex_coords, 3, 2, out_coords + i * dim_out);
+    }
   }
 }
 
