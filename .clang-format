@@ -70,5 +70,6 @@ SpacesInParentheses: 'false'
 SpacesInSquareBrackets: 'false'
 TabWidth: '2'
 UseTab: Never
+LineEnding: LF
 
 ...
