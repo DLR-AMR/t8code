@@ -121,7 +121,6 @@ t8_cmesh_new_periodic_tri_wrap (sc_MPI_Comm *Ccomm);
 t8_forest_t
 t8_forest_new_uniform_default (t8_cmesh_t cmesh, int level, int do_face_ghost, sc_MPI_Comm *comm);
 
-
 /** 
  * \param [in, out] forest     The forest
  * \param [in] recursive       A flag specifying whether adaptation is to be done recursively
