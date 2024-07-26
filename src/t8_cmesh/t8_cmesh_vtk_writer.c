@@ -251,7 +251,7 @@ t8_cmesh_vtk_write_file_ext (const t8_cmesh_t cmesh, const char *fileprefix, con
        */
       T8_ASSERT (tree->treeid + cmesh->first_tree == (t8_gloidx_t) ((long) tree->treeid + cmesh->first_tree));
       T8_ASSERT (tree->treeid + cmesh->first_tree ==  tree->treeid + (t8_locidx_t) cmesh->first_tree);
-      fprintf (vtufile, " %ld", tree->treeid + (t8_locidx_t) cmesh->first_tree);
+      fprintf (vtufile, " %ld", (long)(tree->treeid + (t8_locidx_t) cmesh->first_tree));
       if (!(sk % 8))
         fprintf (vtufile, "\n         ");
     }
