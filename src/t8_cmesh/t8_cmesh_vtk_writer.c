@@ -32,7 +32,7 @@
  * \a cmesh must be committed before calling this function.
  */
 static t8_gloidx_t
-t8_cmesh_get_num_vertices (t8_cmesh_t cmesh, int count_ghosts)
+t8_cmesh_get_num_vertices (const t8_cmesh_t cmesh, const int count_ghosts)
 {
   int iclass;
   t8_eclass_t ghost_class;
@@ -56,7 +56,7 @@ t8_cmesh_get_num_vertices (t8_cmesh_t cmesh, int count_ghosts)
 }
 
 static int
-t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix, int write_ghosts)
+t8_cmesh_vtk_write_file_ext (const t8_cmesh_t cmesh, const char *fileprefix, const int write_ghosts)
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
@@ -305,7 +305,7 @@ t8_cmesh_vtk_write_file_ext (t8_cmesh_t cmesh, const char *fileprefix, int write
 }
 
 int
-t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix)
+t8_cmesh_vtk_write_file (const t8_cmesh_t cmesh, const char *fileprefix)
 {
   return t8_cmesh_vtk_write_file_ext (cmesh, fileprefix, 1);
 }

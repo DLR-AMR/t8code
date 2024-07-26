@@ -36,10 +36,10 @@
 #include <memory>
 
 void
-t8_geometry_handler::register_geometry (t8_geometry_c **geom)
+t8_geometry_handler::register_geometry (t8_geometry_c *geom)
 {
-  std::unique_ptr<t8_geometry> geom_ptr = std::unique_ptr<t8_geometry> (std::move (*geom));
-  *geom = add_geometry<t8_geometry> (std::move (geom_ptr));
+  std::unique_ptr<t8_geometry> geom_ptr = std::unique_ptr<t8_geometry> (std::move (geom));
+  add_geometry<t8_geometry> (std::move (geom_ptr));
 }
 
 void

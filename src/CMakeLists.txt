@@ -9,20 +9,27 @@ endif()
 add_library( T8CODE::T8 ALIAS T8 )
 
 if( CMAKE_BUILD_TYPE STREQUAL "Release" )
-  set (T8_CPPFLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE}")
+  set (T8_CXXFLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE}")
   set (T8_CFLAGS "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_RELEASE}")
 endif()
 
 if( CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo" )
-  set (T8_CPPFLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+  set (T8_CXXFLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
   set (T8_CFLAGS "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_RELWITHDEBINFO}")
 endif()
 
 if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
-  set (T8_CPPFLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG}")
+  set (T8_CXXFLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG}")
   set (T8_CFLAGS "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_DEBUG}")
 
     target_compile_definitions( T8 PUBLIC T8_ENABLE_DEBUG )
+endif()
+
+if( T8CODE_ENABLE_NETCDF )
+  target_link_libraries( T8 PUBLIC netCDF::netcdf )
+  target_compile_definitions(T8 PUBLIC
+    T8_WITH_NETCDF
+    $<$<BOOL:${T8CODE_ENABLE_MPI}>:T8_WITH_NETCDF_PAR> )
 endif()
 
 set_target_properties( T8 PROPERTIES OUTPUT_NAME t8 )
@@ -51,6 +58,18 @@ if( T8CODE_ENABLE_OCC )
     target_compile_definitions( T8 PUBLIC T8_WITH_OCC=1 )
     target_include_directories( T8 PUBLIC ${OpenCASCADE_INCLUDE_DIRS} )
     target_link_libraries( T8 PUBLIC ${OpenCASCADE_LIBRARIES} )
+endif()
+
+if( T8CODE_ENABLE_LESS_TESTS )
+    target_compile_definitions( T8 PUBLIC T8_ENABLE_LESS_TESTS=1 )
+endif()
+
+if( T8CODE_BUILD_PEDANTIC )
+  # TODO: Add `-Wextra -Wpedantic`. As of now, t8code would not compile with this.
+  # See also: https://github.com/DLR-AMR/t8code/issues/1155.
+  target_compile_options( T8 PUBLIC -Wall -pedantic -Werror )
+  set (T8_CXXFLAGS "${T8_CXXFLAGS} -W -Wall -Wpedantic -Werror")
+  set (T8_CFLAGS "${T8_CFLAGS} -W -Wall -Wpedantic -Werror")
 endif()
 
 target_sources( T8 PRIVATE 
@@ -134,15 +153,16 @@ target_sources( T8 PRIVATE
 target_compile_definitions( T8 PUBLIC T8_CMAKE_BUILD )
 target_compile_definitions( T8 PUBLIC T8_CC="${CMAKE_C_COMPILER}" )
 target_compile_definitions( T8 PUBLIC T8_CFLAGS="${T8_CFLAGS}" )
-target_compile_definitions( T8 PUBLIC T8_CPP="${CMAKE_CXX_COMPILER}" )
-target_compile_definitions( T8 PUBLIC T8_CPPFLAGS="${T8_CPPFLAGS}" )
+target_compile_definitions( T8 PUBLIC T8_CXX="${CMAKE_CXX_COMPILER}" )
+target_compile_definitions( T8 PUBLIC T8_CXXFLAGS="${T8_CXXFLAGS}" )
 target_compile_definitions( T8 PUBLIC T8_LDFLAGS="${CMAKE_SHARED_LINKER_FLAGS}" )
 
-target_compile_definitions( T8 PUBLIC T8_PACKAGE_STRING="t8 ${T8CODE_VERSION_RAW}" )
+target_compile_definitions( T8 PUBLIC T8_PACKAGE_STRING="t8 ${T8CODE_VERSION}" )
 target_compile_definitions( T8 PUBLIC T8_VERSION="${T8CODE_VERSION}" )
 target_compile_definitions( T8 PUBLIC T8_VERSION_MAJOR=${T8CODE_VERSION_MAJOR} )
 target_compile_definitions( T8 PUBLIC T8_VERSION_MINOR=${T8CODE_VERSION_MINOR} )
 target_compile_definitions( T8 PUBLIC T8_VERSION_PATCH=${T8CODE_VERSION_PATCH} )
+target_compile_definitions( T8 PUBLIC T8_VERSION_POINT=${T8CODE_VERSION_POINT} )
 
 get_target_property( T8_LIBS_LIST T8 LINK_LIBRARIES )
 string( REPLACE ";" " " T8_LIBS "${T8_LIBS_LIST}" )
@@ -176,7 +196,9 @@ install( FILES
 
 install( DIRECTORY t8_cmesh DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.h" )
 install( DIRECTORY t8_data DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.h" )
-install( DIRECTORY t8_forest DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.h" )
+install( DIRECTORY t8_forest DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING
+  PATTERN "*.h"
+  PATTERN "*private.h" EXCLUDE )
 install( DIRECTORY t8_geometry DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.h" )
 install( DIRECTORY t8_schemes DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.h" )
 install( DIRECTORY t8_vtk DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.h" )
