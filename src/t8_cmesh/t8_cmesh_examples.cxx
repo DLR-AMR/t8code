@@ -3319,12 +3319,101 @@ t8_cmesh_new_prismed_spherical_shell_octahedron (const double inner_radius, cons
 }
 
 t8_cmesh_t
-t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shell_thickness, const int num_levels,
+t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shell_thickness, const int num_trees,
                                     const int num_layers, sc_MPI_Comm comm)
 {
-  return t8_cmesh_new_spherical_shell (T8_ECLASS_HEX, new t8_geometry_cubed_spherical_shell (),
-                                       t8_cmesh_new_quadrangulated_spherical_surface, inner_radius, shell_thickness,
-                                       num_levels, num_layers, comm);
+  /* Initialization of the mesh */
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+
+  t8_cmesh_register_geometry<t8_geometry_cubed_spherical_shell> (cmesh); /* Use spherical geometry */
+
+  /* clang-format off */
+  const int nrotas = t8_eclass_num_faces[T8_ECLASS_HEX]; /* Number of 3D cmesh elements resp. trees. */
+  const int ntrees = nrotas * num_trees * num_trees * num_layers; /* Number of 3D cmesh elements resp. trees. */
+  const int nverts = t8_eclass_num_vertices[T8_ECLASS_HEX]; /* Number of vertices per cmesh element. */
+
+  /* Arrays for the face connectivity computations via vertices. */
+  double all_verts[ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM];
+  t8_eclass_t all_eclasses[ntrees];
+
+  /* Defitition of the tree class. */
+  for (int itree = 0; itree < ntrees; itree++) {
+    t8_cmesh_set_tree_class (cmesh, itree, T8_ECLASS_HEX);
+    all_eclasses[itree] = T8_ECLASS_HEX;
+  }
+
+  const double outer_radius = inner_radius + shell_thickness;
+
+  const double _SQRT3 = 1.7320508075688772;
+  const double r = inner_radius / _SQRT3;
+  const double R = outer_radius / _SQRT3;
+
+  // Vertices of the template hex.
+  const double vertices[nverts][3] = {
+    { -r, -r, r }, { r, -r, r }, { -r, r, r }, { r, r, r },
+    { -R, -R, R }, { R, -R, R }, { -R, R, R }, { R, R, R } 
+  };
+
+  const double angles[nrotas] = { 0.0 , 0.5 * M_PI, 0.5 * M_PI, M_PI, -0.5 * M_PI, -0.5 * M_PI };
+  const int rot_axis[nrotas] = { 0, 0, 1, 1, 0, 1 };
+
+  const double h = 1.0 / num_layers;
+  const double w = 1.0 / num_trees;
+  const double l = 1.0 / num_trees;
+
+  int itree = 0;
+  for (int irot = 0; irot < nrotas; irot++) {
+
+    double rot_mat[3][3];
+
+    if (rot_axis[irot] == 0) {
+      t8_mat_init_xrot (rot_mat, angles[irot]);
+    }
+    else {
+      t8_mat_init_yrot (rot_mat, angles[irot]);
+    }
+
+    for (int k = 0; k < num_layers; k++) {
+      for (int j = 0; j < num_trees; j++) {
+        for (int i = 0; i < num_trees; i++) {
+          const double I = i + 1;
+          const double J = j + 1;
+          const double K = k + 1;
+          double ref_coords[nverts][3] = {
+            { i*w, j*l, k*h }, { I*w, j*l, k*h }, { i*w, J*l, k*h }, { I*w, J*l, k*h },
+            { i*w, j*l, K*h }, { I*w, j*l, K*h }, { i*w, J*l, K*h }, { I*w, J*l, K*h } 
+          };
+
+          double tile_vertices[nverts][3];
+          t8_geom_compute_linear_geometry (T8_ECLASS_HEX, (double *) vertices, (double *) ref_coords, nverts, (double *) tile_vertices);
+
+          double rot_vertices[nverts][3];
+          for (int ivert = 0; ivert < nverts; ivert++) {
+            t8_mat_mult_vec (rot_mat, &(tile_vertices[ivert][0]), &(rot_vertices[ivert][0]));
+          }
+
+          t8_cmesh_set_tree_vertices (cmesh, itree, (double *) rot_vertices, nverts);
+
+          for (int ivert = 0; ivert < nverts; ivert++) {
+            for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
+              all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree, ivert, icoord)]
+                = rot_vertices[ivert][icoord];
+            }
+          }
+          
+          ++itree;
+        }
+      }
+    }
+  }
+ 
+  /* Face connectivity. */
+  t8_cmesh_set_join_by_vertices (cmesh, ntrees, all_eclasses, all_verts, NULL, 0);
+
+  /* Commit the mesh */
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
 }
 
 t8_cmesh_t

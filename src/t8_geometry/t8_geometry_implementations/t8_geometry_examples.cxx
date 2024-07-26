@@ -264,32 +264,56 @@ t8_geometry_quadrangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh
 {
   double position[3]; /* Position vector in the element. */
 
+  double normal[3]; /* Position vector in the element. */
+
+  double tangent1[3]; /* Position vector in the element. */
+  double tangent2[3]; /* Position vector in the element. */
+
+  double origin[3];
+
+  const double _SQRT3 = 1.7320508075688772;
+
+  t8_vec_tri_normal (active_tree_vertices, active_tree_vertices + 3, active_tree_vertices + 6, normal);
+  t8_vec_normalize (normal);
+
+  const double R = std::abs(t8_vec_dot (active_tree_vertices, normal));
+
+  const double radius = R * _SQRT3;
+
+  tangent1[0] = normal[1];
+  tangent1[1] = normal[2];
+  tangent1[2] = -normal[0];
+
+  t8_vec_axpy (normal, tangent1, -t8_vec_dot(normal, tangent1));
+  t8_vec_cross (normal, tangent1, tangent2);
+  
+  t8_vec_normalize (tangent1);
+  t8_vec_normalize (tangent2);
+
+  t8_vec_axy (normal, origin, R);
+
   /* All elements are aligned such that the face normal follows the
    * outward radial direction of the sphere. */
-  const double radius = t8_vec_norm (active_tree_vertices);
-
   for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
     const size_t offset_2d = 2 * i_coord;
     const size_t offset_3d = 3 * i_coord;
 
-    double corr_ref_coords[3]; /* Corrected reference coordinates. */
+    double local_pos[3];
+    double out_pos[3];
 
-    /* Shorthand for code readability. `ref_coords` go from 0 to 1. */
-    const double x = ref_coords[offset_2d + 0];
-    const double y = ref_coords[offset_2d + 1];
+    t8_geom_linear_interpolation (ref_coords + offset_2d, active_tree_vertices, 3, 2, position);
+    t8_vec_diff (position, origin, local_pos);
 
-    /* tldr: Correction in order to rectify elements near the corners. 
-     * This is necessary, since due to the transformation from the unit cube
-     * to the sphere elements near the face centers expand while near the
-     * corners they shrink. Following correction alleviates this.
-     */
-    corr_ref_coords[0] = tan (0.5 * M_PI * (x - 0.5)) * 0.5 + 0.5;
-    corr_ref_coords[1] = tan (0.5 * M_PI * (y - 0.5)) * 0.5 + 0.5;
-    corr_ref_coords[2] = 0;
+    const double alpha1 = R * tan (0.25 * M_PI * t8_vec_dot (tangent1, local_pos) / R);
+    const double alpha2 = R * tan (0.25 * M_PI * t8_vec_dot (tangent2, local_pos) / R);
 
-    t8_geom_linear_interpolation (corr_ref_coords, active_tree_vertices, 3, 2, position);
-    t8_vec_normalize (position);
-    t8_vec_axy (position, out_coords + offset_3d, radius);
+    t8_vec_copy (origin, out_pos);
+    t8_vec_axpy (tangent1, out_pos, alpha1);
+    t8_vec_axpy (tangent2, out_pos, alpha2);
+
+    t8_vec_rescale (out_pos, radius);
+
+    t8_vec_copy (out_pos, out_coords + offset_3d);
   }
 }
 
@@ -306,34 +330,55 @@ t8_geometry_cubed_spherical_shell::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx
 {
   double position[3]; /* Position vector in the element. */
 
-  /* All elements are aligned such that the reference z-direction follows the
-   * outward radial direction of the sphere. Hence the element height is equal to
-   * the shell thickness. */
-  const double inner_radius = t8_vec_norm (active_tree_vertices);
-  const double shell_thickness = t8_vec_norm (active_tree_vertices + 4 * 3) - inner_radius;
+  double normal[3]; /* Position vector in the element. */
 
+  double tangent1[3]; /* Position vector in the element. */
+  double tangent2[3]; /* Position vector in the element. */
+
+  double origin[3];
+
+  const double _SQRT3 = 1.7320508075688772;
+
+  t8_vec_tri_normal (active_tree_vertices, active_tree_vertices + 3, active_tree_vertices + 6, normal);
+  t8_vec_normalize (normal);
+
+  const double R = std::abs(t8_vec_dot (active_tree_vertices, normal));
+
+  const double inner_radius = R * _SQRT3;
+  const double shell_thickness = std::abs(t8_vec_dot (active_tree_vertices + 4*3, normal)) * _SQRT3 - inner_radius;
+
+  tangent1[0] = normal[1];
+  tangent1[1] = normal[2];
+  tangent1[2] = -normal[0];
+
+  t8_vec_axpy (normal, tangent1, -t8_vec_dot(normal, tangent1));
+  t8_vec_cross (normal, tangent1, tangent2);
+  
+  t8_vec_normalize (tangent1);
+  t8_vec_normalize (tangent2);
+  t8_vec_axy (normal, origin, R);
+
+  /* All elements are aligned such that the face normal follows the
+   * outward radial direction of the sphere. */
   for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
-    const size_t offset = 3 * i_coord;
+    const size_t offset_3d = 3 * i_coord;
 
-    double corr_ref_coords[3]; /* Corrected reference coordinates. */
+    double local_pos[3];
+    double out_pos[3];
 
-    /* Shorthand for code readability. `ref_coords` go from 0 to 1. */
-    const double x = ref_coords[offset + 0];
-    const double y = ref_coords[offset + 1];
-    const double z = ref_coords[offset + 2];
+    t8_geom_linear_interpolation (ref_coords + offset_3d, active_tree_vertices, 3, 2, position);
+    t8_vec_diff (position, origin, local_pos);
 
-    /* tldr: Correction in order to rectify elements near the corners. 
-     * This is necessary, since due to the transformation from the unit cube
-     * to the sphere elements near the face centers expand while near the
-     * corners they shrink. Following correction alleviates this.
-     */
-    corr_ref_coords[0] = tan (0.5 * M_PI * (x - 0.5)) * 0.5 + 0.5;
-    corr_ref_coords[1] = tan (0.5 * M_PI * (y - 0.5)) * 0.5 + 0.5;
-    corr_ref_coords[2] = z;
+    const double alpha1 = R * tan (0.25 * M_PI * t8_vec_dot (tangent1, local_pos) / R);
+    const double alpha2 = R * tan (0.25 * M_PI * t8_vec_dot (tangent2, local_pos) / R);
 
-    t8_geom_linear_interpolation (corr_ref_coords, active_tree_vertices, 3, 3, position);
-    t8_vec_normalize (position);
-    t8_vec_axy (position, out_coords + offset, inner_radius + z * shell_thickness);
+    t8_vec_copy (origin, out_pos);
+    t8_vec_axpy (tangent1, out_pos, alpha1);
+    t8_vec_axpy (tangent2, out_pos, alpha2);
+
+    t8_vec_rescale (out_pos, inner_radius + ref_coords[offset_3d + 2] * shell_thickness);
+
+    t8_vec_copy (out_pos, out_coords + offset_3d);
   }
 }
 
