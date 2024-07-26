@@ -1443,8 +1443,8 @@ t8_cmesh_partition_given (const t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from, c
   char **send_buffer = NULL, *my_buffer = NULL;
 
   int fs, ls;
-  int fr = 0; // is it a good default though?
-  int lr = 0; // to discuss before merging
+  int fr = 0;
+  int lr = 0;
 
   sc_MPI_Request *requests = NULL;
   t8_locidx_t num_ghosts, itree, num_trees;
