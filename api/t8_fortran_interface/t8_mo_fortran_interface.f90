@@ -209,6 +209,64 @@ module t8_mo_fortran_interface
       end Interface
 
       Interface
+            integer (c_int) function t8_forest_get_local_num_elements (forest) &
+                                    bind (c, name = 't8_forest_get_local_num_elements')
+                  use, intrinsic :: ISO_C_BINDING, only: c_ptr, c_int
+                  IMPLICIT NONE
+                  type (c_ptr), value :: forest
+            end function t8_forest_get_local_num_elements
+      end Interface
+
+      Interface
+            integer (c_int) function t8_forest_get_global_num_elements (forest) &
+                                     bind (c, name = 't8_forest_get_global_num_elements')
+                  use, intrinsic :: ISO_C_BINDING, only: c_ptr, c_int
+                  IMPLICIT NONE
+                  type (c_ptr), value :: forest
+            end function t8_forest_get_global_num_elements
+      end Interface
+
+      Interface
+            integer (c_int) function t8_forest_get_num_local_trees (forest) &
+                                    bind (c, name = 't8_forest_get_num_local_trees')
+                  use, intrinsic :: ISO_C_BINDING, only: c_ptr, c_int
+                  IMPLICIT NONE
+                  type (c_ptr), value :: forest
+            end function t8_forest_get_num_local_trees
+      end Interface
+
+      Interface
+            integer (c_int) function t8_forest_get_tree_num_elements (forest, ltreeid) &
+                                    bind (c, name = 't8_forest_get_tree_num_elements')
+                  use, intrinsic :: ISO_C_BINDING, only: c_ptr, c_int
+                  IMPLICIT NONE
+                  type (c_ptr), value :: forest
+                  integer (c_int), value :: ltreeid
+            end function t8_forest_get_tree_num_elements
+      end Interface
+
+      Interface
+            type (c_ptr) function t8_forest_get_element_in_tree (forest, ltreeid, leid_in_tree) &
+                                    bind (c, name = 't8_forest_get_element_in_tree')
+                  use, intrinsic :: ISO_C_BINDING, only: c_ptr, c_int
+                  IMPLICIT NONE
+                  type (c_ptr), value :: forest
+                  integer (c_int), value :: ltreeid, leid_in_tree
+            end function t8_forest_get_element_in_tree
+      end Interface
+
+      Interface
+            subroutine t8_forest_element_from_ref_coords (forest, ltreeid, element, ref_coords, num_coords, coords_out) &
+                                    bind (c, name = 't8_forest_element_from_ref_coords')
+                  use, intrinsic :: ISO_C_BINDING, only: c_ptr, c_int, c_double
+                  IMPLICIT NONE
+                  type (c_ptr), value :: forest, element
+                  integer (c_int), value :: ltreeid, num_coords
+                  real (c_double), dimension(3) :: ref_coords, coords_out
+            end subroutine t8_forest_element_from_ref_coords
+      end Interface
+
+      Interface
             subroutine t8_global_productionf_noargs_f (string) &
                                     bind (c, name = 't8_global_productionf_noargs')
                   use, intrinsic :: ISO_C_BINDING, only: c_char
