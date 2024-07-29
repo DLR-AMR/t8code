@@ -33,12 +33,9 @@ t8_fortran_init_all_ (sc_MPI_Comm * comm)
 {
   T8_ASSERT (comm != NULL);
   /* Initialize sc */
-  t8_debugf ("Sc init Start\n");
   sc_init (*comm, 1, 1, NULL, SC_LP_DEFAULT);
-  t8_debugf ("Sc init\n");
   /* Initialize t8code */
   t8_init (SC_LP_DEFAULT);
-  t8_debugf ("t8 init\n");
 }
 
 /* Wrapper around sc_finalize */
@@ -61,7 +58,6 @@ t8_fortran_init_all (sc_MPI_Comm * comm)
 {
   int                 rank;
 
-  t8_debugf ("Init all with comm %lu\n", (long unsigned) comm);
   t8_fortran_init_all_ (comm);
   if (*comm != sc_MPI_COMM_NULL) {
     sc_MPI_Comm_rank (*comm, &rank);
@@ -176,8 +172,6 @@ t8_forest_adapt_by_coordinates (t8_forest_t forest,
 
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (callback != NULL);
-
-  t8_debugf ("Starting t8_fortran_adapt_by_coordinates\n");
 
   /* Initialize new forest */
   t8_forest_init (&forest_new);
