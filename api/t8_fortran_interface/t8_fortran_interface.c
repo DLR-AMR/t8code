@@ -26,6 +26,7 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh/t8_cmesh_helpers.h>
 #include <t8_element_c_interface.h>
+#include <t8_schemes/t8_default/t8_default_c_interface.h>
 
 void
 t8_fortran_init_all_ (sc_MPI_Comm * comm)
