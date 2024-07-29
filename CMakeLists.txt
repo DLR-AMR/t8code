@@ -9,6 +9,7 @@ project( T8CODE
 include( CTest )
 
 option( T8CODE_BUILD_AS_SHARED_LIBRARY "Whether t8code should be built as a shared or a static library" ON )
+option( T8CODE_BUILD_PEDANTIC "Compile t8code with `-Wall -pedantic -Werror` as done in the Github CI." OFF )
 option( T8CODE_BUILD_TESTS "Build t8code's automated tests" ON )
 option( T8CODE_BUILD_TUTORIALS "Build t8code's tutorials" ON )
 option( T8CODE_BUILD_EXAMPLES "Build t8code's examples" ON )
@@ -18,12 +19,15 @@ option( T8CODE_ENABLE_LESS_TESTS "Tests not as thoroughly to speed up the test s
 option( T8CODE_ENABLE_MPI "Enable t8code's features which rely on MPI" ON )
 option( T8CODE_ENABLE_VTK "Enable t8code's features which rely on VTK" OFF )
 option( T8CODE_ENABLE_OCC "Enable t8code's features which rely on OpenCASCADE" OFF )
+option( T8CODE_ENABLE_NETCDF "Enable t8code's features which rely on netCDF" OFF )
 
 option( T8CODE_USE_SYSTEM_SC "Use system-installed sc library" OFF )
 option( T8CODE_USE_SYSTEM_P4EST "Use system-installed p4est library" OFF )
 
-option( BUILD_DOCUMENTATION "Build t8code's documentation" ON)
-option( BUILD_SPHINX_DOCUMENTATION "Build t8code's documentation using sphinx" OFF)
+option( T8CODE_BUILD_DOCUMENTATION "Build t8code's documentation" OFF )
+
+include(CMakeDependentOption)
+cmake_dependent_option( T8CODE_BUILD_DOCUMENTATION_SPHINX "Build t8code's documentation using sphinx" OFF "T8CODE_BUILD_DOCUMENTATION" OFF )
 
 set(T8CODE_CUSTOM_TEST_COMMAND "" CACHE STRING "Define custom test command, e.g.: mpirun -n 4")
 
@@ -36,12 +40,10 @@ set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Release RelWithDebInfo Debu
 set( CMAKE_C_STANDARD 11 )
 set( CMAKE_C_STANDARD_REQUIRED ON )
 set( CMAKE_C_EXTENSIONS OFF )
-list( APPEND CMAKE_C_FLAGS "-Wall" )
 
 set( CMAKE_CXX_STANDARD 17 )
 set( CMAKE_CXX_STANDARD_REQUIRED ON )
 set( CMAKE_CXX_EXTENSIONS OFF )
-list( APPEND CMAKE_CXX_FLAGS "-Wall" )
 
 if( T8CODE_ENABLE_MPI )
     find_package( MPI COMPONENTS C REQUIRED )
@@ -58,6 +60,10 @@ endif()
 
 if( T8CODE_ENABLE_OCC )
     find_package( OpenCASCADE REQUIRED )
+endif()
+
+if( T8CODE_ENABLE_NETCDF )
+    find_package( netCDF REQUIRED )
 endif()
 
 # Override default for this libsc option
@@ -101,10 +107,6 @@ if ( T8CODE_BUILD_BENCHMARKS )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/benchmarks )
 endif()
 
-if ( BUILD_DOCUMENTATION ) 
+if ( T8CODE_BUILD_DOCUMENTATION )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/doc )
-endif()
-
-if ( BUILD_SPHINX_DOCUMENTATION )
-    set (BUILD_DOCUMENTATION 1)
 endif()

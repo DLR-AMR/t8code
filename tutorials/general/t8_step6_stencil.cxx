@@ -244,10 +244,13 @@ t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_d
           break;
         }
 
-        /* Free allocated memory. */
-        T8_FREE (neighbors);
-        T8_FREE (dual_faces);
-        T8_FREE (neighids);
+        if (num_neighbors > 0) {
+          /* Free allocated memory. */
+          eclass_scheme->t8_element_destroy (num_neighbors, neighbors);
+          T8_FREE (neighbors);
+          T8_FREE (dual_faces);
+          T8_FREE (neighids);
+        }
       }
 
       /* Prepare finite difference computations. The code also accounts for non-conforming interfaces. */
@@ -369,7 +372,13 @@ t8_step6_main (int argc, char **argv)
 
   /* The uniform refinement level of the forest. */
   const int dim = 2;
+
+#if T8_ENABLE_DEBUG
+  /* Set lower refinement level. Otherwise the program is painfully slow. */
+  const int level = 3;
+#else
   const int level = 6;
+#endif
 
   /* The array that will hold our per element data. */
   data_per_element *data;
