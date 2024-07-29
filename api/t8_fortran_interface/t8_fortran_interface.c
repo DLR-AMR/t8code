@@ -79,13 +79,7 @@ t8_fortran_init_all_noMPI ()
 
 /* Build C MPI comm from Fortran MPI Comm. */
 sc_MPI_Comm        *
-t8_fortran_MPI_Comm_new (
-#if T8_ENABLE_MPI
-                          MPI_Fint
-#else
-                          int
-#endif
-                          Fcomm)
+t8_fortran_MPI_Comm_new (MPI_T8_Fint Fcomm)
 {
 #if !T8_ENABLE_MPI
   SC_ABORT ("t8code was not configured with MPI support.");
@@ -128,7 +122,6 @@ t8_forest_new_uniform_default (t8_cmesh_t cmesh,
                                 *comm);
 }
 
-/* TODO: If family given pass midpoint coordinates of parent */
 int
 t8_fortran_adapt_by_coordinates_callback (t8_forest_t forest,
                                           t8_forest_t forest_from,
@@ -189,8 +182,6 @@ t8_forest_adapt_by_coordinates (t8_forest_t forest,
   /* Initialize new forest */
   t8_forest_init (&forest_new);
   /* Set the callback as user data */
-  /* TODO: This is forbidden by ISO_C. We cannot pass a function pointer as a void *.
-     We need an additional function t8_forest_set_user_fun_pointer. */
   t8_forest_set_user_function (forest_new,
                                (t8_generic_function_pointer) callback);
   /* Call set adapt  */
