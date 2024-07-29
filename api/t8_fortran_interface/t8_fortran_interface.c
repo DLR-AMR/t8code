@@ -84,7 +84,13 @@ t8_fortran_MPI_Comm_new (MPI_T8_Fint Fcomm)
   /* We use malloc instead of T8_ALLOC since t8code may not be initialized
    * yet. */
   sc_MPI_Comm        *Ccomm = (sc_MPI_Comm *) malloc (sizeof (*Ccomm));
+  #ifdef T8_ENABLE_MPI
+  /* If configured with MPI, transform the Fortran communicator handle to a C handle */
   *Ccomm = MPI_Comm_f2c (Fcomm);
+  #else
+  /* In case it is not configured with MPI, set the communicator to NULL as a fallback */
+  *Ccomm = sc_MPI_COMM_NULL;
+  #endif
   t8_debugf ("Created comm %lu\n", (long unsigned) Ccomm);
   return Ccomm;
 }
