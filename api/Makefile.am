@@ -16,6 +16,9 @@ t8_fortran_module_sources = api/t8_fortran_interface/t8_mo_fortran_interface.f90
 libt8_compiled_sources += $(t8_fortran_module_sources)
 # Save the module sources in a different variable for later use
 AM_FCFLAGS = 
+libt8_compiled_sources += \
+  api/t8_fortran_interface/t8_fortran_interface.c
+
 AM_CPPFLAGS += -I@top_srcdir@/api
 MODSOURCES = $(t8_fortran_module_sources)
 
