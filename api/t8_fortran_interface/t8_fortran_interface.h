@@ -39,13 +39,13 @@
 typedef int (*t8_fortran_adapt_coordinate_callback) (double x, double y, double z, int is_family);
 
 /* A fallback type if t8code is not built with MPI */
-typedef 
+typedef
 #ifdef T8_ENABLE_MPI
-MPI_Fint
+  MPI_Fint
 #else
-int
+  int
 #endif
-MPI_T8_Fint;
+    MPI_T8_Fint;
 
 T8_EXTERN_C_BEGIN ();
 
@@ -123,7 +123,6 @@ t8_cmesh_new_periodic_tri_wrap (sc_MPI_Comm *Ccomm);
  */
 t8_forest_t
 t8_forest_new_uniform_default (t8_cmesh_t cmesh, int level, int do_face_ghost, sc_MPI_Comm *comm);
-
 
 /** 
  * \param [in, out] forest     The forest
