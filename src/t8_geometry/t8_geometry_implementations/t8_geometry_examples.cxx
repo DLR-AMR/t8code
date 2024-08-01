@@ -108,7 +108,8 @@ t8_geom_evaluate_sphere_tri_prism (const double *active_tree_vertices, const t8_
     }
   }
   else {
-    const double shell_thickness = t8_vec_norm (active_tree_vertices + 3 * 3) - inner_radius;
+    const size_t outer_vertex_offset = 3 * 3;
+    const double shell_thickness = t8_vec_norm (active_tree_vertices + outer_vertex_offset) - inner_radius;
     for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
       const size_t offset = 3 * i_coord;
       const double z = ref_coords[offset + 2];
