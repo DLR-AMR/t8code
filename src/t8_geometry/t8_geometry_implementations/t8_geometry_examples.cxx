@@ -90,133 +90,31 @@ t8_geometry_quadrangulated_disk::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t
   }
 }
 
-/* Helper function for `t8_geom_evaluate_sphere_tri_prism`. */
-static inline void
-t8_map_triangle_to_sphere (const double *active_tree_vertices, const double sphere_radius, const int shift,
-                           const double u_ref[3], const double v_ref[3], const double w_ref[3],
-                           const double *ref_coords, const size_t num_coords, double *out_coords)
-{
-  double u[3]; /* Position vector. */
-  double v[3]; /* First triangle side. */
-  double w[3]; /* Second triangle side. */
-
-  /* `(3 - shift + 0) % 3)*3` circular rotates array indices according to `shift`. */
-  for (size_t i = 0; i < 3; i++) {
-    u[i] = active_tree_vertices[((3 - shift + 0) % 3) * 3 + i];
-    v[i] = active_tree_vertices[((3 - shift + 1) % 3) * 3 + i] - u[i];
-    w[i] = active_tree_vertices[((3 - shift + 2) % 3) * 3 + i] - u[i];
-  }
-
-  for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
-    const size_t offset = 3 * i_coord;
-
-    /* Shorthand for code readability. */
-    const double x_ref = ref_coords[offset + 0];
-    const double y_ref = ref_coords[offset + 1];
-
-    /* Compute local triangle coordinates in the new reference space. */
-    const double vv_ref = u_ref[0] + x_ref * v_ref[0] + y_ref * w_ref[0];
-    const double ww_ref = u_ref[1] + x_ref * v_ref[1] + y_ref * w_ref[1];
-
-    /* tldr: Correction in order to rectify elements near the corners. This
-       * is necessary, since due to the transformation from the cmesh triangle to the
-       * sphere elements near the face centers expand while near the corners they
-       * shrink. Following correction alleviates this.
-       * TODO: This correction is not general and probably not optimal in all cases.
-       *       But it works good enough. Find a better one. This is not a trivial task, though.
-       */
-    const double vv_corr = tan (0.5 * M_PI * (vv_ref - 0.5)) * 0.5 + 0.5;
-    const double ww_corr = tan (0.5 * M_PI * (ww_ref - 0.5)) * 0.5 + 0.5;
-
-    /* Compute and apply the corrected mapping. The position vector `pos` pokes
-     * through the triangle plane. It then gets rescaled to the sphere's radius. */
-    double pos[3];
-    pos[0] = u[0] + vv_corr * v[0] + ww_corr * w[0];
-    pos[1] = u[1] + vv_corr * v[1] + ww_corr * w[1];
-    pos[2] = u[2] + vv_corr * v[2] + ww_corr * w[2];
-
-    t8_vec_rescale (pos, sphere_radius);
-
-    for (size_t i = 0; i < 3; i++) {
-      out_coords[offset + i] = out_coords[offset + i] + pos[i] * (1.0 / 3.0);
-    }
-  }
-}
-
 static inline void
 t8_geom_evaluate_sphere_tri_prism (const double *active_tree_vertices, const t8_eclass_t eclass,
                                    const double *ref_coords, const size_t num_coords, double *out_coords)
 {
-  /* The next three code blocks straighten out the elements near the triangle
-   * corners by averaging the rectification with all three corners. */
+  // All elements are aligned such that the reference z-direction follows the
+  // outward radial direction of the sphere. Hence the inner radius is equal to
+  // the norm of the first positition vector of `active_tree_vertices`.
+  const double inner_radius = t8_vec_norm (active_tree_vertices);
 
-  /* Clear `out_coords`. */
-  for (size_t i = 0; i < 3 * num_coords; i++) {
-    out_coords[i] = 0.0;
+  t8_geom_compute_linear_geometry (eclass, active_tree_vertices, ref_coords, num_coords, out_coords);
+
+  if (eclass == T8_ECLASS_TRIANGLE) {
+    for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
+      const size_t offset = 3 * i_coord;
+      t8_vec_rescale (out_coords + offset, inner_radius);
+    }
   }
-
-  /* We derive the sphere's radius from the first corner of the triangle/prism.
-   * The averaging factor `1/3` is already included here. */
-  const double sphere_radius = t8_vec_norm (active_tree_vertices);
-
-  {
-    /* Reference coordinates from first triangle corner. */
-    const double u_ref[3] = { 0.0, 0.0, 0.0 };
-    const double v_ref[3] = { 1.0, 0.0, 0.0 };
-    const double w_ref[3] = { -1.0, 1.0, 0.0 };
-
-    t8_map_triangle_to_sphere (active_tree_vertices, sphere_radius, 0, u_ref, v_ref, w_ref, ref_coords, num_coords,
-                               out_coords);
-  }
-
-  {
-    /* Reference coordinates from second triangle corner. */
-    const double u_ref[3] = { 1.0, 0.0, 0.0 };
-    const double v_ref[3] = { -1.0, 1.0, 0.0 };
-    const double w_ref[3] = { 0.0, -1.0, 0.0 };
-
-    t8_map_triangle_to_sphere (active_tree_vertices, sphere_radius, 1, u_ref, v_ref, w_ref, ref_coords, num_coords,
-                               out_coords);
-  }
-
-  {
-    /* Reference coordinates from third triangle corner. */
-    const double u_ref[3] = { 0.0, 1.0, 0.0 };
-    const double v_ref[3] = { 0.0, -1.0, 0.0 };
-    const double w_ref[3] = { 1.0, 0.0, 0.0 };
-
-    t8_map_triangle_to_sphere (active_tree_vertices, sphere_radius, 2, u_ref, v_ref, w_ref, ref_coords, num_coords,
-                               out_coords);
-  }
-
-  /* For triangles we are done. */
-  if (eclass == T8_ECLASS_TRIANGLE)
-    return;
-
-  /* 
-   * For prisms we must rescale along the radial direction to pad the shell thickness.
-   */
-
-  double n[3]; /* Normal vector of the prism's base triangle at the inner shell surface. */
-  t8_vec_tri_normal (active_tree_vertices, active_tree_vertices + 3, active_tree_vertices + 6, n);
-  t8_vec_normalize (n);
-
-  double r[3]; /* Radial vector through the first base triangle corners. */
-  r[0] = active_tree_vertices[0];
-  r[1] = active_tree_vertices[1];
-  r[2] = active_tree_vertices[2];
-  t8_vec_normalize (r);
-
-  /* With this pre-computed denominator we determine the intersection of `r` and `p`. See below. */
-  const double denominator = 1.0 / t8_vec_dot (r, n);
-
-  for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
-    const size_t offset = 3 * i_coord;
-
-    /* Position vector `p` pointing to the reference location in the prism. */
-    double p[3];
-    t8_geom_compute_linear_geometry (T8_ECLASS_PRISM, active_tree_vertices, ref_coords + offset, 1, p);
-    t8_vec_rescale (out_coords + offset, t8_vec_dot (p, n) * denominator);
+  else {
+    const size_t outer_vertex_offset = 3 * 3;
+    const double shell_thickness = t8_vec_norm (active_tree_vertices + outer_vertex_offset) - inner_radius;
+    for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
+      const size_t offset = 3 * i_coord;
+      const double z = ref_coords[offset + 2];
+      t8_vec_rescale (out_coords + offset, inner_radius + z * shell_thickness);
+    }
   }
 }
 

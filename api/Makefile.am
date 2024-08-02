@@ -10,5 +10,8 @@ libt8_installed_headers_fortran_interface = \
 
 dist_fortraninterfaceinclude_HEADERS = $(libt8_installed_headers_fortran_interface)
 
+libt8_compiled_sources += \
+  api/t8_fortran_interface/t8_fortran_interface.c
+
 AM_CPPFLAGS += -I@top_srcdir@/api
 endif
