@@ -3124,9 +3124,9 @@ t8_cmesh_new_triangulated_spherical_surface_cube (const double radius, sc_MPI_Co
   t8_cmesh_register_geometry<t8_geometry_quadrangulated_spherical_surface> (cmesh);
 
   const int nface_rot = 4; // Four triangles create a cube's face.
-  const int ncube_rot = 6; // Six rotations of the four trinagles to the six cube's faces.
+  const int ncube_rot = 6; // Six rotations of the four triangles to the six cube's faces.
 
-  const int ntrees = nface_rot*ncube_rot; // Number of cmesh elements resp. trees.
+  constexpr int ntrees = nface_rot*ncube_rot; // Number of cmesh elements resp. trees.
   const int nverts = 3; // Number of cmesh element (triangle) vertices.
 
   // Arrays for the face connectivity computations via vertices.
@@ -3418,8 +3418,8 @@ t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shel
   const int nverts = t8_eclass_num_vertices[T8_ECLASS_HEX]; /* Number of vertices per cmesh element. */
 
   /* Arrays for the face connectivity computations via vertices. */
-  double all_verts[ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM];
-  t8_eclass_t all_eclasses[ntrees];
+  double *all_verts = T8_ALLOC(double, ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM);
+  t8_eclass_t *all_eclasses = T8_ALLOC(t8_eclass_t, ntrees);
 
   /* Defitition of the tree class. */
   for (int itree = 0; itree < ntrees; itree++) {
@@ -3435,13 +3435,13 @@ t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shel
   const double R = outer_radius / _CBRT;
 
   // Vertices of the template hex.
-  const double vertices[nverts][3] = {
+  const double vertices[][3] = {
     { -r, -r, r }, { r, -r, r }, { -r, r, r }, { r, r, r },
     { -R, -R, R }, { R, -R, R }, { -R, R, R }, { R, R, R } 
   };
 
-  const double angles[nrotas] = { 0.0 , 0.5 * M_PI, 0.5 * M_PI, M_PI, -0.5 * M_PI, -0.5 * M_PI };
-  const int rot_axis[nrotas] = { 0, 0, 1, 1, 0, 1 };
+  const double angles[] = { 0.0 , 0.5 * M_PI, 0.5 * M_PI, M_PI, -0.5 * M_PI, -0.5 * M_PI };
+  const int rot_axis[] = { 0, 0, 1, 1, 0, 1 };
 
   const double h = 1.0 / num_layers;
   const double w = 1.0 / num_trees;
@@ -3465,15 +3465,15 @@ t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shel
           const double I = i + 1;
           const double J = j + 1;
           const double K = k + 1;
-          double ref_coords[nverts][3] = {
+          double ref_coords[][3] = {
             { i*w, j*l, k*h }, { I*w, j*l, k*h }, { i*w, J*l, k*h }, { I*w, J*l, k*h },
             { i*w, j*l, K*h }, { I*w, j*l, K*h }, { i*w, J*l, K*h }, { I*w, J*l, K*h } 
           };
 
-          double tile_vertices[nverts][3];
+          double tile_vertices[8][3];
           t8_geom_compute_linear_geometry (T8_ECLASS_HEX, (double *) vertices, (double *) ref_coords, nverts, (double *) tile_vertices);
 
-          double rot_vertices[nverts][3];
+          double rot_vertices[8][3];
           for (int ivert = 0; ivert < nverts; ivert++) {
             t8_mat_mult_vec (rot_mat, &(tile_vertices[ivert][0]), &(rot_vertices[ivert][0]));
           }
@@ -3495,6 +3495,9 @@ t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shel
  
   /* Face connectivity. */
   t8_cmesh_set_join_by_vertices (cmesh, ntrees, all_eclasses, all_verts, NULL, 0);
+
+  T8_FREE (all_verts);
+  T8_FREE (all_eclasses);
 
   /* Commit the mesh */
   t8_cmesh_commit (cmesh, comm);

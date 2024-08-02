@@ -160,59 +160,55 @@ t8_geometry_quadrangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh
                                                                 const double *ref_coords, const size_t num_coords,
                                                                 double *out_coords) const
 {
-  double position[3]; /* Position vector in the element. */
+  // Note, all elements are aligned such that the face normal follows the
+  // outward radial direction of the sphere.
 
-  double normal[3]; /* Position vector in the element. */
+  // These three vectors resemble a tripod.
+  double normal[3]; // Normal vector.
+  double tangent1[3]; // First tangent vector.
+  double tangent2[3]; // Second tangent vector.
 
-  double tangent1[3]; /* Position vector in the element. */
-  double tangent2[3]; /* Position vector in the element. */
-
-  double origin[3];
-
-  constexpr double _CBRT = std::cbrt(1.0);
-
+  // Compute normal vector of the current cmesh cell.
   t8_vec_tri_normal (active_tree_vertices, active_tree_vertices + 3, active_tree_vertices + 6, normal);
   t8_vec_normalize (normal);
 
-  const double R = std::abs(t8_vec_dot (active_tree_vertices, normal));
+  // Compute sphere's radius over cube root which is the shortest distance to the origin (0,0,0).
+  const double distance = std::abs(t8_vec_dot (active_tree_vertices, normal));
 
-  const double radius = R * _CBRT;
+  // Compute actual radius of the sphere.
+  const double radius = distance * std::cbrt(1.0);
 
-  tangent1[0] = normal[1];
-  tangent1[1] = normal[2];
-  tangent1[2] = -normal[0];
+  // Compute orthogonal coordinate system anchored on the cmesh element.
+  t8_vec_orthogonal_tripod (normal, tangent1, tangent2);
 
-  t8_vec_axpy (normal, tangent1, -t8_vec_dot(normal, tangent1));
-  t8_vec_cross (normal, tangent1, tangent2);
-  
-  t8_vec_normalize (tangent1);
-  t8_vec_normalize (tangent2);
+  // Compute anchor of the tripod on the cmesh element's plane.
+  double anchor[3];
+  t8_vec_axy (normal, anchor, distance);
 
-  t8_vec_axy (normal, origin, R);
-
-  /* All elements are aligned such that the face normal follows the
-   * outward radial direction of the sphere. */
+  // Loop over given reference coordinates.
   for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
     const size_t offset_2d = 2 * i_coord;
     const size_t offset_3d = 3 * i_coord;
 
-    double local_pos[3];
-    double out_pos[3];
-
+     // Compute the the position vector in the cmesh element.
+    double position[3];
     t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords + offset_2d, 1, position);
 
-    t8_vec_diff (position, origin, local_pos);
+    // Compute difference vector between position and tripod's anchor.
+    double diff_vec[3];
+    t8_vec_diff (position, anchor, diff_vec);
 
-    const double alpha1 = R * tan (0.25 * M_PI * t8_vec_dot (tangent1, local_pos) / R);
-    const double alpha2 = R * tan (0.25 * M_PI * t8_vec_dot (tangent2, local_pos) / R);
+    // Compute the coefficients of the difference vector in the local
+    // coordinate system of the tripod and apply equi-angular correction.
+    const double alpha1 = distance * tan (0.25 * M_PI * t8_vec_dot (tangent1, diff_vec) / distance);
+    const double alpha2 = distance * tan (0.25 * M_PI * t8_vec_dot (tangent2, diff_vec) / distance);
 
-    t8_vec_copy (origin, out_pos);
-    t8_vec_axpy (tangent1, out_pos, alpha1);
-    t8_vec_axpy (tangent2, out_pos, alpha2);
-
-    t8_vec_rescale (out_pos, radius);
-
-    t8_vec_copy (out_pos, out_coords + offset_3d);
+    // Compute the final transformed coordinates.
+    double *out_vec = out_coords + offset_3d;
+    t8_vec_copy (anchor, out_vec);
+    t8_vec_axpy (tangent1, out_vec, alpha1);
+    t8_vec_axpy (tangent2, out_vec, alpha2);
+    t8_vec_rescale (out_vec, radius);
   }
 }
 
@@ -227,57 +223,67 @@ void
 t8_geometry_cubed_spherical_shell::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
                                                      const size_t num_coords, double *out_coords) const
 {
-  double position[3]; /* Position vector in the element. */
+  // Note, all elements are aligned such that the face normal follows the
+  // outward radial direction of the sphere.
 
-  double normal[3]; /* Position vector in the element. */
+  // These three vectors resemble a tripod.
+  double normal[3]; // Normal vector.
+  double tangent1[3]; // First tangent vector.
+  double tangent2[3]; // Second tangent vector.
 
-  double tangent1[3]; /* Position vector in the element. */
-  double tangent2[3]; /* Position vector in the element. */
-
-  double origin[3];
-
-  constexpr double _CBRT = std::cbrt(1.0);
-
+  // Compute normal vector of the current cmesh cell.
   t8_vec_tri_normal (active_tree_vertices, active_tree_vertices + 3, active_tree_vertices + 6, normal);
   t8_vec_normalize (normal);
 
-  const double R = std::abs(t8_vec_dot (active_tree_vertices, normal));
+  // Compute sphere's radius over cube root which is the shortest distance to the origin (0,0,0).
+  const double distance = std::abs(t8_vec_dot (active_tree_vertices, normal));
 
-  const double inner_radius = R * _CBRT;
-  const double shell_thickness = std::abs(t8_vec_dot (active_tree_vertices + 4*3, normal)) * _CBRT - inner_radius;
+  // Compute actual radius of the sphere.
+  constexpr double CBRT = std::cbrt(1.0);
+  const double inner_radius = distance * CBRT;
+  const double shell_thickness = std::abs(t8_vec_dot (active_tree_vertices + t8_eclass_num_vertices[active_tree_class]*3/2, normal)) * CBRT - inner_radius;
 
-  tangent1[0] = normal[1];
-  tangent1[1] = normal[2];
-  tangent1[2] = -normal[0];
+  // Compute orthogonal coordinate system anchored on the cmesh element.
+  t8_vec_orthogonal_tripod (normal, tangent1, tangent2);
 
-  t8_vec_axpy (normal, tangent1, -t8_vec_dot(normal, tangent1));
-  t8_vec_cross (normal, tangent1, tangent2);
-  
-  t8_vec_normalize (tangent1);
-  t8_vec_normalize (tangent2);
-  t8_vec_axy (normal, origin, R);
+  // Compute anchor of the tripod on the cmesh element's plane.
+  double anchor[3];
+  t8_vec_axy (normal, anchor, distance);
 
-  /* All elements are aligned such that the face normal follows the
-   * outward radial direction of the sphere. */
+  t8_eclass_t interpolation_eclass;
+  switch (active_tree_class) {
+    case T8_ECLASS_HEX:
+      interpolation_eclass = T8_ECLASS_QUAD;
+      break;
+    case T8_ECLASS_PRISM:
+      interpolation_eclass = T8_ECLASS_TRIANGLE;
+      break;
+    default:
+      SC_ABORT_NOT_REACHED ();
+  }
+
   for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
     const size_t offset_3d = 3 * i_coord;
 
-    double local_pos[3];
-    double out_pos[3];
+    // Compute the the position vector in the cmesh element.
+    double position[3];
+    t8_geom_compute_linear_geometry (interpolation_eclass, active_tree_vertices, ref_coords + offset_3d, 1, position);
 
-    t8_geom_linear_interpolation (ref_coords + offset_3d, active_tree_vertices, 3, 2, position);
-    t8_vec_diff (position, origin, local_pos);
+    // Compute difference vector between position and tripod's anchor.
+    double diff_vec[3];
+    t8_vec_diff (position, anchor, diff_vec);
 
-    const double alpha1 = R * tan (0.25 * M_PI * t8_vec_dot (tangent1, local_pos) / R);
-    const double alpha2 = R * tan (0.25 * M_PI * t8_vec_dot (tangent2, local_pos) / R);
+    // Compute the coefficients of the difference vector in the local
+    // coordinate system of the tripod and apply equi-angular correction.
+    const double alpha1 = distance * tan (0.25 * M_PI * t8_vec_dot (tangent1, diff_vec) / distance);
+    const double alpha2 = distance * tan (0.25 * M_PI * t8_vec_dot (tangent2, diff_vec) / distance);
 
-    t8_vec_copy (origin, out_pos);
-    t8_vec_axpy (tangent1, out_pos, alpha1);
-    t8_vec_axpy (tangent2, out_pos, alpha2);
-
-    t8_vec_rescale (out_pos, inner_radius + ref_coords[offset_3d + 2] * shell_thickness);
-
-    t8_vec_copy (out_pos, out_coords + offset_3d);
+    // Compute the final transformed coordinates.
+    double *out_vec = out_coords + offset_3d;
+    t8_vec_copy (anchor, out_vec);
+    t8_vec_axpy (tangent1, out_vec, alpha1);
+    t8_vec_axpy (tangent2, out_vec, alpha2);
+    t8_vec_rescale (out_vec, inner_radius + ref_coords[offset_3d + 2] * shell_thickness);
   }
 }
 

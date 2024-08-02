@@ -245,6 +245,25 @@ t8_vec_tri_normal (const double p1[3], const double p2[3], const double p3[3], d
   t8_vec_cross (a, b, normal);
 }
 
+/** Compute an orthogonal coordinate system from a given vector.
+ * \param [in]   v1 3D vector.
+ * \param [out]  v2 3D vector.
+ * \param [out]  v3 3D vector.
+ */
+static inline void
+t8_vec_orthogonal_tripod (const double v1[3], double v2[3], double v3[3])
+{
+  v2[0] = v1[1];
+  v2[1] = v1[2];
+  v2[2] = -v1[0];
+
+  t8_vec_axpy (v1, v2, -t8_vec_dot(v1, v2));
+  t8_vec_cross (v1, v2, v3);
+  
+  t8_vec_normalize (v2);
+  t8_vec_normalize (v3);
+}
+
 /** Swap the components of two vectors.
  * \param [in,out]  p1  A 3D vector.
  * \param [in,out]  p2  A 3D vector.
