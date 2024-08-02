@@ -3115,6 +3115,90 @@ t8_cmesh_new_triangulated_spherical_surface_icosahedron (const double radius, sc
 }
 
 t8_cmesh_t
+t8_cmesh_new_triangulated_spherical_surface_cube (const double radius, sc_MPI_Comm comm)
+{
+  // Initialization of the mesh.
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+
+  t8_cmesh_register_geometry<t8_geometry_quadrangulated_spherical_surface> (cmesh);
+
+  const int nface_rot = 4; // Four triangles create a cube's face.
+  const int ncube_rot = 6; // Six rotations of the four trinagles to the six cube's faces.
+
+  const int ntrees = nface_rot*ncube_rot; // Number of cmesh elements resp. trees.
+  const int nverts = 3; // Number of cmesh element (triangle) vertices.
+
+  // Arrays for the face connectivity computations via vertices.
+  double all_verts[ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM];
+  t8_eclass_t all_eclasses[ntrees];
+
+  // Defitition of the tree class.
+  for (int itree = 0; itree < ntrees; itree++) {
+    t8_cmesh_set_tree_class (cmesh, itree, T8_ECLASS_TRIANGLE);
+    all_eclasses[itree] = T8_ECLASS_TRIANGLE;
+  }
+
+  constexpr double _CBRT = std::cbrt(1.0);
+  const double r = radius / _CBRT;
+
+  const double vertices[3][3] = { { -r, -r, r }, { r, -r, r }, { 0.0, 0.0, r } };
+
+  const double face_angles[] = { 0.0, 0.5 * M_PI, M_PI, 1.5*M_PI };
+  const double cube_angles[] = { 0.0, 0.5 * M_PI, 0.5 * M_PI, M_PI, -0.5 * M_PI, -0.5 * M_PI };
+  const int cube_rot_axis[] = { 0, 0, 1, 1, 0, 1 };
+
+  // Set the vertices.
+  int itree = 0;
+  for (int icube_rot = 0; icube_rot < ncube_rot; ++icube_rot) {
+    double cube_rot_mat[3][3];
+    double cube_rot_vertices[3][3];
+
+    if (cube_rot_axis[icube_rot] == 0) {
+      t8_mat_init_xrot (cube_rot_mat, cube_angles[icube_rot]);
+    }
+    else {
+      t8_mat_init_yrot (cube_rot_mat, cube_angles[icube_rot]);
+    }
+
+    for (int iface_rot = 0; iface_rot < nface_rot; ++iface_rot) {
+      double face_rot_mat[3][3];
+      double face_rot_vertices[3][3];
+
+      t8_mat_init_zrot (face_rot_mat, face_angles[iface_rot]);
+
+      // Rotate around z-axis to create a quadratic face.
+      for (int ivert = 0; ivert < nverts; ivert++) {
+        t8_mat_mult_vec (face_rot_mat, &(vertices[ivert][0]), &(face_rot_vertices[ivert][0]));
+      }
+
+      // Rotate to one of the cube's faces.
+      for (int ivert = 0; ivert < nverts; ivert++) {
+        t8_mat_mult_vec (cube_rot_mat, &(face_rot_vertices[ivert][0]), &(cube_rot_vertices[ivert][0]));
+      }
+
+      t8_cmesh_set_tree_vertices (cmesh, itree, (double *) cube_rot_vertices, nverts);
+
+      for (int ivert = 0; ivert < nverts; ivert++) {
+        for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
+          all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree, ivert, icoord)]
+            = cube_rot_vertices[ivert][icoord];
+        }
+      }
+
+      ++itree;
+    }
+  }
+
+  // Face connectivity.
+  t8_cmesh_set_join_by_vertices (cmesh, ntrees, all_eclasses, all_verts, NULL, 0);
+
+  // Commit the mesh.
+  t8_cmesh_commit (cmesh, comm);
+  return cmesh;
+}
+
+t8_cmesh_t
 t8_cmesh_new_quadrangulated_spherical_surface (const double radius, sc_MPI_Comm comm)
 {
   /* Initialization of the mesh */
@@ -3136,8 +3220,8 @@ t8_cmesh_new_quadrangulated_spherical_surface (const double radius, sc_MPI_Comm 
     all_eclasses[itree] = T8_ECLASS_QUAD;
   }
 
-  const double _SQRT3 = 1.7320508075688772;
-  const double r = radius / _SQRT3;
+  constexpr double _CBRT = std::cbrt(1.0);
+  const double r = radius / _CBRT;
 
   const double vertices[4][3] = { { -r, -r, r }, { r, -r, r }, { -r, r, r }, { r, r, r } };
 
@@ -3326,7 +3410,7 @@ t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shel
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
 
-  t8_cmesh_register_geometry<t8_geometry_cubed_spherical_shell> (cmesh); /* Use spherical geometry */
+  t8_cmesh_register_geometry<t8_geometry_cubed_spherical_shell> (cmesh); /* Use spherical geometry. */
 
   /* clang-format off */
   const int nrotas = t8_eclass_num_faces[T8_ECLASS_HEX]; /* Number of 3D cmesh elements resp. trees. */
@@ -3345,9 +3429,10 @@ t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shel
 
   const double outer_radius = inner_radius + shell_thickness;
 
-  const double _SQRT3 = 1.7320508075688772;
-  const double r = inner_radius / _SQRT3;
-  const double R = outer_radius / _SQRT3;
+  const double _CBRT = 1.7320508075688772;
+
+  const double r = inner_radius / _CBRT;
+  const double R = outer_radius / _CBRT;
 
   // Vertices of the template hex.
   const double vertices[nverts][3] = {
@@ -3426,12 +3511,13 @@ t8_cmesh_new_cubed_sphere (const double radius, sc_MPI_Comm comm)
   const double inner_radius = 0.6 * radius;
   const double outer_radius = radius;
 
-  const double SQRT3 = 1.7320508075688772;
-  const double inner_x = inner_radius / SQRT3;
+  constexpr double _CBRT = std::cbrt(1.0);
+
+  const double inner_x = inner_radius / _CBRT;
   const double inner_y = inner_x;
   const double inner_z = inner_x;
 
-  const double outer_x = outer_radius / SQRT3;
+  const double outer_x = outer_radius / _CBRT;
   const double outer_y = outer_x;
   const double outer_z = outer_x;
 

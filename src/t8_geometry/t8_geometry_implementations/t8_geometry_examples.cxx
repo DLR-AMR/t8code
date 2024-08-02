@@ -271,14 +271,14 @@ t8_geometry_quadrangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh
 
   double origin[3];
 
-  const double _SQRT3 = 1.7320508075688772;
+  constexpr double _CBRT = std::cbrt(1.0);
 
   t8_vec_tri_normal (active_tree_vertices, active_tree_vertices + 3, active_tree_vertices + 6, normal);
   t8_vec_normalize (normal);
 
   const double R = std::abs(t8_vec_dot (active_tree_vertices, normal));
 
-  const double radius = R * _SQRT3;
+  const double radius = R * _CBRT;
 
   tangent1[0] = normal[1];
   tangent1[1] = normal[2];
@@ -301,7 +301,8 @@ t8_geometry_quadrangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh
     double local_pos[3];
     double out_pos[3];
 
-    t8_geom_linear_interpolation (ref_coords + offset_2d, active_tree_vertices, 3, 2, position);
+    t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords + offset_2d, 1, position);
+
     t8_vec_diff (position, origin, local_pos);
 
     const double alpha1 = R * tan (0.25 * M_PI * t8_vec_dot (tangent1, local_pos) / R);
@@ -337,15 +338,15 @@ t8_geometry_cubed_spherical_shell::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx
 
   double origin[3];
 
-  const double _SQRT3 = 1.7320508075688772;
+  constexpr double _CBRT = std::cbrt(1.0);
 
   t8_vec_tri_normal (active_tree_vertices, active_tree_vertices + 3, active_tree_vertices + 6, normal);
   t8_vec_normalize (normal);
 
   const double R = std::abs(t8_vec_dot (active_tree_vertices, normal));
 
-  const double inner_radius = R * _SQRT3;
-  const double shell_thickness = std::abs(t8_vec_dot (active_tree_vertices + 4*3, normal)) * _SQRT3 - inner_radius;
+  const double inner_radius = R * _CBRT;
+  const double shell_thickness = std::abs(t8_vec_dot (active_tree_vertices + 4*3, normal)) * _CBRT - inner_radius;
 
   tangent1[0] = normal[1];
   tangent1[1] = normal[2];
