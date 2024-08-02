@@ -164,19 +164,19 @@ t8_geometry_quadrangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh
   // outward radial direction of the sphere.
 
   // These three vectors resemble a tripod.
-  double normal[3]; // Normal vector.
-  double tangent1[3]; // First tangent vector.
-  double tangent2[3]; // Second tangent vector.
+  double normal[3];    // Normal vector.
+  double tangent1[3];  // First tangent vector.
+  double tangent2[3];  // Second tangent vector.
 
   // Compute normal vector of the current cmesh cell.
   t8_vec_tri_normal (active_tree_vertices, active_tree_vertices + 3, active_tree_vertices + 6, normal);
   t8_vec_normalize (normal);
 
   // Compute sphere's radius over cube root which is the shortest distance to the origin (0,0,0).
-  const double distance = std::abs(t8_vec_dot (active_tree_vertices, normal));
+  const double distance = std::abs (t8_vec_dot (active_tree_vertices, normal));
 
   // Compute actual radius of the sphere.
-  const double radius = distance * std::cbrt(1.0);
+  const double radius = distance * std::cbrt (1.0);
 
   // Compute orthogonal coordinate system anchored on the cmesh element.
   t8_vec_orthogonal_tripod (normal, tangent1, tangent2);
@@ -190,7 +190,7 @@ t8_geometry_quadrangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh
     const size_t offset_2d = 2 * i_coord;
     const size_t offset_3d = 3 * i_coord;
 
-     // Compute the the position vector in the cmesh element.
+    // Compute the the position vector in the cmesh element.
     double position[3];
     t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords + offset_2d, 1, position);
 
@@ -227,21 +227,23 @@ t8_geometry_cubed_spherical_shell::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx
   // outward radial direction of the sphere.
 
   // These three vectors resemble a tripod.
-  double normal[3]; // Normal vector.
-  double tangent1[3]; // First tangent vector.
-  double tangent2[3]; // Second tangent vector.
+  double normal[3];    // Normal vector.
+  double tangent1[3];  // First tangent vector.
+  double tangent2[3];  // Second tangent vector.
 
   // Compute normal vector of the current cmesh cell.
   t8_vec_tri_normal (active_tree_vertices, active_tree_vertices + 3, active_tree_vertices + 6, normal);
   t8_vec_normalize (normal);
 
   // Compute sphere's radius over cube root which is the shortest distance to the origin (0,0,0).
-  const double distance = std::abs(t8_vec_dot (active_tree_vertices, normal));
+  const double distance = std::abs (t8_vec_dot (active_tree_vertices, normal));
 
   // Compute actual radius of the sphere.
-  constexpr double CBRT = std::cbrt(1.0);
+  constexpr double CBRT = std::cbrt (1.0);
   const double inner_radius = distance * CBRT;
-  const double shell_thickness = std::abs(t8_vec_dot (active_tree_vertices + t8_eclass_num_vertices[active_tree_class]*3/2, normal)) * CBRT - inner_radius;
+  const double shell_thickness
+    = std::abs (t8_vec_dot (active_tree_vertices + t8_eclass_num_vertices[active_tree_class] * 3 / 2, normal)) * CBRT
+      - inner_radius;
 
   // Compute orthogonal coordinate system anchored on the cmesh element.
   t8_vec_orthogonal_tripod (normal, tangent1, tangent2);
@@ -252,14 +254,14 @@ t8_geometry_cubed_spherical_shell::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx
 
   t8_eclass_t interpolation_eclass;
   switch (active_tree_class) {
-    case T8_ECLASS_HEX:
-      interpolation_eclass = T8_ECLASS_QUAD;
-      break;
-    case T8_ECLASS_PRISM:
-      interpolation_eclass = T8_ECLASS_TRIANGLE;
-      break;
-    default:
-      SC_ABORT_NOT_REACHED ();
+  case T8_ECLASS_HEX:
+    interpolation_eclass = T8_ECLASS_QUAD;
+    break;
+  case T8_ECLASS_PRISM:
+    interpolation_eclass = T8_ECLASS_TRIANGLE;
+    break;
+  default:
+    SC_ABORT_NOT_REACHED ();
   }
 
   for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {

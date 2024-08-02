@@ -3123,11 +3123,11 @@ t8_cmesh_new_triangulated_spherical_surface_cube (const double radius, sc_MPI_Co
 
   t8_cmesh_register_geometry<t8_geometry_quadrangulated_spherical_surface> (cmesh);
 
-  const int nface_rot = 4; // Four triangles create a cube's face.
-  const int ncube_rot = 6; // Six rotations of the four triangles to the six cube's faces.
+  const int nface_rot = 4;  // Four triangles create a cube's face.
+  const int ncube_rot = 6;  // Six rotations of the four triangles to the six cube's faces.
 
-  constexpr int ntrees = nface_rot*ncube_rot; // Number of cmesh elements resp. trees.
-  const int nverts = 3; // Number of cmesh element (triangle) vertices.
+  constexpr int ntrees = nface_rot * ncube_rot;  // Number of cmesh elements resp. trees.
+  const int nverts = 3;                          // Number of cmesh element (triangle) vertices.
 
   // Arrays for the face connectivity computations via vertices.
   double all_verts[ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM];
@@ -3139,12 +3139,12 @@ t8_cmesh_new_triangulated_spherical_surface_cube (const double radius, sc_MPI_Co
     all_eclasses[itree] = T8_ECLASS_TRIANGLE;
   }
 
-  constexpr double _CBRT = std::cbrt(1.0);
+  constexpr double _CBRT = std::cbrt (1.0);
   const double r = radius / _CBRT;
 
   const double vertices[3][3] = { { -r, -r, r }, { r, -r, r }, { 0.0, 0.0, r } };
 
-  const double face_angles[] = { 0.0, 0.5 * M_PI, M_PI, 1.5*M_PI };
+  const double face_angles[] = { 0.0, 0.5 * M_PI, M_PI, 1.5 * M_PI };
   const double cube_angles[] = { 0.0, 0.5 * M_PI, 0.5 * M_PI, M_PI, -0.5 * M_PI, -0.5 * M_PI };
   const int cube_rot_axis[] = { 0, 0, 1, 1, 0, 1 };
 
@@ -3220,7 +3220,7 @@ t8_cmesh_new_quadrangulated_spherical_surface (const double radius, sc_MPI_Comm 
     all_eclasses[itree] = T8_ECLASS_QUAD;
   }
 
-  constexpr double _CBRT = std::cbrt(1.0);
+  constexpr double _CBRT = std::cbrt (1.0);
   const double r = radius / _CBRT;
 
   const double vertices[4][3] = { { -r, -r, r }, { r, -r, r }, { -r, r, r }, { r, r, r } };

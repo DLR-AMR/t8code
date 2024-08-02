@@ -257,9 +257,9 @@ t8_vec_orthogonal_tripod (const double v1[3], double v2[3], double v3[3])
   v2[1] = v1[2];
   v2[2] = -v1[0];
 
-  t8_vec_axpy (v1, v2, -t8_vec_dot(v1, v2));
+  t8_vec_axpy (v1, v2, -t8_vec_dot (v1, v2));
   t8_vec_cross (v1, v2, v3);
-  
+
   t8_vec_normalize (v2);
   t8_vec_normalize (v3);
 }
