@@ -1064,8 +1064,7 @@ t8_subelement_scheme_hex_c::t8_element_last_descendant (const t8_element_t *elem
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (desc));
   T8_ASSERT (0 <= level && level <= P8EST_OLD_QMAXLEVEL);
-  // p8est_quadrant_last_descendant (q, r, level);
-  p8est_quadrant_last_descendant ((p8est_quadrant_t *) elem, (p8est_quadrant_t *) desc, level);
+  p8est_quadrant_last_descendant (q, r, level);
 
   /* We allow constructing a last descendant from a subelement. 
    * Keep in mind, that transforming a hex element to a subelement does not change the 
