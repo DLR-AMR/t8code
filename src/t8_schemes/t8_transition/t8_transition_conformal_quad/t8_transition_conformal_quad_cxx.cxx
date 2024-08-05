@@ -26,7 +26,6 @@
 #include <p4est_bits.h>
 #include <t8_schemes/t8_default/t8_default_line/t8_dline_bits.h>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
-#include <t8_schemes/t8_default/t8_default_quad/t8_default_quad.hxx>
 #include <t8_geometry/t8_geometry_helpers.h>
 #include "t8.h"
 #include "t8_transition_conformal_quad_cxx.hxx"
@@ -1368,14 +1367,15 @@ t8_subelement_scheme_quad_c::t8_element_vertex_integer_coords (const t8_element_
 {
   SC_ABORT ("This function is not implemented for the given scheme.\n");
 }
+
 void
 t8_subelement_scheme_quad_c::t8_element_reference_coords (const t8_element_t *elem, const double *ref_coords,
                                                           const size_t num_coords, double *out_coords) const
 {
+  T8_ASSERT (num_coords > 0);
   T8_ASSERT (ref_coords != NULL);
   T8_ASSERT (out_coords != NULL);
   T8_ASSERT (t8_element_is_valid (elem));
-  static struct t8_default_scheme_quad_c default_quad_scheme;
 
   const t8_quad_with_subelements *element = (t8_quad_with_subelements *) elem;
   if (!t8_element_is_subelement (elem)) {
@@ -1406,14 +1406,17 @@ t8_subelement_scheme_quad_c::t8_element_reference_coords (const t8_element_t *el
     for (int ivertex = 0;ivertex < num_vertices;++ivertex) {
       t8_element_vertex_reference_coords (elem, ivertex, vertex_coords + 3*ivertex);
     }
-    constexpr int dim = 2;
-    constexpr int dim_out = 3;
+
     // For each incoming coordinate compute the barycentric coordinates and do the interpolation
-    for (int i = 0;i < num_coords;++i) {
-      const double ref_x = ref_coords[0 + dim * num_coords];
-      const double ref_y = ref_coords[1 + dim * num_coords];
+    for (size_t icoord = 0;icoord < num_coords;++icoord) {
+      // The ref_coords are always 3 dimensional - even though we do not use the 3rd entry.
+      // The out_coords are 2 dimensional.
+      const int offset_3d = icoord * 3; // offset for 3 dim ref_coords when iterating over points
+      const int offset_2d = icoord * 2; // offset for 2 dim out_coords when iterating over points
+      const double ref_x = ref_coords[0 + offset_3d];
+      const double ref_y = ref_coords[1 + offset_3d];
       const double barycentric_coeff[3] = {0, ref_x - ref_y, ref_y};
-      t8_geom_triangular_interpolation (barycentric_coeff, vertex_coords, 3, 2, out_coords + i * dim_out);
+      t8_geom_triangular_interpolation (barycentric_coeff, vertex_coords, 3, 2, out_coords + offset_2d);
     }
   }
 }

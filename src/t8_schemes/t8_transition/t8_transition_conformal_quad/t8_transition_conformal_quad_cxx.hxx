@@ -41,6 +41,7 @@
 #include <t8_schemes/t8_default/t8_default_line/t8_default_line.hxx>
 #include <t8_schemes/t8_default/t8_default_tri/t8_default_tri.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
+#include <t8_schemes/t8_default/t8_default_quad/t8_default_quad.hxx>
 
 /** The structure holding a quadrilateral element in the default scheme.
  * We make this definition public for interoperability of element classes.
@@ -82,39 +83,6 @@ typedef struct
 
 #define T8_QUAD_TRANSITION_IS_IMPLEMENTED 1
 #define T8_QUAD_TRANSITION_SCHEME_IS_CONFORMAL 1
-
-/** Return the toplevel dimension. */
-#define T8_QUAD_GET_TDIM(quad) ((int) (quad)->pad8)
-
-/** Return the direction of the third dimension.
- * This is only valid to call if the toplevel dimension is three.
- */
-#define T8_QUAD_GET_TNORMAL(quad) (T8_ASSERT (T8_QUAD_GET_TDIM (quad) == 3), ((int) (quad)->pad16))
-
-/** Return the coordinate in the third dimension.
- * This is only valid to call if the toplevel dimension is three.
- */
-#define T8_QUAD_GET_TCOORD(quad) (T8_ASSERT (T8_QUAD_GET_TDIM (quad) == 3), ((int) (quad)->p.user_long))
-
-/** Set the toplevel dimension of a quadrilateral. */
-#define T8_QUAD_SET_TDIM(quad, dim) \
-  do { \
-    T8_ASSERT ((dim) == 2 || (dim) == 3); \
-    (quad)->pad8 = (int8_t) (dim); \
-  } while (0)
-
-/** Set the direction of the third dimension. */
-#define T8_QUAD_SET_TNORMAL(quad, normal) \
-  do { \
-    T8_ASSERT ((normal) >= 0 && (normal) < 3); \
-    (quad)->pad16 = (int16_t) (normal); \
-  } while (0)
-
-/** Set the coordinate in the third dimension. */
-#define T8_QUAD_SET_TCOORD(quad, coord) \
-  do { \
-    (quad)->p.user_long = (long) (coord); \
-  } while (0)
 
 #if 0
 /** Provide an implementation for the quadrilateral element class with subelements. */
@@ -574,6 +542,12 @@ struct t8_subelement_scheme_quad_c: public t8_default_scheme_common_c
   int
   t8_element_subelement_values_are_valid (const t8_element_t *elem) const;
 #endif
+
+  /** Default quad scheme which is used to query quad specific computations,
+   *  for example in \ref t8_element_reference_coords
+  */
+  struct t8_default_scheme_quad_c default_quad_scheme;
 };
 
 #endif /* !T8_TRANSITION_QUAD_CXX_HXX */
+
