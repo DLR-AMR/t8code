@@ -251,9 +251,6 @@ t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost
     t8_forest_ghost_interface_c * ghost_interface = t8_forest_ghost_interface_face_new(ghost_version);
     t8_forest_set_ghost_ext_new(forest, do_ghost, ghost_interface);
   }
-  if(forest->ghost_interface != NULL){
-    t8_productionf("t8_set_ghost_ext aufgerufen, obwohl schon ghost_interface existiert.");
-  }
 }
 
 void
@@ -520,7 +517,6 @@ t8_forest_commit (t8_forest_t forest)
       forest->ghost_interface = forest->set_from->ghost_interface;
       t8_forest_ghost_interface_ref(forest->ghost_interface);
       t8_debugf("t8_forest_commit: uebernehme ghost von set_from\n");
-      t8_productionf("t8_forest_commit: uebernehme ghost von set_from\n");
     }
 
     /* Compute the maximum allowed refinement level */
@@ -676,7 +672,6 @@ t8_forest_commit (t8_forest_t forest)
     /* Construct a ghost layer, if desired */
     if (forest->do_ghost) {
       /* TODO: ghost type */
-      t8_productionf("t8_forest_commit: do_ghost\n");
       t8_forest_ghost_create_ext(forest);
     }
     forest->do_ghost = 0;
@@ -1495,7 +1490,6 @@ t8_forest_free_trees (t8_forest_t forest)
 static void
 t8_forest_reset (t8_forest_t *pforest)
 {
-  t8_productionf("t8_forest_reset:\n");
   int mpiret;
   t8_forest_t forest;
 
@@ -1507,12 +1501,10 @@ t8_forest_reset (t8_forest_t *pforest)
   if (!forest->committed) {
     if (forest->set_from != NULL) {
       /* in this case we have taken ownership and not released it yet */
-      t8_productionf("set_from wird unref in t8_forest_reset\n");
       t8_forest_unref (&forest->set_from);
     }
   }
   else {
-    t8_productionf("forest hat kein set_from in t8_forest_reset\n");
     T8_ASSERT (forest->set_from == NULL);
   }
 
