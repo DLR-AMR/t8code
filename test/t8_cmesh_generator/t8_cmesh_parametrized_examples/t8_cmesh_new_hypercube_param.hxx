@@ -61,7 +61,7 @@ example_set *cmesh_example = (example_set *) new cmesh_cartesian_product_params<
   std::make_pair (periodic_eclasses.begin (), periodic_eclasses.end ()),
   std::make_pair (cmesh_params::my_comms.begin (), cmesh_params::my_comms.end ()),
   std::make_pair (cmesh_params::do_bcast.begin (), cmesh_params::do_bcast.end ()),
-  std::make_pair (cmesh_params::no_partition.begin (), cmesh_params::no_partition.end ()),
+  std::make_pair (cmesh_params::partition.begin (), cmesh_params::partition.end ()),
   std::make_pair (cmesh_params::periodic.begin (), cmesh_params::periodic.end ()), cmesh_wrapper, param_to_string,
   "t8_cmesh_new_hypercube_");
 
@@ -72,7 +72,7 @@ example_set *cmesh_example_pyra = (example_set *) new cmesh_cartesian_product_pa
   std::make_pair (nonperiodic_eclasses.begin (), nonperiodic_eclasses.end ()),
   std::make_pair (cmesh_params::my_comms.begin (), cmesh_params::my_comms.end ()),
   std::make_pair (cmesh_params::do_bcast.begin (), cmesh_params::do_bcast.end ()),
-  std::make_pair (cmesh_params::no_partition.begin (), cmesh_params::no_partition.end ()),
+  std::make_pair (cmesh_params::partition.begin (), cmesh_params::partition.end ()),
   std::make_pair (cmesh_params::no_periodic.begin (), cmesh_params::no_periodic.end ()), cmesh_wrapper, param_to_string,
   "t8_cmesh_new_hypercube_");
 }  // namespace new_hypercube_cmesh
