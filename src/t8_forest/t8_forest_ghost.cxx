@@ -1394,12 +1394,7 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
 void
 t8_forest_ghost_create_ext (t8_forest_t forest)
 {
-  t8_productionf("t8_forest_ghost_create_ext(forest):\n");
-  t8_forest_ghost_t ghost = NULL;
-  t8_ghost_mpi_send_info_t *send_info;
-  sc_MPI_Request *requests;
-  // int create_tree_array = 0, create_gfirst_desc_array = 0;
-  // int create_element_array = 0; // nicht mehr nötig da in ghost-interface ausgelagert
+  t8_forest_ghost_t ghost;
   t8_forest_ghost_interface_c * ghost_interface;
 
   T8_ASSERT (t8_forest_is_committed (forest));
@@ -1427,75 +1422,9 @@ t8_forest_ghost_create_ext (t8_forest_t forest)
     t8_global_productionf ("Start ghost at %f  %f\n", sc_MPI_Wtime (), forest->profile->ghost_runtime);
   }
 
-  /* step one */
-  t8_global_productionf ("Befor step1\n");
-  ghost_interface->t8_ghost_step_1_allocate(forest);
+  ghost_interface->do_ghost(forest);
 
-  //   /* create element offset array if not done already */
-  //   create_element_array = 1;
-  //   t8_forest_partition_create_offsets (forest);
-  // }
-  // if (forest->tree_offsets == NULL) {
-  //   /* Create tree offset array if not done already */
-  //   create_tree_array = 1;
-  //   t8_forest_partition_create_tree_offsets (forest);
-  // }
-  // if (forest->global_first_desc == NULL) {
-  //   /* Create global first desc array if not done already */
-  //   create_gfirst_desc_array = 1;
-  //   t8_forest_partition_create_first_desc (forest);
-  // }
-
-  if (t8_forest_get_local_num_elements (forest) > 0) {
-    if (t8_forest_ghost_interface_get_type(ghost_interface) == T8_GHOST_NONE) {
-      t8_debugf ("WARNING: Trying to construct ghosts with ghost_type NONE. "
-                 "Ghost layer is not constructed.\n");
-      return;
-    }
-
-    /* Initialize the ghost structure */
-    t8_forest_ghost_init (&forest->ghosts, t8_forest_ghost_interface_get_type(ghost_interface));
     ghost = forest->ghosts;
-
-    /* step two */
-    t8_global_productionf ("Befor step2\n");
-    ghost_interface->t8_ghost_step_2(forest);
-    
-    //   t8_global_productionf ("t8_forest_ghost_create_ext: t8_forest_ghost_fill_remote_v3(forest)\n");
-    //   t8_forest_ghost_fill_remote_v3 (forest);
-    // }
-    // else {
-    //   /* Construct the remote elements and processes. */
-    //   t8_global_productionf ("t8_forest_ghost_create_ext: t8_forest_ghost_fill_remote (forest, ghost, unbalanced_version != 0)\n");
-    //   t8_forest_ghost_fill_remote (forest, ghost, unbalanced_version != 0);
-    // }
-
-    /* Step three */
-    /* Start sending the remote elements */
-    send_info = t8_forest_ghost_send_start (forest, ghost, &requests);
-
-    /* Receive the ghost elements from the remote processes */
-    t8_forest_ghost_receive (forest, ghost);
-
-    /* End sending the remote elements */
-    t8_forest_ghost_send_end (forest, ghost, send_info, requests);
-  }
-
-  /* step one clean up */
-  t8_global_productionf ("Befor step1 clean up\n");
-  ghost_interface->t8_ghost_step_1_clean_up(forest);
-
-  //   /* Free the offset memory, if created */
-  //   t8_shmem_array_destroy (&forest->element_offsets);
-  // }
-  // if (create_tree_array) {
-  //   /* Free the offset memory, if created */
-  //   t8_shmem_array_destroy (&forest->tree_offsets);
-  // }
-  // if (create_gfirst_desc_array) {
-  //   /* Free the offset memory, if created */
-  //   t8_shmem_array_destroy (&forest->global_first_desc);
-  // }
 
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of ghost_create */
