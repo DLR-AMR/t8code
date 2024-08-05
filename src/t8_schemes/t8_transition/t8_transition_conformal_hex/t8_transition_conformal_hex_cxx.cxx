@@ -1746,7 +1746,7 @@ t8_subelement_scheme_hex_c::t8_element_reference_coords (const t8_element_t *ele
     int location[3] = {};
     t8_element_get_location_of_subelement (elem, location);
 
-    for (int coord = 0; coord < num_coords; ++coord) {
+    for (size_t coord = 0; coord < num_coords; ++coord) {
       const size_t offset = coord * 3;
       out_coords[offset + 0] = q1->x + ref_coords[offset + 0] * len;
       out_coords[offset + 1] = q1->y + ref_coords[offset + 1] * len;
@@ -2364,7 +2364,7 @@ t8_subelement_scheme_hex_c::t8_element_get_location_of_subelement (const t8_elem
    * 
    * These information are then saved in the location array which will be used by the element_vertex function, 
    * to automatically determine the vertex coordinates of the given subelement. 
-   * 
+   */
 
   /* 1) convert the transition type from a decimal to a binary representation */
   int type = phex_w_sub->transition_type;
