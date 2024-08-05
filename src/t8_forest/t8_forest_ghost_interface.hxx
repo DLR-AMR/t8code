@@ -26,10 +26,20 @@
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
 #include <memory>
-#include <t8_forest/t8_forest_ghost_interface/t8_forest_ghost_interface.h>
-#include <t8_forest/t8_forest_ghost_interface/t8_forest_ghost_interface_wrapper.h>
+#include <t8_forest/t8_forest_ghost_interface.h>
+#include <t8_forest/t8_forest_ghost_interface_wrapper.h>
 
 T8_EXTERN_C_BEGIN ();
+
+/**
+ * Flags for first step function
+ * store in the flags which memory was allocated
+*/
+enum t8_ghost_interface_face_flag {
+    CREATE_ELEMENT_ARRAY    = 1,
+    CREATE_TREE_ARRAY       = 2,
+    CREATE_GFIRST_DESC_ARRAY= 4
+};
 
 struct t8_forest_ghost_interface
 {
@@ -37,7 +47,7 @@ struct t8_forest_ghost_interface
     /**
      * Constructor
     */
-    t8_forest_ghost_interface() : ghost_type(T8_GHOST_NONE)
+    t8_forest_ghost_interface()
     {
       t8_refcount_init (&rc);
       t8_debugf ("Constructed the a None ghost_interface.\n");
@@ -53,7 +63,6 @@ struct t8_forest_ghost_interface
         t8_refcount_unref (&rc);
       }
       t8_debugf ("Deleted the ghost_interface.\n");
-      t8_productionf ("Deleted the ghost_interface.\n");
     }
 
     /**
@@ -84,58 +93,46 @@ struct t8_forest_ghost_interface
     {
       if (t8_refcount_unref (&rc)) {
         t8_debugf ("Deleting the ghost_interface.\n");
-        t8_productionf ("Deleting the ghost_interface.\n");
         delete this;
       }
     }
 
-
-    /**
-     * The algorithm to create the ghost layer is structured in three steps
-     * First is every prozess tells every other one, witch elements belong to him
-     * Second every prozess identifies all his neighbor elements an to witch prozess they blong
-     * Third every prozesse send the date of his owne elements to the neighbots, 
-     * which he knows have this element as a neighbor
-    */
-    /**
-     * Virtual function for the first step. 
-     * \param [in] forest   the forest an witch the ghost should work
-    */
+    /** Create one layer of ghost elements for a forest.
+     * \see t8_forest_set_ghost
+     * \param [in,out]    forest     The forest.
+     * \a forest must be committed before calling this function.
+     */
     virtual void
-    t8_ghost_step_1_allocate(t8_forest_t forest)
+    do_ghost(t8_forest_t forest)
     = 0;
 
     /**
-     * Clean up memory, which was allocatet in the first step, but first can releas after step two
-     * \param [in] forest   the forest an witch the ghost should work
+     * Compute and collect ownerships to create the nessesary offset
+     * for elements, trees and first descandance 
     */
     virtual void
-    t8_ghost_step_1_clean_up(t8_forest_t forest)
-    = 0;
+    communicate_ownerships(t8_forest_t forest);
 
-    /**
-     * Virtual function for the second step. 
-     * \param [in] forest   the forest an witch the ghost should work
-    */
     virtual void
-    t8_ghost_step_2(t8_forest_t forest)
-    = 0;
+    communicate_ghost_elements(t8_forest_t forest);
 
+    virtual void
+    clean_up(t8_forest_t forest);
 
     protected:
     /**
      * Constructor for the derivided classes to set the korrekt type for them.
      * \param [in] g_type   The type (faces, edges, userdefind, ...) of the ghost_interface
     */
-    t8_forest_ghost_interface(t8_ghost_type_t g_type) : ghost_type(g_type) {
+    explicit t8_forest_ghost_interface(t8_ghost_type_t g_type) : ghost_type(g_type) {
       t8_refcount_init (&rc);
       t8_debugf ("Constructed a ghost_interface.\n");
-      t8_productionf("Constructed a ghost_interface.\n");
     };
     /** type of the ghost_interface */
-    t8_ghost_type_t ghost_type;
+    t8_ghost_type_t ghost_type{T8_GHOST_NONE};
     /** The reference count of the ghost_interface. TODO: Replace by shared_ptr when forest becomes a class. */
     t8_refcount_t rc;
+    int32_t memory_flag{};
 };
 
 

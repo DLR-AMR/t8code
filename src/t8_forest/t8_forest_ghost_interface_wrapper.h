@@ -25,7 +25,7 @@
 
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_forest/t8_forest_ghost_interface/t8_forest_ghost_interface.h>
+#include <t8_forest/t8_forest_ghost_interface.h>
 
 
 T8_EXTERN_C_BEGIN ();
@@ -36,6 +36,8 @@ T8_EXTERN_C_BEGIN ();
  * Create a new ghost_interface with given version
 */
 t8_forest_ghost_interface_c * t8_forest_ghost_interface_face_new(int version);
+
+t8_forest_ghost_interface_c * t8_forest_ghost_interface_stencil_new();
 
 /**
  * Satisfy the C interface of forest
@@ -52,12 +54,14 @@ t8_ghost_type_t t8_forest_ghost_interface_get_type(t8_forest_ghost_interface_c *
 /** 
  * Satisfy the C interface of forest
  * Do a ref on the ghost_interface
+ * Needed in t8_forest_commit
 */
 void t8_forest_ghost_interface_ref(t8_forest_ghost_interface_c * ghost_interface);
 
 /** 
  * Satisfy the C interface of forest
  * Do a unref on the ghost_interface
+ * Needed in t8_forest_commit and t8_forest_set_ghost_ext_new
 */
 void t8_forest_ghost_interface_unref(t8_forest_ghost_interface_c ** pghost_interface);
 
