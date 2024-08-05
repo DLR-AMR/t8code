@@ -449,14 +449,13 @@ t8_cmesh_new_prismed_spherical_shell_icosahedron (const double inner_radius, con
 /** Construct a cubed spherical shell of given inner radius and thickness.
  * \param [in] inner_radius       Radius of the inner side of the shell.
  * \param [in] shell_thickness    Thickness of the shell.
- * \param [in] num_levels         Number of trees per patch in longitudinal and latitudinal direction
-                                  given as level of refinement: 4^num_levels.
+ * \param [in] num_trees          Number of trees per patch in longitudinal and latitudinal direction.
  * \param [in] num_layers         Number of layers of the shell.
  * \param [in] comm               The MPI communicator used to commit the cmesh
  * \return                        A cmesh representing the spherical surface.
  */
 t8_cmesh_t
-t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shell_thickness, const int num_levels,
+t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shell_thickness, const int num_trees,
                                     const int num_layers, sc_MPI_Comm comm);
 
 /** Construct a cubed sphere of given radius.
