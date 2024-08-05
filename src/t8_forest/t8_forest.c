@@ -29,7 +29,7 @@
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_ghost.h>
-#include <t8_forest/t8_forest_ghost_interface/t8_forest_ghost_interface_wrapper.h>
+#include <t8_forest/t8_forest_ghost_interface_wrapper.h>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest/t8_forest_balance.h>
 #include <t8_forest/t8_forest_vtk.h>

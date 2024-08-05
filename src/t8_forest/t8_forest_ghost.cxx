@@ -31,9 +31,9 @@
 #include <t8_data/t8_containers.h>
 #include <sc_statistics.h>
 
-#include <t8_forest/t8_forest_ghost_interface/t8_forest_ghost_interface.h>
-#include <t8_forest/t8_forest_ghost_interface/t8_forest_ghost_interface.hxx>
-#include <t8_forest/t8_forest_ghost_interface/t8_forest_ghost_interface_faces.hxx>
+#include <t8_forest/t8_forest_ghost_interface.h>
+#include <t8_forest/t8_forest_ghost_interface.hxx>
+#include <t8_forest/t8_forest_ghost_search.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
