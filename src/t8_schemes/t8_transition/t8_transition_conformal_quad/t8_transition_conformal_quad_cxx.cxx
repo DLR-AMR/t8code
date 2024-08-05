@@ -2197,11 +2197,9 @@ t8_subelement_scheme_quad_c::t8_element_init (int length, t8_element_t *elem) co
      * set their quad to the level 0 quad with ID 0. */
     p4est_quadrant_t *quad = &pquad_w_sub[elem_count].p4q;
     /* Set all values to 0 */
-    for (int i = 0; i < length; i++) {
-      p4est_quadrant_set_morton (quad + i, 0, 0);
-      T8_QUAD_SET_TDIM (quad + i, 2);
-      T8_ASSERT (p4est_quadrant_is_extended (quad + i));
-    }
+    p4est_quadrant_set_morton (quad, 0, 0);
+    T8_QUAD_SET_TDIM (quad, 2);
+    T8_ASSERT (p4est_quadrant_is_extended (quad));
 #endif
   }
 }
