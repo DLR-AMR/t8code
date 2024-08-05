@@ -787,14 +787,15 @@ struct t8_eclass_scheme
 
   /** Construct all sibling neighbors of elem at face in quad scheme. */
   virtual void
-
   t8_element_get_sibling_neighbor_in_transition_cell (const t8_element_t *elem, const int face, const int num_neighbors,
                                                       t8_element_t *neighbor_at_face[], int *neigh_face[])
     = 0;
+
   /** Return 1 if the eclass scheme has an implementation for subelements, which is conformal. */
   virtual int
   t8_element_transition_scheme_is_conformal (void)
     = 0;
+
   /** Return zero refine value for schemes that do not have a transition implementation.
    *  \param [in] elem A valid element 
    *  \return Integer, used as the refine value during transition adaptation.
@@ -819,7 +820,9 @@ struct t8_eclass_scheme
   t8_element_get_number_of_subelements (int transition_type) const
     = 0;
 
-  /** Return the subelement id of a given element. 
+  /** Return the subelement id of a given element. When an element is split into N
+   * subelements, there subelements must be set to 0, 1, 2, ... N-1 and determine
+   * there linear order.
    *  \param [in] elem A valid element 
    *  \return the subelement id of elem (0 if elem is no subelement)
    */
@@ -827,6 +830,7 @@ struct t8_eclass_scheme
   t8_element_get_subelement_id (const t8_element *elem) const
     = 0;
 
+  /* TODO: Rename this function. Not all subelements are transition cells, so the name is misleading. */
   /** This function refines a parent element into subelements.
    *  Depending on the subelement type, the number of subelements 
    *  to fill the parent element, can differ.
