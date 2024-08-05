@@ -39,8 +39,10 @@ tabeamug_build_forest (const char *filename, int level, int maxlevel)
   const int dimension = 2;
   const int main_rank = 0;
   const int use_cad = 0;
-  t8_cmesh_t cmesh = t8_cmesh_new_from_class (T8_ECLASS_QUAD, comm);
-  //t8_cmesh_from_msh_file (filename, partition, comm, dimension, main_rank, use_cad);
+  
+  t8_cmesh_t cmesh = t8_cmesh_from_msh_file (filename, partition, comm, dimension, main_rank, use_cad);
+
+  SC_CHECK_ABORTF (cmesh != NULL, "Could not build cmesh from files %s.msh and %s.brep.\n", filename, filename);
 
   /* Build uniform forest */
   t8_scheme_cxx_t *scheme = t8_scheme_new_transition_quad_cxx ();  // default adapt scheme.
@@ -60,9 +62,9 @@ tabeamug_build_forest (const char *filename, int level, int maxlevel)
 
   t8_eclass_scheme_c *quad_scheme = t8_forest_get_eclass_scheme (forest_adapt, T8_ECLASS_QUAD);
   const t8_element_t *elem = t8_forest_get_element (forest_adapt, 0, NULL);
-  double ref_coords[2] = {0, 0};
-  double out_coords[3];
-  quad_scheme->t8_element_reference_coords (elem, ref_coords, 3, out_coords);
+  double ref_coords[3] = {0, 0, -1};
+  double out_coords[2];
+  quad_scheme->t8_element_reference_coords (elem, ref_coords, 1, out_coords);
 
  
 
