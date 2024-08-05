@@ -550,4 +550,3 @@ struct t8_subelement_scheme_quad_c: public t8_default_scheme_common_c
 };
 
 #endif /* !T8_TRANSITION_QUAD_CXX_HXX */
-
