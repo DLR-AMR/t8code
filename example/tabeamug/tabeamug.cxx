@@ -23,7 +23,6 @@ tabeamug_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_t
   const bool is_in_treeset_A = tree_boundariesA[0] <= global_tree_id && global_tree_id < tree_boundariesA[1];
   const bool is_in_treeset_B = tree_boundariesB[0] <= global_tree_id && global_tree_id < tree_boundariesB[1];
   if (is_in_treeset_A || is_in_treeset_B) {
-    return 2;  // subelement test.
     // This element is in a tree that should be refined.
     if (ts->t8_element_child_id (elements[0]) == 0)
       return 1;  // testing only - delete when done
@@ -76,9 +75,7 @@ tabeamug_build_forest (const char *filename, int level, int maxlevel)
   //t8_forest_write_vtk_ext (forest_adapt, vtkname, 1, 1, 1, 1, 1, 0, 1, 0, NULL);
   t8_forest_write_vtk (forest_adapt, vtkname);
 
-  return;
-
-  // builde balanced forest
+  // build balanced forest
   t8_forest_t forest_balance;
   t8_forest_init (&forest_balance);
   const int no_repartition = 0;
