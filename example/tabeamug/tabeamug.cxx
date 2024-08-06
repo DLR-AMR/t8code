@@ -12,7 +12,7 @@ tabeamug_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_t
                 t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
 {
   const int maxlevel = *(const int *) t8_forest_get_user_data (forest);
-  const t8_gloidx_t tree_boundariesA[] = { 0, 1 };  //{ 10, 40 };
+  const t8_gloidx_t tree_boundariesA[] = { 10, 40 };
   const t8_gloidx_t tree_boundariesB[] = { 90, 120 };
 
   const int element_level = ts->t8_element_level (elements[0]);
@@ -24,9 +24,7 @@ tabeamug_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_t
   const bool is_in_treeset_B = tree_boundariesB[0] <= global_tree_id && global_tree_id < tree_boundariesB[1];
   if (is_in_treeset_A || is_in_treeset_B) {
     // This element is in a tree that should be refined.
-    if (ts->t8_element_child_id (elements[0]) == 0)
-      return 1;  // testing only - delete when done
-    // return 1; //testing only - reactive when done
+    return 1;
   }
   return 0;
 }
@@ -42,8 +40,7 @@ tabeamug_build_forest (const char *filename, int level, int maxlevel)
   const int main_rank = 0;
   const int use_cad = 0;
 
-  t8_cmesh_t cmesh = t8_cmesh_new_from_class (T8_ECLASS_QUAD, comm);
-  //t8_cmesh_from_msh_file (filename, partition, comm, dimension, main_rank, use_cad);
+  t8_cmesh_t cmesh = t8_cmesh_from_msh_file (filename, partition, comm, dimension, main_rank, use_cad);
 
   SC_CHECK_ABORTF (cmesh != NULL, "Could not build cmesh from files %s.msh and %s.brep.\n", filename, filename);
 
@@ -96,8 +93,7 @@ tabeamug_build_forest (const char *filename, int level, int maxlevel)
 
   // vtk output of transitioned forest
   snprintf (vtkname, BUFSIZ, "tabeamug_transition_%i_%i", level, maxlevel);
-  //t8_forest_write_vtk_ext (forest_transition, vtkname, 1, 1, 1, 1, 1, 0, 1, 0, NULL);
-  t8_forest_write_vtk (forest_transition, vtkname);
+  t8_forest_write_vtk_ext (forest_transition, vtkname, 1, 1, 1, 1, 1, 0, 0, 0, NULL);
 
   t8_forest_unref (&forest_transition);
 }
