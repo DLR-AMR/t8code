@@ -1413,10 +1413,7 @@ t8_subelement_scheme_quad_c::t8_element_reference_coords (const t8_element_t *el
       // The out_coords are 2 dimensional.
       const int offset_3d = icoord * 3;  // offset for 3 dim ref_coords when iterating over points
       const int offset_2d = icoord * 2;  // offset for 2 dim out_coords when iterating over points
-      const double ref_x = ref_coords[0 + offset_3d];
-      const double ref_y = ref_coords[1 + offset_3d];
-      const double barycentric_coeff[3] = { 0, ref_x - ref_y, ref_y };
-      t8_geom_triangular_interpolation (barycentric_coeff, vertex_coords, 3, 2, out_coords + offset_2d);
+      t8_geom_triangular_interpolation (ref_coords + offset_3d, vertex_coords, 2, 2, out_coords + offset_2d);
     }
   }
 }
