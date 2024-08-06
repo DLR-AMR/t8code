@@ -1435,7 +1435,8 @@ t8_subelement_scheme_quad_c::t8_element_vertex_reference_coords (const t8_elemen
 }
 
 void
-t8_subelement_scheme_quad_c::t8_element_vertex_coords (const t8_element_t *elem, int vertex, int coords[]) const
+t8_subelement_scheme_quad_c::t8_element_vertex_coords (const t8_element_t *elem, int vertex,
+                                                       t8_dquad_subelement_coord_t coords[]) const
 {
   const t8_quad_with_subelements *pquad_w_sub = (const t8_quad_with_subelements *) elem;
   const p4est_quadrant_t *q1 = &pquad_w_sub->p4q;
@@ -1461,7 +1462,7 @@ t8_subelement_scheme_quad_c::t8_element_vertex_coords (const t8_element_t *elem,
 
 void
 t8_subelement_scheme_quad_c::t8_element_vertex_coords_of_subelement (const t8_element_t *elem, int vertex,
-                                                                     int coords[]) const
+                                                                     t8_dquad_subelement_coord_t coords[]) const
 {
   const t8_quad_with_subelements *pquad_w_sub = (const t8_quad_with_subelements *) elem;
   const p4est_quadrant_t *q1 = &pquad_w_sub->p4q;

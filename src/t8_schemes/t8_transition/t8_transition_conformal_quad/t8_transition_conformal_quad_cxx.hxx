@@ -66,6 +66,9 @@
  * Each transition cell consists of different subelements. The given example consists of 6 different subelements, whose ids range from 0 to 5.
  * A dummy variable will store the information, whether a given element is a subelement or a standard quad element. */
 
+/** Variable type for an integer valued coordinate of a quad (sub-)element. */
+typedef p4est_qcoord_t t8_dquad_subelement_coord_t;
+
 typedef struct
 {
   /* p4est quadrant */
@@ -317,7 +320,8 @@ struct t8_subelement_scheme_quad_c: public t8_default_scheme_common_c
 
   /** Compute the integer coordinates of a given element vertex. */
   virtual void
-  t8_element_vertex_coords (const t8_element_t *t, int vertex, int coords[]) const;
+  t8_element_vertex_coords (const t8_element_t *t, int vertex, t8_dquad_subelement_coord_t coords[]) const;
+
   /** Compute the integer coordinates of a given element vertex.
    * The default scheme implements the Morton type SFCs. In these SFCs the
    * elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and 
@@ -329,7 +333,7 @@ struct t8_subelement_scheme_quad_c: public t8_default_scheme_common_c
    *                      whose entries will be filled with the coordinates of \a vertex.
    */
   virtual void
-  t8_element_vertex_integer_coords (const t8_element_t *elem, int vertex, int coords[]) const;
+  t8_element_vertex_integer_coords (const t8_element_t *elem, int vertex, t8_dquad_subelement_coord_t coords[]) const;
 
   /** Convert a point in the reference space of an element to a point in the
  *  reference space of the tree.
