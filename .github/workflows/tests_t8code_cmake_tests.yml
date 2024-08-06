@@ -102,7 +102,7 @@ jobs:
     - name: check release mode
       run: echo "Checking release mode"
     - name: echo cmake line
-      run: echo cmake $CONFIG_RELEASE
+      run: echo cmake ../ $CONFIG_RELEASE
     - name: cmake release
       run: mkdir build_release && cd build_release && cmake ../ $CONFIG_RELEASE
     - name: OnFailUploadLog
@@ -126,6 +126,8 @@ jobs:
 # cmake and test in debug mode
     - name: check debugging mode
       run: echo "Checking debug mode"
+    - name: echo cmake line
+      run: echo cmake ../ $CONFIG_DEBUG
     - name: cmake debug
       run: mkdir build_debug && cd build_debug && cmake ../ $CONFIG_DEBUG
     - name: OnFailUploadLog
