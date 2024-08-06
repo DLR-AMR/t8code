@@ -57,7 +57,7 @@ void
 t8_geom_triangular_interpolation (const double *coefficients, const double *corner_values, const int corner_value_dim,
                                   const int interpolation_dim, double *evaluated_function)
 {
-  /* The algorithm is able to calculate any point in a triangle or tetrahedron using barycentric coordinates.
+  /* The algorithm is able to calculate any point in a triangle or tetrahedron using cartesian coordinates.
    * All points are calculated by the sum of each corner point (e.g. p1 -> corner point 1) multiplied by a
    * scalar, which in this case are the reference coordinates (ref_coords).
    */
@@ -67,10 +67,12 @@ t8_geom_triangular_interpolation (const double *coefficients, const double *corn
     temp[i_dim] = (corner_values[corner_value_dim + i_dim] - /* (p2 - p1) * ref_coords */
                    corner_values[i_dim])
                     * coefficients[0]
+
                   + (interpolation_dim == 3
                        ? (corner_values[3 * corner_value_dim + i_dim] - corner_values[2 * corner_value_dim + i_dim])
                            * coefficients[1]
                        : 0.) /* (p4 - p3) * ref_coords */
+
                   + (corner_values[2 * corner_value_dim + i_dim] - corner_values[corner_value_dim + i_dim])
                       * coefficients[interpolation_dim - 1] /* (p3 - p2) * ref_coords */
                   + corner_values[i_dim];                   /* p1 */
