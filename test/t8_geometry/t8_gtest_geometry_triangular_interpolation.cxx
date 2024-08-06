@@ -27,19 +27,27 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_geometry/t8_geometry_helpers.h>
 
-TEST_F (triangular_interpolation, corners_map_to_corners){
+/* TODO: - Check interpolation dim 3
+ *       - Check corner_value_dim > 1 
+ *       - Check different coefficient coordinates (for example midpoint)
+ *       - Check different corner values */
+
+/* Check that the corner interpolation coordinates are 
+ * mapped to the corners of a triangle. */
+
+TEST_F (triangular_interpolation, corners_map_to_corners)
+{
   const double eps = 1e-14;
 
-  const double coeff_A[3] = {0, 0};
-  const double coeff_B[3] = {0, 1};
-  const double coeff_C[3] = {1, 1};
-  const double coeff_D[3] = {1, 1};
+  const double coeff_A[3] = { 0, 0 };
+  const double coeff_B[3] = { 0, 1 };
+  const double coeff_C[3] = { 1, 1 };
+  const double coeff_D[3] = { 1, 1 };
 
-  const double corner_values[] =
-  {
-    1, 2, // corner A
-    3, 4, // corner B
-    5, 6  // corner C
+  const double corner_values[] = {
+    1, 2,  // corner A
+    3, 4,  // corner B
+    5, 6   // corner C
   };
 
   const double *cornerA = corner_values;
