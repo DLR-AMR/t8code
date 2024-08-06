@@ -51,13 +51,13 @@ tabeamug_build_forest (const char *filename, int level, int maxlevel)
   /* Build uniform forest */
   t8_scheme_cxx_t *scheme = t8_scheme_new_transition_quad_cxx ();  // default adapt scheme.
 
-  const int do_face_ghost = 0;                                     // No ghost needed.
+  const int do_face_ghost = 0;  // No ghost needed.
   t8_forest_t forest_uniform = t8_forest_new_uniform (cmesh, scheme, level, do_face_ghost, comm);
 
   t8_forest_t forest_temp = forest_uniform;
   t8_forest_t forest_adapt = forest_uniform;
   /* Build adapted forest */
-  for (int ilevel = level + 1;ilevel <= maxlevel;++ilevel) {
+  for (int ilevel = level + 1; ilevel <= maxlevel; ++ilevel) {
     const int recursive = 0;  // We want to define multiple levels at once.
     /* Adapt the forest. We use the maximum refinement levet as user data. */
     forest_adapt = t8_forest_new_adapt (forest_temp, tabeamug_adapt, recursive, do_face_ghost, &maxlevel);
@@ -66,19 +66,17 @@ tabeamug_build_forest (const char *filename, int level, int maxlevel)
 
   t8_eclass_scheme_c *quad_scheme = t8_forest_get_eclass_scheme (forest_adapt, T8_ECLASS_QUAD);
   const t8_element_t *elem = t8_forest_get_element (forest_adapt, 0, NULL);
-  double ref_coords[3] = {0, 0, -1};
+  double ref_coords[3] = { 0, 0, -1 };
   double out_coords[2];
   quad_scheme->t8_element_reference_coords (elem, ref_coords, 1, out_coords);
-
- 
 
   // vtk output of adapted forest
   char vtkname[BUFSIZ];
   snprintf (vtkname, BUFSIZ, "tabeamug_adapt_%i_%i", level, maxlevel);
   //t8_forest_write_vtk_ext (forest_adapt, vtkname, 1, 1, 1, 1, 1, 0, 1, 0, NULL);
   t8_forest_write_vtk (forest_adapt, vtkname);
-  
-return;
+
+  return;
 
   // builde balanced forest
   t8_forest_t forest_balance;
