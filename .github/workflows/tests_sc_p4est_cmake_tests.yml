@@ -39,18 +39,6 @@ on:
       MPI:
         required: true
         type: string
-      SC_DEBUG:
-        required: true
-        type: string
-      SC_RELEASE:
-        required: true
-        type: string
-      P4EST_DEBUG:
-        required: true
-        type: string
-      P4EST_RELEASE:
-        required: true
-        type: string
 
 jobs:
   sc_p4est_cmake_tests:
@@ -75,20 +63,22 @@ jobs:
     - name: Get input vars
       run: export MAKEFLAGS="${{ inputs.MAKEFLAGS }}"
         && export MPI="${{ inputs.MPI }}"
-        && export SC_DEBUG="${{ inputs.SC_DEBUG }}"
-        && export SC_RELEASE="${{ inputs.SC_RELEASE }}"
-        && export P4EST_DEBUG="${{ inputs.P4EST_DEBUG }}"
-        && export P4EST_RELEASE="${{ inputs.P4EST_RELEASE }}"
         && echo MPI="$MPI" >> $GITHUB_ENV
         && echo MAKEFLAGS="$MAKEFLAGS" >> $GITHUB_ENV
+#
+# SC tests
+#
+    ## save variables  
+    - name: Save variables
+      run: export SC_DEBUG=$PWD/sc/build/Debug
+        && export SC_RELEASE=$PWD/sc/build/Release
+        && export P4EST_DEBUG=$PWD/p4est/build/Debug
+        && export P4EST_RELEASE=$PWD/p4est/build/Release
         && echo SC_DEBUG="$SC_DEBUG" >> $GITHUB_ENV
         && echo SC_RELEASE="$SC_RELEASE" >> $GITHUB_ENV
         && echo P4EST_DEBUG="$P4EST_DEBUG" >> $GITHUB_ENV
         && echo P4EST_RELEASE="$P4EST_RELEASE" >> $GITHUB_ENV
-#
-# SC tests
-#
-      ## sc debug
+    ## sc debug
     - name: sc debug check
       run: cd $SC_DEBUG && ctest $MAKEFLAGS
     - name: OnFailUploadLog

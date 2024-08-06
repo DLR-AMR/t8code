@@ -1,4 +1,4 @@
-name: CMake CI t8code tests
+name: CMake CI t8code linkage tests
 
 
 #  This file is part of t8code.
@@ -71,6 +71,7 @@ jobs:
 #
 #  T8CODE
 #
+#
     # build config vars
     - name: less-test option
       if: ${{ inputs.LESS_TESTS }}
@@ -78,31 +79,79 @@ jobs:
            && echo LESS_TEST_OPTION="$LESS_TEST_OPTION" >> $GITHUB_ENV
     - name: build config variables
       run: export CONFIG_OPTIONS="${LESS_TEST_OPTION} -DT8CODE_USE_SYSTEM_SC=ON -DT8CODE_USE_SYSTEM_P4EST=ON -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSC_DIR=$SC_PATH/install/cmake -DP4EST_DIR=$P4EST_PATH/install/cmake"
-        && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
-# cmake and test
-    - name: Printing MPI compiler info
-      run: mpicc --version && mpirun --version
-    - name: Printing GCC compiler info
-      run: gcc --version && g++ --version
+           && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
+# cmake and test with netcdf
+    - name: check NetCDF
+      run: echo "Checking NetCDF"
     - name: echo cmake line
-      run: echo cmake ../ $CONFIG_OPTIONS
-    - name: cmake
-      run: mkdir build && cd build && cmake ../ $CONFIG_OPTIONS
+      run: echo cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_NetCDF=ON
+    - name: cmake MPI NetCDF debug
+      run: mkdir build_netcdf && cd build_netcdf && cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_NetCDF=ON
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
       with:
-        name: cmake_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
-        path: build/CMakeFiles/CMakeOutput.log
+        name: cmake_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_NetCDF.log
+        path: build_netcdf/CMakeFiles/CMakeOutput.log
     - name: make
-      run: cd build && make $MAKEFLAGS
+      run: cd build_netcdf && make $MAKEFLAGS
     - name: make install
-      run: cd build && make install $MAKEFLAGS
+      run: cd build_netcdf && make install $MAKEFLAGS
     - name: make test
-      run: cd build && make test $MAKEFLAGS
+      run: cd build_netcdf && make test $MAKEFLAGS
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
       with:
-        name: test-suite_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
-        path: build/Testing/Temporary/LastTest.log
+        name: test-suite_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_NetCDF.log
+        path: build_netcdf/Testing/Temporary/LastTest.log
+# cmake and test with OpenCASCADE
+    - name: check OpenCASCADE
+      run: echo "Checking OpenCASCADE"
+    - name: echo cmake line
+      run: echo cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_OCC=ON -DOpenCASCADE_DIR=/usr/local/lib/cmake/opencascade
+    - name: cmake OpenCASCADE
+      run: mkdir build_occ && cd build_occ && cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_OCC=ON -DOpenCASCADE_DIR=/usr/local/lib/cmake/opencascade
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: cmake_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_OCC.log
+        path: build_occ/CMakeFiles/CMakeOutput.log
+    - name: make
+      run: cd build_occ && make $MAKEFLAGS
+    - name: make install
+      run: cd build_occ && make install $MAKEFLAGS
+    - name: make test
+      run: cd build_occ && make test $MAKEFLAGS
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-suite_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_OCC.log
+        path: build_occ/Testing/Temporary/LastTest.log
+# cmake and test with VTK
+    - name: check VTK
+      run: echo "Checking VTK"
+    - name: echo cmake line
+      run: echo cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_VTK=ON -DVTK_DIR=/usr/local/lib/cmake/vtk-9.1
+    - name: cmake MPI VTK debug
+      run: mkdir build_vtk && cd build_vtk && cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_VTK=ON -DVTK_DIR=/usr/local/lib/cmake/vtk-9.1
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: cmake_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_VTK.log
+        path: build_vtk/CMakeFiles/CMakeOutput.log
+    - name: make
+      run: cd build_vtk && make $MAKEFLAGS
+    - name: make install
+      run: cd build_vtk && make install $MAKEFLAGS
+    - name: make test
+      run: cd build_vtk && make test $MAKEFLAGS
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-suite_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_VTK.log
+        path: build_vtk/Testing/Temporary/LastTest.log

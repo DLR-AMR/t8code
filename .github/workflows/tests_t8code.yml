@@ -46,75 +46,69 @@ on:
       - cron:  '10 1 * * *'
 
 jobs:
-  # Preparation step for serial tests. Repo is cloned and sc + p4est are compiled without MPI.
-  preparation_serial:
+  # Preparation step for tests. Repo is cloned and sc + p4est are compiled with and without MPI.
+  preparation:
     if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
     uses: ./.github/workflows/tests_t8code_cmake_preparation.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        MPI: [OFF, ON]
+        include: 
+          - MAKEFLAGS: -j4
     with:
-      MAKEFLAGS: -j4
-      IGNORE_CACHE: true
-      CACHE_COUNTER: 5
-      MPI: OFF
+      MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
+      IGNORE_CACHE: false # Use this to force a new installation of sc and p4est
+      CACHE_COUNTER: 6 # Increase this number to force a new installation of sc and p4est
+      MPI: ${{ matrix.MPI }}
   
-  # Run serial tests for sc and p4est
-  sc_p4est_tests_serial:
-    if: ((github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule') && needs.preparation_serial.outputs.USED_CACHE != 1)
-    needs: preparation_serial
+  # Run parallel tests for sc and p4est with and without MPI
+  sc_p4est_tests:
+    if: ((github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule') && needs.preparation.outputs.USED_CACHE != 1)
+    needs: preparation
     uses: ./.github/workflows/tests_sc_p4est_cmake_tests.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        MPI: [OFF, ON]
+        include: 
+          - MAKEFLAGS: -j4
     with:
-      MAKEFLAGS: -j4
-      MPI: OFF
-      SC_DEBUG: ${{ needs.preparation_serial.outputs.SC_DEBUG }}
-      SC_RELEASE: ${{ needs.preparation_serial.outputs.SC_RELEASE }}
-      P4EST_DEBUG: ${{ needs.preparation_serial.outputs.P4EST_DEBUG }}
-      P4EST_RELEASE: ${{ needs.preparation_serial.outputs.P4EST_RELEASE }}
-  
-  # Run t8code tests for serial configuration
-  t8code_tests_serial:
-    if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
-    needs: preparation_serial
-    uses: ./.github/workflows/tests_t8code_cmake_tests.yml
-    with:
-      MAKEFLAGS: -j4
-      MPI: OFF
-      SC_DEBUG: ${{ needs.preparation_serial.outputs.SC_DEBUG }}
-      SC_RELEASE: ${{ needs.preparation_serial.outputs.SC_RELEASE }}
-      P4EST_DEBUG: ${{ needs.preparation_serial.outputs.P4EST_DEBUG }}
-      P4EST_RELEASE: ${{ needs.preparation_serial.outputs.P4EST_RELEASE }}
+      MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
+      MPI: ${{ matrix.MPI }}
 
-
-  # Preparation step for parallel tests. Repo is cloned and sc + p4est are compiled with MPI.
-  preparation_parallel:
+  # Run t8code tests with and without MPI and in serial and debug mode
+  t8code_tests:
     if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
-    uses: ./.github/workflows/tests_t8code_cmake_preparation.yml
-    with:
-      MAKEFLAGS: -j4
-      IGNORE_CACHE: true
-      CACHE_COUNTER: 5
-      MPI: ON
-  
-    # Run parallel tests for sc and p4est
-  sc_p4est_tests_parallel:
-    if: ((github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule') && needs.preparation_parallel.outputs.USED_CACHE != 1)
-    needs: preparation_parallel
-    uses: ./.github/workflows/tests_sc_p4est_cmake_tests.yml
-    with:
-      MAKEFLAGS: -j4
-      MPI: ON
-      SC_DEBUG: ${{ needs.preparation_parallel.outputs.SC_DEBUG }}
-      SC_RELEASE: ${{ needs.preparation_parallel.outputs.SC_RELEASE }}
-      P4EST_DEBUG: ${{ needs.preparation_parallel.outputs.P4EST_DEBUG }}
-      P4EST_RELEASE: ${{ needs.preparation_parallel.outputs.P4EST_RELEASE }}
-  
-  # Run t8code tests for parallel configuration
-  t8code_tests_parallel:
-    if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
-    needs: preparation_parallel
     uses: ./.github/workflows/tests_t8code_cmake_tests.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        MPI: [OFF, ON]
+        BUILD_TYPE: [Debug, Release]
+        include: 
+          - MAKEFLAGS: -j4
+    needs: preparation
     with:
-      MAKEFLAGS: -j4
-      MPI: ON
-      SC_DEBUG: ${{ needs.preparation_parallel.outputs.SC_DEBUG }}
-      SC_RELEASE: ${{ needs.preparation_parallel.outputs.SC_RELEASE }}
-      P4EST_DEBUG: ${{ needs.preparation_parallel.outputs.P4EST_DEBUG }}
-      P4EST_RELEASE: ${{ needs.preparation_parallel.outputs.P4EST_RELEASE }}
+      MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
+      MPI: ${{ matrix.MPI }}
+      BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
+      LESS_TESTS: ${{ github.event_name == 'pull_request'  }}
+
+  # Run t8code linkage tests with and without MPI and in serial and debug mode
+  t8code_linkage_tests:
+    if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
+    uses: ./.github/workflows/tests_t8code_cmake_linkage_tests.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        MPI: [OFF, ON]
+        BUILD_TYPE: [Debug, Release]
+        include: 
+          - MAKEFLAGS: -j4
+    needs: preparation
+    with:
+      MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
+      MPI: ${{ matrix.MPI }}
+      BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
+      LESS_TESTS: ${{ github.event_name == 'pull_request'  }}
