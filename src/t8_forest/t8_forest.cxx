@@ -2591,19 +2591,39 @@ t8_forest_element_is_leaf (const t8_forest_t forest, const t8_element_t *element
     return 0;
   }
   /* An element was found but it may not be the candidate element.
-   * If our original element is not a subelement, then we compare with the found element.
-   * Otherwise, if our element is a subelement, then all subelements from the same element match
-   * the search and we need to query whether our element is contained in that set. */
+   * If our original query element is not a subelement, then we compare with the found element.
+   * 
+   * Otherwise, if our query element is a subelement, then all subelements from the same element match
+   * the search and we need to query whether our element is contained in that set.
+   * If the query element is a leaf then the search_result may point to any other subelement resulting from the
+   * same element.
+   */
   t8_locidx_t check_index = search_result;
 
   if (scheme->t8_element_is_subelement (element)) {
-    /* From now we consider the case that our element is a subelement. */
-    const int subelement_id = scheme->t8_element_get_subelement_id (element);
-    check_index += subelement_id;
-  }
-  if (t8_element_array_get_count (elements) <= (size_t) check_index) {
-    /* The element cannot be contained in the array. */
-    return 0;
+    const t8_element_t *check_subelement = t8_element_array_index_locidx (elements, search_result);
+    T8_ASSERT (check_subelement != NULL);
+    /* Our query element is a subelement.
+     * It has a subelement id A.
+     * If the check element at index "search_result" is not a subelement,
+     * then the element is not a leaf and we can return.
+     * If it is a subelement, then it has id B.
+     * If our query element is contained in the array, then
+     * it must be at index "search_result - B + A".
+     */
+    const int query_subelement_id = scheme->t8_element_get_subelement_id (element);
+    if (!scheme->t8_element_is_subelement (check_subelement)) {
+      // The found element is not a subelement, thus our query element is not a leaf.
+      return 0;
+    }
+    const int check_subelement_id = scheme->t8_element_get_subelement_id (check_subelement);
+    // Compute the new index where our query element should be found.
+    check_index = search_result - check_subelement_id + query_subelement_id;
+
+    if (t8_element_array_get_count (elements) <= (size_t) check_index) {
+      /* The element cannot be contained in the array. */
+      return 0;
+    }
   }
 
   /* Get the respective element from the array and compare with our query element. */
@@ -3381,7 +3401,6 @@ t8_forest_supports_transitioning (t8_forest_t forest)
 
   return supports_transition_all_procs;
 }
-
 
 static void
 t8_forest_set_mpicomm (t8_forest_t forest, sc_MPI_Comm mpicomm, int do_dup)
