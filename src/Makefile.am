@@ -148,7 +148,6 @@ libt8_compiled_sources = \
   src/t8_vtk/t8_vtk_parallel.cxx \
   src/t8_vtk/t8_vtk_reader.cxx \
   src/t8_vtk/t8_vtk_writer.cxx \
-  src/t8_vtk/t8_vtk_writer_c_interface.cxx \
   src/t8_vtk/t8_vtk_write_ASCII.cxx \
   src/t8_vtk/t8_vtk_writer_helper.cxx
 

@@ -106,6 +106,7 @@ vtk_writer<t8_cmesh_t>::write_ASCII (const t8_cmesh_t forest)
   return t8_cmesh_vtk_write_ASCII (forest, this->fileprefix.c_str ());
 }
 
+/* Implementation of the c-interface */
 T8_EXTERN_C_BEGIN ();
 
 int
