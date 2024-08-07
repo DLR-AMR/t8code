@@ -207,11 +207,11 @@ t8_forest_vtk_cells_offset_kernel (t8_forest_t forest, const t8_locidx_t ltree_i
 
   if (modus == T8_VTK_KERNEL_INIT) {
     *data = T8_ALLOC_ZERO (long long, 1);
-    return 1;
+    return true;
   }
   else if (modus == T8_VTK_KERNEL_CLEANUP) {
     T8_FREE (*data);
-    return 1;
+    return true;
   }
   T8_ASSERT (modus == T8_VTK_KERNEL_EXECUTE);
 
@@ -221,7 +221,7 @@ t8_forest_vtk_cells_offset_kernel (t8_forest_t forest, const t8_locidx_t ltree_i
   *offset += num_vertices;
   freturn = fprintf (vtufile, " %lld", *offset);
   if (freturn <= 0) {
-    return 0;
+    return false;
   }
   *columns += 1;
 
