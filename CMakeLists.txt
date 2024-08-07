@@ -58,15 +58,27 @@ endif()
 
 if( T8CODE_ENABLE_VTK )
     find_package( VTK REQUIRED )
-endif()
+    if(VTK_FOUND)
+        message("Found VTK")
+    endif (VTK_FOUND)
+endif( T8CODE_ENABLE_VTK )
 
 if( T8CODE_ENABLE_OCC )
-    find_package( OpenCASCADE REQUIRED )
-endif()
+    find_package( OpenCASCADE REQUIRED COMPONENTS
+    TKBO TKPrim TKTopAlgo
+    TKGeomAlgo TKBRep 
+    TKG3d TKG2d TKMath TKernel )
+    if(OpenCASCADE_FOUND)
+        message("Found OpenCASCADE")
+    endif (OpenCASCADE_FOUND)
+endif( T8CODE_ENABLE_OCC )
 
 if( T8CODE_ENABLE_NETCDF )
     find_package( netCDF REQUIRED )
-endif()
+    if(netCDF_FOUND)
+        message("Found netCDF")
+    endif (netCDF_FOUND)
+endif( T8CODE_ENABLE_NETCDF )
 
 # Override default for this libsc option
 set( BUILD_SHARED_LIBS ON CACHE BOOL "Build libsc as a shared library" )

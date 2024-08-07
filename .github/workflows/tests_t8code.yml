@@ -64,7 +64,7 @@ jobs:
   
   # Run parallel tests for sc and p4est with and without MPI
   sc_p4est_tests:
-    if: ((github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule') && needs.preparation.outputs.USED_CACHE != 1)
+    if: ((github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule'))
     needs: preparation
     uses: ./.github/workflows/tests_sc_p4est_cmake_tests.yml
     strategy:

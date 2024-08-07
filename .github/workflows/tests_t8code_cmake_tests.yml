@@ -94,7 +94,7 @@ jobs:
       with:
         name: cmake_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
         path: build/CMakeFiles/CMakeOutput.log
-    - name: make
+    - name: ninja
       run: cd build && ninja $MAKEFLAGS
     - name: ninja install
       run: cd build && ninja install $MAKEFLAGS
