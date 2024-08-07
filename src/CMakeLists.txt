@@ -27,10 +27,9 @@ endif()
 
 if( T8CODE_ENABLE_NETCDF )
   target_link_libraries( T8 PUBLIC netCDF::netcdf )
-
   target_compile_definitions(T8 PUBLIC
     T8_WITH_NETCDF
-    $<$<BOOL:${NETCDF_HAVE_NETCDF_PAR}>:T8_WITH_NETCDF_PAR> )
+    $<$<AND:$<BOOL:${NETCDF_HAVE_NETCDF_PAR}>,$<BOOL:${T8CODE_ENABLE_MPI}>>:T8_WITH_NETCDF_PAR> )
 endif()
 
 set_target_properties( T8 PROPERTIES OUTPUT_NAME t8 )
