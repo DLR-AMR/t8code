@@ -46,12 +46,12 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  *                        must come first in the array.
  * \return  True if successful, false if not (process local).
  */
-int
+bool
 t8_forest_vtk_write_ASCII (t8_forest_t forest, const char *fileprefix, const int write_treeid, const int write_mpirank,
                            const int write_level, const int write_element_id, int write_ghosts, const int num_data,
                            t8_vtk_data_field_t *data);
 
-int
+bool
 t8_cmesh_vtk_write_ASCII (t8_cmesh_t cmesh, const char *fileprefix);
 
 #endif /* T8_VTK_WRITE_ASCII_HXX */

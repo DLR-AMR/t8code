@@ -95,7 +95,7 @@ use_c_interface<t8_forest_t> (const t8_forest_t grid, const char *fileprefix, co
                                            curved_flag, write_ghosts, num_data, data);
 #else
   return t8_forest_vtk_write_file (grid, fileprefix, write_treeid, write_mpirank, write_level, write_element_id,
-                                   curved_flag, write_ghosts, num_data, data);
+                                   write_ghosts, num_data, data);
 #endif
 }
 

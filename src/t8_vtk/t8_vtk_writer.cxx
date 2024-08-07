@@ -67,8 +67,6 @@ vtk_writer<t8_forest_t>::t8_grid_tree_to_vtk_cells (
   return;
 }
 
-#endif /* T8_WITH_VTK */
-
 /**
  * \brief template specialization for cmeshes. 
  * 
@@ -89,6 +87,7 @@ vtk_writer<t8_cmesh_t>::t8_grid_tree_to_vtk_cells (
   (*elem_id)++;
   return;
 }
+#endif /* T8_WITH_VTK */
 
 template <>
 bool
