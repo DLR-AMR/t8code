@@ -78,7 +78,7 @@ destroy_grid<t8_forest_t> (t8_forest_t *forest)
 }
 
 template <typename grid_t>
-int
+static int
 use_c_interface (const grid_t grid, const char *fileprefix, const int write_treeid, const int write_mpirank,
                  const int write_level, const int write_element_id, const int curved_flag, const int write_ghosts,
                  const int num_data, t8_vtk_data_field_t *data, sc_MPI_Comm comm);
