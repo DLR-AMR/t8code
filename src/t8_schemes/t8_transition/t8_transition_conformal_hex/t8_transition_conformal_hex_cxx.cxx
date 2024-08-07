@@ -29,6 +29,7 @@
 #include <p4est_bits.h>
 #include <t8_schemes/t8_default/t8_default_line/t8_dline_bits.h>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
+#include <t8_geometry/t8_geometry_helpers.h>
 #include "t8_transition_conformal_hex_cxx.hxx"
 #include <cmath>
 
@@ -1714,222 +1715,49 @@ void
 t8_subelement_scheme_hex_c::t8_element_reference_coords (const t8_element_t *elem, const double *ref_coords,
                                                          const size_t num_coords, double *out_coords) const
 {
+  T8_ASSERT (num_coords > 0);
   T8_ASSERT (ref_coords != NULL);
+  T8_ASSERT (out_coords != NULL);
   T8_ASSERT (t8_element_is_valid (elem));
 
+  const t8_hex_with_subelements *element = (t8_hex_with_subelements *) elem;
   if (!t8_element_is_subelement (elem)) {
-    const p8est_quadrant_t *q1 = (const p8est_quadrant_t *) elem;
-
-    /* Get the length of the quadrant */
-    const p4est_qcoord_t len = P8EST_QUADRANT_LEN (q1->level);
-
-    for (size_t coord = 0; coord < num_coords; ++coord) {
-      const size_t offset = 3 * coord;
-      /* Compute the x, y and z coordinates of the point depending on the
-     * reference coordinates */
-      out_coords[offset + 0] = q1->x + ref_coords[offset + 0] * len;
-      out_coords[offset + 1] = q1->y + ref_coords[offset + 1] * len;
-      out_coords[offset + 2] = q1->z + ref_coords[offset + 2] * len;
-
-      /* We divide the integer coordinates by the root length of the hex
-     * to obtain the reference coordinates. */
-      out_coords[offset + 0] /= (double) P8EST_ROOT_LEN;
-      out_coords[offset + 1] /= (double) P8EST_ROOT_LEN;
-      out_coords[offset + 2] /= (double) P8EST_ROOT_LEN;
-    }
+    const t8_element_t *hex = (const t8_element_t *) &element->p8q;
+    // We call the default hex reference coord function for the hex coordinates.
+    default_hex_scheme.t8_element_reference_coords (hex, ref_coords, num_coords, out_coords);
   }
   else {
-    t8_hex_with_subelements *phex_w_sub = (t8_hex_with_subelements *) elem;
-    p8est_quadrant_t *q1 = &phex_w_sub->p8q;
-    p4est_qcoord_t len = P8EST_QUADRANT_LEN (q1->level);
-    /* get location information of the given subelement */
-    int location[3] = {};
-    t8_element_get_location_of_subelement (elem, location);
+    /* This element is a subelement and hence a pyramid. */
+    T8_ASSERT (t8_element_shape (elem) == T8_ECLASS_PYRAMID);
 
-    for (size_t coord = 0; coord < num_coords; ++coord) {
-      const size_t offset = coord * 3;
-      out_coords[offset + 0] = q1->x + ref_coords[offset + 0] * len;
-      out_coords[offset + 1] = q1->y + ref_coords[offset + 1] * len;
-      out_coords[offset + 2] = q1->z + ref_coords[offset + 2] * len;
-
-      //Set the apex to the center of the transition cell
-      if (ref_coords[0] == 1 && ref_coords[1] == 1 && ref_coords[2] == 1) {
-        out_coords[offset + 0] -= ref_coords[offset + 0] * (len / 2);
-        out_coords[offset + 1] -= ref_coords[offset + 1] * (len / 2);
-        out_coords[offset + 2] -= ref_coords[offset + 2] * (len / 2);
+    /* 
+     * We use t8_geom_triangular_interpolation to compute the coordinates
+     * given the coordinates of the vertices.
+     * For this we consider the pyramid as a cube with 4 corners collapsed into one.
+     */
+    constexpr int num_vertices = 5;  // Should use t8_eclass_num_vertices[T8_ECLASS_TRIANGLE]; but is not constexpr
+    constexpr int num_vertex_coords = 8 * 3;  // We need 8 corners since we use trilinear interpolation.
+    double vertex_coords[num_vertex_coords];  // Stores the pyramids vertices
+    for (int ivertex = 0; ivertex < num_vertices; ++ivertex) {
+      // Compute the coordinates of the 5 pyramid vertices.
+      t8_element_vertex_reference_coords (elem, ivertex, vertex_coords + 3 * ivertex);
+    }
+    /* Copy the values of the pyramids last vertex over to vertex_coords 5,6,7
+      * in order to build a virtual cube where all top corners collapse onto one.
+      * We can then us the cubical linear interpolation function. */
+    for (int ivertex = num_vertices; ivertex < 8; ++ivertex) {
+      for (int idim = 0; idim < 3; ++idim) {
+        vertex_coords[3 * ivertex + idim] = vertex_coords[3 * (num_vertices - 1) + idim];
       }
-      else {
-        if (location[0] == 0) {
-          //face 0
-          //Add the x-coordinate to the z-coordinate in order to flip the base side of the pyramid to face f0
-          out_coords[offset + 2] += ref_coords[offset + 0] * len;
-          //set x-coordinate to zero
-          out_coords[offset + 0] -= ref_coords[offset + 0] * len;
-        }
-        if (location[0] == 1) {
-          //Add one to the z-coordinate if the x-coordinate equals zero
-          out_coords[offset + 2] += (1 - 1 * ref_coords[offset + 0]) * len;
-          //set x-coordinate to one
-          out_coords[offset + 0] += (1 - 1 * ref_coords[offset + 0]) * len;
-        }
-        if (location[0] == 2) {
-          //Add one to the z-coordinate if the y-coordinate equals one
-          out_coords[offset + 2] += (ref_coords[offset + 1]) * len;
-          //set y-coordinate to zero
-          out_coords[offset + 1] -= (ref_coords[offset + 1]) * len;
-        }
-        if (location[0] == 3) {
-          //Add one to the z-coordinate if the y-coordinate equals zero
-          out_coords[offset + 2] += (1 - ref_coords[offset + 1]) * len;
-          //set y-coordinate to one
-          out_coords[offset + 1] += (1 - 1 * ref_coords[offset + 1]) * len;
-        }
-        //Nothing more to do for face 4
-        if (location[0] == 5) {
-          //Add one to the z-coordinate
-          out_coords[offset + 2] += len;
-        }
-        //split
-        if (location[1] == 1) {
-          if (location[0] == 0) {
-            if ((location[2] & 2) == 0) {
-              //front
-              //scale the y coordinate if not zero
-              out_coords[offset + 1] -= ref_coords[offset + 1] * (len / 2);
-            }
-            else {
-              //back
-              //scale the y coordinate if zero
-              out_coords[offset + 1] += (1 - ref_coords[offset + 1]) * (len / 2);
-            }
-            if ((location[2] & 1) == 0) {
-              //bottom
-              //scale the z coordinate if not zero and z is not zero if the x-coordinate of ref_coords is not zero.
-              out_coords[offset + 2] -= (ref_coords[offset + 0]) * (len / 2);
-            }
-            else {
-              //up
-              //scale the z coordinate if zero
-              out_coords[offset + 2] += (1 - 1 * ref_coords[offset + 0]) * (len / 2);
-            }
-          }
-          if (location[0] == 1) {
-            if ((location[2] & 2) == 0) {
-              //front
-              //scale the y coordinate if not zero
-              out_coords[offset + 1] -= ref_coords[offset + 1] * (len / 2);
-            }
-            else {
-              //back
-              //scale the y coordinate if zero
-              out_coords[offset + 1] += (1 - ref_coords[offset + 1]) * (len / 2);
-            }
-            if ((location[2] & 1) == 0) {
-              //bottom
-              //scale the z coordinate if not zero and z is not zero if the x-coordinate of ref_coords is zero.
-              out_coords[offset + 2] -= (1 - ref_coords[offset + 0]) * (len / 2);
-            }
-            else {
-              //up
-              //scale the z coordinate if zero
-              out_coords[offset + 2] += (ref_coords[offset + 0]) * (len / 2);
-            }
-          }
-          if (location[0] == 2) {
-            if ((location[2] & 4) == 0) {
-              //left
-              //scale the x coordinate if not zero
-              out_coords[offset + 0] -= ref_coords[offset + 0] * (len / 2);
-            }
-            else {
-              //right
-              //scale the x coordinate if  zero
-              out_coords[offset + 0] += (1 - ref_coords[offset + 0]) * (len / 2);
-            }
-            if ((location[2] & 1) == 0) {
-              //bottom
-              //scale the z coordinate if not zero
-              out_coords[offset + 2] -= ref_coords[offset + 1] * (len / 2);
-            }
-            else {
-              //up
-              //scale the z coordinate if  zero
-              out_coords[offset + 2] += (1 - ref_coords[offset + 1]) * (len / 2);
-            }
-          }
-          if (location[0] == 3) {
-            if ((location[2] & 4) == 0) {
-              //left
-              //scale the x coordinate if not zero
-              out_coords[offset + 0] -= ref_coords[offset + 0] * (len / 2);
-            }
-            else {
-              //right
-              //scale the x coordinate if  zero
-              out_coords[offset + 0] += (1 - ref_coords[offset + 0]) * (len / 2);
-            }
-            if ((location[2] & 1) == 0) {
-              //bottom
-              //scale the z coordinate if not zero
-              out_coords[offset + 2] -= (1 - ref_coords[offset + 1]) * (len / 2);
-            }
-            else {
-              //up
-              //scale the z coordinate if  zero
-              out_coords[offset + 2] += (ref_coords[offset + 1]) * (len / 2);
-            }
-          }
+    }
 
-          if (location[0] == 4) {
-            if ((location[2] & 4) == 0) {
-              //left
-              //scale the x coordinate if not zero
-              out_coords[offset + 0] -= ref_coords[offset + 0] * (len / 2);
-            }
-            else {
-              //right
-              //scale the x coordinate if  zero
-              out_coords[offset + 0] += (1 - ref_coords[offset + 0]) * (len / 2);
-            }
-            if ((location[2] & 2) == 0) {
-              //front
-              //scale the y coordinate if not zero
-              out_coords[offset + 1] -= ref_coords[offset + 1] * (len / 2);
-            }
-            else {
-              //back
-              //scale the y coordinate if zero
-              out_coords[offset + 1] += (1 - 1 * ref_coords[offset + 1]) * (len / 2);
-            }
-          }
-          if (location[0] == 5) {
-            if ((location[2] & 4) == 0) {
-              //left
-              //scale the x coordinate if not zero
-              out_coords[offset + 0] -= ref_coords[offset + 0] * (len / 2);
-            }
-            else {
-              //right
-              //scale the x coordinate if  zero
-              out_coords[offset + 0] += (1 - ref_coords[offset + 0]) * (len / 2);
-            }
-            if ((location[2] & 2) == 0) {
-              //front
-              //scale the y coordinate if not zero
-              out_coords[offset + 1] -= ref_coords[offset + 1] * (len / 2);
-            }
-            else {
-              //back
-              //scale the y coordinate if zero
-              out_coords[offset + 1] += (1 - 1 * ref_coords[offset + 1]) * (len / 2);
-            }
-          }
-        }
-      }
-
-      out_coords[offset + 0] /= (double) P8EST_ROOT_LEN;
-      out_coords[offset + 1] /= (double) P8EST_ROOT_LEN;
-      out_coords[offset + 2] /= (double) P8EST_ROOT_LEN;
+    // For each incoming coordinate do the interpolation
+    for (size_t icoord = 0; icoord < num_coords; ++icoord) {
+      // The ref_coords are always 3 dimensional - even though we do not use the 3rd entry.
+      // The out_coords are 2 dimensional.
+      const int offset_ref = icoord * 3;  // offset for 3 dim ref_coords when iterating over points
+      const int offset_out = icoord * 3;  // offset for 3 dim out_coords when iterating over points
+      t8_geom_linear_interpolation (ref_coords + offset_ref, vertex_coords, 3, 3, out_coords + offset_out);
     }
   }
 }

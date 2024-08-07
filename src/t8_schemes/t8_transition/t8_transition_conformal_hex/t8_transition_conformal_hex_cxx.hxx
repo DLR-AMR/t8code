@@ -637,6 +637,11 @@ struct t8_subelement_scheme_hex_c: public t8_default_scheme_common_c
   t8_element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const;
 
 #endif
+
+  /** Default hex scheme which is used to query hex specific computations,
+   *  for example in \ref t8_element_reference_coords
+  */
+  struct t8_default_scheme_hex_c default_hex_scheme;
 };
 
 #endif /* !T8_TRANSITION_HEX_CXX_HXX */
