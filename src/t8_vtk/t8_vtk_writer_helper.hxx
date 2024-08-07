@@ -224,4 +224,20 @@ template <typename grid_t>
 int
 grid_element_level (const grid_t grid, const t8_locidx_t itree, const t8_element_t *element);
 
+
+template <>
+int
+grid_element_level<t8_forest_t> (const t8_forest_t grid, const t8_locidx_t itree, const t8_element_t *element)
+{
+  const t8_eclass_t eclass = t8_forest_get_eclass (grid, itree);
+  t8_eclass_scheme *scheme = t8_forest_get_eclass_scheme (grid, eclass);
+  return scheme->t8_element_level (element);
+}
+template <>
+int
+grid_element_level<t8_cmesh_t> (const t8_cmesh_t grid, const t8_locidx_t itree, const t8_element_t *element)
+{
+  return 0;
+}
+
 #endif /* T8_VTK_WRITER_HELPER */
