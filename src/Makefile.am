@@ -80,7 +80,7 @@ libt8_installed_headers_vtk = \
   src/t8_vtk/t8_vtk_reader.hxx \
   src/t8_vtk/t8_vtk_writer.hxx \
   src/t8_vtk/t8_vtk_types.h \
-  src/t8_vtk/t8_vtk_writer_c_interface.h
+  src/t8_vtk/t8_vtk_writer.h
 libt8_installed_headers_schemes_default =
 libt8_installed_headers_default_common =
 libt8_installed_headers_default_vertex =

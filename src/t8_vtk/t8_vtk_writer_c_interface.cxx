@@ -20,7 +20,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_vtk/t8_vtk_writer_c_interface.h>
+#include <t8_vtk/t8_vtk_writer.h>
 #include <t8_vtk/t8_vtk_writer.hxx>
 #include <string>
 #include <t8_forest/t8_forest_general.h>

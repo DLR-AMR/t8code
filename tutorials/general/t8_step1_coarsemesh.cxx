@@ -35,10 +35,10 @@
  *    from t8_cmesh.h to create a different cmesh.
  */
 
-#include <t8.h>                               /* General t8code header, always include this. */
-#include <t8_cmesh.h>                         /* cmesh definition and basic interface. */
-#include <t8_vtk/t8_vtk_writer_c_interface.h> /* cmesh-writer interface. */
-#include <t8_cmesh/t8_cmesh_examples.h>       /* A collection of exemplary cmeshes */
+#include <t8.h>                         /* General t8code header, always include this. */
+#include <t8_cmesh.h>                   /* cmesh definition and basic interface. */
+#include <t8_vtk/t8_vtk_writer.h>       /* cmesh-writer interface. */
+#include <t8_cmesh/t8_cmesh_examples.h> /* A collection of exemplary cmeshes */
 
 /* Builds cmesh of 6 tetrahedra that build up a unit cube.
  * \param [in] comm   MPI Communicator to use.

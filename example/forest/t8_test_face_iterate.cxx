@@ -33,7 +33,7 @@
 #include <t8_cmesh_readmshfile.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_data/t8_containers.h>
-#include <t8_vtk/t8_vtk_writer_c_interface.h>
+#include <t8_vtk/t8_vtk_writer.h>
 
 typedef struct
 {

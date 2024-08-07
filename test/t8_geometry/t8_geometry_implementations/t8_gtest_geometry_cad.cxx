@@ -30,7 +30,7 @@
 #include <test/t8_gtest_macros.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <t8_element.h>
-#include <t8_vtk/t8_vtk_writer_c_interface.h>
+#include <t8_vtk/t8_vtk_writer.h>
 
 #include <t8_schemes/t8_default/t8_default_hex/t8_dhex.h>
 #include <array>
@@ -49,7 +49,6 @@
 #include <TopoDS_Face.hxx>
 #include <TopoDS_Edge.hxx>
 #include <t8_element.h>
-#include <t8_vtk/t8_vtk_writer_c_interface.h>
 
 #include <test/t8_gtest_custom_assertion.hxx>
 #endif
