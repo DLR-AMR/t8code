@@ -78,7 +78,7 @@ jobs:
       run: export LESS_TEST_OPTION="-DT8CODE_ENABLE_LESS_TESTS=ON"
            && echo LESS_TEST_OPTION="$LESS_TEST_OPTION" >> $GITHUB_ENV
     - name: build config variables
-      run: export CONFIG_OPTIONS="${LESS_TEST_OPTION} -DT8CODE_USE_SYSTEM_SC=ON -DT8CODE_USE_SYSTEM_P4EST=ON -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSC_DIR=$SC_PATH/install/cmake -DP4EST_DIR=$P4EST_PATH/install/cmake"
+      run: export CONFIG_OPTIONS="${LESS_TEST_OPTION} -GNinja -DT8CODE_USE_SYSTEM_SC=ON -DT8CODE_USE_SYSTEM_P4EST=ON -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSC_DIR=$SC_PATH/install/cmake -DP4EST_DIR=$P4EST_PATH/install/cmake"
            && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
 # cmake and test with netcdf
     - name: check NetCDF
@@ -109,9 +109,9 @@ jobs:
     - name: check OpenCASCADE
       run: echo "Checking OpenCASCADE"
     - name: echo cmake line
-      run: echo cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_OCC=ON -DOpenCASCADE_DIR=/usr/local/lib/cmake/opencascade
+      run: echo cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_OCC=ON
     - name: cmake OpenCASCADE
-      run: mkdir build_occ && cd build_occ && cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_OCC=ON -DOpenCASCADE_DIR=/usr/local/lib/cmake/opencascade
+      run: mkdir build_occ && cd build_occ && cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_OCC=ON
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
