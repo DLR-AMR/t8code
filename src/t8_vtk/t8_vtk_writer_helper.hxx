@@ -224,7 +224,6 @@ template <typename grid_t>
 int
 grid_element_level (const grid_t grid, const t8_locidx_t itree, const t8_element_t *element);
 
-
 template <>
 int
 grid_element_level<t8_forest_t> (const t8_forest_t grid, const t8_locidx_t itree, const t8_element_t *element)

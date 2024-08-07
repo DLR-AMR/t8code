@@ -528,7 +528,6 @@ class vtk_writer {
   sc_MPI_Comm comm;
 };
 
-
 #if T8_WITH_VTK
 /**
  * \brief template specialization for forests. 
