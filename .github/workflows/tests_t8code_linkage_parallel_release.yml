@@ -210,7 +210,7 @@ jobs:
     - name: check OpenCASCADE
       run: echo "Checking OpenCASCADE with MPI in release mode"
     - name: configure MPI OpenCASCADE release
-      run: mkdir build_cad && cd build_cad && ../configure $CONFIG_RELEASE --with-cad CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var -isystem/usr/include/opencascade"
+      run: mkdir build_cad && cd build_cad && ../configure $CONFIG_RELEASE --with-occ CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var -isystem/usr/include/opencascade"
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
