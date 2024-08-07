@@ -84,9 +84,9 @@ jobs:
     - name: check NetCDF
       run: echo "Checking NetCDF"
     - name: echo cmake line
-      run: echo cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_NetCDF=ON
+      run: echo cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_NETCDF=ON
     - name: cmake MPI NetCDF debug
-      run: mkdir build_netcdf && cd build_netcdf && cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_NetCDF=ON
+      run: mkdir build_netcdf && cd build_netcdf && cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_NETCDF=ON
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
@@ -94,11 +94,11 @@ jobs:
         name: cmake_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_NetCDF.log
         path: build_netcdf/CMakeFiles/CMakeOutput.log
     - name: make
-      run: cd build_netcdf && make $MAKEFLAGS
-    - name: make install
-      run: cd build_netcdf && make install $MAKEFLAGS
-    - name: make test
-      run: cd build_netcdf && make test $MAKEFLAGS
+      run: cd build_netcdf && ninja $MAKEFLAGS
+    - name: ninja install
+      run: cd build_netcdf && ninja install $MAKEFLAGS
+    - name: ninja test
+      run: cd build_netcdf && ninja test $MAKEFLAGS
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
@@ -119,11 +119,11 @@ jobs:
         name: cmake_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_OCC.log
         path: build_occ/CMakeFiles/CMakeOutput.log
     - name: make
-      run: cd build_occ && make $MAKEFLAGS
-    - name: make install
-      run: cd build_occ && make install $MAKEFLAGS
-    - name: make test
-      run: cd build_occ && make test $MAKEFLAGS
+      run: cd build_occ && ninja $MAKEFLAGS
+    - name: ninja install
+      run: cd build_occ && ninja install $MAKEFLAGS
+    - name: ninja test
+      run: cd build_occ && ninja test $MAKEFLAGS
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
@@ -144,11 +144,11 @@ jobs:
         name: cmake_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_VTK.log
         path: build_vtk/CMakeFiles/CMakeOutput.log
     - name: make
-      run: cd build_vtk && make $MAKEFLAGS
-    - name: make install
-      run: cd build_vtk && make install $MAKEFLAGS
-    - name: make test
-      run: cd build_vtk && make test $MAKEFLAGS
+      run: cd build_vtk && ninja $MAKEFLAGS
+    - name: ninja install
+      run: cd build_vtk && ninja install $MAKEFLAGS
+    - name: ninja test
+      run: cd build_vtk && ninja test $MAKEFLAGS
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4

@@ -113,17 +113,17 @@ jobs:
       if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
       ## sc debug
     - name: sc cmake debug
-      run: cd $SC_DEBUG && cmake ../../ -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$SC_DEBUG/install -Dmpi=$MPI
+      run: cd $SC_DEBUG && cmake ../../ -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$SC_DEBUG/install -Dmpi=$MPI -GNinja
       if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
     - name: sc build debug
-      run: cd $SC_DEBUG && make $MAKEFLAGS && make $MAKEFLAGS install
+      run: cd $SC_DEBUG && ninja $MAKEFLAGS && ninja $MAKEFLAGS install
       if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
       ## sc release
     - name: sc cmake release
-      run: cd $SC_RELEASE && cmake ../../ -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$SC_RELEASE/install -Dmpi=$MPI
+      run: cd $SC_RELEASE && cmake ../../ -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$SC_RELEASE/install -Dmpi=$MPI -GNinja
       if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
     - name: sc build release
-      run: cd $SC_RELEASE && make $MAKEFLAGS && make $MAKEFLAGS install
+      run: cd $SC_RELEASE && ninja $MAKEFLAGS && ninja $MAKEFLAGS install
       if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
 #
 # P4EST
@@ -161,17 +161,17 @@ jobs:
       run: mkdir -p $P4EST_DEBUG $P4EST_RELEASE
     ## p4est debug
     - name: p4est cmake debug
-      run: cd $P4EST_DEBUG && cmake ../../ -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$P4EST_DEBUG/install -DP4EST_USE_SYSTEM_SC=ON -DSC_DIR=$SC_DEBUG/install/cmake -DP4EST_ENABLE_MPI=$MPI
+      run: cd $P4EST_DEBUG && cmake ../../ -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$P4EST_DEBUG/install -DP4EST_USE_SYSTEM_SC=ON -DSC_DIR=$SC_DEBUG/install/cmake -DP4EST_ENABLE_MPI=$MPI -GNinja
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
     - name: p4est build debug
-      run: cd $P4EST_DEBUG && make $MAKEFLAGS && make $MAKEFLAGS install
+      run: cd $P4EST_DEBUG && ninja $MAKEFLAGS && ninja $MAKEFLAGS install
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
     ## p4est release
     - name: p4est cmake release
-      run: cd $P4EST_RELEASE && cmake ../../ -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$P4EST_RELEASE/install -DP4EST_USE_SYSTEM_SC=ON -DSC_DIR=$SC_DEBUG/install/cmake -DP4EST_ENABLE_MPI=$MPI
+      run: cd $P4EST_RELEASE && cmake ../../ -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$P4EST_RELEASE/install -DP4EST_USE_SYSTEM_SC=ON -DSC_DIR=$SC_DEBUG/install/cmake -DP4EST_ENABLE_MPI=$MPI -GNinja
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
     - name: p4est build release
-      run: cd $P4EST_RELEASE && make $MAKEFLAGS && make $MAKEFLAGS install
+      run: cd $P4EST_RELEASE && ninja $MAKEFLAGS && ninja $MAKEFLAGS install
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
     
     ## output cache info

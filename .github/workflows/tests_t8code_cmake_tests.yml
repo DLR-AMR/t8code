@@ -95,11 +95,11 @@ jobs:
         name: cmake_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
         path: build/CMakeFiles/CMakeOutput.log
     - name: make
-      run: cd build && make $MAKEFLAGS
-    - name: make install
-      run: cd build && make install $MAKEFLAGS
-    - name: make test
-      run: cd build && make test $MAKEFLAGS
+      run: cd build && ninja $MAKEFLAGS
+    - name: ninja install
+      run: cd build && ninja install $MAKEFLAGS
+    - name: ninja test
+      run: cd build && ninja test $MAKEFLAGS
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
