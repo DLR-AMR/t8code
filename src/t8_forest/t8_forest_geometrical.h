@@ -52,7 +52,7 @@ t8_forest_get_dimension (const t8_forest_t forest);
  *                             the x, y and z coordinates of the vertex.
  */
 void
-t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id, const t8_element_t *element, int corner_number,
+t8_forest_element_coordinate_from_corner_number (t8_forest_t forest, t8_locidx_t ltree_id, const t8_element_t *element, int corner_number,
                               double *coordinates);
 
 /** Compute the coordinates of a point inside an element inside a tree.

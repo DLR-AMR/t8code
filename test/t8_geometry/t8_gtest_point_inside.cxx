@@ -214,7 +214,7 @@ TEST_P (geometry_point_inside, test_point_inside)
       const int num_corners = eclass_scheme->t8_element_num_corners (element);
       /* For each corner get its coordinates */
       for (int icorner = 0; icorner < num_corners; ++icorner) {
-        t8_forest_element_coordinate (forest, itree, element, icorner, element_vertices[icorner]);
+        t8_forest_element_coordinate_from_corner_number (forest, itree, element, icorner, element_vertices[icorner]);
       }
 
       /* Allocate the barycentric coordinates */

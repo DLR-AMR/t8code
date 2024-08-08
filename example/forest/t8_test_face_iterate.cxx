@@ -49,7 +49,7 @@ t8_test_fiterate_callback (t8_forest_t forest, t8_locidx_t ltreeid, const t8_ele
 
   if (leaf_index >= 0) {
     coords = ((t8_test_fiterate_udata_t *) user_data)->coords;
-    t8_forest_element_coordinate (forest, ltreeid, element, 0, coords);
+    t8_forest_element_coordinate_from_corner_number (forest, ltreeid, element, 0, coords);
     t8_debugf ("Leaf element in tree %i at face %i, tree local index %i has corner 0 coords %lf %lf %lf\n", ltreeid,
                face, (int) leaf_index, coords[0], coords[1], coords[2]);
     ((t8_test_fiterate_udata_t *) user_data)->count++;

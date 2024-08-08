@@ -109,7 +109,7 @@ t8_geometry_linear::t8_geom_point_batch_inside_element (t8_forest_t forest, t8_l
     /* A point is 'inside' a vertex if they have the same coordinates */
     double vertex_coords[3];
     /* Get the vertex coordinates */
-    t8_forest_element_coordinate (forest, ltreeid, element, 0, vertex_coords);
+    t8_forest_element_coordinate_from_corner_number (forest, ltreeid, element, 0, vertex_coords);
     /* Check whether the point and the vertex are within tolerance distance
        * to each other */
     for (int ipoint = 0; ipoint < num_points; ipoint++) {
@@ -127,9 +127,9 @@ t8_geometry_linear::t8_geom_point_batch_inside_element (t8_forest_t forest, t8_l
     double p_0[3], v[3];
 
     /* Compute the vertex coordinates of the line */
-    t8_forest_element_coordinate (forest, ltreeid, element, 0, p_0);
+    t8_forest_element_coordinate_from_corner_number (forest, ltreeid, element, 0, p_0);
     /* v = p_1 */
-    t8_forest_element_coordinate (forest, ltreeid, element, 1, v);
+    t8_forest_element_coordinate_from_corner_number (forest, ltreeid, element, 1, v);
     /* v = p_1 - p_0 */
     t8_vec_axpy (p_0, v, -1);
     for (int ipoint = 0; ipoint < num_points; ipoint++) {
@@ -141,10 +141,10 @@ t8_geometry_linear::t8_geom_point_batch_inside_element (t8_forest_t forest, t8_l
     /* We divide the quad in two triangles and use the triangle check. */
     double p_0[3], p_1[3], p_2[3], p_3[3];
     /* Compute the vertex coordinates of the quad */
-    t8_forest_element_coordinate (forest, ltreeid, element, 0, p_0);
-    t8_forest_element_coordinate (forest, ltreeid, element, 1, p_1);
-    t8_forest_element_coordinate (forest, ltreeid, element, 2, p_2);
-    t8_forest_element_coordinate (forest, ltreeid, element, 3, p_3);
+    t8_forest_element_coordinate_from_corner_number (forest, ltreeid, element, 0, p_0);
+    t8_forest_element_coordinate_from_corner_number (forest, ltreeid, element, 1, p_1);
+    t8_forest_element_coordinate_from_corner_number (forest, ltreeid, element, 2, p_2);
+    t8_forest_element_coordinate_from_corner_number (forest, ltreeid, element, 3, p_3);
 
 #if T8_ENABLE_DEBUG
     /* Issue a warning if the points of the quad do not lie in the same plane */
@@ -179,9 +179,9 @@ t8_geometry_linear::t8_geom_point_batch_inside_element (t8_forest_t forest, t8_l
     double p_0[3], p_1[3], p_2[3];
 
     /* Compute the vertex coordinates of the triangle */
-    t8_forest_element_coordinate (forest, ltreeid, element, 0, p_0);
-    t8_forest_element_coordinate (forest, ltreeid, element, 1, p_1);
-    t8_forest_element_coordinate (forest, ltreeid, element, 2, p_2);
+    t8_forest_element_coordinate_from_corner_number (forest, ltreeid, element, 0, p_0);
+    t8_forest_element_coordinate_from_corner_number (forest, ltreeid, element, 1, p_1);
+    t8_forest_element_coordinate_from_corner_number (forest, ltreeid, element, 2, p_2);
     double v[3];
     double w[3];
     /* v = v - p_0 = p_1 - p_0 */
@@ -223,7 +223,7 @@ t8_geometry_linear::t8_geom_point_batch_inside_element (t8_forest_t forest, t8_l
       /* Compute a point x on the face */
       const int afacecorner = ts->t8_element_get_face_corner (element, iface, 0);
       double point_on_face[3];
-      t8_forest_element_coordinate (forest, ltreeid, element, afacecorner, point_on_face);
+      t8_forest_element_coordinate_from_corner_number (forest, ltreeid, element, afacecorner, point_on_face);
       for (int ipoint = 0; ipoint < num_points; ipoint++) {
         const int is_inside_iface = t8_plane_point_inside (point_on_face, face_normal, &points[ipoint * 3]);
         if (is_inside_iface == 0) {
