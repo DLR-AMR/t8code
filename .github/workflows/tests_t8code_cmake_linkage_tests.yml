@@ -64,3 +64,11 @@ jobs:
         && echo P4EST_PATH="$P4EST_PATH" >> $GITHUB_ENV
         && echo LESS_TESTS="$LESS_TESTS" >> $GITHUB_ENV
         && echo EVENT_NAME="$EVENT_NAME" >> $GITHUB_ENV
+    - name: echo vars
+      run: echo MAKEFLAGS=$MAKEFLAGS
+        && echo MPI=$MPI
+        && echo BUILD_TYPE=$BUILD_TYPE
+        && echo SC_PATH=$SC_PATH
+        && echo P4EST_PATH=$P4EST_PATH
+        && echo LESS_TESTS=$LESS_TESTS
+        && echo EVENT_NAME=$EVENT_NAME
