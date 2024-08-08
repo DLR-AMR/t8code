@@ -74,7 +74,6 @@ jobs:
         BUILD_TYPE: [Debug]
         include: 
           - MAKEFLAGS: -j4
-    needs: preparation
     with:
       MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
       MPI: ${{ matrix.MPI }}
