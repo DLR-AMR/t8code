@@ -80,4 +80,5 @@ jobs:
       MPI: ${{ matrix.MPI }}
       BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
       LESS_TESTS: ${{ github.event_name == 'pull_request' }}
+      EVENT_NAME: ${{ github.event_name }}
 

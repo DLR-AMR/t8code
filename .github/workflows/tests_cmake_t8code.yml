@@ -36,6 +36,9 @@ on:
       LESS_TESTS:
         required: true
         type: boolean
+      EVENT_NAME:
+        required: true
+        type: string
 
 jobs:  
   t8code_cmake_tests:
@@ -51,6 +54,7 @@ jobs:
         && export MPI="${{ inputs.MPI }}"
         && export BUILD_TYPE="${{ inputs.BUILD_TYPE }}"
         && export LESS_TESTS="${{ inputs.LESS_TESTS }}"
+        && export EVENT_NAME="${{ inputs.EVENT_NAME }}"
         && export SC_PATH=$PWD/sc/build/$BUILD_TYPE
         && export P4EST_PATH=$PWD/p4est/build/$BUILD_TYPE
         && echo MAKEFLAGS="$MAKEFLAGS" >> $GITHUB_ENV
@@ -59,6 +63,7 @@ jobs:
         && echo SC_PATH="$SC_PATH" >> $GITHUB_ENV
         && echo P4EST_PATH="$P4EST_PATH" >> $GITHUB_ENV
         && echo LESS_TESTS="$LESS_TESTS" >> $GITHUB_ENV
+        && echo EVENT_NAME="$EVENT_NAME" >> $GITHUB_ENV
 #
 #  T8CODE
 #
