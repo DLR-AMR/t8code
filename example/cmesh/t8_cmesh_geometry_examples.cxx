@@ -170,6 +170,26 @@ main (int argc, char **argv)
   }
 
   {
+    const char *prefix_cmesh = "t8_triangulated_spherical_surface_cube_cmesh";
+    const char *prefix_forest = "t8_triangulated_spherical_surface_cube_forest";
+
+    const int uniform_level = 4;
+    const double radius = 42.0;
+
+    t8_cmesh_t cmesh = t8_cmesh_new_triangulated_spherical_surface_cube (radius, comm);
+
+    t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), uniform_level, 0, comm);
+
+    t8_cmesh_vtk_write_file (cmesh, prefix_cmesh);
+    t8_global_productionf ("Wrote %s.\n", prefix_cmesh);
+
+    t8_write_forest_to_vtu (forest, prefix_forest);
+    t8_global_productionf ("Wrote %s.\n\n", prefix_forest);
+
+    t8_forest_unref (&forest);
+  }
+
+  {
     const char *prefix_cmesh = "t8_quadrangulated_spherical_surface_cmesh";
     const char *prefix_forest = "t8_quadrangulated_spherical_surface_forest";
 
