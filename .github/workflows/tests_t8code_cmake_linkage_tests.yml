@@ -36,6 +36,9 @@ on:
       LESS_TESTS:
         required: true
         type: boolean
+      EVENT_NAME:
+        required: true
+        type: string
 
 jobs:  
   t8code_cmake_tests:
@@ -61,6 +64,8 @@ jobs:
       run: export MAKEFLAGS="${{ inputs.MAKEFLAGS }}"
         && export MPI="${{ inputs.MPI }}"
         && export BUILD_TYPE="${{ inputs.BUILD_TYPE }}"
+        && export LESS_TESTS="${{ inputs.LESS_TESTS }}"
+        && export EVENT_NAME="${{ inputs.EVENT_NAME }}"
         && export SC_PATH=$PWD/sc/build/$BUILD_TYPE
         && export P4EST_PATH=$PWD/p4est/build/$BUILD_TYPE
         && echo MAKEFLAGS="$MAKEFLAGS" >> $GITHUB_ENV
@@ -68,90 +73,5 @@ jobs:
         && echo BUILD_TYPE="$BUILD_TYPE" >> $GITHUB_ENV
         && echo SC_PATH="$SC_PATH" >> $GITHUB_ENV
         && echo P4EST_PATH="$P4EST_PATH" >> $GITHUB_ENV
-#
-#  T8CODE
-#
-#
-    # build config vars
-    - name: less-test option
-      if: ${{ inputs.LESS_TESTS }}
-      run: export LESS_TEST_OPTION="-DT8CODE_ENABLE_LESS_TESTS=ON"
-           && echo LESS_TEST_OPTION="$LESS_TEST_OPTION" >> $GITHUB_ENV
-    - name: build config variables
-      run: export CONFIG_OPTIONS="${LESS_TEST_OPTION} -GNinja -DT8CODE_USE_SYSTEM_SC=ON -DT8CODE_USE_SYSTEM_P4EST=ON -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSC_DIR=$SC_PATH/install/cmake -DP4EST_DIR=$P4EST_PATH/install/cmake"
-           && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
-# cmake and test with netcdf
-    - name: check NetCDF
-      run: echo "Checking NetCDF"
-    - name: echo cmake line
-      run: echo cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_NETCDF=ON
-    - name: cmake MPI NetCDF debug
-      run: mkdir build_netcdf && cd build_netcdf && cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_NETCDF=ON
-    - name: OnFailUploadLog
-      if: failure()
-      uses: actions/upload-artifact@v4
-      with:
-        name: cmake_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_NetCDF.log
-        path: build_netcdf/CMakeFiles/CMakeOutput.log
-    - name: make
-      run: cd build_netcdf && ninja $MAKEFLAGS
-    - name: ninja install
-      run: cd build_netcdf && ninja install $MAKEFLAGS
-    - name: ninja test
-      run: cd build_netcdf && ninja test $MAKEFLAGS
-    - name: OnFailUploadLog
-      if: failure()
-      uses: actions/upload-artifact@v4
-      with:
-        name: test-suite_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_NetCDF.log
-        path: build_netcdf/Testing/Temporary/LastTest.log
-# cmake and test with OpenCASCADE
-    - name: check OpenCASCADE
-      run: echo "Checking OpenCASCADE"
-    - name: echo cmake line
-      run: echo cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_OCC=ON
-    - name: cmake OpenCASCADE
-      run: mkdir build_occ && cd build_occ && cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_OCC=ON
-    - name: OnFailUploadLog
-      if: failure()
-      uses: actions/upload-artifact@v4
-      with:
-        name: cmake_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_OCC.log
-        path: build_occ/CMakeFiles/CMakeOutput.log
-    - name: make
-      run: cd build_occ && ninja $MAKEFLAGS
-    - name: ninja install
-      run: cd build_occ && ninja install $MAKEFLAGS
-    - name: ninja test
-      run: cd build_occ && ninja test $MAKEFLAGS
-    - name: OnFailUploadLog
-      if: failure()
-      uses: actions/upload-artifact@v4
-      with:
-        name: test-suite_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_OCC.log
-        path: build_occ/Testing/Temporary/LastTest.log
-# cmake and test with VTK
-    - name: check VTK
-      run: echo "Checking VTK"
-    - name: echo cmake line
-      run: echo cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_VTK=ON -DVTK_DIR=/usr/local/lib/cmake/vtk-9.1
-    - name: cmake MPI VTK debug
-      run: mkdir build_vtk && cd build_vtk && cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_VTK=ON -DVTK_DIR=/usr/local/lib/cmake/vtk-9.1
-    - name: OnFailUploadLog
-      if: failure()
-      uses: actions/upload-artifact@v4
-      with:
-        name: cmake_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_VTK.log
-        path: build_vtk/CMakeFiles/CMakeOutput.log
-    - name: make
-      run: cd build_vtk && ninja $MAKEFLAGS
-    - name: ninja install
-      run: cd build_vtk && ninja install $MAKEFLAGS
-    - name: ninja test
-      run: cd build_vtk && ninja test $MAKEFLAGS
-    - name: OnFailUploadLog
-      if: failure()
-      uses: actions/upload-artifact@v4
-      with:
-        name: test-suite_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_VTK.log
-        path: build_vtk/Testing/Temporary/LastTest.log
+        && echo LESS_TESTS="$LESS_TESTS" >> $GITHUB_ENV
+        && echo EVENT_NAME="$EVENT_NAME" >> $GITHUB_ENV
