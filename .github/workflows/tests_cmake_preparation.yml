@@ -48,7 +48,6 @@ env:
 jobs:
   cmake_preparation:
     runs-on: ubuntu-latest
-    container: dlramr/t8code-ubuntu:t8-dependencies
     timeout-minutes: 10
     outputs:
       USED_CACHE: ${{ steps.used_cache.outputs.USED_CACHE }}
@@ -56,137 +55,9 @@ jobs:
 #
 # Setup
 #
-    - uses: actions/checkout@v4
-      with: 
-        fetch-depth: 0
-    - name: Update packages
-      run: apt-get update && apt-get upgrade -y
-      # This seems to be necessary because of the docker container
-    - name: disable ownership checks
-      run: git config --global --add safe.directory '*'
-    - name: init submodules
-      run: git submodule init
-    - name: update submodules
-      run: git submodule update
-    - name: Get input vars
-      run: export MAKEFLAGS="${{ inputs.MAKEFLAGS }}"
-        && export IGNORE_CACHE="${{ inputs.IGNORE_CACHE }}"
-        && export CACHE_COUNTER="${{ inputs.CACHE_COUNTER }}"
-        && export MPI="${{ inputs.MPI }}"
-        && echo MAKEFLAGS="$MAKEFLAGS" >> $GITHUB_ENV
-        && echo IGNORE_CACHE="$IGNORE_CACHE" >> $GITHUB_ENV
-        && echo CACHE_COUNTER="$CACHE_COUNTER" >> $GITHUB_ENV
-        && echo MPI="$MPI" >> $GITHUB_ENV
-#
-#       SC installation
-#
-    - name: store sc folders in var
-      run: echo SC_BUILD=$PWD/sc/build >> $GITHUB_ENV
-        && echo SC_DEBUG=$PWD/sc/build/Debug >> $GITHUB_ENV
-        && echo SC_RELEASE=$PWD/sc/build/Release >> $GITHUB_ENV
-    - name: Get sc commit hash
-      run: hash=`git rev-parse HEAD:sc` && echo sc_commit=$hash >> $GITHUB_ENV
-    - name: Check cache for previous sc installation
-      id: sc_cmake_cache
-      uses: actions/cache@v4
-      with:
-        path: |
-          ${{ env.SC_DEBUG }}
-          ${{ env.SC_RELEASE }}
-        # You can increase the counter at the end to force a new key and hence recomputing the cache
-        key: sc-cmake-MPI-${{ inputs.MPI }}-${{ env.sc_commit }}-${{ inputs.CACHE_COUNTER }}
-    - name: Log that no cache was found
-      run: echo USED_CACHE=0 >> $GITHUB_ENV
-      if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' }}
-    - name: Cache info
-      if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' ||  inputs.IGNORE_CACHE == 1 }}
-      run: echo No cache found or cache will be ignored. IGNORE_CACHE=$IGNORE_CACHE
-    - name: if ignore cache, delete folders
-      if: ${{ inputs.IGNORE_CACHE == 1 }}
-      # The true at the end is to ignore errors that i.e. occur when the folders do not exist
-      run: rm -r $SC_BUILD || true
-    - name: make folders
-      run: mkdir -p $SC_DEBUG $SC_RELEASE
-      if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
-    - name: install sc
-      run: echo "Install sc"
-      if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
-      ## sc debug
-    - name: sc cmake debug
-      run: cd $SC_DEBUG && cmake ../../ -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$SC_DEBUG/install -Dmpi=$MPI -GNinja
-      if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
-    - name: sc build debug
-      run: cd $SC_DEBUG && ninja $MAKEFLAGS && ninja $MAKEFLAGS install
-      if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
-      ## sc release
-    - name: sc cmake release
-      run: cd $SC_RELEASE && cmake ../../ -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$SC_RELEASE/install -Dmpi=$MPI -GNinja
-      if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
-    - name: sc build release
-      run: cd $SC_RELEASE && ninja $MAKEFLAGS && ninja $MAKEFLAGS install
-      if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
-#
-# P4EST
-#
-    - name: store p4est folders in var
-      run: echo P4EST_BUILD=$PWD/p4est/build >> $GITHUB_ENV
-        && echo P4EST_DEBUG=$PWD/p4est/build/Debug >> $GITHUB_ENV
-        && echo P4EST_RELEASE=$PWD/p4est/build/Release >> $GITHUB_ENV
-    - name: Get p4est commit hash
-      run: hash=`git rev-parse HEAD:p4est` && echo p4est_commit=$hash >> $GITHUB_ENV
-    - name: Check cache for previous p4est installation
-      id: p4est_cmake_cache
-      uses: actions/cache@v4
-      with:
-        path: |
-          ${{ env.P4EST_DEBUG }}
-          ${{ env.P4EST_RELEASE }}
-        # You can increase the counter at the end to force a new key and hence recomputing the cache
-        key: p4est-cmake-MPI-${{ inputs.MPI }}-${{ env.p4est_commit }}-${{ env.sc_commit }}-${{ inputs.CACHE_COUNTER }}
-    - name: Log that no cache was found
-      run: echo USED_CACHE=0 >> $GITHUB_ENV
-      if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' }}
-    - name: Cache info
-      if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
-      run: echo No cache found or cache will be ignored. IGNORE_CACHE=$IGNORE_CACHE
-    - name: install p4est
-      run: echo "Install p4est"
-      if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
-    - name: if ignore cache, delete folders
-      if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
-      # The true at the end is to ignore errors that i.e. occur when the folders do not exist      
-      run: rm -r $P4EST_BUILD || true
-    - name: make folders
-      if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
-      run: mkdir -p $P4EST_DEBUG $P4EST_RELEASE
-    ## p4est debug
-    - name: p4est cmake debug
-      run: cd $P4EST_DEBUG && cmake ../../ -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$P4EST_DEBUG/install -DP4EST_USE_SYSTEM_SC=ON -DSC_DIR=$SC_DEBUG/install/cmake -DP4EST_ENABLE_MPI=$MPI -GNinja
-      if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
-    - name: p4est build debug
-      run: cd $P4EST_DEBUG && ninja $MAKEFLAGS && ninja $MAKEFLAGS install
-      if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
-    ## p4est release
-    - name: p4est cmake release
-      run: cd $P4EST_RELEASE && cmake ../../ -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$P4EST_RELEASE/install -DP4EST_USE_SYSTEM_SC=ON -DSC_DIR=$SC_DEBUG/install/cmake -DP4EST_ENABLE_MPI=$MPI -GNinja
-      if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
-    - name: p4est build release
-      run: cd $P4EST_RELEASE && ninja $MAKEFLAGS && ninja $MAKEFLAGS install
-      if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
-    
+
     ## output cache info
     - name: output cache info
       id: used_cache
-      run: echo "USED_CACHE=$USED_CACHE" >> $GITHUB_OUTPUT
+      run: echo "USED_CACHE=0" >> $GITHUB_OUTPUT
     
-    ## tar artifact to keep permissions: https://github.com/actions/upload-artifact?tab=readme-ov-file#permission-loss
-    - name: Tar files
-      run: tar -cvf artifact.tar .
-
-    ## upload artifacts
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: SC_P4EST_MPI_${{ inputs.MPI }}
-        path: ./artifact.tar
-        retention-days: 1

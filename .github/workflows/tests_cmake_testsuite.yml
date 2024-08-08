@@ -93,5 +93,5 @@ jobs:
       MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
       MPI: ${{ matrix.MPI }}
       BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
-      LESS_TESTS: ${{ github.event_name == 'pull_request'  }}
+      LESS_TESTS: ${{ github.event_name == 'pull_request' }}
 
