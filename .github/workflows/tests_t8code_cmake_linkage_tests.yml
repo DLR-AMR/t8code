@@ -70,47 +70,7 @@ jobs:
     - name: test6
       run: echo "test6"
       if: inputs.LESS_TESTS == true
-    - name: Get input vars
-      run: export MAKEFLAGS="${{ inputs.MAKEFLAGS }}"
-        && export MPI="${{ inputs.MPI }}"
-        && export BUILD_TYPE="${{ inputs.BUILD_TYPE }}"
-        && export LESS_TESTS="${{ inputs.LESS_TESTS }}"
-        && export EVENT_NAME="${{ inputs.EVENT_NAME }}"
-        && export SC_PATH=$PWD/sc/build/$BUILD_TYPE
-        && export P4EST_PATH=$PWD/p4est/build/$BUILD_TYPE
-        && echo MAKEFLAGS="$MAKEFLAGS" >> $GITHUB_ENV
-        && echo MPI="$MPI" >> $GITHUB_ENV
-        && echo BUILD_TYPE="$BUILD_TYPE" >> $GITHUB_ENV
-        && echo SC_PATH="$SC_PATH" >> $GITHUB_ENV
-        && echo P4EST_PATH="$P4EST_PATH" >> $GITHUB_ENV
-        && echo LESS_TESTS="$LESS_TESTS" >> $GITHUB_ENV
-        && echo EVENT_NAME="$EVENT_NAME" >> $GITHUB_ENV
-    - name: echo vars
-      run: echo MAKEFLAGS=$MAKEFLAGS
-        && echo MPI=$MPI
-        && echo BUILD_TYPE=$BUILD_TYPE
-        && echo SC_PATH=$SC_PATH
-        && echo P4EST_PATH=$P4EST_PATH
-        && echo LESS_TESTS=$LESS_TESTS
-        && echo EVENT_NAME=$EVENT_NAME
-    - name: test0
-      run: echo "test0"
-      if: ${{ inputs.LESS_TESTS }}
-    - name: test1
-      run: echo "test1"
-      if: ${{ inputs.LESS_TESTS == true }}
-    - name: test2
-      run: echo "test2"
-      if: ${{ inputs.LESS_TESTS }} == true
-    - name: test3
-      run: echo "test3"
-      if: ${{ inputs.LESS_TESTS == 'true' }}
-    - name: test4
-      run: echo "test4"
-      if: ${{ inputs.LESS_TESTS }} == 'true'
-    - name: test5
-      run: echo "test5"
-      if: inputs.LESS_TESTS == 'true'
-    - name: test6
-      run: echo "test6"
-      if: inputs.LESS_TESTS == true
+    - name: test7
+      run: echo "test7"
+      if: inputs.LESS_TESTS
+    
