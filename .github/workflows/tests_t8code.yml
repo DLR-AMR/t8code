@@ -64,7 +64,6 @@ jobs:
       LESS_TESTS: ${{ github.event_name == 'pull_request'  }}
       EVENT_NAME: ${{ github.event_name }}
 
-jobs:
   # Run t8code linkage tests with and without MPI and in serial and debug mode
   negated:
     if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
