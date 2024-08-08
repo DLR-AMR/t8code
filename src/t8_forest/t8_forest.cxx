@@ -408,7 +408,7 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id, const t8
 }
 
 void
-t8_forest_element_from_ref_coords_ext (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
+t8_forest_element_coordinate_from_ref_coords_ext (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
                                        const double *ref_coords, const size_t num_coords, double *coords_out,
                                        const double *stretch_factors)
 {
@@ -445,10 +445,10 @@ t8_forest_element_from_ref_coords_ext (t8_forest_t forest, t8_locidx_t ltreeid, 
 }
 
 void
-t8_forest_element_from_ref_coords (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
+t8_forest_element_coordinate_from_ref_coords (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
                                    const double *ref_coords, const size_t num_coords, double *coords_out)
 {
-  t8_forest_element_from_ref_coords_ext (forest, ltreeid, element, ref_coords, num_coords, coords_out, NULL);
+  t8_forest_element_coordinate_from_ref_coords_ext (forest, ltreeid, element, ref_coords, num_coords, coords_out, NULL);
 }
 
 /* Compute the diameter of an element. */
@@ -504,7 +504,7 @@ t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const t8_el
   /* Get the element class and calculate the centroid using its element
    * reference coordinates */
   const t8_element_shape_t element_shape = t8_element_shape (ts, element);
-  t8_forest_element_from_ref_coords (forest, ltreeid, element, t8_element_centroid_ref_coords[element_shape], 1,
+  t8_forest_element_coordinate_from_ref_coords (forest, ltreeid, element, t8_element_centroid_ref_coords[element_shape], 1,
                                      coordinates);
 }
 

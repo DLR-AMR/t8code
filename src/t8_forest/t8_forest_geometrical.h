@@ -73,7 +73,7 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id, const t8
  */
 
 void
-t8_forest_element_from_ref_coords_ext (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
+t8_forest_element_coordinate_from_ref_coords_ext (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
                                        const double *ref_coords, const size_t num_coords, double *coords_out,
                                        const double *stretch_factors);
 
@@ -90,7 +90,7 @@ t8_forest_element_from_ref_coords_ext (t8_forest_t forest, t8_locidx_t ltreeid, 
  *                                    the x, y and z coordinates of the point inside the domain.
  */
 void
-t8_forest_element_from_ref_coords (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
+t8_forest_element_coordinate_from_ref_coords (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
                                    const double *ref_coords, const size_t num_coords, double *coords_out);
 
 /** Compute the coordinates of the centroid of an element if a geometry
