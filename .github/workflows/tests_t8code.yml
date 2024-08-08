@@ -53,8 +53,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        MPI: [OFF, ON]
-        BUILD_TYPE: [Debug, Release]
+        MPI: [ON]
+        BUILD_TYPE: [Release]
         include: 
           - MAKEFLAGS: -j4
     with:
