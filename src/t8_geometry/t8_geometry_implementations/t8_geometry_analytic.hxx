@@ -70,7 +70,7 @@ struct t8_geometry_analytic: public t8_geometry
    * \return The type.
    */
   inline t8_geometry_type_t
-  t8_geom_get_type () const
+  t8_geom_get_type () const override
   {
     return T8_GEOMETRY_TYPE_ANALYTIC;
   };
@@ -83,9 +83,9 @@ struct t8_geometry_analytic: public t8_geometry
    * \param [in]  num_coords  Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
-  virtual void
+  void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double *out_coords) const;
+                    double *out_coords) const override;
 
   /**
    * Compute the jacobian of the \a t8_geom_evaluate map at a point in the reference space \f$ [0,1]^\mathrm{dim} \f$.
@@ -100,9 +100,9 @@ struct t8_geometry_analytic: public t8_geometry
    * dim 1: J = (0)   dim 2: J = (0 1)  dim 3: J = (0 1 0)
    *            (0)              (0 0)             (0 0 1)
    */
-  virtual void
+  void
   t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                             double *jacobian) const;
+                             double *jacobian) const override;
 
   /**
    * \param[in] forest            The forest of the element.
@@ -113,10 +113,10 @@ struct t8_geometry_analytic: public t8_geometry
    * \param[in, out] is_inside    Array to fill with flags whether the point is inside or not
    * \param[in] tolerance         Tolerance of the inside-check
    */
-  virtual void
+  void
   t8_geom_point_batch_inside_element (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
                                       const double *points, const int num_points, int *is_inside,
-                                      const double tolerance)
+                                      const double tolerance) const override
   {
     SC_ABORTF ("Function not yet implemented");
   }
@@ -125,8 +125,8 @@ struct t8_geometry_analytic: public t8_geometry
    * Check if the currently active tree has a negative volume
    * \return                True (non-zero) if the currently loaded tree has a negative volume. 0 otherwise.  
    */
-  virtual bool
-  t8_geom_tree_negative_volume () const;
+  bool
+  t8_geom_tree_negative_volume () const override;
 
   /** Update a possible internal data buffer for per tree data.
    * This function is called before the first coordinates in a new tree are
@@ -135,8 +135,8 @@ struct t8_geometry_analytic: public t8_geometry
    * \param [in]  cmesh      The cmesh.
    * \param [in]  gtreeid    The global tree.
    */
-  virtual void
-  t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
+  void
+  t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid) override;
 
   inline const void *
   t8_geom_analytic_get_user_data ()

@@ -595,11 +595,7 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const 
       /* Store the new bounds at the entry for this element */
       new_bounds[iface * 2] = lower;
       new_bounds[iface * 2 + 1] = upper;
-      if (lower == upper && lower == forest->mpirank) {
-        /* All neighbor leaves at this face are owned by the current rank */
-        faces_totally_owned = faces_totally_owned && 1;
-      }
-      else {
+      if (lower != upper or lower != forest->mpirank) {
         faces_totally_owned = 0;
       }
     }
