@@ -1,0 +1,76 @@
+name: CMake CI t8code linkage tests
+
+
+#  This file is part of t8code.
+#  t8code is a C library to manage a collection (a forest) of multiple
+#  connected adaptive space-trees of general element types in parallel.
+#
+#  Copyright (C) 2024 the developers
+#
+#  t8code is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  t8code is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with t8code; if not, write to the Free Software Foundation, Inc.,
+#  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+on:
+  workflow_call:
+    inputs:
+      MAKEFLAGS:
+        required: true
+        type: string
+      MPI:
+        required: true
+        type: string
+      BUILD_TYPE:
+        required: true
+        type: string
+      LESS_TESTS:
+        required: true
+        type: boolean
+      EVENT_NAME:
+        required: true
+        type: string
+
+jobs:  
+  t8code_cmake_tests:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    container: dlramr/t8code-ubuntu:t8-dependencies
+    steps:
+#
+# Setup
+#
+    - name: test0
+      run: echo "test0"
+      if: ${{ inputs.LESS_TESTS }}
+    - name: test1
+      run: echo "test1"
+      if: ${{ inputs.LESS_TESTS == true }}
+    - name: test2
+      run: echo "test2"
+      if: ${{ inputs.LESS_TESTS }} == true
+    - name: test3
+      run: echo "test3"
+      if: ${{ inputs.LESS_TESTS == 'true' }}
+    - name: test4
+      run: echo "test4"
+      if: ${{ inputs.LESS_TESTS }} == 'true'
+    - name: test5
+      run: echo "test5"
+      if: inputs.LESS_TESTS == 'true'
+    - name: test6
+      run: echo "test6"
+      if: inputs.LESS_TESTS == true
+    - name: test7
+      run: echo "test7"
+      if: inputs.LESS_TESTS
+    
