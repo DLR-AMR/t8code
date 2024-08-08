@@ -365,9 +365,9 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer<vtkDataSet> vtkGrid, const int partition, c
   }
 
   /* Set the dimension on all procs (even empty procs). */
-  const int dim = num_trees > 0 ? t8_get_dimension (vtkGrid) : 0;
+  int dim = num_trees > 0 ? t8_get_dimension (vtkGrid) : 0;
   int dim_buf = dim;
-  mpiret = sc_MPI_Allreduce (&dim, &dim_buf, 1, sc_MPI_INT, sc_MPI_MAX, comm);
+  mpiret = sc_MPI_Allreduce ((void *) &dim, &dim_buf, 1, sc_MPI_INT, sc_MPI_MAX, comm);
   SC_CHECK_MPI (mpiret);
   t8_cmesh_set_dimension (cmesh, dim_buf);
 
