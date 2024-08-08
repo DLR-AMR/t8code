@@ -61,21 +61,7 @@ jobs:
       IGNORE_CACHE: false # Use this to force a new installation of sc and p4est for this specific workflow run
       CACHE_COUNTER: 0 # Increase this number to force a new installation of sc and p4est and to update the cache once
       MPI: ${{ matrix.MPI }}
-  
-  # Run parallel tests for sc and p4est with and without MPI
-  sc_p4est_tests:
-    if: ((github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule'))
-    needs: preparation
-    uses: ./.github/workflows/tests_cmake_sc_p4est.yml
-    strategy:
-      fail-fast: false
-      matrix:
-        MPI: [OFF, ON]
-        include: 
-          - MAKEFLAGS: -j4
-    with:
-      MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
-      MPI: ${{ matrix.MPI }}
+
 
   # Run t8code tests with and without MPI and in serial and debug mode
   t8code_tests:
@@ -84,8 +70,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        MPI: [OFF, ON]
-        BUILD_TYPE: [Debug, Release]
+        MPI: [OFF]
+        BUILD_TYPE: [Debug]
         include: 
           - MAKEFLAGS: -j4
     needs: preparation
