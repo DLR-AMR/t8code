@@ -49,6 +49,27 @@ jobs:
 #
 # Setup
 #
+    - name: test0
+      run: echo "test0"
+      if: ${{ inputs.LESS_TESTS }}
+    - name: test1
+      run: echo "test1"
+      if: ${{ inputs.LESS_TESTS == true }}
+    - name: test2
+      run: echo "test2"
+      if: ${{ inputs.LESS_TESTS }} == true
+    - name: test3
+      run: echo "test3"
+      if: ${{ inputs.LESS_TESTS == 'true' }}
+    - name: test4
+      run: echo "test4"
+      if: ${{ inputs.LESS_TESTS }} == 'true'
+    - name: test5
+      run: echo "test5"
+      if: inputs.LESS_TESTS == 'true'
+    - name: test6
+      run: echo "test6"
+      if: inputs.LESS_TESTS == true
     - name: Get input vars
       run: export MAKEFLAGS="${{ inputs.MAKEFLAGS }}"
         && export MPI="${{ inputs.MPI }}"
@@ -72,3 +93,24 @@ jobs:
         && echo P4EST_PATH=$P4EST_PATH
         && echo LESS_TESTS=$LESS_TESTS
         && echo EVENT_NAME=$EVENT_NAME
+    - name: test0
+      run: echo "test0"
+      if: ${{ inputs.LESS_TESTS }}
+    - name: test1
+      run: echo "test1"
+      if: ${{ inputs.LESS_TESTS == true }}
+    - name: test2
+      run: echo "test2"
+      if: ${{ inputs.LESS_TESTS }} == true
+    - name: test3
+      run: echo "test3"
+      if: ${{ inputs.LESS_TESTS == 'true' }}
+    - name: test4
+      run: echo "test4"
+      if: ${{ inputs.LESS_TESTS }} == 'true'
+    - name: test5
+      run: echo "test5"
+      if: inputs.LESS_TESTS == 'true'
+    - name: test6
+      run: echo "test6"
+      if: inputs.LESS_TESTS == true
