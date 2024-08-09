@@ -50,7 +50,7 @@ endif()
 if( T8CODE_ENABLE_VTK )
     target_compile_definitions( T8 PUBLIC T8_VTK_VERSION_USED="${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}" )
     target_compile_definitions( T8 PUBLIC T8_WITH_VTK=1 )
-    target_include_directories( T8 PUBLIC ${VTK_INCLUDE_DIRS} )
+    target_include_directories( T8 PUBLIC ${VTK_INCLUDE_DIR} )
     target_link_libraries( T8 PUBLIC ${VTK_LIBRARIES} )
 endif()
 
@@ -105,7 +105,6 @@ target_sources( T8 PRIVATE
     t8_forest/t8_forest_partition.cxx 
     t8_forest/t8_forest.cxx 
     t8_forest/t8_forest_private.c 
-    t8_forest/t8_forest_vtk.cxx 
     t8_forest/t8_forest_ghost.cxx 
     t8_forest/t8_forest_iterate.cxx 
     t8_forest/t8_forest_balance.cxx 
@@ -147,6 +146,9 @@ target_sources( T8 PRIVATE
     t8_vtk/t8_vtk_unstructured.cxx 
     t8_vtk/t8_vtk_parallel.cxx 
     t8_vtk/t8_vtk_reader.cxx 
+    t8_vtk/t8_vtk_writer.cxx
+    t8_vtk/t8_vtk_write_ASCII.cxx
+    t8_vtk/t8_vtk_writer_helper.cxx
 )
 
 target_compile_definitions( T8 PUBLIC T8_CMAKE_BUILD )
