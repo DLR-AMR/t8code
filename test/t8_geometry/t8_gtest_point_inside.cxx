@@ -34,7 +34,6 @@
 #include <t8_cmesh/t8_cmesh_geometry.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx>
-#include <t8_forest/t8_forest_vtk.h>
 
 /* In this test we define a triangle in the x-y plane
  * and a point that lies in a triangle that is parallel
