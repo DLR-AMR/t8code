@@ -457,7 +457,7 @@ main (int argc, char *argv[])
       test_linear_cylinder ? vtu_prefix = "test_linear_cylinder" : vtu_prefix = "test_cad_cylinder";
     }
     else if (test_hypercube){
-      cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
+      cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
       vtu_prefix = "test_hypercube_hybrid";
     }
     else {
