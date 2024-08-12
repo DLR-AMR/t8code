@@ -57,7 +57,7 @@ void
 t8_geom_triangular_interpolation (const double *coefficients, const double *corner_values, const int corner_value_dim,
                                   const int interpolation_dim, double *evaluated_function)
 {
-  /* The algorithm is able to calculate any point in a triangle or tetrahedron using barycentric coordinates.
+  /* The algorithm is able to calculate any point in a triangle or tetrahedron using cartesian coordinates.
    * All points are calculated by the sum of each corner point (e.g. p1 -> corner point 1) multiplied by a
    * scalar, which in this case are the reference coordinates (ref_coords).
    */
@@ -67,10 +67,12 @@ t8_geom_triangular_interpolation (const double *coefficients, const double *corn
     temp[i_dim] = (corner_values[corner_value_dim + i_dim] - /* (p2 - p1) * ref_coords */
                    corner_values[i_dim])
                     * coefficients[0]
+
                   + (interpolation_dim == 3
                        ? (corner_values[3 * corner_value_dim + i_dim] - corner_values[2 * corner_value_dim + i_dim])
                            * coefficients[1]
                        : 0.) /* (p4 - p3) * ref_coords */
+
                   + (corner_values[2 * corner_value_dim + i_dim] - corner_values[corner_value_dim + i_dim])
                       * coefficients[interpolation_dim - 1] /* (p3 - p2) * ref_coords */
                   + corner_values[i_dim];                   /* p1 */
@@ -189,7 +191,7 @@ t8_geom_compute_linear_axis_aligned_geometry (const t8_eclass_t tree_class, cons
      * axis-aligned. A quad needs one matching coordinate. */
     int n_equal_coords = 0;
     for (int i_dim = 0; i_dim < T8_ECLASS_MAX_DIM; ++i_dim) {
-      if (abs (tree_vertices[i_dim] - tree_vertices[T8_ECLASS_MAX_DIM + i_dim]) <= SC_EPS) {
+      if (fabs (tree_vertices[i_dim] - tree_vertices[T8_ECLASS_MAX_DIM + i_dim]) <= SC_EPS) {
         ++n_equal_coords;
       }
     }
@@ -385,7 +387,7 @@ t8_geom_get_scaling_factor_of_edge_on_face_tet (const int edge, const int face, 
    *      /   --|--face
    *     /      |
    *    /    <~~| orthogonal direction
-   *   /<----o--| maximum othogonal direction
+   *   /<----o--| maximum orthogonal direction
    *  /_________|
    */
 
@@ -473,7 +475,7 @@ t8_geom_get_scaling_factor_of_edge_on_face_prism (const int edge, const int face
    *      /   --|--face
    *     /      |
    *    /    <~~| orthogonal direction
-   *   /<----o--| maximum othogonal direction
+   *   /<----o--| maximum orthogonal direction
    *  /_________|
    */
   const double orthogonal_direction[9][5] = { { ref_coords[2], 0, 0, (1 - ref_coords[0]), 0 },

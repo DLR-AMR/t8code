@@ -23,14 +23,14 @@
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_element_cxx.hxx>
+#include <t8_element.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
 typedef struct
 {
-  t8_eclass_scheme_c *ts;
+  const t8_eclass_scheme_c *ts;
   int level;
   int num_children;
 } t8_forest_child_type_query_t;
@@ -54,17 +54,15 @@ void
 t8_forest_split_array (const t8_element_t *element, t8_element_array_t *leaf_elements, size_t *offsets)
 {
   sc_array_t offset_view;
-  sc_array_t *element_array;
   t8_forest_child_type_query_t query_data;
-  t8_eclass_scheme_c *ts;
 
-  ts = t8_element_array_get_scheme (leaf_elements);
+  const t8_eclass_scheme_c *ts = t8_element_array_get_scheme (leaf_elements);
   /* Store the number of children and the level of element */
   query_data.num_children = ts->t8_element_num_children (element);
   query_data.level = ts->t8_element_level (element);
   query_data.ts = ts;
 
-  element_array = t8_element_array_get_array (leaf_elements);
+  sc_array_t *element_array = t8_element_array_get_array_mutable (leaf_elements);
   /* Split the elements array according to the elements' ancestor id at
    * the given level. In other words for each child C of element, find
    * the indices i, j such that all descendants of C are
@@ -82,7 +80,7 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
 {
   t8_eclass_scheme_c *ts;
   t8_eclass_t eclass;
-  t8_element_t *leaf, **face_children;
+  t8_element_t **face_children;
   int child_face, num_face_children, iface;
   int *child_indices;
   size_t *split_offsets, indexa, indexb, elem_count;
@@ -102,7 +100,8 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
   if (elem_count == 1) {
     /* There is only one leaf left, we check whether it is the same as element
      * and if so call the callback function */
-    leaf = t8_element_array_index_locidx (leaf_elements, 0);
+    const t8_element_t *leaf = t8_element_array_index_locidx (leaf_elements, 0);
+    T8_ASSERT (t8_forest_element_is_leaf (forest, leaf, ltreeid));
     if (ts->t8_element_equal (element, leaf)) {
       /* The element is the leaf, we are at the last stage of the recursion
        * and can call the callback. */
@@ -112,7 +111,8 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
   }
 #ifdef T8_ENABLE_DEBUG
   /* Check whether element has greater level than the first leaf */
-  leaf = t8_element_array_index_locidx (leaf_elements, 0);
+  const t8_element_t *leaf = t8_element_array_index_locidx (leaf_elements, 0);
+  T8_ASSERT (t8_forest_element_is_leaf (forest, leaf, ltreeid));
   T8_ASSERT (ts->t8_element_level (element) < ts->t8_element_level (leaf));
 #endif
 
@@ -202,6 +202,7 @@ t8_forest_search_recursion (t8_forest_t forest, const t8_locidx_t ltreeid, t8_el
     SC_CHECK_ABORT (ts->t8_element_level (element) <= ts->t8_element_level (leaf),
                     "Search: element level greater than leaf level\n");
     if (ts->t8_element_level (element) == ts->t8_element_level (leaf)) {
+      T8_ASSERT (t8_forest_element_is_leaf (forest, leaf, ltreeid));
       T8_ASSERT (ts->t8_element_equal (element, leaf));
       /* The element is the leaf */
       is_leaf = 1;

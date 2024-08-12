@@ -77,7 +77,9 @@ t8code_googletest_programs = \
   test/t8_forest/t8_gtest_ghost_and_owner \
   test/t8_forest/t8_gtest_forest_commit \
   test/t8_forest/t8_gtest_balance \
+  test/t8_forest/t8_gtest_element_is_leaf \
   test/t8_IO/t8_gtest_vtk_reader \
+  test/t8_IO/t8_gtest_vtk_writer \
   test/t8_forest_incomplete/t8_gtest_permute_hole \
   test/t8_forest_incomplete/t8_gtest_recursive \
   test/t8_forest_incomplete/t8_gtest_iterate_replace \
@@ -87,7 +89,9 @@ t8code_googletest_programs = \
   test/t8_schemes/t8_gtest_default \
   test/t8_schemes/t8_gtest_pack_unpack \
   test/t8_schemes/t8_gtest_child_parent_face \
-  test/t8_cmesh_generator/t8_gtest_cmesh_generator_test
+  test/t8_cmesh_generator/t8_gtest_cmesh_generator_test \
+  test/t8_forest/t8_gtest_partition_data
+
 
 test_t8_IO_t8_gtest_vtk_reader_SOURCES = \
   test/t8_gtest_main.cxx \
@@ -293,6 +297,10 @@ test_t8_forest_t8_gtest_balance_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_forest/t8_gtest_balance.cxx
 
+test_t8_forest_t8_gtest_element_is_leaf_SOURCES = \
+  test/t8_gtest_main.cxx \
+  test/t8_forest/t8_gtest_element_is_leaf.cxx
+
 test_t8_forest_incomplete_t8_gtest_permute_hole_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_forest_incomplete/t8_gtest_permute_hole.cxx
@@ -336,6 +344,14 @@ test_t8_cmesh_generator_t8_gtest_cmesh_generator_test_SOURCES = \
 test_t8_cmesh_t8_gtest_cmesh_copy_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_cmesh/t8_gtest_cmesh_copy.cxx
+
+test_t8_forest_t8_gtest_partition_data_SOURCES = \
+  test/t8_gtest_main.cxx \
+  test/t8_forest/t8_gtest_partition_data.cxx
+
+test_t8_IO_t8_gtest_vtk_writer_SOURCES = \
+  test/t8_gtest_main.cxx \
+  test/t8_IO/t8_gtest_vtk_writer.cxx
 
 #define ld and cpp flags for all targets
 t8_gtest_target_ld_add = $(LDADD) test/libgtest.la
@@ -545,6 +561,10 @@ test_t8_forest_t8_gtest_balance_LDADD = $(t8_gtest_target_ld_add)
 test_t8_forest_t8_gtest_balance_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_forest_t8_gtest_balance_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
+test_t8_forest_t8_gtest_element_is_leaf_LDADD = $(t8_gtest_target_ld_add)
+test_t8_forest_t8_gtest_element_is_leaf_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_forest_t8_gtest_element_is_leaf_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+
 test_t8_IO_t8_gtest_vtk_reader_LDADD = $(t8_gtest_target_ld_add)
 test_t8_IO_t8_gtest_vtk_reader_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_IO_t8_gtest_vtk_reader_CPPFLAGS = $(t8_gtest_target_cpp_flags)
@@ -593,6 +613,13 @@ test_t8_cmesh_t8_gtest_cmesh_copy_LDADD = $(t8_gtest_target_ld_add)
 test_t8_cmesh_t8_gtest_cmesh_copy_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_cmesh_t8_gtest_cmesh_copy_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
+test_t8_forest_t8_gtest_partition_data_LDADD = $(t8_gtest_target_ld_add)
+test_t8_forest_t8_gtest_partition_data_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_forest_t8_gtest_partition_data_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+
+test_t8_IO_t8_gtest_vtk_writer_LDADD = $(t8_gtest_target_ld_add)
+test_t8_IO_t8_gtest_vtk_writer_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_IO_t8_gtest_vtk_writer_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 # If we did not configure t8code with MPI we need to build Googletest
 # without MPI support.
 if !T8_ENABLE_MPI
@@ -645,6 +672,7 @@ test_t8_forest_t8_gtest_ghost_delete_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags
 test_t8_forest_t8_gtest_ghost_and_owner_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_t8_gtest_forest_commit_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_t8_gtest_balance_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_forest_t8_gtest_element_is_leaf_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_IO_t8_gtest_vtk_reader_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_incomplete_t8_gtest_permute_hole_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_forest_incomplete_t8_gtest_recursive_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
@@ -657,6 +685,7 @@ test_t8_schemes_t8_gtest_pack_unpack_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags
 test_t8_schemes_t8_gtest_child_parent_face_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_generator_t8_gtest_cmesh_generator_test_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_cmesh_copy_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_IO_t8_gtest_vtk_writer_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 
 endif
 

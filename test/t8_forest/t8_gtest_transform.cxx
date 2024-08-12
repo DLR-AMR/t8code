@@ -34,11 +34,9 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_forest/t8_forest_cxx.h>
 #include <t8_forest/t8_forest_types.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest_partition.h>
-#include <t8_forest/t8_forest_private.h>
 
 class forest_transform: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
  protected:

@@ -25,7 +25,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 */
 
 #include <gtest/gtest.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_vec.h>
 
 #ifndef CUSTOM_ASSERTION_HXX
