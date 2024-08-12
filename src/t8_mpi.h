@@ -49,6 +49,8 @@ T8_EXTERN_C_BEGIN ();
 #define t8_MPI_Pack_size MPI_Pack_size
 #define t8_MPI_Unpack MPI_Unpack
 
+#define t8_MPI_Gather MPI_Gather
+
 #else /* !T8_ENABLE_MPI */
 
 #define t8_MPI_INT8_T (1)
@@ -100,6 +102,9 @@ t8_MPI_Pack (const void *inbuf, int incount, sc_MPI_Datatype datatype, void *out
 int
 t8_MPI_Unpack (const void *inbuf, int insize, int *position, void *outbuf, int outcount, sc_MPI_Datatype datatype,
                sc_MPI_Comm comm);
+
+int
+t8_MPI_Gather (void *, int, sc_MPI_Datatype, void *, int, sc_MPI_Datatype, int, sc_MPI_Comm);
 
 #endif
 

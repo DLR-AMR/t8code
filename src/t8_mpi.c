@@ -125,4 +125,27 @@ t8_MPI_Unpack (const void *inbuf, int insize, int *position, void *outbuf, int o
   return sc_MPI_SUCCESS;
 }
 
+int
+t8_MPI_Gather (void *p, int np, sc_MPI_Datatype tp, void *q, int nq, sc_MPI_Datatype tq, int rank, sc_MPI_Comm comm)
+{
+  size_t lp;
+#ifdef SC_ENABLE_DEBUG
+  size_t lq;
+#endif
+
+  SC_ASSERT (rank == 0 && np >= 0 && nq >= 0);
+
+  /* *INDENT-OFF* horrible indent bug */
+  lp = (size_t) np * t8_mpi_sizeof (tp);
+#ifdef SC_ENABLE_DEBUG
+  lq = (size_t) nq * t8_mpi_sizeof (tq);
+#endif
+  /* *INDENT-ON* */
+
+  SC_ASSERT (lp == lq);
+  memcpy (q, p, lp);
+
+  return sc_MPI_SUCCESS;
+}
+
 #endif
