@@ -67,10 +67,10 @@ typedef int (*t8_forest_search_fn) (t8_forest_t forest, const t8_locidx_t ltreei
  * \param[in] num_active_queries  The number of currently active queries. Does not have to be equal to query->elem_count,
  *                                since some queries might have been deactivated from previous calls
  */
-typedef int (*t8_forest_query_fn) (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
-                                   const int is_leaf, const t8_element_array_t *leaf_elements,
-                                   const t8_locidx_t tree_leaf_index, sc_array_t *query, sc_array_t *query_indices,
-                                   int *query_matches, const size_t num_active_queries);
+typedef void (*t8_forest_query_fn) (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
+                                    const int is_leaf, const t8_element_array_t *leaf_elements,
+                                    const t8_locidx_t tree_leaf_index, sc_array_t *query, sc_array_t *query_indices,
+                                    int *query_matches, const size_t num_active_queries);
 
 T8_EXTERN_C_BEGIN ();
 

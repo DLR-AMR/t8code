@@ -85,7 +85,7 @@ t8_test_search_all_fn (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_e
   return 1;
 }
 
-static int
+static void
 t8_test_search_query_all_fn (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, const int is_leaf,
                              const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index,
                              sc_array_t *queries, sc_array_t *query_indices, int *query_matches,
@@ -113,7 +113,6 @@ t8_test_search_query_all_fn (t8_forest_t forest, t8_locidx_t ltreeid, const t8_e
     }
     query_matches[iquery] = 1;
   }
-  return 1;
 }
 
 TEST_P (forest_search, test_search_one_query_matches_all)

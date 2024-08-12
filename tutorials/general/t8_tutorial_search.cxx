@@ -169,7 +169,7 @@ t8_tutorial_search_callback (t8_forest_t forest, const t8_locidx_t ltreeid, cons
  * a counter for this element by one.
  * These counters are provided in an sc_array as user data of the input forest.
  */
-static int
+static void
 t8_tutorial_search_query_callback (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
                                    const int is_leaf, const t8_element_array_t *leaf_elements,
                                    const t8_locidx_t tree_leaf_index, sc_array_t *query, sc_array_t *query_indices,
@@ -222,7 +222,6 @@ t8_tutorial_search_query_callback (t8_forest_t forest, const t8_locidx_t ltreeid
       }
     }
   }
-  return 0;
 }
 
 /* Write the forest to vtu files and also write the particles_per_element
