@@ -60,4 +60,69 @@ t8_MPI_Type_size (sc_MPI_Datatype datatype, int *size)
   return sc_MPI_SUCCESS;
 }
 
+int
+t8_MPI_Pack_size (int incount, sc_MPI_Datatype datatype, sc_MPI_Comm comm, int *size)
+{
+  int mpiret;
+
+  SC_ASSERT (incount >= 0);
+  SC_ASSERT (size != NULL);
+
+  mpiret = t8_MPI_Type_size (datatype, size);
+  SC_CHECK_MPI (mpiret);
+  *size *= incount;
+
+  return sc_MPI_SUCCESS;
+}
+
+int
+t8_MPI_Pack (const void *inbuf, int incount, sc_MPI_Datatype datatype, void *outbuf, int outsize, int *position,
+             sc_MPI_Comm comm)
+{
+  int mpiret;
+  int size;
+
+  SC_ASSERT (incount >= 0);
+  SC_ASSERT (position != NULL);
+
+  mpiret = t8_MPI_Pack_size (incount, datatype, comm, &size);
+  SC_CHECK_MPI (mpiret);
+
+  /* Check that we have enough space to pack the datatypes */
+  if (*position + size > outsize) {
+    return sc_MPI_ERR_NO_SPACE;
+  }
+
+  /* Copy the contiguous memory */
+  memcpy ((char *) outbuf + *position, inbuf, size);
+  *position += size;
+
+  return sc_MPI_SUCCESS;
+}
+
+int
+t8_MPI_Unpack (const void *inbuf, int insize, int *position, void *outbuf, int outcount, sc_MPI_Datatype datatype,
+               sc_MPI_Comm comm)
+{
+  int mpiret;
+  int size;
+
+  SC_ASSERT (position != NULL);
+  SC_ASSERT (outcount >= 0);
+
+  mpiret = t8_MPI_Pack_size (outcount, datatype, comm, &size);
+  SC_CHECK_MPI (mpiret);
+
+  /* Check that the message is big enough for the datatypes that we want */
+  if (*position + size > insize) {
+    return sc_MPI_ERR_NO_SPACE;
+  }
+
+  /* Copy the contiguous memory */
+  memcpy (outbuf, (char *) inbuf + *position, size);
+  *position += size;
+
+  return sc_MPI_SUCCESS;
+}
+
 #endif

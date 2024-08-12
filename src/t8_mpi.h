@@ -45,6 +45,10 @@ T8_EXTERN_C_BEGIN ();
 
 #define t8_MPI_Type_size MPI_Type_size
 
+#define t8_MPI_Pack MPI_Pack
+#define t8_MPI_Pack_size MPI_Pack_size
+#define t8_MPI_Unpack MPI_Unpack
+
 #else /* !T8_ENABLE_MPI */
 
 #define t8_MPI_INT8_T (1)
@@ -57,6 +61,45 @@ T8_EXTERN_C_BEGIN ();
  */
 int
 t8_MPI_Type_size (sc_MPI_Datatype datatype, int *size);
+
+/** Determine space needed to pack several instances of the same datatype.
+ * \param [in] incount        Number of elements to pack.
+ * \param [in] datatype       Datatype of elements to pack.
+ * \param [in] comm           Valid MPI communicator.
+ * \param [out] size          Number of bytes needed to packed \b incount
+ *                            instances of \b datatype.
+ * \return                    MPI_SUCCESS on success.
+ */
+int
+t8_MPI_Pack_size (int incount, sc_MPI_Datatype datatype, sc_MPI_Comm comm, int *size);
+
+/** Pack several instances of the same datatype into contiguous memory.
+ * \param [in] inbuf          Buffer of elements of type \b datatype.
+ * \param [in] incount        Number of elements in \b inbuf.
+ * \param [in] datatype       Datatype of elements in \b inbuf.
+ * \param [out] outbuf        Output buffer in which elements are packed.
+ * \param [in] outsize        Size of output buffer in bytes.
+ * \param [in, out] position  The current position in the output buffer.
+ * \param [in] comm           Valid MPI communicator.
+ * \return                    MPI_SUCCESS on success.
+ */
+int
+t8_MPI_Pack (const void *inbuf, int incount, sc_MPI_Datatype datatype, void *outbuf, int outsize, int *position,
+             sc_MPI_Comm comm);
+
+/** Unpack contiguous memory into several instances of the same datatype.
+ * \param [in] inbuf          Buffer of packed data.
+ * \param [in] insize         Number of bytes in \b inbuf
+ * \param [in, out] position  The current position in the input buffer.
+ * \param [out] outbuf        Output buffer in which elements are unpacked.
+ * \param [in] outcount       Number of elements to unpack.
+ * \param [in] datatype       Datatype of elements to be unpacked.
+ * \param [in] comm           Valid MPI communicator.
+ * \return                    MPI_SUCCESS on success.
+ */
+int
+t8_MPI_Unpack (const void *inbuf, int insize, int *position, void *outbuf, int outcount, sc_MPI_Datatype datatype,
+               sc_MPI_Comm comm);
 
 #endif
 
