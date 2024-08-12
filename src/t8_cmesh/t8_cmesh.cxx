@@ -128,7 +128,7 @@ t8_cmesh_is_committed (const t8_cmesh_t cmesh)
 int
 t8_cmesh_validate_geometry (const t8_cmesh_t cmesh)
 {
-/* After a cmesh is committed, check whether all trees in a cmesh are compatible
+  /* After a cmesh is committed, check whether all trees in a cmesh are compatible
  * with their geometry and if they have positive volume.
  * Returns true if all trees are valid. Returns also true if no geometries are
  * registered yet, since the validity computation depends on the used geometry.
@@ -147,15 +147,16 @@ t8_cmesh_validate_geometry (const t8_cmesh_t cmesh)
     /* Iterate over all trees, get their vertices and check the volume */
     for (t8_locidx_t itree = 0; itree < cmesh->num_local_trees; itree++) {
       /* Check if tree and geometry are compatible. */
-      const int geometry_compatible = cmesh->geometry_handler->tree_compatible_with_geom (cmesh, t8_cmesh_get_global_id (cmesh, itree));
+      const int geometry_compatible
+        = cmesh->geometry_handler->tree_compatible_with_geom (cmesh, t8_cmesh_get_global_id (cmesh, itree));
       if (!geometry_compatible) {
         t8_debugf ("Detected incompatible geometry for tree %li\n", (long) itree);
         valid = false;
       }
-      if (geometry_compatible)
-      {
+      if (geometry_compatible) {
         /* Check for negative volume. This only makes sense if the geometry is valid for the tree. */
-        const int negative_volume = cmesh->geometry_handler->tree_negative_volume (cmesh, t8_cmesh_get_global_id (cmesh, itree));
+        const int negative_volume
+          = cmesh->geometry_handler->tree_negative_volume (cmesh, t8_cmesh_get_global_id (cmesh, itree));
         if (negative_volume) {
           t8_debugf ("Detected negative volume in tree %li\n", (long) itree);
           valid = false;
@@ -434,7 +435,7 @@ t8_cmesh_get_tree_vertices (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, ltreeid) || t8_cmesh_treeid_is_ghost (cmesh, ltreeid));
-  return (double*) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_VERTICES_ATTRIBUTE_KEY, ltreeid);
+  return (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_VERTICES_ATTRIBUTE_KEY, ltreeid);
 }
 
 void *
