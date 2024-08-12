@@ -54,8 +54,8 @@ T8_EXTERN_C_BEGIN ();
 
 #else /* !T8_ENABLE_MPI */
 
-#define t8_MPI_INT8_T (1)
-#define t8_MPI_UNSIGNED_LONG_LONG (0x4c000409)
+#define t8_MPI_INT8_T ((sc_MPI_Datatype) 1)
+#define t8_MPI_UNSIGNED_LONG_LONG ((sc_MPI_Datatype) 0x4c000409)
 
 /** Return size of an MPI datatype.
  * \param [in] datatype     Valid MPI datatype.

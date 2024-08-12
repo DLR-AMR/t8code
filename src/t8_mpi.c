@@ -176,6 +176,7 @@ t8_shmem_allgather_basic (void *sendbuf, int sendcount, sc_MPI_Datatype sendtype
   SC_CHECK_MPI (mpiret);
 }
 
+#if defined(__bgq__) || defined(SC_ENABLE_MPIWINSHARED)
 static void
 t8_shmem_allgather_common (void *sendbuf, int sendcount, sc_MPI_Datatype sendtype, void *recvbuf, int recvcount,
                            sc_MPI_Datatype recvtype, sc_MPI_Comm comm, sc_MPI_Comm intranode, sc_MPI_Comm internode)
@@ -207,6 +208,7 @@ t8_shmem_allgather_common (void *sendbuf, int sendcount, sc_MPI_Datatype sendtyp
   }
   sc_shmem_write_end (recvbuf, comm);
 }
+#endif
 
 #if !defined(SC_SHMEM_DEFAULT)
 #define SC_SHMEM_DEFAULT SC_SHMEM_BASIC
