@@ -97,6 +97,7 @@ libt8_internal_headers = \
   src/t8_cmesh/t8_cmesh_trees.h src/t8_cmesh/t8_cmesh_partition.h \
   src/t8_cmesh/t8_cmesh_copy.h \
   src/t8_cmesh/t8_cmesh_offset.h \
+  src/t8_mpi.h \
   src/t8_vtk/t8_vtk_polydata.hxx \
   src/t8_vtk/t8_vtk_unstructured.hxx \
   src/t8_vtk/t8_vtk_parallel.hxx \
@@ -106,7 +107,7 @@ libt8_internal_headers = \
   src/t8_windows.h \
   src/t8_vtk/t8_vtk_writer_helper.hxx
 libt8_compiled_sources = \
-  src/t8.c src/t8_eclass.c src/t8_mesh.c \
+  src/t8.c src/t8_mpi.c src/t8_eclass.c src/t8_mesh.c \
   src/t8_element.cxx \
   src/t8_element_c_interface.cxx \
   src/t8_refcount.c src/t8_cmesh/t8_cmesh.cxx \
