@@ -249,14 +249,12 @@ struct t8_geometry_handler
     if (registered_geometries.find (hash) == registered_geometries.end ()) {
       registered_geometries.emplace (hash, std::move (geom));
     }
-    /* clang-format off */
     else {
       t8_productionf ("WARNING: Did not register the geometry %s because it is already registered.\n"
                       "Geometries only need to be registered once per process.\n"
                       "If you are registering a new geometry it probably has the same name as another one.\n",
                       geom->t8_geom_get_name ().c_str ());
     }
-    /* clang-format on */
     if (registered_geometries.size () == 1) {
       active_geometry = registered_geometries.at (hash).get ();
     }
