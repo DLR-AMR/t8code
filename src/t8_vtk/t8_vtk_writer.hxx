@@ -137,10 +137,7 @@ class vtk_writer {
    * \return false 
    */
   bool
-  write_ASCII (const grid_t grid)
-  {
-    return write_ASCII (grid);
-  }
+  write_ASCII (const grid_t grid);
 
  private:
 #if T8_WITH_VTK
