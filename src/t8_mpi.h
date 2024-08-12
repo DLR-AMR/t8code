@@ -119,6 +119,20 @@ sc_MPI_Allgather (void *, int, sc_MPI_Datatype, void *, int, sc_MPI_Datatype, sc
 size_t
 t8_mpi_sizeof (sc_MPI_Datatype t);
 
+/** Fill a shmem array with an allgather.
+ *
+ * \param[in] sendbuf         the source from this process
+ * \param[in] sendcount       the number of items to allgather
+ * \param[in] sendtype        the type of items to allgather
+ * \param[in,out] recvbuf     the destination shmem array
+ * \param[in] recvcount       the number of items to allgather
+ * \param[in] recvtype        the type of items to allgather
+ * \param[in] comm            the mpi communicator
+ */
+void
+t8_shmem_allgather (void *sendbuf, int sendcount, sc_MPI_Datatype sendtype, void *recvbuf, int recvcount,
+                    sc_MPI_Datatype recvtype, sc_MPI_Comm comm);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_MPI_H */

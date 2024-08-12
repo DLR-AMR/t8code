@@ -20,8 +20,9 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/* including t8_mpi.h does not work here since t8_mpi.h is included by t8.h */
 #include <t8.h>
-#include <t8_mpi.h>
+#include <sc_shmem.h>
 
 size_t
 t8_mpi_sizeof (sc_MPI_Datatype t)
@@ -155,3 +156,92 @@ t8_MPI_Allgather (void *p, int np, sc_MPI_Datatype tp, void *q, int nq, sc_MPI_D
 }
 
 #endif
+
+static sc_shmem_type_t
+t8_shmem_get_type_default (sc_MPI_Comm comm)
+{
+  sc_shmem_type_t type = sc_shmem_get_type (comm);
+  if (type == SC_SHMEM_NOT_SET) {
+    type = sc_shmem_default_type;
+    sc_shmem_set_type (comm, type);
+  }
+  return type;
+}
+
+static void
+t8_shmem_allgather_basic (void *sendbuf, int sendcount, sc_MPI_Datatype sendtype, void *recvbuf, int recvcount,
+                          sc_MPI_Datatype recvtype, sc_MPI_Comm comm, sc_MPI_Comm intranode, sc_MPI_Comm internode)
+{
+  int mpiret = t8_MPI_Allgather (sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm);
+  SC_CHECK_MPI (mpiret);
+}
+
+static void
+t8_shmem_allgather_common (void *sendbuf, int sendcount, sc_MPI_Datatype sendtype, void *recvbuf, int recvcount,
+                           sc_MPI_Datatype recvtype, sc_MPI_Comm comm, sc_MPI_Comm intranode, sc_MPI_Comm internode)
+{
+  size_t typesize;
+  int mpiret, intrarank, intrasize;
+  char *noderecvchar = NULL;
+
+  typesize = t8_mpi_sizeof (recvtype);
+
+  mpiret = sc_MPI_Comm_rank (intranode, &intrarank);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_size (intranode, &intrasize);
+  SC_CHECK_MPI (mpiret);
+
+  /* node root gathers from node */
+  if (!intrarank) {
+    noderecvchar = SC_ALLOC (char, intrasize *recvcount *typesize);
+  }
+  mpiret = t8_MPI_Gather (sendbuf, sendcount, sendtype, noderecvchar, recvcount, recvtype, 0, intranode);
+  SC_CHECK_MPI (mpiret);
+
+  /* node root allgathers between nodes */
+  if (sc_shmem_write_start (recvbuf, comm)) {
+    mpiret = t8_MPI_Allgather (noderecvchar, sendcount * intrasize, sendtype, recvbuf, recvcount * intrasize, recvtype,
+                               internode);
+    SC_CHECK_MPI (mpiret);
+    SC_FREE (noderecvchar);
+  }
+  sc_shmem_write_end (recvbuf, comm);
+}
+
+#if !defined(SC_SHMEM_DEFAULT)
+#define SC_SHMEM_DEFAULT SC_SHMEM_BASIC
+#endif
+
+void
+t8_shmem_allgather (void *sendbuf, int sendcount, sc_MPI_Datatype sendtype, void *recvbuf, int recvcount,
+                    sc_MPI_Datatype recvtype, sc_MPI_Comm comm)
+{
+  sc_shmem_type_t type;
+  sc_MPI_Comm intranode = sc_MPI_COMM_NULL, internode = sc_MPI_COMM_NULL;
+
+  type = t8_shmem_get_type_default (comm);
+  sc_mpi_comm_get_node_comms (comm, &intranode, &internode);
+  if (intranode == sc_MPI_COMM_NULL || internode == sc_MPI_COMM_NULL) {
+    type = SC_SHMEM_BASIC;
+  }
+  switch (type) {
+  case SC_SHMEM_BASIC:
+  case SC_SHMEM_PRESCAN:
+    t8_shmem_allgather_basic (sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, intranode, internode);
+    break;
+#if defined(__bgq__) || defined(SC_ENABLE_MPIWINSHARED)
+#if defined(__bgq__)
+  case SC_SHMEM_BGQ:
+  case SC_SHMEM_BGQ_PRESCAN:
+#endif
+#if defined(SC_ENABLE_MPIWINSHARED)
+  case SC_SHMEM_WINDOW:
+  case SC_SHMEM_WINDOW_PRESCAN:
+#endif
+    t8_shmem_allgather_common (sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, intranode, internode);
+    break;
+#endif
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
+}
