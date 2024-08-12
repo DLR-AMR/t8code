@@ -131,8 +131,8 @@ struct t8_geometry
   };
 
   /**
-   * Check if  the currently active tree has a negative volume
-   * \return                True (non-zero) if the currently loaded tree has a negative volume. 0 otherwise.  
+   * Check if the currently active tree has a negative volume.
+   * \return                True if the currently loaded tree has a negative volume.
    */
   virtual bool
   t8_geom_tree_negative_volume () const
