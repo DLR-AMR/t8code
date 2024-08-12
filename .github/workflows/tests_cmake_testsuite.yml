@@ -114,3 +114,20 @@ jobs:
       BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
       LESS_TESTS: ${{ github.event_name == 'pull_request'  }}
 
+  # Run t8code linkage tests with and without MPI and in serial and debug mode
+  t8code_api_tests:
+    if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule') && false
+    uses: ./.github/workflows/tests_cmake_t8code_api.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        MPI: [OFF, ON]
+        BUILD_TYPE: [Debug, Release]
+        include: 
+          - MAKEFLAGS: -j4
+    needs: preparation
+    with:
+      MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
+      MPI: ${{ matrix.MPI }}
+      BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
+      LESS_TESTS: ${{ github.event_name == 'pull_request'  }}
