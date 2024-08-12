@@ -148,10 +148,8 @@ typedef struct
 static int
 t8_tutorial_search_callback (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
                              const int is_leaf, const t8_element_array_t *leaf_elements,
-                             const t8_locidx_t tree_leaf_index, void *query, sc_array_t *query_indices,
-                             int *query_matches, const size_t num_active_queries)
+                             const t8_locidx_t tree_leaf_index)
 {
-  T8_ASSERT (query == NULL);
 
   /* Get a pointer to our user data and increase the counter of searched elements. */
   t8_tutorial_search_user_data_t *user_data = (t8_tutorial_search_user_data_t *) t8_forest_get_user_data (forest);
@@ -174,7 +172,7 @@ t8_tutorial_search_callback (t8_forest_t forest, const t8_locidx_t ltreeid, cons
 static int
 t8_tutorial_search_query_callback (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
                                    const int is_leaf, const t8_element_array_t *leaf_elements,
-                                   const t8_locidx_t tree_leaf_index, void *query, sc_array_t *query_indices,
+                                   const t8_locidx_t tree_leaf_index, sc_array_t *query, sc_array_t *query_indices,
                                    int *query_matches, const size_t num_active_queries)
 {
   /* Build an array of all particle-coords, necessary for t8_forest_element_point_batch_inside */
