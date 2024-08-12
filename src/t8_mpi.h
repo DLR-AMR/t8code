@@ -109,7 +109,7 @@ t8_MPI_Gather (void *, int, sc_MPI_Datatype, void *, int, sc_MPI_Datatype, int, 
 
 /** Execute the MPI_Allgather algorithm. */
 int
-sc_MPI_Allgather (void *, int, sc_MPI_Datatype, void *, int, sc_MPI_Datatype, sc_MPI_Comm);
+t8_MPI_Allgather (void *, int, sc_MPI_Datatype, void *, int, sc_MPI_Datatype, sc_MPI_Comm);
 #endif
 
 /** Return the size of MPI datatypes.

@@ -352,7 +352,7 @@ t8_default_scheme_vertex_c::t8_element_MPI_Pack (t8_element_t **const elements, 
   int mpiret;
   t8_dvertex_t **vertices = (t8_dvertex_t **) elements;
   for (unsigned int ielem = 0; ielem < count; ielem++) {
-    mpiret = sc_MPI_Pack (&vertices[ielem]->level, 1, t8_MPI_INT8_T, send_buffer, buffer_size, position, comm);
+    mpiret = t8_MPI_Pack (&vertices[ielem]->level, 1, t8_MPI_INT8_T, send_buffer, buffer_size, position, comm);
     SC_CHECK_MPI (mpiret);
   }
 }
@@ -365,7 +365,7 @@ t8_default_scheme_vertex_c::t8_element_MPI_Pack_size (const unsigned int count, 
   int datasize = 0;
   int mpiret;
 
-  mpiret = sc_MPI_Pack_size (1, t8_MPI_INT8_T, comm, &datasize);
+  mpiret = t8_MPI_Pack_size (1, t8_MPI_INT8_T, comm, &datasize);
   SC_CHECK_MPI (mpiret);
   singlesize += datasize;
 
@@ -381,7 +381,7 @@ t8_default_scheme_vertex_c::t8_element_MPI_Unpack (void *recvbuf, const int buff
   int mpiret;
   t8_dvertex_t **vertices = (t8_dvertex_t **) elements;
   for (unsigned int ielem = 0; ielem < count; ielem++) {
-    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(vertices[ielem]->level), 1, t8_MPI_INT8_T, comm);
+    mpiret = t8_MPI_Unpack (recvbuf, buffer_size, position, &(vertices[ielem]->level), 1, t8_MPI_INT8_T, comm);
     SC_CHECK_MPI (mpiret);
   }
 }
