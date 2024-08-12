@@ -112,6 +112,24 @@ struct t8_geometry_linear_axis_aligned: public t8_geometry_with_vertices
    */
   virtual bool
   t8_geom_tree_negative_volume () const;
+
+  /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * Only line, quad and hex elements are supported by this geometry.
+   * \return                True if the geometry is compatible with the tree.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const override
+  {
+    if (active_tree_class == T8_ECLASS_LINE || active_tree_class == T8_ECLASS_QUAD
+        || active_tree_class == T8_ECLASS_HEX) {
+      t8_productionf ("Axis-aligned geometry is not compatible with tree type %s\n It is only compatible with line, "
+                      "quad and hex elements.\n",
+                      t8_eclass_to_string[active_tree_class]);
+      return true;
+    }
+    return false;
+  }
 };
 
 #endif /* !T8_GEOMETRY_LINEAR_AXIS_ALIGNED_HXX */
