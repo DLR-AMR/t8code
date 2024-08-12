@@ -44,6 +44,9 @@ t8_geometry_with_vertices::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t
   }
   /* Load this trees vertices. */
   active_tree_vertices = t8_cmesh_get_tree_vertices (cmesh, ltreeid);
+#if T8_ENABLE_DEBUG
+    SC_CHECK_ABORTF (active_tree_vertices != NULL, "ERROR: No vertices found for tree %li\n", (long) ltreeid);
+#endif
 
   /* Check whether we support this class */
   T8_ASSERT (active_tree_class == T8_ECLASS_VERTEX || active_tree_class == T8_ECLASS_TRIANGLE

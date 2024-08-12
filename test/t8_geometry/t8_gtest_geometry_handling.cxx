@@ -118,6 +118,8 @@ TEST (test_geometry, cmesh_two_trees_and_geometries)
   /* Build a simple 2 tree cmesh and set geometries for the trees. */
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
+  /* We will assign a linear geometry, so we need vertices. */
+  t8_cmesh_set_tree_vertices (cmesh, 0, *t8_element_corner_ref_coords[T8_ECLASS_QUAD], 4);
   t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_TRIANGLE);
   /* Register the linear geometry and zero geometry to this cmesh. */
   auto linear_geom = t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, 2);
@@ -161,11 +163,11 @@ TEST (test_geometry, cmesh_geometry_unique)
 
   t8_debugf ("Testing cmesh tree geometry get with unique geometry.\n");
 
-  /* Build a simple 2 tree cmesh and set geometries for the trees. */
+  /* Build a simple 1 tree cmesh and set geometry for the trees. */
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
   /* Register the linear_geometry to this cmesh. */
-  auto provided_geom = t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, 2);
+  auto provided_geom = t8_cmesh_register_geometry<t8_geometry_zero> (cmesh, 2);
   /* Commit the cmesh */
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 
