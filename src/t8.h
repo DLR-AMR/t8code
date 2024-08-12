@@ -52,6 +52,9 @@
  * It needs to be followed by a semicolon to look like a statement. */
 #define T8_EXTERN_C_END() SC_EXTERN_C_END
 
+/* always include t8_mpi.h */
+#include <t8_mpi.h>
+
 /* call this after including all headers */
 T8_EXTERN_C_BEGIN ();
 

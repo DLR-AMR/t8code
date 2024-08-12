@@ -79,6 +79,7 @@ target_sources( T8 PRIVATE
     t8_element.cxx 
     t8_element_c_interface.cxx 
     t8_mesh.c
+    t8_mpi.c
     t8_netcdf.c 
     t8_refcount.c 
     t8_version.c 
@@ -170,6 +171,7 @@ target_compile_definitions( T8 PUBLIC T8_LIBS="${T8_LIBS}" )
 
 install( FILES
     t8.h
+    t8_mpi.h
     t8_cmesh.h
     t8_cmesh.hxx
     t8_cmesh_netcdf.h
