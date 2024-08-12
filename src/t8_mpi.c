@@ -148,4 +148,10 @@ t8_MPI_Gather (void *p, int np, sc_MPI_Datatype tp, void *q, int nq, sc_MPI_Data
   return sc_MPI_SUCCESS;
 }
 
+int
+t8_MPI_Allgather (void *p, int np, sc_MPI_Datatype tp, void *q, int nq, sc_MPI_Datatype tq, sc_MPI_Comm comm)
+{
+  return t8_MPI_Gather (p, np, tp, q, nq, tq, 0, comm);
+}
+
 #endif

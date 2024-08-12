@@ -50,6 +50,7 @@ T8_EXTERN_C_BEGIN ();
 #define t8_MPI_Unpack MPI_Unpack
 
 #define t8_MPI_Gather MPI_Gather
+#define t8_MPI_Allgather MPI_Allgather
 
 #else /* !T8_ENABLE_MPI */
 
@@ -106,6 +107,9 @@ t8_MPI_Unpack (const void *inbuf, int insize, int *position, void *outbuf, int o
 int
 t8_MPI_Gather (void *, int, sc_MPI_Datatype, void *, int, sc_MPI_Datatype, int, sc_MPI_Comm);
 
+/** Execute the MPI_Allgather algorithm. */
+int
+sc_MPI_Allgather (void *, int, sc_MPI_Datatype, void *, int, sc_MPI_Datatype, sc_MPI_Comm);
 #endif
 
 /** Return the size of MPI datatypes.
