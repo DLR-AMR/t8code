@@ -653,7 +653,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
   case T8_GEOM_ANALYTIC_QUAD_TO_SPHERE:
     t8_global_productionf ("Wrapping a quad around a sphere.\n");
     t8_cmesh_register_geometry<t8_geometry_analytic> (cmesh, 3, "geom_quad_to_sphere", quad_to_sphere_callback, nullptr,
-                                                      nullptr, nullptr, nullptr);
+                                                      nullptr, nullptr, nullptr, nullptr);
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
     t8_cmesh_set_join (cmesh, 0, 0, 1, 0, 0);
 

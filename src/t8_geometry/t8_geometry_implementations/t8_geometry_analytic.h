@@ -71,6 +71,11 @@ typedef void (*t8_geom_load_tree_data_fn) (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
  */
 typedef int (*t8_geom_tree_negative_volume_fn) ();
 
+/**
+ * Definition for the tree compatible function.
+ */
+typedef int (*t8_geom_tree_compatible_fn) ();
+
 T8_EXTERN_C_BEGIN ();
 
 /** Destroy a geometry analytic object.
@@ -79,19 +84,30 @@ T8_EXTERN_C_BEGIN ();
 void
 t8_geometry_analytic_destroy (t8_geometry_c **geom);
 
-/** Create a new analytical geometry.
- * \return          A pointer to an allocated geometry struct.
- */
+/**
+   * Create a new analytic geometry with a given dimension. The geometry
+   * is viable with all tree types and uses a user-provided analytic and
+   * jacobian function. The actual mappings are done by these functions.
+   * \param [in] dim        The dimension of this geometry.
+   * \param [in] name       The name to give this geometry.
+   * \param [in] analytical The analytical function to use for this geometry.
+   * \param [in] jacobian   The jacobian of \a analytical.
+   * \param [in] load_tree_data The function that is used to load a tree's data.
+   * \param [in] tree_negative_volume_in The function that is used to compute if a trees volume is negative.
+   * \param [in] tree_compatible_in The function that is used to check if a tree is compatible with the geometry.
+   * \return          A pointer to an allocated geometry struct.
+   */
 t8_geometry_c *
 t8_geometry_analytic_new (int dim, const char *name, t8_geom_analytic_fn analytical,
                           t8_geom_analytic_jacobian_fn jacobian, t8_geom_load_tree_data_fn load_tree_data,
-                          t8_geom_tree_negative_volume_fn tree_negative_volume, const void *user_data);
+                          t8_geom_tree_negative_volume_fn tree_negative_volume,
+                          t8_geom_tree_compatible_fn tree_compatible, const void *user_data);
 
 /**
  * Load vertex data from given tree. 
  * \param [in]  cmesh       The cmesh.
  * \param [in]  gtreeid     The global tree id (in the cmesh).
- * \param [out] vertex_out  The load tree vertices.
+ * \param [out] user_data  The load tree vertices.
  */
 void
 t8_geom_load_tree_data_vertices (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const void **user_data);
