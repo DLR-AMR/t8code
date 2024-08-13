@@ -48,7 +48,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         run: |
           echo message_build=1 >> $GITHUB_ENV &&
-          echo message_content='User ${{github.actor}} triggered the  ${{ github.jobs[github.job].name }} workflow_dispatch' >> $GITHUB_ENV
+          echo message_content='User ${{github.actor}} triggered the  ${{ github.action }} workflow_dispatch' >> $GITHUB_ENV
       - name: closed_message
         if: github.event.action == 'closed'
         run: |
