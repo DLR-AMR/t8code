@@ -172,7 +172,7 @@ t8_tutorial_search_callback (t8_forest_t forest, const t8_locidx_t ltreeid, cons
 static void
 t8_tutorial_search_query_callback (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
                                    const int is_leaf, const t8_element_array_t *leaf_elements,
-                                   const t8_locidx_t tree_leaf_index, sc_array_t *query, sc_array_t *query_indices,
+                                   const t8_locidx_t tree_leaf_index, sc_array_t *queries, sc_array_t *query_indices,
                                    int *query_matches, const size_t num_active_queries)
 {
   /* Build an array of all particle-coords, necessary for t8_forest_element_point_batch_inside */
@@ -182,7 +182,7 @@ t8_tutorial_search_query_callback (t8_forest_t forest, const t8_locidx_t ltreeid
     const size_t particle_id = *(size_t *) sc_array_index_int (query_indices, particle_iter);
     /* Cast the query into a particle*/
     t8_tutorial_search_particle_t *particle
-      = (t8_tutorial_search_particle_t *) sc_array_index ((sc_array_t *) query, particle_id);
+      = (t8_tutorial_search_particle_t *) sc_array_index ((sc_array_t *) queries, particle_id);
     /* extract the coordinates of the particle struct */
     coords[3 * particle_iter] = particle->coordinates[0];
     coords[3 * particle_iter + 1] = particle->coordinates[1];
@@ -198,7 +198,7 @@ t8_tutorial_search_query_callback (t8_forest_t forest, const t8_locidx_t ltreeid
   sc_array *particles_per_element = user_data->particles_per_element;
   /* Ensure that the data is actually set. */
   T8_ASSERT (particles_per_element != NULL);
-  T8_ASSERT (query != NULL);
+  T8_ASSERT (queries != NULL);
 
   /* Test whether the particles are inside this element. */
   t8_forest_element_points_inside (forest, ltreeid, element, coords, num_active_queries, query_matches, tolerance);
@@ -216,7 +216,7 @@ t8_tutorial_search_query_callback (t8_forest_t forest, const t8_locidx_t ltreeid
         /* Get the correct particle_id */
         size_t particle_id = *(size_t *) sc_array_index_int (query_indices, matches_id);
         t8_tutorial_search_particle_t *particle
-          = (t8_tutorial_search_particle_t *) sc_array_index ((sc_array_t *) query, particle_id);
+          = (t8_tutorial_search_particle_t *) sc_array_index ((sc_array_t *) queries, particle_id);
         particle->is_inside_partition = 1;
         *(double *) t8_sc_array_index_locidx (particles_per_element, element_index) += 1;
       }
