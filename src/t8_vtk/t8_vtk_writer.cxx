@@ -81,7 +81,7 @@ vtk_writer<t8_cmesh_t>::t8_grid_tree_to_vtk_cells (
   const t8_locidx_t num_local_trees, t8_gloidx_t *elem_id, long int *point_id, const t8_gloidx_t offset,
   const bool ghosts, const t8_locidx_t itree)
 {
-  /* A cmesh does not have any further elements, we can call the translatore directly. */
+  /* A cmesh does not have any further elements, we can call the translator directly. */
   this->t8_grid_element_to_vtk_cell (cmesh, NULL, itree, offset, ghosts, *elem_id, point_id, cellTypes, points,
                                      cellArray, vtk_treeid, vtk_mpirank, vtk_level, vtk_element_id);
   (*elem_id)++;
