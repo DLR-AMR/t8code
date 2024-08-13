@@ -184,7 +184,7 @@ main (int argc, char **argv)
     t8_global_productionf ("Wrote %s.pvtu\n", prefix_cmesh);
 
     t8_write_forest_to_vtu (forest, prefix_forest);
-    t8_global_productionf ("Wrote %s.\n\n", prefix_forest);
+    t8_global_productionf ("Wrote %s.pvtu\n\n", prefix_forest);
 
     t8_forest_unref (&forest);
   }
