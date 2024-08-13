@@ -64,6 +64,7 @@ endif()
 
 if( T8CODE_ENABLE_NETCDF )
     find_package( netCDF REQUIRED )
+    include(cmake/CheckNetCDFPar.cmake)
 endif()
 
 # Override default for this libsc option
