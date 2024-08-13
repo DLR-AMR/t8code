@@ -44,6 +44,11 @@ jobs:
       - name: debug_before_build
         run: echo ${{ env.message_build}}
       # build the message depending on different types of events and event actions. Message is written into mattermost.json
+      - name: dispatch_run
+        if: github.event.action == 'workflow_dispatch'
+        run: |
+          echo message_build=1 >> $GITHUB_ENV &&
+          echo message_content='User ${{github.actor}} triggered the  ${{ github.jobs[github.job].name }} workflow_dispatch' >> $GITHUB_ENV
       - name: closed_message
         if: github.event.action == 'closed'
         run: |
