@@ -47,6 +47,7 @@ t8_geometry_lagrange::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, c
 {
   if (num_points != 1)
     SC_ABORT ("Error: Batch computation of geometry not yet supported.");
+  T8_ASSERT (t8_geom_check_tree_compatibility ());
   const auto basis_functions = t8_geometry_lagrange::t8_geom_compute_basis (ref_coords);
   const size_t n_vertex = basis_functions.size ();
   for (size_t i_component = 0; i_component < T8_ECLASS_MAX_DIM; i_component++) {
@@ -113,6 +114,26 @@ t8_geometry_lagrange::t8_geom_compute_basis (const double *ref_coords) const
     SC_ABORTF ("Error: Lagrange geometry for degree %i %s not yet implemented. \n", *degree,
                t8_eclass_to_string[active_tree_class]);
   }
+}
+
+bool
+t8_geometry_lagrange::t8_geom_check_tree_compatibility () const
+{
+  bool return_val = true;
+  if (*degree > T8_GEOMETRY_MAX_POLYNOMIAL_DEGREE) {
+    t8_debugf ("Lagrange tree with degree %i detected.\n"
+               "Only degrees up to %i are supported.",
+               *degree, T8_GEOMETRY_MAX_POLYNOMIAL_DEGREE);
+    return_val = false;
+  }
+  if (active_tree_class != T8_ECLASS_LINE && active_tree_class != T8_ECLASS_TRIANGLE
+      && active_tree_class != T8_ECLASS_QUAD && active_tree_class != T8_ECLASS_HEX) {
+    t8_debugf ("Lagrange tree with class %i detected.\n"
+               "Only lines, triangles, quadrilaterals and hexahedra are supported with the lagrangian geometry.\n",
+               active_tree_class);
+    return_val = false;
+  }
+  return return_val;
 }
 
 inline std::vector<double>
