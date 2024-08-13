@@ -250,6 +250,7 @@ INSTANTIATE_TEST_SUITE_P (t8_gtest_geometry_lagrange, LagrangeCmesh,
     return test_name.str ();});
 /* clang-format on */
 
+#if T8_ENABLE_DEBUG
 TEST (test_geometry_lagrange, incompatible_geometry)
 {
   t8_cmesh_t cmesh;
@@ -309,3 +310,4 @@ TEST (test_geometry_lagrange, incompatible_geometry)
   ASSERT_FALSE (t8_cmesh_validate_geometry (cmesh));
   t8_cmesh_destroy (&cmesh);
 }
+#endif /* T8_ENABLE_DEBUG */
