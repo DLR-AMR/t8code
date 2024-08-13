@@ -124,7 +124,7 @@ t8_cmesh_is_committed (const t8_cmesh_t cmesh)
   return 1;
 }
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 int
 t8_cmesh_validate_geometry (const t8_cmesh_t cmesh)
 {
