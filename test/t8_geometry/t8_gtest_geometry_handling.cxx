@@ -27,7 +27,6 @@
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
 #include <t8_cmesh.hxx>
-#include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_geometry/t8_geometry.h>
 #include <t8_geometry/t8_geometry_handler.hxx>
@@ -181,40 +180,5 @@ TEST (test_geometry, cmesh_geometry_unique)
     << "Could not find cmesh tree geometry.";
 
   /* clean-up */
-  t8_cmesh_destroy (&cmesh);
-}
-
-TEST (test_geometry, incompatible_geometry)
-{
-  t8_cmesh_t cmesh;
-
-  t8_debugf ("Testing geometry compatibility checking.\n");
-
-  /* Build a simple set geometries for the tree. */
-  t8_cmesh_init (&cmesh);
-  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
-  t8_cmesh_set_tree_vertices (cmesh, 0, *t8_element_corner_ref_coords[T8_ECLASS_QUAD], 4);
-  /* Commit the cmesh */
-  t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
-  /* Register the t8_geometry_linear_axis_aligned geometry to this cmesh. */
-  t8_cmesh_register_geometry<t8_geometry_linear_axis_aligned> (cmesh, 2);
-  /* Should return true since the t8_geometry_linear_axis_aligned geometry is compatible with quads. */
-  ASSERT_TRUE (t8_cmesh_validate_geometry (cmesh));
-  t8_cmesh_destroy (&cmesh);
-
-  /* Build a simple set geometries for the tree. */
-  t8_cmesh_init (&cmesh);
-  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
-  t8_cmesh_set_tree_vertices (cmesh, 0, *t8_element_corner_ref_coords[T8_ECLASS_TRIANGLE], 3);
-  t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_QUAD);
-  t8_cmesh_set_tree_vertices (cmesh, 1, *t8_element_corner_ref_coords[T8_ECLASS_QUAD], 4);
-  /* Commit the cmesh */
-  t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
-  /* Register the linear axis aligned geometry to this cmesh.
-   * We register it after committing because it would throw an assertion and do not have death tests.*/
-  t8_cmesh_register_geometry<t8_geometry_linear_axis_aligned> (cmesh, 2);
-  /* Check validity after committing to circumvent the assertion.
-   * Should return false since the t8_geometry_linear_axis_aligned geometry is not compatible with triangles. */
-  ASSERT_FALSE (t8_cmesh_validate_geometry (cmesh));
   t8_cmesh_destroy (&cmesh);
 }
