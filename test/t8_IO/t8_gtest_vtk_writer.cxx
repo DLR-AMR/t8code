@@ -26,6 +26,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 
+#include <t8_vtk/t8_vtk_writer.h>
+
 /**
  * Create a hybrid forest or a cmesh
  * 
@@ -75,6 +77,42 @@ destroy_grid<t8_forest_t> (t8_forest_t *forest)
   t8_forest_unref (forest);
 }
 
+template <typename grid_t>
+static int
+use_c_interface (const grid_t grid, const char *fileprefix, const int write_treeid, const int write_mpirank,
+                 const int write_level, const int write_element_id, const int curved_flag, const int write_ghosts,
+                 const int num_data, t8_vtk_data_field_t *data, sc_MPI_Comm comm);
+
+template <>
+int
+use_c_interface<t8_forest_t> (const t8_forest_t grid, const char *fileprefix, const int write_treeid,
+                              const int write_mpirank, const int write_level, const int write_element_id,
+                              const int curved_flag, const int write_ghosts, const int num_data,
+                              t8_vtk_data_field_t *data, sc_MPI_Comm comm)
+{
+#if T8_WITH_VTK
+  return t8_forest_vtk_write_file_via_API (grid, fileprefix, write_treeid, write_mpirank, write_level, write_element_id,
+                                           curved_flag, write_ghosts, num_data, data);
+#else
+  return t8_forest_vtk_write_file (grid, fileprefix, write_treeid, write_mpirank, write_level, write_element_id,
+                                   write_ghosts, num_data, data);
+#endif
+}
+
+template <>
+int
+use_c_interface<t8_cmesh_t> (const t8_cmesh_t grid, const char *fileprefix, const int write_treeid,
+                             const int write_mpirank, const int write_level, const int write_element_id,
+                             const int curved_flag, const int write_ghosts, const int num_data,
+                             t8_vtk_data_field_t *data, sc_MPI_Comm comm)
+{
+#if T8_WITH_VTK
+  return t8_cmesh_vtk_write_file_via_API (grid, fileprefix, comm);
+#else
+  return t8_cmesh_vtk_write_file (grid, fileprefix);
+#endif
+}
+
 /**
  * Templated class to test the vtk writer for forests and cmeshes. 
  * 
@@ -89,6 +127,12 @@ class vtk_writer_test: public testing::Test {
     grid = make_grid<grid_t> ();
     writer = new vtk_writer<grid_t> (true, true, true, true, true, true, std::string ("test_vtk"), 0, NULL,
                                      sc_MPI_COMM_WORLD);
+  }
+
+  int
+  grid_c_interface ()
+  {
+    return use_c_interface (grid, "test_vtk_c_interface", 1, 1, 1, 1, 1, 1, 0, NULL, sc_MPI_COMM_WORLD);
   }
 
   void
@@ -109,16 +153,19 @@ TYPED_TEST_SUITE_P (vtk_writer_test);
  */
 TYPED_TEST_P (vtk_writer_test, write_vtk)
 {
-  int success = this->writer->write (this->grid);
-
 #if T8_WITH_VTK
-  EXPECT_TRUE (success);
+  EXPECT_TRUE (this->writer->write_with_API (this->grid));
 #else
-  EXPECT_FALSE (success);
+  EXPECT_TRUE (this->writer->write_ASCII (this->grid));
 #endif
 }
 
-REGISTER_TYPED_TEST_SUITE_P (vtk_writer_test, write_vtk);
+TYPED_TEST_P (vtk_writer_test, c_interface)
+{
+  EXPECT_TRUE (this->grid_c_interface ());
+}
+
+REGISTER_TYPED_TEST_SUITE_P (vtk_writer_test, write_vtk, c_interface);
 
 using GridTypes = ::testing::Types<t8_cmesh_t, t8_forest_t>;
 
