@@ -216,13 +216,13 @@ t8_create_cad_hypercube (double *rot_vec, int face, int edge, double *parameters
   T8_ASSERT (face < 0 || edge < 0);
   if (face >= 0) {
     faces[face] = 1;
-    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, t8_create_cad_surface_shape_x_z ());
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, t8_create_cad_surface_shape_x_z ());
     t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + face,
                             parameters, 8 * sizeof (double), 0);
   }
   else if (edge >= 0) {
     edges[edge] = 1;
-    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, t8_create_cad_curve_shape ());
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, t8_create_cad_curve_shape ());
     t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + edge,
                             parameters, 2 * sizeof (double), 0);
   }
@@ -231,7 +231,7 @@ t8_create_cad_hypercube (double *rot_vec, int face, int edge, double *parameters
      * we have to create a geometry. Hence a cad geometry can only be created
      * with an actual shape, we just create a geometry with a curve and do not
      * link the curve to any edge. */
-    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, t8_create_cad_curve_shape ());
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, t8_create_cad_curve_shape ());
   }
   t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, faces, 6 * sizeof (int), 0);
   t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges, 24 * sizeof (int), 0);
@@ -423,13 +423,13 @@ t8_create_cad_reference_tet (int face, int edge, double *parameters)
   T8_ASSERT (face < 0 || edge < 0);
   if (face >= 0) {
     faces[face] = 1;
-    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, t8_create_cad_surface_shape_x_z ());
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, t8_create_cad_surface_shape_x_z ());
     t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + face,
                             parameters, 6 * sizeof (double), 0);
   }
   else if (edge >= 0) {
     edges[edge] = 1;
-    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, t8_create_cad_curve_shape ());
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, t8_create_cad_curve_shape ());
     t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + edge,
                             parameters, 2 * sizeof (double), 0);
   }
@@ -438,7 +438,7 @@ t8_create_cad_reference_tet (int face, int edge, double *parameters)
      * we have to create a geometry. Hence a cad geometry can only be created
      * with an actual shape, we just create a geometry with a curve and do not
      * link the curve to any edge. */
-    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, t8_create_cad_curve_shape ());
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, t8_create_cad_curve_shape ());
   }
   t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, faces, 4 * sizeof (int), 0);
   t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges, 12 * sizeof (int), 0);
@@ -670,7 +670,7 @@ TEST_P (class_2d_element_cad_curve, t8_check_2d_element_cad_curve)
 
     t8_cmesh_init (&cmesh);
     t8_cmesh_set_tree_class (cmesh, 0, eclass);
-    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 2, (curvature == 0 ? shape_linear : shape_curved));
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, (curvature == 0 ? shape_linear : shape_curved));
 
     t8_cmesh_set_tree_vertices (
       cmesh, 0, (eclass == T8_ECLASS_QUAD ? vertices_quad + orientation : vertices_tri + orientation), num_vertices);
@@ -790,7 +790,7 @@ TEST_P (class_2d_element_linear_cad_surface, t8_check_2d_element_linear_cad_surf
                           (eclass == T8_ECLASS_QUAD ? params_quad : params_tri), 2 * num_vertices * sizeof (double), 0);
 
   /* Register the geometry */
-  t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 2, shape);
+  t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, shape);
   /* Commit the cmesh */
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 
@@ -857,7 +857,7 @@ class class_2d_element_curved_cad_surface: public testing::TestWithParam<t8_ecla
 
     t8_cmesh_init (&cmesh);
     t8_cmesh_set_tree_class (cmesh, 0, eclass);
-    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 2, shape);
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, shape);
   }
 
   void
@@ -964,13 +964,13 @@ t8_create_cad_reference_prism (int face, int edge, double *parameters)
   if (face >= 0) {
     faces[face] = 1;
     t8_cmesh_register_geometry<t8_geometry_cad> (
-      cmesh, 3, (face <= 2 ? t8_create_cad_surface_shape_x_z () : t8_create_cad_surface_shape_x_y ()));
+      cmesh, (face <= 2 ? t8_create_cad_surface_shape_x_z () : t8_create_cad_surface_shape_x_y ()));
     t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + face,
                             parameters, 2 * face_vertices * sizeof (double), 0);
   }
   else if (edge >= 0) {
     edges[edge] = 1;
-    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, t8_create_cad_curve_shape ());
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, t8_create_cad_curve_shape ());
     t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + edge,
                             parameters, 2 * sizeof (double), 0);
   }
@@ -979,7 +979,7 @@ t8_create_cad_reference_prism (int face, int edge, double *parameters)
      * we have to create a geometry. Hence a cad geometry can only be created
      * with an actual shape, we just create a geometry with a curve and do not
      * link the curve to any edge. */
-    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, t8_create_cad_curve_shape ());
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, t8_create_cad_curve_shape ());
   }
   t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, faces, 5 * sizeof (int), 0);
   t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges, 18 * sizeof (int), 0);

@@ -54,19 +54,15 @@ TEST (test_geometry, test_geometry_handler_register)
   t8_debugf ("Testing geometry handler register and get geometry.\n");
   /* Throw every implemented geometry at the handler and let it search for it. */
   std::vector<t8_geometry *> geometries;
-  for (int idim = 0; idim <= T8_ECLASS_MAX_DIM; ++idim) {
 
-    /* Register the geometries with dimension. */
-    geometries.push_back (geom_handler.register_geometry<t8_geometry_linear> (idim));
-    geometries.push_back (geom_handler.register_geometry<t8_geometry_zero> (idim));
+  geometries.push_back (geom_handler.register_geometry<t8_geometry_linear> ());
+  geometries.push_back (geom_handler.register_geometry<t8_geometry_zero> ());
 #if T8_WITH_OCC
-    geometries.push_back (geom_handler.register_geometry<t8_geometry_cad> (idim));
+  geometries.push_back (geom_handler.register_geometry<t8_geometry_cad> ());
 #endif /* T8_WITH_OCC */
-    geometries.push_back (geom_handler.register_geometry<t8_geometry_analytic> (idim, "analytic_geom"));
-    geometries.push_back (geom_handler.register_geometry<t8_geometry_linear_axis_aligned> (idim));
-    geometries.push_back (geom_handler.register_geometry<t8_geometry_lagrange> (idim));
-  }
-  /* Register the geometries without dimension.  */
+  geometries.push_back (geom_handler.register_geometry<t8_geometry_analytic> ("analytic_geom"));
+  geometries.push_back (geom_handler.register_geometry<t8_geometry_linear_axis_aligned> ());
+  geometries.push_back (geom_handler.register_geometry<t8_geometry_lagrange> ());
   geometries.push_back (geom_handler.register_geometry<t8_geometry_quadrangulated_disk> ());
   geometries.push_back (geom_handler.register_geometry<t8_geometry_triangulated_spherical_surface> ());
   geometries.push_back (geom_handler.register_geometry<t8_geometry_quadrangulated_spherical_surface> ());
@@ -81,9 +77,6 @@ TEST (test_geometry, test_geometry_handler_register)
     /* The hash should also be equal. */
     ASSERT_EQ (found_geom->t8_geom_get_hash (), geom->t8_geom_get_hash ())
       << "Could not find geometry with hash " << geom->t8_geom_get_hash ();
-    /* Same for the dimension */
-    ASSERT_EQ (found_geom->t8_geom_get_dimension (), geom->t8_geom_get_dimension ())
-      << "Could not find geometry with dimension " << geom->t8_geom_get_dimension ();
   }
 
   /* Check that we can find the geometries by hash. */
@@ -95,9 +88,6 @@ TEST (test_geometry, test_geometry_handler_register)
     /* The name should also be equal. */
     ASSERT_EQ (found_geom->t8_geom_get_name (), geom->t8_geom_get_name ())
       << "Could not find geometry with name " << geom->t8_geom_get_name ();
-    /* Same for the dimension */
-    ASSERT_EQ (found_geom->t8_geom_get_dimension (), geom->t8_geom_get_dimension ())
-      << "Could not find geometry with dimension " << geom->t8_geom_get_dimension ();
   }
 
   /* Try to find a different geometry via the name. Must return nullptr. */
@@ -122,8 +112,8 @@ TEST (test_geometry, cmesh_two_trees_and_geometries)
   t8_cmesh_set_tree_vertices (cmesh, 0, *t8_element_corner_ref_coords[T8_ECLASS_QUAD], 4);
   t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_TRIANGLE);
   /* Register the linear geometry and zero geometry to this cmesh. */
-  auto linear_geom = t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, 2);
-  auto zero_geom = t8_cmesh_register_geometry<t8_geometry_zero> (cmesh, 2);
+  auto linear_geom = t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
+  auto zero_geom = t8_cmesh_register_geometry<t8_geometry_zero> (cmesh);
   /* Set the id geometry for the trees. */
   t8_cmesh_set_tree_geometry (cmesh, 0, linear_geom);
   t8_cmesh_set_tree_geometry (cmesh, 1, zero_geom);
@@ -138,9 +128,6 @@ TEST (test_geometry, cmesh_two_trees_and_geometries)
   /* Name should also be equal. */
   ASSERT_EQ (found_geom->t8_geom_get_name (), linear_geom->t8_geom_get_name ())
     << "Could not find linear tree geometry at tree 0.";
-  /* Same for the dimension */
-  ASSERT_EQ (found_geom->t8_geom_get_dimension (), linear_geom->t8_geom_get_dimension ())
-    << "Could not find linear tree geometry at tree 0.";
 
   found_geom = t8_cmesh_get_tree_geometry (cmesh, 1);
   /* Hash should be equal. */
@@ -148,9 +135,6 @@ TEST (test_geometry, cmesh_two_trees_and_geometries)
     << "Could not find zero tree geometry at tree 0.";
   /* Name should also be equal. */
   ASSERT_EQ (found_geom->t8_geom_get_name (), zero_geom->t8_geom_get_name ())
-    << "Could not find zero tree geometry at tree 0.";
-  /* Same for the dimension */
-  ASSERT_EQ (found_geom->t8_geom_get_dimension (), zero_geom->t8_geom_get_dimension ())
     << "Could not find zero tree geometry at tree 0.";
 
   /* clean-up */
@@ -167,7 +151,7 @@ TEST (test_geometry, cmesh_geometry_unique)
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
   /* Register the linear_geometry to this cmesh. */
-  auto provided_geom = t8_cmesh_register_geometry<t8_geometry_zero> (cmesh, 2);
+  auto provided_geom = t8_cmesh_register_geometry<t8_geometry_zero> (cmesh);
   /* Commit the cmesh */
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 

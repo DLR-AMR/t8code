@@ -47,7 +47,7 @@ typedef void (*t8_geom_analytic_fn) (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, cons
  * Definition for the jacobian of an analytic geometry function.
  * \param [in]  cmesh       The cmesh.
  * \param [in]  gtreeid     The global tree (of the cmesh) in which the reference point is.
- * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
+ * \param [in]  ref_coords  Array of tree dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
  * \param [in]  num_coords  Amount of points of \f$ \mathrm{dim} \f$ to map.
  * \param [out] jacobian    The jacobian at \a ref_coords. Array of size \f$ \mathrm{dim} \cdot 3 \f$ x \a num_coords. Indices \f$ 3 \cdot i\f$ , \f$ 3 \cdot i+1 \f$ , \f$ 3 \cdot i+2 \f$
  *                          correspond to the \f$ i \f$-th column of the jacobian (Entry \f$ 3 \cdot i + j \f$ is \f$ \frac{\partial f_j}{\partial x_i} \f$).
@@ -85,10 +85,9 @@ void
 t8_geometry_analytic_destroy (t8_geometry_c **geom);
 
 /**
-   * Create a new analytic geometry with a given dimension. The geometry
+   * Create a new analytic geometry. The geometry
    * is viable with all tree types and uses a user-provided analytic and
    * jacobian function. The actual mappings are done by these functions.
-   * \param [in] dim        The dimension of this geometry.
    * \param [in] name       The name to give this geometry.
    * \param [in] analytical The analytical function to use for this geometry.
    * \param [in] jacobian   The jacobian of \a analytical.
@@ -98,8 +97,8 @@ t8_geometry_analytic_destroy (t8_geometry_c **geom);
    * \return          A pointer to an allocated geometry struct.
    */
 t8_geometry_c *
-t8_geometry_analytic_new (int dim, const char *name, t8_geom_analytic_fn analytical,
-                          t8_geom_analytic_jacobian_fn jacobian, t8_geom_load_tree_data_fn load_tree_data,
+t8_geometry_analytic_new (const char *name, t8_geom_analytic_fn analytical, t8_geom_analytic_jacobian_fn jacobian,
+                          t8_geom_load_tree_data_fn load_tree_data,
                           t8_geom_tree_negative_volume_fn tree_negative_volume,
                           t8_geom_tree_compatible_fn tree_compatible, const void *user_data);
 
