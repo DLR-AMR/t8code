@@ -181,7 +181,7 @@ main (int argc, char **argv)
     t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), uniform_level, 0, comm);
 
     t8_cmesh_vtk_write_file (cmesh, prefix_cmesh);
-    t8_global_productionf ("Wrote %s.\n", prefix_cmesh);
+    t8_global_productionf ("Wrote %s.pvtu\n", prefix_cmesh);
 
     t8_write_forest_to_vtu (forest, prefix_forest);
     t8_global_productionf ("Wrote %s.\n\n", prefix_forest);
