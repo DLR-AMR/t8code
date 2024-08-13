@@ -136,8 +136,8 @@ t8_geometry_prismed_spherical_shell::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloi
 
 void
 t8_geometry_tessellated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
-                                                                const double *ref_coords, const size_t num_coords,
-                                                                double *out_coords) const
+                                                             const double *ref_coords, const size_t num_coords,
+                                                             double *out_coords) const
 {
   // Note, all elements are aligned such that the face normal follows the
   // outward radial direction of the sphere.
