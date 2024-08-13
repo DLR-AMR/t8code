@@ -10,11 +10,12 @@ libt8_installed_headers_fortran_interface = \
 
 dist_fortraninterfaceinclude_HEADERS = $(libt8_installed_headers_fortran_interface)
 
+# Save the module sources in a different variable for later use
 t8_fortran_module_sources = api/t8_fortran_interface/t8_mo_fortran_interface.f90 
 
 # Add the Fortran sources to the lib 
 libt8_compiled_sources += $(t8_fortran_module_sources)
-# Save the module sources in a different variable for later use
+
 AM_FCFLAGS = 
 libt8_compiled_sources += \
   api/t8_fortran_interface/t8_fortran_interface.c

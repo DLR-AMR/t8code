@@ -26,6 +26,7 @@ create-moddir:
 # Save the module directory
 t8_current_moddir += @T8_FORTRAN_MODULE_DIR@/
 
+# End if T8_WITH_MODDIR
 endif
 
 # If the install target is made, we will copy the module files into the include directory (after the installation of the header files)
@@ -42,4 +43,5 @@ install-data-hook:
 # TODO: Implement t8_fortran_test depends on the modules: t8_mo_fortran_interface
 #example/Fortran/t8_fortran_test.o : api/t8_fortran_interface/t8_mo_fortran_interface.o 
 
+# end if T8_ENABLE_FORTRAN
 endif
