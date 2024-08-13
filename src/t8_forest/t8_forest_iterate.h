@@ -36,7 +36,12 @@
 typedef int (*t8_forest_iterate_face_fn) (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
                                           int face, void *user_data, t8_locidx_t tree_leaf_index);
 
-/*
+/**
+ * A call-back function used by \ref t8_forest_search describing a search-criterion. Is called on an element and the search criterion should be 
+ * checked on that element. 
+ * Return true if the search criterion is met, false otherwise.  
+ *
+ *
  * \param[in] forest              the forest
  * \param[in] ltreeid             the local tree id of the current tree
  * \param[in] element             the element for which the query is executed
@@ -44,15 +49,20 @@ typedef int (*t8_forest_iterate_face_fn) (t8_forest_t forest, t8_locidx_t ltreei
  * \param[in] leaf_elements       the leaf elements in \a forest that are descendants of \a element (or the element 
  *                                itself if \a is_leaf is true)
  * \param[in] tree_leaf_index     the local index of the first leaf in \a leaf_elements
+ * \returns                       non-zero if the search criterion is met, zero otherwise. 
  */
 typedef int (*t8_forest_search_fn) (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
                                     const int is_leaf, const t8_element_array_t *leaf_elements,
                                     const t8_locidx_t tree_leaf_index);
 
-/*
+/**
+ * A call-back function used by \ref t8_forest_search for queries. Is called on an element and all queries are checked on that element. 
+ * All positive queries are passed further down to the children of the element up to leaf elements of the tree. The results of the check
+ * are stored in \a query_matches. 
+ * 
  * \param[in] forest              the forest
  * \param[in] ltreeid             the local tree id of the current tree
- * \param[in] element             the element for which the query is executed
+ * \param[in] element             the element for which the queries are executed
  * \param[in] is_leaf             true if and only if \a element is a leaf element
  * \param[in] leaf_elements       the leaf elements in \a forest that are descendants of \a element (or the element 
  *                                itself if \a is_leaf is true)
