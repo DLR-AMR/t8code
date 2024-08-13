@@ -135,7 +135,7 @@ t8_geometry_prismed_spherical_shell::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloi
 }
 
 void
-t8_geometry_tesselated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
+t8_geometry_tessellated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
                                                                 const double *ref_coords, const size_t num_coords,
                                                                 double *out_coords) const
 {
@@ -364,9 +364,9 @@ t8_geometry_prismed_spherical_shell_new ()
 }
 
 t8_geometry_c *
-t8_geometry_tesselated_spherical_surface_new ()
+t8_geometry_tessellated_spherical_surface_new ()
 {
-  t8_geometry_tesselated_spherical_surface *geom = new t8_geometry_tesselated_spherical_surface ();
+  t8_geometry_tessellated_spherical_surface *geom = new t8_geometry_tessellated_spherical_surface ();
   return (t8_geometry_c *) geom;
 }
 
