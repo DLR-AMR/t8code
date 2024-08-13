@@ -62,3 +62,25 @@ t8_geom_get_type (const t8_geometry_c *geom)
 
   return geom->t8_geom_get_type ();
 }
+
+/* Load the id and class of the newly active tree to the active_tree and active_tree_class variable. */
+void
+t8_geometry::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
+{
+  /* Set active id and eclass */
+  const t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
+  active_tree = gtreeid;
+  const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
+  if (0 <= ltreeid && ltreeid < num_local_trees) {
+    active_tree_class = t8_cmesh_get_tree_class (cmesh, ltreeid);
+  }
+  else {
+    active_tree_class = t8_cmesh_get_ghost_class (cmesh, ltreeid - num_local_trees);
+  }
+
+  /* Check whether we support this class */
+  T8_ASSERT (active_tree_class == T8_ECLASS_VERTEX || active_tree_class == T8_ECLASS_TRIANGLE
+             || active_tree_class == T8_ECLASS_TET || active_tree_class == T8_ECLASS_QUAD
+             || active_tree_class == T8_ECLASS_HEX || active_tree_class == T8_ECLASS_LINE
+             || active_tree_class == T8_ECLASS_PRISM || active_tree_class == T8_ECLASS_PYRAMID);
+}
