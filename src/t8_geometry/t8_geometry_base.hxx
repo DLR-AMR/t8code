@@ -146,13 +146,12 @@ struct t8_geometry
    * Check for compatibility of the currently loaded tree with the geometry.
    * If the geometry has limitations these can be checked here.
    * This includes for example if only specific tree types or dimensions are supported.
+   * If all trees are supported, this function should return true.
    * \return                True if the geometry is compatible with the tree.
    */
   virtual bool
   t8_geom_check_tree_compatibility () const
-  {
-    return 1;
-  }
+    = 0;
 
   /**
    * Get the dimension of this geometry.
