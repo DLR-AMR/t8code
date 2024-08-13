@@ -3121,7 +3121,7 @@ t8_cmesh_new_triangulated_spherical_surface_cube (const double radius, sc_MPI_Co
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
 
-  t8_cmesh_register_geometry<t8_geometry_quadrangulated_spherical_surface> (cmesh);
+  t8_cmesh_register_geometry<t8_geometry_tesselated_spherical_surface> (cmesh);
 
   const int nface_rot = 4;  // Four triangles create a cube's face.
   const int ncube_rot = 6;  // Six rotations of the four triangles to the six cube's faces.
@@ -3205,7 +3205,7 @@ t8_cmesh_new_quadrangulated_spherical_surface (const double radius, sc_MPI_Comm 
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
 
-  t8_cmesh_register_geometry<t8_geometry_quadrangulated_spherical_surface> (cmesh); /* Use spherical geometry */
+  t8_cmesh_register_geometry<t8_geometry_tesselated_spherical_surface> (cmesh); /* Use spherical geometry */
 
   const int ntrees = 6; /* Number of cmesh elements resp. trees. */
   const int nverts = 4; /* Number of cmesh element vertices. */

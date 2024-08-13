@@ -69,7 +69,7 @@ TEST (test_geometry, test_geometry_handler_register)
   /* Register the geometries without dimension.  */
   geometries.push_back (geom_handler.register_geometry<t8_geometry_quadrangulated_disk> ());
   geometries.push_back (geom_handler.register_geometry<t8_geometry_triangulated_spherical_surface> ());
-  geometries.push_back (geom_handler.register_geometry<t8_geometry_quadrangulated_spherical_surface> ());
+  geometries.push_back (geom_handler.register_geometry<t8_geometry_tesselated_spherical_surface> ());
   geometries.push_back (geom_handler.register_geometry<t8_geometry_cubed_spherical_shell> ());
 
   /* Check that we can find the geometries by name. */

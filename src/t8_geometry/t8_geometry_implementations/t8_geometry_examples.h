@@ -50,11 +50,11 @@ t8_geometry_quadrangulated_disk_new ();
 t8_geometry_c *
 t8_geometry_triangulated_spherical_surface_new ();
 
-/** Create a new quadrangulated_spherical_surface geometry.
+/** Create a new tesselated_spherical_surface geometry.
  * \return          A pointer to an allocated geometry struct.
  */
 t8_geometry_c *
-t8_geometry_quadrangulated_spherical_surface_new ();
+t8_geometry_tesselated_spherical_surface_new ();
 
 /** Create a new cubed_spherical_shell geometry.
  * \return          A pointer to an allocated geometry struct.

@@ -129,18 +129,18 @@ struct t8_geometry_triangulated_spherical_surface: public t8_geometry_with_verti
   /* Load tree data is inherited from t8_geometry_with_vertices. */
 };
 
-/** This geometry maps the faces of a cube to a spherical surface.
+/** This geometry maps the faces of a cube made of quads and/or triangles to a spherical surface.
  */
-struct t8_geometry_quadrangulated_spherical_surface: public t8_geometry_with_vertices
+struct t8_geometry_tesselated_spherical_surface: public t8_geometry_with_vertices
 {
  public:
   /* Basic constructor that sets the dimension and the name. */
-  t8_geometry_quadrangulated_spherical_surface (): t8_geometry_with_vertices (2, "t8_quadrangulated_spherical_surface_")
+  t8_geometry_tesselated_spherical_surface (): t8_geometry_with_vertices (2, "t8_tesselated_spherical_surface_")
   {
   }
 
   /* The destructor. */
-  virtual ~t8_geometry_quadrangulated_spherical_surface ()
+  virtual ~t8_geometry_tesselated_spherical_surface ()
   {
   }
 
