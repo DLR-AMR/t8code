@@ -71,8 +71,9 @@ inline void
 t8_geometry_lagrange::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 {
   t8_geometry_with_vertices::t8_geom_load_tree_data (cmesh, gtreeid);
-  t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
-  degree = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_LAGRANGE_POLY_DEGREE, ltreeid);
+  const t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
+  degree
+    = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_LAGRANGE_POLY_DEGREE_KEY, ltreeid);
   T8_ASSERT (degree != NULL);
 }
 
@@ -272,7 +273,7 @@ t8_lagrange_element::t8_lagrange_element (t8_eclass_t eclass, uint32_t degree, s
   /* Create a cmesh with a single element */
   int dim = t8_eclass_to_dimension[eclass];
   t8_cmesh_init (&cmesh);
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_LAGRANGE_POLY_DEGREE, &degree, sizeof (int), 1);
+  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_LAGRANGE_POLY_DEGREE_KEY, &degree, sizeof (int), 1);
   t8_cmesh_register_geometry<t8_geometry_lagrange> (cmesh, dim);
   t8_cmesh_set_tree_class (cmesh, 0, eclass);
   t8_cmesh_set_tree_vertices (cmesh, 0, nodes.data (), nodes.size ());
