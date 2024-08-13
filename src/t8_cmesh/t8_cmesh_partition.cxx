@@ -863,7 +863,7 @@ t8_cmesh_partition_copy_data (char *send_buffer, t8_cmesh_t cmesh, const t8_cmes
       /* The byte count of this ghosts attribute info structs */
       this_ghosts_att_info_size = num_attributes * sizeof (t8_attribute_info_struct_t);
       /* Copy all attribute info data of this ghost */
-      first_attr_info = (t8_attribute_info_struct_t *) T8_GHOST_FIRST_ATT (ghost_cpy);
+      first_attr_info = (t8_attribute_info_struct_t *) T8_GHOST_FIRST_ATT_INFO (ghost_cpy);
       memcpy (first_attr_info, attr_info, this_ghosts_att_info_size);
       temp_offset_ghost_att += this_ghosts_att_info_size;
 

@@ -29,7 +29,7 @@ if( T8CODE_ENABLE_NETCDF )
   target_link_libraries( T8 PUBLIC netCDF::netcdf )
   target_compile_definitions(T8 PUBLIC
     T8_WITH_NETCDF
-    $<$<BOOL:${T8CODE_ENABLE_MPI}>:T8_WITH_NETCDF_PAR> )
+    $<$<AND:$<BOOL:${NETCDF_HAVE_NETCDF_PAR}>,$<BOOL:${T8CODE_ENABLE_MPI}>>:T8_WITH_NETCDF_PAR> )
 endif()
 
 set_target_properties( T8 PROPERTIES OUTPUT_NAME t8 )
@@ -56,7 +56,7 @@ endif()
 
 if( T8CODE_ENABLE_OCC )
     target_compile_definitions( T8 PUBLIC T8_WITH_OCC=1 )
-    target_include_directories( T8 PUBLIC ${OpenCASCADE_INCLUDE_DIRS} )
+    target_include_directories( T8 PUBLIC ${OpenCASCADE_INCLUDE_DIR} )
     target_link_libraries( T8 PUBLIC ${OpenCASCADE_LIBRARIES} )
 endif()
 
