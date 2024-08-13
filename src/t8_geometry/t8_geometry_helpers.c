@@ -29,6 +29,11 @@ void
 t8_geom_linear_interpolation (const double *coefficients, const double *corner_values, const int corner_value_dim,
                               const int interpolation_dim, double *evaluated_function)
 {
+  T8_ASSERT (0 <= corner_value_dim && corner_value_dim <= 3);
+  T8_ASSERT (1 <= interpolation_dim && interpolation_dim <= 3);
+
+  /* Temporary storage for result. Using this allows evaluated_function to use the same space as  
+   * coefficients or corner_values if needed. */
   double temp[3] = { 0 };
   for (int i_dim = 0; i_dim < corner_value_dim; i_dim++) {
     temp[i_dim] = corner_values[0 * corner_value_dim + i_dim] * (1 - coefficients[0]) /* x=0 y=0 z=0 */
@@ -57,10 +62,16 @@ void
 t8_geom_triangular_interpolation (const double *coefficients, const double *corner_values, const int corner_value_dim,
                                   const int interpolation_dim, double *evaluated_function)
 {
+  T8_ASSERT (0 <= corner_value_dim && corner_value_dim <= 3);
+  T8_ASSERT (2 <= interpolation_dim && interpolation_dim <= 3);
+
   /* The algorithm is able to calculate any point in a triangle or tetrahedron using cartesian coordinates.
    * All points are calculated by the sum of each corner point (e.g. p1 -> corner point 1) multiplied by a
    * scalar, which in this case are the reference coordinates (ref_coords).
    */
+
+  /* Temporary storage for result. Using this allows evaluated_function to use the same space as  
+   * coefficients or corner_values if needed. */
   double temp[3] = { 0 };
 
   for (int i_dim = 0; i_dim < corner_value_dim; i_dim++) {

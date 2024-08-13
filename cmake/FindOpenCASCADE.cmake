@@ -1,9 +1,9 @@
 # taken and adapted from the heekscad project: https://github.com/Heeks
 
-# - Try to find OpenCASCADE libraries
-### Does not test what version has been found,though
-### that could be done by parsing Standard_Version.hxx
+# HeeksCAD is covered by the new BSD license
 
+# Copyright (c) 2008, Daniel Heeks
+# All rights reserved.
 
 # Once done, this will define
 #  OpenCASCADE_FOUND - true if OCC has been found
