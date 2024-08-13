@@ -27,7 +27,8 @@
 #include <t8_forest/t8_forest_general.h>        /* Forest definition and basic interface. */
 #include <t8_forest/t8_forest_geometrical.h>    /* Forest-related geometry operations. */
 #include <t8_schemes/t8_default/t8_default.hxx> /* Default refinement scheme. */
-#include <t8_cmesh_vtk_writer.h>                /* Write file in vtu file */
+#include <t8_vtk/t8_vtk_writer.h>
+/* Write file in vtu file */
 #include <t8_forest/t8_forest_io.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 

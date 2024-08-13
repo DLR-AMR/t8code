@@ -17,7 +17,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 */
 
 #include <t8_cmesh_vtk_reader.hxx>
-#include <t8_cmesh_vtk_writer.h>
+#include <t8_vtk/t8_vtk_writer.h>
 #include <t8_cmesh.h>
 #include <sc_options.h>
 #include <t8.h>
