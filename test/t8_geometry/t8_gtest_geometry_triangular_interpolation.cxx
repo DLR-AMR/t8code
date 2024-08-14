@@ -71,8 +71,8 @@ TEST (triangular_interpolation, corners_map_to_corners_2d)
   // Check corner B
   // 2D
   t8_geom_triangular_interpolation (coeff_B, corner_values_2d, 2, dimension, result);
-  EXPECT_NEAR (cornerB[0], result[0], eps);
-  EXPECT_NEAR (cornerB[1], result[1], eps);
+  EXPECT_NEAR (cornerB[0], result[0], T8_PRECISION_EPS);
+  EXPECT_NEAR (cornerB[1], result[1], T8_PRECISION_EPS);
 
   // Check corner C
   // 2D
