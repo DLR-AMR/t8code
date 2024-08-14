@@ -29,6 +29,11 @@ void
 t8_geom_linear_interpolation (const double *coefficients, const double *corner_values, const int corner_value_dim,
                               const int interpolation_dim, double *evaluated_function)
 {
+  T8_ASSERT (0 <= corner_value_dim && corner_value_dim <= 3);
+  T8_ASSERT (1 <= interpolation_dim && interpolation_dim <= 3);
+
+  /* Temporary storage for result. Using this allows evaluated_function to use the same space as  
+   * coefficients or corner_values if needed. */
   double temp[3] = { 0 };
   for (int i_dim = 0; i_dim < corner_value_dim; i_dim++) {
     temp[i_dim] = corner_values[0 * corner_value_dim + i_dim] * (1 - coefficients[0]) /* x=0 y=0 z=0 */
@@ -57,20 +62,28 @@ void
 t8_geom_triangular_interpolation (const double *coefficients, const double *corner_values, const int corner_value_dim,
                                   const int interpolation_dim, double *evaluated_function)
 {
-  /* The algorithm is able to calculate any point in a triangle or tetrahedron using barycentric coordinates.
+  T8_ASSERT (0 <= corner_value_dim && corner_value_dim <= 3);
+  T8_ASSERT (2 <= interpolation_dim && interpolation_dim <= 3);
+
+  /* The algorithm is able to calculate any point in a triangle or tetrahedron using cartesian coordinates.
    * All points are calculated by the sum of each corner point (e.g. p1 -> corner point 1) multiplied by a
    * scalar, which in this case are the reference coordinates (ref_coords).
    */
+
+  /* Temporary storage for result. Using this allows evaluated_function to use the same space as  
+   * coefficients or corner_values if needed. */
   double temp[3] = { 0 };
 
   for (int i_dim = 0; i_dim < corner_value_dim; i_dim++) {
     temp[i_dim] = (corner_values[corner_value_dim + i_dim] - /* (p2 - p1) * ref_coords */
                    corner_values[i_dim])
                     * coefficients[0]
+
                   + (interpolation_dim == 3
                        ? (corner_values[3 * corner_value_dim + i_dim] - corner_values[2 * corner_value_dim + i_dim])
                            * coefficients[1]
                        : 0.) /* (p4 - p3) * ref_coords */
+
                   + (corner_values[2 * corner_value_dim + i_dim] - corner_values[corner_value_dim + i_dim])
                       * coefficients[interpolation_dim - 1] /* (p3 - p2) * ref_coords */
                   + corner_values[i_dim];                   /* p1 */
@@ -189,7 +202,7 @@ t8_geom_compute_linear_axis_aligned_geometry (const t8_eclass_t tree_class, cons
      * axis-aligned. A quad needs one matching coordinate. */
     int n_equal_coords = 0;
     for (int i_dim = 0; i_dim < T8_ECLASS_MAX_DIM; ++i_dim) {
-      if (abs (tree_vertices[i_dim] - tree_vertices[T8_ECLASS_MAX_DIM + i_dim]) <= SC_EPS) {
+      if (fabs (tree_vertices[i_dim] - tree_vertices[T8_ECLASS_MAX_DIM + i_dim]) <= SC_EPS) {
         ++n_equal_coords;
       }
     }

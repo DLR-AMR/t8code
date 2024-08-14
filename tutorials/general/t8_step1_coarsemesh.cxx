@@ -37,7 +37,7 @@
 
 #include <t8.h>                         /* General t8code header, always include this. */
 #include <t8_cmesh.h>                   /* cmesh definition and basic interface. */
-#include <t8_cmesh_vtk_writer.h>        /* cmesh-writer interface. */
+#include <t8_vtk/t8_vtk_writer.h>       /* cmesh-writer interface. */
 #include <t8_cmesh/t8_cmesh_examples.h> /* A collection of exemplary cmeshes */
 
 /* Builds cmesh of 6 tetrahedra that build up a unit cube.
@@ -106,7 +106,7 @@ main (int argc, char **argv)
   /* Initialize the sc library, has to happen before we initialize t8code. */
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
-  t8_init (SC_LP_PRODUCTION);
+  t8_init (SC_LP_DEBUG);
 
   /* Print a message on the root process. */
   t8_global_productionf (" [step1] \n");

@@ -68,8 +68,12 @@ void
 t8_geom_linear_interpolation (const double *coefficients, const double *corner_values, int corner_value_dim,
                               int interpolation_dim, double *evaluated_function);
 
-/** Triangular interpolation between 3 points (triangle) or 4 points (tetrahedron) using barycentric coordinates.
- * \param [in]    coefficients        An array of size \a interpolation_dim giving the coefficients used for the interpolation
+/** Triangular interpolation between 3 points (triangle) or 4 points (tetrahedron) using cartesian coordinates.
+ * The input coefficients have to be given as coordinates in the reference triangle (interpolation_dim = 2) with points
+ * (0,0) (1,0) (1,1)
+ * or the reference tet (interpolation_dim = 3) with points
+ * (0,0,0) (1,0,0) (1,1,0) (1,1,1).
+ * \param [in]    coefficients        An array of size \a interpolation_dim giving the coefficients in the reference triangle/tet used for the interpolation
  * \param [in]    corner_values       An array of size 
                                                        3 * \a corner_value_dim for \a interpolation_dim == 2 or
                                                        4 * \a corner_value_dim for \a interpolation_dim == 3, 

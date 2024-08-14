@@ -760,7 +760,7 @@ t8_cmesh_trees_get_attribute (const t8_cmesh_trees_t trees, const t8_locidx_t lt
     ghost = NULL;
     /* number of attributes and pointer to first att_info struct */
     num_attributes = tree->num_attributes;
-    first_att_info = T8_TREE_FIRST_ATT (tree);
+    first_att_info = T8_TREE_FIRST_ATT_INFO (tree);
   }
   else {
     /* Get a pointer to the ghost */
@@ -768,7 +768,7 @@ t8_cmesh_trees_get_attribute (const t8_cmesh_trees_t trees, const t8_locidx_t lt
     tree = NULL;
     /* number of attributes and pointer to first att_info struct */
     num_attributes = ghost->num_attributes;
-    first_att_info = T8_GHOST_FIRST_ATT (ghost);
+    first_att_info = T8_GHOST_FIRST_ATT_INFO (ghost);
   }
 
   key_id.key = key;

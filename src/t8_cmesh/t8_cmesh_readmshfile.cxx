@@ -445,15 +445,19 @@ t8_msh_file_4_read_nodes (FILE *fp, t8_locidx_t *num_nodes, sc_mempool_t **node_
         case 1:
           retval = sscanf (line, "%lf %lf %lf %lf", &Node->coordinates[0], &Node->coordinates[1], &Node->coordinates[2],
                            &Node->parameters[0]);
-          if (retval == 4) {
-            break;
+          if (retval != 4) {
+            t8_global_errorf ("Error reading node file after node %li\n", (long) last_index);
+            goto die_node;
           }
+          break;
         case 2:
           retval = sscanf (line, "%lf %lf %lf %lf %lf", &Node->coordinates[0], &Node->coordinates[1],
                            &Node->coordinates[2], &Node->parameters[0], &Node->parameters[1]);
-          if (retval == 5) {
-            break;
+          if (retval != 5) {
+            t8_global_errorf ("Error reading node file after node %li\n", (long) last_index);
+            goto die_node;
           }
+          break;
         default:
           t8_global_errorf ("Error reading node file after node %li\n", (long) last_index);
           goto die_node;
@@ -574,6 +578,12 @@ t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
     /* Continue if tree type is supported */
     eclass = t8_msh_tree_type_to_eclass[ele_type];
     T8_ASSERT (eclass != T8_ECLASS_COUNT);
+
+    if (t8_eclass_to_dimension[eclass] > dim) {
+      t8_errorf (
+        "Warning: Encountered element which dimension is greater than %d. Did you set the correct dimension?\n", dim);
+    }
+
     /* Check if the tree is of the correct dimension */
     if (t8_eclass_to_dimension[eclass] == dim) {
       /* The tree is of the correct dimension,
@@ -887,6 +897,12 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
     }
     eclass = t8_msh_tree_type_to_eclass[ele_type];
     T8_ASSERT (eclass != T8_ECLASS_COUNT);
+
+    if (t8_eclass_to_dimension[eclass] > dim) {
+      t8_errorf (
+        "Warning: Encountered element which dimension is greater than %d. Did you set the correct dimension?\n", dim);
+    }
+
     /* Check if the tree is of the correct dimension */
     if (t8_eclass_to_dimension[eclass] != dim) {
       /* The trees in this block are not of the correct dimension.
