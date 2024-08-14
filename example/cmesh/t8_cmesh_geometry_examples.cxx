@@ -114,8 +114,8 @@ main (int argc, char **argv)
     const char *prefix_cmesh = "t8_quadrangulated_disk_cmesh";
     const char *prefix_forest = "t8_quadrangulated_disk_forest";
 
-    const int uniform_level = 6;
-    const double radius = 1.0;
+    const int uniform_level = 5;
+    const double radius = 5.0;
 
     t8_cmesh_t cmesh = t8_cmesh_new_quadrangulated_disk (radius, comm);
 
@@ -288,7 +288,7 @@ main (int argc, char **argv)
     const char *prefix_forest = "t8_cubed_sphere_forest";
 
     const int uniform_level = 2;
-    const double radius = 1.0;
+    const double radius = 5.0;
 
     t8_cmesh_t cmesh = t8_cmesh_new_cubed_sphere (radius, comm);
 
