@@ -44,8 +44,6 @@
  * mapped to the corners of a triangle. */
 TEST (triangular_interpolation, corners_map_to_corners_2d)
 {
-  const double eps = 1e-14;
-
   const double coeff_A[2] = { 0, 0 };
   const double coeff_B[2] = { 0, 1 };
   const double coeff_C[2] = { 1, 1 };
@@ -67,8 +65,8 @@ TEST (triangular_interpolation, corners_map_to_corners_2d)
   // Check corner A
   // 2D
   t8_geom_triangular_interpolation (coeff_A, corner_values_2d, 2, dimension, result);
-  EXPECT_NEAR (cornerA[0], result[0], eps);
-  EXPECT_NEAR (cornerA[1], result[1], eps);
+  EXPECT_NEAR (cornerA[0], result[0], T8_PRECISION_EPS);
+  EXPECT_NEAR (cornerA[1], result[1], T8_PRECISION_EPS);
 
   // Check corner B
   // 2D
@@ -79,16 +77,14 @@ TEST (triangular_interpolation, corners_map_to_corners_2d)
   // Check corner C
   // 2D
   t8_geom_triangular_interpolation (coeff_C, corner_values_2d, 2, dimension, result);
-  EXPECT_NEAR (cornerC[0], result[0], eps);
-  EXPECT_NEAR (cornerC[1], result[1], eps);
+  EXPECT_NEAR (cornerC[0], result[0], T8_PRECISION_EPS);
+  EXPECT_NEAR (cornerC[1], result[1], T8_PRECISION_EPS);
 }
 
 /* Check that the corner interpolation coordinates are 
  * mapped to the corners of a tetrahedron. */
 TEST (triangular_interpolation, corners_map_to_corners_3d)
 {
-  const double eps = 1e-14;
-
   const double coeff_A[3] = { 0, 0, 0 };
   const double coeff_B[3] = { 0, 1, 0 };
   const double coeff_C[3] = { 1, 1, 0 };
@@ -113,28 +109,28 @@ TEST (triangular_interpolation, corners_map_to_corners_3d)
   // Check corner A
   // 3D
   t8_geom_triangular_interpolation (coeff_A, corner_values_3d, 3, dimension, result);
-  EXPECT_NEAR (cornerA[0], result[0], eps);
-  EXPECT_NEAR (cornerA[1], result[1], eps);
-  EXPECT_NEAR (cornerA[2], result[2], eps);
+  EXPECT_NEAR (cornerA[0], result[0], T8_PRECISION_EPS);
+  EXPECT_NEAR (cornerA[1], result[1], T8_PRECISION_EPS);
+  EXPECT_NEAR (cornerA[2], result[2], T8_PRECISION_EPS);
 
   // Check corner B
   // 3D
   t8_geom_triangular_interpolation (coeff_B, corner_values_3d, 3, dimension, result);
-  EXPECT_NEAR (cornerB[0], result[0], eps);
-  EXPECT_NEAR (cornerB[1], result[1], eps);
-  EXPECT_NEAR (cornerB[2], result[2], eps);
+  EXPECT_NEAR (cornerB[0], result[0], T8_PRECISION_EPS);
+  EXPECT_NEAR (cornerB[1], result[1], T8_PRECISION_EPS);
+  EXPECT_NEAR (cornerB[2], result[2], T8_PRECISION_EPS);
 
   // Check corner C
   // 3D
   t8_geom_triangular_interpolation (coeff_C, corner_values_3d, 3, dimension, result);
-  EXPECT_NEAR (cornerC[0], result[0], eps);
-  EXPECT_NEAR (cornerC[1], result[1], eps);
-  EXPECT_NEAR (cornerC[2], result[2], eps);
+  EXPECT_NEAR (cornerC[0], result[0], T8_PRECISION_EPS);
+  EXPECT_NEAR (cornerC[1], result[1], T8_PRECISION_EPS);
+  EXPECT_NEAR (cornerC[2], result[2], T8_PRECISION_EPS);
 
   // Check corner D
   // 3D
   t8_geom_triangular_interpolation (coeff_D, corner_values_3d, 3, dimension, result);
-  EXPECT_NEAR (cornerD[0], result[0], eps);
-  EXPECT_NEAR (cornerD[1], result[1], eps);
-  EXPECT_NEAR (cornerD[2], result[2], eps);
+  EXPECT_NEAR (cornerD[0], result[0], T8_PRECISION_EPS);
+  EXPECT_NEAR (cornerD[1], result[1], T8_PRECISION_EPS);
+  EXPECT_NEAR (cornerD[2], result[2], T8_PRECISION_EPS);
 }
