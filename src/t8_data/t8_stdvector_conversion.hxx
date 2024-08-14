@@ -68,7 +68,6 @@ template <typename T>
 void
 t8_forest_ghost_exchange_data_with_vector (t8_forest_t forest, const std::vector<T> &element_vector)
 {
-  t8_debugf ("Entering ghost_exchange_data_with_vector\n");
   T8_ASSERT (t8_forest_is_committed (forest));
 
   /*Create sc_array_t view from the vector*/
