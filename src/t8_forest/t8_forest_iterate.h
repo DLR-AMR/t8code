@@ -43,7 +43,7 @@ typedef int (*t8_forest_iterate_face_fn) (t8_forest_t forest, t8_locidx_t ltreei
  *
  * \param[in] forest              the forest
  * \param[in] ltreeid             the local tree id of the current tree
- * \param[in] element             the element for which the query is executed
+ * \param[in] element             the element for which the search criterion is checked.
  * \param[in] is_leaf             true if and only if \a element is a leaf element
  * \param[in] leaf_elements       the leaf elements in \a forest that are descendants of \a element (or the element 
  *                                itself if \a is_leaf is true)
