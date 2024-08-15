@@ -84,6 +84,23 @@ struct t8_geometry_quadrangulated_disk: public t8_geometry_with_vertices
     return T8_GEOMETRY_TYPE_UNDEFINED;
   };
 
+  /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * Only quad elements are supported by this geometry.
+   * \return                True if the geometry is compatible with the tree.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const
+  {
+    if (active_tree_class != T8_ECLASS_QUAD) {
+      t8_productionf ("t8_geometry_quadrangulated_disk is not compatible with tree type %s\n"
+                      "It is only compatible with quad elements.\n",
+                      t8_eclass_to_string[active_tree_class]);
+      return true;
+    }
+    return false;
+  }
+
   /* Load tree data is inherited from t8_geometry_with_vertices. */
 };
 
@@ -124,6 +141,23 @@ struct t8_geometry_triangulated_spherical_surface: public t8_geometry_with_verti
                              double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
+  }
+
+  /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * Only triangle elements are supported by this geometry.
+   * \return                True if the geometry is compatible with the tree.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const
+  {
+    if (active_tree_class != T8_ECLASS_TRIANGLE) {
+      t8_productionf ("t8_geometry_triangulated_spherical_surface is not compatible with tree type %s\n"
+                      "It is only compatible with triangle elements.\n",
+                      t8_eclass_to_string[active_tree_class]);
+      return true;
+    }
+    return false;
   }
 
   /* Load tree data is inherited from t8_geometry_with_vertices. */
@@ -167,6 +201,23 @@ struct t8_geometry_tessellated_spherical_surface: public t8_geometry_with_vertic
     SC_ABORT_NOT_REACHED ();
   }
 
+  /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * Only quad elements are supported by this geometry.
+   * \return                True if the geometry is compatible with the tree.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const
+  {
+    if (active_tree_class != T8_ECLASS_QUAD) {
+      t8_productionf ("t8_geometry_quadrangulated_spherical_surface is not compatible with tree type %s\n"
+                      "It is only compatible with quad elements.\n",
+                      t8_eclass_to_string[active_tree_class]);
+      return true;
+    }
+    return false;
+  }
+
   /* Load tree data is inherited from t8_geometry_with_vertices. */
 };
 
@@ -206,6 +257,23 @@ struct t8_geometry_cubed_spherical_shell: public t8_geometry_with_vertices
                              double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
+  }
+
+  /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * Only hex elements are supported by this geometry.
+   * \return                True if the geometry is compatible with the tree.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const
+  {
+    if (active_tree_class != T8_ECLASS_HEX) {
+      t8_productionf ("t8_geometry_cubed_spherical_shell is not compatible with tree type %s\n"
+                      "It is only compatible with hex elements.\n",
+                      t8_eclass_to_string[active_tree_class]);
+      return true;
+    }
+    return false;
   }
 
   /* Load tree data is inherited from t8_geometry_with_vertices. */
@@ -249,6 +317,23 @@ struct t8_geometry_prismed_spherical_shell: public t8_geometry_with_vertices
     SC_ABORT_NOT_REACHED ();
   }
 
+  /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * Only prism elements are supported by this geometry.
+   * \return                True if the geometry is compatible with the tree.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const
+  {
+    if (active_tree_class != T8_ECLASS_PRISM) {
+      t8_productionf ("t8_geometry_prismed_spherical_shell is not compatible with tree type %s\n"
+                      "It is only compatible with prism elements.\n",
+                      t8_eclass_to_string[active_tree_class]);
+      return true;
+    }
+    return false;
+  }
+
   /* Load tree data is inherited from t8_geometry_with_vertices. */
 };
 
@@ -288,6 +373,23 @@ struct t8_geometry_cubed_sphere: public t8_geometry_with_vertices
                              double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
+  }
+
+  /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * Only hex elements are supported by this geometry.
+   * \return                True if the geometry is compatible with the tree.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const
+  {
+    if (active_tree_class != T8_ECLASS_HEX) {
+      t8_productionf ("t8_geometry_cubed_sphere is not compatible with tree type %s\n"
+                      "It is only compatible with hex elements.\n",
+                      t8_eclass_to_string[active_tree_class]);
+      return true;
+    }
+    return false;
   }
 
   /* Load tree data is inherited from t8_geometry_with_vertices. */
