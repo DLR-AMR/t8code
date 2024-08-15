@@ -46,7 +46,7 @@ add_t8_test( NAME t8_gtest_multiple_attributes           SOURCES t8_gtest_main.c
 add_t8_test( NAME t8_gtest_attribute_gloidx_array        SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_attribute_gloidx_array.cxx )
 
 add_t8_test( NAME t8_gtest_shmem SOURCES t8_gtest_main.cxx t8_data/t8_gtest_shmem.cxx )
-add_t8_test( NAME t8_gtest_data_pack SOURCES t8_gtest_main.cxx t8_data/t8_gtest_data_handler.cxx)
+add_t8_test( NAME t8_gtest_data_pack SOURCES t8_gtest_main.cxx t8_data/t8_gtest_data_handler.cxx t8_data/t8_data_handler_specs.cxx)
 
 add_t8_test( NAME t8_gtest_element_volume            SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_element_volume.cxx )
 add_t8_test( NAME t8_gtest_search                    SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_search.cxx )

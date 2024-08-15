@@ -25,6 +25,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <t8.h>
 #include <vector>
+#include <test/t8_data/t8_data_handler_specs.hxx>
 
 template <typename T>
 class t8_data_handler {
@@ -51,23 +52,18 @@ class t8_data_handler {
          * \return the size of the packed data in number of bytes. 
          */
   void
-  t8_data_pack (const T &data, const int pos, std::vector<char> &buffer, sc_MPI_Comm comm);
+  t8_data_pack (T &data, int &pos, std::vector<char> &buffer, sc_MPI_Comm comm);
 
   void
   t8_data_pack_vector (const std::vector<T> &data, const int num_data, std::vector<char> &buffer, sc_MPI_Comm comm)
   {
     int pos = 0;
-    int size;
     T8_ASSERT (buffer.size == t8_buffer_size (num_data, comm));
 
-    sc_MPI_Pack_size (1, sc_MPI_Int, comm, &size);
     sc_MPI_Pack (&num_data, 1, MPI_INT, buffer.data (), buffer.size (), &pos, comm);
-    pos += size;
 
-    const int single_size = t8_data_size (comm);
     for (int idata = 0; idata < num_data; idata++) {
       t8_data_pack (data[idata], pos, buffer, comm);
-      pos += single_size;
     }
   }
 
@@ -78,13 +74,26 @@ class t8_data_handler {
          * \return T* the unpacked data. 
          */
   void
-  t8_data_unpack (const void *packed_data, const int insize, const int outcount, std::vector<T> &unpacked_data,
-                  sc_MPI_Comm comm);
+  t8_data_unpack (std::vector<char> &buffer, int &pos, T &data, sc_MPI_Comm comm);
 
   void
-  t8_data_unpack_vector (const std::vector<char> &packed_data, std::vector<T> &data, sc_MPI_Comm comm)
+  t8_data_unpack_vector (std::vector<char> &buffer, std::vector<T> &data, int &outcount, sc_MPI_Comm comm)
   {
+    int pos = 0;
+
+    int mpiret = sc_MPI_Unpack (buffer.data (), buffer.size (), &pos, &outcount, 1, sc_MPI_INT, comm);
+    SC_CHECK_MPI (mpiret);
+    T8_ASSERT (outcount >= 0);
+
+    data.resize (outcount);
+
+    for (int ipack = 0; ipack < outcount; ++ipack) {
+      t8_data_unpack (buffer, pos, data[ipack], comm);
+    }
   }
 };
+
+template <>
+class t8_data_handler<enlarged_data<int>>;
 
 #endif /* T8_DATA_HANDLER_HXX */
