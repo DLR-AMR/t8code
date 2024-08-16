@@ -8,7 +8,7 @@ function( add_t8_test )
     cmake_parse_arguments( ADD_T8_TEST "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
     add_executable( ${ADD_T8_TEST_NAME} ${ADD_T8_TEST_SOURCES} )
-    target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 gtest )
+    target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 gtest pthread)
 
     # Split custom test command into a list by whitespace.
     separate_arguments (T8CODE_CUSTOM_TEST_COMMAND_LIST NATIVE_COMMAND "${T8CODE_CUSTOM_TEST_COMMAND}")
@@ -71,6 +71,7 @@ add_t8_test( NAME t8_gtest_empty_global_tree SOURCES t8_gtest_main.cxx t8_forest
 add_t8_test( NAME t8_gtest_geometry_cad         SOURCES t8_gtest_main.cxx t8_geometry/t8_geometry_implementations/t8_gtest_geometry_cad.cxx )
 add_t8_test( NAME t8_gtest_geometry_linear      SOURCES t8_gtest_main.cxx t8_geometry/t8_geometry_implementations/t8_gtest_geometry_linear.cxx )
 add_t8_test( NAME t8_gtest_geometry_lagrange    SOURCES t8_gtest_main.cxx t8_geometry/t8_geometry_implementations/t8_gtest_geometry_lagrange.cxx )
+add_t8_test( NAME t8_gtest_geometry_triangular_interpolation    SOURCES t8_gtest_main.cxx t8_geometry/t8_gtest_geometry_triangular_interpolation.cxx )
 add_t8_test( NAME t8_gtest_geometry_handling    SOURCES t8_gtest_main.cxx t8_geometry/t8_gtest_geometry_handling.cxx )
 add_t8_test( NAME t8_gtest_point_inside         SOURCES t8_gtest_main.cxx t8_geometry/t8_gtest_point_inside.cxx )
 
