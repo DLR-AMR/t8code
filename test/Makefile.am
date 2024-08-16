@@ -45,6 +45,7 @@ t8code_googletest_programs = \
   test/t8_cmesh/t8_gtest_hypercube \
   test/t8_schemes/t8_gtest_element_count_leaves \
   test/t8_schemes/t8_gtest_element_ref_coords \
+  test/t8_geometry/t8_gtest_geometry_triangular_interpolation \
   test/t8_geometry/t8_gtest_geometry_handling \
   test/t8_schemes/t8_gtest_descendant \
   test/t8_schemes/t8_gtest_find_parent \
@@ -80,6 +81,7 @@ t8code_googletest_programs = \
   test/t8_forest/t8_gtest_element_is_leaf \
   test/t8_forest/t8_gtest_element_is_boundary \
   test/t8_IO/t8_gtest_vtk_reader \
+  test/t8_IO/t8_gtest_vtk_writer \
   test/t8_forest_incomplete/t8_gtest_permute_hole \
   test/t8_forest_incomplete/t8_gtest_recursive \
   test/t8_forest_incomplete/t8_gtest_iterate_replace \
@@ -176,6 +178,10 @@ test_t8_schemes_t8_gtest_element_count_leaves_SOURCES = \
 test_t8_schemes_t8_gtest_element_ref_coords_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_schemes/t8_gtest_element_ref_coords.cxx
+
+test_t8_geometry_t8_gtest_geometry_triangular_interpolation_SOURCES = \
+  test/t8_gtest_main.cxx \
+  test/t8_geometry/t8_gtest_geometry_triangular_interpolation.cxx
 
 test_t8_geometry_t8_gtest_geometry_handling_SOURCES = \
   test/t8_gtest_main.cxx \
@@ -353,6 +359,10 @@ test_t8_forest_t8_gtest_partition_data_SOURCES = \
   test/t8_gtest_main.cxx \
   test/t8_forest/t8_gtest_partition_data.cxx
 
+test_t8_IO_t8_gtest_vtk_writer_SOURCES = \
+  test/t8_gtest_main.cxx \
+  test/t8_IO/t8_gtest_vtk_writer.cxx
+
 #define ld and cpp flags for all targets
 t8_gtest_target_ld_add = $(LDADD) test/libgtest.la
 t8_gtest_target_ld_flags = $(AM_LDFLAGS) -pthread
@@ -440,6 +450,10 @@ test_t8_schemes_t8_gtest_element_count_leaves_CPPFLAGS = $(t8_gtest_target_cpp_f
 test_t8_schemes_t8_gtest_element_ref_coords_LDADD = $(t8_gtest_target_ld_add)
 test_t8_schemes_t8_gtest_element_ref_coords_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_schemes_t8_gtest_element_ref_coords_CPPFLAGS = $(t8_gtest_target_cpp_flags)
+
+test_t8_geometry_t8_gtest_geometry_triangular_interpolation_LDADD = $(t8_gtest_target_ld_add)
+test_t8_geometry_t8_gtest_geometry_triangular_interpolation_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_geometry_t8_gtest_geometry_triangular_interpolation_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
 test_t8_geometry_t8_gtest_geometry_handling_LDADD = $(t8_gtest_target_ld_add)
 test_t8_geometry_t8_gtest_geometry_handling_LDFLAGS = $(t8_gtest_target_ld_flags)
@@ -621,6 +635,9 @@ test_t8_forest_t8_gtest_partition_data_LDADD = $(t8_gtest_target_ld_add)
 test_t8_forest_t8_gtest_partition_data_LDFLAGS = $(t8_gtest_target_ld_flags)
 test_t8_forest_t8_gtest_partition_data_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 
+test_t8_IO_t8_gtest_vtk_writer_LDADD = $(t8_gtest_target_ld_add)
+test_t8_IO_t8_gtest_vtk_writer_LDFLAGS = $(t8_gtest_target_ld_flags)
+test_t8_IO_t8_gtest_vtk_writer_CPPFLAGS = $(t8_gtest_target_cpp_flags)
 # If we did not configure t8code with MPI we need to build Googletest
 # without MPI support.
 if !T8_ENABLE_MPI
@@ -643,6 +660,7 @@ test_t8_cmesh_t8_gtest_hypercube_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_cmesh_set_join_by_vertices_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_element_count_leaves_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_element_ref_coords_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_geometry_t8_gtest_geometry_triangular_interpolation_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_geometry_t8_gtest_geometry_handling_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_descendant_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_schemes_t8_gtest_find_parent_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
@@ -687,6 +705,7 @@ test_t8_schemes_t8_gtest_pack_unpack_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags
 test_t8_schemes_t8_gtest_child_parent_face_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_generator_t8_gtest_cmesh_generator_test_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 test_t8_cmesh_t8_gtest_cmesh_copy_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
+test_t8_IO_t8_gtest_vtk_writer_CPPFLAGS += $(t8_gtest_target_mpi_cpp_flags)
 
 endif
 

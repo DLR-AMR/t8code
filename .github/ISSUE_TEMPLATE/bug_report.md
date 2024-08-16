@@ -19,6 +19,7 @@ Which command did you run/which function did you call?
 A clear and concise description of what you expected to happen.
 
 **Log files**
+- If possible, add any output and error messages that you got
 - Please upload the `config.log` file (when building with autotools)
 - For failing tests, please upload the `test-suite.log` file (when building with autotools)
 - When building with CMake please upload

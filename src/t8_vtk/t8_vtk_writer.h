@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2024 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,20 +20,44 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** file t8_forest_vtk.h
- */
+#ifndef T8_VTK_WRITER_C_INTERFACE_H
+#define T8_VTK_WRITER_C_INTERFACE_H
 
-/* TODO: Document this file */
-
-#ifndef T8_FOREST_VTK_H
-#define T8_FOREST_VTK_H
-
+#include <t8.h>
 #include <t8_vtk.h>
-#include <t8_forest/t8_forest_general.h>
-#include <t8_forest/t8_forest_geometrical.h>
+#include <t8_forest/t8_forest_types.h>
+
+#if T8_WITH_VTK
+#include <vtkUnstructuredGrid.h>
+#endif
 
 T8_EXTERN_C_BEGIN ();
-/* function declarations */
+
+#if T8_WITH_VTK
+/**
+ * Translate a forest into a vtkUnstructuredGrid with respect to the given flags. 
+ * This function uses the vtk library. t8code must be configured with
+ * "--with-vtk" in order to use it.
+ * \param [in]  forest    The forest.
+ * \param[in, out] unstructuredGrid 
+ * \param [in]  write_treeid If true, the global tree id is written for each element.
+ * \param [in]  write_mpirank If true, the mpirank is written for each element.
+ * \param [in]  write_level If true, the refinement level is written for each element.
+ * \param [in]  write_element_id If true, the global element id is written for each element.
+ * \param [in]  curved_flag If true, write the elements as curved element types from vtk.
+ * \param [in]  write_ghosts If true, write out ghost elements as well.
+ * \param [in]  num_data  Number of user defined double valued data fields to write.
+ * \param [in]  data      Array of t8_vtk_data_field_t of length \a num_data
+ *                        providing the user defined per element data.
+ *                        If scalar and vector fields are used, all scalar fields
+ *                        must come first in the array.
+ */
+void
+t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
+                                  const int write_treeid, const int write_mpirank, const int write_level,
+                                  const int write_element_id, const int write_ghosts, const int curved_flag,
+                                  const int num_data, t8_vtk_data_field_t *data);
+#endif
 
 /** Write the forest in .pvtu file format. Writes one .vtu file per
  * process and a meta .pvtu file.
@@ -87,6 +111,42 @@ t8_forest_vtk_write_file (t8_forest_t forest, const char *fileprefix, const int 
                           const int write_level, const int write_element_id, int write_ghosts, const int num_data,
                           t8_vtk_data_field_t *data);
 
-T8_EXTERN_C_END ();
+/**
+ * Write the cmesh in .pvtu file format. Writes one .vtu file per
+ * process and a meta .pvtu file.
+ * This function uses the vtk library. t8code must be configured with
+ * "--with-vtk" in order to use it.
+ * 
+ * \param[in] cmesh The cmesh
+ * \param[in] fileprefix The prefix of the output files
+ * \param[in] comm The communicator to use
+ * \return int 
+ * \note If t8code was not configured with vtk, use \ref t8_cmesh_vtk_write_file
+ */
+int
+t8_cmesh_vtk_write_file_via_API (t8_cmesh_t cmesh, const char *fileprefix, sc_MPI_Comm comm);
 
-#endif /* !T8_FOREST_VTK_H */
+/**
+ * Write the cmesh in .pvtu file format. Writes one .vtu file per
+ * process and a meta .pvtu file.
+ * This function writes ASCII files and can be used when
+ * t8code is not configure with "--with-vtk" and
+ * \ref t8_cmesh_vtk_write_file_via_API is not available. 
+ * 
+ * \param[in] cmesh The cmesh
+ * \param[in] fileprefix The prefix of the output files 
+ * \return int 
+ */
+int
+t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix);
+
+#if T8_WITH_VTK
+void
+t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
+                                  const int write_treeid, const int write_mpirank, const int write_level,
+                                  const int write_element_id, const int write_ghosts, const int curved_flag,
+                                  const int num_data, t8_vtk_data_field_t *data);
+#endif
+
+T8_EXTERN_C_END ();
+#endif /* T8_VTK_WRITER_C_INTERFACE_H */

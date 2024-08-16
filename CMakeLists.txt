@@ -40,12 +40,12 @@ set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Release RelWithDebInfo Debu
 set( CMAKE_C_STANDARD 11 )
 set( CMAKE_C_STANDARD_REQUIRED ON )
 set( CMAKE_C_EXTENSIONS OFF )
-list( APPEND CMAKE_C_FLAGS "-Wall" )
 
 set( CMAKE_CXX_STANDARD 17 )
 set( CMAKE_CXX_STANDARD_REQUIRED ON )
 set( CMAKE_CXX_EXTENSIONS OFF )
-list( APPEND CMAKE_CXX_FLAGS "-Wall" )
+
+set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 if( T8CODE_ENABLE_MPI )
     find_package( MPI COMPONENTS C REQUIRED )
@@ -58,15 +58,29 @@ endif()
 
 if( T8CODE_ENABLE_VTK )
     find_package( VTK REQUIRED )
-endif()
+    if(VTK_FOUND)
+        message("Found VTK")
+    endif (VTK_FOUND)
+endif( T8CODE_ENABLE_VTK )
 
 if( T8CODE_ENABLE_OCC )
-    find_package( OpenCASCADE REQUIRED )
-endif()
+    find_package( OpenCASCADE REQUIRED COMPONENTS
+    TKBO TKPrim TKTopAlgo
+    TKGeomAlgo TKBRep
+    TKG3d TKG2d TKMath TKernel )
+    if(OpenCASCADE_FOUND)
+        message("Found OpenCASCADE")
+    endif (OpenCASCADE_FOUND)
+endif( T8CODE_ENABLE_OCC )
 
 if( T8CODE_ENABLE_NETCDF )
     find_package( netCDF REQUIRED )
-endif()
+    if(netCDF_FOUND)
+        message("Found netCDF")
+        include(cmake/CheckNetCDFPar.cmake)
+    endif (netCDF_FOUND)
+endif( T8CODE_ENABLE_NETCDF )
+
 
 # Override default for this libsc option
 set( BUILD_SHARED_LIBS ON CACHE BOOL "Build libsc as a shared library" )
