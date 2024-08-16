@@ -14,7 +14,7 @@
 # ${OpenCASCADE_FOUND} is cached, so once OCC is found this block shouldn't have to run again
 IF( NOT OpenCASCADE_FOUND )
 	
-	set(CASROOT $ENV{CASROOT} CACHE PATH "Additional include path for package search")
+    set(CASROOT $ENV{CASROOT} CACHE PATH "Additional include path for package search")
 
     # 32 bit or 64 bit?
     IF( CMAKE_SIZEOF_VOID_P EQUAL 4 )
@@ -34,8 +34,8 @@ IF( NOT OpenCASCADE_FOUND )
     ENDIF( CMAKE_SIZEOF_VOID_P EQUAL 4 )
 
   IF(UNIX)
-    set( _incsearchpath /usr/include/opencascade /usr/include/ /opt/occ/inc ${CASROOT}/inc ${CASROOT}/include/)
-    set( _libsearchpath /usr/lib64 /usr/lib /opt/occ/lib ${CASROOT}/lib64 ${CASROOT}/lib )
+    set( _incsearchpath /usr/include/opencascade /usr/include/ /opt/occ/inc ${CASROOT}/inc ${CASROOT}/include/ ${OCC_INC})
+    set( _libsearchpath /usr/lib64 /usr/lib /opt/occ/lib ${CASROOT}/lib64 ${CASROOT}/lib ${OCC_LIB})
   ELSE(UNIX)
     IF (WIN32)
       set( _incsearchpath ${CASROOT}\\inc ${CASROOT}\\include)
