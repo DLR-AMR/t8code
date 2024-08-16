@@ -31,8 +31,10 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 /** Lookup table for number of nodes for curved eclasses. */
 const int t8_curved_eclass_num_nodes[T8_ECLASS_COUNT] = { 1, 3, 8, 6, 20, 10, 15, 13 };
 
+#if T8_WITH_VTK
 /** Lookup table for vtk types of curved elements */
 const int t8_curved_eclass_vtk_type[T8_ECLASS_COUNT] = { 1, 21, 23, 22, 25, 24, 26, 27 };
+#endif
 
 /** Map vtk element corners to element reference coordinates. The reference
  * coordinates are defined in such a way, that the linear vtk corners are listed
