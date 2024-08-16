@@ -257,21 +257,26 @@ t8_dline_vertex_ref_coords (const t8_dline_t *elem, const int vertex, double coo
 
 /** Convert points in the reference space of a line element to points in the
  *  reference space of the tree (level 0) embedded in [0,1]^1.
- * \param [in]  elem       Input line.
- * \param [in]  ref_coords The reference coordinates in the line
- *                         (\a num_coords times \f$ [0,1]^1 \f$)
- * \param [in]  num_coords Number of coordinates to evaluate
+ * \param [in]  elem        Input line.
+ * \param [in]  ref_coords  The reference coordinates in the line
+ *                          (\a num_coords times \f$ [0,1]^1 \f$)
+ * \param [in]  num_coords  Number of coordinates to evaluate
+ * \param [in]  padding     Only used if \a num_coords > 1.
+ *                          The amount of padding in \a ref_coords between array elements:
+ *                          For elem dim 2 and input {x1, y1, x2, y2, ...} padding is 0.
+ *                          For elem dim 2 and input {x1, y1, z1, x2, y2, z2, ...} padding is 1.
+ *                          For elem dim 3 and input {x1, y1, z1, x2, y2, z2, ...} padding is 0.
  * \param [in]  skip_coords Only used for batch computation of prisms.
  *                          In all other cases 0.
  *                          Skip coordinates in the \a ref_coords and
  *                          \a out_coords array.
- * \param [out] out_coords An array of \a num_coords x 1 x double that
- * 		                     will be filled with the reference coordinates
- *                         of the points on the line.
+ * \param [out] out_coords  An array of \a num_coords x 1 x double that
+ * 		                      will be filled with the reference coordinates
+ *                          of the points on the line.
  */
 void
 t8_dline_compute_reference_coords (const t8_dline_t *elem, const double *ref_coords, const size_t num_coords,
-                                   const size_t skip_coords, double *out_coords);
+                                   const size_t padding, const size_t skip_coords, double *out_coords);
 
 /** Computes the linear position of a line in an uniform grid.
  * \param [in] line  Line whose id will be computed.
