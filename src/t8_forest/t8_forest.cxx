@@ -383,8 +383,8 @@ t8_forest_is_equal (t8_forest_t forest_a, t8_forest_t forest_b)
  */
 /* TODO: replace ltree_id argument with ts argument. */
 void
-t8_forest_element_coordinate_from_corner_number (t8_forest_t forest, t8_locidx_t ltree_id, const t8_element_t *element, int corner_number,
-                              double *coordinates)
+t8_forest_element_coordinate_from_corner_number (t8_forest_t forest, t8_locidx_t ltree_id, const t8_element_t *element,
+                                                 int corner_number, double *coordinates)
 {
   double vertex_coords[3] = { 0.0 };
   t8_eclass_scheme_c *ts;
@@ -409,8 +409,9 @@ t8_forest_element_coordinate_from_corner_number (t8_forest_t forest, t8_locidx_t
 
 void
 t8_forest_element_coordinate_from_ref_coords_ext (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                       const double *ref_coords, const size_t num_coords, double *coords_out,
-                                       const double *stretch_factors)
+                                                  const double *ref_coords, const size_t num_coords,
+                                                  const size_t padding, double *coords_out,
+                                                  const double *stretch_factors)
 {
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
   const int tree_dim = t8_eclass_to_dimension[tree_class];
@@ -425,18 +426,17 @@ t8_forest_element_coordinate_from_ref_coords_ext (t8_forest_t forest, t8_locidx_
     const t8_geometry_type_t geom_type = t8_geometry_get_type (cmesh, gtreeid);
     T8_ASSERT (geom_type == T8_GEOMETRY_TYPE_LINEAR || geom_type == T8_GEOMETRY_TYPE_LINEAR_AXIS_ALIGNED);
 #endif /* T8_ENABLE_DEBUG */
-    const int tree_dim = t8_eclass_to_dimension[tree_class];
-    double stretched_ref_coords[T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM];
+    double *stretched_ref_coords = T8_ALLOC (double, num_coords *(tree_dim == 0 ? 1 : tree_dim));
     for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
       for (int dim = 0; dim < tree_dim; ++dim) {
         stretched_ref_coords[i_coord * tree_dim + dim]
-          = 0.5 + ((ref_coords[i_coord * tree_dim + dim] - 0.5) * stretch_factors[dim]);
+          = 0.5 + ((ref_coords[i_coord * (tree_dim + padding) + dim] - 0.5) * stretch_factors[dim]);
       }
     }
-    scheme->t8_element_reference_coords (element, stretched_ref_coords, num_coords, tree_ref_coords);
+    scheme->t8_element_reference_coords (element, stretched_ref_coords, num_coords, padding, tree_ref_coords);
   }
   else {
-    scheme->t8_element_reference_coords (element, ref_coords, num_coords, tree_ref_coords);
+    scheme->t8_element_reference_coords (element, ref_coords, num_coords, padding, tree_ref_coords);
   }
 
   t8_geometry_evaluate (cmesh, gtreeid, tree_ref_coords, num_coords, coords_out);
@@ -446,9 +446,11 @@ t8_forest_element_coordinate_from_ref_coords_ext (t8_forest_t forest, t8_locidx_
 
 void
 t8_forest_element_coordinate_from_ref_coords (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                   const double *ref_coords, const size_t num_coords, double *coords_out)
+                                              const double *ref_coords, const size_t num_coords, const size_t padding,
+                                              double *coords_out)
 {
-  t8_forest_element_coordinate_from_ref_coords_ext (forest, ltreeid, element, ref_coords, num_coords, coords_out, NULL);
+  t8_forest_element_coordinate_from_ref_coords_ext (forest, ltreeid, element, ref_coords, num_coords, padding,
+                                                    coords_out, NULL);
 }
 
 /* Compute the diameter of an element. */
@@ -504,8 +506,8 @@ t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const t8_el
   /* Get the element class and calculate the centroid using its element
    * reference coordinates */
   const t8_element_shape_t element_shape = t8_element_shape (ts, element);
-  t8_forest_element_coordinate_from_ref_coords (forest, ltreeid, element, t8_element_centroid_ref_coords[element_shape], 1,
-                                     coordinates);
+  t8_forest_element_coordinate_from_ref_coords (forest, ltreeid, element, t8_element_centroid_ref_coords[element_shape],
+                                                1, 0, coordinates);
 }
 
 /* Compute the length of the line from one corner to a second corner in an element */

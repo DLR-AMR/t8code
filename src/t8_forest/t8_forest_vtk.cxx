@@ -177,15 +177,18 @@ t8_get_number_of_vtk_nodes (const t8_element_shape_t eclass, const int curved_fl
 
 #if T8_WITH_VTK
 static void
-t8_forest_vtk_get_element_nodes (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, const int vertex,
+t8_forest_vtk_get_element_nodes (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
                                  const int curved_flag, double *out_coords)
 {
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
   const t8_eclass_scheme_c *scheme = t8_forest_get_eclass_scheme (forest, tree_class);
   const t8_element_shape_t element_shape = scheme->t8_element_shape (element);
-  const double *ref_coords = t8_forest_vtk_point_to_element_ref_coords[element_shape][vertex];
+  const int elem_dim = t8_eclass_to_dimension[element_shape];
+  /* Even though a vertex has dim 0 it still has one coordinate. */
+  const int padding = elem_dim != 0 ? 3 - elem_dim : 2;
+  const double *ref_coords = t8_forest_vtk_point_to_element_ref_coords[element_shape][0];
   const int num_node = t8_get_number_of_vtk_nodes (element_shape, curved_flag);
-  t8_forest_element_coordinate_from_ref_coords (forest, ltreeid, element, ref_coords, num_node, out_coords);
+  t8_forest_element_coordinate_from_ref_coords (forest, ltreeid, element, ref_coords, num_node, padding, out_coords);
 }
 
 /**
@@ -268,7 +271,7 @@ t8_forest_element_to_vtk_cell (
   }
   double *coordinates = T8_ALLOC (double, 3 * num_node);
   /* Compute coordinates for all vertices inside the domain. */
-  t8_forest_vtk_get_element_nodes (forest, itree, element, 0, curved_flag, coordinates);
+  t8_forest_vtk_get_element_nodes (forest, itree, element, curved_flag, coordinates);
   /* For each element we iterate over all points */
   for (int ivertex = 0; ivertex < num_node; ivertex++, (*point_id)++) {
     const size_t offset_3d = 3 * ivertex;
@@ -623,7 +626,7 @@ t8_forest_vtk_cells_vertices_kernel (t8_forest_t forest, const t8_locidx_t ltree
   num_el_vertices = t8_eclass_num_vertices[element_shape];
   for (ivertex = 0; ivertex < num_el_vertices; ivertex++) {
     const double *ref_coords = t8_forest_vtk_point_to_element_ref_coords[element_shape][ivertex];
-    t8_forest_element_coordinate_from_ref_coords (forest, ltree_id, element, ref_coords, 1, element_coordinates);
+    t8_forest_element_coordinate_from_ref_coords (forest, ltree_id, element, ref_coords, 1, 0, element_coordinates);
     freturn = fprintf (vtufile, "         ");
     if (freturn <= 0) {
       return 0;

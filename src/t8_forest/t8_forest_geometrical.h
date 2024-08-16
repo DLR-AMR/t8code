@@ -52,8 +52,8 @@ t8_forest_get_dimension (const t8_forest_t forest);
  *                             the x, y and z coordinates of the vertex.
  */
 void
-t8_forest_element_coordinate_from_corner_number (t8_forest_t forest, t8_locidx_t ltree_id, const t8_element_t *element, int corner_number,
-                              double *coordinates);
+t8_forest_element_coordinate_from_corner_number (t8_forest_t forest, t8_locidx_t ltree_id, const t8_element_t *element,
+                                                 int corner_number, double *coordinates);
 
 /** Compute the coordinates of a point inside an element inside a tree.
  *  The point is given in reference coordinates inside the element and gets
@@ -66,6 +66,11 @@ t8_forest_element_coordinate_from_corner_number (t8_forest_t forest, t8_locidx_t
  * \param [in]      element           The element.
  * \param [in]      ref_coords        The reference coordinates of the point inside the element.
  * \param [in]      num_coords        The number of coordinate sets in ref_coord (dimension x double).
+ * \param [in]      padding           Only used if \a num_coords > 1.
+ *                                    The amount of padding in \a ref_coords between array elements:
+ *                                    For elem dim 2 and input {x1, y1, x2, y2, ...} padding is 0.
+ *                                    For elem dim 2 and input {x1, y1, z1, x2, y2, z2, ...} padding is 1.
+ *                                    For elem dim 3 and input {x1, y1, z1, x2, y2, z2, ...} padding is 0.
  * \param [out]     coords_out        On input an allocated array to store 3 doubles, on output
  *                                    the x, y and z coordinates of the point inside the domain.
  * \param [in]      stretch_factors   If provided, elements are stretched according to the stretch factors
@@ -74,8 +79,9 @@ t8_forest_element_coordinate_from_corner_number (t8_forest_t forest, t8_locidx_t
 
 void
 t8_forest_element_coordinate_from_ref_coords_ext (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                       const double *ref_coords, const size_t num_coords, double *coords_out,
-                                       const double *stretch_factors);
+                                                  const double *ref_coords, const size_t num_coords,
+                                                  const size_t padding, double *coords_out,
+                                                  const double *stretch_factors);
 
 /** Compute the coordinates of a point inside an element inside a tree.
  *  The point is given in reference coordinates inside the element and gets
@@ -86,12 +92,19 @@ t8_forest_element_coordinate_from_ref_coords_ext (t8_forest_t forest, t8_locidx_
  * \param [in]      element           The element.
  * \param [in]      ref_coords        The reference coordinates of the point inside the element.
  * \param [in]      num_coords        The number of coordinate sets in ref_coord (dimension x double).
+ * \param [in]      padding           Only used if \a num_coords > 1.
+ *                                    The amount of padding in \a ref_coords between array elements:
+ *                                    For elem dim 2 and input {x1, y1, x2, y2, ...} padding is 0.
+ *                                    For elem dim 2 and input {x1, y1, z1, x2, y2, z2, ...} padding is 1.
+ *                                    For elem dim 3 and input {x1, y1, z1, x2, y2, z2, ...} padding is 0.
  * \param [out]     coords_out        On input an allocated array to store 3 doubles, on output
  *                                    the x, y and z coordinates of the point inside the domain.
  */
+
 void
 t8_forest_element_coordinate_from_ref_coords (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                   const double *ref_coords, const size_t num_coords, double *coords_out);
+                                              const double *ref_coords, const size_t num_coords, const size_t padding,
+                                              double *coords_out);
 
 /** Compute the coordinates of the centroid of an element if a geometry
  * for this tree is registered in the forest's cmesh.

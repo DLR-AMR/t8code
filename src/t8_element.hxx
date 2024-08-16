@@ -578,12 +578,17 @@ struct t8_eclass_scheme
    * \param [in] coords_input The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
    *                          in the reference space of the element.
    * \param [in] num_coords   Number of \f$ dim\f$-sized coordinates to evaluate.
+   * \param [in] padding      Only used if \a num_coords > 1.
+   *                          The amount of padding in \a ref_coords between array elements:
+   *                          For elem dim 2 and input {x1, y1, x2, y2, ...} padding is 0.
+   *                          For elem dim 2 and input {x1, y1, z1, x2, y2, z2, ...} padding is 1.
+   *                          For elem dim 3 and input {x1, y1, z1, x2, y2, z2, ...} padding is 0.
    * \param [out] out_coords  The coordinates of the points in the
    *                          reference space of the tree.
    */
   virtual void
   t8_element_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
-                               double *out_coords) const
+                               const size_t padding, double *out_coords) const
     = 0;
 
   /** Count how many leaf descendants of a given uniform level an element would produce.
