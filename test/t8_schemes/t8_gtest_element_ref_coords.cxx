@@ -35,9 +35,9 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <test/t8_gtest_macros.hxx>
 
 #if T8_ENABLE_LESS_TESTS
-#define MAX_LEVEL_REF_COORD_TEST 3
+#define MAX_LEVEL_AND_PADDING_REF_COORD_TEST 3
 #else
-#define MAX_LEVEL_REF_COORD_TEST 4
+#define MAX_LEVEL_AND_PADDING_REF_COORD_TEST 4
 #endif
 
 /**
@@ -97,17 +97,27 @@ t8_element_centroid_by_vertex_coords (const t8_forest_t forest, const t8_eclass_
 }
 
 /**
- * Computes the reference coordinates of the vertices of an element.
- * \param [in] shape The element shape.
+ * Computes the reference coordinates of the vertices of an element and adds padding.
+ * Output:
+ * {x1, y1, z1, ... padding ..., x2, y2, z2, ... padding ..., ... , xn, yn, zn, ... padding ...}
+ * for 3 D shapes. Will omit y and z according to the shapes dimension.
+ * \param [in] shape         The element shape.
+ * \param [in] padding       The amount of padding to use.
  * \param [out] batch_coords The batch coordinates of the vertices for the element shape.
+ *                           The min length of the array is dim(shape) * (num_vertices + padding).
+ *                           Vertices are treated as dim 1.
  */
 void
-t8_get_batch_coords_for_element_type (const t8_element_shape_t shape, double *batch_coords)
+t8_generate_batch_coords_w_padding_for_element_type (const t8_element_shape_t shape, const size_t padding,
+                                                     double *batch_coords)
 {
   const int num_vertices = t8_eclass_num_vertices[shape];
+  const int elem_dim = t8_eclass_to_dimension[shape];
+  const int elem_dim_w_vertex = elem_dim == 0 ? 1 : elem_dim;
   for (int i_vertex = 0; i_vertex < num_vertices; ++i_vertex) {
-    for (int dim = 0; dim < T8_ECLASS_MAX_DIM; ++dim) {
-      batch_coords[i_vertex * T8_ECLASS_MAX_DIM + dim] = t8_element_corner_ref_coords[shape][i_vertex][dim];
+    const size_t offset = i_vertex * (padding + elem_dim_w_vertex);
+    for (int i_dim = 0; i_dim < elem_dim_w_vertex; ++i_dim) {
+      batch_coords[offset + i_dim] = t8_element_corner_ref_coords[shape][i_vertex][i_dim];
     }
   }
 }
@@ -118,19 +128,22 @@ t8_get_batch_coords_for_element_type (const t8_element_shape_t shape, double *ba
  * \param [in] i_vertex The vertex index.
  * \param [in] elem_dim The dimension of the element.
  * \param [in] batch_coords The input batch coordinates.
+ * \param [in] padding The padding used in the batch coordinates.
  * \param [in] tree_ref_coords_by_vertex The reference coordinates of the vertex computed by \ref t8_element_vertex_reference_coords.
  * \param [in] tree_ref_coords_by_element_ref_coords The reference coordinates of the vertex computed by \ref t8_element_reference_coords.
  * \return The additional info.
  */
 std::string
 t8_generate_additional_info_ref_coords (const t8_element_shape_t shape, const int i_vertex, const int elem_dim,
-                                        const double *batch_coords, const double *tree_ref_coords_by_vertex,
+                                        const double *batch_coords, const size_t padding,
+                                        const double *tree_ref_coords_by_vertex,
                                         const double *tree_ref_coords_by_element_ref_coords)
 {
   std::ostringstream add_info;
+  const size_t offset = i_vertex * (padding + elem_dim == 0 ? 1 : elem_dim);
   add_info << "Test failed for element shape " << t8_eclass_to_string[shape];
   add_info << " on vertex " << i_vertex << std::endl;
-  add_info << t8_write_message_by_dim ("with the batch coords:", batch_coords, elem_dim) << std::endl;
+  add_info << t8_write_message_by_dim ("with the batch coords:", batch_coords + offset, elem_dim) << std::endl;
   add_info << t8_write_message_by_dim ("tree_ref_coords_by_vertex:", tree_ref_coords_by_vertex, elem_dim) << std::endl;
   add_info << t8_write_message_by_dim (
     "tree_ref_coords_by_element_ref_coords:", tree_ref_coords_by_element_ref_coords + i_vertex * elem_dim, elem_dim);
@@ -180,10 +193,11 @@ t8_compare_arrays (const double *array1, const double *array2, const int dim, co
  * \param [in] ltree_id The local tree id.
  * \param [in] element The element.
  * \param [in] ts The element class scheme.
+ * \param [in] padding The padding added to the batch reference coords.
  */
 void
 t8_test_coords (const t8_forest_t forest, const t8_locidx_t ltree_id, const t8_element_t *element,
-                const t8_eclass_scheme_c *ts)
+                const t8_eclass_scheme_c *ts, const size_t padding)
 {
   double tree_ref_coords_by_vertex
     [3]; /** reference coordinates of the element vertices computed by \ref t8_element_vertex_reference_coords */
@@ -195,23 +209,24 @@ t8_test_coords (const t8_forest_t forest, const t8_locidx_t ltree_id, const t8_e
   double centroid_by_element_ref_coords
     [3]; /** centroid computed via \ref t8_forest_element_centroid (uses \ref t8_element_reference_coords) -> \ref t8_geometry_evaluate */
   double batch_coords
-    [T8_ECLASS_MAX_CORNERS
-     * T8_ECLASS_MAX_DIM]; /** reference coordinates of the element vertices computed by \ref t8_get_batch_coords_for_element_type */
+    [T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM
+     * (MAX_LEVEL_AND_PADDING_REF_COORD_TEST
+        - 1)]; /** reference coordinates of the element vertices computed by \ref t8_get_batch_coords_for_element_type */
 
   /* compare results of the two different way to obtain tree ref coords */
   const t8_element_shape_t shape = ts->t8_element_shape (element);
   const int num_vertices = t8_eclass_num_vertices[shape];
   const int elem_dim = t8_eclass_to_dimension[shape];
-  t8_get_batch_coords_for_element_type (shape, batch_coords);
+  t8_generate_batch_coords_w_padding_for_element_type (shape, padding, batch_coords);
 
-  ts->t8_element_reference_coords (element, batch_coords, num_vertices, tree_ref_coords_by_element_ref_coords);
+  ts->t8_element_reference_coords (element, batch_coords, num_vertices, padding, tree_ref_coords_by_element_ref_coords);
   for (int i_vertex = 0; i_vertex < num_vertices; ++i_vertex) {
     ts->t8_element_vertex_reference_coords (element, i_vertex, tree_ref_coords_by_vertex);
     EXPECT_TRUE (t8_compare_arrays (tree_ref_coords_by_vertex,
                                     tree_ref_coords_by_element_ref_coords + i_vertex * elem_dim, elem_dim,
                                     2 * T8_PRECISION_EPS))
-      << t8_generate_additional_info_ref_coords (shape, i_vertex, elem_dim, batch_coords, tree_ref_coords_by_vertex,
-                                                 tree_ref_coords_by_element_ref_coords);
+      << t8_generate_additional_info_ref_coords (shape, i_vertex, elem_dim, batch_coords, padding,
+                                                 tree_ref_coords_by_vertex, tree_ref_coords_by_element_ref_coords);
   }
   /* Compare results of the two different ways to compute an elements centroid */
   t8_forest_element_centroid (forest, ltree_id, element, centroid_by_element_ref_coords);
@@ -229,6 +244,9 @@ class class_ref_coords: public testing::TestWithParam<std::tuple<t8_eclass_t, in
     const std::tuple<t8_eclass, int> params = GetParam ();
     const t8_eclass_t eclass = std::get<0> (params);
     const int level = std::get<1> (params);
+    /* We increase the amount of padding with the level since the runtime of the test would explode otherwise.
+       But we keep the padding at 0 for level 1 to have more testcases with padding = 0. */
+    padding = level == 0 ? 0 : level - 1;
     t8_cmesh_t cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
     forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0, sc_MPI_COMM_WORLD);
     t8_forest_init (&forest_partition);
@@ -242,6 +260,7 @@ class class_ref_coords: public testing::TestWithParam<std::tuple<t8_eclass_t, in
     t8_forest_unref (&forest);
   }
   t8_forest_t forest, forest_partition;
+  size_t padding;
 };
 
 TEST_P (class_ref_coords, t8_check_elem_ref_coords)
@@ -253,11 +272,11 @@ TEST_P (class_ref_coords, t8_check_elem_ref_coords)
     const t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest, tree_class);
     for (ielement = 0; ielement < t8_forest_get_tree_num_elements (forest, itree); ielement++) {
       const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
-      t8_test_coords (forest, itree, element, ts);
+      t8_test_coords (forest, itree, element, ts, padding);
     }
   }
   /* Increase cmesh ref counter to not loose it during t8_forest_unref */
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_element_ref_coords, class_ref_coords,
-                          testing::Combine (AllEclasses, testing::Range (0, MAX_LEVEL_REF_COORD_TEST + 1)));
+                          testing::Combine (AllEclasses, testing::Range (0, MAX_LEVEL_AND_PADDING_REF_COORD_TEST + 1)));
