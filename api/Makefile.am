@@ -27,7 +27,6 @@ src_libt8_la_FCFLAGS = $(AM_FCFLAGS)
 src_libt8_la_FFLAGS = $(FFLAGS)
 
 # Include the Fortran specific variables and rules
-#include t8_fortran_specific.mk
-
+include t8_fortran_specific.mk
 
 endif
