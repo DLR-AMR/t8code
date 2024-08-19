@@ -28,34 +28,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <test/t8_data/t8_data_handler_specs.hxx>
 
 template <typename T>
-class t8_single_data_handler {
- public:
-  int
-  t8_data_size (sc_MPI_Comm comm);
-
-  /**
-     * Overwrite this routine to describe how data of type T should be packed
-     * 
-     * \param[in] data Data to be packed via MPI_Pack
-     * \return the size of the packed data in number of bytes. 
-     */
-  void
-  t8_data_pack (T &data, int &pos, std::vector<char> &buffer, sc_MPI_Comm comm);
-
-  /**
-     * Overwrite this routine to describe how data of type T should be unpacked 
-     * 
-     * \param packed_data A void-pointer to the packed Data
-     * \return T* the unpacked data. 
-     */
-  void
-  t8_data_unpack (std::vector<char> &buffer, int &pos, T &data, sc_MPI_Comm comm);
-};
-
-template <>
-class t8_single_data_handler<enlarged_data<int>>;
-
-template <typename T>
 class t8_data_handler: public t8_single_data_handler<T> {
  public:
   int
