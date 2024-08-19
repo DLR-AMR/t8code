@@ -519,7 +519,7 @@ struct t8_default_scheme_prism_c: public t8_default_scheme_common_c
    *                          in the reference space of the element.
    * \param [in] num_coords   Number of \f$ dim\f$-sized coordinates to evaluate.
    * \param [in] padding      Only used if \a num_coords > 1.
-   *                          The amount of padding in \a ref_coords between array elements:
+   *                          The number of padding entries in \a ref_coords between array elements:
    *                          For elem dim 2 and input {x1, y1, x2, y2, ...} padding is 0.
    *                          For elem dim 2 and input {x1, y1, z1, x2, y2, z2, ...} padding is 1.
    *                          For elem dim 3 and input {x1, y1, z1, x2, y2, z2, ...} padding is 0.

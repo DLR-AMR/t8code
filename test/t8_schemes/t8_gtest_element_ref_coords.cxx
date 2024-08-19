@@ -102,7 +102,7 @@ t8_element_centroid_by_vertex_coords (const t8_forest_t forest, const t8_eclass_
  * {x1, y1, z1, ... padding ..., x2, y2, z2, ... padding ..., ... , xn, yn, zn, ... padding ...}
  * for 3 D shapes. Will omit y and z according to the shapes dimension.
  * \param [in] shape         The element shape.
- * \param [in] padding       The amount of padding to use.
+ * \param [in] padding       The number of padding entries to use.
  * \param [out] batch_coords The batch coordinates of the vertices for the element shape.
  *                           The min length of the array is dim(shape) * (num_vertices + padding).
  *                           Vertices are treated as dim 1.
@@ -128,7 +128,7 @@ t8_generate_batch_coords_w_padding_for_element_type (const t8_element_shape_t sh
  * \param [in] i_vertex The vertex index.
  * \param [in] elem_dim The dimension of the element.
  * \param [in] batch_coords The input batch coordinates.
- * \param [in] padding The padding used in the batch coordinates.
+ * \param [in] padding The number of padding entries used in the batch coordinates.
  * \param [in] tree_ref_coords_by_vertex The reference coordinates of the vertex computed by \ref t8_element_vertex_reference_coords.
  * \param [in] tree_ref_coords_by_element_ref_coords The reference coordinates of the vertex computed by \ref t8_element_reference_coords.
  * \return The additional info.
@@ -244,7 +244,7 @@ class class_ref_coords: public testing::TestWithParam<std::tuple<t8_eclass_t, in
     const std::tuple<t8_eclass, int> params = GetParam ();
     const t8_eclass_t eclass = std::get<0> (params);
     const int level = std::get<1> (params);
-    /* We increase the amount of padding with the level since the runtime of the test would explode otherwise.
+    /* We increase the number of padding entries with the level since the runtime of the test would explode otherwise.
        But we keep the padding at 0 for level 1 to have more testcases with padding = 0. */
     padding = level == 0 ? 0 : level - 1;
     t8_cmesh_t cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);

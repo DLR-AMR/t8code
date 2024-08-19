@@ -67,7 +67,7 @@ t8_forest_element_coordinate_from_corner_number (t8_forest_t forest, t8_locidx_t
  * \param [in]      ref_coords        The reference coordinates of the point inside the element.
  * \param [in]      num_coords        The number of coordinate sets in ref_coord (dimension x double).
  * \param [in]      padding           Only used if \a num_coords > 1.
- *                                    The amount of padding in \a ref_coords between array elements:
+ *                                    The number of padding entries in \a ref_coords between array elements:
  *                                    For elem dim 2 and input {x1, y1, x2, y2, ...} padding is 0.
  *                                    For elem dim 2 and input {x1, y1, z1, x2, y2, z2, ...} padding is 1.
  *                                    For elem dim 3 and input {x1, y1, z1, x2, y2, z2, ...} padding is 0.
