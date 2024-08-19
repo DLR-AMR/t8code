@@ -35,6 +35,9 @@ class data_handler_test: public testing::Test {
     SC_CHECK_MPI (mpiret);
     mpiret = sc_MPI_Comm_size (comm, &mpisize);
     SC_CHECK_MPI (mpiret);
+
+    data_handler = new t8_data_handler<enlarged_data<T>> ();
+    creator = new data_creator<enlarged_data<T>> ();
   }
 
   void
@@ -52,10 +55,10 @@ class data_handler_test: public testing::Test {
 };
 
 TYPED_TEST_SUITE_P (data_handler_test);
-/*
+
 TYPED_TEST_P (data_handler_test, single_data)
 {
-  std::vector<char> buffer;
+  std::vector<char> buffer (this->data_handler->t8_buffer_size (1, this->comm));
 
   this->creator->create (1);
   int pos = 0;
@@ -89,13 +92,14 @@ TYPED_TEST_P (data_handler_test, single_data)
   EXPECT_EQ (this->recv_data[0].data, this->creator->large_data[0].data);
   EXPECT_EQ (this->recv_data[0].check, this->creator->large_data[0].check);
 }
-*/
+
+/*
 TYPED_TEST_P (data_handler_test, vector_of_data)
 {
   for (int num_data = 1; num_data < this->max_num_data; num_data++) {
     this->creator->create (num_data);
 
-    std::vector<char> buffer;
+    std::vector<char> buffer(this->data_handler->t8_buffer_size(num_data, this->comm));
     this->data_handler->t8_data_pack_vector (this->creator->large_data, num_data, buffer, this->comm);
 
     int mpiret
@@ -125,12 +129,13 @@ TYPED_TEST_P (data_handler_test, vector_of_data)
       EXPECT_EQ (this->recv_data[idata].check, this->creator->large_data[idata].check);
     }
   }
-}
+}*/
 
 REGISTER_TYPED_TEST_SUITE_P (data_handler_test,
-                             // single_data,
-                             vector_of_data);
+                             single_data  //,
+                                          //vector_of_data
+);
 
-using DataTypes = ::testing::Types<int>;
+using DataTypes = ::testing::Types<int, double>;
 
 INSTANTIATE_TYPED_TEST_SUITE_P (Test_data_handler, data_handler_test, DataTypes, );

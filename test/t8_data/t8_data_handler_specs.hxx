@@ -36,8 +36,10 @@ struct enlarged_data
 template <typename T>
 class data_creator {
  public:
-  data_creator (): large_data (0) {};
-  ;
+  data_creator ()
+  {
+    large_data = std::vector<T> (0);
+  };
 
   void
   create (const int num_data);

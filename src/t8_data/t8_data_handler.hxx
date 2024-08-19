@@ -25,7 +25,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <t8.h>
 #include <vector>
-#include <test/t8_data/t8_data_handler_specs.hxx>
+#include <t8_data/t8_data_handler_base.hxx>
+#include <t8_data/t8_data_packs/t8_packed_types.hxx>
 
 template <typename T>
 class t8_data_handler: public t8_single_data_handler<T> {
