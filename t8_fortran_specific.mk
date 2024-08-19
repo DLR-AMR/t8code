@@ -40,8 +40,8 @@ install-data-hook:
 # This needs to be done in order to ensure the correct build process in any case
 # ...
 
-# TODO: Implement t8_fortran_test depends on the modules: t8_mo_fortran_interface
-#example/Fortran/t8_fortran_test.o : api/t8_fortran_interface/t8_mo_fortran_interface.o 
+# TODO: Implement t8_fortran_test depends on the modules: t8_fortran_interface
+#example/Fortran/t8_fortran_test.o : api/t8_fortran_interface/t8_fortran_interface.o 
 
 # end if T8_ENABLE_FORTRAN
 endif
