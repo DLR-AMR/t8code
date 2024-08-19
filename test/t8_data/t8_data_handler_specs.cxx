@@ -34,3 +34,15 @@ data_creator<enlarged_data<int>>::create (const int num_data)
     item.check = idata++;
   }
 }
+
+template <>
+void
+data_creator<enlarged_data<double>>::create (const int num_data)
+{
+  large_data.resize (num_data);
+  int idata = 0;
+  for (enlarged_data<double> item : large_data) {
+    item.data = 42.42;
+    item.check = idata++;
+  }
+}

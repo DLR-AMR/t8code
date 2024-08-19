@@ -28,53 +28,58 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <test/t8_data/t8_data_handler_specs.hxx>
 
 template <typename T>
-class t8_data_handler {
+class t8_single_data_handler {
  public:
-  t8_data_handler ();
-
   int
   t8_data_size (sc_MPI_Comm comm);
 
+  /**
+     * Overwrite this routine to describe how data of type T should be packed
+     * 
+     * \param[in] data Data to be packed via MPI_Pack
+     * \return the size of the packed data in number of bytes. 
+     */
+  void
+  t8_data_pack (T &data, int &pos, std::vector<char> &buffer, sc_MPI_Comm comm);
+
+  /**
+     * Overwrite this routine to describe how data of type T should be unpacked 
+     * 
+     * \param packed_data A void-pointer to the packed Data
+     * \return T* the unpacked data. 
+     */
+  void
+  t8_data_unpack (std::vector<char> &buffer, int &pos, T &data, sc_MPI_Comm comm);
+};
+
+template <>
+class t8_single_data_handler<enlarged_data<int>>;
+
+template <typename T>
+class t8_data_handler: public t8_single_data_handler<T> {
+ public:
   int
   t8_buffer_size (const int num_data, sc_MPI_Comm comm)
   {
-    const int single_size = t8_data_size ();
-    const int num_data_size;
+    const int single_size = this->t8_data_size (comm);
+    int num_data_size;
     int mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &num_data_size);
     SC_CHECK_MPI (mpiret);
     return num_data_size + num_data * single_size;
   }
 
-  /**
-         * Overwrite this routine to describe how data of type T should be packed
-         * 
-         * \param[in] data Data to be packed via MPI_Pack
-         * \return the size of the packed data in number of bytes. 
-         */
   void
-  t8_data_pack (T &data, int &pos, std::vector<char> &buffer, sc_MPI_Comm comm);
-
-  void
-  t8_data_pack_vector (const std::vector<T> &data, const int num_data, std::vector<char> &buffer, sc_MPI_Comm comm)
+  t8_data_pack_vector (std::vector<T> &data, const int num_data, std::vector<char> &buffer, sc_MPI_Comm comm)
   {
     int pos = 0;
-    T8_ASSERT (buffer.size == t8_buffer_size (num_data, comm));
+    T8_ASSERT (buffer.size () == t8_buffer_size (num_data, comm));
 
     sc_MPI_Pack (&num_data, 1, MPI_INT, buffer.data (), buffer.size (), &pos, comm);
 
     for (int idata = 0; idata < num_data; idata++) {
-      t8_data_pack (data[idata], pos, buffer, comm);
+      this->t8_data_pack (data[idata], pos, buffer, comm);
     }
   }
-
-  /**
-         * Overwrite this routine to describe how data of type T should be unpacked 
-         * 
-         * \param packed_data A void-pointer to the packed Data
-         * \return T* the unpacked data. 
-         */
-  void
-  t8_data_unpack (std::vector<char> &buffer, int &pos, T &data, sc_MPI_Comm comm);
 
   void
   t8_data_unpack_vector (std::vector<char> &buffer, std::vector<T> &data, int &outcount, sc_MPI_Comm comm)
@@ -88,12 +93,9 @@ class t8_data_handler {
     data.resize (outcount);
 
     for (int ipack = 0; ipack < outcount; ++ipack) {
-      t8_data_unpack (buffer, pos, data[ipack], comm);
+      this->t8_data_unpack (buffer, pos, data[ipack], comm);
     }
   }
 };
-
-template <>
-class t8_data_handler<enlarged_data<int>>;
 
 #endif /* T8_DATA_HANDLER_HXX */

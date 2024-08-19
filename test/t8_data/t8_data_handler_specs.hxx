@@ -36,7 +36,8 @@ struct enlarged_data
 template <typename T>
 class data_creator {
  public:
-  data_creator ();
+  data_creator (): large_data (0) {};
+  ;
 
   void
   create (const int num_data);
@@ -48,18 +49,6 @@ template <>
 class data_creator<int>;
 
 template <>
-class data_creator<double> {
-  void
-  create (const int num_data)
-  {
-    data.resize (num_data);
-
-    for (int idata = 0; idata < num_data; idata++) {
-      data[idata].data = 42.42;
-      data[idata].check = idata;
-    }
-  }
-  std::vector<enlarged_data<int>> data;
-};
+class data_creator<double>;
 
 #endif /* T8_DATA_HANDLER_SPECS_HXX */

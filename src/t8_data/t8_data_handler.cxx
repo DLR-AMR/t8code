@@ -21,10 +21,11 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 */
 
 #include <test/t8_data/t8_data_handler_specs.hxx>
+#include <t8_data/t8_data_handler.hxx>
 
 template <>
 int
-t8_data_handler<enlarged_data<int>>::t8_data_size (sc_MPI_Comm comm)
+t8_single_data_handler<enlarged_data<int>>::t8_data_size (sc_MPI_Comm comm)
 {
   int size;
   const int mpiret = sc_MPI_Pack_size (2, sc_MPI_INT, comm, &size);
@@ -34,8 +35,8 @@ t8_data_handler<enlarged_data<int>>::t8_data_size (sc_MPI_Comm comm)
 
 template <>
 void
-t8_data_handler<enlarged_data<int>>::t8_data_pack (enlarged_data<int> data, int &pos, std::vector<char> &buffer,
-                                                   sc_MPI_Comm comm)
+t8_single_data_handler<enlarged_data<int>>::t8_data_pack (enlarged_data<int> data, int &pos, std::vector<char> &buffer,
+                                                          sc_MPI_Comm comm)
 {
   int mpiret = sc_MPI_Pack (&data.data, 1, sc_MPI_INT, buffer.data (), buffer.size (), &pos, comm);
   SC_CHECK_MPI (mpiret);
@@ -46,8 +47,8 @@ t8_data_handler<enlarged_data<int>>::t8_data_pack (enlarged_data<int> data, int 
 
 template <>
 void
-t8_data_handler<enlarged_data<int>>::t8_data_unpack (std::vector<char> &buffer, int &pos, enlarged_data<int> &data,
-                                                     int &outcount, sc_MPI_Comm comm)
+t8_single_data_handler<enlarged_data<int>>::t8_data_unpack (std::vector<char> &buffer, int &pos,
+                                                            enlarged_data<int> &data, sc_MPI_Comm comm)
 {
   int mpiret = sc_MPI_Unpack (buffer.data (), buffer.size (), &pos, &data.data, 1, sc_MPI_INT, comm);
   SC_CHECK_MPI (mpiret);

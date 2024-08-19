@@ -42,8 +42,8 @@ class data_handler_test: public testing::Test {
   {
   }
 
-  t8_data_handler<enlarged_data<T>> data_handler;
-  data_creator<enlarged_data<T>> creator;
+  t8_data_handler<enlarged_data<T>> *data_handler;
+  data_creator<enlarged_data<T>> *creator;
   std::vector<enlarged_data<T>> recv_data;
   int mpirank;
   int mpisize;
@@ -57,8 +57,9 @@ TYPED_TEST_P (data_handler_test, single_data)
 {
   std::vector<char> buffer;
 
-  this->creator.create (1);
-  this->data_handler->t8_data_pack (this->creator->data[0], 0, buffer, this->comm);
+  this->creator->create (1);
+  int pos = 0;
+  this->data_handler->t8_data_pack (this->creator->large_data[0], pos, buffer, this->comm);
 
   int mpiret
     = sc_MPI_Send (buffer.data (), buffer.size (), sc_MPI_PACKED, (this->mpirank + 1) % this->mpisize, 0, this->comm);
@@ -76,14 +77,17 @@ TYPED_TEST_P (data_handler_test, single_data)
   SC_CHECK_MPI (mpiret);
   std::vector<char> packed (size);
 
-  mpiret = sc_MPI_Recv (packed.data (), packed.size (), sc_MPI_PACKED, recv_from, 0, this->comm, &status);
+  pos = 0;
+  mpiret = sc_MPI_Recv (packed.data (), packed.size (), sc_MPI_PACKED, recv_from, pos, this->comm, &status);
   SC_CHECK_MPI (mpiret);
 
   this->recv_data.resize (1);
-  this->data_handler->t8_data_unpack (packed, this->recv_data[0], this->comm);
+  int outcount = 0;
+  pos = 0;
+  this->data_handler->t8_data_unpack (packed, pos, this->recv_data[0], this->comm);
 
-  EXPECT_EQ (this->recv_data[0].data, this->creator[0].data);
-  EXPECT_EQ (this->recv_data[0].check, this->creator[0].check);
+  EXPECT_EQ (this->recv_data[0].data, this->creator->large_data[0].data);
+  EXPECT_EQ (this->recv_data[0].check, this->creator->large_data[0].check);
 }
 
 TYPED_TEST_P (data_handler_test, vector_of_data)
@@ -92,7 +96,7 @@ TYPED_TEST_P (data_handler_test, vector_of_data)
     this->creator->create (num_data);
 
     std::vector<char> buffer;
-    this->data_handler->t8_data_pack_vector (this->creator.data, num_data, buffer, this->comm);
+    this->data_handler->t8_data_pack_vector (this->creator->large_data, num_data, buffer, this->comm);
 
     int mpiret
       = sc_MPI_Send (buffer.data (), buffer.size (), sc_MPI_PACKED, (this->mpirank + 1) % this->mpisize, 0, this->comm);
@@ -114,11 +118,11 @@ TYPED_TEST_P (data_handler_test, vector_of_data)
     SC_CHECK_MPI (mpiret);
 
     int outcount = 0;
-    this->data_handler->t8_data_unpack_vector (packed, this->recv_data, &outcount, this->comm);
+    this->data_handler->t8_data_unpack_vector (packed, this->recv_data, outcount, this->comm);
     EXPECT_EQ (outcount, num_data);
     for (int idata = 0; idata < num_data; idata++) {
-      EXPECT_EQ (this->recv_data[idata].data, this->creator.data[idata].data);
-      EXPECT_EQ (this->recv_data[idata].check, this->creator.data[idata].check);
+      EXPECT_EQ (this->recv_data[idata].data, this->creator->large_data[idata].data);
+      EXPECT_EQ (this->recv_data[idata].check, this->creator->large_data[idata].check);
     }
   }
 }
