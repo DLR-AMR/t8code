@@ -49,6 +49,8 @@ class data_handler_test: public testing::Test {
   void
   TearDown () override
   {
+    delete (data_handler);
+    delete (creator);
   }
 
   t8_data_handler<enlarged_data<T>> *data_handler;
