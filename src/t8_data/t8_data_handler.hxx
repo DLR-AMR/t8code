@@ -63,8 +63,8 @@ class t8_data_handler: public t8_single_data_handler<T> {
     const int num_data = data.size ();
     sc_MPI_Pack (&num_data, 1, MPI_INT, buffer.data (), buffer.size (), &pos, comm);
 
-    for (int idata = 0; idata < num_data; idata++) {
-      this->data_pack (data[idata], pos, buffer, comm);
+    for (T item : data) {
+      this->data_pack (item, pos, buffer, comm);
     }
   }
 
@@ -87,8 +87,8 @@ class t8_data_handler: public t8_single_data_handler<T> {
 
     data.resize (outcount);
 
-    for (int ipack = 0; ipack < outcount; ++ipack) {
-      this->data_unpack (buffer, pos, data[ipack], comm);
+    for (T item : data) {
+      this->data_unpack (buffer, pos, item, comm);
     }
   }
 
