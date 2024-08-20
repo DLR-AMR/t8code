@@ -27,16 +27,20 @@ on:
       MAKEFLAGS:
         required: true
         type: string
+        description: 'Make flags to use for compilation (like -j4)'
       IGNORE_CACHE:
         required: false
         type: boolean
         default: false
+        description: 'Ignore cache and force recompilation'
       CACHE_COUNTER:
         required: true
         type: number
+        description: 'Counter to force updating the cache'
       MPI:
         required: true
         type: string
+        description: 'Use MPI for compilation (ON/OFF)'
     outputs:
       USED_CACHE:
         description: "Whether the cache was used"
