@@ -91,6 +91,37 @@ class t8_data_handler: public t8_single_data_handler<T> {
       this->data_unpack (buffer, pos, data[ipack], comm);
     }
   }
+
+  int
+  data_send (std::vector<T> &data, int dest, int tag, sc_MPI_Comm comm)
+  {
+    std::vector<char> buffer (buffer_size (data.size (), comm));
+    data_pack_vector (data, buffer, comm);
+
+    const int mpiret = sc_MPI_Send (buffer.data (), buffer.size (), sc_MPI_PACKED, dest, tag, comm);
+
+    return mpiret;
+  }
+
+  int
+  data_recv (std::vector<T> &data, int source, int tag, sc_MPI_Comm comm, sc_MPI_Status *status, int &outcount)
+  {
+    int mpiret = sc_MPI_Probe (source, tag, comm, status);
+    SC_CHECK_MPI (mpiret);
+
+    int size;
+    mpiret = sc_MPI_Get_count (status, sc_MPI_PACKED, &size);
+    SC_CHECK_MPI (mpiret);
+
+    std::vector<char> buffer (size);
+    int pos = 0;
+    mpiret = sc_MPI_Recv (buffer.data (), buffer.size (), sc_MPI_PACKED, source, pos, comm, status);
+    SC_CHECK_MPI (mpiret);
+
+    data_unpack_vector (buffer, data, outcount, comm);
+
+    return mpiret;
+  }
 };
 
 #endif /* T8_DATA_HANDLER_HXX */
