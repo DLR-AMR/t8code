@@ -29,7 +29,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 template <typename T>
 class t8_single_data_handler {
  public:
-  int
+  inline int
   data_size (sc_MPI_Comm comm);
 
   /**

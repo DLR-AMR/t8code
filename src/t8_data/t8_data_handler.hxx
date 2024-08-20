@@ -81,6 +81,7 @@ class t8_data_handler: public t8_single_data_handler<T> {
   {
     int pos = 0;
 
+    /* Get the number of items we received. */
     int mpiret = sc_MPI_Unpack (buffer.data (), buffer.size (), &pos, &outcount, 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
     T8_ASSERT (outcount >= 0);
