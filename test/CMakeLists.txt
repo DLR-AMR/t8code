@@ -8,8 +8,12 @@ function( add_t8_test )
     cmake_parse_arguments( ADD_T8_TEST "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
     add_executable( ${ADD_T8_TEST_NAME} ${ADD_T8_TEST_SOURCES} )
-    target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 gtest )
-    add_test( NAME ${ADD_T8_TEST_NAME} COMMAND ./${ADD_T8_TEST_NAME} )
+    target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 gtest pthread)
+
+    # Split custom test command into a list by whitespace.
+    separate_arguments (T8CODE_CUSTOM_TEST_COMMAND_LIST NATIVE_COMMAND "${T8CODE_CUSTOM_TEST_COMMAND}")
+
+    add_test( NAME ${ADD_T8_TEST_NAME} COMMAND ${T8CODE_CUSTOM_TEST_COMMAND_LIST} ./${ADD_T8_TEST_NAME} )
 endfunction()
 
 # Copy test files to build folder so that the t8_test programs can find them.
@@ -28,12 +32,16 @@ add_t8_test( NAME t8_gtest_basics            SOURCES t8_gtest_main.cxx t8_gtest_
 add_t8_test( NAME t8_gtest_netcdf_linkage    SOURCES t8_gtest_main.cxx t8_gtest_netcdf_linkage.cxx )
 add_t8_test( NAME t8_gtest_vtk_linkage       SOURCES t8_gtest_main.cxx t8_gtest_vtk_linkage.cxx )
 
-add_t8_test( NAME t8_gtest_hypercube                     SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_hypercube.cxx )
-add_t8_test( NAME t8_gtest_cmesh_copy                    SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_copy.cxx )
-add_t8_test( NAME t8_gtest_cmesh_face_is_boundary        SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_face_is_boundary.cxx )
-add_t8_test( NAME t8_gtest_cmesh_partition               SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_partition.cxx )
-add_t8_test( NAME t8_gtest_cmesh_set_partition_offsets   SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_set_partition_offsets.cxx )
-add_t8_test( NAME t8_gtest_cmesh_set_join_by_vertices    SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_set_join_by_vertices.cxx )
+add_t8_test( NAME t8_gtest_hypercube                            SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_hypercube.cxx )
+add_t8_test( NAME t8_gtest_cmesh_readmshfile                    SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_readmshfile.cxx )
+add_t8_test( NAME t8_gtest_cmesh_copy                           SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_copy.cxx )
+add_t8_test( NAME t8_gtest_cmesh_face_is_boundary               SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_face_is_boundary.cxx )
+add_t8_test( NAME t8_gtest_cmesh_partition                      SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_partition.cxx )
+add_t8_test( NAME t8_gtest_cmesh_set_partition_offsets          SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_set_partition_offsets.cxx )
+add_t8_test( NAME t8_gtest_cmesh_set_join_by_vertices           SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_set_join_by_vertices.cxx )
+add_t8_test( NAME t8_gtest_cmesh_add_attributes_when_derive     SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_add_attributes_when_derive.cxx )
+add_t8_test( NAME t8_gtest_cmesh_tree_vertices_negative_volume  SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_tree_vertices_negative_volume.cxx )
+
 add_t8_test( NAME t8_gtest_multiple_attributes           SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_multiple_attributes.cxx )
 add_t8_test( NAME t8_gtest_attribute_gloidx_array        SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_attribute_gloidx_array.cxx )
 
@@ -48,6 +56,11 @@ add_t8_test( NAME t8_gtest_transform                 SOURCES t8_gtest_main.cxx t
 add_t8_test( NAME t8_gtest_ghost_exchange            SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_ghost_exchange.cxx )
 add_t8_test( NAME t8_gtest_ghost_delete              SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_ghost_delete.cxx )
 add_t8_test( NAME t8_gtest_ghost_and_owner           SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_ghost_and_owner.cxx )
+add_t8_test( NAME t8_gtest_balance                   SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_balance.cxx )
+add_t8_test( NAME t8_gtest_forest_commit             SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_forest_commit.cxx )
+add_t8_test( NAME t8_gtest_forest_face_normal        SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_forest_face_normal.cxx )
+add_t8_test( NAME t8_gtest_element_is_leaf           SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_element_is_leaf.cxx )
+add_t8_test( NAME t8_gtest_partition_data            SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_partition_data.cxx )
 
 add_t8_test( NAME t8_gtest_permute_hole      SOURCES t8_gtest_main.cxx t8_forest_incomplete/t8_gtest_permute_hole.cxx )
 add_t8_test( NAME t8_gtest_recursive         SOURCES t8_gtest_main.cxx t8_forest_incomplete/t8_gtest_recursive.cxx )
@@ -57,10 +70,13 @@ add_t8_test( NAME t8_gtest_empty_global_tree SOURCES t8_gtest_main.cxx t8_forest
 
 add_t8_test( NAME t8_gtest_geometry_cad         SOURCES t8_gtest_main.cxx t8_geometry/t8_geometry_implementations/t8_gtest_geometry_cad.cxx )
 add_t8_test( NAME t8_gtest_geometry_linear      SOURCES t8_gtest_main.cxx t8_geometry/t8_geometry_implementations/t8_gtest_geometry_linear.cxx )
+add_t8_test( NAME t8_gtest_geometry_lagrange    SOURCES t8_gtest_main.cxx t8_geometry/t8_geometry_implementations/t8_gtest_geometry_lagrange.cxx )
+add_t8_test( NAME t8_gtest_geometry_triangular_interpolation    SOURCES t8_gtest_main.cxx t8_geometry/t8_gtest_geometry_triangular_interpolation.cxx )
 add_t8_test( NAME t8_gtest_geometry_handling    SOURCES t8_gtest_main.cxx t8_geometry/t8_gtest_geometry_handling.cxx )
 add_t8_test( NAME t8_gtest_point_inside         SOURCES t8_gtest_main.cxx t8_geometry/t8_gtest_point_inside.cxx )
 
 add_t8_test( NAME t8_gtest_vtk_reader SOURCES t8_gtest_main.cxx t8_IO/t8_gtest_vtk_reader.cxx )
+add_t8_test( NAME t8_gtest_vtk_writer SOURCES t8_gtest_main.cxx t8_IO/t8_gtest_vtk_writer.cxx )
 
 add_t8_test( NAME t8_gtest_nca                   SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_nca.cxx )
 add_t8_test( NAME t8_gtest_pyra_connectivity     SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_pyra_connectivity.cxx )
@@ -77,10 +93,21 @@ add_t8_test( NAME t8_gtest_boundary_extrude      SOURCES t8_gtest_main.cxx t8_sc
 add_t8_test( NAME t8_gtest_face_descendant       SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_face_descendant.cxx )
 add_t8_test( NAME t8_gtest_default               SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_default.cxx )
 add_t8_test( NAME t8_gtest_child_parent_face     SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_child_parent_face.cxx )
+add_t8_test( NAME t8_gtest_pack_unpack           SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_pack_unpack.cxx )
+add_t8_test( NAME t8_gtest_root                  SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_root.cxx )
+add_t8_test( NAME t8_gtest_scheme_consistency    SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_scheme_consistency.cxx )
 
 copy_test_file( test_cube_unstructured_1.inp )
 copy_test_file( test_cube_unstructured_2.inp )
 copy_test_file( test_vtk_tri.vtu )
 copy_test_file( test_vtk_cube.vtp )
 copy_test_file( test_parallel_file.pvtu )
+copy_test_file( test_parallel_file_0.vtu )
+copy_test_file( test_parallel_file_1.vtu )
 copy_test_file( test_polydata.pvtp )
+copy_test_file( test_polydata_0.vtp )
+copy_test_file( test_polydata_1.vtp )
+copy_test_file( test_msh_file_vers2_ascii.msh )
+copy_test_file( test_msh_file_vers4_ascii.msh )
+copy_test_file( test_msh_file_vers2_bin.msh )
+copy_test_file( test_msh_file_vers4_bin.msh )

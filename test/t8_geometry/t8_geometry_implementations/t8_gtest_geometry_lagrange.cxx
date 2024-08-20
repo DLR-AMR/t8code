@@ -1,23 +1,23 @@
 /*
-This file is part of t8code.
-t8code is a C library to manage a collection (a forest) of multiple
-connected adaptive space-trees of general element classes in parallel.
+  This file is part of t8code.
+  t8code is a C library to manage a collection (a forest) of multiple
+  connected adaptive space-trees of general element classes in parallel.
 
-Copyright (C) 2024 the developers
+  Copyright (C) 2024 the developers
 
-t8code is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
+  t8code is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
 
-t8code is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+  t8code is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with t8code; if not, write to the Free Software Foundation, Inc.,
-51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+  You should have received a copy of the GNU General Public License
+  along with t8code; if not, write to the Free Software Foundation, Inc.,
+  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
 /** \file t8_gtest_geometry_lagrange.cxx
@@ -34,10 +34,11 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <test/t8_gtest_macros.hxx>
 #include <t8_eclass.h>
 #include <t8_vec.h>
-#include <t8_element_cxx.hxx>
+#include <t8_element.hxx>
 #include <t8_cmesh.h>
-#include <t8_cmesh_vtk_writer.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_vtk/t8_vtk_writer.h>
+
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.hxx>
@@ -99,7 +100,7 @@ allclose (const U &a, const V &b, double tol = T8_PRECISION_SQRT_EPS)
  * \return         Coordinates of the points, given in x,y,z.
  */
 std::vector<std::array<double, T8_ECLASS_MAX_DIM>>
-sample (t8_eclass_t eclass, uint n_point)
+sample (t8_eclass_t eclass, uint32_t n_point)
 {
   std::srand (time (NULL));
   std::vector<std::array<double, T8_ECLASS_MAX_DIM>> points (n_point);
@@ -228,7 +229,7 @@ TEST_P (LagrangeCmesh, lagrange_mapping)
   t8_lagrange_element lag = create_sample_element (eclass, degree);
   /* Compare the mappings on each boundary face of the Lagrange element */
   std::vector<t8_lagrange_element> faces = lag.decompose ();
-  uint i_face = 0;
+  uint32_t i_face = 0;
   for (const auto &face : faces) {
     auto points_on_face = sample (face.get_type (), T8_NUM_SAMPLE_POINTS);
     for (const auto &point : points_on_face) {

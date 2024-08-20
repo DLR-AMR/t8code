@@ -61,7 +61,7 @@
  * just a convention to ensure that the node numbering be consistent.
  * 3. The mapping by the Lagrange geometry falls back to the linear geometry
  * for degree one. It means that the starting point for the node number
- * assignment is the numbering defined in the \a t8_element.c file.
+ * assignment is the numbering defined in the \a t8_element.cxx file.
  * 4. The node numbering is performed in increasing spatial dimension, which
  * results in a hierarchical construction of elements. The node numbers are
  * assigned based on increasing face IDs, then increasing edge IDs, then
@@ -348,7 +348,7 @@ class t8_lagrange_element {
    * \param nodes   x,y,z coordinates of the nodes, adhering to the numbering
    *                convention.
    */
-  t8_lagrange_element (t8_eclass_t eclass, uint degree, std::vector<double> &nodes);
+  t8_lagrange_element (t8_eclass_t eclass, uint32_t degree, std::vector<double> &nodes);
 
   /**
    * Destroy the t8_lagrange_element object.
@@ -385,7 +385,7 @@ class t8_lagrange_element {
    * \return      x,y,z coordinates of the node.
    */
   std::vector<double>
-  get_node_coords (uint node) const;
+  get_node_coords (uint32_t node) const;
 
   /**
    * Coordinates of the specified nodes.
@@ -394,14 +394,14 @@ class t8_lagrange_element {
    * \return       x,y,z coordinates of the nodes.
    */
   std::vector<std::vector<double>>
-  get_node_coords (std::vector<uint> &nodes) const;
+  get_node_coords (std::vector<uint32_t> &nodes) const;
 
   /**
    * Node labels on the faces of the element.
    * 
    * \return  Node labels on each face of the element.
    */
-  std::vector<std::vector<uint>>
+  std::vector<std::vector<uint32_t>>
   get_face_nodes () const;
 
   /**
@@ -434,7 +434,7 @@ class t8_lagrange_element {
    * \return         Coordinates of the points, given in x,y,z.
    */
   std::vector<std::array<double, T8_ECLASS_MAX_DIM>>
-  sample (uint n_point) const;
+  sample (uint32_t n_point) const;
 
   /**
    * Map this element on the face of a higher-dimensional element.
@@ -489,16 +489,16 @@ class t8_lagrange_element {
   /** Lagrange elements have the same element class as the linear ones. */
   t8_eclass_t eclass;
   /** Polynomial degree of the geometrical mapping. */
-  const uint degree;
+  const uint32_t degree;
   /** Points in the physical space, which span the geometry of the element. */
   const std::vector<double> nodes;
   /** Coarse mesh, wrapped by this class. */
   t8_cmesh_t cmesh;
   /** Number of nodes in the Lagrange element of a given class and degree */
-  static constexpr uint lagrange_nodes[T8_ECLASS_COUNT][2] = { { 1, 1 }, { 2, 3 }, { 4, 9 }, { 3, 6 }, { 8, 27 } };
+  static constexpr uint32_t lagrange_nodes[T8_ECLASS_COUNT][2] = { { 1, 1 }, { 2, 3 }, { 4, 9 }, { 3, 6 }, { 8, 27 } };
 
   t8_forest_t
-  create_uniform_forest (t8_cmesh_t cmesh, uint level) const;
+  create_uniform_forest (t8_cmesh_t cmesh, uint32_t level) const;
 };
 
 #endif /* !T8_GEOMETRY_LAGRANGE_HXX */
