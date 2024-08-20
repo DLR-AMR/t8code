@@ -31,31 +31,53 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 template <typename T>
 class t8_data_handler: public t8_single_data_handler<T> {
  public:
+  /**
+   * Compute the size of a buffer for \a num_data items of type T
+   * 
+   * \param[in] num_data Number of items that will be packed into the buffer
+   * \param[in] comm The communicator that will be used. 
+   * \return The size of the buffer in bytes. 
+   */
   int
-  t8_buffer_size (const int num_data, sc_MPI_Comm comm)
+  buffer_size (const int num_data, sc_MPI_Comm comm)
   {
-    const int single_size = this->t8_data_size (comm);
+    const int single_size = this->data_size (comm);
     int num_data_size;
     int mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &num_data_size);
     SC_CHECK_MPI (mpiret);
     return num_data_size + num_data * single_size;
   }
 
+  /**
+   * Pack a vector of items into a buffer. 
+   * 
+   * \param[in] data A vector of items to pack
+   * \param[in, out] buffer A vector that will be filled with the packed data. 
+   * \param[in] comm The used communicator
+   */
   void
-  t8_data_pack_vector (std::vector<T> &data, const int num_data, std::vector<char> &buffer, sc_MPI_Comm comm)
+  data_pack_vector (std::vector<T> &data, std::vector<char> &buffer, sc_MPI_Comm comm)
   {
     int pos = 0;
-    T8_ASSERT (buffer.size () == t8_buffer_size (num_data, comm));
-
+    T8_ASSERT (buffer.size () == buffer_size (data.size (), comm));
+    const int num_data = data.size ();
     sc_MPI_Pack (&num_data, 1, MPI_INT, buffer.data (), buffer.size (), &pos, comm);
 
     for (int idata = 0; idata < num_data; idata++) {
-      this->t8_data_pack (data[idata], pos, buffer, comm);
+      this->data_pack (data[idata], pos, buffer, comm);
     }
   }
 
+  /**
+   * Unpack a buffer into a vector of items. 
+   * 
+   * \param[in] buffer  The input buffer
+   * \param[in, out] data Vector of type T, that will be filled with the unpacked data.
+   * \param[in, out] outcount Number of items that were packed
+   * \param[in] comm The communicator to use. 
+   */
   void
-  t8_data_unpack_vector (std::vector<char> &buffer, std::vector<T> &data, int &outcount, sc_MPI_Comm comm)
+  data_unpack_vector (std::vector<char> &buffer, std::vector<T> &data, int &outcount, sc_MPI_Comm comm)
   {
     int pos = 0;
 
@@ -66,7 +88,7 @@ class t8_data_handler: public t8_single_data_handler<T> {
     data.resize (outcount);
 
     for (int ipack = 0; ipack < outcount; ++ipack) {
-      this->t8_data_unpack (buffer, pos, data[ipack], comm);
+      this->data_unpack (buffer, pos, data[ipack], comm);
     }
   }
 };
