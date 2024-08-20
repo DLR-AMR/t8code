@@ -57,7 +57,10 @@ if( T8CODE_ENABLE_MPI )
 endif()
 
 if( T8CODE_ENABLE_VTK )
-    find_package( VTK REQUIRED )
+    find_package( VTK REQUIRED COMPONENTS
+        IOXML CommonExecutionModel CommonDataModel
+        IOGeometry IOXMLParser IOParallelXML IOPLY
+        ParallelMPI FiltersCore vtksys CommonCore zlib IOLegacy)
     if(VTK_FOUND)
         message("Found VTK")
     endif (VTK_FOUND)

@@ -262,7 +262,7 @@ t8_cmesh_triangle_read_eles (t8_cmesh_t cmesh, int corner_offset, char *filename
       double temp;
 
       T8_ASSERT (dim == 3);
-      t8_debugf ("Correcting negative volume of tree %li\n", static_cast<long>(triangle - triangle_offset));
+      t8_debugf ("Correcting negative volume of tree %li\n", static_cast<long> (triangle - triangle_offset));
       /* We switch vertex 0 and vertex 1 */
       for (i = 0; i < 3; i++) {
         temp = tree_vertices[i];
