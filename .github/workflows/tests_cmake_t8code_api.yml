@@ -27,15 +27,19 @@ on:
       MAKEFLAGS:
         required: true
         type: string
+        description: 'Make flags to use for compilation (like -j4)'
       MPI:
         required: true
         type: string
+        description: 'Use MPI for compilation (ON/OFF)'
       BUILD_TYPE:
         required: true
         type: string
+        description: 'Build type (Release/Debug)'
       LESS_TESTS:
         required: true
         type: boolean
+        description: 'Enable less tests option for configuring'
 
 jobs:  
   t8code_cmake_tests:
