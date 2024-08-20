@@ -64,12 +64,13 @@ TYPED_TEST_P (data_handler_test, single_data)
   int pos = 0;
   this->data_handler->t8_data_pack (this->creator->large_data[0], pos, buffer, this->comm);
 
+  int send_to = (this->mpirank + 1) % this->mpisize;
+
   int mpiret
     = sc_MPI_Send (buffer.data (), buffer.size (), sc_MPI_PACKED, (this->mpirank + 1) % this->mpisize, 0, this->comm);
   SC_CHECK_MPI (mpiret);
 
-  int recv_from = (this->mpirank == 0) ? (this->mpisize - 1) : (this->mpisize - 1);
-
+  int recv_from = (this->mpirank == 0) ? (this->mpisize - 1) : (this->mpirank - 1);
   sc_MPI_Status status;
 
   mpiret = sc_MPI_Probe (recv_from, 0, this->comm, &status);
@@ -93,13 +94,12 @@ TYPED_TEST_P (data_handler_test, single_data)
   EXPECT_EQ (this->recv_data[0].check, this->creator->large_data[0].check);
 }
 
-/*
 TYPED_TEST_P (data_handler_test, vector_of_data)
 {
   for (int num_data = 1; num_data < this->max_num_data; num_data++) {
     this->creator->create (num_data);
 
-    std::vector<char> buffer(this->data_handler->t8_buffer_size(num_data, this->comm));
+    std::vector<char> buffer (this->data_handler->t8_buffer_size (num_data, this->comm));
     this->data_handler->t8_data_pack_vector (this->creator->large_data, num_data, buffer, this->comm);
 
     int mpiret
@@ -108,7 +108,7 @@ TYPED_TEST_P (data_handler_test, vector_of_data)
 
     sc_MPI_Status status;
 
-    int recv_from = (this->mpirank == 0) ? (this->mpisize - 1) : (this->mpisize - 1);
+    int recv_from = (this->mpirank == 0) ? (this->mpisize - 1) : (this->mpirank - 1);
 
     mpiret = sc_MPI_Probe (recv_from, 0, this->comm, &status);
     SC_CHECK_MPI (mpiret);
@@ -129,12 +129,9 @@ TYPED_TEST_P (data_handler_test, vector_of_data)
       EXPECT_EQ (this->recv_data[idata].check, this->creator->large_data[idata].check);
     }
   }
-}*/
+}
 
-REGISTER_TYPED_TEST_SUITE_P (data_handler_test,
-                             single_data  //,
-                                          //vector_of_data
-);
+REGISTER_TYPED_TEST_SUITE_P (data_handler_test, single_data, vector_of_data);
 
 using DataTypes = ::testing::Types<int, double>;
 
