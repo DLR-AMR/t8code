@@ -92,6 +92,16 @@ class t8_data_handler: public t8_single_data_handler<T> {
     }
   }
 
+  /**
+   * Wrapper around a \a data_pack_vector and an sc_MPI_Send. 
+   * Packs the \a data and sends it to rank \a dest using \a tag via \a comm
+   * 
+   * \param[in] data The data to pack and send
+   * \param[in] dest The rank we send to. 
+   * \param[in] tag The tag to use during communication
+   * \param[in] comm The communicator to use. 
+   * \return The result of the mpi-communication
+   */
   int
   data_send (std::vector<T> &data, int dest, int tag, sc_MPI_Comm comm)
   {
@@ -103,6 +113,18 @@ class t8_data_handler: public t8_single_data_handler<T> {
     return mpiret;
   }
 
+  /**
+   * Wrapper around an \a sc_MPI_Recv and \a data_unpack. 
+   * Receives and unpackes data coming from \a source. 
+   * 
+   * \param[in, out] data The output buffer. Will be filled with the unpacked data.
+   * \param[in] source The rank we receive data from
+   * \param[in] tag The tag used during communication
+   * \param[in] comm The communicator to use. 
+   * \param[in] status Status of the MPI-communication
+   * \param[in, out] outcount After execution it is the number of items of type \a T received. 
+   * \return The result of the mpi communication.  
+   */
   int
   data_recv (std::vector<T> &data, int source, int tag, sc_MPI_Comm comm, sc_MPI_Status *status, int &outcount)
   {
