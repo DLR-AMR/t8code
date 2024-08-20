@@ -36,9 +36,11 @@ on:
       MAKEFLAGS:
         required: true
         type: string
+        description: 'Make flags to use for compilation (like -j4)'
       MPI:
         required: true
         type: string
+        description: 'Use MPI for compilation (ON/OFF)'
 
 jobs:
   sc_p4est_cmake_tests:
