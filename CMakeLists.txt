@@ -29,7 +29,7 @@ option( T8CODE_BUILD_DOCUMENTATION "Build t8code's documentation" OFF )
 include(CMakeDependentOption)
 cmake_dependent_option( T8CODE_BUILD_DOCUMENTATION_SPHINX "Build t8code's documentation using sphinx" OFF "T8CODE_BUILD_DOCUMENTATION" OFF )
 
-set(T8CODE_CUSTOM_TEST_COMMAND "" CACHE STRING "Define custom test command, e.g.: mpirun -n 4")
+set(T8CODE_CUSTOM_TEST_COMMAND "mpirun -n 2" CACHE STRING "Define custom test command, e.g.: mpirun -n 4")
 
 if( NOT CMAKE_BUILD_TYPE )
     set( CMAKE_BUILD_TYPE "Release" )
