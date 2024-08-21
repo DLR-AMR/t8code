@@ -31,11 +31,17 @@ cmake_dependent_option( T8CODE_BUILD_DOCUMENTATION_SPHINX "Build t8code's docume
 
 set(T8CODE_CUSTOM_TEST_COMMAND "" CACHE STRING "Define custom test command, e.g.: mpirun -n 4")
 
-if( NOT CMAKE_BUILD_TYPE )
-    set( CMAKE_BUILD_TYPE "Release" )
-endif()
+# Set a default build type if none was specified
+set(default_build_type "Release")
 
-set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Release RelWithDebInfo Debug)
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
+  set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE
+      STRING "Choose the type of build. Build types available: Release Debug RelWithDebInfo" FORCE)
+  # Set the possible values of build type for cmake-gui
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
+    "Debug" "Release" "RelWithDebInfo")
+endif()
 
 set( CMAKE_C_STANDARD 11 )
 set( CMAKE_C_STANDARD_REQUIRED ON )
