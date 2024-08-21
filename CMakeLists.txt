@@ -29,7 +29,7 @@ option( T8CODE_BUILD_DOCUMENTATION "Build t8code's documentation" OFF )
 include(CMakeDependentOption)
 cmake_dependent_option( T8CODE_BUILD_DOCUMENTATION_SPHINX "Build t8code's documentation using sphinx" OFF "T8CODE_BUILD_DOCUMENTATION" OFF )
 
-set(T8CODE_CUSTOM_TEST_COMMAND "" CACHE STRING "Define custom test command, e.g.: mpirun -n 4")
+set(T8CODE_CUSTOM_TEST_COMMAND "" CACHE STRING "Define custom test command, e.g.: mpirun -np 8 (overwrites standard mpirun -np 4 if build with mpi)")
 
 if( NOT CMAKE_BUILD_TYPE )
     set( CMAKE_BUILD_TYPE "Release" )
@@ -57,7 +57,10 @@ if( T8CODE_ENABLE_MPI )
 endif()
 
 if( T8CODE_ENABLE_VTK )
-    find_package( VTK REQUIRED )
+    find_package( VTK REQUIRED COMPONENTS
+        IOXML CommonExecutionModel CommonDataModel
+        IOGeometry IOXMLParser IOParallelXML IOPLY
+        ParallelMPI FiltersCore vtksys CommonCore zlib IOLegacy)
     if(VTK_FOUND)
         message("Found VTK")
     endif (VTK_FOUND)
