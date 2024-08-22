@@ -5,8 +5,8 @@ function( add_t8_benchmark )
     cmake_parse_arguments( ADD_T8_BENCHMARK "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
     add_executable( ${ADD_T8_BENCHMARK_NAME} ${ADD_T8_BENCHMARK_SOURCES} )
-    target_include_directories( ${ADD_T8_BENCHMARK_NAME} PRIVATE ${PROJECT_SOURCE_DIR} )
-    target_link_libraries( ${ADD_T8_BENCHMARK_NAME} PRIVATE T8 SC::SC )
+    target_link_libraries( ${ADD_T8_BENCHMARK_NAME} PRIVATE T8 ${SC_LIBRARIES} m )
+    target_include_directories( ${ADD_T8_BENCHMARK_NAME} PRIVATE ${PROJECT_SOURCE_DIR} ${SC_INCLUDE_DIR})
 
     install( TARGETS ${ADD_T8_BENCHMARK_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
 endfunction()

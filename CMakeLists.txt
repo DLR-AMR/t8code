@@ -56,6 +56,20 @@ if( T8CODE_ENABLE_MPI )
     # set( SC_ENABLE_MPI ON ) # When the fix gets merged, replace the previous line with this one
 endif()
 
+if ( T8CODE_USE_SYSTEM_SC )
+    find_package( SC REQUIRED )
+else( T8CODE_USE_SYSTEM_SC )
+    set (SC_LIBRARIES "SC::SC")
+    add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/sc )
+endif( T8CODE_USE_SYSTEM_SC )
+
+if ( T8CODE_USE_SYSTEM_P4EST )
+    find_package( P4EST REQUIRED )
+else( T8CODE_USE_SYSTEM_P4EST )
+    set (P4EST_LIBRARIES "P4EST::P4EST")
+    add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/p4est )
+endif( T8CODE_USE_SYSTEM_P4EST )
+
 if( T8CODE_ENABLE_VTK )
     find_package( VTK REQUIRED COMPONENTS
         IOXML CommonExecutionModel CommonDataModel
@@ -95,18 +109,6 @@ set(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT FALSE)
 set(CMAKE_INSTALL_NAME_DIR ${CMAKE_INSTALL_PREFIX}/lib)
 set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH true)
-
-if ( T8CODE_USE_SYSTEM_SC )
-    find_package( SC REQUIRED PATHS /path/to/system/sc )
-else()
-    add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/sc )
-endif()
-
-if ( T8CODE_USE_SYSTEM_P4EST )
-    find_package( P4EST REQUIRED PATHS /path/to/system/p4est )
-else()
-    add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/p4est )
-endif()
 
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/src )
 

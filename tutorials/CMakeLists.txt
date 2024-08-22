@@ -5,8 +5,8 @@ function( add_t8_tutorial )
     cmake_parse_arguments( ADD_T8_TUTORIAL "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
     add_executable( ${ADD_T8_TUTORIAL_NAME} ${ADD_T8_TUTORIAL_SOURCES} )
-    target_link_libraries( ${ADD_T8_TUTORIAL_NAME} PRIVATE T8 SC::SC )
-    target_include_directories( ${ADD_T8_TUTORIAL_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. )
+    target_link_libraries( ${ADD_T8_TUTORIAL_NAME} PRIVATE T8 ${SC_LIBRARIES} m )
+    target_include_directories( ${ADD_T8_TUTORIAL_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. ${SC_INCLUDE_DIR} )
 
     install( TARGETS ${ADD_T8_TUTORIAL_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
 endfunction()

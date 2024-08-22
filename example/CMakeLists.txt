@@ -11,13 +11,13 @@ install( TARGETS t8example DESTINATION ${CMAKE_INSTALL_PREFIX}/lib )
 
 function( add_t8_example )
     set( options "" )
-    set( oneValueArgs "NAME" )  
+    set( oneValueArgs "NAME" )
     set( multiValueArgs "SOURCES" )
     cmake_parse_arguments( ADD_T8_EXAMPLE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
     add_executable( ${ADD_T8_EXAMPLE_NAME} ${ADD_T8_EXAMPLE_SOURCES} )
-    target_link_libraries( ${ADD_T8_EXAMPLE_NAME} PRIVATE T8 t8example SC::SC )
-    target_include_directories( ${ADD_T8_EXAMPLE_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. )
+    target_link_libraries( ${ADD_T8_EXAMPLE_NAME} PRIVATE T8 t8example ${SC_LIBRARIES} m )
+    target_include_directories( ${ADD_T8_EXAMPLE_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. ${SC_INCLUDE_DIR} )
 
     install( TARGETS ${ADD_T8_EXAMPLE_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
 endfunction()

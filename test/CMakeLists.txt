@@ -8,7 +8,7 @@ function( add_t8_test )
     cmake_parse_arguments( ADD_T8_TEST "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
     add_executable( ${ADD_T8_TEST_NAME} ${ADD_T8_TEST_SOURCES} )
-    target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 gtest pthread)
+    target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 gtest pthread m )
 
     # Split custom test command into a list by whitespace.
     # If MPI is enabled, and no custom test command is provided, use mpirun -np 4 as the default command.
