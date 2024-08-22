@@ -25,13 +25,6 @@ if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
     target_compile_definitions( T8 PUBLIC T8_ENABLE_DEBUG )
 endif()
 
-if( T8CODE_ENABLE_NETCDF )
-  target_link_libraries( T8 PUBLIC netCDF::netcdf )
-  target_compile_definitions(T8 PUBLIC
-    T8_WITH_NETCDF
-    $<$<AND:$<BOOL:${NETCDF_HAVE_NETCDF_PAR}>,$<BOOL:${T8CODE_ENABLE_MPI}>>:T8_WITH_NETCDF_PAR> )
-endif()
-
 set_target_properties( T8 PROPERTIES OUTPUT_NAME t8 )
 
 target_include_directories( T8 PUBLIC
@@ -65,23 +58,44 @@ else( T8CODE_USE_SYSTEM_P4EST )
     target_link_libraries( T8 PUBLIC ${P4EST_LIBRARIES} )
 endif( T8CODE_USE_SYSTEM_P4EST )
 
-if ( T8CODE_ENABLE_MPI )
+if ( MPI_FOUND )
+    message(STATUS "Found MPI")
+    message(STATUS "MPI include dir: ${MPI_C_INCLUDE_DIRS}")
+    message(STATUS "MPI libraries: ${MPI_C_LIBRARIES}")
     target_compile_definitions( T8 PUBLIC T8_ENABLE_MPI )
     target_compile_definitions( T8 PUBLIC T8_ENABLE_MPIIO )
     target_link_libraries( T8 PUBLIC MPI::MPI_C )
-endif()
+endif( MPI_FOUND )
 
-if( T8CODE_ENABLE_VTK )
+if( VTK_FOUND )
+    message(STATUS "Found VTK")
+    message(STATUS "VTK version: ${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}")
+    message(STATUS "VTK include dir: ${VTK_INCLUDE_DIR}")
+    message(STATUS "VTK libraries: ${VTK_LIBRARIES}")
     target_compile_definitions( T8 PUBLIC T8_VTK_VERSION_USED="${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}" )
     target_compile_definitions( T8 PUBLIC T8_WITH_VTK=1 )
     target_include_directories( T8 PUBLIC ${VTK_INCLUDE_DIR} )
     target_link_libraries( T8 PUBLIC ${VTK_LIBRARIES} )
-endif()
+endif( VTK_FOUND )
 
-if( T8CODE_ENABLE_OCC )
+if( OpenCASCADE_FOUND )
+    message(STATUS "Found OpenCASCADE")
+    message(STATUS "OpenCASCADE version: ${OCC_VERSION_STRING}")
+    message(STATUS "OpenCASCADE include dir: ${OpenCASCADE_INCLUDE_DIR}")
+    message(STATUS "OpenCASCADE libraries: ${OpenCASCADE_LIBRARIES}")
     target_compile_definitions( T8 PUBLIC T8_WITH_OCC=1 )
     target_include_directories( T8 PUBLIC ${OpenCASCADE_INCLUDE_DIR} )
     target_link_libraries( T8 PUBLIC ${OpenCASCADE_LIBRARIES} )
+endif( OpenCASCADE_FOUND )
+
+if( NETCDF_FOUND )
+    message(STATUS "Found netCDF")
+    message(STATUS "netCDF include dir: ${netCDF_INCLUDE_DIR}")
+    message(STATUS "netCDF libraries: ${netCDF_LIBRARIES}")
+    target_link_libraries( T8 PUBLIC netCDF::netcdf )
+    target_compile_definitions(T8 PUBLIC
+        T8_WITH_NETCDF
+        $<$<AND:$<BOOL:${NETCDF_HAVE_NETCDF_PAR}>,$<BOOL:${T8CODE_ENABLE_MPI}>>:T8_WITH_NETCDF_PAR> )
 endif()
 
 if( T8CODE_ENABLE_LESS_TESTS )
