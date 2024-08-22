@@ -65,11 +65,11 @@ if( T8CODE_ENABLE_LESS_TESTS )
 endif()
 
 if( T8CODE_BUILD_PEDANTIC )
-  # TODO: Add `-Wextra -Wpedantic`. As of now, t8code would not compile with this.
-  # See also: https://github.com/DLR-AMR/t8code/issues/1155.
-  target_compile_options( T8 PUBLIC -Wall -pedantic -Werror )
-  set (T8_CXXFLAGS "${T8_CXXFLAGS} -W -Wall -Wpedantic -Werror")
-  set (T8_CFLAGS "${T8_CFLAGS} -W -Wall -Wpedantic -Werror")
+    # TODO: Add `-Wextra -Wpedantic`. As of now, t8code would not compile with this.
+    # See also: https://github.com/DLR-AMR/t8code/issues/1155.
+    target_compile_options( T8 PUBLIC -Wall -pedantic -Werror )
+    set (T8_CXXFLAGS "${T8_CXXFLAGS} -W -Wall -Wpedantic -Werror")
+    set (T8_CFLAGS "${T8_CFLAGS} -W -Wall -Wpedantic -Werror")
 endif()
 
 target_sources( T8 PRIVATE 
@@ -197,8 +197,8 @@ install( FILES
 install( DIRECTORY t8_cmesh DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.h" )
 install( DIRECTORY t8_data DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.h" )
 install( DIRECTORY t8_forest DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING
-  PATTERN "*.h"
-  PATTERN "*private.h" EXCLUDE )
+    PATTERN "*.h"
+    PATTERN "*private.h" EXCLUDE )
 install( DIRECTORY t8_geometry DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.h" )
 install( DIRECTORY t8_schemes DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.h" )
 install( DIRECTORY t8_vtk DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.h" )
@@ -216,7 +216,7 @@ install( TARGETS T8 EXPORT ${PROJECT_NAME}-targets )
 include( CMakePackageConfigHelpers )
 
 configure_package_config_file( ${CMAKE_CURRENT_LIST_DIR}/config.cmake.in
-  ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}Config.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}Config.cmake
 INSTALL_DESTINATION cmake
 )
 
