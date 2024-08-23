@@ -149,7 +149,22 @@ TYPED_TEST_P (data_handler_test, send_recv)
 #endif
 }
 
-REGISTER_TYPED_TEST_SUITE_P (data_handler_test, pack_unpack_single_data, pack_unpack_vector_of_data, send_recv);
+TYPED_TEST_P (data_handler_test, allgather)
+{
+  this->creator->create (this->max_num_data);
+
+  const int mpiret = this->data_handler->allgather (this->creator->large_data, this->recv_data, this->comm);
+  SC_CHECK_MPI (mpiret);
+
+  const int data_size = this->mpisize * this->max_num_data;
+  for (int idata = 0; idata < data_size; ++idata) {
+    EXPECT_EQ (this->recv_data[idata].data, this->creator->large_data[idata % this->max_num_data].data);
+    EXPECT_EQ (this->recv_data[idata].check, this->creator->large_data[idata % this->max_num_data].check);
+  }
+}
+
+REGISTER_TYPED_TEST_SUITE_P (data_handler_test, pack_unpack_single_data, pack_unpack_vector_of_data, send_recv,
+                             allgather);
 
 using DataTypes = ::testing::Types<int, double>;
 

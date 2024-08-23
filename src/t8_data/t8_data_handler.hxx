@@ -56,14 +56,30 @@ class t8_data_handler: public t8_single_data_handler<T> {
    * \param[in] comm The used communicator
    */
   void
-  data_pack_vector (std::vector<T> &data, std::vector<char> &buffer, sc_MPI_Comm comm)
+  data_pack_vector (const std::vector<T> &data, std::vector<char> &buffer, sc_MPI_Comm comm)
   {
     int pos = 0;
     T8_ASSERT (buffer.size () == (long unsigned int) buffer_size (data.size (), comm));
     const int num_data = data.size ();
     sc_MPI_Pack (&num_data, 1, sc_MPI_INT, buffer.data (), buffer.size (), &pos, comm);
 
-    for (T item : data) {
+    for (const T item : data) {
+      this->data_pack (item, pos, buffer, comm);
+    }
+  }
+
+  /**
+   * Pack a vector of items into a buffer. 
+   * 
+   * \param[in] data A vector of items to pack
+   * \param[in, out] buffer A vector that will be filled with the packed data. 
+   * \param[in] comm The used communicator
+   */
+  void
+  data_pack_vector_no_size (const std::vector<T> &data, std::vector<char> &buffer, sc_MPI_Comm comm)
+  {
+    int pos = 0;
+    for (const T item : data) {
       this->data_pack (item, pos, buffer, comm);
     }
   }
@@ -87,6 +103,24 @@ class t8_data_handler: public t8_single_data_handler<T> {
     T8_ASSERT (outcount >= 0);
 
     data.resize (outcount);
+
+    for (T item : data) {
+      this->data_unpack (buffer, pos, item, comm);
+    }
+  }
+
+  /**
+   * Unpack a buffer into a vector of items. 
+   * 
+   * \param[in] buffer  The input buffer
+   * \param[in, out] data Vector of type T, that will be filled with the unpacked data. The vector is already
+   *                      allocated to the proper size. 
+   * \param[in] comm The communicator to use. 
+   */
+  void
+  data_unpack_vector_no_size (const std::vector<char> &buffer, std::vector<T> &data, sc_MPI_Comm comm)
+  {
+    int pos = 0;
 
     for (T item : data) {
       this->data_unpack (buffer, pos, item, comm);
@@ -154,6 +188,30 @@ class t8_data_handler: public t8_single_data_handler<T> {
     t8_infof ("Data recv only available when configured with --enable-mpi\n");
     return sc_MPI_ERR_OTHER;
 #endif
+  }
+
+  int
+  allgather (const std::vector<T> &send, std::vector<T> &recv, sc_MPI_Comm comm)
+  {
+    const int bsize = buffer_size (send.size (), comm);
+    std::vector<char> buffer (bsize);
+    data_pack_vector_no_size (send, buffer, comm);
+
+    int mpisize;
+    int mpiret = sc_MPI_Comm_size (comm, &mpisize);
+    SC_CHECK_MPI (mpiret);
+
+    const int recv_size = mpisize * bsize;
+    std::vector<char> recv_buffer (recv_size);
+    mpiret = sc_MPI_Allgather (buffer.data (), buffer.size (), sc_MPI_PACKED, recv_buffer.data (), buffer.size (),
+                               sc_MPI_PACKED, comm);
+    SC_CHECK_MPI (mpiret);
+
+    recv.resize (send.size () * mpisize);
+
+    data_unpack_vector_no_size (recv_buffer, recv, comm);
+
+    return mpiret;
   }
 };
 
