@@ -7,8 +7,26 @@ function( add_t8_test )
     set( multiValueArgs "SOURCES" )
     cmake_parse_arguments( ADD_T8_TEST "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
+    # Get the path of the second file listed in the SOURCES list (if there is one then from the first) and use it to determine the build directory.
+    # We use the second file, because the first is t8_gtest_main, which is in the root test dir. The executable will be build in the same directory as the second source file.
+    list (LENGTH ADD_T8_TEST_SOURCES TEST_SOURCES_LENGTH)
+    if ( TEST_SOURCES_LENGTH GREATER 1 )
+        list(GET ADD_T8_TEST_SOURCES 1 TEST_SOURCE)
+    else()
+        list(GET ADD_T8_TEST_SOURCES 0 TEST_SOURCE)
+    endif()
+    get_filename_component(TEST_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/${TEST_SOURCE}" DIRECTORY)
+    file(RELATIVE_PATH TEST_RELATIVE_DIR "${CMAKE_SOURCE_DIR}" "${TEST_SOURCE_DIR}")
+    set(TEST_BUILD_DIR "${CMAKE_BINARY_DIR}/${TEST_RELATIVE_DIR}")
+
     add_executable( ${ADD_T8_TEST_NAME} ${ADD_T8_TEST_SOURCES} )
     target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 gtest pthread)
+
+    set_target_properties(${ADD_T8_TEST_NAME} PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${TEST_BUILD_DIR}"
+        LIBRARY_OUTPUT_DIRECTORY "${TEST_BUILD_DIR}"
+        ARCHIVE_OUTPUT_DIRECTORY "${TEST_BUILD_DIR}"
+    )
 
     # Split custom test command into a list by whitespace.
     # If MPI is enabled, and no custom test command is provided, use mpirun -np 4 as the default command.
@@ -23,7 +41,7 @@ function( add_t8_test )
         separate_arguments (T8CODE_TEST_COMMAND_LIST NATIVE_COMMAND ${T8CODE_CUSTOM_TEST_COMMAND})
     endif ( T8CODE_ENABLE_MPI )
 
-    add_test( NAME ${ADD_T8_TEST_NAME} COMMAND ${T8CODE_TEST_COMMAND_LIST} ./${ADD_T8_TEST_NAME} )
+    add_test( NAME ${ADD_T8_TEST_NAME} COMMAND ${T8CODE_TEST_COMMAND_LIST} ${TEST_BUILD_DIR}/${ADD_T8_TEST_NAME} )
 endfunction()
 
 # Copy test files to build folder so that the t8_test programs can find them.
