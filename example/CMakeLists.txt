@@ -15,7 +15,10 @@ function( add_t8_example )
     set( multiValueArgs "SOURCES" )
     cmake_parse_arguments( ADD_T8_EXAMPLE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
-    get_filename_component(EXAMPLE_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/${ADD_T8_EXAMPLE_SOURCES}" DIRECTORY)
+    # Get the path of the first file listed in the SOURCES list and use it to determine the build directory.
+    # The executable will be build in the same directory as the first source file.
+    list(GET ADD_T8_EXAMPLE_SOURCES 0 FIRST_SOURCE)
+    get_filename_component(EXAMPLE_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/${FIRST_SOURCE}" DIRECTORY)
     file(RELATIVE_PATH EXAMPLE_RELATIVE_DIR "${CMAKE_SOURCE_DIR}" "${EXAMPLE_SOURCE_DIR}")
     set(EXAMPLE_BUILD_DIR "${CMAKE_BINARY_DIR}/${EXAMPLE_RELATIVE_DIR}")
 
