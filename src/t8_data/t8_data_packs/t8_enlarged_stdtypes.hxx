@@ -30,7 +30,7 @@ template <>
 class t8_single_data_handler<enlarged_data<int>> {
  public:
   int
-  data_size (sc_MPI_Comm comm)
+  size (sc_MPI_Comm comm)
   {
     int size;
     const int mpiret = sc_MPI_Pack_size (2, sc_MPI_INT, comm, &size);
@@ -39,7 +39,7 @@ class t8_single_data_handler<enlarged_data<int>> {
   }
 
   void
-  data_pack (const enlarged_data<int> data, int &pos, std::vector<char> &buffer, sc_MPI_Comm comm)
+  pack (const enlarged_data<int> data, int &pos, std::vector<char> &buffer, sc_MPI_Comm comm)
   {
     int mpiret = sc_MPI_Pack (&data.data, 1, sc_MPI_INT, buffer.data (), buffer.size (), &pos, comm);
     SC_CHECK_MPI (mpiret);
@@ -49,7 +49,7 @@ class t8_single_data_handler<enlarged_data<int>> {
   }
 
   void
-  data_unpack (const std::vector<char> &buffer, int &pos, enlarged_data<int> &data, sc_MPI_Comm comm)
+  unpack (const std::vector<char> &buffer, int &pos, enlarged_data<int> &data, sc_MPI_Comm comm)
   {
     int mpiret = sc_MPI_Unpack (buffer.data (), buffer.size (), &pos, &data.data, 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
@@ -63,7 +63,7 @@ template <>
 class t8_single_data_handler<enlarged_data<double>> {
  public:
   int
-  data_size (sc_MPI_Comm comm)
+  size (sc_MPI_Comm comm)
   {
     int int_size;
     int mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &int_size);
@@ -75,7 +75,7 @@ class t8_single_data_handler<enlarged_data<double>> {
   }
 
   void
-  data_pack (const enlarged_data<double> data, int &pos, std::vector<char> &buffer, sc_MPI_Comm comm)
+  pack (const enlarged_data<double> data, int &pos, std::vector<char> &buffer, sc_MPI_Comm comm)
   {
     int mpiret = sc_MPI_Pack (&data.data, 1, sc_MPI_DOUBLE, buffer.data (), buffer.size (), &pos, comm);
     SC_CHECK_MPI (mpiret);
@@ -85,7 +85,7 @@ class t8_single_data_handler<enlarged_data<double>> {
   }
 
   void
-  data_unpack (const std::vector<char> &buffer, int &pos, enlarged_data<double> &data, sc_MPI_Comm comm)
+  unpack (const std::vector<char> &buffer, int &pos, enlarged_data<double> &data, sc_MPI_Comm comm)
   {
     int mpiret = sc_MPI_Unpack (buffer.data (), buffer.size (), &pos, &data.data, 1, sc_MPI_DOUBLE, comm);
     SC_CHECK_MPI (mpiret);

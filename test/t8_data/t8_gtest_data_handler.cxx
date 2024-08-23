@@ -77,12 +77,12 @@ TYPED_TEST_P (data_handler_test, pack_unpack_single_data)
   int pos = 0;
 
   /* Pack the data into the buffer. */
-  this->data_handler->data_pack (this->creator->large_data[0], pos, buffer, this->comm);
+  this->data_handler->pack (this->creator->large_data[0], pos, buffer, this->comm);
 
   /* Unpack the data. */
   this->recv_data.resize (1);
   pos = 0;
-  this->data_handler->data_unpack (buffer, pos, this->recv_data[0], this->comm);
+  this->data_handler->unpack (buffer, pos, this->recv_data[0], this->comm);
 
   EXPECT_EQ (this->recv_data[0].data, this->creator->large_data[0].data);
   EXPECT_EQ (this->recv_data[0].check, this->creator->large_data[0].check);
@@ -99,10 +99,10 @@ TYPED_TEST_P (data_handler_test, pack_unpack_vector_of_data)
 
     /* Create send buffer and pack data into it. */
     std::vector<char> buffer (this->data_handler->buffer_size (num_data, this->comm));
-    this->data_handler->data_pack_vector (this->creator->large_data, buffer, this->comm);
+    this->data_handler->pack_vector_prefix (this->creator->large_data, buffer, this->comm);
 
     int outcount = 0;
-    this->data_handler->data_unpack_vector (buffer, this->recv_data, outcount, this->comm);
+    this->data_handler->unpack_vector_prefix (buffer, this->recv_data, outcount, this->comm);
     EXPECT_EQ (outcount, num_data);
     for (int idata = 0; idata < num_data; idata++) {
       EXPECT_EQ (this->recv_data[idata].data, this->creator->large_data[idata].data);
@@ -123,7 +123,7 @@ TYPED_TEST_P (data_handler_test, send_recv)
   int send_to = (this->mpirank + 1) % this->mpisize;
 
   /* Pack and send the data. */
-  int mpiret = this->data_handler->data_send (this->creator->large_data, send_to, 0, this->comm);
+  int mpiret = this->data_handler->send (this->creator->large_data, send_to, 0, this->comm);
 #if T8_ENABLE_MPI
   SC_CHECK_MPI (mpiret);
 #else
@@ -136,7 +136,7 @@ TYPED_TEST_P (data_handler_test, send_recv)
   /* Receive and unpack the data. */
   sc_MPI_Status status;
   int outcount;
-  mpiret = this->data_handler->data_recv (this->recv_data, recv_from, 0, this->comm, &status, outcount);
+  mpiret = this->data_handler->recv (this->recv_data, recv_from, 0, this->comm, &status, outcount);
 #if T8_ENABLE_MPI
   SC_CHECK_MPI (mpiret);
   EXPECT_EQ (outcount, this->max_num_data);
