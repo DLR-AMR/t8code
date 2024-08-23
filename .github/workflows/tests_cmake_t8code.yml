@@ -103,7 +103,7 @@ jobs:
     - name: ninja install
       run: cd build && ninja install $MAKEFLAGS
     - name: ninja test
-      run: cd build && ninja test $MAKEFLAGS
+      run: cd build && ninja test
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
