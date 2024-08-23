@@ -101,8 +101,8 @@ jobs:
       run: cd build_netcdf && ninja $MAKEFLAGS
     - name: ninja install
       run: cd build_netcdf && ninja install $MAKEFLAGS
-    - name: ctest
-      run: cd build_netcdf && ctest $MAKEFLAGS
+    - name: ninja test
+      run: cd build_netcdf && ninja test $MAKEFLAGS
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
@@ -126,8 +126,8 @@ jobs:
       run: cd build_occ && ninja $MAKEFLAGS
     - name: ninja install
       run: cd build_occ && ninja install $MAKEFLAGS
-    - name: ctest
-      run: cd build_occ && ctest $MAKEFLAGS
+    - name: ninja test
+      run: cd build_occ && ninja test $MAKEFLAGS
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
@@ -151,8 +151,8 @@ jobs:
       run: cd build_vtk && ninja $MAKEFLAGS
     - name: ninja install
       run: cd build_vtk && ninja install $MAKEFLAGS
-    - name: ctest
-      run: cd build_vtk && ctest $MAKEFLAGS
+    - name: ninja test
+      run: cd build_vtk && ninja test $MAKEFLAGS
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
