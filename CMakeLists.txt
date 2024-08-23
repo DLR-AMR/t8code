@@ -84,7 +84,6 @@ if( T8CODE_ENABLE_NETCDF )
     endif (netCDF_FOUND)
 endif( T8CODE_ENABLE_NETCDF )
 
-
 # Override default for this libsc option
 set( BUILD_SHARED_LIBS ON CACHE BOOL "Build libsc as a shared library" )
 
