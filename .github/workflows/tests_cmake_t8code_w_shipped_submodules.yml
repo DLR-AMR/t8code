@@ -99,8 +99,8 @@ jobs:
       run: cd build && ninja $MAKEFLAGS
     - name: ninja install
       run: cd build && ninja install $MAKEFLAGS
-    - name: ctest
-      run: cd build && ctest $MAKEFLAGS
+    - name: ninja test
+      run: cd build && ninja test
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
