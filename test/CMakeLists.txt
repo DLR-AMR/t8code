@@ -11,9 +11,19 @@ function( add_t8_test )
     target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 gtest pthread)
 
     # Split custom test command into a list by whitespace.
-    separate_arguments (T8CODE_CUSTOM_TEST_COMMAND_LIST NATIVE_COMMAND "${T8CODE_CUSTOM_TEST_COMMAND}")
+    # If MPI is enabled, and no custom test command is provided, use mpirun -np 4 as the default command.
+    # If MPI is not enabled, use the custom test command as is.
+    if ( T8CODE_ENABLE_MPI )
+        if ( T8CODE_CUSTOM_TEST_COMMAND STREQUAL "" )
+            separate_arguments (T8CODE_TEST_COMMAND_LIST NATIVE_COMMAND "mpirun -np 4")
+        else ( T8CODE_CUSTOM_TEST_COMMAND STREQUAL "" )
+            separate_arguments (T8CODE_TEST_COMMAND_LIST NATIVE_COMMAND ${T8CODE_CUSTOM_TEST_COMMAND})
+        endif ( T8CODE_CUSTOM_TEST_COMMAND STREQUAL "" )
+    else( T8CODE_ENABLE_MPI )
+        separate_arguments (T8CODE_TEST_COMMAND_LIST NATIVE_COMMAND ${T8CODE_CUSTOM_TEST_COMMAND})
+    endif ( T8CODE_ENABLE_MPI )
 
-    add_test( NAME ${ADD_T8_TEST_NAME} COMMAND ${T8CODE_CUSTOM_TEST_COMMAND_LIST} ./${ADD_T8_TEST_NAME} )
+    add_test( NAME ${ADD_T8_TEST_NAME} COMMAND ${T8CODE_TEST_COMMAND_LIST} ./${ADD_T8_TEST_NAME} )
 endfunction()
 
 # Copy test files to build folder so that the t8_test programs can find them.
@@ -71,6 +81,7 @@ add_t8_test( NAME t8_gtest_empty_global_tree SOURCES t8_gtest_main.cxx t8_forest
 add_t8_test( NAME t8_gtest_geometry_cad         SOURCES t8_gtest_main.cxx t8_geometry/t8_geometry_implementations/t8_gtest_geometry_cad.cxx )
 add_t8_test( NAME t8_gtest_geometry_linear      SOURCES t8_gtest_main.cxx t8_geometry/t8_geometry_implementations/t8_gtest_geometry_linear.cxx )
 add_t8_test( NAME t8_gtest_geometry_lagrange    SOURCES t8_gtest_main.cxx t8_geometry/t8_geometry_implementations/t8_gtest_geometry_lagrange.cxx )
+add_t8_test( NAME t8_gtest_geometry_triangular_interpolation    SOURCES t8_gtest_main.cxx t8_geometry/t8_gtest_geometry_triangular_interpolation.cxx )
 add_t8_test( NAME t8_gtest_geometry_handling    SOURCES t8_gtest_main.cxx t8_geometry/t8_gtest_geometry_handling.cxx )
 add_t8_test( NAME t8_gtest_point_inside         SOURCES t8_gtest_main.cxx t8_geometry/t8_gtest_point_inside.cxx )
 
