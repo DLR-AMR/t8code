@@ -59,9 +59,9 @@ class t8_data_handler: public t8_single_data_handler<T> {
   data_pack_vector (std::vector<T> &data, std::vector<char> &buffer, sc_MPI_Comm comm)
   {
     int pos = 0;
-    T8_ASSERT (buffer.size () == buffer_size (data.size (), comm));
+    T8_ASSERT (buffer.size () == (long unsigned int) buffer_size (data.size (), comm));
     const int num_data = data.size ();
-    sc_MPI_Pack (&num_data, 1, MPI_INT, buffer.data (), buffer.size (), &pos, comm);
+    sc_MPI_Pack (&num_data, 1, sc_MPI_INT, buffer.data (), buffer.size (), &pos, comm);
 
     for (T item : data) {
       this->data_pack (item, pos, buffer, comm);
@@ -106,12 +106,17 @@ class t8_data_handler: public t8_single_data_handler<T> {
   int
   data_send (std::vector<T> &data, int dest, int tag, sc_MPI_Comm comm)
   {
+#if T8_ENABLE_MPI
     std::vector<char> buffer (buffer_size (data.size (), comm));
     data_pack_vector (data, buffer, comm);
 
     const int mpiret = sc_MPI_Send (buffer.data (), buffer.size (), sc_MPI_PACKED, dest, tag, comm);
 
     return mpiret;
+#else
+    t8_infof ("Data send only available when configured with --enable-mpi\n");
+    return sc_MPI_ERR_OTHER;
+#endif
   }
 
   /**
@@ -129,6 +134,7 @@ class t8_data_handler: public t8_single_data_handler<T> {
   int
   data_recv (std::vector<T> &data, int source, int tag, sc_MPI_Comm comm, sc_MPI_Status *status, int &outcount)
   {
+#if T8_ENABLE_MPI
     int mpiret = sc_MPI_Probe (source, tag, comm, status);
     SC_CHECK_MPI (mpiret);
 
@@ -144,6 +150,10 @@ class t8_data_handler: public t8_single_data_handler<T> {
     data_unpack_vector (buffer, data, outcount, comm);
 
     return mpiret;
+#else
+    t8_infof ("Data recv only available when configured with --enable-mpi\n");
+    return sc_MPI_ERR_OTHER;
+#endif
   }
 };
 

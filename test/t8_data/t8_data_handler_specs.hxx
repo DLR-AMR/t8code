@@ -27,8 +27,15 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <vector>
 
 template <typename T>
-struct enlarged_data
-{
+class enlarged_data {
+ public:
+  void
+  set (T data, int check)
+  {
+    data = data;
+    check = check;
+  }
+
   T data;     // original data
   int check;  // additional data to check against
 };

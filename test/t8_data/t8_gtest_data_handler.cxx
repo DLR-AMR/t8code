@@ -67,7 +67,7 @@ TYPED_TEST_SUITE_P (data_handler_test);
 /**
  * Test to pack and unpack a single element of type T. 
  */
-TYPED_TEST_P (data_handler_test, single_data)
+TYPED_TEST_P (data_handler_test, pack_unpack_single_data)
 {
   /* Send buffer to be filled with the packed data. */
   std::vector<char> buffer (this->data_handler->buffer_size (1, this->comm));
@@ -78,10 +78,6 @@ TYPED_TEST_P (data_handler_test, single_data)
 
   /* Pack the data into the buffer. */
   this->data_handler->data_pack (this->creator->large_data[0], pos, buffer, this->comm);
-
-  /* Compute the rank this rank receives from .*/
-  int recv_from = (this->mpirank == 0) ? (this->mpisize - 1) : (this->mpirank - 1);
-  sc_MPI_Status status;
 
   /* Unpack the data. */
   this->recv_data.resize (1);
@@ -95,7 +91,7 @@ TYPED_TEST_P (data_handler_test, single_data)
 /**
  * Test to pack and unpack a vector of elements of type T. 
  */
-TYPED_TEST_P (data_handler_test, vector_of_data)
+TYPED_TEST_P (data_handler_test, pack_unpack_vector_of_data)
 {
   /* Test different sizes. */
   for (int num_data = 1; num_data < this->max_num_data; num_data++) {
@@ -128,7 +124,11 @@ TYPED_TEST_P (data_handler_test, send_recv)
 
   /* Pack and send the data. */
   int mpiret = this->data_handler->data_send (this->creator->large_data, send_to, 0, this->comm);
+#if T8_ENABLE_MPI
   SC_CHECK_MPI (mpiret);
+#else
+  EXPECT_EQ (mpiret, sc_MPI_ERR_OTHER);
+#endif
 
   /* Compute the rank we this rank receives from. */
   int recv_from = (this->mpirank == 0) ? (this->mpisize - 1) : (this->mpirank - 1);
@@ -137,16 +137,19 @@ TYPED_TEST_P (data_handler_test, send_recv)
   sc_MPI_Status status;
   int outcount;
   mpiret = this->data_handler->data_recv (this->recv_data, recv_from, 0, this->comm, &status, outcount);
+#if T8_ENABLE_MPI
   SC_CHECK_MPI (mpiret);
-
   EXPECT_EQ (outcount, this->max_num_data);
   for (int idata = 0; idata < this->max_num_data; idata++) {
     EXPECT_EQ (this->recv_data[idata].data, this->creator->large_data[idata].data);
     EXPECT_EQ (this->recv_data[idata].check, this->creator->large_data[idata].check);
   }
+#else
+  EXPECT_EQ (mpiret, sc_MPI_ERR_OTHER);
+#endif
 }
 
-REGISTER_TYPED_TEST_SUITE_P (data_handler_test, single_data, vector_of_data, send_recv);
+REGISTER_TYPED_TEST_SUITE_P (data_handler_test, pack_unpack_single_data, pack_unpack_vector_of_data, send_recv);
 
 using DataTypes = ::testing::Types<int, double>;
 
