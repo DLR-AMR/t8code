@@ -113,4 +113,21 @@ jobs:
       MPI: ${{ matrix.MPI }}
       BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
       LESS_TESTS: ${{ github.event_name == 'pull_request'  }}
+  
+  # Run t8code tests with shipped submodules. This test is only for the build system, so only one config is tested.
+  t8code_w_shipped_submodules_tests:
+    if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
+    uses: ./.github/workflows/tests_cmake_t8code_w_shipped_submodules.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        MPI: [ON]
+        BUILD_TYPE: [Debug]
+        include: 
+          - MAKEFLAGS: -j4
+    with:
+      MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
+      MPI: ${{ matrix.MPI }}
+      BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
+      LESS_TESTS: ${{ github.event_name == 'pull_request'  }}
 
