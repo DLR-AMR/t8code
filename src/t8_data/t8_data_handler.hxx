@@ -205,6 +205,7 @@ class t8_data_handler: public t8_single_data_handler<T> {
   int
   allgather (const std::vector<T> &send, std::vector<T> &recv, sc_MPI_Comm comm)
   {
+#if T8_ENABLE_MPI
     const int bsize = buffer_size (send.size (), comm);
     std::vector<char> buffer (bsize);
     pack_vector_no_prefix (send, buffer, comm);
@@ -224,6 +225,10 @@ class t8_data_handler: public t8_single_data_handler<T> {
     unpack_vector_no_prefix (recv_buffer, recv, comm);
 
     return mpiret;
+#else
+    t8_infof ("recv only available when configured with --enable-mpi\n");
+    return sc_MPI_ERR_OTHER;
+#endif
   }
 };
 
