@@ -5,8 +5,8 @@ else()
     add_library( t8example STATIC )
 endif()
 target_sources( t8example PRIVATE common/t8_example_common.cxx common/t8_example_common_functions.cxx )
-target_include_directories( t8example PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. )
-target_link_libraries( t8example PRIVATE T8 )
+target_include_directories( t8example PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. ${SC_INCLUDE_DIR} )
+target_link_libraries( t8example PRIVATE T8 ${SC_LIBRARIES} m )
 install( TARGETS t8example DESTINATION ${CMAKE_INSTALL_PREFIX}/lib )
 
 function( add_t8_example )
@@ -15,9 +15,19 @@ function( add_t8_example )
     set( multiValueArgs "SOURCES" )
     cmake_parse_arguments( ADD_T8_EXAMPLE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
+    get_filename_component(EXAMPLE_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/${ADD_T8_EXAMPLE_SOURCES}" DIRECTORY)
+    file(RELATIVE_PATH EXAMPLE_RELATIVE_DIR "${CMAKE_SOURCE_DIR}" "${EXAMPLE_SOURCE_DIR}")
+    set(EXAMPLE_BUILD_DIR "${CMAKE_BINARY_DIR}/${EXAMPLE_RELATIVE_DIR}")
+
     add_executable( ${ADD_T8_EXAMPLE_NAME} ${ADD_T8_EXAMPLE_SOURCES} )
     target_link_libraries( ${ADD_T8_EXAMPLE_NAME} PRIVATE T8 t8example SC::SC )
     target_include_directories( ${ADD_T8_EXAMPLE_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. )
+
+    set_target_properties(${ADD_T8_EXAMPLE_NAME} PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${EXAMPLE_BUILD_DIR}"
+        LIBRARY_OUTPUT_DIRECTORY "${EXAMPLE_BUILD_DIR}"
+        ARCHIVE_OUTPUT_DIRECTORY "${EXAMPLE_BUILD_DIR}"
+    )
 
     install( TARGETS ${ADD_T8_EXAMPLE_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
 endfunction()
