@@ -103,7 +103,7 @@ jobs:
     - name: ninja install
       run: cd build && ninja install $MAKEFLAGS
     - name: serial tests
-      run: cd build && ctest -j4 -R _serial
+      run: cd build && ctest $MAKEFLAGS -R _serial
     - name: parallel tests
       run: cd build && ctest -R _parallel
     - name: OnFailUploadLog

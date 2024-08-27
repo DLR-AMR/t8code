@@ -102,7 +102,7 @@ jobs:
     - name: ninja install
       run: cd build_netcdf && ninja install $MAKEFLAGS
     - name: serial test
-      run: cd build_netcdf && ctest -j4 -R _serial
+      run: cd build_netcdf && ctest $MAKEFLAGS -R _serial
     - name: parallel test
       run: cd build_netcdf && ctest -R _parallel
     - name: OnFailUploadLog
@@ -129,7 +129,7 @@ jobs:
     - name: ninja install
       run: cd build_occ && ninja install $MAKEFLAGS
     - name: serial test
-      run: cd build_occ && ctest -j4 -R _serial
+      run: cd build_occ && ctest $MAKEFLAGS -R _serial
     - name: parallel test
       run: cd build_occ && ctest -R _parallel
     - name: OnFailUploadLog
@@ -156,7 +156,7 @@ jobs:
     - name: ninja install
       run: cd build_vtk && ninja install $MAKEFLAGS
     - name: serial test
-      run: cd build_vtk && ctest -j4 -R _serial
+      run: cd build_vtk && ctest $MAKEFLAGS -R _serial
     - name: parallel test
       run: cd build_vtk && ctest -R _parallel
     - name: OnFailUploadLog
