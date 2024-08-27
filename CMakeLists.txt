@@ -29,7 +29,8 @@ option( T8CODE_BUILD_DOCUMENTATION "Build t8code's documentation" OFF )
 include(CMakeDependentOption)
 cmake_dependent_option( T8CODE_BUILD_DOCUMENTATION_SPHINX "Build t8code's documentation using sphinx" OFF "T8CODE_BUILD_DOCUMENTATION" OFF )
 
-set(T8CODE_CUSTOM_TEST_COMMAND "" CACHE STRING "Define custom test command, e.g.: mpirun -np 8 (overwrites standard mpirun -np 4 if build with mpi)")
+set(T8CODE_CUSTOM_PARALLEL_TEST_COMMAND "" CACHE STRING "Define custom command for parallel tests , e.g.: mpirun -np 8 (overwrites standard mpirun -np 4 if build with mpi)")
+set(T8CODE_CUSTOM_SERIAL_TEST_COMMAND "" CACHE STRING "Define custom command for serial tests.")
 
 # Set a default build type if none was specified
 set(default_build_type "Release")
