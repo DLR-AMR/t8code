@@ -29,7 +29,7 @@ option( T8CODE_BUILD_DOCUMENTATION "Build t8code's documentation" OFF )
 include(CMakeDependentOption)
 cmake_dependent_option( T8CODE_BUILD_DOCUMENTATION_SPHINX "Build t8code's documentation using sphinx" OFF "T8CODE_BUILD_DOCUMENTATION" OFF )
 
-set(T8CODE_CUSTOM_TEST_COMMAND "" CACHE STRING "Define custom test command, e.g.: mpirun -n 4")
+set(T8CODE_CUSTOM_TEST_COMMAND "" CACHE STRING "Define custom test command, e.g.: mpirun -np 8 (overwrites standard mpirun -np 4 if build with mpi)")
 
 # Set a default build type if none was specified
 set(default_build_type "Release")
@@ -89,7 +89,6 @@ if( T8CODE_ENABLE_NETCDF )
         include(cmake/CheckNetCDFPar.cmake)
     endif (netCDF_FOUND)
 endif( T8CODE_ENABLE_NETCDF )
-
 
 # Override default for this libsc option
 set( BUILD_SHARED_LIBS ON CACHE BOOL "Build libsc as a shared library" )
