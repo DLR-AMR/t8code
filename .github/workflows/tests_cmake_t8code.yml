@@ -102,8 +102,10 @@ jobs:
       run: cd build && ninja $MAKEFLAGS
     - name: ninja install
       run: cd build && ninja install $MAKEFLAGS
-    - name: ninja test
-      run: cd build && ninja test
+    - name: serial tests
+      run: cd build && ctest -j4 -R _serial
+    - name: parallel tests
+      run: cd build && ctest -R _parallel
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4

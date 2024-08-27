@@ -126,8 +126,10 @@ jobs:
       run: cd build_occ && ninja $MAKEFLAGS
     - name: ninja install
       run: cd build_occ && ninja install $MAKEFLAGS
-    - name: ninja test
-      run: cd build_occ && ninja test
+    - name: serial test
+      run: cd build_occ && ctest -j4 -R _serial
+    - name: parallel test
+      run: cd build_occ && ctest -R _parallel
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
@@ -151,8 +153,10 @@ jobs:
       run: cd build_vtk && ninja $MAKEFLAGS
     - name: ninja install
       run: cd build_vtk && ninja install $MAKEFLAGS
-    - name: ninja test
-      run: cd build_vtk && ninja test
+    - name: serial test
+      run: cd build_vtk && ctest -j4 -R _serial
+    - name: parallel test
+      run: cd build_vtk && ctest -R _parallel
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
