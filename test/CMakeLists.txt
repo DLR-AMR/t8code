@@ -14,7 +14,9 @@ function( add_t8_test )
     # If MPI is enabled, and no custom test command is provided, use mpirun -np 4 as the default command.
     # If MPI is not enabled, use the custom test command as is.
     if ( T8CODE_ENABLE_MPI )
-        if ( T8CODE_CUSTOM_TEST_COMMAND STREQUAL "" )
+        if (NAME MATCHES "_serial")
+            separate_arguments(T8CODE_TEST_COMMAND_LIST "mpirun -np 1")
+        elseif ( T8CODE_CUSTOM_TEST_COMMAND STREQUAL "" )
             separate_arguments (T8CODE_TEST_COMMAND_LIST NATIVE_COMMAND "mpirun -np 4")
         else ( T8CODE_CUSTOM_TEST_COMMAND STREQUAL "" )
             separate_arguments (T8CODE_TEST_COMMAND_LIST NATIVE_COMMAND ${T8CODE_CUSTOM_TEST_COMMAND})
