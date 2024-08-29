@@ -30,30 +30,84 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 class t8_abstract_data_handler {
  public:
+  /**
+   * Compute the size of a buffer for 
+   * 
+   * \param[in] comm The communicator that will be used. 
+   * \return The size of the buffer in bytes. 
+   */
   virtual int
   buffer_size (sc_MPI_Comm comm)
     = 0;
 
+  /**
+   * Pack a vector of items into a buffer. The first integer of the packed data tells how many
+   * items were packed. 
+   * 
+   * \param[in, out] buffer A vector that will be filled with the packed data. 
+   *                        Adds a prefix-int for the size.
+   * \param[in] comm        The used communicator
+   */
   virtual void
   pack_vector_prefix (std::vector<char> &buffer, sc_MPI_Comm comm)
     = 0;
 
+  /**
+   * Pack a vector of items into a buffer. In contrast to \a pack_vector_sizeprefix no prefix
+   * to tell how many items have been packed is used. 
+   * 
+   * \param[in, out] buffer A vector that will be filled with the packed data.
+   * \param[in] comm The used communicator
+   */
   virtual void
   pack_vector_no_prefix (std::vector<char> &buffer, sc_MPI_Comm comm)
     = 0;
 
+  /**
+   * Unpack a buffer into a vector of items. Expects a prefix telling how many items of type T have been packed. 
+   * 
+   * \param[in] buffer  The input buffer
+   * \param[in, out] outcount Number of items that were packed
+   * \param[in] comm The communicator to use. 
+   */
   virtual void
   unpack_vector_prefix (std::vector<char> &buffer, int &outcount, sc_MPI_Comm comm)
     = 0;
 
+  /**
+   * Unpack a buffer into a vector of items. Does not expect a prefix giving any metadata. 
+   * 
+   * \param[in] buffer  The input buffer
+   * \param[in] comm The communicator to use. 
+   */
   virtual void
   unpack_vector_no_prefix (std::vector<char> &buffer, sc_MPI_Comm comm)
     = 0;
 
+  /**
+   * Wrapper around a \a data_pack_vector and an sc_MPI_Send. 
+   * Packs the \a data and sends it to rank \a dest using \a tag via \a comm
+   * 
+   * \param[in] dest The rank we send to. 
+   * \param[in] tag The tag to use during communication
+   * \param[in] comm The communicator to use. 
+   * \return The result of the mpi-communication
+   */
   virtual int
   send (int dest, int tag, sc_MPI_Comm comm)
     = 0;
 
+  /**
+   * Wrapper around an \a sc_MPI_Recv and \a data_unpack. 
+   * Receives and unpackes data coming from \a source. 
+   * 
+   * \param[in] source The rank we receive data from
+   * \param[in] tag The tag used during communication
+   * \param[in] comm The communicator to use. 
+   * \param[in] status Status of the MPI-communication
+   * \param[in, out] outcount After execution it is the number of items of type \a T received. 
+   * \return The result of the mpi communication.  
+   */
   virtual int
   recv (int source, int tag, sc_MPI_Comm comm, sc_MPI_Status *status, int &outcount)
     = 0;
@@ -73,13 +127,6 @@ class t8_data_handler: public t8_abstract_data_handler, public t8_single_data_ha
     return m_data;
   }
 
-  /**
-   * Compute the size of a buffer for \a num_data items of type T
-   * 
-   * \param[in] num_data Number of items that will be packed into the buffer
-   * \param[in] comm The communicator that will be used. 
-   * \return The size of the buffer in bytes. 
-   */
   int
   buffer_size (sc_MPI_Comm comm) override
   {
@@ -90,15 +137,6 @@ class t8_data_handler: public t8_abstract_data_handler, public t8_single_data_ha
     return num_data_size + m_data.size () * single_size;
   }
 
-  /**
-   * Pack a vector of items into a buffer. The first integer of the packed data tells how many
-   * items were packed. 
-   * 
-   * \param[in] data        A vector of items to pack
-   * \param[in, out] buffer A vector that will be filled with the packed data. 
-   *                        Adds a prefix-int for the size.
-   * \param[in] comm        The used communicator
-   */
   void
   pack_vector_prefix (std::vector<char> &buffer, sc_MPI_Comm comm) override
   {
@@ -112,14 +150,6 @@ class t8_data_handler: public t8_abstract_data_handler, public t8_single_data_ha
     }
   }
 
-  /**
-   * Pack a vector of items into a buffer. In contrast to \a pack_vector_sizeprefix no prefix
-   * to tell how many items have been packed is used. 
-   * 
-   * \param[in] data A vector of items to pack
-   * \param[in, out] buffer A vector that will be filled with the packed data.
-   * \param[in] comm The used communicator
-   */
   void
   pack_vector_no_prefix (std::vector<char> &buffer, sc_MPI_Comm comm) override
   {
@@ -129,14 +159,6 @@ class t8_data_handler: public t8_abstract_data_handler, public t8_single_data_ha
     }
   }
 
-  /**
-   * Unpack a buffer into a vector of items. Expects a prefix telling how many items of type T have been packed. 
-   * 
-   * \param[in] buffer  The input buffer
-   * \param[in, out] data Vector of type T, that will be filled with the unpacked data.
-   * \param[in, out] outcount Number of items that were packed
-   * \param[in] comm The communicator to use. 
-   */
   void
   unpack_vector_prefix (std::vector<char> &buffer, int &outcount, sc_MPI_Comm comm) override
   {
@@ -149,39 +171,21 @@ class t8_data_handler: public t8_abstract_data_handler, public t8_single_data_ha
 
     m_data.resize (outcount);
 
-    for (T item : m_data) {
+    for (T &item : m_data) {
       this->unpack (buffer, pos, item, comm);
     }
   }
 
-  /**
-   * Unpack a buffer into a vector of items. Does not expect a prefix giving any metadata. 
-   * 
-   * \param[in] buffer  The input buffer
-   * \param[in, out] data Vector of type T, that will be filled with the unpacked data. The vector is already
-   *                      allocated to the proper size. 
-   * \param[in] comm The communicator to use. 
-   */
   void
   unpack_vector_no_prefix (std::vector<char> &buffer, sc_MPI_Comm comm) override
   {
     int pos = 0;
 
-    for (T item : m_data) {
+    for (T &item : m_data) {
       this->unpack (buffer, pos, item, comm);
     }
   }
 
-  /**
-   * Wrapper around a \a data_pack_vector and an sc_MPI_Send. 
-   * Packs the \a data and sends it to rank \a dest using \a tag via \a comm
-   * 
-   * \param[in] data The data to pack and send
-   * \param[in] dest The rank we send to. 
-   * \param[in] tag The tag to use during communication
-   * \param[in] comm The communicator to use. 
-   * \return The result of the mpi-communication
-   */
   int
   send (int dest, int tag, sc_MPI_Comm comm) override
   {
@@ -198,18 +202,6 @@ class t8_data_handler: public t8_abstract_data_handler, public t8_single_data_ha
 #endif
   }
 
-  /**
-   * Wrapper around an \a sc_MPI_Recv and \a data_unpack. 
-   * Receives and unpackes data coming from \a source. 
-   * 
-   * \param[in, out] data The output buffer. Will be filled with the unpacked data.
-   * \param[in] source The rank we receive data from
-   * \param[in] tag The tag used during communication
-   * \param[in] comm The communicator to use. 
-   * \param[in] status Status of the MPI-communication
-   * \param[in, out] outcount After execution it is the number of items of type \a T received. 
-   * \return The result of the mpi communication.  
-   */
   int
   recv (int source, int tag, sc_MPI_Comm comm, sc_MPI_Status *status, int &outcount) override
   {
