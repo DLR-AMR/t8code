@@ -51,16 +51,11 @@ class t8_single_data_handler<enlarged_data<int>> {
   void
   unpack (const std::vector<char> &buffer, int &pos, enlarged_data<int> &data, sc_MPI_Comm comm)
   {
-    int recv_data;
-    int mpiret = sc_MPI_Unpack (buffer.data (), buffer.size (), &pos, &recv_data, 1, sc_MPI_INT, comm);
+    int mpiret = sc_MPI_Unpack (buffer.data (), buffer.size (), &pos, &(data.data), 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
 
-    int recv_check;
-    mpiret = sc_MPI_Unpack (buffer.data (), buffer.size (), &pos, &recv_check, 1, sc_MPI_INT, comm);
+    mpiret = sc_MPI_Unpack (buffer.data (), buffer.size (), &pos, &(data.check), 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
-
-    data.data = recv_data;
-    data.check = recv_check;
   }
 };
 
@@ -92,16 +87,11 @@ class t8_single_data_handler<enlarged_data<double>> {
   void
   unpack (const std::vector<char> &buffer, int &pos, enlarged_data<double> &data, sc_MPI_Comm comm)
   {
-    double recv_data;
-    int mpiret = sc_MPI_Unpack (buffer.data (), buffer.size (), &pos, &recv_data, 1, sc_MPI_DOUBLE, comm);
+    int mpiret = sc_MPI_Unpack (buffer.data (), buffer.size (), &pos, &(data.data), 1, sc_MPI_DOUBLE, comm);
     SC_CHECK_MPI (mpiret);
 
-    int recv_check;
-    mpiret = sc_MPI_Unpack (buffer.data (), buffer.size (), &pos, &recv_check, 1, sc_MPI_INT, comm);
+    mpiret = sc_MPI_Unpack (buffer.data (), buffer.size (), &pos, &(data.check), 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
-
-    data.data = recv_data;
-    data.check = recv_check;
   }
 };
 
