@@ -211,7 +211,7 @@ t8_geometry_cubed_spherical_shell::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx
   const double distance = std::abs (t8_vec_dot (active_tree_vertices, normal));
 
   // Compute actual radius of the sphere.
-  constexpr double CBRT = std::cbrt (1.0);
+  const double CBRT = std::cbrt (1.0);
   const double inner_radius = distance * CBRT;
   const double shell_thickness
     = std::abs (t8_vec_dot (active_tree_vertices + t8_eclass_num_vertices[active_tree_class] * 3 / 2, normal)) * CBRT
