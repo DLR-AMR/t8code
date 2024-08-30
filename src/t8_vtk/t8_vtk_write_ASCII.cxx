@@ -1114,7 +1114,7 @@ t8_cmesh_vtk_write_file_ext (const t8_cmesh_t cmesh, const char *fileprefix, con
       /* TODO: We switched to 32 Bit because Paraview could not handle 64 well enough.
        */
       T8_ASSERT (tree->treeid + cmesh->first_tree == (t8_gloidx_t) ((long) tree->treeid + cmesh->first_tree));
-      fprintf (vtufile, " %ld", (long) tree->treeid + cmesh->first_tree);
+      fprintf (vtufile, " %lld", (long) tree->treeid + cmesh->first_tree);
       if (!(sk % 8))
         fprintf (vtufile, "\n         ");
     }
