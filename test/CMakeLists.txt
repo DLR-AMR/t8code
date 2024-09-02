@@ -10,6 +10,10 @@ function( add_t8_test )
     add_executable( ${ADD_T8_TEST_NAME} ${ADD_T8_TEST_SOURCES} )
     target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 gtest pthread)
 
+    if( T8CODE_EXPORT_COMPILE_COMMANDS )
+        set_target_properties( ${ADD_T8_TEST_NAME} PROPERTIES EXPORT_COMPILE_COMMANDS ON )
+    endif( T8CODE_EXPORT_COMPILE_COMMANDS )
+
     # Split custom test command into a list by whitespace.
     # If MPI is enabled, and no custom test command is provided, use mpirun -np 4 as the default command.
     # If MPI is not enabled, use the custom test command as is.
