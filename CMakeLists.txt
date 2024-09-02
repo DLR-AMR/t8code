@@ -30,13 +30,20 @@ option( T8CODE_BUILD_DOCUMENTATION "Build t8code's documentation" OFF )
 include(CMakeDependentOption)
 cmake_dependent_option( T8CODE_BUILD_DOCUMENTATION_SPHINX "Build t8code's documentation using sphinx" OFF "T8CODE_BUILD_DOCUMENTATION" OFF )
 
-set(T8CODE_CUSTOM_TEST_COMMAND "" CACHE STRING "Define custom test command, e.g.: mpirun -np 8 (overwrites standard mpirun -np 4 if build with mpi)")
+set(T8CODE_CUSTOM_PARALLEL_TEST_COMMAND "" CACHE STRING "Define a custom command for parallel tests , e.g.: mpirun -np 8 (overwrites standard mpirun -np 4 if build with mpi)")
+set(T8CODE_CUSTOM_SERIAL_TEST_COMMAND "" CACHE STRING "Define a custom command for serial tests.")
 
-if( NOT CMAKE_BUILD_TYPE )
-    set( CMAKE_BUILD_TYPE "Release" )
+# Set a default build type if none was specified
+set(default_build_type "Release")
+
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
+  set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE
+      STRING "Choose the type of build. Build types available: Release Debug RelWithDebInfo" FORCE)
+  # Set the possible values of build type for cmake-gui
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
+    "Debug" "Release" "RelWithDebInfo")
 endif()
-
-set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Release RelWithDebInfo Debug)
 
 set( CMAKE_C_STANDARD 11 )
 set( CMAKE_C_STANDARD_REQUIRED ON )
@@ -84,7 +91,6 @@ if( T8CODE_ENABLE_NETCDF )
         include(cmake/CheckNetCDFPar.cmake)
     endif (netCDF_FOUND)
 endif( T8CODE_ENABLE_NETCDF )
-
 
 # Override default for this libsc option
 set( BUILD_SHARED_LIBS ON CACHE BOOL "Build libsc as a shared library" )
