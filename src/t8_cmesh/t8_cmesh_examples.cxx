@@ -3128,7 +3128,7 @@ t8_cmesh_new_triangulated_spherical_surface_cube (const double radius, sc_MPI_Co
   const int ncube_rot = 6;  // Six rotations of the four triangles to the six cube's faces.
 
   const int ntrees = nface_rot * ncube_rot;  // Number of cmesh elements resp. trees.
-  const int nverts = 3;                          // Number of cmesh element (triangle) vertices.
+  const int nverts = 3;                      // Number of cmesh element (triangle) vertices.
 
   // Arrays for the face connectivity computations via vertices.
   double all_verts[ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM];
