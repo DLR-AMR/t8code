@@ -8,6 +8,10 @@ function( add_t8_benchmark )
     target_link_libraries( ${ADD_T8_BENCHMARK_NAME} PRIVATE T8 ${SC_LIBRARIES} m )
     target_include_directories( ${ADD_T8_BENCHMARK_NAME} PRIVATE ${PROJECT_SOURCE_DIR} ${SC_INCLUDE_DIR})
 
+    if( T8CODE_EXPORT_COMPILE_COMMANDS )
+        set_target_properties( ${ADD_T8_BENCHMARK_NAME} PROPERTIES EXPORT_COMPILE_COMMANDS ON )
+    endif( T8CODE_EXPORT_COMPILE_COMMANDS )
+
     install( TARGETS ${ADD_T8_BENCHMARK_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
 endfunction()
 
