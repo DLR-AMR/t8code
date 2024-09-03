@@ -25,6 +25,10 @@ if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
     target_compile_definitions( T8 PUBLIC T8_ENABLE_DEBUG )
 endif()
 
+if( T8CODE_EXPORT_COMPILE_COMMANDS )
+  set_target_properties( T8 PROPERTIES EXPORT_COMPILE_COMMANDS ON )
+endif( T8CODE_EXPORT_COMPILE_COMMANDS )
+
 if( T8CODE_ENABLE_NETCDF )
   target_link_libraries( T8 PUBLIC netCDF::netcdf )
   target_compile_definitions(T8 PUBLIC

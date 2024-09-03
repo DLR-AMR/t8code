@@ -101,8 +101,15 @@ jobs:
       run: cd build_netcdf && ninja $MAKEFLAGS
     - name: ninja install
       run: cd build_netcdf && ninja install $MAKEFLAGS
-    - name: ctest
+    - name: serial tests (if MPI is enabled)
+      run: cd build_netcdf && ctest $MAKEFLAGS -R _serial
+      if: ${{ inputs.MPI == 'ON' }}
+    - name: parallel tests (if MPI is enabled)
+      run: cd build_netcdf && ctest -R _parallel
+      if: ${{ inputs.MPI == 'ON' }}
+    - name: tests (if MPI is disabled)
       run: cd build_netcdf && ctest $MAKEFLAGS
+      if: ${{ inputs.MPI == 'OFF' }}
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
@@ -126,8 +133,15 @@ jobs:
       run: cd build_occ && ninja $MAKEFLAGS
     - name: ninja install
       run: cd build_occ && ninja install $MAKEFLAGS
-    - name: ctest
+    - name: serial tests (if MPI is enabled)
+      run: cd build_occ && ctest $MAKEFLAGS -R _serial
+      if: ${{ inputs.MPI == 'ON' }}
+    - name: parallel tests (if MPI is enabled)
+      run: cd build_occ && ctest -R _parallel
+      if: ${{ inputs.MPI == 'ON' }}
+    - name: tests (if MPI is disabled)
       run: cd build_occ && ctest $MAKEFLAGS
+      if: ${{ inputs.MPI == 'OFF' }}
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
@@ -151,8 +165,15 @@ jobs:
       run: cd build_vtk && ninja $MAKEFLAGS
     - name: ninja install
       run: cd build_vtk && ninja install $MAKEFLAGS
-    - name: ctest
+    - name: serial tests (if MPI is enabled)
+      run: cd build_vtk && ctest $MAKEFLAGS -R _serial
+      if: ${{ inputs.MPI == 'ON' }}
+    - name: parallel tests (if MPI is enabled)
+      run: cd build_vtk && ctest -R _parallel
+      if: ${{ inputs.MPI == 'ON' }}
+    - name: tests (if MPI is disabled)
       run: cd build_vtk && ctest $MAKEFLAGS
+      if: ${{ inputs.MPI == 'OFF' }}
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
