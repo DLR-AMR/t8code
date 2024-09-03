@@ -26,7 +26,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8.h>
 #include <vector>
 #include <t8_data/t8_data_handler_base.hxx>
-#include <t8_data/t8_data_packs/t8_packed_types.hxx>
 
 class t8_abstract_data_handler {
  public:
@@ -40,6 +39,10 @@ class t8_abstract_data_handler {
   buffer_size (sc_MPI_Comm comm)
     = 0;
 
+  virtual int
+  buffer_size_no_prefix (sc_MPI_Comm comm)
+    = 0;
+
   /**
    * Pack a vector of items into a buffer. The first integer of the packed data tells how many
    * items were packed. 
@@ -49,7 +52,7 @@ class t8_abstract_data_handler {
    * \param[in] comm        The used communicator
    */
   virtual void
-  pack_vector_prefix (std::vector<char> &buffer, sc_MPI_Comm comm)
+  pack_vector_prefix (std::vector<char> &buffer, int &pos, sc_MPI_Comm comm)
     = 0;
 
   /**
@@ -60,7 +63,7 @@ class t8_abstract_data_handler {
    * \param[in] comm The used communicator
    */
   virtual void
-  pack_vector_no_prefix (std::vector<char> &buffer, sc_MPI_Comm comm)
+  pack_vector_no_prefix (std::vector<char> &buffer, int &pos, sc_MPI_Comm comm)
     = 0;
 
   /**
@@ -71,7 +74,7 @@ class t8_abstract_data_handler {
    * \param[in] comm The communicator to use. 
    */
   virtual void
-  unpack_vector_prefix (std::vector<char> &buffer, int &outcount, sc_MPI_Comm comm)
+  unpack_vector_prefix (const std::vector<char> &buffer, int &outcount, int &pos, sc_MPI_Comm comm)
     = 0;
 
   /**
@@ -81,7 +84,7 @@ class t8_abstract_data_handler {
    * \param[in] comm The communicator to use. 
    */
   virtual void
-  unpack_vector_no_prefix (std::vector<char> &buffer, sc_MPI_Comm comm)
+  unpack_vector_no_prefix (const std::vector<char> &buffer, int &pos, sc_MPI_Comm comm)
     = 0;
 
   /**
@@ -94,7 +97,7 @@ class t8_abstract_data_handler {
    * \return The result of the mpi-communication
    */
   virtual int
-  send (int dest, int tag, sc_MPI_Comm comm)
+  send (const int dest, const int tag, sc_MPI_Comm comm)
     = 0;
 
   /**
@@ -109,13 +112,27 @@ class t8_abstract_data_handler {
    * \return The result of the mpi communication.  
    */
   virtual int
-  recv (int source, int tag, sc_MPI_Comm comm, sc_MPI_Status *status, int &outcount)
+  recv (const int source, const int tag, sc_MPI_Comm comm, sc_MPI_Status *status, int &outcount)
     = 0;
+
+  virtual int
+  type ()
+    = 0;
+
+  virtual t8_abstract_data_handler *
+  new_handler (const int type)
+    = 0;
+
+  virtual ~t8_abstract_data_handler () {};
 };
 
 template <typename T>
-class t8_data_handler: public t8_abstract_data_handler, public t8_single_data_handler<T> {
+class t8_data_handler: public t8_abstract_data_handler {
  public:
+  t8_data_handler ()
+  {
+  }
+
   t8_data_handler (std::vector<T> &data)
   {
     m_data = data;
@@ -128,42 +145,47 @@ class t8_data_handler: public t8_abstract_data_handler, public t8_single_data_ha
   }
 
   int
+  buffer_size_no_prefix (sc_MPI_Comm comm) override
+  {
+    int total_size = 0;
+    for (const T &item : m_data) {
+      total_size += single_handler.size (item, comm);
+    }
+    return total_size;
+  }
+
+  int
   buffer_size (sc_MPI_Comm comm) override
   {
-    const int single_size = this->size (comm);
-    int num_data_size;
-    int mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &num_data_size);
+    int total_size = 0;
+    int mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &total_size);
     SC_CHECK_MPI (mpiret);
-    return num_data_size + m_data.size () * single_size;
+    return total_size + buffer_size_no_prefix (comm);
   }
 
   void
-  pack_vector_prefix (std::vector<char> &buffer, sc_MPI_Comm comm) override
+  pack_vector_prefix (std::vector<char> &buffer, int &pos, sc_MPI_Comm comm) override
   {
-    int pos = 0;
     T8_ASSERT (buffer.size () == (long unsigned int) buffer_size (comm));
     const int num_data = m_data.size ();
     sc_MPI_Pack (&num_data, 1, sc_MPI_INT, buffer.data (), buffer.size (), &pos, comm);
 
-    for (const T item : m_data) {
-      this->pack (item, pos, buffer, comm);
+    for (const T &item : m_data) {
+      single_handler.pack (item, pos, buffer, comm);
     }
   }
 
   void
-  pack_vector_no_prefix (std::vector<char> &buffer, sc_MPI_Comm comm) override
+  pack_vector_no_prefix (std::vector<char> &buffer, int &pos, sc_MPI_Comm comm) override
   {
-    int pos = 0;
-    for (const T item : m_data) {
-      this->pack (item, pos, buffer, comm);
+    for (const T &item : m_data) {
+      single_handler.pack (item, pos, buffer, comm);
     }
   }
 
   void
-  unpack_vector_prefix (std::vector<char> &buffer, int &outcount, sc_MPI_Comm comm) override
+  unpack_vector_prefix (const std::vector<char> &buffer, int &pos, int &outcount, sc_MPI_Comm comm) override
   {
-    int pos = 0;
-
     /* Get the number of items we received. */
     int mpiret = sc_MPI_Unpack (buffer.data (), buffer.size (), &pos, &outcount, 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
@@ -172,26 +194,25 @@ class t8_data_handler: public t8_abstract_data_handler, public t8_single_data_ha
     m_data.resize (outcount);
 
     for (T &item : m_data) {
-      this->unpack (buffer, pos, item, comm);
+      single_handler.unpack (buffer, pos, item, comm);
     }
   }
 
   void
-  unpack_vector_no_prefix (std::vector<char> &buffer, sc_MPI_Comm comm) override
+  unpack_vector_no_prefix (const std::vector<char> &buffer, int &pos, sc_MPI_Comm comm) override
   {
-    int pos = 0;
-
     for (T &item : m_data) {
-      this->unpack (buffer, pos, item, comm);
+      single_handler.unpack (buffer, pos, item, comm);
     }
   }
 
   int
-  send (int dest, int tag, sc_MPI_Comm comm) override
+  send (const int dest, const int tag, sc_MPI_Comm comm) override
   {
 #if T8_ENABLE_MPI
+    int pos = 0;
     std::vector<char> buffer (buffer_size (comm));
-    pack_vector_prefix (buffer, comm);
+    pack_vector_prefix (buffer, pos, comm);
 
     const int mpiret = sc_MPI_Send (buffer.data (), buffer.size (), sc_MPI_PACKED, dest, tag, comm);
 
@@ -203,9 +224,10 @@ class t8_data_handler: public t8_abstract_data_handler, public t8_single_data_ha
   }
 
   int
-  recv (int source, int tag, sc_MPI_Comm comm, sc_MPI_Status *status, int &outcount) override
+  recv (const int source, const int tag, sc_MPI_Comm comm, sc_MPI_Status *status, int &outcount) override
   {
 #if T8_ENABLE_MPI
+    int pos = 0;
     int mpiret = sc_MPI_Probe (source, tag, comm, status);
     SC_CHECK_MPI (mpiret);
 
@@ -214,11 +236,11 @@ class t8_data_handler: public t8_abstract_data_handler, public t8_single_data_ha
     SC_CHECK_MPI (mpiret);
 
     std::vector<char> buffer (size);
-    int pos = 0;
+
     mpiret = sc_MPI_Recv (buffer.data (), buffer.size (), sc_MPI_PACKED, source, pos, comm, status);
     SC_CHECK_MPI (mpiret);
-
-    unpack_vector_prefix (buffer, outcount, comm);
+    int vector_pos = 0;
+    unpack_vector_prefix (buffer, vector_pos, outcount, comm);
 
     return mpiret;
 #else
@@ -227,8 +249,28 @@ class t8_data_handler: public t8_abstract_data_handler, public t8_single_data_ha
 #endif
   }
 
+  int
+  type ()
+  {
+    return this->type ();
+  }
+
+  t8_abstract_data_handler *
+  new_handler (const int type)
+  {
+    if (type < 0) {
+      SC_ABORTF ("[D] place-holder for t8code types");
+      return NULL;
+    }
+    else {
+      t8_abstract_data_handler *new_handler = (t8_abstract_data_handler *) single_handler.new_user_handler (type);
+      return new_handler;
+    }
+  }
+
  private:
   std::vector<T> m_data;
+  t8_single_data_handler<T> single_handler;
 };
 
 #endif /* T8_DATA_HANDLER_HXX */

@@ -25,6 +25,13 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <t8.h>
 #include <vector>
+#include <t8_data/t8_data_handler.hxx>
+
+class pseudo_tree {
+ public:
+  std::vector<int> topo_data;
+  std::vector<t8_abstract_data_handler *> tree_data;
+};
 
 template <typename T>
 class enlarged_data {
