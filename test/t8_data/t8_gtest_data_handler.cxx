@@ -23,6 +23,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <gtest/gtest.h>
 #include <t8_data/t8_data_packs/t8_packed_types.hxx>
 #include <test/t8_data/t8_data_handler_specs.hxx>
+#include <test/t8_data/t8_pseudo_trees.hxx>
 #include <t8_data/t8_data_handler.hxx>
 #include <vector>
 #include <numeric>
@@ -193,6 +194,47 @@ TEST (data_handler_test, multiple_handler)
   /* Pack and send the data. */
 }
 
+TEST (data_handler_test, pseudo_tree_test)
+{
+  const int num_data = 100;
+  pseudo_tree tree;
+  std::vector<enlarged_data<int>> int_data (num_data);
+  for (int idata = 0; idata < num_data; idata++) {
+    int_data[idata].check = 42;
+    int_data[idata].data = idata;
+  }
+  tree.topo_data.resize (10);
+  std::iota (tree.topo_data.begin (), tree.topo_data.end (), 0);
+  t8_data_handler<enlarged_data<int>> int_handler (int_data);
+
+  tree.tree_data.push_back (&int_handler);
+
+  pseudo_tree tree_copy (tree);
+  EXPECT_EQ (tree.topo_data.size (), tree_copy.topo_data.size ());
+  EXPECT_EQ (tree.tree_data.size (), tree_copy.tree_data.size ());
+
+  std::vector<enlarged_data<int>> copied_data
+    = ((t8_data_handler<enlarged_data<int>> *) (tree_copy.tree_data[0]))->get_data ();
+
+  for (int idata = 0; idata < num_data; idata++) {
+    EXPECT_EQ (copied_data[idata].data, int_data[idata].data);
+    EXPECT_EQ (copied_data[idata].check, int_data[idata].check);
+  }
+
+  pseudo_tree tree_equal = tree_copy;
+
+  EXPECT_EQ (tree.topo_data.size (), tree_equal.topo_data.size ());
+  EXPECT_EQ (tree.tree_data.size (), tree_equal.tree_data.size ());
+
+  std::vector<enlarged_data<int>> equal_data
+    = ((t8_data_handler<enlarged_data<int>> *) (tree_equal.tree_data[0]))->get_data ();
+
+  for (int idata = 0; idata < num_data; idata++) {
+    EXPECT_EQ (equal_data[idata].data, int_data[idata].data);
+    EXPECT_EQ (equal_data[idata].check, int_data[idata].check);
+  }
+}
+
 TEST (data_handler_test, tree_test)
 {
   sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
@@ -203,56 +245,90 @@ TEST (data_handler_test, tree_test)
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
 
-  const int num_trees = mpirank % 4 * 10;
+  const int num_trees = (mpirank % 4) * 10;
   const int num_data = 100;
 
-  std::vector<pseudo_tree> trees (100);
-  const int num_topo_data = ((mpirank % 2) + 1) * 100;
-  std::vector<enlarged_data<int>> int_data (num_data);
-  std::vector<enlarged_data<double>> double_data (num_data);
   const double fraction = 0.42;
-  for (int idata = 0; idata < num_data; idata++) {
-    int_data[idata].data = idata;
-    int_data[idata].check = mpirank;
-    double_data[idata].data = (double) idata + fraction;
-    double_data[idata].check = mpirank;
-  }
+
+  std::vector<pseudo_tree> trees;
 
   for (int itree = 0; itree < num_trees; itree++) {
-    std::vector<int> topo_data (num_topo_data);
-    std::iota (topo_data.begin (), topo_data.end (), 0);
-    const int num_tree_data = (mpirank + itree) % 3;
-    std::vector<t8_abstract_data_handler *> tree_data (num_data);
+    pseudo_tree tree;
+    const int tree_topo_size = ((mpirank % 3) + 1) * 10;
+    tree.topo_data.resize (tree_topo_size);
+    std::iota (tree.topo_data.begin (), tree.topo_data.end (), 0);
 
-    for (int idata = 0; idata < num_tree_data - 1; idata++) {
-      if (idata == 0) {
-        tree_data[0] = new t8_data_handler<enlarged_data<int>> (int_data);
+    const int num_tree_data = (mpirank + itree) % 2;
+    for (int itree_data = 0; itree_data < num_tree_data; itree_data++) {
+      if (itree_data == 0) {
+        std::vector<enlarged_data<int>> int_data (num_data);
+        for (int idata = 0; idata < num_data; idata++) {
+          int_data[idata].check = mpirank;
+          int_data[idata].data = idata;
+        }
+        t8_data_handler<enlarged_data<int>> int_handler (int_data);
+        tree.tree_data.push_back (&int_handler);
       }
-      if (idata == 1) {
-        tree_data[1] = new t8_data_handler<enlarged_data<double>> (double_data);
+      else {
+        std::vector<enlarged_data<double>> double_data (num_data);
+        for (int idata = 0; idata < num_data; idata++) {
+          double_data[idata].check = mpirank;
+          double_data[idata].data = (double) idata + fraction;
+          t8_data_handler<enlarged_data<double>> double_handler (double_data);
+          tree.tree_data.push_back (&double_handler);
+        }
       }
     }
-    trees[itree].topo_data = topo_data;
-    trees[itree].tree_data = tree_data;
+    trees.push_back (tree);
   }
+  t8_data_handler<pseudo_tree> tree_handler (trees);
 
-  t8_data_handler<pseudo_tree> *tree_handler = new t8_data_handler<pseudo_tree> (trees);
+  const int send_to = (mpirank + 1) % mpisize;
+  const int recv_from = (mpirank == 0) ? (mpisize - 1) : (mpirank - 1);
 
-  /* Compute the rank this rank sends to. We send in a round-robin fashion */
-  int send_to = (mpirank + 1) % mpisize;
-  int recv_from = (mpirank == 0) ? (mpisize - 1) : (mpirank - 1);
-
-  mpiret = tree_handler->send (send_to, 0, comm);
-
-#if T8_ENABLE_MPI
+  mpiret = tree_handler.send (send_to, 0, comm);
   SC_CHECK_MPI (mpiret);
-#else
-  EXPECT_EQ (mpiret, sc_MPI_ERR_OTHER);
-#endif
-  /* Receive and unpack the data. */
   sc_MPI_Status status;
   int outcount;
-  tree_handler->recv (recv_from, 0, comm, &status, outcount);
+  mpiret = tree_handler.recv (recv_from, 0, comm, &status, outcount);
+
+  std::vector<pseudo_tree> recv_trees = tree_handler.get_data ();
+
+  ASSERT_EQ (recv_trees.size (), ((recv_from) % 4) * 10);
+  t8_debugf ("[D] received %i trees from %i\n", recv_trees.size (), recv_from);
+
+  for (int itree = 0; itree < recv_trees.size (); itree++) {
+    ASSERT_EQ (recv_trees[itree].topo_data.size (), ((recv_from % 3) + 1) * 10);
+    t8_debugf ("[D] tree %i has %i topo_data \n", itree, recv_from);
+
+    for (int itopo_data = 0; itopo_data < recv_trees[itree].topo_data.size (); itopo_data++) {
+      EXPECT_EQ (recv_trees[itree].topo_data[itopo_data], recv_trees[itree].topo_data.size ());
+    }
+
+    const int num_recv_tree_data = recv_trees[itree].tree_data.size ();
+    ASSERT_EQ (num_recv_tree_data, (recv_from + itree) % 2);
+    t8_debugf ("[D] tree %i has %i tree_data \n", itree, num_recv_tree_data);
+    for (int itree_data = 0; itree_data < num_recv_tree_data; itree_data++) {
+      if (itree_data == 0) {
+        std::vector<enlarged_data<int>> recv_ints
+          = ((t8_data_handler<enlarged_data<int>> *) (recv_trees[itree].tree_data[itree_data]))->get_data ();
+        ASSERT_EQ (recv_ints.size (), num_data);
+        for (int idata = 0; idata < num_data; idata++) {
+          EXPECT_EQ (recv_ints[idata].data, idata);
+          EXPECT_EQ (recv_ints[idata].check, recv_from);
+        }
+      }
+      else {
+        std::vector<enlarged_data<double>> recv_double
+          = ((t8_data_handler<enlarged_data<double>> *) (recv_trees[itree].tree_data[itree_data]))->get_data ();
+        ASSERT_EQ (recv_double.size (), num_data);
+        for (int idata = 0; idata < num_data; idata++) {
+          EXPECT_EQ (recv_double[idata].data, (double) idata + fraction);
+          EXPECT_EQ (recv_double[idata].check, recv_from);
+        }
+      }
+    }
+  }
 }
 
 REGISTER_TYPED_TEST_SUITE_P (data_handler_test, pack_unpack_vector_of_data, send_recv);

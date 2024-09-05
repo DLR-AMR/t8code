@@ -28,9 +28,9 @@ void
 data_creator<enlarged_data<int>>::create (const int num_data)
 {
   large_data.resize (num_data);
-  int idata = 0;
-  for (enlarged_data<int> item : large_data) {
-    item.set (42, idata++);
+  for (int idata = 0; idata < num_data; idata++) {
+    large_data[idata].data = idata;
+    large_data[idata].check = 42;
   }
 }
 
@@ -39,8 +39,8 @@ void
 data_creator<enlarged_data<double>>::create (const int num_data)
 {
   large_data.resize (num_data);
-  int idata = 0;
-  for (enlarged_data<double> item : large_data) {
-    item.set (42.42, idata++);
+  for (int idata = 0; idata < num_data; idata++) {
+    large_data[idata].data = idata;
+    large_data[idata].check = 42.42;
   }
 }

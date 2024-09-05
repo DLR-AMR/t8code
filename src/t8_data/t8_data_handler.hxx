@@ -26,6 +26,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8.h>
 #include <vector>
 #include <t8_data/t8_data_handler_base.hxx>
+#include <algorithm>
 
 class t8_abstract_data_handler {
  public:
@@ -37,10 +38,6 @@ class t8_abstract_data_handler {
    */
   virtual int
   buffer_size (sc_MPI_Comm comm)
-    = 0;
-
-  virtual int
-  buffer_size_no_prefix (sc_MPI_Comm comm)
     = 0;
 
   /**
@@ -56,17 +53,6 @@ class t8_abstract_data_handler {
     = 0;
 
   /**
-   * Pack a vector of items into a buffer. In contrast to \a pack_vector_sizeprefix no prefix
-   * to tell how many items have been packed is used. 
-   * 
-   * \param[in, out] buffer A vector that will be filled with the packed data.
-   * \param[in] comm The used communicator
-   */
-  virtual void
-  pack_vector_no_prefix (std::vector<char> &buffer, int &pos, sc_MPI_Comm comm)
-    = 0;
-
-  /**
    * Unpack a buffer into a vector of items. Expects a prefix telling how many items of type T have been packed. 
    * 
    * \param[in] buffer  The input buffer
@@ -75,16 +61,6 @@ class t8_abstract_data_handler {
    */
   virtual void
   unpack_vector_prefix (const std::vector<char> &buffer, int &outcount, int &pos, sc_MPI_Comm comm)
-    = 0;
-
-  /**
-   * Unpack a buffer into a vector of items. Does not expect a prefix giving any metadata. 
-   * 
-   * \param[in] buffer  The input buffer
-   * \param[in] comm The communicator to use. 
-   */
-  virtual void
-  unpack_vector_no_prefix (const std::vector<char> &buffer, int &pos, sc_MPI_Comm comm)
     = 0;
 
   /**
@@ -119,10 +95,6 @@ class t8_abstract_data_handler {
   type ()
     = 0;
 
-  virtual t8_abstract_data_handler *
-  new_handler (const int type)
-    = 0;
-
   virtual ~t8_abstract_data_handler () {};
 };
 
@@ -133,25 +105,31 @@ class t8_data_handler: public t8_abstract_data_handler {
   {
   }
 
+  t8_data_handler (const t8_data_handler &other)
+  {
+    t8_debugf ("[D] copy constructor\n");
+    single_handler = other.single_handler;
+    m_data.resize (other.m_data.size ());
+    for (int idata = 0; idata < other.m_data.size (); idata++) {
+      m_data[idata] = T (other.m_data[idata]);
+    }
+    t8_debugf ("[D] copy constructor\n");
+  }
+
   t8_data_handler (std::vector<T> &data)
   {
-    m_data = data;
+    m_data.resize (data.size ());
+    t8_debugf ("[D] copy handler\n");
+    for (int idata = 0; idata < data.size (); idata++) {
+      m_data[idata] = T (data[idata]);
+    }
+    t8_debugf ("[D] copy finished\n");
   };
 
-  std::vector<T>
+  std::vector<T> &
   get_data ()
   {
     return m_data;
-  }
-
-  int
-  buffer_size_no_prefix (sc_MPI_Comm comm) override
-  {
-    int total_size = 0;
-    for (const T &item : m_data) {
-      total_size += single_handler.size (item, comm);
-    }
-    return total_size;
   }
 
   int
@@ -160,7 +138,11 @@ class t8_data_handler: public t8_abstract_data_handler {
     int total_size = 0;
     int mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &total_size);
     SC_CHECK_MPI (mpiret);
-    return total_size + buffer_size_no_prefix (comm);
+    for (const T &item : m_data) {
+      const int size = single_handler.size (item, comm);
+      total_size += size;
+    }
+    return total_size;
   }
 
   void
@@ -176,14 +158,6 @@ class t8_data_handler: public t8_abstract_data_handler {
   }
 
   void
-  pack_vector_no_prefix (std::vector<char> &buffer, int &pos, sc_MPI_Comm comm) override
-  {
-    for (const T &item : m_data) {
-      single_handler.pack (item, pos, buffer, comm);
-    }
-  }
-
-  void
   unpack_vector_prefix (const std::vector<char> &buffer, int &pos, int &outcount, sc_MPI_Comm comm) override
   {
     /* Get the number of items we received. */
@@ -191,16 +165,9 @@ class t8_data_handler: public t8_abstract_data_handler {
     SC_CHECK_MPI (mpiret);
     T8_ASSERT (outcount >= 0);
 
+    t8_debugf ("[D] outcount: %i\n", outcount);
     m_data.resize (outcount);
 
-    for (T &item : m_data) {
-      single_handler.unpack (buffer, pos, item, comm);
-    }
-  }
-
-  void
-  unpack_vector_no_prefix (const std::vector<char> &buffer, int &pos, sc_MPI_Comm comm) override
-  {
     for (T &item : m_data) {
       single_handler.unpack (buffer, pos, item, comm);
     }
@@ -253,19 +220,6 @@ class t8_data_handler: public t8_abstract_data_handler {
   type ()
   {
     return this->type ();
-  }
-
-  t8_abstract_data_handler *
-  new_handler (const int type)
-  {
-    if (type < 0) {
-      SC_ABORTF ("[D] place-holder for t8code types");
-      return NULL;
-    }
-    else {
-      t8_abstract_data_handler *new_handler = (t8_abstract_data_handler *) single_handler.new_user_handler (type);
-      return new_handler;
-    }
   }
 
  private:
