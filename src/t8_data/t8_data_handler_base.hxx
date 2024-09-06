@@ -24,31 +24,37 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #define T8_DATA_HANDLER_BASE
 
 #include <t8.h>
-#include <test/t8_data/t8_data_handler_specs.hxx>
 
 template <typename T>
 class t8_single_data_handler {
  public:
-  inline int
-  size (sc_MPI_Comm comm);
+  t8_single_data_handler () {};
+
+  int
+  size (const T &data, sc_MPI_Comm comm);
 
   /**
-     * Overwrite this routine to describe how data of type T should be packed
-     * 
-     * \param[in] data Data to be packed via MPI_Pack
-     * \return the size of the packed data in number of bytes. 
-     */
+    * Overwrite this routine to describe how data of type T should be packed
+    * 
+    * \param[in] data Data to be packed via MPI_Pack
+    * \return the size of the packed data in number of bytes. 
+    */
   void
   pack (const T &data, int &pos, std::vector<char> &buffer, sc_MPI_Comm comm);
 
   /**
-     * Overwrite this routine to describe how data of type T should be unpacked 
-     * 
-     * \param packed_data A void-pointer to the packed Data
-     * \return T* the unpacked data. 
-     */
+    * Overwrite this routine to describe how data of type T should be unpacked 
+    * 
+    * \param packed_data A void-pointer to the packed Data
+    * \return T* the unpacked data. 
+    */
   void
   unpack (const std::vector<char> &buffer, int &pos, T &data, sc_MPI_Comm comm);
+
+  int
+  type ();
+
+  ~t8_single_data_handler () {};
 };
 
 #endif /* T8_DATA_HANDLER_BASE */

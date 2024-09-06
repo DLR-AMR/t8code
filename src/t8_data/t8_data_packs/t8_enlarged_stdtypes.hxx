@@ -20,17 +20,19 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#ifndef T8_ENLARGED_INT
-#define T8_ENLARGED_INT
+#ifndef T8_ENLARGED_STDTYPES
+#define T8_ENLARGED_STDTYPES
 
 #include <test/t8_data/t8_data_handler_specs.hxx>
 #include <t8_data/t8_data_handler_base.hxx>
+
+enum pseudo_types { T8_ENLARGED_INT = 0, T8_ENLARGED_DOUBLE = 1 };
 
 template <>
 class t8_single_data_handler<enlarged_data<int>> {
  public:
   int
-  size (sc_MPI_Comm comm)
+  size (const enlarged_data<int> &item, sc_MPI_Comm comm)
   {
     int size;
     const int mpiret = sc_MPI_Pack_size (2, sc_MPI_INT, comm, &size);
@@ -39,23 +41,29 @@ class t8_single_data_handler<enlarged_data<int>> {
   }
 
   void
-  pack (const enlarged_data<int> data, int &pos, std::vector<char> &buffer, sc_MPI_Comm comm)
+  pack (const enlarged_data<int> &data, int &pos, std::vector<char> &buffer, sc_MPI_Comm comm)
   {
-    int mpiret = sc_MPI_Pack (&data.data, 1, sc_MPI_INT, buffer.data (), buffer.size (), &pos, comm);
+    int mpiret = sc_MPI_Pack (&(data.data), 1, sc_MPI_INT, buffer.data (), buffer.size (), &pos, comm);
     SC_CHECK_MPI (mpiret);
 
-    mpiret = sc_MPI_Pack (&data.data, 1, sc_MPI_INT, buffer.data (), buffer.size (), &pos, comm);
+    mpiret = sc_MPI_Pack (&(data.check), 1, sc_MPI_INT, buffer.data (), buffer.size (), &pos, comm);
     SC_CHECK_MPI (mpiret);
   }
 
   void
   unpack (const std::vector<char> &buffer, int &pos, enlarged_data<int> &data, sc_MPI_Comm comm)
   {
-    int mpiret = sc_MPI_Unpack (buffer.data (), buffer.size (), &pos, &data.data, 1, sc_MPI_INT, comm);
+    int mpiret = sc_MPI_Unpack (buffer.data (), buffer.size (), &pos, &(data.data), 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
 
-    mpiret = sc_MPI_Unpack (buffer.data (), buffer.size (), &pos, &data.check, 1, sc_MPI_INT, comm);
+    mpiret = sc_MPI_Unpack (buffer.data (), buffer.size (), &pos, &(data.check), 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
+  }
+
+  int
+  type ()
+  {
+    return T8_ENLARGED_INT;
   }
 };
 
@@ -63,7 +71,7 @@ template <>
 class t8_single_data_handler<enlarged_data<double>> {
  public:
   int
-  size (sc_MPI_Comm comm)
+  size (const enlarged_data<double> &item, sc_MPI_Comm comm)
   {
     int int_size;
     int mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &int_size);
@@ -75,24 +83,30 @@ class t8_single_data_handler<enlarged_data<double>> {
   }
 
   void
-  pack (const enlarged_data<double> data, int &pos, std::vector<char> &buffer, sc_MPI_Comm comm)
+  pack (const enlarged_data<double> &data, int &pos, std::vector<char> &buffer, sc_MPI_Comm comm)
   {
-    int mpiret = sc_MPI_Pack (&data.data, 1, sc_MPI_DOUBLE, buffer.data (), buffer.size (), &pos, comm);
+    int mpiret = sc_MPI_Pack (&(data.data), 1, sc_MPI_DOUBLE, buffer.data (), buffer.size (), &pos, comm);
     SC_CHECK_MPI (mpiret);
 
-    mpiret = sc_MPI_Pack (&data.data, 1, sc_MPI_INT, buffer.data (), buffer.size (), &pos, comm);
+    mpiret = sc_MPI_Pack (&(data.check), 1, sc_MPI_INT, buffer.data (), buffer.size (), &pos, comm);
     SC_CHECK_MPI (mpiret);
   }
 
   void
   unpack (const std::vector<char> &buffer, int &pos, enlarged_data<double> &data, sc_MPI_Comm comm)
   {
-    int mpiret = sc_MPI_Unpack (buffer.data (), buffer.size (), &pos, &data.data, 1, sc_MPI_DOUBLE, comm);
+    int mpiret = sc_MPI_Unpack (buffer.data (), buffer.size (), &pos, &(data.data), 1, sc_MPI_DOUBLE, comm);
     SC_CHECK_MPI (mpiret);
 
-    mpiret = sc_MPI_Unpack (buffer.data (), buffer.size (), &pos, &data.check, 1, sc_MPI_INT, comm);
+    mpiret = sc_MPI_Unpack (buffer.data (), buffer.size (), &pos, &(data.check), 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
+  }
+
+  int
+  type ()
+  {
+    return T8_ENLARGED_DOUBLE;
   }
 };
 
-#endif /* T8_ENLARGED_INT */
+#endif /* T8_ENLARGED_STDTYPES */

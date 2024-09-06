@@ -26,126 +26,161 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8.h>
 #include <vector>
 #include <t8_data/t8_data_handler_base.hxx>
-#include <t8_data/t8_data_packs/t8_packed_types.hxx>
+#include <algorithm>
 
-template <typename T>
-class t8_data_handler: public t8_single_data_handler<T> {
+class t8_abstract_data_handler {
  public:
   /**
-   * Compute the size of a buffer for \a num_data items of type T
+   * Compute the size of a buffer for 
    * 
-   * \param[in] num_data Number of items that will be packed into the buffer
    * \param[in] comm The communicator that will be used. 
    * \return The size of the buffer in bytes. 
    */
-  int
-  buffer_size (const int num_data, sc_MPI_Comm comm)
-  {
-    const int single_size = this->size (comm);
-    int num_data_size;
-    int mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &num_data_size);
-    SC_CHECK_MPI (mpiret);
-    return num_data_size + num_data * single_size;
-  }
+  virtual int
+  buffer_size (sc_MPI_Comm comm)
+    = 0;
 
   /**
    * Pack a vector of items into a buffer. The first integer of the packed data tells how many
    * items were packed. 
    * 
-   * \param[in] data        A vector of items to pack
    * \param[in, out] buffer A vector that will be filled with the packed data. 
    *                        Adds a prefix-int for the size.
    * \param[in] comm        The used communicator
    */
-  void
-  pack_vector_prefix (const std::vector<T> &data, std::vector<char> &buffer, sc_MPI_Comm comm)
-  {
-    int pos = 0;
-    T8_ASSERT (buffer.size () == (long unsigned int) buffer_size (data.size (), comm));
-    const int num_data = data.size ();
-    sc_MPI_Pack (&num_data, 1, sc_MPI_INT, buffer.data (), buffer.size (), &pos, comm);
-
-    for (const T item : data) {
-      this->pack (item, pos, buffer, comm);
-    }
-  }
-
-  /**
-   * Pack a vector of items into a buffer. In contrast to \a pack_vector_sizeprefix no prefix
-   * to tell how many items have been packed is used. 
-   * 
-   * \param[in] data A vector of items to pack
-   * \param[in, out] buffer A vector that will be filled with the packed data.
-   * \param[in] comm The used communicator
-   */
-  void
-  pack_vector_no_prefix (const std::vector<T> &data, std::vector<char> &buffer, sc_MPI_Comm comm)
-  {
-    int pos = 0;
-    for (const T item : data) {
-      this->pack (item, pos, buffer, comm);
-    }
-  }
+  virtual void
+  pack_vector_prefix (std::vector<char> &buffer, int &pos, sc_MPI_Comm comm)
+    = 0;
 
   /**
    * Unpack a buffer into a vector of items. Expects a prefix telling how many items of type T have been packed. 
    * 
    * \param[in] buffer  The input buffer
-   * \param[in, out] data Vector of type T, that will be filled with the unpacked data.
    * \param[in, out] outcount Number of items that were packed
    * \param[in] comm The communicator to use. 
    */
-  void
-  unpack_vector_prefix (std::vector<char> &buffer, std::vector<T> &data, int &outcount, sc_MPI_Comm comm)
-  {
-    int pos = 0;
-
-    /* Get the number of items we received. */
-    int mpiret = sc_MPI_Unpack (buffer.data (), buffer.size (), &pos, &outcount, 1, sc_MPI_INT, comm);
-    SC_CHECK_MPI (mpiret);
-    T8_ASSERT (outcount >= 0);
-
-    data.resize (outcount);
-
-    for (T item : data) {
-      this->unpack (buffer, pos, item, comm);
-    }
-  }
-
-  /**
-   * Unpack a buffer into a vector of items. Does not expect a prefix giving any metadata. 
-   * 
-   * \param[in] buffer  The input buffer
-   * \param[in, out] data Vector of type T, that will be filled with the unpacked data. The vector is already
-   *                      allocated to the proper size. 
-   * \param[in] comm The communicator to use. 
-   */
-  void
-  unpack_vector_no_prefix (const std::vector<char> &buffer, std::vector<T> &data, sc_MPI_Comm comm)
-  {
-    int pos = 0;
-
-    for (T item : data) {
-      this->unpack (buffer, pos, item, comm);
-    }
-  }
+  virtual void
+  unpack_vector_prefix (const std::vector<char> &buffer, int &pos, int &outcount, sc_MPI_Comm comm)
+    = 0;
 
   /**
    * Wrapper around a \a data_pack_vector and an sc_MPI_Send. 
    * Packs the \a data and sends it to rank \a dest using \a tag via \a comm
    * 
-   * \param[in] data The data to pack and send
    * \param[in] dest The rank we send to. 
    * \param[in] tag The tag to use during communication
    * \param[in] comm The communicator to use. 
    * \return The result of the mpi-communication
    */
+  virtual int
+  send (const int dest, const int tag, sc_MPI_Comm comm)
+    = 0;
+
+  /**
+   * Wrapper around an \a sc_MPI_Recv and \a data_unpack. 
+   * Receives and unpackes data coming from \a source. 
+   * 
+   * \param[in] source The rank we receive data from
+   * \param[in] tag The tag used during communication
+   * \param[in] comm The communicator to use. 
+   * \param[in] status Status of the MPI-communication
+   * \param[in, out] outcount After execution it is the number of items of type \a T received. 
+   * \return The result of the mpi communication.  
+   */
+  virtual int
+  recv (const int source, const int tag, sc_MPI_Comm comm, sc_MPI_Status *status, int &outcount)
+    = 0;
+
+  /**
+   * Return the type (as an int) that is handled by this data handler. 
+   * Can be used to call pack/unpack from other data-handlers.
+   * 
+   * \return int 
+   */
+  virtual int
+  type ()
+    = 0;
+
+  virtual ~t8_abstract_data_handler () {};
+};
+
+template <typename T>
+class t8_data_handler: public t8_abstract_data_handler {
+ public:
+  t8_data_handler ()
+  {
+  }
+
+  t8_data_handler (const t8_data_handler &other)
+  {
+    single_handler = other.single_handler;
+    m_data.resize (other.m_data.size ());
+    for (int idata = 0; idata < other.m_data.size (); idata++) {
+      m_data[idata] = T (other.m_data[idata]);
+    }
+  }
+
+  t8_data_handler (std::vector<T> &data)
+  {
+    m_data.resize (data.size ());
+    for (int idata = 0; idata < data.size (); idata++) {
+      m_data[idata] = T (data[idata]);
+    }
+  };
+
+  std::vector<T> &
+  get_data ()
+  {
+    return m_data;
+  }
+
   int
-  send (std::vector<T> &data, int dest, int tag, sc_MPI_Comm comm)
+  buffer_size (sc_MPI_Comm comm) override
+  {
+    int total_size = 0;
+    int mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &total_size);
+    SC_CHECK_MPI (mpiret);
+    for (const T &item : m_data) {
+      const int size = single_handler.size (item, comm);
+      total_size += size;
+    }
+    return total_size;
+  }
+
+  void
+  pack_vector_prefix (std::vector<char> &buffer, int &pos, sc_MPI_Comm comm) override
+  {
+    const int num_data = m_data.size ();
+    sc_MPI_Pack (&num_data, 1, sc_MPI_INT, buffer.data (), buffer.size (), &pos, comm);
+
+    for (const T &item : m_data) {
+      single_handler.pack (item, pos, buffer, comm);
+    }
+  }
+
+  void
+  unpack_vector_prefix (const std::vector<char> &buffer, int &pos, int &outcount, sc_MPI_Comm comm) override
+  {
+    /* Get the number of items we received. */
+    int mpiret = sc_MPI_Unpack (buffer.data (), buffer.size (), &pos, &outcount, 1, sc_MPI_INT, comm);
+    SC_CHECK_MPI (mpiret);
+
+    T8_ASSERT (outcount >= 0);
+
+    m_data.resize (outcount);
+
+    for (T &item : m_data) {
+      single_handler.unpack (buffer, pos, item, comm);
+    }
+  }
+
+  int
+  send (const int dest, const int tag, sc_MPI_Comm comm) override
   {
 #if T8_ENABLE_MPI
-    std::vector<char> buffer (buffer_size (data.size (), comm));
-    pack_vector_prefix (data, buffer, comm);
+    int pos = 0;
+    std::vector<char> buffer (buffer_size (comm));
+    pack_vector_prefix (buffer, pos, comm);
 
     const int mpiret = sc_MPI_Send (buffer.data (), buffer.size (), sc_MPI_PACKED, dest, tag, comm);
 
@@ -156,22 +191,11 @@ class t8_data_handler: public t8_single_data_handler<T> {
 #endif
   }
 
-  /**
-   * Wrapper around an \a sc_MPI_Recv and \a data_unpack. 
-   * Receives and unpackes data coming from \a source. 
-   * 
-   * \param[in, out] data The output buffer. Will be filled with the unpacked data.
-   * \param[in] source The rank we receive data from
-   * \param[in] tag The tag used during communication
-   * \param[in] comm The communicator to use. 
-   * \param[in] status Status of the MPI-communication
-   * \param[in, out] outcount After execution it is the number of items of type \a T received. 
-   * \return The result of the mpi communication.  
-   */
   int
-  recv (std::vector<T> &data, int source, int tag, sc_MPI_Comm comm, sc_MPI_Status *status, int &outcount)
+  recv (const int source, const int tag, sc_MPI_Comm comm, sc_MPI_Status *status, int &outcount) override
   {
 #if T8_ENABLE_MPI
+    int pos = 0;
     int mpiret = sc_MPI_Probe (source, tag, comm, status);
     SC_CHECK_MPI (mpiret);
 
@@ -180,11 +204,10 @@ class t8_data_handler: public t8_single_data_handler<T> {
     SC_CHECK_MPI (mpiret);
 
     std::vector<char> buffer (size);
-    int pos = 0;
+
     mpiret = sc_MPI_Recv (buffer.data (), buffer.size (), sc_MPI_PACKED, source, pos, comm, status);
     SC_CHECK_MPI (mpiret);
-
-    unpack_vector_prefix (buffer, data, outcount, comm);
+    unpack_vector_prefix (buffer, pos, outcount, comm);
 
     return mpiret;
 #else
@@ -193,43 +216,15 @@ class t8_data_handler: public t8_single_data_handler<T> {
 #endif
   }
 
-  /**
-   * Wrapper around an sc_MPI_Allgather, packing the data before sending it and 
-   * unpacking it afterwards. 
-   * 
-   * \param[in] send        The data that should be send to all other ranks in the communicator.
-   * \param[in, out] recv   A vector of type \a T to gather the data. Will be set to proper size. 
-   * \param[in] comm        The communicator to use. 
-   * \return int 
-   */
   int
-  allgather (const std::vector<T> &send, std::vector<T> &recv, sc_MPI_Comm comm)
+  type ()
   {
-#if T8_ENABLE_MPI
-    const int bsize = buffer_size (send.size (), comm);
-    std::vector<char> buffer (bsize);
-    pack_vector_no_prefix (send, buffer, comm);
-
-    int mpisize;
-    int mpiret = sc_MPI_Comm_size (comm, &mpisize);
-    SC_CHECK_MPI (mpiret);
-
-    const int recv_size = mpisize * bsize;
-    std::vector<char> recv_buffer (recv_size);
-    mpiret = sc_MPI_Allgather (buffer.data (), buffer.size (), sc_MPI_PACKED, recv_buffer.data (), buffer.size (),
-                               sc_MPI_PACKED, comm);
-    SC_CHECK_MPI (mpiret);
-
-    recv.resize (send.size () * mpisize);
-
-    unpack_vector_no_prefix (recv_buffer, recv, comm);
-
-    return mpiret;
-#else
-    t8_infof ("recv only available when configured with --enable-mpi\n");
-    return sc_MPI_ERR_OTHER;
-#endif
+    return single_handler.type ();
   }
+
+ private:
+  std::vector<T> m_data;
+  t8_single_data_handler<T> single_handler;
 };
 
 #endif /* T8_DATA_HANDLER_HXX */

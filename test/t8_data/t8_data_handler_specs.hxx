@@ -25,10 +25,15 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <t8.h>
 #include <vector>
+#include <t8_data/t8_data_handler.hxx>
 
 template <typename T>
 class enlarged_data {
  public:
+  enlarged_data ()
+  {
+  }
+
   void
   set (T data, int check)
   {
