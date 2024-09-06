@@ -4,9 +4,22 @@ function( add_t8_tutorial )
     set( multiValueArgs "SOURCES" )
     cmake_parse_arguments( ADD_T8_TUTORIAL "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
+    # Get the path of the first file listed in the SOURCES list and use it to determine the build directory.
+    # The executable will be build in the same directory as the first source file.
+    list(GET ADD_T8_TUTORIAL_SOURCES 0 FIRST_SOURCE)
+    get_filename_component(TUTORIAL_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/${FIRST_SOURCE}" DIRECTORY)
+    file(RELATIVE_PATH TUTORIAL_RELATIVE_DIR "${CMAKE_SOURCE_DIR}" "${TUTORIAL_SOURCE_DIR}")
+    set(TUTORIAL_BUILD_DIR "${CMAKE_BINARY_DIR}/${TUTORIAL_RELATIVE_DIR}")
+
     add_executable( ${ADD_T8_TUTORIAL_NAME} ${ADD_T8_TUTORIAL_SOURCES} )
     target_link_libraries( ${ADD_T8_TUTORIAL_NAME} PRIVATE T8 SC::SC )
     target_include_directories( ${ADD_T8_TUTORIAL_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. )
+    
+    set_target_properties(${ADD_T8_TUTORIAL_NAME} PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${TUTORIAL_BUILD_DIR}"
+        LIBRARY_OUTPUT_DIRECTORY "${TUTORIAL_BUILD_DIR}"
+        ARCHIVE_OUTPUT_DIRECTORY "${TUTORIAL_BUILD_DIR}"
+    )
 
     if( T8CODE_EXPORT_COMPILE_COMMANDS )
         set_target_properties( ${ADD_T8_TUTORIAL_NAME} PROPERTIES EXPORT_COMPILE_COMMANDS ON )
