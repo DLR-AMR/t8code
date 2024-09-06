@@ -1,5 +1,11 @@
 # JOSS paper about t8code
 
+View the paper: [paper.pdf](https://github.com/DLR-AMR/t8code_JOSS/blob/main/paper.pdf).
+
+Edit the paper: [paper.md](https://github.com/DLR-AMR/t8code_JOSS/blob/main/paper.md)
+
+## Intro
+
 The Journal of Open Source Software (JOSS) is a developer friendly journal for
 research software packages.
 
