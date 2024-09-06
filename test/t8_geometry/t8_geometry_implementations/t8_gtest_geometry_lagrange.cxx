@@ -251,6 +251,11 @@ INSTANTIATE_TEST_SUITE_P (t8_gtest_geometry_lagrange, LagrangeCmesh,
 /* clang-format on */
 
 #if T8_ENABLE_DEBUG
+
+/**
+ * Tests the compatibility checking for the Lagrange geometry.
+ * The geometry should throw assertions if the geometry is not compatible with an assigned tree.
+ */
 TEST (test_geometry_lagrange, incompatible_geometry)
 {
   t8_cmesh_t cmesh;
