@@ -119,21 +119,20 @@ t8_geometry_lagrange::t8_geom_compute_basis (const double *ref_coords) const
 bool
 t8_geometry_lagrange::t8_geom_check_tree_compatibility () const
 {
-  bool return_val = true;
   if (*degree > T8_GEOMETRY_MAX_POLYNOMIAL_DEGREE) {
     t8_debugf ("Lagrange tree with degree %i detected.\n"
                "Only degrees up to %i are supported.",
                *degree, T8_GEOMETRY_MAX_POLYNOMIAL_DEGREE);
-    return_val = false;
+    return false;
   }
   if (active_tree_class != T8_ECLASS_LINE && active_tree_class != T8_ECLASS_TRIANGLE
       && active_tree_class != T8_ECLASS_QUAD && active_tree_class != T8_ECLASS_HEX) {
     t8_debugf ("Lagrange tree with class %i detected.\n"
                "Only lines, triangles, quadrilaterals and hexahedra are supported with the lagrangian geometry.\n",
                active_tree_class);
-    return_val = false;
+    return false;
   }
-  return return_val;
+  return true;
 }
 
 inline std::vector<double>
