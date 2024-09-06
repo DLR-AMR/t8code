@@ -235,6 +235,7 @@ TEST (data_handler_test, pseudo_tree_test)
   }
 }
 
+#if T8_ENABLE_MPI
 TEST (data_handler_test, tree_test)
 {
   sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
@@ -326,6 +327,7 @@ TEST (data_handler_test, tree_test)
     }
   }
 }
+#endif
 
 REGISTER_TYPED_TEST_SUITE_P (data_handler_test, pack_unpack_vector_of_data, send_recv);
 
