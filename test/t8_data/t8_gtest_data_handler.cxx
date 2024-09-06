@@ -156,9 +156,10 @@ TEST (data_handler_test, multiple_handler)
 
   /* Compute the rank this rank sends to. We send in a round-robin fashion */
   int send_to = (mpirank + 1) % mpisize;
+#if T8_ENABLE_MPI
   /* Compute the rank this rank receives from. */
   int recv_from = (mpirank == 0) ? (mpisize - 1) : (mpirank - 1);
-
+#endif
   for (t8_abstract_data_handler *ihandler : handler) {
 
     mpiret = ihandler->send (send_to, 0, comm);

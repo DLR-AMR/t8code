@@ -190,7 +190,6 @@ class t8_data_handler: public t8_abstract_data_handler {
     int size;
     mpiret = sc_MPI_Get_count (status, sc_MPI_PACKED, &size);
     SC_CHECK_MPI (mpiret);
-
     std::vector<char> buffer (size);
 
     mpiret = sc_MPI_Recv (buffer.data (), buffer.size (), sc_MPI_PACKED, source, pos, comm, status);

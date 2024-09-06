@@ -50,10 +50,8 @@ class t8_single_data_handler<pseudo_tree> {
 
     /* tree_data_size */
     total_size += int_size;
-    if (item.tree_data.size () > 0) {
-      for (auto ihandler : item.tree_data) {
-        total_size += ihandler->buffer_size (comm) + int_size;
-      }
+    for (auto ihandler : item.tree_data) {
+      total_size += ihandler->buffer_size (comm) + int_size;
     }
     return total_size;
   }
@@ -65,7 +63,7 @@ class t8_single_data_handler<pseudo_tree> {
     /* Pack number of topological data */
     int mpiret = sc_MPI_Pack (&data_size, 1, sc_MPI_INT, buffer.data (), buffer.size (), &pos, comm);
     SC_CHECK_MPI (mpiret);
-    for (int topo_item : data.topo_data) {
+    for (const int &topo_item : data.topo_data) {
       /* Pack each topological data*/
       mpiret = sc_MPI_Pack (&topo_item, 1, sc_MPI_INT, buffer.data (), buffer.size (), &pos, comm);
       SC_CHECK_MPI (mpiret);
@@ -75,7 +73,7 @@ class t8_single_data_handler<pseudo_tree> {
     mpiret = sc_MPI_Pack (&tree_data_size, 1, sc_MPI_INT, buffer.data (), buffer.size (), &pos, comm);
     SC_CHECK_MPI (mpiret);
 
-    for (auto handler : data.tree_data) {
+    for (auto &handler : data.tree_data) {
       const int type = handler->type ();
       /* Pack type of tree data */
       mpiret = sc_MPI_Pack (&type, 1, sc_MPI_INT, buffer.data (), buffer.size (), &pos, comm);
