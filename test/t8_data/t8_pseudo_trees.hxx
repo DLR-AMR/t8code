@@ -105,7 +105,7 @@ class t8_single_data_handler<pseudo_tree> {
     SC_CHECK_MPI (mpiret);
     data.tree_data.resize (num_handler);
 
-    for (int ihandler = 0; ihandler < data.tree_data.size (); ihandler++) {
+    for (int ihandler = 0; ihandler < num_handler; ihandler++) {
       /* Unpack type of tree data*/
       int type;
       mpiret = sc_MPI_Unpack (buffer.data (), buffer.size (), &pos, &type, 1, sc_MPI_INT, comm);

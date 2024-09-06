@@ -158,7 +158,6 @@ TEST (data_handler_test, multiple_handler)
   int send_to = (mpirank + 1) % mpisize;
   /* Compute the rank this rank receives from. */
   int recv_from = (mpirank == 0) ? (mpisize - 1) : (mpirank - 1);
-  t8_debugf ("[D] computed recv from %i\n", recv_from);
 
   for (t8_abstract_data_handler *ihandler : handler) {
 
@@ -294,12 +293,15 @@ TEST (data_handler_test, tree_test)
 
   std::vector<pseudo_tree> recv_trees = tree_handler.get_data ();
 
-  ASSERT_EQ (recv_trees.size (), ((recv_from) % 4) * 10);
+  const int num_recv_trees = recv_trees.size ();
 
-  for (int itree = 0; itree < recv_trees.size (); itree++) {
-    ASSERT_EQ (recv_trees[itree].topo_data.size (), ((recv_from % 3) + 1) * 10);
+  ASSERT_EQ (num_recv_trees, ((recv_from) % 4) * 10);
 
-    for (int itopo_data = 0; itopo_data < recv_trees[itree].topo_data.size (); itopo_data++) {
+  for (int itree = 0; itree < num_recv_trees; itree++) {
+    const int num_recv_tree_topo_size = recv_trees[itree].topo_data.size ();
+    ASSERT_EQ (num_recv_tree_topo_size, ((recv_from % 3) + 1) * 10);
+
+    for (int itopo_data = 0; itopo_data < num_recv_tree_topo_size; itopo_data++) {
       EXPECT_EQ (recv_trees[itree].topo_data[itopo_data], itopo_data);
     }
 
@@ -309,7 +311,7 @@ TEST (data_handler_test, tree_test)
       if (itree_data == 0) {
         std::vector<enlarged_data<int>> recv_ints
           = ((t8_data_handler<enlarged_data<int>> *) (recv_trees[itree].tree_data[itree_data]))->get_data ();
-        ASSERT_EQ (recv_ints.size (), num_data);
+        ASSERT_EQ ((const int) recv_ints.size (), num_data);
         for (int idata = 0; idata < num_data; idata++) {
           EXPECT_EQ (recv_ints[idata].data, idata);
           EXPECT_EQ (recv_ints[idata].check, recv_from);
@@ -318,7 +320,7 @@ TEST (data_handler_test, tree_test)
       else {
         std::vector<enlarged_data<double>> recv_double
           = ((t8_data_handler<enlarged_data<double>> *) (recv_trees[itree].tree_data[itree_data]))->get_data ();
-        ASSERT_EQ (recv_double.size (), num_data);
+        ASSERT_EQ ((const int) recv_double.size (), num_data);
         for (int idata = 0; idata < num_data; idata++) {
           EXPECT_EQ (recv_double[idata].data, (double) idata + fraction);
           EXPECT_EQ (recv_double[idata].check, recv_from);

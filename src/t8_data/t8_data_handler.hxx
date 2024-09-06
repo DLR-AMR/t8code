@@ -123,9 +123,7 @@ class t8_data_handler: public t8_abstract_data_handler {
   t8_data_handler (std::vector<T> &data)
   {
     m_data.resize (data.size ());
-    for (int idata = 0; idata < data.size (); idata++) {
-      m_data[idata] = T (data[idata]);
-    }
+    std::copy (data.begin (), data.end (), m_data.begin ());
   };
 
   std::vector<T> &
