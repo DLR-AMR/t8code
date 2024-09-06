@@ -105,7 +105,7 @@ struct t8_geometry
    * \param [in]  gtreeid    The global tree.
    */
   virtual void
-  t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
+  t8_geom_load_tree_data (const t8_cmesh_t cmesh, const t8_gloidx_t gtreeid);
 
   /** Query whether a batch of points lies inside an element. 
  * \param [in]      forest      The forest.

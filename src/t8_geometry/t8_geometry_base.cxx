@@ -65,7 +65,7 @@ t8_geom_get_type (const t8_geometry_c *geom)
 
 /* Load the id and class of the newly active tree to the active_tree and active_tree_class variable. */
 void
-t8_geometry::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
+t8_geometry::t8_geom_load_tree_data (const t8_cmesh_t cmesh, const t8_gloidx_t gtreeid)
 {
   /* Set active id and eclass */
   const t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
