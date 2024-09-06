@@ -54,9 +54,6 @@ class t8_single_data_handler {
   int
   type ();
 
-  void *
-  new_user_handler (const int type);
-
   ~t8_single_data_handler () {};
 };
 

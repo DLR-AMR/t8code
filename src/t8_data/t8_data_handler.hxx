@@ -60,7 +60,7 @@ class t8_abstract_data_handler {
    * \param[in] comm The communicator to use. 
    */
   virtual void
-  unpack_vector_prefix (const std::vector<char> &buffer, int &outcount, int &pos, sc_MPI_Comm comm)
+  unpack_vector_prefix (const std::vector<char> &buffer, int &pos, int &outcount, sc_MPI_Comm comm)
     = 0;
 
   /**
@@ -91,6 +91,12 @@ class t8_abstract_data_handler {
   recv (const int source, const int tag, sc_MPI_Comm comm, sc_MPI_Status *status, int &outcount)
     = 0;
 
+  /**
+   * Return the type (as an int) that is handled by this data handler. 
+   * Can be used to call pack/unpack from other data-handlers.
+   * 
+   * \return int 
+   */
   virtual int
   type ()
     = 0;
@@ -107,23 +113,19 @@ class t8_data_handler: public t8_abstract_data_handler {
 
   t8_data_handler (const t8_data_handler &other)
   {
-    t8_debugf ("[D] copy constructor\n");
     single_handler = other.single_handler;
     m_data.resize (other.m_data.size ());
     for (int idata = 0; idata < other.m_data.size (); idata++) {
       m_data[idata] = T (other.m_data[idata]);
     }
-    t8_debugf ("[D] copy constructor\n");
   }
 
   t8_data_handler (std::vector<T> &data)
   {
     m_data.resize (data.size ());
-    t8_debugf ("[D] copy handler\n");
     for (int idata = 0; idata < data.size (); idata++) {
       m_data[idata] = T (data[idata]);
     }
-    t8_debugf ("[D] copy finished\n");
   };
 
   std::vector<T> &
@@ -148,7 +150,6 @@ class t8_data_handler: public t8_abstract_data_handler {
   void
   pack_vector_prefix (std::vector<char> &buffer, int &pos, sc_MPI_Comm comm) override
   {
-    T8_ASSERT (buffer.size () == (long unsigned int) buffer_size (comm));
     const int num_data = m_data.size ();
     sc_MPI_Pack (&num_data, 1, sc_MPI_INT, buffer.data (), buffer.size (), &pos, comm);
 
@@ -163,9 +164,9 @@ class t8_data_handler: public t8_abstract_data_handler {
     /* Get the number of items we received. */
     int mpiret = sc_MPI_Unpack (buffer.data (), buffer.size (), &pos, &outcount, 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
+
     T8_ASSERT (outcount >= 0);
 
-    t8_debugf ("[D] outcount: %i\n", outcount);
     m_data.resize (outcount);
 
     for (T &item : m_data) {
@@ -206,8 +207,7 @@ class t8_data_handler: public t8_abstract_data_handler {
 
     mpiret = sc_MPI_Recv (buffer.data (), buffer.size (), sc_MPI_PACKED, source, pos, comm, status);
     SC_CHECK_MPI (mpiret);
-    int vector_pos = 0;
-    unpack_vector_prefix (buffer, vector_pos, outcount, comm);
+    unpack_vector_prefix (buffer, pos, outcount, comm);
 
     return mpiret;
 #else
@@ -219,7 +219,7 @@ class t8_data_handler: public t8_abstract_data_handler {
   int
   type ()
   {
-    return this->type ();
+    return single_handler.type ();
   }
 
  private:
