@@ -179,7 +179,7 @@ t8_cmesh_check_version_of_msh_file (FILE *fp)
   /* Search for the line starting with "$MeshFormat". */
   while (!feof (fp) && strcmp (first_word, "$MeshFormat")) {
     (void) t8_cmesh_msh_read_next_line (&line, &linen, fp);
-    retval = sscanf (line, "%2048s", first_word);
+    retval = sscanf (line, "%2047s", first_word);
 
     /* Checking for read/write error */
     if (retval != 1) {
@@ -258,7 +258,7 @@ t8_msh_file_2_read_nodes (FILE *fp, t8_locidx_t *num_nodes, sc_mempool_t **node_
   while (!feof (fp) && strcmp (first_word, "$Nodes")) {
     (void) t8_cmesh_msh_read_next_line (&line, &linen, fp);
     /* Get the first word of this line */
-    retval = sscanf (line, "%2048s", first_word);
+    retval = sscanf (line, "%2047s", first_word);
 
     /* Checking for read/write error */
     if (retval != 1) {
@@ -358,7 +358,7 @@ t8_msh_file_4_read_nodes (FILE *fp, t8_locidx_t *num_nodes, sc_mempool_t **node_
   while (!feof (fp) && strcmp (first_word, "$Nodes")) {
     (void) t8_cmesh_msh_read_next_line (&line, &linen, fp);
     /* Get the first word of this line */
-    retval = sscanf (line, "%2048s", first_word);
+    retval = sscanf (line, "%2047s", first_word);
     /* Checking for read/write error */
     if (retval != 1) {
       t8_global_errorf ("Premature end of line while reading nodes.\n");
@@ -445,15 +445,19 @@ t8_msh_file_4_read_nodes (FILE *fp, t8_locidx_t *num_nodes, sc_mempool_t **node_
         case 1:
           retval = sscanf (line, "%lf %lf %lf %lf", &Node->coordinates[0], &Node->coordinates[1], &Node->coordinates[2],
                            &Node->parameters[0]);
-          if (retval == 4) {
-            break;
+          if (retval != 4) {
+            t8_global_errorf ("Error reading node file after node %li\n", (long) last_index);
+            goto die_node;
           }
+          break;
         case 2:
           retval = sscanf (line, "%lf %lf %lf %lf %lf", &Node->coordinates[0], &Node->coordinates[1],
                            &Node->coordinates[2], &Node->parameters[0], &Node->parameters[1]);
-          if (retval == 5) {
-            break;
+          if (retval != 5) {
+            t8_global_errorf ("Error reading node file after node %li\n", (long) last_index);
+            goto die_node;
           }
+          break;
         default:
           t8_global_errorf ("Error reading node file after node %li\n", (long) last_index);
           goto die_node;
@@ -498,7 +502,8 @@ die_node:
  * for each tree the indices of its vertices.
  * They are stored as arrays of long ints. */
 static int
-t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, sc_array_t **vertex_indices, int dim)
+t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, sc_array_t **vertex_indices,
+                               const int dim)
 {
   char *line = (char *) malloc (1024), *line_modify;
   char first_word[2048] = "\0";
@@ -519,7 +524,7 @@ t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
   while (!feof (fp) && strcmp (first_word, "$Elements")) {
     (void) t8_cmesh_msh_read_next_line (&line, &linen, fp);
     /* Get the first word of this line */
-    retval = sscanf (line, "%2048s", first_word);
+    retval = sscanf (line, "%2047s", first_word);
 
     /* Checking for read/write error */
     if (retval != 1) {
@@ -573,6 +578,12 @@ t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
     /* Continue if tree type is supported */
     eclass = t8_msh_tree_type_to_eclass[ele_type];
     T8_ASSERT (eclass != T8_ECLASS_COUNT);
+
+    if (t8_eclass_to_dimension[eclass] > dim) {
+      t8_errorf (
+        "Warning: Encountered element which dimension is greater than %d. Did you set the correct dimension?\n", dim);
+    }
+
     /* Check if the tree is of the correct dimension */
     if (t8_eclass_to_dimension[eclass] == dim) {
       /* The tree is of the correct dimension,
@@ -622,9 +633,16 @@ t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
         int num_switches = 0;
         int switch_indices[4] = { 0 };
         int iswitch;
-        T8_ASSERT (t8_eclass_to_dimension[eclass] == 3);
-        t8_debugf ("Correcting negative volume of tree %li\n", tree_count);
+        T8_ASSERT (t8_eclass_to_dimension[eclass] > 1);
+        t8_debugf ("Correcting negative volume of tree %li\n", static_cast<long> (tree_count));
         switch (eclass) {
+        case T8_ECLASS_TRIANGLE:
+        case T8_ECLASS_QUAD:
+          /* We switch vertex 1 and vertex 2. */
+          num_switches = 2;
+          switch_indices[0] = 0;
+          switch_indices[1] = 2;
+          break;
         case T8_ECLASS_TET:
           /* We switch vertex 0 and vertex 3 */
           num_switches = 1;
@@ -802,8 +820,8 @@ t8_cmesh_correct_parameters_on_closed_geometry (const int geometry_dim, const in
  * We cannot access this geometry over the cmesh interface since the cmesh
  * is not committed yet. */
 static int
-t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, sc_array_t **vertex_indices, int dim,
-                               const t8_geometry_c *linear_geometry_base, const int use_cad_geometry,
+t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, sc_array_t **vertex_indices,
+                               const int dim, const t8_geometry_c *linear_geometry_base, const int use_cad_geometry,
                                const t8_geometry_c *cad_geometry_base)
 {
   char *line = (char *) malloc (1024), *line_modify;
@@ -829,7 +847,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
   while (!feof (fp) && strcmp (first_word, "$Elements")) {
     (void) t8_cmesh_msh_read_next_line (&line, &linen, fp);
     /* Get the first word of this line */
-    retval = sscanf (line, "%2048s", first_word);
+    retval = sscanf (line, "%2047s", first_word);
 
     /* Checking for read/write error */
     if (retval != 1) {
@@ -879,6 +897,12 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
     }
     eclass = t8_msh_tree_type_to_eclass[ele_type];
     T8_ASSERT (eclass != T8_ECLASS_COUNT);
+
+    if (t8_eclass_to_dimension[eclass] > dim) {
+      t8_errorf (
+        "Warning: Encountered element which dimension is greater than %d. Did you set the correct dimension?\n", dim);
+    }
+
     /* Check if the tree is of the correct dimension */
     if (t8_eclass_to_dimension[eclass] != dim) {
       /* The trees in this block are not of the correct dimension.
@@ -948,11 +972,18 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
           int num_switches = 0;
           int switch_indices[4] = { 0 };
           int iswitch;
-          T8_ASSERT (t8_eclass_to_dimension[eclass] == 3);
-          t8_debugf ("Correcting negative volume of tree %li\n", tree_count);
+          T8_ASSERT (t8_eclass_to_dimension[eclass] > 1);
+          t8_debugf ("Correcting negative volume of tree %li\n", static_cast<long> (tree_count));
           switch (eclass) {
+          case T8_ECLASS_TRIANGLE:
+          case T8_ECLASS_QUAD:
+            /* We switch vertex 1 and vertex 2. */
+            num_switches = 2;
+            switch_indices[0] = 0;
+            switch_indices[1] = 2;
+            break;
           case T8_ECLASS_TET:
-            /* We switch vertex 0 and vertex 3 */
+            /* We switch vertex 0 and vertex 3. */
             num_switches = 1;
             switch_indices[0] = 3;
             break;
@@ -1579,11 +1610,11 @@ t8_msh_file_face_set_boundary (void **face, const void *data)
 /* Given two faces and the classes of their volume trees,
  * compute the orientation of the faces to each other */
 static int
-t8_msh_file_face_orientation (t8_msh_file_face_t *Face_a, t8_msh_file_face_t *Face_b, t8_eclass_t tree_class_a,
-                              t8_eclass_t tree_class_b)
+t8_msh_file_face_orientation (const t8_msh_file_face_t *Face_a, const t8_msh_file_face_t *Face_b,
+                              const t8_eclass_t tree_class_a, const t8_eclass_t tree_class_b)
 {
   long vertex_zero; /* The number of the first vertex of the smaller face */
-  t8_msh_file_face_t *smaller_Face, *bigger_Face;
+  const t8_msh_file_face_t *smaller_Face, *bigger_Face;
   int compare, iv;
   t8_eclass_t bigger_class;
   int orientation = -1;
@@ -1634,7 +1665,7 @@ t8_msh_file_face_orientation (t8_msh_file_face_t *Face_a, t8_msh_file_face_t *Fa
 /* This routine does only find neighbors between local trees.
  * Use with care if cmesh is partitioned. */
 static void
-t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh, sc_array_t *vertex_indices)
+t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh, const sc_array_t *vertex_indices)
 {
   sc_hash_t *faces;
   t8_msh_file_face_t *Face, **pNeighbor, *Neighbor;
@@ -1752,8 +1783,8 @@ t8_cmesh_from_msh_file_register_geometries (t8_cmesh_t cmesh, const int use_cad_
 }
 
 t8_cmesh_t
-t8_cmesh_from_msh_file (const char *fileprefix, int partition, sc_MPI_Comm comm, int dim, int main_proc,
-                        int use_cad_geometry)
+t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm comm, const int dim,
+                        const int main_proc, const int use_cad_geometry)
 {
   int mpirank, mpisize, mpiret;
   t8_cmesh_t cmesh;

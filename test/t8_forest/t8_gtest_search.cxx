@@ -27,7 +27,7 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_iterate.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <test/t8_gtest_macros.hxx>
 
 class forest_search: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
@@ -62,11 +62,8 @@ class forest_search: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
  */
 static int
 t8_test_search_all_fn (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element, const int is_leaf,
-                       const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index, void *queries,
-                       sc_array_t *query_indices, int *query_matches, const size_t num_active_queries)
+                       const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index)
 {
-  EXPECT_TRUE (queries == NULL) << "Search callback must not be called with query argument.";
-
   sc_array_t *matched_leaves = (sc_array_t *) t8_forest_get_user_data (forest);
   if (is_leaf) {
     t8_locidx_t tree_offset;
@@ -88,15 +85,16 @@ t8_test_search_all_fn (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_e
   return 1;
 }
 
-static int
+static void
 t8_test_search_query_all_fn (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, const int is_leaf,
-                             const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index, void *queries,
-                             sc_array_t *query_indices, int *query_matches, const size_t num_active_queries)
+                             const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index,
+                             sc_array_t *queries, sc_array_t *query_indices, int *query_matches,
+                             const size_t num_active_queries)
 {
   EXPECT_TRUE (queries != NULL) << "query callback must be called with queries argument. ";
   EXPECT_EQ (num_active_queries, (long unsigned int) 1) << "Wrong number of active queries passed to query callback.";
   for (size_t iquery = 0; iquery < num_active_queries; iquery++) {
-    void *query = sc_array_index_int ((sc_array_t *) queries, iquery);
+    void *query = sc_array_index_int (queries, iquery);
     /* The query callback is always called with a query */
     EXPECT_TRUE (query != NULL) << "query " << iquery << " is NULL.";
     /* The query is an int with value 42 (see below) */
@@ -115,7 +113,6 @@ t8_test_search_query_all_fn (t8_forest_t forest, t8_locidx_t ltreeid, const t8_e
     }
     query_matches[iquery] = 1;
   }
-  return 1;
 }
 
 TEST_P (forest_search, test_search_one_query_matches_all)

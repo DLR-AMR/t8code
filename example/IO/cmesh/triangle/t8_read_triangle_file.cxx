@@ -24,8 +24,9 @@
 #include <t8.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh_triangle.h>
-#include <t8_cmesh_vtk_writer.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_vtk/t8_vtk_writer.h>
+
+#include <t8_schemes/t8_default/t8_default.hxx>
 
 void
 t8_read_triangle_file_build_cmesh (const char *prefix, int do_dup, int do_partition)

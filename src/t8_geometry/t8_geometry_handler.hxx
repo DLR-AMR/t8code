@@ -78,7 +78,7 @@ struct t8_geometry_handler
    * \param [in]  geom  The geometry to register.
    */
   void
-  register_geometry (t8_geometry **geom);
+  register_geometry (t8_geometry *geom);
 
   /**
    * Find a geometry by its name.
@@ -212,6 +212,19 @@ struct t8_geometry_handler
   }
 
   /**
+   * Check for compatibility of the tree with the assigned geometry.
+   * \param [in] cmesh   The cmesh.
+   * \param [in] gtreeid The global tree id of the tree to check.
+   * \return             True if the tree and assigned geometry are compatible.
+   */
+  inline bool
+  tree_compatible_with_geom (const t8_cmesh_t cmesh, const t8_gloidx_t gtreeid)
+  {
+    update_tree (cmesh, gtreeid);
+    return active_geometry->t8_geom_check_tree_compatibility ();
+  }
+
+  /**
    * Increase the reference count of the geometry handler.
    */
   inline void
@@ -248,6 +261,12 @@ struct t8_geometry_handler
     const size_t hash = geom->t8_geom_get_hash ();
     if (registered_geometries.find (hash) == registered_geometries.end ()) {
       registered_geometries.emplace (hash, std::move (geom));
+    }
+    else {
+      t8_productionf ("WARNING: Did not register the geometry %s because it is already registered.\n"
+                      "Geometries only need to be registered once per process.\n"
+                      "If you are registering a new geometry it probably has the same name as another one.\n",
+                      geom->t8_geom_get_name ().c_str ());
     }
     if (registered_geometries.size () == 1) {
       active_geometry = registered_geometries.at (hash).get ();

@@ -24,13 +24,13 @@
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
 #include <test/t8_gtest_macros.hxx>
 
-/* In this test, we adapt, balance and partition a uniform forest.
+/* In this test we adapt, balance and partition a uniform forest.
  * We do this in two ways:
  * 1st  All operations are performed in one single call to t8_forest_commit
  * 2nd  Each intermediate step is performed in a separate commit
