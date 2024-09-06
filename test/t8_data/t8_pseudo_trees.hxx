@@ -61,7 +61,7 @@ class t8_single_data_handler<pseudo_tree> {
   void
   pack (const pseudo_tree &data, int &pos, std::vector<char> &buffer, sc_MPI_Comm comm)
   {
-    int data_size = data.topo_data.size ();
+    const int data_size = data.topo_data.size ();
     /* Pack number of topological data */
     int mpiret = sc_MPI_Pack (&data_size, 1, sc_MPI_INT, buffer.data (), buffer.size (), &pos, comm);
     SC_CHECK_MPI (mpiret);
@@ -70,14 +70,13 @@ class t8_single_data_handler<pseudo_tree> {
       mpiret = sc_MPI_Pack (&topo_item, 1, sc_MPI_INT, buffer.data (), buffer.size (), &pos, comm);
       SC_CHECK_MPI (mpiret);
     }
-
     /* Pack number of tree-specific data*/
-    int tree_data_size = data.tree_data.size ();
+    const int tree_data_size = data.tree_data.size ();
     mpiret = sc_MPI_Pack (&tree_data_size, 1, sc_MPI_INT, buffer.data (), buffer.size (), &pos, comm);
     SC_CHECK_MPI (mpiret);
 
     for (auto handler : data.tree_data) {
-      int type = handler->type ();
+      const int type = handler->type ();
       /* Pack type of tree data */
       mpiret = sc_MPI_Pack (&type, 1, sc_MPI_INT, buffer.data (), buffer.size (), &pos, comm);
       SC_CHECK_MPI (mpiret);
@@ -105,20 +104,18 @@ class t8_single_data_handler<pseudo_tree> {
     SC_CHECK_MPI (mpiret);
     data.tree_data.resize (num_handler);
 
-    for (int ihandler = 0; ihandler < num_handler; ihandler++) {
-      /* Unpack type of tree data*/
+    for (auto &ihandler : data.tree_data) {
       int type;
       mpiret = sc_MPI_Unpack (buffer.data (), buffer.size (), &pos, &type, 1, sc_MPI_INT, comm);
       int outcount = 0;
       if (type == 0) {
-        data.tree_data[ihandler] = new t8_data_handler<enlarged_data<int>> ();
+        ihandler = new t8_data_handler<enlarged_data<int>> ();
       }
       else {
-        data.tree_data[ihandler] = new t8_data_handler<enlarged_data<double>> ();
+        ihandler = new t8_data_handler<enlarged_data<double>> ();
       }
-
       /* Unpack tree data*/
-      data.tree_data[ihandler]->unpack_vector_prefix (buffer, pos, outcount, comm);
+      ihandler->unpack_vector_prefix (buffer, pos, outcount, comm);
     }
   }
 

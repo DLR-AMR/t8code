@@ -111,15 +111,6 @@ class t8_data_handler: public t8_abstract_data_handler {
   {
   }
 
-  t8_data_handler (const t8_data_handler &other)
-  {
-    single_handler = other.single_handler;
-    m_data.resize (other.m_data.size ());
-    for (int idata = 0; idata < other.m_data.size (); idata++) {
-      m_data[idata] = T (other.m_data[idata]);
-    }
-  }
-
   t8_data_handler (std::vector<T> &data)
   {
     m_data.resize (data.size ());
@@ -160,9 +151,8 @@ class t8_data_handler: public t8_abstract_data_handler {
   unpack_vector_prefix (const std::vector<char> &buffer, int &pos, int &outcount, sc_MPI_Comm comm) override
   {
     /* Get the number of items we received. */
-    int mpiret = sc_MPI_Unpack (buffer.data (), buffer.size (), &pos, &outcount, 1, sc_MPI_INT, comm);
+    const int mpiret = sc_MPI_Unpack (buffer.data (), buffer.size (), &pos, &outcount, 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
-
     T8_ASSERT (outcount >= 0);
 
     m_data.resize (outcount);
