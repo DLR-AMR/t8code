@@ -179,7 +179,7 @@ t8_cmesh_check_version_of_msh_file (FILE *fp)
   /* Search for the line starting with "$MeshFormat". */
   while (!feof (fp) && strcmp (first_word, "$MeshFormat")) {
     (void) t8_cmesh_msh_read_next_line (&line, &linen, fp);
-    retval = sscanf (line, "%2048s", first_word);
+    retval = sscanf (line, "%2047s", first_word);
 
     /* Checking for read/write error */
     if (retval != 1) {
@@ -258,7 +258,7 @@ t8_msh_file_2_read_nodes (FILE *fp, t8_locidx_t *num_nodes, sc_mempool_t **node_
   while (!feof (fp) && strcmp (first_word, "$Nodes")) {
     (void) t8_cmesh_msh_read_next_line (&line, &linen, fp);
     /* Get the first word of this line */
-    retval = sscanf (line, "%2048s", first_word);
+    retval = sscanf (line, "%2047s", first_word);
 
     /* Checking for read/write error */
     if (retval != 1) {
@@ -358,7 +358,7 @@ t8_msh_file_4_read_nodes (FILE *fp, t8_locidx_t *num_nodes, sc_mempool_t **node_
   while (!feof (fp) && strcmp (first_word, "$Nodes")) {
     (void) t8_cmesh_msh_read_next_line (&line, &linen, fp);
     /* Get the first word of this line */
-    retval = sscanf (line, "%2048s", first_word);
+    retval = sscanf (line, "%2047s", first_word);
     /* Checking for read/write error */
     if (retval != 1) {
       t8_global_errorf ("Premature end of line while reading nodes.\n");
@@ -524,7 +524,7 @@ t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
   while (!feof (fp) && strcmp (first_word, "$Elements")) {
     (void) t8_cmesh_msh_read_next_line (&line, &linen, fp);
     /* Get the first word of this line */
-    retval = sscanf (line, "%2048s", first_word);
+    retval = sscanf (line, "%2047s", first_word);
 
     /* Checking for read/write error */
     if (retval != 1) {
@@ -634,7 +634,7 @@ t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
         int switch_indices[4] = { 0 };
         int iswitch;
         T8_ASSERT (t8_eclass_to_dimension[eclass] > 1);
-        t8_debugf ("Correcting negative volume of tree %li\n", tree_count);
+        t8_debugf ("Correcting negative volume of tree %li\n", static_cast<long> (tree_count));
         switch (eclass) {
         case T8_ECLASS_TRIANGLE:
         case T8_ECLASS_QUAD:
@@ -847,7 +847,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
   while (!feof (fp) && strcmp (first_word, "$Elements")) {
     (void) t8_cmesh_msh_read_next_line (&line, &linen, fp);
     /* Get the first word of this line */
-    retval = sscanf (line, "%2048s", first_word);
+    retval = sscanf (line, "%2047s", first_word);
 
     /* Checking for read/write error */
     if (retval != 1) {
@@ -973,7 +973,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
           int switch_indices[4] = { 0 };
           int iswitch;
           T8_ASSERT (t8_eclass_to_dimension[eclass] > 1);
-          t8_debugf ("Correcting negative volume of tree %li\n", tree_count);
+          t8_debugf ("Correcting negative volume of tree %li\n", static_cast<long> (tree_count));
           switch (eclass) {
           case T8_ECLASS_TRIANGLE:
           case T8_ECLASS_QUAD:

@@ -25,6 +25,10 @@ if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
     target_compile_definitions( T8 PUBLIC T8_ENABLE_DEBUG )
 endif()
 
+if( T8CODE_EXPORT_COMPILE_COMMANDS )
+  set_target_properties( T8 PROPERTIES EXPORT_COMPILE_COMMANDS ON )
+endif( T8CODE_EXPORT_COMPILE_COMMANDS )
+
 if( T8CODE_ENABLE_NETCDF )
   target_link_libraries( T8 PUBLIC netCDF::netcdf )
   target_compile_definitions(T8 PUBLIC
@@ -50,13 +54,13 @@ endif()
 if( T8CODE_ENABLE_VTK )
     target_compile_definitions( T8 PUBLIC T8_VTK_VERSION_USED="${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}" )
     target_compile_definitions( T8 PUBLIC T8_WITH_VTK=1 )
-    target_include_directories( T8 PUBLIC ${VTK_INCLUDE_DIRS} )
+    target_include_directories( T8 PUBLIC ${VTK_INCLUDE_DIR} )
     target_link_libraries( T8 PUBLIC ${VTK_LIBRARIES} )
 endif()
 
 if( T8CODE_ENABLE_OCC )
     target_compile_definitions( T8 PUBLIC T8_WITH_OCC=1 )
-    target_include_directories( T8 PUBLIC ${OpenCASCADE_INCLUDE_DIRS} )
+    target_include_directories( T8 PUBLIC ${OpenCASCADE_INCLUDE_DIR} )
     target_link_libraries( T8 PUBLIC ${OpenCASCADE_LIBRARIES} )
 endif()
 
@@ -86,7 +90,6 @@ target_sources( T8 PRIVATE
     t8_cmesh/t8_cmesh.cxx 
     t8_cmesh/t8_cmesh_cad.cxx 
     t8_cmesh/t8_cmesh_triangle.cxx 
-    t8_cmesh/t8_cmesh_vtk_writer.c 
     t8_cmesh/t8_cmesh_stash.c 
     t8_cmesh/t8_cmesh_vtk_reader.cxx 
     t8_cmesh/t8_cmesh_save.cxx 
@@ -106,7 +109,6 @@ target_sources( T8 PRIVATE
     t8_forest/t8_forest_partition.cxx 
     t8_forest/t8_forest.cxx 
     t8_forest/t8_forest_private.c 
-    t8_forest/t8_forest_vtk.cxx 
     t8_forest/t8_forest_ghost.cxx 
     t8_forest/t8_forest_iterate.cxx 
     t8_forest/t8_forest_balance.cxx 
@@ -148,6 +150,9 @@ target_sources( T8 PRIVATE
     t8_vtk/t8_vtk_unstructured.cxx 
     t8_vtk/t8_vtk_parallel.cxx 
     t8_vtk/t8_vtk_reader.cxx 
+    t8_vtk/t8_vtk_writer.cxx
+    t8_vtk/t8_vtk_write_ASCII.cxx
+    t8_vtk/t8_vtk_writer_helper.cxx
 )
 
 target_compile_definitions( T8 PUBLIC T8_CMAKE_BUILD )
@@ -177,7 +182,6 @@ install( FILES
     t8_cmesh_tetgen.h
     t8_cmesh_triangle.h
     t8_cmesh_vtk_reader.hxx
-    t8_cmesh_vtk_writer.h
     t8_eclass.h
     t8_element.h
     t8_element_c_interface.h

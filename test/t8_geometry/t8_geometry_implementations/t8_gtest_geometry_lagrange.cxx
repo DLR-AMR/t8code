@@ -1,23 +1,23 @@
 /*
-This file is part of t8code.
-t8code is a C library to manage a collection (a forest) of multiple
-connected adaptive space-trees of general element classes in parallel.
+  This file is part of t8code.
+  t8code is a C library to manage a collection (a forest) of multiple
+  connected adaptive space-trees of general element classes in parallel.
 
-Copyright (C) 2024 the developers
+  Copyright (C) 2024 the developers
 
-t8code is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
+  t8code is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
 
-t8code is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+  t8code is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with t8code; if not, write to the Free Software Foundation, Inc.,
-51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+  You should have received a copy of the GNU General Public License
+  along with t8code; if not, write to the Free Software Foundation, Inc.,
+  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
 /** \file t8_gtest_geometry_lagrange.cxx
@@ -36,7 +36,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_vec.h>
 #include <t8_element.hxx>
 #include <t8_cmesh.hxx>
-#include <t8_cmesh_vtk_writer.h>
+#include <t8_vtk/t8_vtk_writer.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
@@ -250,6 +250,12 @@ INSTANTIATE_TEST_SUITE_P (t8_gtest_geometry_lagrange, LagrangeCmesh,
     return test_name.str ();});
 /* clang-format on */
 
+#if T8_ENABLE_DEBUG
+
+/**
+ * Tests the compatibility checking for the Lagrange geometry.
+ * The geometry should throw assertions if the geometry is not compatible with an assigned tree.
+ */
 TEST (test_geometry_lagrange, incompatible_geometry)
 {
   t8_cmesh_t cmesh;
@@ -285,7 +291,7 @@ TEST (test_geometry_lagrange, incompatible_geometry)
   /* Commit the cmesh */
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   /* Register the t8_geometry_lagrange to this cmesh.
-   * We register it after committing because it would throw an assertion and do not have death tests.*/
+   * We register it after committing because it would throw an assertion and we do not have death tests.*/
   t8_cmesh_register_geometry<t8_geometry_lagrange> (cmesh);
   /* Check validity after committing to circumvent the assertion.
    * Should return false since the t8_geometry_lagrange geometry is not compatible with prisms. */
@@ -302,10 +308,11 @@ TEST (test_geometry_lagrange, incompatible_geometry)
   /* Commit the cmesh */
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   /* Register the t8_geometry_lagrange to this cmesh.
-   * We register it after committing because it would throw an assertion and do not have death tests.*/
+   * We register it after committing because it would throw an assertion and we do not have death tests.*/
   t8_cmesh_register_geometry<t8_geometry_lagrange> (cmesh);
   /* Check validity after committing to circumvent the assertion.
    * Should return false since the maximum polynomial degree is exceeded. */
   ASSERT_FALSE (t8_cmesh_validate_geometry (cmesh));
   t8_cmesh_destroy (&cmesh);
 }
+#endif /* T8_ENABLE_DEBUG */
