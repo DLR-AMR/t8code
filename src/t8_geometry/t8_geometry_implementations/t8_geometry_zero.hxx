@@ -127,6 +127,17 @@ struct t8_geometry_zero: public t8_geometry
    */
   inline void
   t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid) override;
+
+  /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * This geometry supports all element types, hence it returns true.
+   * \return                True if the geometry is compatible with the tree.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const override
+  {
+    return true;
+  }
 };
 
 #endif /* !T8_GEOMETRY_ZERO_HXX */

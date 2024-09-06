@@ -98,14 +98,14 @@ struct t8_geometry
 
   /** Update a possible internal data buffer for per tree data.
    * This function is called before the first coordinates in a new tree are
-   * evaluated. You can use it for example to load the vertex coordinates of the 
-   * tree into an internal buffer (as is done in the linear geometry).
+   * evaluated.
+   * In this base implementation we use it to load the treeid and class
+   * to the internal member variables \a active_tree and \a active_tree_class.
    * \param [in]  cmesh      The cmesh.
    * \param [in]  gtreeid    The global tree.
    */
   virtual void
-  t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
-    = 0;
+  t8_geom_load_tree_data (const t8_cmesh_t cmesh, const t8_gloidx_t gtreeid);
 
   /** Query whether a batch of points lies inside an element. 
  * \param [in]      forest      The forest.
@@ -131,8 +131,8 @@ struct t8_geometry
   };
 
   /**
-   * Check if  the currently active tree has a negative volume
-   * \return                True (non-zero) if the currently loaded tree has a negative volume. 0 otherwise.  
+   * Check if the currently active tree has a negative volume.
+   * \return                True if the currently loaded tree has a negative volume.
    */
   virtual bool
   t8_geom_tree_negative_volume () const
@@ -141,6 +141,17 @@ struct t8_geometry
     /* To suppress compiler warnings. */
     return 0;
   };
+
+  /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * If the geometry has limitations these can be checked here.
+   * This includes for example if only specific tree types or dimensions are supported.
+   * If all trees are supported, this function should return true.
+   * \return                True if the geometry is compatible with the tree.
+   */
+  virtual bool
+  t8_geom_check_tree_compatibility () const
+    = 0;
 
   /**
    * Get the dimension of this geometry.
@@ -177,14 +188,11 @@ struct t8_geometry
     = 0;
 
  protected:
-  int dimension;
-  /**< The dimension of reference space for which this is a geometry. */
-
-  std::string name;
-  /**< The name of this geometry. */
-
-  size_t hash;
-  /**< The hash of the name of this geometry. */
+  int dimension;                 /**< The dimension of reference space for which this is a geometry. */
+  std::string name;              /**< The name of this geometry. */
+  size_t hash;                   /**< The hash of the name of this geometry. */
+  t8_gloidx_t active_tree;       /**< The tree of which currently vertices are loaded. */
+  t8_eclass_t active_tree_class; /**< The class of the currently active tree. */
 };
 
 T8_EXTERN_C_END ();
