@@ -169,10 +169,10 @@ struct t8_geometry_analytic: public t8_geometry
   t8_geom_tree_compatible_fn tree_compatible; /**< The function to check if a tree is compatible. */
 
   const void *tree_data; /** Tree data pointer that can be set in \a load_tree_data and 
-                                           is passed onto \a analytical_function and \a jacobian. */
+                             is passed onto \a analytical_function and \a jacobian. */
 
   const void *user_data; /** Additional user data pointer that can be set in constructor
-                                         * and modified via \ref t8_geom_analytic_get_user_data. */
+                             and modified via \ref t8_geom_analytic_get_user_data. */
 };
 
 #endif /* !T8_GEOMETRY_ANALYTICAL_HXX */
