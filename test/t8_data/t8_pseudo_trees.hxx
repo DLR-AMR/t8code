@@ -63,11 +63,9 @@ class t8_single_data_handler<pseudo_tree> {
     /* Pack number of topological data */
     int mpiret = sc_MPI_Pack (&data_size, 1, sc_MPI_INT, buffer.data (), buffer.size (), &pos, comm);
     SC_CHECK_MPI (mpiret);
-    for (const int &topo_item : data.topo_data) {
-      /* Pack each topological data*/
-      mpiret = sc_MPI_Pack (&topo_item, 1, sc_MPI_INT, buffer.data (), buffer.size (), &pos, comm);
-      SC_CHECK_MPI (mpiret);
-    }
+    /* Pack each topological data*/
+    mpiret = sc_MPI_Pack ((data.topo_data.data ()), data_size, sc_MPI_INT, buffer.data (), buffer.size (), &pos, comm);
+    SC_CHECK_MPI (mpiret);
     /* Pack number of tree-specific data*/
     const int tree_data_size = data.tree_data.size ();
     mpiret = sc_MPI_Pack (&tree_data_size, 1, sc_MPI_INT, buffer.data (), buffer.size (), &pos, comm);
