@@ -34,6 +34,7 @@
 #include <t8_forest/t8_forest_ghost_interface.h>
 #include <t8_forest/t8_forest_ghost_interface.hxx>
 #include <t8_forest/t8_forest_ghost_search.hxx>
+#include <t8_forest/t8_forest_ghost_stencil.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -2084,6 +2085,14 @@ t8_forest_ghost_interface_face_new(int version){
   return (t8_forest_ghost_interface_c *) ghost_interface;
 }
 
+
+t8_forest_ghost_interface_c * 
+t8_forest_ghost_interface_stencil_new(){
+  t8_debugf ("Call t8_forest_ghost_interface_stencil_new.\n");
+  t8_forest_ghost_stencil * ghost_interface = new t8_forest_ghost_stencil();
+  return (t8_forest_ghost_interface_c *) ghost_interface;
+}
+
 int 
 t8_forest_ghost_interface_face_verison(t8_forest_ghost_interface_c * ghost_interface){
   T8_ASSERT(ghost_interface != NULL);
@@ -2091,6 +2100,105 @@ t8_forest_ghost_interface_face_verison(t8_forest_ghost_interface_c * ghost_inter
   t8_forest_ghost_face * ghost_interface_passed = (t8_forest_ghost_face *) ghost_interface;
 
   return ghost_interface_passed->get_version();
+}
+
+
+/**
+ * Derived class for a stencil on an uniform mesh.
+ */
+
+
+
+void
+t8_forest_ghost_stencil::do_ghost(t8_forest_t forest){
+  /**
+   * Compute bounds for elements
+   */
+
+  t8_forest_ghost_init (&forest->ghosts, ghost_type);
+
+  t8_locidx_t current_index; // counter over all local elements
+  t8_locidx_t ielement, num_elements_in_tree; // count over the local elements in a tree
+  t8_eclass_scheme_c *eclass_scheme;
+  t8_eclass_t tree_class;
+  const t8_element_t *element;
+
+  
+  SC_CHECK_ABORT( forest->global_num_trees > 1, "more than one tree in ghost for stencil" );
+
+  tree_class = t8_forest_get_tree_class (forest, 0);
+  eclass_scheme = t8_forest_get_eclass_scheme (forest, tree_class);
+  SC_CHECK_ABORT( tree_class == T8_ECLASS_HEX, "only forest with eclass hex are possible for ghost for stencil" )
+  num_elements_in_tree = t8_forest_get_tree_num_elements (forest, 0);
+  
+  for (ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index){
+    element = t8_forest_get_element_in_tree (forest, 0, ielement);
+    /** compute the stencil elements */
+    add_stencil_to_ghost(forest, element, eclass_scheme, eclass_scheme->t8_element_level(element), tree_class, 0, ielement);
+  }
+
+  communicate_ghost_elements(forest);
+}
+
+/**
+   * Add this stencil (elements N and F) for elmenet E to ghost
+   * 
+   *           N
+   *           |
+   *       N - F - N
+   *       |   |   |
+   *   N - F - E - F - N
+   *       |   |   |
+   *       N - F - N
+   *           |
+   *           N
+   */
+void
+t8_forest_ghost_stencil::add_stencil_to_ghost(t8_forest_t forest, const t8_element_t * element, t8_eclass_scheme_c *eclass_scheme, int level,
+                                              t8_eclass_t tree_class, t8_locidx_t ltreeid, t8_locidx_t ielement){
+  
+  t8_locidx_t iface_neig, ineig;
+  t8_element_t * face_neig;
+  t8_element_t * neig;
+  t8_eclass_t eclass = t8_forest_get_eclass (forest, 0);
+
+  /**
+   * First loop over the F elements, this are the face-neighbors of E
+   */
+  for ( iface_neig = 0; iface_neig < eclass_scheme->t8_element_num_faces(element); ++iface_neig){
+    eclass_scheme->t8_element_new (1,&face_neig);
+    eclass_scheme->t8_element_new (1,&neig);
+    /* Compute one F */
+    int neight_face;
+    int face_neig_exists = eclass_scheme->t8_element_face_neighbor_inside(element, face_neig, iface_neig, &neight_face);
+    /* if the F exists */
+    if(face_neig_exists){
+      /* compute the mpirank for F, and if its not ownes by this prozess, add it to gost */
+      int remote_rank = t8_forest_element_find_owner_ext(forest, 0, face_neig, eclass, 0, forest->mpisize - 1, (forest->mpisize - 1)/2, 0);
+      T8_ASSERT( 0 <= remote_rank && remote_rank < forest->mpisize );
+      if(forest->mpirank != remote_rank){
+        t8_ghost_add_remote (forest, forest->ghosts, remote_rank, ltreeid, element, ielement);
+      }
+      /* Loop over the face neighbors of F (exept of E), this are the N */
+      for( ineig = 0; ineig < eclass_scheme->t8_element_num_faces(face_neig); ++ineig ){
+        if(ineig != neight_face){
+          /* Compute N */
+          int neight_neig_face;
+          int neig_exists = eclass_scheme->t8_element_face_neighbor_inside(face_neig, neig, ineig, &neight_neig_face);
+          if(neig_exists){
+            /* compute the mpirank for N, and if its not ownes by this prozess, add it to gost */
+            remote_rank = t8_forest_element_find_owner_ext(forest, 0, neig, eclass, 0, forest->mpisize -1, (forest->mpisize - 1) / 2 ,0);
+            T8_ASSERT( 0 <= remote_rank && remote_rank < forest->mpisize );
+            if(forest->mpirank != remote_rank){
+              t8_ghost_add_remote (forest, forest->ghosts, remote_rank, ltreeid, element, ielement);
+            }
+          }
+        }
+      }
+    }
+    eclass_scheme->t8_element_destroy(1, &face_neig);
+    eclass_scheme->t8_element_destroy(1, &neig);
+  }
 }
 
 T8_EXTERN_C_END ();
