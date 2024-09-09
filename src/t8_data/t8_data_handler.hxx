@@ -155,6 +155,7 @@ class t8_data_handler: public t8_abstract_data_handler {
     SC_CHECK_MPI (mpiret);
     T8_ASSERT (outcount >= 0);
 
+    m_data.clear ();
     m_data.resize (outcount);
 
     for (T &item : m_data) {

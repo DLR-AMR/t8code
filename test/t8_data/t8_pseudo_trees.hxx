@@ -31,6 +31,13 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 class pseudo_tree {
  public:
+  ~pseudo_tree ()
+  {
+    for (auto &handler : tree_data) {
+      delete (handler);
+    }
+  }
+
   std::vector<int> topo_data;
   std::vector<t8_abstract_data_handler *> tree_data;
 };
@@ -98,20 +105,29 @@ class t8_single_data_handler<pseudo_tree> {
     int num_handler = 0;
     mpiret = sc_MPI_Unpack (buffer.data (), buffer.size (), &pos, &num_handler, 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
-    data.tree_data.resize (num_handler);
 
     for (auto &ihandler : data.tree_data) {
+      delete (ihandler);
+      ihandler = nullptr;
+    }
+
+    for (int ihandler = 0; ihandler < num_handler; ihandler++) {
+      t8_abstract_data_handler *new_handler = NULL;
       int type;
       mpiret = sc_MPI_Unpack (buffer.data (), buffer.size (), &pos, &type, 1, sc_MPI_INT, comm);
       int outcount = 0;
       if (type == 0) {
-        ihandler = new t8_data_handler<enlarged_data<int>> ();
+        new_handler = new t8_data_handler<enlarged_data<int>> ();
+      }
+      else if (type == 1) {
+        new_handler = new t8_data_handler<enlarged_data<double>> ();
       }
       else {
-        ihandler = new t8_data_handler<enlarged_data<double>> ();
+        SC_ABORT_NOT_REACHED ();
       }
       /* Unpack tree data*/
-      ihandler->unpack_vector_prefix (buffer, pos, outcount, comm);
+      new_handler->unpack_vector_prefix (buffer, pos, outcount, comm);
+      data.tree_data.push_back (new_handler);
     }
   }
 

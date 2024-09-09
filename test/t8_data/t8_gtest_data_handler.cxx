@@ -260,7 +260,7 @@ TEST (data_handler_test, tree_test)
     std::iota (tree.topo_data.begin (), tree.topo_data.end (), 0);
 
     const int num_tree_data = (mpirank + itree) % 2;
-    tree.tree_data.resize (num_tree_data);
+    t8_abstract_data_handler *new_handler = NULL;
     for (int itree_data = 0; itree_data < num_tree_data; itree_data++) {
       if (itree_data == 0) {
         std::vector<enlarged_data<int>> int_data (num_data);
@@ -268,16 +268,17 @@ TEST (data_handler_test, tree_test)
           int_data[idata].check = mpirank;
           int_data[idata].data = idata;
         }
-        tree.tree_data[itree_data] = new t8_data_handler<enlarged_data<int>> (int_data);
+        new_handler = new t8_data_handler<enlarged_data<int>> (int_data);
       }
       else {
         std::vector<enlarged_data<double>> double_data (num_data);
         for (int idata = 0; idata < num_data; idata++) {
           double_data[idata].check = mpirank;
           double_data[idata].data = (double) idata + fraction;
-          tree.tree_data[itree_data] = new t8_data_handler<enlarged_data<double>> (double_data);
+          new_handler = new t8_data_handler<enlarged_data<double>> (double_data);
         }
       }
+      tree.tree_data.push_back (new_handler);
     }
     trees.push_back (tree);
   }
