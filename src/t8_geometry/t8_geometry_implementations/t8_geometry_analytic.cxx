@@ -26,13 +26,14 @@ t8_geometry_analytic::t8_geometry_analytic (int dim, std::string name, t8_geom_a
                                             t8_geom_analytic_jacobian_fn jacobian_in,
                                             t8_geom_load_tree_data_fn load_tree_data_in,
                                             t8_geom_tree_negative_volume_fn tree_negative_volume_in,
-                                            const void *user_data_in)
+                                            t8_geom_tree_compatible_fn tree_compatible_in, const void *user_data_in)
   : t8_geometry (dim, name + "_" + std::to_string (dim))
 {
   analytical_function = analytical;
   jacobian = jacobian_in;
   load_tree_data = load_tree_data_in;
   tree_negative_volume = tree_negative_volume_in;
+  tree_compatible = tree_compatible_in;
   user_data = user_data_in;
 }
 
@@ -43,6 +44,7 @@ t8_geometry_analytic::t8_geometry_analytic (int dim, std::string name)
   jacobian = NULL;
   load_tree_data = NULL;
   tree_negative_volume = NULL;
+  tree_compatible = NULL;
   user_data = NULL;
 }
 
@@ -87,6 +89,18 @@ t8_geometry_analytic::t8_geom_tree_negative_volume () const
   }
 }
 
+bool
+t8_geometry_analytic::t8_geom_check_tree_compatibility () const
+{
+  if (tree_compatible != NULL) {
+    /* tree_compatible if a loading function was provided. */
+    return tree_compatible ();
+  }
+  else {
+    return true;
+  }
+}
+
 T8_EXTERN_C_BEGIN ();
 
 void
@@ -101,10 +115,11 @@ t8_geometry_analytic_destroy (t8_geometry_c **geom)
 t8_geometry_c *
 t8_geometry_analytic_new (int dim, const char *name, t8_geom_analytic_fn analytical,
                           t8_geom_analytic_jacobian_fn jacobian, t8_geom_load_tree_data_fn load_tree_data,
-                          t8_geom_tree_negative_volume_fn tree_negative_volume, const void *user_data)
+                          t8_geom_tree_negative_volume_fn tree_negative_volume,
+                          t8_geom_tree_compatible_fn tree_compatible, const void *user_data)
 {
-  t8_geometry_analytic *geom
-    = new t8_geometry_analytic (dim, name, analytical, jacobian, load_tree_data, tree_negative_volume, user_data);
+  t8_geometry_analytic *geom = new t8_geometry_analytic (dim, name, analytical, jacobian, load_tree_data,
+                                                         tree_negative_volume, tree_compatible, user_data);
   return (t8_geometry_c *) geom;
 }
 
