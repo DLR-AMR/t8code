@@ -106,6 +106,7 @@ struct t8_forest_ghost_interface
     do_ghost(t8_forest_t forest)
     = 0;
 
+    protected:
     /**
      * Compute and collect ownerships to create the nessesary offset
      * for elements, trees and first descandance 
@@ -119,7 +120,6 @@ struct t8_forest_ghost_interface
     virtual void
     clean_up(t8_forest_t forest);
 
-    protected:
     /**
      * Constructor for the derivided classes to set the korrekt type for them.
      * \param [in] g_type   The type (faces, edges, userdefind, ...) of the ghost_interface

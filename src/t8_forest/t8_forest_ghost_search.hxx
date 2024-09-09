@@ -53,19 +53,21 @@ struct t8_forest_ghost_w_search : public t8_forest_ghost_interface
     virtual void
     do_ghost(t8_forest_t forest) override;
 
+    protected:
     /**
-     * Übernommen aus t8_forest_ghost_fill_remote_v3
-     * daher keine unterstüzung mehr von version 1 und 2
-     * Nur der search_fn parameter, ist nicht fest sonder etwpricht der member variabel
+     * Equal to t8_forest_ghost_fill_remote_v3
+     * so no support for version 1 and 2 of face heigbors
+     * Only the search_fn parameter for serch ist not the same as in t8_forest_ghost_fill_remote_v3
+     * use the member variable of the class
     */
     virtual void 
-    step_2(t8_forest_t forest);
+    search_for_ghost_elements(t8_forest_t forest);
     
 
-    protected:
     t8_forest_ghost_w_search(t8_ghost_type_t ghost_type, t8_forest_search_query_fn search_function)
         : t8_forest_ghost_interface(ghost_type), search_fn(search_function)
         {
+            T8_ASSERT(ghost_type != T8_GHOST_NONE);
         }
 
     t8_forest_search_query_fn search_fn{};
@@ -77,9 +79,10 @@ struct t8_forest_ghost_face : public t8_forest_ghost_w_search
     public:
     explicit t8_forest_ghost_face(int version);
     
-    void step_2(t8_forest_t forest) override;
-
     inline int get_version() const {return version;}
+
+    protected:
+    void search_for_ghost_elements(t8_forest_t forest) override;
 
     private:
     int version{};

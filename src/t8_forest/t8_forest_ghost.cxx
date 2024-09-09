@@ -177,8 +177,7 @@ t8_forest_ghost_init (t8_forest_ghost_t *pghost, t8_ghost_type_t ghost_type)
 {
   t8_forest_ghost_t ghost;
 
-  /* We currently only support face-neighbor ghosts */
-  T8_ASSERT (ghost_type == T8_GHOST_FACES); // TODO muss angepasst werden
+  T8_ASSERT (ghost_type != T8_GHOST_NONE);
 
   /* Allocate memory for ghost */
   ghost = *pghost = T8_ALLOC_ZERO (t8_forest_ghost_struct_t, 1);
@@ -1982,18 +1981,16 @@ t8_forest_ghost_interface::clean_up(t8_forest_t forest){
 t8_forest_ghost_w_search::t8_forest_ghost_w_search(t8_ghost_type_t ghost_type)
     : t8_forest_ghost_interface(ghost_type)
 {
-  T8_ASSERT(ghost_type != T8_GHOST_NONE && ghost_type != T8_GHOST_USERDEFINED);
-  T8_ASSERT(ghost_type == T8_GHOST_FACES);
+  T8_ASSERT(ghost_type != T8_GHOST_NONE); 
+  T8_ASSERT(ghost_type == T8_GHOST_FACES); // currently no other typs are suportet
   if(ghost_type == T8_GHOST_FACES){
     search_fn = t8_forest_ghost_search_boundary;
   }
-  SC_CHECK_ABORT(ghost_type == T8_GHOST_VERTICES || ghost_type == T8_GHOST_EDGES || ghost_type == T8_GHOST_FACES,
-    "invalide type for t8_forest_ghost_w_search");
+  SC_CHECK_ABORT(ghost_type != T8_GHOST_USERDEFINED, "use t8_forest_ghost_w_search(t8_forest_search_query_fn serach_function) for userdefined ghost") ; 
 }
 
 void
 t8_forest_ghost_w_search::do_ghost(t8_forest_t forest){
-  t8_forest_ghost_t ghost;
 
   communicate_ownerships(forest);
 
@@ -2006,9 +2003,8 @@ t8_forest_ghost_w_search::do_ghost(t8_forest_t forest){
 
     /* Initialize the ghost structure */
     t8_forest_ghost_init (&forest->ghosts, ghost_type);
-    ghost = forest->ghosts;
 
-    step_2(forest);
+    search_for_ghost_elements(forest);
 
     communicate_ghost_elements(forest);
   }
@@ -2016,7 +2012,7 @@ t8_forest_ghost_w_search::do_ghost(t8_forest_t forest){
 }
 
 void
-t8_forest_ghost_w_search::step_2(t8_forest_t forest){
+t8_forest_ghost_w_search::search_for_ghost_elements(t8_forest_t forest){
   t8_forest_ghost_boundary_data_t data;
   void *store_user_data = NULL;
 
@@ -2059,7 +2055,7 @@ t8_forest_ghost_face::t8_forest_ghost_face(int version)
 
 
 void
-t8_forest_ghost_face::step_2(t8_forest_t forest){
+t8_forest_ghost_face::search_for_ghost_elements(t8_forest_t forest){
   t8_global_productionf (" t8_forest_ghost_face::step_2 \n");
   T8_ASSERT( forest->ghosts != NULL);
   t8_forest_ghost_t ghost = forest->ghosts;
@@ -2128,7 +2124,7 @@ t8_forest_ghost_stencil::do_ghost(t8_forest_t forest){
 
   tree_class = t8_forest_get_tree_class (forest, 0);
   eclass_scheme = t8_forest_get_eclass_scheme (forest, tree_class);
-  SC_CHECK_ABORT( tree_class == T8_ECLASS_HEX, "only forest with eclass hex are possible for ghost for stencil" )
+  SC_CHECK_ABORT( tree_class == T8_ECLASS_HEX, "only forest with eclass hex are possible for ghost for stencil" );
   num_elements_in_tree = t8_forest_get_tree_num_elements (forest, 0);
   
   for (ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index){
