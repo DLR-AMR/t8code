@@ -40,7 +40,7 @@ class t8_single_data_handler {
     * \return the size of the packed data in number of bytes. 
     */
   void
-  pack (const T &data, int &pos, std::vector<char> &buffer, sc_MPI_Comm comm);
+  pack (const T &data, int &pos, void *buffer, const int num_bytes, sc_MPI_Comm comm);
 
   /**
     * Overwrite this routine to describe how data of type T should be unpacked 
@@ -49,7 +49,7 @@ class t8_single_data_handler {
     * \return T* the unpacked data. 
     */
   void
-  unpack (const std::vector<char> &buffer, int &pos, T &data, sc_MPI_Comm comm);
+  unpack (const void *buffer, const int num_bytes, int &pos, T &data, sc_MPI_Comm comm);
 
   int
   type ();

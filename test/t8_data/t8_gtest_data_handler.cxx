@@ -74,12 +74,13 @@ TYPED_TEST_P (data_handler_test, pack_unpack_vector_of_data)
 {
   /* Create send buffer and pack data into it. */
   int pos = 0;
-  std::vector<char> buffer (this->data_handler->buffer_size (this->comm));
-  this->data_handler->pack_vector_prefix (buffer, pos, this->comm);
+  const int num_bytes = this->data_handler->buffer_size (this->comm);
+  void *buffer = malloc (num_bytes);
+  this->data_handler->pack_vector_prefix (buffer, num_bytes, pos, this->comm);
 
   int outcount = 0;
   pos = 0;
-  this->data_handler->unpack_vector_prefix (buffer, pos, outcount, this->comm);
+  this->data_handler->unpack_vector_prefix (buffer, num_bytes, pos, outcount, this->comm);
   EXPECT_EQ (outcount, this->max_num_data);
 
   this->recv_data = this->data_handler->get_data ();
@@ -88,6 +89,8 @@ TYPED_TEST_P (data_handler_test, pack_unpack_vector_of_data)
     EXPECT_EQ (this->recv_data[idata].data, this->creator->large_data[idata].data);
     EXPECT_EQ (this->recv_data[idata].check, this->creator->large_data[idata].check);
   }
+
+  free (buffer);
 }
 
 /**

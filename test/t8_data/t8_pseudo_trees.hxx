@@ -64,46 +64,46 @@ class t8_single_data_handler<pseudo_tree> {
   }
 
   void
-  pack (const pseudo_tree &data, int &pos, std::vector<char> &buffer, sc_MPI_Comm comm)
+  pack (const pseudo_tree &data, int &pos, void *buffer, const int num_bytes, sc_MPI_Comm comm)
   {
     const int data_size = data.topo_data.size ();
     /* Pack number of topological data */
-    int mpiret = sc_MPI_Pack (&data_size, 1, sc_MPI_INT, buffer.data (), buffer.size (), &pos, comm);
+    int mpiret = sc_MPI_Pack (&data_size, 1, sc_MPI_INT, buffer, num_bytes, &pos, comm);
     SC_CHECK_MPI (mpiret);
     /* Pack each topological data*/
-    mpiret = sc_MPI_Pack ((data.topo_data.data ()), data_size, sc_MPI_INT, buffer.data (), buffer.size (), &pos, comm);
+    mpiret = sc_MPI_Pack ((data.topo_data.data ()), data_size, sc_MPI_INT, buffer, num_bytes, &pos, comm);
     SC_CHECK_MPI (mpiret);
     /* Pack number of tree-specific data*/
     const int tree_data_size = data.tree_data.size ();
-    mpiret = sc_MPI_Pack (&tree_data_size, 1, sc_MPI_INT, buffer.data (), buffer.size (), &pos, comm);
+    mpiret = sc_MPI_Pack (&tree_data_size, 1, sc_MPI_INT, buffer, num_bytes, &pos, comm);
     SC_CHECK_MPI (mpiret);
 
     for (auto &handler : data.tree_data) {
       const int type = handler->type ();
       /* Pack type of tree data */
-      mpiret = sc_MPI_Pack (&type, 1, sc_MPI_INT, buffer.data (), buffer.size (), &pos, comm);
+      mpiret = sc_MPI_Pack (&type, 1, sc_MPI_INT, buffer, num_bytes, &pos, comm);
       SC_CHECK_MPI (mpiret);
       /* Pack each data. */
-      handler->pack_vector_prefix (buffer, pos, comm);
+      handler->pack_vector_prefix (buffer, num_bytes, pos, comm);
     }
   }
 
   void
-  unpack (const std::vector<char> &buffer, int &pos, pseudo_tree &data, sc_MPI_Comm comm)
+  unpack (const void *buffer, const int num_bytes, int &pos, pseudo_tree &data, sc_MPI_Comm comm)
   {
     /* Unpack number of topological data */
     int topo_data_size = 0;
-    int mpiret = sc_MPI_Unpack (buffer.data (), buffer.size (), &pos, &topo_data_size, 1, sc_MPI_INT, comm);
+    int mpiret = sc_MPI_Unpack (buffer, num_bytes, &pos, &topo_data_size, 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
     data.topo_data.resize (topo_data_size);
     for (int &topo_item : data.topo_data) {
       /* Unpack each topological item */
-      mpiret = sc_MPI_Unpack (buffer.data (), buffer.size (), &pos, &topo_item, 1, sc_MPI_INT, comm);
+      mpiret = sc_MPI_Unpack (buffer, num_bytes, &pos, &topo_item, 1, sc_MPI_INT, comm);
       SC_CHECK_MPI (mpiret);
     }
     /* Unpack number of tree-specific data */
     int num_handler = 0;
-    mpiret = sc_MPI_Unpack (buffer.data (), buffer.size (), &pos, &num_handler, 1, sc_MPI_INT, comm);
+    mpiret = sc_MPI_Unpack (buffer, num_bytes, &pos, &num_handler, 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
 
     for (auto &ihandler : data.tree_data) {
@@ -114,7 +114,7 @@ class t8_single_data_handler<pseudo_tree> {
     for (int ihandler = 0; ihandler < num_handler; ihandler++) {
       t8_abstract_data_handler *new_handler = NULL;
       int type;
-      mpiret = sc_MPI_Unpack (buffer.data (), buffer.size (), &pos, &type, 1, sc_MPI_INT, comm);
+      mpiret = sc_MPI_Unpack (buffer, num_bytes, &pos, &type, 1, sc_MPI_INT, comm);
       int outcount = 0;
       if (type == 0) {
         new_handler = new t8_data_handler<enlarged_data<int>> ();
@@ -126,7 +126,7 @@ class t8_single_data_handler<pseudo_tree> {
         SC_ABORT_NOT_REACHED ();
       }
       /* Unpack tree data*/
-      new_handler->unpack_vector_prefix (buffer, pos, outcount, comm);
+      new_handler->unpack_vector_prefix (buffer, num_bytes, pos, outcount, comm);
       data.tree_data.push_back (new_handler);
     }
   }
