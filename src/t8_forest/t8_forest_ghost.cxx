@@ -2120,11 +2120,11 @@ t8_forest_ghost_stencil::do_ghost(t8_forest_t forest){
   const t8_element_t *element;
 
   
-  SC_CHECK_ABORT( forest->global_num_trees > 1, "more than one tree in ghost for stencil" );
+  SC_CHECK_ABORT( t8_forest_get_num_global_trees(forest) == 1, "more than one tree in ghost for stencil" );
 
   tree_class = t8_forest_get_tree_class (forest, 0);
   eclass_scheme = t8_forest_get_eclass_scheme (forest, tree_class);
-  SC_CHECK_ABORT( tree_class == T8_ECLASS_HEX, "only forest with eclass hex are possible for ghost for stencil" );
+  SC_CHECK_ABORT( tree_class == T8_ECLASS_QUAD, "only forest with eclass quad are possible for ghost for stencil" );
   num_elements_in_tree = t8_forest_get_tree_num_elements (forest, 0);
   
   for (ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index){
