@@ -52,7 +52,7 @@ jobs:
   build:
 
     if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     container: dlramr/t8code-ubuntu:t8-dependencies
     timeout-minutes: 90
     steps:

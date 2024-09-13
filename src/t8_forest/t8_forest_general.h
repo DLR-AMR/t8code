@@ -536,7 +536,7 @@ t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, 
  * \param [in]    forest  The forest. Must have a valid ghost layer.
  * \param [in]    ltreeid A local tree id.
  * \param [in]    leaf    A leaf in tree \a ltreeid of \a forest.
- * \param [out]   neighbor_leaves Unallocated on input. On output the neighbor
+ * \param [out]   pneighbor_leaves Unallocated on input. On output the neighbor
  *                        leaves are stored here.
  * \param [in]    face    The index of the face across which the face neighbors
  *                        are searched.
@@ -554,6 +554,16 @@ t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, 
  * and *pelement_indices = NULL on output.
  * \note Currently \a forest must be balanced.
  * \note \a forest must be committed before calling this function.
+ *
+ * \note Important! This routine allocates memory which must be freed. Do it like this:
+ *
+ *   if (num_neighbors > 0) {
+ *     eclass_scheme->t8_element_destroy (num_neighbors, neighbors);
+ *     T8_FREE (pneighbor_leaves);
+ *     T8_FREE (pelement_indices);
+ *     T8_FREE (dual_faces);
+ *   }
+ *
  */
 void
 t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf,
@@ -824,7 +834,7 @@ t8_forest_element_points_inside (t8_forest_t forest, t8_locidx_t ltreeid, const 
                                  const double *points, int num_points, int *is_inside, const double tolerance);
 
 /* TODO: if set level and partition/adapt/balance all give NULL, then
- * refine uniformly and partition/adapt/balance the unfiform forest. */
+ * refine uniformly and partition/adapt/balance the uniform forest. */
 /** Build a uniformly refined forest on a coarse mesh.
  * \param [in]      cmesh     A coarse mesh.
  * \param [in]      scheme    An eclass scheme.

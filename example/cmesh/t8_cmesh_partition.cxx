@@ -23,13 +23,14 @@
 #include <sc_refcount.h>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_cmesh_vtk_writer.h>
+#include <t8_vtk/t8_vtk_writer.h>
+
 #include <t8_cmesh/t8_cmesh_partition.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <p4est_connectivity.h>
 #include <p8est_connectivity.h>
 #include <sc_shmem.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 
 static void
 t8_random_partition (int level)

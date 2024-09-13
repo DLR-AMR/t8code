@@ -22,7 +22,7 @@
 
 #include <sc_options.h>
 #include <sc_refcount.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_geometry/t8_geometry_base.hxx>
@@ -140,6 +140,22 @@ struct t8_geometry_sincos: public t8_geometry
   }
 
   /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * Only quad elements are supported by this geometry.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const
+  {
+    if (active_tree_class != T8_ECLASS_QUAD) {
+      t8_productionf (
+        "t8_geometry_sincos is not compatible with tree type %s\n It is only compatible with quad elements.\n",
+        t8_eclass_to_string[active_tree_class]);
+      return false;
+    }
+    return true;
+  }
+
+  /**
    * Get the type of this geometry.
    * \return The type.
    */
@@ -201,6 +217,22 @@ struct t8_geometry_moebius: public t8_geometry_with_vertices
                              double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
+  }
+
+  /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * Only quad elements are supported by this geometry.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const
+  {
+    if (active_tree_class != T8_ECLASS_QUAD) {
+      t8_productionf (
+        "t8_geometry_moebius is not compatible with tree type %s\n It is only compatible with quad elements.\n",
+        t8_eclass_to_string[active_tree_class]);
+      return false;
+    }
+    return true;
   }
 
   /**
@@ -274,6 +306,22 @@ struct t8_geometry_cylinder: public t8_geometry
   }
 
   /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * Only quad elements are supported by this geometry.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const
+  {
+    if (active_tree_class != T8_ECLASS_QUAD) {
+      t8_productionf (
+        "t8_geometry_cylinder is not compatible with tree type %s\n It is only compatible with quad elements.\n",
+        t8_eclass_to_string[active_tree_class]);
+      return false;
+    }
+    return true;
+  }
+
+  /**
    * Get the type of this geometry.
    * \return The type.
    */
@@ -339,6 +387,22 @@ struct t8_geometry_circle: public t8_geometry_with_vertices
                              double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
+  }
+
+  /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * Only quad elements are supported by this geometry.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const
+  {
+    if (active_tree_class != T8_ECLASS_QUAD) {
+      t8_productionf (
+        "t8_geometry_circle is not compatible with tree type %s\n It is only compatible with quad elements.\n",
+        t8_eclass_to_string[active_tree_class]);
+      return false;
+    }
+    return true;
   }
 
   /**
@@ -435,6 +499,22 @@ struct t8_geometry_moving: public t8_geometry
   }
 
   /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * Only quad elements are supported by this geometry.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const
+  {
+    if (active_tree_class != T8_ECLASS_QUAD) {
+      t8_productionf (
+        "t8_geometry_moving is not compatible with tree type %s\n It is only compatible with quad elements.\n",
+        t8_eclass_to_string[active_tree_class]);
+      return false;
+    }
+    return true;
+  }
+
+  /**
    * Get the type of this geometry.
    * \return The type.
    */
@@ -502,6 +582,22 @@ struct t8_geometry_cube_zdistorted: public t8_geometry
   t8_geom_tree_negative_volume () const
   {
     return 0;
+  }
+
+  /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * Only hex elements are supported by this geometry.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const
+  {
+    if (active_tree_class != T8_ECLASS_HEX) {
+      t8_productionf (
+        "t8_geometry_cube_zdistorted is not compatible with tree type %s\n It is only compatible with hex elements.\n",
+        t8_eclass_to_string[active_tree_class]);
+      return false;
+    }
+    return true;
   }
 
   /**
@@ -653,7 +749,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
   case T8_GEOM_ANALYTIC_QUAD_TO_SPHERE:
     t8_global_productionf ("Wrapping a quad around a sphere.\n");
     t8_cmesh_register_geometry<t8_geometry_analytic> (cmesh, 3, "geom_quad_to_sphere", quad_to_sphere_callback, nullptr,
-                                                      nullptr, nullptr, nullptr);
+                                                      nullptr, nullptr, nullptr, nullptr);
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
     t8_cmesh_set_join (cmesh, 0, 0, 1, 0, 0);
 

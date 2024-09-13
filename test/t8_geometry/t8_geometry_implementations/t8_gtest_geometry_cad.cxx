@@ -24,13 +24,14 @@
 #include <t8_cmesh.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_vtk.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <test/t8_gtest_macros.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <t8_element.h>
-#include <t8_cmesh_vtk_writer.h>
+#include <t8_vtk/t8_vtk_writer.h>
+
 #include <t8_schemes/t8_default/t8_default_hex/t8_dhex.h>
 #include <array>
 #include <memory>
@@ -48,7 +49,7 @@
 #include <TopoDS_Face.hxx>
 #include <TopoDS_Edge.hxx>
 #include <t8_element.h>
-#include <t8_cmesh_vtk_writer.h>
+
 #include <test/t8_gtest_custom_assertion.hxx>
 #endif
 

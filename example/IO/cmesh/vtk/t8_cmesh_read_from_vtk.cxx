@@ -17,14 +17,14 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 */
 
 #include <t8_cmesh_vtk_reader.hxx>
-#include <t8_cmesh_vtk_writer.h>
+#include <t8_vtk/t8_vtk_writer.h>
 #include <t8_cmesh.h>
 #include <sc_options.h>
 #include <t8.h>
 #include <t8_vtk.h>
 
 #include <t8_forest/t8_forest.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 
 /**
  * Construct a cmesh read from a VTK-file type supported by our vtk-reader.
