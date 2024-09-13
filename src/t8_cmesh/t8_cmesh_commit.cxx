@@ -118,7 +118,7 @@ t8_cmesh_add_attributes (const t8_cmesh_t cmesh, sc_hash_t *ghost_ids)
           ghosts_inserted++;
         }
         /* attribute is on a ghost tree */
-        t8_cmesh_trees_add_ghost_attribute (cmesh->trees, 0, attribute, (*facejoin_pp)->local_id, ghosts_inserted,
+        t8_cmesh_trees_add_ghost_attribute (cmesh->trees, attribute, (*facejoin_pp)->local_id, ghosts_inserted,
                                             (*facejoin_pp)->attr_id);
         (*facejoin_pp)->attr_id++;
       }
