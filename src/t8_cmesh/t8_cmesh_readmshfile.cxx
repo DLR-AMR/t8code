@@ -1022,6 +1022,10 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
           T8_ASSERT (!t8_cmesh_tree_vertices_negative_volume (eclass, tree_vertices, num_nodes));
         } /* End of negative volume handling */
         /* Set the vertices of this tree */
+        t8_debugf("set vertices of tree %li: \n", tree_count);
+        for(int inode=0; inode < num_nodes; inode++){
+          t8_debugf("%f %f %f\n", tree_vertices[3*inode+0],tree_vertices[3*inode+1],tree_vertices[3*inode+2]);
+        }
         t8_cmesh_set_tree_vertices (cmesh, tree_count, tree_vertices, num_nodes);
         /* If wished, we store the vertex indices of that tree. */
         if (vertex_indices != NULL) {
@@ -1734,6 +1738,7 @@ t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh, const sc_array_t *vertex_ind
         /* Calculate the orientation */
         orientation = t8_msh_file_face_orientation (Face, Neighbor, eclass, neighbor_tclass);
         /* Set the face connection */
+        t8_debugf("called t8_cmesh_set_join(cmesh, g1=%li, g2=%li, f1= %i, f2=%i, or=%i)\n",gtree_id, gtree_neighbor, face_it, Neighbor->face_number, orientation);
         t8_cmesh_set_join (cmesh, gtree_id, gtree_neighbor, face_it, Neighbor->face_number, orientation);
         T8_FREE (Face->vertices);
         sc_mempool_free (face_mempool, Face);

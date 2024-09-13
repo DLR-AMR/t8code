@@ -22,7 +22,12 @@ function( add_t8_example )
     install( TARGETS ${ADD_T8_EXAMPLE_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
 endfunction()
 
+function( copy_example_file TEST_FILE_NAME )
+    configure_file(${CMAKE_CURRENT_LIST_DIR}/examplefiles/${TEST_FILE_NAME} ${CMAKE_CURRENT_BINARY_DIR}/examplefiles/${TEST_FILE_NAME} COPYONLY)
+endfunction()
+
 add_t8_example( NAME t8_advection                       SOURCES advect/t8_advection.cxx )
+add_t8_example( NAME t8_neighbor                        SOURCES face_neighbor.cxx )
 
 add_t8_example( NAME t8_cmesh_partition                 SOURCES cmesh/t8_cmesh_partition.cxx )
 add_t8_example( NAME t8_cmesh_set_join_by_vertices      SOURCES cmesh/t8_cmesh_set_join_by_vertices.cxx )
@@ -56,3 +61,6 @@ add_t8_example( NAME t8_example_gauss_blob              SOURCES remove/t8_exampl
 add_t8_example( NAME t8_example_empty_trees             SOURCES remove/t8_example_empty_trees.cxx )
 
 add_t8_example( NAME t8_version                         SOURCES version/t8_version.cxx )
+
+copy_example_file (mwe.msh)
+copy_example_file (mwe_reversed.msh)
