@@ -755,9 +755,9 @@ t8_cmesh_trees_add_attribute (const t8_cmesh_trees_t trees, const int proc, cons
 }
 
 void
-t8_cmesh_trees_add_ghost_attribute (const t8_cmesh_trees_t trees, const int proc,
-                                    const t8_stash_attribute_struct_t *attr, const t8_locidx_t local_ghost_id,
-                                    const t8_locidx_t ghosts_inserted, const size_t index)
+t8_cmesh_trees_add_ghost_attribute (const t8_cmesh_trees_t trees, const t8_stash_attribute_struct_t *attr,
+                                    const t8_locidx_t local_ghost_id, const t8_locidx_t ghosts_inserted,
+                                    const size_t index)
 {
   t8_part_tree_t part;
   t8_cghost_t ghost;
@@ -769,7 +769,7 @@ t8_cmesh_trees_add_ghost_attribute (const t8_cmesh_trees_t trees, const int proc
   T8_ASSERT (attr->attr_data != NULL || attr->attr_size == 0);
   T8_ASSERT (attr->id >= 0);
 
-  part = t8_cmesh_trees_get_part (trees, proc);
+  part = t8_cmesh_trees_get_part (trees, 0);
   ghost = t8_part_tree_get_ghost (part, local_ghost_id);
 
   attr_info = T8_GHOST_ATTR_INFO (ghost, index);
