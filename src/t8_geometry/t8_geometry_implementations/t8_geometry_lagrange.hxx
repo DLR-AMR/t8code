@@ -153,6 +153,14 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
   virtual void
   t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 
+  /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * This geometry supports lines, triangles, quadrilaterals and hexahedra up to degree 2.
+   * \return                True if the geometry is compatible with the tree.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const;
+
  private:
   /**
    * Evaluates the basis functions of the current tree type at a point.

@@ -33,7 +33,6 @@
 /**
  * This file tests the volume-computation of elements.
  */
-#define epsilon 1e-9
 
 /* Construct a forest of a hypercube with volume 1. If the element are refined uniformly
  * all elements have volume 1/global_num_elements. */
@@ -109,10 +108,10 @@ TEST_P (t8_forest_volume, volume_check)
       const double volume = t8_forest_element_volume (forest, itree, element);
       if (eclass == T8_ECLASS_PYRAMID) {
         const double shape_volume = pyramid_control_volume ((t8_dpyramid_t *) element);
-        EXPECT_NEAR (volume, shape_volume, epsilon);
+        EXPECT_NEAR (volume, shape_volume, T8_PRECISION_SQRT_EPS);
       }
       else {
-        EXPECT_NEAR (volume, control_volume, epsilon);
+        EXPECT_NEAR (volume, control_volume, T8_PRECISION_SQRT_EPS);
       }
     }
   }
