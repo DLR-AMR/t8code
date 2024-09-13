@@ -47,6 +47,7 @@ t8_geometry_lagrange::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, c
 {
   if (num_points != 1)
     SC_ABORT ("Error: Batch computation of geometry not yet supported.");
+  T8_ASSERT (t8_geom_check_tree_compatibility ());
   const auto basis_functions = t8_geometry_lagrange::t8_geom_compute_basis (ref_coords);
   const size_t n_vertex = basis_functions.size ();
   for (size_t i_component = 0; i_component < T8_ECLASS_MAX_DIM; i_component++) {
@@ -71,8 +72,9 @@ inline void
 t8_geometry_lagrange::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 {
   t8_geometry_with_vertices::t8_geom_load_tree_data (cmesh, gtreeid);
-  t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
-  degree = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_LAGRANGE_POLY_DEGREE, ltreeid);
+  const t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
+  degree
+    = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_LAGRANGE_POLY_DEGREE_KEY, ltreeid);
   T8_ASSERT (degree != NULL);
 }
 
@@ -112,6 +114,25 @@ t8_geometry_lagrange::t8_geom_compute_basis (const double *ref_coords) const
     SC_ABORTF ("Error: Lagrange geometry for degree %i %s not yet implemented. \n", *degree,
                t8_eclass_to_string[active_tree_class]);
   }
+}
+
+bool
+t8_geometry_lagrange::t8_geom_check_tree_compatibility () const
+{
+  if (*degree > T8_GEOMETRY_MAX_POLYNOMIAL_DEGREE) {
+    t8_debugf ("Lagrange tree with degree %i detected.\n"
+               "Only degrees up to %i are supported.",
+               *degree, T8_GEOMETRY_MAX_POLYNOMIAL_DEGREE);
+    return false;
+  }
+  if (active_tree_class != T8_ECLASS_LINE && active_tree_class != T8_ECLASS_TRIANGLE
+      && active_tree_class != T8_ECLASS_QUAD && active_tree_class != T8_ECLASS_HEX) {
+    t8_debugf ("Lagrange tree with class %i detected.\n"
+               "Only lines, triangles, quadrilaterals and hexahedra are supported with the lagrangian geometry.\n",
+               active_tree_class);
+    return false;
+  }
+  return true;
 }
 
 inline std::vector<double>
@@ -272,7 +293,7 @@ t8_lagrange_element::t8_lagrange_element (t8_eclass_t eclass, uint32_t degree, s
   /* Create a cmesh with a single element */
   int dim = t8_eclass_to_dimension[eclass];
   t8_cmesh_init (&cmesh);
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_LAGRANGE_POLY_DEGREE, &degree, sizeof (int), 1);
+  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_LAGRANGE_POLY_DEGREE_KEY, &degree, sizeof (int), 1);
   t8_cmesh_register_geometry<t8_geometry_lagrange> (cmesh, dim);
   t8_cmesh_set_tree_class (cmesh, 0, eclass);
   t8_cmesh_set_tree_vertices (cmesh, 0, nodes.data (), nodes.size ());

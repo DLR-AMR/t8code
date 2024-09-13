@@ -135,6 +135,17 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
   virtual void
   t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 
+  /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * This geometry supports all element types, hence it returns true.
+   * \return                True if the geometry is compatible with the tree.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const
+  {
+    return true;
+  }
+
   /** Check if a cad_curve is a line.
    * \param [in] curve_index      The index of the cad_curve.
    * \return                      1 if curve is a line, 0 if curve is not a line.
