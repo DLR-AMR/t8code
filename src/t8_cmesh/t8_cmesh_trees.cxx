@@ -401,7 +401,6 @@ t8_cmesh_trees_finish_part (const t8_cmesh_trees_t trees, const int proc)
   }
   if (num_ghost_attributes > 0) {
     ghost = t8_part_tree_get_ghost (part, 0);
-    //    t8_debugf("size of array:%li, offset: %li", first_face + attr_total_bytes + face_neigh_bytes, )
     attr = (t8_attribute_info_struct_t *) (part->first_tree + first_face + face_neigh_bytes + tree_attr_total_bytes);
     attr->attribute_offset = num_ghost_attributes * sizeof (t8_attribute_info_struct_t);
   }
@@ -782,13 +781,6 @@ t8_cmesh_trees_add_ghost_attribute (const t8_cmesh_trees_t trees, const int proc
   attr_info->key = attr->key;
   attr_info->package_id = attr->package_id;
   attr_info->attribute_size = attr->attr_size;
-
-#if 0
-  *attribute_data_offset += attr->attr_size;
-  if (index == (size_t) ghost->num_attributes - 1) {
-    *attribute_data_offset -= ghost->num_attributes * sizeof (t8_attribute_info_struct_t);
-  }
-#endif
 
   /* If we are not yet at the last attribute of the part,
    * get next attribute and set its offset*/

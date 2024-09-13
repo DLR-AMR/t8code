@@ -39,14 +39,7 @@ class t8_cmesh_partition_class: public testing::TestWithParam<cmesh_example_base
   void
   SetUp () override
   {
-    std::string name;
-    GetParam ()->param_to_string (name);
-
-    size_t found = name.find (std::string ("t8_cmesh_new_from_class__Pyramid_sc_MPI_COMM_WORLD"));
-    if (found != std::string::npos) {
-      /* Test not working for pyramids */
-    }
-    found = GetParam ()->name.find (std::string ("empty"));
+    size_t found = GetParam ()->name.find (std::string ("empty"));
     if (found != std::string::npos) {
       /* Tests not working for empty cmeshes */
       GTEST_SKIP ();
