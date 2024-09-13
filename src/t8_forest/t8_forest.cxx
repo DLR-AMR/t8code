@@ -4158,7 +4158,7 @@ t8_forest_new_uniform (t8_cmesh_t cmesh, t8_scheme_cxx_t *scheme, const int leve
 
   /* Initialize the forest */
   t8_forest_init (&forest);
-  
+
   /* repartition cmesh according to uniform refinement if needed */
   if (cmesh->set_partition) {
     t8_cmesh_t cmesh_uniform_partition;
