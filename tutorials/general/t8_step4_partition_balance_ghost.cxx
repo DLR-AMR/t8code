@@ -93,6 +93,14 @@
 #include <t8_schemes/t8_default/t8_default.hxx> /* default refinement scheme. */
 #include <tutorials/general/t8_step3.h>
 
+#include <t8_forest/t8_forest_ghost_interface_wrapper.h>
+#include <cstdlib>
+// zur speicheranalyse
+#include <t8_forest/t8_forest_ghost_search.hxx>
+
+
+#include <t8_forest/t8_forest_profiling.h>          /* for profining */
+
 T8_EXTERN_C_BEGIN ();
 
 /* So far we have seen t8_forest_new_* functions to create forests.
@@ -149,9 +157,22 @@ t8_step4_partition_ghost (t8_forest_t forest)
    * We currently support ghost mode T8_GHOST_FACES that creates face neighbor ghost elements
    * and will in future also support other modes for edge/vertex neighbor ghost elements.
    */
-  t8_forest_set_ghost (new_forest, 1, T8_GHOST_FACES);
+  t8_global_productionf (" [step4] t8_forest_set_ghost_ext_new:\n");
+  // t8_forest_set_ghost (new_forest, 1, T8_GHOST_FACES);
+  t8_forest_ghost_interface_c * stencil_ghost = t8_forest_ghost_interface_stencil_new();
+  t8_forest_set_ghost_ext_new(new_forest, 1, stencil_ghost);
+
+  // t8_forest_ghost_interface_c * ghost_interface = t8_forest_ghost_interface_stencil_new();
+  // t8_forest_set_ghost_ext_new(new_forest, 1, ghost_interface);
+  
+  t8_forest_set_profiling (new_forest, 1);
   /* Commit the forest, this step will perform the partitioning and ghost layer creation. */
+  t8_global_productionf (" [step4] t8_forest_commit (new_forest):\n");
   t8_forest_commit (new_forest);
+  t8_global_productionf (" [step4] t8_forest_compute_profile (new_forest):\n");
+  t8_forest_compute_profile (new_forest);
+  t8_global_productionf (" [step4] t8_forest_print_profile (new_forest):\n");
+  t8_forest_print_profile (new_forest);
 
   return new_forest;
 }
@@ -164,6 +185,7 @@ t8_step4_balance (t8_forest_t forest)
 {
   t8_forest_t balanced_forest;
   /* Adapt the input forest. */
+  t8_global_productionf (" [step4] t8_step3_adapt_forest (forest):\n");
   t8_forest_t unbalanced_forest = t8_step3_adapt_forest (forest);
 
   /* Output to vtk. */
@@ -178,8 +200,10 @@ t8_step4_balance (t8_forest_t forest)
    * Setting this flag to false (no_repartition = false -> yes repartition) will repartition
    * the forest after balance, such that every process has the same number of elements afterwards.
    */
+  t8_global_productionf (" [step4] t8_forest_set_balance (balanced_forest, unbalanced_forest, 0);:\n");
   t8_forest_set_balance (balanced_forest, unbalanced_forest, 0);
   /* Commit the forest. */
+  t8_global_productionf (" [step4] t8_forest_commit (balanced_forest):\n");
   t8_forest_commit (balanced_forest);
 
   return balanced_forest;
@@ -198,7 +222,7 @@ t8_step4_main (int argc, char **argv)
   const char *prefix_partition_ghost = "t8_step4_partitioned_ghost_forest";
   const char *prefix_balance = "t8_step4_balanced_forest";
   /* The uniform refinement level of the forest. */
-  const int level = 3;
+  const int level = 8;
 
   /* Initialize MPI. This has to happen before we initialize sc or t8code. */
   mpiret = sc_MPI_Init (&argc, &argv);
@@ -230,9 +254,10 @@ t8_step4_main (int argc, char **argv)
   t8_global_productionf (" [step4] Creating an adapted forest as in step3.\n");
   t8_global_productionf (" [step4] \n");
   /* Build a cube cmesh with tet, hex, and prism trees. */
-  cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
+  cmesh = t8_cmesh_new_hypercube(T8_ECLASS_QUAD, comm, 0, 0, 0);// t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
   t8_global_productionf (" [step4] Created coarse mesh.\n");
   forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0, comm);
+  t8_global_productionf (" [step4] fores has %li global and %i local trees \n", t8_forest_get_num_global_trees(forest),  t8_forest_get_num_local_trees(forest));
 
   /* Print information of the forest. */
   t8_step3_print_forest_information (forest);
@@ -241,21 +266,21 @@ t8_step4_main (int argc, char **argv)
   t8_forest_write_vtk (forest, prefix_uniform);
   t8_global_productionf (" [step4] Wrote uniform level %i forest to vtu files: %s*\n", level, prefix_uniform);
 
-  /*
-   *  Adapt the forest.
-   */
+  // /*
+  //  *  Adapt the forest.
+  //  */
 
-  /* Adapt the forest. We can reuse the forest variable, since the new adapted
-   * forest will take ownership of the old forest and destroy it.
-   * Note that the adapted forest is a new forest, though. */
-  forest = t8_step3_adapt_forest (forest);
+  // /* Adapt the forest. We can reuse the forest variable, since the new adapted
+  //  * forest will take ownership of the old forest and destroy it.
+  //  * Note that the adapted forest is a new forest, though. */
+  // forest = t8_step3_adapt_forest (forest);
 
-  /* Print information of our new forest. */
-  t8_step3_print_forest_information (forest);
+  // /* Print information of our new forest. */
+  // t8_step3_print_forest_information (forest);
 
-  /* Write forest to vtu files. */
-  t8_forest_write_vtk (forest, prefix_adapt);
-  t8_global_productionf (" [step4] Wrote adapted forest to vtu files: %s*\n", prefix_adapt);
+  // /* Write forest to vtu files. */
+  // t8_forest_write_vtk (forest, prefix_adapt);
+  // t8_global_productionf (" [step4] Wrote adapted forest to vtu files: %s*\n", prefix_adapt);
 
   /*
    * Partition and create ghost elements.
@@ -266,23 +291,34 @@ t8_step4_main (int argc, char **argv)
   t8_global_productionf (" [step4] \n");
   forest = t8_step4_partition_ghost (forest);
   t8_global_productionf (" [step4] Repartitioned forest and built ghost layer.\n");
+  t8_global_productionf (" [step4] The size of the forest (pointer) ist %li byts\n", sizeof(forest));
   t8_step3_print_forest_information (forest);
   /* Write forest to vtu files. */
   t8_forest_write_vtk_ext (forest, prefix_partition_ghost, 1, 1, 1, 1, 1, 0, 1, 0, NULL);
+
+  float ar = forest->profile->adapt_runtime;
+  float gr = forest->profile->ghost_runtime;
+  float cr = forest->profile->commit_runtime;
+  float br = forest->profile->balance_runtime;
+  float pr = forest->profile->partition_runtime;
+  t8_productionf("End ghost after %f s with %i local und %i ghost elements, art %f, crt %f, brt %f, prt %f, trt %f s\n", 
+                  gr, t8_forest_get_local_num_elements (forest),  t8_forest_get_num_ghosts (forest), 
+                  ar, cr, br, pr, ar+gr+cr+br+pr );
+
 
   /*
    * Balance
    */
 
-  t8_global_productionf (" [step4] \n");
-  t8_global_productionf (" [step4] Creating an unbalanced forest and balancing it.\n");
-  t8_global_productionf (" [step4] \n");
-  forest = t8_step4_balance (forest);
-  t8_global_productionf (" [step4] Balanced forest.\n");
-  t8_step3_print_forest_information (forest);
-  /* Write forest to vtu files. */
-  t8_forest_write_vtk (forest, prefix_balance);
-  t8_global_productionf (" [step4] Wrote balanced forest to vtu files: %s*\n", prefix_balance);
+  // t8_global_productionf (" [step4] \n");
+  // t8_global_productionf (" [step4] Creating an unbalanced forest and balancing it.\n");
+  // t8_global_productionf (" [step4] \n");
+  // forest = t8_step4_balance (forest);
+  // t8_global_productionf (" [step4] Balanced forest.\n");
+  // t8_step3_print_forest_information (forest);
+  // /* Write forest to vtu files. */
+  // t8_forest_write_vtk (forest, prefix_balance);
+  // t8_global_productionf (" [step4] Wrote balanced forest to vtu files: %s*\n", prefix_balance);
 
   /*
    * clean-up
