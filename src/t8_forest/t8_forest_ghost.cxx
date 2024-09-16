@@ -2136,6 +2136,41 @@ t8_forest_ghost_stencil::do_ghost(t8_forest_t forest){
   communicate_ghost_elements(forest);
 }
 
+
+
+/**
+ * Function to compute the owner of an element
+ * \param [in]      forest a commit uniform forest which is partitioned
+ * \param [in]      eclass_scheme shoud fit to the element
+ * \param [in]      element compute owner of this
+ * \param [out]     owner
+ * \note: the function use, that the linear id of the element is the same as the golbal index
+ * for example this is true for uniform meshes.
+ * the function also use, that the forest is partitioned.
+ * The owner is found in O(1)
+ */
+int
+t8_forest_ghost_interface_stencil_get_remot_rank(t8_forest_t forest, t8_eclass_scheme_c * eclass_scheme, t8_element_t *element){
+  t8_gloidx_t golbal_num_elements = t8_forest_get_global_num_elements(forest);
+  t8_linearidx_t lin_id = eclass_scheme->t8_element_get_linear_id( element, eclass_scheme->t8_element_level(element));
+
+  t8_linearidx_t b_0 = golbal_num_elements / forest->mpisize ;
+  t8_linearidx_t r = golbal_num_elements % forest->mpisize ;
+  
+  int p_guess = lin_id / b_0 ;
+  if( p_guess < 2 || r == 0){
+    return p_guess;
+  }
+  int x = ( p_guess * r ) / forest->mpisize ;
+
+  int owner = ( lin_id - x ) / b_0 ;
+
+  return owner;
+
+}
+
+
+
 /**
    * Add this stencil (elements N and F) for elmenet E to ghost
    * 
@@ -2170,7 +2205,8 @@ t8_forest_ghost_stencil::add_stencil_to_ghost(t8_forest_t forest, const t8_eleme
     /* if the F exists */
     if(face_neig_exists){
       /* compute the mpirank for F, and if its not ownes by this prozess, add it to gost */
-      int remote_rank = t8_forest_element_find_owner_ext(forest, 0, face_neig, eclass, 0, forest->mpisize - 1, (forest->mpisize - 1)/2, 0);
+      int remote_rank = t8_forest_ghost_interface_stencil_get_remot_rank(forest, eclass_scheme, face_neig);
+      T8_ASSERT( remote_rank ==  t8_forest_element_find_owner_ext(forest, 0, face_neig, eclass, 0, forest->mpisize - 1, remote_rank, 0) );
       T8_ASSERT( 0 <= remote_rank && remote_rank < forest->mpisize );
       if(forest->mpirank != remote_rank){
         t8_ghost_add_remote (forest, forest->ghosts, remote_rank, ltreeid, element, ielement);
@@ -2183,7 +2219,8 @@ t8_forest_ghost_stencil::add_stencil_to_ghost(t8_forest_t forest, const t8_eleme
           int neig_exists = eclass_scheme->t8_element_face_neighbor_inside(face_neig, neig, ineig, &neight_neig_face);
           if(neig_exists){
             /* compute the mpirank for N, and if its not ownes by this prozess, add it to gost */
-            remote_rank = t8_forest_element_find_owner_ext(forest, 0, neig, eclass, 0, forest->mpisize -1, (forest->mpisize - 1) / 2 ,0);
+            remote_rank =  t8_forest_ghost_interface_stencil_get_remot_rank(forest, eclass_scheme, neig);
+            T8_ASSERT(remote_rank ==  t8_forest_element_find_owner_ext(forest, 0, neig, eclass, 0, forest->mpisize -1, remote_rank ,0));
             T8_ASSERT( 0 <= remote_rank && remote_rank < forest->mpisize );
             if(forest->mpirank != remote_rank){
               t8_ghost_add_remote (forest, forest->ghosts, remote_rank, ltreeid, element, ielement);
