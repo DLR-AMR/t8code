@@ -303,6 +303,55 @@ t8_forest_ghost_tree_num_elements (t8_forest_t forest, t8_locidx_t lghost_tree)
   return t8_element_array_get_count (&ghost_tree->elements);
 }
 
+const t8_element_t *
+t8_ghost_get_ghost_in_tree (t8_forest_t forest, t8_locidx_t lghost_tree, t8_linearidx_t linear_id, int element_level,
+                            t8_locidx_t *loc_ghost_id)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  const t8_element_array_t *ghost_elements = t8_forest_ghost_get_tree_elements (forest, lghost_tree);
+  T8_ASSERT (ghost_elements != NULL);
+  /* Search for the element.
+   * The search returns the largest index i,
+   * such that the element at position i has a smaller id than the given one.
+   * If no such i exists, it returns -1. */
+  *loc_ghost_id = t8_forest_bin_search_lower (ghost_elements, linear_id, element_level);
+  if (*loc_ghost_id >= 0) {
+    /* The element was found */
+    return (const t8_element_t *) t8_sc_array_index_locidx (&(ghost_elements->array), *loc_ghost_id);
+  }
+  return nullptr;
+}
+
+t8_locidx_t
+t8_ghost_get_ghost_id_in_tree (t8_forest_t forest, t8_locidx_t lghost_tree, t8_element_t *ghost_element)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  const t8_element_array_t *ghost_elements = t8_forest_ghost_get_tree_elements (forest, lghost_tree);
+  T8_ASSERT (ghost_elements != NULL);
+  /* In order to find the element, we need to compute its linear id.
+   * To do so, we need the scheme and the level of the element. */
+  const t8_eclass_scheme_c *scheme = t8_element_array_get_scheme (ghost_elements);
+  const int ghost_level = scheme->t8_element_level (ghost_element);
+  /* Compute the linear id. */
+  const t8_linearidx_t element_id = scheme->t8_element_get_linear_id (ghost_element, ghost_level);
+  /* Search for the element */
+  int loc_ghost_id;
+  const t8_element_t *found_ghost
+    = t8_ghost_get_ghost_in_tree (forest, lghost_tree, element_id, ghost_level, &loc_ghost_id);
+  if (loc_ghost_id < 0) {
+    /* The element was not found */
+    return -1;
+  }
+  /* An element was found but it may not be the candidate element. 
+   * To identify whether the element was found, we compare these two. */
+  if (scheme->t8_element_equal (ghost_element, found_ghost)) {
+    return loc_ghost_id;
+  }
+  else {
+    return -1;
+  }
+}
+
 t8_element_array_t *
 t8_forest_ghost_get_tree_elements (const t8_forest_t forest, const t8_locidx_t lghost_tree)
 {
