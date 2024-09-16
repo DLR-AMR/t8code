@@ -195,6 +195,17 @@ t8_forest_get_tree_element_array (t8_forest_t forest, t8_locidx_t ltreeid);
 t8_element_array_t *
 t8_forest_get_tree_element_array_mutable (const t8_forest_t forest, t8_locidx_t ltreeid);
 
+/** Search for a linear element id (at forest->maxlevel) in a sorted array of
+ * elements. If the element does not exist, return the largest index i
+ * such that the element at position i has a smaller id than the given one.
+ * If no such i exists, return -1.
+ * \param [in]     elements    The array of elements.
+ * \param [in]     element_id  The linear id of the element to search for.
+ * \param [in]     maxlevel    The maximum level of the elements.
+ */
+t8_locidx_t
+t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_linearidx_t element_id, const int maxlevel);
+
 /** Find the owner process of a given element, deprecated version.
  * Use t8_forest_element_find_owner instead.
  * \param [in]     forest  The forest.
