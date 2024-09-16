@@ -445,12 +445,13 @@ class t8_cmesh_set_join_by_vertices_class: public testing::TestWithParam<cmesh_e
   {
     size_t found = GetParam ()->name.find (std::string ("bigmesh"));
     if (found != std::string::npos) {
-      /* skip bigmeshes as they get to large */
+      /* skip bigmeshes as they do not have vertices from which to build the connectivity */
       GTEST_SKIP ();
     }
 
     cmesh = GetParam ()->cmesh_create ();
     if (cmesh->set_partition) {
+      /* skip partitioned cmeshes, as they do not have all necessary vertex information for the neighbors */
       GTEST_SKIP ();
     }
   }

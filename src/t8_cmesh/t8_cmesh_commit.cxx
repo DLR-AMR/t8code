@@ -84,7 +84,7 @@ t8_cmesh_set_shmem_type (sc_MPI_Comm comm)
 }
 
 static void
-t8_cmesh_add_attributes (const t8_cmesh_t cmesh, sc_hash_t *ghost_ids, size_t *attribute_data_offset)
+t8_cmesh_add_attributes (const t8_cmesh_t cmesh, sc_hash_t *ghost_ids)
 {
   t8_stash_attribute_struct_t *attribute;
   const t8_stash_t stash = cmesh->stash;
@@ -94,6 +94,7 @@ t8_cmesh_add_attributes (const t8_cmesh_t cmesh, sc_hash_t *ghost_ids, size_t *a
 
   temp_facejoin = T8_ALLOC_ZERO (t8_ghost_facejoin_t, 1);
 
+  t8_locidx_t ghosts_inserted = 0;
   ltree = -1;
   for (si = 0, sj = 0; si < stash->attributes.elem_count; si++, sj++) {
     attribute = (t8_stash_attribute_struct_t *) sc_array_index (&stash->attributes, si);
@@ -112,9 +113,13 @@ t8_cmesh_add_attributes (const t8_cmesh_t cmesh, sc_hash_t *ghost_ids, size_t *a
       T8_ASSERT (ghost_ids != NULL);
       temp_facejoin->ghost_id = attribute->id;
       if (sc_hash_lookup (ghost_ids, temp_facejoin, (void ***) &facejoin_pp)) {
+        T8_ASSERT ((t8_locidx_t) sj == (t8_locidx_t) (*facejoin_pp)->attr_id);
+        if (sj == 0) {
+          ghosts_inserted++;
+        }
         /* attribute is on a ghost tree */
-        t8_cmesh_trees_add_ghost_attribute (cmesh->trees, 0, attribute, (*facejoin_pp)->local_id,
-                                            (*facejoin_pp)->attr_id, attribute_data_offset);
+        t8_cmesh_trees_add_ghost_attribute (cmesh->trees, attribute, (*facejoin_pp)->local_id, ghosts_inserted,
+                                            (*facejoin_pp)->attr_id);
         (*facejoin_pp)->attr_id++;
       }
     }
@@ -167,7 +172,7 @@ t8_cmesh_commit_replicated_new (t8_cmesh_t cmesh)
     t8_stash_attribute_sort (cmesh->stash);
     cmesh->num_trees = cmesh->num_local_trees = num_trees;
     cmesh->first_tree = 0;
-    t8_cmesh_add_attributes (cmesh, NULL, NULL);
+    t8_cmesh_add_attributes (cmesh, NULL);
 
     /* Set all face connections */
     t8_cmesh_trees_set_all_boundary (cmesh, cmesh->trees);
@@ -198,7 +203,6 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   t8_cghost_t ghost1;
   int F;
   size_t si;
-  size_t attribute_data_offset;
 
 #if T8_ENABLE_DEBUG
   sc_flopinfo_t fi, snapshot;
@@ -375,7 +379,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
         ghost1->att_offset += attribute->attr_size;
       }
     }
-    attribute_data_offset = t8_cmesh_trees_finish_part (cmesh->trees, 0);
+    t8_cmesh_trees_finish_part (cmesh->trees, 0);
     t8_cmesh_trees_set_all_boundary (cmesh, cmesh->trees);
 
     /* Go through all face_neighbour entries and parse every
@@ -473,7 +477,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
      *       counting the attributes per tree. */
 
     t8_stash_attribute_sort (cmesh->stash);
-    t8_cmesh_add_attributes (cmesh, ghost_ids, &attribute_data_offset);
+    t8_cmesh_add_attributes (cmesh, ghost_ids);
 
     /* compute global number of trees. id1 serves as buffer since
      * global number and local number have different datatypes */

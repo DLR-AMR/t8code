@@ -114,7 +114,7 @@ libt8_compiled_sources = \
   src/t8_cmesh/t8_cmesh_vtk_reader.cxx \
   src/t8_cmesh/t8_cmesh_save.cxx \
   src/t8_cmesh/t8_cmesh_netcdf.c \
-  src/t8_cmesh/t8_cmesh_trees.c src/t8_cmesh/t8_cmesh_commit.cxx \
+  src/t8_cmesh/t8_cmesh_trees.cxx src/t8_cmesh/t8_cmesh_commit.cxx \
   src/t8_cmesh/t8_cmesh_partition.cxx\
   src/t8_cmesh/t8_cmesh_copy.c src/t8_data/t8_shmem.c \
   src/t8_cmesh/t8_cmesh_geometry.cxx \
