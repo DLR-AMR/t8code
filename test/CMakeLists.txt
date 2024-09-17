@@ -77,6 +77,7 @@ add_t8_test( NAME t8_gtest_boundary_extrude      SOURCES t8_gtest_main.cxx t8_sc
 add_t8_test( NAME t8_gtest_face_descendant       SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_face_descendant.cxx )
 add_t8_test( NAME t8_gtest_default               SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_default.cxx )
 add_t8_test( NAME t8_gtest_child_parent_face     SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_child_parent_face.cxx )
+add_t8_test( NAME t8_gtest_build_forest_from_geo_domain     SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_build_forest_from_geo_domain.cxx )
 
 copy_test_file( test_cube_unstructured_1.inp )
 copy_test_file( test_cube_unstructured_2.inp )
