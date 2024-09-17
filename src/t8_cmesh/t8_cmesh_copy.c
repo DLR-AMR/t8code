@@ -33,7 +33,7 @@
 #include "t8_cmesh_copy.h"
 
 void
-t8_cmesh_copy (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from, sc_MPI_Comm comm)
+t8_cmesh_copy (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from, sc_MPI_Comm comm)
 {
   size_t num_parts, iz;
   t8_locidx_t first_tree, num_trees, first_ghost, num_ghosts;
@@ -60,7 +60,7 @@ t8_cmesh_copy (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from, sc_MPI_Comm comm)
   if (cmesh_from->tree_offsets != NULL) {
     T8_ASSERT (cmesh->tree_offsets == NULL);
     cmesh->tree_offsets = t8_cmesh_alloc_offsets (cmesh->mpisize, comm);
-    sc_shmem_memcpy (cmesh->tree_offsets, cmesh_from->tree_offsets, sizeof (t8_gloidx_t) * (cmesh->mpisize + 1), comm);
+    t8_shmem_array_copy (cmesh->tree_offsets, cmesh_from->tree_offsets);
   }
   /* Copy the numbers of trees */
   memcpy (cmesh->num_trees_per_eclass, cmesh_from->num_trees_per_eclass, T8_ECLASS_COUNT * sizeof (t8_gloidx_t));
@@ -69,13 +69,15 @@ t8_cmesh_copy (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from, sc_MPI_Comm comm)
           T8_ECLASS_COUNT * sizeof (t8_locidx_t));
 
   /* Copy the tree info */
-  num_parts = t8_cmesh_trees_get_numproc (cmesh_from->trees);
   cmesh->trees = NULL;
-  t8_cmesh_trees_init (&cmesh->trees, num_parts, cmesh_from->num_local_trees, cmesh_from->num_ghosts);
-  t8_cmesh_trees_copy_toproc (cmesh->trees, cmesh_from->trees, cmesh_from->num_local_trees, cmesh_from->num_ghosts);
-  for (iz = 0; iz < num_parts; iz++) {
-    t8_cmesh_trees_get_part_data (cmesh_from->trees, iz, &first_tree, &num_trees, &first_ghost, &num_ghosts);
-    t8_cmesh_trees_start_part (cmesh->trees, iz, first_tree, num_trees, first_ghost, num_ghosts, 0);
-    t8_cmesh_trees_copy_part (cmesh->trees, iz, cmesh_from->trees, iz);
+  if (cmesh_from->trees) {
+    num_parts = t8_cmesh_trees_get_numproc (cmesh_from->trees);
+    t8_cmesh_trees_init (&cmesh->trees, num_parts, cmesh_from->num_local_trees, cmesh_from->num_ghosts);
+    t8_cmesh_trees_copy_toproc (cmesh->trees, cmesh_from->trees, cmesh_from->num_local_trees, cmesh_from->num_ghosts);
+    for (iz = 0; iz < num_parts; iz++) {
+      t8_cmesh_trees_get_part_data (cmesh_from->trees, iz, &first_tree, &num_trees, &first_ghost, &num_ghosts);
+      t8_cmesh_trees_start_part (cmesh->trees, iz, first_tree, num_trees, first_ghost, num_ghosts, 0);
+      t8_cmesh_trees_copy_part (cmesh->trees, iz, cmesh_from->trees, iz);
+    }
   }
 }

@@ -42,9 +42,15 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_iterate.h>
+<<<<<<< HEAD
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #include <t8_netcdf/t8_forest_netcdf.h>
 #include <t8_netcdf/t8_netcdf.h>
+=======
+#include <t8_schemes/t8_default/t8_default.hxx>
+#include <t8_forest_netcdf.h>
+#include <t8_netcdf.h>
+>>>>>>> t8origin/main
 
 /* In this example is the use of the netcdf feature exemplary displayed.
 * We show how to write out a forest in the netCDF format and how to create additional (integer/double) netCDF variables which hold element data.
