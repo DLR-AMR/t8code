@@ -46,7 +46,7 @@ fi
 suffixes="c|cxx|h|hxx"
 
 # Find all files with the appropriate suffix in the 
-# src/ example/ test/ and tutorials/ subfolder.
-files=`find ../src ../example ../test ../tutorials ../benchmarks -regextype egrep -iregex ".*\.($suffixes)"`
+# src/, example/, test/, tutorials/, benchmark/, and /api subfolders.
+files=`find ../src ../example ../test ../tutorials ../benchmarks ../api -regextype egrep -iregex ".*\.($suffixes)"`
 
 echo $files

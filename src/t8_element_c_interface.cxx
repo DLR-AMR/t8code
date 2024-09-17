@@ -27,7 +27,7 @@
  */
 
 #include <t8_element.h>
-#include <t8_element_cxx.hxx>
+#include <t8_element.hxx>
 #include <t8_element_c_interface.h>
 
 size_t

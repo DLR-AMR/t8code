@@ -9,8 +9,12 @@ are permitted in any medium without royalty provided the copyright
 notice and this notice are preserved.  This file is offered as-is,
 without warranty of any kind.
 
-Basic Installation
-==================
+Two build systems are available: Autotools and CMake. The instructions
+to install t8code using the CMake build system can be found further
+down.
+
+Basic Autotools Installation
+============================
 
 Note: We provide a short guide to install t8code in our Wiki [Installation guide](https://github.com/DLR-AMR/t8code/wiki/Installation).
 
@@ -370,3 +374,66 @@ operates.
 
 `configure' also accepts some other, not widely useful, options.  Run
 `configure --help' for more details.
+
+Basic CMake Installation
+========================
+
+  1. Clone the repository and update the submodules:
+
+          git clone git@github.com:DLR-AMR/t8code.git
+          cd t8code
+          git submodule init
+          git submodule update
+
+  2. Create a build directory. CMake builds are done out-of-tree in a
+     dedicated build directory. This is traditionally achieved by
+     creating a ``build`` directory at the root of the repository:
+
+          mkdir build
+          cd build
+
+  2. Invoke CMake. Configure your build of CMake, and generate the
+     corresponding build files:
+
+          cmake .. -DCMAKE_C_COMPILER="your favorite c compiler"     \
+                   -DCMAKE_CXX_COMPILER="your favorite c++ compiler" \
+                   -DCMAKE_CXX_FLAGS="your favorite compiler flags"  \
+                   -DCMAKE_BUILD_TYPE=Release/Debug/RelWithDebInfo   \
+                   -DCMAKE_INSTALL_PREFIX="path/to/install/folder"   \
+                   -DT8CODE_BUILD_TUTORIALS=OFF
+
+     You can add as many options as needed. A list of all the
+     configuration options can be obtained using ccmake's TUI or are
+     referenced in our Wiki [Installation guide]
+     (https://github.com/DLR-AMR/t8code/wiki/Installation).
+
+  3. Build and install t8code
+
+          cmake --build . -j
+          cmake --install
+
+Linking against t8code in your own CMake-based project
+======================================================
+
+T8code can either be linked in-tree (i.e. meaning t8code source is a
+subdirectory of your project) or you can link to an installed version
+of t8code build with CMake (this is the recommended way). To link
+in-tree, follow the next steps:
+
+  1. Insert an ``add_subdirectory( path/to/t8code/sources )``
+     instruction in your top level ``CMakeLists.txt`` file.
+
+  2. Add a ``target_link_libraries( your_target PRIVATE T8CODE::T8 )``
+     instruction for each target depending on t8code
+
+To link to an installed version of t8code, do the following:
+
+  1. Add to your `CMakeLists.txt`:
+
+          find_package( T8CODE REQUIRED )
+          target_link_libraries( your_target PRIVATE T8CODE::T8 )
+
+  2. When launching CMake, you may have to provide the root directory
+     of t8code's installation:
+
+          cmake /path/to/project -DT8CODE_ROOT=/path/to/t8code/install/dir

@@ -22,7 +22,7 @@
 
 #include <sc_options.h>
 #include <sc_refcount.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_geometry/t8_geometry_base.hxx>
@@ -94,23 +94,26 @@ struct t8_geometry_sincos: public t8_geometry
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
-   * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [in]  num_coords Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double out_coords[3]) const
+                    double *out_coords) const
   {
-    if (num_coords != 1)
-      SC_ABORT ("Error: Batch computation of geometry not yet supported.");
-    double x = ref_coords[0];
-    if (gtreeid == 1) {
-      /* Translate ref coordinates by +1 in x direction for the second tree. */
-      x += 1;
+    for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
+      const int offset_2d = 2 * i_coord;
+      const int offset_3d = 3 * i_coord;
+      double x = ref_coords[offset_2d];
+      if (gtreeid == 1) {
+        /* Translate ref coordinates by +1 in x direction for the second tree. */
+        x += 1;
+      }
+      out_coords[offset_3d] = x;
+      out_coords[offset_3d + 1] = ref_coords[offset_2d + 1];
+      out_coords[offset_3d + 2]
+        = 0.2 * sin (ref_coords[offset_2d] * 2 * M_PI) * cos (ref_coords[offset_2d + 1] * 2 * M_PI);
     }
-    out_coords[0] = x;
-    out_coords[1] = ref_coords[1];
-    out_coords[2] = 0.2 * sin (ref_coords[0] * 2 * M_PI) * cos (ref_coords[1] * 2 * M_PI);
   }
 
   /* Jacobian, not implemented. */
@@ -134,6 +137,22 @@ struct t8_geometry_sincos: public t8_geometry
   t8_geom_tree_negative_volume () const
   {
     return 0;
+  }
+
+  /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * Only quad elements are supported by this geometry.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const
+  {
+    if (active_tree_class != T8_ECLASS_QUAD) {
+      t8_productionf (
+        "t8_geometry_sincos is not compatible with tree type %s\n It is only compatible with quad elements.\n",
+        t8_eclass_to_string[active_tree_class]);
+      return false;
+    }
+    return true;
   }
 
   /**
@@ -166,31 +185,30 @@ struct t8_geometry_moebius: public t8_geometry_with_vertices
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
-   * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [in]  num_coords Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double out_coords[3]) const
+                    double *out_coords) const
   {
-    if (num_coords != 1)
-      SC_ABORT ("Error: Batch computation of geometry not yet supported.");
     double t;
     double phi;
 
     /* Compute the linear coordinates (in [0,1]^2) of the reference vertex and store in out_coords. */
-    /* No idea why, but indent insert a lot of newlines here */
-    t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, 1, out_coords);
+    t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, num_coords, out_coords);
 
-    /* At first, we map x from [0,1] to [-.5,.5]
-     * and y to [0, 2*PI] */
-    t = out_coords[0] - .5;
-    phi = out_coords[1] * 2 * M_PI;
-
-    /* We now apply the parametrization for the moebius strip. */
-    out_coords[0] = (1 - t * sin (phi / 2)) * cos (phi);
-    out_coords[1] = (1 - t * sin (phi / 2)) * sin (phi);
-    out_coords[2] = t * cos (phi / 2);
+    for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
+      const int offset_3d = i_coord * 3;
+      /* At first, we map x from [0,1] to [-.5,.5]
+      * and y to [0, 2*PI] */
+      t = out_coords[offset_3d] - .5;
+      phi = out_coords[offset_3d + 1] * 2 * M_PI;
+      /* We now apply the parametrization for the moebius strip. */
+      out_coords[offset_3d] = (1 - t * sin (phi / 2)) * cos (phi);
+      out_coords[offset_3d + 1] = (1 - t * sin (phi / 2)) * sin (phi);
+      out_coords[offset_3d + 2] = t * cos (phi / 2);
+    }
   }
 
   /* Jacobian, not implemented. */
@@ -199,6 +217,22 @@ struct t8_geometry_moebius: public t8_geometry_with_vertices
                              double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
+  }
+
+  /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * Only quad elements are supported by this geometry.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const
+  {
+    if (active_tree_class != T8_ECLASS_QUAD) {
+      t8_productionf (
+        "t8_geometry_moebius is not compatible with tree type %s\n It is only compatible with quad elements.\n",
+        t8_eclass_to_string[active_tree_class]);
+      return false;
+    }
+    return true;
   }
 
   /**
@@ -232,18 +266,20 @@ struct t8_geometry_cylinder: public t8_geometry
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
-   * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [in]  num_coords Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double out_coords[3]) const
+                    double *out_coords) const
   {
-    if (num_coords != 1)
-      SC_ABORT ("Error: Batch computation of geometry not yet supported.");
-    out_coords[0] = cos (ref_coords[0] * 2 * M_PI);
-    out_coords[1] = ref_coords[1];
-    out_coords[2] = sin (ref_coords[0] * 2 * M_PI);
+    for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
+      const int offset_3d = i_coord * 3;
+      const int offset_2d = i_coord * 2;
+      out_coords[offset_3d] = cos (ref_coords[offset_2d] * 2 * M_PI);
+      out_coords[offset_3d + 1] = ref_coords[offset_2d + 1];
+      out_coords[offset_3d + 2] = sin (ref_coords[offset_2d] * 2 * M_PI);
+    }
   }
 
   /* Jacobian, not implemented. */
@@ -267,6 +303,22 @@ struct t8_geometry_cylinder: public t8_geometry
   t8_geom_tree_negative_volume () const
   {
     return 0;
+  }
+
+  /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * Only quad elements are supported by this geometry.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const
+  {
+    if (active_tree_class != T8_ECLASS_QUAD) {
+      t8_productionf (
+        "t8_geometry_cylinder is not compatible with tree type %s\n It is only compatible with quad elements.\n",
+        t8_eclass_to_string[active_tree_class]);
+      return false;
+    }
+    return true;
   }
 
   /**
@@ -301,31 +353,32 @@ struct t8_geometry_circle: public t8_geometry_with_vertices
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
-   * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [in]  num_coords Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double out_coords[3]) const
+                    double *out_coords) const
   {
-    if (num_coords != 1)
-      SC_ABORT ("Error: Batch computation of geometry not yet supported.");
     double x;
     double y;
 
     /* Compute the linear coordinates (in [0,1]^2) of the reference vertex and store in out_coords. */
 
     /* No idea why, but indent insert a lot of newlines here */
-    t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, 1, out_coords);
+    t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, num_coords, out_coords);
 
-    /* We now remap the coords to match the square [-1,1]^2 */
-    x = out_coords[0] * 2 - 1;
-    y = out_coords[1] * 2 - 1;
+    for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
+      const int offset_3d = i_coord * 3;
+      /* We now remap the coords to match the square [-1,1]^2 */
+      x = out_coords[offset_3d] * 2 - 1;
+      y = out_coords[offset_3d + 1] * 2 - 1;
 
-    /* An now we apply the formula that projects the square to the circle. */
-    out_coords[0] = x * sqrt (1 - y * y / 2);
-    out_coords[1] = y * sqrt (1 - x * x / 2);
-    out_coords[2] = 0;
+      /* An now we apply the formula that projects the square to the circle. */
+      out_coords[offset_3d] = x * sqrt (1 - y * y / 2);
+      out_coords[offset_3d + 1] = y * sqrt (1 - x * x / 2);
+      out_coords[offset_3d + 2] = 0;
+    }
   }
 
   /* Jacobian, not implemented. */
@@ -334,6 +387,22 @@ struct t8_geometry_circle: public t8_geometry_with_vertices
                              double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
+  }
+
+  /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * Only quad elements are supported by this geometry.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const
+  {
+    if (active_tree_class != T8_ECLASS_QUAD) {
+      t8_productionf (
+        "t8_geometry_circle is not compatible with tree type %s\n It is only compatible with quad elements.\n",
+        t8_eclass_to_string[active_tree_class]);
+      return false;
+    }
+    return true;
   }
 
   /**
@@ -372,34 +441,38 @@ struct t8_geometry_moving: public t8_geometry
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
-   * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [in]  num_coords Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double out_coords[3]) const
+                    double *out_coords) const
   {
-    if (num_coords != 1)
-      SC_ABORT ("Error: Batch computation of geometry not yet supported.");
-    double x = ref_coords[0] - .5;
-    double y = ref_coords[1] - .5;
-    const double time = *ptime;
-    double radius_sqr = x * x + y * y;
-    double phi = radius_sqr * (time > 2 ? 4 - time : time);
+    double x, y, radius_sqr, phi, rho;
+    int sign;
+    for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
+      const int offset_3d = i_coord * 3;
+      const int offset_2d = i_coord * 2;
+      x = ref_coords[offset_2d] - .5;
+      y = ref_coords[offset_2d + 1] - .5;
+      const double time = *ptime;
+      radius_sqr = x * x + y * y;
+      phi = radius_sqr * (time > 2 ? 4 - time : time);
 
-    /* Change gridlines by applying a 4th order polynomial mapping
-     * [0,1]^2 -> [0,1]^2.
-     * And then map this to [-0.5,-0.5]^2 */
-    int sign = x < 0 ? 1 : -1;
-    double rho = 0.5 - time / 10;
-    x = sign * (1 - exp (-fabs (-x) / rho)) / (2 * (1 - exp (-0.5 / rho)));
-    sign = y < 0 ? 1 : -1;
-    y = sign * (1 - exp (-fabs (-y) / rho)) / (2 * (1 - exp (-0.5 / rho)));
+      /* Change gridlines by applying a 4th order polynomial mapping
+      * [0,1]^2 -> [0,1]^2.
+      * And then map this to [-0.5,-0.5]^2 */
+      sign = x < 0 ? 1 : -1;
+      rho = 0.5 - time / 10;
+      x = sign * (1 - exp (-fabs (-x) / rho)) / (2 * (1 - exp (-0.5 / rho)));
+      sign = y < 0 ? 1 : -1;
+      y = sign * (1 - exp (-fabs (-y) / rho)) / (2 * (1 - exp (-0.5 / rho)));
 
-    /* Rotate the x-y axis and add sincos in z axis. */
-    out_coords[0] = x * (cos (phi)) - y * sin (phi);
-    out_coords[1] = y * (cos (phi)) + x * sin (phi);
-    out_coords[2] = 0;
+      /* Rotate the x-y axis and add sincos in z axis. */
+      out_coords[offset_3d] = x * (cos (phi)) - y * sin (phi);
+      out_coords[offset_3d + 1] = y * (cos (phi)) + x * sin (phi);
+      out_coords[offset_3d + 2] = 0;
+    }
   }
 
   /* Jacobian, not implemented. */
@@ -423,6 +496,22 @@ struct t8_geometry_moving: public t8_geometry
   t8_geom_tree_negative_volume () const
   {
     return 0;
+  }
+
+  /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * Only quad elements are supported by this geometry.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const
+  {
+    if (active_tree_class != T8_ECLASS_QUAD) {
+      t8_productionf (
+        "t8_geometry_moving is not compatible with tree type %s\n It is only compatible with quad elements.\n",
+        t8_eclass_to_string[active_tree_class]);
+      return false;
+    }
+    return true;
   }
 
   /**
@@ -455,18 +544,21 @@ struct t8_geometry_cube_zdistorted: public t8_geometry
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
-   * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [in]  num_coords Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double out_coords[3]) const
+                    double *out_coords) const
   {
-    if (num_coords != 1)
-      SC_ABORT ("Error: Batch computation of geometry not yet supported.");
-    out_coords[0] = ref_coords[0];
-    out_coords[1] = ref_coords[1];
-    out_coords[2] = ref_coords[2] * (0.8 + 0.2 * sin (ref_coords[0] * 2 * M_PI) * cos (ref_coords[1] * 2 * M_PI));
+    for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
+      const int offset_3d = i_coord * 3;
+      out_coords[offset_3d] = ref_coords[offset_3d];
+      out_coords[offset_3d + 1] = ref_coords[offset_3d + 1];
+      out_coords[offset_3d + 2]
+        = ref_coords[offset_3d + 2]
+          * (0.8 + 0.2 * sin (ref_coords[offset_3d] * 2 * M_PI) * cos (ref_coords[offset_3d + 1] * 2 * M_PI));
+    }
   }
 
   /* Jacobian, not implemented. */
@@ -490,6 +582,22 @@ struct t8_geometry_cube_zdistorted: public t8_geometry
   t8_geom_tree_negative_volume () const
   {
     return 0;
+  }
+
+  /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * Only hex elements are supported by this geometry.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const
+  {
+    if (active_tree_class != T8_ECLASS_HEX) {
+      t8_productionf (
+        "t8_geometry_cube_zdistorted is not compatible with tree type %s\n It is only compatible with hex elements.\n",
+        t8_eclass_to_string[active_tree_class]);
+      return false;
+    }
+    return true;
   }
 
   /**
@@ -641,7 +749,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
   case T8_GEOM_ANALYTIC_QUAD_TO_SPHERE:
     t8_global_productionf ("Wrapping a quad around a sphere.\n");
     t8_cmesh_register_geometry<t8_geometry_analytic> (cmesh, 3, "geom_quad_to_sphere", quad_to_sphere_callback, nullptr,
-                                                      nullptr, nullptr, nullptr);
+                                                      nullptr, nullptr, nullptr, nullptr);
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
     t8_cmesh_set_join (cmesh, 0, 0, 1, 0, 0);
 
@@ -651,7 +759,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
 #if T8_WITH_OCC
     t8_global_productionf ("Creating uniform level %i forests with an cad triangle geometry.\n", level);
 
-    /* Constructing a triangle with one curved edge (f2) */
+    /* Constructing a triangle with one curved edge (f1) */
     Handle_Geom_BSplineCurve cad_curve;
     TColgp_Array1OfPnt point_array (1, 3);
     TopoDS_Shape shape;
@@ -668,7 +776,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     shape = BRepBuilderAPI_MakeEdge (cad_curve).Edge ();
 
     /* Create a cad geometry. */
-    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, shape);
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 2, shape);
 
     /* The arrays indicate which face/edge carries a geometry. 
        * 0 means no geometry and any other number indicates the position of the geometry 

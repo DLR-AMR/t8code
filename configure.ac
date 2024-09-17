@@ -45,6 +45,7 @@ dnl Enable C++ and Fortran
 fi
 
 SC_MPI_ENGAGE([T8])
+T8_CHECK_MPI_TEST_FLAGS()
 
 dnl Check for all Fortran related options and features
 T8_CHECK_FORTRAN

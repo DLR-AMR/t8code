@@ -52,7 +52,7 @@ jobs:
   build:
 
     if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     container: dlramr/t8code-ubuntu:t8-dependencies
     timeout-minutes: 90
     steps:
@@ -60,11 +60,16 @@ jobs:
 # Setup and bootstrap
 #
     - uses: actions/checkout@v4
-      with: 
-        fetch-depth: 0
+      with:
+        fetch-tags: true # required to get version tags
+        fetch-depth: 0    # required to get all history, especially the version tags    
+    - name: install sudo
+      run: apt update && apt install sudo
+    # On the github Ubuntu 20.04, sudo is not available by default
+    # we need it, however, to update/upgrade our packages.    
     - name: Update packages
-      run: apt-get update && apt-get upgrade -y
-      # This seems to be necessary because of the docker container
+      run: sudo apt-get update && sudo apt-get upgrade -y
+      # This step is necessary to get the newest package data
     - name: disable ownership checks
       run: git config --global --add safe.directory '*'
     - name: init submodules

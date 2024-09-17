@@ -419,6 +419,7 @@ t8_dtri_compute_reference_coords (const t8_dtri_t *elem, const double *ref_coord
     /* offset defines, how many coordinates to skip in an iteration. */
 #ifndef T8_DTRI_TO_DTET
     const size_t offset = (2 + skip_coords) * coord;
+    const size_t offset_3d = 3 * coord;
 #else
     const size_t offset = 3 * coord;
 #endif
@@ -428,8 +429,8 @@ t8_dtri_compute_reference_coords (const t8_dtri_t *elem, const double *ref_coord
     out_coords[offset + 2] = elem->z;
 #endif
 #ifndef T8_DTRI_TO_DTET
-    out_coords[offset + tri_orientation] += h * ref_coords[offset + 0];
-    out_coords[offset + 1 - tri_orientation] += h * ref_coords[offset + 1];
+    out_coords[offset + tri_orientation] += h * ref_coords[offset_3d + 0];
+    out_coords[offset + 1 - tri_orientation] += h * ref_coords[offset_3d + 1];
 #else
     out_coords[offset + tet_orientation0] += h * ref_coords[offset + 0];
     out_coords[offset + tet_orientation1] += h * ref_coords[offset + 1];
@@ -1170,6 +1171,8 @@ t8_dtri_is_root_boundary (const t8_dtri_t *t, int face)
       return t->y == t->z;
     case 3:
       return t->y == 0;
+    default:
+      SC_ABORT_NOT_REACHED ();
     }
   case 1:
     /* type 1 tets are only boundary at face 0 */
@@ -1186,6 +1189,8 @@ t8_dtri_is_root_boundary (const t8_dtri_t *t, int face)
   case 5:
     /* type 5 tets are only boundary at face 3 */
     return face == 3 && t->y == 0;
+  default:
+    SC_ABORT_NOT_REACHED ();
   }
 #endif
   SC_ABORT_NOT_REACHED ();

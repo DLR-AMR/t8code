@@ -52,7 +52,7 @@
 
 /* Write the neighbor data of all ghosts */
 static int
-t8_cmesh_save_ghost_neighbors (t8_cmesh_t cmesh, FILE *fp)
+t8_cmesh_save_ghost_neighbors (const t8_cmesh_t cmesh, FILE *fp)
 {
   t8_locidx_t ighost;
   t8_cghost_t ghost;
@@ -81,7 +81,7 @@ t8_cmesh_save_ghost_neighbors (t8_cmesh_t cmesh, FILE *fp)
 }
 
 static int
-t8_cmesh_load_ghost_attributes (t8_cmesh_t cmesh, FILE *fp)
+t8_cmesh_load_ghost_attributes (const t8_cmesh_t cmesh, FILE *fp)
 {
 
   t8_locidx_t ighost;
@@ -111,7 +111,7 @@ t8_cmesh_load_ghost_attributes (t8_cmesh_t cmesh, FILE *fp)
 }
 
 static int
-t8_cmesh_save_ghosts (t8_cmesh_t cmesh, FILE *fp)
+t8_cmesh_save_ghosts (const t8_cmesh_t cmesh, FILE *fp)
 {
   t8_locidx_t ighost;
   t8_cghost_t ghost;
@@ -130,7 +130,7 @@ t8_cmesh_save_ghosts (t8_cmesh_t cmesh, FILE *fp)
 }
 
 static int
-t8_cmesh_load_ghosts (t8_cmesh_t cmesh, FILE *fp)
+t8_cmesh_load_ghosts (const t8_cmesh_t cmesh, FILE *fp)
 {
   t8_locidx_t ighost;
   t8_cghost_t ghost;
@@ -168,7 +168,7 @@ t8_cmesh_load_ghosts (t8_cmesh_t cmesh, FILE *fp)
 
 /* Load all attributes that were stored in a file */
 static int
-t8_cmesh_load_tree_attributes (t8_cmesh_t cmesh, FILE *fp)
+t8_cmesh_load_tree_attributes (const t8_cmesh_t cmesh, FILE *fp)
 {
   double *vertices = NULL;
   t8_locidx_t itree;
@@ -235,7 +235,7 @@ t8_cmesh_load_tree_attributes (t8_cmesh_t cmesh, FILE *fp)
 }
 
 static int
-t8_cmesh_save_tree_attribute (t8_cmesh_t cmesh, FILE *fp)
+t8_cmesh_save_tree_attribute (const t8_cmesh_t cmesh, FILE *fp)
 {
   double *vertices;
   t8_locidx_t itree;
@@ -301,7 +301,7 @@ t8_cmesh_save_tree_attribute (t8_cmesh_t cmesh, FILE *fp)
 }
 
 static int
-t8_cmesh_save_trees (t8_cmesh_t cmesh, FILE *fp)
+t8_cmesh_save_trees (const t8_cmesh_t cmesh, FILE *fp)
 {
   t8_locidx_t itree;
   t8_ctree_t tree;
@@ -338,7 +338,7 @@ t8_cmesh_save_trees (t8_cmesh_t cmesh, FILE *fp)
 /* Load all tree data (eclasses, neighbors, vertex coordinates,...)
  * from a cmesh file into a cmesh */
 static int
-t8_cmesh_load_trees (t8_cmesh_t cmesh, FILE *fp)
+t8_cmesh_load_trees (const t8_cmesh_t cmesh, FILE *fp)
 {
   size_t bytes_for_trees, att_bytes;
   t8_locidx_t itree;
@@ -378,7 +378,7 @@ t8_cmesh_load_trees (t8_cmesh_t cmesh, FILE *fp)
 }
 
 static int
-t8_cmesh_save_header (t8_cmesh_t cmesh, FILE *fp)
+t8_cmesh_save_header (const t8_cmesh_t cmesh, FILE *fp)
 {
   int ret;
   int eclass;
@@ -435,7 +435,7 @@ t8_cmesh_save_header (t8_cmesh_t cmesh, FILE *fp)
 /* Read the number of trees, dimension, etc. from a saved cmesh file.
  * If anything goes wrong, the file is closed and 0 is returned */
 static int
-t8_cmesh_load_header (t8_cmesh_t cmesh, FILE *fp)
+t8_cmesh_load_header (const t8_cmesh_t cmesh, FILE *fp)
 {
   int file_format, save_rank, save_mpisize;
   int ieclass;
@@ -512,7 +512,7 @@ t8_cmesh_load_header (t8_cmesh_t cmesh, FILE *fp)
 }
 
 int
-t8_cmesh_save (t8_cmesh_t cmesh, const char *fileprefix)
+t8_cmesh_save (const t8_cmesh_t cmesh, const char *fileprefix)
 {
   FILE *fp;
   char filename[BUFSIZ];
@@ -656,8 +656,8 @@ t8_cmesh_load (const char *filename, sc_MPI_Comm comm)
  * it stores the number of the file in file_to_load.
  */
 static int
-t8_cmesh_load_proc_loads (int mpirank, int mpisize, int num_files, sc_MPI_Comm comm, t8_load_mode_t mode,
-                          int *file_to_load, int num_procs_per_node)
+t8_cmesh_load_proc_loads (const int mpirank, const int mpisize, const int num_files, sc_MPI_Comm comm,
+                          const t8_load_mode_t mode, int *file_to_load, int num_procs_per_node)
 {
   sc_MPI_Comm inter = sc_MPI_COMM_NULL, intra = sc_MPI_COMM_NULL;
   int mpiret, interrank, intrarank, intersize;
@@ -738,8 +738,8 @@ t8_cmesh_load_proc_loads (int mpirank, int mpisize, int num_files, sc_MPI_Comm c
  * the next bigger nonloading process.
  */
 static int
-t8_cmesh_load_bigger_nonloading (int mpirank, int mpisize, int num_files, t8_load_mode_t mode, sc_MPI_Comm comm,
-                                 int num_procs_per_node)
+t8_cmesh_load_bigger_nonloading (const int mpirank, const int mpisize, const int num_files, const t8_load_mode_t mode,
+                                 sc_MPI_Comm comm, const int num_procs_per_node)
 {
   int next_bigger_nonloading;
   sc_MPI_Comm inter = sc_MPI_COMM_NULL, intra = sc_MPI_COMM_NULL;
@@ -814,8 +814,8 @@ t8_cmesh_load_bigger_nonloading (int mpirank, int mpisize, int num_files, t8_loa
  * If N = 1, the cmesh is broadcasted and not partitioned.
  */
 t8_cmesh_t
-t8_cmesh_load_and_distribute (const char *fileprefix, int num_files, sc_MPI_Comm comm, t8_load_mode_t mode,
-                              int procs_per_node)
+t8_cmesh_load_and_distribute (const char *fileprefix, const int num_files, sc_MPI_Comm comm, const t8_load_mode_t mode,
+                              const int procs_per_node)
 {
   t8_cmesh_t cmesh;
   char buffer[BUFSIZ];

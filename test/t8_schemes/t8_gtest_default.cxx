@@ -1,10 +1,9 @@
 /*
   This file is part of t8code.
   t8code is a C library to manage a collection (a forest) of multiple
-  connected adaptive space-trees of general element types in parallel.
+  connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2023 The University of Texas System
-  Written by Carsten Burstedde, Lucas C. Wilcox, and Tobin Isaac
+  Copyright (C) 2024 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -26,16 +25,16 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 
-#include <t8_schemes/t8_default/t8_default_vertex/t8_default_vertex_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_line/t8_default_line_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_quad/t8_default_quad_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_hex/t8_default_hex_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_tri/t8_default_tri_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_tet/t8_default_tet_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_prism/t8_default_prism_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.hxx>
+#include <t8_schemes/t8_default/t8_default_line/t8_default_line.hxx>
+#include <t8_schemes/t8_default/t8_default_quad/t8_default_quad.hxx>
+#include <t8_schemes/t8_default/t8_default_hex/t8_default_hex.hxx>
+#include <t8_schemes/t8_default/t8_default_tri/t8_default_tri.hxx>
+#include <t8_schemes/t8_default/t8_default_tet/t8_default_tet.hxx>
+#include <t8_schemes/t8_default/t8_default_prism/t8_default_prism.hxx>
+#include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid.hxx>
 #include <test/t8_gtest_macros.hxx>
 
 class gtest_default_scheme: public testing::TestWithParam<t8_eclass_t> {

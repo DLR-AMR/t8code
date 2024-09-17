@@ -36,28 +36,49 @@
 typedef int (*t8_forest_iterate_face_fn) (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
                                           int face, void *user_data, t8_locidx_t tree_leaf_index);
 
-/*
+/**
+ * A call-back function used by \ref t8_forest_search describing a search-criterion. Is called on an element and the 
+ * search criterion should be checked on that element. Return true if the search criterion is met, false otherwise.  
+ *
+ *
  * \param[in] forest              the forest
  * \param[in] ltreeid             the local tree id of the current tree
- * \param[in] element             the element for which the query is executed
+ * \param[in] element             the element for which the search criterion is checked.
  * \param[in] is_leaf             true if and only if \a element is a leaf element
  * \param[in] leaf_elements       the leaf elements in \a forest that are descendants of \a element (or the element 
  *                                itself if \a is_leaf is true)
  * \param[in] tree_leaf_index     the local index of the first leaf in \a leaf_elements
- * \param[in] queries             if not NULL, a query that is passed through from the search function
- * \param[in] query_indices       if \a query is not NULL the indices of \a query in the \a queries array from \ref 
- *                                t8_forest_search
- * \param[in, out] query_matches  if \a query is not NULL: true at the i-th index if and only if the element 'matches' 
- *                                the query of the i-th query index. 
- *                                if \a query is NULL: true if and only if the search should continue with the
- *                                children of \a element and the queries should be performed for this element.
- * \param[in] num_active_queries  The number of currently active queries. Does not have to be equal to query->elem_count,
- *                                since some queries might have been deactivated from previous calls
+ * \returns                       non-zero if the search criterion is met, zero otherwise. 
  */
-typedef int (*t8_forest_search_query_fn) (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
-                                          const int is_leaf, const t8_element_array_t *leaf_elements,
-                                          const t8_locidx_t tree_leaf_index, void *query, sc_array_t *query_indices,
-                                          int *query_matches, const size_t num_active_queries);
+typedef int (*t8_forest_search_fn) (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
+                                    const int is_leaf, const t8_element_array_t *leaf_elements,
+                                    const t8_locidx_t tree_leaf_index);
+
+/**
+ * A call-back function used by \ref t8_forest_search for queries. Is called on an element and all queries are checked
+ * on that element. All positive queries are passed further down to the children of the element up to leaf elements of
+ * the tree. The results of the check are stored in \a query_matches. 
+ * 
+ * \param[in] forest              the forest
+ * \param[in] ltreeid             the local tree id of the current tree
+ * \param[in] element             the element for which the queries are executed
+ * \param[in] is_leaf             true if and only if \a element is a leaf element
+ * \param[in] leaf_elements       the leaf elements in \a forest that are descendants of \a element (or the element 
+ *                                itself if \a is_leaf is true)
+ * \param[in] tree_leaf_index     the local index of the first leaf in \a leaf_elements
+ * \param[in] queries             An array of queries that are checked by the function
+ * \param[in] query_indices       An array of size_t entries, where each entry is an index of a query in \q queries.
+ * \param[in, out] query_matches  An array of length \a num_active_queries. 
+ *                                If the element is not a leave must be set to true or false at the i-th index for 
+ *                                each query, specifying whether the element 'matches' the query of the i-th query 
+ *                                index or not. When the element is a leaf we can return before all entries are set. 
+ * \param[in] num_active_queries  The number of currently active queries (equals the number of entries of 
+ *                                \a query_matches and entries of \a query_indices). 
+ */
+typedef void (*t8_forest_query_fn) (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
+                                    const int is_leaf, const t8_element_array_t *leaf_elements,
+                                    const t8_locidx_t tree_leaf_index, sc_array_t *queries, sc_array_t *query_indices,
+                                    int *query_matches, const size_t num_active_queries);
 
 T8_EXTERN_C_BEGIN ();
 
@@ -85,8 +106,7 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
  * To pass user data to the search_fn function use \ref t8_forest_set_user_data
  */
 void
-t8_forest_search (t8_forest_t forest, t8_forest_search_query_fn search_fn, t8_forest_search_query_fn query_fn,
-                  sc_array_t *queries);
+t8_forest_search (t8_forest_t forest, t8_forest_search_fn search_fn, t8_forest_query_fn query_fn, sc_array_t *queries);
 
 /** Given two forest where the elements in one forest are either direct children or
  * parents of the elements in the other forest

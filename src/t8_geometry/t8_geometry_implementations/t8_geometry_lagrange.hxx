@@ -61,7 +61,7 @@
  * just a convention to ensure that the node numbering be consistent.
  * 3. The mapping by the Lagrange geometry falls back to the linear geometry
  * for degree one. It means that the starting point for the node number
- * assignment is the numbering defined in the \a t8_element.c file.
+ * assignment is the numbering defined in the \a t8_element.cxx file.
  * 4. The node numbering is performed in increasing spatial dimension, which
  * results in a hierarchical construction of elements. The node numbers are
  * assigned based on increasing face IDs, then increasing edge IDs, then
@@ -152,6 +152,14 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
    */
   virtual void
   t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
+
+  /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * This geometry supports lines, triangles, quadrilaterals and hexahedra up to degree 2.
+   * \return                True if the geometry is compatible with the tree.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const;
 
  private:
   /**

@@ -33,6 +33,6 @@ As a reviewer please read through all the code lines and make sure that the code
 - [ ] If a new directory with source-files is added, it must be covered by the `script/find_all_source_files.scp` to check the indentation of these files.
 - [ ] If this PR introduces a new feature, it must be covered in an example/tutorial and a Wiki article.
 
-#### Licence
+#### License
 
 - [ ] The author added a BSD statement to `doc/` (or already has one)

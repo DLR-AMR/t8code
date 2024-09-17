@@ -55,6 +55,7 @@ t8_get_version_minor ()
 int
 t8_get_version_patch ()
 {
+#ifndef T8_CMAKE_BUILD
   const char *version_point = t8_get_version_point_string ();
 
   if (version_point == NULL || strlen (version_point) == 0) {
@@ -92,4 +93,7 @@ t8_get_version_patch ()
 
   /* Return the patch number */
   return patch_number;
+#else
+  return T8_VERSION_PATCH;
+#endif
 }

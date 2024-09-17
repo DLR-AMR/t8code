@@ -1,8 +1,12 @@
 # Conditionally adding new sources to the main T8 target as in the original BS looked wrong...
-add_library( t8example )
+if ( ${T8CODE_BUILD_AS_SHARED_LIBRARY} )
+    add_library( t8example SHARED )
+else()
+    add_library( t8example STATIC )
+endif()
 target_sources( t8example PRIVATE common/t8_example_common.cxx common/t8_example_common_functions.cxx )
-target_include_directories( t8example PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. )
-target_link_libraries( t8example PRIVATE T8 )
+target_include_directories( t8example PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. ${SC_INCLUDE_DIR} )
+target_link_libraries( t8example PRIVATE T8 ${SC_LIBRARIES} m )
 install( TARGETS t8example DESTINATION ${CMAKE_INSTALL_PREFIX}/lib )
 
 function( add_t8_example )
@@ -11,11 +15,28 @@ function( add_t8_example )
     set( multiValueArgs "SOURCES" )
     cmake_parse_arguments( ADD_T8_EXAMPLE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
+    # Get the path of the first file listed in the SOURCES list and use it to determine the build directory.
+    # The executable will be build in the same directory as the first source file.
+    list(GET ADD_T8_EXAMPLE_SOURCES 0 FIRST_SOURCE)
+    get_filename_component(EXAMPLE_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/${FIRST_SOURCE}" DIRECTORY)
+    file(RELATIVE_PATH EXAMPLE_RELATIVE_DIR "${CMAKE_SOURCE_DIR}" "${EXAMPLE_SOURCE_DIR}")
+    set(EXAMPLE_BUILD_DIR "${CMAKE_BINARY_DIR}/${EXAMPLE_RELATIVE_DIR}")
+
     add_executable( ${ADD_T8_EXAMPLE_NAME} ${ADD_T8_EXAMPLE_SOURCES} )
     target_link_libraries( ${ADD_T8_EXAMPLE_NAME} PRIVATE T8 t8example SC::SC )
     target_include_directories( ${ADD_T8_EXAMPLE_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. )
 
-    install( TARGETS ${ADD_T8_EXAMPLE_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/example )
+    set_target_properties(${ADD_T8_EXAMPLE_NAME} PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${EXAMPLE_BUILD_DIR}"
+        LIBRARY_OUTPUT_DIRECTORY "${EXAMPLE_BUILD_DIR}"
+        ARCHIVE_OUTPUT_DIRECTORY "${EXAMPLE_BUILD_DIR}"
+    )
+
+    if( T8CODE_EXPORT_COMPILE_COMMANDS )
+        set_target_properties( ${ADD_T8_EXAMPLE_NAME} PROPERTIES EXPORT_COMPILE_COMMANDS ON )
+    endif( T8CODE_EXPORT_COMPILE_COMMANDS )
+
+    install( TARGETS ${ADD_T8_EXAMPLE_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
 endfunction()
 
 add_t8_example( NAME t8_advection                       SOURCES advect/t8_advection.cxx )
@@ -42,8 +63,10 @@ add_t8_example( NAME t8_time_tetgen                     SOURCES IO/cmesh/tetgen/
 add_t8_example( NAME t8_forest_tetgen                   SOURCES IO/cmesh/tetgen/t8_forest_from_tetgen.cxx )
 add_t8_example( NAME t8_read_triangle                   SOURCES IO/cmesh/triangle/t8_read_triangle_file.cxx )
 add_t8_example( NAME t8_cmesh_read_from_vtk             SOURCES IO/cmesh/vtk/t8_cmesh_read_from_vtk.cxx )
+
 add_t8_example( NAME t8_netcdf_compilation_status       SOURCES IO/forest/netcdf/t8_netcdf_status.c )
 add_t8_example( NAME t8_write_forest_netcdf             SOURCES IO/forest/netcdf/t8_write_forest_netcdf.cxx )
+add_t8_example( NAME t8_gmsh_to_vtk                     SOURCES IO/forest/gmsh/t8_gmsh_to_vtk.cxx )
 
 add_t8_example( NAME t8_example_spheres                 SOURCES remove/t8_example_spheres.cxx )
 add_t8_example( NAME t8_example_gauss_blob              SOURCES remove/t8_example_gauss_blob.cxx )
