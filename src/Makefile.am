@@ -100,6 +100,7 @@ libt8_internal_headers = \
   src/t8_vtk/t8_vtk_parallel.hxx \
   src/t8_forest/t8_forest_ghost.h \
   src/t8_forest/t8_forest_balance.h src/t8_forest/t8_forest_types.h \
+  src/t8_forest/t8_forest_transition.h \
   src/t8_forest/t8_forest_private.h \
   src/t8_windows.h \
   src/t8_vtk/t8_vtk_writer_helper.hxx \
@@ -140,6 +141,7 @@ libt8_compiled_sources = \
   src/t8_forest/t8_forest_ghost.cxx src/t8_forest/t8_forest_iterate.cxx \
   src/t8_version.c \
   src/t8_vtk.c src/t8_forest/t8_forest_balance.cxx \
+  src/t8_forest/t8_forest_transition.cxx \
   src/t8_forest/t8_forest_netcdf.cxx \
   src/t8_element_shape.c \
   src/t8_netcdf.c \

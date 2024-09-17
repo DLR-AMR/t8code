@@ -34,6 +34,8 @@
  * and that it returns false for the parent and the first child.
  */
 
+/* TODO: Implement a test for subelements as soon as subelement schemes are available. */
+
 /* Maximum uniform level for forest. */
 #define T8_IS_LEAF_MAX_LVL 4
 

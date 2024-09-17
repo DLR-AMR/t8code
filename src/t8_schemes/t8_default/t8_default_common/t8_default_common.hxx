@@ -126,6 +126,97 @@ class t8_default_scheme_common_c: public t8_eclass_scheme_c {
   virtual void
   t8_element_anchor (const t8_element_t *elem, int anchor[3]) const
     = 0;
+  /*-----------------------------Functions for transition schemes---------------------------------*/
+  /** Return the subelement id of the neighbor subelement of elem at face elem_face
+  *   that is a sibling of the subelement neigh. 
+  *  \param [in] elem a given element (possibly subelement)
+  *  \param [in] neigh a random subelement (pseudoneighbor) in a transition cell from which we assume that it owns the real neighbor of elem
+  *  \param [in] elem_face a given face number of element elem
+  *  \return the subelement id of the real subelement neighbor of element elem, which is a sibling of neigh.
+  */
+  virtual int
+  t8_element_find_neighbor_in_transition_cell (const t8_element_t *elem, const t8_element_t *neigh, int elem_face);
+
+  /** Return the transition type of an element
+   *  \param [in] elem A valid element 
+   *  \return the transition type of elem (0 if elem is no subelement) 
+   */
+  virtual int
+  t8_element_get_transition_type (const t8_element *elem);
+  /** Check whether the neighbors of an element at a specific face are siblings
+   *  \param [in] elem A valid element 
+   *  \param [in] elem_face A valid face 
+   *  \return true if the neighbor of elem at face elem_face is a sibling.
+   */
+  virtual int
+  t8_element_neighbor_is_sibling (const t8_element *elem, const int elem_face) const;
+
+  /** Check whether the neighbors of an element at a specific face are siblings
+   *  \param [in] elem A valid element 
+   *  \param [in] elem_face A valid face 
+   *  \return return the number of sibling neighbors at a given face.
+   */
+  virtual int
+  t8_element_get_num_sibling_neighbors_at_face (const t8_element *elem, const int elem_face) const;
+  /** Construct all sibling neighbors of elem at face in hex scheme. */
+  virtual void
+
+  t8_element_get_sibling_neighbor_in_transition_cell_hex (const t8_element_t *elem, const int face,
+                                                          const int num_neighbors, t8_element_t *neighbor_at_face[],
+                                                          int *neigh_face);
+
+  /** Construct all sibling neighbors of elem at face in quad scheme */
+  virtual void
+
+  t8_element_get_sibling_neighbor_in_transition_cell (const t8_element_t *elem, const int face, const int num_neighbors,
+                                                      t8_element_t *neighbor_at_face[], int *neigh_face[]);
+
+  /** Return 1 if the eclass scheme has an implementation for subelements, which is conformal. */
+  virtual int
+  t8_element_transition_scheme_is_conformal (void);
+
+  /** Return zero refine value for schemes that do not have a transition implementation.
+   *  \param [in] elem A valid element 
+   *  \return Integer, used as the refine value during transition adaptation.
+   */
+  virtual int
+  t8_element_get_transition_refine_identifier (void) const;
+
+  /** Check whether a given element is a subelement
+   *  \param [in] elem A valid element 
+   *  \return true if elem is a subelement 
+   */
+  virtual int
+  t8_element_is_subelement (const t8_element *elem) const;
+
+  /** Return the number of subelements in a transition cell of type transition_type
+   *  \param [in] transition_type The subelement type as an integer
+   *  \return the number of subelements, this transition cell consists of
+   */
+  virtual int
+  t8_element_get_number_of_subelements (int transition_type) const;
+
+  /** Return the subelement id of a given element. 
+   *  \param [in] elem A valid element 
+   *  \return the subelement id of elem (0 if elem is no subelement)
+   */
+  virtual int
+  t8_element_get_subelement_id (const t8_element *elem) const;
+
+  /** This function refines a parent element into subelements.
+   *  Depending on the subelement type, the number of subelements 
+   *  to fill the parent element, can differ.
+   *  \param [in] elem A valid element
+   *  \param [in] type The subelement type
+   *  \param [out] subelements An array of all subelements of the parent quad element elem
+   */
+  virtual void
+  t8_element_to_transition_cell (const t8_element_t *elem, int type, t8_element_t *c[]);
+
+  /** Return 1 if the eclass scheme has an implementation for subelements. Return 0 otherwise. */
+  virtual int
+  t8_element_scheme_supports_transitioning (void);
+
 #if T8_ENABLE_DEBUG
   virtual void
   t8_element_debug_print (const t8_element_t *elem) const;
