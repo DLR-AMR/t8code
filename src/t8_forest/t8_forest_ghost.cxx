@@ -1938,9 +1938,9 @@ t8_forest_ghost_destroy (t8_forest_ghost_t *pghost)
 
 /**
  * Implementation of the ghost-interface
- * Wrapper for the abstracte base classe
+ * Wrapper for the abstracte base class
  * Implementation of the comunication steps
- * and implementation of the dreived classe search
+ * and implementation of the dreived class search
 */
 
 t8_ghost_type_t 
