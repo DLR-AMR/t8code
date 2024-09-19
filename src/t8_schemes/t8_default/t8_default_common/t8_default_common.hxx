@@ -41,20 +41,20 @@ class t8_default_scheme_common_c: public t8_eclass_scheme_c {
   t8_element_deinit (int length, t8_element_t *elem) const override;
 
   /** Compute the number of corners of a given element. */
-  virtual int
-  t8_element_num_corners (const t8_element_t *elem) const;
+  int
+  t8_element_num_corners (const t8_element_t *elem) const override;
 
   /** Allocate space for a bunch of elements. */
-  virtual void
-  t8_element_new (int length, t8_element_t **elem) const;
+  void
+  t8_element_new (int length, t8_element_t **elem) const override;
 
   /** Deallocate space for a bunch of elements. */
-  virtual void
-  t8_element_destroy (int length, t8_element_t **elem) const;
+  void
+  t8_element_destroy (int length, t8_element_t **elem) const override;
 
   /** Return the shape of an element */
-  virtual t8_element_shape_t
-  t8_element_shape (const t8_element_t *elem) const;
+  t8_element_shape_t
+  t8_element_shape (const t8_element_t *elem) const override;
 
   /** Count how many leaf descendants of a given uniform level an element would produce.
    * \param [in] t     The element to be checked.
@@ -64,8 +64,8 @@ class t8_default_scheme_common_c: public t8_eclass_scheme_c {
    * Each default element (except pyramids) refines into 2^{dim * (level - level(t))}
    * children.
    */
-  virtual t8_gloidx_t
-  t8_element_count_leaves (const t8_element_t *t, int level) const;
+  t8_gloidx_t
+  t8_element_count_leaves (const t8_element_t *t, int level) const override;
 
   /** Compute the number of siblings of an element. That is the number of 
    * Children of its parent.
@@ -73,16 +73,16 @@ class t8_default_scheme_common_c: public t8_eclass_scheme_c {
    * \return          The number of siblings of \a element.
    * Note that this number is >= 1, since we count the element itself as a sibling.
    */
-  virtual int
-  t8_element_num_siblings (const t8_element_t *elem) const;
+  int
+  t8_element_num_siblings (const t8_element_t *elem) const override;
 
   /** Count how many leaf descendants of a given uniform level the root element will produce.
    * \param [in] level A refinement level.
    * \return The value of \ref t8_element_count_leaves if the input element
    *      is the root (level 0) element.
    */
-  virtual t8_gloidx_t
-  t8_element_count_leaves_from_root (int level) const;
+  t8_gloidx_t
+  t8_element_count_leaves_from_root (int level) const override;
 
   /** Compute the integer coordinates of a given element vertex.
    * The default scheme implements the Morton type SFCs. In these SFCs the
@@ -113,9 +113,9 @@ class t8_default_scheme_common_c: public t8_eclass_scheme_c {
    * \param [out] out_coords  The coordinates of the points in the
    *                          reference space of the tree.
    */
-  virtual void
+  void
   t8_element_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
-                               const size_t padding, double *out_coords) const
+                               const size_t padding, double *out_coords) const override
     = 0;
 
   /** Get the integer coordinates of the anchor node of an element.
