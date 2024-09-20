@@ -391,7 +391,8 @@ t8_cmesh_partition_sendrange (const t8_cmesh_t cmesh, const t8_cmesh_t cmesh_fro
     ret--;
   }
 
-  t8_debugf ("%s_first = %i, %s_last = %i, last_tree = %li\n", "send", *send_first, "send", *send_last, static_cast<long>(ret));
+  t8_debugf ("%s_first = %i, %s_last = %i, last_tree = %li\n", "send", *send_first, "send", *send_last,
+             static_cast<long> (ret));
 
   T8_ASSERT (*send_first >= 0);
   //TODO:reactivate  T8_ASSERT (*send_last >= 0);
@@ -1412,7 +1413,7 @@ t8_cmesh_partition_debug_listprocs (const t8_cmesh_t cmesh, const t8_cmesh_t cme
     }
   }
   t8_debugf ("I send to: %s\n", out);
-  std::strcpy(out, " ");
+  std::strcpy (out, " ");
   if (cmesh_from->set_partition) {
     for (p = 0; p < mpisize; p++) {
       if (t8_offset_sendsto (p, mpirank, from, to)) {
