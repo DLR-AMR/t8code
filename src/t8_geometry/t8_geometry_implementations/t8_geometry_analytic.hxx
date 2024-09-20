@@ -46,10 +46,13 @@ struct t8_geometry_analytic: public t8_geometry
    * \param [in] analytical The analytical function to use for this geometry.
    * \param [in] jacobian   The jacobian of \a analytical.
    * \param [in] load_tree_data The function that is used to load a tree's data.
+   * \param [in] tree_negative_volume_in The function that is used to compute if a trees volume is negative.
+   * \param [in] tree_compatible_in The function that is used to check if a tree is compatible with the geometry.
    */
   t8_geometry_analytic (int dim, std::string name, t8_geom_analytic_fn analytical,
                         t8_geom_analytic_jacobian_fn jacobian, t8_geom_load_tree_data_fn load_tree_data,
-                        t8_geom_tree_negative_volume_fn tree_negative_volume_in, const void *user_data);
+                        t8_geom_tree_negative_volume_fn tree_negative_volume_in,
+                        t8_geom_tree_compatible_fn tree_compatible_in, const void *user_data);
 
   /**
    * Constructor of the analytic geometry for testing purposes.
@@ -128,6 +131,16 @@ struct t8_geometry_analytic: public t8_geometry
   bool
   t8_geom_tree_negative_volume () const override;
 
+  /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * If the geometry has limitations these can be checked here.
+   * This includes for example if only specific tree types or dimensions are supported.
+   * If all trees are supported, this function should return true.
+   * \return                True if the geometry is compatible with the tree.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const;
+
   /** Update a possible internal data buffer for per tree data.
    * This function is called before the first coordinates in a new tree are
    * evaluated. You can use it for example to load the vertex coordinates of the 
@@ -153,11 +166,13 @@ struct t8_geometry_analytic: public t8_geometry
 
   t8_geom_tree_negative_volume_fn tree_negative_volume; /**< The function to check for negative volumes. */
 
+  t8_geom_tree_compatible_fn tree_compatible; /**< The function to check if a tree is compatible. */
+
   const void *tree_data; /** Tree data pointer that can be set in \a load_tree_data and 
-                                           is passed onto \a analytical_function and \a jacobian. */
+                             is passed onto \a analytical_function and \a jacobian. */
 
   const void *user_data; /** Additional user data pointer that can be set in constructor
-                                         * and modified via \ref t8_geom_analytic_get_user_data. */
+                             and modified via \ref t8_geom_analytic_get_user_data. */
 };
 
 #endif /* !T8_GEOMETRY_ANALYTICAL_HXX */
