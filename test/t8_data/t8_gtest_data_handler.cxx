@@ -75,7 +75,7 @@ TYPED_TEST_P (data_handler_test, pack_unpack_vector_of_data)
   /* Create send buffer and pack data into it. */
   int pos = 0;
   const int num_bytes = this->data_handler->buffer_size (this->comm);
-  void *buffer = malloc (num_bytes);
+  void *buffer = malloc(num_bytes);
   this->data_handler->pack_vector_prefix (buffer, num_bytes, pos, this->comm);
 
   int outcount = 0;
@@ -90,7 +90,7 @@ TYPED_TEST_P (data_handler_test, pack_unpack_vector_of_data)
     EXPECT_EQ (this->recv_data[idata].check, this->creator->large_data[idata].check);
   }
 
-  free (buffer);
+  free(buffer);
 }
 
 /**
@@ -191,10 +191,6 @@ TEST (data_handler_test, multiple_handler)
 #else
   EXPECT_EQ (mpiret, sc_MPI_ERR_OTHER);
 #endif
-
-  delete (int_handler);
-  delete (double_handler);
-  /* Pack and send the data. */
 }
 
 TEST (data_handler_test, pseudo_tree_test)
@@ -224,6 +220,7 @@ TEST (data_handler_test, pseudo_tree_test)
     EXPECT_EQ (copied_data[idata].check, int_data[idata].check);
   }
 
+  
   pseudo_tree tree_equal = tree_copy;
 
   EXPECT_EQ (tree.topo_data.size (), tree_equal.topo_data.size ());

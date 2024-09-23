@@ -111,6 +111,25 @@ class t8_data_handler: public t8_abstract_data_handler {
   {
   }
 
+  t8_data_handler( const t8_data_handler &other) : single_handler(other.single_handler){
+    m_data.resize(other.m_data.size());
+    std::copy(other.m_data.begin(), other.m_data.end(), m_data.begin());
+  }
+
+  t8_data_handler& operator= (const t8_data_handler &other){
+    if(this != &other){
+      single_handler = other.single_handler;
+
+      for(T *item : m_data){
+        delete item;
+      }
+      m_data.clear();
+      m_data.resize(other.m_data.size());
+      std::copy(other.m_data.begin(), other.m_data.end(), m_data);
+    }
+    return *this;
+  }
+
   t8_data_handler (std::vector<T> &data)
   {
     m_data.resize (data.size ());
@@ -155,7 +174,6 @@ class t8_data_handler: public t8_abstract_data_handler {
     SC_CHECK_MPI (mpiret);
     T8_ASSERT (outcount >= 0);
 
-    m_data.clear ();
     m_data.resize (outcount);
 
     for (T &item : m_data) {
@@ -175,6 +193,7 @@ class t8_data_handler: public t8_abstract_data_handler {
     const int mpiret = sc_MPI_Send (buffer, num_bytes, sc_MPI_PACKED, dest, tag, comm);
 
     free (buffer);
+    m_data.resize(0);
     return mpiret;
 #else
     t8_infof ("send only available when configured with --enable-mpi\n");
@@ -211,6 +230,10 @@ class t8_data_handler: public t8_abstract_data_handler {
   type ()
   {
     return single_handler.type ();
+  }
+
+  ~t8_data_handler(){
+    m_data.clear();
   }
 
  private:

@@ -31,11 +31,32 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 class pseudo_tree {
  public:
-  ~pseudo_tree ()
-  {
-    for (auto &handler : tree_data) {
-      delete (handler);
+  pseudo_tree(){}
+
+  pseudo_tree(const pseudo_tree &other) : topo_data(other.topo_data){
+    tree_data.resize(other.tree_data.size());
+    std::copy(other.tree_data.begin(), other.tree_data.end(), tree_data.begin());
+  }
+
+  pseudo_tree& operator= (const pseudo_tree &other){
+    if( this != &other){
+      for (t8_abstract_data_handler* handler : tree_data) {
+        delete handler;
+      }
+      tree_data.clear();
+      topo_data = other.topo_data;
+
+      if(tree_data.size() != other.tree_data.size()){
+        tree_data.resize(other.tree_data.size());
+
+        std::copy(other.tree_data.begin(), other.tree_data.end(), tree_data.begin());
+      }
     }
+    return *this;
+  }
+
+  ~pseudo_tree(){
+    tree_data.clear();
   }
 
   std::vector<int> topo_data;
@@ -106,28 +127,27 @@ class t8_single_data_handler<pseudo_tree> {
     mpiret = sc_MPI_Unpack (buffer, num_bytes, &pos, &num_handler, 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
 
-    for (auto &ihandler : data.tree_data) {
-      delete (ihandler);
-      ihandler = nullptr;
-    }
+
 
     for (int ihandler = 0; ihandler < num_handler; ihandler++) {
-      t8_abstract_data_handler *new_handler = NULL;
       int type;
+
+      delete data.tree_data[ihandler];
       mpiret = sc_MPI_Unpack (buffer, num_bytes, &pos, &type, 1, sc_MPI_INT, comm);
       int outcount = 0;
       if (type == 0) {
-        new_handler = new t8_data_handler<enlarged_data<int>> ();
+        t8_data_handler<enlarged_data<int>> *new_handler = new t8_data_handler<enlarged_data<int>> ();
+        new_handler->unpack_vector_prefix (buffer, num_bytes, pos, outcount, comm);
+        data.tree_data.push_back(new_handler);
       }
       else if (type == 1) {
-        new_handler = new t8_data_handler<enlarged_data<double>> ();
+        t8_data_handler<enlarged_data<double>> *new_handler = new t8_data_handler<enlarged_data<double>> ();
+        new_handler->unpack_vector_prefix (buffer, num_bytes, pos, outcount, comm);
+        data.tree_data.push_back(new_handler);
       }
       else {
         SC_ABORT_NOT_REACHED ();
       }
-      /* Unpack tree data*/
-      new_handler->unpack_vector_prefix (buffer, num_bytes, pos, outcount, comm);
-      data.tree_data.push_back (new_handler);
     }
   }
 
