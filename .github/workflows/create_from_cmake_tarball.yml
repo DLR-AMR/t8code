@@ -49,7 +49,7 @@ jobs:
     container: dlramr/t8code-ubuntu:t8-dependencies
     timeout-minutes: 90
     steps:
-      - name: triggering workflow:
+      - name: triggering workflow
         run: echo ${{github.event.workflow_run.name}} && echo ${{github.even.workflow_run.id}}
       - name: install sudo
         run: apt update && apt install sudo
