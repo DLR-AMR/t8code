@@ -79,7 +79,10 @@ include test/Makefile.am
 include example/Makefile.am
 include tutorials/Makefile.am
 include benchmarks/Makefile.am
-include api/Makefile.am
+
+if T8_ENABLE_FORTRAN
+  include api/Makefile.am
+endif
 
 # revision control and ChangeLog
 ChangeLog:
