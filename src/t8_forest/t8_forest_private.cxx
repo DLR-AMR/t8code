@@ -56,7 +56,6 @@ t8_forest_get_tree_element_array_mutable (const t8_forest_t forest, t8_locidx_t 
   return (t8_element_array_t*) t8_forest_get_tree_element_array (forest, ltreeid);
 }
 
-/* TODO: should return t8_locidx_t */
 t8_locidx_t
 t8_forest_bin_search_lower (const t8_element_array_t* elements, const t8_linearidx_t element_id, const int maxlevel)
 {
