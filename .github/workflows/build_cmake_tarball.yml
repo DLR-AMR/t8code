@@ -77,13 +77,13 @@ jobs:
         run: pandoc --version
       # Build the tarball
       - name: Make tarball
-        run: cd build && ninja package_source 
+        run: cd build && ninja package_source && mv package/*.tar.gz tarballs
       # Upload the tarball
       - name: upload tarball
         uses: actions/upload-artifact@v4
         with:
           name: tarballs
-          path: build/package/tarballs
+          path: build/tarballs
       
   on-failure:
     runs-on: ubuntu-latest
