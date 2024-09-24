@@ -31,7 +31,7 @@ endif
 
 # If the install target is made, we will copy the module files into the include directory (after the installation of the header files)
 install-data-hook:
-	@cp -fp $(t8_current_moddir)*.$(FC_MODEXT) $(includedir)
+	@cp -fp $(t8_current_moddir)*.$(FC_MODEXT) $(includedir)/t8_fortran_interface
 
 # Define dependencies of the Fortran modules (in case they depend on other modules)
 # This needs to be done in order to ensure the correct build process in any case
