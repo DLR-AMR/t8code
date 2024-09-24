@@ -37,14 +37,14 @@ on:
     branches:
       - main
       - develop
-  workflow_dispatch: 
   workflow_run:
     workflows: [Build tarball using CMake]
     types: [completed]
+  workflow_dispatch: 
 
 jobs:
   on-success:
-    if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-20.04
     container: dlramr/t8code-ubuntu:t8-dependencies
     timeout-minutes: 90
