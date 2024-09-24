@@ -50,41 +50,41 @@ jobs:
       container: dlramr/t8code-ubuntu:t8-dependencies
       timeout-minutes: 90
       steps:
-        uses: actions/checkout@v4
-        with:
-          fetch-tags: true # required to get version tags
-          fetch-depth: 0    # required to get all history, especially the version tags    
-      - name: install sudo
-        run: apt update && apt install sudo
+        - uses: actions/checkout@v4
+          with:
+            fetch-tags: true # required to get version tags
+            fetch-depth: 0    # required to get all history, especially the version tags    
+        - name: install sudo
+          run: apt update && apt install sudo
       # On the github Ubuntu 20.04, sudo is not available by default
       # we need it, however, to update/upgrade our packages.    
-      - name: Update packages
-        run: sudo apt-get update && sudo apt-get upgrade -y
-      # This step is necessary to get the newest package data
-      - name: disable ownership checks
-        run: git config --global --add safe.directory '*'
-      - name: init submodules
-        run: git submodule init
-      - name: update submodules
-        run: git submodule update
-      - name: build config variables
-        run: export CONFIG_OPTIONS="${LESS_TEST_OPTION} -GNinja -DT8CODE_USE_SYSTEM_SC=ON -DT8CODE_USE_SYSTEM_P4EST=ON -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSC_DIR=$SC_PATH/install/cmake -DP4EST_DIR=$P4EST_PATH/install/cmake"
-        && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
-      - name: cmake
-        run: mkdir build && cd build && cmake ../ $CONFIG_OPTIONS
-      - name: Install pandoc
-        uses: nikeee/setup-pandoc@v1
-      - name: Test pandoc
-        run: pandoc --version
-      # Build the tarball
-      - name: Make tarball
-        run: cd build && ninja package_source 
-      # Upload the tarball
-      - name: upload tarball
-        uses: actions/upload-artifact@v4
-        with:
-          name: tarballs
-          path: build/tarballs
+        - name: Update packages
+          run: sudo apt-get update && sudo apt-get upgrade -y
+          # This step is necessary to get the newest package data
+        - name: disable ownership checks
+          run: git config --global --add safe.directory '*'
+        - name: init submodules
+          run: git submodule init
+        - name: update submodules
+          run: git submodule update
+        - name: build config variables
+          run: export CONFIG_OPTIONS="${LESS_TEST_OPTION} -GNinja -DT8CODE_USE_SYSTEM_SC=ON -DT8CODE_USE_SYSTEM_P4EST=ON -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSC_DIR=$SC_PATH/install/cmake -DP4EST_DIR=$P4EST_PATH/install/cmake" 
+                && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
+        - name: cmake
+          run: mkdir build && cd build && cmake ../ $CONFIG_OPTIONS
+        - name: Install pandoc
+          uses: nikeee/setup-pandoc@v1
+        - name: Test pandoc
+          run: pandoc --version
+        # Build the tarball
+        - name: Make tarball
+          run: cd build && ninja package_source 
+        # Upload the tarball
+        - name: upload tarball
+          uses: actions/upload-artifact@v4
+          with:
+            name: tarballs
+            path: build/tarballs
 
     test_tarball:
       needs: build-tarball
@@ -109,7 +109,7 @@ jobs:
       - name: update Github_env
         run: export TAR_DIR="$RUNNER_TEMP/`basename tarballs/*.tar.gz .tar.gz`" &&
             echo TAR_DIR="$TAR_DIR" >>$GITHUB_ENV
-       - name: less-test option
+      - name: less-test option
         if: ${{ inputs.LESS_TESTS }}
         run: export LESS_TEST_OPTION="-DT8CODE_ENABLE_LESS_TESTS=ON"
             && echo LESS_TEST_OPTION="$LESS_TEST_OPTION" >> $GITHUB_ENV
