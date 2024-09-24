@@ -40,6 +40,7 @@ on:
   workflow_dispatch: 
   workflow_run:
     workflows: [t8code CMake testsuite]
+    types: [completed]
 
 jobs:
   on-success:

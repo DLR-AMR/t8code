@@ -40,6 +40,7 @@ on:
   workflow_dispatch: 
   workflow_run:
     workflows: [Build tarball using CMake]
+    types: [completed]
 
 jobs:
   on-success:
