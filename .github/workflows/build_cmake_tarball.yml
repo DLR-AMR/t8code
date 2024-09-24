@@ -77,7 +77,7 @@ jobs:
         run: pandoc --version
       # Build the tarball
       - name: Make tarball
-        run: cd build && ninja package_source && mv package/*.tar.gz tarballs
+        run: cd build && ninja package_source && mv package/*Source.tar.gz tarballs
       # Upload the tarball
       - name: upload tarball
         uses: actions/upload-artifact@v4
