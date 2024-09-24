@@ -2,6 +2,7 @@
 # Non-recursive Makefile.am in api
 # Included from toplevel directory
 
+if T8_ENABLE_FORTRAN
 fortraninterfaceincludedir = $(includedir)/t8_fortran_interface
 
 libt8_installed_headers_fortran_interface = \
@@ -27,3 +28,6 @@ src_libt8_la_FFLAGS = $(FFLAGS)
 
 # Include the Fortran specific variables and rules
 include t8_fortran_specific.mk
+
+# T8_ENABLE_FORTRAN
+endif
