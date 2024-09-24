@@ -57,7 +57,9 @@ set( CMAKE_CXX_EXTENSIONS OFF )
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 if( T8CODE_ENABLE_MPI )
-    find_package( MPI COMPONENTS C REQUIRED )
+
+    # find_package( MPI COMPONENTS Fortran REQUIRED )
+    find_package( MPI COMPONENTS C Fortran REQUIRED )
     if( NOT MPIEXEC_EXECUTABLE )
         message( FATAL_ERROR "MPIEXEC was not found" )
     endif()
@@ -139,11 +141,7 @@ if ( T8CODE_BUILD_DOCUMENTATION )
 endif()
 
 if( T8CODE_BUILD_FORTRAN_INTERFACE )
-    enable_language(Fortran)
-
-    # set(FVERSION "-std=f95")
-    # set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${FVERSION}")
-    
+    enable_language( Fortran )
+    # find_package( MPI COMPONENTS Fortran REQUIRED )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/api/t8_fortran_interface )
-    
-endif( T8CODE_BUILD_FORTRAN_INTERFACE )
+endif()

@@ -20,7 +20,16 @@ function( add_t8_test )
     set(TEST_BUILD_DIR "${CMAKE_BINARY_DIR}/${TEST_RELATIVE_DIR}")
 
     add_executable( ${ADD_T8_TEST_NAME} ${ADD_T8_TEST_SOURCES} )
-    target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 gtest pthread)
+
+    # Check if test is a Fortran file and if MPI is enabled.
+    string ( FIND ${ADD_T8_TEST_NAME} "fortran" is_fortran_file  )
+    if ( (${is_fortran_file} GREATER_EQUAL 0) AND T8CODE_ENABLE_MPI ) 
+      target_include_directories( ${ADD_T8_TEST_NAME} PRIVATE ${CMAKE_BINARY_DIR}/src )
+      target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 gtest pthread MPI::MPI_Fortran )
+    else()
+      # target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 MPI::MPI_Fortran )
+      target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 gtest pthread )
+    endif ()
 
     set_target_properties(${ADD_T8_TEST_NAME} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${TEST_BUILD_DIR}"
@@ -130,6 +139,10 @@ add_t8_test( NAME t8_gtest_child_parent_face_serial     SOURCES t8_gtest_main.cx
 add_t8_test( NAME t8_gtest_pack_unpack_serial           SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_pack_unpack.cxx )
 add_t8_test( NAME t8_gtest_root_serial                  SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_root.cxx )
 add_t8_test( NAME t8_gtest_scheme_consistency_serial    SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_scheme_consistency.cxx )
+
+if( T8CODE_BUILD_FORTRAN_INTERFACE AND T8CODE_ENABLE_MPI )
+  add_t8_test( NAME t8_test_fortran_mpi_interface_init    SOURCES api/t8_fortran_interface/t8_test_mpi_init.f90 )
+endif()
 
 copy_test_file( test_cube_unstructured_1.inp )
 copy_test_file( test_cube_unstructured_2.inp )
