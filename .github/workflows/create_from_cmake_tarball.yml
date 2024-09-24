@@ -59,6 +59,7 @@ jobs:
       - name: Download tarball
         uses: actions/download-artifact@v4
         with:
+            run-id: ${{ github.event.workflow_run.id }}
             name: tarballs
             path: tarballs
       - name: Extract tarball
