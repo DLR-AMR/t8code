@@ -105,7 +105,7 @@ target_sources( T8 PRIVATE
     t8_forest/t8_forest_adapt.cxx 
     t8_forest/t8_forest_partition.cxx 
     t8_forest/t8_forest.cxx 
-    t8_forest/t8_forest_private.c 
+    t8_forest/t8_forest_private.cxx
     t8_forest/t8_forest_vtk.cxx 
     t8_forest/t8_forest_ghost.cxx 
     t8_forest/t8_forest_iterate.cxx 
