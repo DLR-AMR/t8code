@@ -1,4 +1,4 @@
-module t8_fortran_interface
+module t8_fortran_interface_mod
 
       use, intrinsic :: ISO_C_BINDING
 
@@ -304,4 +304,4 @@ module t8_fortran_interface
             end subroutine t8_fortran_element_volume_f
       end Interface
 
-End module t8_fortran_interface
+End module t8_fortran_interface_mod
