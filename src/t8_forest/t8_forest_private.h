@@ -199,6 +199,7 @@ t8_forest_get_tree_element_array_mutable (const t8_forest_t forest, t8_locidx_t 
  * elements. If the element does not exist, return the largest index i
  * such that the element at position i has a smaller id than the given one.
  * If no such i exists, return -1.
+ * \note This search does not work for subelements.
  * \param [in]     elements    The array of elements.
  * \param [in]     element_id  The linear id of the element to search for.
  * \param [in]     maxlevel    The maximum level of the elements.
