@@ -48,10 +48,6 @@ jobs:
     container: dlramr/t8code-ubuntu:t8-dependencies
     timeout-minutes: 90
     steps:
-    runs-on: ubuntu-20.04
-      container: dlramr/t8code-ubuntu:t8-dependencies
-      timeout-minutes: 90
-      steps:
       - name: install sudo
         run: apt update && apt install sudo
       # On the github Ubuntu 20.04, sudo is not available by default
