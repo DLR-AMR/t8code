@@ -39,7 +39,7 @@ on:
       - develop
   workflow_dispatch: 
   workflow_run:
-    workflows: [Build tarball with CMake]
+    workflows: [Build tarball using CMake]
 
 jobs:
   on-success:
