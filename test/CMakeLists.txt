@@ -27,7 +27,6 @@ function( add_t8_test )
       target_include_directories( ${ADD_T8_TEST_NAME} PRIVATE ${CMAKE_BINARY_DIR}/src )
       target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 gtest pthread MPI::MPI_Fortran )
     else()
-      # target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 MPI::MPI_Fortran )
       target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 gtest pthread )
     endif ()
 
