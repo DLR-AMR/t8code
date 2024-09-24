@@ -28,19 +28,14 @@ env:
   MAKEFLAGS: "-j2 V=0"
 
 on:
-  push:
-    branches:
-      - main
-      - develop
-      - CI-*tarball* # for testing this script, all feature branches with "tarball" in their name
-  pull_request:
-    branches:
-      - main
-      - develop
   workflow_dispatch: 
   workflow_run:
     workflows: [t8code CMake testsuite]
     types: [completed]
+    branches:
+      - main
+      - develop
+      - CI-*tarball* # for testing this script, all feature branches with "tarball" in their name
 
 jobs:
   on-success:
