@@ -73,7 +73,7 @@ t8_forest_ghost_tree_num_elements (t8_forest_t forest, t8_locidx_t lghost_tree);
  *
  * \param [in] forest The forest object.
  * \param [in] lghost_tree The local index of the ghost tree.
- * \param [in] linear_id The local index of the element.
+ * \param [in] linear_id The linear id of the element.
  * \param [in] element_level The level of the element.
  * \param [out] loc_ghost_id The local id of the ghost. -1 if no ghost was found.
  * \return The ghost element. nullptr if no ghost was found.
