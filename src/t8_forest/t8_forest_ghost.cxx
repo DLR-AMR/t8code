@@ -317,7 +317,7 @@ t8_ghost_get_ghost_in_tree (t8_forest_t forest, t8_locidx_t lghost_tree, t8_line
   *loc_ghost_id = t8_forest_bin_search_lower (ghost_elements, linear_id, element_level);
   if (*loc_ghost_id >= 0) {
     /* The element was found */
-    return (const t8_element_t *) t8_sc_array_index_locidx (&(ghost_elements->array), *loc_ghost_id);
+    return t8_element_array_index_locidx (ghost_elements, *loc_ghost_id);
   }
   return nullptr;
 }
