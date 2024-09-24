@@ -1,0 +1,34 @@
+set(CPACK_PACKAGE_VENDOR "DLR-SC AMR")
+set(CPACK_PACKAGE_NAME "T8CODE")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Parallel algorithms and data structures for tree-based AMR with arbitrary element shapes.")
+set(CPACK_PACKAGE_VERSION_MAJOR ${T8CODE_VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${T8CODE_VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${T8CODE_VERSION_PATCH})
+set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING")
+set(CPACK_PACKAGE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/package)
+set( CPACK_PACKAGE_ICON  ${CMAKE_CURRENT_LIST_DIR}/t8code_logo.png)
+
+
+set(CPACK_SOURCE_GENERATOR "TGZ;ZIP")
+set(CPACK_SOURCE_IGNORE_FILES .git/ .github/ .vscode/ _CPack_Packages/
+${CMAKE_BINARY_DIR}/ ${PROJECT_BINARY_DIR}/
+Makefile.in
+aclocal.m4
+autom4te.cache/
+build/
+bin/
+configure
+DartConfiguration.tcl
+CMakeCache.txt
+build/
+build-aux/
+configure
+config.log
+)
+
+set(CPACK_PACKAGE_NAME "T8CODE")
+set(CPACK_VERBATIM_VARIABLES TRUE)
+
+
+include(CPack)

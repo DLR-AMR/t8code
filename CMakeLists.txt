@@ -136,3 +136,5 @@ endif()
 if ( T8CODE_BUILD_DOCUMENTATION )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/doc )
 endif()
+
+include (CPackConfig.cmake)
