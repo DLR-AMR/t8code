@@ -30,7 +30,7 @@ env:
 on:
   workflow_dispatch: 
   workflow_run:
-    workflows: [t8code CMake testsuite]
+    workflows: ["t8code CMake testsuite"]
     types: [completed]
     branches:
       - main

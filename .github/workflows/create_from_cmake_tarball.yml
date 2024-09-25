@@ -30,7 +30,7 @@ env:
 on:
   push:
   workflow_run:
-    workflows: [Build tarball using CMake]
+    workflows: ["Build tarball using CMake"]
     types: [completed]
     branches:
       - main
