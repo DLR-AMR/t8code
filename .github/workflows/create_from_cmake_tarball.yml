@@ -30,12 +30,12 @@ env:
 on:
   push:
   workflow_run:
-    workflows: [build_cmake_tarball.yml]
+    workflows: ["Build tarball using CMake"]
     types: [completed]
     branches:
       - main
       - develop
-      - CI-*tarball* # for testing this script, all feature branches with "tarball" in their name
+      - *Cpack* # for testing this script, all feature branches with "tarball" in their name
   workflow_dispatch: 
 
 jobs:
