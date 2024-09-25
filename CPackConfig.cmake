@@ -10,7 +10,7 @@ set(CPACK_PACKAGE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/package)
 set(CPACK_PACKAGE_ICON  ${CMAKE_CURRENT_SOURCE_DIR}/t8code_logo.png)
 
 # Define a variable for the version file
-set(VERSION_FILE "${CMAKE_CURRENT_LIST_DIR}/version.txt")
+set(VERSION_FILE "${CMAKE_CURRENT_BINARY_DIR}/version.txt")
 
 
 # Custom command to generate the version file
