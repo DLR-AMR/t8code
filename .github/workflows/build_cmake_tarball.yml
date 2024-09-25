@@ -35,6 +35,7 @@ on:
       - main
       - develop
       - Cpack 
+      
 jobs:
   on-success:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
