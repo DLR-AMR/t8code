@@ -28,10 +28,11 @@ env:
   MAKEFLAGS: "-j2 V=0"
 
 on:
-  push:
   workflow_run:
-    workflows: ["Build tarball using CMake"]
-    types: [completed]
+    workflows: 
+      - Build tarball using CMake
+    types: 
+      - completed
     branches:
       - main
       - develop

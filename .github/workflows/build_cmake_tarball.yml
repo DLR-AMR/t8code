@@ -29,13 +29,15 @@ env:
 
 on:
   workflow_run:
-    workflows: ["t8code CMake testsuite"]
-    types: [completed]
+    workflows: 
+      - t8code CMake testsuite
+    types: 
+      - completed
     branches:
       - main
       - develop
       - Cpack 
-      
+
 jobs:
   on-success:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
