@@ -35,8 +35,7 @@ on:
     branches:
       - main
       - develop
-      - Cpack # for testing this script, all feature branches with "tarball" in their name
-  workflow_dispatch: 
+      - Cpack 
 
 jobs:
   on-success:
