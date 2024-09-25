@@ -3,6 +3,7 @@
 #include <array>
 #include <variant>
 #include <vector>
+#include <example/multilevel/t8_multilevel_concept_crtp.hxx>
 
 typedef enum { triangle_eclass, quad_eclass, eclass_count } eclass;
 
@@ -11,7 +12,7 @@ typedef struct element element_t;
 
 // Using CRTP to avoid virtual function calls
 template <class Derived_scheme_t>
-class Scheme_base {
+class Scheme_base: public crtp<Derived_scheme_t> {
  public:
   ~Scheme_base ()
   {
@@ -21,21 +22,21 @@ class Scheme_base {
   get_level (element_t *elem)
   {
     // cast derived class into base class to avoid virtual functions
-    return static_cast<Derived_scheme_t const &> (*this).get_level (elem);
+    return this->underlying ().get_level (elem);
   };
 
   inline int
   get_num_children (element_t *elem)
   {
     // cast derived class into base class to avoid virtual functions
-    return static_cast<Derived_scheme_t const &> (*this).get_num_children (elem);
+    return this->underlying ().get_num_children (elem);
   };
 
   inline int
   get_num_vertices ()
   {
     // cast derived class into base class to avoid virtual functions
-    return static_cast<Derived_scheme_t const &> (*this).get_num_vertices ();
+    return this->underlying ().get_num_vertices ();
   };
 
  private:
