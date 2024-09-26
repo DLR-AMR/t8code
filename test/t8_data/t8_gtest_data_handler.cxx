@@ -44,20 +44,19 @@ class data_handler_test: public testing::Test {
     SC_CHECK_MPI (mpiret);
     mpiret = sc_MPI_Comm_size (comm, &mpisize);
     SC_CHECK_MPI (mpiret);
-    creator = new data_creator<enlarged_data<T>> ();
-    creator->create (max_num_data);
-    data_handler = new t8_data_handler<enlarged_data<T>> (creator->large_data);
+    creator = data_creator<enlarged_data<T>> ();
+    creator.create (max_num_data);
+    data_handler = new t8_data_handler<enlarged_data<T>> (creator.large_data);
   }
 
   void
   TearDown () override
   {
-    delete (data_handler);
-    delete (creator);
+    delete data_handler;
   }
 
   t8_data_handler<enlarged_data<T>> *data_handler;
-  data_creator<enlarged_data<T>> *creator;
+  data_creator<enlarged_data<T>> creator;
   std::vector<enlarged_data<T>> recv_data;
   int mpirank;
   int mpisize;
@@ -75,7 +74,7 @@ TYPED_TEST_P (data_handler_test, pack_unpack_vector_of_data)
   /* Create send buffer and pack data into it. */
   int pos = 0;
   const int num_bytes = this->data_handler->buffer_size (this->comm);
-  void *buffer = malloc(num_bytes);
+  void *buffer = malloc (num_bytes);
   this->data_handler->pack_vector_prefix (buffer, num_bytes, pos, this->comm);
 
   int outcount = 0;
@@ -83,14 +82,14 @@ TYPED_TEST_P (data_handler_test, pack_unpack_vector_of_data)
   this->data_handler->unpack_vector_prefix (buffer, num_bytes, pos, outcount, this->comm);
   EXPECT_EQ (outcount, this->max_num_data);
 
-  this->recv_data = this->data_handler->get_data ();
+  this->data_handler->get_data (this->recv_data);
 
   for (int idata = 0; idata < this->max_num_data; idata++) {
-    EXPECT_EQ (this->recv_data[idata].data, this->creator->large_data[idata].data);
-    EXPECT_EQ (this->recv_data[idata].check, this->creator->large_data[idata].check);
+    EXPECT_EQ (this->recv_data[idata].data, this->creator.large_data[idata].data);
+    EXPECT_EQ (this->recv_data[idata].check, this->creator.large_data[idata].check);
   }
 
-  free(buffer);
+  free (buffer);
 }
 
 /**
@@ -117,13 +116,13 @@ TYPED_TEST_P (data_handler_test, send_recv)
   int outcount;
   mpiret = this->data_handler->recv (recv_from, 0, this->comm, &status, outcount);
 
-  this->recv_data = this->data_handler->get_data ();
+  this->data_handler->get_data (this->recv_data);
 #if T8_ENABLE_MPI
   SC_CHECK_MPI (mpiret);
   EXPECT_EQ (outcount, this->max_num_data);
   for (int idata = 0; idata < this->max_num_data; idata++) {
-    EXPECT_EQ (this->recv_data[idata].data, this->creator->large_data[idata].data);
-    EXPECT_EQ (this->recv_data[idata].check, this->creator->large_data[idata].check);
+    EXPECT_EQ (this->recv_data[idata].data, this->creator.large_data[idata].data);
+    EXPECT_EQ (this->recv_data[idata].check, this->creator.large_data[idata].check);
   }
 #else
   EXPECT_EQ (mpiret, sc_MPI_ERR_OTHER);
@@ -151,11 +150,12 @@ TEST (data_handler_test, multiple_handler)
     double_data[idata].data = (double) idata + fraction;
     double_data[idata].check = mpirank;
   }
+  t8_data_handler<enlarged_data<int>> int_handler (int_data);
+  t8_data_handler<enlarged_data<double>> double_handler (double_data);
+  std::vector<t8_abstract_data_handler *> handler;
 
-  t8_data_handler<enlarged_data<int>> *int_handler = new t8_data_handler<enlarged_data<int>> (int_data);
-  t8_data_handler<enlarged_data<double>> *double_handler = new t8_data_handler<enlarged_data<double>> (double_data);
-
-  std::vector<t8_abstract_data_handler *> handler = { int_handler, double_handler };
+  handler.push_back (&int_handler);
+  handler.push_back (&double_handler);
 
   /* Compute the rank this rank sends to. We send in a round-robin fashion */
   int send_to = (mpirank + 1) % mpisize;
@@ -177,8 +177,10 @@ TEST (data_handler_test, multiple_handler)
 #endif
   }
 
-  std::vector<enlarged_data<int>> recv_ints = int_handler->get_data ();
-  std::vector<enlarged_data<double>> recv_doubles = double_handler->get_data ();
+  std::vector<enlarged_data<int>> recv_ints;
+  std::vector<enlarged_data<double>> recv_doubles;
+  ((t8_data_handler<enlarged_data<int>> *) (handler[0]))->get_data (recv_ints);
+  ((t8_data_handler<enlarged_data<double>> *) (handler[1]))->get_data (recv_doubles);
 
 #if T8_ENABLE_MPI
   SC_CHECK_MPI (mpiret);
@@ -212,22 +214,21 @@ TEST (data_handler_test, pseudo_tree_test)
   EXPECT_EQ (tree.topo_data.size (), tree_copy.topo_data.size ());
   EXPECT_EQ (tree.tree_data.size (), tree_copy.tree_data.size ());
 
-  std::vector<enlarged_data<int>> copied_data
-    = ((t8_data_handler<enlarged_data<int>> *) (tree_copy.tree_data[0]))->get_data ();
+  std::vector<enlarged_data<int>> copied_data;
+  ((t8_data_handler<enlarged_data<int>> *) (tree_copy.tree_data[0]))->get_data (copied_data);
 
   for (int idata = 0; idata < num_data; idata++) {
     EXPECT_EQ (copied_data[idata].data, int_data[idata].data);
     EXPECT_EQ (copied_data[idata].check, int_data[idata].check);
   }
 
-  
   pseudo_tree tree_equal = tree_copy;
 
   EXPECT_EQ (tree.topo_data.size (), tree_equal.topo_data.size ());
   EXPECT_EQ (tree.tree_data.size (), tree_equal.tree_data.size ());
 
-  std::vector<enlarged_data<int>> equal_data
-    = ((t8_data_handler<enlarged_data<int>> *) (tree_equal.tree_data[0]))->get_data ();
+  std::vector<enlarged_data<int>> equal_data;
+  ((t8_data_handler<enlarged_data<int>> *) (tree_equal.tree_data[0]))->get_data (equal_data);
 
   for (int idata = 0; idata < num_data; idata++) {
     EXPECT_EQ (equal_data[idata].data, int_data[idata].data);
@@ -293,7 +294,8 @@ TEST (data_handler_test, tree_test)
   int outcount;
   mpiret = tree_handler.recv (recv_from, 0, comm, &status, outcount);
 
-  std::vector<pseudo_tree> recv_trees = tree_handler.get_data ();
+  std::vector<pseudo_tree> recv_trees;
+  tree_handler.get_data (recv_trees);
 
   const int num_recv_trees = recv_trees.size ();
 
@@ -311,8 +313,8 @@ TEST (data_handler_test, tree_test)
     ASSERT_EQ (num_recv_tree_data, (recv_from + itree) % 2);
     for (int itree_data = 0; itree_data < num_recv_tree_data; itree_data++) {
       if (itree_data == 0) {
-        std::vector<enlarged_data<int>> recv_ints
-          = ((t8_data_handler<enlarged_data<int>> *) (recv_trees[itree].tree_data[itree_data]))->get_data ();
+        std::vector<enlarged_data<int>> recv_ints;
+        ((t8_data_handler<enlarged_data<int>> *) (recv_trees[itree].tree_data[itree_data]))->get_data (recv_ints);
         ASSERT_EQ ((const int) recv_ints.size (), num_data);
         for (int idata = 0; idata < num_data; idata++) {
           EXPECT_EQ (recv_ints[idata].data, idata);
@@ -320,8 +322,8 @@ TEST (data_handler_test, tree_test)
         }
       }
       else {
-        std::vector<enlarged_data<double>> recv_double
-          = ((t8_data_handler<enlarged_data<double>> *) (recv_trees[itree].tree_data[itree_data]))->get_data ();
+        std::vector<enlarged_data<double>> recv_double;
+        ((t8_data_handler<enlarged_data<double>> *) (recv_trees[itree].tree_data[itree_data]))->get_data (recv_double);
         ASSERT_EQ ((const int) recv_double.size (), num_data);
         for (int idata = 0; idata < num_data; idata++) {
           EXPECT_EQ (recv_double[idata].data, (double) idata + fraction);
