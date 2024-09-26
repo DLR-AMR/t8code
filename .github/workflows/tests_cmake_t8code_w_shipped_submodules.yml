@@ -1,4 +1,4 @@
-name: CMake tests t8code
+name: CMake tests t8code with shipped submodules
 
 
 #  This file is part of t8code.
@@ -50,28 +50,25 @@ jobs:
 #
 # Setup
 #
-    - name: Download artifacts
-      uses: actions/download-artifact@v4
-      with:
-        name: SC_P4EST_MPI_${{ inputs.MPI }}
-    - name: untar artifact
-      run: tar -xf artifact.tar && rm artifact.tar
+    - uses: actions/checkout@v4
+      with: 
+        fetch-depth: 0
     - name: Update packages
       run: apt-get update && apt-get upgrade -y
       # This seems to be necessary because of the docker container
     - name: disable ownership checks
       run: git config --global --add safe.directory '*'
+    - name: init submodules
+      run: git submodule init
+    - name: update submodules
+      run: git submodule update
     - name: Get input vars
       run: export MAKEFLAGS="${{ inputs.MAKEFLAGS }}"
         && export MPI="${{ inputs.MPI }}"
         && export BUILD_TYPE="${{ inputs.BUILD_TYPE }}"
-        && export SC_PATH=$PWD/sc/build/$BUILD_TYPE
-        && export P4EST_PATH=$PWD/p4est/build/$BUILD_TYPE
         && echo MAKEFLAGS="$MAKEFLAGS" >> $GITHUB_ENV
         && echo MPI="$MPI" >> $GITHUB_ENV
         && echo BUILD_TYPE="$BUILD_TYPE" >> $GITHUB_ENV
-        && echo SC_PATH="$SC_PATH" >> $GITHUB_ENV
-        && echo P4EST_PATH="$P4EST_PATH" >> $GITHUB_ENV
 #
 #  T8CODE
 #
@@ -81,7 +78,7 @@ jobs:
       run: export LESS_TEST_OPTION="-DT8CODE_ENABLE_LESS_TESTS=ON"
            && echo LESS_TEST_OPTION="$LESS_TEST_OPTION" >> $GITHUB_ENV
     - name: build config variables
-      run: export CONFIG_OPTIONS="${LESS_TEST_OPTION} -GNinja -DT8CODE_USE_SYSTEM_SC=ON -DT8CODE_USE_SYSTEM_P4EST=ON -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSC_DIR=$SC_PATH/install/cmake -DP4EST_DIR=$P4EST_PATH/install/cmake"
+      run: export CONFIG_OPTIONS="${LESS_TEST_OPTION} -GNinja -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE"
         && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
     # cmake and test
     - name: Printing MPI compiler info
@@ -96,7 +93,7 @@ jobs:
       if: failure()
       uses: actions/upload-artifact@v4
       with:
-        name: cmake_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
+        name: cmake_w_submodules_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
         path: build/CMakeFiles/CMakeOutput.log
     - name: ninja
       run: cd build && ninja $MAKEFLAGS
@@ -115,5 +112,5 @@ jobs:
       if: failure()
       uses: actions/upload-artifact@v4
       with:
-        name: test-suite_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
+        name: test-suite_w_submodules_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
         path: build/Testing/Temporary/LastTest.log

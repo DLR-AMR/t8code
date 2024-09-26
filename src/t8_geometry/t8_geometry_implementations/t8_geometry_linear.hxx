@@ -104,6 +104,17 @@ struct t8_geometry_linear: public t8_geometry_with_vertices
                                       const double *points, const int num_points, int *is_inside,
                                       const double tolerance) const;
 
+  /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * This geometry supports all element types, hence it returns true.
+   * \return                True if the geometry is compatible with the tree.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const
+  {
+    return true;
+  }
+
   /* Load tree data is inherited from t8_geometry_with_vertices. */
 };
 

@@ -25,6 +25,10 @@ if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
     target_compile_definitions( T8 PUBLIC T8_ENABLE_DEBUG )
 endif()
 
+if( T8CODE_EXPORT_COMPILE_COMMANDS )
+  set_target_properties( T8 PROPERTIES EXPORT_COMPILE_COMMANDS ON )
+endif( T8CODE_EXPORT_COMPILE_COMMANDS )
+
 if( T8CODE_ENABLE_NETCDF )
   target_link_libraries( T8 PUBLIC netCDF::netcdf )
   target_compile_definitions(T8 PUBLIC
@@ -90,7 +94,7 @@ target_sources( T8 PRIVATE
     t8_cmesh/t8_cmesh_vtk_reader.cxx 
     t8_cmesh/t8_cmesh_save.cxx 
     t8_cmesh/t8_cmesh_netcdf.c 
-    t8_cmesh/t8_cmesh_trees.c 
+    t8_cmesh/t8_cmesh_trees.cxx 
     t8_cmesh/t8_cmesh_commit.cxx 
     t8_cmesh/t8_cmesh_partition.cxx 
     t8_cmesh/t8_cmesh_copy.c 
