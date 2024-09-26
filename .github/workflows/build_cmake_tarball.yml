@@ -33,10 +33,7 @@ on:
       - CMake tests t8code
     types: 
       - completed
-    branches:
-      - main
-      - Cpack
-      - develop 
+
 
 jobs:
   on-success:

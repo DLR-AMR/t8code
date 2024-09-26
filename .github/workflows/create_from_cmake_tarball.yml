@@ -33,10 +33,6 @@ on:
       - Build tarball using CMake
     types: 
       - completed
-    branches:
-      - main
-      - develop
-      - Cpack 
 
 jobs:
   on-success:
