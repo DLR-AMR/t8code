@@ -41,6 +41,11 @@ jobs:
     container: dlramr/t8code-ubuntu:t8-dependencies
     timeout-minutes: 90
     steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
+      - run: git branch
+      - run: env
       - name: triggering workflow
         run: echo ${{github.event.workflow_run.name}} && echo ${{github.even.workflow_run.id}}
       - name: install sudo
