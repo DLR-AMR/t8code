@@ -35,8 +35,8 @@ on:
       - completed
     branches:
       - main
-      - develop
-      - Cpack 
+      - Cpack
+      - develop 
 
 jobs:
   on-success:
