@@ -140,7 +140,7 @@ jobs:
     - name: Check vars
       run: echo "[$CONFIG_DEBUG]"
     - name: configure from Tarball
-      run: mkdir build_tar && cd build_tar && $TAR_DIR/cmake $CONFIG_OPTIONS
+      run: mkdir build_tar && cd build_tar && cmake $TAR_DIR $CONFIG_OPTIONS
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
