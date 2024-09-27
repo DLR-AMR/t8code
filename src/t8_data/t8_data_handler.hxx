@@ -151,20 +151,6 @@ class t8_data_handler: public t8_abstract_data_handler {
  public:
   t8_data_handler () = default;
 
-  t8_data_handler (const t8_data_handler &other)
-  {
-    m_data = other.m_data;
-  }
-
-  t8_data_handler &
-  operator= (const t8_data_handler &other)
-  {
-    if (this != &other) {
-      m_data = other.m_data;
-    }
-    return *this;
-  }
-
   t8_abstract_data_handler *
   clone () const override
   {
