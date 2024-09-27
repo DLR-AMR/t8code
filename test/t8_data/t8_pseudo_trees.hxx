@@ -29,6 +29,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <test/t8_data/t8_data_handler_specs.hxx>
 #include <t8_data/t8_data_handler.hxx>
 
+#include <memory>
+
 class pseudo_tree {
  public:
   pseudo_tree ()
@@ -39,7 +41,7 @@ class pseudo_tree {
   {
     tree_data.resize (other.tree_data.size ());
     for (size_t i = 0; i < other.tree_data.size (); ++i) {
-      tree_data[i] = other.tree_data[i];
+      tree_data[i] = std::unique_ptr<t8_abstract_data_handler> (other.tree_data[i]->clone ());
     }
   }
 
@@ -47,27 +49,21 @@ class pseudo_tree {
   operator= (const pseudo_tree &other)
   {
     if (this != &other) {
-      for (t8_abstract_data_handler *handler : tree_data) {
-        delete handler;
-      }
       tree_data.clear ();
       topo_data = other.topo_data;
 
       tree_data.resize (other.tree_data.size ());
       for (size_t i = 0; i < other.tree_data.size (); ++i) {
-        tree_data[i] = other.tree_data[i];
+        tree_data[i] = std::unique_ptr<t8_abstract_data_handler> (other.tree_data[i]->clone ());
       }
     }
     return *this;
   }
 
-  ~pseudo_tree ()
-  {
-    tree_data.clear ();
-  }
+  ~pseudo_tree () = default;
 
   std::vector<int> topo_data;
-  std::vector<t8_abstract_data_handler *> tree_data;
+  std::vector<std::unique_ptr<t8_abstract_data_handler>> tree_data;
 };
 
 template <>
@@ -85,7 +81,7 @@ class t8_single_data_handler<pseudo_tree> {
 
     /* tree_data_size */
     total_size += int_size;
-    for (auto ihandler : item->tree_data) {
+    for (const auto &ihandler : item->tree_data) {
       total_size += ihandler->buffer_size (comm) + int_size;
     }
     return total_size;
@@ -119,6 +115,13 @@ class t8_single_data_handler<pseudo_tree> {
   void
   unpack (const void *buffer, const int num_bytes, int &pos, pseudo_tree *data, sc_MPI_Comm comm)
   {
+    /* Clear existing tree data */
+    for (const auto &handler_ptr : data->tree_data) {
+      t8_abstract_data_handler *handler = handler_ptr.get ();
+      delete handler;
+    }
+    data->tree_data.clear ();
+
     /* Unpack number of topological data */
     int topo_data_size = 0;
     int mpiret = sc_MPI_Unpack (buffer, num_bytes, &pos, &topo_data_size, 1, sc_MPI_INT, comm);
@@ -141,12 +144,12 @@ class t8_single_data_handler<pseudo_tree> {
       if (type == 0) {
         t8_data_handler<enlarged_data<int>> *new_handler = new t8_data_handler<enlarged_data<int>> ();
         new_handler->unpack_vector_prefix (buffer, num_bytes, pos, outcount, comm);
-        data->tree_data.push_back (new_handler);
+        data->tree_data.push_back (std::unique_ptr<t8_abstract_data_handler> (new_handler));
       }
       else if (type == 1) {
         t8_data_handler<enlarged_data<double>> *new_handler = new t8_data_handler<enlarged_data<double>> ();
         new_handler->unpack_vector_prefix (buffer, num_bytes, pos, outcount, comm);
-        data->tree_data.push_back (new_handler);
+        data->tree_data.push_back (std::unique_ptr<t8_abstract_data_handler> (new_handler));
       }
       else {
         SC_ABORT_NOT_REACHED ();
