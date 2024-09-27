@@ -31,30 +31,120 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 class t8_abstract_data_handler {
  public:
+  /**
+   * Pure virtual function to determine the buffer size.
+   *
+   * This function must be implemented by derived classes to calculate
+   * the size of the buffer required for communication.
+   *
+   * \param[in] comm The MPI communicator.
+   * \return The size of the buffer.
+   */
   virtual int
   buffer_size (sc_MPI_Comm comm)
     = 0;
+
+  /**
+   * Creates a copy of the current data handler.
+   *
+   * This pure virtual function must be implemented by derived classes to
+   * provide a mechanism for cloning the data handler. The cloned object
+   * should be a deep copy, ensuring that all relevant data is duplicated.
+   *
+   * \return A pointer to the newly cloned t8_abstract_data_handler object.
+   */
   virtual t8_abstract_data_handler *
   clone () const
     = 0;
+
+  /**
+   * Packs a vector into a buffer. The vector data will be prefixed with the number of elements in the vector.
+   *
+   * This pure virtual function is responsible for packing a vector prefix into the provided buffer.
+   *
+   * \param[in, out] buffer A pointer to the buffer where the vector prefix will be packed.
+   * \param[in] num_bytes The number of bytes to be packed.
+   * \param[in] pos A reference to an integer representing the current position in the buffer. This will be updated as bytes are packed.
+   * \param[in] comm The MPI communicator used for the operation.
+   */
   virtual void
   pack_vector_prefix (void *buffer, const int num_bytes, int &pos, sc_MPI_Comm comm)
     = 0;
+
+  /**
+   * Unpacks a vector from a buffer. Expected to be prefixed with the number of elements in the vector.
+   *
+   * This pure virtual function is responsible for unpacking a vector prefix from the provided buffer.
+   *
+   * \param[in] buffer Pointer to the buffer containing the packed data.
+   * \param[in] num_bytes The number of bytes in the buffer.
+   * \param[in] pos Reference to an integer representing the current position in the buffer. This will be updated as data is unpacked.
+   * \param[in] outcount Reference to an integer where the count of unpacked elements will be stored.
+   * \param[in] comm The MPI communicator used for the operation.
+   */
   virtual void
   unpack_vector_prefix (const void *buffer, const int num_bytes, int &pos, int &outcount, sc_MPI_Comm comm)
     = 0;
+
+  /**
+   * Pure virtual function to send data to a specified destination.
+   *
+   * This function is responsible for packing and sending data to a given destination
+   * with a specific tag using the provided MPI communicator.
+   *
+   * \param[in] dest The destination rank to which the data will be sent.
+   * \param[in] tag The tag associated with the message to be sent.
+   * \param[in] comm The MPI communicator used for the communication.
+   * \return An integer indicating the status of the send operation.
+   */
   virtual int
   send (const int dest, const int tag, sc_MPI_Comm comm)
     = 0;
+
+  /**
+   * Receives a message from a specified source.
+   *
+   * This pure virtual function is responsible for receiving and unpacking a message from a given source
+   * with a specific tag within the provided MPI communicator. The function will also
+   * update the status and output count of the received message.
+   *
+   * \param[in] source The rank of the source process from which the message is received.
+   * \param[in] tag The tag of the message to be received.
+   * \param[in] comm The MPI communicator within which the message is received.
+   * \param[in] status A pointer to an MPI status object that will be updated with the status of the received message.
+   * \param[in] outcount A reference to an integer that will be updated with the count of received elements.
+   * \return An integer indicating the success or failure of the receive operation.
+   */
   virtual int
   recv (const int source, const int tag, sc_MPI_Comm comm, sc_MPI_Status *status, int &outcount)
     = 0;
+
+  /**
+   * Pure virtual function to get the type.
+   * 
+   * This function must be overridden in derived classes to return the type.
+   * 
+   * \return An integer representing the type.
+   */
   virtual int
   type ()
     = 0;
+
   virtual ~t8_abstract_data_handler () {};
 };
 
+/**
+ * \class t8_data_handler
+ * A data handler class that manages a collection of data items.
+ * 
+ * This class provides functionalities to handle a collection of data items
+ * of type T. It supports cloning, packing, unpacking, sending, and receiving
+ * data using MPI.
+ * 
+ * \tparam T The type of data items managed by this handler.
+ * 
+ * \note This class requires MPI to be enabled for send and receive operations.
+ */
 template <typename T>
 class t8_data_handler: public t8_abstract_data_handler {
  public:

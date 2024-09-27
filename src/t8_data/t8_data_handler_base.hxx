@@ -34,23 +34,40 @@ class t8_single_data_handler {
   size (const T &data, sc_MPI_Comm comm);
 
   /**
-    * Overwrite this routine to describe how data of type T should be packed
-    * 
-    * \param[in] data Data to be packed via MPI_Pack
-    * \return the size of the packed data in number of bytes. 
-    */
+   * Packs the given data into a buffer for communication.
+   *
+   * \tparam T The type of the data to be packed.
+   * \param[in] data The data to be packed.
+   * \param[in] pos The current position in the buffer where the data should be packed.
+   * \param[in, out] buffer The buffer where the data will be packed.
+   * \param[in] num_bytes The number of bytes available in the buffer.
+   * \param[in] comm The MPI communicator used for communication.
+   */
   void
   pack (const T &data, int &pos, void *buffer, const int num_bytes, sc_MPI_Comm comm);
 
   /**
-    * Overwrite this routine to describe how data of type T should be unpacked 
-    * 
-    * \param packed_data A void-pointer to the packed Data
-    * \return T* the unpacked data. 
-    */
+   * Unpacks data from a buffer.
+   *
+   * This function unpacks data from a given buffer into the provided data structure.
+   *
+   * \tparam T The type of the data to be unpacked.
+   * \param[in] buffer A pointer to the buffer containing the packed data.
+   * \param[in] num_bytes The number of bytes in the buffer.
+   * \param[in] pos A reference to an integer representing the current position in the buffer.
+   * \param[in, out] data A pointer to the data structure where the unpacked data will be stored.
+   * \param[in] comm The MPI communicator used for communication.
+   */
   void
   unpack (const void *buffer, const int num_bytes, int &pos, T *data, sc_MPI_Comm comm);
 
+  /**
+   * Returns the type of the data handler.
+   *
+   * This function returns the type of the data handler.
+   *
+   * \return An integer representing the type.
+   */
   int
   type ();
 
