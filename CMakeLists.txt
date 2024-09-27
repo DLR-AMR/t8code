@@ -146,4 +146,8 @@ endif()
 if( T8CODE_BUILD_FORTRAN_INTERFACE )
     enable_language( Fortran )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/api/t8_fortran_interface )
+
+    if( NOT T8CODE_ENABLE_MPI )
+        message( FATAL_ERROR "Fortran API only available when MPI is enabled." )
+    endif()
 endif()
