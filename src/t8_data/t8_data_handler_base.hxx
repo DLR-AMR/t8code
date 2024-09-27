@@ -59,7 +59,7 @@ class t8_single_data_handler {
    * \param[in] comm The MPI communicator used for communication.
    */
   void
-  unpack (const void *buffer, const int num_bytes, int &pos, T *data, sc_MPI_Comm comm);
+  unpack (const void *buffer, const int num_bytes, int &pos, T &data, sc_MPI_Comm comm);
 
   /**
    * Returns the type of the data handler.

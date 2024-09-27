@@ -252,7 +252,7 @@ TEST (data_handler_test, tree_test)
 
   const double fraction = 0.42;
 
-  std::vector<pseudo_tree> trees;
+  std::vector<std::unique_ptr<pseudo_tree>> trees;
 
   for (int itree = 0; itree < num_trees; itree++) {
     pseudo_tree tree;
@@ -281,9 +281,9 @@ TEST (data_handler_test, tree_test)
       }
       tree.tree_data.push_back (std::unique_ptr<t8_abstract_data_handler> (new_handler));
     }
-    trees.push_back (tree);
+    trees.push_back (std::unique_ptr<pseudo_tree> (new pseudo_tree (tree)));
   }
-  t8_data_handler<pseudo_tree> tree_handler (trees);
+  t8_data_handler<std::unique_ptr<pseudo_tree>> tree_handler (trees);
 
   const int send_to = (mpirank + 1) % mpisize;
   const int recv_from = (mpirank == 0) ? (mpisize - 1) : (mpirank - 1);
@@ -294,7 +294,7 @@ TEST (data_handler_test, tree_test)
   int outcount;
   mpiret = tree_handler.recv (recv_from, 0, comm, &status, outcount);
 
-  std::vector<pseudo_tree> recv_trees;
+  std::vector<std::unique_ptr<pseudo_tree>> recv_trees;
   tree_handler.get_data (recv_trees);
 
   const int num_recv_trees = recv_trees.size ();
@@ -302,19 +302,19 @@ TEST (data_handler_test, tree_test)
   ASSERT_EQ (num_recv_trees, ((recv_from) % 4) * 10);
 
   for (int itree = 0; itree < num_recv_trees; itree++) {
-    const int num_recv_tree_topo_size = recv_trees[itree].topo_data.size ();
+    const int num_recv_tree_topo_size = recv_trees[itree]->topo_data.size ();
     ASSERT_EQ (num_recv_tree_topo_size, ((recv_from % 3) + 1) * 10);
 
     for (int itopo_data = 0; itopo_data < num_recv_tree_topo_size; itopo_data++) {
-      EXPECT_EQ (recv_trees[itree].topo_data[itopo_data], itopo_data);
+      EXPECT_EQ (recv_trees[itree]->topo_data[itopo_data], itopo_data);
     }
 
-    const int num_recv_tree_data = recv_trees[itree].tree_data.size ();
+    const int num_recv_tree_data = recv_trees[itree]->tree_data.size ();
     ASSERT_EQ (num_recv_tree_data, (recv_from + itree) % 2);
     for (int itree_data = 0; itree_data < num_recv_tree_data; itree_data++) {
       if (itree_data == 0) {
         std::vector<enlarged_data<int>> recv_ints;
-        ((t8_data_handler<enlarged_data<int>> *) (recv_trees[itree].tree_data[itree_data].get ()))
+        dynamic_cast<t8_data_handler<enlarged_data<int>> *> (recv_trees[itree]->tree_data[itree_data].get ())
           ->get_data (recv_ints);
         ASSERT_EQ ((const int) recv_ints.size (), num_data);
         for (int idata = 0; idata < num_data; idata++) {
@@ -324,7 +324,7 @@ TEST (data_handler_test, tree_test)
       }
       else {
         std::vector<enlarged_data<double>> recv_double;
-        dynamic_cast<t8_data_handler<enlarged_data<double>> *> (recv_trees[itree].tree_data[itree_data].get ())
+        dynamic_cast<t8_data_handler<enlarged_data<double>> *> (recv_trees[itree]->tree_data[itree_data].get ())
           ->get_data (recv_double);
         ASSERT_EQ ((const int) recv_double.size (), num_data);
         for (int idata = 0; idata < num_data; idata++) {
