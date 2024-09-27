@@ -121,7 +121,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        MPI: [OFF, ON]
+        MPI: [ON] # For now the fortran API only supports building with MPI
         BUILD_TYPE: [Debug, Release]
         include: 
           - MAKEFLAGS: -j4
