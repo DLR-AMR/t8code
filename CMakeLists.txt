@@ -151,3 +151,5 @@ if( T8CODE_BUILD_FORTRAN_INTERFACE )
         message( FATAL_ERROR "Fortran API only available when MPI is enabled." )
     endif()
 endif()
+
+include (cmake/CPackConfig.cmake)
