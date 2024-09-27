@@ -157,14 +157,14 @@ class t8_single_data_handler<pseudo_tree> {
       mpiret = sc_MPI_Unpack (buffer, num_bytes, &pos, &type, 1, sc_MPI_INT, comm);
       int outcount = 0;
       if (type == 0) {
-        t8_data_handler<enlarged_data<int>> *new_handler = new t8_data_handler<enlarged_data<int>> ();
-        new_handler->unpack_vector_prefix (buffer, num_bytes, pos, outcount, comm);
-        data->tree_data.push_back (std::unique_ptr<t8_abstract_data_handler> (new_handler));
+        auto new_handler = std::make_unique<t8_data_handler<enlarged_data<int>>>();
+        new_handler->unpack_vector_prefix(buffer, num_bytes, pos, outcount, comm);
+        data->tree_data.push_back(std::move(new_handler));
       }
       else if (type == 1) {
-        t8_data_handler<enlarged_data<double>> *new_handler = new t8_data_handler<enlarged_data<double>> ();
-        new_handler->unpack_vector_prefix (buffer, num_bytes, pos, outcount, comm);
-        data->tree_data.push_back (std::unique_ptr<t8_abstract_data_handler> (new_handler));
+        auto new_handler = std::make_unique<t8_data_handler<enlarged_data<double>>>();
+        new_handler->unpack_vector_prefix(buffer, num_bytes, pos, outcount, comm);
+        data->tree_data.push_back(std::move(new_handler));
       }
       else {
         SC_ABORT_NOT_REACHED ();

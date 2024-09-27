@@ -151,6 +151,20 @@ class t8_data_handler: public t8_abstract_data_handler {
  public:
   t8_data_handler () = default;
 
+  t8_data_handler (const t8_data_handler &other)
+  {
+    m_data = other.m_data;
+  }
+
+  t8_data_handler &
+  operator= (const t8_data_handler &other)
+  {
+    if (this != &other) {
+      m_data = other.m_data;
+    }
+    return *this;
+  }
+
   t8_abstract_data_handler *
   clone () const override
   {
@@ -172,17 +186,16 @@ class t8_data_handler: public t8_abstract_data_handler {
   buffer_size (sc_MPI_Comm comm) override
   {
     int total_size = 0;
-    int mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &total_size);
-    const int single_size = single_handler.size (m_data[0], comm);
-    total_size += single_size * m_data.size ();
-    return total_size;
+    const int mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &total_size);
+    SC_CHECK_MPI (mpiret);
+    return total_size + single_handler.size (m_data[0], comm) * m_data.size ();
   }
 
   void
   pack_vector_prefix (void *buffer, const int num_bytes, int &pos, sc_MPI_Comm comm) override
   {
     const int num_data = m_data.size ();
-    int mpiret = sc_MPI_Pack (&num_data, 1, sc_MPI_INT, buffer, num_bytes, &pos, comm);
+    const int mpiret = sc_MPI_Pack (&num_data, 1, sc_MPI_INT, buffer, num_bytes, &pos, comm);
     SC_CHECK_MPI (mpiret);
 
     for (const auto &item : m_data) {
@@ -193,7 +206,7 @@ class t8_data_handler: public t8_abstract_data_handler {
   void
   unpack_vector_prefix (const void *buffer, const int num_bytes, int &pos, int &outcount, sc_MPI_Comm comm) override
   {
-    int mpiret = sc_MPI_Unpack (buffer, num_bytes, &pos, &outcount, 1, sc_MPI_INT, comm);
+    const int mpiret = sc_MPI_Unpack (buffer, num_bytes, &pos, &outcount, 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
     T8_ASSERT (outcount >= 0);
     m_data.resize (outcount);
