@@ -149,18 +149,31 @@ class t8_abstract_data_handler {
 template <typename T>
 class t8_data_handler: public t8_abstract_data_handler {
  public:
-  t8_data_handler () = default;
+  t8_data_handler (): single_handler ()
+  {
+    m_data = nullptr;
+  }
 
   t8_data_handler (const t8_data_handler &other)
   {
-    m_data = other.m_data;
+    if (other.m_data) {
+      m_data = std::make_unique<std::vector<T>> (*other.m_data);
+    }
+    else {
+      m_data = nullptr;
+    }
   }
 
   t8_data_handler &
   operator= (const t8_data_handler &other)
   {
     if (this != &other) {
-      m_data = other.m_data;
+      if (other.m_data) {
+        m_data = std::make_unique<std::vector<T>> (*other.m_data);
+      }
+      else {
+        m_data.reset ();
+      }
     }
     return *this;
   }
@@ -171,15 +184,20 @@ class t8_data_handler: public t8_abstract_data_handler {
     return new t8_data_handler<T> (*this);
   }
 
-  t8_data_handler (std::vector<T> &data)
+  t8_data_handler (const std::vector<T> &data)
   {
-    m_data = data;
+    m_data = std::make_unique<std::vector<T>> (data);
   }
 
   void
   get_data (std::vector<T> &data)
   {
-    data = m_data;
+    if (m_data) {
+      data = *m_data;
+    }
+    else {
+      data.clear ();
+    }
   }
 
   int
@@ -188,17 +206,23 @@ class t8_data_handler: public t8_abstract_data_handler {
     int total_size = 0;
     const int mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &total_size);
     SC_CHECK_MPI (mpiret);
-    return total_size + single_handler.size (m_data[0], comm) * m_data.size ();
+    if (m_data) {
+      return total_size + this->single_handler.size (m_data->at (0), comm) * m_data->size ();
+    }
+    else {
+      SC_ABORT_NOT_REACHED ();
+      return -1;
+    }
   }
 
   void
   pack_vector_prefix (void *buffer, const int num_bytes, int &pos, sc_MPI_Comm comm) override
   {
-    const int num_data = m_data.size ();
+    const int num_data = m_data->size ();
     const int mpiret = sc_MPI_Pack (&num_data, 1, sc_MPI_INT, buffer, num_bytes, &pos, comm);
     SC_CHECK_MPI (mpiret);
 
-    for (const auto &item : m_data) {
+    for (const auto &item : *m_data) {
       single_handler.pack (item, pos, buffer, num_bytes, comm);
     }
   }
@@ -209,8 +233,11 @@ class t8_data_handler: public t8_abstract_data_handler {
     const int mpiret = sc_MPI_Unpack (buffer, num_bytes, &pos, &outcount, 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
     T8_ASSERT (outcount >= 0);
-    m_data.resize (outcount);
-    for (auto &item : m_data) {
+    if (!m_data) {
+      m_data = std::make_unique<std::vector<T>> ();
+    }
+    m_data->resize (outcount);
+    for (auto &item : *m_data) {
       single_handler.unpack (buffer, num_bytes, pos, item, comm);
     }
   }
@@ -265,7 +292,7 @@ class t8_data_handler: public t8_abstract_data_handler {
   ~t8_data_handler () override = default;
 
  private:
-  std::vector<T> m_data;
+  std::unique_ptr<std::vector<T>> m_data;
   t8_single_data_handler<T> single_handler;
 };
 
