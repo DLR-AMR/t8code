@@ -283,7 +283,7 @@ TEST (data_handler_test, tree_test)
     }
     trees.push_back (tree);
   }
-  t8_data_handler<std::unique_ptr<pseudo_tree>> tree_handler (trees);
+  t8_data_handler<pseudo_tree> tree_handler (trees);
 
   const int send_to = (mpirank + 1) % mpisize;
   const int recv_from = (mpirank == 0) ? (mpisize - 1) : (mpirank - 1);
