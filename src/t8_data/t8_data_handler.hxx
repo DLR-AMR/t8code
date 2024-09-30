@@ -123,15 +123,12 @@ class t8_abstract_data_handler {
 
 /**
  * \class t8_data_handler
- * A data handler class that manages a collection of data items.
- * 
- * This class provides functionalities to handle a collection of data items
- * of type T. It supports cloning, packing, unpacking, sending, and receiving
- * data using MPI.
- * 
- * \tparam T The type of data items managed by this handler.
- * 
- * \note This class requires MPI to be enabled for send and receive operations.
+ * \brief A template class for handling data in a distributed environment.
+ *
+ * This class inherits from t8_abstract_data_handler and provides methods for
+ * packing, unpacking, sending, and receiving data using MPI.
+ *
+ * \tparam T The type of data to be handled.
  */
 template <typename T>
 class t8_data_handler: public t8_abstract_data_handler {
