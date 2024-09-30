@@ -164,7 +164,7 @@ t8_forest_ghost_destroy (t8_forest_ghost_t *pghost);
 
 /** Part of step 2 of the ghost_creat_ext 
  * for ghost_type face
- * Is declared, so that ghost_interface_face can use ist
+ * Is declared, so that ghost_interface_face can use it
  * \see t8_forest_ghost_interface_faces::t8_ghost_step_2
  * \param [in,out]    forest     The forest.
  */
@@ -173,13 +173,12 @@ t8_forest_ghost_fill_remote_v3 (t8_forest_t forest);
 
 /** Part of step 2 of the ghost_creat_ext 
  * for ghost_type face
- * Is declared, so that ghost_interface_face can use ist
+ * Is declared, so that ghost_interface_face can use it
  * \see t8_forest_ghost_interface_faces::t8_ghost_step_2
  * \param [in,out]    forest     The forest.
  */
 void
 t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int ghost_method);
-
 
 /** Create one layer of ghost elements for a forest.
  * \see t8_forest_set_ghost

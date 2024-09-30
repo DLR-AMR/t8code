@@ -2962,12 +2962,13 @@ t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from, int no_re
 }
 
 void
-t8_forest_set_ghost_ext_new (t8_forest_t forest, int do_ghost, t8_forest_ghost_interface_c * ghost_interface){
+t8_forest_set_ghost_ext_new (t8_forest_t forest, int do_ghost, t8_forest_ghost_interface_c *ghost_interface)
+{
   T8_ASSERT (t8_forest_is_initialized (forest));
   SC_CHECK_ABORT (do_ghost != 0, "do_ghost == 0 in set_ghost_ext_new.\n");
   SC_CHECK_ABORT (ghost_interface != NULL, "invalides ghost interface in set_ghost_ext_new\n");
-  if(forest->ghost_interface != NULL){
-    t8_forest_ghost_interface_unref(&(forest->ghost_interface));
+  if (forest->ghost_interface != NULL) {
+    t8_forest_ghost_interface_unref (&(forest->ghost_interface));
   }
   forest->do_ghost = do_ghost;
   forest->ghost_interface = ghost_interface;
@@ -2990,8 +2991,8 @@ t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost
     forest->do_ghost = (do_ghost != 0); /* True if and only if do_ghost != 0 */
   }
   if (forest->do_ghost) {
-    t8_forest_ghost_interface_c * ghost_interface = t8_forest_ghost_interface_face_new(ghost_version);
-    t8_forest_set_ghost_ext_new(forest, do_ghost, ghost_interface);
+    t8_forest_ghost_interface_c *ghost_interface = t8_forest_ghost_interface_face_new (ghost_version);
+    t8_forest_set_ghost_ext_new (forest, do_ghost, ghost_interface);
   }
 }
 
@@ -3257,8 +3258,8 @@ t8_forest_commit (t8_forest_t forest)
 
     if (forest->ghost_interface == NULL && forest->set_from->ghost_interface != NULL) {
       forest->ghost_interface = forest->set_from->ghost_interface;
-      t8_forest_ghost_interface_ref(forest->ghost_interface);
-      t8_debugf("t8_forest_commit: uebernehme ghost von set_from\n");
+      t8_forest_ghost_interface_ref (forest->ghost_interface);
+      t8_debugf ("t8_forest_commit: uebernehme ghost von set_from\n");
     }
 
     /* Compute the maximum allowed refinement level */
@@ -3414,7 +3415,7 @@ t8_forest_commit (t8_forest_t forest)
     /* Construct a ghost layer, if desired */
     if (forest->do_ghost) {
       /* TODO: ghost type */
-      t8_forest_ghost_create_ext(forest);
+      t8_forest_ghost_create_ext (forest);
     }
     forest->do_ghost = 0;
   }
@@ -4266,8 +4267,8 @@ t8_forest_reset (t8_forest_t *pforest)
     t8_forest_ghost_unref (&forest->ghosts);
   }
   /* Destroy the ghost_interface class if it exist */
-  if (forest->ghost_interface != NULL){
-    t8_forest_ghost_interface_unref(&(forest->ghost_interface));
+  if (forest->ghost_interface != NULL) {
+    t8_forest_ghost_interface_unref (&(forest->ghost_interface));
   }
   /* we have taken ownership on calling t8_forest_set_* */
   if (forest->scheme_cxx != NULL) {

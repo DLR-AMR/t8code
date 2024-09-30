@@ -23,23 +23,23 @@
 #ifndef T8_FOREST_GHOST_STENCIL_HXX
 #define T8_FOREST_GHOST_STENCIL_HXX
 
-
 #include <t8_forest/t8_forest_ghost_interface.h>
 #include <t8_forest/t8_forest_ghost_interface.hxx>
 
 T8_EXTERN_C_BEGIN ();
 
-struct t8_forest_ghost_stencil : t8_forest_ghost_interface
+struct t8_forest_ghost_stencil: t8_forest_ghost_interface
 {
-  public:
-  t8_forest_ghost_stencil() : t8_forest_ghost_interface(T8_GHOST_USERDEFINED){};
-  
-  void 
-  do_ghost(t8_forest_t forest) override;
+ public:
+  t8_forest_ghost_stencil (): t8_forest_ghost_interface (T8_GHOST_USERDEFINED) {};
 
-  protected:
-  void add_stencil_to_ghost(t8_forest_t forest, const t8_element_t * element, t8_eclass_scheme_c *eclass_scheme, int level,
-                            t8_eclass_t tree_class, t8_locidx_t ltreeid, t8_locidx_t ielement);
+  void
+  do_ghost (t8_forest_t forest) override;
+
+ protected:
+  void
+  add_stencil_to_ghost (t8_forest_t forest, const t8_element_t *element, t8_eclass_scheme_c *eclass_scheme, int level,
+                        t8_eclass_t tree_class, t8_locidx_t ltreeid, t8_locidx_t ielement);
 };
 
 T8_EXTERN_C_END ();

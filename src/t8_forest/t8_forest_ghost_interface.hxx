@@ -35,107 +35,102 @@ T8_EXTERN_C_BEGIN ();
  * Flags for first step function
  * store in the flags which memory was allocated
 */
-enum t8_ghost_interface_face_flag {
-    CREATE_ELEMENT_ARRAY    = 1,
-    CREATE_TREE_ARRAY       = 2,
-    CREATE_GFIRST_DESC_ARRAY= 4
-};
+enum t8_ghost_interface_face_flag { CREATE_ELEMENT_ARRAY = 1, CREATE_TREE_ARRAY = 2, CREATE_GFIRST_DESC_ARRAY = 4 };
 
 struct t8_forest_ghost_interface
 {
-    public:
-    /**
+ public:
+  /**
      * Constructor
     */
-    t8_forest_ghost_interface()
-    {
-      t8_refcount_init (&rc);
-      t8_debugf ("Constructed the a None ghost_interface.\n");
-    }
+  t8_forest_ghost_interface ()
+  {
+    t8_refcount_init (&rc);
+    t8_debugf ("Constructed the a None ghost_interface.\n");
+  }
 
-    /**
+  /**
      * Destructor.
      */
-    virtual ~t8_forest_ghost_interface ()
-    {
-      if (sc_refcount_is_active (&rc)) {
-        T8_ASSERT (t8_refcount_is_last (&rc));
-        t8_refcount_unref (&rc);
-      }
-      t8_debugf ("Deleted the ghost_interface.\n");
+  virtual ~t8_forest_ghost_interface ()
+  {
+    if (sc_refcount_is_active (&rc)) {
+      T8_ASSERT (t8_refcount_is_last (&rc));
+      t8_refcount_unref (&rc);
     }
+    t8_debugf ("Deleted the ghost_interface.\n");
+  }
 
-    /**
+  /**
      * Get the type of the ghost_interface
      * \return the type
     */
-    inline t8_ghost_type_t
-    t8_ghost_get_type() const
-    {
-      return ghost_type;
-    }
+  inline t8_ghost_type_t
+  t8_ghost_get_type () const
+  {
+    return ghost_type;
+  }
 
-    /**
+  /**
      * Increase the reference count of the ghost interface.
      */
-    virtual inline void
-    ref ()
-    {
-      t8_refcount_ref (&rc);
-    }
+  virtual inline void
+  ref ()
+  {
+    t8_refcount_ref (&rc);
+  }
 
-    /**
+  /**
      * Decrease the reference count of the ghost_interface.
      * If the reference count reaches zero, the ghost_interface is deleted.
      */
-    virtual inline void
-    unref ()
-    {
-      if (t8_refcount_unref (&rc)) {
-        t8_debugf ("Deleting the ghost_interface.\n");
-        delete this;
-      }
+  virtual inline void
+  unref ()
+  {
+    if (t8_refcount_unref (&rc)) {
+      t8_debugf ("Deleting the ghost_interface.\n");
+      delete this;
     }
+  }
 
-    /** Create one layer of ghost elements for a forest.
+  /** Create one layer of ghost elements for a forest.
      * \see t8_forest_set_ghost
      * \param [in,out]    forest     The forest.
      * \a forest must be committed before calling this function.
      */
-    virtual void
-    do_ghost(t8_forest_t forest)
+  virtual void
+  do_ghost (t8_forest_t forest)
     = 0;
 
-    protected:
-    /**
-     * Compute and collect ownerships to create the nessesary offset
+ protected:
+  /**
+     * Compute and collect ownerships to create the necessary offset
      * for elements, trees and first descandance 
     */
-    virtual void
-    communicate_ownerships(t8_forest_t forest);
+  virtual void
+  communicate_ownerships (t8_forest_t forest);
 
-    virtual void
-    communicate_ghost_elements(t8_forest_t forest);
+  virtual void
+  communicate_ghost_elements (t8_forest_t forest);
 
-    virtual void
-    clean_up(t8_forest_t forest);
+  virtual void
+  clean_up (t8_forest_t forest);
 
-    /**
+  /**
      * Constructor for the derivided classes to set the korrekt type for them.
      * \param [in] g_type   The type (faces, edges, userdefind, ...) of the ghost_interface
     */
-    explicit t8_forest_ghost_interface(t8_ghost_type_t g_type) : ghost_type(g_type) {
-      t8_refcount_init (&rc);
-      t8_debugf ("Constructed a ghost_interface.\n");
-    };
-    /** type of the ghost_interface */
-    t8_ghost_type_t ghost_type{T8_GHOST_NONE};
-    /** The reference count of the ghost_interface. TODO: Replace by shared_ptr when forest becomes a class. */
-    t8_refcount_t rc;
-    int32_t memory_flag{};
+  explicit t8_forest_ghost_interface (t8_ghost_type_t g_type): ghost_type (g_type)
+  {
+    t8_refcount_init (&rc);
+    t8_debugf ("Constructed a ghost_interface.\n");
+  };
+  /** type of the ghost_interface */
+  t8_ghost_type_t ghost_type { T8_GHOST_NONE };
+  /** The reference count of the ghost_interface. TODO: Replace by shared_ptr when forest becomes a class. */
+  t8_refcount_t rc;
+  int32_t memory_flag {};
 };
-
-
 
 T8_EXTERN_C_END ();
 

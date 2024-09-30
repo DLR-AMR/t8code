@@ -20,8 +20,6 @@
 //   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 // */
 
-
-
 // #ifndef T8_GHOST_INTERFACE_FACE_H
 // #define T8_GHOST_INTERFACE_FACE_H
 
@@ -42,7 +40,7 @@
 // {
 //     public:
 //     /**
-//      * Construtor
+//      * Constructor
 //     */
 //     t8_forest_ghost_interface_faces();
 
@@ -60,14 +58,12 @@
 
 //     virtual void
 //     do_ghost(t8_forest forest) override;
-    
 
 //     protected:
-    
+
 //     int ghost_version;
 //     int32_t flag_step_1;
 
 // };
-
 
 // #endif /* !T8_GHOST_INTERFACE_FACE_H */

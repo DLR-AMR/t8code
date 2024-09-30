@@ -25,16 +25,13 @@
 
 #include <t8.h>
 
-
 T8_EXTERN_C_BEGIN ();
-
 
 /** This typedef holds virtual functions for a particular ghost interface.
  * We need it so that we can use t8_ghost_interface_c pointers in .c files
  * without them seeing the actual C++ code (and then not compiling)
  */
 typedef struct t8_forest_ghost_interface t8_forest_ghost_interface_c;
-
 
 T8_EXTERN_C_END ();
 

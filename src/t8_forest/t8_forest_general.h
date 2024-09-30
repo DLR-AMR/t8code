@@ -41,11 +41,11 @@ typedef struct t8_tree *t8_tree_t;
 /** This type controls, which neighbors count as ghost elements.
  * Currently, we support face-neighbors. Vertex and edge neighbors will eventually be added. */
 typedef enum {
-  T8_GHOST_NONE = 0, /**< Do not create ghost layer. */
-  T8_GHOST_FACES,    /**< Consider all face (codimension 1) neighbors. */
-  T8_GHOST_EDGES,    /**< Consider all edge (codimension 2) and face neighbors. */
-  T8_GHOST_VERTICES,  /**< Consider all vertex (codimension 3) and edge and face neighbors. */
-  T8_GHOST_USERDEFINED/** If the user define by his self a step_1 or step_2 function*/
+  T8_GHOST_NONE = 0,   /**< Do not create ghost layer. */
+  T8_GHOST_FACES,      /**< Consider all face (codimension 1) neighbors. */
+  T8_GHOST_EDGES,      /**< Consider all edge (codimension 2) and face neighbors. */
+  T8_GHOST_VERTICES,   /**< Consider all vertex (codimension 3) and edge and face neighbors. */
+  T8_GHOST_USERDEFINED /** If the user define by his self a step_1 or step_2 function*/
 } t8_ghost_type_t;
 
 /** This typedef is needed as a helper construct to 
@@ -365,21 +365,21 @@ t8_forest_set_ghost (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_typ
  *                                If 2, the iterative algorithm for unbalanced forests.
  *                                If 3, the top-down search algorithm for unbalanced forests.
  * \see t8_forest_set_ghost
- * \note this function creats an ghost_interface obcejct and call \ref t8_forest_set_ghost_ext_new
+ * \note this function creates an ghost_interface obcejct and call \ref t8_forest_set_ghost_ext_new
  */
 void
 t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_type, int ghost_version);
 
 /** Set a ghost_interface
- * In application schoud only used if the user creats its own ghost_interface class (type = userderdefined)
+ * In application schoud only used if the user creates its own ghost_interface class (type = userderdefined)
  * \param [in]    forest          the fores
  * \param [in]    do_ghost        ---
  * \param [in]    ghost_interface pointer to an object of the class ghost_interface or a derived class
  *                                The forest takes ownership of the ghost_interface
- * \note if the forest has alrady a ghost_interface, the old one will be unref and the new one will be set.
+ * \note if the forest has already a ghost_interface, the old one will be unref and the new one will be set.
 */
 void
-t8_forest_set_ghost_ext_new (t8_forest_t forest, int do_ghost, t8_forest_ghost_interface_c * ghost_interface);
+t8_forest_set_ghost_ext_new (t8_forest_t forest, int do_ghost, t8_forest_ghost_interface_c *ghost_interface);
 
 /* TODO: use assertions and document that the forest_set (..., from) and
  *       set_load are mutually exclusive. */

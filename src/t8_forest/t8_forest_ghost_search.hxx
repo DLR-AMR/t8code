@@ -20,73 +20,72 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-
-
 #ifndef T8_GHOST_INTERFACE_FACE_H
 #define T8_GHOST_INTERFACE_FACE_H
 
 #include <t8_forest/t8_forest_ghost_interface.hxx>
 #include <t8_forest/t8_forest_types.h>
-#include <t8_forest/t8_forest_iterate.h> // Definition of t8_forest_search_query_fn
+#include <t8_forest/t8_forest_iterate.h>  // Definition of t8_forest_search_query_fn
 
-
-struct t8_forest_ghost_w_search : public t8_forest_ghost_interface
+struct t8_forest_ghost_w_search: public t8_forest_ghost_interface
 {
-    public:
-    /**
-     * Construtor
+ public:
+  /**
+     * Constructor
     */
-    t8_forest_ghost_w_search();
-    
-    explicit t8_forest_ghost_w_search(t8_forest_search_query_fn serach_function)
-        : t8_forest_ghost_interface(T8_GHOST_USERDEFINED), search_fn(serach_function)
-    {
-        T8_ASSERT(serach_function != nullptr);
-    }
+  t8_forest_ghost_w_search ();
 
-    explicit t8_forest_ghost_w_search(t8_ghost_type_t ghost_type);
+  explicit t8_forest_ghost_w_search (t8_forest_search_query_fn search_function)
+    : t8_forest_ghost_interface (T8_GHOST_USERDEFINED), search_fn (search_function)
+  {
+    T8_ASSERT (search_function != nullptr);
+  }
 
-    virtual ~t8_forest_ghost_w_search ()
-    {
-    }
+  explicit t8_forest_ghost_w_search (t8_ghost_type_t ghost_type);
 
-    virtual void
-    do_ghost(t8_forest_t forest) override;
+  virtual ~t8_forest_ghost_w_search ()
+  {
+  }
 
-    protected:
-    /**
+  virtual void
+  do_ghost (t8_forest_t forest) override;
+
+ protected:
+  /**
      * Equal to t8_forest_ghost_fill_remote_v3
      * so no support for version 1 and 2 of face heigbors
-     * Only the search_fn parameter for serch ist not the same as in t8_forest_ghost_fill_remote_v3
+     * Only the search_fn parameter for search it not the same as in t8_forest_ghost_fill_remote_v3
      * use the member variable of the class
     */
-    virtual void 
-    search_for_ghost_elements(t8_forest_t forest);
-    
+  virtual void
+  search_for_ghost_elements (t8_forest_t forest);
 
-    t8_forest_ghost_w_search(t8_ghost_type_t ghost_type, t8_forest_search_query_fn search_function)
-        : t8_forest_ghost_interface(ghost_type), search_fn(search_function)
-        {
-            T8_ASSERT(ghost_type != T8_GHOST_NONE);
-        }
+  t8_forest_ghost_w_search (t8_ghost_type_t ghost_type, t8_forest_search_query_fn search_function)
+    : t8_forest_ghost_interface (ghost_type), search_fn (search_function)
+  {
+    T8_ASSERT (ghost_type != T8_GHOST_NONE);
+  }
 
-    t8_forest_search_query_fn search_fn{};
-
+  t8_forest_search_query_fn search_fn {};
 };
 
-struct t8_forest_ghost_face : public t8_forest_ghost_w_search
+struct t8_forest_ghost_face: public t8_forest_ghost_w_search
 {
-    public:
-    explicit t8_forest_ghost_face(int version);
-    
-    inline int get_version() const {return version;}
+ public:
+  explicit t8_forest_ghost_face (int version);
 
-    protected:
-    void search_for_ghost_elements(t8_forest_t forest) override;
+  inline int
+  get_version () const
+  {
+    return version;
+  }
 
-    private:
-    int version{};
+ protected:
+  void
+  search_for_ghost_elements (t8_forest_t forest) override;
+
+ private:
+  int version {};
 };
-
 
 #endif /* !T8_GHOST_INTERFACE_FACE_H */
