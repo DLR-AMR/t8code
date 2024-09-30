@@ -31,6 +31,21 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <memory>
 
+/**
+ * \class pseudo_tree
+ * A class representing a pseudo tree structure.
+ *
+ * The pseudo_tree class encapsulates a tree-like structure with topology data and tree data.
+ * It provides constructors, assignment operator, and destructor for managing the tree data.
+ * 
+ * It is meant for testing purposes only and to mimic the structure of a tree.
+ *
+ * \var std::vector<int> pseudo_tree::topo_data
+ * A vector containing the topology data of the pseudo tree.
+ *
+ * \var std::vector<std::unique_ptr<t8_abstract_data_handler>> pseudo_tree::tree_data
+ * A vector of unique pointers to t8_abstract_data_handler objects representing the tree data.
+ */
 class pseudo_tree {
  public:
   pseudo_tree ()
@@ -70,90 +85,89 @@ template <>
 class t8_single_data_handler<pseudo_tree> {
  public:
   int
-  size (const pseudo_tree *item, sc_MPI_Comm comm)
+  size (const pseudo_tree &item, sc_MPI_Comm comm)
   {
     int int_size = 0;
-    const int topo_data_size = item->topo_data.size () + 1;
-
-    const int mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &int_size);
+    int mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &int_size);
     SC_CHECK_MPI (mpiret);
-    int total_size = topo_data_size * int_size;
 
-    /* tree_data_size */
-    total_size += int_size;
-    for (const auto &ihandler : item->tree_data) {
+    // Calculate the size for topo_data
+    const int topo_data_size = item.topo_data.size ();
+    int total_size = (topo_data_size + 1) * int_size;
+
+    // Calculate the size for tree_data
+    total_size += int_size;  // for tree_data_size
+    for (const auto &ihandler : item.tree_data) {
       total_size += ihandler->buffer_size (comm) + int_size;
     }
+
     return total_size;
   }
 
   void
-  pack (const pseudo_tree *data, int &pos, void *buffer, const int num_bytes, sc_MPI_Comm comm)
+  pack (const pseudo_tree &data, int &pos, void *buffer, const int num_bytes, sc_MPI_Comm comm)
   {
-    const int data_size = data->topo_data.size ();
+    const int data_size = data.topo_data.size ();
     /* Pack number of topological data */
     int mpiret = sc_MPI_Pack (&data_size, 1, sc_MPI_INT, buffer, num_bytes, &pos, comm);
     SC_CHECK_MPI (mpiret);
-    /* Pack each topological data*/
-    mpiret = sc_MPI_Pack ((data->topo_data.data ()), data_size, sc_MPI_INT, buffer, num_bytes, &pos, comm);
+    /* Pack topological data in one call */
+    mpiret = sc_MPI_Pack (data.topo_data.data (), data_size, sc_MPI_INT, buffer, num_bytes, &pos, comm);
     SC_CHECK_MPI (mpiret);
-    /* Pack number of tree-specific data*/
-    const int tree_data_size = data->tree_data.size ();
+    /* Pack number of tree-specific data */
+    const int tree_data_size = data.tree_data.size ();
     mpiret = sc_MPI_Pack (&tree_data_size, 1, sc_MPI_INT, buffer, num_bytes, &pos, comm);
     SC_CHECK_MPI (mpiret);
 
-    for (auto &handler : data->tree_data) {
+    for (const auto &handler : data.tree_data) {
       const int type = handler->type ();
       /* Pack type of tree data */
       mpiret = sc_MPI_Pack (&type, 1, sc_MPI_INT, buffer, num_bytes, &pos, comm);
       SC_CHECK_MPI (mpiret);
-      /* Pack each data. */
+      /* Pack each data */
       handler->pack_vector_prefix (buffer, num_bytes, pos, comm);
     }
   }
 
   void
-  unpack (const void *buffer, const int num_bytes, int &pos, pseudo_tree *data, sc_MPI_Comm comm)
+  unpack (const void *buffer, const int num_bytes, int &pos, pseudo_tree &data, sc_MPI_Comm comm)
   {
     /* Clear existing tree data */
-    for (const auto &handler_ptr : data->tree_data) {
-      t8_abstract_data_handler *handler = handler_ptr.get ();
-      delete handler;
-    }
-    data->tree_data.clear ();
+    data.tree_data.clear ();
 
     /* Unpack number of topological data */
     int topo_data_size = 0;
     int mpiret = sc_MPI_Unpack (buffer, num_bytes, &pos, &topo_data_size, 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
-    data->topo_data.resize (topo_data_size);
-    for (int &topo_item : data->topo_data) {
-      /* Unpack each topological item */
-      mpiret = sc_MPI_Unpack (buffer, num_bytes, &pos, &topo_item, 1, sc_MPI_INT, comm);
-      SC_CHECK_MPI (mpiret);
-    }
+    data.topo_data.resize (topo_data_size);
+    mpiret = sc_MPI_Unpack (buffer, num_bytes, &pos, data.topo_data.data (), topo_data_size, sc_MPI_INT, comm);
+    SC_CHECK_MPI (mpiret);
+
     /* Unpack number of tree-specific data */
     int num_handler = 0;
     mpiret = sc_MPI_Unpack (buffer, num_bytes, &pos, &num_handler, 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
 
+    data.tree_data.reserve (num_handler);
     for (int ihandler = 0; ihandler < num_handler; ihandler++) {
       int type;
       mpiret = sc_MPI_Unpack (buffer, num_bytes, &pos, &type, 1, sc_MPI_INT, comm);
-      int outcount = 0;
+      SC_CHECK_MPI (mpiret);
+
+      std::unique_ptr<t8_abstract_data_handler> new_handler;
       if (type == 0) {
-        t8_data_handler<enlarged_data<int>> *new_handler = new t8_data_handler<enlarged_data<int>> ();
-        new_handler->unpack_vector_prefix (buffer, num_bytes, pos, outcount, comm);
-        data->tree_data.push_back (std::unique_ptr<t8_abstract_data_handler> (new_handler));
+        new_handler = std::make_unique<t8_data_handler<enlarged_data<int>>> ();
       }
       else if (type == 1) {
-        t8_data_handler<enlarged_data<double>> *new_handler = new t8_data_handler<enlarged_data<double>> ();
-        new_handler->unpack_vector_prefix (buffer, num_bytes, pos, outcount, comm);
-        data->tree_data.push_back (std::unique_ptr<t8_abstract_data_handler> (new_handler));
+        new_handler = std::make_unique<t8_data_handler<enlarged_data<double>>> ();
       }
       else {
         SC_ABORT_NOT_REACHED ();
       }
+
+      int outcount = 0;
+      new_handler->unpack_vector_prefix (buffer, num_bytes, pos, outcount, comm);
+      data.tree_data.push_back (std::move (new_handler));
     }
   }
 

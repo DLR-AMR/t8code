@@ -314,7 +314,7 @@ TEST (data_handler_test, tree_test)
     for (int itree_data = 0; itree_data < num_recv_tree_data; itree_data++) {
       if (itree_data == 0) {
         std::vector<enlarged_data<int>> recv_ints;
-        ((t8_data_handler<enlarged_data<int>> *) (recv_trees[itree].tree_data[itree_data].get ()))
+        dynamic_cast<t8_data_handler<enlarged_data<int>> *> (recv_trees[itree].tree_data[itree_data].get ())
           ->get_data (recv_ints);
         ASSERT_EQ ((const int) recv_ints.size (), num_data);
         for (int idata = 0; idata < num_data; idata++) {
