@@ -199,40 +199,44 @@ TEST (data_handler_test, pseudo_tree_test)
 {
   const int num_data = 100;
   pseudo_tree tree;
+  tree.topo_data.resize (10);
+  std::iota (tree.topo_data.begin (), tree.topo_data.end (), 0);
+
   std::vector<enlarged_data<int>> int_data (num_data);
-  for (int idata = 0; idata < num_data; idata++) {
+  for (int idata = 0; idata < num_data; ++idata) {
     int_data[idata].check = 42;
     int_data[idata].data = idata;
   }
-  tree.topo_data.resize (10);
-  std::iota (tree.topo_data.begin (), tree.topo_data.end (), 0);
-  t8_data_handler<enlarged_data<int>> int_handler (int_data);
-
-  tree.tree_data.push_back (std::make_unique<t8_data_handler<enlarged_data<int>>> (int_handler));
+  tree.tree_data.resize (1);
+  tree.tree_data[0] = std::make_shared<t8_data_handler<enlarged_data<int>>> (std::move (int_data));
 
   pseudo_tree tree_copy (tree);
   EXPECT_EQ (tree.topo_data.size (), tree_copy.topo_data.size ());
   EXPECT_EQ (tree.tree_data.size (), tree_copy.tree_data.size ());
 
   std::vector<enlarged_data<int>> copied_data;
-  ((t8_data_handler<enlarged_data<int>> *) (tree_copy.tree_data[0].get ()))->get_data (copied_data);
+  auto handler = std::dynamic_pointer_cast<t8_data_handler<enlarged_data<int>>> (tree_copy.tree_data[0]).get ();
+  ASSERT_NE (handler, nullptr);
+  handler->get_data (copied_data);
 
-  for (int idata = 0; idata < num_data; idata++) {
-    EXPECT_EQ (copied_data[idata].data, int_data[idata].data);
-    EXPECT_EQ (copied_data[idata].check, int_data[idata].check);
+  for (int idata = 0; idata < num_data; ++idata) {
+    EXPECT_EQ (copied_data[idata].data, idata);
+    EXPECT_EQ (copied_data[idata].check, 42);
   }
 
-  pseudo_tree tree_equal = tree_copy;
+  pseudo_tree tree_equal = std::move (tree_copy);
 
   EXPECT_EQ (tree.topo_data.size (), tree_equal.topo_data.size ());
   EXPECT_EQ (tree.tree_data.size (), tree_equal.tree_data.size ());
 
   std::vector<enlarged_data<int>> equal_data;
-  ((t8_data_handler<enlarged_data<int>> *) (tree_equal.tree_data[0].get ()))->get_data (equal_data);
+  auto handler_equal = std::dynamic_pointer_cast<t8_data_handler<enlarged_data<int>>> (tree_equal.tree_data[0]).get ();
+  ASSERT_NE (handler_equal, nullptr);
+  handler_equal->get_data (equal_data);
 
-  for (int idata = 0; idata < num_data; idata++) {
-    EXPECT_EQ (equal_data[idata].data, int_data[idata].data);
-    EXPECT_EQ (equal_data[idata].check, int_data[idata].check);
+  for (int idata = 0; idata < num_data; ++idata) {
+    EXPECT_EQ (equal_data[idata].data, idata);
+    EXPECT_EQ (equal_data[idata].check, 42);
   }
 }
 
@@ -240,49 +244,47 @@ TEST (data_handler_test, pseudo_tree_test)
 TEST (data_handler_test, tree_test)
 {
   sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
-  int mpirank;
-  int mpisize;
-  int mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  int mpirank, mpisize, mpiret;
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
 
   const int num_trees = (mpirank % 4) * 10;
-  const int num_data = 100;
-
+  const int num_data = 1000;
   const double fraction = 0.42;
 
-  std::vector<pseudo_tree> trees;
+  std::vector<pseudo_tree> trees (num_trees);
 
-  for (int itree = 0; itree < num_trees; itree++) {
+  for (int itree = 0; itree < num_trees; ++itree) {
     pseudo_tree tree;
     const int tree_topo_size = ((mpirank % 3) + 1) * 10;
     tree.topo_data.resize (tree_topo_size);
     std::iota (tree.topo_data.begin (), tree.topo_data.end (), 0);
 
     const int num_tree_data = (mpirank + itree) % 2;
-    t8_abstract_data_handler *new_handler = NULL;
-    for (int itree_data = 0; itree_data < num_tree_data; itree_data++) {
+    tree.tree_data.resize (num_tree_data);
+    for (int itree_data = 0; itree_data < num_tree_data; ++itree_data) {
       if (itree_data == 0) {
         std::vector<enlarged_data<int>> int_data (num_data);
-        for (int idata = 0; idata < num_data; idata++) {
+        for (int idata = 0; idata < num_data; ++idata) {
           int_data[idata].check = mpirank;
           int_data[idata].data = idata;
         }
-        new_handler = new t8_data_handler<enlarged_data<int>> (int_data);
+        tree.tree_data[itree_data] = std::make_shared<t8_data_handler<enlarged_data<int>>> (std::move (int_data));
       }
       else {
         std::vector<enlarged_data<double>> double_data (num_data);
-        for (int idata = 0; idata < num_data; idata++) {
+        for (int idata = 0; idata < num_data; ++idata) {
           double_data[idata].check = mpirank;
-          double_data[idata].data = (double) idata + fraction;
-          new_handler = new t8_data_handler<enlarged_data<double>> (double_data);
+          double_data[idata].data = static_cast<double> (idata) + fraction;
         }
+        tree.tree_data[itree_data] = std::make_shared<t8_data_handler<enlarged_data<double>>> (std::move (double_data));
       }
-      tree.tree_data.push_back (std::unique_ptr<t8_abstract_data_handler> (new_handler));
     }
-    trees.push_back (tree);
+    trees[itree] = std::move (tree);
   }
+
   t8_data_handler<pseudo_tree> tree_handler (trees);
 
   const int send_to = (mpirank + 1) % mpisize;
@@ -298,37 +300,42 @@ TEST (data_handler_test, tree_test)
   tree_handler.get_data (recv_trees);
 
   const int num_recv_trees = recv_trees.size ();
+  ASSERT_EQ (num_recv_trees, (recv_from % 4) * 10);
 
-  ASSERT_EQ (num_recv_trees, ((recv_from) % 4) * 10);
-
-  for (int itree = 0; itree < num_recv_trees; itree++) {
+  for (int itree = 0; itree < num_recv_trees; ++itree) {
     const int num_recv_tree_topo_size = recv_trees[itree].topo_data.size ();
     ASSERT_EQ (num_recv_tree_topo_size, ((recv_from % 3) + 1) * 10);
 
-    for (int itopo_data = 0; itopo_data < num_recv_tree_topo_size; itopo_data++) {
+    for (int itopo_data = 0; itopo_data < num_recv_tree_topo_size; ++itopo_data) {
       EXPECT_EQ (recv_trees[itree].topo_data[itopo_data], itopo_data);
     }
 
     const int num_recv_tree_data = recv_trees[itree].tree_data.size ();
     ASSERT_EQ (num_recv_tree_data, (recv_from + itree) % 2);
-    for (int itree_data = 0; itree_data < num_recv_tree_data; itree_data++) {
+    for (int itree_data = 0; itree_data < num_recv_tree_data; ++itree_data) {
       if (itree_data == 0) {
         std::vector<enlarged_data<int>> recv_ints;
-        dynamic_cast<t8_data_handler<enlarged_data<int>> *> (recv_trees[itree].tree_data[itree_data].get ())
-          ->get_data (recv_ints);
-        ASSERT_EQ ((const int) recv_ints.size (), num_data);
-        for (int idata = 0; idata < num_data; idata++) {
+        auto int_handler
+          = std::dynamic_pointer_cast<t8_data_handler<enlarged_data<int>>> (recv_trees[itree].tree_data[itree_data])
+              .get ();
+        ASSERT_NE (int_handler, nullptr);
+        int_handler->get_data (recv_ints);
+        ASSERT_EQ (static_cast<int> (recv_ints.size ()), num_data);
+        for (int idata = 0; idata < num_data; ++idata) {
           EXPECT_EQ (recv_ints[idata].data, idata);
           EXPECT_EQ (recv_ints[idata].check, recv_from);
         }
       }
       else {
         std::vector<enlarged_data<double>> recv_double;
-        dynamic_cast<t8_data_handler<enlarged_data<double>> *> (recv_trees[itree].tree_data[itree_data].get ())
-          ->get_data (recv_double);
-        ASSERT_EQ ((const int) recv_double.size (), num_data);
-        for (int idata = 0; idata < num_data; idata++) {
-          EXPECT_EQ (recv_double[idata].data, (double) idata + fraction);
+        auto double_handler
+          = std::dynamic_pointer_cast<t8_data_handler<enlarged_data<double>>> (recv_trees[itree].tree_data[itree_data])
+              .get ();
+        ASSERT_NE (double_handler, nullptr);
+        double_handler->get_data (recv_double);
+        ASSERT_EQ (static_cast<int> (recv_double.size ()), num_data);
+        for (int idata = 0; idata < num_data; ++idata) {
+          EXPECT_EQ (recv_double[idata].data, static_cast<double> (idata) + fraction);
           EXPECT_EQ (recv_double[idata].check, recv_from);
         }
       }

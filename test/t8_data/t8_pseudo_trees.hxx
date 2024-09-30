@@ -33,52 +33,18 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 /**
  * \class pseudo_tree
- * A class representing a pseudo tree structure.
- *
- * The pseudo_tree class encapsulates a tree-like structure with topology data and tree data.
- * It provides constructors, assignment operator, and destructor for managing the tree data.
+ * Represents a pseudo tree structure containing topological and tree data.
  * 
- * It is meant for testing purposes only and to mimic the structure of a tree.
- *
- * \var std::vector<int> pseudo_tree::topo_data
- * A vector containing the topology data of the pseudo tree.
- *
- * \var std::vector<std::unique_ptr<t8_abstract_data_handler>> pseudo_tree::tree_data
- * A vector of unique pointers to t8_abstract_data_handler objects representing the tree data.
+ * \note This class is used for testing purposes only.
+ * 
+ * The pseudo_tree class encapsulates two main data members:
+ * - `topo_data`: A vector of integers representing topological data.
+ * - `tree_data`: A vector of pointers to t8_abstract_data_handler objects, representing tree data.
  */
 class pseudo_tree {
  public:
-  pseudo_tree ()
-  {
-  }
-
-  pseudo_tree (const pseudo_tree &other): topo_data (other.topo_data)
-  {
-    tree_data.resize (other.tree_data.size ());
-    for (size_t i = 0; i < other.tree_data.size (); ++i) {
-      tree_data[i] = std::unique_ptr<t8_abstract_data_handler> (other.tree_data[i]->clone ());
-    }
-  }
-
-  pseudo_tree &
-  operator= (const pseudo_tree &other)
-  {
-    if (this != &other) {
-      tree_data.clear ();
-      topo_data = other.topo_data;
-
-      tree_data.resize (other.tree_data.size ());
-      for (size_t i = 0; i < other.tree_data.size (); ++i) {
-        tree_data[i] = std::unique_ptr<t8_abstract_data_handler> (other.tree_data[i]->clone ());
-      }
-    }
-    return *this;
-  }
-
-  ~pseudo_tree () = default;
-
   std::vector<int> topo_data;
-  std::vector<std::unique_ptr<t8_abstract_data_handler>> tree_data;
+  std::vector<std::shared_ptr<t8_abstract_data_handler>> tree_data;
 };
 
 template <>
@@ -97,7 +63,7 @@ class t8_single_data_handler<pseudo_tree> {
 
     // Calculate the size for tree_data
     total_size += int_size;  // for tree_data_size
-    for (const auto &ihandler : item.tree_data) {
+    for (auto ihandler : item.tree_data) {
       total_size += ihandler->buffer_size (comm) + int_size;
     }
 
@@ -148,26 +114,26 @@ class t8_single_data_handler<pseudo_tree> {
     mpiret = sc_MPI_Unpack (buffer, num_bytes, &pos, &num_handler, 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
 
-    data.tree_data.reserve (num_handler);
+    data.tree_data.resize (num_handler);
     for (int ihandler = 0; ihandler < num_handler; ihandler++) {
+    }
+    for (auto &ihandler : data.tree_data) {
       int type;
       mpiret = sc_MPI_Unpack (buffer, num_bytes, &pos, &type, 1, sc_MPI_INT, comm);
       SC_CHECK_MPI (mpiret);
 
-      std::unique_ptr<t8_abstract_data_handler> new_handler;
       if (type == 0) {
-        new_handler = std::make_unique<t8_data_handler<enlarged_data<int>>> ();
+        ihandler = std::make_shared<t8_data_handler<enlarged_data<int>>> ();
       }
       else if (type == 1) {
-        new_handler = std::make_unique<t8_data_handler<enlarged_data<double>>> ();
+        ihandler = std::make_shared<t8_data_handler<enlarged_data<double>>> ();
       }
       else {
         SC_ABORT_NOT_REACHED ();
       }
 
       int outcount = 0;
-      new_handler->unpack_vector_prefix (buffer, num_bytes, pos, outcount, comm);
-      data.tree_data.push_back (std::move (new_handler));
+      ihandler->unpack_vector_prefix (buffer, num_bytes, pos, outcount, comm);
     }
   }
 

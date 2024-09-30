@@ -46,19 +46,6 @@ class t8_abstract_data_handler {
     = 0;
 
   /**
-   * Creates a copy of the current data handler.
-   *
-   * This pure virtual function must be implemented by derived classes to
-   * provide a mechanism for cloning the data handler. The cloned object
-   * should be a deep copy, ensuring that all relevant data is duplicated.
-   *
-   * \return A pointer to the newly cloned t8_abstract_data_handler object.
-   */
-  virtual t8_abstract_data_handler *
-  clone () const
-    = 0;
-
-  /**
    * Packs a vector into a buffer. The vector data will be prefixed with the number of elements in the vector.
    *
    * This pure virtual function is responsible for packing a vector prefix into the provided buffer.
@@ -154,49 +141,16 @@ class t8_data_handler: public t8_abstract_data_handler {
     m_data = nullptr;
   }
 
-  t8_data_handler (const t8_data_handler &other)
+  t8_data_handler (const std::vector<T> &data): single_handler ()
   {
-    if (other.m_data) {
-      m_data = std::make_unique<std::vector<T>> (*other.m_data);
-    }
-    else {
-      m_data = nullptr;
-    }
-  }
-
-  t8_data_handler &
-  operator= (const t8_data_handler &other)
-  {
-    if (this != &other) {
-      if (other.m_data) {
-        m_data = std::make_unique<std::vector<T>> (*other.m_data);
-      }
-      else {
-        m_data.reset ();
-      }
-    }
-    return *this;
-  }
-
-  t8_abstract_data_handler *
-  clone () const override
-  {
-    return new t8_data_handler<T> (*this);
-  }
-
-  t8_data_handler (const std::vector<T> &data)
-  {
-    m_data = std::make_unique<std::vector<T>> (data);
+    m_data = std::make_shared<std::vector<T>> (data);
   }
 
   void
-  get_data (std::vector<T> &data)
+  get_data (std::vector<T> &data) const
   {
     if (m_data) {
       data = *m_data;
-    }
-    else {
-      data.clear ();
     }
   }
 
@@ -288,12 +242,8 @@ class t8_data_handler: public t8_abstract_data_handler {
     return single_handler.type ();
   }
 
-  ~t8_data_handler () override
-  {
-  }
-
  private:
-  std::unique_ptr<std::vector<T>> m_data;
+  std::shared_ptr<std::vector<T>> m_data;
   t8_single_data_handler<T> single_handler;
 };
 
