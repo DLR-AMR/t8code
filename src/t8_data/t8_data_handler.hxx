@@ -141,9 +141,8 @@ class t8_data_handler: public t8_abstract_data_handler {
     m_data = nullptr;
   }
 
-  t8_data_handler (const std::vector<T> &data): single_handler ()
+  t8_data_handler (const std::vector<T> &data): m_data (std::make_shared<std::vector<T>> (data)), single_handler ()
   {
-    m_data = std::make_shared<std::vector<T>> (data);
   }
 
   void
@@ -186,10 +185,13 @@ class t8_data_handler: public t8_abstract_data_handler {
     const int mpiret = sc_MPI_Unpack (buffer, num_bytes, &pos, &outcount, 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
     T8_ASSERT (outcount >= 0);
+
     if (!m_data) {
-      m_data = std::make_unique<std::vector<T>> ();
+      m_data = std::make_shared<std::vector<T>> (outcount);
     }
-    m_data->resize (outcount);
+    else {
+      m_data->resize (outcount);
+    }
     for (auto &item : *m_data) {
       single_handler.unpack (buffer, num_bytes, pos, item, comm);
     }
