@@ -224,7 +224,7 @@ class t8_data_handler: public t8_abstract_data_handler {
     std::vector<char> buffer (num_bytes);
     pack_vector_prefix (buffer.data (), num_bytes, pos, comm);
 
-    int mpiret = sc_MPI_Send (buffer.data (), num_bytes, sc_MPI_PACKED, dest, tag, comm);
+    const int mpiret = sc_MPI_Send (buffer.data (), num_bytes, sc_MPI_PACKED, dest, tag, comm);
     SC_CHECK_MPI (mpiret);
     return mpiret;
 #else
@@ -270,7 +270,7 @@ class t8_data_handler: public t8_abstract_data_handler {
 };
 
 template <typename T>
-class t8_data_handler<std::unique_ptr<T>> {
+class t8_data_handler<std::unique_ptr<T>>: public t8_abstract_data_handler {
  public:
   t8_data_handler () = default;
 
@@ -278,7 +278,7 @@ class t8_data_handler<std::unique_ptr<T>> {
   {
     m_data.reserve (other.m_data.size ());
     for (const auto &item : other.m_data) {
-      m_data.emplace_back (item->clone ());
+      m_data.emplace_back (std::make_unique<T> (*item));
     }
   }
 
@@ -289,14 +289,14 @@ class t8_data_handler<std::unique_ptr<T>> {
       m_data.clear ();
       m_data.reserve (other.m_data.size ());
       for (const auto &item : other.m_data) {
-        m_data.emplace_back (item->clone ());
+        m_data.emplace_back (std::make_unique<T> (*item));
       }
     }
     return *this;
   }
 
   t8_abstract_data_handler *
-  clone () const
+  clone () const override
   {
     return new t8_data_handler<std::unique_ptr<T>> (*this);
   }
@@ -319,10 +319,10 @@ class t8_data_handler<std::unique_ptr<T>> {
   }
 
   int
-  buffer_size (sc_MPI_Comm comm)
+  buffer_size (sc_MPI_Comm comm) override
   {
     int total_size = 0;
-    int mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &total_size);
+    const int mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &total_size);
     SC_CHECK_MPI (mpiret);
     for (const auto &item : m_data) {
       const int size = single_handler.size (item.get (), comm);
@@ -332,10 +332,10 @@ class t8_data_handler<std::unique_ptr<T>> {
   }
 
   void
-  pack_vector_prefix (void *buffer, const int num_bytes, int &pos, sc_MPI_Comm comm)
+  pack_vector_prefix (void *buffer, const int num_bytes, int &pos, sc_MPI_Comm comm) override
   {
     const int num_data = m_data.size ();
-    int mpiret = sc_MPI_Pack (&num_data, 1, sc_MPI_INT, buffer, num_bytes, &pos, comm);
+    const int mpiret = sc_MPI_Pack (&num_data, 1, sc_MPI_INT, buffer, num_bytes, &pos, comm);
     SC_CHECK_MPI (mpiret);
 
     for (const auto &item : m_data) {
@@ -344,9 +344,9 @@ class t8_data_handler<std::unique_ptr<T>> {
   }
 
   void
-  unpack_vector_prefix (const void *buffer, const int num_bytes, int &pos, int &outcount, sc_MPI_Comm comm)
+  unpack_vector_prefix (const void *buffer, const int num_bytes, int &pos, int &outcount, sc_MPI_Comm comm) override
   {
-    int mpiret = sc_MPI_Unpack (buffer, num_bytes, &pos, &outcount, 1, sc_MPI_INT, comm);
+    const int mpiret = sc_MPI_Unpack (buffer, num_bytes, &pos, &outcount, 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
     T8_ASSERT (outcount >= 0);
 
@@ -360,7 +360,7 @@ class t8_data_handler<std::unique_ptr<T>> {
   }
 
   int
-  send (const int dest, const int tag, sc_MPI_Comm comm)
+  send (const int dest, const int tag, sc_MPI_Comm comm) override
   {
 #if T8_ENABLE_MPI
     int pos = 0;
@@ -368,7 +368,7 @@ class t8_data_handler<std::unique_ptr<T>> {
     std::vector<char> buffer (num_bytes);
     pack_vector_prefix (buffer.data (), num_bytes, pos, comm);
 
-    int mpiret = sc_MPI_Send (buffer.data (), num_bytes, sc_MPI_PACKED, dest, tag, comm);
+    const int mpiret = sc_MPI_Send (buffer.data (), num_bytes, sc_MPI_PACKED, dest, tag, comm);
     SC_CHECK_MPI (mpiret);
     return mpiret;
 #else
@@ -378,7 +378,7 @@ class t8_data_handler<std::unique_ptr<T>> {
   }
 
   int
-  recv (const int source, const int tag, sc_MPI_Comm comm, sc_MPI_Status *status, int &outcount)
+  recv (const int source, const int tag, sc_MPI_Comm comm, sc_MPI_Status *status, int &outcount) override
   {
 #if T8_ENABLE_MPI
     int pos = 0;
@@ -401,10 +401,12 @@ class t8_data_handler<std::unique_ptr<T>> {
   }
 
   int
-  type ()
+  type () override
   {
     return single_handler.type ();
   }
+
+  ~t8_data_handler () override = default;
 
  private:
   std::vector<std::unique_ptr<T>> m_data;
