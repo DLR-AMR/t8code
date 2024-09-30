@@ -207,10 +207,8 @@ class t8_data_handler: public t8_abstract_data_handler {
     const int mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &total_size);
     SC_CHECK_MPI (mpiret);
     if (m_data) {
-      if (m_data) {
-        for (const auto &item : *m_data) {
-          total_size += single_handler.size (item, comm);
-        }
+      for (const auto &item : *m_data) {
+        total_size += single_handler.size (item, comm);
       }
     }
     return total_size;
@@ -292,9 +290,6 @@ class t8_data_handler: public t8_abstract_data_handler {
 
   ~t8_data_handler () override
   {
-    if (m_data) {
-      m_data.reset ();
-    }
   }
 
  private:
