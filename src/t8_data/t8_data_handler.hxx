@@ -133,11 +133,20 @@ class t8_abstract_data_handler {
 template <typename TType>
 class t8_data_handler: public t8_abstract_data_handler {
  public:
+  /**
+   * Construct a new t8 data handler.
+   * m_data is initialized to nullptr.
+   */
   t8_data_handler (): single_handler ()
   {
     m_data = nullptr;
   }
 
+  /**
+   * Construct a new t8 data handler with the given data.
+   *
+   * \param[in] data The data to be handled.
+   */
   t8_data_handler (const std::vector<TType> &data)
     : m_data (std::make_shared<std::vector<TType>> (data)), single_handler ()
   {
