@@ -93,8 +93,8 @@ class vtk_writer {
               const bool write_ghosts, const bool curved_flag, std::string fileprefix, const int num_data,
               t8_vtk_data_field_t *data, sc_MPI_Comm comm)
     : write_treeid (write_treeid), write_mpirank (write_mpirank), write_level (write_level),
-      write_ghosts (write_ghosts), curved_flag (curved_flag), fileprefix (fileprefix), num_data (num_data), data (data),
-      comm (comm)
+      write_element_id (write_element_id), write_ghosts (write_ghosts), curved_flag (curved_flag),
+      fileprefix (fileprefix), num_data (num_data), data (data), comm (comm)
   {
   }
 
