@@ -28,7 +28,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_data/t8_data_handler_base.hxx>
 #include <algorithm>
 #include <memory>
-#include <type_traits>
+#include <numeric>
 
 class t8_abstract_data_handler {
  public:
@@ -157,9 +157,8 @@ class t8_data_handler: public t8_abstract_data_handler {
     const int mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &total_size);
     SC_CHECK_MPI (mpiret);
     if (m_data) {
-      for (const auto &item : *m_data) {
-        total_size += single_handler.size (item, comm);
-      }
+      total_size += std::accumulate (m_data->begin (), m_data->end (), 0,
+                                     [&] (int sum, const T &item) { return sum + single_handler.size (item, comm); });
     }
     return total_size;
   }
@@ -171,9 +170,8 @@ class t8_data_handler: public t8_abstract_data_handler {
     const int mpiret = sc_MPI_Pack (&num_data, 1, sc_MPI_INT, buffer, num_bytes, &pos, comm);
     SC_CHECK_MPI (mpiret);
 
-    for (const auto &item : *m_data) {
-      single_handler.pack (item, pos, buffer, num_bytes, comm);
-    }
+    std::for_each (m_data->begin (), m_data->end (),
+                   [&] (const T &item) { single_handler.pack (item, pos, buffer, num_bytes, comm); });
   }
 
   void
@@ -195,9 +193,8 @@ class t8_data_handler: public t8_abstract_data_handler {
     else {
       m_data->resize (outcount);
     }
-    for (auto &item : *m_data) {
-      single_handler.unpack (buffer, num_bytes, pos, item, comm);
-    }
+    std::for_each (m_data->begin (), m_data->end (),
+                   [&] (T &item) { single_handler.unpack (buffer, num_bytes, pos, item, comm); });
   }
 
   int
