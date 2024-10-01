@@ -244,6 +244,12 @@ class t8_data_handler: public t8_abstract_data_handler {
     return single_handler.type ();
   }
 
+  t8_data_handler (const std::vector<T> &data, t8_single_data_handler_c single_handler)
+  {
+    m_data = std::make_shared<std::vector<T>> (data);
+    this->single_handler = single_handler;
+  }
+
  private:
   std::shared_ptr<std::vector<T>> m_data;
   t8_single_data_handler<T> single_handler;
@@ -256,6 +262,16 @@ typedef struct
 } t8_data_handler_c;
 
 void
-get_data ()
+get_data (const t8_data_handler_c *handler, void *data)
+{
+  if (handler->m_data) {
+    memcpy (data, handler->m_data, sizeof (handler->m_data));
+  }
+}
+
+int
+buffer_size (const t8_data_handler_c *handler, sc_MPI_Comm comm)
+{
+}
 
 #endif /* T8_DATA_HANDLER_HXX */
