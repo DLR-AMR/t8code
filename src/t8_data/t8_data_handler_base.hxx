@@ -25,10 +25,9 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <t8.h>
 
-template <typename T>
+template <typename TType>
 class t8_single_data_handler {
  public:
-
   /**
    * Construct a new t8 single data handler.
    * 
@@ -43,7 +42,7 @@ class t8_single_data_handler {
    * \return An integer representing the size of the data.
    */
   int
-  size (const T &data, sc_MPI_Comm comm);
+  size (const TType &data, sc_MPI_Comm comm);
 
   /**
    * Packs the given data into a buffer for communication.
@@ -56,7 +55,7 @@ class t8_single_data_handler {
    * \param[in] comm The MPI communicator used for communication.
    */
   void
-  pack (const T &data, int &pos, void *buffer, const int num_bytes, sc_MPI_Comm comm);
+  pack (const TType &data, int &pos, void *buffer, const int num_bytes, sc_MPI_Comm comm);
 
   /**
    * Unpacks data from a buffer.
@@ -71,7 +70,7 @@ class t8_single_data_handler {
    * \param[in] comm The MPI communicator used for communication.
    */
   void
-  unpack (const void *buffer, const int num_bytes, int &pos, T &data, sc_MPI_Comm comm);
+  unpack (const void *buffer, const int num_bytes, int &pos, TType &data, sc_MPI_Comm comm);
 
   /**
    * Returns the type of the data handler.

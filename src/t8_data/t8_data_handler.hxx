@@ -128,9 +128,9 @@ class t8_abstract_data_handler {
  * This class inherits from t8_abstract_data_handler and provides methods for
  * packing, unpacking, sending, and receiving data using MPI.
  *
- * \tparam T The type of data to be handled.
+ * \tparam TType The type of data to be handled.
  */
-template <typename T>
+template <typename TType>
 class t8_data_handler: public t8_abstract_data_handler {
  public:
   t8_data_handler (): single_handler ()
@@ -138,12 +138,13 @@ class t8_data_handler: public t8_abstract_data_handler {
     m_data = nullptr;
   }
 
-  t8_data_handler (const std::vector<T> &data): m_data (std::make_shared<std::vector<T>> (data)), single_handler ()
+  t8_data_handler (const std::vector<TType> &data)
+    : m_data (std::make_shared<std::vector<TType>> (data)), single_handler ()
   {
   }
 
   void
-  get_data (std::vector<T> &data) const
+  get_data (std::vector<TType> &data) const
   {
     if (m_data) {
       data = *m_data;
@@ -157,8 +158,9 @@ class t8_data_handler: public t8_abstract_data_handler {
     const int mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &total_size);
     SC_CHECK_MPI (mpiret);
     if (m_data) {
-      total_size += std::accumulate (m_data->begin (), m_data->end (), 0,
-                                     [&] (int sum, const T &item) { return sum + single_handler.size (item, comm); });
+      total_size += std::accumulate (m_data->begin (), m_data->end (), 0, [&] (int sum, const TType &item) {
+        return sum + single_handler.size (item, comm);
+      });
     }
     return total_size;
   }
@@ -171,7 +173,7 @@ class t8_data_handler: public t8_abstract_data_handler {
     SC_CHECK_MPI (mpiret);
 
     std::for_each (m_data->begin (), m_data->end (),
-                   [&] (const T &item) { single_handler.pack (item, pos, buffer, num_bytes, comm); });
+                   [&] (const TType &item) { single_handler.pack (item, pos, buffer, num_bytes, comm); });
   }
 
   void
@@ -182,13 +184,13 @@ class t8_data_handler: public t8_abstract_data_handler {
     T8_ASSERT (outcount >= 0);
 
     if (!m_data) {
-      m_data = std::make_shared<std::vector<T>> (outcount);
+      m_data = std::make_shared<std::vector<TType>> (outcount);
     }
     else {
       m_data->resize (outcount);
     }
     std::for_each (m_data->begin (), m_data->end (),
-                   [&] (T &item) { single_handler.unpack (buffer, num_bytes, pos, item, comm); });
+                   [&] (TType &item) { single_handler.unpack (buffer, num_bytes, pos, item, comm); });
   }
 
   int
@@ -239,16 +241,16 @@ class t8_data_handler: public t8_abstract_data_handler {
   }
 
  private:
- /**
+  /**
   * \brief A shared pointer to a vector of data. 
   * This data will be packed, unpacked, and communicated via MPI.
   */
-  std::shared_ptr<std::vector<T>> m_data;
+  std::shared_ptr<std::vector<TType>> m_data;
   /**
    * \brief A single data handler for the data type T.
    * This handler will be used to pack and unpack individual data items.
    */
-  t8_single_data_handler<T> single_handler;
+  t8_single_data_handler<TType> single_handler;
 };
 
 #endif /* T8_DATA_HANDLER_HXX */
