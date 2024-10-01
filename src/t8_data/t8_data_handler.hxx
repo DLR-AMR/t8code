@@ -208,7 +208,6 @@ class t8_data_handler: public t8_abstract_data_handler {
   int
   send (const int dest, const int tag, sc_MPI_Comm comm) override
   {
-#if T8_ENABLE_MPI
     int pos = 0;
     const int num_bytes = buffer_size (comm);
     std::vector<char> buffer (num_bytes);
@@ -217,16 +216,11 @@ class t8_data_handler: public t8_abstract_data_handler {
     const int mpiret = sc_MPI_Send (buffer.data (), num_bytes, sc_MPI_PACKED, dest, tag, comm);
     SC_CHECK_MPI (mpiret);
     return mpiret;
-#else
-    t8_infof ("send only available when configured with --enable-mpi\n");
-    return sc_MPI_ERR_OTHER;
-#endif
   }
 
   int
   recv (const int source, const int tag, sc_MPI_Comm comm, sc_MPI_Status *status, int &outcount) override
   {
-#if T8_ENABLE_MPI
     int pos = 0;
     int mpiret = sc_MPI_Probe (source, tag, comm, status);
     SC_CHECK_MPI (mpiret);
@@ -240,10 +234,6 @@ class t8_data_handler: public t8_abstract_data_handler {
     SC_CHECK_MPI (mpiret);
     unpack_vector_prefix (buffer.data (), num_bytes, pos, outcount, comm);
     return mpiret;
-#else
-    t8_infof ("recv only available when configured with --enable-mpi\n");
-    return sc_MPI_ERR_OTHER;
-#endif
   }
 
   int

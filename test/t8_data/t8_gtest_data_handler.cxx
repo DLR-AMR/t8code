@@ -101,11 +101,9 @@ TYPED_TEST_P (data_handler_test, send_recv)
   int send_to = (this->mpirank + 1) % this->mpisize;
 
   /* Pack and send the data. */
-  int mpiret = this->data_handler->send (send_to, 0, this->comm);
 #if T8_ENABLE_MPI
+  int mpiret = this->data_handler->send (send_to, 0, this->comm);
   SC_CHECK_MPI (mpiret);
-#else
-  EXPECT_EQ (mpiret, sc_MPI_ERR_OTHER);
 #endif
 
   /* Compute the rank we this rank receives from. */
@@ -114,18 +112,16 @@ TYPED_TEST_P (data_handler_test, send_recv)
   /* Receive and unpack the data. */
   sc_MPI_Status status;
   int outcount;
-  mpiret = this->data_handler->recv (recv_from, 0, this->comm, &status, outcount);
-
-  this->recv_data = *(this->data_handler->get_data ());
 #if T8_ENABLE_MPI
+  mpiret = this->data_handler->recv (recv_from, 0, this->comm, &status, outcount);
   SC_CHECK_MPI (mpiret);
+  this->recv_data = *(this->data_handler->get_data ());
+
   EXPECT_EQ (outcount, this->max_num_data);
   for (int idata = 0; idata < this->max_num_data; idata++) {
     EXPECT_EQ (this->recv_data[idata].data, this->creator.large_data[idata].data);
     EXPECT_EQ (this->recv_data[idata].check, this->creator.large_data[idata].check);
   }
-#else
-  EXPECT_EQ (mpiret, sc_MPI_ERR_OTHER);
 #endif
 }
 
@@ -165,15 +161,13 @@ TEST (data_handler_test, multiple_handler)
 #endif
   for (t8_abstract_data_handler *ihandler : handler) {
 
-    mpiret = ihandler->send (send_to, 0, comm);
 #if T8_ENABLE_MPI
+    mpiret = ihandler->send (send_to, 0, comm);
     SC_CHECK_MPI (mpiret);
     /* Receive and unpack the data. */
     sc_MPI_Status status;
     int outcount;
     mpiret = ihandler->recv (recv_from, 0, comm, &status, outcount);
-#else
-    EXPECT_EQ (mpiret, sc_MPI_ERR_OTHER);
 #endif
   }
 
@@ -189,8 +183,6 @@ TEST (data_handler_test, multiple_handler)
     EXPECT_EQ (recv_doubles[idata].check, recv_from);
     EXPECT_NEAR (recv_doubles[idata].data, (double) idata + fraction, T8_PRECISION_EPS);
   }
-#else
-  EXPECT_EQ (mpiret, sc_MPI_ERR_OTHER);
 #endif
 }
 
