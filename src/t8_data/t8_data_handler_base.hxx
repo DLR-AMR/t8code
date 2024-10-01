@@ -28,8 +28,20 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 template <typename T>
 class t8_single_data_handler {
  public:
+
+  /**
+   * Construct a new t8 single data handler.
+   * 
+   */
   t8_single_data_handler () {};
 
+  /** 
+   * Returns the size of the data.
+   * 
+   * \param[in] data The data to compute the size of. 
+   * \param[in] comm The MPI communicator used for communication.
+   * \return An integer representing the size of the data.
+   */
   int
   size (const T &data, sc_MPI_Comm comm);
 

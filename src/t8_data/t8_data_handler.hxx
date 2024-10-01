@@ -239,7 +239,15 @@ class t8_data_handler: public t8_abstract_data_handler {
   }
 
  private:
+ /**
+  * \brief A shared pointer to a vector of data. 
+  * This data will be packed, unpacked, and communicated via MPI.
+  */
   std::shared_ptr<std::vector<T>> m_data;
+  /**
+   * \brief A single data handler for the data type T.
+   * This handler will be used to pack and unpack individual data items.
+   */
   t8_single_data_handler<T> single_handler;
 };
 
