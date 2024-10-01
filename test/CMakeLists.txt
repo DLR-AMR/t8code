@@ -20,7 +20,7 @@ function( add_t8_test )
     set(TEST_BUILD_DIR "${CMAKE_BINARY_DIR}/${TEST_RELATIVE_DIR}")
 
     add_executable( ${ADD_T8_TEST_NAME} ${ADD_T8_TEST_SOURCES} )
-    target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 gtest pthread)
+    target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 gtest pthread m )
 
     set_target_properties(${ADD_T8_TEST_NAME} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${TEST_BUILD_DIR}"

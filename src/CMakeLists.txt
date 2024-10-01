@@ -9,18 +9,18 @@ endif()
 add_library( T8CODE::T8 ALIAS T8 )
 
 if( CMAKE_BUILD_TYPE STREQUAL "Release" )
-  set (T8_CXXFLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE}")
-  set (T8_CFLAGS "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_RELEASE}")
+    set (T8_CXXFLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE}")
+    set (T8_CFLAGS "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_RELEASE}")
 endif()
 
 if( CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo" )
-  set (T8_CXXFLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
-  set (T8_CFLAGS "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_RELWITHDEBINFO}")
+    set (T8_CXXFLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+    set (T8_CFLAGS "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_RELWITHDEBINFO}")
 endif()
 
 if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
-  set (T8_CXXFLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG}")
-  set (T8_CFLAGS "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_DEBUG}")
+    set (T8_CXXFLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG}")
+    set (T8_CFLAGS "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_DEBUG}")
 
     target_compile_definitions( T8 PUBLIC T8_ENABLE_DEBUG )
 endif()
@@ -29,39 +29,77 @@ if( T8CODE_EXPORT_COMPILE_COMMANDS )
   set_target_properties( T8 PROPERTIES EXPORT_COMPILE_COMMANDS ON )
 endif( T8CODE_EXPORT_COMPILE_COMMANDS )
 
-if( T8CODE_ENABLE_NETCDF )
-  target_link_libraries( T8 PUBLIC netCDF::netcdf )
-  target_compile_definitions(T8 PUBLIC
-    T8_WITH_NETCDF
-    $<$<AND:$<BOOL:${NETCDF_HAVE_NETCDF_PAR}>,$<BOOL:${T8CODE_ENABLE_MPI}>>:T8_WITH_NETCDF_PAR> )
-endif()
-
 set_target_properties( T8 PROPERTIES OUTPUT_NAME t8 )
 
 target_include_directories( T8 PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include>
 )
 
-target_link_libraries( T8 PUBLIC P4EST::P4EST SC::SC )
+if ( T8CODE_USE_SYSTEM_SC )
+    if ( SC_FOUND )
+        message(STATUS "Found system SC")
+        message(STATUS "SC include dir: ${SC_INCLUDE_DIR}")
+        message(STATUS "SC libraries: ${SC_LIBRARIES}")
+        target_include_directories( T8 PUBLIC ${SC_INCLUDE_DIR} )
+        target_link_libraries( T8 PUBLIC ${SC_LIBRARIES} )
+    endif ( SC_FOUND )
+else( T8CODE_USE_SYSTEM_SC )
+    message(STATUS "Building SC with t8code")
+    target_link_libraries( T8 PUBLIC ${SC_LIBRARIES} )
+endif( T8CODE_USE_SYSTEM_SC )
 
-if ( T8CODE_ENABLE_MPI )
+if ( T8CODE_USE_SYSTEM_P4EST )
+    if ( P4EST_FOUND )
+        message(STATUS "Found system p4est")
+        message(STATUS "p4est include dir: ${P4EST_INCLUDE_DIR}")
+        message(STATUS "p4est libraries: ${P4EST_LIBRARIES}")
+        target_include_directories( T8 PUBLIC ${P4EST_INCLUDE_DIR} )
+        target_link_libraries( T8 PUBLIC ${P4EST_LIBRARIES} )
+    endif ( P4EST_FOUND )
+else( T8CODE_USE_SYSTEM_P4EST )
+    message(STATUS "Building p4est with t8code")
+    target_link_libraries( T8 PUBLIC ${P4EST_LIBRARIES} )
+endif( T8CODE_USE_SYSTEM_P4EST )
+
+if ( MPI_FOUND )
+    message(STATUS "Found MPI")
+    message(STATUS "MPI include dir: ${MPI_C_INCLUDE_DIRS}")
+    message(STATUS "MPI libraries: ${MPI_C_LIBRARIES}")
     target_compile_definitions( T8 PUBLIC T8_ENABLE_MPI )
     target_compile_definitions( T8 PUBLIC T8_ENABLE_MPIIO )
     target_link_libraries( T8 PUBLIC MPI::MPI_C )
-endif()
+endif( MPI_FOUND )
 
-if( T8CODE_ENABLE_VTK )
+if( VTK_FOUND )
+    message(STATUS "Found VTK")
+    message(STATUS "VTK version: ${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}")
+    message(STATUS "VTK include dir: ${VTK_INCLUDE_DIR}")
+    message(STATUS "VTK libraries: ${VTK_LIBRARIES}")
     target_compile_definitions( T8 PUBLIC T8_VTK_VERSION_USED="${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}" )
     target_compile_definitions( T8 PUBLIC T8_WITH_VTK=1 )
     target_include_directories( T8 PUBLIC ${VTK_INCLUDE_DIR} )
     target_link_libraries( T8 PUBLIC ${VTK_LIBRARIES} )
-endif()
+endif( VTK_FOUND )
 
-if( T8CODE_ENABLE_OCC )
+if( OpenCASCADE_FOUND )
+    message(STATUS "Found OpenCASCADE")
+    message(STATUS "OpenCASCADE version: ${OCC_VERSION_STRING}")
+    message(STATUS "OpenCASCADE include dir: ${OpenCASCADE_INCLUDE_DIR}")
+    message(STATUS "OpenCASCADE libraries: ${OpenCASCADE_LIBRARIES}")
     target_compile_definitions( T8 PUBLIC T8_WITH_OCC=1 )
     target_include_directories( T8 PUBLIC ${OpenCASCADE_INCLUDE_DIR} )
     target_link_libraries( T8 PUBLIC ${OpenCASCADE_LIBRARIES} )
+endif( OpenCASCADE_FOUND )
+
+if( NETCDF_FOUND )
+    message(STATUS "Found netCDF")
+    message(STATUS "netCDF include dir: ${netCDF_INCLUDE_DIR}")
+    message(STATUS "netCDF libraries: ${netCDF_LIBRARIES}")
+    target_link_libraries( T8 PUBLIC netCDF::netcdf )
+    target_compile_definitions(T8 PUBLIC
+        T8_WITH_NETCDF
+        $<$<AND:$<BOOL:${NETCDF_HAVE_NETCDF_PAR}>,$<BOOL:${T8CODE_ENABLE_MPI}>>:T8_WITH_NETCDF_PAR> )
 endif()
 
 if( T8CODE_ENABLE_LESS_TESTS )
@@ -69,11 +107,11 @@ if( T8CODE_ENABLE_LESS_TESTS )
 endif()
 
 if( T8CODE_BUILD_PEDANTIC )
-  # TODO: Add `-Wextra -Wpedantic`. As of now, t8code would not compile with this.
-  # See also: https://github.com/DLR-AMR/t8code/issues/1155.
-  target_compile_options( T8 PUBLIC -Wall -pedantic -Werror )
-  set (T8_CXXFLAGS "${T8_CXXFLAGS} -W -Wall -Wpedantic -Werror")
-  set (T8_CFLAGS "${T8_CFLAGS} -W -Wall -Wpedantic -Werror")
+    # TODO: Add `-Wextra -Wpedantic`. As of now, t8code would not compile with this.
+    # See also: https://github.com/DLR-AMR/t8code/issues/1155.
+    target_compile_options( T8 PUBLIC -Wall -pedantic -Werror )
+    set (T8_CXXFLAGS "${T8_CXXFLAGS} -W -Wall -Wpedantic -Werror")
+    set (T8_CFLAGS "${T8_CFLAGS} -W -Wall -Wpedantic -Werror")
 endif()
 
 target_sources( T8 PRIVATE 
@@ -201,8 +239,8 @@ install( FILES
 install( DIRECTORY t8_cmesh DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.h" )
 install( DIRECTORY t8_data DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.h" )
 install( DIRECTORY t8_forest DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING
-  PATTERN "*.h"
-  PATTERN "*private.h" EXCLUDE )
+    PATTERN "*.h"
+    PATTERN "*private.h" EXCLUDE )
 install( DIRECTORY t8_geometry DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.h" )
 install( DIRECTORY t8_schemes DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.h" )
 install( DIRECTORY t8_vtk DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.h" )
@@ -220,7 +258,7 @@ install( TARGETS T8 EXPORT ${PROJECT_NAME}-targets )
 include( CMakePackageConfigHelpers )
 
 configure_package_config_file( ${CMAKE_CURRENT_LIST_DIR}/config.cmake.in
-  ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}Config.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}Config.cmake
 INSTALL_DESTINATION cmake
 )
 

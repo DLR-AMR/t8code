@@ -56,7 +56,7 @@ set( CMAKE_CXX_EXTENSIONS OFF )
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 if( T8CODE_ENABLE_MPI )
-    find_package( MPI COMPONENTS C REQUIRED )
+    find_package(MPI COMPONENTS C REQUIRED)
     if( NOT MPIEXEC_EXECUTABLE )
         message( FATAL_ERROR "MPIEXEC was not found" )
     endif()
@@ -64,14 +64,25 @@ if( T8CODE_ENABLE_MPI )
     # set( SC_ENABLE_MPI ON ) # When the fix gets merged, replace the previous line with this one
 endif()
 
+if ( T8CODE_USE_SYSTEM_SC )
+    find_package( SC REQUIRED )
+else( T8CODE_USE_SYSTEM_SC )
+    set (SC_LIBRARIES "SC::SC")
+    add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/sc )
+endif( T8CODE_USE_SYSTEM_SC )
+
+if ( T8CODE_USE_SYSTEM_P4EST )
+    find_package( P4EST REQUIRED )
+else( T8CODE_USE_SYSTEM_P4EST )
+    set (P4EST_LIBRARIES "P4EST::P4EST")
+    add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/p4est )
+endif( T8CODE_USE_SYSTEM_P4EST )
+
 if( T8CODE_ENABLE_VTK )
     find_package( VTK REQUIRED COMPONENTS
         IOXML CommonExecutionModel CommonDataModel
         IOGeometry IOXMLParser IOParallelXML IOPLY
         ParallelMPI FiltersCore vtksys CommonCore zlib IOLegacy)
-    if(VTK_FOUND)
-        message("Found VTK")
-    endif (VTK_FOUND)
 endif( T8CODE_ENABLE_VTK )
 
 if( T8CODE_ENABLE_OCC )
@@ -79,17 +90,13 @@ if( T8CODE_ENABLE_OCC )
     TKBO TKPrim TKTopAlgo
     TKGeomAlgo TKBRep
     TKG3d TKG2d TKMath TKernel )
-    if(OpenCASCADE_FOUND)
-        message("Found OpenCASCADE")
-    endif (OpenCASCADE_FOUND)
 endif( T8CODE_ENABLE_OCC )
 
 if( T8CODE_ENABLE_NETCDF )
     find_package( netCDF REQUIRED )
-    if(netCDF_FOUND)
-        message("Found netCDF")
+    if ( NETCDF_FOUND )
         include(cmake/CheckNetCDFPar.cmake)
-    endif (netCDF_FOUND)
+    endif()
 endif( T8CODE_ENABLE_NETCDF )
 
 # Override default for this libsc option
@@ -102,18 +109,6 @@ set(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT FALSE)
 set(CMAKE_INSTALL_NAME_DIR ${CMAKE_INSTALL_PREFIX}/lib)
 set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH true)
-
-if ( T8CODE_USE_SYSTEM_SC )
-    find_package( SC REQUIRED PATHS /path/to/system/sc )
-else()
-    add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/sc )
-endif()
-
-if ( T8CODE_USE_SYSTEM_P4EST )
-    find_package( P4EST REQUIRED PATHS /path/to/system/p4est )
-else()
-    add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/p4est )
-endif()
 
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/src )
 

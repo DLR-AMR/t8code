@@ -12,8 +12,8 @@ function( add_t8_benchmark )
     set(BENCHMARK_BUILD_DIR "${CMAKE_BINARY_DIR}/${BENCHMARK_RELATIVE_DIR}")
 
     add_executable( ${ADD_T8_BENCHMARK_NAME} ${ADD_T8_BENCHMARK_SOURCES} )
-    target_include_directories( ${ADD_T8_BENCHMARK_NAME} PRIVATE ${PROJECT_SOURCE_DIR} )
-    target_link_libraries( ${ADD_T8_BENCHMARK_NAME} PRIVATE T8 SC::SC )
+    target_link_libraries( ${ADD_T8_BENCHMARK_NAME} PRIVATE T8 ${SC_LIBRARIES} m )
+    target_include_directories( ${ADD_T8_BENCHMARK_NAME} PRIVATE ${PROJECT_SOURCE_DIR} ${SC_INCLUDE_DIR})
 
     set_target_properties(${ADD_T8_BENCHMARK_NAME} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${BENCHMARK_BUILD_DIR}"

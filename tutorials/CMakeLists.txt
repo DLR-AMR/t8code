@@ -12,8 +12,9 @@ function( add_t8_tutorial )
     set(TUTORIAL_BUILD_DIR "${CMAKE_BINARY_DIR}/${TUTORIAL_RELATIVE_DIR}")
 
     add_executable( ${ADD_T8_TUTORIAL_NAME} ${ADD_T8_TUTORIAL_SOURCES} )
-    target_link_libraries( ${ADD_T8_TUTORIAL_NAME} PRIVATE T8 SC::SC )
-    target_include_directories( ${ADD_T8_TUTORIAL_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. )
+
+    target_link_libraries( ${ADD_T8_TUTORIAL_NAME} PRIVATE T8 ${SC_LIBRARIES} m )
+    target_include_directories( ${ADD_T8_TUTORIAL_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. ${SC_INCLUDE_DIR} )
     
     set_target_properties(${ADD_T8_TUTORIAL_NAME} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${TUTORIAL_BUILD_DIR}"
