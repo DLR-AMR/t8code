@@ -1,4 +1,4 @@
-# taken and adapted from the heekscad project: https://github.com/Heeks
+# Taken and adapted from the heekscad project: https://github.com/Heeks
 
 # HeeksCAD is covered by the new BSD license
 
