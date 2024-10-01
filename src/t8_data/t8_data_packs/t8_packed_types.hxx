@@ -23,6 +23,11 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #ifndef T8_PACKED_TYPES
 #define T8_PACKED_TYPES
 
+/**
+ * \file Summary file to include all packed types.
+ * 
+ */
+
 #include <t8_data/t8_data_packs/t8_enlarged_stdtypes.hxx>
 
 #endif /* T8_PACKED_TYPES */

@@ -26,6 +26,15 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <test/t8_data/t8_data_handler_specs.hxx>
 #include <t8_data/t8_data_handler_base.hxx>
 
+/**
+ * \file This file provides a templated class for testing single data items.
+ * 
+ */
+
+/**
+ * \brief pseudo_types for testing
+ * 
+ */
 enum pseudo_types { T8_ENLARGED_INT = 0, T8_ENLARGED_DOUBLE = 1 };
 
 template <>
