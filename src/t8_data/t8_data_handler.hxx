@@ -152,12 +152,15 @@ class t8_data_handler: public t8_abstract_data_handler {
   {
   }
 
-  void
-  get_data (std::vector<TType> &data) const
+  /**
+   * \brief Get the data.
+   * 
+   * \return std::shared_ptr<std::vector<TType>> 
+   */
+  std::shared_ptr<std::vector<TType>>
+  get_data () const
   {
-    if (m_data) {
-      data = *m_data;
-    }
+    return m_data;
   }
 
   int

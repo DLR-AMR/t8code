@@ -82,7 +82,7 @@ TYPED_TEST_P (data_handler_test, pack_unpack_vector_of_data)
   this->data_handler->unpack_vector_prefix (buffer, num_bytes, pos, outcount, this->comm);
   EXPECT_EQ (outcount, this->max_num_data);
 
-  this->data_handler->get_data (this->recv_data);
+  this->recv_data = *(this->data_handler->get_data ());
 
   for (int idata = 0; idata < this->max_num_data; idata++) {
     EXPECT_EQ (this->recv_data[idata].data, this->creator.large_data[idata].data);
@@ -116,7 +116,7 @@ TYPED_TEST_P (data_handler_test, send_recv)
   int outcount;
   mpiret = this->data_handler->recv (recv_from, 0, this->comm, &status, outcount);
 
-  this->data_handler->get_data (this->recv_data);
+  this->recv_data = *(this->data_handler->get_data ());
 #if T8_ENABLE_MPI
   SC_CHECK_MPI (mpiret);
   EXPECT_EQ (outcount, this->max_num_data);
@@ -177,10 +177,9 @@ TEST (data_handler_test, multiple_handler)
 #endif
   }
 
-  std::vector<enlarged_data<int>> recv_ints;
-  std::vector<enlarged_data<double>> recv_doubles;
-  ((t8_data_handler<enlarged_data<int>> *) (handler[0]))->get_data (recv_ints);
-  ((t8_data_handler<enlarged_data<double>> *) (handler[1]))->get_data (recv_doubles);
+  std::vector<enlarged_data<int>> recv_ints = *((t8_data_handler<enlarged_data<int>> *) (handler[0]))->get_data ();
+  std::vector<enlarged_data<double>> recv_doubles
+    = *((t8_data_handler<enlarged_data<double>> *) (handler[1]))->get_data ();
 
 #if T8_ENABLE_MPI
   SC_CHECK_MPI (mpiret);
@@ -214,10 +213,9 @@ TEST (data_handler_test, pseudo_tree_test)
   EXPECT_EQ (tree.topo_data.size (), tree_copy.topo_data.size ());
   EXPECT_EQ (tree.tree_data.size (), tree_copy.tree_data.size ());
 
-  std::vector<enlarged_data<int>> copied_data;
   auto handler = std::dynamic_pointer_cast<t8_data_handler<enlarged_data<int>>> (tree_copy.tree_data[0]).get ();
   ASSERT_NE (handler, nullptr);
-  handler->get_data (copied_data);
+  std::vector<enlarged_data<int>> copied_data = *(handler->get_data ());
 
   for (int idata = 0; idata < num_data; ++idata) {
     EXPECT_EQ (copied_data[idata].data, idata);
@@ -229,10 +227,9 @@ TEST (data_handler_test, pseudo_tree_test)
   EXPECT_EQ (tree.topo_data.size (), tree_equal.topo_data.size ());
   EXPECT_EQ (tree.tree_data.size (), tree_equal.tree_data.size ());
 
-  std::vector<enlarged_data<int>> equal_data;
   auto handler_equal = std::dynamic_pointer_cast<t8_data_handler<enlarged_data<int>>> (tree_equal.tree_data[0]).get ();
   ASSERT_NE (handler_equal, nullptr);
-  handler_equal->get_data (equal_data);
+  std::vector<enlarged_data<int>> equal_data = *(handler_equal->get_data ());
 
   for (int idata = 0; idata < num_data; ++idata) {
     EXPECT_EQ (equal_data[idata].data, idata);
@@ -296,8 +293,7 @@ TEST (data_handler_test, tree_test)
   int outcount;
   mpiret = tree_handler.recv (recv_from, 0, comm, &status, outcount);
 
-  std::vector<pseudo_tree> recv_trees;
-  tree_handler.get_data (recv_trees);
+  std::vector<pseudo_tree> recv_trees = *(tree_handler.get_data ());
 
   const int num_recv_trees = recv_trees.size ();
   ASSERT_EQ (num_recv_trees, (recv_from % 4) * 10);
@@ -314,12 +310,12 @@ TEST (data_handler_test, tree_test)
     ASSERT_EQ (num_recv_tree_data, (recv_from + itree) % 2);
     for (int itree_data = 0; itree_data < num_recv_tree_data; ++itree_data) {
       if (itree_data == 0) {
-        std::vector<enlarged_data<int>> recv_ints;
         auto int_handler
           = std::dynamic_pointer_cast<t8_data_handler<enlarged_data<int>>> (recv_trees[itree].tree_data[itree_data])
               .get ();
         ASSERT_NE (int_handler, nullptr);
-        int_handler->get_data (recv_ints);
+        std::vector<enlarged_data<int>> recv_ints = *(int_handler->get_data ());
+
         ASSERT_EQ (static_cast<int> (recv_ints.size ()), num_data);
         for (int idata = 0; idata < num_data; ++idata) {
           EXPECT_EQ (recv_ints[idata].data, idata);
@@ -327,12 +323,11 @@ TEST (data_handler_test, tree_test)
         }
       }
       else {
-        std::vector<enlarged_data<double>> recv_double;
         auto double_handler
           = std::dynamic_pointer_cast<t8_data_handler<enlarged_data<double>>> (recv_trees[itree].tree_data[itree_data])
               .get ();
         ASSERT_NE (double_handler, nullptr);
-        double_handler->get_data (recv_double);
+        std::vector<enlarged_data<double>> recv_double = *(double_handler->get_data ());
         ASSERT_EQ (static_cast<int> (recv_double.size ()), num_data);
         for (int idata = 0; idata < num_data; ++idata) {
           EXPECT_EQ (recv_double[idata].data, static_cast<double> (idata) + fraction);
