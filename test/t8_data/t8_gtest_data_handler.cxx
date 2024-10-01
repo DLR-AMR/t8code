@@ -103,13 +103,12 @@ TYPED_TEST_P (data_handler_test, pack_unpack_vector_of_data)
 TYPED_TEST_P (data_handler_test, send_recv)
 {
   /* Compute the rank this rank sends to. We send in a round-robin fashion */
-  int send_to = (this->mpirank + 1) % this->mpisize;
 
   /* Pack and send the data. */
 #if T8_ENABLE_MPI
+  int send_to = (this->mpirank + 1) % this->mpisize;
   int mpiret = this->data_handler->send (send_to, 0, this->comm);
   SC_CHECK_MPI (mpiret);
-#endif
 
   /* Compute the rank we this rank receives from. */
   int recv_from = (this->mpirank == 0) ? (this->mpisize - 1) : (this->mpirank - 1);
@@ -117,7 +116,6 @@ TYPED_TEST_P (data_handler_test, send_recv)
   /* Receive and unpack the data. */
   sc_MPI_Status status;
   int outcount;
-#if T8_ENABLE_MPI
   mpiret = this->data_handler->recv (recv_from, 0, this->comm, &status, outcount);
   SC_CHECK_MPI (mpiret);
   this->recv_data = *(this->data_handler->get_data ());
@@ -158,29 +156,25 @@ TEST (data_handler_test, multiple_handler)
   handler.push_back (&int_handler);
   handler.push_back (&double_handler);
 
+#if T8_ENABLE_MPI
   /* Compute the rank this rank sends to. We send in a round-robin fashion */
   int send_to = (mpirank + 1) % mpisize;
-#if T8_ENABLE_MPI
   /* Compute the rank this rank receives from. */
   int recv_from = (mpirank == 0) ? (mpisize - 1) : (mpirank - 1);
-#endif
   for (t8_abstract_data_handler *ihandler : handler) {
 
-#if T8_ENABLE_MPI
     mpiret = ihandler->send (send_to, 0, comm);
     SC_CHECK_MPI (mpiret);
     /* Receive and unpack the data. */
     sc_MPI_Status status;
     int outcount;
     mpiret = ihandler->recv (recv_from, 0, comm, &status, outcount);
-#endif
   }
 
   std::vector<enlarged_data<int>> recv_ints = *((t8_data_handler<enlarged_data<int>> *) (handler[0]))->get_data ();
   std::vector<enlarged_data<double>> recv_doubles
     = *((t8_data_handler<enlarged_data<double>> *) (handler[1]))->get_data ();
 
-#if T8_ENABLE_MPI
   SC_CHECK_MPI (mpiret);
   for (int idata = 0; idata < num_data; idata++) {
     EXPECT_EQ (recv_ints[idata].check, recv_from);
