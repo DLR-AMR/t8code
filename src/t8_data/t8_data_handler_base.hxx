@@ -74,4 +74,27 @@ class t8_single_data_handler {
   ~t8_single_data_handler () {};
 };
 
+/**
+ * \class t8_single_data_handler_c
+ * @\rief A class for handling single data operations in an MPI environment.
+ *
+ * This class provides methods to determine the size of data, pack data into a buffer,
+ * unpack data from a buffer, and get the type of data.
+ */
+struct t8_single_data_handler_c
+{
+
+  int
+  size (const void *data, sc_MPI_Comm comm);
+
+  void
+  pack (const void *data, int &pos, void *buffer, const int num_bytes, sc_MPI_Comm comm);
+
+  void
+  unpack (const void *buffer, const int num_bytes, int &pos, void *data, sc_MPI_Comm comm);
+
+  int
+  type ();
+};
+
 #endif /* T8_DATA_HANDLER_BASE */

@@ -185,7 +185,13 @@ class t8_data_handler: public t8_abstract_data_handler {
 
     if (!m_data) {
       m_data = std::make_shared<std::vector<T>> (outcount);
-    }
+    } /**
+ * @brief Get the size of the data.
+ *
+ * @param data Pointer to the data.
+ * @param comm MPI communicator.
+ * @return The size of the data.
+ */
     else {
       m_data->resize (outcount);
     }
@@ -245,5 +251,14 @@ class t8_data_handler: public t8_abstract_data_handler {
   std::shared_ptr<std::vector<T>> m_data;
   t8_single_data_handler<T> single_handler;
 };
+
+typedef struct
+{
+  void *m_data;
+  t8_single_data_handler_c single_handler;
+} t8_data_handler_c;
+
+void
+get_data ()
 
 #endif /* T8_DATA_HANDLER_HXX */
