@@ -27,10 +27,9 @@ template <>
 void
 data_creator<enlarged_data<int>>::create (const int num_data)
 {
-  large_data.resize (num_data);
+  large_data.reserve (num_data);
   for (int idata = 0; idata < num_data; idata++) {
-    large_data[idata].data = idata;
-    large_data[idata].check = 42;
+    large_data.emplace_back (42, idata);
   }
 }
 
@@ -38,9 +37,8 @@ template <>
 void
 data_creator<enlarged_data<double>>::create (const int num_data)
 {
-  large_data.resize (num_data);
+  large_data.reserve (num_data);
   for (int idata = 0; idata < num_data; idata++) {
-    large_data[idata].data = idata;
-    large_data[idata].check = 42.42;
+    large_data.emplace_back (42.42, idata);
   }
 }
