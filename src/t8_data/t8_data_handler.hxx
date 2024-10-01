@@ -20,6 +20,11 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/**
+ * \file This file provides functions to pack and unpack data for communication and to send and receive it using MPI.
+ * 
+ */
+
 #ifndef T8_DATA_HANDLER_HXX
 #define T8_DATA_HANDLER_HXX
 

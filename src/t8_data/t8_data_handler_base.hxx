@@ -23,6 +23,11 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #ifndef T8_DATA_HANDLER_BASE
 #define T8_DATA_HANDLER_BASE
 
+/**
+ * \file This file provides a templated class for handling single data items.
+ * 
+ */
+
 #include <t8.h>
 
 template <typename TType>

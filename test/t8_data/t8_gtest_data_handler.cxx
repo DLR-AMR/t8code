@@ -29,6 +29,11 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <numeric>
 
 /**
+ * \file Test to check the functionality of the t8_data_handler class. 
+ * 
+ */
+
+/**
  * Templated testing class. Creates enlarged data (original data + a checking integer) and a 
  * data handler. 
  * 

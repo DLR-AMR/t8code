@@ -25,11 +25,14 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <t8.h>
 #include <vector>
-#include <algorithm>
 #include <test/t8_data/t8_data_handler_specs.hxx>
 #include <t8_data/t8_data_handler.hxx>
-
 #include <memory>
+
+/**
+ *  /file This file provides a pseudo tree structure for testing purposes.
+ * 
+ */
 
 /**
  * \class pseudo_tree
