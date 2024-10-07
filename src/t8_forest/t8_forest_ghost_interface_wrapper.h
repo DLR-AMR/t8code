@@ -31,25 +31,31 @@ T8_EXTERN_C_BEGIN ();
 
 /**
  * Satisfy the C interface of forest
- * Create a new ghost_interface with given version
-*/
+ * Create a new ghost_interface of type face with given version
+ */
 t8_forest_ghost_interface_c *
 t8_forest_ghost_interface_face_new (int version);
 
+/**
+ * Satisfy the C interface of forest
+ * Create a new ghost_interface of type stencil
+ */
 t8_forest_ghost_interface_c *
 t8_forest_ghost_interface_stencil_new ();
 
 /**
  * Satisfy the C interface of forest
- * Return for a ghost_interface of Type FACE the ghost_algorithm / ghost_version
-*/
+ * Return for a ghost_interface of Type FACE the ghost_algorithm / ghost_version (1, 2 or 3)
+ * \param [in]    ghost_interface Pointer to object of class t8_forest_ghost_face
+ */
 int
 t8_forest_ghost_interface_face_version (t8_forest_ghost_interface_c *ghost_interface);
 
 /**
  * Satisfy the C interface of forest
  * Return the type of a ghost_interface
-*/
+ * \param [in]    ghost_interface Pointer to object of class t8_forest_ghost_interface or a derivet class
+ */
 t8_ghost_type_t
 t8_forest_ghost_interface_get_type (t8_forest_ghost_interface_c *ghost_interface);
 
@@ -57,7 +63,7 @@ t8_forest_ghost_interface_get_type (t8_forest_ghost_interface_c *ghost_interface
  * Satisfy the C interface of forest
  * Do a ref on the ghost_interface
  * Needed in t8_forest_commit
-*/
+ */
 void
 t8_forest_ghost_interface_ref (t8_forest_ghost_interface_c *ghost_interface);
 
@@ -65,7 +71,7 @@ t8_forest_ghost_interface_ref (t8_forest_ghost_interface_c *ghost_interface);
  * Satisfy the C interface of forest
  * Do a unref on the ghost_interface
  * Needed in t8_forest_commit and t8_forest_set_ghost_ext_new
-*/
+ */
 void
 t8_forest_ghost_interface_unref (t8_forest_ghost_interface_c **pghost_interface);
 

@@ -2172,19 +2172,6 @@ t8_forest_ghost_interface_stencil_get_remote_rank (t8_forest_t forest, t8_eclass
   return owner;
 }
 
-/**
-   * Add this stencil (elements N and F) for element E to ghost
-   * 
-   *           N
-   *           |
-   *       N - F - N
-   *       |   |   |
-   *   N - F - E - F - N
-   *       |   |   |
-   *       N - F - N
-   *           |
-   *           N
-   */
 void
 t8_forest_ghost_stencil::add_stencil_to_ghost (t8_forest_t forest, const t8_element_t *element,
                                                t8_eclass_scheme_c *eclass_scheme, int level, t8_eclass_t tree_class,
