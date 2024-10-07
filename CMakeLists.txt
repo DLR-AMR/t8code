@@ -4,7 +4,7 @@ include(cmake/GitProjectVersion.cmake)
 
 project( T8CODE
   DESCRIPTION "Parallel algorithms and data structures for tree-based AMR with arbitrary element shapes."
-  LANGUAGES C CXX
+  LANGUAGES C CXX Fortran
   VERSION "${T8CODE_VERSION_MAJOR}.${T8CODE_VERSION_MINOR}.${T8CODE_VERSION_PATCH}" )
 include( CTest )
 
@@ -15,6 +15,7 @@ option( T8CODE_BUILD_TESTS "Build t8code's automated tests" ON )
 option( T8CODE_BUILD_TUTORIALS "Build t8code's tutorials" ON )
 option( T8CODE_BUILD_EXAMPLES "Build t8code's examples" ON )
 option( T8CODE_BUILD_BENCHMARKS "Build t8code's benchmarks" ON )
+option( T8CODE_BUILD_FORTRAN_INTERFACE "Build t8code's Fortran interface" OFF )
 option( T8CODE_ENABLE_LESS_TESTS "Tests not as thoroughly to speed up the test suite. Tests the same functionality. (WARNING: Use with care.)" OFF )
 
 option( T8CODE_ENABLE_MPI "Enable t8code's features which rely on MPI" ON )
@@ -56,7 +57,12 @@ set( CMAKE_CXX_EXTENSIONS OFF )
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 if( T8CODE_ENABLE_MPI )
-    find_package( MPI COMPONENTS C REQUIRED )
+    if( T8CODE_BUILD_FORTRAN_INTERFACE )
+      find_package( MPI COMPONENTS C Fortran REQUIRED )
+    else()
+      find_package( MPI COMPONENTS C REQUIRED )
+    endif()
+
     if( NOT MPIEXEC_EXECUTABLE )
         message( FATAL_ERROR "MPIEXEC was not found" )
     endif()
@@ -136,3 +142,14 @@ endif()
 if ( T8CODE_BUILD_DOCUMENTATION )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/doc )
 endif()
+
+if( T8CODE_BUILD_FORTRAN_INTERFACE )
+    enable_language( Fortran )
+    add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/api/t8_fortran_interface )
+
+    if( NOT T8CODE_ENABLE_MPI )
+        message( FATAL_ERROR "Fortran API only available when MPI is enabled." )
+    endif()
+endif()
+
+include (cmake/CPackConfig.cmake)

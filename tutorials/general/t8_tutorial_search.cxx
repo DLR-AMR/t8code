@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* See also: https://github.com/holke/t8code/wiki/Tutorial:-Search
+/* See also: https://github.com/DLR-AMR/t8code/wiki/Tutorial:-Search
  * In this tutorial we discuss t8code's search algorithm.
  * search is a powerful tool to identify leaf elements that match a given condition
  * and execute a function on them.
