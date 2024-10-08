@@ -81,17 +81,8 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
    * is compatible with all tree types and uses as many vertices as the number of Lagrange
    * basis functions used for the mapping.
    * The vertices are saved via the \ref t8_cmesh_set_tree_vertices function.
-   * \param [in] dim  0 <= \a dim <= 3. Element dimension in the parametric space.
-   * E.g. \a dim = 2 for a \ref T8_ECLASS_QUAD element.
    */
-  t8_geometry_lagrange (int dim);
-
-  /* Base constructor with no arguments. We need this since it
-   * is called from derived class constructors.
-   * Sets dimension and name to invalid values. */
-  t8_geometry_lagrange (): t8_geometry_with_vertices ()
-  {
-  }
+  t8_geometry_lagrange ();
 
   virtual ~t8_geometry_lagrange ();
 
@@ -122,7 +113,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
    * 
    * \param [in]  cmesh       The cmesh in which the point lies.
    * \param [in]  gtreeid     The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension x \a num_points entries, specifying points in the reference space.
+   * \param [in]  ref_coords  Array of tree dimension x \a num_points entries, specifying points in the reference space.
    * \param [in]  num_points  Number of points to map. Currently, only one point is supported.
    * \param [out] out_coords  Coordinates of the mapped points in physical space of \a ref_coords. The length is \a num_points * 3.
    */
@@ -134,7 +125,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
    * Compute the Jacobian of the \a t8_geom_evaluate map at a point in the reference space.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension x \a num_points entries, specifying points in the reference space.
+   * \param [in]  ref_coords  Array of tree dimension x \a num_points entries, specifying points in the reference space.
    * \param [in]  num_points  Number of points to map.
    * \param [out] jacobian    The Jacobian at \a ref_coords. Array of size \a num_points x dimension x 3. Indices \f$ 3 \cdot i\f$ , \f$ 3 \cdot i+1 \f$ , \f$ 3 \cdot i+2 \f$
    *                          correspond to the \f$ i \f$-th column of the Jacobian  (Entry \f$ 3 \cdot i + j \f$ is \f$ \frac{\partial f_j}{\partial x_i} \f$).
@@ -164,7 +155,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
  private:
   /**
    * Evaluates the basis functions of the current tree type at a point.
-   * \param [in]  ref_point  Array of \a dimension entries, specifying the point in the reference space.
+   * \param [in]  ref_point  Array of tree dimension entries, specifying the point in the reference space.
    */
   inline std::vector<double>
   t8_geom_compute_basis (const double *ref_point) const;
