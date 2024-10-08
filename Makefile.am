@@ -46,7 +46,10 @@ dist_t8aclocal_DATA = config/t8_include.m4 \
                       config/t8_stdpp.m4 \
                       config/t8_netcdf.m4 \
                       config/t8_vtk.m4 \
-                      config/t8_occ.m4
+                      config/t8_occ.m4 \
+                      config/t8_fortran.m4 \
+                      config/t8_mpi.m4
+
 
 # install t8code data in the correct directory
 t8datadir = $(datadir)/t8code/data
@@ -76,6 +79,7 @@ include test/Makefile.am
 include example/Makefile.am
 include tutorials/Makefile.am
 include benchmarks/Makefile.am
+include api/Makefile.am
 
 # revision control and ChangeLog
 ChangeLog:

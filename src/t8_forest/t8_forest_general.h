@@ -436,6 +436,17 @@ t8_forest_get_num_ghosts (const t8_forest_t forest);
 t8_eclass_t
 t8_forest_get_eclass (const t8_forest_t forest, const t8_locidx_t ltreeid);
 
+/**
+ * Check whether a given tree id belongs to a local tree in a forest.
+ * 
+ * \param [in]    forest The forest.
+ * \param [in]    local_tree A tree id.
+ * \return True if and only if the id \a local_tree belongs to a local tree of \a forest.
+ * \a forest must be committed before calling this function.
+ */
+int
+t8_forest_tree_is_local (const t8_forest_t forest, const t8_locidx_t local_tree);
+
 /** Given a global tree id compute the forest local id of this tree.
  * If the tree is a local tree, then the local id is between 0 and the number
  * of local trees. If the tree is not a local tree, a negative number is returned.
@@ -493,6 +504,19 @@ t8_forest_cmesh_ltreeid_to_ltreeid (t8_forest_t forest, t8_locidx_t lctreeid);
 t8_ctree_t
 t8_forest_get_coarse_tree (t8_forest_t forest, t8_locidx_t ltreeid);
 
+/**
+ * Query whether a given element is a leaf in a forest.
+ * 
+ * \param [in]  forest    The forest.
+ * \param [in]  element   An element of a local tree in \a forest.
+ * \param [in]  local_tree A local tree id of \a forest.
+ * \return True (non-zero) if and only if \a element is a leaf in \a local_tree of \a forest.
+ * \note This does not query for ghost leaves.
+ * \note \a forest must be committed before calling this function.
+ */
+int
+t8_forest_element_is_leaf (const t8_forest_t forest, const t8_element_t *element, const t8_locidx_t local_tree);
+
 /** Compute the leaf face orientation at given face in a forest.
  * \param [in]    forest  The forest. Must have a valid ghost layer.
  * \param [in]    ltreeid A local tree id.
@@ -512,7 +536,7 @@ t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, 
  * \param [in]    forest  The forest. Must have a valid ghost layer.
  * \param [in]    ltreeid A local tree id.
  * \param [in]    leaf    A leaf in tree \a ltreeid of \a forest.
- * \param [out]   neighbor_leaves Unallocated on input. On output the neighbor
+ * \param [out]   pneighbor_leaves Unallocated on input. On output the neighbor
  *                        leaves are stored here.
  * \param [in]    face    The index of the face across which the face neighbors
  *                        are searched.
@@ -530,6 +554,16 @@ t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, 
  * and *pelement_indices = NULL on output.
  * \note Currently \a forest must be balanced.
  * \note \a forest must be committed before calling this function.
+ *
+ * \note Important! This routine allocates memory which must be freed. Do it like this:
+ *
+ *   if (num_neighbors > 0) {
+ *     eclass_scheme->t8_element_destroy (num_neighbors, neighbors);
+ *     T8_FREE (pneighbor_leaves);
+ *     T8_FREE (pelement_indices);
+ *     T8_FREE (dual_faces);
+ *   }
+ *
  */
 void
 t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf,
@@ -800,7 +834,7 @@ t8_forest_element_points_inside (t8_forest_t forest, t8_locidx_t ltreeid, const 
                                  const double *points, int num_points, int *is_inside, const double tolerance);
 
 /* TODO: if set level and partition/adapt/balance all give NULL, then
- * refine uniformly and partition/adapt/balance the unfiform forest. */
+ * refine uniformly and partition/adapt/balance the uniform forest. */
 /** Build a uniformly refined forest on a coarse mesh.
  * \param [in]      cmesh     A coarse mesh.
  * \param [in]      scheme    An eclass scheme.

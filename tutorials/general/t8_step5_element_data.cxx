@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* See also: https://github.com/holke/t8code/wiki/Step-5---Store-element-data
+/* See also: https://github.com/DLR-AMR/t8code/wiki/Step-5---Store-element-data
  *
  * This is step5 of the t8code tutorials.
  * In the following we will store data in the individual elements of our forest. 
@@ -42,13 +42,13 @@
  *     data into the output file.
  *  */
 
-#include <t8.h>                                     /* General t8code header, always include this. */
-#include <t8_cmesh.h>                               /* cmesh definition and basic interface. */
-#include <t8_cmesh/t8_cmesh_examples.h>             /* A collection of exemplary cmeshes */
-#include <t8_forest/t8_forest_general.h>            /* forest definition and basic interface. */
-#include <t8_forest/t8_forest_io.h>                 /* save forest */
-#include <t8_forest/t8_forest_geometrical.h>        /* geometrical information */
-#include <t8_schemes/t8_default/t8_default_cxx.hxx> /* default refinement scheme. */
+#include <t8.h>                                 /* General t8code header, always include this. */
+#include <t8_cmesh.h>                           /* cmesh definition and basic interface. */
+#include <t8_cmesh/t8_cmesh_examples.h>         /* A collection of exemplary cmeshes */
+#include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
+#include <t8_forest/t8_forest_io.h>             /* save forest */
+#include <t8_forest/t8_forest_geometrical.h>    /* geometrical information */
+#include <t8_schemes/t8_default/t8_default.hxx> /* default refinement scheme. */
 #include <tutorials/general/t8_step3.h>
 
 T8_EXTERN_C_BEGIN ();

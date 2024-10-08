@@ -22,7 +22,7 @@
 
 #include <gtest/gtest.h>
 #include <t8_cmesh.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_cmesh/t8_cmesh_partition.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 
@@ -124,8 +124,7 @@ TEST_P (cmesh_multiple_attributes, multiple_attributes)
   t8_locidx_t num_ghosts = t8_cmesh_get_num_ghosts (cmesh_mult_at_from_stash);
   for (t8_locidx_t ltree_id = 0; ltree_id < num_local_trees + num_ghosts; ltree_id++) {
     const t8_gloidx_t gtree_id = t8_cmesh_get_global_id (cmesh_mult_at_from_stash, ltree_id);
-    const double *vertices_partition = (double *) t8_cmesh_get_attribute (
-      cmesh_mult_at_from_stash, t8_get_package_id (), T8_CMESH_VERTICES_ATTRIBUTE_KEY, ltree_id);
+    const double *vertices_partition = t8_cmesh_get_tree_vertices (cmesh_mult_at_from_stash, ltree_id);
     const t8_eclass_t eclass = (ltree_id < num_local_trees)
                                  ? t8_cmesh_get_tree_class (cmesh_one_at, ltree_id)
                                  : t8_cmesh_get_ghost_class (cmesh_one_at, ltree_id - num_local_trees);
@@ -133,9 +132,12 @@ TEST_P (cmesh_multiple_attributes, multiple_attributes)
 
     /* Compare vertices with reference vertices. */
     for (int v_id = 0; v_id < 8; v_id++) {
-      EXPECT_EQ (vertices_partition[v_id * 3], vertices_ref[v_id * 3] + gtree_id);
-      EXPECT_EQ (vertices_partition[v_id * 3 + 1], vertices_ref[v_id * 3 + 1]);
-      EXPECT_EQ (vertices_partition[v_id * 3 + 2], vertices_ref[v_id * 3 + 2]);
+      EXPECT_EQ (vertices_partition[v_id * 3], vertices_ref[v_id * 3] + gtree_id)
+        << " at tree id " << ltree_id << " and vertex " << v_id;
+      EXPECT_EQ (vertices_partition[v_id * 3 + 1], vertices_ref[v_id * 3 + 1])
+        << " at tree id " << ltree_id << " and rtex " << v_id;
+      EXPECT_EQ (vertices_partition[v_id * 3 + 2], vertices_ref[v_id * 3 + 2])
+        << " at tree id " << ltree_id << " and vertex " << v_id;
     }
     /* Compare second attribute with global tree id. */
     t8_locidx_t att;
@@ -150,4 +152,4 @@ TEST_P (cmesh_multiple_attributes, multiple_attributes)
 }
 
 /* Test for different number of trees. */
-INSTANTIATE_TEST_SUITE_P (t8_gtest_multiple_attributes, cmesh_multiple_attributes, testing::Range (1, 4));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_multiple_attributes, cmesh_multiple_attributes, testing::Range (1, 10));
