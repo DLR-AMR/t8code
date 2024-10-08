@@ -457,8 +457,8 @@ int
 t8_tutorial_build_cmesh_main (int argc, char **argv)
 {
   /* The prefix for our output files. */
-  const char *prefix_2D = "t8_step8_user_defined_mesh_2D";
-  const char *prefix_3D = "t8_step8_user_defined_mesh_3D";
+  const char *prefix_2D = "t8_user_defined_mesh_2D";
+  const char *prefix_3D = "t8_user_defined_mesh_3D";
 
   /*
    * Initialization.
