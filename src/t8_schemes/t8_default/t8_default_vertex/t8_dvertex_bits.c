@@ -176,12 +176,13 @@ t8_dvertex_vertex_ref_coords (const t8_dvertex_t *elem, const int vertex, double
 
 void
 t8_dvertex_compute_reference_coords (const t8_dvertex_t *elem, const double *ref_coords, const size_t num_coords,
-                                     double *out_coords)
+                                     const size_t padding, double *out_coords)
 {
   T8_ASSERT (fabs (ref_coords[0]) <= T8_PRECISION_EPS);
   T8_ASSERT (t8_dvertex_is_valid (elem));
   for (size_t coord = 0; coord < num_coords; ++coord) {
-    out_coords[coord] = 0;
+    const size_t offset_out = coord * (1 + padding);
+    out_coords[offset_out] = 0;
   }
 }
 

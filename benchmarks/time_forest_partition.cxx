@@ -84,7 +84,7 @@ t8_anchor_element (t8_forest_t forest, t8_locidx_t which_tree,
                                               t8_forest_ltreeid_to_cmesh_ltreeid
                                               (forest, which_tree));
 
-  t8_forest_element_coordinate (forest, which_tree, element, tree_vertices,
+  t8_forest_element_coordinate_from_corner_number (forest, which_tree, element, tree_vertices,
                                 0, elem_anchor_f);
 #if 0
   /* get the element anchor node */
