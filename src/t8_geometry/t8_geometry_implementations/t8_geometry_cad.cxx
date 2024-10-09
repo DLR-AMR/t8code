@@ -50,8 +50,7 @@ const int t8_interpolation_coefficient_tet_edge[6] = { 0, 0, 0, 2, 2, 1 };
  * For example: face 0 is described by coordinates z and y. */
 const int t8_face_ref_coords_tet[4][2] = { { 2, 1 }, { 0, 1 }, { 0, 1 }, { 0, 2 } };
 
-t8_geometry_cad::t8_geometry_cad (int dim, std::string fileprefix, std::string name_in)
-  : t8_geometry_with_vertices (dim, name_in + "_" + std::to_string (dim))
+t8_geometry_cad::t8_geometry_cad (std::string fileprefix, std::string name_in): t8_geometry_with_vertices (name_in)
 {
   BRep_Builder builder;
   std::string current_file (fileprefix);
@@ -74,8 +73,8 @@ t8_geometry_cad::t8_geometry_cad (int dim, std::string fileprefix, std::string n
   TopExp::MapShapesAndUniqueAncestors (cad_shape, TopAbs_EDGE, TopAbs_FACE, cad_shape_edge2face_map);
 }
 
-t8_geometry_cad::t8_geometry_cad (int dim, const TopoDS_Shape cad_shape, std::string name_in)
-  : t8_geometry_with_vertices (dim, name_in + "_" + std::to_string (dim))
+t8_geometry_cad::t8_geometry_cad (const TopoDS_Shape cad_shape, std::string name_in)
+  : t8_geometry_with_vertices (name_in)
 {
   if (cad_shape.IsNull ()) {
     SC_ABORTF ("Shape is null. \n");
@@ -87,7 +86,7 @@ t8_geometry_cad::t8_geometry_cad (int dim, const TopoDS_Shape cad_shape, std::st
   TopExp::MapShapesAndUniqueAncestors (cad_shape, TopAbs_EDGE, TopAbs_FACE, cad_shape_edge2face_map);
 }
 
-t8_geometry_cad::t8_geometry_cad (int dim): t8_geometry_with_vertices (dim, "t8_geom_cad_" + std::to_string (dim))
+t8_geometry_cad::t8_geometry_cad (): t8_geometry_with_vertices ("t8_geom_cad")
 {
   cad_shape.Nullify ();
 }
@@ -1634,11 +1633,11 @@ t8_geometry_cad::t8_geom_is_surface_closed (int geometry_index, int parameter) c
 T8_EXTERN_C_BEGIN ();
 
 /* Satisfy the C interface from t8_geometry_cad.h.
- * Create a new geometry with given dimension. */
+ * Create a new geometry. */
 t8_geometry_cad_c *
-t8_geometry_cad_new (int dimension, const char *fileprefix, const char *name_in)
+t8_geometry_cad_new (const char *fileprefix, const char *name_in)
 {
-  t8_geometry_cad *geom = new t8_geometry_cad (dimension, fileprefix, name_in);
+  t8_geometry_cad *geom = new t8_geometry_cad (fileprefix, name_in);
   return (t8_geometry_cad_c *) geom;
 }
 
