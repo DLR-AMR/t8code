@@ -39,9 +39,9 @@ main (int argc, char **argv)
   t8_global_essentialf ("NetCDF Input Example\n");
 
   /* Define the ought to be considered parts of all dimensions */
-  const t8_nc_dimension_interval_t lon_dimension (t8_nc_dimension_t::LON, 0, 96);
-  const t8_nc_dimension_interval_t lat_dimension (t8_nc_dimension_t::LAT, 0, 64);
-  const t8_nc_dimension_interval_t lev_dimension (t8_nc_dimension_t::LEV, 0, 1);
+  const t8_nc_dimension_interval_t lon_dimension (t8_nc_dimension_t::LON, 0, 32);
+  const t8_nc_dimension_interval_t lat_dimension (t8_nc_dimension_t::LAT, 0, 32);
+  const t8_nc_dimension_interval_t lev_dimension (t8_nc_dimension_t::LEV, 0, 32);
 
   /* Make a hyperslab from all dimensions */
   const t8_nc_hyperslab_t hyperslab (lon_dimension, lat_dimension, lev_dimension);
@@ -58,13 +58,22 @@ main (int argc, char **argv)
   /* Seize the inquired data */
   std::vector<InputVar> nc_variables = nc_data.transfer_data ();
   t8_productionf ("Size of InputVar vector: %ld\n", nc_variables.size ());
+#if 0
+  auto [initial_embedded_forest, current_max_refinement_lvl_initial] = 
+              t8_nc_build_initial_embedded_mesh(nc_variables.front().global_domain_, nc_variables.front().initial_layout_, sc_MPI_COMM_WORLD);
+  
+  t8_forest_unref(&initial_embedded_forest);
 
-  //auto [initial_embedded_forest, current_max_refinement_lvl_initial] = t8_nc_build_initial_embedded_mesh();
-  //auto [initial_congruent_forest, current_max_refinement_lvl_congruent] = t8_nc_build_initial_congruent_mesh();
+#endif
+  auto [initial_congruent_forest, current_max_refinement_lvl_congruent] = 
+              t8_nc_build_initial_congruent_mesh(nc_variables.front().global_domain_, nc_variables.front().initial_layout_, sc_MPI_COMM_WORLD);
+
+  t8_forest_unref(&initial_congruent_forest);
 
   sc_finalize ();
 
   mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
+
   return 0;
 }
