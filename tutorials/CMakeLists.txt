@@ -28,6 +28,11 @@ function( add_t8_tutorial )
     install( TARGETS ${ADD_T8_TUTORIAL_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
 endfunction()
 
+#copy tutorial files to the exact same location in the builddir as they are in the source dir
+function( copy_tutorial_file TUTORIAL_FILE_NAME_SUBPATH )
+    configure_file(${CMAKE_CURRENT_LIST_DIR}/${TUTORIAL_FILE_NAME_SUBPATH} ${CMAKE_CURRENT_BINARY_DIR}/${TUTORIAL_FILE_NAME_SUBPATH} COPYONLY)
+endfunction()
+
 add_t8_tutorial( NAME t8_step0_helloworld               SOURCES general/t8_step0_helloworld.cxx )
 add_t8_tutorial( NAME t8_step1_coarsemesh               SOURCES general/t8_step1_coarsemesh.cxx )
 add_t8_tutorial( NAME t8_step2_uniform_forest           SOURCES general/t8_step2_uniform_forest.cxx )
@@ -39,3 +44,8 @@ add_t8_tutorial( NAME t8_step7_interpolation            SOURCES general/t8_step7
 add_t8_tutorial( NAME t8_tutorial_build_cmesh           SOURCES general/t8_tutorial_build_cmesh.cxx general/t8_tutorial_build_cmesh_main.cxx)
 add_t8_tutorial( NAME t8_tutorial_search                SOURCES general/t8_tutorial_search.cxx general/t8_step3_adapt_forest.cxx )
 add_t8_tutorial( NAME t8_features_curved_meshes         SOURCES features/t8_features_curved_meshes.cxx)
+
+copy_tutorial_file (features/t8_features_curved_meshes_generate_cmesh_hex.geo)
+copy_tutorial_file (features/t8_features_curved_meshes_generate_cmesh_quad.geo)
+copy_tutorial_file (features/t8_features_curved_meshes_generate_cmesh_tet.geo)
+copy_tutorial_file (features/t8_features_curved_meshes_generate_cmesh_tri.geo)

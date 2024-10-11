@@ -371,7 +371,7 @@ t8_cmesh_new_pyramid (sc_MPI_Comm comm)
   /* Use linear geometry */
   t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, 3);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_PYRAMID);
-  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 15);
+  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 5);
   t8_cmesh_commit (cmesh, comm);
   return cmesh;
 }
@@ -684,7 +684,7 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
   if (do_partition) {
     t8_global_errorf (
       "WARNING: Partitioning the hypercube cmesh is currently not supported.\n"
-      "Using this cmesh will crash when vertices are used. See also https://github.com/holke/t8code/issues/79\n");
+      "Using this cmesh will crash when vertices are used. See also https://github.com/DLR-AMR/t8code/issues/79\n");
   }
 
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
@@ -2150,7 +2150,6 @@ t8_cmesh_new_prism_geometry (sc_MPI_Comm comm)
   return cmesh;
 }
 
-<<<<<<< HEAD
 /* On each process, create a num_x by num_y (by num_z) brick connectivity and
  * make a cmesh connectivity from the disjoint union of those.
  * Example: 2 processors,
@@ -2278,8 +2277,6 @@ t8_cmesh_new_brick_wall (t8_gloidx_t num_x, t8_gloidx_t num_y, t8_gloidx_t num_z
   return t8_cmesh_new_hypercube_pad (elem_type, comm, boundary_vertices, num_x, num_y, num_z, use_axis_aligned);
 }
 
-=======
->>>>>>> t8origin/main
 /* Construct a tetrahedral cmesh that has all possible face to face
  * connections and orientations. */
 t8_cmesh_t
