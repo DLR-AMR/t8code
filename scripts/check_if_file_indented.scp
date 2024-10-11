@@ -52,7 +52,7 @@ MAJOR=`echo $VERSION | cut -d. -f1`
 MINOR=`echo $VERSION | cut -d. -f2`
 PATCH=`echo $VERSION | cut -d. -f3`
 
-if [[ "$MAJOR" != "$REQUIRED_VERSION_MAJOR" || $MINOR != "$REQUIRED_VERSION_MINOR" || $PATCH != "$REQUIRED_VERSION_PATCH" ]]; then
+if [[ "$MAJOR" != "$REQUIRED_VERSION_MAJOR" || $MINOR != "$REQUIRED_VERSION_MINOR" ]]; then
   echo "Please install clang-format version $REQUIRED_VERSION_STRING"
   exit 1
 fi
