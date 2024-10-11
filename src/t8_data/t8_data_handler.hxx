@@ -204,6 +204,7 @@ class t8_data_handler: public t8_abstract_data_handler {
       m_data = std::make_shared<std::vector<TType>> (outcount);
     }
     else {
+      m_data->clear ();
       m_data->resize (outcount);
     }
     std::for_each (m_data->begin (), m_data->end (),
