@@ -24,16 +24,16 @@
 #include <sc_options.h>
 #include <sc_refcount.h>
 #include <t8_eclass.h>
-#include <t8_element_cxx.hxx>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_element.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh_readmshfile.h>
-#include <t8_cmesh_vtk_writer.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_data/t8_containers.h>
+#include <t8_vtk/t8_vtk_writer.h>
 
 typedef struct
 {
@@ -158,19 +158,13 @@ t8_test_fiterate_brick (int dim, int x, int y, int z, int periodic_x, int period
                         sc_MPI_Comm comm, int no_vtk)
 {
   t8_cmesh_t cmesh;
-  p4est_connectivity_t *conn4;
-  p8est_connectivity_t *conn8;
 
   if (dim == 2) {
-    conn4 = p4est_connectivity_new_brick (x, y, periodic_x, periodic_y);
-    cmesh = t8_cmesh_new_from_p4est (conn4, comm, 0);
-    p4est_connectivity_destroy (conn4);
+    cmesh = t8_cmesh_new_brick_2d (x, y, periodic_x, periodic_y, comm);
   }
   else {
     T8_ASSERT (dim == 3);
-    conn8 = p8est_connectivity_new_brick (x, y, z, periodic_x, periodic_y, periodic_z);
-    cmesh = t8_cmesh_new_from_p8est (conn8, comm, 0);
-    p8est_connectivity_destroy (conn8);
+    cmesh = t8_cmesh_new_brick_3d (x, y, z, periodic_x, periodic_y, periodic_z, comm);
   }
 
   t8_test_fiterate_refine_and_partition (cmesh, level, comm, 1, no_vtk);

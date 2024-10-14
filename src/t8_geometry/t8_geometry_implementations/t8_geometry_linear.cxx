@@ -23,11 +23,10 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_geometry/t8_geometry_helpers.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_vec.h>
 
-t8_geometry_linear::t8_geometry_linear (int dim)
-  : t8_geometry_with_vertices (dim, "t8_geom_linear_" + std::to_string (dim))
+t8_geometry_linear::t8_geometry_linear (): t8_geometry_with_vertices ("t8_geom_linear")
 {
 }
 
@@ -242,11 +241,11 @@ t8_geometry_linear::t8_geom_point_batch_inside_element (t8_forest_t forest, t8_l
 T8_EXTERN_C_BEGIN ();
 
 /* Satisfy the C interface from t8_geometry_linear.h.
- * Create a new geometry with given dimension. */
+ * Create a new geometry. */
 t8_geometry_c *
-t8_geometry_linear_new (int dimension)
+t8_geometry_linear_new ()
 {
-  t8_geometry_linear *geom = new t8_geometry_linear (dimension);
+  t8_geometry_linear *geom = new t8_geometry_linear ();
   return (t8_geometry_c *) geom;
 }
 

@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* See also: https://github.com/holke/t8code/wiki/Step-2---Creating-a-uniform-forest
+/* See also: https://github.com/DLR-AMR/t8code/wiki/Step-2---Creating-a-uniform-forest
  *
  * After we learned how to create a cmesh in step1, we will
  * now build our first partitioned forest, get its local and global
@@ -32,7 +32,7 @@
  * Together with the cmesh, we also need a refinement scheme. This scheme tells the
  * forest how elements of each shape (t8_eclass_t) are refined, what their neighbor
  * are etc.
- * The default scheme in t8_schemes/t8_default/t8_default_cxx.hxx provides an implementation for
+ * The default scheme in t8_schemes/t8_default/t8_default.hxx provides an implementation for
  * all element shapes that t8code supports (with pyramids currently under construction).
  * 
  * How you can experiment here:
@@ -44,12 +44,13 @@
  *    forest (for example the number of local trees).
  */
 
-#include <t8.h>                                     /* General t8code header, always include this. */
-#include <t8_cmesh.h>                               /* cmesh definition and basic interface. */
-#include <t8_cmesh/t8_cmesh_examples.h>             /* A collection of exemplary cmeshes */
-#include <t8_forest/t8_forest_general.h>            /* forest definition and general interface. */
-#include <t8_forest/t8_forest_io.h>                 /* forest io interface. */
-#include <t8_schemes/t8_default/t8_default_cxx.hxx> /* default refinement scheme. */
+#include <t8.h>                                 /* General t8code header, always include this. */
+#include <t8_cmesh.h>                           /* cmesh definition and basic interface. */
+#include <t8_cmesh/t8_cmesh_examples.h>         /* A collection of exemplary cmeshes */
+#include <t8_forest/t8_forest_general.h>        /* forest definition and general interface. */
+#include <t8_forest/t8_forest_io.h>             /* forest io interface. */
+#include <t8_schemes/t8_default/t8_default.hxx> /* default refinement scheme. */
+#include <string>
 
 /* Builds cmesh of 2 prisms that build up a unit cube. 
  * See step1 for a detailed description.
@@ -138,7 +139,7 @@ main (int argc, char **argv)
   /* Initialize the sc library, has to happen before we initialize t8code. */
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
-  t8_init (SC_LP_PRODUCTION);
+  t8_init (SC_LP_DEBUG);
 
   /* Print a message on the root process. */
   t8_global_productionf (" [step2] \n");

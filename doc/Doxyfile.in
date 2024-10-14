@@ -44,8 +44,8 @@ PROJECT_NUMBER         = @VERSION@
 # for a project that appears at the top of each page and should give viewer a
 # quick idea about the purpose of the project. Keep the description short.
 
-PROJECT_BRIEF          = t8code is a C library to manage a forest of adaptive \
-                         space-trees of general element classes in parallel.
+PROJECT_BRIEF          = "t8code is a C library to manage a forest of adaptive \
+                         space-trees of general element classes in parallel."
 
 # With the PROJECT_LOGO tag one can specify a logo or an icon that is included
 # in the documentation. The maximum height of the logo should not exceed 55
@@ -2611,3 +2611,8 @@ GENERATE_LEGEND        = YES
 # The default value is: YES.
 
 DOT_CLEANUP            = YES
+
+GENERATE_XML           = YES
+
+XML_OUTPUT             = xml
+

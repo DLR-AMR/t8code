@@ -35,13 +35,13 @@
  *   - Refine the mesh at different geometries.
  *  */
 
-#include <t8.h>                                     /* General t8code header, always include this. */
-#include <sc_options.h>                             /* CLI parser */
-#include <t8_cmesh.h>                               /* cmesh definition and basic interface. */
-#include <t8_forest/t8_forest_general.h>            /* forest definition and basic interface. */
-#include <t8_forest/t8_forest_io.h>                 /* save forest */
-#include <t8_forest/t8_forest_geometrical.h>        /* geometrical information of the forest */
-#include <t8_schemes/t8_default/t8_default_cxx.hxx> /* default refinement scheme. */
+#include <t8.h>                                 /* General t8code header, always include this. */
+#include <sc_options.h>                         /* CLI parser */
+#include <t8_cmesh.h>                           /* cmesh definition and basic interface. */
+#include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
+#include <t8_forest/t8_forest_io.h>             /* save forest */
+#include <t8_forest/t8_forest_geometrical.h>    /* geometrical information of the forest */
+#include <t8_schemes/t8_default/t8_default.hxx> /* default refinement scheme. */
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx> /* Linear geometry calculation of trees */
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>    /* Curved geometry calculation of trees */
 #include <t8_cmesh_readmshfile.h>                                         /* msh file reader */
@@ -393,8 +393,8 @@ main (int argc, char **argv)
   /* initialize command line argument parser */
   opt = sc_options_new (argv[0]);
   sc_options_add_switch (opt, 'h', "help", &helpme, "Display a short help message.");
-  sc_options_add_string (opt, 'f', "fileprefix", &fileprefix, "./naca6412",
-                         "Fileprefix of the msh and brep files. Default: \"./naca6412\"");
+  sc_options_add_string (opt, 'f', "fileprefix", &fileprefix, "./airfoil_windtunnel_hexahedra",
+                         "Fileprefix of the msh and brep files. Default: \"./airfoil_windtunnel_hexahedra\"");
   sc_options_add_int (opt, 'd', "dimension", &dim, 3, "The dimension of the mesh. Default: 3");
   sc_options_add_switch (opt, 'g', "geometry", &geometry,
                          "Refine the forest based on the geometries the elements lie on. "
@@ -427,7 +427,7 @@ main (int argc, char **argv)
     if (!plane && !geometry) {
       t8_global_productionf ("%s\n", help);
       t8_global_productionf ("\n\tERROR: Wrong usage.\n"
-                             "\tPlease specify either the '-p' or the '-s' option as described above.\n\n");
+                             "\tPlease specify either the '-p' or the '-g' option as described above.\n\n");
     }
     else {
       t8_global_productionf ("\n\tERROR: Wrong usage.\n\n");
