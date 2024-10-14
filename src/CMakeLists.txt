@@ -191,6 +191,9 @@ install( FILES
     t8_vec.h
     t8_version.h
     t8_vtk.h
+    src/t8_data/t8_shmem.h
+    src/t8_data/t8_containers.h
+    src/t8_data/t8_stdvector_conversion.hxx
     t8_windows.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include
 )
 
