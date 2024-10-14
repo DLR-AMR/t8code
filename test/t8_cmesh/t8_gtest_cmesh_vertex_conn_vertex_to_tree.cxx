@@ -234,9 +234,9 @@ TEST_P (t8_test_cmesh_vertex_conn_vtt, DISABLED_convert_to_ttv_and_back)
   /* Now we can build vtt conns from the ttv conns.
    * They should match the original connectivities. */
   t8_cmesh_vertex_conn_vertex_to_tree vtt_new;
-  vtt_new.build_from_ttv(derived_cmesh_A, ttv);
+  vtt_new.build_from_ttv (derived_cmesh_A, ttv);
   t8_cmesh_vertex_conn_vertex_to_tree vtt_new_all_to_one;
-  vtt_all_to_one.build_from_ttv(derived_cmesh_B, ttv_all_to_one);
+  vtt_all_to_one.build_from_ttv (derived_cmesh_B, ttv_all_to_one);
 
   /* Check for equality. */
   EXPECT_EQ (vtt, vtt_new);

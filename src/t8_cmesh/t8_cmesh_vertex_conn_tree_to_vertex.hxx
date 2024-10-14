@@ -46,8 +46,7 @@
 /* forward declaration of ttv class needed since the two class headers include each other. */
 class t8_cmesh_vertex_conn_vertex_to_tree;
 
-class t8_cmesh_vertex_conn_tree_to_vertex
-{
+class t8_cmesh_vertex_conn_tree_to_vertex {
  public:
   /** Standard constructor. Does nothing. */
   t8_cmesh_vertex_conn_tree_to_vertex (): state (EMPTY)
@@ -67,7 +66,7 @@ class t8_cmesh_vertex_conn_tree_to_vertex
    * \note This does not work until issue #923 https://github.com/DLR-AMR/t8code/issues/923 is resolved.
    */
   t8_cmesh_vertex_conn_tree_to_vertex (const t8_cmesh_t cmesh_from, const t8_cmesh_t cmesh,
-                                         const struct t8_cmesh_vertex_conn_vertex_to_tree &vtt);
+                                       const struct t8_cmesh_vertex_conn_vertex_to_tree &vtt);
 
   /* Setter functions */
   /** Set all global vertex ids of a local tree. 
@@ -98,10 +97,8 @@ class t8_cmesh_vertex_conn_tree_to_vertex
   friend struct t8_cmesh_vertex_connectivity;
 
  private:
-
   enum {
     EMPTY, /*< Is initialized but empty. */
     FILLED /*< Is filled with at least one entry. */
   } state;
 };
-

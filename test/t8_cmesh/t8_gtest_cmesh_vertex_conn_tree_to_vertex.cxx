@@ -189,7 +189,7 @@ TEST_P (cmesh_vertex_conn_ttv_with_core_classes_temp, convert_to_vtt)
 {
   /* create a vertex_to_tree list from ttv */
   t8_cmesh_vertex_conn_vertex_to_tree vtt;
-  vtt.build_from_ttv(cmesh, ttv);
+  vtt.build_from_ttv (cmesh, ttv);
   /* Since global tree i is mapped to vertices:
    *  i*T8_ECLASS_MAX_CORNERS, i*T8_ECLASS_MAX_CORNERS + 1, ... 
    *  and this mapping is unique, we know that the list for vertex j

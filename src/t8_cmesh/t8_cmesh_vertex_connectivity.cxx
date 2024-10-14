@@ -63,8 +63,8 @@ t8_cmesh_set_global_vertices_of_tree (const t8_cmesh_t cmesh, const t8_gloidx_t 
                                       const t8_gloidx_t *global_tree_vertices, const int num_vertices)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
-  cmesh->vertex_connectivity->set_global_vertex_ids_of_tree_vertices (
-    cmesh, global_tree, global_tree_vertices, num_vertices);
+  cmesh->vertex_connectivity->set_global_vertex_ids_of_tree_vertices (cmesh, global_tree, global_tree_vertices,
+                                                                      num_vertices);
 }
 
 t8_gloidx_t

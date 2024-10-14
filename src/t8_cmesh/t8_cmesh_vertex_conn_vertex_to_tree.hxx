@@ -64,8 +64,7 @@ class t8_cmesh_vertex_conn_tree_to_vertex;
  * 
 */
 
-class t8_cmesh_vertex_conn_vertex_to_tree
-{
+class t8_cmesh_vertex_conn_vertex_to_tree {
  public:
   /** Standard constructor. 
    * Initializes the class and allows setting vertex entries 
@@ -75,7 +74,7 @@ class t8_cmesh_vertex_conn_vertex_to_tree
   {
   }
 
-  /** Funktion to fill vtt from cmesh and ttv information.
+  /** Function to fill vtt from cmesh and ttv information.
    * Sets all global ids and associated tree vertices from
    * the given input class.
    * Afterwards, the class is set to committed and can be used.
@@ -197,7 +196,6 @@ class t8_cmesh_vertex_conn_vertex_to_tree
     INITIALIZED, /*< Can currently be filled with entries. */
     COMMITTED    /*< Is filled and cannot be changed. */
   } state;
-
 };
 
 #endif /* !T8_CMESH_VERTEX_CONN_VERTEX_TO_TREE_HXX */

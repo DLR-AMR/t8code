@@ -33,8 +33,7 @@
 
 /* Builds vertex_to_tree with existing tree_to_vertex list. */
 void
-t8_cmesh_vertex_conn_vertex_to_tree::build_from_ttv (
-  const t8_cmesh_t cmesh, t8_cmesh_vertex_conn_tree_to_vertex& ttv)
+t8_cmesh_vertex_conn_vertex_to_tree::build_from_ttv (const t8_cmesh_t cmesh, t8_cmesh_vertex_conn_tree_to_vertex& ttv)
 {
   /* Call standard constructor */
   T8_ASSERT (state == INITIALIZED);
@@ -112,7 +111,7 @@ t8_cmesh_vertex_conn_vertex_to_tree::commit (const t8_cmesh_t cmesh)
 
 void
 t8_cmesh_vertex_conn_vertex_to_tree::add_vertex_to_tree (const t8_cmesh_t cmesh, t8_gloidx_t global_vertex_id,
-                                                           t8_locidx_t ltreeid, int tree_vertex)
+                                                         t8_locidx_t ltreeid, int tree_vertex)
 {
   T8_ASSERT (!is_committed ());
   T8_ASSERT (0 <= global_vertex_id);
