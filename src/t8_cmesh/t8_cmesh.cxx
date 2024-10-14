@@ -125,15 +125,45 @@ t8_cmesh_is_committed (const t8_cmesh_t cmesh)
   return 1;
 }
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 int
 t8_cmesh_validate_geometry (const t8_cmesh_t cmesh)
 {
+  /* After a cmesh is committed, check whether all trees in a cmesh are compatible
+ * with their geometry and if they have positive volume.
+ * Returns true if all trees are valid. Returns also true if no geometries are
+ * registered yet, since the validity computation depends on the used geometry.
+ */
+
   /* Geometry handler is not constructed yet */
   if (cmesh->geometry_handler == NULL) {
-    return 1;
+    return true;
   }
-  return t8_cmesh_no_negative_volume (cmesh);
+  if (cmesh == NULL) {
+    return true;
+  }
+  if (cmesh->geometry_handler->get_num_geometries () > 0) {
+    /* Iterate over all trees, get their vertices and check the volume */
+    for (t8_locidx_t itree = 0; itree < cmesh->num_local_trees; itree++) {
+      /* Check if tree and geometry are compatible. */
+      const int geometry_compatible
+        = cmesh->geometry_handler->tree_compatible_with_geom (cmesh, t8_cmesh_get_global_id (cmesh, itree));
+      if (!geometry_compatible) {
+        t8_debugf ("Detected incompatible geometry for tree %li\n", (long) itree);
+        return false;
+      }
+      if (geometry_compatible) {
+        /* Check for negative volume. This only makes sense if the geometry is valid for the tree. */
+        const int negative_volume
+          = cmesh->geometry_handler->tree_negative_volume (cmesh, t8_cmesh_get_global_id (cmesh, itree));
+        if (negative_volume) {
+          t8_debugf ("Detected negative volume in tree %li\n", (long) itree);
+          return false;
+        }
+      }
+    }
+  }
+  return true;
 }
 #endif /* T8_ENABLE_DEBUG */
 
@@ -402,7 +432,6 @@ t8_cmesh_get_tree_vertices (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, ltreeid) || t8_cmesh_treeid_is_ghost (cmesh, ltreeid));
-
   return (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_VERTICES_ATTRIBUTE_KEY, ltreeid);
 }
 
@@ -583,39 +612,6 @@ t8_cmesh_tree_vertices_negative_volume (const t8_eclass_t eclass, const double *
   T8_ASSERT (sc_prod != 0);
   return eclass == T8_ECLASS_TET ? sc_prod > 0 : sc_prod < 0;
 }
-
-#ifdef T8_ENABLE_DEBUG
-/* After a cmesh is committed, check whether all trees in a cmesh do have positive volume.
- * Returns true if all trees have positive volume. Returns also true if no geometries are
- * registered yet, since the volume computation depends on the used geometry.
- */
-int
-t8_cmesh_no_negative_volume (const t8_cmesh_t cmesh)
-{
-  bool res = false;
-
-  if (cmesh == NULL) {
-    return 0;
-  }
-  if (cmesh->geometry_handler == NULL) {
-    return 0;
-  }
-  if (cmesh->geometry_handler->get_num_geometries () > 0) {
-    /* Iterate over all trees, get their vertices and check the volume */
-    for (t8_locidx_t itree = 0; itree < cmesh->num_local_trees; itree++) {
-      const int ret = cmesh->geometry_handler->tree_negative_volume (cmesh, t8_cmesh_get_global_id (cmesh, itree));
-      if (ret) {
-        t8_debugf ("Detected negative volume in tree %li\n", (long) itree);
-      }
-      res |= ret; /* res is true if one ret value is true */
-    }
-    return !res;
-  }
-  else {
-    return true;
-  }
-}
-#endif
 
 void
 t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, const t8_gloidx_t gtree_id, const double *vertices,

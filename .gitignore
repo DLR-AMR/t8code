@@ -22,6 +22,9 @@ config.status
 Doxyfile
 doxygen/
 
+CMakeCache.txt
+CMakeFiles/
+
 src/stamp-h1
 src/t8_config.h
 src/pre_config.h
