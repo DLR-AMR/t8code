@@ -571,8 +571,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8
                                t8_locidx_t **pelement_indices, t8_eclass_scheme_c **pneigh_scheme,
                                int forest_is_balanced);
 
-
- /** Like \ref t8_forest_leaf_face_neighbors but also provides information about the global neighbors and the orientaion. 
+/** Like \ref t8_forest_leaf_face_neighbors but also provides information about the global neighbors and the orientation. 
   * \param [out]   gneigh_tree  The global tree IDs of the neighbor trees.
   * \param [out]   orientation  The face orientation is computed and stored there.
   * All other parameters and behavior are identical to \ref `t8_forest_leaf_face_neighbors`.
