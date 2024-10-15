@@ -76,14 +76,14 @@ t8_common_within_levelset (t8_forest_t forest, t8_locidx_t ltreeid, t8_element_t
     double coords[3];
 
     /* Compute LS function at first corner */
-    t8_forest_element_coordinate (forest, ltreeid, element, 0, coords);
+    t8_forest_element_coordinate_from_corner_number (forest, ltreeid, element, 0, coords);
     /* compute the level-set function at this corner */
     value = levelset (coords, t, udata);
     /* sign = 1 if value > 0, -1 if value < 0, 0 if value = 0 */
     sign = value > 0 ? 1 : -(value < 0);
     /* iterate over all corners */
     for (icorner = 1; icorner < num_corners; icorner++) {
-      t8_forest_element_coordinate (forest, ltreeid, element, icorner, coords);
+      t8_forest_element_coordinate_from_corner_number (forest, ltreeid, element, icorner, coords);
       /* compute the level-set function at this corner */
       value = levelset (coords, t, udata);
       if ((value > 0 && sign <= 0) || (value == 0 && sign != 0) || (value < 0 && sign >= 0)) {
