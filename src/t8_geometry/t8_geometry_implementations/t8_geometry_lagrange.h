@@ -39,13 +39,12 @@ T8_EXTERN_C_BEGIN ();
  * The geometry is compatible with all tree types and uses as many vertices
  * as the number of Lagrange basis functions used for the mapping.
  * The vertices are saved via the \ref t8_cmesh_set_tree_vertices function.
- * Sets the dimension and the name to "t8_geom_lagrange_{dim}"
- * \param [in] dim  0 <= \a dimension <= 3. The dimension.
+ * Sets the name to "t8_geom_lagrange"
  * \return          A pointer to an allocated t8_geometry_lagrange struct, as
- *                  if the \ref t8_geometry_lagrange (int dim) constructor was called.
+ *                  if the \ref t8_geometry_lagrange () constructor was called.
  */
 t8_geometry_c *
-t8_geometry_lagrange_new (int dim);
+t8_geometry_lagrange_new ();
 
 /** Destroy a Lagrange geometry that was created with \ref t8_geometry_lagrange_new.
  * \param [in,out] geom A Lagrange geometry. Set to NULL on output.

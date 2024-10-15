@@ -157,7 +157,7 @@ t8_cmesh_new_periodic_hybrid_2d (sc_MPI_Comm comm)
   t8_cmesh_init (&cmesh);
 
   /* 3. Definition of the geometry */
-  t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, 2);
+  t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
   ; /* Use linear geometry */
 
   /* 4. Definition of the classes of the different trees */
@@ -253,7 +253,7 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
    * t8_cmesh_init (&cmesh);
    *
    * // 3. Definition of the geometry
-   * t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, 3);;    // Use linear geometry 
+   * t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);    // Use linear geometry 
    * 
    * // 4. Definition of the classes of the different trees
    * t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TET);
@@ -300,7 +300,7 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
   t8_cmesh_init (&cmesh);
 
   /*  Definition of the geometry */
-  t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, 3);
+  t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
   /* Use linear geometry */
 
   /* Defitition of the classes of the different trees */
@@ -457,8 +457,8 @@ int
 t8_tutorial_build_cmesh_main (int argc, char **argv)
 {
   /* The prefix for our output files. */
-  const char *prefix_2D = "t8_step8_user_defined_mesh_2D";
-  const char *prefix_3D = "t8_step8_user_defined_mesh_3D";
+  const char *prefix_2D = "t8_user_defined_mesh_2D";
+  const char *prefix_3D = "t8_user_defined_mesh_3D";
 
   /*
    * Initialization.
