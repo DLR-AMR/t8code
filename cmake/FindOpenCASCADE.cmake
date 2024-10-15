@@ -11,8 +11,6 @@
 #  OpenCASCADE_LIBRARIES - names of OCC libraries
 #  OpenCASCADE_LINK_DIRECTORY - location of OCC libraries
 
-# test
-
 # ${OpenCASCADE_FOUND} is cached, so once OCC is found this block shouldn't have to run again
 IF( NOT OpenCASCADE_FOUND )
 	
