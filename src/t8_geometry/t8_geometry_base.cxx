@@ -27,18 +27,6 @@
 #include <t8_geometry/t8_geometry_base.hxx>
 #include <t8_geometry/t8_geometry_base.h>
 
-/** Get the dimension of a geometry.
- * \param [in]  geom  A geometry.
- * \return            The dimension of \a geom.
- */
-int
-t8_geom_get_dimension (const t8_geometry_c *geom)
-{
-  T8_ASSERT (geom != NULL);
-
-  return geom->t8_geom_get_dimension ();
-}
-
 /** Get the name of a geometry.
  * \param [in]  geom  A geometry.
  * \return            The name of \a geom.
