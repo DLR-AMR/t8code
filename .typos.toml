@@ -1,8 +1,6 @@
 [default.extend-words]
 eles = "eles"
 packageid = "packageid"
-oce = "oce"
-
 
 [files]
 extend-exclude = ["scripts/t8indent", "thirdparty/", "t8code_logo.png", "cmake/FindOpenCASCADE.cmake"]
