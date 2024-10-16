@@ -66,17 +66,17 @@ class geometry_test: public testing::TestWithParam<std::tuple<int, t8_eclass>> {
     }
     switch (geom_int) {
     case T8_GEOMETRY_TYPE_LINEAR:
-      geom = new t8_geometry_linear (t8_eclass_to_dimension[eclass]);
-      t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, t8_eclass_to_dimension[eclass]);
+      geom = new t8_geometry_linear ();
+      t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
       break;
     case T8_GEOMETRY_TYPE_LINEAR_AXIS_ALIGNED:
-      geom = new t8_geometry_linear_axis_aligned (t8_eclass_to_dimension[eclass]);
+      geom = new t8_geometry_linear_axis_aligned ();
       /* Copy last vertex to the second position*/
       vertices[3] = vertices[3 * (num_vertices - 1)];
       vertices[4] = vertices[3 * (num_vertices - 1) + 1];
       vertices[5] = vertices[3 * (num_vertices - 1) + 2];
 
-      t8_cmesh_register_geometry<t8_geometry_linear_axis_aligned> (cmesh, t8_eclass_to_dimension[eclass]);
+      t8_cmesh_register_geometry<t8_geometry_linear_axis_aligned> (cmesh);
       break;
     default:
       break;
@@ -175,7 +175,7 @@ TEST (test_geometry_linear, incompatible_geometry)
   /* Commit the cmesh */
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   /* Register the t8_geometry_linear_axis_aligned geometry to this cmesh. */
-  t8_cmesh_register_geometry<t8_geometry_linear_axis_aligned> (cmesh, 2);
+  t8_cmesh_register_geometry<t8_geometry_linear_axis_aligned> (cmesh);
   /* Should return true since the t8_geometry_linear_axis_aligned geometry is compatible with quads. */
   ASSERT_TRUE (t8_cmesh_validate_geometry (cmesh));
   t8_cmesh_destroy (&cmesh);
@@ -190,7 +190,7 @@ TEST (test_geometry_linear, incompatible_geometry)
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   /* Register the linear axis aligned geometry to this cmesh.
    * We register it after committing because it would throw an assertion and do not have death tests.*/
-  t8_cmesh_register_geometry<t8_geometry_linear_axis_aligned> (cmesh, 2);
+  t8_cmesh_register_geometry<t8_geometry_linear_axis_aligned> (cmesh);
   /* Check validity after committing to circumvent the assertion.
    * Should return false since the t8_geometry_linear_axis_aligned geometry is not compatible with triangles. */
   ASSERT_FALSE (t8_cmesh_validate_geometry (cmesh));

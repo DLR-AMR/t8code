@@ -39,13 +39,12 @@ T8_EXTERN_C_BEGIN ();
  * The geometry is only viable for line/quad/hex elements and uses two
  * vertices (min and max coords) per tree. The vertices are saved via
  * the \ref t8_cmesh_set_tree_vertices function.
- * \param [in] dim  0 <= \a dimension <= 3. The dimension.
  * \return          A pointer to an allocated t8_geometry_linear_axis_aligned
- *                  struct, as if the t8_geometry_linear_axis_aligned
- *                  (int dimension) constructor was called.
+ *                  struct, as if the t8_geometry_linear_axis_aligned ()
+ *                  constructor was called.
  */
 t8_geometry_c *
-t8_geometry_linear_axis_aligned_new (int dim);
+t8_geometry_linear_axis_aligned_new ();
 
 /** Destroy a linear, axis-aligned geometry that was created with
  * \ref t8_geometry_linear_axis_aligned_new.
