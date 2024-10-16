@@ -589,7 +589,9 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8
     * \param [in]    forest_is_balanced True if we know that \a forest is balanced, false
     *                        otherwise.
     * \param [out]   gneigh_tree  The global tree IDs of the neighbor trees.
-  * \param [out]   orientation  The face orientation is computed and stored there.
+  * \param [out]   orientation  If not NULL on input, the face orientation is computed and stored here. 
+  *                                         Thus, if the face connection is an inter-tree connection the orientation of the tree-to-tree connection is stored. 
+  *                                         Otherwise, the value 0 is stored.
   * All other parameters and behavior are identical to \ref `t8_forest_leaf_face_neighbors`.
   */
 void
