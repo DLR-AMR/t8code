@@ -2112,10 +2112,17 @@ t8_forest_leaf_is_boundary (const t8_forest_t forest, t8_locidx_t local_tree, co
     /* The forest has no holes, thus the leaf cannot be a boundary leaf. */
     return 0;
   }
-  else {
-    SC_ABORT ("This forest has holes and a computation of boundary elements is not supported. Once "
-              "https://github.com/DLR-AMR/t8code/issues/825 is resolved, the function will be available.\n");
-  }
+
+  /*
+   * The remaining code handles the case that the forest has holes and the element may thus 
+   * be an inner boundary.
+   * This case is not yet support due to issue #825. Hence, we currently abort.
+   * Once the issue is resolved, the abort message can be removed and the code should work.
+   * */
+
+  SC_ABORT ("This forest has holes and a computation of boundary elements is not supported. Once "
+            "https://github.com/DLR-AMR/t8code/issues/825 is resolved, the function will be available.\n");
+
   /* we need to compute the face neighbors to know whether the element is a boundary element. */
   const int is_balanced = t8_forest_is_balanced (forest);
   int num_neighbors;
