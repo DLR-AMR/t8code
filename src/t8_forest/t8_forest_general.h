@@ -540,7 +540,7 @@ t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, 
  *                        leaves are stored here.
  * \param [in]    face    The index of the face across which the face neighbors
  *                        are searched.
- * \param [out]   dual_face On output the face id's of the neighboring elements' faces.
+ * \param [out]   dual_faces On output the face id's of the neighboring elements' faces.
  * \param [out]   num_neighbors On output the number of neighbor leaves.
  * \param [out]   pelement_indices Unallocated on input. On output the element indices
  *                        of the neighbor leaves are stored here.
@@ -549,7 +549,6 @@ t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, 
  * \param [out]   pneigh_scheme On output the eclass scheme of the neighbor elements.
  * \param [in]    forest_is_balanced True if we know that \a forest is balanced, false
  *                        otherwise.
- * \param [out]   orientation If a pointer to an integer variable is given the face orientation is computed and stored there.
  * \note If there are no face neighbors, then *neighbor_leaves = NULL, num_neighbors = 0,
  * and *pelement_indices = NULL on output.
  * \note Currently \a forest must be balanced.
