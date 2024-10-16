@@ -571,27 +571,27 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8
                                int forest_is_balanced);
 
 /** Like \ref t8_forest_leaf_face_neighbors but also provides information about the global neighbors and the orientation. 
-  * \param [in]    forest  The forest. Must have a valid ghost layer.
-  * \param [in]    ltreeid A local tree id.
-  * \param [in]    leaf    A leaf in tree \a ltreeid of \a forest.
-  * \param [out]   pneighbor_leaves Unallocated on input. On output the neighbor
-  *                        leaves are stored here.
-  * \param [in]    face    The index of the face across which the face neighbors
-  *                        are searched.
-  * \param [out]   dual_faces On output the face id's of the neighboring elements' faces.
-  * \param [out]   num_neighbors On output the number of neighbor leaves.
-  * \param [out]   pelement_indices Unallocated on input. On output the element indices
-  *                        of the neighbor leaves are stored here.
-  *                        0, 1, ... num_local_el - 1 for local leaves and
-  *                        num_local_el , ... , num_local_el + num_ghosts - 1 for ghosts.
-  * \param [out]   pneigh_scheme On output the eclass scheme of the neighbor elements.
-  * \param [in]    forest_is_balanced True if we know that \a forest is balanced, false
-  *                        otherwise.
-  * \param [out]   gneigh_tree  The global tree IDs of the neighbor trees.
-  * \param [out]   orientation  If not NULL on input, the face orientation is computed and stored here. 
-  *                                         Thus, if the face connection is an inter-tree connection the orientation of the tree-to-tree connection is stored. 
-  *                                         Otherwise, the value 0 is stored.
-  * All other parameters and behavior are identical to \ref `t8_forest_leaf_face_neighbors`.
+ * \param [in]    forest  The forest. Must have a valid ghost layer.
+ * \param [in]    ltreeid A local tree id.
+ * \param [in]    leaf    A leaf in tree \a ltreeid of \a forest.
+ * \param [out]   pneighbor_leaves Unallocated on input. On output the neighbor
+ *                        leaves are stored here.
+ * \param [in]    face    The index of the face across which the face neighbors
+ *                        are searched.
+ * \param [out]   dual_faces On output the face id's of the neighboring elements' faces.
+ * \param [out]   num_neighbors On output the number of neighbor leaves.
+ * \param [out]   pelement_indices Unallocated on input. On output the element indices
+ *                        of the neighbor leaves are stored here.
+ *                        0, 1, ... num_local_el - 1 for local leaves and
+ *                        num_local_el , ... , num_local_el + num_ghosts - 1 for ghosts.
+ * \param [out]   pneigh_scheme On output the eclass scheme of the neighbor elements.
+ * \param [in]    forest_is_balanced True if we know that \a forest is balanced, false
+ *                        otherwise.
+ * \param [out]   gneigh_tree  The global tree IDs of the neighbor trees.
+ * \param [out]   orientation  If not NULL on input, the face orientation is computed and stored here. 
+ *                                         Thus, if the face connection is an inter-tree connection the orientation of the tree-to-tree connection is stored. 
+ *                                         Otherwise, the value 0 is stored.
+ * All other parameters and behavior are identical to \ref `t8_forest_leaf_face_neighbors`.
  * \note If there are no face neighbors, then *neighbor_leaves = NULL, num_neighbors = 0,
  * and *pelement_indices = NULL on output.
  * \note Currently \a forest must be balanced.
@@ -606,7 +606,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8
  *     T8_FREE (dual_faces);
  *   }
  *
-  */
+ */
 void
 t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf,
                                    t8_element_t **pneighbor_leaves[], int face, int *dual_faces[], int *num_neighbors,
