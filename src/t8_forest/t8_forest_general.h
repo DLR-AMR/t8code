@@ -593,6 +593,20 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8
   *                                         Thus, if the face connection is an inter-tree connection the orientation of the tree-to-tree connection is stored. 
   *                                         Otherwise, the value 0 is stored.
   * All other parameters and behavior are identical to \ref `t8_forest_leaf_face_neighbors`.
+ * \note If there are no face neighbors, then *neighbor_leaves = NULL, num_neighbors = 0,
+ * and *pelement_indices = NULL on output.
+ * \note Currently \a forest must be balanced.
+ * \note \a forest must be committed before calling this function.
+ *
+ * \note Important! This routine allocates memory which must be freed. Do it like this:
+ *
+ *   if (num_neighbors > 0) {
+ *     eclass_scheme->t8_element_destroy (num_neighbors, neighbors);
+ *     T8_FREE (pneighbor_leaves);
+ *     T8_FREE (pelement_indices);
+ *     T8_FREE (dual_faces);
+ *   }
+ *
   */
 void
 t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf,
