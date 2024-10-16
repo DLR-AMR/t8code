@@ -2506,9 +2506,8 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest, t8_gloidx_t gtre
   /* It is impossible for an element with bigger id to belong to a smaller process */
   T8_ASSERT (first_owner <= last_owner);
 
-  if (first_owner >= last_owner - 1) {
-    T8_ASSERT (first_owner == last_owner || first_owner == last_owner - 1);
-    /* The owners of this element are determined, no recursion is necessary */
+  if (first_owner == last_owner) {
+    /* This element has a unique owner, no recursion is necessary */
     /* Add the owner to the array of owners */
     /* TODO: check if this process is already listed. If we traverse the face children
      * in SFC order, we can just check the last entry in owners here */
