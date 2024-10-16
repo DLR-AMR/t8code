@@ -10,7 +10,7 @@ As a reviewer please read through all the code lines and make sure that the code
 #### General
 - [ ] The reviewer executed the new code features at least once and checked the results manually
 
-- [ ] The code follows the [t8code coding guidelines](https://github.com/holke/t8code/wiki/Coding-Guideline)
+- [ ] The code follows the [t8code coding guidelines](https://github.com/DLR-AMR/t8code/wiki/Coding-Guideline)
 - [ ] New source/header files are properly added to the Makefiles
 - [ ] The code is well documented
 - [ ] All function declarations, structs/classes and their members have a proper doxygen documentation
@@ -33,6 +33,6 @@ As a reviewer please read through all the code lines and make sure that the code
 - [ ] If a new directory with source-files is added, it must be covered by the `script/find_all_source_files.scp` to check the indentation of these files.
 - [ ] If this PR introduces a new feature, it must be covered in an example/tutorial and a Wiki article.
 
-#### Licence
+#### License
 
 - [ ] The author added a BSD statement to `doc/` (or already has one)

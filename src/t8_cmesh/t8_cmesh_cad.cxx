@@ -81,14 +81,14 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees, int nu
     shape = BRepBuilderAPI_MakeFace (cylinder_outer, 1e-6).Face ();
     shape = BRepAlgoAPI_Fuse (shape, BRepBuilderAPI_MakeFace (cylinder_inner, 1e-6).Face ());
 
-    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, shape, "cad surface");
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, shape, "cad surface");
 
 #else  /* !T8_WITH_OCC */
     SC_ABORTF ("OCC not linked");
 #endif /* T8_WITH_OCC */
   }
   else {
-    t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, 3);
+    t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
   }
 
 #if T8_WITH_OCC
