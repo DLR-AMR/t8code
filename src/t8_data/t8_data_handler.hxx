@@ -248,6 +248,16 @@ class t8_data_handler: public t8_abstract_data_handler {
     return single_handler.type ();
   }
 
+  bool
+  create_handle_for_internal_data (auto &ihandler, type)
+  {
+    switch (type) {
+    // Placeholder for future internal data, which is handled here.
+    default:
+      return false;
+    }
+  }
+
  private:
   /**
   * \brief A shared pointer to a vector of data. 

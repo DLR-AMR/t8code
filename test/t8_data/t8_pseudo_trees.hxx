@@ -123,18 +123,21 @@ class t8_single_data_handler<pseudo_tree> {
       mpiret = sc_MPI_Unpack (buffer, num_bytes, &pos, &type, 1, sc_MPI_INT, comm);
       SC_CHECK_MPI (mpiret);
 
-      if (type == 0) {
-        ihandler = std::make_shared<t8_data_handler<enlarged_data<int>>> ();
-      }
-      else if (type == 1) {
-        ihandler = std::make_shared<t8_data_handler<enlarged_data<double>>> ();
-      }
-      else {
-        SC_ABORT_NOT_REACHED ();
-      }
+      if (!create_handle_for_internal_data (ihandler, type)) {
 
-      int outcount = 0;
-      ihandler->unpack_vector_prefix (buffer, num_bytes, pos, outcount, comm);
+        if (type == 0) {
+          ihandler = std::make_shared<t8_data_handler<enlarged_data<int>>> ();
+        }
+        else if (type == 1) {
+          ihandler = std::make_shared<t8_data_handler<enlarged_data<double>>> ();
+        }
+        else {
+          SC_ABORT_NOT_REACHED ();
+        }
+
+        int outcount = 0;
+        ihandler->unpack_vector_prefix (buffer, num_bytes, pos, outcount, comm);
+      }
     }
   }
 
