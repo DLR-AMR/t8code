@@ -198,7 +198,7 @@ t8_shmem_array_allgather (const void *sendbuf, int sendcount, sc_MPI_Datatype se
   T8_ASSERT (t8_shmem_array_is_initialized (recvarray));
   T8_ASSERT (!t8_shmem_array_is_writing_possible (recvarray));
 
-  sc_shmem_allgather ((void *) sendbuf, sendcount, sendtype, recvarray->array, recvcount, recvtype, recvarray->comm);
+  t8_shmem_allgather ((void *) sendbuf, sendcount, sendtype, recvarray->array, recvcount, recvtype, recvarray->comm);
 }
 
 void
