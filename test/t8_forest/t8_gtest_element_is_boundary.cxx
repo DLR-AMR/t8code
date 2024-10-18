@@ -99,6 +99,10 @@ class element_is_boundary: public testing::TestWithParam<std::tuple<int, cmesh_e
     int maxlevel = 7;
     const int recursive_adapt = 1;
     forest_adapt = t8_forest_new_adapt (forest, t8_test_adapt_first_child, recursive_adapt, 0, &maxlevel);
+    /* Since the cmesh may be partitioned when building forest and forest_adapt, the old
+     * cmesh might get deleted and replaced by a new partitioned cmesh.
+     * We need to update our internal cmesh pointer to accommodate. */
+    cmesh = t8_forest_get_cmesh (forest_adapt);
   }
 
   void
