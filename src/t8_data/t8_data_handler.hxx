@@ -249,7 +249,7 @@ class t8_data_handler: public t8_abstract_data_handler {
   }
 
   bool
-  create_handle_for_internal_data (auto &ihandler, type)
+  create_handle_for_internal_data (t8_abstract_data_handler * const handler, const int type)
   {
     switch (type) {
     // Placeholder for future internal data, which is handled here.
