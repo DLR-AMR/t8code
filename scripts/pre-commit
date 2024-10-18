@@ -35,6 +35,7 @@
 CHECK_INDENT=./scripts/check_if_file_indented.scp
 
 TYPOS=`which typos 2> /dev/null`
+TYPOS_CONFIG_FILE=./.typos.toml
 
 if [ -z "$TYPOS" ]
 then
@@ -68,7 +69,11 @@ do
     continue
   fi
 
-  status=`$TYPOS $file`
+  # Calling the typos script
+  # We use a config file to exclude certain spellings and specific files.
+  # Excluding specific files in the config files does only work when used together
+  # with --force-exclude
+  status=`$TYPOS --force-exclude --config $TYPOS_CONFIG_FILE $file`
   if ! [ -z "$status" ]; then
     echo "File $file contains typos."
     nocontinue=1
