@@ -97,7 +97,7 @@ t8_cmesh_get_tree_geom_hash (const t8_cmesh_t cmesh, const t8_gloidx_t gtreeid)
   const size_t *hash
     = (const size_t *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_GEOMETRY_ATTRIBUTE_KEY, ltreeid);
   if (hash == nullptr) {
-    SC_ABORTF ("Could not find geometry for tree %ld.", gtreeid);
+    SC_ABORTF ("Could not find geometry for tree %ld.", static_cast<long> (gtreeid));
   }
   return *hash;
 }

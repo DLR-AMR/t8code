@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <api/t8_fortran_interface/t8_fortran_interface.h>
+#include <t8_fortran_interface.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_cmesh/t8_cmesh_examples.h>

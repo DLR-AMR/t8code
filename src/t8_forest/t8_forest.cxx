@@ -38,7 +38,7 @@
 #include <t8_forest/t8_forest_profiling.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_adapt.h>
-#include <t8_forest/t8_forest_vtk.h>
+#include <t8_vtk/t8_vtk_writer.h>
 #include <t8_geometry/t8_geometry_base.hxx>
 #include <t8_forest/t8_forest_ghost_interface.hxx>
 #include <t8_forest/t8_forest_ghost_search.hxx>
@@ -1439,52 +1439,6 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
     forest->global_num_elements = 0;
     forest->incomplete_trees = -1;
   }
-}
-
-/* Search for a linear element id (at forest->maxlevel) in a sorted array of
- * elements. If the element does not exist, return the largest index i
- * such that the element at position i has a smaller id than the given one.
- * If no such i exists, return -1.
- */
-/* TODO: should return t8_locidx_t */
-static t8_locidx_t
-t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_linearidx_t element_id, const int maxlevel)
-{
-  t8_linearidx_t query_id;
-  t8_locidx_t low, high, guess;
-
-  const t8_eclass_scheme_c *ts = t8_element_array_get_scheme (elements);
-  /* At first, we check whether any element has smaller id than the
-   * given one. */
-  const t8_element_t *query = t8_element_array_index_int (elements, 0);
-  query_id = ts->t8_element_get_linear_id (query, maxlevel);
-  if (query_id > element_id) {
-    /* No element has id smaller than the given one */
-    return -1;
-  }
-
-  /* We now perform the binary search */
-  low = 0;
-  high = t8_element_array_get_count (elements) - 1;
-  while (low < high) {
-    guess = (low + high + 1) / 2;
-    query = t8_element_array_index_int (elements, guess);
-    query_id = ts->t8_element_get_linear_id (query, maxlevel);
-    if (query_id == element_id) {
-      /* we are done */
-      return guess;
-    }
-    else if (query_id > element_id) {
-      /* look further left */
-      high = guess - 1;
-    }
-    else {
-      /* look further right, but keep guess in the search range */
-      low = guess;
-    }
-  }
-  T8_ASSERT (low == high);
-  return low;
 }
 
 t8_eclass_t
@@ -3690,11 +3644,10 @@ t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id, t8_locidx_t 
 const t8_element_t *
 t8_forest_get_element_in_tree (t8_forest_t forest, t8_locidx_t ltreeid, t8_locidx_t leid_in_tree)
 {
-  t8_tree_t tree;
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (0 <= ltreeid && ltreeid < t8_forest_get_num_local_trees (forest));
 
-  tree = t8_forest_get_tree (forest, ltreeid);
+  const t8_tree_t tree = t8_forest_get_tree (forest, ltreeid);
   const t8_element_t *element = t8_forest_get_tree_element (tree, leid_in_tree);
   T8_ASSERT (t8_forest_element_is_leaf (forest, element, ltreeid));
   return element;
@@ -4168,6 +4121,17 @@ t8_forest_new_uniform (t8_cmesh_t cmesh, t8_scheme_cxx_t *scheme, const int leve
 
   /* Initialize the forest */
   t8_forest_init (&forest);
+
+  if (cmesh->set_partition) {
+    t8_cmesh_t cmesh_uniform_partition;
+    t8_cmesh_init (&cmesh_uniform_partition);
+    t8_cmesh_set_derive (cmesh_uniform_partition, cmesh);
+    t8_scheme_cxx_ref (scheme);
+    t8_cmesh_set_partition_uniform (cmesh_uniform_partition, level, scheme);
+    t8_cmesh_commit (cmesh_uniform_partition, comm);
+    cmesh = cmesh_uniform_partition;
+  }
+
   /* Set the cmesh, scheme and level */
   t8_forest_set_cmesh (forest, cmesh, comm);
   t8_forest_set_scheme (forest, scheme);

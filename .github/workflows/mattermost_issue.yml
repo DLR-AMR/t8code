@@ -44,20 +44,26 @@ jobs:
       - name: debug_before_build
         run: echo ${{ env.message_build}}
       # build the message depending on different types of events and event actions. Message is written into mattermost.json
+      - name: dispatch_run
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo message_build=1 >> $GITHUB_ENV &&
+          echo message_content='User ${{github.actor}} triggered the workflow_dispatch' >> $GITHUB_ENV
       - name: closed_message
         if: github.event.action == 'closed'
         run: |
           echo message_build=1 >> $GITHUB_ENV &&
-          echo message_content='Issue ${{ github.event.issue.number }} has been closed. See ${{ github.event.issue.html_url }} for more details.' >> $GITHUB_ENV
-# Would like to have this message read "User X closed issue ...".
-# How can we get the user name? Tried ${{ github.event.issue.user.name }} and others, did not work.
+          echo message_content='User ${{ github.actor }} closed issue ${{ github.event.issue.number }}. See ${{ github.event.issue.html_url }} for more details.' >> $GITHUB_ENV
       - name: opened_message
-        if: github.event.action == 'opened' || github.event.action == 'reopened'
+        if: github.event.action == 'opened'
         run: |
           echo message_build=1 >> $GITHUB_ENV &&
-          echo message_content='Issue ${{ github.event.issue.number }} was (re-)opened. See ${{ github.event.issue.html_url }} for more details.' >> $GITHUB_ENV
-# Would like to have this message read "User X (re-)opened issue ...".
-# How can we get the user name? Tried ${{ github.event.issue.user.name }} and others, did not work.
+          echo message_content='User ${{ github.actor }} opened issue ${{ github.event.issue.number }}. See ${{ github.event.issue.html_url }} for more details.' >> $GITHUB_ENV
+      - name: reopened_message
+        if: github.event.action == 'reopened'
+        run: |
+          echo message_build=1 >> $GITHUB_ENV &&
+          echo message_content='User ${{ github.actor }} reopened issue ${{ github.event.issue.number }}. See ${{ github.event.issue.html_url }} for more details.' >> $GITHUB_ENV
       - name: debug_after_build
         run: echo ${{ env.message_build }}
       # if a message has been written send the message to the mattermost-channel described in the secrets

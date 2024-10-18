@@ -68,7 +68,7 @@ We provide a short guide to install t8code in our Wiki [Installation guide](http
 ### Getting started
   
   To get familiar with t8code and its algorithms and data structures we recommend executing the tutorial examples in `tutorials`
-  and read the corresponding Wiki pages starting with [Step 0 - Helloworld](https://github.com/holke/t8code/wiki/Step-0---Hello-World).
+  and read the corresponding Wiki pages starting with [Step 0 - Helloworld](https://github.com/DLR-AMR/t8code/wiki/Step-0---Hello-World).
   
   A sophisticated example of a complete numerical simulation is our finite volume solver of the advection equation in `example/advection`.
 

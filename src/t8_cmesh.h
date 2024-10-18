@@ -104,17 +104,6 @@ t8_cmesh_is_committed (const t8_cmesh_t cmesh);
  */
 int
 t8_cmesh_validate_geometry (const t8_cmesh_t cmesh);
-
-/** After a cmesh is committed, check whether all trees in a cmesh do have positive volume.
- * Returns true if all trees have positive volume.
- * \param [in]  cmesh           This cmesh is examined. May be NULL.
- * \return                      True if \a cmesh is not NULL and all trees for
- *                              which \ref  t8_cmesh_set_tree_vertices
- *                              was called, do have positive geometric volume.
- *                              False otherwise.
- */
-int
-t8_cmesh_no_negative_volume (t8_cmesh_t cmesh);
 #endif
 
 /** Given a set of vertex coordinates for a tree of a given eclass.

@@ -35,6 +35,7 @@
 #include <t8.h>
 #include <t8_cmesh.h>
 #include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_geometrical.h>
 
 typedef int (*t8_fortran_adapt_coordinate_callback) (double x, double y, double z, int is_family);
 

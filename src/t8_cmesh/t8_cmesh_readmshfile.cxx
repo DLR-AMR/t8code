@@ -179,7 +179,7 @@ t8_cmesh_check_version_of_msh_file (FILE *fp)
   /* Search for the line starting with "$MeshFormat". */
   while (!feof (fp) && strcmp (first_word, "$MeshFormat")) {
     (void) t8_cmesh_msh_read_next_line (&line, &linen, fp);
-    retval = sscanf (line, "%2048s", first_word);
+    retval = sscanf (line, "%2047s", first_word);
 
     /* Checking for read/write error */
     if (retval != 1) {
@@ -258,7 +258,7 @@ t8_msh_file_2_read_nodes (FILE *fp, t8_locidx_t *num_nodes, sc_mempool_t **node_
   while (!feof (fp) && strcmp (first_word, "$Nodes")) {
     (void) t8_cmesh_msh_read_next_line (&line, &linen, fp);
     /* Get the first word of this line */
-    retval = sscanf (line, "%2048s", first_word);
+    retval = sscanf (line, "%2047s", first_word);
 
     /* Checking for read/write error */
     if (retval != 1) {
@@ -358,7 +358,7 @@ t8_msh_file_4_read_nodes (FILE *fp, t8_locidx_t *num_nodes, sc_mempool_t **node_
   while (!feof (fp) && strcmp (first_word, "$Nodes")) {
     (void) t8_cmesh_msh_read_next_line (&line, &linen, fp);
     /* Get the first word of this line */
-    retval = sscanf (line, "%2048s", first_word);
+    retval = sscanf (line, "%2047s", first_word);
     /* Checking for read/write error */
     if (retval != 1) {
       t8_global_errorf ("Premature end of line while reading nodes.\n");
@@ -524,7 +524,7 @@ t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
   while (!feof (fp) && strcmp (first_word, "$Elements")) {
     (void) t8_cmesh_msh_read_next_line (&line, &linen, fp);
     /* Get the first word of this line */
-    retval = sscanf (line, "%2048s", first_word);
+    retval = sscanf (line, "%2047s", first_word);
 
     /* Checking for read/write error */
     if (retval != 1) {
@@ -634,7 +634,7 @@ t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
         int switch_indices[4] = { 0 };
         int iswitch;
         T8_ASSERT (t8_eclass_to_dimension[eclass] > 1);
-        t8_debugf ("Correcting negative volume of tree %li\n", tree_count);
+        t8_debugf ("Correcting negative volume of tree %li\n", static_cast<long> (tree_count));
         switch (eclass) {
         case T8_ECLASS_TRIANGLE:
         case T8_ECLASS_QUAD:
@@ -847,7 +847,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
   while (!feof (fp) && strcmp (first_word, "$Elements")) {
     (void) t8_cmesh_msh_read_next_line (&line, &linen, fp);
     /* Get the first word of this line */
-    retval = sscanf (line, "%2048s", first_word);
+    retval = sscanf (line, "%2047s", first_word);
 
     /* Checking for read/write error */
     if (retval != 1) {
@@ -973,7 +973,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
           int switch_indices[4] = { 0 };
           int iswitch;
           T8_ASSERT (t8_eclass_to_dimension[eclass] > 1);
-          t8_debugf ("Correcting negative volume of tree %li\n", tree_count);
+          t8_debugf ("Correcting negative volume of tree %li\n", static_cast<long> (tree_count));
           switch (eclass) {
           case T8_ECLASS_TRIANGLE:
           case T8_ECLASS_QUAD:
@@ -1765,15 +1765,14 @@ T8_EXTERN_C_BEGIN ();
  * no cad geometry is used.
  */
 static int
-t8_cmesh_from_msh_file_register_geometries (t8_cmesh_t cmesh, const int use_cad_geometry, const int dim,
-                                            const char *fileprefix, const t8_geometry_c **linear_geometry,
-                                            const t8_geometry_c **cad_geometry)
+t8_cmesh_from_msh_file_register_geometries (t8_cmesh_t cmesh, const int use_cad_geometry, const char *fileprefix,
+                                            const t8_geometry_c **linear_geometry, const t8_geometry_c **cad_geometry)
 {
   /* Register linear geometry */
-  *linear_geometry = t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, dim);
+  *linear_geometry = t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
   if (use_cad_geometry) {
 #if T8_WITH_OCC
-    *cad_geometry = t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, dim, std::string (fileprefix));
+    *cad_geometry = t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, std::string (fileprefix));
 #else /* !T8_WITH_OCC */
     *cad_geometry = NULL;
     return 0;
@@ -1819,8 +1818,8 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
   t8_cmesh_set_dimension (cmesh, dim);
 
   /* Register the geometries for the cmesh. */
-  const int registered_geom_success = t8_cmesh_from_msh_file_register_geometries (
-    cmesh, use_cad_geometry, dim, fileprefix, &linear_geometry, &cad_geometry);
+  const int registered_geom_success
+    = t8_cmesh_from_msh_file_register_geometries (cmesh, use_cad_geometry, fileprefix, &linear_geometry, &cad_geometry);
   if (!registered_geom_success) {
     /* Registering failed */
     t8_errorf ("cad is not linked. Cannot use cad geometry.\n");

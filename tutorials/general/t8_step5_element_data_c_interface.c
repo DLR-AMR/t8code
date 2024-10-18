@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* See also: https://github.com/holke/t8code/wiki/Step-5---Store-element-data
+/* See also: https://github.com/DLR-AMR/t8code/wiki/Step-5---Store-element-data
  *
  * This is step5 of the t8code tutorials using the C interface of t8code.
  * In the following we will store data in the individual elements of our forest. 
