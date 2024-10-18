@@ -47,3 +47,14 @@ t8_dhex_compute_reference_coords (const t8_dhex_t *elem, const double *ref_coord
     out_coords[offset + 2] /= (double) P8EST_ROOT_LEN;
   }
 }
+
+/*Copies a hexahedra from source to dest*/
+void
+t8_dhex_copy (const t8_dhex_t *source, t8_dhex_t *dest)
+{
+  T8_ASSERT (source != NULL && dest != NULL);
+  if (source == dest) {
+    return;
+  }
+  memcpy (dest, source, sizeof (t8_dhex_t));
+}

@@ -46,6 +46,13 @@ void
 t8_dhex_compute_reference_coords (const t8_dhex_t *elem, const double *ref_coords, const size_t num_coords,
                                   double *out_coords);
 
+/** Copy the data from source to dest
+ * \param[in] source    The source-hex
+ * \param[in,out] dest  The destination
+ */
+void
+t8_dhex_copy (const t8_dhex_t *source, t8_dhex_t *dest);
+
 T8_EXTERN_C_END ();
 
 #endif /* T8_DHEX_BITS_H */

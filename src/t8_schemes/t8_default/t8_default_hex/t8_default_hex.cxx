@@ -51,7 +51,7 @@ t8_default_scheme_hex_c::t8_element_copy (const t8_element_t *source, t8_element
 {
   T8_ASSERT (t8_element_is_valid (source));
   T8_ASSERT (t8_element_is_valid (dest));
-  *(p8est_quadrant_t *) dest = *(const p8est_quadrant_t *) source;
+  t8_dhex_copy ((const t8_dhex_t *) source, (t8_dhex_t *) dest);
 }
 
 int
