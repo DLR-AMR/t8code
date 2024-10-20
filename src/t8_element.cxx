@@ -52,7 +52,7 @@ const double t8_element_centroid_ref_coords[T8_ECLASS_COUNT][3] = {
 /* clang-format on */
 
 void
-t8_scheme_cxx_ref (t8_scheme_cxx_t *scheme)
+t8_schemexx_ref (t8_scheme *scheme)
 {
   T8_ASSERT (scheme != NULL);
 
@@ -60,22 +60,22 @@ t8_scheme_cxx_ref (t8_scheme_cxx_t *scheme)
 }
 
 void
-t8_scheme_cxx_unref (t8_scheme_cxx_t **pscheme)
+t8_schemexx_unref (t8_scheme **pscheme)
 {
-  t8_scheme_cxx_t *scheme;
+  t8_scheme *scheme;
 
   T8_ASSERT (pscheme != NULL);
   scheme = *pscheme;
   T8_ASSERT (scheme != NULL);
 
   if (sc_refcount_unref (&scheme->rc)) {
-    t8_scheme_cxx_destroy (scheme);
+    t8_schemexx_destroy (scheme);
     *pscheme = NULL;
   }
 }
 
 void
-t8_scheme_cxx_destroy (t8_scheme_cxx_t *s)
+t8_schemexx_destroy (t8_scheme *s)
 {
   int t;
 

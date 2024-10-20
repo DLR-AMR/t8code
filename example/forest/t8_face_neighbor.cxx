@@ -38,8 +38,8 @@ t8_ghost_neighbor_test (t8_eclass_t eclass, sc_MPI_Comm comm, int hybrid)
   t8_cmesh_t cmesh;
   t8_forest_t forest;
   t8_element_t *elem, *neigh;
-  t8_scheme_cxx_t *scheme;
-  t8_eclass_scheme_c *neigh_scheme;
+  t8_scheme *scheme;
+  t8_scheme *neigh_scheme;
   t8_default_scheme_common_c *common_scheme;
   int level = 1;
   t8_locidx_t element_id = 0, treeid;

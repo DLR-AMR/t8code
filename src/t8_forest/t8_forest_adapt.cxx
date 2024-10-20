@@ -44,7 +44,7 @@ T8_EXTERN_C_BEGIN ();
  *       not valid. 
  */
 static int
-t8_forest_is_family_callback (t8_eclass_scheme_c *ts, const int num_elements, t8_element_t **elements)
+t8_forest_is_family_callback (t8_scheme *ts, const int num_elements, t8_element_t **elements)
 {
 
   for (int iter = 0; iter < num_elements; iter++) {
@@ -101,8 +101,7 @@ t8_forest_is_family_callback (t8_eclass_scheme_c *ts, const int num_elements, t8
  *       recursively, return INT32_MIN.
  */
 static t8_locidx_t
-t8_forest_pos (t8_forest_t forest, t8_eclass_scheme_c *ts, t8_element_array_t *telements,
-               const t8_locidx_t telements_pos)
+t8_forest_pos (t8_forest_t forest, t8_scheme *ts, t8_element_array_t *telements, const t8_locidx_t telements_pos)
 {
   const t8_locidx_t elements_in_array = t8_element_array_get_count (telements);
   T8_ASSERT (0 <= telements_pos && telements_pos < elements_in_array);
@@ -212,9 +211,9 @@ t8_forest_pos (t8_forest_t forest, t8_eclass_scheme_c *ts, t8_element_array_t *t
  * \param [in] el_buffer Buffer space to store a family of elements.
  */
 static void
-t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid, t8_locidx_t lelement_id,
-                                   t8_eclass_scheme_c *ts, t8_element_array_t *telements, t8_locidx_t el_coarsen,
-                                   t8_locidx_t *el_inserted, t8_element_t **el_buffer)
+t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid, t8_locidx_t lelement_id, t8_scheme *ts,
+                                   t8_element_array_t *telements, t8_locidx_t el_coarsen, t8_locidx_t *el_inserted,
+                                   t8_element_t **el_buffer)
 {
   T8_ASSERT (el_coarsen >= 0);
   /* el_inserted is the index of the last element in telements plus one.
@@ -313,9 +312,9 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid, t8_l
  * \param [in] element_removed Flag set to 1 if element was removed.
  */
 static void
-t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid, t8_locidx_t lelement_id,
-                                  t8_eclass_scheme_c *ts, sc_list_t *elem_list, t8_element_array_t *telements,
-                                  t8_locidx_t *num_inserted, t8_element_t **el_buffer, int *element_removed)
+t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid, t8_locidx_t lelement_id, t8_scheme *ts,
+                                  sc_list_t *elem_list, t8_element_array_t *telements, t8_locidx_t *num_inserted,
+                                  t8_element_t **el_buffer, int *element_removed)
 {
   while (elem_list->elem_count > 0) {
     /* Until the list is empty we
@@ -367,7 +366,7 @@ void
 t8_forest_adapt (t8_forest_t forest)
 {
   t8_forest_t forest_from;
-  t8_eclass_scheme_c *tscheme;
+  t8_scheme *tscheme;
   t8_element_array_t *telements;
   t8_element_array_t *telements_from;
   t8_element_t **elements;

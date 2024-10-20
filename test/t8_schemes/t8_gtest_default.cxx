@@ -78,7 +78,7 @@ class gtest_default_scheme: public testing::TestWithParam<t8_eclass_t> {
   {
     delete (eclass_scheme);
   }
-  t8_eclass_scheme_c *eclass_scheme;
+  t8_scheme *eclass_scheme;
 };
 
 TEST_P (gtest_default_scheme, is_default)

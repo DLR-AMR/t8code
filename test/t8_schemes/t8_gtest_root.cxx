@@ -44,11 +44,11 @@ class root: public testing::TestWithParam<t8_eclass> {
   TearDown () override
   {
     ts->t8_element_destroy (1, &element);
-    t8_scheme_cxx_unref (&scheme);
+    t8_schemexx_unref (&scheme);
   }
   t8_element_t *element;
-  t8_scheme_cxx *scheme;
-  t8_eclass_scheme_c *ts;
+  t8_scheme *scheme;
+  t8_scheme *ts;
   t8_eclass_t eclass;
 };
 

@@ -63,6 +63,7 @@ T8_EXTERN_C_BEGIN ();
  * \param [in] forest_old      The forest that is adapted
  * \param [in] forest_new      The forest that is newly constructed from \a forest_old
  * \param [in] which_tree      The local tree containing \a first_outgoing and \a first_incoming
+ * \param [in] tree_class      The eclass of the local tree containing \a first_outgoing and \a first_incoming
  * \param [in] ts              The eclass scheme of the tree
  * \param [in] refine          -1 if family in \a forest_old got coarsened, 0 if element
  *                             has not been touched, 1 if element got refined and -2 if
@@ -84,7 +85,7 @@ T8_EXTERN_C_BEGIN ();
  * \see t8_forest_iterate_replace
  */
 typedef void (*t8_forest_replace_t) (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree,
-                                     t8_eclass_scheme_c *ts, const int refine, const int num_outgoing,
+                                     t8_eclass_t tree_class, t8_scheme_c *ts, const int refine, const int num_outgoing,
                                      const t8_locidx_t first_outgoing, const int num_incoming,
                                      const t8_locidx_t first_incoming);
 
@@ -112,8 +113,8 @@ typedef void (*t8_forest_replace_t) (t8_forest_t forest_old, t8_forest_t forest_
 /* TODO: Do we really need the forest argument? Since the forest is not committed yet it
  *       seems dangerous to expose to the user. */
 typedef int (*t8_forest_adapt_t) (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                                  t8_locidx_t lelement_id, t8_eclass_scheme_c *ts, const int is_family,
-                                  const int num_elements, t8_element_t *elements[]);
+                                  t8_locidx_t lelement_id, t8_scheme_c *ts, const int is_family, const int num_elements,
+                                  t8_element_t *elements[]);
 
 /** Create a new forest with reference count one.
  * This forest needs to be specialized with the t8_forest_set_* calls.
@@ -198,7 +199,7 @@ t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh, sc_MPI_Comm comm);
  *                              This can be prevented by referencing \b scheme.
  */
 void
-t8_forest_set_scheme (t8_forest_t forest, t8_scheme_cxx_t *scheme);
+t8_forest_set_scheme (t8_forest_t forest, t8_scheme_c *scheme);
 
 /** Set the initial refinement level to be used when \b forest is committed.
  * \param [in,out] forest      The forest whose level will be set.
@@ -529,7 +530,7 @@ t8_forest_element_is_leaf (const t8_forest_t forest, const t8_element_t *element
  * For more information about the encoding of face orientation refer to \ref t8_cmesh_get_face_neighbor.
  */
 int
-t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_eclass_scheme_c *ts,
+t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_scheme_c *ts,
                                  const t8_element_t *leaf, int face);
 
 /** Compute the leaf face neighbors of a forest.
@@ -568,14 +569,13 @@ t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, 
 void
 t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf,
                                t8_element_t **pneighbor_leaves[], int face, int *dual_faces[], int *num_neighbors,
-                               t8_locidx_t **pelement_indices, t8_eclass_scheme_c **pneigh_scheme,
-                               int forest_is_balanced);
+                               t8_locidx_t **pelement_indices, t8_scheme_c **pneigh_scheme, int forest_is_balanced);
 
 void
 t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf,
                                    t8_element_t **pneighbor_leaves[], int face, int *dual_faces[], int *num_neighbors,
-                                   t8_locidx_t **pelement_indices, t8_eclass_scheme_c **pneigh_scheme,
-                                   int forest_is_balanced, t8_gloidx_t *gneigh_tree, int *orientation);
+                                   t8_locidx_t **pelement_indices, t8_scheme_c **pneigh_scheme, int forest_is_balanced,
+                                   t8_gloidx_t *gneigh_tree, int *orientation);
 
 /** Exchange ghost information of user defined element data.
  * \param[in] forest       The forest. Must be committed.
@@ -762,18 +762,8 @@ t8_forest_get_first_local_element_id (t8_forest_t forest);
  * \return          The element scheme of the forest.
  * \see t8_forest_set_scheme
  */
-t8_scheme_cxx_t *
+t8_scheme_c *
 t8_forest_get_scheme (const t8_forest_t forest);
-
-/** Return the eclass scheme of a given element class associated to a forest.
- * \param [in]      forest.     A committed forest.
- * \param [in]      eclass.     An element class.
- * \return          The eclass scheme of \a eclass associated to forest.
- * \see t8_forest_set_scheme
- * \note  The forest is not required to have trees of class \a eclass.
- */
-t8_eclass_scheme_c *
-t8_forest_get_eclass_scheme (t8_forest_t forest, t8_eclass_t eclass);
 
 /** Return the eclass of the tree in which a face neighbor of a given element
  * lies.
@@ -805,7 +795,7 @@ t8_forest_element_neighbor_eclass (t8_forest_t forest, t8_locidx_t ltreeid, cons
  */
 t8_gloidx_t
 t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *elem, t8_element_t *neigh,
-                                 t8_eclass_scheme_c *neigh_scheme, int face, int *neigh_face);
+                                 t8_scheme_c *neigh_scheme, int face, int *neigh_face);
 
 /* TODO: implement */
 void
@@ -847,7 +837,7 @@ t8_forest_element_points_inside (t8_forest_t forest, t8_locidx_t ltreeid, const 
  * \ref t8_forest_set_scheme, \ref t8_forest_set_level, and \ref t8_forest_commit.
  */
 t8_forest_t
-t8_forest_new_uniform (t8_cmesh_t cmesh, t8_scheme_cxx_t *scheme, const int level, const int do_face_ghost,
+t8_forest_new_uniform (t8_cmesh_t cmesh, t8_scheme_c *scheme, const int level, const int do_face_ghost,
                        sc_MPI_Comm comm);
 
 /** Build a adapted forest from another forest.

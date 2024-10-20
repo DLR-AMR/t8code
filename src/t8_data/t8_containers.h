@@ -40,8 +40,8 @@
  */
 typedef struct
 {
-  t8_eclass_scheme_c *scheme; /**< An eclass scheme of which elements should be stored */
-  sc_array_t array;           /**< The array in which the elements are stored */
+  t8_scheme_c *scheme; /**< An eclass scheme of which elements should be stored */
+  sc_array_t array;    /**< The array in which the elements are stored */
 } t8_element_array_t;
 
 T8_EXTERN_C_BEGIN ();
@@ -51,7 +51,7 @@ T8_EXTERN_C_BEGIN ();
  * \return              Return an allocated array of zero length.
  */
 t8_element_array_t *
-t8_element_array_new (t8_eclass_scheme_c *scheme);
+t8_element_array_new (t8_scheme_c *scheme);
 
 /** Creates a new array structure with a given length (number of elements)
  * and calls \ref t8_element_new for those elements.
@@ -62,14 +62,14 @@ t8_element_array_new (t8_eclass_scheme_c *scheme);
  *                          t8_element_new was called.
  */
 t8_element_array_t *
-t8_element_array_new_count (t8_eclass_scheme_c *scheme, size_t num_elements);
+t8_element_array_new_count (t8_scheme_c *scheme, size_t num_elements);
 
 /** Initializes an already allocated (or static) array structure.
  * \param [in,out]  element_array  Array structure to be initialized.
  * \param [in]      scheme         The eclass scheme of which elements should be stored.
  */
 void
-t8_element_array_init (t8_element_array_t *element_array, t8_eclass_scheme_c *scheme);
+t8_element_array_init (t8_element_array_t *element_array, t8_scheme_c *scheme);
 
 /** Initializes an already allocated (or static) array structure
  * and allocates a given number of elements and initializes them with \ref t8_element_init.
@@ -78,7 +78,7 @@ t8_element_array_init (t8_element_array_t *element_array, t8_eclass_scheme_c *sc
  * \param [in] num_elements   Number of initial array elements.
  */
 void
-t8_element_array_init_size (t8_element_array_t *element_array, t8_eclass_scheme_c *scheme, size_t num_elements);
+t8_element_array_init_size (t8_element_array_t *element_array, t8_scheme_c *scheme, size_t num_elements);
 
 /** Initializes an already allocated (or static) view from existing t8_element_array.
  * The array view returned does not require t8_element_array_reset (doesn't hurt though).
@@ -105,8 +105,7 @@ t8_element_array_init_view (t8_element_array_t *view, t8_element_array_t *array,
  *                          It is not necessary to call t8_element_array_reset later.
  */
 void
-t8_element_array_init_data (t8_element_array_t *view, t8_element_t *base, t8_eclass_scheme_c *scheme,
-                            size_t elem_count);
+t8_element_array_init_data (t8_element_array_t *view, t8_element_t *base, t8_scheme_c *scheme, size_t elem_count);
 
 /** Initializes an already allocated (or static) array structure
  * and copy an existing array of t8_element_t into it.
@@ -119,7 +118,7 @@ t8_element_array_init_data (t8_element_array_t *view, t8_element_t *base, t8_ecl
  * \param [in] num_elements   Number of elements in \a data to be copied.
  */
 void
-t8_element_array_init_copy (t8_element_array_t *element_array, t8_eclass_scheme_c *scheme, t8_element_t *data,
+t8_element_array_init_copy (t8_element_array_t *element_array, t8_scheme_c *scheme, t8_element_t *data,
                             size_t num_elements);
 
 /** Change the number of elements stored in an element array.
@@ -197,7 +196,7 @@ t8_element_array_index_int_mutable (t8_element_array_t *element_array, int index
  * \param [in]  element_array Array of elements.
  * \return      The eclass scheme stored at \a element_array.
  */
-const t8_eclass_scheme_c *
+const t8_scheme_c *
 t8_element_array_get_scheme (const t8_element_array_t *element_array);
 
 /** Return the number of elements stored in a t8_element_array_t.

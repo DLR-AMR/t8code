@@ -370,7 +370,7 @@ static void
 t8_ghost_init_remote_tree (t8_forest_t forest, t8_gloidx_t gtreeid, int remote_rank, t8_eclass_t eclass,
                            t8_ghost_remote_tree_t *remote_tree)
 {
-  t8_eclass_scheme_c *ts;
+  t8_scheme *ts;
   t8_locidx_t local_treeid;
 
   T8_ASSERT (remote_tree != NULL);
@@ -397,7 +397,7 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int remote_ran
   t8_ghost_remote_t remote_entry_lookup, *remote_entry;
   t8_ghost_remote_tree_t *remote_tree;
   t8_element_t *elem_copy;
-  t8_eclass_scheme_c *ts;
+  t8_scheme *ts;
   t8_eclass_t eclass;
   sc_array_t *remote_array;
   size_t index, element_count;
@@ -492,7 +492,7 @@ typedef struct
                                            Each entry is an array of 2 * (max_num_faces + 1) integers,
                                            | face_0 low | face_0 high | ... | face_n low | face_n high | owner low | owner high | */
   sc_array_t face_owners;      /* Temporary storage for all owners at a leaf's face */
-  t8_eclass_scheme_c *ts;
+  t8_scheme *ts;
   t8_gloidx_t gtreeid;
   int level_nca; /* The refinement level of the root element in the search.
                                            At position element_level - level_nca in bounds_per_level are the bounds
@@ -687,7 +687,7 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int gh
   t8_tree_t tree;
   t8_eclass_t tree_class, neigh_class, last_class;
   t8_gloidx_t neighbor_tree;
-  t8_eclass_scheme_c *ts, *neigh_scheme = NULL, *prev_neigh_scheme = NULL;
+  t8_scheme *ts, *neigh_scheme = NULL, *prev_neigh_scheme = NULL;
 
   int iface, num_faces;
   int num_face_children, max_num_face_children = 0;
@@ -1020,7 +1020,7 @@ t8_forest_ghost_parse_received_message (t8_forest_t forest, t8_forest_ghost_t gh
   size_t num_elements, old_elem_count, ghosts_offset;
   t8_ghost_gtree_hash_t *tree_hash, **pfound_tree, *found_tree;
   t8_ghost_tree_t *ghost_tree;
-  t8_eclass_scheme_c *ts;
+  t8_scheme *ts;
   t8_element_t *element_insert;
   t8_ghost_process_hash_t *process_hash;
 #ifdef T8_ENABLE_DEBUG

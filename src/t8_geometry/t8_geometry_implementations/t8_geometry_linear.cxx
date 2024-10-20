@@ -102,7 +102,7 @@ t8_geometry_linear::t8_geom_point_batch_inside_element (t8_forest_t forest, t8_l
                                                         const double tolerance) const
 {
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
-  t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest, tree_class);
+  t8_scheme *ts = t8_forest_get_eclass_scheme (forest, tree_class);
   const t8_element_shape_t element_shape = ts->t8_element_shape (element);
   switch (element_shape) {
   case T8_ECLASS_VERTEX: {

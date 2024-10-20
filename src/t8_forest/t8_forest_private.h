@@ -57,7 +57,7 @@ T8_EXTERN_C_BEGIN ();
  */
 int
 t8_forest_is_incomplete_family (const t8_forest_t forest, const t8_locidx_t ltree_id, const t8_locidx_t el_considered,
-                                t8_eclass_scheme_c *tscheme, t8_element_t **elements, const int elements_size);
+                                t8_scheme_c *tscheme, t8_element_t **elements, const int elements_size);
 
 /* For each tree in a forest compute its first and last descendant */
 void
@@ -77,7 +77,7 @@ t8_forest_populate (t8_forest_t forest);
  * \see t8_forest_set_scheme
  * \note  The forest is not required to have trees of class \a eclass.
  */
-t8_eclass_scheme_c *
+t8_scheme_c *
 t8_forest_get_eclass_scheme_before_commit (t8_forest_t forest, t8_eclass_t eclass);
 
 /** Compute the maximum possible refinement level in a forest.
@@ -98,7 +98,7 @@ t8_forest_compute_maxlevel (t8_forest_t forest);
  * \see t8_forest_new_uniform.
  */
 int
-t8_forest_min_nonempty_level (t8_cmesh_t cmesh, t8_scheme_cxx_t *scheme);
+t8_forest_min_nonempty_level (t8_cmesh_t cmesh, t8_scheme_c *scheme);
 
 /** return nonzero if the first tree of a forest is shared with a smaller
  * process.
@@ -396,8 +396,8 @@ t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t forest, t8_locidx_t l
  */
 t8_gloidx_t
 t8_forest_element_half_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *elem,
-                                       t8_element_t *neighs[], t8_eclass_scheme_c *neigh_scheme, int face,
-                                       int num_neighs, int dual_faces[]);
+                                       t8_element_t *neighs[], t8_scheme_c *neigh_scheme, int face, int num_neighs,
+                                       int dual_faces[]);
 
 /** Iterate over all leaves of a forest and for each face compute the face neighbor
  * leaves with \ref t8_forest_leaf_face_neighbors and print their local element ids.
@@ -421,8 +421,7 @@ t8_forest_print_all_leaf_neighbors (t8_forest_t forest);
  * \note \a forest must be committed before calling this function.
  */
 int
-t8_forest_element_has_leaf_desc (t8_forest_t forest, t8_gloidx_t gtreeid, const t8_element_t *element,
-                                 t8_eclass_scheme_c *ts);
+t8_forest_element_has_leaf_desc (t8_forest_t forest, t8_gloidx_t gtreeid, const t8_element_t *element, t8_scheme_c *ts);
 
 T8_EXTERN_C_END ();
 

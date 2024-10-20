@@ -63,7 +63,7 @@ class forest_commit: public testing::TestWithParam<cmesh_example_base *> {
  * imbalanced forest. */
 static int
 t8_test_adapt_balance (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                       t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+                       t8_scheme *ts, const int is_family, const int num_elements, t8_element_t *elements[])
 {
   T8_ASSERT (!is_family || (is_family && num_elements == ts->t8_element_num_children (elements[0])));
 
@@ -137,7 +137,7 @@ TEST_P (forest_commit, test_forest_commit)
 
   const int level_step = 2;
 
-  t8_scheme_cxx_t *scheme = t8_scheme_new_default_cxx ();
+  t8_scheme *scheme = t8_scheme_new_default_cxx ();
 
   /* Compute the first level, such that no process is empty */
   int min_level = t8_forest_min_nonempty_level (cmesh, scheme);
@@ -158,11 +158,11 @@ TEST_P (forest_commit, test_forest_commit)
     forest_abp_3part = t8_test_forest_commit_abp_3step (forest, maxlevel);
 
     ASSERT_TRUE (t8_forest_is_equal (forest_abp_3part, forest_ada_bal_part)) << "The forests are not equal";
-    t8_scheme_cxx_ref (scheme);
+    t8_schemexx_ref (scheme);
     t8_forest_unref (&forest_ada_bal_part);
     t8_forest_unref (&forest_abp_3part);
   }
-  t8_scheme_cxx_unref (&scheme);
+  t8_schemexx_unref (&scheme);
   t8_debugf ("Done testing forest commit.");
 }
 

@@ -42,12 +42,12 @@ T8_EXTERN_C_BEGIN ();
  * if we refine recursively. */
 static int
 t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t ltree_id, t8_locidx_t lelement_id,
-                         t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+                         t8_scheme *ts, const int is_family, const int num_elements, t8_element_t *elements[])
 {
   int *pdone, iface, num_faces, num_half_neighbors, ineigh;
   t8_gloidx_t neighbor_tree;
   t8_eclass_t neigh_class;
-  t8_eclass_scheme_c *neigh_scheme;
+  t8_scheme *neigh_scheme;
   const t8_element_t *element = elements[0];
   t8_element_t **half_neighbors;
 
@@ -104,7 +104,7 @@ t8_forest_compute_max_element_level (t8_forest_t forest)
 {
   t8_locidx_t ielement, elem_in_tree;
   t8_locidx_t itree, num_trees;
-  t8_eclass_scheme_c *scheme;
+  t8_scheme *scheme;
   int local_max_level = 0, elem_level;
 
   /* Iterate over all local trees and all local elements and comupte the maximum occurring level */
@@ -316,7 +316,7 @@ t8_forest_is_balanced (t8_forest_t forest)
   t8_forest_t forest_from;
   t8_locidx_t num_trees, num_elements;
   t8_locidx_t itree, ielem;
-  t8_eclass_scheme_c *ts;
+  t8_scheme *ts;
   void *data_temp;
   int dummy_int;
 

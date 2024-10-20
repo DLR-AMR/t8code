@@ -52,7 +52,7 @@ class class_forest_face_normal: public testing::TestWithParam<std::tuple<t8_ecla
     t8_forest_unref (&forest);
   }
   t8_forest_t forest;
-  t8_scheme_cxx *scheme;
+  t8_scheme *scheme;
   t8_eclass_t eclass;
   int level;
 };
@@ -68,7 +68,7 @@ TEST_P (class_forest_face_normal, back_and_forth)
     const t8_locidx_t tree_elements = t8_forest_get_tree_num_elements (forest, itree);
     const t8_eclass_t tree_eclass = t8_forest_get_tree_class (forest, itree);
     ASSERT_EQ (eclass, tree_eclass);
-    const t8_eclass_scheme_c *escheme = t8_forest_get_eclass_scheme (forest, tree_eclass);
+    const t8_scheme *escheme = t8_forest_get_eclass_scheme (forest, tree_eclass);
     for (t8_locidx_t ielement = 0; ielement < tree_elements; ielement++) {
       const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
       const int num_faces = escheme->t8_element_num_faces (element);
@@ -82,7 +82,7 @@ TEST_P (class_forest_face_normal, back_and_forth)
         t8_element_t **neighbors;
         int num_neighbors;
         const int forest_is_balanced = 1;
-        t8_eclass_scheme_c *neigh_scheme;
+        t8_scheme *neigh_scheme;
         int *dual_faces;
         t8_locidx_t *neigh_ids;
 

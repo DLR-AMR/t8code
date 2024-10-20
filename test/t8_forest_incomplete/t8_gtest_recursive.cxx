@@ -49,7 +49,7 @@ class recursive_tree: public testing::TestWithParam<t8_eclass_t> {
     cmesh = t8_cmesh_new_bigmesh (eclass, MPI_size, sc_MPI_COMM_WORLD);
     scheme = t8_scheme_new_default_cxx ();
 
-    t8_scheme_cxx_ref (scheme);
+    t8_schemexx_ref (scheme);
     t8_cmesh_ref (cmesh);
 
     /* The forest to be adapted. */
@@ -65,7 +65,7 @@ class recursive_tree: public testing::TestWithParam<t8_eclass_t> {
   }
   int MPI_size;
   t8_eclass_t eclass;
-  t8_scheme_cxx_t *scheme;
+  t8_scheme *scheme;
   t8_cmesh_t cmesh;
   t8_forest_t forest;
   t8_forest_t forest_base;
@@ -74,8 +74,8 @@ class recursive_tree: public testing::TestWithParam<t8_eclass_t> {
 /** Remove every element except last and first of a family. */
 static int
 t8_adapt_remove_but_last_first (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                                t8_locidx_t lelement_id, t8_eclass_scheme_c *ts, const int is_family,
-                                const int num_elements, t8_element_t *elements[])
+                                t8_locidx_t lelement_id, t8_scheme *ts, const int is_family, const int num_elements,
+                                t8_element_t *elements[])
 {
   const int num_children = ts->t8_element_num_children (elements[0]);
   const int child_id = ts->t8_element_child_id (elements[0]);
@@ -88,7 +88,7 @@ t8_adapt_remove_but_last_first (t8_forest_t forest, t8_forest_t forest_from, t8_
 /** Refine the first element of a family. */
 static int
 t8_adapt_refine_first (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                       t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+                       t8_scheme *ts, const int is_family, const int num_elements, t8_element_t *elements[])
 {
   const int level = ts->t8_element_level (elements[0]);
   const int level_max = ts->t8_element_maxlevel ();
@@ -102,7 +102,7 @@ t8_adapt_refine_first (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t 
 /** Refine every element. */
 static int
 t8_adapt_refine_all (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                     t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+                     t8_scheme *ts, const int is_family, const int num_elements, t8_element_t *elements[])
 {
   return 1;
 }
@@ -110,7 +110,7 @@ t8_adapt_refine_all (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t wh
 /** Coarse every family. */
 static int
 t8_adapt_coarse_all (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                     t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+                     t8_scheme *ts, const int is_family, const int num_elements, t8_element_t *elements[])
 {
   if (is_family) {
     return -1;

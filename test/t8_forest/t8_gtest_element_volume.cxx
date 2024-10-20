@@ -54,7 +54,7 @@ class t8_forest_volume: public testing::TestWithParam<std::tuple<t8_eclass_t, in
     t8_forest_unref (&forest);
   }
   t8_forest_t forest;
-  t8_scheme_cxx *scheme;
+  t8_scheme *scheme;
   t8_eclass_t eclass;
   int level;
 };

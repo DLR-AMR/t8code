@@ -46,7 +46,7 @@
  */
 static int
 t8_adapt_menger_quad (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                      t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+                      t8_scheme *ts, const int is_family, const int num_elements, t8_element_t *elements[])
 {
   const int *adapt_data = (const int *) t8_forest_get_user_data (forest);
   const int level_max = adapt_data[0];
@@ -77,7 +77,7 @@ t8_adapt_menger_quad (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t w
  */
 static int
 t8_adapt_sierpinski_tri (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                         t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+                         t8_scheme *ts, const int is_family, const int num_elements, t8_element_t *elements[])
 {
   const int *adapt_data = (const int *) t8_forest_get_user_data (forest);
   const int level_max = adapt_data[0];
@@ -101,7 +101,7 @@ t8_adapt_sierpinski_tri (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_
  */
 static int
 t8_adapt_menger_hex (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                     t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+                     t8_scheme *ts, const int is_family, const int num_elements, t8_element_t *elements[])
 {
   const int *adapt_data = (const int *) t8_forest_get_user_data (forest);
   const int level_max = adapt_data[0];
@@ -149,7 +149,7 @@ t8_adapt_menger_hex (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t wh
  */
 static int
 t8_adapt_sierpinski_tet (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                         t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+                         t8_scheme *ts, const int is_family, const int num_elements, t8_element_t *elements[])
 {
   const int *adapt_data = (const int *) t8_forest_get_user_data (forest);
   const int level_max = adapt_data[0];
@@ -173,8 +173,7 @@ t8_adapt_sierpinski_tet (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_
  */
 static int
 t8_adapt_sierpinski_prism (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                           t8_eclass_scheme_c *ts, const int is_family, const int num_elements,
-                           t8_element_t *elements[])
+                           t8_scheme *ts, const int is_family, const int num_elements, t8_element_t *elements[])
 {
   const int *adapt_data = (const int *) t8_forest_get_user_data (forest);
   const int level_max = adapt_data[0];
@@ -198,8 +197,8 @@ t8_adapt_sierpinski_prism (t8_forest_t forest, t8_forest_t forest_from, t8_locid
  */
 static int
 t8_adapt_sierpinski_pyramid (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                             t8_locidx_t lelement_id, t8_eclass_scheme_c *ts, const int is_family,
-                             const int num_elements, t8_element_t *elements[])
+                             t8_locidx_t lelement_id, t8_scheme *ts, const int is_family, const int num_elements,
+                             t8_element_t *elements[])
 {
   const int *adapt_data = (const int *) t8_forest_get_user_data (forest);
   const int level_max = adapt_data[0];
@@ -220,7 +219,7 @@ t8_adapt_sierpinski_pyramid (t8_forest_t forest, t8_forest_t forest_from, t8_loc
 /* Coarse every family in the mesh. */
 static int
 t8_adapt_coarse (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                 t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+                 t8_scheme *ts, const int is_family, const int num_elements, t8_element_t *elements[])
 {
   if (is_family) {
     return -1;

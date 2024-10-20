@@ -42,7 +42,7 @@ class class_test_boundary_extrude: public TestDFS {
         /* Get face scheme */
         const int tree_face = ts->t8_element_tree_face (element, iface);
         const t8_eclass_t face_eclass = (t8_eclass_t) t8_eclass_face_types[eclass][tree_face];
-        const t8_eclass_scheme_c *face_ts = scheme->eclass_schemes[face_eclass];
+        const t8_scheme *face_ts = scheme->eclass_schemes[face_eclass];
 
         t8_element_t *boundary;
         face_ts->t8_element_new (1, &boundary);

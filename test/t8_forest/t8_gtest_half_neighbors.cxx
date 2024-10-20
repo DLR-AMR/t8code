@@ -50,7 +50,7 @@ class forest_half_neighbors: public testing::TestWithParam<std::tuple<t8_eclass,
   t8_eclass_t eclass;
   int cmesh_type;
   t8_cmesh_t cmesh;
-  t8_scheme_cxx_t *default_scheme;
+  t8_scheme *default_scheme;
   t8_element_t *neighbor;
 };
 
@@ -89,7 +89,7 @@ TEST_P (forest_half_neighbors, test_half_neighbors)
   sc_array_init (&owners, sizeof (int));
   /* Build a uniform forest */
   t8_forest_t forest = t8_forest_new_uniform (cmesh, default_scheme, level, 0, sc_MPI_COMM_WORLD);
-  t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest, eclass);
+  t8_scheme *ts = t8_forest_get_eclass_scheme (forest, eclass);
   /* iterate over all elements */
   for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++) {
     for (t8_locidx_t ielement = 0; ielement < t8_forest_get_tree_num_elements (forest, itree); ielement++) {
@@ -98,7 +98,7 @@ TEST_P (forest_half_neighbors, test_half_neighbors)
       for (int face = 0; face < ts->t8_element_num_faces (element); face++) {
         /* Get the eclass of the face neighbor and get the scheme */
         const t8_eclass_t neigh_class = t8_forest_element_neighbor_eclass (forest, itree, element, face);
-        t8_eclass_scheme_c *neigh_scheme = t8_forest_get_eclass_scheme (forest, neigh_class);
+        t8_scheme *neigh_scheme = t8_forest_get_eclass_scheme (forest, neigh_class);
         const int num_face_neighs = ts->t8_element_num_face_children (element, face);
         t8_element_t **half_neighbors = T8_ALLOC (t8_element_t *, num_face_neighs);
         ts->t8_element_new (num_face_neighs, half_neighbors);

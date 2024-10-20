@@ -519,7 +519,7 @@ struct t8_geometry_cube_zdistorted: public t8_geometry
  * domain boundary up to a given maximum refinement level. */
 static int
 t8_geom_adapt_boundary (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t ltree_id, t8_locidx_t lelement_id,
-                        t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+                        t8_scheme *ts, const int is_family, const int num_elements, t8_element_t *elements[])
 {
   t8_cmesh_t cmesh = t8_forest_get_cmesh (forest_from);
   /* Get the number of faces of the element. */

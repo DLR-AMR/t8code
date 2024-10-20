@@ -65,13 +65,13 @@ class forest_transform: public testing::TestWithParam<std::tuple<t8_eclass, int>
   }
   t8_eclass_t eclass;
   t8_cmesh_t cmesh;
-  t8_scheme_cxx_t *default_scheme;
+  t8_scheme *default_scheme;
   t8_forest_t forest;
   int level;
 };
 
 static void
-t8_test_transform_element (t8_eclass_scheme_c *ts, const t8_element_t *elem, t8_eclass_t eclass)
+t8_test_transform_element (t8_scheme *ts, const t8_element_t *elem, t8_eclass_t eclass)
 {
   t8_element_t *transform;
 

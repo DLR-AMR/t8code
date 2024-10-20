@@ -122,7 +122,7 @@ t8_forest_partition_test_desc (t8_forest_t forest)
   t8_element_t *elem_desc;
   t8_linearidx_t first_desc_id;
   t8_locidx_t ielem;
-  t8_eclass_scheme_c *ts;
+  t8_scheme *ts;
   t8_tree_t tree;
   int level;
 
@@ -223,7 +223,7 @@ t8_forest_partition_test_boundary_element (const t8_forest_t forest)
     T8_ASSERT (itree > -1);
   }
   const t8_tree_t tree = t8_forest_get_tree (forest, itree);
-  t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest, tree->eclass);
+  t8_scheme *ts = t8_forest_get_eclass_scheme (forest, tree->eclass);
   t8_element_t *element_last_desc;
   ts->t8_element_new (1, &element_last_desc);
   /* last element of current rank */
@@ -255,7 +255,7 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
   sc_MPI_Comm comm;
   t8_linearidx_t local_first_desc;
   t8_element_t *first_desc = NULL;
-  t8_eclass_scheme_c *ts;
+  t8_scheme *ts;
 
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -918,7 +918,7 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm, int proc
   t8_forest_partition_tree_info_t *tree_info;
   t8_tree_t tree, last_tree;
   size_t element_size {};
-  t8_eclass_scheme_c *eclass_scheme;
+  t8_scheme *eclass_scheme;
 
   if (proc != forest->mpirank) {
     T8_ASSERT (proc == status->MPI_SOURCE);

@@ -48,7 +48,7 @@ class class_schemes_descendant: public testing::TestWithParam<t8_eclass_t> {
     ts->t8_element_destroy (1, &elem);
     ts->t8_element_destroy (1, &desc);
     ts->t8_element_destroy (1, &test);
-    t8_scheme_cxx_unref (&scheme);
+    t8_schemexx_unref (&scheme);
   }
 #ifdef T8_ENABLE_DEBUG
   const int maxlvl = 3;
@@ -56,8 +56,8 @@ class class_schemes_descendant: public testing::TestWithParam<t8_eclass_t> {
   const int maxlvl = 4;
 #endif
 
-  t8_scheme_cxx *scheme;
-  t8_eclass_scheme_c *ts;
+  t8_scheme *scheme;
+  t8_scheme *ts;
   t8_eclass_t eclass;
   t8_element_t *elem;
   t8_element_t *desc;
@@ -68,7 +68,7 @@ class class_schemes_descendant: public testing::TestWithParam<t8_eclass_t> {
  * computed correctly. Only the descendant of elem->level + 1 is tested. 
  */
 static void
-t8_recursive_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *test, t8_eclass_scheme_c *ts, int maxlvl)
+t8_recursive_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *test, t8_scheme *ts, int maxlvl)
 {
   const int num_children = ts->t8_element_num_children (elem);
   const int level = ts->t8_element_level (elem);
@@ -95,7 +95,7 @@ t8_recursive_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *t
  * of levels. 
  */
 static void
-t8_deep_first_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *test, t8_eclass_scheme_c *ts, int level)
+t8_deep_first_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *test, t8_scheme *ts, int level)
 {
   const int elem_level = ts->t8_element_level (elem);
   ts->t8_element_copy (elem, test);
@@ -112,7 +112,7 @@ t8_deep_first_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *
  * of levels.
  */
 static void
-t8_deep_last_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *test, t8_eclass_scheme_c *ts, int level)
+t8_deep_last_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *test, t8_scheme *ts, int level)
 {
   ts->t8_element_copy (elem, test);
 
@@ -131,8 +131,7 @@ t8_deep_last_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *t
  * The level between the element and the descendant is larger or equal to one.
  */
 static void
-t8_large_step_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *test, t8_eclass_scheme_c *ts,
-                          int maxlvl)
+t8_large_step_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *test, t8_scheme *ts, int maxlvl)
 {
   for (int ilevel = ts->t8_element_level (elem); ilevel < maxlvl; ilevel++) {
 

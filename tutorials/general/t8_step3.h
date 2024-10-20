@@ -74,7 +74,7 @@ t8_step3_adapt_forest (t8_forest_t forest);
  */
 int
 t8_step3_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                         t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[]);
+                         t8_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[]);
 
 T8_EXTERN_C_END ();
 

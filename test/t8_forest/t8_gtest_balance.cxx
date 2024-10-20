@@ -65,7 +65,7 @@ TEST_P (gtest_balance, confirm_is_balanced_check_for_uniform_forests)
   if (ieclass == t8_eclass_t::T8_ECLASS_PYRAMID && ido_periodic == 1)
     GTEST_SKIP_ ("The pyramid cube mesh cannot be periodic.");
 
-  t8_scheme_cxx_t *default_scheme = t8_scheme_new_default_cxx ();
+  t8_scheme *default_scheme = t8_scheme_new_default_cxx ();
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube (ieclass, sc_MPI_COMM_WORLD, 0, 0, ido_periodic);
   t8_forest_t forest = t8_forest_new_uniform (cmesh, default_scheme, ilevel, 0, sc_MPI_COMM_WORLD);
 
@@ -82,7 +82,7 @@ struct gtest_balance_adapt_data
 
 static int
 t8_gtest_balance_refine_certain_trees (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                                       t8_locidx_t lelement_id, t8_eclass_scheme_c *ts, const int is_family,
+                                       t8_locidx_t lelement_id, t8_scheme *ts, const int is_family,
                                        const int num_elements, t8_element_t *elements[])
 {
   gtest_balance_adapt_data *adapt_data = static_cast<gtest_balance_adapt_data *> (t8_forest_get_user_data (forest));
@@ -161,7 +161,7 @@ t8_gtest_check_custom_balanced_forest (t8_forest_t balanced_forest,
 
     const t8_gloidx_t gtree_id = t8_forest_global_tree_id (balanced_forest, tree_id);
 
-    const t8_eclass_scheme_c *ts
+    const t8_scheme *ts
       = t8_forest_get_eclass_scheme (balanced_forest, t8_forest_get_tree_class (balanced_forest, tree_id));
 
     for (t8_locidx_t elem_id = 0; elem_id < num_tree_local_elems; ++elem_id) {

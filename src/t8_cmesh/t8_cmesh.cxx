@@ -273,7 +273,7 @@ t8_cmesh_set_partition_offsets (t8_cmesh_t cmesh, t8_shmem_array_t tree_offsets)
 }
 
 void
-t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, const int element_level, t8_scheme_cxx_t *ts)
+t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, const int element_level, t8_scheme *ts)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   T8_ASSERT (element_level >= -1);
@@ -1268,7 +1268,7 @@ t8_cmesh_reset (t8_cmesh_t *pcmesh)
 
   /* unref the partition scheme (if set) */
   if (cmesh->set_partition_scheme != NULL) {
-    t8_scheme_cxx_unref (&cmesh->set_partition_scheme);
+    t8_schemexx_unref (&cmesh->set_partition_scheme);
   }
 
   T8_FREE (cmesh);
@@ -1420,7 +1420,7 @@ t8_cmesh_debug_print_trees (const t8_cmesh_t cmesh, sc_MPI_Comm comm)
 }
 
 void
-t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, const int level, const t8_scheme_cxx_t *ts, t8_gloidx_t *first_local_tree,
+t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, const int level, const t8_scheme *ts, t8_gloidx_t *first_local_tree,
                          t8_gloidx_t *child_in_tree_begin, t8_gloidx_t *last_local_tree, t8_gloidx_t *child_in_tree_end,
                          int8_t *first_tree_shared)
 {
@@ -1449,7 +1449,7 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, const int level, const t8_scheme_cxx_
   t8_gloidx_t prev_last_tree = -1;
 #endif
   int tree_class;
-  t8_eclass_scheme_c *tree_scheme;
+  t8_scheme *tree_scheme;
 
   /* Compute the number of children on level in each tree */
   global_num_children = 0;

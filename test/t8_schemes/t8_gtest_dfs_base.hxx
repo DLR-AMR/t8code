@@ -83,9 +83,9 @@ class TestDFS: public testing::TestWithParam<t8_eclass_t> {
     dfs_test_teardown ();
   }
 
-  t8_scheme_cxx *scheme;
+  t8_scheme *scheme;
   t8_eclass_t eclass;
-  t8_eclass_scheme_c *ts;
+  t8_scheme_c *ts;
   t8_element_t *element;
 };
 

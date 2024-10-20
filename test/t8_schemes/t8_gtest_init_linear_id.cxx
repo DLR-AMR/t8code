@@ -47,20 +47,20 @@ class linear_id: public testing::TestWithParam<t8_eclass> {
     ts->t8_element_destroy (1, &element);
     ts->t8_element_destroy (1, &child);
     ts->t8_element_destroy (1, &test);
-    t8_scheme_cxx_unref (&scheme);
+    t8_schemexx_unref (&scheme);
   }
   t8_element_t *element;
   t8_element_t *child;
   t8_element_t *test;
-  t8_scheme_cxx *scheme;
-  t8_eclass_scheme_c *ts;
+  t8_scheme *scheme;
+  t8_scheme *ts;
   t8_eclass_t eclass;
   sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
 };
 
 static int
 t8_test_init_linear_id_refine_everything (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                                          t8_locidx_t lelement_id, t8_eclass_scheme_c *ts, const int is_family,
+                                          t8_locidx_t lelement_id, t8_scheme *ts, const int is_family,
                                           const int num_elements, t8_element_t *elements[])
 {
   return 1;
@@ -80,7 +80,7 @@ TEST_P (linear_id, uniform_forest)
   cmesh = t8_cmesh_new_from_class (ts->eclass, comm);
   t8_cmesh_ref (cmesh);
   forest = t8_forest_new_uniform (cmesh, scheme, 0, 0, comm);
-  t8_scheme_cxx_ref (scheme);
+  t8_schemexx_ref (scheme);
   for (int level = 0; level < maxlvl; level++) {
     /*Get the number of local trees*/
     const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
@@ -90,7 +90,7 @@ TEST_P (linear_id, uniform_forest)
       const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, tree_id);
       /*Manually compute the id of the first element*/
       const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, tree_id);
-      t8_eclass_scheme_c *tc_scheme = t8_forest_get_eclass_scheme (forest, tree_class);
+      t8_scheme *tc_scheme = t8_forest_get_eclass_scheme (forest, tree_class);
       const t8_locidx_t shift = tc_scheme->t8_element_count_leaves_from_root (level) - num_elements_in_tree;
       /*Iterate over elements */
       for (t8_locidx_t id_iter = 0; id_iter < num_elements_in_tree; id_iter++) {

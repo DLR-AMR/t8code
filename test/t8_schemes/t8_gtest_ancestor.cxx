@@ -51,7 +51,7 @@ class ancestor: public testing::TestWithParam<t8_eclass> {
     ts->t8_element_destroy (1, &correct_ancestor);
     ts->t8_element_destroy (1, &desc_a);
     ts->t8_element_destroy (1, &check);
-    t8_scheme_cxx_unref (&scheme);
+    t8_schemexx_unref (&scheme);
   }
   /* correct_nca  -> the nearest common ancestor that we check for
     * desc_a       -> a descendant of correct_nca
@@ -59,15 +59,15 @@ class ancestor: public testing::TestWithParam<t8_eclass> {
     * check        -> the computed nca of desc_a and desc_b, should be equal to correct_nca
     */
   t8_element_t *correct_ancestor, *desc_a, *check;
-  t8_scheme_cxx *scheme;
-  t8_eclass_scheme_c *ts;
+  t8_scheme *scheme;
+  t8_scheme *ts;
   t8_eclass_t eclass;
 };
 
 /*Test root and parent*/
 static void
 t8_recursive_ancestor (t8_element_t *element, t8_element_t *child, t8_element_t *parent, t8_element_t *test_ancestor,
-                       t8_eclass_scheme_c *ts, const int maxlvl)
+                       t8_scheme *ts, const int maxlvl)
 {
   int num_children, i;
   int level = ts->t8_element_level (parent);

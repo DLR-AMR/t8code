@@ -40,7 +40,7 @@ struct t8_adapt_data
 /* Refine, if element is within a given radius. */
 static int
 t8_adapt_callback_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                          t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+                          t8_scheme *ts, const int is_family, const int num_elements, t8_element_t *elements[])
 {
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
   T8_ASSERT (adapt_data != NULL);
@@ -60,7 +60,7 @@ t8_adapt_callback_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx
 /* Remove, element if it is within a given radius. */
 static int
 t8_adapt_callback_remove (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                          t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+                          t8_scheme *ts, const int is_family, const int num_elements, t8_element_t *elements[])
 {
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
   T8_ASSERT (adapt_data != NULL);

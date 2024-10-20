@@ -71,9 +71,8 @@ struct t8_return_data
  * If true, we check the parameter \a num_outgoing, \a first_outgoing
  * \a num_incoming and \a first_incoming for correctness. */
 void
-t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree, t8_eclass_scheme_c *ts,
-                   int refine, int num_outgoing, t8_locidx_t first_outgoing, int num_incoming,
-                   t8_locidx_t first_incoming)
+t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree, t8_scheme *ts, int refine,
+                   int num_outgoing, t8_locidx_t first_outgoing, int num_incoming, t8_locidx_t first_incoming)
 {
   /* Note, the new forest contains the callback returns of the old forest */
   struct t8_return_data *adapt_data = (struct t8_return_data *) t8_forest_get_user_data (forest_new);
@@ -145,7 +144,7 @@ t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
 */
 int
 t8_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                   t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+                   t8_scheme *ts, const int is_family, const int num_elements, t8_element_t *elements[])
 {
   struct t8_return_data *return_data = (struct t8_return_data *) t8_forest_get_user_data (forest);
   T8_ASSERT (return_data != NULL);
