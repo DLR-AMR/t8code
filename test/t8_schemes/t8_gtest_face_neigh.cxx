@@ -51,13 +51,13 @@ class face_neigh: public testing::TestWithParam<t8_eclass_t> {
     ts->t8_element_destroy (1, &element);
     ts->t8_element_destroy (1, &child);
     ts->t8_element_destroy (1, &neigh);
-    t8_scheme_cxx_unref (&scheme);
+    t8_schemexx_unref (&scheme);
   }
   t8_element_t *element;
   t8_element_t *child;
   t8_element_t *neigh;
-  t8_scheme_cxx *scheme;
-  t8_eclass_scheme_c *ts;
+  t8_scheme *scheme;
+  t8_scheme *ts;
   t8_eclass_t eclass;
 
 #ifdef T8_ENABLE_LESS_TESTS
@@ -70,7 +70,7 @@ class face_neigh: public testing::TestWithParam<t8_eclass_t> {
 
 void
 t8_test_face_neighbor_inside (int num_faces, t8_element_t *element, t8_element_t *child, t8_element_t *neigh,
-                              t8_eclass_scheme_c *ts)
+                              t8_scheme *ts)
 {
   int face_num;
   int check;
@@ -87,8 +87,7 @@ t8_test_face_neighbor_inside (int num_faces, t8_element_t *element, t8_element_t
 }
 
 int
-t8_test_get_middle_child (t8_eclass_t eclass, int ilevel, t8_element_t *element, t8_element_t *child,
-                          t8_eclass_scheme_c *ts)
+t8_test_get_middle_child (t8_eclass_t eclass, int ilevel, t8_element_t *element, t8_element_t *child, t8_scheme *ts)
 {
   /* Get the child number of the child in the middle of the element, depending of the shape of the element. */
   switch (eclass) {
@@ -172,8 +171,8 @@ TEST_P (face_neigh, check_not_inside_root)
 }
 
 void
-t8_recursive_check_diff (t8_element_t *element, t8_element_t *child, t8_element_t *neigh, t8_eclass_scheme_c *ts,
-                         int maxlvl, int level)
+t8_recursive_check_diff (t8_element_t *element, t8_element_t *child, t8_element_t *neigh, t8_scheme *ts, int maxlvl,
+                         int level)
 {
 
   T8_ASSERT (level <= maxlvl && maxlvl <= ts->t8_element_maxlevel () - 1);

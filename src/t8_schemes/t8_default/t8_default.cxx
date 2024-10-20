@@ -24,24 +24,15 @@
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_refcount.h>
 
-#include <t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.hxx>
-#include <t8_schemes/t8_default/t8_default_line/t8_default_line.hxx>
-#include <t8_schemes/t8_default/t8_default_quad/t8_default_quad.hxx>
-#include <t8_schemes/t8_default/t8_default_hex/t8_default_hex.hxx>
-#include <t8_schemes/t8_default/t8_default_tri/t8_default_tri.hxx>
-#include <t8_schemes/t8_default/t8_default_tet/t8_default_tet.hxx>
-#include <t8_schemes/t8_default/t8_default_prism/t8_default_prism.hxx>
-#include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid.hxx>
-
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
-t8_scheme_cxx_t *
+t8_scheme *
 t8_scheme_new_default_cxx (void)
 {
-  t8_scheme_cxx_t *s;
+  t8_scheme *s;
 
-  s = T8_ALLOC_ZERO (t8_scheme_cxx_t, 1);
+  s = T8_ALLOC_ZERO (t8_scheme, 1);
   t8_refcount_init (&s->rc);
 
   s->eclass_schemes[T8_ECLASS_VERTEX] = new t8_default_scheme_vertex_c ();
@@ -76,7 +67,7 @@ t8_scheme_new_default_cxx (void)
 }
 
 int
-t8_eclass_scheme_is_default (t8_eclass_scheme_c *ts)
+t8_eclass_scheme_is_default (t8_scheme *ts)
 {
   switch (ts->eclass) {
   case T8_ECLASS_VERTEX:

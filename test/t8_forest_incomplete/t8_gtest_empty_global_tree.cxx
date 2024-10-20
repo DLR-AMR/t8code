@@ -62,7 +62,7 @@ class DISABLED_global_tree: public testing::TestWithParam<std::tuple<t8_eclass, 
  *  global trees which are defined by the current testcase of test. */
 static int
 t8_adapt_remove (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                 t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+                 t8_scheme *ts, const int is_family, const int num_elements, t8_element_t *elements[])
 {
   const int *testcase = (const int *) t8_forest_get_user_data (forest);
   const t8_gloidx_t global_tree_id = t8_forest_global_tree_id (forest_from, which_tree);

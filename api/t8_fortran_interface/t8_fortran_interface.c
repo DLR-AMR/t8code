@@ -117,7 +117,7 @@ t8_cmesh_new_periodic_tri_wrap (sc_MPI_Comm *Ccomm)
 t8_forest_t
 t8_forest_new_uniform_default (t8_cmesh_t cmesh, int level, int do_face_ghost, sc_MPI_Comm *comm)
 {
-  t8_scheme_cxx_t *default_scheme = t8_scheme_new_default_cxx ();
+  t8_scheme_c *default_scheme = t8_scheme_new_default_cxx ();
 
   T8_ASSERT (comm != NULL);
   return t8_forest_new_uniform (cmesh, default_scheme, level, do_face_ghost, *comm);
@@ -125,7 +125,7 @@ t8_forest_new_uniform_default (t8_cmesh_t cmesh, int level, int do_face_ghost, s
 
 int
 t8_fortran_adapt_by_coordinates_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                                          t8_locidx_t lelement_id, t8_eclass_scheme_c *ts, const int is_family,
+                                          t8_locidx_t lelement_id, t8_scheme_c *ts, const int is_family,
                                           int num_elements, t8_element_t *elements[])
 {
   t8_fortran_adapt_coordinate_callback callback

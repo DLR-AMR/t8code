@@ -170,7 +170,7 @@ TEST_P (geometry_point_inside, test_point_inside)
 
   t8_debugf ("Testing eclass %s, uniform level %i with approx. %i points per element.\n", t8_eclass_to_string[eclass],
              level, num_points_to_generate);
-  t8_scheme_cxx_t *default_scheme = t8_scheme_new_default_cxx ();
+  t8_scheme *default_scheme = t8_scheme_new_default_cxx ();
 
   /* We translate the coordinates of the cmesh to create a non-standard case.
    * In particular, we want the 1D and 2D elements to move outside of axis
@@ -203,7 +203,7 @@ TEST_P (geometry_point_inside, test_point_inside)
     const t8_locidx_t num_elements = t8_forest_get_tree_num_elements (forest, itree);
     /* Get the associated eclass scheme */
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
-    const t8_eclass_scheme_c *eclass_scheme = t8_forest_get_eclass_scheme (forest, tree_class);
+    const t8_scheme *eclass_scheme = t8_forest_get_eclass_scheme (forest, tree_class);
     for (t8_locidx_t ielement = 0; ielement < num_elements; ++ielement) {
       /* Get a pointer to the element */
       const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);

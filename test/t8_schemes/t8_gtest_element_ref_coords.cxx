@@ -71,7 +71,7 @@ t8_write_message_by_dim (const char *message, const T *array, const int dim)
  * \param [out] coordinates The coordinates of the centroid.
  */
 void
-t8_element_centroid_by_vertex_coords (const t8_forest_t forest, const t8_eclass_scheme_c *ts, const t8_locidx_t ltreeid,
+t8_element_centroid_by_vertex_coords (const t8_forest_t forest, const t8_scheme *ts, const t8_locidx_t ltreeid,
                                       const t8_element_t *element, double *coordinates)
 {
   double vertex_ref_coords[3], vertex_out_coords[3];
@@ -182,8 +182,7 @@ t8_compare_arrays (const double *array1, const double *array2, const int dim, co
  * \param [in] ts The element class scheme.
  */
 void
-t8_test_coords (const t8_forest_t forest, const t8_locidx_t ltree_id, const t8_element_t *element,
-                const t8_eclass_scheme_c *ts)
+t8_test_coords (const t8_forest_t forest, const t8_locidx_t ltree_id, const t8_element_t *element, const t8_scheme *ts)
 {
   double tree_ref_coords_by_vertex
     [3]; /** reference coordinates of the element vertices computed by \ref t8_element_vertex_reference_coords */
@@ -250,7 +249,7 @@ TEST_P (class_ref_coords, t8_check_elem_ref_coords)
   /* Check the reference coordinates of each element in each tree */
   for (itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++) {
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
-    const t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest, tree_class);
+    const t8_scheme *ts = t8_forest_get_eclass_scheme (forest, tree_class);
     for (ielement = 0; ielement < t8_forest_get_tree_num_elements (forest, itree); ielement++) {
       const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
       t8_test_coords (forest, itree, element, ts);

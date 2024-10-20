@@ -32,7 +32,7 @@
 T8_EXTERN_C_BEGIN ();
 
 /** Return the default element implementation of t8code. */
-t8_scheme_cxx_t *
+t8_scheme_c *
 t8_scheme_new_default_cxx (void);
 
 /** Check whether a given eclass_scheme is one of the default schemes.
@@ -41,7 +41,7 @@ t8_scheme_new_default_cxx (void);
  *                  false (zero) otherwise.
  */
 int
-t8_eclass_scheme_is_default (t8_eclass_scheme_c *ts);
+t8_eclass_scheme_is_default (t8_scheme_c *ts);
 
 T8_EXTERN_C_END ();
 

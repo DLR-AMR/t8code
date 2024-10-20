@@ -42,8 +42,7 @@
  * imbalanced forest. */
 static int
 t8_test_adapt_first_child (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                           t8_eclass_scheme_c *ts, const int is_family, const int num_elements,
-                           t8_element_t *elements[])
+                           t8_scheme *ts, const int is_family, const int num_elements, t8_element_t *elements[])
 {
   T8_ASSERT (!is_family || (is_family && num_elements == ts->t8_element_num_children (elements[0])));
 
@@ -98,7 +97,7 @@ class element_is_leaf: public testing::TestWithParam<std::tuple<int, cmesh_examp
 
   t8_forest_t forest { NULL };
   t8_forest_t forest_adapt { NULL };
-  t8_scheme_cxx_t *scheme;
+  t8_scheme *scheme;
 };
 
 void
@@ -109,7 +108,7 @@ t8_test_element_is_leaf_for_forest (t8_forest_t forest)
   for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree) {
     const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
-    const t8_eclass_scheme_c *scheme = t8_forest_get_eclass_scheme (forest, tree_class);
+    const t8_scheme *scheme = t8_forest_get_eclass_scheme (forest, tree_class);
     /* Allocate memory to build a non-leaf element. */
     t8_element_t *not_leaf;
     scheme->t8_element_new (1, &not_leaf);

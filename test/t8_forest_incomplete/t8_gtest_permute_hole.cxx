@@ -102,7 +102,7 @@ struct t8_elements
  * the current permutation \a remove is 0. */
 static int
 t8_adapt_remove (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                 t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+                 t8_scheme *ts, const int is_family, const int num_elements, t8_element_t *elements[])
 {
   struct t8_elements *data = (struct t8_elements *) t8_forest_get_user_data (forest);
   if (data->remove[lelement_id] == 0) {
@@ -114,7 +114,7 @@ t8_adapt_remove (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_
 /** Coarse every (incomplete) family */
 static int
 t8_adapt_coarse (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                 t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+                 t8_scheme *ts, const int is_family, const int num_elements, t8_element_t *elements[])
 {
   if (is_family) {
     return -1;

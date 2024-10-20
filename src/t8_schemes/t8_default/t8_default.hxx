@@ -29,11 +29,20 @@
 #pragma once
 
 #include <t8_element.hxx>
+#include <t8_schemes/t8_scheme.hxx>
+#include <t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.hxx>
+#include <t8_schemes/t8_default/t8_default_line/t8_default_line.hxx>
+#include <t8_schemes/t8_default/t8_default_quad/t8_default_quad.hxx>
+#include <t8_schemes/t8_default/t8_default_hex/t8_default_hex.hxx>
+#include <t8_schemes/t8_default/t8_default_tri/t8_default_tri.hxx>
+#include <t8_schemes/t8_default/t8_default_tet/t8_default_tet.hxx>
+#include <t8_schemes/t8_default/t8_default_prism/t8_default_prism.hxx>
+#include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid.hxx>
 
 T8_EXTERN_C_BEGIN ();
 
 /** Return the default element implementation of t8code. */
-t8_scheme_cxx_t *
+t8_scheme_c *
 t8_scheme_new_default_cxx (void);
 
 /** Check whether a given eclass_scheme is one of the default schemes.
@@ -42,6 +51,6 @@ t8_scheme_new_default_cxx (void);
  *                  false (zero) otherwise.
  */
 int
-t8_eclass_scheme_is_default (t8_eclass_scheme_c *ts);
+t8_eclass_scheme_is_default (t8_scheme_c *ts);
 
 T8_EXTERN_C_END ();

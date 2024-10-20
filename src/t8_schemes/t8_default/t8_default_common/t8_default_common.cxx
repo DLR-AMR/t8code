@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2024 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ T8_EXTERN_C_BEGIN ();
  * \param [in]     length       Non-negative number of elements to allocate.
  * \param [in,out] elem         Array of correct size whose members are filled.
  */
-static void
+inline static void
 t8_default_mempool_alloc (sc_mempool_t *ts_context, int length, t8_element_t **elem);
 
 /** This class independent function assumes an sc_mempool_t as context.
@@ -43,7 +43,7 @@ t8_default_mempool_alloc (sc_mempool_t *ts_context, int length, t8_element_t **e
  * \param [in]     length       Non-negative number of elements to destroy.
  * \param [in,out] elem         Array whose members are returned to the mempool.
  */
-static void
+inline static void
 t8_default_mempool_free (sc_mempool_t *ts_context, int length, t8_element_t **elem);
 
 /* Destructor */
@@ -56,7 +56,7 @@ t8_default_scheme_common_c::~t8_default_scheme_common_c ()
 
 /** Compute the number of corners of a given element. */
 int
-t8_default_scheme_common_c::t8_element_num_corners (const t8_element_t *elem) const
+t8_default_scheme_common_c::element_get_num_corners (const t8_element_t *elem) const
 {
   /* use the lookup table of the eclasses.
    * Pyramids should implement their own version of this function. */
@@ -64,18 +64,18 @@ t8_default_scheme_common_c::t8_element_num_corners (const t8_element_t *elem) co
 }
 
 void
-t8_default_scheme_common_c::t8_element_new (int length, t8_element_t **elem) const
+t8_default_scheme_common_c::element_new (int length, t8_element_t **elem) const
 {
   t8_default_mempool_alloc ((sc_mempool_t *) this->ts_context, length, elem);
 }
 
 void
-t8_default_scheme_common_c::t8_element_destroy (int length, t8_element_t **elem) const
+t8_default_scheme_common_c::element_destroy (int length, t8_element_t **elem) const
 {
   t8_default_mempool_free ((sc_mempool_t *) this->ts_context, length, elem);
 }
 
-static void
+inline static void
 t8_default_mempool_alloc (sc_mempool_t *ts_context, int length, t8_element_t **elem)
 {
   int i;
@@ -89,7 +89,7 @@ t8_default_mempool_alloc (sc_mempool_t *ts_context, int length, t8_element_t **e
   }
 }
 
-static void
+inline static void
 t8_default_mempool_free (sc_mempool_t *ts_context, int length, t8_element_t **elem)
 {
   int i;
@@ -104,7 +104,7 @@ t8_default_mempool_free (sc_mempool_t *ts_context, int length, t8_element_t **el
 }
 
 t8_element_shape_t
-t8_default_scheme_common_c::t8_element_shape (const t8_element_t *elem) const
+t8_default_scheme_common_c::element_get_shape (const t8_element_t *elem) const
 {
   return eclass;
 }
@@ -118,10 +118,10 @@ count_leaves_from_level (int element_level, int refinement_level, int dimension)
 }
 
 t8_gloidx_t
-t8_default_scheme_common_c::t8_element_count_leaves (const t8_element_t *t, int level) const
+t8_default_scheme_common_c::element_count_leaves (const t8_element_t *t, int level) const
 {
 
-  int element_level = t8_element_level (t);
+  int element_level = element_get_level (t);
   t8_element_shape_t element_shape;
   int dim = t8_eclass_to_dimension[eclass];
   element_shape = t8_element_shape (t);
@@ -136,7 +136,7 @@ t8_default_scheme_common_c::t8_element_count_leaves (const t8_element_t *t, int 
  * The number of children is 2^dim for each element, except for pyramids.
  * TODO: For pyramids we will have to implement a standalone version in the pyramid scheme. */
 int
-t8_default_scheme_common_c::t8_element_num_siblings (const t8_element_t *elem) const
+t8_default_scheme_common_c::element_get_num_siblings (const t8_element_t *elem) const
 {
   const int dim = t8_eclass_to_dimension[eclass];
   T8_ASSERT (eclass != T8_ECLASS_PYRAMID);
@@ -144,7 +144,7 @@ t8_default_scheme_common_c::t8_element_num_siblings (const t8_element_t *elem) c
 }
 
 t8_gloidx_t
-t8_default_scheme_common_c::t8_element_count_leaves_from_root (int level) const
+t8_default_scheme_common_c::count_leaves_from_root (int level) const
 {
   if (eclass == T8_ECLASS_PYRAMID) {
     return 2 * sc_intpow64u (8, level) - sc_intpow64u (6, level);
@@ -155,16 +155,16 @@ t8_default_scheme_common_c::t8_element_count_leaves_from_root (int level) const
 
 #if T8_ENABLE_DEBUG
 void
-t8_default_scheme_common_c::t8_element_debug_print (const t8_element_t *elem) const
+t8_default_scheme_common_c::element_debug_print (const t8_element_t *elem) const
 {
   char debug_string[BUFSIZ];
-  t8_element_to_string (elem, debug_string, BUFSIZ);
+  element_to_string (elem, debug_string, BUFSIZ);
   t8_debugf ("%s\n", debug_string);
 }
 #endif
 
 void
-t8_default_scheme_common_c::t8_element_deinit (int length, t8_element_t *elem) const
+t8_default_scheme_common_c::element_deinit (int length, t8_element_t *elem) const
 {
 }
 

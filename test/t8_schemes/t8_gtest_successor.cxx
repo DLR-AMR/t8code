@@ -53,11 +53,11 @@ class class_successor: public testing::TestWithParam<t8_eclass_t> {
     ts->t8_element_destroy (1, &child);
     ts->t8_element_destroy (1, &last);
 
-    t8_scheme_cxx_unref (&scheme);
+    t8_schemexx_unref (&scheme);
   }
   t8_eclass_t eclass;
-  t8_eclass_scheme_c *ts;
-  t8_scheme_cxx *scheme;
+  t8_scheme *ts;
+  t8_scheme *scheme;
   t8_element_t *element;
   t8_element_t *successor;
   t8_element_t *child;
@@ -70,7 +70,7 @@ class class_successor: public testing::TestWithParam<t8_eclass_t> {
  */
 static void
 t8_recursive_successor (t8_element_t *element, t8_element_t *successor, t8_element_t *child, t8_element_t *last,
-                        t8_eclass_scheme_c *ts, const int maxlvl)
+                        t8_scheme *ts, const int maxlvl)
 {
   const int level = ts->t8_element_level (element);
   ASSERT_TRUE (ts->t8_element_level (element) <= maxlvl && maxlvl <= ts->t8_element_maxlevel () - 1);
@@ -113,7 +113,7 @@ t8_recursive_successor (t8_element_t *element, t8_element_t *successor, t8_eleme
  * maximum level are computed. The successor runs through all these children.
  */
 static void
-t8_deep_successor (t8_element_t *element, t8_element_t *successor, t8_element_t *child, t8_eclass_scheme_c *ts)
+t8_deep_successor (t8_element_t *element, t8_element_t *successor, t8_element_t *child, t8_scheme *ts)
 {
   int maxlvl = ts->t8_element_maxlevel ();
   int num_children = ts->t8_element_num_children (element);

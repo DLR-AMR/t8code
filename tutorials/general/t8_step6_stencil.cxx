@@ -83,7 +83,7 @@ t8_step6_build_forest (sc_MPI_Comm comm, int dim, int level)
 {
   t8_cmesh_t cmesh = t8_cmesh_new_periodic (comm, dim);
 
-  t8_scheme_cxx_t *scheme = t8_scheme_new_default_cxx ();
+  t8_scheme *scheme = t8_scheme_new_default_cxx ();
   struct t8_step3_adapt_data adapt_data = {
     { 0.0, 0.0, 0.0 }, /* Midpoints of the sphere. */
     0.5,               /* Refine if inside this radius. */
@@ -129,7 +129,7 @@ t8_step6_create_element_data (t8_forest_t forest)
   /* Loop over all local trees in the forest. */
   for (t8_locidx_t itree = 0, current_index = 0; itree < num_local_trees; ++itree) {
     t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
-    t8_eclass_scheme_c *eclass_scheme = t8_forest_get_eclass_scheme (forest, tree_class);
+    t8_scheme *eclass_scheme = t8_forest_get_eclass_scheme (forest, tree_class);
 
     /* Get the number of elements of this tree. */
     t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
@@ -188,7 +188,7 @@ t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_d
    * each element is calculated and stored into the element data array. */
   for (t8_locidx_t itree = 0, current_index = 0; itree < num_local_trees; ++itree) {
     t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
-    t8_eclass_scheme_c *eclass_scheme = t8_forest_get_eclass_scheme (forest, tree_class);
+    t8_scheme *eclass_scheme = t8_forest_get_eclass_scheme (forest, tree_class);
 
     t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
 
@@ -204,11 +204,11 @@ t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_d
       /* Loop over all faces of an element. */
       int num_faces = eclass_scheme->t8_element_num_faces (element);
       for (int iface = 0; iface < num_faces; iface++) {
-        int num_neighbors;                /**< Number of neighbors for each face */
-        int *dual_faces;                  /**< The face indices of the neighbor elements */
-        t8_locidx_t *neighids;            /**< Indices of the neighbor elements */
-        t8_element_t **neighbors;         /*< Neighboring elements. */
-        t8_eclass_scheme_c *neigh_scheme; /*< Neighboring elements scheme. */
+        int num_neighbors;        /**< Number of neighbors for each face */
+        int *dual_faces;          /**< The face indices of the neighbor elements */
+        t8_locidx_t *neighids;    /**< Indices of the neighbor elements */
+        t8_element_t **neighbors; /*< Neighboring elements. */
+        t8_scheme *neigh_scheme;  /*< Neighboring elements scheme. */
 
         /* Collect all neighbors at the current face. */
         t8_forest_leaf_face_neighbors (forest, itree, element, &neighbors, iface, &dual_faces, &num_neighbors,

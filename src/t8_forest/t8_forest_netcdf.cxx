@@ -416,7 +416,7 @@ t8_forest_write_netcdf_data (t8_forest_t forest, t8_forest_netcdf_context_t *con
     /* Iterate over all local elements in the local tree */
     for (local_elem_id = 0; local_elem_id < num_local_tree_elem; local_elem_id++) {
       /* Get the eclass scheme */
-      t8_eclass_scheme_c *scheme = t8_forest_get_eclass_scheme (forest, tree_class);
+      t8_scheme *scheme = t8_forest_get_eclass_scheme (forest, tree_class);
       /* Get the local element in the local tree */
       const t8_element_t *element = t8_forest_get_element_in_tree (forest, ltree_id, local_elem_id);
       /* Determine the element shape */
@@ -741,7 +741,7 @@ t8_forest_write_netcdf_coordinate_data (t8_forest_t forest, t8_forest_netcdf_con
 
     for (local_elem_id = 0; local_elem_id < num_local_tree_elem; local_elem_id++) {
       /* Get the eclass scheme */
-      t8_eclass_scheme_c *scheme = t8_forest_get_eclass_scheme (forest, tree_class);
+      t8_scheme *scheme = t8_forest_get_eclass_scheme (forest, tree_class);
       /* Get the local element in the local tree */
       const t8_element_t *element = t8_forest_get_element_in_tree (forest, ltree_id, local_elem_id);
       /* Determine the element shape */

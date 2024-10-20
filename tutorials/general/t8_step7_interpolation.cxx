@@ -112,7 +112,7 @@ t8_element_get_value (const t8_step7_adapt_data *adapt_data, t8_locidx_t ielemen
  */
 int
 t8_step7_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                         t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+                         t8_scheme *ts, const int is_family, const int num_elements, t8_element_t *elements[])
 {
   /* Our adaptation criterion is to look at the midpoint coordinates of the current element and if
    * they are inside a sphere around a given midpoint we refine, if they are outside, we coarsen. */
@@ -199,9 +199,8 @@ t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn, int do_par
  * \param [in] first_incoming    index of the new element
  */
 void
-t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree, t8_eclass_scheme_c *ts,
-                   int refine, int num_outgoing, t8_locidx_t first_outgoing, int num_incoming,
-                   t8_locidx_t first_incoming)
+t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree, t8_scheme *ts, int refine,
+                   int num_outgoing, t8_locidx_t first_outgoing, int num_incoming, t8_locidx_t first_incoming)
 {
   struct t8_step7_adapt_data *adapt_data_new = (struct t8_step7_adapt_data *) t8_forest_get_user_data (forest_new);
   const struct t8_step7_adapt_data *adapt_data_old
@@ -286,7 +285,7 @@ t8_interpolation ()
   t8_step7_adapt_data *data;
   double centroid[3];
   const double midpoint[3] = { 0.5, 0.5, 1 };
-  t8_scheme_cxx_t *scheme = t8_scheme_new_default_cxx ();
+  t8_scheme *scheme = t8_scheme_new_default_cxx ();
 
   /* Construct a cmesh */
   t8_cmesh_t cmesh = t8_cmesh_new_from_class (T8_ECLASS_HEX, sc_MPI_COMM_WORLD);

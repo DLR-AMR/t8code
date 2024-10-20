@@ -43,7 +43,7 @@
  * \return testing::AssertionResult 
  */
 testing::AssertionResult
-element_equality (const char *ts_expr, const char *elem_1_expr, const char *elem_2_expr, const t8_eclass_scheme_c *ts,
+element_equality (const char *ts_expr, const char *elem_1_expr, const char *elem_2_expr, const t8_scheme_c *ts,
                   const t8_element_t *elem_1, const t8_element_t *elem_2)
 {
   if (ts->t8_element_equal (elem_1, elem_2)) {

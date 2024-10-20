@@ -1545,7 +1545,7 @@ t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   t8_cmesh_t cmesh_from;
   t8_gloidx_t last_tree;
   const t8_gloidx_t *tree_offsets;
-  t8_scheme_cxx_t *ts;
+  t8_scheme *ts;
 
   T8_ASSERT (t8_cmesh_is_committed (cmesh->set_from));
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));

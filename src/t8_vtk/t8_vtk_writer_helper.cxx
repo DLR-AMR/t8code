@@ -40,7 +40,7 @@ t8_forest_vtk_get_element_nodes (t8_forest_t forest, t8_locidx_t ltreeid, const 
                                  const int curved_flag, double *out_coords)
 {
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
-  const t8_eclass_scheme_c *scheme = t8_forest_get_eclass_scheme (forest, tree_class);
+  const t8_scheme *scheme = t8_forest_get_eclass_scheme (forest, tree_class);
   const t8_element_shape_t element_shape = scheme->t8_element_shape (element);
   const double *ref_coords = t8_forest_vtk_point_to_element_ref_coords[element_shape][vertex];
   const int num_node = t8_get_number_of_vtk_nodes (element_shape, curved_flag);
@@ -161,7 +161,7 @@ t8_element_shape_t
 grid_element_shape<t8_forest_t> (const t8_forest_t grid, const t8_locidx_t itree, const t8_element_t *element)
 {
   const t8_eclass_t eclass = t8_forest_get_eclass (grid, itree);
-  t8_eclass_scheme *scheme = t8_forest_get_eclass_scheme (grid, eclass);
+  t8_scheme *scheme = t8_forest_get_eclass_scheme (grid, eclass);
   return scheme->t8_element_shape (element);
 }
 
@@ -197,7 +197,7 @@ int
 grid_element_level<t8_forest_t> (const t8_forest_t grid, const t8_locidx_t itree, const t8_element_t *element)
 {
   const t8_eclass_t eclass = t8_forest_get_eclass (grid, itree);
-  t8_eclass_scheme *scheme = t8_forest_get_eclass_scheme (grid, eclass);
+  t8_scheme *scheme = t8_forest_get_eclass_scheme (grid, eclass);
   return scheme->t8_element_level (element);
 }
 template <>
