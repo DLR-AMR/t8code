@@ -40,67 +40,9 @@ std::pair<t8_forest_t, int>
 t8_nc_build_initial_congruent_mesh (const t8_nc_geo_domain_t& domain, const t8_nc_data_layout_t initial_layout,
                                     sc_MPI_Comm comm);
 
-/* Draft */
-#if 0
-std::vector<t8_gloidx_t>
-t8_nc_get_common_divisors(const std::vector<t8_gloidx_t>& dimension_lengths)
-{
-    T8_ASSERT(dimension_lengths.size() >= 2);
-
-    auto first_dim_iter = dimension_lengths.begin();
-    auto dim_iter =std::next(dimension_lengths.begin());
-
-    t8_gloidx_t common_divisor = std::gcd(*first_dim_iter, *dim_iter);
-
-    for (; dim_iter != dimension_lengths.end(); ++dim_iter)
-    {
-        common_divisor = std::gcd(common_divisor, *dim_iter);
-    }
-
-    const t8_gloidx_t greatest_common_divisor = common_divisor;
-
-    std::vector<t8_gloidx_t> common_divisors;
-
-    common_divisors.push_back(greatest_common_divisor);
-
-    for (t8_gloidx_t i = 1; i*i < greatest_common_divisor; ++i)
-    {
-        if (greatest_common_divisor % i == 0) {
-            common_divisors.push_back(i);
-        }
-    }
-    return common_divisors;
-}
-
-typedef struct t8_nc_congruent_mesh_specifications
-{
-    int initial_refienment_level{0};
-    std::vector<t8_gloidx_t> trees_per_dim; // tree_per_dim[0] -> Anzahl Baeume x, trees_per_dim[1] -> Anzahl Baeume y ...
-} t8_nc_congruent_mesh_specifications_t;
-
-t8_nc_congruent_mesh_specifications_t
-t8_nc_calc_init_ref_level_and_num_trees(const t8_nc_geo_domain_t& global_domain)
-{
-    std::vector<t8_gloidx_t> dimension_lengths;
-
-    for (int dim = static_cast<int>(t8_nc_dimension_t::LON); dim <= static_cast<int>(t8_nc_dimension_t::TIME); ++dim)
-    {
-        const t8_gloidx_t dim_length = global_domain.get_dimension_length(static_cast<t8_nc_dimension_t>(dim));
-        if (dim_length > 1)
-        {
-            dimension_lengths.push_back(dim_length);
-        }
-    }
-
-    T8_ASSERT(dimension_lengths.size() == static_cast<size_t>(global_domain.get_dimensionality()));
-
-    std::vector<t8_gloidx_t> common_divisors = t8_nc_get_common_divisors(dimension_lengths);
-}
-#endif
+/* Checking if the last bit is a zero, because then it is possible to be a multiple of 2. */
 inline bool
 t8_check_if_last_bit_is_zero(const t8_gloidx_t byte)
-
-/* Checking if the last bit is a zero, because then it is possible to be a multiple of 2. */
 {
     return (byte & 0x0001 ? true : false);
 }
