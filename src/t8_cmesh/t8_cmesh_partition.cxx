@@ -25,6 +25,8 @@
  * TODO: document this file
  */
 
+#include <cstring>
+
 #include <t8_data/t8_shmem.h>
 #include <t8_cmesh.h>
 #include <t8_element.h>
@@ -389,7 +391,8 @@ t8_cmesh_partition_sendrange (const t8_cmesh_t cmesh, const t8_cmesh_t cmesh_fro
     ret--;
   }
 
-  t8_debugf ("%s_first = %i, %s_last = %i, last_tree = %li\n", "send", *send_first, "send", *send_last, ret);
+  t8_debugf ("%s_first = %i, %s_last = %i, last_tree = %li\n", "send", *send_first, "send", *send_last,
+             static_cast<long> (ret));
 
   T8_ASSERT (*send_first >= 0);
   //TODO:reactivate  T8_ASSERT (*send_last >= 0);
@@ -863,7 +866,7 @@ t8_cmesh_partition_copy_data (char *send_buffer, t8_cmesh_t cmesh, const t8_cmes
       /* The byte count of this ghosts attribute info structs */
       this_ghosts_att_info_size = num_attributes * sizeof (t8_attribute_info_struct_t);
       /* Copy all attribute info data of this ghost */
-      first_attr_info = (t8_attribute_info_struct_t *) T8_GHOST_FIRST_ATT (ghost_cpy);
+      first_attr_info = (t8_attribute_info_struct_t *) T8_GHOST_FIRST_ATT_INFO (ghost_cpy);
       memcpy (first_attr_info, attr_info, this_ghosts_att_info_size);
       temp_offset_ghost_att += this_ghosts_att_info_size;
 
@@ -1410,7 +1413,7 @@ t8_cmesh_partition_debug_listprocs (const t8_cmesh_t cmesh, const t8_cmesh_t cme
     }
   }
   t8_debugf ("I send to: %s\n", out);
-  sprintf (out, " ");
+  std::strcpy (out, " ");
   if (cmesh_from->set_partition) {
     for (p = 0; p < mpisize; p++) {
       if (t8_offset_sendsto (p, mpirank, from, to)) {
@@ -1440,7 +1443,9 @@ t8_cmesh_partition_given (const t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from, c
   size_t my_buffer_bytes = -1;
   char **send_buffer = NULL, *my_buffer = NULL;
 
-  int fs, ls, fr, lr;
+  int fs, ls;
+  int fr = 0;
+  int lr = 0;
 
   sc_MPI_Request *requests = NULL;
   t8_locidx_t num_ghosts, itree, num_trees;

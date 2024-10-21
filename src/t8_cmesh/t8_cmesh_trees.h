@@ -121,14 +121,14 @@ T8_EXTERN_C_BEGIN ();
 /* TODO: document */
 
 /* Given a tree return the beginning of its attributes block */
-#define T8_TREE_FIRST_ATT(t) ((char *) (t) + (t)->att_offset)
+#define T8_TREE_FIRST_ATT_INFO(t) ((char *) (t) + (t)->att_offset)
 
 /* Given a tree and an index i return the i-th attribute index of that tree */
 #define T8_TREE_ATTR_INFO(t, i) \
   ((t8_attribute_info_struct_t *) ((char *) (t) + (t)->att_offset + (i) * sizeof (t8_attribute_info_struct_t)))
 
 /* Given a tree and an attribute info return the attribute */
-#define T8_TREE_ATTR(t, ai) (T8_TREE_FIRST_ATT (t) + (ai)->attribute_offset)
+#define T8_TREE_ATTR(t, ai) (T8_TREE_FIRST_ATT_INFO (t) + (ai)->attribute_offset)
 
 /* Given a tree return its face_neighbor array */
 #define T8_TREE_FACE(t) ((char *) (t) + (t)->neigh_offset)
@@ -137,7 +137,7 @@ T8_EXTERN_C_BEGIN ();
 #define T8_TREE_TTF(t) (T8_TREE_FACE (t) + t8_eclass_num_faces[(t)->eclass] * sizeof (t8_locidx_t))
 
 /* Given a ghost return the beginning of its attribute block */
-#define T8_GHOST_FIRST_ATT(g) T8_TREE_FIRST_ATT (g)
+#define T8_GHOST_FIRST_ATT_INFO(g) T8_TREE_FIRST_ATT_INFO (g)
 
 /* Given a ghost and an index i return the i-th attribute index of that ghost */
 #define T8_GHOST_ATTR_INFO(g, i) T8_TREE_ATTR_INFO (g, i)
@@ -220,7 +220,7 @@ t8_cmesh_trees_start_part (t8_cmesh_trees_t trees, int proc, t8_locidx_t lfirst_
  * \param [in,out]        trees The trees structure to be updated.
  * \param [in]            proc  The number of the part to be finished.
  */
-size_t
+void
 t8_cmesh_trees_finish_part (t8_cmesh_trees_t trees, int proc);
 
 /** Copy the tree_to_proc and ghost_to_proc arrays of one tree structure to
@@ -433,9 +433,19 @@ void
 t8_cmesh_trees_add_attribute (const t8_cmesh_trees_t trees, int proc, const t8_stash_attribute_struct_t *attr,
                               t8_locidx_t tree_id, size_t index);
 
+/** Add the next ghost attribute from stash to the correct position in the char pointer structure
+ * Since it is created from stash, all attributes are added to part 0.
+ * The following attribute offset gets updated already.
+ * \param [in,out]    trees The trees structure, whose char array is updated.
+ * \param [in]        attr The stash attribute that is added.
+ * \param [in]        local_ghost_id The local ghost id.
+ * \param [in]        ghosts_inserted The number of ghost that were already inserted, so that we do not write over the end.
+ * \param [in]        index The attribute index of the attribute to be added.
+*/
+
 void
-t8_cmesh_trees_add_ghost_attribute (const t8_cmesh_trees_t trees, int proc, const t8_stash_attribute_struct_t *attr,
-                                    t8_locidx_t local_ghost_id, size_t index, size_t *attribute_data_offset);
+t8_cmesh_trees_add_ghost_attribute (const t8_cmesh_trees_t trees, const t8_stash_attribute_struct_t *attr,
+                                    t8_locidx_t local_ghost_id, t8_locidx_t ghosts_inserted, size_t index);
 
 /** Return the number of parts of a trees structure.
  * \param [in]        trees The trees structure.

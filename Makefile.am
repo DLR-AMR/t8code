@@ -47,6 +47,7 @@ dist_t8aclocal_DATA = config/t8_include.m4 \
                       config/t8_netcdf.m4 \
                       config/t8_vtk.m4 \
                       config/t8_occ.m4 \
+                      config/t8_fortran.m4 \
                       config/t8_mpi.m4
 
 
@@ -74,11 +75,11 @@ DISTCLEANFILES += \
 # non-recursive build
 include src/Makefile.am
 include src/t8_schemes/t8_default/Makefile.am
-include api/Makefile.am
 include test/Makefile.am
 include example/Makefile.am
 include tutorials/Makefile.am
 include benchmarks/Makefile.am
+include api/Makefile.am
 
 # revision control and ChangeLog
 ChangeLog:

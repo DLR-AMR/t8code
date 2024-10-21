@@ -1,23 +1,23 @@
 /*
-This file is part of t8code.
-t8code is a C library to manage a collection (a forest) of multiple
-connected adaptive space-trees of general element classes in parallel.
+  This file is part of t8code.
+  t8code is a C library to manage a collection (a forest) of multiple
+  connected adaptive space-trees of general element classes in parallel.
 
-Copyright (C) 2024 the developers
+  Copyright (C) 2024 the developers
 
-t8code is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
+  t8code is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
 
-t8code is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+  t8code is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with t8code; if not, write to the Free Software Foundation, Inc.,
-51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+  You should have received a copy of the GNU General Public License
+  along with t8code; if not, write to the Free Software Foundation, Inc.,
+  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
 #ifndef T8_CMESH_NEW_HYPERCUBE_PARAM_HXX
@@ -61,7 +61,7 @@ example_set *cmesh_example = (example_set *) new cmesh_cartesian_product_params<
   std::make_pair (periodic_eclasses.begin (), periodic_eclasses.end ()),
   std::make_pair (cmesh_params::my_comms.begin (), cmesh_params::my_comms.end ()),
   std::make_pair (cmesh_params::do_bcast.begin (), cmesh_params::do_bcast.end ()),
-  std::make_pair (cmesh_params::no_partition.begin (), cmesh_params::no_partition.end ()),
+  std::make_pair (cmesh_params::partition.begin (), cmesh_params::partition.end ()),
   std::make_pair (cmesh_params::periodic.begin (), cmesh_params::periodic.end ()), cmesh_wrapper, param_to_string,
   "t8_cmesh_new_hypercube_");
 
@@ -72,7 +72,7 @@ example_set *cmesh_example_pyra = (example_set *) new cmesh_cartesian_product_pa
   std::make_pair (nonperiodic_eclasses.begin (), nonperiodic_eclasses.end ()),
   std::make_pair (cmesh_params::my_comms.begin (), cmesh_params::my_comms.end ()),
   std::make_pair (cmesh_params::do_bcast.begin (), cmesh_params::do_bcast.end ()),
-  std::make_pair (cmesh_params::no_partition.begin (), cmesh_params::no_partition.end ()),
+  std::make_pair (cmesh_params::partition.begin (), cmesh_params::partition.end ()),
   std::make_pair (cmesh_params::no_periodic.begin (), cmesh_params::no_periodic.end ()), cmesh_wrapper, param_to_string,
   "t8_cmesh_new_hypercube_");
 }  // namespace new_hypercube_cmesh

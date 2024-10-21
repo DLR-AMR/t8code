@@ -4,16 +4,18 @@ include(cmake/GitProjectVersion.cmake)
 
 project( T8CODE
   DESCRIPTION "Parallel algorithms and data structures for tree-based AMR with arbitrary element shapes."
-  LANGUAGES C CXX
+  LANGUAGES C CXX Fortran
   VERSION "${T8CODE_VERSION_MAJOR}.${T8CODE_VERSION_MINOR}.${T8CODE_VERSION_PATCH}" )
 include( CTest )
 
 option( T8CODE_BUILD_AS_SHARED_LIBRARY "Whether t8code should be built as a shared or a static library" ON )
 option( T8CODE_BUILD_PEDANTIC "Compile t8code with `-Wall -pedantic -Werror` as done in the Github CI." OFF )
+option( T8CODE_EXPORT_COMPILE_COMMANDS "Export the compile commands as json. Can be used by IDEs for code completion (e.g. intellisense, clangd)" OFF )
 option( T8CODE_BUILD_TESTS "Build t8code's automated tests" ON )
 option( T8CODE_BUILD_TUTORIALS "Build t8code's tutorials" ON )
 option( T8CODE_BUILD_EXAMPLES "Build t8code's examples" ON )
 option( T8CODE_BUILD_BENCHMARKS "Build t8code's benchmarks" ON )
+option( T8CODE_BUILD_FORTRAN_INTERFACE "Build t8code's Fortran interface" OFF )
 option( T8CODE_ENABLE_LESS_TESTS "Tests not as thoroughly to speed up the test suite. Tests the same functionality. (WARNING: Use with care.)" OFF )
 
 option( T8CODE_ENABLE_MPI "Enable t8code's features which rely on MPI" ON )
@@ -29,13 +31,20 @@ option( T8CODE_BUILD_DOCUMENTATION "Build t8code's documentation" OFF )
 include(CMakeDependentOption)
 cmake_dependent_option( T8CODE_BUILD_DOCUMENTATION_SPHINX "Build t8code's documentation using sphinx" OFF "T8CODE_BUILD_DOCUMENTATION" OFF )
 
-set(T8CODE_CUSTOM_TEST_COMMAND "" CACHE STRING "Define custom test command, e.g.: mpirun -n 4")
+set(T8CODE_CUSTOM_PARALLEL_TEST_COMMAND "" CACHE STRING "Define a custom command for parallel tests , e.g.: mpirun -np 8 (overwrites standard mpirun -np 4 if build with mpi)")
+set(T8CODE_CUSTOM_SERIAL_TEST_COMMAND "" CACHE STRING "Define a custom command for serial tests.")
 
-if( NOT CMAKE_BUILD_TYPE )
-    set( CMAKE_BUILD_TYPE "Release" )
+# Set a default build type if none was specified
+set(default_build_type "Release")
+
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
+  set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE
+      STRING "Choose the type of build. Build types available: Release Debug RelWithDebInfo" FORCE)
+  # Set the possible values of build type for cmake-gui
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
+    "Debug" "Release" "RelWithDebInfo")
 endif()
-
-set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Release RelWithDebInfo Debug)
 
 set( CMAKE_C_STANDARD 11 )
 set( CMAKE_C_STANDARD_REQUIRED ON )
@@ -45,8 +54,15 @@ set( CMAKE_CXX_STANDARD 17 )
 set( CMAKE_CXX_STANDARD_REQUIRED ON )
 set( CMAKE_CXX_EXTENSIONS OFF )
 
+set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+
 if( T8CODE_ENABLE_MPI )
-    find_package( MPI COMPONENTS C REQUIRED )
+    if( T8CODE_BUILD_FORTRAN_INTERFACE )
+      find_package( MPI COMPONENTS C Fortran REQUIRED )
+    else()
+      find_package( MPI COMPONENTS C REQUIRED )
+    endif()
+
     if( NOT MPIEXEC_EXECUTABLE )
         message( FATAL_ERROR "MPIEXEC was not found" )
     endif()
@@ -55,16 +71,32 @@ if( T8CODE_ENABLE_MPI )
 endif()
 
 if( T8CODE_ENABLE_VTK )
-    find_package( VTK REQUIRED )
-endif()
+    find_package( VTK REQUIRED COMPONENTS
+        IOXML CommonExecutionModel CommonDataModel
+        IOGeometry IOXMLParser IOParallelXML IOPLY
+        ParallelMPI FiltersCore vtksys CommonCore zlib IOLegacy)
+    if(VTK_FOUND)
+        message("Found VTK")
+    endif (VTK_FOUND)
+endif( T8CODE_ENABLE_VTK )
 
 if( T8CODE_ENABLE_OCC )
-    find_package( OpenCASCADE REQUIRED )
-endif()
+    find_package( OpenCASCADE REQUIRED COMPONENTS
+    TKBO TKPrim TKTopAlgo
+    TKGeomAlgo TKBRep
+    TKG3d TKG2d TKMath TKernel )
+    if(OpenCASCADE_FOUND)
+        message("Found OpenCASCADE")
+    endif (OpenCASCADE_FOUND)
+endif( T8CODE_ENABLE_OCC )
 
 if( T8CODE_ENABLE_NETCDF )
     find_package( netCDF REQUIRED )
-endif()
+    if(netCDF_FOUND)
+        message("Found netCDF")
+        include(cmake/CheckNetCDFPar.cmake)
+    endif (netCDF_FOUND)
+endif( T8CODE_ENABLE_NETCDF )
 
 # Override default for this libsc option
 set( BUILD_SHARED_LIBS ON CACHE BOOL "Build libsc as a shared library" )
@@ -110,3 +142,14 @@ endif()
 if ( T8CODE_BUILD_DOCUMENTATION )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/doc )
 endif()
+
+if( T8CODE_BUILD_FORTRAN_INTERFACE )
+    enable_language( Fortran )
+    add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/api/t8_fortran_interface )
+
+    if( NOT T8CODE_ENABLE_MPI )
+        message( FATAL_ERROR "Fortran API only available when MPI is enabled." )
+    endif()
+endif()
+
+include (cmake/CPackConfig.cmake)

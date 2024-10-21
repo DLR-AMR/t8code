@@ -35,8 +35,18 @@
 #include <t8.h>
 #include <t8_cmesh.h>
 #include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_geometrical.h>
 
 typedef int (*t8_fortran_adapt_coordinate_callback) (double x, double y, double z, int is_family);
+
+/* A fallback type if t8code is not built with MPI */
+typedef
+#ifdef T8_ENABLE_MPI
+  MPI_Fint
+#else
+  int
+#endif
+    MPI_T8_Fint;
 
 T8_EXTERN_C_BEGIN ();
 
@@ -86,13 +96,7 @@ t8_fortran_cmesh_set_join_by_stash_noConn (t8_cmesh_t cmesh, const int do_both_d
  *                             this function.
  */
 sc_MPI_Comm *
-t8_fortran_MPI_Comm_new (
-#if T8_ENABLE_MPI
-  MPI_Fint
-#else
-  int
-#endif
-    Fcomm);
+t8_fortran_MPI_Comm_new (MPI_T8_Fint Fcomm);
 
 /** Free the memory of a C MPI Communicator pointer that was created
  *  with \ref t8_fortran_MPI_Comm_new.
@@ -120,7 +124,6 @@ t8_cmesh_new_periodic_tri_wrap (sc_MPI_Comm *Ccomm);
  */
 t8_forest_t
 t8_forest_new_uniform_default (t8_cmesh_t cmesh, int level, int do_face_ghost, sc_MPI_Comm *comm);
-
 
 /** 
  * \param [in, out] forest     The forest

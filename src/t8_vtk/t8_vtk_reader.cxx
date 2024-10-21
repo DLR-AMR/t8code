@@ -1,23 +1,23 @@
 /*
-This file is part of t8code.
-t8code is a C library to manage a collection (a forest) of multiple
-connected adaptive space-trees of general element classes in parallel.
+  This file is part of t8code.
+  t8code is a C library to manage a collection (a forest) of multiple
+  connected adaptive space-trees of general element classes in parallel.
 
-Copyright (C) 2023 the developers
+  Copyright (C) 2023 the developers
 
-t8code is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
+  t8code is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
 
-t8code is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+  t8code is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with t8code; if not, write to the Free Software Foundation, Inc.,
-51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+  You should have received a copy of the GNU General Public License
+  along with t8code; if not, write to the Free Software Foundation, Inc.,
+  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
 #include <t8_vtk/t8_vtk_reader.hxx>
@@ -365,14 +365,14 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer<vtkDataSet> vtkGrid, const int partition, c
   }
 
   /* Set the dimension on all procs (even empty procs). */
-  const int dim = num_trees > 0 ? t8_get_dimension (vtkGrid) : 0;
+  int dim = num_trees > 0 ? t8_get_dimension (vtkGrid) : 0;
   int dim_buf = dim;
-  mpiret = sc_MPI_Allreduce (&dim, &dim_buf, 1, sc_MPI_INT, sc_MPI_MAX, comm);
+  mpiret = sc_MPI_Allreduce ((void *) &dim, &dim_buf, 1, sc_MPI_INT, sc_MPI_MAX, comm);
   SC_CHECK_MPI (mpiret);
   t8_cmesh_set_dimension (cmesh, dim_buf);
 
   /* Set the geometry. */
-  t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, dim_buf);
+  t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
 
   /* Global-id of the first local tree */
   t8_gloidx_t first_tree = 0;
