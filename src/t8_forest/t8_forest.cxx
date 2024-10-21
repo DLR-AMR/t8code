@@ -1460,11 +1460,11 @@ t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_lineari
   }
 
   /* We search for the first element in the array that is greater than the given element id. */
-  auto elem_iter
-    = std::upper_bound (t8_element_array_begin (elements), t8_element_array_end (elements), element_id,
-                        [&maxlevel, &ts] (const t8_linearidx_t element_id_, const t8_element_array_iterator::value_type &elem_ptr) {
-                          return (element_id_ < ts->t8_element_get_linear_id (elem_ptr, maxlevel));
-                        });
+  auto elem_iter = std::upper_bound (
+    t8_element_array_begin (elements), t8_element_array_end (elements), element_id,
+    [&maxlevel, &ts] (const t8_linearidx_t element_id_, const t8_element_array_iterator::value_type &elem_ptr) {
+      return (element_id_ < ts->t8_element_get_linear_id (elem_ptr, maxlevel));
+    });
 
   /* After we found the element with an id greater than the given one, we are able to jump one index back.
    * This guarantees us that the element at (index - 1) is smaller or equal to the given element id.
