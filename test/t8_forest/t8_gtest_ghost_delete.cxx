@@ -45,7 +45,7 @@ test_adapt_holes (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which
                   t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
 {
   double coordinates[3];
-  t8_forest_element_coordinate (forest_from, which_tree, elements[0], 0, coordinates);
+  t8_forest_element_coordinate_from_corner_number (forest_from, which_tree, elements[0], 0, coordinates);
   if (fabs (coordinates[1]) < T8_PRECISION_EPS)
     return 1;  // refine the lowest row
   if (fabs (coordinates[1] - 0.25) < T8_PRECISION_EPS)

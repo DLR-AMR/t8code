@@ -372,6 +372,7 @@ t8_dtri_compute_vertex_ref_coords (const t8_dtri_t *elem, const int vertex, doub
 
 void
 t8_dtri_compute_reference_coords (const t8_dtri_t *elem, const double *ref_coords, const size_t num_coords,
+                                  const size_t padding,
 #ifndef T8_DTRI_TO_DTET
                                   const size_t skip_coords,
 #endif
@@ -416,35 +417,39 @@ t8_dtri_compute_reference_coords (const t8_dtri_t *elem, const double *ref_coord
   const int tet_orientation2 = (tet_orientation0 + ((type % 2 == 0) ? 2 : 1)) % 3;
 #endif
   for (size_t coord = 0; coord < num_coords; ++coord) {
-    /* offset defines, how many coordinates to skip in an iteration. */
+    /* offset defines, how many coordinates to skip in an iteration.
+       Padding adds a padding to the input coords. Skip_coords skips input and output
+       coords, since it is used for prisms, which are defined via triangles and lines.
+       Here it has to leave out the z coord to leave space for the line. */
 #ifndef T8_DTRI_TO_DTET
-    const size_t offset = (2 + skip_coords) * coord;
-    const size_t offset_3d = 3 * coord;
+    const size_t offset_ref = (t8_eclass_to_dimension[T8_ECLASS_TRIANGLE] + skip_coords + padding) * coord;
+    const size_t offset_out = (t8_eclass_to_dimension[T8_ECLASS_TRIANGLE] + skip_coords) * coord;
 #else
-    const size_t offset = 3 * coord;
+    const size_t offset_ref = (t8_eclass_to_dimension[T8_ECLASS_TET] + padding) * coord;
+    const size_t offset_out = (t8_eclass_to_dimension[T8_ECLASS_TET]) * coord;
 #endif
-    out_coords[offset + 0] = elem->x;
-    out_coords[offset + 1] = elem->y;
+    out_coords[offset_out + 0] = elem->x;
+    out_coords[offset_out + 1] = elem->y;
 #ifdef T8_DTRI_TO_DTET
-    out_coords[offset + 2] = elem->z;
+    out_coords[offset_out + 2] = elem->z;
 #endif
 #ifndef T8_DTRI_TO_DTET
-    out_coords[offset + tri_orientation] += h * ref_coords[offset_3d + 0];
-    out_coords[offset + 1 - tri_orientation] += h * ref_coords[offset_3d + 1];
+    out_coords[offset_out + tri_orientation] += h * ref_coords[offset_ref + 0];
+    out_coords[offset_out + 1 - tri_orientation] += h * ref_coords[offset_ref + 1];
 #else
-    out_coords[offset + tet_orientation0] += h * ref_coords[offset + 0];
-    out_coords[offset + tet_orientation1] += h * ref_coords[offset + 1];
-    out_coords[offset + tet_orientation2] += h * ref_coords[offset + 2];
+    out_coords[offset_out + tet_orientation0] += h * ref_coords[offset_ref + 0];
+    out_coords[offset_out + tet_orientation1] += h * ref_coords[offset_ref + 1];
+    out_coords[offset_out + tet_orientation2] += h * ref_coords[offset_ref + 2];
 
     /* done 3D */
 #endif
     /* Since the integer coordinates are coordinates w.r.t to
      * the embedding into [0,T8_DTRI_ROOT_LEN]^d, we just need
      * to divide them by the root length. */
-    out_coords[offset + 0] /= (double) T8_DTRI_ROOT_LEN;
-    out_coords[offset + 1] /= (double) T8_DTRI_ROOT_LEN;
+    out_coords[offset_out + 0] /= (double) T8_DTRI_ROOT_LEN;
+    out_coords[offset_out + 1] /= (double) T8_DTRI_ROOT_LEN;
 #ifdef T8_DTRI_TO_DTET
-    out_coords[offset + 2] /= (double) T8_DTRI_ROOT_LEN;
+    out_coords[offset_out + 2] /= (double) T8_DTRI_ROOT_LEN;
 #endif
   }
 }
