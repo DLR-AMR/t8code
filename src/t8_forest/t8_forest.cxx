@@ -2508,9 +2508,14 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest, t8_gloidx_t gtre
     else {
       last_owner_entry = -1;
     }
-    if (first_owner != last_owner_entry) {
+
+    if (first_owner > last_owner_entry) {
       /* We did not count this process as an owner, thus we add it */
       *(int *) sc_array_push (owners) = first_owner;
+    }
+    if (last_owner > last_owner_entry) {
+      /* We did not count this process as an owner, thus we add it */
+      *(int *) sc_array_push (owners) = last_owner;
     }
     T8_ASSERT (t8_forest_element_check_owner (forest, first_face_desc, gtreeid, eclass, first_owner, 1));
     T8_ASSERT (t8_forest_element_check_owner (forest, last_face_desc, gtreeid, eclass, first_owner, 1));
@@ -3380,6 +3385,7 @@ t8_forest_commit (t8_forest_t forest)
   }
 
   if (forest->mpisize > 1) {
+    sc_MPI_Barrier (forest->mpicomm);
     /* Construct a ghost layer, if desired */
     if (forest->do_ghost) {
       /* TODO: ghost type */
