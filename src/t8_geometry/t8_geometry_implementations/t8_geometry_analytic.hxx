@@ -38,10 +38,9 @@ struct t8_geometry_analytic: public t8_geometry
 {
  public:
   /**
-   * Constructor of the analytic geometry with a given dimension. The geometry
+   * Constructor of the analytic geometry. The geometry
    * is viable with all tree types and uses a user-provided analytic and
    * jacobian function. The actual mappings are done by these functions.
-   * \param [in] dim        The dimension of this geometry.
    * \param [in] name       The name to give this geometry.
    * \param [in] analytical The analytical function to use for this geometry.
    * \param [in] jacobian   The jacobian of \a analytical.
@@ -49,17 +48,16 @@ struct t8_geometry_analytic: public t8_geometry
    * \param [in] tree_negative_volume_in The function that is used to compute if a trees volume is negative.
    * \param [in] tree_compatible_in The function that is used to check if a tree is compatible with the geometry.
    */
-  t8_geometry_analytic (int dim, std::string name, t8_geom_analytic_fn analytical,
-                        t8_geom_analytic_jacobian_fn jacobian, t8_geom_load_tree_data_fn load_tree_data,
+  t8_geometry_analytic (std::string name, t8_geom_analytic_fn analytical, t8_geom_analytic_jacobian_fn jacobian,
+                        t8_geom_load_tree_data_fn load_tree_data,
                         t8_geom_tree_negative_volume_fn tree_negative_volume_in,
                         t8_geom_tree_compatible_fn tree_compatible_in, const void *user_data);
 
   /**
    * Constructor of the analytic geometry for testing purposes.
-   * \param [in] dim        The dimension of this geometry.
    * \param [in] name       The name to give this geometry.
    */
-  t8_geometry_analytic (int dim, std::string name);
+  t8_geometry_analytic (std::string name);
 
   /** The destructor. 
    */
@@ -82,7 +80,7 @@ struct t8_geometry_analytic: public t8_geometry
    * Maps points in the reference space \f$ [0,1]^\mathrm{dim} \to \mathbb{R}^3 \f$.
    * \param [in]  cmesh       The cmesh in which the point lies.
    * \param [in]  gtreeid     The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  ref_coords  Array of tree dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
    * \param [in]  num_coords  Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
@@ -94,7 +92,7 @@ struct t8_geometry_analytic: public t8_geometry
    * Compute the jacobian of the \a t8_geom_evaluate map at a point in the reference space \f$ [0,1]^\mathrm{dim} \f$.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  ref_coords  Array of tree dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
    * \param [in]  num_coords  Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] jacobian    The jacobian at \a ref_coords. Array of size \f$ \mathrm{dim} \cdot 3 \f$ x \a num_coords. Indices \f$ 3 \cdot i\f$ , \f$ 3 \cdot i+1 \f$ , \f$ 3 \cdot i+2 \f$
    *                          correspond to the \f$ i \f$-th column of the jacobian (Entry \f$ 3 \cdot i + j \f$ is \f$ \frac{\partial f_j}{\partial x_i} \f$).

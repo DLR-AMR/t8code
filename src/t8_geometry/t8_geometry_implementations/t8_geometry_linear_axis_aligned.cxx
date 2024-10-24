@@ -42,8 +42,8 @@ correct_point_order (const double tree_vertices[6])
 }
 #endif
 
-t8_geometry_linear_axis_aligned::t8_geometry_linear_axis_aligned (int dim)
-  : t8_geometry_with_vertices (dim, "t8_geom_linear_axis_aligned_" + std::to_string (dim))
+t8_geometry_linear_axis_aligned::t8_geometry_linear_axis_aligned ()
+  : t8_geometry_with_vertices ("t8_geom_linear_axis_aligned")
 {
 }
 
@@ -115,9 +115,9 @@ T8_EXTERN_C_BEGIN ();
 /* Satisfy the C interface from t8_geometry_linear_axis_aligned.h.
  * Create a new geometry with given dimension. */
 t8_geometry_c *
-t8_geometry_linear_axis_aligned_new (int dimension)
+t8_geometry_linear_axis_aligned_new ()
 {
-  t8_geometry_linear_axis_aligned *geom = new t8_geometry_linear_axis_aligned (dimension);
+  t8_geometry_linear_axis_aligned *geom = new t8_geometry_linear_axis_aligned ();
   return (t8_geometry_c *) geom;
 }
 

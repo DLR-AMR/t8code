@@ -372,7 +372,7 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer<vtkDataSet> vtkGrid, const int partition, c
   t8_cmesh_set_dimension (cmesh, dim_buf);
 
   /* Set the geometry. */
-  t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, dim_buf);
+  t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
 
   /* Global-id of the first local tree */
   t8_gloidx_t first_tree = 0;

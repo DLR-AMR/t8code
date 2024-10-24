@@ -32,8 +32,7 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>
 
-t8_geometry_lagrange::t8_geometry_lagrange (int dim)
-  : t8_geometry_with_vertices (dim, "t8_geom_lagrange_" + std::to_string (dim))
+t8_geometry_lagrange::t8_geometry_lagrange (): t8_geometry_with_vertices ("t8_geom_lagrange")
 {
 }
 
@@ -291,10 +290,9 @@ t8_lagrange_element::t8_lagrange_element (t8_eclass_t eclass, uint32_t degree, s
   // if (nodes.size () != parametric_nodes.size ())
   //   SC_ABORTF ("Provide the 3 coordinates of the nodes.\n");
   /* Create a cmesh with a single element */
-  int dim = t8_eclass_to_dimension[eclass];
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_LAGRANGE_POLY_DEGREE_KEY, &degree, sizeof (int), 1);
-  t8_cmesh_register_geometry<t8_geometry_lagrange> (cmesh, dim);
+  t8_cmesh_register_geometry<t8_geometry_lagrange> (cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, eclass);
   t8_cmesh_set_tree_vertices (cmesh, 0, nodes.data (), nodes.size ());
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
@@ -522,11 +520,11 @@ t8_lagrange_element::write () const
 T8_EXTERN_C_BEGIN ();
 
 /* Satisfy the C interface from t8_geometry_lagrange.h.
- * Create a new geometry with given dimension. */
+ * Create a new geometry. */
 t8_geometry_c *
-t8_geometry_lagrange_new (int dimension)
+t8_geometry_lagrange_new ()
 {
-  t8_geometry_lagrange *geom = new t8_geometry_lagrange (dimension);
+  t8_geometry_lagrange *geom = new t8_geometry_lagrange ();
   return (t8_geometry_c *) geom;
 }
 

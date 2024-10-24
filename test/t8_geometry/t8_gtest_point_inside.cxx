@@ -56,7 +56,7 @@ TEST (t8_point_inside, test_point_inside_specific_triangle)
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 3);
   /* We use standard linear geometry */
-  t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, 2);
+  t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), 0, 0, sc_MPI_COMM_WORLD);
 
@@ -97,7 +97,7 @@ TEST (t8_point_inside, test_point_inside_specific_quad)
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 4);
   /* We use standard linear geometry */
-  t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, 2);
+  t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), 0, 0, sc_MPI_COMM_WORLD);
 

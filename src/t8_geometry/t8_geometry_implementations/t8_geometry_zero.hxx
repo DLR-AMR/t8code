@@ -37,13 +37,12 @@ struct t8_geometry_zero: public t8_geometry
 {
  public:
   /**
-   * Constructor of the zero geometry with a given dimension. The geometry
+   * Constructor of the zero geometry. The geometry
    * is viable with all tree types. This geometry maps all points to zero and
    * is meant for debugging purposes.
-   * Sets the dimension and the name to "t8_geom_zero_{dim}"
-   * \param [in] dim  0 <= \a dimension <= 3. The dimension.
+   * Sets the dimension and the name to "t8_geom_zero"
    */
-  t8_geometry_zero (int dimension);
+  t8_geometry_zero ();
 
   /**
    * Check if  the currently active tree has a negative volume
@@ -74,7 +73,7 @@ struct t8_geometry_zero: public t8_geometry
    * Maps points in the reference space \f$ [0,1]^\mathrm{dim} \to \mathbb{R}^3 \f$.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  ref_coords  Array of tree dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
    * \param [in]  num_coords  Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    * \note All entries in out_coords will be set to 0.
@@ -87,7 +86,7 @@ struct t8_geometry_zero: public t8_geometry
    * Compute the jacobian of the \a t8_geom_evaluate map at a point in the reference space \f$ [0,1]^\mathrm{dim} \f$.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  ref_coords  Array of tree dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
    * \param [in]  num_coords  Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] jacobian    The jacobian at \a ref_coords. Array of size \a num_coords x dimension x 3. Indices \f$ 3 \cdot i\f$ , \f$ 3 \cdot i+1 \f$ , \f$ 3 \cdot i+2 \f$
    *                          correspond to the \f$ i \f$-th column of the jacobian  (Entry \f$ 3 \cdot i + j \f$ is \f$ \frac{\partial f_j}{\partial x_i} \f$).
@@ -140,4 +139,4 @@ struct t8_geometry_zero: public t8_geometry
   }
 };
 
-#endif /* !T8_GEOMETRY_ZERO_HXX */
+#endif /* T8_GEOMETRY_ZERO_HXX */

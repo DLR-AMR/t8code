@@ -39,19 +39,10 @@ struct t8_geometry_linear_axis_aligned: public t8_geometry_with_vertices
    * Constructor of the linear, axis-aligned geometry with a given dimension.
    * The geometry is only viable for the line/quad/hex tree types and uses two
    * vertices (min and max coords) per tree. The vertices are saved via
-   * the \ref t8_cmesh_set_tree_vertices function. Sets the dimension and the
-   * name to "t8_geom_linear_axis_aligned_{dim}"
-   * \param [in] dim  0 <= \a dimension <= 3. The dimension.
+   * the \ref t8_cmesh_set_tree_vertices function. Sets the
+   * name to "t8_geom_linear_axis_aligned"
    */
-  t8_geometry_linear_axis_aligned (int dim);
-
-  /* Base constructor with no arguments. We need this since it
-   * is called from derived class constructors.
-   * Sets dimension and name to invalid values. */
-
-  t8_geometry_linear_axis_aligned (): t8_geometry_with_vertices ()
-  {
-  }
+  t8_geometry_linear_axis_aligned ();
 
   /** The destructor. 
    */
@@ -71,7 +62,7 @@ struct t8_geometry_linear_axis_aligned: public t8_geometry_with_vertices
    * Maps points in the reference space \f$ [0,1]^\mathrm{dim} \to \mathbb{R}^3 \f$.
    * \param [in]  cmesh       The cmesh in which the point lies.
    * \param [in]  gtreeid     The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  ref_coords  Array of tree dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
    * \param [in]  num_coords  Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
@@ -83,7 +74,7 @@ struct t8_geometry_linear_axis_aligned: public t8_geometry_with_vertices
    * Compute the jacobian of the \a t8_geom_evaluate map at a point in the reference space \f$ [0,1]^\mathrm{dim} \f$.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  ref_coords  Array of tree dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
    * \param [in]  num_coords  Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] jacobian    The jacobian at \a ref_coords. Array of size \a num_coords x dimension x 3. Indices \f$ 3 \cdot i\f$ , \f$ 3 \cdot i+1 \f$ , \f$ 3 \cdot i+2 \f$
    *                          correspond to the \f$ i \f$-th column of the jacobian  (Entry \f$ 3 \cdot i + j \f$ is \f$ \frac{\partial f_j}{\partial x_i} \f$).
