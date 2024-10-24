@@ -34,8 +34,6 @@
 
 //relativ einfach halten
 
-
-
 TEST (t8_gtest_build_forest_from_geo_domain, embedded_forest)
 {
 
@@ -44,20 +42,18 @@ TEST (t8_gtest_build_forest_from_geo_domain, embedded_forest)
   const t8_nc_dimension_interval_t lat_dimension (t8_nc_dimension_t::LAT, 0, 22);
   const t8_nc_dimension_interval_t lev_dimension (t8_nc_dimension_t::LEV, 0, 1);
 
-  const t8_nc_geo_domain_t global_domain(lon_dimension, lat_dimension, lev_dimension);
+  const t8_nc_geo_domain_t global_domain (lon_dimension, lat_dimension, lev_dimension);
 
   const t8_nc_data_layout_t initial_layout = t8_nc_data_layout_t::LAT_LON;
 
-  auto [initial_embedded_forest, current_max_refinement_lvl_initial] = 
-              t8_nc_build_initial_embedded_mesh(global_domain, initial_layout, sc_MPI_COMM_WORLD);
-  
-  EXPECT_EQ (t8_forest_get_global_num_elements(initial_embedded_forest), 430);
+  auto [initial_embedded_forest, current_max_refinement_lvl_initial]
+    = t8_nc_build_initial_embedded_mesh (global_domain, initial_layout, sc_MPI_COMM_WORLD);
+
+  EXPECT_EQ (t8_forest_get_global_num_elements (initial_embedded_forest), 430);
 
   //forest ausgeben lassen und nachschauen, ob das sinnvoll ist (wenn ungerade automatisch +1)
 
-  t8_forest_unref(&initial_embedded_forest);
-
-
+  t8_forest_unref (&initial_embedded_forest);
 }
 
 TEST (t8_gtest_build_forest_from_geo_domain, embedded_forest_3D)
@@ -68,20 +64,18 @@ TEST (t8_gtest_build_forest_from_geo_domain, embedded_forest_3D)
   const t8_nc_dimension_interval_t lat_dimension (t8_nc_dimension_t::LAT, 0, 6);
   const t8_nc_dimension_interval_t lev_dimension (t8_nc_dimension_t::LEV, 0, 2);
 
-  const t8_nc_geo_domain_t global_domain(lon_dimension, lat_dimension, lev_dimension);
+  const t8_nc_geo_domain_t global_domain (lon_dimension, lat_dimension, lev_dimension);
 
   const t8_nc_data_layout_t initial_layout = t8_nc_data_layout_t::LAT_LON;
 
-  auto [initial_embedded_forest, current_max_refinement_lvl_initial] = 
-              t8_nc_build_initial_embedded_mesh(global_domain, initial_layout, sc_MPI_COMM_WORLD);
-  
-  EXPECT_EQ (t8_forest_get_global_num_elements(initial_embedded_forest), 64);
+  auto [initial_embedded_forest, current_max_refinement_lvl_initial]
+    = t8_nc_build_initial_embedded_mesh (global_domain, initial_layout, sc_MPI_COMM_WORLD);
+
+  EXPECT_EQ (t8_forest_get_global_num_elements (initial_embedded_forest), 64);
 
   //forest ausgeben lassen und nachschauen, ob das sinnvoll ist (wenn ungerade automatisch +1)
 
-  t8_forest_unref(&initial_embedded_forest);
-
-
+  t8_forest_unref (&initial_embedded_forest);
 }
 
 TEST (t8_gtest_build_forest_from_geo_domain, embedded_forest_3D_odd)
@@ -92,22 +86,19 @@ TEST (t8_gtest_build_forest_from_geo_domain, embedded_forest_3D_odd)
   const t8_nc_dimension_interval_t lat_dimension (t8_nc_dimension_t::LAT, 0, 5);
   const t8_nc_dimension_interval_t lev_dimension (t8_nc_dimension_t::LEV, 0, 2);
 
-  const t8_nc_geo_domain_t global_domain(lon_dimension, lat_dimension, lev_dimension);
+  const t8_nc_geo_domain_t global_domain (lon_dimension, lat_dimension, lev_dimension);
 
   const t8_nc_data_layout_t initial_layout = t8_nc_data_layout_t::LAT_LON;
 
-  auto [initial_embedded_forest, current_max_refinement_lvl_initial] = 
-              t8_nc_build_initial_embedded_mesh(global_domain, initial_layout, sc_MPI_COMM_WORLD);
-  
-  EXPECT_EQ (t8_forest_get_global_num_elements(initial_embedded_forest), 64);
+  auto [initial_embedded_forest, current_max_refinement_lvl_initial]
+    = t8_nc_build_initial_embedded_mesh (global_domain, initial_layout, sc_MPI_COMM_WORLD);
+
+  EXPECT_EQ (t8_forest_get_global_num_elements (initial_embedded_forest), 64);
 
   //forest ausgeben lassen und nachschauen, ob das sinnvoll ist (wenn ungerade automatisch +1)
 
-  t8_forest_unref(&initial_embedded_forest);
-
-
+  t8_forest_unref (&initial_embedded_forest);
 }
-
 
 TEST (t8_gtest_build_forest_from_geo_domain, embedded_forest_3D_quadratic)
 {
@@ -117,111 +108,104 @@ TEST (t8_gtest_build_forest_from_geo_domain, embedded_forest_3D_quadratic)
   const t8_nc_dimension_interval_t lat_dimension (t8_nc_dimension_t::LAT, 0, 64);
   const t8_nc_dimension_interval_t lev_dimension (t8_nc_dimension_t::LEV, 0, 64);
 
-  const t8_nc_geo_domain_t global_domain(lon_dimension, lat_dimension, lev_dimension);
+  const t8_nc_geo_domain_t global_domain (lon_dimension, lat_dimension, lev_dimension);
 
   const t8_nc_data_layout_t initial_layout = t8_nc_data_layout_t::LAT_LON;
 
-  auto [initial_embedded_forest, current_max_refinement_lvl_initial] = 
-              t8_nc_build_initial_embedded_mesh(global_domain, initial_layout, sc_MPI_COMM_WORLD);
-  
-  EXPECT_EQ (t8_forest_get_global_num_elements(initial_embedded_forest), 262144);
+  auto [initial_embedded_forest, current_max_refinement_lvl_initial]
+    = t8_nc_build_initial_embedded_mesh (global_domain, initial_layout, sc_MPI_COMM_WORLD);
+
+  EXPECT_EQ (t8_forest_get_global_num_elements (initial_embedded_forest), 262144);
 
   //forest ausgeben lassen und nachschauen, ob das sinnvoll ist (wenn ungerade automatisch +1)
 
-  t8_forest_unref(&initial_embedded_forest);
-
-
+  t8_forest_unref (&initial_embedded_forest);
 }
 
 TEST (t8_gtest_build_forest_from_geo_domain, congruent_mesh)
 {
-  
+
   /* Define the ought to be considered parts of all dimensions */
   const t8_nc_dimension_interval_t lon_dimension (t8_nc_dimension_t::LON, 0, 18);
   const t8_nc_dimension_interval_t lat_dimension (t8_nc_dimension_t::LAT, 0, 22);
   const t8_nc_dimension_interval_t lev_dimension (t8_nc_dimension_t::LEV, 0, 1);
 
-  const t8_nc_geo_domain_t global_domain(lon_dimension, lat_dimension, lev_dimension);
+  const t8_nc_geo_domain_t global_domain (lon_dimension, lat_dimension, lev_dimension);
 
   const t8_nc_data_layout_t initial_layout = t8_nc_data_layout_t::LAT_LON;
-  
-  auto [initial_congruent_forest, current_max_refinement_lvl_congruent] = 
-              t8_nc_build_initial_congruent_mesh(global_domain, initial_layout, sc_MPI_COMM_WORLD);
 
-  EXPECT_EQ (t8_forest_get_global_num_elements(initial_congruent_forest), 396);
+  auto [initial_congruent_forest, current_max_refinement_lvl_congruent]
+    = t8_nc_build_initial_congruent_mesh (global_domain, initial_layout, sc_MPI_COMM_WORLD);
 
-  EXPECT_EQ (t8_forest_get_num_global_trees(initial_congruent_forest), 99);
+  EXPECT_EQ (t8_forest_get_global_num_elements (initial_congruent_forest), 396);
 
-  t8_forest_unref(&initial_congruent_forest);
+  EXPECT_EQ (t8_forest_get_num_global_trees (initial_congruent_forest), 99);
 
+  t8_forest_unref (&initial_congruent_forest);
 }
 
 TEST (t8_gtest_build_forest_from_geo_domain, congruent_mesh_3D)
 {
-   
+
   /* Define the ought to be considered parts of all dimensions */
   const t8_nc_dimension_interval_t lon_dimension (t8_nc_dimension_t::LON, 0, 8);
   const t8_nc_dimension_interval_t lat_dimension (t8_nc_dimension_t::LAT, 0, 7);
   const t8_nc_dimension_interval_t lev_dimension (t8_nc_dimension_t::LEV, 0, 3);
 
-  const t8_nc_geo_domain_t global_domain(lon_dimension, lat_dimension, lev_dimension);
+  const t8_nc_geo_domain_t global_domain (lon_dimension, lat_dimension, lev_dimension);
 
   const t8_nc_data_layout_t initial_layout = t8_nc_data_layout_t::LAT_LON;
-  
-  auto [initial_congruent_forest, current_max_refinement_lvl_congruent] = 
-              t8_nc_build_initial_congruent_mesh(global_domain, initial_layout, sc_MPI_COMM_WORLD);
 
-  EXPECT_EQ (t8_forest_get_global_num_elements(initial_congruent_forest), 168);
+  auto [initial_congruent_forest, current_max_refinement_lvl_congruent]
+    = t8_nc_build_initial_congruent_mesh (global_domain, initial_layout, sc_MPI_COMM_WORLD);
 
-  EXPECT_EQ (t8_forest_get_num_global_trees(initial_congruent_forest), 168);
+  EXPECT_EQ (t8_forest_get_global_num_elements (initial_congruent_forest), 168);
 
-  t8_forest_unref(&initial_congruent_forest);
+  EXPECT_EQ (t8_forest_get_num_global_trees (initial_congruent_forest), 168);
 
+  t8_forest_unref (&initial_congruent_forest);
 }
-
 
 TEST (t8_gtest_build_forest_from_geo_domain, congruent_mesh_3D_power_of_two)
 {
-   
+
   /* Define the ought to be considered parts of all dimensions */
   const t8_nc_dimension_interval_t lon_dimension (t8_nc_dimension_t::LON, 0, 2);
   const t8_nc_dimension_interval_t lat_dimension (t8_nc_dimension_t::LAT, 0, 8);
   const t8_nc_dimension_interval_t lev_dimension (t8_nc_dimension_t::LEV, 0, 4);
 
-  const t8_nc_geo_domain_t global_domain(lon_dimension, lat_dimension, lev_dimension);
+  const t8_nc_geo_domain_t global_domain (lon_dimension, lat_dimension, lev_dimension);
 
   const t8_nc_data_layout_t initial_layout = t8_nc_data_layout_t::LAT_LON;
-  
-  auto [initial_congruent_forest, current_max_refinement_lvl_congruent] = 
-              t8_nc_build_initial_congruent_mesh(global_domain, initial_layout, sc_MPI_COMM_WORLD);
 
-  EXPECT_EQ (t8_forest_get_global_num_elements(initial_congruent_forest), 64);
+  auto [initial_congruent_forest, current_max_refinement_lvl_congruent]
+    = t8_nc_build_initial_congruent_mesh (global_domain, initial_layout, sc_MPI_COMM_WORLD);
 
-  EXPECT_EQ (t8_forest_get_num_global_trees(initial_congruent_forest), 8);
+  EXPECT_EQ (t8_forest_get_global_num_elements (initial_congruent_forest), 64);
 
-  t8_forest_unref(&initial_congruent_forest);
+  EXPECT_EQ (t8_forest_get_num_global_trees (initial_congruent_forest), 8);
 
+  t8_forest_unref (&initial_congruent_forest);
 }
 
 TEST (t8_gtest_build_forest_from_geo_domain, congruent_mesh_3D_quadartic)
 {
-   
+
   /* Define the ought to be considered parts of all dimensions */
   const t8_nc_dimension_interval_t lon_dimension (t8_nc_dimension_t::LON, 0, 64);
   const t8_nc_dimension_interval_t lat_dimension (t8_nc_dimension_t::LAT, 0, 64);
   const t8_nc_dimension_interval_t lev_dimension (t8_nc_dimension_t::LEV, 0, 64);
 
-  const t8_nc_geo_domain_t global_domain(lon_dimension, lat_dimension, lev_dimension);
+  const t8_nc_geo_domain_t global_domain (lon_dimension, lat_dimension, lev_dimension);
 
   const t8_nc_data_layout_t initial_layout = t8_nc_data_layout_t::LAT_LON;
-  
-  auto [initial_congruent_forest, current_max_refinement_lvl_congruent] = 
-              t8_nc_build_initial_congruent_mesh(global_domain, initial_layout, sc_MPI_COMM_WORLD);
 
-  EXPECT_EQ (t8_forest_get_global_num_elements(initial_congruent_forest), 262144);
+  auto [initial_congruent_forest, current_max_refinement_lvl_congruent]
+    = t8_nc_build_initial_congruent_mesh (global_domain, initial_layout, sc_MPI_COMM_WORLD);
 
-  EXPECT_EQ (t8_forest_get_num_global_trees(initial_congruent_forest), 1);
+  EXPECT_EQ (t8_forest_get_global_num_elements (initial_congruent_forest), 262144);
 
-  t8_forest_unref(&initial_congruent_forest);
+  EXPECT_EQ (t8_forest_get_num_global_trees (initial_congruent_forest), 1);
 
+  t8_forest_unref (&initial_congruent_forest);
 }

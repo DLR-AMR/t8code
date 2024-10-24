@@ -59,15 +59,15 @@ main (int argc, char **argv)
   std::vector<InputVar> nc_variables = nc_data.transfer_data ();
   t8_productionf ("Size of InputVar vector: %ld\n", nc_variables.size ());
 
-  auto [initial_embedded_forest, current_max_refinement_lvl_initial] = 
-              t8_nc_build_initial_embedded_mesh(nc_variables.front().global_domain_, nc_variables.front().initial_layout_, sc_MPI_COMM_WORLD);
-  
-  t8_forest_unref(&initial_embedded_forest);
+  auto [initial_embedded_forest, current_max_refinement_lvl_initial] = t8_nc_build_initial_embedded_mesh (
+    nc_variables.front ().global_domain_, nc_variables.front ().initial_layout_, sc_MPI_COMM_WORLD);
 
-  auto [initial_congruent_forest, current_max_refinement_lvl_congruent] = 
-              t8_nc_build_initial_congruent_mesh(nc_variables.front().global_domain_, nc_variables.front().initial_layout_, sc_MPI_COMM_WORLD);
+  t8_forest_unref (&initial_embedded_forest);
 
-  t8_forest_unref(&initial_congruent_forest);
+  auto [initial_congruent_forest, current_max_refinement_lvl_congruent] = t8_nc_build_initial_congruent_mesh (
+    nc_variables.front ().global_domain_, nc_variables.front ().initial_layout_, sc_MPI_COMM_WORLD);
+
+  t8_forest_unref (&initial_congruent_forest);
 
   sc_finalize ();
 
