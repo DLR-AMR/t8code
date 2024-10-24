@@ -510,9 +510,7 @@ typedef struct
 
 static int
 t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                 const int is_leaf, const t8_element_array_t *leaves, const t8_locidx_t tree_leaf_index,
-                                 void *query, sc_array_t *query_indices, int *query_matches,
-                                 const size_t num_active_queries)
+                                 const int is_leaf, const t8_element_array_t *leaves, const t8_locidx_t tree_leaf_index)
 {
   t8_forest_ghost_boundary_data_t *data = (t8_forest_ghost_boundary_data_t *) t8_forest_get_user_data (forest);
   int num_faces, iface, faces_totally_owned, level;
@@ -599,11 +597,7 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const 
       /* Store the new bounds at the entry for this element */
       new_bounds[iface * 2] = lower;
       new_bounds[iface * 2 + 1] = upper;
-      if (lower == upper && lower == forest->mpirank) {
-        /* All neighbor leaves at this face are owned by the current rank */
-        faces_totally_owned = faces_totally_owned && 1;
-      }
-      else {
+      if (lower != upper or lower != forest->mpirank) {
         faces_totally_owned = 0;
       }
     }
@@ -1991,7 +1985,7 @@ t8_forest_ghost_w_search::t8_forest_ghost_w_search (t8_ghost_type_t ghost_type):
     search_fn = t8_forest_ghost_search_boundary;
   }
   SC_CHECK_ABORT (ghost_type != T8_GHOST_USERDEFINED,
-                  "use t8_forest_ghost_w_search(t8_forest_search_query_fn search_function) for userdefined ghost");
+                  "use t8_forest_ghost_w_search(t8_forest_search_fn search_function) for userdefined ghost");
 }
 
 void

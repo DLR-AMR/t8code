@@ -4,11 +4,33 @@ function( add_t8_tutorial )
     set( multiValueArgs "SOURCES" )
     cmake_parse_arguments( ADD_T8_TUTORIAL "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
+    # Get the path of the first file listed in the SOURCES list and use it to determine the build directory.
+    # The executable will be build in the same directory as the first source file.
+    list(GET ADD_T8_TUTORIAL_SOURCES 0 FIRST_SOURCE)
+    get_filename_component(TUTORIAL_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/${FIRST_SOURCE}" DIRECTORY)
+    file(RELATIVE_PATH TUTORIAL_RELATIVE_DIR "${CMAKE_SOURCE_DIR}" "${TUTORIAL_SOURCE_DIR}")
+    set(TUTORIAL_BUILD_DIR "${CMAKE_BINARY_DIR}/${TUTORIAL_RELATIVE_DIR}")
+
     add_executable( ${ADD_T8_TUTORIAL_NAME} ${ADD_T8_TUTORIAL_SOURCES} )
     target_link_libraries( ${ADD_T8_TUTORIAL_NAME} PRIVATE T8 SC::SC )
     target_include_directories( ${ADD_T8_TUTORIAL_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. )
+    
+    set_target_properties(${ADD_T8_TUTORIAL_NAME} PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${TUTORIAL_BUILD_DIR}"
+        LIBRARY_OUTPUT_DIRECTORY "${TUTORIAL_BUILD_DIR}"
+        ARCHIVE_OUTPUT_DIRECTORY "${TUTORIAL_BUILD_DIR}"
+    )
+
+    if( T8CODE_EXPORT_COMPILE_COMMANDS )
+        set_target_properties( ${ADD_T8_TUTORIAL_NAME} PROPERTIES EXPORT_COMPILE_COMMANDS ON )
+    endif( T8CODE_EXPORT_COMPILE_COMMANDS )
 
     install( TARGETS ${ADD_T8_TUTORIAL_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+endfunction()
+
+#copy tutorial files to the exact same location in the builddir as they are in the source dir
+function( copy_tutorial_file TUTORIAL_FILE_NAME_SUBPATH )
+    configure_file(${CMAKE_CURRENT_LIST_DIR}/${TUTORIAL_FILE_NAME_SUBPATH} ${CMAKE_CURRENT_BINARY_DIR}/${TUTORIAL_FILE_NAME_SUBPATH} COPYONLY)
 endfunction()
 
 add_t8_tutorial( NAME t8_step0_helloworld               SOURCES general/t8_step0_helloworld.cxx )
@@ -22,3 +44,8 @@ add_t8_tutorial( NAME t8_step7_interpolation            SOURCES general/t8_step7
 add_t8_tutorial( NAME t8_tutorial_build_cmesh           SOURCES general/t8_tutorial_build_cmesh.cxx general/t8_tutorial_build_cmesh_main.cxx)
 add_t8_tutorial( NAME t8_tutorial_search                SOURCES general/t8_tutorial_search.cxx general/t8_step3_adapt_forest.cxx )
 add_t8_tutorial( NAME t8_features_curved_meshes         SOURCES features/t8_features_curved_meshes.cxx)
+
+copy_tutorial_file (features/t8_features_curved_meshes_generate_cmesh_hex.geo)
+copy_tutorial_file (features/t8_features_curved_meshes_generate_cmesh_quad.geo)
+copy_tutorial_file (features/t8_features_curved_meshes_generate_cmesh_tet.geo)
+copy_tutorial_file (features/t8_features_curved_meshes_generate_cmesh_tri.geo)

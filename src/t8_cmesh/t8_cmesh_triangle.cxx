@@ -262,7 +262,7 @@ t8_cmesh_triangle_read_eles (t8_cmesh_t cmesh, int corner_offset, char *filename
       double temp;
 
       T8_ASSERT (dim == 3);
-      t8_debugf ("Correcting negative volume of tree %li\n", (long) triangle - triangle_offset);
+      t8_debugf ("Correcting negative volume of tree %li\n", static_cast<long> (triangle - triangle_offset));
       /* We switch vertex 0 and vertex 1 */
       for (i = 0; i < 3; i++) {
         temp = tree_vertices[i];
@@ -531,7 +531,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_C
 
     t8_cmesh_init (&cmesh);
     /* We will use linear geometry. */
-    t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, dim);
+    t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
     /* read .node file */
     snprintf (current_file, BUFSIZ, "%s.node", fileprefix);
     retval = t8_cmesh_triangle_read_nodes (cmesh, current_file, &vertices, &num_vertices, dim);
@@ -658,7 +658,7 @@ t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix, int partition, sc_
   if (cmesh != NULL) {
     /* Use linear geometry.
      * We need to set the geometry after the broadcast. */
-    t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, dim);
+    t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
     if (partition) {
       first_tree = (mpirank * cmesh->num_trees) / mpisize;
       last_tree = ((mpirank + 1) * cmesh->num_trees) / mpisize - 1;

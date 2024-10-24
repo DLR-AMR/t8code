@@ -25,7 +25,7 @@
 
 #include <t8_forest/t8_forest_ghost_interface.hxx>
 #include <t8_forest/t8_forest_types.h>
-#include <t8_forest/t8_forest_iterate.h>  // Definition of t8_forest_search_query_fn
+#include <t8_forest/t8_forest_iterate.h>  // Definition of t8_forest_search_fn
 
 struct t8_forest_ghost_w_search: public t8_forest_ghost_interface
 {
@@ -42,7 +42,7 @@ struct t8_forest_ghost_w_search: public t8_forest_ghost_interface
    * with search_function as callbackfunction.
    * \note the t8_ghost_type_t of the object will we userdefined
    */
-  explicit t8_forest_ghost_w_search (t8_forest_search_query_fn search_function)
+  explicit t8_forest_ghost_w_search (t8_forest_search_fn search_function)
     : t8_forest_ghost_interface (T8_GHOST_USERDEFINED), search_fn (search_function)
   {
     T8_ASSERT (search_function != nullptr);
@@ -80,15 +80,15 @@ struct t8_forest_ghost_w_search: public t8_forest_ghost_interface
   /**
    * Constructor for the derivided classes to set the type and the search_function.
    * \param [in] ghost_type       The type (faces, edges, userdefind, ...) of the ghost_interface
-   * \param [in] search_function  Function of type t8_forest_search_query_fn, used as callbackfunktion in search_for_ghost_elements
+   * \param [in] search_function  Function of type t8_forest_search_fn, used as callbackfunktion in search_for_ghost_elements
    */
-  t8_forest_ghost_w_search (t8_ghost_type_t ghost_type, t8_forest_search_query_fn search_function)
+  t8_forest_ghost_w_search (t8_ghost_type_t ghost_type, t8_forest_search_fn search_function)
     : t8_forest_ghost_interface (ghost_type), search_fn (search_function)
   {
     T8_ASSERT (ghost_type != T8_GHOST_NONE);
   }
   /** Callbackfunction for t8_forest_search in search_for_ghost_elements */
-  t8_forest_search_query_fn search_fn {};
+  t8_forest_search_fn search_fn {};
 };
 
 struct t8_forest_ghost_face: public t8_forest_ghost_w_search

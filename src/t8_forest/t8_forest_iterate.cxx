@@ -172,8 +172,8 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
 static void
 t8_forest_search_recursion (t8_forest_t forest, const t8_locidx_t ltreeid, t8_element_t *element,
                             const t8_eclass_scheme_c *ts, t8_element_array_t *leaf_elements,
-                            const t8_locidx_t tree_lindex_of_first_leaf, t8_forest_search_query_fn search_fn,
-                            t8_forest_search_query_fn query_fn, sc_array_t *queries, sc_array_t *active_queries)
+                            const t8_locidx_t tree_lindex_of_first_leaf, t8_forest_search_fn search_fn,
+                            t8_forest_query_fn query_fn, sc_array_t *queries, sc_array_t *active_queries)
 {
   /* Assertions to check for necessary requirements */
   /* The forest must be committed */
@@ -209,8 +209,7 @@ t8_forest_search_recursion (t8_forest_t forest, const t8_locidx_t ltreeid, t8_el
     }
   }
   /* Call the callback function for the element */
-  const int ret
-    = search_fn (forest, ltreeid, element, is_leaf, leaf_elements, tree_lindex_of_first_leaf, NULL, NULL, NULL, 0);
+  const int ret = search_fn (forest, ltreeid, element, is_leaf, leaf_elements, tree_lindex_of_first_leaf);
 
   if (!ret) {
     /* The function returned false. We abort the recursion */
@@ -288,8 +287,8 @@ t8_forest_search_recursion (t8_forest_t forest, const t8_locidx_t ltreeid, t8_el
 
 /* Perform a top-down search in one tree of the forest */
 static void
-t8_forest_search_tree (t8_forest_t forest, t8_locidx_t ltreeid, t8_forest_search_query_fn search_fn,
-                       t8_forest_search_query_fn query_fn, sc_array_t *queries, sc_array_t *active_queries)
+t8_forest_search_tree (t8_forest_t forest, t8_locidx_t ltreeid, t8_forest_search_fn search_fn,
+                       t8_forest_query_fn query_fn, sc_array_t *queries, sc_array_t *active_queries)
 {
 
   /* Get the element class, scheme and leaf elements of this tree */
@@ -315,8 +314,7 @@ t8_forest_search_tree (t8_forest_t forest, t8_locidx_t ltreeid, t8_forest_search
 }
 
 void
-t8_forest_search (t8_forest_t forest, t8_forest_search_query_fn search_fn, t8_forest_search_query_fn query_fn,
-                  sc_array_t *queries)
+t8_forest_search (t8_forest_t forest, t8_forest_search_fn search_fn, t8_forest_query_fn query_fn, sc_array_t *queries)
 {
   /* If we have queries build a list of all active queries,
    * thus all queries in the array */
@@ -359,7 +357,8 @@ t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_fo
     t8_eclass_t eclass = t8_forest_get_tree_class (forest_new, itree);
     T8_ASSERT (eclass == t8_forest_get_tree_class (forest_old, itree));
     t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest_new, eclass);
-    T8_ASSERT (ts == t8_forest_get_eclass_scheme (forest_new, eclass));
+    // Check that the two forests use the same scheme.
+    T8_ASSERT (ts == t8_forest_get_eclass_scheme (forest_old, eclass));
 
     t8_locidx_t ielem_new = 0;
     t8_locidx_t ielem_old = 0;

@@ -39,8 +39,8 @@ T8_EXTERN_C_BEGIN ();
 struct t8_geometry_with_vertices: public t8_geometry
 {
  public:
-  /* Basic constructor that sets the dimension, the name, and the name for the attribute. */
-  t8_geometry_with_vertices (int dimension, std::string name): t8_geometry (dimension, name)
+  /* Basic constructor that sets the name. */
+  t8_geometry_with_vertices (std::string name): t8_geometry (name)
   {
     active_tree_vertices = NULL;
     active_tree = -1;
@@ -48,8 +48,8 @@ struct t8_geometry_with_vertices: public t8_geometry
 
   /* Base constructor with no arguments. We need this since it
    * is called from derived class constructors.
-   * Sets dimension and name to invalid values. */
-  t8_geometry_with_vertices (): t8_geometry_with_vertices (-1, "Invalid")
+   * Sets the name to an invalid value. */
+  t8_geometry_with_vertices (): t8_geometry_with_vertices ("Invalid")
   {
     active_tree_vertices = NULL;
     active_tree = -1;
@@ -93,8 +93,6 @@ struct t8_geometry_with_vertices: public t8_geometry
   };
 
  protected:
-  t8_gloidx_t active_tree;            /*< The tree of which currently vertices are loaded. */
-  t8_eclass_t active_tree_class;      /*< The class of the currently active tree. */
   const double* active_tree_vertices; /*< The vertices of the currently active tree. */
 };
 
