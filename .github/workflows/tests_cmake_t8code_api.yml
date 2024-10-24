@@ -101,8 +101,15 @@ jobs:
       run: cd build_fortran && ninja $MAKEFLAGS
     - name: ninja install
       run: cd build_fortran && ninja install $MAKEFLAGS
-    - name: ninja test
-      run: cd build_fortran && ninja test
+    - name: serial tests (if MPI is enabled)
+      run: cd build_fortran && ctest $MAKEFLAGS -R _serial
+      if: ${{ inputs.MPI == 'ON' }}
+    - name: parallel tests (if MPI is enabled)
+      run: cd build_fortran && ctest -R _parallel
+      if: ${{ inputs.MPI == 'ON' }}
+    - name: tests (if MPI is disabled)
+      run: cd build_fortran && ctest $MAKEFLAGS
+      if: ${{ inputs.MPI == 'OFF' }}
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v4
