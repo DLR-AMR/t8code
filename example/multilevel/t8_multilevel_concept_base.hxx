@@ -12,7 +12,7 @@ typedef struct element element_t;
 
 // Using CRTP to avoid virtual function calls
 template <class Derived_scheme_t>
-class Scheme_base: public crtp<Derived_scheme_t> {
+class Scheme_base: public t8_crtp<Derived_scheme_t> {
  public:
   ~Scheme_base ()
   {

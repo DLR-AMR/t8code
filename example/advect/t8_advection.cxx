@@ -179,8 +179,9 @@ t8_advect_element_set_phi_adapt (const t8_advect_problem_t *problem, t8_locidx_t
 /* Adapt the forest. We refine if the level-set function is close to zero
  * and coarsen if it is larger than a given threshold. */
 static int
-t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t ltree_id, t8_locidx_t lelement_id,
-                 t8_scheme *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t ltree_id, t8_eclass_t tree_class,
+                 t8_locidx_t lelement_id, t8_scheme *ts, const int is_family, const int num_elements,
+                 t8_element_t *elements[])
 {
   t8_advect_problem_t *problem;
   t8_advect_element_data_t *elem_data;
@@ -195,7 +196,7 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t ltree_
   /* Get a pointer to the problem from the user data pointer of forest */
   problem = (t8_advect_problem_t *) t8_forest_get_user_data (forest);
   /* Get the element's level */
-  level = ts->t8_element_level (elements[0]);
+  level = ts->element_get_level (tree_class, elements[0]);
   if (level == problem->maxlevel && !is_family) {
     /* It is not possible to refine this level */
     return 0;
@@ -516,7 +517,7 @@ t8_advect_advance_element (t8_advect_problem_t *problem, t8_locidx_t lelement)
 /* Compute element midpoint and vol and store at element_data field. */
 static void
 t8_advect_compute_element_data (t8_advect_problem_t *problem, t8_advect_element_data_t *elem_data,
-                                const t8_element_t *element, t8_locidx_t ltreeid, t8_scheme *ts)
+                                const t8_element_t *element, t8_locidx_t ltreeid)
 {
   /* Compute the midpoint coordinates of element */
   t8_forest_element_centroid (problem->forest, ltreeid, element, elem_data->midpoint);
@@ -997,13 +998,14 @@ t8_advect_problem_init_elements (t8_advect_problem_t *problem)
   /* maximum possible delta_t value */
   min_delta_t = problem->T - problem->t;
   for (itree = 0, idata = 0; itree < num_trees; itree++) {
-    ts = t8_forest_get_eclass_scheme (problem->forest, t8_forest_get_tree_class (problem->forest, itree));
+    const t8_eclass_t tree_class = t8_forest_get_tree_class (problem->forest, itree);
+    ts = t8_forest_get_scheme (problem->forest);
     num_elems_in_tree = t8_forest_get_tree_num_elements (problem->forest, itree);
     for (ielement = 0; ielement < num_elems_in_tree; ielement++, idata++) {
       const t8_element_t *element = t8_forest_get_element_in_tree (problem->forest, itree, ielement);
       elem_data = (t8_advect_element_data_t *) t8_sc_array_index_locidx (problem->element_data, idata);
       /* Initialize the element's midpoint and volume */
-      t8_advect_compute_element_data (problem, elem_data, element, itree, ts);
+      t8_advect_compute_element_data (problem, elem_data, element, itree);
       /* Compute the minimum diameter */
       diam = t8_forest_element_diam (problem->forest, itree, element);
       T8_ASSERT (diam > 0);
@@ -1026,9 +1028,9 @@ t8_advect_problem_init_elements (t8_advect_problem_t *problem)
       /* Set the initial condition */
       t8_advect_element_set_phi (problem, idata, problem->phi_0 (elem_data->midpoint, 0, problem->udata_for_phi));
       /* Set the level */
-      elem_data->level = ts->t8_element_level (element);
+      elem_data->level = ts->element_get_level (tree_class, element);
       /* Set the faces */
-      elem_data->num_faces = ts->t8_element_num_faces (element);
+      elem_data->num_faces = ts->element_get_num_faces (tree_class, element);
       for (iface = 0; iface < elem_data->num_faces; iface++) {
         /* Compute the indices of the face neighbors */
 

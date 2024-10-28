@@ -25,7 +25,7 @@
 #include <sc_refcount.h>
 #include <t8_eclass.h>
 #include <t8_element.hxx>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <t8_schemes/t8_scheme.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_geometrical.h>
@@ -86,20 +86,20 @@ t8_test_fiterate (t8_forest_t forest)
   num_trees = t8_forest_get_num_local_trees (forest);
   for (itree = 0; itree < num_trees; itree++) {
     eclass = t8_forest_get_tree_class (forest, itree);
-    ts = t8_forest_get_eclass_scheme (forest, eclass);
+    ts = t8_forest_get_scheme (forest);
     const t8_element_t *first_el = t8_forest_get_element_in_tree (forest, itree, 0);
     const t8_element_t *last_el
       = t8_forest_get_element_in_tree (forest, itree, t8_forest_get_tree_num_elements (forest, itree) - 1);
-    ts->t8_element_new (1, &nca);
-    ts->t8_element_nca (first_el, last_el, nca);
+    ts->element_new (eclass, 1, &nca);
+    ts->element_get_nca (eclass, first_el, last_el, nca);
     leaf_elements = t8_forest_tree_get_leaves (forest, itree);
 
-    for (iface = 0; iface < ts->t8_element_num_faces (nca); iface++) {
+    for (iface = 0; iface < ts->element_get_num_faces (eclass, nca); iface++) {
       udata.count = 0;
       t8_forest_iterate_faces (forest, itree, nca, iface, leaf_elements, &udata, 0, t8_test_fiterate_callback);
       t8_debugf ("Leaf elements at face %i:\t%i\n", iface, udata.count);
     }
-    ts->t8_element_destroy (1, &nca);
+    ts->element_destroy (eclass, 1, &nca);
   }
 }
 

@@ -27,6 +27,7 @@
 #include <t8_element.hxx>
 #include <sc_containers.h>
 #include <t8_data/t8_containers.h>
+#include <t8_schemes/t8_scheme.hxx>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -46,64 +47,68 @@ t8_element_array_is_valid (const t8_element_array_t *element_array)
 
   /* Check that the element size of the scheme matches the size of data elements
    * stored in the array. */
-  is_valid = is_valid && element_array->scheme->t8_element_size () == element_array->array.elem_size;
+  is_valid
+    = is_valid && element_array->scheme->get_element_size (element_array->tree_class) == element_array->array.elem_size;
 
   return is_valid;
 }
 #endif
 
 t8_element_array_t *
-t8_element_array_new (t8_scheme *scheme)
+t8_element_array_new (const t8_scheme_c *scheme, const t8_eclass_t tree_class)
 {
   t8_element_array_t *new_array;
 
   /* allocate memory */
   new_array = T8_ALLOC (t8_element_array_t, 1);
   /* initialize array */
-  t8_element_array_init (new_array, scheme);
+  t8_element_array_init (new_array, scheme, tree_class);
   T8_ASSERT (t8_element_array_is_valid (new_array));
 
   return new_array;
 }
 
 t8_element_array_t *
-t8_element_array_new_count (t8_scheme *scheme, size_t num_elements)
+t8_element_array_new_count (t8_scheme_c *scheme, const t8_eclass_t tree_class, const size_t num_elements)
 {
   t8_element_array_t *new_array;
 
   /* allocate memory */
   new_array = T8_ALLOC (t8_element_array_t, 1);
   /* initialize array */
-  t8_element_array_init_size (new_array, scheme, num_elements);
+  t8_element_array_init_size (new_array, scheme, tree_class, num_elements);
   T8_ASSERT (t8_element_array_is_valid (new_array));
 
   return new_array;
 }
 
 void
-t8_element_array_init (t8_element_array_t *element_array, t8_scheme *scheme)
+t8_element_array_init (t8_element_array_t *element_array, const t8_scheme_c *scheme, const t8_eclass_t tree_class)
 {
   size_t elem_size;
 
   T8_ASSERT (element_array != NULL);
 
-  /* set the scheme */
+  /* set the scheme and eclass */
   element_array->scheme = scheme;
+  element_array->tree_class = tree_class;
   /* get the size of an element and initialize the array member */
-  elem_size = scheme->t8_element_size ();
+  elem_size = scheme->get_element_size (tree_class);
   sc_array_init (&element_array->array, elem_size);
   T8_ASSERT (t8_element_array_is_valid (element_array));
 }
 
 void
-t8_element_array_init_size (t8_element_array_t *element_array, t8_scheme *scheme, size_t num_elements)
+t8_element_array_init_size (t8_element_array_t *element_array, const t8_scheme_c *scheme, const t8_eclass_t tree_class,
+                            const size_t num_elements)
 {
   t8_element_t *first_element;
   T8_ASSERT (element_array != NULL);
 
   element_array->scheme = scheme;
+  element_array->tree_class = tree_class;
   /* allocate the elements */
-  sc_array_init_size (&element_array->array, scheme->t8_element_size (), num_elements);
+  sc_array_init_size (&element_array->array, scheme->get_element_size (tree_class), num_elements);
 
   if (num_elements > 0) {
     /* Call t8_element_init for the elements */
@@ -114,7 +119,8 @@ t8_element_array_init_size (t8_element_array_t *element_array, t8_scheme *scheme
 }
 
 void
-t8_element_array_init_view (t8_element_array_t *view, t8_element_array_t *array, size_t offset, size_t length)
+t8_element_array_init_view (t8_element_array_t *view, const t8_element_array_t *array, const size_t offset,
+                            const size_t length)
 {
   T8_ASSERT (t8_element_array_is_valid (array));
 
@@ -126,7 +132,8 @@ t8_element_array_init_view (t8_element_array_t *view, t8_element_array_t *array,
 }
 
 void
-t8_element_array_init_data (t8_element_array_t *view, t8_element_t *base, t8_scheme *scheme, size_t elem_count)
+t8_element_array_init_data (t8_element_array_t *view, const t8_element_t *base, const t8_scheme_c *scheme,
+                            const size_t elem_count)
 {
   /* Initialize the element array */
   sc_array_init_data (&view->array, (void *) base, scheme->t8_element_size (), elem_count);
@@ -136,13 +143,13 @@ t8_element_array_init_data (t8_element_array_t *view, t8_element_t *base, t8_sch
 }
 
 void
-t8_element_array_init_copy (t8_element_array_t *element_array, t8_scheme *scheme, t8_element_t *data,
-                            size_t num_elements)
+t8_element_array_init_copy (t8_element_array_t *element_array, const t8_scheme_c *scheme, const t8_eclass_t tree_class,
+                            const t8_element_t *data, const size_t num_elements)
 {
   sc_array_t *array;
   T8_ASSERT (element_array != NULL);
 
-  t8_element_array_init (element_array, scheme);
+  t8_element_array_init (element_array, scheme, tree_class);
 
   array = &element_array->array;
 #ifdef T8_ENABLE_DEBUG
@@ -152,23 +159,23 @@ t8_element_array_init_copy (t8_element_array_t *element_array, t8_scheme *scheme
     const t8_element_t *element;
     size_t size;
 
-    size = scheme->t8_element_size ();
+    size = scheme->get_element_size (tree_class);
     for (ielem = 0; ielem < num_elements; ielem++) {
       /* data is of incomplete type, we thus have to manually set the address
        * of the ielem-th t8_element */
       element = (const t8_element_t *) (((char *) data) + ielem * size);
-      T8_ASSERT (scheme->t8_element_is_valid (element));
+      T8_ASSERT (scheme->element_is_valid (tree_class, element));
     }
   }
 #endif
   /* Allocate enough memory for the new elements */
-  sc_array_init_size (array, scheme->t8_element_size (), num_elements);
+  sc_array_init_size (array, scheme->get_element_size (tree_class), num_elements);
   /* Copy the elements in data */
   memcpy (array->array, data, num_elements * array->elem_size);
 }
 
 void
-t8_element_array_resize (t8_element_array_t *element_array, size_t new_count)
+t8_element_array_resize (t8_element_array_t *element_array, const size_t new_count)
 {
   size_t old_count;
   T8_ASSERT (t8_element_array_is_valid (element_array));
@@ -218,7 +225,7 @@ t8_element_array_push (t8_element_array_t *element_array)
 }
 
 t8_element_t *
-t8_element_array_push_count (t8_element_array_t *element_array, size_t count)
+t8_element_array_push_count (t8_element_array_t *element_array, const size_t count)
 {
   t8_element_t *new_elements;
   T8_ASSERT (t8_element_array_is_valid (element_array));
@@ -230,14 +237,14 @@ t8_element_array_push_count (t8_element_array_t *element_array, size_t count)
 }
 
 const t8_element_t *
-t8_element_array_index_locidx (const t8_element_array_t *element_array, t8_locidx_t index)
+t8_element_array_index_locidx (const t8_element_array_t *element_array, const t8_locidx_t index)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
   return (const t8_element_t *) t8_sc_array_index_locidx (&element_array->array, index);
 }
 
 const t8_element_t *
-t8_element_array_index_int (const t8_element_array_t *element_array, int index)
+t8_element_array_index_int (const t8_element_array_t *element_array, const int index)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
   return (const t8_element_t *) sc_array_index_int ((sc_array_t *) &element_array->array,
@@ -245,22 +252,29 @@ t8_element_array_index_int (const t8_element_array_t *element_array, int index)
 }
 
 t8_element_t *
-t8_element_array_index_locidx_mutable (t8_element_array_t *element_array, t8_locidx_t index)
+t8_element_array_index_locidx_mutable (t8_element_array_t *element_array, const t8_locidx_t index)
 {
   return (t8_element_t *) t8_element_array_index_locidx (element_array, index);
 }
 
 t8_element_t *
-t8_element_array_index_int_mutable (t8_element_array_t *element_array, int index)
+t8_element_array_index_int_mutable (t8_element_array_t *element_array, const int index)
 {
   return (t8_element_t *) t8_element_array_index_int (element_array, index);
 }
 
-const t8_scheme *
+const t8_scheme_c *
 t8_element_array_get_scheme (const t8_element_array_t *element_array)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
   return element_array->scheme;
+}
+
+t8_eclass_t
+t8_element_array_get_tree_class (const t8_element_array_t *element_array)
+{
+  T8_ASSERT (t8_element_array_is_valid (element_array));
+  return element_array->tree_class;
 }
 
 size_t

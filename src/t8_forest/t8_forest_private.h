@@ -43,7 +43,6 @@ T8_EXTERN_C_BEGIN ();
  * \param [in]      ltree_id        The index of considered local tree.
  * \param [in]      el_considered   The local id of the first element in 
  *                                  \a elements in the local tree of the forest.
- * \param [in]      tscheme         The scheme for the local tree.
  * \param [in]      elements        Array of elements to consider.
  * \param [in]      elements_size   Number of elements in \a elements.
  * \return          Size of family or zero, if \a elements does not contain a
@@ -57,7 +56,7 @@ T8_EXTERN_C_BEGIN ();
  */
 int
 t8_forest_is_incomplete_family (const t8_forest_t forest, const t8_locidx_t ltree_id, const t8_locidx_t el_considered,
-                                t8_scheme_c *tscheme, t8_element_t **elements, const int elements_size);
+                                t8_element_t **elements, const int elements_size);
 
 /* For each tree in a forest compute its first and last descendant */
 void
@@ -68,17 +67,15 @@ t8_forest_compute_desc (t8_forest_t forest);
 void
 t8_forest_populate (t8_forest_t forest);
 
-/** Return the eclass scheme of a given element class associated to a forest.
+/** Return the scheme associated to a forest.
  * This function does not check whether the given forest is committed, use with
  * caution and only if you are sure that the eclass_scheme was set.
  * \param [in]      forest     A nearly committed forest.
- * \param [in]      eclass     An element class.
- * \return          The eclass scheme of \a eclass associated to forest.
+ * \return          The scheme associated to forest.
  * \see t8_forest_set_scheme
- * \note  The forest is not required to have trees of class \a eclass.
  */
 t8_scheme_c *
-t8_forest_get_eclass_scheme_before_commit (t8_forest_t forest, t8_eclass_t eclass);
+t8_forest_get_scheme_before_commit (t8_forest_t forest);
 
 /** Compute the maximum possible refinement level in a forest.
  * This is the minimum over all maximum refinement level of the present element

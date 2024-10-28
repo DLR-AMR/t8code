@@ -64,7 +64,7 @@ T8_EXTERN_C_BEGIN ();
  * \param [in] forest_new      The forest that is newly constructed from \a forest_old
  * \param [in] which_tree      The local tree containing \a first_outgoing and \a first_incoming
  * \param [in] tree_class      The eclass of the local tree containing \a first_outgoing and \a first_incoming
- * \param [in] ts              The eclass scheme of the tree
+ * \param [in] ts              The scheme of the forest
  * \param [in] refine          -1 if family in \a forest_old got coarsened, 0 if element
  *                             has not been touched, 1 if element got refined and -2 if
  *                             element got removed. See return of t8_forest_adapt_t.
@@ -96,13 +96,14 @@ typedef void (*t8_forest_replace_t) (t8_forest_t forest_old, t8_forest_t forest_
  * Otherwise \a is_family must equal zero and we consider the first entry
  * of the element array for refinement. 
  * Entries of the element array beyond the first \a num_elements are undefined.
- * \param [in] forest       the forest to which the new elements belong
- * \param [in] forest_from  the forest that is adapted.
- * \param [in] which_tree   the local tree containing \a elements
- * \param [in] lelement_id  the local element id in \a forest_old in the tree of the current element
- * \param [in] ts           the eclass scheme of the tree
- * \param [in] is_family    if 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
- * \param [in] num_elements the number of entries in \a elements that are defined
+ * \param [in] forest       The forest to which the new elements belong.
+ * \param [in] forest_from  The forest that is adapted.
+ * \param [in] which_tree   The local tree containing \a elements.
+ * \param [in] tree_class   The eclass of \a which_tree.
+ * \param [in] lelement_id  The local element id in \a forest_old in the tree of the current element.
+ * \param [in] ts           The scheme of the forest.
+ * \param [in] is_family    If 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
+ * \param [in] num_elements The number of entries in \a elements that are defined
  * \param [in] elements     Pointers to a family or, if \a is_family is zero,
  *                          pointer to one element.
  * \return 1 if the first entry in \a elements should be refined,
@@ -113,8 +114,8 @@ typedef void (*t8_forest_replace_t) (t8_forest_t forest_old, t8_forest_t forest_
 /* TODO: Do we really need the forest argument? Since the forest is not committed yet it
  *       seems dangerous to expose to the user. */
 typedef int (*t8_forest_adapt_t) (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                                  t8_locidx_t lelement_id, t8_scheme_c *ts, const int is_family, const int num_elements,
-                                  t8_element_t *elements[]);
+                                  t8_eclass_t tree_class, t8_locidx_t lelement_id, t8_scheme_c *ts, const int is_family,
+                                  const int num_elements, t8_element_t *elements[]);
 
 /** Create a new forest with reference count one.
  * This forest needs to be specialized with the t8_forest_set_* calls.

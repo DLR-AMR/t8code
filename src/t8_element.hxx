@@ -34,11 +34,9 @@
 #include <t8_element.h>
 #include <t8_schemes/t8_crtp.hxx>
 
-T8_EXTERN_C_BEGIN ();
-
 /** This class holds functions for a particular element class. */
 template <class TUnderlyingEclassScheme>
-class t8_eclass_scheme: public crtp<TUnderlyingEclassScheme> {
+class t8_eclass_scheme: public t8_crtp<TUnderlyingEclassScheme> {
  private:
   t8_scheme () {}; /**< private destructor which can only be used by derived schemes. */
   friend TUnderlyingEclassScheme;
@@ -887,5 +885,3 @@ class t8_eclass_scheme: public crtp<TUnderlyingEclassScheme> {
     this->underlying ().element_MPI_Unpack (recvbuf, buffer_size, position, elements, count, comm);
   };
 };
-
-T8_EXTERN_C_END ();
