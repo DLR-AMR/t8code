@@ -59,7 +59,7 @@ libt8_installed_headers_forest = \
   src/t8_forest/t8_forest_ghost_interface_wrapper.h \
   src/t8_forest/t8_forest_ghost_interface.h \
   src/t8_forest/t8_forest_ghost_interface.hxx \
-  src/t8_forest/t8_forest_ghost_search.hxx
+  src/t8_forest/t8_forest_ghost_search.hxx \
   src/t8_forest/t8_forest_ghost_stencil.hxx
 libt8_installed_headers_geometry = \
   src/t8_geometry/t8_geometry.h \
