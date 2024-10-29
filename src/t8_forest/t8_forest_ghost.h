@@ -79,8 +79,9 @@ t8_forest_ghost_tree_num_elements (t8_forest_t forest, t8_locidx_t lghost_tree);
  * \return The ghost element. nullptr if no ghost was found.
  */
 const t8_element_t *
-t8_ghost_get_ghost_in_tree_from_linear_id (t8_forest_t forest, t8_locidx_t lghost_tree, t8_linearidx_t linear_id,
-                                           int element_level, t8_locidx_t *loc_ghost_id);
+t8_ghost_get_ghost_in_tree_from_linear_id (t8_forest_t forest, const t8_locidx_t lghost_tree,
+                                           const t8_linearidx_t linear_id, const int element_level,
+                                           t8_locidx_t *loc_ghost_id);
 
 /** Retrieves the local index of a ghost element in its specific ghost tree.
  *
@@ -91,7 +92,7 @@ t8_ghost_get_ghost_in_tree_from_linear_id (t8_forest_t forest, t8_locidx_t lghos
  *         -1 if no ghost element was found.
  */
 t8_locidx_t
-t8_ghost_get_ghost_id_in_tree (t8_forest_t forest, t8_locidx_t lghost_tree, t8_element_t *ghost_element);
+t8_ghost_get_ghost_id_in_tree (t8_forest_t forest, const t8_locidx_t lghost_tree, const t8_element_t *ghost_element);
 
 /** Get a pointer to the ghost element array of a ghost tree.
  * \param [in]  forest    The forest. Ghost layer must exist.

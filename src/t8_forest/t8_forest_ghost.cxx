@@ -324,7 +324,7 @@ t8_ghost_get_ghost_in_tree_from_linear_id (t8_forest_t forest, t8_locidx_t lghos
 }
 
 t8_locidx_t
-t8_ghost_get_ghost_id_in_tree (t8_forest_t forest, t8_locidx_t lghost_tree, t8_element_t *ghost_element)
+t8_ghost_get_ghost_id_in_tree (t8_forest_t forest, t8_locidx_t lghost_tree, const t8_element_t *ghost_element)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   const t8_element_array_t *ghost_elements = t8_forest_ghost_get_tree_elements (forest, lghost_tree);
