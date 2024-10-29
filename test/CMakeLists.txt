@@ -96,6 +96,7 @@ add_t8_test( NAME t8_gtest_find_owner_parallel          SOURCES t8_gtest_main.cx
 add_t8_test( NAME t8_gtest_user_data_parallel           SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_user_data.cxx )
 add_t8_test( NAME t8_gtest_transform_serial             SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_transform.cxx )
 add_t8_test( NAME t8_gtest_ghost_exchange_parallel      SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_ghost_exchange.cxx )
+add_t8_test( NAME t8_gtest_ghost_in_tree                SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_ghost_in_tree.cxx )
 add_t8_test( NAME t8_gtest_ghost_delete_parallel        SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_ghost_delete.cxx )
 add_t8_test( NAME t8_gtest_ghost_and_owner_parallel     SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_ghost_and_owner.cxx )
 add_t8_test( NAME t8_gtest_balance_parallel             SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_balance.cxx )
