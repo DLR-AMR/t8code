@@ -1,6 +1,6 @@
 title: t8code
-version: 2.0.0
-date-released: "2024-04-19"
+version: 3.0.0
+date-released: "2024-10-29"
 repository-code: "https://github.com/dlr-amr/t8code"
 url: "https://dlr-amr.github.io/t8code/"
 doi: "10.5281/zenodo.7034838"
@@ -66,6 +66,10 @@ authors:
     email: "Prasanna.Ponnusamy@dlr.de"
     affiliation: "German Aerospace Center (DLR)"
     orcid: "https://orcid.org/0000-0002-4950-7297"
+    given-names: Ole  
+    family-names: Albers
+    email: "Ole.Albers@dlr.de"
+    affiliation: "German Aerospace Center (DLR)"
   #Contributors
   - given-names: Veli
     family-names: Uenlue

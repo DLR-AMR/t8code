@@ -33,7 +33,7 @@
 TEST (t8_gtest_version, major_version)
 {
   /* Change this number when you increase the major version. */
-  const int major_version = 2;
+  const int major_version = 3;
 
   EXPECT_EQ (t8_get_version_major (), major_version);
 }
