@@ -29,6 +29,7 @@
 #include <t8_cmesh.h>
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
 #include <test/t8_gtest_macros.hxx>
+#include <t8_data/t8_element_array_iterator.hxx>
 
 /* This test program tests the t8_ghost_get_ghost_in_tree_from_linear_id
  * and t8_ghost_get_ghost_id_in_tree function of the Ghost interface.
@@ -58,7 +59,6 @@ class forest_ghost_in_tree: public testing::TestWithParam<cmesh_example_base *> 
   SetUp () override
   {
 
-    scheme = t8_scheme_new_default_cxx ();
     /* Construct a cmesh */
     cmesh = GetParam ()->cmesh_create ();
     if (t8_cmesh_is_empty (cmesh)) {
@@ -66,26 +66,33 @@ class forest_ghost_in_tree: public testing::TestWithParam<cmesh_example_base *> 
       GTEST_SKIP ();
     }
 
+    scheme = t8_scheme_new_default_cxx ();
     /* Create a uniformly refined forest */
     t8_forest_t forest_uniform = t8_forest_new_uniform (cmesh, scheme, level, 1, sc_MPI_COMM_WORLD);
     /* Adapt the forest */
     int maxlevel = level + 2;
-    forest_adapt = t8_forest_new_adapt (forest, t8_test_gao_adapt, 1, 1, &maxlevel);
+    forest_adapt = t8_forest_new_adapt (forest_uniform, t8_test_adapt_second_element, 1, 1, &maxlevel);
+    // We need to update the cmesh since it changes with adapt.
+    cmesh = t8_forest_get_cmesh (forest_adapt);
   }
   void
   TearDown () override
   {
-    t8_cmesh_destroy (&cmesh);
-    t8_scheme_cxx_unref (&scheme);
+    if (t8_cmesh_is_empty (cmesh)) {
+      t8_cmesh_destroy (&cmesh);
+    }
+    else {
+      t8_forest_unref (&forest_adapt);
+    }
   }
   t8_cmesh_t cmesh;
   t8_scheme_cxx_t *scheme;
   t8_forest_t forest_adapt;
   int level =  // initial uniform refinement level
 #if T8_ENABLE_LESS_TESTS
-    5;  // less-tests, shorter runtime
+    3;  // less-tests, shorter runtime
 #else
-    7;  // more tests, longer runtime
+    5;  // more tests, longer runtime
 #endif
 };
 
