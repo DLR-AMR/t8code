@@ -4,7 +4,7 @@ include(cmake/GitProjectVersion.cmake)
 
 project( T8CODE
   DESCRIPTION "Parallel algorithms and data structures for tree-based AMR with arbitrary element shapes."
-  LANGUAGES C CXX Fortran
+  LANGUAGES C CXX
   VERSION "${T8CODE_VERSION_MAJOR}.${T8CODE_VERSION_MINOR}.${T8CODE_VERSION_PATCH}" )
 include( CTest )
 
@@ -63,6 +63,10 @@ set( CMAKE_CXX_STANDARD_REQUIRED ON )
 set( CMAKE_CXX_EXTENSIONS OFF )
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+
+if( T8CODE_BUILD_FORTRAN_INTERFACE )
+    enable_language( Fortran )
+endif()
 
 if( T8CODE_ENABLE_MPI )
     if( T8CODE_BUILD_FORTRAN_INTERFACE )
@@ -152,7 +156,6 @@ if ( T8CODE_BUILD_DOCUMENTATION )
 endif()
 
 if( T8CODE_BUILD_FORTRAN_INTERFACE )
-    enable_language( Fortran )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/api/t8_fortran_interface )
 
     if( NOT T8CODE_ENABLE_MPI )
