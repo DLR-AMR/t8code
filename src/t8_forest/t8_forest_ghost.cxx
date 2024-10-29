@@ -310,7 +310,7 @@ t8_ghost_get_ghost_in_tree_from_linear_id (t8_forest_t forest, t8_locidx_t lghos
   T8_ASSERT (t8_forest_is_committed (forest));
   const t8_element_array_t *ghost_elements = t8_forest_ghost_get_tree_elements (forest, lghost_tree);
   T8_ASSERT (ghost_elements != NULL);
-  T8_ASSERT (forest->incomplete_trees);  // This function will not word properlt with incomplete trees.
+  T8_ASSERT (!forest->incomplete_trees);  // This function will not word properlt with incomplete trees.
   /* Search for the element.
    * The search returns the largest index i,
    * such that the element at position i has a smaller id than the given one.
