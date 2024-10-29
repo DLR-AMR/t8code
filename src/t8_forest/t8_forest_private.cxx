@@ -24,6 +24,8 @@
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_element.hxx>
+#include <t8_data/t8_element_array_iterator.hxx>
+#include <algorithm>
 
 T8_EXTERN_C_BEGIN ();
 
