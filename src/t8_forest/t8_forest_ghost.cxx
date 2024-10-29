@@ -2034,7 +2034,7 @@ t8_forest_ghost_w_search::t8_forest_ghost_w_search (t8_ghost_type_t ghost_type):
     search_fn = t8_forest_ghost_search_boundary;
   }
   SC_CHECK_ABORT (ghost_type != T8_GHOST_USERDEFINED,
-                  "use t8_forest_ghost_w_search(t8_forest_search_query_fn search_function) for userdefined ghost");
+                  "use t8_forest_ghost_w_search(t8_forest_search_fn search_function) for userdefined ghost");
 }
 
 void

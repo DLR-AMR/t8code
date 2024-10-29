@@ -357,7 +357,8 @@ t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_fo
     t8_eclass_t eclass = t8_forest_get_tree_class (forest_new, itree);
     T8_ASSERT (eclass == t8_forest_get_tree_class (forest_old, itree));
     t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest_new, eclass);
-    T8_ASSERT (ts == t8_forest_get_eclass_scheme (forest_new, eclass));
+    // Check that the two forests use the same scheme.
+    T8_ASSERT (ts == t8_forest_get_eclass_scheme (forest_old, eclass));
 
     t8_locidx_t ielem_new = 0;
     t8_locidx_t ielem_old = 0;
