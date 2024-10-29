@@ -32,8 +32,6 @@
 #include <test/t8_gtest_macros.hxx>
 #include <t8_netcdf/t8_nc_mesh.hxx>
 
-//relativ einfach halten
-
 TEST (t8_gtest_build_forest_from_geo_domain, embedded_forest)
 {
 
@@ -50,8 +48,6 @@ TEST (t8_gtest_build_forest_from_geo_domain, embedded_forest)
     = t8_nc_build_initial_embedded_mesh (global_domain, initial_layout, sc_MPI_COMM_WORLD);
 
   EXPECT_EQ (t8_forest_get_global_num_elements (initial_embedded_forest), 430);
-
-  //forest ausgeben lassen und nachschauen, ob das sinnvoll ist (wenn ungerade automatisch +1)
 
   t8_forest_unref (&initial_embedded_forest);
 }
@@ -73,8 +69,6 @@ TEST (t8_gtest_build_forest_from_geo_domain, embedded_forest_3D)
 
   EXPECT_EQ (t8_forest_get_global_num_elements (initial_embedded_forest), 64);
 
-  //forest ausgeben lassen und nachschauen, ob das sinnvoll ist (wenn ungerade automatisch +1)
-
   t8_forest_unref (&initial_embedded_forest);
 }
 
@@ -95,8 +89,6 @@ TEST (t8_gtest_build_forest_from_geo_domain, embedded_forest_3D_odd)
 
   EXPECT_EQ (t8_forest_get_global_num_elements (initial_embedded_forest), 64);
 
-  //forest ausgeben lassen und nachschauen, ob das sinnvoll ist (wenn ungerade automatisch +1)
-
   t8_forest_unref (&initial_embedded_forest);
 }
 
@@ -116,8 +108,6 @@ TEST (t8_gtest_build_forest_from_geo_domain, embedded_forest_3D_quadratic)
     = t8_nc_build_initial_embedded_mesh (global_domain, initial_layout, sc_MPI_COMM_WORLD);
 
   EXPECT_EQ (t8_forest_get_global_num_elements (initial_embedded_forest), 262144);
-
-  //forest ausgeben lassen und nachschauen, ob das sinnvoll ist (wenn ungerade automatisch +1)
 
   t8_forest_unref (&initial_embedded_forest);
 }

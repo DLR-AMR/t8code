@@ -55,7 +55,7 @@ t8_check_if_last_bit_is_zero (const t8_gloidx_t byte)
 static inline int
 check_divisor_for_compliance (t8_gloidx_t current_refinement_lvl)
 {
-  /* Checks, wheter a number is a multiple of 2 or not.*/
+  /* Checks, whether a number is a multiple of 2 or not.*/
 
   int refinement_counter = 1;
   /* If a number is a multiple of 2, it returns the power of 2, to get the number that was entered. 
@@ -75,7 +75,7 @@ check_divisor_for_compliance (t8_gloidx_t current_refinement_lvl)
   return refinement_counter;
 }
 
-/* Function that calculates the smallest possible refinement level and number of trees for a congruent mesh with given dimension lenghts.*/
+/* Function that calculates the smallest possible refinement level and number of trees for a congruent mesh with given dimension lengths.*/
 inline std::pair<int, std::vector<int>>
 t8_nc_calculate_initial_refinement_level_and_number_of_trees (const t8_nc_geo_domain_t& global_domain)
 {
@@ -96,7 +96,7 @@ t8_nc_calculate_initial_refinement_level_and_number_of_trees (const t8_nc_geo_do
 
     all_dimensions_length = { dimension_length_one, dimension_length_two };
   }
-  /* If we have 3 dimensions, than we need a longer vector and to observe the thrid dimension lenght. */
+  /* If we have 3 dimensions, than we need a longer vector and to observe the third dimension length. */
   else if (dim == 3) {
 
     const t8_gloidx_t dimension_length_three = global_domain.get_dimension_length (t8_nc_dimension_t::LEV);
@@ -124,7 +124,7 @@ t8_nc_calculate_initial_refinement_level_and_number_of_trees (const t8_nc_geo_do
     }
   }
 
-  /* Devides the amount of elements per dimension with the refinement level to get the amount of trees per dimension. */
+  /* Divides the amount of elements per dimension with the refinement level to get the amount of trees per dimension. */
   for (int iter = 0; iter < dim; ++iter) {
     all_dimensions_number_of_trees[iter] = all_dimensions_length[iter] / std::pow (2, refinement_lvl);
   }

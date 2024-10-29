@@ -34,7 +34,7 @@ t8_nc_validate_initial_refinement_level_for_dimensionality (const int initial_re
 
   if (initial_refinement_level < 0 || initial_refinement_level > maximum_possible_refinement_level) {
     t8_errorf (
-      "The corresponding refinement level is not within the range of an computationally posible refinement level.");
+      "The corresponding refinement level is not within the range of an computationally possible refinement level.");
   }
 }
 
@@ -156,7 +156,7 @@ t8_nc_refine_to_initial_mesh (t8_forest_t forest, [[maybe_unused]] t8_forest_t f
     return 0;
   }
 
-  /* If the element is inside the global domain, it will be refined until the intial refinement level is reached */
+  /* If the element is inside the global domain, it will be refined until the initial refinement level is reached */
   if (t8_nc_is_mesh_element_in_geo_domain (elements[0], ts, adapt_data->global_domain,
                                            adapt_data->initial_refinement_level, adapt_data->initial_layout)) {
     return 1;
