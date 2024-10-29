@@ -113,13 +113,16 @@ TEST_P (forest_ghost_in_tree, test_get_ghost_id_in_tree)
     // Get the ghost elements of that tree
     const t8_element_array_t *ghosts = t8_forest_ghost_get_tree_elements (forest_adapt, ighost_tree);
     t8_locidx_t ghost_index_in_tree = 0;
-    for (const t8_element_t &ighost : ghosts) {  // loop over all ghost elements
+    //for (const t8_element_t &ighost : ghosts) {  // loop over all ghost elements
+
+    for (; ghost_index_in_tree < t8_element_array_get_count (ghosts); ++ghost_index_in_tree) {
+      const t8_element_t *ighost = t8_element_array_index_locidx (ghosts, ghost_index_in_tree);
       // Compute the index in the tree of the current ghost
       const t8_locidx_t check_ghost_index_in_tree = t8_ghost_get_ghost_id_in_tree (forest_adapt, ighost_tree, ighost);
       ASSERT_GE (check_ghost_index_in_tree, 0) << "Ghost element was not found.";  // The ghost must have been found.
       // Check that the index is correct
       EXPECT_EQ (check_ghost_index_in_tree, ghost_index_in_tree) << "Wrong index returned for ghost element.";
-      ++ghost_index_in_tree;
+      // ++ghost_index_in_tree;
     }
   }
 }
@@ -134,12 +137,15 @@ TEST_P (forest_ghost_in_tree, test_get_ghost_in_tree_from_linear_id)
     // Get the ghost elements of that tree
     const t8_element_array_t *ghosts = t8_forest_ghost_get_tree_elements (forest_adapt, ighost_tree);
     t8_locidx_t ghost_index_in_tree = 0;
-    for (const t8_element_t &ighost : ghosts) {  // loop over all ghost elements
+    //for (const t8_element_t &ighost : ghosts) {  // loop over all ghost elements
+    for (; ghost_index_in_tree < t8_element_array_get_count (ghosts); ++ghost_index_in_tree) {
+
+      const t8_element_t *ighost = t8_element_array_index_locidx (ghosts, ghost_index_in_tree);
       // Now checking t8_ghost_get_ghost_in_tree_from_linear_id
       const t8_eclass_t eclass = t8_forest_get_tree_class (forest_adapt, num_local_trees + ighost_tree);
       const t8_eclass_scheme_c *scheme = t8_forest_get_eclass_scheme (forest_adapt, eclass);
-      const int ghost_level = scheme->t8_element_level (ghost);
-      const t8_linearidx_t ghost_id = scheme->t8_element_get_linear_id (ghost, ghost_level);
+      const int ghost_level = scheme->t8_element_level (ighost);
+      const t8_linearidx_t ghost_id = scheme->t8_element_get_linear_id (ighost, ghost_level);
       t8_locidx_t check_ghost_index;
       const t8_element_t *check_ghost = t8_ghost_get_ghost_in_tree_from_linear_id (forest_adapt, ighost_tree, ghost_id,
                                                                                    ghost_level, &check_ghost_index);
@@ -147,7 +153,7 @@ TEST_P (forest_ghost_in_tree, test_get_ghost_in_tree_from_linear_id)
       EXPECT_TRUE (scheme->t8_element_equal (ighost, check_ghost)) << "Returned wrong ghost element.";
       EXPECT_EQ (check_ghost_index, ghost_index_in_tree) << "Returned wrong ghost index.";
 
-      ++ghost_index_in_tree;
+      // ++ghost_index_in_tree;
     }
   }
 }
