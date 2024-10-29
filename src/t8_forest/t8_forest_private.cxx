@@ -56,44 +56,37 @@ t8_forest_get_tree_element_array_mutable (const t8_forest_t forest, t8_locidx_t 
   return (t8_element_array_t*) t8_forest_get_tree_element_array (forest, ltreeid);
 }
 
+/** \brief Search for a linear element id (at forest->maxlevel) in a sorted array of
+ * elements. If the element does not exist, return the largest index i
+ * such that the element at position i has a smaller id than the given one.
+ * If no such i exists, return -1.
+ */
 t8_locidx_t
-t8_forest_bin_search_lower (const t8_element_array_t* elements, const t8_linearidx_t element_id, const int maxlevel)
+t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_linearidx_t element_id, const int maxlevel)
 {
-  t8_linearidx_t query_id;
-  t8_locidx_t low, high, guess;
-
-  const t8_eclass_scheme_c* ts = t8_element_array_get_scheme (elements);
+  const t8_eclass_scheme_c *ts = t8_element_array_get_scheme (elements);
   /* At first, we check whether any element has smaller id than the
    * given one. */
-  const t8_element_t* query = t8_element_array_index_int (elements, 0);
-  query_id = ts->t8_element_get_linear_id (query, maxlevel);
+  const t8_element_t *query = t8_element_array_index_int (elements, 0);
+  const t8_linearidx_t query_id = ts->t8_element_get_linear_id (query, maxlevel);
   if (query_id > element_id) {
-    /* No element has id smaller than the given one */
+    /* No element has id smaller than the given one. */
     return -1;
   }
 
-  /* We now perform the binary search */
-  low = 0;
-  high = t8_element_array_get_count (elements) - 1;
-  while (low < high) {
-    guess = (low + high + 1) / 2;
-    query = t8_element_array_index_int (elements, guess);
-    query_id = ts->t8_element_get_linear_id (query, maxlevel);
-    if (query_id == element_id) {
-      /* we are done */
-      return guess;
-    }
-    else if (query_id > element_id) {
-      /* look further left */
-      high = guess - 1;
-    }
-    else {
-      /* look further right, but keep guess in the search range */
-      low = guess;
-    }
-  }
-  T8_ASSERT (low == high);
-  return low;
+  /* We search for the first element in the array that is greater than the given element id. */
+  auto elem_iter = std::upper_bound (
+    t8_element_array_begin (elements), t8_element_array_end (elements), element_id,
+    [&maxlevel, &ts] (const t8_linearidx_t element_id_, const t8_element_array_iterator::value_type &elem_ptr) {
+      return (element_id_ < ts->t8_element_get_linear_id (elem_ptr, maxlevel));
+    });
+
+  /* After we found the element with an id greater than the given one, we are able to jump one index back.
+   * This guarantees us that the element at (index - 1) is smaller or equal to the given element id.
+   * In case we do not find an element that is greater than the given element_id, the binary search returns
+   * the end-iterator of the element array. In that case, we want to return the last index from the element
+   * array. */
+  return elem_iter.GetCurrentIndex () - 1;
 }
 
 T8_EXTERN_C_END ();
