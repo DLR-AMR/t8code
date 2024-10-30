@@ -529,4 +529,10 @@ t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_fo
   t8_global_productionf ("Done t8_forest_iterate_replace\n");
 }
 
+void
+t8_forest_search_partition (t8_forest_t forest, t8_forest_partition_search_fn search_fn,
+                            t8_forest_partition_query_fn query_fn, sc_array_t *queries)
+{
+}
+
 T8_EXTERN_C_END ();
