@@ -27,6 +27,12 @@
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
+size_t
+t8_default_scheme_vertex_c::get_element_size (void) const
+{
+  return sizeof (t8_dvertex_t);
+}
+
 int
 t8_default_scheme_vertex_c::get_maxlevel (void) const
 {

@@ -28,31 +28,109 @@
 
 #include <t8_element.hxx>
 #include <t8_schemes/t8_crtp.hxx>
+#include <sc_functions.h>
 
 /* Macro to check whether a pointer (VAR) to a base class, comes from an
  * implementation of a child class (TYPE). */
 #define T8_COMMON_IS_TYPE(VAR, TYPE) ((dynamic_cast<TYPE> (VAR)) != NULL)
 
-class t8_default_scheme_common_c {
+/** This class independent function assumes an sc_mempool_t as context.
+ * It is suitable as the elem_new callback in \ref t8_eclass_scheme_t.
+ * We assume that the mempool has been created with the correct element size.
+ * \param [in,out] ts_context   An element is allocated in this sc_mempool_t.
+ * \param [in]     length       Non-negative number of elements to allocate.
+ * \param [in,out] elem         Array of correct size whose members are filled.
+ */
+inline static void
+t8_default_mempool_alloc (sc_mempool_t *ts_context, int length, t8_element_t **elem)
+{
+  int i;
+
+  T8_ASSERT (ts_context != NULL);
+  T8_ASSERT (0 <= length);
+  T8_ASSERT (elem != NULL);
+
+  for (i = 0; i < length; ++i) {
+    elem[i] = (t8_element_t *) sc_mempool_alloc (ts_context);
+  }
+}
+
+/** This class independent function assumes an sc_mempool_t as context.
+ * It is suitable as the elem_destroy callback in \ref t8_eclass_scheme_t.
+ * We assume that the mempool has been created with the correct element size.
+ * \param [in,out] ts_context   An element is returned to this sc_mempool_t.
+ * \param [in]     length       Non-negative number of elements to destroy.
+ * \param [in,out] elem         Array whose members are returned to the mempool.
+ */
+inline static void
+t8_default_mempool_free (sc_mempool_t *ts_context, int length, t8_element_t **elem)
+{
+  int i;
+
+  T8_ASSERT (ts_context != NULL);
+  T8_ASSERT (0 <= length);
+  T8_ASSERT (elem != NULL);
+
+  for (i = 0; i < length; ++i) {
+    sc_mempool_free (ts_context, elem[i]);
+  }
+}
+
+/* Given an element's level and dimension, return the number of leaves it
+ * produces at a given uniform refinement level */
+static inline t8_gloidx_t
+count_leaves_from_level (int element_level, int refinement_level, int dimension)
+{
+  return element_level > refinement_level ? 0 : sc_intpow64 (2, dimension * (refinement_level - element_level));
+}
+
+template <class TUnderlyingEclassScheme>
+class t8_default_scheme_common_c: t8_eclass_scheme<TUnderlyingEclassScheme> {
  public:
   /** Destructor for all default schemes */
-  ~t8_default_scheme_common_c ();
+  ~t8_default_scheme_common_c ()
+  {
+    T8_ASSERT (ts_context != NULL);
+    SC_ASSERT (((sc_mempool_t *) ts_context)->elem_count == 0);
+    sc_mempool_destroy ((sc_mempool_t *) ts_context);
+  }
 
   /** Compute the number of corners of a given element. */
   int
-  element_get_num_corners (const t8_element_t *elem) const;
+  element_get_num_corners (const t8_element_t *elem) const
+  {
+    /* use the lookup table of the eclasses.
+     * Pyramids should implement their own version of this function. */
+    return t8_eclass_num_vertices[eclass];
+  }
 
   /** Allocate space for a bunch of elements. */
   void
-  element_new (int length, t8_element_t **elem) const;
+  element_new (int length, t8_element_t **elem) const
+  {
+    t8_default_mempool_alloc ((sc_mempool_t *) this->ts_context, length, elem);
+  }
 
   /** Deallocate space for a bunch of elements. */
   void
-  element_destroy (int length, t8_element_t **elem) const;
+  element_destroy (int length, t8_element_t **elem) const
+  {
+    t8_default_mempool_free ((sc_mempool_t *) this->ts_context, length, elem);
+  }
+
+  void
+  t8_element_deinit (int length, t8_element_t *elem) const
+  {
+  }
 
   /** Return the shape of an element */
   t8_element_shape_t
-  element_get_shape (const t8_element_t *elem) const;
+  element_get_shape (const t8_element_t *elem) const
+  {
+    /* use the lookup table of the eclasses.
+     * Pyramids should implement their own version of this function. */
+    return eclass;
+  }
 
   /** Count how many leaf descendants of a given uniform level an element would produce.
    * \param [in] t     The element to be checked.
@@ -63,7 +141,18 @@ class t8_default_scheme_common_c {
    * children.
    */
   t8_gloidx_t
-  element_count_leaves (const t8_element_t *t, int level) const;
+  element_count_leaves (const t8_element_t *t, int level) const
+  {
+    int element_level = element_get_level (t);
+    t8_element_shape_t element_shape;
+    int dim = t8_eclass_to_dimension[eclass];
+    element_shape = t8_element_shape (t);
+    if (element_shape == T8_ECLASS_PYRAMID) {
+      int level_diff = level - element_level;
+      return element_level > level ? 0 : 2 * sc_intpow64 (8, level_diff) - sc_intpow64 (6, level_diff);
+    }
+    return count_leaves_from_level (element_level, level, dim);
+  }
 
   /** Compute the number of siblings of an element. That is the number of 
    * Children of its parent.
@@ -72,7 +161,12 @@ class t8_default_scheme_common_c {
    * Note that this number is >= 1, since we count the element itself as a sibling.
    */
   int
-  element_get_num_siblings (const t8_element_t *elem) const;
+  element_get_num_siblings (const t8_element_t *elem) const
+  {
+    const int dim = t8_eclass_to_dimension[eclass];
+    T8_ASSERT (eclass != T8_ECLASS_PYRAMID);
+    return sc_intpow (2, dim);
+  }
 
   /** Count how many leaf descendants of a given uniform level the root element will produce.
    * \param [in] level A refinement level.
@@ -80,10 +174,22 @@ class t8_default_scheme_common_c {
    *      is the root (level 0) element.
    */
   t8_gloidx_t
-  count_leaves_from_root (int level) const;
+  count_leaves_from_root (int level) const
+  {
+    if (eclass == T8_ECLASS_PYRAMID) {
+      return 2 * sc_intpow64u (8, level) - sc_intpow64u (6, level);
+    }
+    int dim = t8_eclass_to_dimension[eclass];
+    return count_leaves_from_level (0, level, dim);
+  }
 
 #if T8_ENABLE_DEBUG
   void
-  element_debug_print (const t8_element_t *elem) const;
+  element_debug_print (const t8_element_t *elem) const
+  {
+    char debug_string[BUFSIZ];
+    element_to_string (elem, debug_string, BUFSIZ);
+    t8_debugf ("%s\n", debug_string);
+  }
 #endif
 };

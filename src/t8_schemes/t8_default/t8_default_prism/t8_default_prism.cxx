@@ -24,10 +24,17 @@
 #include <t8_schemes/t8_default/t8_default_prism/t8_default_prism.hxx>
 #include <t8_schemes/t8_default/t8_default_prism/t8_dprism_bits.h>
 #include <t8_schemes/t8_default/t8_default_prism/t8_dprism.h>
+#include <t8_schemes/t8_scheme.hxx>
 
 typedef t8_dprism_t t8_default_prism_t;
 
 T8_EXTERN_C_BEGIN ();
+
+size_t
+t8_default_scheme_prism_c::get_element_size (void) const
+{
+  return sizeof (t8_dprism_t);
+}
 
 void
 t8_default_scheme_prism_c::element_new (int length, t8_element_t **elem) const
@@ -225,10 +232,10 @@ t8_default_scheme_prism_c::element_get_tree_face (const t8_element_t *elem, int 
 }
 
 int
-t8_default_scheme_prism_c::element_extrude_face (const t8_element_t *face, const t8_scheme *face_scheme,
-                                                 t8_element_t *elem, int root_face) const
+t8_default_scheme_prism_c::element_extrude_face (const t8_element_t *face, const t8_eclass_t face_eclass,
+                                                 t8_element_t *elem, int root_face, const t8_scheme *scheme) const
 {
-  T8_ASSERT (face_scheme->element_is_valid (face));
+  T8_ASSERT (scheme->element_is_valid (face_eclass, face));
   T8_ASSERT (0 <= root_face && root_face < T8_DPRISM_FACES);
   t8_dprism_extrude_face (face, elem, root_face);
   T8_ASSERT (element_is_valid (elem));
@@ -267,12 +274,13 @@ t8_default_scheme_prism_c::element_get_nca (const t8_element_t *elem1, const t8_
 
 void
 t8_default_scheme_prism_c::element_construct_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
-                                                            const t8_scheme *boundary_scheme) const
+                                                            const t8_scheme *scheme) const
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
   t8_dprism_boundary_face ((const t8_dprism_t *) elem, face, boundary);
-  T8_ASSERT (boundary_scheme->element_is_valid (boundary));
+  T8_ASSERT (
+    scheme->element_is_valid (static_cast<t8_eclass_t> (t8_eclass_face_types[T8_ECLASS_PRISM][face]), boundary));
 }
 
 const int t8_dprism_face_corner[5][4] = {

@@ -383,7 +383,7 @@ t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t forest, t8_locidx_t l
  * \param [in,out] neighs An array of allocated elements of the correct element class.
  *                        On output the face neighbors of \a elem across \a face of one
  *                        bigger refinement level are stored.
- * \param [in]     neigh_scheme The eclass scheme of the neighbors.
+ * \param [in]     neigh_class The eclass of the neighbors.
  * \param [in]     face    The number of the face of \a elem.
  * \param [in]     num_neighs The number of allocated element in \a neighs. Must match the
  *                         number of face neighbors of one bigger refinement level.
@@ -393,7 +393,7 @@ t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t forest, t8_locidx_t l
  */
 t8_gloidx_t
 t8_forest_element_half_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *elem,
-                                       t8_element_t *neighs[], t8_scheme_c *neigh_scheme, int face, int num_neighs,
+                                       t8_element_t *neighs[], t8_eclass_t neigh_class, int face, int num_neighs,
                                        int dual_faces[]);
 
 /** Iterate over all leaves of a forest and for each face compute the face neighbor
@@ -411,14 +411,15 @@ t8_forest_print_all_leaf_neighbors (t8_forest_t forest);
  * \param [in]  forest    The forest.
  * \param [in]  gtreeid   The global id of the tree the element is in
  * \param [in]  element   The element
- * \param [in]  ts        The eclass scheme of \a element.
+ * \param [in]  ts        The eclass of \a element.
  * \return                True if in the forest there exists a local leaf or ghost
  *                        leaf that is a descendant of \a element but not equal to \a element.
  * \note If no ghost layer was created for the forest, only local elements are tested.
  * \note \a forest must be committed before calling this function.
  */
 int
-t8_forest_element_has_leaf_desc (t8_forest_t forest, t8_gloidx_t gtreeid, const t8_element_t *element, t8_scheme_c *ts);
+t8_forest_element_has_leaf_desc (t8_forest_t forest, t8_gloidx_t gtreeid, const t8_element_t *element,
+                                 const t8_eclass_t tree_class);
 
 T8_EXTERN_C_END ();
 

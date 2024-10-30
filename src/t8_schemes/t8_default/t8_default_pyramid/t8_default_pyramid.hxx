@@ -37,12 +37,19 @@
 
 class t8_default_scheme_pyramid_c:
   public t8_eclass_scheme<t8_default_scheme_pyramid_c>,
-  public t8_default_scheme_common_c {
+  public t8_default_scheme_common_c<t8_default_scheme_pyramid_c> {
  public:
   /** Constructor. */
   t8_default_scheme_pyramid_c (void);
 
   ~t8_default_scheme_pyramid_c ();
+
+  /** Return the size of a prism element.
+   * \return  The size of an element of class prism.
+   */
+  size_t
+  get_element_size (void) const;
+
   /** Allocate memory for an array of pyramids and initialize them.
    * \param [in] length   The number of pyramid elements to be allocated.
    * \param [in,out] elems On input an array of \b length many unallocated
@@ -362,18 +369,23 @@ class t8_default_scheme_pyramid_c:
     SC_ABORT ("This function is not implemented yet.\n");
   }
 
-  /** Given a boundary face inside a root tree's face construct the element inside the root tree that has the given 
-   *  face as a face.
-   * \param [in] face         A face element.
-   * \param [in] face_scheme  The scheme for the face element.
-   * \param [in,out] elem     An allocated element. The entries will be filled with the data of the element that has 
-   *                          \a face as a face and lies within the root tree.
-   * \param [in] root_face    The index of the face of the root tree in which \a face lies.
-   * \return                  The face number of the face of \a elem that coincides with \a face.
+  /** Given a boundary face inside a root tree's face construct
+   *  the element inside the root tree that has the given face as a
+   *  face.
+   * \param [in] face     A face element.
+   * \param [in] face_eclass The eclass for the face element.
+   * \param [in,out] elem An allocated element. The entries will be filled with
+   *                      the data of the element that has \a face as a face and
+   *                      lies within the root tree.
+   * \param [in] root_face The index of the face of the root tree in which \a face
+   *                      lies.
+   * \param [in] scheme   The scheme collection with a scheme for the eclass of the face.
+   * \return              The face number of the face of \a elem that coincides
+   *                      with \a face.
    */
   int
-  element_extrude_face (const t8_element_t *face, const t8_scheme_c *face_scheme, t8_element_t *elem,
-                        int root_face) const;
+  element_extrude_face (const t8_element_t *face, const t8_eclass_t face_eclass, t8_element_t *elem, int root_face,
+                        const t8_scheme *scheme) const;
 
   /** Construct the first descendant of an element at a given level that touches a given face.
    * \param [in] elem      The input element.
@@ -398,14 +410,16 @@ class t8_default_scheme_pyramid_c:
 
   /** Construct the boundary element at a specific face.
    * \param [in] elem     The input element.
-   * \param [in] face     The index of the face of which to construct the boundary element.
-   * \param [in,out] boundary An allocated element of dimension of \a element minus 1. The entries will be filled with 
-   *                      the entries of the face of \a element.
-   * \param [in] boundary_scheme The scheme for the eclass of the boundary face.
+   * \param [in] face     The index of the face of which to construct the
+   *                      boundary element.
+   * \param [in,out] boundary An allocated element of dimension of \a element
+   *                      minus 1. The entries will be filled with the entries
+   *                      of the face of \a element.
+   * \param [in] scheme   The scheme containing an eclass scheme for the boundary face.
    */
   void
   element_construct_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
-                                   const t8_scheme_c *boundary_scheme) const;
+                                   const t8_scheme *scheme) const;
 
   /** Compute whether a given element shares a given face with its root tree.
    * \param [in] elem     The input element.

@@ -38,20 +38,20 @@ class t8_scheme {
   /* clang-format off */
   using scheme_var = std::variant<
                                 /* Default schemes */
-                                t8_default_vertex,
-                                t8_default_line,
-                                t8_default_quad,
-                                t8_default_tri,
-                                t8_default_hex,
-                                t8_default_tet,
-                                t8_default_prism,
-                                t8_default_pyramid
+                                t8_default_scheme_vertex_c,
+                                t8_default_scheme_line_c,
+                                t8_default_scheme_quad_c,
+                                t8_default_scheme_tri_c,
+                                t8_default_scheme_hex_c,
+                                t8_default_scheme_tet_c,
+                                t8_default_scheme_prism_c,
+                                t8_default_scheme_pyramid_c
                                 >;
   /* clang-format on */
   using scheme_container = std::array<scheme_var, T8_ECLASS_COUNT>;
 
  private:
-  Scheme_container eclass_schemes;
+  scheme_container eclass_schemes;
 
  public:
   /** Return the size of any element of a given class.
@@ -63,7 +63,7 @@ class t8_scheme {
   inline size_t
   get_element_size (t8_eclass_t tree_class) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.get_element_size (elem); }, eclass_schemes[tree_class]);
+    return std::visit ([&] (auto &&scheme) { return scheme.get_element_size (); }, eclass_schemes[tree_class]);
   };
 
   /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.

@@ -548,7 +548,7 @@ t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, 
  *                        of the neighbor leaves are stored here.
  *                        0, 1, ... num_local_el - 1 for local leaves and
  *                        num_local_el , ... , num_local_el + num_ghosts - 1 for ghosts.
- * \param [out]   pneigh_scheme On output the eclass scheme of the neighbor elements.
+ * \param [out]   pneigh_eclass On output the eclass of the neighbor elements.
  * \param [in]    forest_is_balanced True if we know that \a forest is balanced, false
  *                        otherwise.
  * \param [out]   orientation If a pointer to an integer variable is given the face orientation is computed and stored there.
@@ -570,12 +570,12 @@ t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, 
 void
 t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf,
                                t8_element_t **pneighbor_leaves[], int face, int *dual_faces[], int *num_neighbors,
-                               t8_locidx_t **pelement_indices, t8_scheme_c **pneigh_scheme, int forest_is_balanced);
+                               t8_locidx_t **pelement_indices, t8_eclass_t *pneigh_eclass, int forest_is_balanced);
 
 void
 t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf,
                                    t8_element_t **pneighbor_leaves[], int face, int *dual_faces[], int *num_neighbors,
-                                   t8_locidx_t **pelement_indices, t8_scheme_c **pneigh_scheme, int forest_is_balanced,
+                                   t8_locidx_t **pelement_indices, t8_eclass_t *pneigh_eclass, int forest_is_balanced,
                                    t8_gloidx_t *gneigh_tree, int *orientation);
 
 /** Exchange ghost information of user defined element data.
@@ -787,7 +787,7 @@ t8_forest_element_neighbor_eclass (t8_forest_t forest, t8_locidx_t ltreeid, cons
  *                  On output, this element's data is filled with the
  *                  data of the face neighbor. If the neighbor does not exist
  *                  the data could be modified arbitrarily.
- * \param [in] neigh_scheme The eclass scheme of \a neigh.
+ * \param [in] neigh_eclass The eclass of \a neigh.
  * \param [in] face The number of the face along which the neighbor should be
  *                  constructed.
  * \param [out] neigh_face The number of the face viewed from perspective of \a neigh.
@@ -796,7 +796,7 @@ t8_forest_element_neighbor_eclass (t8_forest_t forest, t8_locidx_t ltreeid, cons
  */
 t8_gloidx_t
 t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *elem, t8_element_t *neigh,
-                                 t8_scheme_c *neigh_scheme, int face, int *neigh_face);
+                                 t8_eclass_t neigh_eclass, int face, int *neigh_face);
 
 /* TODO: implement */
 void

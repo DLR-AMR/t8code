@@ -25,11 +25,18 @@
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.h>
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.h>
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtet_connectivity.h>
+#include <t8_schemes/t8_scheme.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
 typedef t8_dtet_t t8_default_tet_t;
+
+size_t
+t8_default_scheme_tet_c::get_element_size (void) const
+{
+  return sizeof (t8_dtet_t);
+}
 
 int
 t8_default_scheme_tet_c::get_maxlevel (void) const
@@ -245,15 +252,15 @@ t8_default_scheme_tet_c::element_get_tree_face (const t8_element_t *elem, int fa
  * both in t8_dtri_bits.c. This would be needed by an implementation, at least
  * for tets. */
 int
-t8_default_scheme_tet_c::element_extrude_face (const t8_element_t *face, const t8_scheme *face_scheme,
-                                               t8_element_t *elem, int root_face) const
+t8_default_scheme_tet_c::element_extrude_face (const t8_element_t *face, const t8_eclass_t face_eclass,
+                                               t8_element_t *elem, int root_face, const t8_scheme *scheme) const
 {
   const t8_dtri_t *b = (const t8_dtri_t *) face;
   t8_dtet_t *t = (t8_dtet_t *) elem;
 
   T8_ASSERT (element_is_valid (elem));
-  T8_ASSERT (face_scheme->eclass == T8_ECLASS_TRIANGLE);
-  T8_ASSERT (face_scheme->element_is_valid (face));
+  T8_ASSERT (face_eclass == T8_ECLASS_TRIANGLE);
+  T8_ASSERT (scheme->element_is_valid (face_eclass, face));
   T8_ASSERT (0 <= root_face && root_face < T8_DTET_FACES);
   t->level = b->level;
   switch (root_face) {
@@ -322,15 +329,14 @@ t8_default_scheme_tet_c::element_construct_last_descendant_face (const t8_elemen
  * both in t8_dtet_bits.c. */
 void
 t8_default_scheme_tet_c::element_construct_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
-                                                          const t8_scheme *boundary_scheme) const
+                                                          const t8_scheme *scheme) const
 {
   const t8_default_tet_t *t = (const t8_default_tet_t *) elem;
   t8_dtri_t *b = (t8_dtri_t *) boundary;
   int face_cat;
 
   T8_ASSERT (element_is_valid (elem));
-  T8_ASSERT (boundary_scheme->eclass == T8_ECLASS_TRIANGLE);
-  T8_ASSERT (boundary_scheme->element_is_valid (boundary));
+  T8_ASSERT (scheme->element_is_valid (T8_ECLASS_TRIANGLE, boundary));
   T8_ASSERT (0 <= face && face < T8_DTET_FACES);
   /* The level of the boundary element is the same as the quadrant's level */
   b->level = t->level;

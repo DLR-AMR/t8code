@@ -25,10 +25,17 @@
 #include <t8_schemes/t8_default/t8_default_vertex/t8_dvertex_bits.h>
 #include <t8_schemes/t8_default/t8_default_line/t8_dline_bits.h>
 #include <t8_schemes/t8_default/t8_default_line/t8_dline.h>
+#include <t8_schemes/t8_scheme.hxx>
 
 typedef t8_dline_t t8_default_line_t;
 
 T8_EXTERN_C_BEGIN ();
+
+size_t
+t8_default_scheme_line_c::get_element_size (void) const
+{
+  return sizeof (t8_dline_t);
+}
 
 int
 t8_default_scheme_line_c::get_maxlevel (void) const
@@ -167,12 +174,12 @@ t8_default_scheme_line_c::element_transform_face (const t8_element_t *elem1, t8_
  *  the element inside the root tree that has the given face as a
  *  face. */
 int
-t8_default_scheme_line_c::element_extrude_face (const t8_element_t *face, const t8_scheme *face_scheme,
-                                                t8_element_t *elem, int root_face) const
+t8_default_scheme_line_c::element_extrude_face (const t8_element_t *face, const t8_eclass_t face_eclass,
+                                                t8_element_t *elem, int root_face, const t8_scheme *scheme) const
 {
   T8_ASSERT (element_is_valid (elem));
-  T8_ASSERT (T8_COMMON_IS_TYPE (face_scheme, const t8_default_scheme_vertex_c *));
-  T8_ASSERT (face_scheme->element_is_valid (face));
+  T8_ASSERT (face_eclass == T8_ECLASS_VERTEX);
+  T8_ASSERT (scheme->element_is_valid (face_eclass, face));
 
   return t8_dline_extrude_face ((const t8_dvertex_t *) face, root_face, (t8_dline_t *) elem);
 }
@@ -180,12 +187,10 @@ t8_default_scheme_line_c::element_extrude_face (const t8_element_t *face, const 
 /** Construct the boundary element at a specific face. */
 void
 t8_default_scheme_line_c::element_construct_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
-                                                           const t8_scheme *boundary_scheme) const
+                                                           const t8_scheme *scheme) const
 {
   T8_ASSERT (element_is_valid (elem));
-  T8_ASSERT (T8_COMMON_IS_TYPE (boundary_scheme, const t8_default_scheme_vertex_c *));
-  T8_ASSERT (boundary_scheme->eclass == T8_ECLASS_VERTEX);
-  T8_ASSERT (boundary_scheme->element_is_valid (boundary));
+  T8_ASSERT (scheme->element_is_valid (T8_ECLASS_VERTEX, boundary));
   T8_ASSERT (0 <= face && face < T8_DLINE_FACES);
 
   /* Since each vertex is the same, we just construct a vertex of the same level

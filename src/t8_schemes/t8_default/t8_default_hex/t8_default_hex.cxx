@@ -24,6 +24,7 @@
 #include <p4est_bits.h>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 #include <t8_schemes/t8_default/t8_default_hex/t8_default_hex.hxx>
+#include <t8_schemes/t8_scheme.hxx>
 
 #define HEX_LINEAR_MAXLEVEL P8EST_OLD_QMAXLEVEL
 #define HEX_REFINE_MAXLEVEL P8EST_OLD_QMAXLEVEL
@@ -32,6 +33,12 @@
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
+
+size_t
+t8_default_scheme_hex_c::get_element_size (void) const
+{
+  return sizeof (t8_phex_t);
+}
 
 int
 t8_default_scheme_hex_c::get_maxlevel (void) const
@@ -293,16 +300,15 @@ t8_default_scheme_hex_c::element_get_tree_face (const t8_element_t *elem, int fa
 }
 
 int
-t8_default_scheme_hex_c::element_extrude_face (const t8_element_t *face, const t8_scheme *face_scheme,
-                                               t8_element_t *elem, int root_face) const
+t8_default_scheme_hex_c::element_extrude_face (const t8_element_t *face, const t8_eclass_t face_eclass,
+                                               t8_element_t *elem, int root_face, const t8_scheme *scheme) const
 {
   const p4est_quadrant_t *b = (const p4est_quadrant_t *) face;
   p8est_quadrant_t *q = (p8est_quadrant_t *) elem;
 
-  T8_ASSERT (T8_COMMON_IS_TYPE (face_scheme, const t8_default_scheme_quad_c *));
+  T8_ASSERT (face_eclass == T8_ECLASS_QUAD);
   T8_ASSERT (element_is_valid (elem));
-  T8_ASSERT (face_scheme->eclass == T8_ECLASS_QUAD);
-  T8_ASSERT (face_scheme->element_is_valid (face));
+  T8_ASSERT (scheme->element_is_valid (face_eclass, face));
   T8_ASSERT (0 <= root_face && root_face < P8EST_FACES);
   q->level = b->level;
   /*
@@ -394,15 +400,13 @@ t8_default_scheme_hex_c::element_construct_last_descendant_face (const t8_elemen
 
 void
 t8_default_scheme_hex_c::element_construct_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
-                                                          const t8_scheme *boundary_scheme) const
+                                                          const t8_scheme *scheme) const
 {
   const p8est_quadrant_t *q = (const p8est_quadrant_t *) elem;
   p4est_quadrant_t *b = (p4est_quadrant_t *) boundary;
 
   T8_ASSERT (element_is_valid (elem));
-  T8_ASSERT (T8_COMMON_IS_TYPE (boundary_scheme, const t8_default_scheme_quad_c *));
-  T8_ASSERT (boundary_scheme->eclass == T8_ECLASS_QUAD);
-  T8_ASSERT (boundary_scheme->element_is_valid (boundary));
+  T8_ASSERT (scheme->element_is_valid (T8_ECLASS_QUAD, boundary));
   T8_ASSERT (0 <= face && face < P8EST_FACES);
 
   /* The level of the boundary element is the same as the quadrant's level */

@@ -26,10 +26,17 @@
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.h>
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.h>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.h>
+#include <t8_schemes/t8_scheme.hxx>
 
 typedef t8_dpyramid_t t8_default_pyramid_t;
 
 T8_EXTERN_C_BEGIN ();
+
+size_t
+t8_default_scheme_pyramid_c::get_element_size (void) const
+{
+  return sizeof (t8_dpyramid_t);
+}
 
 void
 t8_default_scheme_pyramid_c::element_new (int length, t8_element_t **elem) const
@@ -264,19 +271,21 @@ t8_default_scheme_pyramid_c::element_is_root_boundary (const t8_element_t *elem,
 
 void
 t8_default_scheme_pyramid_c::element_construct_boundary_face (const t8_element_t *elem, int face,
-                                                              t8_element_t *boundary,
-                                                              const t8_scheme *boundary_scheme) const
+                                                              t8_element_t *boundary, const t8_scheme *scheme) const
 {
   T8_ASSERT (element_is_valid (elem));
   t8_dpyramid_boundary_face ((const t8_dpyramid_t *) elem, face, boundary);
-  T8_ASSERT (boundary_scheme->element_is_valid (boundary));
+  T8_ASSERT (
+    scheme->element_is_valid (static_cast<t8_eclass_t> (t8_eclass_face_types[T8_ECLASS_PYRAMID][face]), boundary));
 }
 
 int
-t8_default_scheme_pyramid_c::element_extrude_face (const t8_element_t *face, const t8_scheme *face_scheme,
-                                                   t8_element_t *elem, int root_face) const
+t8_default_scheme_pyramid_c::element_extrude_face (const t8_element_t *face, const t8_eclass_t face_eclass,
+                                                   t8_element_t *elem, int root_face, const t8_scheme *scheme) const
 {
-  T8_ASSERT (face_scheme->element_is_valid (face));
+  T8_ASSERT (element_is_valid (elem));
+  T8_ASSERT (face_eclass == T8_ECLASS_TRIANGLE || face_eclass == T8_ECLASS_QUAD);
+  T8_ASSERT (scheme->element_is_valid (face_eclass, elem));
   return t8_dpyramid_extrude_face (face, (t8_dpyramid_t *) elem, root_face);
   T8_ASSERT (element_is_valid (elem));
 }

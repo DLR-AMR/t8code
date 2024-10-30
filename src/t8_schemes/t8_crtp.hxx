@@ -28,7 +28,7 @@
 
 /* CRTP helper class, adds static "upcasting" methods for const and non const objects. */
 template <class TUnderlying>
-class crtp {
+class t8_crtp {
  public:
   TUnderlying&
   underlying ()

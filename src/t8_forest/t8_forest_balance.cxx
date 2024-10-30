@@ -49,7 +49,6 @@ t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_
   int *pdone, iface, num_faces, num_half_neighbors, ineigh;
   t8_gloidx_t neighbor_tree;
   t8_eclass_t neigh_class;
-  t8_scheme *neigh_scheme;
   const t8_element_t *element = elements[0];
   t8_element_t **half_neighbors;
 
@@ -74,15 +73,14 @@ t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_
       half_neighbors = T8_ALLOC (t8_element_t *, num_half_neighbors);
       ts->element_new (neigh_class, num_half_neighbors, half_neighbors);
       /* Compute the half face neighbors of element at this face */
-      neighbor_tree = t8_forest_element_half_face_neighbors (
-        forest_from, ltree_id, element, half_neighbors, neigh_scheme, iface, num_half_neighbors, NULL);  // TODO: CRTP
+      neighbor_tree = t8_forest_element_half_face_neighbors (forest_from, ltree_id, element, half_neighbors,
+                                                             neigh_class, iface, num_half_neighbors, NULL);
       if (neighbor_tree >= 0) {
         /* The face neighbors do exist, check for each one, whether it has
          * local or ghost leaf descendants in the forest.
          * If so, the element will be refined. */
         for (ineigh = 0; ineigh < num_half_neighbors; ineigh++) {
-          if (t8_forest_element_has_leaf_desc (forest_from, neighbor_tree, half_neighbors[ineigh],
-                                               neigh_scheme)) {  //TODO: CRTP
+          if (t8_forest_element_has_leaf_desc (forest_from, neighbor_tree, half_neighbors[ineigh], neigh_class)) {
             /* This element should be refined */
             *pdone = 0;
             /* clean-up */

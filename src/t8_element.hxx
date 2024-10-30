@@ -38,16 +38,20 @@
 template <class TUnderlyingEclassScheme>
 class t8_eclass_scheme: public t8_crtp<TUnderlyingEclassScheme> {
  private:
-  t8_scheme () {}; /**< private destructor which can only be used by derived schemes. */
+  /** Private constructor which can only be used by derived schemes.
+   * \param [in] tree_class The tree class of this element scheme.
+   * \param [in] elem_size  The size of the elements this scheme holds.
+  */
+  t8_eclass_scheme (const t8_eclass_t tree_class, const size_t elem_size)
+    : element_size (elem_size), eclass (tree_class) {};
   friend TUnderlyingEclassScheme;
 
  protected:
-  size_t element_size; /**< The size in bytes of an element of class \a eclass */
-  void *ts_context;    /**< Anonymous implementation context. */
+  const size_t element_size; /**< The size in bytes of an element of class \a eclass */
+  void *ts_context;          /**< Anonymous implementation context. */
 
  public:
-  t8_eclass_t eclass;
-  /**< The element class */
+  const t8_eclass_t eclass; /**< The tree class */
 
   /** The destructor. It does nothing but has to be defined since
    * we may want to delete an eclass_scheme that is actually inherited

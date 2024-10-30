@@ -29,7 +29,7 @@
 #include <t8_element.h>
 #include <t8_element.hxx>
 #include <t8_element_c_interface.h>
-#include <t8_scheme.hxx>
+#include <t8_schemes/t8_scheme.hxx>
 #include <t8_forest/t8_forest_types.h>
 
 size_t
