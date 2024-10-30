@@ -209,13 +209,15 @@ struct t8_geometry_tessellated_spherical_surface: public t8_geometry_with_vertic
   bool
   t8_geom_check_tree_compatibility () const
   {
-    if (active_tree_class != T8_ECLASS_QUAD) {
-      t8_productionf ("t8_geometry_quadrangulated_spherical_surface is not compatible with tree type %s\n"
-                      "It is only compatible with quad elements.\n",
-                      t8_eclass_to_string[active_tree_class]);
-      return false;
+    if (active_tree_class == T8_ECLASS_TRIANGLE || active_tree_class == T8_ECLASS_QUAD) {
+      return true;
     }
-    return true;
+
+    t8_productionf ("t8_geometry_quadrangulated_spherical_surface is not compatible with tree type %s\n"
+                    "It is only compatible with quad elements.\n",
+                    t8_eclass_to_string[active_tree_class]);
+
+    return false;
   }
 
   /* Load tree data is inherited from t8_geometry_with_vertices. */
