@@ -213,8 +213,8 @@ struct t8_geometry_tessellated_spherical_surface: public t8_geometry_with_vertic
       return true;
     }
 
-    t8_productionf ("t8_geometry_quadrangulated_spherical_surface is not compatible with tree type %s\n"
-                    "It is only compatible with quad elements.\n",
+    t8_productionf ("t8_geometry_tessellated_spherical_surface is not compatible with tree type %s\n"
+                    "It is only compatible with triangle and quad elements.\n",
                     t8_eclass_to_string[active_tree_class]);
 
     return false;
