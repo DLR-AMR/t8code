@@ -6,17 +6,9 @@ project( T8CODE
   DESCRIPTION "Parallel algorithms and data structures for tree-based AMR with arbitrary element shapes."
   LANGUAGES C CXX Fortran
   VERSION "${T8CODE_VERSION_MAJOR}.${T8CODE_VERSION_MINOR}.${T8CODE_VERSION_PATCH}" )
-include( CTest )
 
-option( T8CODE_BUILD_AS_SHARED_LIBRARY "Whether t8code should be built as a shared or a static library" ON )
-option( T8CODE_BUILD_PEDANTIC "Compile t8code with `-Wall -pedantic -Werror` as done in the Github CI." OFF )
-option( T8CODE_EXPORT_COMPILE_COMMANDS "Export the compile commands as json. Can be used by IDEs for code completion (e.g. intellisense, clangd)" OFF )
-option( T8CODE_BUILD_TESTS "Build t8code's automated tests" ON )
-option( T8CODE_BUILD_TUTORIALS "Build t8code's tutorials" ON )
-option( T8CODE_BUILD_EXAMPLES "Build t8code's examples" ON )
-option( T8CODE_BUILD_BENCHMARKS "Build t8code's benchmarks" ON )
-option( T8CODE_BUILD_FORTRAN_INTERFACE "Build t8code's Fortran interface" OFF )
-option( T8CODE_ENABLE_LESS_TESTS "Tests not as thoroughly to speed up the test suite. Tests the same functionality. (WARNING: Use with care.)" OFF )
+include( CTest )
+include(CMakeDependentOption)
 
 option( T8CODE_ENABLE_MPI "Enable t8code's features which rely on MPI" ON )
 option( T8CODE_ENABLE_VTK "Enable t8code's features which rely on VTK" OFF )
@@ -26,9 +18,23 @@ option( T8CODE_ENABLE_NETCDF "Enable t8code's features which rely on netCDF" OFF
 option( T8CODE_USE_SYSTEM_SC "Use system-installed sc library" OFF )
 option( T8CODE_USE_SYSTEM_P4EST "Use system-installed p4est library" OFF )
 
-option( T8CODE_BUILD_DOCUMENTATION "Build t8code's documentation" OFF )
+option( T8CODE_BUILD_AS_SHARED_LIBRARY "Whether t8code should be built as a shared or a static library" ON )
+option( T8CODE_BUILD_PEDANTIC "Compile t8code with `-Wall -pedantic -Werror` as done in the Github CI." OFF )
+option( T8CODE_EXPORT_COMPILE_COMMANDS "Export the compile commands as json. Can be used by IDEs for code completion (e.g. intellisense, clangd)" OFF )
 
-include(CMakeDependentOption)
+option( T8CODE_BUILD_TESTS "Build t8code's automated tests" ON )
+cmake_dependent_option( T8CODE_BUILD_TPL_TESTS "Build the tests from libsc and p4est" OFF "T8CODE_BUILD_TESTS" OFF )
+cmake_dependent_option( T8CODE_ENABLE_LESS_TESTS "Tests not as thoroughly to speed up the test suite. Tests the same functionality. (WARNING: Use with care.)" OFF "T8CODE_BUILD_TESTS" OFF )
+
+option( T8CODE_BUILD_TUTORIALS "Build t8code's tutorials" ON )
+
+option( T8CODE_BUILD_EXAMPLES "Build t8code's examples" ON )
+cmake_dependent_option( T8CODE_BUILD_TPL_EXAMPLES "Build the examples from libsc and p4est" OFF "T8CODE_BUILD_EXAMPLES" OFF )
+
+option( T8CODE_BUILD_BENCHMARKS "Build t8code's benchmarks" ON )
+option( T8CODE_BUILD_FORTRAN_INTERFACE "Build t8code's Fortran interface" OFF )
+
+option( T8CODE_BUILD_DOCUMENTATION "Build t8code's documentation" OFF )
 cmake_dependent_option( T8CODE_BUILD_DOCUMENTATION_SPHINX "Build t8code's documentation using sphinx" OFF "T8CODE_BUILD_DOCUMENTATION" OFF )
 
 set(T8CODE_CUSTOM_PARALLEL_TEST_COMMAND "" CACHE STRING "Define a custom command for parallel tests , e.g.: mpirun -np 8 (overwrites standard mpirun -np 4 if build with mpi)")
@@ -120,16 +126,16 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH true)
 if ( T8CODE_USE_SYSTEM_SC )
     find_package( SC REQUIRED PATHS /path/to/system/sc )
 else()
-    set( SC_BUILD_EXAMPLES OFF )
-    set( SC_BUILD_TESTING OFF )
+    set( SC_BUILD_EXAMPLES ${T8CODE_BUILD_TPL_EXAMPLES} )
+    set( SC_BUILD_TESTING ${T8CODE_BUILD_TPL_TESTS} )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/sc )
 endif()
 
 if ( T8CODE_USE_SYSTEM_P4EST )
     find_package( P4EST REQUIRED PATHS /path/to/system/p4est )
 else()
-    set( P4EST_BUILD_EXAMPLES OFF )
-    set( P4EST_BUILD_TESTING OFF )
+    set( P4EST_BUILD_EXAMPLES ${T8CODE_BUILD_TPL_EXAMPLES} )
+    set( P4EST_BUILD_TESTING ${T8CODE_BUILD_TPL_TESTS} )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/p4est )
 endif()
 
