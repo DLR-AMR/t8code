@@ -163,7 +163,7 @@ main (int argc, char **argv)
   t8_global_productionf (" [step2] Created uniform forest.\n");
   t8_global_productionf (" [step2] Refinement level:\t\t\t%i\n", level);
   t8_global_productionf (" [step2] Local number of elements:\t\t%i\n", local_num_elements);
-  t8_global_productionf (" [step2] Global number of elements:\t%li\n", static_cast< long >(global_num_elements));
+  t8_global_productionf (" [step2] Global number of elements:\t%li\n", static_cast<long> (global_num_elements));
 
   /* Write forest to vtu files. */
   t8_step2_write_forest_vtk (forest, prefix);

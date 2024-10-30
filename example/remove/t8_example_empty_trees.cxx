@@ -78,20 +78,17 @@ t8_strip_of_quads (t8_gloidx_t num_trees, t8_gloidx_t empty_tree, const char **v
                   "\tlast_local_tree:  %li\n"
                   "\tlocal_num_trees:  %i\n"
                   "\tglobal_num_trees: %li\n",
-                  static_cast< long >(forest->first_local_tree), 
-                  static_cast< long >(forest->last_local_tree), 
-                  t8_forest_get_num_local_trees (forest),
-                  static_cast< long >(t8_forest_get_num_global_trees (forest)));
+                  static_cast<long> (forest->first_local_tree), static_cast<long> (forest->last_local_tree),
+                  t8_forest_get_num_local_trees (forest), static_cast<long> (t8_forest_get_num_global_trees (forest)));
 
   t8_productionf ("The adapted forest with one empty tree:\n"
                   "\tfirst_local_tree: %li\n"
                   "\tlast_local_tree:  %li\n"
                   "\tlocal_num_trees:  %i\n"
                   "\tglobal_num_trees: %li\n",
-                  static_cast< long >(forest_adapt->first_local_tree), 
-                  static_cast< long >(forest_adapt->last_local_tree),
-                  t8_forest_get_num_local_trees (forest_adapt), 
-                  static_cast< long >(t8_forest_get_num_global_trees (forest_adapt)));
+                  static_cast<long> (forest_adapt->first_local_tree), static_cast<long> (forest_adapt->last_local_tree),
+                  t8_forest_get_num_local_trees (forest_adapt),
+                  static_cast<long> (t8_forest_get_num_global_trees (forest_adapt)));
 
   t8_forest_unref (&forest_adapt);
   t8_forest_unref (&forest);
