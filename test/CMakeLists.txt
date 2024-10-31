@@ -141,7 +141,6 @@ add_t8_test( NAME t8_gtest_child_parent_face     SOURCES t8_gtest_main.cxx t8_sc
 add_t8_test( NAME t8_gtest_pack_unpack           SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_pack_unpack.cxx )
 add_t8_test( NAME t8_gtest_root                  SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_root.cxx )
 add_t8_test( NAME t8_gtest_scheme_consistency    SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_scheme_consistency.cxx )
-=======
 add_t8_test( NAME t8_gtest_cmesh_bcast_parallel     SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_bcast.cxx )
 add_t8_test( NAME t8_gtest_eclass_serial            SOURCES t8_gtest_main.cxx t8_gtest_eclass.cxx )
 add_t8_test( NAME t8_gtest_vec_serial               SOURCES t8_gtest_main.cxx t8_gtest_vec.cxx )
