@@ -24,6 +24,7 @@
 #include <t8_schemes/t8_default/t8_default_prism/t8_default_prism.hxx>
 #include <t8_schemes/t8_default/t8_default_prism/t8_dprism_bits.h>
 #include <t8_schemes/t8_default/t8_default_prism/t8_dprism.h>
+#include <t8_eclass.h>
 
 typedef t8_dprism_t t8_default_prism_t;
 
@@ -291,7 +292,7 @@ t8_default_scheme_prism_c::t8_element_first_descendant_face (const t8_element_t 
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
   T8_ASSERT (0 <= level && level <= T8_DPRISM_MAXLEVEL);
   T8_ASSERT (t8_element_is_valid (elem));
-  corner = t8_dprism_face_corner[face][0];
+  corner = t8_face_vertex_to_tree_vertex[T8_ECLASS_PRISM][face][0];
   t8_dprism_corner_descendant ((const t8_dprism_t *) elem, (t8_dprism_t *) first_desc, corner, level);
   T8_ASSERT (t8_element_is_valid (first_desc));
 }
@@ -305,10 +306,10 @@ t8_default_scheme_prism_c::t8_element_last_descendant_face (const t8_element_t *
   T8_ASSERT (0 <= level && level <= T8_DPRISM_MAXLEVEL);
   T8_ASSERT (t8_element_is_valid (elem));
   if (face < 3) {
-    corner = t8_dprism_face_corner[face][3];
+    corner = t8_face_vertex_to_tree_vertex[T8_ECLASS_PRISM][face][3];
   }
   else {
-    corner = t8_dprism_face_corner[face][2];
+    corner = t8_face_vertex_to_tree_vertex[T8_ECLASS_PRISM][face][2];
   }
   t8_dprism_corner_descendant ((const t8_dprism_t *) elem, (t8_dprism_t *) last_desc, corner, level);
   T8_ASSERT (t8_element_is_valid (last_desc));
