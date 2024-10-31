@@ -130,7 +130,7 @@ t8_default_scheme_tri_c::t8_element_get_corner_face (const t8_element_t *element
   T8_ASSERT (t8_element_is_valid (element));
   T8_ASSERT (0 <= corner && corner < T8_DTRI_CORNERS);
   T8_ASSERT (0 <= face && face < 2);
-  return t8_dtri_corner_face[corner][face];
+  return t8_face_vertex_to_tree_vertex[T8_ECLASS_TRIANGLE][corner][face];
 }
 
 void
