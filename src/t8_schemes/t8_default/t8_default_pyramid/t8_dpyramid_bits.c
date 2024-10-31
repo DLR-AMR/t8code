@@ -27,6 +27,7 @@
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.h>
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtet_connectivity.h>
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.h>
+#include <t8_eclass.h>
 
 typedef int8_t t8_dpyramid_cube_id_t;
 
@@ -973,7 +974,7 @@ t8_dpyramid_first_descendant_face (const t8_dpyramid_t *p, const int face, t8_dp
   T8_ASSERT (0 <= level && level <= T8_DPYRAMID_MAXLEVEL);
   T8_ASSERT (p->pyramid.level <= level);
   if (t8_dpyramid_shape (p) == T8_ECLASS_TET) {
-    const int corner = t8_dtet_face_corner[face][0];
+    const int corner = t8_face_vertex_to_tree_vertex[T8_ECLASS_TET][face][0];
     t8_dpyramid_corner_descendant (p, first_desc, corner, level);
   }
   else if (p->pyramid.level == T8_DPYRAMID_MAXLEVEL) {
@@ -1040,7 +1041,8 @@ t8_dpyramid_last_descendant_face (const t8_dpyramid_t *p, const int face, t8_dpy
 
   if (t8_dpyramid_shape (p) == T8_ECLASS_TET) {
     T8_ASSERT (0 <= face && face < T8_DTET_FACES);
-    const int corner = SC_MAX (t8_dtet_face_corner[face][1], t8_dtet_face_corner[face][2]);
+    const int corner = SC_MAX (t8_face_vertex_to_tree_vertex[T8_ECLASS_TET][face][1],
+                               t8_face_vertex_to_tree_vertex[T8_ECLASS_TET][face][2]);
     t8_dpyramid_corner_descendant (p, last_desc, corner, level);
   }
   else {
@@ -1395,7 +1397,7 @@ t8_dpyramid_get_face_corner (const t8_dpyramid_t *pyra, int face, int corner)
 {
   T8_ASSERT (0 <= face && face <= T8_DPYRAMID_FACES);
   if (t8_dpyramid_shape (pyra) == T8_ECLASS_TET) {
-    return t8_dtet_face_corner[face][corner];
+    return t8_face_vertex_to_tree_vertex[T8_ECLASS_TET][face][corner];
   }
   else {
     const int corner_number = t8_dpyramid_face_corner[pyra->pyramid.type - T8_DPYRAMID_FIRST_TYPE][face][corner];
