@@ -83,7 +83,7 @@ t8_forest_ghost_exchange_data_with_vector (t8_forest_t forest, const std::vector
 /*Wrapper function to handle std::vector directly for t8_forest_search*/
 template <typename T>
 void
-t8_forest_search_with_vector (t8_forest_t forest, t8_forest_search_query_fn search_fn,
+t8_forest_search_with_vector (t8_forest_t forest, t8_forest_search_fn search_fn,
                               t8_forest_search_query_fn query_fn, const std::vector<T> &query_vector)
 {
   t8_debugf ("Entering t8_forest_search_with_vector\n");
