@@ -58,8 +58,8 @@ t8_test_manual_first_last_face_descendant (const t8_eclass_scheme_c *ts, const t
 }
 
 class class_descendant: public TestDFS {
-  virtual void
-  check_element ()
+  void
+  check_element () override
   {
     /* Check the linear first and last descendants of an element along all faces. 
      * For the test the descendants are computed manually by t8_test_manual_first_last_face_descendant and 

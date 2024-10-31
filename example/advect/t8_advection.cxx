@@ -1247,7 +1247,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u, t8_example_level_se
   for (problem->num_time_steps = 0; !done; problem->num_time_steps++, problem->t += problem->delta_t) {
     if (problem->num_time_steps % modulus == modulus - 1) {
       t8_global_essentialf ("[advect] Step %i  %li elems\n", problem->num_time_steps + 1,
-                            t8_forest_get_global_num_elements (problem->forest));
+                            static_cast<long> (t8_forest_get_global_num_elements (problem->forest)));
     }
     /* Time loop */
 
