@@ -276,14 +276,6 @@ t8_default_scheme_prism_c::t8_element_boundary_face (const t8_element_t *elem, i
   T8_ASSERT (boundary_scheme->t8_element_is_valid (boundary));
 }
 
-const int t8_dprism_face_corner[5][4] = {
-  { 1, 2, 4, 5 },
-  { 0, 2, 3, 5 },
-  { 0, 1, 3, 4 },
-  { 0, 1, 2, -1 }, /*this face is a triangle -> -1 for the 4th corner */
-  { 3, 4, 5, -1 }  /*this face is a triangle -> -1 for the 4th corner */
-};
-
 void
 t8_default_scheme_prism_c::t8_element_first_descendant_face (const t8_element_t *elem, int face,
                                                              t8_element_t *first_desc, int level) const

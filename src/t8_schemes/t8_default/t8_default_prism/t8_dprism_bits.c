@@ -27,8 +27,6 @@
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.h>
 #include <t8_eclass.h>
 
-int t8_dprism_face_corners[5][4] = { { 1, 2, 4, 5 }, { 0, 2, 3, 5 }, { 0, 1, 3, 4 }, { 0, 1, 2, -1 }, { 3, 4, 5, -1 } };
-
 int
 t8_dprism_get_level (const t8_dprism_t *p)
 {
