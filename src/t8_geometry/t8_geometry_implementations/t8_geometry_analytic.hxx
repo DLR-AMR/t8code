@@ -137,7 +137,7 @@ struct t8_geometry_analytic: public t8_geometry
    * \return                True if the geometry is compatible with the tree.
    */
   bool
-  t8_geom_check_tree_compatibility () const;
+  t8_geom_check_tree_compatibility () const override;
 
   /** Update a possible internal data buffer for per tree data.
    * This function is called before the first coordinates in a new tree are
