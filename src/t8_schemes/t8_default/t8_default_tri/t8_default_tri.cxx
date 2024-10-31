@@ -26,6 +26,7 @@
 #include <t8_schemes/t8_default/t8_default_line/t8_dline_bits.h>
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtet.h>
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.h>
+#include <t8_eclass.h>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -120,7 +121,7 @@ t8_default_scheme_tri_c::t8_element_get_face_corner (const t8_element_t *element
   T8_ASSERT (t8_element_is_valid (element));
   T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
   T8_ASSERT (0 <= corner && corner < 2);
-  return t8_dtri_face_corner[face][corner];
+  return t8_face_vertex_to_tree_vertex[T8_ECLASS_TRIANGLE][face][corner];
 }
 
 int
@@ -326,7 +327,7 @@ t8_default_scheme_tri_c::t8_element_first_descendant_face (const t8_element_t *e
   T8_ASSERT (0 <= level && level <= T8_DTRI_MAXLEVEL);
 
   /* Compute the first corner of this face */
-  corner = t8_dtri_face_corner[face][0];
+  corner = t8_face_vertex_to_tree_vertex[T8_ECLASS_TRIANGLE][face][0];
   /* Compute the descendant in this corner */
   t8_dtri_corner_descendant ((const t8_dtri_t *) elem, (t8_dtri_t *) first_desc, corner, level);
 }
@@ -339,7 +340,7 @@ t8_default_scheme_tri_c::t8_element_last_descendant_face (const t8_element_t *el
   T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
   T8_ASSERT (0 <= level && level <= T8_DTRI_MAXLEVEL);
   /* Compute the last corner of this face */
-  corner = t8_dtri_face_corner[face][1];
+  corner = t8_face_vertex_to_tree_vertex[T8_ECLASS_TRIANGLE][face][1];
   /* Compute the descendant in this corner */
   t8_dtri_corner_descendant ((const t8_dtri_t *) elem, (t8_dtri_t *) last_desc, corner, level);
 }
