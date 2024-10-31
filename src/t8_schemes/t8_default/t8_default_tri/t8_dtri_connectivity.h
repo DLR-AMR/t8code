@@ -68,9 +68,6 @@ extern const int t8_dtri_parenttype_Iloc_to_type[2][4];
 /** Store the cube-id for each (parenttype,local Index) combination. */
 extern const int t8_dtri_parenttype_Iloc_to_cid[2][4];
 
-/** Store the indices of the faces of each corner of a triangle. */
-extern const int t8_dtri_corner_face[3][2];
-
 T8_EXTERN_C_END ();
 
 #endif /* T8_DTRI_CONNECTIVITY_H */
