@@ -320,6 +320,7 @@ t8_ghost_get_ghost_in_tree_from_linear_id (t8_forest_t forest, t8_locidx_t lghos
     /* The element was found */
     return t8_element_array_index_locidx (ghost_elements, *loc_ghost_id);
   }
+  *loc_ghost_id = -1;
   return nullptr;
 }
 
