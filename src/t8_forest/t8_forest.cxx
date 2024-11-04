@@ -1519,7 +1519,7 @@ t8_forest_element_neighbor_eclass (t8_forest_t forest, t8_locidx_t ltreeid, cons
 
 t8_gloidx_t
 t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *elem, t8_element_t *neigh,
-                                 t8_eclass_scheme_c *neigh_scheme, int face, int *neigh_face)
+                                 const t8_eclass_scheme_c *neigh_scheme, int face, int *neigh_face)
 {
   t8_eclass_scheme_c *ts;
   t8_tree_t tree;
@@ -1632,7 +1632,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const 
 
 t8_gloidx_t
 t8_forest_element_half_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *elem,
-                                       t8_element_t *neighs[], t8_eclass_scheme_c *neigh_scheme, int face,
+                                       t8_element_t *neighs[], const t8_eclass_scheme_c *neigh_scheme, int face,
                                        int num_neighs, int dual_faces[])
 {
   t8_eclass_scheme_c *ts;

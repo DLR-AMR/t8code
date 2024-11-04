@@ -396,7 +396,7 @@ t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t forest, t8_locidx_t l
  */
 t8_gloidx_t
 t8_forest_element_half_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *elem,
-                                       t8_element_t *neighs[], t8_eclass_scheme_c *neigh_scheme, int face,
+                                       t8_element_t *neighs[], const t8_eclass_scheme_c *neigh_scheme, int face,
                                        int num_neighs, int dual_faces[]);
 
 /** Iterate over all leaves of a forest and for each face compute the face neighbor
