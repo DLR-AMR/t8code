@@ -97,7 +97,7 @@ t8_geom_evaluate_sphere_tri_prism (const double *active_tree_vertices, const t8_
 {
   // All elements are aligned such that the reference z-direction follows the
   // outward radial direction of the sphere. Hence the inner radius is equal to
-  // the norm of the first positition vector of `active_tree_vertices`.
+  // the norm of the first position vector of `active_tree_vertices`.
   const double inner_radius = t8_vec_norm (active_tree_vertices);
 
   t8_geom_compute_linear_geometry (eclass, active_tree_vertices, ref_coords, num_coords, out_coords);
