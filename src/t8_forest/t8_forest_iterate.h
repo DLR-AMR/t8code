@@ -88,11 +88,11 @@ typedef void (*t8_forest_query_fn) (t8_forest_t forest, const t8_locidx_t ltreei
  * \param[in] ltreeid             the local tree id of the current tree in the cmesh. Since the cmesh has to be
  *                                replicated, it coincides with the global tree id.
  * \param[in] element             the element for which the search criterion is checked
- * \param[in] pfirst              the lowest processor that owns part of \a element. Guaranteed to be non-empty.
- * \param[in] plast               the highest processor that owns part of \a element. Guaranteed to be non-empty.
+ * \param[in] pfirst              the first processor that owns part of \a element. Guaranteed to be non-empty.
+ * \param[in] plast               the last processor that owns part of \a element. Guaranteed to be non-empty.
  * \returns                       non-zero if the search criterion is met, zero otherwise.
  */
-typedef int (*t8_forest_partition_search_fn) (t8_forest_t forest, const t8_locidx_t ltreeid,
+typedef int (*t8_forest_partition_search_fn) (const t8_forest_t forest, const t8_locidx_t ltreeid,
                                               const t8_element_t *element, const int pfirst, const int plast);
 
 /**
@@ -104,8 +104,8 @@ typedef int (*t8_forest_partition_search_fn) (t8_forest_t forest, const t8_locid
  * \param[in] ltreeid             the local tree id of the current tree in the cmesh. Since the cmesh has to be
  *                                replicated, it coincides with the global tree id.
  * \param[in] element             the element for which the query is executed
- * \param[in] pfirst              the lowest processor that owns part of \a element. Guaranteed to be non-empty.
- * \param[in] plast               the highest processor that owns part of \a element. Guaranteed to be non-empty.
+ * \param[in] pfirst              the first processor that owns part of \a element. Guaranteed to be non-empty.
+ * \param[in] plast               the last processor that owns part of \a element. Guaranteed to be non-empty.
  *                                if this is equal to \a pfirst, then the recursion will stop for
  *                                \a element's branch after this function returns.
  * \param[in] queries             an array of queries that are checked by the function
@@ -117,9 +117,9 @@ typedef int (*t8_forest_partition_search_fn) (t8_forest_t forest, const t8_locid
  * \param[in] num_active_queries  The number of currently active queries (equals the number of entries of
  *                                \a query_matches and entries of \a query_indices).
  */
-typedef int (*t8_forest_partition_query_fn) (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
-                                             const int pfirst, const int plast, void *queries,
-                                             sc_array_t *query_indices, int *query_matches,
+typedef int (*t8_forest_partition_query_fn) (const t8_forest_t forest, const t8_locidx_t ltreeid,
+                                             const t8_element_t *element, const int pfirst, const int plast,
+                                             void *queries, sc_array_t *query_indices, int *query_matches,
                                              const size_t num_active_queries);
 
 T8_EXTERN_C_BEGIN ();
@@ -176,7 +176,8 @@ t8_forest_search (t8_forest_t forest, t8_forest_search_fn search_fn, t8_forest_q
 void
 t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_forest_replace_t replace_fn);
 
-/* Perform a top-down search of the global partition, executing a callback on
+/**
+ * Perform a top-down search of the global partition, executing a callback on
  * each intermediate element. The search will enter each tree at least once.
  * The recursion will only go down branches that are split between multiple processors.
  * This is not a collective function. It does not communicate.
@@ -184,9 +185,14 @@ t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_fo
  * If the callback returns false for an element, its descendants
  * are not further searched.
  * To pass user data to \b search_fn function use \ref t8_forest_set_user_data
+ *
+ * \param[in] forest              the forest to be searched
+ * \param[in] search_fn           a search callback function called on elements
+ * \param[in] query_fn            a query callback function called for all active queries of an element
+ * \param[in,out] queries         an array of queries that are checked by the function
  */
 void
-t8_forest_search_partition (t8_forest_t forest, t8_forest_partition_search_fn search_fn,
+t8_forest_search_partition (const t8_forest_t forest, t8_forest_partition_search_fn search_fn,
                             t8_forest_partition_query_fn query_fn, sc_array_t *queries);
 
 T8_EXTERN_C_END ();
