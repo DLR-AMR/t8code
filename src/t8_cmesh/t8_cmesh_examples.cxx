@@ -3424,13 +3424,11 @@ t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shel
 
   const double outer_radius = inner_radius + shell_thickness;
 
-  const double _CBRT = 1.7320508075688772;
-
-  const double r = inner_radius / _CBRT;
-  const double R = outer_radius / _CBRT;
+  const double r = 1.0 / std::sqrt(3.0); // inner radius
+  const double R = 2.0 / std::sqrt(3.0); // outer radius
 
   // Vertices of the template hex.
-  const double vertices[][3] = {
+  const double hex_vertices[][3] = {
     { -r, -r, r }, { r, -r, r }, { -r, r, r }, { r, r, r },
     { -R, -R, R }, { R, -R, R }, { -R, R, R }, { R, R, R } 
   };
