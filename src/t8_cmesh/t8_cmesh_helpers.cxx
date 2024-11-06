@@ -242,8 +242,6 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const t8_gloidx_t ntrees, const
 
         if (neigh_itree > -1) {
           t8_cmesh_set_join (cmesh, itree, neigh_itree, iface, neigh_iface, orientation);
-          t8_productionf ("itree, iface, orient = %d | %d ; %d | %d ; %d\n", itree, neigh_itree, iface, neigh_iface,
-                          orientation);
         }
       }
     }
