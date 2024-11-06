@@ -69,6 +69,9 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const t8_gloidx_t ntrees, const
     }
   }
 
+  /* Scaled tolerance to decide if two doubles are equal. */
+  const double tolerance = 10.0 * T8_PRECISION_EPS * std::abs (max_coord - min_coord);
+
   /* Setup hash table `faces` mapping a hash key to a pair containing `(itree, iface)`. */
   std::multimap<unsigned long, std::pair<int, int>> faces;
 
@@ -154,7 +157,7 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const t8_gloidx_t ntrees, const
                                                                    neigh_itree, neigh_ivert, icoord)];
 
               /* Compare the coordinates with some tolerance. */
-              if (fabs (face_vert - neigh_face_vert) < 10.0 * T8_PRECISION_EPS) {
+              if (std::abs (face_vert - neigh_face_vert) < tolerance) {
                 match_count_per_coord++;
               }
             }
@@ -239,6 +242,8 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const t8_gloidx_t ntrees, const
 
         if (neigh_itree > -1) {
           t8_cmesh_set_join (cmesh, itree, neigh_itree, iface, neigh_iface, orientation);
+          t8_productionf ("itree, iface, orient = %d | %d ; %d | %d ; %d\n", itree, neigh_itree, iface, neigh_iface,
+                          orientation);
         }
       }
     }
