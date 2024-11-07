@@ -841,7 +841,7 @@ t8_forest_element_neighbor_eclass (t8_forest_t forest, t8_locidx_t ltreeid, cons
  */
 t8_gloidx_t
 t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *elem, t8_element_t *neigh,
-                                 t8_eclass_scheme_c *neigh_scheme, int face, int *neigh_face);
+                                 const t8_eclass_scheme_c *neigh_scheme, int face, int *neigh_face);
 
 /* TODO: implement */
 void

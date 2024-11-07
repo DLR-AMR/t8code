@@ -95,7 +95,7 @@ t8_ghost_neighbor_test (t8_eclass_t eclass, sc_MPI_Comm comm, int hybrid)
     if (ret != -1) {
       /* Anchor is only implemented in the common scheme. */
       common_scheme->t8_element_anchor (neigh, anchor_node);
-      t8_debugf ("neighbor of %i across face %i (in tree %li): (%i,%i,%i,%i)\n", element_id, i, ret,
+      t8_debugf ("neighbor of %i across face %i (in tree %li): (%i,%i,%i,%i)\n", element_id, i, static_cast<long> (ret),
                  neigh_scheme->t8_element_level (neigh), anchor_node[0], anchor_node[1],
                  t8_eclass_to_dimension[elem_eclass] > 2 ? anchor_node[2] : -1);
     }

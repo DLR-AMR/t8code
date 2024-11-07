@@ -295,7 +295,8 @@ t8_tutorial_search_for_particles (t8_forest_t forest, sc_array *particles)
 
   /* Print the number of elements and number of searched elements. */
   global_num_elements = t8_forest_get_global_num_elements (forest);
-  t8_global_productionf (" [search] Searched forest with %li global elements.\n", global_num_elements);
+  t8_global_productionf (" [search] Searched forest with %li global elements.\n",
+                         static_cast<long> (global_num_elements));
   t8_global_errorf (" [search] Looked at %i elements during search.\n", global_num_searched_elements);
 
   /*

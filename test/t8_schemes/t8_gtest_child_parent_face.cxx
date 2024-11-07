@@ -28,8 +28,8 @@
 #include <test/t8_gtest_macros.hxx>
 
 class class_child_parent_face: public TestDFS {
-  virtual void
-  check_element ()
+  void
+  check_element () override
   {
     const int num_faces = ts->t8_element_num_faces (element);
     for (int iface = 0; iface < num_faces; iface++) {
