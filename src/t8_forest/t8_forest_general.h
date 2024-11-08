@@ -613,6 +613,39 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
                                    t8_locidx_t **pelement_indices, t8_eclass_scheme_c **pneigh_scheme,
                                    int forest_is_balanced, t8_gloidx_t *gneigh_tree, int *orientation);
 
+/**
+ * Given the process local index of an element or ghost \a E in "num_local_elements + num_ghosts" -
+ * i.e. the same order that we use for \ref t8_forest_ghost_exchange_data - and a face number of \a E,
+ * compute the indices of the corresponding neighbor elements or ghosts.
+ * 
+ * \param[in]  forest         The committed forest.
+ * \param[in]  element_index  The process local index of an element or ghost of \a forest. 
+ *                            0 <= \a element_index < num_local_element + num_ghosts.
+ * \param[in]  element_face   A face of the corresponding element.
+ * \param[out] num_neighbors  The number of neighbors of the element across \a face.
+ * \param[out] neighbor_indices The process local indices of the neighbor elements.
+ * \return                    True (nonzero) if there are neighbors, False (0) otherwise.
+ */
+int
+t8_forest_leaf_face_neighbor_indices (const t8_forest_t forest, const t8_locidx_t element_index, const int element_face,
+                                      int *num_neighbors, t8_locidx_t **neighbor_indices);
+
+/**
+ * This function is an optimization of \ref t8_forest_leaf_face_neighbor_indices when the caller
+ * is certain that there is only a single or no face number.
+* 
+ * \param[in]  forest         The committed forest.
+ * \param[in]  element_index  The process local index of an element or ghost of \a forest. 
+ *                            0 <= \a element_index < num_local_element + num_ghosts.
+ * \param[in]  element_face   A face of the corresponding element.
+ * \param[out] neighbor_index The process local index of the neighbor element.
+ * \return                    True (nonzero) if there is a neighbor, False (0) otherwise.
+ *                            Will also return false when there are multiple neighbors.
+ */
+int
+t8_forest_leaf_face_neighbor_index_single_neighbor (const t8_forest_t forest, const t8_locidx_t element_index,
+                                                    const int element_face, t8_locidx_t *neighbor_index);
+
 /** Exchange ghost information of user defined element data.
  * \param[in] forest       The forest. Must be committed.
  * \param[in] element_data An array of length num_local_elements + num_ghosts
