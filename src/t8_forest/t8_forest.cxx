@@ -1929,6 +1929,40 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8
                                      pelement_indices, pneigh_scheme, forest_is_balanced, NULL, NULL);
 }
 
+int
+t8_forest_leaf_face_neighbor_indices (const t8_forest_t forest, const t8_locidx_t element_index, const int element_face,
+                                      int *num_neighbors, t8_locidx_t **neighbor_indices)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  const t8_locidx_t num_local_elements = t8_forest_get_num_elements (forest);
+  const t8_locidx_t num_ghosts = t8_forest_get_num_ghosts (forest);
+  /* Check index bounds */
+  T8_ASSERT (0 <= element_index);
+  T8_ASSERT (element_index < num_local_elements + num_ghosts);
+  /* The index either points to an element or a ghost */
+  const bool is_element = element_index < num_local_elements;
+  const bool is_ghost = !is_element;
+  /* Compute the element and its tree. */
+  t8_locidx_t tree_id;
+  const t8_element_t * element = is_element ? 
+      t8_forest_get_element (forest, element_index, &tree_id)
+    : t8_forest_get_ghost (forest, element_index, &tree_id); // does not exist yet
+  
+  /* Get the scheme */
+  const t8_eclass_t eclass = t8_forest_get_tree_class (forest, tree_id);
+  const t8_eclass_scheme_c *scheme = t8_forest_get_eclass_scheme (forest, eclass);
+
+  /* Check number of faces */
+#if T8_ENABLE_DEBUG
+  const int num_faces = scheme->t8_element_num_faces (element);
+  T8_ASSERT (0 <= element_face && element_face < num_faces);
+#endif
+  // Call leaf face neighbor now
+  // But works only for true elements?
+  // If we know only one neighbor we can face_neighbor inside?
+  // Not really what if tree boundary?
+}
+
 void
 t8_forest_print_all_leaf_neighbors (t8_forest_t forest)
 {
