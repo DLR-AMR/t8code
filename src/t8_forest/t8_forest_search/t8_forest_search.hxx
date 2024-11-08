@@ -28,6 +28,7 @@
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
 #include <functional>
+#include <numeric>
 
 /*
  *   Discussion about C++ callback handling https://stackoverflow.com/questions/2298242/callback-functions-in-c
@@ -51,12 +52,12 @@
  * \param[in] tree_leaf_index The index of the current leaf element within the tree.
  * \param[in] user_data A reference to user-defined data passed to the callback.
  *
- * \return An integer result code. The meaning of the result code is defined by the specific implementation of the callback.
+ * \return True if the search should continue, false otherwise.
  */
 template <typename Udata = void>
 using t8_search_element_callback
-  = std::function<int (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element, const bool is_leaf,
-                       const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index, Udata &user_data)>;
+  = std::function<bool (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element, const bool is_leaf,
+                        const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index, Udata &user_data)>;
 
 /**
  * \typedef t8_search_queries_callback
@@ -78,7 +79,7 @@ using t8_search_element_callback
  */
 template <typename Query_T, typename Udata = void>
 using t8_search_queries_callback = std::function<void (
-  t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element, const int is_leaf,
+  t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element, const bool is_leaf,
   const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index, std::vector<Query_T> &queries,
   std::vector<int> &active_query_indices, std::vector<bool> &query_matches, Udata &user_data)>;
 
@@ -89,7 +90,7 @@ using t8_search_queries_callback = std::function<void (
  * @tparam Udata 
  */
 template <typename Udata = void>
-class search {
+class t8_search {
  public:
   /**
    * \brief Constructor of the search class. Sets the element callback, forest, and user data.
@@ -97,8 +98,8 @@ class search {
    * \param[in] forest The forest in which the search is performed.
    * \param[in] user_data The user-defined data to be passed to the callback.
    */
-  search (t8_search_element_callback<Udata> element_callback, const t8_forest_t forest = nullptr,
-          const Udata &user_data = nullptr)
+  t8_search (t8_search_element_callback<Udata> element_callback, const t8_forest_t forest = nullptr,
+             const Udata &user_data = nullptr)
     : element_callback (element_callback), user_data (user_data)
   {
     t8_forest_ref (forest);
@@ -116,7 +117,7 @@ class search {
   void
   update_forest (const t8_forest_t forest)
   {
-    t8_forest_unref (this->forest);
+    t8_forest_unref (&(this->forest));
     t8_forest_ref (forest);
     this->forest = forest;
   }
@@ -141,9 +142,9 @@ class search {
    * associated with the search instance. It ensures that the resources
    * held by the forest object are only released if no further references exist.
    */
-  ~search ()
+  ~t8_search ()
   {
-    t8_forest_unref (this->forest);
+    t8_forest_unref (&(this->forest));
   };
 
   /**
@@ -163,15 +164,31 @@ class search {
    * This function performs a search operation on the tree.
    */
   void
-  search_tree ();
+  search_tree (const t8_locidx_t ltreeid);
 
-  /**
+  /**{
+
+}
    * \brief Recursively searches for elements in the forest.
    *
    * This function performs a recursive search operation, used on each tree in the forest.
    */
   void
-  search_recursion ();
+  search_recursion (const t8_locidx_t ltreeid, t8_element_t *element, const t8_eclass_scheme_c *ts,
+                    t8_element_array_t *leaf_elements, const t8_locidx_t tree_lindex_of_first_leaf);
+
+  bool
+  stop_due_to_queries ()
+  {
+    return false;
+  }
+
+  void
+  check_queries (const t8_locidx_t ltreeid, const t8_element_t *element, const bool is_leaf,
+                 const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index)
+  {
+    return;
+  }
 
   t8_search_element_callback<Udata> element_callback;
 
@@ -180,7 +197,7 @@ class search {
 };
 
 template <typename Query_T, typename Udata = void>
-class search_with_queries: public search<Udata> {
+class t8_search_with_queries: public t8_search<Udata> {
  public:
   /**
    * \brief Constructor for the search_with_queries class.
@@ -195,13 +212,12 @@ class search_with_queries: public search<Udata> {
    * \param[in] queries A vector containing the queries to be processed.
    * \param[in] forest An optional forest object. Defaults to nullptr.
    */
-  search_with_queries (t8_search_element_callback<Udata> element_callback,
-                       t8_search_queries_callback<Query_T, Udata> queries_callback, std::vector<Query_T> &queries,
-                       const t8_forest_t forest = nullptr)
+  t8_search_with_queries (t8_search_element_callback<Udata> element_callback,
+                          t8_search_queries_callback<Query_T, Udata> queries_callback, std::vector<Query_T> &queries,
+                          const t8_forest_t forest = nullptr)
     : search<Udata> (element_callback, forest), queries_callback (queries_callback), queries (queries)
   {
-    t8_forest_ref (forest);
-    this->forest = forest;
+    std::iota (this->active_queries.begin (), this->active_queries.end (), 0);
   };
 
   /**
@@ -218,15 +234,40 @@ class search_with_queries: public search<Udata> {
     this->queries = queries;
   }
 
-  ~search_with_queries ()
+  ~t8_search_with_queries ()
   {
     t8_forest_unref (this->forest);
   };
 
  private:
-  t8_search_queries_callback<Query_T, Udata> queries_callback;
-  const std::vector<Query_T> &queries;
-};
+  bool
+  stop_due_to_queries ()
+  {
+    return active_queries.empty ();
+  }
+
+  void
+  check_queries (std::vector<size_t> new_active_queries, const t8_locidx_t ltreeid, const t8_element_t *element,
+                 const bool is_leaf, const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index)
+  {
+    T8_ASSERT (new_active_queries.empty ());
+    if (!active_queries.empty ()) {
+      std::vector<bool> query_matches (active_queries.size ());
+      queries_callback (forest, ltreeid, element, is_leaf, leaf_elements, tree_leaf_index, queries, active_queries,
+                        query_matches, user_data);
+      if (!is_leaf) {
+        std::for_each (active_queries.begin (), active_queries.end (), [&] (size_t iactive) {
+          if (query_matches[iactive]) {
+            new_active_queries.push_back (iactive);
+          }
+        });
+      }
+    }
+
+    t8_search_queries_callback<Query_T, Udata> queries_callback;
+    const std::vector<Query_T> &queries;
+    std::vector<size_t> active_queries;
+  };
 
 #if 0
 //General shape of search
