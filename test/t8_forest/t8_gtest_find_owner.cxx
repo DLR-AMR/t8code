@@ -40,7 +40,7 @@ class forest_find_owner: public testing::TestWithParam<t8_eclass> {
   {
     eclass = GetParam ();
 
-    default_scheme = t8_scheme_new_default_cxx ();
+    default_scheme = t8_scheme_new_default ();
     /* Construct a coarse mesh of one tree */
     cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
   }

@@ -20,72 +20,48 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <new>
 #include <t8_schemes/t8_default/t8_default.hxx>
-#include <t8_refcount.h>
+#include <t8_schemes/t8_scheme_builder.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
 t8_scheme *
-t8_scheme_new_default_cxx (void)
+t8_scheme_new_default (void)
 {
-  t8_scheme *s;
+  t8_scheme_builder builder;
 
-  s = T8_ALLOC_ZERO (t8_scheme, 1);
-  t8_refcount_init (&s->rc);
-
-  s->eclass_schemes[T8_ECLASS_VERTEX] = new t8_default_scheme_vertex ();
-  s->eclass_schemes[T8_ECLASS_LINE] = new t8_default_scheme_line ();
-  s->eclass_schemes[T8_ECLASS_QUAD] = new t8_default_scheme_quad ();
-  s->eclass_schemes[T8_ECLASS_HEX] = new t8_default_scheme_hex ();
-  s->eclass_schemes[T8_ECLASS_TRIANGLE] = new t8_default_scheme_tri ();
-  s->eclass_schemes[T8_ECLASS_TET] = new t8_default_scheme_tet ();
-  s->eclass_schemes[T8_ECLASS_PRISM] = new t8_default_scheme_prism ();
-  s->eclass_schemes[T8_ECLASS_PYRAMID] = new t8_default_scheme_pyramid ();
-
-  T8_ASSERT (s->eclass_schemes[T8_ECLASS_VERTEX]->t8_element_maxlevel ()
-             >= s->eclass_schemes[T8_ECLASS_LINE]->t8_element_maxlevel ());
-  T8_ASSERT (s->eclass_schemes[T8_ECLASS_LINE]->t8_element_maxlevel ()
-             >= s->eclass_schemes[T8_ECLASS_QUAD]->t8_element_maxlevel ());
-  T8_ASSERT (s->eclass_schemes[T8_ECLASS_LINE]->t8_element_maxlevel ()
-             >= s->eclass_schemes[T8_ECLASS_TRIANGLE]->t8_element_maxlevel ());
-  T8_ASSERT (s->eclass_schemes[T8_ECLASS_TRIANGLE]->t8_element_maxlevel ()
-             >= s->eclass_schemes[T8_ECLASS_TET]->t8_element_maxlevel ());
-  T8_ASSERT (s->eclass_schemes[T8_ECLASS_TRIANGLE]->t8_element_maxlevel ()
-             >= s->eclass_schemes[T8_ECLASS_PRISM]->t8_element_maxlevel ());
-  T8_ASSERT (s->eclass_schemes[T8_ECLASS_TRIANGLE]->t8_element_maxlevel ()
-             >= s->eclass_schemes[T8_ECLASS_PYRAMID]->t8_element_maxlevel ());
-  T8_ASSERT (s->eclass_schemes[T8_ECLASS_QUAD]->t8_element_maxlevel ()
-             >= s->eclass_schemes[T8_ECLASS_HEX]->t8_element_maxlevel ());
-  T8_ASSERT (s->eclass_schemes[T8_ECLASS_QUAD]->t8_element_maxlevel ()
-             >= s->eclass_schemes[T8_ECLASS_PRISM]->t8_element_maxlevel ());
-  T8_ASSERT (s->eclass_schemes[T8_ECLASS_QUAD]->t8_element_maxlevel ()
-             >= s->eclass_schemes[T8_ECLASS_PYRAMID]->t8_element_maxlevel ());
-
-  return s;
+  builder.add_eclass_scheme<t8_default_scheme_vertex> (T8_ECLASS_VERTEX);
+  builder.add_eclass_scheme<t8_default_scheme_line> (T8_ECLASS_LINE);
+  builder.add_eclass_scheme<t8_default_scheme_quad> (T8_ECLASS_QUAD);
+  builder.add_eclass_scheme<t8_default_scheme_hex> (T8_ECLASS_HEX);
+  builder.add_eclass_scheme<t8_default_scheme_tri> (T8_ECLASS_TRIANGLE);
+  builder.add_eclass_scheme<t8_default_scheme_tet> (T8_ECLASS_TET);
+  builder.add_eclass_scheme<t8_default_scheme_prism> (T8_ECLASS_PRISM);
+  builder.add_eclass_scheme<t8_default_scheme_pyramid> (T8_ECLASS_PYRAMID);
+  return builder.build_scheme ();
 }
 
 int
-t8_eclass_scheme_is_default (t8_scheme *ts)
+t8_eclass_scheme_is_default (t8_scheme *scheme, t8_eclass_t eclass)
 {
-  switch (ts->eclass) {
+  switch (eclass) {
   case T8_ECLASS_VERTEX:
-    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_vertex *);
+    return scheme->check_eclass_scheme_type<t8_default_scheme_vertex> (T8_ECLASS_VERTEX);
   case T8_ECLASS_LINE:
-    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_line *);
+    return scheme->check_eclass_scheme_type<t8_default_scheme_line> (T8_ECLASS_LINE);
   case T8_ECLASS_QUAD:
-    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_quad *);
+    return scheme->check_eclass_scheme_type<t8_default_scheme_quad> (T8_ECLASS_QUAD);
   case T8_ECLASS_TRIANGLE:
-    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_tri *);
+    return scheme->check_eclass_scheme_type<t8_default_scheme_tri> (T8_ECLASS_TRIANGLE);
   case T8_ECLASS_HEX:
-    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_hex *);
+    return scheme->check_eclass_scheme_type<t8_default_scheme_hex> (T8_ECLASS_HEX);
   case T8_ECLASS_TET:
-    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_tet *);
+    return scheme->check_eclass_scheme_type<t8_default_scheme_tet> (T8_ECLASS_TET);
   case T8_ECLASS_PRISM:
-    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_prism *);
+    return scheme->check_eclass_scheme_type<t8_default_scheme_prism> (T8_ECLASS_PRISM);
   case T8_ECLASS_PYRAMID:
-    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_pyramid *);
+    return scheme->check_eclass_scheme_type<t8_default_scheme_pyramid> (T8_ECLASS_PYRAMID);
   default:
     SC_ABORT_NOT_REACHED ();
   }

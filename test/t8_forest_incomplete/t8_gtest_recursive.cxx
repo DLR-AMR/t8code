@@ -47,7 +47,7 @@ class recursive_tree: public testing::TestWithParam<t8_eclass_t> {
 
     /* Construct a cmesh such that each process will get one rooted tree */
     cmesh = t8_cmesh_new_bigmesh (eclass, MPI_size, sc_MPI_COMM_WORLD);
-    scheme = t8_scheme_new_default_cxx ();
+    scheme = t8_scheme_new_default ();
 
     t8_schemexx_ref (scheme);
     t8_cmesh_ref (cmesh);

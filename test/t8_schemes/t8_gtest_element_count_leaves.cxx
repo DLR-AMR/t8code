@@ -50,7 +50,7 @@ class class_element_leaves: public testing::TestWithParam<t8_eclass> {
   }
   t8_eclass eclass;
   t8_scheme *class_scheme;
-  t8_scheme *ts = t8_scheme_new_default_cxx ();
+  t8_scheme *ts = t8_scheme_new_default ();
 };
 
 TEST_P (class_element_leaves, test_element_count_leaves_root)

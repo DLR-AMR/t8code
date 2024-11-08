@@ -93,6 +93,18 @@ class t8_scheme {
     }
   }
 
+  /** Check if the scheme is of a specific type.
+   * \tparam TEclass_Scheme The type of the scheme to check for.
+   * \param [in] tree_class    The eclass of the current tree.
+   * \return                    True if the scheme is of type \a TEclass_Scheme, false otherwise.
+   */
+  template <class TEclass_Scheme>
+  inline bool
+  check_eclass_scheme_type (t8_eclass_t tree_class) const
+  {
+    return std::holds_alternative<TEclass_Scheme> (eclass_schemes[tree_class]);
+  }
+
   /** Return the size of any element of a given class.
    * \param [in] tree_class    The eclass of the current tree.
    * \return                      The size of an element of class \a tree_class.

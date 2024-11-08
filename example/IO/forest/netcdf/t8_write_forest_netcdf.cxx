@@ -195,7 +195,7 @@ t8_example_compare_performance_netcdf_var_properties (sc_MPI_Comm comm, int fore
   retval = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (retval);
   /* Create a default scheme */
-  default_scheme = t8_scheme_new_default_cxx ();
+  default_scheme = t8_scheme_new_default ();
 
   /* Construct a 3D hybrid hypercube as a cmesh */
   cmesh = t8_cmesh_new_hypercube_hybrid (comm, 1, 0);
@@ -343,7 +343,7 @@ t8_example_netcdf_write_forest (sc_MPI_Comm comm, int forest_refinement_level, i
   SC_CHECK_MPI (retval);
 
   /* Create a default scheme */
-  default_scheme = t8_scheme_new_default_cxx ();
+  default_scheme = t8_scheme_new_default ();
 
   /* Construct a cube coarse mesh */
   /* Construct a 3D hybrid hypercube as a cmesh */

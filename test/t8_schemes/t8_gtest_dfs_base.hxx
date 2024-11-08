@@ -59,7 +59,7 @@ class TestDFS: public testing::TestWithParam<t8_eclass_t> {
   void
   dfs_test_setup ()
   {
-    scheme = t8_scheme_new_default_cxx ();
+    scheme = t8_scheme_new_default ();
     eclass = GetParam ();
     ts = scheme->eclass_schemes[eclass];
     ts->t8_element_new (1, &element);

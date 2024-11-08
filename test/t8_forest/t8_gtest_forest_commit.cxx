@@ -137,7 +137,7 @@ TEST_P (forest_commit, test_forest_commit)
 
   const int level_step = 2;
 
-  t8_scheme *scheme = t8_scheme_new_default_cxx ();
+  t8_scheme *scheme = t8_scheme_new_default ();
 
   /* Compute the first level, such that no process is empty */
   int min_level = t8_forest_min_nonempty_level (cmesh, scheme);

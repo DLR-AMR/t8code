@@ -75,7 +75,7 @@ class element_is_leaf: public testing::TestWithParam<std::tuple<int, cmesh_examp
       GTEST_SKIP ();
     }
     /* Build the default scheme (TODO: Test this with all schemes) */
-    scheme = t8_scheme_new_default_cxx ();
+    scheme = t8_scheme_new_default ();
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
     t8_forest_ref (forest);
     //const int maxlevel = t8_forest_get_maxlevel (forest);

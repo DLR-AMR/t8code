@@ -196,7 +196,7 @@ main (int argc, char **argv)
   t8_forest_init (&forest_p8);
   t8_forest_set_cmesh (forest_p8, cmesh_p8, sc_MPI_COMM_WORLD);
   t8_forest_set_level (forest_p8, level);
-  t8_forest_set_scheme (forest_p8, t8_scheme_new_default_cxx ());
+  t8_forest_set_scheme (forest_p8, t8_scheme_new_default ());
   sc_flops_shot (&fi, &snapshot);
   sc_stats_set1 (&stats[5], snapshot.iwtime, "t8 forest p8 New level 4");
   sc_flops_snap (&fi, &snapshot);
@@ -227,7 +227,7 @@ main (int argc, char **argv)
   t8_forest_init (&forest_t8);
   t8_forest_set_cmesh (forest_t8, cmesh_p8, sc_MPI_COMM_WORLD);
   t8_forest_set_level (forest_t8, level);
-  t8_forest_set_scheme (forest_t8, t8_scheme_new_default_cxx ());
+  t8_forest_set_scheme (forest_t8, t8_scheme_new_default ());
   sc_flops_shot (&fi, &snapshot);
   sc_stats_set1 (&stats[7], snapshot.iwtime, "t8 forest t8 New Level 4");
   sc_flops_snap (&fi, &snapshot);

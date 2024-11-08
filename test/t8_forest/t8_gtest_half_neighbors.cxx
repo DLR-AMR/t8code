@@ -42,7 +42,7 @@ class forest_half_neighbors: public testing::TestWithParam<std::tuple<t8_eclass,
     eclass = std::get<0> (GetParam ());
     cmesh_type = std::get<1> (GetParam ());
 
-    default_scheme = t8_scheme_new_default_cxx ();
+    default_scheme = t8_scheme_new_default ();
     /* Construct a coarse mesh of one tree */
     cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
   }

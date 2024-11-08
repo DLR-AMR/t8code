@@ -84,7 +84,7 @@ t8_step2_build_uniform_forest (sc_MPI_Comm comm, t8_cmesh_t cmesh, int level)
   t8_scheme *scheme;
 
   /* Create the refinement scheme. */
-  scheme = t8_scheme_new_default_cxx ();
+  scheme = t8_scheme_new_default ();
   /* Creat the uniform forest. */
   forest = t8_forest_new_uniform (cmesh, scheme, level, 0, comm);
 

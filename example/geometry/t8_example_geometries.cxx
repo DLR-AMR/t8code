@@ -1022,7 +1022,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
    * 2 and refine recursively only along the boundary. */
   uniform_level = geom_type == T8_GEOM_CIRCLE ? SC_MIN (2, level) : level;
   /* Create a uniform forest */
-  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), uniform_level, 0, sc_MPI_COMM_WORLD);
+  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), uniform_level, 0, sc_MPI_COMM_WORLD);
   if (geom_type == T8_GEOM_CIRCLE) {
     t8_forest_t forest_adapt;
     /* Create a forest that is only refined at the tree boundaries. 

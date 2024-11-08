@@ -41,7 +41,7 @@ class class_forest_face_normal: public testing::TestWithParam<std::tuple<t8_ecla
   {
     eclass = std::get<0> (GetParam ());
     level = std::get<1> (GetParam ());
-    scheme = t8_scheme_new_default_cxx ();
+    scheme = t8_scheme_new_default ();
     t8_cmesh_t cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
     const int do_face_ghost = 1;
     forest = t8_forest_new_uniform (cmesh, scheme, level, do_face_ghost, sc_MPI_COMM_WORLD);

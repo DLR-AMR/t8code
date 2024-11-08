@@ -42,15 +42,16 @@
 T8_EXTERN_C_BEGIN ();
 
 /** Return the default element implementation of t8code. */
-t8_scheme_c *
-t8_scheme_new_default_cxx (void);
+t8_scheme *
+t8_scheme_new_default (void);
 
 /** Check whether a given eclass_scheme is one of the default schemes.
- * \param [in] ts   A (pointer to a) scheme
- * \return          True (non-zero) if \a ts is one of the default schemes,
- *                  false (zero) otherwise.
+ * \param [in] scheme   A (pointer to a) scheme
+ * \param [in] eclass   The eclass to check
+ * \return              True (non-zero) if \a ts is one of the default schemes,
+ *                      false (zero) otherwise.
  */
 int
-t8_eclass_scheme_is_default (t8_scheme_c *ts);
+t8_eclass_scheme_is_default (const t8_scheme *scheme, const t8_eclass_t eclass);
 
 T8_EXTERN_C_END ();

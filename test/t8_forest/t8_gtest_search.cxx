@@ -38,7 +38,7 @@ class forest_search: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
     eclass = std::get<0> (GetParam ());
     level = std::get<1> (GetParam ());
 
-    default_scheme = t8_scheme_new_default_cxx ();
+    default_scheme = t8_scheme_new_default ();
     /* Construct a cube coarse mesh */
     cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
     /* Build a uniform forest */

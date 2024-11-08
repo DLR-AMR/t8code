@@ -29,10 +29,10 @@
 
 #include <t8_schemes/t8_scheme.hxx>
 
-class Scheme_builder {
+class t8_scheme_builder {
  public:
-  Scheme_builder (): scheme (new t8_scheme) {};
-  ~Scheme_builder () {};
+  t8_scheme_builder (): scheme (new t8_scheme) {};
+  ~t8_scheme_builder () {};
 
   using scheme_var = t8_scheme::scheme_var;
 
@@ -43,7 +43,7 @@ class Scheme_builder {
     scheme->eclass_schemes[tree_class] = TEclass_Scheme (std::forward<_Args> (args)...);
   }
 
-  const t8_scheme *
+  t8_scheme *
   build_scheme () const
   {
     return scheme;

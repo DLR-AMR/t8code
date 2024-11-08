@@ -37,7 +37,7 @@ class nca: public testing::TestWithParam<t8_eclass> {
   SetUp () override
   {
     eclass = GetParam ();
-    scheme = t8_scheme_new_default_cxx ();
+    scheme = t8_scheme_new_default ();
     ts = scheme->eclass_schemes[eclass];
     ts->t8_element_new (1, &correct_nca);
     ts->t8_element_new (1, &desc_a);

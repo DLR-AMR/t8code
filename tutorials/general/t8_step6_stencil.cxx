@@ -83,7 +83,7 @@ t8_step6_build_forest (sc_MPI_Comm comm, int dim, int level)
 {
   t8_cmesh_t cmesh = t8_cmesh_new_periodic (comm, dim);
 
-  t8_scheme *scheme = t8_scheme_new_default_cxx ();
+  t8_scheme *scheme = t8_scheme_new_default ();
   struct t8_step3_adapt_data adapt_data = {
     { 0.0, 0.0, 0.0 }, /* Midpoints of the sphere. */
     0.5,               /* Refine if inside this radius. */

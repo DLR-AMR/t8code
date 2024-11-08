@@ -45,8 +45,8 @@ class DISABLED_global_tree: public testing::TestWithParam<std::tuple<t8_eclass, 
   {
     eclass = std::get<0> (GetParam ());
     testcase = std::get<1> (GetParam ());
-    forest = t8_forest_new_uniform (t8_cmesh_new_bigmesh (eclass, 3, sc_MPI_COMM_WORLD), t8_scheme_new_default_cxx (),
-                                    0, 0, sc_MPI_COMM_WORLD);
+    forest = t8_forest_new_uniform (t8_cmesh_new_bigmesh (eclass, 3, sc_MPI_COMM_WORLD), t8_scheme_new_default (), 0, 0,
+                                    sc_MPI_COMM_WORLD);
   }
   void
   TearDown () override

@@ -259,7 +259,7 @@ t8_forest_t
 t8_lagrange_element::create_uniform_forest (t8_cmesh_t cmesh, uint32_t level) const
 {
   t8_forest_t forest;
-  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0, sc_MPI_COMM_WORLD);
+  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, sc_MPI_COMM_WORLD);
   return forest;
 }
 

@@ -44,7 +44,7 @@ class t8_forest_volume: public testing::TestWithParam<std::tuple<t8_eclass_t, in
   {
     eclass = std::get<0> (GetParam ());
     level = std::get<1> (GetParam ());
-    scheme = t8_scheme_new_default_cxx ();
+    scheme = t8_scheme_new_default ();
     t8_cmesh_t cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
   }

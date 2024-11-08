@@ -47,7 +47,7 @@ class forest_transform: public testing::TestWithParam<std::tuple<t8_eclass, int>
     level = std::get<1> (GetParam ());
 
     t8_debugf ("\n\n\nTesting eclass %s with level %i", t8_eclass_to_string[eclass], level);
-    default_scheme = t8_scheme_new_default_cxx ();
+    default_scheme = t8_scheme_new_default ();
     /* Construct a coarse mesh of one tree */
     cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
 

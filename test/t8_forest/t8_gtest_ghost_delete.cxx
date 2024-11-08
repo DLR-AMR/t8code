@@ -78,7 +78,7 @@ class DISABLED_forest_ghost_exchange_holes: public testing::Test {
     if (comm != sc_MPI_COMM_NULL) {
       sc_MPI_Comm_size (comm, &size);
       T8_ASSERT (size <= 2);
-      scheme = t8_scheme_new_default_cxx ();
+      scheme = t8_scheme_new_default ();
       /* Construct a cmesh */
       cmesh = t8_cmesh_new_hypercube (T8_ECLASS_QUAD, comm, 0, 0, 0);
     }
