@@ -188,6 +188,7 @@ install( FILES
     t8_element.hxx
     t8_element_shape.h
     t8_forest_netcdf.h
+    t8_forest_search.hxx
     t8_mat.h
     t8_mesh.h
     t8_netcdf.h
