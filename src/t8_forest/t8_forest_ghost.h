@@ -69,6 +69,31 @@ t8_forest_ghost_get_tree_element_offset (t8_forest_t forest, t8_locidx_t lghost_
 t8_locidx_t
 t8_forest_ghost_tree_num_elements (t8_forest_t forest, t8_locidx_t lghost_tree);
 
+/** Retrieves a ghost element from its ghost tree given the element's linear id.
+ *
+ * \param [in] forest The forest object.
+ * \param [in] lghost_tree The local index of the ghost tree.
+ * \param [in] linear_id The linear id of the element.
+ * \param [in] element_level The level of the element.
+ * \param [out] loc_ghost_id The local id of the ghost. -1 if no ghost was found.
+ * \return The ghost element. nullptr if no ghost was found.
+ */
+const t8_element_t *
+t8_ghost_get_ghost_in_tree_from_linear_id (t8_forest_t forest, const t8_locidx_t lghost_tree,
+                                           const t8_linearidx_t linear_id, const int element_level,
+                                           t8_locidx_t *loc_ghost_id);
+
+/** Retrieves the local index of a ghost element in its specific ghost tree.
+ *
+ * \param [in] forest The forest object.
+ * \param [in] lghost_tree The local index of the ghost tree.
+ * \param [in] ghost_element The ghost element.
+ * \return The local index of the element in the ghost element array of the ghost tree.
+ *         -1 if no ghost element was found.
+ */
+t8_locidx_t
+t8_ghost_get_ghost_id_in_tree (t8_forest_t forest, const t8_locidx_t lghost_tree, const t8_element_t *ghost_element);
+
 /** Get a pointer to the ghost element array of a ghost tree.
  * \param [in]  forest    The forest. Ghost layer must exist.
  * \param [in]  lghost_tree The ghost tree id of a ghost tree.
@@ -162,10 +187,37 @@ t8_forest_ghost_unref (t8_forest_ghost_t *pghost);
 void
 t8_forest_ghost_destroy (t8_forest_ghost_t *pghost);
 
+/** Part of step 2 of the ghost_creat_ext 
+ * for ghost_type face
+ * Is declared, so that ghost_interface_face can use it
+ * \see t8_forest_ghost_interface_faces::t8_ghost_step_2
+ * \param [in,out]    forest     The forest.
+ */
+void
+t8_forest_ghost_fill_remote_v3 (t8_forest_t forest);
+
+/** Part of step 2 of the ghost_creat_ext 
+ * for ghost_type face
+ * Is declared, so that ghost_interface_face can use it
+ * \see t8_forest_ghost_interface_faces::t8_ghost_step_2
+ * \param [in,out]    forest     The forest.
+ */
+void
+t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int ghost_method);
+
 /** Create one layer of ghost elements for a forest.
  * \see t8_forest_set_ghost
  * \param [in,out]    forest     The forest.
  * \a forest must be committed before calling this function.
+ */
+void
+t8_forest_ghost_create_ext (t8_forest_t forest);
+
+/** Create one layer of ghost elements for a forest.
+ * \see t8_forest_set_ghost
+ * \param [in,out]    forest     The forest.
+ * \a forest must be committed before calling this function.
+ * \a forest->ghost_interface must have the \a type FACE and the \a version 2
  */
 void
 t8_forest_ghost_create (t8_forest_t forest);
@@ -176,12 +228,18 @@ t8_forest_ghost_create (t8_forest_t forest);
  *                Mesh Refinement On Forests of Octrees
  * \param [in,out]    forest     The balanced forest/
  * \a forest must be committed before calling this function.
+ * \a forest->ghost_interface must have the \a type FACE and the \a version 1
  * \note The user should prefer \ref t8_forest_ghost_create even for balanced forests.
  */
 void
 t8_forest_ghost_create_balanced_only (t8_forest_t forest);
 
-/* experimental version using the ghost_v3 algorithm */
+/** Creating one layer of ghost elements for a forest. 
+ * experimental version using the ghost_v3 algorithm
+ * \param [in,out]    forest     The forest.
+ * \a forest must be committed before calling this function.
+ * \a forest->ghost_interface must have the \a type FACE and the \a version 1
+ */
 void
 t8_forest_ghost_create_topdown (t8_forest_t forest);
 

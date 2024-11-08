@@ -25,6 +25,8 @@
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_ghost.h>
+#include <t8_forest/t8_forest_ghost_interface.hxx>
+#include <t8_forest/t8_forest_ghost_interface_wrapper.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_profiling.h>
 #include <t8_element.hxx>
@@ -137,6 +139,7 @@ t8_forest_balance (t8_forest_t forest, int repartition)
   int count_partition_stats = 0;
   double ada_time, ghost_time, part_time;
   sc_statinfo_t *adap_stats, *ghost_stats, *partition_stats;
+  int create_ghost_interface = 0;
 
   t8_global_productionf ("Into t8_forest_balance with %lli global elements.\n",
                          (long long) t8_forest_get_global_num_elements (forest->set_from));
@@ -170,8 +173,16 @@ t8_forest_balance (t8_forest_t forest, int repartition)
   t8_forest_ref (forest_from);
 
   if (forest->set_from->ghosts == NULL) {
-    forest->set_from->ghost_type = T8_GHOST_FACES;
+    // forest->set_from->ghost_type = T8_GHOST_FACES;
+    if (forest->set_from->ghost_interface == NULL) {
+      forest->set_from->ghost_interface = t8_forest_ghost_interface_face_new (3);
+      create_ghost_interface = 1;
+    }
     t8_forest_ghost_create_topdown (forest->set_from);
+    if (create_ghost_interface) {
+      t8_forest_ghost_interface_unref (&(forest->set_from->ghost_interface));
+      forest->set_from->ghost_interface = NULL;
+    }
   }
 
   while (!done_global) {

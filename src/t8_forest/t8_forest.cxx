@@ -29,6 +29,7 @@
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_ghost.h>
+#include <t8_forest/t8_forest_ghost_interface_wrapper.h>
 #include <t8_forest/t8_forest_balance.h>
 #include <t8_element.hxx>
 #include <t8_element_c_interface.h>
@@ -39,13 +40,12 @@
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_vtk/t8_vtk_writer.h>
 #include <t8_geometry/t8_geometry_base.hxx>
+#include <t8_forest/t8_forest_ghost_interface.hxx>
+#include <t8_forest/t8_forest_ghost_search.hxx>
 #if T8_ENABLE_DEBUG
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
 #endif
-#include <t8_data/t8_element_array_iterator.hxx>
-
-#include <algorithm>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -1439,39 +1439,6 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
     forest->global_num_elements = 0;
     forest->incomplete_trees = -1;
   }
-}
-
-/** \brief Search for a linear element id (at forest->maxlevel) in a sorted array of
- * elements. If the element does not exist, return the largest index i
- * such that the element at position i has a smaller id than the given one.
- * If no such i exists, return -1.
- */
-static t8_locidx_t
-t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_linearidx_t element_id, const int maxlevel)
-{
-  const t8_eclass_scheme_c *ts = t8_element_array_get_scheme (elements);
-  /* At first, we check whether any element has smaller id than the
-   * given one. */
-  const t8_element_t *query = t8_element_array_index_int (elements, 0);
-  const t8_linearidx_t query_id = ts->t8_element_get_linear_id (query, maxlevel);
-  if (query_id > element_id) {
-    /* No element has id smaller than the given one. */
-    return -1;
-  }
-
-  /* We search for the first element in the array that is greater than the given element id. */
-  auto elem_iter = std::upper_bound (
-    t8_element_array_begin (elements), t8_element_array_end (elements), element_id,
-    [&maxlevel, &ts] (const t8_linearidx_t element_id_, const t8_element_array_iterator::value_type &elem_ptr) {
-      return (element_id_ < ts->t8_element_get_linear_id (elem_ptr, maxlevel));
-    });
-
-  /* After we found the element with an id greater than the given one, we are able to jump one index back.
-   * This guarantees us that the element at (index - 1) is smaller or equal to the given element id.
-   * In case we do not find an element that is greater than the given element_id, the binary search returns
-   * the end-iterator of the element array. In that case, we want to return the last index from the element
-   * array. */
-  return elem_iter.GetCurrentIndex () - 1;
 }
 
 t8_eclass_t
@@ -2954,6 +2921,19 @@ t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from, int no_re
 }
 
 void
+t8_forest_set_ghost_ext_new (t8_forest_t forest, int do_ghost, t8_forest_ghost_interface_c *ghost_interface)
+{
+  T8_ASSERT (t8_forest_is_initialized (forest));
+  SC_CHECK_ABORT (do_ghost != 0, "do_ghost == 0 in set_ghost_ext_new.\n");
+  SC_CHECK_ABORT (ghost_interface != NULL, "invalides ghost interface in set_ghost_ext_new\n");
+  if (forest->ghost_interface != NULL) {
+    t8_forest_ghost_interface_unref (&(forest->ghost_interface));
+  }
+  forest->do_ghost = do_ghost;
+  forest->ghost_interface = ghost_interface;
+}
+
+void
 t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_type, int ghost_version)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
@@ -2970,8 +2950,8 @@ t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost
     forest->do_ghost = (do_ghost != 0); /* True if and only if do_ghost != 0 */
   }
   if (forest->do_ghost) {
-    forest->ghost_type = ghost_type;
-    forest->ghost_algorithm = ghost_version;
+    t8_forest_ghost_interface_c *ghost_interface = t8_forest_ghost_interface_face_new (ghost_version);
+    t8_forest_set_ghost_ext_new (forest, do_ghost, ghost_interface);
   }
 }
 
@@ -3235,6 +3215,12 @@ t8_forest_commit (t8_forest_t forest)
     forest->scheme_cxx = forest->set_from->scheme_cxx;
     forest->global_num_trees = forest->set_from->global_num_trees;
 
+    if (forest->ghost_interface == NULL && forest->set_from->ghost_interface != NULL) {
+      forest->ghost_interface = forest->set_from->ghost_interface;
+      t8_forest_ghost_interface_ref (forest->ghost_interface);
+      t8_debugf ("t8_forest_commit: uebernehme ghost von set_from\n");
+    }
+
     /* Compute the maximum allowed refinement level */
     t8_forest_compute_maxlevel (forest);
     if (forest->from_method == T8_FOREST_FROM_COPY) {
@@ -3389,19 +3375,7 @@ t8_forest_commit (t8_forest_t forest)
     /* Construct a ghost layer, if desired */
     if (forest->do_ghost) {
       /* TODO: ghost type */
-      switch (forest->ghost_algorithm) {
-      case 1:
-        t8_forest_ghost_create_balanced_only (forest);
-        break;
-      case 2:
-        t8_forest_ghost_create (forest);
-        break;
-      case 3:
-        t8_forest_ghost_create_topdown (forest);
-        break;
-      default:
-        SC_ABORT ("Invalid choice of ghost algorithm");
-      }
+      t8_forest_ghost_create_ext (forest);
     }
     forest->do_ghost = 0;
   }
@@ -3676,11 +3650,10 @@ t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id, t8_locidx_t 
 const t8_element_t *
 t8_forest_get_element_in_tree (t8_forest_t forest, t8_locidx_t ltreeid, t8_locidx_t leid_in_tree)
 {
-  t8_tree_t tree;
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (0 <= ltreeid && ltreeid < t8_forest_get_num_local_trees (forest));
 
-  tree = t8_forest_get_tree (forest, ltreeid);
+  const t8_tree_t tree = t8_forest_get_tree (forest, ltreeid);
   const t8_element_t *element = t8_forest_get_tree_element (tree, leid_in_tree);
   T8_ASSERT (t8_forest_element_is_leaf (forest, element, ltreeid));
   return element;
@@ -4262,6 +4235,10 @@ t8_forest_reset (t8_forest_t *pforest)
   /* Destroy the ghost layer if it exists */
   if (forest->ghosts != NULL) {
     t8_forest_ghost_unref (&forest->ghosts);
+  }
+  /* Destroy the ghost_interface class if it exist */
+  if (forest->ghost_interface != NULL) {
+    t8_forest_ghost_interface_unref (&(forest->ghost_interface));
   }
   /* we have taken ownership on calling t8_forest_set_* */
   if (forest->scheme_cxx != NULL) {
