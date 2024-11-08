@@ -30,6 +30,7 @@
 #include <t8_schemes/t8_default/t8_default_hex/t8_dhex.h>
 #include <t8_schemes/t8_default/t8_default_hex/t8_dhex_bits.h>
 #include <t8_schemes/t8_default/t8_default_quad/t8_default_quad.hxx>
+#include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 
 /** The class holding a hexahedral element in the default scheme.
  * We make this definition public for interoperability of element classes.
@@ -37,14 +38,12 @@
  */
 typedef p8est_quadrant_t t8_phex_t;
 
-class t8_default_scheme_hex_c:
-  public t8_eclass_scheme<t8_default_scheme_hex_c>,
-  public t8_default_scheme_common_c<t8_default_scheme_hex_c> {
+class t8_default_scheme_hex: private t8_default_scheme_common<t8_default_scheme_hex> {
  public:
   /** Constructor. */
-  t8_default_scheme_hex_c ();
+  t8_default_scheme_hex (): t8_default_scheme_common<t8_default_scheme_hex> (T8_ECLASS_HEX, sizeof (t8_phex_t)) {};
 
-  ~t8_default_scheme_hex_c ();
+  ~t8_default_scheme_hex () {};
 
   /** Return the size of a hex element.
    * \return  The size of an element of class hex.

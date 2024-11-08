@@ -35,14 +35,14 @@ t8_scheme_new_default_cxx (void)
   s = T8_ALLOC_ZERO (t8_scheme, 1);
   t8_refcount_init (&s->rc);
 
-  s->eclass_schemes[T8_ECLASS_VERTEX] = new t8_default_scheme_vertex_c ();
-  s->eclass_schemes[T8_ECLASS_LINE] = new t8_default_scheme_line_c ();
-  s->eclass_schemes[T8_ECLASS_QUAD] = new t8_default_scheme_quad_c ();
-  s->eclass_schemes[T8_ECLASS_HEX] = new t8_default_scheme_hex_c ();
-  s->eclass_schemes[T8_ECLASS_TRIANGLE] = new t8_default_scheme_tri_c ();
-  s->eclass_schemes[T8_ECLASS_TET] = new t8_default_scheme_tet_c ();
-  s->eclass_schemes[T8_ECLASS_PRISM] = new t8_default_scheme_prism_c ();
-  s->eclass_schemes[T8_ECLASS_PYRAMID] = new t8_default_scheme_pyramid_c ();
+  s->eclass_schemes[T8_ECLASS_VERTEX] = new t8_default_scheme_vertex ();
+  s->eclass_schemes[T8_ECLASS_LINE] = new t8_default_scheme_line ();
+  s->eclass_schemes[T8_ECLASS_QUAD] = new t8_default_scheme_quad ();
+  s->eclass_schemes[T8_ECLASS_HEX] = new t8_default_scheme_hex ();
+  s->eclass_schemes[T8_ECLASS_TRIANGLE] = new t8_default_scheme_tri ();
+  s->eclass_schemes[T8_ECLASS_TET] = new t8_default_scheme_tet ();
+  s->eclass_schemes[T8_ECLASS_PRISM] = new t8_default_scheme_prism ();
+  s->eclass_schemes[T8_ECLASS_PYRAMID] = new t8_default_scheme_pyramid ();
 
   T8_ASSERT (s->eclass_schemes[T8_ECLASS_VERTEX]->t8_element_maxlevel ()
              >= s->eclass_schemes[T8_ECLASS_LINE]->t8_element_maxlevel ());
@@ -71,21 +71,21 @@ t8_eclass_scheme_is_default (t8_scheme *ts)
 {
   switch (ts->eclass) {
   case T8_ECLASS_VERTEX:
-    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_vertex_c *);
+    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_vertex *);
   case T8_ECLASS_LINE:
-    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_line_c *);
+    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_line *);
   case T8_ECLASS_QUAD:
-    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_quad_c *);
+    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_quad *);
   case T8_ECLASS_TRIANGLE:
-    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_tri_c *);
+    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_tri *);
   case T8_ECLASS_HEX:
-    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_hex_c *);
+    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_hex *);
   case T8_ECLASS_TET:
-    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_tet_c *);
+    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_tet *);
   case T8_ECLASS_PRISM:
-    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_prism_c *);
+    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_prism *);
   case T8_ECLASS_PYRAMID:
-    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_pyramid_c *);
+    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_pyramid *);
   default:
     SC_ABORT_NOT_REACHED ();
   }

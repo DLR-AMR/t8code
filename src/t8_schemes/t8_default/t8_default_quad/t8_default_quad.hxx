@@ -76,14 +76,12 @@ typedef p4est_quadrant_t t8_pquad_t;
     (quad)->p.user_long = (long) (coord); \
   } while (0)
 
-class t8_default_scheme_quad_c:
-  public t8_eclass_scheme<t8_default_scheme_quad_c>,
-  public t8_default_scheme_common_c<t8_default_scheme_quad_c> {
+class t8_default_scheme_quad: private t8_default_scheme_common<t8_default_scheme_quad> {
  public:
   /** Constructor. */
-  t8_default_scheme_quad_c ();
+  t8_default_scheme_quad (): t8_default_scheme_common<t8_default_scheme_quad> (T8_ECLASS_QUAD, sizeof (t8_pquad_t)) {};
 
-  ~t8_default_scheme_quad_c ();
+  ~t8_default_scheme_quad () {};
 
   /** Return the size of a quad element.
    * \return  The size of an element of class quad.

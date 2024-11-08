@@ -42,8 +42,8 @@ class t8_eclass_scheme: public t8_crtp<TUnderlyingEclassScheme> {
    * \param [in] tree_class The tree class of this element scheme.
    * \param [in] elem_size  The size of the elements this scheme holds.
   */
-  t8_eclass_scheme (const t8_eclass_t tree_class, const size_t elem_size)
-    : element_size (elem_size), eclass (tree_class) {};
+  t8_eclass_scheme (const t8_eclass_t tree_class, const size_t elem_size, void *ts_context)
+    : element_size (elem_size), eclass (tree_class), ts_context (ts_context) {};
   friend TUnderlyingEclassScheme;
 
  protected:
@@ -55,7 +55,7 @@ class t8_eclass_scheme: public t8_crtp<TUnderlyingEclassScheme> {
 
   /** The destructor. It does nothing but has to be defined since
    * we may want to delete an eclass_scheme that is actually inherited
-   * (for example t8_default_scheme_quad_c) and providing an implementation
+   * (for example t8_default_scheme_quad) and providing an implementation
    * for the destructor ensures that the
    * destructor of the child class will be executed. */
   ~t8_scheme ()

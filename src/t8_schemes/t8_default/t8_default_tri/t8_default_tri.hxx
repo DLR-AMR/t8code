@@ -31,15 +31,14 @@
 #include <t8_element.hxx>
 #include <t8_schemes/t8_default/t8_default_line/t8_default_line.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
+#include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.h>
 
-class t8_default_scheme_tri_c:
-  public t8_eclass_scheme<t8_default_scheme_tri_c>,
-  public t8_default_scheme_common_c<t8_default_scheme_tri_c> {
+class t8_default_scheme_tri: private t8_default_scheme_common<t8_default_scheme_tri> {
  public:
   /** Constructor. */
-  t8_default_scheme_tri_c ();
+  t8_default_scheme_tri (): t8_default_scheme_common<t8_default_scheme_tri> (T8_ECLASS_TRIANGLE, sizeof (t8_dtri_t)) {};
 
-  ~t8_default_scheme_tri_c ();
+  ~t8_default_scheme_tri () {};
 
   /** Return the size of a tri element.
    * \return  The size of an element of class tri.

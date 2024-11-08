@@ -1522,7 +1522,7 @@ die_ele:
 typedef struct
 {
   t8_locidx_t ltree_id; /* The local id of the tree this face belongs to */
-  int8_t face_number;   /* The number of that face whitin the tree */
+  int8_t face_number;   /* The number of that face within the tree */
   int num_vertices;     /* The number of vertices of this face. */
   long *vertices;       /* The indices of these vertices. */
 } t8_msh_file_face_t;

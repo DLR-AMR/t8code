@@ -85,10 +85,17 @@ count_leaves_from_level (int element_level, int refinement_level, int dimension)
 }
 
 template <class TUnderlyingEclassScheme>
-class t8_default_scheme_common_c: t8_eclass_scheme<TUnderlyingEclassScheme> {
+class t8_default_scheme_common: private t8_eclass_scheme<TUnderlyingEclassScheme> {
+ private:
+  t8_default_scheme_common (const t8_eclass_t tree_class, const size_t elem_size)
+    : t8_eclass_scheme<TUnderlyingEclassScheme> (tree_class, elem_size, sc_mempool_new (elem_size);)
+  {
+  }
+  friend TUnderlyingEclassScheme;
+
  public:
   /** Destructor for all default schemes */
-  ~t8_default_scheme_common_c ()
+  ~t8_default_scheme_common ()
   {
     T8_ASSERT (ts_context != NULL);
     SC_ASSERT (((sc_mempool_t *) ts_context)->elem_count == 0);

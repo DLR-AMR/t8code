@@ -32,15 +32,14 @@
 #include <t8_element.hxx>
 #include <t8_schemes/t8_default/t8_default_tri/t8_default_tri.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
+#include <t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.h>
 
-class t8_default_scheme_tet_c:
-  public t8_eclass_scheme<t8_default_scheme_tet_c>,
-  public t8_default_scheme_common_c<t8_default_scheme_tet_c> {
+class t8_default_scheme_tet: private t8_default_scheme_common<t8_default_scheme_tet> {
  public:
   /** Constructor. */
-  t8_default_scheme_tet_c ();
+  t8_default_scheme_tet (): t8_default_scheme_common<t8_default_scheme_tet> (T8_ECLASS_TET, sizeof (t8_dtet_t)) {};
 
-  ~t8_default_scheme_tet_c ();
+  ~t8_default_scheme_tet () {};
 
   /** Return the size of a tet element.
    * \return  The size of an element of class tet.

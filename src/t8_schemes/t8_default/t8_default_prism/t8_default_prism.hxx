@@ -32,19 +32,19 @@
 #include <t8_schemes/t8_default/t8_default_line/t8_default_line.hxx>
 #include <t8_schemes/t8_default/t8_default_tri/t8_default_tri.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
+#include <t8_schemes/t8_default/t8_default_prism/t8_dprism_bits.h>
 
 /** Provide an implementation for the prism element class.
  * It is written as a self-contained library in the t8_dprism_* files.
  */
 
-class t8_default_scheme_prism_c:
-  public t8_eclass_scheme<t8_default_scheme_prism_c>,
-  public t8_default_scheme_common_c<t8_default_scheme_prism_c> {
+class t8_default_scheme_prism: private t8_default_scheme_common<t8_default_scheme_prism> {
  public:
   /** Constructor. */
-  t8_default_scheme_prism_c (void);
+  t8_default_scheme_prism ()
+    : t8_default_scheme_common<t8_default_scheme_prism> (T8_ECLASS_PRISM, sizeof (t8_dprism_t)) {};
 
-  ~t8_default_scheme_prism_c ();
+  ~t8_default_scheme_prism () {};
 
   /** Return the size of a prism element.
    * \return  The size of an element of class prism.

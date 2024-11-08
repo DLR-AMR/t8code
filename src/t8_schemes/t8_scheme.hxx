@@ -23,6 +23,8 @@
 #pragma once
 
 #include <variant>
+#include <array>
+#include <t8_refcount.h>
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 
@@ -32,28 +34,65 @@ class t8_scheme {
   friend class t8_scheme_builder;
 
  public:
-  t8_scheme () {};
-  ~t8_scheme () {};
+  t8_scheme ()
+  {
+    t8_refcount_init (&rc);
+  };
+
+  ~t8_scheme ()
+  {
+    if (sc_refcount_is_active (&rc)) {
+      T8_ASSERT (t8_refcount_is_last (&rc));
+      t8_refcount_unref (&rc);
+    }
+    t8_debugf ("Deleted the scheme.\n");
+  };
 
   /* clang-format off */
+  
+  /** Variant to hold an eclass scheme. */
   using scheme_var = std::variant<
                                 /* Default schemes */
-                                t8_default_scheme_vertex_c,
-                                t8_default_scheme_line_c,
-                                t8_default_scheme_quad_c,
-                                t8_default_scheme_tri_c,
-                                t8_default_scheme_hex_c,
-                                t8_default_scheme_tet_c,
-                                t8_default_scheme_prism_c,
-                                t8_default_scheme_pyramid_c
+                                t8_default_scheme_vertex,
+                                t8_default_scheme_line,
+                                t8_default_scheme_quad,
+                                t8_default_scheme_tri,
+                                t8_default_scheme_hex,
+                                t8_default_scheme_tet,
+                                t8_default_scheme_prism,
+                                t8_default_scheme_pyramid
                                 >;
   /* clang-format on */
-  using scheme_container = std::array<scheme_var, T8_ECLASS_COUNT>;
+
+  using scheme_container = std::array<scheme_var, T8_ECLASS_COUNT>; /**< Container type for holding eclass schemes. */
 
  private:
-  scheme_container eclass_schemes;
+  scheme_container eclass_schemes; /**< The container holding the eclass schemes. */
+  t8_refcount_t rc; /**< The reference count of the scheme. TODO: Replace by shared_ptr when forest becomes a class. */
 
  public:
+  /**
+   * Increase the reference count of the scheme.
+   */
+  inline void
+  ref ()
+  {
+    t8_refcount_ref (&rc);
+  }
+
+  /**
+   * Decrease the reference count of the scheme.
+   * If the reference count reaches zero, the scheme is deleted.
+   */
+  inline void
+  unref ()
+  {
+    if (t8_refcount_unref (&rc)) {
+      t8_debugf ("Deleting the geometry_handler.\n");
+      delete this;
+    }
+  }
+
   /** Return the size of any element of a given class.
    * \param [in] tree_class    The eclass of the current tree.
    * \return                      The size of an element of class \a tree_class.

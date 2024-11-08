@@ -31,25 +31,25 @@
 
 class Scheme_builder {
  public:
-  Scheme_builder () {};
+  Scheme_builder (): scheme (new t8_scheme) {};
   ~Scheme_builder () {};
 
-  using Scheme_v = Scheme::Scheme_v;
+  using scheme_var = t8_scheme::scheme_var;
 
-  template <typename Eclass_scheme, typename... _args>
+  template <typename TEclass_Scheme, typename... _Args>
   void
-  add_eclass_scheme (eclass tree_class, _args &&...args)
+  add_eclass_scheme (t8_eclass_t tree_class, _Args &&...args)
   {
-    scheme.eclass_schemes[tree_class] = Multilevel_element_scheme<Eclass_scheme> (std::forward<_args> (args)...);
+    scheme->eclass_schemes[tree_class] = TEclass_Scheme (std::forward<_Args> (args)...);
   }
 
-  const Scheme
+  const t8_scheme *
   build_scheme () const
   {
     return scheme;
   }
 
  private:
-  Scheme scheme;
+  t8_scheme *scheme;
   bool multilevel;
 };

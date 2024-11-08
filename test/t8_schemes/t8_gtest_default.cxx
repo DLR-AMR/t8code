@@ -46,28 +46,28 @@ class gtest_default_scheme: public testing::TestWithParam<t8_eclass_t> {
     const t8_eclass_t eclass = GetParam ();
     switch (eclass) {
     case T8_ECLASS_VERTEX:
-      eclass_scheme = new t8_default_scheme_vertex_c ();
+      eclass_scheme = new t8_default_scheme_vertex ();
       break;
     case T8_ECLASS_LINE:
-      eclass_scheme = new t8_default_scheme_line_c ();
+      eclass_scheme = new t8_default_scheme_line ();
       break;
     case T8_ECLASS_QUAD:
-      eclass_scheme = new t8_default_scheme_quad_c ();
+      eclass_scheme = new t8_default_scheme_quad ();
       break;
     case T8_ECLASS_TRIANGLE:
-      eclass_scheme = new t8_default_scheme_tri_c ();
+      eclass_scheme = new t8_default_scheme_tri ();
       break;
     case T8_ECLASS_HEX:
-      eclass_scheme = new t8_default_scheme_hex_c ();
+      eclass_scheme = new t8_default_scheme_hex ();
       break;
     case T8_ECLASS_TET:
-      eclass_scheme = new t8_default_scheme_tet_c ();
+      eclass_scheme = new t8_default_scheme_tet ();
       break;
     case T8_ECLASS_PRISM:
-      eclass_scheme = new t8_default_scheme_prism_c ();
+      eclass_scheme = new t8_default_scheme_prism ();
       break;
     case T8_ECLASS_PYRAMID:
-      eclass_scheme = new t8_default_scheme_pyramid_c ();
+      eclass_scheme = new t8_default_scheme_pyramid ();
       break;
     default:
       SC_ABORT_NOT_REACHED ();

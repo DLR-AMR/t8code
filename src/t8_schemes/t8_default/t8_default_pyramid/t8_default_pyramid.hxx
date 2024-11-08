@@ -30,19 +30,19 @@
 
 #include <t8_element.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
+#include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.h>
 
 /** Provide an implementation for the pyramid element class. It is written as a self-contained library in the 
  * t8_dpyramid_* files.
  */
 
-class t8_default_scheme_pyramid_c:
-  public t8_eclass_scheme<t8_default_scheme_pyramid_c>,
-  public t8_default_scheme_common_c<t8_default_scheme_pyramid_c> {
+class t8_default_scheme_pyramid: private t8_default_scheme_common<t8_default_scheme_pyramid> {
  public:
   /** Constructor. */
-  t8_default_scheme_pyramid_c (void);
+  t8_default_scheme_pyramid ()
+    : t8_default_scheme_common<t8_default_scheme_pyramid> (T8_ECLASS_PYRAMID, sizeof (t8_dpyramid_t)) {};
 
-  ~t8_default_scheme_pyramid_c ();
+  ~t8_default_scheme_pyramid () {};
 
   /** Return the size of a prism element.
    * \return  The size of an element of class prism.

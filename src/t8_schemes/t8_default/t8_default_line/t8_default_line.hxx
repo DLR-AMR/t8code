@@ -31,19 +31,18 @@
 #include <t8_element.h>
 #include <t8_element.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
+#include <t8_schemes/t8_default/t8_default_line/t8_dline_bits.h>
 
 /** Provide an implementation for the line element class.
  * It is written as a self-contained library in the t8_dline_* files.
  */
 
-class t8_default_scheme_line_c:
-  public t8_eclass_scheme<t8_default_scheme_line_c>,
-  public t8_default_scheme_common_c<t8_default_scheme_line_c> {
+class t8_default_scheme_line: private t8_default_scheme_common<t8_default_scheme_line> {
  public:
   /** Constructor. */
-  t8_default_scheme_line_c ();
+  t8_default_scheme_line (): t8_default_scheme_common<t8_default_scheme_line> (T8_ECLASS_LINE, sizeof (t8_dline_t)) {};
 
-  ~t8_default_scheme_line_c ();
+  ~t8_default_scheme_line () {};
 
   /** Return the size of a line element.
    * \return  The size of an element of class line.
