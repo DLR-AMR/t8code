@@ -61,15 +61,14 @@ t8_search_base::search_recursion (const t8_locidx_t ltreeid, t8_element_t *eleme
     }
   }
   /* Call the callback function for the element */
-  const bool ret = check_element (this->forest, ltreeid, element, is_leaf, leaf_elements, tree_lindex_of_first_leaf);
+  const bool ret = check_element (ltreeid, element, is_leaf, leaf_elements, tree_lindex_of_first_leaf);
 
   if (!ret) {
     /* The function returned false. We abort the recursion */
     return;
   }
   std::vector<size_t> new_active_queries;
-  this->check_queries (this->forest, new_active_queries, ltreeid, element, is_leaf, leaf_elements,
-                       tree_lindex_of_first_leaf);
+  this->check_queries (new_active_queries, ltreeid, element, is_leaf, leaf_elements, tree_lindex_of_first_leaf);
 
   if (is_leaf) {
     return;
