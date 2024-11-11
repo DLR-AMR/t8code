@@ -215,7 +215,7 @@ class t8_search_with_queries: public t8_search<Udata> {
   t8_search_with_queries (t8_search_element_callback<Udata> element_callback,
                           t8_search_queries_callback<Query_T, Udata> queries_callback, std::vector<Query_T> &queries,
                           const t8_forest_t forest = nullptr)
-    : search<Udata> (element_callback, forest), queries_callback (queries_callback), queries (queries)
+    : t8_search<Udata> (element_callback, forest), queries_callback (queries_callback), queries (queries)
   {
     std::iota (this->active_queries.begin (), this->active_queries.end (), 0);
   };
@@ -243,32 +243,33 @@ class t8_search_with_queries: public t8_search<Udata> {
   bool
   stop_due_to_queries ()
   {
-    return active_queries.empty ();
+    return this->active_queries.empty ();
   }
 
   void
-  check_queries (std::vector<size_t> new_active_queries, const t8_locidx_t ltreeid, const t8_element_t *element,
-                 const bool is_leaf, const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index)
+  check_queries (t8_forest_t forest, std::vector<size_t> new_active_queries, const t8_locidx_t ltreeid,
+                 const t8_element_t *element, const bool is_leaf, const t8_element_array_t *leaf_elements,
+                 const t8_locidx_t tree_leaf_index)
   {
     T8_ASSERT (new_active_queries.empty ());
-    if (!active_queries.empty ()) {
+    if (!this->active_queries.empty ()) {
       std::vector<bool> query_matches (active_queries.size ());
-      queries_callback (forest, ltreeid, element, is_leaf, leaf_elements, tree_leaf_index, queries, active_queries,
-                        query_matches, user_data);
+      queries_callback (forest, ltreeid, element, is_leaf, leaf_elements, tree_leaf_index, this->queries,
+                        this->active_queries, query_matches, this->user_data);
       if (!is_leaf) {
-        std::for_each (active_queries.begin (), active_queries.end (), [&] (size_t iactive) {
+        std::for_each (this->active_queries.begin (), this->active_queries.end (), [&] (size_t iactive) {
           if (query_matches[iactive]) {
             new_active_queries.push_back (iactive);
           }
         });
       }
     }
+  }
 
-    t8_search_queries_callback<Query_T, Udata> queries_callback;
-    const std::vector<Query_T> &queries;
-    std::vector<size_t> active_queries;
-  };
-
+  t8_search_queries_callback<Query_T, Udata> queries_callback;
+  const std::vector<Query_T> &queries;
+  std::vector<size_t> active_queries;
+};
 #if 0
 //General shape of search
 
