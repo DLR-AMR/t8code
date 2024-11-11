@@ -46,7 +46,7 @@ t8_search_base::search_recursion (const t8_locidx_t ltreeid, t8_element_t *eleme
     return;
   }
 
-  int is_leaf = 0;
+  bool is_leaf = false;
   if (elem_count == 1) {
     /* There is only one leaf left, we check whether it is the same as element and if so call the callback function */
     const t8_element_t *leaf = t8_element_array_index_locidx (leaf_elements, 0);
@@ -57,18 +57,19 @@ t8_search_base::search_recursion (const t8_locidx_t ltreeid, t8_element_t *eleme
       T8_ASSERT (t8_forest_element_is_leaf (this->forest, leaf, ltreeid));
       T8_ASSERT (ts->t8_element_equal (element, leaf));
       /* The element is the leaf */
-      is_leaf = 1;
+      is_leaf = true;
     }
   }
   /* Call the callback function for the element */
-  const bool ret = this->check_element (ltreeid, element, is_leaf, leaf_elements, tree_lindex_of_first_leaf);
+  const bool ret = check_element (this->forest, ltreeid, element, is_leaf, leaf_elements, tree_lindex_of_first_leaf);
 
   if (!ret) {
     /* The function returned false. We abort the recursion */
     return;
   }
   std::vector<size_t> new_active_queries;
-  this->check_queries (new_active_queries, ltreeid, element, is_leaf, leaf_elements, tree_lindex_of_first_leaf);
+  this->check_queries (this->forest, new_active_queries, ltreeid, element, is_leaf, leaf_elements,
+                       tree_lindex_of_first_leaf);
 
   if (is_leaf) {
     return;

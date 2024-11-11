@@ -44,8 +44,6 @@ class forest_search: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
     cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
     /* Build a uniform forest */
     forest = t8_forest_new_uniform (cmesh, default_scheme, level, 0, sc_MPI_COMM_WORLD);
-    const t8_eclass_t eclass = t8_forest_get_tree_class (forest, 0);
-    t8_debugf ("[D] eclass %d\n", eclass);
   }
   void
   TearDown () override
@@ -64,13 +62,12 @@ class forest_search: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
  * If this function is called for a leaf, it sets the corresponding entry to 1.
  */
 bool
-t8_test_search_all_fn (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element, const bool is_leaf,
-                       const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index,
+t8_test_search_all_fn (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
+                       const bool is_leaf, const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index,
                        std::vector<bool> *user_data)
 {
+  T8_ASSERT (t8_forest_is_committed (forest));
   if (is_leaf) {
-    t8_debugf ("[D] ltreeid %d\n", ltreeid);
-    fflush (stdout);
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
     t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest, tree_class);
     const t8_locidx_t tree_offset = t8_forest_get_tree_element_offset (forest, ltreeid);
@@ -87,7 +84,7 @@ t8_test_search_all_fn (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_e
 }
 
 void
-t8_test_search_query_all_fn (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
+t8_test_search_query_all_fn (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
                              const bool is_leaf, const t8_element_array_t *leaf_elements,
                              const t8_locidx_t tree_leaf_index, std::vector<int> &queries,
                              std::vector<size_t> &active_query_indices, std::vector<bool> &query_matches,
@@ -98,7 +95,7 @@ t8_test_search_query_all_fn (t8_forest_t forest, const t8_locidx_t ltreeid, cons
     << "Wrong number of active queries passed to query callback.";
   for (int iquery : active_query_indices) {
     /* The query is an int with value 42 (see below) */
-    EXPECT_EQ (iquery, 42) << "Wrong query argument passed to query callback.";
+    EXPECT_EQ (queries[iquery], 42) << "Wrong query argument passed to query callback.";
     if (is_leaf) {
       /* Test whether tree_leaf_index is actually the index of the element */
       t8_locidx_t test_ltreeid;
@@ -116,10 +113,8 @@ t8_test_search_query_all_fn (t8_forest_t forest, const t8_locidx_t ltreeid, cons
 
 TEST_P (forest_search, test_search_one_query_matches_all)
 {
-  const int query = 42;
-
   /* set up a single query containing our query */
-  std::vector<int> queries = { 1 };
+  std::vector<int> queries = { 42 };
 
   t8_locidx_t num_elements = t8_forest_get_local_num_elements (forest);
   /* set up an array in which we flag whether an element was matched in the

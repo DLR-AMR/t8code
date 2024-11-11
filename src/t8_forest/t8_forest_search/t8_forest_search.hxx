@@ -27,6 +27,7 @@
 
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest.h>  // Ensure t8_forest_t is defined
 #include <functional>
 #include <numeric>
 
@@ -55,9 +56,9 @@
  * \return True if the search should continue, false otherwise.
  */
 template <typename Udata = void>
-using t8_search_element_callback
-  = std::function<bool (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element, const bool is_leaf,
-                        const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index, Udata *user_data)>;
+using t8_search_element_callback = std::function<bool (
+  const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element, const bool is_leaf,
+  const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index, Udata *user_data)>;
 
 /**
  * \typedef t8_search_queries_callback
@@ -79,7 +80,7 @@ using t8_search_element_callback
  */
 template <typename Query_T, typename Udata = void>
 using t8_search_queries_callback = std::function<void (
-  t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element, const bool is_leaf,
+  const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element, const bool is_leaf,
   const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index, std::vector<Query_T> &queries,
   std::vector<size_t> &active_query_indices, std::vector<bool> &query_matches, Udata *user_data)>;
 
@@ -159,13 +160,14 @@ class t8_search_base {
     = 0;
 
   virtual bool
-  check_element (const t8_locidx_t ltreeid, const t8_element_t *element, const bool is_leaf,
-                 const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index)
+  check_element (const t8_forest_t forest_check, const t8_locidx_t ltreeid, const t8_element_t *element,
+                 const bool is_leaf, const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index)
     = 0;
 
   virtual void
-  check_queries (std::vector<size_t> &new_active_queries, const t8_locidx_t ltreeid, const t8_element_t *element,
-                 const bool is_leaf, const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index)
+  check_queries (const t8_forest_t forest_check, std::vector<size_t> &new_active_queries, const t8_locidx_t ltreeid,
+                 const t8_element_t *element, const bool is_leaf, const t8_element_array_t *leaf_elements,
+                 const t8_locidx_t tree_leaf_index)
     = 0;
 
   t8_forest_t forest;
@@ -214,16 +216,17 @@ class t8_search: public t8_search_base {
   }
 
   bool
-  check_element (const t8_locidx_t ltreeid, const t8_element_t *element, const bool is_leaf,
-                 const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index)
+  check_element (const t8_forest_t forest_check, const t8_locidx_t ltreeid, const t8_element_t *element,
+                 const bool is_leaf, const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index)
   {
-    return this->element_callback (this->forest, ltreeid, element, is_leaf, leaf_elements, tree_leaf_index,
-                                   this->user_data);
+    T8_ASSERT (t8_forest_is_committed (forest_check));
+    return this->element_callback (forest_check, ltreeid, element, is_leaf, leaf_elements, tree_leaf_index, user_data);
   }
 
   void
-  check_queries (std::vector<size_t> &new_active_queries, const t8_locidx_t ltreeid, const t8_element_t *element,
-                 const bool is_leaf, const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index)
+  check_queries (const t8_forest_t forest_check, std::vector<size_t> &new_active_queries, const t8_locidx_t ltreeid,
+                 const t8_element_t *element, const bool is_leaf, const t8_element_array_t *leaf_elements,
+                 const t8_locidx_t tree_leaf_index)
   {
     return;
   }
@@ -280,13 +283,14 @@ class t8_search_with_queries: public t8_search<Udata> {
   }
 
   void
-  check_queries (std::vector<size_t> &new_active_queries, const t8_locidx_t ltreeid, const t8_element_t *element,
-                 const bool is_leaf, const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index)
+  check_queries (const t8_forest_t forest_check, std::vector<size_t> &new_active_queries, const t8_locidx_t ltreeid,
+                 const t8_element_t *element, const bool is_leaf, const t8_element_array_t *leaf_elements,
+                 const t8_locidx_t tree_leaf_index)
   {
     T8_ASSERT (new_active_queries.empty ());
     if (!this->active_queries.empty ()) {
       std::vector<bool> query_matches (active_queries.size ());
-      this->queries_callback (this->forest, ltreeid, element, is_leaf, leaf_elements, tree_leaf_index, this->queries,
+      this->queries_callback (forest_check, ltreeid, element, is_leaf, leaf_elements, tree_leaf_index, this->queries,
                               this->active_queries, query_matches, this->user_data);
       if (!is_leaf) {
         std::for_each (this->active_queries.begin (), this->active_queries.end (), [&] (size_t iactive) {
