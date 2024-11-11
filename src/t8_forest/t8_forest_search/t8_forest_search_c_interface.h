@@ -26,8 +26,8 @@
 #define T8_FOREST_SEARCH_C_INTERFACE_H
 
 #include <t8.h>
-#include <t8_forest/t8_forest_general.h>
 
+T8_EXTERN_C_BEGIN ();
 /*
  *   Discussion about C++ callback handling https://stackoverflow.com/questions/2298242/callback-functions-in-c
  *   We decided for option 4, using std::function together with templates.
@@ -78,5 +78,7 @@ void
 t8_forest_c_search_with_queries_destroy (t8_forest_search_with_queries_c_wrapper *search);
 void
 t8_forest_c_search_with_queries_do_search (t8_forest_search_with_queries_c_wrapper *search);
+
+T8_EXTERN_C_END ();
 
 #endif  // T8_FOREST_SEARCH_C_INTERFACE_H

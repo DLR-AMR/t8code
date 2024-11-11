@@ -67,14 +67,15 @@ t8_test_search_all_fn (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_e
                        std::vector<int> &user_data)
 {
   if (is_leaf) {
-    t8_locidx_t test_ltreeid;
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
-    const t8_scheme *scheme = t8_forest_get_scheme (forest);
+    t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest, tree_class);
 
+    const t8_locidx_t tree_offset = t8_forest_get_tree_element_offset (forest, ltreeid);
     const t8_locidx_t tree_offset = t8_forest_get_tree_element_offset (forest, ltreeid);
     /* Set the corresponding entry to 1 */
     user_data[tree_offset + tree_leaf_index] = true;
     /* Test whether tree_leaf_index is actually the index of the element */
+    t8_locidx_t test_ltreeid;
     const t8_element_t *test_element = t8_forest_get_element (forest, tree_offset + tree_leaf_index, &test_ltreeid);
 
     EXPECT_ELEM_EQ (scheme, tree_class, element, test_element);
@@ -98,7 +99,7 @@ t8_test_search_query_all_fn (const t8_forest_t forest, const t8_locidx_t ltreeid
     EXPECT_EQ (iquery, 42) << "Wrong query argument passed to query callback.";
     if (is_leaf) {
       /* Test whether tree_leaf_index is actually the index of the element */
-      const t8_locidx_t test_ltreeid;
+      t8_locidx_t test_ltreeid;
       const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
       const t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest, tree_class);
 

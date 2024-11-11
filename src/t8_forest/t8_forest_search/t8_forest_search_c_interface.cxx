@@ -20,10 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8.h>
 #include <t8_forest/t8_forest_search/t8_forest_search.hxx>
-
-T8_EXTERN_C_BEGIN ();
 
 struct t8_forest_search
 {

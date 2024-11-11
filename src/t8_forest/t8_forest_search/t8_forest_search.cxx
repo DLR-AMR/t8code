@@ -71,7 +71,7 @@ t8_search::search_recursion (const t8_locidx_t ltreeid, t8_element_t *element, c
     return;
   }
   std::vector<size_t> new_active_queries;
-  this->check_queries (new_active_queries, ltreeid, element, is_leaf, leaf_elements, tree_lindex_of_first_leaf);
+  this->check_queries (forest, new_active_queries, ltreeid, element, is_leaf, leaf_elements, tree_lindex_of_first_leaf);
 
   if (is_leaf) {
     return;
