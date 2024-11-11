@@ -20,23 +20,21 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_forest/t8_forest_search/t8_forest_search.hxx>
+#include "t8_forest/t8_forest_search/t8_forest_search.hxx"
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_element.hxx>
 
 void
-t8_search::search_recursion (const t8_locidx_t ltreeid, t8_element_t *element, const t8_eclass_scheme_c *ts,
-                             t8_element_array_t *leaf_elements, const t8_locidx_t tree_lindex_of_first_leaf)
+t8_search_base::search_recursion (const t8_locidx_t ltreeid, t8_element_t *element, const t8_eclass_scheme_c *ts,
+                                  t8_element_array_t *leaf_elements, const t8_locidx_t tree_lindex_of_first_leaf)
 {
   /* Assertions to check for necessary requirements */
   /* The forest must be committed */
-  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (t8_forest_is_committed (this->forest));
   /* The tree must be local */
-  T8_ASSERT (0 <= ltreeid && ltreeid < t8_forest_get_num_local_trees (forest));
-  /* If we have queries, we also must have a query function */
-  T8_ASSERT ((queries == NULL) == (query_fn == NULL));
+  T8_ASSERT (0 <= ltreeid && ltreeid < t8_forest_get_num_local_trees (this->forest));
 
   const size_t elem_count = t8_element_array_get_count (leaf_elements);
   if (elem_count == 0) {
@@ -56,22 +54,21 @@ t8_search::search_recursion (const t8_locidx_t ltreeid, t8_element_t *element, c
     SC_CHECK_ABORT (ts->t8_element_level (element) <= ts->t8_element_level (leaf),
                     "Search: element level greater than leaf level\n");
     if (ts->t8_element_level (element) == ts->t8_element_level (leaf)) {
-      T8_ASSERT (t8_forest_element_is_leaf (forest, leaf, ltreeid));
+      T8_ASSERT (t8_forest_element_is_leaf (this->forest, leaf, ltreeid));
       T8_ASSERT (ts->t8_element_equal (element, leaf));
       /* The element is the leaf */
       is_leaf = 1;
     }
   }
   /* Call the callback function for the element */
-  const bool ret
-    = this->element_callback (forest, ltreeid, element, is_leaf, leaf_elements, tree_lindex_of_first_leaf, user_data);
+  const bool ret = this->check_element (ltreeid, element, is_leaf, leaf_elements, tree_lindex_of_first_leaf);
 
   if (!ret) {
     /* The function returned false. We abort the recursion */
     return;
   }
   std::vector<size_t> new_active_queries;
-  this->check_queries (forest, new_active_queries, ltreeid, element, is_leaf, leaf_elements, tree_lindex_of_first_leaf);
+  this->check_queries (new_active_queries, ltreeid, element, is_leaf, leaf_elements, tree_lindex_of_first_leaf);
 
   if (is_leaf) {
     return;
@@ -99,8 +96,7 @@ t8_search::search_recursion (const t8_locidx_t ltreeid, t8_element_t *element, c
        * we construct an array of these leaves */
       t8_element_array_init_view (&child_leaves, leaf_elements, indexa, indexb - indexa);
       /* Enter the recursion */
-      t8_forest_search_recursion (forest, ltreeid, children[ichild], ts, &child_leaves,
-                                  indexa + tree_lindex_of_first_leaf, search_fn, query_fn, queries, new_active_queries);
+      search_recursion (ltreeid, children[ichild], ts, &child_leaves, indexa + tree_lindex_of_first_leaf);
     }
   }
 
@@ -111,11 +107,11 @@ t8_search::search_recursion (const t8_locidx_t ltreeid, t8_element_t *element, c
 }
 
 void
-t8_search::search_tree (const t8_locidx_t ltreeid)
+t8_search_base::search_tree (const t8_locidx_t ltreeid)
 {
-  const t8_eclass_t eclass = t8_forest_get_eclass (forest, ltreeid);
-  const t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest, eclass);
-  t8_element_array_t *leaf_elements = t8_forest_tree_get_leaves (forest, ltreeid);
+  const t8_eclass_t eclass = t8_forest_get_eclass (this->forest, ltreeid);
+  const t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (this->forest, eclass);
+  t8_element_array_t *leaf_elements = t8_forest_tree_get_leaves (this->forest, ltreeid);
 
   /* assert for empty tree */
   T8_ASSERT (t8_element_array_get_count (leaf_elements) >= 0);
@@ -129,15 +125,16 @@ t8_search::search_tree (const t8_locidx_t ltreeid)
   ts->t8_element_nca (first_el, last_el, nca);
 
   /* Start the top-down search */
-  this->search_recursion (ltreeid, nca, ts, leaf_elements, 0, search_fn, query_fn, queries, active_queries);
+  this->search_recursion (ltreeid, nca, ts, leaf_elements, 0);
 
   ts->t8_element_destroy (1, &nca);
 }
 
 void
-t8_search::do_search ()
+t8_search_base::do_search ()
 {
-  const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
+  T8_ASSERT (t8_forest_is_committed (forest));
+  const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (this->forest);
   for (t8_locidx_t itree = 0; itree < num_local_trees; itree++) {
     this->search_tree (itree);
   }

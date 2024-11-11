@@ -57,7 +57,7 @@
 template <typename Udata = void>
 using t8_search_element_callback
   = std::function<bool (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element, const bool is_leaf,
-                        const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index, Udata &user_data)>;
+                        const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index, Udata *user_data)>;
 
 /**
  * \typedef t8_search_queries_callback
@@ -81,28 +81,15 @@ template <typename Query_T, typename Udata = void>
 using t8_search_queries_callback = std::function<void (
   t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element, const bool is_leaf,
   const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index, std::vector<Query_T> &queries,
-  std::vector<int> &active_query_indices, std::vector<bool> &query_matches, Udata &user_data)>;
+  std::vector<size_t> &active_query_indices, std::vector<bool> &query_matches, Udata *user_data)>;
 
-/**
- * @brief A class to search for elements in a forest. A user-defined callback function is invoked for each element
- * to allow for custom search operations.
- * 
- * @tparam Udata 
- */
-template <typename Udata = void>
-class t8_search {
+class t8_search_base {
  public:
-  /**
-   * \brief Constructor of the search class. Sets the element callback, forest, and user data.
-   * \param[in] element_callback The callback function to be invoked for each element during the search.
-   * \param[in] forest The forest in which the search is performed.
-   * \param[in] user_data The user-defined data to be passed to the callback.
-   */
-  t8_search (t8_search_element_callback<Udata> element_callback, const t8_forest_t forest = nullptr,
-             const Udata &user_data = nullptr)
-    : element_callback (element_callback), user_data (user_data)
+  t8_search_base (t8_forest_t forest = nullptr)
   {
-    t8_forest_ref (forest);
+    if (forest != nullptr) {
+      t8_forest_ref (forest);
+    }
     this->forest = forest;
   };
 
@@ -115,24 +102,14 @@ class t8_search {
    * \param forest The new forest to be assigned.
    */
   void
-  update_forest (const t8_forest_t forest)
+  update_forest (t8_forest_t forest)
   {
-    t8_forest_unref (&(this->forest));
+    if (this->forest != nullptr) {
+      t8_forest_unref (&(this->forest));
+    }
+    T8_ASSERT (forest != nullptr);
     t8_forest_ref (forest);
     this->forest = forest;
-  }
-
-  /**
-   * \brief Updates the user data with the provided data.
-   *
-   * This function sets the user data to the given value.
-   *
-   * \param[in] udata The new user data to be set.
-   */
-  void
-  update_user_data (const Udata &udata)
-  {
-    this->user_data = udata;
   }
 
   /**
@@ -142,9 +119,11 @@ class t8_search {
    * associated with the search instance. It ensures that the resources
    * held by the forest object are only released if no further references exist.
    */
-  ~t8_search ()
+  ~t8_search_base ()
   {
-    t8_forest_unref (&(this->forest));
+    if (this->forest != nullptr) {
+      t8_forest_unref (&(this->forest));
+    }
   };
 
   /**
@@ -159,41 +138,97 @@ class t8_search {
 
  private:
   /**
-   * \brief Searches the tree for specific elements or conditions.
-   *
-   * This function performs a search operation on the tree.
-   */
+     * \brief Searches the tree for specific elements or conditions.
+     *
+     * This function performs a search operation on the tree.
+     */
   void
   search_tree (const t8_locidx_t ltreeid);
 
-  /**{
-
-}
-   * \brief Recursively searches for elements in the forest.
-   *
-   * This function performs a recursive search operation, used on each tree in the forest.
-   */
+  /**
+     * \brief Recursively searches for elements in the forest.
+     *
+     * This function performs a recursive search operation, used on each tree in the forest.
+     */
   void
   search_recursion (const t8_locidx_t ltreeid, t8_element_t *element, const t8_eclass_scheme_c *ts,
                     t8_element_array_t *leaf_elements, const t8_locidx_t tree_lindex_of_first_leaf);
 
+  virtual bool
+  stop_due_to_queries ()
+    = 0;
+
+  virtual bool
+  check_element (const t8_locidx_t ltreeid, const t8_element_t *element, const bool is_leaf,
+                 const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index)
+    = 0;
+
+  virtual void
+  check_queries (std::vector<size_t> &new_active_queries, const t8_locidx_t ltreeid, const t8_element_t *element,
+                 const bool is_leaf, const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index)
+    = 0;
+
+  t8_forest_t forest;
+};
+
+/**
+ * @brief A class to search for elements in a forest. A user-defined callback function is invoked for each element
+ * to allow for custom search operations.
+ * 
+ * @tparam Udata 
+ */
+template <typename Udata = void>
+class t8_search: public t8_search_base {
+ public:
+  /**
+   * \brief Constructor of the search class. Sets the element callback, forest, and user data.
+   * \param[in] element_callback The callback function to be invoked for each element during the search.
+   * \param[in] forest The forest in which the search is performed.
+   * \param[in] user_data The user-defined data to be passed to the callback.
+   */
+  t8_search (t8_search_element_callback<Udata> element_callback, t8_forest_t forest = nullptr,
+             Udata *user_data = nullptr)
+    : t8_search_base (forest), element_callback (element_callback), user_data (user_data) {};
+
+  /**
+   * \brief Updates the user data with the provided data.
+   *
+   * This function sets the user data to the given value.
+   *
+   * \param[in] udata The new user data to be set.
+   */
+  void
+  update_user_data (Udata *udata)
+  {
+    this->user_data = udata;
+  }
+
+  Udata *user_data;
+  t8_forest_t forest;
+
+ private:
   bool
   stop_due_to_queries ()
   {
     return false;
   }
 
-  void
-  check_queries (const t8_locidx_t ltreeid, const t8_element_t *element, const bool is_leaf,
+  bool
+  check_element (const t8_locidx_t ltreeid, const t8_element_t *element, const bool is_leaf,
                  const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index)
+  {
+    return this->element_callback (this->forest, ltreeid, element, is_leaf, leaf_elements, tree_leaf_index,
+                                   this->user_data);
+  }
+
+  void
+  check_queries (std::vector<size_t> &new_active_queries, const t8_locidx_t ltreeid, const t8_element_t *element,
+                 const bool is_leaf, const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index)
   {
     return;
   }
 
   t8_search_element_callback<Udata> element_callback;
-
-  const t8_forest_t &forest;
-  const Udata &user_data;
 };
 
 template <typename Query_T, typename Udata = void>
@@ -214,9 +249,10 @@ class t8_search_with_queries: public t8_search<Udata> {
    */
   t8_search_with_queries (t8_search_element_callback<Udata> element_callback,
                           t8_search_queries_callback<Query_T, Udata> queries_callback, std::vector<Query_T> &queries,
-                          const t8_forest_t forest = nullptr)
-    : t8_search<Udata> (element_callback, forest), queries_callback (queries_callback), queries (queries)
+                          const t8_forest_t forest = nullptr, Udata *user_data = nullptr)
+    : t8_search<Udata> (element_callback, forest, user_data), queries_callback (queries_callback), queries (queries)
   {
+    this->active_queries.resize (queries.size ());
     std::iota (this->active_queries.begin (), this->active_queries.end (), 0);
   };
 
@@ -229,15 +265,12 @@ class t8_search_with_queries: public t8_search<Udata> {
    * \param queries A vector containing the new queries to be set.
    */
   void
-  update_queries (const std::vector<Query_T> &queries)
+  update_queries (std::vector<Query_T> &queries)
   {
     this->queries = queries;
   }
 
-  ~t8_search_with_queries ()
-  {
-    t8_forest_unref (this->forest);
-  };
+  ~t8_search_with_queries () {};
 
  private:
   bool
@@ -247,15 +280,14 @@ class t8_search_with_queries: public t8_search<Udata> {
   }
 
   void
-  check_queries (t8_forest_t forest, std::vector<size_t> new_active_queries, const t8_locidx_t ltreeid,
-                 const t8_element_t *element, const bool is_leaf, const t8_element_array_t *leaf_elements,
-                 const t8_locidx_t tree_leaf_index)
+  check_queries (std::vector<size_t> &new_active_queries, const t8_locidx_t ltreeid, const t8_element_t *element,
+                 const bool is_leaf, const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index)
   {
     T8_ASSERT (new_active_queries.empty ());
     if (!this->active_queries.empty ()) {
       std::vector<bool> query_matches (active_queries.size ());
-      queries_callback (forest, ltreeid, element, is_leaf, leaf_elements, tree_leaf_index, this->queries,
-                        this->active_queries, query_matches, this->user_data);
+      this->queries_callback (this->forest, ltreeid, element, is_leaf, leaf_elements, tree_leaf_index, this->queries,
+                              this->active_queries, query_matches, this->user_data);
       if (!is_leaf) {
         std::for_each (this->active_queries.begin (), this->active_queries.end (), [&] (size_t iactive) {
           if (query_matches[iactive]) {
@@ -267,7 +299,7 @@ class t8_search_with_queries: public t8_search<Udata> {
   }
 
   t8_search_queries_callback<Query_T, Udata> queries_callback;
-  const std::vector<Query_T> &queries;
+  std::vector<Query_T> &queries;
   std::vector<size_t> active_queries;
 };
 #if 0

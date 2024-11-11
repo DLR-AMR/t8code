@@ -3719,7 +3719,6 @@ t8_eclass_t
 t8_forest_get_tree_class (const t8_forest_t forest, const t8_locidx_t ltreeid)
 {
   t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
-
   T8_ASSERT (0 <= ltreeid && ltreeid < num_local_trees + t8_forest_get_num_ghost_trees (forest));
   if (ltreeid < num_local_trees) {
     /* The id belongs to a local tree */
