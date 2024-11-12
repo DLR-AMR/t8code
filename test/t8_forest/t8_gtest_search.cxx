@@ -139,5 +139,4 @@ TEST_P (forest_search, test_search_one_query_matches_all)
   t8_forest_unref (&forest);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_search, forest_search,
-                          testing::Combine (testing::Values (T8_ECLASS_QUAD), testing::Range (0, 6)));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_search, forest_search, testing::Combine (AllEclasses, testing::Range (0, 6)));
