@@ -90,6 +90,7 @@ class t8_search_base {
   {
     if (forest != nullptr) {
       t8_forest_ref (forest);
+      T8_ASSERT (t8_forest_is_committed (forest));
     }
     this->forest = forest;
   };
@@ -109,6 +110,7 @@ class t8_search_base {
       t8_forest_unref (&(this->forest));
     }
     T8_ASSERT (forest != nullptr);
+    T8_ASSERT (t8_forest_is_committed (forest));
     t8_forest_ref (forest);
     this->forest = forest;
   }
@@ -120,8 +122,11 @@ class t8_search_base {
    * associated with the search instance. It ensures that the resources
    * held by the forest object are only released if no further references exist.
    */
-  ~t8_search_base () {
-
+  ~t8_search_base ()
+  {
+    if (this->forest != nullptr) {
+      t8_forest_unref (&(this->forest));
+    }
   };
 
   /**
