@@ -218,7 +218,7 @@ class t8_search: public t8_search_base {
  public:
   t8_search (t8_search_element_callback<Udata> element_callback, t8_forest_t forest = nullptr,
              Udata *user_data = nullptr)
-    : t8_search_base (forest), element_callback (element_callback), user_data (user_data)
+    : t8_search_base (forest), user_data (user_data), element_callback (element_callback)
   {
   }
 
