@@ -53,8 +53,6 @@ libt8_installed_headers_forest = \
   src/t8_forest/t8_forest_profiling.h \
   src/t8_forest/t8_forest_io.h \
   src/t8_forest/t8_forest_adapt.h \
-  src/t8_forest/t8_forest_vtk.h \
-  src/t8_forest/t8_forest_to_vtkUnstructured.hxx \
   src/t8_forest/t8_forest_iterate.h src/t8_forest/t8_forest_partition.h \
   src/t8_forest/t8_forest_ghost_interface_wrapper.h \
   src/t8_forest/t8_forest_ghost_interface.h \
