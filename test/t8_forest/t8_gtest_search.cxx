@@ -111,6 +111,29 @@ t8_test_search_query_all_fn (const t8_forest_t forest, const t8_locidx_t ltreeid
   }
 }
 
+TEST_P (forest_search, t8_test_search_all_fn)
+{
+  t8_locidx_t num_elements = t8_forest_get_local_num_elements (forest);
+  /* set up an array in which we flag whether an element was matched in the
+   * search */
+  std::vector<bool> matched_leaves (num_elements, false);
+
+  /* Call search. This search matches all elements. After this call we expect
+   * all entries in the matched_leaves array to be set to 1. */
+
+  t8_search<std::vector<bool>> search (t8_test_search_all_fn);
+
+  search.update_user_data (&matched_leaves);
+  search.update_forest (forest);
+  search.do_search ();
+
+  /* Check whether matched_leaves entries are all 1 */
+  std::for_each (matched_leaves.begin (), matched_leaves.end (),
+                 [] (bool b) { ASSERT_TRUE (b) << "Search did not match all leaves. First mismatch at leaf " << b; });
+
+  t8_forest_unref (&forest);
+}
+
 TEST_P (forest_search, test_search_one_query_matches_all)
 {
   /* set up a single query containing our query */
