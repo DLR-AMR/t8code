@@ -306,56 +306,5 @@ class t8_search_with_queries: public t8_search<Udata> {
   std::vector<Query_T> &queries;
   std::vector<size_t> active_queries;
 };
-#if 0
-//General shape of search
-
-template <typename Query_T>
-void
-do_search () (
-    // init queries
-    for each tree {
-        search_tree {
-            // init NCA and get elements
-            element = NCA;
-            search_recursion(element) {
-                if (stop_due_to_queries) {
-                    return;
-                }
-                ret = element_callback(element);
-                if (!ret) return;
-                do_queries ();
-                
-                // Prepare recursion
-                for all children search_recursion (child[i]);
-            }
-            // delete NCA and elements
-        }
-    }
-    // delete queries
-}
-
-search::do_queries ()
-{
-    return;
-}
-
-search::stop_due_to_queries () {
-    return false;
-}
- search_with_queries::do_queries () 
-{
-    if (queries) {
-        if (!leaf) // Init new query array
-        query_callback (element, queries<T>, query_matches);
-        if (!leaf) // Fill new query array
-    }
-}
- search_with_queries::stop_due_to_queries () {
-  if (queries != NULL && num_active == 0) {
-    /* There are no queries left. We stop the recursion */
-    return true; 
-  }
-}
-#endif
 
 #endif  // T8_FOREST_SEARCH_HXX
