@@ -211,6 +211,9 @@ class t8_search_base {
   check_queries (std::vector<size_t> &new_active_queries, const t8_locidx_t ltreeid, const t8_element_t *element,
                  const bool is_leaf, const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index)
     = 0;
+
+  virtual void
+  update_queries (std::vector<size_t> &old_query_indices) = 0;
 };
 
 template <typename Udata = void>
@@ -255,6 +258,12 @@ class t8_search: public t8_search_base {
   check_queries (std::vector<size_t> &new_active_queries, const t8_locidx_t ltreeid, const t8_element_t *element,
                  const bool is_leaf, const t8_element_array_t *leaf_elements,
                  const t8_locidx_t tree_leaf_index) override
+  {
+    return;
+  }
+
+  void
+  update_queries (std::vector<size_t> &old_query_indices)
   {
     return;
   }
@@ -306,6 +315,12 @@ class t8_search_with_queries: public t8_search<Udata> {
         new_active_queries.assign (positive_queries.begin (), positive_queries.end ());
       }
     }
+    std::swap (this->active_queries, new_active_queries);
+  }
+
+  void
+  update_queries (std::vector<size_t> &old_query_indices){
+    std::swap(this->active_queries, old_query_indices);
   }
 
   t8_search_queries_callback<Query_T, Udata> queries_callback;
