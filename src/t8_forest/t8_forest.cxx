@@ -1915,7 +1915,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
   }
   else {
     /* TODO: implement unbalanced version */
-    SC_ABORT_NOT_REACHED ();
+    SC_ABORT ("Computing leaf face neighbors is only supported for balanced forest.\n");
   }
 }
 
