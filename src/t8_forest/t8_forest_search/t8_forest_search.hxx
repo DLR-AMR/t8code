@@ -212,8 +212,15 @@ class t8_search_base {
                  const bool is_leaf, const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index)
     = 0;
 
+  /**
+   * @brief  Function the gives the user the opportunity to update the queries after 
+   *         each step in the recursion.
+   *
+   * \param old_query_indices 
+   */
   virtual void
-  update_queries (std::vector<size_t> &old_query_indices) = 0;
+  update_queries (std::vector<size_t> &old_query_indices)
+    = 0;
 };
 
 template <typename Udata = void>
@@ -319,8 +326,9 @@ class t8_search_with_queries: public t8_search<Udata> {
   }
 
   void
-  update_queries (std::vector<size_t> &old_query_indices){
-    std::swap(this->active_queries, old_query_indices);
+  update_queries (std::vector<size_t> &old_query_indices)
+  {
+    std::swap (this->active_queries, old_query_indices);
   }
 
   t8_search_queries_callback<Query_T, Udata> queries_callback;
