@@ -123,6 +123,10 @@ class t8_abstract_data_handler {
   type ()
     = 0;
 
+  virtual bool
+  create_handle_for_internal_data (t8_abstract_data_handler *const handler, const int type)
+    = 0;
+
   virtual ~t8_abstract_data_handler () {};
 };
 
@@ -249,7 +253,7 @@ class t8_data_handler: public t8_abstract_data_handler {
   }
 
   bool
-  create_handle_for_internal_data (t8_abstract_data_handler * const handler, const int type)
+  create_handle_for_internal_data (t8_abstract_data_handler *const handler, const int type) override
   {
     switch (type) {
     // Placeholder for future internal data, which is handled here.
