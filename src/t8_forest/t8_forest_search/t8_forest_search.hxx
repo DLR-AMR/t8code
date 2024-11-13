@@ -30,6 +30,7 @@
 #include <t8_forest/t8_forest.h>  // Ensure t8_forest_t is defined
 #include <functional>
 #include <numeric>
+#include <ranges>
 
 /*
  *   Discussion about C++ callback handling https://stackoverflow.com/questions/2298242/callback-functions-in-c
@@ -79,10 +80,9 @@ using t8_search_element_callback = std::function<bool (
  * \param[in] user_data User-defined data passed to the callback.
  */
 template <typename Query_T, typename Udata = void>
-using t8_search_queries_callback = std::function<void (
+using t8_search_queries_callback = std::function<bool (
   const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element, const bool is_leaf,
-  const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index, std::vector<Query_T> &queries,
-  std::vector<size_t> &active_query_indices, std::vector<bool> &query_matches, Udata *user_data)>;
+  const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index, const Query_T &query, Udata *user_data)>;
 
 class t8_search_base {
  public:
@@ -298,15 +298,12 @@ class t8_search_with_queries: public t8_search<Udata> {
   {
     T8_ASSERT (new_active_queries.empty ());
     if (!this->active_queries.empty ()) {
-      std::vector<bool> query_matches (active_queries.size ());
-      this->queries_callback (this->forest, ltreeid, element, is_leaf, leaf_elements, tree_leaf_index, this->queries,
-                              this->active_queries, query_matches, this->user_data);
+      auto positive_queries = this->active_queries | std::ranges::views::filter ([&] (size_t &query_index) {
+                                return this->queries_callback (this->forest, ltreeid, element, is_leaf, leaf_elements,
+                                                               tree_leaf_index, queries[query_index], this->user_data);
+                              });
       if (!is_leaf) {
-        for (size_t iactive : this->active_queries) {
-          if (query_matches[iactive]) {
-            new_active_queries.push_back (iactive);
-          }
-        }
+        new_active_queries.assign (positive_queries.begin (), positive_queries.end ());
       }
     }
   }
