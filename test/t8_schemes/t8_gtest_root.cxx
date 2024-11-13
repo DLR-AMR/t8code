@@ -29,14 +29,12 @@
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 
-class root: public testing::TestWithParam<t8_eclass> {
+class root: public testing::TestWithParam<t8_eclass_scheme_c *> {
  protected:
   void
   SetUp () override
   {
-    eclass = GetParam ();
-    scheme = t8_scheme_new_default_cxx ();
-    ts = scheme->eclass_schemes[eclass];
+    ts = GetParam ();
     ts->t8_element_new (1, &element);
     ts->t8_element_root (element);
   }
@@ -44,12 +42,9 @@ class root: public testing::TestWithParam<t8_eclass> {
   TearDown () override
   {
     ts->t8_element_destroy (1, &element);
-    t8_scheme_cxx_unref (&scheme);
   }
   t8_element_t *element;
-  t8_scheme_cxx *scheme;
   t8_eclass_scheme_c *ts;
-  t8_eclass_t eclass;
 };
 
 /*Test root*/
@@ -68,4 +63,4 @@ TEST_P (root, equals_linear_id_0_0)
   ts->t8_element_destroy (1, &root_compare);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_root, root, AllEclasses, print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_root, root, AllSchemesEclasses);
