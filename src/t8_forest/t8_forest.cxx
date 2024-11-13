@@ -1961,6 +1961,14 @@ t8_forest_leaf_face_neighbor_indices (const t8_forest_t forest, const t8_locidx_
   // But works only for true elements?
   // If we know only one neighbor we can face_neighbor inside?
   // Not really what if tree boundary?
+  {
+    leaf_face_neighbor (neighbors); // Extend to ghost if neighbors exist
+    return pelement_indices;
+  }
+
+  // TODO:
+  //  - extend lfn to accept Ghosts
+  //  - implement t8_forest_get_ghost
 }
 
 void
