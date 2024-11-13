@@ -72,6 +72,7 @@ t8_scheme_new_default_cxx (void)
   T8_ASSERT (s->eclass_schemes[T8_ECLASS_QUAD]->t8_element_maxlevel ()
              >= s->eclass_schemes[T8_ECLASS_PYRAMID]->t8_element_maxlevel ());
 
+  s->num_eclasses = T8_ECLASS_COUNT;
   return s;
 }
 

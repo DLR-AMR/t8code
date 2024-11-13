@@ -54,6 +54,9 @@ struct t8_scheme_cxx
 
   /** This array holds one virtual table per element class. */
   t8_eclass_scheme_c *eclass_schemes[T8_ECLASS_COUNT];
+
+  /** Number of eclasses implemented in the scheme*/
+  int num_eclasses;
 };
 
 /** This array holds the reference coordinates of each vertex of each element.
