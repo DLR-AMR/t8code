@@ -34,7 +34,7 @@ class scheme_iterators {
          * \param [in] schemes The list of schemes to iterate over.
          * \param [in] is_end Flag to indicate if the iterator is at the end.
         */
-    Iterator (const std::vector<const t8_scheme_cxx*>& schemes, bool is_end = false)
+    Iterator (const std::vector<const t8_scheme_cxx*>& schemes, const bool is_end = false)
       : schemes (schemes), scheme_index (is_end ? schemes.size () : 0), eclass_index (0)
     {
       if (!is_end && !schemes.empty ()) {
