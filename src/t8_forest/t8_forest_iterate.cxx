@@ -82,7 +82,6 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
   t8_eclass_t eclass;
   t8_element_t **face_children;
   int num_face_children, iface;
-  int *child_indices;
   size_t *split_offsets, elem_count;
   t8_element_array_t face_child_leaves;
 
@@ -140,20 +139,23 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
   face_children = T8_ALLOC (t8_element_t *, num_face_children);
   ts->t8_element_new (num_face_children, face_children);
   /* Memory for the child indices of the face children */
-  child_indices = T8_ALLOC (int, num_face_children);
+  int *child_indices = T8_ALLOC (int, num_face_children);
   /* Memory for the indices that split the leaf_elements array */
-  split_offsets = T8_ALLOC (size_t, ts->t8_element_num_children (element) + 1);
+  const int num_children = ts->t8_element_num_children (element);
+  split_offsets = T8_ALLOC (size_t, num_children + 1);
   /* Compute the face children */
   ts->t8_element_children_at_face (element, face, face_children, num_face_children, child_indices);
   /* Split the leaves array in portions belonging to the children of element */
   t8_forest_split_array (element, leaf_elements, split_offsets);
   for (iface = 0; iface < num_face_children; iface++) {
     /* Check if there are any leaf elements for this face child */
+    T8_ASSERT (0 <= child_indices[iface]);
+    T8_ASSERT (child_indices[iface] < num_children + 1);
     const size_t indexa = split_offsets[child_indices[iface]];     /* first leaf of this face child */
     const size_t indexb = split_offsets[child_indices[iface] + 1]; /* first leaf of next child */
     if (indexa < indexb) {
       /* There exist leaves of this face child in leaf_elements,
-        * we construct an array of these leaves */
+          * we construct an array of these leaves */
       t8_element_array_init_view (&face_child_leaves, leaf_elements, indexa, indexb - indexa);
       /* Compute the corresponding face number of this face child */
       const int child_face = ts->t8_element_face_child_face (element, face, iface);
@@ -162,12 +164,12 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
       t8_forest_iterate_faces (forest, ltreeid, face_children[iface], child_face, &face_child_leaves, user_data,
                                indexa + tree_lindex_of_first_leaf, callback);
     }
-    /* clean-up */
-    ts->t8_element_destroy (num_face_children, face_children);
-    T8_FREE (face_children);
-    T8_FREE (child_indices);
-    T8_FREE (split_offsets);
   }
+  /* clean-up */
+  ts->t8_element_destroy (num_face_children, face_children);
+  T8_FREE (face_children);
+  T8_FREE (child_indices);
+  T8_FREE (split_offsets);
 }
 
 /* The recursion that is called from t8_forest_search_tree
