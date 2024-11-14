@@ -196,7 +196,7 @@ TEST_P (element_is_leaf_or_ghost, element_is_ghost_adapt)
   t8_test_element_is_leaf_for_forest (forest_adapt);
 }
 
-/* Define a lambda to beatify gtest output for tuples <level, cmesh>.
+/* Define a lambda to beautify gtest output for tuples <level, cmesh>.
  * This will set the correct level and cmesh name as part of the test case name. */
 auto pretty_print_level_and_cmesh_params
   = [] (const testing::TestParamInfo<std::tuple<int, cmesh_example_base *>> &info) {
