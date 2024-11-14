@@ -29,6 +29,7 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_geometrical.h>
+#include <t8_forest/t8_forest_ghost.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
@@ -74,28 +75,35 @@ t8_basic_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_t
 static void
 t8_test_fiterate (t8_forest_t forest)
 {
-  t8_locidx_t itree, num_trees;
-  t8_eclass_t eclass;
-  t8_eclass_scheme_c *ts;
-  t8_element_t *nca;
-  t8_element_array_t *leaf_elements;
   t8_test_fiterate_udata_t udata;
-  int iface;
 
-  num_trees = t8_forest_get_num_local_trees (forest) + t8_forest_get_num_ghost_trees (forest);
-  for (itree = 0; itree < num_trees; itree++) {
-    eclass = t8_forest_get_tree_class (forest, itree);
-    ts = t8_forest_get_eclass_scheme (forest, eclass);
-    const t8_element_t *first_el = t8_forest_get_element_in_tree (forest, itree, 0);
+  t8_forest_set_user_data (forest, &udata);
+  const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
+  const t8_locidx_t num_trees = num_local_trees + t8_forest_get_num_ghost_trees (forest);
+  for (t8_locidx_t itree = 0; itree < num_trees; itree++) {
+    const t8_eclass_t eclass = t8_forest_get_tree_class (forest, itree);
+    const t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest, eclass);
+    // Query whether this tree is a ghost and compute its ghost tree id.
+    const bool is_ghost = itree >= num_local_trees;
+    const t8_locidx_t ghost_tree_id = is_ghost ? itree - num_local_trees : -1;
+    // Get the number of elements or ghosts in this tree
+    const t8_locidx_t num_tree_elements = is_ghost ? t8_forest_ghost_tree_num_elements (forest, ghost_tree_id)
+                                                   : t8_forest_get_tree_num_elements (forest, itree);
+    // Get all leaf elements
+    const t8_element_array_t *leaf_elements = !is_ghost ? t8_forest_tree_get_leaves (forest, itree)
+                                                        : t8_forest_ghost_get_tree_elements (forest, ghost_tree_id);
+    // Get the first and last element
+    const t8_element_t *first_el = (const t8_element_t *) t8_element_array_index_locidx (leaf_elements, 0);
     const t8_element_t *last_el
-      = t8_forest_get_element_in_tree (forest, itree, t8_forest_get_tree_num_elements (forest, itree) - 1);
+      = (const t8_element_t *) t8_element_array_index_locidx (leaf_elements, num_tree_elements - 1);
+
+    t8_element_t *nca;
     ts->t8_element_new (1, &nca);
     ts->t8_element_nca (first_el, last_el, nca);
-    leaf_elements = t8_forest_tree_get_leaves (forest, itree);
 
-    for (iface = 0; iface < ts->t8_element_num_faces (nca); iface++) {
+    //
+    for (int iface = 0; iface < ts->t8_element_num_faces (nca); iface++) {
       udata.count = 0;
-      t8_forest_set_user_data (forest, &udata);
       t8_forest_iterate_faces (forest, itree, nca, iface, leaf_elements, &udata, 0, t8_test_fiterate_callback);
       t8_debugf ("Leaf elements at face %i:\t%i\n", iface, udata.count);
     }
@@ -140,6 +148,7 @@ t8_test_fiterate_refine_and_partition (t8_cmesh_t cmesh, int level, sc_MPI_Comm 
   /* partition the adapted forest */
   t8_forest_init (&forest_partition);
   t8_forest_set_partition (forest_partition, forest_adapt, 0);
+  t8_forest_set_ghost (forest_partition, 1, T8_GHOST_FACES);
   t8_forest_commit (forest_partition);
   t8_debugf ("Created ghost structure with %li ghost elements.\n", (long) t8_forest_get_num_ghosts (forest_partition));
   if (!no_vtk) {
