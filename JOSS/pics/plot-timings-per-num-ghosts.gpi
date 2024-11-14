@@ -1,0 +1,25 @@
+set terminal pngcairo enhanced
+
+set output "plot-timings-per-num-ghosts.png"
+
+set encoding utf8
+
+set grid
+
+p4hex = "timings-p4.dat"
+t8tet = "timings-t8-tet.dat"
+
+set xlabel "number of MPI ranks"
+set ylabel "ghost layer runtime over #ghosts [μs/#ghosts]"
+
+set logscale x 2
+
+set yrange[0:7]
+
+set key bottom
+
+set title "Runtimes of ghost layer creation per ghost element over num. of proc."
+
+plot \
+  p4hex using 1:($2/$3 * 1e6) with lp lw 2 ps 2 title "p4est with hexahedral mesh (218 billion elements)", \
+  t8tet using 1:($2/$3 * 1e6) with lp lw 2 ps 2 title "t8code with tetrahedral mesh (93 billion elements)"
