@@ -66,7 +66,7 @@ main (int argc, char **argv)
   opt = sc_options_new (argv[0]);
   sc_options_add_switch (opt, 'h', "help", &helpme, "Display a short help message.");
   sc_options_add_switch (opt, 'v', "verbose", &verbose,
-                         "Print more information. In particual major, minor and patch version.");
+                         "Print more information. In particular major, minor and patch version.");
 
   int parsed = sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
 
