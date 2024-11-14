@@ -91,7 +91,7 @@ t8_element_array_init_size (t8_element_array_t *element_array, t8_eclass_scheme_
  *                       It is not necessary to call sc_array_reset later.
  */
 void
-t8_element_array_init_view (t8_element_array_t *view, t8_element_array_t *array, size_t offset, size_t length);
+t8_element_array_init_view (t8_element_array_t *view, const t8_element_array_t *array, size_t offset, size_t length);
 
 /** Initializes an already allocated (or static) view from given plain C data
  * (array of t8_element_t).

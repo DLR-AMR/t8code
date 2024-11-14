@@ -84,7 +84,7 @@ T8_EXTERN_C_BEGIN ();
 
 /* TODO: Document */
 void
-t8_forest_split_array (const t8_element_t *element, t8_element_array_t *leaf_elements, size_t *offsets);
+t8_forest_split_array (const t8_element_t *element, const t8_element_array_t *leaf_elements, size_t *offsets);
 
 /* TODO: comment */
 /* Iterate over all leaves of an element that touch a given face of the element */
