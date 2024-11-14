@@ -52,12 +52,19 @@ auto print_eclass = [] (const testing::TestParamInfo<t8_eclass> &info) { return 
 #define T8_NUM_SAMPLE_POINTS 10000
 #endif
 
+namespace t8code_schemes
+{
 const t8_scheme_cxx *default_scheme = t8_scheme_new_default_cxx ();
-const t8_scheme_cxx *sa_scheme = t8_scheme_new_default_cxx ();
-const std::vector<const t8_scheme_cxx *> schemes = { default_scheme, sa_scheme };
-scheme_iterators scheme_iter (schemes);
 
-#define AllSchemesEclasses testing::ValuesIn (scheme_iter.begin (), scheme_iter.end ())
+// placeholder for testing two schemes
+const t8_scheme_cxx *sa_scheme = t8_scheme_new_default_cxx ();
+
+const std::vector<const t8_scheme_cxx *> schemes = { default_scheme, sa_scheme };
+
+scheme_iterators scheme_iter (schemes);
+}  // namespace t8code_schemes
+
+#define AllSchemesEclasses testing::ValuesIn (t8code_schemes::scheme_iter.begin (), t8code_schemes::scheme_iter.end ())
 #define AllEclasses testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT)
 #define AllEclasses2D testing::Values (T8_ECLASS_QUAD, T8_ECLASS_TRIANGLE)
 
