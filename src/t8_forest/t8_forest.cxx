@@ -2057,13 +2057,24 @@ t8_forest_tree_is_local (const t8_forest_t forest, const t8_locidx_t local_tree)
 int
 t8_forest_element_is_leaf (const t8_forest_t forest, const t8_element_t *element, const t8_locidx_t local_tree)
 {
+  bool check_ghost = false;
+  T8_ASSERT (t8_forest_tree_is_local (forest, local_tree));
+  return t8_forest_element_is_leaf_or_ghost (forest, element, local_tree, check_ghost);
+}
+
+int
+t8_forest_element_is_leaf_or_ghost (const t8_forest_t forest, const t8_element_t *element, const t8_locidx_t local_tree,
+                                    const int check_ghost)
+{
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (t8_forest_tree_is_local (forest, local_tree));
 
   /* We get the array of the tree's elements and then search in the array of elements for our 
    * element candidate. */
   /* Get the array */
-  const t8_element_array_t *elements = t8_forest_get_tree_element_array (forest, local_tree);
+  const t8_element_array_t *elements = !check_ghost ? t8_forest_tree_get_leaves (forest, local_tree)
+                                                    : t8_forest_ghost_get_tree_elements (forest, local_tree);
+
   T8_ASSERT (elements != NULL);
 
   /* In order to find the element, we need to compute its linear id.
