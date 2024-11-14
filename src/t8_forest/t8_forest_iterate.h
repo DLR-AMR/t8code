@@ -34,7 +34,8 @@
 #include <t8_forest/t8_forest_general.h>
 
 typedef int (*t8_forest_iterate_face_fn) (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                          int face, void *user_data, t8_locidx_t tree_leaf_index);
+                                          int face, int is_leaf, const t8_element_array_t *leaf_elements,
+                                          t8_locidx_t tree_leaf_index);
 
 /**
  * A call-back function used by \ref t8_forest_search describing a search-criterion. Is called on an element and the 
