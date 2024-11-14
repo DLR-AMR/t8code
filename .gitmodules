@@ -6,6 +6,3 @@
 	path = sc
 	url = https://github.com/cburstedde/libsc.git
 	ignore = dirty
-[submodule "JOSS"]
-	path = JOSS
-	url = https://github.com/DLR-AMR/t8code_JOSS
