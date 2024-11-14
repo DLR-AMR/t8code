@@ -69,6 +69,7 @@ t8_forest_split_array (const t8_element_t *element, const t8_element_array_t *le
    * elements[i], ..., elements[j-1]
    */
   sc_array_init_data (&offset_view, offsets, sizeof (size_t), query_data.num_children + 1);
+  // Unfortunately, we have to cast away constness to pass to sc_array_split
   sc_array_split ((sc_array_t *) element_array, &offset_view, query_data.num_children, t8_forest_determine_child_type,
                   (void *) &query_data);
 }
