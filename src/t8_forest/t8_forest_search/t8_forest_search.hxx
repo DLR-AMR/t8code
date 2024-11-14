@@ -235,7 +235,7 @@ class t8_search_base {
     = 0;
 
   /**
-   * @brief  Function the gives the user the opportunity to update the queries after 
+   * \brief  Function the gives the user the opportunity to update the queries after 
    *         each step in the recursion.
    *
    * \param old_query_indices 
@@ -300,6 +300,14 @@ class t8_search: public t8_search_base {
   t8_search_element_callback<Udata> element_callback;
 };
 
+/** 
+ * \brief A class that performs a search in a forest with queries.
+ * Uses a filter-view to filter out the active queries. It is recommended to use this version of the search
+ * if the number of queries is small or if the queries do not need any further computations to be evaluated. 
+ * 
+ * \tparam Query_T The type of queries
+ * \tparam Udata The type of the user data, defaults to void.
+*/
 template <typename Query_T, typename Udata = void>
 class t8_search_with_queries: public t8_search<Udata> {
  public:
@@ -358,6 +366,16 @@ class t8_search_with_queries: public t8_search<Udata> {
   std::vector<size_t> active_queries;
 };
 
+/**
+ * \brief A class that performs a search in a forest with batched queries.
+ * 
+ * All active queries are passed to the callback function, which processes them in a batch. It is recommended to 
+ * use this version of the searcch if further computations have to be done to evaluate the queries. That way these
+ * precomputations are not done for every call to the callback again and only have to be evaluated once per call.
+ * 
+ * \tparam Query_T The type of queries
+ * \tparam Udata The type of the user data, defaults to void.
+ */
 template <typename Query_T, typename Udata = void>
 class t8_search_with_batched_queries: public t8_search<Udata> {
  public:
