@@ -75,7 +75,7 @@ t8_forest_split_array (const t8_element_t *element, const t8_element_array_t *le
 
 void
 t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int face,
-                         const t8_element_array_t *leaf_elements, void *user_data, t8_locidx_t tree_lindex_of_first_leaf,
+                         const t8_element_array_t *leaf_elements, t8_locidx_t tree_lindex_of_first_leaf,
                          t8_forest_iterate_face_fn callback)
 {
 
@@ -88,6 +88,7 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
   // Check whether we are in a local tree or ghost tree
   const bool tree_is_local = t8_forest_tree_is_local (forest, ltreeid);
   const bool tree_is_ghost = !tree_is_local;
+  const bool local_or_ghost_tree_id = tree_is_local ? ltreeid : ltreeid - num_local_trees;
 
   const size_t elem_count = t8_element_array_get_count (leaf_elements);
   if (elem_count == 0) {
@@ -104,7 +105,7 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
     const t8_element_t *leaf = t8_element_array_index_locidx (leaf_elements, 0);
     if (ts->t8_element_equal (element, leaf)) {
       // TODO: this might break for ghosts, extend to ghost
-      T8_ASSERT (t8_forest_element_is_leaf (forest, leaf, ltreeid));
+      T8_ASSERT (t8_forest_element_is_leaf_or_ghost (forest, leaf, local_or_ghost_tree_id, tree_is_ghost));
       /* The element is the leaf, we are at the last stage of the recursion */
       is_leaf = 1;
     }
@@ -113,7 +114,7 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
   if (!is_leaf) {
     /* Check whether element has greater level than the first leaf */
     const t8_element_t *leaf = t8_element_array_index_locidx (leaf_elements, 0);
-    T8_ASSERT (t8_forest_element_is_leaf (forest, leaf, ltreeid));
+    T8_ASSERT (t8_forest_element_is_leaf_or_ghost (forest, leaf, local_or_ghost_tree_id, tree_is_ghost));
     T8_ASSERT (ts->t8_element_level (element) < ts->t8_element_level (leaf));
   }
 #endif
