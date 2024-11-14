@@ -74,15 +74,37 @@ using t8_search_element_callback = std::function<bool (
  * \param[in] is_leaf A flag indicating if the element is a leaf.
  * \param[in] leaf_elements The array of leaf elements.
  * \param[in] tree_leaf_index The index of the leaf within the tree.
+ * \param[in] query A single query to be processed.
+ * \param[in] user_data User-defined data passed to the callback.
+ */
+template <typename Query_T, typename Udata = void>
+using t8_search_query_callback = std::function<bool (
+  const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element, const bool is_leaf,
+  const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index, const Query_T &query, Udata *user_data)>;
+
+/**
+ * \typedef t8_search_batched_queries_callback
+ * \brief A callback function type used for search queries within a forest. Processes a batch of queries.
+ *
+ * \tparam Query_T The type of the query.
+ * \tparam Udata The type of user data, defaults to void.
+ *
+ * \param[in] forest The forest in which the search is performed.
+ * \param[in] ltreeid The local tree ID within the forest.
+ * \param[in] element The element being queried.
+ * \param[in] is_leaf A flag indicating if the element is a leaf.
+ * \param[in] leaf_elements The array of leaf elements.
+ * \param[in] tree_leaf_index The index of the leaf within the tree.
  * \param[in] queries A vector of queries to be processed.
  * \param[in, out] active_query_indices A vector of indices of active queries.
  * \param[in, out] query_matches A vector of query matches. Each entry corresponds to a query in the queries vector.
  * \param[in] user_data User-defined data passed to the callback.
  */
 template <typename Query_T, typename Udata = void>
-using t8_search_queries_callback = std::function<bool (
+using t8_search_batched_queries_callback = std::function<void (
   const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element, const bool is_leaf,
-  const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index, const Query_T &query, Udata *user_data)>;
+  const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index, const std::vector<Query_T> &queries,
+  const std::vector<size_t> &active_query_indices, std::vector<bool> &query_matches, Udata *user_data)>;
 
 class t8_search_base {
  public:
@@ -282,7 +304,7 @@ template <typename Query_T, typename Udata = void>
 class t8_search_with_queries: public t8_search<Udata> {
  public:
   t8_search_with_queries (t8_search_element_callback<Udata> element_callback,
-                          t8_search_queries_callback<Query_T, Udata> queries_callback, std::vector<Query_T> &queries,
+                          t8_search_query_callback<Query_T, Udata> queries_callback, std::vector<Query_T> &queries,
                           const t8_forest_t forest = nullptr, Udata *user_data = nullptr)
     : t8_search<Udata> (element_callback, forest, user_data), queries_callback (queries_callback), queries (queries)
   {
@@ -320,9 +342,9 @@ class t8_search_with_queries: public t8_search<Udata> {
                               });
       if (!is_leaf) {
         new_active_queries.assign (positive_queries.begin (), positive_queries.end ());
+        std::swap (this->active_queries, new_active_queries);
       }
     }
-    std::swap (this->active_queries, new_active_queries);
   }
 
   void
@@ -331,7 +353,68 @@ class t8_search_with_queries: public t8_search<Udata> {
     std::swap (this->active_queries, old_query_indices);
   }
 
-  t8_search_queries_callback<Query_T, Udata> queries_callback;
+  t8_search_query_callback<Query_T, Udata> queries_callback;
+  std::vector<Query_T> &queries;
+  std::vector<size_t> active_queries;
+};
+
+template <typename Query_T, typename Udata = void>
+class t8_search_with_batched_queries: public t8_search<Udata> {
+ public:
+  t8_search_with_batched_queries (t8_search_element_callback<Udata> element_callback,
+                                  t8_search_batched_queries_callback<Query_T, Udata> queries_callback,
+                                  std::vector<Query_T> &queries, const t8_forest_t forest = nullptr,
+                                  Udata *user_data = nullptr)
+    : t8_search<Udata> (element_callback, forest, user_data), queries_callback (queries_callback), queries (queries)
+  {
+    this->active_queries.resize (queries.size ());
+    std::iota (this->active_queries.begin (), this->active_queries.end (), 0);
+  }
+
+  void
+  update_queries (std::vector<Query_T> &queries)
+  {
+    this->queries = queries;
+  }
+
+  ~t8_search_with_batched_queries ()
+  {
+  }
+
+ private:
+  bool
+  stop_due_to_queries () override
+  {
+    return this->active_queries.empty ();
+  }
+  void
+  check_queries (std::vector<size_t> &new_active_queries, const t8_locidx_t ltreeid, const t8_element_t *element,
+                 const bool is_leaf, const t8_element_array_t *leaf_elements,
+                 const t8_locidx_t tree_leaf_index) override
+  {
+    T8_ASSERT (new_active_queries.empty ());
+    if (!this->active_queries.empty ()) {
+      std::vector<bool> query_matches (this->active_queries.size ());
+      this->queries_callback (this->forest, ltreeid, element, is_leaf, leaf_elements, tree_leaf_index, this->queries,
+                              this->active_queries, query_matches, this->user_data);
+      if (!is_leaf) {
+        for (size_t i = 0; i < query_matches.size (); i++) {
+          if (query_matches[i]) {
+            new_active_queries.push_back (this->active_queries[i]);
+          }
+        }
+      }
+    }
+    std::swap (new_active_queries, this->active_queries);
+  }
+
+  void
+  update_queries (std::vector<size_t> &old_query_indices)
+  {
+    std::swap (this->active_queries, old_query_indices);
+  }
+
+  t8_search_batched_queries_callback<Query_T, Udata> queries_callback;
   std::vector<Query_T> &queries;
   std::vector<size_t> active_queries;
 };
