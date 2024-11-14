@@ -114,12 +114,12 @@ t8_element_array_init_size (t8_element_array_t *element_array, t8_eclass_scheme_
 }
 
 void
-t8_element_array_init_view (t8_element_array_t *view, t8_element_array_t *array, size_t offset, size_t length)
+t8_element_array_init_view (t8_element_array_t *view, const t8_element_array_t *array, size_t offset, size_t length)
 {
   T8_ASSERT (t8_element_array_is_valid (array));
 
   /* Initialize the element array */
-  sc_array_init_view (&view->array, &array->array, offset, length);
+  sc_array_init_view (&view->array, &((t8_element_array_t *) array)->array, offset, length);
   /* Set the scheme */
   view->scheme = array->scheme;
   T8_ASSERT (t8_element_array_is_valid (view));
