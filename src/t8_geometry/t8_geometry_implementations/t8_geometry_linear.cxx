@@ -215,18 +215,19 @@ t8_geometry_linear::t8_geom_point_batch_inside_element (t8_forest_t forest, t8_l
     for (int ipoint = 0; ipoint < num_points; ipoint++) {
       is_inside[ipoint] = 1;
     }
+    std::array<std::array<double, 3>, T8_ECLASS_MAX_FACES> face_normals;
     for (int iface = 0; iface < num_faces; ++iface) {
-      double face_normal[3];
       /* Compute the outer normal n of the face */
-      t8_forest_element_face_normal (forest, ltreeid, element, iface, face_normal);
-      /* Compute a point x on the face */
+      t8_forest_element_face_normal (forest, ltreeid, element, iface, face_normals[iface].data ());
+    }
+    std::array<std::array<double, 3>, T8_ECLASS_MAX_FACES> face_points;
+    for (int iface = 0; iface < num_faces; ++iface) {
       const int afacecorner = ts->t8_element_get_face_corner (element, iface, 0);
-      double point_on_face[3];
-      t8_forest_element_coordinate (forest, ltreeid, element, afacecorner, point_on_face);
-      for (int ipoint = 0; ipoint < num_points; ipoint++) {
-        const int is_inside_iface = t8_plane_point_inside (point_on_face, face_normal, &points[ipoint * 3]);
-        if (is_inside_iface == 0) {
-          /* Point is on the outside of face iface. Update is_inside */
+      t8_forest_element_coordinate (forest, ltreeid, element, afacecorner, face_points[iface].data ());
+    }
+    for (int ipoint = 0; ipoint < num_points; ipoint++) {
+      for (int iface = 0; iface < num_faces; ++iface) {
+        if (t8_plane_point_inside (face_points[iface].data (), face_normals[iface].data (), &points[ipoint * 3]) == 0) {
           is_inside[ipoint] = 0;
         }
       }
