@@ -68,7 +68,7 @@ T8_EXTERN_C_BEGIN ();
  * However, we want it to trigger any time t8code is in debugging mode, independent of sc.
  */
 #ifdef T8_ENABLE_DEBUG
-#define T8_ASSERT(c, ...) SC_CHECK_ABORT ((c), "Assertion '" #c "'" __VA_ARGS__)
+#define T8_ASSERT(c, ...) SC_CHECK_ABORT ((c), "Assertion '" #c "'" __VA_ARGS__ "")
 #else
 #define T8_ASSERT(c, ...) SC_NOOP ()
 #endif
