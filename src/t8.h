@@ -61,35 +61,16 @@ T8_EXTERN_C_BEGIN ();
 /** Portable way to use the const keyword determined by configure. */
 #define t8_restrict _sc_restrict
 
-/** Widely used assertion. Only active in debug-mode. */
+/** Widely used assertion, with optional error message. Only active in debug-mode. */
 /* Note that we use the same definition as in sc.h. We are deliberately not using
  * #define T8_ASSERT SC_ASSERT
  * since then the assertion would not trigger if sc is not configured in debugging mode.
  * However, we want it to trigger any time t8code is in debugging mode, independent of sc.
  */
 #ifdef T8_ENABLE_DEBUG
-#define T8_ASSERT(c) SC_CHECK_ABORT ((c), "Assertion '" #c "'")
+#define T8_ASSERT(c, ...) SC_CHECK_ABORT ((c), "Assertion '" #c "'" __VA_ARGS__)
 #else
-#define T8_ASSERT(c) SC_NOOP ()
-#endif
-
-/** Extended assertion with detailed error message (including the condition, file, function, 
- * and line number) along with a custom user-specified message. Only active in debug-mode.
- * \param cond     The condition to check.
- * \param msg      A custom message to display if the assertion fails.
- * \param ...      Optional additional arguments to format the message.
-  */
-#ifdef T8_ENABLE_DEBUG
-#define T8_ASSERTF(cond, msg, ...) \
-  do { \
-    if (!(cond)) { \
-      fprintf (stderr, "Assertion failed: (%s), function %s, file %s, line %d.\nMessage: " msg "\n", #cond, \
-               __FUNCTION__, __FILE__, __LINE__, ##__VA_ARGS__); \
-      abort (); \
-    } \
-  } while (0)
-#else
-#define T8_ASSERTF(cond, msg, ...) SC_NOOP ()
+#define T8_ASSERT(c, ...) SC_NOOP ()
 #endif
 
 /** Allocate a \a t-array with \a n elements. */
