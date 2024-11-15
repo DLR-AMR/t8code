@@ -61,16 +61,22 @@ T8_EXTERN_C_BEGIN ();
 /** Portable way to use the const keyword determined by configure. */
 #define t8_restrict _sc_restrict
 
-/** Widely used assertion, with optional error message. Only active in debug-mode. */
+/** Widely used assertion. Only active in debug-mode. */
 /* Note that we use the same definition as in sc.h. We are deliberately not using
  * #define T8_ASSERT SC_ASSERT
  * since then the assertion would not trigger if sc is not configured in debugging mode.
  * However, we want it to trigger any time t8code is in debugging mode, independent of sc.
  */
 #ifdef T8_ENABLE_DEBUG
-#define T8_ASSERT(c, ...) SC_CHECK_ABORT ((c), "Assertion '" #c "'" __VA_ARGS__ "")
+#define T8_ASSERT(c) SC_CHECK_ABORT ((c), "Assertion '" #c "'")
 #else
-#define T8_ASSERT(c, ...) SC_NOOP ()
+#define T8_ASSERT(c) SC_NOOP ()
+#endif
+
+#ifdef T8_ENABLE_DEBUG
+#define T8_ASSERTF(c, msg) SC_CHECK_ABORT ((c), "Assertion '" #c "': " msg)
+#else
+#define T8_ASSERTF(c, msg) SC_NOOP ()
 #endif
 
 /** Allocate a \a t-array with \a n elements. */
