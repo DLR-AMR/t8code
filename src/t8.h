@@ -73,6 +73,25 @@ T8_EXTERN_C_BEGIN ();
 #define T8_ASSERT(c) SC_NOOP ()
 #endif
 
+/** Extended assertion with detailed error message (including the condition, file, function, 
+ * and line number) along with a custom user-specified message. Only active in debug-mode.
+ * \param cond     The condition to check.
+ * \param msg      A custom message to display if the assertion fails.
+ * \param ...      Optional additional arguments to format the message.
+  */
+#ifdef T8_ENABLE_DEBUG
+#define T8_ASSERTF(cond, msg, ...) \
+  do { \
+    if (!(cond)) { \
+      fprintf (stderr, "Assertion failed: (%s), function %s, file %s, line %d.\nMessage: " msg "\n", #cond, \
+               __FUNCTION__, __FILE__, __LINE__, ##__VA_ARGS__); \
+      abort (); \
+    } \
+  } while (0)
+#else
+#define T8_ASSERTF(cond, msg, ...) SC_NOOP ()
+#endif
+
 /** Allocate a \a t-array with \a n elements. */
 #define T8_ALLOC(t, n) (t *) sc_malloc (t8_get_package_id (), (n) * sizeof (t))
 
