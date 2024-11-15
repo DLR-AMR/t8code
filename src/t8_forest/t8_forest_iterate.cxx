@@ -156,7 +156,6 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
       /* Compute the corresponding face number of this face child */
       const int child_face = ts->t8_element_face_child_face (element, face, iface);
       /* Enter the recursion */
-      // TODO: Change element index when ghost.
       t8_forest_iterate_faces (forest, ltreeid, face_children[iface], child_face, &face_child_leaves, user_data,
                                indexa + tree_lindex_of_first_leaf, callback);
     }
