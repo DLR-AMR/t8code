@@ -416,11 +416,10 @@ class t8_search_with_batched_queries: public t8_search<Udata> {
       this->queries_callback (this->forest, ltreeid, element, is_leaf, leaf_elements, tree_leaf_index, this->queries,
                               this->active_queries, query_matches, this->user_data);
       if (!is_leaf) {
-        for (size_t i = 0; i < query_matches.size (); i++) {
-          if (query_matches[i]) {
-            new_active_queries.push_back (this->active_queries[i]);
-          }
-        }
+        auto positive_queries = this->active_queries | std::ranges::views::filter ([&] (size_t &query_index) {
+                                  return query_matches[query_index];
+                                });
+        new_active_queries.assign (positive_queries.begin (), positive_queries.end ());
       }
     }
     std::swap (new_active_queries, this->active_queries);
