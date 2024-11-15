@@ -82,7 +82,19 @@ typedef void (*t8_forest_query_fn) (t8_forest_t forest, const t8_locidx_t ltreei
 
 T8_EXTERN_C_BEGIN ();
 
-/* TODO: Document */
+/** Split an array of elements according to the children of a given element E.
+ *  In other words for each child C of E, find
+ *  the index i, j, such that all descendants of C are
+ *  elements[i], ..., elements[j-1]. 
+ * 
+ * \param [in] element       An element.
+ * \param [in] leaf_elements An array of leaf elements of \a element. Thus, all
+ *                           elements must be descendants. Sorted by linear index.
+ * \param [in,out] offsets   On input an allocated array of \a num_children_of_E + 1 entries.  
+ *                           On output entry i indicates the position in \a leaf_elements
+ *                           where the descandents of the i-th child of E start.
+ */
+
 void
 t8_forest_split_array (const t8_element_t *element, const t8_element_array_t *leaf_elements, size_t *offsets);
 
