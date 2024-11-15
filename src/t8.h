@@ -73,6 +73,7 @@ T8_EXTERN_C_BEGIN ();
 #define T8_ASSERT(c) SC_NOOP ()
 #endif
 
+/**Extended T8_ASSERT assertion with custom error message. Only active in debug-mode. */
 #ifdef T8_ENABLE_DEBUG
 #define T8_ASSERTF(c, msg) SC_CHECK_ABORT ((c), "Assertion '" #c "': " msg)
 #else
