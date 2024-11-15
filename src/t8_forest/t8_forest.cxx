@@ -1441,7 +1441,7 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
   }
 }
 
-/** \brief Search for a linear element id (at forest->maxlevel) in a sorted array of
+/** \brief Search for a linear element id maxlevel in a sorted array of
  * elements. If the element does not exist, return the largest index i
  * such that the element at position i has a smaller id than the given one.
  * If no such i exists, return -1.
