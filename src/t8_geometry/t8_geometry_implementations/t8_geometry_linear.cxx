@@ -229,6 +229,7 @@ t8_geometry_linear::t8_geom_point_batch_inside_element (t8_forest_t forest, t8_l
       for (int iface = 0; iface < num_faces; ++iface) {
         if (t8_plane_point_inside (face_points[iface].data (), face_normals[iface].data (), &points[ipoint * 3]) == 0) {
           is_inside[ipoint] = 0;
+          break;
         }
       }
     }
