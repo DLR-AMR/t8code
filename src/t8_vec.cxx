@@ -20,12 +20,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_vec.h
- * Provide vector operations for 3D vectors.
- */
-
-#include <t8_vec.h>
 #include <t8_vec.hxx>
+#include <t8_vec.h>
 
 double
 t8_vec_norm_c_interface (const double vec[3])
