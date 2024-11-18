@@ -39,6 +39,7 @@
 #include <t8_forest/t8_forest_profiling.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <example/common/t8_example_common.h>
+#include <t8_vec.hxx>
 
 /* This is the user defined data used to define the
  * region in which we partition.
@@ -52,24 +53,6 @@ typedef struct
   int base_level;      /* A given level that is not coarsend further, see -l argument */
   int max_level;       /* A max level that is not refined further, see -L argument */
 } adapt_data_t;
-
-/* Simple 3 dimensional vector product */
-static double
-t8_vec3_dot (double *v1, double *v2)
-{
-  return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
-}
-
-/* Set x = x - alpha*y
- * for 2 3dim vectors x,y and a constant alpha */
-static void
-t8_vec3_xmay (double *x, double alpha, double *y)
-{
-  int i;
-  for (i = 0; i < 3; i++) {
-    x[i] -= alpha * y[i];
-  }
-}
 
 #if 0
 /* TODO: deprecated. was replaced by t8_common_midpoint. */
@@ -120,18 +103,18 @@ t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tr
   t8_forest_element_centroid (forest_from, which_tree, elements[0], elem_midpoint);
 
   /* Calculate elem_midpoint - c_min n */
-  t8_vec3_xmay (elem_midpoint, adapt_data->c_min, normal);
+  t8_vec_axy (elem_midpoint, normal, adapt_data->c_min);
 
   /* The purpose of the factor C*h is that the levels get smaller, the
    * closer we get to the interface. We refine a cell if it is at most
    * C times its own height away from the interface */
-  if (t8_vec3_dot (elem_midpoint, normal) >= 0) {
+  if (t8_vec_dot (elem_midpoint, normal) >= 0) {
     /* if the anchor node is to the right of c_min*E,
      * check if it is to the left of c_max*E */
 
     /* set elem_midpoint to the original anchor - c_max*normal */
-    t8_vec3_xmay (elem_midpoint, adapt_data->c_max - adapt_data->c_min, normal);
-    if (t8_vec3_dot (elem_midpoint, normal) <= 0) {
+    t8_vec_axy (elem_midpoint, normal, adapt_data->c_max - adapt_data->c_min);
+    if (t8_vec_dot (elem_midpoint, normal) <= 0) {
       if (level < max_level) {
         /* We do refine if level smaller 1+base level and the anchor is
          * to the left of c_max*E */
@@ -156,7 +139,7 @@ t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tr
 static void
 t8_vec3_normalize (double *v)
 {
-  double norm = sqrt (t8_vec3_dot (v, v));
+  double norm = sqrt (t8_vec_dot (v, v));
 
   v[0] /= norm;
   v[1] /= norm;

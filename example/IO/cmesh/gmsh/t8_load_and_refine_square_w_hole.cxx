@@ -33,10 +33,10 @@
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
-
+#inclde < t8_vec.hxx>
 /* Simple 3 dimensional vector product */
 static double
-t8_vec3_dot (double *v1, double *v2)
+t8_vec_dot (double *v1, double *v2)
 {
   return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
 }
@@ -84,7 +84,7 @@ t8_midpoint (t8_forest_t forest, t8_locidx_t which_tree, t8_eclass_scheme_c *ts,
     for (j = 0; j < 3; j++) {
       corner[0][j] -= elem_mid_point[j];
     }
-    *h = sqrt (t8_vec3_dot (corner[0], corner[0]));
+    *h = sqrt (t8_vec_dot (corner[0], corner[0]));
 
     T8_FREE (corner[0]);
     T8_FREE (corner[1]);
@@ -106,7 +106,7 @@ t8_midpoint (t8_forest_t forest, t8_locidx_t which_tree, t8_eclass_scheme_c *ts,
       t8_vec3_xmay (corner[i], 1, elem_mid_point);
       /* Set the size of the element to the euclidean distance of the two
        * vertices if it is bigger than the previous distance */
-      *h = SC_MAX (sqrt (t8_vec3_dot (corner[i], corner[i])), *h);
+      *h = SC_MAX (sqrt (t8_vec_dot (corner[i], corner[i])), *h);
       T8_FREE (corner[i]);
     }
   }
@@ -135,7 +135,7 @@ t8_load_refine_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t w
   }
   /* Refine along the inner boundary.
    * The factor in front of h controls the width of the refinement region. */
-  if (ts->eclass == T8_ECLASS_TRIANGLE && t8_vec3_dot (elem_midpoint, elem_midpoint) < 1 + 5 * h) {
+  if (ts->eclass == T8_ECLASS_TRIANGLE && t8_vec_dot (elem_midpoint, elem_midpoint) < 1 + 5 * h) {
     return 1;
   }
 
