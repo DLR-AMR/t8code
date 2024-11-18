@@ -167,6 +167,6 @@ t8_vec_orthogonal_tripod_c_interface (const double v1[3], double v2[3], double v
 void
 t8_vec_swap_c_interface (double p1[3], double p2[3]);
 
-#T8_EXTERN_C_END();
+T8_EXTERN_C_END ();
 
 #endif /* T8_VEC_H */

@@ -31,8 +31,7 @@
 
 #include <algorithm>
 #include <numeric>
-
-#T8_EXTERN_C_BEGIN();
+T8_EXTERN_C_BEGIN ();
 
 /** Vector norm.
  * \param [in] vec  A 3D vector.
@@ -73,8 +72,8 @@ t8_vec_copy (const double vec_in[3], double vec_out[3])
 static inline double
 t8_vec_dist (const double vec_x[3], const double vec_y[3])
 {
-  double dist = 0;
-  std::transform (vec_x, vec_x + 3, vec_y, &dist, [] (double x, double y) { return (x - y) * (x - y); });
+  double dist = std::inner_product (vec_x, vec_x + 3, vec_y, 0.0, std::plus<double> (),
+                                    [] (double x, double y) { return (x - y) * (x - y); });
   return std::sqrt (dist);
 }
 
@@ -246,6 +245,6 @@ t8_vec_swap (double p1[3], double p2[3])
   }
 }
 
-#T8_EXTERN_C_END();
+T8_EXTERN_C_END ();
 
 #endif /* !T8_VEC_HXX */
