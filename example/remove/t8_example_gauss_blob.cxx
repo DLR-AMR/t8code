@@ -34,7 +34,7 @@ struct t8_adapt_data
   const int remove_scope;
   const double spheres_radius_inner;
   const double spheres_radius_outer;
-  const double midpoint[3];
+  const t8_point_t midpoint;
 };
 
 static double
@@ -103,10 +103,10 @@ t8_adapt_refine (t8_forest_t forest, t8_forest_t forest_from, const t8_locidx_t 
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
   T8_ASSERT (adapt_data != NULL);
 
-  double centroid[3];
-  t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
+  t8_point_t centroid;
+  t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid.data ());
 
-  const double dist = t8_vec_dist (adapt_data->midpoint, centroid);
+  const double dist = t8_vec_dist (adapt_data->midpoint, centroid.data ());
   if (dist < adapt_data->spheres_radius_outer) {
     return 1;
   }

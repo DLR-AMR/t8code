@@ -367,10 +367,10 @@ static double
 t8_advect_flux_upwind (const t8_advect_problem_t *problem, double el_plus_phi, double el_minus_phi, t8_locidx_t ltreeid,
                        const t8_element_t *element_plus, int face)
 {
-  double face_center[3];
-  double u_at_face_center[3];
-  double normal[3], normal_times_u;
-  double area;
+  t8_point_t face_center;
+  t8_point_t u_at_face_center;
+  t8_point_t normal;
+  double area, normal_times_u;
 
   /*
    *    | --x-- | --x-- |   Two elements, midpoints marked with 'x'
@@ -379,11 +379,11 @@ t8_advect_flux_upwind (const t8_advect_problem_t *problem, double el_plus_phi, d
    */
 
   /* Compute the center coordinate of the face */
-  t8_forest_element_face_centroid (problem->forest, ltreeid, element_plus, face, face_center);
+  t8_forest_element_face_centroid (problem->forest, ltreeid, element_plus, face, face_center.data ());
   /* Compute u at the face center. */
-  problem->u (face_center, problem->t, u_at_face_center);
+  problem->u (face_center.data (), problem->t, u_at_face_center.data ());
   /* Compute the normal of the element at this face */
-  t8_forest_element_face_normal (problem->forest, ltreeid, element_plus, face, normal);
+  t8_forest_element_face_normal (problem->forest, ltreeid, element_plus, face, normal.data ());
   /* Compute the area of the face */
   area = t8_forest_element_face_area (problem->forest, ltreeid, element_plus, face);
 
@@ -990,7 +990,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t *problem)
   const t8_scheme *scheme = t8_forest_get_scheme (problem->forest);
   t8_eclass_t neigh_eclass;
   double speed, max_speed = 0, min_diam = -1, delta_t, min_delta_t;
-  double u[3];
+  t8_point_t u;
   double diam;
   double min_vol = 1e9;
 
