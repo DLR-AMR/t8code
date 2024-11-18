@@ -104,7 +104,7 @@ t8_common_adapt_level_set (t8_forest_t forest, t8_forest_t forest_from, t8_locid
 
 typedef struct
 {
-  double M[3];
+  t8_point_t M;
   /**< midpoint */
   double radius;
   /**< radius */
