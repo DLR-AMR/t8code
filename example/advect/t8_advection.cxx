@@ -36,7 +36,7 @@
 #include <t8_cmesh_readmshfile.h>
 #include <t8_vtk/t8_vtk_writer.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_vec.h>
+#include <t8_vec.hxx>
 
 #define MAX_FACES 8 /* The maximum number of faces of an element */
 /* TODO: This is not memory efficient. If we run out of memory, we can optimize here. */

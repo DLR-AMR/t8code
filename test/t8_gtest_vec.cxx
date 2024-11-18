@@ -23,7 +23,7 @@
 /* In this file we collect tests for the routines in t8_vec.h */
 
 #include <gtest/gtest.h>
-#include <t8_vec.h>
+#include <t8_vec.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
 
 /* Wrapper for 3D vector datatype */
