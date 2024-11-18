@@ -22,7 +22,7 @@
 
 #include <t8.h>
 #include <t8_forest/t8_forest.h>
-#include <t8_vec.h>
+#include <t8_vec.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <sc_options.h>

@@ -24,7 +24,7 @@
   * that are used in more than one example. */
 
 #include <example/common/t8_example_common.h>
-#include <t8_vec.h>
+#include <t8_vec.hxx>
 
 T8_EXTERN_C_BEGIN ();
 

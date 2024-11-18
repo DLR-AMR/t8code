@@ -87,6 +87,7 @@ target_sources( T8 PRIVATE
     t8_refcount.c 
     t8_version.c 
     t8_vtk.c 
+    t8_vec.cxx
     t8_cmesh/t8_cmesh.cxx 
     t8_cmesh/t8_cmesh_cad.cxx 
     t8_cmesh/t8_cmesh_triangle.cxx 
@@ -193,6 +194,7 @@ install( FILES
     t8_netcdf.h
     t8_refcount.h
     t8_vec.h
+    t8_vec.hxx
     t8_version.h
     t8_vtk.h
     t8_windows.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include
