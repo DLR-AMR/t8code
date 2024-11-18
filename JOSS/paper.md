@@ -238,7 +238,7 @@ around 15\% to 20\% of overall runtime compared to the solver.
 | elements. \label{tab:t8code_runtimes}                            |
 +================+===================+====================+========+
 
-![Runtimes of ghost layer creation on the terraybyte cluster for p4est and
+![Runtimes of ghost layer creation on the terrabyte cluster for p4est and
 t8code. The meshes have been refined into a Menger sponge for hexahedral mesh
 with p4est (max. level 12) and a Sierpinski sponge for the tetrahedral mesh in
 t8code (max. level 13) to create a fractal pattern with billions of elements as
