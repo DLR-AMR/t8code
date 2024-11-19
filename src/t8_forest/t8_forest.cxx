@@ -44,6 +44,9 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
 #endif
+#include <t8_data/t8_element_array_iterator.hxx>
+
+#include <algorithm>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -1412,50 +1415,37 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
   }
 }
 
-/* Search for a linear element id (at forest->maxlevel) in a sorted array of
+/** \brief Search for a linear element id (at forest->maxlevel) in a sorted array of
  * elements. If the element does not exist, return the largest index i
  * such that the element at position i has a smaller id than the given one.
  * If no such i exists, return -1.
  */
-/* TODO: should return t8_locidx_t */
 static t8_locidx_t
 t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_linearidx_t element_id, const int maxlevel)
 {
-  t8_linearidx_t query_id;
-  t8_locidx_t low, high, guess;
-
   const t8_scheme *ts = t8_element_array_get_scheme (elements);
   /* At first, we check whether any element has smaller id than the
    * given one. */
   const t8_element_t *query = t8_element_array_index_int (elements, 0);
-  query_id = ts->t8_element_get_linear_id (query, maxlevel);
+  const t8_linearidx_t query_id = ts->t8_element_get_linear_id (query, maxlevel);
   if (query_id > element_id) {
-    /* No element has id smaller than the given one */
+    /* No element has id smaller than the given one. */
     return -1;
   }
 
-  /* We now perform the binary search */
-  low = 0;
-  high = t8_element_array_get_count (elements) - 1;
-  while (low < high) {
-    guess = (low + high + 1) / 2;
-    query = t8_element_array_index_int (elements, guess);
-    query_id = ts->t8_element_get_linear_id (query, maxlevel);
-    if (query_id == element_id) {
-      /* we are done */
-      return guess;
-    }
-    else if (query_id > element_id) {
-      /* look further left */
-      high = guess - 1;
-    }
-    else {
-      /* look further right, but keep guess in the search range */
-      low = guess;
-    }
-  }
-  T8_ASSERT (low == high);
-  return low;
+  /* We search for the first element in the array that is greater than the given element id. */
+  auto elem_iter = std::upper_bound (
+    t8_element_array_begin (elements), t8_element_array_end (elements), element_id,
+    [&maxlevel, &ts] (const t8_linearidx_t element_id_, const t8_element_array_iterator::value_type &elem_ptr) {
+      return (element_id_ < ts->t8_element_get_linear_id (elem_ptr, maxlevel));
+    });
+
+  /* After we found the element with an id greater than the given one, we are able to jump one index back.
+   * This guarantees us that the element at (index - 1) is smaller or equal to the given element id.
+   * In case we do not find an element that is greater than the given element_id, the binary search returns
+   * the end-iterator of the element array. In that case, we want to return the last index from the element
+   * array. */
+  return elem_iter.GetCurrentIndex () - 1;
 }
 
 t8_eclass_t
@@ -2476,9 +2466,14 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest, t8_gloidx_t gtre
     else {
       last_owner_entry = -1;
     }
-    if (first_owner != last_owner_entry) {
+
+    if (first_owner > last_owner_entry) {
       /* We did not count this process as an owner, thus we add it */
       *(int *) sc_array_push (owners) = first_owner;
+    }
+    if (last_owner > last_owner_entry) {
+      /* We did not count this process as an owner, thus we add it */
+      *(int *) sc_array_push (owners) = last_owner;
     }
     T8_ASSERT (t8_forest_element_check_owner (forest, first_face_desc, gtreeid, eclass, first_owner, 1));
     T8_ASSERT (t8_forest_element_check_owner (forest, last_face_desc, gtreeid, eclass, first_owner, 1));
@@ -3340,6 +3335,7 @@ t8_forest_commit (t8_forest_t forest)
   }
 
   if (forest->mpisize > 1) {
+    sc_MPI_Barrier (forest->mpicomm);
     /* Construct a ghost layer, if desired */
     if (forest->do_ghost) {
       /* TODO: ghost type */
@@ -4096,6 +4092,17 @@ t8_forest_new_uniform (t8_cmesh_t cmesh, t8_scheme *scheme, const int level, con
 
   /* Initialize the forest */
   t8_forest_init (&forest);
+
+  if (cmesh->set_partition) {
+    t8_cmesh_t cmesh_uniform_partition;
+    t8_cmesh_init (&cmesh_uniform_partition);
+    t8_cmesh_set_derive (cmesh_uniform_partition, cmesh);
+    t8_scheme_cxx_ref (scheme);
+    t8_cmesh_set_partition_uniform (cmesh_uniform_partition, level, scheme);
+    t8_cmesh_commit (cmesh_uniform_partition, comm);
+    cmesh = cmesh_uniform_partition;
+  }
+
   /* Set the cmesh, scheme and level */
   t8_forest_set_cmesh (forest, cmesh, comm);
   t8_forest_set_scheme (forest, scheme);

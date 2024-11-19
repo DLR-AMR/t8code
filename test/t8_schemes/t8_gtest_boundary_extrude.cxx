@@ -32,8 +32,8 @@ class class_test_boundary_extrude: public TestDFS {
   /* For elements that are on the face of the root element, check that creating the boundary element
    * and extruding it results in the original element
     */
-  virtual void
-  check_element ()
+  void
+  check_element () override
   {
     const int num_faces = ts->t8_element_num_faces (element);
     for (int iface = 0; iface < num_faces; iface++) {

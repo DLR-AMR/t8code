@@ -168,7 +168,7 @@ t8_step3_print_forest_information (t8_forest_t forest)
   /* Get the global number of elements. */
   global_num_elements = t8_forest_get_global_num_elements (forest);
   t8_global_productionf (" [step3] Local number of elements:\t\t%i\n", local_num_elements);
-  t8_global_productionf (" [step3] Global number of elements:\t%li\n", global_num_elements);
+  t8_global_productionf (" [step3] Global number of elements:\t%li\n", static_cast<long> (global_num_elements));
 }
 
 int

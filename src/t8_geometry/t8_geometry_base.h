@@ -35,13 +35,6 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/** Get the dimension of a geometry.
- * \param [in]  geom  A geometry.
- * \return            The dimension of \a geom.
- */
-int
-t8_geom_get_dimension (const t8_geometry_c *geom);
-
 /** Get the name of a geometry.
  * \param [in]  geom  A geometry.
  * \return            The name of \a geom.

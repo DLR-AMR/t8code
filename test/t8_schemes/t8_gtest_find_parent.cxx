@@ -28,8 +28,8 @@
 #include <test/t8_gtest_macros.hxx>
 
 class class_find_parent: public TestDFS {
-  virtual void
-  check_element ()
+  void
+  check_element () override
   {
     const int num_children = ts->t8_element_num_children (element);
     for (int ichild = 0; ichild < num_children; ichild++) {

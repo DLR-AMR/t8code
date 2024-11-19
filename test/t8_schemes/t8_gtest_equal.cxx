@@ -28,8 +28,8 @@
 #include "t8_gtest_dfs_base.hxx"
 
 class class_test_equal: public TestDFS {
-  virtual void
-  check_element ()
+  void
+  check_element () override
   {
     const int num_children = ts->t8_element_num_children (element);
     for (int ichild1 = 0; ichild1 < num_children; ichild1++) {

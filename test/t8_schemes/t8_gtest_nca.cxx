@@ -189,19 +189,21 @@ t8_recursive_nca_check (t8_element_t *check_nca, t8_element_t *desc_a, t8_elemen
          * This makes debugging a lot easier, as one can reconstruct the descendants
          * via t8_element_set_linear_id and can directly test them instead of waiting
          * until the recursion reaches the faulty computation. */
-        t8_debugf ("id of desc_a: %li, level: %i\n", ts->t8_element_get_linear_id (desc_a, level_a), level_a);
-        t8_debugf ("id of desc_b: %li, level: %i\n", ts->t8_element_get_linear_id (desc_b, level_b), level_b);
+        t8_debugf ("id of desc_a: %li, level: %i\n", static_cast<long> (ts->t8_element_get_linear_id (desc_a, level_a)),
+                   level_a);
+        t8_debugf ("id of desc_b: %li, level: %i\n", static_cast<long> (ts->t8_element_get_linear_id (desc_b, level_b)),
+                   level_b);
 
         for (int k = SC_MAX (level_a, level_b); k >= 0; k--) {
-          t8_debugf ("id of desc_a: %li, level: %i\n", ts->t8_element_get_linear_id (desc_a, k), k);
-          t8_debugf ("id of desc_b: %li, level: %i\n", ts->t8_element_get_linear_id (desc_b, k), k);
+          t8_debugf ("id of desc_a: %li, level: %i\n", static_cast<long> (ts->t8_element_get_linear_id (desc_a, k)), k);
+          t8_debugf ("id of desc_b: %li, level: %i\n", static_cast<long> (ts->t8_element_get_linear_id (desc_b, k)), k);
         }
 
-        t8_debugf ("id of the correct nca: %li, level: %i\n", ts->t8_element_get_linear_id (check_nca, level_c),
-                   level_c);
+        t8_debugf ("id of the correct nca: %li, level: %i\n",
+                   static_cast<long> (ts->t8_element_get_linear_id (check_nca, level_c)), level_c);
 
-        t8_debugf ("id of the computed nca: %li, level: %i\n", ts->t8_element_get_linear_id (check, level_nca),
-                   level_nca);
+        t8_debugf ("id of the computed nca: %li, level: %i\n",
+                   static_cast<long> (ts->t8_element_get_linear_id (check, level_nca)), level_nca);
 
         SC_ABORT ("Computed nca is not the correct nca!\n");
       }

@@ -65,7 +65,7 @@ t8_cmesh_new_from_p8est (p8est_connectivity_t *conn, sc_MPI_Comm comm, int do_pa
  * this function is merely for debugging and to show the possibility.
  * \param [in]      comm       mpi communicator to be used with the new cmesh.
  * \param [in]      do_partition Flag whether the cmesh should be partitioned or not.
- * \param [in]      dimension  An empty cmesh requires a dimension nevertheless. 0 <= \a dimension <= 3.
+ * \param [in]      dimension  An empty cmesh requires a dimension nevertheless. 0 <= tree dimension <= 3.
  * \return                     A committed t8_cmesh structure that has no trees.
  */
 t8_cmesh_t

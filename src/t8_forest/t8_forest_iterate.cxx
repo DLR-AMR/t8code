@@ -52,7 +52,7 @@ t8_forest_determine_child_type (sc_array_t *leaf_elements, size_t index, void *d
 }
 
 void
-t8_forest_split_array (const t8_element_t *element, t8_element_array_t *leaf_elements, size_t *offsets)
+t8_forest_split_array (const t8_element_t *element, const t8_element_array_t *leaf_elements, size_t *offsets)
 {
   sc_array_t offset_view;
   t8_forest_child_type_query_t query_data;
@@ -63,21 +63,22 @@ t8_forest_split_array (const t8_element_t *element, t8_element_array_t *leaf_ele
   query_data.level = ts->t8_element_level (element);
   query_data.ts = ts;
 
-  sc_array_t *element_array = t8_element_array_get_array_mutable (leaf_elements);
+  const sc_array_t *element_array = t8_element_array_get_array (leaf_elements);
   /* Split the elements array according to the elements' ancestor id at
    * the given level. In other words for each child C of element, find
    * the indices i, j such that all descendants of C are
    * elements[i], ..., elements[j-1]
    */
   sc_array_init_data (&offset_view, offsets, sizeof (size_t), query_data.num_children + 1);
-  sc_array_split (element_array, &offset_view, query_data.num_children, t8_forest_determine_child_type,
+  // Unfortunately, we have to cast away constness to pass to sc_array_split
+  sc_array_split ((sc_array_t *) element_array, &offset_view, query_data.num_children, t8_forest_determine_child_type,
                   (void *) &query_data);
 }
 
 void
 t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int face,
-                         t8_element_array_t *leaf_elements, void *user_data, t8_locidx_t tree_lindex_of_first_leaf,
-                         t8_forest_iterate_face_fn callback)
+                         const t8_element_array_t *leaf_elements, void *user_data,
+                         t8_locidx_t tree_lindex_of_first_leaf, t8_forest_iterate_face_fn callback)
 {
   t8_scheme *ts;
   t8_eclass_t eclass;
@@ -358,9 +359,9 @@ t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_fo
     /* Get the eclass of the tree and scheme */
     t8_eclass_t eclass = t8_forest_get_tree_class (forest_new, itree);
     T8_ASSERT (eclass == t8_forest_get_tree_class (forest_old, itree));
-    t8_scheme *ts = t8_forest_get_scheme (forest_new, eclass);
-    T8_ASSERT (ts == t8_forest_get_scheme (forest_new, eclass));
-
+    t8_scheme *ts = t8_forest_get_scheme (forest_new);
+    // Check that the two forests use the same scheme.
+    T8_ASSERT (ts == t8_forest_get_scheme (forest_old));
     t8_locidx_t ielem_new = 0;
     t8_locidx_t ielem_old = 0;
     while (ielem_new < elems_per_tree_new) {

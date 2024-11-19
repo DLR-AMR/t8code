@@ -53,7 +53,7 @@ main (int argc, char **argv)
   global_num_trees = t8_cmesh_get_num_trees (cmesh);
   t8_global_productionf (" [step1] Created coarse mesh.\n");
   t8_global_productionf (" [step1] Local number of trees:\t%i\n", local_num_trees);
-  t8_global_productionf (" [step1] Global number of trees:\t%li\n", global_num_trees);
+  t8_global_productionf (" [step1] Global number of trees:\t%li\n", static_cast<long> (global_num_trees));
   t8_scheme *scheme = t8_scheme_new_default ();
   t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, 0, 0, sc_MPI_COMM_WORLD);
   t8_forest_vtk_write_file (forest, prefix, 1, 1, 1, 1, 0, 0, NULL);

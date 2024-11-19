@@ -81,8 +81,8 @@ typedef enum {
 struct t8_geometry_sincos: public t8_geometry
 {
  public:
-  /* Basic constructor that sets the dimension and the name. */
-  t8_geometry_sincos (): t8_geometry (2, "t8_sincos_geometry")
+  /* Basic constructor that sets the name. */
+  t8_geometry_sincos (): t8_geometry ("t8_sincos_geometry")
   {
   }
 
@@ -93,7 +93,7 @@ struct t8_geometry_sincos: public t8_geometry
    * models the rectangle [0,2] x [0,1].
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
+   * \param [in]  ref_coords Array of tree dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
    * \param [in]  num_coords Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
@@ -140,6 +140,22 @@ struct t8_geometry_sincos: public t8_geometry
   }
 
   /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * Only quad elements are supported by this geometry.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const
+  {
+    if (active_tree_class != T8_ECLASS_QUAD) {
+      t8_productionf (
+        "t8_geometry_sincos is not compatible with tree type %s\n It is only compatible with quad elements.\n",
+        t8_eclass_to_string[active_tree_class]);
+      return false;
+    }
+    return true;
+  }
+
+  /**
    * Get the type of this geometry.
    * \return The type.
    */
@@ -159,8 +175,8 @@ struct t8_geometry_sincos: public t8_geometry
 struct t8_geometry_moebius: public t8_geometry_with_vertices
 {
  public:
-  /* Basic constructor that sets the dimension and the name. */
-  t8_geometry_moebius (): t8_geometry_with_vertices (2, "t8_moebius_geometry")
+  /* Basic constructor that sets the name. */
+  t8_geometry_moebius (): t8_geometry_with_vertices ("t8_moebius_geometry")
   {
   }
 
@@ -168,7 +184,7 @@ struct t8_geometry_moebius: public t8_geometry_with_vertices
    * Maps points in \f$ [0,1]^2 \f$ to the moebius band.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
+   * \param [in]  ref_coords Array of tree dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
    * \param [in]  num_coords Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
@@ -204,6 +220,22 @@ struct t8_geometry_moebius: public t8_geometry_with_vertices
   }
 
   /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * Only quad elements are supported by this geometry.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const
+  {
+    if (active_tree_class != T8_ECLASS_QUAD) {
+      t8_productionf (
+        "t8_geometry_moebius is not compatible with tree type %s\n It is only compatible with quad elements.\n",
+        t8_eclass_to_string[active_tree_class]);
+      return false;
+    }
+    return true;
+  }
+
+  /**
    * Get the type of this geometry.
    * \return The type.
    */
@@ -224,8 +256,8 @@ struct t8_geometry_moebius: public t8_geometry_with_vertices
 struct t8_geometry_cylinder: public t8_geometry
 {
  public:
-  /* Basic constructor that sets the dimension and the name. */
-  t8_geometry_cylinder (): t8_geometry (2, "t8_cylinder_geometry")
+  /* Basic constructor that sets the name. */
+  t8_geometry_cylinder (): t8_geometry ("t8_cylinder_geometry")
   {
   }
 
@@ -233,7 +265,7 @@ struct t8_geometry_cylinder: public t8_geometry
    * Map a reference point in the unit square to a cylinder.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
+   * \param [in]  ref_coords Array of tree dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
    * \param [in]  num_coords Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
@@ -274,6 +306,22 @@ struct t8_geometry_cylinder: public t8_geometry
   }
 
   /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * Only quad elements are supported by this geometry.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const
+  {
+    if (active_tree_class != T8_ECLASS_QUAD) {
+      t8_productionf (
+        "t8_geometry_cylinder is not compatible with tree type %s\n It is only compatible with quad elements.\n",
+        t8_eclass_to_string[active_tree_class]);
+      return false;
+    }
+    return true;
+  }
+
+  /**
    * Get the type of this geometry.
    * \return The type.
    */
@@ -295,8 +343,8 @@ struct t8_geometry_cylinder: public t8_geometry
 struct t8_geometry_circle: public t8_geometry_with_vertices
 {
  public:
-  /* Basic constructor that sets the dimension and the name. */
-  t8_geometry_circle (): t8_geometry_with_vertices (2, "t8_circle_geometry")
+  /* Basic constructor that sets the name. */
+  t8_geometry_circle (): t8_geometry_with_vertices ("t8_circle_geometry")
   {
   }
 
@@ -304,7 +352,7 @@ struct t8_geometry_circle: public t8_geometry_with_vertices
    * Map a reference point in the unit square to a circle.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
+   * \param [in]  ref_coords Array of tree dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
    * \param [in]  num_coords Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
@@ -342,6 +390,22 @@ struct t8_geometry_circle: public t8_geometry_with_vertices
   }
 
   /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * Only quad elements are supported by this geometry.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const
+  {
+    if (active_tree_class != T8_ECLASS_QUAD) {
+      t8_productionf (
+        "t8_geometry_circle is not compatible with tree type %s\n It is only compatible with quad elements.\n",
+        t8_eclass_to_string[active_tree_class]);
+      return false;
+    }
+    return true;
+  }
+
+  /**
    * Get the type of this geometry.
    * \return The type.
    */
@@ -367,8 +431,8 @@ struct t8_geometry_circle: public t8_geometry_with_vertices
 struct t8_geometry_moving: public t8_geometry
 {
  public:
-  /* Basic constructor that sets the dimension the name and the time pointer. */
-  t8_geometry_moving (const double *time): t8_geometry (2, "t8_moving_geometry"), ptime (time)
+  /* Basic constructor that sets the name and the time pointer. */
+  t8_geometry_moving (const double *time): t8_geometry ("t8_moving_geometry"), ptime (time)
   {
   }
 
@@ -376,7 +440,7 @@ struct t8_geometry_moving: public t8_geometry
    * Map a reference point in the unit square to a square distorted with time.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
+   * \param [in]  ref_coords Array of tree dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
    * \param [in]  num_coords Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
@@ -435,6 +499,22 @@ struct t8_geometry_moving: public t8_geometry
   }
 
   /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * Only quad elements are supported by this geometry.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const
+  {
+    if (active_tree_class != T8_ECLASS_QUAD) {
+      t8_productionf (
+        "t8_geometry_moving is not compatible with tree type %s\n It is only compatible with quad elements.\n",
+        t8_eclass_to_string[active_tree_class]);
+      return false;
+    }
+    return true;
+  }
+
+  /**
    * Get the type of this geometry.
    * \return The type.
    */
@@ -455,15 +535,15 @@ struct t8_geometry_moving: public t8_geometry
 struct t8_geometry_cube_zdistorted: public t8_geometry
 {
  public:
-  /* Basic constructor that sets the dimension and the name. */
-  t8_geometry_cube_zdistorted (): t8_geometry (3, "t8_cube_zdistorted_geometry")
+  /* Basic constructor that sets the name. */
+  t8_geometry_cube_zdistorted (): t8_geometry ("t8_cube_zdistorted_geometry")
   {
   }
   /**
    * Map a reference point in the unit cube to a cube distorted in the z axis.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
+   * \param [in]  ref_coords Array of tree dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
    * \param [in]  num_coords Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
@@ -502,6 +582,22 @@ struct t8_geometry_cube_zdistorted: public t8_geometry
   t8_geom_tree_negative_volume () const
   {
     return 0;
+  }
+
+  /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * Only hex elements are supported by this geometry.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const
+  {
+    if (active_tree_class != T8_ECLASS_HEX) {
+      t8_productionf (
+        "t8_geometry_cube_zdistorted is not compatible with tree type %s\n It is only compatible with hex elements.\n",
+        t8_eclass_to_string[active_tree_class]);
+      return false;
+    }
+    return true;
   }
 
   /**
@@ -652,8 +748,8 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     break;
   case T8_GEOM_ANALYTIC_QUAD_TO_SPHERE:
     t8_global_productionf ("Wrapping a quad around a sphere.\n");
-    t8_cmesh_register_geometry<t8_geometry_analytic> (cmesh, 3, "geom_quad_to_sphere", quad_to_sphere_callback, nullptr,
-                                                      nullptr, nullptr, nullptr);
+    t8_cmesh_register_geometry<t8_geometry_analytic> (cmesh, "geom_quad_to_sphere", quad_to_sphere_callback, nullptr,
+                                                      nullptr, nullptr, nullptr, nullptr);
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
     t8_cmesh_set_join (cmesh, 0, 0, 1, 0, 0);
 
@@ -680,7 +776,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     shape = BRepBuilderAPI_MakeEdge (cad_curve).Edge ();
 
     /* Create a cad geometry. */
-    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 2, shape);
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, shape);
 
     /* The arrays indicate which face/edge carries a geometry. 
        * 0 means no geometry and any other number indicates the position of the geometry 
@@ -744,7 +840,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     shape = BRepAlgoAPI_Fuse (shape, BRepBuilderAPI_MakeEdge (cad_curve1).Edge ());
 
     /* Create a cad geometry. */
-    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, shape);
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, shape);
 
     /* The arrays indicate which face/edge carries a geometry. 
      * 0 means no geometry and any other number indicates the position of the geometry 
@@ -845,7 +941,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     int edges[24] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
     /* Create cad geometry. */
-    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, shape);
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, shape);
 
     /* Create tree 0 */
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
@@ -942,7 +1038,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     int edges[24] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
     /* Create a cad geometry. */
-    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, shape);
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, shape);
 
     /* Create corresponding trees and parameters. 
      * Here we create num trees by a coordinate transformation from cylinder to cartesian coordinates. */
