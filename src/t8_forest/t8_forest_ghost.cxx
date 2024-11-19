@@ -1459,19 +1459,6 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
     t8_forest_ghost_send_end (forest, ghost, send_info, requests);
   }
 
-  if (create_element_array) {
-    /* Free the offset memory, if created */
-    t8_shmem_array_destroy (&forest->element_offsets);
-  }
-  if (create_tree_array) {
-    /* Free the offset memory, if created */
-    t8_shmem_array_destroy (&forest->tree_offsets);
-  }
-  if (create_gfirst_desc_array) {
-    /* Free the offset memory, if created */
-    t8_shmem_array_destroy (&forest->global_first_desc);
-  }
-
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of ghost_create */
     forest->profile->ghost_runtime += sc_MPI_Wtime ();
@@ -1489,6 +1476,19 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
      * runtimes were computed to 0.
      * Only delete the line, if you know what you are doing. */
     t8_global_productionf ("End ghost at %f  %f\n", sc_MPI_Wtime (), forest->profile->ghost_runtime);
+  }
+
+  if (create_element_array) {
+    /* Free the offset memory, if created */
+    t8_shmem_array_destroy (&forest->element_offsets);
+  }
+  if (create_tree_array) {
+    /* Free the offset memory, if created */
+    t8_shmem_array_destroy (&forest->tree_offsets);
+  }
+  if (create_gfirst_desc_array) {
+    /* Free the offset memory, if created */
+    t8_shmem_array_destroy (&forest->global_first_desc);
   }
 
   t8_global_productionf ("Done t8_forest_ghost with %i local elements and %i"
