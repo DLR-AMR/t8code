@@ -89,8 +89,8 @@ t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tr
                t8_element_t *elements[])
 {
   int level, base_level, max_level;
-  double elem_midpoint[3];
-  double *normal;
+  t8_point_t elem_midpoint[3];
+  t8_point_t *normal;
   adapt_data_t *adapt_data;
 
   T8_ASSERT (!is_family || num_elements == scheme->element_get_num_children (tree_class, elements[0]));
