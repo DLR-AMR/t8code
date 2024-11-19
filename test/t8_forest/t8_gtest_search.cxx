@@ -64,7 +64,7 @@ class forest_search: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
 bool
 t8_test_search_all_fn (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
                        const bool is_leaf, const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index,
-                       std::vector<bool> *user_data)
+                       std::shared_ptr<std::vector<bool>> user_data)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   if (is_leaf) {
@@ -86,7 +86,8 @@ t8_test_search_all_fn (const t8_forest_t forest, const t8_locidx_t ltreeid, cons
 inline bool
 t8_test_search_query_all_fn (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
                              const bool is_leaf, const t8_element_array_t *leaf_elements,
-                             const t8_locidx_t tree_leaf_index, const int &querie, std::vector<bool> *user_data)
+                             const t8_locidx_t tree_leaf_index, const int &querie,
+                             std::shared_ptr<std::vector<bool>> user_data)
 {
   /* The query is an int with value 42 (see below) */
   EXPECT_EQ (querie, 42) << "Wrong query argument passed to query callback.";

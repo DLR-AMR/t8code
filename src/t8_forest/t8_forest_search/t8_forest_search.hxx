@@ -30,6 +30,7 @@
 #include <t8_forest/t8_forest.h>  // Ensure t8_forest_t is defined
 #include <functional>
 #include <numeric>
+#include <memory>
 #include <ranges>
 
 /*
@@ -59,7 +60,7 @@
 template <typename Udata = void>
 using t8_search_element_callback = std::function<bool (
   const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element, const bool is_leaf,
-  const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index, Udata *user_data)>;
+  const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index, std::shared_ptr<Udata> user_data)>;
 
 /**
  * \typedef t8_search_queries_callback
@@ -78,9 +79,10 @@ using t8_search_element_callback = std::function<bool (
  * \param[in] user_data User-defined data passed to the callback.
  */
 template <typename Query_T, typename Udata = void>
-using t8_search_query_callback = std::function<bool (
-  const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element, const bool is_leaf,
-  const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index, const Query_T &query, Udata *user_data)>;
+using t8_search_query_callback
+  = std::function<bool (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
+                        const bool is_leaf, const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index,
+                        const Query_T &query, std::shared_ptr<Udata> user_data)>;
 
 /**
  * \typedef t8_search_batched_queries_callback
@@ -104,7 +106,7 @@ template <typename Query_T, typename Udata = void>
 using t8_search_batched_queries_callback = std::function<void (
   const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element, const bool is_leaf,
   const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index, const std::vector<Query_T> &queries,
-  const std::vector<size_t> &active_query_indices, std::vector<bool> &query_matches, Udata *user_data)>;
+  const std::vector<size_t> &active_query_indices, std::vector<bool> &query_matches, std::shared_ptr<Udata> user_data)>;
 
 class t8_search_base {
  public:
@@ -250,8 +252,11 @@ class t8_search: public t8_search_base {
  public:
   t8_search (t8_search_element_callback<Udata> element_callback, t8_forest_t forest = nullptr,
              Udata *user_data = nullptr)
-    : t8_search_base (forest), user_data (user_data), element_callback (element_callback)
+    : t8_search_base (forest), element_callback (element_callback)
   {
+    if (user_data != nullptr) {
+      this->user_data = std::make_shared<Udata> (*user_data);
+    }
   }
 
   /** \brief Updates the user data associated with the object.
@@ -263,10 +268,20 @@ class t8_search: public t8_search_base {
   void
   update_user_data (Udata *udata)
   {
-    this->user_data = udata;
+    if (udata != nullptr) {
+      if (this->user_data != nullptr) {
+        this->user_data.reset ();
+      }
+      this->user_data = std::make_shared<Udata> (*udata);
+    }
   }
 
-  Udata *user_data;
+  ~t8_search ()
+  {
+    // No need to delete user_data as it is managed by std::shared_ptr
+  }
+
+  std::shared_ptr<Udata> user_data;
 
  private:
   bool
