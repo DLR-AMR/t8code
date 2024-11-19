@@ -29,6 +29,11 @@
 
 #include <t8_schemes/t8_scheme.hxx>
 
+#if T8_ENABLE_DEBUG
+// Only needed for a debug print
+#include <typeinfo>
+#endif  // T8_ENABLE_DEBUG
+
 class t8_scheme_builder {
  public:
   t8_scheme_builder (): scheme (new t8_scheme) {};
@@ -40,7 +45,17 @@ class t8_scheme_builder {
   void
   add_eclass_scheme (t8_eclass_t tree_class, _Args &&...args)
   {
-    scheme->eclass_schemes[tree_class] = TEclass_Scheme (std::forward<_Args> (args)...);
+#if T8_ENABLE_DEBUG
+    // This way the typeinfo header is only included when needed
+    t8_debugf ("Registering scheme of type %s for tree class %s.\n", typeid (T).name (),
+               t8_eclass_to_string[tree_class]);
+#endif  // T8_ENABLE_DEBUG
+    if (scheme->eclass_schemes.find (tree_class) == scheme->eclass_schemes.end ()) {
+      registered_geometries.emplace (tree_class, TEclass_Scheme (std::forward<_Args> (args)...));
+    }
+    else {
+      SC_ABORTF ("Scheme for tree class %d already exists.", tree_class);
+    }
   }
 
   t8_scheme *

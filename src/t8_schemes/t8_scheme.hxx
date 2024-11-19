@@ -23,7 +23,7 @@
 #pragma once
 
 #include <variant>
-#include <array>
+#include <unordered_map>
 #include <t8_refcount.h>
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
@@ -64,7 +64,7 @@ class t8_scheme {
                                 >;
   /* clang-format on */
 
-  using scheme_container = std::array<scheme_var, T8_ECLASS_COUNT>; /**< Container type for holding eclass schemes. */
+  using scheme_container = std::unordered_map<int, scheme_var>; /**< Container type for holding eclass schemes. */
 
  private:
   scheme_container eclass_schemes; /**< The container holding the eclass schemes. */
@@ -114,6 +114,10 @@ class t8_scheme {
   inline size_t
   get_element_size (t8_eclass_t tree_class) const
   {
+#if T8_ENABLE_DEBUG
+    // Check if the scheme actually exists
+    T8_ASSERT (eclass_schemes.contains (tree_class));
+#endif  // T8_ENABLE_DEBUG
     return std::visit ([&] (auto &&scheme) { return scheme.get_element_size (); }, eclass_schemes[tree_class]);
   };
 
