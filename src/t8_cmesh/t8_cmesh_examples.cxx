@@ -2933,7 +2933,6 @@ t8_cmesh_new_triangulated_spherical_surface_octahedron (const double radius, sc_
   }
 
   double vertices_top[3][3] = { { radius, 0.0, 0.0 }, { 0.0, radius, 0.0 }, { 0.0, 0.0, radius } };
-
   double vertices_bot[3][3] = { { radius, 0.0, 0.0 }, { 0.0, radius, 0.0 }, { 0.0, 0.0, -radius } };
 
   for (int turn = 0, itree = -1; turn < ntrees / 2; turn++) {
