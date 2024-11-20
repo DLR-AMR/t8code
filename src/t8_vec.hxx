@@ -28,15 +28,12 @@
 #define T8_VEC_HXX
 
 #include <t8.h>
-
-// typedef std::array<double, 3> t8_point_t;
-
 template <std::size_t N>
 using t8_point_t = std::array<double, N>;
+typedef t8_point_t<3> t8_3D_point;
 
 #include <algorithm>
 #include <numeric>
-T8_EXTERN_C_BEGIN ();
 
 /** Vector norm.
  * \param [in] vec  A 3D vector.
@@ -50,11 +47,11 @@ t8_vec_norm (const t8_point_t<N> &vec)
 }
 
 /** Normalize a vector.
- * \param [in,out] vec  A 3D vector.
+ * \param [in,out] vec  A N-D vector.
  */
 template <std::size_t N>
 static inline void
-t8_vec_normalize (t8_point_t<N> vec)
+t8_vec_normalize (t8_point_t<N> &vec)
 {
   const double norm = t8_vec_norm (vec);
   std::transform (vec.begin (), vec.end (), vec.begin (), [norm] (double v) { return v / norm; });
@@ -66,14 +63,14 @@ t8_vec_normalize (t8_point_t<N> vec)
  */
 template <std::size_t N>
 static inline void
-t8_vec_copy (const t8_point_t<N> &vec_in, t8_point_t &vec_out)
+t8_vec_copy (const t8_point_t<N> &vec_in, t8_point_t<N> &vec_out)
 {
   std::copy (vec_in.begin (), vec_in.end (), vec_out.begin ());
 }
 
 /** Euclidean distance of X and Y.
- * \param [in]  vec_x  A 3D vector.
- * \param [in]  vec_y  A 3D vector.
+ * \param [in]  vec_x  A N-D vector.
+ * \param [in]  vec_y  A N-D vector.
  * \return             The euclidean distance.
  *                     Equivalent to norm (X-Y).
  */
@@ -87,7 +84,7 @@ t8_vec_dist (const t8_point_t<N> &vec_x, const t8_point_t<N> &vec_y)
 }
 
 /** Compute X = alpha * X
- * \param [in,out] vec_x  A 3D vector. On output set to \a alpha * \a vec_x.
+ * \param [in,out] vec_x  A N-D vector. On output set to \a alpha * \a vec_x.
  * \param [in]     alpha  A factor.
  */
 template <std::size_t N>
@@ -98,20 +95,20 @@ t8_vec_ax (t8_point_t<N> &vec_x, const double alpha)
 }
 
 /** Compute Y = alpha * X
- * \param [in]  vec_x  A 3D vector.
+ * \param [in]  vec_x  A N-D vector.
  * \param [out] vec_z  On output set to \a alpha * \a vec_x.
  * \param [in]  alpha  A factor.
  */
 template <std::size_t N>
 static inline void
-t8_vec_axy (const t8_point_t<N> vec_x, t8_point_t<N> vec_y, const double alpha)
+t8_vec_axy (const t8_point_t<N> &vec_x, t8_point_t<N> &vec_y, const double alpha)
 {
   std::transform (vec_x.begin (), vec_x.end (), vec_y.begin (), [alpha] (double v) { return v * alpha; });
 }
 
 /** Y = alpha * X + b
- * \param [in]  vec_x  A 3D vector.
- * \param [out] vec_y  On input, a 3D vector.
+ * \param [in]  vec_x  A N-D vector.
+ * \param [out] vec_y  On input, a N-D vector.
  *                     On output set to \a alpha * \a vec_x + \a b.
  * \param [in]  alpha  A factor.
  * \param [in]  b      An offset.
@@ -119,28 +116,28 @@ t8_vec_axy (const t8_point_t<N> vec_x, t8_point_t<N> vec_y, const double alpha)
  */
 template <std::size_t N>
 static inline void
-t8_vec_axb (const t8_point_t<N> vec_x, t8_point_t<N> vec_y, const double alpha, const double b)
+t8_vec_axb (const t8_point_t<N> &vec_x, t8_point_t<N> &vec_y, const double alpha, const double b)
 {
   std::transform (vec_x.begin (), vec_x.end (), vec_y.begin (), [alpha, b] (double v) { return alpha * v + b; });
 }
 
 /** Y = Y + alpha * X
- * \param [in]  vec_x  A 3D vector.
- * \param [in,out] vec_y On input, a 3D vector.
+ * \param [in]  vec_x  A N-D vector.
+ * \param [in,out] vec_y On input, a N-D vector.
  *                      On output set \a to vec_y + \a alpha * \a vec_x
  * \param [in]  alpha  A factor.
  */
 template <std::size_t N>
 static inline void
-t8_vec_axpy (const t8_point_t<N> vec_x, t8_point_t<N> vec_y, const double alpha)
+t8_vec_axpy (const t8_point_t<N> &vec_x, t8_point_t<N> &vec_y, const double alpha)
 {
   std::transform (vec_x.begin (), vec_x.end (), vec_y.begin (), vec_y.begin (),
                   [alpha] (double x, double y) { return y + alpha * x; });
 }
 
 /** Z = Y + alpha * X
- * \param [in]  vec_x  A 3D vector.
- * \param [in]  vec_y  A 3D vector.
+ * \param [in]  vec_x  A N-D vector.
+ * \param [in]  vec_y  A N-D vector.
  * \param [out] vec_z  On output set \a to vec_y + \a alpha * \a vec_x
  */
 template <std::size_t N>
@@ -152,8 +149,8 @@ t8_vec_axpyz (const t8_point_t<N> &vec_x, const t8_point_t<N> &vec_y, t8_point_t
 }
 
 /** Dot product of X and Y.
- * \param [in]  vec_x  A 3D vector.
- * \param [in]  vec_y  A 3D vector.
+ * \param [in]  vec_x  A N-D vector.
+ * \param [in]  vec_y  A N-D vector.
  * \return             The dot product \a vec_x * \a vec_y
  */
 template <std::size_t N>
@@ -167,11 +164,10 @@ t8_vec_dot (const t8_point_t<N> &vec_x, const t8_point_t<N> &vec_y)
  * \param [in]  vec_y  A 2D vector.
  * \param [out] cross  On output, the cross product of \a vec_x and \a vec_y.
  */
-template <std::size_t N>
-static inline void
-t8_vec_cross_2D (const t8_point_t<N> vec_x, const t8_point_t<N> vec_y, double<N> &cross)
+static inline double
+t8_vec_cross_2D (const t8_point_t<2> &vec_x, const t8_point_t<2> &vec_y)
 {
-  cross = vec_x[0] * vec_y[1] - vec_x[1] * vec_y[0];
+  return vec_x[0] * vec_y[1] - vec_x[1] * vec_y[0];
 }
 
 /** Cross product of X and Y
@@ -179,9 +175,8 @@ t8_vec_cross_2D (const t8_point_t<N> vec_x, const t8_point_t<N> vec_y, double<N>
  * \param [in]  vec_y  A 3D vector.
  * \param [out] cross  On output, the cross product of \a vec_x and \a vec_y.
  */
-template <std::size_t N>
 static inline void
-t8_vec_cross_3D (const t8_point_t<N> vec_x, const t8_point_t<N> vec_y, t8_point_t<N> &cross)
+t8_vec_cross_3D (const t8_3D_point &vec_x, const t8_3D_point &vec_y, t8_3D_point &cross)
 {
   cross[0] = vec_x[1] * vec_y[2] - vec_x[2] * vec_y[1];
   cross[1] = vec_x[2] * vec_y[0] - vec_x[0] * vec_y[2];
@@ -189,15 +184,15 @@ t8_vec_cross_3D (const t8_point_t<N> vec_x, const t8_point_t<N> vec_y, t8_point_
 }
 
 /** Compute the difference of two vectors.
- * \param [in]  vec_x  A 3D vector.
- * \param [in]  vec_y  A 3D vector.
+ * \param [in]  vec_x  A N-D vector.
+ * \param [in]  vec_y  A N-D vector.
  * \param [out] diff   On output, the difference of \a vec_x and \a vec_y.
  */
 template <std::size_t N>
 static inline void
-t8_vec_diff (const t8_point_t<N> vec_x, const t8_point_t<N> vec_y, double diff[3])
+t8_vec_diff (const t8_point_t<N> &vec_x, const t8_point_t<N> &vec_y, t8_point_t<N> &diff)
 {
-  std::transform (vec_x.begin (), vec_x.end (), vec_y.begin (), diff, std::minus<double> ());
+  std::transform (vec_x.begin (), vec_x.end (), vec_y.begin (), diff.begin (), std::minus<double> ());
 }
 
 /**
@@ -217,7 +212,7 @@ t8_vec_eq (const t8_point_t<N> &vec_x, const t8_point_t<N> &vec_y, const double 
 }
 
 /** Rescale a vector to a new length.
- * \param [in,out] vec  A 3D vector.
+ * \param [in,out] vec  A N-D vector.
  * \param [in]  new_length  New length of the vector.
  */
 template <std::size_t N>
@@ -234,15 +229,14 @@ t8_vec_rescale (t8_point_t<N> &vec, const double new_length)
  * \param [in]  p3  A 3D vector.
  * \param [out] Normal vector of the triangle. (Not necessarily of length 1!)
  */
-template <std::size_t N>
 static inline void
-t8_vec_tri_normal (const t8_point_t<N> p1, const t8_point_t<N> p2, const t8_point_t<N> p3, t8_point_t<N> normal)
+t8_vec_tri_normal (const t8_3D_point &p1, const t8_3D_point &p2, const t8_3D_point &p3, t8_3D_point &normal)
 {
-  t8_point_t a;
-  t8_point_t b;
+  t8_3D_point a;
+  t8_3D_point b;
   std::transform (p2.begin (), p2.end (), p1.begin (), a, std::minus<double> ());
   std::transform (p3.begin (), p3.end (), p1.begin (), b, std::minus<double> ());
-  t8_vec_cross (a, b, normal);
+  t8_vec_cross_3D (a, b, normal);
 }
 
 /** Compute an orthogonal coordinate system from a given vector.
@@ -250,24 +244,23 @@ t8_vec_tri_normal (const t8_point_t<N> p1, const t8_point_t<N> p2, const t8_poin
  * \param [out]  v2 3D vector.
  * \param [out]  v3 3D vector.
  */
-template <std::size_t N>
 static inline void
-t8_vec_orthogonal_tripod (const t8_point_t<N> &v1, t8_point_t<N> &v2, t8_point_t<N> &v3)
+t8_vec_orthogonal_tripod (const t8_3D_point &v1, t8_3D_point &v2, t8_3D_point &v3)
 {
   v2[0] = v1[1];
   v2[1] = v1[2];
   v2[2] = -v1[0];
 
-  t8_vec_axpy (v1, v2, -t8_vec_dot (v1, v2));
-  t8_vec_cross (v1, v2, v3);
+  t8_vec_axpy<3> (v1, v2, -t8_vec_dot<3> (v1, v2));
+  t8_vec_cross_3D (v1, v2, v3);
 
-  t8_vec_normalize (v2);
-  t8_vec_normalize (v3);
+  t8_vec_normalize<3> (v2);
+  t8_vec_normalize<3> (v3);
 }
 
 /** Swap the components of two vectors.
- * \param [in,out]  p1  A 3D vector.
- * \param [in,out]  p2  A 3D vector.
+ * \param [in,out]  p1  A N-D vector.
+ * \param [in,out]  p2  A N-D vector.
  */
 template <std::size_t N>
 static inline void
@@ -275,7 +268,5 @@ t8_vec_swap (t8_point_t<N> &p1, t8_point_t<N> &p2)
 {
   std::swap (p1, p2);
 }
-
-T8_EXTERN_C_END ();
 
 #endif /* !T8_VEC_HXX */
