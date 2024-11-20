@@ -30,10 +30,9 @@
  * Here, each element is sent individually.
  */
 class class_test_pack: public TestDFS {
-  virtual void
-
   /* pack the element and its children, send to ourself, unpack and check if it is the same element */
-  check_element ()
+  void
+  check_element () override
   {
     size_t count = 1;
     int position = 0;

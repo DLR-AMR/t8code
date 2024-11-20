@@ -1522,7 +1522,7 @@ die_ele:
 typedef struct
 {
   t8_locidx_t ltree_id; /* The local id of the tree this face belongs to */
-  int8_t face_number;   /* The number of that face whitin the tree */
+  int8_t face_number;   /* The number of that face within the tree */
   int num_vertices;     /* The number of vertices of this face. */
   long *vertices;       /* The indices of these vertices. */
 } t8_msh_file_face_t;
@@ -1765,15 +1765,14 @@ T8_EXTERN_C_BEGIN ();
  * no cad geometry is used.
  */
 static int
-t8_cmesh_from_msh_file_register_geometries (t8_cmesh_t cmesh, const int use_cad_geometry, const int dim,
-                                            const char *fileprefix, const t8_geometry_c **linear_geometry,
-                                            const t8_geometry_c **cad_geometry)
+t8_cmesh_from_msh_file_register_geometries (t8_cmesh_t cmesh, const int use_cad_geometry, const char *fileprefix,
+                                            const t8_geometry_c **linear_geometry, const t8_geometry_c **cad_geometry)
 {
   /* Register linear geometry */
-  *linear_geometry = t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, dim);
+  *linear_geometry = t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
   if (use_cad_geometry) {
 #if T8_WITH_OCC
-    *cad_geometry = t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, dim, std::string (fileprefix));
+    *cad_geometry = t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, std::string (fileprefix));
 #else /* !T8_WITH_OCC */
     *cad_geometry = NULL;
     return 0;
@@ -1819,8 +1818,8 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
   t8_cmesh_set_dimension (cmesh, dim);
 
   /* Register the geometries for the cmesh. */
-  const int registered_geom_success = t8_cmesh_from_msh_file_register_geometries (
-    cmesh, use_cad_geometry, dim, fileprefix, &linear_geometry, &cad_geometry);
+  const int registered_geom_success
+    = t8_cmesh_from_msh_file_register_geometries (cmesh, use_cad_geometry, fileprefix, &linear_geometry, &cad_geometry);
   if (!registered_geom_success) {
     /* Registering failed */
     t8_errorf ("cad is not linked. Cannot use cad geometry.\n");

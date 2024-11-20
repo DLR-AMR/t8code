@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* See also: https://github.com/holke/t8code/wiki/Step-2---Creating-a-uniform-forest
+/* See also: https://github.com/DLR-AMR/t8code/wiki/Step-2---Creating-a-uniform-forest
  *
  * After we learned how to create a cmesh in step1, we will
  * now build our first partitioned forest, get its local and global
@@ -163,7 +163,7 @@ main (int argc, char **argv)
   t8_global_productionf (" [step2] Created uniform forest.\n");
   t8_global_productionf (" [step2] Refinement level:\t\t\t%i\n", level);
   t8_global_productionf (" [step2] Local number of elements:\t\t%i\n", local_num_elements);
-  t8_global_productionf (" [step2] Global number of elements:\t%li\n", global_num_elements);
+  t8_global_productionf (" [step2] Global number of elements:\t%li\n", static_cast<long> (global_num_elements));
 
   /* Write forest to vtu files. */
   t8_step2_write_forest_vtk (forest, prefix);
