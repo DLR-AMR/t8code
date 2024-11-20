@@ -59,7 +59,7 @@ affiliations:
    index: 1
  - name: Rheinische Friedrich-Wilhelms-Universität Bonn, Institute for Numerical Simulations and Hausdorff Center for Mathematics,  Germany
    index: 2
-date: 10 June 2024
+date: 20 November 2024
 bibliography: paper.bib
 
 # Optional fields if submitting to a AAS journal too, see this blog post:
@@ -112,15 +112,13 @@ recursive refinement on a wide range of element types: vertices, lines,
 quadrilaterals, triangles, hexahedra, tetrahedra, prisms, and pyramids.
 Additionally, extensions to other refinement patterns and element shapes are
 straightforwardly supported due to `t8code`'s modular code structure and clear
-distinction between low- and high-level mesh operations [@holke2023t8code].
-This gives our AMR solution an unique position in the market catering for a
-wide range of use cases. Currently, `t8code` is optimized for grid-based
-applications using face-to-face connectivity between elements, such as
-Finite-Volume and Discontinuous Galerkin methods. In the future, we plan to
-support node-to-node connectivity and hanging nodes resolution to further
-increase the range of applications, such as Finite Element methods. More
-information on `t8code`'s feature set and on how to include it in an
-application can be found in [@holke2023t8code].
+distinction between low- and high-level mesh operations.  This gives our AMR
+solution an unique position in the market catering for a wide range of use
+cases. Currently, `t8code` is optimized for grid-based applications using
+face-to-face connectivity between elements, such as Finite-Volume and
+Discontinuous Galerkin methods. In the future, we plan to support node-to-node
+connectivity and hanging nodes resolution to further increase the range of
+applications, such as Finite Element methods.
 
 # Exemplary application
 
@@ -164,10 +162,10 @@ space-filling curve (SFC) logic. Via these SFCs, all elements in a refinement
 tree are assigned an integer-based index and are stored in linear order.
 Element coordinates or element neighbors do not need to be stored explicitly
 but can be reconstructed from the SFC index. Fast bitwise SFC operations ensure
-optimal runtimes and diminish the need for memory lookups. Moreover, the SFC
-is used to distribute the forest mesh across multiple processes, so that each
-process only stores a unique portion of the SFC.  See
-\autoref{fig:SpaceFillingCurves}.
+optimal runtimes and diminish the need for memory lookups. Moreover, the SFC is
+used to distribute the forest mesh across multiple processes, so that each
+process only stores a unique portion of the SFC. See
+\autoref{fig:SpaceFillingCurves} for an illustration of the concept.
 
 While being successfully applied to quadrilateral
 and hexahedral meshes [@burstedde_p4est_2011; @weinzierl_peano_2019],
@@ -202,17 +200,17 @@ Center. In \autoref{tab:t8code_runtimes}, [@holke_optimized_2021] we show that
 `t8code`'s ghost routine is exceptionally fast with proper scaling of up to 1.1
 trillion mesh elements. Computing ghost layers around parallel domains is
 usually the most expensive of all mesh operations. To put these results into
-perspective, we conducted scaling tests on the terrabyte cluster
-at Leibniz Supercomputing Centre comparing the ghost layer
-creation runtimes of p4est and t8code. See \autoref{fig:ghost_layer_runtimes} for
-the results. The p4est library has been established as one of the most
-performant meshing libraries [@BursteddeWilcoxGhattas11] specializing on
-adaptive quadrilateral and hexahedral meshes. Clearly, t8code shows near
-perfect scaling for tetrahedral meshes on par with p4est. The absolute runtime
-of t8code is around 1.5 times the runtime of p4est measured on a per ghost
-element basis. This is expected since the ghost layer algorithm is more complex
-and thus a bit less optimized, while supporting a wider range of element
-types.
+perspective, we conducted scaling tests on the terrabyte cluster at Leibniz
+Supercomputing Centre comparing the ghost layer creation runtimes of p4est and
+t8code. In \autoref{fig:ghost_layer_runtimes} the measured runtimes of both
+libraries are plotted over the number of processes. The p4est library has been
+established as one of the most performant meshing libraries
+[@BursteddeWilcoxGhattas11] specializing on adaptive quadrilateral and
+hexahedral meshes. Clearly, t8code shows near perfect scaling for tetrahedral
+meshes on par with p4est. The absolute runtime of t8code is around 1.5 times
+the runtime of p4est measured on a per ghost element basis. This is expected
+since the ghost layer algorithm is more complex and thus a bit less optimized,
+while supporting a wider range of element types.
 
 Furthermore, in a prototype code [@Dreyer2021] implementing a high-order
 Discontinuous Galerkin (DG) method for advection-diffusion equations on
