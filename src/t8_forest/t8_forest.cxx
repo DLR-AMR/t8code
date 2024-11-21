@@ -1780,6 +1780,8 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
   }
 
   // Somehow collect leaf arrays
+  // std::vector<element_array>
+  // iterate over vector
 
   //static t8_locidx_t
   //t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_linearidx_t element_id, const int maxlevel);
@@ -1797,6 +1799,24 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
     // The last descendant must have been found by the search, since the neighbor
     // element itself would be a match for the search.
     T8_ASSERT (0 <= last_desc_index);
+
+    // Get the actual leaf elements that contain the first and last face desc
+    t8_element_t **first_and_last_face_leafs;
+    neigh_scheme->t8_element_new (first_and_last_face_leafs, 2);
+    first_and_last_face_leafs[0] = t8_element_array_index_locidx (tree_leafs, first_desc_index);
+    first_and_last_face_leafs[1] = t8_element_array_index_locidx (tree_leafs, last_desc_index);
+    // Compute their nearest common ancestor
+    neigh_scheme->t8_element_nca (first_and_last_face_leafs[0], first_and_last_face_leafs[1], nca_of_face_desc);
+
+    t8_forest_iterate_faces (forest, local_neighbor_tree, nca_of_face_desc, tree_leafs, first_desc_index,
+                             t8_leaf_face_neighbor_face_it_callback);
+    // Output of iterate_faces:
+    //  Array of indices in tree_leafs of all the face neighbor elements
+    //  Assign pneighbor_leaves
+    //  Assign dual_faces
+    //  Assign pelement_indices
+    // (all as growing std::vectors, resp t8_element_array)
+    t8_locidx_t *neighbor_indices_in_leafs;
   }
 }
 
