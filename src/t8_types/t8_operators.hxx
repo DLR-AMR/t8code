@@ -154,4 +154,15 @@ operator<< (std::ostream& os, T8Type<T, Parameter> const& p)
   return os;
 }
 
+/**
+ * \brief A template for hashable types. Used to make a type hashable.
+ * 
+ * \tparam T 
+ */
+template <typename T>
+struct Hashable
+{
+  static constexpr bool is_hashable = true;
+};
+
 #endif /* T8_OPERATORS_HXX */

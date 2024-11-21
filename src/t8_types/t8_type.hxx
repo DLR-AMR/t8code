@@ -79,4 +79,20 @@ class T8Type: public competence<T8Type<T, Parameter, competence...>>... {
   T value_;
 };
 
+namespace std
+{
+template <typename T, typename Parameter, template <typename> class... competence>
+struct hash<T8Type<T, Parameter, competence...>>
+{
+  using T8TypeImpl = T8Type<T, Parameter, competence...>;
+  using checkIfHashable = typename std::enable_if<T8TypeImpl::is_hashable, void>::type;
+
+  size_t
+  operator() (T8Type<T, Parameter, competence...> const& x) const
+  {
+    return std::hash<T> {}(x.get ());
+  }
+};
+}  // namespace std
+
 #endif /* T8_TYPE_HXX */

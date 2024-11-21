@@ -48,12 +48,17 @@ struct dummy_double_3
 {
 };
 
+struct dummy_name_tag
+{
+};
+
 using DummyInt = T8Type<int, dummy_int, Addable, Subtractable, Multipliable, Dividable, Incrementable, Decrementable>;
 using DummyInt2 = T8Type<int, dummy_int_2>;
 using DummyDouble = T8Type<double, dummy_double>;
 using DummyRefInt = T8Type<int &, dummy_ref_int>;
 using DummyRefDouble = T8Type<double &, dummy_ref_double>;
 using Dummy3DVec = T8Type<std::array<double, 3>, dummy_double_3, EqualityComparable, Swapable>;
+using DummyName = T8Type<std::string, dummy_name_tag, EqualityComparable, Hashable>;
 
 TEST (t8_gtest_type, strong_type)
 {
@@ -109,4 +114,14 @@ TEST (t8_gtest_type, operators)
   vec2.swap (vec3);
   EXPECT_EQ (vec1, vec3);
   EXPECT_NE (vec1, vec2);
+}
+
+TEST (t8_gtest_type, hashable)
+{
+  std::unordered_map<DummyName, int> my_map
+    = { { DummyName ("one"), 1 }, { DummyName ("two"), 2 }, { DummyName ("three"), 3 } };
+
+  EXPECT_EQ (my_map[DummyName ("one")], 1);
+  EXPECT_EQ (my_map[DummyName ("two")], 2);
+  EXPECT_EQ (my_map[DummyName ("three")], 3);
 }
