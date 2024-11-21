@@ -81,6 +81,20 @@ class T8Type: public competence<T8Type<T, Parameter, competence...>>... {
 
 namespace std
 {
+/**
+ * \brief Functor for hashing T8Type objects.
+ *
+ * This struct defines a functor that computes the hash value of a T8Type object.
+ * It uses the std::hash function to generate the hash value based on the underlying
+ * type T of the T8Type object.
+ *
+ * \tparam T The underlying type of the T8Type object.
+ * \tparam Parameter Additional parameters for the T8Type object.
+ * \tparam competence Variadic template parameters for additional competencies.
+ *
+ * \note This functor is enabled only if the T8Type object is hashable, as determined
+ *       by the is_hashable member of the T8TypeImpl type.
+ */
 template <typename T, typename Parameter, template <typename> class... competence>
 struct hash<T8Type<T, Parameter, competence...>>
 {
