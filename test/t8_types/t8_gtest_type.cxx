@@ -53,7 +53,7 @@ using DummyInt2 = T8Type<int, dummy_int_2>;
 using DummyDouble = T8Type<double, dummy_double>;
 using DummyRefInt = T8Type<int &, dummy_ref_int>;
 using DummyRefDouble = T8Type<double &, dummy_ref_double>;
-using Dummy3DVec = T8Type<std::array<double, 3>, dummy_double_3, EqualityComparable>;
+using Dummy3DVec = T8Type<std::array<double, 3>, dummy_double_3, EqualityComparable, Swapable>;
 
 TEST (t8_gtest_type, strong_type)
 {
@@ -106,4 +106,7 @@ TEST (t8_gtest_type, operators)
   EXPECT_EQ (vec1, vec2);
   Dummy3DVec vec3 ({ 2.0, 2.0, 3.0 });
   EXPECT_NE (vec1, vec3);
+  vec2.swap (vec3);
+  EXPECT_EQ (vec1, vec3);
+  EXPECT_NE (vec1, vec2);
 }

@@ -127,6 +127,16 @@ struct Printable: crtp<T, Printable>
 };
 
 template <typename T>
+struct Swapable: crtp<T, Swapable>
+{
+  void
+  swap (T& other)
+  {
+    std::swap (this->underlying ().get (), other.get ());
+  }
+};
+
+template <typename T>
 struct EqualityComparable: crtp<T, EqualityComparable>
 {
   bool
