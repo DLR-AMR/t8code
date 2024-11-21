@@ -29,6 +29,19 @@
 
 #include <t8.h>
 
+/**
+ * \brief An implementation of strong type with additional competences.
+ *
+ * This class template allows the creation of a type that can be extended with
+ * multiple competences. Each competence is a template class that takes the
+ * main type as a template parameter.
+ * 
+ * This is heavily inspired by (and taken from) https://www.fluentcpp.com/2016/12/08/strong-types-for-strong-interfaces/
+ *
+ * \tparam T The type of the value to be stored.
+ * \tparam Parameter An additional parameter for the type.
+ * \tparam competence Variadic template parameter for the competences.
+ */
 template <typename T, typename Parameter, template <typename> class... competence>
 class T8Type: public competence<T8Type<T, Parameter, competence...>>... {
  public:
