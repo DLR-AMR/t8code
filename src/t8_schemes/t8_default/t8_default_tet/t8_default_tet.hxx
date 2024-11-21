@@ -34,10 +34,14 @@
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.h>
 
-class t8_default_scheme_tet: private t8_default_scheme_common<t8_default_scheme_tet> {
+class t8_default_scheme_tet:
+  private t8_eclass_scheme<t8_default_scheme_tet>,
+  public t8_default_scheme_common<t8_default_scheme_tet> {
  public:
   /** Constructor. */
-  t8_default_scheme_tet (): t8_default_scheme_common<t8_default_scheme_tet> (T8_ECLASS_TET, sizeof (t8_dtet_t)) {};
+  t8_default_scheme_tet ()
+    : t8_eclass_scheme<t8_default_scheme_tet> (T8_ECLASS_TET, sizeof (t8_dtet_t),
+                                               sc_mempool_new (sizeof (t8_dtet_t))) {};
 
   ~t8_default_scheme_tet () {};
 

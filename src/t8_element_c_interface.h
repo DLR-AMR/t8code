@@ -32,6 +32,7 @@
 #define T8_ELEMENT_C_INTERFACE_H
 
 #include <t8_element.h>
+#include <t8_forest/t8_forest_general.h>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -269,7 +270,7 @@ t8_element_ancestor_id (const t8_forest_t forest, const t8_eclass_t tree_class, 
  * \return              Zero if \b fam is not a family, nonzero if it is.
  */
 int
-t8_element_is_family (const t8_forest_t forest, const t8_eclass_t tree_class, t8_element_t *const *fam);
+t8_elements_are_family (const t8_forest_t forest, const t8_eclass_t tree_class, t8_element_t *const *fam);
 
 /** Compute the nearest common ancestor of two elements. That is,
  * the element with highest level that still has both given elements as

@@ -138,7 +138,7 @@ t8_fortran_adapt_by_coordinates_callback (t8_forest_t forest, t8_forest_t forest
   /* Coarsen if a family was given and return value is negative. */
   if (is_family) {
     /* The elements form a family */
-    T8_ASSERT (t8_element_is_family (ts, elements));
+    T8_ASSERT (t8_elements_are_family (ts, elements));
     /* Build the parent. */
     t8_element_t *parent;
     t8_element_new (ts, 1, &parent);

@@ -53,6 +53,9 @@ class t8_eclass_scheme: public t8_crtp<TUnderlyingEclassScheme> {
  public:
   const t8_eclass_t eclass; /**< The tree class */
 
+// TODO: Find out if this is needed
+// DO NOT LET THIS SLIP THROUGH THE REVIEW, I DO NOT KNOW YET IF IT IS ALRIGHT TO DELETE THIS
+#if 0
   /** The destructor. It does nothing but has to be defined since
    * we may want to delete an eclass_scheme that is actually inherited
    * (for example t8_default_scheme_quad) and providing an implementation
@@ -62,6 +65,7 @@ class t8_eclass_scheme: public t8_crtp<TUnderlyingEclassScheme> {
   {
     this->underlying ().~TUnderlyingEclassScheme ();
   }
+#endif
 
   /** Return the size of any element of a given class.
    * \return                      The size of an element of class \b ts.
@@ -71,9 +75,10 @@ class t8_eclass_scheme: public t8_crtp<TUnderlyingEclassScheme> {
   inline size_t
   get_element_size (void) const
   {
-    return this->underlying ().get_element_size (elem);
-  };
+    return element_size;
+  }
 
+#if 0
   /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
    * Returns false otherwise.
    * \return                    non-zero if there is one element in the tree that does not refine into 2^dim children.
@@ -333,9 +338,9 @@ class t8_eclass_scheme: public t8_crtp<TUnderlyingEclassScheme> {
    * \note level 0 elements do not form a family.
    */
   inline int
-  element_is_family (t8_element_t *const *fam) const
+  elements_are_family (t8_element_t *const *fam) const
   {
-    return this->underlying ().element_is_family (fam);
+    return this->underlying ().elements_are_family (fam);
   };
 
   /** Compute the nearest common ancestor of two elements. That is,
@@ -888,4 +893,6 @@ class t8_eclass_scheme: public t8_crtp<TUnderlyingEclassScheme> {
   {
     this->underlying ().element_MPI_Unpack (recvbuf, buffer_size, position, elements, count, comm);
   };
+
+#endif  //if 0
 };

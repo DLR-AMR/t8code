@@ -61,15 +61,14 @@ class TestDFS: public testing::TestWithParam<t8_eclass_t> {
   {
     scheme = t8_scheme_new_default ();
     eclass = GetParam ();
-    ts = scheme->eclass_schemes[eclass];
-    ts->t8_element_new (1, &element);
-    ts->t8_element_root (element);
+    scheme->element_new (eclass, 1, &element);
+    scheme->get_root (eclass, element);
   }
   void
   dfs_test_teardown ()
   {
-    ts->t8_element_destroy (1, &element);
-    t8_scheme_cxx_unref (&scheme);
+    scheme->element_destroy (eclass, 1, &element);
+    scheme->unref ();
   }
 
   void
@@ -85,7 +84,6 @@ class TestDFS: public testing::TestWithParam<t8_eclass_t> {
 
   t8_scheme *scheme;
   t8_eclass_t eclass;
-  t8_scheme_c *ts;
   t8_element_t *element;
 };
 

@@ -63,7 +63,7 @@ extern const double t8_element_centroid_ref_coords[T8_ECLASS_COUNT][3];
  *                              exist with positive reference count.
  */
 void
-t8_scheme_cxx_ref (t8_scheme_c *scheme);
+t8_scheme_ref (t8_scheme_c *scheme);
 
 /** Decrease the reference counter of a scheme.
  * If the counter reaches zero, this scheme is destroyed.
@@ -75,11 +75,7 @@ t8_scheme_cxx_ref (t8_scheme_c *scheme);
  *                              the scheme is not modified in other ways.
  */
 void
-t8_scheme_cxx_unref (t8_scheme_c **pscheme);
-
-/* TODO: document, see t8_element.hxx */
-extern void
-t8_scheme_cxx_destroy (t8_scheme_c *s);
+t8_scheme_unref (t8_scheme_c **pscheme);
 
 T8_EXTERN_C_END ();
 

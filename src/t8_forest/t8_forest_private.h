@@ -49,7 +49,7 @@ T8_EXTERN_C_BEGIN ();
  *                  family. 
  * \note            The check works for complete and incomplete forests.
  *                  In the case of complete forests, the scheme based element 
- *                  function \see t8_element_is_family is recommended.
+ *                  function \see t8_elements_are_family is recommended.
  * \note            If the element with id \a el_considered is not the first
  *                  family member, return 0. Therefore, if return is x > 0, 
  *                  the first x elements in \a elements form a family.

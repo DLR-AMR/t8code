@@ -95,7 +95,7 @@ TEST_P (forest_find_owner, find_owner)
     /* build the cmesh */
     cmesh = t8_test_create_cmesh (itype, eclass, sc_MPI_COMM_WORLD);
     /* We reuse the scheme for all forests and thus ref it */
-    t8_schemexx_ref (default_scheme);
+    t8_scheme_ref (default_scheme);
     /* build the forest */
     t8_forest_t         forest =
       t8_forest_new_uniform (cmesh, default_scheme, level, 0,
@@ -130,7 +130,7 @@ TEST_P (forest_find_owner, find_owner)
   }
   /* clean-up */
   ts->t8_element_destroy (1, &element);
-  t8_schemexx_unref (&default_scheme);
+  t8_scheme_unref (&default_scheme);
 }
 #endif
 
@@ -145,10 +145,10 @@ TEST_P (forest_find_owner, find_multiple_owners)
   sc_array_init (&owners, sizeof (int));
   /* Build a uniform forest */
   t8_forest_t forest = t8_forest_new_uniform (cmesh, default_scheme, level, 0, sc_MPI_COMM_WORLD);
-  t8_scheme *ts = t8_forest_get_eclass_scheme (forest, eclass);
+  t8_scheme *ts = t8_forest_get_scheme (forest);
   /* Construct the root element */
-  ts->t8_element_new (1, &root_element);
-  ts->t8_element_set_linear_id (root_element, 0, 0);
+  ts->element_new (eclass, 1, &root_element);
+  ts->element_set_linear_id (eclass, root_element, 0, 0);
 
   for (int face = 0; face < t8_eclass_num_faces[eclass]; face++) {
     t8_forest_element_owners_at_face (forest, 0, root_element, eclass, face, &owners);
@@ -164,7 +164,7 @@ TEST_P (forest_find_owner, find_multiple_owners)
   /* write vtk file in debug mode */
   t8_forest_write_vtk (forest, "test_owners_forest");
 #endif
-  ts->t8_element_destroy (1, &root_element);
+  ts->element_destroy (eclass, 1, &root_element);
   t8_forest_unref (&forest);
   sc_array_reset (&owners);
 }

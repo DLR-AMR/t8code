@@ -38,10 +38,14 @@
  */
 typedef p8est_quadrant_t t8_phex_t;
 
-class t8_default_scheme_hex: private t8_default_scheme_common<t8_default_scheme_hex> {
+class t8_default_scheme_hex:
+  private t8_eclass_scheme<t8_default_scheme_hex>,
+  public t8_default_scheme_common<t8_default_scheme_hex> {
  public:
   /** Constructor. */
-  t8_default_scheme_hex (): t8_default_scheme_common<t8_default_scheme_hex> (T8_ECLASS_HEX, sizeof (t8_phex_t)) {};
+  t8_default_scheme_hex ()
+    : t8_eclass_scheme<t8_default_scheme_hex> (T8_ECLASS_HEX, sizeof (t8_phex_t),
+                                               sc_mempool_new (sizeof (t8_phex_t))) {};
 
   ~t8_default_scheme_hex () {};
 

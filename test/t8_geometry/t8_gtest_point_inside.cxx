@@ -203,13 +203,13 @@ TEST_P (geometry_point_inside, test_point_inside)
     const t8_locidx_t num_elements = t8_forest_get_tree_num_elements (forest, itree);
     /* Get the associated eclass scheme */
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
-    const t8_scheme *eclass_scheme = t8_forest_get_eclass_scheme (forest, tree_class);
+    const t8_scheme *scheme = t8_forest_get_scheme (forest);
     for (t8_locidx_t ielement = 0; ielement < num_elements; ++ielement) {
       /* Get a pointer to the element */
       const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
 
       /* Compute the corner coordinates of the element */
-      const int num_corners = eclass_scheme->t8_element_num_corners (element);
+      const int num_corners = scheme->element_get_num_corners (tree_class, element);
       /* For each corner get its coordinates */
       for (int icorner = 0; icorner < num_corners; ++icorner) {
         t8_forest_element_coordinate (forest, itree, element, icorner, element_vertices[icorner]);

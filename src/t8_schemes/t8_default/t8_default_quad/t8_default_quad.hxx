@@ -76,10 +76,14 @@ typedef p4est_quadrant_t t8_pquad_t;
     (quad)->p.user_long = (long) (coord); \
   } while (0)
 
-class t8_default_scheme_quad: private t8_default_scheme_common<t8_default_scheme_quad> {
+class t8_default_scheme_quad:
+  private t8_eclass_scheme<t8_default_scheme_quad>,
+  public t8_default_scheme_common<t8_default_scheme_quad> {
  public:
   /** Constructor. */
-  t8_default_scheme_quad (): t8_default_scheme_common<t8_default_scheme_quad> (T8_ECLASS_QUAD, sizeof (t8_pquad_t)) {};
+  t8_default_scheme_quad ()
+    : t8_eclass_scheme<t8_default_scheme_quad> (T8_ECLASS_QUAD, sizeof (t8_pquad_t),
+                                                sc_mempool_new (sizeof (t8_pquad_t))) {};
 
   ~t8_default_scheme_quad () {};
 

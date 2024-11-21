@@ -133,15 +133,16 @@ t8_step5_create_element_data (t8_forest_t forest)
     t8_scheme *eclass_scheme;
     const t8_element_t *element;
 
+    /* Get the scheme of the forest for later usage. */
+    const t8_scheme *scheme = t8_forest_get_scheme (forest);
     /* Get the number of trees that have elements of this process. */
     num_local_trees = t8_forest_get_num_local_trees (forest);
     for (itree = 0, current_index = 0; itree < num_local_trees; ++itree) {
       /* This loop iterates through all local trees in the forest. */
-      /* Each tree may have a different element class (quad/tri/hex/tet etc.) and therefore
+      /* Each tree may have a different tree class (quad/tri/hex/tet etc.) and therefore
        * also a different way to interpret its elements. In order to be able to handle elements
-       * of a tree, we need to get its eclass_scheme, and in order to so we first get its eclass. */
-      tree_class = t8_forest_get_tree_class (forest, itree);
-      eclass_scheme = t8_forest_get_eclass_scheme (forest, tree_class);
+       * of a tree, we need the scheme we obtained earlier and in order to use it we get the eclass of the tree. */
+      const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
       /* Get the number of elements of this tree. */
       num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
       for (ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
@@ -154,7 +155,7 @@ t8_step5_create_element_data (t8_forest_t forest)
         element = t8_forest_get_element_in_tree (forest, itree, ielement);
         /* We want to store the elements level and its volume as data. We compute these
          * via the eclass_scheme and the forest_element interface. */
-        element_data[current_index].level = eclass_scheme->t8_element_level (element);
+        element_data[current_index].level = eclass_scheme->element_get_level (tree_class, element);
         element_data[current_index].volume = t8_forest_element_volume (forest, itree, element);
       }
     }

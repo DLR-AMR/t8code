@@ -83,14 +83,17 @@ class t8_scheme {
   /**
    * Decrease the reference count of the scheme.
    * If the reference count reaches zero, the scheme is deleted.
+   * \return The remaining reference count. If 0 the scheme was deleted.
    */
-  inline void
+  inline int
   unref ()
   {
+    const int remaining = rc.refcount - 1;
     if (t8_refcount_unref (&rc)) {
-      t8_debugf ("Deleting the geometry_handler.\n");
+      t8_debugf ("Deleting the scheme.\n");
       delete this;
     }
+    return remaining;
   }
 
   /** Check if the scheme is of a specific type.
@@ -412,7 +415,7 @@ class t8_scheme {
   inline int
   elements_are_family (t8_eclass_t tree_class, t8_element_t *const *fam) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_is_family (fam); }, eclass_schemes[tree_class]);
+    return std::visit ([&] (auto &&scheme) { return scheme.elements_are_family (fam); }, eclass_schemes[tree_class]);
   };
 
   /** Compute the nearest common ancestor of two elements. That is,
@@ -609,13 +612,11 @@ class t8_scheme {
    * and will not be modified.
    */
   inline void
-  element_construct_boundary_face (t8_eclass_t tree_class, const t8_element_t *elem, int face, t8_element_t *boundary,
-                                   const t8_eclass_t boundary_face_eclass) const
+  element_construct_boundary_face (t8_eclass_t tree_class, const t8_element_t *elem, int face,
+                                   t8_element_t *boundary) const
   {
     return std::visit (
-      [&] (auto &&scheme) {
-        return scheme.element_construct_boundary_face (elem, face, boundary, boundary_face_eclass, this);
-      },
+      [&] (auto &&scheme) { return scheme.element_construct_boundary_face (elem, face, boundary, this); },
       eclass_schemes[tree_class]);
   };
 

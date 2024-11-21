@@ -64,7 +64,7 @@ T8_EXTERN_C_BEGIN ();
 /* This is our own defined data that we will pass on to the
  * adaptation callback. */
 
-/* The adaptation callback function. This function will be called once for each element
+/** The adaptation callback function. This function will be called once for each element
  * and the return value decides whether this element should be refined or not.
  *   return > 0 -> This element should get refined.
  *   return = 0 -> This element should not get refined.
@@ -78,6 +78,7 @@ T8_EXTERN_C_BEGIN ();
  * \param [in] forest       The current forest that is in construction.
  * \param [in] forest_from  The forest from which we adapt the current forest (in our case, the uniform forest)
  * \param [in] which_tree   The process local id of the current tree.
+ * \param [in] tree_class   The eclass of \a which_tree.
  * \param [in] lelement_id  The tree local index of the current element (or the first of the family).
  * \param [in] ts           The refinement scheme for this tree's element class.
  * \param [in] is_family    if 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
@@ -85,8 +86,9 @@ T8_EXTERN_C_BEGIN ();
  * \param [in] elements     The element or family of elements to consider for refinement/coarsening.
  */
 int
-t8_step3_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                         t8_scheme *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+t8_step3_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
+                         t8_locidx_t lelement_id, t8_scheme *ts, const int is_family, const int num_elements,
+                         t8_element_t *elements[])
 {
   /* Our adaptation criterion is to look at the midpoint coordinates of the current element and if
    * they are inside a sphere around a given midpoint we refine, if they are outside, we coarsen. */

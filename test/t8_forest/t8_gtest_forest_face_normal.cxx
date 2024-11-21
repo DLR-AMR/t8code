@@ -68,10 +68,10 @@ TEST_P (class_forest_face_normal, back_and_forth)
     const t8_locidx_t tree_elements = t8_forest_get_tree_num_elements (forest, itree);
     const t8_eclass_t tree_eclass = t8_forest_get_tree_class (forest, itree);
     ASSERT_EQ (eclass, tree_eclass);
-    const t8_scheme *escheme = t8_forest_get_eclass_scheme (forest, tree_eclass);
+    const t8_scheme *escheme = t8_forest_get_scheme (forest);
     for (t8_locidx_t ielement = 0; ielement < tree_elements; ielement++) {
       const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
-      const int num_faces = escheme->t8_element_num_faces (element);
+      const int num_faces = escheme->element_get_num_faces (tree_class, element);
       for (int iface = 0; iface < num_faces; iface++) {
         /* Compute facenormal */
         double face_normal[3] = { 0, 0, 0 };
@@ -101,7 +101,7 @@ TEST_P (class_forest_face_normal, back_and_forth)
         }
 
         if (num_neighbors > 0) {
-          neigh_scheme->t8_element_destroy (num_neighbors, neighbors);
+          neigh_scheme->element_destroy (tree_class, num_neighbors, neighbors);
           T8_FREE (neigh_ids);
           T8_FREE (neighbors);
           T8_FREE (dual_faces);

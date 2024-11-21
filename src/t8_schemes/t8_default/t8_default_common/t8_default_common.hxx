@@ -85,21 +85,22 @@ count_leaves_from_level (int element_level, int refinement_level, int dimension)
 }
 
 template <class TUnderlyingEclassScheme>
-class t8_default_scheme_common: private t8_eclass_scheme<TUnderlyingEclassScheme> {
+class t8_default_scheme_common: private t8_crtp<TUnderlyingEclassScheme> {
  private:
-  t8_default_scheme_common (const t8_eclass_t tree_class, const size_t elem_size)
-    : t8_eclass_scheme<TUnderlyingEclassScheme> (tree_class, elem_size, sc_mempool_new (elem_size);)
+  friend TUnderlyingEclassScheme;
+
+  /** Private constructor which can only be used by derived schemes. */
+  t8_default_scheme_common ()
   {
   }
-  friend TUnderlyingEclassScheme;
 
  public:
   /** Destructor for all default schemes */
   ~t8_default_scheme_common ()
   {
-    T8_ASSERT (ts_context != NULL);
-    SC_ASSERT (((sc_mempool_t *) ts_context)->elem_count == 0);
-    sc_mempool_destroy ((sc_mempool_t *) ts_context);
+    T8_ASSERT (this->underlying ().ts_context != NULL);
+    SC_ASSERT (((sc_mempool_t *) this->underlying ().ts_context)->elem_count == 0);
+    sc_mempool_destroy ((sc_mempool_t *) this->underlying ().ts_context);
   }
 
   /** Compute the number of corners of a given element. */
@@ -108,21 +109,21 @@ class t8_default_scheme_common: private t8_eclass_scheme<TUnderlyingEclassScheme
   {
     /* use the lookup table of the eclasses.
      * Pyramids should implement their own version of this function. */
-    return t8_eclass_num_vertices[eclass];
+    return t8_eclass_num_vertices[this->underlying ().eclass];
   }
 
   /** Allocate space for a bunch of elements. */
   void
   element_new (int length, t8_element_t **elem) const
   {
-    t8_default_mempool_alloc ((sc_mempool_t *) this->ts_context, length, elem);
+    t8_default_mempool_alloc ((sc_mempool_t *) this->underlying ().ts_context, length, elem);
   }
 
   /** Deallocate space for a bunch of elements. */
   void
   element_destroy (int length, t8_element_t **elem) const
   {
-    t8_default_mempool_free ((sc_mempool_t *) this->ts_context, length, elem);
+    t8_default_mempool_free ((sc_mempool_t *) this->underlying ().ts_context, length, elem);
   }
 
   void
@@ -136,7 +137,7 @@ class t8_default_scheme_common: private t8_eclass_scheme<TUnderlyingEclassScheme
   {
     /* use the lookup table of the eclasses.
      * Pyramids should implement their own version of this function. */
-    return eclass;
+    return this->underlying ().eclass;
   }
 
   /** Count how many leaf descendants of a given uniform level an element would produce.
@@ -150,10 +151,10 @@ class t8_default_scheme_common: private t8_eclass_scheme<TUnderlyingEclassScheme
   t8_gloidx_t
   element_count_leaves (const t8_element_t *t, int level) const
   {
-    int element_level = element_get_level (t);
+    int element_level = this->underlying ().element_get_level (t);
     t8_element_shape_t element_shape;
-    int dim = t8_eclass_to_dimension[eclass];
-    element_shape = t8_element_shape (t);
+    int dim = t8_eclass_to_dimension[this->underlying ().eclass];
+    element_shape = element_get_shape (t);
     if (element_shape == T8_ECLASS_PYRAMID) {
       int level_diff = level - element_level;
       return element_level > level ? 0 : 2 * sc_intpow64 (8, level_diff) - sc_intpow64 (6, level_diff);
@@ -170,8 +171,8 @@ class t8_default_scheme_common: private t8_eclass_scheme<TUnderlyingEclassScheme
   int
   element_get_num_siblings (const t8_element_t *elem) const
   {
-    const int dim = t8_eclass_to_dimension[eclass];
-    T8_ASSERT (eclass != T8_ECLASS_PYRAMID);
+    const int dim = t8_eclass_to_dimension[this->underlying ().eclass];
+    T8_ASSERT (this->underlying ().eclass != T8_ECLASS_PYRAMID);
     return sc_intpow (2, dim);
   }
 
@@ -183,10 +184,10 @@ class t8_default_scheme_common: private t8_eclass_scheme<TUnderlyingEclassScheme
   t8_gloidx_t
   count_leaves_from_root (int level) const
   {
-    if (eclass == T8_ECLASS_PYRAMID) {
+    if (this->underlying ().eclass == T8_ECLASS_PYRAMID) {
       return 2 * sc_intpow64u (8, level) - sc_intpow64u (6, level);
     }
-    int dim = t8_eclass_to_dimension[eclass];
+    int dim = t8_eclass_to_dimension[this->underlying ().eclass];
     return count_leaves_from_level (0, level, dim);
   }
 
@@ -195,7 +196,7 @@ class t8_default_scheme_common: private t8_eclass_scheme<TUnderlyingEclassScheme
   element_debug_print (const t8_element_t *elem) const
   {
     char debug_string[BUFSIZ];
-    element_to_string (elem, debug_string, BUFSIZ);
+    this->underlying ().element_to_string (elem, debug_string, BUFSIZ);
     t8_debugf ("%s\n", debug_string);
   }
 #endif

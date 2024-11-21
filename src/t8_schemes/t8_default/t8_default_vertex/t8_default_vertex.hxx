@@ -34,11 +34,14 @@
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 #include <t8_schemes/t8_default/t8_default_vertex/t8_dvertex_bits.h>
 
-class t8_default_scheme_vertex: private t8_default_scheme_common<t8_default_scheme_vertex> {
+class t8_default_scheme_vertex:
+  private t8_eclass_scheme<t8_default_scheme_vertex>,
+  public t8_default_scheme_common<t8_default_scheme_vertex> {
  public:
   /** Constructor. */
   t8_default_scheme_vertex ()
-    : t8_default_scheme_common<t8_default_scheme_vertex> (T8_ECLASS_VERTEX, sizeof (t8_dvertex_t)) {};
+    : t8_eclass_scheme<t8_default_scheme_vertex> (T8_ECLASS_VERTEX, sizeof (t8_dvertex_t),
+                                                  sc_mempool_new (sizeof (t8_dvertex_t))) {};
 
   ~t8_default_scheme_vertex () {};
 

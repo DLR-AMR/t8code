@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2024 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -241,7 +241,6 @@ int
 t8_forest_min_nonempty_level (t8_cmesh_t cmesh, t8_scheme *scheme)
 {
   int level, min_num_children, maxlevel;
-  t8_scheme *ts;
   int eclass;
   t8_element_t *element;
 
@@ -256,14 +255,13 @@ t8_forest_min_nonempty_level (t8_cmesh_t cmesh, t8_scheme *scheme)
   maxlevel = 100;
   for (eclass = T8_ECLASS_ZERO; eclass < T8_ECLASS_COUNT; eclass++) {
     if (cmesh->num_trees_per_eclass[eclass] > 0) {
-      ts = scheme->eclass_schemes[eclass];
       /* Compute the number of children of the root tree. */
-      ts->t8_element_new (1, &element);
-      ts->t8_element_root (element);
-      min_num_children = SC_MIN (min_num_children, ts->t8_element_num_children (element));
-      ts->t8_element_destroy (1, &element);
+      scheme->element_new ((t8_eclass_t) eclass, 1, &element);
+      scheme->get_root ((t8_eclass_t) eclass, element);
+      min_num_children = SC_MIN (min_num_children, scheme->element_get_num_children ((t8_eclass_t) eclass, element));
+      scheme->element_destroy ((t8_eclass_t) eclass, 1, &element);
       /* Compute the minimum possible maximum refinement level */
-      maxlevel = SC_MIN (maxlevel, ts->t8_element_maxlevel ());
+      maxlevel = SC_MIN (maxlevel, scheme->get_maxlevel ((t8_eclass_t) eclass));
     }
   }
 
@@ -319,7 +317,7 @@ t8_forest_no_overlap (t8_forest_t forest)
       }
     }
     /* clean up, as each tree can have a different scheme */
-    ts->t8_element_destroy (1, &element_nca);
+    ts->element_destroy (tree_class, 1, &element_nca);
   }
   /* Check if a local tree in the global forest has local overlapping elements.
    * has_overlap_local_global is equal to 1 if a process has a local overlap, else 0. */
@@ -344,7 +342,6 @@ t8_forest_is_equal (t8_forest_t forest_a, t8_forest_t forest_b)
   t8_locidx_t elems_in_tree_a, elems_in_tree_b;
   t8_locidx_t ielem;
   t8_locidx_t itree;
-  *ts_a, *ts_b;
 
   T8_ASSERT (t8_forest_is_committed (forest_a));
   T8_ASSERT (t8_forest_is_committed (forest_b));
@@ -406,7 +403,7 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id, const t8
   T8_ASSERT (forest->scheme != NULL);
   /* Get the tree's class and scheme */
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltree_id);
-  const t8_scheme *ts = t8_forest_get_scheme (forest, tree_class);
+  const t8_scheme *ts = t8_forest_get_scheme (forest);
   /* Compute the vertex coordinates inside [0,1]^dim reference cube. */
   ts->element_get_vertex_reference_coords (tree_class, element, corner_number, vertex_coords);
   /* Compute the global tree id */
@@ -500,7 +497,7 @@ void
 t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, double *coordinates)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
-  const t8_scheme *ts t8_forest_get_scheme (forest);
+  const t8_scheme *ts = t8_forest_get_scheme (forest);
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
 
   /* Get the tree's eclass and scheme. */
@@ -741,7 +738,7 @@ t8_forest_element_face_area (t8_forest_t forest, t8_locidx_t ltreeid, const t8_e
   T8_ASSERT (t8_forest_is_committed (forest));
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
   const t8_scheme *ts = t8_forest_get_scheme (forest);
-  const t8_element_shape_t face_shape = ts->t8_element_face_shape (tree_class, element, face);
+  const t8_element_shape_t face_shape = ts->element_get_face_shape (tree_class, element, face);
 
   switch (face_shape) {
   case T8_ECLASS_VERTEX:
@@ -817,7 +814,7 @@ t8_forest_element_face_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const 
   T8_ASSERT (t8_forest_is_committed (forest));
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
   const t8_scheme *ts = t8_forest_get_scheme (forest);
-  const t8_element_shape_t face_shape = ts->t8_element_face_shape (tree_class, element, face);
+  const t8_element_shape_t face_shape = ts->element_get_face_shape (tree_class, element, face);
 
   switch (face_shape) {
   case T8_ECLASS_VERTEX: {
@@ -926,7 +923,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
   T8_ASSERT (t8_forest_is_committed (forest));
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
   const t8_scheme *ts = t8_forest_get_scheme (forest);
-  const t8_element_shape_t face_shape = ts->t8_element_face_shape (tree_class, element, face);
+  const t8_element_shape_t face_shape = ts->element_get_face_shape (tree_class, element, face);
 
   switch (face_shape) {
   case T8_ECLASS_VERTEX:
@@ -1102,7 +1099,7 @@ t8_forest_compute_desc (t8_forest_t forest)
 {
   t8_locidx_t itree_id, num_trees, num_elements;
   t8_tree_t itree;
-  t8_scheme *ts;
+  const t8_scheme *ts = t8_forest_get_scheme (forest);
 
   T8_ASSERT (forest != NULL);
   /* Iterate over all trees */
@@ -1117,21 +1114,21 @@ t8_forest_compute_desc (t8_forest_t forest)
       itree->last_desc = NULL;
       continue;
     }
-    /* get the eclass scheme associated to tree */
-    ts = forest->scheme_cxx->eclass_schemes[itree->eclass];
+    /* get the eclass associated to tree */
+    const t8_eclass_t tree_class = itree->eclass;
     /* get a pointer to the first element of itree */
     const t8_element_t *first_element = t8_element_array_index_locidx (&itree->elements, 0);
     /* get memory for the trees first descendant */
-    ts->t8_element_new (1, &itree->first_desc);
+    ts->element_new (tree_class, 1, &itree->first_desc);
     /* calculate the first descendant of the first element */
-    ts->t8_element_first_descendant (first_element, itree->first_desc, forest->maxlevel);
+    ts->element_construct_first_descendant (tree_class, first_element, itree->first_desc, forest->maxlevel);
     /* get a pointer to the last element of itree */
     num_elements = t8_element_array_get_count (&itree->elements);
     const t8_element_t *last_element = t8_element_array_index_locidx (&itree->elements, num_elements - 1);
     /* get memory for the trees first descendant */
-    ts->t8_element_new (1, &itree->last_desc);
+    ts->element_new (tree_class, 1, &itree->last_desc);
     /* calculate the last descendant of the first element */
-    ts->t8_element_last_descendant (last_element, itree->last_desc, forest->maxlevel);
+    ts->element_construct_last_descendant (tree_class, last_element, itree->last_desc, forest->maxlevel);
   }
 }
 
@@ -1156,7 +1153,7 @@ t8_forest_populate (t8_forest_t forest)
 
   SC_CHECK_ABORT (forest->set_level <= forest->maxlevel, "Given refinement level exceeds the maximum.\n");
   /* TODO: create trees and quadrants according to uniform refinement */
-  t8_cmesh_uniform_bounds (forest->cmesh, forest->set_level, forest->scheme_cxx, &forest->first_local_tree,
+  t8_cmesh_uniform_bounds (forest->cmesh, forest->set_level, forest->scheme, &forest->first_local_tree,
                            &child_in_tree_begin, &forest->last_local_tree, &child_in_tree_end, NULL);
 
   /* True if the forest has no elements */
@@ -1208,7 +1205,7 @@ t8_forest_populate (t8_forest_t forest)
       for (et = start + 1; et < end; et++, count_elements++) {
         element_succ = t8_element_array_index_locidx_mutable (telements, et - start);
         T8_ASSERT (scheme->element_get_level (tree_class, element) == forest->set_level);
-        scheme->element_construct_successor (element, element_succ);
+        scheme->element_construct_successor (tree_class, element, element_succ);
         /* TODO: process elements here */
         element = element_succ;
       }
@@ -1424,21 +1421,23 @@ static t8_locidx_t
 t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_linearidx_t element_id, const int maxlevel)
 {
   const t8_scheme *ts = t8_element_array_get_scheme (elements);
+  const t8_eclass_t tree_class = t8_element_array_get_tree_class (elements);
   /* At first, we check whether any element has smaller id than the
    * given one. */
   const t8_element_t *query = t8_element_array_index_int (elements, 0);
-  const t8_linearidx_t query_id = ts->t8_element_get_linear_id (query, maxlevel);
+  const t8_linearidx_t query_id = ts->element_get_linear_id (tree_class, query, maxlevel);
   if (query_id > element_id) {
     /* No element has id smaller than the given one. */
     return -1;
   }
 
   /* We search for the first element in the array that is greater than the given element id. */
-  auto elem_iter = std::upper_bound (
-    t8_element_array_begin (elements), t8_element_array_end (elements), element_id,
-    [&maxlevel, &ts] (const t8_linearidx_t element_id_, const t8_element_array_iterator::value_type &elem_ptr) {
-      return (element_id_ < ts->t8_element_get_linear_id (elem_ptr, maxlevel));
-    });
+  auto elem_iter
+    = std::upper_bound (t8_element_array_begin (elements), t8_element_array_end (elements), element_id,
+                        [&maxlevel, &ts, &tree_class] (const t8_linearidx_t element_id_,
+                                                       const t8_element_array_iterator::value_type &elem_ptr) {
+                          return (element_id_ < ts->element_get_linear_id (tree_class, elem_ptr, maxlevel));
+                        });
 
   /* After we found the element with an id greater than the given one, we are able to jump one index back.
    * This guarantees us that the element at (index - 1) is smaller or equal to the given element id.
@@ -1461,7 +1460,7 @@ t8_forest_element_neighbor_eclass (t8_forest_t forest, t8_locidx_t ltreeid, cons
   const t8_tree_t tree = t8_forest_get_tree (forest, ltreeid);
   const t8_eclass_t eclass = tree->eclass;
   const t8_scheme *ts = t8_forest_get_scheme (forest);
-  if (!ts->t8_element_is_root_boundary (eclass, elem, face)) {
+  if (!ts->element_is_root_boundary (eclass, elem, face)) {
     /* The neighbor element is inside the current tree. */
     return tree->eclass;
   }
@@ -1664,11 +1663,11 @@ t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, 
                                  const t8_element_t *leaf, int face)
 {
   int orientation = 0;
-
-  if (t8_element_is_root_boundary (ts, leaf, face)) {
+  const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
+  if (t8_element_is_root_boundary (forest, tree_class, leaf, face)) {
     t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
     t8_locidx_t ltreeid_in_cmesh = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
-    int iface_in_tree = t8_element_tree_face (ts, leaf, face);
+    int iface_in_tree = t8_element_tree_face (forest, tree_class, leaf, face);
     t8_cmesh_get_face_neighbor (cmesh, ltreeid_in_cmesh, iface_in_tree, NULL, &orientation);
   }
 
@@ -1685,7 +1684,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
   t8_gloidx_t gneigh_treeid;
   t8_locidx_t lneigh_treeid = -1;
   t8_locidx_t lghost_treeid = -1, *element_indices, element_index;
-  t8_scheme *ts = t8_forest_get_scheme (forest);
+  const t8_scheme *ts = t8_forest_get_scheme (forest);
   const t8_element_t *ancestor;
   t8_element_t **neighbor_leaves;
   t8_linearidx_t neigh_id;
@@ -1729,17 +1728,17 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
       num_children_at_face = ts->element_get_num_face_children (eclass, leaf, face);
       neighbor_leaves = *pneighbor_leaves = T8_ALLOC (t8_element_t *, num_children_at_face);
       *dual_faces = T8_ALLOC (int, num_children_at_face);
-      neigh_scheme->t8_element_new (num_children_at_face, neighbor_leaves);
+      ts->element_new (*pneigh_eclass, num_children_at_face, neighbor_leaves);
       /* Compute neighbor elements and global treeid of the neighbor */
-      gneigh_treeid = t8_forest_element_half_face_neighbors (forest, ltreeid, leaf, neighbor_leaves, neigh_scheme, face,
-                                                             num_children_at_face, *dual_faces);
+      gneigh_treeid = t8_forest_element_half_face_neighbors (forest, ltreeid, leaf, neighbor_leaves, *pneigh_eclass,
+                                                             face, num_children_at_face, *dual_faces);
     }
     if (gneigh_tree) {
       *gneigh_tree = gneigh_treeid;
     }
     if (gneigh_treeid < 0) {
       /* There exists no face neighbor across this face, we return with this info */
-      neigh_scheme->t8_element_destroy (num_children_at_face, neighbor_leaves);
+      ts->element_destroy (*pneigh_eclass, num_children_at_face, neighbor_leaves);
       T8_FREE (neighbor_leaves);
       T8_FREE (*dual_faces);
       *dual_faces = NULL;
@@ -1759,14 +1758,14 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
     for (ineigh = 0; ineigh < num_children_at_face; ineigh++) {
       /* At first, we check whether the current rank owns the neighbor, since
        * this is a constant time check and it is the most common case */
-      if (t8_forest_element_check_owner (forest, neighbor_leaves[ineigh], gneigh_treeid, neigh_class, forest->mpirank,
-                                         at_maxlevel)) {
+      if (t8_forest_element_check_owner (forest, neighbor_leaves[ineigh], gneigh_treeid, *pneigh_eclass,
+                                         forest->mpirank, at_maxlevel)) {
         owners[ineigh] = forest->mpirank;
         /* The neighbor tree is also a local tree. we store its local treeid */
         lneigh_treeid = t8_forest_get_local_id (forest, gneigh_treeid);
       }
       else {
-        owners[ineigh] = t8_forest_element_find_owner (forest, gneigh_treeid, neighbor_leaves[ineigh], neigh_class);
+        owners[ineigh] = t8_forest_element_find_owner (forest, gneigh_treeid, neighbor_leaves[ineigh], *pneigh_eclass);
         /* Store that at least one neighbor is a ghost */
         have_ghosts = 1;
       }
@@ -1787,7 +1786,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
     if (!different_owners) {
       /* The face neighbors belong to the same process, we thus need to determine
        * if they are leaves or their parent or grandparent. */
-      neigh_id = neigh_scheme->t8_element_get_linear_id (neighbor_leaves[0], forest->maxlevel);
+      neigh_id = ts->element_get_linear_id (*pneigh_eclass, neighbor_leaves[0], forest->maxlevel);
       if (owners[0] != forest->mpirank) {
         /* The elements are ghost elements of the same owner */
         const t8_element_array_t *element_array = t8_forest_ghost_get_tree_elements (forest, lghost_treeid);
@@ -1815,35 +1814,35 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
         /* Add the element offset of this tree to the index */
         element_index += t8_forest_get_tree_element_offset (forest, lneigh_treeid);
       }
-      if (neigh_scheme->t8_element_compare (ancestor, neighbor_leaves[0]) < 0) {
+      if (ts->element_compare (*pneigh_eclass, ancestor, neighbor_leaves[0]) < 0) {
         /* ancestor is a real ancestor, and thus the neighbor is either the parent
          * or the grandparent of the half neighbors. We can return it and the indices. */
         /* We need to determine the dual face */
-        if (neigh_scheme->t8_element_level (ancestor) == ts->t8_element_level (leaf)) {
+        if (ts->element_get_level (*pneigh_eclass, ancestor) == ts->element_get_level (eclass, leaf)) {
           /* The ancestor is the same-level neighbor of leaf */
           if (!at_maxlevel) {
             /* its dual face is the face of the parent of the first neighbor leaf */
-            *dual_faces[0] = neigh_scheme->t8_element_face_parent_face (neighbor_leaves[0], *dual_faces[0]);
+            *dual_faces[0] = ts->element_face_get_parent_face (*pneigh_eclass, neighbor_leaves[0], *dual_faces[0]);
           }
         }
         else {
           /* The ancestor is the parent of the parent */
-          T8_ASSERT (neigh_scheme->t8_element_level (ancestor) == ts->t8_element_level (leaf) - 1);
+          T8_ASSERT (ts->element_get_level (*pneigh_eclass, ancestor) == ts->element_get_level (eclass, leaf) - 1);
 
-          *dual_faces[0] = neigh_scheme->t8_element_face_parent_face (neighbor_leaves[0], *dual_faces[0]);
+          *dual_faces[0] = ts->element_face_get_parent_face (*pneigh_eclass, neighbor_leaves[0], *dual_faces[0]);
           if (!at_maxlevel) {
             /* We need to compute the dual face of the grandparent. */
             /* Construct the parent of the grand child */
-            neigh_scheme->t8_element_parent (neighbor_leaves[0], neighbor_leaves[0]);
+            ts->element_get_parent (*pneigh_eclass, neighbor_leaves[0], neighbor_leaves[0]);
             /* Compute the face id of the parent's face */
-            *dual_faces[0] = neigh_scheme->t8_element_face_parent_face (neighbor_leaves[0], *dual_faces[0]);
+            *dual_faces[0] = ts->element_face_get_parent_face (*pneigh_eclass, neighbor_leaves[0], *dual_faces[0]);
           }
         }
 
         /* free memory */
-        neigh_scheme->t8_element_destroy (num_children_at_face - 1, neighbor_leaves + 1);
+        ts->element_destroy (*pneigh_eclass, num_children_at_face - 1, neighbor_leaves + 1);
         /* copy the ancestor */
-        neigh_scheme->t8_element_copy (ancestor, neighbor_leaves[0]);
+        ts->element_copy (*pneigh_eclass, ancestor, neighbor_leaves[0]);
         /* set return values */
         *num_neighbors = 1;
         *pelement_indices = T8_ALLOC (t8_locidx_t, 1);
@@ -1864,7 +1863,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
     element_indices = *pelement_indices;
     for (ineigh = 0; ineigh < num_children_at_face; ineigh++) {
       /* Compute the linear id at maxlevel of the neighbor leaf */
-      neigh_id = neigh_scheme->t8_element_get_linear_id (neighbor_leaves[ineigh], forest->maxlevel);
+      neigh_id = ts->element_get_linear_id (*pneigh_eclass, neighbor_leaves[ineigh], forest->maxlevel);
       /* Get a pointer to the element array in which the neighbor lies and search for the element's index in this array.
        * This is either the local leaf array of the local tree or the corresponding leaf array in the ghost structure */
       if (owners[ineigh] == forest->mpirank) {
@@ -1881,7 +1880,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
           t8_locidx_t check_ltreeid;
           const t8_element_t *check_element = t8_forest_get_element (forest, element_indices[ineigh], &check_ltreeid);
           T8_ASSERT (check_ltreeid == lneigh_treeid);
-          T8_ASSERT (neigh_scheme->t8_element_equal (check_element, neighbor_leaves[ineigh]));
+          T8_ASSERT (ts->element_is_equal (*pneigh_eclass, check_element, neighbor_leaves[ineigh]));
         }
 #endif
       }
@@ -1896,7 +1895,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
         {
           t8_element_t *check_element;
           check_element = t8_forest_ghost_get_element (forest, lghost_treeid, element_indices[ineigh]);
-          T8_ASSERT (neigh_scheme->t8_element_equal (check_element, neighbor_leaves[ineigh]));
+          T8_ASSERT (ts->element_is_equal (*pneigh_eclass, check_element, neighbor_leaves[ineigh]));
         }
 #endif
         /* Add the element offset of previous ghosts to this index */
@@ -1928,8 +1927,8 @@ t8_forest_print_all_leaf_neighbors (t8_forest_t forest)
   t8_locidx_t ltree, ielem;
   t8_element_t **neighbor_leaves;
   int iface, num_neighbors, ineigh;
-  t8_eclass_t eclass;
-  t8_scheme *ts, *neigh_scheme;
+  t8_eclass_t eclass, neigh_eclass;
+  t8_scheme *ts;
   t8_locidx_t *element_indices;
   int *dual_faces;
   char buffer[BUFSIZ];
@@ -1952,11 +1951,11 @@ t8_forest_print_all_leaf_neighbors (t8_forest_t forest)
     /* Get a pointer to the ielem-th element, its eclass, treeid and scheme */
     const t8_element_t *leaf = t8_forest_get_element (forest, ielem, &ltree);
     eclass = t8_forest_get_tree_class (forest, ltree);
-    ts = t8_forest_get_eclass_scheme (forest, eclass);
+    ts = t8_forest_get_scheme (forest);
     /* Iterate over all faces */
-    for (iface = 0; iface < ts->t8_element_num_faces (leaf); iface++) {
+    for (iface = 0; iface < ts->element_get_num_faces (eclass, leaf); iface++) {
       t8_forest_leaf_face_neighbors (forest, ltree, leaf, &neighbor_leaves, iface, &dual_faces, &num_neighbors,
-                                     &element_indices, &neigh_scheme, 1);
+                                     &element_indices, &neigh_eclass, 1);
       t8_debugf ("Element %li across face %i has %i leaf neighbors (with dual faces).\n", (long) ielem, iface,
                  num_neighbors);
       snprintf (buffer, BUFSIZ, "\tIndices:\t");
@@ -1966,7 +1965,7 @@ t8_forest_print_all_leaf_neighbors (t8_forest_t forest)
       }
       t8_debugf ("%s\n", buffer);
       if (num_neighbors > 0) {
-        neigh_scheme->t8_element_destroy (num_neighbors, neighbor_leaves);
+        ts->element_destroy (neigh_eclass, num_neighbors, neighbor_leaves);
 
         T8_FREE (element_indices);
         T8_FREE (neighbor_leaves);
@@ -2007,9 +2006,10 @@ t8_forest_element_is_leaf (const t8_forest_t forest, const t8_element_t *element
   /* In order to find the element, we need to compute its linear id.
    * To do so, we need the scheme and the level of the element. */
   const t8_scheme *scheme = t8_element_array_get_scheme (elements);
-  const int element_level = scheme->t8_element_level (element);
+  const t8_eclass_t tree_class = t8_element_array_get_tree_class (elements);
+  const int element_level = scheme->element_get_level (tree_class, element);
   /* Compute the linear id. */
-  const t8_linearidx_t element_id = scheme->t8_element_get_linear_id (element, element_level);
+  const t8_linearidx_t element_id = scheme->element_get_linear_id (tree_class, element, element_level);
   /* Search for the element.
    * The search returns the largest index i,
    * such that the element at position i has a smaller id than the given one.
@@ -2023,7 +2023,7 @@ t8_forest_element_is_leaf (const t8_forest_t forest, const t8_element_t *element
    * To identify whether the element was found, we compare these two. */
   const t8_element_t *check_element = t8_element_array_index_locidx (elements, search_result);
   T8_ASSERT (check_element != NULL);
-  return (scheme->t8_element_equal (element, check_element));
+  return (scheme->element_is_equal (tree_class, element, check_element));
 }
 
 /* Check if an element is owned by a specific rank */
@@ -2057,17 +2057,17 @@ t8_forest_element_check_owner (t8_forest_t forest, t8_element_t *element, t8_glo
       /* The tree is either the first or the last tree on rank, we thus
        * have to check whether element is in the range of the tree */
       /* Get the eclass scheme of the tree */
-      ts = t8_forest_get_eclass_scheme (forest, eclass);
+      ts = t8_forest_get_scheme (forest);
       /* Compute the linear id of the first descendant of element */
       if (!element_is_desc) {
-        ts->t8_element_new (1, &first_desc);
-        ts->t8_element_first_descendant (element, first_desc, forest->maxlevel);
-        first_desc_id = ts->t8_element_get_linear_id (first_desc, forest->maxlevel);
-        ts->t8_element_destroy (1, &first_desc);
+        ts->element_new (eclass, 1, &first_desc);
+        ts->element_construct_first_descendant (eclass, element, first_desc, forest->maxlevel);
+        first_desc_id = ts->element_get_linear_id (eclass, first_desc, forest->maxlevel);
+        ts->element_destroy (eclass, 1, &first_desc);
       }
       else {
         /* The element is its own first descendant */
-        first_desc_id = ts->t8_element_get_linear_id (element, forest->maxlevel);
+        first_desc_id = ts->element_get_linear_id (eclass, element, forest->maxlevel);
       }
       /* Get the id of the trees first descendant and the first descendant
        * of the next nonempty rank */
@@ -2168,15 +2168,15 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid, t8_el
   if (upper_bound == lower_bound) {
     return upper_bound;
   }
-  ts = t8_forest_get_eclass_scheme (forest, eclass);
+  ts = t8_forest_get_scheme (forest);
   if (element_is_desc) {
     /* The element is already its own first_descendant */
     first_desc = element;
   }
   else {
     /* Build the first descendant of element */
-    ts->t8_element_new (1, &first_desc);
-    ts->t8_element_first_descendant (element, first_desc, forest->maxlevel);
+    ts->element_new (eclass, 1, &first_desc);
+    ts->element_construct_first_descendant (eclass, element, first_desc, forest->maxlevel);
   }
 
   T8_ASSERT (forest->tree_offsets != NULL);
@@ -2186,7 +2186,7 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid, t8_el
   const t8_gloidx_t *first_trees = t8_shmem_array_get_gloidx_array (forest->tree_offsets);
   first_descs = (t8_linearidx_t *) t8_shmem_array_get_array (forest->global_first_desc);
   /* Compute the linear id of the element's first descendant */
-  element_desc_id = ts->t8_element_get_linear_id (first_desc, ts->t8_element_level (first_desc));
+  element_desc_id = ts->element_get_linear_id (eclass, first_desc, ts->element_get_level (eclass, first_desc));
   /* Get a pointer to the element offset array */
   const t8_gloidx_t *element_offsets = t8_shmem_array_get_gloidx_array (forest->element_offsets);
 
@@ -2285,7 +2285,7 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid, t8_el
 
   /* clean-up */
   if (!element_is_desc) {
-    ts->t8_element_destroy (1, &first_desc);
+    ts->element_destroy (eclass, 1, &first_desc);
   }
   T8_ASSERT (t8_forest_element_check_owner (forest, element, gtreeid, eclass, guess, element_is_desc));
   return guess;
@@ -2804,7 +2804,7 @@ t8_forest_set_scheme (t8_forest_t forest, t8_scheme *scheme)
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (!forest->committed);
-  T8_ASSERT (forest->scheme_cxx == NULL);
+  T8_ASSERT (forest->scheme == NULL);
   T8_ASSERT (forest->set_from == NULL);
 
   T8_ASSERT (scheme != NULL);
@@ -2832,7 +2832,7 @@ t8_forest_set_copy (t8_forest_t forest, const t8_forest_t set_from)
   T8_ASSERT (!forest->committed);
   T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
   T8_ASSERT (forest->cmesh == NULL);
-  T8_ASSERT (forest->scheme_cxx == NULL);
+  T8_ASSERT (forest->scheme == NULL);
   T8_ASSERT (forest->set_from == NULL);
 
   T8_ASSERT (set_from != NULL);
@@ -2856,7 +2856,7 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from, int set
   T8_ASSERT (!forest->committed);
   T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
   T8_ASSERT (forest->cmesh == NULL);
-  T8_ASSERT (forest->scheme_cxx == NULL);
+  T8_ASSERT (forest->scheme == NULL);
 
   forest->set_for_coarsening = set_for_coarsening;
 
@@ -2940,7 +2940,7 @@ t8_forest_set_adapt (t8_forest_t forest, const t8_forest_t set_from, t8_forest_a
   T8_ASSERT (!forest->committed);
   T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
   T8_ASSERT (forest->cmesh == NULL);
-  T8_ASSERT (forest->scheme_cxx == NULL);
+  T8_ASSERT (forest->scheme == NULL);
   T8_ASSERT (forest->set_adapt_fn == NULL);
   T8_ASSERT (forest->set_adapt_recursive == -1);
 
@@ -3006,21 +3006,22 @@ t8_forest_comm_global_num_elements (t8_forest_t forest)
 /** Adapt callback function to refine every element in the forest.
  * It is merely used to build a new forest with pyramids. 
  * 
- * \param [in] forest       the forest to which the new elements belong
- * \param [in] forest_from  the forest that is adapted.
- * \param [in] which_tree   the local tree containing \a elements
- * \param [in] lelement_id  the local element id in \a forest_old in the tree of the current element
- * \param [in] ts           the eclass scheme of the tree
- * \param [in] is_family    if 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
- * \param [in] num_elements the number of entries in \a elements that are defined
+ * \param [in] forest       The forest to which the new elements belong
+ * \param [in] forest_from  The forest that is adapted.
+ * \param [in] which_tree   The local tree containing \a elements.
+ * \param [in] tree_class   The eclass of \a which_tree.
+ * \param [in] lelement_id  The local element id in \a forest_old in the tree of the current element
+ * \param [in] ts           The eclass scheme of the tree
+ * \param [in] is_family    If 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
+ * \param [in] num_elements The number of entries in \a elements that are defined
  * \param [in] elements     Pointers to a family or, if \a is_family is zero,
  *                          pointer to one element.
  * \return                  Always return 1, to refine every element
  */
 static int
 t8_forest_refine_everything (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                             t8_locidx_t lelement_id, t8_scheme *ts, const int is_family, const int num_elements,
-                             t8_element_t *elements[])
+                             t8_eclass_t tree_class, t8_locidx_t lelement_id, t8_scheme *ts, const int is_family,
+                             const int num_elements, t8_element_t *elements[])
 {
 
   return 1;
@@ -3034,7 +3035,7 @@ t8_forest_refine_everything (t8_forest_t forest, t8_forest_t forest_from, t8_loc
  * \note This function is MPI collective
  * 
  * \param[in] forest    The forest to check
- * \return          non-zero if any tree refines irregular
+ * \return          Non-zero if any tree refines irregular
  */
 static int
 t8_forest_refines_irregular (t8_forest_t forest)
@@ -3072,12 +3073,12 @@ t8_forest_populate_irregular (t8_forest_t forest)
   t8_forest_t forest_tmp;
   t8_forest_t forest_tmp_partition;
   t8_cmesh_ref (forest->cmesh);
-  t8_schemexx_ref (forest->scheme_cxx);
+  forest->scheme->ref ();
   /* We start with a level 0 uniform refinement */
   t8_forest_init (&forest_zero);
   t8_forest_set_level (forest_zero, 0);
   t8_forest_set_cmesh (forest_zero, forest->cmesh, forest->mpicomm);
-  t8_forest_set_scheme (forest_zero, forest->scheme_cxx);
+  t8_forest_set_scheme (forest_zero, forest->scheme);
   t8_forest_commit (forest_zero);
 
   /* Up to the specified level we refine every element. */
@@ -3117,7 +3118,7 @@ t8_forest_commit (t8_forest_t forest)
      * forest */
     T8_ASSERT (forest->mpicomm != sc_MPI_COMM_NULL);
     T8_ASSERT (forest->cmesh != NULL);
-    T8_ASSERT (forest->scheme_cxx != NULL);
+    T8_ASSERT (forest->scheme != NULL);
     T8_ASSERT (forest->from_method == T8_FOREST_FROM_LAST);
     T8_ASSERT (forest->incomplete_trees == -1);
 
@@ -3153,7 +3154,7 @@ t8_forest_commit (t8_forest_t forest)
 
     T8_ASSERT (forest->mpicomm == sc_MPI_COMM_NULL);
     T8_ASSERT (forest->cmesh == NULL);
-    T8_ASSERT (forest->scheme_cxx == NULL);
+    T8_ASSERT (forest->scheme == NULL);
     T8_ASSERT (!forest->do_dup);
     T8_ASSERT (forest->from_method >= T8_FOREST_FROM_FIRST && forest->from_method < T8_FOREST_FROM_LAST);
     T8_ASSERT (forest->set_from->incomplete_trees > -1);
@@ -3178,11 +3179,11 @@ t8_forest_commit (t8_forest_t forest)
 
     /* increase reference count of cmesh and scheme from the input forest */
     t8_cmesh_ref (forest->set_from->cmesh);
-    t8_schemexx_ref (forest->set_from->scheme_cxx);
+    t8_scheme_ref (forest->set_from->scheme);
     /* set the dimension, cmesh and scheme from the old forest */
     forest->dimension = forest->set_from->dimension;
     forest->cmesh = forest->set_from->cmesh;
-    forest->scheme_cxx = forest->set_from->scheme_cxx;
+    forest->scheme = forest->set_from->scheme;
     forest->global_num_trees = forest->set_from->global_num_trees;
 
     /* Compute the maximum allowed refinement level */
@@ -4097,7 +4098,7 @@ t8_forest_new_uniform (t8_cmesh_t cmesh, t8_scheme *scheme, const int level, con
     t8_cmesh_t cmesh_uniform_partition;
     t8_cmesh_init (&cmesh_uniform_partition);
     t8_cmesh_set_derive (cmesh_uniform_partition, cmesh);
-    t8_scheme_cxx_ref (scheme);
+    t8_scheme_ref (scheme);
     t8_cmesh_set_partition_uniform (cmesh_uniform_partition, level, scheme);
     t8_cmesh_commit (cmesh_uniform_partition, comm);
     cmesh = cmesh_uniform_partition;
@@ -4152,9 +4153,9 @@ t8_forest_free_trees (t8_forest_t forest)
     if (t8_forest_get_tree_element_count (tree) >= 1) {
       /* destroy first and last descendant */
       const t8_eclass_t eclass = t8_forest_get_tree_class (forest, jt);
-      const t8_scheme *scheme = forest->scheme_cxx->eclass_schemes[eclass];
-      t8_element_destroy (scheme, 1, &tree->first_desc);
-      t8_element_destroy (scheme, 1, &tree->last_desc);
+      const t8_scheme *scheme = forest->scheme;
+      scheme->element_destroy (eclass, 1, &tree->first_desc);
+      scheme->element_destroy (eclass, 1, &tree->last_desc);
     }
     else {
       T8_ASSERT (forest->incomplete_trees);
@@ -4202,8 +4203,8 @@ t8_forest_reset (t8_forest_t *pforest)
     t8_forest_ghost_unref (&forest->ghosts);
   }
   /* we have taken ownership on calling t8_forest_set_* */
-  if (forest->scheme_cxx != NULL) {
-    t8_schemexx_unref (&forest->scheme_cxx);
+  if (forest->scheme != NULL) {
+    t8_scheme_unref (&forest->scheme);
   }
   if (forest->cmesh != NULL) {
     t8_cmesh_unref (&forest->cmesh);

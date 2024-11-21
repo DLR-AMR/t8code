@@ -37,10 +37,14 @@
  * It is written as a self-contained library in the t8_dline_* files.
  */
 
-class t8_default_scheme_line: private t8_default_scheme_common<t8_default_scheme_line> {
+class t8_default_scheme_line:
+  private t8_eclass_scheme<t8_default_scheme_line>,
+  public t8_default_scheme_common<t8_default_scheme_line> {
  public:
   /** Constructor. */
-  t8_default_scheme_line (): t8_default_scheme_common<t8_default_scheme_line> (T8_ECLASS_LINE, sizeof (t8_dline_t)) {};
+  t8_default_scheme_line ()
+    : t8_eclass_scheme<t8_default_scheme_line> (T8_ECLASS_LINE, sizeof (t8_dline_t),
+                                                sc_mempool_new (sizeof (t8_dline_t))) {};
 
   ~t8_default_scheme_line () {};
 

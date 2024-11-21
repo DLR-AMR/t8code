@@ -30,12 +30,12 @@
 template <class TUnderlying>
 class t8_crtp {
  public:
-  TUnderlying&
+  inline TUnderlying&
   underlying ()
   {
     return static_cast<TUnderlying&> (*this);
   }
-  TUnderlying const&
+  inline TUnderlying const&
   underlying () const
   {
     return static_cast<TUnderlying const&> (*this);

@@ -26,6 +26,7 @@
 #include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
+#include <t8_schemes/t8_scheme.hxx>
 #include <t8_refcount.h>
 #include <t8_data/t8_shmem.h>
 #include <t8_vec.h>
@@ -1264,7 +1265,7 @@ t8_cmesh_reset (t8_cmesh_t *pcmesh)
 
   /* unref the partition scheme (if set) */
   if (cmesh->set_partition_scheme != NULL) {
-    t8_schemexx_unref (&cmesh->set_partition_scheme);
+    t8_scheme_unref (&cmesh->set_partition_scheme);
   }
 
   T8_FREE (cmesh);
@@ -1445,7 +1446,6 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, const int level, const t8_scheme *ts,
   t8_gloidx_t prev_last_tree = -1;
 #endif
   int tree_class;
-  t8_scheme *tree_scheme;
 
   /* Compute the number of children on level in each tree */
   global_num_children = 0;
@@ -1454,9 +1454,7 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, const int level, const t8_scheme *ts,
      * tree class.
      */
     if (cmesh->num_trees_per_eclass[tree_class] > 0) {
-      tree_scheme = ts->eclass_schemes[tree_class];
-      T8_ASSERT (tree_scheme != NULL);
-      children_per_tree = tree_scheme->t8_element_count_leaves_from_root (level);
+      children_per_tree = ts->count_leaves_from_root (tree_class, level);
       T8_ASSERT (children_per_tree >= 0);
       global_num_children += cmesh->num_trees_per_eclass[tree_class] * children_per_tree;
     }

@@ -66,20 +66,17 @@ t8_test_search_all_fn (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_e
 {
   sc_array_t *matched_leaves = (sc_array_t *) t8_forest_get_user_data (forest);
   if (is_leaf) {
-    t8_locidx_t tree_offset;
     t8_locidx_t test_ltreeid;
-    t8_element_t *test_element;
-    t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
-    t8_scheme *ts;
-    ts = t8_forest_get_eclass_scheme (forest, tree_class);
+    const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
+    const t8_scheme *ts = t8_forest_get_scheme (forest);
 
-    tree_offset = t8_forest_get_tree_element_offset (forest, ltreeid);
+    const t8_locidx_t tree_offset = t8_forest_get_tree_element_offset (forest, ltreeid);
     /* Set the corresponding entry to 1 */
     *(int *) t8_sc_array_index_locidx (matched_leaves, tree_offset + tree_leaf_index) = 1;
     /* Test whether tree_leaf_index is actually the index of the element */
-    test_element = t8_forest_get_element (forest, tree_offset + tree_leaf_index, &test_ltreeid);
+    const t8_element_t *test_element = t8_forest_get_element (forest, tree_offset + tree_leaf_index, &test_ltreeid);
 
-    EXPECT_ELEM_EQ (ts, element, test_element);
+    EXPECT_ELEM_EQ (ts, tree_class, element, test_element);
     EXPECT_EQ (ltreeid, test_ltreeid) << "Tree mismatch in search.";
   }
   return 1;
@@ -102,13 +99,12 @@ t8_test_search_query_all_fn (t8_forest_t forest, t8_locidx_t ltreeid, const t8_e
     if (is_leaf) {
       /* Test whether tree_leaf_index is actually the index of the element */
       t8_locidx_t test_ltreeid;
-      t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
-      t8_scheme *ts;
-      ts = t8_forest_get_eclass_scheme (forest, tree_class);
+      const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
+      const t8_scheme *ts = t8_forest_get_scheme (forest);
 
       t8_locidx_t tree_offset = t8_forest_get_tree_element_offset (forest, ltreeid);
       t8_element_t *test_element = t8_forest_get_element (forest, tree_offset + tree_leaf_index, &test_ltreeid);
-      EXPECT_ELEM_EQ (ts, element, test_element);
+      EXPECT_ELEM_EQ (ts, tree_class, element, test_element);
       EXPECT_EQ (ltreeid, test_ltreeid) << "Tree mismatch in search.";
     }
     query_matches[iquery] = 1;

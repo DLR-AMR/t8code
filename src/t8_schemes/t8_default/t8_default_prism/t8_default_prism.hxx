@@ -38,11 +38,14 @@
  * It is written as a self-contained library in the t8_dprism_* files.
  */
 
-class t8_default_scheme_prism: private t8_default_scheme_common<t8_default_scheme_prism> {
+class t8_default_scheme_prism:
+  private t8_eclass_scheme<t8_default_scheme_prism>,
+  public t8_default_scheme_common<t8_default_scheme_prism> {
  public:
   /** Constructor. */
   t8_default_scheme_prism ()
-    : t8_default_scheme_common<t8_default_scheme_prism> (T8_ECLASS_PRISM, sizeof (t8_dprism_t)) {};
+    : t8_eclass_scheme<t8_default_scheme_prism> (T8_ECLASS_PRISM, sizeof (t8_dprism_t),
+                                                 sc_mempool_new (sizeof (t8_dprism_t))) {};
 
   ~t8_default_scheme_prism () {};
 

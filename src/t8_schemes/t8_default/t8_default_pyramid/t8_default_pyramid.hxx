@@ -36,11 +36,14 @@
  * t8_dpyramid_* files.
  */
 
-class t8_default_scheme_pyramid: private t8_default_scheme_common<t8_default_scheme_pyramid> {
+class t8_default_scheme_pyramid:
+  private t8_eclass_scheme<t8_default_scheme_pyramid>,
+  public t8_default_scheme_common<t8_default_scheme_pyramid> {
  public:
   /** Constructor. */
   t8_default_scheme_pyramid ()
-    : t8_default_scheme_common<t8_default_scheme_pyramid> (T8_ECLASS_PYRAMID, sizeof (t8_dpyramid_t)) {};
+    : t8_eclass_scheme<t8_default_scheme_pyramid> (T8_ECLASS_PYRAMID, sizeof (t8_dpyramid_t),
+                                                   sc_mempool_new (sizeof (t8_dpyramid_t))) {};
 
   ~t8_default_scheme_pyramid () {};
 
