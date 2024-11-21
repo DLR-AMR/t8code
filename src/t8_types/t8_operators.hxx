@@ -31,6 +31,12 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * The operators can be used by a \a T8Type to extend the functionality of the type.
  */
 
+/**
+ * \brief The CRTP pattern for operators.
+ * 
+ * \tparam T 
+ * \tparam crtpType 
+ */
 template <typename T, template <typename> class crtpType>
 struct crtp
 {
