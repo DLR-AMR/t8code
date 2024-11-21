@@ -276,11 +276,6 @@ class t8_search: public t8_search_base {
     }
   }
 
-  ~t8_search ()
-  {
-    // No need to delete user_data as it is managed by std::shared_ptr
-  }
-
   std::shared_ptr<Udata> user_data;
 
  private:
