@@ -76,14 +76,10 @@ typedef p4est_quadrant_t t8_pquad_t;
     (quad)->p.user_long = (long) (coord); \
   } while (0)
 
-class t8_default_scheme_quad:
-  private t8_eclass_scheme<t8_default_scheme_quad>,
-  public t8_default_scheme_common<t8_default_scheme_quad> {
+class t8_default_scheme_quad: public t8_default_scheme_common<t8_default_scheme_quad> {
  public:
   /** Constructor. */
-  t8_default_scheme_quad ()
-    : t8_eclass_scheme<t8_default_scheme_quad> (T8_ECLASS_QUAD, sizeof (t8_pquad_t),
-                                                sc_mempool_new (sizeof (t8_pquad_t))) {};
+  t8_default_scheme_quad (): t8_default_scheme_common (T8_ECLASS_QUAD, sizeof (t8_pquad_t)) {};
 
   ~t8_default_scheme_quad () {};
 
@@ -416,7 +412,6 @@ class t8_default_scheme_quad:
    *  the element inside the root tree that has the given face as a
    *  face.
    * \param [in] face     A face element.
-   * \param [in] face_eclass The eclass for the face element.
    * \param [in,out] elem An allocated element. The entries will be filled with
    *                      the data of the element that has \a face as a face and
    *                      lies within the root tree.
@@ -427,8 +422,7 @@ class t8_default_scheme_quad:
    *                      with \a face.
    */
   int
-  element_extrude_face (const t8_element_t *face, const t8_eclass_t face_eclass, t8_element_t *elem, int root_face,
-                        const t8_scheme *scheme) const;
+  element_extrude_face (const t8_element_t *face, t8_element_t *elem, int root_face, const t8_scheme *scheme) const;
 
   /** Construct the first descendant of an element at a given level that touches a given face.
    * \param [in] elem      The input element.

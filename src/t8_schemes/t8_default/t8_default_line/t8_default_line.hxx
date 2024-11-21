@@ -37,14 +37,10 @@
  * It is written as a self-contained library in the t8_dline_* files.
  */
 
-class t8_default_scheme_line:
-  private t8_eclass_scheme<t8_default_scheme_line>,
-  public t8_default_scheme_common<t8_default_scheme_line> {
+class t8_default_scheme_line: public t8_default_scheme_common<t8_default_scheme_line> {
  public:
   /** Constructor. */
-  t8_default_scheme_line ()
-    : t8_eclass_scheme<t8_default_scheme_line> (T8_ECLASS_LINE, sizeof (t8_dline_t),
-                                                sc_mempool_new (sizeof (t8_dline_t))) {};
+  t8_default_scheme_line (): t8_default_scheme_common (T8_ECLASS_LINE, sizeof (t8_dline_t)) {};
 
   ~t8_default_scheme_line () {};
 
@@ -389,7 +385,6 @@ class t8_default_scheme_line:
    *  the element inside the root tree that has the given face as a
    *  face.
    * \param [in] face     A face element.
-   * \param [in] face_eclass The eclass for the face element.
    * \param [in,out] elem An allocated element. The entries will be filled with
    *                      the data of the element that has \a face as a face and
    *                      lies within the root tree.
@@ -400,8 +395,7 @@ class t8_default_scheme_line:
    *                      with \a face.
    */
   int
-  element_extrude_face (const t8_element_t *face, const t8_eclass_t face_eclass, t8_element_t *elem, int root_face,
-                        const t8_scheme *scheme) const;
+  element_extrude_face (const t8_element_t *face, t8_element_t *elem, int root_face, const t8_scheme *scheme) const;
 
   /** Construct the first descendant of an element at a given level that touches a given face.
    * \param [in] elem      The input element.

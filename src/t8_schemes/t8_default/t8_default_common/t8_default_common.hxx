@@ -84,23 +84,33 @@ count_leaves_from_level (int element_level, int refinement_level, int dimension)
   return element_level > refinement_level ? 0 : sc_intpow64 (2, dimension * (refinement_level - element_level));
 }
 
-template <class TUnderlyingEclassScheme>
-class t8_default_scheme_common: private t8_crtp<TUnderlyingEclassScheme> {
+template <class TUnderlyingEclass_Scheme>
+class t8_default_scheme_common: public t8_crtp<TUnderlyingEclass_Scheme> {
  private:
-  friend TUnderlyingEclassScheme;
-
-  /** Private constructor which can only be used by derived schemes. */
-  t8_default_scheme_common ()
+  friend TUnderlyingEclass_Scheme;
+  /** Private constructor which can only be used by derived schemes.
+   * \param [in] tree_class The tree class of this element scheme.
+   * \param [in] elem_size  The size of the elements this scheme holds.
+  */
+  t8_default_scheme_common (const t8_eclass_t tree_class, const size_t elem_size)
+    : element_size (elem_size), eclass (tree_class)
   {
-  }
+    ts_context = sc_mempool_new (elem_size);
+  };
+
+ protected:
+  const size_t element_size; /**< The size in bytes of an element of class \a eclass */
+  void *ts_context;          /**< Anonymous implementation context. */
 
  public:
+  const t8_eclass_t eclass; /**< The tree class */
+
   /** Destructor for all default schemes */
   ~t8_default_scheme_common ()
   {
-    T8_ASSERT (this->underlying ().ts_context != NULL);
-    SC_ASSERT (((sc_mempool_t *) this->underlying ().ts_context)->elem_count == 0);
-    sc_mempool_destroy ((sc_mempool_t *) this->underlying ().ts_context);
+    T8_ASSERT (ts_context != NULL);
+    SC_ASSERT (((sc_mempool_t *) ts_context)->elem_count == 0);
+    sc_mempool_destroy ((sc_mempool_t *) ts_context);
   }
 
   /** Compute the number of corners of a given element. */
@@ -109,25 +119,25 @@ class t8_default_scheme_common: private t8_crtp<TUnderlyingEclassScheme> {
   {
     /* use the lookup table of the eclasses.
      * Pyramids should implement their own version of this function. */
-    return t8_eclass_num_vertices[this->underlying ().eclass];
+    return t8_eclass_num_vertices[eclass];
   }
 
   /** Allocate space for a bunch of elements. */
   void
   element_new (int length, t8_element_t **elem) const
   {
-    t8_default_mempool_alloc ((sc_mempool_t *) this->underlying ().ts_context, length, elem);
+    t8_default_mempool_alloc ((sc_mempool_t *) ts_context, length, elem);
   }
 
   /** Deallocate space for a bunch of elements. */
   void
   element_destroy (int length, t8_element_t **elem) const
   {
-    t8_default_mempool_free ((sc_mempool_t *) this->underlying ().ts_context, length, elem);
+    t8_default_mempool_free ((sc_mempool_t *) ts_context, length, elem);
   }
 
   void
-  t8_element_deinit (int length, t8_element_t *elem) const
+  element_deinit (int length, t8_element_t *elem) const
   {
   }
 
@@ -137,7 +147,7 @@ class t8_default_scheme_common: private t8_crtp<TUnderlyingEclassScheme> {
   {
     /* use the lookup table of the eclasses.
      * Pyramids should implement their own version of this function. */
-    return this->underlying ().eclass;
+    return eclass;
   }
 
   /** Count how many leaf descendants of a given uniform level an element would produce.
@@ -153,7 +163,7 @@ class t8_default_scheme_common: private t8_crtp<TUnderlyingEclassScheme> {
   {
     int element_level = this->underlying ().element_get_level (t);
     t8_element_shape_t element_shape;
-    int dim = t8_eclass_to_dimension[this->underlying ().eclass];
+    int dim = t8_eclass_to_dimension[eclass];
     element_shape = element_get_shape (t);
     if (element_shape == T8_ECLASS_PYRAMID) {
       int level_diff = level - element_level;
@@ -171,8 +181,8 @@ class t8_default_scheme_common: private t8_crtp<TUnderlyingEclassScheme> {
   int
   element_get_num_siblings (const t8_element_t *elem) const
   {
-    const int dim = t8_eclass_to_dimension[this->underlying ().eclass];
-    T8_ASSERT (this->underlying ().eclass != T8_ECLASS_PYRAMID);
+    const int dim = t8_eclass_to_dimension[eclass];
+    T8_ASSERT (eclass != T8_ECLASS_PYRAMID);
     return sc_intpow (2, dim);
   }
 
@@ -184,10 +194,10 @@ class t8_default_scheme_common: private t8_crtp<TUnderlyingEclassScheme> {
   t8_gloidx_t
   count_leaves_from_root (int level) const
   {
-    if (this->underlying ().eclass == T8_ECLASS_PYRAMID) {
+    if (eclass == T8_ECLASS_PYRAMID) {
       return 2 * sc_intpow64u (8, level) - sc_intpow64u (6, level);
     }
-    int dim = t8_eclass_to_dimension[this->underlying ().eclass];
+    int dim = t8_eclass_to_dimension[eclass];
     return count_leaves_from_level (0, level, dim);
   }
 

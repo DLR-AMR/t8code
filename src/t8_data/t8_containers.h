@@ -40,9 +40,9 @@
  */
 typedef struct
 {
-  t8_scheme_c *scheme;    /**< A scheme of which elements should be stored */
-  t8_eclass_t tree_class; /**< The tree class of the elements stored in the array */
-  sc_array_t array;       /**< The array in which the elements are stored */
+  const t8_scheme_c *scheme; /**< A scheme of which elements should be stored */
+  t8_eclass_t tree_class;    /**< The tree class of the elements stored in the array */
+  sc_array_t array;          /**< The array in which the elements are stored */
 } t8_element_array_t;
 
 T8_EXTERN_C_BEGIN ();

@@ -34,14 +34,10 @@
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.h>
 
-class t8_default_scheme_tet:
-  private t8_eclass_scheme<t8_default_scheme_tet>,
-  public t8_default_scheme_common<t8_default_scheme_tet> {
+class t8_default_scheme_tet: public t8_default_scheme_common<t8_default_scheme_tet> {
  public:
   /** Constructor. */
-  t8_default_scheme_tet ()
-    : t8_eclass_scheme<t8_default_scheme_tet> (T8_ECLASS_TET, sizeof (t8_dtet_t),
-                                               sc_mempool_new (sizeof (t8_dtet_t))) {};
+  t8_default_scheme_tet (): t8_default_scheme_common (T8_ECLASS_TET, sizeof (t8_dtet_t)) {};
 
   ~t8_default_scheme_tet () {};
 
@@ -346,7 +342,6 @@ class t8_default_scheme_tet:
    *  the element inside the root tree that has the given face as a
    *  face.
    * \param [in] face     A face element.
-   * \param [in] face_eclass The eclass for the face element.
    * \param [in,out] elem An allocated element. The entries will be filled with
    *                      the data of the element that has \a face as a face and
    *                      lies within the root tree.
@@ -357,8 +352,7 @@ class t8_default_scheme_tet:
    *                      with \a face.
    */
   int
-  element_extrude_face (const t8_element_t *face, const t8_eclass_t face_eclass, t8_element_t *elem, int root_face,
-                        const t8_scheme *scheme) const;
+  element_extrude_face (const t8_element_t *face, t8_element_t *elem, int root_face, const t8_scheme *scheme) const;
 
   /** Construct the first descendant of an element at a given level that touches a given face.
    * \param [in] elem      The input element.

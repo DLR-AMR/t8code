@@ -280,12 +280,12 @@ t8_default_scheme_pyramid::element_construct_boundary_face (const t8_element_t *
 }
 
 int
-t8_default_scheme_pyramid::element_extrude_face (const t8_element_t *face, const t8_eclass_t face_eclass,
-                                                 t8_element_t *elem, int root_face, const t8_scheme *scheme) const
+t8_default_scheme_pyramid::element_extrude_face (const t8_element_t *face, t8_element_t *elem, int root_face,
+                                                 const t8_scheme *scheme) const
 {
   T8_ASSERT (element_is_valid (elem));
-  T8_ASSERT (face_eclass == T8_ECLASS_TRIANGLE || face_eclass == T8_ECLASS_QUAD);
-  T8_ASSERT (scheme->element_is_valid (face_eclass, elem));
+  const t8_eclass_t face_eclass = (t8_eclass_t) t8_eclass_face_types[T8_ECLASS_PYRAMID][root_face];
+  T8_ASSERT (scheme->element_is_valid (face_eclass, face));
   return t8_dpyramid_extrude_face (face, (t8_dpyramid_t *) elem, root_face);
   T8_ASSERT (element_is_valid (elem));
 }
