@@ -2045,7 +2045,14 @@ t8_forest_element_is_leaf_or_ghost (const t8_forest_t forest, const t8_element_t
                                     const int check_ghost)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
-  T8_ASSERT (t8_forest_tree_is_local (forest, local_tree));
+#if T8_ENABLE_DEBUG
+  if (!check_ghost) {
+    T8_ASSERT (t8_forest_tree_is_local (forest, local_tree));
+  }
+  else {
+    T8_ASSERT (0 <= local_tree && local_tree < t8_forest_get_num_ghost_trees (forest));
+  }
+#endif
 
   /* We get the array of the tree's elements and then search in the array of elements for our 
    * element candidate. */
