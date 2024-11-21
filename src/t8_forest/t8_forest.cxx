@@ -46,6 +46,7 @@
 #include <t8_data/t8_element_array_iterator.hxx>
 
 #include <algorithm>
+#include <vector>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -1714,12 +1715,56 @@ t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, 
   return orientation;
 }
 
+struct t8_lfn_user_data
+{
+  std::vector<t8_locidx_t> element_indices;
+  std::vector<int> dual_faces;
+  std::vector<t8_element_t *> neighbors;
+  const t8_eclass_scheme_c &scheme;
+};
+
+static int
+t8_forest_leaf_face_neighbors_iterate (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int face,
+                                       int is_leaf, const t8_element_array_t *leaf_elements,
+                                       t8_locidx_t tree_leaf_index, void *user_data)
+{
+  // Output of iterate_faces:
+  //  Array of indices in tree_leafs of all the face neighbor elements
+  //  Assign pneighbor_leaves
+  //  Assign dual_faces
+  //  Assign pelement_indices
+  if (!is_leaf) {
+    // continue search until leaf level
+    return 1;
+  }
+  T8_ASSERT (is_leaf);
+  // Query whether this tree is a ghost and if so
+  // compute its id as a ghost tree ( 0 <= id < num_ghost_trees)
+  const bool is_ghost_tree = !t8_forest_tree_is_local (forest, ltreeid);
+  const t8_locidx_t adjusted_tree_id = !is_ghost_tree ? ltreeid : ltreeid - t8_forest_get_num_local_trees (forest);
+  T8_ASSERT (t8_forest_element_is_leaf_or_ghost (forest, element, adjusted_tree_id, is_ghost_tree));
+
+  struct t8_lfn_user_data &lfn_data = static_cast<struct t8_lfn_user_data &> (user_data);
+  // face is the face of the considered leaf neighbor element and thus the
+  // corresponding dual face
+  lfn_data.dual_faces.push_back (face);
+  // Compute the index of the element
+  const t8_locidx_t tree_offset = !is_ghost_tree ? t8_forest_get_tree_element_offset (forest, ltreeid);
+    : t8_forest_ghost_get_tree_element_offset (adjusted_tree_id);
+    const t8_locidx_t element_index = tree_offset + tree_leaf_index;
+  lfn_data.element_indices.push_back (element_index));
+  // Add the pointer to the current element
+  const t8_element_t *pnew_element = lfn_data.neighbors.emplace_back ();
+  pnew_element = element;
+}
+
 // TODO: ltreeid must be forest ghost tree id i.e. num_local_trees + N
 void
 t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf_or_ghost,
-                                   t8_element_t **pneighbor_leaves[], int face, int *dual_faces[], int *num_neighbors,
-                                   t8_locidx_t **pelement_indices, t8_eclass_scheme_c **pneigh_scheme,
-                                   int forest_is_balanced, t8_gloidx_t *gneigh_tree, int *orientation)
+                                   const t8_element_t **pneighbor_leaves[], int face, const int *dual_faces[],
+                                   const int *num_neighbors, const t8_locidx_t **pelement_indices,
+                                   const t8_eclass_scheme_c **pneigh_scheme, int forest_is_balanced,
+                                   t8_gloidx_t *gneigh_tree, const int *orientation)
 {
   t8_gloidx_t gneigh_treeid;
   t8_locidx_t lneigh_treeid = -1;
@@ -1808,15 +1853,24 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
     // Compute their nearest common ancestor
     neigh_scheme->t8_element_nca (first_and_last_face_leafs[0], first_and_last_face_leafs[1], nca_of_face_desc);
 
+    struct t8_lfn_user_data user_data;
+
     t8_forest_iterate_faces (forest, local_neighbor_tree, nca_of_face_desc, tree_leafs, first_desc_index,
-                             t8_leaf_face_neighbor_face_it_callback);
+                             t8_leaf_face_neighbor_face_it_callback, &user_data);
     // Output of iterate_faces:
     //  Array of indices in tree_leafs of all the face neighbor elements
     //  Assign pneighbor_leaves
     //  Assign dual_faces
     //  Assign pelement_indices
     // (all as growing std::vectors, resp t8_element_array)
-    t8_locidx_t *neighbor_indices_in_leafs;
+    *num_neighbors = user_data.neighbors.size ();
+    // Copy neighbor element pointers
+    *pneighbor_leaves = T8_ALLOC (t8_element_t *, num_neighbors);
+    std::memcpy (*pneighbor_leaves, user_data.neighbors.data (), num_neighbors * sizeof (t8_element_t *));
+    *pelement_indices = T8_ALLOC (t8_locidx_t, num_neighbors);
+    std::memcpy (*pelement_indices, user_data.element_indices.data (), num_neighbors * sizeof (t8_locidx_t));
+    *dual_faces = T8_ALLOC (int, num_neighbors);
+    std::memcpy (*dual_faces, user_data.dual_faces.data (), num_neighbors * sizeof (int));
   }
 }
 
