@@ -69,7 +69,7 @@ t8_element_array_new (const t8_scheme_c *scheme, const t8_eclass_t tree_class)
 }
 
 t8_element_array_t *
-t8_element_array_new_count (t8_scheme_c *scheme, const t8_eclass_t tree_class, const size_t num_elements)
+t8_element_array_new_count (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const size_t num_elements)
 {
   t8_element_array_t *new_array;
 
@@ -113,7 +113,7 @@ t8_element_array_init_size (t8_element_array_t *element_array, const t8_scheme_c
   if (num_elements > 0) {
     /* Call t8_element_init for the elements */
     first_element = (t8_element_t *) sc_array_index (&element_array->array, 0);
-    scheme->t8_element_init (num_elements, first_element);
+    scheme->element_init (tree_class, num_elements, first_element);
   }
   T8_ASSERT (t8_element_array_is_valid (element_array));
 }

@@ -173,12 +173,11 @@ t8_default_scheme_line::element_transform_face (const t8_element_t *elem1, t8_el
  *  the element inside the root tree that has the given face as a
  *  face. */
 int
-t8_default_scheme_line::element_extrude_face (const t8_element_t *face, const t8_eclass_t face_eclass,
-                                              t8_element_t *elem, int root_face, const t8_scheme *scheme) const
+t8_default_scheme_line::element_extrude_face (const t8_element_t *face, t8_element_t *elem, int root_face,
+                                              const t8_scheme *scheme) const
 {
   T8_ASSERT (element_is_valid (elem));
-  T8_ASSERT (face_eclass == T8_ECLASS_VERTEX);
-  T8_ASSERT (scheme->element_is_valid (face_eclass, face));
+  T8_ASSERT (scheme->element_is_valid (T8_ECLASS_VERTEX, face));
 
   return t8_dline_extrude_face ((const t8_dvertex_t *) face, root_face, (t8_dline_t *) elem);
 }

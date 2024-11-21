@@ -300,15 +300,14 @@ t8_default_scheme_hex::element_get_tree_face (const t8_element_t *elem, int face
 }
 
 int
-t8_default_scheme_hex::element_extrude_face (const t8_element_t *face, const t8_eclass_t face_eclass,
-                                             t8_element_t *elem, int root_face, const t8_scheme *scheme) const
+t8_default_scheme_hex::element_extrude_face (const t8_element_t *face, t8_element_t *elem, int root_face,
+                                             const t8_scheme *scheme) const
 {
   const p4est_quadrant_t *b = (const p4est_quadrant_t *) face;
   p8est_quadrant_t *q = (p8est_quadrant_t *) elem;
 
-  T8_ASSERT (face_eclass == T8_ECLASS_QUAD);
   T8_ASSERT (element_is_valid (elem));
-  T8_ASSERT (scheme->element_is_valid (face_eclass, face));
+  T8_ASSERT (scheme->element_is_valid (T8_ECLASS_QUAD, face));
   T8_ASSERT (0 <= root_face && root_face < P8EST_FACES);
   q->level = b->level;
   /*

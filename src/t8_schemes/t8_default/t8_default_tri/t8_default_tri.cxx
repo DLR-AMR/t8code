@@ -275,15 +275,14 @@ t8_default_scheme_tri::element_transform_face (const t8_element_t *elem1, t8_ele
  * both in t8_dtri_bits.c. This would be needed by an implementation, at least
  * for tets. */
 int
-t8_default_scheme_tri::element_extrude_face (const t8_element_t *face, const t8_eclass_t face_eclass,
-                                             t8_element_t *elem, int root_face, const t8_scheme *scheme) const
+t8_default_scheme_tri::element_extrude_face (const t8_element_t *face, t8_element_t *elem, int root_face,
+                                             const t8_scheme *scheme) const
 {
   const t8_dline_t *l = (const t8_dline_t *) face;
   t8_dtri_t *t = (t8_dtri_t *) elem;
 
   T8_ASSERT (element_is_valid (elem));
-  T8_ASSERT (face_eclass == T8_ECLASS_LINE);
-  T8_ASSERT (scheme->element_is_valid (face_eclass, face));
+  T8_ASSERT (scheme->element_is_valid (T8_ECLASS_LINE, face));
   T8_ASSERT (0 <= root_face && root_face < T8_DTRI_FACES);
   /*
    * The faces of the root triangle are enumerated like this

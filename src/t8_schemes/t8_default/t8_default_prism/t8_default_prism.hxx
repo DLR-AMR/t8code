@@ -38,14 +38,10 @@
  * It is written as a self-contained library in the t8_dprism_* files.
  */
 
-class t8_default_scheme_prism:
-  private t8_eclass_scheme<t8_default_scheme_prism>,
-  public t8_default_scheme_common<t8_default_scheme_prism> {
+class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme_prism> {
  public:
   /** Constructor. */
-  t8_default_scheme_prism ()
-    : t8_eclass_scheme<t8_default_scheme_prism> (T8_ECLASS_PRISM, sizeof (t8_dprism_t),
-                                                 sc_mempool_new (sizeof (t8_dprism_t))) {};
+  t8_default_scheme_prism (): t8_default_scheme_common (T8_ECLASS_PRISM, sizeof (t8_dprism_t)) {};
 
   ~t8_default_scheme_prism () {};
 
@@ -283,7 +279,7 @@ class t8_default_scheme_prism:
    * \param [in] elem         The element.
    * \param [in] face         A face of \a elem.
    * \param [in,out] children Allocated elements, in which the children of \a elem that share a face with \a face 
-   *                          are stored. They will be stored in order of their linear id.
+   *                          are stored. They will be stored in order of their prismar id.
    * \param [in] num_children The number of elements in \a children. Must match the number of children that touch \a face.
    *                          \ref element_get_num_face_children
    * \param [in,out] child_indices If not NULL, an array of num_children integers must be given, on output its i-th 
@@ -370,7 +366,6 @@ class t8_default_scheme_prism:
    *  the element inside the root tree that has the given face as a
    *  face.
    * \param [in] face     A face element.
-   * \param [in] face_eclass The eclass for the face element.
    * \param [in,out] elem An allocated element. The entries will be filled with
    *                      the data of the element that has \a face as a face and
    *                      lies within the root tree.
@@ -381,8 +376,7 @@ class t8_default_scheme_prism:
    *                      with \a face.
    */
   int
-  element_extrude_face (const t8_element_t *face, const t8_eclass_t face_eclass, t8_element_t *elem, int root_face,
-                        const t8_scheme *scheme) const;
+  element_extrude_face (const t8_element_t *face, t8_element_t *elem, int root_face, const t8_scheme *scheme) const;
 
   /** Construct the first descendant of an element at a given level that touches a given face.
    * \param [in] elem      The input element.

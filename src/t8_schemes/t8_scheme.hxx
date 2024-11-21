@@ -581,7 +581,6 @@ class t8_scheme {
    *  face.
    * \param [in] tree_class    The eclass of the current tree.
    * \param [in] face     A face element.
-   * \param [in] face_eclass The eclass for the face element.
    * \param [in,out] elem An allocated element. The entries will be filled with
    *                      the data of the element that has \a face as a face and
    *                      lies within the root tree.
@@ -591,12 +590,10 @@ class t8_scheme {
    *                      with \a face.
    */
   inline int
-  element_extrude_face (t8_eclass_t tree_class, const t8_element_t *face, const t8_eclass_t face_eclass,
-                        t8_element_t *elem, int root_face) const
+  element_extrude_face (t8_eclass_t tree_class, const t8_element_t *face, t8_element_t *elem, int root_face) const
   {
-    return std::visit (
-      [&] (auto &&scheme) { return scheme.element_extrude_face (face, face_eclass, elem, root_face, this); },
-      eclass_schemes[tree_class]);
+    return std::visit ([&] (auto &&scheme) { return scheme.element_extrude_face (face, elem, root_face, this); },
+                       eclass_schemes[tree_class]);
   };
 
   /** Construct the boundary element at a specific face.
@@ -607,7 +604,6 @@ class t8_scheme {
    * \param [in,out] boundary An allocated element of dimension of \a element
    *                      minus 1. The entries will be filled with the entries
    *                      of the face of \a element.
-   * \param [in] boundary_face_eclass The eclass of the boundary face.
    * If \a elem is of class T8_ECLASS_VERTEX, then \a boundary must be NULL
    * and will not be modified.
    */

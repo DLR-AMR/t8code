@@ -252,15 +252,14 @@ t8_default_scheme_tet::element_get_tree_face (const t8_element_t *elem, int face
  * both in t8_dtri_bits.c. This would be needed by an implementation, at least
  * for tets. */
 int
-t8_default_scheme_tet::element_extrude_face (const t8_element_t *face, const t8_eclass_t face_eclass,
-                                             t8_element_t *elem, int root_face, const t8_scheme *scheme) const
+t8_default_scheme_tet::element_extrude_face (const t8_element_t *face, t8_element_t *elem, int root_face,
+                                             const t8_scheme *scheme) const
 {
   const t8_dtri_t *b = (const t8_dtri_t *) face;
   t8_dtet_t *t = (t8_dtet_t *) elem;
 
   T8_ASSERT (element_is_valid (elem));
-  T8_ASSERT (face_eclass == T8_ECLASS_TRIANGLE);
-  T8_ASSERT (scheme->element_is_valid (face_eclass, face));
+  T8_ASSERT (scheme->element_is_valid (T8_ECLASS_TRIANGLE, face));
   T8_ASSERT (0 <= root_face && root_face < T8_DTET_FACES);
   t->level = b->level;
   switch (root_face) {

@@ -489,15 +489,14 @@ t8_default_scheme_quad::element_transform_face (const t8_element_t *elem1, t8_el
 }
 
 int
-t8_default_scheme_quad::element_extrude_face (const t8_element_t *face, const t8_eclass_t face_eclass,
-                                              t8_element_t *elem, int root_face, const t8_scheme *scheme) const
+t8_default_scheme_quad::element_extrude_face (const t8_element_t *face, t8_element_t *elem, int root_face,
+                                              const t8_scheme *scheme) const
 {
   const t8_dline_t *l = (const t8_dline_t *) face;
   p4est_quadrant_t *q = (p4est_quadrant_t *) elem;
 
   T8_ASSERT (element_is_valid (elem));
-  T8_ASSERT (face_eclass == T8_ECLASS_LINE);
-  T8_ASSERT (scheme->element_is_valid (face_eclass, elem));
+  T8_ASSERT (scheme->element_is_valid (T8_ECLASS_LINE, elem));
   T8_ASSERT (0 <= root_face && root_face < P4EST_FACES);
   /*
    * The faces of the root quadrant are enumerated like this:
