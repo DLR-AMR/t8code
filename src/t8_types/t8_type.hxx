@@ -29,14 +29,16 @@
 
 #include <t8.h>
 
-template <typename T, typename Parameter>
-class T8Type {
+template <typename T, typename Parameter, template <typename> class... competence>
+class T8Type: public competence<T8Type<T, Parameter, competence...>>... {
  public:
-  explicit T8Type (const T& value): value_ (value)
+  explicit T8Type (T const& value): value_ (value)
   {
   }
 
-  explicit T8Type (T&& value): value_ (std::move (value))
+  template <typename T_ref = T>
+  explicit T8Type (T&& value, typename std::enable_if<!std::is_reference<T_ref> {}, std::nullptr_t>::type = nullptr)
+    : value_ (std::move (value))
   {
   }
 
