@@ -106,14 +106,15 @@ t8_element_array_init_view (t8_element_array_t *view, const t8_element_array_t *
  * \param [in,out] view     Array structure to be initialized.
  * \param [in] base         The data must not be moved while view is alive.
  *                          Must be an array of t8_element_t corresponding to \a scheme.
- * \param [in] scheme       The eclass scheme of the elements stored in \a base.
+ * \param [in] scheme       The scheme of the elements stored in \a base.
+ * \param [in] tree_class   The tree class of the elements stored in \a base.
  * \param [in] elem_count   The length of the view in element units.
  *                          The view cannot be resized to exceed this length.
  *                          It is not necessary to call t8_element_array_reset later.
  */
 void
 t8_element_array_init_data (t8_element_array_t *view, const t8_element_t *base, const t8_scheme_c *scheme,
-                            const size_t elem_count);
+                            const t8_eclass_t tree_class, const size_t elem_count);
 
 /** Initializes an already allocated (or static) array structure
  * and copy an existing array of t8_element_t into it.

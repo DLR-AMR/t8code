@@ -280,20 +280,20 @@ t8_element_transform_face (const t8_forest_t forest, const t8_eclass_t tree_clas
 
 int
 t8_element_extrude_face (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *face,
-                         const t8_eclass_t face_eclass, t8_element_t *elem, int root_face)
+                         t8_element_t *elem, int root_face)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  return forest->scheme->element_extrude_face (tree_class, face, face_scheme, elem, root_face);
+  return forest->scheme->element_extrude_face (tree_class, face, elem, root_face);
 }
 
 void
 t8_element_construct_boundary_face (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem,
-                                    int face, t8_element_t *boundary, const t8_eclass_t boundary_face_eclass)
+                                    int face, t8_element_t *boundary)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  return forest->scheme->element_construct_boundary_face (tree_class, elem, face, boundary, boundary_scheme);
+  return forest->scheme->element_construct_boundary_face (tree_class, elem, face, boundary);
 }
 
 void

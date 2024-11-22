@@ -524,8 +524,8 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const 
     data->gtreeid = t8_forest_global_tree_id (forest, ltreeid);
     data->eclass = t8_forest_get_eclass (forest, ltreeid);
     data->ts = t8_forest_get_scheme (forest);
-    data->level_nca = data->ts->t8_element_level (element);
-    data->max_num_faces = data->ts->t8_element_max_num_faces (element);
+    data->level_nca = data->ts->element_get_level (data->eclass, element);
+    data->max_num_faces = data->ts->element_get_max_num_faces (data->eclass, element);
     max_num_faces = data->max_num_faces;
     sc_array_reset (&data->bounds_per_level);
     sc_array_init_size (&data->bounds_per_level, 2 * (max_num_faces + 1) * sizeof (int), 1);
@@ -689,7 +689,6 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int gh
   t8_tree_t tree;
   t8_eclass_t neigh_class, last_class;
   t8_gloidx_t neighbor_tree;
-  t8_scheme *prev_neigh_scheme = NULL;
 
   int iface, num_faces;
   int num_face_children, max_num_face_children = 0;
@@ -805,7 +804,7 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int gh
   /* Clean-up memory */
   if (ghost_method == 0) {
     if (half_neighbors != NULL) {
-      ts->t8_element_destroy (neigh_class, max_num_face_children, half_neighbors);
+      ts->element_destroy (neigh_class, max_num_face_children, half_neighbors);
       T8_FREE (half_neighbors);
     }
   }

@@ -402,7 +402,6 @@ t8_element_transform_face (const t8_forest_t forest, const t8_eclass_t tree_clas
  *  face.
  * \param [in] ts       Implementation of a class scheme.
  * \param [in] face     A face element.
- * \param [in] face_eclass The eclass for the face element.
  * \param [in,out] elem An allocated element. The entries will be filled with
  *                      the data of the element that has \a face as a face and
  *                      lies within the root tree.
@@ -413,7 +412,7 @@ t8_element_transform_face (const t8_forest_t forest, const t8_eclass_t tree_clas
  */
 int
 t8_element_extrude_face (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *face,
-                         const t8_eclass_t face_eclass, t8_element_t *elem, int root_face);
+                         t8_element_t *elem, int root_face);
 
 /** Construct the boundary element at a specific face.
  * \param [in] ts       Implementation of a class scheme.
@@ -423,13 +422,12 @@ t8_element_extrude_face (const t8_forest_t forest, const t8_eclass_t tree_class,
  * \param [in,out] boundary An allocated element of dimension of \a element
  *                      minus 1. The entries will be filled with the entries
  *                      of the face of \a element.
- * \param [in] boundary_face_eclass The eclass of the boundary face.
  * If \a elem is of class T8_ECLASS_VERTEX, then \a boundary must be NULL
  * and will not be modified.
  */
 void
 t8_element_boundary_face (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem, int face,
-                          t8_element_t *boundary, const t8_eclass_t boundary_face_eclass);
+                          t8_element_t *boundary);
 
 /** Construct the first descendant of an element at a given level that touches a given face.
  * \param [in] ts        Implementation of a class scheme.
