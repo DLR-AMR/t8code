@@ -715,9 +715,9 @@ class t8_eclass_scheme: public t8_crtp<TUnderlyingEclassScheme> {
    * \ref t8_element_count_leaves.
    */
   inline t8_gloidx_t
-  element_count_leaves_from_root (int level) const
+  count_leaves_from_root (int level) const
   {
-    return this->underlying ().element_count_leaves_from_root (level);
+    return this->underlying ().count_leaves_from_root (level);
   };
 
 #ifdef T8_ENABLE_DEBUG

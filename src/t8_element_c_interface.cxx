@@ -398,7 +398,7 @@ t8_element_get_reference_coords (const t8_forest_t forest, const t8_eclass_t tre
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  return forest->scheme->element_get_reference_coords (tree_class, t, vertex, coords);
+  return forest->scheme->element_get_reference_coords (tree_class, t, ref_coords, num_coords, coords);
 }
 
 t8_gloidx_t
@@ -414,7 +414,7 @@ t8_element_count_leaves_from_root (const t8_forest_t forest, const t8_eclass_t t
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  return forest->scheme->element_count_leaves_from_root (tree_class, level);
+  return forest->scheme->count_leaves_from_root (tree_class, level);
 }
 
 #ifdef T8_ENABLE_DEBUG
@@ -482,7 +482,7 @@ t8_element_get_root (const t8_forest_t forest, const t8_eclass_t tree_class, t8_
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  return forest->scheme->get_root_element (tree_class, elem);
+  return forest->scheme->get_root (tree_class, elem);
 }
 
 void

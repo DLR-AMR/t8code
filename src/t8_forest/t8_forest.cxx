@@ -1371,7 +1371,6 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
   t8_tree_t tree, fromtree;
   t8_gloidx_t num_tree_elements;
   t8_locidx_t jt, number_of_trees;
-  t8_scheme *eclass_scheme;
 
   T8_ASSERT (forest != NULL);
   T8_ASSERT (from != NULL);
@@ -1451,24 +1450,23 @@ t8_eclass_t
 t8_forest_element_neighbor_eclass (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *elem, int face)
 {
   t8_ctree_t coarse_tree;
-  t8_eclass_t eclass;
   int tree_face;
   t8_locidx_t lcoarse_neighbor;
   t8_cmesh_t cmesh;
 
   /* Get a pointer to the tree to read its element class */
   const t8_tree_t tree = t8_forest_get_tree (forest, ltreeid);
-  const t8_eclass_t eclass = tree->eclass;
+  const t8_eclass_t tree_class = tree->eclass;
   const t8_scheme *ts = t8_forest_get_scheme (forest);
-  if (!ts->element_is_root_boundary (eclass, elem, face)) {
+  if (!ts->element_is_root_boundary (tree_class, elem, face)) {
     /* The neighbor element is inside the current tree. */
-    return tree->eclass;
+    return tree_class;
   }
   else {
     /* The neighbor is in a neighbor tree */
     /* If the face neighbor is not inside the tree, we have to find out the tree
      * face and the tree's face neighbor along that face. */
-    tree_face = ts->element_get_tree_face (eclass, elem, face);
+    tree_face = ts->element_get_tree_face (tree_class, elem, face);
 
     cmesh = t8_forest_get_cmesh (forest);
     /* Get the coarse tree corresponding to tree */
@@ -1529,7 +1527,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const 
     /* Allocate the face element */
     ts->element_new (boundary_class, 1, &face_element);
     /* Compute the face element. */
-    ts->element_construct_boundary_face (eclass, elem, face, face_element, boundary_class);
+    ts->element_construct_boundary_face (eclass, elem, face, face_element);
     /* Get the coarse tree that contains elem.
      * Also get the face neighbor information of the coarse tree. */
     (void) t8_cmesh_trees_get_tree_ext (cmesh->trees, lctree_id, &face_neighbor, &ttf);
@@ -1586,7 +1584,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const 
     sign = t8_eclass_face_orientation[eclass][tree_face] == t8_eclass_face_orientation[neigh_eclass][tree_neigh_face];
     ts->element_transform_face (boundary_class, face_element, face_element, ttf[tree_face] / F, sign, is_smaller);
     /* And now we extrude the face to the new neighbor element */
-    *neigh_face = ts->element_extrude_face (neigh_eclass, face_element, boundary_class, neigh, tree_neigh_face);
+    *neigh_face = ts->element_extrude_face (neigh_eclass, face_element, neigh, tree_neigh_face);
     /* Free the face_element */
     ts->element_destroy (boundary_class, 1, &face_element);
 
@@ -2648,14 +2646,11 @@ int
 t8_forest_element_has_leaf_desc (t8_forest_t forest, t8_gloidx_t gtreeid, const t8_element_t *element,
                                  const t8_eclass_t tree_class)
 {
-  t8_locidx_t ltreeid;
   t8_element_t *last_desc;
   t8_locidx_t ghost_treeid;
   t8_linearidx_t last_desc_id, elem_id;
   int index, level, level_found;
   const t8_scheme *ts = t8_forest_get_scheme (forest);
-  const t8_locidx_t ltreeid = t8_forest_get_local_id (forest, gtreeid);
-  const t8_eclass_t tree_class = t8_forest_get_eclass (forest, ltreeid);
 
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -2671,7 +2666,7 @@ t8_forest_element_has_leaf_desc (t8_forest_t forest, t8_gloidx_t gtreeid, const 
   level = ts->element_get_level (tree_class, element);
   /* Get the local id of the tree. If the tree is not a local tree,
    * then the number returned is negative */
-  ltreeid = t8_forest_get_local_id (forest, gtreeid);
+  const t8_locidx_t ltreeid = t8_forest_get_local_id (forest, gtreeid);
   if (ltreeid >= 0) {
     /* The tree is a local tree */
     /* Get the elements */
@@ -3044,13 +3039,12 @@ t8_forest_refines_irregular (t8_forest_t forest)
   int irregular_all_procs = 0; /* Result over all procs */
   int int_eclass;
   int mpiret;
-  t8_scheme *tscheme;
   /* Iterate over all eclasses */
   for (int_eclass = (int) T8_ECLASS_ZERO; int_eclass < (int) T8_ECLASS_COUNT; int_eclass++) {
     /* If the forest has trees of the current eclass, check if elements of this eclass refine irregular. */
     if (forest->cmesh->num_local_trees_per_eclass[int_eclass] > 0) {
-      tscheme = t8_forest_get_scheme_before_commit (forest);
-      irregular = irregular || t8_element_refines_irregular (forest, (t8_eclass_t) int_eclass);
+      const t8_scheme *scheme = t8_forest_get_scheme_before_commit (forest);
+      irregular = irregular || scheme->refines_irregular (static_cast<t8_eclass_t> (int_eclass));
     }
   }
   /* Combine the process-local results via a logic or and distribute the result over all procs (in the communicator).*/

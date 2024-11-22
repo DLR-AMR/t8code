@@ -695,6 +695,7 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int gh
   int ichild, owner;
   sc_array_t owners, tree_owners;
   int is_atom;
+  const t8_scheme *ts = t8_forest_get_scheme (forest);
 
   last_class = T8_ECLASS_COUNT;
   num_local_trees = t8_forest_get_num_local_trees (forest);
@@ -709,7 +710,6 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int gh
      * scheme associated to the class and the number of elements in this tree. */
     tree = t8_forest_get_tree (forest, itree);
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
-    const t8_scheme *ts = t8_forest_get_scheme (forest);
 
     /* Loop over the elements of this tree */
     num_tree_elems = t8_forest_get_tree_element_count (tree);

@@ -293,7 +293,7 @@ size_t
 t8_element_array_get_size (const t8_element_array_t *element_array)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
-  return element_array->scheme->element_size (element_array->tree_class);
+  return element_array->scheme->get_element_size (element_array->tree_class);
 }
 
 const t8_element_t *
@@ -340,7 +340,7 @@ t8_element_array_reset (t8_element_array_t *element_array)
   size_t count = t8_element_array_get_count (element_array);
   if (count > 0) {
     t8_element_t *first_elem = t8_element_array_index_locidx_mutable (element_array, 0);
-    element_array->scheme->t8_element_deinit (count, first_elem);
+    element_array->scheme->element_deinit (element_array->tree_class, count, first_elem);
   }
   sc_array_reset (&element_array->array);
 }
@@ -352,7 +352,7 @@ t8_element_array_truncate (t8_element_array_t *element_array)
   size_t count = t8_element_array_get_count (element_array);
   if (count > 0) {
     t8_element_t *first_elem = t8_element_array_index_locidx_mutable (element_array, 0);
-    element_array->scheme->t8_element_deinit (count, first_elem);
+    element_array->scheme->element_deinit (element_array->tree_class, count, first_elem);
   }
   sc_array_truncate (&element_array->array);
 }

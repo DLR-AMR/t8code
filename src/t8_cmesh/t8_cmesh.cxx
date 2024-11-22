@@ -1454,7 +1454,7 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, const int level, const t8_scheme *ts,
      * tree class.
      */
     if (cmesh->num_trees_per_eclass[tree_class] > 0) {
-      children_per_tree = ts->count_leaves_from_root (tree_class, level);
+      children_per_tree = ts->count_leaves_from_root (static_cast<t8_eclass_t> (tree_class), level);
       T8_ASSERT (children_per_tree >= 0);
       global_num_children += cmesh->num_trees_per_eclass[tree_class] * children_per_tree;
     }

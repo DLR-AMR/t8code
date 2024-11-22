@@ -448,8 +448,7 @@ t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_fo
 #endif
             ts->element_destroy (tree_class, 1, &elem_parent);
             const int refine = -1;
-            replace_fn (forest_old, forest_new, itree, tree_class, tree_class, ts, refine, family_size, ielem_old, 1,
-                        ielem_new);
+            replace_fn (forest_old, forest_new, itree, tree_class, ts, refine, family_size, ielem_old, 1, ielem_new);
             /* Advance to the next element */
             ielem_new++;
             ielem_old += family_size;
@@ -465,7 +464,7 @@ t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_fo
           if (ts->element_is_equal (tree_class, elem_new, elem_old)) {
             /* elem_new = elem_old */
             const int refine = 0;
-            replace_fn (forest_old, forest_new, itree, tree_class, tree_class, ts, refine, 1, ielem_old, 1, ielem_new);
+            replace_fn (forest_old, forest_new, itree, tree_class, ts, refine, 1, ielem_old, 1, ielem_new);
             /* Advance to the next element */
             ielem_new++;
             ielem_old++;
@@ -496,8 +495,7 @@ t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_fo
           /* elem_old was refined */
           const t8_locidx_t family_size = ts->element_get_num_children (tree_class, elem_old);
           const int refine = 1;
-          replace_fn (forest_old, forest_new, itree, tree_class, tree_class, ts, refine, 1, ielem_old, family_size,
-                      ielem_new);
+          replace_fn (forest_old, forest_new, itree, tree_class, ts, refine, 1, ielem_old, family_size, ielem_new);
           /* Advance to the next element */
           ielem_new += family_size;
           ielem_old++;
@@ -507,8 +505,7 @@ t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_fo
           /* elem_old was coarsened */
           const t8_locidx_t family_size = ts->element_get_num_children (tree_class, elem_new);
           const int refine = -1;
-          replace_fn (forest_old, forest_new, itree, tree_class, tree_class, ts, refine, family_size, ielem_old, 1,
-                      ielem_new);
+          replace_fn (forest_old, forest_new, itree, tree_class, ts, refine, family_size, ielem_old, 1, ielem_new);
           /* Advance to the next element */
           ielem_new++;
           ielem_old += family_size;
@@ -517,7 +514,7 @@ t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_fo
           /* elem_new = elem_old */
           T8_ASSERT (ts->element_is_equal (tree_class, elem_new, elem_old));
           const int refine = 0;
-          replace_fn (forest_old, forest_new, itree, tree_class, tree_class, ts, refine, 1, ielem_old, 1, ielem_new);
+          replace_fn (forest_old, forest_new, itree, tree_class, ts, refine, 1, ielem_old, 1, ielem_new);
           /* Advance to the next element */
           ielem_new++;
           ielem_old++;
@@ -529,7 +526,7 @@ t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_fo
       for (; ielem_old < elems_per_tree_old; ielem_old++) {
         /* remaining elements in old tree got removed */
         const int refine = -2;
-        replace_fn (forest_old, forest_new, itree, tree_class, tree_class, ts, refine, 1, ielem_old, 0, -1);
+        replace_fn (forest_old, forest_new, itree, tree_class, ts, refine, 1, ielem_old, 0, -1);
       }
     }
     else {
