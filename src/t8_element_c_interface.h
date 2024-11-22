@@ -57,8 +57,13 @@ t8_element_refines_irregular (const t8_forest_t forest, const t8_eclass_t tree_c
 int
 t8_element_maxlevel (const t8_forest_t forest, const t8_eclass_t tree_class);
 
+/** Return the level of an element.
+ * \param [in] ts     Implementation of a class scheme.
+ * \param [in] elem   The element.
+ * \return            The level of \a element.
+ */
 int
-t8_element_level (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem);
+t8_element_get_level (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem);
 
 /** Copy all entries of \b source to \b dest. \b dest must be an existing
  *  element. No memory is allocated by this function.
@@ -566,7 +571,7 @@ t8_element_vertex_reference_coords (const t8_forest_t forest, const t8_eclass_t 
  * \param [in] level  A refinement level.
  * \return Suppose \a t is uniformly refined up to level \a level. The return value
  * is the resulting number of elements (of the given level).
- * If \a level < t8_element_level(t), the return value should be 0.
+ * If \a level < t8_element_get_level(t), the return value should be 0.
  *
  * Example: If \a t is a line element that refines into 2 line elements on each level,
  *  then the return value is max(0, 2^{\a level - level(\a t)}).

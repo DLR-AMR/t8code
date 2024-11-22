@@ -1207,7 +1207,6 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u, t8_example_level_se
   int hanging, neigh_is_ghost;
   t8_locidx_t neigh_index = -1;
   double phi_plus, phi_minus;
-  const t8_scheme *scheme = t8_forest_get_scheme (problem->forest);
 
   /* Initialize problem */
   /* start timing */
@@ -1215,6 +1214,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u, t8_example_level_se
   problem = t8_advect_problem_init (cmesh, u, phi_0, ls_data, level, maxlevel, T, cfl, comm, band_width, dim, dummy_op,
                                     volume_refine);
   t8_advect_problem_init_elements (problem);
+  const t8_scheme *scheme = t8_forest_get_scheme (problem->forest);
 
   if (maxlevel > level) {
     int ilevel;

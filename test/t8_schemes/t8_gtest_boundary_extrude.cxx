@@ -35,22 +35,22 @@ class class_test_boundary_extrude: public TestDFS {
   void
   check_element () override
   {
-    const int num_faces = ts->element_get_num_faces (tree_class, element);
+    const int num_faces = scheme->element_get_num_faces (tree_class, element);
     for (int iface = 0; iface < num_faces; iface++) {
       /* Iterate over all faces that are also root faces and determine the face element */
-      if (ts->root_boundary (element, iface)) {
+      if (scheme->element_is_root_boundary (tree_class, element, iface)) {
         /* Get face scheme */
-        const int tree_face = ts->element_get_tree_face (tree_class, element, iface);
+        const int tree_face = scheme->element_get_tree_face (tree_class, element, iface);
         const t8_eclass_t face_eclass = (t8_eclass_t) t8_eclass_face_types[tree_class][tree_face];
 
         t8_element_t *boundary;
         scheme->element_new (face_eclass, 1, &boundary);
 
-        ts->element_construct_boundary_face (tree_class, element, iface, boundary, scheme);
+        scheme->element_construct_boundary_face (tree_class, element, iface, boundary);
 
-        ts->element_extrude_face (tree_class, boundary, scheme, check, tree_face);
+        scheme->element_extrude_face (tree_class, boundary, check, tree_face);
 
-        EXPECT_ELEM_EQ (ts, tree_class, element, check);
+        EXPECT_ELEM_EQ (scheme, tree_class, element, check);
 
         scheme->element_destroy (face_eclass, 1, &boundary);
       }
@@ -63,13 +63,13 @@ class class_test_boundary_extrude: public TestDFS {
   {
     dfs_test_setup ();
     /* Get element and initialize it */
-    ts->element_new (tree_class, 1, &check);
+    scheme->element_new (tree_class, 1, &check);
   }
   void
   TearDown () override
   {
     /* Destroy element */
-    ts->element_destroy (tree_class, 1, &check);
+    scheme->element_destroy (tree_class, 1, &check);
 
     /* Destroy DFS test */
     dfs_test_teardown ();

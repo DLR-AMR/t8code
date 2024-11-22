@@ -157,7 +157,7 @@ t8_step5_create_element_data (t8_forest_t forest)
         /* We want to store the elements level and its volume as data. We compute these
          * via the eclass_scheme and the forest_element interface. */
 
-        element_data[current_index].level = t8_element_level (forest, tree_class, element);
+        element_data[current_index].level = t8_element_get_level (forest, tree_class, element);
         element_data[current_index].volume = t8_forest_element_volume (forest, itree, element);
       }
     }

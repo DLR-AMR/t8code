@@ -826,7 +826,7 @@ class t8_scheme {
    * \param [in] level A refinement level.
    * \return Suppose \a t is uniformly refined up to level \a level. The return value
    * is the resulting number of elements (of the given level).
-   * If \a level < t8_element_level(t), the return value should be 0.
+   * If \a level < element_get_level(t), the return value should be 0.
    *
    * Example: If \a t is a line element that refines into 2 line elements on each level,
    *  then the return value is max(0, 2^{\a level - level(\a t)}).

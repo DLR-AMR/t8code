@@ -29,7 +29,7 @@
 
 /* compute the first/last descendant by iteratively taking the first/last child at each level*/
 static void
-t8_test_manual_first_last_face_descendant (const t8_scheme *ts, const t8_element_t *element,
+t8_test_manual_first_last_face_descendant (const t8_scheme *scheme, const t8_element_t *element,
                                            const t8_eclass_t tree_class, const int iface, const int desc_level,
                                            const int last, t8_element_t *face_desc)
 {
@@ -74,7 +74,7 @@ class class_descendant: public TestDFS {
     for (int ilevel = level + 1; ilevel < max_test_lvl; ilevel++) {
       for (int jface = 0; jface < num_faces; jface++) {
 
-        t8_test_manual_first_last_face_descendant (ts, element, tree_class, jface, ilevel, 0, manual_face_desc);
+        t8_test_manual_first_last_face_descendant (scheme, element, tree_class, jface, ilevel, 0, manual_face_desc);
         scheme->element_construct_first_descendant_face (tree_class, element, jface, scheme_face_desc, ilevel);
         /* Compare the manually computed child with the result of t8_element_first_descendant_face. */
         EXPECT_ELEM_EQ (scheme, tree_class, scheme_face_desc, manual_face_desc);

@@ -46,7 +46,7 @@
  *     Notice, that the uniform forest is evenly distributed, but that the adapted forest
  *     is not. This is due to the fact that we do not repartition our forest here.
  *   - Add a maximum refinement level to the adapt_data struct and use non-recursive refinement.
- *     Do not refine an element if it has reached the maximum level. (Hint: ts->t8_element_level)
+ *     Do not refine an element if it has reached the maximum level. (Hint: ts->element_get_level)
  */
 
 #include <t8.h>                                 /* General t8code header, always include this. */
