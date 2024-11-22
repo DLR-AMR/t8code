@@ -559,7 +559,7 @@ t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, 
  * \note Important! This routine allocates memory which must be freed. Do it like this:
  *
  *   if (num_neighbors > 0) {
- *     eclass_scheme->t8_element_destroy (num_neighbors, neighbors);
+ *     scheme->element_destroy (pneigh_eclass, num_neighbors, neighbors);
  *     T8_FREE (pneighbor_leaves);
  *     T8_FREE (pelement_indices);
  *     T8_FREE (dual_faces);
@@ -585,7 +585,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8
  *                        of the neighbor leaves are stored here.
  *                        0, 1, ... num_local_el - 1 for local leaves and
  *                        num_local_el , ... , num_local_el + num_ghosts - 1 for ghosts.
- * \param [out]   pneigh_scheme On output the eclass scheme of the neighbor elements.
+ * \param [out]   pneigh_eclass On output the eclass of the neighbor elements.
  * \param [in]    forest_is_balanced True if we know that \a forest is balanced, false
  *                        otherwise.
  * \param [out]   gneigh_tree  The global tree IDs of the neighbor trees.
@@ -601,7 +601,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8
  * \note Important! This routine allocates memory which must be freed. Do it like this:
  *
  *   if (num_neighbors > 0) {
- *     eclass_scheme->t8_element_destroy (num_neighbors, neighbors);
+ *     scheme->element_destroy (pneigh_eclass, num_neighbors, neighbors);
  *     T8_FREE (pneighbor_leaves);
  *     T8_FREE (pelement_indices);
  *     T8_FREE (dual_faces);

@@ -51,5 +51,4 @@ class t8_scheme_builder {
 
  private:
   t8_scheme *scheme;
-  bool multilevel;
 };

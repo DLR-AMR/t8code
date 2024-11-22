@@ -93,17 +93,14 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclass_Scheme> {
    * \param [in] elem_size  The size of the elements this scheme holds.
   */
   t8_default_scheme_common (const t8_eclass_t tree_class, const size_t elem_size)
-    : element_size (elem_size), eclass (tree_class)
-  {
-    ts_context = sc_mempool_new (elem_size);
-  };
+    : element_size (elem_size), ts_context (sc_mempool_new (elem_size)), eclass (tree_class) {};
 
  protected:
-  const size_t element_size; /**< The size in bytes of an element of class \a eclass */
-  void *ts_context;          /**< Anonymous implementation context. */
+  size_t element_size; /**< The size in bytes of an element of class \a eclass */
+  void *ts_context;    /**< Anonymous implementation context. */
 
  public:
-  const t8_eclass_t eclass; /**< The tree class */
+  t8_eclass_t eclass; /**< The tree class */
 
   /** Destructor for all default schemes */
   ~t8_default_scheme_common ()

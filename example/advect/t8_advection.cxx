@@ -594,7 +594,7 @@ t8_advect_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
       const t8_element_t *element
         = t8_forest_get_element_in_tree (problem->forest_adapt, which_tree, first_incoming + i);
       /* Compute midpoint and vol of the new element */
-      t8_advect_compute_element_data (problem, elem_data_in + i, element, which_tree, ts);
+      t8_advect_compute_element_data (problem, elem_data_in + i, element, which_tree);
       t8_advect_element_set_phi_adapt (problem, first_incoming_data + i, phi_old);
       /* Set the neighbor entries to uninitialized */
       const int num_new_faces = ts->element_get_num_faces (tree_class, element);
@@ -626,7 +626,7 @@ t8_advect_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
     /* Get a pointer to the new element */
     const t8_element_t *element = t8_forest_get_element_in_tree (problem->forest_adapt, which_tree, first_incoming);
     /* Compute midpoint and vol of the new element */
-    t8_advect_compute_element_data (problem, elem_data_in, element, which_tree, ts);
+    t8_advect_compute_element_data (problem, elem_data_in, element, which_tree);
 
     /* Compute average of phi */
     for (i = 0; i < num_outgoing; i++) {
@@ -988,7 +988,8 @@ t8_advect_problem_init_elements (t8_advect_problem_t *problem)
   t8_element_t **neighbors;
   int iface, ineigh;
   t8_advect_element_data_t *elem_data;
-  t8_scheme *ts, *neigh_scheme;
+  t8_scheme *ts;
+  t8_eclass_t neigh_eclass;
   double speed, max_speed = 0, min_diam = -1, delta_t, min_delta_t;
   double u[3];
   double diam;
@@ -1036,13 +1037,13 @@ t8_advect_problem_init_elements (t8_advect_problem_t *problem)
 
         t8_forest_leaf_face_neighbors (problem->forest, itree, element, &neighbors, iface,
                                        &elem_data->dual_faces[iface], &elem_data->num_neighbors[iface],
-                                       &elem_data->neighs[iface], &neigh_scheme, 1);
+                                       &elem_data->neighs[iface], &neigh_eclass, 1);
         for (ineigh = 0; ineigh < elem_data->num_neighbors[iface]; ineigh++) {
-          elem_data->neigh_level[iface] = neigh_scheme->t8_element_level (neighbors[ineigh]);
+          elem_data->neigh_level[iface] = ts->element_get_level (neigh_eclass, neighbors[ineigh]);
         }
 
         if (elem_data->num_neighbors[iface] > 0) {
-          neigh_scheme->t8_element_destroy (elem_data->num_neighbors[iface], neighbors);
+          ts->element_destroy (neigh_eclass, elem_data->num_neighbors[iface], neighbors);
           T8_FREE (neighbors);
           //t8_global_essentialf("alloc face %i of elem %i\n", iface, ielement);
           elem_data->fluxes[iface] = T8_ALLOC (double, elem_data->num_neighbors[iface]);
@@ -1198,7 +1199,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u, t8_example_level_se
   int adapted_or_partitioned = 0;
   int dual_face;
   t8_element_t **neighs;
-  t8_scheme *neigh_scheme;
+  t8_eclass_t neigh_eclass;
   double total_time, solve_time = 0;
   double ghost_exchange_time, ghost_waittime, neighbor_time, flux_time;
   double vtk_time = 0;
@@ -1206,6 +1207,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u, t8_example_level_se
   int hanging, neigh_is_ghost;
   t8_locidx_t neigh_index = -1;
   double phi_plus, phi_minus;
+  const t8_scheme *scheme = t8_forest_get_scheme (problem->forest);
 
   /* Initialize problem */
   /* start timing */
@@ -1289,14 +1291,14 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u, t8_example_level_se
               neighbor_time = -sc_MPI_Wtime ();
               t8_forest_leaf_face_neighbors (problem->forest, itree, elem, &neighs, iface,
                                              &elem_data->dual_faces[iface], &elem_data->num_neighbors[iface],
-                                             &elem_data->neighs[iface], &neigh_scheme, 1);
+                                             &elem_data->neighs[iface], &neigh_eclass, 1);
               for (ineigh = 0; ineigh < elem_data->num_neighbors[iface]; ineigh++) {
-                elem_data->neigh_level[iface] = neigh_scheme->t8_element_level (neighs[ineigh]);
+                elem_data->neigh_level[iface] = scheme->element_get_level (neigh_eclass, neighs[ineigh]);
               }
 
               T8_ASSERT (neighs != NULL || elem_data->num_neighbors[iface] == 0);
               if (neighs != NULL) {
-                neigh_scheme->t8_element_destroy (elem_data->num_neighbors[iface], neighs);
+                scheme->element_destroy (neigh_eclass, elem_data->num_neighbors[iface], neighs);
 
                 T8_FREE (neighs);
               }
