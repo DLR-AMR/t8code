@@ -53,14 +53,25 @@ struct dummy_name_tag
 {
 };
 
-using DummyInt
-  = T8Type<int, dummy_int, Addable, Subtractable, AddAssignable, Multipliable, Dividable, Incrementable, Decrementable>;
+typedef struct
+{
+  int x;
+  double y;
+} int_and_double_struct;
+
+struct int_and_double_tag
+{
+};
+
+using DummyInt = T8Type<int, dummy_int, Addable, Subtractable, AddAssignable, Multipliable, Dividable,
+                        PrefixDecrementable, PrefixIncrementable>;
 using DummyInt2 = T8Type<int, dummy_int_2>;
 using DummyDouble = T8Type<double, dummy_double>;
 using DummyRefInt = T8Type<int &, dummy_ref_int>;
 using DummyRefDouble = T8Type<double &, dummy_ref_double>;
 using Dummy3DVec = T8Type<std::array<double, 3>, dummy_double_3, EqualityComparable, Swapable>;
 using DummyName = T8Type<std::string, dummy_name_tag, EqualityComparable, Hashable>;
+using int_and_double = T8Type<int_and_double_struct, int_and_double_tag>;
 
 TEST (t8_gtest_type, strong_type)
 {
@@ -74,6 +85,14 @@ TEST (t8_gtest_type, strong_type)
   EXPECT_FALSE ((std::is_same<DummyInt2, DummyDouble>::value));
   EXPECT_FALSE ((std::is_same<DummyDouble, DummyInt>::value));
   EXPECT_FALSE ((std::is_same<DummyDouble, DummyInt2>::value));
+
+  EXPECT_EQ (sizeof (DummyInt), sizeof (int));
+  EXPECT_EQ (sizeof (DummyDouble), sizeof (double));
+  EXPECT_EQ (sizeof (DummyRefInt), sizeof (int *));
+  EXPECT_EQ (sizeof (DummyRefDouble), sizeof (double *));
+  EXPECT_EQ (sizeof (Dummy3DVec), sizeof (std::array<double, 3>));
+  EXPECT_EQ (sizeof (DummyName), sizeof (std::string));
+  EXPECT_EQ (sizeof (int_and_double), sizeof (int_and_double_struct));
 }
 
 TEST (t8_gtest_type, strong_type_get)
@@ -84,18 +103,18 @@ TEST (t8_gtest_type, strong_type_get)
   DummyRefInt dummy_ref_int (dummy_int.get ());
   DummyRefDouble dummy_ref_double (dummy_double.get ());
 
-  std::vector<DummyInt> dummy_ints (100);
-  std::iota (dummy_ints.begin (), dummy_ints.end (), DummyInt (0));
-  std::for_each (dummy_ints.begin (), dummy_ints.end (), [&dummy_int] (DummyInt &i) { i += dummy_int; });
-
-  std::for_each (dummy_ints.begin (), dummy_ints.end (),
-                 [n = 5] (const DummyInt &i) mutable { EXPECT_EQ (i.get (), n++); });
-
   EXPECT_EQ (dummy_int.get (), 5);
   EXPECT_EQ (dummy_int_2.get (), 10);
   EXPECT_EQ (dummy_double.get (), 3.14);
   EXPECT_EQ (dummy_ref_int.get (), 5);
   EXPECT_EQ (dummy_ref_double.get (), 3.14);
+
+  std::vector<DummyInt> vec (10000);
+
+  std::iota (vec.begin (), vec.end (), DummyInt (0));
+  std::for_each (vec.begin (), vec.end (), [&dummy_int] (DummyInt &i) { i += dummy_int; });
+
+  std::for_each (vec.begin (), vec.end (), [n = 5] (const DummyInt &i) mutable { EXPECT_EQ (i.get (), n++); });
 }
 
 TEST (t8_gtest_type, operators)
