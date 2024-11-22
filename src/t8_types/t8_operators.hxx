@@ -95,6 +95,17 @@ struct Dividable: crtp<T, Dividable>
 };
 
 template <typename T>
+struct AddAssignable: crtp<T, AddAssignable>
+{
+  T&
+  operator+= (T const& other)
+  {
+    this->underlying ().get () += other.get ();
+    return this->underlying ();
+  }
+};
+
+template <typename T>
 struct Incrementable: crtp<T, Incrementable>
 {
   T&

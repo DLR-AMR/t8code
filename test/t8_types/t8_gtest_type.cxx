@@ -25,6 +25,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_types/t8_type.hxx>
 #include <t8_types/t8_operators.hxx>
 #include <typeinfo>
+#include <numeric>
 
 struct dummy_int
 {
@@ -52,7 +53,8 @@ struct dummy_name_tag
 {
 };
 
-using DummyInt = T8Type<int, dummy_int, Addable, Subtractable, Multipliable, Dividable, Incrementable, Decrementable>;
+using DummyInt
+  = T8Type<int, dummy_int, Addable, Subtractable, AddAssignable, Multipliable, Dividable, Incrementable, Decrementable>;
 using DummyInt2 = T8Type<int, dummy_int_2>;
 using DummyDouble = T8Type<double, dummy_double>;
 using DummyRefInt = T8Type<int &, dummy_ref_int>;
@@ -81,6 +83,13 @@ TEST (t8_gtest_type, strong_type_get)
   DummyDouble dummy_double (3.14);
   DummyRefInt dummy_ref_int (dummy_int.get ());
   DummyRefDouble dummy_ref_double (dummy_double.get ());
+
+  std::vector<DummyInt> dummy_ints (100);
+  std::iota (dummy_ints.begin (), dummy_ints.end (), DummyInt (0));
+  std::for_each (dummy_ints.begin (), dummy_ints.end (), [&dummy_int] (DummyInt &i) { i += dummy_int; });
+
+  std::for_each (dummy_ints.begin (), dummy_ints.end (),
+                 [n = 5] (const DummyInt &i) mutable { EXPECT_EQ (i.get (), n++); });
 
   EXPECT_EQ (dummy_int.get (), 5);
   EXPECT_EQ (dummy_int_2.get (), 10);

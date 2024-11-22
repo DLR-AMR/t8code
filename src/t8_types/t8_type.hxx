@@ -45,6 +45,8 @@
 template <typename T, typename Parameter, template <typename> class... competence>
 class T8Type: public competence<T8Type<T, Parameter, competence...>>... {
  public:
+  explicit T8Type () = default;
+
   explicit T8Type (T const& value): value_ (value)
   {
   }
