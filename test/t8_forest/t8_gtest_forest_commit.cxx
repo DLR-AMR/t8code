@@ -63,7 +63,7 @@ class forest_commit: public testing::TestWithParam<cmesh_example_base *> {
  * imbalanced forest. */
 static int
 t8_test_adapt_balance (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
-                       t8_locidx_t lelement_id, t8_scheme *ts, const int is_family, const int num_elements,
+                       t8_locidx_t lelement_id, const t8_scheme *ts, const int is_family, const int num_elements,
                        t8_element_t *elements[])
 {
   T8_ASSERT (!is_family || (is_family && num_elements == ts->element_get_num_children (tree_class, elements[0])));
