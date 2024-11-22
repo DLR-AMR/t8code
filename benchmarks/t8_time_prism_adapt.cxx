@@ -35,16 +35,16 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 
 static int
-t8_basic_adapt_refine_type (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
+t8_basic_adapt_refine_type (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
                             t8_locidx_t lelement_id, t8_scheme *ts, const int is_family, const int num_elements,
                             t8_element_t *elements[])
 {
   int level;
   int type;
 
-  T8_ASSERT (!is_family || num_elements == ts->t8_element_num_children (elements[0]));
+  T8_ASSERT (!is_family || num_elements == ts->element_get_num_children (tree_class, elements[0]));
 
-  level = ts->t8_element_level (elements[0]);
+  level = ts->element_get_level (tree_class, elements[0]);
   if (level >= *(int *) t8_forest_get_user_data (forest)) {
     return 0;
   }
@@ -58,15 +58,16 @@ t8_basic_adapt_refine_type (t8_forest_t forest, t8_forest_t forest_from, t8_loci
 }
 
 static int
-t8_basic_adapt_refine_tet (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                           t8_scheme *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+t8_basic_adapt_refine_tet (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
+                           t8_locidx_t lelement_id, t8_scheme *ts, const int is_family, const int num_elements,
+                           t8_element_t *elements[])
 {
   int level;
   int type;
 
-  T8_ASSERT (!is_family || num_elements == ts->t8_element_num_children (elements[0]));
+  T8_ASSERT (!is_family || num_elements == ts->element_get_num_children (tree_class, elements[0]));
 
-  level = ts->t8_element_level (elements[0]);
+  level = ts->element_get_level (tree_class, elements[0]);
   if (level >= *(int *) t8_forest_get_user_data (forest)) {
     return 0;
   }

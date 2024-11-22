@@ -535,8 +535,8 @@ t8_advect_compute_element_data (t8_advect_problem_t *problem, t8_advect_element_
  *       Similar formula for refining?
  */
 static void
-t8_advect_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree, t8_scheme *ts,
-                   t8_eclass_t tree_class, int refine, int num_outgoing, t8_locidx_t first_outgoing, int num_incoming,
+t8_advect_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree, t8_eclass_t tree_class,
+                   const t8_scheme *ts, int refine, int num_outgoing, t8_locidx_t first_outgoing, int num_incoming,
                    t8_locidx_t first_incoming)
 {
   t8_advect_problem_t *problem;

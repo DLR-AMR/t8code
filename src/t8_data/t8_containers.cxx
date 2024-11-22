@@ -130,17 +130,19 @@ t8_element_array_init_view (t8_element_array_t *view, const t8_element_array_t *
   sc_array_init_view (&view->array, &((t8_element_array_t *) array)->array, offset, length);
   /* Set the scheme */
   view->scheme = array->scheme;
+  view->tree_class = array->tree_class;
   T8_ASSERT (t8_element_array_is_valid (view));
 }
 
 void
 t8_element_array_init_data (t8_element_array_t *view, const t8_element_t *base, const t8_scheme_c *scheme,
-                            const size_t elem_count)
+                            const t8_eclass_t tree_class, const size_t elem_count)
 {
   /* Initialize the element array */
-  sc_array_init_data (&view->array, (void *) base, scheme->t8_element_size (), elem_count);
+  sc_array_init_data (&view->array, (void *) base, scheme->get_element_size (tree_class), elem_count);
   /* set the scheme */
   view->scheme = scheme;
+  view->tree_class = tree_class;
   T8_ASSERT (t8_element_array_is_valid (view));
 }
 
@@ -180,6 +182,7 @@ void
 t8_element_array_resize (t8_element_array_t *element_array, const size_t new_count)
 {
   size_t old_count;
+  const t8_eclass_t tree_class = element_array->tree_class;
   T8_ASSERT (t8_element_array_is_valid (element_array));
   /* Store the old number of elements */
   old_count = t8_element_array_get_count (element_array);
@@ -191,13 +194,13 @@ t8_element_array_resize (t8_element_array_t *element_array, const size_t new_cou
     /* Get the first newly allocated element */
     first_new_elem = t8_element_array_index_locidx_mutable (element_array, old_count);
     /* Call t8_element_init on all new elements */
-    element_array->scheme->t8_element_init (new_count - old_count, first_new_elem);
+    element_array->scheme->element_init (tree_class, new_count - old_count, first_new_elem);
   }
   else if (old_count > new_count) {
     t8_element_t *first_old_elem;
     /* Get the first element to deinit */
     first_old_elem = t8_element_array_index_locidx_mutable (element_array, new_count);
-    element_array->scheme->t8_element_deinit (old_count - new_count, first_old_elem);
+    element_array->scheme->element_deinit (tree_class, old_count - new_count, first_old_elem);
     sc_array_resize (&element_array->array, new_count);
   }
   else {
@@ -222,7 +225,7 @@ t8_element_array_push (t8_element_array_t *element_array)
   t8_element_t *new_element;
   T8_ASSERT (t8_element_array_is_valid (element_array));
   new_element = (t8_element_t *) sc_array_push (&element_array->array);
-  element_array->scheme->t8_element_init (1, new_element);
+  element_array->scheme->element_init (element_array->tree_class, 1, new_element);
   return new_element;
 }
 
@@ -234,7 +237,7 @@ t8_element_array_push_count (t8_element_array_t *element_array, const size_t cou
   /* grow the array */
   new_elements = (t8_element_t *) sc_array_push_count (&element_array->array, count);
   /* initialize the elements */
-  element_array->scheme->t8_element_init (count, new_elements);
+  element_array->scheme->element_init (element_array->tree_class, count, new_elements);
   return new_elements;
 }
 
@@ -290,7 +293,7 @@ size_t
 t8_element_array_get_size (const t8_element_array_t *element_array)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
-  return element_array->scheme->t8_element_size ();
+  return element_array->scheme->element_size (element_array->tree_class);
 }
 
 const t8_element_t *

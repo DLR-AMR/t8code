@@ -85,8 +85,8 @@ T8_EXTERN_C_BEGIN ();
  * \see t8_forest_iterate_replace
  */
 typedef void (*t8_forest_replace_t) (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree,
-                                     t8_eclass_t tree_class, t8_scheme_c *ts, const int refine, const int num_outgoing,
-                                     const t8_locidx_t first_outgoing, const int num_incoming,
+                                     t8_eclass_t tree_class, const t8_scheme_c *ts, const int refine,
+                                     const int num_outgoing, const t8_locidx_t first_outgoing, const int num_incoming,
                                      const t8_locidx_t first_incoming);
 
 /** Callback function prototype to decide for refining and coarsening.
@@ -114,8 +114,8 @@ typedef void (*t8_forest_replace_t) (t8_forest_t forest_old, t8_forest_t forest_
 /* TODO: Do we really need the forest argument? Since the forest is not committed yet it
  *       seems dangerous to expose to the user. */
 typedef int (*t8_forest_adapt_t) (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                                  t8_eclass_t tree_class, t8_locidx_t lelement_id, t8_scheme_c *ts, const int is_family,
-                                  const int num_elements, t8_element_t *elements[]);
+                                  t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme_c *ts,
+                                  const int is_family, const int num_elements, t8_element_t *elements[]);
 
 /** Create a new forest with reference count one.
  * This forest needs to be specialized with the t8_forest_set_* calls.
