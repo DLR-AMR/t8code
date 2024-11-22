@@ -665,7 +665,7 @@ class t8_scheme {
    * \param [in] elem     The input element.
    * \param [in] face     A face of \a elem.
    * \return              True if \a face is a subface of the element's root element.
-   * \note You can compute the corresponding face number of the tree via \ref t8_element_tree_face.
+   * \note You can compute the corresponding face number of the tree via \ref element_get_tree_face.
    */
   inline int
   element_is_root_boundary (t8_eclass_t tree_class, const t8_element_t *elem, int face) const

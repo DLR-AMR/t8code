@@ -94,19 +94,19 @@ t8_naca_geometry_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8
   /* And check if it was retrieved successfully. */
   T8_ASSERT (adapt_data != NULL);
   /* Refine element to the uniform refinement level */
-  if (ts->t8_element_level (elements[0]) < adapt_data->level) {
+  if (ts->element_get_level (tree_class, elements[0]) < adapt_data->level) {
     return 1;
   }
   /* We retrieve the number of faces of this element. */
-  const int num_faces = ts->t8_element_num_faces (elements[0]);
+  const int num_faces = ts->element_get_num_faces (tree_class, elements[0]);
   for (int iface = 0; iface < num_faces; ++iface) {
     /* We look if a face of the element lies on a face of the tree */
-    if (ts->t8_element_is_root_boundary (elements[0], iface)) {
+    if (ts->element_is_root_boundary (tree_class, elements[0], iface)) {
       /* We retrieve the face it lies on */
-      int tree_face = ts->t8_element_tree_face (elements[0], iface);
+      int tree_face = ts->element_get_tree_face (tree_class, elements[0], iface);
       const t8_locidx_t cmesh_ltreeid = t8_forest_ltreeid_to_cmesh_ltreeid (forest_from, which_tree);
       /* Retrieve the element dimension */
-      const int element_dim = t8_eclass_to_dimension[ts->eclass];
+      const int element_dim = t8_eclass_to_dimension[tree_class];
       /* We retrieve the geometry information of the tree.
        * In the 3D case, we look for linked surfaces, but in 2D, we look for linked edges. */
       const int attribute_key = element_dim == 3 ? T8_CMESH_CAD_FACE_ATTRIBUTE_KEY : T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY;
@@ -115,7 +115,7 @@ t8_naca_geometry_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8
       /* If the tree face has a linked surface and it is in the list we refine it */
       for (int igeom = 0; igeom < adapt_data->n_geometries; ++igeom) {
         if (linked_geometries[tree_face] == adapt_data->geometries[igeom]
-            && ts->t8_element_level (elements[0]) < adapt_data->levels[igeom]) {
+            && ts->element_get_level (tree_class, elements[0]) < adapt_data->levels[igeom]) {
           /* Refine this element */
           return 1;
         }
@@ -228,14 +228,14 @@ struct t8_naca_plane_adapt_data
  */
 int
 t8_naca_plane_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                              t8_Eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme *ts, const int is_family,
+                              t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme *ts, const int is_family,
                               const int num_elements, t8_element_t *elements[])
 {
   double elem_midpoint[3];
   int elem_level;
 
   /* Get the level of the element */
-  elem_level = ts->t8_element_level (elements[0]);
+  elem_level = ts->element_get_level (tree_class, elements[0]);
   /* We retrieve the adapt data */
   const struct t8_naca_plane_adapt_data *adapt_data
     = (const struct t8_naca_plane_adapt_data *) t8_forest_get_user_data (forest);

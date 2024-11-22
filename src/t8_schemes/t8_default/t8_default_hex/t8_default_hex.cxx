@@ -399,7 +399,6 @@ t8_default_scheme_hex::element_construct_last_descendant_face (const t8_element_
 
 void
 t8_default_scheme_hex::element_construct_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
-                                                        const t8_eclass_t boundary_face_eclass,
                                                         const t8_scheme *scheme) const
 {
   const p8est_quadrant_t *q = (const p8est_quadrant_t *) elem;

@@ -129,8 +129,6 @@ t8_step5_create_element_data (t8_forest_t forest)
     t8_locidx_t itree, num_local_trees;
     t8_locidx_t current_index;
     t8_locidx_t ielement, num_elements_in_tree;
-    t8_eclass_t tree_class;
-    t8_scheme *eclass_scheme;
     const t8_element_t *element;
 
     /* Get the scheme of the forest for later usage. */
@@ -154,8 +152,8 @@ t8_step5_create_element_data (t8_forest_t forest)
          * we need to get a pointer to this element. */
         element = t8_forest_get_element_in_tree (forest, itree, ielement);
         /* We want to store the elements level and its volume as data. We compute these
-         * via the eclass_scheme and the forest_element interface. */
-        element_data[current_index].level = eclass_scheme->element_get_level (tree_class, element);
+         * via the scheme and the forest_element interface. */
+        element_data[current_index].level = scheme->element_get_level (tree_class, element);
         element_data[current_index].volume = t8_forest_element_volume (forest, itree, element);
       }
     }

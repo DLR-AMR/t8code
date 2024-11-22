@@ -38,20 +38,20 @@ class TestDFS: public testing::TestWithParam<t8_eclass_t> {
   void
   check_recursive_dfs_to_max_lvl (const int max_dfs_recursion_level)
   {
-    int level = ts->element_get_level (tree_class, element);
+    int level = scheme->element_get_level (tree_class, element);
     ASSERT_LE (level, max_dfs_recursion_level);
-    ASSERT_LT (max_dfs_recursion_level, ts->get_maxlevel (tree_class));
+    ASSERT_LT (max_dfs_recursion_level, scheme->get_maxlevel (tree_class));
 
     /** call the implementation of the specific test*/
     check_element ();
 
-    if (ts->element_get_level (tree_class, element) < max_dfs_recursion_level) {
+    if (scheme->element_get_level (tree_class, element) < max_dfs_recursion_level) {
       /* iterate over all children */
-      const int num_children = ts->element_get_num_children (tree_class, element);
+      const int num_children = scheme->element_get_num_children (tree_class, element);
       for (int ichild = 0; ichild < num_children; ichild++) {
-        ts->element_get_child (tree_class, element, ichild, element);
+        scheme->element_get_child (tree_class, element, ichild, element);
         check_recursive_dfs_to_max_lvl (max_dfs_recursion_level);
-        ts->element_get_parent (tree_class, element, element);
+        scheme->element_get_parent (tree_class, element, element);
       }
     }
   }

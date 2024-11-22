@@ -44,26 +44,27 @@ typedef enum {
  * This function comes from the timings2.c example of p4est.
  */
 int
-t8_refine_p8est (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                 t8_scheme *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+t8_refine_p8est (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
+                 t8_locidx_t lelement_id, const t8_scheme *ts, const int is_family, const int num_elements,
+                 t8_element_t *elements[])
 {
   int id;
-  T8_ASSERT (!is_family || num_elements == ts->t8_element_num_children (elements[0]));
+  T8_ASSERT (!is_family || num_elements == ts->element_get_num_children (tree_class, elements[0]));
 
-  id = ts->t8_element_child_id (elements[0]);
+  id = ts->element_get_child_id (tree_class, elements[0]);
   return (id == 0 || id == 3 || id == 5 || id == 6);
 }
 
 /* Refine every third element. */
 static int
 t8_adapt_every_third_element (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                              t8_locidx_t lelement_id, t8_scheme *ts, const int is_family, const int num_elements,
-                              t8_element_t *elements[])
+                              t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme *ts, const int is_family,
+                              const int num_elements, t8_element_t *elements[])
 {
   int level;
-  T8_ASSERT (!is_family || num_elements == ts->t8_element_num_children (elements[0]));
-  level = ts->t8_element_level (elements[0]);
-  if (ts->t8_element_get_linear_id (elements[0], level) % 3 == 0) {
+  T8_ASSERT (!is_family || num_elements == ts->element_get_num_children (tree_class, elements[0]));
+  level = ts->element_get_level (tree_class, elements[0]);
+  if (ts->element_get_linear_id (tree_class, elements[0], level) % 3 == 0) {
     return 1;
   }
   return 0;

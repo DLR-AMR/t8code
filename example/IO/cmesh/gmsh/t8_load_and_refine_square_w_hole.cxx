@@ -55,18 +55,20 @@ t8_vec3_xmay (double *x, double alpha, double *y)
 /* Compute the coordinates of the midpoint
  * and a measure for the length of a  triangle or square */
 static void
-t8_midpoint (t8_forest_t forest, t8_locidx_t which_tree, t8_scheme *ts, t8_element_t *element, double elem_mid_point[3],
-             double *h)
+t8_midpoint (t8_forest_t forest, t8_locidx_t which_tree, t8_element_t *element, double elem_mid_point[3], double *h)
 {
   double *corner[3];
   int i, j;
+
+  /* We retrieve the tree class for later usage. */
+  const t8_eclass_t tree_class = t8_forest_get_eclass (forest, which_tree);
 
   /* We compute the midpoint as mean of all vertices */
   /* We compute the size as the medium distance of a vertex to the
    * midpoint */
   *h = 0;
   elem_mid_point[0] = elem_mid_point[1] = elem_mid_point[2] = 0;
-  if (ts->eclass == T8_ECLASS_QUAD) {
+  if (tree_class == T8_ECLASS_QUAD) {
     corner[0] = T8_ALLOC (double, 3);
     corner[1] = T8_ALLOC (double, 3);
     /* We approximate the midpoint of a square as the middle of
@@ -90,7 +92,7 @@ t8_midpoint (t8_forest_t forest, t8_locidx_t which_tree, t8_scheme *ts, t8_eleme
     T8_FREE (corner[1]);
   }
   else {
-    T8_ASSERT (ts->eclass == T8_ECLASS_TRIANGLE);
+    T8_ASSERT (tree_class == T8_ECLASS_TRIANGLE);
     for (i = 0; i < 3; i++) {
       corner[i] = T8_ALLOC (double, 3);
       /* Get the coordinates of the elements  i-th vertex */
@@ -121,22 +123,22 @@ t8_load_refine_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t w
   double elem_midpoint[3];
   double h;
 
-  t8_midpoint (forest_from, which_tree, ts, elements[0], elem_midpoint, &h);
+  t8_midpoint (forest_from, which_tree, elements[0], elem_midpoint, &h);
 
-  level = ts->t8_element_level (elements[0]);
+  level = ts->element_get_level (tree_class, elements[0]);
   if (level > 2) {
     /* Do not refine further than level 2 */
     return 0;
   }
   /* Refine along the outside boundary.
    * The factors in front of h control the width of the refinement region */
-  if (ts->eclass == T8_ECLASS_QUAD
+  if (tree_class == T8_ECLASS_QUAD
       && (fabs (elem_midpoint[0]) > 2 - 0.7 * h || fabs (elem_midpoint[1]) > 2 - 0.8 * h)) {
     return 1;
   }
   /* Refine along the inner boundary.
    * The factor in front of h controls the width of the refinement region. */
-  if (ts->eclass == T8_ECLASS_TRIANGLE && t8_vec3_dot (elem_midpoint, elem_midpoint) < 1 + 5 * h) {
+  if (tree_class == T8_ECLASS_TRIANGLE && t8_vec3_dot (elem_midpoint, elem_midpoint) < 1 + 5 * h) {
     return 1;
   }
 

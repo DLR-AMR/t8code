@@ -39,17 +39,17 @@ class class_test_pack: public TestDFS {
 
     /* Compute pack size and allocate send buffer */
     int pack_size;
-    int num_children = ts->element_get_num_children (tree_class, element);
-    ts->element_MPI_Pack_size (tree_class, count, comm, &pack_size);
+    int num_children = scheme->element_get_num_children (tree_class, element);
+    scheme->element_MPI_Pack_size (tree_class, count, comm, &pack_size);
     pack_size *= (num_children + 1);
     char *sendbuf = T8_ALLOC (char, pack_size);
 
     /* pack data */
-    ts->element_MPI_Pack (tree_class, &element, count, sendbuf, pack_size, &position, comm);
+    scheme->element_MPI_Pack (tree_class, &element, count, sendbuf, pack_size, &position, comm);
     t8_element_t **children = T8_ALLOC (t8_element_t *, num_children);
-    ts->element_new (tree_class, num_children, children);
-    ts->element_get_children (tree_class, element, num_children, children);
-    ts->element_MPI_Pack (tree_class, children, num_children, sendbuf, pack_size, &position, comm);
+    scheme->element_new (tree_class, num_children, children);
+    scheme->element_get_children (tree_class, element, num_children, children);
+    scheme->element_MPI_Pack (tree_class, children, num_children, sendbuf, pack_size, &position, comm);
 
     int recvBufferSize = pack_size;
     char *recvbuf = T8_ALLOC (char, recvBufferSize);
@@ -77,22 +77,22 @@ class class_test_pack: public TestDFS {
 #endif
     /* Unpack data */
     position = 0;
-    ts->element_MPI_Unpack (tree_class, recvbuf, recvBufferSize, &position, &element_compare, count, comm);
+    scheme->element_MPI_Unpack (tree_class, recvbuf, recvBufferSize, &position, &element_compare, count, comm);
     t8_element_t **children_compare = T8_ALLOC (t8_element_t *, num_children);
-    ts->element_new (tree_class, num_children, children_compare);
-    ts->element_MPI_Unpack (tree_class, recvbuf, recvBufferSize, &position, children_compare, num_children, comm);
+    scheme->element_new (tree_class, num_children, children_compare);
+    scheme->element_MPI_Unpack (tree_class, recvbuf, recvBufferSize, &position, children_compare, num_children, comm);
 
     /* free buffers */
     T8_FREE (sendbuf);
     T8_FREE (recvbuf);
 
     /* Check that data was sent and received correctly */
-    EXPECT_ELEM_EQ (ts, tree_class, element, element_compare);
+    EXPECT_ELEM_EQ (scheme, tree_class, element, element_compare);
     for (int ichild = 0; ichild < num_children; ichild++) {
-      EXPECT_ELEM_EQ (ts, tree_class, children[ichild], children_compare[ichild]);
+      EXPECT_ELEM_EQ (scheme, tree_class, children[ichild], children_compare[ichild]);
     }
-    ts->element_destroy (tree_class, num_children, children);
-    ts->element_destroy (tree_class, num_children, children_compare);
+    scheme->element_destroy (tree_class, num_children, children);
+    scheme->element_destroy (tree_class, num_children, children_compare);
     T8_FREE (children);
     T8_FREE (children_compare);
   }
@@ -103,7 +103,7 @@ class class_test_pack: public TestDFS {
   {
     dfs_test_setup ();
     /* Get element and initialize it */
-    ts->element_new (tree_class, 1, &element_compare);
+    scheme->element_new (tree_class, 1, &element_compare);
 
     comm = sc_MPI_COMM_WORLD;
     mpiret = sc_MPI_Comm_rank (comm, &rank);
@@ -113,7 +113,7 @@ class class_test_pack: public TestDFS {
   TearDown () override
   {
     /* Destroy element */
-    ts->element_destroy (tree_class, 1, &element_compare);
+    scheme->element_destroy (tree_class, 1, &element_compare);
 
     /* Destroy DFS test */
     dfs_test_teardown ();

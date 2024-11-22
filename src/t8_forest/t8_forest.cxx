@@ -1665,7 +1665,7 @@ t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, 
   if (t8_element_is_root_boundary (forest, tree_class, leaf, face)) {
     t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
     t8_locidx_t ltreeid_in_cmesh = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
-    int iface_in_tree = t8_element_tree_face (forest, tree_class, leaf, face);
+    int iface_in_tree = t8_element_get_tree_face (forest, tree_class, leaf, face);
     t8_cmesh_get_face_neighbor (cmesh, ltreeid_in_cmesh, iface_in_tree, NULL, &orientation);
   }
 

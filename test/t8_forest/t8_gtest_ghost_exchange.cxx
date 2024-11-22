@@ -68,7 +68,7 @@ class forest_ghost_exchange: public testing::TestWithParam<cmesh_example_base *>
 
 static int
 t8_test_exchange_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                        const t8_eclass_t tree_class, t8_locidx_t lelement_id, t8_scheme *ts, const int is_family,
+                        const t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme *ts, const int is_family,
                         const int num_elements, t8_element_t *elements[])
 {
   /* refine every second element up to the maximum level */

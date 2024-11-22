@@ -369,7 +369,7 @@ t8_element_face_parent_face (const t8_forest_t forest, const t8_eclass_t tree_cl
  *         Any arbitrary integer if \a is not at a tree boundary.
  */
 int
-t8_element_tree_face (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem, int face);
+t8_element_get_tree_face (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem, int face);
 
 /** Suppose we have two trees that share a common face f.
  *  Given an element e that is a subface of f in one of the trees

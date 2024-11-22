@@ -218,7 +218,7 @@ t8_test_coords (const t8_forest_t forest, const t8_locidx_t ltree_id, const t8_e
   }
   /* Compare results of the two different ways to compute an elements centroid */
   t8_forest_element_centroid (forest, ltree_id, element, centroid_by_element_ref_coords);
-  t8_element_centroid_by_vertex_coords (forest, ts, ltree_id, element, centroid_by_vertices);
+  t8_element_centroid_by_vertex_coords (forest, ltree_id, element, centroid_by_vertices);
   EXPECT_TRUE (
     t8_compare_arrays (centroid_by_vertices, centroid_by_element_ref_coords, T8_ECLASS_MAX_DIM, 2 * T8_PRECISION_EPS))
     << t8_generate_additional_info_centroid (shape, centroid_by_vertices, centroid_by_element_ref_coords);

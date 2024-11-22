@@ -64,10 +64,10 @@ t8_basic_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_t
                 t8_element_t *elements[])
 {
   int mpirank, mpiret;
-  T8_ASSERT (!is_family || num_elements == ts->t8_element_num_children (elements[0]));
+  T8_ASSERT (!is_family || num_elements == ts->element_get_num_children (tree_class, elements[0]));
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
-  if (which_tree == 0 && mpirank == 0 && ts->t8_element_level (elements[0]) < 2) {
+  if (which_tree == 0 && mpirank == 0 && ts->element_get_level (tree_class, elements[0]) < 2) {
     return 1;
   }
   return 0;
@@ -78,7 +78,7 @@ t8_test_fiterate (t8_forest_t forest)
 {
   t8_locidx_t itree, num_trees;
   t8_eclass_t eclass;
-  t8_scheme *ts;
+  const t8_scheme *ts = t8_forest_get_scheme (forest);
   t8_element_t *nca;
   t8_element_array_t *leaf_elements;
   t8_test_fiterate_udata_t udata;
@@ -87,7 +87,6 @@ t8_test_fiterate (t8_forest_t forest)
   num_trees = t8_forest_get_num_local_trees (forest);
   for (itree = 0; itree < num_trees; itree++) {
     eclass = t8_forest_get_tree_class (forest, itree);
-    ts = t8_forest_get_scheme (forest);
     const t8_element_t *first_el = t8_forest_get_element_in_tree (forest, itree, 0);
     const t8_element_t *last_el
       = t8_forest_get_element_in_tree (forest, itree, t8_forest_get_tree_num_elements (forest, itree) - 1);

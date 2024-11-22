@@ -31,13 +31,13 @@ class class_find_parent: public TestDFS {
   void
   check_element () override
   {
-    const int num_children = ts->element_get_num_children (tree_class, element);
+    const int num_children = scheme->element_get_num_children (tree_class, element);
     for (int ichild = 0; ichild < num_children; ichild++) {
-      ts->element_get_child (tree_class, element, ichild, child);
+      scheme->element_get_child (tree_class, element, ichild, child);
       /* Compute parent of child */
-      ts->element_get_parent (tree_class, child, test_parent);
+      scheme->element_get_parent (tree_class, child, test_parent);
       /* Check that it is equal to the original element */
-      EXPECT_ELEM_EQ (ts, tree_class, element, test_parent);
+      EXPECT_ELEM_EQ (scheme, tree_class, element, test_parent);
     }
   }
 
@@ -47,15 +47,15 @@ class class_find_parent: public TestDFS {
   {
     dfs_test_setup ();
     /* Get element and initialize it */
-    ts->element_new (tree_class, 1, &child);
-    ts->element_new (tree_class, 1, &test_parent);
+    scheme->element_new (tree_class, 1, &child);
+    scheme->element_new (tree_class, 1, &test_parent);
   }
   void
   TearDown () override
   {
     /* Destroy element */
-    ts->element_destroy (tree_class, 1, &child);
-    ts->element_destroy (tree_class, 1, &test_parent);
+    scheme->element_destroy (tree_class, 1, &child);
+    scheme->element_destroy (tree_class, 1, &test_parent);
 
     /* Destroy DFS test */
     dfs_test_teardown ();
