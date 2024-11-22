@@ -72,6 +72,3 @@ add_t8_example( NAME t8_example_gauss_blob              SOURCES remove/t8_exampl
 add_t8_example( NAME t8_example_empty_trees             SOURCES remove/t8_example_empty_trees.cxx )
 
 add_t8_example( NAME t8_version                         SOURCES version/t8_version.cxx )
-
-add_t8_example( NAME t8_example_multilevel              SOURCES multilevel/t8_example_multilevel.cxx multilevel/t8_multilevel_concept_base.hxx multilevel/t8_multilevel_concept_default.hxx multilevel/t8_multilevel_concept_multilevel.hxx)
-add_t8_example( NAME t8_test                            SOURCES multilevel/benchmark.cxx multilevel/benchmark_crtp.hxx multilevel/benchmark_virtual.hxx)
