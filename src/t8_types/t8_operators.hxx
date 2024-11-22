@@ -53,6 +53,17 @@ struct crtp
   }
 };
 
+/*
+ * The following is a list of competences that can be added to a type.
+ * Each competence provides access to an operator of the underlying type. That way instead of
+ * typing `my_int.get() + my_other_int.get()` you can type `my_int + my_other_int`. 
+ */
+
+/**
+ * \brief A template for addable types. Provides the + operator.
+ * 
+ * \tparam T 
+ */
 template <typename T>
 struct Addable: crtp<T, Addable>
 {
@@ -64,6 +75,11 @@ struct Addable: crtp<T, Addable>
   }
 };
 
+/**
+ * \brief A template for subtractable types. Provides the - operator.
+ * 
+ * \tparam T 
+ */
 template <typename T>
 struct Subtractable: crtp<T, Subtractable>
 {
@@ -74,6 +90,11 @@ struct Subtractable: crtp<T, Subtractable>
   }
 };
 
+/**
+ * \brief A template for multipliable types. Provides the * operator.
+ * 
+ * \tparam T 
+ */
 template <typename T>
 struct Multipliable: crtp<T, Multipliable>
 {
@@ -84,6 +105,11 @@ struct Multipliable: crtp<T, Multipliable>
   }
 };
 
+/**
+ * \brief A template for dividable types. Provides the / operator.
+ * 
+ * \tparam T 
+ */
 template <typename T>
 struct Dividable: crtp<T, Dividable>
 {
@@ -94,6 +120,11 @@ struct Dividable: crtp<T, Dividable>
   }
 };
 
+/**
+ * \brief A template for add-assignable types. Provides the += operator.
+ * 
+ * \tparam T 
+ */
 template <typename T>
 struct AddAssignable: crtp<T, AddAssignable>
 {
@@ -105,8 +136,15 @@ struct AddAssignable: crtp<T, AddAssignable>
   }
 };
 
+/**
+ * \brief A template for incrementable types. Provides the ++ operator.
+ * 
+ * \tparam T 
+ * 
+ * \note The operator is a prefix operator.
+ */
 template <typename T>
-struct Incrementable: crtp<T, Incrementable>
+struct PrefixIncrementable: crtp<T, PrefixIncrementable>
 {
   T&
   operator++ ()
@@ -116,8 +154,15 @@ struct Incrementable: crtp<T, Incrementable>
   }
 };
 
+/**
+ * \brief A template for decrementable types. Provides the -- operator.
+ * 
+ * \tparam T 
+ * 
+ * \note The operator is a prefix operator.
+ */
 template <typename T>
-struct Decrementable: crtp<T, Decrementable>
+struct PrefixDecrementable: crtp<T, PrefixDecrementable>
 {
   T&
   operator-- ()
@@ -137,6 +182,11 @@ struct Printable: crtp<T, Printable>
   }
 };
 
+/**
+ * \brief A template for swapping types. Used to make a type swappable.
+ * 
+ * \tparam T 
+ */
 template <typename T>
 struct Swapable: crtp<T, Swapable>
 {
@@ -147,6 +197,11 @@ struct Swapable: crtp<T, Swapable>
   }
 };
 
+/**
+ * \brief A template for equality comparable types. Provides the == operator.
+ * 
+ * \tparam T 
+ */
 template <typename T>
 struct EqualityComparable: crtp<T, EqualityComparable>
 {
@@ -157,6 +212,11 @@ struct EqualityComparable: crtp<T, EqualityComparable>
   }
 };
 
+/**
+ * \brief A template for << types. Provides the << operator.
+ * 
+ * \tparam T 
+ */
 template <typename T, typename Parameter>
 std::ostream&
 operator<< (std::ostream& os, T8Type<T, Parameter> const& p)
