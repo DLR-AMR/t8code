@@ -47,19 +47,68 @@ authors:
     orcid: 0000-0002-8384-9282
     equal-contrib: true
     affiliation: 1
+    orcid: 0000-0002-8384-9282
+  - name: Uenlue, Veli
+    equal-contrib: true
+    affiliation: 1
+  - name: Albers, Ole
+    equal-contrib: true
+    affiliation: 1
   - name: Carsten Burstedde
     orcid: 0000-0001-9843-1041
     affiliation: 2
   - name: Achim Basermann
     orcid: 0000-0003-3637-3231
     affiliation: 1
+  - given-names: Hergl, Chiara
+    orcid: 0000-0002-4016-9113
+    affiliation: 1
+  - name: Julia, Weber
+    affiliation: 1
+  - name: Schoenlein, Kathrin
+    affiliation: 1
+  - name: Ackerschott, Jonas
+    affiliation: 10
+  - name: Evgenii, Andreev
+    affiliation: 10
+  - name: Csati, Zoltan
+    affiliation: 4
+  - name: Dutka, Alexandra
+    affiliation: 4
+  - name: Geihe, Benedict
+    affiliation: 5
+  - name: Kestener, Pierre
+    affiliation: 6
+  - name: Kirby, Andrew
+    affiliation: 7
+  - name: Ranocha, Hendrik
+    affiliation: 8
+  - name: Schlottke-Lakemper, Michael
+    affiliation: 9
 
 affiliations:
  - name: German Aerospace Center (DLR), Institute of Software Technology, Department High-Performance Computing, Cologne, Germany
    index: 1
  - name: Rheinische Friedrich-Wilhelms-Universität Bonn, Institute for Numerical Simulations and Hausdorff Center for Mathematics,  Germany
    index: 2
-date: 20 November 2024
+ - name: Forschungszentrum Juelich (JSC)
+   index: 3
+ - name: CERFACS
+   index: 4
+ - name: University of Cologne
+   index: 5
+ - name: CEA
+   index: 6
+ - name: University of Wyoming
+   index: 7
+ - name: University of Hamburg
+   index: 8
+ - name: RWTH Aachen
+   index: 9
+ - name: unaffiliated
+   index: 10
+
+date: 29 October 2024
 bibliography: paper.bib
 
 # Optional fields if submitting to a AAS journal too, see this blog post:
