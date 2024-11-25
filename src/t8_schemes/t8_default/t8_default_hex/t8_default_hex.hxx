@@ -23,7 +23,8 @@
 /** \file t8_default_hex.h
  */
 
-#pragma once
+#ifndef T8_DEFAULT_HEX_HXX
+#define T8_DEFAULT_HEX_HXX
 
 #include <p8est.h>
 #include <t8_element.hxx>
@@ -628,3 +629,5 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
   element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements,
                       const int unsigned count, sc_MPI_Comm comm) const;
 };
+
+#endif /* !T8_DEFAULT_HEX_HXX */

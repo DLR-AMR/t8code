@@ -25,7 +25,8 @@
  * element class schemes to a scheme.
  */
 
-#pragma once
+#ifndef T8_SCHEME_BUILDER_HXX
+#define T8_SCHEME_BUILDER_HXX
 
 #include <t8_schemes/t8_scheme.hxx>
 
@@ -52,3 +53,5 @@ class t8_scheme_builder {
  private:
   t8_scheme *scheme;
 };
+
+#endif /* !T8_SCHEME_BUILDER_HXX */

@@ -24,7 +24,8 @@
  * We provide some functions that are useful across element classes.
  */
 
-#pragma once
+#ifndef T8_DEFAULT_COMMON_HXX
+#define T8_DEFAULT_COMMON_HXX
 
 #include <t8_element.hxx>
 #include <t8_schemes/t8_crtp.hxx>
@@ -208,3 +209,5 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclass_Scheme> {
   }
 #endif
 };
+
+#endif /* !T8_DEFAULT_COMMON_HXX */

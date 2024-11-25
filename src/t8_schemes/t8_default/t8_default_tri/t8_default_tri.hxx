@@ -26,7 +26,8 @@
  * implementations in \file t8_dtri_bits.h
  */
 
-#pragma once
+#ifndef T8_DEFAULT_TRI_HXX
+#define T8_DEFAULT_TRI_HXX
 
 #include <t8_element.hxx>
 #include <t8_schemes/t8_default/t8_default_line/t8_default_line.hxx>
@@ -567,3 +568,5 @@ class t8_default_scheme_tri: public t8_default_scheme_common<t8_default_scheme_t
   element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements,
                       const unsigned int count, sc_MPI_Comm comm) const;
 };
+
+#endif /* !T8_DEFAULT_TRI_HXX */

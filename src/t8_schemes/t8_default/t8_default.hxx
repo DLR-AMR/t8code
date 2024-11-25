@@ -26,7 +26,8 @@
  * This scheme points to a consistent implementation of all element classes.
  */
 
-#pragma once
+#ifndef T8_DEFAULT_HXX
+#define T8_DEFAULT_HXX
 
 #include <t8_element.hxx>
 #include <t8_schemes/t8_scheme.hxx>
@@ -55,3 +56,5 @@ int
 t8_eclass_scheme_is_default (const t8_scheme *scheme, const t8_eclass_t eclass);
 
 T8_EXTERN_C_END ();
+
+#endif /* !T8_DEFAULT_HXX */
