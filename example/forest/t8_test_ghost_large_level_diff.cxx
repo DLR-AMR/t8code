@@ -68,15 +68,15 @@
  */
 static int
 t8_ghost_fractal_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
-                        t8_locidx_t lelement_id, const t8_scheme *ts, int is_family, int num_elements,
+                        t8_locidx_t lelement_id, const t8_scheme *scheme, int is_family, int num_elements,
                         t8_element_t *elements[])
 {
   int level;
   int type, child_id;
-  T8_ASSERT (!is_family || num_elements == ts->element_get_num_children (tree_class, elements[0]));
-  T8_ASSERT (t8_eclass_scheme_is_default (ts, tree_class));
+  T8_ASSERT (!is_family || num_elements == scheme->element_get_num_children (tree_class, elements[0]));
+  T8_ASSERT (t8_eclass_scheme_is_default (scheme, tree_class));
 
-  level = ts->element_get_level (tree_class, elements[0]);
+  level = scheme->element_get_level (tree_class, elements[0]);
   if (level >= *(int *) t8_forest_get_user_data (forest)) {
     return 0;
   }
@@ -84,7 +84,7 @@ t8_ghost_fractal_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t
     type = ((t8_dprism_t *) elements[0])->tri.type;
     /* refine type 0 except those with child_id 3 or 4 */
     if (type == 0) {
-      child_id = ts->element_get_child_id (tree_class, elements[0]);
+      child_id = scheme->element_get_child_id (tree_class, elements[0]);
       /* Not refining */
       if (child_id == 3 || child_id == 4) {
         return 0;
@@ -105,7 +105,7 @@ t8_ghost_fractal_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t
     return 0;
   }
   else if (tree_class == T8_ECLASS_HEX) {
-    child_id = ts->element_get_child_id (tree_class, elements[0]);
+    child_id = scheme->element_get_child_id (tree_class, elements[0]);
     if (child_id == 0 || child_id == 3 || child_id == 5 || child_id == 6) {
       return 1;
     };

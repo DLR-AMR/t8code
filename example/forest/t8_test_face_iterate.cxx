@@ -60,14 +60,14 @@ t8_test_fiterate_callback (t8_forest_t forest, t8_locidx_t ltreeid, const t8_ele
 /* Only refine the first tree on a process. */
 static int
 t8_basic_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
-                t8_locidx_t lelement_id, const t8_scheme *ts, const int is_family, const int num_elements,
+                t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family, const int num_elements,
                 t8_element_t *elements[])
 {
   int mpirank, mpiret;
-  T8_ASSERT (!is_family || num_elements == ts->element_get_num_children (tree_class, elements[0]));
+  T8_ASSERT (!is_family || num_elements == scheme->element_get_num_children (tree_class, elements[0]));
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
-  if (which_tree == 0 && mpirank == 0 && ts->element_get_level (tree_class, elements[0]) < 2) {
+  if (which_tree == 0 && mpirank == 0 && scheme->element_get_level (tree_class, elements[0]) < 2) {
     return 1;
   }
   return 0;
@@ -78,7 +78,7 @@ t8_test_fiterate (t8_forest_t forest)
 {
   t8_locidx_t itree, num_trees;
   t8_eclass_t eclass;
-  const t8_scheme *ts = t8_forest_get_scheme (forest);
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
   t8_element_t *nca;
   t8_element_array_t *leaf_elements;
   t8_test_fiterate_udata_t udata;
@@ -90,16 +90,16 @@ t8_test_fiterate (t8_forest_t forest)
     const t8_element_t *first_el = t8_forest_get_element_in_tree (forest, itree, 0);
     const t8_element_t *last_el
       = t8_forest_get_element_in_tree (forest, itree, t8_forest_get_tree_num_elements (forest, itree) - 1);
-    ts->element_new (eclass, 1, &nca);
-    ts->element_get_nca (eclass, first_el, last_el, nca);
+    scheme->element_new (eclass, 1, &nca);
+    scheme->element_get_nca (eclass, first_el, last_el, nca);
     leaf_elements = t8_forest_tree_get_leaves (forest, itree);
 
-    for (iface = 0; iface < ts->element_get_num_faces (eclass, nca); iface++) {
+    for (iface = 0; iface < scheme->element_get_num_faces (eclass, nca); iface++) {
       udata.count = 0;
       t8_forest_iterate_faces (forest, itree, nca, iface, leaf_elements, &udata, 0, t8_test_fiterate_callback);
       t8_debugf ("Leaf elements at face %i:\t%i\n", iface, udata.count);
     }
-    ts->element_destroy (eclass, 1, &nca);
+    scheme->element_destroy (eclass, 1, &nca);
   }
 }
 

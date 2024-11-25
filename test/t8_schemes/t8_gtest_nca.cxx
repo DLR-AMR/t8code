@@ -151,7 +151,7 @@ TEST_P (nca, nca_check_deep)
  * \param[in] parent_a          An initialized element, descendant of \a correct_nca, not a descendant or ancestor of \a parent_b. \a desc_a will be a child of it
  * \param[in] parent_b          An initialized element, descendant of \a correct_nca, not a descendant or ancestor of \a parent_a. \a desc_b will be a child of it
  * \param[in] max_lvl           The maximal depth of the recursion
- * \param[in] ts                the scheme to use
+ * \param[in] scheme                the scheme to use
  */
 static void
 t8_recursive_nca_check (t8_element_t *check_nca, t8_element_t *desc_a, t8_element_t *desc_b, t8_element_t *check,

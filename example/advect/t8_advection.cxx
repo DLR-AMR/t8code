@@ -180,7 +180,7 @@ t8_advect_element_set_phi_adapt (const t8_advect_problem_t *problem, t8_locidx_t
  * and coarsen if it is larger than a given threshold. */
 static int
 t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t ltree_id, t8_eclass_t tree_class,
-                 t8_locidx_t lelement_id, const t8_scheme *ts, const int is_family, const int num_elements,
+                 t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family, const int num_elements,
                  t8_element_t *elements[])
 {
   t8_advect_problem_t *problem;
@@ -196,7 +196,7 @@ t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t ltree_
   /* Get a pointer to the problem from the user data pointer of forest */
   problem = (t8_advect_problem_t *) t8_forest_get_user_data (forest);
   /* Get the element's level */
-  level = ts->element_get_level (tree_class, elements[0]);
+  level = scheme->element_get_level (tree_class, elements[0]);
   if (level == problem->maxlevel && !is_family) {
     /* It is not possible to refine this level */
     return 0;
@@ -415,7 +415,7 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t *problem, t8_locidx_t i
                                const t8_element_t *element_hang, int face, int adapted_or_partitioned)
 {
   int i, num_face_children, child_face;
-  t8_scheme *ts;
+  t8_scheme *scheme;
   t8_eclass eclass;
   t8_element_t **face_children;
   t8_advect_element_data_t *neigh_data;
@@ -430,21 +430,21 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t *problem, t8_locidx_t i
   el_hang = (t8_advect_element_data_t *) t8_sc_array_index_locidx (problem->element_data, iel_hang);
   /* Get the eclass and the scheme for the element */
   eclass = t8_forest_get_tree_class (problem->forest, ltreeid);
-  ts = t8_forest_get_scheme (problem->forest);
+  scheme = t8_forest_get_scheme (problem->forest);
   /* Compute the children of the element at the face */
-  num_face_children = ts->element_get_num_face_children (eclass, element_hang, face);
+  num_face_children = scheme->element_get_num_face_children (eclass, element_hang, face);
   T8_ASSERT (num_face_children == el_hang->num_neighbors[face]);
 
   face_children = T8_ALLOC (t8_element_t *, num_face_children);
-  ts->element_new (eclass, num_face_children, face_children);
-  ts->element_get_children_at_face (eclass, element_hang, face, face_children, num_face_children, NULL);
+  scheme->element_new (eclass, num_face_children, face_children);
+  scheme->element_get_children_at_face (eclass, element_hang, face, face_children, num_face_children, NULL);
 
   /* Store the phi value of el_hang. We use it as the phi value of the
    * children to compute the flux */
   phi_plus = t8_advect_element_get_phi (problem, iel_hang);
 
   for (i = 0; i < num_face_children; i++) {
-    child_face = ts->element_face_get_child_face (eclass, element_hang, face, i);
+    child_face = scheme->element_face_get_child_face (eclass, element_hang, face, i);
     /* Get a pointer to the neighbor's element data */
     neigh_id = el_hang->neighs[face][i];
     neigh_data = (t8_advect_element_data_t *) t8_sc_array_index_locidx (problem->element_data, neigh_id);
@@ -473,7 +473,7 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t *problem, t8_locidx_t i
 
   el_hang->flux_valid[face] = 1;
   /* clean-up */
-  ts->element_destroy (eclass, num_face_children, face_children);
+  scheme->element_destroy (eclass, num_face_children, face_children);
   T8_FREE (face_children);
 
   a = 2;
@@ -536,7 +536,7 @@ t8_advect_compute_element_data (t8_advect_problem_t *problem, t8_advect_element_
  */
 static void
 t8_advect_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree, t8_eclass_t tree_class,
-                   const t8_scheme *ts, int refine, int num_outgoing, t8_locidx_t first_outgoing, int num_incoming,
+                   const t8_scheme *scheme, int refine, int num_outgoing, t8_locidx_t first_outgoing, int num_incoming,
                    t8_locidx_t first_incoming)
 {
   t8_advect_problem_t *problem;
@@ -568,7 +568,7 @@ t8_advect_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
     /* Get a pointer to the new element */
     const t8_element_t *element = t8_forest_get_element_in_tree (problem->forest_adapt, which_tree, first_incoming);
     /* Debug check number of faces */
-    T8_ASSERT (elem_data_in->num_faces == ts->element_get_num_faces (tree_class, element));
+    T8_ASSERT (elem_data_in->num_faces == scheme->element_get_num_faces (tree_class, element));
 #endif
     /* Set the neighbor entries to uninitialized */
     for (iface = 0; iface < elem_data_in->num_faces; iface++) {
@@ -585,7 +585,7 @@ t8_advect_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
     /* Ensure that the number of incoming elements matches the
      * number of children of the outgoing element. */
     const t8_element_t *element_outgoing = t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing);
-    const int num_children = ts->element_get_num_children (tree_class, element_outgoing);
+    const int num_children = scheme->element_get_num_children (tree_class, element_outgoing);
     T8_ASSERT (num_incoming == num_children);
 #endif
     /* The old element is refined, we copy the phi values and compute the new midpoints */
@@ -597,7 +597,7 @@ t8_advect_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
       t8_advect_compute_element_data (problem, elem_data_in + i, element, which_tree);
       t8_advect_element_set_phi_adapt (problem, first_incoming_data + i, phi_old);
       /* Set the neighbor entries to uninitialized */
-      const int num_new_faces = ts->element_get_num_faces (tree_class, element);
+      const int num_new_faces = scheme->element_get_num_faces (tree_class, element);
       elem_data_in[i].num_faces = num_new_faces;
       for (iface = 0; iface < num_new_faces; iface++) {
         elem_data_in[i].num_neighbors[iface] = 0;
@@ -618,7 +618,7 @@ t8_advect_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
     /* Ensure that the number of outgoing elements matches the
      * number of siblings of the first outgoing element. */
     const t8_element_t *element_outgoing = t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing);
-    const int num_siblings = ts->element_get_num_siblings (tree_class, element_outgoing);
+    const int num_siblings = scheme->element_get_num_siblings (tree_class, element_outgoing);
     T8_ASSERT (num_outgoing == num_siblings);
 #endif
     /* The old elements form a family which is coarsened. We compute the average
@@ -636,7 +636,7 @@ t8_advect_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
     t8_advect_element_set_phi_adapt (problem, first_incoming_data, phi);
     /* Set the neighbor entries to uninitialized */
     elem_data_in->num_faces = elem_data_out[0].num_faces;
-    T8_ASSERT (elem_data_in->num_faces == ts->element_get_num_faces (tree_class, element));
+    T8_ASSERT (elem_data_in->num_faces == scheme->element_get_num_faces (tree_class, element));
     for (iface = 0; iface < elem_data_in->num_faces; iface++) {
       elem_data_in->num_neighbors[iface] = 0;
       elem_data_in->flux_valid[iface] = -1;
@@ -988,7 +988,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t *problem)
   t8_element_t **neighbors;
   int iface, ineigh;
   t8_advect_element_data_t *elem_data;
-  t8_scheme *ts;
+  t8_scheme *scheme;
   t8_eclass_t neigh_eclass;
   double speed, max_speed = 0, min_diam = -1, delta_t, min_delta_t;
   double u[3];
@@ -1000,7 +1000,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t *problem)
   min_delta_t = problem->T - problem->t;
   for (itree = 0, idata = 0; itree < num_trees; itree++) {
     const t8_eclass_t tree_class = t8_forest_get_tree_class (problem->forest, itree);
-    ts = t8_forest_get_scheme (problem->forest);
+    scheme = t8_forest_get_scheme (problem->forest);
     num_elems_in_tree = t8_forest_get_tree_num_elements (problem->forest, itree);
     for (ielement = 0; ielement < num_elems_in_tree; ielement++, idata++) {
       const t8_element_t *element = t8_forest_get_element_in_tree (problem->forest, itree, ielement);
@@ -1029,9 +1029,9 @@ t8_advect_problem_init_elements (t8_advect_problem_t *problem)
       /* Set the initial condition */
       t8_advect_element_set_phi (problem, idata, problem->phi_0 (elem_data->midpoint, 0, problem->udata_for_phi));
       /* Set the level */
-      elem_data->level = ts->element_get_level (tree_class, element);
+      elem_data->level = scheme->element_get_level (tree_class, element);
       /* Set the faces */
-      elem_data->num_faces = ts->element_get_num_faces (tree_class, element);
+      elem_data->num_faces = scheme->element_get_num_faces (tree_class, element);
       for (iface = 0; iface < elem_data->num_faces; iface++) {
         /* Compute the indices of the face neighbors */
 
@@ -1039,11 +1039,11 @@ t8_advect_problem_init_elements (t8_advect_problem_t *problem)
                                        &elem_data->dual_faces[iface], &elem_data->num_neighbors[iface],
                                        &elem_data->neighs[iface], &neigh_eclass, 1);
         for (ineigh = 0; ineigh < elem_data->num_neighbors[iface]; ineigh++) {
-          elem_data->neigh_level[iface] = ts->element_get_level (neigh_eclass, neighbors[ineigh]);
+          elem_data->neigh_level[iface] = scheme->element_get_level (neigh_eclass, neighbors[ineigh]);
         }
 
         if (elem_data->num_neighbors[iface] > 0) {
-          ts->element_destroy (neigh_eclass, elem_data->num_neighbors[iface], neighbors);
+          scheme->element_destroy (neigh_eclass, elem_data->num_neighbors[iface], neighbors);
           T8_FREE (neighbors);
           //t8_global_essentialf("alloc face %i of elem %i\n", iface, ielement);
           elem_data->fluxes[iface] = T8_ALLOC (double, elem_data->num_neighbors[iface]);

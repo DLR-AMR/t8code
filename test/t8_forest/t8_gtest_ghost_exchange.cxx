@@ -68,12 +68,12 @@ class forest_ghost_exchange: public testing::TestWithParam<cmesh_example_base *>
 
 static int
 t8_test_exchange_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                        const t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme *ts, const int is_family,
-                        const int num_elements, t8_element_t *elements[])
+                        const t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme *scheme,
+                        const int is_family, const int num_elements, t8_element_t *elements[])
 {
   /* refine every second element up to the maximum level */
-  int level = ts->element_get_level (tree_class, elements[0]);
-  t8_linearidx_t eid = ts->element_get_linear_id (tree_class, elements[0], level);
+  int level = scheme->element_get_level (tree_class, elements[0]);
+  t8_linearidx_t eid = scheme->element_get_linear_id (tree_class, elements[0], level);
   int maxlevel = *(int *) t8_forest_get_user_data (forest);
 
   if (eid % 2 && level < maxlevel) {
@@ -89,7 +89,7 @@ t8_test_exchange_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t
 static void
 t8_test_ghost_exchange_data_id (t8_forest_t forest)
 {
-  const t8_scheme *ts = t8_forest_get_scheme (forest);
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
   size_t array_pos = 0;
   sc_array_t element_data;
 
@@ -105,7 +105,8 @@ t8_test_ghost_exchange_data_id (t8_forest_t forest)
       /* Get a pointer to this element */
       const t8_element_t *elem = t8_forest_get_element_in_tree (forest, itree, ielem);
       /* Compute the linear id of this element */
-      t8_linearidx_t elem_id = ts->element_get_linear_id (tree_class, elem, ts->element_get_level (tree_class, elem));
+      t8_linearidx_t elem_id
+        = scheme->element_get_linear_id (tree_class, elem, scheme->element_get_level (tree_class, elem));
       /* Store this id at the element's index in the array */
       *(t8_linearidx_t *) sc_array_index (&element_data, array_pos) = elem_id;
       array_pos++;
@@ -123,7 +124,8 @@ t8_test_ghost_exchange_data_id (t8_forest_t forest)
       /* Get a pointer to this ghost */
       const t8_element_t *elem = t8_forest_ghost_get_element (forest, itree, ielem);
       /* Compute its ghost_id */
-      t8_linearidx_t ghost_id = ts->element_get_linear_id (tree_class, elem, ts->element_get_level (tree_class, elem));
+      t8_linearidx_t ghost_id
+        = scheme->element_get_linear_id (tree_class, elem, scheme->element_get_level (tree_class, elem));
       /* Compare this id with the entry in the element_data array */
       t8_linearidx_t ghost_entry = *(t8_linearidx_t *) sc_array_index (&element_data, array_pos);
       ASSERT_EQ (ghost_id, ghost_entry) << "Error when exchanging ghost data. Received wrong element id.\n";

@@ -38,7 +38,7 @@
  * \param[in] tree_class_expr The name of the tree class 
  * \param[in] elem_1_expr The name of the first element \a elem_1
  * \param[in] elem_2_expr The name of the second element \a elem_2
- * \param[in] ts The scheme to use to check the equality
+ * \param[in] scheme The scheme to use to check the equality
  * \param[in] tree_class The eclass of the tree the elements are part of
  * \param[in] elem_1 The element to compare with \a elem_2
  * \param[in] elem_2 the element to compare with \a elem_1
@@ -46,18 +46,18 @@
  */
 testing::AssertionResult
 element_equality (const char *ts_expr, const char *tree_class_expr, const char *elem_1_expr, const char *elem_2_expr,
-                  const t8_scheme *ts, const t8_eclass_t tree_class, const t8_element_t *elem_1,
+                  const t8_scheme *scheme, const t8_eclass_t tree_class, const t8_element_t *elem_1,
                   const t8_element_t *elem_2)
 {
-  if (ts->element_is_equal (tree_class, elem_1, elem_2)) {
+  if (scheme->element_is_equal (tree_class, elem_1, elem_2)) {
     return testing::AssertionSuccess ();
   }
   else {
 #if T8_ENABLE_DEBUG
     char elem_1_string[BUFSIZ];
     char elem_2_string[BUFSIZ];
-    ts->element_to_string (tree_class, elem_1, elem_1_string, BUFSIZ);
-    ts->element_to_string (tree_class, elem_2, elem_2_string, BUFSIZ);
+    scheme->element_to_string (tree_class, elem_1, elem_1_string, BUFSIZ);
+    scheme->element_to_string (tree_class, elem_2, elem_2_string, BUFSIZ);
     return testing::AssertionFailure () << elem_1_expr << " " << elem_1_string << " is not equal to \n"
                                         << elem_2_expr << " " << elem_2_string << " given scheme " << ts_expr
                                         << " and tree class " << tree_class_expr << " "

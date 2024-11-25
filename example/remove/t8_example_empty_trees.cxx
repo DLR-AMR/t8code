@@ -35,7 +35,7 @@ T8_EXTERN_C_BEGIN ();
  *  global trees which is given by the user_data. */
 static int
 t8_adapt_remove (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
-                 t8_locidx_t lelement_id, const t8_scheme *ts, const int is_family, const int num_elements,
+                 t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family, const int num_elements,
                  t8_element_t *elements[])
 {
   const t8_gloidx_t *tree_id = (const t8_gloidx_t *) t8_forest_get_user_data (forest);

@@ -97,7 +97,7 @@ t8_output_data_to_vtu (t8_forest_t forest, double *data, const char *prefix)
 /* Refine, if element is within a given radius. */
 static int
 t8_adapt_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
-                 t8_locidx_t lelement_id, const t8_scheme *ts, const int is_family, const int num_elements,
+                 t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family, const int num_elements,
                  t8_element_t *elements[])
 {
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
@@ -116,7 +116,7 @@ t8_adapt_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_
 /* Remove, element if it is within our outside a given radius. */
 static int
 t8_adapt_remove (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
-                 t8_locidx_t lelement_id, const t8_scheme *ts, const int is_family, const int num_elements,
+                 t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family, const int num_elements,
                  t8_element_t *elements[])
 {
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);

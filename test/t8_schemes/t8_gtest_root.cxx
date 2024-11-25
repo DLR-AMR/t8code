@@ -47,7 +47,6 @@ class root: public testing::TestWithParam<t8_eclass> {
   }
   t8_element_t *element;
   t8_scheme *scheme;
-  t8_scheme *ts;
   t8_eclass_t eclass;
 };
 
@@ -63,7 +62,7 @@ TEST_P (root, equals_linear_id_0_0)
   t8_element_t *root_compare;
   scheme->element_new (eclass, 1, &root_compare);
   scheme->element_set_linear_id (eclass, root_compare, 0, 0);
-  EXPECT_ELEM_EQ (ts, eclass, element, root_compare);
+  EXPECT_ELEM_EQ (scheme, eclass, element, root_compare);
   scheme->element_destroy (eclass, 1, &root_compare);
 }
 

@@ -38,7 +38,7 @@ t8_scheme_new_default (void);
 /** Check whether a given eclass_scheme is one of the default schemes.
  * \param [in] scheme   A (pointer to a) scheme
  * \param [in] eclass   The eclass to check
- * \return              True (non-zero) if \a ts is one of the default schemes,
+ * \return              True (non-zero) if \a scheme is one of the default schemes,
  *                      false (zero) otherwise.
  */
 int

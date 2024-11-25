@@ -85,8 +85,8 @@ t8_common_within_levelset (t8_forest_t forest, t8_locidx_t ltreeid, t8_element_t
  */
 int
 t8_common_adapt_balance (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
-                         t8_locidx_t lelement_id, const t8_scheme_c *ts, const int is_family, const int num_elements,
-                         t8_element_t *elements[]);
+                         t8_locidx_t lelement_id, const t8_scheme_c *scheme, const int is_family,
+                         const int num_elements, t8_element_t *elements[]);
 
 /** Adapt a forest along a given level-set function.
  * The user data of forest must be a pointer to a \a t8_example_level_set_struct_t.
@@ -97,8 +97,8 @@ t8_common_adapt_balance (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_
  *        if band_with = 0, then all elements that are touched by the zero LS are refined. */
 int
 t8_common_adapt_level_set (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
-                           t8_locidx_t lelement_id, const t8_scheme_c *ts, const int is_family, const int num_elements,
-                           t8_element_t *elements[]);
+                           t8_locidx_t lelement_id, const t8_scheme_c *scheme, const int is_family,
+                           const int num_elements, t8_element_t *elements[]);
 
 /** Real valued functions defined in t8_example_common_functions.h */
 

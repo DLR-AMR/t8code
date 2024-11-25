@@ -121,7 +121,7 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
   element_compare (const t8_element_t *elem1, const t8_element_t *elem2) const;
 
   /** Check if two elements are equal.
-  * \param [in] ts     Implementation of a class scheme.
+  * \param [in] scheme     Implementation of a class scheme.
   * \param [in] elem1  The first element.
   * \param [in] elem2  The second element.
   * \return            1 if the elements are equal, 0 if they are not equal
@@ -255,7 +255,7 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
 
   /** Query whether a given set of elements is a family or not.
    * \param [in] fam      An array of as many elements as an element of class
-   *                      \b ts has siblings.
+   *                      \b scheme has siblings.
    * \return              Zero if \b fam is not a family, nonzero if it is.
    * \note level 0 elements do not form a family.
    */

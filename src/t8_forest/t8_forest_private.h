@@ -411,7 +411,7 @@ t8_forest_print_all_leaf_neighbors (t8_forest_t forest);
  * \param [in]  forest    The forest.
  * \param [in]  gtreeid   The global id of the tree the element is in
  * \param [in]  element   The element
- * \param [in]  ts        The eclass of \a element.
+ * \param [in]  scheme        The eclass of \a element.
  * \return                True if in the forest there exists a local leaf or ghost
  *                        leaf that is a descendant of \a element but not equal to \a element.
  * \note If no ghost layer was created for the forest, only local elements are tested.

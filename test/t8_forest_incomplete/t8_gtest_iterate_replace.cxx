@@ -72,7 +72,7 @@ struct t8_return_data
  * \a num_incoming and \a first_incoming for correctness. */
 void
 t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree, t8_eclass_t tree_class,
-                   const t8_scheme *ts, int refine, int num_outgoing, t8_locidx_t first_outgoing, int num_incoming,
+                   const t8_scheme *scheme, int refine, int num_outgoing, t8_locidx_t first_outgoing, int num_incoming,
                    t8_locidx_t first_incoming)
 {
   /* Note, the new forest contains the callback returns of the old forest */
@@ -101,19 +101,19 @@ t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
     /* Begin check family */
     const t8_element_t *parent = t8_forest_get_element_in_tree (forest_new, which_tree, first_incoming);
     t8_element_t *parent_compare;
-    ts->element_new (tree_class, 1, &parent_compare);
+    scheme->element_new (tree_class, 1, &parent_compare);
     int family_size = 1;
     t8_locidx_t tree_num_elements_old = t8_forest_get_tree_num_elements (forest_old, which_tree);
-    for (t8_locidx_t elidx = 1;
-         elidx < ts->element_get_num_children (tree_class, parent) && elidx + first_outgoing < tree_num_elements_old;
+    for (t8_locidx_t elidx = 1; elidx < scheme->element_get_num_children (tree_class, parent)
+                                && elidx + first_outgoing < tree_num_elements_old;
          elidx++) {
       const t8_element_t *child = t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing + elidx);
-      ts->element_get_parent (tree_class, child, parent_compare);
-      if (ts->element_is_equal (tree_class, parent, parent_compare)) {
+      scheme->element_get_parent (tree_class, child, parent_compare);
+      if (scheme->element_is_equal (tree_class, parent, parent_compare)) {
         family_size++;
       }
     }
-    ts->element_destroy (tree_class, 1, &parent_compare);
+    scheme->element_destroy (tree_class, 1, &parent_compare);
     ASSERT_EQ (num_outgoing, family_size);
     /* End check family */
 
@@ -133,7 +133,7 @@ t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
   if (refine == 1) {
     ASSERT_EQ (num_outgoing, 1);
     const t8_element_t *element = t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing);
-    const t8_locidx_t family_size = ts->element_get_num_children (tree_class, element);
+    const t8_locidx_t family_size = scheme->element_get_num_children (tree_class, element);
     ASSERT_EQ (num_incoming, family_size);
   }
 }
@@ -146,7 +146,7 @@ t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
 */
 int
 t8_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
-                   t8_locidx_t lelement_id, const t8_scheme *ts, const int is_family, const int num_elements,
+                   t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family, const int num_elements,
                    t8_element_t *elements[])
 {
   struct t8_return_data *return_data = (struct t8_return_data *) t8_forest_get_user_data (forest);

@@ -43,7 +43,7 @@ T8_EXTERN_C_BEGIN ();
  * if we refine recursively. */
 static int
 t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t ltree_id, t8_eclass_t tree_class,
-                         t8_locidx_t lelement_id, const t8_scheme *ts, const int is_family, const int num_elements,
+                         t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family, const int num_elements,
                          t8_element_t *elements[])
 {
   int *pdone, iface, num_faces, num_half_neighbors, ineigh;
@@ -60,18 +60,18 @@ t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_
    */
 
   if (forest_from->maxlevel_existing <= 0
-      || ts->element_get_level (tree_class, element) <= forest_from->maxlevel_existing - 2) {
+      || scheme->element_get_level (tree_class, element) <= forest_from->maxlevel_existing - 2) {
 
     pdone = (int *) forest->t8code_data;
 
-    num_faces = ts->element_get_num_faces (tree_class, element);
+    num_faces = scheme->element_get_num_faces (tree_class, element);
     for (iface = 0; iface < num_faces; iface++) {
       /* Get the element class and scheme of the face neighbor */
       neigh_class = t8_forest_element_neighbor_eclass (forest_from, ltree_id, element, iface);
       /* Allocate memory for the number of half face neighbors */
-      num_half_neighbors = ts->element_get_num_face_children (tree_class, element, iface);
+      num_half_neighbors = scheme->element_get_num_face_children (tree_class, element, iface);
       half_neighbors = T8_ALLOC (t8_element_t *, num_half_neighbors);
-      ts->element_new (neigh_class, num_half_neighbors, half_neighbors);
+      scheme->element_new (neigh_class, num_half_neighbors, half_neighbors);
       /* Compute the half face neighbors of element at this face */
       neighbor_tree = t8_forest_element_half_face_neighbors (forest_from, ltree_id, element, half_neighbors,
                                                              neigh_class, iface, num_half_neighbors, NULL);
@@ -84,14 +84,14 @@ t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_
             /* This element should be refined */
             *pdone = 0;
             /* clean-up */
-            ts->element_destroy (neigh_class, num_half_neighbors, half_neighbors);
+            scheme->element_destroy (neigh_class, num_half_neighbors, half_neighbors);
             T8_FREE (half_neighbors);
             return 1;
           }
         }
       }
       /* clean-up */
-      ts->element_destroy (neigh_class, num_half_neighbors, half_neighbors);
+      scheme->element_destroy (neigh_class, num_half_neighbors, half_neighbors);
       T8_FREE (half_neighbors);
     }
   }
@@ -318,7 +318,7 @@ t8_forest_is_balanced (t8_forest_t forest)
   t8_forest_t forest_from;
   t8_locidx_t num_trees, num_elements;
   t8_locidx_t itree, ielem;
-  t8_scheme *ts;
+  t8_scheme *scheme;
   void *data_temp;
   int dummy_int;
 
@@ -337,14 +337,15 @@ t8_forest_is_balanced (t8_forest_t forest)
   /* Iterate over all trees */
   for (itree = 0; itree < num_trees; itree++) {
     num_elements = t8_forest_get_tree_num_elements (forest, itree);
-    ts = t8_forest_get_scheme (forest);
+    scheme = t8_forest_get_scheme (forest);
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
     /* Iterate over all elements of this tree */
     for (ielem = 0; ielem < num_elements; ielem++) {
       const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielem);
       /* Test if this element would need to be refined in the balance step.
        * If so, the forest is not balanced locally. */
-      if (t8_forest_balance_adapt (forest, forest, itree, tree_class, ielem, ts, 0, 1, (t8_element_t **) (&element))) {
+      if (t8_forest_balance_adapt (forest, forest, itree, tree_class, ielem, scheme, 0, 1,
+                                   (t8_element_t **) (&element))) {
         forest->set_from = forest_from;
         forest->t8code_data = data_temp;
         return 0;

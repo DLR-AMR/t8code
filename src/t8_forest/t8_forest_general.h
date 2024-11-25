@@ -64,7 +64,7 @@ T8_EXTERN_C_BEGIN ();
  * \param [in] forest_new      The forest that is newly constructed from \a forest_old
  * \param [in] which_tree      The local tree containing \a first_outgoing and \a first_incoming
  * \param [in] tree_class      The eclass of the local tree containing \a first_outgoing and \a first_incoming
- * \param [in] ts              The scheme of the forest
+ * \param [in] scheme              The scheme of the forest
  * \param [in] refine          -1 if family in \a forest_old got coarsened, 0 if element
  *                             has not been touched, 1 if element got refined and -2 if
  *                             element got removed. See return of t8_forest_adapt_t.
@@ -85,7 +85,7 @@ T8_EXTERN_C_BEGIN ();
  * \see t8_forest_iterate_replace
  */
 typedef void (*t8_forest_replace_t) (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree,
-                                     t8_eclass_t tree_class, const t8_scheme_c *ts, const int refine,
+                                     t8_eclass_t tree_class, const t8_scheme_c *scheme, const int refine,
                                      const int num_outgoing, const t8_locidx_t first_outgoing, const int num_incoming,
                                      const t8_locidx_t first_incoming);
 
@@ -101,7 +101,7 @@ typedef void (*t8_forest_replace_t) (t8_forest_t forest_old, t8_forest_t forest_
  * \param [in] which_tree   The local tree containing \a elements.
  * \param [in] tree_class   The eclass of \a which_tree.
  * \param [in] lelement_id  The local element id in \a forest_old in the tree of the current element.
- * \param [in] ts           The scheme of the forest.
+ * \param [in] scheme           The scheme of the forest.
  * \param [in] is_family    If 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
  * \param [in] num_elements The number of entries in \a elements that are defined
  * \param [in] elements     Pointers to a family or, if \a is_family is zero,
@@ -114,7 +114,7 @@ typedef void (*t8_forest_replace_t) (t8_forest_t forest_old, t8_forest_t forest_
 /* TODO: Do we really need the forest argument? Since the forest is not committed yet it
  *       seems dangerous to expose to the user. */
 typedef int (*t8_forest_adapt_t) (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                                  t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme_c *ts,
+                                  t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme_c *scheme,
                                   const int is_family, const int num_elements, t8_element_t *elements[]);
 
 /** Create a new forest with reference count one.
@@ -471,7 +471,7 @@ t8_forest_get_local_id (const t8_forest_t forest, const t8_gloidx_t gtreeid);
  * \return                 The tree's local id in \a forest, if it is a local tree.
  *                         num_local_trees + the ghosts id, if it is a ghost tree.
  *                         A negative number if not.
- * \see https://github.com/DLR-AMR/t8code/wiki/Tree-indexing for more details about tree indexing.
+ * \see https://github.com/DLR-AMR/t8code/wiki/Tree-indexing for more details about tree indexing
  */
 t8_locidx_t
 t8_forest_get_local_or_ghost_id (const t8_forest_t forest, const t8_gloidx_t gtreeid);
@@ -522,7 +522,7 @@ t8_forest_element_is_leaf (const t8_forest_t forest, const t8_element_t *element
 /** Compute the leaf face orientation at given face in a forest.
  * \param [in]    forest  The forest. Must have a valid ghost layer.
  * \param [in]    ltreeid A local tree id.
- * \param [in]    ts      The eclass scheme of the element.
+ * \param [in]    scheme      The eclass scheme of the element.
  * \param [in]    leaf    A leaf in tree \a ltreeid of \a forest.
  * \param [in]    face    The index of the face across which the face neighbors
  *                        are searched.
@@ -531,7 +531,7 @@ t8_forest_element_is_leaf (const t8_forest_t forest, const t8_element_t *element
  * For more information about the encoding of face orientation refer to \ref t8_cmesh_get_face_neighbor.
  */
 int
-t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_scheme_c *ts,
+t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_scheme_c *scheme,
                                  const t8_element_t *leaf, int face);
 
 /** Compute the leaf face neighbors of a forest.
