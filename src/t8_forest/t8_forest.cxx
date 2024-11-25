@@ -1099,7 +1099,7 @@ t8_forest_compute_desc (t8_forest_t forest)
 {
   t8_locidx_t itree_id, num_trees, num_elements;
   t8_tree_t itree;
-  const t8_scheme *ts = t8_forest_get_scheme (forest);
+  const t8_scheme *ts = t8_forest_get_scheme_before_commit (forest);
 
   T8_ASSERT (forest != NULL);
   /* Iterate over all trees */
