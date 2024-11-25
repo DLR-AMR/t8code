@@ -23,7 +23,7 @@
 #pragma once
 
 #include <variant>
-#include <array>
+#include <vector>
 #include <t8_refcount.h>
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
@@ -72,7 +72,7 @@ class t8_scheme {
                                 >;
   /* clang-format on */
 
-  using scheme_container = std::array<scheme_var, T8_ECLASS_COUNT>; /**< Container type for holding eclass schemes. */
+  using scheme_container = std::vector<scheme_var>; /**< Container type for holding eclass schemes. */
 
  private:
   scheme_container eclass_schemes; /**< The container holding the eclass schemes. */
