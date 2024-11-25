@@ -34,36 +34,36 @@ class root: public testing::TestWithParam<t8_eclass> {
   void
   SetUp () override
   {
-    eclass = GetParam ();
+    tree_class = GetParam ();
     scheme = t8_scheme_new_default ();
-    scheme->element_new (eclass, 1, &element);
-    scheme->get_root (eclass, element);
+    scheme->element_new (tree_class, 1, &element);
+    scheme->get_root (tree_class, element);
   }
   void
   TearDown () override
   {
-    scheme->element_destroy (eclass, 1, &element);
+    scheme->element_destroy (tree_class, 1, &element);
     scheme->unref ();
   }
   t8_element_t *element;
   t8_scheme *scheme;
-  t8_eclass_t eclass;
+  t8_eclass_t tree_class;
 };
 
 /*Test root*/
 
 TEST_P (root, has_level_zero)
 {
-  EXPECT_EQ (scheme->element_get_level (eclass, element), 0);
+  EXPECT_EQ (scheme->element_get_level (tree_class, element), 0);
 }
 
 TEST_P (root, equals_linear_id_0_0)
 {
   t8_element_t *root_compare;
-  scheme->element_new (eclass, 1, &root_compare);
-  scheme->element_set_linear_id (eclass, root_compare, 0, 0);
-  EXPECT_ELEM_EQ (scheme, eclass, element, root_compare);
-  scheme->element_destroy (eclass, 1, &root_compare);
+  scheme->element_new (tree_class, 1, &root_compare);
+  scheme->element_set_linear_id (tree_class, root_compare, 0, 0);
+  EXPECT_ELEM_EQ (scheme, tree_class, element, root_compare);
+  scheme->element_destroy (tree_class, 1, &root_compare);
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_root, root, AllEclasses, print_eclass);
