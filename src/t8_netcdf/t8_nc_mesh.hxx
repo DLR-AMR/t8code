@@ -9,6 +9,7 @@
 #include <t8_netcdf/t8_nc_hyperslab.hxx>
 
 #include <utility>
+#include <numeric>
 
 std::pair<t8_forest_t, int>
 t8_nc_build_initial_embedded_mesh (const t8_nc_geo_domain_t& domain, const t8_nc_data_layout_t initial_layout,
