@@ -35,7 +35,7 @@
 #define T8_COMMON_IS_TYPE(VAR, TYPE) ((dynamic_cast<TYPE> (VAR)) != NULL)
 
 /** This class independent function assumes an sc_mempool_t as context.
- * It is suitable as the elem_new callback in \ref t8_eclass_scheme_t.
+ * It is suitable as the element_new callback in \ref t8_eclass_scheme.
  * We assume that the mempool has been created with the correct element size.
  * \param [in,out] ts_context   An element is allocated in this sc_mempool_t.
  * \param [in]     length       Non-negative number of elements to allocate.
