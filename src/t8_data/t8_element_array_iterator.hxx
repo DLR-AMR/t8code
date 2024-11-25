@@ -200,14 +200,14 @@ class t8_element_array_iterator {
 
   /* Return the index within the array the iterator currently points to [0,...,size]. */
   t8_locidx_t
-  GetCurrentIndex () const
+  get_current_index () const
   {
     return current_index;
   };
 
   /* Compute the linear id at a given level for the element the iterator points to. */
   t8_linearidx_t
-  GetLinearIDAtLevel (const int level)
+  get_linear_id_at_level (const int level)
   {
     T8_ASSERT (current_index >= 0 && static_cast<size_t> (current_index) < elements->elem_count);
     return scheme->t8_element_get_linear_id (*(*this), level);

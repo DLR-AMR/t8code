@@ -1471,7 +1471,7 @@ t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_lineari
    * In case we do not find an element that is greater than the given element_id, the binary search returns
    * the end-iterator of the element array. In that case, we want to return the last index from the element
    * array. */
-  return elem_iter.GetCurrentIndex () - 1;
+  return elem_iter.get_current_index () - 1;
 }
 
 t8_eclass_t
