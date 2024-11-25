@@ -198,14 +198,19 @@ class t8_element_array_iterator {
     return lhs.current_index - rhs.current_index;
   }
 
-  /* Return the index within the array the iterator currently points to [0,...,size]. */
+  /** Return the index within the array the iterator currently points to [0,...,size]. 
+   * \return The index within the array the iterator currently points to.
+  */
   t8_locidx_t
   get_current_index () const
   {
     return current_index;
   };
 
-  /* Compute the linear id at a given level for the element the iterator points to. */
+  /** Compute the linear id at a given level for the element the iterator points to. 
+   * \param[in] level The level at which the linear id should be computed.
+   * \return The linear id at the given level.
+  */
   t8_linearidx_t
   get_linear_id_at_level (const int level)
   {
