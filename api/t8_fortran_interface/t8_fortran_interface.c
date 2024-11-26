@@ -125,7 +125,7 @@ t8_forest_new_uniform_default (t8_cmesh_t cmesh, int level, int do_face_ghost, s
 
 int
 t8_fortran_adapt_by_coordinates_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                                          t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme_c *ts,
+                                          t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme_c *scheme,
                                           const int is_family, int num_elements, t8_element_t *elements[])
 {
   t8_fortran_adapt_coordinate_callback callback
@@ -138,11 +138,11 @@ t8_fortran_adapt_by_coordinates_callback (t8_forest_t forest, t8_forest_t forest
   /* Coarsen if a family was given and return value is negative. */
   if (is_family) {
     /* The elements form a family */
-    T8_ASSERT (t8_elements_are_family (ts, elements));
+    T8_ASSERT (t8_elements_are_family (scheme, elements));
     /* Build the parent. */
     t8_element_t *parent;
-    t8_element_new (ts, 1, &parent);
-    t8_element_parent (ts, elements[0], parent);
+    t8_element_new (scheme, 1, &parent);
+    t8_element_parent (scheme, elements[0], parent);
     /* Get the coordinates of the parent. */
     t8_forest_element_centroid (forest_from, which_tree, parent, midpoint);
 

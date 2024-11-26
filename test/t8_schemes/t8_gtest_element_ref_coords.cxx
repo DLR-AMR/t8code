@@ -76,18 +76,18 @@ t8_element_centroid_by_vertex_coords (const t8_forest_t forest, const t8_locidx_
   double vertex_ref_coords[3], vertex_out_coords[3];
   const t8_gloidx_t gtreeid = t8_forest_global_tree_id (forest, ltreeid);
   const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
-  const t8_scheme *ts = t8_forest_get_scheme (forest);
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
 
   /* Initialize the centroid with (0, 0, 0). */
   std::fill_n (coordinates, 3, 0);
   /* Get the number of corners of the element. */
-  const int num_vertices = ts->element_get_num_corners (tree_class, element);
+  const int num_vertices = scheme->element_get_num_corners (tree_class, element);
   for (int i_vertex = 0; i_vertex < num_vertices; i_vertex++) {
     /* For each corner, add its coordinates to the centroids coordinates. */
 
     /* Compute the vertex coordinates inside [0,1]^dim reference cube. */
-    ts->element_get_vertex_reference_coords (tree_class, element, i_vertex, vertex_ref_coords);
+    scheme->element_get_vertex_reference_coords (tree_class, element, i_vertex, vertex_ref_coords);
     /* Evaluate the geometry */
     t8_geometry_evaluate (cmesh, gtreeid, vertex_ref_coords, 1, vertex_out_coords);
     /* coordinates = coordinates + vertex_coords */
@@ -184,7 +184,7 @@ t8_compare_arrays (const double *array1, const double *array2, const int dim, co
 void
 t8_test_coords (const t8_forest_t forest, const t8_locidx_t ltree_id, const t8_element_t *element)
 {
-  const t8_scheme *ts = t8_forest_get_scheme (forest);
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltree_id);
 
   double tree_ref_coords_by_vertex
@@ -201,15 +201,15 @@ t8_test_coords (const t8_forest_t forest, const t8_locidx_t ltree_id, const t8_e
      * T8_ECLASS_MAX_DIM]; /** reference coordinates of the element vertices computed by \ref t8_get_batch_coords_for_element_type */
 
   /* compare results of the two different way to obtain tree ref coords */
-  const t8_element_shape_t shape = ts->element_get_shape (tree_class, element);
+  const t8_element_shape_t shape = scheme->element_get_shape (tree_class, element);
   const int num_vertices = t8_eclass_num_vertices[shape];
   const int elem_dim = t8_eclass_to_dimension[shape];
   t8_get_batch_coords_for_element_type (shape, batch_coords);
 
-  ts->element_get_reference_coords (tree_class, element, batch_coords, num_vertices,
-                                    tree_ref_coords_by_element_ref_coords);
+  scheme->element_get_reference_coords (tree_class, element, batch_coords, num_vertices,
+                                        tree_ref_coords_by_element_ref_coords);
   for (int i_vertex = 0; i_vertex < num_vertices; ++i_vertex) {
-    ts->element_get_vertex_reference_coords (tree_class, element, i_vertex, tree_ref_coords_by_vertex);
+    scheme->element_get_vertex_reference_coords (tree_class, element, i_vertex, tree_ref_coords_by_vertex);
     EXPECT_TRUE (t8_compare_arrays (tree_ref_coords_by_vertex,
                                     tree_ref_coords_by_element_ref_coords + i_vertex * elem_dim, elem_dim,
                                     2 * T8_PRECISION_EPS))

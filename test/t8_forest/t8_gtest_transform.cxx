@@ -71,16 +71,16 @@ class forest_transform: public testing::TestWithParam<std::tuple<t8_eclass, int>
 };
 
 static void
-t8_test_transform_element (t8_scheme *ts, const t8_element_t *elem, t8_eclass_t tree_class)
+t8_test_transform_element (t8_scheme *scheme, const t8_element_t *elem, t8_eclass_t tree_class)
 {
   t8_element_t *transform;
 
-  ts->element_new (tree_class, 1, &transform);
+  scheme->element_new (tree_class, 1, &transform);
 
-  ts->element_transform_face (tree_class, elem, transform, 0, 0, 0);
-  EXPECT_ELEM_EQ (ts, tree_class, elem, transform);
-  ts->element_transform_face (tree_class, elem, transform, 0, 0, 1);
-  EXPECT_ELEM_EQ (ts, tree_class, elem, transform);
+  scheme->element_transform_face (tree_class, elem, transform, 0, 0, 0);
+  EXPECT_ELEM_EQ (scheme, tree_class, elem, transform);
+  scheme->element_transform_face (tree_class, elem, transform, 0, 0, 1);
+  EXPECT_ELEM_EQ (scheme, tree_class, elem, transform);
   if (tree_class == T8_ECLASS_TRIANGLE) {
     /* For triangles we test:
      * 3 times ori = 1 sign = 0  == identity
@@ -89,29 +89,29 @@ t8_test_transform_element (t8_scheme *ts, const t8_element_t *elem, t8_eclass_t 
      * ori = 1 sign = 1, then ori = 1 sign = 1  == identity
      * ori = 2 sign = 1, then ori = 2 sign = 1  == identity
      */
-    ts->element_copy (tree_class, elem, transform);
+    scheme->element_copy (tree_class, elem, transform);
     /* 3 time or = 1 sign = 0 */
     for (int itimes = 0; itimes < 3; itimes++) {
-      ts->element_transform_face (tree_class, transform, transform, 1, 0, 0);
+      scheme->element_transform_face (tree_class, transform, transform, 1, 0, 0);
     }
 
-    EXPECT_ELEM_EQ (ts, tree_class, elem, transform);
+    EXPECT_ELEM_EQ (scheme, tree_class, elem, transform);
     /* or = 1 sign = 0, then or = 2 sign = 0 */
-    ts->element_transform_face (tree_class, transform, transform, 1, 0, 0);
-    ts->element_transform_face (tree_class, transform, transform, 2, 0, 0);
-    EXPECT_ELEM_EQ (ts, tree_class, elem, transform);
+    scheme->element_transform_face (tree_class, transform, transform, 1, 0, 0);
+    scheme->element_transform_face (tree_class, transform, transform, 2, 0, 0);
+    EXPECT_ELEM_EQ (scheme, tree_class, elem, transform);
     /* or = 2 sign = 0, then or = 1 sign = 0 */
-    ts->element_transform_face (tree_class, transform, transform, 2, 0, 0);
-    ts->element_transform_face (tree_class, transform, transform, 1, 0, 0);
-    EXPECT_ELEM_EQ (ts, tree_class, elem, transform);
+    scheme->element_transform_face (tree_class, transform, transform, 2, 0, 0);
+    scheme->element_transform_face (tree_class, transform, transform, 1, 0, 0);
+    EXPECT_ELEM_EQ (scheme, tree_class, elem, transform);
     /* or = 1 sign = 1, then or = 1 sign = 1 */
-    ts->element_transform_face (tree_class, transform, transform, 1, 1, 0);
-    ts->element_transform_face (tree_class, transform, transform, 1, 1, 0);
-    EXPECT_ELEM_EQ (ts, tree_class, elem, transform);
+    scheme->element_transform_face (tree_class, transform, transform, 1, 1, 0);
+    scheme->element_transform_face (tree_class, transform, transform, 1, 1, 0);
+    EXPECT_ELEM_EQ (scheme, tree_class, elem, transform);
     /* or = 2 sign = 1, then or = 2 sign = 1 */
-    ts->element_transform_face (tree_class, transform, transform, 2, 1, 0);
-    ts->element_transform_face (tree_class, transform, transform, 2, 1, 0);
-    EXPECT_ELEM_EQ (ts, tree_class, elem, transform);
+    scheme->element_transform_face (tree_class, transform, transform, 2, 1, 0);
+    scheme->element_transform_face (tree_class, transform, transform, 2, 1, 0);
+    EXPECT_ELEM_EQ (scheme, tree_class, elem, transform);
   }
   else {
     T8_ASSERT (tree_class == T8_ECLASS_QUAD);
@@ -124,43 +124,44 @@ t8_test_transform_element (t8_scheme *ts, const t8_element_t *elem, t8_eclass_t 
      * ori = 2 sign = 1, then ori = 1 sign = 1  == identity
      */
 
-    ts->element_copy (tree_class, elem, transform);
+    scheme->element_copy (tree_class, elem, transform);
     /* 4 times or = 1 sign = 0 */
     for (int itimes = 0; itimes < 4; itimes++) {
-      ts->element_transform_face (tree_class, transform, transform, 1, 0, 1);
+      scheme->element_transform_face (tree_class, transform, transform, 1, 0, 1);
     }
-    EXPECT_ELEM_EQ (ts, tree_class, elem, transform);
+    EXPECT_ELEM_EQ (scheme, tree_class, elem, transform);
     /* 4 times or = 1 sign = 0, if not smaller face */
     for (int itimes = 0; itimes < 4; itimes++) {
-      ts->element_transform_face (tree_class, transform, transform, 1, 0, 0);
+      scheme->element_transform_face (tree_class, transform, transform, 1, 0, 0);
     }
-    EXPECT_ELEM_EQ (ts, tree_class, elem, transform);
+    EXPECT_ELEM_EQ (scheme, tree_class, elem, transform);
     /* or = 1 sign = 0, then or = 3 sign = 0, then ori = 1 sign = 0 */
-    ts->element_transform_face (tree_class, transform, transform, 1, 0, 1);
-    ts->element_transform_face (tree_class, transform, transform, 3, 0, 1);
-    ts->element_transform_face (tree_class, transform, transform, 1, 0, 1);
-    EXPECT_ELEM_EQ (ts, tree_class, elem, transform);
+    scheme->element_transform_face (tree_class, transform, transform, 1, 0, 1);
+    scheme->element_transform_face (tree_class, transform, transform, 3, 0, 1);
+    scheme->element_transform_face (tree_class, transform, transform, 1, 0, 1);
+    EXPECT_ELEM_EQ (scheme, tree_class, elem, transform);
     /* or = 2 sign = 0, then or = 1 sign = 0 */
-    ts->element_transform_face (tree_class, transform, transform, 2, 0, 1);
-    ts->element_transform_face (tree_class, transform, transform, 1, 0, 1);
-    EXPECT_ELEM_EQ (ts, tree_class, elem, transform);
+    scheme->element_transform_face (tree_class, transform, transform, 2, 0, 1);
+    scheme->element_transform_face (tree_class, transform, transform, 1, 0, 1);
+    EXPECT_ELEM_EQ (scheme, tree_class, elem, transform);
     /* TODO: Add tests */
   }
 
   /* Transforming back and forth must lead to the same element */
   for (int iorientation = 0; iorientation < t8_eclass_num_vertices[tree_class]; iorientation++) {
     for (int sign = 0; sign < 2; sign++) {
-      ts->element_transform_face (tree_class, elem, transform, iorientation, sign, 1);
-      ts->element_transform_face (tree_class, transform, transform, iorientation, sign, 0);
-      EXPECT_ELEM_EQ (ts, tree_class, elem, transform) << "Orientation " << iorientation << " smaller sign " << sign;
-      ts->element_transform_face (tree_class, elem, transform, iorientation, sign, 0);
-      ts->element_transform_face (tree_class, transform, transform, iorientation, sign, 1);
-      EXPECT_ELEM_EQ (ts, tree_class, elem, transform)
+      scheme->element_transform_face (tree_class, elem, transform, iorientation, sign, 1);
+      scheme->element_transform_face (tree_class, transform, transform, iorientation, sign, 0);
+      EXPECT_ELEM_EQ (scheme, tree_class, elem, transform)
+        << "Orientation " << iorientation << " smaller sign " << sign;
+      scheme->element_transform_face (tree_class, elem, transform, iorientation, sign, 0);
+      scheme->element_transform_face (tree_class, transform, transform, iorientation, sign, 1);
+      EXPECT_ELEM_EQ (scheme, tree_class, elem, transform)
         << "Orientation " << iorientation << " not smaller sign " << sign;
     }
   }
 
-  ts->element_destroy (tree_class, 1, &transform);
+  scheme->element_destroy (tree_class, 1, &transform);
 }
 
 TEST_P (forest_transform, test_forest_transform_elements)

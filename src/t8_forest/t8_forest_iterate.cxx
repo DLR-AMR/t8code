@@ -31,7 +31,7 @@ T8_EXTERN_C_BEGIN ();
 
 typedef struct
 {
-  const t8_scheme *ts;
+  const t8_scheme *scheme;
   t8_eclass_t tree_class;
   int level;
   int num_children;
@@ -47,9 +47,9 @@ t8_forest_determine_child_type (sc_array_t *leaf_elements, size_t index, void *d
 
   /* Get a pointer to the element */
   element = (t8_element_t *) t8_sc_array_index_locidx (leaf_elements, index);
-  T8_ASSERT (query_data->level < query_data->ts->element_get_level (query_data->tree_class, element));
+  T8_ASSERT (query_data->level < query_data->scheme->element_get_level (query_data->tree_class, element));
   /* Compute the element's ancestor id at the stored level and return it as the element's type */
-  return query_data->ts->element_get_ancestor_id (query_data->tree_class, element, query_data->level + 1);
+  return query_data->scheme->element_get_ancestor_id (query_data->tree_class, element, query_data->level + 1);
 }
 
 void
@@ -58,13 +58,13 @@ t8_forest_split_array (const t8_element_t *element, const t8_element_array_t *le
   sc_array_t offset_view;
   t8_forest_child_type_query_t query_data;
 
-  const t8_scheme *ts = t8_element_array_get_scheme (leaf_elements);
+  const t8_scheme *scheme = t8_element_array_get_scheme (leaf_elements);
   const t8_eclass_t tree_class = t8_element_array_get_tree_class (leaf_elements);
   /* Store the number of children and the level of element */
-  query_data.num_children = ts->element_get_num_children (tree_class, element);
-  query_data.level = ts->element_get_level (tree_class, element);
+  query_data.num_children = scheme->element_get_num_children (tree_class, element);
+  query_data.level = scheme->element_get_level (tree_class, element);
   query_data.tree_class = tree_class;
-  query_data.ts = ts;
+  query_data.scheme = scheme;
 
   const sc_array_t *element_array = t8_element_array_get_array (leaf_elements);
   /* Split the elements array according to the elements' ancestor id at
@@ -83,7 +83,7 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
                          const t8_element_array_t *leaf_elements, void *user_data,
                          t8_locidx_t tree_lindex_of_first_leaf, t8_forest_iterate_face_fn callback)
 {
-  t8_scheme *ts;
+  t8_scheme *scheme;
   t8_eclass_t eclass;
   t8_element_t **face_children;
   int child_face, num_face_children, iface;
@@ -100,14 +100,14 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
     return;
   }
   eclass = t8_forest_get_tree_class (forest, ltreeid);
-  ts = t8_forest_get_scheme (forest);
+  scheme = t8_forest_get_scheme (forest);
 
   if (elem_count == 1) {
     /* There is only one leaf left, we check whether it is the same as element
      * and if so call the callback function */
     const t8_element_t *leaf = t8_element_array_index_locidx (leaf_elements, 0);
     T8_ASSERT (t8_forest_element_is_leaf (forest, leaf, ltreeid));
-    if (ts->element_is_equal (eclass, element, leaf)) {
+    if (scheme->element_is_equal (eclass, element, leaf)) {
       /* The element is the leaf, we are at the last stage of the recursion
        * and can call the callback. */
       (void) callback (forest, ltreeid, leaf, face, user_data, tree_lindex_of_first_leaf);
@@ -118,7 +118,7 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
   /* Check whether element has greater level than the first leaf */
   const t8_element_t *leaf = t8_element_array_index_locidx (leaf_elements, 0);
   T8_ASSERT (t8_forest_element_is_leaf (forest, leaf, ltreeid));
-  T8_ASSERT (ts->element_get_level (eclass, element) < ts->element_get_level (eclass, leaf));
+  T8_ASSERT (scheme->element_get_level (eclass, element) < scheme->element_get_level (eclass, leaf));
 #endif
 
   /* Call the callback function element, we pass -index - 1 as index to indicate
@@ -127,15 +127,15 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
     /* Enter the recursion */
     /* We compute all face children of E, compute their leaf arrays and call iterate_faces */
     /* allocate the memory to store the face children */
-    num_face_children = ts->element_get_num_face_children (eclass, element, face);
+    num_face_children = scheme->element_get_num_face_children (eclass, element, face);
     face_children = T8_ALLOC (t8_element_t *, num_face_children);
-    ts->element_new (eclass, num_face_children, face_children);
+    scheme->element_new (eclass, num_face_children, face_children);
     /* Memory for the child indices of the face children */
     child_indices = T8_ALLOC (int, num_face_children);
     /* Memory for the indices that split the leaf_elements array */
-    split_offsets = T8_ALLOC (size_t, ts->element_get_num_children (eclass, element) + 1);
+    split_offsets = T8_ALLOC (size_t, scheme->element_get_num_children (eclass, element) + 1);
     /* Compute the face children */
-    ts->element_get_children_at_face (eclass, element, face, face_children, num_face_children, child_indices);
+    scheme->element_get_children_at_face (eclass, element, face, face_children, num_face_children, child_indices);
     /* Split the leaves array in portions belonging to the children of element */
     t8_forest_split_array (element, leaf_elements, split_offsets);
     for (iface = 0; iface < num_face_children; iface++) {
@@ -147,14 +147,14 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
          * we construct an array of these leaves */
         t8_element_array_init_view (&face_child_leaves, leaf_elements, indexa, indexb - indexa);
         /* Compute the corresponding face number of this face child */
-        child_face = ts->element_face_get_child_face (eclass, element, face, iface);
+        child_face = scheme->element_face_get_child_face (eclass, element, face, iface);
         /* Enter the recursion */
         t8_forest_iterate_faces (forest, ltreeid, face_children[iface], child_face, &face_child_leaves, user_data,
                                  indexa + tree_lindex_of_first_leaf, callback);
       }
     }
     /* clean-up */
-    ts->element_destroy (eclass, num_face_children, face_children);
+    scheme->element_destroy (eclass, num_face_children, face_children);
     T8_FREE (face_children);
     T8_FREE (child_indices);
     T8_FREE (split_offsets);
@@ -299,7 +299,7 @@ t8_forest_search_tree (t8_forest_t forest, t8_locidx_t ltreeid, t8_forest_search
 
   /* Get the element class, scheme and leaf elements of this tree */
   const t8_eclass_t eclass = t8_forest_get_eclass (forest, ltreeid);
-  const t8_scheme *ts = t8_forest_get_scheme (forest);
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
   t8_element_array_t *leaf_elements = t8_forest_tree_get_leaves (forest, ltreeid);
 
   /* assert for empty tree */
@@ -310,14 +310,14 @@ t8_forest_search_tree (t8_forest_t forest, t8_locidx_t ltreeid, t8_forest_search
     = t8_element_array_index_locidx (leaf_elements, t8_element_array_get_count (leaf_elements) - 1);
   /* Compute their nearest common ancestor */
   t8_element_t *nca;
-  ts->element_new (eclass, 1, &nca);
-  ts->element_get_nca (eclass, first_el, last_el, nca);
+  scheme->element_new (eclass, 1, &nca);
+  scheme->element_get_nca (eclass, first_el, last_el, nca);
 
   /* Start the top-down search */
   t8_forest_search_recursion (forest, ltreeid, nca, eclass, leaf_elements, 0, search_fn, query_fn, queries,
                               active_queries);
 
-  ts->element_destroy (eclass, 1, &nca);
+  scheme->element_destroy (eclass, 1, &nca);
 }
 
 void
@@ -351,9 +351,9 @@ t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_fo
   t8_global_productionf ("Into t8_forest_iterate_replace\n");
   T8_ASSERT (t8_forest_is_committed (forest_old));
   T8_ASSERT (t8_forest_is_committed (forest_new));
-  const t8_scheme *ts = t8_forest_get_scheme (forest_new);
+  const t8_scheme *scheme = t8_forest_get_scheme (forest_new);
   // Check that the two forests use the same scheme.
-  T8_ASSERT (ts == t8_forest_get_scheme (forest_old));
+  T8_ASSERT (scheme == t8_forest_get_scheme (forest_old));
 
   const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest_new);
   T8_ASSERT (num_local_trees == t8_forest_get_num_local_trees (forest_old));
@@ -378,8 +378,8 @@ t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_fo
       const t8_element_t *elem_old = t8_forest_get_element_in_tree (forest_old, itree, ielem_old);
 
       /* Get the levels of these elements */
-      const int level_new = ts->element_get_level (tree_class, elem_new);
-      const int level_old = ts->element_get_level (tree_class, elem_old);
+      const int level_new = scheme->element_get_level (tree_class, elem_new);
+      const int level_old = scheme->element_get_level (tree_class, elem_old);
 
       if (forest_new->incomplete_trees) {
         /* If el_removed is 1, the element in forest_new has been removed.
@@ -388,24 +388,25 @@ t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_fo
         if (level_old < level_new) {
           /* elem_old got refined or removed */
           t8_element_t *elem_parent;
-          ts->element_new (tree_class, 1, &elem_parent);
-          ts->element_get_parent (tree_class, elem_new, elem_parent);
-          if (ts->element_is_equal (tree_class, elem_old, elem_parent)) {
+          scheme->element_new (tree_class, 1, &elem_parent);
+          scheme->element_get_parent (tree_class, elem_new, elem_parent);
+          if (scheme->element_is_equal (tree_class, elem_old, elem_parent)) {
             /* elem_old got refined */
             T8_ASSERT (level_new == level_old + 1);
-            const t8_locidx_t family_size = ts->element_get_num_children (tree_class, elem_old);
+            const t8_locidx_t family_size = scheme->element_get_num_children (tree_class, elem_old);
 #if T8_DEBUG
             /* Check if family of new refined elements is complete */
             T8_ASSERT (ielem_new + family_size <= elems_per_tree_new);
             for (t8_locidx_t ielem = 1; ielem < family_size; ielem++) {
               const t8_element_t *elem_new_debug = t8_forest_get_element_in_tree (forest_new, itree, ielem_new + ielem);
-              ts->t8_element_parent (elem_new_debug, elem_parent);
-              SC_CHECK_ABORT (ts->element_is_equal (tree_class, elem_old, elem_parent), "Family is not complete.");
+              scheme->t8_element_parent (elem_new_debug, elem_parent);
+              SC_CHECK_ABORT (scheme->element_is_equal (tree_class, elem_old, elem_parent), "Family is not complete.");
             }
 #endif
-            ts->element_destroy (tree_class, 1, &elem_parent);
+            scheme->element_destroy (tree_class, 1, &elem_parent);
             const int refine = 1;
-            replace_fn (forest_old, forest_new, itree, tree_class, ts, refine, 1, ielem_old, family_size, ielem_new);
+            replace_fn (forest_old, forest_new, itree, tree_class, scheme, refine, 1, ielem_old, family_size,
+                        ielem_new);
             /* Advance to the next element */
             ielem_new += family_size;
             ielem_old++;
@@ -413,42 +414,43 @@ t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_fo
           else {
             /* elem_old got removed */
             el_removed = 1;
-            ts->element_destroy (tree_class, 1, &elem_parent);
+            scheme->element_destroy (tree_class, 1, &elem_parent);
           }
         }
         else if (level_old > level_new) {
           /* elem_old got coarsened or removed */
           t8_element_t *elem_parent;
-          ts->element_new (tree_class, 1, &elem_parent);
-          ts->element_get_parent (tree_class, elem_old, elem_parent);
-          if (ts->element_is_equal (tree_class, elem_new, elem_parent)) {
+          scheme->element_new (tree_class, 1, &elem_parent);
+          scheme->element_get_parent (tree_class, elem_old, elem_parent);
+          if (scheme->element_is_equal (tree_class, elem_new, elem_parent)) {
             /* elem_old got coarsened */
             T8_ASSERT (level_new == level_old - 1);
             /* Get size of family of old forest */
             int family_size = 1;
-            for (t8_locidx_t ielem = 1;
-                 ielem < ts->element_get_num_children (tree_class, elem_new) && ielem + ielem_old < elems_per_tree_old;
+            for (t8_locidx_t ielem = 1; ielem < scheme->element_get_num_children (tree_class, elem_new)
+                                        && ielem + ielem_old < elems_per_tree_old;
                  ielem++) {
               elem_old = t8_forest_get_element_in_tree (forest_old, itree, ielem_old + ielem);
-              ts->element_get_parent (tree_class, elem_old, elem_parent);
-              if (ts->element_is_equal (tree_class, elem_new, elem_parent)) {
+              scheme->element_get_parent (tree_class, elem_old, elem_parent);
+              if (scheme->element_is_equal (tree_class, elem_new, elem_parent)) {
                 family_size++;
               }
             }
-            T8_ASSERT (family_size <= ts->element_get_num_children (tree_class, elem_new));
+            T8_ASSERT (family_size <= scheme->element_get_num_children (tree_class, elem_new));
 #if T8_DEBUG
             /* Check whether elem_old is the first element of the family */
             for (t8_locidx_t ielem = 1;
-                 ielem < ts->element_get_num_children (tree_class, elem_old) && ielem_old - ielem >= 0; ielem++) {
+                 ielem < scheme->element_get_num_children (tree_class, elem_old) && ielem_old - ielem >= 0; ielem++) {
               const t8_element_t *elem_old_debug = t8_forest_get_element_in_tree (forest_old, itree, ielem_old - ielem);
-              ts->element_get_parent (tree_class, elem_old_debug, elem_parent);
-              SC_CHECK_ABORT (!ts->t8_element_equal (elem_new, elem_parent),
+              scheme->element_get_parent (tree_class, elem_old_debug, elem_parent);
+              SC_CHECK_ABORT (!scheme->t8_element_equal (elem_new, elem_parent),
                               "elem_old is not the first of the family.");
             }
 #endif
-            ts->element_destroy (tree_class, 1, &elem_parent);
+            scheme->element_destroy (tree_class, 1, &elem_parent);
             const int refine = -1;
-            replace_fn (forest_old, forest_new, itree, tree_class, ts, refine, family_size, ielem_old, 1, ielem_new);
+            replace_fn (forest_old, forest_new, itree, tree_class, scheme, refine, family_size, ielem_old, 1,
+                        ielem_new);
             /* Advance to the next element */
             ielem_new++;
             ielem_old += family_size;
@@ -456,15 +458,15 @@ t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_fo
           else {
             /* elem_old got removed */
             el_removed = 1;
-            ts->element_destroy (tree_class, 1, &elem_parent);
+            scheme->element_destroy (tree_class, 1, &elem_parent);
           }
         }
         else {
           /* elem_old was untouched or got removed */
-          if (ts->element_is_equal (tree_class, elem_new, elem_old)) {
+          if (scheme->element_is_equal (tree_class, elem_new, elem_old)) {
             /* elem_new = elem_old */
             const int refine = 0;
-            replace_fn (forest_old, forest_new, itree, tree_class, ts, refine, 1, ielem_old, 1, ielem_new);
+            replace_fn (forest_old, forest_new, itree, tree_class, scheme, refine, 1, ielem_old, 1, ielem_new);
             /* Advance to the next element */
             ielem_new++;
             ielem_old++;
@@ -479,7 +481,7 @@ t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_fo
           T8_ASSERT (forest_new->incomplete_trees == 1);
           /* element got removed */
           const int refine = -2;
-          replace_fn (forest_old, forest_new, itree, tree_class, ts, refine, 1, ielem_old, 0, -1);
+          replace_fn (forest_old, forest_new, itree, tree_class, scheme, refine, 1, ielem_old, 0, -1);
           /* Advance to the next element */
           ielem_old++;
         }
@@ -493,9 +495,9 @@ t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_fo
         if (level_old < level_new) {
           T8_ASSERT (level_new == level_old + 1);
           /* elem_old was refined */
-          const t8_locidx_t family_size = ts->element_get_num_children (tree_class, elem_old);
+          const t8_locidx_t family_size = scheme->element_get_num_children (tree_class, elem_old);
           const int refine = 1;
-          replace_fn (forest_old, forest_new, itree, tree_class, ts, refine, 1, ielem_old, family_size, ielem_new);
+          replace_fn (forest_old, forest_new, itree, tree_class, scheme, refine, 1, ielem_old, family_size, ielem_new);
           /* Advance to the next element */
           ielem_new += family_size;
           ielem_old++;
@@ -503,18 +505,18 @@ t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_fo
         else if (level_old > level_new) {
           T8_ASSERT (level_new == level_old - 1);
           /* elem_old was coarsened */
-          const t8_locidx_t family_size = ts->element_get_num_children (tree_class, elem_new);
+          const t8_locidx_t family_size = scheme->element_get_num_children (tree_class, elem_new);
           const int refine = -1;
-          replace_fn (forest_old, forest_new, itree, tree_class, ts, refine, family_size, ielem_old, 1, ielem_new);
+          replace_fn (forest_old, forest_new, itree, tree_class, scheme, refine, family_size, ielem_old, 1, ielem_new);
           /* Advance to the next element */
           ielem_new++;
           ielem_old += family_size;
         }
         else {
           /* elem_new = elem_old */
-          T8_ASSERT (ts->element_is_equal (tree_class, elem_new, elem_old));
+          T8_ASSERT (scheme->element_is_equal (tree_class, elem_new, elem_old));
           const int refine = 0;
-          replace_fn (forest_old, forest_new, itree, tree_class, ts, refine, 1, ielem_old, 1, ielem_new);
+          replace_fn (forest_old, forest_new, itree, tree_class, scheme, refine, 1, ielem_old, 1, ielem_new);
           /* Advance to the next element */
           ielem_new++;
           ielem_old++;
@@ -526,7 +528,7 @@ t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_fo
       for (; ielem_old < elems_per_tree_old; ielem_old++) {
         /* remaining elements in old tree got removed */
         const int refine = -2;
-        replace_fn (forest_old, forest_new, itree, tree_class, ts, refine, 1, ielem_old, 0, -1);
+        replace_fn (forest_old, forest_new, itree, tree_class, scheme, refine, 1, ielem_old, 0, -1);
       }
     }
     else {

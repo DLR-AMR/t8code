@@ -52,7 +52,6 @@ class class_successor: public testing::TestWithParam<t8_eclass_t> {
     scheme->unref ();
   }
   t8_eclass_t tree_class;
-  t8_scheme *ts;
   t8_scheme *scheme;
   t8_element_t *element;
   t8_element_t *successor;
@@ -149,7 +148,7 @@ TEST_P (class_successor, test_recursive_and_deep_successor)
   /* Test at Maxlevel. */
   scheme->element_set_linear_id (tree_class, element, scheme->get_maxlevel (tree_class) - 2, 0);
   scheme->element_set_linear_id (tree_class, successor, scheme->get_maxlevel (tree_class), 0);
-  t8_deep_successor (element, successor, last, ts, tree_class);
+  t8_deep_successor (element, successor, last, scheme, tree_class);
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_successor, class_successor, AllEclasses, print_eclass);

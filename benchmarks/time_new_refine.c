@@ -36,7 +36,7 @@
 /* This function refines every element */
 static int
 t8_basic_adapt_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
-                       t8_locidx_t lelement_id, const t8_scheme_c *ts, const int is_family, const int num_elements,
+                       t8_locidx_t lelement_id, const t8_scheme_c *scheme, const int is_family, const int num_elements,
                        t8_element_t *elements[])
 {
   int level;
@@ -53,7 +53,7 @@ t8_basic_adapt_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t 
 /* This function coarsens each element */
 static int
 t8_basic_adapt_coarsen (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
-                        t8_locidx_t lelement_id, const t8_scheme_c *ts, const int is_family, int num_elements,
+                        t8_locidx_t lelement_id, const t8_scheme_c *scheme, const int is_family, int num_elements,
                         t8_element_t *elements[])
 {
   if (is_family) {

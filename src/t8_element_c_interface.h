@@ -51,14 +51,16 @@ int
 t8_element_refines_irregular (const t8_forest_t forest, const t8_eclass_t tree_class);
 
 /** Return the maximum allowed level for any element of a given class.
- * \param [in] ts     Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \return            The maximum allowed level for elements of class \b ts.
  */
 int
 t8_element_maxlevel (const t8_forest_t forest, const t8_eclass_t tree_class);
 
 /** Return the level of an element.
- * \param [in] ts     Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elem   The element.
  * \return            The level of \a element.
  */
@@ -67,7 +69,7 @@ t8_element_get_level (const t8_forest_t forest, const t8_eclass_t tree_class, co
 
 /** Copy all entries of \b source to \b dest. \b dest must be an existing
  *  element. No memory is allocated by this function.
-* \param [in] ts          Implementation of a class scheme.
+* \param [in] scheme          Implementation of a class scheme.
  * \param [in] source     The element whose entries will be copied to \b dest.
  * \param [in,out] dest   This element's entries will be overwritten with the
  *                        entries of \b source.
@@ -78,7 +80,8 @@ t8_element_copy (const t8_forest_t forest, const t8_eclass_t tree_class, const t
                  t8_element_t *dest);
 
 /** Compare two elements with respect to the scheme.
- * \param [in] ts     Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elem1  The first element.
  * \param [in] elem2  The second element.
  * \return       negative if elem1 < elem2, zero if elem1 equals elem2
@@ -90,7 +93,8 @@ t8_element_compare (const t8_forest_t forest, const t8_eclass_t tree_class, cons
                     const t8_element_t *elem2);
 
 /** Check if two elements are equal.
- * \param [in] ts     Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elem1  The first element.
  * \param [in] elem2  The second element.
  * \return            1 if the elements are equal, 0 if they are not equal
@@ -103,7 +107,8 @@ t8_element_equal (const t8_forest_t forest, const t8_eclass_t tree_class, const 
  *  \b parent needs to be an existing element. No memory is allocated by this function.
  *  \b elem and \b parent can point to the same element, then the entries of
  *  \b elem are overwritten by the ones of its parent.
- * \param [in] ts     Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elem   The element whose parent will be computed.
  * \param [in,out] parent This element's entries will be overwritten by those
  *                    of \b elem's parent.
@@ -116,7 +121,8 @@ t8_element_parent (const t8_forest_t forest, const t8_eclass_t tree_class, const
 
 /** Compute the number of siblings of an element. That is the number of 
  * Children of its parent.
- * \param [in] ts     Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elem   The element.
  * \return            The number of siblings of \a element.
  * Note that this number is >= 1, since we count the element itself as a sibling.
@@ -128,7 +134,8 @@ t8_element_num_siblings (const t8_forest_t forest, const t8_eclass_t tree_class,
  *  \b sibling needs to be an existing element. No memory is allocated by this function.
  *  \b elem and \b sibling can point to the same element, then the entries of
  *  \b elem are overwritten by the ones of its i-th sibling.
- * \param [in] ts     Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elem   The element whose sibling will be computed.
  * \param [in] sibid  The id of the sibling computed.
  * \param [in,out] sibling This element's entries will be overwritten by those
@@ -141,7 +148,8 @@ t8_element_sibling (const t8_forest_t forest, const t8_eclass_t tree_class, cons
                     t8_element_t *sibling);
 
 /** Compute the number of corners of an element.
- * \param [in] ts     Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elem   The element.
  * \return            The number of corners of \a element.
  */
@@ -149,7 +157,8 @@ int
 t8_element_num_corners (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem);
 
 /** Compute the number of faces of an element.
- * \param [in] ts     Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elem   The element.
  * \return            The number of faces of \a element.
  */
@@ -158,7 +167,8 @@ t8_element_num_faces (const t8_forest_t forest, const t8_eclass_t tree_class, co
 
 /** Compute the maximum number of faces of a given element and all of its
  *  descendants.
- * \param [in] ts     Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elem   The element.
  * \return            The number of faces of \a element.
  */
@@ -166,7 +176,8 @@ int
 t8_element_max_num_faces (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem);
 
 /** Compute the number of children of an element when it is refined.
- * \param [in] ts     Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elem   The element.
  * \return            The number of children of \a element.
  */
@@ -174,7 +185,8 @@ int
 t8_element_num_children (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem);
 
 /** Compute the number of children of an element's face when the element is refined.
- * \param [in] ts     Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elem   The element.
  * \param [in] face   A face of \a elem.
  * \return            The number of children of \a face if \a elem is to be refined.
@@ -190,7 +202,8 @@ t8_element_num_face_children (const t8_forest_t forest, const t8_eclass_t tree_c
  *               0 x --- x 1
  *      Thus for face = 1 the output is: corner=0 : 1, corner=1: 3
  *
- * \param [in] ts       Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] element  The element.
  * \param [in] face     A face index for \a element.
  * \param [in] corner   A corner index for the face 0 <= \a corner < num_face_corners.
@@ -213,7 +226,8 @@ t8_element_get_face_corner (const t8_forest_t forest, const t8_eclass_t tree_cla
  *               0 x --- x 1
  *                  face 2
  *      Thus for corner = 1 the output is: face=0 : 2, face=1: 1
- * \param [in] ts       Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] element  The element.
  * \param [in] corner   A corner index for the face.
  * \param [in] face     A face index for \a corner.
@@ -224,7 +238,8 @@ t8_element_get_corner_face (const t8_forest_t forest, const t8_eclass_t tree_cla
                             int corner, int face);
 
 /** Construct the child element of a given number.
- * \param [in] ts             Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elem     This must be a valid element, bigger than maxlevel.
  * \param [in] childid  The number of the child to construct.
  * \param [in,out] child        The storage for this element must exist.
@@ -236,7 +251,8 @@ t8_element_child (const t8_forest_t forest, const t8_eclass_t tree_class, const 
                   t8_element_t *child);
 
 /** Construct all children of a given element.
- * \param [in] ts       Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elem     This must be a valid element, bigger than maxlevel.
  * \param [in] length   The length of the output array \a c must match
  *                      the number of children.
@@ -251,7 +267,8 @@ t8_element_children (const t8_forest_t forest, const t8_eclass_t tree_class, con
                      t8_element_t *c[]);
 
 /** Compute the child id of an element.
- * \param [in] ts       Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elem     This must be a valid element.
  * \return              The child id of elem.
  */
@@ -260,7 +277,8 @@ t8_element_child_id (const t8_forest_t forest, const t8_eclass_t tree_class, con
 
 /** Compute the ancestor id of an element, that is the child id
  * at a given level.
- * \param [in] ts       Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elem     This must be a valid element.
  * \param [in] level    A refinement level. Must satisfy \a level < elem.level
  * \return              The child_id of \a elem in regard to its \a level ancestor.
@@ -269,9 +287,10 @@ int
 t8_element_ancestor_id (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem, int level);
 
 /** Query whether a given set of elements is a family or not.
- * \param [in] ts       Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] fam      An array of as many elements as an element of class
- *                      \b ts has children.
+ *                      \b scheme has children.
  * \return              Zero if \b fam is not a family, nonzero if it is.
  */
 int
@@ -280,7 +299,8 @@ t8_elements_are_family (const t8_forest_t forest, const t8_eclass_t tree_class, 
 /** Compute the nearest common ancestor of two elements. That is,
  * the element with highest level that still has both given elements as
  * descendants.
- * \param [in] ts       Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elem1    The first of the two input elements.
  * \param [in] elem2    The second of the two input elements.
  * \param [in,out] nca  The storage for this element must exist
@@ -293,7 +313,8 @@ t8_element_nca (const t8_forest_t forest, const t8_eclass_t tree_class, const t8
                 const t8_element_t *elem2, t8_element_t *nca);
 
 /** Compute the shape of the face of an element.
- * \param [in] ts       Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elem     The element.
  * \param [in] face     A face of \a elem.
  * \return              The element shape of the face.
@@ -306,7 +327,8 @@ t8_element_face_shape (const t8_forest_t forest, const t8_eclass_t tree_class, c
 
 /** Given an element and a face of the element, compute all children of
  * the element that touch the face.
- * \param [in] ts       Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elem     The element.
  * \param [in] face     A face of \a elem.
  * \param [in,out] children Allocated elements, in which the children of \a elem
@@ -334,7 +356,8 @@ t8_element_children_at_face (const t8_forest_t forest, const t8_eclass_t tree_cl
  *   elem    face  face_child    Returns the face number f
  * \endverbatim
  *
- * \param [in] ts         Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elem       The element.
  * \param [in] face       Then number of the face.
  * \param [in] face_child A number 0 <= \a face_child < num_face_children,
@@ -352,7 +375,8 @@ t8_element_face_child_face (const t8_forest_t forest, const t8_eclass_t tree_cla
  * of the parent of the element that matches the element's face. Or return -1 if
  * no face of the parent matches the face.
  *
- * \param [in] ts     Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elem   The element.
  * \param [in] face   Then number of the face.
  * \return            If \a face of \a elem is also a face of \a elem's parent,
@@ -366,7 +390,8 @@ t8_element_face_parent_face (const t8_forest_t forest, const t8_eclass_t tree_cl
 /** Given an element and a face of this element. If the face lies on the
  *  tree boundary, return the face number of the tree face.
  *  If not the return value is arbitrary.
- * \param [in] ts       Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elem     The element.
  * \param [in] face     The index of a face of \a elem.
  * \return The index of the tree face that \a face is a subface of, if
@@ -381,7 +406,8 @@ t8_element_get_tree_face (const t8_forest_t forest, const t8_eclass_t tree_class
  *  and given the orientation of the tree connection, construct the face
  *  element of the respective tree neighbor that logically coincides with e
  *  but lies in the coordinate system of the neighbor tree.
- * \param [in] ts        Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elem1     The face element.
  * \param [in,out] elem2 On return the face element \a elem1 with respect
  *                       to the coordinate system of the other tree.
@@ -405,7 +431,8 @@ t8_element_transform_face (const t8_forest_t forest, const t8_eclass_t tree_clas
 /** Given a boundary face inside a root tree's face construct
  *  the element inside the root tree that has the given face as a
  *  face.
- * \param [in] ts       Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] face     A face element.
  * \param [in,out] elem An allocated element. The entries will be filled with
  *                      the data of the element that has \a face as a face and
@@ -420,7 +447,8 @@ t8_element_extrude_face (const t8_forest_t forest, const t8_eclass_t tree_class,
                          t8_element_t *elem, int root_face);
 
 /** Construct the boundary element at a specific face.
- * \param [in] ts       Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elem     The input element.
  * \param [in] face     The index of the face of which to construct the
  *                      boundary element.
@@ -435,7 +463,8 @@ t8_element_boundary_face (const t8_forest_t forest, const t8_eclass_t tree_class
                           t8_element_t *boundary);
 
 /** Construct the first descendant of an element at a given level that touches a given face.
- * \param [in] ts        Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elem      The input element.
  * \param [in] face      A face of \a elem.
  * \param [in, out] first_desc An allocated element. This element's data will be
@@ -448,7 +477,8 @@ t8_element_first_descendant_face (const t8_forest_t forest, const t8_eclass_t tr
                                   int face, t8_element_t *first_desc, int level);
 
 /** Construct the last descendant of an element at a given level that touches a given face.
- * \param [in] ts        Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elem      The input element.
  * \param [in] face      A face of \a elem.
  * \param [in, out] last_desc An allocated element. This element's data will be
@@ -461,7 +491,8 @@ t8_element_last_descendant_face (const t8_forest_t forest, const t8_eclass_t tre
                                  int face, t8_element_t *last_desc, int level);
 
 /** Compute whether a given element shares a given face with its root tree.
- * \param [in] ts       Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elem     The input element.
  * \param [in] face     A face of \a elem.
  * \return              True if \a face is a subface of the element's root element.
@@ -472,7 +503,8 @@ t8_element_is_root_boundary (const t8_forest_t forest, const t8_eclass_t tree_cl
 
 /** Construct the face neighbor of a given element if this face neighbor
  * is inside the root tree. Return 0 otherwise.
- * \param [in] ts     Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elem  The element to be considered.
  * \param [in,out] neigh If the face neighbor of \a elem along \a face is inside
  *                  the root tree, this element's data is filled with the
@@ -493,7 +525,8 @@ t8_element_face_neighbor_inside (const t8_forest_t forest, const t8_eclass_t tre
 /** Return the shape of an allocated element according its type.
 *  For example, a child of an element can be an element of a different shape
 *  and has to be handled differently - according to its shape.
- * \param [in] ts     Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
 *  \param [in] elem   The element to be considered
 *  \return            The shape of the element as an eclass
 */
@@ -502,7 +535,8 @@ t8_element_shape (const t8_forest_t forest, const t8_eclass_t tree_class, const 
 
 /** Initialize the entries of an allocated element according to a
  *  given linear id in a uniform refinement.
- * \param [in] ts       Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in,out] elem The element whose entries will be set.
  * \param [in] level    The level of the uniform refinement to consider.
  * \param [in] id       The linear id.
@@ -514,7 +548,8 @@ t8_element_set_linear_id (const t8_forest_t forest, const t8_eclass_t tree_class
 
 /** Compute the linear id of a given element in a hypothetical uniform
  * refinement of a given level.
- * \param [in] ts       Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elem     The element whose id we compute.
  * \param [in] level    The level of the uniform refinement to consider.
  * \return              The linear id of the element.
@@ -523,7 +558,8 @@ t8_linearidx_t
 t8_element_get_linear_id (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem, int level);
 
 /** Compute the first descendant of a given element.
- * \param [in] ts       Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elem     The element whose descendant is computed.
  * \param [out] desc    The first element in a uniform refinement of \a elem
  *                      of the maximum possible level.
@@ -533,7 +569,8 @@ t8_element_first_descendant (const t8_forest_t forest, const t8_eclass_t tree_cl
                              t8_element_t *desc, int level);
 
 /** Compute the last descendant of a given element.
- * \param [in] ts       Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elem     The element whose descendant is computed.
  * \param [out] desc    The last element in a uniform refinement of \a elem
  *                      of the maximum possible level.
@@ -543,7 +580,8 @@ t8_element_last_descendant (const t8_forest_t forest, const t8_eclass_t tree_cla
                             t8_element_t *desc, int level);
 
 /** Construct the successor in a uniform refinement of a given element.
- * \param [in] ts         Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elem1      The element whose successor should be constructed.
  * \param [in,out] elem2  The element whose entries will be set.
  * \param [in] level      The level of the uniform refinement to consider.
@@ -566,7 +604,8 @@ t8_element_vertex_reference_coords (const t8_forest_t forest, const t8_eclass_t 
                                     const int vertex, double coords[]);
 
 /** Count how many leaf descendants of a given uniform level an element would produce.
- * \param [in] ts     Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] t      The element to be checked.
  * \param [in] level  A refinement level.
  * \return Suppose \a t is uniformly refined up to level \a level. The return value
@@ -581,7 +620,8 @@ t8_gloidx_t
 t8_element_count_leaves (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *t, int level);
 
 /** Count how many leaf descendants of a given uniform level the root element will produce.
- * \param [in] ts    Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] level A refinement level.
  * \return The value of \ref t8_element_count_leaves if the input element
  *      is the root (level 0) element.
@@ -597,7 +637,8 @@ t8_element_count_leaves_from_root (const t8_forest_t forest, const t8_eclass_t t
    *  safe to perform any of the above algorithms on it.
    *  For example this could mean that all coordinates are in valid ranges
    *  and other membervariables do have meaningful values.
-   * \param [in] ts   Implementation of a class scheme.
+   * \param [in] forest        The current forest.
+   * \param [in] tree_class    The eclass of tree the elements are part of.
    * \param [in]      elem  The element to be checked.
    * \return          True if \a elem is safe to use. False otherwise.
    * \note            An element that is constructed with \ref t8_element_new
@@ -618,7 +659,8 @@ t8_element_is_valid (const t8_forest_t forest, const t8_eclass_t tree_class, con
  * and the level of the triangle. This function is only available in the
  * debugging configuration. 
  * 
- * \param [in] ts     Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elem   The element to print
  */
 void
@@ -636,7 +678,8 @@ t8_element_to_string (const t8_forest_t forest, const t8_eclass_t tree_class, co
 #endif
 
 /** Allocate memory for an array of elements of a given class and initialize them.
- * \param [in] ts         Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] length     The number of elements to be allocated.
  * \param [in,out] elems  On input an array of \b length many unallocated element pointers.
  *                        On output all these pointers will point to an allocated and initialized element.
@@ -655,7 +698,8 @@ void
 t8_element_new (const t8_forest_t forest, const t8_eclass_t tree_class, int length, t8_element_t **elems);
 
 /** Deallocate an array of elements.
- * \param [in] ts         Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] length     The number of elements in the array.
  * \param [in,out] elems  On input an array of \b length many allocated element pointers. On output all these pointers
  *                        will be freed. \b elem itself will not be freed by this function.
@@ -664,14 +708,16 @@ void
 t8_element_destroy (const t8_forest_t forest, const t8_eclass_t tree_class, int length, t8_element_t **elems);
 
 /** Fills an element with the root element.
- * \param [in] ts         Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in,out] elem   The element to be filled with root.
  */
 void
 t8_element_get_root (const t8_forest_t forest, const t8_eclass_t tree_class, t8_element_t *elem);
 
 /** Pack multiple elements into contiguous memory, so they can be sent via MPI.
- * \param [in] ts         Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elements Array of elements that are to be packed
  * \param [in] count Number of elements to pack
  * \param [in,out] send_buffer Buffer in which to pack the elements
@@ -685,7 +731,8 @@ t8_element_MPI_Pack (const t8_forest_t forest, const t8_eclass_t tree_class, t8_
                      sc_MPI_Comm comm);
 
 /** Determine an upper bound for the size of the packed message of \b count elements
- * \param [in] ts         Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] count Number of elements to pack
  * \param [in] comm MPI Communicator
  * \param [out] pack_size upper bound on the message size
@@ -695,7 +742,8 @@ t8_element_MPI_Pack_size (const t8_forest_t forest, const t8_eclass_t tree_class
                           sc_MPI_Comm comm, int *pack_size);
 
 /** Unpack multiple elements from contiguous memory that was received via MPI.
- * \param [in] ts         Implementation of a class scheme.
+ * \param [in] forest        The current forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] recvbuf Buffer from which to unpack the elements
  * \param [in] buffer_size size of the buffer (in order to check that we don't access out of range)
  * \param [in, out] position the position of the first byte that is not already packed
