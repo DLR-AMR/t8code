@@ -291,6 +291,17 @@ class t8_default_scheme_pyramid: public t8_default_scheme_common<t8_default_sche
   t8_element_shape_t
   element_get_shape (const t8_element_t *elem) const;
 
+  /** Count how many leaf descendants of a given uniform level an element would produce.
+   * \param [in] t     The element to be checked.
+   * \param [in] level A refinement level.
+   * \return Suppose \a t is uniformly refined up to level \a level. The return value
+   * is the resulting number of elements (of the given level).
+   * Each default element (except pyramids) refines into 2^{dim * (level - level(t))}
+   * children.
+   */
+  t8_gloidx_t
+  element_count_leaves (const t8_element_t *t, int level) const;
+
   /** Compute the shape of the face of an element.
    * \param [in] elem   The element.
    * \param [in] face   A face of \a elem.

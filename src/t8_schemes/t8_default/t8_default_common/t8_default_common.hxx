@@ -209,14 +209,8 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclass_Scheme> {
   t8_gloidx_t
   element_count_leaves (const t8_element_t *t, int level) const
   {
-    int element_level = this->underlying ().element_get_level (t);
-    t8_element_shape_t element_shape;
-    int dim = t8_eclass_to_dimension[eclass];
-    element_shape = element_get_shape (t);
-    if (element_shape == T8_ECLASS_PYRAMID) {
-      int level_diff = level - element_level;
-      return element_level > level ? 0 : 2 * sc_intpow64 (8, level_diff) - sc_intpow64 (6, level_diff);
-    }
+    const int element_level = this->underlying ().element_get_level (t);
+    const int dim = t8_eclass_to_dimension[eclass];
     return count_leaves_from_level (element_level, level, dim);
   }
 
