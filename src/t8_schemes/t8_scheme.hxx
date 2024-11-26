@@ -104,6 +104,15 @@ class t8_scheme {
     return remaining;
   }
 
+  /** Get the number of eclass schemes inside the scheme.
+   * \return The number of eclass schemes.
+   */
+  inline size_t
+  get_num_eclass_schemes () const
+  {
+    return eclass_schemes.size ();
+  }
+
   /** Check if the scheme is of a specific type.
    * \tparam TEclass_Scheme The type of the scheme to check for.
    * \param [in] tree_class    The eclass of the current tree.
