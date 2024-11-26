@@ -53,7 +53,7 @@ struct t8_forest_ghost_w_search: public t8_forest_ghost_interface
    * The search_function is chosen by the type
    * \note currently only the type face is supported
    */
-  explicit t8_forest_ghost_w_search (t8_ghost_type_t ghost_type);
+  explicit t8_forest_ghost_w_search (const t8_ghost_type_t ghost_type);
 
   virtual ~t8_forest_ghost_w_search ()
   {
@@ -100,7 +100,7 @@ struct t8_forest_ghost_face: public t8_forest_ghost_w_search
    * \param [in] version    one of tree versions (1,2,3) can be used
    * \note version 3 is the same treesearch as in t8_forest_ghost_w_search
    */
-  explicit t8_forest_ghost_face (int version);
+  explicit t8_forest_ghost_face (const int version);
 
   inline int
   get_version () const

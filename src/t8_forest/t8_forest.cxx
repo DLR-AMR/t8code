@@ -2952,7 +2952,7 @@ t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from, int no_re
 }
 
 void
-t8_forest_set_ghost_ext_new (t8_forest_t forest, const int do_ghost, const t8_forest_ghost_interface_c *ghost_interface)
+t8_forest_set_ghost_ext_new (t8_forest_t forest, const int do_ghost, t8_forest_ghost_interface_c *ghost_interface)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
   T8_ASSERT (!(do_ghost == 1 && ghost_interface == NULL));

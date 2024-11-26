@@ -57,7 +57,7 @@ t8_forest_ghost_interface_face_version (t8_forest_ghost_interface_c *ghost_inter
  * \param [in]    ghost_interface Pointer to object of class t8_forest_ghost_interface or a derivet class
  */
 t8_ghost_type_t
-t8_forest_ghost_interface_get_type (t8_forest_ghost_interface_c *ghost_interface);
+t8_forest_ghost_interface_get_type (const t8_forest_ghost_interface_c *ghost_interface);
 
 /** 
  * Satisfy the C interface of forest
