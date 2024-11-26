@@ -147,6 +147,14 @@ class t8_default_scheme_pyramid: public t8_default_scheme_common<t8_default_sche
   int
   element_get_num_siblings (const t8_element_t *elem) const;
 
+  /** Count how many leaf descendants of a given uniform level the root element will produce.
+   * \param [in] level A refinement level.
+   * \return The value of \ref t8_element_count_leaves if the input element
+   *      is the root (level 0) element.
+   */
+  t8_gloidx_t
+  count_leaves_from_root (int level) const;
+
   /** Compute a specific sibling of a given pyramid element \b elem and store it in \b sibling.
    * \b sibling needs to be an existing element. No memory is allocated by this function.
    * \b elem and \b sibling can point to the same element, then the entries of

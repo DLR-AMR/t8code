@@ -111,6 +111,12 @@ t8_default_scheme_pyramid::element_get_num_siblings (const t8_element_t *elem) c
   return t8_dpyramid_num_siblings ((const t8_dpyramid_t *) elem);
 }
 
+t8_gloidx_t
+t8_default_scheme_pyramid::count_leaves_from_root (int level) const
+{
+  return 2 * sc_intpow64u (8, level) - sc_intpow64u (6, level);
+}
+
 int
 t8_default_scheme_pyramid::element_get_num_faces (const t8_element_t *elem) const
 {
