@@ -260,7 +260,7 @@ int
 t8_default_scheme_pyramid::elements_are_family (t8_element_t *const *fam) const
 {
 #if T8_ENABLE_DEBUG
-  int num_siblings = t8_element_num_siblings (fam[0]);
+  const int num_siblings = element_get_num_siblings (fam[0]);
   for (int i = 0; i < num_siblings; i++) {
     T8_ASSERT (element_is_valid (fam[i]));
   }
