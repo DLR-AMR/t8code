@@ -28,7 +28,8 @@
  * p.user_long for the p4est_qcoord_t coordinate in the normal direction.
  */
 
-#pragma once
+#ifndef T8_DEFAULT_QUAD_HXX
+#define T8_DEFAULT_QUAD_HXX
 
 #include <p4est.h>
 #include <t8_element.hxx>
@@ -659,3 +660,5 @@ class t8_default_scheme_quad: public t8_default_scheme_common<t8_default_scheme_
   element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements,
                       const unsigned int count, sc_MPI_Comm comm) const;
 };
+
+#endif /* !T8_DEFAULT_QUAD_HXX */

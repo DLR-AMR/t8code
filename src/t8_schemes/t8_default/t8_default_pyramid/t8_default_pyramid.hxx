@@ -26,7 +26,8 @@
  * implementations in \file t8_dpyramid_bits.h
  */
 
-#pragma once
+#ifndef T8_DEFAULT_PYRAMID_HXX
+#define T8_DEFAULT_PYRAMID_HXX
 
 #include <t8_element.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
@@ -612,3 +613,5 @@ class t8_default_scheme_pyramid: public t8_default_scheme_common<t8_default_sche
   element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements,
                       const unsigned int count, sc_MPI_Comm comm) const;
 };
+
+#endif /* !T8_DEFAULT_PYRAMID_HXX */

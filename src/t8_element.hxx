@@ -27,7 +27,8 @@
  * For each element class, one implementation of the type and inline table is required.
  */
 
-#pragma once
+#ifndef T8_ELEMENT_HXX
+#define T8_ELEMENT_HXX
 
 #include <sc_refcount.h>
 #include <t8_eclass.h>
@@ -896,3 +897,5 @@ class t8_eclass_scheme: public t8_crtp<TUnderlyingEclassScheme> {
 
 #endif  //if 0
 };
+
+#endif /* !T8_ELEMENT_HXX */

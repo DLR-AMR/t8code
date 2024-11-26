@@ -26,7 +26,8 @@
  * implementations in \file t8_dvertex_bits.h
  */
 
-#pragma once
+#ifndef T8_DEFAULT_VERTEX_HXX
+#define T8_DEFAULT_VERTEX_HXX
 
 #include <t8_element.h>
 #include <t8_element.hxx>
@@ -669,3 +670,5 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
   element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements,
                       const unsigned int count, sc_MPI_Comm comm) const;
 };
+
+#endif /* !T8_DEFAULT_VERTEX_HXX */

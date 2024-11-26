@@ -20,7 +20,8 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#pragma once
+#ifndef T8_SCHEME_HXX
+#define T8_SCHEME_HXX
 
 #include <variant>
 #include <vector>
@@ -1057,3 +1058,5 @@ class t8_scheme {
       eclass_schemes[tree_class]);
   };
 };
+
+#endif /* !T8_SCHEME_HXX */
