@@ -110,6 +110,56 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclass_Scheme> {
     sc_mempool_destroy ((sc_mempool_t *) ts_context);
   }
 
+  /** Move constructor */
+  t8_default_scheme_common (t8_default_scheme_common &&other) noexcept
+    : element_size (other.element_size), ts_context (other.ts_context), eclass (other.eclass)
+  {
+    other.ts_context = nullptr;
+  }
+
+  /** Move assignment operator */
+  t8_default_scheme_common &
+  operator= (t8_default_scheme_common &&other) noexcept
+  {
+    if (this != &other) {
+      // Free existing resources of moved-to object
+      if (ts_context) {
+        sc_mempool_destroy ((sc_mempool_t *) ts_context);
+      }
+
+      // Transfer ownership of resources
+      element_size = other.element_size;
+      eclass = other.eclass;
+      ts_context = other.ts_context;
+
+      // Leave the source object in a valid state
+      other.ts_context = nullptr;
+    }
+    return *this;
+  }
+
+  /** Copy constructor */
+  t8_default_scheme_common (const t8_default_scheme_common &other)
+    : element_size (other.element_size), ts_context (sc_mempool_new (other.element_size)), eclass (other.eclass) {};
+
+  /** Copy assignment operator */
+  t8_default_scheme_common &
+  operator= (const t8_default_scheme_common &other)
+  {
+    if (this != &other) {
+      // Free existing resources of assigned-to object
+      if (ts_context) {
+        sc_mempool_destroy ((sc_mempool_t *) ts_context);
+      }
+
+      // Copy the values from the source object
+      element_size = other.element_size;
+      eclass = other.eclass;
+      ts_context = sc_mempool_new (other.element_size);
+    }
+    return *this;
+  }
+
   /** Compute the number of corners of a given element. */
   int
   element_get_num_corners (const t8_element_t *elem) const
