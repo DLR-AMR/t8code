@@ -3096,6 +3096,25 @@ t8_forest_populate_irregular (t8_forest_t forest)
   t8_forest_unref (&forest_tmp_partition);
 }
 
+/**
+ * Checks if a scheme is valid. This is an intermediate check, which requires the schemes eclass schemes
+ * to be in the same order as the eclass enum. This is only needed as long as the trees access the eclass scheme
+ * via their tree class. TODO. Remove when the trees access the eclass scheme via a key.
+ * \param [in] scheme The scheme to check.
+ * \return            Non-zero if the scheme is valid.
+ */
+static int
+t8_forest_scheme_is_valid (const t8_scheme *scheme)
+{
+  int eclass_int;
+  for (eclass_int = 0; eclass_int < T8_ECLASS_COUNT; eclass_int++) {
+    if (scheme->get_eclass_scheme_eclass (static_cast<t8_eclass_t> (eclass_int)) != eclass_int) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
 void
 t8_forest_commit (t8_forest_t forest)
 {
@@ -3119,6 +3138,11 @@ t8_forest_commit (t8_forest_t forest)
     T8_ASSERT (forest->scheme != NULL);
     T8_ASSERT (forest->from_method == T8_FOREST_FROM_LAST);
     T8_ASSERT (forest->incomplete_trees == -1);
+
+    /* Check if the scheme is valid
+     * TODO: Remove when trees access schemes via key.
+     * Also remove the complete function t8_forest_scheme_is_valid */
+    T8_ASSERT (t8_forest_scheme_is_valid (forest->scheme));
 
     /* dup communicator if requested */
     if (forest->do_dup) {

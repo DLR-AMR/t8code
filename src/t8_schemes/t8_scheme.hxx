@@ -126,6 +126,18 @@ class t8_scheme {
     return std::holds_alternative<TEclass_Scheme> (eclass_schemes[tree_class]);
   }
 
+  /** Get the eclass an eclas scheme is valid for. \Note: This function should return the input value as long as the
+   * eclass schemes are soreted correctly. In the future, the trees will access the schemes by a key and then this
+   * function will make more sense.
+   * \param [in] tree_class     The eclass of the current tree.
+   * \return                    The valid tree class for the eclass scheme.
+   */
+  inline t8_eclass_t
+  get_eclass_scheme_eclass (t8_eclass_t tree_class) const
+  {
+    return std::visit ([&] (auto &&scheme) { return scheme.eclass; }, eclass_schemes[tree_class]);
+  }
+
   /** Return the size of any element of a given class.
    * \param [in] tree_class    The eclass of the current tree.
    * \return                      The size of an element of class \a tree_class.
