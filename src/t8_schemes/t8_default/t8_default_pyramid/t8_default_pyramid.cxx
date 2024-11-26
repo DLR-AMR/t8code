@@ -98,14 +98,14 @@ t8_default_scheme_pyramid::element_get_num_children (const t8_element_t *elem) c
 }
 
 int
-t8_default_scheme_pyramid::t8_element_num_corners (const t8_element_t *elem) const
+t8_default_scheme_pyramid::element_get_num_corners (const t8_element_t *elem) const
 {
   T8_ASSERT (element_is_valid (elem));
   return t8_dpyramid_num_corners ((const t8_dpyramid_t *) elem);
 }
 
 int
-t8_default_scheme_pyramid::t8_element_num_siblings (const t8_element_t *elem) const
+t8_default_scheme_pyramid::element_get_num_siblings (const t8_element_t *elem) const
 {
   T8_ASSERT (element_is_valid (elem));
   return t8_dpyramid_num_siblings ((const t8_dpyramid_t *) elem);
@@ -291,7 +291,7 @@ t8_default_scheme_pyramid::element_extrude_face (const t8_element_t *face, t8_el
 }
 
 t8_element_shape_t
-t8_default_scheme_pyramid::t8_element_shape (const t8_element_t *elem) const
+t8_default_scheme_pyramid::element_get_shape (const t8_element_t *elem) const
 {
   T8_ASSERT (element_is_valid (elem));
   return t8_dpyramid_shape ((const t8_dpyramid_t *) elem);

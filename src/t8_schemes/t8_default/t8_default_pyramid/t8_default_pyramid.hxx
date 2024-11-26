@@ -145,7 +145,7 @@ class t8_default_scheme_pyramid: public t8_default_scheme_common<t8_default_sche
    * Note that this number is >= 1, since we count the element itself as a sibling.
    */
   int
-  t8_element_num_siblings (const t8_element_t *elem) const;
+  element_get_num_siblings (const t8_element_t *elem) const;
 
   /** Compute a specific sibling of a given pyramid element \b elem and store it in \b sibling.
    * \b sibling needs to be an existing element. No memory is allocated by this function.
@@ -205,7 +205,7 @@ class t8_default_scheme_pyramid: public t8_default_scheme_common<t8_default_sche
    * \return          The number of corners of \a elem.
    */
   int
-  t8_element_num_corners (const t8_element_t *elem) const;
+  element_get_num_corners (const t8_element_t *elem) const;
 
   /** Return the face numbers of the faces sharing an element's corner.
    * \param [in] element  The element.
@@ -280,7 +280,7 @@ class t8_default_scheme_pyramid: public t8_default_scheme_common<t8_default_sche
    * \return              The shape of the element as an eclass
    */
   t8_element_shape_t
-  t8_element_shape (const t8_element_t *elem) const;
+  element_get_shape (const t8_element_t *elem) const;
 
   /** Compute the shape of the face of an element.
    * \param [in] elem   The element.
