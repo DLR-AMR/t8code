@@ -178,7 +178,7 @@ t8_forest_ghost_fill_remote_v3 (t8_forest_t forest);
  * \param [in,out]    forest     The forest.
  */
 void
-t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int ghost_method);
+t8_forest_ghost_fill_remote (t8_forest_t forest, const t8_forest_ghost_t ghost, const int ghost_method);
 
 /** Create one layer of ghost elements for a forest.
  * \see t8_forest_set_ghost

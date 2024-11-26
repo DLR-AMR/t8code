@@ -372,14 +372,14 @@ t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost
 
 /** Set a ghost_interface
  * In application schoud only used if the user creates its own ghost_interface class (type = userderdefined)
- * \param [in]    forest          the fores
+ * \param [in]    forest          The forest
  * \param [in]    do_ghost        ---
  * \param [in]    ghost_interface pointer to an object of the class ghost_interface or a derived class
  *                                The forest takes ownership of the ghost_interface
  * \note if the forest has already a ghost_interface, the old one will be unref and the new one will be set.
 */
 void
-t8_forest_set_ghost_ext_new (t8_forest_t forest, int do_ghost, t8_forest_ghost_interface_c *ghost_interface);
+t8_forest_set_ghost_ext_new (t8_forest_t forest, const int do_ghost, const t8_forest_ghost_interface_c *ghost_interface);
 
 /* TODO: use assertions and document that the forest_set (..., from) and
  *       set_load are mutually exclusive. */

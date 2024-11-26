@@ -34,7 +34,7 @@ T8_EXTERN_C_BEGIN ();
  * Create a new ghost_interface of type face with given version
  */
 t8_forest_ghost_interface_c *
-t8_forest_ghost_interface_face_new (int version);
+t8_forest_ghost_interface_face_new (const int version);
 
 /**
  * Satisfy the C interface of forest

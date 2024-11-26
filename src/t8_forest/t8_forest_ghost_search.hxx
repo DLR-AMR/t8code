@@ -82,7 +82,7 @@ struct t8_forest_ghost_w_search: public t8_forest_ghost_interface
    * \param [in] ghost_type       The type (faces, edges, userdefind, ...) of the ghost_interface
    * \param [in] search_function  Function of type t8_forest_search_fn, used as callbackfunktion in search_for_ghost_elements
    */
-  t8_forest_ghost_w_search (t8_ghost_type_t ghost_type, t8_forest_search_fn search_function)
+  t8_forest_ghost_w_search (const t8_ghost_type_t ghost_type, const t8_forest_search_fn search_function)
     : t8_forest_ghost_interface (ghost_type), search_fn (search_function)
   {
     T8_ASSERT (ghost_type != T8_GHOST_NONE);

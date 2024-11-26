@@ -2952,7 +2952,7 @@ t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from, int no_re
 }
 
 void
-t8_forest_set_ghost_ext_new (t8_forest_t forest, int do_ghost, t8_forest_ghost_interface_c *ghost_interface)
+t8_forest_set_ghost_ext_new (t8_forest_t forest, const int do_ghost, const t8_forest_ghost_interface_c *ghost_interface)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
   SC_CHECK_ABORT (do_ghost != 0, "do_ghost == 0 in set_ghost_ext_new.\n");
@@ -3249,7 +3249,6 @@ t8_forest_commit (t8_forest_t forest)
     if (forest->ghost_interface == NULL && forest->set_from->ghost_interface != NULL) {
       forest->ghost_interface = forest->set_from->ghost_interface;
       t8_forest_ghost_interface_ref (forest->ghost_interface);
-      t8_debugf ("t8_forest_commit: uebernehme ghost von set_from\n");
     }
 
     /* Compute the maximum allowed refinement level */
