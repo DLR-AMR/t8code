@@ -76,14 +76,15 @@ class t8_scheme {
 
  private:
   scheme_container eclass_schemes; /**< The container holding the eclass schemes. */
-  t8_refcount_t rc; /**< The reference count of the scheme. TODO: Replace by shared_ptr when forest becomes a class. */
+  mutable t8_refcount_t
+    rc; /**< The reference count of the scheme. Mutable so that the class can be const and the ref counter is still mutable. TODO: Replace by shared_ptr when forest becomes a class. */
 
  public:
   /**
    * Increase the reference count of the scheme.
    */
   inline void
-  ref ()
+  ref () const
   {
     t8_refcount_ref (&rc);
   }
@@ -94,7 +95,7 @@ class t8_scheme {
    * \return The remaining reference count. If 0 the scheme was deleted.
    */
   inline int
-  unref ()
+  unref () const
   {
     const int remaining = rc.refcount - 1;
     if (t8_refcount_unref (&rc)) {

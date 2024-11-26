@@ -371,12 +371,19 @@ static void
 t8_ghost_init_remote_tree (t8_forest_t forest, t8_gloidx_t gtreeid, int remote_rank, t8_eclass_t tree_class,
                            t8_ghost_remote_tree_t *remote_tree)
 {
+<<<<<<< Updated upstream
   t8_scheme *ts;
+=======
+  const t8_scheme *scheme = t8_forest_get_scheme (forest)
+>>>>>>> Stashed changes
   t8_locidx_t local_treeid;
 
   T8_ASSERT (remote_tree != NULL);
 
+<<<<<<< Updated upstream
   ts = t8_forest_get_scheme (forest);
+=======
+>>>>>>> Stashed changes
   local_treeid = gtreeid - t8_forest_get_first_local_tree_id (forest);
   /* Set the entries of the new remote tree */
   remote_tree->global_id = gtreeid;
@@ -398,7 +405,11 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int remote_ran
   t8_ghost_remote_t remote_entry_lookup, *remote_entry;
   t8_ghost_remote_tree_t *remote_tree;
   t8_element_t *elem_copy;
+<<<<<<< Updated upstream
   t8_scheme *ts;
+=======
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+>>>>>>> Stashed changes
   t8_eclass_t tree_class;
   sc_array_t *remote_array;
   size_t index, element_count;
@@ -408,7 +419,11 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int remote_ran
 
   /* Get the tree's element class and the scheme */
   tree_class = t8_forest_get_tree_class (forest, ltreeid);
+<<<<<<< Updated upstream
   ts = t8_forest_get_scheme (forest);
+=======
+
+>>>>>>> Stashed changes
   gtreeid = t8_forest_get_first_local_tree_id (forest) + ltreeid;
 
   /* Check whether the remote_rank is already present in the remote ghosts
@@ -494,7 +509,11 @@ typedef struct
                                            Each entry is an array of 2 * (max_num_faces + 1) integers,
                                            | face_0 low | face_0 high | ... | face_n low | face_n high | owner low | owner high | */
   sc_array_t face_owners;      /* Temporary storage for all owners at a leaf's face */
+<<<<<<< Updated upstream
   t8_scheme *ts;
+=======
+  const t8_scheme *scheme;
+>>>>>>> Stashed changes
   t8_gloidx_t gtreeid;
   int level_nca; /* The refinement level of the root element in the search.
                                            At position element_level - level_nca in bounds_per_level are the bounds
@@ -1019,7 +1038,11 @@ t8_forest_ghost_parse_received_message (t8_forest_t forest, t8_forest_ghost_t gh
   size_t num_elements, old_elem_count, ghosts_offset;
   t8_ghost_gtree_hash_t *tree_hash, **pfound_tree, *found_tree;
   t8_ghost_tree_t *ghost_tree;
+<<<<<<< Updated upstream
   t8_scheme *ts;
+=======
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+>>>>>>> Stashed changes
   t8_element_t *element_insert;
   t8_ghost_process_hash_t *process_hash;
 #ifdef T8_ENABLE_DEBUG
@@ -1063,7 +1086,10 @@ t8_forest_ghost_parse_received_message (t8_forest_t forest, t8_forest_ghost_t gh
     tree_hash->global_id = global_id;
 
     /* Get the scheme for this tree */
+<<<<<<< Updated upstream
     ts = t8_forest_get_scheme (forest);
+=======
+>>>>>>> Stashed changes
     if (sc_hash_insert_unique (ghost->global_tree_to_ghost_tree, tree_hash, (void ***) &pfound_tree)) {
       /* The tree was not stored already, tree_hash is now an entry in the hash table. */
       /* If the tree was not contained, it is the newest tree in the array and

@@ -499,7 +499,7 @@ class t8_eclass_scheme: public t8_crtp<TUnderlyingEclassScheme> {
    */
   inline int
   element_extrude_face (const t8_element_t *face, const t8_eclass_t face_eclass, t8_element_t *elem, int root_face,
-                        t8_scheme *scheme) const
+                        const t8_scheme *scheme) const
   {
     return this->underlying ().element_extrude_face (face, face_eclass, elem, root_face, scheme);
   };
@@ -518,7 +518,7 @@ class t8_eclass_scheme: public t8_crtp<TUnderlyingEclassScheme> {
    */
   inline void
   element_construct_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
-                                   const t8_eclass_t boundary_face_eclass, t8_scheme *scheme) const
+                                   const t8_eclass_t boundary_face_eclass, const t8_scheme *scheme) const
   {
     this->underlying ().element_construct_boundary_face (elem, face, boundary, boundary_face_eclass, scheme);
   };

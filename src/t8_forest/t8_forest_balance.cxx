@@ -105,14 +105,13 @@ t8_forest_compute_max_element_level (t8_forest_t forest)
 {
   t8_locidx_t ielement, elem_in_tree;
   t8_locidx_t itree, num_trees;
-  t8_scheme *scheme;
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
   int local_max_level = 0, elem_level;
 
   /* Iterate over all local trees and all local elements and comupte the maximum occurring level */
   num_trees = t8_forest_get_num_local_trees (forest);
   for (itree = 0; itree < num_trees; itree++) {
     elem_in_tree = t8_forest_get_tree_num_elements (forest, itree);
-    scheme = t8_forest_get_scheme (forest);
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
     for (ielement = 0; ielement < elem_in_tree; ielement++) {
       /* Get the element and compute its level */
@@ -318,11 +317,15 @@ t8_forest_is_balanced (t8_forest_t forest)
   t8_forest_t forest_from;
   t8_locidx_t num_trees, num_elements;
   t8_locidx_t itree, ielem;
+<<<<<<< Updated upstream
   t8_scheme *ts;
+=======
+>>>>>>> Stashed changes
   void *data_temp;
   int dummy_int;
 
   T8_ASSERT (t8_forest_is_committed (forest));
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
 
   /* temporarily save forest_from */
   forest_from = forest->set_from;
@@ -337,7 +340,10 @@ t8_forest_is_balanced (t8_forest_t forest)
   /* Iterate over all trees */
   for (itree = 0; itree < num_trees; itree++) {
     num_elements = t8_forest_get_tree_num_elements (forest, itree);
+<<<<<<< Updated upstream
     ts = t8_forest_get_scheme (forest);
+=======
+>>>>>>> Stashed changes
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
     /* Iterate over all elements of this tree */
     for (ielem = 0; ielem < num_elements; ielem++) {

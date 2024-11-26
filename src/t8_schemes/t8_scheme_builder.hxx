@@ -43,7 +43,7 @@ class t8_scheme_builder {
     scheme->eclass_schemes[tree_class] = TEclass_Scheme (std::forward<_Args> (args)...);
   }
 
-  t8_scheme *
+  const t8_scheme *
   build_scheme () const
   {
     return scheme;

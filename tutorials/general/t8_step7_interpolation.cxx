@@ -290,7 +290,7 @@ t8_interpolation ()
   t8_step7_adapt_data *data;
   double centroid[3];
   const double midpoint[3] = { 0.5, 0.5, 1 };
-  t8_scheme *scheme = t8_scheme_new_default ();
+  const t8_scheme *scheme = t8_scheme_new_default ();
 
   /* Construct a cmesh */
   t8_cmesh_t cmesh = t8_cmesh_new_from_class (T8_ECLASS_HEX, sc_MPI_COMM_WORLD);

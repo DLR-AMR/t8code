@@ -123,7 +123,11 @@ t8_forest_partition_test_desc (t8_forest_t forest)
   t8_element_t *elem_desc;
   t8_linearidx_t first_desc_id;
   t8_locidx_t ielem;
+<<<<<<< Updated upstream
   t8_scheme *ts;
+=======
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+>>>>>>> Stashed changes
   t8_tree_t tree;
   int level;
 
@@ -133,7 +137,10 @@ t8_forest_partition_test_desc (t8_forest_t forest)
   }
 
   tree = t8_forest_get_tree (forest, 0);
+<<<<<<< Updated upstream
   ts = t8_forest_get_scheme (forest);
+=======
+>>>>>>> Stashed changes
   const t8_eclass_t tree_class = tree->eclass;
   /* Get the first descendant id of this rank */
   first_desc_id = *(t8_linearidx_t *) t8_shmem_array_index (forest->global_first_desc, forest->mpirank);
@@ -258,7 +265,10 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
   sc_MPI_Comm comm;
   t8_linearidx_t local_first_desc;
   t8_element_t *first_desc = NULL;
+<<<<<<< Updated upstream
   t8_scheme *ts;
+=======
+>>>>>>> Stashed changes
 
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -299,7 +309,11 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
     /* This process is not empty, the element was found, so we compute its first descendant. */
     if (first_element != NULL) {
       /* Get the eclass_scheme of the element. */
+<<<<<<< Updated upstream
       ts = t8_forest_get_scheme (forest);
+=======
+      const t8_scheme *scheme = t8_forest_get_scheme (forest);
+>>>>>>> Stashed changes
       const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, 0);
       ts->element_new (tree_class, 1, &first_desc);
       ts->element_construct_first_descendant (tree_class, first_element, first_desc, forest->maxlevel);

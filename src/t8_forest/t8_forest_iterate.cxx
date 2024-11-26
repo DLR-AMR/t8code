@@ -83,7 +83,11 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
                          const t8_element_array_t *leaf_elements, void *user_data,
                          t8_locidx_t tree_lindex_of_first_leaf, t8_forest_iterate_face_fn callback)
 {
+<<<<<<< Updated upstream
   t8_scheme *ts;
+=======
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+>>>>>>> Stashed changes
   t8_eclass_t eclass;
   t8_element_t **face_children;
   int child_face, num_face_children, iface;
@@ -100,7 +104,10 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
     return;
   }
   eclass = t8_forest_get_tree_class (forest, ltreeid);
+<<<<<<< Updated upstream
   ts = t8_forest_get_scheme (forest);
+=======
+>>>>>>> Stashed changes
 
   if (elem_count == 1) {
     /* There is only one leaf left, we check whether it is the same as element
