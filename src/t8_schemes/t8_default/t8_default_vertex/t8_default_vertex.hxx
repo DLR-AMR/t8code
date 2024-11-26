@@ -36,9 +36,10 @@
 
 class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_scheme_vertex> {
  public:
-  /** Constructor. */
+  /** Constructor which calls the specialized constructor for the base. */
   t8_default_scheme_vertex (): t8_default_scheme_common (T8_ECLASS_VERTEX, sizeof (t8_dvertex_t)) {};
 
+  /** Destructor */
   ~t8_default_scheme_vertex () {};
 
   /** Return the size of a vertex element.

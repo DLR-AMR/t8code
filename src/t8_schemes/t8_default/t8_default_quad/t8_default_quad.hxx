@@ -78,9 +78,10 @@ typedef p4est_quadrant_t t8_pquad_t;
 
 class t8_default_scheme_quad: public t8_default_scheme_common<t8_default_scheme_quad> {
  public:
-  /** Constructor. */
+  /** Constructor which calls the specialized constructor for the base. */
   t8_default_scheme_quad (): t8_default_scheme_common (T8_ECLASS_QUAD, sizeof (t8_pquad_t)) {};
 
+  /** Destructor */
   ~t8_default_scheme_quad () {};
 
   /** Return the size of a quad element.

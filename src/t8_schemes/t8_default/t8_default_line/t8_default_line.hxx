@@ -39,9 +39,10 @@
 
 class t8_default_scheme_line: public t8_default_scheme_common<t8_default_scheme_line> {
  public:
-  /** Constructor. */
+  /** Constructor which calls the specialized constructor for the base. */
   t8_default_scheme_line (): t8_default_scheme_common (T8_ECLASS_LINE, sizeof (t8_dline_t)) {};
 
+  /** Destructor */
   ~t8_default_scheme_line () {};
 
   /** Return the size of a line element.

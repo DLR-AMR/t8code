@@ -36,9 +36,10 @@
 
 class t8_default_scheme_tet: public t8_default_scheme_common<t8_default_scheme_tet> {
  public:
-  /** Constructor. */
+  /** Constructor which calls the specialized constructor for the base. */
   t8_default_scheme_tet (): t8_default_scheme_common (T8_ECLASS_TET, sizeof (t8_dtet_t)) {};
 
+  /** Destructor */
   ~t8_default_scheme_tet () {};
 
   /** Return the size of a tet element.

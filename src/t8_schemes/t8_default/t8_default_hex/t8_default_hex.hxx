@@ -40,9 +40,10 @@ typedef p8est_quadrant_t t8_phex_t;
 
 class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_hex> {
  public:
-  /** Constructor. */
+  /** Constructor which calls the specialized constructor for the base. */
   t8_default_scheme_hex (): t8_default_scheme_common (T8_ECLASS_HEX, sizeof (t8_phex_t)) {};
 
+  /** Destructor */
   ~t8_default_scheme_hex () {};
 
   /** Return the size of a hex element.

@@ -40,9 +40,10 @@
 
 class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme_prism> {
  public:
-  /** Constructor. */
+  /** Constructor which calls the specialized constructor for the base. */
   t8_default_scheme_prism (): t8_default_scheme_common (T8_ECLASS_PRISM, sizeof (t8_dprism_t)) {};
 
+  /** Destructor */
   ~t8_default_scheme_prism () {};
 
   /** Return the size of a prism element.
