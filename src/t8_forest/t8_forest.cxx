@@ -2955,8 +2955,7 @@ void
 t8_forest_set_ghost_ext_new (t8_forest_t forest, const int do_ghost, const t8_forest_ghost_interface_c *ghost_interface)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
-  SC_CHECK_ABORT (do_ghost != 0, "do_ghost == 0 in set_ghost_ext_new.\n");
-  SC_CHECK_ABORT (ghost_interface != NULL, "invalides ghost interface in set_ghost_ext_new\n");
+  T8_ASSERT (!(do_ghost == 1 && ghost_interface == NULL));
   if (forest->ghost_interface != NULL) {
     t8_forest_ghost_interface_unref (&(forest->ghost_interface));
   }
