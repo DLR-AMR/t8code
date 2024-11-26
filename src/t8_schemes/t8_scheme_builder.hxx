@@ -42,8 +42,8 @@ class t8_scheme_builder {
   using scheme_var = t8_scheme::scheme_var;
 
   /** Add a new element class scheme to the scheme.
-   * \tparam [in] TEclass_Scheme  The type of the element class scheme.
-   * \tparam [in] _Args           The types of the arguments to pass to the constructor of the element class scheme.
+   * \tparam TEclass_Scheme       The type of the element class scheme.
+   * \tparam Args                 The types of the arguments to pass to the constructor of the element class scheme.
    * \param  [in] args            The arguments to pass to the constructor of the element class scheme.
    * \return                      The position of the added element class scheme in the scheme.
    */
