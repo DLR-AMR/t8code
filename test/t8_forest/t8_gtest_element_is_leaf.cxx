@@ -41,13 +41,13 @@
  * family is refined and no other elements. This results in a highly
  * imbalanced forest. */
 static int
-t8_test_adapt_first_child (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                           t8_eclass_scheme_c *ts, const int is_family, const int num_elements,
-                           t8_element_t *elements[])
+t8_test_adapt_first_child (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
+                           const t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme *scheme,
+                           const int is_family, const int num_elements, t8_element_t *elements[])
 {
-  T8_ASSERT (!is_family || (is_family && num_elements == ts->t8_element_num_children (elements[0])));
+  T8_ASSERT (!is_family || (is_family && num_elements == scheme->element_get_num_children (tree_class, elements[0])));
 
-  int level = ts->t8_element_level (elements[0]);
+  int level = scheme->element_get_level (tree_class, elements[0]);
 
   /* we set a maximum refinement level as forest user data */
   int maxlevel = *(int *) t8_forest_get_user_data (forest);
@@ -55,7 +55,7 @@ t8_test_adapt_first_child (t8_forest_t forest, t8_forest_t forest_from, t8_locid
     /* Do not refine after the maxlevel */
     return 0;
   }
-  int child_id = ts->t8_element_child_id (elements[0]);
+  int child_id = scheme->element_get_child_id (tree_class, elements[0]);
   if (child_id == 1) {
     return 1;
   }
@@ -76,7 +76,7 @@ class element_is_leaf: public testing::TestWithParam<std::tuple<int, cmesh_examp
       GTEST_SKIP ();
     }
     /* Build the default scheme (TODO: Test this with all schemes) */
-    scheme = t8_scheme_new_default_cxx ();
+    scheme = t8_scheme_new_default ();
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
     t8_forest_ref (forest);
     //const int maxlevel = t8_forest_get_maxlevel (forest);
@@ -98,7 +98,7 @@ class element_is_leaf: public testing::TestWithParam<std::tuple<int, cmesh_examp
 
   t8_forest_t forest { NULL };
   t8_forest_t forest_adapt { NULL };
-  t8_scheme_cxx_t *scheme;
+  t8_scheme *scheme;
 };
 
 void
@@ -109,10 +109,10 @@ t8_test_element_is_leaf_for_forest (t8_forest_t forest)
   for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree) {
     const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
-    const t8_eclass_scheme_c *scheme = t8_forest_get_eclass_scheme (forest, tree_class);
+    const t8_scheme *scheme = t8_forest_get_scheme (forest);
     /* Allocate memory to build a non-leaf element. */
     t8_element_t *not_leaf;
-    scheme->t8_element_new (1, &not_leaf);
+    scheme->element_new (tree_class, 1, &not_leaf);
     /* Iterate over all the tree's leaf elements, check whether the leaf
      * is correctly identified by t8_forest_element_is_leaf,
      * build its parent and its first child (if they exist), and verify
@@ -121,17 +121,17 @@ t8_test_element_is_leaf_for_forest (t8_forest_t forest)
       const t8_element_t *leaf_element = t8_forest_get_element_in_tree (forest, itree, ielement);
       EXPECT_TRUE (t8_forest_element_is_leaf (forest, leaf_element, itree));
       /* Compute parent and first child of element and check that they are not in the tree */
-      const int element_level = scheme->t8_element_level (leaf_element);
+      const int element_level = scheme->element_get_level (tree_class, leaf_element);
       if (element_level > 0) {
-        scheme->t8_element_parent (leaf_element, not_leaf);
+        scheme->element_get_parent (tree_class, leaf_element, not_leaf);
         EXPECT_FALSE (t8_forest_element_is_leaf (forest, not_leaf, itree));
       }
-      if (element_level < scheme->t8_element_maxlevel ()) {
-        scheme->t8_element_child (leaf_element, 0, not_leaf);
+      if (element_level < scheme->get_maxlevel (tree_class)) {
+        scheme->element_get_child (tree_class, leaf_element, 0, not_leaf);
         EXPECT_FALSE (t8_forest_element_is_leaf (forest, not_leaf, itree));
       }
     }
-    scheme->t8_element_destroy (1, &not_leaf);
+    scheme->element_destroy (tree_class, 1, &not_leaf);
   }
 }
 

@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2024 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,30 +20,29 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_default_c_interface.h
- * C interface definition to the default element implementation.
+/** \file t8_crtp.hxx
+ * This file implements a helper class for CRTP implementations.
  */
 
-#ifndef T8_DEFAULT_C_INTERFACE_H
-#define T8_DEFAULT_C_INTERFACE_H
+#ifndef T8_CRTP_HXX
+#define T8_CRTP_HXX
 
-#include <t8_element.h>
-
-T8_EXTERN_C_BEGIN ();
-
-/** Return the default scheme implementation of t8code. */
-t8_scheme_c *
-t8_scheme_new_default (void);
-
-/** Check whether a given eclass_scheme is one of the default schemes.
- * \param [in] scheme   A (pointer to a) scheme
- * \param [in] eclass   The eclass to check
- * \return              True (non-zero) if \a scheme is one of the default schemes,
- *                      false (zero) otherwise.
+/** CRTP helper class, adds static "upcasting" methods for const and non const objects. 
+ * \tparam TUnderlying The CRTP derived class.
  */
-int
-t8_eclass_scheme_is_default (const t8_scheme_c *scheme, const t8_eclass_t eclass);
+template <class TUnderlying>
+class t8_crtp {
+ public:
+  inline TUnderlying&
+  underlying ()
+  {
+    return static_cast<TUnderlying&> (*this);
+  }
+  inline TUnderlying const&
+  underlying () const
+  {
+    return static_cast<TUnderlying const&> (*this);
+  }
+};
 
-T8_EXTERN_C_END ();
-
-#endif /* !T8_DEFAULT_C_INTERFACE_H */
+#endif /* !T8_CRTP_HXX */

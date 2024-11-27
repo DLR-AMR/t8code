@@ -42,7 +42,7 @@ class forest_ghost_owner: public testing::TestWithParam<cmesh_example_base *> {
   SetUp () override
   {
 
-    scheme = t8_scheme_new_default_cxx ();
+    scheme = t8_scheme_new_default ();
     /* Construct a cmesh */
     cmesh = GetParam ()->cmesh_create ();
     if (t8_cmesh_is_empty (cmesh)) {
@@ -54,19 +54,20 @@ class forest_ghost_owner: public testing::TestWithParam<cmesh_example_base *> {
   TearDown () override
   {
     t8_cmesh_destroy (&cmesh);
-    t8_scheme_cxx_unref (&scheme);
+    t8_scheme_unref (&scheme);
   }
   t8_cmesh_t cmesh;
-  t8_scheme_cxx_t *scheme;
+  t8_scheme *scheme;
 };
 
 static int
-t8_test_gao_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                   t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+t8_test_gao_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
+                   t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family, const int num_elements,
+                   t8_element_t *elements[])
 {
   /* refine every second element up to the maximum level */
-  int level = ts->t8_element_level (elements[0]);
-  t8_linearidx_t eid = ts->t8_element_get_linear_id (elements[0], level);
+  int level = scheme->element_get_level (tree_class, elements[0]);
+  t8_linearidx_t eid = scheme->element_get_linear_id (tree_class, elements[0], level);
   int maxlevel = *(int *) t8_forest_get_user_data (forest);
 
   if (eid % 2 && level < maxlevel) {
@@ -128,7 +129,7 @@ TEST_P (forest_ghost_owner, test_ghost_owner)
   t8_debugf ("Testing ghost exchange with start level %i\n", min_level);
   for (int level = min_level; level < min_level + 3; level++) {
     /* ref the scheme since we reuse it */
-    t8_scheme_cxx_ref (scheme);
+    t8_scheme_ref (scheme);
     /* ref the cmesh since we reuse it */
     t8_cmesh_ref (cmesh);
     /* Create a uniformly refined forest */

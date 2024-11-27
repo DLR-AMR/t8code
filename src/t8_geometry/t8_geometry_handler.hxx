@@ -24,7 +24,8 @@
  * General geometry definitions
  */
 
-#pragma once
+#ifndef T8_GEOMETRY_HANDLER_HXX
+#define T8_GEOMETRY_HANDLER_HXX
 
 #include <t8.h>
 #include <t8_geometry/t8_geometry.h>
@@ -291,3 +292,5 @@ struct t8_geometry_handler
   /** The reference count of the geometry handler. TODO: Replace by shared_ptr when cmesh becomes a class. */
   t8_refcount_t rc;
 };
+
+#endif /* !T8_GEOMETRY_HANDLER_HXX */

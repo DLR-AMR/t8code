@@ -25,6 +25,7 @@
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
+#include <t8_schemes/t8_scheme.hxx>
 #include <t8_element.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
@@ -122,7 +123,7 @@ t8_forest_partition_test_desc (t8_forest_t forest)
   t8_element_t *elem_desc;
   t8_linearidx_t first_desc_id;
   t8_locidx_t ielem;
-  t8_eclass_scheme_c *ts;
+  t8_scheme *scheme;
   t8_tree_t tree;
   int level;
 
@@ -132,21 +133,22 @@ t8_forest_partition_test_desc (t8_forest_t forest)
   }
 
   tree = t8_forest_get_tree (forest, 0);
-  ts = t8_forest_get_eclass_scheme (forest, tree->eclass);
+  scheme = t8_forest_get_scheme (forest);
+  const t8_eclass_t tree_class = tree->eclass;
   /* Get the first descendant id of this rank */
   first_desc_id = *(t8_linearidx_t *) t8_shmem_array_index (forest->global_first_desc, forest->mpirank);
-  ts->t8_element_new (1, &elem_desc);
+  scheme->element_new (tree_class, 1, &elem_desc);
   for (ielem = 0; ielem < t8_forest_get_tree_element_count (tree); ielem++) {
     /* Iterate over elems, for each one create the first descendant and check
      * its linear id versus the linear id of first_desc. */
     const t8_element_t *element = t8_element_array_index_locidx (&tree->elements, ielem);
-    ts->t8_element_first_descendant (element, elem_desc, forest->maxlevel);
-    level = ts->t8_element_level (elem_desc);
-    T8_ASSERT (level == ts->t8_element_level (elem_desc));
+    scheme->element_construct_first_descendant (tree_class, element, elem_desc, forest->maxlevel);
+    level = scheme->element_get_level (tree_class, elem_desc);
+    T8_ASSERT (level == scheme->element_get_level (tree_class, elem_desc));
     T8_ASSERT (level == forest->maxlevel);
-    T8_ASSERT (ts->t8_element_get_linear_id (elem_desc, level) >= first_desc_id);
+    T8_ASSERT (scheme->element_get_linear_id (tree_class, elem_desc, level) >= first_desc_id);
   }
-  ts->t8_element_destroy (1, &elem_desc);
+  scheme->element_destroy (tree_class, 1, &elem_desc);
 }
 #endif
 
@@ -223,20 +225,21 @@ t8_forest_partition_test_boundary_element (const t8_forest_t forest)
     T8_ASSERT (itree > -1);
   }
   const t8_tree_t tree = t8_forest_get_tree (forest, itree);
-  t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest, tree->eclass);
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  const t8_eclass_t tree_class = tree->eclass;
   t8_element_t *element_last_desc;
-  ts->t8_element_new (1, &element_last_desc);
+  scheme->element_new (tree_class, 1, &element_last_desc);
   /* last element of current rank */
   const t8_element_t *element_last
     = t8_forest_get_element_in_tree (forest, itree, t8_forest_get_tree_element_count (tree) - 1);
-  T8_ASSERT (ts->t8_element_is_valid (element_last));
+  T8_ASSERT (scheme->element_is_valid (tree_class, element_last));
   /* last and finest possiple element of current rank */
-  ts->t8_element_last_descendant (element_last, element_last_desc, forest->maxlevel);
-  T8_ASSERT (ts->t8_element_is_valid (element_last_desc));
-  const int level = ts->t8_element_level (element_last_desc);
-  T8_ASSERT (level == ts->t8_element_level (element_last_desc));
+  scheme->element_construct_last_descendant (tree_class, element_last, element_last_desc, forest->maxlevel);
+  T8_ASSERT (scheme->element_is_valid (tree_class, element_last_desc));
+  const int level = scheme->element_get_level (tree_class, element_last_desc);
+  T8_ASSERT (level == scheme->element_get_level (tree_class, element_last_desc));
   T8_ASSERT (level == forest->maxlevel);
-  const t8_linearidx_t last_desc_id = ts->t8_element_get_linear_id (element_last_desc, level);
+  const t8_linearidx_t last_desc_id = scheme->element_get_linear_id (tree_class, element_last_desc, level);
   /* Get the first descendant id of rank+1 */
   const t8_linearidx_t first_desc_id
     = *(t8_linearidx_t *) t8_shmem_array_index (forest->global_first_desc, forest->mpirank + 1);
@@ -245,7 +248,7 @@ t8_forest_partition_test_boundary_element (const t8_forest_t forest)
   /** TODO: This assertion might still be wrong, when our last element is the last element of the tree*/
   T8_ASSERT (itree < num_local_trees - 1 || last_desc_id < first_desc_id);
   /* clean up */
-  ts->t8_element_destroy (1, &element_last_desc);
+  scheme->element_destroy (tree_class, 1, &element_last_desc);
 #endif
 }
 
@@ -255,7 +258,7 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
   sc_MPI_Comm comm;
   t8_linearidx_t local_first_desc;
   t8_element_t *first_desc = NULL;
-  t8_eclass_scheme_c *ts;
+  t8_scheme *scheme;
 
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -296,12 +299,13 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
     /* This process is not empty, the element was found, so we compute its first descendant. */
     if (first_element != NULL) {
       /* Get the eclass_scheme of the element. */
-      ts = t8_forest_get_eclass_scheme (forest, t8_forest_get_tree_class (forest, 0));
-      ts->t8_element_new (1, &first_desc);
-      ts->t8_element_first_descendant (first_element, first_desc, forest->maxlevel);
+      scheme = t8_forest_get_scheme (forest);
+      const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, 0);
+      scheme->element_new (tree_class, 1, &first_desc);
+      scheme->element_construct_first_descendant (tree_class, first_element, first_desc, forest->maxlevel);
       /* Compute the linear id of the descendant. */
-      local_first_desc = ts->t8_element_get_linear_id (first_desc, forest->maxlevel);
-      ts->t8_element_destroy (1, &first_desc);
+      local_first_desc = scheme->element_get_linear_id (tree_class, first_desc, forest->maxlevel);
+      scheme->element_destroy (tree_class, 1, &first_desc);
     }
   }
   /* Collect all first global indices in the array */
@@ -918,7 +922,7 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm, int proc
   t8_forest_partition_tree_info_t *tree_info;
   t8_tree_t tree, last_tree;
   size_t element_size {};
-  t8_eclass_scheme_c *eclass_scheme;
+  const t8_scheme *scheme = t8_forest_get_scheme (forest->set_from);
 
   if (proc != forest->mpirank) {
     T8_ASSERT (proc == status->MPI_SOURCE);
@@ -983,12 +987,11 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm, int proc
       }
       /* Done calculating the element offset */
       /* Get the size of an element of the tree */
-      eclass_scheme = t8_forest_get_eclass_scheme (forest->set_from, tree->eclass);
-      element_size = eclass_scheme->t8_element_size ();
+      element_size = scheme->get_element_size (tree->eclass);
       /* initialize the elements array and copy the elements from the receive buffer */
       T8_ASSERT (element_cursor + tree_info->num_elements * element_size <= (size_t) recv_bytes);
-      t8_element_array_init_copy (&tree->elements, eclass_scheme, (t8_element_t *) (recv_buffer + element_cursor),
-                                  tree_info->num_elements);
+      t8_element_array_init_copy (&tree->elements, scheme, tree->eclass,
+                                  (t8_element_t *) (recv_buffer + element_cursor), tree_info->num_elements);
     }
     else {
       T8_ASSERT (itree == 0); /* This situation only happens for the first tree */
@@ -1006,8 +1009,7 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm, int proc
       if (tree_info->num_elements > 0) {
         t8_element_t *first_new_element = t8_element_array_index_locidx_mutable (&tree->elements, old_num_elements);
         /* Get the size of an element of the tree */
-        eclass_scheme = t8_forest_get_eclass_scheme (forest->set_from, tree->eclass);
-        element_size = eclass_scheme->t8_element_size ();
+        element_size = scheme->get_element_size (tree->eclass);
         T8_ASSERT (element_size == t8_element_array_get_size (&tree->elements));
         /* Copy the elements from the receive buffer to the elements array */
         memcpy ((void *) first_new_element, recv_buffer + element_cursor, tree_info->num_elements * element_size);

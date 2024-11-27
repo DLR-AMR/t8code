@@ -614,29 +614,30 @@ struct t8_geometry_cube_zdistorted: public t8_geometry
 /* This adapt callback function will refine all elements at the
  * domain boundary up to a given maximum refinement level. */
 static int
-t8_geom_adapt_boundary (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t ltree_id, t8_locidx_t lelement_id,
-                        t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+t8_geom_adapt_boundary (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t ltree_id, t8_eclass_t tree_class,
+                        t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family, const int num_elements,
+                        t8_element_t *elements[])
 {
   t8_cmesh_t cmesh = t8_forest_get_cmesh (forest_from);
   /* Get the number of faces of the element. */
-  int num_faces = ts->t8_element_num_faces (elements[0]);
+  int num_faces = scheme->element_get_num_faces (tree_class, elements[0]);
   int iface;
   /* Get the maximum level from the forest's user data 
    * (must be set before using the callback). */
   int maxlevel = *(int *) t8_forest_get_user_data (forest);
 
   /* We do not refine more then the given maximum level. */
-  if (ts->t8_element_level (elements[0]) >= maxlevel) {
+  if (scheme->element_get_level (tree_class, elements[0]) >= maxlevel) {
     return 0;
   }
 
   /* Check for each face of the element whether it lies on the 
    * domain boundary. If so, the element is refined. */
   for (iface = 0; iface < num_faces; ++iface) {
-    if (ts->t8_element_is_root_boundary (elements[0], iface)) {
+    if (scheme->element_is_root_boundary (tree_class, elements[0], iface)) {
       /* This element's face is at its tree boundary. Check whether
          the tree's face is at the domain boundary. */
-      int tree_face = ts->t8_element_tree_face (elements[0], iface);
+      int tree_face = scheme->element_get_tree_face (tree_class, elements[0], iface);
       t8_locidx_t lctreeid = t8_forest_ltreeid_to_cmesh_ltreeid (forest_from, ltree_id);
       if (t8_cmesh_tree_face_is_boundary (cmesh, lctreeid, tree_face)) {
         /* The tree's face is at the domain boundary, we refine the element. */
@@ -1118,7 +1119,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
    * 2 and refine recursively only along the boundary. */
   uniform_level = geom_type == T8_GEOM_CIRCLE ? SC_MIN (2, level) : level;
   /* Create a uniform forest */
-  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), uniform_level, 0, sc_MPI_COMM_WORLD);
+  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), uniform_level, 0, sc_MPI_COMM_WORLD);
   if (geom_type == T8_GEOM_CIRCLE) {
     t8_forest_t forest_adapt;
     /* Create a forest that is only refined at the tree boundaries. 
