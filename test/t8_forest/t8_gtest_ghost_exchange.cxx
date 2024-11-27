@@ -104,9 +104,9 @@ t8_test_ghost_exchange_data_id (t8_forest_t forest)
     for (t8_locidx_t ielem = 0; ielem < t8_forest_get_tree_num_elements (forest, itree); ielem++) {
       /* Get a pointer to this element */
       const t8_element_t *elem = t8_forest_get_element_in_tree (forest, itree, ielem);
+      const int level = scheme->element_get_level (tree_class, elem);
       /* Compute the linear id of this element */
-      t8_linearidx_t elem_id
-        = scheme->element_get_linear_id (tree_class, elem, scheme->element_get_level (tree_class, elem));
+      const t8_linearidx_t elem_id = scheme->element_get_linear_id (tree_class, elem, level);
       /* Store this id at the element's index in the array */
       *(t8_linearidx_t *) sc_array_index (&element_data, array_pos) = elem_id;
       array_pos++;
@@ -119,7 +119,7 @@ t8_test_ghost_exchange_data_id (t8_forest_t forest)
   /* We now iterate over all ghost elements and check whether the correct
    * id was received */
   for (t8_locidx_t itree = 0; itree < t8_forest_get_num_ghost_trees (forest); itree++) {
-    const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
+    const t8_eclass_t tree_class = t8_forest_ghost_get_tree_class (forest, itree);
     for (t8_locidx_t ielem = 0; ielem < t8_forest_ghost_tree_num_elements (forest, itree); ielem++) {
       /* Get a pointer to this ghost */
       const t8_element_t *elem = t8_forest_ghost_get_element (forest, itree, ielem);
