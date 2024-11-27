@@ -24,6 +24,7 @@ doxygen/
 
 CMakeCache.txt
 CMakeFiles/
+version.txt
 
 src/stamp-h1
 src/t8_config.h
