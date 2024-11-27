@@ -32,9 +32,7 @@
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <test/t8_schemes/t8_gtest_iterator.cxx>
 #include <iostream>
-
-extern t8_scheme_cxx *
-t8_scheme_new_default_cxx ();
+#include <t8_schemes/t8_scheme.hxx>
 
 /**
  * lambda to pass to an INSTANTIATE_TEST_SUITE_P to print the current cmesh_example_base
@@ -52,19 +50,14 @@ auto print_eclass = [] (const testing::TestParamInfo<t8_eclass> &info) { return 
 #define T8_NUM_SAMPLE_POINTS 10000
 #endif
 
-namespace t8code_schemes
-{
-const t8_scheme_cxx *default_scheme = t8_scheme_new_default_cxx ();
+t8_scheme *test_default_scheme = t8_scheme_new_default ();
+t8_scheme *test_default_scheme_2 = t8_scheme_new_default ();
 
-// placeholder for testing two schemes
-const t8_scheme_cxx *sa_scheme = t8_scheme_new_default_cxx ();
-
-const std::vector<const t8_scheme_cxx *> schemes = { default_scheme, sa_scheme };
+const std::vector<t8_scheme *> schemes = { test_default_scheme, test_default_scheme_2 };
 
 scheme_iterators scheme_iter (schemes);
-}  // namespace t8code_schemes
 
-#define AllSchemesEclasses testing::ValuesIn (t8code_schemes::scheme_iter.begin (), t8code_schemes::scheme_iter.end ())
+#define AllSchemesEclasses testing::ValuesIn (scheme_iter.begin (), scheme_iter.end ())
 #define AllEclasses testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT)
 #define AllEclasses2D testing::Values (T8_ECLASS_QUAD, T8_ECLASS_TRIANGLE)
 

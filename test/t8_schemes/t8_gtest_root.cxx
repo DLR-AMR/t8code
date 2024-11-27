@@ -29,38 +29,41 @@
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 
-class root: public testing::TestWithParam<t8_eclass_scheme_c *> {
+class root: public testing::TestWithParam<std::tuple<t8_scheme *, t8_eclass_t>> {
  protected:
   void
   SetUp () override
   {
-    ts = GetParam ();
-    ts->t8_element_new (1, &element);
-    ts->t8_element_root (element);
+    std::tie (scheme, tree_class) = GetParam ();
+    scheme = t8_scheme_new_default ();
+    scheme->element_new (tree_class, 1, &element);
+    scheme->get_root (tree_class, element);
   }
   void
   TearDown () override
   {
-    ts->t8_element_destroy (1, &element);
+    scheme->element_destroy (tree_class, 1, &element);
+    scheme->unref ();
   }
   t8_element_t *element;
-  t8_eclass_scheme_c *ts;
+  t8_scheme *scheme;
+  t8_eclass_t tree_class;
 };
 
 /*Test root*/
 
 TEST_P (root, has_level_zero)
 {
-  EXPECT_EQ (ts->t8_element_level (element), 0);
+  EXPECT_EQ (scheme->element_get_level (tree_class, element), 0);
 }
 
 TEST_P (root, equals_linear_id_0_0)
 {
   t8_element_t *root_compare;
-  ts->t8_element_new (1, &root_compare);
-  ts->t8_element_set_linear_id (root_compare, 0, 0);
-  EXPECT_ELEM_EQ (ts, element, root_compare);
-  ts->t8_element_destroy (1, &root_compare);
+  scheme->element_new (tree_class, 1, &root_compare);
+  scheme->element_set_linear_id (tree_class, root_compare, 0, 0);
+  EXPECT_ELEM_EQ (scheme, tree_class, element, root_compare);
+  scheme->element_destroy (tree_class, 1, &root_compare);
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_root, root, AllSchemesEclasses);

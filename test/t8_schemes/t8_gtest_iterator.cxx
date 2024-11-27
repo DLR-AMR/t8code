@@ -2,10 +2,19 @@
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <vector>
+#include <tuple>
+
+// Define the user-defined operator++ for t8_eclass_t
+t8_eclass_t&
+operator++ (t8_eclass_t& eclass)
+{
+  eclass = static_cast<t8_eclass_t> (static_cast<int> (eclass) + 1);
+  return eclass;
+}
 
 /** 
  * \class scheme_iterators
- * Class to iterate over all eclasses of all schemes an return the t8_eclass_scheme_c*.
+ * Class to iterate over all eclasses of all schemes and return the t8_scheme and the current t8_eclass_t.
  */
 class scheme_iterators {
  public:
@@ -13,7 +22,7 @@ class scheme_iterators {
      * Initialize the iterator with a list of schemes.
      * \param [in] schemes The list of schemes to iterate over.
     */
-  scheme_iterators (const std::vector<const t8_scheme_cxx*>& schemes): schemes (schemes)
+  scheme_iterators (const std::vector<t8_scheme*>& schemes): schemes (schemes)
   {
   }
 
@@ -25,32 +34,33 @@ class scheme_iterators {
   {
     using iterator_category = std::forward_iterator_tag;
     using difference_type = std::ptrdiff_t;
-    using value_type = t8_eclass_scheme_c*;
-    using pointer = t8_eclass_scheme_c**;
-    using reference = t8_eclass_scheme_c*&;
+    using value_type = std::tuple<t8_scheme*, t8_eclass_t>;
+    using pointer = std::tuple<t8_scheme*, t8_eclass_t>*;
+    using reference = std::tuple<t8_scheme*, t8_eclass_t>&;
 
     /**
          * Constructor for the iterator.
          * \param [in] schemes The list of schemes to iterate over.
          * \param [in] is_end Flag to indicate if the iterator is at the end.
         */
-    Iterator (const std::vector<const t8_scheme_cxx*>& schemes, const bool is_end = false)
-      : schemes (schemes), scheme_index (is_end ? schemes.size () : 0), eclass_index (0)
+    Iterator (const std::vector<t8_scheme*>& schemes, const bool is_end = false)
+      : schemes (schemes), scheme_index (is_end ? schemes.size () : 0), eclass_index (t8_eclass_t (0))
     {
       if (!is_end && !schemes.empty ()) {
-        eclass_count = schemes[scheme_index]->num_eclasses;
+        eclass_count = schemes[scheme_index]->get_num_eclass_schemes ();
       }
     }
 
     /**
          * Dereference operator.
-         * \return The current eclass scheme or tree scheme ts.
+         * \return The current scheme and eclass.
         */
-    t8_eclass_scheme_c*
+    std::tuple<t8_scheme*, t8_eclass_t>
     operator* () const
     {
-      const t8_scheme_cxx* current_scheme = schemes[scheme_index];
-      return current_scheme->eclass_schemes[eclass_index];
+      t8_scheme* current_scheme = schemes[scheme_index];
+      t8_eclass_t current_eclass = eclass_index;
+      return std::make_tuple (current_scheme, current_eclass);
     }
 
     /**
@@ -60,10 +70,10 @@ class scheme_iterators {
     Iterator&
     operator++ ()
     {
-      if (++eclass_index >= eclass_count) {
-        eclass_index = 0;
+      if (static_cast<int> (++eclass_index) >= eclass_count) {
+        eclass_index = t8_eclass_t (0);
         if (++scheme_index < schemes.size ()) {
-          eclass_count = schemes[scheme_index]->num_eclasses;
+          eclass_count = schemes[scheme_index]->get_num_eclass_schemes ();
         }
       }
       return *this;
@@ -81,9 +91,9 @@ class scheme_iterators {
     }
 
    private:
-    const std::vector<const t8_scheme_cxx*>& schemes;
+    const std::vector<t8_scheme*>& schemes;
     size_t scheme_index;
-    size_t eclass_index;
+    t8_eclass_t eclass_index;
     size_t eclass_count;
   };
 
@@ -99,5 +109,5 @@ class scheme_iterators {
   }
 
  private:
-  const std::vector<const t8_scheme_cxx*>& schemes;
+  const std::vector<t8_scheme*>& schemes;
 };
