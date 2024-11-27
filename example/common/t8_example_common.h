@@ -64,7 +64,6 @@ T8_EXTERN_C_BEGIN ();
  * \param [in]      forest      The forest.
  * \param [in]      ltreeid     A local tree in \a forest.
  * \param [in]      element     An element of tree \a ltreeid in \a forest.
- * \param [in]      ts          The scheme for \a element.
  * \param [in]      levelset    The level-set function.
  * \param [in]      band_width  Check whether the element is within a band of
  *                              \a band_width many elements of its size.
@@ -77,7 +76,7 @@ T8_EXTERN_C_BEGIN ();
  *                              the zero level-set passes through \a element.
  */
 int
-t8_common_within_levelset (t8_forest_t forest, t8_locidx_t ltreeid, t8_element_t *element, t8_eclass_scheme_c *ts,
+t8_common_within_levelset (t8_forest_t forest, t8_locidx_t ltreeid, t8_element_t *element,
                            t8_example_level_set_fn levelset, double band_width, double t, void *udata);
 
 /** Adapt a forest such that always the second child of the first
@@ -85,8 +84,9 @@ t8_common_within_levelset (t8_forest_t forest, t8_locidx_t ltreeid, t8_element_t
  * imbalanced forest.
  */
 int
-t8_common_adapt_balance (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                         t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[]);
+t8_common_adapt_balance (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
+                         t8_locidx_t lelement_id, const t8_scheme_c *scheme, const int is_family,
+                         const int num_elements, t8_element_t *elements[]);
 
 /** Adapt a forest along a given level-set function.
  * The user data of forest must be a pointer to a \a t8_example_level_set_struct_t.
@@ -96,9 +96,9 @@ t8_common_adapt_balance (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_
 /* TODO: Currently the band_width control is not working yet.
  *        if band_with = 0, then all elements that are touched by the zero LS are refined. */
 int
-t8_common_adapt_level_set (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                           t8_eclass_scheme_c *ts, const int is_family, const int num_elements,
-                           t8_element_t *elements[]);
+t8_common_adapt_level_set (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
+                           t8_locidx_t lelement_id, const t8_scheme_c *scheme, const int is_family,
+                           const int num_elements, t8_element_t *elements[]);
 
 /** Real valued functions defined in t8_example_common_functions.h */
 

@@ -70,8 +70,8 @@ struct t8_example_netcdf_adapt_data
 * \note A detailed description of the adaption process is found in step 3 of the tutorial located in 't8code/example/tutorials'.
 */
 int
-t8_example_netcdf_adapt_fn (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                            t8_locidx_t lelement_id, t8_eclass_scheme_c *ts, const int is_family,
+t8_example_netcdf_adapt_fn (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
+                            t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family,
                             const int num_elements, t8_element_t *elements[])
 {
   double element_centroid[3];
@@ -177,7 +177,7 @@ t8_example_compare_performance_netcdf_var_properties (sc_MPI_Comm comm, int fore
 {
   t8_cmesh_t cmesh;
   t8_forest_t forest;
-  t8_scheme_cxx_t *default_scheme;
+  t8_scheme *default_scheme;
   t8_gloidx_t num_elements;
   t8_nc_int64_t *var_rank;
   double *random_values;
@@ -195,7 +195,7 @@ t8_example_compare_performance_netcdf_var_properties (sc_MPI_Comm comm, int fore
   retval = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (retval);
   /* Create a default scheme */
-  default_scheme = t8_scheme_new_default_cxx ();
+  default_scheme = t8_scheme_new_default ();
 
   /* Construct a 3D hybrid hypercube as a cmesh */
   cmesh = t8_cmesh_new_hypercube_hybrid (comm, 1, 0);
@@ -324,7 +324,7 @@ t8_example_netcdf_write_forest (sc_MPI_Comm comm, int forest_refinement_level, i
 {
   t8_cmesh_t cmesh;
   t8_forest_t forest;
-  t8_scheme_cxx_t *default_scheme;
+  t8_scheme *default_scheme;
   t8_gloidx_t num_elements;
   t8_nc_int32_t *var_rank;
   double *random_values;
@@ -343,7 +343,7 @@ t8_example_netcdf_write_forest (sc_MPI_Comm comm, int forest_refinement_level, i
   SC_CHECK_MPI (retval);
 
   /* Create a default scheme */
-  default_scheme = t8_scheme_new_default_cxx ();
+  default_scheme = t8_scheme_new_default ();
 
   /* Construct a cube coarse mesh */
   /* Construct a 3D hybrid hypercube as a cmesh */

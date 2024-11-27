@@ -198,10 +198,10 @@ TestPartitionData (const t8_forest_t initial_forest, const t8_forest_t partition
  */
 static int
 t8_test_partition_data_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                              t8_locidx_t lelement_id, t8_eclass_scheme_c* ts, const int is_family,
-                              const int num_elements, t8_element_t* elements[])
+                              t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme* scheme,
+                              const int is_family, const int num_elements, t8_element_t* elements[])
 {
-  const int level = ts->t8_element_level (elements[0]);
+  const int level = scheme->element_get_level (tree_class, elements[0]);
   const t8_gloidx_t gtree_id = t8_forest_global_tree_id (forest_from, which_tree);
   if (level < 3 && gtree_id == 0) {
     return 1;
@@ -225,7 +225,7 @@ TEST (partition_data, test_partition_data)
 {
   /* Build a forest */
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, 0, 0, 0);
-  t8_scheme_cxx_t* scheme = t8_scheme_new_default_cxx ();
+  t8_scheme* scheme = t8_scheme_new_default ();
   t8_forest_t base_forest = t8_forest_new_uniform (cmesh, scheme, 1, 0, sc_MPI_COMM_WORLD);
 
   /* Adapt the forest examplary. */

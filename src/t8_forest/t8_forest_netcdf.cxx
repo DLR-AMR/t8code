@@ -60,6 +60,7 @@ These functions write a file in the NetCDF-format which represents the given 2D-
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest_netcdf.h>
 #include <t8_element_shape.h>
+#include <t8_schemes/t8_scheme.hxx>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -388,6 +389,7 @@ t8_forest_write_netcdf_data (t8_forest_t forest, t8_forest_netcdf_context_t *con
   size_t start_ptr;
   size_t count_ptr;
   int retval;
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
 
   /* Get the first local element id in a forest (function is collective) */
   first_local_elem_id = t8_forest_get_first_local_element_id (forest);
@@ -415,12 +417,10 @@ t8_forest_write_netcdf_data (t8_forest_t forest, t8_forest_netcdf_context_t *con
     local_tree_offset = t8_forest_get_tree_element_offset (forest, ltree_id);
     /* Iterate over all local elements in the local tree */
     for (local_elem_id = 0; local_elem_id < num_local_tree_elem; local_elem_id++) {
-      /* Get the eclass scheme */
-      t8_eclass_scheme_c *scheme = t8_forest_get_eclass_scheme (forest, tree_class);
       /* Get the local element in the local tree */
       const t8_element_t *element = t8_forest_get_element_in_tree (forest, ltree_id, local_elem_id);
       /* Determine the element shape */
-      element_shape = scheme->t8_element_shape (element);
+      element_shape = scheme->element_get_shape (tree_class, element);
       /* Store the type of the element in its global index position */
       Mesh_elem_types[(local_tree_offset + local_elem_id)] = t8_element_shape_vtk_type (element_shape);
       /* Store the elements tree_id in its global index position */
@@ -740,12 +740,10 @@ t8_forest_write_netcdf_coordinate_data (t8_forest_t forest, t8_forest_netcdf_con
     local_tree_offset = t8_forest_get_tree_element_offset (forest, ltree_id);
 
     for (local_elem_id = 0; local_elem_id < num_local_tree_elem; local_elem_id++) {
-      /* Get the eclass scheme */
-      t8_eclass_scheme_c *scheme = t8_forest_get_eclass_scheme (forest, tree_class);
       /* Get the local element in the local tree */
       const t8_element_t *element = t8_forest_get_element_in_tree (forest, ltree_id, local_elem_id);
       /* Determine the element shape */
-      element_shape = scheme->t8_element_shape (element);
+      element_shape = scheme->element_get_shape (tree_class, element);
       /* Get the number of nodes for this elements shape */
       number_nodes = t8_element_shape_num_vertices (element_shape);
       i = 0;

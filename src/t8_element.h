@@ -41,23 +41,10 @@ T8_EXTERN_C_BEGIN ();
  */
 typedef struct t8_element t8_element_t;
 
-/** This typedef holds virtual functions for a particular element class. */
-typedef struct t8_eclass_scheme t8_eclass_scheme_c;
-
-typedef struct t8_scheme_cxx t8_scheme_cxx_t;
-
-/** The scheme holds implementations for one or more element classes. */
-struct t8_scheme_cxx
-{
-  /** Reference counter for this scheme. */
-  sc_refcount_t rc;
-
-  /** This array holds one virtual table per element class. */
-  t8_eclass_scheme_c *eclass_schemes[T8_ECLASS_COUNT];
-
-  /** Number of eclasses implemented in the scheme*/
-  int num_eclasses;
-};
+/** The scheme holds implementations for one or more element classes.
+ *  Opaque pointer for C interface.
+ */
+typedef struct t8_scheme t8_scheme_c;
 
 /** This array holds the reference coordinates of each vertex of each element.
  *  It can e.g. be used with the \ref t8_element_reference_coords function.
@@ -76,7 +63,7 @@ extern const double t8_element_centroid_ref_coords[T8_ECLASS_COUNT][3];
  *                              exist with positive reference count.
  */
 void
-t8_scheme_cxx_ref (t8_scheme_cxx_t *scheme);
+t8_scheme_ref (t8_scheme_c *scheme);
 
 /** Decrease the reference counter of a scheme.
  * If the counter reaches zero, this scheme is destroyed.
@@ -88,11 +75,7 @@ t8_scheme_cxx_ref (t8_scheme_cxx_t *scheme);
  *                              the scheme is not modified in other ways.
  */
 void
-t8_scheme_cxx_unref (t8_scheme_cxx_t **pscheme);
-
-/* TODO: document, see t8_element.hxx */
-extern void
-t8_scheme_cxx_destroy (t8_scheme_cxx_t *s);
+t8_scheme_unref (t8_scheme_c **pscheme);
 
 T8_EXTERN_C_END ();
 

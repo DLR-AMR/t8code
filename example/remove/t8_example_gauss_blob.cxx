@@ -96,8 +96,9 @@ t8_output_data_to_vtu (t8_forest_t forest, double *data, const char *prefix)
 
 /* Refine, if element is within a given radius. */
 static int
-t8_adapt_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                 t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+t8_adapt_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
+                 t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family, const int num_elements,
+                 t8_element_t *elements[])
 {
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
   T8_ASSERT (adapt_data != NULL);
@@ -114,8 +115,9 @@ t8_adapt_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_
 
 /* Remove, element if it is within our outside a given radius. */
 static int
-t8_adapt_remove (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                 t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+t8_adapt_remove (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
+                 t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family, const int num_elements,
+                 t8_element_t *elements[])
 {
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
   T8_ASSERT (adapt_data != NULL);
@@ -151,7 +153,7 @@ t8_construct_spheres (const int initial_level, const double radius_inner, const 
    * Its center is therefore the center of the corresponding surface. */
   struct t8_adapt_data adapt_data = { remove_scope, radius_inner, radius_outer, { 0.5, 0.5, 0.5 } };
 
-  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), initial_level, 0, sc_MPI_COMM_WORLD);
+  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), initial_level, 0, sc_MPI_COMM_WORLD);
   forest = t8_forest_new_adapt (forest, t8_adapt_refine, 0, 0, &adapt_data);
   if (remove_scope > 0) {
     forest = t8_forest_new_adapt (forest, t8_adapt_remove, 0, 0, &adapt_data);

@@ -33,22 +33,21 @@ class class_schemes_descendant: public testing::TestWithParam<t8_eclass_t> {
   void
   SetUp () override
   {
-    eclass = GetParam ();
+    tree_class = GetParam ();
 
-    scheme = t8_scheme_new_default_cxx ();
-    ts = scheme->eclass_schemes[eclass];
-    ts->t8_element_new (1, &elem);
-    ts->t8_element_new (1, &desc);
-    ts->t8_element_new (1, &test);
-    ts->t8_element_root (elem);
+    scheme = t8_scheme_new_default ();
+    scheme->element_new (tree_class, 1, &elem);
+    scheme->element_new (tree_class, 1, &desc);
+    scheme->element_new (tree_class, 1, &test);
+    scheme->get_root (tree_class, elem);
   }
   void
   TearDown () override
   {
-    ts->t8_element_destroy (1, &elem);
-    ts->t8_element_destroy (1, &desc);
-    ts->t8_element_destroy (1, &test);
-    t8_scheme_cxx_unref (&scheme);
+    scheme->element_destroy (tree_class, 1, &elem);
+    scheme->element_destroy (tree_class, 1, &desc);
+    scheme->element_destroy (tree_class, 1, &test);
+    t8_scheme_unref (&scheme);
   }
 #ifdef T8_ENABLE_DEBUG
   const int maxlvl = 3;
@@ -56,9 +55,8 @@ class class_schemes_descendant: public testing::TestWithParam<t8_eclass_t> {
   const int maxlvl = 4;
 #endif
 
-  t8_scheme_cxx *scheme;
-  t8_eclass_scheme_c *ts;
-  t8_eclass_t eclass;
+  t8_scheme *scheme;
+  t8_eclass_t tree_class;
   t8_element_t *elem;
   t8_element_t *desc;
   t8_element_t *test;
@@ -68,25 +66,26 @@ class class_schemes_descendant: public testing::TestWithParam<t8_eclass_t> {
  * computed correctly. Only the descendant of elem->level + 1 is tested. 
  */
 static void
-t8_recursive_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *test, t8_eclass_scheme_c *ts, int maxlvl)
+t8_recursive_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *test, t8_scheme *scheme,
+                         const t8_eclass_t tree_class, int maxlvl)
 {
-  const int num_children = ts->t8_element_num_children (elem);
-  const int level = ts->t8_element_level (elem);
+  const int num_children = scheme->element_get_num_children (tree_class, elem);
+  const int level = scheme->element_get_level (tree_class, elem);
   for (int ichild = 0; ichild < num_children; ichild++) {
-    ts->t8_element_child (elem, ichild, desc);
+    scheme->element_get_child (tree_class, elem, ichild, desc);
     /* first child == first descendant. */
     if (ichild == 0) {
-      ts->t8_element_first_descendant (elem, test, level + 1);
-      EXPECT_ELEM_EQ (ts, desc, test);
+      scheme->element_construct_first_descendant (tree_class, elem, test, level + 1);
+      EXPECT_ELEM_EQ (scheme, tree_class, desc, test);
     }
     /* last child == last descendant. */
     else if (ichild == num_children - 1) {
-      ts->t8_element_last_descendant (elem, test, level + 1);
-      EXPECT_ELEM_EQ (ts, desc, test);
+      scheme->element_construct_last_descendant (tree_class, elem, test, level + 1);
+      EXPECT_ELEM_EQ (scheme, tree_class, desc, test);
     }
     else if (level > maxlvl) {
-      t8_recursive_descendant (desc, elem, test, ts, maxlvl);
-      ts->t8_element_parent (desc, elem);
+      t8_recursive_descendant (desc, elem, test, scheme, tree_class, maxlvl);
+      scheme->element_get_parent (tree_class, desc, elem);
     }
   }
 }
@@ -95,65 +94,67 @@ t8_recursive_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *t
  * of levels. 
  */
 static void
-t8_deep_first_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *test, t8_eclass_scheme_c *ts, int level)
+t8_deep_first_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *test, t8_scheme *scheme,
+                          const t8_eclass_t tree_class, int level)
 {
-  const int elem_level = ts->t8_element_level (elem);
-  ts->t8_element_copy (elem, test);
+  const int elem_level = scheme->element_get_level (tree_class, elem);
+  scheme->element_copy (tree_class, elem, test);
 
   for (int ilevel = elem_level; ilevel < level; ilevel++) {
-    ts->t8_element_child (test, 0, desc);
-    ts->t8_element_copy (desc, test);
+    scheme->element_get_child (tree_class, test, 0, desc);
+    scheme->element_copy (tree_class, desc, test);
   }
-  ts->t8_element_first_descendant (elem, test, level);
-  EXPECT_ELEM_EQ (ts, desc, test);
+  scheme->element_construct_first_descendant (tree_class, elem, test, level);
+  EXPECT_ELEM_EQ (scheme, tree_class, desc, test);
 }
 
 /* Test, if the last descendant of an element is computed correctly over a range
  * of levels.
  */
 static void
-t8_deep_last_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *test, t8_eclass_scheme_c *ts, int level)
+t8_deep_last_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *test, t8_scheme *scheme,
+                         const t8_eclass_t tree_class, int level)
 {
-  ts->t8_element_copy (elem, test);
+  scheme->element_copy (tree_class, elem, test);
 
   /* Compute the correct element. */
-  for (int ilevel = ts->t8_element_level (elem); ilevel < level; ilevel++) {
-    const int num_children = ts->t8_element_num_children (test);
-    ts->t8_element_child (test, num_children - 1, desc);
-    ts->t8_element_copy (desc, test);
+  for (int ilevel = scheme->element_get_level (tree_class, elem); ilevel < level; ilevel++) {
+    const int num_children = scheme->element_get_num_children (tree_class, test);
+    scheme->element_get_child (tree_class, test, num_children - 1, desc);
+    scheme->element_copy (tree_class, desc, test);
   }
   /* Check for equality. */
-  ts->t8_element_last_descendant (elem, test, level);
-  EXPECT_ELEM_EQ (ts, desc, test);
+  scheme->element_construct_last_descendant (tree_class, elem, test, level);
+  EXPECT_ELEM_EQ (scheme, tree_class, desc, test);
 }
 
 /* Test if the first and last descendant of an element are computed correctly.
  * The level between the element and the descendant is larger or equal to one.
  */
 static void
-t8_large_step_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *test, t8_eclass_scheme_c *ts,
-                          int maxlvl)
+t8_large_step_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *test, t8_scheme *scheme,
+                          const t8_eclass_t tree_class, int maxlvl)
 {
-  for (int ilevel = ts->t8_element_level (elem); ilevel < maxlvl; ilevel++) {
+  for (int ilevel = scheme->element_get_level (tree_class, elem); ilevel < maxlvl; ilevel++) {
 
-    const int num_children = ts->t8_element_num_children (elem);
+    const int num_children = scheme->element_get_num_children (tree_class, elem);
     /* Use these functions to perform the actual test. */
-    t8_deep_first_descendant (elem, desc, test, ts, maxlvl);
-    t8_deep_last_descendant (elem, desc, test, ts, maxlvl);
+    t8_deep_first_descendant (elem, desc, test, scheme, tree_class, maxlvl);
+    t8_deep_last_descendant (elem, desc, test, scheme, tree_class, maxlvl);
     for (int jchild = 0; jchild < num_children; jchild++) {
-      ts->t8_element_child (elem, jchild, desc);
-      t8_large_step_descendant (desc, elem, test, ts, maxlvl);
-      ts->t8_element_parent (desc, elem);
+      scheme->element_get_child (tree_class, elem, jchild, desc);
+      t8_large_step_descendant (desc, elem, test, scheme, tree_class, maxlvl);
+      scheme->element_get_parent (tree_class, desc, elem);
     }
   }
 }
 
 TEST_P (class_schemes_descendant, test_recursive_descendant)
 {
-  t8_recursive_descendant (elem, desc, test, ts, maxlvl);
-  t8_deep_first_descendant (elem, desc, test, ts, ts->t8_element_maxlevel ());
-  t8_deep_last_descendant (elem, desc, test, ts, ts->t8_element_maxlevel ());
-  t8_large_step_descendant (elem, desc, test, ts, maxlvl);
+  t8_recursive_descendant (elem, desc, test, scheme, tree_class, maxlvl);
+  t8_deep_first_descendant (elem, desc, test, scheme, tree_class, scheme->get_maxlevel (tree_class));
+  t8_deep_last_descendant (elem, desc, test, scheme, tree_class, scheme->get_maxlevel (tree_class));
+  t8_large_step_descendant (elem, desc, test, scheme, tree_class, maxlvl);
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_descendant, class_schemes_descendant, AllEclasses, print_eclass);
