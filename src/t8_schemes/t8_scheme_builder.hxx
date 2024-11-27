@@ -35,6 +35,9 @@
 #include <typeinfo>
 #endif  // T8_ENABLE_DEBUG
 
+/** The scheme builder adds eclass schemes to a scheme container and returns it.
+ * TODO: Make return value a reference.
+ */
 class t8_scheme_builder {
  public:
   t8_scheme_builder (): scheme (new t8_scheme) {};
