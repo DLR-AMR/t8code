@@ -108,8 +108,10 @@ static t8_locidx_t
 t8_forest_pos (t8_forest_t forest, t8_eclass_t tree_class, t8_scheme *scheme, t8_element_array_t *telements,
                const t8_locidx_t telements_pos)
 {
+#if T8_ENABLE_DEBUG
   const t8_eclass_t tree_eclass_check = telements->tree_class;
   T8_ASSERT (tree_eclass_check == tree_class);
+#endif
 
   const t8_locidx_t elements_in_array = t8_element_array_get_count (telements);
   T8_ASSERT (0 <= telements_pos && telements_pos < elements_in_array);
