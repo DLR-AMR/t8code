@@ -3096,6 +3096,7 @@ t8_forest_populate_irregular (t8_forest_t forest)
   t8_forest_unref (&forest_tmp_partition);
 }
 
+#ifdef T8_ENABLE_DEBUG
 /**
  * Checks if a scheme is valid. This is an intermediate check, which requires the schemes eclass schemes
  * to be in the same order as the eclass enum. This is only needed as long as the trees access the eclass scheme
@@ -3106,14 +3107,14 @@ t8_forest_populate_irregular (t8_forest_t forest)
 static int
 t8_forest_scheme_is_valid (const t8_scheme *scheme)
 {
-  int eclass_int;
-  for (eclass_int = 0; eclass_int < T8_ECLASS_COUNT; eclass_int++) {
+  for (int eclass_int = 0; eclass_int < T8_ECLASS_COUNT; eclass_int++) {
     if (scheme->get_eclass_scheme_eclass (static_cast<t8_eclass_t> (eclass_int)) != eclass_int) {
       return 0;
     }
   }
   return 1;
 }
+#endif
 
 void
 t8_forest_commit (t8_forest_t forest)
