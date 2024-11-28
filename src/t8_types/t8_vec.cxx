@@ -20,7 +20,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_vec.hxx>
+#include <t8_types/t8_vec.hxx>
 #include <t8_vec.h>
 
 double
