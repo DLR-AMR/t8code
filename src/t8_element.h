@@ -43,6 +43,7 @@ typedef struct t8_element t8_element_t;
 
 /** The scheme holds implementations for one or more element classes.
  *  Opaque pointer for C interface.
+ *  Detailed documentation at \ref t8_scheme.
  */
 typedef struct t8_scheme t8_scheme_c;
 

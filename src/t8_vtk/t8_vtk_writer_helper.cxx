@@ -162,7 +162,7 @@ t8_element_shape_t
 grid_element_shape<t8_forest_t> (const t8_forest_t grid, const t8_locidx_t itree, const t8_element_t *element)
 {
   const t8_eclass_t eclass = t8_forest_get_eclass (grid, itree);
-  t8_scheme *scheme = t8_forest_get_scheme (grid);
+  const t8_scheme *scheme = t8_forest_get_scheme (grid);
   return scheme->element_get_shape (eclass, element);
 }
 

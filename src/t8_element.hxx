@@ -54,20 +54,6 @@ class t8_eclass_scheme: public t8_crtp<TUnderlyingEclassScheme> {
  public:
   const t8_eclass_t eclass; /**< The tree class */
 
-// TODO: Find out if this is needed
-// DO NOT LET THIS SLIP THROUGH THE REVIEW, I DO NOT KNOW YET IF IT IS ALRIGHT TO DELETE THIS
-#if 0
-  /** The destructor. It does nothing but has to be defined since
-   * we may want to delete an eclass_scheme that is actually inherited
-   * (for example t8_default_scheme_quad) and providing an implementation
-   * for the destructor ensures that the
-   * destructor of the child class will be executed. */
-  ~t8_scheme ()
-  {
-    this->underlying ().~TUnderlyingEclassScheme ();
-  }
-#endif
-
   /** Return the size of any element of a given class.
    * \return                      The size of an element of class \b ts.
    * We provide a default implementation of this routine that should suffice
