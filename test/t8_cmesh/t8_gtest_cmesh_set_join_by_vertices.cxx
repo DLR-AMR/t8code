@@ -468,7 +468,7 @@ class t8_cmesh_set_join_by_vertices_class: public testing::TestWithParam<cmesh_e
   t8_cmesh_t cmesh = NULL;
 };
 
-TEST_P (t8_cmesh_set_join_by_vertices_class, test_cmesh_set_join_by_vertices_parametrized)
+TEST_P (t8_cmesh_set_join_by_vertices_class, test_cmesh_set_join_by_vertices_parameterized)
 {
   test_with_cmesh (cmesh);
 }

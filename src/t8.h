@@ -150,7 +150,7 @@ typedef enum {
 int
 t8_get_package_id (void);
 
-/** Logging function parametrized by local/global category and priority.
+/** Logging function parameterized by local/global category and priority.
  * \param [in] category     Either SC_LC_NORMAL for outputting on every rank
  *                          or SC_LC_GLOBAL for outputting on the root rank.
  * \param [in] priority     Please see sc.h for legal log priorities.
@@ -160,7 +160,7 @@ t8_get_package_id (void);
 void
 t8_logv (int category, int priority, const char *fmt, va_list ap);
 
-/** Logging function parametrized by local/global category and priority.
+/** Logging function parameterized by local/global category and priority.
  * \param [in] category     Either SC_LC_NORMAL for outputting on every rank
  *                          or SC_LC_GLOBAL for outputting on the root rank.
  * \param [in] priority     Please see sc.h for legal log priorities.
