@@ -87,7 +87,6 @@ target_sources( T8 PRIVATE
     t8_refcount.c 
     t8_version.c 
     t8_vtk.c 
-    t8_vec.cxx
     t8_cmesh/t8_cmesh.cxx 
     t8_cmesh/t8_cmesh_cad.cxx 
     t8_cmesh/t8_cmesh_triangle.cxx 
@@ -147,6 +146,7 @@ target_sources( T8 PRIVATE
     t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.c
     t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.cxx
     t8_schemes/t8_default/t8_default_vertex/t8_dvertex_bits.c
+    t8_types/t8_vec.cxx
     t8_vtk/t8_vtk_polydata.cxx 
     t8_vtk/t8_vtk_unstructured.cxx 
     t8_vtk/t8_vtk_parallel.cxx 

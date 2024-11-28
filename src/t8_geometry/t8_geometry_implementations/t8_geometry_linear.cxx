@@ -24,7 +24,7 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_geometry/t8_geometry_helpers.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
-#include <t8_vec.hxx>
+#include <t8_types/t8_vec.hxx>
 
 t8_geometry_linear::t8_geometry_linear (): t8_geometry_with_vertices ("t8_geom_linear")
 {
