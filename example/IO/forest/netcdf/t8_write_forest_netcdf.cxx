@@ -36,7 +36,7 @@
 #define NC_COLLECTIVE 1
 #endif
 #include <t8_eclass.h>
-#include <t8_vec.hxx>
+#include <t8_types/t8_vec.hxx>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
