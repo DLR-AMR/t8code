@@ -235,7 +235,9 @@ int
 t8_default_scheme_prism::element_extrude_face (const t8_element_t *face, t8_element_t *elem, int root_face,
                                                const t8_scheme *scheme) const
 {
+#if T8_ENABLE_DEBUG
   const t8_eclass_t face_eclass = (t8_eclass_t) t8_eclass_face_types[T8_ECLASS_PRISM][root_face];
+#endif
   T8_ASSERT (scheme->element_is_valid (face_eclass, face));
   T8_ASSERT (0 <= root_face && root_face < T8_DPRISM_FACES);
   t8_dprism_extrude_face (face, elem, root_face);
