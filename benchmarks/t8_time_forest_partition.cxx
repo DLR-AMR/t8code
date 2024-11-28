@@ -39,7 +39,7 @@
 #include <t8_forest/t8_forest_profiling.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <example/common/t8_example_common.h>
-#include <t8_vec.hxx>
+#include <t8_types/t8_vec.hxx>
 
 /* This is the user defined data used to define the
  * region in which we partition.
