@@ -3485,7 +3485,6 @@ t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shel
 
   const double outer_radius = inner_radius + shell_thickness;
 
-<<<<<<< HEAD
   const double r = 1.0 / std::sqrt(3.0); // inner radius
   const double R = 2.0 / std::sqrt(3.0); // outer radius
 
@@ -3493,15 +3492,6 @@ t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shel
   const double hex_vertices[][3] = {
     { -r, -r, r }, { r, -r, r }, { -r, r, r }, { r, r, r },
     { -R, -R, R }, { R, -R, R }, { -R, R, R }, { R, R, R } 
-=======
-  const double r_ = 1.0 / std::sqrt(3.0); // inner radius
-  const double R_ = 2.0 / std::sqrt(3.0); // outer radius
-
-  // Vertices of the template hex.
-  const double hex_vertices[][3] = {
-    { -r_, -r_, r_ }, { r_, -r_, r_ }, { -r_, r_, r_ }, { r_, r_, r_ },
-    { -R_, -R_, R_ }, { R_, -R_, R_ }, { -R_, R_, R_ }, { R_, R_, R_ } 
->>>>>>> 3c6d3b109 (Make cmesh sphere examples more robust.)
   };
 
   const double angles[] = { 0.0 , 0.5 * M_PI, 0.5 * M_PI, M_PI, -0.5 * M_PI, -0.5 * M_PI };
