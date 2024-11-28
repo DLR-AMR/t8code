@@ -289,8 +289,10 @@ int
 t8_default_scheme_pyramid::element_extrude_face (const t8_element_t *face, t8_element_t *elem, int root_face,
                                                  const t8_scheme *scheme) const
 {
+#if T8_ENABLE_DEBUG
   const t8_eclass_t face_eclass = (t8_eclass_t) t8_eclass_face_types[T8_ECLASS_PYRAMID][root_face];
   T8_ASSERT (scheme->element_is_valid (face_eclass, face));
+#endif
   return t8_dpyramid_extrude_face (face, (t8_dpyramid_t *) elem, root_face);
   T8_ASSERT (element_is_valid (elem));
 }
