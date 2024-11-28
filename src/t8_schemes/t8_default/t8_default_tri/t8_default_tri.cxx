@@ -156,8 +156,7 @@ t8_default_scheme_tri::element_get_children (const t8_element_t *elem, int lengt
   T8_ASSERT (element_is_valid (elem));
 #ifdef T8_ENABLE_DEBUG
   {
-    int j;
-    for (j = 0; j < length; j++) {
+    for (int j = 0; j < length; j++) {
       T8_ASSERT (element_is_valid (c[j]));
     }
   }
@@ -185,8 +184,7 @@ t8_default_scheme_tri::elements_are_family (t8_element_t *const *fam) const
 {
 #ifdef T8_ENABLE_DEBUG
   {
-    int j;
-    for (j = 0; j < T8_DTRI_CHILDREN; j++) {
+    for (int j = 0; j < T8_DTRI_CHILDREN; j++) {
       T8_ASSERT (element_is_valid (fam[j]));
     }
   }
@@ -223,8 +221,7 @@ t8_default_scheme_tri::element_get_children_at_face (const t8_element_t *elem, i
   T8_ASSERT (element_is_valid (elem));
 #ifdef T8_ENABLE_DEBUG
   {
-    int j;
-    for (j = 0; j < num_children; j++) {
+    for (int j = 0; j < num_children; j++) {
       T8_ASSERT (element_is_valid (children[j]));
     }
   }
@@ -340,11 +337,10 @@ void
 t8_default_scheme_tri::element_construct_last_descendant_face (const t8_element_t *elem, int face,
                                                                t8_element_t *last_desc, int level) const
 {
-  int corner;
   T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
   T8_ASSERT (0 <= level && level <= T8_DTRI_MAXLEVEL);
   /* Compute the last corner of this face */
-  corner = t8_dtri_face_corner[face][1];
+  const int corner = t8_dtri_face_corner[face][1];
   /* Compute the descendant in this corner */
   t8_dtri_corner_descendant ((const t8_dtri_t *) elem, (t8_dtri_t *) last_desc, corner, level);
 }

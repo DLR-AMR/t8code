@@ -73,6 +73,8 @@ t8_default_scheme_hex::element_compare (const t8_element_t *elem1, const t8_elem
 int
 t8_default_scheme_hex::element_is_equal (const t8_element_t *elem1, const t8_element_t *elem2) const
 {
+  T8_ASSERT (element_is_valid (elem1));
+  T8_ASSERT (element_is_valid (elem2));
   return p8est_quadrant_is_equal ((const p8est_quadrant_t *) elem1, (const p8est_quadrant_t *) elem2);
 }
 
@@ -113,14 +115,14 @@ t8_default_scheme_hex::element_get_num_children (const t8_element_t *elem) const
 }
 
 int
-t8_default_scheme_hex::element_get_num_face_children (const t8_element_t *elem, int face) const
+t8_default_scheme_hex::element_get_num_face_children (const t8_element_t *elem, const int face) const
 {
   T8_ASSERT (element_is_valid (elem));
   return 4;
 }
 
 int
-t8_default_scheme_hex::element_get_face_corner (const t8_element_t *element, int face, int corner) const
+t8_default_scheme_hex::element_get_face_corner (const t8_element_t *element, const int face, const int corner) const
 {
   T8_ASSERT (element_is_valid (element));
   T8_ASSERT (0 <= face && face < P8EST_FACES);
@@ -130,7 +132,7 @@ t8_default_scheme_hex::element_get_face_corner (const t8_element_t *element, int
 }
 
 void
-t8_default_scheme_hex::element_get_child (const t8_element_t *elem, int childid, t8_element_t *child) const
+t8_default_scheme_hex::element_get_child (const t8_element_t *elem, const int childid, t8_element_t *child) const
 {
   const p8est_quadrant_t *q = (const p8est_quadrant_t *) elem;
   const p4est_qcoord_t shift = P8EST_QUADRANT_LEN (q->level + 1);
@@ -157,8 +159,7 @@ t8_default_scheme_hex::element_get_children (const t8_element_t *elem, int lengt
   T8_ASSERT (element_is_valid (elem));
 #ifdef T8_ENABLE_DEBUG
   {
-    int i;
-    for (i = 0; i < P8EST_CHILDREN; i++) {
+    for (int i = 0; i < P8EST_CHILDREN; i++) {
       T8_ASSERT (element_is_valid (c[i]));
     }
   }
@@ -176,7 +177,7 @@ t8_default_scheme_hex::element_get_child_id (const t8_element_t *elem) const
 }
 
 int
-t8_default_scheme_hex::element_get_ancestor_id (const t8_element_t *elem, int level) const
+t8_default_scheme_hex::element_get_ancestor_id (const t8_element_t *elem, const int level) const
 {
   return p8est_quadrant_ancestor_id ((p8est_quadrant_t *) elem, level);
 }
@@ -186,8 +187,7 @@ t8_default_scheme_hex::elements_are_family (t8_element_t *const *fam) const
 {
 #ifdef T8_ENABLE_DEBUG
   {
-    int i;
-    for (i = 0; i < P8EST_CHILDREN; i++) {
+    for (int i = 0; i < P8EST_CHILDREN; i++) {
       T8_ASSERT (element_is_valid (fam[i]));
     }
   }
@@ -205,23 +205,22 @@ t8_default_scheme_hex::element_get_nca (const t8_element_t *elem1, const t8_elem
 }
 
 t8_element_shape_t
-t8_default_scheme_hex::element_get_face_shape (const t8_element_t *elem, int face) const
+t8_default_scheme_hex::element_get_face_shape (const t8_element_t *elem, const int face) const
 {
   T8_ASSERT (element_is_valid (elem));
   return T8_ECLASS_QUAD;
 }
 
 void
-t8_default_scheme_hex::element_get_children_at_face (const t8_element_t *elem, int face, t8_element_t *children[],
-                                                     int num_children, int *child_indices) const
+t8_default_scheme_hex::element_get_children_at_face (const t8_element_t *elem, const int face, t8_element_t *children[],
+                                                     const int num_children, int *child_indices) const
 {
-  int child_ids_local[4], i, *child_ids;
+  int child_ids_local[4], *child_ids;
 
   T8_ASSERT (element_is_valid (elem));
 #ifdef T8_ENABLE_DEBUG
   {
-    int j;
-    for (j = 0; j < P4EST_CHILDREN; j++) {
+    for (int j = 0; j < P4EST_CHILDREN; j++) {
       T8_ASSERT (element_is_valid (children[j]));
     }
   }
@@ -249,7 +248,7 @@ t8_default_scheme_hex::element_get_children_at_face (const t8_element_t *elem, i
    *     x ---- x
    *        f_4
    */
-  for (i = 0; i < P8EST_HALF; ++i) {
+  for (int i = 0; i < P8EST_HALF; ++i) {
     child_ids[i] = p8est_face_corners[face][i];
   }
 
@@ -257,13 +256,14 @@ t8_default_scheme_hex::element_get_children_at_face (const t8_element_t *elem, i
   /* We have to revert the order and compute the zeroth child last, since
    * the usage allows for elem == children[0].
    */
-  for (i = 3; i >= 0; i--) {
+  for (int i = 3; i >= 0; i--) {
     element_get_child (elem, child_ids[i], children[i]);
   }
 }
 
 int
-t8_default_scheme_hex::element_face_get_child_face (const t8_element_t *elem, int face, int face_child) const
+t8_default_scheme_hex::element_face_get_child_face (const t8_element_t *elem, const int face,
+                                                    const int face_child) const
 {
   T8_ASSERT (element_is_valid (elem));
   /* For octants the face enumeration of children is the same as for the parent. */
@@ -271,7 +271,7 @@ t8_default_scheme_hex::element_face_get_child_face (const t8_element_t *elem, in
 }
 
 int
-t8_default_scheme_hex::element_face_get_parent_face (const t8_element_t *elem, int face) const
+t8_default_scheme_hex::element_face_get_parent_face (const t8_element_t *elem, const int face) const
 {
   int child_id;
   const p8est_quadrant_t *q = (const p8est_quadrant_t *) elem;
@@ -291,7 +291,7 @@ t8_default_scheme_hex::element_face_get_parent_face (const t8_element_t *elem, i
 }
 
 int
-t8_default_scheme_hex::element_get_tree_face (const t8_element_t *elem, int face) const
+t8_default_scheme_hex::element_get_tree_face (const t8_element_t *elem, const int face) const
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (0 <= face && face < P8EST_FACES);
@@ -300,7 +300,7 @@ t8_default_scheme_hex::element_get_tree_face (const t8_element_t *elem, int face
 }
 
 int
-t8_default_scheme_hex::element_extrude_face (const t8_element_t *face, t8_element_t *elem, int root_face,
+t8_default_scheme_hex::element_extrude_face (const t8_element_t *face, t8_element_t *elem, const int root_face,
                                              const t8_scheme *scheme) const
 {
   const p4est_quadrant_t *b = (const p4est_quadrant_t *) face;
@@ -363,8 +363,8 @@ t8_default_scheme_hex::element_extrude_face (const t8_element_t *face, t8_elemen
 
 /** Construct the first descendant of an element that touches a given face. */
 void
-t8_default_scheme_hex::element_construct_first_descendant_face (const t8_element_t *elem, int face,
-                                                                t8_element_t *first_desc, int level) const
+t8_default_scheme_hex::element_construct_first_descendant_face (const t8_element_t *elem, const int face,
+                                                                t8_element_t *const first_desc, const int level) const
 {
   const p8est_quadrant_t *q = (const p8est_quadrant_t *) elem;
   p8est_quadrant_t *desc = (p8est_quadrant_t *) first_desc;
@@ -381,8 +381,8 @@ t8_default_scheme_hex::element_construct_first_descendant_face (const t8_element
 
 /** Construct the last descendant of an element that touches a given face. */
 void
-t8_default_scheme_hex::element_construct_last_descendant_face (const t8_element_t *elem, int face,
-                                                               t8_element_t *last_desc, int level) const
+t8_default_scheme_hex::element_construct_last_descendant_face (const t8_element_t *elem, const int face,
+                                                               t8_element_t *const last_desc, const int level) const
 {
   const p8est_quadrant_t *q = (const p8est_quadrant_t *) elem;
   p8est_quadrant_t *desc = (p8est_quadrant_t *) last_desc;
@@ -398,8 +398,8 @@ t8_default_scheme_hex::element_construct_last_descendant_face (const t8_element_
 }
 
 void
-t8_default_scheme_hex::element_construct_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
-                                                        const t8_scheme *scheme) const
+t8_default_scheme_hex::element_construct_boundary_face (const t8_element_t *elem, const int face,
+                                                        t8_element_t *boundary, const t8_scheme *scheme) const
 {
   const p8est_quadrant_t *q = (const p8est_quadrant_t *) elem;
   p4est_quadrant_t *b = (p4est_quadrant_t *) boundary;
@@ -434,7 +434,7 @@ t8_default_scheme_hex::element_construct_boundary_face (const t8_element_t *elem
 }
 
 int
-t8_default_scheme_hex::element_is_root_boundary (const t8_element_t *elem, int face) const
+t8_default_scheme_hex::element_is_root_boundary (const t8_element_t *elem, const int face) const
 {
   const p8est_quadrant_t *q = (const p8est_quadrant_t *) elem;
   p4est_qcoord_t coord;
@@ -453,8 +453,8 @@ t8_default_scheme_hex::element_is_root_boundary (const t8_element_t *elem, int f
 }
 
 int
-t8_default_scheme_hex::element_construct_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face,
-                                                               int *neigh_face) const
+t8_default_scheme_hex::element_construct_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh,
+                                                               const int face, int *const neigh_face) const
 {
   const p8est_quadrant_t *q = (const p8est_quadrant_t *) elem;
   p8est_quadrant_t *n = (p8est_quadrant_t *) neigh;
@@ -479,7 +479,7 @@ t8_default_scheme_hex::element_construct_face_neighbor_inside (const t8_element_
 }
 
 void
-t8_default_scheme_hex::element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id) const
+t8_default_scheme_hex::element_set_linear_id (t8_element_t *elem, const int level, const t8_linearidx_t id) const
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= HEX_LINEAR_MAXLEVEL);
@@ -489,7 +489,7 @@ t8_default_scheme_hex::element_set_linear_id (t8_element_t *elem, int level, t8_
 }
 
 t8_linearidx_t
-t8_default_scheme_hex::element_get_linear_id (const t8_element_t *elem, int level) const
+t8_default_scheme_hex::element_get_linear_id (const t8_element_t *elem, const int level) const
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= HEX_LINEAR_MAXLEVEL);
@@ -538,7 +538,8 @@ t8_default_scheme_hex::element_get_anchor (const t8_element_t *elem, int coord[3
 }
 
 void
-t8_default_scheme_hex::element_get_vertex_integer_coords (const t8_element_t *elem, int vertex, int coords[]) const
+t8_default_scheme_hex::element_get_vertex_integer_coords (const t8_element_t *elem, const int vertex,
+                                                          int coords[]) const
 {
   const p8est_quadrant_t *q1 = (const p8est_quadrant_t *) elem;
 
@@ -585,7 +586,7 @@ t8_default_scheme_hex::refines_irregular () const
 }
 
 void
-t8_default_scheme_hex::element_new (int length, t8_element_t **elem) const
+t8_default_scheme_hex::element_new (const int length, t8_element_t **elem) const
 {
   /* allocate memory for a hex */
   t8_default_scheme_common::element_new (length, elem);
@@ -593,8 +594,7 @@ t8_default_scheme_hex::element_new (int length, t8_element_t **elem) const
   /* in debug mode, set sensible default values. */
 #ifdef T8_ENABLE_DEBUG
   {
-    int i;
-    for (i = 0; i < length; i++) {
+    for (int i = 0; i < length; i++) {
       get_root (elem[i]);
       T8_QUAD_SET_TDIM ((p8est_quadrant_t *) elem[i], 3);
     }
@@ -603,7 +603,7 @@ t8_default_scheme_hex::element_new (int length, t8_element_t **elem) const
 }
 
 void
-t8_default_scheme_hex::element_init (int length, t8_element_t *elem) const
+t8_default_scheme_hex::element_init (const int length, t8_element_t *elem) const
 {
 #ifdef T8_ENABLE_DEBUG
   p8est_quadrant_t *quads = (p8est_quadrant_t *) elem;

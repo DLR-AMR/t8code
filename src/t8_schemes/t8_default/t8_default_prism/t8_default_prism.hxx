@@ -281,7 +281,7 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
    * \param [in] elem         The element.
    * \param [in] face         A face of \a elem.
    * \param [in,out] children Allocated elements, in which the children of \a elem that share a face with \a face 
-   *                          are stored. They will be stored in order of their prismar id.
+   *                          are stored. They will be stored in order of their prism id.
    * \param [in] num_children The number of elements in \a children. Must match the number of children that touch \a face.
    *                          \ref element_get_num_face_children
    * \param [in,out] child_indices If not NULL, an array of num_children integers must be given, on output its i-th 

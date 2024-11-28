@@ -46,7 +46,7 @@ T8_EXTERN_C_BEGIN ();
  *       not valid. 
  */
 static int
-t8_forest_is_family_callback (t8_scheme *scheme, t8_eclass_t tree_class, const int num_elements,
+t8_forest_is_family_callback (t8_scheme *scheme, const t8_eclass_t tree_class, const int num_elements,
                               t8_element_t **elements)
 {
 

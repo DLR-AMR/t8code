@@ -199,13 +199,11 @@ void
 t8_default_scheme_quad::element_get_children (const t8_element_t *elem, int length, t8_element_t *c[]) const
 {
   const p4est_quadrant_t *q = (const p4est_quadrant_t *) elem;
-  int i;
 
   T8_ASSERT (element_is_valid (elem));
 #ifdef T8_ENABLE_DEBUG
   {
-    int j;
-    for (j = 0; j < P4EST_CHILDREN; j++) {
+    for (int j = 0; j < P4EST_CHILDREN; j++) {
       T8_ASSERT (element_is_valid (c[j]));
     }
   }
@@ -213,7 +211,7 @@ t8_default_scheme_quad::element_get_children (const t8_element_t *elem, int leng
   T8_ASSERT (length == P4EST_CHILDREN);
 
   p4est_quadrant_childrenpv (q, (p4est_quadrant_t **) c);
-  for (i = 0; i < P4EST_CHILDREN; ++i) {
+  for (int i = 0; i < P4EST_CHILDREN; ++i) {
     element_copy_surround (q, (p4est_quadrant_t *) c[i]);
   }
 }
@@ -235,8 +233,7 @@ int
 t8_default_scheme_quad::elements_are_family (t8_element_t *const *fam) const
 {
 #ifdef T8_ENABLE_DEBUG
-  int i;
-  for (i = 0; i < P4EST_CHILDREN; i++) {
+  for (int i = 0; i < P4EST_CHILDREN; i++) {
     T8_ASSERT (element_is_valid (fam[i]));
   }
 #endif
@@ -324,8 +321,7 @@ t8_default_scheme_quad::element_get_children_at_face (const t8_element_t *elem, 
 
 #ifdef T8_ENABLE_DEBUG
   {
-    int i;
-    for (i = 0; i < num_children; i++) {
+    for (int i = 0; i < num_children; i++) {
       T8_ASSERT (element_is_valid (children[i]));
     }
   }
@@ -395,7 +391,6 @@ int
 t8_default_scheme_quad::element_face_get_parent_face (const t8_element_t *elem, int face) const
 {
   const p4est_quadrant_t *q = (const p4est_quadrant_t *) elem;
-  int child_id;
 
   T8_ASSERT (element_is_valid (elem));
   if (q->level == 0) {
@@ -403,7 +398,7 @@ t8_default_scheme_quad::element_face_get_parent_face (const t8_element_t *elem, 
   }
   /* Determine whether face is a subface of the parent.
    * This is the case if the child_id matches one of the faces corners */
-  child_id = p4est_quadrant_child_id (q);
+  const int child_id = p4est_quadrant_child_id (q);
   if (child_id == p4est_face_corners[face][0] || child_id == p4est_face_corners[face][1]) {
     return face;
   }
@@ -712,8 +707,7 @@ t8_default_scheme_quad::element_new (int length, t8_element_t **elem) const
 
   /* in debug mode, set sensible default values. */
   {
-    int i;
-    for (i = 0; i < length; i++) {
+    for (int i = 0; i < length; i++) {
       get_root (elem[i]);
       T8_QUAD_SET_TDIM ((p4est_quadrant_t *) elem[i], 2);
     }

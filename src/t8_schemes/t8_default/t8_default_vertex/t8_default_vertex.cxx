@@ -133,8 +133,7 @@ t8_default_scheme_vertex::element_get_children (const t8_element_t *elem, int le
   T8_ASSERT (length == T8_DVERTEX_CHILDREN);
   T8_ASSERT (element_is_valid (elem));
 #ifdef T8_ENABLE_DEBUG
-  int i;
-  for (i = 0; i < T8_DVERTEX_CHILDREN; i++) {
+  for (int i = 0; i < T8_DVERTEX_CHILDREN; i++) {
     T8_ASSERT (element_is_valid (c[i]));
   }
 #endif
@@ -158,8 +157,7 @@ int
 t8_default_scheme_vertex::elements_are_family (t8_element_t *const *fam) const
 {
 #ifdef T8_ENABLE_DEBUG
-  int i;
-  for (i = 0; i < T8_DVERTEX_CHILDREN; i++) {
+  for (int i = 0; i < T8_DVERTEX_CHILDREN; i++) {
     T8_ASSERT (element_is_valid (fam[i]));
   }
 #endif
@@ -296,7 +294,7 @@ int
 t8_default_scheme_vertex::refines_irregular () const
 {
   /*vertices refine regularly */
-  return 0;
+  return false;
 }
 
 void
@@ -308,8 +306,7 @@ t8_default_scheme_vertex::element_new (int length, t8_element_t **elem) const
   /* in debug mode, set sensible default values. */
 #ifdef T8_ENABLE_DEBUG
   {
-    int i;
-    for (i = 0; i < length; i++) {
+    for (int i = 0; i < length; i++) {
       get_root (elem[i]);
     }
   }

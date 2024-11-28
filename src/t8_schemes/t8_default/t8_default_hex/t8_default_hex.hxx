@@ -71,7 +71,7 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
    * \see element_is_valid
    */
   void
-  element_new (int length, t8_element_t **elem) const;
+  element_new (const int length, t8_element_t **elem) const;
 
   /** Initialize an array of allocated hexaedra.
    * \param [in] length   The number of hex to be initialized.
@@ -91,7 +91,7 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
    * \see element_is_valid
    */
   void
-  element_init (int length, t8_element_t *elem) const;
+  element_init (const int length, t8_element_t *elem) const;
 
   /** Return the refinement level of an element.
    * \param [in] elem    The element whose level should be returned.
@@ -192,7 +192,7 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
    * \return            The number of children of \a face if \a elem is to be refined.
    */
   int
-  element_get_num_face_children (const t8_element_t *elem, int face) const;
+  element_get_num_face_children (const t8_element_t *elem, const int face) const;
   /** Return the corner number of an element's face corner.
    * \param [in] element  The element.
    * \param [in] face     A face index for \a element.
@@ -200,7 +200,7 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
    * \return              The corner number of the \a corner-th vertex of \a face.
    */
   int
-  element_get_face_corner (const t8_element_t *element, int face, int corner) const;
+  element_get_face_corner (const t8_element_t *element, const int face, const int corner) const;
 
   /** Return the face numbers of the faces sharing an element's corner.
    * \param [in] element  The element.

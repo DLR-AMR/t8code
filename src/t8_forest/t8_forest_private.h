@@ -393,8 +393,8 @@ t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t forest, t8_locidx_t l
  */
 t8_gloidx_t
 t8_forest_element_half_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *elem,
-                                       t8_element_t *neighs[], t8_eclass_t neigh_class, int face, int num_neighs,
-                                       int dual_faces[]);
+                                       t8_element_t *neighs[], const t8_eclass_t neigh_class, const int face,
+                                       const int num_neighs, int dual_faces[]);
 
 /** Iterate over all leaves of a forest and for each face compute the face neighbor
  * leaves with \ref t8_forest_leaf_face_neighbors and print their local element ids.

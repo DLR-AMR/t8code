@@ -170,8 +170,7 @@ int
 t8_default_scheme_tet::elements_are_family (t8_element_t *const *fam) const
 {
 #ifdef T8_ENABLE_DEBUG
-  int i;
-  for (i = 0; i < T8_DTET_CHILDREN; i++) {
+  for (int i = 0; i < T8_DTET_CHILDREN; i++) {
     T8_ASSERT (element_is_valid (fam[i]));
   }
 #endif
@@ -211,8 +210,7 @@ t8_default_scheme_tet::element_get_children_at_face (const t8_element_t *elem, i
 #ifdef T8_ENABLE_DEBUG
   /* debugging check that all children elements are valid */
   {
-    int i;
-    for (i = 0; i < num_children; i++) {
+    for (int i = 0; i < num_children; i++) {
       T8_ASSERT (element_is_valid (children[i]));
     }
   }
@@ -312,12 +310,11 @@ void
 t8_default_scheme_tet::element_construct_last_descendant_face (const t8_element_t *elem, int face,
                                                                t8_element_t *last_desc, int level) const
 {
-  int corner;
   T8_ASSERT (0 <= face && face < T8_DTET_FACES);
   T8_ASSERT (0 <= level && level <= T8_DTET_MAXLEVEL);
 
   /* Compute the last corner of this face */
-  corner = SC_MAX (t8_dtet_face_corner[face][1], t8_dtet_face_corner[face][2]);
+  const int corner = SC_MAX (t8_dtet_face_corner[face][1], t8_dtet_face_corner[face][2]);
   /* Compute the descendant in this corner */
   t8_dtet_corner_descendant ((const t8_dtet_t *) elem, (t8_dtet_t *) last_desc, corner, level);
 }
@@ -517,8 +514,7 @@ t8_default_scheme_tet::element_new (int length, t8_element_t **elem) const
   /* in debug mode, set sensible default values. */
 #ifdef T8_ENABLE_DEBUG
   {
-    int i;
-    for (i = 0; i < length; i++) {
+    for (int i = 0; i < length; i++) {
       get_root (elem[i]);
     }
   }

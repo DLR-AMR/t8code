@@ -85,10 +85,10 @@ count_leaves_from_level (int element_level, int refinement_level, int dimension)
   return element_level > refinement_level ? 0 : sc_intpow64 (2, dimension * (refinement_level - element_level));
 }
 
-template <class TUnderlyingEclass_Scheme>
-class t8_default_scheme_common: public t8_crtp<TUnderlyingEclass_Scheme> {
+template <class TUnderlyingEclassScheme>
+class t8_default_scheme_common: public t8_crtp<TUnderlyingEclassScheme> {
  private:
-  friend TUnderlyingEclass_Scheme;
+  friend TUnderlyingEclassScheme;
   /** Private constructor which can only be used by derived schemes.
    * \param [in] tree_class The tree class of this element scheme.
    * \param [in] elem_size  The size of the elements this scheme holds.
@@ -161,7 +161,10 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclass_Scheme> {
     return *this;
   }
 
-  /** Compute the number of corners of a given element. */
+  /** Compute the number of corners of a given element.
+   * \return The number of corners of the element.
+   * \note This function is overwritten by the pyramid implementation.
+  */
   int
   element_get_num_corners (const t8_element_t *elem) const
   {
@@ -170,16 +173,19 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclass_Scheme> {
     return t8_eclass_num_vertices[eclass];
   }
 
-  /** Allocate space for a bunch of elements. */
+  /** Allocate space for a bunch of elements.
+   * \param [in] length The number of elements to allocate.
+   * \param [out] elem  The elements to allocate.
+  */
   void
-  element_new (int length, t8_element_t **elem) const
+  element_new (const int length, t8_element_t **elem) const
   {
     t8_default_mempool_alloc ((sc_mempool_t *) ts_context, length, elem);
   }
 
   /** Deallocate space for a bunch of elements. */
   void
-  element_destroy (int length, t8_element_t **elem) const
+  element_destroy (const int length, t8_element_t **elem) const
   {
     t8_default_mempool_free ((sc_mempool_t *) ts_context, length, elem);
   }
@@ -189,7 +195,11 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclass_Scheme> {
   {
   }
 
-  /** Return the shape of an element */
+  /** Return the shape of an element 
+   * \param [in] elem The element.
+   * \return The shape of the element.
+   * \note This function is overwritten by the pyramid implementation.
+  */
   t8_element_shape_t
   element_get_shape (const t8_element_t *elem) const
   {
@@ -205,6 +215,7 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclass_Scheme> {
    * is the resulting number of elements (of the given level).
    * Each default element (except pyramids) refines into 2^{dim * (level - level(t))}
    * children.
+   * \note This function is overwritten by the pyramid implementation.
    */
   t8_gloidx_t
   element_count_leaves (const t8_element_t *t, int level) const
@@ -218,7 +229,8 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclass_Scheme> {
    * Children of its parent.
    * \param [in] elem The element.
    * \return          The number of siblings of \a element.
-   * Note that this number is >= 1, since we count the element itself as a sibling.
+   * \note This function is overwritten by the pyramid implementation.
+   * \note that this number is >= 1, since we count the element itself as a sibling.
    */
   int
   element_get_num_siblings (const t8_element_t *elem) const
@@ -232,14 +244,15 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclass_Scheme> {
    * \param [in] level A refinement level.
    * \return The value of \ref t8_element_count_leaves if the input element
    *      is the root (level 0) element.
+   * \note This function is overwritten by the pyramid implementation.
    */
   t8_gloidx_t
-  count_leaves_from_root (int level) const
+  count_leaves_from_root (const int level) const
   {
     if (eclass == T8_ECLASS_PYRAMID) {
       return 2 * sc_intpow64u (8, level) - sc_intpow64u (6, level);
     }
-    int dim = t8_eclass_to_dimension[eclass];
+    const int dim = t8_eclass_to_dimension[eclass];
     return count_leaves_from_level (0, level, dim);
   }
 

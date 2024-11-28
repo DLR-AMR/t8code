@@ -97,7 +97,7 @@ t8_forest_is_incomplete_family (const t8_forest_t forest, const t8_locidx_t ltre
    * */
   if (child_id_current > 0 && el_considered > 0) {
     const t8_element_t *element_temp = t8_forest_get_tree_element (tree, el_considered - 1);
-    int level_temp = tscheme->element_get_level (tree_class, element_temp);
+    const int level_temp = tscheme->element_get_level (tree_class, element_temp);
     /* Only elements with higher or equal level then level of current considered
      * element, can get potentially be overlapped. */
     if (level_temp >= level_current) {

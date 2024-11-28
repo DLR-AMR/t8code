@@ -70,7 +70,7 @@ class t8_default_scheme_line: public t8_default_scheme_common<t8_default_scheme_
    * \see element_is_valid
    */
   void
-  element_new (int length, t8_element_t **elem) const;
+  element_new (const int length, t8_element_t **elem) const;
 
   /** Initialize an array of allocated line elements.
    * \param [in] length   The number of line elements to be initialized.
@@ -161,7 +161,7 @@ class t8_default_scheme_line: public t8_default_scheme_common<t8_default_scheme_
    *                    and match the element class of the sibling.
    */
   void
-  element_get_sibling (const t8_element_t *elem, int sibid, t8_element_t *sibling) const
+  element_get_sibling (const t8_element_t *elem, const int sibid, t8_element_t *sibling) const
   {
     SC_ABORT ("This function is not implemented yet.\n");
     return; /* suppresses compiler warning */
@@ -195,7 +195,7 @@ class t8_default_scheme_line: public t8_default_scheme_common<t8_default_scheme_
    * \return            The number of children of \a face if \a elem is to be refined.
    */
   int
-  element_get_num_face_children (const t8_element_t *elem, int face) const;
+  element_get_num_face_children (const t8_element_t *elem, const int face) const;
   /** Return the corner number of an element's face corner.
    * \param [in] element  The element.
    * \param [in] face     A face index for \a element.

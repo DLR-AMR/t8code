@@ -85,7 +85,7 @@ T8_EXTERN_C_BEGIN ();
  * \see t8_forest_iterate_replace
  */
 typedef void (*t8_forest_replace_t) (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree,
-                                     t8_eclass_t tree_class, const t8_scheme_c *scheme, const int refine,
+                                     const t8_eclass_t tree_class, const t8_scheme_c *scheme, const int refine,
                                      const int num_outgoing, const t8_locidx_t first_outgoing, const int num_incoming,
                                      const t8_locidx_t first_incoming);
 
@@ -114,7 +114,7 @@ typedef void (*t8_forest_replace_t) (t8_forest_t forest_old, t8_forest_t forest_
 /* TODO: Do we really need the forest argument? Since the forest is not committed yet it
  *       seems dangerous to expose to the user. */
 typedef int (*t8_forest_adapt_t) (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                                  t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme_c *scheme,
+                                  const t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme_c *scheme,
                                   const int is_family, const int num_elements, t8_element_t *elements[]);
 
 /** Create a new forest with reference count one.
@@ -532,7 +532,7 @@ t8_forest_element_is_leaf (const t8_forest_t forest, const t8_element_t *element
  */
 int
 t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_scheme_c *scheme,
-                                 const t8_element_t *leaf, int face);
+                                 const t8_element_t *leaf, const int face);
 
 /** Compute the leaf face neighbors of a forest.
  * \param [in]    forest  The forest. Must have a valid ghost layer.
@@ -832,7 +832,7 @@ t8_forest_element_neighbor_eclass (t8_forest_t forest, t8_locidx_t ltreeid, cons
  */
 t8_gloidx_t
 t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *elem, t8_element_t *neigh,
-                                 t8_eclass_t neigh_eclass, int face, int *neigh_face);
+                                 const t8_eclass_t neigh_eclass, int face, int *neigh_face);
 
 /* TODO: implement */
 void

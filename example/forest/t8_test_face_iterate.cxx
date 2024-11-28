@@ -59,7 +59,7 @@ t8_test_fiterate_callback (t8_forest_t forest, t8_locidx_t ltreeid, const t8_ele
 
 /* Only refine the first tree on a process. */
 static int
-t8_basic_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
+t8_basic_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, const t8_eclass_t tree_class,
                 t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family, const int num_elements,
                 t8_element_t *elements[])
 {

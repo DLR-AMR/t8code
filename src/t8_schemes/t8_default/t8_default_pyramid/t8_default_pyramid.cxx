@@ -47,8 +47,7 @@ t8_default_scheme_pyramid::element_new (int length, t8_element_t **elem) const
   /* in debug mode, set sensible default values. */
 #ifdef T8_ENABLE_DEBUG
   {
-    int i;
-    for (i = 0; i < length; i++) {
+    for (int i = 0; i < length; i++) {
       get_root (elem[i]);
     }
   }
@@ -422,7 +421,7 @@ int
 t8_default_scheme_pyramid::refines_irregular () const
 {
   /*Pyramids do not refine regularly */
-  return 1;
+  return true;
 }
 
 #ifdef T8_ENABLE_DEBUG
