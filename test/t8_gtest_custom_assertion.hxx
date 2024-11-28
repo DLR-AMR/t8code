@@ -65,7 +65,7 @@ element_equality (const char *ts_expr, const char *tree_class_expr, const char *
 #else
     return testing::AssertionFailure () << elem_1_expr << " is not equal to \n"
                                         << elem_2_expr << " given scheme " << ts_expr
-                                        << " and tree class " tree_class_expr;
+                                        << " and tree class " << tree_class_expr;
 #endif
   }
 }
