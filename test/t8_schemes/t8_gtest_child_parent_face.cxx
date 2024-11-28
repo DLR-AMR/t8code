@@ -43,10 +43,10 @@ class class_child_parent_face: public TestDFS {
 
       for (int ifacechild = 0; ifacechild < num_face_children; ifacechild++) {
         /* Iterate over those children and determine the childface corresponding to the parentface */
-        int childface = scheme->element_face_get_child_face (tree_class, element, iface, ifacechild);
+        const int childface = scheme->element_face_get_child_face (tree_class, element, iface, ifacechild);
         ASSERT_NE (childface, -1);
         /* Determine the parentface corresponding to the childface */
-        int parentface = scheme->element_face_get_parent_face (tree_class, children[ifacechild], childface);
+        const int parentface = scheme->element_face_get_parent_face (tree_class, children[ifacechild], childface);
         /* Check, that this is equal to the face that we started with */
         EXPECT_EQ (iface, parentface);
       }

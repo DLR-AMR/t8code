@@ -69,12 +69,11 @@ class nca: public testing::TestWithParam<t8_eclass> {
  */
 TEST_P (nca, nca_check_shallow)
 {
-  int i, j;
   const int num_children = scheme->element_get_num_children (tree_class, correct_nca);
   /* Iterate over all combinations of two children from correct_nca */
-  for (i = 0; i < num_children - 1; i++) {
+  for (int i = 0; i < num_children - 1; i++) {
     scheme->element_get_child (tree_class, correct_nca, i, desc_a);
-    for (j = i + 1; j < num_children; j++) {
+    for (int j = i + 1; j < num_children; j++) {
       scheme->element_get_child (tree_class, correct_nca, j, desc_b);
       /*Compute the nca */
       scheme->element_get_nca (tree_class, desc_a, desc_b, check);

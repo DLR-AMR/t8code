@@ -38,7 +38,7 @@ class TestDFS: public testing::TestWithParam<t8_eclass_t> {
   void
   check_recursive_dfs_to_max_lvl (const int max_dfs_recursion_level)
   {
-    int level = scheme->element_get_level (tree_class, element);
+    const int level = scheme->element_get_level (tree_class, element);
     ASSERT_LE (level, max_dfs_recursion_level);
     ASSERT_LT (max_dfs_recursion_level, scheme->get_maxlevel (tree_class));
 
