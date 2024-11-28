@@ -66,13 +66,12 @@ t8_default_mempool_alloc (sc_mempool_t *ts_context, int length, t8_element_t **e
 inline static void
 t8_default_mempool_free (sc_mempool_t *ts_context, int length, t8_element_t **elem)
 {
-  int i;
 
   T8_ASSERT (ts_context != NULL);
   T8_ASSERT (0 <= length);
   T8_ASSERT (elem != NULL);
 
-  for (i = 0; i < length; ++i) {
+  for (int i = 0; i < length; ++i) {
     sc_mempool_free (ts_context, elem[i]);
   }
 }
@@ -80,7 +79,7 @@ t8_default_mempool_free (sc_mempool_t *ts_context, int length, t8_element_t **el
 /* Given an element's level and dimension, return the number of leaves it
  * produces at a given uniform refinement level */
 static inline t8_gloidx_t
-count_leaves_from_level (int element_level, int refinement_level, int dimension)
+count_leaves_from_level (const int element_level, const int refinement_level, const int dimension)
 {
   return element_level > refinement_level ? 0 : sc_intpow64 (2, dimension * (refinement_level - element_level));
 }
