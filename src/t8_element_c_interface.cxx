@@ -327,13 +327,12 @@ t8_element_is_root_boundary (const t8_forest_t forest, const t8_eclass_t tree_cl
 }
 
 int
-t8_element_construct_face_neighbor_inside (const t8_forest_t forest, const t8_eclass_t tree_class,
-                                           const t8_element_t *elem, t8_element_t *neigh, const int face,
-                                           int *neigh_face)
+t8_element_get_face_neighbor_inside (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem,
+                                     t8_element_t *neigh, const int face, int *neigh_face)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  return forest->scheme->element_construct_face_neighbor_inside (tree_class, elem, neigh, face, neigh_face);
+  return forest->scheme->element_get_face_neighbor_inside (tree_class, elem, neigh, face, neigh_face);
 }
 
 t8_element_shape_t

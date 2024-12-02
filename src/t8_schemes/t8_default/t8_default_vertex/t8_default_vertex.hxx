@@ -486,8 +486,7 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
    *                  on output.
    */
   int
-  element_construct_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face,
-                                          int *neigh_face) const
+  element_get_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face, int *neigh_face) const
   {
     SC_ABORT ("Not implemented.\n");
     return 0; /* prevents compiler warning */

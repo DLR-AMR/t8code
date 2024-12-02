@@ -1494,8 +1494,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const 
   const t8_tree_t tree = t8_forest_get_tree (forest, ltreeid);
   const t8_eclass_t eclass = tree->eclass;
   t8_scheme *scheme = t8_forest_get_scheme (forest);
-  if (neigh_eclass == eclass
-      && scheme->element_construct_face_neighbor_inside (eclass, elem, neigh, face, neigh_face)) {
+  if (neigh_eclass == eclass && scheme->element_get_face_neighbor_inside (eclass, elem, neigh, face, neigh_face)) {
     /* The neighbor was constructed and is inside the current tree. */
     return ltreeid + t8_forest_get_first_local_tree_id (forest);
   }

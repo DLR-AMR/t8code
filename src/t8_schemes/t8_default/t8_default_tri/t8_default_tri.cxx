@@ -392,8 +392,8 @@ t8_default_scheme_tri::element_is_root_boundary (const t8_element_t *elem, int f
 }
 
 int
-t8_default_scheme_tri::element_construct_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face,
-                                                               int *neigh_face) const
+t8_default_scheme_tri::element_get_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face,
+                                                         int *neigh_face) const
 {
   const t8_dtri_t *t = (const t8_dtri_t *) elem;
   t8_dtri_t *n = (t8_dtri_t *) neigh;

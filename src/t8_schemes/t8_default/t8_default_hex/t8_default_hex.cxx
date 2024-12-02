@@ -453,8 +453,8 @@ t8_default_scheme_hex::element_is_root_boundary (const t8_element_t *elem, const
 }
 
 int
-t8_default_scheme_hex::element_construct_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh,
-                                                               const int face, int *const neigh_face) const
+t8_default_scheme_hex::element_get_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, const int face,
+                                                         int *const neigh_face) const
 {
   const p8est_quadrant_t *q = (const p8est_quadrant_t *) elem;
   p8est_quadrant_t *n = (p8est_quadrant_t *) neigh;

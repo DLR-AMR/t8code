@@ -454,8 +454,7 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
    *                  on output.
    */
   int
-  element_construct_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face,
-                                          int *neigh_face) const;
+  element_get_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face, int *neigh_face) const;
 
   /** Initialize the entries of an allocated element according to a
    *  given linear id in a uniform refinement.

@@ -329,8 +329,8 @@ t8_default_scheme_prism::element_is_root_boundary (const t8_element_t *elem, int
 }
 
 int
-t8_default_scheme_prism::element_construct_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh,
-                                                                 int face, int *neigh_face) const
+t8_default_scheme_prism::element_get_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face,
+                                                           int *neigh_face) const
 {
   const t8_dprism_t *p = (const t8_dprism_t *) elem;
   t8_dprism_t *n = (t8_dprism_t *) neigh;

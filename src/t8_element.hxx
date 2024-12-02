@@ -567,10 +567,10 @@ class t8_eclass_scheme: public t8_crtp<TUnderlyingEclassScheme> {
    *                  on output.
    */
   inline int
-  element_construct_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face,
+  element_get_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face,
                                           int *neigh_face) const
   {
-    return this->underlying ().element_construct_face_neighbor_inside (elem, neigh, face, neigh_face);
+    return this->underlying ().element_get_face_neighbor_inside (elem, neigh, face, neigh_face);
   };
 
   /** Return the shape of an allocated element according its type.

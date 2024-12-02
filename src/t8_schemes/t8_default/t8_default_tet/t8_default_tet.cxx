@@ -378,8 +378,8 @@ t8_default_scheme_tet::element_is_root_boundary (const t8_element_t *elem, int f
 }
 
 int
-t8_default_scheme_tet::element_construct_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face,
-                                                               int *neigh_face) const
+t8_default_scheme_tet::element_get_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face,
+                                                         int *neigh_face) const
 {
   const t8_dtet_t *t = (const t8_dtet_t *) elem;
   t8_dtet_t *n = (t8_dtet_t *) neigh;

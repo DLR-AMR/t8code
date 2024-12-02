@@ -625,8 +625,8 @@ t8_default_scheme_quad::element_is_root_boundary (const t8_element_t *elem, int 
 }
 
 int
-t8_default_scheme_quad::element_construct_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face,
-                                                                int *neigh_face) const
+t8_default_scheme_quad::element_get_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face,
+                                                          int *neigh_face) const
 {
   const p4est_quadrant_t *q = (const p4est_quadrant_t *) elem;
   p4est_quadrant_t *n = (p4est_quadrant_t *) neigh;

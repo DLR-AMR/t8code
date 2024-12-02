@@ -719,11 +719,11 @@ class t8_scheme {
    *                  on output.
    */
   inline int
-  element_construct_face_neighbor_inside (const t8_eclass_t tree_class, const t8_element_t *elem, t8_element_t *neigh,
-                                          const int face, int *neigh_face) const
+  element_get_face_neighbor_inside (const t8_eclass_t tree_class, const t8_element_t *elem, t8_element_t *neigh,
+                                    const int face, int *neigh_face) const
   {
     return std::visit (
-      [&] (auto &&scheme) { return scheme.element_construct_face_neighbor_inside (elem, neigh, face, neigh_face); },
+      [&] (auto &&scheme) { return scheme.element_get_face_neighbor_inside (elem, neigh, face, neigh_face); },
       eclass_schemes[tree_class]);
   };
 

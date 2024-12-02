@@ -240,8 +240,8 @@ t8_default_scheme_line::element_is_root_boundary (const t8_element_t *elem, int 
 }
 
 int
-t8_default_scheme_line::element_construct_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face,
-                                                                int *neigh_face) const
+t8_default_scheme_line::element_get_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face,
+                                                          int *neigh_face) const
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (element_is_valid (neigh));

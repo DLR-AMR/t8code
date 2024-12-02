@@ -202,8 +202,8 @@ t8_default_scheme_pyramid::element_get_child_id (const t8_element_t *p) const
 }
 
 int
-t8_default_scheme_pyramid::element_construct_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh,
-                                                                   int face, int *neigh_face) const
+t8_default_scheme_pyramid::element_get_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face,
+                                                             int *neigh_face) const
 {
   T8_ASSERT (element_is_valid (elem));
   return t8_dpyramid_face_neighbor_inside ((const t8_dpyramid_t *) elem, (t8_dpyramid_t *) neigh, face, neigh_face);
