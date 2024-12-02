@@ -25,8 +25,7 @@
 #include <t8_schemes/t8_default/t8_default_line/t8_dline_bits.h>
 #include <t8_schemes/t8_default/t8_default_prism/t8_dprism_bits.h>
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.h>
-
-int t8_dprism_face_corners[5][4] = { { 1, 2, 4, 5 }, { 0, 2, 3, 5 }, { 0, 1, 3, 4 }, { 0, 1, 2, -1 }, { 3, 4, 5, -1 } };
+#include <t8_eclass.h>
 
 int
 t8_dprism_get_level (const t8_dprism_t *p)
@@ -306,9 +305,9 @@ t8_dprism_get_face_corner (const t8_dprism_t *p, int face, int corner)
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
   T8_ASSERT (0 <= corner);
   T8_ASSERT ((corner <= 3 && face <= 2) || (corner <= 2));
-  T8_ASSERT (t8_dprism_face_corners[face][corner] >= 0);
+  T8_ASSERT (t8_face_vertex_to_tree_vertex[T8_ECLASS_PRISM][face][corner] >= 0);
 
-  return t8_dprism_face_corners[face][corner];
+  return t8_face_vertex_to_tree_vertex[T8_ECLASS_PRISM][face][corner];
 }
 
 void

@@ -32,9 +32,6 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/** Look-up table for the corners of each face. */
-extern int t8_dprism_face_corners[5][4];
-
 /** Compute the level of a prism.
  * \param [in] p    Line whose prism is computed.
  * \return          The level of \a p.
