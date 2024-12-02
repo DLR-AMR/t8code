@@ -645,12 +645,11 @@ class t8_scheme {
    * and will not be modified.
    */
   inline void
-  element_construct_boundary_face (const t8_eclass_t tree_class, const t8_element_t *elem, const int face,
-                                   t8_element_t *boundary) const
+  element_get_boundary_face (const t8_eclass_t tree_class, const t8_element_t *elem, const int face,
+                             t8_element_t *boundary) const
   {
-    return std::visit (
-      [&] (auto &&scheme) { return scheme.element_construct_boundary_face (elem, face, boundary, this); },
-      eclass_schemes[tree_class]);
+    return std::visit ([&] (auto &&scheme) { return scheme.element_get_boundary_face (elem, face, boundary, this); },
+                       eclass_schemes[tree_class]);
   };
 
   /** Construct the first descendant of an element at a given level that touches a given face.

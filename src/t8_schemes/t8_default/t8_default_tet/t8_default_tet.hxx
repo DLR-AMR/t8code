@@ -388,8 +388,7 @@ class t8_default_scheme_tet: public t8_default_scheme_common<t8_default_scheme_t
    * \param [in] scheme   The scheme containing an eclass scheme for the boundary face.
    */
   void
-  element_construct_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
-                                   const t8_scheme *scheme) const;
+  element_get_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary, const t8_scheme *scheme) const;
 
   /** Compute whether a given element shares a given face with its root tree.
    * \param [in] elem     The input element.

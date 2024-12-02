@@ -580,8 +580,8 @@ t8_default_scheme_quad::element_construct_last_descendant_face (const t8_element
 }
 
 void
-t8_default_scheme_quad::element_construct_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
-                                                         const t8_scheme *scheme) const
+t8_default_scheme_quad::element_get_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
+                                                   const t8_scheme *scheme) const
 {
   const p4est_quadrant_t *q = (const p4est_quadrant_t *) elem;
   t8_dline_t *l = (t8_dline_t *) boundary;

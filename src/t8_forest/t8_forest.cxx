@@ -1528,7 +1528,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const 
     /* Allocate the face element */
     scheme->element_new (boundary_class, 1, &face_element);
     /* Compute the face element. */
-    scheme->element_construct_boundary_face (eclass, elem, face, face_element);
+    scheme->element_get_boundary_face (eclass, elem, face, face_element);
     /* Get the coarse tree that contains elem.
      * Also get the face neighbor information of the coarse tree. */
     (void) t8_cmesh_trees_get_tree_ext (cmesh->trees, lctree_id, &face_neighbor, &ttf);

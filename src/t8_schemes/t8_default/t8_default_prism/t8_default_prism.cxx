@@ -273,8 +273,8 @@ t8_default_scheme_prism::element_get_nca (const t8_element_t *elem1, const t8_el
 }
 
 void
-t8_default_scheme_prism::element_construct_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
-                                                          const t8_scheme *scheme) const
+t8_default_scheme_prism::element_get_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
+                                                    const t8_scheme *scheme) const
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);

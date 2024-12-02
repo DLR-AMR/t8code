@@ -184,8 +184,8 @@ t8_default_scheme_line::element_extrude_face (const t8_element_t *face, t8_eleme
 
 /** Construct the boundary element at a specific face. */
 void
-t8_default_scheme_line::element_construct_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
-                                                         const t8_scheme *scheme) const
+t8_default_scheme_line::element_get_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
+                                                   const t8_scheme *scheme) const
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (scheme->element_is_valid (T8_ECLASS_VERTEX, boundary));

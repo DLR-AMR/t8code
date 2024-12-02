@@ -504,10 +504,10 @@ class t8_eclass_scheme: public t8_crtp<TUnderlyingEclassScheme> {
    * and will not be modified.
    */
   inline void
-  element_construct_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
+  element_get_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
                                    const t8_eclass_t boundary_face_eclass, t8_scheme *scheme) const
   {
-    this->underlying ().element_construct_boundary_face (elem, face, boundary, boundary_face_eclass, scheme);
+    this->underlying ().element_get_boundary_face (elem, face, boundary, boundary_face_eclass, scheme);
   };
 
   /** Construct the first descendant of an element at a given level that touches a given face.

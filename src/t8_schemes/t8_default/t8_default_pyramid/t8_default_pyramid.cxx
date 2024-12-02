@@ -275,8 +275,8 @@ t8_default_scheme_pyramid::element_is_root_boundary (const t8_element_t *elem, i
 }
 
 void
-t8_default_scheme_pyramid::element_construct_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
-                                                            const t8_scheme *scheme) const
+t8_default_scheme_pyramid::element_get_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
+                                                      const t8_scheme *scheme) const
 {
   T8_ASSERT (element_is_valid (elem));
   t8_dpyramid_boundary_face ((const t8_dpyramid_t *) elem, face, boundary);
