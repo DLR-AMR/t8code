@@ -28,7 +28,7 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
 #include <t8_refcount.h>
 #include <t8_data/t8_shmem.h>
-#include <t8_types/t8_vec.hxx>
+#include <t8_types/t8_vec.h>
 #include <t8_eclass.h>
 #include <t8_element.hxx>
 #include "t8_cmesh_types.h"
@@ -580,9 +580,9 @@ t8_cmesh_tree_vertices_negative_volume (const t8_eclass_t eclass, const double *
     v_j[2] = 1.0;
 
     /* Compute cross = v_1 x v_2. */
-    t8_vec_cross (v_1, v_2, cross);
+    t8_cross_c_interface (v_1, v_2, cross);
     /* Compute sc_prod = <v_j, cross>. */
-    sc_prod = t8_vec_dot (v_j, cross);
+    sc_prod = t8_dot_c_interface (v_j, cross);
 
     T8_ASSERT (sc_prod != 0);
     return sc_prod < 0;
@@ -603,9 +603,9 @@ t8_cmesh_tree_vertices_negative_volume (const t8_eclass_t eclass, const double *
     v_j[i] = vertices[3 * j + i] - vertices[i];
   }
   /* compute cross = v_1 x v_2 */
-  t8_vec_cross (v_1, v_2, cross);
+  t8_cross_c_interface (v_1, v_2, cross);
   /* Compute sc_prod = <v_j, cross> */
-  sc_prod = t8_vec_dot (v_j, cross);
+  sc_prod = t8_dot_c_interface (v_j, cross);
 
   T8_ASSERT (sc_prod != 0);
   return eclass == T8_ECLASS_TET ? sc_prod > 0 : sc_prod < 0;
@@ -1336,7 +1336,7 @@ t8_cmesh_coords_axb (const double *coords_in, double *coords_out, int num_vertic
   int i;
 
   for (i = 0; i < num_vertices; i++) {
-    t8_vec_axpyz (coords_in + i * 3, b, coords_out + i * 3, alpha);
+    t8_axpyz_c_interface (coords_in + i * 3, b, coords_out + i * 3, alpha);
   }
 }
 
