@@ -262,6 +262,18 @@ struct RandomAccessible: crtp<T, RandomAccessible>
   {
     return this->underlying ().get ().end ();
   }
+
+  auto
+  data () -> decltype (auto)
+  {
+    return this->underlying ().get ().data ();
+  }
+
+  auto
+  data () const -> decltype (auto)
+  {
+    return this->underlying ().get ().data ();
+  }
 };
 
 /**

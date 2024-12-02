@@ -69,7 +69,7 @@ concept IsMySupportedType = IsAnyOf<T, t8_point<dim>, t8_vec<dim>>;
  */
 template <std::size_t dim>
 static inline double
-t8_vec_norm (const t8_vec<dim> &vec)
+t8_norm (const t8_vec<dim> &vec)
 {
   return std::sqrt (std::inner_product (vec.begin (), vec.end (), vec.begin (), 0.0));
 }
@@ -79,9 +79,9 @@ t8_vec_norm (const t8_vec<dim> &vec)
  */
 template <std::size_t dim>
 static inline void
-t8_vec_normalize (const t8_vec<dim> &vec)
+t8_normalize (const t8_vec<dim> &vec)
 {
-  const double norm = t8_vec_norm (vec);
+  const double norm = t8_norm (vec);
   std::transform (vec.begin (), vec.end (), vec.begin (), [norm] (double v) { return v / norm; });
 }
 
@@ -94,7 +94,7 @@ static inline void
 template <typename T>
   requires IsMySupportedType<T, T::dim>
 static inline void
-t8_type_copy (const T &src, T &dest)
+t8_copy (const T &src, T &dest)
 {
   std::copy (src.begin (), src.end (), dest.begin ());
 }
@@ -107,7 +107,7 @@ t8_type_copy (const T &src, T &dest)
  */
 template <std::size_t dim>
 static inline double
-t8_vec_dist (const t8_point<dim> &point_x, const t8_point<dim> &point_y)
+t8_dist (const t8_point<dim> &point_x, const t8_point<dim> &point_y)
 {
   double dist = std::inner_product (point_x.begin (), point_x.end (), point_y.begin (), 0.0, std::plus<double> (),
                                     [] (double x, double y) { return (x - y) * (x - y); });
@@ -120,7 +120,7 @@ t8_vec_dist (const t8_point<dim> &point_x, const t8_point<dim> &point_y)
  */
 template <std::size_t dim>
 static inline void
-t8_vec_ax (t8_vec<dim> &vec_x, const double alpha)
+t8_ax (t8_vec<dim> &vec_x, const double alpha)
 {
   std::transform (vec_x.begin (), vec_x.end (), vec_x.begin (), [alpha] (double v) { return v * alpha; });
 }
@@ -132,7 +132,7 @@ t8_vec_ax (t8_vec<dim> &vec_x, const double alpha)
  */
 template <std::size_t dim>
 static inline void
-t8_vec_axy (const t8_vec<dim> &vec_x, t8_vec<dim> &vec_y, const double alpha)
+t8_axy (const t8_vec<dim> &vec_x, t8_vec<dim> &vec_y, const double alpha)
 {
   std::transform (vec_x.begin (), vec_x.end (), vec_y.begin (), [alpha] (double v) { return v * alpha; });
 }
@@ -147,7 +147,7 @@ t8_vec_axy (const t8_vec<dim> &vec_x, t8_vec<dim> &vec_y, const double alpha)
  */
 template <std::size_t dim>
 static inline void
-t8_vec_axb (const t8_vec<dim> &vec_x, t8_vec<dim> &vec_y, const double alpha, const double b)
+t8_axb (const t8_vec<dim> &vec_x, t8_vec<dim> &vec_y, const double alpha, const double b)
 {
   std::transform (vec_x.begin (), vec_x.end (), vec_y.begin (), [alpha, b] (double v) { return alpha * v + b; });
 }
@@ -160,7 +160,7 @@ t8_vec_axb (const t8_vec<dim> &vec_x, t8_vec<dim> &vec_y, const double alpha, co
  */
 template <std::size_t dim>
 static inline void
-t8_vec_axpy (const t8_vec<dim> &vec_x, t8_vec<dim> &vec_y, const double alpha)
+t8_axpy (const t8_vec<dim> &vec_x, t8_vec<dim> &vec_y, const double alpha)
 {
   std::transform (vec_x.begin (), vec_x.end (), vec_y.begin (), vec_y.begin (),
                   [alpha] (double x, double y) { return y + alpha * x; });
@@ -173,10 +173,22 @@ t8_vec_axpy (const t8_vec<dim> &vec_x, t8_vec<dim> &vec_y, const double alpha)
  */
 template <std::size_t dim>
 static inline void
-t8_vec_axpyz (const t8_vec<dim> &vec_x, const t8_vec<dim> &vec_y, t8_vec<dim> &vec_z, const double alpha)
+t8_axpyz (const t8_vec<dim> &vec_x, const t8_vec<dim> &vec_y, t8_vec<dim> &vec_z, const double alpha)
 {
   std::transform (vec_x.begin (), vec_x.end (), vec_y.begin (), vec_z.begin (),
                   [alpha] (double x, double y) { return y + alpha * x; });
+}
+
+/** Set x = x - alpha*y
+ * \param [in] vec_x A 3D vector.
+ * \param [in] alpha A constant.
+ * \param [in] vec_y A 3D vector.
+ */
+static inline void
+t8_xmay (t8_3D_vec &vec_x, double alpha, const t8_3D_vec &vec_y)
+{
+  std::transform (x.begin (), x.end (), y.begin (), x.begin (),
+                  [alpha] (double xi, double yi) { return xi - alpha * yi; });
 }
 
 /** Dot product of X and Y.
@@ -186,7 +198,7 @@ t8_vec_axpyz (const t8_vec<dim> &vec_x, const t8_vec<dim> &vec_y, t8_vec<dim> &v
  */
 template <std::size_t dim>
 static inline double
-t8_vec_dot (const t8_vec<dim> &vec_x, const t8_vec<dim> &vec_y)
+t8_dot (const t8_vec<dim> &vec_x, const t8_vec<dim> &vec_y)
 {
   return std::inner_product (vec_x.begin (), vec_x.end (), vec_y.begin (), 0.0);
 }
@@ -196,7 +208,7 @@ t8_vec_dot (const t8_vec<dim> &vec_x, const t8_vec<dim> &vec_y)
  * \param [out] cross  On output, the cross product of \a vec_x and \a vec_y.
  */
 static inline double
-t8_vec_cross_2D (const t8_vec<2> &vec_x, const t8_vec<2> &vec_y)
+t8_cross_2D (const t8_vec<2> &vec_x, const t8_vec<2> &vec_y)
 {
   return vec_x[0] * vec_y[1] - vec_x[1] * vec_y[0];
 }
@@ -207,7 +219,7 @@ t8_vec_cross_2D (const t8_vec<2> &vec_x, const t8_vec<2> &vec_y)
  * \param [out] cross  On output, the cross product of \a vec_x and \a vec_y.
  */
 static inline void
-t8_vec_cross_3D (const t8_3D_vec &vec_x, const t8_3D_vec &vec_y, t8_3D_vec &cross)
+t8_cross_3D (const t8_3D_vec &vec_x, const t8_3D_vec &vec_y, t8_3D_vec &cross)
 {
   cross[0] = vec_x[1] * vec_y[2] - vec_x[2] * vec_y[1];
   cross[1] = vec_x[2] * vec_y[0] - vec_x[0] * vec_y[2];
@@ -221,7 +233,7 @@ t8_vec_cross_3D (const t8_3D_vec &vec_x, const t8_3D_vec &vec_y, t8_3D_vec &cros
  */
 template <std::size_t dim>
 static inline void
-t8_vec_diff (const t8_vec<dim> &vec_x, const t8_vec<dim> &vec_y, t8_vec<dim> &diff)
+t8_diff (const t8_vec<dim> &vec_x, const t8_vec<dim> &vec_y, t8_vec<dim> &diff)
 {
   std::transform (vec_x.begin (), vec_x.end (), vec_y.begin (), diff.begin (), std::minus<double> ());
 }
@@ -237,7 +249,7 @@ t8_vec_diff (const t8_vec<dim> &vec_x, const t8_vec<dim> &vec_y, t8_vec<dim> &di
 template <typename T>
   requires IsMySupportedType<T, T::dim>
 static inline bool
-t8_vec_eq (const T &vec_x, const T &vec_y, const double tol)
+t8_eq (const T &vec_x, const T &vec_y, const double tol)
 {
   return std::equal (vec_x.begin (), vec_x.end (), vec_y.begin (),
                      [tol] (double x, double y) { return std::fabs (x - y) <= tol; });
@@ -249,10 +261,10 @@ t8_vec_eq (const T &vec_x, const T &vec_y, const double tol)
  */
 template <std::size_t dim>
 static inline void
-t8_vec_rescale (t8_vec<dim> &vec, const double new_length)
+t8_rescale (t8_vec<dim> &vec, const double new_length)
 {
-  t8_vec_normalize (vec);
-  t8_vec_ax (vec, new_length);
+  t8_normalize (vec);
+  t8_ax (vec, new_length);
 }
 
 /** Compute the normal of a triangle given by its three vertices.
@@ -262,13 +274,13 @@ t8_vec_rescale (t8_vec<dim> &vec, const double new_length)
  * \param [out] Normal vector of the triangle. (Not necessarily of length 1!)
  */
 static inline void
-t8_vec_tri_normal (const t8_3D_vec &p1, const t8_3D_vec &p2, const t8_3D_vec &p3, t8_3D_vec &normal)
+t8_normal_of_tri (const t8_3D_vec &p1, const t8_3D_vec &p2, const t8_3D_vec &p3, t8_3D_vec &normal)
 {
   t8_3D_vec a;
   t8_3D_vec b;
   std::transform (p2.begin (), p2.end (), p1.begin (), a, std::minus<double> ());
   std::transform (p3.begin (), p3.end (), p1.begin (), b, std::minus<double> ());
-  t8_vec_cross_3D (a, b, normal);
+  t8_cross_3D (a, b, normal);
 }
 
 /** Compute an orthogonal coordinate system from a given vector.
@@ -277,17 +289,17 @@ t8_vec_tri_normal (const t8_3D_vec &p1, const t8_3D_vec &p2, const t8_3D_vec &p3
  * \param [out]  v3 3D vector.
  */
 static inline void
-t8_vec_orthogonal_tripod (const t8_3D_vec &v1, t8_3D_vec &v2, t8_3D_vec &v3)
+t8_orthogonal_tripod (const t8_3D_vec &v1, t8_3D_vec &v2, t8_3D_vec &v3)
 {
   v2[0] = v1[1];
   v2[1] = v1[2];
   v2[2] = -v1[0];
 
-  t8_vec_axpy<3> (v1, v2, -t8_vec_dot<3> (v1, v2));
-  t8_vec_cross_3D (v1, v2, v3);
+  t8_axpy<3> (v1, v2, -t8_dot<3> (v1, v2));
+  t8_cross_3D (v1, v2, v3);
 
-  t8_vec_normalize<3> (v2);
-  t8_vec_normalize<3> (v3);
+  t8_normalize<3> (v2);
+  t8_normalize<3> (v3);
 }
 
 /** Swap the components of two vectors.
@@ -297,7 +309,7 @@ t8_vec_orthogonal_tripod (const t8_3D_vec &v1, t8_3D_vec &v2, t8_3D_vec &v3)
 template <typename T>
   requires IsMySupportedType<T, T::dim>
 static inline void
-t8_vec_swap (T &p1, T &p2)
+t8_swap (T &p1, T &p2)
 {
   std::swap (p1, p2);
 }
