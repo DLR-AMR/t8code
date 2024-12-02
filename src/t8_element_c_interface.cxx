@@ -309,13 +309,12 @@ t8_element_get_first_descendant_face (const t8_forest_t forest, const t8_eclass_
 }
 
 void
-t8_element_construct_last_descendant_face (const t8_forest_t forest, const t8_eclass_t tree_class,
-                                           const t8_element_t *elem, const int face, t8_element_t *last_desc,
-                                           const int level)
+t8_element_get_last_descendant_face (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem,
+                                     const int face, t8_element_t *last_desc, const int level)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  return forest->scheme->element_construct_last_descendant_face (tree_class, elem, face, last_desc, level);
+  return forest->scheme->element_get_last_descendant_face (tree_class, elem, face, last_desc, level);
 }
 
 int

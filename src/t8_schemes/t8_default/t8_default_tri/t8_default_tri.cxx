@@ -334,8 +334,8 @@ t8_default_scheme_tri::element_get_first_descendant_face (const t8_element_t *el
 }
 
 void
-t8_default_scheme_tri::element_construct_last_descendant_face (const t8_element_t *elem, int face,
-                                                               t8_element_t *last_desc, int level) const
+t8_default_scheme_tri::element_get_last_descendant_face (const t8_element_t *elem, int face, t8_element_t *last_desc,
+                                                         int level) const
 {
   T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
   T8_ASSERT (0 <= level && level <= T8_DTRI_MAXLEVEL);

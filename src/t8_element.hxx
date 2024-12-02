@@ -534,9 +534,9 @@ class t8_eclass_scheme: public t8_crtp<TUnderlyingEclassScheme> {
    * \param [in] level     The level, at which the last descendant is constructed
    */
   inline void
-  element_construct_last_descendant_face (const t8_element_t *elem, int face, t8_element_t *last_desc, int level) const
+  element_get_last_descendant_face (const t8_element_t *elem, int face, t8_element_t *last_desc, int level) const
   {
-    this->underlying ().element_construct_last_descendant_face (elem, face, last_desc, level);
+    this->underlying ().element_get_last_descendant_face (elem, face, last_desc, level);
   };
 
   /** Compute whether a given element shares a given face with its root tree.

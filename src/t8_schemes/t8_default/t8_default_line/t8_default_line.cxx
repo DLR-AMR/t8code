@@ -218,8 +218,8 @@ t8_default_scheme_line::element_get_first_descendant_face (const t8_element_t *e
 }
 
 void
-t8_default_scheme_line::element_construct_last_descendant_face (const t8_element_t *elem, int face,
-                                                                t8_element_t *last_desc, int level) const
+t8_default_scheme_line::element_get_last_descendant_face (const t8_element_t *elem, int face, t8_element_t *last_desc,
+                                                          int level) const
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (element_is_valid (last_desc));

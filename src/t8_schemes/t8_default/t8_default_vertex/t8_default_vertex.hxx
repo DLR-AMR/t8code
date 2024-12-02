@@ -440,7 +440,7 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
    * \param [in] level     The level, at which the last descendant is constructed
    */
   void
-  element_construct_last_descendant_face (const t8_element_t *elem, int face, t8_element_t *last_desc, int level) const
+  element_get_last_descendant_face (const t8_element_t *elem, int face, t8_element_t *last_desc, int level) const
   {
     SC_ABORT ("Not implemented.\n");
     return; /* prevents compiler warning */

@@ -2426,7 +2426,7 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest, t8_gloidx_t gtre
   }
   if (last_desc == NULL) {
     scheme->element_new (eclass, 1, &last_face_desc);
-    scheme->element_construct_last_descendant_face (eclass, element, face, last_face_desc, forest->maxlevel);
+    scheme->element_get_last_descendant_face (eclass, element, face, last_face_desc, forest->maxlevel);
   }
   else {
     last_face_desc = last_desc;
@@ -2437,7 +2437,7 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest, t8_gloidx_t gtre
     t8_element_t *test_desc;
 
     scheme->element_new (eclass, 1, &test_desc);
-    scheme->element_construct_last_descendant_face (eclass, element, face, test_desc, forest->maxlevel);
+    scheme->element_get_last_descendant_face (eclass, element, face, test_desc, forest->maxlevel);
     T8_ASSERT (scheme->element_is_equal (eclass, test_desc, last_face_desc));
     scheme->element_get_first_descendant_face (eclass, element, face, test_desc, forest->maxlevel);
     T8_ASSERT (scheme->element_is_equal (eclass, test_desc, first_face_desc));
@@ -2578,7 +2578,7 @@ t8_forest_element_owners_at_face_bounds (t8_forest_t forest, t8_gloidx_t gtreeid
   scheme->element_new (eclass, 1, &first_face_desc);
   scheme->element_get_first_descendant_face (eclass, element, face, first_face_desc, forest->maxlevel);
   scheme->element_new (eclass, 1, &last_face_desc);
-  scheme->element_construct_last_descendant_face (eclass, element, face, last_face_desc, forest->maxlevel);
+  scheme->element_get_last_descendant_face (eclass, element, face, last_face_desc, forest->maxlevel);
 
   /* owner of first and last descendants */
   *lower = t8_forest_element_find_owner_ext (forest, gtreeid, first_face_desc, eclass, *lower, *upper, *lower, 1);

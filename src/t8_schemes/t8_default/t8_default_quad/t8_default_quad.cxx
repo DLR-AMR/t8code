@@ -563,8 +563,8 @@ t8_default_scheme_quad::element_get_first_descendant_face (const t8_element_t *e
 
 /** Construct the last descendant of an element that touches a given face. */
 void
-t8_default_scheme_quad::element_construct_last_descendant_face (const t8_element_t *elem, int face,
-                                                                t8_element_t *last_desc, int level) const
+t8_default_scheme_quad::element_get_last_descendant_face (const t8_element_t *elem, int face, t8_element_t *last_desc,
+                                                          int level) const
 {
   const p4est_quadrant_t *q = (const p4est_quadrant_t *) elem;
   p4est_quadrant_t *desc = (p4est_quadrant_t *) last_desc;

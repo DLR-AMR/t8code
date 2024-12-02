@@ -381,8 +381,8 @@ t8_default_scheme_hex::element_get_first_descendant_face (const t8_element_t *el
 
 /** Construct the last descendant of an element that touches a given face. */
 void
-t8_default_scheme_hex::element_construct_last_descendant_face (const t8_element_t *elem, const int face,
-                                                               t8_element_t *const last_desc, const int level) const
+t8_default_scheme_hex::element_get_last_descendant_face (const t8_element_t *elem, const int face,
+                                                         t8_element_t *const last_desc, const int level) const
 {
   const p8est_quadrant_t *q = (const p8est_quadrant_t *) elem;
   p8est_quadrant_t *desc = (p8est_quadrant_t *) last_desc;

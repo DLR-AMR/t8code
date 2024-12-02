@@ -347,8 +347,8 @@ t8_default_scheme_pyramid::element_construct_last_descendant (const t8_element_t
 }
 
 void
-t8_default_scheme_pyramid::element_construct_last_descendant_face (const t8_element_t *elem, int face,
-                                                                   t8_element_t *last_desc, int level) const
+t8_default_scheme_pyramid::element_get_last_descendant_face (const t8_element_t *elem, int face,
+                                                             t8_element_t *last_desc, int level) const
 {
   T8_ASSERT (element_is_valid (elem));
   t8_dpyramid_last_descendant_face ((const t8_dpyramid_t *) elem, face, (t8_dpyramid_t *) last_desc, level);

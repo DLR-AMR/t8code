@@ -680,11 +680,11 @@ class t8_scheme {
    * \param [in] level     The level, at which the last descendant is constructed
    */
   inline void
-  element_construct_last_descendant_face (const t8_eclass_t tree_class, const t8_element_t *elem, const int face,
-                                          t8_element_t *last_desc, const int level) const
+  element_get_last_descendant_face (const t8_eclass_t tree_class, const t8_element_t *elem, const int face,
+                                    t8_element_t *last_desc, const int level) const
   {
     return std::visit (
-      [&] (auto &&scheme) { return scheme.element_construct_last_descendant_face (elem, face, last_desc, level); },
+      [&] (auto &&scheme) { return scheme.element_get_last_descendant_face (elem, face, last_desc, level); },
       eclass_schemes[tree_class]);
   };
 
