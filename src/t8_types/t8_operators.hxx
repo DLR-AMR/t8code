@@ -262,17 +262,16 @@ struct RandomAccessible: crtp<T, RandomAccessible>
   {
     return this->underlying ().get ().end ();
   }
-};
 
-/**
- * \brief A template for hashable types. Used to make a type hashable.
- * 
- * \tparam T 
- */
-template <typename TUnderlying>
-struct Hashable
-{
-  static constexpr bool is_hashable = true;
-};
+  auto
+  data () -> decltype (auto)
+  {
+    return this->underlying ().get ().data ();
+  }
 
-#endif /* T8_OPERATORS_HXX */
+  auto
+  data () const -> decltype (auto)
+  {
+    return this->underlying ().get ().data ();
+  }
+};
