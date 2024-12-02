@@ -39,7 +39,7 @@
 #include <t8_forest/t8_forest_profiling.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <example/common/t8_example_common.h>
-#include <t8_types/t8_vec.hxx>
+#include <t8_types/t8_vec.h>
 
 /* This is the user defined data used to define the
  * region in which we partition.
@@ -88,8 +88,8 @@ t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tr
                t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
 {
   int level, base_level, max_level;
-  t8_point_t elem_midpoint[3];
-  t8_point_t *normal;
+  double elem_midpoint[3];
+  double *normal;
   adapt_data_t *adapt_data;
 
   T8_ASSERT (!is_family || num_elements == ts->t8_element_num_children (elements[0]));
@@ -103,18 +103,18 @@ t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tr
   t8_forest_element_centroid (forest_from, which_tree, elements[0], elem_midpoint);
 
   /* Calculate elem_midpoint - c_min n */
-  t8_vec_axy (elem_midpoint, normal, adapt_data->c_min);
+  t8_axy_c_interface (elem_midpoint, normal, adapt_data->c_min);
 
   /* The purpose of the factor C*h is that the levels get smaller, the
    * closer we get to the interface. We refine a cell if it is at most
    * C times its own height away from the interface */
-  if (t8_vec_dot (elem_midpoint, normal) >= 0) {
+  if (t8_dot_c_interface (elem_midpoint, normal) >= 0) {
     /* if the anchor node is to the right of c_min*E,
      * check if it is to the left of c_max*E */
 
     /* set elem_midpoint to the original anchor - c_max*normal */
-    t8_vec_axy (elem_midpoint, normal, adapt_data->c_max - adapt_data->c_min);
-    if (t8_vec_dot (elem_midpoint, normal) <= 0) {
+    t8_axy_c_interface (elem_midpoint, normal, adapt_data->c_max - adapt_data->c_min);
+    if (t8_dot_c_interface (elem_midpoint, normal) <= 0) {
       if (level < max_level) {
         /* We do refine if level smaller 1+base level and the anchor is
          * to the left of c_max*E */
@@ -139,7 +139,7 @@ t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tr
 static void
 t8_vec3_normalize (double *v)
 {
-  double norm = sqrt (t8_vec_dot (v, v));
+  double norm = sqrt (t8_dot_c_interface (v, v));
 
   v[0] /= norm;
   v[1] /= norm;

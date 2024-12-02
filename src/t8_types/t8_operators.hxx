@@ -261,30 +261,16 @@ struct RandomAccessible: crtp<T, RandomAccessible>
   {
     return this->underlying ().get ().end ();
   }
+
+  auto
+  data () -> decltype (auto)
+  {
+    return this->underlying ().get ().data ();
+  }
+
+  auto
+  data () const -> decltype (auto)
+  {
+    return this->underlying ().get ().data ();
+  }
 };
-
-/**
- * \brief A template for << types. Provides the << operator.
- * 
- * \tparam T 
- */
-template <typename T, typename Parameter>
-std::ostream&
-operator<< (std::ostream& os, T8Type<T, Parameter> const& p)
-{
-  p.print (os);
-  return os;
-}
-
-/**
- * \brief A template for hashable types. Used to make a type hashable.
- * 
- * \tparam T 
- */
-template <typename T>
-struct Hashable
-{
-  static constexpr bool is_hashable = true;
-};
-
-#endif /* T8_OPERATORS_HXX */

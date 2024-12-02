@@ -365,9 +365,9 @@ static double
 t8_advect_flux_upwind (const t8_advect_problem_t *problem, double el_plus_phi, double el_minus_phi, t8_locidx_t ltreeid,
                        const t8_element_t *element_plus, int face)
 {
-  t8_point_t face_center;
-  t8_point_t u_at_face_center;
-  t8_point_t normal;
+  double face_center[3];
+  t8_3D_vec u_at_face_center;
+  t8_3D_vec normal;
   double area, normal_times_u;
 
   /*
@@ -377,16 +377,16 @@ t8_advect_flux_upwind (const t8_advect_problem_t *problem, double el_plus_phi, d
    */
 
   /* Compute the center coordinate of the face */
-  t8_forest_element_face_centroid (problem->forest, ltreeid, element_plus, face, face_center.data ());
+  t8_forest_element_face_centroid (problem->forest, ltreeid, element_plus, face, face_center);
   /* Compute u at the face center. */
-  problem->u (face_center.data (), problem->t, u_at_face_center.data ());
+  problem->u (face_center, problem->t, u_at_face_center.data ());
   /* Compute the normal of the element at this face */
   t8_forest_element_face_normal (problem->forest, ltreeid, element_plus, face, normal.data ());
   /* Compute the area of the face */
   area = t8_forest_element_face_area (problem->forest, ltreeid, element_plus, face);
 
   /* Compute the dot-product of u and the normal vector */
-  normal_times_u = t8_vec_dot (normal, u_at_face_center);
+  normal_times_u = t8_dot (normal, u_at_face_center);
 
   if (normal_times_u >= 0) {
     return -el_plus_phi * normal_times_u * area;
@@ -989,7 +989,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t *problem)
   t8_advect_element_data_t *elem_data;
   t8_eclass_scheme_c *ts, *neigh_scheme;
   double speed, max_speed = 0, min_diam = -1, delta_t, min_delta_t;
-  t8_point_t u;
+  t8_3D_vec u;
   double diam;
   double min_vol = 1e9;
 
@@ -1010,7 +1010,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t *problem)
       min_diam = min_diam < 0 ? diam : SC_MIN (min_diam, diam);
       /* Compute the maximum velocity */
       problem->u (elem_data->midpoint, problem->t, u);
-      speed = t8_vec_norm (u);
+      speed = t8_norm (u);
       max_speed = SC_MAX (max_speed, speed);
 
       /* Compute minimum necessary time step */
