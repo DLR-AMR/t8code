@@ -292,8 +292,8 @@ const int t8_dprism_face_corner[5][4] = {
 };
 
 void
-t8_default_scheme_prism::element_construct_first_descendant_face (const t8_element_t *elem, int face,
-                                                                  t8_element_t *first_desc, int level) const
+t8_default_scheme_prism::element_get_first_descendant_face (const t8_element_t *elem, int face,
+                                                            t8_element_t *first_desc, int level) const
 {
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
   T8_ASSERT (0 <= level && level <= T8_DPRISM_MAXLEVEL);

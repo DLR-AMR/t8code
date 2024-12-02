@@ -75,7 +75,7 @@ class class_descendant: public TestDFS {
       for (int jface = 0; jface < num_faces; jface++) {
 
         t8_test_manual_first_last_face_descendant (scheme, element, tree_class, jface, ilevel, 0, manual_face_desc);
-        scheme->element_construct_first_descendant_face (tree_class, element, jface, scheme_face_desc, ilevel);
+        scheme->element_get_first_descendant_face (tree_class, element, jface, scheme_face_desc, ilevel);
         /* Compare the manually computed child with the result of t8_element_first_descendant_face. */
         EXPECT_ELEM_EQ (scheme, tree_class, scheme_face_desc, manual_face_desc);
 

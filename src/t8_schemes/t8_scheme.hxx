@@ -662,11 +662,11 @@ class t8_scheme {
    * \param [in] level     The level, at which the first descendant is constructed
    */
   inline void
-  element_construct_first_descendant_face (const t8_eclass_t tree_class, const t8_element_t *elem, const int face,
-                                           t8_element_t *first_desc, const int level) const
+  element_get_first_descendant_face (const t8_eclass_t tree_class, const t8_element_t *elem, const int face,
+                                     t8_element_t *first_desc, const int level) const
   {
     return std::visit (
-      [&] (auto &&scheme) { return scheme.element_construct_first_descendant_face (elem, face, first_desc, level); },
+      [&] (auto &&scheme) { return scheme.element_get_first_descendant_face (elem, face, first_desc, level); },
       eclass_schemes[tree_class]);
   };
 

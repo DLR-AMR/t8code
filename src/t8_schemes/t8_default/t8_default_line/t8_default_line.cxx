@@ -198,8 +198,8 @@ t8_default_scheme_line::element_get_boundary_face (const t8_element_t *elem, int
 
 /** Construct the first descendant of an element that touches a given face.   */
 void
-t8_default_scheme_line::element_construct_first_descendant_face (const t8_element_t *elem, int face,
-                                                                 t8_element_t *first_desc, int level) const
+t8_default_scheme_line::element_get_first_descendant_face (const t8_element_t *elem, int face, t8_element_t *first_desc,
+                                                           int level) const
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (element_is_valid (first_desc));
@@ -227,7 +227,7 @@ t8_default_scheme_line::element_construct_last_descendant_face (const t8_element
   T8_ASSERT (0 <= level && level <= T8_DLINE_MAXLEVEL);
 
   /* The last descendant is the same as the first descendant. */
-  element_construct_first_descendant_face (elem, face, last_desc, level);
+  element_get_first_descendant_face (elem, face, last_desc, level);
 }
 
 int

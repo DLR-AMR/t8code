@@ -363,8 +363,8 @@ t8_default_scheme_hex::element_extrude_face (const t8_element_t *face, t8_elemen
 
 /** Construct the first descendant of an element that touches a given face. */
 void
-t8_default_scheme_hex::element_construct_first_descendant_face (const t8_element_t *elem, const int face,
-                                                                t8_element_t *const first_desc, const int level) const
+t8_default_scheme_hex::element_get_first_descendant_face (const t8_element_t *elem, const int face,
+                                                          t8_element_t *const first_desc, const int level) const
 {
   const p8est_quadrant_t *q = (const p8est_quadrant_t *) elem;
   p8est_quadrant_t *desc = (p8est_quadrant_t *) first_desc;

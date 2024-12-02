@@ -365,8 +365,7 @@ class t8_default_scheme_tet: public t8_default_scheme_common<t8_default_scheme_t
    * \param [in] level     The level, at which the first descendant is constructed
    */
   void
-  element_construct_first_descendant_face (const t8_element_t *elem, int face, t8_element_t *first_desc,
-                                           int level) const;
+  element_get_first_descendant_face (const t8_element_t *elem, int face, t8_element_t *first_desc, int level) const;
 
   /** Construct the last descendant of an element at a given level that touches a given face.
    * \param [in] elem      The input element.

@@ -292,8 +292,8 @@ t8_default_scheme_tet::element_extrude_face (const t8_element_t *face, t8_elemen
 }
 
 void
-t8_default_scheme_tet::element_construct_first_descendant_face (const t8_element_t *elem, int face,
-                                                                t8_element_t *first_desc, int level) const
+t8_default_scheme_tet::element_get_first_descendant_face (const t8_element_t *elem, int face, t8_element_t *first_desc,
+                                                          int level) const
 {
   int corner;
   T8_ASSERT (0 <= face && face < T8_DTET_FACES);

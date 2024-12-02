@@ -519,10 +519,10 @@ class t8_eclass_scheme: public t8_crtp<TUnderlyingEclassScheme> {
    * \param [in] level     The level, at which the first descendant is constructed
    */
   inline void
-  element_construct_first_descendant_face (const t8_element_t *elem, int face, t8_element_t *first_desc,
+  element_get_first_descendant_face (const t8_element_t *elem, int face, t8_element_t *first_desc,
                                            int level) const
   {
-    this->underlying ().element_construct_first_descendant_face (elem, face, first_desc, level);
+    this->underlying ().element_get_first_descendant_face (elem, face, first_desc, level);
   };
 
   /** Construct the last descendant of an element at a given level that touches a given face.
