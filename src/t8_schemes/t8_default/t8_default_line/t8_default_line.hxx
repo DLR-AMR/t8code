@@ -203,7 +203,7 @@ class t8_default_scheme_line: public t8_default_scheme_common<t8_default_scheme_
    * \return              The corner number of the \a corner-th vertex of \a face.
    */
   int
-  element_get_face_corner (const t8_element_t *element, int face, int corner) const
+  element_get_face_corner (const t8_element_t *element, const int face, const int corner) const
   {
     SC_ABORT ("Not implemented.\n");
     return 0; /* prevents compiler warning */

@@ -145,8 +145,7 @@ t8_default_scheme_tet::element_get_children (const t8_element_t *elem, int lengt
   T8_ASSERT (length == T8_DTET_CHILDREN);
   T8_ASSERT (element_is_valid (elem));
 #ifdef T8_ENABLE_DEBUG
-  int i;
-  for (i = 0; i < T8_DTET_CHILDREN; i++) {
+  for (int i = 0; i < T8_DTET_CHILDREN; i++) {
     T8_ASSERT (element_is_valid (c[i]));
   }
 #endif
