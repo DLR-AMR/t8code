@@ -105,7 +105,7 @@ t8_forest_is_family_callback (t8_scheme *scheme, const t8_eclass_t tree_class, c
  *       recursively, return INT32_MIN.
  */
 static t8_locidx_t
-t8_forest_pos (t8_forest_t forest, t8_eclass_t tree_class, t8_scheme *scheme, t8_element_array_t *telements,
+t8_forest_pos (t8_forest_t forest, const t8_eclass_t tree_class, t8_scheme *scheme, t8_element_array_t *telements,
                const t8_locidx_t telements_pos)
 {
 #if T8_ENABLE_DEBUG
@@ -222,7 +222,7 @@ t8_forest_pos (t8_forest_t forest, t8_eclass_t tree_class, t8_scheme *scheme, t8
  * \param [in] el_buffer Buffer space to store a family of elements.
  */
 static void
-t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid, t8_eclass_t tree_class,
+t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eclass_t tree_class,
                                    t8_locidx_t lelement_id, t8_scheme *scheme, t8_element_array_t *telements,
                                    t8_locidx_t el_coarsen, t8_locidx_t *el_inserted, t8_element_t **el_buffer)
 {
@@ -324,7 +324,7 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid, t8_e
  * \param [in] element_removed Flag set to 1 if element was removed.
  */
 static void
-t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid, t8_eclass_t tree_class,
+t8_forest_adapt_refine_recursive (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_eclass_t tree_class,
                                   t8_locidx_t lelement_id, t8_scheme *scheme, sc_list_t *elem_list,
                                   t8_element_array_t *telements, t8_locidx_t *num_inserted, t8_element_t **el_buffer,
                                   int *element_removed)

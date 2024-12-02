@@ -39,8 +39,7 @@ t8_basic_adapt_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t 
                        t8_locidx_t lelement_id, const t8_scheme_c *scheme, const int is_family, const int num_elements,
                        t8_element_t *elements[])
 {
-  int level;
-  level = t8_element_get_level (forest_from, tree_class, elements[0]);
+  const int level = t8_element_get_level (forest_from, tree_class, elements[0]);
   /* coarsen */
   if (num_elements > 1) {
     if (level > 0)
