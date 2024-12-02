@@ -179,18 +179,6 @@ t8_axpyz (const t8_vec<dim> &vec_x, const t8_vec<dim> &vec_y, t8_vec<dim> &vec_z
                   [alpha] (double x, double y) { return y + alpha * x; });
 }
 
-/** Set x = x - alpha*y
- * \param [in] vec_x A 3D vector.
- * \param [in] alpha A constant.
- * \param [in] vec_y A 3D vector.
- */
-static inline void
-t8_xmay (t8_3D_vec &vec_x, double alpha, const t8_3D_vec &vec_y)
-{
-  std::transform (x.begin (), x.end (), y.begin (), x.begin (),
-                  [alpha] (double xi, double yi) { return xi - alpha * yi; });
-}
-
 /** Dot product of X and Y.
  * \param [in]  vec_x  An N-dimensional vector.
  * \param [in]  vec_y  An N-dimensional vector.
