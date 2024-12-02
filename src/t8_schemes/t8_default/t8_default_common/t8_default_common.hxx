@@ -81,7 +81,7 @@ t8_default_mempool_free (sc_mempool_t *ts_context, int length, t8_element_t **el
 static inline t8_gloidx_t
 count_leaves_from_level (const int element_level, const int refinement_level, const int dimension)
 {
-  return element_level > refinement_level ? 0 : sc_intpow64 (2, dimension * (refinement_level - element_level));
+  return element_level > refinement_level ? 0 : (1ULL << (dimension * (refinement_level - element_level)));
 }
 
 template <class TUnderlyingEclassScheme>
