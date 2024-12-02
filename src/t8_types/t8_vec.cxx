@@ -93,14 +93,6 @@ t8_axpyz_c_interface (const double vec_x[3], const double vec_y[3], double vec_z
   t8_axpyz (vec_array_x, vec_array_y, vec_array_z, alpha);
 }
 
-void
-t8_xmay_c_interface (double vec_x[3], const double alpha, const double vec_y[3])
-{
-  t8_3D_vec vec_array_x ({ vec_x[0], vec_x[1], vec_x[2] });
-  t8_3D_vec vec_array_y ({ vec_y[0], vec_y[1], vec_y[2] });
-  t8_xmay (vec_array_x, alpha, vec_array_y);
-}
-
 double
 t8_dot_c_interface (const double vec_x[3], const double vec_y[3])
 {

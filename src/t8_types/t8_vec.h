@@ -102,14 +102,6 @@ t8_axpy_c_interface (const double vec_x[3], double vec_y[3], const double alpha)
 void
 t8_axpyz_c_interface (const double vec_x[3], const double vec_y[3], double vec_z[3], const double alpha);
 
-/** Set x = x - alpha*y
- * \param [in] vec_x A 3D vector.
- * \param [in] alpha A constant.
- * \param [in] vec_y A 3D vector.
- */
-void
-t8_xmay_c_interface (double vec_x[3], const double alpha, const double vec_y[3]);
-
 /** Dot product of X and Y.
  * \param [in]  vec_x  A 3D vector.
  * \param [in]  vec_y  A 3D vector.

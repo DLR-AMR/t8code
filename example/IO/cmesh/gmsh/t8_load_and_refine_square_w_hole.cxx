@@ -88,7 +88,7 @@ t8_midpoint (t8_forest_t forest, t8_locidx_t which_tree, t8_element_t *element, 
     /* Now that we now the midpoint, we can compute h */
     for (i = 0; i < 3; i++) {
       /* Compute the difference of the mid vertex and the i-th vertex */
-      t8_xmay_c_interface (corner[i], 1, elem_mid_point);
+      t8_axy_c_interface (corner[i], elem_mid_point, 1);
       /* Set the size of the element to the euclidean distance of the two
        * vertices if it is bigger than the previous distance */
       *h = SC_MAX (sqrt (t8_dot_c_interface (corner[i], corner[i])), *h);
