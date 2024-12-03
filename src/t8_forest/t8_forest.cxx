@@ -30,6 +30,8 @@
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_balance.h>
+#include <t8_forest/t8_forest_iterate.h>
+#include <t8_forest/t8_forest_ghost.h>
 #include <t8_element.hxx>
 #include <t8_element_c_interface.h>
 #include <t8_cmesh/t8_cmesh_trees.h>
@@ -1475,37 +1477,28 @@ t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_lineari
   return elem_iter.GetCurrentIndex () - 1;
 }
 
-// TODO: Extend to ghost elements
 t8_eclass_t
-t8_forest_element_neighbor_eclass (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *elem, int face)
+t8_forest_element_neighbor_eclass (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *elem,
+                                   const int face)
 {
-  t8_eclass_scheme_c *ts;
-  t8_tree_t tree;
-  t8_ctree_t coarse_tree;
-  t8_eclass_t eclass;
-  int tree_face;
-  t8_locidx_t lcoarse_neighbor;
-  t8_cmesh_t cmesh;
+  const t8_eclass_t eclass = t8_forest_get_tree_class (forest, ltreeid);
+  const t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest, eclass);
 
-  /* Get a pointer to the tree to read its element class */
-  tree = t8_forest_get_tree (forest, ltreeid);
-  eclass = tree->eclass;
-  ts = t8_forest_get_eclass_scheme (forest, eclass);
   if (!ts->t8_element_is_root_boundary (elem, face)) {
     /* The neighbor element is inside the current tree. */
-    return tree->eclass;
+    return eclass;
   }
   else {
     /* The neighbor is in a neighbor tree */
     /* If the face neighbor is not inside the tree, we have to find out the tree
      * face and the tree's face neighbor along that face. */
-    tree_face = ts->t8_element_tree_face (elem, face);
+    const int tree_face = ts->t8_element_tree_face (elem, face);
 
-    cmesh = t8_forest_get_cmesh (forest);
+    const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
     /* Get the coarse tree corresponding to tree */
-    coarse_tree = t8_forest_get_coarse_tree (forest, ltreeid);
+    const t8_ctree_t coarse_tree = t8_forest_get_coarse_tree (forest, ltreeid);
     /* Get the (coarse) local id of the tree neighbor */
-    lcoarse_neighbor = t8_cmesh_trees_get_face_neighbor (coarse_tree, tree_face);
+    const t8_locidx_t lcoarse_neighbor = t8_cmesh_trees_get_face_neighbor (coarse_tree, tree_face);
     T8_ASSERT (0 <= lcoarse_neighbor);
     if (lcoarse_neighbor < t8_cmesh_get_num_local_trees (cmesh)) {
       /* The tree neighbor is a local tree */
