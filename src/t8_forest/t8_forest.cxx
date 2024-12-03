@@ -1840,10 +1840,6 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
     }
   }
 
-  // Somehow collect leaf arrays
-  // std::vector<element_array>
-  // iterate over vector
-
   struct t8_lfn_user_data user_data (*neigh_scheme);
 
   // Now we iterate over the leaf arrays of the neighbor tree
