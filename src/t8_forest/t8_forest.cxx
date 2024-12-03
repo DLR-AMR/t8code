@@ -1876,6 +1876,8 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
       // Compute their nearest common ancestor
       neigh_scheme->t8_element_nca (first_face_leaf, last_face_leaf, nca_of_face_desc);
       const int face_of_nca = 0;
+      // TODO: Need to implement face of nca
+      // Any thing left TODO here???
       SC_ABORT ("Not implemented");
 
       t8_forest_iterate_faces (forest, local_neighbor_tree, nca_of_face_desc, face_of_nca, tree_leafs, first_desc_index,
