@@ -1775,8 +1775,8 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
     T8_ASSERT (t8_forest_element_is_ghost (forest, leaf_or_ghost, local_ghost_treeid));
   }
 #endif
-  SC_CHECK_ABORT (forest->incomplete_trees, "Leaf face neighbor is not supported for "
-                                            "forests with deleted elements.\n");
+  SC_CHECK_ABORT (!forest->incomplete_trees, "Leaf face neighbor is not supported for "
+                                             "forests with deleted elements.\n");
   SC_CHECK_ABORT (forest->mpisize == 1 || forest->ghosts != NULL,
                   "Ghost structure is needed for t8_forest_leaf_face_neighbors "
                   "but was not found in forest.\n");
