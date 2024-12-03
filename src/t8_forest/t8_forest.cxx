@@ -1801,6 +1801,16 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
   const t8_gloidx_t gneigh_treeid = t8_forest_element_face_neighbor (
     forest, ltreeid, leaf_or_ghost, same_level_neighbor, neigh_scheme, face, &neigh_face);
 
+  if (gneigh_treeid < 0) {
+    // There is no face neighbor across this face
+    neigh_scheme->t8_element_destroy (1, &same_level_neighbor);
+    *dual_faces = NULL;
+    *num_neighbors = 0;
+    *pelement_indices = NULL;
+    *pneighbor_leaves = NULL;
+    return;
+  }
+
   const int maxlevel = neigh_scheme->t8_element_maxlevel ();
 
   // Compute the first and last face descendant of the neighbor
