@@ -1559,7 +1559,7 @@ t8_dpyramid_vertex_reference_coords (const t8_dpyramid_t *elem, const int vertex
 
 void
 t8_dpyramid_compute_reference_coords (const t8_dpyramid_t *elem, const double *ref_coords, const size_t num_coords,
-                                      double *out_coords)
+                                      const size_t padding, double *out_coords)
 {
   T8_ASSERT (ref_coords != NULL);
   T8_ASSERT (t8_dpyramid_is_valid (elem));
@@ -1567,33 +1567,35 @@ t8_dpyramid_compute_reference_coords (const t8_dpyramid_t *elem, const double *r
     const t8_dpyramid_coord_t length = T8_DPYRAMID_LEN (elem->pyramid.level);
     size_t coord;
     for (coord = 0; coord < num_coords; ++coord) {
-      const size_t offset = coord * 3;
-      out_coords[offset + 0] = elem->pyramid.x;
-      out_coords[offset + 1] = elem->pyramid.y;
-      out_coords[offset + 2] = elem->pyramid.z;
+      const size_t offset_ref = coord * (t8_eclass_to_dimension[T8_ECLASS_PYRAMID] + padding);
+      const size_t offset_out = coord * t8_eclass_to_dimension[T8_ECLASS_PYRAMID];
+      out_coords[offset_out + 0] = elem->pyramid.x;
+      out_coords[offset_out + 1] = elem->pyramid.y;
+      out_coords[offset_out + 2] = elem->pyramid.z;
 
-      out_coords[offset + 0] += ref_coords[offset + 0] * length;
-      out_coords[offset + 1] += ref_coords[offset + 1] * length;
-      out_coords[offset + 2] += ref_coords[offset + 2] * length;
+      out_coords[offset_out + 0] += ref_coords[offset_ref + 0] * length;
+      out_coords[offset_out + 1] += ref_coords[offset_ref + 1] * length;
+      out_coords[offset_out + 2] += ref_coords[offset_ref + 2] * length;
     }
     if (elem->pyramid.type == T8_DPYRAMID_SECOND_TYPE) {
       for (coord = 0; coord < num_coords; ++coord) {
-        const size_t offset = coord * 3;
-        out_coords[offset + 0] -= ref_coords[offset + 2] * length;
-        out_coords[offset + 1] -= ref_coords[offset + 2] * length;
-        out_coords[offset + 2] += (1 - 2 * ref_coords[offset + 2]) * length;
+        const size_t offset_ref = coord * (t8_eclass_to_dimension[T8_ECLASS_PYRAMID] + padding);
+        const size_t offset_out = coord * t8_eclass_to_dimension[T8_ECLASS_PYRAMID];
+        out_coords[offset_out + 0] -= ref_coords[offset_ref + 2] * length;
+        out_coords[offset_out + 1] -= ref_coords[offset_ref + 2] * length;
+        out_coords[offset_out + 2] += (1 - 2 * ref_coords[offset_ref + 2]) * length;
       }
     }
     for (coord = 0; coord < num_coords; ++coord) {
-      const size_t offset = coord * 3;
+      const size_t offset_out = coord * t8_eclass_to_dimension[T8_ECLASS_PYRAMID];
       /* Scale the coordinates onto the reference cube */
-      out_coords[offset + 0] /= (double) T8_DPYRAMID_ROOT_LEN;
-      out_coords[offset + 1] /= (double) T8_DPYRAMID_ROOT_LEN;
-      out_coords[offset + 2] /= (double) T8_DPYRAMID_ROOT_LEN;
+      out_coords[offset_out + 0] /= (double) T8_DPYRAMID_ROOT_LEN;
+      out_coords[offset_out + 1] /= (double) T8_DPYRAMID_ROOT_LEN;
+      out_coords[offset_out + 2] /= (double) T8_DPYRAMID_ROOT_LEN;
     }
   }
   else {
-    t8_dtet_compute_reference_coords (&(elem->pyramid), ref_coords, num_coords, out_coords);
+    t8_dtet_compute_reference_coords (&(elem->pyramid), ref_coords, num_coords, padding, out_coords);
   }
 }
 

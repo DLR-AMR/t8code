@@ -3363,7 +3363,8 @@ t8_cmesh_new_spherical_shell (t8_eclass_t eclass, t8_geometry_c *geometry,
       /* Retrieve 2D element vertices. */
       double elem_vertices_2d[T8_ECLASS_MAX_CORNERS * 3];
       for (int ivert = 0; ivert < t8_eclass_num_vertices[eclass_2d]; ivert++) {
-        t8_forest_element_coordinate (forest, itree_local, element, ivert, elem_vertices_2d + ivert * 3);
+        t8_forest_element_coordinate_from_corner_number (forest, itree_local, element, ivert,
+                                                         elem_vertices_2d + ivert * 3);
       }
 
       {

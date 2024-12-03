@@ -97,6 +97,11 @@ t8_dtri_compute_vertex_ref_coords (const t8_dtri_t *elem, const int vertex, doub
  * \param [in]  ref_coords The reference coordinates in the triangle
  *                         (\a num_coords times \f$ [0,1]^2 \f$)
  * \param [in]  num_coords Number of coordinates to evaluate
+ * \param [in]  padding    Only used if \a num_coords > 1.
+ *                         The number of padding entries in \a ref_coords between array elements:
+ *                         For elem dim 2 and input {x1, y1, x2, y2, ...} padding is 0.
+ *                         For elem dim 2 and input {x1, y1, z1, x2, y2, z2, ...} padding is 1.
+ *                         For elem dim 3 and input {x1, y1, z1, x2, y2, z2, ...} padding is 0.
  * \param [in]  skip_coords Only used for batch computation of prisms.
  *                          In all other cases 0.
  *                          Skip coordinates in the \a ref_coords and
@@ -107,7 +112,7 @@ t8_dtri_compute_vertex_ref_coords (const t8_dtri_t *elem, const int vertex, doub
  */
 void
 t8_dtri_compute_reference_coords (const t8_dtri_t *elem, const double *ref_coords, const size_t num_coords,
-                                  const size_t skip_coords, double *out_coords);
+                                  const size_t padding, const size_t skip_coords, double *out_coords);
 
 /** Compute the coordinates of the four vertices of a triangle.
  * \param [in] elem         Input triangle.

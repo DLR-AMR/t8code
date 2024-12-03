@@ -72,9 +72,9 @@ t8_midpoint (t8_forest_t forest, t8_locidx_t which_tree, t8_eclass_scheme_c *ts,
     /* We approximate the midpoint of a square as the middle of
      * the diagonal from vertex 0 to vertex 3 */
     /* Get the coordinates of the elements  0-th vertex */
-    t8_forest_element_coordinate (forest, which_tree, element, 0, corner[0]);
+    t8_forest_element_coordinate_from_corner_number (forest, which_tree, element, 0, corner[0]);
     /* Get the coordinates of the elements  3rd vertex */
-    t8_forest_element_coordinate (forest, which_tree, element, 3, corner[1]);
+    t8_forest_element_coordinate_from_corner_number (forest, which_tree, element, 3, corner[1]);
 
     for (j = 0; j < 3; j++) {
       elem_mid_point[j] += corner[0][j] / 2.;
@@ -94,7 +94,7 @@ t8_midpoint (t8_forest_t forest, t8_locidx_t which_tree, t8_eclass_scheme_c *ts,
     for (i = 0; i < 3; i++) {
       corner[i] = T8_ALLOC (double, 3);
       /* Get the coordinates of the elements  i-th vertex */
-      t8_forest_element_coordinate (forest, which_tree, element, i, corner[i]);
+      t8_forest_element_coordinate_from_corner_number (forest, which_tree, element, i, corner[i]);
       /* At a third of the vertex coordinates to the midpoint coordinates */
       for (j = 0; j < 3; j++) {
         elem_mid_point[j] += corner[i][j] / 3.;

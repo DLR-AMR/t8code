@@ -38,13 +38,18 @@ T8_EXTERN_C_BEGIN ();
  * \param [in]  ref_coords The reference coordinates in the hex
  *                         (\a num_coords times \f$ [0,1]^3 \f$)
  * \param [in]  num_coords Number of coordinates to evaluate
+ * \param [in]  padding    Only used if \a num_coords > 1.
+ *                         The number of padding entries in \a ref_coords between array elements:
+ *                         For elem dim 2 and input {x1, y1, x2, y2, ...} padding is 0.
+ *                         For elem dim 2 and input {x1, y1, z1, x2, y2, z2, ...} padding is 1.
+ *                         For elem dim 3 and input {x1, y1, z1, x2, y2, z2, ...} padding is 0.
  * \param [out] out_coords An array of \a num_coords x 3 x double that
  * 		                     will be filled with the reference coordinates
  *                         of the points on the hex.
  */
 void
 t8_dhex_compute_reference_coords (const t8_dhex_t *elem, const double *ref_coords, const size_t num_coords,
-                                  double *out_coords);
+                                  const size_t padding, double *out_coords);
 
 T8_EXTERN_C_END ();
 

@@ -138,7 +138,7 @@ t8_forest_vtk_cells_vertices_kernel (t8_forest_t forest, const t8_locidx_t ltree
   num_el_vertices = t8_eclass_num_vertices[element_shape];
   for (ivertex = 0; ivertex < num_el_vertices; ivertex++) {
     const double *ref_coords = t8_forest_vtk_point_to_element_ref_coords[element_shape][ivertex];
-    t8_forest_element_from_ref_coords (forest, ltree_id, element, ref_coords, 1, element_coordinates);
+    t8_forest_element_coordinate_from_ref_coords (forest, ltree_id, element, ref_coords, 1, 0, element_coordinates);
     freturn = fprintf (vtufile, "         ");
     if (freturn <= 0) {
       return 0;
