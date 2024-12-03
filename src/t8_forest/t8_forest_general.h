@@ -830,17 +830,18 @@ t8_forest_get_scheme (const t8_forest_t forest);
 t8_eclass_scheme_c *
 t8_forest_get_eclass_scheme (t8_forest_t forest, t8_eclass_t eclass);
 
-/** Return the eclass of the tree in which a face neighbor of a given element
+/** Return the eclass of the tree in which a face neighbor of a given element or ghost
  * lies.
- * \param [in]      forest.     A committed forest.
- * \param [in]      ltreeid.    The local tree in which the element lies.
- * \param [in]      elem.       An element in the tree \a ltreeid.
- * \param [in]      face.       A face number of \a elem.
+ * \param [in]      forest      A committed forest.
+ * \param [in]      ltreeid     The local tree or ghost tree in which the element lies. 0 <= \a ltreeid < num_local_trees + num_ghost_trees
+ * \param [in]      elem        An element or ghost in the tree \a ltreeid.
+ * \param [in]      face        A face number of \a elem.
  * \return                      The local tree id of the tree in which the face
  *                              neighbor of \a elem across \a face lies.
  */
 t8_eclass_t
-t8_forest_element_neighbor_eclass (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *elem, int face);
+t8_forest_element_neighbor_eclass (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *elem,
+                                   const int face);
 
 /** Construct the face neighbor of an element, possibly across tree boundaries.
  * Returns the global tree-id of the tree in which the neighbor element lies in.
