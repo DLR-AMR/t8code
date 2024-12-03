@@ -1860,11 +1860,8 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
   for (auto &tree_leafs : leaf_arrays) {
     const t8_locidx_t first_desc_search = t8_forest_bin_search_lower (tree_leafs, first_face_desc_id, maxlevel);
     const t8_locidx_t last_desc_search = t8_forest_bin_search_lower (tree_leafs, last_face_desc_id, maxlevel);
-    if (first_desc_search < 0 && last_desc_search < 0) {
-      // TODO: No neighbor in this leaf array
-      SC_ABORT ("Not implemented yet. TODO.");
-    }
-    else {
+    if (first_desc_search >= 0 || last_desc_search >= 0) {
+      // There will be face neighbors in this leaf array.
       // The first descendant may not be in the leaf array, we then
       // start with the first leaf.
       const t8_locidx_t first_desc_index = SC_MAX (0, first_desc_search);
