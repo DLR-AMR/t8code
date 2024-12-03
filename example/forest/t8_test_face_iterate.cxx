@@ -44,15 +44,15 @@ typedef struct
 
 static int
 t8_test_fiterate_callback (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int face, int is_leaf,
-                           const t8_element_array_t *leaf_elements, t8_locidx_t leaf_index)
+                           const t8_element_array_t *leaf_elements, t8_locidx_t leaf_index, void *user_data)
 {
   if (is_leaf) {
-    t8_test_fiterate_udata_t *user_data = (t8_test_fiterate_udata_t *) t8_forest_get_user_data (forest);
-    double *coords = user_data->coords;
+    t8_test_fiterate_udata_t *test_user_data = (t8_test_fiterate_udata_t *) user_data;
+    double *coords = test_user_data->coords;
     t8_forest_element_coordinate (forest, ltreeid, element, 0, coords);
     t8_debugf ("Leaf element in tree %i at face %i, tree local index %i has corner 0 coords %lf %lf %lf\n", ltreeid,
                face, (int) leaf_index, coords[0], coords[1], coords[2]);
-    user_data->count++;
+    test_user_data->count++;
   }
   return 1;
 }
@@ -104,7 +104,7 @@ t8_test_fiterate (t8_forest_t forest)
     //
     for (int iface = 0; iface < ts->t8_element_num_faces (nca); iface++) {
       udata.count = 0;
-      t8_forest_iterate_faces (forest, itree, nca, iface, leaf_elements, &udata, 0, t8_test_fiterate_callback);
+      t8_forest_iterate_faces (forest, itree, nca, iface, leaf_elements, 0, t8_test_fiterate_callback, &udata);
       t8_debugf ("Leaf elements at face %i:\t%i\n", iface, udata.count);
     }
     ts->t8_element_destroy (1, &nca);
