@@ -76,7 +76,7 @@ t8_forest_split_array (const t8_element_t *element, const t8_element_array_t *le
 void
 t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int face,
                          const t8_element_array_t *leaf_elements, t8_locidx_t tree_lindex_of_first_leaf,
-                         t8_forest_iterate_face_fn callback)
+                         t8_forest_iterate_face_fn callback, void *user_data)
 {
 
   T8_ASSERT (t8_forest_is_committed (forest));
@@ -120,7 +120,8 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
 #endif
 
   /* Call the callback function element, if it returns true, we continue with the top-down recursion */
-  const int ret = callback (forest, ltreeid, element, face, is_leaf, leaf_elements, tree_lindex_of_first_leaf);
+  const int ret
+    = callback (forest, ltreeid, element, face, is_leaf, leaf_elements, tree_lindex_of_first_leaf, user_data);
   if (!ret || is_leaf) {
     // The callback returned false or the element is a leaf.
     // We abort the recursion.
@@ -156,8 +157,8 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
       /* Compute the corresponding face number of this face child */
       const int child_face = ts->t8_element_face_child_face (element, face, iface);
       /* Enter the recursion */
-      t8_forest_iterate_faces (forest, ltreeid, face_children[iface], child_face, &face_child_leaves, user_data,
-                               indexa + tree_lindex_of_first_leaf, callback);
+      t8_forest_iterate_faces (forest, ltreeid, face_children[iface], child_face, &face_child_leaves,
+                               indexa + tree_lindex_of_first_leaf, callback, user_data);
     }
   }
   /* clean-up */
