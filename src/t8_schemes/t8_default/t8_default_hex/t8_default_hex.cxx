@@ -498,8 +498,7 @@ t8_default_scheme_hex::element_get_linear_id (const t8_element_t *elem, const in
 }
 
 void
-t8_default_scheme_hex::element_construct_first_descendant (const t8_element_t *elem, t8_element_t *desc,
-                                                           int level) const
+t8_default_scheme_hex::element_get_first_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (element_is_valid (desc));
@@ -508,7 +507,7 @@ t8_default_scheme_hex::element_construct_first_descendant (const t8_element_t *e
 }
 
 void
-t8_default_scheme_hex::element_construct_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const
+t8_default_scheme_hex::element_get_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (element_is_valid (desc));

@@ -27,11 +27,14 @@
 #define T8_DEFAULT_HEX_HXX
 
 #include <p8est.h>
-#include <t8_element.hxx>
+#include <t8_element.h>
 #include <t8_schemes/t8_default/t8_default_hex/t8_dhex.h>
 #include <t8_schemes/t8_default/t8_default_hex/t8_dhex_bits.h>
 #include <t8_schemes/t8_default/t8_default_quad/t8_default_quad.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
+
+/* Forward declaration of the scheme so we can use it as an argument in the eclass schemes function. */
+class t8_scheme;
 
 /** The class holding a hexahedral element in the default scheme.
  * We make this definition public for interoperability of element classes.
@@ -482,7 +485,7 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
    * \param [in] level    The level, at which the descendant is computed.
    */
   void
-  element_construct_first_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
+  element_get_first_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
 
   /** Compute the last descendant of a given element.
    * \param [in] elem     The element whose descendant is computed.
@@ -491,7 +494,7 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
    * \param [in] level    The level, at which the descendant is computed.
    */
   void
-  element_construct_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
+  element_get_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
 
   /** Construct the successor in a uniform refinement of a given element.
    * \param [in] elem1    The element whose successor should be constructed.

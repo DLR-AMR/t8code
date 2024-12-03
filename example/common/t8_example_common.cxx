@@ -25,7 +25,6 @@
 
 #include <sc_refcount.h>
 #include <t8_forest/t8_forest_adapt.h>
-#include <t8_element.hxx>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>

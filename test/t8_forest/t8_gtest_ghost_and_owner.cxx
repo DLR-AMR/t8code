@@ -54,7 +54,7 @@ class forest_ghost_owner: public testing::TestWithParam<cmesh_example_base *> {
   TearDown () override
   {
     t8_cmesh_destroy (&cmesh);
-    t8_scheme_unref (&scheme);
+    scheme->unref ();
   }
   t8_cmesh_t cmesh;
   t8_scheme *scheme;
@@ -129,7 +129,7 @@ TEST_P (forest_ghost_owner, test_ghost_owner)
   t8_debugf ("Testing ghost exchange with start level %i\n", min_level);
   for (int level = min_level; level < min_level + 3; level++) {
     /* ref the scheme since we reuse it */
-    t8_scheme_ref (scheme);
+    scheme->ref ();
     /* ref the cmesh since we reuse it */
     t8_cmesh_ref (cmesh);
     /* Create a uniformly refined forest */

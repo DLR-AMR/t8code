@@ -49,7 +49,7 @@ class recursive_tree: public testing::TestWithParam<t8_eclass_t> {
     cmesh = t8_cmesh_new_bigmesh (tree_class, MPI_size, sc_MPI_COMM_WORLD);
     scheme = t8_scheme_new_default ();
 
-    t8_scheme_ref (scheme);
+    scheme->ref ();
     t8_cmesh_ref (cmesh);
 
     /* The forest to be adapted. */

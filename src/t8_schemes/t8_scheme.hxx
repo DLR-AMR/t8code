@@ -20,6 +20,11 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_scheme.hxx
+ * This file defines the interface of eclass scheme implementations. Further, it defines the t8_scheme class, which
+ * holds one or more element schemes. It also relays the function calls to the specific schemes.
+ */
+
 #ifndef T8_SCHEME_HXX
 #define T8_SCHEME_HXX
 
@@ -778,10 +783,10 @@ class t8_scheme {
    * \param [in] level    The level, at which the descendant is computed.
    */
   inline void
-  element_construct_first_descendant (const t8_eclass_t tree_class, const t8_element_t *elem, t8_element_t *desc,
-                                      const int level) const
+  element_get_first_descendant (const t8_eclass_t tree_class, const t8_element_t *elem, t8_element_t *desc,
+                                const int level) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_construct_first_descendant (elem, desc, level); },
+    return std::visit ([&] (auto &&scheme) { return scheme.element_get_first_descendant (elem, desc, level); },
                        eclass_schemes[tree_class]);
   };
 
@@ -793,10 +798,10 @@ class t8_scheme {
    * \param [in] level    The level, at which the descendant is computed.
    */
   inline void
-  element_construct_last_descendant (const t8_eclass_t tree_class, const t8_element_t *elem, t8_element_t *desc,
-                                     const int level) const
+  element_get_last_descendant (const t8_eclass_t tree_class, const t8_element_t *elem, t8_element_t *desc,
+                               const int level) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_construct_last_descendant (elem, desc, level); },
+    return std::visit ([&] (auto &&scheme) { return scheme.element_get_last_descendant (elem, desc, level); },
                        eclass_schemes[tree_class]);
   };
 

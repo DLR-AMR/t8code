@@ -31,7 +31,6 @@
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_balance.h>
 #include <t8_schemes/t8_scheme.hxx>
-#include <t8_element.hxx>
 #include <t8_element_c_interface.h>
 #include <t8_cmesh/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
@@ -1121,14 +1120,14 @@ t8_forest_compute_desc (t8_forest_t forest)
     /* get memory for the trees first descendant */
     scheme->element_new (tree_class, 1, &itree->first_desc);
     /* calculate the first descendant of the first element */
-    scheme->element_construct_first_descendant (tree_class, first_element, itree->first_desc, forest->maxlevel);
+    scheme->element_get_first_descendant (tree_class, first_element, itree->first_desc, forest->maxlevel);
     /* get a pointer to the last element of itree */
     num_elements = t8_element_array_get_count (&itree->elements);
     const t8_element_t *last_element = t8_element_array_index_locidx (&itree->elements, num_elements - 1);
     /* get memory for the trees first descendant */
     scheme->element_new (tree_class, 1, &itree->last_desc);
     /* calculate the last descendant of the first element */
-    scheme->element_construct_last_descendant (tree_class, last_element, itree->last_desc, forest->maxlevel);
+    scheme->element_get_last_descendant (tree_class, last_element, itree->last_desc, forest->maxlevel);
   }
 }
 
@@ -1327,10 +1326,10 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
     scheme->get_root (eclass, element);
     scheme->element_new (eclass, 1, &desc);
     if (first_or_last == 0) {
-      scheme->element_construct_first_descendant (eclass, element, desc, forest->maxlevel);
+      scheme->element_get_first_descendant (eclass, element, desc, forest->maxlevel);
     }
     else {
-      scheme->element_construct_last_descendant (eclass, element, desc, forest->maxlevel);
+      scheme->element_get_last_descendant (eclass, element, desc, forest->maxlevel);
     }
     /* We can now check whether the first/last possible descendant matches the
      * first/last local descendant */
@@ -2060,7 +2059,7 @@ t8_forest_element_check_owner (t8_forest_t forest, t8_element_t *element, t8_glo
       /* Compute the linear id of the first descendant of element */
       if (!element_is_desc) {
         scheme->element_new (eclass, 1, &first_desc);
-        scheme->element_construct_first_descendant (eclass, element, first_desc, forest->maxlevel);
+        scheme->element_get_first_descendant (eclass, element, first_desc, forest->maxlevel);
         first_desc_id = scheme->element_get_linear_id (eclass, first_desc, forest->maxlevel);
         scheme->element_destroy (eclass, 1, &first_desc);
       }
@@ -2175,7 +2174,7 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid, t8_el
   else {
     /* Build the first descendant of element */
     scheme->element_new (eclass, 1, &first_desc);
-    scheme->element_construct_first_descendant (eclass, element, first_desc, forest->maxlevel);
+    scheme->element_get_first_descendant (eclass, element, first_desc, forest->maxlevel);
   }
 
   T8_ASSERT (forest->tree_offsets != NULL);
@@ -2343,7 +2342,7 @@ t8_forest_element_find_owner_old (t8_forest_t forest, t8_gloidx_t gtreeid, t8_el
   }
   /* Compute the first descendant of the element */
   scheme->element_new (eclass, 1, &element_first_desc);
-  scheme->element_construct_first_descendant (eclass, element, element_first_desc, forest->maxlevel);
+  scheme->element_get_first_descendant (eclass, element, element_first_desc, forest->maxlevel);
   /* Compute the linear of the first descendant */
   element_desc_lin_id = scheme->element_get_linear_id (eclass, element_first_desc, forest->maxlevel);
 
@@ -2551,9 +2550,9 @@ t8_forest_element_owners_bounds (t8_forest_t forest, t8_gloidx_t gtreeid, const 
 
   /* Compute the first and last descendant of element */
   scheme->element_new (eclass, 1, &first_desc);
-  scheme->element_construct_first_descendant (eclass, element, first_desc, forest->maxlevel);
+  scheme->element_get_first_descendant (eclass, element, first_desc, forest->maxlevel);
   scheme->element_new (eclass, 1, &last_desc);
-  scheme->element_construct_last_descendant (eclass, element, last_desc, forest->maxlevel);
+  scheme->element_get_last_descendant (eclass, element, last_desc, forest->maxlevel);
 
   /* Compute their owners as bounds for all of element's owners */
   *lower = t8_forest_element_find_owner_ext (forest, gtreeid, first_desc, eclass, *lower, *upper, *lower, 1);
@@ -2661,7 +2660,7 @@ t8_forest_element_has_leaf_desc (t8_forest_t forest, t8_gloidx_t gtreeid, const 
   /* TODO: element interface function t8_element_last_desc_id */
   scheme->element_new (tree_class, 1, &last_desc);
   /* TODO: set level in last_descendant */
-  scheme->element_construct_last_descendant (tree_class, element, last_desc, forest->maxlevel);
+  scheme->element_get_last_descendant (tree_class, element, last_desc, forest->maxlevel);
   last_desc_id = scheme->element_get_linear_id (tree_class, last_desc, forest->maxlevel);
   /* Get the level of the element */
   level = scheme->element_get_level (tree_class, element);
@@ -3201,7 +3200,7 @@ t8_forest_commit (t8_forest_t forest)
 
     /* increase reference count of cmesh and scheme from the input forest */
     t8_cmesh_ref (forest->set_from->cmesh);
-    t8_scheme_ref (forest->set_from->scheme);
+    forest->set_from->scheme->ref ();
     /* set the dimension, cmesh and scheme from the old forest */
     forest->dimension = forest->set_from->dimension;
     forest->cmesh = forest->set_from->cmesh;
@@ -4120,7 +4119,7 @@ t8_forest_new_uniform (t8_cmesh_t cmesh, t8_scheme *scheme, const int level, con
     t8_cmesh_t cmesh_uniform_partition;
     t8_cmesh_init (&cmesh_uniform_partition);
     t8_cmesh_set_derive (cmesh_uniform_partition, cmesh);
-    t8_scheme_ref (scheme);
+    scheme->ref ();
     t8_cmesh_set_partition_uniform (cmesh_uniform_partition, level, scheme);
     t8_cmesh_commit (cmesh_uniform_partition, comm);
     cmesh = cmesh_uniform_partition;
@@ -4226,7 +4225,7 @@ t8_forest_reset (t8_forest_t *pforest)
   }
   /* we have taken ownership on calling t8_forest_set_* */
   if (forest->scheme != NULL) {
-    t8_scheme_unref (&forest->scheme);
+    forest->scheme->unref ();
   }
   if (forest->cmesh != NULL) {
     t8_cmesh_unref (&forest->cmesh);

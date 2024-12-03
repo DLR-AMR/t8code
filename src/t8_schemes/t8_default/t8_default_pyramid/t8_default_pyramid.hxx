@@ -29,9 +29,12 @@
 #ifndef T8_DEFAULT_PYRAMID_HXX
 #define T8_DEFAULT_PYRAMID_HXX
 
-#include <t8_element.hxx>
+#include <t8_element.h>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.h>
+
+/* Forward declaration of the scheme so we can use it as an argument in the eclass schemes function. */
+class t8_scheme;
 
 /** Provide an implementation for the pyramid element class. It is written as a self-contained library in the 
  * t8_dpyramid_* files.
@@ -483,7 +486,7 @@ class t8_default_scheme_pyramid: public t8_default_scheme_common<t8_default_sche
    * \param [in] level    The level, at which the descendant is computed.
    */
   void
-  element_construct_first_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
+  element_get_first_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
 
   /** Compute the last descendant of a given element.
    * \param [in] elem     The element whose descendant is computed.
@@ -491,7 +494,7 @@ class t8_default_scheme_pyramid: public t8_default_scheme_common<t8_default_sche
    * \param [in] level    The level, at which the descendant is computed.
    */
   void
-  element_construct_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
+  element_get_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
 
   /** Construct the successor in a uniform refinement of a given element.
    * \param [in] elem1    The element whose successor should be constructed.

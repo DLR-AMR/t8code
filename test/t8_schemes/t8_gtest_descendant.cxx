@@ -47,7 +47,7 @@ class class_schemes_descendant: public testing::TestWithParam<t8_eclass_t> {
     scheme->element_destroy (tree_class, 1, &elem);
     scheme->element_destroy (tree_class, 1, &desc);
     scheme->element_destroy (tree_class, 1, &test);
-    t8_scheme_unref (&scheme);
+    scheme->unref ();
   }
 #ifdef T8_ENABLE_DEBUG
   const int maxlvl = 3;
@@ -75,12 +75,12 @@ t8_recursive_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *t
     scheme->element_get_child (tree_class, elem, ichild, desc);
     /* first child == first descendant. */
     if (ichild == 0) {
-      scheme->element_construct_first_descendant (tree_class, elem, test, level + 1);
+      scheme->element_get_first_descendant (tree_class, elem, test, level + 1);
       EXPECT_ELEM_EQ (scheme, tree_class, desc, test);
     }
     /* last child == last descendant. */
     else if (ichild == num_children - 1) {
-      scheme->element_construct_last_descendant (tree_class, elem, test, level + 1);
+      scheme->element_get_last_descendant (tree_class, elem, test, level + 1);
       EXPECT_ELEM_EQ (scheme, tree_class, desc, test);
     }
     else if (level > maxlvl) {
@@ -104,7 +104,7 @@ t8_deep_first_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *
     scheme->element_get_child (tree_class, test, 0, desc);
     scheme->element_copy (tree_class, desc, test);
   }
-  scheme->element_construct_first_descendant (tree_class, elem, test, level);
+  scheme->element_get_first_descendant (tree_class, elem, test, level);
   EXPECT_ELEM_EQ (scheme, tree_class, desc, test);
 }
 
@@ -124,7 +124,7 @@ t8_deep_last_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *t
     scheme->element_copy (tree_class, desc, test);
   }
   /* Check for equality. */
-  scheme->element_construct_last_descendant (tree_class, elem, test, level);
+  scheme->element_get_last_descendant (tree_class, elem, test, level);
   EXPECT_ELEM_EQ (scheme, tree_class, desc, test);
 }
 

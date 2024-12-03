@@ -28,7 +28,6 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_cmesh/t8_cmesh_trees.h>
-#include <t8_element.hxx>
 #include <t8_data/t8_containers.h>
 #include <sc_statistics.h>
 

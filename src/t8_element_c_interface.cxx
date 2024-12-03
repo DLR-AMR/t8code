@@ -27,7 +27,6 @@
  */
 
 #include <t8_element.h>
-#include <t8_element.hxx>
 #include <t8_element_c_interface.h>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_forest/t8_forest_types.h>
@@ -362,21 +361,21 @@ t8_element_get_linear_id (const t8_forest_t forest, const t8_eclass_t tree_class
 }
 
 void
-t8_element_construct_first_descendant (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem,
-                                       t8_element_t *desc, int level)
+t8_element_get_first_descendant (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem,
+                                 t8_element_t *desc, int level)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  return forest->scheme->element_construct_first_descendant (tree_class, elem, desc, level);
+  return forest->scheme->element_get_first_descendant (tree_class, elem, desc, level);
 }
 
 void
-t8_element_construct_last_descendant (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem,
-                                      t8_element_t *desc, const int level)
+t8_element_get_last_descendant (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem,
+                                t8_element_t *desc, const int level)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  return forest->scheme->element_construct_last_descendant (tree_class, elem, desc, level);
+  return forest->scheme->element_get_last_descendant (tree_class, elem, desc, level);
 }
 
 void

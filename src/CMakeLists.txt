@@ -125,6 +125,7 @@ target_sources( T8 PRIVATE
     t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.cxx 
     t8_geometry/t8_geometry_implementations/t8_geometry_zero.cxx 
     t8_geometry/t8_geometry_implementations/t8_geometry_examples.cxx 
+    t8_schemes/t8_scheme.cxx
     t8_schemes/t8_default/t8_default.cxx
     t8_schemes/t8_default/t8_default_hex/t8_default_hex.cxx
     t8_schemes/t8_default/t8_default_hex/t8_dhex_bits.c

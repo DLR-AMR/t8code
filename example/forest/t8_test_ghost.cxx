@@ -23,7 +23,6 @@
 #include <sc_options.h>
 #include <sc_refcount.h>
 #include <t8_eclass.h>
-#include <t8_element.hxx>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>

@@ -27,9 +27,10 @@
 #ifndef T8_DEFAULT_COMMON_HXX
 #define T8_DEFAULT_COMMON_HXX
 
-#include <t8_element.hxx>
+#include <t8_element.h>
 #include <t8_schemes/t8_crtp.hxx>
 #include <sc_functions.h>
+#include <sc_containers.h>
 
 /* Macro to check whether a pointer (VAR) to a base class, comes from an
  * implementation of a child class (TYPE). */
@@ -160,11 +161,22 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclassScheme> {
     return *this;
   }
 
+  /** Return the size of any element of a given class.
+   * \return                      The size of an element of class \b ts.
+   * We provide a default implementation of this routine that should suffice
+   * for most use cases.
+   */
+  inline size_t
+  get_element_size (void) const
+  {
+    return element_size;
+  }
+
   /** Compute the number of corners of a given element.
    * \return The number of corners of the element.
    * \note This function is overwritten by the pyramid implementation.
   */
-  int
+  inline int
   element_get_num_corners (const t8_element_t *elem) const
   {
     /* use the lookup table of the eclasses.
@@ -176,20 +188,20 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclassScheme> {
    * \param [in] length The number of elements to allocate.
    * \param [out] elem  The elements to allocate.
   */
-  void
+  inline void
   element_new (const int length, t8_element_t **elem) const
   {
     t8_default_mempool_alloc ((sc_mempool_t *) ts_context, length, elem);
   }
 
   /** Deallocate space for a bunch of elements. */
-  void
+  inline void
   element_destroy (const int length, t8_element_t **elem) const
   {
     t8_default_mempool_free ((sc_mempool_t *) ts_context, length, elem);
   }
 
-  void
+  inline void
   element_deinit (int length, t8_element_t *elem) const
   {
   }
@@ -199,7 +211,7 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclassScheme> {
    * \return The shape of the element.
    * \note This function is overwritten by the pyramid implementation.
   */
-  t8_element_shape_t
+  inline t8_element_shape_t
   element_get_shape (const t8_element_t *elem) const
   {
     /* use the lookup table of the eclasses.
@@ -216,7 +228,7 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclassScheme> {
    * children.
    * \note This function is overwritten by the pyramid implementation.
    */
-  t8_gloidx_t
+  inline t8_gloidx_t
   element_count_leaves (const t8_element_t *t, int level) const
   {
     const int element_level = this->underlying ().element_get_level (t);
@@ -231,7 +243,7 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclassScheme> {
    * \note This function is overwritten by the pyramid implementation.
    * \note that this number is >= 1, since we count the element itself as a sibling.
    */
-  int
+  inline int
   element_get_num_siblings (const t8_element_t *elem) const
   {
     const int dim = t8_eclass_to_dimension[eclass];
@@ -245,7 +257,7 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclassScheme> {
    *      is the root (level 0) element.
    * \note This function is overwritten by the pyramid implementation.
    */
-  t8_gloidx_t
+  inline t8_gloidx_t
   count_leaves_from_root (const int level) const
   {
     if (eclass == T8_ECLASS_PYRAMID) {
@@ -256,7 +268,7 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclassScheme> {
   }
 
 #if T8_ENABLE_DEBUG
-  void
+  inline void
   element_debug_print (const t8_element_t *elem) const
   {
     char debug_string[BUFSIZ];

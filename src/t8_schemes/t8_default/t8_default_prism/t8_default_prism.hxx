@@ -29,11 +29,14 @@
 #ifndef T8_DEFAULT_PRISM_HXX
 #define T8_DEFAULT_PRISM_HXX
 
-#include <t8_element.hxx>
+#include <t8_element.h>
 #include <t8_schemes/t8_default/t8_default_line/t8_default_line.hxx>
 #include <t8_schemes/t8_default/t8_default_tri/t8_default_tri.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 #include <t8_schemes/t8_default/t8_default_prism/t8_dprism_bits.h>
+
+/* Forward declaration of the scheme so we can use it as an argument in the eclass schemes function. */
+class t8_scheme;
 
 /** Provide an implementation for the prism element class.
  * It is written as a self-contained library in the t8_dprism_* files.
@@ -464,7 +467,7 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
    * \param [in] level    The level, at which the descendant is computed.
    */
   void
-  element_construct_first_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
+  element_get_first_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
 
   /** Compute the last descendant of a given element.
    * \param [in] elem     The element whose descendant is computed.
@@ -472,7 +475,7 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
    * \param [in] level    The level, at which the descendant is computed.
    */
   void
-  element_construct_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
+  element_get_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
 
   /** Construct the successor in a uniform refinement of a given element.
    * \param [in] elem1    The element whose successor should be constructed.

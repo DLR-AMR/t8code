@@ -55,7 +55,6 @@ These functions write a file in the NetCDF-format which represents the given 2D-
 #define NC_COLLECTIVE 1
 #endif
 #endif
-#include <t8_element.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest_netcdf.h>

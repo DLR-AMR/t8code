@@ -31,6 +31,7 @@
 #include <t8_data/t8_shmem.h>
 #include <t8_cmesh/t8_cmesh_save.h>
 #include <t8_element.h>
+#include <t8_schemes/t8_scheme.h>
 
 /* Forward pointer reference to hidden cmesh implementation.
  * This reference needs to be known by t8_geometry, hence we 

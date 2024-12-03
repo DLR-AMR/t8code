@@ -159,11 +159,11 @@ TEST_P (forest_commit, test_forest_commit)
     forest_abp_3part = t8_test_forest_commit_abp_3step (forest, maxlevel);
 
     ASSERT_TRUE (t8_forest_is_equal (forest_abp_3part, forest_ada_bal_part)) << "The forests are not equal";
-    t8_scheme_ref (scheme);
+    scheme->ref ();
     t8_forest_unref (&forest_ada_bal_part);
     t8_forest_unref (&forest_abp_3part);
   }
-  t8_scheme_unref (&scheme);
+  scheme->unref ();
   t8_debugf ("Done testing forest commit.");
 }
 

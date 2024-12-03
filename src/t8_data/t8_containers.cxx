@@ -24,7 +24,6 @@
  * TODO: document this file
  */
 
-#include <t8_element.hxx>
 #include <sc_containers.h>
 #include <t8_data/t8_containers.h>
 #include <t8_schemes/t8_scheme.hxx>

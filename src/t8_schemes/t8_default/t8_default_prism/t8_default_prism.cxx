@@ -367,8 +367,7 @@ t8_default_scheme_prism::element_construct_successor (const t8_element_t *elem, 
 }
 
 void
-t8_default_scheme_prism::element_construct_first_descendant (const t8_element_t *elem, t8_element_t *desc,
-                                                             int level) const
+t8_default_scheme_prism::element_get_first_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const
 {
   T8_ASSERT (0 <= level && level <= T8_DPRISM_MAXLEVEL);
   T8_ASSERT (element_is_valid (elem));
@@ -377,8 +376,7 @@ t8_default_scheme_prism::element_construct_first_descendant (const t8_element_t 
 }
 
 void
-t8_default_scheme_prism::element_construct_last_descendant (const t8_element_t *elem, t8_element_t *desc,
-                                                            int level) const
+t8_default_scheme_prism::element_get_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const
 {
   T8_ASSERT (0 <= level && level <= T8_DPRISM_MAXLEVEL);
   T8_ASSERT (element_is_valid (elem));
