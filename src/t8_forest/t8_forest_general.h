@@ -627,7 +627,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8
  *
  */
 void
-t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf,
+t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf_or_ghost,
                                    t8_element_t **pneighbor_leaves[], int face, int *dual_faces[], int *num_neighbors,
                                    t8_locidx_t **pelement_indices, t8_eclass_scheme_c **pneigh_scheme,
                                    int forest_is_balanced, t8_gloidx_t *gneigh_tree, int *orientation);
