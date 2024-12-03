@@ -1757,12 +1757,11 @@ t8_forest_leaf_face_neighbors_iterate (t8_forest_t forest, t8_locidx_t ltreeid, 
   return 1;
 }
 
-// TODO: ltreeid must be forest ghost tree id i.e. num_local_trees + N
 void
 t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf_or_ghost,
                                    t8_element_t **pneighbor_leaves[], int face, int *dual_faces[], int *num_neighbors,
                                    t8_locidx_t **pelement_indices, t8_eclass_scheme_c **pneigh_scheme,
-                                   int forest_is_balanced, t8_gloidx_t *gneigh_tree, int *orientation)
+                                   t8_gloidx_t *gneigh_tree, int *orientation)
 {
 
   T8_ASSERT (t8_forest_is_committed (forest));
@@ -2135,11 +2134,10 @@ else
 void
 t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf,
                                t8_element_t **pneighbor_leaves[], int face, int *dual_faces[], int *num_neighbors,
-                               t8_locidx_t **pelement_indices, t8_eclass_scheme_c **pneigh_scheme,
-                               int forest_is_balanced)
+                               t8_locidx_t **pelement_indices, t8_eclass_scheme_c **pneigh_scheme)
 {
   t8_forest_leaf_face_neighbors_ext (forest, ltreeid, leaf, pneighbor_leaves, face, dual_faces, num_neighbors,
-                                     pelement_indices, pneigh_scheme, forest_is_balanced, NULL, NULL);
+                                     pelement_indices, pneigh_scheme, NULL, NULL);
 }
 
 void
@@ -2176,7 +2174,7 @@ t8_forest_print_all_leaf_neighbors (t8_forest_t forest)
     /* Iterate over all faces */
     for (iface = 0; iface < ts->t8_element_num_faces (leaf); iface++) {
       t8_forest_leaf_face_neighbors (forest, ltree, leaf, &neighbor_leaves, iface, &dual_faces, &num_neighbors,
-                                     &element_indices, &neigh_scheme, 1);
+                                     &element_indices, &neigh_scheme);
       t8_debugf ("Element %li across face %i has %i leaf neighbors (with dual faces).\n", (long) ielem, iface,
                  num_neighbors);
       snprintf (buffer, BUFSIZ, "\tIndices:\t");

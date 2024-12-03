@@ -566,11 +566,8 @@ t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, 
  *                        0, 1, ... num_local_el - 1 for local leaves and
  *                        num_local_el , ... , num_local_el + num_ghosts - 1 for ghosts.
  * \param [out]   pneigh_scheme On output the eclass scheme of the neighbor elements.
- * \param [in]    forest_is_balanced True if we know that \a forest is balanced, false
- *                        otherwise.
  * \note If there are no face neighbors, then *neighbor_leaves = NULL, num_neighbors = 0,
  * and *pelement_indices = NULL on output.
- * \note Currently \a forest must be balanced.
  * \note \a forest must be committed before calling this function.
  *
  * \note Important! This routine allocates memory which must be freed. Do it like this:
@@ -586,8 +583,7 @@ t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, 
 void
 t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf,
                                t8_element_t **pneighbor_leaves[], int face, int *dual_faces[], int *num_neighbors,
-                               t8_locidx_t **pelement_indices, t8_eclass_scheme_c **pneigh_scheme,
-                               int forest_is_balanced);
+                               t8_locidx_t **pelement_indices, t8_eclass_scheme_c **pneigh_scheme);
 
 /** Like \ref t8_forest_leaf_face_neighbors but also provides information about the global neighbors and the orientation. 
  * \param [in]    forest  The forest. Must have a valid ghost layer.
@@ -604,8 +600,6 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8
  *                        0, 1, ... num_local_el - 1 for local leaves and
  *                        num_local_el , ... , num_local_el + num_ghosts - 1 for ghosts.
  * \param [out]   pneigh_scheme On output the eclass scheme of the neighbor elements.
- * \param [in]    forest_is_balanced True if we know that \a forest is balanced, false
- *                        otherwise.
  * \param [out]   gneigh_tree  The global tree IDs of the neighbor trees.
  * \param [out]   orientation  If not NULL on input, the face orientation is computed and stored here. 
  *                                         Thus, if the face connection is an inter-tree connection the orientation of the tree-to-tree connection is stored. 
@@ -613,7 +607,6 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8
  * All other parameters and behavior are identical to \ref `t8_forest_leaf_face_neighbors`.
  * \note If there are no face neighbors, then *neighbor_leaves = NULL, num_neighbors = 0,
  * and *pelement_indices = NULL on output.
- * \note Currently \a forest must be balanced.
  * \note \a forest must be committed before calling this function.
  *
  * \note Important! This routine allocates memory which must be freed. Do it like this:
@@ -630,7 +623,7 @@ void
 t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf_or_ghost,
                                    t8_element_t **pneighbor_leaves[], int face, int *dual_faces[], int *num_neighbors,
                                    t8_locidx_t **pelement_indices, t8_eclass_scheme_c **pneigh_scheme,
-                                   int forest_is_balanced, t8_gloidx_t *gneigh_tree, int *orientation);
+                                   t8_gloidx_t *gneigh_tree, int *orientation);
 
 /** Exchange ghost information of user defined element data.
  * \param[in] forest       The forest. Must be committed.

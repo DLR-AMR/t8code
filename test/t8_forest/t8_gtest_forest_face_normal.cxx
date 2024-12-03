@@ -81,14 +81,13 @@ TEST_P (class_forest_face_normal, back_and_forth)
 
         t8_element_t **neighbors;
         int num_neighbors;
-        const int forest_is_balanced = 1;
         t8_eclass_scheme_c *neigh_scheme;
         int *dual_faces;
         t8_locidx_t *neigh_ids;
 
         t8_gloidx_t gneightree;
         t8_forest_leaf_face_neighbors_ext (forest, itree, element, &neighbors, iface, &dual_faces, &num_neighbors,
-                                           &neigh_ids, &neigh_scheme, forest_is_balanced, &gneightree, NULL);
+                                           &neigh_ids, &neigh_scheme, &gneightree, NULL);
 
         /* Iterate and compute their facenormal */
         for (int ineigh = 0; ineigh < num_neighbors; ineigh++) {
