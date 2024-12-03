@@ -1894,16 +1894,19 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
       // neighbor data.
       // TODO: Since there is no other way, we copy them from the vectors.
       //       This should be improved in the future to get around the copy.
+
+      *num_neighbors = user_data.neighbors.size ();
+      // Copy neighbor element pointers
+      *pneighbor_leaves = T8_ALLOC (t8_element_t *, *num_neighbors);
+      memcpy (*pneighbor_leaves, user_data.neighbors.data (), *num_neighbors * sizeof (t8_element_t *));
+      *pelement_indices = T8_ALLOC (t8_locidx_t, *num_neighbors);
+      memcpy (*pelement_indices, user_data.element_indices.data (), *num_neighbors * sizeof (t8_locidx_t));
+      *dual_faces = T8_ALLOC (int, *num_neighbors);
+      memcpy (*dual_faces, user_data.dual_faces.data (), *num_neighbors * sizeof (int));
     }
-    *num_neighbors = user_data.neighbors.size ();
-    // Copy neighbor element pointers
-    *pneighbor_leaves = T8_ALLOC (t8_element_t *, *num_neighbors);
-    memcpy (*pneighbor_leaves, user_data.neighbors.data (), *num_neighbors * sizeof (t8_element_t *));
-    *pelement_indices = T8_ALLOC (t8_locidx_t, *num_neighbors);
-    memcpy (*pelement_indices, user_data.element_indices.data (), *num_neighbors * sizeof (t8_locidx_t));
-    *dual_faces = T8_ALLOC (int, *num_neighbors);
-    memcpy (*dual_faces, user_data.dual_faces.data (), *num_neighbors * sizeof (int));
   }
+  // We must have found face neighbors by now.
+  T8_ASSERT (*num_neighbors > 0);
 #if 0
 t8_locidx_t lneigh_treeid = -1;
   t8_locidx_t lghost_treeid = -1, *element_indices, element_index;
