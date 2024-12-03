@@ -1839,14 +1839,17 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
       leaf_arrays.push_back (tree_leafs);
     }
   }
-  const t8_locidx_t local_neighbor_ghost_treeid = t8_forest_ghost_get_ghost_treeid (forest, gneigh_treeid);
-  if (local_neighbor_ghost_treeid >= 0) {
-    // The neighbor tree is also a ghost tree and face neighbors of our element might
-    // be ghost elements.
-    // We add the ghost elements of that tree to our search array.
-    const t8_element_array_t *ghost_leafs = t8_forest_ghost_get_tree_elements (forest, local_neighbor_ghost_treeid);
-    if (ghost_leafs != nullptr) {
-      leaf_arrays.push_back (ghost_leafs);
+
+  if (forest->ghosts != NULL) {
+    const t8_locidx_t local_neighbor_ghost_treeid = t8_forest_ghost_get_ghost_treeid (forest, gneigh_treeid);
+    if (local_neighbor_ghost_treeid >= 0) {
+      // The neighbor tree is also a ghost tree and face neighbors of our element might
+      // be ghost elements.
+      // We add the ghost elements of that tree to our search array.
+      const t8_element_array_t *ghost_leafs = t8_forest_ghost_get_tree_elements (forest, local_neighbor_ghost_treeid);
+      if (ghost_leafs != nullptr) {
+        leaf_arrays.push_back (ghost_leafs);
+      }
     }
   }
 
