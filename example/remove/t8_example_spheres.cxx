@@ -22,7 +22,7 @@
 
 #include <t8.h>
 #include <t8_forest/t8_forest.h>
-#include <t8_types/t8_vec.h>
+#include <t8_types/t8_vec.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <sc_options.h>
@@ -34,7 +34,7 @@ struct t8_adapt_data
   const int num_spheres;
   const double spheres_radius_inner;
   const double spheres_radius_outer;
-  const double *midpoints;
+  const t8_3D_point *midpoints;
 };
 
 /* Refine, if element is within a given radius. */
@@ -45,11 +45,11 @@ t8_adapt_callback_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
   T8_ASSERT (adapt_data != NULL);
 
-  double centroid[3];
-  t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
+  t8_3D_point centroid;
+  t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid.data ());
 
   for (int i = 0; i < adapt_data->num_spheres; i++) {
-    const double dist = t8_dist_c_interface (adapt_data->midpoints + (i * 3), centroid);
+    const double dist = t8_dist (adapt_data->midpoints + (i * 3), centroid);
     if (dist < adapt_data->spheres_radius_outer) {
       return 1;
     }
@@ -65,11 +65,11 @@ t8_adapt_callback_remove (t8_forest_t forest, t8_forest_t forest_from, t8_locidx
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
   T8_ASSERT (adapt_data != NULL);
 
-  double centroid[3];
-  t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
+  t8_3D_point centroid;
+  t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid.data ());
 
   for (int i = 0; i < adapt_data->num_spheres; i++) {
-    const double dist = t8_dist_c_interface (adapt_data->midpoints + (i * 3), centroid);
+    const double dist = t8_dist (adapt_data->midpoints + (i * 3), centroid);
     if (dist < adapt_data->spheres_radius_inner) {
       return -2;
     }

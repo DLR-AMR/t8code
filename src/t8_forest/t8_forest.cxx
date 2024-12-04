@@ -22,7 +22,7 @@
 
 #include <sc_statistics.h>
 #include <t8_refcount.h>
-#include <t8_vec.h>
+#include <t8_types/t8_vec.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_types.h>
@@ -568,7 +568,7 @@ t8_forest_element_tet_volume (const double coordinates[4][3])
   }
 
   /* Compute the cross product of the 2nd and 3rd */
-  t8_cross_c_interface (coordinates_tmp[1], coordinates_tmp[2], cross);
+  t8_cross_3D_c_interface (coordinates_tmp[1], coordinates_tmp[2], cross);
 
   /* return |(a-d) * ((b-d)x(c-d))| / 6 */
   return fabs (t8_dot_c_interface (coordinates_tmp[0], cross)) / 6;
@@ -685,7 +685,7 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid, const t8_elem
     }
 
     /* Compute the cross product of the 2nd and 3rd */
-    t8_cross_c_interface (coordinates[2], coordinates[3], cross);
+    t8_cross_3D_c_interface (coordinates[2], coordinates[3], cross);
 
     /* return |(a-d) * ((b-d)x(c-d))| */
     return fabs (t8_dot_c_interface (coordinates[1], cross));
@@ -925,15 +925,15 @@ t8_four_points_coplanar (const double p_0[3], const double p_1[3], const double 
 
   /* n1 = A x B */
   double A_cross_B[3];
-  t8_cross_c_interface (A, B, A_cross_B);
+  t8_cross_3D_c_interface (A, B, A_cross_B);
 
   /* n2 = A x C */
   double A_cross_C[3];
-  t8_cross_c_interface (A, C, A_cross_C);
+  t8_cross_3D_c_interface (A, C, A_cross_C);
 
   /* n1 x n2 */
   double n1_cross_n2[3];
-  t8_cross_c_interface (A_cross_B, A_cross_C, n1_cross_n2);
+  t8_cross_3D_c_interface (A_cross_B, A_cross_C, n1_cross_n2);
 
   /* || n1 x n2 || */
   const double norm = t8_norm_c_interface (n1_cross_n2);
@@ -1087,7 +1087,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
 
     /* Compute the cross product of the two,
      * and the norm of the cross product */
-    t8_cross_c_interface (corner_vertices[1], corner_vertices[2], normal);
+    t8_cross_3D_c_interface (corner_vertices[1], corner_vertices[2], normal);
     norm = t8_norm_c_interface (normal);
     T8_ASSERT (norm > 1e-14);
     /* Compute the coordinates of the center of the element */

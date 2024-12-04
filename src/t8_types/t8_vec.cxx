@@ -48,8 +48,8 @@ t8_copy_c_interface (const double vec_in[3], double vec_out[3])
 double
 t8_dist_c_interface (const double vec_x[3], const double vec_y[3])
 {
-  t8_3D_vec vec_array_x ({ vec_x[0], vec_x[1], vec_x[2] });
-  t8_3D_vec vec_array_y ({ vec_y[0], vec_y[1], vec_y[2] });
+  t8_3D_point vec_array_x ({ vec_x[0], vec_x[1], vec_x[2] });
+  t8_3D_point vec_array_y ({ vec_y[0], vec_y[1], vec_y[2] });
   return t8_dist (vec_array_x, vec_array_y);
 }
 
@@ -102,11 +102,19 @@ t8_dot_c_interface (const double vec_x[3], const double vec_y[3])
 }
 
 void
-t8_cross_c_interface (const double vec_x[3], const double vec_y[3], double cross[3])
+t8_cross_3D_c_interface (const double vec_x[3], const double vec_y[3], double cross[3])
 {
   t8_3D_vec vec_array_x ({ vec_x[0], vec_x[1], vec_x[2] });
   t8_3D_vec vec_array_y ({ vec_y[0], vec_y[1], vec_y[2] });
-  t8_cross (vec_array_x, vec_array_y, cross);
+  t8_cross_3D (vec_array_x, vec_array_y, cross);
+}
+
+void
+t8_cross_2D_c_interface (const double vec_x[2], const double vec_y[2], double cross)
+{
+  t8_3D_vec vec_array_x ({ vec_x[0], vec_x[1] });
+  t8_3D_vec vec_array_y ({ vec_y[0], vec_y[1] });
+  t8_cross_2D (vec_array_x, vec_array_y, cross);
 }
 
 void
@@ -155,5 +163,5 @@ t8_swap_c_interface (double p1[3], double p2[3])
 {
   t8_3D_vec p1_array ({ p1[0], p1[1], p1[2] });
   t8_3D_vec p2_array ({ p2[0], p2[1], p2[2] });
-  t8_vec_swap (p1_array, p2_array);
+  t8_swap (p1_array, p2_array);
 }

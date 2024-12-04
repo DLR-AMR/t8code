@@ -57,7 +57,7 @@ struct t8_step7_element_data_t
  * adaptation callback. */
 typedef struct t8_step7_adapt_data
 {
-  double midpoint[3];               /* The midpoint of our sphere. */
+  t8_3D_point midpoint;             /* The midpoint of our sphere. */
   double refine_if_inside_radius;   /* if an element's center is smaller than this value, we refine the element. */
   double coarsen_if_outside_radius; /* if an element's center is larger this value, we coarsen its family. */
   sc_array_t *element_data;
@@ -116,7 +116,7 @@ t8_step7_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_
 {
   /* Our adaptation criterion is to look at the midpoint coordinates of the current element and if
    * they are inside a sphere around a given midpoint we refine, if they are outside, we coarsen. */
-  double centroid[3]; /* Will hold the element midpoint. */
+  t8_3D_vec centroid; /* Will hold the element midpoint. */
   /* In t8_step3_adapt_forest we pass a t8_step3_adapt_data pointer as user data to the
    * t8_forest_new_adapt function. This pointer is stored as the used data of the new forest
    * and we can now access it with t8_forest_get_user_data (forest). */
@@ -131,10 +131,10 @@ t8_step7_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_
   T8_ASSERT (adapt_data != NULL);
 
   /* Compute the element's centroid coordinates. */
-  t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
+  t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid.data ());
 
   /* Compute the distance to our sphere midpoint. */
-  dist = t8_vec_dist (centroid, adapt_data->midpoint);
+  dist = t8_dist (centroid, adapt_data->midpoint);
   if (dist < adapt_data->refine_if_inside_radius) {
     /* Refine this element. */
     return 1;
@@ -284,8 +284,8 @@ t8_interpolation ()
   t8_forest_t forest_adapt;
   t8_step7_element_data_t *elem_data;
   t8_step7_adapt_data *data;
-  double centroid[3];
-  const double midpoint[3] = { 0.5, 0.5, 1 };
+  t8_3D_point centroid;
+  const t8_3D_point midpoint ({ 0.5, 0.5, 1 });
   t8_scheme_cxx_t *scheme = t8_scheme_new_default_cxx ();
 
   /* Construct a cmesh */
@@ -314,10 +314,10 @@ t8_interpolation ()
       const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielem_tree);
 
       /* Get the centroid of the local element. */
-      t8_forest_element_centroid (forest, itree, element, centroid);
+      t8_forest_element_centroid (forest, itree, element, centroid.data ());
 
       /* Calculation of the distance to the centroid for the referenced element */
-      elem_data->values = t8_vec_dist (centroid, midpoint);
+      elem_data->values = t8_dist (centroid, midpoint);
 
       t8_element_set_element (data, ielem, *elem_data);
     }
