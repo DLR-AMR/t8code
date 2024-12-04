@@ -89,10 +89,10 @@ element_equality (const char *ts_expr, const char *tree_class_expr, const char *
  * \return testing::AssertionResult 
  */
 testing::AssertionResult
-vec3_equality (const char *vec_1_expr, const char *vec_2_expr, const char *precision_expr, const double vec_1[3],
-               const double vec_2[3], const double precision)
+vec3_equality (const char *vec_1_expr, const char *vec_2_expr, const char *precision_expr, const t8_3D_vec vec_1,
+               const t8_3D_vec vec_2, const double precision)
 {
-  if (t8_vec_eq (vec_1, vec_2, precision)) {
+  if (t8_eq (vec_1, vec_2, precision)) {
     return testing::AssertionSuccess ();
   }
   else {

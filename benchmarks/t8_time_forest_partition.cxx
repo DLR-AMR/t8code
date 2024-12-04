@@ -38,8 +38,8 @@
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_profiling.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
-#include <example/common/t8_example_common.h>
-#include <t8_types/t8_vec.h>
+#include <example/common/t8_example_common.hxx>
+#include <t8_types/t8_vec.hxx>
 
 /* This is the user defined data used to define the
  * region in which we partition.
@@ -49,7 +49,7 @@
 typedef struct
 {
   double c_min, c_max; /* constants that define the thickness of the refinement region */
-  double normal[3];    /* normal vector to the plane E */
+  t8_3D_vec normal;    /* normal vector to the plane E */
   int base_level;      /* A given level that is not coarsend further, see -l argument */
   int max_level;       /* A max level that is not refined further, see -L argument */
 } adapt_data_t;
@@ -89,8 +89,8 @@ t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tr
                t8_element_t *elements[])
 {
   int level, base_level, max_level;
-  double elem_midpoint[3];
-  double *normal;
+  t8_3D_vec elem_midpoint;
+  t8_3D_vec normal;
   adapt_data_t *adapt_data;
 
   T8_ASSERT (!is_family || num_elements == scheme->element_get_num_children (tree_class, elements[0]));
@@ -101,21 +101,21 @@ t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tr
   base_level = adapt_data->base_level;
   max_level = adapt_data->max_level;
   /* Compute the coordinates of the anchor node. */
-  t8_forest_element_centroid (forest_from, which_tree, elements[0], elem_midpoint);
+  t8_forest_element_centroid (forest_from, which_tree, elements[0], elem_midpoint.data ());
 
   /* Calculate elem_midpoint - c_min n */
-  t8_axy_c_interface (elem_midpoint, normal, adapt_data->c_min);
+  t8_axy (elem_midpoint, normal, adapt_data->c_min);
 
   /* The purpose of the factor C*h is that the levels get smaller, the
    * closer we get to the interface. We refine a cell if it is at most
    * C times its own height away from the interface */
-  if (t8_dot_c_interface (elem_midpoint, normal) >= 0) {
+  if (t8_dot (elem_midpoint, normal) >= 0) {
     /* if the anchor node is to the right of c_min*E,
      * check if it is to the left of c_max*E */
 
     /* set elem_midpoint to the original anchor - c_max*normal */
-    t8_axy_c_interface (elem_midpoint, normal, adapt_data->c_max - adapt_data->c_min);
-    if (t8_dot_c_interface (elem_midpoint, normal) <= 0) {
+    t8_axy (elem_midpoint, normal, adapt_data->c_max - adapt_data->c_min);
+    if (t8_dot (elem_midpoint, normal) <= 0) {
       if (level < max_level) {
         /* We do refine if level smaller 1+base level and the anchor is
          * to the left of c_max*E */
@@ -135,16 +135,6 @@ t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tr
     return -1;
   }
   return 0;
-}
-
-static void
-t8_vec3_normalize (double *v)
-{
-  double norm = sqrt (t8_dot_c_interface (v, v));
-
-  v[0] /= norm;
-  v[1] /= norm;
-  v[2] /= norm;
 }
 
 /* Create a cmesh from a .msh files uniform level 0
@@ -195,7 +185,7 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix, sc_MPI_C
   adapt_data.normal[0] = 0.8;
   adapt_data.normal[1] = 0.3;
   adapt_data.normal[2] = 0.0;
-  t8_vec3_normalize (adapt_data.normal);
+  t8_normalize (adapt_data.normal);
   adapt_data.base_level = init_level;
   adapt_data.max_level = max_level;
   /* Start the time loop, in each time step the refinement front  moves

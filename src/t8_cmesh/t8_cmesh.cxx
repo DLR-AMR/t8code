@@ -579,7 +579,7 @@ t8_cmesh_tree_vertices_negative_volume (const t8_eclass_t eclass, const double *
     v_j[2] = 1.0;
 
     /* Compute cross = v_1 x v_2. */
-    t8_cross_c_interface (v_1, v_2, cross);
+    t8_cross_3D_c_interface (v_1, v_2, cross);
     /* Compute sc_prod = <v_j, cross>. */
     sc_prod = t8_dot_c_interface (v_j, cross);
 
@@ -602,7 +602,7 @@ t8_cmesh_tree_vertices_negative_volume (const t8_eclass_t eclass, const double *
     v_j[i] = vertices[3 * j + i] - vertices[i];
   }
   /* compute cross = v_1 x v_2 */
-  t8_cross_c_interface (v_1, v_2, cross);
+  t8_cross_3D_c_interface (v_1, v_2, cross);
   /* Compute sc_prod = <v_j, cross> */
   sc_prod = t8_dot_c_interface (v_j, cross);
 

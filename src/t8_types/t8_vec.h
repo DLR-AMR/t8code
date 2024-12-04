@@ -116,7 +116,15 @@ t8_dot_c_interface (const double vec_x[3], const double vec_y[3]);
  * \param [out] cross  On output, the cross product of \a vec_x and \a vec_y.
  */
 void
-t8_cross_c_interface (const double vec_x[3], const double vec_y[3], double cross[3]);
+t8_cross_3D_c_interface (const double vec_x[3], const double vec_y[3], double cross[3]);
+
+/** Cross product of X and Y
+ * \param [in]  vec_x  A 2D vector.
+ * \param [in]  vec_y  A 2D vector.
+ * \param [out] cross  On output, the cross product of \a vec_x and \a vec_y.
+ */
+void
+t8_cross_2D_c_interface (const double vec_x[2], const double vec_y[2], double cross);
 
 /** Compute the difference of two vectors.
  * \param [in]  vec_x  A 3D vector.

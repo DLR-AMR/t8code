@@ -74,8 +74,8 @@ t8_geometry_with_vertices::t8_geom_tree_negative_volume () const
    */
 
   /* build the vectors v_i as vertices_i - vertices_0 */
-  t8_3D_vec v_1, v_2, v_j, cross, sc_prod;
-  int jvector_source;
+  t8_3D_vec v_1, v_2, v_j, cross;
+  int jvector_source, sc_prod;
   if (active_tree_class == T8_ECLASS_TET || active_tree_class == T8_ECLASS_PRISM) {
     /* In the tet/prism case, the third vector is v_3 */
     jvector_source = 3;
@@ -90,7 +90,7 @@ t8_geometry_with_vertices::t8_geom_tree_negative_volume () const
     v_j[dim] = active_tree_vertices[3 * jvector_source + dim] - active_tree_vertices[dim];
   }
   /* compute cross = v_1 x v_2 */
-  t8_cross (v_1, v_2, cross);
+  t8_cross_3D (v_1, v_2, cross);
   /* Compute sc_prod = <v_j, cross> */
   sc_prod = t8_dot (v_j, cross);
 
