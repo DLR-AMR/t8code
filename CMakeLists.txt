@@ -4,7 +4,7 @@ include(cmake/GitProjectVersion.cmake)
 
 project( T8CODE
   DESCRIPTION "Parallel algorithms and data structures for tree-based AMR with arbitrary element shapes."
-  LANGUAGES C CXX Fortran
+  LANGUAGES C CXX
   VERSION "${T8CODE_VERSION_MAJOR}.${T8CODE_VERSION_MINOR}.${T8CODE_VERSION_PATCH}" )
 include( CTest )
 
@@ -46,15 +46,27 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     "Debug" "Release" "RelWithDebInfo")
 endif()
 
-set( CMAKE_C_STANDARD 11 )
+if( NOT DEFINED CMAKE_C_STANDARD ) 
+  set( CMAKE_C_STANDARD 11 )
+elseif( CMAKE_C_STANDARD LESS 11 )
+  message( FATAL_ERROR "The CMAKE_C_STANDARD variable has been set to ${CMAKE_C_STANDARD}, but t8code requires C11" )
+endif()
 set( CMAKE_C_STANDARD_REQUIRED ON )
 set( CMAKE_C_EXTENSIONS OFF )
 
-set( CMAKE_CXX_STANDARD 17 )
+if( NOT DEFINED CMAKE_CXX_STANDARD ) 
+  set( CMAKE_CXX_STANDARD 20 )
+elseif( CMAKE_CXX_STANDARD LESS 20 )
+  message( FATAL_ERROR "The CMAKE_CXX_STANDARD variable has been set to ${CMAKE_CXX_STANDARD}, but t8code requires C++20" )
+endif()
 set( CMAKE_CXX_STANDARD_REQUIRED ON )
 set( CMAKE_CXX_EXTENSIONS OFF )
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+
+if( T8CODE_BUILD_FORTRAN_INTERFACE )
+    enable_language( Fortran )
+endif()
 
 if( T8CODE_ENABLE_MPI )
     if( T8CODE_BUILD_FORTRAN_INTERFACE )
@@ -144,7 +156,6 @@ if ( T8CODE_BUILD_DOCUMENTATION )
 endif()
 
 if( T8CODE_BUILD_FORTRAN_INTERFACE )
-    enable_language( Fortran )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/api/t8_fortran_interface )
 
     if( NOT T8CODE_ENABLE_MPI )

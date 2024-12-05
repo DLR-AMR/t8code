@@ -121,7 +121,7 @@ main (int argc, char **argv)
   global_num_trees = t8_cmesh_get_num_trees (cmesh);
   t8_global_productionf (" [step1] Created coarse mesh.\n");
   t8_global_productionf (" [step1] Local number of trees:\t%i\n", local_num_trees);
-  t8_global_productionf (" [step1] Global number of trees:\t%li\n", global_num_trees);
+  t8_global_productionf (" [step1] Global number of trees:\t%li\n", static_cast<long> (global_num_trees));
   t8_step1_write_cmesh_vtk (cmesh, prefix);
   t8_global_productionf (" [step1] Wrote coarse mesh to vtu files: %s*\n", prefix);
   t8_step1_destroy_cmesh (cmesh);
