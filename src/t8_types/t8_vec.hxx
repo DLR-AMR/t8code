@@ -36,8 +36,6 @@
 
 #include <algorithm>
 #include <numeric>
-#include <type_traits>
-#include <concepts>
 
 template <std::size_t dim>
 struct t8_vec_tag
@@ -57,12 +55,6 @@ template <std::size_t dim>
 using t8_point = T8Type<std::array<double, dim>, t8_point_tag<dim>, EqualityComparable, Swapable, RandomAccessible>;
 using t8_3D_point = t8_point<3>;
 
-template <typename T, typename... U>
-concept IsAnyOf = (std::is_same_v<T, U> || ...);
-
-template <typename T, std::size_t dim>
-concept IsMySupportedType = IsAnyOf<T, t8_point<dim>, t8_vec<dim>>;
-
 /** Vector norm.
  * \param [in] vec  An N-dimensional vector.
  * \return          The norm of \a vec.
@@ -79,7 +71,7 @@ t8_norm (const t8_vec<dim> &vec)
  */
 template <std::size_t dim>
 static inline void
-t8_normalize (const t8_vec<dim> &vec)
+t8_normalize (t8_vec<dim> &vec)
 {
   const double norm = t8_norm (vec);
   std::transform (vec.begin (), vec.end (), vec.begin (), [norm] (double v) { return v / norm; });
@@ -90,11 +82,20 @@ t8_normalize (const t8_vec<dim> &vec)
 t8_type_copy (T const &src, T const &dest)
 static inline void
 */
-
 template <typename T>
-  requires IsMySupportedType<T, T::dim>
 static inline void
-t8_copy (const T &src, T &dest)
+t8_copy (const T &src, T &dest);
+
+template <std::size_t dim>
+static inline void
+t8_copy (const t8_vec<dim> &src, t8_vec<dim> &dest)
+{
+  std::copy (src.begin (), src.end (), dest.begin ());
+}
+
+template <std::size_t dim>
+static inline void
+t8_copy (const t8_point<dim> &src, t8_point<dim> &dest)
 {
   std::copy (src.begin (), src.end (), dest.begin ());
 }
@@ -235,7 +236,6 @@ t8_diff (const t8_vec<dim> &vec_x, const t8_vec<dim> &vec_y, t8_vec<dim> &diff)
  * \return true, if the vectors are equal up to \a tol 
  */
 template <typename T>
-  requires IsMySupportedType<T, T::dim>
 static inline bool
 t8_eq (const T &vec_x, const T &vec_y, const double tol)
 {
@@ -266,8 +266,8 @@ t8_normal_of_tri (const t8_3D_vec &p1, const t8_3D_vec &p2, const t8_3D_vec &p3,
 {
   t8_3D_vec a;
   t8_3D_vec b;
-  std::transform (p2.begin (), p2.end (), p1.begin (), a, std::minus<double> ());
-  std::transform (p3.begin (), p3.end (), p1.begin (), b, std::minus<double> ());
+  std::transform (p2.begin (), p2.end (), p1.begin (), a.begin (), std::minus<double> ());
+  std::transform (p3.begin (), p3.end (), p1.begin (), b.begin (), std::minus<double> ());
   t8_cross_3D (a, b, normal);
 }
 
@@ -288,18 +288,6 @@ t8_orthogonal_tripod (const t8_3D_vec &v1, t8_3D_vec &v2, t8_3D_vec &v3)
 
   t8_normalize<3> (v2);
   t8_normalize<3> (v3);
-}
-
-/** Swap the components of two vectors.
- * \param [in,out]  p1  An N-dimensional vector.
- * \param [in,out]  p2  An N-dimensional vector.
- */
-template <typename T>
-  requires IsMySupportedType<T, T::dim>
-static inline void
-t8_swap (T &p1, T &p2)
-{
-  std::swap (p1, p2);
 }
 
 #endif /* !T8_VEC_HXX */

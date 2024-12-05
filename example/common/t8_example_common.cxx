@@ -28,9 +28,7 @@
 #include <t8_element.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
-#include <example/common/t8_example_common.h>
-
-T8_EXTERN_C_BEGIN ();
+#include <example/common/t8_example_common.hxx>
 
 /* Adapt a forest such that always the second child of the first
  * tree is refined and no other elements. This results in a highly
@@ -65,7 +63,8 @@ int
 t8_common_within_levelset (t8_forest_t forest, t8_locidx_t ltreeid, t8_element_t *element, t8_eclass_scheme_c *ts,
                            t8_example_level_set_fn levelset, double band_width, double t, void *udata)
 {
-  double elem_midpoint[3], elem_diam;
+  t8_3D_point elem_midpoint;
+  double elem_diam;
   double value;
 
   T8_ASSERT (band_width >= 0);
@@ -73,17 +72,17 @@ t8_common_within_levelset (t8_forest_t forest, t8_locidx_t ltreeid, t8_element_t
     /* If bandwidth = 0, we only refine the elements that are intersected by the zero level-set */
     int num_corners = ts->t8_element_num_corners (element);
     int sign = 1, icorner;
-    double coords[3];
+    t8_3D_point coords;
 
     /* Compute LS function at first corner */
-    t8_forest_element_coordinate (forest, ltreeid, element, 0, coords);
+    t8_forest_element_coordinate (forest, ltreeid, element, 0, coords.data ());
     /* compute the level-set function at this corner */
     value = levelset (coords, t, udata);
     /* sign = 1 if value > 0, -1 if value < 0, 0 if value = 0 */
     sign = value > 0 ? 1 : -(value < 0);
     /* iterate over all corners */
     for (icorner = 1; icorner < num_corners; icorner++) {
-      t8_forest_element_coordinate (forest, ltreeid, element, icorner, coords);
+      t8_forest_element_coordinate (forest, ltreeid, element, icorner, coords.data ());
       /* compute the level-set function at this corner */
       value = levelset (coords, t, udata);
       if ((value > 0 && sign <= 0) || (value == 0 && sign != 0) || (value < 0 && sign >= 0)) {
@@ -95,7 +94,7 @@ t8_common_within_levelset (t8_forest_t forest, t8_locidx_t ltreeid, t8_element_t
   }
 
   /* Compute the coordinates of the anchor node X. */
-  t8_forest_element_centroid (forest, ltreeid, element, elem_midpoint);
+  t8_forest_element_centroid (forest, ltreeid, element, elem_midpoint.data ());
   /* Compute the element's diameter */
   elem_diam = t8_forest_element_diam (forest, ltreeid, element);
   /* Compute L(X) */
@@ -152,5 +151,3 @@ t8_common_adapt_level_set (t8_forest_t forest, t8_forest_t forest_from, t8_locid
   }
   return 0;
 }
-
-T8_EXTERN_C_END ();

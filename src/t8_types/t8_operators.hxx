@@ -218,6 +218,12 @@ struct EqualityComparable: crtp<T, EqualityComparable>
   }
 };
 
+template <typename T>
+struct Hashable
+{
+  static constexpr bool is_hashable = true;
+};
+
 /**
  * \brief A template for random accessible types. Provides the [] operator.
  * 
@@ -274,3 +280,5 @@ struct RandomAccessible: crtp<T, RandomAccessible>
     return this->underlying ().get ().data ();
   }
 };
+
+#endif  // T8_OPERATORS_HXX

@@ -32,7 +32,7 @@
 #include <t8_cmesh_readmshfile.h>
 #include <t8_vtk/t8_vtk_writer.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <example/common/t8_example_common.h>
+#include <example/common/t8_example_common.hxx>
 
 typedef enum {
   REFINE_THIRD = 0, /* Refine every third element */
