@@ -22,7 +22,7 @@
 
 #include <sc_refcount.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_element_c_interface.h>
+#include <t8_schemes/t8_scheme.h>
 #include <t8_schemes/t8_default/t8_default_c_interface.h>
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri.h>
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtet.h>
