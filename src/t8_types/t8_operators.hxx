@@ -210,30 +210,75 @@ struct EqualityComparable: crtp<T, EqualityComparable>
   {
     return this->underlying ().get () == other.get ();
   }
+
+  bool
+  operator!= (T const& other) const
+  {
+    return !(*this == other);
+  }
 };
 
-/**
- * \brief A template for << types. Provides the << operator.
- * 
- * \tparam T 
- */
-template <typename T, typename Parameter>
-std::ostream&
-operator<< (std::ostream& os, T8Type<T, Parameter> const& p)
-{
-  p.print (os);
-  return os;
-}
-
-/**
- * \brief A template for hashable types. Used to make a type hashable.
- * 
- * \tparam T 
- */
 template <typename T>
 struct Hashable
 {
   static constexpr bool is_hashable = true;
 };
 
-#endif /* T8_OPERATORS_HXX */
+/**
+ * \brief A template for random accessible types. Provides the [] operator.
+ * 
+ * \tparam T 
+ */
+template <typename T>
+struct RandomAccessible: crtp<T, RandomAccessible>
+{
+  auto
+  operator[] (std::size_t index) -> decltype (auto)
+  {
+    return this->underlying ().get ()[index];
+  }
+
+  auto
+  operator[] (std::size_t index) const -> decltype (auto)
+  {
+    return this->underlying ().get ()[index];
+  }
+
+  auto
+  begin () -> decltype (auto)
+  {
+    return this->underlying ().get ().begin ();
+  }
+
+  auto
+  begin () const -> decltype (auto)
+  {
+    return this->underlying ().get ().begin ();
+  }
+
+  auto
+  end () -> decltype (auto)
+  {
+    return this->underlying ().get ().end ();
+  }
+
+  auto
+  end () const -> decltype (auto)
+  {
+    return this->underlying ().get ().end ();
+  }
+
+  auto
+  data () -> decltype (auto)
+  {
+    return this->underlying ().get ().data ();
+  }
+
+  auto
+  data () const -> decltype (auto)
+  {
+    return this->underlying ().get ().data ();
+  }
+};
+
+#endif  // T8_OPERATORS_HXX
