@@ -1415,7 +1415,7 @@ t8_forest_ghost_create_ext (t8_forest_t forest)
      * Only delete the line, if you know what you are doing. */
     t8_global_productionf ("Start ghost at %f  %f\n", sc_MPI_Wtime (), forest->profile->ghost_runtime);
   }
-
+  /* Call the dot_ghost function on the ghost_interface class of the forest to compute the ghost layer */
   ghost_interface->do_ghost (forest);
 
   ghost = forest->ghosts;
@@ -1882,9 +1882,9 @@ t8_forest_ghost_destroy (t8_forest_ghost_t *pghost)
 
 /**
  * Implementation of the ghost-interface
- * Wrapper for the abstracte base classes
- * Implementation of the communication steps
- * and implementation of the dreived class search
+ * wrapper for the abstract base classes and
+ * implementation of the communication steps
+ * and implementation of the derived class search
 */
 
 t8_ghost_type_t
@@ -1914,13 +1914,12 @@ t8_forest_ghost_interface_unref (t8_forest_ghost_interface_c **pghost_interface)
 }
 
 /**
- * Abstract Base Class
+ * Abstract base class
 */
 
 void
 t8_forest_ghost_interface::communicate_ownerships (t8_forest_t forest)
 {
-  t8_global_productionf (" t8_forest_ghost_interface_faces::t8_ghost_step_1_allocate \n");
   if (forest->element_offsets == NULL) {
     /* create element offset array if not done already */
     memory_flag = memory_flag | CREATE_ELEMENT_ARRAY;
@@ -1941,7 +1940,7 @@ t8_forest_ghost_interface::communicate_ownerships (t8_forest_t forest)
 void
 t8_forest_ghost_interface::communicate_ghost_elements (t8_forest_t forest)
 {
-  t8_forest_ghost_t ghost = forest->ghosts;  // TODO: make sure, that ghost is init
+  t8_forest_ghost_t ghost = forest->ghosts;
   t8_ghost_mpi_send_info_t *send_info;
   sc_MPI_Request *requests;
 
@@ -1958,7 +1957,6 @@ t8_forest_ghost_interface::communicate_ghost_elements (t8_forest_t forest)
 void
 t8_forest_ghost_interface::clean_up (t8_forest_t forest)
 {
-  t8_global_productionf (" t8_forest_ghost_interface_faces::t8_ghost_step_1_clean_up \n");
   if (memory_flag & CREATE_GFIRST_DESC_ARRAY) {
     /* Free the offset memory, if created */
     t8_shmem_array_destroy (&forest->element_offsets);
@@ -1981,7 +1979,7 @@ t8_forest_ghost_w_search::t8_forest_ghost_w_search (const t8_ghost_type_t ghost_
   : t8_forest_ghost_interface (ghost_type)
 {
   T8_ASSERT (ghost_type != T8_GHOST_NONE);
-  T8_ASSERT (ghost_type == T8_GHOST_FACES);  // currently no other typs are suportet
+  T8_ASSERT (ghost_type == T8_GHOST_FACES);  // currently no other types are supported
   if (ghost_type == T8_GHOST_FACES) {
     search_fn = t8_forest_ghost_search_boundary;
   }

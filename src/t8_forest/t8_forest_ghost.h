@@ -162,19 +162,19 @@ t8_forest_ghost_unref (t8_forest_ghost_t *pghost);
 void
 t8_forest_ghost_destroy (t8_forest_ghost_t *pghost);
 
-/** Part of step 2 of the ghost_creat_ext 
+/** Part of search_for_ghost_elements of the ghost_creat_ext 
  * for ghost_type face
  * Is declared, so that ghost_interface_face can use it
- * \see t8_forest_ghost_interface_faces::t8_ghost_step_2
+ * \see t8_forest_ghost_w_search::search_for_ghost_elements
  * \param [in,out]    forest     The forest.
  */
 void
 t8_forest_ghost_fill_remote_v3 (t8_forest_t forest);
 
-/** Part of step 2 of the ghost_creat_ext 
+/** Part of step search_for_ghost_elements of the ghost_creat_ext 
  * for ghost_type face
  * Is declared, so that ghost_interface_face can use it
- * \see t8_forest_ghost_interface_faces::t8_ghost_step_2
+ * \see t8_forest_ghost_face::search_for_ghost_elements
  * \param [in,out]    forest     The forest.
  */
 void

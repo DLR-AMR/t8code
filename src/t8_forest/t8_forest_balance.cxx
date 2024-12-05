@@ -139,7 +139,7 @@ t8_forest_balance (t8_forest_t forest, int repartition)
   int count_partition_stats = 0;
   double ada_time, ghost_time, part_time;
   sc_statinfo_t *adap_stats, *ghost_stats, *partition_stats;
-  int create_ghost_interface = 0;
+  int create_ghost_interface = 0; /* flag if create ghost_interface */
 
   t8_global_productionf ("Into t8_forest_balance with %lli global elements.\n",
                          (long long) t8_forest_get_global_num_elements (forest->set_from));
@@ -172,14 +172,18 @@ t8_forest_balance (t8_forest_t forest, int repartition)
   /* This function is reference neutral regarding forest_from */
   t8_forest_ref (forest_from);
 
+  /* if the set_from forest of forest has no ghost layer computed,
+   * compute a ghost layer for the set_from forest */
   if (forest->set_from->ghosts == NULL) {
-    // forest->set_from->ghost_type = T8_GHOST_FACES;
+    /* If the forest does not yet have a ghost_interface */
     if (forest->set_from->ghost_interface == NULL) {
+      /* create a ghost_interface of type face with top-down-search */
       forest->set_from->ghost_interface = t8_forest_ghost_interface_face_new (3);
       create_ghost_interface = 1;
     }
+    /* compute ghost layer for set_from forest */
     t8_forest_ghost_create_topdown (forest->set_from);
-    if (create_ghost_interface) {
+    if (create_ghost_interface) { /* if a ghost_interface has been created, it will be deleted here */
       t8_forest_ghost_interface_unref (&(forest->set_from->ghost_interface));
       forest->set_from->ghost_interface = NULL;
     }
