@@ -2174,7 +2174,9 @@ t8_forest_ghost_stencil::add_stencil_to_ghost (t8_forest_t forest, const t8_elem
   t8_locidx_t iface_neighbor, ineighbor;
   t8_element_t *face_neighbor;
   t8_element_t *neighbor;
+#ifdef T8_ENABLE_DEBUG
   const t8_eclass_t eclass = t8_forest_get_eclass (forest, 0);
+#endif
 
   /**
    * First loop over the F elements, this are the face-neighbors of E
