@@ -98,21 +98,16 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
   const t8_eclass_t eclass = t8_forest_get_tree_class (forest, ltreeid);
   const t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest, eclass);
 
-  int is_leaf = 0;
-  if (elem_count == 1) {
-    /* There is only one leaf left, we check whether it is the same as element
-     * and if so call the callback function */
-    const t8_element_t *leaf = t8_element_array_index_locidx (leaf_elements, 0);
-    if (ts->t8_element_equal (element, leaf)) {
-      // TODO: this might break for ghosts, extend to ghost
-      T8_ASSERT (t8_forest_element_is_leaf_or_ghost (forest, leaf, local_or_ghost_tree_id, tree_is_ghost));
-      /* The element is the leaf, we are at the last stage of the recursion */
-      is_leaf = 1;
-    }
-  }
+  // TODO: This does a costly binary search. Is there a better criterion to check
+  //        whether element is a leaf or not?
+  //        We tried (elem_count == 1) but this does not work since we could
+  //        start the search with a full family and element being one sibling.
+  //        In that case, element is a leaf but elem_count is not 1.
+  bool is_leaf = t8_forest_element_is_leaf_or_ghost (forest, element, local_or_ghost_tree_id, tree_is_ghost);
+
 #ifdef T8_ENABLE_DEBUG
   if (!is_leaf) {
-    /* Check whether element has greater level than the first leaf */
+    /* Check whether element has smaller level than the first leaf */
     const t8_element_t *leaf = t8_element_array_index_locidx (leaf_elements, 0);
     T8_ASSERT (t8_forest_element_is_leaf_or_ghost (forest, leaf, local_or_ghost_tree_id, tree_is_ghost));
     T8_ASSERT (ts->t8_element_level (element) < ts->t8_element_level (leaf));
