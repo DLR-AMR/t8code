@@ -1859,6 +1859,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
 
   // Now we iterate over the leaf arrays of the neighbor tree
   // or neighbor ghost tree and find all leaf face neighbors of the element.
+  *num_neighbors = 0;
   for (auto &tree_leafs : leaf_arrays) {
     const t8_locidx_t first_desc_search = t8_forest_bin_search_lower (tree_leafs, first_face_desc_id, maxlevel);
     const t8_locidx_t last_desc_search = t8_forest_bin_search_lower (tree_leafs, last_face_desc_id, maxlevel);
@@ -1905,14 +1906,18 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
       // TODO: Since there is no other way, we copy them from the vectors.
       //       This should be improved in the future to get around the copy.
 
-      *num_neighbors = user_data.neighbors.size ();
+      const int num_neighbors_current_tree = user_data.neighbors.size ();
+      const int total_num_neighbors = *num_neighbors + num_neighbors_current_tree;
       // Copy neighbor element pointers
-      *pneighbor_leaves = T8_ALLOC (t8_element_t *, *num_neighbors);
-      memcpy (*pneighbor_leaves, user_data.neighbors.data (), *num_neighbors * sizeof (t8_element_t *));
+      T8_REALLOC (*pneighbor_leaves, t8_element_t *, total_num_neighbors);
+      memcpy (*pneighbor_leaves + *num_neighbors, user_data.neighbors.data (),
+              num_neighbors_current_tree * sizeof (t8_element_t *));
       *pelement_indices = T8_ALLOC (t8_locidx_t, *num_neighbors);
-      memcpy (*pelement_indices, user_data.element_indices.data (), *num_neighbors * sizeof (t8_locidx_t));
-      *dual_faces = T8_ALLOC (int, *num_neighbors);
-      memcpy (*dual_faces, user_data.dual_faces.data (), *num_neighbors * sizeof (int));
+      memcpy (*pelement_indices + *num_neighbors, user_data.element_indices.data (),
+              num_neighbors_current_tree * sizeof (t8_locidx_t));
+      T8_REALLOC (*dual_faces, int, total_num_neighbors);
+      memcpy (*dual_faces + *num_neighbors, user_data.dual_faces.data (), num_neighbors_current_tree * sizeof (int));
+      *num_neighbors = total_num_neighbors;
     }
   }
   // We must have found face neighbors by now.
