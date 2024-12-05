@@ -47,13 +47,13 @@ TEST (t8_gtest_vec, norm)
 /* test the t8_dist function */
 TEST (t8_gtest_vec, dist)
 {
-  const t8_3D_vec zero ({ 0, 0, 0 });
-  const t8_3D_vec onetwothree ({ 1, 2, 3 });
-  const t8_3D_vec arbitrary ({ -.05, 3.14159, 42 });
+  const t8_3D_point zero ({ 0, 0, 0 });
+  const t8_3D_point onetwothree ({ 1, 2, 3 });
+  const t8_3D_point arbitrary ({ -.05, 3.14159, 42 });
   const double distzeroonetwothree = sqrt (1 + 4 + 9);
   const double distarbitraryonetwothree = 39.030830477;
-  EXPECT_VEC3_EQ (zero, zero, T8_PRECISION_EPS);
-  EXPECT_VEC3_EQ (onetwothree, onetwothree, T8_PRECISION_EPS);
+  EXPECT_VEC_EQ (zero, zero, T8_PRECISION_EPS);
+  EXPECT_VEC_EQ (onetwothree, onetwothree, T8_PRECISION_EPS);
   EXPECT_NEAR (t8_dist (onetwothree, zero), distzeroonetwothree, epsilon);
   EXPECT_NEAR (t8_dist (zero, onetwothree), distzeroonetwothree, epsilon);
   EXPECT_NEAR (t8_dist (arbitrary, onetwothree), distarbitraryonetwothree, epsilon);
@@ -217,7 +217,7 @@ TEST (t8_gtest_vec, dot)
 }
 
 /* test the t8_cross_3D function */
-TEST (t8_gtest_vec, cross)
+TEST (t8_gtest_vec, cross_3D)
 {
   const t8_3D_vec czero ({ 0, 0, 0 });
   const t8_3D_vec e1 ({ 1, 0, 0 });
@@ -241,14 +241,14 @@ TEST (t8_gtest_vec, cross)
 
   /* e1 x e2 = e3 */
   t8_cross_3D (e1, e2, cross);
-  EXPECT_VEC3_EQ (cross, e3, T8_PRECISION_EPS);
+  EXPECT_VEC_EQ (cross, e3, T8_PRECISION_EPS);
 
   /* e2 x e3 = e1 */
   t8_cross_3D (e2, e3, cross);
-  EXPECT_VEC3_EQ (cross, e1, T8_PRECISION_EPS);
+  EXPECT_VEC_EQ (cross, e1, T8_PRECISION_EPS);
 }
 
-TEST (t8_gtest_vec, cross)
+TEST (t8_gtest_vec, cross_2D)
 {
   const t8_vec<2> zero ({ 0, 0 });
   const t8_vec<2> e1 ({ 1, 0 });   // Unit vector along x-axis
@@ -291,5 +291,5 @@ TEST (t8_gtest_vec, check_less_or_equal)
   const t8_3D_vec one ({ 1.0, 1.0, 1.0 });
   const t8_3D_vec one_minus_eps ({ 1.0 - T8_PRECISION_EPS, 1.0 - T8_PRECISION_EPS, 1.0 - T8_PRECISION_EPS });
 
-  EXPECT_VEC3_EQ (one, one_minus_eps, T8_PRECISION_EPS);
+  EXPECT_VEC_EQ (one, one_minus_eps, T8_PRECISION_EPS);
 }
