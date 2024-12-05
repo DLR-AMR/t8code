@@ -38,7 +38,7 @@ struct t8_adapt_data
 };
 
 static double
-t8_gausss_blob (const double center_elem[3], const double center_cube[3], const double radius)
+t8_gausss_blob (const double center_elem[3], const t8_3D_point &center_cube, const double radius)
 {
   double expo = 0;
   for (int i = 0; i < 3; i++) {
@@ -49,7 +49,7 @@ t8_gausss_blob (const double center_elem[3], const double center_cube[3], const 
 }
 
 static double *
-t8_create_element_data (t8_forest_t forest, const double sphere_center[3], const double sphere_radius)
+t8_create_element_data (t8_forest_t forest, const t8_3D_point &sphere_center, const double sphere_radius)
 {
   t8_locidx_t num_local_elements;
   t8_locidx_t num_ghost_elements;
@@ -149,9 +149,11 @@ t8_construct_spheres (const int initial_level, const double radius_inner, const 
     cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
   }
 
+  t8_3D_point midpoint ({ 0.5, 0.5, 0.5 });
+
   /* On each face of a cube, a sphere rises halfway in. 
    * Its center is therefore the center of the corresponding surface. */
-  struct t8_adapt_data adapt_data = { remove_scope, radius_inner, radius_outer, { 0.5, 0.5, 0.5 } };
+  struct t8_adapt_data adapt_data = { remove_scope, radius_inner, radius_outer, midpoint };
 
   forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), initial_level, 0, sc_MPI_COMM_WORLD);
   forest = t8_forest_new_adapt (forest, t8_adapt_refine, 0, 0, &adapt_data);

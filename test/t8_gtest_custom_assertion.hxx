@@ -88,25 +88,20 @@ element_equality (const char *ts_expr, const char *tree_class_expr, const char *
  * \param[in] precision Test equality up to this prescision
  * \return testing::AssertionResult 
  */
+template <typename T>
 testing::AssertionResult
-vec3_equality (const char *vec_1_expr, const char *vec_2_expr, const char *precision_expr, const t8_3D_vec vec_1,
-               const t8_3D_vec vec_2, const double precision)
+vec_equality (const char *vec_1_expr, const char *vec_2_expr, const char *precision_expr, const T &vec_1,
+              const T &vec_2, const double precision)
 {
   if (t8_eq (vec_1, vec_2, precision)) {
     return testing::AssertionSuccess ();
   }
   else {
-#if T8_ENABLE_DEBUG
-    return testing::AssertionFailure () << vec_1[0] << " " << vec_1[1] << " " << vec_1[2] << " " << vec_1_expr
-                                        << " is not equal to \n"
-                                        << vec_2[0] << " " << vec_2[1] << " " << vec_2[2] << " " << vec_2_expr << " \n"
+    return testing::AssertionFailure () << vec_1_expr << " is not equal to " << vec_2_expr << " \n"
                                         << "Precision given by " << precision_expr << " " << precision;
-#else
-    return testing::AssertionFailure () << vec_1_expr << " is not equal to " << vec_2_expr;
-#endif
   }
 }
 
-#define EXPECT_VEC3_EQ(vec_1, vec_2, precision) EXPECT_PRED_FORMAT3 (vec3_equality, (vec_1), (vec_2), (precision))
+#define EXPECT_VEC_EQ(vec_1, vec_2, precision) EXPECT_PRED_FORMAT3 (vec_equality, (vec_1), (vec_2), (precision))
 
 #endif /* T8_GTEST_CUSTOM_ASSERTION_HXX */

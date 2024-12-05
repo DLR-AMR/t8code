@@ -40,7 +40,7 @@ t8_normalize_c_interface (double vec[3])
 void
 t8_copy_c_interface (const double vec_in[3], double vec_out[3])
 {
-  t8_3D_vec vec_array_in ({ vec_in[0], vec_in[1], vec_in[2] });
+  const t8_3D_vec vec_array_in ({ vec_in[0], vec_in[1], vec_in[2] });
   t8_3D_vec vec_array_out ({ vec_out[0], vec_out[1], vec_out[2] });
   t8_copy (vec_array_in, vec_array_out);
 }
@@ -73,7 +73,7 @@ t8_axb_c_interface (const double vec_x[3], double vec_y[3], const double alpha, 
 {
   t8_3D_vec vec_array_x ({ vec_x[0], vec_x[1], vec_x[2] });
   t8_3D_vec vec_array_y ({ vec_y[0], vec_y[1], vec_y[2] });
-  t8_axb (vec_x, vec_y, alpha, b);
+  t8_axb (vec_array_x, vec_array_y, alpha, b);
 }
 
 void
@@ -106,15 +106,16 @@ t8_cross_3D_c_interface (const double vec_x[3], const double vec_y[3], double cr
 {
   t8_3D_vec vec_array_x ({ vec_x[0], vec_x[1], vec_x[2] });
   t8_3D_vec vec_array_y ({ vec_y[0], vec_y[1], vec_y[2] });
-  t8_cross_3D (vec_array_x, vec_array_y, cross);
+  t8_3D_vec cross_array ({ cross[0], cross[1], cross[2] });
+  t8_cross_3D (vec_array_x, vec_array_y, cross_array);
 }
 
-void
-t8_cross_2D_c_interface (const double vec_x[2], const double vec_y[2], double cross)
+double
+t8_cross_2D_c_interface (const double vec_x[2], const double vec_y[2])
 {
-  t8_3D_vec vec_array_x ({ vec_x[0], vec_x[1] });
-  t8_3D_vec vec_array_y ({ vec_y[0], vec_y[1] });
-  t8_cross_2D (vec_array_x, vec_array_y, cross);
+  t8_vec<2> vec_array_x ({ vec_x[0], vec_x[1] });
+  t8_vec<2> vec_array_y ({ vec_y[0], vec_y[1] });
+  return t8_cross_2D (vec_array_x, vec_array_y);
 }
 
 void
@@ -122,7 +123,8 @@ t8_diff_c_interface (const double vec_x[3], const double vec_y[3], double diff[3
 {
   t8_3D_vec vec_array_x ({ vec_x[0], vec_x[1], vec_x[2] });
   t8_3D_vec vec_array_y ({ vec_y[0], vec_y[1], vec_y[2] });
-  t8_diff (vec_array_x, vec_array_y, diff);
+  t8_3D_vec diff_array ({ diff[0], diff[1], diff[2] });
+  t8_diff (vec_array_x, vec_array_y, diff_array);
 }
 
 int
@@ -146,7 +148,8 @@ t8_normal_of_tri_c_interface (const double p1[3], const double p2[3], const doub
   t8_3D_vec p1_array ({ p1[0], p1[1], p1[2] });
   t8_3D_vec p2_array ({ p2[0], p2[1], p2[2] });
   t8_3D_vec p3_array ({ p3[0], p3[1], p3[2] });
-  t8_normal_of_tri (p1_array, p2_array, p3_array, normal);
+  t8_3D_vec normal_array ({ normal[0], normal[1], normal[2] });
+  t8_normal_of_tri (p1_array, p2_array, p3_array, normal_array);
 }
 
 void
@@ -163,5 +166,5 @@ t8_swap_c_interface (double p1[3], double p2[3])
 {
   t8_3D_vec p1_array ({ p1[0], p1[1], p1[2] });
   t8_3D_vec p2_array ({ p2[0], p2[1], p2[2] });
-  t8_swap (p1_array, p2_array);
+  std::swap (p1_array, p2_array);
 }

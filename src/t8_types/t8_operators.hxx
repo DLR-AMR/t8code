@@ -219,6 +219,12 @@ struct EqualityComparable: t8_crtp_operator<TUnderlying, EqualityComparable>
   }
 };
 
+template <typename T>
+struct Hashable
+{
+  static constexpr bool is_hashable = true;
+};
+
 /**
  * \brief A template for random accessible types. Provides the [] operator.
  * 
