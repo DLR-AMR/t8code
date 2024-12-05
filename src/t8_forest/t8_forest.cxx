@@ -32,6 +32,8 @@
 #include <t8_forest/t8_forest_balance.h>
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_forest/t8_forest_ghost.h>
+#include <t8_schemes/t8_default/t8_default_quad/t8_default_quad.hxx>
+#include <t8_schemes/t8_default/t8_default_hex/t8_default_hex.hxx>
 #include <t8_element.hxx>
 #include <t8_element_c_interface.h>
 #include <t8_cmesh/t8_cmesh_trees.h>
@@ -1875,10 +1877,18 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
       const t8_element_t *last_face_leaf = t8_element_array_index_locidx (tree_leafs, last_desc_index);
       // Compute their nearest common ancestor
       neigh_scheme->t8_element_nca (first_face_leaf, last_face_leaf, nca_of_face_desc);
-      const int face_of_nca = 0;
-      // TODO: Need to implement face of nca
-      // Any thing left TODO here???
-      SC_ABORT ("Not implemented");
+      const int face_of_nca = neigh_face;
+      // TODO: Need to implement element function to compute face id of nca face.
+      //        Input: Element A and face f, Element B that is ancestor or successor of A, and
+      //                  shares face f (f is a subface of a face of B or B has a subface of f)
+      //        Output: The face id of the corresponding ancestor/descendant face of B
+      //
+      //      Currently we hardcode this algorithm for quads. In that case the face id of B is always f.
+      const bool scheme_is_default_quad_hex
+        = dynamic_cast<const struct t8_default_scheme_quad_c *> (neigh_scheme) != NULL
+          || dynamic_cast<const struct t8_default_scheme_hex_c *> (neigh_scheme) != NULL;
+      SC_CHECK_ABORT (scheme_is_default_quad_hex,
+                      "Computing leaf face neighbors currently only works for default quad or hex schemes.");
 
       t8_forest_iterate_faces (forest, local_neighbor_tree, nca_of_face_desc, face_of_nca, tree_leafs, first_desc_index,
                                t8_forest_leaf_face_neighbors_iterate, &user_data);
