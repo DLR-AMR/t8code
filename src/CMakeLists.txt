@@ -69,12 +69,23 @@ if( T8CODE_ENABLE_LESS_TESTS )
 endif()
 
 if( T8CODE_BUILD_PEDANTIC )
-  # TODO: Add `-Wextra -Wpedantic`. As of now, t8code would not compile with this.
-  # See also: https://github.com/DLR-AMR/t8code/issues/1155.
-  target_compile_options( T8 PUBLIC -Wall -pedantic -Werror )
-  set (T8_CXXFLAGS "${T8_CXXFLAGS} -W -Wall -Wpedantic -Werror")
-  set (T8_CFLAGS "${T8_CFLAGS} -W -Wall -Wpedantic -Werror")
+  target_compile_options( T8 PUBLIC -pedantic )
+  set (T8_CXXFLAGS "${T8_CXXFLAGS} -Wpedantic")
+  set (T8_CFLAGS "${T8_CFLAGS} -Wpedantic")
 endif()
+
+if( T8CODE_BUILD_WALL)
+  target_compile_options( T8 PUBLIC -Wall )
+  set (T8_CXXFLAGS "${T8_CXXFLAGS} -Wall")
+  set (T8_CFLAGS "${T8_CFLAGS} -Wall")
+endif()
+
+if( T8CODE_BUILD_WERROR )
+  target_compile_options( T8 PUBLIC -Werror )
+  set (T8_CXXFLAGS "${T8_CXXFLAGS} -Werror")
+  set (T8_CFLAGS "${T8_CFLAGS} -Werror")
+endif()
+
 
 target_sources( T8 PRIVATE 
     t8.c 
