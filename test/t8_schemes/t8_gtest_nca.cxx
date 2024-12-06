@@ -69,12 +69,11 @@ class nca: public testing::TestWithParam<t8_eclass> {
  */
 TEST_P (nca, nca_check_shallow)
 {
-  int i, j;
   const int num_children = scheme->element_get_num_children (tree_class, correct_nca);
   /* Iterate over all combinations of two children from correct_nca */
-  for (i = 0; i < num_children - 1; i++) {
+  for (int i = 0; i < num_children - 1; i++) {
     scheme->element_get_child (tree_class, correct_nca, i, desc_a);
-    for (j = i + 1; j < num_children; j++) {
+    for (int j = i + 1; j < num_children; j++) {
       scheme->element_get_child (tree_class, correct_nca, j, desc_b);
       /*Compute the nca */
       scheme->element_get_nca (tree_class, desc_a, desc_b, check);
@@ -109,9 +108,9 @@ TEST_P (nca, nca_check_deep)
       /* Compute first and last descendant at every level up to elem_max_lvl. 
        * They have the correct_nca as the nca */
       for (check_lvl_a = lvl + 1; check_lvl_a < elem_max_level; check_lvl_a++) {
-        scheme->element_construct_first_descendant (tree_class, correct_nca, desc_a, check_lvl_a);
+        scheme->element_get_first_descendant (tree_class, correct_nca, desc_a, check_lvl_a);
         for (check_lvl_b = lvl + 1; check_lvl_b < elem_max_level; check_lvl_b++) {
-          scheme->element_construct_last_descendant (tree_class, correct_nca, desc_b, check_lvl_b);
+          scheme->element_get_last_descendant (tree_class, correct_nca, desc_b, check_lvl_b);
           /* Compute the nca of desc_a and desc_b */
           scheme->element_get_nca (tree_class, desc_a, desc_b, check);
           if (tree_class == T8_ECLASS_VERTEX) {

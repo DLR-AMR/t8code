@@ -156,8 +156,7 @@ t8_default_scheme_tri::element_get_children (const t8_element_t *elem, int lengt
   T8_ASSERT (element_is_valid (elem));
 #ifdef T8_ENABLE_DEBUG
   {
-    int j;
-    for (j = 0; j < length; j++) {
+    for (int j = 0; j < length; j++) {
       T8_ASSERT (element_is_valid (c[j]));
     }
   }
@@ -185,8 +184,7 @@ t8_default_scheme_tri::elements_are_family (t8_element_t *const *fam) const
 {
 #ifdef T8_ENABLE_DEBUG
   {
-    int j;
-    for (j = 0; j < T8_DTRI_CHILDREN; j++) {
+    for (int j = 0; j < T8_DTRI_CHILDREN; j++) {
       T8_ASSERT (element_is_valid (fam[j]));
     }
   }
@@ -223,8 +221,7 @@ t8_default_scheme_tri::element_get_children_at_face (const t8_element_t *elem, i
   T8_ASSERT (element_is_valid (elem));
 #ifdef T8_ENABLE_DEBUG
   {
-    int j;
-    for (j = 0; j < num_children; j++) {
+    for (int j = 0; j < num_children; j++) {
       T8_ASSERT (element_is_valid (children[j]));
     }
   }
@@ -323,8 +320,8 @@ t8_default_scheme_tri::element_extrude_face (const t8_element_t *face, t8_elemen
 }
 
 void
-t8_default_scheme_tri::element_construct_first_descendant_face (const t8_element_t *elem, int face,
-                                                                t8_element_t *first_desc, int level) const
+t8_default_scheme_tri::element_get_first_descendant_face (const t8_element_t *elem, int face, t8_element_t *first_desc,
+                                                          int level) const
 {
   int corner;
   T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
@@ -337,22 +334,21 @@ t8_default_scheme_tri::element_construct_first_descendant_face (const t8_element
 }
 
 void
-t8_default_scheme_tri::element_construct_last_descendant_face (const t8_element_t *elem, int face,
-                                                               t8_element_t *last_desc, int level) const
+t8_default_scheme_tri::element_get_last_descendant_face (const t8_element_t *elem, int face, t8_element_t *last_desc,
+                                                         int level) const
 {
-  int corner;
   T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
   T8_ASSERT (0 <= level && level <= T8_DTRI_MAXLEVEL);
   /* Compute the last corner of this face */
-  corner = t8_dtri_face_corner[face][1];
+  const int corner = t8_dtri_face_corner[face][1];
   /* Compute the descendant in this corner */
   t8_dtri_corner_descendant ((const t8_dtri_t *) elem, (t8_dtri_t *) last_desc, corner, level);
 }
 
 /* Construct the boundary element at a specific face. */
 void
-t8_default_scheme_tri::element_construct_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
-                                                        const t8_scheme *scheme) const
+t8_default_scheme_tri::element_get_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
+                                                  const t8_scheme *scheme) const
 {
   const t8_dtri_t *t = (const t8_dtri_t *) elem;
   t8_dline_t *l = (t8_dline_t *) boundary;
@@ -396,8 +392,8 @@ t8_default_scheme_tri::element_is_root_boundary (const t8_element_t *elem, int f
 }
 
 int
-t8_default_scheme_tri::element_construct_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face,
-                                                               int *neigh_face) const
+t8_default_scheme_tri::element_get_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face,
+                                                         int *neigh_face) const
 {
   const t8_dtri_t *t = (const t8_dtri_t *) elem;
   t8_dtri_t *n = (t8_dtri_t *) neigh;
@@ -432,8 +428,7 @@ t8_default_scheme_tri::element_get_linear_id (const t8_element_t *elem, int leve
 }
 
 void
-t8_default_scheme_tri::element_construct_first_descendant (const t8_element_t *elem, t8_element_t *desc,
-                                                           int level) const
+t8_default_scheme_tri::element_get_first_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (element_is_valid (desc));
@@ -442,7 +437,7 @@ t8_default_scheme_tri::element_construct_first_descendant (const t8_element_t *e
 }
 
 void
-t8_default_scheme_tri::element_construct_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const
+t8_default_scheme_tri::element_get_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (element_is_valid (desc));

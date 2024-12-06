@@ -198,7 +198,7 @@ TestPartitionData (const t8_forest_t initial_forest, const t8_forest_t partition
  */
 static int
 t8_test_partition_data_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                              t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme* scheme,
+                              const t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme* scheme,
                               const int is_family, const int num_elements, t8_element_t* elements[])
 {
   const int level = scheme->element_get_level (tree_class, elements[0]);

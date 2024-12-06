@@ -20,9 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_element.hxx>
 #include <t8_element.h>
-#include <t8_schemes/t8_scheme.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -51,23 +49,5 @@ const double t8_element_centroid_ref_coords[T8_ECLASS_COUNT][3] = {
   { 0.6, 0.6, 0.2 }          /* T8_ECLASS_PYRAMID */
 };
 /* clang-format on */
-
-void
-t8_scheme_ref (t8_scheme_c *scheme)
-{
-  T8_ASSERT (scheme != NULL);
-
-  scheme->ref ();
-}
-
-void
-t8_scheme_unref (t8_scheme_c **pscheme)
-{
-  T8_ASSERT (pscheme != NULL);
-
-  if ((*pscheme)->unref () < 1) {
-    *pscheme = NULL;
-  }
-}
 
 T8_EXTERN_C_END ();

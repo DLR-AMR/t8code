@@ -32,11 +32,14 @@
 #define T8_DEFAULT_QUAD_HXX
 
 #include <p4est.h>
-#include <t8_element.hxx>
+#include <t8_element.h>
 #include <t8_schemes/t8_default/t8_default_quad/t8_dquad.h>
 #include <t8_schemes/t8_default/t8_default_quad/t8_dquad_bits.h>
 #include <t8_schemes/t8_default/t8_default_line/t8_default_line.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
+
+/* Forward declaration of the scheme so we can use it as an argument in the eclass schemes function. */
+class t8_scheme;
 
 /** The structure holding a quadrilateral element in the default scheme.
  * We make this definition public for interoperability of element classes.
@@ -435,8 +438,7 @@ class t8_default_scheme_quad: public t8_default_scheme_common<t8_default_scheme_
    * \param [in] level     The level, at which the first descendant is constructed
    */
   void
-  element_construct_first_descendant_face (const t8_element_t *elem, int face, t8_element_t *first_desc,
-                                           int level) const;
+  element_get_first_descendant_face (const t8_element_t *elem, int face, t8_element_t *first_desc, int level) const;
 
   /** Construct the last descendant of an element at a given level that touches a given face.
    * \param [in] elem      The input element.
@@ -447,7 +449,7 @@ class t8_default_scheme_quad: public t8_default_scheme_common<t8_default_scheme_
    * \param [in] level     The level, at which the last descendant is constructed
    */
   void
-  element_construct_last_descendant_face (const t8_element_t *elem, int face, t8_element_t *last_desc, int level) const;
+  element_get_last_descendant_face (const t8_element_t *elem, int face, t8_element_t *last_desc, int level) const;
 
   /** Construct the boundary element at a specific face.
    * \param [in] elem     The input element.
@@ -459,8 +461,7 @@ class t8_default_scheme_quad: public t8_default_scheme_common<t8_default_scheme_
    * \param [in] scheme   The scheme containing an eclass scheme for the boundary face.
    */
   void
-  element_construct_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
-                                   const t8_scheme *scheme) const;
+  element_get_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary, const t8_scheme *scheme) const;
 
   /** Compute whether a given element shares a given face with its root tree.
    * \param [in] elem     The input element.
@@ -486,8 +487,7 @@ class t8_default_scheme_quad: public t8_default_scheme_common<t8_default_scheme_
    *                  on output.
    */
   int
-  element_construct_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face,
-                                          int *neigh_face) const;
+  element_get_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face, int *neigh_face) const;
 
   /** Initialize the entries of an allocated element according to a
    *  given linear id in a uniform refinement.
@@ -515,7 +515,7 @@ class t8_default_scheme_quad: public t8_default_scheme_common<t8_default_scheme_
    * \param [in] level    The level, at which the descendant is computed.
    */
   void
-  element_construct_first_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
+  element_get_first_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
 
   /** Compute the last descendant of a given element.
    * \param [in] elem     The element whose descendant is computed.
@@ -524,7 +524,7 @@ class t8_default_scheme_quad: public t8_default_scheme_common<t8_default_scheme_
    * \param [in] level    The level, at which the descendant is computed.
    */
   void
-  element_construct_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
+  element_get_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
 
   /** Construct the successor in a uniform refinement of a given element.
    * \param [in] elem1    The element whose successor should be constructed.

@@ -71,7 +71,7 @@ class forest_transform: public testing::TestWithParam<std::tuple<t8_eclass, int>
 };
 
 static void
-t8_test_transform_element (t8_scheme *scheme, const t8_element_t *elem, t8_eclass_t tree_class)
+t8_test_transform_element (const t8_scheme *scheme, const t8_element_t *elem, const t8_eclass_t tree_class)
 {
   t8_element_t *transform;
 

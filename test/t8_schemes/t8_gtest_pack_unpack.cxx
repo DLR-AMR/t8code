@@ -39,7 +39,7 @@ class class_test_pack: public TestDFS {
 
     /* Compute pack size and allocate send buffer */
     int pack_size;
-    int num_children = scheme->element_get_num_children (tree_class, element);
+    const int num_children = scheme->element_get_num_children (tree_class, element);
     scheme->element_MPI_Pack_size (tree_class, count, comm, &pack_size);
     pack_size *= (num_children + 1);
     char *sendbuf = T8_ALLOC (char, pack_size);

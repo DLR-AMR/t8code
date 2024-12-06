@@ -29,11 +29,14 @@
 #ifndef T8_DEFAULT_PRISM_HXX
 #define T8_DEFAULT_PRISM_HXX
 
-#include <t8_element.hxx>
+#include <t8_element.h>
 #include <t8_schemes/t8_default/t8_default_line/t8_default_line.hxx>
 #include <t8_schemes/t8_default/t8_default_tri/t8_default_tri.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 #include <t8_schemes/t8_default/t8_default_prism/t8_dprism_bits.h>
+
+/* Forward declaration of the scheme so we can use it as an argument in the eclass schemes function. */
+class t8_scheme;
 
 /** Provide an implementation for the prism element class.
  * It is written as a self-contained library in the t8_dprism_* files.
@@ -281,7 +284,7 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
    * \param [in] elem         The element.
    * \param [in] face         A face of \a elem.
    * \param [in,out] children Allocated elements, in which the children of \a elem that share a face with \a face 
-   *                          are stored. They will be stored in order of their prismar id.
+   *                          are stored. They will be stored in order of their prism id.
    * \param [in] num_children The number of elements in \a children. Must match the number of children that touch \a face.
    *                          \ref element_get_num_face_children
    * \param [in,out] child_indices If not NULL, an array of num_children integers must be given, on output its i-th 
@@ -389,8 +392,7 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
    * \param [in] level     The level, at which the first descendant is constructed
    */
   void
-  element_construct_first_descendant_face (const t8_element_t *elem, int face, t8_element_t *first_desc,
-                                           int level) const;
+  element_get_first_descendant_face (const t8_element_t *elem, int face, t8_element_t *first_desc, int level) const;
 
   /** Construct the last descendant of an element at a given level that touches a given face.
    * \param [in] elem      The input element.
@@ -401,7 +403,7 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
    * \param [in] level     The level, at which the last descendant is constructed
    */
   void
-  element_construct_last_descendant_face (const t8_element_t *elem, int face, t8_element_t *last_desc, int level) const;
+  element_get_last_descendant_face (const t8_element_t *elem, int face, t8_element_t *last_desc, int level) const;
 
   /** Construct the boundary element at a specific face.
    * \param [in] elem     The input element.
@@ -413,8 +415,7 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
    * \param [in] scheme   The scheme containing an eclass scheme for the boundary face.
    */
   void
-  element_construct_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
-                                   const t8_scheme *scheme) const;
+  element_get_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary, const t8_scheme *scheme) const;
 
   /** Compute whether a given element shares a given face with its root tree.
    * \param [in] elem     The input element.
@@ -440,8 +441,7 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
    *                  on output.
    */
   int
-  element_construct_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face,
-                                          int *neigh_face) const;
+  element_get_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face, int *neigh_face) const;
 
   /** Initialize the entries of an allocated element according to a
    *  given linear id in a uniform refinement.
@@ -467,7 +467,7 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
    * \param [in] level    The level, at which the descendant is computed.
    */
   void
-  element_construct_first_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
+  element_get_first_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
 
   /** Compute the last descendant of a given element.
    * \param [in] elem     The element whose descendant is computed.
@@ -475,7 +475,7 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
    * \param [in] level    The level, at which the descendant is computed.
    */
   void
-  element_construct_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
+  element_get_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
 
   /** Construct the successor in a uniform refinement of a given element.
    * \param [in] elem1    The element whose successor should be constructed.

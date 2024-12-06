@@ -1,6 +1,6 @@
 # User Updates for the upcoming t8code v4.0.0
 
-We have just merged another branch into our main branch that introduces a lot of changes. Here, we want to explain what is new, why we decided on this feature, what we intend with the feature in the (near) future and most importantly what do you as a user have to change to be on par with t8code v4.0.0
+We have just merged another branch into our main branch that introduces a lot of changes. Here, we want to explain what is new, why we decided on this feature, what we intend with the feature in the (near) future and most importantly what do you as a user have to change to be on par with the upcoming t8code v4.0.0
 
 ## What is new?
 Long story short: We completely changed the element-schemes, the part of t8code that decides how any element in a forest behaves. Before this update was introduced we used a virtual base class defining all functions, and for each type of element there was a class inheriting from the base class and implementing all these functions for a specific type of element (vertex, line, triangle, tetrahedra, ...). 
@@ -59,9 +59,8 @@ Instead of getting the tree specific scheme we only need to get the schemes used
 	      elem_level = scheme->t8_element_level (tree_class, elem);
 	    }
 	}
-	In summary there are two major changes:
-	
 
+In summary there are two major changes:
  1. Get the scheme outside of loop over the trees
  2. Access element functions via the scheme, the class of the tree and the element.
 
@@ -91,4 +90,4 @@ Ok, we admit it, the default scheme has some small tiny changes (but don't worry
       builder.add_eclass_scheme<t8_default_scheme_prism> ();
       builder.add_eclass_scheme<t8_default_scheme_pyramid> ();
       return builder.build_scheme ();
-   }
+	}

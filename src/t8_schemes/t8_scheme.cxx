@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2024 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,17 +20,30 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* In this file we implement a C interface for the member functions of the
- * t8_scheme class.
- * With this interface you can use these member functions from a C file
- * without the need of compiling it with C++.
- */
-
 #include <t8_element.h>
-#include <t8_element.hxx>
-#include <t8_element_c_interface.h>
+#include <t8_schemes/t8_scheme.h>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_forest/t8_forest_types.h>
+
+T8_EXTERN_C_BEGIN ();
+
+void
+t8_scheme_ref (t8_scheme_c *scheme)
+{
+  T8_ASSERT (scheme != NULL);
+
+  scheme->ref ();
+}
+
+void
+t8_scheme_unref (t8_scheme_c **pscheme)
+{
+  T8_ASSERT (pscheme != NULL);
+
+  if ((*pscheme)->unref () < 1) {
+    *pscheme = NULL;
+  }
+}
 
 size_t
 t8_element_get_element_size (const t8_forest_t forest, const t8_eclass_t tree_class)
@@ -108,8 +121,8 @@ t8_element_get_num_siblings (const t8_forest_t forest, const t8_eclass_t tree_cl
 }
 
 void
-t8_element_get_sibling (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem, int sibid,
-                        t8_element_t *sibling)
+t8_element_get_sibling (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem,
+                        const int sibid, t8_element_t *sibling)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -158,8 +171,8 @@ t8_element_get_num_face_children (const t8_forest_t forest, const t8_eclass_t tr
 }
 
 int
-t8_element_get_face_corner (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem, int face,
-                            int corner)
+t8_element_get_face_corner (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem,
+                            const int face, const int corner)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -168,7 +181,7 @@ t8_element_get_face_corner (const t8_forest_t forest, const t8_eclass_t tree_cla
 
 int
 t8_element_get_corner_face (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem,
-                            int corner, int face)
+                            const int corner, const int face)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -176,8 +189,8 @@ t8_element_get_corner_face (const t8_forest_t forest, const t8_eclass_t tree_cla
 }
 
 void
-t8_element_get_child (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem, int childid,
-                      t8_element_t *child)
+t8_element_get_child (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem,
+                      const int childid, t8_element_t *child)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -185,8 +198,8 @@ t8_element_get_child (const t8_forest_t forest, const t8_eclass_t tree_class, co
 }
 
 void
-t8_element_get_children (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem, int length,
-                         t8_element_t *c[])
+t8_element_get_children (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem,
+                         const int length, t8_element_t *c[])
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -202,7 +215,8 @@ t8_element_get_child_id (const t8_forest_t forest, const t8_eclass_t tree_class,
 }
 
 int
-t8_element_get_ancestor_id (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem, int level)
+t8_element_get_ancestor_id (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem,
+                            const int level)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -227,7 +241,8 @@ t8_element_get_nca (const t8_forest_t forest, const t8_eclass_t tree_class, cons
 }
 
 t8_element_shape_t
-t8_element_get_face_shape (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem, int face)
+t8_element_get_face_shape (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem,
+                           const int face)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -236,7 +251,7 @@ t8_element_get_face_shape (const t8_forest_t forest, const t8_eclass_t tree_clas
 
 void
 t8_element_get_children_at_face (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem,
-                                 int face, t8_element_t *children[], int num_children, int *child_indices)
+                                 const int face, t8_element_t *children[], const int num_children, int *child_indices)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -245,7 +260,7 @@ t8_element_get_children_at_face (const t8_forest_t forest, const t8_eclass_t tre
 
 int
 t8_element_face_get_child_face (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem,
-                                int face, int face_child)
+                                const int face, const int face_child)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -254,7 +269,7 @@ t8_element_face_get_child_face (const t8_forest_t forest, const t8_eclass_t tree
 
 int
 t8_element_face_get_parent_face (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem,
-                                 int face)
+                                 const int face)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -262,7 +277,8 @@ t8_element_face_get_parent_face (const t8_forest_t forest, const t8_eclass_t tre
 }
 
 int
-t8_element_get_tree_face (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem, int face)
+t8_element_get_tree_face (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem,
+                          const int face)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -271,7 +287,7 @@ t8_element_get_tree_face (const t8_forest_t forest, const t8_eclass_t tree_class
 
 void
 t8_element_transform_face (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem1,
-                           t8_element_t *elem2, int orientation, int sign, int is_smaller_face)
+                           t8_element_t *elem2, const int orientation, const int sign, const int is_smaller_face)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -280,7 +296,7 @@ t8_element_transform_face (const t8_forest_t forest, const t8_eclass_t tree_clas
 
 int
 t8_element_extrude_face (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *face,
-                         t8_element_t *elem, int root_face)
+                         t8_element_t *elem, const int root_face)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -288,34 +304,35 @@ t8_element_extrude_face (const t8_forest_t forest, const t8_eclass_t tree_class,
 }
 
 void
-t8_element_construct_boundary_face (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem,
-                                    int face, t8_element_t *boundary)
+t8_element_get_boundary_face (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem,
+                              const int face, t8_element_t *boundary)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  return forest->scheme->element_construct_boundary_face (tree_class, elem, face, boundary);
+  return forest->scheme->element_get_boundary_face (tree_class, elem, face, boundary);
 }
 
 void
-t8_element_construct_first_descendant_face (const t8_forest_t forest, const t8_eclass_t tree_class,
-                                            const t8_element_t *elem, int face, t8_element_t *first_desc, int level)
+t8_element_get_first_descendant_face (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem,
+                                      int face, t8_element_t *first_desc, const int level)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  return forest->scheme->element_construct_first_descendant_face (tree_class, elem, face, first_desc, level);
+  return forest->scheme->element_get_first_descendant_face (tree_class, elem, face, first_desc, level);
 }
 
 void
-t8_element_construct_last_descendant_face (const t8_forest_t forest, const t8_eclass_t tree_class,
-                                           const t8_element_t *elem, int face, t8_element_t *last_desc, int level)
+t8_element_get_last_descendant_face (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem,
+                                     const int face, t8_element_t *last_desc, const int level)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  return forest->scheme->element_construct_last_descendant_face (tree_class, elem, face, last_desc, level);
+  return forest->scheme->element_get_last_descendant_face (tree_class, elem, face, last_desc, level);
 }
 
 int
-t8_element_is_root_boundary (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem, int face)
+t8_element_is_root_boundary (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem,
+                             const int face)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -323,12 +340,12 @@ t8_element_is_root_boundary (const t8_forest_t forest, const t8_eclass_t tree_cl
 }
 
 int
-t8_element_construct_face_neighbor_inside (const t8_forest_t forest, const t8_eclass_t tree_class,
-                                           const t8_element_t *elem, t8_element_t *neigh, int face, int *neigh_face)
+t8_element_get_face_neighbor_inside (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem,
+                                     t8_element_t *neigh, const int face, int *neigh_face)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  return forest->scheme->element_construct_face_neighbor_inside (tree_class, elem, neigh, face, neigh_face);
+  return forest->scheme->element_get_face_neighbor_inside (tree_class, elem, neigh, face, neigh_face);
 }
 
 t8_element_shape_t
@@ -349,7 +366,8 @@ t8_element_set_linear_id (const t8_forest_t forest, const t8_eclass_t tree_class
 }
 
 t8_linearidx_t
-t8_element_get_linear_id (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem, int level)
+t8_element_get_linear_id (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem,
+                          const int level)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -357,21 +375,21 @@ t8_element_get_linear_id (const t8_forest_t forest, const t8_eclass_t tree_class
 }
 
 void
-t8_element_construct_first_descendant (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem,
-                                       t8_element_t *desc, int level)
+t8_element_get_first_descendant (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem,
+                                 t8_element_t *desc, int level)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  return forest->scheme->element_construct_first_descendant (tree_class, elem, desc, level);
+  return forest->scheme->element_get_first_descendant (tree_class, elem, desc, level);
 }
 
 void
-t8_element_construct_last_descendant (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem,
-                                      t8_element_t *desc, int level)
+t8_element_get_last_descendant (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *elem,
+                                t8_element_t *desc, const int level)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  return forest->scheme->element_construct_last_descendant (tree_class, elem, desc, level);
+  return forest->scheme->element_get_last_descendant (tree_class, elem, desc, level);
 }
 
 void
@@ -402,7 +420,7 @@ t8_element_get_reference_coords (const t8_forest_t forest, const t8_eclass_t tre
 }
 
 t8_gloidx_t
-t8_element_count_leaves (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *t, int level)
+t8_element_count_leaves (const t8_forest_t forest, const t8_eclass_t tree_class, const t8_element_t *t, const int level)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -410,7 +428,7 @@ t8_element_count_leaves (const t8_forest_t forest, const t8_eclass_t tree_class,
 }
 
 t8_gloidx_t
-t8_element_count_leaves_from_root (const t8_forest_t forest, const t8_eclass_t tree_class, int level)
+t8_element_count_leaves_from_root (const t8_forest_t forest, const t8_eclass_t tree_class, const int level)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -447,7 +465,7 @@ t8_element_to_string (const t8_forest_t forest, const t8_eclass_t tree_class, co
 #endif
 
 void
-t8_element_new (const t8_forest_t forest, const t8_eclass_t tree_class, int length, t8_element_t **elems)
+t8_element_new (const t8_forest_t forest, const t8_eclass_t tree_class, const int length, t8_element_t **elems)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -463,7 +481,7 @@ t8_element_init (const t8_forest_t forest, const t8_eclass_t tree_class, int len
 }
 
 void
-t8_element_deinit (const t8_forest_t forest, const t8_eclass_t tree_class, int length, t8_element_t *elems)
+t8_element_deinit (const t8_forest_t forest, const t8_eclass_t tree_class, const int length, t8_element_t *elems)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -512,3 +530,5 @@ t8_element_MPI_Unpack (const t8_forest_t forest, const t8_eclass_t tree_class, v
 
   return forest->scheme->element_MPI_Unpack (tree_class, recvbuf, buffer_size, position, elements, count, comm);
 }
+
+T8_EXTERN_C_END ();
