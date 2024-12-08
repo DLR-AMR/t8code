@@ -40,7 +40,6 @@
 
 /** \file t8_cmesh.cxx
  *  This file collects all general cmesh routines that need c++ compilation.
- *  Particularly those functions that use the element interface from \ref t8_element.hxx.
  */
 
 int

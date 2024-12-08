@@ -183,7 +183,6 @@ install( FILES
     t8_cmesh_vtk_reader.hxx
     t8_eclass.h
     t8_element.h
-    t8_element.hxx
     t8_element_shape.h
     t8_forest_netcdf.h
     t8_mat.h
