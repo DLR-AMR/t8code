@@ -64,7 +64,7 @@ class DISABLED_local_tree: public testing::TestWithParam<t8_eclass_t> {
     eclass = GetParam ();
     sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &MPI_size);
 
-    forest = t8_forest_new_uniform (t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD), t8_scheme_new_default_cxx (),
+    forest = t8_forest_new_uniform (t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD), t8_scheme_new_default (),
                                     MPI_size, 0, sc_MPI_COMM_WORLD);
     /* TODO: The level does not need to be as big as MPI_SIZE, only as big so that each process has at least one element */
 
@@ -93,8 +93,9 @@ struct t8_trees_to_remove
 /** Remove every element of rank i if the i`th bit in 
  * the current instance \a remove is 0. */
 static int
-t8_adapt_remove (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                 t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+t8_adapt_remove (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, const t8_eclass_t tree_class,
+                 t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family, const int num_elements,
+                 t8_element_t *elements[])
 {
   struct t8_trees_to_remove *trees_to_remove = (struct t8_trees_to_remove *) t8_forest_get_user_data (forest);
   if (trees_to_remove->remove[forest_from->mpirank] == 0) {

@@ -26,21 +26,30 @@
  * implementations in \file t8_dtri_bits.h
  */
 
-#pragma once
+#ifndef T8_DEFAULT_TRI_HXX
+#define T8_DEFAULT_TRI_HXX
 
-#include <t8_element.hxx>
+#include <t8_element.h>
 #include <t8_schemes/t8_default/t8_default_line/t8_default_line.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
+#include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.h>
 
-struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
-{
+/* Forward declaration of the scheme so we can use it as an argument in the eclass schemes function. */
+class t8_scheme;
+
+class t8_default_scheme_tri: public t8_default_scheme_common<t8_default_scheme_tri> {
  public:
-  /** The virtual table for a particular implementation of an element class. */
+  /** Constructor which calls the specialized constructor for the base. */
+  t8_default_scheme_tri (): t8_default_scheme_common (T8_ECLASS_TRIANGLE, sizeof (t8_dtri_t)) {};
 
-  /** Constructor. */
-  t8_default_scheme_tri_c ();
+  /** Destructor */
+  ~t8_default_scheme_tri () {};
 
-  ~t8_default_scheme_tri_c ();
+  /** Return the size of a tri element.
+   * \return  The size of an element of class tri.
+   */
+  size_t
+  get_element_size (void) const;
 
   /** Allocate memory for an array of triangles and initialize them.
    * \param [in] length   The number of tri elements to be allocated.
@@ -49,51 +58,51 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
    *                      On output all these pointers will point to an allocated
    *                      and initialized element.
    * \note Not every element that is created in t8code will be created by a call
-   * to this function. However, if an element is not created using \ref t8_element_new,
-   * then it is guaranteed that \ref t8_element_init is called on it.
-   * \note In debugging mode, an element that was created with \ref t8_element_new
-   * must pass \ref t8_element_is_valid.
-   * \note If an element was created by \ref t8_element_new then \ref t8_element_init
-   * may not be called for it. Thus, \ref t8_element_new should initialize an element
-   * in the same way as a call to \ref t8_element_init would.
-   * \see t8_element_init
-   * \see t8_element_is_valid
+   * to this function. However, if an element is not created using \ref element_new,
+   * then it is guaranteed that \ref element_init is called on it.
+   * \note In debugging mode, an element that was created with \ref element_new
+   * must pass \ref element_is_valid.
+   * \note If an element was created by \ref element_new then \ref element_init
+   * may not be called for it. Thus, \ref element_new should initialize an element
+   * in the same way as a call to \ref element_init would.
+   * \see element_init
+   * \see element_is_valid
    */
-  virtual void
-  t8_element_new (int length, t8_element_t **elem) const;
+  void
+  element_new (int length, t8_element_t **elem) const;
 
   /** Initialize an array of allocated tri elements.
    * \param [in] length   The number of tri elements to be initialized.
    * \param [in,out] elems On input an array of \b length many allocated
    *                       elements.
    * \param [in] called_new True if the elements in \a elem were created by a call
-   *                       to \ref t8_element_new. False if no element in \a elem
+   *                       to \ref element_new. False if no element in \a elem
    *                       was created in this way. The case that only some elements
-   *                       were created by \ref t8_element_new should never occur.
-   * \note In debugging mode, an element that was passed to \ref t8_element_init
-   * must pass \ref t8_element_is_valid.
-   * \note If an element was created by \ref t8_element_new then \ref t8_element_init
-   * may not be called for it. Thus, \ref t8_element_new should initialize an element
-   * in the same way as a call to \ref t8_element_init would.
+   *                       were created by \ref element_new should never occur.
+   * \note In debugging mode, an element that was passed to \ref element_init
+   * must pass \ref element_is_valid.
+   * \note If an element was created by \ref element_new then \ref element_init
+   * may not be called for it. Thus, \ref element_new should initialize an element
+   * in the same way as a call to \ref element_init would.
    * Thus, if \a called_new is true this function should usually do nothing.
-   * \see t8_element_new
-   * \see t8_element_is_valid
+   * \see element_new
+   * \see element_is_valid
    */
-  virtual void
-  t8_element_init (int length, t8_element_t *elem) const;
+  void
+  element_init (int length, t8_element_t *elem) const;
 
   /** Return the refinement level of an element.
    * \param [in] elem    The element whose level should be returned.
    * \return             The level of \b elem.
    */
-  virtual int
-  t8_element_level (const t8_element_t *elem) const;
+  int
+  element_get_level (const t8_element_t *elem) const;
 
   /** Return the maximum allowed level for this element class.
    * \return                      The maximum allowed level for elements of this class.
    */
-  virtual int
-  t8_element_maxlevel (void) const;
+  int
+  get_maxlevel (void) const;
 
   /** Copy all entries of \b source to \b dest. \b dest must be an existing element. No memory is allocated by this 
    * function.
@@ -101,8 +110,8 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
    * \param [in,out] dest This element's entries will be overwritten with the entries of \b source.
    * \note \a source and \a dest may point to the same element.
    */
-  virtual void
-  t8_element_copy (const t8_element_t *source, t8_element_t *dest) const;
+  void
+  element_copy (const t8_element_t *source, t8_element_t *dest) const;
 
   /** Compare two elements.
    * \param [in] elem1  The first element.
@@ -110,17 +119,17 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
    * \return       negative if elem1 < elem2, zero if elem1 equals elem2 and positive if elem1 > elem2.
    *  If elem2 is a copy of elem1 then the elements are equal.
    */
-  virtual int
-  t8_element_compare (const t8_element_t *elem1, const t8_element_t *elem2) const;
+  int
+  element_compare (const t8_element_t *elem1, const t8_element_t *elem2) const;
 
   /** Check if two elements are equal.
-  * \param [in] ts     Implementation of a class scheme.
+  * \param [in] scheme     Implementation of a class scheme.
   * \param [in] elem1  The first element.
   * \param [in] elem2  The second element.
   * \return            1 if the elements are equal, 0 if they are not equal
   */
-  virtual int
-  t8_element_equal (const t8_element_t *elem1, const t8_element_t *elem2) const;
+  int
+  element_is_equal (const t8_element_t *elem1, const t8_element_t *elem2) const;
 
   /** Compute the parent of a given element \b elem and store it in \b parent.
    * \b parent needs to be an existing element. No memory is allocated by this function.
@@ -131,8 +140,8 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
    *                        this element must exist and match the element class of the parent. For a pyramid, for 
    *                        example, it may be either a tetrahedron or a pyramid depending on \b elem's childid.
    */
-  virtual void
-  t8_element_parent (const t8_element_t *elem, t8_element_t *parent) const;
+  void
+  element_get_parent (const t8_element_t *elem, t8_element_t *parent) const;
 
   /** Compute a specific sibling of a given tri element \b elem and store it in \b sibling.
    * \b sibling needs to be an existing element. No memory is allocated by this function.
@@ -143,37 +152,37 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
    * \param [in,out] sibling This element's entries will be overwritten by those of \b elem's sibid-th sibling.
    *                    The storage for this element must existand match the element class of the sibling.
    */
-  virtual void
-  t8_element_sibling (const t8_element_t *elem, int sibid, t8_element_t *sibling) const;
+  void
+  element_get_sibling (const t8_element_t *elem, int sibid, t8_element_t *sibling) const;
 
   /** Compute the number of faces of a given element.
    * \param [in] elem The element.
    * \return          The number of faces of \a elem.
    */
-  virtual int
-  t8_element_num_faces (const t8_element_t *elem) const;
+  int
+  element_get_num_faces (const t8_element_t *elem) const;
 
   /** Compute the maximum number of faces of a given element and all of its descendants.
    * \param [in] elem The element.
    * \return          The maximum number of faces of \a elem and its descendants.
    */
-  virtual int
-  t8_element_max_num_faces (const t8_element_t *elem) const;
+  int
+  element_get_max_num_faces (const t8_element_t *elem) const;
 
   /** Return the number of children of an element when it is refined.
    * \param [in] elem   The element whose number of children is returned.
    * \return            The number of children of \a elem if it is to be refined.
    */
-  virtual int
-  t8_element_num_children (const t8_element_t *elem) const;
+  int
+  element_get_num_children (const t8_element_t *elem) const;
 
   /** Return the number of children of an element's face when the element is refined.
    * \param [in] elem   The element whose face is considered.
    * \param [in] face   A face of \a elem.
    * \return            The number of children of \a face if \a elem is to be refined.
    */
-  virtual int
-  t8_element_num_face_children (const t8_element_t *elem, int face) const;
+  int
+  element_get_num_face_children (const t8_element_t *elem, int face) const;
 
   /** Return the corner number of an element's face corner.
    * \param [in] element  The element.
@@ -181,8 +190,8 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
    * \param [in] corner   A corner index for the face 0 <= \a corner < num_face_corners.
    * \return              The corner number of the \a corner-th vertex of \a face.
    */
-  virtual int
-  t8_element_get_face_corner (const t8_element_t *element, int face, int corner) const;
+  int
+  element_get_face_corner (const t8_element_t *element, int face, int corner) const;
 
   /** Return the face numbers of the faces sharing an element's corner.
    * \param [in] element  The element.
@@ -190,8 +199,8 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
    * \param [in] face     A face index for \a corner.
    * \return              The face number of the \a face-th face at \a corner.
    */
-  virtual int
-  t8_element_get_corner_face (const t8_element_t *element, int corner, int face) const;
+  int
+  element_get_corner_face (const t8_element_t *element, int corner, int face) const;
 
   /** Construct the child element of a given number.
    * \param [in] elem      This must be a valid element, bigger than maxlevel.
@@ -200,8 +209,8 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
    *                       On output, a valid element.
    * It is valid to call this function with elem = child.
      */
-  virtual void
-  t8_element_child (const t8_element_t *elem, int childid, t8_element_t *child) const;
+  void
+  element_get_child (const t8_element_t *elem, int childid, t8_element_t *child) const;
 
   /** Construct all children of a given element.
    * \param [in] elem   This must be a valid element, bigger than maxlevel.
@@ -209,33 +218,33 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
    * \param [in,out] c  The storage for these \a length elements must exist and match the element class in the 
    *                    children's ordering. On output, all children are valid.
    * It is valid to call this function with elem = c[0].
-   * \see t8_element_num_children
+   * \see element_get_num_children
      */
-  virtual void
-  t8_element_children (const t8_element_t *elem, int length, t8_element_t *c[]) const;
+  void
+  element_get_children (const t8_element_t *elem, int length, t8_element_t *c[]) const;
 
   /** Compute the child id of an element.
    * \param [in] elem This must be a valid element.
    * \return          The child id of elem.
    */
-  virtual int
-  t8_element_child_id (const t8_element_t *elem) const;
+  int
+  element_get_child_id (const t8_element_t *elem) const;
 
   /** Compute the ancestor id of an element, that is the child id at a given level.
    * \param [in] elem     This must be a valid element.
    * \param [in] level    A refinement level. Must satisfy \a level < elem.level
    * \return              The child_id of \a elem in regard to its \a level ancestor.
    */
-  virtual int
-  t8_element_ancestor_id (const t8_element_t *elem, int level) const;
+  int
+  element_get_ancestor_id (const t8_element_t *elem, int level) const;
 
   /** Query whether a given set of elements is a family or not.
-   * \param [in] fam      An array of as many elements as an element of class \b ts has siblings.
+   * \param [in] fam      An array of as many elements as an element of class \b scheme has siblings.
    * \return              Zero if \b fam is not a family, nonzero if it is.
    * \note level 0 elements do not form a family.
    */
-  virtual int
-  t8_element_is_family (t8_element_t *const *fam) const;
+  int
+  elements_are_family (t8_element_t *const *fam) const;
 
   /** Compute the nearest common ancestor of two elements. That is, the element with highest level that still has both 
    * given elements as descendants.
@@ -244,16 +253,16 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
    * \param [in,out] nca  The storage for this element must exist and match the element class of the child. On output 
    *                      the unique nearest common ancestor of \b elem1 and \b elem2.
    */
-  virtual void
-  t8_element_nca (const t8_element_t *elem1, const t8_element_t *elem2, t8_element_t *nca) const;
+  void
+  element_get_nca (const t8_element_t *elem1, const t8_element_t *elem2, t8_element_t *nca) const;
 
   /** Compute the shape of the face of an element.
    * \param [in] elem     The element.
    * \param [in] face     A face of \a elem.
    * \return              The element shape of the face.
    */
-  virtual t8_element_shape_t
-  t8_element_face_shape (const t8_element_t *elem, int face) const;
+  t8_element_shape_t
+  element_get_face_shape (const t8_element_t *elem, int face) const;
 
   /** Given an element and a face of the element, compute all children of the element that touch the face.
    * \param [in] elem     The element.
@@ -261,14 +270,14 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
    * \param [in,out] children Allocated elements, in which the children of \a elem that share a face with \a face are 
    *                      stored. They will be stored in order of their linear id.
    * \param [in] num_children The number of elements in \a children. Must match the number of children that touch 
-   *                      \a face. \ref t8_element_num_face_children
+   *                      \a face. \ref element_get_num_face_children
    * \param [in,out] child_indices If not NULL, an array of num_children integers must be given,
    *                      on output its i-th entry is the child_id of the i-th face_child.
    * It is valid to call this function with elem = children[0].
    */
-  virtual void
-  t8_element_children_at_face (const t8_element_t *elem, int face, t8_element_t *children[], int num_children,
-                               int *child_indices) const;
+  void
+  element_get_children_at_face (const t8_element_t *elem, int face, t8_element_t *children[], int num_children,
+                                int *child_indices) const;
 
   /** Given a face of an element and a child number of a child of that face, return the face number
    * of the child of the element that matches the child face.
@@ -285,11 +294,11 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
    * \param [in]  face    Then number of the face.
    * \param [in]  face_child A number 0 <= \a face_child < num_face_children, specifying a child of \a elem that shares
    *                      a face with \a face. These children are counted in linear order. This coincides with the 
-   *                      order of children from a call to \ref t8_element_children_at_face.
+   *                      order of children from a call to \ref element_get_children_at_face.
    * \return              The face number of the face of a child of \a elem that coincides with \a face_child.
    */
-  virtual int
-  t8_element_face_child_face (const t8_element_t *elem, int face, int face_child) const;
+  int
+  element_face_get_child_face (const t8_element_t *elem, int face, int face_child) const;
 
   /** Given a face of an element return the face number of the parent of the element that matches the element's face. 
    * Or return -1 if no face of the parent matches the face.
@@ -298,8 +307,8 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
    * \return              If \a face of \a elem is also a face of \a elem's parent, the face number of this face. Otherwise -1.
    * \note For the root element this function always returns \a face.
    */
-  virtual int
-  t8_element_face_parent_face (const t8_element_t *elem, int face) const;
+  int
+  element_face_get_parent_face (const t8_element_t *elem, int face) const;
 
   /** Given an element and a face of this element. If the face lies on the tree boundary, return the face number of 
    * the tree face. If not the return value is arbitrary.
@@ -308,8 +317,8 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
    * \return The index of the tree face that \a face is a subface of, if \a face is on a tree boundary. Any arbitrary 
    *          integer if \a is not at a tree boundary.
    */
-  virtual int
-  t8_element_tree_face (const t8_element_t *elem, int face) const;
+  int
+  element_get_tree_face (const t8_element_t *elem, int face) const;
 
   /** Suppose we have two trees that share a common face f. Given an element e that is a subface of f in one of the 
    *  trees and given the orientation of the tree connection, construct the face element of the respective tree 
@@ -325,22 +334,25 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
    *                        f<f'. The orientation is defined in relation to the smaller face.
    * \note \a elem1 and \a elem2 may point to the same element.
    */
-  virtual void
-  t8_element_transform_face (const t8_element_t *elem1, t8_element_t *elem2, int orientation, int sign,
-                             int is_smaller_face) const;
+  void
+  element_transform_face (const t8_element_t *elem1, t8_element_t *elem2, int orientation, int sign,
+                          int is_smaller_face) const;
 
-  /** Given a boundary face inside a root tree's face construct the element inside the root tree that has the given 
-   *  face as a face.
+  /** Given a boundary face inside a root tree's face construct
+   *  the element inside the root tree that has the given face as a
+   *  face.
    * \param [in] face     A face element.
-   * \param [in] face_scheme The scheme for the face element.
-   * \param [in,out] elem An allocated element. The entries will be filled with the data of the element that has 
-   *                      \a face as a face and lies within the root tree.
-   * \param [in] root_face The index of the face of the root tree in which \a face lies.
-   * \return              The face number of the face of \a elem that coincides with \a face.
+   * \param [in,out] elem An allocated element. The entries will be filled with
+   *                      the data of the element that has \a face as a face and
+   *                      lies within the root tree.
+   * \param [in] root_face The index of the face of the root tree in which \a face
+   *                      lies.
+   * \param [in] scheme   The scheme collection with a scheme for the eclass of the face.
+   * \return              The face number of the face of \a elem that coincides
+   *                      with \a face.
    */
-  virtual int
-  t8_element_extrude_face (const t8_element_t *face, const t8_eclass_scheme_c *face_scheme, t8_element_t *elem,
-                           int root_face) const;
+  int
+  element_extrude_face (const t8_element_t *face, t8_element_t *elem, int root_face, const t8_scheme *scheme) const;
 
   /** Construct the first descendant of an element at a given level that touches a given face.
    * \param [in] elem      The input element.
@@ -349,8 +361,8 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
    *                       descendant of \a elem that shares a face with \a face.
    * \param [in] level     The level, at which the first descendant is constructed
    */
-  virtual void
-  t8_element_first_descendant_face (const t8_element_t *elem, int face, t8_element_t *first_desc, int level) const;
+  void
+  element_get_first_descendant_face (const t8_element_t *elem, int face, t8_element_t *first_desc, int level) const;
 
   /** Construct the last descendant of an element at a given level that touches a given face.
    * \param [in] elem      The input element.
@@ -359,27 +371,28 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
    *                       descendant of \a elem that shares a face with \a face.
    * \param [in] level     The level, at which the last descendant is constructed
    */
-  virtual void
-  t8_element_last_descendant_face (const t8_element_t *elem, int face, t8_element_t *last_desc, int level) const;
+  void
+  element_get_last_descendant_face (const t8_element_t *elem, int face, t8_element_t *last_desc, int level) const;
 
   /** Construct the boundary element at a specific face.
    * \param [in] elem     The input element.
-   * \param [in] face     The index of the face of which to construct the boundary element.
-   * \param [in,out] boundary An allocated element of dimension of \a element minus 1. The entries will be filled with 
-   *                      the entries of the face of \a element.
-   * \param [in] boundary_scheme The scheme for the eclass of the boundary face.
+   * \param [in] face     The index of the face of which to construct the
+   *                      boundary element.
+   * \param [in,out] boundary An allocated element of dimension of \a element
+   *                      minus 1. The entries will be filled with the entries
+   *                      of the face of \a element.
+   * \param [in] scheme   The scheme containing an eclass scheme for the boundary face.
    */
-  virtual void
-  t8_element_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
-                            const t8_eclass_scheme_c *boundary_scheme) const;
+  void
+  element_get_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary, const t8_scheme *scheme) const;
 
   /** Compute whether a given element shares a given face with its root tree.
    * \param [in] elem     The input element.
    * \param [in] face     A face of \a elem.
    * \return              True if \a face is a subface of the element's root element.
    */
-  virtual int
-  t8_element_is_root_boundary (const t8_element_t *elem, int face) const;
+  int
+  element_is_root_boundary (const t8_element_t *elem, int face) const;
 
   /** Construct the face neighbor of a given element if this face neighbor is inside the root tree. Return 0 otherwise.
    * \param [in] elem The element to be considered.
@@ -391,8 +404,8 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
    * \return          True if \a neigh is inside the root tree. False if not. In this case \a neigh's data can be 
    *                  arbitrary on output.
    */
-  virtual int
-  t8_element_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face, int *neigh_face) const;
+  int
+  element_get_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face, int *neigh_face) const;
 
   /** Initialize the entries of an allocated element according to a given linear id in a uniform refinement.
    * \param [in,out] elem The element whose entries will be set.
@@ -400,40 +413,40 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
    * \param [in] id       The linear id.
    *                      id must fulfil 0 <= id < 'number of leaves in the uniform refinement'
    */
-  virtual void
-  t8_element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id) const;
+  void
+  element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id) const;
 
   /** Compute the linear id of a given element in a hypothetical uniform refinement of a given level.
    * \param [in] elem     The element whose id we compute.
    * \param [in] level    The level of the uniform refinement to consider.
    * \return              The linear id of the element.
    */
-  virtual t8_linearidx_t
-  t8_element_get_linear_id (const t8_element_t *elem, int level) const;
+  t8_linearidx_t
+  element_get_linear_id (const t8_element_t *elem, int level) const;
 
   /** Compute the first descendant of a given element.
    * \param [in] elem     The element whose descendant is computed.
    * \param [out] desc    The first element in a uniform refinement of \a elem of the given level.
    * \param [in] level    The level, at which the descendant is computed.
    */
-  virtual void
-  t8_element_first_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
+  void
+  element_get_first_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
 
   /** Compute the last descendant of a given element.
    * \param [in] elem     The element whose descendant is computed.
    * \param [out] desc    The last element in a uniform refinement of \a elem of the given level.
    * \param [in] level    The level, at which the descendant is computed.
    */
-  virtual void
-  t8_element_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
+  void
+  element_get_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
 
   /** Construct the successor in a uniform refinement of a given element.
    * \param [in] elem1    The element whose successor should be constructed.
    * \param [in,out] elem2  The element whose entries will be set.
    * \param [in] level    The level of the uniform refinement to consider.
    */
-  virtual void
-  t8_element_successor (const t8_element_t *elem, t8_element_t *succ) const;
+  void
+  element_construct_successor (const t8_element_t *elem, t8_element_t *succ) const;
 
   /** Get the integer coordinates of the anchor node of an element. The default scheme implements the Morton type SFCs.
    * In these SFCs the elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and  L the maximum 
@@ -442,8 +455,8 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
    * \param [in] elem   The element.
    * \param [out] anchor The integer coordinates of the anchor node in the cube [0,1]^(dL)
    */
-  virtual void
-  t8_element_anchor (const t8_element_t *elem, int anchor[3]) const;
+  void
+  element_get_anchor (const t8_element_t *elem, int anchor[3]) const;
 
   /** Compute the integer coordinates of a given element vertex. The default scheme implements the Morton type SFCs. 
    * In these SFCs the elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and L the maximum 
@@ -453,8 +466,8 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
    *   \param [out] coords An array of at least as many integers as the element's dimension whose entries will be 
    *                          filled with the coordinates of \a vertex.
    */
-  virtual void
-  t8_element_vertex_integer_coords (const t8_element_t *elem, int vertex, int coords[]) const;
+  void
+  element_get_vertex_integer_coords (const t8_element_t *elem, int vertex, int coords[]) const;
 
   /** Compute the coordinates of a given element vertex inside a reference tree
    *  that is embedded into [0,1]^d (d = dimension).
@@ -465,8 +478,8 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
    *   \warning           coords should be zero-initialized, as only the first d coords will be set, but when used elsewhere
    *                      all coords might be used. 
    */
-  virtual void
-  t8_element_vertex_reference_coords (const t8_element_t *elem, const int vertex, double coords[]) const;
+  void
+  element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex, double coords[]) const;
 
   /** Convert points in the reference space of an element to points in the
    *  reference space of the tree.
@@ -478,34 +491,34 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
    * \param [out] out_coords  The coordinates of the points in the
    *                          reference space of the tree.
    */
-  virtual void
-  t8_element_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
-                               double *out_coords) const;
+  void
+  element_get_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
+                                double *out_coords) const;
 
   /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
    * Returns false otherwise.
    * * \return           0, because tris refine regularly
    */
-  virtual int
-  t8_element_refines_irregular (void) const;
+  int
+  refines_irregular (void) const;
 
 #ifdef T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is
    *  safe to perform any of the above algorithms on it.
    * \param [in]      elem  The element to be checked.
    * \return          True if \a elem is safe to use. False otherwise.
-   * \note            An element that is constructed with \ref t8_element_new
+   * \note            An element that is constructed with \ref element_new
    *                  must pass this test.
-   * \note            An element for which \ref t8_element_init was called must pass
+   * \note            An element for which \ref element_init was called must pass
    *                  this test.
    * \note            This function is used for debugging to catch certain errors.
    *                  These can for example occur when an element points to a region
    *                  of memory which should not be interpreted as an element.
-   * \note            We recommend to use the assertion T8_ASSERT (t8_element_is_valid (elem))
+   * \note            We recommend to use the assertion T8_ASSERT (element_is_valid (elem))
    *                  in the implementation of each of the functions in this file.
    */
-  virtual int
-  t8_element_is_valid (const t8_element_t *t) const;
+  int
+  element_is_valid (const t8_element_t *t) const;
 
   /**
   * Print a given element. For a example for a triangle print the coordinates
@@ -514,15 +527,15 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
   * 
   * \param [in]        elem  The element to print
   */
-  virtual void
-  t8_element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const;
+  void
+  element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const;
 #endif
 
   /** Fills an element with the root element.
  * \param [in,out] elem   The element to be filled with root.
  */
   void
-  t8_element_root (t8_element_t *elem) const;
+  get_root (t8_element_t *elem) const;
 
   /** Pack multiple elements into contiguous memory, so they can be sent via MPI.
    * \param [in] elements Array of elements that are to be packed
@@ -532,17 +545,17 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
    * \param [in, out] position the position of the first byte that is not already packed
    * \param [in] comm MPI Communicator
   */
-  virtual void
-  t8_element_MPI_Pack (t8_element_t **const elements, const unsigned int count, void *send_buffer, int buffer_size,
-                       int *position, sc_MPI_Comm comm) const;
+  void
+  element_MPI_Pack (t8_element_t **const elements, const unsigned int count, void *send_buffer, int buffer_size,
+                    int *position, sc_MPI_Comm comm) const;
 
   /** Determine an upper bound for the size of the packed message of \b count elements
    * \param [in] count Number of elements to pack
    * \param [in] comm MPI Communicator
    * \param [out] pack_size upper bound on the message size
   */
-  virtual void
-  t8_element_MPI_Pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size) const;
+  void
+  element_MPI_Pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size) const;
 
   /** Unpack multiple elements from contiguous memory that was received via MPI.
    * \param [in] recvbuf Buffer from which to unpack the elements
@@ -552,7 +565,9 @@ struct t8_default_scheme_tri_c: public t8_default_scheme_common_c
    * \param [in] count Number of elements to unpack
    * \param [in] comm MPI Communicator
   */
-  virtual void
-  t8_element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements,
-                         const unsigned int count, sc_MPI_Comm comm) const;
+  void
+  element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements,
+                      const unsigned int count, sc_MPI_Comm comm) const;
 };
+
+#endif /* !T8_DEFAULT_TRI_HXX */

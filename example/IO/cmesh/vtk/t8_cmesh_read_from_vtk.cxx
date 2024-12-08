@@ -55,7 +55,7 @@ t8_forest_construct_from_vtk (const char *prefix, sc_MPI_Comm comm, const int va
   if (partition) {
     t8_cmesh_init (&cmesh);
     t8_cmesh_set_derive (cmesh, cmesh_in);
-    t8_cmesh_set_partition_uniform (cmesh, 0, t8_scheme_new_default_cxx ());
+    t8_cmesh_set_partition_uniform (cmesh, 0, t8_scheme_new_default ());
     t8_cmesh_commit (cmesh, comm);
     snprintf (out_file, BUFSIZ - 16, "%s_cmesh_partition", out_prefix);
     t8_cmesh_vtk_write_file (cmesh, out_file);
@@ -70,7 +70,7 @@ t8_forest_construct_from_vtk (const char *prefix, sc_MPI_Comm comm, const int va
   /* Initialize the cmesh of the forest */
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
   /* Set the scheme of the forest. In this case, the default schemes are used */
-  t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
+  t8_forest_set_scheme (forest, t8_scheme_new_default ());
   t8_forest_commit (forest);
 
   t8_vtk_data_field_t *vtk_data;

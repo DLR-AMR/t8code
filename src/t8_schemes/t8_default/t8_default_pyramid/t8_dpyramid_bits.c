@@ -1540,6 +1540,7 @@ t8_dpyramid_compute_integer_coords (const t8_dpyramid_t *elem, const int vertex,
     }
   }
   else {
+    T8_ASSERT (t8_dpyramid_shape (elem) == T8_ECLASS_TET);
     T8_ASSERT (0 <= vertex && vertex < T8_DTET_CORNERS);
     t8_dtet_compute_integer_coords (&(elem->pyramid), vertex, coords);
   }

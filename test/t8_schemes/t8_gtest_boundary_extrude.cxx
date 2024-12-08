@@ -35,25 +35,24 @@ class class_test_boundary_extrude: public TestDFS {
   void
   check_element () override
   {
-    const int num_faces = ts->t8_element_num_faces (element);
+    const int num_faces = scheme->element_get_num_faces (tree_class, element);
     for (int iface = 0; iface < num_faces; iface++) {
       /* Iterate over all faces that are also root faces and determine the face element */
-      if (ts->t8_element_is_root_boundary (element, iface)) {
+      if (scheme->element_is_root_boundary (tree_class, element, iface)) {
         /* Get face scheme */
-        const int tree_face = ts->t8_element_tree_face (element, iface);
-        const t8_eclass_t face_eclass = (t8_eclass_t) t8_eclass_face_types[eclass][tree_face];
-        const t8_eclass_scheme_c *face_ts = scheme->eclass_schemes[face_eclass];
+        const int tree_face = scheme->element_get_tree_face (tree_class, element, iface);
+        const t8_eclass_t face_eclass = (t8_eclass_t) t8_eclass_face_types[tree_class][tree_face];
 
         t8_element_t *boundary;
-        face_ts->t8_element_new (1, &boundary);
+        scheme->element_new (face_eclass, 1, &boundary);
 
-        ts->t8_element_boundary_face (element, iface, boundary, face_ts);
+        scheme->element_get_boundary_face (tree_class, element, iface, boundary);
 
-        ts->t8_element_extrude_face (boundary, face_ts, check, tree_face);
+        scheme->element_extrude_face (tree_class, boundary, check, tree_face);
 
-        EXPECT_ELEM_EQ (ts, element, check);
+        EXPECT_ELEM_EQ (scheme, tree_class, element, check);
 
-        face_ts->t8_element_destroy (1, &boundary);
+        scheme->element_destroy (face_eclass, 1, &boundary);
       }
     }
   }
@@ -64,13 +63,13 @@ class class_test_boundary_extrude: public TestDFS {
   {
     dfs_test_setup ();
     /* Get element and initialize it */
-    ts->t8_element_new (1, &check);
+    scheme->element_new (tree_class, 1, &check);
   }
   void
   TearDown () override
   {
     /* Destroy element */
-    ts->t8_element_destroy (1, &check);
+    scheme->element_destroy (tree_class, 1, &check);
 
     /* Destroy DFS test */
     dfs_test_teardown ();

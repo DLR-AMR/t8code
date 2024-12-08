@@ -34,8 +34,9 @@ T8_EXTERN_C_BEGIN ();
 /** Removes all elements of a local tree if they belong to the corresponding
  *  global trees which is given by the user_data. */
 static int
-t8_adapt_remove (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                 t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+t8_adapt_remove (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, const t8_eclass_t tree_class,
+                 const t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family, const int num_elements,
+                 t8_element_t *elements[])
 {
   const t8_gloidx_t *tree_id = (const t8_gloidx_t *) t8_forest_get_user_data (forest);
   const t8_gloidx_t global_tree_id = t8_forest_global_tree_id (forest_from, which_tree);
@@ -55,7 +56,7 @@ t8_strip_of_quads (t8_gloidx_t num_trees, t8_gloidx_t empty_tree, const char **v
   t8_cmesh_t cmesh
     = t8_cmesh_new_hypercube_pad (T8_ECLASS_QUAD, sc_MPI_COMM_WORLD, boundary_coords, num_trees, 1, 0, use_axis_alined);
 
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), 0, 0, sc_MPI_COMM_WORLD);
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), 0, 0, sc_MPI_COMM_WORLD);
 
   t8_forest_write_vtk (forest, *vtuname);
   t8_debugf ("Output to %s\n", *vtuname);
