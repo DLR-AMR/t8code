@@ -367,7 +367,7 @@ t8_element_get_face_shape (const t8_scheme_c *scheme, const t8_eclass_t tree_cla
  */
 void
 t8_element_get_children_at_face (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *elem,
-                                 const int face, t8_element_t *children[], int num_children, int *child_indices);
+                                 const int face, t8_element_t *children[], const int num_children, int *child_indices);
 
 /** Given a face of an element and a child number of a child of that face, return the face number
  * of the child of the element that matches the child face.
