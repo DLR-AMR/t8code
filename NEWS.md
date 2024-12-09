@@ -76,7 +76,7 @@ As you might have reconnized allready, some of the element functions have been r
 
 Furthermore we applied our naming-guidelines to the scheme functions and got rid of all `t8_`-prefixes for functions that are now a member of t8code class. 
 
-A list of all renamings (without considering the deletion of the prefix):
+A list of all renamings (without considering the deletion of the prefix) is here:
 
 - `t8_element_level` -> `element_get_level`
 - `t8_element_maxlevel` -> `get_maxlevel`
