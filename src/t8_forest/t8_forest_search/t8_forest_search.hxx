@@ -588,7 +588,7 @@ class t8_partition_search_base {
    * \return True if the search should continue, false otherwise.
    */
   virtual bool
-  check_element (const t8_locidx_t ltreeid, const t8_element_t *element, int pfirst, int plast)
+  check_element (const t8_locidx_t ltreeid, const t8_element_t *element, const int pfirst, const int plast)
     = 0;
 
   /** \brief Checks queries during the search.
@@ -605,7 +605,7 @@ class t8_partition_search_base {
    */
   virtual void
   check_queries (std::vector<size_t> &new_active_queries, const t8_locidx_t ltreeid, const t8_element_t *element,
-                 int pfirst, int plast)
+                 const int pfirst, const int plast)
     = 0;
 
   /**
@@ -617,6 +617,64 @@ class t8_partition_search_base {
   virtual void
   update_queries (std::vector<size_t> &old_query_indices)
     = 0;
+};
+
+template <typename Udata = void>
+class t8_partition_search: public t8_partition_search_base {
+ public:
+  t8_partition_search (t8_partition_search_element_callback<Udata> element_callback, t8_forest_t forest = nullptr,
+                       Udata *user_data = nullptr)
+    : t8_partition_search_base (forest), element_callback (element_callback)
+  {
+    if (user_data != nullptr) {
+      this->user_data = user_data;
+    }
+  }
+
+  /** \brief Updates the user data associated with the object.
+   *
+   * This function sets the user data pointer to the provided Udata object.
+   *
+   * \param[in] udata A pointer to the Udata object to be set as the user data.
+   */
+  void
+  update_user_data (Udata *udata)
+  {
+    if (udata != nullptr) {
+      this->user_data = udata;
+    }
+  }
+
+  Udata *user_data;
+
+ private:
+  bool
+  stop_due_to_queries () override
+  {
+    return false;
+  }
+
+  bool
+  check_element (const t8_locidx_t ltreeid, const t8_element_t *element, const int pfirst, const int plast) override
+  {
+    T8_ASSERT (t8_forest_is_committed (this->forest));
+    return this->element_callback (this->forest, ltreeid, element, pfirst, plast, user_data);
+  }
+
+  void
+  check_queries (std::vector<size_t> &new_active_queries, const t8_locidx_t ltreeid, const t8_element_t *element,
+                 const int pfirst, const int plast) override
+  {
+    return;
+  }
+
+  void
+  update_queries (std::vector<size_t> &old_query_indices)
+  {
+    return;
+  }
+
+  t8_search_element_callback<Udata> element_callback;
 };
 
 #endif  // T8_FOREST_SEARCH_HXX
