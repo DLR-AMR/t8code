@@ -130,7 +130,7 @@ using t8_partition_search_element_callback
                         const int pfirst, const int plast, Udata *user_data)>;
 
 /**
- * \typedef t8_partition_search_queries_callback
+ * \typedef t8_partition_search_query_callback
  * \brief A callback function type used for searching queries in the partition of a forest.
  *
  * \tparam Query_T The type of the query.
@@ -145,7 +145,7 @@ using t8_partition_search_element_callback
  * \param[in] user_data User-defined data passed to the callback.
  */
 template <typename Query_T, typename Udata = void>
-using t8_partition_search_queries_callback
+using t8_partition_search_query_callback
   = std::function<void (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
                         const int pfirst, const int plast, const Query_T &query, Udata *user_data)>;
 
@@ -674,7 +674,73 @@ class t8_partition_search: public t8_partition_search_base {
     return;
   }
 
-  t8_search_element_callback<Udata> element_callback;
+  t8_partition_search_element_callback<Udata> element_callback;
 };
 
+/**
+ * \brief A class that performs a search in the partition of a forest with queries.
+ * Uses a filter-view to filter out the active queries. It is recommended to use this version of the search
+ * if the number of queries is small or if the queries do not need any further computations to be evaluated.
+ *
+ * \tparam Query_T The type of queries
+ * \tparam Udata The type of the user data, defaults to void.
+*/
+template <typename Query_T, typename Udata = void>
+class t8_partition_search_with_queries: public t8_partition_search<Udata> {
+ public:
+  t8_partition_search_with_queries (t8_partition_search_element_callback<Udata> element_callback,
+                                    t8_partition_search_query_callback<Query_T, Udata> queries_callback,
+                                    std::vector<Query_T> &queries, const t8_forest_t forest = nullptr,
+                                    Udata *user_data = nullptr)
+    : t8_partition_search<Udata> (element_callback, forest, user_data), queries_callback (queries_callback),
+      queries (queries)
+  {
+    this->active_queries.resize (queries.size ());
+    std::iota (this->active_queries.begin (), this->active_queries.end (), 0);
+  }
+
+  void
+  update_queries (std::vector<Query_T> &queries)
+  {
+    this->queries = queries;
+  }
+
+  ~t8_partition_search_with_queries ()
+  {
+  }
+
+ private:
+  bool
+  stop_due_to_queries () override
+  {
+    return this->active_queries.empty ();
+  }
+
+  void
+  check_queries (std::vector<size_t> &new_active_queries, const t8_locidx_t ltreeid, const t8_element_t *element,
+                 const int pfirst, const int plast) override
+  {
+    T8_ASSERT (new_active_queries.empty ());
+    if (!this->active_queries.empty ()) {
+      auto positive_queries = this->active_queries | std::ranges::views::filter ([&] (size_t &query_index) {
+                                return this->queries_callback (this->forest, ltreeid, element, pfirst, plast,
+                                                               queries[query_index], this->user_data);
+                              });
+      if (pfirst != plast) {
+        new_active_queries.assign (positive_queries.begin (), positive_queries.end ());
+        std::swap (this->active_queries, new_active_queries);
+      }
+    }
+  }
+
+  void
+  update_queries (std::vector<size_t> &old_query_indices)
+  {
+    std::swap (this->active_queries, old_query_indices);
+  }
+
+  t8_partition_search_query_callback<Query_T, Udata> queries_callback;
+  std::vector<Query_T> &queries;
+  std::vector<size_t> active_queries;
+};
 #endif  // T8_FOREST_SEARCH_HXX
