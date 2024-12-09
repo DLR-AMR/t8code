@@ -68,7 +68,7 @@ static t8_forest_t
 t8_step5_build_forest (sc_MPI_Comm comm, int level)
 {
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
-  t8_scheme_cxx_t *scheme = t8_scheme_new_default_cxx ();
+  t8_scheme_c *scheme = t8_scheme_new_default ();
   struct t8_step3_adapt_data adapt_data = {
     { 0.5, 0.5, 1 }, /* Midpoints of the sphere. */
     0.2,             /* Refine if inside this radius. */
@@ -132,19 +132,18 @@ t8_step5_create_element_data (t8_forest_t forest)
     t8_locidx_t itree, num_local_trees;
     t8_locidx_t current_index;
     t8_locidx_t ielement, num_elements_in_tree;
-    t8_eclass_t tree_class;
-    t8_eclass_scheme_c *eclass_scheme;
     const t8_element_t *element;
 
+    /* Get the scheme of the forest for later usage. */
+    t8_scheme_c *scheme = t8_forest_get_scheme (forest);
     /* Get the number of trees that have elements of this process. */
     num_local_trees = t8_forest_get_num_local_trees (forest);
     for (itree = 0, current_index = 0; itree < num_local_trees; ++itree) {
       /* This loop iterates through all local trees in the forest. */
-      /* Each tree may have a different element class (quad/tri/hex/tet etc.) and therefore
+      /* Each tree may have a different tree class (quad/tri/hex/tet etc.) and therefore
        * also a different way to interpret its elements. In order to be able to handle elements
-       * of a tree, we need to get its eclass_scheme, and in order to so we first get its eclass. */
-      tree_class = t8_forest_get_tree_class (forest, itree);
-      eclass_scheme = t8_forest_get_eclass_scheme (forest, tree_class);
+       * of a tree, we need the scheme we obtained earlier and in order to use it we get the eclass of the tree. */
+      const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
       /* Get the number of elements of this tree. */
       num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
       for (ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
@@ -158,7 +157,7 @@ t8_step5_create_element_data (t8_forest_t forest)
         /* We want to store the elements level and its volume as data. We compute these
          * via the eclass_scheme and the forest_element interface. */
 
-        element_data[current_index].level = t8_element_level (eclass_scheme, element);
+        element_data[current_index].level = t8_element_get_level (forest, tree_class, element);
         element_data[current_index].volume = t8_forest_element_volume (forest, itree, element);
       }
     }
