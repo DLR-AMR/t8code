@@ -8,7 +8,7 @@ We provided you with a default implementation for all standard shapes supported 
 If you wanted to use an element function you needed the scheme and the eclass of the tree the element belongs to to call the proper function. 
 
 ### CRTP instead of a virtual base class
-We left this approach and now use a [CRTP](https://www.fluentcpp.com/2017/05/16/what-the-crtp-brings-to-code/) approach instead. That way we can get rid of the virtual base class and hopefully by avoiding virtual function calls and now with the opportunity to inline functions we can optimize the code further. 
+We left this approach and now use a [CRTP](https://www.fluentcpp.com/2017/05/16/what-the-crtp-brings-to-code/) approach instead. That way we can get rid of the virtual base class and hopefully by avoiding virtual function calls and now with the opportunity to inline functions we can optimize the code further.
 
 ### The scheme builder
 Furthermore, we now provide a scheme builder instead of only the default scheme with our default implementation (don't worry, the default implementation is still there and untouched, t8code will still behave in the way that you know it). 
@@ -31,7 +31,7 @@ for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree){
   /* Get the eclass of the tree. */
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
   /* Get the scheme of of this eclass. */
-  const t8_eclass_scheme_c *tscheme = t8_forest_get_eclass_scheme (forest_from, tree_class);
+  <code><span stayle="color:red">const t8_eclass_scheme_c *tscheme = t8_forest_get_eclass_scheme (forest_from, tree_class);</span></code>
   /* Get the number of elements in the tree itree. */
   const t8_locidx_t num_elems = t8_forest_get_tree_num_elements (forest, itree);
   /* Loop over all elements */
