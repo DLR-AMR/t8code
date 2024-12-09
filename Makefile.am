@@ -119,10 +119,12 @@ distclean-local:
 maintainer-clean-local:
 	rm -rf doc/{html,latex,man,*.doxygen.tags}
 
-# We are using a README.md and not a README file. However, autotools forces us
-# to use a README file. With this rule, we trick autotools in thinking that we
-# provide a README.
+# We are using a README.md and a NEWS.md and not a README and a NEWS file. However, autotools forces us
+# to use a README and a NEWS file. With this rule, we trick autotools in thinking that we
+# provide a README and a NEWS file.
 README: README.md
+	pandoc -f markdown -t plain --wrap=none $< -o $@
+NEWS: NEWS.md
 	pandoc -f markdown -t plain --wrap=none $< -o $@
 
 gtest:

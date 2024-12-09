@@ -47,9 +47,10 @@
 class t8_element_array_iterator {
 
  private:
-  const t8_eclass_scheme_c* scheme; /*!< The scheme of the elements residing within the array. */
-  const sc_array_t* elements;       /*!< A pointer to the actual serialized array of element pointers. */
-  t8_locidx_t current_index { 0 };  /*!< The index the iterator currently points to. */
+  const t8_scheme* scheme;         /*!< The scheme of the elements residing within the array. */
+  const sc_array_t* elements;      /*!< A pointer to the actual serialized array of element pointers. */
+  t8_locidx_t current_index { 0 }; /*!< The index the iterator currently points to. */
+  t8_eclass_t tree_class;          /*!< The tree class of the elements in the array. */
 
  public:
   using iterator_category = std::random_access_iterator_tag;
@@ -62,7 +63,7 @@ class t8_element_array_iterator {
   t8_element_array_iterator () = delete;
   t8_element_array_iterator (const t8_element_array_t* element_array, const t8_locidx_t position)
     : scheme { t8_element_array_get_scheme (element_array) }, elements { t8_element_array_get_array (element_array) },
-      current_index { position } {};
+      current_index { position }, tree_class (t8_element_array_get_tree_class (element_array)) {};
 
   /* Copy/Move Constructors/Assignment-Operators */
   t8_element_array_iterator (const t8_element_array_iterator& other) = default;
@@ -215,7 +216,7 @@ class t8_element_array_iterator {
   get_linear_id_at_level (const int level)
   {
     T8_ASSERT (current_index >= 0 && static_cast<size_t> (current_index) < elements->elem_count);
-    return scheme->t8_element_get_linear_id (*(*this), level);
+    return scheme->element_get_linear_id (tree_class, *(*this), level);
   };
 };
 

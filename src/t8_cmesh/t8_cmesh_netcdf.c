@@ -43,6 +43,7 @@ These functions write a file in the netCDF-format which represents the given 2D-
 #include <t8_cmesh_netcdf.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_schemes/t8_scheme.h>
 
 /* Contains all Variables used in order to work with the NetCDF-File */
 typedef struct

@@ -90,7 +90,7 @@ t8_element_get_value (const t8_step7_adapt_data *adapt_data, t8_locidx_t ielemen
 /* This is our own defined data that we will pass on to the
  * adaptation callback. */
 
-/* The adaptation callback function. This function will be called once for each element
+/** The adaptation callback function. This function will be called once for each element
  * and the return value decides whether this element should be refined or not.
  *   return > 0 -> This element should get refined.
  *   return = 0 -> This element should not get refined.
@@ -104,15 +104,18 @@ t8_element_get_value (const t8_step7_adapt_data *adapt_data, t8_locidx_t ielemen
  * \param [in] forest       The current forest that is in construction.
  * \param [in] forest_from  The forest from which we adapt the current forest (in our case, the uniform forest)
  * \param [in] which_tree   The process local id of the current tree.
+ * \param [in] tree_class   The eclass of \a which_tree
+ * \param [in] tree_class   The tree_class of the elements of the tree.
  * \param [in] lelement_id  The tree local index of the current element (or the first of the family).
- * \param [in] ts           The refinement scheme for this tree's element class.
+ * \param [in] scheme           The refinement scheme of the forest.
  * \param [in] is_family    if 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
  * \param [in] num_elements The number of entries in \a elements elements that are defined.
  * \param [in] elements     The element or family of elements to consider for refinement/coarsening.
  */
 int
-t8_step7_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                         t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+t8_step7_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
+                         const t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme *scheme,
+                         const int is_family, const int num_elements, t8_element_t *elements[])
 {
   /* Our adaptation criterion is to look at the midpoint coordinates of the current element and if
    * they are inside a sphere around a given midpoint we refine, if they are outside, we coarsen. */
@@ -191,7 +194,8 @@ t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn, int do_par
  * \param [in] forest_old        non adapted forest
  * \param [in] forest_new        adapted forest
  * \param [in] which_tree        tree_id of the analyzed element
- * \param [in] ts                eclass scheme
+ * \param [in] tree_class        The eclass of the tree 
+ * \param [in] scheme                Scheme of the forest
  * \param [in] refine            ==0 - do nothing, == -1 - coarsen, == 1 - refine
  * \param [in] num_outgoing      number of the elements not refined forest
  * \param [in] first_outgoing    index of the old element
@@ -199,8 +203,8 @@ t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn, int do_par
  * \param [in] first_incoming    index of the new element
  */
 void
-t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree, t8_eclass_scheme_c *ts,
-                   int refine, int num_outgoing, t8_locidx_t first_outgoing, int num_incoming,
+t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree, const t8_eclass_t tree_class,
+                   const t8_scheme *scheme, int refine, int num_outgoing, t8_locidx_t first_outgoing, int num_incoming,
                    t8_locidx_t first_incoming)
 {
   struct t8_step7_adapt_data *adapt_data_new = (struct t8_step7_adapt_data *) t8_forest_get_user_data (forest_new);
@@ -286,7 +290,7 @@ t8_interpolation ()
   t8_step7_adapt_data *data;
   double centroid[3];
   const double midpoint[3] = { 0.5, 0.5, 1 };
-  t8_scheme_cxx_t *scheme = t8_scheme_new_default_cxx ();
+  t8_scheme *scheme = t8_scheme_new_default ();
 
   /* Construct a cmesh */
   t8_cmesh_t cmesh = t8_cmesh_new_from_class (T8_ECLASS_HEX, sc_MPI_COMM_WORLD);

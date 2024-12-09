@@ -35,36 +35,43 @@
  * \brief Test two elements for equality and print the elements if they aren't equal
  * 
  * \param[in] ts_expr The name of the scheme \a ts
+ * \param[in] tree_class_expr The name of the tree class 
  * \param[in] elem_1_expr The name of the first element \a elem_1
  * \param[in] elem_2_expr The name of the second element \a elem_2
- * \param[in] ts The scheme to use to check the equality
+ * \param[in] scheme The scheme to use to check the equality
+ * \param[in] tree_class The eclass of the tree the elements are part of
  * \param[in] elem_1 The element to compare with \a elem_2
  * \param[in] elem_2 the element to compare with \a elem_1
  * \return testing::AssertionResult 
  */
 testing::AssertionResult
-element_equality (const char *ts_expr, const char *elem_1_expr, const char *elem_2_expr, const t8_eclass_scheme_c *ts,
-                  const t8_element_t *elem_1, const t8_element_t *elem_2)
+element_equality (const char *ts_expr, const char *tree_class_expr, const char *elem_1_expr, const char *elem_2_expr,
+                  const t8_scheme *scheme, const t8_eclass_t tree_class, const t8_element_t *elem_1,
+                  const t8_element_t *elem_2)
 {
-  if (ts->t8_element_equal (elem_1, elem_2)) {
+  if (scheme->element_is_equal (tree_class, elem_1, elem_2)) {
     return testing::AssertionSuccess ();
   }
   else {
 #if T8_ENABLE_DEBUG
     char elem_1_string[BUFSIZ];
     char elem_2_string[BUFSIZ];
-    ts->t8_element_to_string (elem_1, elem_1_string, BUFSIZ);
-    ts->t8_element_to_string (elem_2, elem_2_string, BUFSIZ);
+    scheme->element_to_string (tree_class, elem_1, elem_1_string, BUFSIZ);
+    scheme->element_to_string (tree_class, elem_2, elem_2_string, BUFSIZ);
     return testing::AssertionFailure () << elem_1_expr << " " << elem_1_string << " is not equal to \n"
-                                        << elem_2_expr << " " << elem_2_string << " given scheme " << ts_expr;
+                                        << elem_2_expr << " " << elem_2_string << " given scheme " << ts_expr
+                                        << " and tree class " << tree_class_expr << " "
+                                        << t8_eclass_to_string[tree_class];
 #else
     return testing::AssertionFailure () << elem_1_expr << " is not equal to \n"
-                                        << elem_2_expr << " given scheme " << ts_expr;
+                                        << elem_2_expr << " given scheme " << ts_expr << " and tree class "
+                                        << tree_class_expr;
 #endif
   }
 }
 
-#define EXPECT_ELEM_EQ(scheme, elem1, elem2) EXPECT_PRED_FORMAT3 (element_equality, (scheme), (elem1), (elem2))
+#define EXPECT_ELEM_EQ(scheme, tree_class, elem1, elem2) \
+  EXPECT_PRED_FORMAT4 (element_equality, (scheme), (tree_class), (elem1), (elem2))
 
 /**
  * \brief Test if two 3D vectors are equal with respect to a given precision
