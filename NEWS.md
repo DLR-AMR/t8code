@@ -68,7 +68,52 @@ In summary there are two major changes:
  1. Get the scheme outside of loop over the trees
  2. Access element functions via the scheme, the class of the tree and the element.
 
-## Usage of the default scheme
+### Call to an element function
+All element-specific function got an additional argument, the class of the tree. In your application we recommend to get the scheme of a forest only once. It is very likeley, that you already got the information about the tree-class using the element function in its old way. All other function arguments have stayed the same. 
+
+### Renaming of some element functions
+As you might have reconnized allready, some of the element functions have been renamed. We try to get closer to the getter/setter style there and to make more clear what the function does. 
+
+Furthermore we applied our naming-guidelines to the scheme functions and got rid of all `t8_`-prefixes for functions that are now a member of t8code class. 
+
+A list of all renamings (without considering the deletion of the prefix):
+
+- `t8_element_level` -> `element_get_level`
+- `t8_element_maxlevel` -> `get_maxlevel`
+- `t8_element_equal` -> `element_is_equal`
+- `t8_element_parent` -> `element_get_parent`
+- `t8_element_sibling` -> `element_get_sibling`
+- `t8_element_num_faces` -> `element_get_num_faces`
+- `t8_element_max_num_faces` -> `element_get_max_num_faces`
+- `t8_element_num_children` -> `element_get_num_children`
+- `t8_element_num_face_children` -> `element_get_num_face_children`
+- `t8_element_child` -> `element_get_child`
+- `t8_element_children` -> `element_get_children`
+- `t8_element_child_id` -> `element_get_child_id`
+- `t8_element_ancestor_id` -> `element_get_ancestor_id`
+- `t8_element_is_family` -> `elements_are_family`
+- `t8_element_nca` -> `element_get_nca`
+- `t8_element_face_shape` -> `element_get_face_shape`
+- `t8_element_children_at_face` -> `element_get_children_at_face`
+- `t8_element_face_child_face` -> `element_face_get_child_face`
+- `t8_element_face_parent_face` -> `element_face_get_parent_face`
+- `t8_element_tree_face` -> `element_get_tree_face`
+- `t8_element_first_descendant_face` -> `element_get_first_descendant_face`
+- `t8_element_last_descendant_face` -> `element_get_last_descendant_face`
+- `t8_element_boundary_face` -> `element_get_boundary_face`
+- `t8_element_face_neighbor_inside` -> `element_get_face_neighbor_inside`
+- `t8_element_linear_id` -> `element_get_linear_id`
+- `t8_element_first_descendant` -> `element_get_first_descendant`
+- `t8_element_last_descendant` -> `element_get_last_descendant`
+- `t8_element_successor` -> `element_construct_successsor`
+- `t8_element_anchor` -> `element_get_anchor`
+- `t8_element_vertex_integer_coords` -> `element_get_vertex_integer_coords`
+- `t8_element_vertex_reference_coords` -> `element_get_vertex_reference_coords`
+- `t8_element_refines_irregular` -> `refines_irregular`
+- `t8_element_root` -> `t8_element_get_root`
+
+
+### Usage of the default scheme
 If you just want to use the default scheme you now use
 ```cpp
 t8_scheme *scheme = t8_scheme_new_default ();
