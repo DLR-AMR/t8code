@@ -102,7 +102,7 @@ A list of all renamings (without considering the deletion of the prefix) is here
 - `t8_element_last_descendant_face` -> `element_get_last_descendant_face`
 - `t8_element_boundary_face` -> `element_get_boundary_face`
 - `t8_element_face_neighbor_inside` -> `element_get_face_neighbor_inside`
-- `t8_element_linear_id` -> `element_get_linear_id`
+- `t8_element_linear_id` -> `element_set_linear_id`
 - `t8_element_first_descendant` -> `element_get_first_descendant`
 - `t8_element_last_descendant` -> `element_get_last_descendant`
 - `t8_element_successor` -> `element_construct_successsor`
