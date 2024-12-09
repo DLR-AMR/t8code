@@ -30,11 +30,6 @@
 
 #include <t8_schemes/t8_scheme.hxx>
 
-#if T8_ENABLE_DEBUG
-// Only needed for a debug print
-#include <typeinfo>
-#endif  // T8_ENABLE_DEBUG
-
 /** The scheme builder adds eclass schemes to a scheme container and returns it.
  * TODO: Make return value a reference.
  */
@@ -56,8 +51,7 @@ class t8_scheme_builder {
   add_eclass_scheme (_Args &&...args)
   {
 #if T8_ENABLE_DEBUG
-    // This way the typeinfo header is only included when needed
-    t8_debugf ("Registering scheme of type %s with position %li.\n", typeid (TEclassScheme).name (),
+    t8_debugf ("Registering scheme of type %s with position %li.\n", t8_debug_print_type<TEclassScheme> ().c_str (),
                scheme->eclass_schemes.size ());
 #endif  // T8_ENABLE_DEBUG
     scheme->eclass_schemes.emplace_back (std::in_place_type<TEclassScheme>, std::forward<_Args> (args)...);
