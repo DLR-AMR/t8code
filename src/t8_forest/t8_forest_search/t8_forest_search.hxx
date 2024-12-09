@@ -743,4 +743,75 @@ class t8_partition_search_with_queries: public t8_partition_search<Udata> {
   std::vector<Query_T> &queries;
   std::vector<size_t> active_queries;
 };
+
+/**
+ * \brief A class that performs a search in the partition of a forest with batched queries.
+ *
+ * All active queries are passed to the callback function, which processes them in a batch. It is recommended to
+ * use this version of the searcch if further computations have to be done to evaluate the queries. That way these
+ * precomputations are not done for every call to the callback again and only have to be evaluated once per call.
+ *
+ * \tparam Query_T The type of queries
+ * \tparam Udata The type of the user data, defaults to void.
+ */
+template <typename Query_T, typename Udata = void>
+class t8_partition_search_with_batched_queries: public t8_partition_search<Udata> {
+ public:
+  t8_partition_search_with_batched_queries (
+    t8_partition_search_element_callback<Udata> element_callback,
+    t8_partition_search_batched_queries_callback<Query_T, Udata> queries_callback, std::vector<Query_T> &queries,
+    const t8_forest_t forest = nullptr, Udata *user_data = nullptr)
+    : t8_partition_search<Udata> (element_callback, forest, user_data), queries_callback (queries_callback),
+      queries (queries)
+  {
+    this->active_queries.resize (queries.size ());
+    std::iota (this->active_queries.begin (), this->active_queries.end (), 0);
+  }
+
+  void
+  update_queries (std::vector<Query_T> &queries)
+  {
+    this->queries = queries;
+  }
+
+  ~t8_partition_search_with_batched_queries ()
+  {
+  }
+
+ private:
+  bool
+  stop_due_to_queries () override
+  {
+    return this->active_queries.empty ();
+  }
+  void
+  check_queries (std::vector<size_t> &new_active_queries, const t8_locidx_t ltreeid, const t8_element_t *element,
+                 const int pfirst, const int plast) override
+  {
+    T8_ASSERT (new_active_queries.empty ());
+    if (!this->active_queries.empty ()) {
+      std::vector<bool> query_matches (this->active_queries.size ());
+      this->queries_callback (this->forest, ltreeid, element, pfirst, plast, this->queries, this->active_queries,
+                              query_matches, this->user_data);
+      if (pfirst != plast) {
+        auto positive_queries = this->active_queries | std::ranges::views::filter ([&] (size_t &query_index) {
+                                  return query_matches[query_index];
+                                });
+        new_active_queries.assign (positive_queries.begin (), positive_queries.end ());
+      }
+    }
+    std::swap (new_active_queries, this->active_queries);
+  }
+
+  void
+  update_queries (std::vector<size_t> &old_query_indices)
+  {
+    std::swap (this->active_queries, old_query_indices);
+  }
+
+  t8_partition_search_batched_queries_callback<Query_T, Udata> queries_callback;
+  std::vector<Query_T> &queries;
+  std::vector<size_t> active_queries;
+};
+
 #endif  // T8_FOREST_SEARCH_HXX
