@@ -3,7 +3,7 @@
 We have just merged another branch into our main branch that introduces a lot of changes. Here, we want to explain what is new, why we decided on this feature, what we intend with the feature in the (near) future and most importantly what do you as a user have to [change](#what-do-you-have-to-change) to be on par with the upcoming t8code v4.0.0
 
 ## What is new?
-Long story short: We completely changed the element-schemes, the part of t8code that decides how any element in a forest behaves. Before this update was introduced we used a virtual base class defining all functions. For each type of tree there was a class inheriting from the base class and implementing all these functions for a specific type of tree (vertex, line, triangle, tetrahedra, ...). 
+Long story short: We completely changed the element-schemes, the part of t8code that decides how any element in a forest behaves. Before this update was introduced we used a virtual base class defining all functions. For each type of tree shape there was a class inheriting from the base class and implementing all these functions for a specific type of tree shape (vertex, line, triangle, tetrahedra, ...). 
 We provided you with a default implementation for all standard shapes supported by t8code by bundling them all together in the default scheme. 
 If you wanted to use an element function you needed the scheme and the eclass of the tree the element belongs to to call the proper function. 
 
@@ -23,7 +23,7 @@ We also aim to let you be more creative with the scheme builder. We see applicat
 
 ## What do you have to change?
 A typical situation where you need the element schemes is when you loop over all trees and all elements in each tree to call a function on each element:
-<pre><code>
+```diff
 /* Loop over each tree in the forest */
 for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree){
   /* Get the tree with local id itree. */
@@ -31,7 +31,7 @@ for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree){
   /* Get the eclass of the tree. */
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
   /* Get the scheme of of this eclass. */
-  <font color="red">const t8_eclass_scheme_c *tscheme = t8_forest_get_eclass_scheme (forest_from, tree_class);</font>
+- const t8_eclass_scheme_c *tscheme = t8_forest_get_eclass_scheme (forest_from, tree_class);
   /* Get the number of elements in the tree itree. */
   const t8_locidx_t num_elems = t8_forest_get_tree_num_elements (forest, itree);
   /* Loop over all elements */
@@ -39,16 +39,16 @@ for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree){
     /* Get the element with tree-local-id ielem */
     const t8_element_t *elem = t8_forest_get_element_in_tree (forest, itree, ielem);
     /* Call a function on that element */
-    <font color="orange">const int elem_level = scheme->t8_element_level (elem);</font>
+!   const int elem_level = scheme->t8_element_level (elem);
   }
 }
-</code></pre>
+```
 
 Instead of getting the tree specific scheme we only need to get the schemes used by this forest in total. Additionally (such that the scheme knows which implementation to use) we add the class of the tree to the call of the element function:
-<pre><code>
+```diff
 /* Get the scheme used by this forest. */
-<font color="greenyellow">const t8_scheme *scheme = t8_forest_get_scheme(forest);
-/* Loop over each tree in the forest */</font>
++ const t8_scheme *scheme = t8_forest_get_scheme(forest);
+/* Loop over each tree in the forest */
 for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree){
   /* Get the number of elements in the tree itree */
   const t8_locidx_t num_elems = t8_forest_get_tree_num_elements (forest, itree);
@@ -59,10 +59,10 @@ for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree){
     /* Get the element with tree-local-id ielem */
     const t8_element_t *elem = t8_forest_get_element_in_tree (forest, itree, ielem);
     /* Call a function on that element */
-    <font color="orange"> const int elem_level = scheme->element_get_level (tree_class, elem);</font>
+!    elem_level = scheme->element_get_level (tree_class, elem);
   }
 }
-</code></pre>
+```
 
 In summary there are two major changes:
  1. Get the scheme outside of loop over the trees
