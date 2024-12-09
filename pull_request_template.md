@@ -39,9 +39,4 @@ As a reviewer please read through all the code lines and make sure that the code
 
 #### Tag Label
 
-Decide how the tag gets increased in accordance with semantic versioning.
-Delete the labels which are not applicable.
-
-/label ~tag:patch
-/label ~tag:minor
-/label ~tag:major
+- [ ] The author added the patch/minor/major label in accordance to semantic versioning.
