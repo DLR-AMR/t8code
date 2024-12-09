@@ -124,9 +124,21 @@ typedef int (*t8_forest_partition_query_fn) (const t8_forest_t forest, const t8_
 
 T8_EXTERN_C_BEGIN ();
 
-/* TODO: Document */
+/** Split an array of elements according to the children of a given element E.
+ *  In other words for each child C of E, find
+ *  the index i, j, such that all descendants of C are
+ *  elements[i], ..., elements[j-1]. 
+ * 
+ * \param [in] element       An element.
+ * \param [in] leaf_elements An array of leaf elements of \a element. Thus, all
+ *                           elements must be descendants. Sorted by linear index.
+ * \param [in,out] offsets   On input an allocated array of \a num_children_of_E + 1 entries.  
+ *                           On output entry i indicates the position in \a leaf_elements
+ *                           where the descandents of the i-th child of E start.
+ */
+
 void
-t8_forest_split_array (const t8_element_t *element, t8_element_array_t *leaf_elements, size_t *offsets);
+t8_forest_split_array (const t8_element_t *element, const t8_element_array_t *leaf_elements, size_t *offsets);
 
 /* TODO: comment */
 /* Iterate over all leaves of an element that touch a given face of the element */
@@ -138,8 +150,8 @@ t8_forest_split_array (const t8_element_t *element, t8_element_array_t *leaf_ele
  * If it returns false, the current element is not traversed further */
 void
 t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int face,
-                         t8_element_array_t *leaf_elements, void *user_data, t8_locidx_t tree_lindex_of_first_leaf,
-                         t8_forest_iterate_face_fn callback);
+                         const t8_element_array_t *leaf_elements, void *user_data,
+                         t8_locidx_t tree_lindex_of_first_leaf, t8_forest_iterate_face_fn callback);
 
 /* Perform a top-down search of the forest, executing a callback on each
  * intermediate element. The search will enter each tree at least once.

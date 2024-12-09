@@ -1519,7 +1519,7 @@ t8_forest_element_neighbor_eclass (t8_forest_t forest, t8_locidx_t ltreeid, cons
 
 t8_gloidx_t
 t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *elem, t8_element_t *neigh,
-                                 t8_eclass_scheme_c *neigh_scheme, int face, int *neigh_face)
+                                 const t8_eclass_scheme_c *neigh_scheme, int face, int *neigh_face)
 {
   t8_eclass_scheme_c *ts;
   t8_tree_t tree;
@@ -1632,7 +1632,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const 
 
 t8_gloidx_t
 t8_forest_element_half_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *elem,
-                                       t8_element_t *neighs[], t8_eclass_scheme_c *neigh_scheme, int face,
+                                       t8_element_t *neighs[], const t8_eclass_scheme_c *neigh_scheme, int face,
                                        int num_neighs, int dual_faces[])
 {
   t8_eclass_scheme_c *ts;
@@ -2508,9 +2508,14 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest, t8_gloidx_t gtre
     else {
       last_owner_entry = -1;
     }
-    if (first_owner != last_owner_entry) {
+
+    if (first_owner > last_owner_entry) {
       /* We did not count this process as an owner, thus we add it */
       *(int *) sc_array_push (owners) = first_owner;
+    }
+    if (last_owner > last_owner_entry) {
+      /* We did not count this process as an owner, thus we add it */
+      *(int *) sc_array_push (owners) = last_owner;
     }
     T8_ASSERT (t8_forest_element_check_owner (forest, first_face_desc, gtreeid, eclass, first_owner, 1));
     T8_ASSERT (t8_forest_element_check_owner (forest, last_face_desc, gtreeid, eclass, first_owner, 1));
@@ -3380,6 +3385,7 @@ t8_forest_commit (t8_forest_t forest)
   }
 
   if (forest->mpisize > 1) {
+    sc_MPI_Barrier (forest->mpicomm);
     /* Construct a ghost layer, if desired */
     if (forest->do_ghost) {
       /* TODO: ghost type */
@@ -3713,7 +3719,6 @@ t8_eclass_t
 t8_forest_get_tree_class (const t8_forest_t forest, const t8_locidx_t ltreeid)
 {
   t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
-
   T8_ASSERT (0 <= ltreeid && ltreeid < num_local_trees + t8_forest_get_num_ghost_trees (forest));
   if (ltreeid < num_local_trees) {
     /* The id belongs to a local tree */
