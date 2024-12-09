@@ -1,6 +1,6 @@
 # User Updates for the upcoming t8code v4.0.0
 
-We have just merged another branch into our main branch that introduces a lot of changes. Here, we want to explain what is new, why we decided on this feature, what we intend with the feature in the (near) future and most importantly what do you as a user have to change to be on par with the upcoming t8code v4.0.0
+We have just merged another branch into our main branch that introduces a lot of changes. Here, we want to explain what is new, why we decided on this feature, what we intend with the feature in the (near) future and most importantly what do you as a user have to [change](#what-do-you-have-to-change) to be on par with the upcoming t8code v4.0.0
 
 ## What is new?
 Long story short: We completely changed the element-schemes, the part of t8code that decides how any element in a forest behaves. Before this update was introduced we used a virtual base class defining all functions. For each type of tree shape there was a class inheriting from the base class and implementing all these functions for a specific type of tree shape (vertex, line, triangle, tetrahedra, ...). 
