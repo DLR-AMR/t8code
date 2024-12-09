@@ -36,3 +36,12 @@ As a reviewer please read through all the code lines and make sure that the code
 #### License
 
 - [ ] The author added a BSD statement to `doc/` (or already has one)
+
+#### Tag Label
+
+Decide how the tag gets increased in accordance with semantic versioning.
+Delete the labels which are not applicable.
+
+/label ~tag:patch
+/label ~tag:minor
+/label ~tag:major
