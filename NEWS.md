@@ -26,8 +26,6 @@ A typical situation where you need the element schemes is when you loop over all
 ```diff
 /* Loop over each tree in the forest */
 for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree){
-  /* Get the tree with local id itree. */
-  const t8_tree_t tree = t8_forest_get_tree (forest, itree);
   /* Get the eclass of the tree. */
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
   /* Get the scheme of of this eclass. */
