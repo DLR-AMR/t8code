@@ -82,7 +82,7 @@ typedef int (*t8_forest_vtk_cell_data_kernel) (t8_forest_t forest, const t8_loci
 static t8_locidx_t
 t8_forest_num_points (t8_forest_t forest, const int count_ghosts)
 {
-  const t8_scheme *tscheme = t8_forest_get_scheme (forest);
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
   t8_locidx_t num_points = 0;
 
   for (t8_locidx_t itree = 0; itree < (t8_locidx_t) forest->trees->elem_count; itree++) {
@@ -93,7 +93,7 @@ t8_forest_num_points (t8_forest_t forest, const int count_ghosts)
     const size_t num_elements = t8_element_array_get_count (&tree->elements);
     for (t8_locidx_t ielem = 0; ielem < (t8_locidx_t) num_elements; ielem++) {
       const t8_element_t *elem = t8_element_array_index_locidx (&tree->elements, ielem);
-      num_points += tscheme->element_get_num_corners (tree_class, elem);
+      num_points += scheme->element_get_num_corners (tree_class, elem);
     }
   }
   if (count_ghosts) {
@@ -107,7 +107,7 @@ t8_forest_num_points (t8_forest_t forest, const int count_ghosts)
       const size_t num_elements = t8_forest_ghost_tree_num_elements (forest, itree);
       for (t8_locidx_t ielem = 0; ielem < (t8_locidx_t) num_elements; ielem++) {
         const t8_element_t *elem = t8_element_array_index_locidx (ghost_elem, ielem);
-        num_points += tscheme->element_get_num_corners (ghost_class, elem);
+        num_points += scheme->element_get_num_corners (ghost_class, elem);
       }
     }
   }
