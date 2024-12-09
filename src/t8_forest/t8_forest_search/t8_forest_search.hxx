@@ -107,6 +107,28 @@ using t8_search_batched_queries_callback = std::function<void (
   const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index, const std::vector<Query_T> &queries,
   const std::vector<size_t> &active_query_indices, std::vector<bool> &query_matches, Udata *user_data)>;
 
+/**
+ * \typedef t8_partition_search_element_callback
+ * \brief A callback function type used for searching elements in the partition of a forest.
+ *
+ * This callback function is invoked during the partition search process in a forest. It allows
+ * custom operations to be performed on each element encountered during the search.
+ *
+ * \tparam Udata The type of user data passed to the callback. Defaults to void.
+ *
+ * \param[in] forest              The forest whose partition is searched.
+ * \param[in] ltreeid             The local tree ID of the current tree in the cmesh.
+ * \param[in] element             A pointer to the current element being processed.
+ * \param[in] pfirst              The first processor that owns part of \a element. Guaranteed to be non-empty.
+ * \param[in] plast               The last processor that owns part of \a element. Guaranteed to be non-empty.
+ *
+ * \return True, if the search should continue, false otherwise.
+ */
+template <typename Udata = void>
+using t8_partition_search_element_callback = std::function<bool (
+  const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element, const int pfirst, const int plast,
+  Udata *user_data)>;
+
 class t8_search_base {
  public:
   /**  \brief Constructor for the t8_search_base class.
