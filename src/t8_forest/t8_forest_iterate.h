@@ -117,10 +117,10 @@ typedef int (*t8_forest_partition_search_fn) (const t8_forest_t forest, const t8
  * \param[in] num_active_queries  The number of currently active queries (equals the number of entries of
  *                                \a query_matches and entries of \a query_indices).
  */
-typedef int (*t8_forest_partition_query_fn) (const t8_forest_t forest, const t8_locidx_t ltreeid,
-                                             const t8_element_t *element, const int pfirst, const int plast,
-                                             void *queries, sc_array_t *query_indices, int *query_matches,
-                                             const size_t num_active_queries);
+typedef void (*t8_forest_partition_query_fn) (const t8_forest_t forest, const t8_locidx_t ltreeid,
+                                              const t8_element_t *element, const int pfirst, const int plast,
+                                              void *queries, sc_array_t *query_indices, int *query_matches,
+                                              const size_t num_active_queries);
 
 T8_EXTERN_C_BEGIN ();
 

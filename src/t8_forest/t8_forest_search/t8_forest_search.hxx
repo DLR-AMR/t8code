@@ -129,6 +129,29 @@ using t8_partition_search_element_callback = std::function<bool (
   const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element, const int pfirst, const int plast,
   Udata *user_data)>;
 
+/**
+ * \typedef t8_partition_search_batched_queries_callback
+ * \brief A callback function type used for searching queries in the partition of a forest. Processes a batch of queries.
+ *
+ * \tparam Query_T The type of the query.
+ * \tparam Udata The type of user data, defaults to void.
+ *
+ * \param[in] forest The forest whose partition is searched.
+ * \param[in] ltreeid The local tree ID within the forest.
+ * \param[in] element The element being queried.
+ * \param[in] pfirst The first processor that owns part of \a element. Guaranteed to be non-empty.
+ * \param[in] plast The last processor that owns part of \a element. Guaranteed to be non-empty.
+ * \param[in] queries A vector of queries to be processed.
+ * \param[in, out] active_query_indices A vector of indices of active queries.
+ * \param[in, out] query_matches A vector of query matches. Each entry corresponds to a query in the queries vector.
+ * \param[in] user_data User-defined data passed to the callback.
+ */
+template <typename Query_T, typename Udata = void>
+using t8_partition_search_batched_queries_callback = std::function<void (
+  const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element, const int pfirst, const int plast,
+  const std::vector<Query_T> &queries, const std::vector<size_t> &active_query_indices,
+  std::vector<bool> &query_matches, Udata *user_data)>;
+
 class t8_search_base {
  public:
   /**  \brief Constructor for the t8_search_base class.
