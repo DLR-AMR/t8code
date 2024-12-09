@@ -59,7 +59,7 @@ for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree){
     /* Get the element with tree-local-id ielem */
     const t8_element_t *elem = t8_forest_get_element_in_tree (forest, itree, ielem);
     /* Call a function on that element */
-!    elem_level = scheme->element_get_level (tree_class, elem);
+!    const int elem_level = scheme->element_get_level (tree_class, elem);
   }
 }
 ```
