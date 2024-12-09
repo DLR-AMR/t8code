@@ -130,6 +130,26 @@ using t8_partition_search_element_callback
                         const int pfirst, const int plast, Udata *user_data)>;
 
 /**
+ * \typedef t8_partition_search_queries_callback
+ * \brief A callback function type used for searching queries in the partition of a forest.
+ *
+ * \tparam Query_T The type of the query.
+ * \tparam Udata The type of user data, defaults to void.
+ *
+ * \param[in] forest The forest whose partition is searched.
+ * \param[in] ltreeid The local tree ID within the forest.
+ * \param[in] element The element being queried.
+ * \param[in] pfirst The first processor that owns part of \a element. Guaranteed to be non-empty.
+ * \param[in] plast The last processor that owns part of \a element. Guaranteed to be non-empty.
+ * \param[in] query A single query to be processed.
+ * \param[in] user_data User-defined data passed to the callback.
+ */
+template <typename Query_T, typename Udata = void>
+using t8_partition_search_queries_callback
+  = std::function<void (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
+                        const int pfirst, const int plast, const Query_T &query, Udata *user_data)>;
+
+/**
  * \typedef t8_partition_search_batched_queries_callback
  * \brief A callback function type used for searching queries in the partition of a forest. Processes a batch of queries.
  *
