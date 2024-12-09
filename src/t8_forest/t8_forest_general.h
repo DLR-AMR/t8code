@@ -517,6 +517,25 @@ t8_forest_get_coarse_tree (t8_forest_t forest, t8_locidx_t ltreeid);
 int
 t8_forest_element_is_leaf (const t8_forest_t forest, const t8_element_t *element, const t8_locidx_t local_tree);
 
+/**
+ * Query whether a given element or a ghost is a leaf of a local or ghost tree in a forest.
+ * 
+ * \param [in]  forest    The forest.
+ * \param [in]  element   An element of a local tree in \a forest.
+ * \param [in]  local_tree A local tree id of \a forest or a ghost tree id
+ * \param [in]  check_ghost If true \a element is interpreted as a ghost element and
+ *                         \a local_tree as the id of a ghost tree (0 <= \a local_tree < num_ghost_trees).
+ *                         If false \a element is interpreted as an element and \a local_tree as
+ *                         the id of a local tree (0 <= \a local_tree < num_local_trees).
+ * \return True (non-zero) if and only if \a element is a leaf (or ghost) in \a local_tree of \a forest.
+ * \note \a forest must be committed before calling this function.
+ * \ref t8_forest_element_is_leaf
+ * \ref t8_forest_element_is_ghost
+ */
+int
+t8_forest_element_is_leaf_or_ghost (const t8_forest_t forest, const t8_element_t *element, const t8_locidx_t local_tree,
+                                    const int check_ghost);
+
 /** Compute the leaf face orientation at given face in a forest.
  * \param [in]    forest  The forest. Must have a valid ghost layer.
  * \param [in]    ltreeid A local tree id.
