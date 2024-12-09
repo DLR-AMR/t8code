@@ -507,4 +507,116 @@ class t8_search_with_batched_queries: public t8_search<Udata> {
   std::vector<size_t> active_queries;
 };
 
+class t8_partition_search_base {
+ public:
+  /**  \brief Constructor for the t8_partition_search_base class.
+   *
+   *
+   * This constructor initializes a t8_partition_search_base object with the
+   * given forest. If the forest is not null, it increments the reference count
+   * of the forest and asserts that the forest is committed.
+   *
+   * \param[in] forest A pointer to a t8_forest_t object. Defaults to nullptr.
+   */
+  t8_partition_search_base (t8_forest_t forest = nullptr): forest (forest)
+  {
+    if (forest != nullptr) {
+      t8_forest_ref (forest);
+      T8_ASSERT (t8_forest_is_committed (forest));
+    }
+  }
+
+  /**  \brief Update the forest for the search.
+   *
+   * This function updates the forest for the search. If the current forest is not null,
+   * it decrements the reference count of the forest. It then asserts that the new forest
+   * is not null and is committed. Finally, it increments the reference count of the new forest.
+   *
+   * \param[in] forest A pointer to a t8_forest_t object.
+   */
+  void
+  update_forest (t8_forest_t forest)
+  {
+    if (this->forest != nullptr) {
+      t8_forest_unref (&(this->forest));
+    }
+    T8_ASSERT (forest != nullptr);
+    T8_ASSERT (t8_forest_is_committed (forest));
+    t8_forest_ref (forest);
+    this->forest = forest;
+  }
+
+  /**  \brief Destructor for the t8_partition_search_base class.
+   *
+   * This destructor decrements the reference count of the forest if it is not null.
+   */
+  ~t8_partition_search_base ()
+  {
+    if (this->forest != nullptr) {
+      t8_forest_unref (&(this->forest));
+    }
+  }
+
+  /**  \brief Perform the search.
+   *
+   * This function performs the search in the forest.
+   */
+  void
+  do_search ();
+
+  t8_forest_t forest;
+
+ private:
+  /** \brief Checks if the search should stop due to empty queries.
+   *
+   */
+  virtual bool
+  stop_due_to_queries ()
+    = 0;
+
+  /** \brief Checks an element during the search.
+   *
+   * This function is called for each element encountered during the search.
+   * It passes the arguments to the callback function provided by the user.
+   *
+   * \param[in] ltreeid The local tree ID of the current element.
+   * \param[in] element A pointer to the current element being processed.
+   * \param[in] is_leaf A bool indicating whether the current element is a leaf (non-zero) or not (zero).
+   * \param[in] leaf_elements A pointer to an array of leaf elements.
+   * \param[in] tree_leaf_index The index of the current leaf element within the tree.
+   *
+   * \return True if the search should continue, false otherwise.
+   */
+  virtual bool
+  check_element (const t8_locidx_t ltreeid, const t8_element_t *element, int pfirst, int plast)
+    = 0;
+
+  /** \brief Checks queries during the search.
+   *
+   * This function is called to check queries during the search.
+   * It passes the arguments to the callback function provided by the user.
+   *
+   * \param[in] new_active_queries A vector of indices of active queries.
+   * \param[in] ltreeid The local tree ID of the current element.
+   * \param[in] element A pointer to the current element being processed.
+   * \param[in] is_leaf A bool indicating whether the current element is a leaf (non-zero) or not (zero).
+   * \param[in] leaf_elements A pointer to an array of leaf elements.
+   * \param[in] tree_leaf_index The index of the current leaf element within the tree.
+   */
+  virtual void
+  check_queries (std::vector<size_t> &new_active_queries, const t8_locidx_t ltreeid, const t8_element_t *element,
+                 int pfirst, int plast)
+    = 0;
+
+  /**
+   * \brief  Function the gives the user the opportunity to update the queries after
+   *         each step in the recursion.
+   *
+   * \param old_query_indices
+   */
+  virtual void
+  update_queries (std::vector<size_t> &old_query_indices)
+    = 0;
+};
+
 #endif  // T8_FOREST_SEARCH_HXX
