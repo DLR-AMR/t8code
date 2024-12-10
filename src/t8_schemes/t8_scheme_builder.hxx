@@ -30,11 +30,9 @@
 
 #include <t8_schemes/t8_scheme.hxx>
 
-#if T8_ENABLE_DEBUG
-// Only needed for a debug print
-#include <typeinfo>
-#endif  // T8_ENABLE_DEBUG
-
+/** The scheme builder adds eclass schemes to a scheme container and returns it.
+ * TODO: Make return value a reference.
+ */
 class t8_scheme_builder {
  public:
   t8_scheme_builder (): scheme (new t8_scheme) {};
@@ -43,21 +41,20 @@ class t8_scheme_builder {
   using scheme_var = t8_scheme::scheme_var;
 
   /** Add a new element class scheme to the scheme.
-   * \tparam TEclass_Scheme       The type of the element class scheme.
+   * \tparam TEclassScheme       The type of the element class scheme.
    * \tparam Args                 The types of the arguments to pass to the constructor of the element class scheme.
    * \param  [in] args            The arguments to pass to the constructor of the element class scheme.
    * \return                      The position of the added element class scheme in the scheme.
    */
-  template <typename TEclass_Scheme, typename... _Args>
+  template <typename TEclassScheme, typename... _Args>
   size_t
   add_eclass_scheme (_Args &&...args)
   {
 #if T8_ENABLE_DEBUG
-    // This way the typeinfo header is only included when needed
-    t8_debugf ("Registering scheme of type %s with position %li.\n", typeid (TEclass_Scheme).name (),
+    t8_debugf ("Registering scheme of type %s with position %li.\n", t8_debug_print_type<TEclassScheme> ().c_str (),
                scheme->eclass_schemes.size ());
 #endif  // T8_ENABLE_DEBUG
-    scheme->eclass_schemes.emplace_back (std::in_place_type<TEclass_Scheme>, std::forward<_Args> (args)...);
+    scheme->eclass_schemes.emplace_back (std::in_place_type<TEclassScheme>, std::forward<_Args> (args)...);
     return scheme->eclass_schemes.size ();
   }
 

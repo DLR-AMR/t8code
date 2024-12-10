@@ -24,7 +24,6 @@
  * TODO: document this file
  */
 
-#include <t8_element.hxx>
 #include <sc_containers.h>
 #include <t8_data/t8_containers.h>
 #include <t8_schemes/t8_scheme.hxx>
@@ -71,10 +70,8 @@ t8_element_array_new (const t8_scheme_c *scheme, const t8_eclass_t tree_class)
 t8_element_array_t *
 t8_element_array_new_count (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const size_t num_elements)
 {
-  t8_element_array_t *new_array;
-
   /* allocate memory */
-  new_array = T8_ALLOC (t8_element_array_t, 1);
+  t8_element_array_t *new_array = T8_ALLOC (t8_element_array_t, 1);
   /* initialize array */
   t8_element_array_init_size (new_array, scheme, tree_class, num_elements);
   T8_ASSERT (t8_element_array_is_valid (new_array));
@@ -85,15 +82,13 @@ t8_element_array_new_count (const t8_scheme_c *scheme, const t8_eclass_t tree_cl
 void
 t8_element_array_init (t8_element_array_t *element_array, const t8_scheme_c *scheme, const t8_eclass_t tree_class)
 {
-  size_t elem_size;
-
   T8_ASSERT (element_array != NULL);
 
   /* set the scheme and eclass */
   element_array->scheme = scheme;
   element_array->tree_class = tree_class;
   /* get the size of an element and initialize the array member */
-  elem_size = scheme->get_element_size (tree_class);
+  const size_t elem_size = scheme->get_element_size (tree_class);
   sc_array_init (&element_array->array, elem_size);
   T8_ASSERT (t8_element_array_is_valid (element_array));
 }
@@ -161,9 +156,7 @@ t8_element_array_init_copy (t8_element_array_t *element_array, const t8_scheme_c
   {
     size_t ielem;
     const t8_element_t *element;
-    size_t size;
-
-    size = scheme->get_element_size (tree_class);
+    const size_t size = scheme->get_element_size (tree_class);
     for (ielem = 0; ielem < num_elements; ielem++) {
       /* data is of incomplete type, we thus have to manually set the address
        * of the ielem-th t8_element */
@@ -337,7 +330,7 @@ void
 t8_element_array_reset (t8_element_array_t *element_array)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
-  size_t count = t8_element_array_get_count (element_array);
+  const size_t count = t8_element_array_get_count (element_array);
   if (count > 0) {
     t8_element_t *first_elem = t8_element_array_index_locidx_mutable (element_array, 0);
     element_array->scheme->element_deinit (element_array->tree_class, count, first_elem);
@@ -349,7 +342,7 @@ void
 t8_element_array_truncate (t8_element_array_t *element_array)
 {
   T8_ASSERT (t8_element_array_is_valid (element_array));
-  size_t count = t8_element_array_get_count (element_array);
+  const size_t count = t8_element_array_get_count (element_array);
   if (count > 0) {
     t8_element_t *first_elem = t8_element_array_index_locidx_mutable (element_array, 0);
     element_array->scheme->element_deinit (element_array->tree_class, count, first_elem);

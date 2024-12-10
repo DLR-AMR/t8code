@@ -31,7 +31,6 @@
 #include <t8_data/t8_shmem.h>
 #include <t8_vec.h>
 #include <t8_eclass.h>
-#include <t8_element.hxx>
 #include "t8_cmesh_types.h"
 #ifdef T8_WITH_METIS
 #include <metis.h>
@@ -41,7 +40,6 @@
 
 /** \file t8_cmesh.cxx
  *  This file collects all general cmesh routines that need c++ compilation.
- *  Particularly those functions that use the element interface from \ref t8_element.hxx.
  */
 
 int
@@ -1265,7 +1263,7 @@ t8_cmesh_reset (t8_cmesh_t *pcmesh)
 
   /* unref the partition scheme (if set) */
   if (cmesh->set_partition_scheme != NULL) {
-    t8_scheme_unref (&cmesh->set_partition_scheme);
+    cmesh->set_partition_scheme->unref ();
   }
 
   T8_FREE (cmesh);

@@ -26,7 +26,6 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_schemes/t8_scheme.hxx>
-#include <t8_element.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -142,7 +141,7 @@ t8_forest_partition_test_desc (t8_forest_t forest)
     /* Iterate over elems, for each one create the first descendant and check
      * its linear id versus the linear id of first_desc. */
     const t8_element_t *element = t8_element_array_index_locidx (&tree->elements, ielem);
-    scheme->element_construct_first_descendant (tree_class, element, elem_desc, forest->maxlevel);
+    scheme->element_get_first_descendant (tree_class, element, elem_desc, forest->maxlevel);
     level = scheme->element_get_level (tree_class, elem_desc);
     T8_ASSERT (level == scheme->element_get_level (tree_class, elem_desc));
     T8_ASSERT (level == forest->maxlevel);
@@ -234,7 +233,7 @@ t8_forest_partition_test_boundary_element (const t8_forest_t forest)
     = t8_forest_get_element_in_tree (forest, itree, t8_forest_get_tree_element_count (tree) - 1);
   T8_ASSERT (scheme->element_is_valid (tree_class, element_last));
   /* last and finest possiple element of current rank */
-  scheme->element_construct_last_descendant (tree_class, element_last, element_last_desc, forest->maxlevel);
+  scheme->element_get_last_descendant (tree_class, element_last, element_last_desc, forest->maxlevel);
   T8_ASSERT (scheme->element_is_valid (tree_class, element_last_desc));
   const int level = scheme->element_get_level (tree_class, element_last_desc);
   T8_ASSERT (level == scheme->element_get_level (tree_class, element_last_desc));
@@ -302,7 +301,7 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
       scheme = t8_forest_get_scheme (forest);
       const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, 0);
       scheme->element_new (tree_class, 1, &first_desc);
-      scheme->element_construct_first_descendant (tree_class, first_element, first_desc, forest->maxlevel);
+      scheme->element_get_first_descendant (tree_class, first_element, first_desc, forest->maxlevel);
       /* Compute the linear id of the descendant. */
       local_first_desc = scheme->element_get_linear_id (tree_class, first_desc, forest->maxlevel);
       scheme->element_destroy (tree_class, 1, &first_desc);

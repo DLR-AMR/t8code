@@ -31,6 +31,7 @@
 #include <t8_data/t8_shmem.h>
 #include <t8_cmesh/t8_cmesh_save.h>
 #include <t8_element.h>
+#include <t8_schemes/t8_scheme.h>
 
 /* Forward pointer reference to hidden cmesh implementation.
  * This reference needs to be known by t8_geometry, hence we 
@@ -211,14 +212,14 @@ t8_cmesh_set_partition_offsets (t8_cmesh_t cmesh, t8_shmem_array_t tree_offsets)
  *                                referencing \b scheme before calling this function.
  */
 void
-t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, int element_level, t8_scheme_c *scheme);
+t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, const int element_level, t8_scheme_c *scheme);
 
 /** Refine the cmesh to a given level.
  * Thus split each tree into x^level subtrees
  * TODO: implement */
 /* If level = 0  then no refinement is performed */
 void
-t8_cmesh_set_refine (t8_cmesh_t cmesh, int level, t8_scheme_c *scheme);
+t8_cmesh_set_refine (t8_cmesh_t cmesh, const int level, t8_scheme_c *scheme);
 
 /** Set the dimension of a cmesh. If any tree is inserted to the cmesh
  * via \a t8_cmesh_set_tree_class, then the dimension is set automatically
@@ -731,7 +732,7 @@ t8_cmesh_get_partition_table (t8_cmesh_t cmesh);
  * \a cmesh must be committed before calling this function. *
  */
 void
-t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level, const t8_scheme_c *scheme, t8_gloidx_t *first_local_tree,
+t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, const int level, const t8_scheme_c *scheme, t8_gloidx_t *first_local_tree,
                          t8_gloidx_t *child_in_tree_begin, t8_gloidx_t *last_local_tree, t8_gloidx_t *child_in_tree_end,
                          int8_t *first_tree_shared);
 

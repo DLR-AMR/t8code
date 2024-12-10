@@ -29,7 +29,6 @@
 #ifndef T8_DEFAULT_HXX
 #define T8_DEFAULT_HXX
 
-#include <t8_element.hxx>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.hxx>
 #include <t8_schemes/t8_default/t8_default_line/t8_default_line.hxx>

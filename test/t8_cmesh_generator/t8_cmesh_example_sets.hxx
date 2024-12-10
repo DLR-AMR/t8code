@@ -25,15 +25,15 @@
 
 #include <vector>
 
-#include "test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_prism_cake_param.hxx"
-#include "test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_from_class_param.hxx"
-#include "test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_bigmesh_param.hxx"
-#include "test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_disjoint_bricks_param.hxx"
-#include "test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_comm.hxx"
-#include "test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_hypercube_pad.hxx"
-#include "test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_hypercube_param.hxx"
-#include "test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_empty.hxx"
-#include "test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_periodic.hxx"
+#include "test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_new_prism_cake_param.hxx"
+#include "test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_new_from_class_param.hxx"
+#include "test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_new_bigmesh_param.hxx"
+#include "test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_new_disjoint_bricks_param.hxx"
+#include "test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_new_comm.hxx"
+#include "test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_new_hypercube_pad.hxx"
+#include "test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_new_hypercube_param.hxx"
+#include "test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_new_empty.hxx"
+#include "test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_new_periodic.hxx"
 #include "test/t8_cmesh_generator/t8_gtest_cmesh_cartestian_product.hxx"
 #include "test/t8_cmesh_generator/t8_gtest_cmesh_sum_of_sets.hxx"
 

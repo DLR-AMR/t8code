@@ -28,7 +28,6 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_cmesh/t8_cmesh_trees.h>
-#include <t8_element.hxx>
 #include <t8_data/t8_containers.h>
 #include <sc_statistics.h>
 
@@ -398,18 +397,15 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int remote_ran
   t8_ghost_remote_t remote_entry_lookup, *remote_entry;
   t8_ghost_remote_tree_t *remote_tree;
   t8_element_t *elem_copy;
-  t8_scheme *scheme;
-  t8_eclass_t tree_class;
   sc_array_t *remote_array;
   size_t index, element_count;
-  t8_gloidx_t gtreeid;
   int *remote_process_entry;
   int level, copy_level = 0;
 
   /* Get the tree's element class and the scheme */
-  tree_class = t8_forest_get_tree_class (forest, ltreeid);
-  scheme = t8_forest_get_scheme (forest);
-  gtreeid = t8_forest_get_first_local_tree_id (forest) + ltreeid;
+  const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  const t8_gloidx_t gtreeid = t8_forest_get_first_local_tree_id (forest) + ltreeid;
 
   /* Check whether the remote_rank is already present in the remote ghosts
    * array. */
