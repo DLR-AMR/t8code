@@ -29,59 +29,60 @@
 
 /* compute the first/last descendant by iteratively taking the first/last child at each level*/
 static void
-t8_test_manual_first_last_face_descendant (const t8_eclass_scheme_c *ts, const t8_element_t *element, const int iface,
-                                           const int desc_level, const int last, t8_element_t *face_desc)
+t8_test_manual_first_last_face_descendant (const t8_scheme *scheme, const t8_element_t *element,
+                                           const t8_eclass_t tree_class, const int iface, const int desc_level,
+                                           const int last, t8_element_t *face_desc)
 {
-  const int num_children_at_face = ts->t8_element_num_face_children (element, iface);
+  const int num_children_at_face = scheme->element_get_num_face_children (tree_class, element, iface);
 
   int *child_indices = T8_ALLOC (int, num_children_at_face);
   t8_element_t **children = T8_ALLOC (t8_element_t *, num_children_at_face);
-  ts->t8_element_new (num_children_at_face, children);
+  scheme->element_new (tree_class, num_children_at_face, children);
 
-  ts->t8_element_copy (element, face_desc);
-  const int level = ts->t8_element_level (element);
+  scheme->element_copy (tree_class, element, face_desc);
+  const int level = scheme->element_get_level (tree_class, element);
   for (int ilevel = level; ilevel < desc_level; ilevel++) {
-    EXPECT_EQ (ts->t8_element_num_face_children (element, iface), num_children_at_face);
+    EXPECT_EQ (scheme->element_get_num_face_children (tree_class, element, iface), num_children_at_face);
     /* Compute child_id of the test_child_id-th child. */
-    ts->t8_element_children_at_face (face_desc, iface, children, num_children_at_face, child_indices);
+    scheme->element_get_children_at_face (tree_class, face_desc, iface, children, num_children_at_face, child_indices);
 
     /* chose correct face_id dependent on if we want first or last face desc.*/
     const int face_child_id = last ? num_children_at_face - 1 : 0;
 
     const int child_id = child_indices[face_child_id];
 
-    ts->t8_element_child (face_desc, child_id, face_desc);
+    scheme->element_get_child (tree_class, face_desc, child_id, face_desc);
   }
-  ts->t8_element_destroy (num_children_at_face, children);
+  scheme->element_destroy (tree_class, num_children_at_face, children);
   T8_FREE (children);
   T8_FREE (child_indices);
 }
 
 class class_descendant: public TestDFS {
-  virtual void
-  check_element ()
+  void
+  check_element () override
   {
     /* Check the linear first and last descendants of an element along all faces. 
      * For the test the descendants are computed manually by t8_test_manual_first_last_face_descendant and 
      * by the scheme implementation t8_element_first_descendant for the first descendants over the levels.
      */
 
-    const int level = ts->t8_element_level (element);
-    const int num_faces = ts->t8_element_num_faces (element);
+    const int level = scheme->element_get_level (tree_class, element);
+    const int num_faces = scheme->element_get_num_faces (tree_class, element);
 
     /* Testing the linear first descendant. */
     for (int ilevel = level + 1; ilevel < max_test_lvl; ilevel++) {
       for (int jface = 0; jface < num_faces; jface++) {
 
-        t8_test_manual_first_last_face_descendant (ts, element, jface, ilevel, 0, manual_face_desc);
-        ts->t8_element_first_descendant_face (element, jface, scheme_face_desc, ilevel);
+        t8_test_manual_first_last_face_descendant (scheme, element, tree_class, jface, ilevel, 0, manual_face_desc);
+        scheme->element_get_first_descendant_face (tree_class, element, jface, scheme_face_desc, ilevel);
         /* Compare the manually computed child with the result of t8_element_first_descendant_face. */
-        EXPECT_ELEM_EQ (ts, scheme_face_desc, manual_face_desc);
+        EXPECT_ELEM_EQ (scheme, tree_class, scheme_face_desc, manual_face_desc);
 
-        t8_test_manual_first_last_face_descendant (ts, element, jface, ilevel, 1, manual_face_desc);
-        ts->t8_element_last_descendant_face (element, jface, scheme_face_desc, ilevel);
+        t8_test_manual_first_last_face_descendant (scheme, element, tree_class, jface, ilevel, 1, manual_face_desc);
+        scheme->element_get_last_descendant_face (tree_class, element, jface, scheme_face_desc, ilevel);
         /* Compare the manually computed child with the result of t8_element_last_descendant_face. */
-        EXPECT_ELEM_EQ (ts, scheme_face_desc, manual_face_desc);
+        EXPECT_ELEM_EQ (scheme, tree_class, scheme_face_desc, manual_face_desc);
       }
     }
   }
@@ -91,15 +92,15 @@ class class_descendant: public TestDFS {
   SetUp () override
   {
     dfs_test_setup ();
-    max_test_lvl = ts->t8_element_maxlevel ();
-    ts->t8_element_new (1, &manual_face_desc);
-    ts->t8_element_new (1, &scheme_face_desc);
+    max_test_lvl = scheme->get_maxlevel (tree_class);
+    scheme->element_new (tree_class, 1, &manual_face_desc);
+    scheme->element_new (tree_class, 1, &scheme_face_desc);
   }
   void
   TearDown () override
   {
-    ts->t8_element_destroy (1, &manual_face_desc);
-    ts->t8_element_destroy (1, &scheme_face_desc);
+    scheme->element_destroy (tree_class, 1, &manual_face_desc);
+    scheme->element_destroy (tree_class, 1, &scheme_face_desc);
     dfs_test_teardown ();
   }
   int max_test_lvl;
