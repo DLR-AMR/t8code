@@ -70,7 +70,7 @@ In summary there are two major changes:
 All element-specific function got an additional argument, the class of the tree. In your application we recommend to get the scheme of a forest only once. It is very likely, that you already got the information about the tree-class using the element function in its old way. All other function arguments have stayed the same. 
 
 ### Renaming of some element functions
-As you might have reconnized allready, some of the element functions have been renamed. We try to get closer to the getter/setter style there and to make more clear what the function does. 
+As you might have reconnized already, some of the element functions have been renamed. We try to get closer to the getter/setter style there and to make more clear what the function does. 
 
 Furthermore we applied our naming-guidelines to the scheme functions and got rid of all `t8_`-prefixes for functions that are now a member of t8code class. 
 
