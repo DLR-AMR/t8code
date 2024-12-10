@@ -91,8 +91,7 @@ target_sources( T8 PRIVATE
     t8.c 
     t8_eclass.c 
     t8_element_shape.c
-    t8_element.cxx 
-    t8_element_c_interface.cxx 
+    t8_element.cxx
     t8_mesh.c
     t8_netcdf.c 
     t8_refcount.c 
@@ -136,8 +135,8 @@ target_sources( T8 PRIVATE
     t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.cxx 
     t8_geometry/t8_geometry_implementations/t8_geometry_zero.cxx 
     t8_geometry/t8_geometry_implementations/t8_geometry_examples.cxx 
+    t8_schemes/t8_scheme.cxx
     t8_schemes/t8_default/t8_default.cxx
-    t8_schemes/t8_default/t8_default_common/t8_default_common.cxx
     t8_schemes/t8_default/t8_default_hex/t8_default_hex.cxx
     t8_schemes/t8_default/t8_default_hex/t8_dhex_bits.c
     t8_schemes/t8_default/t8_default_line/t8_default_line.cxx
@@ -195,8 +194,6 @@ install( FILES
     t8_cmesh_vtk_reader.hxx
     t8_eclass.h
     t8_element.h
-    t8_element_c_interface.h
-    t8_element.hxx
     t8_element_shape.h
     t8_forest_netcdf.h
     t8_mat.h
