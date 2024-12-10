@@ -112,8 +112,8 @@ static void
 t8_deep_successor (t8_element_t *element, t8_element_t *successor, t8_element_t *child, t8_scheme *scheme,
                    const t8_eclass_t tree_class)
 {
-  int maxlvl = scheme->get_maxlevel (tree_class);
-  int num_children = scheme->element_get_num_children (tree_class, element);
+  const int maxlvl = scheme->get_maxlevel (tree_class);
+  const int num_children = scheme->element_get_num_children (tree_class, element);
 
   for (int ichild = 0; ichild < num_children; ichild++) {
     scheme->element_get_child (tree_class, element, ichild, child);
@@ -142,7 +142,7 @@ TEST_P (class_successor, test_recursive_and_deep_successor)
   /* Test at lower level. */
   for (int ilevel = 1; ilevel <= maxlvl; ilevel++) {
     scheme->element_set_linear_id (tree_class, successor, ilevel, 0);
-    scheme->element_construct_last_descendant (tree_class, element, last, ilevel);
+    scheme->element_get_last_descendant (tree_class, element, last, ilevel);
     t8_recursive_successor (element, successor, child, last, scheme, tree_class, ilevel);
   }
   /* Test at Maxlevel. */

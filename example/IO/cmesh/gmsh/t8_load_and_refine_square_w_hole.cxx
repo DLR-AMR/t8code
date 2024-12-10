@@ -119,13 +119,12 @@ t8_load_refine_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t w
                       t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family, const int num_elements,
                       t8_element_t *elements[])
 {
-  int level;
   double elem_midpoint[3];
   double h;
 
   t8_midpoint (forest_from, which_tree, elements[0], elem_midpoint, &h);
 
-  level = scheme->element_get_level (tree_class, elements[0]);
+  const int level = scheme->element_get_level (tree_class, elements[0]);
   if (level > 2) {
     /* Do not refine further than level 2 */
     return 0;

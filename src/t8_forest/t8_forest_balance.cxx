@@ -28,7 +28,6 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_profiling.h>
 #include <t8_schemes/t8_scheme.hxx>
-#include <t8_element.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -42,9 +41,9 @@ T8_EXTERN_C_BEGIN ();
  * we pass forest_from as a parameter. But doing so is not valid anymore
  * if we refine recursively. */
 static int
-t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t ltree_id, t8_eclass_t tree_class,
-                         t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family, const int num_elements,
-                         t8_element_t *elements[])
+t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from, const t8_locidx_t ltree_id,
+                         const t8_eclass_t tree_class, const t8_locidx_t lelement_id, const t8_scheme *scheme,
+                         const int is_family, const int num_elements, t8_element_t *elements[])
 {
   int *pdone, iface, num_faces, num_half_neighbors, ineigh;
   t8_gloidx_t neighbor_tree;
@@ -106,7 +105,7 @@ t8_forest_compute_max_element_level (t8_forest_t forest)
   t8_locidx_t ielement, elem_in_tree;
   t8_locidx_t itree, num_trees;
   t8_scheme *scheme;
-  int local_max_level = 0, elem_level;
+  int local_max_level = 0;
 
   /* Iterate over all local trees and all local elements and comupte the maximum occurring level */
   num_trees = t8_forest_get_num_local_trees (forest);
@@ -117,7 +116,7 @@ t8_forest_compute_max_element_level (t8_forest_t forest)
     for (ielement = 0; ielement < elem_in_tree; ielement++) {
       /* Get the element and compute its level */
       const t8_element_t *elem = t8_forest_get_element_in_tree (forest, itree, ielement);
-      elem_level = scheme->element_get_level (tree_class, elem);
+      const int elem_level = scheme->element_get_level (tree_class, elem);
       local_max_level = SC_MAX (local_max_level, elem_level);
     }
   }

@@ -39,19 +39,15 @@ static int
 t8_basic_adapt_refine_type (t8_forest_t forest, t8_locidx_t which_tree, t8_eclass_t tree_class,
                             const t8_scheme_c *scheme, const int is_family, int num_elements, t8_element_t *elements[])
 {
-  int level;
-  int type;
-  int dim;
-
   T8_ASSERT (!is_family || num_elements == t8_eclass_num_children[tree_class]);
 
-  dim = t8_eclass_to_dimension[tree_class];
-  level = t8_element_get_level (forest, tree_class, elements[0]);
+  const int dim = t8_eclass_to_dimension[tree_class];
+  const int level = t8_element_get_level (forest, tree_class, elements[0]);
   if (level >= max_ref_level) {
     return 0;
   }
   /* get the type of the current element */
-  type = dim == 2 ? ((t8_dtri_t *) elements[0])->type : ((t8_dtet_t *) elements[0])->type;
+  const int type = dim == 2 ? ((t8_dtri_t *) elements[0])->type : ((t8_dtet_t *) elements[0])->type;
   /* refine type 0 and 3 */
   if (type == 0 || type == 3) {
     return 1;

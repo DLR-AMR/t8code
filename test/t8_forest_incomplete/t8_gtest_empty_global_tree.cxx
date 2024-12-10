@@ -61,7 +61,7 @@ class DISABLED_global_tree: public testing::TestWithParam<std::tuple<t8_eclass, 
 /** Removes all elements of local trees if they belong to the corresponding
  *  global trees which are defined by the current testcase of test. */
 static int
-t8_adapt_remove (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
+t8_adapt_remove (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, const t8_eclass_t tree_class,
                  t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family, const int num_elements,
                  t8_element_t *elements[])
 {

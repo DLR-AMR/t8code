@@ -55,7 +55,6 @@ These functions write a file in the NetCDF-format which represents the given 2D-
 #define NC_COLLECTIVE 1
 #endif
 #endif
-#include <t8_element.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest_netcdf.h>
@@ -730,7 +729,7 @@ t8_forest_write_netcdf_coordinate_data (t8_forest_t forest, t8_forest_netcdf_con
 
   /* Check if pointers are not NULL. */
   T8_ASSERT (Mesh_node_x != NULL && Mesh_node_y != NULL && Mesh_node_z != NULL && Mesh_elem_nodes != NULL);
-
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
   /* Iterate over all local trees. */
   /* Corners should be stored in the same order as in a vtk-file (read that somewehere on a netcdf page). */
   for (ltree_id = 0; ltree_id < num_local_trees; ltree_id++) {

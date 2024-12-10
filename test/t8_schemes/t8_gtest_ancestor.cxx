@@ -68,8 +68,8 @@ t8_recursive_ancestor (t8_element_t *element, t8_element_t *child, t8_element_t 
                        const t8_scheme *scheme, const t8_eclass_t tree_class, const int maxlvl)
 {
   int num_children, i;
-  int level = scheme->element_get_level (tree_class, parent);
-  int elem_lvl = scheme->element_get_level (tree_class, element);
+  const int level = scheme->element_get_level (tree_class, parent);
+  const int elem_lvl = scheme->element_get_level (tree_class, element);
   T8_ASSERT (level >= elem_lvl);
   num_children = scheme->element_get_num_children (tree_class, parent);
   if (level == maxlvl) {
@@ -89,7 +89,7 @@ t8_recursive_ancestor (t8_element_t *element, t8_element_t *child, t8_element_t 
 TEST_P (ancestor, root_recursive_check)
 {
   t8_element_t *parent;
-  int max_lvl = 5;
+  const int max_lvl = 5;
   scheme->element_new (eclass, 1, &parent);
   scheme->element_copy (eclass, correct_ancestor, parent);
   t8_recursive_ancestor (correct_ancestor, desc_a, parent, check, scheme, eclass, max_lvl);
@@ -101,7 +101,7 @@ TEST_P (ancestor, multi_level_recursive_check)
   t8_element_t *parent;
   t8_element_t *correct_ancestor_high_level;
   int recursion_depth = 5;
-  int max_lvl = scheme->get_maxlevel (eclass);
+  const int max_lvl = scheme->get_maxlevel (eclass);
   int i;
   scheme->element_new (eclass, 1, &parent);
   scheme->element_new (eclass, 1, &correct_ancestor_high_level);

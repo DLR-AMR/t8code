@@ -179,7 +179,7 @@ t8_advect_element_set_phi_adapt (const t8_advect_problem_t *problem, t8_locidx_t
 /* Adapt the forest. We refine if the level-set function is close to zero
  * and coarsen if it is larger than a given threshold. */
 static int
-t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t ltree_id, t8_eclass_t tree_class,
+t8_advect_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t ltree_id, const t8_eclass_t tree_class,
                  t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family, const int num_elements,
                  t8_element_t *elements[])
 {
@@ -517,7 +517,7 @@ t8_advect_advance_element (t8_advect_problem_t *problem, t8_locidx_t lelement)
 /* Compute element midpoint and vol and store at element_data field. */
 static void
 t8_advect_compute_element_data (t8_advect_problem_t *problem, t8_advect_element_data_t *elem_data,
-                                const t8_element_t *element, t8_locidx_t ltreeid)
+                                const t8_element_t *element, const t8_locidx_t ltreeid)
 {
   /* Compute the midpoint coordinates of element */
   t8_forest_element_centroid (problem->forest, ltreeid, element, elem_data->midpoint);
@@ -535,7 +535,7 @@ t8_advect_compute_element_data (t8_advect_problem_t *problem, t8_advect_element_
  *       Similar formula for refining?
  */
 static void
-t8_advect_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree, t8_eclass_t tree_class,
+t8_advect_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree, const t8_eclass_t tree_class,
                    const t8_scheme *scheme, int refine, int num_outgoing, t8_locidx_t first_outgoing, int num_incoming,
                    t8_locidx_t first_incoming)
 {

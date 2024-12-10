@@ -46,7 +46,7 @@ class class_test_boundary_extrude: public TestDFS {
         t8_element_t *boundary;
         scheme->element_new (face_eclass, 1, &boundary);
 
-        scheme->element_construct_boundary_face (tree_class, element, iface, boundary);
+        scheme->element_get_boundary_face (tree_class, element, iface, boundary);
 
         scheme->element_extrude_face (tree_class, boundary, check, tree_face);
 

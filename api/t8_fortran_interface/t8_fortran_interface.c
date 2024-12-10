@@ -25,7 +25,7 @@
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh/t8_cmesh_helpers.h>
-#include <t8_element_c_interface.h>
+#include <t8_schemes/t8_scheme.h>
 #include <t8_schemes/t8_default/t8_default_c_interface.h>
 
 void
@@ -125,8 +125,9 @@ t8_forest_new_uniform_default (t8_cmesh_t cmesh, int level, int do_face_ghost, s
 
 int
 t8_fortran_adapt_by_coordinates_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                                          t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme_c *scheme,
-                                          const int is_family, int num_elements, t8_element_t *elements[])
+                                          const t8_eclass_t tree_class, t8_locidx_t lelement_id,
+                                          const t8_scheme_c *scheme, const int is_family, const int num_elements,
+                                          t8_element_t *elements[])
 {
   t8_fortran_adapt_coordinate_callback callback
     = (t8_fortran_adapt_coordinate_callback) t8_forest_get_user_function (forest);

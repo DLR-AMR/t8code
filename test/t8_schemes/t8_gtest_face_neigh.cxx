@@ -24,7 +24,6 @@
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
-#include <t8_element_c_interface.h>
 #include <test/t8_gtest_macros.hxx>
 
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.h>
@@ -73,8 +72,8 @@ t8_test_face_neighbor_inside (int num_faces, t8_element_t *element, t8_element_t
   for (int iface = 0; iface < num_faces; iface++) {
     /* Compute the neighbors neighbor along a given face and check, if the result is the
      * original element. */
-    scheme->element_construct_face_neighbor_inside (tree_class, child, neigh, iface, &face_num);
-    scheme->element_construct_face_neighbor_inside (tree_class, neigh, element, face_num, &check);
+    scheme->element_get_face_neighbor_inside (tree_class, child, neigh, iface, &face_num);
+    scheme->element_get_face_neighbor_inside (tree_class, neigh, element, face_num, &check);
 
     EXPECT_TRUE (scheme->element_is_equal (tree_class, child, element)) << "Got a false neighbor.";
     EXPECT_ELEM_EQ (scheme, tree_class, child, element);
@@ -153,7 +152,7 @@ TEST_P (face_neigh, check_not_inside_root)
 
       scheme->element_get_child (tree_class, element, child_id, child);
       int face_num;
-      int inside = scheme->element_construct_face_neighbor_inside (tree_class, child, neigh, face_contact, &face_num);
+      int inside = scheme->element_get_face_neighbor_inside (tree_class, child, neigh, face_contact, &face_num);
 
       ASSERT_EQ (inside, 0) << "Element is not outside.";
 
@@ -178,11 +177,11 @@ t8_recursive_check_diff (t8_element_t *element, t8_element_t *child, t8_element_
 
   /* Compute the neighbors neighbor along a given face and check, if the result is the
    * original element. */
-  int num_faces = scheme->element_get_num_faces (tree_class, element);
+  const int num_faces = scheme->element_get_num_faces (tree_class, element);
 
   t8_test_face_neighbor_inside (num_faces, child, element, neigh, scheme, tree_class);
 
-  int num_children = scheme->element_get_num_children (tree_class, child);
+  const int num_children = scheme->element_get_num_children (tree_class, child);
   for (int ichild = 0; ichild < num_children; ichild++) {
     scheme->element_get_child (tree_class, element, ichild, child);
     t8_recursive_check_diff (child, element, neigh, scheme, tree_class, maxlvl, level + 1);
@@ -194,7 +193,7 @@ t8_recursive_check_diff (t8_element_t *element, t8_element_t *child, t8_element_
 TEST_P (face_neigh, recursive_check_diff)
 {
   int level = 1;
-  int middle_child_id = t8_test_get_middle_child (tree_class, level, element, child, scheme, tree_class);
+  const int middle_child_id = t8_test_get_middle_child (tree_class, level, element, child, scheme, tree_class);
   scheme->element_get_child (tree_class, element, middle_child_id, child);
 
   t8_recursive_check_diff (child, element, neigh, scheme, tree_class, maxlvl, level);

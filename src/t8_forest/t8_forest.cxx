@@ -31,8 +31,6 @@
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_balance.h>
 #include <t8_schemes/t8_scheme.hxx>
-#include <t8_element.hxx>
-#include <t8_element_c_interface.h>
 #include <t8_cmesh/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_forest/t8_forest_profiling.h>
@@ -61,12 +59,12 @@ t8_forest_is_incomplete_family (const t8_forest_t forest, const t8_locidx_t ltre
   T8_ASSERT (elements != NULL);
   T8_ASSERT (elements_size > 0);
 
-  const t8_scheme *tscheme = t8_forest_get_scheme (forest);
-  T8_ASSERT (tscheme != NULL);
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  T8_ASSERT (scheme != NULL);
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltree_id);
 
   /* If current considered element has level 0 there is no coarsening possible */
-  if (0 == tscheme->element_get_level (tree_class, elements[0])) {
+  if (0 == scheme->element_get_level (tree_class, elements[0])) {
     return 0;
   }
 
@@ -78,17 +76,17 @@ t8_forest_is_incomplete_family (const t8_forest_t forest, const t8_locidx_t ltre
   /* Buffer for elements */
   t8_element_t *element_parent_current;
   t8_element_t *element_compare;
-  tscheme->element_new (tree_class, 1, &element_parent_current);
-  tscheme->element_new (tree_class, 1, &element_compare);
+  scheme->element_new (tree_class, 1, &element_parent_current);
+  scheme->element_new (tree_class, 1, &element_compare);
 
   /* We first assume that we have an (in)complete family with the size of array elements. 
    * In the following we try to disprove this. */
   int family_size = elements_size;
 
   /* Get level, child ID and parent of first element of possible family */
-  const int level_current = tscheme->element_get_level (tree_class, elements[0]);
-  const int child_id_current = tscheme->element_get_child_id (tree_class, elements[0]);
-  tscheme->element_get_parent (tree_class, elements[0], element_parent_current);
+  const int level_current = scheme->element_get_level (tree_class, elements[0]);
+  const int child_id_current = scheme->element_get_child_id (tree_class, elements[0]);
+  scheme->element_get_parent (tree_class, elements[0], element_parent_current);
 
   /* Elements of the current family could already be passed, so that 
    * the element/family currently under consideration can no longer be coarsened.
@@ -97,18 +95,18 @@ t8_forest_is_incomplete_family (const t8_forest_t forest, const t8_locidx_t ltre
    * */
   if (child_id_current > 0 && el_considered > 0) {
     const t8_element_t *element_temp = t8_forest_get_tree_element (tree, el_considered - 1);
-    int level_temp = tscheme->element_get_level (tree_class, element_temp);
+    const int level_temp = scheme->element_get_level (tree_class, element_temp);
     /* Only elements with higher or equal level then level of current considered
      * element, can get potentially be overlapped. */
     if (level_temp >= level_current) {
       /* Compare ancestors */
-      tscheme->element_get_nca (tree_class, element_parent_current, element_temp, element_compare);
-      const int level_compare = tscheme->element_get_level (tree_class, element_compare);
+      scheme->element_get_nca (tree_class, element_parent_current, element_temp, element_compare);
+      const int level_compare = scheme->element_get_level (tree_class, element_compare);
       /* Level_current-1 is level of element_parent_current */
       T8_ASSERT (level_compare <= level_current - 1);
       if (level_compare == level_current - 1) {
-        tscheme->element_destroy (tree_class, 1, &element_parent_current);
-        tscheme->element_destroy (tree_class, 1, &element_compare);
+        scheme->element_destroy (tree_class, 1, &element_parent_current);
+        scheme->element_destroy (tree_class, 1, &element_compare);
         return 0;
       }
     }
@@ -116,16 +114,16 @@ t8_forest_is_incomplete_family (const t8_forest_t forest, const t8_locidx_t ltre
 
   /* Reduce family_size to the number of family members that directly follow each other. */
   for (int family_iter = 1; family_iter < family_size; family_iter++) {
-    const int level = tscheme->element_get_level (tree_class, elements[family_iter]);
+    const int level = scheme->element_get_level (tree_class, elements[family_iter]);
     /* By comparing the levels in advance we may be able to avoid
      * the more complex test with the parent element.*/
     if (level != level_current) {
       family_size = family_iter;
       break;
     }
-    tscheme->element_get_parent (tree_class, elements[family_iter], element_compare);
+    scheme->element_get_parent (tree_class, elements[family_iter], element_compare);
     /* If the levels are equal, check if the parents are too. */
-    if (!tscheme->element_is_equal (tree_class, element_parent_current, element_compare)) {
+    if (!scheme->element_is_equal (tree_class, element_parent_current, element_compare)) {
       family_size = family_iter;
       break;
     }
@@ -138,28 +136,28 @@ t8_forest_is_incomplete_family (const t8_forest_t forest, const t8_locidx_t ltre
    * family_size in this family) that would be overlapped after coarsening. */
   if (family_size < elements_size) {
     /* Get level of element after last element of current possible family */
-    const int level = tscheme->element_get_level (tree_class, elements[family_size]);
+    const int level = scheme->element_get_level (tree_class, elements[family_size]);
     /* Only elements with higher level then level of current element, can get 
      * potentially be overlapped. */
     if (level > level_current) {
       /* Compare ancestors */
-      tscheme->element_get_nca (tree_class, element_parent_current, elements[family_size], element_compare);
-      const int level_compare = tscheme->element_get_level (tree_class, element_compare);
+      scheme->element_get_nca (tree_class, element_parent_current, elements[family_size], element_compare);
+      const int level_compare = scheme->element_get_level (tree_class, element_compare);
       T8_ASSERT (level_compare <= level_current - 1);
       if (level_compare == level_current - 1) {
-        tscheme->element_destroy (tree_class, 1, &element_parent_current);
-        tscheme->element_destroy (tree_class, 1, &element_compare);
+        scheme->element_destroy (tree_class, 1, &element_parent_current);
+        scheme->element_destroy (tree_class, 1, &element_compare);
         return 0;
       }
     }
   }
 
   /* clean up */
-  tscheme->element_destroy (tree_class, 1, &element_parent_current);
-  tscheme->element_destroy (tree_class, 1, &element_compare);
+  scheme->element_destroy (tree_class, 1, &element_parent_current);
+  scheme->element_destroy (tree_class, 1, &element_compare);
 
 #if T8_ENABLE_MPI
-  const int num_siblings = tscheme->element_get_num_siblings (tree_class, elements[0]);
+  const int num_siblings = scheme->element_get_num_siblings (tree_class, elements[0]);
   T8_ASSERT (family_size <= num_siblings);
   /* If the first/last element at a process boundary is not the first/last
    * element of a possible family, we are not guaranteed to consider all 
@@ -1121,14 +1119,14 @@ t8_forest_compute_desc (t8_forest_t forest)
     /* get memory for the trees first descendant */
     scheme->element_new (tree_class, 1, &itree->first_desc);
     /* calculate the first descendant of the first element */
-    scheme->element_construct_first_descendant (tree_class, first_element, itree->first_desc, forest->maxlevel);
+    scheme->element_get_first_descendant (tree_class, first_element, itree->first_desc, forest->maxlevel);
     /* get a pointer to the last element of itree */
     num_elements = t8_element_array_get_count (&itree->elements);
     const t8_element_t *last_element = t8_element_array_index_locidx (&itree->elements, num_elements - 1);
     /* get memory for the trees first descendant */
     scheme->element_new (tree_class, 1, &itree->last_desc);
     /* calculate the last descendant of the first element */
-    scheme->element_construct_last_descendant (tree_class, last_element, itree->last_desc, forest->maxlevel);
+    scheme->element_get_last_descendant (tree_class, last_element, itree->last_desc, forest->maxlevel);
   }
 }
 
@@ -1327,10 +1325,10 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
     scheme->get_root (eclass, element);
     scheme->element_new (eclass, 1, &desc);
     if (first_or_last == 0) {
-      scheme->element_construct_first_descendant (eclass, element, desc, forest->maxlevel);
+      scheme->element_get_first_descendant (eclass, element, desc, forest->maxlevel);
     }
     else {
-      scheme->element_construct_last_descendant (eclass, element, desc, forest->maxlevel);
+      scheme->element_get_last_descendant (eclass, element, desc, forest->maxlevel);
     }
     /* We can now check whether the first/last possible descendant matches the
      * first/last local descendant */
@@ -1443,7 +1441,7 @@ t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_lineari
    * In case we do not find an element that is greater than the given element_id, the binary search returns
    * the end-iterator of the element array. In that case, we want to return the last index from the element
    * array. */
-  return elem_iter.GetCurrentIndex () - 1;
+  return elem_iter.get_current_index () - 1;
 }
 
 t8_eclass_t
@@ -1494,8 +1492,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const 
   const t8_tree_t tree = t8_forest_get_tree (forest, ltreeid);
   const t8_eclass_t eclass = tree->eclass;
   t8_scheme *scheme = t8_forest_get_scheme (forest);
-  if (neigh_eclass == eclass
-      && scheme->element_construct_face_neighbor_inside (eclass, elem, neigh, face, neigh_face)) {
+  if (neigh_eclass == eclass && scheme->element_get_face_neighbor_inside (eclass, elem, neigh, face, neigh_face)) {
     /* The neighbor was constructed and is inside the current tree. */
     return ltreeid + t8_forest_get_first_local_tree_id (forest);
   }
@@ -1528,7 +1525,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const 
     /* Allocate the face element */
     scheme->element_new (boundary_class, 1, &face_element);
     /* Compute the face element. */
-    scheme->element_construct_boundary_face (eclass, elem, face, face_element);
+    scheme->element_get_boundary_face (eclass, elem, face, face_element);
     /* Get the coarse tree that contains elem.
      * Also get the face neighbor information of the coarse tree. */
     (void) t8_cmesh_trees_get_tree_ext (cmesh->trees, lctree_id, &face_neighbor, &ttf);
@@ -1663,10 +1660,10 @@ t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, 
 {
   int orientation = 0;
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
-  if (t8_element_is_root_boundary (forest, tree_class, leaf, face)) {
+  if (scheme->element_is_root_boundary (tree_class, leaf, face)) {
     t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
     t8_locidx_t ltreeid_in_cmesh = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
-    int iface_in_tree = t8_element_get_tree_face (forest, tree_class, leaf, face);
+    int iface_in_tree = scheme->element_get_tree_face (tree_class, leaf, face);
     t8_cmesh_get_face_neighbor (cmesh, ltreeid_in_cmesh, iface_in_tree, NULL, &orientation);
   }
 
@@ -2061,7 +2058,7 @@ t8_forest_element_check_owner (t8_forest_t forest, t8_element_t *element, t8_glo
       /* Compute the linear id of the first descendant of element */
       if (!element_is_desc) {
         scheme->element_new (eclass, 1, &first_desc);
-        scheme->element_construct_first_descendant (eclass, element, first_desc, forest->maxlevel);
+        scheme->element_get_first_descendant (eclass, element, first_desc, forest->maxlevel);
         first_desc_id = scheme->element_get_linear_id (eclass, first_desc, forest->maxlevel);
         scheme->element_destroy (eclass, 1, &first_desc);
       }
@@ -2176,7 +2173,7 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid, t8_el
   else {
     /* Build the first descendant of element */
     scheme->element_new (eclass, 1, &first_desc);
-    scheme->element_construct_first_descendant (eclass, element, first_desc, forest->maxlevel);
+    scheme->element_get_first_descendant (eclass, element, first_desc, forest->maxlevel);
   }
 
   T8_ASSERT (forest->tree_offsets != NULL);
@@ -2344,7 +2341,7 @@ t8_forest_element_find_owner_old (t8_forest_t forest, t8_gloidx_t gtreeid, t8_el
   }
   /* Compute the first descendant of the element */
   scheme->element_new (eclass, 1, &element_first_desc);
-  scheme->element_construct_first_descendant (eclass, element, element_first_desc, forest->maxlevel);
+  scheme->element_get_first_descendant (eclass, element, element_first_desc, forest->maxlevel);
   /* Compute the linear of the first descendant */
   element_desc_lin_id = scheme->element_get_linear_id (eclass, element_first_desc, forest->maxlevel);
 
@@ -2419,14 +2416,14 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest, t8_gloidx_t gtre
   /* Create first and last descendants at face */
   if (first_desc == NULL) {
     scheme->element_new (eclass, 1, &first_face_desc);
-    scheme->element_construct_first_descendant_face (eclass, element, face, first_face_desc, forest->maxlevel);
+    scheme->element_get_first_descendant_face (eclass, element, face, first_face_desc, forest->maxlevel);
   }
   else {
     first_face_desc = first_desc;
   }
   if (last_desc == NULL) {
     scheme->element_new (eclass, 1, &last_face_desc);
-    scheme->element_construct_last_descendant_face (eclass, element, face, last_face_desc, forest->maxlevel);
+    scheme->element_get_last_descendant_face (eclass, element, face, last_face_desc, forest->maxlevel);
   }
   else {
     last_face_desc = last_desc;
@@ -2437,9 +2434,9 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest, t8_gloidx_t gtre
     t8_element_t *test_desc;
 
     scheme->element_new (eclass, 1, &test_desc);
-    scheme->element_construct_last_descendant_face (eclass, element, face, test_desc, forest->maxlevel);
+    scheme->element_get_last_descendant_face (eclass, element, face, test_desc, forest->maxlevel);
     T8_ASSERT (scheme->element_is_equal (eclass, test_desc, last_face_desc));
-    scheme->element_construct_first_descendant_face (eclass, element, face, test_desc, forest->maxlevel);
+    scheme->element_get_first_descendant_face (eclass, element, face, test_desc, forest->maxlevel);
     T8_ASSERT (scheme->element_is_equal (eclass, test_desc, first_face_desc));
     scheme->element_destroy (eclass, 1, &test_desc);
   }
@@ -2552,9 +2549,9 @@ t8_forest_element_owners_bounds (t8_forest_t forest, t8_gloidx_t gtreeid, const 
 
   /* Compute the first and last descendant of element */
   scheme->element_new (eclass, 1, &first_desc);
-  scheme->element_construct_first_descendant (eclass, element, first_desc, forest->maxlevel);
+  scheme->element_get_first_descendant (eclass, element, first_desc, forest->maxlevel);
   scheme->element_new (eclass, 1, &last_desc);
-  scheme->element_construct_last_descendant (eclass, element, last_desc, forest->maxlevel);
+  scheme->element_get_last_descendant (eclass, element, last_desc, forest->maxlevel);
 
   /* Compute their owners as bounds for all of element's owners */
   *lower = t8_forest_element_find_owner_ext (forest, gtreeid, first_desc, eclass, *lower, *upper, *lower, 1);
@@ -2576,9 +2573,9 @@ t8_forest_element_owners_at_face_bounds (t8_forest_t forest, t8_gloidx_t gtreeid
   }
 
   scheme->element_new (eclass, 1, &first_face_desc);
-  scheme->element_construct_first_descendant_face (eclass, element, face, first_face_desc, forest->maxlevel);
+  scheme->element_get_first_descendant_face (eclass, element, face, first_face_desc, forest->maxlevel);
   scheme->element_new (eclass, 1, &last_face_desc);
-  scheme->element_construct_last_descendant_face (eclass, element, face, last_face_desc, forest->maxlevel);
+  scheme->element_get_last_descendant_face (eclass, element, face, last_face_desc, forest->maxlevel);
 
   /* owner of first and last descendants */
   *lower = t8_forest_element_find_owner_ext (forest, gtreeid, first_face_desc, eclass, *lower, *upper, *lower, 1);
@@ -2662,7 +2659,7 @@ t8_forest_element_has_leaf_desc (t8_forest_t forest, t8_gloidx_t gtreeid, const 
   /* TODO: element interface function t8_element_last_desc_id */
   scheme->element_new (tree_class, 1, &last_desc);
   /* TODO: set level in last_descendant */
-  scheme->element_construct_last_descendant (tree_class, element, last_desc, forest->maxlevel);
+  scheme->element_get_last_descendant (tree_class, element, last_desc, forest->maxlevel);
   last_desc_id = scheme->element_get_linear_id (tree_class, last_desc, forest->maxlevel);
   /* Get the level of the element */
   level = scheme->element_get_level (tree_class, element);
@@ -3096,6 +3093,7 @@ t8_forest_populate_irregular (t8_forest_t forest)
   t8_forest_unref (&forest_tmp_partition);
 }
 
+#ifdef T8_ENABLE_DEBUG
 /**
  * Checks if a scheme is valid. This is an intermediate check, which requires the schemes eclass schemes
  * to be in the same order as the eclass enum. This is only needed as long as the trees access the eclass scheme
@@ -3106,14 +3104,14 @@ t8_forest_populate_irregular (t8_forest_t forest)
 static int
 t8_forest_scheme_is_valid (const t8_scheme *scheme)
 {
-  int eclass_int;
-  for (eclass_int = 0; eclass_int < T8_ECLASS_COUNT; eclass_int++) {
+  for (int eclass_int = 0; eclass_int < T8_ECLASS_COUNT; eclass_int++) {
     if (scheme->get_eclass_scheme_eclass (static_cast<t8_eclass_t> (eclass_int)) != eclass_int) {
       return 0;
     }
   }
   return 1;
 }
+#endif
 
 void
 t8_forest_commit (t8_forest_t forest)
@@ -3201,7 +3199,7 @@ t8_forest_commit (t8_forest_t forest)
 
     /* increase reference count of cmesh and scheme from the input forest */
     t8_cmesh_ref (forest->set_from->cmesh);
-    t8_scheme_ref (forest->set_from->scheme);
+    forest->set_from->scheme->ref ();
     /* set the dimension, cmesh and scheme from the old forest */
     forest->dimension = forest->set_from->dimension;
     forest->cmesh = forest->set_from->cmesh;
@@ -4120,7 +4118,7 @@ t8_forest_new_uniform (t8_cmesh_t cmesh, t8_scheme *scheme, const int level, con
     t8_cmesh_t cmesh_uniform_partition;
     t8_cmesh_init (&cmesh_uniform_partition);
     t8_cmesh_set_derive (cmesh_uniform_partition, cmesh);
-    t8_scheme_ref (scheme);
+    scheme->ref ();
     t8_cmesh_set_partition_uniform (cmesh_uniform_partition, level, scheme);
     t8_cmesh_commit (cmesh_uniform_partition, comm);
     cmesh = cmesh_uniform_partition;
@@ -4226,7 +4224,7 @@ t8_forest_reset (t8_forest_t *pforest)
   }
   /* we have taken ownership on calling t8_forest_set_* */
   if (forest->scheme != NULL) {
-    t8_scheme_unref (&forest->scheme);
+    forest->scheme->unref ();
   }
   if (forest->cmesh != NULL) {
     t8_cmesh_unref (&forest->cmesh);
