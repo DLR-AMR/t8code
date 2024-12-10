@@ -29,12 +29,12 @@
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 
-class root: public testing::TestWithParam<t8_eclass> {
+class root: public testing::TestWithParam<std::tuple<t8_scheme *, t8_eclass_t>> {
  protected:
   void
   SetUp () override
   {
-    tree_class = GetParam ();
+    std::tie (scheme, tree_class) = GetParam ();
     scheme = t8_scheme_new_default ();
     scheme->element_new (tree_class, 1, &element);
     scheme->get_root (tree_class, element);
@@ -66,4 +66,4 @@ TEST_P (root, equals_linear_id_0_0)
   scheme->element_destroy (tree_class, 1, &root_compare);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_root, root, AllEclasses, print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_root, root, AllSchemesEclasses);
