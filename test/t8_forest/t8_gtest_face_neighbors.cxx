@@ -30,11 +30,29 @@
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
+#include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_ghost.h>
 #include <test/t8_gtest_macros.hxx>
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
+
+bool
+test_face_neighbors_skip_cmesh (const t8_cmesh_t cmesh)
+{
+  // We only allow cmeshes with pure quad or hex elements.
+  // So we check all eclass and if the cmesh contains any of those
+  // we skip the cmesh.
+  for (int eclass = T8_ECLASS_ZERO; eclass < T8_ECLASS_COUNT; ++eclass) {
+    if (eclass != T8_ECLASS_QUAD && eclass != T8_ECLASS_HEX) {
+      if (cmesh->num_trees_per_eclass[eclass] > 0) {
+        return true;
+      }
+    }
+  }
+  // Additionally, we skip empty cmeshes.
+  return t8_cmesh_is_empty (cmesh);
+}
 
 class forest_face_neighbors: public testing::TestWithParam<cmesh_example_base *> {
  protected:
@@ -42,7 +60,7 @@ class forest_face_neighbors: public testing::TestWithParam<cmesh_example_base *>
   SetUp () override
   {
     t8_cmesh_t cmesh = GetParam ()->cmesh_create ();
-    if (t8_cmesh_is_empty (cmesh)) {
+    if (test_face_neighbors_skip_cmesh (cmesh)) {
       /* we skip empty cmeshes case */
       t8_cmesh_unref (&cmesh);
       GTEST_SKIP ();

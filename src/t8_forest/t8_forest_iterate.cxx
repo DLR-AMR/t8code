@@ -88,7 +88,7 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
   // Check whether we are in a local tree or ghost tree
   const bool tree_is_local = t8_forest_tree_is_local (forest, ltreeid);
   const bool tree_is_ghost = !tree_is_local;
-  const bool local_or_ghost_tree_id = tree_is_local ? ltreeid : ltreeid - num_local_trees;
+  const t8_locidx_t local_or_ghost_tree_id = tree_is_local ? ltreeid : ltreeid - num_local_trees;
 
   const size_t elem_count = t8_element_array_get_count (leaf_elements);
   if (elem_count == 0) {
