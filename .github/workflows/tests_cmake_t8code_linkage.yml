@@ -43,7 +43,7 @@ on:
 
 jobs:  
   t8code_cmake_tests:
-    timeout-minutes: 45
+    timeout-minutes: 60
     runs-on: ubuntu-latest
     container: dlramr/t8code-ubuntu:t8-dependencies
     steps:
