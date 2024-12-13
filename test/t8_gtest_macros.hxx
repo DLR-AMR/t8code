@@ -30,7 +30,6 @@
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
-#include <test/t8_schemes/t8_gtest_iterator.hxx>
 #include <iostream>
 #include <t8_schemes/t8_scheme.hxx>
 
