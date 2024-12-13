@@ -28,7 +28,7 @@
 #include <gtest/gtest.h>
 
 t8_scheme *
-t8_scheme_all_schemes(void)
+t8_scheme_all_schemes (void)
 {
   t8_scheme_builder builder;
 
@@ -44,6 +44,6 @@ t8_scheme_all_schemes(void)
   return builder.build_scheme ();
 }
 
-#define AllSchemes ::testing::Range(T8_ECLASS_ZERO, T8_ECLASS_COUNT)
+#define AllSchemes ::testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT)
 
 #endif /* T8_GTEST_SCHEMES_HXX */

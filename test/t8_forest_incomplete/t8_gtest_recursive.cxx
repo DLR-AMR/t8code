@@ -63,7 +63,7 @@ class recursive_tree: public testing::TestWithParam<t8_eclass_t> {
   void
   TearDown () override
   {
-    if (tree_class != T8_ECLASS_ZERO){
+    if (tree_class != T8_ECLASS_ZERO) {
       t8_forest_unref (&forest);
       t8_forest_unref (&forest_base);
     }
@@ -150,5 +150,4 @@ TEST_P (recursive_tree, test_recursive)
   ASSERT_TRUE (t8_forest_is_equal (forest, forest_base));
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_recursive, recursive_tree, AllSchemes,
-                          print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_recursive, recursive_tree, AllSchemes, print_eclass);

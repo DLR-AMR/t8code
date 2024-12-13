@@ -35,7 +35,7 @@ class class_schemes_descendant: public testing::TestWithParam<t8_eclass_t> {
   {
     tree_class = GetParam ();
 
-    scheme = t8_scheme_all_schemes();
+    scheme = t8_scheme_all_schemes ();
     scheme->element_new (tree_class, 1, &elem);
     scheme->element_new (tree_class, 1, &desc);
     scheme->element_new (tree_class, 1, &test);
