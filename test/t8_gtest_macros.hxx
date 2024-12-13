@@ -46,7 +46,6 @@ auto print_eclass = [] (const testing::TestParamInfo<t8_eclass> &info) { return 
 #define T8_NUM_SAMPLE_POINTS 10000
 #endif
 
-
 #define AllEclasses testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT)
 #define AllEclasses2D testing::Values (T8_ECLASS_QUAD, T8_ECLASS_TRIANGLE)
 
