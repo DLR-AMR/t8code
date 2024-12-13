@@ -21,6 +21,9 @@ name: CMake tests t8code with shipped submodules
 #  along with t8code; if not, write to the Free Software Foundation, Inc.,
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
+env:
+  DEBUG_CONFIG: "-O1"
+
 on:
   workflow_call:
     inputs:
