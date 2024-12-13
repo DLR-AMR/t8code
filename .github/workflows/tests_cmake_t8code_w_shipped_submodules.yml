@@ -77,11 +77,8 @@ jobs:
       if: ${{ inputs.LESS_TESTS }}
       run: export LESS_TEST_OPTION="-DT8CODE_ENABLE_LESS_TESTS=ON"
            && echo LESS_TEST_OPTION="$LESS_TEST_OPTION" >> $GITHUB_ENV
-    - name: compiler-optimization
-      if: ${{ inputs.BUILD_TYPE == 'Debug' }}
-      run: export -DCMAKE_C_FLAGS_DEBUG="-O1 -g" -DCMAKE_CXX_FLAGS_DEBUG="-O1 -g"
     - name: build config variables
-      run: export CONFIG_OPTIONS="${LESS_TEST_OPTION} -GNinja -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=ON -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE"
+      run: export CONFIG_OPTIONS="${LESS_TEST_OPTION} -GNinja -DCMAKE_C_FLAGS_DEBUG="-O1 -g" -DCMAKE_CXX_FLAGS_DEBUG="-O1 -g" -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=ON -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE"
         && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
     # cmake and test
     - name: Printing MPI compiler info
