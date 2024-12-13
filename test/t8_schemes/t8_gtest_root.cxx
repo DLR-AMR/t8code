@@ -26,16 +26,17 @@
 #include <gtest/gtest.h>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <test/t8_gtest_macros.hxx>
+#include <test/t8_gtest_schemes.hxx>
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 
-class root: public testing::TestWithParam<t8_eclass> {
- protected:
+class root: public testing::TestWithParam<t8_eclass_t> {
+ public:
   void
   SetUp () override
   {
+    scheme = t8_scheme_all_schemes ();
     tree_class = GetParam ();
-    scheme = t8_scheme_new_default ();
     scheme->element_new (tree_class, 1, &element);
     scheme->get_root (tree_class, element);
   }
@@ -45,6 +46,7 @@ class root: public testing::TestWithParam<t8_eclass> {
     scheme->element_destroy (tree_class, 1, &element);
     scheme->unref ();
   }
+
   t8_element_t *element;
   t8_scheme *scheme;
   t8_eclass_t tree_class;
@@ -66,4 +68,4 @@ TEST_P (root, equals_linear_id_0_0)
   scheme->element_destroy (tree_class, 1, &root_compare);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_root, root, AllEclasses, print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_root, root, AllSchemes);

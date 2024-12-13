@@ -24,7 +24,7 @@
 #include <t8.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_macros.hxx>
 
 /* In this test, we recursively constructs a mesh containing only the first 
@@ -43,11 +43,14 @@ class recursive_tree: public testing::TestWithParam<t8_eclass_t> {
   SetUp () override
   {
     tree_class = GetParam ();
+    if (tree_class == T8_ECLASS_ZERO) {
+      GTEST_SKIP ();
+    }
     sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &MPI_size);
 
     /* Construct a cmesh such that each process will get one rooted tree */
     cmesh = t8_cmesh_new_bigmesh (tree_class, MPI_size, sc_MPI_COMM_WORLD);
-    scheme = t8_scheme_new_default ();
+    scheme = t8_scheme_all_schemes ();
 
     scheme->ref ();
     t8_cmesh_ref (cmesh);
@@ -60,8 +63,10 @@ class recursive_tree: public testing::TestWithParam<t8_eclass_t> {
   void
   TearDown () override
   {
-    t8_forest_unref (&forest);
-    t8_forest_unref (&forest_base);
+    if (tree_class != T8_ECLASS_ZERO) {
+      t8_forest_unref (&forest);
+      t8_forest_unref (&forest_base);
+    }
   }
   int MPI_size;
   t8_eclass_t tree_class;
@@ -145,5 +150,4 @@ TEST_P (recursive_tree, test_recursive)
   ASSERT_TRUE (t8_forest_is_equal (forest, forest_base));
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_recursive, recursive_tree, testing::Range (T8_ECLASS_LINE, T8_ECLASS_COUNT),
-                          print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_recursive, recursive_tree, AllSchemes, print_eclass);

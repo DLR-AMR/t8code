@@ -22,7 +22,7 @@
 
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include "t8_gtest_dfs_base.hxx"
 #include <test/t8_gtest_macros.hxx>
@@ -74,4 +74,4 @@ TEST_P (class_find_parent, t8_compute_child_find_parent)
   check_recursive_dfs_to_max_lvl (maxlvl);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_find_parent, class_find_parent, AllEclasses, print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_find_parent, class_find_parent, AllSchemes, print_eclass);

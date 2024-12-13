@@ -106,10 +106,10 @@ t8_test_element_is_leaf_for_forest (t8_forest_t forest)
 {
   const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
 
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
   for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree) {
     const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
-    const t8_scheme *scheme = t8_forest_get_scheme (forest);
     /* Allocate memory to build a non-leaf element. */
     t8_element_t *not_leaf;
     scheme->element_new (tree_class, 1, &not_leaf);

@@ -23,7 +23,7 @@
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <test/t8_gtest_schemes.hxx>
 #include <sc_functions.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <test/t8_gtest_macros.hxx>
@@ -34,7 +34,7 @@ class linear_id: public testing::TestWithParam<t8_eclass> {
   SetUp () override
   {
     tree_class = GetParam ();
-    scheme = t8_scheme_new_default ();
+    scheme = t8_scheme_all_schemes ();
     scheme->element_new (tree_class, 1, &element);
     scheme->element_new (tree_class, 1, &child);
     scheme->element_new (tree_class, 1, &test);
@@ -147,4 +147,4 @@ TEST_P (linear_id, id_at_other_level)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_test_init_linear_id, linear_id, AllEclasses, print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_test_init_linear_id, linear_id, AllSchemes, print_eclass);
