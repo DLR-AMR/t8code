@@ -24,6 +24,7 @@
 #include <t8_eclass.h>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <test/t8_gtest_macros.hxx>
+#include <test/t8_gtest_schemes.hxx>
 #include "t8_gtest_dfs_base.hxx"
 
 /** Use DFS to check for all elements, if packing them, sending them to ourself and unpacking them results in the same element
@@ -134,4 +135,4 @@ TEST_P (class_test_pack, test_equal_dfs)
   check_recursive_dfs_to_max_lvl (maxlvl);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_pack, AllEclasses);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_pack, AllSchemes);

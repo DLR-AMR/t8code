@@ -21,7 +21,7 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_macros.hxx>
 
 /*
@@ -47,7 +47,7 @@ class class_element_leaves: public testing::TestWithParam<t8_eclass> {
     scheme->unref ();
   }
   t8_eclass eclass;
-  t8_scheme *scheme = t8_scheme_new_default ();
+  t8_scheme *scheme = t8_scheme_all_schemes ();
 };
 
 TEST_P (class_element_leaves, test_element_count_leaves_root)
@@ -125,4 +125,4 @@ TEST_P (class_element_leaves, test_element_count_leaves_one_level)
   scheme->element_destroy (eclass, 1, &element);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_element_count_leaves, class_element_leaves, AllEclasses, print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_element_count_leaves, class_element_leaves, AllSchemes, print_eclass);

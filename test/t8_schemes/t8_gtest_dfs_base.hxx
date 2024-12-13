@@ -25,7 +25,7 @@
 
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <test/t8_gtest_schemes.hxx>
 
 class TestDFS: public testing::TestWithParam<t8_eclass_t> {
  public:
@@ -59,7 +59,7 @@ class TestDFS: public testing::TestWithParam<t8_eclass_t> {
   void
   dfs_test_setup ()
   {
-    scheme = t8_scheme_new_default ();
+    scheme = t8_scheme_all_schemes ();
     tree_class = GetParam ();
     scheme->element_new (tree_class, 1, &element);
     scheme->get_root (tree_class, element);

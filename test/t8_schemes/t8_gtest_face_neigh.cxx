@@ -23,7 +23,7 @@
 #include <gtest/gtest.h>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <t8_eclass.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_macros.hxx>
 
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.h>
@@ -34,7 +34,7 @@ class face_neigh: public testing::TestWithParam<t8_eclass_t> {
   SetUp () override
   {
     tree_class = GetParam ();
-    scheme = t8_scheme_new_default ();
+    scheme = t8_scheme_all_schemes ();
     scheme->element_new (tree_class, 1, &element);
     scheme->element_new (tree_class, 1, &child);
     scheme->element_new (tree_class, 1, &neigh);
@@ -199,4 +199,4 @@ TEST_P (face_neigh, recursive_check_diff)
   t8_recursive_check_diff (child, element, neigh, scheme, tree_class, maxlvl, level);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_face_neigh, face_neigh, AllEclasses, print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_face_neigh, face_neigh, AllSchemes, print_eclass);
