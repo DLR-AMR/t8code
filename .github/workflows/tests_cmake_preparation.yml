@@ -48,6 +48,7 @@ on:
 
 env:
   USED_CACHE: ${{ !inputs.IGNORE_CACHE }}
+  DEBUG_CONFIG: "-O1 -g"
 
 jobs:
   cmake_preparation:
