@@ -141,3 +141,9 @@ jobs:
       MPI: ON
       BUILD_TYPE: Debug
       LESS_TESTS: ${{ github.event_name == 'pull_request'  }}
+
+  t8code_tarball:
+    if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
+    uses: ./.github/workflows/build_cmake_tarball.yml
+    needs: [preparation, sc_p4est_tests, t8code_tests, t8code_linkage_tests, t8code_api_tests, t8code_w_shipped_submodules_tests]
+
