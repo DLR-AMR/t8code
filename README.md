@@ -1,5 +1,3 @@
-https://github.com/DLR-AMR/t8code/blob/main/.github/workflows/tests_cmake_testsuite.yml
-
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7034838.svg)](https://doi.org/10.5281/zenodo.7034838)
 [![t8code CI](https://github.com/DLR-AMR/t8code/actions/workflows/tests_cmake_testsuite.yml/badge.svg)](https://github.com/DLR-AMR/t8code/actions/workflows/tests_cmake_testsuite.yml)
 
