@@ -25,11 +25,17 @@ name: CMake Tarball
 #
 
 env:
+  MAKEFLAGS: "-j2 V=0"
   DEBUG_CONFIG: "-O1"
 
 
 on:
   workflow_call: 
+    inputs:
+      LESS_TESTS:
+        required: true
+        type: boolean
+        description: 'Enable less tests option for configuring'
 
 jobs:
   build:
@@ -117,7 +123,7 @@ jobs:
           
 # build config vars
     - name: less-test-option
-      if: github.event_name == 'pull_request'
+      if: ${{ inputs.LESS_TESTS }}
       run: export LESS_TEST_OPTION="-DT8CODE_ENABLE_LESS_TESTS=ON"
            && echo LESS_TEST_OPTION="$LESS_TEST_OPTION" >> $GITHUB_ENV
     - name: build config variables
