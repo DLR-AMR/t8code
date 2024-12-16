@@ -472,10 +472,10 @@ t8_standalone_scheme_c<eclass_T>::element_get_ancestor_equation (const t8_elemen
                                                                  t8_element_t *ancestor)
 {
   const t8_standalone_element_t<eclass_T> *p = (const t8_standalone_element_t<eclass_T> *) elem;
-  t8_standalone_element_t<eclass_T> *anc = (t8_standalone_element_t<eclass_T> *) ancestor;
+  t8_standalone_element_t<eclass_T> *ancestor_elem = (t8_standalone_element_t<eclass_T> *) ancestor;
   T8_ASSERT (0 <= level && level <= el->level);
-  if (p != anc) {
-    element_copy (p, anc);
+  if (p != ancestor_elem) {
+    element_copy (p, ancestor_elem);
   }
   if (p->level == level) {
     return;
@@ -483,13 +483,13 @@ t8_standalone_scheme_c<eclass_T>::element_get_ancestor_equation (const t8_elemen
 
   /* Set type */
   if constexpr (T8_ELEMENT_NUM_EQUATIONS[eclass_T]) {
-    anc->type = element_compute_type_at_level (and, level);
+    ancestor_elem->type = element_compute_type_at_level (ancestor_elem, level);
   }
 
-  /* The coordinates and the type of the anc are defined by the level. */
+  /* The coordinates and the type of the ancestor_elem are defined by the level. */
   element_cut_coordinates (and, T8_ELEMENT_MAXLEVEL[eclass_T] - level);
 
-  anc->level = level;
+  ancestor_elem->level = level;
 }
 
 template <t8_eclass_t eclass_T>
