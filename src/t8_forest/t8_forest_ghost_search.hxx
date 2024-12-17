@@ -31,7 +31,11 @@ struct t8_forest_ghost_w_search: public t8_forest_ghost_interface
 {
  public:
   /**
-    * Constructor
+    * Constructors:
+    * there are three ways to construct a object of t8_forest_ghost_w_search
+    * t8_forest_ghost_w_search (), 
+    * t8_forest_ghost_w_search (t8_forest_search_fn search_function),
+    * t8_forest_ghost_w_search (const t8_ghost_type_t ghost_type)
     */
   t8_forest_ghost_w_search ();
 

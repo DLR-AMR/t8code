@@ -2041,8 +2041,6 @@ t8_forest_ghost_w_search::search_for_ghost_elements (t8_forest_t forest)
   /* Reset the data arrays */
   sc_array_reset (&data.face_owners);
   sc_array_reset (&data.bounds_per_level);
-#ifdef T8_ENABLE_DEBUG
-#endif
 }
 
 t8_forest_ghost_face::t8_forest_ghost_face (const int version)
@@ -2104,10 +2102,6 @@ t8_forest_ghost_interface_face_version (t8_forest_ghost_interface_c *ghost_inter
 void
 t8_forest_ghost_stencil::do_ghost (t8_forest_t forest)
 {
-  /**
-   * Compute bounds for elements
-   */
-
   t8_forest_ghost_init (&forest->ghosts, ghost_type);
 
   t8_locidx_t current_index;                   // counter over all local elements
@@ -2136,7 +2130,7 @@ t8_forest_ghost_stencil::do_ghost (t8_forest_t forest)
  * \param [in]      forest a commit uniform forest which is partitioned
  * \param [in]      eclass_scheme should fit to the element
  * \param [in]      element compute owner of this
- * \param [out]     owner
+ * \return          owner of element
  * \note: the function use, that the linear id of the element is the same as the global index
  * for example this is true for uniform meshes.
  * the function also use, that the forest is partitioned.
