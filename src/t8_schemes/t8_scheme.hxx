@@ -41,6 +41,7 @@
 #include <t8_schemes/t8_default/t8_default_tet/t8_default_tet.hxx>
 #include <t8_schemes/t8_default/t8_default_prism/t8_default_prism.hxx>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone.hxx>
 
 /** This class holds one or more element schemes.
  * It also relays the function calls to the specific schemes. */
@@ -74,7 +75,15 @@ class t8_scheme {
                                 t8_default_scheme_hex,
                                 t8_default_scheme_tet,
                                 t8_default_scheme_prism,
-                                t8_default_scheme_pyramid
+                                t8_default_scheme_pyramid,
+                                t8_standalone_scheme<T8_ECLASS_VERTEX>,
+                                t8_standalone_scheme<T8_ECLASS_LINE>,
+                                t8_standalone_scheme<T8_ECLASS_QUAD>,
+                                t8_standalone_scheme<T8_ECLASS_TRIANGLE>,
+                                t8_standalone_scheme<T8_ECLASS_HEX>,
+                                t8_standalone_scheme<T8_ECLASS_TET>,
+                                t8_standalone_scheme<T8_ECLASS_PRISM>,
+                                t8_standalone_scheme<T8_ECLASS_PYRAMID>
                                 >;
   /* clang-format on */
 
