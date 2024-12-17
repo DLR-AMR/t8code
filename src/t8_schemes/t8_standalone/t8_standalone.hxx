@@ -2,6 +2,7 @@
 #define T8_STANDALONE_HXX
 
 #include <t8_schemes/t8_scheme.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone_implementation.hxx>
 
 T8_EXTERN_C_BEGIN ();
 

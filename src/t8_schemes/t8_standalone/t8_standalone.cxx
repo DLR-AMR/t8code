@@ -9,14 +9,14 @@ t8_scheme_new_standalone (void)
 {
   t8_scheme_builder builder;
 
-  builder.add_eclass_scheme<t8_standalone_scheme_c<T8_ECLASS_VERTEX>> ();
-  builder.add_eclass_scheme<t8_standalone_scheme_c<T8_ECLASS_LINE>> ();
-  builder.add_eclass_scheme<t8_standalone_scheme_c<T8_ECLASS_QUAD>> ();
-  builder.add_eclass_scheme<t8_standalone_scheme_c<T8_ECLASS_HEX>> ();
-  builder.add_eclass_scheme<t8_standalone_scheme_c<T8_ECLASS_TRIANGLE>> ();
-  builder.add_eclass_scheme<t8_standalone_scheme_c<T8_ECLASS_TET>> ();
-  builder.add_eclass_scheme<t8_standalone_scheme_c<T8_ECLASS_PRISM>> ();
-  builder.add_eclass_scheme<t8_standalone_scheme_c<T8_ECLASS_PYRAMID>> ();
+  builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_VERTEX>> ();
+  builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_LINE>> ();
+  builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_QUAD>> ();
+  builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_TRIANGLE>> ();
+  builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_HEX>> ();
+  builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_TET>> ();
+  builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_PRISM>> ();
+  builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_PYRAMID>> ();
   return builder.build_scheme ();
 }
 
@@ -25,21 +25,21 @@ t8_eclass_scheme_is_standalone (const t8_scheme *scheme, const t8_eclass_t eclas
 {
   switch (eclass) {
   case T8_ECLASS_VERTEX:
-    return scheme->check_eclass_scheme_type<t8_standalone_scheme_c> (T8_ECLASS_VERTEX);
+    return scheme->check_eclass_scheme_type<t8_standalone_scheme<T8_ECLASS_VERTEX>> (T8_ECLASS_VERTEX);
   case T8_ECLASS_LINE:
-    return scheme->check_eclass_scheme_type<t8_standalone_scheme_c> (T8_ECLASS_LINE);
+    return scheme->check_eclass_scheme_type<t8_standalone_scheme<T8_ECLASS_LINE>> (T8_ECLASS_LINE);
   case T8_ECLASS_QUAD:
-    return scheme->check_eclass_scheme_type<t8_standalone_scheme_c> (T8_ECLASS_QUAD);
+    return scheme->check_eclass_scheme_type<t8_standalone_scheme<T8_ECLASS_QUAD>> (T8_ECLASS_QUAD);
   case T8_ECLASS_TRIANGLE:
-    return scheme->check_eclass_scheme_type<t8_standalone_scheme_c> (T8_ECLASS_TRIANGLE);
+    return scheme->check_eclass_scheme_type<t8_standalone_scheme<T8_ECLASS_TRIANGLE>> (T8_ECLASS_TRIANGLE);
   case T8_ECLASS_HEX:
-    return scheme->check_eclass_scheme_type<t8_standalone_scheme_c> (T8_ECLASS_HEX);
+    return scheme->check_eclass_scheme_type<t8_standalone_scheme<T8_ECLASS_HEX>> (T8_ECLASS_HEX);
   case T8_ECLASS_TET:
-    return scheme->check_eclass_scheme_type<t8_standalone_scheme_c> (T8_ECLASS_TET);
+    return scheme->check_eclass_scheme_type<t8_standalone_scheme<T8_ECLASS_PRISM>> (T8_ECLASS_TET);
   case T8_ECLASS_PRISM:
-    return scheme->check_eclass_scheme_type<t8_standalone_scheme_c> (T8_ECLASS_PRISM);
+    return scheme->check_eclass_scheme_type<t8_standalone_scheme<T8_ECLASS_PRISM>> (T8_ECLASS_PRISM);
   case T8_ECLASS_PYRAMID:
-    return scheme->check_eclass_scheme_type<t8_standalone_scheme_c> (T8_ECLASS_PYRAMID);
+    return scheme->check_eclass_scheme_type<t8_standalone_scheme<T8_ECLASS_PYRAMID>> (T8_ECLASS_PYRAMID);
   default:
     SC_ABORT_NOT_REACHED ();
   }
