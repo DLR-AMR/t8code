@@ -69,19 +69,29 @@ if( T8CODE_ENABLE_LESS_TESTS )
 endif()
 
 if( T8CODE_BUILD_PEDANTIC )
-  # TODO: Add `-Wextra -Wpedantic`. As of now, t8code would not compile with this.
-  # See also: https://github.com/DLR-AMR/t8code/issues/1155.
-  target_compile_options( T8 PUBLIC -Wall -pedantic -Werror )
-  set (T8_CXXFLAGS "${T8_CXXFLAGS} -W -Wall -Wpedantic -Werror")
-  set (T8_CFLAGS "${T8_CFLAGS} -W -Wall -Wpedantic -Werror")
+  target_compile_options( T8 PUBLIC -pedantic )
+  set (T8_CXXFLAGS "${T8_CXXFLAGS} -Wpedantic")
+  set (T8_CFLAGS "${T8_CFLAGS} -Wpedantic")
 endif()
+
+if( T8CODE_BUILD_WALL)
+  target_compile_options( T8 PUBLIC -Wall )
+  set (T8_CXXFLAGS "${T8_CXXFLAGS} -Wall")
+  set (T8_CFLAGS "${T8_CFLAGS} -Wall")
+endif()
+
+if( T8CODE_BUILD_WERROR )
+  target_compile_options( T8 PUBLIC -Werror )
+  set (T8_CXXFLAGS "${T8_CXXFLAGS} -Werror")
+  set (T8_CFLAGS "${T8_CFLAGS} -Werror")
+endif()
+
 
 target_sources( T8 PRIVATE 
     t8.c 
     t8_eclass.c 
     t8_element_shape.c
-    t8_element.cxx 
-    t8_element_c_interface.cxx 
+    t8_element.cxx
     t8_mesh.c
     t8_netcdf.c 
     t8_refcount.c 
@@ -185,8 +195,6 @@ install( FILES
     t8_cmesh_vtk_reader.hxx
     t8_eclass.h
     t8_element.h
-    t8_element_c_interface.h
-    t8_element.hxx
     t8_element_shape.h
     t8_forest_netcdf.h
     t8_mat.h

@@ -43,6 +43,24 @@
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone_implementation.hxx>
+#include <string>
+#if T8_ENABLE_DEBUG
+// Only needed for t8_debug_print_type
+#include <typeinfo>
+
+/**
+ * Get the type of the template parameter as a string.
+ * \tparam TType          The template parameter to get the type of.
+ * \return std::string&   The type of the template parameter as a string.
+ */
+template <typename TType>
+inline std::string &
+t8_debug_print_type ()
+{
+  static std::string type_name = typeid (TType).name ();
+  return type_name;
+}
+#endif  // T8_ENABLE_DEBUG
 
 /** This class holds one or more element schemes.
  * It also relays the function calls to the specific schemes. */

@@ -22,7 +22,7 @@
 
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <test/t8_gtest_macros.hxx>
 
@@ -32,7 +32,7 @@ class class_successor: public testing::TestWithParam<t8_eclass_t> {
   SetUp () override
   {
     tree_class = GetParam ();
-    scheme = t8_scheme_new_default ();
+    scheme = t8_scheme_all_schemes ();
     scheme->element_new (tree_class, 1, &element);
     scheme->element_new (tree_class, 1, &successor);
     scheme->element_new (tree_class, 1, &child);
@@ -151,4 +151,4 @@ TEST_P (class_successor, test_recursive_and_deep_successor)
   t8_deep_successor (element, successor, last, scheme, tree_class);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_successor, class_successor, AllEclasses, print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_successor, class_successor, AllSchemes, print_eclass);

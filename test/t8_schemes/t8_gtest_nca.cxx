@@ -28,7 +28,7 @@
 #include <gtest/gtest.h>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <t8_eclass.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_macros.hxx>
 
 class nca: public testing::TestWithParam<t8_eclass> {
@@ -37,7 +37,7 @@ class nca: public testing::TestWithParam<t8_eclass> {
   SetUp () override
   {
     tree_class = GetParam ();
-    scheme = t8_scheme_new_default ();
+    scheme = t8_scheme_all_schemes ();
     scheme->element_new (tree_class, 1, &correct_nca);
     scheme->element_new (tree_class, 1, &desc_a);
     scheme->element_new (tree_class, 1, &desc_b);
@@ -314,4 +314,4 @@ TEST_P (nca, recursive_check_higher_level)
   scheme->element_destroy (tree_class, 1, &correct_nca_high_level);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_nca, nca, AllEclasses, print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_nca, nca, AllSchemes, print_eclass);
