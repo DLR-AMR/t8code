@@ -1,3 +1,25 @@
+/*
+  This file is part of t8code.
+  t8code is a C library to manage a collection (a forest) of multiple
+  connected adaptive space-trees of general element classes in parallel.
+
+  Copyright (C) 2015 the developers
+
+  t8code is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  t8code is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with t8code; if not, write to the Free Software Foundation, Inc.,
+  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+*/
+
 #include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <t8_schemes/t8_scheme_builder.hxx>
 
@@ -16,7 +38,7 @@ t8_scheme_new_standalone (void)
   builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_HEX>> ();
   // builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_TET>> ();
   // builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_PRISM>> ();
-  // builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_PYRAMID>> ();
+  // builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_PYRAMID>> (); //ADD if PYRAMID in "element_get_shape"
   return builder.build_scheme ();
 }
 

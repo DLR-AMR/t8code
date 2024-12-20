@@ -155,11 +155,11 @@ class t8_scheme {
    * We provide a default implementation of this routine that should suffice
    * for most use cases.
    */
-  // inline size_t
-  // get_element_size (const t8_eclass_t tree_class) const
-  // {
-  //   return std::visit ([&] (auto &&scheme) { return scheme.get_element_size (); }, eclass_schemes[tree_class]);
-  // };
+  inline size_t
+  get_element_size (const t8_eclass_t tree_class) const
+  {
+    return std::visit ([&] (auto &&scheme) { return scheme.get_element_size (); }, eclass_schemes[tree_class]);
+  };
 
   /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
    * Returns false otherwise.
@@ -228,12 +228,12 @@ class t8_scheme {
   * \param [in] elem2  The second element.
   * \return            true if the elements are equal, false if they are not equal
   */
-  // inline bool
-  // element_is_equal (const t8_eclass_t tree_class, const t8_element_t *elem1, const t8_element_t *elem2) const
-  // {
-  //   return std::visit ([&] (auto &&scheme) { return scheme.element_is_equal (elem1, elem2); },
-  //                      eclass_schemes[tree_class]);
-  // };
+  inline bool
+  element_is_equal (const t8_eclass_t tree_class, const t8_element_t *elem1, const t8_element_t *elem2) const
+  {
+    return std::visit ([&] (auto &&scheme) { return scheme.element_is_equal (elem1, elem2); },
+                       eclass_schemes[tree_class]);
+  };
 
   /** Compute the parent of a given element \a elem and store it in \a parent.
    *  \a parent needs to be an existing element. No memory is allocated by this function.

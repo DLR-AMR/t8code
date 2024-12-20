@@ -60,10 +60,10 @@ constexpr int8_t t8_element_type_cubeid_to_Iloc[1 << T8_ELEMENT_NUM_EQUATIONS[TE
 template <t8_eclass_t TEclass>
 constexpr int8_t t8_type_edge_equations[T8_ELEMENT_NUM_EQUATIONS[TEclass]][2];
 
-// /**VERTEX*/
-// template <t8_eclass_t TEclass>
-// constexpr int8_t t8_type_vertex_dim_to_binary[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_NUM_CORNERS[TEclass]]
-//                                              [T8_ELEMENT_DIM[TEclass]];
+/**VERTEX*/
+template <t8_eclass_t TEclass>
+constexpr int8_t t8_type_vertex_dim_to_binary[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_NUM_CORNERS[TEclass]]
+                                             [T8_ELEMENT_DIM[TEclass]];
 
 // /**FACE*/
 // template <t8_eclass_t TEclass>

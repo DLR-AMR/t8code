@@ -1,3 +1,25 @@
+/*
+  This file is part of t8code.
+  t8code is a C library to manage a collection (a forest) of multiple
+  connected adaptive space-trees of general element classes in parallel.
+
+  Copyright (C) 2015 the developers
+
+  t8code is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  t8code is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with t8code; if not, write to the Free Software Foundation, Inc.,
+  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+*/
+
 #ifndef T8_STANDALONE_ELEMENT_CXX_HXX
 #define T8_STANDALONE_ELEMENT_CXX_HXX
 
@@ -6,22 +28,23 @@
 #include <sc_functions.h>
 #include <t8_schemes/t8_standalone/t8_standalone_elements.hxx>
 
-template <t8_eclass_t TEclass>
+template <t8_eclass TEclass>
 struct t8_standalone_scheme
 {
- private:
+ public:
   /** Constructor
    * \param [in] elem_size  The size of the elements this scheme holds.
   */
-  t8_standalone_scheme (const size_t elem_size)
-    : element_size (elem_size), ts_context (sc_mempool_new (elem_size)), eclass (TEclass) {};
+  t8_standalone_scheme ()
+    : element_size (sizeof (t8_standalone_element_t<TEclass>)), ts_context (sc_mempool_new (element_size)),
+      eclass (TEclass) {};
 
  protected:
   size_t element_size; /**< The size in bytes of an element of class \a eclass */
   void *ts_context;    /**< Anonymous implementation context. */
 
  public:
-  t8_eclass_t eclass; /**< The tree class */
+  t8_eclass eclass; /**< The tree class */
 
   /** Destructor for all default schemes */
   ~t8_standalone_scheme ()
@@ -81,6 +104,14 @@ struct t8_standalone_scheme
     return *this;
   }
 
+  // ################################################____GENERAL INFO____################################################
+
+  inline size_t
+  get_element_size (void) const
+  {
+    return element_size;
+  }
+
   /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
    * Returns false otherwise.
    * \return                    non-zero if there is one element in the tree that does not refine into 2^dim children.
@@ -103,142 +134,7 @@ struct t8_standalone_scheme
     return T8_ELEMENT_MAXLEVEL[TEclass];
   }
 
-  /** Return the level of a particular element.
-   * \param [in] elem    The element whose level should be returned.
-   * \return             The level of \b elem.
-   */
-  static inline int
-  element_get_level (const t8_element_t *elem)
-  {
-    T8_ASSERT (element_is_valid (elem));
-    return ((const t8_standalone_element_t<TEclass> *) elem)->level;
-  }
-
-  /** Copy all entries of \b source to \b dest. \b dest must be an existing
-   *  element. No memory is allocated by this function.
-   * \param [in] source The element whose entries will be copied to \b dest.
-   * \param [in,out] dest This element's entries will be overwrite with the
-   *                    entries of \b source.
-   * \note \a source and \a dest may point to the same element.
-   */
-  static inline void
-  element_copy (const t8_element_t *source, t8_element_t *dest)
-  {
-    T8_ASSERT (element_is_valid (source));
-    T8_ASSERT (source != dest);
-    memcpy ((t8_standalone_element_t<TEclass> *) dest, (const t8_standalone_element_t<TEclass> *) source,
-            sizeof (t8_standalone_element_t<TEclass>));
-    T8_ASSERT (element_is_valid (dest));
-  }
-
-  /** Compare two elements.
-   * \param [in] elem1  The first element.
-   * \param [in] elem2  The second element.
-   * \return       negative if elem1 < elem2, zero if elem1 equals elem2
-   *               and positive if elem1 > elem2.
-   *  If elem2 is a copy of elem1 then the elements are equal.
-   */
-  static inline int
-  element_compare (const t8_element_t *elem1, const t8_element_t *elem2)
-  {
-    T8_ASSERT (element_is_valid (elem1));
-    T8_ASSERT (element_is_valid (elem2));
-
-    const t8_standalone_element_t<TEclass> *e1 = (const t8_standalone_element_t<TEclass> *) elem1;
-    const t8_standalone_element_t<TEclass> *e2 = (const t8_standalone_element_t<TEclass> *) elem2;
-
-    const int maxlvl = SC_MAX (e1->level, e2->level);
-
-    const t8_linearidx_t id1 = t8_standalone_scheme<TEclass>::element_get_linear_id ((const t8_element_t *) e1, maxlvl);
-    const t8_linearidx_t id2 = t8_standalone_scheme<TEclass>::element_get_linear_id ((const t8_element_t *) e2, maxlvl);
-    if (id1 == id2) {
-      if (e1->level == e2->level) {
-        return 0;
-      }
-      else {
-        return e1->level - e2->level;
-      }
-    }
-    return id1 < id2 ? -1 : 1;
-  }
-
-  /** ################################################____REFINEMENT____################################################  */
-
-  /** Compute the parent of a given element \b elem and store it in \b parent.
-   *  \b parent needs to be an existing element. No memory is allocated by this function.
-   *  \b elem and \b parent can point to the same element, then the entries of
-   *  \b elem are overwritten by the ones of its parent.
-   * \param [in] elem   The element whose parent will be computed.
-   * \param [in,out] parent This element's entries will be overwritten by those
-   *                    of \b elem's parent.
-   *                    The storage for this element must exist
-   *                    and match the element class of the parent.
-   *                    For a pyramid, for example, it may be either a
-   *                    tetrahedron or a pyramid depending on \b elem's childid.
-   */
-  static inline void
-  element_get_parent (const t8_element_t *elem, t8_element_t *parent)
-  {
-    T8_ASSERT (element_is_valid (elem));
-
-    const t8_standalone_element_t<TEclass> *p = (const t8_standalone_element_t<TEclass> *) elem;
-    t8_standalone_element_t<TEclass> *parent_elem = (t8_standalone_element_t<TEclass> *) parent;
-
-    T8_ASSERT (p->level > 0);
-
-    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      const t8_cube_id_t cube_id = compute_cubeid ((const t8_element_t *) p, p->level);
-      parent_elem->type = t8_element_type_cubeid_to_parenttype<TEclass>[p->type.to_ulong ()][cube_id];
-    }
-
-    const t8_element_coord_t length = t8_standalone_scheme<TEclass>::element_get_len ((p->level));
-    // Auslagern also bithelper function?
-    for (int i = 0; i < T8_ELEMENT_DIM[TEclass]; i++) {
-      parent_elem->coords[i] = p->coords[i] & ~length;
-    }
-
-    parent_elem->level = p->level - 1;
-    T8_ASSERT (parent_elem->level >= 0);
-
-    T8_ASSERT (element_is_valid (parent));
-  }
-
-  /** Compute the number of siblings of an element. That is the number of 
-   * Children of its parent.
-   * \param [in] elem The element.
-   * \return          The number of siblings of \a element.
-   * Note that this number is >= 1, since we count the element itself as a sibling.
-   */
-  static inline int
-  element_get_num_siblings (const t8_element_t *elem)
-  {
-    T8_ASSERT (element_is_valid (elem));
-
-    const t8_standalone_element_t<TEclass> *p = (const t8_standalone_element_t<TEclass> *) elem;
-    if (p->level == 0)
-      return 1;
-    T8_ASSERT (0 < p->level && p->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
-    t8_standalone_element_t<TEclass> parent;
-    t8_standalone_scheme<TEclass>::element_get_parent ((const t8_element_t *) p, (t8_element_t *) &parent);
-    return t8_standalone_scheme<TEclass>::element_get_num_children ((const t8_element_t *) &parent);
-  }
-
-  /** Compute a specific sibling of a given element \b elem and store it in \b sibling.
-   *  \b sibling needs to be an existing element. No memory is allocated by this function.
-   *  \b elem and \b sibling can point to the same element, then the entries of
-   *  \b elem are overwritten by the ones of its sibid-th sibling.
-   * \param [in] elem   The element whose sibling will be computed.
-   * \param [in] sibid  The id of the sibling computed.
-   * \param [in,out] sibling This element's entries will be overwritten by those
-   *                    of \b elem's sibid-th sibling.
-   *                    The storage for this element must exist
-   *                    and match the element class of the sibling.
-   */
-  static inline void
-  element_get_sibling (const t8_element_t *elem, int sibid, t8_element_t *sibling)
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-  }
+  // ################################################____SHAPE INFORMATION____################################################
 
   /** Compute the number of corners of a given element.
    * \param [in] elem The element.
@@ -247,7 +143,7 @@ struct t8_standalone_scheme
   static inline int
   element_get_num_corners (const t8_element_t *elem)
   {
-    T8_ASSERT (element_is_valid (elem));
+    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem));
 
     const t8_standalone_element_t<TEclass> *p = (const t8_standalone_element_t<TEclass> *) elem;
     T8_ASSERT (0 <= p->level && p->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
@@ -269,6 +165,7 @@ struct t8_standalone_scheme
   element_get_num_faces (const t8_element_t *elem)
   {
     SC_ABORT ("This function is not implemented in this scheme yet.\n");
+    return 0;
   }
 
   /** Compute the maximum number of faces of a given element and all of its
@@ -280,38 +177,26 @@ struct t8_standalone_scheme
   element_get_max_num_faces (const t8_element_t *elem)
   {
     SC_ABORT ("This function is not implemented in this scheme yet.\n");
+    return 0;
   }
 
-  /** Return the number of children of an element when it is refined.
-   * \param [in] elem   The element whose number of children is returned.
-   * \return            The number of children of \a elem if it is to be refined.
-   */
-  static inline int
-  element_get_num_children (const t8_element_t *elem)
+  static inline t8_element_shape_t
+  element_get_shape (const t8_element_t *elem)
   {
-    T8_ASSERT (element_is_valid (elem));
+    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem));
 
     const t8_standalone_element_t<TEclass> *p = (const t8_standalone_element_t<TEclass> *) elem;
     T8_ASSERT (0 <= p->level && p->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
 
-    if constexpr (TEclass == T8_ECLASS_PYRAMID) {
-      if (element_get_shape ((const t8_element_t *) p) == T8_ECLASS_PYRAMID) {
-        return 10;
-      }
-      return 6;
-    }
-    return T8_ELEMENT_NUM_CHILDREN[TEclass];
-  }
-
-  /** Return the number of children of an element's face when the element is refined.
-   * \param [in] elem   The element whose face is considered.
-   * \param [in] face   A face of \a elem.
-   * \return            The number of children of \a face if \a elem is to be refined.
-   */
-  static inline int
-  element_get_num_face_children (const t8_element_t *elem, int face)
-  {
-    SC_ABORT ("This function is not implemented in this scheme yet.\n");
+    // if constexpr (TEclass == T8_ECLASS_PYRAMID) {
+    //   if (p->type == T8_DPYRAMID_FIRST_PYRA_TYPE || p->type == T8_DPYRAMID_SECOND_PYRA_TYPE) {
+    //     return T8_ECLASS_PYRAMID;
+    //   }
+    //   else {
+    //     return T8_ECLASS_TET;
+    //   }
+    // }
+    return TEclass;
   }
 
   /** Return the corner number of an element's face corner.
@@ -358,6 +243,148 @@ struct t8_standalone_scheme
     return 0;
   }
 
+  static inline t8_element_shape_t
+  element_get_face_shape (const t8_element_t *elem, int face)
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+    return T8_ECLASS_ZERO;
+  }
+
+  // ################################################____GENERAL HELPER____################################################
+
+  /** Copy all entries of \b source to \b dest. \b dest must be an existing
+   *  element. No memory is allocated by this function.
+   * \param [in] source The element whose entries will be copied to \b dest.
+   * \param [in,out] dest This element's entries will be overwrite with the
+   *                    entries of \b source.
+   * \note \a source and \a dest may point to the same element.
+   */
+  static inline void
+  element_copy (const t8_element_t *source, t8_element_t *dest)
+  {
+    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (source));
+    T8_ASSERT (source != dest);
+    memcpy ((t8_standalone_element_t<TEclass> *) dest, (const t8_standalone_element_t<TEclass> *) source,
+            sizeof (t8_standalone_element_t<TEclass>));
+    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (dest));
+  }
+
+  static inline int
+  element_is_equal (const t8_element_t *elem1, const t8_element_t *elem2)
+  {
+    const t8_standalone_element_t<TEclass> *el1 = (const t8_standalone_element_t<TEclass> *) elem1;
+    t8_standalone_element_t<TEclass> *el2 = (t8_standalone_element_t<TEclass> *) elem2;
+    if (el1->level != el2->level)
+      return 0;
+    for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
+      if (el1->coords[idim] != el2->coords[idim])
+        return 0;
+    }
+    return el1->type == el2->type;
+  }
+
+  // ################################################____ACCESSOR____################################################
+
+  /** Return the level of a particular element.
+   * \param [in] elem    The element whose level should be returned.
+   * \return             The level of \b elem.
+   */
+  static inline int
+  element_get_level (const t8_element_t *elem)
+  {
+    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem));
+    return ((const t8_standalone_element_t<TEclass> *) elem)->level;
+  }
+
+  // ################################################____REFINEMENT____################################################
+
+  static inline void
+  get_root (t8_element_t *elem)
+  {
+    t8_standalone_element_t<TEclass> *p = (t8_standalone_element_t<TEclass> *) elem;
+    p->level = 0;
+    for (size_t i = 0; i < T8_ELEMENT_DIM[TEclass]; i++) {
+      p->coords[i] = 0;
+    }
+    p->type = 0;
+  }
+
+  /** Compute the parent of a given element \b elem and store it in \b parent.
+   *  \b parent needs to be an existing element. No memory is allocated by this function.
+   *  \b elem and \b parent can point to the same element, then the entries of
+   *  \b elem are overwritten by the ones of its parent.
+   * \param [in] elem   The element whose parent will be computed.
+   * \param [in,out] parent This element's entries will be overwritten by those
+   *                    of \b elem's parent.
+   *                    The storage for this element must exist
+   *                    and match the element class of the parent.
+   *                    For a pyramid, for example, it may be either a
+   *                    tetrahedron or a pyramid depending on \b elem's childid.
+   */
+  static inline void
+  element_get_parent (const t8_element_t *elem, t8_element_t *parent)
+  {
+    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem));
+
+    const t8_standalone_element_t<TEclass> *p = (const t8_standalone_element_t<TEclass> *) elem;
+    t8_standalone_element_t<TEclass> *parent_elem = (t8_standalone_element_t<TEclass> *) parent;
+
+    T8_ASSERT (p->level > 0);
+
+    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      const t8_cube_id_t cube_id = compute_cubeid ((const t8_element_t *) p, p->level);
+      parent_elem->type = t8_element_type_cubeid_to_parenttype<TEclass>[p->type.to_ulong ()][cube_id];
+    }
+
+    const t8_element_coord_t length = t8_standalone_scheme<TEclass>::element_get_len ((p->level));
+    // Auslagern also bithelper function?
+    for (int i = 0; i < T8_ELEMENT_DIM[TEclass]; i++) {
+      parent_elem->coords[i] = p->coords[i] & ~length;
+    }
+
+    parent_elem->level = p->level - 1;
+    T8_ASSERT (parent_elem->level >= 0);
+
+    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (parent));
+  }
+
+  /** Compute the number of siblings of an element. That is the number of 
+   * Children of its parent.
+   * \param [in] elem The element.
+   * \return          The number of siblings of \a element.
+   * Note that this number is >= 1, since we count the element itself as a sibling.
+   */
+  static inline int
+  element_get_num_siblings (const t8_element_t *elem)
+  {
+    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem));
+
+    const t8_standalone_element_t<TEclass> *p = (const t8_standalone_element_t<TEclass> *) elem;
+    if (p->level == 0)
+      return 1;
+    T8_ASSERT (0 < p->level && p->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
+    t8_standalone_element_t<TEclass> parent;
+    t8_standalone_scheme<TEclass>::element_get_parent ((const t8_element_t *) p, (t8_element_t *) &parent);
+    return t8_standalone_scheme<TEclass>::element_get_num_children ((const t8_element_t *) &parent);
+  }
+
+  /** Compute a specific sibling of a given element \b elem and store it in \b sibling.
+   *  \b sibling needs to be an existing element. No memory is allocated by this function.
+   *  \b elem and \b sibling can point to the same element, then the entries of
+   *  \b elem are overwritten by the ones of its sibid-th sibling.
+   * \param [in] elem   The element whose sibling will be computed.
+   * \param [in] sibid  The id of the sibling computed.
+   * \param [in,out] sibling This element's entries will be overwritten by those
+   *                    of \b elem's sibid-th sibling.
+   *                    The storage for this element must exist
+   *                    and match the element class of the sibling.
+   */
+  static inline void
+  element_get_sibling (const t8_element_t *elem, int sibid, t8_element_t *sibling)
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+  }
+
   /** Construct the child element of a given number.
    * \param [in] elem     This must be a valid element, bigger than maxlevel.
    * \param [in] childid  The number of the child to construct.
@@ -373,7 +400,7 @@ struct t8_standalone_scheme
   static inline void
   element_get_child (const t8_element_t *elem, int childid, t8_element_t *child)
   {
-    T8_ASSERT (element_is_valid (elem));
+    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem));
     T8_ASSERT (0 <= childid);
     T8_ASSERT (childid < t8_standalone_scheme<TEclass>::element_get_num_children (elem));
 
@@ -402,7 +429,28 @@ struct t8_standalone_scheme
 
     c->level = p->level + 1;
 
-    T8_ASSERT (element_is_valid (child));
+    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (child));
+  }
+
+  /** Return the number of children of an element when it is refined.
+   * \param [in] elem   The element whose number of children is returned.
+   * \return            The number of children of \a elem if it is to be refined.
+   */
+  static inline int
+  element_get_num_children (const t8_element_t *elem)
+  {
+    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem));
+
+    const t8_standalone_element_t<TEclass> *p = (const t8_standalone_element_t<TEclass> *) elem;
+    T8_ASSERT (0 <= p->level && p->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
+
+    if constexpr (TEclass == T8_ECLASS_PYRAMID) {
+      if (element_get_shape ((const t8_element_t *) p) == T8_ECLASS_PYRAMID) {
+        return 10;
+      }
+      return 6;
+    }
+    return T8_ELEMENT_NUM_CHILDREN[TEclass];
   }
 
   /** Construct all children of a given element.
@@ -419,7 +467,7 @@ struct t8_standalone_scheme
   static inline void
   element_get_children (const t8_element_t *elem, int length, t8_element_t *c[])
   {
-    T8_ASSERT (element_is_valid (elem));
+    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem));
 
     const t8_standalone_element_t<TEclass> *p = (const t8_standalone_element_t<TEclass> *) elem;
     T8_ASSERT (0 <= p->level && p->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
@@ -430,7 +478,7 @@ struct t8_standalone_scheme
     }
 #if T8_ENABLE_DEBUG
     for (int i = 0; i < length; i++) {
-      T8_ASSERT (element_is_valid (c[i]));
+      T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (c[i]));
     }
 #endif
   }
@@ -442,7 +490,7 @@ struct t8_standalone_scheme
   static inline int
   element_get_child_id (const t8_element_t *elem)
   {
-    T8_ASSERT (element_is_valid (elem));
+    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem));
 
     const t8_standalone_element_t<TEclass> *p = (const t8_standalone_element_t<TEclass> *) elem;
     T8_ASSERT (p->level >= 0);
@@ -469,7 +517,7 @@ struct t8_standalone_scheme
   static inline int
   element_get_ancestor_id (const t8_element_t *elem, int level)
   {
-    T8_ASSERT (element_is_valid (elem));
+    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem));
     T8_ASSERT (0 <= level && level <= T8_ELEMENT_MAXLEVEL[TEclass]);
 
     const t8_standalone_element_t<TEclass> *p = (const t8_standalone_element_t<TEclass> *) elem;
@@ -487,12 +535,12 @@ struct t8_standalone_scheme
    * \note level 0 elements do not form a family.
    */
   static inline int
-  elements_are_family (t8_element_t **fam)
+  elements_are_family (t8_element_t *const *fam)
   {
 #if T8_ENABLE_DEBUG
-    int num_siblings = element_get_num_siblings ((const t8_standalone_element_t<TEclass> *) fam[0]);
+    int num_siblings = t8_standalone_scheme<TEclass>::element_get_num_siblings (fam[0]);
     for (int i = 0; i < num_siblings; i++) {
-      T8_ASSERT (element_is_valid (fam[i]));
+      T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (fam[i]));
     }
 #endif
 
@@ -531,8 +579,8 @@ struct t8_standalone_scheme
   static inline void
   element_get_nca (const t8_element_t *elem1, const t8_element_t *elem2, t8_element_t *nca)
   {
-    T8_ASSERT (element_is_valid (elem1));
-    T8_ASSERT (element_is_valid (elem2));
+    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem1));
+    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem2));
 
     const t8_standalone_element_t<TEclass> *el1 = (const t8_standalone_element_t<TEclass> *) elem1;
     const t8_standalone_element_t<TEclass> *el2 = (const t8_standalone_element_t<TEclass> *) elem2;
@@ -552,7 +600,7 @@ struct t8_standalone_scheme
       real_level++; /* we subtracted once too much */
     }
     t8_standalone_scheme<TEclass>::element_get_ancestor_equation ((const t8_element_t *) el1, real_level, nca);
-    T8_ASSERT (element_is_valid (nca));
+    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (nca));
   }
 
   /** Compute the first descendant of a given element.
@@ -564,7 +612,7 @@ struct t8_standalone_scheme
   static inline void
   element_get_first_descendant (const t8_element_t *elem, t8_element_t *desc, int level)
   {
-    T8_ASSERT (element_is_valid (elem));
+    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem));
 
     const t8_standalone_element_t<TEclass> *p = (const t8_standalone_element_t<TEclass> *) elem;
     t8_standalone_element_t<TEclass> *d = (t8_standalone_element_t<TEclass> *) desc;
@@ -576,7 +624,7 @@ struct t8_standalone_scheme
     t8_standalone_scheme<TEclass>::element_copy ((const t8_element_t *) p, (t8_element_t *) d);
     d->level = level;
 
-    T8_ASSERT (element_is_valid ((t8_element_t *) d));
+    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid ((t8_element_t *) d));
   }
 
   /** Compute the last descendant of a given element.
@@ -588,7 +636,7 @@ struct t8_standalone_scheme
   static inline void
   element_get_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level)
   {
-    T8_ASSERT (element_is_valid (elem));
+    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem));
 
     const t8_standalone_element_t<TEclass> *p = (const t8_standalone_element_t<TEclass> *) elem;
     t8_standalone_element_t<TEclass> *d = (t8_standalone_element_t<TEclass> *) desc;
@@ -607,15 +655,254 @@ struct t8_standalone_scheme
       d->coords[i] |= coord_offset;
     }
 
-    T8_ASSERT (element_is_valid (desc));
+    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (desc));
   }
 
-  /** ################################################____LINEAR ID____################################################  */
+  // ################################################____FACE REFINEMENT____################################################
 
+  /** Return the number of children of an element's face when the element is refined.
+   * \param [in] elem   The element whose face is considered.
+   * \param [in] face   A face of \a elem.
+   * \return            The number of children of \a face if \a elem is to be refined.
+   */
+  static inline int
+  element_get_num_face_children (const t8_element_t *elem, int face)
+  {
+    SC_ABORT ("This function is not implemented in this scheme yet.\n");
+    return 0;
+  }
+
+  /** Given an element and a face of the element, compute all children of
+   * the element that touch the face.
+   * \param [in] elem     The element.
+   * \param [in] face     A face of \a elem.
+   * \param [in,out] children Allocated elements, in which the children of \a elem
+   *                      that share a face with \a face are stored.
+   *                      They will be stored in order of their linear id.
+   * \param [in] num_children The number of elements in \a children. Must match
+   *                      the number of children that touch \a face.
+   *                      \ref t8_element_num_face_children
+   * \param [in,out] child_indices If not NULL, an array of num_children integers must be given,
+   *                      on output its i-th entry is the child_id of the i-th face_child.
+   * It is valid to call this function with elem = children[0].
+   */
+  static inline void
+  element_get_children_at_face (const t8_element_t *elem, int face, t8_element_t *children[], int num_children,
+                                int *child_indices)
+  {
+    SC_ABORT ("This function is not implemented in this scheme yet.\n");
+  }
+
+  /** Given a face of an element and a child number of a child of that face, return the face number
+   * of the child of the element that matches the child face.
+   * \verbatim
+      x ---- x   x      x           x ---- x
+      |      |   |      |           |   |  | <-- f
+      |      |   |      x           |   x--x
+      |      |   |                  |      |
+      x ---- x   x                  x ---- x
+      elem    face  face_child    Returns the face number f
+    \endverbatim
+
+    * \param [in]  elem    The element.
+    * \param [in]  face    Then number of the face.
+    * \param [in]  face_child A number 0 <= \a face_child < num_face_children,
+    *                      specifying a child of \a elem that shares a face with \a face.
+    *                      These children are counted in linear order. This coincides with
+    *                      the order of children from a call to \ref t8_element_children_at_face.
+    * \return              The face number of the face of a child of \a elem
+    *                      that coincides with \a face_child.
+    */
+  static inline int
+  element_face_get_child_face (const t8_element_t *elem, int face, int face_child)
+  {
+    SC_ABORT ("This function is not implemented in this scheme yet.\n");
+    return 0;
+  }
+
+  /** Given a face of an element return the face number
+   * of the parent of the element that matches the element's face. Or return -1 if
+   * no face of the parent matches the face.
+
+    * \param [in]  elem    The element.
+    * \param [in]  face    Then number of the face.
+    * \return              If \a face of \a elem is also a face of \a elem's parent,
+    *                      the face number of this face. Otherwise -1.
+    * \note For the root element this function always returns \a face.
+    */
+  static inline int
+  element_face_get_parent_face (const t8_element_t *elem, int face)
+  {
+    SC_ABORT ("This function is not implemented in this scheme yet.\n");
+    return 0;
+  }
+
+  /** Construct the first descendant of an element at a given level that touches a given face.
+   * \param [in] elem      The input element.
+   * \param [in] face      A face of \a elem.
+   * \param [in, out] first_desc An allocated element. This element's data will be
+   *                       filled with the data of the first descendant of \a elem
+   *                       that shares a face with \a face.
+   * \param [in] level     The level, at which the first descendant is constructed
+   */
+  static inline void
+  element_get_first_descendant_face (const t8_element_t *elem, int face, t8_element_t *first_desc, int level)
+  {
+    SC_ABORT ("This function is not implemented in this scheme yet.\n");
+  }
+
+  /** Construct the last descendant of an element at a given level that touches a given face.
+   * \param [in] elem      The input element.
+   * \param [in] face      A face of \a elem.
+   * \param [in, out] last_desc An allocated element. This element's data will be
+   *                       filled with the data of the last descendant of \a elem
+   *                       that shares a face with \a face.
+   * \param [in] level     The level, at which the last descendant is constructed
+   */
+  static inline void
+  element_get_last_descendant_face (const t8_element_t *elem, int face, t8_element_t *last_desc, int level)
+  {
+    SC_ABORT ("This function is not implemented in this scheme yet.\n");
+  }
+
+  // ################################################____FACE NEIGHBOR____################################################
+
+  /** Compute whether a given element shares a given face with its root tree.
+   * \param [in] elem     The input element.
+   * \param [in] face     A face of \a elem.
+   * \return              True if \a face is a subface of the element's root element.
+   * \note You can compute the corresponding face number of the tree via \ref t8_element_tree_face.
+   */
+  static inline int
+  element_is_root_boundary (const t8_element_t *elem, int face)
+  {
+    SC_ABORT ("This function is not implemented in this scheme yet.\n");
+    return 0;
+  }
+
+  /** Given an element and a face of this element. If the face lies on the
+   *  tree boundary, return the face number of the tree face.
+   *  If not the return value is arbitrary.
+   *  You can call \ref t8_element_is_root_boundary to query whether the face is
+   *  at the tree boundary.
+   * \param [in] elem     The element.
+   * \param [in] face     The index of a face of \a elem.
+   * \return The index of the tree face that \a face is a subface of, if
+   *         \a face is on a tree boundary.
+   *         Any arbitrary integer if \a is not at a tree boundary.
+   * \warning The return value may look like a valid face of the tree even if 
+   *   the element does not lie on the root boundary.
+   */
+  static inline int
+  element_get_tree_face (const t8_element_t *elem, int face)
+  {
+    SC_ABORT ("This function is not implemented in this scheme yet.\n");
+    return 0;
+  }
+
+  /** Construct the face neighbor of a given element if this face neighbor
+   * is inside the root tree. Return 0 otherwise.
+   * \param [in] elem The element to be considered.
+   * \param [in,out] neigh If the face neighbor of \a elem along \a face is inside
+   *                  the root tree, this element's data is filled with the
+   *                  data of the face neighbor. Otherwise the data can be modified
+   *                  arbitrarily.
+   * \param [in] face The number of the face along which the neighbor should be
+   *                  constructed.
+   * \param [out] neigh_face The number of \a face as viewed from \a neigh.
+   *                  An arbitrary value, if the neighbor is not inside the root tree.
+   * \return          True if \a neigh is inside the root tree.
+   *                  False if not. In this case \a neigh's data can be arbitrary
+   *                  on output.
+   */
+  static inline int
+  element_get_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face, int *neigh_face)
+  {
+    SC_ABORT ("This function is not implemented in this scheme yet.\n");
+    return 0;
+  }
+
+  // ################################################____TREE FACE TRANSFORMATION____################################################  */
+
+  /** Suppose we have two trees that share a common face f.
+   *  Given an element e that is a subface of f in one of the trees
+   *  and given the orientation of the tree connection, construct the face
+   *  element of the respective tree neighbor that logically coincides with e
+   *  but lies in the coordinate system of the neighbor tree.
+   *  \param [in] elem1     The face element.
+   *  \param [in,out] elem2 On return the face element \a elem1 with respective
+   *                        to the coordinate system of the other tree.
+   *  \param [in] orientation The orientation of the tree-tree connection.
+   *                        \see t8_cmesh_set_join
+   *  \param [in] sign      Depending on the topological orientation of the two tree faces,
+   *                        either 0 (both faces have opposite orientation)
+   *                        or 1 (both faces have the same top. orientattion).
+   *                        \ref t8_eclass_face_orientation
+   *  \param [in] is_smaller_face Flag to declare whether \a elem1 belongs to
+   *                        the smaller face. A face f of tree T is smaller than
+   *                        f' of T' if either the eclass of T is smaller or if
+   *                        the classes are equal and f<f'. The orientation is
+   *                        defined in relation to the smaller face.
+   * \note \a elem1 and \a elem2 may point to the same element.
+   */
+  static inline void
+  element_transform_face (const t8_element_t *elem1, t8_element_t *elem2, int orientation, int sign,
+                          int is_smaller_face)
+  {
+    SC_ABORT ("This function is not implemented in this scheme yet.\n");
+  }
+
+  /** Given a boundary face inside a root tree's face construct
+   *  the element inside the root tree that has the given face as a
+   *  face.
+   * \param [in] face     A face element.
+   * \param [in] face_scheme The scheme for the face element.
+   * \param [in,out] elem An allocated element. The entries will be filled with
+   *                      the data of the element that has \a face as a face and
+   *                      lies within the root tree.
+   * \param [in] root_face The index of the face of the root tree in which \a face
+   *                      lies.
+   * \return              The face number of the face of \a elem that coincides
+   *                      with \a face.
+   */
+  static inline int
+  element_extrude_face (const t8_element_t *face, t8_element_t *elem, int root_face, const t8_scheme *face_scheme)
+  {
+    SC_ABORT ("This function is not implemented in this scheme yet.\n");
+    return 0;
+  }
+
+  /** Construct the boundary element at a specific face.
+   * \param [in] elem     The input element.
+   * \param [in] face     The index of the face of which to construct the
+   *                      boundary element.
+   * \param [in,out] boundary An allocated element of dimension of \a element
+   *                      minus 1. The entries will be filled with the entries
+   *                      of the face of \a element.
+   * \param [in] boundary_scheme The scheme for the eclass of the boundary face.
+   * If \a elem is of class T8_ECLASS_VERTEX, then \a boundary must be NULL
+   * and will not be modified.
+   */
+  static inline void
+  element_get_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
+                             const t8_scheme *boundary_scheme)
+  {
+    SC_ABORT ("This function is not implemented in this scheme yet.\n");
+  }
+
+  // ################################################____LINEAR ID____################################################
+
+  /** Initialize the entries of an allocated element according to a
+   *  given linear id in a uniform refinement.
+   * \param [in,out] elem The element whose entries will be set.
+   * \param [in] level    The level of the uniform refinement to consider.
+   * \param [in] id       The linear id.
+   *                      id must fulfil 0 <= id < 'number of leaves in the uniform refinement'
+   */
   static inline void
   element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id)
   {
-    T8_ASSERT (element_is_valid (elem));
+    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem));
 
     t8_standalone_element_t<TEclass> *p = (t8_standalone_element_t<TEclass> *) elem;
 
@@ -632,10 +919,16 @@ struct t8_standalone_scheme
     t8_standalone_scheme<TEclass>::element_init_linear_id_recursive ((t8_element_t *) p, level, id);
   }
 
+  /** Compute the linear id of a given element in a hypothetical uniform
+   * refinement of a given level.
+   * \param [in] elem     The element whose id we compute.
+   * \param [in] level    The level of the uniform refinement to consider.
+   * \return              The linear id of the element.
+   */
   static inline t8_linearidx_t
   element_get_linear_id (const t8_element_t *elem, int level)
   {
-    T8_ASSERT (element_is_valid (elem));
+    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem));
 
     const t8_standalone_element_t<TEclass> *p = (const t8_standalone_element_t<TEclass> *) elem;
     t8_standalone_element_t<TEclass> recursive_start;
@@ -656,27 +949,27 @@ struct t8_standalone_scheme
     return id;
   }
 
+  /** Construct the successor in a uniform refinement of a given element.
+   * \param [in] elem1    The element whose successor should be constructed.
+   * \param [in,out] elem2  The element whose entries will be set.
+   */
   static inline void
-  element_construct_successor (const t8_element_t *t, t8_element_t *s, int level)
+  element_construct_successor (const t8_element_t *t, t8_element_t *s)
   {
-    T8_ASSERT (element_is_valid (t));
+    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (t));
 
     const t8_standalone_element_t<TEclass> *elem = (const t8_standalone_element_t<TEclass> *) t;
     t8_standalone_element_t<TEclass> *succ = (t8_standalone_element_t<TEclass> *) s;
 
-    T8_ASSERT (1 <= level && level <= T8_ELEMENT_MAXLEVEL[TEclass]);
     t8_standalone_scheme<TEclass>::element_copy ((const t8_element_t *) elem, (t8_element_t *) succ);
-    succ->level = level;
 
     const int child_id = t8_standalone_scheme<TEclass>::element_get_child_id ((const t8_element_t *) elem);
-    const int num_siblings = t8_sele_num_siblings (elem);
+    const int num_siblings = t8_standalone_scheme<TEclass>::element_get_num_siblings ((const t8_element_t *) elem);
     T8_ASSERT (0 <= child_id && child_id < num_siblings);
     if (child_id == num_siblings - 1) {
-      t8_standalone_scheme<TEclass>::element_construct_successor ((const t8_element_t *) succ, (t8_element_t *) succ,
-                                                                  level - 1);
-      succ->level = level;
-      int shift = T8_ELEMENT_MAXLEVEL[TEclass] - level + 1;
-      t8_standalone_scheme<TEclass>::element_cut_coordinates ((const t8_element_t *) succ, shift);
+      t8_standalone_scheme<TEclass>::element_get_parent ((const t8_element_t *) succ, (t8_element_t *) succ);
+      t8_standalone_scheme<TEclass>::element_construct_successor ((const t8_element_t *) succ, (t8_element_t *) succ);
+      t8_standalone_scheme<TEclass>::element_get_child ((const t8_element_t *) succ, 0, (t8_element_t *) succ);
     }
     else {
       t8_standalone_scheme<TEclass>::element_get_parent ((const t8_element_t *) succ, (t8_element_t *) succ);
@@ -684,32 +977,144 @@ struct t8_standalone_scheme
                                                         (t8_element_t *) succ);
     }
 
-    T8_ASSERT (element_is_valid (s));
+    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (s));
   }
 
-  /** ################################################____SHAPE____################################################  */
-
-  static inline t8_element_shape_t
-  element_get_shape (const t8_element_t *elem)
+  /** Count how many leaf descendants of a given uniform level an element would produce.
+   * \param [in] t     The element to be checked.
+   * \param [in] level A refinement level.
+   * \return Suppose \a t is uniformly refined up to level \a level. The return value
+   * is the resulting number of elements (of the given level).
+   * If \a level < t8_element_level(t), the return value should be 0.
+   *
+   * Example: If \a t is a line element that refines into 2 line elements on each level,
+   *  then the return value is max(0, 2^{\a level - level(\a t)}).
+   *  Thus, if \a t's level is 0, and \a level = 3, the return value is 2^3 = 8.
+   */
+  static inline t8_gloidx_t
+  element_count_leaves (const t8_element_t *elem, int level)
   {
-    T8_ASSERT (element_is_valid (elem));
+    return t8_standalone_scheme<TEclass>::num_descendants_at_leveldiff (
+      elem, level - t8_standalone_scheme<TEclass>::element_get_level (elem));
+  }
 
-    const t8_standalone_element_t<TEclass> *p = (const t8_standalone_element_t<TEclass> *) elem;
-    T8_ASSERT (0 <= p->level && p->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
-
+  /** Count how many leaf descendants of a given uniform level the root element will produce.
+   * \param [in] level A refinement level.
+   * \return The value of \ref t8_element_count_leaves if the input element
+   *      is the root (level 0) element.
+   *
+   * This is a convenience function, and can be implemented via
+   * \ref t8_element_count_leaves.
+   */
+  static inline t8_gloidx_t
+  count_leaves_from_root (int level)
+  {
+    T8_ASSERT (level >= 0);
     if constexpr (TEclass == T8_ECLASS_PYRAMID) {
-      if (p->type == T8_DPYRAMID_FIRST_PYRA_TYPE || p->type == T8_DPYRAMID_SECOND_PYRA_TYPE) {
-        return T8_ECLASS_PYRAMID;
+      t8_linearidx_t two_to_l = 1LL << level;
+      t8_linearidx_t eight_to_l = 1LL << (3 * level);
+      return ((eight_to_l << 2) - two_to_l) / 3;
+    }
+    return 1LL << (level * T8_ELEMENT_DIM[TEclass]);
+  }
+
+  /** Compare two elements.
+   * \param [in] elem1  The first element.
+   * \param [in] elem2  The second element.
+   * \return       negative if elem1 < elem2, zero if elem1 equals elem2
+   *               and positive if elem1 > elem2.
+   *  If elem2 is a copy of elem1 then the elements are equal.
+   */
+  static inline int
+  element_compare (const t8_element_t *elem1, const t8_element_t *elem2)
+  {
+    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem1));
+    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem2));
+
+    const t8_standalone_element_t<TEclass> *e1 = (const t8_standalone_element_t<TEclass> *) elem1;
+    const t8_standalone_element_t<TEclass> *e2 = (const t8_standalone_element_t<TEclass> *) elem2;
+
+    const int maxlvl = SC_MAX (e1->level, e2->level);
+
+    const t8_linearidx_t id1 = t8_standalone_scheme<TEclass>::element_get_linear_id ((const t8_element_t *) e1, maxlvl);
+    const t8_linearidx_t id2 = t8_standalone_scheme<TEclass>::element_get_linear_id ((const t8_element_t *) e2, maxlvl);
+    if (id1 == id2) {
+      if (e1->level == e2->level) {
+        return 0;
       }
       else {
-        return T8_ECLASS_TET;
+        return e1->level - e2->level;
       }
     }
-    return TEclass;
+    return id1 < id2 ? -1 : 1;
   }
 
+  // ################################################____VISUALIZATION____################################################
+
+  /** Compute the coordinates of a given element vertex inside a reference tree
+   *  that is embedded into [0,1]^d (d = dimension).
+   *   \param [in] t      The element to be considered.
+   *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
+   *   \param [out] coords An array of at least as many doubles as the element's dimension
+   *                      whose entries will be filled with the coordinates of \a vertex.
+   */
+  static inline void
+  element_get_vertex_reference_coords (const t8_element_t *t, const int vertex, double coords[])
+  {
+    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (t));
+
+    const t8_standalone_element_t<TEclass> *elem = (const t8_standalone_element_t<TEclass> *) t;
+    if constexpr (TEclass == T8_ECLASS_VERTEX) {
+      return;
+    }
+    else {
+      int coords_int[T8_ELEMENT_DIM[TEclass]];
+      T8_ASSERT (0 <= vertex && vertex < T8_ELEMENT_NUM_CORNERS[TEclass]);
+      t8_standalone_scheme<TEclass>::element_compute_coords ((const t8_element_t *) elem, vertex, coords_int);
+      for (int i = 0; i < T8_ELEMENT_DIM[TEclass]; i++) {
+        coords[i] = coords_int[i] / (double) t8_standalone_scheme<TEclass>::get_root_len ();
+      }
+    }
+  }
+
+  /** Convert a point in the reference space of an element to a point in the
+   *  reference space of the tree.
+   * 
+   * \param [in] elem         The element.
+   * \param [in] coords_input The coordinates of the point in the reference space of the element.
+   * \param [in] user_data    User data.
+   * \param [out] out_coords  The coordinates of the point in the reference space of the tree.
+   */
+  static inline void
+  element_get_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
+                                double *out_coords)
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+  }
+
+  // ################################################____MEMORY____################################################
+
+  /** Allocate memory for an array of elements of a given class and initialize them.
+   * \param [in] length   The number of elements to be allocated.
+   * \param [in,out] elems On input an array of \b length many unallocated
+   *                      element pointers.
+   *                      On output all these pointers will point to an allocated
+   *                      and initialized element.
+   * \note Not every element that is created in t8code will be created by a call
+   * to this function. However, if an element is not created using \ref t8_element_new,
+   * then it is guaranteed that \ref t8_element_init is called on it.
+   * \note In debugging mode, an element that was created with \ref t8_element_new
+   * must pass \ref t8_element_is_valid.
+   * \note If an element was created by \ref t8_element_new then \ref t8_element_init
+   * may not be called for it. Thus, \ref t8_element_new should initialize an element
+   * in the same way as a call to \ref t8_element_init would.
+   * \see t8_element_init
+   * \see t8_element_is_valid
+   */
+  /* TODO: would it be better to directly allocate an array of elements,
+   *       not element pointers? */
   void
-  element_new (int length, t8_element_t **elem)
+  element_new (int length, t8_element_t **elem) const
   {
     /* allocate memory */
     T8_ASSERT (this->ts_context != NULL);
@@ -720,45 +1125,73 @@ struct t8_standalone_scheme
       elem[i] = (t8_element_t *) sc_mempool_alloc ((sc_mempool_t *) this->ts_context);
     }
 
-    /* in debug mode, set sensible default values. */
+/* in debug mode, set sensible default values. */
 #ifdef T8_ENABLE_DEBUG
     {
       int i;
       for (i = 0; i < length; i++) {
-        t8_standalone_scheme<TEclass>::element_init (1, elem[i], 0);
+        t8_standalone_scheme<TEclass>::element_init (1, elem[i]);
       }
     }
 #endif
   }
 
-  static void
-  element_init (int length, t8_element_t *elem, int called_new)
+  /** Initialize an array of allocated elements.
+   * \param [in] length   The number of elements to be initialized.
+   * \param [in,out] elems On input an array of \b length many allocated
+   *                       elements.
+   * \param [in] called_new True if the elements in \a elem were created by a call
+   *                       to \ref t8_element_new. False if no element in \a elem
+   *                       was created in this way. The case that only some elements
+   *                       were created by \ref t8_element_new should never occur.
+   * \note In debugging mode, an element that was passed to \ref t8_element_init
+   * must pass \ref t8_element_is_valid.
+   * \note If an element was created by \ref t8_element_new then \ref t8_element_init
+   * may not be called for it. Thus, \ref t8_element_new should initialize an element
+   * in the same way as a call to \ref t8_element_init would.
+   * Thus, if \a called_new is true this function should usually do nothing.
+   * \see t8_element_new
+   * \see t8_element_is_valid
+   */
+  static inline void
+  element_init (int length, t8_element_t *elem)
   {
 #ifdef T8_ENABLE_DEBUG
-    if (!called_new) {
-      int i;
-      t8_standalone_element_t<TEclass> *el = (t8_standalone_element_t<TEclass> *) elem;
-      /* Set all values to 0 */
-      for (i = 0; i < length; i++) {
-        t8_sele_init_linear_id<TEclass> (el + i, 0, 0);
-        T8_ASSERT (t8_sele_is_valid<TEclass> (el + i));
-      }
+    int i;
+    t8_standalone_element_t<TEclass> *el = (t8_standalone_element_t<TEclass> *) elem;
+    /* Set all values to 0 */
+    for (i = 0; i < length; i++) {
+      t8_standalone_scheme<TEclass>::element_init_linear_id ((t8_element_t *) (el + i), 0, 0);
+      T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid ((t8_element_t *) (el + i)));
     }
 #endif
   }
 
+  static inline void
+  element_deinit (int length, t8_element_t *elem)
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+  }
+
+  /** Deallocate an array of elements.
+   * \param [in] length   The number of elements in the array.
+   * \param [in,out] elems On input an array of \b length many allocated
+   *                      element pointers.
+   *                      On output all these pointers will be freed.
+   *                      \b elem itself will not be freed by this function.
+   */
   void
-  element_destroy (int length, t8_element_t **elem)
+  element_destroy (int length, t8_element_t **elem) const
   {
     T8_ASSERT (this->ts_context != NULL);
     T8_ASSERT (0 <= length);
     T8_ASSERT (elem != NULL);
     for (int i = 0; i < length; ++i) {
-      sc_mempool_free ((sc_mempool_t *) this->ts_context, elem[i]);
+      sc_mempool_free ((sc_mempool_t *) ts_context, elem[i]);
     }
   }
 
-  /** ################################################____DEBUG____################################################  */
+  // ################################################____DEBUG____################################################
 
 #ifdef T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is
@@ -807,7 +1240,7 @@ struct t8_standalone_scheme
   static inline void
   element_debug_print (const t8_element_t *elem)
   {
-    T8_ASSERT (element_is_valid (elem));
+    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem));
 
     const t8_standalone_element_t<TEclass> *p = (const t8_standalone_element_t<TEclass> *) elem;
 
@@ -819,12 +1252,65 @@ struct t8_standalone_scheme
       t8_debugf ("t_%i: %i \n", e, p->type[e]);
     }
 
-    T8_ASSERT (element_is_valid (elem));
+    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem));
   }
+
+  static inline void
+  element_to_string (const t8_element_t *elem, char *debug_string, const int string_size)
+  {
+    SC_ABORT ("This function is not implemented yet.\n");
+  }
+
 #endif
 
+  // ################################################____MPI____################################################
+
+  /** Pack multiple elements into contiguous memory, so they can be sent via MPI.
+     * \param [in] tree_class    The eclass of the current tree.
+     * \param [in] elements Array of elements that are to be packed
+     * \param [in] count Number of elements to pack
+     * \param [in,out] send_buffer Buffer in which to pack the elements
+     * \param [in] buffer_size size of the buffer (in order to check that we don't access out of range)
+     * \param [in, out] position the position of the first byte that is not already packed
+     * \param [in] comm MPI Communicator
+    */
+  inline void
+  element_MPI_Pack (t8_element_t **const elements, const unsigned int count, void *send_buffer, int buffer_size,
+                    int *position, sc_MPI_Comm comm) const
+  {
+    SC_ABORT ("This function is not implemented in this scheme yet.\n");
+  }
+
+  /** Determine an upper bound for the size of the packed message of \a count elements
+     * \param [in] tree_class    The eclass of the current tree.
+     * \param [in] count Number of elements to pack
+     * \param [in] comm MPI Communicator
+     * \param [out] pack_size upper bound on the message size
+    */
+  inline void
+  element_MPI_Pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size) const
+  {
+    SC_ABORT ("This function is not implemented in this scheme yet.\n");
+  }
+
+  /** Unpack multiple elements from contiguous memory that was received via MPI.
+     * \param [in] tree_class    The eclass of the current tree.
+     * \param [in] recvbuf Buffer from which to unpack the elements
+     * \param [in] buffer_size size of the buffer (in order to check that we don't access out of range)
+     * \param [in, out] position the position of the first byte that is not already packed
+     * \param [in] elements Array of initialised elements that is to be filled from the message
+     * \param [in] count Number of elements to unpack
+     * \param [in] comm MPI Communicator
+    */
+  inline void
+  element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements,
+                      const unsigned int count, sc_MPI_Comm comm) const
+  {
+    SC_ABORT ("This function is not implemented in this scheme yet.\n");
+  }
+
  private:
-  /** ################################################____HELPER____################################################  */
+  // ################################################____HELPER____################################################
   static inline t8_element_coord_t
   element_get_len (t8_element_level_t level)
   {
@@ -870,7 +1356,7 @@ struct t8_standalone_scheme
     }
 
     /* The coordinates and the type of the ancestor_elem are defined by the level. */
-    t8_standalone_scheme<TEclass>::element_cut_coordinates ((const t8_element_t *) ancestor_elem,
+    t8_standalone_scheme<TEclass>::element_cut_coordinates ((t8_element_t *) ancestor_elem,
                                                             T8_ELEMENT_MAXLEVEL[TEclass] - level);
 
     ancestor_elem->level = level;
@@ -931,7 +1417,7 @@ struct t8_standalone_scheme
  * \param[in]       shift Number of bits to set to zero
  */
   static inline void
-  element_cut_coordinates (const t8_element_t *elem, const int shift)
+  element_cut_coordinates (t8_element_t *elem, const int shift)
   {
     t8_standalone_element_t<TEclass> *p = (t8_standalone_element_t<TEclass> *) elem;
 
@@ -975,6 +1461,18 @@ struct t8_standalone_scheme
   }
 
   static inline void
+  element_init_linear_id (t8_element_t *elem, const int level, t8_linearidx_t id)
+  {
+    t8_standalone_element_t<TEclass> *p = (t8_standalone_element_t<TEclass> *) elem;
+    t8_standalone_scheme<TEclass>::get_root ((t8_element_t *) p);
+    if (level == 0) {
+      T8_ASSERT (id == 0);
+      return;
+    }
+    t8_standalone_scheme<TEclass>::element_init_linear_id_recursive ((t8_element_t *) p, level, id);
+  }
+
+  static inline void
   element_init_linear_id_recursive (t8_element_t *elem, const int level_diff, t8_linearidx_t id)
   {
     t8_standalone_element_t<TEclass> *p = (t8_standalone_element_t<TEclass> *) elem;
@@ -1000,8 +1498,8 @@ struct t8_standalone_scheme
     for (childindex = 0;
          childindex < t8_standalone_scheme<TEclass>::element_get_num_children ((const t8_element_t *) p);
          childindex++) {
-      num_descendants_of_child = t8_standalone_scheme<TEclass>::t8_sele_init_linear_id_recursive (
-        (const t8_element_t *) p, childindex, level_diff);
+      num_descendants_of_child = t8_standalone_scheme<TEclass>::num_descendants_of_child_at_leveldiff (
+        (t8_element_t *) p, childindex, level_diff);
       sum_descendants_of_children_before += num_descendants_of_child;
       if (sum_descendants_of_children_before > id) {
         sum_descendants_of_children_before -= num_descendants_of_child;
@@ -1016,30 +1514,58 @@ struct t8_standalone_scheme
   static inline t8_linearidx_t
   num_descendants_of_child_at_leveldiff (const t8_element_t *elem, int childindex, int leveldiff)
   {
-    t8_standalone_element_t<TEclass> *p = (t8_standalone_element_t<TEclass> *) elem;
+    const t8_standalone_element_t<TEclass> *p = (const t8_standalone_element_t<TEclass> *) elem;
 
     t8_standalone_element_t<TEclass> child;
     t8_standalone_scheme<TEclass>::element_get_child ((const t8_element_t *) p, childindex, (t8_element_t *) &child);
 
-    t8_linearidx_t num_descendants;
-    if (leveldiff - 1 < 0) {
-      num_descendants = 0;
-    }
-    else if constexpr (TEclass == T8_ECLASS_PYRAMID) {
-      t8_linearidx_t two_to_l = 1LL << (leveldiff - 1);
-      t8_linearidx_t eight_to_l = 1LL << (3 * (leveldiff - 1));
-      if (t8_standalone_scheme<TEclass>::element_get_shape ((const t8_element_t *) &child) == T8_ECLASS_PYRAMID) {
-        num_descendants = ((eight_to_l << 2) - two_to_l) / 3;
+    t8_linearidx_t num_descendants
+      = t8_standalone_scheme<TEclass>::num_descendants_at_leveldiff ((const t8_element_t *) &child, leveldiff);
+    return num_descendants;
+  }
+
+  static inline t8_linearidx_t
+  num_descendants_at_leveldiff (const t8_element_t *elem, const int leveldiff)
+  {
+    t8_standalone_element_t<TEclass> *p = (t8_standalone_element_t<TEclass> *) elem;
+    if (leveldiff < 0)
+      return 0;
+    if constexpr (TEclass == T8_ECLASS_PYRAMID) {
+      t8_linearidx_t two_to_l = 1LL << leveldiff;
+      t8_linearidx_t eight_to_l = 1LL << (3 * leveldiff);
+      if (t8_standalone_scheme<TEclass>::element_get_shape ((t8_element_t *) p) == T8_ECLASS_PYRAMID) {
+        return ((eight_to_l << 2) - two_to_l) / 3;
       }
       else {
-        num_descendants = ((eight_to_l << 1) + two_to_l) / 3;
+        return ((eight_to_l << 1) + two_to_l) / 3;
+      }
+    }
+    return 1LL << (T8_ELEMENT_DIM[TEclass] * leveldiff);
+  }
+
+  static inline void
+  element_compute_coords (const t8_element_t *elem, const int vertex, int coords[])
+  {
+    const t8_standalone_element_t<TEclass> *p = (const t8_standalone_element_t<TEclass> *) elem;
+
+    T8_ASSERT (0 <= vertex
+               && vertex < t8_standalone_scheme<TEclass>::element_get_num_corners ((const t8_element_t *) p));
+
+    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      int8_t type = p->type.to_ulong ();
+      for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
+        coords[idim] = p->coords[idim]
+                       + t8_type_vertex_dim_to_binary<TEclass>[type][vertex][idim]
+                           * t8_standalone_scheme<TEclass>::element_get_len (p->level);
       }
     }
     else {
-      num_descendants = 1LL << (T8_ELEMENT_DIM[TEclass] * (leveldiff - 1));
+      //Hypercubes
+      for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
+        coords[idim] = p->coords[idim]
+                       + ((vertex & (1 << idim)) >> idim) * t8_standalone_scheme<TEclass>::element_get_len (p->level);
+      }
     }
-
-    return num_descendants;
   }
 };
 
