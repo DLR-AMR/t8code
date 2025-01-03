@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2024 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -24,37 +24,198 @@
  * We provide some functions that are useful across element classes.
  */
 
-#pragma once
+#ifndef T8_DEFAULT_COMMON_HXX
+#define T8_DEFAULT_COMMON_HXX
 
-#include <t8_element.hxx>
+#include <t8_element.h>
+#include <t8_schemes/t8_crtp.hxx>
+#include <sc_functions.h>
+#include <sc_containers.h>
 
 /* Macro to check whether a pointer (VAR) to a base class, comes from an
  * implementation of a child class (TYPE). */
 #define T8_COMMON_IS_TYPE(VAR, TYPE) ((dynamic_cast<TYPE> (VAR)) != NULL)
 
-class t8_default_scheme_common_c: public t8_eclass_scheme_c {
+/** This class independent function assumes an sc_mempool_t as context.
+ * It is suitable as the element_new callback in \ref t8_eclass_scheme.
+ * We assume that the mempool has been created with the correct element size.
+ * \param [in,out] ts_context   An element is allocated in this sc_mempool_t.
+ * \param [in]     length       Non-negative number of elements to allocate.
+ * \param [in,out] elem         Array of correct size whose members are filled.
+ */
+inline static void
+t8_default_mempool_alloc (sc_mempool_t *ts_context, int length, t8_element_t **elem)
+{
+  T8_ASSERT (ts_context != NULL);
+  T8_ASSERT (0 <= length);
+  T8_ASSERT (elem != NULL);
+
+  for (int i = 0; i < length; ++i) {
+    elem[i] = (t8_element_t *) sc_mempool_alloc (ts_context);
+  }
+}
+
+/** This class independent function assumes an sc_mempool_t as context.
+ * It is suitable as the elem_destroy callback in \ref t8_eclass_scheme_t.
+ * We assume that the mempool has been created with the correct element size.
+ * \param [in,out] ts_context   An element is returned to this sc_mempool_t.
+ * \param [in]     length       Non-negative number of elements to destroy.
+ * \param [in,out] elem         Array whose members are returned to the mempool.
+ */
+inline static void
+t8_default_mempool_free (sc_mempool_t *ts_context, int length, t8_element_t **elem)
+{
+
+  T8_ASSERT (ts_context != NULL);
+  T8_ASSERT (0 <= length);
+  T8_ASSERT (elem != NULL);
+
+  for (int i = 0; i < length; ++i) {
+    sc_mempool_free (ts_context, elem[i]);
+  }
+}
+
+/* Given an element's level and dimension, return the number of leaves it
+ * produces at a given uniform refinement level */
+static inline t8_gloidx_t
+count_leaves_from_level (const int element_level, const int refinement_level, const int dimension)
+{
+  return element_level > refinement_level ? 0 : (1ULL << (dimension * (refinement_level - element_level)));
+}
+
+template <class TUnderlyingEclassScheme>
+class t8_default_scheme_common: public t8_crtp<TUnderlyingEclassScheme> {
+ private:
+  friend TUnderlyingEclassScheme;
+  /** Private constructor which can only be used by derived schemes.
+   * \param [in] tree_class The tree class of this element scheme.
+   * \param [in] elem_size  The size of the elements this scheme holds.
+  */
+  t8_default_scheme_common (const t8_eclass_t tree_class, const size_t elem_size)
+    : element_size (elem_size), ts_context (sc_mempool_new (elem_size)), eclass (tree_class) {};
+
+ protected:
+  size_t element_size; /**< The size in bytes of an element of class \a eclass */
+  void *ts_context;    /**< Anonymous implementation context. */
+
  public:
+  t8_eclass_t eclass; /**< The tree class */
+
   /** Destructor for all default schemes */
-  virtual ~t8_default_scheme_common_c ();
+  ~t8_default_scheme_common ()
+  {
+    T8_ASSERT (ts_context != NULL);
+    SC_ASSERT (((sc_mempool_t *) ts_context)->elem_count == 0);
+    sc_mempool_destroy ((sc_mempool_t *) ts_context);
+  }
 
-  virtual void
-  t8_element_deinit (int length, t8_element_t *elem) const override;
+  /** Move constructor */
+  t8_default_scheme_common (t8_default_scheme_common &&other) noexcept
+    : element_size (other.element_size), ts_context (other.ts_context), eclass (other.eclass)
+  {
+    other.ts_context = nullptr;
+  }
 
-  /** Compute the number of corners of a given element. */
-  int
-  t8_element_num_corners (const t8_element_t *elem) const override;
+  /** Move assignment operator */
+  t8_default_scheme_common &
+  operator= (t8_default_scheme_common &&other) noexcept
+  {
+    if (this != &other) {
+      // Free existing resources of moved-to object
+      if (ts_context) {
+        sc_mempool_destroy ((sc_mempool_t *) ts_context);
+      }
 
-  /** Allocate space for a bunch of elements. */
-  void
-  t8_element_new (int length, t8_element_t **elem) const override;
+      // Transfer ownership of resources
+      element_size = other.element_size;
+      eclass = other.eclass;
+      ts_context = other.ts_context;
+
+      // Leave the source object in a valid state
+      other.ts_context = nullptr;
+    }
+    return *this;
+  }
+
+  /** Copy constructor */
+  t8_default_scheme_common (const t8_default_scheme_common &other)
+    : element_size (other.element_size), ts_context (sc_mempool_new (other.element_size)), eclass (other.eclass) {};
+
+  /** Copy assignment operator */
+  t8_default_scheme_common &
+  operator= (const t8_default_scheme_common &other)
+  {
+    if (this != &other) {
+      // Free existing resources of assigned-to object
+      if (ts_context) {
+        sc_mempool_destroy ((sc_mempool_t *) ts_context);
+      }
+
+      // Copy the values from the source object
+      element_size = other.element_size;
+      eclass = other.eclass;
+      ts_context = sc_mempool_new (other.element_size);
+    }
+    return *this;
+  }
+
+  /** Return the size of any element of a given class.
+   * \return                      The size of an element of class \b ts.
+   * We provide a default implementation of this routine that should suffice
+   * for most use cases.
+   */
+  inline size_t
+  get_element_size (void) const
+  {
+    return element_size;
+  }
+
+  /** Compute the number of corners of a given element.
+   * \return The number of corners of the element.
+   * \note This function is overwritten by the pyramid implementation.
+  */
+  inline int
+  element_get_num_corners (const t8_element_t *elem) const
+  {
+    /* use the lookup table of the eclasses.
+     * Pyramids should implement their own version of this function. */
+    return t8_eclass_num_vertices[eclass];
+  }
+
+  /** Allocate space for a bunch of elements.
+   * \param [in] length The number of elements to allocate.
+   * \param [out] elem  The elements to allocate.
+  */
+  inline void
+  element_new (const int length, t8_element_t **elem) const
+  {
+    t8_default_mempool_alloc ((sc_mempool_t *) ts_context, length, elem);
+  }
 
   /** Deallocate space for a bunch of elements. */
-  void
-  t8_element_destroy (int length, t8_element_t **elem) const override;
+  inline void
+  element_destroy (const int length, t8_element_t **elem) const
+  {
+    t8_default_mempool_free ((sc_mempool_t *) ts_context, length, elem);
+  }
 
-  /** Return the shape of an element */
-  t8_element_shape_t
-  t8_element_shape (const t8_element_t *elem) const override;
+  inline void
+  element_deinit (int length, t8_element_t *elem) const
+  {
+  }
+
+  /** Return the shape of an element 
+   * \param [in] elem The element.
+   * \return The shape of the element.
+   * \note This function is overwritten by the pyramid implementation.
+  */
+  inline t8_element_shape_t
+  element_get_shape (const t8_element_t *elem) const
+  {
+    /* use the lookup table of the eclasses.
+     * Pyramids should implement their own version of this function. */
+    return eclass;
+  }
 
   /** Count how many leaf descendants of a given uniform level an element would produce.
    * \param [in] t     The element to be checked.
@@ -63,71 +224,56 @@ class t8_default_scheme_common_c: public t8_eclass_scheme_c {
    * is the resulting number of elements (of the given level).
    * Each default element (except pyramids) refines into 2^{dim * (level - level(t))}
    * children.
+   * \note This function is overwritten by the pyramid implementation.
    */
-  t8_gloidx_t
-  t8_element_count_leaves (const t8_element_t *t, int level) const override;
+  inline t8_gloidx_t
+  element_count_leaves (const t8_element_t *t, int level) const
+  {
+    const int element_level = this->underlying ().element_get_level (t);
+    const int dim = t8_eclass_to_dimension[eclass];
+    return count_leaves_from_level (element_level, level, dim);
+  }
 
   /** Compute the number of siblings of an element. That is the number of 
    * Children of its parent.
    * \param [in] elem The element.
    * \return          The number of siblings of \a element.
-   * Note that this number is >= 1, since we count the element itself as a sibling.
+   * \note This function is overwritten by the pyramid implementation.
+   * \note that this number is >= 1, since we count the element itself as a sibling.
    */
-  int
-  t8_element_num_siblings (const t8_element_t *elem) const override;
+  inline int
+  element_get_num_siblings (const t8_element_t *elem) const
+  {
+    const int dim = t8_eclass_to_dimension[eclass];
+    T8_ASSERT (eclass != T8_ECLASS_PYRAMID);
+    return sc_intpow (2, dim);
+  }
 
   /** Count how many leaf descendants of a given uniform level the root element will produce.
    * \param [in] level A refinement level.
    * \return The value of \ref t8_element_count_leaves if the input element
    *      is the root (level 0) element.
+   * \note This function is overwritten by the pyramid implementation.
    */
-  t8_gloidx_t
-  t8_element_count_leaves_from_root (int level) const override;
+  inline t8_gloidx_t
+  count_leaves_from_root (const int level) const
+  {
+    if (eclass == T8_ECLASS_PYRAMID) {
+      return 2 * sc_intpow64u (8, level) - sc_intpow64u (6, level);
+    }
+    const int dim = t8_eclass_to_dimension[eclass];
+    return count_leaves_from_level (0, level, dim);
+  }
 
-  /** Compute the integer coordinates of a given element vertex.
-   * The default scheme implements the Morton type SFCs. In these SFCs the
-   * elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and 
-   * L the maximum refinement level. 
-   * All element vertices have integer coordinates in this cube.
-   *   \param [in] elem    The element.
-   *   \param [in] vertex  The id of the vertex whose coordinates shall be computed.
-   *   \param [out] coords An array of at least as many integers as the element's dimension
-   *                      whose entries will be filled with the coordinates of \a vertex.
-   */
-  virtual void
-  t8_element_vertex_integer_coords (const t8_element_t *elem, int vertex, int coords[]) const
-    = 0;
-
-  /** Convert points in the reference space of an element to points in the
-   *  reference space of the tree.
-   * 
-   * \param [in] elem         The element.
-   * \param [in] coords_input The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
-   *                          in the reference space of the element.
-   * \param [in] num_coords   Number of \f$ dim\f$-sized coordinates to evaluate.
-   * \param [out] out_coords  The coordinates of the points in the
-   *                          reference space of the tree.
-   */
-  void
-  t8_element_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
-                               double *out_coords) const override
-    = 0;
-
-  /** Get the integer coordinates of the anchor node of an element.
-   * The default scheme implements the Morton type SFCs. In these SFCs the
-   * elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and 
-   * L the maximum refinement level. 
-   * All element vertices have integer coordinates in this cube and the anchor
-   * node is the first of all vertices (index 0). It also has the lowest x,y and z
-   * coordinates.
-   * \param [in] elem   The element.
-   * \param [out] anchor The integer coordinates of the anchor node in the cube [0,1]^(dL)
-   */
-  virtual void
-  t8_element_anchor (const t8_element_t *elem, int anchor[3]) const
-    = 0;
 #if T8_ENABLE_DEBUG
-  virtual void
-  t8_element_debug_print (const t8_element_t *elem) const;
+  inline void
+  element_debug_print (const t8_element_t *elem) const
+  {
+    char debug_string[BUFSIZ];
+    this->underlying ().element_to_string (elem, debug_string, BUFSIZ);
+    t8_debugf ("%s\n", debug_string);
+  }
 #endif
 };
+
+#endif /* !T8_DEFAULT_COMMON_HXX */
