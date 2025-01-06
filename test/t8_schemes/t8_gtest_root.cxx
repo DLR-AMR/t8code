@@ -29,9 +29,10 @@
 #include <test/t8_gtest_schemes.hxx>
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
+#include <test/t8_gtest_macros.hxx>
 
 class root: public testing::TestWithParam<t8_eclass_t> {
- public:
+ protected:
   void
   SetUp () override
   {
