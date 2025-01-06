@@ -32,6 +32,7 @@
 
 #include <t8.h>
 #include <t8_forest/t8_forest_types.h>
+#include <t8_types/t8_scheme_id.hxx>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -90,9 +91,35 @@ t8_forest_ghost_get_tree_elements (const t8_forest_t forest, const t8_locidx_t l
 t8_locidx_t
 t8_forest_ghost_get_ghost_treeid (t8_forest_t forest, t8_gloidx_t gtreeid);
 
-/* TODO: document */
+
+/**
+ * Retrieves the element class of a ghost tree in the forest.
+ *
+ * This function returns the element class (t8_eclass_t) of a specified ghost tree
+ * within the given forest. The element class defines the type of elements that
+ * the tree contains.
+ *
+ * \param[in] forest The forest containing the ghost tree.
+ * \param[in] lghost_tree The local index of the ghost tree within the forest.
+ * \return The element class of the specified ghost tree.
+ */
 t8_eclass_t
 t8_forest_ghost_get_tree_class (const t8_forest_t forest, const t8_locidx_t lghost_tree);
+
+
+/**
+ * Get the scheme ID of a local ghost tree.
+ *
+ * This function retrieves the scheme ID associated with a given local ghost tree within a forest.
+ *
+ * \param [in] forest The forest. The ghost layer must exist.
+ * \param [in] lghost_tree The ghost tree ID of a ghost tree.
+ * \return The scheme ID of the local ghost tree \a lghost_tree.
+ *
+ * \note The forest must be committed before calling this function.
+ */
+t8_scheme_id
+t8_forest_ghost_get_tree_scheme_id (const t8_forest_t forest, const t8_locidx_t lghost_tree)
 
 /** Given a local ghost tree compute the global tree id of it.
  * \param [in]  forest    The forest. Ghost layer must exist.

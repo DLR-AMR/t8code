@@ -26,6 +26,7 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_data/t8_containers.h>
+#include <t8_types/t8_scheme_id.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -34,7 +35,7 @@ T8_EXTERN_C_BEGIN ();
 /** Return zero if the first \a num_elements in \a elements are not a (sub)family.
  * \param [in] scheme       The element scheme for current local tree 
  *                           where the elements are from.
- * \param [in] tree_class    The eclass of tree the elements are part of.
+ * \param [in] scheme_id    The eclass of tree the elements are part of.
  * \param [in] elements      The elements array.
  * \param [in] num_elements  The first \a num_elements to be checked in \a elements.
  * \return                   0 if the first \a num_elements in \a elements are 
@@ -45,53 +46,53 @@ T8_EXTERN_C_BEGIN ();
  *       not valid. 
  */
 static int
-t8_forest_is_family_callback (t8_scheme *scheme, const t8_eclass_t tree_class, const int num_elements,
+t8_forest_is_family_callback (t8_scheme *scheme, const const t8_scheme_id scheme_id, const int num_elements,
                               t8_element_t **elements)
 {
 
   for (int iter = 0; iter < num_elements; iter++) {
-    T8_ASSERT (scheme->element_is_valid (tree_class, elements[iter]));
+    T8_ASSERT (scheme->element_is_valid (scheme_id, elements[iter]));
   }
 
-  if (scheme->element_get_level (tree_class, elements[0]) == 0) {
+  if (scheme->element_get_level (scheme_id, elements[0]) == 0) {
     return 0;
   }
 
   t8_element_t *element_parent;
   t8_element_t *element_parent_compare;
-  scheme->element_new (tree_class, 1, &element_parent_compare);
-  scheme->element_new (tree_class, 1, &element_parent);
-  scheme->element_get_parent (tree_class, elements[0], element_parent);
+  scheme->element_new (scheme_id, 1, &element_parent_compare);
+  scheme->element_new (scheme_id, 1, &element_parent);
+  scheme->element_get_parent (scheme_id, elements[0], element_parent);
 
   for (int iter = 0; iter < num_elements; iter++) {
-    scheme->element_get_parent (tree_class, elements[iter], element_parent_compare);
-    if (!scheme->element_is_equal (tree_class, element_parent, element_parent_compare)) {
-      scheme->element_destroy (tree_class, 1, &element_parent);
-      scheme->element_destroy (tree_class, 1, &element_parent_compare);
+    scheme->element_get_parent (scheme_id, elements[iter], element_parent_compare);
+    if (!scheme->element_is_equal (scheme_id, element_parent, element_parent_compare)) {
+      scheme->element_destroy (scheme_id, 1, &element_parent);
+      scheme->element_destroy (scheme_id, 1, &element_parent_compare);
       return 0;
     }
   }
 
-  if (num_elements < scheme->element_get_num_siblings (tree_class, elements[0])) {
+  if (num_elements < scheme->element_get_num_siblings (scheme_id, elements[0])) {
     for (int iter = num_elements; iter < num_elements; iter++) {
-      scheme->element_get_parent (tree_class, elements[iter], element_parent_compare);
-      if (scheme->element_is_equal (tree_class, element_parent, element_parent_compare)) {
-        scheme->element_destroy (tree_class, 1, &element_parent);
-        scheme->element_destroy (tree_class, 1, &element_parent_compare);
+      scheme->element_get_parent (scheme_id, elements[iter], element_parent_compare);
+      if (scheme->element_is_equal (scheme_id, element_parent, element_parent_compare)) {
+        scheme->element_destroy (scheme_id, 1, &element_parent);
+        scheme->element_destroy (scheme_id, 1, &element_parent_compare);
         return 0;
       }
     }
   }
 
-  scheme->element_destroy (tree_class, 1, &element_parent);
-  scheme->element_destroy (tree_class, 1, &element_parent_compare);
+  scheme->element_destroy (scheme_id, 1, &element_parent);
+  scheme->element_destroy (scheme_id, 1, &element_parent_compare);
   return 1;
 }
 #endif
 
 /** Return the index of the first family member of a given family in an array of elements.
  * \param [in] forest        The forest
- * \param [in] tree_class    The eclass of tree the elements are part of.
+ * \param [in] scheme_id    The eclass of tree the elements are part of.
  * \param [in] scheme        The element scheme for elements in \a telements.
  * \param [in] telements     The array of newly created (adapted) elements.
  * \param [in] telements_pos The index of an element in \a telement
@@ -104,22 +105,22 @@ t8_forest_is_family_callback (t8_scheme *scheme, const t8_eclass_t tree_class, c
  *       recursively, return INT32_MIN.
  */
 static t8_locidx_t
-t8_forest_pos (t8_forest_t forest, const t8_eclass_t tree_class, t8_scheme *scheme, t8_element_array_t *telements,
+t8_forest_pos (t8_forest_t forest, const t8_scheme_id scheme_id, t8_scheme *scheme, t8_element_array_t *telements,
                const t8_locidx_t telements_pos)
 {
 #if T8_ENABLE_DEBUG
   const t8_eclass_t tree_eclass_check = telements->tree_class;
-  T8_ASSERT (tree_eclass_check == tree_class);
+  T8_ASSERT (tree_eclass_check == scheme->get_eclass_scheme_eclass (scheme_id));
 #endif
 
   const t8_locidx_t elements_in_array = t8_element_array_get_count (telements);
   T8_ASSERT (0 <= telements_pos && telements_pos < elements_in_array);
   const t8_element_t *element = t8_element_array_index_locidx (telements, telements_pos);
-  const int level_current = scheme->element_get_level (tree_class, element);
-  const int num_siblings = scheme->element_get_num_siblings (tree_class, element);
+  const int level_current = scheme->element_get_level (scheme_id, element);
+  const int num_siblings = scheme->element_get_num_siblings (scheme_id, element);
 
   {
-    const int child_id = scheme->element_get_child_id (tree_class, element);
+    const int child_id = scheme->element_get_child_id (scheme_id, element);
     /* Left if condition:
      * If child_id is not last, elements cannot be coarsened recursively.
      * But elements (vertex) whose family consist of exactly one element do 
@@ -141,10 +142,10 @@ t8_forest_pos (t8_forest_t forest, const t8_eclass_t tree_class, t8_scheme *sche
 
   t8_element_t *element_parent;
   t8_element_t *element_parent_compare;
-  scheme->element_new (tree_class, 1, &element_parent_compare);
-  scheme->element_new (tree_class, 1, &element_parent);
+  scheme->element_new (scheme_id, 1, &element_parent_compare);
+  scheme->element_new (scheme_id, 1, &element_parent);
   /* Get parent of a family member by coarsening last member. */
-  scheme->element_get_parent (tree_class, element, element_parent);
+  scheme->element_get_parent (scheme_id, element, element_parent);
 
   /* Loop backward over all possible familie members until we hit an 
    * element that is not part of the family or we have reached the 
@@ -156,14 +157,14 @@ t8_forest_pos (t8_forest_t forest, const t8_eclass_t tree_class, t8_scheme *sche
     pos = telements_pos - el_iter;
     T8_ASSERT (0 <= pos && pos < elements_in_array);
     element_compare = t8_element_array_index_locidx (telements, pos);
-    const int level_compare = scheme->element_get_level (tree_class, element_compare);
+    const int level_compare = scheme->element_get_level (scheme_id, element_compare);
     /* By comparing the levels in advance we may be able to avoid
      * the more complex test with the parent element.*/
     if (level_current != level_compare) {
       break;
     }
-    scheme->element_get_parent (tree_class, element_compare, element_parent_compare);
-    if (!scheme->element_is_equal (tree_class, element_parent, element_parent_compare)) {
+    scheme->element_get_parent (scheme_id, element_compare, element_parent_compare);
+    if (!scheme->element_is_equal (scheme_id, element_parent, element_parent_compare)) {
       break;
     }
   }
@@ -172,13 +173,13 @@ t8_forest_pos (t8_forest_t forest, const t8_eclass_t tree_class, t8_scheme *sche
    * family, check if the first element along the space-filling-curve next to the
    * considered elements is overlapped when set is coarsened. */
   if (el_iter < (t8_locidx_t) num_siblings && el_iter < elements_in_array) {
-    int level_compare = scheme->element_get_level (tree_class, element_compare);
+    int level_compare = scheme->element_get_level (scheme_id, element_compare);
     /* Only elements with higher level then level of elements in family, can get 
      * potentially be overlapped. */
     if (level_compare > level_current) {
       /* Compare ancestors */
-      scheme->element_get_nca (tree_class, element, element_compare, element_parent_compare);
-      level_compare = scheme->element_get_level (tree_class, element_parent_compare);
+      scheme->element_get_nca (scheme_id, element, element_compare, element_parent_compare);
+      level_compare = scheme->element_get_level (scheme_id, element_parent_compare);
       T8_ASSERT (level_compare <= level_current - 1);
       if (level_compare == level_current - 1) {
         pos = INT32_MIN; /* No recursion coarsening */
@@ -187,15 +188,15 @@ t8_forest_pos (t8_forest_t forest, const t8_eclass_t tree_class, t8_scheme *sche
     pos++;
   }
   /* clean up */
-  scheme->element_destroy (tree_class, 1, &element_parent);
-  scheme->element_destroy (tree_class, 1, &element_parent_compare);
+  scheme->element_destroy (scheme_id, 1, &element_parent);
+  scheme->element_destroy (scheme_id, 1, &element_parent_compare);
 
 #if T8_ENABLE_MPI
   /* The first element on process rank must have child_id 0, otherwise other 
    * family members could be on process rank-1. */
   if (pos == 0 && forest->mpirank > 0) {
     const t8_element_t *element_boarder = t8_element_array_index_locidx (telements, pos);
-    const int child_id = scheme->element_get_child_id (tree_class, element_boarder);
+    const int child_id = scheme->element_get_child_id (scheme_id, element_boarder);
     if (child_id > 0) {
       return INT32_MIN;
     }
@@ -209,7 +210,7 @@ t8_forest_pos (t8_forest_t forest, const t8_eclass_t tree_class, t8_scheme *sche
  * The last inserted element must be the last element of a family.
  * \param [in] forest  The new forest currently in construction.
  * \param [in] ltreeid The current local tree.
- * \param [in] tree_class The eclass of tree \a ltreeid.
+ * \param [in] scheme_id The eclass of tree \a ltreeid.
  * \param [in] lelement_id The id of the currently coarsened element in the tree of the original forest.
  * \param [in] scheme      The scheme for this local tree.
  * \param [in] telements The array of newly created (adapted) elements.
@@ -221,7 +222,7 @@ t8_forest_pos (t8_forest_t forest, const t8_eclass_t tree_class, t8_scheme *sche
  * \param [in] el_buffer Buffer space to store a family of elements.
  */
 static void
-t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eclass_t tree_class,
+t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid, const t8_scheme_id scheme_id,
                                    t8_locidx_t lelement_id, t8_scheme *scheme, t8_element_array_t *telements,
                                    t8_locidx_t el_coarsen, t8_locidx_t *el_inserted, t8_element_t **el_buffer)
 {
@@ -232,8 +233,8 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid, cons
   int num_siblings;
   {
     const t8_element_t *element = t8_element_array_index_locidx (telements, *el_inserted - 1);
-    T8_ASSERT (scheme->element_get_level (tree_class, element) > 0);
-    num_siblings = scheme->element_get_num_siblings (tree_class, element);
+    T8_ASSERT (scheme->element_get_level (scheme_id, element) > 0);
+    num_siblings = scheme->element_get_num_siblings (scheme_id, element);
   }
 
   t8_locidx_t elements_in_array = t8_element_array_get_count (telements);
@@ -262,7 +263,7 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid, cons
       T8_ASSERT (0 < num_elements_to_adapt_callback);
       T8_ASSERT (num_elements_to_adapt_callback <= num_siblings);
     }
-    else if (ielement == (t8_locidx_t) num_siblings && scheme->elements_are_family (tree_class, fam)) {
+    else if (ielement == (t8_locidx_t) num_siblings && scheme->elements_are_family (scheme_id, fam)) {
       /* We will pass a full family to the adapt callback */
       num_elements_to_adapt_callback = num_siblings;
     }
@@ -277,7 +278,7 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid, cons
     }
     else {
       T8_ASSERT (forest->set_from->incomplete_trees == 0);
-      T8_ASSERT (!is_family || scheme->elements_are_family (tree_class, fam));
+      T8_ASSERT (!is_family || scheme->elements_are_family (scheme_id, fam));
     }
 #endif
     if (is_family
@@ -288,11 +289,11 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid, cons
       *el_inserted -= (t8_locidx_t) (num_elements_to_adapt_callback - 1);
       /* remove num_elements_to_adapt_callback - 1 elements from the array */
       T8_ASSERT ((size_t) elements_in_array == t8_element_array_get_count (telements));
-      T8_ASSERT (scheme->element_get_level (tree_class, t8_element_array_index_locidx (telements, pos)) > 0);
-      scheme->element_get_parent (tree_class, fam[0], fam[0]);
+      T8_ASSERT (scheme->element_get_level (scheme_id, t8_element_array_index_locidx (telements, pos)) > 0);
+      scheme->element_get_parent (scheme_id, fam[0], fam[0]);
       /*Shorten the array by the number of siblings of the fine element */
       elements_in_array -= (t8_locidx_t) num_elements_to_adapt_callback - 1;
-      num_siblings = scheme->element_get_num_siblings (tree_class, fam[0]);
+      num_siblings = scheme->element_get_num_siblings (scheme_id, fam[0]);
       t8_element_array_resize (telements, elements_in_array);
       /* Set element to the new constructed parent. Since resizing the array
        * may change the position in memory, we have to do it after resizing. */
@@ -310,7 +311,7 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid, cons
 /** Check the lastly inserted element of an array for recursive refining or removing.
  * \param [in] forest  The new forest currently in construction.
  * \param [in] ltreeid The current local tree.
- * \param [in] tree_class The eclass of tree \a ltreeid.
+ * \param [in] scheme_id The scheme_id of tree \a ltreeid.
  * \param [in] lelement_id The id of the currently coarsened element in the tree of the original forest.
  * \param [in] scheme      The scheme for this local tree.
  * \param [in] elem_list Helper list to temporarily insert the newly refined elements.
@@ -323,7 +324,7 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid, cons
  * \param [in] element_removed Flag set to 1 if element was removed.
  */
 static void
-t8_forest_adapt_refine_recursive (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_eclass_t tree_class,
+t8_forest_adapt_refine_recursive (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_scheme_id scheme_id,
                                   t8_locidx_t lelement_id, t8_scheme *scheme, sc_list_t *elem_list,
                                   t8_element_array_t *telements, t8_locidx_t *num_inserted, t8_element_t **el_buffer,
                                   int *element_removed)
@@ -337,19 +338,19 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, const t8_locidx_t ltreeid,
      * - Otherwise, we add the element to the array of new elements
      */
     el_buffer[0] = (t8_element_t *) sc_list_pop (elem_list);
-    const int num_children = scheme->element_get_num_children (tree_class, el_buffer[0]);
+    const int num_children = scheme->element_get_num_children (scheme_id, el_buffer[0]);
     const int is_family = 0;
     const int num_elements_to_adapt_callback = 1;
-    const int refine = forest->set_adapt_fn (forest, forest->set_from, ltreeid, tree_class, lelement_id, scheme,
+    const int refine = forest->set_adapt_fn (forest, forest->set_from, ltreeid, scheme_id, lelement_id, scheme,
                                              is_family, num_elements_to_adapt_callback, el_buffer);
     T8_ASSERT (refine != -1);
     if (refine == 1) {
       /* The element should be refined */
-      if (scheme->element_get_level (tree_class, el_buffer[0]) < forest->maxlevel) {
+      if (scheme->element_get_level (scheme_id, el_buffer[0]) < forest->maxlevel) {
         /* only refine, if we do not exceed the maximum allowed level */
         /* Create the children and add them to the list */
-        scheme->element_new (tree_class, num_children - 1, el_buffer + 1);
-        scheme->element_get_children (tree_class, el_buffer[0], num_children, el_buffer);
+        scheme->element_new (scheme_id, num_children - 1, el_buffer + 1);
+        scheme->element_get_children (scheme_id, el_buffer[0], num_children, el_buffer);
         for (int ci = num_children - 1; ci >= 0; ci--) {
           (void) sc_list_prepend (elem_list, el_buffer[ci]);
         }
@@ -359,15 +360,15 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, const t8_locidx_t ltreeid,
       /* This element should get removed,
        * we just remove it from the buffer */
       *element_removed = 1;
-      scheme->element_destroy (tree_class, 1, el_buffer);
+      scheme->element_destroy (scheme_id, 1, el_buffer);
     }
     else {
       T8_ASSERT (refine == 0);
       /* This element should not get refined,
        * we remove it from the buffer and add it to the array of new elements. */
       t8_element_t *insert_el = t8_element_array_push (telements);
-      scheme->element_copy (tree_class, el_buffer[0], insert_el);
-      scheme->element_destroy (tree_class, 1, el_buffer);
+      scheme->element_copy (scheme_id, el_buffer[0], insert_el);
+      scheme->element_destroy (scheme_id, 1, el_buffer);
       (*num_inserted)++;
     }
   } /* End while loop */

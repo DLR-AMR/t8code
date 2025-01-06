@@ -32,6 +32,7 @@
 #include <t8_cmesh.h>
 #include <t8_element.h>
 #include <t8_data/t8_containers.h>
+#include <t8_types/t8_scheme_id.hxx>
 
 /** Opaque pointer to a forest implementation. */
 typedef struct t8_forest *t8_forest_t;
@@ -85,7 +86,7 @@ T8_EXTERN_C_BEGIN ();
  * \see t8_forest_iterate_replace
  */
 typedef void (*t8_forest_replace_t) (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree,
-                                     const t8_eclass_t tree_class, const t8_scheme_c *scheme, const int refine,
+                                     const t8_scheme_id scheme_id, const t8_scheme_c *scheme, const int refine,
                                      const int num_outgoing, const t8_locidx_t first_outgoing, const int num_incoming,
                                      const t8_locidx_t first_incoming);
 
@@ -114,7 +115,7 @@ typedef void (*t8_forest_replace_t) (t8_forest_t forest_old, t8_forest_t forest_
 /* TODO: Do we really need the forest argument? Since the forest is not committed yet it
  *       seems dangerous to expose to the user. */
 typedef int (*t8_forest_adapt_t) (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                                  const t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme_c *scheme,
+                                  const t8_scheme_id scheme_id, t8_locidx_t lelement_id, const t8_scheme_c *scheme,
                                   const int is_family, const int num_elements, t8_element_t *elements[]);
 
 /** Create a new forest with reference count one.
@@ -783,6 +784,20 @@ t8_forest_get_tree_element_count (t8_tree_t tree);
  */
 t8_eclass_t
 t8_forest_get_tree_class (const t8_forest_t forest, const t8_locidx_t ltreeid);
+
+/**
+ * Get the scheme ID of a specific tree in the forest.
+ *
+ * This function retrieves the scheme ID associated with a particular tree
+ * within the given forest. The scheme ID is used to identify the type of
+ * scheme that is applied to the tree.
+ *
+ * \param[in] forest The forest from which to retrieve the tree's scheme ID.
+ * \param[in] ltreeid The local tree ID within the forest for which to get the scheme ID.
+ * \return The scheme ID of the specified tree.
+ */
+t8_scheme_id
+t8_forest_get_tree_scheme_id (const t8_forest_t forest, const t8_locidx_t ltreeid);
 
 /** Compute the global index of the first local element of a forest.
  * This function is collective.

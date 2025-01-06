@@ -30,6 +30,7 @@
 #include <t8_cmesh/t8_cmesh_trees.h>
 #include <t8_data/t8_containers.h>
 #include <sc_statistics.h>
+#include <t8_types/t8_scheme_id.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -51,6 +52,7 @@ typedef struct
   t8_locidx_t element_offset;  /* The count of all ghost elements in all smaller ghost trees */
   t8_element_array_t elements; /* The ghost elements of that tree */
   t8_eclass_t eclass;          /* The trees element class */
+  t8_scheme_id scheme_id;      /* The scheme id of the tree */
 } t8_ghost_tree_t;
 
 /* The data structure stored in the global_tree_to_ghost_tree hash table. */
@@ -337,6 +339,16 @@ t8_forest_ghost_get_tree_class (const t8_forest_t forest, const t8_locidx_t lgho
 
   ghost_tree = t8_forest_ghost_get_tree (forest, lghost_tree);
   return ghost_tree->eclass;
+}
+
+/* Given an index in the ghost_tree array, return this tree's scheme id */
+t8_scheme_id
+t8_forest_ghost_get_tree_scheme_id (const t8_forest_t forest, const t8_locidx_t lghost_tree)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  const t8_ghost_tree_t *ghost_tree = t8_forest_ghost_get_tree (forest, lghost_tree);
+  return ghost_tree->scheme_id;
 }
 
 /* Given an index in the ghost_tree array, return this tree's global id */

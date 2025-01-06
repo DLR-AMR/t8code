@@ -42,15 +42,10 @@
 #include <t8_schemes/t8_default/t8_default_prism/t8_default_prism.hxx>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid.hxx>
 #include <string>
-#include <t8_types/t8_type.hxx>
-#include <t8_types/t8_operators.hxx>
+#include <t8_types/t8_scheme_id.hxx>
 #if T8_ENABLE_DEBUG
 // Only needed for t8_debug_print_type
 #include <typeinfo>
-
-struct t8_scheme_id_tag{};
-
-using t8_scheme_id = T8Type<int, t8_scheme_id_tag>;
 
 /**
  * Get the type of the template parameter as a string.

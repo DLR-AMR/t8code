@@ -35,6 +35,7 @@
 #include <t8_data/t8_containers.h>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest/t8_forest_general.h>
+#include <t8_types/t8_scheme_id.hxx>
 
 typedef struct t8_profile t8_profile_t;            /* Defined below */
 typedef struct t8_forest_ghost *t8_forest_ghost_t; /* Defined below */
@@ -143,6 +144,7 @@ typedef struct t8_tree
 {
   t8_element_array_t elements; /**< locally stored elements */
   t8_eclass_t eclass;          /**< The element class of this tree */
+  t8_scheme_id scheme_id;     /**< The scheme id of the scheme in this tree */
   /* TODO: We will need the *_desc variables later for sure. */
   t8_element_t *first_desc,    /**< first local descendant */
     *last_desc;                /**< last local descendant */

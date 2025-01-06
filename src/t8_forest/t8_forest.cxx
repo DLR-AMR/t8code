@@ -3702,6 +3702,19 @@ t8_forest_get_tree_class (const t8_forest_t forest, const t8_locidx_t ltreeid)
   }
 }
 
+t8_scheme_id
+t8_forest_get_tree_scheme_id (const t8_forest_t forest, const t8_locidx_t ltreeid){
+  const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
+
+  T8_ASSERT (0 <= ltreeid && ltreeid < num_local_trees + t8_forest_get_num_ghost_trees (forest));
+  if(ltreeid < num_local_trees){
+    return t8_forest_get_tree (forest, ltreeid)->scheme_id;
+  }
+  else{
+    return t8_forest_ghost_get_scheme_id (forest, ltreeid - num_local_trees);
+  }
+}
+
 /* Return the global index of the first local element */
 t8_gloidx_t
 t8_forest_get_first_local_element_id (t8_forest_t forest)
