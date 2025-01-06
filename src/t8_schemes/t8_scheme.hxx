@@ -149,7 +149,7 @@ class t8_scheme {
     return std::holds_alternative<TEclassScheme> (eclass_schemes[tree_class]);
   }
 
-  /** Get the eclass an eclas scheme is valid for. \Note: This function should return the input value as long as the
+  /** Get the eclass an eclass scheme is valid for. \Note: This function should return the input value as long as the
    * eclass schemes are soreted correctly. In the future, the trees will access the schemes by a key and then this
    * function will make more sense.
    * \param [in] tree_class     The eclass of the current tree.

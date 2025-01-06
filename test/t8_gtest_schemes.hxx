@@ -44,6 +44,8 @@ t8_scheme_all_schemes (void)
   return builder.build_scheme ();
 }
 
-#define AllSchemes ::testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT)
+#define NUM_SCHEMES 8
+
+#define AllSchemes ::testing::Range (0, NUM_SCHEMES)
 
 #endif /* T8_GTEST_SCHEMES_HXX */

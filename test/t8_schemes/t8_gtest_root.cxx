@@ -31,42 +31,42 @@
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <test/t8_gtest_macros.hxx>
 
-class root: public testing::TestWithParam<t8_eclass_t> {
+class root: public testing::TestWithParam<int> {
  protected:
   void
   SetUp () override
   {
     scheme = t8_scheme_all_schemes ();
-    tree_class = GetParam ();
-    scheme->element_new (tree_class, 1, &element);
-    scheme->get_root (tree_class, element);
+    scheme_id = GetParam ();
+    scheme->element_new (static_cast<t8_eclass_t>(scheme_id), 1, &element);
+    scheme->get_root (static_cast<t8_eclass_t>(scheme_id), element);
   }
   void
   TearDown () override
   {
-    scheme->element_destroy (tree_class, 1, &element);
+    scheme->element_destroy (static_cast<t8_eclass_t>(scheme_id), 1, &element);
     scheme->unref ();
   }
 
   t8_element_t *element;
   t8_scheme *scheme;
-  t8_eclass_t tree_class;
+  int scheme_id;
 };
 
 /*Test root*/
 
 TEST_P (root, has_level_zero)
 {
-  EXPECT_EQ (scheme->element_get_level (tree_class, element), 0);
+  EXPECT_EQ (scheme->element_get_level (static_cast<t8_eclass_t>(scheme_id), element), 0);
 }
 
 TEST_P (root, equals_linear_id_0_0)
 {
   t8_element_t *root_compare;
-  scheme->element_new (tree_class, 1, &root_compare);
-  scheme->element_set_linear_id (tree_class, root_compare, 0, 0);
-  EXPECT_ELEM_EQ (scheme, tree_class, element, root_compare);
-  scheme->element_destroy (tree_class, 1, &root_compare);
+  scheme->element_new (static_cast<t8_eclass_t>(scheme_id), 1, &root_compare);
+  scheme->element_set_linear_id (static_cast<t8_eclass_t>(scheme_id), root_compare, 0, 0);
+  EXPECT_ELEM_EQ (scheme, scheme_id, element, root_compare);
+  scheme->element_destroy (static_cast<t8_eclass_t>(scheme_id), 1, &root_compare);
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_root, root, AllSchemes);

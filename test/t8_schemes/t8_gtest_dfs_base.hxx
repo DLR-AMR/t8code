@@ -27,7 +27,7 @@
 #include <t8_eclass.h>
 #include <test/t8_gtest_schemes.hxx>
 
-class TestDFS: public testing::TestWithParam<t8_eclass_t> {
+class TestDFS: public testing::TestWithParam<int> {
  public:
   /** recursive tests check something for all descendants of a starting element (currently only root) upto maxlevel
 */
@@ -38,20 +38,20 @@ class TestDFS: public testing::TestWithParam<t8_eclass_t> {
   void
   check_recursive_dfs_to_max_lvl (const int max_dfs_recursion_level)
   {
-    const int level = scheme->element_get_level (tree_class, element);
+    const int level = scheme->element_get_level (static_cast<t8_eclass_t>(scheme_id), element);
     ASSERT_LE (level, max_dfs_recursion_level);
-    ASSERT_LT (max_dfs_recursion_level, scheme->get_maxlevel (tree_class));
+    ASSERT_LT (max_dfs_recursion_level, scheme->get_maxlevel (static_cast<t8_eclass_t>(scheme_id)));
 
     /** call the implementation of the specific test*/
     check_element ();
 
-    if (scheme->element_get_level (tree_class, element) < max_dfs_recursion_level) {
+    if (scheme->element_get_level (static_cast<t8_eclass_t>(scheme_id), element) < max_dfs_recursion_level) {
       /* iterate over all children */
-      const int num_children = scheme->element_get_num_children (tree_class, element);
+      const int num_children = scheme->element_get_num_children (static_cast<t8_eclass_t>(scheme_id), element);
       for (int ichild = 0; ichild < num_children; ichild++) {
-        scheme->element_get_child (tree_class, element, ichild, element);
+        scheme->element_get_child (static_cast<t8_eclass_t>(scheme_id), element, ichild, element);
         check_recursive_dfs_to_max_lvl (max_dfs_recursion_level);
-        scheme->element_get_parent (tree_class, element, element);
+        scheme->element_get_parent (static_cast<t8_eclass_t>(scheme_id), element, element);
       }
     }
   }
@@ -60,14 +60,14 @@ class TestDFS: public testing::TestWithParam<t8_eclass_t> {
   dfs_test_setup ()
   {
     scheme = t8_scheme_all_schemes ();
-    tree_class = GetParam ();
-    scheme->element_new (tree_class, 1, &element);
-    scheme->get_root (tree_class, element);
+    scheme_id = GetParam ();
+    scheme->element_new (static_cast<t8_eclass_t>(scheme_id), 1, &element);
+    scheme->get_root (static_cast<t8_eclass_t>(scheme_id), element);
   }
   void
   dfs_test_teardown ()
   {
-    scheme->element_destroy (tree_class, 1, &element);
+    scheme->element_destroy (static_cast<t8_eclass_t>(scheme_id), 1, &element);
     scheme->unref ();
   }
 
@@ -82,8 +82,8 @@ class TestDFS: public testing::TestWithParam<t8_eclass_t> {
     dfs_test_teardown ();
   }
 
+  int scheme_id;
   t8_scheme *scheme;
-  t8_eclass_t tree_class;
   t8_element_t *element;
 };
 

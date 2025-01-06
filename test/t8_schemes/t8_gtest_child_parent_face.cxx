@@ -31,26 +31,26 @@ class class_child_parent_face: public TestDFS {
   void
   check_element () override
   {
-    const int num_faces = scheme->element_get_num_faces (tree_class, element);
+    const int num_faces = scheme->element_get_num_faces (static_cast<t8_eclass_t>(scheme_id), element);
     for (int iface = 0; iface < num_faces; iface++) {
       /* Iterate over all faces and determine the facechildren*/
-      const int num_face_children = scheme->element_get_num_face_children (tree_class, element, iface);
+      const int num_face_children = scheme->element_get_num_face_children (static_cast<t8_eclass_t>(scheme_id), element, iface);
       t8_element_t **children;
       children = T8_ALLOC (t8_element_t *, num_face_children);
-      scheme->element_new (tree_class, num_face_children, children);
+      scheme->element_new (static_cast<t8_eclass_t>(scheme_id), num_face_children, children);
 
-      scheme->element_get_children_at_face (tree_class, element, iface, children, num_face_children, NULL);
+      scheme->element_get_children_at_face (static_cast<t8_eclass_t>(scheme_id), element, iface, children, num_face_children, NULL);
 
       for (int ifacechild = 0; ifacechild < num_face_children; ifacechild++) {
         /* Iterate over those children and determine the childface corresponding to the parentface */
-        const int childface = scheme->element_face_get_child_face (tree_class, element, iface, ifacechild);
+        const int childface = scheme->element_face_get_child_face (static_cast<t8_eclass_t>(scheme_id), element, iface, ifacechild);
         ASSERT_NE (childface, -1);
         /* Determine the parentface corresponding to the childface */
-        const int parentface = scheme->element_face_get_parent_face (tree_class, children[ifacechild], childface);
+        const int parentface = scheme->element_face_get_parent_face (static_cast<t8_eclass_t>(scheme_id), children[ifacechild], childface);
         /* Check, that this is equal to the face that we started with */
         EXPECT_EQ (iface, parentface);
       }
-      scheme->element_destroy (tree_class, num_face_children, children);
+      scheme->element_destroy (static_cast<t8_eclass_t>(scheme_id), num_face_children, children);
       T8_FREE (children);
     }
   }
@@ -80,4 +80,4 @@ TEST_P (class_child_parent_face, t8_recursive_dfs_child_parent_face)
   check_recursive_dfs_to_max_lvl (maxlvl);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_child_parent_face, class_child_parent_face, AllEclasses, print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_child_parent_face, class_child_parent_face, AllSchemes);
