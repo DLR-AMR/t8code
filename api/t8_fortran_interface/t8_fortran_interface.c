@@ -139,11 +139,11 @@ t8_fortran_adapt_by_coordinates_callback (t8_forest_t forest, t8_forest_t forest
   /* Coarsen if a family was given and return value is negative. */
   if (is_family) {
     /* The elements form a family */
-    T8_ASSERT (t8_elements_are_family (scheme, elements));
+    T8_ASSERT (t8_elements_are_family (scheme, tree_class, elements));
     /* Build the parent. */
     t8_element_t *parent;
-    t8_element_new (scheme, 1, &parent);
-    t8_element_parent (scheme, elements[0], parent);
+    t8_element_new (scheme, tree_class, 1, &parent);
+    t8_element_get_parent (scheme, tree_class, elements[0], parent);
     /* Get the coordinates of the parent. */
     t8_forest_element_centroid (forest_from, which_tree, parent, midpoint);
 
