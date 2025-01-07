@@ -130,7 +130,7 @@ gTestCompareEQ (const T& value1, const T& value2) -> std::enable_if_t<std::is_sa
  * \brief This function generates example data of the type \tparam T corresponding to the global 
  * element id of each element. It constructs one value per element. The data is defined according 
  * to the partition of \a initial_forest. Afterwards a call to \see t8_forest_partition_data() is made
- * which redistributes the example data array accordindly to the partition of \a partitioned_forest.
+ * which redistributes the example data array accordingly to the partition of \a partitioned_forest.
  * Once the partitioning of the example data array is finished, we check whether each process obtained
  * the correct data entries in the proper ordering.
  * 
