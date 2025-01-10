@@ -30,10 +30,10 @@
 #define t8_standalone_element_t t8_standalone_t
 
 constexpr uint8_t T8_ELEMENT_DIM[T8_ECLASS_COUNT] = { 0, 1, 2, 2, 3, 3, 3, 3 };
-//constexpr uint8_t T8_ELEMENT_MAXLEVEL[T8_ECLASS_COUNT] = { 255, 30, 29, 29, 21, 21, 21, 18 };
-//constexpr uint8_t T8_ELEMENT_MAXLEVEL[T8_ECLASS_COUNT] = {255, 15, 15, 15, 15, 15, 15, 15};
-//constexpr uint8_t T8_ELEMENT_MAXLEVEL[T8_ECLASS_COUNT] = {3, 3, 3, 3, 3, 3, 3, 3};
-constexpr uint8_t T8_ELEMENT_MAXLEVEL[T8_ECLASS_COUNT] = { 5, 5, 5, 5, 5, 5, 5, 5 };
+constexpr uint8_t T8_ELEMENT_MAXLEVEL[T8_ECLASS_COUNT] = { 255, 30, 29, 29, 21, 21, 21, 18 };
+// constexpr uint8_t T8_ELEMENT_MAXLEVEL[T8_ECLASS_COUNT] = {255, 15, 15, 15, 15, 15, 15, 15};
+// constexpr uint8_t T8_ELEMENT_MAXLEVEL[T8_ECLASS_COUNT] = { 3, 3, 3, 3, 3, 3, 3, 3 };
+// constexpr uint8_t T8_ELEMENT_MAXLEVEL[T8_ECLASS_COUNT] = { 5, 5, 5, 5, 5, 5, 5, 5 };
 //constexpr uint8_t T8_ELEMENT_MAXLEVEL[T8_ECLASS_COUNT] = {2, 2, 2, 2, 2, 2, 2, 2};
 constexpr uint8_t T8_ELEMENT_MAX_NUM_FACES[T8_ECLASS_COUNT] = { 1, 2, 4, 3, 6, 4, 5, 5 };
 constexpr uint8_t T8_ELEMENT_NUM_CHILDREN[T8_ECLASS_COUNT] = { 1, 2, 4, 4, 8, 8, 8, 10 };

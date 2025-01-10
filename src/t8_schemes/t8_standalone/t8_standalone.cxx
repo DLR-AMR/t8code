@@ -34,10 +34,11 @@ t8_scheme_new_standalone (void)
   builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_VERTEX>> ();
   builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_LINE>> ();
   builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_QUAD>> ();
-  //builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_TRIANGLE>> ();
+  builder.add_eclass_scheme<t8_default_scheme_tri> ();
   builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_HEX>> ();
-  // builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_TET>> ();
-  // builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_PRISM>> ();
+  builder.add_eclass_scheme<t8_default_scheme_tet> ();
+  builder.add_eclass_scheme<t8_default_scheme_prism> ();
+  builder.add_eclass_scheme<t8_default_scheme_pyramid> ();
   // builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_PYRAMID>> (); //ADD if PYRAMID in "element_get_shape"
   return builder.build_scheme ();
 }
