@@ -263,7 +263,8 @@ struct t8_standalone_scheme
   element_copy (const t8_element_t *source, t8_element_t *dest)
   {
     T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (source));
-    T8_ASSERT (source != dest);
+    if (source == dest)
+      return;
     memcpy ((t8_standalone_element_t<TEclass> *) dest, (const t8_standalone_element_t<TEclass> *) source,
             sizeof (t8_standalone_element_t<TEclass>));
     T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (dest));
@@ -400,6 +401,8 @@ struct t8_standalone_scheme
   static inline void
   element_get_child (const t8_element_t *elem, int childid, t8_element_t *child)
   {
+    t8_debugf ("childid: %i, num_children: %i\n", childid,
+               t8_standalone_scheme<TEclass>::element_get_num_children (elem));
     T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem));
     T8_ASSERT (0 <= childid);
     T8_ASSERT (childid < t8_standalone_scheme<TEclass>::element_get_num_children (elem));
@@ -902,21 +905,63 @@ struct t8_standalone_scheme
   static inline void
   element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id)
   {
-    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem));
 
     t8_standalone_element_t<TEclass> *p = (t8_standalone_element_t<TEclass> *) elem;
 
-    p->level = 0;
-    for (size_t i = 0; i < T8_ELEMENT_DIM[TEclass]; i++) {
-      p->coords[i] = 0;
-    }
-    p->type = 0;
+    t8_standalone_scheme<TEclass>::get_root ((t8_element_t *) p);
 
     if (level == 0) {
       T8_ASSERT (id == 0);
       return;
     }
-    t8_standalone_scheme<TEclass>::element_init_linear_id_recursive ((t8_element_t *) p, level, id);
+
+    T8_ASSERT (0 <= id);
+    T8_ASSERT (1 <= level && level <= T8_ELEMENT_MAXLEVEL[TEclass]);
+
+    if (id == 0) {
+      t8_standalone_scheme<TEclass>::element_get_first_descendant ((const t8_element_t *) p, (t8_element_t *) p, level);
+      return;
+    }
+
+    while (p->level < level) {
+      t8_linearidx_t sum_descendants_of_children_before = 0;
+      t8_linearidx_t num_descendants_of_child = 0;
+      int childindex = 0;
+
+      while (true) {
+                   t8_standalone_scheme<TEclass>::element_get_num_children ((const t8_element_t *) p));
+                   t8_standalone_element_t<TEclass> child;
+                   t8_standalone_scheme<TEclass>::element_get_child ((const t8_element_t *) p, childindex,
+                                                                     (t8_element_t *) &child);
+                   num_descendants_of_child
+                     = t8_standalone_scheme<TEclass>::element_count_leaves ((t8_element_t *) &child, level);
+
+                   /* Calculate the sum of descendants of the children until we reach the id */
+                   t8_linearidx_t sum_descendants_of_children_until_current
+                     = sum_descendants_of_children_before + num_descendants_of_child;
+
+                   if (sum_descendants_of_children_until_current > id) {
+                     break;
+                   }
+
+                   /* Go to the next child */
+                   sum_descendants_of_children_before = sum_descendants_of_children_until_current;
+                   childindex++;
+                   T8_ASSERT (childindex
+                              < t8_standalone_scheme<TEclass>::element_get_num_children ((const t8_element_t *) p));
+      }
+
+      t8_standalone_scheme<TEclass>::element_get_child ((const t8_element_t *) p, childindex, (t8_element_t *) p);
+      id -= sum_descendants_of_children_before;
+      if (id == 0) {
+        t8_standalone_scheme<TEclass>::element_get_first_descendant ((const t8_element_t *) p, (t8_element_t *) p,
+                                                                     level);
+        return;
+      }
+    }
+    T8_ASSERT (id < T8_ELEMENT_NUM_CHILDREN[TEclass]);
+    t8_standalone_scheme<TEclass>::element_get_child ((const t8_element_t *) p, id, (t8_element_t *) p);
+    return;
   }
 
   /** Compute the linear id of a given element in a hypothetical uniform
@@ -928,23 +973,37 @@ struct t8_standalone_scheme
   static inline t8_linearidx_t
   element_get_linear_id (const t8_element_t *elem, int level)
   {
-    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem));
 
     const t8_standalone_element_t<TEclass> *p = (const t8_standalone_element_t<TEclass> *) elem;
-    t8_standalone_element_t<TEclass> recursive_start;
-
+    t8_standalone_element_t<TEclass> ancestor;
     if (level < p->level) {
       t8_standalone_scheme<TEclass>::element_get_ancestor_equation ((const t8_element_t *) p, level,
-                                                                    (t8_element_t *) &recursive_start);
+                                                                    (t8_element_t *) &ancestor);
     }
     else {
-      t8_standalone_scheme<TEclass>::element_get_first_descendant ((const t8_element_t *) p,
-                                                                   (t8_element_t *) &recursive_start, level);
+      t8_standalone_scheme<TEclass>::element_get_first_descendant ((const t8_element_t *) p, (t8_element_t *) &ancestor,
+                                                                   level);
     }
-
     /* Maybe we can also input p into recursive function and calculate id directly for first desc */
-    t8_linearidx_t id
-      = t8_standalone_scheme<TEclass>::element_get_linear_id_recursive ((t8_element_t *) &recursive_start, 0, 0);
+    int id = 0;
+    int level_diff = 0;
+
+    while (ancestor.level != 0) {
+      const int childid = t8_standalone_scheme<TEclass>::element_get_child_id ((t8_element_t *) &ancestor);
+      t8_standalone_scheme<TEclass>::element_get_parent ((t8_element_t *) &ancestor, (t8_element_t *) &ancestor);
+      t8_linearidx_t parent_id = 0;
+      for (int ichild = 0; ichild < childid; ichild++) {
+        /* p is now parent, so compute child to get sibling of original p */
+        t8_standalone_element_t<TEclass> child;
+        t8_standalone_scheme<TEclass>::element_get_child ((const t8_element_t *) &ancestor, ichild,
+                                                          (t8_element_t *) &child);
+        t8_linearidx_t num_child_descendants
+          = t8_standalone_scheme<TEclass>::element_count_leaves ((t8_element_t *) &child, level);
+        parent_id += num_child_descendants;
+      }
+      id += parent_id;
+      level_diff += 1;
+    }
     T8_ASSERT (id >= 0);
     return id;
   }
@@ -1089,7 +1148,22 @@ struct t8_standalone_scheme
   element_get_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
                                 double *out_coords)
   {
-    SC_ABORT ("This function is not implemented yet.\n");
+    double *current_ref_coords = (double *) ref_coords;
+    double *current_out_coords = out_coords;
+    t8_element_coord_t h
+      = t8_standalone_scheme<TEclass>::element_get_len (t8_standalone_scheme<TEclass>::element_get_level (elem));
+
+    for (size_t coord = 0; coord < num_coords; ++coord) {
+      for (int dim = 0; dim < T8_ELEMENT_DIM[TEclass]; ++dim) {
+        current_out_coords[dim]
+          = ((t8_standalone_element_t<TEclass> *) elem)->coords[dim] + current_ref_coords[dim] * h;
+
+        current_out_coords[dim] /= (double) t8_standalone_scheme<TEclass>::get_root_len ();
+      }
+
+      current_ref_coords += T8_ECLASS_MAX_DIM;
+      current_out_coords += T8_ELEMENT_DIM[TEclass];
+    }
   }
 
   // ################################################____MEMORY____################################################
@@ -1161,7 +1235,7 @@ struct t8_standalone_scheme
     t8_standalone_element_t<TEclass> *el = (t8_standalone_element_t<TEclass> *) elem;
     /* Set all values to 0 */
     for (i = 0; i < length; i++) {
-      t8_standalone_scheme<TEclass>::element_init_linear_id ((t8_element_t *) (el + i), 0, 0);
+      t8_standalone_scheme<TEclass>::element_set_linear_id ((t8_element_t *) (el + i), 0, 0);
       T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid ((t8_element_t *) (el + i)));
     }
 #endif
@@ -1170,7 +1244,6 @@ struct t8_standalone_scheme
   static inline void
   element_deinit (int length, t8_element_t *elem)
   {
-    SC_ABORT ("This function is not implemented yet.\n");
   }
 
   /** Deallocate an array of elements.
@@ -1442,7 +1515,6 @@ struct t8_standalone_scheme
   element_get_linear_id_recursive (t8_element_t *elem, const t8_linearidx_t id, const int level_diff)
   {
     t8_standalone_element_t<TEclass> *p = (t8_standalone_element_t<TEclass> *) elem;
-
     if (p->level == 0)
       return id;
 
@@ -1486,7 +1558,7 @@ struct t8_standalone_scheme
     }
 
     if (level_diff == 1) {
-      T8_ASSERT (id <= T8_ELEMENT_NUM_CHILDREN[TEclass]);
+      T8_ASSERT (id < T8_ELEMENT_NUM_CHILDREN[TEclass]);
       t8_standalone_scheme<TEclass>::element_get_child ((const t8_element_t *) p, id, (t8_element_t *) p);
       return;
     }
@@ -1520,7 +1592,7 @@ struct t8_standalone_scheme
     t8_standalone_scheme<TEclass>::element_get_child ((const t8_element_t *) p, childindex, (t8_element_t *) &child);
 
     t8_linearidx_t num_descendants
-      = t8_standalone_scheme<TEclass>::num_descendants_at_leveldiff ((const t8_element_t *) &child, leveldiff);
+      = t8_standalone_scheme<TEclass>::num_descendants_at_leveldiff ((const t8_element_t *) &child, leveldiff - 1);
     return num_descendants;
   }
 
