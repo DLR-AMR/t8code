@@ -37,12 +37,14 @@
  * Note, that each rank has its own local/global tree. No trees are shared.
  */
 
-class recursive_tree: public testing::TestWithParam<t8_eclass_t> {
+class recursive_tree: public testing::TestWithParam<int> {
  protected:
   void
   SetUp () override
   {
-    tree_class = GetParam ();
+    scheme_id = GetParam ();
+    scheme = t8_scheme_all_schemes ();
+    tree_class = scheme->get_eclass_scheme_eclass (static_cast<t8_eclass_t>(scheme_id));
     if (tree_class == T8_ECLASS_ZERO) {
       GTEST_SKIP ();
     }
@@ -50,7 +52,6 @@ class recursive_tree: public testing::TestWithParam<t8_eclass_t> {
 
     /* Construct a cmesh such that each process will get one rooted tree */
     cmesh = t8_cmesh_new_bigmesh (tree_class, MPI_size, sc_MPI_COMM_WORLD);
-    scheme = t8_scheme_all_schemes ();
 
     scheme->ref ();
     t8_cmesh_ref (cmesh);
@@ -67,8 +68,12 @@ class recursive_tree: public testing::TestWithParam<t8_eclass_t> {
       t8_forest_unref (&forest);
       t8_forest_unref (&forest_base);
     }
+    else {
+      scheme->unref ();
+    }
   }
   int MPI_size;
+  int scheme_id;
   t8_eclass_t tree_class;
   t8_scheme *scheme;
   t8_cmesh_t cmesh;
@@ -150,4 +155,4 @@ TEST_P (recursive_tree, test_recursive)
   ASSERT_TRUE (t8_forest_is_equal (forest, forest_base));
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_recursive, recursive_tree, AllSchemes, print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_recursive, recursive_tree, AllSchemes);

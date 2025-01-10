@@ -28,32 +28,32 @@
 
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.h>
 
-class face_neigh: public testing::TestWithParam<t8_eclass_t> {
+class face_neigh: public testing::TestWithParam<int> {
  protected:
   void
   SetUp () override
   {
-    tree_class = GetParam ();
+    scheme_id = GetParam ();
     scheme = t8_scheme_all_schemes ();
-    scheme->element_new (tree_class, 1, &element);
-    scheme->element_new (tree_class, 1, &child);
-    scheme->element_new (tree_class, 1, &neigh);
-    scheme->get_root (tree_class, element);
+    scheme->element_new (static_cast<t8_eclass_t>(scheme_id), 1, &element);
+    scheme->element_new (static_cast<t8_eclass_t>(scheme_id), 1, &child);
+    scheme->element_new (static_cast<t8_eclass_t>(scheme_id), 1, &neigh);
+    scheme->get_root (static_cast<t8_eclass_t>(scheme_id), element);
   }
 
   void
   TearDown () override
   {
-    scheme->element_destroy (tree_class, 1, &element);
-    scheme->element_destroy (tree_class, 1, &child);
-    scheme->element_destroy (tree_class, 1, &neigh);
+    scheme->element_destroy (static_cast<t8_eclass_t>(scheme_id), 1, &element);
+    scheme->element_destroy (static_cast<t8_eclass_t>(scheme_id), 1, &child);
+    scheme->element_destroy (static_cast<t8_eclass_t>(scheme_id), 1, &neigh);
     scheme->unref ();
   }
   t8_element_t *element;
   t8_element_t *child;
   t8_element_t *neigh;
+  int scheme_id;
   t8_scheme *scheme;
-  t8_eclass_t tree_class;
 
 #ifdef T8_ENABLE_LESS_TESTS
   const int maxlvl = 3;
@@ -64,7 +64,7 @@ class face_neigh: public testing::TestWithParam<t8_eclass_t> {
 
 void
 t8_test_face_neighbor_inside (int num_faces, t8_element_t *element, t8_element_t *child, t8_element_t *neigh,
-                              t8_scheme *scheme, t8_eclass_t tree_class)
+                              t8_scheme *scheme, const int scheme_id)
 {
   int face_num;
   int check;
@@ -72,17 +72,17 @@ t8_test_face_neighbor_inside (int num_faces, t8_element_t *element, t8_element_t
   for (int iface = 0; iface < num_faces; iface++) {
     /* Compute the neighbors neighbor along a given face and check, if the result is the
      * original element. */
-    scheme->element_get_face_neighbor_inside (tree_class, child, neigh, iface, &face_num);
-    scheme->element_get_face_neighbor_inside (tree_class, neigh, element, face_num, &check);
+    scheme->element_get_face_neighbor_inside (static_cast<t8_eclass_t>(scheme_id), child, neigh, iface, &face_num);
+    scheme->element_get_face_neighbor_inside (static_cast<t8_eclass_t>(scheme_id), neigh, element, face_num, &check);
 
-    EXPECT_TRUE (scheme->element_is_equal (tree_class, child, element)) << "Got a false neighbor.";
-    EXPECT_ELEM_EQ (scheme, tree_class, child, element);
+    EXPECT_TRUE (scheme->element_is_equal (static_cast<t8_eclass_t>(scheme_id), child, element)) << "Got a false neighbor.";
+    EXPECT_ELEM_EQ (scheme, scheme_id, child, element);
   }
 }
 
 int
 t8_test_get_middle_child (t8_eclass_t eclass, int ilevel, t8_element_t *element, t8_element_t *child, t8_scheme *scheme,
-                          const t8_eclass_t tree_class)
+                          const int scheme_id)
 {
   /* Get the child number of the child in the middle of the element, depending of the shape of the element. */
   switch (eclass) {
@@ -93,24 +93,24 @@ t8_test_get_middle_child (t8_eclass_t eclass, int ilevel, t8_element_t *element,
   case T8_ECLASS_QUAD:
     /* There are no inner children in level one refinement. The test starts with level two, because this is the first level, inner children exists.
        The third child of level one child 0 is one of four middle children in level two. */
-    scheme->element_get_child (tree_class, element, 0, child);
-    scheme->element_copy (tree_class, child, element);
+    scheme->element_get_child (static_cast<t8_eclass_t>(scheme_id), element, 0, child);
+    scheme->element_copy (static_cast<t8_eclass_t>(scheme_id), child, element);
     return 3;
   case T8_ECLASS_TRIANGLE:
     return 3;
   case T8_ECLASS_HEX:
     /* There are no inner children in level one refinement. The test starts with level two, because this is the first level, inner children existing.
        The third child of level one child 4 is one of eight middle children in level two. */
-    scheme->element_get_child (tree_class, element, 4, child);
-    scheme->element_copy (tree_class, child, element);
+    scheme->element_get_child (static_cast<t8_eclass_t>(scheme_id), element, 4, child);
+    scheme->element_copy (static_cast<t8_eclass_t>(scheme_id), child, element);
     return 3;
   case T8_ECLASS_TET:
     return 3;
   case T8_ECLASS_PRISM:
     /* There are no inner children in level one refinement. The test starts with level two, because this is the first level, inner children existing.
        The last child of level one child 4 is one of eight middle children in level two. */
-    scheme->element_get_child (tree_class, element, 4, child);
-    scheme->element_copy (tree_class, child, element);
+    scheme->element_get_child (static_cast<t8_eclass_t>(scheme_id), element, 4, child);
+    scheme->element_copy (static_cast<t8_eclass_t>(scheme_id), child, element);
     return 7;
   case T8_ECLASS_PYRAMID: {
     t8_dpyramid_t *pyramid = (t8_dpyramid_t *) element;
@@ -135,31 +135,31 @@ TEST_P (face_neigh, check_not_inside_root)
 {
   /* Are the neighbors of the element really outside?. */
 
-  const int num_faces = scheme->element_get_num_faces (tree_class, element);
+  const int num_faces = scheme->element_get_num_faces (static_cast<t8_eclass_t>(scheme_id), element);
 
   for (int iface = 0; iface < num_faces; iface++) {
 
-    const int num_children = scheme->element_get_num_face_children (tree_class, element, iface);
+    const int num_children = scheme->element_get_num_face_children (static_cast<t8_eclass_t>(scheme_id), element, iface);
     int *child_indices = T8_ALLOC (int, num_children);
     t8_element_t **children = T8_ALLOC (t8_element_t *, num_children);
-    scheme->element_new (tree_class, num_children, children);
-    scheme->element_get_children_at_face (tree_class, element, iface, children, num_children, child_indices);
+    scheme->element_new (static_cast<t8_eclass_t>(scheme_id), num_children, children);
+    scheme->element_get_children_at_face (static_cast<t8_eclass_t>(scheme_id), element, iface, children, num_children, child_indices);
 
     for (int jchild = 0; jchild < num_children; jchild++) {
 
       const int child_id = child_indices[jchild];
-      const int face_contact = scheme->element_face_get_child_face (tree_class, element, iface, jchild);
+      const int face_contact = scheme->element_face_get_child_face (static_cast<t8_eclass_t>(scheme_id), element, iface, jchild);
 
-      scheme->element_get_child (tree_class, element, child_id, child);
+      scheme->element_get_child (static_cast<t8_eclass_t>(scheme_id), element, child_id, child);
       int face_num;
-      int inside = scheme->element_get_face_neighbor_inside (tree_class, child, neigh, face_contact, &face_num);
+      int inside = scheme->element_get_face_neighbor_inside (static_cast<t8_eclass_t>(scheme_id), child, neigh, face_contact, &face_num);
 
       ASSERT_EQ (inside, 0) << "Element is not outside.";
 
-      inside = scheme->element_get_tree_face (tree_class, child, face_contact);
+      inside = scheme->element_get_tree_face (static_cast<t8_eclass_t>(scheme_id), child, face_contact);
       ASSERT_EQ (inside, iface) << "Wrong face.";
     }
-    scheme->element_destroy (tree_class, num_children, children);
+    scheme->element_destroy (static_cast<t8_eclass_t>(scheme_id), num_children, children);
     T8_FREE (children);
     T8_FREE (child_indices);
   }
@@ -193,10 +193,11 @@ t8_recursive_check_diff (t8_element_t *element, t8_element_t *child, t8_element_
 TEST_P (face_neigh, recursive_check_diff)
 {
   int level = 1;
-  const int middle_child_id = t8_test_get_middle_child (tree_class, level, element, child, scheme, tree_class);
-  scheme->element_get_child (tree_class, element, middle_child_id, child);
+  const t8_eclass_t tree_class = scheme->get_eclass_scheme_eclass(static_cast<t8_eclass_t>(scheme_id));
+  const int middle_child_id = t8_test_get_middle_child (tree_class, level, element, child, scheme, scheme_id);
+  scheme->element_get_child (static_cast<t8_eclass_t>(scheme_id), element, middle_child_id, child);
 
   t8_recursive_check_diff (child, element, neigh, scheme, tree_class, maxlvl, level);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_face_neigh, face_neigh, AllSchemes, print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_face_neigh, face_neigh, AllSchemes);
