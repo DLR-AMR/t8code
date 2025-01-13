@@ -30,7 +30,7 @@
 #include <test/t8_gtest_macros.hxx>
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <test/t8_gtest_schemes.hxx>
 
 class ancestor: public testing::TestWithParam<t8_eclass> {
  protected:
@@ -38,7 +38,7 @@ class ancestor: public testing::TestWithParam<t8_eclass> {
   SetUp () override
   {
     eclass = GetParam ();
-    scheme = t8_scheme_new_default ();
+    scheme = t8_scheme_all_schemes ();
     scheme->element_new (eclass, 1, &correct_ancestor);
     scheme->element_new (eclass, 1, &desc_a);
     scheme->element_new (eclass, 1, &check);

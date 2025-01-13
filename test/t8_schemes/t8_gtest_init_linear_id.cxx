@@ -33,19 +33,19 @@ class linear_id: public testing::TestWithParam<t8_eclass> {
   void
   SetUp () override
   {
-    tree_class = GetParam ();
-    scheme = t8_scheme_new_default ();
-    scheme->element_new (tree_class, 1, &element);
-    scheme->element_new (tree_class, 1, &child);
-    scheme->element_new (tree_class, 1, &test);
-    scheme->get_root (tree_class, element);
+    scheme_id = GetParam ();
+    scheme = t8_scheme_all_schemes ();
+    scheme->element_new (static_cast<t8_eclass_t> (scheme_id), 1, &element);
+    scheme->element_new (static_cast<t8_eclass_t> (scheme_id), 1, &child);
+    scheme->element_new (static_cast<t8_eclass_t> (scheme_id), 1, &test);
+    scheme->get_root (static_cast<t8_eclass_t> (scheme_id), element);
   }
   void
   TearDown () override
   {
-    scheme->element_destroy (tree_class, 1, &element);
-    scheme->element_destroy (tree_class, 1, &child);
-    scheme->element_destroy (tree_class, 1, &test);
+    scheme->element_destroy (static_cast<t8_eclass_t> (scheme_id), 1, &element);
+    scheme->element_destroy (static_cast<t8_eclass_t> (scheme_id), 1, &child);
+    scheme->element_destroy (static_cast<t8_eclass_t> (scheme_id), 1, &test);
     scheme->unref ();
   }
   t8_element_t *element;
@@ -76,27 +76,32 @@ TEST_P (linear_id, uniform_forest)
   const int maxlvl = 6;
 #endif
   /* Construct a forest with a single element of the current class*/
-  cmesh = t8_cmesh_new_from_class (tree_class, comm);
+  t8_eclass_t eclass = scheme->get_eclass_scheme_eclass (static_cast<t8_eclass_t> (scheme_id));
+  t8_debugf ("scheme_id: %i, eclass: %s\n", scheme_id, t8_eclass_to_string[eclass]);
+  cmesh = t8_cmesh_new_from_class (eclass, comm);
   t8_cmesh_ref (cmesh);
   forest = t8_forest_new_uniform (cmesh, scheme, 0, 0, comm);
-  const t8_scheme *tc_scheme = t8_forest_get_scheme (forest);
   scheme->ref ();
   for (int level = 0; level < maxlvl; level++) {
     /*Get the number of local trees*/
     const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
+    t8_debugf ("level: %i, num_local_trees: %i\n", level, num_local_trees);
     /*Iterate over trees */
     for (t8_locidx_t tree_id = 0; tree_id < num_local_trees; tree_id++) {
       /*Get the number of elements in the tree*/
       const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, tree_id);
       /*Manually compute the id of the first element*/
-      const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, tree_id);
-      const t8_locidx_t shift = tc_scheme->count_leaves_from_root (tree_class, level) - num_elements_in_tree;
+      const t8_locidx_t shift
+        = scheme->count_leaves_from_root (static_cast<t8_eclass_t> (scheme_id), level) - num_elements_in_tree;
       /*Iterate over elements */
+      t8_debugf ("tree_id: %i, num_elements_in_tree: %i\n", tree_id, num_elements_in_tree);
       for (t8_locidx_t id_iter = 0; id_iter < num_elements_in_tree; id_iter++) {
+        t8_debugf ("id_iter: %i\n", id_iter);
         /*Get the current element*/
         const t8_element_t *element = t8_forest_get_element_in_tree (forest, tree_id, id_iter);
         /*Get the ID of the element at current level */
-        const t8_locidx_t id = tc_scheme->element_get_linear_id (tree_class, element, level);
+        scheme->element_debug_print (static_cast<t8_eclass_t> (scheme_id), element);
+        const t8_locidx_t id = scheme->element_get_linear_id (static_cast<t8_eclass_t> (scheme_id), element, level);
         /* Check the computed id*/
         EXPECT_EQ (id, id_iter + shift);
       }
@@ -125,21 +130,25 @@ TEST_P (linear_id, id_at_other_level)
 #endif
   for (int level = 0; level < max_lvl; level++) {
     /* Compute the number of elements at the current level */
-    const t8_linearidx_t num_desc = scheme->count_leaves_from_root (tree_class, level);
+    const t8_linearidx_t num_desc = scheme->count_leaves_from_root (static_cast<t8_eclass_t> (scheme_id), level);
     for (t8_linearidx_t id = 0; id < num_desc; id++) {
       /* Set the child at the current level */
-      scheme->element_set_linear_id (tree_class, child, level, id);
+      scheme->element_set_linear_id (static_cast<t8_eclass_t> (scheme_id), child, level, id);
       /* Compute the id of child at a higher level. */
-      const t8_linearidx_t id_at_lvl = scheme->element_get_linear_id (tree_class, child, level + add_lvl);
+      const t8_linearidx_t id_at_lvl
+        = scheme->element_get_linear_id (static_cast<t8_eclass_t> (scheme_id), child, level + add_lvl);
       /* Compute how many leaves/descendants child has at level level+add_lvl */
-      const t8_linearidx_t child_desc = scheme->element_count_leaves (tree_class, child, level + add_lvl);
+      const t8_linearidx_t child_desc
+        = scheme->element_count_leaves (static_cast<t8_eclass_t> (scheme_id), child, level + add_lvl);
       /* Iterate over all descendants */
       for (t8_linearidx_t leaf_id = 0; leaf_id < child_desc; leaf_id++) {
         /* Set the descendant (test) at level of the descendants and shift the 
          * leaf_id into the region of the descendants of child*/
-        scheme->element_set_linear_id (tree_class, test, level + add_lvl, id_at_lvl + leaf_id);
+        scheme->element_set_linear_id (static_cast<t8_eclass_t> (scheme_id), test, level + add_lvl,
+                                       id_at_lvl + leaf_id);
         /* Compute the id of the descendant (test) at the current level */
-        const t8_linearidx_t test_id = scheme->element_get_linear_id (tree_class, test, level);
+        const t8_linearidx_t test_id
+          = scheme->element_get_linear_id (static_cast<t8_eclass_t> (scheme_id), test, level);
         /* test_id and id should be equal. */
         EXPECT_EQ (id, test_id);
       }

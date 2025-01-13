@@ -31,24 +31,26 @@ class class_successor: public testing::TestWithParam<t8_eclass_t> {
   void
   SetUp () override
   {
-    tree_class = GetParam ();
-    scheme = t8_scheme_new_default ();
-    scheme->element_new (tree_class, 1, &element);
-    scheme->element_new (tree_class, 1, &successor);
-    scheme->element_new (tree_class, 1, &child);
-    scheme->element_new (tree_class, 1, &last);
+    scheme = t8_scheme_all_schemes ();
+    scheme_id = GetParam ();
+    scheme->element_new (static_cast<t8_eclass_t> (scheme_id), 1, &element);
+    scheme->element_new (static_cast<t8_eclass_t> (scheme_id), 1, &successor);
+    scheme->element_new (static_cast<t8_eclass_t> (scheme_id), 1, &child);
+    scheme->element_new (static_cast<t8_eclass_t> (scheme_id), 1, &last);
 
-    scheme->get_root (tree_class, element);
+    scheme->get_root (static_cast<t8_eclass_t> (scheme_id), element);
+
+    tree_class = scheme->get_eclass_scheme_eclass (static_cast<t8_eclass_t> (scheme_id));
     if (tree_class == T8_ECLASS_VERTEX)
       GTEST_SKIP ();
   }
   void
   TearDown () override
   {
-    scheme->element_destroy (tree_class, 1, &element);
-    scheme->element_destroy (tree_class, 1, &successor);
-    scheme->element_destroy (tree_class, 1, &child);
-    scheme->element_destroy (tree_class, 1, &last);
+    scheme->element_destroy (static_cast<t8_eclass_t> (scheme_id), 1, &element);
+    scheme->element_destroy (static_cast<t8_eclass_t> (scheme_id), 1, &successor);
+    scheme->element_destroy (static_cast<t8_eclass_t> (scheme_id), 1, &child);
+    scheme->element_destroy (static_cast<t8_eclass_t> (scheme_id), 1, &last);
     scheme->unref ();
   }
   t8_eclass_t tree_class;
@@ -65,41 +67,41 @@ class class_successor: public testing::TestWithParam<t8_eclass_t> {
  */
 static void
 t8_recursive_successor (t8_element_t *element, t8_element_t *successor, t8_element_t *child, t8_element_t *last,
-                        t8_scheme *scheme, const t8_eclass_t tree_class, const int maxlvl)
+                        t8_scheme *scheme, const int scheme_id, const int maxlvl)
 {
-  const int level = scheme->element_get_level (tree_class, element);
-  ASSERT_TRUE (scheme->element_get_level (tree_class, element) <= maxlvl
-               && maxlvl <= scheme->get_maxlevel (tree_class) - 1);
-  const int num_children = scheme->element_get_num_children (tree_class, element);
+  const int level = scheme->element_get_level (static_cast<t8_eclass_t> (scheme_id), element);
+  ASSERT_TRUE (scheme->element_get_level (static_cast<t8_eclass_t> (scheme_id), element) <= maxlvl
+               && maxlvl <= scheme->get_maxlevel (static_cast<t8_eclass_t> (scheme_id)) - 1);
+  const int num_children = scheme->element_get_num_children (static_cast<t8_eclass_t> (scheme_id), element);
   if (level == maxlvl - 1) {
     /* Check, if the successor of the last recursion is the first child of
      * of this element.
      */
-    scheme->element_get_child (tree_class, element, 0, child);
-    EXPECT_ELEM_EQ (scheme, tree_class, child, successor);
+    scheme->element_get_child (static_cast<t8_eclass_t> (scheme_id), element, 0, child);
+    EXPECT_ELEM_EQ (scheme, scheme_id, child, successor);
     /*Check if the successor in this element is computed correctly */
     for (int ichild = 1; ichild < num_children; ichild++) {
-      EXPECT_EQ (scheme->element_get_level (tree_class, child), maxlvl);
-      scheme->element_construct_successor (tree_class, child, successor);
-      scheme->element_get_child (tree_class, element, ichild, child);
-      EXPECT_ELEM_EQ (scheme, tree_class, child, successor);
+      EXPECT_EQ (scheme->element_get_level (static_cast<t8_eclass_t> (scheme_id), child), maxlvl);
+      scheme->element_construct_successor (static_cast<t8_eclass_t> (scheme_id), child, successor);
+      scheme->element_get_child (static_cast<t8_eclass_t> (scheme_id), element, ichild, child);
+      EXPECT_ELEM_EQ (scheme, scheme_id, child, successor);
     }
     /*If the iterator is the last element, the test can finish */
-    if (scheme->element_is_equal (tree_class, last, child)) {
+    if (scheme->element_is_equal (static_cast<t8_eclass_t> (scheme_id), last, child)) {
       return;
     }
     /*Compute the next successor / "jump" out of the current element */
     else {
-      EXPECT_EQ (scheme->element_get_level (tree_class, child), maxlvl);
-      scheme->element_construct_successor (tree_class, child, successor);
+      EXPECT_EQ (scheme->element_get_level (static_cast<t8_eclass_t> (scheme_id), child), maxlvl);
+      scheme->element_construct_successor (static_cast<t8_eclass_t> (scheme_id), child, successor);
     }
   }
   else {
     /*DFS run through the elements */
     for (int ichild = 0; ichild < num_children; ichild++) {
-      scheme->element_get_child (tree_class, element, ichild, child);
-      t8_recursive_successor (child, successor, element, last, scheme, tree_class, maxlvl);
-      scheme->element_get_parent (tree_class, child, element);
+      scheme->element_get_child (static_cast<t8_eclass_t> (scheme_id), element, ichild, child);
+      t8_recursive_successor (child, successor, element, last, scheme, scheme_id, maxlvl);
+      scheme->element_get_parent (static_cast<t8_eclass_t> (scheme_id), child, element);
     }
   }
 }
@@ -110,24 +112,25 @@ t8_recursive_successor (t8_element_t *element, t8_element_t *successor, t8_eleme
  */
 static void
 t8_deep_successor (t8_element_t *element, t8_element_t *successor, t8_element_t *child, t8_scheme *scheme,
-                   const t8_eclass_t tree_class)
+                   const int scheme_id)
 {
-  const int maxlvl = scheme->get_maxlevel (tree_class);
-  const int num_children = scheme->element_get_num_children (tree_class, element);
+  const int maxlvl = scheme->get_maxlevel (static_cast<t8_eclass_t> (scheme_id));
+  const int num_children = scheme->element_get_num_children (static_cast<t8_eclass_t> (scheme_id), element);
 
   for (int ichild = 0; ichild < num_children; ichild++) {
-    scheme->element_get_child (tree_class, element, ichild, child);
+    scheme->element_get_child (static_cast<t8_eclass_t> (scheme_id), element, ichild, child);
     /* Go to the children at maximum level. */
-    const int num_children_child = scheme->element_get_num_children (tree_class, child);
+    const int num_children_child = scheme->element_get_num_children (static_cast<t8_eclass_t> (scheme_id), child);
     for (int jchild = 0; jchild < num_children_child; jchild++) {
-      scheme->element_get_child (tree_class, child, jchild, element);
+      scheme->element_get_child (static_cast<t8_eclass_t> (scheme_id), child, jchild, element);
       /* Check the computation of the successor. */
-      ASSERT_TRUE (scheme->element_is_equal (tree_class, element, successor)) << "Wrong Successor at Maxlvl.\n";
+      ASSERT_TRUE (scheme->element_is_equal (static_cast<t8_eclass_t> (scheme_id), element, successor))
+        << "Wrong Successor at Maxlvl.\n";
       /* Compute the next successor. */
-      EXPECT_EQ (scheme->element_get_level (tree_class, successor), maxlvl);
-      scheme->element_construct_successor (tree_class, successor, successor);
+      EXPECT_EQ (scheme->element_get_level (static_cast<t8_eclass_t> (scheme_id), successor), maxlvl);
+      scheme->element_construct_successor (static_cast<t8_eclass_t> (scheme_id), successor, successor);
     }
-    scheme->element_get_parent (tree_class, child, element);
+    scheme->element_get_parent (static_cast<t8_eclass_t> (scheme_id), child, element);
   }
 }
 
@@ -141,14 +144,16 @@ TEST_P (class_successor, test_recursive_and_deep_successor)
 
   /* Test at lower level. */
   for (int ilevel = 1; ilevel <= maxlvl; ilevel++) {
-    scheme->element_set_linear_id (tree_class, successor, ilevel, 0);
-    scheme->element_get_last_descendant (tree_class, element, last, ilevel);
-    t8_recursive_successor (element, successor, child, last, scheme, tree_class, ilevel);
+    scheme->element_set_linear_id (static_cast<t8_eclass_t> (scheme_id), successor, ilevel, 0);
+    scheme->element_get_last_descendant (static_cast<t8_eclass_t> (scheme_id), element, last, ilevel);
+    t8_recursive_successor (element, successor, child, last, scheme, scheme_id, ilevel);
   }
   /* Test at Maxlevel. */
-  scheme->element_set_linear_id (tree_class, element, scheme->get_maxlevel (tree_class) - 2, 0);
-  scheme->element_set_linear_id (tree_class, successor, scheme->get_maxlevel (tree_class), 0);
-  t8_deep_successor (element, successor, last, scheme, tree_class);
+  scheme->element_set_linear_id (static_cast<t8_eclass_t> (scheme_id), element,
+                                 scheme->get_maxlevel (static_cast<t8_eclass_t> (scheme_id)) - 2, 0);
+  scheme->element_set_linear_id (static_cast<t8_eclass_t> (scheme_id), successor,
+                                 scheme->get_maxlevel (static_cast<t8_eclass_t> (scheme_id)), 0);
+  t8_deep_successor (element, successor, last, scheme, scheme_id);
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_successor, class_successor, AllEclasses, print_eclass);
