@@ -40,17 +40,17 @@ class class_test_pack: public TestDFS {
 
     /* Compute pack size and allocate send buffer */
     int pack_size;
-    const int num_children = scheme->element_get_num_children (static_cast<t8_eclass_t>(scheme_id), element);
-    scheme->element_MPI_Pack_size (static_cast<t8_eclass_t>(scheme_id), count, comm, &pack_size);
+    const int num_children = scheme->element_get_num_children (eclass, element);
+    scheme->element_MPI_Pack_size (eclass, count, comm, &pack_size);
     pack_size *= (num_children + 1);
     char *sendbuf = T8_ALLOC (char, pack_size);
 
     /* pack data */
-    scheme->element_MPI_Pack (static_cast<t8_eclass_t>(scheme_id), &element, count, sendbuf, pack_size, &position, comm);
+    scheme->element_MPI_Pack (eclass, &element, count, sendbuf, pack_size, &position, comm);
     t8_element_t **children = T8_ALLOC (t8_element_t *, num_children);
-    scheme->element_new (static_cast<t8_eclass_t>(scheme_id), num_children, children);
-    scheme->element_get_children (static_cast<t8_eclass_t>(scheme_id), element, num_children, children);
-    scheme->element_MPI_Pack (static_cast<t8_eclass_t>(scheme_id), children, num_children, sendbuf, pack_size, &position, comm);
+    scheme->element_new (eclass, num_children, children);
+    scheme->element_get_children (eclass, element, num_children, children);
+    scheme->element_MPI_Pack (eclass, children, num_children, sendbuf, pack_size, &position, comm);
 
     int recvBufferSize = pack_size;
     char *recvbuf = T8_ALLOC (char, recvBufferSize);
@@ -78,22 +78,22 @@ class class_test_pack: public TestDFS {
 #endif
     /* Unpack data */
     position = 0;
-    scheme->element_MPI_Unpack (static_cast<t8_eclass_t>(scheme_id), recvbuf, recvBufferSize, &position, &element_compare, count, comm);
+    scheme->element_MPI_Unpack (eclass, recvbuf, recvBufferSize, &position, &element_compare, count, comm);
     t8_element_t **children_compare = T8_ALLOC (t8_element_t *, num_children);
-    scheme->element_new (static_cast<t8_eclass_t>(scheme_id), num_children, children_compare);
-    scheme->element_MPI_Unpack (static_cast<t8_eclass_t>(scheme_id), recvbuf, recvBufferSize, &position, children_compare, num_children, comm);
+    scheme->element_new (eclass, num_children, children_compare);
+    scheme->element_MPI_Unpack (eclass, recvbuf, recvBufferSize, &position, children_compare, num_children, comm);
 
     /* free buffers */
     T8_FREE (sendbuf);
     T8_FREE (recvbuf);
 
     /* Check that data was sent and received correctly */
-    EXPECT_ELEM_EQ (scheme, scheme_id, element, element_compare);
+    EXPECT_ELEM_EQ (scheme, eclass, element, element_compare);
     for (int ichild = 0; ichild < num_children; ichild++) {
-      EXPECT_ELEM_EQ (scheme, scheme_id, children[ichild], children_compare[ichild]);
+      EXPECT_ELEM_EQ (scheme, eclass, children[ichild], children_compare[ichild]);
     }
-    scheme->element_destroy (static_cast<t8_eclass_t>(scheme_id), num_children, children);
-    scheme->element_destroy (static_cast<t8_eclass_t>(scheme_id), num_children, children_compare);
+    scheme->element_destroy (eclass, num_children, children);
+    scheme->element_destroy (eclass, num_children, children_compare);
     T8_FREE (children);
     T8_FREE (children_compare);
   }
@@ -104,7 +104,7 @@ class class_test_pack: public TestDFS {
   {
     dfs_test_setup ();
     /* Get element and initialize it */
-    scheme->element_new (static_cast<t8_eclass_t>(scheme_id), 1, &element_compare);
+    scheme->element_new (eclass, 1, &element_compare);
 
     comm = sc_MPI_COMM_WORLD;
     mpiret = sc_MPI_Comm_rank (comm, &rank);
@@ -114,7 +114,7 @@ class class_test_pack: public TestDFS {
   TearDown () override
   {
     /* Destroy element */
-    scheme->element_destroy (static_cast<t8_eclass_t>(scheme_id), 1, &element_compare);
+    scheme->element_destroy (eclass, 1, &element_compare);
 
     /* Destroy DFS test */
     dfs_test_teardown ();

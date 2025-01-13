@@ -28,6 +28,7 @@
 #define T8_DTET_CONNECTIVITY_H
 
 #include <t8.h>
+#include <t8_eclass.h>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -91,7 +92,7 @@ extern const int t8_dtet_face_child_id_by_type[6][4][4];
  * The other 2 corner are given in counterclockwise order as seen from
  * outside of the tet.
  */
-extern const int t8_dtet_face_corner[4][3];
+#define t8_dtet_face_corner t8_face_vertex_to_tree_vertex[T8_ECLASS_TET]
 
 /** For each combination parent_type, type with parent_type != type,
  * provide the face number of the face of a tet that lies within a face of

@@ -35,12 +35,12 @@ class class_test_boundary_extrude: public TestDFS {
   void
   check_element () override
   {
-    const int num_faces = scheme->element_get_num_faces (static_cast<t8_eclass_t>(scheme_id), element);
+    const int num_faces = scheme->element_get_num_faces (eclass, element);
     for (int iface = 0; iface < num_faces; iface++) {
       /* Iterate over all faces that are also root faces and determine the face element */
-      if (scheme->element_is_root_boundary (static_cast<t8_eclass_t>(scheme_id), element, iface)) {
+      if (scheme->element_is_root_boundary (eclass, element, iface)) {
         /* Get face scheme */
-        const int tree_face = scheme->element_get_tree_face (static_cast<t8_eclass_t>(scheme_id), element, iface);
+        const int tree_face = scheme->element_get_tree_face (eclass, element, iface);
 
         /* Note: This wont work with non-default schemes, where the order of schemes is not the same as
          * in the default scheme. */
@@ -49,11 +49,11 @@ class class_test_boundary_extrude: public TestDFS {
         t8_element_t *boundary;
         scheme->element_new (face_eclass, 1, &boundary);
 
-        scheme->element_get_boundary_face (static_cast<t8_eclass_t>(scheme_id), element, iface, boundary);
+        scheme->element_get_boundary_face (eclass, element, iface, boundary);
 
-        scheme->element_extrude_face (static_cast<t8_eclass_t>(scheme_id), boundary, check, tree_face);
+        scheme->element_extrude_face (eclass, boundary, check, tree_face);
 
-        EXPECT_ELEM_EQ (scheme, scheme_id, element, check);
+        EXPECT_ELEM_EQ (scheme, eclass, element, check);
 
         scheme->element_destroy (face_eclass, 1, &boundary);
       }
@@ -66,14 +66,14 @@ class class_test_boundary_extrude: public TestDFS {
   {
     dfs_test_setup ();
     /* Get element and initialize it */
-    scheme->element_new (static_cast<t8_eclass_t>(scheme_id), 1, &check);
-    tree_class = scheme->get_eclass_scheme_eclass (static_cast<t8_eclass_t>(scheme_id));
+    scheme->element_new (eclass, 1, &check);
+    tree_class = scheme->get_eclass_scheme_eclass (eclass);
   }
   void
   TearDown () override
   {
     /* Destroy element */
-    scheme->element_destroy (static_cast<t8_eclass_t>(scheme_id), 1, &check);
+    scheme->element_destroy (eclass, 1, &check);
 
     /* Destroy DFS test */
     dfs_test_teardown ();
