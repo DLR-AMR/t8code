@@ -4,11 +4,21 @@ include(cmake/GitProjectVersion.cmake)
 
 project( T8CODE
   DESCRIPTION "Parallel algorithms and data structures for tree-based AMR with arbitrary element shapes."
-  LANGUAGES C CXX Fortran
+  LANGUAGES C CXX
   VERSION "${T8CODE_VERSION_MAJOR}.${T8CODE_VERSION_MINOR}.${T8CODE_VERSION_PATCH}" )
 
-include( CTest )
-include(CMakeDependentOption)
+option( T8CODE_BUILD_AS_SHARED_LIBRARY "Whether t8code should be built as a shared or a static library" ON )
+option( T8CODE_BUILD_PEDANTIC "Compile t8code with `-pedantic` as done in the Github CI." OFF )
+option( T8CODE_BUILD_WALL "Compile t8code with `-Wall` as done in the Github CI." OFF )
+option( T8CODE_BUILD_WERROR "Compile t8code with `-Werror` as done in the Github CI." OFF )
+option( T8CODE_BUILD_EXTRA_WARNINGS "Compile t8code with extra warnings as done in the Github CI." OFF )
+option( T8CODE_EXPORT_COMPILE_COMMANDS "Export the compile commands as json. Can be used by IDEs for code completion (e.g. intellisense, clangd)" OFF )
+option( T8CODE_BUILD_TESTS "Build t8code's automated tests" ON )
+option( T8CODE_BUILD_TUTORIALS "Build t8code's tutorials" ON )
+option( T8CODE_BUILD_EXAMPLES "Build t8code's examples" ON )
+option( T8CODE_BUILD_BENCHMARKS "Build t8code's benchmarks" ON )
+option( T8CODE_BUILD_FORTRAN_INTERFACE "Build t8code's Fortran interface" OFF )
+option( T8CODE_ENABLE_LESS_TESTS "Tests not as thoroughly to speed up the test suite. Tests the same functionality. (WARNING: Use with care.)" OFF )
 
 option( T8CODE_ENABLE_MPI "Enable t8code's features which rely on MPI" ON )
 option( T8CODE_ENABLE_VTK "Enable t8code's features which rely on VTK" OFF )
@@ -69,6 +79,10 @@ set( CMAKE_CXX_STANDARD_REQUIRED ON )
 set( CMAKE_CXX_EXTENSIONS OFF )
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+
+if( T8CODE_BUILD_FORTRAN_INTERFACE )
+    enable_language( Fortran )
+endif()
 
 if( T8CODE_ENABLE_MPI )
     if( T8CODE_BUILD_FORTRAN_INTERFACE )
@@ -162,7 +176,6 @@ if ( T8CODE_BUILD_DOCUMENTATION )
 endif()
 
 if( T8CODE_BUILD_FORTRAN_INTERFACE )
-    enable_language( Fortran )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/api/t8_fortran_interface )
 
     if( NOT T8CODE_ENABLE_MPI )

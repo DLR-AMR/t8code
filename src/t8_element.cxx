@@ -20,7 +20,6 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_element.hxx>
 #include <t8_element.h>
 
 /* We want to export the whole implementation to be callable from "C" */
@@ -50,51 +49,5 @@ const double t8_element_centroid_ref_coords[T8_ECLASS_COUNT][3] = {
   { 0.6, 0.6, 0.2 }          /* T8_ECLASS_PYRAMID */
 };
 /* clang-format on */
-
-void
-t8_scheme_cxx_ref (t8_scheme_cxx_t *scheme)
-{
-  T8_ASSERT (scheme != NULL);
-
-  sc_refcount_ref (&scheme->rc);
-}
-
-void
-t8_scheme_cxx_unref (t8_scheme_cxx_t **pscheme)
-{
-  t8_scheme_cxx_t *scheme;
-
-  T8_ASSERT (pscheme != NULL);
-  scheme = *pscheme;
-  T8_ASSERT (scheme != NULL);
-
-  if (sc_refcount_unref (&scheme->rc)) {
-    t8_scheme_cxx_destroy (scheme);
-    *pscheme = NULL;
-  }
-}
-
-void
-t8_scheme_cxx_destroy (t8_scheme_cxx_t *s)
-{
-  int t;
-
-  T8_ASSERT (s != NULL);
-  T8_ASSERT (s->rc.refcount == 0);
-
-  for (t = 0; t < T8_ECLASS_COUNT; ++t) {
-    if (s->eclass_schemes[t] != NULL) {
-      delete s->eclass_schemes[t];
-    }
-  }
-  T8_FREE (s);
-}
-
-/* Default implementation for the element size */
-size_t
-t8_eclass_scheme::t8_element_size () const
-{
-  return element_size;
-}
 
 T8_EXTERN_C_END ();
