@@ -145,15 +145,9 @@ struct t8_standalone_scheme
   {
     T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem));
 
-    const t8_standalone_element_t<TEclass> *p = (const t8_standalone_element_t<TEclass> *) elem;
-    T8_ASSERT (0 <= p->level && p->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
+    const t8_standalone_element_t<TEclass> *el = (const t8_standalone_element_t<TEclass> *) elem;
+    T8_ASSERT (0 <= el->level && el->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
 
-    if constexpr (TEclass == T8_ECLASS_PYRAMID) {
-      if (element_get_shape ((const t8_element_t *) p) == T8_ECLASS_PYRAMID) {
-        return 5;
-      }
-      return 4;
-    }
     return T8_ELEMENT_NUM_CORNERS[TEclass];
   }
 
@@ -185,18 +179,9 @@ struct t8_standalone_scheme
   {
     T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem));
 
-    const t8_standalone_element_t<TEclass> *p = (const t8_standalone_element_t<TEclass> *) elem;
-    T8_ASSERT (0 <= p->level && p->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
+    const t8_standalone_element_t<TEclass> *el = (const t8_standalone_element_t<TEclass> *) elem;
+    T8_ASSERT (0 <= el->level && el->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
 
-    /* Pyramids are not implemented in this scheme yet*/
-    // if constexpr (TEclass == T8_ECLASS_PYRAMID) {
-    //   if (p->type == T8_DPYRAMID_FIRST_PYRA_TYPE || p->type == T8_DPYRAMID_SECOND_PYRA_TYPE) {
-    //     return T8_ECLASS_PYRAMID;
-    //   }
-    //   else {
-    //     return T8_ECLASS_TET;
-    //   }
-    // }
     return TEclass;
   }
 
@@ -287,7 +272,9 @@ struct t8_standalone_scheme
       if (el1->coords[idim] != el2->coords[idim])
         return 0;
     }
-    return el1->type == el2->type;
+    /* return el1->type == el2->type;
+    ToDo-Type */
+    return 1;
   }
 
   // ################################################____ACCESSOR____################################################
@@ -342,12 +329,12 @@ struct t8_standalone_scheme
     T8_ASSERT (el->level > 0);
 
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      const t8_cube_id_t cube_id = compute_cubeid (el, el->level);
-      parent_elem->type = t8_element_type_cubeid_to_parenttype<TEclass>[el->type.to_ulong ()][cube_id];
+      SC_ABORT ("Only implemented for hypercubes.\n");
     }
 
     const t8_element_coord_t length = t8_standalone_scheme<TEclass>::element_get_len ((el->level));
     // Could be a bithelper function?
+    /* Set coordinates to zero*/
     for (int i = 0; i < T8_ELEMENT_DIM[TEclass]; i++) {
       parent_elem->coords[i] = el->coords[i] & ~length;
     }
@@ -371,7 +358,7 @@ struct t8_standalone_scheme
 
     const t8_standalone_element_t<TEclass> *el = (const t8_standalone_element_t<TEclass> *) elem;
     if (el->level == 0)
-      return 1;
+      SC_ABORT ("The root element has no siblings.\n");
     T8_ASSERT (0 < el->level && el->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
     t8_standalone_element_t<TEclass> parent;
     t8_standalone_scheme<TEclass>::element_get_parent ((const t8_element_t *) el, (t8_element_t *) &parent);
@@ -423,8 +410,7 @@ struct t8_standalone_scheme
     /* Compute the cube id and shift the coordinates accordingly */
     t8_cube_id_t cube_id;
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      cube_id = t8_element_type_Iloc_to_childcubeid<TEclass>[el->type.to_ulong ()][childid];
-      c->type = t8_element_type_Iloc_to_childtype<TEclass>[el->type.to_ulong ()][childid];
+      SC_ABORT ("Only implemented for hypercubes.\n");
     }
     else {
       cube_id = childid;
@@ -510,7 +496,7 @@ struct t8_standalone_scheme
     const t8_cube_id_t cube_id = compute_cubeid (el, el->level);
     int8_t child_id;
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      child_id = t8_element_type_cubeid_to_Iloc<TEclass>[el->type.to_ulong ()][cube_id];
+      SC_ABORT ("Only implemented for hypercubes.\n");
     }
     else {
       child_id = cube_id;
@@ -599,14 +585,7 @@ struct t8_standalone_scheme
     int cube_ancestor_level = t8_standalone_scheme<TEclass>::element_get_cube_ancestor_level (el1, el2);
     int real_level = cube_ancestor_level;
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      t8_element_type_t<TEclass> ancestor_type, ancestor2_type;
-      /* iterate through the levels until the ancestor types match*/
-      do {
-        ancestor_type = t8_standalone_scheme<TEclass>::element_compute_type_at_level (el1, real_level);
-        ancestor2_type = t8_standalone_scheme<TEclass>::element_compute_type_at_level (el2, real_level);
-        real_level--;
-      } while (ancestor_type != ancestor2_type);
-      real_level++; /* we subtracted once too much */
+      SC_ABORT ("Only implemented for hypercubes.\n");
     }
     /* get the ancestor at the calculated level*/
     t8_standalone_scheme<TEclass>::element_get_ancestor_equation (el1, real_level,
@@ -623,8 +602,6 @@ struct t8_standalone_scheme
   static inline void
   element_get_first_descendant (const t8_element_t *elem, t8_element_t *desc, int level)
   {
-    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem));
-
     const t8_standalone_element_t<TEclass> *el = (const t8_standalone_element_t<TEclass> *) elem;
     t8_standalone_element_t<TEclass> *d = (t8_standalone_element_t<TEclass> *) desc;
 
@@ -1022,7 +999,7 @@ struct t8_standalone_scheme
   static inline void
   element_construct_successor (const t8_element_t *elem1, t8_element_t *elem2)
   {
-    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (t));
+    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem1));
 
     const t8_standalone_element_t<TEclass> *elem = (const t8_standalone_element_t<TEclass> *) elem1;
     t8_standalone_element_t<TEclass> *succ = (t8_standalone_element_t<TEclass> *) elem2;
@@ -1044,7 +1021,7 @@ struct t8_standalone_scheme
                                                         (t8_element_t *) succ);
     }
 
-    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (s));
+    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem2));
   }
 
   /** Count how many leaf descendants of a given uniform level an element would produce.
@@ -1128,7 +1105,7 @@ struct t8_standalone_scheme
   static inline void
   element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex, double coords[])
   {
-    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (t));
+    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem));
 
     const t8_standalone_element_t<TEclass> *el = (const t8_standalone_element_t<TEclass> *) elem;
     if constexpr (TEclass == T8_ECLASS_VERTEX) {
@@ -1321,7 +1298,6 @@ struct t8_standalone_scheme
   static inline void
   element_debug_print (const t8_element_t *elem)
   {
-    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem));
 
     const t8_standalone_element_t<TEclass> *el = (const t8_standalone_element_t<TEclass> *) elem;
 
@@ -1332,8 +1308,6 @@ struct t8_standalone_scheme
     for (int e = 0; e < T8_ELEMENT_NUM_EQUATIONS[TEclass]; e++) {
       t8_debugf ("t_%i: %i \n", e, el->type[e]);
     }
-
-    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem));
   }
 
   static inline void
@@ -1415,6 +1389,13 @@ struct t8_standalone_scheme
     return cube_id;
   }
 
+  /**
+ * Compute the ancestor of \a el at a given level via the equation properties
+ * 
+ * \param[in] elem      Input pyramid
+ * \param[in] level     Level of the ancestor to compute
+ * \param[in, out] and  Allocated element that will be filled with the data of the ancestor.
+ */
   static inline void
   element_get_ancestor_equation (const t8_standalone_element_t<TEclass> *elem, const int level,
                                  t8_standalone_element_t<TEclass> *ancestor)
@@ -1429,7 +1410,7 @@ struct t8_standalone_scheme
 
     /* Set type */
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      ancestor->type = t8_standalone_scheme<TEclass>::element_compute_type_at_level (ancestor, level);
+      SC_ABORT ("Only implemented for hypercubes.\n");
     }
 
     /* The coordinates and the type of the ancestor are defined by the level. */
@@ -1455,6 +1436,14 @@ struct t8_standalone_scheme
     return min_value;
   }
 
+  /** Compute the type of an element at a given level. Starting from its own level,
+ * we iterate over the levels and compute the type of this level. If elem is a tetrahedron,
+ * we compute it in a tetrahedral fashion up unto the last level where elem is a tet and
+ * continue in a pyramidal fashion 
+ * \param [in] elem      Input element
+ * \param [in] level  The level at which the type is computed
+ * \return            The type of \a p at level \a level.
+ */
   static inline t8_element_type_t<TEclass>
   element_compute_type_at_level (const t8_standalone_element_t<TEclass> *elem, int level)
   {
@@ -1486,7 +1475,7 @@ struct t8_standalone_scheme
   /**
  * Set the \a shift last bits of every coordinate to zero. 
  * 
- * \param[in, out]  p     Input element
+ * \param[in, out]  elem     Input element
  * \param[in]       shift Number of bits to set to zero
  */
   static inline void
@@ -1613,6 +1602,12 @@ struct t8_standalone_scheme
     return 1LL << (T8_ELEMENT_DIM[TEclass] * leveldiff);
   }
 
+  /** Compute the coordinates of a vertex of an element.
+ * \param [in] elem    Input element.
+ * \param [in] vertex The number of the vertex.
+ * \param [out] coords An array of 3 t8_element_coord_t that
+ * 		     will be filled with the coordinates of the vertex.
+ */
   static inline void
   element_compute_coords (const t8_standalone_element_t<TEclass> *elem, const int vertex, int coords[])
   {
@@ -1620,12 +1615,7 @@ struct t8_standalone_scheme
                && vertex < t8_standalone_scheme<TEclass>::element_get_num_corners ((const t8_element_t *) elem));
 
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      int8_t type = elem->type.to_ulong ();
-      for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
-        coords[idim] = elem->coords[idim]
-                       + t8_type_vertex_dim_to_binary<TEclass>[type][vertex][idim]
-                           * t8_standalone_scheme<TEclass>::element_get_len (elem->level);
-      }
+      SC_ABORT ("Only implemented for hypercubes.\n");
     }
     else {
       //Hypercubes
