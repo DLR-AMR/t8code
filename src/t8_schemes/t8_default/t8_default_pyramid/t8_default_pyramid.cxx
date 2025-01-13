@@ -463,8 +463,8 @@ t8_default_scheme_pyramid::element_MPI_Pack (t8_element_t **const elements, cons
     t8_dtet_t *p = &pyramids[ielem]->pyramid;
     t8_dtet_element_pack (&p, 1, send_buffer, buffer_size, position, comm);
 
-    SC_CHECK_MPI (
-      sc_MPI_Pack (&pyramids[ielem]->switch_shape_at_level, 1, sc_MPI_INT8_T, send_buffer, buffer_size, position, comm));
+    SC_CHECK_MPI (sc_MPI_Pack (&pyramids[ielem]->switch_shape_at_level, 1, sc_MPI_INT8_T, send_buffer, buffer_size,
+                               position, comm));
   }
 }
 
