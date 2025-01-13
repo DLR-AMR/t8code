@@ -65,7 +65,7 @@ TEST_P (gtest_balance, confirm_is_balanced_check_for_uniform_forests)
   if (ieclass == t8_eclass_t::T8_ECLASS_PYRAMID && ido_periodic == 1)
     GTEST_SKIP_ ("The pyramid cube mesh cannot be periodic.");
 
-  t8_scheme_cxx_t *default_scheme = t8_scheme_new_default_cxx ();
+  t8_scheme *default_scheme = t8_scheme_new_default ();
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube (ieclass, sc_MPI_COMM_WORLD, 0, 0, ido_periodic);
   t8_forest_t forest = t8_forest_new_uniform (cmesh, default_scheme, ilevel, 0, sc_MPI_COMM_WORLD);
 
@@ -82,8 +82,8 @@ struct gtest_balance_adapt_data
 
 static int
 t8_gtest_balance_refine_certain_trees (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                                       t8_locidx_t lelement_id, t8_eclass_scheme_c *ts, const int is_family,
-                                       const int num_elements, t8_element_t *elements[])
+                                       const t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme *scheme,
+                                       const int is_family, const int num_elements, t8_element_t *elements[])
 {
   gtest_balance_adapt_data *adapt_data = static_cast<gtest_balance_adapt_data *> (t8_forest_get_user_data (forest));
 
@@ -91,7 +91,7 @@ t8_gtest_balance_refine_certain_trees (t8_forest_t forest, t8_forest_t forest_fr
 
   if (std::find (adapt_data->trees_to_refine.begin (), adapt_data->trees_to_refine.end (), gtree_id)
         != adapt_data->trees_to_refine.end ()
-      && ts->t8_element_level (elements[0]) < adapt_data->max_refinement_level) {
+      && scheme->element_get_level (tree_class, elements[0]) < adapt_data->max_refinement_level) {
     return 1;
   }
   else {
@@ -132,7 +132,7 @@ t8_gtest_obtain_forest_for_balance_tests (const std::vector<t8_gloidx_t> &trees_
   t8_forest_t forest;
   t8_forest_init (&forest);
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
-  t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
+  t8_forest_set_scheme (forest, t8_scheme_new_default ());
   t8_forest_commit (forest);
 
   gtest_balance_adapt_data adapt_data;
@@ -160,14 +160,13 @@ t8_gtest_check_custom_balanced_forest (t8_forest_t balanced_forest,
     const t8_locidx_t num_tree_local_elems = t8_forest_get_tree_num_elements (balanced_forest, tree_id);
 
     const t8_gloidx_t gtree_id = t8_forest_global_tree_id (balanced_forest, tree_id);
-
-    const t8_eclass_scheme_c *ts
-      = t8_forest_get_eclass_scheme (balanced_forest, t8_forest_get_tree_class (balanced_forest, tree_id));
+    const t8_eclass_t tree_class = t8_forest_get_tree_class (balanced_forest, tree_id);
+    const t8_scheme *scheme = t8_forest_get_scheme (balanced_forest);
 
     for (t8_locidx_t elem_id = 0; elem_id < num_tree_local_elems; ++elem_id) {
       const t8_element_t *element = t8_forest_get_element_in_tree (balanced_forest, tree_id, elem_id);
 
-      const int elem_level = ts->t8_element_level (element);
+      const int elem_level = scheme->element_get_level (tree_class, element);
 
       if (elem_level != expected_elem_level_per_tree[gtree_id]) {
         return false;
