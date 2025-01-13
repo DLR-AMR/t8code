@@ -31,13 +31,13 @@ class class_find_parent: public TestDFS {
   void
   check_element () override
   {
-    const int num_children = scheme->element_get_num_children (static_cast<t8_eclass_t>(scheme_id), element);
+    const int num_children = scheme->element_get_num_children (eclass, element);
     for (int ichild = 0; ichild < num_children; ichild++) {
-      scheme->element_get_child (static_cast<t8_eclass_t>(scheme_id), element, ichild, child);
+      scheme->element_get_child (eclass, element, ichild, child);
       /* Compute parent of child */
-      scheme->element_get_parent (static_cast<t8_eclass_t>(scheme_id), child, test_parent);
+      scheme->element_get_parent (eclass, child, test_parent);
       /* Check that it is equal to the original element */
-      EXPECT_ELEM_EQ (scheme, scheme_id, element, test_parent);
+      EXPECT_ELEM_EQ (scheme, eclass, element, test_parent);
     }
   }
 
@@ -47,15 +47,15 @@ class class_find_parent: public TestDFS {
   {
     dfs_test_setup ();
     /* Get element and initialize it */
-    scheme->element_new (static_cast<t8_eclass_t>(scheme_id), 1, &child);
-    scheme->element_new (static_cast<t8_eclass_t>(scheme_id), 1, &test_parent);
+    scheme->element_new (eclass, 1, &child);
+    scheme->element_new (eclass, 1, &test_parent);
   }
   void
   TearDown () override
   {
     /* Destroy element */
-    scheme->element_destroy (static_cast<t8_eclass_t>(scheme_id), 1, &child);
-    scheme->element_destroy (static_cast<t8_eclass_t>(scheme_id), 1, &test_parent);
+    scheme->element_destroy (eclass, 1, &child);
+    scheme->element_destroy (eclass, 1, &test_parent);
 
     /* Destroy DFS test */
     dfs_test_teardown ();

@@ -26,34 +26,34 @@
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <test/t8_gtest_macros.hxx>
 
-class class_successor: public testing::TestWithParam<int> {
+class class_successor: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
  protected:
   void
   SetUp () override
   {
-    scheme = t8_scheme_all_schemes ();
-    scheme_id = GetParam ();
-    scheme->element_new (static_cast<t8_eclass_t>(scheme_id), 1, &element);
-    scheme->element_new (static_cast<t8_eclass_t>(scheme_id), 1, &successor);
-    scheme->element_new (static_cast<t8_eclass_t>(scheme_id), 1, &child);
-    scheme->element_new (static_cast<t8_eclass_t>(scheme_id), 1, &last);
+    const int scheme_id = std::get<0> (GetParam ());
+    scheme = create_from_scheme_id (scheme_id);
+    tree_class = std::get<1> (GetParam ());
+    scheme->element_new (tree_class, 1, &element);
+    scheme->element_new (tree_class, 1, &successor);
+    scheme->element_new (tree_class, 1, &child);
+    scheme->element_new (tree_class, 1, &last);
 
-    scheme->get_root (static_cast<t8_eclass_t>(scheme_id), element);
+    scheme->get_root (tree_class, element);
 
-    tree_class = scheme->get_eclass_scheme_eclass (static_cast<t8_eclass_t>(scheme_id));
+    tree_class = scheme->get_eclass_scheme_eclass (tree_class);
     if (tree_class == T8_ECLASS_VERTEX)
       GTEST_SKIP ();
   }
   void
   TearDown () override
   {
-    scheme->element_destroy (static_cast<t8_eclass_t>(scheme_id), 1, &element);
-    scheme->element_destroy (static_cast<t8_eclass_t>(scheme_id), 1, &successor);
-    scheme->element_destroy (static_cast<t8_eclass_t>(scheme_id), 1, &child);
-    scheme->element_destroy (static_cast<t8_eclass_t>(scheme_id), 1, &last);
+    scheme->element_destroy (tree_class, 1, &element);
+    scheme->element_destroy (tree_class, 1, &successor);
+    scheme->element_destroy (tree_class, 1, &child);
+    scheme->element_destroy (tree_class, 1, &last);
     scheme->unref ();
   }
-  int scheme_id;
   t8_scheme *scheme;
   t8_element_t *element;
   t8_element_t *successor;
@@ -144,13 +144,13 @@ TEST_P (class_successor, test_recursive_and_deep_successor)
 
   /* Test at lower level. */
   for (int ilevel = 1; ilevel <= maxlvl; ilevel++) {
-    scheme->element_set_linear_id (static_cast<t8_eclass_t>(scheme_id), successor, ilevel, 0);
-    scheme->element_get_last_descendant (static_cast<t8_eclass_t>(scheme_id), element, last, ilevel);
+    scheme->element_set_linear_id (tree_class, successor, ilevel, 0);
+    scheme->element_get_last_descendant (tree_class, element, last, ilevel);
     t8_recursive_successor (element, successor, child, last, scheme, tree_class, ilevel);
   }
   /* Test at Maxlevel. */
-  scheme->element_set_linear_id (static_cast<t8_eclass_t>(scheme_id), element, scheme->get_maxlevel (static_cast<t8_eclass_t>(scheme_id)) - 2, 0);
-  scheme->element_set_linear_id (static_cast<t8_eclass_t>(scheme_id), successor, scheme->get_maxlevel (static_cast<t8_eclass_t>(scheme_id)), 0);
+  scheme->element_set_linear_id (tree_class, element, scheme->get_maxlevel (tree_class) - 2, 0);
+  scheme->element_set_linear_id (tree_class, successor, scheme->get_maxlevel (tree_class), 0);
   t8_deep_successor (element, successor, last, scheme, tree_class);
 }
 

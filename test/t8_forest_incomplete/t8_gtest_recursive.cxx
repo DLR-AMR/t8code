@@ -37,14 +37,14 @@
  * Note, that each rank has its own local/global tree. No trees are shared.
  */
 
-class recursive_tree: public testing::TestWithParam<int> {
+class recursive_tree: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
  protected:
   void
   SetUp () override
   {
-    scheme_id = GetParam ();
-    scheme = t8_scheme_all_schemes ();
-    tree_class = scheme->get_eclass_scheme_eclass (static_cast<t8_eclass_t>(scheme_id));
+    const int scheme_id = std::get<0> (GetParam ());
+    scheme = create_from_scheme_id (scheme_id);
+    tree_class = std::get<1> (GetParam ());
     if (tree_class == T8_ECLASS_ZERO) {
       GTEST_SKIP ();
     }
@@ -73,7 +73,6 @@ class recursive_tree: public testing::TestWithParam<int> {
     }
   }
   int MPI_size;
-  int scheme_id;
   t8_eclass_t tree_class;
   t8_scheme *scheme;
   t8_cmesh_t cmesh;

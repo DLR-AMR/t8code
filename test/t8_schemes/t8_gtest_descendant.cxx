@@ -28,25 +28,26 @@
 
 /* This program tests the descendant function of an element. */
 
-class class_schemes_descendant: public testing::TestWithParam<int> {
+class class_schemes_descendant: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
  protected:
   void
   SetUp () override
   {
-    scheme_id = GetParam ();
+    const int scheme_id = std::get<0> (GetParam ());
+    scheme = create_from_scheme_id (scheme_id);
+    eclass = std::get<1> (GetParam ());
 
-    scheme = t8_scheme_all_schemes ();
-    scheme->element_new (static_cast<t8_eclass_t>(scheme_id), 1, &elem);
-    scheme->element_new (static_cast<t8_eclass_t>(scheme_id), 1, &desc);
-    scheme->element_new (static_cast<t8_eclass_t>(scheme_id), 1, &test);
-    scheme->get_root (static_cast<t8_eclass_t>(scheme_id), elem);
+    scheme->element_new (eclass, 1, &elem);
+    scheme->element_new (eclass, 1, &desc);
+    scheme->element_new (eclass, 1, &test);
+    scheme->get_root (eclass, elem);
   }
   void
   TearDown () override
   {
-    scheme->element_destroy (static_cast<t8_eclass_t>(scheme_id), 1, &elem);
-    scheme->element_destroy (static_cast<t8_eclass_t>(scheme_id), 1, &desc);
-    scheme->element_destroy (static_cast<t8_eclass_t>(scheme_id), 1, &test);
+    scheme->element_destroy (eclass, 1, &elem);
+    scheme->element_destroy (eclass, 1, &desc);
+    scheme->element_destroy (eclass, 1, &test);
     scheme->unref ();
   }
 #ifdef T8_ENABLE_DEBUG
@@ -55,7 +56,7 @@ class class_schemes_descendant: public testing::TestWithParam<int> {
   const int maxlvl = 4;
 #endif
 
-  int scheme_id;
+  t8_eclass_t eclass;
   t8_scheme *scheme;
   t8_element_t *elem;
   t8_element_t *desc;
@@ -67,25 +68,25 @@ class class_schemes_descendant: public testing::TestWithParam<int> {
  */
 static void
 t8_recursive_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *test, t8_scheme *scheme,
-                         const int scheme_id, const int maxlvl)
+                         const t8_eclass_t eclass, const int maxlvl)
 {
-  const int num_children = scheme->element_get_num_children (static_cast<t8_eclass_t>(scheme_id), elem);
-  const int level = scheme->element_get_level (static_cast<t8_eclass_t>(scheme_id), elem);
+  const int num_children = scheme->element_get_num_children (eclass, elem);
+  const int level = scheme->element_get_level (eclass, elem);
   for (int ichild = 0; ichild < num_children; ichild++) {
-    scheme->element_get_child (static_cast<t8_eclass_t>(scheme_id), elem, ichild, desc);
+    scheme->element_get_child (eclass, elem, ichild, desc);
     /* first child == first descendant. */
     if (ichild == 0) {
-      scheme->element_get_first_descendant (static_cast<t8_eclass_t>(scheme_id), elem, test, level + 1);
-      EXPECT_ELEM_EQ (scheme, scheme_id, desc, test);
+      scheme->element_get_first_descendant (eclass, elem, test, level + 1);
+      EXPECT_ELEM_EQ (scheme, eclass, desc, test);
     }
     /* last child == last descendant. */
     else if (ichild == num_children - 1) {
-      scheme->element_get_last_descendant (static_cast<t8_eclass_t>(scheme_id), elem, test, level + 1);
-      EXPECT_ELEM_EQ (scheme, scheme_id, desc, test);
+      scheme->element_get_last_descendant (eclass, elem, test, level + 1);
+      EXPECT_ELEM_EQ (scheme, eclass, desc, test);
     }
     else if (level > maxlvl) {
-      t8_recursive_descendant (desc, elem, test, scheme, static_cast<t8_eclass_t>(scheme_id), maxlvl);
-      scheme->element_get_parent (static_cast<t8_eclass_t>(scheme_id), desc, elem);
+      t8_recursive_descendant (desc, elem, test, scheme, eclass, maxlvl);
+      scheme->element_get_parent (eclass, desc, elem);
     }
   }
 }
@@ -95,17 +96,17 @@ t8_recursive_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *t
  */
 static void
 t8_deep_first_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *test, t8_scheme *scheme,
-                          const int scheme_id, const int level)
+                          const t8_eclass_t eclass, const int level)
 {
-  const int elem_level = scheme->element_get_level (static_cast<t8_eclass_t>(scheme_id), elem);
-  scheme->element_copy (static_cast<t8_eclass_t>(scheme_id), elem, test);
+  const int elem_level = scheme->element_get_level (eclass, elem);
+  scheme->element_copy (eclass, elem, test);
 
   for (int ilevel = elem_level; ilevel < level; ilevel++) {
-    scheme->element_get_child (static_cast<t8_eclass_t>(scheme_id), test, 0, desc);
-    scheme->element_copy (static_cast<t8_eclass_t>(scheme_id), desc, test);
+    scheme->element_get_child (eclass, test, 0, desc);
+    scheme->element_copy (eclass, desc, test);
   }
-  scheme->element_get_first_descendant (static_cast<t8_eclass_t>(scheme_id), elem, test, level);
-  EXPECT_ELEM_EQ (scheme, scheme_id, desc, test);
+  scheme->element_get_first_descendant (eclass, elem, test, level);
+  EXPECT_ELEM_EQ (scheme, eclass, desc, test);
 }
 
 /* Test, if the last descendant of an element is computed correctly over a range
@@ -113,19 +114,19 @@ t8_deep_first_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *
  */
 static void
 t8_deep_last_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *test, t8_scheme *scheme,
-                         const int scheme_id, const int level)
+                         const t8_eclass_t eclass, const int level)
 {
-  scheme->element_copy (static_cast<t8_eclass_t>(scheme_id), elem, test);
+  scheme->element_copy (eclass, elem, test);
 
   /* Compute the correct element. */
-  for (int ilevel = scheme->element_get_level (static_cast<t8_eclass_t>(scheme_id), elem); ilevel < level; ilevel++) {
-    const int num_children = scheme->element_get_num_children (static_cast<t8_eclass_t>(scheme_id), test);
-    scheme->element_get_child (static_cast<t8_eclass_t>(scheme_id), test, num_children - 1, desc);
-    scheme->element_copy (static_cast<t8_eclass_t>(scheme_id), desc, test);
+  for (int ilevel = scheme->element_get_level (eclass, elem); ilevel < level; ilevel++) {
+    const int num_children = scheme->element_get_num_children (eclass, test);
+    scheme->element_get_child (eclass, test, num_children - 1, desc);
+    scheme->element_copy (eclass, desc, test);
   }
   /* Check for equality. */
-  scheme->element_get_last_descendant (static_cast<t8_eclass_t>(scheme_id), elem, test, level);
-  EXPECT_ELEM_EQ (scheme, scheme_id, desc, test);
+  scheme->element_get_last_descendant (eclass, elem, test, level);
+  EXPECT_ELEM_EQ (scheme, eclass, desc, test);
 }
 
 /* Test if the first and last descendant of an element are computed correctly.
@@ -133,29 +134,29 @@ t8_deep_last_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *t
  */
 static void
 t8_large_step_descendant (t8_element_t *elem, t8_element_t *desc, t8_element_t *test, t8_scheme *scheme,
-                          const int scheme_id, const int maxlvl)
+                          const t8_eclass_t eclass, const int maxlvl)
 {
-  for (int ilevel = scheme->element_get_level (static_cast<t8_eclass_t>(scheme_id), elem); ilevel < maxlvl; ilevel++) {
+  for (int ilevel = scheme->element_get_level (eclass, elem); ilevel < maxlvl; ilevel++) {
 
-    const int num_children = scheme->element_get_num_children (static_cast<t8_eclass_t>(scheme_id), elem);
+    const int num_children = scheme->element_get_num_children (eclass, elem);
     /* Use these functions to perform the actual test. */
-    t8_deep_first_descendant (elem, desc, test, scheme, static_cast<t8_eclass_t>(scheme_id), maxlvl);
-    t8_deep_last_descendant (elem, desc, test, scheme, static_cast<t8_eclass_t>(scheme_id), maxlvl);
+    t8_deep_first_descendant (elem, desc, test, scheme, eclass, maxlvl);
+    t8_deep_last_descendant (elem, desc, test, scheme, eclass, maxlvl);
     for (int jchild = 0; jchild < num_children; jchild++) {
-      scheme->element_get_child (static_cast<t8_eclass_t>(scheme_id), elem, jchild, desc);
-      t8_large_step_descendant (desc, elem, test, scheme, static_cast<t8_eclass_t>(scheme_id), maxlvl);
-      scheme->element_get_parent (static_cast<t8_eclass_t>(scheme_id), desc, elem);
+      scheme->element_get_child (eclass, elem, jchild, desc);
+      t8_large_step_descendant (desc, elem, test, scheme, eclass, maxlvl);
+      scheme->element_get_parent (eclass, desc, elem);
     }
   }
 }
 
 TEST_P (class_schemes_descendant, test_recursive_descendant)
 {
-  const int elem_maxlvl = scheme->get_maxlevel (static_cast<t8_eclass_t>(scheme_id));
-  t8_recursive_descendant (elem, desc, test, scheme, scheme_id, maxlvl);
-  t8_deep_first_descendant (elem, desc, test, scheme, scheme_id, elem_maxlvl);
-  t8_deep_last_descendant (elem, desc, test, scheme, scheme_id, elem_maxlvl);
-  t8_large_step_descendant (elem, desc, test, scheme, scheme_id, maxlvl);
+  const int elem_maxlvl = scheme->get_maxlevel (eclass);
+  t8_recursive_descendant (elem, desc, test, scheme, eclass, maxlvl);
+  t8_deep_first_descendant (elem, desc, test, scheme, eclass, elem_maxlvl);
+  t8_deep_last_descendant (elem, desc, test, scheme, eclass, elem_maxlvl);
+  t8_large_step_descendant (elem, desc, test, scheme, eclass, maxlvl);
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_descendant, class_schemes_descendant, AllSchemes);
