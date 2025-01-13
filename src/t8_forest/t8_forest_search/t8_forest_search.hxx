@@ -189,7 +189,7 @@ class t8_search_base {
    * \param[in] tree_lindex_of_first_leaf The index of the first leaf in the tree.
    */
   void
-  search_recursion (const t8_locidx_t ltreeid, t8_element_t *element, const t8_eclass_scheme_c *ts,
+  search_recursion (const t8_locidx_t ltreeid, t8_element_t *element, const t8_scheme *ts,
                     t8_element_array_t *leaf_elements, const t8_locidx_t tree_lindex_of_first_leaf);
 
   /** \brief Checks if the search should stop due to empty queries.
