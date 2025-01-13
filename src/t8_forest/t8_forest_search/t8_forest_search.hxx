@@ -30,7 +30,6 @@
 #include <t8_forest/t8_forest.h>  // Ensure t8_forest_t is defined
 #include <functional>
 #include <numeric>
-#include <memory>
 #include <ranges>
 
 /*
