@@ -45,6 +45,7 @@ class recursive_tree: public testing::TestWithParam<std::tuple<int, t8_eclass_t>
     const int scheme_id = std::get<0> (GetParam ());
     scheme = create_from_scheme_id (scheme_id);
     tree_class = std::get<1> (GetParam ());
+
     if (tree_class == T8_ECLASS_ZERO) {
       GTEST_SKIP ();
     }
