@@ -1,7 +1,6 @@
 cmake_minimum_required( VERSION 3.16 )
+
 include( cmake/GitProjectVersion.cmake )
-include( CTest )
-include( CMakeDependentOption )
 
 project( 
     T8CODE
@@ -9,6 +8,9 @@ project(
     LANGUAGES C CXX
     VERSION "${T8CODE_VERSION_MAJOR}.${T8CODE_VERSION_MINOR}.${T8CODE_VERSION_PATCH}" 
 )
+
+include( CTest )
+include( CMakeDependentOption )
 
 option( T8CODE_BUILD_AS_SHARED_LIBRARY "Whether t8code should be built as a shared or a static library" ON )
 option( T8CODE_BUILD_PEDANTIC "Compile t8code with `-pedantic` as done in the Github CI." OFF )
