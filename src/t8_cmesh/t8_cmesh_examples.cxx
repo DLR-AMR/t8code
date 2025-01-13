@@ -3327,7 +3327,7 @@ t8_cmesh_new_spherical_shell (t8_eclass_t eclass, t8_geometry_c *geometry,
   sc_MPI_Comm_split (comm, mpi_rank, mpi_rank, &local_comm);
 
   /* Create 2D quadrangulated spherical surface of given refinement level per patch. */
-  t8_forest_t forest = t8_forest_new_uniform (inner_sphere_creator (1.0, local_comm), t8_scheme_new_default_cxx (),
+  t8_forest_t forest = t8_forest_new_uniform (inner_sphere_creator (1.0, local_comm), t8_scheme_new_default (),
                                               num_levels, 0, local_comm);
 
   /* clang-format off */
