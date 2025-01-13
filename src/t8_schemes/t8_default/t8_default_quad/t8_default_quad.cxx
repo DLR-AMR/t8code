@@ -774,7 +774,7 @@ t8_default_scheme_quad::element_MPI_Pack (t8_element_t **const elements, const u
     SC_CHECK_MPI (mpiret);
     mpiret = sc_MPI_Pack (&quads[ielem]->y, 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
     SC_CHECK_MPI (mpiret);
-    mpiret = sc_MPI_Pack (&quads[ielem]->level, 1, MPI_INT8_T, send_buffer, buffer_size, position, comm);
+    mpiret = sc_MPI_Pack (&quads[ielem]->level, 1, sc_MPI_INT8_T, send_buffer, buffer_size, position, comm);
     SC_CHECK_MPI (mpiret);
   }
 }
@@ -793,7 +793,7 @@ t8_default_scheme_quad::element_MPI_Pack_size (const unsigned int count, sc_MPI_
   singlesize += 2 * datasize;
 
   /* level */
-  mpiret = sc_MPI_Pack_size (1, MPI_INT8_T, comm, &datasize);
+  mpiret = sc_MPI_Pack_size (1, sc_MPI_INT8_T, comm, &datasize);
   SC_CHECK_MPI (mpiret);
   singlesize += datasize;
 
@@ -812,7 +812,7 @@ t8_default_scheme_quad::element_MPI_Unpack (void *recvbuf, const int buffer_size
     SC_CHECK_MPI (mpiret);
     mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem]->y), 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
-    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem]->level), 1, MPI_INT8_T, comm);
+    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(quads[ielem]->level), 1, sc_MPI_INT8_T, comm);
     SC_CHECK_MPI (mpiret);
   }
 }

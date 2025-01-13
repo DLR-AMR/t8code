@@ -477,11 +477,11 @@ t8_default_scheme_prism::element_MPI_Pack (t8_element_t **const elements, const 
     SC_CHECK_MPI (mpiret);
     mpiret = sc_MPI_Pack (&prisms[ielem]->tri.y, 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
     SC_CHECK_MPI (mpiret);
-    mpiret = sc_MPI_Pack (&prisms[ielem]->tri.type, 1, MPI_INT8_T, send_buffer, buffer_size, position, comm);
+    mpiret = sc_MPI_Pack (&prisms[ielem]->tri.type, 1, sc_MPI_INT8_T, send_buffer, buffer_size, position, comm);
     SC_CHECK_MPI (mpiret);
 
     T8_ASSERT (prisms[ielem]->line.level == prisms[ielem]->tri.level);
-    mpiret = sc_MPI_Pack (&prisms[ielem]->line.level, 1, MPI_INT8_T, send_buffer, buffer_size, position, comm);
+    mpiret = sc_MPI_Pack (&prisms[ielem]->line.level, 1, sc_MPI_INT8_T, send_buffer, buffer_size, position, comm);
     SC_CHECK_MPI (mpiret);
   }
 }
@@ -500,7 +500,7 @@ t8_default_scheme_prism::element_MPI_Pack_size (const unsigned int count, sc_MPI
   singlesize += 3 * datasize;
 
   /*type, level*/
-  mpiret = sc_MPI_Pack_size (1, MPI_INT8_T, comm, &datasize);
+  mpiret = sc_MPI_Pack_size (1, sc_MPI_INT8_T, comm, &datasize);
   SC_CHECK_MPI (mpiret);
   singlesize += 2 * datasize;
 
@@ -521,9 +521,9 @@ t8_default_scheme_prism::element_MPI_Unpack (void *recvbuf, const int buffer_siz
     SC_CHECK_MPI (mpiret);
     mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(prisms[ielem]->tri.y), 1, sc_MPI_INT, comm);
     SC_CHECK_MPI (mpiret);
-    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(prisms[ielem]->tri.type), 1, MPI_INT8_T, comm);
+    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(prisms[ielem]->tri.type), 1, sc_MPI_INT8_T, comm);
     SC_CHECK_MPI (mpiret);
-    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(prisms[ielem]->tri.level), 1, MPI_INT8_T, comm);
+    mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(prisms[ielem]->tri.level), 1, sc_MPI_INT8_T, comm);
     SC_CHECK_MPI (mpiret);
     prisms[ielem]->line.level = prisms[ielem]->tri.level;
   }
