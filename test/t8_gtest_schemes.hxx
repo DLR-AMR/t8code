@@ -27,21 +27,18 @@
 #include <t8_schemes/t8_scheme_builder.hxx>
 #include <gtest/gtest.h>
 
-
-
-t8_scheme * create_from_scheme_id (const int scheme_id){
+t8_scheme *
+create_from_scheme_id (const int scheme_id)
+{
   switch (scheme_id) {
-    case 0:
-      return t8_scheme_new_default ();
-    default:
-      SC_ABORT_NOT_REACHED ();
-      return nullptr;
+  case 0:
+    return t8_scheme_new_default ();
+  default:
+    SC_ABORT_NOT_REACHED ();
+    return nullptr;
   }
 }
 
-
-
-
-#define AllSchemes ::testing::Combine(::testing::Values(0), ::testing::Range(T8_ECLASS_ZERO, T8_ECLASS_COUNT))
+#define AllSchemes ::testing::Combine (::testing::Values (0), ::testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT))
 
 #endif /* T8_GTEST_SCHEMES_HXX */
