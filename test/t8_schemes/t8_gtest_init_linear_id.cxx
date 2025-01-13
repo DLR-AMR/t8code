@@ -23,12 +23,12 @@
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <test/t8_gtest_schemes.hxx>
 #include <sc_functions.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <test/t8_gtest_macros.hxx>
 
-class linear_id: public testing::TestWithParam<t8_eclass> {
+class linear_id: public testing::TestWithParam<int> {
  protected:
   void
   SetUp () override
@@ -51,8 +51,8 @@ class linear_id: public testing::TestWithParam<t8_eclass> {
   t8_element_t *element;
   t8_element_t *child;
   t8_element_t *test;
+  int scheme_id;
   t8_scheme *scheme;
-  t8_eclass_t tree_class;
   sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
 };
 
@@ -77,7 +77,6 @@ TEST_P (linear_id, uniform_forest)
 #endif
   /* Construct a forest with a single element of the current class*/
   t8_eclass_t eclass = scheme->get_eclass_scheme_eclass (static_cast<t8_eclass_t> (scheme_id));
-  t8_debugf ("scheme_id: %i, eclass: %s\n", scheme_id, t8_eclass_to_string[eclass]);
   cmesh = t8_cmesh_new_from_class (eclass, comm);
   t8_cmesh_ref (cmesh);
   forest = t8_forest_new_uniform (cmesh, scheme, 0, 0, comm);
@@ -85,7 +84,6 @@ TEST_P (linear_id, uniform_forest)
   for (int level = 0; level < maxlvl; level++) {
     /*Get the number of local trees*/
     const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
-    t8_debugf ("level: %i, num_local_trees: %i\n", level, num_local_trees);
     /*Iterate over trees */
     for (t8_locidx_t tree_id = 0; tree_id < num_local_trees; tree_id++) {
       /*Get the number of elements in the tree*/
@@ -94,9 +92,7 @@ TEST_P (linear_id, uniform_forest)
       const t8_locidx_t shift
         = scheme->count_leaves_from_root (static_cast<t8_eclass_t> (scheme_id), level) - num_elements_in_tree;
       /*Iterate over elements */
-      t8_debugf ("tree_id: %i, num_elements_in_tree: %i\n", tree_id, num_elements_in_tree);
       for (t8_locidx_t id_iter = 0; id_iter < num_elements_in_tree; id_iter++) {
-        t8_debugf ("id_iter: %i\n", id_iter);
         /*Get the current element*/
         const t8_element_t *element = t8_forest_get_element_in_tree (forest, tree_id, id_iter);
         /*Get the ID of the element at current level */
@@ -156,4 +152,4 @@ TEST_P (linear_id, id_at_other_level)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_test_init_linear_id, linear_id, AllEclasses, print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_test_init_linear_id, linear_id, AllSchemes);

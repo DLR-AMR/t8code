@@ -24,7 +24,6 @@
 #define T8_GTEST_SCHEMES_HXX
 
 #include <t8_schemes/t8_default/t8_default.hxx>
-#include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <t8_schemes/t8_scheme_builder.hxx>
 #include <gtest/gtest.h>
 
@@ -32,15 +31,12 @@ t8_scheme *
 t8_scheme_all_schemes (void)
 {
   t8_scheme_builder builder;
+
   builder.add_eclass_scheme<t8_default_scheme_vertex> ();
-  // builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_VERTEX>> ();
   builder.add_eclass_scheme<t8_default_scheme_line> ();
-  // builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_LINE>> ();
   builder.add_eclass_scheme<t8_default_scheme_quad> ();
-  // builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_QUAD>> ();
   builder.add_eclass_scheme<t8_default_scheme_tri> ();
   builder.add_eclass_scheme<t8_default_scheme_hex> ();
-  // builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_HEX>> ();
   builder.add_eclass_scheme<t8_default_scheme_tet> ();
   builder.add_eclass_scheme<t8_default_scheme_prism> ();
   builder.add_eclass_scheme<t8_default_scheme_pyramid> ();

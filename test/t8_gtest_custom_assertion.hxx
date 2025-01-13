@@ -46,18 +46,18 @@
  */
 testing::AssertionResult
 element_equality (const char *ts_expr, const char *tree_class_expr, const char *elem_1_expr, const char *elem_2_expr,
-                  const t8_scheme *scheme, const t8_eclass_t tree_class, const t8_element_t *elem_1,
-                  const t8_element_t *elem_2)
+                  const t8_scheme *scheme, const int scheme_id, const t8_element_t *elem_1, const t8_element_t *elem_2)
 {
-  if (scheme->element_is_equal (tree_class, elem_1, elem_2)) {
+  if (scheme->element_is_equal (static_cast<t8_eclass_t> (scheme_id), elem_1, elem_2)) {
     return testing::AssertionSuccess ();
   }
   else {
 #if T8_ENABLE_DEBUG
     char elem_1_string[BUFSIZ];
     char elem_2_string[BUFSIZ];
-    scheme->element_to_string (tree_class, elem_1, elem_1_string, BUFSIZ);
-    scheme->element_to_string (tree_class, elem_2, elem_2_string, BUFSIZ);
+    const t8_eclass_t tree_class = scheme->get_eclass_scheme_eclass (static_cast<t8_eclass_t> (scheme_id));
+    scheme->element_to_string (static_cast<t8_eclass_t> (scheme_id), elem_1, elem_1_string, BUFSIZ);
+    scheme->element_to_string (static_cast<t8_eclass_t> (scheme_id), elem_2, elem_2_string, BUFSIZ);
     return testing::AssertionFailure () << elem_1_expr << " " << elem_1_string << " is not equal to \n"
                                         << elem_2_expr << " " << elem_2_string << " given scheme " << ts_expr
                                         << " and tree class " << tree_class_expr << " "
@@ -70,8 +70,8 @@ element_equality (const char *ts_expr, const char *tree_class_expr, const char *
   }
 }
 
-#define EXPECT_ELEM_EQ(scheme, tree_class, elem1, elem2) \
-  EXPECT_PRED_FORMAT4 (element_equality, (scheme), (tree_class), (elem1), (elem2))
+#define EXPECT_ELEM_EQ(scheme, scheme_id, elem1, elem2) \
+  EXPECT_PRED_FORMAT4 (element_equality, (scheme), (scheme_id), (elem1), (elem2))
 
 /**
  * \brief Test if two 3D vectors are equal with respect to a given precision

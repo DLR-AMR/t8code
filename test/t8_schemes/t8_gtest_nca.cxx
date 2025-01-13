@@ -28,10 +28,10 @@
 #include <gtest/gtest.h>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <t8_eclass.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_macros.hxx>
 
-class nca: public testing::TestWithParam<t8_eclass> {
+class nca: public testing::TestWithParam<int> {
  protected:
   void
   SetUp () override
@@ -61,6 +61,7 @@ class nca: public testing::TestWithParam<t8_eclass> {
     */
   t8_element_t *correct_nca, *desc_a, *desc_b, *check;
   t8_scheme *scheme;
+  int scheme_id;
   t8_eclass_t tree_class;
 };
 
@@ -79,7 +80,7 @@ TEST_P (nca, nca_check_shallow)
       /*Compute the nca */
       scheme->element_get_nca (static_cast<t8_eclass_t> (scheme_id), desc_a, desc_b, check);
       /*expect equality */
-      EXPECT_ELEM_EQ (scheme, tree_class, check, correct_nca);
+      EXPECT_ELEM_EQ (scheme, scheme_id, check, correct_nca);
     }
   }
 }
@@ -156,7 +157,7 @@ TEST_P (nca, nca_check_deep)
 static void
 t8_recursive_nca_check (t8_element_t *check_nca, t8_element_t *desc_a, t8_element_t *desc_b, t8_element_t *check,
                         t8_element_t *parent_a, t8_element_t *parent_b, const int max_lvl, t8_scheme *scheme,
-                        const t8_eclass_t tree_class)
+                        const int scheme_id)
 {
   T8_ASSERT (max_lvl <= scheme->get_maxlevel (static_cast<t8_eclass_t> (scheme_id)) - 1);
   /* compute the level of the parents */
@@ -220,7 +221,7 @@ t8_recursive_nca_check (t8_element_t *check_nca, t8_element_t *desc_a, t8_elemen
         SC_ABORT ("Computed nca is not the correct nca!\n");
       }
       /* parent_a stays fixed, b-part goes one level deeper into the recursion */
-      t8_recursive_nca_check (check_nca, desc_a, parent_b, check, parent_a, desc_b, max_lvl, scheme, tree_class);
+      t8_recursive_nca_check (check_nca, desc_a, parent_b, check, parent_a, desc_b, max_lvl, scheme, scheme_id);
       /* We reused parent_b, hence we have to recompute the correct parent */
       scheme->element_get_parent (static_cast<t8_eclass_t> (scheme_id), desc_b, parent_b);
     }
@@ -254,7 +255,7 @@ TEST_P (nca, recursive_check)
       for (j = i + 1; j < num_children; j++) {
         scheme->element_get_child (static_cast<t8_eclass_t> (scheme_id), correct_nca, j, parent_b);
         t8_recursive_nca_check (correct_nca, desc_a, desc_b, check, parent_a, parent_b, recursion_depth, scheme,
-                                tree_class);
+                                scheme_id);
       }
     }
   }
@@ -304,7 +305,7 @@ TEST_P (nca, recursive_check_higher_level)
           scheme->element_get_child (static_cast<t8_eclass_t> (scheme_id), correct_nca_high_level, l, parent_b);
           if (k != l) {
             t8_recursive_nca_check (correct_nca_high_level, desc_a, desc_b, check, parent_a, parent_b, i, scheme,
-                                    tree_class);
+                                    scheme_id);
           }
           else {
             scheme->element_get_nca (static_cast<t8_eclass_t> (scheme_id), parent_a, parent_b, check);
@@ -327,4 +328,4 @@ TEST_P (nca, recursive_check_higher_level)
   scheme->element_destroy (static_cast<t8_eclass_t> (scheme_id), 1, &correct_nca_high_level);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_nca, nca, AllEclasses, print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_nca, nca, AllSchemes);

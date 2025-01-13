@@ -30,7 +30,6 @@
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
-#include <test/t8_schemes/t8_gtest_iterator.cxx>
 #include <iostream>
 #include <t8_schemes/t8_scheme.hxx>
 
@@ -50,14 +49,6 @@ auto print_eclass = [] (const testing::TestParamInfo<t8_eclass> &info) { return 
 #define T8_NUM_SAMPLE_POINTS 10000
 #endif
 
-t8_scheme *test_default_scheme = t8_scheme_new_default ();
-t8_scheme *test_default_scheme_2 = t8_scheme_new_default ();
-
-const std::vector<t8_scheme *> schemes = { test_default_scheme, test_default_scheme_2 };
-
-scheme_iterators scheme_iter (schemes);
-
-#define AllSchemesEclasses testing::ValuesIn (scheme_iter.begin (), scheme_iter.end ())
 #define AllEclasses testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT)
 #define AllEclasses2D testing::Values (T8_ECLASS_QUAD, T8_ECLASS_TRIANGLE)
 

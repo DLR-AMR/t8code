@@ -22,11 +22,11 @@
 
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <test/t8_gtest_macros.hxx>
 
-class class_successor: public testing::TestWithParam<t8_eclass_t> {
+class class_successor: public testing::TestWithParam<int> {
  protected:
   void
   SetUp () override
@@ -53,12 +53,13 @@ class class_successor: public testing::TestWithParam<t8_eclass_t> {
     scheme->element_destroy (static_cast<t8_eclass_t> (scheme_id), 1, &last);
     scheme->unref ();
   }
-  t8_eclass_t tree_class;
+  int scheme_id;
   t8_scheme *scheme;
   t8_element_t *element;
   t8_element_t *successor;
   t8_element_t *child;
   t8_element_t *last;
+  t8_eclass_t tree_class;
 };
 
 /* Check the computation of the successor recursively. Iterate through the elements
@@ -156,4 +157,4 @@ TEST_P (class_successor, test_recursive_and_deep_successor)
   t8_deep_successor (element, successor, last, scheme, scheme_id);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_successor, class_successor, AllEclasses, print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_successor, class_successor, AllSchemes);
