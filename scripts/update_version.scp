@@ -148,17 +148,17 @@ sed -i "s/version: [0-9]\+\.[0-9]\+\.[0-9]\+/version: ${NEW_VERSION}/" ../CITATI
 
 # Update the date-released in the citation file. 
 CURRENT_DATE=$(date +%F)
-sed -i "s/date-released: \".*\"/date-released: \"${CURRENT_DATE}\"/" ../CITATION.cff
+sed -i "s/date-released: [0-9]\{4\}\.[0-9]\{2\}\.[0-9]\{2\}/date-released: ${CURRENT_DATE}/" CITATION.cff
 
 GIT_COMMIT_MESSAGE="Updated the version to ${NEW_VERSION}"
 
 # Add the changes to a new commit
 git config user.name t8ddy
-git config user.email ${{ secrets.T8DDY_MAIL }}
 
 
 echo "git add version.txt"
 git add version.txt
+git add CITATION.cff
 echo "git commit -m $GIT_COMMIT_MESSAGE"
 git commit -m "$GIT_COMMIT_MESSAGE"
 
