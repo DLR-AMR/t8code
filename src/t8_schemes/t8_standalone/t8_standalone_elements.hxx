@@ -27,7 +27,7 @@
 #include <array>
 #include <bitset>
 
-#define t8_standalone_element_t t8_standalone_t
+#define t8_standalone_element t8_standalone
 
 constexpr uint8_t T8_ELEMENT_DIM[T8_ECLASS_COUNT] = { 0, 1, 2, 2, 3, 3, 3, 3 };
 constexpr uint8_t T8_ELEMENT_MAXLEVEL[T8_ECLASS_COUNT] = { 255, 30, 29, 29, 21, 21, 21, 18 };
@@ -115,27 +115,27 @@ constexpr int8_t t8_type_vertex_dim_to_binary[1 << T8_ELEMENT_NUM_EQUATIONS[TEcl
 // #include "t8_sele_lut_pyra_cxx.hxx"
 // #include "t8_sele_lut_tet_cxx.hxx"
 
-typedef uint32_t t8_element_coord_t;
-typedef uint8_t t8_element_level_t;
-typedef int8_t t8_cube_id_t;
+typedef uint32_t t8_element_coord;
+typedef uint8_t t8_element_level;
+typedef int8_t t8_cube_id;
 
 template <t8_eclass_t TEclass>
-using t8_element_type_t = std::bitset<T8_ELEMENT_NUM_EQUATIONS[TEclass]>;
+using t8_element_type = std::bitset<T8_ELEMENT_NUM_EQUATIONS[TEclass]>;
 
 template <t8_eclass_t TEclass>
-using t8_element_coords_t = std::array<t8_element_coord_t, T8_ELEMENT_DIM[TEclass]>;
+using t8_element_coords = std::array<t8_element_coord, T8_ELEMENT_DIM[TEclass]>;
 
 template <t8_eclass_t TEclass>
-struct t8_standalone_element_t
+struct t8_standalone_element
 {
   /** The refinement level of the element relative to the root at level 0. */
-  t8_element_level_t level;
+  t8_element_level level;
 
   /** The coordinates of the anchor vertex of the element. */
-  t8_element_coords_t<TEclass> coords;
+  t8_element_coords<TEclass> coords;
 
   /** Bit array: which inequality is fulfilled at which level. */
-  t8_element_type_t<TEclass> type;
+  t8_element_type<TEclass> type;
 };
 
 #endif /* T8_STANDALONE_ELEMENTS_HXX */
