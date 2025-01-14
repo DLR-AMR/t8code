@@ -34,22 +34,22 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 /**
  * \brief The CRTP pattern for operators.
  * 
- * \tparam T 
+ * \tparam TUnderlying
  * \tparam crtpType 
  */
-template <typename T, template <typename> class crtpType>
-struct crtp
+template <typename TUnderlying, template <typename> class crtpType>
+struct t8_crtp_operator
 {
-  T&
+  inline TUnderlying&
   underlying ()
   {
-    return static_cast<T&> (*this);
+    return static_cast<TUnderlying&> (*this);
   }
 
-  T const&
+  inline TUnderlying const&
   underlying () const
   {
-    return static_cast<T const&> (*this);
+    return static_cast<TUnderlying const&> (*this);
   }
 };
 
@@ -62,74 +62,74 @@ struct crtp
 /**
  * \brief A template for addable types. Provides the + operator.
  * 
- * \tparam T 
+ * \tparam TUnderlying
  */
-template <typename T>
-struct Addable: crtp<T, Addable>
+template <typename TUnderlying>
+struct Addable: t8_crtp_operator<TUnderlying, Addable>
 {
 
-  T
-  operator+ (T const& other)
+  TUnderlying
+  operator+ (TUnderlying const& other)
   {
-    return T (this->underlying ().get () + other.get ());
+    return TUnderlying (this->underlying ().get () + other.get ());
   }
 };
 
 /**
  * \brief A template for subtractable types. Provides the - operator.
  * 
- * \tparam T 
+ * \tparam TUnderlying 
  */
-template <typename T>
-struct Subtractable: crtp<T, Subtractable>
+template <typename TUnderlying>
+struct Subtractable: t8_crtp_operator<TUnderlying, Subtractable>
 {
-  T
-  operator- (T const& other)
+  TUnderlying
+  operator- (TUnderlying const& other)
   {
-    return T (this->underlying ().get () - other.get ());
+    return TUnderlying (this->underlying ().get () - other.get ());
   }
 };
 
 /**
  * \brief A template for multipliable types. Provides the * operator.
  * 
- * \tparam T 
+ * \tparam TUnderlying 
  */
-template <typename T>
-struct Multipliable: crtp<T, Multipliable>
+template <typename TUnderlying>
+struct Multipliable: t8_crtp_operator<TUnderlying, Multipliable>
 {
-  T
-  operator* (T const& other)
+  TUnderlying
+  operator* (TUnderlying const& other)
   {
-    return T (this->underlying ().get () * other.get ());
+    return TUnderlying (this->underlying ().get () * other.get ());
   }
 };
 
 /**
  * \brief A template for dividable types. Provides the / operator.
  * 
- * \tparam T 
+ * \tparam TUnderlying 
  */
-template <typename T>
-struct Dividable: crtp<T, Dividable>
+template <typename TUnderlying>
+struct Dividable: t8_crtp_operator<TUnderlying, Dividable>
 {
-  T
-  operator/ (T const& other)
+  TUnderlying
+  operator/ (TUnderlying const& other)
   {
-    return T (this->underlying ().get () / other.get ());
+    return TUnderlying (this->underlying ().get () / other.get ());
   }
 };
 
 /**
  * \brief A template for add-assignable types. Provides the += operator.
  * 
- * \tparam T 
+ * \tparam TUnderlying 
  */
-template <typename T>
-struct AddAssignable: crtp<T, AddAssignable>
+template <typename TUnderlying>
+struct AddAssignable: t8_crtp_operator<TUnderlying, AddAssignable>
 {
-  T&
-  operator+= (T const& other)
+  TUnderlying&
+  operator+= (TUnderlying const& other)
   {
     this->underlying ().get () += other.get ();
     return this->underlying ();
@@ -139,14 +139,14 @@ struct AddAssignable: crtp<T, AddAssignable>
 /**
  * \brief A template for incrementable types. Provides the ++ operator.
  * 
- * \tparam T 
+ * \tparam TUnderlying
  * 
  * \note The operator is a prefix operator.
  */
-template <typename T>
-struct PrefixIncrementable: crtp<T, PrefixIncrementable>
+template <typename TUnderlying>
+struct PrefixIncrementable: t8_crtp_operator<TUnderlying, PrefixIncrementable>
 {
-  T&
+  TUnderlying&
   operator++ ()
   {
     this->underlying ().get ()++;
@@ -157,14 +157,14 @@ struct PrefixIncrementable: crtp<T, PrefixIncrementable>
 /**
  * \brief A template for decrementable types. Provides the -- operator.
  * 
- * \tparam T 
+ * \tparam TUnderlying 
  * 
  * \note The operator is a prefix operator.
  */
-template <typename T>
-struct PrefixDecrementable: crtp<T, PrefixDecrementable>
+template <typename TUnderlying>
+struct PrefixDecrementable: t8_crtp_operator<TUnderlying, PrefixDecrementable>
 {
-  T&
+  TUnderlying&
   operator-- ()
   {
     this->underlying ().get ()--;
@@ -172,8 +172,8 @@ struct PrefixDecrementable: crtp<T, PrefixDecrementable>
   }
 };
 
-template <typename T>
-struct Printable: crtp<T, Printable>
+template <typename TUnderlying>
+struct Printable: t8_crtp_operator<TUnderlying, Printable>
 {
   void
   print (std::ostream& os) const
@@ -185,13 +185,13 @@ struct Printable: crtp<T, Printable>
 /**
  * \brief A template for swapping types. Used to make a type swappable.
  * 
- * \tparam T 
+ * \tparam TUnderlying 
  */
-template <typename T>
-struct Swapable: crtp<T, Swapable>
+template <typename TUnderlying>
+struct Swapable: t8_crtp_operator<TUnderlying, Swapable>
 {
   void
-  swap (T& other)
+  swap (TUnderlying& other)
   {
     std::swap (this->underlying ().get (), other.get ());
   }
@@ -200,13 +200,13 @@ struct Swapable: crtp<T, Swapable>
 /**
  * \brief A template for equality comparable types. Provides the == operator.
  * 
- * \tparam T 
+ * \tparam TUnderlying 
  */
-template <typename T>
-struct EqualityComparable: crtp<T, EqualityComparable>
+template <typename TUnderlying>
+struct EqualityComparable: t8_crtp_operator<TUnderlying, EqualityComparable>
 {
   bool
-  operator== (T const& other) const
+  operator== (TUnderlying const& other) const
   {
     return this->underlying ().get () == other.get ();
   }
@@ -217,9 +217,9 @@ struct EqualityComparable: crtp<T, EqualityComparable>
  * 
  * \tparam T 
  */
-template <typename T, typename Parameter>
+template <typename TUnderlying, typename Parameter>
 std::ostream&
-operator<< (std::ostream& os, T8Type<T, Parameter> const& p)
+operator<< (std::ostream& os, T8Type<TUnderlying, Parameter> const& p)
 {
   p.print (os);
   return os;
@@ -230,7 +230,7 @@ operator<< (std::ostream& os, T8Type<T, Parameter> const& p)
  * 
  * \tparam T 
  */
-template <typename T>
+template <typename TUnderlying>
 struct Hashable
 {
   static constexpr bool is_hashable = true;
