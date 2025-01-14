@@ -25,7 +25,7 @@ permissions:
 
 
 on:
-  pull_request:
+  workflow_call:
 
 jobs:
   semantic_version:
@@ -42,11 +42,11 @@ jobs:
       id: get_branch
       run: echo "branch_name=${GITHUB_HEAD_REF}" >> $GITHUB_ENV
     - name: Check for major tag
-      if: contains(github.event.pull_request.labels.*.name, 'major')
+      if: contains(github.event.pull_request.labels.*.name, 'major-release')
       run: ./scripts/update_version.scp MAJOR ${GITHUB_HEAD_REF}
     - name: Check for minor tag
-      if: contains(github.event.pull_request.labels.*.name, 'minor')
+      if: contains(github.event.pull_request.labels.*.name, 'minor-release')
       run: ./scripts/update_version.scp MINOR ${GITHUB_HEAD_REF}
     - name: Check for patch tag
-      if: contains(github.event.pull_request.labels.*.name, 'patch')
+      if: contains(github.event.pull_request.labels.*.name, 'patch-release')
       run: ./scripts/update_version.scp PATCH ${GITHUB_HEAD_REF}
