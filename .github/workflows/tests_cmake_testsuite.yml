@@ -173,10 +173,9 @@ jobs:
         fi
 
   t8code_version:
-    runs-on: ubuntu-latest
-    needs: [check_commit_message, t8code_tarball]
-    if: ${{ needs.check_commit_message.outputs.trigger_version_update == 'true' }}
-    uses: ./.github/workflows/semantic_versioning.yml
+    if: (github.event_name == 'pull_request' && needs.check_commit_message.outputs.trigger_version_update == 'true')
+    uses: ./.github/workflows/create_version_tag.yml
     secrets: inherit
+    needs: [check_commit_message, t8code_tarball]
 
   
