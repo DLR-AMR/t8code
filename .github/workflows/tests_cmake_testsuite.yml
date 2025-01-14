@@ -152,4 +152,5 @@ jobs:
   t8code_version:
     if: (github.event_name == 'pull_request' && github.repository == 'DLR-AMR/t8code') 
     uses: ./.github/workflows/semantic_versioning.yml
+    secrets: inherit
     needs: [t8code_tarball]
