@@ -1,0 +1,52 @@
+name: "t8ddy updates version infos and adds a releases tag"
+
+#  This file is part of t8code.
+#  t8code is a C library to manage a collection (a forest) of multiple
+#  connected adaptive space-trees of general element types in parallel.
+#
+#  Copyright (C) 2025 the developers
+#
+#  t8code is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  t8code is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with t8code; if not, write to the Free Software Foundation, Inc.,
+#  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+permissions:
+  contents: write
+
+
+on:
+  pull_request:
+
+jobs:
+  semantic_version:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        repository: ${{ github.event.pull_request.head.repo.full_name }}
+        ref: ${{ github.event.pull_request.head.ref }}
+        token: ${{ secrets.T8DDY_TOKEN }}
+        fetch-depth: 0
+    - name: Get current branch name
+      id: get_branch
+      run: echo "branch_name=${GITHUB_HEAD_REF}" >> $GITHUB_ENV
+    - name: Check for major tag
+      if: contains(github.event.pull_request.labels.*.name, 'major')
+      run: ./scripts/update_version.scp MAJOR ${GITHUB_HEAD_REF}
+    - name: Check for minor tag
+      if: contains(github.event.pull_request.labels.*.name, 'minor')
+      run: ./scripts/update_version.scp MINOR ${GITHUB_HEAD_REF}
+    - name: Check for patch tag
+      if: contains(github.event.pull_request.labels.*.name, 'patch')
+      run: ./scripts/update_version.scp PATCH ${GITHUB_HEAD_REF}

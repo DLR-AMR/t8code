@@ -148,3 +148,8 @@ jobs:
     needs: [preparation, sc_p4est_tests, t8code_tests, t8code_linkage_tests, t8code_api_tests, t8code_w_shipped_submodules_tests]
     with:
       LESS_TESTS: ${{ github.event_name == 'pull_request'  }}
+
+  t8code_version:
+    if: (github.event_name == 'pull_request' && github.repository == 'DLR-AMR/t8code') 
+    uses: ./.github/workflows/semantic_versioning.yml
+    needs: [t8code_tarball]

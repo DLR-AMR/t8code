@@ -1,0 +1,176 @@
+#! /bin/bash
+
+# This file is part of t8code.
+# t8code is a C library to manage a collection (a forest) of multiple
+# connected adaptive space-trees of general element classes in parallel.
+#
+# Copyright (C) 2025 the developers
+#
+# t8code is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# t8code is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with t8code; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+
+# This script updates the version of the library. It fetches the latest tag on main
+# and checks if the latest commit message is of the format "Update Version" or "Updated the version to MAJOR.MINOR.PATCH".
+# If the latest commit message is of the format "Update Version", it updates the version to the next version, 
+# depending on the first argument given (MAJOR, MINOR or PATCH). The second argument is the branch name.
+# If the latest commit message is of the format "Updated the version to MAJOR.MINOR.PATCH", it prints the 
+# new version number. If the latest commit message is not of the correct format, it exits and returns 1. 
+
+#
+# This script must be executed from the scripts/ folder.
+#
+if [ `basename $PWD` != scripts ]
+then
+  if [ -d scripts ]
+  then
+    # The directory stack is automatically reset on script exit.
+    pushd scripts/ > /dev/null
+  else
+    echo ERROR: scripts/ directory not found.
+    exit 1
+  fi
+fi
+
+git fetch --tags
+# Get the current branch name from the second argument
+BRANCH_NAME=$2
+echo "The branch name is: ${BRANCH_NAME}"
+
+# Get the current version from the latest tag on main
+VERSION_TEXT=$(git describe --tags origin/main)
+
+
+MAJOR=0
+MINOR=0
+PATCH=0
+
+# Get the version number from the version text. 
+if [[ $VERSION_TEXT =~ v([0-9]+)\.([0-9]+)\.([0-9]+) ]]; then
+    MAJOR=${BASH_REMATCH[1]}
+    MINOR=${BASH_REMATCH[2]}
+    PATCH=${BASH_REMATCH[3]}
+fi
+
+echo "Latest version is: ${MAJOR}.${MINOR}.${PATCH}"
+
+# Checkout the branch
+git checkout ${BRANCH_NAME}
+
+
+
+# Get the latest commit message
+LATEST_COMMIT_MESSAGE=$(git log -1 --pretty=%B)
+
+# Check if the latest commit message is of the format "Updated the version to MAJOR.MINOR.PATCH"
+if [[ $LATEST_COMMIT_MESSAGE =~ Updated\ the\ version\ to\ ([0-9]+)\.([0-9]+)\.([0-9]+) ]]; then
+    CHECK_MAJOR=${BASH_REMATCH[1]}
+    CHECK_MINOR=${BASH_REMATCH[2]}
+    CHECK_PATCH=${BASH_REMATCH[3]}
+    echo "The latest commit message is: Updated the version to ${CHECK_MAJOR}.${CHECK_MINOR}.${CHECK_PATCH}"
+    exit 0
+# Check if the latest commit message contains the phrase "Update Version"
+elif [[ $LATEST_COMMIT_MESSAGE == *"Update Version"* ]]; then
+    echo "Start Version Update"
+else
+    echo "Do not update the version"
+    exit 1
+fi
+
+# Check if the latest commit is empty
+if ! git diff --quiet HEAD~1 HEAD; then
+    echo "The latest commit is not empty. Exiting."
+    exit 1
+fi
+
+# Get the first argument that is given to this script. 
+# It should describe the type of version update.
+ARGUMENT=$1
+echo "The first argument is: ${ARGUMENT}"
+
+# Check the type of version update
+if [[ $ARGUMENT == *"MAJOR"* ]]; then
+    MAJOR=$((MAJOR + 1))
+    MINOR=0
+    PATCH=0
+    echo "This is a major version update."
+elif [[ $ARGUMENT == *"MINOR"* ]]; then
+    MINOR=$((MINOR + 1))
+    PATCH=0
+    echo "This is a minor version update."
+elif [[ $ARGUMENT == *"PATCH"* ]]; then
+    PATCH=$((PATCH + 1))
+    echo "This is a patch version update."
+else
+    echo "No version update info given."
+    exit 1
+fi
+
+# Set the new version text
+NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+
+# Check that the new version is indeed larger than the latest version
+if [[ $MAJOR -lt ${BASH_REMATCH[1]} || ($MAJOR -eq ${BASH_REMATCH[1]} && $MINOR -lt ${BASH_REMATCH[2]}) || ($MAJOR -eq ${BASH_REMATCH[1]} && $MINOR -eq ${BASH_REMATCH[2]} && $PATCH -le ${BASH_REMATCH[3]}) ]]; then
+    echo "The new version must be greater than the latest version."
+    exit 1
+fi
+
+echo "NEW_VERSION: ${NEW_VERSION}"
+NEW_VERSION_TEXT="v${NEW_VERSION}"
+
+echo "The new version is set to ${NEW_VERSION_TEXT}"
+
+# Update the major version in test
+sed -i "s/const int major_version = [0-9]\+/const int major_version = ${MAJOR}/" ../test/t8_gtest_version.cxx
+
+# Update the minor version in test
+sed -i "s/const int minor_version = [0-9]\+/const int minor_version = ${MINOR}/" ../test/t8_gtest_version.cxx
+
+# Update the PATCH version in test
+sed -i "s/const int patch = [0-9]\+/const int patch = ${PATCH}/" ../test/t8_gtest_version.cxx
+
+# Update the version in comment in test
+sed -i "s/The current version of t8code is [0-9]\+\.[0-9]\+\.[0-9]\+/The current version of t8code is ${NEW_VERSION}/" ../test/t8_gtest_version.cxx
+
+# Update the version in the citation file
+sed -i "s/version: [0-9]\+\.[0-9]\+\.[0-9]\+/version: ${NEW_VERSION}/" ../CITATION.cff
+
+# Update the date-released in the citation file. 
+CURRENT_DATE=$(date +%F)
+sed -i "s/date-released: \".*\"/date-released: \"${CURRENT_DATE}\"/" ../CITATION.cff
+
+GIT_COMMIT_MESSAGE="Updated the version to ${NEW_VERSION}"
+
+# Add the changes to a new commit
+git config user.name t8ddy
+git config user.email ${{ secrets.T8DDY_MAIL }}
+
+
+echo "git add version.txt"
+git add version.txt
+echo "git commit -m $GIT_COMMIT_MESSAGE"
+git commit -m "$GIT_COMMIT_MESSAGE"
+
+echo "git tag"
+# Tag the new version in git
+if git tag -a $NEW_VERSION_TEXT -m "Version $NEW_VERSION_TEXT"; then
+    echo "Tag created successfully"
+    git push origin ${BRANCH_NAME} --tags
+else
+    echo "Failed to create tag"
+    exit 1
+fi
+
+
+#echo "Updated version to $NEW_VERSION_TEXT"
