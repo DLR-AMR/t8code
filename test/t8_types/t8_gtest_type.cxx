@@ -27,6 +27,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <typeinfo>
 #include <numeric>
 
+/* Tags to differencce between strong types */
 struct dummy_int
 {
 };
@@ -63,6 +64,7 @@ struct int_and_double_tag
 {
 };
 
+/* Strong types for testing */
 using DummyInt = T8Type<int, dummy_int, Addable, Subtractable, AddAssignable, Multipliable, Dividable,
                         PrefixDecrementable, PrefixIncrementable>;
 using DummyInt2 = T8Type<int, dummy_int_2>;
@@ -73,7 +75,11 @@ using Dummy3DVec = T8Type<std::array<double, 3>, dummy_double_3, EqualityCompara
 using DummyName = T8Type<std::string, dummy_name_tag, EqualityComparable, Hashable>;
 using int_and_double = T8Type<int_and_double_struct, int_and_double_tag>;
 
-TEST (t8_gtest_type, strong_type)
+/**
+ * Test if the the strong types are different.
+ * 
+ */
+TEST (t8_gtest_type, strong_type_equality)
 {
   EXPECT_TRUE ((std::is_same<DummyInt, DummyInt>::value));
   EXPECT_TRUE ((std::is_same<DummyInt2, DummyInt2>::value));
@@ -85,7 +91,13 @@ TEST (t8_gtest_type, strong_type)
   EXPECT_FALSE ((std::is_same<DummyInt2, DummyDouble>::value));
   EXPECT_FALSE ((std::is_same<DummyDouble, DummyInt>::value));
   EXPECT_FALSE ((std::is_same<DummyDouble, DummyInt2>::value));
+}
 
+/**
+ *  Check the sizes of the strong types.
+ */
+TEST (t8_gtest_type, strong_type_size)
+{
   EXPECT_EQ (sizeof (DummyInt), sizeof (int));
   EXPECT_EQ (sizeof (DummyDouble), sizeof (double));
   EXPECT_EQ (sizeof (DummyRefInt), sizeof (int *));
@@ -95,6 +107,10 @@ TEST (t8_gtest_type, strong_type)
   EXPECT_EQ (sizeof (int_and_double), sizeof (int_and_double_struct));
 }
 
+/**
+ * Test if each strong type holds the correct values (e.g. the get operator works).
+ * 
+ */
 TEST (t8_gtest_type, strong_type_get)
 {
   DummyInt dummy_int (5);
@@ -117,6 +133,9 @@ TEST (t8_gtest_type, strong_type_get)
   std::for_each (vec.begin (), vec.end (), [n = 5] (const DummyInt &i) mutable { EXPECT_EQ (i.get (), n++); });
 }
 
+/**
+ * Test if the operators of the strong types work.
+ */
 TEST (t8_gtest_type, operators)
 {
   DummyInt my_int (5);
@@ -144,6 +163,9 @@ TEST (t8_gtest_type, operators)
   EXPECT_NE (vec1, vec2);
 }
 
+/**
+ * Test if the strong types are hashable.
+ */
 TEST (t8_gtest_type, hashable)
 {
   std::unordered_map<DummyName, int> my_map

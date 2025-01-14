@@ -28,7 +28,7 @@
 #define T8_DEFAULT_COMMON_HXX
 
 #include <t8_element.h>
-#include <t8_crtp.hxx>
+#include <t8_schemes/t8_crtp.hxx>
 #include <sc_functions.h>
 #include <sc_containers.h>
 
