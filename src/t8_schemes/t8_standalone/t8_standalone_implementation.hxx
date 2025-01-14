@@ -303,7 +303,9 @@ struct t8_standalone_scheme
     for (size_t i = 0; i < T8_ELEMENT_DIM[TEclass]; i++) {
       el->coords[i] = 0;
     }
-    el->type = 0;
+    /* el->type = 0;
+    ToDo-Type */
+    return;
   }
 
   /** Compute the parent of a given element \b elem and store it in \b parent.
@@ -1305,9 +1307,10 @@ struct t8_standalone_scheme
     for (int i = 0; i < T8_ELEMENT_DIM[TEclass]; i++) {
       t8_debugf ("x_%i: %i \n", i, el->coords[i]);
     }
-    for (int e = 0; e < T8_ELEMENT_NUM_EQUATIONS[TEclass]; e++) {
-      t8_debugf ("t_%i: %i \n", e, el->type[e]);
-    }
+    /**  for (int e = 0; e < T8_ELEMENT_NUM_EQUATIONS[TEclass]; e++) {
+    *  t8_debugf ("t_%i: %i \n", e, el->type[e]);
+    *}
+    * ToDo-Type */
   }
 
   static inline void
@@ -1434,42 +1437,6 @@ struct t8_standalone_scheme
 
     int min_value = SC_MIN (T8_ELEMENT_MAXLEVEL[TEclass] - level_inv, (int) SC_MIN (elem1->level, elem2->level));
     return min_value;
-  }
-
-  /** Compute the type of an element at a given level. Starting from its own level,
- * we iterate over the levels and compute the type of this level. If elem is a tetrahedron,
- * we compute it in a tetrahedral fashion up unto the last level where elem is a tet and
- * continue in a pyramidal fashion 
- * \param [in] elem      Input element
- * \param [in] level  The level at which the type is computed
- * \return            The type of \a p at level \a level.
- */
-  static inline t8_element_type_t<TEclass>
-  element_compute_type_at_level (const t8_standalone_element_t<TEclass> *elem, int level)
-  {
-
-    t8_element_type_t<TEclass> type = 0;
-    T8_ASSERT (0 <= elem->level && elem->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
-
-    for (int e = 0; e < T8_ELEMENT_NUM_EQUATIONS[TEclass]; e++) {
-      t8_element_coord_t coord_v0 = elem->coords[t8_type_edge_equations<TEclass>[e][0]];
-      t8_element_coord_t coord_v1 = elem->coords[t8_type_edge_equations<TEclass>[e][1]];
-
-      coord_v0 = (coord_v0 << level) & (t8_standalone_scheme<TEclass>::get_root_len () - 1);
-      coord_v1 = (coord_v1 << level) & (t8_standalone_scheme<TEclass>::get_root_len () - 1);
-
-      if (coord_v0 == coord_v1) {
-        type[e] = elem->type[e] | type[e];
-      }
-      else if (coord_v0 < coord_v1) {
-        type |= (1 << e);
-      }
-      else {
-        T8_ASSERT (coord_v0 > coord_v1);
-        T8_ASSERT (!(type & (t8_element_type_t<TEclass>) (1 << e)).all ());
-      }
-    }
-    return type;
   }
 
   /**
