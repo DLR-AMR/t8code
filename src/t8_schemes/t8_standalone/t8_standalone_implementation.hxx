@@ -36,12 +36,12 @@ struct t8_standalone_scheme
    * \param [in] elem_size  The size of the elements this scheme holds.
   */
   t8_standalone_scheme ()
-    : element_size (sizeof (t8_standalone_element<TEclass>)), ts_context (sc_mempool_new (element_size)),
+    : element_size (sizeof (t8_standalone_element<TEclass>)), scheme_context (sc_mempool_new (element_size)),
       eclass (TEclass) {};
 
  protected:
-  size_t element_size; /**< The size in bytes of an element of class \a eclass */
-  void *ts_context;    /**< Anonymous implementation context. */
+  size_t element_size;  /**< The size in bytes of an element of class \a eclass */
+  void *scheme_context; /**< Anonymous implementation context. */
 
  public:
   t8_eclass eclass; /**< The tree class */
@@ -49,16 +49,16 @@ struct t8_standalone_scheme
   /** Destructor for all default schemes */
   ~t8_standalone_scheme ()
   {
-    T8_ASSERT (ts_context != NULL);
-    SC_ASSERT (((sc_mempool_t *) ts_context)->elem_count == 0);
-    sc_mempool_destroy ((sc_mempool_t *) ts_context);
+    T8_ASSERT (scheme_context != NULL);
+    SC_ASSERT (((sc_mempool_t *) scheme_context)->elem_count == 0);
+    sc_mempool_destroy ((sc_mempool_t *) scheme_context);
   }
 
   /** Move constructor */
   t8_standalone_scheme (t8_standalone_scheme &&other) noexcept
-    : element_size (other.element_size), ts_context (other.ts_context), eclass (other.eclass)
+    : element_size (other.element_size), scheme_context (other.scheme_context), eclass (other.eclass)
   {
-    other.ts_context = nullptr;
+    other.scheme_context = nullptr;
   }
 
   /** Move assignment operator */
@@ -67,24 +67,24 @@ struct t8_standalone_scheme
   {
     if (this != &other) {
       // Free existing resources of moved-to object
-      if (ts_context) {
-        sc_mempool_destroy ((sc_mempool_t *) ts_context);
+      if (scheme_context) {
+        sc_mempool_destroy ((sc_mempool_t *) scheme_context);
       }
 
       // Transfer ownership of resources
       element_size = other.element_size;
       eclass = other.eclass;
-      ts_context = other.ts_context;
+      scheme_context = other.scheme_context;
 
       // Leave the source object in a valid state
-      other.ts_context = nullptr;
+      other.scheme_context = nullptr;
     }
     return *this;
   }
 
   /** Copy constructor */
   t8_standalone_scheme (const t8_standalone_scheme &other)
-    : element_size (other.element_size), ts_context (sc_mempool_new (other.element_size)), eclass (other.eclass) {};
+    : element_size (other.element_size), scheme_context (sc_mempool_new (other.element_size)), eclass (other.eclass) {};
 
   /** Copy assignment operator */
   t8_standalone_scheme &
@@ -92,14 +92,14 @@ struct t8_standalone_scheme
   {
     if (this != &other) {
       // Free existing resources of assigned-to object
-      if (ts_context) {
-        sc_mempool_destroy ((sc_mempool_t *) ts_context);
+      if (scheme_context) {
+        sc_mempool_destroy ((sc_mempool_t *) scheme_context);
       }
 
       // Copy the values from the source object
       element_size = other.element_size;
       eclass = other.eclass;
-      ts_context = sc_mempool_new (other.element_size);
+      scheme_context = sc_mempool_new (other.element_size);
     }
     return *this;
   }
@@ -819,7 +819,7 @@ struct t8_standalone_scheme
    *                        \see t8_cmesh_set_join
    *  \param [in] sign      Depending on the topological orientation of the two tree faces,
    *                        either 0 (both faces have opposite orientation)
-   *                        or 1 (both faces have the same top. orientattion).
+   *                        or 1 (both faces have the same top. orientation).
    *                        \ref t8_eclass_face_orientation
    *  \param [in] is_smaller_face Flag to declare whether \a elem1 belongs to
    *                        the smaller face. A face f of tree T is smaller than
@@ -1170,12 +1170,12 @@ struct t8_standalone_scheme
   element_new (int length, t8_element_t **elem) const
   {
     /* allocate memory */
-    T8_ASSERT (this->ts_context != NULL);
+    T8_ASSERT (this->scheme_context != NULL);
     T8_ASSERT (0 <= length);
     T8_ASSERT (elem != NULL);
 
     for (int i = 0; i < length; ++i) {
-      elem[i] = (t8_element_t *) sc_mempool_alloc ((sc_mempool_t *) this->ts_context);
+      elem[i] = (t8_element_t *) sc_mempool_alloc ((sc_mempool_t *) this->scheme_context);
     }
 
 /* in debug mode, set sensible default values. */
@@ -1235,11 +1235,11 @@ struct t8_standalone_scheme
   void
   element_destroy (int length, t8_element_t **elem) const
   {
-    T8_ASSERT (this->ts_context != NULL);
+    T8_ASSERT (this->scheme_context != NULL);
     T8_ASSERT (0 <= length);
     T8_ASSERT (elem != NULL);
     for (int i = 0; i < length; ++i) {
-      sc_mempool_free ((sc_mempool_t *) ts_context, elem[i]);
+      sc_mempool_free ((sc_mempool_t *) scheme_context, elem[i]);
     }
   }
 
