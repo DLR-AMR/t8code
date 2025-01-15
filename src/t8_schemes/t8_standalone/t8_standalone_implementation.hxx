@@ -36,16 +36,13 @@ struct t8_standalone_scheme
    * \param [in] elem_size  The size of the elements this scheme holds.
   */
   t8_standalone_scheme ()
-    : element_size (sizeof (t8_standalone_element<TEclass>)), scheme_context (sc_mempool_new (element_size)),
-      eclass (TEclass) {};
+    : element_size (sizeof (t8_standalone_element<TEclass>)), scheme_context (sc_mempool_new (element_size)) {};
 
  protected:
   size_t element_size;  /**< The size in bytes of an element of class \a eclass */
   void *scheme_context; /**< Anonymous implementation context. */
 
  public:
-  t8_eclass eclass; /**< The tree class */
-
   /** Destructor for all default schemes */
   ~t8_standalone_scheme ()
   {
@@ -56,7 +53,7 @@ struct t8_standalone_scheme
 
   /** Move constructor */
   t8_standalone_scheme (t8_standalone_scheme &&other) noexcept
-    : element_size (other.element_size), scheme_context (other.scheme_context), eclass (other.eclass)
+    : element_size (other.element_size), scheme_context (other.scheme_context)
   {
     other.scheme_context = nullptr;
   }
@@ -73,7 +70,6 @@ struct t8_standalone_scheme
 
       // Transfer ownership of resources
       element_size = other.element_size;
-      eclass = other.eclass;
       scheme_context = other.scheme_context;
 
       // Leave the source object in a valid state
@@ -84,7 +80,7 @@ struct t8_standalone_scheme
 
   /** Copy constructor */
   t8_standalone_scheme (const t8_standalone_scheme &other)
-    : element_size (other.element_size), scheme_context (sc_mempool_new (other.element_size)), eclass (other.eclass) {};
+    : element_size (other.element_size), scheme_context (sc_mempool_new (other.element_size)) {};
 
   /** Copy assignment operator */
   t8_standalone_scheme &
@@ -98,13 +94,21 @@ struct t8_standalone_scheme
 
       // Copy the values from the source object
       element_size = other.element_size;
-      eclass = other.eclass;
       scheme_context = sc_mempool_new (other.element_size);
     }
     return *this;
   }
 
   // ################################################____GENERAL INFO____################################################
+
+  /** Return the tree class of this scheme.
+   * \return The tree class of this scheme.
+   */
+  inline t8_eclass_t
+  get_eclass (void) const
+  {
+    return TEclass;
+  }
 
   inline size_t
   get_element_size (void) const
