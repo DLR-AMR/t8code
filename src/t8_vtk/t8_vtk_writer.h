@@ -140,13 +140,5 @@ t8_cmesh_vtk_write_file_via_API (t8_cmesh_t cmesh, const char *fileprefix, sc_MP
 int
 t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix);
 
-#if T8_WITH_VTK
-void
-t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
-                                  const int write_treeid, const int write_mpirank, const int write_level,
-                                  const int write_element_id, const int write_ghosts, const int curved_flag,
-                                  const int num_data, t8_vtk_data_field_t *data);
-#endif
-
 T8_EXTERN_C_END ();
 #endif /* T8_VTK_WRITER_C_INTERFACE_H */
