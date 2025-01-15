@@ -24,6 +24,7 @@
 #include <t8_schemes/t8_default/t8_default_line/t8_dline_bits.h>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 #include <t8_schemes/t8_default/t8_default_quad/t8_default_quad.hxx>
+#include <t8_schemes/t8_default/t8_default_quad/t8_default_quad_bits.hxx>
 #include <t8_schemes/t8_scheme.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
@@ -694,7 +695,7 @@ t8_default_scheme_quad::element_get_reference_coords (const t8_element_t *elem, 
                                                       const size_t num_coords, double *out_coords) const
 {
   T8_ASSERT (element_is_valid (elem));
-  t8_dquad_compute_reference_coords ((const t8_dquad_t *) elem, ref_coords, num_coords, out_coords);
+  t8_dquad_compute_reference_coords ((const p4est_quadrant_t *) elem, ref_coords, num_coords, out_coords);
 }
 
 void
