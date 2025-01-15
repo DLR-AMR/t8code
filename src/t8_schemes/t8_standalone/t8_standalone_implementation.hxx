@@ -887,6 +887,7 @@ struct t8_standalone_scheme
 
     t8_standalone_scheme<TEclass>::get_root ((t8_element_t *) el);
 
+    /* There is only one element at level 0, so it must be root */
     if (level == 0) {
       T8_ASSERT (id == 0);
       return;
@@ -895,17 +896,19 @@ struct t8_standalone_scheme
     T8_ASSERT (0 <= id);
     T8_ASSERT (1 <= level && level <= T8_ELEMENT_MAXLEVEL[TEclass]);
 
-    if (id == 0) {
-      t8_standalone_scheme<TEclass>::element_get_first_descendant ((const t8_element_t *) el, (t8_element_t *) el,
-                                                                   level);
-      return;
-    }
-
     while (el->level < level) {
+      /* Shortcut if we need the first descendant of the subtree*/
+      if (id == 0) {
+        t8_standalone_scheme<TEclass>::element_get_first_descendant ((const t8_element_t *) el, (t8_element_t *) el,
+                                                                     level);
+        return;
+      }
+
       t8_linearidx_t sum_descendants_of_children_before = 0;
       t8_linearidx_t num_descendants_of_child = 0;
       int childindex = 0;
 
+      /* Find the first child id so that the sum of descendants of previous child and the own number of descendants is greater than id */
       while (true) {
         t8_standalone_scheme<TEclass>::element_get_num_children ((const t8_element_t *) el);
         t8_standalone_element<TEclass> child;
@@ -913,7 +916,7 @@ struct t8_standalone_scheme
                                                           (t8_element_t *) &child);
         num_descendants_of_child = t8_standalone_scheme<TEclass>::element_count_leaves ((t8_element_t *) &child, level);
 
-        /* Calculate the sum of descendants of the children until we reach the id */
+        /* Add number of descendant of current child to cumulative sum */
         t8_linearidx_t sum_descendants_of_children_until_current
           = sum_descendants_of_children_before + num_descendants_of_child;
 
@@ -926,14 +929,10 @@ struct t8_standalone_scheme
         childindex++;
         T8_ASSERT (childindex < t8_standalone_scheme<TEclass>::element_get_num_children ((const t8_element_t *) el));
       }
-
+      /* Replace el by child to go into next iteration at finer level*/
       t8_standalone_scheme<TEclass>::element_get_child ((const t8_element_t *) el, childindex, (t8_element_t *) el);
+      /* get id in subtree of child */
       id -= sum_descendants_of_children_before;
-      if (id == 0) {
-        t8_standalone_scheme<TEclass>::element_get_first_descendant ((const t8_element_t *) el, (t8_element_t *) el,
-                                                                     level);
-        return;
-      }
     }
     T8_ASSERT (id < T8_ELEMENT_NUM_CHILDREN[TEclass]);
     t8_standalone_scheme<TEclass>::element_get_child ((const t8_element_t *) el, id, (t8_element_t *) el);
@@ -953,13 +952,15 @@ struct t8_standalone_scheme
     const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
     t8_standalone_element<TEclass> ancestor;
 
-    /* Get the ancesotor of the element unless the element level is equal to the level refinement. Then get the first descendant*/
+    /* Determine the starting element for the iterative linear id computation. */
     if (level < el->level) {
+      /* Throw away child ids up to the coarser level */
       t8_standalone_scheme<TEclass>::element_get_ancestor (el, level, &ancestor);
     }
     else {
-      t8_standalone_scheme<TEclass>::element_get_first_descendant ((const t8_element_t *) el,
-                                                                   (t8_element_t *) &ancestor, level);
+      /* Start with the input element. 
+       Copy to have a mutable element. */
+      t8_standalone_scheme<TEclass>::element_copy ((const t8_element_t *) el, (t8_element_t *) &ancestor);
     }
 
     int id = 0;
@@ -970,7 +971,7 @@ struct t8_standalone_scheme
       t8_linearidx_t parent_id = 0;
 
       for (int ichild = 0; ichild < childid; ichild++) {
-        /* el is now parent, so compute child to get sibling of original p */
+        /* el is now parent, so compute child to get sibling of previous el */
         t8_standalone_element<TEclass> child;
         t8_standalone_scheme<TEclass>::element_get_child ((const t8_element_t *) &ancestor, ichild,
                                                           (t8_element_t *) &child);
@@ -1001,7 +1002,7 @@ struct t8_standalone_scheme
     const int child_id = t8_standalone_scheme<TEclass>::element_get_child_id ((const t8_element_t *) elem);
     const int num_siblings = t8_standalone_scheme<TEclass>::element_get_num_siblings ((const t8_element_t *) elem);
     T8_ASSERT (0 <= child_id && child_id < num_siblings);
-    /* If the element is the last child of the parent, we need to go to the parent's successor */
+    /* If the element is the last child of the parent, we need to go to the parent's successor (go to a coarser level)*/
     if (child_id == num_siblings - 1) {
       t8_standalone_scheme<TEclass>::element_get_parent ((const t8_element_t *) succ, (t8_element_t *) succ);
       t8_standalone_scheme<TEclass>::element_construct_successor ((const t8_element_t *) succ, (t8_element_t *) succ);
