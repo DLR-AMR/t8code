@@ -1919,8 +1919,14 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
       SC_CHECK_ABORT (scheme_is_default_quad_hex,
                       "Computing leaf face neighbors currently only works for default quad or hex schemes.");
 
-      t8_forest_iterate_faces (forest, local_neighbor_tree, nca_of_face_desc, face_of_nca, tree_leafs, first_desc_index,
-                               t8_forest_leaf_face_neighbors_iterate, &user_data);
+      // Restrict search array to the leafs from first to last face desc
+      t8_element_array_t face_leafs;
+      const size_t face_leaf_count = last_desc_index - first_desc_index + 1;
+      T8_ASSERT (face_leaf_count > 0);
+      t8_element_array_init_view (&face_leafs, tree_leafs, first_desc_index, face_leaf_count);
+      // Iterate over all leafs at the face and collect them as neighbors.
+      t8_forest_iterate_faces (forest, local_neighbor_tree, nca_of_face_desc, face_of_nca, &face_leafs,
+                               first_desc_index, t8_forest_leaf_face_neighbors_iterate, &user_data);
       // Output of iterate_faces:
       //  Array of indices in tree_leafs of all the face neighbor elements
       //  Assign pneighbor_leaves
