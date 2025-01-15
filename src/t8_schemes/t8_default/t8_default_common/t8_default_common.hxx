@@ -159,6 +159,15 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclassScheme> {
     return *this;
   }
 
+  /** Return the tree class of this scheme.
+   * \return The tree class of this scheme.
+   */
+  inline t8_eclass_t
+  get_eclass (void) const
+  {
+    return eclass;
+  }
+
   /** Return the size of any element of a given class.
    * \return                      The size of an element of class \b ts.
    * We provide a default implementation of this routine that should suffice
