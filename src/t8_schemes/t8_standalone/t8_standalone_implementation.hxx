@@ -344,10 +344,11 @@ struct t8_standalone_scheme
   }
 
   /** Compute the number of siblings of an element. That is the number of 
-   * Children of its parent.
+   * Elements with the same parent (if available).
    * \param [in] elem The element.
    * \return          The number of siblings of \a element.
    * Note that this number is >= 1, since we count the element itself as a sibling.
+   * Note that the number of siblings is 1 for the root element.
    */
   static inline int
   element_get_num_siblings (const t8_element_t *elem)
@@ -356,8 +357,9 @@ struct t8_standalone_scheme
 
     const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
     if (el->level == 0)
-      SC_ABORT ("The root element has no siblings.\n");
+      return 1;
     T8_ASSERT (0 < el->level && el->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
+    /* To get the number siblings, we first get the parent and then get the number of children of that parent*/
     t8_standalone_element<TEclass> parent;
     t8_standalone_scheme<TEclass>::element_get_parent ((const t8_element_t *) el, (t8_element_t *) &parent);
     return t8_standalone_scheme<TEclass>::element_get_num_children ((const t8_element_t *) &parent);
@@ -435,12 +437,6 @@ struct t8_standalone_scheme
     const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
     T8_ASSERT (0 <= el->level && el->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
 
-    if constexpr (TEclass == T8_ECLASS_PYRAMID) {
-      if (element_get_shape ((const t8_element_t *) el) == T8_ECLASS_PYRAMID) {
-        return 10;
-      }
-      return 6;
-    }
     return T8_ELEMENT_NUM_CHILDREN[TEclass];
   }
 
@@ -603,7 +599,7 @@ struct t8_standalone_scheme
     T8_ASSERT (level >= el->level);
     T8_ASSERT (0 <= level && level <= T8_ELEMENT_MAXLEVEL[TEclass]);
 
-    /* The first descendant of a pyramid has the same anchor coords and type, but another level */
+    /* The first descendant of an element has the same anchor coords and type, but another level */
     t8_standalone_scheme<TEclass>::element_copy ((const t8_element_t *) el, (t8_element_t *) d);
     d->level = level;
 
@@ -1308,7 +1304,12 @@ struct t8_standalone_scheme
   static inline void
   element_to_string (const t8_element_t *elem, char *debug_string, const int string_size)
   {
-    SC_ABORT ("This function is not implemented yet.\n");
+    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
+    int offset = 0;
+    offset += snprintf (debug_string + offset, string_size - offset, "level: %i\n", el->level);
+    for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
+      offset += snprintf (debug_string + offset, string_size - offset, "x_%i: %i \n", idim, el->coords[idim]);
+    }
   }
 
 #endif
@@ -1316,7 +1317,6 @@ struct t8_standalone_scheme
   // ################################################____MPI____################################################
 
   /** Pack multiple elements into contiguous memory, so they can be sent via MPI.
-     * \param [in] tree_class    The eclass of the current tree.
      * \param [in] elements Array of elements that are to be packed
      * \param [in] count Number of elements to pack
      * \param [in,out] send_buffer Buffer in which to pack the elements
@@ -1327,12 +1327,22 @@ struct t8_standalone_scheme
   inline void
   element_MPI_Pack (t8_element_t **const elements, const unsigned int count, void *send_buffer, int buffer_size,
                     int *position, sc_MPI_Comm comm) const
+
   {
-    SC_ABORT ("This function is not implemented in this scheme yet.\n");
+    int mpiret;
+    t8_standalone_element<TEclass> **els = (t8_standalone_element<TEclass> **) elements;
+
+    for (unsigned int ielem = 0; ielem < count; ielem++) {
+      for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
+        mpiret = sc_MPI_Pack (&(els[ielem]->coords[idim]), 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
+        SC_CHECK_MPI (mpiret);
+      }
+      mpiret = sc_MPI_Pack (&els[ielem]->level, 1, sc_MPI_INT8_T, send_buffer, buffer_size, position, comm);
+      SC_CHECK_MPI (mpiret);
+    }
   }
 
   /** Determine an upper bound for the size of the packed message of \a count elements
-     * \param [in] tree_class    The eclass of the current tree.
      * \param [in] count Number of elements to pack
      * \param [in] comm MPI Communicator
      * \param [out] pack_size upper bound on the message size
@@ -1340,11 +1350,24 @@ struct t8_standalone_scheme
   inline void
   element_MPI_Pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size) const
   {
-    SC_ABORT ("This function is not implemented in this scheme yet.\n");
+    int singlesize = 0;
+    int datasize = 0;
+    int mpiret;
+
+    /* x,y,z */
+    mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &datasize);
+    SC_CHECK_MPI (mpiret);
+    singlesize += T8_ELEMENT_DIM[TEclass] * datasize;
+
+    /* level */
+    mpiret = sc_MPI_Pack_size (1, sc_MPI_INT8_T, comm, &datasize);
+    SC_CHECK_MPI (mpiret);
+    singlesize += datasize;
+
+    *pack_size = count * singlesize;
   }
 
   /** Unpack multiple elements from contiguous memory that was received via MPI.
-     * \param [in] tree_class    The eclass of the current tree.
      * \param [in] recvbuf Buffer from which to unpack the elements
      * \param [in] buffer_size size of the buffer (in order to check that we don't access out of range)
      * \param [in, out] position the position of the first byte that is not already packed
@@ -1356,7 +1379,17 @@ struct t8_standalone_scheme
   element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements,
                       const unsigned int count, sc_MPI_Comm comm) const
   {
-    SC_ABORT ("This function is not implemented in this scheme yet.\n");
+    int mpiret;
+    t8_standalone_element<TEclass> **els = (t8_standalone_element<TEclass> **) elements;
+
+    for (unsigned int ielem = 0; ielem < count; ielem++) {
+      for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
+        mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(els[ielem]->coords[idim]), 1, sc_MPI_INT, comm);
+        SC_CHECK_MPI (mpiret);
+      }
+      mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(els[ielem]->level), 1, sc_MPI_INT8_T, comm);
+      SC_CHECK_MPI (mpiret);
+    }
   }
 
  private:
@@ -1461,6 +1494,14 @@ struct t8_standalone_scheme
     }
   }
 
+  /**
+ * Adjust the coordinates based on the cube ID.
+ * 
+ * \param[in]       el       Input element
+ * \param[in, out]  elem     Output element
+ * \param[in]       length   Length to add based on cube ID
+ * \param[in]       cube_id  Cube ID for bitwise operation
+ */
   static inline void
   bithelper_function (const t8_standalone_element<TEclass> *el, t8_standalone_element<TEclass> *elem,
                       const t8_element_coord length, t8_cube_id cube_id)
@@ -1469,6 +1510,7 @@ struct t8_standalone_scheme
       elem->coords[i] = el->coords[i] + ((cube_id & (1 << i)) ? length : 0);
     }
   }
+
   static inline t8_element_coord
   get_root_len ()
   {
