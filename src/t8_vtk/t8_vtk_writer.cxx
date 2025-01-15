@@ -151,8 +151,8 @@ t8_forest_to_vtkUnstructuredGrid (const t8_forest_t forest, vtkSmartPointer<vtkU
                                   const int write_element_id, const int write_ghosts, const int curved_flag,
                                   const int num_data, t8_vtk_data_field_t *data)
 {
-  std::cout << "Into t8_forest_to_vtkUnstructuredGrid with num_elements: " << t8_forest_get_local_num_elements (forest)
-            << std::endl;
+  t8_productionf ("Into t8_forest_to_vtkUnstructuredGrid with num_elements: %d\n",
+                  t8_forest_get_local_num_elements (forest));
   vtk_writer<t8_forest_t> writer (write_treeid, write_mpirank, write_level, write_element_id, write_ghosts, curved_flag,
                                   std::string (""), num_data, data, t8_forest_get_mpicomm (forest));
   writer.grid_to_vtkUnstructuredGrid (forest, unstructuredGrid);

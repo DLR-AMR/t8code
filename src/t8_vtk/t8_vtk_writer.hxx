@@ -349,8 +349,7 @@ class vtk_writer {
     bool do_ghosts = grid_do_ghosts (grid, write_ghosts);
     /* Compute the number of cells on this process. */
     t8_locidx_t num_cells = num_cells_to_write (grid, do_ghosts);
-
-    std::cout << "Number of cells to write: " << num_cells << std::endl;
+    t8_productionf ("Number of cells to write: %ld\n", num_cells);
 
     int *cellTypes = T8_ALLOC (int, num_cells);
     T8_ASSERT (cellTypes != NULL);
