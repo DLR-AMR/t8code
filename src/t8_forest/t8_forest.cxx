@@ -1851,14 +1851,21 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
   // The neighbor leafs could be distributed across a local tree and a ghost
   // tree. We thus possibly need to search in two different arrays.
   // We store these in a vector and iterate over the entries.
-  std::vector<const t8_element_array_t *> leaf_arrays;
+  // The leaf arrays themself do not store any information about their tree,
+  // whether it is local or ghost.
+  // We thus need to add this info and hence store a pair of element array and
+  // a bool that is true if and only if the element array corresponds to a ghost tree.
+  using neighbor_leaf_array = std::pair<const t8_element_array_t *, const bool>;
+
+  std::vector<const neighbor_leaf_array *> leaf_arrays;
   // Compute the local id of the neighbor tree and check if it is a local tree
   const t8_locidx_t local_neighbor_tree = t8_forest_get_local_id (forest, *gneigh_tree);
   if (0 <= local_neighbor_tree) {
     // The neighbor tree is a local tree and hence there may be local neighbor elements.
     const t8_element_array_t *tree_leafs = t8_forest_tree_get_leaves (forest, local_neighbor_tree);
     if (tree_leafs != nullptr) {
-      leaf_arrays.push_back (tree_leafs);
+      neighbor_leaf_array *leaf_array = new neighbor_leaf_array (tree_leafs, false);
+      leaf_arrays.push_back (leaf_array);
     }
   }
 
@@ -1870,7 +1877,8 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
       // We add the ghost elements of that tree to our search array.
       const t8_element_array_t *ghost_leafs = t8_forest_ghost_get_tree_elements (forest, local_neighbor_ghost_treeid);
       if (ghost_leafs != nullptr) {
-        leaf_arrays.push_back (ghost_leafs);
+        neighbor_leaf_array *leaf_array = new neighbor_leaf_array (ghost_leafs, true);
+        leaf_arrays.push_back (leaf_array);
       }
     }
   }
@@ -1888,7 +1896,9 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
   *pneighbor_leaves = NULL;
   *pelement_indices = NULL;
   *dual_faces = NULL;
-  for (auto &tree_leafs : leaf_arrays) {
+  for (auto &leaf_array : leaf_arrays) {
+    auto &tree_leafs = leaf_array->first;
+    const bool leaf_array_is_ghost = leaf_array->second;
     const t8_locidx_t first_desc_search = t8_forest_bin_search_lower (tree_leafs, first_face_desc_id, maxlevel);
     const t8_locidx_t last_desc_search = t8_forest_bin_search_lower (tree_leafs, last_face_desc_id, maxlevel);
     if (first_desc_search >= 0 || last_desc_search >= 0) {
@@ -1925,7 +1935,13 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
       T8_ASSERT (face_leaf_count > 0);
       t8_element_array_init_view (&face_leafs, tree_leafs, first_desc_index, face_leaf_count);
       // Iterate over all leafs at the face and collect them as neighbors.
-      t8_forest_iterate_faces (forest, local_neighbor_tree, nca_of_face_desc, face_of_nca, &face_leafs,
+      const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
+      // Compute the local or ghost tree id depending on whether this leaf array corresponds to a local
+      // tree or ghost tree.
+      const t8_locidx_t face_iterate_tree_id
+        = leaf_array_is_ghost ? t8_forest_ghost_get_ghost_treeid (forest, *gneigh_tree) + num_local_trees
+                              : local_neighbor_tree;
+      t8_forest_iterate_faces (forest, face_iterate_tree_id, nca_of_face_desc, face_of_nca, &face_leafs,
                                first_desc_index, t8_forest_leaf_face_neighbors_iterate, &user_data);
       // Output of iterate_faces:
       //  Array of indices in tree_leafs of all the face neighbor elements
