@@ -25,7 +25,7 @@
 
 #include <t8.h>
 #include <t8_vtk.h>
-#include <t8_forest/t8_forest_types.h>
+#include <t8_forest/t8_forest.h>
 
 #if T8_WITH_VTK
 #include <vtkUnstructuredGrid.h>
