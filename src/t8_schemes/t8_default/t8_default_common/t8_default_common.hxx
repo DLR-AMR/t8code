@@ -97,10 +97,9 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclassScheme> {
  protected:
   size_t element_size; /**< The size in bytes of an element of class \a eclass */
   void *ts_context;    /**< Anonymous implementation context. */
+  t8_eclass_t eclass;  /**< The tree class */
 
  public:
-  t8_eclass_t eclass; /**< The tree class */
-
   /** Destructor for all default schemes */
   ~t8_default_scheme_common ()
   {
