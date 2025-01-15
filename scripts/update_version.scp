@@ -69,31 +69,6 @@ echo "Latest version is: ${MAJOR}.${MINOR}.${PATCH}"
 git checkout ${BRANCH_NAME}
 
 
-
-# Get the latest commit message
-LATEST_COMMIT_MESSAGE=$(git log -1 --pretty=%B)
-
-# Check if the latest commit message is of the format "Updated the version to MAJOR.MINOR.PATCH"
-if [[ $LATEST_COMMIT_MESSAGE =~ Updated\ the\ version\ to\ ([0-9]+)\.([0-9]+)\.([0-9]+) ]]; then
-    CHECK_MAJOR=${BASH_REMATCH[1]}
-    CHECK_MINOR=${BASH_REMATCH[2]}
-    CHECK_PATCH=${BASH_REMATCH[3]}
-    echo "The latest commit message is: Updated the version to ${CHECK_MAJOR}.${CHECK_MINOR}.${CHECK_PATCH}"
-    exit 0
-# Check if the latest commit message contains the phrase "Update Version"
-elif [[ $LATEST_COMMIT_MESSAGE == *"Update Version"* ]]; then
-    echo "Start Version Update"
-else
-    echo "Do not update the version"
-    exit 1
-fi
-
-# Check if the latest commit is empty
-if ! git diff --quiet HEAD~1 HEAD; then
-    echo "The latest commit is not empty. Exiting."
-    exit 1
-fi
-
 # Get the first argument that is given to this script. 
 # It should describe the type of version update.
 ARGUMENT=$1

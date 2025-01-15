@@ -161,10 +161,8 @@ jobs:
         fetch-depth: 0
     - name: Check if commit is empty
       run: |
-        if git diff --cached --exit-code; then
-          echo "Empty commit detected"
-          else
-          echo "Commit is not empty"
+        if ! git diff --quiet HEAD~1 HEAD; then
+          echo "The latest commit is not empty. Exiting."
           exit 1
         fi
     - name: Check commit message
