@@ -159,6 +159,14 @@ jobs:
         repository: ${{ github.event.pull_request.head.repo.full_name }}
         ref: ${{ github.event.pull_request.head.ref }}
         fetch-depth: 0
+    - name: Check if commit is empty
+      run: |
+        if git diff --cached --exit-code; then
+          echo "Empty commit detected"
+          else
+          echo "Commit is not empty"
+          exit 1
+        fi
     - name: Check commit message
       id: check_commit_message
       run: |
