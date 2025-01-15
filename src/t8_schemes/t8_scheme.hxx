@@ -164,7 +164,7 @@ class t8_scheme {
   inline t8_eclass_t
   get_eclass_scheme_eclass (const t8_eclass_t tree_class) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.eclass; }, eclass_schemes[tree_class]);
+    return std::visit ([&] (auto &&scheme) { return scheme.get_eclass (); }, eclass_schemes[tree_class]);
   }
 
   /** Return the size of any element of a given class.

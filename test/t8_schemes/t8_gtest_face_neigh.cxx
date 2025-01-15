@@ -76,8 +76,7 @@ t8_test_face_neighbor_inside (int num_faces, t8_element_t *element, t8_element_t
     scheme->element_get_face_neighbor_inside (eclass, child, neigh, iface, &face_num);
     scheme->element_get_face_neighbor_inside (eclass, neigh, element, face_num, &check);
 
-    EXPECT_TRUE (scheme->element_is_equal (eclass, child, element)) << "Got a false neighbor.";
-    EXPECT_ELEM_EQ (scheme, eclass, child, element);
+    EXPECT_ELEM_EQ (scheme, tree_class, child, element) << "Got a false neighbor.";
   }
 }
 
