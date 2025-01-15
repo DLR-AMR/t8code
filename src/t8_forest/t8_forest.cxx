@@ -1770,6 +1770,17 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
                                    t8_locidx_t **pelement_indices, t8_eclass_scheme_c **pneigh_scheme,
                                    t8_gloidx_t *gneigh_tree, int *orientation)
 {
+  /* We compute all face neighbor leaf elements of E via the following strategy:
+   * - Compute the same level face neighbor N
+   * - Compute the first and last face descendants FD, LD, of N
+   * - The neighbor tree could be a local tree or ghost (or both),
+   *   for each variant get the leaf array of the neighbor tree and search in it:
+   *   - Search for FD and LD in the leaf array and get indices of the nearest matching leaf elements.
+   *   - For the matching leaf elements, compute their nca (nearest common ancestor) - that is the finest element that contains both of them.
+   *     This nca will contain all face neighbors (in the local tree or ghost tree).
+   *   - Use the nca as a starting point for a recursive search across its corresponding face.
+   *     Each element found on the face is a matching leaf face neighbor of E.
+   **/
 
   T8_ASSERT (t8_forest_is_committed (forest));
 #if T8_ENABLE_DEBUG
@@ -1796,8 +1807,8 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
     *orientation = t8_forest_leaf_face_orientation (forest, ltreeid, ts, leaf_or_ghost, face);
   }
 
-  /* At first we compute these children of the face neighbor elements of leaf. For this, we need the
-    * neighbor tree's eclass, scheme, and tree id */
+  /* At first we compute the same lave face neighbor element of leaf. For this, we need the
+   * neighbor tree's eclass and scheme. */
   const t8_eclass_t neigh_class = t8_forest_element_neighbor_eclass (forest, ltreeid, leaf_or_ghost, face);
   const t8_eclass_scheme_c *neigh_scheme = *pneigh_scheme = t8_forest_get_eclass_scheme (forest, neigh_class);
 
@@ -1820,7 +1831,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
 
   const int maxlevel = neigh_scheme->t8_element_maxlevel ();
 
-  // Compute the first and last face descendant of the neighbor
+  // Compute the first and last face descendant of the neighbor to compute their ids
   t8_element_t *first_face_desc;
   t8_element_t *last_face_desc;
   neigh_scheme->t8_element_new (1, &first_face_desc);
