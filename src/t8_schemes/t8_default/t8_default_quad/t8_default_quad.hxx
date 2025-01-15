@@ -85,6 +85,9 @@ class t8_default_scheme_quad: public t8_default_scheme_common<t8_default_scheme_
   /** Constructor which calls the specialized constructor for the base. */
   t8_default_scheme_quad (): t8_default_scheme_common (T8_ECLASS_QUAD, sizeof (t8_pquad_t)) {};
 
+  /** Constructor with a custom element size. */
+  t8_default_scheme_quad (size_t elem_size): t8_default_scheme_common (T8_ECLASS_QUAD, elem_size) {};
+
   /** Destructor */
   ~t8_default_scheme_quad () {};
 
