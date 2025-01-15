@@ -168,7 +168,7 @@ jobs:
           echo "Update version"
           echo "VERSION_UPDATE=true" >> $GITHUB_OUTPUT
         else
-          echo "do not update version"
+          echo "Do not update version"
           echo "VERSION_UPDATE=false" >> $GITHUB_OUTPUT
         fi
 
