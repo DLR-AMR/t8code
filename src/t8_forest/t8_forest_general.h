@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2024 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@ typedef enum {
   T8_GHOST_FACES,      /**< Consider all face (codimension 1) neighbors. */
   T8_GHOST_EDGES,      /**< Consider all edge (codimension 2) and face neighbors. */
   T8_GHOST_VERTICES,   /**< Consider all vertex (codimension 3) and edge and face neighbors. */
-  T8_GHOST_USERDEFINED /** If the user define by his self a step_1 or step_2 function*/
+  T8_GHOST_USERDEFINED /**< for user-defined neighborhoods */
 } t8_ghost_type_t;
 
 /** This typedef is needed as a helper construct to 
@@ -372,14 +372,14 @@ t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost
 
 /** Set a ghost_interface
  * In application schoud only used if the user creates its own ghost_interface class (type = userderdefined)
- * \param [in]    forest          the fores
- * \param [in]    do_ghost        ---
- * \param [in]    ghost_interface pointer to an object of the class ghost_interface or a derived class
+ * \param [in]    forest          The forest
+ * \param [in]    do_ghost        If 0 no ghost layer will be computed
+ * \param [in]    ghost_interface Pointer to an object of the class ghost_interface or a derived class
  *                                The forest takes ownership of the ghost_interface
  * \note if the forest has already a ghost_interface, the old one will be unref and the new one will be set.
 */
 void
-t8_forest_set_ghost_ext_new (t8_forest_t forest, int do_ghost, t8_forest_ghost_interface_c *ghost_interface);
+t8_forest_set_ghost_ext_new (t8_forest_t forest, const int do_ghost, t8_forest_ghost_interface_c *ghost_interface);
 
 /* TODO: use assertions and document that the forest_set (..., from) and
  *       set_load are mutually exclusive. */

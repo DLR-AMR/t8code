@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2024 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -31,7 +31,11 @@ struct t8_forest_ghost_w_search: public t8_forest_ghost_interface
 {
  public:
   /**
-    * Constructor
+    * Constructors:
+    * there are three ways to construct a object of t8_forest_ghost_w_search
+    * t8_forest_ghost_w_search (), 
+    * t8_forest_ghost_w_search (t8_forest_search_fn search_function),
+    * t8_forest_ghost_w_search (const t8_ghost_type_t ghost_type)
     */
   t8_forest_ghost_w_search ();
 
@@ -53,7 +57,7 @@ struct t8_forest_ghost_w_search: public t8_forest_ghost_interface
    * The search_function is chosen by the type
    * \note currently only the type face is supported
    */
-  explicit t8_forest_ghost_w_search (t8_ghost_type_t ghost_type);
+  explicit t8_forest_ghost_w_search (const t8_ghost_type_t ghost_type);
 
   virtual ~t8_forest_ghost_w_search ()
   {
@@ -82,7 +86,7 @@ struct t8_forest_ghost_w_search: public t8_forest_ghost_interface
    * \param [in] ghost_type       The type (faces, edges, userdefind, ...) of the ghost_interface
    * \param [in] search_function  Function of type t8_forest_search_fn, used as callbackfunktion in search_for_ghost_elements
    */
-  t8_forest_ghost_w_search (t8_ghost_type_t ghost_type, t8_forest_search_fn search_function)
+  t8_forest_ghost_w_search (const t8_ghost_type_t ghost_type, const t8_forest_search_fn search_function)
     : t8_forest_ghost_interface (ghost_type), search_fn (search_function)
   {
     T8_ASSERT (ghost_type != T8_GHOST_NONE);
@@ -100,7 +104,7 @@ struct t8_forest_ghost_face: public t8_forest_ghost_w_search
    * \param [in] version    one of tree versions (1,2,3) can be used
    * \note version 3 is the same treesearch as in t8_forest_ghost_w_search
    */
-  explicit t8_forest_ghost_face (int version);
+  explicit t8_forest_ghost_face (const int version);
 
   inline int
   get_version () const

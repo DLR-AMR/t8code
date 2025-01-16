@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2024 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -2916,11 +2916,10 @@ t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from, int no_re
 }
 
 void
-t8_forest_set_ghost_ext_new (t8_forest_t forest, int do_ghost, t8_forest_ghost_interface_c *ghost_interface)
+t8_forest_set_ghost_ext_new (t8_forest_t forest, const int do_ghost, t8_forest_ghost_interface_c *ghost_interface)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
-  SC_CHECK_ABORT (do_ghost != 0, "do_ghost == 0 in set_ghost_ext_new.\n");
-  SC_CHECK_ABORT (ghost_interface != NULL, "invalides ghost interface in set_ghost_ext_new\n");
+  T8_ASSERT (!(do_ghost == 1 && ghost_interface == NULL));
   if (forest->ghost_interface != NULL) {
     t8_forest_ghost_interface_unref (&(forest->ghost_interface));
   }
@@ -3213,7 +3212,6 @@ t8_forest_commit (t8_forest_t forest)
     if (forest->ghost_interface == NULL && forest->set_from->ghost_interface != NULL) {
       forest->ghost_interface = forest->set_from->ghost_interface;
       t8_forest_ghost_interface_ref (forest->ghost_interface);
-      t8_debugf ("t8_forest_commit: uebernehme ghost von set_from\n");
     }
 
     /* Compute the maximum allowed refinement level */

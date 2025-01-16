@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2024 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -70,8 +70,9 @@ struct t8_forest_ghost_stencil: t8_forest_ghost_interface
    * \note some parameters currently expect specific values
    */
   void
-  add_stencil_to_ghost (t8_forest_t forest, const t8_element_t *element, t8_eclass_scheme_c *eclass_scheme, int level,
-                        t8_eclass_t tree_class, t8_locidx_t ltreeid, t8_locidx_t ielement);
+  add_stencil_to_ghost (t8_forest_t forest, const t8_element_t *element, const t8_eclass_scheme_c *eclass_scheme,
+                        const int level, const t8_eclass_t tree_class, const t8_locidx_t ltreeid,
+                        const t8_locidx_t ielement);
 };
 
 T8_EXTERN_C_END ();
