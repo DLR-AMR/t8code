@@ -1544,7 +1544,6 @@ struct t8_standalone_scheme
   static inline t8_linearidx_t
   num_descendants_at_leveldiff (const t8_element_t *elem, const int leveldiff)
   {
-    t8_standalone_element<TEclass> *p = (t8_standalone_element<TEclass> *) elem;
     if (leveldiff < 0)
       return 0;
     if constexpr (TEclass == T8_ECLASS_PYRAMID) {
