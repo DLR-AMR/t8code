@@ -470,12 +470,12 @@ class t8_scheme {
   };
 
   /** Query whether a given set of elements is a family or not.
-     * \param [in] tree_class    The eclass of the current tree.
-     * \param [in] fam      An array of as many elements as an element of class
-     *                      \a tree_class has siblings.
-     * \return              Zero if \a fam is not a family, nonzero if it is.
-     * \note level 0 elements do not form a family.
-     */
+   * \param [in] tree_class    The eclass of the current tree.
+   * \param [in] fam      An array of as many elements as an element of class
+   *                      \a tree_class has siblings.
+   * \return              Zero if \a fam is not a family, nonzero if it is.
+   * \note level 0 elements do not form a family.
+   */
   inline bool
   elements_are_family (const t8_eclass_t tree_class, t8_element_t *const *fam) const
   {
@@ -551,19 +551,18 @@ class t8_scheme {
       |      |   |      x           |   x--x
       |      |   |                  |      |
       x ---- x   x                  x ---- x
-        elem    face  face_child    Returns the face number f
-      \endverbatim
-
-    * \param [in] tree_class    The eclass of the current tree.
-    * \param [in]  elem    The element.
-    * \param [in]  face    Then number of the face.
-    * \param [in]  face_child A number 0 <= \a face_child < num_face_children,
-    *                      specifying a child of \a elem that shares a face with \a face.
-    *                      These children are counted in linear order. This coincides with
-    *                      the order of children from a call to \ref t8_element_children_at_face.
-    * \return              The face number of the face of a child of \a elem
-    *                      that coincides with \a face_child.
-    */
+       elem    face  face_child    Returns the face number f
+     \endverbatim
+   * \param [in] tree_class    The eclass of the current tree.
+   * \param [in]  elem    The element.
+   * \param [in]  face    Then number of the face.
+   * \param [in]  face_child A number 0 <= \a face_child < num_face_children,
+   *                      specifying a child of \a elem that shares a face with \a face.
+   *                      These children are counted in linear order. This coincides with
+   *                      the order of children from a call to \ref t8_element_children_at_face.
+   * \return              The face number of the face of a child of \a elem
+   *                      that coincides with \a face_child.
+   */
   inline int
   element_face_get_child_face (const t8_eclass_t tree_class, const t8_element_t *elem, const int face,
                                const int face_child) const
@@ -938,12 +937,12 @@ class t8_scheme {
   };
 
   /**
-   * Print a given element. For a example for a triangle print the coordinates
-   * and the level of the triangle. This function is only available in the
-   * debugging configuration.
-   * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] elem  The element to print
-   */
+ * Print a given element. For a example for a triangle print the coordinates
+ * and the level of the triangle. This function is only available in the
+ * debugging configuration.
+ * \param [in] tree_class    The eclass of the current tree.
+ * \param [in] elem  The element to print
+ */
   inline void
   element_debug_print (const t8_eclass_t tree_class, const t8_element_t *elem) const
   {
@@ -951,11 +950,11 @@ class t8_scheme {
   };
 
   /**
-   * Fill a string with readable information about the element
-   * \param [in] tree_class    The eclass of the current tree.
-   * \param[in] elem The element to translate into human-readable information
-   * \param[in, out] debug_string The string to fill.
-   */
+ * Fill a string with readable information about the element
+ * \param [in] tree_class    The eclass of the current tree.
+ * \param[in] elem The element to translate into human-readable information
+ * \param[in, out] debug_string The string to fill.
+ */
   inline void
   element_to_string (const t8_eclass_t tree_class, const t8_element_t *elem, char *debug_string,
                      const int string_size) const
