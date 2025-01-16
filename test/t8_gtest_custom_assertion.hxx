@@ -74,6 +74,9 @@ element_equality (const char *ts_expr, const char *tree_class_expr, const char *
 #define EXPECT_ELEM_EQ(scheme, eclass, elem1, elem2) \
   EXPECT_PRED_FORMAT4 (element_equality, (scheme), (eclass), (elem1), (elem2))
 
+#define ASSERT_ELEM_EQ(scheme, tree_class, elem1, elem2) \
+  ASSERT_PRED_FORMAT4 (element_equality, (scheme), (tree_class), (elem1), (elem2))
+
 /**
  * \brief Test if two 3D vectors are equal with respect to a given precision
  * 
