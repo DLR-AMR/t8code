@@ -577,7 +577,6 @@ struct t8_standalone_scheme
 
     const t8_standalone_element<TEclass> *el1 = (const t8_standalone_element<TEclass> *) elem1;
     const t8_standalone_element<TEclass> *el2 = (const t8_standalone_element<TEclass> *) elem2;
-    t8_standalone_element<TEclass> nca2;
     /* get the first possible level of the nca*/
     int cube_ancestor_level = t8_standalone_scheme<TEclass>::element_get_cube_nca_level (el1, el2);
     int real_level = cube_ancestor_level;
