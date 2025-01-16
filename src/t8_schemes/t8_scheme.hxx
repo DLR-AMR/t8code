@@ -241,11 +241,11 @@ class t8_scheme {
   };
 
   /** Check if two elements are equal.
-    * \param [in] tree_class    The eclass of the current tree.
-    * \param [in] elem1  The first element.
-    * \param [in] elem2  The second element.
-    * \return            true if the elements are equal, false if they are not equal
-    */
+   * \param [in] tree_class    The eclass of the current tree.
+  * \param [in] elem1  The first element.
+  * \param [in] elem2  The second element.
+  * \return            true if the elements are equal, false if they are not equal
+  */
   inline bool
   element_is_equal (const t8_eclass_t tree_class, const t8_element_t *elem1, const t8_element_t *elem2) const
   {
