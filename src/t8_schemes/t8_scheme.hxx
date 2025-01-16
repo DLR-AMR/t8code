@@ -843,13 +843,13 @@ class t8_scheme {
 
   /** Compute the coordinates of a given element vertex inside a reference tree
    * that is embedded into [0,1]^d (d = dimension).
-   * \param [in] tree_class    The eclass of the current tree. 
+   * \param [in] tree_class    The eclass of the current tree.
    * \param [in] t      The element to be considered.
    * \param [in] vertex The id of the vertex whose coordinates shall be computed.
    * \param [out] coords An array of at least as many doubles as the element's dimension
    *                    whose entries will be filled with the coordinates of \a vertex.
    * \warning           coords should be zero-initialized, as only the first d coords will be set, but when used elsewhere
-   *                    all coords might be used.
+   *                    all coords might be used. 
    */
   inline void
   element_get_vertex_reference_coords (const t8_eclass_t tree_class, const t8_element_t *t, const int vertex,
