@@ -553,6 +553,7 @@ class t8_scheme {
       x ---- x   x                  x ---- x
        elem    face  face_child    Returns the face number f
      \endverbatim
+
    * \param [in] tree_class    The eclass of the current tree.
    * \param [in]  elem    The element.
    * \param [in]  face    Then number of the face.
@@ -599,7 +600,7 @@ class t8_scheme {
    * \return The index of the tree face that \a face is a subface of, if
    *         \a face is on a tree boundary.
    *         Any arbitrary integer if \a is not at a tree boundary.
-   * \warning The return value may look like a valid face of the tree even if
+   * \warning The return value may look like a valid face of the tree even if 
    *   the element does not lie on the root boundary.
    */
   inline int
@@ -842,7 +843,7 @@ class t8_scheme {
 
   /** Compute the coordinates of a given element vertex inside a reference tree
    * that is embedded into [0,1]^d (d = dimension).
-   * \param [in] tree_class    The eclass of the current tree.
+   * \param [in] tree_class    The eclass of the current tree. 
    * \param [in] t      The element to be considered.
    * \param [in] vertex The id of the vertex whose coordinates shall be computed.
    * \param [out] coords An array of at least as many doubles as the element's dimension
@@ -940,7 +941,7 @@ class t8_scheme {
  * Print a given element. For a example for a triangle print the coordinates
  * and the level of the triangle. This function is only available in the
  * debugging configuration.
- * \param [in] tree_class    The eclass of the current tree.
+ * \param [in] tree_class    The eclass of the current tree. 
  * \param [in] elem  The element to print
  */
   inline void
@@ -953,7 +954,7 @@ class t8_scheme {
  * Fill a string with readable information about the element
  * \param [in] tree_class    The eclass of the current tree.
  * \param[in] elem The element to translate into human-readable information
- * \param[in, out] debug_string The string to fill.
+ * \param[in, out] debug_string The string to fill. 
  */
   inline void
   element_to_string (const t8_eclass_t tree_class, const t8_element_t *elem, char *debug_string,
