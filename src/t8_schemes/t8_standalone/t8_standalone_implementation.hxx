@@ -182,10 +182,6 @@ struct t8_standalone_scheme
   element_get_shape (const t8_element_t *elem)
   {
     T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem));
-
-    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
-    T8_ASSERT (0 <= el->level && el->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
-
     return TEclass;
   }
 
