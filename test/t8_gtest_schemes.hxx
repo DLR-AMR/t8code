@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2023 the developers
+  Copyright (C) 2024 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,36 +20,25 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_gtest_macros.hxx
-* Provide macros for instantiating parameterized tests
-*/
+#ifndef T8_GTEST_SCHEMES_HXX
+#define T8_GTEST_SCHEMES_HXX
 
-#ifndef T8_GTEST_MACROS_HXX
-#define T8_GTEST_MACROS_HXX
-
-#include <gtest/gtest.h>
-#include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
-#include <iostream>
-#include <t8_schemes/t8_scheme.hxx>
+#include <t8_schemes/t8_scheme_builder.hxx>
+#include <gtest/gtest.h>
 
-/**
- * lambda to pass to an INSTANTIATE_TEST_SUITE_P to print the current cmesh_example_base
- * 
- */
-auto print_eclass = [] (const testing::TestParamInfo<t8_eclass> &info) { return t8_eclass_to_string[info.param]; };
+t8_scheme *
+create_from_scheme_id (const int scheme_id)
+{
+  switch (scheme_id) {
+  case 0:
+    return t8_scheme_new_default ();
+  default:
+    SC_ABORT_NOT_REACHED ();
+    return nullptr;
+  }
+}
 
-/**
- * Number of points to use in tests
- * 
- */
-#ifdef T8_ENABLE_LESS_TESTS
-#define T8_NUM_SAMPLE_POINTS 1000
-#else
-#define T8_NUM_SAMPLE_POINTS 10000
-#endif
+#define AllSchemes ::testing::Combine (::testing::Values (0), ::testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT))
 
-#define AllEclasses testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT)
-#define AllEclasses2D testing::Values (T8_ECLASS_QUAD, T8_ECLASS_TRIANGLE)
-
-#endif /* T8_GTEST_MACROS_HXX */
+#endif /* T8_GTEST_SCHEMES_HXX */
