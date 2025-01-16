@@ -1052,9 +1052,7 @@ struct t8_standalone_scheme
   {
     T8_ASSERT (level >= 0);
     if constexpr (TEclass == T8_ECLASS_PYRAMID) {
-      t8_linearidx_t two_to_l = 1LL << level;
-      t8_linearidx_t eight_to_l = 1LL << (3 * level);
-      return ((eight_to_l << 2) - two_to_l) / 3;
+      SC_ABORT ("Not implemented yet.\n");
     }
     return 1LL << (level * T8_ELEMENT_DIM[TEclass]);
   }
@@ -1427,7 +1425,7 @@ struct t8_standalone_scheme
   /**
  * Compute the ancestor of \a el at a given level via the equation properties
  * 
- * \param[in] elem      Input pyramid
+ * \param[in] elem      Input element
  * \param[in] level     Level of the ancestor to compute
  * \param[in, out] and  Allocated element that will be filled with the data of the ancestor.
  */
@@ -1544,105 +1542,13 @@ struct t8_standalone_scheme
   }
 
   static inline t8_linearidx_t
-  element_get_linear_id_recursive (t8_element_t *elem, const t8_linearidx_t id, const int level_diff)
-  {
-    t8_standalone_element<TEclass> *p = (t8_standalone_element<TEclass> *) elem;
-    if (p->level == 0)
-      return id;
-
-    const int childid = t8_standalone_scheme<TEclass>::element_get_child_id ((const t8_element_t *) p);
-    t8_standalone_scheme<TEclass>::element_get_parent ((const t8_element_t *) p, (t8_element_t *) p);
-    t8_linearidx_t parent_id = 0;
-    for (int ichild = 0; ichild < childid; ichild++) {
-      /* p is now parent, so compute child to get sibling of original p */
-      t8_linearidx_t num_child_descendants = t8_standalone_scheme<TEclass>::num_descendants_of_child_at_leveldiff (
-        (const t8_element_t *) p, ichild, level_diff + 1);
-      parent_id += num_child_descendants;
-    }
-    parent_id += id;
-    return t8_standalone_scheme<TEclass>::element_get_linear_id_recursive ((t8_element_t *) p, parent_id,
-                                                                           level_diff + 1);
-  }
-
-  static inline void
-  element_init_linear_id (t8_element_t *elem, const int level, t8_linearidx_t id)
-  {
-    t8_standalone_element<TEclass> *p = (t8_standalone_element<TEclass> *) elem;
-    t8_standalone_scheme<TEclass>::get_root ((t8_element_t *) p);
-    if (level == 0) {
-      T8_ASSERT (id == 0);
-      return;
-    }
-    t8_standalone_scheme<TEclass>::element_init_linear_id_recursive ((t8_element_t *) p, level, id);
-  }
-
-  static inline void
-  element_init_linear_id_recursive (t8_element_t *elem, const int level_diff, t8_linearidx_t id)
-  {
-    t8_standalone_element<TEclass> *p = (t8_standalone_element<TEclass> *) elem;
-    T8_ASSERT (0 <= id);
-    T8_ASSERT (1 <= level_diff && level_diff <= T8_ELEMENT_MAXLEVEL[TEclass]);
-
-    if (id == 0) {
-      t8_standalone_scheme<TEclass>::element_get_first_descendant ((const t8_element_t *) p, (t8_element_t *) p,
-                                                                   p->level + level_diff);
-      return;
-    }
-
-    if (level_diff == 1) {
-      T8_ASSERT (id < T8_ELEMENT_NUM_CHILDREN[TEclass]);
-      t8_standalone_scheme<TEclass>::element_get_child ((const t8_element_t *) p, id, (t8_element_t *) p);
-      return;
-    }
-
-    t8_linearidx_t sum_descendants_of_children_before = 0;
-    t8_linearidx_t num_descendants_of_child = 0;
-    int childindex;
-    /*If needed, can be replaced by binary search in lookuptable */
-    for (childindex = 0;
-         childindex < t8_standalone_scheme<TEclass>::element_get_num_children ((const t8_element_t *) p);
-         childindex++) {
-      num_descendants_of_child = t8_standalone_scheme<TEclass>::num_descendants_of_child_at_leveldiff (
-        (t8_element_t *) p, childindex, level_diff);
-      sum_descendants_of_children_before += num_descendants_of_child;
-      if (sum_descendants_of_children_before > id) {
-        sum_descendants_of_children_before -= num_descendants_of_child;
-        break;
-      }
-    }
-    t8_standalone_scheme<TEclass>::element_get_child ((const t8_element_t *) p, childindex, (t8_element_t *) p);
-    t8_standalone_scheme<TEclass>::element_init_linear_id_recursive ((t8_element_t *) p, level_diff - 1,
-                                                                     id - sum_descendants_of_children_before);
-  }
-
-  static inline t8_linearidx_t
-  num_descendants_of_child_at_leveldiff (const t8_element_t *elem, int childindex, int leveldiff)
-  {
-    const t8_standalone_element<TEclass> *p = (const t8_standalone_element<TEclass> *) elem;
-
-    t8_standalone_element<TEclass> child;
-    t8_standalone_scheme<TEclass>::element_get_child ((const t8_element_t *) p, childindex, (t8_element_t *) &child);
-
-    t8_linearidx_t num_descendants
-      = t8_standalone_scheme<TEclass>::num_descendants_at_leveldiff ((const t8_element_t *) &child, leveldiff - 1);
-    return num_descendants;
-  }
-
-  static inline t8_linearidx_t
   num_descendants_at_leveldiff (const t8_element_t *elem, const int leveldiff)
   {
     t8_standalone_element<TEclass> *p = (t8_standalone_element<TEclass> *) elem;
     if (leveldiff < 0)
       return 0;
     if constexpr (TEclass == T8_ECLASS_PYRAMID) {
-      t8_linearidx_t two_to_l = 1LL << leveldiff;
-      t8_linearidx_t eight_to_l = 1LL << (3 * leveldiff);
-      if (t8_standalone_scheme<TEclass>::element_get_shape ((t8_element_t *) p) == T8_ECLASS_PYRAMID) {
-        return ((eight_to_l << 2) - two_to_l) / 3;
-      }
-      else {
-        return ((eight_to_l << 1) + two_to_l) / 3;
-      }
+      SC_ABORT ("Not implemented yet.\n");
     }
     return 1LL << (T8_ELEMENT_DIM[TEclass] * leveldiff);
   }

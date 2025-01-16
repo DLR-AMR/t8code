@@ -31,10 +31,6 @@
 
 constexpr uint8_t T8_ELEMENT_DIM[T8_ECLASS_COUNT] = { 0, 1, 2, 2, 3, 3, 3, 3 };
 constexpr uint8_t T8_ELEMENT_MAXLEVEL[T8_ECLASS_COUNT] = { 255, 30, 29, 29, 21, 21, 21, 18 };
-// constexpr uint8_t T8_ELEMENT_MAXLEVEL[T8_ECLASS_COUNT] = {255, 15, 15, 15, 15, 15, 15, 15};
-// constexpr uint8_t T8_ELEMENT_MAXLEVEL[T8_ECLASS_COUNT] = { 3, 3, 3, 3, 3, 3, 3, 3 };
-// constexpr uint8_t T8_ELEMENT_MAXLEVEL[T8_ECLASS_COUNT] = { 5, 5, 5, 5, 5, 5, 5, 5 };
-//constexpr uint8_t T8_ELEMENT_MAXLEVEL[T8_ECLASS_COUNT] = {2, 2, 2, 2, 2, 2, 2, 2};
 constexpr uint8_t T8_ELEMENT_MAX_NUM_FACES[T8_ECLASS_COUNT] = { 1, 2, 4, 3, 6, 4, 5, 5 };
 constexpr uint8_t T8_ELEMENT_NUM_CHILDREN[T8_ECLASS_COUNT] = { 1, 2, 4, 4, 8, 8, 8, 10 };
 constexpr uint8_t T8_ELEMENT_NUM_CORNERS[T8_ECLASS_COUNT] = { 1, 2, 4, 3, 8, 4, 6, 5 };
@@ -133,9 +129,6 @@ struct t8_standalone_element
 
   /** The coordinates of the anchor vertex of the element. */
   t8_element_coords<TEclass> coords;
-
-  /** Bit array: which inequality is fulfilled at which level. */
-  t8_element_type<TEclass> type;
 };
 
 #endif /* T8_STANDALONE_ELEMENTS_HXX */
