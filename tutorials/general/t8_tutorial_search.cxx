@@ -295,7 +295,8 @@ t8_tutorial_search_for_particles (t8_forest_t forest, sc_array *particles)
 
   /* Print the number of elements and number of searched elements. */
   global_num_elements = t8_forest_get_global_num_elements (forest);
-  t8_global_productionf (" [search] Searched forest with %li global elements.\n", global_num_elements);
+  t8_global_productionf (" [search] Searched forest with %li global elements.\n",
+                         static_cast<long> (global_num_elements));
   t8_global_errorf (" [search] Looked at %i elements during search.\n", global_num_searched_elements);
 
   /*
@@ -404,7 +405,7 @@ main (int argc, char **argv)
   /* Build a cube cmesh with tet, hex, and prism trees. */
   cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
   /* Build a uniform forest on it. */
-  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0, comm);
+  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, comm);
 
   /* Adapt the forest. We can reuse the forest variable, since the new adapted
    * forest will take ownership of the old forest and destroy it.

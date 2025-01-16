@@ -22,22 +22,22 @@
 
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include "t8_gtest_dfs_base.hxx"
 #include <test/t8_gtest_macros.hxx>
 
 class class_find_parent: public TestDFS {
-  virtual void
-  check_element ()
+  void
+  check_element () override
   {
-    const int num_children = ts->t8_element_num_children (element);
+    const int num_children = scheme->element_get_num_children (eclass, element);
     for (int ichild = 0; ichild < num_children; ichild++) {
-      ts->t8_element_child (element, ichild, child);
+      scheme->element_get_child (eclass, element, ichild, child);
       /* Compute parent of child */
-      ts->t8_element_parent (child, test_parent);
+      scheme->element_get_parent (eclass, child, test_parent);
       /* Check that it is equal to the original element */
-      EXPECT_ELEM_EQ (ts, element, test_parent);
+      EXPECT_ELEM_EQ (scheme, eclass, element, test_parent);
     }
   }
 
@@ -47,15 +47,15 @@ class class_find_parent: public TestDFS {
   {
     dfs_test_setup ();
     /* Get element and initialize it */
-    ts->t8_element_new (1, &child);
-    ts->t8_element_new (1, &test_parent);
+    scheme->element_new (eclass, 1, &child);
+    scheme->element_new (eclass, 1, &test_parent);
   }
   void
   TearDown () override
   {
     /* Destroy element */
-    ts->t8_element_destroy (1, &child);
-    ts->t8_element_destroy (1, &test_parent);
+    scheme->element_destroy (eclass, 1, &child);
+    scheme->element_destroy (eclass, 1, &test_parent);
 
     /* Destroy DFS test */
     dfs_test_teardown ();
@@ -74,4 +74,4 @@ TEST_P (class_find_parent, t8_compute_child_find_parent)
   check_recursive_dfs_to_max_lvl (maxlvl);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_find_parent, class_find_parent, AllEclasses, print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_find_parent, class_find_parent, AllSchemes);

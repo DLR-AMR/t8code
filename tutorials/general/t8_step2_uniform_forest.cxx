@@ -81,10 +81,10 @@ static t8_forest_t
 t8_step2_build_uniform_forest (sc_MPI_Comm comm, t8_cmesh_t cmesh, int level)
 {
   t8_forest_t forest;
-  t8_scheme_cxx_t *scheme;
+  t8_scheme *scheme;
 
   /* Create the refinement scheme. */
-  scheme = t8_scheme_new_default_cxx ();
+  scheme = t8_scheme_new_default ();
   /* Creat the uniform forest. */
   forest = t8_forest_new_uniform (cmesh, scheme, level, 0, comm);
 
@@ -163,7 +163,7 @@ main (int argc, char **argv)
   t8_global_productionf (" [step2] Created uniform forest.\n");
   t8_global_productionf (" [step2] Refinement level:\t\t\t%i\n", level);
   t8_global_productionf (" [step2] Local number of elements:\t\t%i\n", local_num_elements);
-  t8_global_productionf (" [step2] Global number of elements:\t%li\n", global_num_elements);
+  t8_global_productionf (" [step2] Global number of elements:\t%li\n", static_cast<long> (global_num_elements));
 
   /* Write forest to vtu files. */
   t8_step2_write_forest_vtk (forest, prefix);

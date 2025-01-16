@@ -1,6 +1,6 @@
 title: t8code
-version: 2.0.0
-date-released: "2024-04-19"
+version: 4.0.0
+date-released: "2024-12-10"
 repository-code: "https://github.com/dlr-amr/t8code"
 url: "https://dlr-amr.github.io/t8code/"
 doi: "10.5281/zenodo.7034838"
@@ -34,7 +34,7 @@ authors:
     orcid: "https://orcid.org/0000-0001-7484-3674"
   - given-names: Jakob
     family-names: Fußbroich
-    email: jakob.fussbroich@dlr.de
+    email: jakob.fussbroich@gmx.com
     affiliation: "German Aerospace Center (DLR)"
     orcid: "https://orcid.org/0000-0003-0784-2182"
   - given-names: Carsten
@@ -44,8 +44,8 @@ authors:
     orcid: "https://orcid.org/0000-0001-9843-1041"
   - given-names: Chiara
     family-names: Hergl
-    email: Chiara.Hergl@dlr.de
-    affiliation: "German Aerospace Center (DLR)"
+    email: hergl-chiara@web.de
+    affiliation: "University of Hannover"
     orcid: "https://orcid.org/0000-0002-4016-9113"
   - given-names: Johannes
     family-names: Markert
@@ -66,6 +66,10 @@ authors:
     email: "Prasanna.Ponnusamy@dlr.de"
     affiliation: "German Aerospace Center (DLR)"
     orcid: "https://orcid.org/0000-0002-4950-7297"
+  - given-names: Ole  
+    family-names: Albers
+    email: "Ole.Albers@dlr.de"
+    affiliation: "German Aerospace Center (DLR)"
   #Contributors
   - given-names: Veli
     family-names: Uenlue
@@ -113,6 +117,23 @@ authors:
     family-names: Schoenlein
     email: kathrin.schoenlein@dlr.de
     affiliation: "German Aerospace Center (DLR)"
+  - given-names: Tabea
+    family-names: Leistikow 
+    email: tabea.leistikow@t-online.de
+    affiliation: "German Aerospace Center (DLR)"
+  - given-names: Mael
+    family-names: Karembe
+    email: mael.karembe@eleves.enpc.fr
+    affiliation: "German Aerospace Center (DLR)"
+  - given-names: Jonas
+    family-names: Thies
+    email: J.Thies@tudelft.nl
+    affiliation: "Delft University of Technology"
+  - given-names: Janot Phillip
+    family-names: George
+    email: Janot.George@dlr.de
+    affiliation: "German Aerospace Center (DLR)"
+    
 
   
 

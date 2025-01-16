@@ -28,29 +28,29 @@
 #include <test/t8_gtest_macros.hxx>
 
 class class_child_parent_face: public TestDFS {
-  virtual void
-  check_element ()
+  void
+  check_element () override
   {
-    const int num_faces = ts->t8_element_num_faces (element);
+    const int num_faces = scheme->element_get_num_faces (eclass, element);
     for (int iface = 0; iface < num_faces; iface++) {
       /* Iterate over all faces and determine the facechildren*/
-      const int num_face_children = ts->t8_element_num_face_children (element, iface);
+      const int num_face_children = scheme->element_get_num_face_children (eclass, element, iface);
       t8_element_t **children;
       children = T8_ALLOC (t8_element_t *, num_face_children);
-      ts->t8_element_new (num_face_children, children);
+      scheme->element_new (eclass, num_face_children, children);
 
-      ts->t8_element_children_at_face (element, iface, children, num_face_children, NULL);
+      scheme->element_get_children_at_face (eclass, element, iface, children, num_face_children, NULL);
 
       for (int ifacechild = 0; ifacechild < num_face_children; ifacechild++) {
         /* Iterate over those children and determine the childface corresponding to the parentface */
-        int childface = ts->t8_element_face_child_face (element, iface, ifacechild);
+        const int childface = scheme->element_face_get_child_face (eclass, element, iface, ifacechild);
         ASSERT_NE (childface, -1);
         /* Determine the parentface corresponding to the childface */
-        int parentface = ts->t8_element_face_parent_face (children[ifacechild], childface);
+        const int parentface = scheme->element_face_get_parent_face (eclass, children[ifacechild], childface);
         /* Check, that this is equal to the face that we started with */
         EXPECT_EQ (iface, parentface);
       }
-      ts->t8_element_destroy (num_face_children, children);
+      scheme->element_destroy (eclass, num_face_children, children);
       T8_FREE (children);
     }
   }
@@ -80,4 +80,4 @@ TEST_P (class_child_parent_face, t8_recursive_dfs_child_parent_face)
   check_recursive_dfs_to_max_lvl (maxlvl);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_child_parent_face, class_child_parent_face, AllEclasses, print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_child_parent_face, class_child_parent_face, AllSchemes);
