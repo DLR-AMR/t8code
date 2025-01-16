@@ -1414,6 +1414,7 @@ struct t8_standalone_scheme
     T8_ASSERT (0 <= elem->level && elem->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
     const t8_element_coord h = t8_standalone_scheme<TEclass>::element_get_len (level);
 
+    /* The cube id of the root element is 0.*/
     if (level == 0) {
       return 0;
     }
