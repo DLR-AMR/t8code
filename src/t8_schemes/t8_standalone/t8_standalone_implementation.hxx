@@ -434,11 +434,6 @@ struct t8_standalone_scheme
   {
     T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem));
 
-    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
-    T8_ASSERT (0 <= el->level && el->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
-    if constexpr (TEclass == T8_ECLASS_PYRAMID) {
-      SC_ABORT ("Not implemented yet.\n");
-    }
     return T8_ELEMENT_NUM_CHILDREN[TEclass];
   }
 
