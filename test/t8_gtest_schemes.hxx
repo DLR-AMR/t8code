@@ -30,18 +30,16 @@
 t8_scheme *
 create_from_scheme_id (const int scheme_id)
 {
-  t8_scheme *create_from_scheme_id (const int scheme_id)
-  {
-    switch (scheme_id) {
-    case 0:
-      return t8_scheme_new_default ();
-    case 1:
-      return t8_scheme_new_standalone ();
-    default:
-      SC_ABORT_NOT_REACHED ();
-      return nullptr;
-    }
+  switch (scheme_id) {
+  case 0:
+    return t8_scheme_new_default ();
+  case 1:
+    return t8_scheme_new_standalone ();
+  default:
+    SC_ABORT_NOT_REACHED ();
+    return nullptr;
   }
+}
 
 #define AllSchemes ::testing::Combine (::testing::Range (0, 2), ::testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT))
 /* Only used for disabling face tests*/
