@@ -61,56 +61,6 @@ template <t8_eclass_t TEclass>
 constexpr int8_t t8_type_vertex_dim_to_binary[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_NUM_CORNERS[TEclass]]
                                              [T8_ELEMENT_DIM[TEclass]];
 
-// /**FACE*/
-// template <t8_eclass_t TEclass>
-// constexpr int8_t t8_sele_lut_face_internal[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_NUM_FACES[TEclass]];
-// template <t8_eclass_t TEclass>
-// constexpr int8_t t8_sele_lut_type_face_to_typebit[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
-//                                                  [T8_ELEMENT_NUM_FACES[TEclass]];
-// template <t8_eclass_t TEclass>
-// constexpr int8_t t8_sele_lut_type_face_to_sign[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_NUM_FACES[TEclass]];
-// template <t8_eclass_t TEclass>
-// constexpr int8_t t8_sele_lut_type_face_to_facenormal_dim[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
-//                                                         [T8_ELEMENT_NUM_FACES[TEclass]];
-// template <t8_eclass_t TEclass>
-// constexpr int8_t t8_sele_lut_type_face_to_neighface[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
-//                                                    [T8_ELEMENT_NUM_FACES[TEclass]];
-// template <t8_eclass_t TEclass>
-// constexpr int8_t t8_sele_lut_type_cubeid_face_to_parentface[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
-//                                                            [1 << T8_ELEMENT_DIM[TEclass]]
-//                                                            [T8_ELEMENT_NUM_FACES[TEclass]];
-// template <t8_eclass_t TEclass>
-// constexpr int8_t t8_sele_lut_type_face_to_is_1_boundary[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
-//                                                        [T8_ELEMENT_NUM_FACES[TEclass]];
-// template <t8_eclass_t TEclass>
-// constexpr int8_t t8_sele_lut_type_face_to_last_facechilds_cubeid[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
-//                                                                 [T8_ELEMENT_NUM_FACES[TEclass]];
-// template <t8_eclass_t TEclass>
-// constexpr int8_t t8_sele_lut_type_face_facechildid_to_childid[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
-//                                                              [T8_ELEMENT_NUM_FACES[TEclass]]
-//                                                              [T8_ELEMENT_MAX_NUM_FACECHILDREN[TEclass]];
-// template <t8_eclass_t TEclass>
-// constexpr int8_t t8_sele_lut_type_childid_face_to_childface[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
-//                                                            [T8_ELEMENT_NUM_CHILDREN[TEclass]]
-//                                                            [T8_ELEMENT_MAX_NUM_FACECHILDREN[TEclass]];
-// template <t8_eclass_t TEclass>
-// constexpr int8_t t8_sele_lut_type_face_to_tree_face[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
-//                                                    [T8_ELEMENT_NUM_FACES[TEclass]];
-// template <t8_eclass_t TEclass>
-// constexpr int8_t t8_sele_lut_rootface_dim_to_facedim[T8_ELEMENT_NUM_FACES[TEclass]][T8_ELEMENT_DIM[TEclass]];
-// template <t8_eclass_t TEclass>
-// constexpr int8_t t8_sele_lut_rootface_eq_to_faceeq[T8_ELEMENT_NUM_FACES[TEclass]][T8_ELEMENT_NUM_EQUATIONS[TEclass]];
-// template <t8_eclass_t TEclass>
-// constexpr int8_t t8_sele_lut_type_rootface_to_face[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
-//                                                   [T8_ELEMENT_NUM_FACES[TEclass]];
-// template <t8_eclass_t TEclass>
-// constexpr t8_eclass_t t8_sele_lut_rootface_to_eclass[T8_ELEMENT_NUM_FACES[TEclass]];
-
-// #include "t8_sele_lut_triangle_cxx.hxx"
-// #include "t8_sele_lut_prism_cxx.hxx"
-// #include "t8_sele_lut_pyra_cxx.hxx"
-// #include "t8_sele_lut_tet_cxx.hxx"
-
 typedef uint32_t t8_element_coord;
 typedef uint8_t t8_element_level;
 typedef int8_t t8_cube_id;
