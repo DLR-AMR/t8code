@@ -46,14 +46,14 @@ target_include_directories( T8 PUBLIC
 target_link_libraries( T8 PUBLIC P4EST::P4EST SC::SC )
 
 if ( T8CODE_ENABLE_MPI )
-    target_compile_definitions( T8 PUBLIC -DT8_ENABLE_MPI )
-    target_compile_definitions( T8 PUBLIC -DT8_ENABLE_MPIIO )
+    target_compile_definitions( T8 PUBLIC T8_ENABLE_MPI )
+    target_compile_definitions( T8 PUBLIC T8_ENABLE_MPIIO )
     target_link_libraries( T8 PUBLIC MPI::MPI_C )
 endif()
 
 if( T8CODE_ENABLE_VTK )
     target_compile_definitions( T8 PUBLIC T8_VTK_VERSION_USED="${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}" )
-    target_compile_definitions( T8 PUBLIC -DT8_WITH_VTK=1 )
+    target_compile_definitions( T8 PUBLIC T8_WITH_VTK=1 )
     target_include_directories( T8 PUBLIC ${VTK_INCLUDE_DIR} )
     target_link_libraries( T8 PUBLIC ${VTK_LIBRARIES} )
 endif()
@@ -65,7 +65,7 @@ if( T8CODE_ENABLE_OCC )
 endif()
 
 if( T8CODE_ENABLE_LESS_TESTS )
-    target_compile_definitions( T8 PUBLIC -DT8_ENABLE_LESS_TESTS=1 )
+    target_compile_definitions( T8 PUBLIC T8_ENABLE_LESS_TESTS=1 )
 endif()
 
 if( T8CODE_BUILD_PEDANTIC )
@@ -165,7 +165,8 @@ target_sources( T8 PRIVATE
     t8_vtk/t8_vtk_writer_helper.cxx
 )
 
-target_compile_definitions( T8 PUBLIC -DT8_CMAKE_BUILD )
+target_compile_definitions( T8 PUBLIC T8_CMAKE_BUILD )
+target_compile_definitions( T8 INTERFACE T8_CMAKE_BUILD )
 target_compile_definitions( T8 PUBLIC T8_CC="${CMAKE_C_COMPILER}" )
 target_compile_definitions( T8 PUBLIC T8_CFLAGS="${T8_CFLAGS}" )
 target_compile_definitions( T8 PUBLIC T8_CXX="${CMAKE_CXX_COMPILER}" )
