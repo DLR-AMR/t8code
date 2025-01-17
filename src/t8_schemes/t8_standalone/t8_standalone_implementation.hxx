@@ -751,7 +751,30 @@ struct t8_standalone_scheme
   static inline void
   element_get_first_descendant_face (const t8_element_t *elem, int face, t8_element_t *first_desc, int level)
   {
-    SC_ABORT ("This function is not implemented in this scheme yet.\n");
+    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
+    t8_standalone_element<TEclass> *first_descendant = (t8_standalone_element<TEclass> *) first_desc;
+
+    first_descendant->level = level;
+    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      SC_ABORT ("Only implemented for hypercubes.\n");
+    }
+    for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
+      first_descendant->coords[idim] = el->coords[idim];
+    }
+    int face_is_1_boundary;
+
+    face_is_1_boundary = face % 2;
+
+    if (face_is_1_boundary) {  //the face is a xi=1 boundary
+      int facenormal_dim;
+      facenormal_dim = face / 2;
+
+      //    t8_debugf("type: %i, face:%i, facenormal_dim: %i\n", elem->type.to_ulong(),face, facenormal_dim);
+      t8_element_coord coord_offset = t8_standalone_scheme<TEclass>::element_get_len (el->level)
+                                      - t8_standalone_scheme<TEclass>::element_get_len (level);
+
+      first_descendant->coords[facenormal_dim] += coord_offset;
+    }
   }
 
   /** Construct the last descendant of an element at a given level that touches a given face.
@@ -765,7 +788,25 @@ struct t8_standalone_scheme
   static inline void
   element_get_last_descendant_face (const t8_element_t *elem, int face, t8_element_t *last_desc, int level)
   {
-    SC_ABORT ("This function is not implemented in this scheme yet.\n");
+    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
+    t8_standalone_element<TEclass> *last_descendant = (t8_standalone_element<TEclass> *) last_desc;
+
+    last_descendant->level = level;
+    t8_element_coord coord_offset = t8_standalone_scheme<TEclass>::element_get_len (el->level)
+                                    - t8_standalone_scheme<TEclass>::element_get_len (level);
+
+    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      SC_ABORT ("Only implemented for hypercubes.\n");
+    }
+
+    for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
+      int multiplier = 1;
+      if (idim == face / 2) {
+        multiplier = face % 2;
+      }
+
+      last_descendant->coords[idim] = el->coords[idim] + multiplier * coord_offset;
+    }
   }
 
   // ################################################____FACE NEIGHBOR____################################################
