@@ -267,12 +267,11 @@ t8_dpyramid_is_family (t8_dpyramid_t **fam)
 {
   const int level = fam[0]->pyramid.level;
   if (t8_dpyramid_shape (fam[0]) == T8_ECLASS_TET) {
-    t8_dtet_t **tet_fam = T8_ALLOC (t8_dtet_t *, T8_DTET_CHILDREN);
+    t8_dtet_t *tet_fam[T8_DTET_CHILDREN];
     for (int i = 0; i < T8_DTET_CHILDREN; i++) {
       tet_fam[i] = &fam[i]->pyramid;
     }
     const int is_family = t8_dtet_is_familypv ((const t8_dtet_t **) tet_fam);
-    T8_FREE (tet_fam);
     return is_family;
   }
   else {
