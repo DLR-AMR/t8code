@@ -42,12 +42,20 @@ struct t8_multilevel_element
 };
 
 template <class TUnderlyingEclassScheme, typename TUnderlyingElementType>
-class t8_multilevel_scheme: public t8_crtp<TUnderlyingEclassScheme> {
+class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
 
  public:
   using multilevel_element = t8_multilevel_element<TUnderlyingElementType>;
   /* Use constructor with modifiable elem size of base class */
-  using TUnderlyingEclassScheme::TUnderlyingEclassScheme (sizeof (multilevel_element));
+  t8_multilevel_scheme ()
+  {
+    TUnderlyingEclassScheme::TUnderlyingEclassScheme (sizeof (multilevel_element));
+  }
+
+  ~t8_multilevel_scheme ()
+  {
+    TUnderlyingEclassScheme::~TUnderlyingEclassScheme ();
+  }
 
   /** Return the size of a multilevel element.
    * \return  The size of a multilevel element.
@@ -55,7 +63,7 @@ class t8_multilevel_scheme: public t8_crtp<TUnderlyingEclassScheme> {
   inline size_t
   get_element_size (void) const
   {
-    return underlying ().get_element_size ();
+    return this->underlying ().get_element_size ();
   }
 
   /** Allocate memory for an array of elements and initialize them.
@@ -78,7 +86,7 @@ class t8_multilevel_scheme: public t8_crtp<TUnderlyingEclassScheme> {
   inline void
   element_new (int length, t8_element_t **elem) const
   {
-    underlying ().element_new (length, elem);
+    this->underlying ().element_new (length, elem);
   }
 
   /** Initialize an array of allocated elements.
@@ -99,24 +107,30 @@ class t8_multilevel_scheme: public t8_crtp<TUnderlyingEclassScheme> {
    * \see element_is_valid
    */
   inline void
-  element_init (int length, t8_element_t *elem) const;
+  element_init (int length, t8_element_t *elem) const
+  {
+    this->underlying ().element_init (length, elem);
+  }
 
   /** Return the refinement level of an element.
    * \param [in] elem    The element whose level should be returned.
    * \return             The level of \b elem.
    */
   inline int
-  element_get_level (const t8_element_t *elem) const;
+  element_get_level (const t8_element_t *elem) const
+  {
+    return ((multilevel_element *) elem)->hierarchical_level;
+  }
 
   /** Return the maximum allowed level for any element of a given class.
    * \return                      The maximum allowed level for elements of class \b ts.
    */
   inline int
-  t8_element_maxlevel (void) const override
+  get_maxlevel (void) const override
   {
     /* The maxlevel is limited by the size of the linear id datatype. 
        Since need to store all parents in the id as well, we can only one level less. */
-    return TUnderlyingEclassScheme::t8_element_maxlevel () - 1;
+    return this->underlying ().t8_element_maxlevel () - 1;
   }
 
   /** Copy all entries of \b source to \b dest. \b dest must be an existing
@@ -127,7 +141,14 @@ class t8_multilevel_scheme: public t8_crtp<TUnderlyingEclassScheme> {
    * \note \a source and \a dest may point to the same element.
    */
   inline void
-  element_copy (const t8_element_t *source, t8_element_t *dest) const;
+  element_copy (const t8_element_t *source, t8_element_t *dest) const
+  {
+    T8_ASSERT (element_is_valid (source));
+    T8_ASSERT (element_is_valid (dest));
+    ((multilevel_element *) dest)->hierarchical_level = ((multilevel_element *) source)->hierarchical_level;
+    this->underlying ().element_copy (&((multilevel_element *) source)->linear_element,
+                                      &((multilevel_element *) dest)->linear_element);
+  }
 
   /** Compare two elements.
    * \param [in] elem1  The first element.
@@ -137,16 +158,37 @@ class t8_multilevel_scheme: public t8_crtp<TUnderlyingEclassScheme> {
    *  If elem2 is a copy of elem1 then the elements are equal.
    */
   inline int
-  element_compare (const t8_element_t *elem1, const t8_element_t *elem2) const;
+  element_compare (const t8_element_t *elem1, const t8_element_t *elem2) const
+  {
+    T8_ASSERT (element_is_valid (elem1));
+    T8_ASSERT (element_is_valid (elem2));
+    const int maxlvl = get_maxlevel ();
+    const t8_linearidx_t id1 = element_get_linear_id (elem1, maxlvl);
+    const t8_linearidx_t id2 = element_get_linear_id (elem2, maxlvl);
+    if (id1 < id2)
+      return -1;
+    if (id1 > id2)
+      return 1;
+    else
+      return 0;
+  }
 
   /** Check if two elements are equal.
-  * \param [in] scheme     Implementation of a class scheme.
-  * \param [in] elem1  The first element.
-  * \param [in] elem2  The second element.
-  * \return            1 if the elements are equal, 0 if they are not equal
-  */
+   * \param [in] scheme     Implementation of a class scheme.
+   * \param [in] elem1  The first element.
+   * \param [in] elem2  The second element.
+   * \return            1 if the elements are equal, 0 if they are not equal
+   */
   inline int
-  element_is_equal (const t8_element_t *elem1, const t8_element_t *elem2) const;
+  element_is_equal (const t8_element_t *elem1, const t8_element_t *elem2) const
+  {
+    T8_ASSERT (element_is_valid (elem1));
+    T8_ASSERT (element_is_valid (elem2));
+    if (element_get_level (elem1) != element_get_level (elem2))
+      return 0;
+    return this->underlying ().element_is_equal (&(static_cast<multilevel_element *> (elem1))->linear_element,
+                                                 &(static_cast<multilevel_element *> (elem2))->linear_element);
+  }
 
   /** Compute the parent of a given element \b elem and store it in \b parent.
    *  \b parent needs to be an existing element. No memory is allocated by this function.
@@ -161,7 +203,28 @@ class t8_multilevel_scheme: public t8_crtp<TUnderlyingEclassScheme> {
    *                    tetrahedron or a pyramid depending on \b elem's childid.
    */
   inline void
-  element_get_parent (const t8_element_t *elem, t8_element_t *parent) const;
+  element_get_parent (const t8_element_t *elem, t8_element_t *parent) const
+  {
+    T8_ASSERT (element_is_valid (elem));
+    T8_ASSERT (element_is_valid (parent));
+    const int level = element_get_level (elem);
+    multilevel_element *elem_m = static_cast<multilevel_element *> (elem);
+    multilevel_element *parent_m = static_cast<multilevel_element *> (parent);
+    /* Parent is always one hierarchical level lower. */
+    parent_m->hierarchical_level = elem_m->hierarchical_level - 1;
+    if (elem_m->hierarchical_level == elem_m->linear_element.level) {
+      /* Hierarchical and geometrical level of elem are the same,
+         so count the hierarchical one up and compute normal parent. */
+      parent_m->hierarchical_level = elem_m->hierarchical_level - 1;
+      this->underlying ().element_get_parent (&elem_m->linear_element, &parent_m->linear_element);
+    }
+    else {
+      /* Hierarchical and geometrical level of elem are different,
+         so the parent is the same as the element but on a lower hierarchical level. */
+      parent_m->hierarchical_level = elem_m->hierarchical_level;
+      this->underlying ().element_copy (&elem_m->linear_element, &parent_m->linear_element);
+    }
+  }
 
   /** Compute a specific sibling of a given element \b elem and store it in \b sibling.
    *  \b sibling needs to be an existing element. No memory is allocated by this function.
@@ -175,14 +238,34 @@ class t8_multilevel_scheme: public t8_crtp<TUnderlyingEclassScheme> {
    *                    and match the element class of the sibling.
    */
   inline void
-  element_get_sibling (const t8_element_t *elem, int sibid, t8_element_t *sibling) const;
+  element_get_sibling (const t8_element_t *elem, const int sibid, t8_element_t *sibling) const
+  {
+    T8_ASSERT (element_is_valid (elem));
+    T8_ASSERT (element_is_valid (parent));
+    multilevel_element *elem_m = static_cast<multilevel_element *> (elem);
+    multilevel_element *sibling_m = static_cast<multilevel_element *> (sibling);
+    /* Siblings are always on the same hierarchical level. */
+    sibling_m->hierarchical_level = elem_m->hierarchical_level;
+    if (sibid == 0) {
+      /* The first sibling is the parent drawn to the same hierarchical level. */
+      this->underlying ().element_get_parent (&elem_m->linear_element, &sibling_m->linear_element);
+    }
+    else {
+      /* All other siblings are shiftet up one id. */
+      this->underlying ().element_get_sibling (&elem_m->linear_element, sibid - 1, &sibling_m->linear_element);
+    }
+  }
 
   /** Compute the number of faces of a given element.
    * \param [in] elem The element.
    * \return          The number of faces of \a elem.
    */
   inline int
-  element_get_num_faces (const t8_element_t *elem) const;
+  element_get_num_faces (const t8_element_t *elem) const
+  {
+    T8_ASSERT (element_is_valid (elem));
+    return this->underlying ().element_get_num_faces (&static_cast<multilevel_element *> (elem)->linear_element);
+  }
 
   /** Compute the maximum number of faces of a given element and all of its
    *  descendants.
@@ -190,14 +273,23 @@ class t8_multilevel_scheme: public t8_crtp<TUnderlyingEclassScheme> {
    * \return          The maximum number of faces of \a elem and its descendants.
    */
   inline int
-  element_get_max_num_faces (const t8_element_t *elem) const;
+  element_get_max_num_faces (const t8_element_t *elem) const
+  {
+    T8_ASSERT (element_is_valid (elem));
+    return this->underlying ().element_get_max_num_faces (&static_cast<multilevel_element *> (elem)->linear_element);
+  }
 
   /** Return the number of children of an element when it is refined.
    * \param [in] elem   The element whose number of children is returned.
    * \return            The number of children of \a elem if it is to be refined.
    */
   inline int
-  element_get_num_children (const t8_element_t *elem) const;
+  element_get_num_children (const t8_element_t *elem) const
+  {
+    T8_ASSERT (element_is_valid (elem));
+    /* Increase the number of children by one so that an element becomes child of itself. */
+    return 1 + this->underlying ().element_get_num_children (&static_cast<multilevel_element *> (elem)->linear_element);
+  }
 
   /** Return the number of children of an element's face when the element is refined.
    * \param [in] elem   The element whose face is considered.
@@ -205,7 +297,13 @@ class t8_multilevel_scheme: public t8_crtp<TUnderlyingEclassScheme> {
    * \return            The number of children of \a face if \a elem is to be refined.
    */
   inline int
-  element_get_num_face_children (const t8_element_t *elem, int face) const;
+  element_get_num_face_children (const t8_element_t *elem, const int face) const
+  {
+    T8_ASSERT (element_is_valid (elem));
+    return this->underlying ().element_get_num_face_children (
+      &static_cast<multilevel_element *> (elem)->linear_element);
+  }
+
   /** Return the corner number of an element's face corner.
    * \param [in] element  The element.
    * \param [in] face     A face index for \a element.
@@ -213,7 +311,11 @@ class t8_multilevel_scheme: public t8_crtp<TUnderlyingEclassScheme> {
    * \return              The corner number of the \a corner-th vertex of \a face.
    */
   inline int
-  element_get_face_corner (const t8_element_t *element, int face, int corner) const;
+  element_get_face_corner (const t8_element_t *elem, const int face, const int corner) const
+  {
+    T8_ASSERT (element_is_valid (elem));
+    return this->underlying ().element_get_face_corner (&static_cast<multilevel_element *> (elem)->linear_element);
+  }
 
   /** Return the face numbers of the faces sharing an element's corner.
    * \param [in] element  The element.
@@ -222,7 +324,11 @@ class t8_multilevel_scheme: public t8_crtp<TUnderlyingEclassScheme> {
    * \return              The face number of the \a face-th face at \a corner.
    */
   inline int
-  element_get_corner_face (const t8_element_t *element, int corner, int face) const;
+  element_get_corner_face (const t8_element_t *elem, int corner, int face) const
+  {
+    T8_ASSERT (element_is_valid (elem));
+    return this->underlying ().element_get_corner_face (&static_cast<multilevel_element *> (elem)->linear_element);
+  }
 
   /** Construct the child element of a given number.
    * \param [in] elem     This must be a valid element, bigger than maxlevel.
@@ -233,7 +339,23 @@ class t8_multilevel_scheme: public t8_crtp<TUnderlyingEclassScheme> {
    * It is valid to call this function with elem = child.
      */
   inline void
-  element_get_child (const t8_element_t *elem, int childid, t8_element_t *child) const;
+  element_get_child (const t8_element_t *elem, const int childid, t8_element_t *child) const
+  {
+    T8_ASSERT (element_is_valid (elem));
+    T8_ASSERT (element_is_valid (child));
+    multilevel_element *elem_m = static_cast<multilevel_element *> (elem);
+    multilevel_element *child_m = static_cast<multilevel_element *> (child);
+    /* Children are always one hierarchical level higher. */
+    child_m->hierarchical_level = elem_m->hierarchical_level + 1;
+    if (childid == 0) {
+      /* The first child is the element itself. */
+      element_copy (elem, child);
+    }
+    else {
+      /* The other children are the normal children shifted by one. */
+      this->underlying ().element_get_child (&elem_m->linear_element, childid - 1, &child_m->linear_element);
+    }
+  }
 
   /** Construct all children of a given element.
    * \param [in] elem     This must be a valid element, bigger than maxlevel.
@@ -246,14 +368,46 @@ class t8_multilevel_scheme: public t8_crtp<TUnderlyingEclassScheme> {
    * \see element_get_num_children
      */
   inline void
-  element_get_children (const t8_element_t *elem, int length, t8_element_t *c[]) const;
+  element_get_children (const t8_element_t *elem, const int length, t8_element_t *children[]) const
+  {
+    T8_ASSERT (element_is_valid (elem));
+    T8_ASSERT (length == element_get_num_children (elem));
+    /* Children are always one level higher. */
+    const int child_level = element_get_level (elem) + 1;
+    multilevel_element *elem_m = static_cast<multilevel_element *> (elem);
+    multilevel_element **children_m = static_cast<multilevel_element **> (children);
+
+    /* The first child is the element itself. */
+    T8_ASSERT (element_is_valid (*children_m));
+    element_copy (elem_m, *children_m);
+    *(children_m)->hierarchical_level = child_level;
+
+    /* The rest are the normal children. */
+    T8_ASSERT (this->underlying ().element_get_num_children (elem_m->linear_element) == length - 1);
+    for (size_t child_id = 0; child_id < length - 1; ++child_id) {
+      this->underlying ().element_get_child (elem_m->linear_element, children_m[child_id]);
+      children_m[child_id]->hierarchical_level = child_level;
+    }
+  }
 
   /** Compute the child id of an element.
    * \param [in] elem     This must be a valid element.
    * \return              The child id of elem.
    */
   inline int
-  element_get_child_id (const t8_element_t *elem) const;
+  element_get_child_id (const t8_element_t *elem) const
+  {
+    T8_ASSERT (element_is_valid (elem));
+    multilevel_element *elem_m = static_cast<multilevel_element *> (elem);
+    /* If the hierarchical level is one higher than the geometrical level,
+    the element is child of itself and has id 0. */
+    if (elem_m->hierarchical_level != elem_m->linear_element.level) {
+      T8_ASSERT (elem_m->hierarchical_level + 1 == elem_m->linear_element.level);
+      return 0;
+    }
+    /* All other children are shifted by one to make space for the first child. */
+    return 1 + this->underlying ().element_get_child_id (&elem_m->linear_element);
+  }
 
   /** Compute the ancestor id of an element, that is the child id
    * at a given level.
