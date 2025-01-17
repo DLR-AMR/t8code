@@ -22,7 +22,7 @@
 
 /** \file t8_gtest_nca.cxx
 * Provide tests to check the functionality of the nearest-common-ancestor function
-* for every element.
+* for every element of a pyramid.
 */
 
 #include <gtest/gtest.h>
