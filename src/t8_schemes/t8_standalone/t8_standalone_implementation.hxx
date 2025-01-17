@@ -159,8 +159,10 @@ struct t8_standalone_scheme
   static inline int
   element_get_num_faces (const t8_element_t *elem)
   {
-    SC_ABORT ("This function is not implemented in this scheme yet.\n");
-    return 0;
+    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
+
+    T8_ASSERT (0 <= el->level && el->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
+    return T8_ELEMENT_NUM_FACES[TEclass];
   }
 
   /** Compute the maximum number of faces of a given element and all of its
@@ -639,8 +641,14 @@ struct t8_standalone_scheme
   static inline int
   element_get_num_face_children (const t8_element_t *elem, int face)
   {
-    SC_ABORT ("This function is not implemented in this scheme yet.\n");
-    return 0;
+    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem));
+    // Not true anymore for 4D with pyramids as faces
+    if constexpr (TEclass == T8_ECLASS_VERTEX) {
+      return 0;
+    }
+    else {
+      return 1 << (T8_ELEMENT_DIM[TEclass] - 1);
+    }
   }
 
   /** Given an element and a face of the element, compute all children of
@@ -661,7 +669,32 @@ struct t8_standalone_scheme
   element_get_children_at_face (const t8_element_t *elem, int face, t8_element_t *children[], int num_children,
                                 int *child_indices)
   {
-    SC_ABORT ("This function is not implemented in this scheme yet.\n");
+    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
+    t8_standalone_element<TEclass> **children_els = (t8_standalone_element<TEclass> **) children;
+
+    int allocated_indices = 0;
+    if (child_indices == NULL) {
+      child_indices = T8_ALLOC_ZERO (int, num_children);
+      allocated_indices = 1;
+    }
+    int face_sign, face_dim;
+    face_sign = face % 2;
+    face_dim = face / 2;
+    for (int ifacechild = 0; ifacechild < num_children; ifacechild++) {
+      t8_element_coord first_part, face_part, last_part;
+      /* ifacechild aaaabb, iface = x, then childid = aaaaxbb*/
+      first_part = (ifacechild >> face_dim) << (face_dim + 1);
+      last_part = ifacechild & ((1 << face_dim) - 1);
+      face_part = face_sign << face_dim;
+      child_indices[ifacechild] = first_part + face_part + last_part;
+    }
+    for (int ifacechild = 0; ifacechild < num_children; ifacechild++) {
+      t8_standalone_scheme<TEclass>::element_get_child ((const t8_element_t *) el, child_indices[ifacechild],
+                                                        (t8_element_t *) children_els[ifacechild]);
+    }
+    if (allocated_indices) {
+      T8_FREE (child_indices);
+    }
   }
 
   /** Given a face of an element and a child number of a child of that face, return the face number
@@ -687,8 +720,7 @@ struct t8_standalone_scheme
   static inline int
   element_face_get_child_face (const t8_element_t *elem, int face, int face_child)
   {
-    SC_ABORT ("This function is not implemented in this scheme yet.\n");
-    return 0;
+    return face;
   }
 
   /** Given a face of an element return the face number
@@ -767,8 +799,7 @@ struct t8_standalone_scheme
   static inline int
   element_get_tree_face (const t8_element_t *elem, int face)
   {
-    SC_ABORT ("This function is not implemented in this scheme yet.\n");
-    return 0;
+    return face;
   }
 
   /** Construct the face neighbor of a given element if this face neighbor
@@ -789,8 +820,31 @@ struct t8_standalone_scheme
   static inline int
   element_get_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face, int *neigh_face)
   {
-    SC_ABORT ("This function is not implemented in this scheme yet.\n");
-    return 0;
+
+    t8_standalone_scheme<TEclass>::element_copy (elem, neigh);
+
+    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
+    t8_standalone_element<TEclass> *neighbor = (t8_standalone_element<TEclass> *) neigh;
+
+    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      SC_ABORT ("Only implemented for hypercubes.\n");
+    }
+    int facenormal_dim, sign;
+    sign = face % 2 ? 1 : -1;
+    facenormal_dim = face / 2;
+
+    /**Adapt coordinates*/
+    t8_element_coord length = t8_standalone_scheme<TEclass>::element_get_len (el->level);
+    t8_debugf ("length: %i, sign:%i\n", length, sign);
+
+    t8_debugf ("neigh_coords[%i]: %i\n", facenormal_dim, neighbor->coords[facenormal_dim]);
+    neighbor->coords[facenormal_dim] += length * sign;
+    t8_debugf ("neigh_coords[%i]: %i\n", facenormal_dim, neighbor->coords[facenormal_dim]);
+
+    *neigh_face = face ^ 1;
+
+    /**check inside root*/
+    return t8_standalone_scheme<TEclass>::element_is_inside_root (neighbor);
   }
 
   // ################################################____TREE FACE TRANSFORMATION____################################################  */
@@ -1561,6 +1615,19 @@ struct t8_standalone_scheme
           = elem->coords[idim]
             + ((vertex & (1 << idim)) >> idim) * t8_standalone_scheme<TEclass>::element_get_len (elem->level);
       }
+    }
+  }
+
+  static inline int
+  element_is_inside_root (const t8_standalone_element<TEclass> *elem)
+  {
+    t8_standalone_element<TEclass> ancestor;
+    t8_standalone_scheme<TEclass>::element_get_ancestor (elem, 0, &ancestor);
+
+    /**Check that we are in the correct cube*/
+    for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
+      if (ancestor.coords[idim])
+        return 0;
     }
   }
 };
