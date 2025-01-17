@@ -103,7 +103,7 @@ typedef struct t8_forest
   // t8_ghost_type_t ghost_type;     /**< If a ghost layer will be created, the type of neighbors that count as ghost. */
   // int ghost_algorithm;            /**< Controls the algorithm used for ghost. 1 = balanced only. 2 = also unbalanced
   //  3 = top-down search and unbalanced. */
-  t8_forest_ghost_interface_c *ghost_interface;
+  t8_forest_ghost_definition_c *ghost_definition;
   void *user_data;          /**< Pointer for arbitrary user data. \see t8_forest_set_user_data. */
   void (*user_function) (); /**< Pointer for arbitrary user function. \see t8_forest_set_user_function. */
   void *t8code_data;        /**< Pointer for arbitrary data that is used internally. */

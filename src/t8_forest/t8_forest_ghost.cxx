@@ -1389,12 +1389,12 @@ void
 t8_forest_ghost_create_ext (t8_forest_t forest)
 {
   t8_forest_ghost_t ghost;
-  t8_forest_ghost_interface_c *ghost_interface;
+  t8_forest_ghost_definition_c *ghost_definition;
 
   T8_ASSERT (t8_forest_is_committed (forest));
-  T8_ASSERT (forest->ghost_interface != NULL);
+  T8_ASSERT (forest->ghost_definition != NULL);
 
-  ghost_interface = forest->ghost_interface;
+  ghost_definition = forest->ghost_definition;
 
   t8_global_productionf ("Into t8_forest_ghost with %i local elements.\n", t8_forest_get_local_num_elements (forest));
 
@@ -1415,8 +1415,8 @@ t8_forest_ghost_create_ext (t8_forest_t forest)
      * Only delete the line, if you know what you are doing. */
     t8_global_productionf ("Start ghost at %f  %f\n", sc_MPI_Wtime (), forest->profile->ghost_runtime);
   }
-  /* Call the dot_ghost function on the ghost_interface class of the forest to compute the ghost layer */
-  ghost_interface->do_ghost (forest);
+  /* Call the dot_ghost function on the ghost_definition class of the forest to compute the ghost layer */
+  ghost_definition->do_ghost (forest);
 
   ghost = forest->ghosts;
 
@@ -1450,7 +1450,7 @@ t8_forest_ghost_create (t8_forest_t forest)
   T8_ASSERT (t8_forest_is_committed (forest));
   if (forest->mpisize > 1) {
     /* call unbalanced version of ghost algorithm */
-    T8_ASSERT (t8_forest_ghost_interface_face_version (forest->ghost_interface) == 2);
+    T8_ASSERT (t8_forest_ghost_definition_face_version (forest->ghost_definition) == 2);
     t8_forest_ghost_create_ext (forest);
   }
 }
@@ -1462,7 +1462,7 @@ t8_forest_ghost_create_balanced_only (t8_forest_t forest)
   if (forest->mpisize > 1) {
     /* TODO: assert that forest is balanced */
     /* Call balanced version of ghost algorithm */
-    T8_ASSERT (t8_forest_ghost_interface_face_version (forest->ghost_interface) == 1);
+    T8_ASSERT (t8_forest_ghost_definition_face_version (forest->ghost_definition) == 1);
     t8_forest_ghost_create_ext (forest);
   }
 }
@@ -1471,8 +1471,8 @@ void
 t8_forest_ghost_create_topdown (t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
-  T8_ASSERT (forest->ghost_interface != NULL);
-  T8_ASSERT (t8_forest_ghost_interface_face_version (forest->ghost_interface) == 3);
+  T8_ASSERT (forest->ghost_definition != NULL);
+  T8_ASSERT (t8_forest_ghost_definition_face_version (forest->ghost_definition) == 3);
   t8_forest_ghost_create_ext (forest);
 }
 
@@ -1888,29 +1888,29 @@ t8_forest_ghost_destroy (t8_forest_ghost_t *pghost)
 */
 
 t8_ghost_type_t
-t8_forest_ghost_interface_get_type (const t8_forest_ghost_interface_c *ghost_interface)
+t8_forest_ghost_definition_get_type (const t8_forest_ghost_definition_c *ghost_definition)
 {
-  T8_ASSERT (ghost_interface != NULL);
-  return ghost_interface->t8_ghost_get_type ();
+  T8_ASSERT (ghost_definition != NULL);
+  return ghost_definition->t8_ghost_get_type ();
 }
 
 void
-t8_forest_ghost_interface_ref (t8_forest_ghost_interface_c *ghost_interface)
+t8_forest_ghost_definition_ref (t8_forest_ghost_definition_c *ghost_definition)
 {
-  T8_ASSERT (ghost_interface != NULL);
-  ghost_interface->ref ();
+  T8_ASSERT (ghost_definition != NULL);
+  ghost_definition->ref ();
 }
 
 void
-t8_forest_ghost_interface_unref (t8_forest_ghost_interface_c **pghost_interface)
+t8_forest_ghost_definition_unref (t8_forest_ghost_definition_c **pghost_definition)
 {
-  t8_forest_ghost_interface_c *ghost_interface;
+  t8_forest_ghost_definition_c *ghost_definition;
 
-  T8_ASSERT (pghost_interface != NULL);
-  ghost_interface = *pghost_interface;
-  T8_ASSERT (ghost_interface != NULL);
+  T8_ASSERT (pghost_definition != NULL);
+  ghost_definition = *pghost_definition;
+  T8_ASSERT (ghost_definition != NULL);
 
-  ghost_interface->unref ();
+  ghost_definition->unref ();
 }
 
 /**
@@ -1918,7 +1918,7 @@ t8_forest_ghost_interface_unref (t8_forest_ghost_interface_c **pghost_interface)
 */
 
 void
-t8_forest_ghost_interface::communicate_ownerships (t8_forest_t forest)
+t8_forest_ghost_definition::communicate_ownerships (t8_forest_t forest)
 {
   if (forest->element_offsets == NULL) {
     /* create element offset array if not done already */
@@ -1938,7 +1938,7 @@ t8_forest_ghost_interface::communicate_ownerships (t8_forest_t forest)
 }
 
 void
-t8_forest_ghost_interface::communicate_ghost_elements (t8_forest_t forest)
+t8_forest_ghost_definition::communicate_ghost_elements (t8_forest_t forest)
 {
   t8_forest_ghost_t ghost = forest->ghosts;
   t8_ghost_mpi_send_info_t *send_info;
@@ -1955,7 +1955,7 @@ t8_forest_ghost_interface::communicate_ghost_elements (t8_forest_t forest)
 }
 
 void
-t8_forest_ghost_interface::clean_up (t8_forest_t forest)
+t8_forest_ghost_definition::clean_up (t8_forest_t forest)
 {
   if (memory_flag & CREATE_GFIRST_DESC_ARRAY) {
     /* Free the offset memory, if created */
@@ -1976,7 +1976,7 @@ t8_forest_ghost_interface::clean_up (t8_forest_t forest)
 */
 
 t8_forest_ghost_w_search::t8_forest_ghost_w_search (const t8_ghost_type_t ghost_type)
-  : t8_forest_ghost_interface (ghost_type)
+  : t8_forest_ghost_definition (ghost_type)
 {
   T8_ASSERT (ghost_type != T8_GHOST_NONE);
   T8_ASSERT (ghost_type == T8_GHOST_FACES);  // currently no other types are supported
@@ -2068,31 +2068,31 @@ t8_forest_ghost_face::search_for_ghost_elements (t8_forest_t forest)
 }
 
 /* Wrapper for derived face class */
-t8_forest_ghost_interface_c *
-t8_forest_ghost_interface_face_new (const int version)
+t8_forest_ghost_definition_c *
+t8_forest_ghost_definition_face_new (const int version)
 {
-  t8_debugf ("Call t8_forest_ghost_interface_face_new.\n");
+  t8_debugf ("Call t8_forest_ghost_definition_face_new.\n");
   T8_ASSERT (1 <= version && version <= 3);
-  t8_forest_ghost_face *ghost_interface = new t8_forest_ghost_face (version);
-  return (t8_forest_ghost_interface_c *) ghost_interface;
+  t8_forest_ghost_face *ghost_definition = new t8_forest_ghost_face (version);
+  return (t8_forest_ghost_definition_c *) ghost_definition;
 }
 
-t8_forest_ghost_interface_c *
-t8_forest_ghost_interface_stencil_new ()
+t8_forest_ghost_definition_c *
+t8_forest_ghost_definition_stencil_new ()
 {
-  t8_debugf ("Call t8_forest_ghost_interface_stencil_new.\n");
-  t8_forest_ghost_stencil *ghost_interface = new t8_forest_ghost_stencil ();
-  return (t8_forest_ghost_interface_c *) ghost_interface;
+  t8_debugf ("Call t8_forest_ghost_definition_stencil_new.\n");
+  t8_forest_ghost_stencil *ghost_definition = new t8_forest_ghost_stencil ();
+  return (t8_forest_ghost_definition_c *) ghost_definition;
 }
 
 int
-t8_forest_ghost_interface_face_version (t8_forest_ghost_interface_c *ghost_interface)
+t8_forest_ghost_definition_face_version (t8_forest_ghost_definition_c *ghost_definition)
 {
-  T8_ASSERT (ghost_interface != NULL);
-  T8_ASSERT (ghost_interface->t8_ghost_get_type () == T8_GHOST_FACES);
-  t8_forest_ghost_face *ghost_interface_passed = (t8_forest_ghost_face *) ghost_interface;
+  T8_ASSERT (ghost_definition != NULL);
+  T8_ASSERT (ghost_definition->t8_ghost_get_type () == T8_GHOST_FACES);
+  t8_forest_ghost_face *ghost_definition_passed = (t8_forest_ghost_face *) ghost_definition;
 
-  return ghost_interface_passed->get_version ();
+  return ghost_definition_passed->get_version ();
 }
 
 /**
@@ -2137,8 +2137,8 @@ t8_forest_ghost_stencil::do_ghost (t8_forest_t forest)
  * The owner is found in O(1)
  */
 int
-t8_forest_ghost_interface_stencil_get_remote_rank (t8_forest_t forest, const t8_eclass_scheme_c *eclass_scheme,
-                                                   t8_element_t *element)
+t8_forest_ghost_definition_stencil_get_remote_rank (t8_forest_t forest, const t8_eclass_scheme_c *eclass_scheme,
+                                                    t8_element_t *element)
 {
   const t8_gloidx_t global_num_elements = t8_forest_get_global_num_elements (forest);
   const t8_linearidx_t lin_id
@@ -2185,7 +2185,7 @@ t8_forest_ghost_stencil::add_stencil_to_ghost (t8_forest_t forest, const t8_elem
     /* if the F exists */
     if (face_neighbor_exists) {
       /* compute the mpirank for F, and if its not owns by this process, add it to ghost */
-      int remote_rank = t8_forest_ghost_interface_stencil_get_remote_rank (forest, eclass_scheme, face_neighbor);
+      int remote_rank = t8_forest_ghost_definition_stencil_get_remote_rank (forest, eclass_scheme, face_neighbor);
       T8_ASSERT (
         remote_rank
         == t8_forest_element_find_owner_ext (forest, 0, face_neighbor, eclass, 0, forest->mpisize - 1, remote_rank, 0));
@@ -2202,7 +2202,7 @@ t8_forest_ghost_stencil::add_stencil_to_ghost (t8_forest_t forest, const t8_elem
             face_neighbor, neighbor, ineighbor, &neighbor_neighbor_face);
           if (neighbor_exists) {
             /* compute the mpirank for N, and if its not owns by this process, add it to ghost */
-            remote_rank = t8_forest_ghost_interface_stencil_get_remote_rank (forest, eclass_scheme, neighbor);
+            remote_rank = t8_forest_ghost_definition_stencil_get_remote_rank (forest, eclass_scheme, neighbor);
             T8_ASSERT (remote_rank
                        == t8_forest_element_find_owner_ext (forest, 0, neighbor, eclass, 0, forest->mpisize - 1,
                                                             remote_rank, 0));

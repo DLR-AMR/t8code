@@ -28,15 +28,15 @@
 
 T8_EXTERN_C_BEGIN ();
 
-struct t8_forest_ghost_stencil: t8_forest_ghost_interface
+struct t8_forest_ghost_stencil: t8_forest_ghost_definition
 {
  public:
   /**
    * Only constructor of t8_forest_ghost_stencil.
-   * Derived class of t8_forest_ghost_interface.
+   * Derived class of t8_forest_ghost_definition.
    * Hase userdefined as type.
    */
-  t8_forest_ghost_stencil (): t8_forest_ghost_interface (T8_GHOST_USERDEFINED) {};
+  t8_forest_ghost_stencil (): t8_forest_ghost_definition (T8_GHOST_USERDEFINED) {};
 
   /** Create one layer of ghost elements for a forest.
    * The neighborhood for this is defined by an stencil.

@@ -31,49 +31,49 @@ T8_EXTERN_C_BEGIN ();
 
 /**
  * Satisfy the C interface of forest
- * Create a new ghost_interface of type face with given version
+ * Create a new ghost_definition of type face with given version
  */
-t8_forest_ghost_interface_c *
-t8_forest_ghost_interface_face_new (const int version);
+t8_forest_ghost_definition_c *
+t8_forest_ghost_definition_face_new (const int version);
 
 /**
  * Satisfy the C interface of forest
- * Create a new ghost_interface of type stencil
+ * Create a new ghost_definition of type stencil
  */
-t8_forest_ghost_interface_c *
-t8_forest_ghost_interface_stencil_new ();
+t8_forest_ghost_definition_c *
+t8_forest_ghost_definition_stencil_new ();
 
 /**
  * Satisfy the C interface of forest
- * Return for a ghost_interface of Type FACE the ghost_algorithm / ghost_version (1, 2 or 3)
- * \param [in]    ghost_interface Pointer to object of class t8_forest_ghost_face
+ * Return for a ghost_definition of Type FACE the ghost_algorithm / ghost_version (1, 2 or 3)
+ * \param [in]    ghost_definition Pointer to object of class t8_forest_ghost_face
  */
 int
-t8_forest_ghost_interface_face_version (t8_forest_ghost_interface_c *ghost_interface);
+t8_forest_ghost_definition_face_version (t8_forest_ghost_definition_c *ghost_definition);
 
 /**
  * Satisfy the C interface of forest
- * Return the type of a ghost_interface
- * \param [in]    ghost_interface Pointer to object of class t8_forest_ghost_interface or a derivet class
+ * Return the type of a ghost_definition
+ * \param [in]    ghost_definition Pointer to object of class t8_forest_ghost_definition or a derivet class
  */
 t8_ghost_type_t
-t8_forest_ghost_interface_get_type (const t8_forest_ghost_interface_c *ghost_interface);
+t8_forest_ghost_definition_get_type (const t8_forest_ghost_definition_c *ghost_definition);
 
 /** 
  * Satisfy the C interface of forest
- * Do a ref on the ghost_interface
+ * Do a ref on the ghost_definition
  * Needed in t8_forest_commit
  */
 void
-t8_forest_ghost_interface_ref (t8_forest_ghost_interface_c *ghost_interface);
+t8_forest_ghost_definition_ref (t8_forest_ghost_definition_c *ghost_definition);
 
 /** 
  * Satisfy the C interface of forest
- * Do a unref on the ghost_interface
+ * Do a unref on the ghost_definition
  * Needed in t8_forest_commit and t8_forest_set_ghost_ext_new
  */
 void
-t8_forest_ghost_interface_unref (t8_forest_ghost_interface_c **pghost_interface);
+t8_forest_ghost_definition_unref (t8_forest_ghost_definition_c **pghost_definition);
 
 T8_EXTERN_C_END ();
 

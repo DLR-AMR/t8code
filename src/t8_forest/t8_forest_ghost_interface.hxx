@@ -35,37 +35,37 @@ T8_EXTERN_C_BEGIN ();
  * Flags for communicate_ownerships 
  * store in the flags which memory was allocated
  */
-enum t8_ghost_interface_face_flag { CREATE_ELEMENT_ARRAY = 1, CREATE_TREE_ARRAY = 2, CREATE_GFIRST_DESC_ARRAY = 4 };
+enum t8_ghost_definition_face_flag { CREATE_ELEMENT_ARRAY = 1, CREATE_TREE_ARRAY = 2, CREATE_GFIRST_DESC_ARRAY = 4 };
 
-struct t8_forest_ghost_interface
+struct t8_forest_ghost_definition
 {
  public:
   /**
    * Constructor:
-   * Creates t8_forest_ghost_interface of type non
+   * Creates t8_forest_ghost_definition of type non
    * init the refcout
    */
-  t8_forest_ghost_interface ()
+  t8_forest_ghost_definition ()
   {
     t8_refcount_init (&rc);
-    t8_debugf ("Constructed the a None ghost_interface.\n");
+    t8_debugf ("Constructed the a None ghost_definition.\n");
   }
 
   /**
    * Destructor.
    * unref the refcout
    */
-  virtual ~t8_forest_ghost_interface ()
+  virtual ~t8_forest_ghost_definition ()
   {
     if (sc_refcount_is_active (&rc)) {
       T8_ASSERT (t8_refcount_is_last (&rc));
       t8_refcount_unref (&rc);
     }
-    t8_debugf ("Deleted the ghost_interface.\n");
+    t8_debugf ("Deleted the ghost_definition.\n");
   }
 
   /**
-   * Get the type of the ghost_interface
+   * Get the type of the ghost_definition
    * \return the type
    */
   inline t8_ghost_type_t
@@ -84,14 +84,14 @@ struct t8_forest_ghost_interface
   }
 
   /**
-   * Decrease the reference count of the ghost_interface.
-   * If the reference count reaches zero, the ghost_interface is deleted.
+   * Decrease the reference count of the ghost_definition.
+   * If the reference count reaches zero, the ghost_definition is deleted.
    */
   virtual inline void
   unref ()
   {
     if (t8_refcount_unref (&rc)) {
-      t8_debugf ("Deleting the ghost_interface.\n");
+      t8_debugf ("Deleting the ghost_definition.\n");
       delete this;
     }
   }
@@ -115,7 +115,7 @@ struct t8_forest_ghost_interface
   communicate_ownerships (t8_forest_t forest);
 
   /**
-   * Exchange the list of remote ghost elements between prozesses
+   * Exchange the list of remote ghost elements between processes
    * \note this function could be used in do_ghost
    */
   virtual void
@@ -130,16 +130,16 @@ struct t8_forest_ghost_interface
 
   /**
    * Constructor for the derivided classes to set the correkt type for them.
-   * \param [in] g_type   The type (faces, edges, userdefind, ...) of the ghost_interface
+   * \param [in] g_type   The type (faces, edges, userdefind, ...) of the ghost_definition
    */
-  explicit t8_forest_ghost_interface (t8_ghost_type_t g_type): ghost_type (g_type)
+  explicit t8_forest_ghost_definition (t8_ghost_type_t g_type): ghost_type (g_type)
   {
     t8_refcount_init (&rc);
-    t8_debugf ("Constructed a ghost_interface.\n");
+    t8_debugf ("Constructed a ghost_definition.\n");
   };
-  /** type of the ghost_interface */
+  /** type of the ghost_definition */
   t8_ghost_type_t ghost_type { T8_GHOST_NONE };
-  /** The reference count of the ghost_interface. TODO: Replace by shared_ptr when forest becomes a class. */
+  /** The reference count of the ghost_definition. TODO: Replace by shared_ptr when forest becomes a class. */
   t8_refcount_t rc;
   /** Record allocated memory in communicate_ownerships for release in clean_up */
   int32_t memory_flag {};
