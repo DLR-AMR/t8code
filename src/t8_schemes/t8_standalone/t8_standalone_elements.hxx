@@ -63,7 +63,8 @@ constexpr int8_t t8_type_vertex_dim_to_binary[1 << T8_ELEMENT_NUM_EQUATIONS[TEcl
 
 typedef uint32_t t8_element_coord;
 typedef uint8_t t8_element_level;
-typedef int8_t t8_cube_id;
+typedef uint8_t t8_cube_id;
+typedef uint8_t t8_child_id;
 
 template <t8_eclass_t TEclass>
 using t8_element_type = std::bitset<T8_ELEMENT_NUM_EQUATIONS[TEclass]>;
