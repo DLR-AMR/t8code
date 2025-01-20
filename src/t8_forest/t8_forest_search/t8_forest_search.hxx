@@ -32,9 +32,11 @@
 #include <numeric>
 #include <ranges>
 
-/*
- *   Discussion about C++ callback handling https://stackoverflow.com/questions/2298242/callback-functions-in-c
- *   We decided for option 4, using std::function together with templates.
+/**  \file t8_forest_search.hxx 
+ * A C++ interface for the search functionality. The user can define search and query callbacks
+ * to perform the search and query operations on the forest. Implementation details regarding the 
+ * callback handling are given by https://stackoverflow.com/questions/2298242/callback-functions-in-c
+ * We decided for option 4, using std::function together with templates.
 */
 
 /**
