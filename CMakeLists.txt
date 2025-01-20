@@ -18,12 +18,17 @@ option( T8CODE_BUILD_WALL "Compile t8code with `-Wall` as done in the Github CI.
 option( T8CODE_BUILD_WERROR "Compile t8code with `-Werror` as done in the Github CI." OFF )
 option( T8CODE_BUILD_EXTRA_WARNINGS "Compile t8code with extra warnings as done in the Github CI." OFF )
 option( T8CODE_EXPORT_COMPILE_COMMANDS "Export the compile commands as json. Can be used by IDEs for code completion (e.g. intellisense, clangd)" OFF )
+
 option( T8CODE_BUILD_TESTS "Build t8code's automated tests" ON )
-option( T8CODE_BUILD_TUTORIALS "Build t8code's tutorials" ON )
+cmake_dependent_option( T8CODE_BUILD_TPL_TESTS "Build the tests from libsc and p4est" ON "T8CODE_BUILD_TESTS" OFF )
+cmake_dependent_option( T8CODE_ENABLE_LESS_TESTS "Tests not as thoroughly to speed up the test suite. Tests the same functionality. (WARNING: Use with care.)" OFF "T8CODE_BUILD_TESTS" OFF )
+
 option( T8CODE_BUILD_EXAMPLES "Build t8code's examples" ON )
+cmake_dependent_option( T8CODE_BUILD_TPL_EXAMPLES "Build the examples from libsc and p4est" OFF "T8CODE_BUILD_EXAMPLES" OFF )
+
+option( T8CODE_BUILD_TUTORIALS "Build t8code's tutorials" ON )
 option( T8CODE_BUILD_BENCHMARKS "Build t8code's benchmarks" ON )
 option( T8CODE_BUILD_FORTRAN_INTERFACE "Build t8code's Fortran interface" OFF )
-option( T8CODE_ENABLE_LESS_TESTS "Tests not as thoroughly to speed up the test suite. Tests the same functionality. (WARNING: Use with care.)" OFF )
 
 option( T8CODE_ENABLE_MPI "Enable t8code's features which rely on MPI" ON )
 option( T8CODE_ENABLE_VTK "Enable t8code's features which rely on VTK" OFF )
@@ -32,18 +37,6 @@ option( T8CODE_ENABLE_NETCDF "Enable t8code's features which rely on netCDF" OFF
 
 option( T8CODE_USE_SYSTEM_SC "Use system-installed sc library" OFF )
 option( T8CODE_USE_SYSTEM_P4EST "Use system-installed p4est library" OFF )
-
-option( T8CODE_BUILD_TESTS "Build t8code's automated tests" ON )
-cmake_dependent_option( T8CODE_BUILD_TPL_TESTS "Build the tests from libsc and p4est" ON "T8CODE_BUILD_TESTS" OFF )
-cmake_dependent_option( T8CODE_ENABLE_LESS_TESTS "Tests not as thoroughly to speed up the test suite. Tests the same functionality. (WARNING: Use with care.)" OFF "T8CODE_BUILD_TESTS" OFF )
-
-option( T8CODE_BUILD_TUTORIALS "Build t8code's tutorials" ON )
-
-option( T8CODE_BUILD_EXAMPLES "Build t8code's examples" ON )
-cmake_dependent_option( T8CODE_BUILD_TPL_EXAMPLES "Build the examples from libsc and p4est" OFF "T8CODE_BUILD_EXAMPLES" OFF )
-
-option( T8CODE_BUILD_BENCHMARKS "Build t8code's benchmarks" ON )
-option( T8CODE_BUILD_FORTRAN_INTERFACE "Build t8code's Fortran interface" OFF )
 
 option( T8CODE_BUILD_DOCUMENTATION "Build t8code's documentation" OFF )
 cmake_dependent_option( T8CODE_BUILD_DOCUMENTATION_SPHINX "Build t8code's documentation using sphinx" OFF "T8CODE_BUILD_DOCUMENTATION" OFF )
