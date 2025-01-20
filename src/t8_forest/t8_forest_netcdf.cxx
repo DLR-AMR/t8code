@@ -748,7 +748,7 @@ t8_forest_write_netcdf_coordinate_data (t8_forest_t forest, t8_forest_netcdf_con
       i = 0;
       for (; i < number_nodes; i++) {
         t8_forest_element_coordinate (forest, ltree_id, element,
-                                      t8_element_shape_vtk_corner_number ((int) element_shape, i), &vertex_coords);
+                                      t8_element_shape_vtk_corner_number ((int) element_shape, i), vertex_coords);
         /* Stores the x-, y- and z- coordinate of the nodes */
         Mesh_node_x[num_it] = vertex_coords[0];
         Mesh_node_y[num_it] = vertex_coords[1];
