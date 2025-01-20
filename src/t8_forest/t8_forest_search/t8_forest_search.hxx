@@ -20,7 +20,12 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file We declare a modern C++ interface for the search functionality. */
+/**  \file t8_forest_search.hxx 
+ * A C++ interface for the search functionality. The user can define search and query callbacks
+ * to perform the search and query operations on the forest. Implementation details regarding the 
+ * callback handling are given by https://stackoverflow.com/questions/2298242/callback-functions-in-c
+ * We decided for option 4, using std::function together with templates.
+*/
 
 #ifndef T8_FOREST_SEARCH_HXX
 #define T8_FOREST_SEARCH_HXX
@@ -31,13 +36,6 @@
 #include <functional>
 #include <numeric>
 #include <ranges>
-
-/**  \file t8_forest_search.hxx 
- * A C++ interface for the search functionality. The user can define search and query callbacks
- * to perform the search and query operations on the forest. Implementation details regarding the 
- * callback handling are given by https://stackoverflow.com/questions/2298242/callback-functions-in-c
- * We decided for option 4, using std::function together with templates.
-*/
 
 /**
  * \typedef t8_search_element_callback

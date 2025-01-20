@@ -20,7 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file We declare a modern C++ interface for the search functionality. */
+/**  \file t8_forest_search.h
+ * This is the C interface for the search functionality. The user can define search and query callbacks
+ * to perform the search and query operations on the forest.
+*/
 
 #ifndef T8_FOREST_SEARCH_C_INTERFACE_H
 #define T8_FOREST_SEARCH_C_INTERFACE_H
@@ -28,56 +31,58 @@
 #include <t8.h>
 
 T8_EXTERN_C_BEGIN ();
-/*
- *   Discussion about C++ callback handling https://stackoverflow.com/questions/2298242/callback-functions-in-c
- *   We decided for option 4, using std::function together with templates.
-*/
 
 typedef int (*t8_search_element_callback_c_wrapper) (t8_forest_t forest, const t8_locidx_t ltreeid,
                                                      const t8_element_t *element, const int is_leaf,
                                                      const t8_element_array_t *leaf_elements,
                                                      const t8_locidx_t tree_leaf_index, void *user_data);
 
-typedef void (*t8_search_queries_callback_c_wrapper) (t8_forest_t forest, const t8_locidx_t ltreeid,
-                                                      const t8_element_t *element, const int is_leaf,
-                                                      const t8_element_array_t *leaf_elements,
-                                                      const t8_locidx_t tree_leaf_index, sc_array_t *queries,
-                                                      sc_array_t *active_query_indices, int *query_matches,
-                                                      void *user_data);
+typedef int (*t8_search_queries_callback_c_wrapper) (t8_forest_t forest, const t8_locidx_t ltreeid,
+                                                     const t8_element_t *element, const int is_leaf,
+                                                     const t8_element_array_t *leaf_elements,
+                                                     const t8_locidx_t tree_leaf_index, void *queries, void *user_data);
 
-typedef struct t8_forest_search_c_wrapper *t8_forest_search;
+typedef void (*t8_search_batched_queries_callback_c_wrapper) (t8_forest_t forest, const t8_locidx_t ltreeid,
+                                                              const t8_element_t *element, const int is_leaf,
+                                                              const t8_element_array_t *leaf_elements,
+                                                              const t8_locidx_t tree_leaf_index, void *queries,
+                                                              size_t *active_query_indices, int *query_matches,
+                                                              void *user_data);
+
+typedef struct t8_forest_c_search *t8_forest_search_c_wrapper;
 
 void
-t8_forest_c_init_search (t8_forest_search_c_wrapper *search, t8_search_element_callback_c_wrapper element_callback,
+t8_forest_c_init_search (t8_forest_search_c_wrapper search, t8_search_element_callback_c_wrapper element_callback,
                          const t8_forest_t forest);
 void
 t8_forest_c_search_update_forest (t8_forest_search_c_wrapper search, const t8_forest_t forest);
 void
-t8_forest_c_search_update_user_data (t8_forest_search_c_wrapper search, const void *udata);
+t8_forest_c_search_update_user_data (t8_forest_search_c_wrapper search, void *udata);
 void
 t8_forest_c_search_do_search (t8_forest_search_c_wrapper search);
 void
-t8_forest_c_search_destroy (t8_forest_search_c_wrapper *search);
+t8_forest_c_search_destroy (t8_forest_search_c_wrapper search);
 
-typedef struct t8_forest_search_with_queries_c_wrapper *t8_forest_search_with_queries;
+typedef struct t8_forest_search_with_queries *t8_forest_search_with_queries_c_wrapper;
 
 void
-t8_forest_c_init_search_with_queries (t8_forest_search_with_queries_c_wrapper *search_with_queries,
+t8_forest_c_init_search_with_queries (t8_forest_search_with_queries_c_wrapper search_with_queries,
                                       t8_search_element_callback_c_wrapper element_callback,
-                                      t8_search_queries_callback_c_wrapper queries_callback, const t8_forest_t forest);
+                                      t8_search_queries_callback_c_wrapper queries_callback, sc_array_t *queries,
+                                      const t8_forest_t forest);
 void
 t8_forest_c_search_with_queries_update_forest (t8_forest_search_with_queries_c_wrapper search_with_queries,
                                                const t8_forest_t forest);
 void
 t8_forest_c_search_with_queries_update_user_data (t8_forest_search_with_queries_c_wrapper search_with_queries,
-                                                  const void *udata);
+                                                  void *udata);
 void
 t8_forest_c_search_with_queries_update_queries (t8_forest_search_with_queries_c_wrapper search_with_queries,
                                                 const void *queries);
 void
-t8_forest_c_search_with_queries_destroy (t8_forest_search_with_queries_c_wrapper *search);
+t8_forest_c_search_with_queries_destroy (t8_forest_search_with_queries_c_wrapper search);
 void
-t8_forest_c_search_with_queries_do_search (t8_forest_search_with_queries_c_wrapper *search);
+t8_forest_c_search_with_queries_do_search (t8_forest_search_with_queries_c_wrapper search);
 
 T8_EXTERN_C_END ();
 

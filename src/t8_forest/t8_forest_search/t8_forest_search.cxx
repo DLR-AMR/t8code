@@ -21,6 +21,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 */
 
 #include "t8_forest/t8_forest_search/t8_forest_search.hxx"
+#include "t8_forest/t8_forest_search/t8_forest_search.h"
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_general.h>
@@ -142,3 +143,117 @@ t8_search_base::do_search ()
     this->search_tree (itree);
   }
 }
+
+/* #################### t8_forest_search c interface #################### */
+T8_EXTERN_C_BEGIN ();
+
+struct t8_forest_c_search
+{
+  t8_search<void *> *c_search;
+};
+
+void
+t8_forest_c_init_search (t8_forest_search_c_wrapper search, t8_search_element_callback_c_wrapper element_callback,
+                         const t8_forest_t forest)
+{
+  T8_ASSERT (search != NULL);
+  T8_ASSERT (element_callback != NULL);
+  search->c_search = new t8_search<void *> (element_callback, forest);
+}
+
+void
+t8_forest_c_search_update_forest (t8_forest_search_c_wrapper search, const t8_forest_t forest)
+{
+  T8_ASSERT (search != NULL);
+  T8_ASSERT (forest != NULL);
+  search->c_search->update_forest (forest);
+}
+
+void
+t8_forest_c_search_update_user_data (t8_forest_search_c_wrapper search, void *udata)
+{
+  T8_ASSERT (search != NULL);
+  T8_ASSERT (udata != NULL);
+  search->c_search->update_user_data (&udata);
+}
+
+void
+t8_forest_c_search_do_search (t8_forest_search_c_wrapper search)
+{
+  T8_ASSERT (search != NULL);
+  search->c_search->do_search ();
+}
+
+void
+t8_forest_c_search_destroy (t8_forest_search_c_wrapper search)
+{
+  T8_ASSERT (search != NULL);
+  delete search->c_search;
+  search->c_search = NULL;
+}
+
+struct t8_forest_search_with_queries
+{
+  t8_search_with_queries<void *, void *> *c_search;
+};
+
+void
+t8_forest_c_init_search_with_queries (t8_forest_search_with_queries_c_wrapper search_with_queries,
+                                      t8_search_element_callback_c_wrapper element_callback,
+                                      t8_search_queries_callback_c_wrapper queries_callback, sc_array_t *queries,
+                                      const t8_forest_t forest)
+{
+  T8_ASSERT (search_with_queries != NULL);
+  T8_ASSERT (element_callback != NULL);
+  T8_ASSERT (queries_callback != NULL);
+  T8_ASSERT (queries != NULL);
+  T8_ASSERT (forest != NULL);
+
+  std::vector<void *> queries_vector (queries->array, queries->array + queries->elem_count);
+
+  search_with_queries->c_search
+    = new t8_search_with_queries<void *, void *> (element_callback, queries_callback, queries_vector, forest);
+}
+
+void
+t8_forest_c_search_with_queries_update_forest (t8_forest_search_with_queries_c_wrapper search_with_queries,
+                                               const t8_forest_t forest)
+{
+  T8_ASSERT (search_with_queries != NULL);
+  T8_ASSERT (forest != NULL);
+  search_with_queries->c_search->update_forest (forest);
+}
+
+void
+t8_forest_c_search_with_queries_update_user_data (t8_forest_search_with_queries_c_wrapper search_with_queries,
+                                                  void *udata)
+{
+  T8_ASSERT (search_with_queries != NULL);
+  T8_ASSERT (udata != NULL);
+  search_with_queries->c_search->update_user_data (udata);
+}
+
+void
+t8_forest_c_search_with_queries_update_queries (t8_forest_search_with_queries_c_wrapper search_with_queries,
+                                                const void *queries)
+{
+  T8_ASSERT (search_with_queries != NULL);
+  T8_ASSERT (queries != NULL);
+  search_with_queries->c_search->update_queries (queries);
+}
+
+void
+t8_forest_c_search_with_queries_do_search (t8_forest_search_with_queries_c_wrapper search)
+{
+  T8_ASSERT (search != NULL);
+  search->c_search->do_search ();
+}
+
+void
+t8_forest_c_search_with_queries_destroy (t8_forest_search_with_queries_c_wrapper search)
+{
+  T8_ASSERT (search != NULL);
+  delete search->c_search;
+  search->c_search = NULL;
+}
+T8_EXTERN_C_END ();
