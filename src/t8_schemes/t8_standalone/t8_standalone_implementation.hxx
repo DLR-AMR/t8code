@@ -861,7 +861,7 @@ struct t8_standalone_scheme
   static inline int
   element_get_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face, int *neigh_face)
   {
-
+    T8_ASSERT (element_get_level (elem) > 0);
     t8_standalone_scheme<TEclass>::element_copy (elem, neigh);
 
     const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
@@ -1515,6 +1515,7 @@ struct t8_standalone_scheme
   element_get_ancestor (const t8_standalone_element<TEclass> *elem, const int level,
                         t8_standalone_element<TEclass> *ancestor)
   {
+    T8_ASSERT (element_is_valid ((t8_element_t *) elem));
     T8_ASSERT (0 <= level && level <= elem->level);
     if (elem != ancestor) {
       t8_standalone_scheme<TEclass>::element_copy ((const t8_element_t *) elem, (t8_element_t *) ancestor);
@@ -1670,6 +1671,7 @@ struct t8_standalone_scheme
       if (ancestor.coords[idim])
         return 0;
     }
+    return 1;
   }
 };
 

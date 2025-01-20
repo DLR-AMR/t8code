@@ -61,7 +61,9 @@ template <t8_eclass_t TEclass>
 constexpr int8_t t8_type_vertex_dim_to_binary[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_NUM_CORNERS[TEclass]]
                                              [T8_ELEMENT_DIM[TEclass]];
 
-typedef uint32_t t8_element_coord;
+/* Element coords are signed ints because we allow a boundary layer around the root element. */
+typedef int32_t t8_element_coord;
+
 typedef uint8_t t8_element_level;
 typedef int8_t t8_cube_id;
 
