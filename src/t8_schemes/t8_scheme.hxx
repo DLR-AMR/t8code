@@ -453,8 +453,9 @@ class t8_scheme {
    * at a given level.
    * \param [in] tree_class    The eclass of the current tree.
    * \param [in] elem     This must be a valid element.
-   * \param [in] level    A refinement level. Must satisfy \a level < elem.level
+   * \param [in] level    A refinement level. Must satisfy \a level <= elem.level
    * \return              The child_id of \a elem in regard to its \a level ancestor.
+   * \note The ancestor id at elem.level is the same as the child id.
    */
   inline int
   element_get_ancestor_id (const t8_eclass_t tree_class, const t8_element_t *elem, const int level) const
