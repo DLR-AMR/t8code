@@ -22,7 +22,7 @@
 
 #include <t8_forest/t8_forest_search/t8_forest_search.hxx>
 
-struct t8_forest_search
+static struct t8_forest_search
 {
   t8_search<void *> *c_search;
 }
