@@ -110,7 +110,7 @@ struct t8_standalone_scheme
     return TEclass;
   }
 
-  inline size_t
+  constexpr size_t
   get_element_size (void) const
   {
     return element_size;
@@ -144,7 +144,7 @@ struct t8_standalone_scheme
    * \param [in] elem The element.
    * \return          The number of corners of \a elem.
    */
-  static inline int
+  static constexpr int
   element_get_num_corners (const t8_element_t *elem)
   {
     T8_ASSERT (element_is_valid (elem));
@@ -156,7 +156,7 @@ struct t8_standalone_scheme
    * \param [in] elem The element.
    * \return          The number of faces of \a elem.
    */
-  static inline int
+  static constexpr int
   element_get_num_faces (const t8_element_t *elem)
   {
     SC_ABORT ("This function is not implemented in this scheme yet.\n");
@@ -168,14 +168,14 @@ struct t8_standalone_scheme
    * \param [in] elem The element.
    * \return          The maximum number of faces of \a elem and its descendants.
    */
-  static inline int
+  static constexpr int
   element_get_max_num_faces (const t8_element_t *elem)
   {
     SC_ABORT ("This function is not implemented in this scheme yet.\n");
     return 0;
   }
 
-  static inline t8_element_shape_t
+  static constexpr t8_element_shape_t
   element_get_shape (const t8_element_t *elem)
   {
     T8_ASSERT (element_is_valid (elem));
@@ -200,7 +200,7 @@ struct t8_standalone_scheme
    * TET               :  Starting with the lowest corner number counterclockwise as seen from
    *                      'outside' of the element.
    */
-  static inline int
+  static constexpr int
   element_get_face_corner (const t8_element_t *element, const int face, const int corner)
   {
     SC_ABORT ("This function is not implemented yet.\n");
@@ -219,14 +219,14 @@ struct t8_standalone_scheme
    * \param [in] face     A face index for \a corner.
    * \return              The face number of the \a face-th face at \a corner.
    */
-  static inline int
+  static constexpr int
   element_get_corner_face (const t8_element_t *element, const int corner, const int face)
   {
     SC_ABORT ("This function is not implemented yet.\n");
     return 0;
   }
 
-  static inline t8_element_shape_t
+  static constexpr t8_element_shape_t
   element_get_face_shape (const t8_element_t *elem, const int face)
   {
     SC_ABORT ("This function is not implemented yet.\n");
@@ -242,7 +242,7 @@ struct t8_standalone_scheme
    *                    entries of \b source.
    * \note \a source and \a dest may point to the same element.
    */
-  static inline void
+  static constexpr void
   element_copy (const t8_element_t *source, t8_element_t *dest)
   {
     T8_ASSERT (element_is_valid (source));
@@ -258,7 +258,7 @@ struct t8_standalone_scheme
   * \param [in] elem2  The second element.
   * \return            true if the elements are equal, false if they are not equal
   */
-  static inline int
+  static constexpr int
   element_is_equal (const t8_element_t *elem1, const t8_element_t *elem2) noexcept
   {
     T8_ASSERT (element_is_valid (elem1));
@@ -295,7 +295,7 @@ struct t8_standalone_scheme
   /** create the root element
    * \param [in,out] elem The element that is filled with the root
    */
-  static inline void
+  static constexpr void
   get_root (t8_element_t *elem)
   {
     t8_standalone_element<TEclass> *el = (t8_standalone_element<TEclass> *) elem;
@@ -320,7 +320,7 @@ struct t8_standalone_scheme
    *                    For a pyramid, for example, it may be either a
    *                    tetrahedron or a pyramid depending on \b elem's childid.
    */
-  static inline void
+  static constexpr void
   element_get_parent (const t8_element_t *elem, t8_element_t *parent)
   {
     T8_ASSERT (element_is_valid (elem));
@@ -350,7 +350,7 @@ struct t8_standalone_scheme
    * Note that this number is >= 1, since we count the element itself as a sibling.
    * Note that the number of siblings is 1 for the root element.
    */
-  static inline int
+  static constexpr int
   element_get_num_siblings (const t8_element_t *elem)
   {
     T8_ASSERT (element_is_valid (elem));
@@ -379,7 +379,7 @@ struct t8_standalone_scheme
    *                    The storage for this element must exist
    *                    and match the element class of the sibling.
    */
-  static inline void
+  static constexpr void
   element_get_sibling (const t8_element_t *elem, const int sibid, t8_element_t *sibling)
   {
     SC_ABORT ("This function is not implemented yet.\n");
@@ -397,7 +397,7 @@ struct t8_standalone_scheme
    * It is valid to call this function with elem = child.
    * \see t8_element_child_eclass
    */
-  static inline void
+  static constexpr void
   element_get_child (const t8_element_t *elem, const int childid, t8_element_t *child)
   {
     T8_ASSERT (element_is_valid (elem));
@@ -432,7 +432,7 @@ struct t8_standalone_scheme
    * \param [in] elem   The element whose number of children is returned.
    * \return            The number of children of \a elem if it is to be refined.
    */
-  static inline int
+  static constexpr int
   element_get_num_children (const t8_element_t *elem)
   {
     T8_ASSERT (element_is_valid (elem));
@@ -451,7 +451,7 @@ struct t8_standalone_scheme
    * \see t8_element_num_children
    * \see t8_element_child_eclass
    */
-  static inline void
+  static constexpr void
   element_get_children (const t8_element_t *elem, const int length, t8_element_t *c[])
   {
     T8_ASSERT (element_is_valid (elem));
@@ -472,7 +472,7 @@ struct t8_standalone_scheme
    * \param [in] elem     This must be a valid element.
    * \return              The child id of elem.
    */
-  static inline int
+  static constexpr int
   element_get_child_id (const t8_element_t *elem)
   {
     T8_ASSERT (element_is_valid (elem));
@@ -499,7 +499,7 @@ struct t8_standalone_scheme
    * \param [in] level    A refinement level. Must satisfy \a level < elem.level
    * \return              The child_id of \a elem in regard to its \a level ancestor.
    */
-  static inline int
+  static constexpr int
   element_get_ancestor_id (const t8_element_t *elem, const int level)
   {
     T8_ASSERT (element_is_valid (elem));
@@ -519,7 +519,7 @@ struct t8_standalone_scheme
    * \return              Zero if \b fam is not a family, nonzero if it is.
    * \note level 0 elements do not form a family.
    */
-  static inline int
+  static constexpr int
   elements_are_family (t8_element_t *const *fam)
   {
 #if T8_ENABLE_DEBUG
@@ -561,7 +561,7 @@ struct t8_standalone_scheme
    *                      On output the unique nearest common ancestor of
    *                      \b elem1 and \b elem2.
    */
-  static inline void
+  static constexpr void
   element_get_nca (const t8_element_t *elem1, const t8_element_t *elem2, t8_element_t *nca)
   {
     T8_ASSERT (element_is_valid (elem1));
@@ -589,7 +589,7 @@ struct t8_standalone_scheme
    *                      of the given level.
    * \param [in] level    The level, at which the descendant is computed.
    */
-  static inline void
+  static constexpr void
   element_get_first_descendant (const t8_element_t *elem, t8_element_t *desc, const int level)
   {
     T8_ASSERT (element_is_valid (elem));
@@ -613,7 +613,7 @@ struct t8_standalone_scheme
    *                      of the given level.
    * \param [in] level    The level, at which the descendant is computed.
    */
-  static inline void
+  static constexpr void
   element_get_last_descendant (const t8_element_t *elem, t8_element_t *desc, const int level)
   {
     T8_ASSERT (element_is_valid (elem));
@@ -644,7 +644,7 @@ struct t8_standalone_scheme
    * \param [in] face   A face of \a elem.
    * \return            The number of children of \a face if \a elem is to be refined.
    */
-  static inline int
+  static constexpr int
   element_get_num_face_children (const t8_element_t *elem, const int face)
   {
     SC_ABORT ("This function is not implemented in this scheme yet.\n");
@@ -665,7 +665,7 @@ struct t8_standalone_scheme
    *                      on output its i-th entry is the child_id of the i-th face_child.
    * It is valid to call this function with elem = children[0].
    */
-  static inline void
+  static constexpr void
   element_get_children_at_face (const t8_element_t *elem, int face, t8_element_t *children[], const int num_children,
                                 int *child_indices)
   {
@@ -692,7 +692,7 @@ struct t8_standalone_scheme
     * \return              The face number of the face of a child of \a elem
     *                      that coincides with \a face_child.
     */
-  static inline int
+  static constexpr int
   element_face_get_child_face (const t8_element_t *elem, const int face, const int face_child)
   {
     SC_ABORT ("This function is not implemented in this scheme yet.\n");
@@ -709,7 +709,7 @@ struct t8_standalone_scheme
     *                      the face number of this face. Otherwise -1.
     * \note For the root element this function always returns \a face.
     */
-  static inline int
+  static constexpr int
   element_face_get_parent_face (const t8_element_t *elem, const int face)
   {
     SC_ABORT ("This function is not implemented in this scheme yet.\n");
@@ -724,7 +724,7 @@ struct t8_standalone_scheme
    *                       that shares a face with \a face.
    * \param [in] level     The level, at which the first descendant is constructed
    */
-  static inline void
+  static constexpr void
   element_get_first_descendant_face (const t8_element_t *elem, const int face, t8_element_t *first_desc,
                                      const int level)
   {
@@ -739,7 +739,7 @@ struct t8_standalone_scheme
    *                       that shares a face with \a face.
    * \param [in] level     The level, at which the last descendant is constructed
    */
-  static inline void
+  static constexpr void
   element_get_last_descendant_face (const t8_element_t *elem, const int face, t8_element_t *last_desc, const int level)
   {
     SC_ABORT ("This function is not implemented in this scheme yet.\n");
@@ -753,7 +753,7 @@ struct t8_standalone_scheme
    * \return              True if \a face is a subface of the element's root element.
    * \note You can compute the corresponding face number of the tree via \ref t8_element_tree_face.
    */
-  static inline int
+  static constexpr int
   element_is_root_boundary (const t8_element_t *elem, const int face)
   {
     SC_ABORT ("This function is not implemented in this scheme yet.\n");
@@ -773,7 +773,7 @@ struct t8_standalone_scheme
    * \warning The return value may look like a valid face of the tree even if 
    *   the element does not lie on the root boundary.
    */
-  static inline int
+  static constexpr int
   element_get_tree_face (const t8_element_t *elem, const int face)
   {
     SC_ABORT ("This function is not implemented in this scheme yet.\n");
@@ -795,7 +795,7 @@ struct t8_standalone_scheme
    *                  False if not. In this case \a neigh's data can be arbitrary
    *                  on output.
    */
-  static inline int
+  static constexpr int
   element_get_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, const int face, int *neigh_face)
   {
     SC_ABORT ("This function is not implemented in this scheme yet.\n");
@@ -825,7 +825,7 @@ struct t8_standalone_scheme
    *                        defined in relation to the smaller face.
    * \note \a elem1 and \a elem2 may point to the same element.
    */
-  static inline void
+  static constexpr void
   element_transform_face (const t8_element_t *elem1, t8_element_t *elem2, const int orientation, const int sign,
                           const int is_smaller_face)
   {
@@ -845,7 +845,7 @@ struct t8_standalone_scheme
    * \return              The face number of the face of \a elem that coincides
    *                      with \a face.
    */
-  static inline int
+  static constexpr int
   element_extrude_face (const t8_element_t *face, t8_element_t *elem, const int root_face, const t8_scheme *face_scheme)
   {
     SC_ABORT ("This function is not implemented in this scheme yet.\n");
@@ -863,7 +863,7 @@ struct t8_standalone_scheme
    * If \a elem is of class T8_ECLASS_VERTEX, then \a boundary must be NULL
    * and will not be modified.
    */
-  static inline void
+  static constexpr void
   element_get_boundary_face (const t8_element_t *elem, const int face, t8_element_t *boundary,
                              const t8_scheme *boundary_scheme)
   {
@@ -879,7 +879,7 @@ struct t8_standalone_scheme
    * \param [in] id       The linear id.
    *                      id must fulfil 0 <= id < 'number of leaves in the uniform refinement'
    */
-  static inline void
+  static constexpr void
   element_set_linear_id (t8_element_t *elem, const int level, t8_linearidx_t id)
   {
 
@@ -941,7 +941,7 @@ struct t8_standalone_scheme
    * \param [in] level    The level of the uniform refinement to consider.
    * \return              The linear id of the element.
    */
-  static inline t8_linearidx_t
+  static constexpr t8_linearidx_t
   element_get_linear_id (const t8_element_t *elem, const int level)
   {
     T8_ASSERT (element_is_valid (elem));
@@ -984,7 +984,7 @@ struct t8_standalone_scheme
    * \param [in] elem1    The element whose successor should be constructed.
    * \param [in,out] elem2  The element whose entries will be set.
    */
-  static inline void
+  static constexpr void
   element_construct_successor (const t8_element_t *elem1, t8_element_t *elem2)
   {
     T8_ASSERT (element_is_valid (elem1));
@@ -1022,7 +1022,7 @@ struct t8_standalone_scheme
    *  then the return value is max(0, 2^{\a level - level(\a t)}).
    *  Thus, if \a t's level is 0, and \a level = 3, the return value is 2^3 = 8.
    */
-  static inline t8_gloidx_t
+  static constexpr t8_gloidx_t
   element_count_leaves (const t8_element_t *elem, const t8_element_level level)
   {
     T8_ASSERT (element_is_valid (elem));
@@ -1043,7 +1043,7 @@ struct t8_standalone_scheme
    * This is a convenience function, and can be implemented via
    * \ref t8_element_count_leaves.
    */
-  static inline t8_gloidx_t
+  static constexpr t8_gloidx_t
   count_leaves_from_root (const int level)
   {
     T8_ASSERT (level <= T8_ELEMENT_MAXLEVEL[TEclass]);
@@ -1061,7 +1061,7 @@ struct t8_standalone_scheme
    *               and positive if elem1 > elem2.
    *  If elem2 is a copy of elem1 then the elements are equal.
    */
-  static inline int
+  static constexpr int
   element_compare (const t8_element_t *elem1, const t8_element_t *elem2)
   {
     T8_ASSERT (element_is_valid (elem1));
@@ -1094,7 +1094,7 @@ struct t8_standalone_scheme
    *   \param [out] coords An array of at least as many doubles as the element's dimension
    *                      whose entries will be filled with the coordinates of \a vertex.
    */
-  static inline void
+  static constexpr void
   element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex, double coords[])
   {
     T8_ASSERT (element_is_valid (elem));
@@ -1121,7 +1121,7 @@ struct t8_standalone_scheme
    * \param [in] user_data    User data.
    * \param [out] out_coords  The coordinates of the point in the reference space of the tree.
    */
-  static inline void
+  static constexpr void
   element_get_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
                                 double *out_coords)
   {
@@ -1213,7 +1213,7 @@ struct t8_standalone_scheme
 #endif
   }
 
-  static inline void
+  static constexpr void
   element_deinit (const int length, t8_element_t *elem)
   {
   }
@@ -1255,7 +1255,7 @@ struct t8_standalone_scheme
    * \note            We recommend to use the assertion T8_ASSERT (element_is_valid (elem))
    *                  in the implementation of each of the functions in this file.
    */
-  static inline int
+  static constexpr int
   element_is_valid (const t8_element_t *elem)
   {
     T8_ASSERT (elem != NULL);
@@ -1280,7 +1280,7 @@ struct t8_standalone_scheme
  * 
  * \param [in]        elem  The element to print
  */
-  static inline void
+  static constexpr void
   element_debug_print (const t8_element_t *elem)
   {
 
@@ -1296,7 +1296,7 @@ struct t8_standalone_scheme
     * ToDo-Type */
   }
 
-  static inline void
+  static constexpr void
   element_to_string (const t8_element_t *elem, char *debug_string, const int string_size)
   {
     const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
@@ -1319,7 +1319,7 @@ struct t8_standalone_scheme
      * \param [in, out] position the position of the first byte that is not already packed
      * \param [in] comm MPI Communicator
     */
-  inline void
+  constexpr void
   element_MPI_Pack (t8_element_t **const elements, const unsigned int count, void *send_buffer, const int buffer_size,
                     int *position, sc_MPI_Comm comm) const
 
@@ -1342,7 +1342,7 @@ struct t8_standalone_scheme
      * \param [in] comm MPI Communicator
      * \param [out] pack_size upper bound on the message size
     */
-  inline void
+  constexpr void
   element_MPI_Pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size) const
   {
     int singlesize = 0;
@@ -1370,7 +1370,7 @@ struct t8_standalone_scheme
      * \param [in] count Number of elements to unpack
      * \param [in] comm MPI Communicator
     */
-  inline void
+  constexpr void
   element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements,
                       const unsigned int count, sc_MPI_Comm comm) const
   {
@@ -1389,7 +1389,7 @@ struct t8_standalone_scheme
 
  private:
   // ################################################____HELPER____################################################
-  static inline t8_element_coord
+  static constexpr t8_element_coord
   element_get_len (const t8_element_level level)
   {
     return 1 << (T8_ELEMENT_MAXLEVEL[TEclass] - (level));
@@ -1420,7 +1420,7 @@ struct t8_standalone_scheme
  * \param[in] level     Level of the ancestor to compute
  * \param[in, out] and  Allocated element that will be filled with the data of the ancestor.
  */
-  static inline void
+  static constexpr void
   element_get_ancestor (const t8_standalone_element<TEclass> *elem, const int level,
                         t8_standalone_element<TEclass> *ancestor)
   {
@@ -1443,7 +1443,7 @@ struct t8_standalone_scheme
     ancestor->level = level;
   }
 
-  static inline int
+  static constexpr int
   element_get_cube_nca_level (const t8_standalone_element<TEclass> *elem1, const t8_standalone_element<TEclass> *elem2)
   {
     /* XOR all coordinates. The number of zeros on the left determines the level needed, so that the coordinates equal. 
@@ -1460,7 +1460,7 @@ struct t8_standalone_scheme
     return SC_MIN (num_zeros, (int) SC_MIN (elem1->level, elem2->level));
   }
 
-  static inline int
+  static constexpr int
   number_of_leading_zeros (const t8_element_coord maxexclor)
   {
     const int num_of_active_bits_used = SC_LOG2_32 (maxexclor) + 1;
@@ -1475,7 +1475,7 @@ struct t8_standalone_scheme
  * \param[in, out]  elem     Input element
  * \param[in]       shift Number of bits to set to zero
  */
-  static inline void
+  static constexpr void
   element_cut_coordinates (t8_standalone_element<TEclass> *elem, const int shift)
   {
     T8_ASSERT (0 <= shift && shift <= T8_ELEMENT_MAXLEVEL[TEclass]);
@@ -1492,7 +1492,7 @@ struct t8_standalone_scheme
  * \param[in]       length      int that is 1 at the level of the input element
  * Note length is used as additional input to avoid recomputation. 
  */
-  static inline void
+  static constexpr void
   set_coords_at_level_to_zero (const t8_standalone_element<TEclass> *elem, t8_standalone_element<TEclass> *parent_elem,
                                const t8_element_coord length)
   {
@@ -1510,7 +1510,7 @@ struct t8_standalone_scheme
  * \param[in]           cube_id  Cube ID for bitwise operation
  * Note length is used as additional input to avoid recomputation. 
  */
-  static inline void
+  static constexpr void
   put_cube_id_at_level (const t8_standalone_element<TEclass> *parent, t8_standalone_element<TEclass> *child,
                         const t8_element_coord length, const t8_cube_id cube_id)
   {
@@ -1548,7 +1548,7 @@ struct t8_standalone_scheme
  * \param [out] coords An array of 3 t8_element_coord that
  * 		     will be filled with the coordinates of the vertex.
  */
-  static inline void
+  static constexpr void
   element_compute_coords (const t8_standalone_element<TEclass> *elem, const int vertex, int coords[])
   {
     T8_ASSERT (0 <= vertex && vertex < element_get_num_corners ((const t8_element_t *) elem));
