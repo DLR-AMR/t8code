@@ -500,7 +500,7 @@ struct t8_standalone_scheme
    * \return              The child_id of \a elem in regard to its \a level ancestor.
    */
   static constexpr int
-  element_get_ancestor_id (const t8_element_t *elem, const int level) noexcept
+  element_get_ancestor_id (const t8_element_t *elem, const t8_element_level level) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (0 <= level && level <= T8_ELEMENT_MAXLEVEL[TEclass]);
@@ -590,7 +590,7 @@ struct t8_standalone_scheme
    * \param [in] level    The level, at which the descendant is computed.
    */
   static constexpr void
-  element_get_first_descendant (const t8_element_t *elem, t8_element_t *desc, const int level) noexcept
+  element_get_first_descendant (const t8_element_t *elem, t8_element_t *desc, const t8_element_level level) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
 
@@ -614,7 +614,7 @@ struct t8_standalone_scheme
    * \param [in] level    The level, at which the descendant is computed.
    */
   static constexpr void
-  element_get_last_descendant (const t8_element_t *elem, t8_element_t *desc, const int level) noexcept
+  element_get_last_descendant (const t8_element_t *elem, t8_element_t *desc, const t8_element_level level) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
 
@@ -726,7 +726,7 @@ struct t8_standalone_scheme
    */
   static constexpr void
   element_get_first_descendant_face (const t8_element_t *elem, const int face, t8_element_t *first_desc,
-                                     const int level) noexcept
+                                     const t8_element_level level) noexcept
   {
     SC_ABORT ("This function is not implemented in this scheme yet.\n");
   }
@@ -741,7 +741,7 @@ struct t8_standalone_scheme
    */
   static constexpr void
   element_get_last_descendant_face (const t8_element_t *elem, const int face, t8_element_t *last_desc,
-                                    const int level) noexcept
+                                    const t8_element_level level) noexcept
   {
     SC_ABORT ("This function is not implemented in this scheme yet.\n");
   }
@@ -883,7 +883,7 @@ struct t8_standalone_scheme
    *                      id must fulfil 0 <= id < 'number of leaves in the uniform refinement'
    */
   static constexpr void
-  element_set_linear_id (t8_element_t *elem, const int level, t8_linearidx_t id) noexcept
+  element_set_linear_id (t8_element_t *elem, const t8_element_level level, t8_linearidx_t id) noexcept
   {
 
     t8_standalone_element<TEclass> *el = (t8_standalone_element<TEclass> *) elem;
@@ -945,7 +945,7 @@ struct t8_standalone_scheme
    * \return              The linear id of the element.
    */
   static constexpr t8_linearidx_t
-  element_get_linear_id (const t8_element_t *elem, const int level) noexcept
+  element_get_linear_id (const t8_element_t *elem, const t8_element_level level) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
     const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
@@ -1047,7 +1047,7 @@ struct t8_standalone_scheme
    * \ref t8_element_count_leaves.
    */
   static constexpr t8_gloidx_t
-  count_leaves_from_root (const int level) noexcept
+  count_leaves_from_root (const t8_element_level level) noexcept
   {
     T8_ASSERT (level <= T8_ELEMENT_MAXLEVEL[TEclass]);
     T8_ASSERT (level >= 0);
@@ -1399,7 +1399,7 @@ struct t8_standalone_scheme
   }
 
   static t8_cube_id
-  compute_cubeid (const t8_standalone_element<TEclass> *elem, const int level) noexcept
+  compute_cubeid (const t8_standalone_element<TEclass> *elem, const t8_element_level level) noexcept
   {
     t8_cube_id cube_id = 0;
 
@@ -1424,7 +1424,7 @@ struct t8_standalone_scheme
  * \param[in, out] and  Allocated element that will be filled with the data of the ancestor.
  */
   static constexpr void
-  element_get_ancestor (const t8_standalone_element<TEclass> *elem, const int level,
+  element_get_ancestor (const t8_standalone_element<TEclass> *elem, const t8_element_level level,
                         t8_standalone_element<TEclass> *ancestor) noexcept
   {
     T8_ASSERT (0 <= level && level <= elem->level);
