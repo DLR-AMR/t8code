@@ -23,8 +23,8 @@
 #ifndef T8_FOREST_GHOST_STENCIL_HXX
 #define T8_FOREST_GHOST_STENCIL_HXX
 
-#include <t8_forest/t8_forest_ghost_interface.h>
-#include <t8_forest/t8_forest_ghost_interface.hxx>
+#include <t8_forest/t8_forest_ghost_definition.h>
+#include <t8_forest/t8_forest_ghost_definition.hxx>
 
 T8_EXTERN_C_BEGIN ();
 

@@ -20,14 +20,14 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#ifndef T8_FOREST_GHOST_INTERFACE_H
-#define T8_FOREST_GHOST_INTERFACE_H
+#ifndef T8_FOREST_GHOST_DEFINITION_H
+#define T8_FOREST_GHOST_DEFINITION_H
 
 #include <t8.h>
 
 T8_EXTERN_C_BEGIN ();
 
-/** This typedef holds virtual functions for a particular ghost interface.
+/** This typedef holds virtual functions for a particular ghost definition.
  * We need it so that we can use t8_ghost_definition_c pointers in .c files
  * without them seeing the actual C++ code (and then not compiling)
  */
@@ -35,4 +35,4 @@ typedef struct t8_forest_ghost_definition t8_forest_ghost_definition_c;
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_FOREST_GHOST_INTERFACE_H */
+#endif /* !T8_FOREST_GHOST_DEFINITION_H */

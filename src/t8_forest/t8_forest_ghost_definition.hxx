@@ -20,14 +20,14 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#ifndef T8_FOREST_GHOST_INTERFACE_HXX
-#define T8_FOREST_GHOST_INTERFACE_HXX
+#ifndef T8_FOREST_GHOST_DEFINITION_HXX
+#define T8_FOREST_GHOST_DEFINITION_HXX
 
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
 #include <memory>
-#include <t8_forest/t8_forest_ghost_interface.h>
-#include <t8_forest/t8_forest_ghost_interface_wrapper.h>
+#include <t8_forest/t8_forest_ghost_definition.h>
+#include <t8_forest/t8_forest_ghost_definition_wrapper.h>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -75,7 +75,7 @@ struct t8_forest_ghost_definition
   }
 
   /**
-   * Increase the reference count of the ghost interface.
+   * Increase the reference count of the ghost_definition.
    */
   virtual inline void
   ref ()
@@ -147,4 +147,4 @@ struct t8_forest_ghost_definition
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_FOREST_GHOST_INTERFACE_HXX */
+#endif /* !T8_FOREST_GHOST_DEFINITION_HXX */
