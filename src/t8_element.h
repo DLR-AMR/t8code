@@ -51,25 +51,6 @@ extern const double t8_element_corner_ref_coords[T8_ECLASS_COUNT][T8_ECLASS_MAX_
  */
 extern const double t8_element_centroid_ref_coords[T8_ECLASS_COUNT][3];
 
-/** Increase the reference counter of a scheme.
- * \param [in,out] scheme       On input, this scheme must be alive, that is,
- *                              exist with positive reference count.
- */
-void
-t8_scheme_ref (const t8_scheme_c *scheme);
-
-/** Decrease the reference counter of a scheme.
- * If the counter reaches zero, this scheme is destroyed.
- * \param [in,out] pscheme      On input, the scheme pointed to must exist
- *                              with positive reference count.  If the
- *                              reference count reaches zero, the scheme is
- *                              destroyed and this pointer set to NULL.
- *                              Otherwise, the pointer is not changed and
- *                              the scheme is not modified in other ways.
- */
-void
-t8_scheme_unref (const t8_scheme_c **pscheme);
-
 T8_EXTERN_C_END ();
 
 #endif /* !T8_ELEMENT_H */

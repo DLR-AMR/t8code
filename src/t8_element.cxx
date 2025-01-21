@@ -50,22 +50,4 @@ const double t8_element_centroid_ref_coords[T8_ECLASS_COUNT][3] = {
 };
 /* clang-format on */
 
-void
-t8_scheme_ref (const t8_scheme_c *scheme)
-{
-  T8_ASSERT (scheme != NULL);
-
-  scheme->ref ();
-}
-
-void
-t8_scheme_unref (const t8_scheme_c **pscheme)
-{
-  T8_ASSERT (pscheme != NULL);
-
-  if ((*pscheme)->unref () < 1) {
-    *pscheme = NULL;
-  }
-}
-
 T8_EXTERN_C_END ();
