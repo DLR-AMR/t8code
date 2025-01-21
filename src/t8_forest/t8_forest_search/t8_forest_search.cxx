@@ -209,7 +209,11 @@ t8_forest_c_init_search_with_queries (t8_forest_search_with_queries_c_wrapper se
   T8_ASSERT (queries != NULL);
   T8_ASSERT (forest != NULL);
 
-  std::vector<void *> queries_vector (queries->array, queries->array + queries->elem_count);
+  std::vector<void *> queries_vector;
+
+  for (int iquery = 0; iquery < queries->elem_count; iquery++) {
+    queries_vector.push_back (sc_array_pop (queries));
+  }
 
   search_with_queries->c_search
     = new t8_search_with_queries<void *, void *> (element_callback, queries_callback, queries_vector, forest);
@@ -230,16 +234,22 @@ t8_forest_c_search_with_queries_update_user_data (t8_forest_search_with_queries_
 {
   T8_ASSERT (search_with_queries != NULL);
   T8_ASSERT (udata != NULL);
-  search_with_queries->c_search->update_user_data (udata);
+  search_with_queries->c_search->update_user_data (&udata);
 }
 
 void
 t8_forest_c_search_with_queries_update_queries (t8_forest_search_with_queries_c_wrapper search_with_queries,
-                                                const void *queries)
+                                                sc_array_t *queries)
 {
   T8_ASSERT (search_with_queries != NULL);
   T8_ASSERT (queries != NULL);
-  search_with_queries->c_search->update_queries (queries);
+
+  std::vector<void *> queries_vector;
+
+  for (int iquery = 0; iquery < queries->elem_count; iquery++) {
+    queries_vector.push_back (sc_array_pop (queries));
+  }
+  search_with_queries->c_search->update_queries (queries_vector);
 }
 
 void

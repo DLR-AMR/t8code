@@ -78,7 +78,7 @@ t8_forest_c_search_with_queries_update_user_data (t8_forest_search_with_queries_
                                                   void *udata);
 void
 t8_forest_c_search_with_queries_update_queries (t8_forest_search_with_queries_c_wrapper search_with_queries,
-                                                const void *queries);
+                                                sc_array_t *queries);
 void
 t8_forest_c_search_with_queries_destroy (t8_forest_search_with_queries_c_wrapper search);
 void
