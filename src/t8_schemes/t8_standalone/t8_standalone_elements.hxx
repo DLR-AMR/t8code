@@ -39,27 +39,6 @@ constexpr uint8_t T8_ELEMENT_MAX_NUM_FACECHILDREN[T8_ECLASS_COUNT] = { 0, 1, 2, 
 
 constexpr uint8_t T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_COUNT] = { 0, 0, 0, 1, 0, 3, 1, 2 };
 
-/**PARENT CHILD BIJECTION*/
-template <t8_eclass_t TEclass>
-constexpr int8_t t8_element_type_Iloc_to_childtype[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
-                                                  [T8_ELEMENT_NUM_CHILDREN[TEclass]];
-template <t8_eclass_t TEclass>
-constexpr int8_t t8_element_type_Iloc_to_childcubeid[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
-                                                    [T8_ELEMENT_NUM_CHILDREN[TEclass]];
-template <t8_eclass_t TEclass>
-constexpr int8_t t8_element_type_cubeid_to_parenttype[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
-                                                     [1 << T8_ELEMENT_DIM[TEclass]];
-template <t8_eclass_t TEclass>
-constexpr int8_t t8_element_type_cubeid_to_Iloc[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][1 << T8_ELEMENT_DIM[TEclass]];
-
-/**TYPE EQUATIONS*/
-template <t8_eclass_t TEclass>
-constexpr int8_t t8_type_edge_equations[T8_ELEMENT_NUM_EQUATIONS[TEclass]][2];
-
-/**VERTEX*/
-template <t8_eclass_t TEclass>
-constexpr int8_t t8_type_vertex_dim_to_binary[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_NUM_CORNERS[TEclass]]
-                                             [T8_ELEMENT_DIM[TEclass]];
 
 typedef uint32_t t8_element_coord;
 typedef uint8_t t8_element_level;
