@@ -42,7 +42,6 @@
  *     data into the output file.
  *  */
 
-// #include <sc.h>                 /* sc library. */
 #include <sc_containers.h>                                /* sc library. */
 #include <t8.h>                                           /* General t8code header, always include this. */
 #include <t8_cmesh.h>                                     /* cmesh definition and basic interface. */
@@ -51,7 +50,7 @@
 #include <t8_forest/t8_forest_geometrical.h>              /* geometrical information of a forest. */
 #include <t8_forest/t8_forest_io.h>                       /* save forest. */
 #include <t8_schemes/t8_default/t8_default_c_interface.h> /* default refinement scheme. */
-#include <t8_element_c_interface.h>                       /* default refinement scheme. */
+#include <t8_schemes/t8_scheme.h>                         /* C interface of the forest scheme */
 #include <tutorials/general/t8_step3.h>
 
 T8_EXTERN_C_BEGIN ();

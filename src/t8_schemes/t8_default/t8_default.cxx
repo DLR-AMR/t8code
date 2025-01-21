@@ -31,14 +31,14 @@ t8_scheme_new_default (void)
 {
   t8_scheme_builder builder;
 
-  builder.add_eclass_scheme<t8_default_scheme_vertex> (T8_ECLASS_VERTEX);
-  builder.add_eclass_scheme<t8_default_scheme_line> (T8_ECLASS_LINE);
-  builder.add_eclass_scheme<t8_default_scheme_quad> (T8_ECLASS_QUAD);
-  builder.add_eclass_scheme<t8_default_scheme_hex> (T8_ECLASS_HEX);
-  builder.add_eclass_scheme<t8_default_scheme_tri> (T8_ECLASS_TRIANGLE);
-  builder.add_eclass_scheme<t8_default_scheme_tet> (T8_ECLASS_TET);
-  builder.add_eclass_scheme<t8_default_scheme_prism> (T8_ECLASS_PRISM);
-  builder.add_eclass_scheme<t8_default_scheme_pyramid> (T8_ECLASS_PYRAMID);
+  builder.add_eclass_scheme<t8_default_scheme_vertex> ();
+  builder.add_eclass_scheme<t8_default_scheme_line> ();
+  builder.add_eclass_scheme<t8_default_scheme_quad> ();
+  builder.add_eclass_scheme<t8_default_scheme_tri> ();
+  builder.add_eclass_scheme<t8_default_scheme_hex> ();
+  builder.add_eclass_scheme<t8_default_scheme_tet> ();
+  builder.add_eclass_scheme<t8_default_scheme_prism> ();
+  builder.add_eclass_scheme<t8_default_scheme_pyramid> ();
   return builder.build_scheme ();
 }
 

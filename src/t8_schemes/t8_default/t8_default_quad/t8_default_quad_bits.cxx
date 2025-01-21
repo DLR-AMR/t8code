@@ -20,30 +20,22 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_default_c_interface.h
- * C interface definition to the default element implementation.
- */
+#include <t8_schemes/t8_default/t8_default_quad/t8_default_quad_bits.hxx>
+#include <p4est_bits.h>
 
-#ifndef T8_DEFAULT_C_INTERFACE_H
-#define T8_DEFAULT_C_INTERFACE_H
+void
+t8_dquad_compute_reference_coords (const p4est_quadrant_t *elem, const double *ref_coords, const size_t num_coords,
+                                   double *out_coords)
+{
+  const p4est_qcoord_t h = P4EST_QUADRANT_LEN (elem->level);
 
-#include <t8_element.h>
+  for (size_t icoord = 0; icoord < num_coords; ++icoord) {
+    const size_t offset_2d = icoord * 2;
+    const size_t offset_3d = icoord * 3;
+    out_coords[offset_2d + 0] = elem->x + ref_coords[offset_3d + 0] * h;
+    out_coords[offset_2d + 1] = elem->y + ref_coords[offset_3d + 1] * h;
 
-T8_EXTERN_C_BEGIN ();
-
-/** Return the default scheme implementation of t8code. */
-const t8_scheme_c *
-t8_scheme_new_default (void);
-
-/** Check whether a given eclass_scheme is one of the default schemes.
- * \param [in] scheme   A (pointer to a) scheme
- * \param [in] eclass   The eclass to check
- * \return              True (non-zero) if \a scheme is one of the default schemes,
- *                      false (zero) otherwise.
- */
-int
-t8_eclass_scheme_is_default (const t8_scheme_c *scheme, const t8_eclass_t eclass);
-
-T8_EXTERN_C_END ();
-
-#endif /* !T8_DEFAULT_C_INTERFACE_H */
+    out_coords[offset_2d + 0] /= (double) P4EST_ROOT_LEN;
+    out_coords[offset_2d + 1] /= (double) P4EST_ROOT_LEN;
+  }
+}

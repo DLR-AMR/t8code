@@ -22,7 +22,7 @@
 
 /** \file t8_gtest_nca.cxx
 * Provide tests to check the functionality of the nearest-common-ancestor function
-* for every element.
+* for every element of a pyramid.
 */
 
 #include <gtest/gtest.h>
@@ -30,7 +30,7 @@
 #include <test/t8_gtest_macros.hxx>
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <test/t8_gtest_schemes.hxx>
 
 class ancestor: public testing::TestWithParam<t8_eclass> {
  protected:
@@ -65,31 +65,31 @@ class ancestor: public testing::TestWithParam<t8_eclass> {
 /*Test root and parent*/
 static void
 t8_recursive_ancestor (t8_element_t *element, t8_element_t *child, t8_element_t *parent, t8_element_t *test_ancestor,
-                       const t8_scheme *ts, const t8_eclass_t tree_class, const int maxlvl)
+                       const t8_scheme *scheme, const t8_eclass_t tree_class, const int maxlvl)
 {
   int num_children, i;
-  int level = ts->element_get_level (tree_class, parent);
-  int elem_lvl = ts->element_get_level (tree_class, element);
+  const int level = scheme->element_get_level (tree_class, parent);
+  const int elem_lvl = scheme->element_get_level (tree_class, element);
   T8_ASSERT (level >= elem_lvl);
-  num_children = ts->element_get_num_children (tree_class, parent);
+  num_children = scheme->element_get_num_children (tree_class, parent);
   if (level == maxlvl) {
     return;
   }
   for (i = 0; i < num_children; i++) {
-    ts->element_get_child (tree_class, parent, i, child);
+    scheme->element_get_child (tree_class, parent, i, child);
     t8_dpyramid_ancestor ((t8_dpyramid_t *) child, level, (t8_dpyramid_t *) test_ancestor);
-    EXPECT_ELEM_EQ (ts, tree_class, parent, test_ancestor);
+    EXPECT_ELEM_EQ (scheme, tree_class, parent, test_ancestor);
     t8_dpyramid_ancestor ((t8_dpyramid_t *) child, elem_lvl, (t8_dpyramid_t *) test_ancestor);
-    EXPECT_ELEM_EQ (ts, tree_class, element, test_ancestor);
-    t8_recursive_ancestor (element, parent, child, test_ancestor, ts, tree_class, maxlvl);
-    ts->element_get_parent (tree_class, child, parent);
+    EXPECT_ELEM_EQ (scheme, tree_class, element, test_ancestor);
+    t8_recursive_ancestor (element, parent, child, test_ancestor, scheme, tree_class, maxlvl);
+    scheme->element_get_parent (tree_class, child, parent);
   }
 }
 
 TEST_P (ancestor, root_recursive_check)
 {
   t8_element_t *parent;
-  int max_lvl = 5;
+  const int max_lvl = 5;
   scheme->element_new (eclass, 1, &parent);
   scheme->element_copy (eclass, correct_ancestor, parent);
   t8_recursive_ancestor (correct_ancestor, desc_a, parent, check, scheme, eclass, max_lvl);
@@ -101,7 +101,7 @@ TEST_P (ancestor, multi_level_recursive_check)
   t8_element_t *parent;
   t8_element_t *correct_ancestor_high_level;
   int recursion_depth = 5;
-  int max_lvl = scheme->get_maxlevel (eclass);
+  const int max_lvl = scheme->get_maxlevel (eclass);
   int i;
   scheme->element_new (eclass, 1, &parent);
   scheme->element_new (eclass, 1, &correct_ancestor_high_level);

@@ -215,7 +215,7 @@ t8_geometry_linear::t8_geom_point_batch_inside_element (t8_forest_t forest, t8_l
      *  <x - p, n> >= 0
      */
 
-    const int num_faces = ts->element_get_num_faces (tree_class, element);
+    const int num_faces = scheme->element_get_num_faces (tree_class, element);
     /* Assume that every point is inside of the element */
     for (int ipoint = 0; ipoint < num_points; ipoint++) {
       is_inside[ipoint] = 1;
@@ -225,7 +225,7 @@ t8_geometry_linear::t8_geom_point_batch_inside_element (t8_forest_t forest, t8_l
       /* Compute the outer normal n of the face */
       t8_forest_element_face_normal (forest, ltreeid, element, iface, face_normal);
       /* Compute a point x on the face */
-      const int afacecorner = ts->element_get_face_corner (tree_class, element, iface, 0);
+      const int afacecorner = scheme->element_get_face_corner (tree_class, element, iface, 0);
       double point_on_face[3];
       t8_forest_element_coordinate (forest, ltreeid, element, afacecorner, point_on_face);
       for (int ipoint = 0; ipoint < num_points; ipoint++) {

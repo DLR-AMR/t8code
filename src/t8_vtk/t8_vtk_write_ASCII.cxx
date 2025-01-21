@@ -23,7 +23,6 @@
 #include "t8_vtk/t8_vtk_write_ASCII.hxx"
 #include "t8_vtk/t8_vtk_writer_helper.hxx"
 #include <t8_vtk.h>
-#include <t8_element.hxx>
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_vec.h>
 #include "t8_forest/t8_forest_types.h"
@@ -61,7 +60,7 @@ typedef enum { T8_VTK_KERNEL_INIT, T8_VTK_KERNEL_EXECUTE, T8_VTK_KERNEL_CLEANUP 
  * \param [in] tree   The local tree of the forest with id \a ltree_id.
  * \param [in] element_index An index of an element inside \a tree.
  * \param [in] element  A pointer to the current element.
- * \param [in] ts       The eclass scheme of the current element.
+ * \param [in] scheme       The eclass scheme of the current element.
  * \param [in] is_ghost Non-zero if the current element is a ghost element.
  *                      In this cas \a tree is NULL.
  *                      All ghost element will be traversed after all elements are
@@ -83,7 +82,7 @@ typedef int (*t8_forest_vtk_cell_data_kernel) (t8_forest_t forest, const t8_loci
 static t8_locidx_t
 t8_forest_num_points (t8_forest_t forest, const int count_ghosts)
 {
-  const t8_scheme *tscheme = t8_forest_get_scheme (forest);
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
   t8_locidx_t num_points = 0;
 
   for (t8_locidx_t itree = 0; itree < (t8_locidx_t) forest->trees->elem_count; itree++) {
@@ -94,7 +93,7 @@ t8_forest_num_points (t8_forest_t forest, const int count_ghosts)
     const size_t num_elements = t8_element_array_get_count (&tree->elements);
     for (t8_locidx_t ielem = 0; ielem < (t8_locidx_t) num_elements; ielem++) {
       const t8_element_t *elem = t8_element_array_index_locidx (&tree->elements, ielem);
-      num_points += tscheme->element_get_num_corners (tree_class, elem);
+      num_points += scheme->element_get_num_corners (tree_class, elem);
     }
   }
   if (count_ghosts) {
@@ -108,7 +107,7 @@ t8_forest_num_points (t8_forest_t forest, const int count_ghosts)
       const size_t num_elements = t8_forest_ghost_tree_num_elements (forest, itree);
       for (t8_locidx_t ielem = 0; ielem < (t8_locidx_t) num_elements; ielem++) {
         const t8_element_t *elem = t8_element_array_index_locidx (ghost_elem, ielem);
-        num_points += tscheme->element_get_num_corners (ghost_class, elem);
+        num_points += scheme->element_get_num_corners (ghost_class, elem);
       }
     }
   }

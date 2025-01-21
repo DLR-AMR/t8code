@@ -26,16 +26,19 @@
 #include <gtest/gtest.h>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <test/t8_gtest_macros.hxx>
+#include <test/t8_gtest_schemes.hxx>
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
+#include <test/t8_gtest_macros.hxx>
 
-class root: public testing::TestWithParam<t8_eclass> {
+class root: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
  protected:
   void
   SetUp () override
   {
-    eclass = GetParam ();
-    scheme = t8_scheme_new_default ();
+    const int scheme_id = std::get<0> (GetParam ());
+    scheme = create_from_scheme_id (scheme_id);
+    eclass = std::get<1> (GetParam ());
     scheme->element_new (eclass, 1, &element);
     scheme->get_root (eclass, element);
   }
@@ -45,9 +48,9 @@ class root: public testing::TestWithParam<t8_eclass> {
     scheme->element_destroy (eclass, 1, &element);
     scheme->unref ();
   }
+
   t8_element_t *element;
   t8_scheme *scheme;
-  t8_scheme *ts;
   t8_eclass_t eclass;
 };
 
@@ -63,8 +66,8 @@ TEST_P (root, equals_linear_id_0_0)
   t8_element_t *root_compare;
   scheme->element_new (eclass, 1, &root_compare);
   scheme->element_set_linear_id (eclass, root_compare, 0, 0);
-  EXPECT_ELEM_EQ (ts, eclass, element, root_compare);
+  EXPECT_ELEM_EQ (scheme, eclass, element, root_compare);
   scheme->element_destroy (eclass, 1, &root_compare);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_root, root, AllEclasses, print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_root, root, AllSchemes);

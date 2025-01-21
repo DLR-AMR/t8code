@@ -31,7 +31,6 @@
 #include <t8_data/t8_shmem.h>
 #include <t8_vec.h>
 #include <t8_eclass.h>
-#include <t8_element.hxx>
 #include "t8_cmesh_types.h"
 #ifdef T8_WITH_METIS
 #include <metis.h>
@@ -41,7 +40,6 @@
 
 /** \file t8_cmesh.cxx
  *  This file collects all general cmesh routines that need c++ compilation.
- *  Particularly those functions that use the element interface from \ref t8_element.hxx.
  */
 
 int
@@ -312,11 +310,11 @@ t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, const int element_level, const
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   T8_ASSERT (element_level >= -1);
-  T8_ASSERT (ts != NULL);
+  T8_ASSERT (scheme != NULL);
 
   cmesh->set_partition = 1;
   cmesh->set_partition_level = element_level;
-  cmesh->set_partition_scheme = ts;
+  cmesh->set_partition_scheme = scheme;
   if (element_level >= 0) {
     /* We overwrite any previous partition settings */
     cmesh->first_tree = -1;
@@ -1269,7 +1267,7 @@ t8_cmesh_reset (t8_cmesh_t *pcmesh)
 
   /* unref the partition scheme (if set) */
   if (cmesh->set_partition_scheme != NULL) {
-    t8_scheme_unref (&cmesh->set_partition_scheme);
+    cmesh->set_partition_scheme->unref ();
   }
 
   T8_FREE (cmesh);
@@ -1421,7 +1419,7 @@ t8_cmesh_debug_print_trees (const t8_cmesh_t cmesh, sc_MPI_Comm comm)
 }
 
 void
-t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, const int level, const t8_scheme *ts, t8_gloidx_t *first_local_tree,
+t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, const int level, const t8_scheme *scheme, t8_gloidx_t *first_local_tree,
                          t8_gloidx_t *child_in_tree_begin, t8_gloidx_t *last_local_tree, t8_gloidx_t *child_in_tree_end,
                          int8_t *first_tree_shared)
 {
@@ -1430,7 +1428,7 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, const int level, const t8_scheme *ts,
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (cmesh->committed);
   T8_ASSERT (level >= 0);
-  T8_ASSERT (ts != NULL);
+  T8_ASSERT (scheme != NULL);
 
   *first_local_tree = 0;
   if (child_in_tree_begin != NULL) {
@@ -1458,7 +1456,7 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, const int level, const t8_scheme *ts,
      * tree class.
      */
     if (cmesh->num_trees_per_eclass[tree_class] > 0) {
-      children_per_tree = ts->count_leaves_from_root (static_cast<t8_eclass_t> (tree_class), level);
+      children_per_tree = scheme->count_leaves_from_root (static_cast<t8_eclass_t> (tree_class), level);
       T8_ASSERT (children_per_tree >= 0);
       global_num_children += cmesh->num_trees_per_eclass[tree_class] * children_per_tree;
     }

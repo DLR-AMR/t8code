@@ -25,10 +25,14 @@
  * element class schemes to a scheme.
  */
 
-#pragma once
+#ifndef T8_SCHEME_BUILDER_HXX
+#define T8_SCHEME_BUILDER_HXX
 
 #include <t8_schemes/t8_scheme.hxx>
 
+/** The scheme builder adds eclass schemes to a scheme container and returns it.
+ * TODO: Make return value a reference.
+ */
 class t8_scheme_builder {
  public:
   t8_scheme_builder (): scheme (new t8_scheme) {};
@@ -36,14 +40,28 @@ class t8_scheme_builder {
 
   using scheme_var = t8_scheme::scheme_var;
 
-  template <typename TEclass_Scheme, typename... _Args>
-  void
-  add_eclass_scheme (t8_eclass_t tree_class, _Args &&...args)
+  /** Add a new element class scheme to the scheme.
+   * \tparam TEclassScheme       The type of the element class scheme.
+   * \tparam Args                 The types of the arguments to pass to the constructor of the element class scheme.
+   * \param  [in] args            The arguments to pass to the constructor of the element class scheme.
+   * \return                      The position of the added element class scheme in the scheme.
+   */
+  template <typename TEclassScheme, typename... _Args>
+  size_t
+  add_eclass_scheme (_Args &&...args)
   {
-    scheme->eclass_schemes[tree_class] = TEclass_Scheme (std::forward<_Args> (args)...);
+#if T8_ENABLE_DEBUG
+    t8_debugf ("Registering scheme of type %s with position %li.\n", t8_debug_print_type<TEclassScheme> ().c_str (),
+               scheme->eclass_schemes.size ());
+#endif  // T8_ENABLE_DEBUG
+    scheme->eclass_schemes.emplace_back (std::in_place_type<TEclassScheme>, std::forward<_Args> (args)...);
+    return scheme->eclass_schemes.size ();
   }
 
-  const t8_scheme *
+  /** Build the scheme.
+   * \return The built scheme.
+   */
+  t8_scheme *
   build_scheme () const
   {
     return scheme;
@@ -52,3 +70,5 @@ class t8_scheme_builder {
  private:
   t8_scheme *scheme;
 };
+
+#endif /* !T8_SCHEME_BUILDER_HXX */

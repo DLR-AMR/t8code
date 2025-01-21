@@ -82,13 +82,13 @@ TEST_P (forest_find_owner, find_owner)
              t8_eclass_to_string[tree_class]);
 
   /* allocate the element */
-  t8_scheme  ts = scheme->eclass_schemes[tree_class];
-  ts->element_new (tree_class, 1, &element);
+  t8_scheme  scheme = scheme->eclass_schemes[tree_class];
+  scheme->element_new (tree_class, 1, &element);
   /* Compute the number of elements per tree */
-  ts->get_root (tree_class, element);
+  scheme->get_root (tree_class, element);
   /* TODO: This computation fails with pyramids */
   t8_gloidx_t         elements_per_tree =
-    pow (ts->element_get_num_children (tree_class, element), level);
+    pow (scheme->element_get_num_children (tree_class, element), level);
 
   for (int itype = 0; itype < 3; itype++) {
     t8_debugf ("\tTesting cmesh type %i\n", itype);
@@ -106,7 +106,7 @@ TEST_P (forest_find_owner, find_owner)
       for (t8_gloidx_t ielement = 0; ielement < elements_per_tree;
            ielement++, global_elem_num++) {
         /* Compute the ielement's elements in the tree */
-        ts->element_set_linear_id (tree_class, element, level, (uint64_t) ielement);
+        scheme->element_set_linear_id (tree_class, element, level, (uint64_t) ielement);
         /* Find the owner of the element */
         int                 owner =
           t8_forest_element_find_owner (forest, itree, element, tree_class);
@@ -129,7 +129,7 @@ TEST_P (forest_find_owner, find_owner)
     t8_forest_unref (&forest);
   }
   /* clean-up */
-  ts->element_destroy (tree_class, 1, &element);
+  scheme->element_destroy (tree_class, 1, &element);
   t8_scheme_unref (&default_scheme);
 }
 #endif
@@ -145,10 +145,10 @@ TEST_P (forest_find_owner, find_multiple_owners)
   sc_array_init (&owners, sizeof (int));
   /* Build a uniform forest */
   t8_forest_t forest = t8_forest_new_uniform (cmesh, default_scheme, level, 0, sc_MPI_COMM_WORLD);
-  t8_scheme *ts = t8_forest_get_scheme (forest);
+  t8_scheme *scheme = t8_forest_get_scheme (forest);
   /* Construct the root element */
-  ts->element_new (tree_class, 1, &root_element);
-  ts->element_set_linear_id (tree_class, root_element, 0, 0);
+  scheme->element_new (tree_class, 1, &root_element);
+  scheme->element_set_linear_id (tree_class, root_element, 0, 0);
 
   for (int face = 0; face < t8_eclass_num_faces[tree_class]; face++) {
     t8_forest_element_owners_at_face (forest, 0, root_element, tree_class, face, &owners);
@@ -164,7 +164,7 @@ TEST_P (forest_find_owner, find_multiple_owners)
   /* write vtk file in debug mode */
   t8_forest_write_vtk (forest, "test_owners_forest");
 #endif
-  ts->element_destroy (tree_class, 1, &root_element);
+  scheme->element_destroy (tree_class, 1, &root_element);
   t8_forest_unref (&forest);
   sc_array_reset (&owners);
 }

@@ -47,8 +47,7 @@ t8_default_scheme_pyramid::element_new (int length, t8_element_t **elem) const
   /* in debug mode, set sensible default values. */
 #ifdef T8_ENABLE_DEBUG
   {
-    int i;
-    for (i = 0; i < length; i++) {
+    for (int i = 0; i < length; i++) {
       get_root (elem[i]);
     }
   }
@@ -98,17 +97,23 @@ t8_default_scheme_pyramid::element_get_num_children (const t8_element_t *elem) c
 }
 
 int
-t8_default_scheme_pyramid::t8_element_num_corners (const t8_element_t *elem) const
+t8_default_scheme_pyramid::element_get_num_corners (const t8_element_t *elem) const
 {
   T8_ASSERT (element_is_valid (elem));
   return t8_dpyramid_num_corners ((const t8_dpyramid_t *) elem);
 }
 
 int
-t8_default_scheme_pyramid::t8_element_num_siblings (const t8_element_t *elem) const
+t8_default_scheme_pyramid::element_get_num_siblings (const t8_element_t *elem) const
 {
   T8_ASSERT (element_is_valid (elem));
   return t8_dpyramid_num_siblings ((const t8_dpyramid_t *) elem);
+}
+
+t8_gloidx_t
+t8_default_scheme_pyramid::count_leaves_from_root (int level) const
+{
+  return 2 * sc_intpow64u (8, level) - sc_intpow64u (6, level);
 }
 
 int
@@ -197,8 +202,8 @@ t8_default_scheme_pyramid::element_get_child_id (const t8_element_t *p) const
 }
 
 int
-t8_default_scheme_pyramid::element_construct_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh,
-                                                                   int face, int *neigh_face) const
+t8_default_scheme_pyramid::element_get_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face,
+                                                             int *neigh_face) const
 {
   T8_ASSERT (element_is_valid (elem));
   return t8_dpyramid_face_neighbor_inside ((const t8_dpyramid_t *) elem, (t8_dpyramid_t *) neigh, face, neigh_face);
@@ -212,8 +217,7 @@ t8_default_scheme_pyramid::element_face_get_parent_face (const t8_element_t *ele
 }
 
 void
-t8_default_scheme_pyramid::element_construct_first_descendant (const t8_element_t *elem, t8_element_t *desc,
-                                                               int level) const
+t8_default_scheme_pyramid::element_get_first_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const
 {
   T8_ASSERT (element_is_valid (elem));
   t8_dpyramid_first_descendant ((const t8_dpyramid_t *) elem, (t8_dpyramid_t *) desc, level);
@@ -221,8 +225,8 @@ t8_default_scheme_pyramid::element_construct_first_descendant (const t8_element_
 }
 
 void
-t8_default_scheme_pyramid::element_construct_first_descendant_face (const t8_element_t *elem, int face,
-                                                                    t8_element_t *first_desc, int level) const
+t8_default_scheme_pyramid::element_get_first_descendant_face (const t8_element_t *elem, int face,
+                                                              t8_element_t *first_desc, int level) const
 {
   T8_ASSERT (element_is_valid (elem));
   t8_dpyramid_first_descendant_face ((const t8_dpyramid_t *) elem, face, (t8_dpyramid_t *) first_desc, level);
@@ -254,7 +258,7 @@ int
 t8_default_scheme_pyramid::elements_are_family (t8_element_t *const *fam) const
 {
 #if T8_ENABLE_DEBUG
-  int num_siblings = t8_element_num_siblings (fam[0]);
+  const int num_siblings = element_get_num_siblings (fam[0]);
   for (int i = 0; i < num_siblings; i++) {
     T8_ASSERT (element_is_valid (fam[i]));
   }
@@ -270,8 +274,8 @@ t8_default_scheme_pyramid::element_is_root_boundary (const t8_element_t *elem, i
 }
 
 void
-t8_default_scheme_pyramid::element_construct_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
-                                                            const t8_scheme *scheme) const
+t8_default_scheme_pyramid::element_get_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
+                                                      const t8_scheme *scheme) const
 {
   T8_ASSERT (element_is_valid (elem));
   t8_dpyramid_boundary_face ((const t8_dpyramid_t *) elem, face, boundary);
@@ -283,18 +287,32 @@ int
 t8_default_scheme_pyramid::element_extrude_face (const t8_element_t *face, t8_element_t *elem, int root_face,
                                                  const t8_scheme *scheme) const
 {
-  T8_ASSERT (element_is_valid (elem));
+#if T8_ENABLE_DEBUG
   const t8_eclass_t face_eclass = (t8_eclass_t) t8_eclass_face_types[T8_ECLASS_PYRAMID][root_face];
   T8_ASSERT (scheme->element_is_valid (face_eclass, face));
+#endif
   return t8_dpyramid_extrude_face (face, (t8_dpyramid_t *) elem, root_face);
   T8_ASSERT (element_is_valid (elem));
 }
 
 t8_element_shape_t
-t8_default_scheme_pyramid::t8_element_shape (const t8_element_t *elem) const
+t8_default_scheme_pyramid::element_get_shape (const t8_element_t *elem) const
 {
   T8_ASSERT (element_is_valid (elem));
   return t8_dpyramid_shape ((const t8_dpyramid_t *) elem);
+}
+
+t8_gloidx_t
+t8_default_scheme_pyramid::element_count_leaves (const t8_element_t *t, int level) const
+{
+  const int element_level = element_get_level (t);
+  const int dim = t8_eclass_to_dimension[eclass];
+  const t8_element_shape_t element_shape = element_get_shape (t);
+  if (element_shape == T8_ECLASS_PYRAMID) {
+    const int level_diff = level - element_level;
+    return element_level > level ? 0 : 2 * sc_intpow64 (8, level_diff) - sc_intpow64 (6, level_diff);
+  }
+  return count_leaves_from_level (element_level, level, dim);
 }
 
 int
@@ -319,8 +337,7 @@ t8_default_scheme_pyramid::element_get_linear_id (const t8_element_t *elem, int 
 }
 
 void
-t8_default_scheme_pyramid::element_construct_last_descendant (const t8_element_t *elem, t8_element_t *desc,
-                                                              int level) const
+t8_default_scheme_pyramid::element_get_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const
 {
   T8_ASSERT (element_is_valid (elem));
   t8_dpyramid_last_descendant ((const t8_dpyramid_t *) elem, (t8_dpyramid_t *) desc, level);
@@ -328,8 +345,8 @@ t8_default_scheme_pyramid::element_construct_last_descendant (const t8_element_t
 }
 
 void
-t8_default_scheme_pyramid::element_construct_last_descendant_face (const t8_element_t *elem, int face,
-                                                                   t8_element_t *last_desc, int level) const
+t8_default_scheme_pyramid::element_get_last_descendant_face (const t8_element_t *elem, int face,
+                                                             t8_element_t *last_desc, int level) const
 {
   T8_ASSERT (element_is_valid (elem));
   t8_dpyramid_last_descendant_face ((const t8_dpyramid_t *) elem, face, (t8_dpyramid_t *) last_desc, level);
@@ -402,7 +419,7 @@ int
 t8_default_scheme_pyramid::refines_irregular () const
 {
   /*Pyramids do not refine regularly */
-  return 1;
+  return true;
 }
 
 #ifdef T8_ENABLE_DEBUG

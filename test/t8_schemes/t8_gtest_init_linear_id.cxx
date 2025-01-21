@@ -23,23 +23,25 @@
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <test/t8_gtest_schemes.hxx>
 #include <sc_functions.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <test/t8_gtest_macros.hxx>
 
-class linear_id: public testing::TestWithParam<t8_eclass> {
+class linear_id: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
  protected:
   void
   SetUp () override
   {
-    eclass = GetParam ();
-    scheme = t8_scheme_new_default ();
+    const int scheme_id = std::get<0> (GetParam ());
+    scheme = create_from_scheme_id (scheme_id);
+    eclass = std::get<1> (GetParam ());
     scheme->element_new (eclass, 1, &element);
     scheme->element_new (eclass, 1, &child);
     scheme->element_new (eclass, 1, &test);
     scheme->get_root (eclass, element);
   }
+
   void
   TearDown () override
   {
@@ -58,8 +60,9 @@ class linear_id: public testing::TestWithParam<t8_eclass> {
 
 static int
 t8_test_init_linear_id_refine_everything (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                                          t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme *ts,
-                                          const int is_family, const int num_elements, t8_element_t *elements[])
+                                          const t8_eclass_t tree_class, t8_locidx_t lelement_id,
+                                          const t8_scheme *scheme, const int is_family, const int num_elements,
+                                          t8_element_t *elements[])
 {
   return 1;
 }
@@ -88,14 +91,13 @@ TEST_P (linear_id, uniform_forest)
       /*Get the number of elements in the tree*/
       const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, tree_id);
       /*Manually compute the id of the first element*/
-      const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, tree_id);
-      const t8_locidx_t shift = tc_scheme->count_leaves_from_root (tree_class, level) - num_elements_in_tree;
+      const t8_locidx_t shift = tc_scheme->count_leaves_from_root (eclass, level) - num_elements_in_tree;
       /*Iterate over elements */
       for (t8_locidx_t id_iter = 0; id_iter < num_elements_in_tree; id_iter++) {
         /*Get the current element*/
         const t8_element_t *element = t8_forest_get_element_in_tree (forest, tree_id, id_iter);
         /*Get the ID of the element at current level */
-        const t8_locidx_t id = tc_scheme->element_get_linear_id (tree_class, element, level);
+        const t8_locidx_t id = tc_scheme->element_get_linear_id (eclass, element, level);
         /* Check the computed id*/
         EXPECT_EQ (id, id_iter + shift);
       }
@@ -146,4 +148,4 @@ TEST_P (linear_id, id_at_other_level)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_test_init_linear_id, linear_id, AllEclasses, print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_test_init_linear_id, linear_id, AllSchemes);

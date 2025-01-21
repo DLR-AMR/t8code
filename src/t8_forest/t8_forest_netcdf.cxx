@@ -55,7 +55,6 @@ These functions write a file in the NetCDF-format which represents the given 2D-
 #define NC_COLLECTIVE 1
 #endif
 #endif
-#include <t8_element.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest_netcdf.h>
@@ -666,7 +665,7 @@ static void
 t8_forest_write_netcdf_coordinate_data (t8_forest_t forest, t8_forest_netcdf_context_t *context, sc_MPI_Comm comm)
 {
 #if T8_WITH_NETCDF
-  double *vertex_coords = T8_ALLOC (double, 3);
+  double vertex_coords[3];
   t8_eclass_t tree_class;
   t8_locidx_t num_local_trees;
   t8_locidx_t ltree_id = 0;
@@ -730,7 +729,7 @@ t8_forest_write_netcdf_coordinate_data (t8_forest_t forest, t8_forest_netcdf_con
 
   /* Check if pointers are not NULL. */
   T8_ASSERT (Mesh_node_x != NULL && Mesh_node_y != NULL && Mesh_node_z != NULL && Mesh_elem_nodes != NULL);
-
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
   /* Iterate over all local trees. */
   /* Corners should be stored in the same order as in a vtk-file (read that somewehere on a netcdf page). */
   for (ltree_id = 0; ltree_id < num_local_trees; ltree_id++) {
@@ -766,8 +765,6 @@ t8_forest_write_netcdf_coordinate_data (t8_forest_t forest, t8_forest_netcdf_con
       }
     }
   }
-  /* Free allocated memory */
-  T8_FREE (vertex_coords);
 
   /* *Write the data into the NetCDF coordinate variables.* */
 

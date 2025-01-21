@@ -23,14 +23,18 @@
 /** \file t8_default_hex.h
  */
 
-#pragma once
+#ifndef T8_DEFAULT_HEX_HXX
+#define T8_DEFAULT_HEX_HXX
 
 #include <p8est.h>
-#include <t8_element.hxx>
+#include <t8_element.h>
 #include <t8_schemes/t8_default/t8_default_hex/t8_dhex.h>
 #include <t8_schemes/t8_default/t8_default_hex/t8_dhex_bits.h>
 #include <t8_schemes/t8_default/t8_default_quad/t8_default_quad.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
+
+/* Forward declaration of the scheme so we can use it as an argument in the eclass schemes function. */
+class t8_scheme;
 
 /** The class holding a hexahedral element in the default scheme.
  * We make this definition public for interoperability of element classes.
@@ -40,9 +44,10 @@ typedef p8est_quadrant_t t8_phex_t;
 
 class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_hex> {
  public:
-  /** Constructor. */
+  /** Constructor which calls the specialized constructor for the base. */
   t8_default_scheme_hex (): t8_default_scheme_common (T8_ECLASS_HEX, sizeof (t8_phex_t)) {};
 
+  /** Destructor */
   ~t8_default_scheme_hex () {};
 
   /** Return the size of a hex element.
@@ -69,7 +74,7 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
    * \see element_is_valid
    */
   void
-  element_new (int length, t8_element_t **elem) const;
+  element_new (const int length, t8_element_t **elem) const;
 
   /** Initialize an array of allocated hexaedra.
    * \param [in] length   The number of hex to be initialized.
@@ -89,7 +94,7 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
    * \see element_is_valid
    */
   void
-  element_init (int length, t8_element_t *elem) const;
+  element_init (const int length, t8_element_t *elem) const;
 
   /** Return the refinement level of an element.
    * \param [in] elem    The element whose level should be returned.
@@ -125,7 +130,7 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
   element_compare (const t8_element_t *elem1, const t8_element_t *elem2) const;
 
   /** Check if two elements are equal.
-  * \param [in] ts     Implementation of a class scheme.
+  * \param [in] scheme     Implementation of a class scheme.
   * \param [in] elem1  The first element.
   * \param [in] elem2  The second element.
   * \return            1 if the elements are equal, 0 if they are not equal
@@ -190,7 +195,7 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
    * \return            The number of children of \a face if \a elem is to be refined.
    */
   int
-  element_get_num_face_children (const t8_element_t *elem, int face) const;
+  element_get_num_face_children (const t8_element_t *elem, const int face) const;
   /** Return the corner number of an element's face corner.
    * \param [in] element  The element.
    * \param [in] face     A face index for \a element.
@@ -198,7 +203,7 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
    * \return              The corner number of the \a corner-th vertex of \a face.
    */
   int
-  element_get_face_corner (const t8_element_t *element, int face, int corner) const;
+  element_get_face_corner (const t8_element_t *element, const int face, const int corner) const;
 
   /** Return the face numbers of the faces sharing an element's corner.
    * \param [in] element  The element.
@@ -247,15 +252,16 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
   /** Compute the ancestor id of an element, that is the child id
    * at a given level.
    * \param [in] elem     This must be a valid element.
-   * \param [in] level    A refinement level. Must satisfy \a level < elem.level
+   * \param [in] level    A refinement level. Must satisfy \a level <= elem.level
    * \return              The child_id of \a elem in regard to its \a level ancestor.
+   * \note The ancestor id at elem.level is the same as the child id.
    */
   int
   element_get_ancestor_id (const t8_element_t *elem, int level) const;
 
   /** Query whether a given set of elements is a family or not.
    * \param [in] fam      An array of as many elements as an element of class
-   *                      \b ts has siblings.
+   *                      \b scheme has siblings.
    * \return              Zero if \b fam is not a family, nonzero if it is.
    * \note level 0 elements do not form a family.
    */
@@ -403,8 +409,7 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
    * \param [in] level     The level, at which the first descendant is constructed
    */
   void
-  element_construct_first_descendant_face (const t8_element_t *elem, int face, t8_element_t *first_desc,
-                                           int level) const;
+  element_get_first_descendant_face (const t8_element_t *elem, int face, t8_element_t *first_desc, int level) const;
 
   /** Construct the last descendant of an element at a given level that touches a given face.
    * \param [in] elem      The input element.
@@ -415,7 +420,7 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
    * \param [in] level     The level, at which the last descendant is constructed
    */
   void
-  element_construct_last_descendant_face (const t8_element_t *elem, int face, t8_element_t *last_desc, int level) const;
+  element_get_last_descendant_face (const t8_element_t *elem, int face, t8_element_t *last_desc, int level) const;
 
   /** Construct the boundary element at a specific face.
    * \param [in] elem     The input element.
@@ -427,8 +432,7 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
    * \param [in] scheme   The scheme containing an eclass scheme for the boundary face.
    */
   void
-  element_construct_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
-                                   const t8_scheme *scheme) const;
+  element_get_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary, const t8_scheme *scheme) const;
 
   /** Compute whether a given element shares a given face with its root tree.
    * \param [in] elem     The input element.
@@ -454,8 +458,7 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
    *                  on output.
    */
   int
-  element_construct_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face,
-                                          int *neigh_face) const;
+  element_get_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face, int *neigh_face) const;
 
   /** Initialize the entries of an allocated element according to a
    *  given linear id in a uniform refinement.
@@ -483,7 +486,7 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
    * \param [in] level    The level, at which the descendant is computed.
    */
   void
-  element_construct_first_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
+  element_get_first_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
 
   /** Compute the last descendant of a given element.
    * \param [in] elem     The element whose descendant is computed.
@@ -492,7 +495,7 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
    * \param [in] level    The level, at which the descendant is computed.
    */
   void
-  element_construct_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
+  element_get_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
 
   /** Construct the successor in a uniform refinement of a given element.
    * \param [in] elem1    The element whose successor should be constructed.
@@ -628,3 +631,5 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
   element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements,
                       const int unsigned count, sc_MPI_Comm comm) const;
 };
+
+#endif /* !T8_DEFAULT_HEX_HXX */

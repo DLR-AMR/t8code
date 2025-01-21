@@ -24,11 +24,13 @@
  * We provide some functions that are useful across element classes.
  */
 
-#pragma once
+#ifndef T8_DEFAULT_COMMON_HXX
+#define T8_DEFAULT_COMMON_HXX
 
-#include <t8_element.hxx>
+#include <t8_element.h>
 #include <t8_schemes/t8_crtp.hxx>
 #include <sc_functions.h>
+#include <sc_containers.h>
 
 /* Macro to check whether a pointer (VAR) to a base class, comes from an
  * implementation of a child class (TYPE). */
@@ -44,13 +46,11 @@
 inline static void
 t8_default_mempool_alloc (sc_mempool_t *ts_context, int length, t8_element_t **elem)
 {
-  int i;
-
   T8_ASSERT (ts_context != NULL);
   T8_ASSERT (0 <= length);
   T8_ASSERT (elem != NULL);
 
-  for (i = 0; i < length; ++i) {
+  for (int i = 0; i < length; ++i) {
     elem[i] = (t8_element_t *) sc_mempool_alloc (ts_context);
   }
 }
@@ -65,13 +65,12 @@ t8_default_mempool_alloc (sc_mempool_t *ts_context, int length, t8_element_t **e
 inline static void
 t8_default_mempool_free (sc_mempool_t *ts_context, int length, t8_element_t **elem)
 {
-  int i;
 
   T8_ASSERT (ts_context != NULL);
   T8_ASSERT (0 <= length);
   T8_ASSERT (elem != NULL);
 
-  for (i = 0; i < length; ++i) {
+  for (int i = 0; i < length; ++i) {
     sc_mempool_free (ts_context, elem[i]);
   }
 }
@@ -79,15 +78,15 @@ t8_default_mempool_free (sc_mempool_t *ts_context, int length, t8_element_t **el
 /* Given an element's level and dimension, return the number of leaves it
  * produces at a given uniform refinement level */
 static inline t8_gloidx_t
-count_leaves_from_level (int element_level, int refinement_level, int dimension)
+count_leaves_from_level (const int element_level, const int refinement_level, const int dimension)
 {
-  return element_level > refinement_level ? 0 : sc_intpow64 (2, dimension * (refinement_level - element_level));
+  return element_level > refinement_level ? 0 : (1ULL << (dimension * (refinement_level - element_level)));
 }
 
-template <class TUnderlyingEclass_Scheme>
-class t8_default_scheme_common: public t8_crtp<TUnderlyingEclass_Scheme> {
+template <class TUnderlyingEclassScheme>
+class t8_default_scheme_common: public t8_crtp<TUnderlyingEclassScheme> {
  private:
-  friend TUnderlyingEclass_Scheme;
+  friend TUnderlyingEclassScheme;
   /** Private constructor which can only be used by derived schemes.
    * \param [in] tree_class The tree class of this element scheme.
    * \param [in] elem_size  The size of the elements this scheme holds.
@@ -98,10 +97,9 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclass_Scheme> {
  protected:
   size_t element_size; /**< The size in bytes of an element of class \a eclass */
   void *ts_context;    /**< Anonymous implementation context. */
+  t8_eclass_t eclass;  /**< The tree class */
 
  public:
-  t8_eclass_t eclass; /**< The tree class */
-
   /** Destructor for all default schemes */
   ~t8_default_scheme_common ()
   {
@@ -110,8 +108,81 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclass_Scheme> {
     sc_mempool_destroy ((sc_mempool_t *) ts_context);
   }
 
-  /** Compute the number of corners of a given element. */
-  int
+  /** Move constructor */
+  t8_default_scheme_common (t8_default_scheme_common &&other) noexcept
+    : element_size (other.element_size), ts_context (other.ts_context), eclass (other.eclass)
+  {
+    other.ts_context = nullptr;
+  }
+
+  /** Move assignment operator */
+  t8_default_scheme_common &
+  operator= (t8_default_scheme_common &&other) noexcept
+  {
+    if (this != &other) {
+      // Free existing resources of moved-to object
+      if (ts_context) {
+        sc_mempool_destroy ((sc_mempool_t *) ts_context);
+      }
+
+      // Transfer ownership of resources
+      element_size = other.element_size;
+      eclass = other.eclass;
+      ts_context = other.ts_context;
+
+      // Leave the source object in a valid state
+      other.ts_context = nullptr;
+    }
+    return *this;
+  }
+
+  /** Copy constructor */
+  t8_default_scheme_common (const t8_default_scheme_common &other)
+    : element_size (other.element_size), ts_context (sc_mempool_new (other.element_size)), eclass (other.eclass) {};
+
+  /** Copy assignment operator */
+  t8_default_scheme_common &
+  operator= (const t8_default_scheme_common &other)
+  {
+    if (this != &other) {
+      // Free existing resources of assigned-to object
+      if (ts_context) {
+        sc_mempool_destroy ((sc_mempool_t *) ts_context);
+      }
+
+      // Copy the values from the source object
+      element_size = other.element_size;
+      eclass = other.eclass;
+      ts_context = sc_mempool_new (other.element_size);
+    }
+    return *this;
+  }
+
+  /** Return the tree class of this scheme.
+   * \return The tree class of this scheme.
+   */
+  inline t8_eclass_t
+  get_eclass (void) const
+  {
+    return eclass;
+  }
+
+  /** Return the size of any element of a given class.
+   * \return                      The size of an element of class \b ts.
+   * We provide a default implementation of this routine that should suffice
+   * for most use cases.
+   */
+  inline size_t
+  get_element_size (void) const
+  {
+    return element_size;
+  }
+
+  /** Compute the number of corners of a given element.
+   * \return The number of corners of the element.
+   * \note This function is overwritten by the pyramid implementation.
+  */
+  inline int
   element_get_num_corners (const t8_element_t *elem) const
   {
     /* use the lookup table of the eclasses.
@@ -119,27 +190,34 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclass_Scheme> {
     return t8_eclass_num_vertices[eclass];
   }
 
-  /** Allocate space for a bunch of elements. */
-  void
-  element_new (int length, t8_element_t **elem) const
+  /** Allocate space for a bunch of elements.
+   * \param [in] length The number of elements to allocate.
+   * \param [out] elem  The elements to allocate.
+  */
+  inline void
+  element_new (const int length, t8_element_t **elem) const
   {
     t8_default_mempool_alloc ((sc_mempool_t *) ts_context, length, elem);
   }
 
   /** Deallocate space for a bunch of elements. */
-  void
-  element_destroy (int length, t8_element_t **elem) const
+  inline void
+  element_destroy (const int length, t8_element_t **elem) const
   {
     t8_default_mempool_free ((sc_mempool_t *) ts_context, length, elem);
   }
 
-  void
+  inline void
   element_deinit (int length, t8_element_t *elem) const
   {
   }
 
-  /** Return the shape of an element */
-  t8_element_shape_t
+  /** Return the shape of an element 
+   * \param [in] elem The element.
+   * \return The shape of the element.
+   * \note This function is overwritten by the pyramid implementation.
+  */
+  inline t8_element_shape_t
   element_get_shape (const t8_element_t *elem) const
   {
     /* use the lookup table of the eclasses.
@@ -154,18 +232,13 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclass_Scheme> {
    * is the resulting number of elements (of the given level).
    * Each default element (except pyramids) refines into 2^{dim * (level - level(t))}
    * children.
+   * \note This function is overwritten by the pyramid implementation.
    */
-  t8_gloidx_t
+  inline t8_gloidx_t
   element_count_leaves (const t8_element_t *t, int level) const
   {
-    int element_level = this->underlying ().element_get_level (t);
-    t8_element_shape_t element_shape;
-    int dim = t8_eclass_to_dimension[eclass];
-    element_shape = element_get_shape (t);
-    if (element_shape == T8_ECLASS_PYRAMID) {
-      int level_diff = level - element_level;
-      return element_level > level ? 0 : 2 * sc_intpow64 (8, level_diff) - sc_intpow64 (6, level_diff);
-    }
+    const int element_level = this->underlying ().element_get_level (t);
+    const int dim = t8_eclass_to_dimension[eclass];
     return count_leaves_from_level (element_level, level, dim);
   }
 
@@ -173,9 +246,10 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclass_Scheme> {
    * Children of its parent.
    * \param [in] elem The element.
    * \return          The number of siblings of \a element.
-   * Note that this number is >= 1, since we count the element itself as a sibling.
+   * \note This function is overwritten by the pyramid implementation.
+   * \note that this number is >= 1, since we count the element itself as a sibling.
    */
-  int
+  inline int
   element_get_num_siblings (const t8_element_t *elem) const
   {
     const int dim = t8_eclass_to_dimension[eclass];
@@ -187,19 +261,20 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclass_Scheme> {
    * \param [in] level A refinement level.
    * \return The value of \ref t8_element_count_leaves if the input element
    *      is the root (level 0) element.
+   * \note This function is overwritten by the pyramid implementation.
    */
-  t8_gloidx_t
-  count_leaves_from_root (int level) const
+  inline t8_gloidx_t
+  count_leaves_from_root (const int level) const
   {
     if (eclass == T8_ECLASS_PYRAMID) {
       return 2 * sc_intpow64u (8, level) - sc_intpow64u (6, level);
     }
-    int dim = t8_eclass_to_dimension[eclass];
+    const int dim = t8_eclass_to_dimension[eclass];
     return count_leaves_from_level (0, level, dim);
   }
 
 #if T8_ENABLE_DEBUG
-  void
+  inline void
   element_debug_print (const t8_element_t *elem) const
   {
     char debug_string[BUFSIZ];
@@ -208,3 +283,5 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclass_Scheme> {
   }
 #endif
 };
+
+#endif /* !T8_DEFAULT_COMMON_HXX */

@@ -107,15 +107,15 @@ t8_element_get_value (const t8_step7_adapt_data *adapt_data, t8_locidx_t ielemen
  * \param [in] tree_class   The eclass of \a which_tree
  * \param [in] tree_class   The tree_class of the elements of the tree.
  * \param [in] lelement_id  The tree local index of the current element (or the first of the family).
- * \param [in] ts           The refinement scheme of the forest.
+ * \param [in] scheme           The refinement scheme of the forest.
  * \param [in] is_family    if 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
  * \param [in] num_elements The number of entries in \a elements elements that are defined.
  * \param [in] elements     The element or family of elements to consider for refinement/coarsening.
  */
 int
-t8_step7_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
-                         t8_locidx_t lelement_id, const t8_scheme *ts, const int is_family, const int num_elements,
-                         t8_element_t *elements[])
+t8_step7_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
+                         const t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme *scheme,
+                         const int is_family, const int num_elements, t8_element_t *elements[])
 {
   /* Our adaptation criterion is to look at the midpoint coordinates of the current element and if
    * they are inside a sphere around a given midpoint we refine, if they are outside, we coarsen. */
@@ -195,7 +195,7 @@ t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn, int do_par
  * \param [in] forest_new        adapted forest
  * \param [in] which_tree        tree_id of the analyzed element
  * \param [in] tree_class        The eclass of the tree 
- * \param [in] ts                Scheme of the forest
+ * \param [in] scheme                Scheme of the forest
  * \param [in] refine            ==0 - do nothing, == -1 - coarsen, == 1 - refine
  * \param [in] num_outgoing      number of the elements not refined forest
  * \param [in] first_outgoing    index of the old element
@@ -203,8 +203,8 @@ t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn, int do_par
  * \param [in] first_incoming    index of the new element
  */
 void
-t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree, t8_eclass_t tree_class,
-                   const t8_scheme *ts, int refine, int num_outgoing, t8_locidx_t first_outgoing, int num_incoming,
+t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree, const t8_eclass_t tree_class,
+                   const t8_scheme *scheme, int refine, int num_outgoing, t8_locidx_t first_outgoing, int num_incoming,
                    t8_locidx_t first_incoming)
 {
   struct t8_step7_adapt_data *adapt_data_new = (struct t8_step7_adapt_data *) t8_forest_get_user_data (forest_new);

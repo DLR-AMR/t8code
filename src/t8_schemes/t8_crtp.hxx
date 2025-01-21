@@ -24,9 +24,12 @@
  * This file implements a helper class for CRTP implementations.
  */
 
-#pragma once
+#ifndef T8_CRTP_HXX
+#define T8_CRTP_HXX
 
-/* CRTP helper class, adds static "upcasting" methods for const and non const objects. */
+/** CRTP helper class, adds static "upcasting" methods for const and non const objects. 
+ * \tparam TUnderlying The CRTP derived class.
+ */
 template <class TUnderlying>
 class t8_crtp {
  public:
@@ -41,3 +44,5 @@ class t8_crtp {
     return static_cast<TUnderlying const&> (*this);
   }
 };
+
+#endif /* !T8_CRTP_HXX */

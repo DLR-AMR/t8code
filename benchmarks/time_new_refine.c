@@ -22,7 +22,7 @@
 
 #include <sc_refcount.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_element_c_interface.h>
+#include <t8_schemes/t8_scheme.h>
 #include <t8_schemes/t8_default/t8_default_c_interface.h>
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri.h>
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtet.h>
@@ -36,11 +36,10 @@
 /* This function refines every element */
 static int
 t8_basic_adapt_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
-                       t8_locidx_t lelement_id, const t8_scheme_c *ts, const int is_family, const int num_elements,
+                       t8_locidx_t lelement_id, const t8_scheme_c *scheme, const int is_family, const int num_elements,
                        t8_element_t *elements[])
 {
-  int level;
-  level = t8_element_get_level (forest_from, tree_class, elements[0]);
+  const int level = t8_element_get_level (scheme, tree_class, elements[0]);
   /* coarsen */
   if (num_elements > 1) {
     if (level > 0)
@@ -53,7 +52,7 @@ t8_basic_adapt_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t 
 /* This function coarsens each element */
 static int
 t8_basic_adapt_coarsen (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
-                        t8_locidx_t lelement_id, const t8_scheme_c *ts, const int is_family, int num_elements,
+                        t8_locidx_t lelement_id, const t8_scheme_c *scheme, const int is_family, int num_elements,
                         t8_element_t *elements[])
 {
   if (is_family) {
