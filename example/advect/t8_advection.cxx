@@ -998,7 +998,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t *problem)
   min_delta_t = problem->T - problem->t;
   for (itree = 0, idata = 0; itree < num_trees; itree++) {
     const t8_eclass_t tree_class = t8_forest_get_tree_class (problem->forest, itree);
-    scheme num_elems_in_tree = t8_forest_get_tree_num_elements (problem->forest, itree);
+    num_elems_in_tree = t8_forest_get_tree_num_elements (problem->forest, itree);
     for (ielement = 0; ielement < num_elems_in_tree; ielement++, idata++) {
       const t8_element_t *element = t8_forest_get_element_in_tree (problem->forest, itree, ielement);
       elem_data = (t8_advect_element_data_t *) t8_sc_array_index_locidx (problem->element_data, idata);

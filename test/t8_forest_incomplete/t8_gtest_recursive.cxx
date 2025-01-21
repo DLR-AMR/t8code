@@ -75,7 +75,7 @@ class recursive_tree: public testing::TestWithParam<std::tuple<int, t8_eclass_t>
   }
   int MPI_size;
   t8_eclass_t tree_class;
-  t8_scheme *scheme;
+  const t8_scheme *scheme;
   t8_cmesh_t cmesh;
   t8_forest_t forest;
   t8_forest_t forest_base;

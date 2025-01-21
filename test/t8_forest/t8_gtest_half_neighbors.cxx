@@ -50,7 +50,7 @@ class forest_half_neighbors: public testing::TestWithParam<std::tuple<t8_eclass,
   t8_eclass_t eclass;
   int cmesh_type;
   t8_cmesh_t cmesh;
-  t8_scheme *default_scheme;
+  const t8_scheme *default_scheme;
   t8_element_t *neighbor;
 };
 

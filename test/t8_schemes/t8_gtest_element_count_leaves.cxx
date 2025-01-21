@@ -49,7 +49,7 @@ class class_element_leaves: public testing::TestWithParam<std::tuple<int, t8_ecl
   {
     scheme->unref ();
   }
-  t8_scheme *scheme;
+  const t8_scheme *scheme;
   t8_eclass_t eclass;
 };
 

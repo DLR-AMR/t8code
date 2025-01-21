@@ -302,11 +302,7 @@ t8_cmesh_set_partition_offsets (t8_cmesh_t cmesh, t8_shmem_array_t tree_offsets)
 }
 
 void
-<<<<<<< Updated upstream
-t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, const int element_level, t8_scheme *ts)
-=======
 t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, const int element_level, const t8_scheme *scheme)
->>>>>>> Stashed changes
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   T8_ASSERT (element_level >= -1);

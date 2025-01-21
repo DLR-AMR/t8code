@@ -316,10 +316,6 @@ t8_forest_is_balanced (t8_forest_t forest)
   t8_forest_t forest_from;
   t8_locidx_t num_trees, num_elements;
   t8_locidx_t itree, ielem;
-<<<<<<< Updated upstream
-  t8_scheme *ts;
-=======
->>>>>>> Stashed changes
   void *data_temp;
   int dummy_int;
 
@@ -339,10 +335,6 @@ t8_forest_is_balanced (t8_forest_t forest)
   /* Iterate over all trees */
   for (itree = 0; itree < num_trees; itree++) {
     num_elements = t8_forest_get_tree_num_elements (forest, itree);
-<<<<<<< Updated upstream
-    ts = t8_forest_get_scheme (forest);
-=======
->>>>>>> Stashed changes
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
     /* Iterate over all elements of this tree */
     for (ielem = 0; ielem < num_elements; ielem++) {

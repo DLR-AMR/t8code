@@ -84,7 +84,7 @@ class TestDFS: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
   }
 
   t8_eclass_t eclass;
-  t8_scheme *scheme;
+  const t8_scheme *scheme;
   t8_element_t *element;
 };
 
