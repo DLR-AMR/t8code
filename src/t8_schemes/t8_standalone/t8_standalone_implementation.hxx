@@ -110,10 +110,10 @@ struct t8_standalone_scheme
     return TEclass;
   }
 
-  constexpr size_t
-  get_element_size (void) const noexcept
+  static constexpr size_t
+  get_element_size (void) noexcept
   {
-    return element_size;
+    return sizeof (t8_standalone_element<TEclass>);
   }
 
   /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
@@ -1398,7 +1398,7 @@ struct t8_standalone_scheme
     return 1 << (T8_ELEMENT_MAXLEVEL[TEclass] - (level));
   }
 
-  static t8_cube_id
+  static constexpr t8_cube_id
   compute_cubeid (const t8_standalone_element<TEclass> *elem, const t8_element_level level) noexcept
   {
     t8_cube_id cube_id = 0;
@@ -1407,11 +1407,10 @@ struct t8_standalone_scheme
     const t8_element_coord h = element_get_len (level);
 
     /* The cube id of the root element is 0.*/
-    if (level == 0) {
-      return 0;
-    }
-    for (int i = 0; i < T8_ELEMENT_DIM[TEclass]; i++) {
-      cube_id |= ((elem->coords[i] & h) ? 1 << i : 0);
+    if (level != 0) {
+      for (int i = 0; i < T8_ELEMENT_DIM[TEclass]; i++) {
+        cube_id |= ((elem->coords[i] & h) ? 1 << i : 0);
+      }
     }
     return cube_id;
   }
@@ -1465,9 +1464,9 @@ struct t8_standalone_scheme
   }
 
   static constexpr int
-  number_of_leading_zeros (const t8_element_coord maxexclor) noexcept
+  number_of_leading_zeros (const t8_element_coord coordinates) noexcept
   {
-    const int num_of_active_bits_used = SC_LOG2_32 (maxexclor) + 1;
+    const int num_of_active_bits_used = SC_LOG2_32 (coordinates) + 1;
     T8_ASSERT (num_of_active_bits_used <= T8_ELEMENT_MAXLEVEL[TEclass]);
 
     return T8_ELEMENT_MAXLEVEL[TEclass] - num_of_active_bits_used;
