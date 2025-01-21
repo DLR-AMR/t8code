@@ -39,7 +39,6 @@ constexpr uint8_t T8_ELEMENT_MAX_NUM_FACECHILDREN[T8_ECLASS_COUNT] = { 0, 1, 2, 
 
 constexpr uint8_t T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_COUNT] = { 0, 0, 0, 1, 0, 3, 1, 2 };
 
-
 typedef uint32_t t8_element_coord;
 typedef uint8_t t8_element_level;
 typedef uint8_t t8_cube_id;
