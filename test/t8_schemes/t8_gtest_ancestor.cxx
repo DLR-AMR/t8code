@@ -58,7 +58,7 @@ class ancestor: public testing::TestWithParam<t8_eclass> {
     * check        -> the computed nca of desc_a and desc_b, should be equal to correct_nca
     */
   t8_element_t *correct_ancestor, *desc_a, *check;
-  t8_scheme *scheme;
+  const t8_scheme *scheme;
   t8_eclass_t eclass;
 };
 

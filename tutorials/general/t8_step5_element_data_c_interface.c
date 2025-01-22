@@ -67,7 +67,7 @@ static t8_forest_t
 t8_step5_build_forest (sc_MPI_Comm comm, int level)
 {
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
-  t8_scheme_c *scheme = t8_scheme_new_default ();
+  const t8_scheme_c *scheme = t8_scheme_new_default ();
   struct t8_step3_adapt_data adapt_data = {
     { 0.5, 0.5, 1 }, /* Midpoints of the sphere. */
     0.2,             /* Refine if inside this radius. */
@@ -134,7 +134,7 @@ t8_step5_create_element_data (t8_forest_t forest)
     const t8_element_t *element;
 
     /* Get the scheme of the forest for later usage. */
-    t8_scheme_c *scheme = t8_forest_get_scheme (forest);
+    const t8_scheme_c *scheme = t8_forest_get_scheme (forest);
     /* Get the number of trees that have elements of this process. */
     num_local_trees = t8_forest_get_num_local_trees (forest);
     for (itree = 0, current_index = 0; itree < num_local_trees; ++itree) {

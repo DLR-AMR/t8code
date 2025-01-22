@@ -46,7 +46,7 @@ class forest_find_owner: public testing::TestWithParam<t8_eclass> {
   }
   t8_eclass_t tree_class;
   t8_cmesh_t cmesh;
-  t8_scheme *default_scheme;
+  const t8_scheme *default_scheme;
 };
 
 #if 0
@@ -82,7 +82,7 @@ TEST_P (forest_find_owner, find_owner)
              t8_eclass_to_string[tree_class]);
 
   /* allocate the element */
-  t8_scheme  scheme = scheme->eclass_schemes[tree_class];
+  const t8_scheme  scheme = scheme->eclass_schemes[tree_class];
   scheme->element_new (tree_class, 1, &element);
   /* Compute the number of elements per tree */
   scheme->get_root (tree_class, element);
@@ -145,7 +145,7 @@ TEST_P (forest_find_owner, find_multiple_owners)
   sc_array_init (&owners, sizeof (int));
   /* Build a uniform forest */
   t8_forest_t forest = t8_forest_new_uniform (cmesh, default_scheme, level, 0, sc_MPI_COMM_WORLD);
-  t8_scheme *scheme = t8_forest_get_scheme (forest);
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
   /* Construct the root element */
   scheme->element_new (tree_class, 1, &root_element);
   scheme->element_set_linear_id (tree_class, root_element, 0, 0);
