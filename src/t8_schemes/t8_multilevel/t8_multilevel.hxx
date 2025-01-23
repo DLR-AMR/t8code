@@ -37,8 +37,8 @@ class t8_scheme;
 template <typename TUnderlyingElementType>
 struct t8_multilevel_element
 {
-  int hierarchical_level;
   TUnderlyingElementType linear_element;
+  bool is_child_of_itself; /** If true, the actual hierarchical level of the element is level(linear_element) + 1. */
 };
 
 template <class TUnderlyingEclassScheme, typename TUnderlyingElementType>
@@ -119,7 +119,9 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
   inline int
   element_get_level (const t8_element_t *elem) const
   {
-    return ((multilevel_element *) elem)->hierarchical_level;
+    T8_ASSERT (element_is_valid (elem));
+    const multilevel_element *m_elem = static_cast<const multilevel_element *> (elem);
+    return this->underlying ().element_get_level (&m_elem->linear_element) + m_elem->is_child_of_itself;
   }
 
   /** Return the maximum allowed level for any element of a given class.
@@ -145,9 +147,10 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
   {
     T8_ASSERT (element_is_valid (source));
     T8_ASSERT (element_is_valid (dest));
-    ((multilevel_element *) dest)->hierarchical_level = ((multilevel_element *) source)->hierarchical_level;
-    this->underlying ().element_copy (&((multilevel_element *) source)->linear_element,
-                                      &((multilevel_element *) dest)->linear_element);
+    const multilevel_element *m_source = static_cast<const multilevel_element *> (source);
+    multilevel_element *m_dest = static_cast<multilevel_element *> (dest);
+    m_dest->is_child_of_itself = m_source->is_child_of_itself;
+    this->underlying ().element_copy (&m_source->linear_element, &m_dest->linear_element);
   }
 
   /** Compare two elements.
@@ -169,8 +172,12 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
       return -1;
     if (id1 > id2)
       return 1;
-    else
-      return 0;
+    else if (id1 == id2) {
+      /* The linear ids are the same, the element with the smaller level is considered smaller */
+      T8_ASSERT (element_get_level (elem1) != element_get_level (elem2) || element_is_equal (elem1, elem2));
+      return element_get_level (elem1) - element_get_level (elem2);
+    }
+    return 0;
   }
 
   /** Check if two elements are equal.
@@ -208,7 +215,7 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (element_is_valid (parent));
     const int level = element_get_level (elem);
-    multilevel_element *elem_m = static_cast<multilevel_element *> (elem);
+    const multilevel_element *elem_m = static_cast<multilevel_element *> (elem);
     multilevel_element *parent_m = static_cast<multilevel_element *> (parent);
     /* Parent is always one hierarchical level lower. */
     parent_m->hierarchical_level = elem_m->hierarchical_level - 1;
@@ -242,7 +249,7 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
   {
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (element_is_valid (parent));
-    multilevel_element *elem_m = static_cast<multilevel_element *> (elem);
+    const multilevel_element *elem_m = static_cast<multilevel_element *> (elem);
     multilevel_element *sibling_m = static_cast<multilevel_element *> (sibling);
     /* Siblings are always on the same hierarchical level. */
     sibling_m->hierarchical_level = elem_m->hierarchical_level;
@@ -287,6 +294,10 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
   element_get_num_children (const t8_element_t *elem) const
   {
     T8_ASSERT (element_is_valid (elem));
+    const multilevel_element *elem_m = static_cast<multilevel_element *> (elem);
+    if (elem_m->is_child_of_itself)
+      /* If an element is child of itself it cannot be refined anymore. */
+      return 1;
     /* Increase the number of children by one so that an element becomes child of itself. */
     return 1 + this->underlying ().element_get_num_children (&static_cast<multilevel_element *> (elem)->linear_element);
   }
@@ -345,15 +356,15 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
     T8_ASSERT (element_is_valid (child));
     multilevel_element *elem_m = static_cast<multilevel_element *> (elem);
     multilevel_element *child_m = static_cast<multilevel_element *> (child);
-    /* Children are always one hierarchical level higher. */
-    child_m->hierarchical_level = elem_m->hierarchical_level + 1;
     if (childid == 0) {
       /* The first child is the element itself. */
       element_copy (elem, child);
+      child_m->is_child_of_itself = 1;
     }
     else {
       /* The other children are the normal children shifted by one. */
       this->underlying ().element_get_child (&elem_m->linear_element, childid - 1, &child_m->linear_element);
+      child_m->is_child_of_itself = 0;
     }
   }
 
@@ -372,21 +383,19 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
   {
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (length == element_get_num_children (elem));
-    /* Children are always one level higher. */
-    const int child_level = element_get_level (elem) + 1;
     multilevel_element *elem_m = static_cast<multilevel_element *> (elem);
     multilevel_element **children_m = static_cast<multilevel_element **> (children);
 
     /* The first child is the element itself. */
     T8_ASSERT (element_is_valid (*children_m));
     element_copy (elem_m, *children_m);
-    *(children_m)->hierarchical_level = child_level;
+    children_m[0]->is_child_of_itself = 1;
 
     /* The rest are the normal children. */
     T8_ASSERT (this->underlying ().element_get_num_children (elem_m->linear_element) == length - 1);
-    for (size_t child_id = 0; child_id < length - 1; ++child_id) {
-      this->underlying ().element_get_child (elem_m->linear_element, children_m[child_id]);
-      children_m[child_id]->hierarchical_level = child_level;
+    for (size_t child_id = 1; child_id < length; ++child_id) {
+      this->underlying ().element_get_child (elem_m->linear_element, child_id - 1, children_m[child_id]);
+      children_m[child_id]->is_child_of_itself = 0;
     }
   }
 
@@ -399,10 +408,8 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
   {
     T8_ASSERT (element_is_valid (elem));
     multilevel_element *elem_m = static_cast<multilevel_element *> (elem);
-    /* If the hierarchical level is one higher than the geometrical level,
-    the element is child of itself and has id 0. */
-    if (elem_m->hierarchical_level != elem_m->linear_element.level) {
-      T8_ASSERT (elem_m->hierarchical_level + 1 == elem_m->linear_element.level);
+    /* If the element is child if itself it has id 0. */
+    if (elem_m->is_child_of_itself) {
       return 0;
     }
     /* All other children are shifted by one to make space for the first child. */
@@ -412,11 +419,28 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
   /** Compute the ancestor id of an element, that is the child id
    * at a given level.
    * \param [in] elem     This must be a valid element.
-   * \param [in] level    A refinement level. Must satisfy \a level < elem.level
+   * \param [in] level    A refinement level. Must satisfy \a level <= elem.level
    * \return              The child_id of \a elem in regard to its \a level ancestor.
+   * \note The ancestor id at elem.level is the same as the child id.
    */
   inline int
-  element_get_ancestor_id (const t8_element_t *elem, int level) const;
+  element_get_ancestor_id (const t8_element_t *elem, const int level) const
+  {
+    T8_ASSERT (element_is_valid (elem));
+    multilevel_element *elem_m = static_cast<multilevel_element *> (elem);
+    const int elem_level = element_get_level (elem);
+    T8_ASSERT (level <= elem_level);
+    if (level == elem_level) {
+      /* If the hierarchical level is one higher than the geometrical level,
+      the element is child of itself and has id 0. */
+      if (elem_m->hierarchical_level != elem_m->linear_element.level) {
+        T8_ASSERT (elem_m->hierarchical_level + 1 == elem_m->linear_element.level);
+        return 0;
+      }
+    }
+    /* All other children are shifted by one to make space for the first child. */
+    return 1 + this->underlying ().element_get_ancestor_id (&elem_m->linear_element, level);
+  }
 
   /** Query whether a given set of elements is a family or not.
    * \param [in] fam      An array of as many elements as an element of class
@@ -425,7 +449,11 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
    * \note level 0 elements do not form a family.
    */
   inline int
-  elements_are_family (t8_element_t *const *fam) const;
+  elements_are_family (t8_element_t *const *fam) const
+  {
+    T8_ASSERT (element_is_valid (fam[0]));
+    const t8_element_t elem[] return this->underlying ().elements_are_family (fam);
+  }
 
   /** Compute the nearest common ancestor of two elements. That is,
    * the element with highest level that still has both given elements as
