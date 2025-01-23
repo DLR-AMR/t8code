@@ -60,7 +60,7 @@ class forest_commit: public testing::TestWithParam<std::tuple<std::tuple<int, t8
     t8_cmesh_destroy (&cmesh);
   }
   t8_cmesh_t cmesh;
-  t8_scheme *scheme;
+  const t8_scheme *scheme;
   t8_eclass_t eclass;
 };
 

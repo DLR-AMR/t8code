@@ -56,7 +56,7 @@ class gtest_balance: public testing::TestWithParam<std::tuple<std::tuple<int, t8
     ido_periodic = std::get<2> (GetParam ());
   }
   t8_eclass_t eclass;
-  t8_scheme *scheme;
+  const t8_scheme *scheme;
   int ilevel;
   int ido_periodic;
 };
@@ -125,7 +125,7 @@ t8_gtest_balance_refine_certain_trees (t8_forest_t forest, t8_forest_t forest_fr
  * \return The adapted forest; as shown above
  */
 static t8_forest_t
-t8_gtest_obtain_forest_for_balance_tests (const std::vector<t8_gloidx_t> &trees_to_refine, t8_scheme *scheme,
+t8_gtest_obtain_forest_for_balance_tests (const std::vector<t8_gloidx_t> &trees_to_refine, const t8_scheme *scheme,
                                           int additional_refinement = 0)
 {
   const double boundary_coords[12] = { 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0 };

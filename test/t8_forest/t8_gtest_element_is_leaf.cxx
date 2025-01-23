@@ -101,7 +101,7 @@ class element_is_leaf:
 
   t8_forest_t forest { NULL };
   t8_forest_t forest_adapt { NULL };
-  t8_scheme *scheme;
+  const t8_scheme *scheme;
   t8_eclass_t eclass;
 };
 
