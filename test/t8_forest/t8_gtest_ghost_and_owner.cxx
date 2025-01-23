@@ -29,6 +29,7 @@
 #include <t8_cmesh.h>
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
 #include <test/t8_gtest_macros.hxx>
+#include <test/t8_gtest_schemes.hxx>
 
 /* This test program tests the forest ghost layer.
  * We adapt a forest and create its ghost layer. Afterwards, we
@@ -36,15 +37,17 @@
  * element is in face the owner that is stored in the ghost layer.
   */
 
-class forest_ghost_owner: public testing::TestWithParam<cmesh_example_base *> {
+class forest_ghost_owner:
+  public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, cmesh_example_base *>> {
  protected:
   void
   SetUp () override
   {
-
-    scheme = t8_scheme_new_default ();
+    const int scheme_id = std::get<0> (std::get<0> (GetParam ()));
+    scheme = create_from_scheme_id (scheme_id);
+    eclass = std::get<1> (std::get<0> (GetParam ()));
     /* Construct a cmesh */
-    cmesh = GetParam ()->cmesh_create ();
+    cmesh = std::get<1> (GetParam ())->cmesh_create ();
     if (t8_cmesh_is_empty (cmesh)) {
       /* empty cmeshes are currently not supported */
       GTEST_SKIP ();
@@ -58,6 +61,7 @@ class forest_ghost_owner: public testing::TestWithParam<cmesh_example_base *> {
   }
   t8_cmesh_t cmesh;
   const t8_scheme *scheme;
+  t8_eclass_t eclass;
 };
 
 static int
@@ -145,4 +149,4 @@ TEST_P (forest_ghost_owner, test_ghost_owner)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_and_owner, forest_ghost_owner, AllCmeshsParam, pretty_print_base_example);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_and_owner, forest_ghost_owner, testing::Combine (AllSchemes, AllCmeshsParam));
