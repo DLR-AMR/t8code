@@ -24,6 +24,8 @@ doxygen/
 
 CMakeCache.txt
 CMakeFiles/
+version.txt
+Testing/
 
 src/stamp-h1
 src/t8_config.h
@@ -44,7 +46,6 @@ src/pre_config.h.in
 # Following list of files can be easily generated with:
 # $ git status --porcelain | grep '^??' | cut -c4- >> .gitignore
 
-benchmarks/ExtremeScaling/t8_bunny
 benchmarks/t8_time_forest_partition
 benchmarks/t8_time_partition
 benchmarks/t8_time_prism_adapt

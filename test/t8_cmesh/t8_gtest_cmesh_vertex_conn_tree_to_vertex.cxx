@@ -26,7 +26,7 @@
 #include <t8_cmesh/t8_cmesh_vertex_connectivity.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <test/t8_cmesh_generator/t8_cmesh_example_sets.hxx>
 
 /* TODO: write test case without existing cmesh to test before attribute bug is fixed */
@@ -39,7 +39,7 @@ class cmesh_vertex_conn_ttv_with_core_classes: public testing::TestWithParam<cme
     T8_ASSERT (t8_cmesh_is_committed (committed_cmesh));
     t8_cmesh_init (&cmesh);
     t8_cmesh_set_derive (cmesh, committed_cmesh);
-    t8_scheme_cxx_t *scheme = t8_scheme_new_default_cxx ();
+    const t8_scheme *scheme = t8_scheme_new_default ();
     t8_cmesh_set_partition_uniform (cmesh, 0, scheme);
     const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (committed_cmesh);
 
@@ -227,7 +227,7 @@ class cmesh_vertex_conn_ttv_with_cmesh_functions: public testing::TestWithParam<
     T8_ASSERT (t8_cmesh_is_committed (committed_cmesh));
     t8_cmesh_init (&cmesh);
     t8_cmesh_set_derive (cmesh, committed_cmesh);
-    t8_scheme_cxx_t *scheme = t8_scheme_new_default_cxx ();
+    const t8_scheme *scheme = t8_scheme_new_default ();
     t8_cmesh_set_partition_uniform (cmesh, 0, scheme);
     const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (committed_cmesh);
 

@@ -83,6 +83,9 @@ add_t8_test( NAME t8_gtest_cmesh_set_partition_offsets_parallel         SOURCES 
 add_t8_test( NAME t8_gtest_cmesh_set_join_by_vertices_serial            SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_set_join_by_vertices.cxx )
 add_t8_test( NAME t8_gtest_cmesh_add_attributes_when_derive_parallel    SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_add_attributes_when_derive.cxx )
 add_t8_test( NAME t8_gtest_cmesh_tree_vertices_negative_volume_serial   SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_tree_vertices_negative_volume.cxx )
+add_t8_test( NAME t8_gtest_cmesh_vertex_conn_tree_to_vertex_parallel    SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_vertex_conn_tree_to_vertex.cxx )
+add_t8_test( NAME t8_gtest_cmesh_vertex_conn_vertex_to_tree_parallel    SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_vertex_conn_vertex_to_tree.cxx )
+add_t8_test( NAME t8_gtest_cmesh_vertex_conn_serial                     SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_vertex_conn.cxx )
 
 add_t8_test( NAME t8_gtest_multiple_attributes_parallel     SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_multiple_attributes.cxx )
 add_t8_test( NAME t8_gtest_attribute_gloidx_array_serial    SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_attribute_gloidx_array.cxx )
@@ -125,6 +128,7 @@ add_t8_test( NAME t8_gtest_pyra_connectivity_serial     SOURCES t8_gtest_main.cx
 add_t8_test( NAME t8_gtest_face_neigh_serial            SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_face_neigh.cxx )
 add_t8_test( NAME t8_gtest_init_linear_id_serial        SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_init_linear_id.cxx )
 add_t8_test( NAME t8_gtest_ancestor_serial              SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_ancestor.cxx )
+add_t8_test( NAME t8_gtest_ancestor_id_serial           SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_ancestor_id.cxx )
 add_t8_test( NAME t8_gtest_element_count_leaves_serial  SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_element_count_leaves.cxx )
 add_t8_test( NAME t8_gtest_element_ref_coords_serial    SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_element_ref_coords.cxx )
 add_t8_test( NAME t8_gtest_descendant_serial            SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_descendant.cxx )
