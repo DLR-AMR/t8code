@@ -22,6 +22,7 @@
 
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
+#include <test/t8_gtest_schemes.hxx>
 #include <t8_cmesh.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>
@@ -33,20 +34,20 @@
 #include <t8_forest/t8_forest_private.h>
 #include <test/t8_gtest_macros.hxx>
 
-class forest_find_owner: public testing::TestWithParam<t8_eclass> {
+class forest_find_owner: public testing::TestWithParam<std::tuple<int, t8_eclass>> {
  protected:
   void
   SetUp () override
   {
-    tree_class = GetParam ();
-
-    default_scheme = t8_scheme_new_default ();
+    const int scheme_id = std::get<0> (GetParam ());
+    scheme = create_from_scheme_id (scheme_id);
+    tree_class = std::get<1> (GetParam ());
     /* Construct a coarse mesh of one tree */
     cmesh = t8_cmesh_new_from_class (tree_class, sc_MPI_COMM_WORLD);
   }
   t8_eclass_t tree_class;
   t8_cmesh_t cmesh;
-  t8_scheme *default_scheme;
+  t8_scheme *scheme;
 };
 
 #if 0
@@ -95,10 +96,10 @@ TEST_P (forest_find_owner, find_owner)
     /* build the cmesh */
     cmesh = t8_test_create_cmesh (itype, tree_class, sc_MPI_COMM_WORLD);
     /* We reuse the scheme for all forests and thus ref it */
-    t8_scheme_ref (default_scheme);
+    t8_scheme_ref (scheme);
     /* build the forest */
     t8_forest_t         forest =
-      t8_forest_new_uniform (cmesh, default_scheme, level, 0,
+      t8_forest_new_uniform (cmesh, scheme, level, 0,
                              sc_MPI_COMM_WORLD);
     for (int itree = 0, t8_gloidx_t global_elem_num = 0;
          itree < t8_forest_get_num_global_trees (forest); itree++) {
@@ -130,7 +131,7 @@ TEST_P (forest_find_owner, find_owner)
   }
   /* clean-up */
   scheme->element_destroy (tree_class, 1, &element);
-  t8_scheme_unref (&default_scheme);
+  t8_scheme_unref (&scheme);
 }
 #endif
 
@@ -144,7 +145,7 @@ TEST_P (forest_find_owner, find_multiple_owners)
   /* initialize the array of owners to store ints */
   sc_array_init (&owners, sizeof (int));
   /* Build a uniform forest */
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, default_scheme, level, 0, sc_MPI_COMM_WORLD);
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
   t8_scheme *scheme = t8_forest_get_scheme (forest);
   /* Construct the root element */
   scheme->element_new (tree_class, 1, &root_element);
@@ -169,4 +170,4 @@ TEST_P (forest_find_owner, find_multiple_owners)
   sc_array_reset (&owners);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_find_owner, forest_find_owner, AllEclasses, print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_find_owner, forest_find_owner, AllSchemes);

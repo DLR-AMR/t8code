@@ -21,6 +21,7 @@
 */
 
 #include <gtest/gtest.h>
+#include <test/t8_gtest_schemes.hxx>
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
 #include <t8_forest/t8_forest_general.h>
@@ -62,21 +63,23 @@ t8_test_adapt_first_child (t8_forest_t forest, t8_forest_t forest_from, t8_locid
   return 0;
 }
 
-class element_is_leaf: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>> {
+class element_is_leaf:
+  public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, int, cmesh_example_base *>> {
  protected:
   void
   SetUp () override
   {
     /* Construct a cmesh */
-    const int level = std::get<0> (GetParam ());
-    t8_cmesh_t cmesh = std::get<1> (GetParam ())->cmesh_create ();
+    const int scheme_id = std::get<0> (std::get<0> (GetParam ()));
+    scheme = create_from_scheme_id (scheme_id);
+    eclass = std::get<1> (std::get<0> (GetParam ()));
+    const int level = std::get<1> (GetParam ());
+    t8_cmesh_t cmesh = std::get<2> (GetParam ())->cmesh_create ();
     if (t8_cmesh_is_empty (cmesh)) {
       /* forest_commit does not support empty cmeshes, we skip this case */
       t8_cmesh_unref (&cmesh);
       GTEST_SKIP ();
     }
-    /* Build the default scheme (TODO: Test this with all schemes) */
-    scheme = t8_scheme_new_default ();
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
     t8_forest_ref (forest);
     //const int maxlevel = t8_forest_get_maxlevel (forest);
@@ -99,6 +102,7 @@ class element_is_leaf: public testing::TestWithParam<std::tuple<int, cmesh_examp
   t8_forest_t forest { NULL };
   t8_forest_t forest_adapt { NULL };
   t8_scheme *scheme;
+  t8_eclass_t eclass;
 };
 
 void
@@ -148,14 +152,16 @@ TEST_P (element_is_leaf, element_is_leaf_adapt)
 /* Define a lambda to beatify gtest output for tuples <level, cmesh>.
  * This will set the correct level and cmesh name as part of the test case name. */
 auto pretty_print_level_and_cmesh_params
-  = [] (const testing::TestParamInfo<std::tuple<int, cmesh_example_base *>> &info) {
-      std::string name = std::string ("Level_") + std::to_string (std::get<0> (info.param));
+  = [] (const testing::TestParamInfo<std::tuple<std::tuple<int, t8_eclass_t>, int, cmesh_example_base *>> &info) {
+      std::string name = std::string ("Level_") + std::to_string (std::get<1> (info.param));
       std::string cmesh_name;
-      std::get<1> (info.param)->param_to_string (cmesh_name);
+      std::get<2> (info.param)->param_to_string (cmesh_name);
       name += std::string ("_") + cmesh_name;
+      name += std::string ("scheme_") + std::to_string (std::get<0> (std::get<0> (info.param)));
+      name += std::string ("_") + std::to_string (info.index);
       return name;
     };
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_element_is_leaf, element_is_leaf,
-                          testing::Combine (testing::Range (0, T8_IS_LEAF_MAX_LVL), AllCmeshsParam),
+                          testing::Combine (AllSchemes, testing::Range (0, T8_IS_LEAF_MAX_LVL), AllCmeshsParam),
                           pretty_print_level_and_cmesh_params);
