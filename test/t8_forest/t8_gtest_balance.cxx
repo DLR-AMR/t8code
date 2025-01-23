@@ -66,9 +66,10 @@ class gtest_balance: public testing::TestWithParam<std::tuple<std::tuple<int, t8
  */
 TEST_P (gtest_balance, confirm_is_balanced_check_for_uniform_forests)
 {
-  if (eclass == t8_eclass_t::T8_ECLASS_PYRAMID && ido_periodic == 1)
+  if (eclass == t8_eclass_t::T8_ECLASS_PYRAMID && ido_periodic == 1) {
+    scheme->unref ();
     GTEST_SKIP_ ("The pyramid cube mesh cannot be periodic.");
-
+  }
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, ido_periodic);
   t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, ilevel, 0, sc_MPI_COMM_WORLD);
 

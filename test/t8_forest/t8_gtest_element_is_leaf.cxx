@@ -77,6 +77,7 @@ class element_is_leaf:
     t8_cmesh_t cmesh = std::get<2> (GetParam ())->cmesh_create ();
     if (t8_cmesh_is_empty (cmesh)) {
       /* forest_commit does not support empty cmeshes, we skip this case */
+      scheme->unref ();
       t8_cmesh_unref (&cmesh);
       GTEST_SKIP ();
     }

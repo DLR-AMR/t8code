@@ -51,6 +51,7 @@ class forest_commit: public testing::TestWithParam<std::tuple<std::tuple<int, t8
     cmesh = std::get<1> (GetParam ())->cmesh_create ();
     if (t8_cmesh_is_empty (cmesh)) {
       /* forest_commit does not support empty cmeshes*/
+      scheme->unref ();
       GTEST_SKIP ();
     }
   }
