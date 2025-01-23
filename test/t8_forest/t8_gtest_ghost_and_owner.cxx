@@ -57,7 +57,7 @@ class forest_ghost_owner: public testing::TestWithParam<cmesh_example_base *> {
     scheme->unref ();
   }
   t8_cmesh_t cmesh;
-  t8_scheme *scheme;
+  const t8_scheme *scheme;
 };
 
 static int

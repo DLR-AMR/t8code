@@ -54,7 +54,7 @@ class class_successor: public testing::TestWithParam<std::tuple<int, t8_eclass_t
     scheme->element_destroy (tree_class, 1, &last);
     scheme->unref ();
   }
-  t8_scheme *scheme;
+  const t8_scheme *scheme;
   t8_element_t *element;
   t8_element_t *successor;
   t8_element_t *child;
@@ -68,7 +68,7 @@ class class_successor: public testing::TestWithParam<std::tuple<int, t8_eclass_t
  */
 static void
 t8_recursive_successor (t8_element_t *element, t8_element_t *successor, t8_element_t *child, t8_element_t *last,
-                        t8_scheme *scheme, const t8_eclass_t tree_class, const int maxlvl)
+                        const t8_scheme *scheme, const t8_eclass_t tree_class, const int maxlvl)
 {
   const int level = scheme->element_get_level (tree_class, element);
   ASSERT_TRUE (scheme->element_get_level (tree_class, element) <= maxlvl
@@ -112,7 +112,7 @@ t8_recursive_successor (t8_element_t *element, t8_element_t *successor, t8_eleme
  * maximum level are computed. The successor runs through all these children.
  */
 static void
-t8_deep_successor (t8_element_t *element, t8_element_t *successor, t8_element_t *child, t8_scheme *scheme,
+t8_deep_successor (t8_element_t *element, t8_element_t *successor, t8_element_t *child, const t8_scheme *scheme,
                    const t8_eclass_t tree_class)
 {
   const int maxlvl = scheme->get_maxlevel (tree_class);

@@ -88,8 +88,7 @@ if( T8CODE_ENABLE_MPI )
     if( NOT MPIEXEC_EXECUTABLE )
         message( FATAL_ERROR "MPIEXEC was not found" )
     endif()
-    set( mpi ON ) # This is very dirty and will be fixed in the libsc repo (https://github.com/cburstedde/libsc/pull/178)
-    # set( SC_ENABLE_MPI ON ) # When the fix gets merged, replace the previous line with this one
+    set( SC_ENABLE_MPI ON )
 endif()
 
 if( T8CODE_ENABLE_VTK )
