@@ -200,7 +200,7 @@ t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh, sc_MPI_Comm comm);
  *                              This can be prevented by referencing \b scheme.
  */
 void
-t8_forest_set_scheme (t8_forest_t forest, t8_scheme_c *scheme);
+t8_forest_set_scheme (t8_forest_t forest, const t8_scheme_c *scheme);
 
 /** Set the initial refinement level to be used when \b forest is committed.
  * \param [in,out] forest      The forest whose level will be set.
@@ -799,7 +799,7 @@ t8_forest_get_first_local_element_id (t8_forest_t forest);
  * \return          The element scheme of the forest.
  * \see t8_forest_set_scheme
  */
-t8_scheme_c *
+const t8_scheme_c *
 t8_forest_get_scheme (const t8_forest_t forest);
 
 /** Return the eclass of the tree in which a face neighbor of a given element
@@ -874,7 +874,7 @@ t8_forest_element_points_inside (t8_forest_t forest, t8_locidx_t ltreeid, const 
  * \ref t8_forest_set_scheme, \ref t8_forest_set_level, and \ref t8_forest_commit.
  */
 t8_forest_t
-t8_forest_new_uniform (t8_cmesh_t cmesh, t8_scheme_c *scheme, const int level, const int do_face_ghost,
+t8_forest_new_uniform (t8_cmesh_t cmesh, const t8_scheme_c *scheme, const int level, const int do_face_ghost,
                        sc_MPI_Comm comm);
 
 /** Build a adapted forest from another forest.

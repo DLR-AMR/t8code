@@ -27,7 +27,7 @@
 #include <t8_schemes/t8_scheme_builder.hxx>
 #include <gtest/gtest.h>
 
-t8_scheme *
+const t8_scheme *
 create_from_scheme_id (const int scheme_id)
 {
   switch (scheme_id) {

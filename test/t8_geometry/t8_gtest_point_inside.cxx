@@ -169,7 +169,7 @@ TEST_P (geometry_point_inside, test_point_inside)
 
   t8_debugf ("Testing eclass %s, uniform level %i with approx. %i points per element.\n", t8_eclass_to_string[eclass],
              level, num_points_to_generate);
-  t8_scheme *default_scheme = t8_scheme_new_default ();
+  const t8_scheme *default_scheme = t8_scheme_new_default ();
 
   /* We translate the coordinates of the cmesh to create a non-standard case.
    * In particular, we want the 1D and 2D elements to move outside of axis

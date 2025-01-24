@@ -53,7 +53,7 @@ class linear_id: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
   t8_element_t *element;
   t8_element_t *child;
   t8_element_t *test;
-  t8_scheme *scheme;
+  const t8_scheme *scheme;
   t8_eclass_t eclass;
   sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
 };
