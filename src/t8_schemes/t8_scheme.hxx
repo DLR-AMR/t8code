@@ -837,6 +837,33 @@ class t8_scheme {
                        eclass_schemes[tree_class]);
   };
 
+  inline int
+  element_max_num_vertex_neighbors (const t8_eclass_t tree_class) const
+  {
+    return std::visit ([&] (auto &&scheme) { return scheme.element_max_num_vertex_neighbors (); },
+                       eclass_schemes[tree_class]);
+  }
+
+  inline void
+  element_vertex_neighbors (const t8_eclass_t tree_class, const t8_element_t *element, const int vertex,
+                            int *num_neighbors, t8_element_t **neighbors, int *neigh_ivertices) const
+  {
+    return std::visit (
+      [&] (auto &&scheme) {
+        return scheme.element_vertex_neighbors (element, vertex, num_neighbors, neighbors, neigh_ivertices);
+      },
+      eclass_schemes[tree_class]);
+  }
+
+  inline void
+  element_corner_descendant (const t8_eclass_t tree_class, const t8_element_t *element, int vertex, int level,
+                             t8_element_t *descendant) const
+  {
+    return std::visit (
+      [&] (auto &&scheme) { return scheme.element_corner_descendant (element, vertex, level, descendant); },
+      eclass_schemes[tree_class]);
+  }
+
   /** Compute the coordinates of a given element vertex inside a reference tree
    * that is embedded into [0,1]^d (d = dimension).
    * \param [in] tree_class    The eclass of the current tree.
