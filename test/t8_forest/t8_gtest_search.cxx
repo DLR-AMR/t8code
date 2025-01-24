@@ -69,7 +69,7 @@ t8_test_search_all_fn (const t8_forest_t forest, const t8_locidx_t ltreeid, cons
   T8_ASSERT (user_data != nullptr);
   if (is_leaf) {
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
-    t8_scheme *ts = t8_forest_get_scheme (forest);
+    const t8_scheme *ts = t8_forest_get_scheme (forest);
     const t8_locidx_t tree_offset = t8_forest_get_tree_element_offset (forest, ltreeid);
     /* Set the corresponding entry to 1 */
     (*user_data)[tree_offset + tree_leaf_index] = true;
