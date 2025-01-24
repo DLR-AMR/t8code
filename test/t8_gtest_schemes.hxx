@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2024 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,30 +20,25 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_default_c_interface.h
- * C interface definition to the default element implementation.
- */
+#ifndef T8_GTEST_SCHEMES_HXX
+#define T8_GTEST_SCHEMES_HXX
 
-#ifndef T8_DEFAULT_C_INTERFACE_H
-#define T8_DEFAULT_C_INTERFACE_H
+#include <t8_schemes/t8_default/t8_default.hxx>
+#include <t8_schemes/t8_scheme_builder.hxx>
+#include <gtest/gtest.h>
 
-#include <t8_element.h>
+const t8_scheme *
+create_from_scheme_id (const int scheme_id)
+{
+  switch (scheme_id) {
+  case 0:
+    return t8_scheme_new_default ();
+  default:
+    SC_ABORT_NOT_REACHED ();
+    return nullptr;
+  }
+}
 
-T8_EXTERN_C_BEGIN ();
+#define AllSchemes ::testing::Combine (::testing::Values (0), ::testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT))
 
-/** Return the default scheme implementation of t8code. */
-const t8_scheme_c *
-t8_scheme_new_default (void);
-
-/** Check whether a given eclass_scheme is one of the default schemes.
- * \param [in] scheme   A (pointer to a) scheme
- * \param [in] eclass   The eclass to check
- * \return              True (non-zero) if \a scheme is one of the default schemes,
- *                      false (zero) otherwise.
- */
-int
-t8_eclass_scheme_is_default (const t8_scheme_c *scheme, const t8_eclass_t eclass);
-
-T8_EXTERN_C_END ();
-
-#endif /* !T8_DEFAULT_C_INTERFACE_H */
+#endif /* T8_GTEST_SCHEMES_HXX */
