@@ -65,7 +65,7 @@ class forest_transform: public testing::TestWithParam<std::tuple<t8_eclass, int>
   }
   t8_eclass_t tree_class;
   t8_cmesh_t cmesh;
-  t8_scheme *default_scheme;
+  const t8_scheme *default_scheme;
   t8_forest_t forest;
   int level;
 };

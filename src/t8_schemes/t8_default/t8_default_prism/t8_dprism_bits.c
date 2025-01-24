@@ -127,16 +127,14 @@ t8_dprism_child_id (const t8_dprism_t *p)
 int
 t8_dprism_is_familypv (t8_dprism_t **fam)
 {
-  t8_dtri_t **tri_fam = T8_ALLOC (t8_dtri_t *, T8_DTRI_CHILDREN);
-  t8_dline_t **line_fam = T8_ALLOC (t8_dline_t *, T8_DLINE_CHILDREN);
+  t8_dtri_t *tri_fam[T8_DPRISM_CHILDREN];
+  t8_dline_t *line_fam[T8_DLINE_CHILDREN];
 
   for (int i = 0; i < T8_DLINE_CHILDREN; i++) {
     for (int j = 0; j < T8_DTRI_CHILDREN; j++) {
       tri_fam[j] = &fam[j + i * T8_DTRI_CHILDREN]->tri;
     }
     if (!t8_dtri_is_familypv ((const t8_dtri_t **) tri_fam)) {
-      T8_FREE (tri_fam);
-      T8_FREE (line_fam);
       return 0;
     }
   }
@@ -151,21 +149,15 @@ t8_dprism_is_familypv (t8_dprism_t **fam)
           && (fam[i]->tri.type == fam[i + T8_DTRI_CHILDREN]->tri.type)
           && (fam[i]->tri.x == fam[i + T8_DTRI_CHILDREN]->tri.x)
           && (fam[i]->tri.y == fam[i + T8_DTRI_CHILDREN]->tri.y))) {
-      T8_FREE (tri_fam);
-      T8_FREE (line_fam);
       return 0;
     }
   }
 
   for (int i = 0; i < T8_DPRISM_CHILDREN; i++) {
     if (fam[i]->line.level != fam[i]->tri.level) {
-      T8_FREE (tri_fam);
-      T8_FREE (line_fam);
       return 0;
     }
   }
-  T8_FREE (tri_fam);
-  T8_FREE (line_fam);
   return 1;
 }
 
