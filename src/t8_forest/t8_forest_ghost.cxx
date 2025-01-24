@@ -523,8 +523,9 @@ t8_forest_ghost_search_vertex_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
 
   t8_debugf ("enter t8_forest_ghost_search_vertex_boundary for :\n");
+#ifdef T8_ENABLE_DEBUG
   scheme->element_debug_print (eclass, element);
-
+#endif
   const int max_neighs = scheme->element_max_num_vertex_neighbors (eclass);
   t8_element_t **vertex_neighbors = T8_ALLOC (t8_element_t *, max_neighs);
   scheme->element_new (eclass, max_neighs, vertex_neighbors);
@@ -541,7 +542,9 @@ t8_forest_ghost_search_vertex_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
       scheme->element_corner_descendant (eclass, vertex_neighbors[ineigh], neigh_ivertices[ineigh],
                                          scheme->get_maxlevel (eclass), vertex_neighbors[ineigh]);
       t8_debugf ("corner_descendant of neigh %i:\n", ineigh);
+#ifdef T8_ENABLE_DEBUG
       scheme->element_debug_print (eclass, vertex_neighbors[ineigh]);
+#endif
       const int remote_rank
         = t8_forest_element_find_owner_ext (forest, t8_forest_global_tree_id (forest, ltreeid),
                                             vertex_neighbors[ineigh], eclass, 0, forest->mpisize - 1, 0, 1);
