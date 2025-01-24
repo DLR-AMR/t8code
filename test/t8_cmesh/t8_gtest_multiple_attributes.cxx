@@ -47,16 +47,13 @@ class cmesh_multiple_attributes: public testing::TestWithParam<std::tuple<std::t
   SetUp () override
   {
     const int scheme_id = std::get<0> (std::get<0> (GetParam ()));
-    scheme = create_from_scheme_id (scheme_id);
-    eclass = std::get<1> (std::get<0> (GetParam ()));
-
     num_trees = std::get<1> (GetParam ());
 
     cmesh_one_at = t8_cmesh_new_row_of_cubes (num_trees, 0, 0, sc_MPI_COMM_WORLD);
-    cmesh_one_at = t8_cmesh_partition_cmesh (cmesh_one_at, scheme, sc_MPI_COMM_WORLD);
+    cmesh_one_at = t8_cmesh_partition_cmesh (cmesh_one_at, create_from_scheme_id (scheme_id), sc_MPI_COMM_WORLD);
 
     cmesh_mult_at = t8_cmesh_new_row_of_cubes (num_trees, 1, 0, sc_MPI_COMM_WORLD);
-    cmesh_mult_at = t8_cmesh_partition_cmesh (cmesh_mult_at, scheme, sc_MPI_COMM_WORLD);
+    cmesh_mult_at = t8_cmesh_partition_cmesh (cmesh_mult_at, create_from_scheme_id (scheme_id), sc_MPI_COMM_WORLD);
 
     cmesh_mult_at_from_stash = t8_cmesh_new_row_of_cubes (num_trees, 1, 1, sc_MPI_COMM_WORLD);
   }
@@ -72,8 +69,6 @@ class cmesh_multiple_attributes: public testing::TestWithParam<std::tuple<std::t
   t8_cmesh_t cmesh_mult_at;
   t8_cmesh_t cmesh_mult_at_from_stash;
   t8_locidx_t num_trees;
-  const t8_scheme *scheme;
-  t8_eclass_t eclass;
 };
 
 /** Check attribute values of cmeshes against reference values. */
