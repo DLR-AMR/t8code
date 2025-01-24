@@ -200,8 +200,8 @@ struct t8_forest_search_with_queries
 void
 t8_forest_c_init_search_with_queries (t8_forest_search_with_queries_c_wrapper search_with_queries,
                                       t8_search_element_callback_c_wrapper element_callback,
-                                      t8_search_queries_callback_c_wrapper queries_callback, sc_array_t *queries,
-                                      const t8_forest_t forest)
+                                      t8_search_queries_callback_c_wrapper queries_callback, void **queries,
+                                      const size_t num_queries, const t8_forest_t forest)
 {
   T8_ASSERT (search_with_queries != NULL);
   T8_ASSERT (element_callback != NULL);
@@ -209,11 +209,7 @@ t8_forest_c_init_search_with_queries (t8_forest_search_with_queries_c_wrapper se
   T8_ASSERT (queries != NULL);
   T8_ASSERT (forest != NULL);
 
-  std::vector<void *> queries_vector;
-
-  for (int iquery = 0; iquery < queries->elem_count; iquery++) {
-    queries_vector.push_back (sc_array_pop (queries));
-  }
+  std::vector<void *> queries_vector = std::vector<void *> (queries, queries + num_queries);
 
   search_with_queries->c_search
     = new t8_search_with_queries<void *, void *> (element_callback, queries_callback, queries_vector, forest);
@@ -239,16 +235,13 @@ t8_forest_c_search_with_queries_update_user_data (t8_forest_search_with_queries_
 
 void
 t8_forest_c_search_with_queries_update_queries (t8_forest_search_with_queries_c_wrapper search_with_queries,
-                                                sc_array_t *queries)
+                                                void **queries, const size_t num_queries)
 {
   T8_ASSERT (search_with_queries != NULL);
   T8_ASSERT (queries != NULL);
 
-  std::vector<void *> queries_vector;
+  std::vector<void *> queries_vector = std::vector<void *> (queries, queries + num_queries);
 
-  for (int iquery = 0; iquery < queries->elem_count; iquery++) {
-    queries_vector.push_back (sc_array_pop (queries));
-  }
   search_with_queries->c_search->update_queries (queries_vector);
 }
 
