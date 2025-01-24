@@ -45,44 +45,65 @@ typedef int (*t8_search_queries_callback_c_wrapper) (t8_forest_t forest, const t
 typedef void (*t8_search_batched_queries_callback_c_wrapper) (t8_forest_t forest, const t8_locidx_t ltreeid,
                                                               const t8_element_t *element, const int is_leaf,
                                                               const t8_element_array_t *leaf_elements,
-                                                              const t8_locidx_t tree_leaf_index, void *queries,
-                                                              size_t *active_query_indices, int *query_matches,
+                                                              const t8_locidx_t tree_leaf_index, const void *queries,
+                                                              const size_t *active_query_indices, int *query_matches,
                                                               void *user_data);
 
 typedef struct t8_forest_c_search *t8_forest_search_c_wrapper;
 
 void
-t8_forest_c_init_search (t8_forest_search_c_wrapper search, t8_search_element_callback_c_wrapper element_callback,
-                         const t8_forest_t forest);
+t8_forest_init_search (t8_forest_search_c_wrapper search, t8_search_element_callback_c_wrapper element_callback,
+                       const t8_forest_t forest);
 void
-t8_forest_c_search_update_forest (t8_forest_search_c_wrapper search, const t8_forest_t forest);
+t8_forest_search_update_forest (t8_forest_search_c_wrapper search, const t8_forest_t forest);
 void
-t8_forest_c_search_update_user_data (t8_forest_search_c_wrapper search, void *udata);
+t8_forest_search_update_user_data (t8_forest_search_c_wrapper search, void *udata);
 void
-t8_forest_c_search_do_search (t8_forest_search_c_wrapper search);
+t8_forest_search_do_search (t8_forest_search_c_wrapper search);
 void
-t8_forest_c_search_destroy (t8_forest_search_c_wrapper search);
+t8_forest_search_destroy (t8_forest_search_c_wrapper search);
 
 typedef struct t8_forest_search_with_queries *t8_forest_search_with_queries_c_wrapper;
 
 void
-t8_forest_c_init_search_with_queries (t8_forest_search_with_queries_c_wrapper search_with_queries,
-                                      t8_search_element_callback_c_wrapper element_callback,
-                                      t8_search_queries_callback_c_wrapper queries_callback, void **queries,
-                                      const size_t num_queries, const t8_forest_t forest);
+t8_forest_init_search_with_queries (t8_forest_search_with_queries_c_wrapper search_with_queries,
+                                    t8_search_element_callback_c_wrapper element_callback,
+                                    t8_search_queries_callback_c_wrapper queries_callback, void **queries,
+                                    const size_t num_queries, const t8_forest_t forest);
 void
-t8_forest_c_search_with_queries_update_forest (t8_forest_search_with_queries_c_wrapper search_with_queries,
-                                               const t8_forest_t forest);
+t8_forest_search_with_queries_update_forest (t8_forest_search_with_queries_c_wrapper search_with_queries,
+                                             const t8_forest_t forest);
 void
-t8_forest_c_search_with_queries_update_user_data (t8_forest_search_with_queries_c_wrapper search_with_queries,
-                                                  void *udata);
+t8_forest_search_with_queries_update_user_data (t8_forest_search_with_queries_c_wrapper search_with_queries,
+                                                void *udata);
 void
-t8_forest_c_search_with_queries_update_queries (t8_forest_search_with_queries_c_wrapper search_with_queries,
-                                                void **queries, const size_t num_queries);
+t8_forest_search_with_queries_update_queries (t8_forest_search_with_queries_c_wrapper search_with_queries,
+                                              void **queries, const size_t num_queries);
 void
-t8_forest_c_search_with_queries_destroy (t8_forest_search_with_queries_c_wrapper search);
+t8_forest_search_with_queries_destroy (t8_forest_search_with_queries_c_wrapper search);
 void
-t8_forest_c_search_with_queries_do_search (t8_forest_search_with_queries_c_wrapper search);
+t8_forest_search_with_queries_do_search (t8_forest_search_with_queries_c_wrapper search);
+
+typedef struct t8_forest_search_with_batched_queries *t8_forest_search_with_batched_queries_c_wrapper;
+
+void
+t8_forest_init_search_with_batched_queries (t8_forest_search_with_batched_queries_c_wrapper search_with_queries,
+                                            t8_search_element_callback_c_wrapper element_callback,
+                                            t8_search_batched_queries_callback_c_wrapper queries_callback,
+                                            void **queries, const size_t num_queries, const t8_forest_t forest);
+void
+t8_forest_search_with_batched_queries_update_forest (
+  t8_forest_search_with_batched_queries_c_wrapper search_with_queries, const t8_forest_t forest);
+void
+t8_forest_search_with_batched_queries_update_user_data (
+  t8_forest_search_with_batched_queries_c_wrapper search_with_queries, void *udata);
+void
+t8_forest_search_with_batched_queries_update_queries (
+  t8_forest_search_with_batched_queries_c_wrapper search_with_queries, void **queries, const size_t num_queries);
+void
+t8_forest_search_with_batched_queries_destroy (t8_forest_search_with_batched_queries_c_wrapper search);
+void
+t8_forest_search_with_batched_queries_do_search (t8_forest_search_with_batched_queries_c_wrapper search);
 
 T8_EXTERN_C_END ();
 

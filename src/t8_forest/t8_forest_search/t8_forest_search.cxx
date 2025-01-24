@@ -149,59 +149,59 @@ T8_EXTERN_C_BEGIN ();
 
 struct t8_forest_c_search
 {
-  t8_search<void *> *c_search;
+  t8_search<void *> *cpp_search;
 };
 
 void
-t8_forest_c_init_search (t8_forest_search_c_wrapper search, t8_search_element_callback_c_wrapper element_callback,
-                         const t8_forest_t forest)
+t8_forest_init_search (t8_forest_search_c_wrapper search, t8_search_element_callback_c_wrapper element_callback,
+                       const t8_forest_t forest)
 {
   T8_ASSERT (search != NULL);
   T8_ASSERT (element_callback != NULL);
-  search->c_search = new t8_search<void *> (element_callback, forest);
+  search->cpp_search = new t8_search<void *> (element_callback, forest);
 }
 
 void
-t8_forest_c_search_update_forest (t8_forest_search_c_wrapper search, const t8_forest_t forest)
+t8_forest_search_update_forest (t8_forest_search_c_wrapper search, const t8_forest_t forest)
 {
   T8_ASSERT (search != NULL);
   T8_ASSERT (forest != NULL);
-  search->c_search->update_forest (forest);
+  search->cpp_search->update_forest (forest);
 }
 
 void
-t8_forest_c_search_update_user_data (t8_forest_search_c_wrapper search, void *udata)
+t8_forest_search_update_user_data (t8_forest_search_c_wrapper search, void *udata)
 {
   T8_ASSERT (search != NULL);
   T8_ASSERT (udata != NULL);
-  search->c_search->update_user_data (&udata);
+  search->cpp_search->update_user_data (&udata);
 }
 
 void
-t8_forest_c_search_do_search (t8_forest_search_c_wrapper search)
+t8_forest_search_do_search (t8_forest_search_c_wrapper search)
 {
   T8_ASSERT (search != NULL);
-  search->c_search->do_search ();
+  search->cpp_search->do_search ();
 }
 
 void
-t8_forest_c_search_destroy (t8_forest_search_c_wrapper search)
+t8_forest_search_destroy (t8_forest_search_c_wrapper search)
 {
   T8_ASSERT (search != NULL);
-  delete search->c_search;
-  search->c_search = NULL;
+  delete search->cpp_search;
+  search->cpp_search = NULL;
 }
 
 struct t8_forest_search_with_queries
 {
-  t8_search_with_queries<void *, void *> *c_search;
+  t8_search_with_queries<void *, void *> *cpp_search;
 };
 
 void
-t8_forest_c_init_search_with_queries (t8_forest_search_with_queries_c_wrapper search_with_queries,
-                                      t8_search_element_callback_c_wrapper element_callback,
-                                      t8_search_queries_callback_c_wrapper queries_callback, void **queries,
-                                      const size_t num_queries, const t8_forest_t forest)
+t8_forest_init_search_with_queries (t8_forest_search_with_queries_c_wrapper search_with_queries,
+                                    t8_search_element_callback_c_wrapper element_callback,
+                                    t8_search_queries_callback_c_wrapper queries_callback, void **queries,
+                                    const size_t num_queries, const t8_forest_t forest)
 {
   T8_ASSERT (search_with_queries != NULL);
   T8_ASSERT (element_callback != NULL);
@@ -211,52 +211,143 @@ t8_forest_c_init_search_with_queries (t8_forest_search_with_queries_c_wrapper se
 
   std::vector<void *> queries_vector = std::vector<void *> (queries, queries + num_queries);
 
-  search_with_queries->c_search
+  search_with_queries->cpp_search
     = new t8_search_with_queries<void *, void *> (element_callback, queries_callback, queries_vector, forest);
 }
 
 void
-t8_forest_c_search_with_queries_update_forest (t8_forest_search_with_queries_c_wrapper search_with_queries,
-                                               const t8_forest_t forest)
+t8_forest_search_with_queries_update_forest (t8_forest_search_with_queries_c_wrapper search_with_queries,
+                                             const t8_forest_t forest)
 {
   T8_ASSERT (search_with_queries != NULL);
   T8_ASSERT (forest != NULL);
-  search_with_queries->c_search->update_forest (forest);
+  search_with_queries->cpp_search->update_forest (forest);
 }
 
 void
-t8_forest_c_search_with_queries_update_user_data (t8_forest_search_with_queries_c_wrapper search_with_queries,
-                                                  void *udata)
+t8_forest_search_with_queries_update_user_data (t8_forest_search_with_queries_c_wrapper search_with_queries,
+                                                void *udata)
 {
   T8_ASSERT (search_with_queries != NULL);
   T8_ASSERT (udata != NULL);
-  search_with_queries->c_search->update_user_data (&udata);
+  search_with_queries->cpp_search->update_user_data (&udata);
 }
 
 void
-t8_forest_c_search_with_queries_update_queries (t8_forest_search_with_queries_c_wrapper search_with_queries,
-                                                void **queries, const size_t num_queries)
+t8_forest_search_with_queries_update_queries (t8_forest_search_with_queries_c_wrapper search_with_queries,
+                                              void **queries, const size_t num_queries)
 {
   T8_ASSERT (search_with_queries != NULL);
   T8_ASSERT (queries != NULL);
 
   std::vector<void *> queries_vector = std::vector<void *> (queries, queries + num_queries);
 
-  search_with_queries->c_search->update_queries (queries_vector);
+  search_with_queries->cpp_search->update_queries (queries_vector);
 }
 
 void
-t8_forest_c_search_with_queries_do_search (t8_forest_search_with_queries_c_wrapper search)
+t8_forest_search_with_queries_do_search (t8_forest_search_with_queries_c_wrapper search)
 {
   T8_ASSERT (search != NULL);
-  search->c_search->do_search ();
+  search->cpp_search->do_search ();
 }
 
 void
-t8_forest_c_search_with_queries_destroy (t8_forest_search_with_queries_c_wrapper search)
+t8_forest_search_with_queries_destroy (t8_forest_search_with_queries_c_wrapper search)
 {
   T8_ASSERT (search != NULL);
-  delete search->c_search;
-  search->c_search = NULL;
+  delete search->cpp_search;
+  search->cpp_search = NULL;
+}
+
+struct t8_forest_search_with_batched_queries
+{
+  t8_search_with_batched_queries<void *, void *> *cpp_search;
+  t8_search_batched_queries_callback_c_wrapper queries_callback;
+
+  void
+  wrapped_queries_callback (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
+                            const bool is_leaf, const t8_element_array_t *leaf_elements,
+                            const t8_locidx_t tree_leaf_index, const std::vector<void *> &queries,
+                            const std::vector<size_t> &active_query_indices, std::vector<bool> &query_matches,
+                            void *user_data)
+  {
+    std::vector<int> query_matches_int (query_matches.size ());
+    queries_callback (forest, ltreeid, element, is_leaf, leaf_elements, tree_leaf_index, queries.data (),
+                      active_query_indices.data (), query_matches_int.data (), user_data);
+    std::transform (query_matches_int.begin (), query_matches_int.end (), query_matches.begin (),
+                    [] (int val) { return static_cast<bool> (val); });
+  }
+};
+
+void
+t8_forest_init_search_with_batched_queries (t8_forest_search_with_batched_queries_c_wrapper search_with_queries,
+                                            t8_search_element_callback_c_wrapper element_callback,
+                                            t8_search_batched_queries_callback_c_wrapper queries_callback,
+                                            void **queries, const size_t num_queries, const t8_forest_t forest)
+{
+  T8_ASSERT (search_with_queries != NULL);
+  T8_ASSERT (element_callback != NULL);
+  T8_ASSERT (queries_callback != NULL);
+  T8_ASSERT (queries != NULL);
+  T8_ASSERT (forest != NULL);
+
+  std::vector<void *> queries_vector = std::vector<void *> (queries, queries + num_queries);
+
+  search_with_queries->queries_callback = queries_callback;
+
+  search_with_queries->cpp_search = new t8_search_with_batched_queries<void *, void *> (
+    element_callback,
+    [&search_with_queries] (
+      const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element, const bool is_leaf,
+      const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index, const std::vector<void *> &queries,
+      const std::vector<size_t> &active_query_indices, std::vector<bool> &query_matches, void *user_data) {
+      search_with_queries->wrapped_queries_callback (forest, ltreeid, element, is_leaf, leaf_elements, tree_leaf_index,
+                                                     queries, active_query_indices, query_matches, user_data);
+    },
+    queries_vector, forest);
+}
+
+void
+t8_forest_search_with_batched_queries_update_forest (
+  t8_forest_search_with_batched_queries_c_wrapper search_with_queries, const t8_forest_t forest)
+{
+  T8_ASSERT (search_with_queries != NULL);
+  T8_ASSERT (forest != NULL);
+  search_with_queries->cpp_search->update_forest (forest);
+}
+
+void
+t8_forest_search_with_batched_queries_update_user_data (
+  t8_forest_search_with_batched_queries_c_wrapper search_with_queries, void *udata)
+{
+  T8_ASSERT (search_with_queries != NULL);
+  T8_ASSERT (udata != NULL);
+  search_with_queries->cpp_search->update_user_data (&udata);
+}
+void
+t8_forest_search_with_batched_queries_update_queries (
+  t8_forest_search_with_batched_queries_c_wrapper search_with_queries, void **queries, const size_t num_queries)
+{
+  T8_ASSERT (search_with_queries != NULL);
+  T8_ASSERT (queries != NULL);
+
+  std::vector<void *> queries_vector = std::vector<void *> (queries, queries + num_queries);
+
+  search_with_queries->cpp_search->update_queries (queries_vector);
+}
+void
+t8_forest_search_with_batched_queries_destroy (t8_forest_search_with_batched_queries_c_wrapper search)
+{
+  T8_ASSERT (search != NULL);
+  delete search->cpp_search;
+  search->cpp_search = NULL;
+}
+
+void
+t8_forest_search_with_batched_queries_do_search (t8_forest_search_with_batched_queries_c_wrapper search)
+{
+  T8_ASSERT (search != NULL);
+  search->cpp_search->do_search ();
 }
 T8_EXTERN_C_END ();
