@@ -29,20 +29,22 @@
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <test/t8_gtest_macros.hxx>
+#include <test/t8_gtest_schemes.hxx>
 
-class forest_search: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
+class forest_search: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass>, int>> {
  protected:
   void
   SetUp () override
   {
-    eclass = std::get<0> (GetParam ());
+    const int scheme_id = std::get<0> (std::get<0> (GetParam ()));
+    scheme = create_from_scheme_id (scheme_id);
+    eclass = std::get<1> (std::get<0> (GetParam ()));
     level = std::get<1> (GetParam ());
 
-    default_scheme = t8_scheme_new_default ();
     /* Construct a cube coarse mesh */
     cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
     /* Build a uniform forest */
-    forest = t8_forest_new_uniform (cmesh, default_scheme, level, 0, sc_MPI_COMM_WORLD);
+    forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
   }
   void
   TearDown () override
@@ -52,7 +54,7 @@ class forest_search: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
   int level;
   t8_cmesh_t cmesh;
   t8_forest_t forest;
-  const t8_scheme *default_scheme;
+  const t8_scheme *scheme;
 };
 
 /* A search function that matches all elements.
@@ -148,4 +150,4 @@ TEST_P (forest_search, test_search_one_query_matches_all)
   sc_array_reset (&queries);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_search, forest_search, testing::Combine (AllEclasses, testing::Range (0, 6)));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_search, forest_search, testing::Combine (AllSchemes, testing::Range (0, 6)));
