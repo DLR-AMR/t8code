@@ -200,5 +200,5 @@ TEST_P (forest_ghost_exchange, test_ghost_exchange)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_exchange, forest_ghost_exchange,
-                          testing::Combine (AllSchemes, AllCmeshsParam));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_exchange, forest_ghost_exchange, testing::Combine (AllSchemes, AllCmeshsParam),
+                          pretty_print_base_example_scheme);

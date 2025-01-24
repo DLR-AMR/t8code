@@ -149,4 +149,5 @@ TEST_P (forest_ghost_owner, test_ghost_owner)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_and_owner, forest_ghost_owner, testing::Combine (AllSchemes, AllCmeshsParam));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_and_owner, forest_ghost_owner, testing::Combine (AllSchemes, AllCmeshsParam),
+                          pretty_print_base_example_scheme);

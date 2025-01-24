@@ -172,4 +172,5 @@ TEST_P (forest_commit, test_forest_commit)
   t8_debugf ("Done testing forest commit.");
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_forest_commit, forest_commit, testing::Combine (AllSchemes, AllCmeshsParam));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_forest_commit, forest_commit, testing::Combine (AllSchemes, AllCmeshsParam),
+                          pretty_print_base_example_scheme);

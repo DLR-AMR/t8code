@@ -49,8 +49,12 @@ class t8_cmesh_partition_class:
       /* Tests not working for empty cmeshes */
       GTEST_SKIP ();
     }
-
     cmesh_original = std::get<1> (GetParam ())->cmesh_create ();
+  }
+  void
+  TearDown () override
+  {
+    scheme->unref ();
   }
   t8_cmesh_t cmesh_original;
   const t8_scheme *scheme;
@@ -125,7 +129,7 @@ TEST_P (t8_cmesh_partition_class, test_cmesh_partition_concentrate)
   for (int i = 0; i < 2; i++) {
     t8_cmesh_init (&cmesh_partition_new2);
     t8_cmesh_set_derive (cmesh_partition_new2, cmesh_partition_new1);
-    t8_cmesh_set_partition_uniform (cmesh_partition_new2, level, t8_scheme_new_default ());
+    t8_cmesh_set_partition_uniform (cmesh_partition_new2, level, scheme);
     t8_cmesh_commit (cmesh_partition_new2, sc_MPI_COMM_WORLD);
     cmesh_partition_new1 = cmesh_partition_new2;
   }
@@ -135,5 +139,5 @@ TEST_P (t8_cmesh_partition_class, test_cmesh_partition_concentrate)
 }
 
 /* Test all cmeshes over all different inputs we get through their id */
-INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_partition, t8_cmesh_partition_class, AllCmeshsParam,
-                          pretty_print_base_example);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_partition, t8_cmesh_partition_class,
+                          testing::Combine (AllSchemes, AllCmeshsParam), pretty_print_base_example_scheme);
