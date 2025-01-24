@@ -271,6 +271,8 @@ class t8_search: public t8_search_base {
     }
   }
 
+  virtual ~t8_search () = default;
+
   Udata *user_data;
 
  private:
@@ -400,9 +402,7 @@ class t8_search_with_batched_queries: public t8_search<Udata> {
     this->queries = queries;
   }
 
-  ~t8_search_with_batched_queries ()
-  {
-  }
+  virtual ~t8_search_with_batched_queries () = default;
 
  private:
   bool
