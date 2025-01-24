@@ -149,40 +149,19 @@ t8_step4_partition_ghost (t8_forest_t forest)
    * We currently support ghost mode T8_GHOST_FACES that creates face neighbor ghost elements
    * and will in future also support other modes for edge/vertex neighbor ghost elements.
    */
-  t8_forest_set_ghost (new_forest, 1, T8_GHOST_FACES);
+  t8_forest_set_ghost (new_forest, 1, T8_GHOST_VERTICES);
   /* Commit the forest, this step will perform the partitioning and ghost layer creation. */
   t8_forest_commit (new_forest);
 
   return new_forest;
 }
 
-/* In this function we adapt a forest as in step3 and balance it. 
- * In our main program the input forest is already adapted and then the resulting twice adapted forest will be unbalanced.
- */
-static t8_forest_t
-t8_step4_balance (t8_forest_t forest)
+int
+t8_refine_first_child (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
+                       t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family, const int num_elements,
+                       t8_element_t *elements[])
 {
-  t8_forest_t balanced_forest;
-  /* Adapt the input forest. */
-  t8_forest_t unbalanced_forest = t8_step3_adapt_forest (forest);
-
-  /* Output to vtk. */
-  t8_forest_write_vtk (unbalanced_forest, "t8_step4_unbalanced_forest");
-  t8_global_productionf (" [step4] Wrote unbalanced forest to vtu files: %s*\n", "t8_step4_unbalanced_forest");
-
-  /* Initialize new forest. */
-  t8_forest_init (&balanced_forest);
-  /* Specify that this forest should result from balancing unbalanced_forest.
-   * The last argument is the flag 'no_repartition'.
-   * Since balancing will refine elements, the load-balance will be broken afterwards.
-   * Setting this flag to false (no_repartition = false -> yes repartition) will repartition
-   * the forest after balance, such that every process has the same number of elements afterwards.
-   */
-  t8_forest_set_balance (balanced_forest, unbalanced_forest, 0);
-  /* Commit the forest. */
-  t8_forest_commit (balanced_forest);
-
-  return balanced_forest;
+  return !scheme->element_get_child_id (tree_class, elements[0]);
 }
 
 int
@@ -196,7 +175,6 @@ t8_step4_main (int argc, char **argv)
   const char *prefix_uniform = "t8_step4_uniform_forest";
   const char *prefix_adapt = "t8_step4_adapted_forest";
   const char *prefix_partition_ghost = "t8_step4_partitioned_ghost_forest";
-  const char *prefix_balance = "t8_step4_balanced_forest";
   /* The uniform refinement level of the forest. */
   const int level = 3;
 
@@ -208,7 +186,7 @@ t8_step4_main (int argc, char **argv)
   /* Initialize the sc library, has to happen before we initialize t8code. */
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
-  t8_init (SC_LP_PRODUCTION);
+  t8_init (SC_LP_DEBUG);
 
   /* Print a message on the root process. */
   t8_global_productionf (" [step4] \n");
@@ -230,7 +208,7 @@ t8_step4_main (int argc, char **argv)
   t8_global_productionf (" [step4] Creating an adapted forest as in step3.\n");
   t8_global_productionf (" [step4] \n");
   /* Build a cube cmesh with tet, hex, and prism trees. */
-  cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
+  cmesh = t8_cmesh_new_hypercube (T8_ECLASS_QUAD, comm, 0, 0, 0);
   t8_global_productionf (" [step4] Created coarse mesh.\n");
   forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, comm);
 
@@ -242,15 +220,13 @@ t8_step4_main (int argc, char **argv)
   t8_global_productionf (" [step4] Wrote uniform level %i forest to vtu files: %s*\n", level, prefix_uniform);
 
   /*
-   *  Adapt the forest.
+   * Adapt.
    */
 
-  /* Adapt the forest. We can reuse the forest variable, since the new adapted
-   * forest will take ownership of the old forest and destroy it.
-   * Note that the adapted forest is a new forest, though. */
-  forest = t8_step3_adapt_forest (forest);
+  forest = t8_forest_new_adapt (forest, t8_refine_first_child, 0, 0, NULL);
+  forest = t8_forest_new_adapt (forest, t8_refine_first_child, 0, 0, NULL);
 
-  /* Print information of our new forest. */
+  /* Print information of the forest. */
   t8_step3_print_forest_information (forest);
 
   /* Write forest to vtu files. */
@@ -269,20 +245,6 @@ t8_step4_main (int argc, char **argv)
   t8_step3_print_forest_information (forest);
   /* Write forest to vtu files. */
   t8_forest_write_vtk_ext (forest, prefix_partition_ghost, 1, 1, 1, 1, 1, 0, 1, 0, NULL);
-
-  /*
-   * Balance
-   */
-
-  t8_global_productionf (" [step4] \n");
-  t8_global_productionf (" [step4] Creating an unbalanced forest and balancing it.\n");
-  t8_global_productionf (" [step4] \n");
-  forest = t8_step4_balance (forest);
-  t8_global_productionf (" [step4] Balanced forest.\n");
-  t8_step3_print_forest_information (forest);
-  /* Write forest to vtu files. */
-  t8_forest_write_vtk (forest, prefix_balance);
-  t8_global_productionf (" [step4] Wrote balanced forest to vtu files: %s*\n", prefix_balance);
 
   /*
    * clean-up
