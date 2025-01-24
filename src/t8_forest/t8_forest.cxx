@@ -2899,7 +2899,7 @@ t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
   /* We currently only support face ghosts */
-  SC_CHECK_ABORT (do_ghost == 0 || ghost_type == T8_GHOST_FACES,
+  SC_CHECK_ABORT (do_ghost == 0 || ghost_type == T8_GHOST_FACES || ghost_type == T8_GHOST_VERTICES,
                   "Ghost neighbors other than face-neighbors are not supported.\n");
   SC_CHECK_ABORT (1 <= ghost_version && ghost_version <= 3, "Invalid choice for ghost version. Choose 1, 2, or 3.\n");
 
