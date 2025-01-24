@@ -74,7 +74,7 @@ t8_forest_populate (t8_forest_t forest);
  * \return          The scheme associated to forest.
  * \see t8_forest_set_scheme
  */
-t8_scheme_c *
+const t8_scheme_c *
 t8_forest_get_scheme_before_commit (t8_forest_t forest);
 
 /** Compute the maximum possible refinement level in a forest.
@@ -95,7 +95,7 @@ t8_forest_compute_maxlevel (t8_forest_t forest);
  * \see t8_forest_new_uniform.
  */
 int
-t8_forest_min_nonempty_level (t8_cmesh_t cmesh, t8_scheme_c *scheme);
+t8_forest_min_nonempty_level (t8_cmesh_t cmesh, const t8_scheme_c *scheme);
 
 /** return nonzero if the first tree of a forest is shared with a smaller
  * process.

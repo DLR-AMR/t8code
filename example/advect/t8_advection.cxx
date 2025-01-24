@@ -415,7 +415,7 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t *problem, t8_locidx_t i
                                const t8_element_t *element_hang, int face, int adapted_or_partitioned)
 {
   int i, num_face_children, child_face;
-  t8_scheme *scheme;
+  const t8_scheme *scheme = t8_forest_get_scheme (problem->forest);
   t8_eclass eclass;
   t8_element_t **face_children;
   t8_advect_element_data_t *neigh_data;
@@ -428,9 +428,8 @@ t8_advect_flux_upwind_hanging (const t8_advect_problem_t *problem, t8_locidx_t i
 
   /* Get a pointer to the element */
   el_hang = (t8_advect_element_data_t *) t8_sc_array_index_locidx (problem->element_data, iel_hang);
-  /* Get the eclass and the scheme for the element */
+  /* Get the eclass for the tree of the element */
   eclass = t8_forest_get_tree_class (problem->forest, ltreeid);
-  scheme = t8_forest_get_scheme (problem->forest);
   /* Compute the children of the element at the face */
   num_face_children = scheme->element_get_num_face_children (eclass, element_hang, face);
   T8_ASSERT (num_face_children == el_hang->num_neighbors[face]);
@@ -903,7 +902,7 @@ t8_advect_problem_init (t8_cmesh_t cmesh, t8_flow_function_3d_fn u, t8_example_l
                         int dummy_op, int volume_refine)
 {
   t8_advect_problem_t *problem;
-  t8_scheme *default_scheme;
+  const t8_scheme *default_scheme = t8_scheme_new_default ();
   int i;
 
   T8_ASSERT (1 <= dim && dim <= 3);
@@ -937,7 +936,6 @@ t8_advect_problem_init (t8_cmesh_t cmesh, t8_flow_function_3d_fn u, t8_example_l
   }
 
   /* Construct uniform forest with ghosts */
-  default_scheme = t8_scheme_new_default ();
 
   problem->forest = t8_forest_new_uniform (cmesh, default_scheme, level, 1, comm);
 
@@ -988,7 +986,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t *problem)
   t8_element_t **neighbors;
   int iface, ineigh;
   t8_advect_element_data_t *elem_data;
-  t8_scheme *scheme;
+  const t8_scheme *scheme = t8_forest_get_scheme (problem->forest);
   t8_eclass_t neigh_eclass;
   double speed, max_speed = 0, min_diam = -1, delta_t, min_delta_t;
   double u[3];
@@ -1000,7 +998,6 @@ t8_advect_problem_init_elements (t8_advect_problem_t *problem)
   min_delta_t = problem->T - problem->t;
   for (itree = 0, idata = 0; itree < num_trees; itree++) {
     const t8_eclass_t tree_class = t8_forest_get_tree_class (problem->forest, itree);
-    scheme = t8_forest_get_scheme (problem->forest);
     num_elems_in_tree = t8_forest_get_tree_num_elements (problem->forest, itree);
     for (ielement = 0; ielement < num_elems_in_tree; ielement++, idata++) {
       const t8_element_t *element = t8_forest_get_element_in_tree (problem->forest, itree, ielement);

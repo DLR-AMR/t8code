@@ -52,7 +52,7 @@ class forest_search: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
   int level;
   t8_cmesh_t cmesh;
   t8_forest_t forest;
-  t8_scheme *default_scheme;
+  const t8_scheme *default_scheme;
 };
 
 /* A search function that matches all elements.

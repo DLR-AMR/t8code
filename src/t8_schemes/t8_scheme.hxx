@@ -100,14 +100,15 @@ class t8_scheme {
 
  private:
   scheme_container eclass_schemes; /**< The container holding the eclass schemes. */
-  t8_refcount_t rc; /**< The reference count of the scheme. TODO: Replace by shared_ptr when forest becomes a class. */
+  mutable t8_refcount_t
+    rc; /**< The reference count of the scheme. Mutable so that the class can be const and the ref counter is still mutable. TODO: Replace by shared_ptr when forest becomes a class. */
 
  public:
   /**
    * Increase the reference count of the scheme.
    */
   inline void
-  ref ()
+  ref () const
   {
     t8_refcount_ref (&rc);
   }
@@ -118,7 +119,7 @@ class t8_scheme {
    * \return The remaining reference count. If 0 the scheme was deleted.
    */
   inline int
-  unref ()
+  unref () const
   {
     const int remaining = rc.refcount - 1;
     if (t8_refcount_unref (&rc)) {
@@ -149,7 +150,7 @@ class t8_scheme {
     return std::holds_alternative<TEclassScheme> (eclass_schemes[tree_class]);
   }
 
-  /** Get the eclass an eclas scheme is valid for. \Note: This function should return the input value as long as the
+  /** Get the eclass an eclass scheme is valid for. \Note: This function should return the input value as long as the
    * eclass schemes are soreted correctly. In the future, the trees will access the schemes by a key and then this
    * function will make more sense.
    * \param [in] tree_class     The eclass of the current tree.
@@ -158,7 +159,7 @@ class t8_scheme {
   inline t8_eclass_t
   get_eclass_scheme_eclass (const t8_eclass_t tree_class) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.eclass; }, eclass_schemes[tree_class]);
+    return std::visit ([&] (auto &&scheme) { return scheme.get_eclass (); }, eclass_schemes[tree_class]);
   }
 
   /** Return the size of any element of a given class.
@@ -453,8 +454,9 @@ class t8_scheme {
    * at a given level.
    * \param [in] tree_class    The eclass of the current tree.
    * \param [in] elem     This must be a valid element.
-   * \param [in] level    A refinement level. Must satisfy \a level < elem.level
+   * \param [in] level    A refinement level. Must satisfy \a level <= elem.level
    * \return              The child_id of \a elem in regard to its \a level ancestor.
+   * \note The ancestor id at elem.level is the same as the child id.
    */
   inline int
   element_get_ancestor_id (const t8_eclass_t tree_class, const t8_element_t *elem, const int level) const

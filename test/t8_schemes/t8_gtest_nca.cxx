@@ -28,16 +28,17 @@
 #include <gtest/gtest.h>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <t8_eclass.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_macros.hxx>
 
-class nca: public testing::TestWithParam<t8_eclass> {
+class nca: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
  protected:
   void
   SetUp () override
   {
-    tree_class = GetParam ();
-    scheme = t8_scheme_new_default ();
+    const int scheme_id = std::get<0> (GetParam ());
+    scheme = create_from_scheme_id (scheme_id);
+    tree_class = std::get<1> (GetParam ());
     scheme->element_new (tree_class, 1, &correct_nca);
     scheme->element_new (tree_class, 1, &desc_a);
     scheme->element_new (tree_class, 1, &desc_b);
@@ -59,7 +60,7 @@ class nca: public testing::TestWithParam<t8_eclass> {
     * check        -> the computed nca of desc_a and desc_b, should be equal to correct_nca
     */
   t8_element_t *correct_nca, *desc_a, *desc_b, *check;
-  t8_scheme *scheme;
+  const t8_scheme *scheme;
   t8_eclass_t tree_class;
 };
 
@@ -154,7 +155,7 @@ TEST_P (nca, nca_check_deep)
  */
 static void
 t8_recursive_nca_check (t8_element_t *check_nca, t8_element_t *desc_a, t8_element_t *desc_b, t8_element_t *check,
-                        t8_element_t *parent_a, t8_element_t *parent_b, const int max_lvl, t8_scheme *scheme,
+                        t8_element_t *parent_a, t8_element_t *parent_b, const int max_lvl, const t8_scheme *scheme,
                         const t8_eclass_t tree_class)
 {
   T8_ASSERT (max_lvl <= scheme->get_maxlevel (tree_class) - 1);
@@ -314,4 +315,4 @@ TEST_P (nca, recursive_check_higher_level)
   scheme->element_destroy (tree_class, 1, &correct_nca_high_level);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_nca, nca, AllEclasses, print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_nca, nca, AllSchemes);

@@ -125,6 +125,7 @@ add_t8_test( NAME t8_gtest_pyra_connectivity_serial     SOURCES t8_gtest_main.cx
 add_t8_test( NAME t8_gtest_face_neigh_serial            SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_face_neigh.cxx )
 add_t8_test( NAME t8_gtest_init_linear_id_serial        SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_init_linear_id.cxx )
 add_t8_test( NAME t8_gtest_ancestor_serial              SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_ancestor.cxx )
+add_t8_test( NAME t8_gtest_ancestor_id_serial           SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_ancestor_id.cxx )
 add_t8_test( NAME t8_gtest_element_count_leaves_serial  SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_element_count_leaves.cxx )
 add_t8_test( NAME t8_gtest_element_ref_coords_serial    SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_element_ref_coords.cxx )
 add_t8_test( NAME t8_gtest_descendant_serial            SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_descendant.cxx )
