@@ -33,7 +33,7 @@
  * We will probably most often want to access all ids of one tree, so a function returning an array of ids
  * is a good idea anyway and if we already store them as such then we do not need to do any data movement
  * when accessing.
- * 
+ *
  * On the downside we will only have a "set all ids of a tree" function and no "set this single id for this tree and this vertex" function.
  */
 

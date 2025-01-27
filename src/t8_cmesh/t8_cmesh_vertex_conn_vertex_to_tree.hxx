@@ -37,31 +37,31 @@ class t8_cmesh_vertex_conn_tree_to_vertex;
 
 /*
  *  notes during development
- * 
+ *
  * This class stores the lookup
- * 
- * global_vertex_id -> List of (tree, tree_local_vertex) 
- * 
+ *
+ * global_vertex_id -> List of (tree, tree_local_vertex)
+ *
  * for a cmesh.
  * It is the opposite lookup as t8_cmesh_vertex_conn_tree_to_vertex
- * 
+ *
  * The global vertex ids must not be contiguous, that is, we have some set
- * 
+ *
  * {I_0 < I_1 < ...< I_N} of natural numbers corresponding to the N+1 vertices.
- * 
+ *
  * I_0 does not have to be 0 and I_N does not have to be N.
- * 
- * 
+ *
+ *
  * So we need lookup: I_i -> i
  *  store this in a hash table.
- * 
+ *
  * dattypes:
- * 
+ *
  * global id: t8_gloidx_t
  * (tree_id, tree_vertex): std::pair<t8_locidx_t, int> = TV_PAIR
  * List of (tree_id, tree_vertex): std::vector<PAIR> = TV_LIST
  * Table global_id -> TV_LIST: std::unordered_map<t8_gloidx_t, TV_LIST>
- * 
+ *
 */
 
 class t8_cmesh_vertex_conn_vertex_to_tree {
