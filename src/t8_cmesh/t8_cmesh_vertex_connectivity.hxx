@@ -57,14 +57,14 @@ struct t8_cmesh_vertex_connectivity
 
   /* Setter functions */
 
-  /** Set all global vertex ids of a local tree. 
-   * \param[in] cmesh The considered cmesh
-   * \param[in] local_tree A local tree id of \a cmesh
-   * \param[in] global_vertex_id The ids of the global vertices in order of \a local_tree's vertices.
-   * \param[in] num_vertices Must match the number of vertices of \a local_tree
-   * 
-   * \note \a cmesh must not be committed.
-  */
+  /** Set all global vertex ids of a local tree.
+    * \param [in] cmesh The considered cmesh
+    * \param [in] local_tree A local tree id of \a cmesh
+    * \param [in] global_vertex_id The ids of the global vertices in order of \a local_tree's vertices.
+    * \param [in] num_vertices Must match the number of vertices of \a local_tree
+    *
+    * \note \a cmesh must not be committed.
+    */
   inline void
   set_global_vertex_ids_of_tree_vertices (const t8_cmesh_t cmesh, const t8_gloidx_t global_tree,
                                           const t8_gloidx_t *global_tree_vertices, const int num_vertices)

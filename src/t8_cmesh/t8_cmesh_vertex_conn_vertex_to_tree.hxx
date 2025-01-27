@@ -66,8 +66,8 @@ class t8_cmesh_vertex_conn_tree_to_vertex;
 
 class t8_cmesh_vertex_conn_vertex_to_tree {
  public:
-  /** Standard constructor. 
-   * Initializes the class and allows setting vertex entries 
+  /** Standard constructor.
+   * Initializes the class and allows setting vertex entries
    * via \ref add_vertex_to_tree
    */
   t8_cmesh_vertex_conn_vertex_to_tree (): state (INITIALIZED)
@@ -78,7 +78,7 @@ class t8_cmesh_vertex_conn_vertex_to_tree {
    * Sets all global ids and associated tree vertices from
    * the given input class.
    * Afterwards, the class is set to committed and can be used.
-   * 
+   *
    * \param [in] cmesh A committed cmesh with set tree to vertex entries.
    * \param [in] ttv A filled tree to vertex list for \a cmesh.
   */
@@ -89,7 +89,7 @@ class t8_cmesh_vertex_conn_vertex_to_tree {
   /* Variable type for (tree_id, tree_vertex_id) pair */
   using tree_vertex_pair = std::pair<t8_locidx_t, int>;
 
-  /* list of tree vertex pairs, each global vertex id maps to 
+  /* list of tree vertex pairs, each global vertex id maps to
     * such a list. */
   using tree_vertex_list = std::vector<tree_vertex_pair>;
 
@@ -99,7 +99,7 @@ class t8_cmesh_vertex_conn_vertex_to_tree {
   /* Given a cmesh, build up the vertex_to_tree.
    * \return: some error value to be specified.
    * The cmesh must not be committed, but all tree information and neighbor information must
-   * have been set. 
+   * have been set.
    * Currently, \a cmesh has to be replicated. */
   void
   set_vertex_to_tree_list (const t8_cmesh_t cmesh);
@@ -119,36 +119,32 @@ class t8_cmesh_vertex_conn_vertex_to_tree {
   void
   add_vertex_to_tree (const t8_cmesh_t cmesh, t8_gloidx_t global_vertex_id, t8_locidx_t ltreeid, int tree_vertex);
 
-  /* Mark as ready for commit. Meaning that all 
+  /* Mark as ready for commit. Meaning that all
    * global vertex ids have been added.
    * After commit, no vertex ids can be added anymore. */
   void
   commit (const t8_cmesh_t cmesh);
 
-  /**
-   * @brief Check whether this instance is committed.
-   * 
-   * @return int True if committed. Thus all entries have been set.
-   */
+  /** Check whether this instance is committed.
+    *
+    * \return int True if committed. Thus all entries have been set.
+    */
   int
   is_committed () const;
 
-  /**
-   * @brief Compare with another instance of this class.
-   * 
-   * @param other 
-   * @return int True if and only if the stored vertex indices match.
-   */
+  /** Compare with another instance of this class.
+    *
+    * \param [in] other   The other list to compare.
+    * \return             True if and only if the stored vertex indices match.
+    */
   int
   is_equal (const t8_cmesh_vertex_conn_vertex_to_tree& other) const;
 
-  /**
-   * @brief Equality operator. Implement
-   * 
-   * @param other 
-   * @return true 
-   * @return false 
-   */
+  /** Equality operator. Implement
+    *
+    * \param [in] other   The other list to compare.
+    * \return             True if and only if the stored vertex indices match.
+    */
   bool
   operator== (const t8_cmesh_vertex_conn_vertex_to_tree& other) const;
 
@@ -178,12 +174,11 @@ class t8_cmesh_vertex_conn_vertex_to_tree {
   void
   sort_list_by_tree_id ();
 
-  /**
-   * @brief Check that all local trees and vertices of a given cmesh are mapped to a global id.
-   * 
-   * @param cmesh A committed cmesh.
-   * @return int True if and only if each local tree and vertex of \a cmesh is associated with a global id.
-   */
+  /** Check that all local trees and vertices of a given cmesh are mapped to a global id.
+    *
+    * \param [in] cmesh    A committed cmesh.
+    * \return             True if and only if each local tree and vertex of \a cmesh is associated with a global id.
+    */
   int
   contains_all_vertices (const t8_cmesh_t cmesh) const;
 
