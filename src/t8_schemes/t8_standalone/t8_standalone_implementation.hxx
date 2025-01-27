@@ -707,7 +707,7 @@ struct t8_standalone_scheme
       face_part = face_sign << face_dim;
       child_indices[ifacechild] = first_part + face_part + last_part;
     }
-    for (int ifacechild = 0; ifacechild < num_children; ifacechild++) {
+    for (int ifacechild = num_children - 1; ifacechild >= 0; ifacechild--) {
       t8_standalone_scheme<TEclass>::element_get_child ((const t8_element_t *) el, child_indices[ifacechild],
                                                         (t8_element_t *) children_els[ifacechild]);
     }
@@ -1374,7 +1374,7 @@ struct t8_standalone_scheme
     T8_ASSERT (elem != NULL);
 
     const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
-    const t8_element_coord max_coord = get_root_len () - 1;
+    const t8_element_coord max_coord = 2LL * get_root_len () - 1;
 
     /* Check the level */
     int is_valid = 0 <= el->level && el->level <= T8_ELEMENT_MAXLEVEL[TEclass];
