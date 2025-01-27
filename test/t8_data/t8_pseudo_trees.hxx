@@ -125,7 +125,7 @@ class t8_single_data_handler<pseudo_tree> {
 
       if (!create_handle_for_internal_data (ihandler, type)) {
 
-/* TODO: This is currently only a placeholder for actual internal data types. */
+        /* TODO: This is currently only a placeholder for actual internal data types. */
         if (type == 0) {
           ihandler = std::make_shared<t8_data_handler<enlarged_data<int>>> ();
         }
