@@ -20,9 +20,9 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_vertex_connectivity.hxx
- * We define classes and interfaces for a global vertex enumeration
- * of a cmesh.
+/** \file t8_cmesh_vertex_connectivity.h
+ * C interface for the cmesh vertex connectivity. See \ref t8_cmesh_vertex_connectivity.hxx
+ * for further information.
  */
 
 #ifndef T8_CMESH_VERTEX_CONNECTIVITY_H

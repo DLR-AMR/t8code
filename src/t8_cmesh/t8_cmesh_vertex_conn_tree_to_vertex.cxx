@@ -20,13 +20,13 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_cmesh_conn_tree_to_vertex.cxx
+ *  This file implements the routines for the t8_cmesh_conn_tree_to_vertex struct.
+ */
+
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
-
-/** \file t8_cmesh_conn_tree_to_vertex.cxx
- *  This file implements the routines for the t8_cmesh_conn_tree_to_vertex_c struct.
- */
 
 /* constructor from a given vertex to tree list. */
 t8_cmesh_vertex_conn_tree_to_vertex::t8_cmesh_vertex_conn_tree_to_vertex (

@@ -22,7 +22,7 @@
 
 /** \file t8_cmesh_vertex_conn_tree_to_vertex.hxx
  * Class to save data structure for tree_to_vertex_lists of the cmesh.
- * When the cmesh stores global vertex numbers, we require a lookup that 
+ * When the cmesh stores global vertex numbers, we require a lookup that
  * matches a tree and its local vertex to a global vertex id.
  * This lookup is encoded in the t8_cmesh_vertex_conn_tree_to_vertex struct.
  */
