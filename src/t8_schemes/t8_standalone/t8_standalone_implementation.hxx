@@ -643,12 +643,7 @@ struct t8_standalone_scheme
   {
     T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem));
     // Not true anymore for 4D with pyramids as faces
-    if constexpr (TEclass == T8_ECLASS_VERTEX) {
-      return 0;
-    }
-    else {
-      return 1 << (T8_ELEMENT_DIM[TEclass] - 1);
-    }
+    return (TEclass == T8_ECLASS_VERTEX) ? 0 : 1 << (T8_ELEMENT_DIM[TEclass] - 1);
   }
 
   /** Given an element and a face of the element, compute all children of
@@ -677,9 +672,8 @@ struct t8_standalone_scheme
       child_indices = T8_ALLOC_ZERO (int, num_children);
       allocated_indices = 1;
     }
-    int face_sign, face_dim;
-    face_sign = face % 2;
-    face_dim = face / 2;
+    const int face_sign = face % 2;
+    const int face_dim = face / 2;
     for (int ifacechild = 0; ifacechild < num_children; ifacechild++) {
       t8_element_coord first_part, face_part, last_part;
       /* ifacechild aaaabb, iface = x, then childid = aaaaxbb*/
@@ -761,9 +755,7 @@ struct t8_standalone_scheme
     for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
       first_descendant->coords[idim] = el->coords[idim];
     }
-    int face_is_1_boundary;
-
-    face_is_1_boundary = face % 2;
+    int face_is_1_boundary = face % 2;
 
     if (face_is_1_boundary) {  //the face is a xi=1 boundary
       int facenormal_dim;
@@ -870,9 +862,8 @@ struct t8_standalone_scheme
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
       SC_ABORT ("Only implemented for hypercubes.\n");
     }
-    int facenormal_dim, sign;
-    sign = face % 2 ? 1 : -1;
-    facenormal_dim = face / 2;
+    const int facenormal_dim = face / 2;
+    const int sign = face % 2 ? 1 : -1;
 
     /**Adapt coordinates*/
     t8_element_coord length = t8_standalone_scheme<TEclass>::element_get_len (el->level);
