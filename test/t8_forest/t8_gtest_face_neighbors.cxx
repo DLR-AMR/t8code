@@ -28,6 +28,7 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
+#include <t8_schemes/t8_default/t8_default_quad/t8_default_quad.hxx>
 #include <t8_cmesh/t8_cmesh_offset.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh/t8_cmesh_types.h>
@@ -91,6 +92,7 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
   const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest_uniform);
   const t8_locidx_t num_ghost_trees = t8_forest_get_num_ghost_trees (forest_uniform);
   const t8_locidx_t num_local_elements = t8_forest_get_local_num_elements (forest_uniform);
+  t8_locidx_t ielement_index = 0;
   for (t8_locidx_t itree = 0; itree < num_local_trees + num_ghost_trees; itree++) {
     const t8_gloidx_t gtree_id = t8_forest_global_tree_id (forest_uniform, itree);
     const bool is_ghost = itree >= num_local_trees;
@@ -103,7 +105,7 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
     const t8_eclass_scheme_c *scheme = t8_forest_get_eclass_scheme (forest_uniform, tree_class);
     const t8_locidx_t num_leafs = t8_element_array_get_count (leaf_elements);
     const t8_locidx_t cmesh_tree = t8_forest_ltreeid_to_cmesh_ltreeid (forest_uniform, itree);
-    for (t8_locidx_t ileaf = 0; ileaf < num_leafs; ++ileaf) {
+    for (t8_locidx_t ileaf = 0; ileaf < num_leafs; ++ileaf, ++ielement_index) {
       // Iterate over each leaf element
       const t8_element_t *element = t8_element_array_index_locidx (leaf_elements, ileaf);
       const int num_faces = scheme->t8_element_num_faces (element);
@@ -118,6 +120,12 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
         t8_eclass_scheme_c *neigh_scheme;
         t8_gloidx_t gneigh_tree;
         int orientation;
+
+        t8_debugf ("Compute face neighbor for tree %i (%s) element %i (index %i), at face %i.\n", itree, 
+            is_ghost ? "ghost" : "local",
+            ileaf, ielement_index, iface);
+        const t8_pquad_t* quad = (const t8_pquad_t*) element;
+        t8_debugf ("Element (x,y,level): (%i,%i,%i)\n", quad->x, quad->y, quad->level);
         // Actual computation of the face neighbors
         t8_forest_leaf_face_neighbors_ext (forest_uniform, itree, element, &neighbor_leaves, iface, &dual_faces,
                                            &num_neighbors, &element_indices, &neigh_scheme, &gneigh_tree, &orientation);
@@ -125,21 +133,27 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
         t8_debugf ("Tree %i element %i at face %i has %i face neighbors.\n", itree, ileaf, iface, num_neighbors);
 
         if (gneigh_tree < 0) {
-          // No neighbors are found, check for correctly set return values
+          // If there is no neighbor tree then there cannot be any face neighbors.
+          // Note that there can also be no face neighbors computed if a neighbor tree exists, but
+          // the element is a ghost and the neighbor would is neither a local element nor ghost.
           ASSERT_EQ (num_neighbors, 0);
-          ASSERT_EQ (neighbor_leaves, nullptr);
-          ASSERT_EQ (element_indices, nullptr);
-          ASSERT_EQ (dual_faces, nullptr);
+        }
+        if (num_neighbors == 0) {
+          // No neighbors are found, check for correctly set return values
+          ASSERT_TRUE (element_indices == NULL);
+          ASSERT_TRUE (neighbor_leaves == NULL);
+          ASSERT_TRUE (dual_faces == NULL);
         }
         else {
           ASSERT_GE (num_neighbors, 0);
-          ASSERT_NE (neighbor_leaves, nullptr);
-          ASSERT_NE (element_indices, nullptr);
-          ASSERT_NE (dual_faces, nullptr);
+          ASSERT_TRUE (neighbor_leaves != NULL);
+          ASSERT_TRUE (element_indices != NULL);
+          ASSERT_TRUE (dual_faces != NULL);
         }
         // Checking for:
         //      uniform forest:
-        //        - inner element has 1 face neighbors
+        //        - inner local element has 1 face neighbors
+        //        - inner ghost element has 0 or 1 face neighbors
         //        - boundary element has 0 face neighbors // TODO: Add this test for all forests
         //        - If E face f has neighbor E' face f', then
         //             E' face f' must have neighbor E face f.
@@ -155,7 +169,12 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
           = is_root_boundary && t8_cmesh_tree_face_is_boundary (cmesh, cmesh_tree, tree_face);
 
         if (!is_boundary_element) {
-          EXPECT_EQ (num_neighbors, 1) << "Inner element should have exactly 1 neighbor, has " << num_neighbors << ".";
+          if (!is_ghost) {
+            EXPECT_EQ (num_neighbors, 1) << "Inner local element should have exactly 1 neighbor, has " << num_neighbors << ".";
+          }
+          else {
+            EXPECT_TRUE (num_neighbors == 0 || num_neighbors == 1) << "Inner ghost element should have exactly 1 or 0 neighbors, has " << num_neighbors << ".";
+          }
         }
         else {
           EXPECT_EQ (num_neighbors, 0) << "Boundary element should have exactly 0 neighbors, has " << num_neighbors
@@ -169,8 +188,11 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
           const int dual_face = dual_faces[ineigh];
           const t8_locidx_t neigh_index = element_indices[ineigh];
 
-          t8_debugf ("Checking neighbor element %p.\n", neighbor);
+          t8_debugf ("Checking neighbor element %p in (global) tree %li.\n", neighbor, gneigh_tree);
           t8_debugf ("dual face is %i, index is %i\n", dual_face, neigh_index);
+          const t8_pquad_t* quad = (const t8_pquad_t*) neighbor;
+          t8_debugf ("Element (x,y,level): (%i,%i,%i)\n", quad->x, quad->y, quad->level);
+          
           ASSERT_TRUE (neigh_scheme->t8_element_is_valid (neighbor))
             << "Neighbor element " << ineigh << " is not valid";
           // Compute the local tree id of the neighbors tree depending on whether
@@ -269,4 +291,4 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
 }
 #endif
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_face_neighbors, forest_face_neighbors, AllCmeshsParam);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_face_neighbors, forest_face_neighbors, AllCmeshsParam, pretty_print_base_example);
