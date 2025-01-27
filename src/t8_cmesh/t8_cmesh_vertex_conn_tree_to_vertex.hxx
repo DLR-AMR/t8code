@@ -37,7 +37,8 @@
  * On the downside we will only have a "set all ids of a tree" function and no "set this single id for this tree and this vertex" function.
  */
 
-#pragma once
+#ifndef T8_CMESH_VERTEX_CONN_TREE_TO_VERTEX_HXX
+#define T8_CMESH_VERTEX_CONN_TREE_TO_VERTEX_HXX
 
 #include <algorithm>
 #include <t8_cmesh.h>
@@ -102,3 +103,5 @@ class t8_cmesh_vertex_conn_tree_to_vertex {
     FILLED /*< Is filled with at least one entry. */
   } state;
 };
+
+#endif /* !T8_CMESH_VERTEX_CONN_TREE_TO_VERTEX_HXX */

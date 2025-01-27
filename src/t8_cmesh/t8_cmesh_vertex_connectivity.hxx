@@ -25,7 +25,8 @@
  * of a cmesh.
  */
 
-#pragma once
+#ifndef T8_CMESH_VERTEX_CONNECTIVITY
+#define T8_CMESH_VERTEX_CONNECTIVITY
 
 #include <memory>
 #include <t8_cmesh.h>
@@ -219,3 +220,5 @@ struct t8_cmesh_vertex_connectivity
 
   t8_cmesh_vertex_conn_tree_to_vertex tree_to_vertex;
 };
+
+#endif /* !T8_CMESH_VERTEX_CONNECTIVITY */
