@@ -180,7 +180,6 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
         else {
           EXPECT_EQ (num_neighbors, 0) << "Boundary element should have exactly 0 neighbors, has " << num_neighbors
                                        << ".";
-          ;
         }
 
         // Check that the neighbor of the neighbor is the original element.
@@ -196,12 +195,25 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
 
           ASSERT_TRUE (neigh_scheme->t8_element_is_valid (neighbor))
             << "Neighbor element " << ineigh << " is not valid";
+
+          t8_locidx_t neigh_ltreeid_from_index;
+          // Check that neighbor index correctly yields neighbor element.
+          if (neigh_index < num_local_elements) {
+            const t8_element_t *neighbor_from_index
+              = t8_forest_get_element (forest, neigh_index, &neigh_ltreeid_from_index);
+            EXPECT_TRUE (neigh_scheme->t8_element_equal (neighbor_from_index, neighbor));
+          }
+          // TODO: Check neighbor index if ghost
+
           // Compute the local tree id of the neighbors tree depending on whether
           // it is a local tree or a ghost tree.
           const t8_locidx_t neigh_ltreeid
             = neigh_index < num_local_elements
                 ? gneigh_tree - t8_forest_get_first_local_tree_id (forest_uniform)
                 : t8_forest_ghost_get_ghost_treeid (forest_uniform, gneigh_tree) + num_local_trees;
+          if (neigh_index < num_local_elements) {
+            EXPECT_EQ (neigh_ltreeid, neigh_ltreeid_from_index);
+          }  // TODO: Check neighbor ltreeid if ghost tree
           // preparation
           t8_element_t **neigh_neighbor_leaves;
           int *neigh_dual_faces;
@@ -224,7 +236,25 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
           // The neighbor's orientation must be the orientation
           EXPECT_EQ (orientation, neigh_orientation);
 
-          // TODO Check for the specific face neighbor that would match the original element
+          // Check that the neighbor of the neighbor element is the original element
+          const t8_element_t *neigh_of_neigh = neigh_neighbor_leaves[0];
+          EXPECT_TRUE (scheme->t8_element_equal (element, neigh_of_neigh));
+
+          // Check that the dual face of the dual face is the original face
+          const int neigh_dual_face = neigh_dual_faces[0];
+          EXPECT_EQ (neigh_dual_face, iface);
+
+          // Check that the index is correct, i.e. when getting the neighbor neighbor element from the index,
+          // we retrieve the original element.
+          const t8_locidx_t element_index = neigh_element_indices[0];
+          EXPECT_GE (element_index, 0);
+
+          if (element_index < num_local_elements) {
+            const t8_element_t *element_from_index = t8_forest_get_element (forest, element_index, NULL);
+            EXPECT_EQ (element_from_index, element)
+              << "Neighbor neighbor element at index " << element_index << " is not original element.";
+          }
+          // TODO: Check element index if original element is a ghost element
 
           // clean-up neighbor's neighbors
           if (neigh_num_neighbors > 0) {
