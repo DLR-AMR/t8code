@@ -41,7 +41,7 @@ enum pseudo_types { T8_ENLARGED_INT = 0, T8_ENLARGED_DOUBLE = 1 };
 
 /**
  * \class t8_single_data_handler
- * \brief A template spezialisation for handling single enlarged ints (int plus an additional int, this 
+ * \brief A template specialisation for handling single enlarged ints (int plus an additional int, this 
  * data-type is meant for testing).
  * 
  * This class implements methods for packing, unpacking, and determining the size of single data items.
@@ -120,7 +120,7 @@ class t8_single_data_handler<enlarged_data<int>> {
 
 /**
  * \class t8_single_data_handler
- * \brief A template spezialisation for handling single enlarged doubles (double plus an additional int, this 
+ * \brief A template specialisation for handling single enlarged doubles (double plus an additional int, this 
  * data-type is meant for testing).
  * 
  * This class implements methods for packing, unpacking, and determining the size of single data items.
