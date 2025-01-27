@@ -110,6 +110,9 @@ struct t8_standalone_scheme
     return TEclass;
   }
 
+  /** Return the size of any element of a given class.
+   * \return                      The size of an element.
+   */
   static constexpr size_t
   get_element_size (void) noexcept
   {
@@ -175,6 +178,12 @@ struct t8_standalone_scheme
     return 0;
   }
 
+  /** Return the shape of an allocated element according its type.
+   * For example, a child of an element can be an element of a different shape
+   * and has to be handled differently - according to its shape.
+   * \param [in] elem     The element to be considered
+   * \return              The shape of the element as an eclass
+   */
   static constexpr t8_element_shape_t
   element_get_shape (const t8_element_t *elem) noexcept
   {
@@ -226,6 +235,14 @@ struct t8_standalone_scheme
     return 0;
   }
 
+  /** Compute the shape of the face of an element.
+   * \param [in] elem     The element.
+   * \param [in] face     A face of \a elem.
+   * \return              The element shape of the face.
+   * I.e. T8_ECLASS_LINE for quads, T8_ECLASS_TRIANGLE for tets
+   *      and depending on the face number either T8_ECLASS_QUAD or
+   *      T8_ECLASS_TRIANGLE for prisms.
+   */
   static constexpr t8_element_shape_t
   element_get_face_shape (const t8_element_t *elem, const int face) noexcept
   {
@@ -1216,6 +1233,14 @@ struct t8_standalone_scheme
 #endif
   }
 
+  /** Deinitialize an array of allocated elements.
+   * \param [in] length   The number of elements to be deinitialized.
+   * \param [in,out] elems On input an array of \a length many allocated
+   *                       and initialized elements, on output an array of
+   *                       \a length many allocated, but not initialized elements.
+   * \note Call this function if you called t8_element_init on the element pointers.
+   * \see t8_element_init
+   */
   static constexpr void
   element_deinit (const int length, t8_element_t *elem) noexcept
   {
@@ -1392,12 +1417,18 @@ struct t8_standalone_scheme
 
  private:
   // ################################################____HELPER____################################################
+
+  /** The length of a element at a given level in integer coordinates */
   static constexpr t8_element_coord
   element_get_len (const t8_element_level level) noexcept
   {
     return 1 << (T8_ELEMENT_MAXLEVEL[TEclass] - (level));
   }
 
+  /** Compute the cube id of an element
+  * \param[in] elem      Input element
+  * \param[in] level     
+  */
   static constexpr t8_cube_id
   compute_cubeid (const t8_standalone_element<TEclass> *elem, const t8_element_level level) noexcept
   {
@@ -1445,6 +1476,10 @@ struct t8_standalone_scheme
     ancestor->level = level;
   }
 
+  /** Use the number of zero bits on the left to detrime the level of the nearest common ancestor of two elements.
+   * \param[in] elem1      First input element
+   * \param[in] elem2      Second input element
+  */
   static constexpr int
   element_get_cube_nca_level (const t8_standalone_element<TEclass> *elem1,
                               const t8_standalone_element<TEclass> *elem2) noexcept
@@ -1463,6 +1498,9 @@ struct t8_standalone_scheme
     return SC_MIN (num_zeros, (int) SC_MIN (elem1->level, elem2->level));
   }
 
+  /** Compute the number of zero bits on the left side of coords.
+   * \param[in] coordinates      Input coordinates
+   */
   static constexpr int
   number_of_leading_zeros (const t8_element_coord coordinates) noexcept
   {
@@ -1522,6 +1560,7 @@ struct t8_standalone_scheme
     }
   }
 
+  /** Compute the length of the root element of the current TEclass. The length for a Vertex root element is always 0. */
   static constexpr t8_element_coord
   get_root_len () noexcept
   {
@@ -1533,7 +1572,11 @@ struct t8_standalone_scheme
     }
   }
 
-  /**Caller is responsible for taking the absolute value of leveldiff */
+  /** Get the number of descendants of an element at a given leveldiff. 
+   * \param[in] elem      Input element
+   * \param[in] leveldiff Difference between the level of the element
+   * Note Caller is responsible for taking the absolute value of leveldiff
+  */
   static constexpr t8_linearidx_t
   num_descendants_at_leveldiff (const t8_element_t *elem, const t8_element_level leveldiff) noexcept
   {
