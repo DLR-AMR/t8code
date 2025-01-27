@@ -1743,10 +1743,13 @@ t8_forest_leaf_face_neighbors_iterate (t8_forest_t forest, t8_locidx_t ltreeid, 
   struct t8_lfn_user_data *lfn_data = reinterpret_cast<struct t8_lfn_user_data *> (user_data);
   // face is the face of the considered leaf neighbor element and thus the
   // corresponding dual face
+  t8_debugf ("Adding new face neighbor (leaf index %li) with dual face %i.\n", tree_leaf_index, face);
   lfn_data->dual_faces.push_back (face);
   // Compute the index of the element
+  const t8_locidx_t num_local_elements = t8_forest_get_local_num_elements (forest);
   const t8_locidx_t tree_offset = !is_ghost_tree ? t8_forest_get_tree_element_offset (forest, ltreeid)
-                                                 : t8_forest_ghost_get_tree_element_offset (forest, adjusted_tree_id);
+                                                 : t8_forest_ghost_get_tree_element_offset (forest, adjusted_tree_id)
+                                                 + num_local_elements;
   const t8_locidx_t element_index = tree_offset + tree_leaf_index;
   lfn_data->element_indices.push_back (element_index);
   // Add the pointer to the current element
