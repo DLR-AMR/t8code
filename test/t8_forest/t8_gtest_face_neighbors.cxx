@@ -121,10 +121,9 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
         t8_gloidx_t gneigh_tree;
         int orientation;
 
-        t8_debugf ("Compute face neighbor for tree %i (%s) element %i (index %i), at face %i.\n", itree, 
-            is_ghost ? "ghost" : "local",
-            ileaf, ielement_index, iface);
-        const t8_pquad_t* quad = (const t8_pquad_t*) element;
+        t8_debugf ("Compute face neighbor for tree %i (%s) element %i (index %i), at face %i.\n", itree,
+                   is_ghost ? "ghost" : "local", ileaf, ielement_index, iface);
+        const t8_pquad_t *quad = (const t8_pquad_t *) element;
         t8_debugf ("Element (x,y,level): (%i,%i,%i)\n", quad->x, quad->y, quad->level);
         // Actual computation of the face neighbors
         t8_forest_leaf_face_neighbors_ext (forest_uniform, itree, element, &neighbor_leaves, iface, &dual_faces,
@@ -170,10 +169,12 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
 
         if (!is_boundary_element) {
           if (!is_ghost) {
-            EXPECT_EQ (num_neighbors, 1) << "Inner local element should have exactly 1 neighbor, has " << num_neighbors << ".";
+            EXPECT_EQ (num_neighbors, 1) << "Inner local element should have exactly 1 neighbor, has " << num_neighbors
+                                         << ".";
           }
           else {
-            EXPECT_TRUE (num_neighbors == 0 || num_neighbors == 1) << "Inner ghost element should have exactly 1 or 0 neighbors, has " << num_neighbors << ".";
+            EXPECT_TRUE (num_neighbors == 0 || num_neighbors == 1)
+              << "Inner ghost element should have exactly 1 or 0 neighbors, has " << num_neighbors << ".";
           }
         }
         else {
@@ -190,9 +191,9 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
 
           t8_debugf ("Checking neighbor element %p in (global) tree %li.\n", neighbor, gneigh_tree);
           t8_debugf ("dual face is %i, index is %i\n", dual_face, neigh_index);
-          const t8_pquad_t* quad = (const t8_pquad_t*) neighbor;
+          const t8_pquad_t *quad = (const t8_pquad_t *) neighbor;
           t8_debugf ("Element (x,y,level): (%i,%i,%i)\n", quad->x, quad->y, quad->level);
-          
+
           ASSERT_TRUE (neigh_scheme->t8_element_is_valid (neighbor))
             << "Neighbor element " << ineigh << " is not valid";
           // Compute the local tree id of the neighbors tree depending on whether
