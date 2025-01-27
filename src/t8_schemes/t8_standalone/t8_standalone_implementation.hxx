@@ -1301,7 +1301,6 @@ struct t8_standalone_scheme
    * \note If an element was created by \ref t8_element_new then \ref t8_element_init
    * may not be called for it. Thus, \ref t8_element_new should initialize an element
    * in the same way as a call to \ref t8_element_init would.
-   * Thus, if \a called_new is true this function should usually do nothing.
    * \see t8_element_new
    * \see t8_element_is_valid
    */
