@@ -1418,7 +1418,9 @@ struct t8_standalone_scheme
  private:
   // ################################################____HELPER____################################################
 
-  /** The length of a element at a given level in integer coordinates */
+  /** The length of a element at a given level in integer coordinates
+   * \param[in] level     Level of the element
+   */
   static constexpr t8_element_coord
   element_get_len (const t8_element_level level) noexcept
   {
@@ -1427,7 +1429,7 @@ struct t8_standalone_scheme
 
   /** Compute the cube id of an element
   * \param[in] elem      Input element
-  * \param[in] level     
+  * \param[in] level     The refinement level
   */
   static constexpr t8_cube_id
   compute_cubeid (const t8_standalone_element<TEclass> *elem, const t8_element_level level) noexcept
@@ -1449,9 +1451,9 @@ struct t8_standalone_scheme
   /**
  * Compute the ancestor of \a el at a given level via the equation properties
  * 
- * \param[in] elem      Input element
- * \param[in] level     Level of the ancestor to compute
- * \param[in, out] and  Allocated element that will be filled with the data of the ancestor.
+ * \param[in] elem            Input element
+ * \param[in] level           Level of the ancestor to compute
+ * \param[in, out] ancestor   Allocated element that will be filled with the data of the ancestor.
  */
   static constexpr void
   element_get_ancestor (const t8_standalone_element<TEclass> *elem, const t8_element_level level,
@@ -1479,8 +1481,9 @@ struct t8_standalone_scheme
   /** Use the number of zero bits on the left to detrime the level of the nearest common ancestor of two elements.
    * \param[in] elem1      First input element
    * \param[in] elem2      Second input element
+   * \return               The level of the nearest common ancestor of the two elements
   */
-  static constexpr int
+  static constexpr t8_element_level
   element_get_cube_nca_level (const t8_standalone_element<TEclass> *elem1,
                               const t8_standalone_element<TEclass> *elem2) noexcept
   {
@@ -1500,6 +1503,7 @@ struct t8_standalone_scheme
 
   /** Compute the number of zero bits on the left side of coords.
    * \param[in] coordinates      Input coordinates
+   * \return                    Number of leading zeros
    */
   static constexpr int
   number_of_leading_zeros (const t8_element_coord coordinates) noexcept
@@ -1560,7 +1564,10 @@ struct t8_standalone_scheme
     }
   }
 
-  /** Compute the length of the root element of the current TEclass. The length for a Vertex root element is always 0. */
+  /** Compute the length of the root element of the current TEclass. The length for a Vertex root element is always 0. 
+   * \return The length of the root element
+  */
+
   static constexpr t8_element_coord
   get_root_len () noexcept
   {
@@ -1575,6 +1582,7 @@ struct t8_standalone_scheme
   /** Get the number of descendants of an element at a given leveldiff. 
    * \param[in] elem      Input element
    * \param[in] leveldiff Difference between the level of the element
+   * \return             number of descendants 
    * Note Caller is responsible for taking the absolute value of leveldiff
   */
   static constexpr t8_linearidx_t
