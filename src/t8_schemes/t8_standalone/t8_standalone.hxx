@@ -29,7 +29,7 @@
 T8_EXTERN_C_BEGIN ();
 
 /** Return the standalone element implementation of t8code. */
-t8_scheme *
+const t8_scheme *
 t8_scheme_new_standalone (void);
 
 /** Check whether a given eclass_scheme is one of the standalone schemes.

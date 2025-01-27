@@ -26,7 +26,7 @@
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
-t8_scheme *
+const t8_scheme *
 t8_scheme_new_standalone (void)
 {
   t8_scheme_builder builder;
