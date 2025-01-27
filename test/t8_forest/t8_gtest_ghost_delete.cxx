@@ -99,7 +99,7 @@ class DISABLED_forest_ghost_exchange_holes: public testing::Test {
     scheme->unref ();
   }
   sc_MPI_Comm comm;
-  t8_scheme *scheme;
+  const t8_scheme *scheme;
   t8_cmesh_t cmesh;
 };
 

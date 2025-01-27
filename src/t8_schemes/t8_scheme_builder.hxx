@@ -61,7 +61,7 @@ class t8_scheme_builder {
   /** Build the scheme.
    * \return The built scheme.
    */
-  t8_scheme *
+  const t8_scheme *
   build_scheme () const
   {
     return scheme;
