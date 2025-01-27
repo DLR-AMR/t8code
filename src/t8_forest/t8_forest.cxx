@@ -1668,6 +1668,47 @@ t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, 
   return orientation;
 }
 
+/** All ** out arguments have memory allocated inside */
+int
+t8_forest_leaf_vertex_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf, int vertex,
+                                 t8_locidx_t **pelement_indices, t8_gloidx_t **gneigh_treeids,
+                                 t8_eclass_t **pneigh_eclasses, t8_element_t **neighbor_leaves, int **dual_vertices)
+{
+  T8_ASSERT (t8_forest_element_is_leaf (forest, leaf, ltreeid));
+  /**
+   * General idea single tree:
+   * construct same level vertex neighbors, construct vertex descendant
+   * binary search in local and ghost elements for ancestor of descendant.
+  */
+  T8_ASSERT (t8_forest_get_num_global_trees (forest) == 1);
+
+  t8_eclass_t eclass = t8_forest_get_tree_class (forest, ltreeid);
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  int num_neighbors = 0;
+
+  /** TODO: Allocate neighbors and dual_vertices */
+  t8_element_t **neighbors;
+  scheme->element_vertex_neighbors (eclass, leaf, vertex, &num_neighbors, neighbors, *dual_vertices);
+  /** Maybe reallocate if less neigbors found? */
+
+  /** TODO: Allocate npelement_indices, gneigh_treeids, pneigh_eclasses, neighbor_leaves */
+
+  /* iterate over neighbors and replace by corner_descendant */
+  for (int ineighbor = 0; ineighbor < num_neighbors; ineighbor++) {
+    t8_element_t *corner_descendant;
+    scheme->element_new (eclass, 1, &corner_descendant);
+    scheme->element_corner_descendant (eclass, neighbors[ineighbor], *dual_vertices[ineighbor],
+                                       scheme->get_maxlevel (eclass), corner_descendant);
+    /** binary search in local and ghost elements for corner descendant */
+    /** TODO: Implement helper function that gets a global tree id and an element, and returns with local element/ghost id,
+     * depending, on whether the element is local or ghost.
+     * This fills pelement_indices, gneigh_treeids, pneigh_eclasses, neighbor_leaves
+     * Find out ancestor dual_vertex, Same for Morton type-enhanced?
+     */
+  }
+  return num_neighbors;
+}
+
 void
 t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf,
                                    t8_element_t **pneighbor_leaves[], int face, int *dual_faces[], int *num_neighbors,
