@@ -26,7 +26,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8.h>
 #include <vector>
 #include <test/t8_data/t8_data_handler_specs.hxx>
-#include <t8_data/t8_data_handler.hxx>
+#include <t8_data/t8_data_handler_base.hxx>
 #include <memory>
 
 /**
@@ -123,7 +123,7 @@ class t8_single_data_handler<pseudo_tree> {
       mpiret = sc_MPI_Unpack (buffer, num_bytes, &pos, &type, 1, sc_MPI_INT, comm);
       SC_CHECK_MPI (mpiret);
 
-      if (!create_handle_for_internal_data (ihandler, type)) {
+      if (!is_internal_data (type)) {
 
         /* TODO: This is currently only a placeholder for actual internal data types. */
         if (type == 0) {
@@ -135,10 +135,12 @@ class t8_single_data_handler<pseudo_tree> {
         else {
           SC_ABORT_NOT_REACHED ();
         }
-
-        int outcount = 0;
-        ihandler->unpack_vector_prefix (buffer, num_bytes, pos, outcount, comm);
       }
+      else {
+        ihandler = create_handle_for_internal_data (type);
+      }
+      int outcount = 0;
+      ihandler->unpack_vector_prefix (buffer, num_bytes, pos, outcount, comm);
     }
   }
 

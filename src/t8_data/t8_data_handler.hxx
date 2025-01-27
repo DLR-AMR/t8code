@@ -126,10 +126,6 @@ class t8_abstract_data_handler {
   type ()
     = 0;
 
-  virtual bool
-  create_handle_for_internal_data (t8_abstract_data_handler *const handler, const int type)
-    = 0;
-
   virtual ~t8_abstract_data_handler () {};
 };
 
@@ -255,16 +251,6 @@ class t8_data_handler: public t8_abstract_data_handler {
     return single_handler.type ();
   }
 
-  bool
-  create_handle_for_internal_data (t8_abstract_data_handler *const handler, const int type) override
-  {
-    switch (type) {
-    // Placeholder for future internal data, which is handled here.
-    default:
-      return false;
-    }
-  }
-
  private:
   /**
   * \brief A shared pointer to a vector of data. 
@@ -277,5 +263,18 @@ class t8_data_handler: public t8_abstract_data_handler {
    */
   t8_single_data_handler<TType> single_handler;
 };
+
+t8_abstract_data_handler *
+create_internal_handler (const int type)
+{
+  switch (type) {
+  case 0:
+    return new t8_data_handler<int> ();
+  case 1:
+    return new t8_data_handler<double> ();
+  default:
+    return nullptr;
+  }
+}
 
 #endif /* T8_DATA_HANDLER_HXX */

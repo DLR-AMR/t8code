@@ -29,7 +29,6 @@
  * This file provides a templated class for handling single data items.
  * 
  */
-
 #include <t8.h>
 
 /**
@@ -84,6 +83,16 @@ class t8_single_data_handler {
    */
   void
   unpack (const void *buffer, const int num_bytes, int &pos, TType &data, sc_MPI_Comm comm);
+
+  bool
+  is_internal_data (const int type)
+  {
+    switch (type) {
+    // Placeholder for future internal data, which is handled here.
+    default:
+      return false;
+    }
+  }
 
   /**
    * Returns the type of the data handler.
