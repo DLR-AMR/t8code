@@ -1519,17 +1519,13 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const 
                                  const t8_eclass_scheme_c *neigh_scheme, int face, int *neigh_face)
 {
   t8_eclass_scheme_c *ts;
-  t8_tree_t tree;
-  t8_eclass_t eclass;
 
   /* Get a pointer to the tree to read its element class */
-  tree = t8_forest_get_tree (forest, ltreeid);
-  eclass = tree->eclass;
+  const t8_eclass_t eclass = t8_forest_get_tree_class (forest, ltreeid);
   ts = t8_forest_get_eclass_scheme (forest, eclass);
   if (neigh_scheme == ts && ts->t8_element_face_neighbor_inside (elem, neigh, face, neigh_face)) {
     /* The neighbor was constructed and is inside the current tree. */
-    // TODO: replace with function t8_forest_local_treeid_to_global_treeid that incorporates ghosts
-    return ltreeid + t8_forest_get_first_local_tree_id (forest);
+    return t8_forest_global_tree_id (forest, ltreeid);
   }
   else {
     /* The neighbor does not lie inside the current tree. The content of neigh is undefined right now. */
