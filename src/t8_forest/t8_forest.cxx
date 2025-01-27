@@ -1689,7 +1689,7 @@ t8_forest_leaf_vertex_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const 
   /** TODO: Allocate neighbors and dual_vertices */
   t8_element_t **neighbors;
   scheme->element_vertex_neighbors (eclass, leaf, vertex, &num_neighbors, neighbors, *dual_vertices);
-  /** Maybe reallocate if less neigbors found? */
+  /** Maybe reallocate if less neighbors found? */
 
   /** TODO: Allocate npelement_indices, gneigh_treeids, pneigh_eclasses, neighbor_leaves */
 
