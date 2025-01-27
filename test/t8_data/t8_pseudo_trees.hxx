@@ -26,7 +26,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8.h>
 #include <vector>
 #include <test/t8_data/t8_data_handler_specs.hxx>
-#include <t8_data/t8_data_handler_base.hxx>
+#include <t8_data/t8_data_handler.hxx>
 #include <memory>
 
 /**
@@ -137,7 +137,7 @@ class t8_single_data_handler<pseudo_tree> {
         }
       }
       else {
-        ihandler = create_handle_for_internal_data (type);
+        ihandler = std::shared_ptr<t8_abstract_data_handler> (create_internal_handler (type));
       }
       int outcount = 0;
       ihandler->unpack_vector_prefix (buffer, num_bytes, pos, outcount, comm);

@@ -264,14 +264,11 @@ class t8_data_handler: public t8_abstract_data_handler {
   t8_single_data_handler<TType> single_handler;
 };
 
-t8_abstract_data_handler *
+inline t8_abstract_data_handler *
 create_internal_handler (const int type)
 {
   switch (type) {
-  case 0:
-    return new t8_data_handler<int> ();
-  case 1:
-    return new t8_data_handler<double> ();
+    /* Place holder to create a handler for internal data structures */
   default:
     return nullptr;
   }

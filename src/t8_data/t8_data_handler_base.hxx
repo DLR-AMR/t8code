@@ -20,8 +20,8 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#ifndef T8_DATA_HANDLER_BASE
-#define T8_DATA_HANDLER_BASE
+#ifndef T8_DATA_HANDLER_BASE_HXX
+#define T8_DATA_HANDLER_BASE_HXX
 
 /**
  * \file t8_data_handler_base.hxx
@@ -30,6 +30,16 @@
  * 
  */
 #include <t8.h>
+
+inline bool
+is_internal_data (const int type)
+{
+  switch (type) {
+  // Placeholder for future internal data, which is handled here.
+  default:
+    return false;
+  }
+};
 
 /**
  * \class t8_single_data_handler
@@ -84,16 +94,6 @@ class t8_single_data_handler {
   void
   unpack (const void *buffer, const int num_bytes, int &pos, TType &data, sc_MPI_Comm comm);
 
-  bool
-  is_internal_data (const int type)
-  {
-    switch (type) {
-    // Placeholder for future internal data, which is handled here.
-    default:
-      return false;
-    }
-  }
-
   /**
    * Returns the type of the data handler.
    *
@@ -107,4 +107,4 @@ class t8_single_data_handler {
   ~t8_single_data_handler () {};
 };
 
-#endif /* T8_DATA_HANDLER_BASE */
+#endif /* T8_DATA_HANDLER_BASE_HXX */
