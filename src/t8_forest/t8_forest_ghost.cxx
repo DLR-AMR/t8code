@@ -370,12 +370,11 @@ static void
 t8_ghost_init_remote_tree (t8_forest_t forest, t8_gloidx_t gtreeid, int remote_rank, t8_eclass_t tree_class,
                            t8_ghost_remote_tree_t *remote_tree)
 {
-  t8_scheme *scheme;
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
   t8_locidx_t local_treeid;
 
   T8_ASSERT (remote_tree != NULL);
 
-  scheme = t8_forest_get_scheme (forest);
   local_treeid = gtreeid - t8_forest_get_first_local_tree_id (forest);
   /* Set the entries of the new remote tree */
   remote_tree->global_id = gtreeid;
@@ -490,7 +489,7 @@ typedef struct
                                            Each entry is an array of 2 * (max_num_faces + 1) integers,
                                            | face_0 low | face_0 high | ... | face_n low | face_n high | owner low | owner high | */
   sc_array_t face_owners;      /* Temporary storage for all owners at a leaf's face */
-  t8_scheme *scheme;
+  const t8_scheme *scheme;
   t8_gloidx_t gtreeid;
   int level_nca; /* The refinement level of the root element in the search.
                                            At position element_level - level_nca in bounds_per_level are the bounds
@@ -1015,7 +1014,7 @@ t8_forest_ghost_parse_received_message (t8_forest_t forest, t8_forest_ghost_t gh
   size_t num_elements, old_elem_count, ghosts_offset;
   t8_ghost_gtree_hash_t *tree_hash, **pfound_tree, *found_tree;
   t8_ghost_tree_t *ghost_tree;
-  t8_scheme *scheme;
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
   t8_element_t *element_insert;
   t8_ghost_process_hash_t *process_hash;
 #ifdef T8_ENABLE_DEBUG
@@ -1059,7 +1058,6 @@ t8_forest_ghost_parse_received_message (t8_forest_t forest, t8_forest_ghost_t gh
     tree_hash->global_id = global_id;
 
     /* Get the scheme for this tree */
-    scheme = t8_forest_get_scheme (forest);
     if (sc_hash_insert_unique (ghost->global_tree_to_ghost_tree, tree_hash, (void ***) &pfound_tree)) {
       /* The tree was not stored already, tree_hash is now an entry in the hash table. */
       /* If the tree was not contained, it is the newest tree in the array and

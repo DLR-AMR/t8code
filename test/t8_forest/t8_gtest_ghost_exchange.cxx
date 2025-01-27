@@ -62,7 +62,7 @@ class forest_ghost_exchange: public testing::TestWithParam<cmesh_example_base *>
     t8_cmesh_destroy (&cmesh);
     scheme->unref ();
   }
-  t8_scheme *scheme;
+  const t8_scheme *scheme;
   t8_cmesh_t cmesh;
 };
 

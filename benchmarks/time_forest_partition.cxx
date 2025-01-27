@@ -75,7 +75,7 @@ t8_vec3_xmay (double *x, double alpha, double *y)
 /* TODO: deprecated. was replaced by t8_common_midpoint. */
 static void
 t8_anchor_element (t8_forest_t forest, t8_locidx_t which_tree,
-                   t8_scheme *scheme, t8_element_t *element,
+                   const t8_scheme *scheme, t8_element_t *element,
                    double elem_anchor_f[3])
 {
   double             *tree_vertices;

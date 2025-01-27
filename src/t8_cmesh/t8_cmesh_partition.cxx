@@ -1545,7 +1545,6 @@ t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   t8_cmesh_t cmesh_from;
   t8_gloidx_t last_tree;
   const t8_gloidx_t *tree_offsets;
-  const t8_scheme *scheme;
 
   T8_ASSERT (t8_cmesh_is_committed (cmesh->set_from));
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
@@ -1565,9 +1564,9 @@ t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   /*         and trees per proc array           */
   /**********************************************/
   if (cmesh->set_partition_level >= 0) {
+    const t8_scheme *scheme = cmesh->set_partition_scheme; /* The refinement scheme */
     /* Compute first and last tree index */
     T8_ASSERT (cmesh->tree_offsets == NULL);
-    scheme = cmesh->set_partition_scheme; /* The refinement scheme */
     T8_ASSERT (scheme != NULL);
     t8_cmesh_uniform_bounds (cmesh_from, cmesh->set_partition_level, scheme, &cmesh->first_tree, NULL, &last_tree, NULL,
                              &cmesh->first_tree_shared);
