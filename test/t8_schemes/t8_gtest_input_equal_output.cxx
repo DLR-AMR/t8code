@@ -32,16 +32,19 @@ class class_test_equal: public TestDFS {
   void
   check_element () override
   {
-    const int num_children = scheme->element_get_num_children (eclass, element);
-
-    scheme->element_new (eclass, num_children, elems1);
-    scheme->element_new (eclass, num_children, elems2);
-
-    /* Copy element */
-    t8_element_t *first_of_elems1 = elems1[0];
-    scheme->element_copy (eclass, element, first_of_elems1);
-
     for (int iface = 0; iface < scheme->element_get_num_faces (eclass, element); iface++) {
+
+      const int num_children = scheme->element_get_num_face_children (eclass, element, iface);
+
+      elems1 = T8_ALLOC (t8_element_t *, num_children);
+      elems2 = T8_ALLOC (t8_element_t *, num_children);
+
+      scheme->element_new (eclass, num_children, elems1);
+      scheme->element_new (eclass, num_children, elems2);
+
+      /* Copy element */
+      t8_element_t *first_of_elems1 = elems1[0];
+      scheme->element_copy (eclass, element, first_of_elems1);
 
       scheme->element_get_children_at_face (eclass, element, iface, elems2, num_children, NULL);
 
@@ -53,10 +56,14 @@ class class_test_equal: public TestDFS {
 
         EXPECT_ELEM_EQ (scheme, eclass, child1, child2);
       }
+
+      /* Destroy element */
+      scheme->element_destroy (eclass, num_children, elems1);
+      scheme->element_destroy (eclass, num_children, elems2);
+
+      T8_FREE (elems1);
+      T8_FREE (elems2);
     }
-    /* Destroy element */
-    scheme->element_destroy (eclass, num_children, elems1);
-    scheme->element_destroy (eclass, num_children, elems2);
   }
 
  protected:
