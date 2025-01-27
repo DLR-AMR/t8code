@@ -39,7 +39,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * 
  * @tparam T the type of data
  */
-template <typename T>
+template <typename TType>
 class data_handler_test: public testing::Test {
  protected:
   void
@@ -49,9 +49,9 @@ class data_handler_test: public testing::Test {
     SC_CHECK_MPI (mpiret);
     mpiret = sc_MPI_Comm_size (comm, &mpisize);
     SC_CHECK_MPI (mpiret);
-    creator = data_creator<enlarged_data<T>> ();
+    creator = data_creator<enlarged_data<TType>> ();
     creator.create (max_num_data);
-    data_handler = new t8_data_handler<enlarged_data<T>> (creator.large_data);
+    data_handler = new t8_data_handler<enlarged_data<TType>> (creator.large_data);
   }
 
   void
@@ -60,9 +60,9 @@ class data_handler_test: public testing::Test {
     delete data_handler;
   }
 
-  t8_data_handler<enlarged_data<T>> *data_handler;
-  data_creator<enlarged_data<T>> creator;
-  std::vector<enlarged_data<T>> recv_data;
+  t8_data_handler<enlarged_data<TType>> *data_handler;
+  data_creator<enlarged_data<TType>> creator;
+  std::vector<enlarged_data<TType>> recv_data;
   int mpirank;
   int mpisize;
   const int max_num_data = 100;
