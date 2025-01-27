@@ -59,7 +59,7 @@ class t8_abstract_data_handler {
    *
    * \param[in, out] buffer A pointer to the buffer where the vector prefix will be packed.
    * \param[in] num_bytes The number of bytes to be packed.
-   * \param[in] pos A reference to an integer representing the current position in the buffer. This will be updated as bytes are packed.
+   * \param[in, out] pos A reference to an integer representing the current position in the buffer. This will be updated as bytes are packed.
    * \param[in] comm The MPI communicator used for the operation.
    */
   virtual void
