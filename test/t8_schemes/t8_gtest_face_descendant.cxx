@@ -22,7 +22,7 @@
 
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <test/t8_gtest_macros.hxx>
 #include "t8_gtest_dfs_base.hxx"
@@ -67,22 +67,22 @@ class class_descendant: public TestDFS {
      * by the scheme implementation t8_element_first_descendant for the first descendants over the levels.
      */
 
-    const int level = scheme->element_get_level (tree_class, element);
-    const int num_faces = scheme->element_get_num_faces (tree_class, element);
+    const int level = scheme->element_get_level (eclass, element);
+    const int num_faces = scheme->element_get_num_faces (eclass, element);
 
     /* Testing the linear first descendant. */
     for (int ilevel = level + 1; ilevel < max_test_lvl; ilevel++) {
       for (int jface = 0; jface < num_faces; jface++) {
 
-        t8_test_manual_first_last_face_descendant (scheme, element, tree_class, jface, ilevel, 0, manual_face_desc);
-        scheme->element_get_first_descendant_face (tree_class, element, jface, scheme_face_desc, ilevel);
+        t8_test_manual_first_last_face_descendant (scheme, element, eclass, jface, ilevel, 0, manual_face_desc);
+        scheme->element_get_first_descendant_face (eclass, element, jface, scheme_face_desc, ilevel);
         /* Compare the manually computed child with the result of t8_element_first_descendant_face. */
-        EXPECT_ELEM_EQ (scheme, tree_class, scheme_face_desc, manual_face_desc);
+        EXPECT_ELEM_EQ (scheme, eclass, scheme_face_desc, manual_face_desc);
 
-        t8_test_manual_first_last_face_descendant (scheme, element, tree_class, jface, ilevel, 1, manual_face_desc);
-        scheme->element_get_last_descendant_face (tree_class, element, jface, scheme_face_desc, ilevel);
+        t8_test_manual_first_last_face_descendant (scheme, element, eclass, jface, ilevel, 1, manual_face_desc);
+        scheme->element_get_last_descendant_face (eclass, element, jface, scheme_face_desc, ilevel);
         /* Compare the manually computed child with the result of t8_element_last_descendant_face. */
-        EXPECT_ELEM_EQ (scheme, tree_class, scheme_face_desc, manual_face_desc);
+        EXPECT_ELEM_EQ (scheme, eclass, scheme_face_desc, manual_face_desc);
       }
     }
   }
@@ -92,15 +92,15 @@ class class_descendant: public TestDFS {
   SetUp () override
   {
     dfs_test_setup ();
-    max_test_lvl = scheme->get_maxlevel (tree_class);
-    scheme->element_new (tree_class, 1, &manual_face_desc);
-    scheme->element_new (tree_class, 1, &scheme_face_desc);
+    max_test_lvl = scheme->get_maxlevel (eclass);
+    scheme->element_new (eclass, 1, &manual_face_desc);
+    scheme->element_new (eclass, 1, &scheme_face_desc);
   }
   void
   TearDown () override
   {
-    scheme->element_destroy (tree_class, 1, &manual_face_desc);
-    scheme->element_destroy (tree_class, 1, &scheme_face_desc);
+    scheme->element_destroy (eclass, 1, &manual_face_desc);
+    scheme->element_destroy (eclass, 1, &scheme_face_desc);
     dfs_test_teardown ();
   }
   int max_test_lvl;
@@ -120,4 +120,4 @@ TEST_P (class_descendant, t8_check_face_desc)
   check_recursive_dfs_to_max_lvl (maxlvl);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_element_face_descendant, class_descendant, AllEclasses, print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_element_face_descendant, class_descendant, DefaultSchemes);

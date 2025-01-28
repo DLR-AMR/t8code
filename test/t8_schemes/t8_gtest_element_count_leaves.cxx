@@ -21,7 +21,7 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_macros.hxx>
 
 /*
@@ -34,20 +34,23 @@
 
 /* Tests whether the leaf count for one additional level matches the number of children */
 
-class class_element_leaves: public testing::TestWithParam<t8_eclass> {
+class class_element_leaves: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
  protected:
   void
   SetUp () override
   {
-    eclass = GetParam ();
+    const int scheme_id = std::get<0> (GetParam ());
+    scheme = create_from_scheme_id (scheme_id);
+    eclass = std::get<1> (GetParam ());
+    eclass = scheme->get_eclass_scheme_eclass (eclass);
   }
   void
   TearDown () override
   {
     scheme->unref ();
   }
-  t8_eclass eclass;
-  t8_scheme *scheme = t8_scheme_new_default ();
+  const t8_scheme *scheme;
+  t8_eclass_t eclass;
 };
 
 TEST_P (class_element_leaves, test_element_count_leaves_root)
@@ -125,4 +128,4 @@ TEST_P (class_element_leaves, test_element_count_leaves_one_level)
   scheme->element_destroy (eclass, 1, &element);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_element_count_leaves, class_element_leaves, AllEclasses, print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_element_count_leaves, class_element_leaves, AllSchemes);

@@ -35,22 +35,25 @@ class class_test_boundary_extrude: public TestDFS {
   void
   check_element () override
   {
-    const int num_faces = scheme->element_get_num_faces (tree_class, element);
+    const int num_faces = scheme->element_get_num_faces (eclass, element);
     for (int iface = 0; iface < num_faces; iface++) {
       /* Iterate over all faces that are also root faces and determine the face element */
-      if (scheme->element_is_root_boundary (tree_class, element, iface)) {
+      if (scheme->element_is_root_boundary (eclass, element, iface)) {
         /* Get face scheme */
-        const int tree_face = scheme->element_get_tree_face (tree_class, element, iface);
+        const int tree_face = scheme->element_get_tree_face (eclass, element, iface);
+
+        /* Note: This wont work with non-default schemes, where the order of schemes is not the same as
+         * in the default scheme. */
         const t8_eclass_t face_eclass = (t8_eclass_t) t8_eclass_face_types[tree_class][tree_face];
 
         t8_element_t *boundary;
         scheme->element_new (face_eclass, 1, &boundary);
 
-        scheme->element_get_boundary_face (tree_class, element, iface, boundary);
+        scheme->element_get_boundary_face (eclass, element, iface, boundary);
 
-        scheme->element_extrude_face (tree_class, boundary, check, tree_face);
+        scheme->element_extrude_face (eclass, boundary, check, tree_face);
 
-        EXPECT_ELEM_EQ (scheme, tree_class, element, check);
+        EXPECT_ELEM_EQ (scheme, eclass, element, check);
 
         scheme->element_destroy (face_eclass, 1, &boundary);
       }
@@ -63,17 +66,19 @@ class class_test_boundary_extrude: public TestDFS {
   {
     dfs_test_setup ();
     /* Get element and initialize it */
-    scheme->element_new (tree_class, 1, &check);
+    scheme->element_new (eclass, 1, &check);
+    tree_class = scheme->get_eclass_scheme_eclass (eclass);
   }
   void
   TearDown () override
   {
     /* Destroy element */
-    scheme->element_destroy (tree_class, 1, &check);
+    scheme->element_destroy (eclass, 1, &check);
 
     /* Destroy DFS test */
     dfs_test_teardown ();
   }
+  t8_eclass_t tree_class;
   t8_element_t *check;
 };
 
@@ -87,4 +92,4 @@ TEST_P (class_test_boundary_extrude, test_boundary_extrude_dfs)
   check_recursive_dfs_to_max_lvl (maxlvl);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_boundary_extrude, AllEclasses, print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_boundary_extrude, DefaultSchemes);

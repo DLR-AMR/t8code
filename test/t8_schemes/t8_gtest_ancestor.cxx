@@ -22,7 +22,7 @@
 
 /** \file t8_gtest_nca.cxx
 * Provide tests to check the functionality of the nearest-common-ancestor function
-* for every element.
+* for every element of a pyramid.
 */
 
 #include <gtest/gtest.h>
@@ -30,7 +30,7 @@
 #include <test/t8_gtest_macros.hxx>
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <test/t8_gtest_schemes.hxx>
 
 class ancestor: public testing::TestWithParam<t8_eclass> {
  protected:
@@ -58,7 +58,7 @@ class ancestor: public testing::TestWithParam<t8_eclass> {
     * check        -> the computed nca of desc_a and desc_b, should be equal to correct_nca
     */
   t8_element_t *correct_ancestor, *desc_a, *check;
-  t8_scheme *scheme;
+  const t8_scheme *scheme;
   t8_eclass_t eclass;
 };
 
