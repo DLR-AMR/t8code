@@ -20,16 +20,16 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_gtest_custom_assertion.cxx
+/** \file t8_gtest_custom_assertion.hxx
 * Provide customized GoogleTest functions for improved error-output
 */
+
+#ifndef T8_GTEST_CUSTOM_ASSERTION_HXX
+#define T8_GTEST_CUSTOM_ASSERTION_HXX
 
 #include <gtest/gtest.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_vec.h>
-
-#ifndef CUSTOM_ASSERTION_HXX
-#define CUSTOM_ASSERTION_HXX
 
 /**
  * \brief Test two elements for equality and print the elements if they aren't equal
@@ -98,4 +98,4 @@ vec3_equality (const char *vec_1_expr, const char *vec_2_expr, const char *preci
 
 #define EXPECT_VEC3_EQ(vec_1, vec_2, precision) EXPECT_PRED_FORMAT3 (vec3_equality, (vec_1), (vec_2), (precision))
 
-#endif /* CUSTOM_ASSERTION_HXX */
+#endif /* T8_GTEST_CUSTOM_ASSERTION_HXX */
