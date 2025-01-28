@@ -20,7 +20,12 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file We declare a modern C++ interface for the search functionality. */
+/**  \file t8_forest_search.hxx 
+ * A C++ interface for the search functionality. The user can define search and query callbacks
+ * to perform the search and query operations on the forest. Implementation details regarding the 
+ * callback handling are given by https://stackoverflow.com/questions/2298242/callback-functions-in-c
+ * We decided for option 4, using std::function together with templates.
+*/
 
 #ifndef T8_FOREST_SEARCH_HXX
 #define T8_FOREST_SEARCH_HXX
@@ -30,13 +35,7 @@
 #include <t8_forest/t8_forest.h>  // Ensure t8_forest_t is defined
 #include <functional>
 #include <numeric>
-#include <memory>
 #include <ranges>
-
-/*
- *   Discussion about C++ callback handling https://stackoverflow.com/questions/2298242/callback-functions-in-c
- *   We decided for option 4, using std::function together with templates.
-*/
 
 /**
  * \typedef t8_search_element_callback
@@ -255,7 +254,7 @@ class t8_search_base {
    * \param[in] tree_lindex_of_first_leaf The index of the first leaf in the tree.
    */
   void
-  search_recursion (const t8_locidx_t ltreeid, t8_element_t *element, const t8_eclass_scheme_c *ts,
+  search_recursion (const t8_locidx_t ltreeid, t8_element_t *element, const t8_scheme *ts,
                     t8_element_array_t *leaf_elements, const t8_locidx_t tree_lindex_of_first_leaf);
 
   /** \brief Checks if the search should stop due to empty queries.
@@ -336,6 +335,8 @@ class t8_search: public t8_search_base {
       this->user_data = udata;
     }
   }
+
+  virtual ~t8_search () = default;
 
   Udata *user_data;
 
@@ -466,9 +467,7 @@ class t8_search_with_batched_queries: public t8_search<Udata> {
     this->queries = queries;
   }
 
-  ~t8_search_with_batched_queries ()
-  {
-  }
+  virtual ~t8_search_with_batched_queries () = default;
 
  private:
   bool

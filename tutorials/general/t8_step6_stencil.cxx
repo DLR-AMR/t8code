@@ -83,7 +83,7 @@ t8_step6_build_forest (sc_MPI_Comm comm, int dim, int level)
 {
   t8_cmesh_t cmesh = t8_cmesh_new_periodic (comm, dim);
 
-  t8_scheme_cxx_t *scheme = t8_scheme_new_default_cxx ();
+  const t8_scheme *scheme = t8_scheme_new_default ();
   struct t8_step3_adapt_data adapt_data = {
     { 0.0, 0.0, 0.0 }, /* Midpoints of the sphere. */
     0.5,               /* Refine if inside this radius. */
@@ -119,6 +119,8 @@ t8_step6_create_element_data (t8_forest_t forest)
   t8_locidx_t num_local_elements = t8_forest_get_local_num_elements (forest);
   /* Get the number of ghost elements of forest. */
   t8_locidx_t num_ghost_elements = t8_forest_get_num_ghosts (forest);
+  /* Get the scheme of the forest */
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
 
   /* Build an array of our data that is as long as the number of elements plus the number of ghosts. */
   struct data_per_element *element_data = T8_ALLOC (struct data_per_element, num_local_elements + num_ghost_elements);
@@ -129,7 +131,6 @@ t8_step6_create_element_data (t8_forest_t forest)
   /* Loop over all local trees in the forest. */
   for (t8_locidx_t itree = 0, current_index = 0; itree < num_local_trees; ++itree) {
     t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
-    t8_eclass_scheme_c *eclass_scheme = t8_forest_get_eclass_scheme (forest, tree_class);
 
     /* Get the number of elements of this tree. */
     t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
@@ -141,16 +142,16 @@ t8_step6_create_element_data (t8_forest_t forest)
       /* Pointer to our current element data struct. */
       struct data_per_element *edat = &element_data[current_index];
 
-      edat->level = eclass_scheme->t8_element_level (element);
+      edat->level = scheme->element_get_level (tree_class, element);
       edat->volume = t8_forest_element_volume (forest, itree, element);
       t8_forest_element_centroid (forest, itree, element, edat->midpoint);
 
       /* Compute vertex coordinates. */
       double verts[4][3] = { 0 };
-      eclass_scheme->t8_element_vertex_reference_coords (element, 0, verts[0]);
-      eclass_scheme->t8_element_vertex_reference_coords (element, 1, verts[1]);
-      eclass_scheme->t8_element_vertex_reference_coords (element, 2, verts[2]);
-      /* Not needed: eclass_scheme->t8_element_vertex_reference_coords (element, 3, verts[3]); */
+      scheme->element_get_vertex_reference_coords (tree_class, element, 0, verts[0]);
+      scheme->element_get_vertex_reference_coords (tree_class, element, 1, verts[1]);
+      scheme->element_get_vertex_reference_coords (tree_class, element, 2, verts[2]);
+      /* Not needed: scheme->element_get_vertex_reference_coords (tree_class, element, 3, verts[3]); */
 
       edat->dx = verts[1][0] - verts[0][0];
       edat->dy = verts[2][1] - verts[0][1];
@@ -178,6 +179,8 @@ t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_d
 
   /* Get the number of trees that have elements of this process. */
   t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
+  /* Get the scheme of the forest */
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
 
   double stencil[3][3] = { 0 };
   double dx[3] = { 0 };
@@ -188,7 +191,6 @@ t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_d
    * each element is calculated and stored into the element data array. */
   for (t8_locidx_t itree = 0, current_index = 0; itree < num_local_trees; ++itree) {
     t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
-    t8_eclass_scheme_c *eclass_scheme = t8_forest_get_eclass_scheme (forest, tree_class);
 
     t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
 
@@ -202,17 +204,17 @@ t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_d
       dy[1] = element_data[current_index].dy;
 
       /* Loop over all faces of an element. */
-      int num_faces = eclass_scheme->t8_element_num_faces (element);
+      int num_faces = scheme->element_get_num_faces (tree_class, element);
       for (int iface = 0; iface < num_faces; iface++) {
-        int num_neighbors;                /**< Number of neighbors for each face */
-        int *dual_faces;                  /**< The face indices of the neighbor elements */
-        t8_locidx_t *neighids;            /**< Indices of the neighbor elements */
-        t8_element_t **neighbors;         /*< Neighboring elements. */
-        t8_eclass_scheme_c *neigh_scheme; /*< Neighboring elements scheme. */
+        int num_neighbors;        /**< Number of neighbors for each face */
+        int *dual_faces;          /**< The face indices of the neighbor elements */
+        t8_locidx_t *neighids;    /**< Indices of the neighbor elements */
+        t8_element_t **neighbors; /*< Neighboring elements. */
+        t8_eclass_t neigh_class;  /*< Neighboring elements tree class. */
 
         /* Collect all neighbors at the current face. */
         t8_forest_leaf_face_neighbors (forest, itree, element, &neighbors, iface, &dual_faces, &num_neighbors,
-                                       &neighids, &neigh_scheme, 1);
+                                       &neighids, &neigh_class, 1);
 
         /* Retrieve the `height` of the face neighbor. Account for two neighbors in case
            of a non-conforming interface by computing the average. */
@@ -246,7 +248,7 @@ t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_d
 
         if (num_neighbors > 0) {
           /* Free allocated memory. */
-          eclass_scheme->t8_element_destroy (num_neighbors, neighbors);
+          scheme->element_destroy (tree_class, num_neighbors, neighbors);
           T8_FREE (neighbors);
           T8_FREE (dual_faces);
           T8_FREE (neighids);

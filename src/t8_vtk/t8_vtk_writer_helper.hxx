@@ -24,7 +24,6 @@
 #define T8_VTK_WRITER_HELPER
 
 #include <t8.h>
-#include <t8_element.hxx>
 #include <t8_forest/t8_forest.h>
 
 #define T8_FOREST_VTK_QUADRATIC_ELEMENT_MAX_CORNERS 20
