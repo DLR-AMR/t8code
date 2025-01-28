@@ -2034,8 +2034,8 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
   }
   // All neighbor elements must be valid
   for (int ineigh = 0; ineigh < *num_neighbors; ++ineigh) {
-    T8_ASSERT (neigh_scheme->t8_element_is_valid (*pneighbor_leaves[ineigh]));
-    t8_debugf ("Face neighbor %p is valid.\n", *pneighbor_leaves[ineigh]);
+    T8_ASSERT (neigh_scheme->t8_element_is_valid ((*pneighbor_leaves)[ineigh]));
+    t8_debugf ("Face neighbor %p is valid.\n", (*pneighbor_leaves)[ineigh]);
   }
 #endif  // T8_ENABLE_DEBUG
 
