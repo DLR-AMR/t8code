@@ -176,13 +176,29 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
             = is_root_boundary && t8_cmesh_tree_face_is_boundary (cmesh, cmesh_tree, tree_face);
 
           if (!is_boundary_element) {
-            if (!is_ghost) {
-              EXPECT_EQ (num_neighbors, 1)
-                << "Inner local element should have exactly 1 neighbor, has " << num_neighbors << ".";
+            if (!is_ghost) {  // Local element
+              if (forest_is_uniform) {
+                // In a uniform forest we must have exactly 1 neighbor.
+                EXPECT_EQ (num_neighbors, 1)
+                  << "Inner local element should have exactly 1 neighbor, has " << num_neighbors << ".";
+              }
+              else {
+                // In an adaptive forest we have 1 or more neighbors.
+                EXPECT_GE (num_neighbors, 1)
+                  << "Inner local element should have at least 1 neighbor, has " << num_neighbors << ".";
+              }
             }
-            else {
-              EXPECT_TRUE (num_neighbors == 0 || num_neighbors == 1)
-                << "Inner ghost element should have exactly 1 or 0 neighbors, has " << num_neighbors << ".";
+            else {  // Ghost element
+              if (forest_is_uniform) {
+                // In a uniform forest a ghost element has none or one neighbor.
+                EXPECT_TRUE (num_neighbors == 0 || num_neighbors == 1)
+                  << "Inner ghost element should have exactly 1 or 0 neighbors, has " << num_neighbors << ".";
+              }
+              else {
+                // In an adaptive forest a ghost element has 0 or more neighbors.
+                EXPECT_GE (num_neighbors, 0)
+                  << "Inner ghost element should have 0 or more neighbors, has " << num_neighbors << ".";
+              }
             }
           }
           else {
