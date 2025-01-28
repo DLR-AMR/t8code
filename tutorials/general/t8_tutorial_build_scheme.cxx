@@ -33,6 +33,9 @@
  * default scheme and the standalone scheme that is provided by t8code. If you have a custom scheme, you can follow
  * the steps in this example to use it with your code. 
  * 
+ * The currently provided schemes are equivalent. Therefore we expect the output to be equivalent. 
+ * In the future, when the standalone scheme is extended, the output will differ for some element classes.
+ * 
  */
 
 #include <t8.h>                                       /* General t8code header, always include this. */
@@ -75,8 +78,10 @@ t8_scheme_default_build_mixed (void)
 
   builder.add_eclass_scheme<t8_default_scheme_vertex> ();
   builder.add_eclass_scheme<t8_default_scheme_line> ();
+  /* For Quads we use the standalone scheme. */
   builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_QUAD>> ();
   builder.add_eclass_scheme<t8_default_scheme_tri> ();
+  /* For Hexahedra we use the standalone scheme. */
   builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_HEX>> ();
   builder.add_eclass_scheme<t8_default_scheme_tet> ();
   builder.add_eclass_scheme<t8_default_scheme_prism> ();
@@ -122,25 +127,33 @@ main (int argc, char **argv)
                                       curved_flag, std::string ("test_vtk"), 0, NULL, comm);
 
   /*
-     *  Build forest with default scheme.
-     */
+   *  Build forest with default scheme.
+   */
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
   /* t8_scheme_new_default creates the default scheme. */
   t8_forest_t forest_default = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), 3, 0, comm);
 
+  bool vtk_written = false;
+  /* Update the output-name */
+  vtk_writer.set_fileprefix (std::string ("forest_with_default_scheme"));
   /* write the forest into a vtk file. If t8code has been configured with VTK we can use the vtk-library. 
      * Otherwise vtk-compatible ASCII-output is created.  */
-  bool vtk_written = false;
 #if T8_WITH_VTK
   vtk_written = vtk_writer.write_with_API (forest_default);
 #else
   vtk_written = vtk_writer.write_ASCII (forest_default);
 #endif
+  /* Check if the writer was successful.  */
   T8_ASSERT (vtk_written);
 
+  /* increase the reference counter because we reuse the cmesh. */
   t8_cmesh_ref (cmesh);
+  /* Create a forest using the scheme that we build manually.  */
   t8_forest_t forest_manual_scheme = t8_forest_new_uniform (cmesh, t8_scheme_default_build_manually (), 3, 0, comm);
+
   vtk_written = false;
+  /* Update the name of the output file.  */
+  vtk_writer.set_fileprefix (std::string ("forest_with_manual_scheme"));
 #if T8_WITH_VTK
   vtk_written = vtk_writer.write_with_API (forest_manual_scheme);
 #else
@@ -148,15 +161,21 @@ main (int argc, char **argv)
 #endif
   T8_ASSERT (vtk_written);
 
+  /* increase the reference counter because we reuse the cmesh. */
   t8_cmesh_ref (cmesh);
+  /* Create a forest using a scheme that mixes the default scheme with the stand alone scheme. */
   t8_forest_t forest_mixed_scheme = t8_forest_new_uniform (cmesh, t8_scheme_default_build_mixed (), 3, 0, comm);
+
   vtk_written = false;
+  vtk_writer.set_fileprefix (std::string ("forest_with_mixed_scheme"));
 #if T8_WITH_VTK
   vtk_written = vtk_writer.write_with_API (forest_mixed_scheme);
 #else
   vtk_written = vtk_writer.write_ASCII (forest_mixed_scheme);
 #endif
+  T8_ASSERT (vtk_written);
 
+  /* Clean up the forests. */
   t8_forest_unref (&forest_default);
   t8_forest_unref (&forest_manual_scheme);
   t8_forest_unref (&forest_mixed_scheme);
