@@ -28,6 +28,7 @@
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
 #include <test/t8_gtest_macros.hxx>
+#include <test/t8_gtest_adapt_callbacks.hxx>
 
 /* In this test we check the t8_forest_element_is_leaf function.
  * Iterating over all cmesh test cases, we creat a uniform and an adaptive forest.
@@ -37,31 +38,6 @@
 
 /* Maximum uniform level for forest. */
 #define T8_IS_LEAF_MAX_LVL 4
-
-/* Adapt a forest such that always the first child of a
- * family is refined and no other elements. This results in a highly
- * imbalanced forest. */
-static int
-t8_test_adapt_first_child (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                           t8_eclass_scheme_c *ts, const int is_family, const int num_elements,
-                           t8_element_t *elements[])
-{
-  T8_ASSERT (!is_family || (is_family && num_elements == ts->t8_element_num_children (elements[0])));
-
-  int level = ts->t8_element_level (elements[0]);
-
-  /* we set a maximum refinement level as forest user data */
-  int maxlevel = *(int *) t8_forest_get_user_data (forest);
-  if (level >= maxlevel) {
-    /* Do not refine after the maxlevel */
-    return 0;
-  }
-  int child_id = ts->t8_element_child_id (elements[0]);
-  if (child_id == 1) {
-    return 1;
-  }
-  return 0;
-}
 
 class element_is_leaf_or_ghost: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>> {
  protected:
