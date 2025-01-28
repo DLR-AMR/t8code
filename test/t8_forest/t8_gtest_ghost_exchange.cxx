@@ -29,6 +29,7 @@
 #include <t8_cmesh.h>
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
 #include <test/t8_gtest_macros.hxx>
+#include <test/t8_gtest_schemes.hxx>
 
 /* TODO: when this test works for all cmeshes remove if statement in test_cmesh_ghost_exchange_all () */
 
@@ -43,14 +44,17 @@
  * in a second test, we store the element's linear id in the data array.
  */
 
-class forest_ghost_exchange: public testing::TestWithParam<cmesh_example_base *> {
+class forest_ghost_exchange:
+  public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, cmesh_example_base *>> {
  protected:
   void
   SetUp () override
   {
-    scheme = t8_scheme_new_default ();
+    const int scheme_id = std::get<0> (std::get<0> (GetParam ()));
+    scheme = create_from_scheme_id (scheme_id);
+    eclass = std::get<1> (std::get<0> (GetParam ()));
     /* Construct a cmesh */
-    cmesh = GetParam ()->cmesh_create ();
+    cmesh = std::get<1> (GetParam ())->cmesh_create ();
     if (t8_cmesh_is_empty (cmesh)) {
       /* empty cmeshes are currently not supported */
       GTEST_SKIP ();
@@ -64,6 +68,7 @@ class forest_ghost_exchange: public testing::TestWithParam<cmesh_example_base *>
   }
   const t8_scheme *scheme;
   t8_cmesh_t cmesh;
+  t8_eclass_t eclass;
 };
 
 static int
@@ -195,4 +200,5 @@ TEST_P (forest_ghost_exchange, test_ghost_exchange)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_exchange, forest_ghost_exchange, AllCmeshsParam, pretty_print_base_example);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_exchange, forest_ghost_exchange, testing::Combine (AllSchemes, AllCmeshsParam),
+                          pretty_print_base_example_scheme);

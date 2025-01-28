@@ -28,6 +28,7 @@
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
+#include <test/t8_gtest_schemes.hxx>
 
 /* This test is executed on a subcommunicator of exactly 2 procs, because it demonstrates a configuration that is currently not working. See https://github.com/DLR-AMR/t8code/issues/825.
  * A partitioned square of uniform refinement level 1 is adapted once, where only the lower half is refined.
@@ -54,7 +55,7 @@ test_adapt_holes (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which
   return 0;
 }
 
-class DISABLED_forest_ghost_exchange_holes: public testing::Test {
+class DISABLED_forest_ghost_exchange_holes: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
  protected:
   void
   SetUp () override
@@ -79,7 +80,9 @@ class DISABLED_forest_ghost_exchange_holes: public testing::Test {
     if (comm != sc_MPI_COMM_NULL) {
       sc_MPI_Comm_size (comm, &size);
       T8_ASSERT (size <= 2);
-      scheme = t8_scheme_new_default ();
+      const int scheme_id = std::get<0> (GetParam ());
+      scheme = create_from_scheme_id (scheme_id);
+      eclass = std::get<1> (GetParam ());
       /* Construct a cmesh */
       cmesh = t8_cmesh_new_hypercube (T8_ECLASS_QUAD, comm, 0, 0, 0);
     }
@@ -101,9 +104,10 @@ class DISABLED_forest_ghost_exchange_holes: public testing::Test {
   sc_MPI_Comm comm;
   const t8_scheme *scheme;
   t8_cmesh_t cmesh;
+  t8_eclass_t eclass;
 };
 
-TEST_F (DISABLED_forest_ghost_exchange_holes, errorTest)
+TEST_P (DISABLED_forest_ghost_exchange_holes, errorTest)
 {
   /* This test tests the functionality described in Issue: https://github.com/DLR-AMR/t8code/issues/825
   */
@@ -118,3 +122,5 @@ TEST_F (DISABLED_forest_ghost_exchange_holes, errorTest)
     t8_forest_unref (&forest);
   }
 }
+
+INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_delete, DISABLED_forest_ghost_exchange_holes, AllSchemes);

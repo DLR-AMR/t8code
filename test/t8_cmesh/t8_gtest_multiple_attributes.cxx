@@ -25,33 +25,35 @@
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_cmesh/t8_cmesh_partition.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
+#include <test/t8_gtest_schemes.hxx>
 
 /* Test if multiple attributes are partitioned correctly. */
 
 /** Return a partitioned cmesh from \a cmesh. */
 static t8_cmesh_t
-t8_cmesh_partition_cmesh (t8_cmesh_t cmesh, sc_MPI_Comm comm)
+t8_cmesh_partition_cmesh (t8_cmesh_t cmesh, const t8_scheme *scheme, sc_MPI_Comm comm)
 {
   t8_cmesh_t cmesh_partition;
   t8_cmesh_init (&cmesh_partition);
   t8_cmesh_set_derive (cmesh_partition, cmesh);
-  t8_cmesh_set_partition_uniform (cmesh_partition, 0, t8_scheme_new_default ());
+  t8_cmesh_set_partition_uniform (cmesh_partition, 0, scheme);
   t8_cmesh_commit (cmesh_partition, comm);
   return cmesh_partition;
 }
 
-class cmesh_multiple_attributes: public testing::TestWithParam<int> {
+class cmesh_multiple_attributes: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, int>> {
  protected:
   void
   SetUp () override
   {
-    num_trees = GetParam ();
+    const int scheme_id = std::get<0> (std::get<0> (GetParam ()));
+    num_trees = std::get<1> (GetParam ());
 
     cmesh_one_at = t8_cmesh_new_row_of_cubes (num_trees, 0, 0, sc_MPI_COMM_WORLD);
-    cmesh_one_at = t8_cmesh_partition_cmesh (cmesh_one_at, sc_MPI_COMM_WORLD);
+    cmesh_one_at = t8_cmesh_partition_cmesh (cmesh_one_at, create_from_scheme_id (scheme_id), sc_MPI_COMM_WORLD);
 
     cmesh_mult_at = t8_cmesh_new_row_of_cubes (num_trees, 1, 0, sc_MPI_COMM_WORLD);
-    cmesh_mult_at = t8_cmesh_partition_cmesh (cmesh_mult_at, sc_MPI_COMM_WORLD);
+    cmesh_mult_at = t8_cmesh_partition_cmesh (cmesh_mult_at, create_from_scheme_id (scheme_id), sc_MPI_COMM_WORLD);
 
     cmesh_mult_at_from_stash = t8_cmesh_new_row_of_cubes (num_trees, 1, 1, sc_MPI_COMM_WORLD);
   }
@@ -152,4 +154,5 @@ TEST_P (cmesh_multiple_attributes, multiple_attributes)
 }
 
 /* Test for different number of trees. */
-INSTANTIATE_TEST_SUITE_P (t8_gtest_multiple_attributes, cmesh_multiple_attributes, testing::Range (1, 10));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_multiple_attributes, cmesh_multiple_attributes,
+                          testing::Combine (AllSchemes, testing::Range (1, 10)));
