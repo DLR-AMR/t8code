@@ -122,7 +122,7 @@ TEST_P (t8_cmesh_partition_class, test_cmesh_partition_concentrate)
     t8_cmesh_commit (cmesh_partition_new2, sc_MPI_COMM_WORLD);
     cmesh_partition_new1 = cmesh_partition_new2;
   }
-  ASSERT_TRUE (t8_cmesh_is_equal (cmesh_partition_new2, cmesh_partition)) << "Cmesh equality check failed.";
+  ASSERT_TRUE (t8_cmesh_is_equal(cmesh_partition_new2, cmesh_partition)) << "Cmesh equality check failed.";
   t8_cmesh_destroy (&cmesh_partition_new2);
   t8_cmesh_destroy (&cmesh_partition);
 }
