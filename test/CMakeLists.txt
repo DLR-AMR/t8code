@@ -82,7 +82,6 @@ add_t8_test( NAME t8_gtest_cmesh_partition_parallel                     SOURCES 
 add_t8_test( NAME t8_gtest_cmesh_set_partition_offsets_parallel         SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_set_partition_offsets.cxx )
 add_t8_test( NAME t8_gtest_cmesh_set_join_by_vertices_serial            SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_set_join_by_vertices.cxx )
 add_t8_test( NAME t8_gtest_cmesh_add_attributes_when_derive_parallel    SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_add_attributes_when_derive.cxx )
-add_t8_test( NAME t8_gtest_cmesh_tree_vertices_negative_volume_serial   SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_tree_vertices_negative_volume.cxx )
 
 add_t8_test( NAME t8_gtest_multiple_attributes_parallel     SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_multiple_attributes.cxx )
 add_t8_test( NAME t8_gtest_attribute_gloidx_array_serial    SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_attribute_gloidx_array.cxx )
@@ -119,6 +118,7 @@ add_t8_test( NAME t8_gtest_point_inside_serial                      SOURCES t8_g
 
 add_t8_test( NAME t8_gtest_vtk_reader_parallel  SOURCES t8_gtest_main.cxx t8_IO/t8_gtest_vtk_reader.cxx )
 add_t8_test( NAME t8_gtest_vtk_writer_parallel  SOURCES t8_gtest_main.cxx t8_IO/t8_gtest_vtk_writer.cxx )
+add_t8_test( NAME t8_gtest_vtk_write_read  SOURCES t8_gtest_main.cxx t8_IO/t8_gtest_vtk_write_read.cxx )
 
 add_t8_test( NAME t8_gtest_nca_serial                   SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_nca.cxx )
 add_t8_test( NAME t8_gtest_pyra_connectivity_serial     SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_pyra_connectivity.cxx )

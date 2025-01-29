@@ -100,9 +100,9 @@ vtk_writer<t8_forest_t>::write_ASCII (const t8_forest_t forest)
 
 template <>
 bool
-vtk_writer<t8_cmesh_t>::write_ASCII (const t8_cmesh_t forest)
+vtk_writer<t8_cmesh_t>::write_ASCII (const t8_cmesh_t cmesh)
 {
-  return t8_cmesh_vtk_write_ASCII (forest, this->fileprefix.c_str ());
+  return t8_cmesh_vtk_write_ASCII (cmesh, this->fileprefix.c_str ());
 }
 
 /* Implementation of the c-interface */
@@ -158,3 +158,18 @@ t8_forest_to_vtkUnstructuredGrid (const t8_forest_t forest, vtkSmartPointer<vtkU
 #endif
 
 T8_EXTERN_C_END ();
+
+template <>
+bool
+vtk_writer<t8_cmesh_t>::grid_has_geometry(const t8_cmesh_t cmesh)
+{
+  return t8_geometry_get_num_geometries (cmesh);
+}
+
+template <>
+bool
+vtk_writer<t8_forest_t>::grid_has_geometry(const t8_forest_t forest)
+{
+  const t8_cmesh_t cmesh = t8_forest_get_cmesh(forest);
+  return t8_geometry_get_num_geometries (cmesh);
+}
