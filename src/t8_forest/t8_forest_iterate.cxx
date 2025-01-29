@@ -540,7 +540,7 @@ void
 t8_forest_search_partition (const t8_forest_t forest, t8_forest_partition_search_fn search_fn,
                             t8_forest_partition_query_fn query_fn, sc_array_t *queries)
 {
-  T8_ASSERT (0); /* not implemented yet */
+  SC_ABORT ("not implemented yet");
 }
 
 T8_EXTERN_C_END ();
