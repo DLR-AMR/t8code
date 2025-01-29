@@ -70,11 +70,10 @@ constexpr int8_t t8_sele_lut_rootface_dim_to_facedim[T8_ELEMENT_NUM_FACES[TEclas
 template <t8_eclass_t TEclass>
 struct t8_standalone_element
 {
-  /** The refinement level of the element relative to the root at level 0. */
-  t8_element_level level;
-
   /** The coordinates of the anchor vertex of the element. */
   t8_element_coords<TEclass> coords;
+  /** The refinement level of the element relative to the root at level 0. */
+  t8_element_level level;
 };
 
 #endif /* T8_STANDALONE_ELEMENTS_HXX */
