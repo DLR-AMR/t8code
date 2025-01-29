@@ -713,7 +713,7 @@ struct t8_standalone_scheme
 
     int allocated_indices = 0;
     if (child_indices == NULL) {
-      child_indices = T8_ALLOC_ZERO (int, num_children);
+      int local_child_indices[T8_ELEMENT_NUM_CHILDREN[TEclass]] = { 0 };
       allocated_indices = 1;
     }
     const int face_sign = face % 2;
