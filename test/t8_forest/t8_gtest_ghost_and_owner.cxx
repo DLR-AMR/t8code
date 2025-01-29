@@ -37,15 +37,13 @@
  * element is in face the owner that is stored in the ghost layer.
   */
 
-class forest_ghost_owner:
-  public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, cmesh_example_base *>> {
+class forest_ghost_owner: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>> {
  protected:
   void
   SetUp () override
   {
-    const int scheme_id = std::get<0> (std::get<0> (GetParam ()));
+    const int scheme_id = std::get<0> (GetParam ());
     scheme = create_from_scheme_id (scheme_id);
-    eclass = std::get<1> (std::get<0> (GetParam ()));
     /* Construct a cmesh */
     cmesh = std::get<1> (GetParam ())->cmesh_create ();
     if (t8_cmesh_is_empty (cmesh)) {
@@ -61,7 +59,6 @@ class forest_ghost_owner:
   }
   t8_cmesh_t cmesh;
   const t8_scheme *scheme;
-  t8_eclass_t eclass;
 };
 
 static int
@@ -149,5 +146,5 @@ TEST_P (forest_ghost_owner, test_ghost_owner)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_and_owner, forest_ghost_owner, testing::Combine (AllSchemes, AllCmeshsParam),
-                          pretty_print_base_example_scheme);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_and_owner, forest_ghost_owner,
+                          testing::Combine (AllSchemeCollections, AllCmeshsParam), pretty_print_base_example_scheme);

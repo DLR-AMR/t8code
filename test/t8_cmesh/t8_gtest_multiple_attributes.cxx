@@ -41,12 +41,12 @@ t8_cmesh_partition_cmesh (t8_cmesh_t cmesh, const t8_scheme *scheme, sc_MPI_Comm
   return cmesh_partition;
 }
 
-class cmesh_multiple_attributes: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, int>> {
+class cmesh_multiple_attributes: public testing::TestWithParam<std::tuple<int, int>> {
  protected:
   void
   SetUp () override
   {
-    const int scheme_id = std::get<0> (std::get<0> (GetParam ()));
+    const int scheme_id = std::get<0> (GetParam ());
     num_trees = std::get<1> (GetParam ());
 
     cmesh_one_at = t8_cmesh_new_row_of_cubes (num_trees, 0, 0, sc_MPI_COMM_WORLD);
@@ -155,4 +155,4 @@ TEST_P (cmesh_multiple_attributes, multiple_attributes)
 
 /* Test for different number of trees. */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_multiple_attributes, cmesh_multiple_attributes,
-                          testing::Combine (AllSchemes, testing::Range (1, 10)));
+                          testing::Combine (AllSchemeCollections, testing::Range (1, 10)));

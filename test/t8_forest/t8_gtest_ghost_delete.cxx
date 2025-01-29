@@ -55,7 +55,7 @@ test_adapt_holes (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which
   return 0;
 }
 
-class DISABLED_forest_ghost_exchange_holes: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
+class DISABLED_forest_ghost_exchange_holes: public testing::TestWithParam<int> {
  protected:
   void
   SetUp () override
@@ -80,9 +80,8 @@ class DISABLED_forest_ghost_exchange_holes: public testing::TestWithParam<std::t
     if (comm != sc_MPI_COMM_NULL) {
       sc_MPI_Comm_size (comm, &size);
       T8_ASSERT (size <= 2);
-      const int scheme_id = std::get<0> (GetParam ());
+      const int scheme_id = GetParam ();
       scheme = create_from_scheme_id (scheme_id);
-      eclass = std::get<1> (GetParam ());
       /* Construct a cmesh */
       cmesh = t8_cmesh_new_hypercube (T8_ECLASS_QUAD, comm, 0, 0, 0);
     }
@@ -104,7 +103,6 @@ class DISABLED_forest_ghost_exchange_holes: public testing::TestWithParam<std::t
   sc_MPI_Comm comm;
   const t8_scheme *scheme;
   t8_cmesh_t cmesh;
-  t8_eclass_t eclass;
 };
 
 TEST_P (DISABLED_forest_ghost_exchange_holes, errorTest)
@@ -123,4 +121,4 @@ TEST_P (DISABLED_forest_ghost_exchange_holes, errorTest)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_delete, DISABLED_forest_ghost_exchange_holes, AllSchemes);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_delete, DISABLED_forest_ghost_exchange_holes, AllSchemeCollections);

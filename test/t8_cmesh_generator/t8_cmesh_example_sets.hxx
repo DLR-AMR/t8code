@@ -49,14 +49,13 @@ auto pretty_print_base_example = [] (const testing::TestParamInfo<cmesh_example_
   return name;
 };
 
-auto pretty_print_base_example_scheme
-  = [] (const testing::TestParamInfo<std::tuple<std::tuple<int, t8_eclass_t>, cmesh_example_base *>> &info) {
-      std::string name;
-      std::get<1> (info.param)->param_to_string (name);
-      name += std::string ("scheme_") + std::to_string (std::get<0> (std::get<0> (info.param)));
-      name += std::string ("_") + std::to_string (info.index);
-      return name;
-    };
+auto pretty_print_base_example_scheme = [] (const testing::TestParamInfo<std::tuple<int, cmesh_example_base *>> &info) {
+  std::string name;
+  std::get<1> (info.param)->param_to_string (name);
+  name += std::string ("scheme_") + std::to_string (std::get<0> (info.param));
+  name += std::string ("_") + std::to_string (info.index);
+  return name;
+};
 
 namespace cmesh_list
 {

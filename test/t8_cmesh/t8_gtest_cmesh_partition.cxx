@@ -35,15 +35,13 @@
  * passed.
  */
 
-class t8_cmesh_partition_class:
-  public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, cmesh_example_base *>> {
+class t8_cmesh_partition_class: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>> {
  protected:
   void
   SetUp () override
   {
-    const int scheme_id = std::get<0> (std::get<0> (GetParam ()));
+    const int scheme_id = std::get<0> (GetParam ());
     scheme = create_from_scheme_id (scheme_id);
-    eclass = std::get<1> (std::get<0> (GetParam ()));
     size_t found = std::get<1> (GetParam ())->name.find (std::string ("empty"));
     if (found != std::string::npos) {
       /* Tests not working for empty cmeshes */
@@ -59,7 +57,6 @@ class t8_cmesh_partition_class:
 
   t8_cmesh_t cmesh_original;
   const t8_scheme *scheme;
-  t8_eclass_t eclass;
 };
 
 static void
@@ -143,4 +140,4 @@ TEST_P (t8_cmesh_partition_class, test_cmesh_partition_concentrate)
 
 /* Test all cmeshes over all different inputs we get through their id */
 INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_partition, t8_cmesh_partition_class,
-                          testing::Combine (AllSchemes, AllCmeshsParam), pretty_print_base_example_scheme);
+                          testing::Combine (AllSchemeCollections, AllCmeshsParam), pretty_print_base_example_scheme);
