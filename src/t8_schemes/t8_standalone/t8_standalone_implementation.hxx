@@ -216,8 +216,16 @@ struct t8_standalone_scheme
   static constexpr int
   element_get_face_corner (const t8_element_t *element, const int face, const int corner) noexcept
   {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0;
+    const int face_sign = face % 2;
+    const int face_dim = face / 2;
+
+    /* Todo helper function*/
+    t8_element_coord first_part, face_part, last_part;
+    /* corner aaaabb, iface = x, then element_corner = aaaaxbb*/
+    first_part = (corner >> face_dim) << (face_dim + 1);
+    last_part = corner & ((1 << face_dim) - 1);
+    face_part = face_sign << face_dim;
+    return first_part + face_part + last_part;
   }
 
   /** Return the face numbers of the faces sharing an element's corner.
@@ -235,8 +243,7 @@ struct t8_standalone_scheme
   static constexpr int
   element_get_corner_face (const t8_element_t *element, const int corner, const int face) noexcept
   {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0;
+    return 2 * face + ((corner & (1 << face)) >> face);
   }
 
   /** Compute the shape of the face of an element.
@@ -250,8 +257,18 @@ struct t8_standalone_scheme
   static constexpr t8_element_shape_t
   element_get_face_shape (const t8_element_t *elem, const int face) noexcept
   {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return T8_ECLASS_ZERO;
+    switch (TEclass) {
+    case T8_ECLASS_VERTEX:
+      SC_ABORT ("Vertices do not have faces.\n");
+    case T8_ECLASS_LINE:
+      return T8_ECLASS_VERTEX;
+    case T8_ECLASS_QUAD:
+      return T8_ECLASS_LINE;
+    case T8_ECLASS_HEX:
+      return T8_ECLASS_QUAD;
+    default:
+      SC_ABORT ("This function is not implemented yet.\n");
+    }
   }
 
   // ################################################____GENERAL HELPER____################################################
@@ -931,7 +948,7 @@ struct t8_standalone_scheme
   element_get_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, const int face,
                                     int *neigh_face) noexcept
   {
-    T8_ASSERT (element_get_level (elem) > 0);
+    T8_ASSERT (element_get_level (elem) >= 0);
     t8_standalone_scheme<TEclass>::element_copy (elem, neigh);
 
     const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
