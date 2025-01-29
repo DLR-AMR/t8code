@@ -36,8 +36,12 @@
  */
 
 /* Maximum uniform level for forest. */
-#define T8_IS_LEAF_MAX_LVL 4
 
+#ifdef T8_ENABLE_LESS_TESTS
+#define T8_IS_LEAF_MAX_LVL 3
+#else
+#define T8_IS_LEAF_MAX_LVL 4
+#endif
 /* Adapt a forest such that always the first child of a
  * family is refined and no other elements. This results in a highly
  * imbalanced forest. */
@@ -63,16 +67,14 @@ t8_test_adapt_first_child (t8_forest_t forest, t8_forest_t forest_from, t8_locid
   return 0;
 }
 
-class element_is_leaf:
-  public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, int, cmesh_example_base *>> {
+class element_is_leaf: public testing::TestWithParam<std::tuple<int, int, cmesh_example_base *>> {
  protected:
   void
   SetUp () override
   {
     /* Construct a cmesh */
-    const int scheme_id = std::get<0> (std::get<0> (GetParam ()));
+    const int scheme_id = std::get<0> (GetParam ());
     scheme = create_from_scheme_id (scheme_id);
-    eclass = std::get<1> (std::get<0> (GetParam ()));
     const int level = std::get<1> (GetParam ());
     t8_cmesh_t cmesh = std::get<2> (GetParam ())->cmesh_create ();
     if (t8_cmesh_is_empty (cmesh)) {
@@ -103,7 +105,6 @@ class element_is_leaf:
   t8_forest_t forest { NULL };
   t8_forest_t forest_adapt { NULL };
   const t8_scheme *scheme;
-  t8_eclass_t eclass;
 };
 
 void
@@ -153,16 +154,17 @@ TEST_P (element_is_leaf, element_is_leaf_adapt)
 /* Define a lambda to beatify gtest output for tuples <level, cmesh>.
  * This will set the correct level and cmesh name as part of the test case name. */
 auto pretty_print_level_and_cmesh_params
-  = [] (const testing::TestParamInfo<std::tuple<std::tuple<int, t8_eclass_t>, int, cmesh_example_base *>> &info) {
+  = [] (const testing::TestParamInfo<std::tuple<int, int, cmesh_example_base *>> &info) {
       std::string name = std::string ("Level_") + std::to_string (std::get<1> (info.param));
       std::string cmesh_name;
       std::get<2> (info.param)->param_to_string (cmesh_name);
       name += std::string ("_") + cmesh_name;
-      name += std::string ("scheme_") + std::to_string (std::get<0> (std::get<0> (info.param)));
+      name += std::string ("scheme_") + std::to_string (std::get<0> (info.param));
       name += std::string ("_") + std::to_string (info.index);
       return name;
     };
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_element_is_leaf, element_is_leaf,
-                          testing::Combine (AllSchemes, testing::Range (0, T8_IS_LEAF_MAX_LVL), AllCmeshsParam),
+                          testing::Combine (AllSchemeCollections, testing::Range (0, T8_IS_LEAF_MAX_LVL),
+                                            AllCmeshsParam),
                           pretty_print_level_and_cmesh_params);

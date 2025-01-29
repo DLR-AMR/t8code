@@ -247,5 +247,11 @@ TEST_P (gtest_balance, balance_consistency_test)
   t8_forest_unref (&already_balanced_forest);
 }
 
+#ifdef T8_ENABLE_LESS_TESTS
+const int maxlvl = 3;
+#else
+const int maxlvl = 5;
+#endif
+
 INSTANTIATE_TEST_SUITE_P (t8_gtest_balance, gtest_balance,
-                          testing::Combine (AllSchemes, testing::Range (0, 5), testing::Range (0, 2)));
+                          testing::Combine (AllSchemes, testing::Range (0, maxlvl), testing::Range (0, 2)));

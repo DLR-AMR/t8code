@@ -35,17 +35,15 @@
  * We build a forest and set user data for it.
  * We then retrieve the data and check whether it is the same.
  */
-class forest_user_data: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
+class forest_user_data: public testing::TestWithParam<int> {
  protected:
   void
   SetUp () override
   {
-    const int scheme_id = std::get<0> (GetParam ());
+    const int scheme_id = GetParam ();
     scheme = create_from_scheme_id (scheme_id);
-    eclass = std::get<1> (GetParam ());
   }
   const t8_scheme *scheme;
-  t8_eclass_t eclass;
 };
 
 TEST_P (forest_user_data, test_user_data)
@@ -136,4 +134,4 @@ TEST_P (forest_user_data, test_user_function)
   t8_forest_unref (&forest);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_user_data, forest_user_data, AllSchemes);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_user_data, forest_user_data, AllSchemeCollections);

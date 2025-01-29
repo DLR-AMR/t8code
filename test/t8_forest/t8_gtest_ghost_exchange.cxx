@@ -44,15 +44,13 @@
  * in a second test, we store the element's linear id in the data array.
  */
 
-class forest_ghost_exchange:
-  public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, cmesh_example_base *>> {
+class forest_ghost_exchange: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>> {
  protected:
   void
   SetUp () override
   {
-    const int scheme_id = std::get<0> (std::get<0> (GetParam ()));
+    const int scheme_id = std::get<0> (GetParam ());
     scheme = create_from_scheme_id (scheme_id);
-    eclass = std::get<1> (std::get<0> (GetParam ()));
     /* Construct a cmesh */
     cmesh = std::get<1> (GetParam ())->cmesh_create ();
     if (t8_cmesh_is_empty (cmesh)) {
@@ -68,7 +66,6 @@ class forest_ghost_exchange:
   }
   const t8_scheme *scheme;
   t8_cmesh_t cmesh;
-  t8_eclass_t eclass;
 };
 
 static int
@@ -200,5 +197,5 @@ TEST_P (forest_ghost_exchange, test_ghost_exchange)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_exchange, forest_ghost_exchange, testing::Combine (AllSchemes, AllCmeshsParam),
-                          pretty_print_base_example_scheme);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_exchange, forest_ghost_exchange,
+                          testing::Combine (AllSchemeCollections, AllCmeshsParam), pretty_print_base_example_scheme);

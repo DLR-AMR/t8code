@@ -39,14 +39,13 @@
  * After these two forests are created, we check for equality.
  */
 
-class forest_commit: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, cmesh_example_base *>> {
+class forest_commit: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>> {
  protected:
   void
   SetUp () override
   {
-    const int scheme_id = std::get<0> (std::get<0> (GetParam ()));
+    const int scheme_id = std::get<0> (GetParam ());
     scheme = create_from_scheme_id (scheme_id);
-    eclass = std::get<1> (std::get<0> (GetParam ()));
     /* Construct a cmesh */
     cmesh = std::get<1> (GetParam ())->cmesh_create ();
     if (t8_cmesh_is_empty (cmesh)) {
@@ -62,7 +61,6 @@ class forest_commit: public testing::TestWithParam<std::tuple<std::tuple<int, t8
   }
   t8_cmesh_t cmesh;
   const t8_scheme *scheme;
-  t8_eclass_t eclass;
 };
 
 /* Adapt a forest such that always the first child of a
@@ -172,5 +170,5 @@ TEST_P (forest_commit, test_forest_commit)
   t8_debugf ("Done testing forest commit.");
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_forest_commit, forest_commit, testing::Combine (AllSchemes, AllCmeshsParam),
-                          pretty_print_base_example_scheme);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_forest_commit, forest_commit,
+                          testing::Combine (AllSchemeCollections, AllCmeshsParam), pretty_print_base_example_scheme);
