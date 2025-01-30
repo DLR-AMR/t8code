@@ -162,9 +162,11 @@ struct t8_standalone_scheme
   static constexpr int
   element_get_num_faces (const t8_element_t *elem) noexcept
   {
+    T8_ASSERT (element_is_valid (elem));
+#ifdef T8_ENABLE_DEBUG
     const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
-
     T8_ASSERT (0 <= el->level && el->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
+#endif
     return T8_ELEMENT_NUM_FACES[TEclass];
   }
 
@@ -177,8 +179,10 @@ struct t8_standalone_scheme
   element_get_max_num_faces (const t8_element_t *elem) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
+#ifdef T8_ENABLE_DEBUG
     const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
     T8_ASSERT (0 <= el->level && el->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
+#endif
     return T8_ELEMENT_NUM_FACES[TEclass];
   }
 
@@ -813,7 +817,6 @@ struct t8_standalone_scheme
       int facenormal_dim;
       facenormal_dim = face / 2;
 
-      //    t8_debugf("type: %i, face:%i, facenormal_dim: %i\n", elem->type.to_ulong(),face, facenormal_dim);
       t8_element_coord coord_offset = t8_standalone_scheme<TEclass>::element_get_len (el->level)
                                       - t8_standalone_scheme<TEclass>::element_get_len (level);
 
