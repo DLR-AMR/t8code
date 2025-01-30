@@ -49,24 +49,6 @@ using t8_element_type = std::bitset<T8_ELEMENT_NUM_EQUATIONS[TEclass]>;
 
 template <t8_eclass_t TEclass>
 using t8_element_coords = std::array<t8_element_coord, T8_ELEMENT_DIM[TEclass]>;
-
-template <t8_eclass_t TEclass>
-constexpr int8_t t8_sele_lut_type_face_to_facenormal_dim[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
-                                                        [T8_ELEMENT_NUM_FACES[TEclass]];
-/**TYPE EQUATIONS*/
-template <t8_eclass_t TEclass>
-constexpr int8_t t8_type_edge_equations[T8_ELEMENT_NUM_EQUATIONS[TEclass]][2];
-
-template <t8_eclass_t TEclass>
-constexpr int8_t t8_sele_lut_type_face_to_is_1_boundary[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
-                                                       [T8_ELEMENT_NUM_FACES[TEclass]];
-template <t8_eclass_t TEclass>
-constexpr int8_t t8_sele_lut_type_rootface_to_face[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
-                                                  [T8_ELEMENT_NUM_FACES[TEclass]];
-template <t8_eclass_t TEclass>
-constexpr int8_t t8_sele_lut_rootface_eq_to_faceeq[T8_ELEMENT_NUM_FACES[TEclass]][T8_ELEMENT_NUM_EQUATIONS[TEclass]];
-template <t8_eclass_t TEclass>
-constexpr int8_t t8_sele_lut_rootface_dim_to_facedim[T8_ELEMENT_NUM_FACES[TEclass]][T8_ELEMENT_DIM[TEclass]];
 template <t8_eclass_t TEclass>
 struct t8_standalone_element
 {
