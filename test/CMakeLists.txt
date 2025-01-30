@@ -139,7 +139,8 @@ add_t8_test( NAME t8_gtest_child_parent_face_serial     SOURCES t8_gtest_main.cx
 add_t8_test( NAME t8_gtest_pack_unpack_serial           SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_pack_unpack.cxx )
 add_t8_test( NAME t8_gtest_root_serial                  SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_root.cxx )
 add_t8_test( NAME t8_gtest_scheme_consistency_serial    SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_scheme_consistency.cxx )
-add_t8_test( NAME t8_gtest_input_equal_output_serial     SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_input_equal_output.cxx )
+add_t8_test( NAME t8_gtest_input_equal_output_serial    SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_input_equal_output.cxx )
+add_t8_test( NAME t8_gtest_face_corner_serial           SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_face_corner.cxx )
 
 if( T8CODE_BUILD_FORTRAN_INTERFACE AND T8CODE_ENABLE_MPI )
   add_t8_test( NAME t8_test_fortran_mpi_interface_init_parallel    SOURCES api/t8_fortran_interface/t8_test_mpi_init.f90 )
