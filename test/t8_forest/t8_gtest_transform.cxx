@@ -177,6 +177,6 @@ TEST_P (forest_transform, test_forest_transform_elements)
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_forest_transform, forest_transform,
-                          testing::Combine (::testing::Combine (::testing::Values (0),
+                          testing::Combine (::testing::Combine (AllSchemeCollections,
                                                                 ::testing::Range (T8_ECLASS_QUAD, T8_ECLASS_TRIANGLE)),
                                             testing::Range (0, 6)));
