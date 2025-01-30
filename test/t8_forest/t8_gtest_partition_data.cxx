@@ -33,6 +33,7 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_partition.h>
+#include <test/t8_gtest_schemes.hxx>
 
 #include <limits>
 #include <numeric>
@@ -45,6 +46,7 @@
  * function \see TestPartitionData.
  */
 class t8_test_partition_data_t {
+
  public:
   t8_test_partition_data_t () = default;
   t8_test_partition_data_t (const t8_gloidx_t value): data { value } {};
@@ -211,6 +213,19 @@ t8_test_partition_data_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_lo
   }
 }
 
+class t8_test_partition_data_test: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
+
+ protected:
+  void
+  SetUp () override
+  {
+    const int scheme_id = std::get<0> (GetParam ());
+    scheme = create_from_scheme_id (scheme_id);
+    eclass = std::get<1> (GetParam ());
+  }
+  const t8_scheme* scheme;
+  t8_eclass_t eclass;
+};
 /**
  * \brief Construct a new TEST object for the t8_forest_partition_data functionality.
  * The tests constructs a hypercube forest of the triangle class in which the first tree is refined
@@ -221,11 +236,10 @@ t8_test_partition_data_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_lo
  * partition given by the partitioned forest.
  * At last the data is checked for compliance with the partition of the partitioned forest.
  */
-TEST (partition_data, test_partition_data)
+TEST_P (t8_test_partition_data_test, test_partition_data)
 {
   /* Build a forest */
-  t8_cmesh_t cmesh = t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, 0, 0, 0);
-  const t8_scheme* scheme = t8_scheme_new_default ();
+  t8_cmesh_t cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
   t8_forest_t base_forest = t8_forest_new_uniform (cmesh, scheme, 1, 0, sc_MPI_COMM_WORLD);
 
   /* Adapt the forest examplary. */
@@ -251,3 +265,5 @@ TEST (partition_data, test_partition_data)
   t8_forest_unref (&initial_forest);
   t8_forest_unref (&partitioned_forest);
 }
+
+INSTANTIATE_TEST_SUITE_P (t8_gtest_partititon_data, t8_test_partition_data_test, AllSchemes);

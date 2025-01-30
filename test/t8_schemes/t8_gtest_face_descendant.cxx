@@ -120,4 +120,4 @@ TEST_P (class_descendant, t8_check_face_desc)
   check_recursive_dfs_to_max_lvl (maxlvl);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_element_face_descendant, class_descendant, DefaultSchemes);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_element_face_descendant, class_descendant, AllSchemes);
