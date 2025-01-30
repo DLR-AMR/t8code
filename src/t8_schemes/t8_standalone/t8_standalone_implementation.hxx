@@ -1114,7 +1114,9 @@ struct t8_standalone_scheme
       return extrude_face<T8_ECLASS_HEX> ((t8_standalone_element<T8_ECLASS_HEX> *) face, elem, root_face);
       break;
     default:
-      return 0;
+      if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+        SC_ABORT ("Only implemented for hypercubes.\n");
+      }
       break;
     }
   }
@@ -1150,6 +1152,11 @@ struct t8_standalone_scheme
       break;
     case T8_ECLASS_HEX:
       compute_boundary_face<T8_ECLASS_HEX> (elem, root_face, (t8_standalone_element<T8_ECLASS_HEX> *) boundary);
+      break;
+    default:
+      if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+        SC_ABORT ("Only implemented for hypercubes.\n");
+      }
       break;
     }
   }
