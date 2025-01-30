@@ -774,7 +774,7 @@ struct t8_standalone_scheme
     if (el->level == 0)
       return -1;
     if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      if ((unsigned int) (face % 2) != ((el->coords[face / 2]) >> (T8_ELEMENT_MAXLEVEL[TEclass] - el->level)) % 2) {
+      if ((face % 2) != ((el->coords[face / 2]) >> (T8_ELEMENT_MAXLEVEL[TEclass] - el->level)) % 2) {
         return -1;
       }
       return face;
@@ -1116,6 +1116,7 @@ struct t8_standalone_scheme
     default:
       if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
         SC_ABORT ("Only implemented for hypercubes.\n");
+        return 0;
       }
       break;
     }
