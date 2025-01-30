@@ -150,7 +150,7 @@ t8_cmesh_validate_geometry (const t8_cmesh_t cmesh, const int check_for_negative
         t8_debugf ("Detected incompatible geometry for tree %li\n", (long) itree);
         return false;
       }
-      else if (check_for_negative_volume){
+      else if (check_for_negative_volume) {
         /* Check for negative volume. This only makes sense if the geometry is valid for the tree. */
         const int negative_volume
           = cmesh->geometry_handler->tree_negative_volume (cmesh, t8_cmesh_get_global_id (cmesh, itree));
@@ -589,26 +589,23 @@ t8_cmesh_is_equal_ext (const t8_cmesh_t cmesh_a, const t8_cmesh_t cmesh_b, const
   }
   /* check entries that are numbers */
   if (cmesh_a->committed != cmesh_b->committed || cmesh_a->dimension != cmesh_b->dimension
-             || cmesh_a->set_partition != cmesh_b->set_partition || cmesh_a->mpirank != cmesh_b->mpirank
-             || cmesh_a->mpisize != cmesh_b->mpisize || cmesh_a->num_trees != cmesh_b->num_trees
-             || cmesh_a->num_local_trees != cmesh_b->num_local_trees || cmesh_a->num_ghosts != cmesh_b->num_ghosts
-             || cmesh_a->first_tree != cmesh_b->first_tree)
-  {
+      || cmesh_a->set_partition != cmesh_b->set_partition || cmesh_a->mpirank != cmesh_b->mpirank
+      || cmesh_a->mpisize != cmesh_b->mpisize || cmesh_a->num_trees != cmesh_b->num_trees
+      || cmesh_a->num_local_trees != cmesh_b->num_local_trees || cmesh_a->num_ghosts != cmesh_b->num_ghosts
+      || cmesh_a->first_tree != cmesh_b->first_tree) {
     return 0;
   }
   /* check arrays */
-  if (memcmp (cmesh_a->num_trees_per_eclass, cmesh_b->num_trees_per_eclass, T8_ECLASS_COUNT * sizeof (t8_gloidx_t)))
-  {
+  if (memcmp (cmesh_a->num_trees_per_eclass, cmesh_b->num_trees_per_eclass, T8_ECLASS_COUNT * sizeof (t8_gloidx_t))) {
     return 0;
   }
 
   if (memcmp (cmesh_a->num_local_trees_per_eclass, cmesh_b->num_local_trees_per_eclass,
-                        T8_ECLASS_COUNT * sizeof (t8_locidx_t)))
-  {
+              T8_ECLASS_COUNT * sizeof (t8_locidx_t))) {
     return 0;
   }
 
-  if (same_tree_order){
+  if (same_tree_order) {
     /* check tree_offsets */
     if (cmesh_a->tree_offsets != NULL) {
       if (cmesh_b->tree_offsets == NULL) {
@@ -616,41 +613,40 @@ t8_cmesh_is_equal_ext (const t8_cmesh_t cmesh_a, const t8_cmesh_t cmesh_b, const
       }
       else {
         if (!t8_shmem_array_is_equal (cmesh_a->tree_offsets, cmesh_b->tree_offsets))
-        return 0;
+          return 0;
       }
     }
   }
   /* check trees */
-  if (same_tree_order)
-  {
+  if (same_tree_order) {
     if (cmesh_a->committed && !t8_cmesh_trees_is_equal (cmesh_a, cmesh_a->trees, cmesh_b->trees, 1)) {
       /* if we have committed check tree arrays */
-      t8_global_productionf("Failed on equal trees");
+      t8_global_productionf ("Failed on equal trees");
       return 0;
     }
     else {
       if (!cmesh_a->committed && !t8_stash_is_equal (cmesh_a->stash, cmesh_b->stash)) {
-      /* if we have not committed check stash arrays */
-      return 0;
+        /* if we have not committed check stash arrays */
+        return 0;
       }
     }
   }
-  else{
+  else {
     if (cmesh_a->committed && !t8_cmesh_trees_is_equal (cmesh_a, cmesh_a->trees, cmesh_b->trees, 0)) {
       /* if we have committed check tree arrays */
-      t8_global_productionf("Failed on equal trees %i", t8_cmesh_trees_is_equal (cmesh_a, cmesh_a->trees, cmesh_b->trees, 0));
+      t8_global_productionf ("Failed on equal trees %i",
+                             t8_cmesh_trees_is_equal (cmesh_a, cmesh_a->trees, cmesh_b->trees, 0));
       return 0;
     }
     else {
       if (!cmesh_a->committed && !t8_stash_is_equal (cmesh_a->stash, cmesh_b->stash)) {
-      /* if we have not committed check stash arrays */
-      return 0;
+        /* if we have not committed check stash arrays */
+        return 0;
       }
     }
   }
-  
-  return 1;  
-  
+
+  return 1;
 }
 
 int

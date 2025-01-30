@@ -793,13 +793,13 @@ t8_forest_vtk_write_ASCII (t8_forest_t forest, const char *fileprefix, const int
   T8_ASSERT (forest != NULL);
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (fileprefix != NULL);
-  if (forest->cmesh->geometry_handler == nullptr){
-      t8_errorf("Error: Forest could not be written as vtk since it does not have geometries.\n");
-      return false;
-    }
-  if (forest->cmesh->geometry_handler->get_num_geometries() == 0){
-      t8_errorf("Error: Forest could not be written as vtk since it does not have geometries.\n");
-      return false;
+  if (forest->cmesh->geometry_handler == nullptr) {
+    t8_errorf ("Error: Forest could not be written as vtk since it does not have geometries.\n");
+    return false;
+  }
+  if (forest->cmesh->geometry_handler->get_num_geometries () == 0) {
+    t8_errorf ("Error: Forest could not be written as vtk since it does not have geometries.\n");
+    return false;
   }
   if (forest->ghosts == NULL || forest->ghosts->num_ghosts_elements == 0) {
     /* Never write ghost elements if there aren't any */
@@ -940,13 +940,13 @@ t8_cmesh_vtk_write_file_ext (const t8_cmesh_t cmesh, const char *fileprefix, con
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   T8_ASSERT (fileprefix != NULL);
 
-  if (cmesh->geometry_handler == nullptr){
-      t8_errorf("Error: Cmesh could not be written as vtk since it does not have geometries.\n");
-      return false;
-    }
-  if (cmesh->geometry_handler->get_num_geometries() == 0){
-      t8_errorf("Error: Cmesh could not be written as vtk since it does not have geometries.\n");
-      return false;
+  if (cmesh->geometry_handler == nullptr) {
+    t8_errorf ("Error: Cmesh could not be written as vtk since it does not have geometries.\n");
+    return false;
+  }
+  if (cmesh->geometry_handler->get_num_geometries () == 0) {
+    t8_errorf ("Error: Cmesh could not be written as vtk since it does not have geometries.\n");
+    return false;
   }
 
   if (cmesh->mpirank == 0) {
