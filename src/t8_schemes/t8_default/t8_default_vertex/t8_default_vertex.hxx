@@ -193,8 +193,9 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
   int
   element_get_face_corner (const t8_element_t *element, int face, int corner) const
   {
-    SC_ABORT_NOT_REACHED (); /* it is impossible to have a face of a vertex */
-    return 0;                /* prevents compiler warning */
+    T8_ASSERT (corner == 0);
+    T8_ASSERT (face == 0);
+    return 0;
   }
 
   /** Return the face numbers of the faces sharing an element's corner.
@@ -206,8 +207,9 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
   int
   element_get_corner_face (const t8_element_t *element, int corner, int face) const
   {
-    SC_ABORT ("Not implemented.\n");
-    return 0; /* prevents compiler warning */
+    T8_ASSERT (corner == 0);
+    T8_ASSERT (face == 0);
+    return 0;
   }
 
   /** Construct the child element of a given number.
