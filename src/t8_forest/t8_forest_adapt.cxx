@@ -45,7 +45,7 @@ T8_EXTERN_C_BEGIN ();
  *       not valid. 
  */
 static int
-t8_forest_is_family_callback (t8_scheme *scheme, const t8_eclass_t tree_class, const int num_elements,
+t8_forest_is_family_callback (const t8_scheme *scheme, t8_eclass_t tree_class, const int num_elements,
                               t8_element_t **elements)
 {
 
@@ -104,7 +104,7 @@ t8_forest_is_family_callback (t8_scheme *scheme, const t8_eclass_t tree_class, c
  *       recursively, return INT32_MIN.
  */
 static t8_locidx_t
-t8_forest_pos (t8_forest_t forest, const t8_eclass_t tree_class, t8_scheme *scheme, t8_element_array_t *telements,
+t8_forest_pos (t8_forest_t forest, t8_eclass_t tree_class, const t8_scheme *scheme, t8_element_array_t *telements,
                const t8_locidx_t telements_pos)
 {
 #if T8_ENABLE_DEBUG
@@ -221,8 +221,8 @@ t8_forest_pos (t8_forest_t forest, const t8_eclass_t tree_class, t8_scheme *sche
  * \param [in] el_buffer Buffer space to store a family of elements.
  */
 static void
-t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eclass_t tree_class,
-                                   t8_locidx_t lelement_id, t8_scheme *scheme, t8_element_array_t *telements,
+t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid, t8_eclass_t tree_class,
+                                   t8_locidx_t lelement_id, const t8_scheme *scheme, t8_element_array_t *telements,
                                    t8_locidx_t el_coarsen, t8_locidx_t *el_inserted, t8_element_t **el_buffer)
 {
   T8_ASSERT (el_coarsen >= 0);
@@ -323,8 +323,8 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid, cons
  * \param [in] element_removed Flag set to 1 if element was removed.
  */
 static void
-t8_forest_adapt_refine_recursive (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_eclass_t tree_class,
-                                  t8_locidx_t lelement_id, t8_scheme *scheme, sc_list_t *elem_list,
+t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid, t8_eclass_t tree_class,
+                                  t8_locidx_t lelement_id, const t8_scheme *scheme, sc_list_t *elem_list,
                                   t8_element_array_t *telements, t8_locidx_t *num_inserted, t8_element_t **el_buffer,
                                   int *element_removed)
 {
@@ -378,7 +378,6 @@ void
 t8_forest_adapt (t8_forest_t forest)
 {
   t8_forest_t forest_from;
-  t8_scheme *scheme;
   t8_element_array_t *telements;
   t8_element_array_t *telements_from;
   t8_element_t **elements;
@@ -449,7 +448,7 @@ t8_forest_adapt (t8_forest_t forest)
     if (num_el_from > 0) {
       const t8_element_t *first_element_from = t8_element_array_index_locidx (telements_from, 0);
       /* Get the element scheme for this tree */
-      scheme = t8_forest_get_scheme (forest_from);
+      const t8_scheme *scheme = t8_forest_get_scheme (forest_from);
       /* Index of the element we currently consider for refinement/coarsening. */
       el_considered = 0;
       /* Index into the newly inserted elements */

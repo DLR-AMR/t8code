@@ -82,7 +82,7 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
                          const t8_element_array_t *leaf_elements, void *user_data,
                          t8_locidx_t tree_lindex_of_first_leaf, t8_forest_iterate_face_fn callback)
 {
-  t8_scheme *scheme;
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
   t8_eclass_t eclass;
   t8_element_t **face_children;
   int child_face, num_face_children, iface;
@@ -99,7 +99,6 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
     return;
   }
   eclass = t8_forest_get_tree_class (forest, ltreeid);
-  scheme = t8_forest_get_scheme (forest);
 
   if (elem_count == 1) {
     /* There is only one leaf left, we check whether it is the same as element
@@ -535,6 +534,13 @@ t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_fo
     }
   } /* tree loop */
   t8_global_productionf ("Done t8_forest_iterate_replace\n");
+}
+
+void
+t8_forest_search_partition (const t8_forest_t forest, t8_forest_partition_search_fn search_fn,
+                            t8_forest_partition_query_fn query_fn, sc_array_t *queries)
+{
+  SC_ABORT ("not implemented yet");
 }
 
 T8_EXTERN_C_END ();

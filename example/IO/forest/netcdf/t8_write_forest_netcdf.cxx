@@ -177,7 +177,7 @@ t8_example_compare_performance_netcdf_var_properties (sc_MPI_Comm comm, int fore
 {
   t8_cmesh_t cmesh;
   t8_forest_t forest;
-  t8_scheme *default_scheme;
+  const t8_scheme *default_scheme = t8_scheme_new_default ();
   t8_gloidx_t num_elements;
   t8_nc_int64_t *var_rank;
   double *random_values;
@@ -194,8 +194,6 @@ t8_example_compare_performance_netcdf_var_properties (sc_MPI_Comm comm, int fore
   /* Receive the process-local MPI rank */
   retval = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (retval);
-  /* Create a default scheme */
-  default_scheme = t8_scheme_new_default ();
 
   /* Construct a 3D hybrid hypercube as a cmesh */
   cmesh = t8_cmesh_new_hypercube_hybrid (comm, 1, 0);
@@ -324,7 +322,7 @@ t8_example_netcdf_write_forest (sc_MPI_Comm comm, int forest_refinement_level, i
 {
   t8_cmesh_t cmesh;
   t8_forest_t forest;
-  t8_scheme *default_scheme;
+  const t8_scheme *default_scheme = t8_scheme_new_default ();
   t8_gloidx_t num_elements;
   t8_nc_int32_t *var_rank;
   double *random_values;
@@ -341,9 +339,6 @@ t8_example_netcdf_write_forest (sc_MPI_Comm comm, int forest_refinement_level, i
   /* Receive the process local MPI rank */
   retval = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (retval);
-
-  /* Create a default scheme */
-  default_scheme = t8_scheme_new_default ();
 
   /* Construct a cube coarse mesh */
   /* Construct a 3D hybrid hypercube as a cmesh */

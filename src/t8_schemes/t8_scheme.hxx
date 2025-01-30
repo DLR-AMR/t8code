@@ -41,6 +41,8 @@
 #include <t8_schemes/t8_default/t8_default_tet/t8_default_tet.hxx>
 #include <t8_schemes/t8_default/t8_default_prism/t8_default_prism.hxx>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone_implementation.hxx>
 #include <string>
 #if T8_ENABLE_DEBUG
 // Only needed for t8_debug_print_type
@@ -92,7 +94,11 @@ class t8_scheme {
                                 t8_default_scheme_hex,
                                 t8_default_scheme_tet,
                                 t8_default_scheme_prism,
-                                t8_default_scheme_pyramid
+                                t8_default_scheme_pyramid,
+                                t8_standalone_scheme<T8_ECLASS_VERTEX>,
+                                t8_standalone_scheme<T8_ECLASS_LINE>,
+                                t8_standalone_scheme<T8_ECLASS_QUAD>,
+                                t8_standalone_scheme<T8_ECLASS_HEX>
                                 >;
   /* clang-format on */
 
@@ -100,14 +106,15 @@ class t8_scheme {
 
  private:
   scheme_container eclass_schemes; /**< The container holding the eclass schemes. */
-  t8_refcount_t rc; /**< The reference count of the scheme. TODO: Replace by shared_ptr when forest becomes a class. */
+  mutable t8_refcount_t
+    rc; /**< The reference count of the scheme. Mutable so that the class can be const and the ref counter is still mutable. TODO: Replace by shared_ptr when forest becomes a class. */
 
  public:
   /**
    * Increase the reference count of the scheme.
    */
   inline void
-  ref ()
+  ref () const
   {
     t8_refcount_ref (&rc);
   }
@@ -118,7 +125,7 @@ class t8_scheme {
    * \return The remaining reference count. If 0 the scheme was deleted.
    */
   inline int
-  unref ()
+  unref () const
   {
     const int remaining = rc.refcount - 1;
     if (t8_refcount_unref (&rc)) {
@@ -453,8 +460,9 @@ class t8_scheme {
    * at a given level.
    * \param [in] tree_class    The eclass of the current tree.
    * \param [in] elem     This must be a valid element.
-   * \param [in] level    A refinement level. Must satisfy \a level < elem.level
+   * \param [in] level    A refinement level. Must satisfy \a level <= elem.level
    * \return              The child_id of \a elem in regard to its \a level ancestor.
+   * \note The ancestor id at elem.level is the same as the child id.
    */
   inline int
   element_get_ancestor_id (const t8_eclass_t tree_class, const t8_element_t *elem, const int level) const

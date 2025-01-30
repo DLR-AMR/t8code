@@ -60,7 +60,7 @@ class nca: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
     * check        -> the computed nca of desc_a and desc_b, should be equal to correct_nca
     */
   t8_element_t *correct_nca, *desc_a, *desc_b, *check;
-  t8_scheme *scheme;
+  const t8_scheme *scheme;
   t8_eclass_t tree_class;
 };
 
@@ -155,7 +155,7 @@ TEST_P (nca, nca_check_deep)
  */
 static void
 t8_recursive_nca_check (t8_element_t *check_nca, t8_element_t *desc_a, t8_element_t *desc_b, t8_element_t *check,
-                        t8_element_t *parent_a, t8_element_t *parent_b, const int max_lvl, t8_scheme *scheme,
+                        t8_element_t *parent_a, t8_element_t *parent_b, const int max_lvl, const t8_scheme *scheme,
                         const t8_eclass_t tree_class)
 {
   T8_ASSERT (max_lvl <= scheme->get_maxlevel (tree_class) - 1);
