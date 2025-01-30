@@ -1116,8 +1116,8 @@ struct t8_standalone_scheme
     default:
       if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
         SC_ABORT ("Only implemented for hypercubes.\n");
-        return 0;
       }
+      return 0;
       break;
     }
   }
