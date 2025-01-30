@@ -710,11 +710,10 @@ struct t8_standalone_scheme
   {
     const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
     t8_standalone_element<TEclass> **children_els = (t8_standalone_element<TEclass> **) children;
+    int local_indices[T8_ELEMENT_NUM_CHILDREN[TEclass]];
 
-    int allocated_indices = 0;
     if (child_indices == NULL) {
-      int local_child_indices[T8_ELEMENT_NUM_CHILDREN[TEclass]] = { 0 };
-      allocated_indices = 1;
+      child_indices = local_indices;
     }
     const int face_sign = face % 2;
     const int face_dim = face / 2;
@@ -729,9 +728,6 @@ struct t8_standalone_scheme
     for (int ifacechild = num_children - 1; ifacechild >= 0; ifacechild--) {
       t8_standalone_scheme<TEclass>::element_get_child ((const t8_element_t *) el, child_indices[ifacechild],
                                                         (t8_element_t *) children_els[ifacechild]);
-    }
-    if (allocated_indices) {
-      T8_FREE (child_indices);
     }
   }
 
