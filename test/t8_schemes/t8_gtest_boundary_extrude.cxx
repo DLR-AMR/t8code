@@ -36,7 +36,6 @@ class class_test_boundary_extrude: public TestDFS {
   check_element () override
   {
     const int num_faces = scheme->element_get_num_faces (eclass, element);
-
     for (int iface = 0; iface < num_faces; iface++) {
       /* Iterate over all faces that are also root faces and determine the face element */
       if (scheme->element_is_root_boundary (eclass, element, iface)) {
