@@ -248,7 +248,7 @@ TEST_P (gtest_balance, balance_consistency_test)
 }
 
 #ifdef T8_ENABLE_LESS_TESTS
-const int maxlvl = 3;
+const int maxlvl = 4;
 #else
 const int maxlvl = 5;
 #endif
