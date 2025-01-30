@@ -28,6 +28,4 @@
 #ifndef T8_CMESH_SAVE_HXX
 #define T8_CMESH_SAVE_HXX
 
-
-
 #endif /* T8_CMESH_SAVE_HXX */

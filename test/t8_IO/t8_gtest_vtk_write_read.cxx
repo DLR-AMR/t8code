@@ -37,14 +37,14 @@ class vtk_write_read_test: public testing::TestWithParam<cmesh_example_base *> {
   void
   SetUp () override
   {
-    cmesh = GetParam ()->cmesh_create (); //create a cmesh from example base
+    cmesh = GetParam ()->cmesh_create (); /* create a cmesh from example base */
   }
 
   void
   TearDown () override
   {
-    std::remove("test_vtk_0.vtu");
-    std::remove("test_vtk.pvtu"); //delete files after test finished
+    std::remove ("test_vtk_0.vtu");
+    std::remove ("test_vtk.pvtu"); /* delete files after test finished */
   }
   t8_cmesh_t cmesh;
 };
@@ -53,43 +53,43 @@ TEST_P (vtk_write_read_test, write_read_vtk)
 {
   t8_cmesh_t unpartitioned_cmesh_read, unpartitioned_cmesh_write;
 
-  const int write_success = t8_cmesh_vtk_write_file_via_API (cmesh, "test_vtk", sc_MPI_COMM_WORLD); 
-  const bool partitioned = t8_cmesh_is_partitioned(cmesh);
+  const int write_success = t8_cmesh_vtk_write_file_via_API (cmesh, "test_vtk", sc_MPI_COMM_WORLD);
+  const bool partitioned = t8_cmesh_is_partitioned (cmesh);
   t8_cmesh_t cmesh2 = t8_vtk_reader_cmesh ("test_vtk.pvtu", partitioned, 0, sc_MPI_COMM_WORLD, VTK_SERIAL_FILE);
-  ASSERT_EQ(cmesh2!=NULL, write_success);
+  ASSERT_EQ (cmesh2 != NULL, write_success);
 
-  if (cmesh2 != NULL){
-    if (partitioned){ //repartition if cmesh is partitioned
+  if (cmesh2 != NULL) {
+    if (partitioned) { /* repartition if cmesh is partitioned */
       t8_cmesh_init (&unpartitioned_cmesh_write);
       t8_cmesh_set_derive (unpartitioned_cmesh_write, cmesh);
-      t8_cmesh_set_partition_offsets (unpartitioned_cmesh_write, t8_cmesh_offset_percent(cmesh, sc_MPI_COMM_WORLD, 100));
-      t8_cmesh_commit(unpartitioned_cmesh_write, sc_MPI_COMM_WORLD);
+      t8_cmesh_set_partition_offsets (unpartitioned_cmesh_write,
+                                      t8_cmesh_offset_percent (cmesh, sc_MPI_COMM_WORLD, 100));
+      t8_cmesh_commit (unpartitioned_cmesh_write, sc_MPI_COMM_WORLD);
       t8_cmesh_init (&unpartitioned_cmesh_read);
       t8_cmesh_set_derive (unpartitioned_cmesh_read, cmesh2);
-      t8_cmesh_set_partition_offsets (unpartitioned_cmesh_read, t8_cmesh_offset_percent(cmesh2, sc_MPI_COMM_WORLD, 100));
-      t8_cmesh_commit(unpartitioned_cmesh_read, sc_MPI_COMM_WORLD);
-      
-      //check equality of repartioned cmeshes
-      t8_gloidx_t num_trees_cmesh_1 = t8_cmesh_get_num_trees(unpartitioned_cmesh_write);
-      t8_gloidx_t num_trees_cmesh_2 = t8_cmesh_get_num_trees(unpartitioned_cmesh_read);
-      ASSERT_EQ(num_trees_cmesh_1, num_trees_cmesh_2);
-      EXPECT_TRUE(t8_cmesh_is_equal_ext(unpartitioned_cmesh_write, unpartitioned_cmesh_read, 0));
+      t8_cmesh_set_partition_offsets (unpartitioned_cmesh_read,
+                                      t8_cmesh_offset_percent (cmesh2, sc_MPI_COMM_WORLD, 100));
+      t8_cmesh_commit (unpartitioned_cmesh_read, sc_MPI_COMM_WORLD);
 
-      //destroy both cmeshes
-      t8_cmesh_unref(&unpartitioned_cmesh_read);
-      t8_cmesh_unref(&unpartitioned_cmesh_write);
+      /* check equality of repartioned cmeshes */
+      t8_gloidx_t num_trees_cmesh_1 = t8_cmesh_get_num_trees (unpartitioned_cmesh_write);
+      t8_gloidx_t num_trees_cmesh_2 = t8_cmesh_get_num_trees (unpartitioned_cmesh_read);
+      ASSERT_EQ (num_trees_cmesh_1, num_trees_cmesh_2);
+      EXPECT_TRUE (t8_cmesh_is_equal_ext (unpartitioned_cmesh_write, unpartitioned_cmesh_read, 0));
+
+      /* destroy both cmeshes */
+      t8_cmesh_unref (&unpartitioned_cmesh_read);
+      t8_cmesh_unref (&unpartitioned_cmesh_write);
     }
-    else{ //continue normally without repartitioning
-      t8_gloidx_t num_trees_cmesh_1 = t8_cmesh_get_num_trees(cmesh);
-      t8_gloidx_t num_trees_cmesh_2 = t8_cmesh_get_num_trees(cmesh2);
-      ASSERT_EQ(num_trees_cmesh_1, num_trees_cmesh_2);
-      EXPECT_TRUE(t8_cmesh_is_equal_ext(cmesh, cmesh2, 0));
-      t8_cmesh_unref(&cmesh2);
+    else { /* continue normally without repartitioning */
+      t8_gloidx_t num_trees_cmesh_1 = t8_cmesh_get_num_trees (cmesh);
+      t8_gloidx_t num_trees_cmesh_2 = t8_cmesh_get_num_trees (cmesh2);
+      ASSERT_EQ (num_trees_cmesh_1, num_trees_cmesh_2);
+      EXPECT_TRUE (t8_cmesh_is_equal_ext (cmesh, cmesh2, 0));
+      t8_cmesh_unref (&cmesh2);
       t8_cmesh_unref (&cmesh);
     }
   }
 }
 
 INSTANTIATE_TEST_SUITE_P (Test_vtk_write_read, vtk_write_read_test, AllCmeshsParam, pretty_print_base_example);
-
-
