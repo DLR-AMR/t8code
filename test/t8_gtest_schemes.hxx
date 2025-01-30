@@ -51,4 +51,6 @@ auto print_all_schemes = [] (const testing::TestParamInfo<std::tuple<int, t8_ecl
 #define AllSchemes ::testing::Combine (::testing::Range (0, 2), ::testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT))
 /* Only used for disabling face tests*/
 #define DefaultSchemes ::testing::Combine (::testing::Range (0, 1), ::testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT))
+#define AllSchemeCollections ::testing::Values (0)
+
 #endif /* T8_GTEST_SCHEMES_HXX */

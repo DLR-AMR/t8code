@@ -51,8 +51,8 @@ typedef int32_t t8_dline_coord_t;
 
 typedef struct t8_dline
 {
-  int8_t level;
   t8_dline_coord_t x;
+  int8_t level;
 } t8_dline_t;
 
 #endif /* T8_DLINE_H */
