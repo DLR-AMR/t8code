@@ -315,4 +315,4 @@ TEST_P (nca, recursive_check_higher_level)
   scheme->element_destroy (tree_class, 1, &correct_nca_high_level);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_nca, nca, AllSchemes);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_nca, nca, AllSchemes, print_all_schemes);
