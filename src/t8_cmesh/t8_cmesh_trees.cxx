@@ -1224,9 +1224,7 @@ t8_cmesh_trees_is_equal (const t8_cmesh_t cmesh, const t8_cmesh_trees_t trees_a,
 {
   int is_equal;
   t8_locidx_t num_trees, num_ghost, ighost;
-  t8_ctree_t treea, treeb;
   t8_cghost_t ghosta, ghostb;
-  t8_locidx_t *face_neighborsa, *face_neighborsb;
   t8_gloidx_t *gface_neighborsa, *gface_neighborsb;
   int8_t *ttfa, *ttfb;
   t8_eclass_t eclass;

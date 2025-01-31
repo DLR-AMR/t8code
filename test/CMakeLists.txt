@@ -118,7 +118,7 @@ add_t8_test( NAME t8_gtest_point_inside_serial                      SOURCES t8_g
 
 add_t8_test( NAME t8_gtest_vtk_reader_parallel  SOURCES t8_gtest_main.cxx t8_IO/t8_gtest_vtk_reader.cxx )
 add_t8_test( NAME t8_gtest_vtk_writer_parallel  SOURCES t8_gtest_main.cxx t8_IO/t8_gtest_vtk_writer.cxx )
-add_t8_test( NAME t8_gtest_vtk_write_read  SOURCES t8_gtest_main.cxx t8_IO/t8_gtest_vtk_write_read.cxx )
+add_t8_test( NAME t8_gtest_vtk_write_read       SOURCES t8_gtest_main.cxx t8_IO/t8_gtest_vtk_write_read.cxx )
 
 add_t8_test( NAME t8_gtest_nca_serial                   SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_nca.cxx )
 add_t8_test( NAME t8_gtest_pyra_connectivity_serial     SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_pyra_connectivity.cxx )
