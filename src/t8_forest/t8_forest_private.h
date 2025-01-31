@@ -329,7 +329,7 @@ t8_forest_element_owners_bounds (t8_forest_t forest, t8_gloidx_t gtreeid, const 
  *                         on output a (better) bound.
  *
  * \note If on input \a lower >= \a upper, then the bounds are not changed by this
- *        algorithm. We interpret \a lower = \a such that the owner is unique and equals \a lower.
+ *        algorithm. We interpret \a lower = \a upper such that the owner is unique and equals \a lower.
  * \note \a forest must be committed before calling this function.
  */
 void
