@@ -53,7 +53,12 @@ libt8_installed_headers_forest = \
   src/t8_forest/t8_forest_profiling.h \
   src/t8_forest/t8_forest_io.h \
   src/t8_forest/t8_forest_adapt.h \
-  src/t8_forest/t8_forest_iterate.h src/t8_forest/t8_forest_partition.h
+  src/t8_forest/t8_forest_iterate.h src/t8_forest/t8_forest_partition.h \
+  src/t8_forest/t8_forest_ghost_interface_wrapper.h \
+  src/t8_forest/t8_forest_ghost_interface.h \
+  src/t8_forest/t8_forest_ghost_interface.hxx \
+  src/t8_forest/t8_forest_ghost_search.hxx \
+  src/t8_forest/t8_forest_ghost_stencil.hxx
 libt8_installed_headers_geometry = \
   src/t8_geometry/t8_geometry.h \
   src/t8_geometry/t8_geometry_handler.hxx \
@@ -137,7 +142,7 @@ libt8_compiled_sources = \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_examples.cxx \
   src/t8_forest/t8_forest_partition.cxx src/t8_forest/t8_forest.cxx \
-  src/t8_forest/t8_forest_private.c \
+  src/t8_forest/t8_forest_private.cxx \
   src/t8_forest/t8_forest_ghost.cxx src/t8_forest/t8_forest_iterate.cxx \
   src/t8_version.c \
   src/t8_vtk.c src/t8_forest/t8_forest_balance.cxx \
