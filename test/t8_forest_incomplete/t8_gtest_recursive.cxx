@@ -155,4 +155,4 @@ TEST_P (recursive_tree, test_recursive)
   ASSERT_TRUE (t8_forest_is_equal (forest, forest_base));
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_recursive, recursive_tree, AllSchemes);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_recursive, recursive_tree, AllSchemes, print_all_schemes);

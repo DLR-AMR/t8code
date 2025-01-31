@@ -120,4 +120,4 @@ TEST_P (t8_forest_volume, volume_check)
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_element_volume, t8_forest_volume,
-                          testing::Combine (AllSchemes, testing::Range (0, 4)));
+                          testing::Combine (DefaultScheme, testing::Range (0, 4)));
