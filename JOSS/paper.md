@@ -22,28 +22,28 @@ authors:
     orcid: 0000-0002-6305-1572
     equal-contrib: true
     affiliation: 1
-  - given-names: Lukas Dreyer
+  - name: Lukas Dreyer
     orcid: 0000-0001-7484-3674
     equal-contrib: true
     affiliation: 1
-  - given-names: Sandro Elsweijer
+  - name: Sandro Elsweijer
     orcid: 0000-0002-2753-3873
     equal-contrib: true
     affiliation: 1
-  - given-names: Niklas Böing
+  - name: Niklas Böing
     equal-contrib: true
     affiliation: 1
-  - given-names: Ioannis Lilikakis
+  - name: Ioannis Lilikakis
     equal-contrib: true
     affiliation: 1
-  - given-names: Jakob Fussbroich
+  - name: Jakob Fussbroich
     orcid: 0000-0003-0784-2182
     equal-contrib: true
     affiliation: 1
-  - given-names: Tabea Leistikow
+  - name: Tabea Leistikow
     equal-contrib: true
     affiliation: 1
-  - given-names: Florian Becker
+  - name: Florian Becker
     orcid: 0000-0002-8384-9282
     equal-contrib: true
     affiliation: 1
@@ -61,7 +61,7 @@ authors:
   - name: Achim Basermann
     orcid: 0000-0003-3637-3231
     affiliation: 1
-  - given-names: Hergl, Chiara
+  - name: Hergl, Chiara
     orcid: 0000-0002-4016-9113
     affiliation: 1
   - name: Julia, Weber
