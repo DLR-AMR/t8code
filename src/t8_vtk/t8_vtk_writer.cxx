@@ -161,15 +161,15 @@ T8_EXTERN_C_END ();
 
 template <>
 bool
-vtk_writer<t8_cmesh_t>::grid_has_geometry(const t8_cmesh_t cmesh)
+vtk_writer<t8_cmesh_t>::grid_has_geometry (const t8_cmesh_t cmesh)
 {
   return t8_geometry_get_num_geometries (cmesh);
 }
 
 template <>
 bool
-vtk_writer<t8_forest_t>::grid_has_geometry(const t8_forest_t forest)
+vtk_writer<t8_forest_t>::grid_has_geometry (const t8_forest_t forest)
 {
-  const t8_cmesh_t cmesh = t8_forest_get_cmesh(forest);
+  const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
   return t8_geometry_get_num_geometries (cmesh);
 }

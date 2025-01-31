@@ -427,8 +427,8 @@ class vtk_writer {
   {
 #if T8_WITH_VTK
     T8_ASSERT (!fileprefix.empty ());
-    if (!grid_has_geometry(grid)){
-      t8_errorf("Error: Grid could not be written as vtk since it does not have geometries.\n");
+    if (!grid_has_geometry (grid)) {
+      t8_errorf ("Error: Grid could not be written as vtk since it does not have geometries.\n");
       return false;
     }
 
@@ -523,7 +523,7 @@ class vtk_writer {
    * 
    */
   bool
-  grid_has_geometry(const grid_t grid);
+  grid_has_geometry (const grid_t grid);
 
   bool write_treeid = false;
   bool write_mpirank = false;

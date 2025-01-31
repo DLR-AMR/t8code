@@ -1177,12 +1177,8 @@ t8_cmesh_tree_is_equal (const t8_gloidx_t tree_id_a, const t8_gloidx_t tree_id_b
                         const t8_cmesh_trees_t trees_b, const bool check_face_neighbors)
 {
   /* Get the treea and their face neighbors */
-
   t8_locidx_t *face_neighborsa, *face_neighborsb;
   int8_t *ttfa, *ttfb;
-  size_t attsizea, attsizeb;
-  t8_attribute_info_struct_t *first_atta, *first_attb;
-  char *atta, *attb;
 
   const t8_ctree_t treea = t8_cmesh_trees_get_tree_ext (trees_a, tree_id_a, &face_neighborsa, &ttfa);
   const t8_ctree_t treeb = t8_cmesh_trees_get_tree_ext (trees_b, tree_id_b, &face_neighborsb, &ttfb);
@@ -1200,17 +1196,17 @@ t8_cmesh_tree_is_equal (const t8_gloidx_t tree_id_a, const t8_gloidx_t tree_id_b
     }
   }
   /* Compare attributes */
-  attsizea = t8_cmesh_trees_attribute_size (treea);
-  attsizeb = t8_cmesh_trees_attribute_size (treeb);
+  const size_t attsizea = t8_cmesh_trees_attribute_size (treea);
+  const size_t attsizeb = t8_cmesh_trees_attribute_size (treeb);
   if (attsizea != attsizeb) {
     return 0;
   }
   if (attsizea > 0) {
     /* Get pointers to all attributes */
-    first_atta = T8_TREE_ATTR_INFO (treea, 0);
-    first_attb = T8_TREE_ATTR_INFO (treeb, 0);
-    atta = (char *) T8_TREE_ATTR (treea, first_atta);
-    attb = (char *) T8_TREE_ATTR (treeb, first_attb);
+    t8_attribute_info_struct_t *first_atta = T8_TREE_ATTR_INFO (treea, 0);
+    t8_attribute_info_struct_t *first_attb = T8_TREE_ATTR_INFO (treeb, 0);
+    char *atta = (char *) T8_TREE_ATTR (treea, first_atta);
+    char *attb = (char *) T8_TREE_ATTR (treeb, first_attb);
     if (memcmp (atta, attb, attsizea)) {
       return 0;
     }
@@ -1222,17 +1218,10 @@ int
 t8_cmesh_trees_is_equal (const t8_cmesh_t cmesh, const t8_cmesh_trees_t trees_a, const t8_cmesh_trees_t trees_b,
                          const int same_tree_order)
 {
-  int is_equal;
-  t8_locidx_t num_trees, num_ghost, ighost;
-  t8_ctree_t treea, treeb;
+  t8_locidx_t ighost;
   t8_cghost_t ghosta, ghostb;
-  t8_locidx_t *face_neighborsa, *face_neighborsb;
   t8_gloidx_t *gface_neighborsa, *gface_neighborsb;
   int8_t *ttfa, *ttfb;
-  t8_eclass_t eclass;
-  size_t attsizea, attsizeb;
-  t8_attribute_info_struct_t *first_atta, *first_attb;
-  char *atta, *attb;
 
   T8_ASSERT (cmesh != NULL);
   if (trees_a == trees_b) {
@@ -1242,8 +1231,8 @@ t8_cmesh_trees_is_equal (const t8_cmesh_t cmesh, const t8_cmesh_trees_t trees_a,
   if (trees_a == NULL || trees_b == NULL) {
     return 0;
   }
-  num_trees = cmesh->num_local_trees;
-  num_ghost = cmesh->num_ghosts;
+  const t8_locidx_t num_trees = cmesh->num_local_trees;
+  const t8_locidx_t num_ghost = cmesh->num_ghosts;
 
   /* We now compare all trees and their attributes */
   if (!same_tree_order) {
@@ -1270,12 +1259,12 @@ t8_cmesh_trees_is_equal (const t8_cmesh_t cmesh, const t8_cmesh_trees_t trees_a,
       ghosta = t8_cmesh_trees_get_ghost_ext (trees_a, ighost, &gface_neighborsa, &ttfa);
       ghostb = t8_cmesh_trees_get_ghost_ext (trees_b, ighost, &gface_neighborsb, &ttfb);
       /* Compare ghost entries */
-      is_equal = ghosta->eclass == ghostb->eclass && ghosta->num_attributes == ghostb->num_attributes
-                 && ghosta->treeid == ghostb->treeid;
+      int is_equal = ghosta->eclass == ghostb->eclass && ghosta->num_attributes == ghostb->num_attributes
+                     && ghosta->treeid == ghostb->treeid;
       if (!is_equal) {
         return 0;
       }
-      eclass = ghosta->eclass;
+      t8_eclass_t eclass = ghosta->eclass;
       /* Compare face neighbors */
       is_equal = !memcmp (gface_neighborsa, gface_neighborsb, t8_eclass_num_faces[eclass] * sizeof (t8_gloidx_t))
                  && !memcmp (ttfa, ttfb, t8_eclass_num_faces[eclass] * sizeof (int8_t));
@@ -1283,17 +1272,17 @@ t8_cmesh_trees_is_equal (const t8_cmesh_t cmesh, const t8_cmesh_trees_t trees_a,
         return 0;
       }
       /* Compare attributes */
-      attsizea = t8_cmesh_trees_ghost_attribute_size (ghosta);
-      attsizeb = t8_cmesh_trees_ghost_attribute_size (ghostb);
+      const size_t attsizea = t8_cmesh_trees_ghost_attribute_size (ghosta);
+      const size_t attsizeb = t8_cmesh_trees_ghost_attribute_size (ghostb);
       if (attsizea != attsizeb) {
         return 0;
       }
       if (attsizea > 0) {
         /* Get pointers to all attributes */
-        first_atta = T8_GHOST_ATTR_INFO (ghosta, 0);
-        first_attb = T8_GHOST_ATTR_INFO (ghostb, 0);
-        atta = (char *) T8_GHOST_ATTR (ghosta, first_atta);
-        attb = (char *) T8_GHOST_ATTR (ghostb, first_attb);
+        t8_attribute_info_struct_t *first_atta = T8_GHOST_ATTR_INFO (ghosta, 0);
+        t8_attribute_info_struct_t *first_attb = T8_GHOST_ATTR_INFO (ghostb, 0);
+        char *atta = (char *) T8_GHOST_ATTR (ghosta, first_atta);
+        char *attb = (char *) T8_GHOST_ATTR (ghostb, first_attb);
         if (memcmp (atta, attb, attsizea)) {
           return 0;
         }
