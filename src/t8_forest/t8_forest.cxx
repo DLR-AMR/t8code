@@ -1978,6 +1978,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
         t8_element_array_t face_leafs;
         const size_t face_leaf_count = last_desc_index - first_desc_index + 1;
         T8_ASSERT (face_leaf_count > 0);
+        t8_debugf ("Starting search with element indices %i to %i (including).\n", first_desc_index, last_desc_index);
         t8_element_array_init_view (&face_leafs, tree_leafs, first_desc_index, face_leaf_count);
         // Iterate over all leafs at the face and collect them as neighbors.
         const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
@@ -2006,6 +2007,8 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
         // total_num_neighbors temporarily counts all inserted neighbors, including this tree
         const int num_neighbors_current_tree = user_data.neighbors.size ();
         const int total_num_neighbors = *num_neighbors + num_neighbors_current_tree;
+        t8_debugf ("Found %i neighbors in tree. Adding up to %i total neighbors.\n", num_neighbors_current_tree,
+                   total_num_neighbors);
         // Copy neighbor element pointers
         *pneighbor_leaves = T8_REALLOC (*pneighbor_leaves, t8_element_t *, total_num_neighbors);
         T8_ASSERT (*pneighbor_leaves != NULL);
