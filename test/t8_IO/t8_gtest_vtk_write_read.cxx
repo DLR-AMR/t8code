@@ -32,6 +32,8 @@
 #include <t8_vtk/t8_vtk_writer.h>
 #include <t8_vtk/t8_vtk_reader.hxx>
 
+#define EXPECT_CMESH_EQ(cmesh_a, cmesh_b) EXPECT_TRUE (t8_cmesh_is_equal_ext (cmesh_a, cmesh_b, 0))
+
 class vtk_write_read_test: public testing::TestWithParam<cmesh_example_base *> {
  protected:
   void
@@ -72,20 +74,20 @@ TEST_P (vtk_write_read_test, write_read_vtk)
       t8_cmesh_commit (unpartitioned_cmesh_read, sc_MPI_COMM_WORLD);
 
       /* check equality of repartioned cmeshes */
-      t8_gloidx_t num_trees_cmesh_1 = t8_cmesh_get_num_trees (unpartitioned_cmesh_write);
-      t8_gloidx_t num_trees_cmesh_2 = t8_cmesh_get_num_trees (unpartitioned_cmesh_read);
+      const t8_gloidx_t num_trees_cmesh_1 = t8_cmesh_get_num_trees (unpartitioned_cmesh_write);
+      const t8_gloidx_t num_trees_cmesh_2 = t8_cmesh_get_num_trees (unpartitioned_cmesh_read);
       ASSERT_EQ (num_trees_cmesh_1, num_trees_cmesh_2);
-      EXPECT_TRUE (t8_cmesh_is_equal_ext (unpartitioned_cmesh_write, unpartitioned_cmesh_read, 0));
+      EXPECT_CMESH_EQ (unpartitioned_cmesh_write, unpartitioned_cmesh_read);
 
       /* destroy both cmeshes */
       t8_cmesh_unref (&unpartitioned_cmesh_read);
       t8_cmesh_unref (&unpartitioned_cmesh_write);
     }
     else { /* continue normally without repartitioning */
-      t8_gloidx_t num_trees_cmesh_1 = t8_cmesh_get_num_trees (cmesh);
-      t8_gloidx_t num_trees_cmesh_2 = t8_cmesh_get_num_trees (cmesh2);
+      const t8_gloidx_t num_trees_cmesh_1 = t8_cmesh_get_num_trees (cmesh);
+      const t8_gloidx_t num_trees_cmesh_2 = t8_cmesh_get_num_trees (cmesh2);
       ASSERT_EQ (num_trees_cmesh_1, num_trees_cmesh_2);
-      EXPECT_TRUE (t8_cmesh_is_equal_ext (cmesh, cmesh2, 0));
+      EXPECT_CMESH_EQ (cmesh, cmesh2);
       t8_cmesh_unref (&cmesh2);
       t8_cmesh_unref (&cmesh);
     }

@@ -941,11 +941,11 @@ t8_cmesh_vtk_write_file_ext (const t8_cmesh_t cmesh, const char *fileprefix, con
   T8_ASSERT (fileprefix != NULL);
 
   if (cmesh->geometry_handler == nullptr) {
-    t8_errorf ("Error: Cmesh could not be written as vtk since it does not have geometries.\n");
+    t8_errorf ("Error: Cmesh could not be written as vtk because the geometry handler is the null pointer.\n");
     return false;
   }
   if (cmesh->geometry_handler->get_num_geometries () == 0) {
-    t8_errorf ("Error: Cmesh could not be written as vtk since it does not have geometries.\n");
+    t8_errorf ("Error: Cmesh could not be written as vtk because the geometry handler is the null pointer.\n");
     return false;
   }
 
