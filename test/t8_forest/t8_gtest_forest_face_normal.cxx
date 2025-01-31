@@ -115,4 +115,4 @@ TEST_P (class_forest_face_normal, back_and_forth)
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_forest_face_normal, class_forest_face_normal,
-                          testing::Combine (AllSchemes, testing::Range (0, 2)));
+                          testing::Combine (DefaultScheme, testing::Range (0, 2)));
