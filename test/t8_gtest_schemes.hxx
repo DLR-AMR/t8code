@@ -43,5 +43,6 @@ create_from_scheme_id (const int scheme_id)
 
 #define AllSchemes ::testing::Combine (::testing::Range (0, 2), ::testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT))
 #define AllSchemeCollections ::testing::Values (0)
+#define DefaultScheme ::testing::Combine (::testing::Values (0), ::testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT))
 
 #endif /* T8_GTEST_SCHEMES_HXX */
