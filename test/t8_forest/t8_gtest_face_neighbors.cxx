@@ -219,7 +219,7 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
             const int dual_face = dual_faces[ineigh];
             const t8_locidx_t neigh_index = element_indices[ineigh];
 
-            t8_debugf ("Checking neighbor element %p in (global) tree %li.\n", neighbor, gneigh_tree);
+            t8_debugf ("Checking neighbor element %p in (global) tree %li.\n", (void *) neighbor, gneigh_tree);
             t8_debugf ("dual face is %i, index is %i\n", dual_face, neigh_index);
 
             ASSERT_TRUE (neigh_scheme->t8_element_is_valid (neighbor))
