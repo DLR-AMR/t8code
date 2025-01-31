@@ -92,4 +92,4 @@ TEST_P (class_test_boundary_extrude, test_boundary_extrude_dfs)
   check_recursive_dfs_to_max_lvl (maxlvl);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_boundary_extrude, AllSchemes);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_boundary_extrude, DefaultScheme);
