@@ -121,9 +121,8 @@ TEST_P (forest_search, t8_test_search_all_fn)
   search.do_search ();
 
   /* Check whether matched_leaves entries are all 1 */
-  for (size_t i = 0; i < matched_leaves.size (); ++i) {
-    ASSERT_TRUE (matched_leaves[i]) << "Search did not match all leaves. Mismatch at leaf " << i;
-  }
+  std::for_each (matched_leaves.begin (), matched_leaves.end (),
+                 [] (bool b) { ASSERT_TRUE (b) << "Search did not match all leaves. First mismatch at leaf " << b; });
 
   t8_forest_unref (&forest);
 }
