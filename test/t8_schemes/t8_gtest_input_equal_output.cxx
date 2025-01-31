@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2025 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -28,6 +28,9 @@
 #include "t8_gtest_dfs_base.hxx"
 #include <t8_data/t8_containers.h>
 
+/* The mainly tested function in this test is element_get_children_at_face. The function allows that the input elem is equal children[0] (output).
+Therefore the test checks if this is true and the input is not overridden in the loop or is overridden in the last iteration.
+This is tested by comparing the output of two cases. In the first case the condition is not true in the second case elem is equal children[0]. */
 class class_test_equal: public TestDFS {
   void
   check_element () override
