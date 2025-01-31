@@ -215,6 +215,22 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
                                          << ".";
           }
 
+          if (forest_is_uniform) {
+            ASSERT_TRUE (num_neighbors == 0 || num_neighbors == 1);
+            // Check the index computation function and that it computes the correct neighbor index.
+            int check_dual_face;
+            const t8_locidx_t check_same_level_index = t8_forest_same_level_leaf_face_neighbor_index (
+              forest, ielement_index, iface, gtree_id, &check_dual_face);
+
+            if (check_dual_face < 0) {
+              EXPECT_EQ (num_neighbors, 0);
+            }
+            if (check_dual_face >= 0) {
+              EXPECT_EQ (dual_faces[0], check_dual_face);
+              EXPECT_EQ (element_indices[0], check_same_level_index);
+            }
+          }
+
           // Check that the neighbor of the neighbor is the original element.
           for (int ineigh = 0; ineigh < num_neighbors; ++ineigh) {
             const t8_element_t *neighbor = neighbor_leaves[ineigh];

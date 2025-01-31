@@ -2270,6 +2270,60 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8
                                      pelement_indices, pneigh_eclass, NULL, NULL);
 }
 
+t8_locidx_t
+t8_forest_same_level_leaf_face_neighbor_index (t8_forest_t forest, const t8_locidx_t element_index,
+                                               const int face_index, const t8_gloidx_t global_treeid, int *dual_face)
+{
+  const t8_locidx_t num_local_elements = t8_forest_get_local_num_elements (forest);
+#if T8_ENABLE_DEBUG
+  const t8_locidx_t num_ghosts = t8_forest_get_num_ghosts (forest);
+  T8_ASSERT (0 <= element_index && element_index < num_local_elements + num_ghosts);
+#endif
+  const bool is_local = element_index < num_local_elements;
+
+  t8_locidx_t local_tree;
+  t8_locidx_t element_index_in_tree;
+  const t8_element_t *element;
+  if (is_local) {
+    local_tree = t8_forest_get_local_id (forest, global_treeid);
+    element_index_in_tree = element_index - t8_forest_get_tree_element_offset (forest, local_tree);
+    element = t8_forest_get_element_in_tree (forest, local_tree, element_index_in_tree);
+  }
+  else {
+    local_tree = t8_forest_ghost_get_ghost_treeid (forest, global_treeid);
+    const t8_locidx_t ghost_offset_in_tree = t8_forest_ghost_get_tree_element_offset (forest, local_tree);
+    element_index_in_tree = element_index - num_local_elements - ghost_offset_in_tree;
+    element = t8_forest_ghost_get_element (forest, local_tree, element_index_in_tree);
+    local_tree += t8_forest_get_num_local_trees (forest);
+  }
+
+  int *dual_faces;
+  int num_neighbors = 0;
+  t8_locidx_t *element_indices;
+  t8_eclass_scheme_c *neigh_scheme;
+
+  t8_debugf ("Same level leaf neighbor for index %i. Which is %s element %i in tree %i.\n", element_index,
+             element_index < num_local_elements ? "local" : "ghost", element_index_in_tree, local_tree);
+
+  t8_forest_leaf_face_neighbors (forest, local_tree, element, NULL, face_index, &dual_faces, &num_neighbors,
+                                 &element_indices, &neigh_scheme);
+
+  T8_ASSERT (num_neighbors == 0 || num_neighbors == 1);
+
+  if (num_neighbors == 0) {
+    *dual_face = -1;
+    return -1;
+  }
+
+  *dual_face = dual_faces[0];
+  const t8_locidx_t neigh_index = element_indices[0];
+
+  T8_FREE (element_indices);
+  T8_FREE (dual_faces);
+
+  return neigh_index;
+}
+
 void
 t8_forest_print_all_leaf_neighbors (t8_forest_t forest)
 {
