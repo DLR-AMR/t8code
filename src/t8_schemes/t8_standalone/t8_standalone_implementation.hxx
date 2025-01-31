@@ -222,14 +222,7 @@ struct t8_standalone_scheme
   {
     const int face_sign = face % 2;
     const int face_dim = face / 2;
-
-    /* Todo helper function*/
-    t8_element_coord first_part, face_part, last_part;
-    /* corner aaaabb, iface = x, then element_corner = aaaaxbb*/
-    first_part = (corner >> face_dim) << (face_dim + 1);
-    last_part = corner & ((1 << face_dim) - 1);
-    face_part = face_sign << face_dim;
-    return first_part + face_part + last_part;
+    return get_face_corner_index (corner, face_sign, face_dim);
   }
 
   /** Return the face numbers of the faces sharing an element's corner.
@@ -722,12 +715,7 @@ struct t8_standalone_scheme
     const int face_sign = face % 2;
     const int face_dim = face / 2;
     for (int ifacechild = 0; ifacechild < num_children; ifacechild++) {
-      t8_element_coord first_part, face_part, last_part;
-      /* ifacechild aaaabb, iface = x, then childid = aaaaxbb*/
-      first_part = (ifacechild >> face_dim) << (face_dim + 1);
-      last_part = ifacechild & ((1 << face_dim) - 1);
-      face_part = face_sign << face_dim;
-      child_indices[ifacechild] = first_part + face_part + last_part;
+      child_indices[ifacechild] = get_face_corner_index (ifacechild, face_sign, face_dim);
     }
     for (int ifacechild = num_children - 1; ifacechild >= 0; ifacechild--) {
       t8_standalone_scheme<TEclass>::element_get_child ((const t8_element_t *) el, child_indices[ifacechild],
@@ -872,7 +860,7 @@ struct t8_standalone_scheme
 
     if (!element_is_face_internal (el, face)) {
       int dimid = element_face_normal_dim (el, face);
-      if (element_face_is_first_boundary (el, face)) {
+      if (element_face_is_1_boundary (el, face)) {
         // a_d must be full of 1s up to level l
         t8_element_coord coord_offset = get_root_len () - element_get_len (el->level);
         if (el->coords[dimid] != coord_offset) {
@@ -948,7 +936,7 @@ struct t8_standalone_scheme
                                     int *neigh_face) noexcept
   {
     T8_ASSERT (element_get_level (elem) >= 0);
-    t8_standalone_scheme<TEclass>::element_copy (elem, neigh);
+    element_copy (elem, neigh);
 
     const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
     t8_standalone_element<TEclass> *neighbor = (t8_standalone_element<TEclass> *) neigh;
@@ -960,7 +948,7 @@ struct t8_standalone_scheme
     const int sign = face % 2 ? 1 : -1;
 
     /**Adapt coordinates*/
-    t8_element_coord length = t8_standalone_scheme<TEclass>::element_get_len (el->level);
+    t8_element_coord length = element_get_len (el->level);
     t8_debugf ("length: %i, sign:%i\n", length, sign);
 
     t8_debugf ("neigh_coords[%i]: %i\n", facenormal_dim, neighbor->coords[facenormal_dim]);
@@ -970,7 +958,7 @@ struct t8_standalone_scheme
     *neigh_face = face ^ 1;
 
     /**check inside root*/
-    return t8_standalone_scheme<TEclass>::element_is_inside_root (neighbor);
+    return element_is_inside_root (neighbor);
   }
 
   // ################################################____TREE FACE TRANSFORMATION____################################################  */
@@ -1893,6 +1881,10 @@ struct t8_standalone_scheme
     }
   }
 
+  /** Check if the element is inside the root tree
+   * \param [in] elem  The input element.
+   * \return 1 if the element is inside the root tree, 0 otherwise.
+   */
   static inline int
   element_is_inside_root (const t8_standalone_element<TEclass> *elem) noexcept
   {
@@ -1907,7 +1899,12 @@ struct t8_standalone_scheme
     return 1;
   }
 
-  static inline int
+  /** Check if the face is an internal face
+   * \param [in] elem  The input element.
+   * \param [in] face  The input face.
+   * \return 1 if the face is internal, 0 otherwise.
+   */
+  static constexpr int
   element_is_face_internal (const t8_standalone_element<TEclass> *elem, const int face) noexcept
   {
     if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
@@ -1918,7 +1915,12 @@ struct t8_standalone_scheme
     }
   }
 
-  static inline int
+  /** Get the normal dim of the face
+   * \param [in] elem  The input element.
+   * \param [in] face  The input face.
+   * \return          The normal dimension of the face.
+   */
+  static constexpr int
   element_face_normal_dim (const t8_standalone_element<TEclass> *elem, const int face) noexcept
   {
     if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
@@ -1929,8 +1931,13 @@ struct t8_standalone_scheme
     }
   }
 
-  static inline int
-  element_face_is_first_boundary (const t8_standalone_element<TEclass> *elem, const int face) noexcept
+  /** Get the faces first boundary
+   * \param [in] elem  The input element.
+   * \param [in] face  The input face.
+   * \return          The first boundary of the face.
+   */
+  static constexpr int
+  element_face_is_1_boundary (const t8_standalone_element<TEclass> *elem, const int face) noexcept
   {
     if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
       return face % 2;
@@ -1940,7 +1947,11 @@ struct t8_standalone_scheme
     }
   }
 
-  static inline t8_eclass_t
+  /** Get the eclass of the face for the element eclass
+   * \return The eclass of the face.
+   * Note: Only implemented for hypercubes
+   */
+  static constexpr t8_eclass_t
   get_face_eclass () noexcept
   {
     t8_eclass_t face_eclass = T8_ECLASS_ZERO;
@@ -1966,9 +1977,18 @@ struct t8_standalone_scheme
     return face_eclass;
   }
 
+  /** Construct the boundary element at a specific face.
+   * \param [in] elem           The input element.
+   * \param [in] root_face      The index of the face of the root tree in which \a face
+   *                            lies.
+   * \param [in,out] boundary   An allocated element of dimension of \a element
+   *                            minus 1. The entries will be filled with the entries
+   *                            of the face of \a element.
+   */
   template <t8_eclass_t face_TEclass>
-  static inline void
-  compute_boundary_face (const t8_element_t *elem, const int root_face, t8_standalone_element<face_TEclass> *boundary)
+  static constexpr void
+  compute_boundary_face (const t8_element_t *elem, const int root_face,
+                         t8_standalone_element<face_TEclass> *boundary) noexcept
   {
     const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
 
@@ -2013,9 +2033,21 @@ struct t8_standalone_scheme
     }
   }
 
+  /** Given a boundary face inside a root tree's face construct
+   *  the element inside the root tree that has the given face as a
+   *  face.
+   * \param [in] face     A face element.
+   * \param [in,out] elem An allocated element. The entries will be filled with
+   *                      the data of the element that has \a face as a face and
+   *                      lies within the root tree.
+   * \param [in] root_face The index of the face of the root tree in which \a face
+   *                      lies.
+   * \return              The face number of the face of \a elem that coincides
+   *                      with \a face.
+   */
   template <t8_eclass_t face_TEclass>
-  static inline int
-  extrude_face (const t8_standalone_element<face_TEclass> *face, t8_element_t *elem, int root_face)
+  static constexpr int
+  extrude_face (const t8_standalone_element<face_TEclass> *face, t8_element_t *elem, int root_face) noexcept
   {
     t8_standalone_element<TEclass> *el = (t8_standalone_element<TEclass> *) elem;
     /** Loop over elemdim, get corresponding facedim and set elem coord accordingly 
@@ -2079,6 +2111,20 @@ struct t8_standalone_scheme
     else {
       SC_ABORT ("Only implemented for hypercubes.\n");
     }
+  }
+
+  /* Compute the index of the corner of a face 
+  \ref element_get_face_corner
+  */
+  static constexpr int
+  get_face_corner_index (int corner, int face_sign, int face_dim) noexcept
+  {
+    t8_element_coord first_part, face_part, last_part;
+    /* corner aaaabb, iface = x, then element_corner = aaaaxbb*/
+    first_part = (corner >> face_dim) << (face_dim + 1);
+    last_part = corner & ((1 << face_dim) - 1);
+    face_part = face_sign << face_dim;
+    return first_part + face_part + last_part;
   }
 };
 
