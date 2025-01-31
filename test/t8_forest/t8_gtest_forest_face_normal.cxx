@@ -29,19 +29,21 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <test/t8_gtest_macros.hxx>
+#include <test/t8_gtest_schemes.hxx>
 
 /**
  * This file tests the face normal computation of elements.
  */
 
-class class_forest_face_normal: public testing::TestWithParam<std::tuple<t8_eclass_t, int>> {
+class class_forest_face_normal: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, int>> {
  protected:
   void
   SetUp () override
   {
-    eclass = std::get<0> (GetParam ());
+    const int scheme_id = std::get<0> (std::get<0> (GetParam ()));
+    scheme = create_from_scheme_id (scheme_id);
+    eclass = std::get<1> (std::get<0> (GetParam ()));
     level = std::get<1> (GetParam ());
-    scheme = t8_scheme_new_default ();
     t8_cmesh_t cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
     const int do_face_ghost = 1;
     forest = t8_forest_new_uniform (cmesh, scheme, level, do_face_ghost, sc_MPI_COMM_WORLD);
@@ -113,4 +115,4 @@ TEST_P (class_forest_face_normal, back_and_forth)
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_forest_face_normal, class_forest_face_normal,
-                          testing::Combine (AllEclasses, testing::Range (0, 2)));
+                          testing::Combine (AllSchemes, testing::Range (0, 2)));
