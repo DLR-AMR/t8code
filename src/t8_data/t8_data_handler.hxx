@@ -251,6 +251,12 @@ class t8_data_handler: public t8_abstract_data_handler {
     return single_handler.type ();
   }
 
+  t8_data_handler (const std::vector<T> &data, t8_single_data_handler_c single_handler)
+  {
+    m_data = std::make_shared<std::vector<T>> (data);
+    this->single_handler = single_handler;
+  }
+
  private:
   /**
   * \brief A shared pointer to a vector of data. 
