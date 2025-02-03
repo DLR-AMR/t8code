@@ -92,19 +92,19 @@ affiliations:
    index: 1
  - name: Rheinische Friedrich-Wilhelms-Universität Bonn, Institute for Numerical Simulations and Hausdorff Center for Mathematics,  Germany
    index: 2
- - name: Forschungszentrum Juelich (JSC)
+ - name: Forschungszentrum Juelich (JSC), Germany
    index: 3
- - name: CERFACS
+ - name: CERFACS, France
    index: 4
- - name: University of Cologne
+ - name: University of Cologne, Germany
    index: 5
- - name: CEA
+ - name: CEA, France
    index: 6
- - name: University of Wyoming
+ - name: University of Wyoming, USA
    index: 7
- - name: University of Hamburg
+ - name: University of Hamburg, Germany
    index: 8
- - name: RWTH Aachen
+ - name: RWTH Aachen, Germany
    index: 9
  - name: unaffiliated
    index: 10
