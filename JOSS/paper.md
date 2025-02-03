@@ -127,15 +127,15 @@ library `t8code`, which was officially released in 2022 [@Holke_t8code_2022].
 and maintained at the [Institute of Software
 Technology](https://www.dlr.de/sc/en/) of the German Aerospace Center (DLR).
 AMR is a widely used method of locally adapting the mesh resolution according
-to an adequate error indicator in grid-based applications - especially in the
+to an adequate error indicator in grid-based applications, especially in the
 context of computational fluid dynamics. Our software library provides fast and
 memory efficient parallel algorithms for dynamic AMR to handle tasks such as
 mesh adaptation, load-balancing, ghost computation, feature search and more.
 `t8code` can manage meshes with over one trillion mesh elements
 [@holke_optimized_2021] and scales up to one million parallel processes
-[@holke_scalable_2018]. It is intended to be used as mesh management backend in
-scientific and engineering simulation codes paving the way towards
-high-performance applications of the upcoming exascale era.
+[@holke_scalable_2018]. It is intended to be used as a mesh management backend in
+scientific and engineering simulation codes, paving the way towards
+high-performance applications in the upcoming exascale era.
 
 # Statement of Need
 
@@ -151,7 +151,7 @@ AMR routines generally leads to a large development overhead motivating the
 need for external mesh management libraries like `t8code`. Our target
 audiences are scientists and application developers working on grid-based
 simulation and visualization frameworks who are looking for a comprehensive and
-versatile mesh management solution. Besides offering AMR we also aim to lower
+versatile mesh management solution. Besides offering AMR, we also aim to lower
 the threshold to parallelize their codes by solely interacting with t8code's
 API. Alternative AMR libraries with a similar range of features are p4est
 [@BursteddeWilcoxGhattas11], libMesh [@libMeshPaper], PARAMESH [@macneice2000paramesh], and
@@ -163,21 +163,21 @@ quadrilaterals, triangles, hexahedra, tetrahedra, prisms, and pyramids.
 Additionally, extensions to other refinement patterns and element shapes are
 straightforwardly supported due to `t8code`'s modular code structure and clear
 distinction between low- and high-level mesh operations.  This gives our AMR
-solution an unique position in the market catering for a wide range of use
+solution an unique position in the market catering to a wide range of use
 cases. Currently, `t8code` is optimized for grid-based applications using
 face-to-face connectivity between elements, such as Finite-Volume and
 Discontinuous Galerkin methods. In the future, we plan to support node-to-node
 connectivity and hanging nodes resolution to further increase the range of
 applications, such as Finite Element methods.
 
-# Exemplary application
+# Example application
 
-\autoref{fig:visploremesh} depicts an examplary adapted mesh managed by
-`t8code` using two different element types: quads and triangles. Shown is the
+\autoref{fig:visploremesh} depicts an example adapted mesh managed by
+`t8code` using two different element types: quads and triangles. The
 temperature profile of a convection simulation of a model planet's mantle
-(source: Institute of Planetary Research, DLR). The original, uniform mesh
+(source: Institute of Planetary Research, DLR) is shown. The original, uniform mesh
 consists of over 158 million quad cells allocating 6.818 GB of memory.  By
-applying AMR to the data the memory usage could be reduced down to 20\% with
+applying AMR to the data, the memory usage can be reduced down to 20\% with
 a compression error of less than 1\%. The error measure was chosen to be the
 norm of the variance between refinement resp. coarsening steps. That is,
 starting from the uniform mesh at highest refinement level ($l = 8$), the mesh
@@ -204,8 +204,8 @@ computational domain and is usually provided by a mesh generator such as
 Gmsh [@geuzaine2009gmsh]. Each of the coarse mesh cells is then viewed as the
 root of a refinement tree. These trees are refined recursively in a structured
 pattern, resulting in a collection of trees, which we call a forest. `t8code`
-stores only a minimal amount of information about the finest elements of the mesh -
-the leaves of the trees - in order to reconstruct the whole forest.
+stores only a minimal amount of information about the finest elements of the
+mesh—the leaves of the trees—in order to reconstruct the whole forest.
 
 By enumerating the leaves in a recursive refinement pattern we obtain a
 space-filling curve (SFC) logic. Via these SFCs, all elements in a refinement
@@ -264,12 +264,12 @@ while supporting a wider range of element types.
 
 Furthermore, in a prototype code [@Dreyer2021] implementing a high-order
 Discontinuous Galerkin (DG) method for advection-diffusion equations on
-dynamically adaptive hexahedral meshes we can report of a 12 times speed-up
+dynamically adaptive hexahedral meshes, we can report of a 12 times speed-up
 compared to non-AMR meshes with only an overall 15\% runtime contribution of
 `t8code`. In \autoref{fig:t8code_runtimes} we compare the runtimes over number
-of processes of the DG solver and the summed mesh operations done by t8code
+of processes of the DG solver and the summed mesh operations done by t8code,
 which are ghost computation, ghost data exchange, partitioning (load
-balancing), refinement, and coarsening as well as balancing ensuring only a
+balancing), refinement, and coarsening, as well as balancing ensuring only a
 difference of one refinement level among element's face neighbors. From the
 graphs in \autoref{fig:t8code_runtimes} we clearly see that `t8code` only takes
 around 15\% to 20\% of overall runtime compared to the solver.
@@ -287,17 +287,17 @@ around 15\% to 20\% of overall runtime compared to the solver.
 +================+===================+====================+========+
 
 ![Runtimes of ghost layer creation on the terrabyte cluster for p4est and
-t8code. The meshes have been refined into a Menger sponge for hexahedral mesh
+t8code. The meshes have been refined into a Menger sponge for the hexahedral mesh
 with p4est (max. level 12) and a Sierpinski sponge for the tetrahedral mesh in
 t8code (max. level 13) to create a fractal pattern with billions of elements as
-a stress test. To make the two runs comparable the runtimes have been divided
+a stress test. To make the two runs comparable, the runtimes have been divided
 by the average local number of ghost elements on a MPI rank.
 \label{fig:ghost_layer_runtimes}
 ](pics/plot-timings-per-num-ghosts.png){width="90%"}
 
 ![Runtimes on JUQUEEN of the solver and summed mesh operations of our DG
 prototype code coupled with `t8code`. Mesh operations are ghost computation,
-ghost data exchange, partitioning (load balancing), refinement and coarsening
+ghost data exchange, partitioning (load balancing), refinement, and coarsening,
 as well as balancing (max. difference of one level of refinement of neighboring
 elements). t8code only takes around 15\% to 20\% of the overall runtime.
 \label{fig:t8code_runtimes}
@@ -308,13 +308,13 @@ elements). t8code only takes around 15\% to 20\% of the overall runtime.
 Even though `t8code` is a newcomer to the market, it is already in use as the
 mesh management backend in various research projects, most notably in the earth
 system modeling (ESM) community. In the
-[ADAPTEX](https://dlr-amr.github.io/adaptex/) project `t8code` is integrated
+[ADAPTEX](https://dlr-amr.github.io/adaptex/) project, `t8code` is integrated
 with the [Trixi framework](https://trixi-framework.github.io/)
-[@schlottkelakemper2020trixi] - a modern computational fluid dynamics code
+[@schlottkelakemper2020trixi], a modern computational fluid dynamics code
 written in [Julia](https://julialang.org/). Over the next years several ESM
 applications are planned to couple to this combination, including
 [MESSy](https://messy-interface.org),
-[MPTrac](https://helmholtz.software/software/mptrac), and
+[MPTrac](https://helmholtz.software/software/mptrac) and
 [SERGHEI](https://helmholtz.software/software/serghei).  Moreover, `t8code`
 also plays an important role in several DLR funded research projects, e.g.,
 [VisPlore](https://www.dlr.de/en/research-and-transfer/projects-and-missions/visplore)
@@ -339,7 +339,7 @@ publications on `t8code` [@holke_scalable_2018; @burstedde_coarse_2017;
 
 Johannes Holke thanks the Bonn International School Graduate School of
 Mathematics (BIGS) for funding the initial development of `t8code`.  Further
-development work was funded by the German Research Foundation as part of
+development work was funded by the German Research Foundation (DFG) as part of
 project 467255783, the European Union via NextGenerationEU and the German
 Federal Ministry of Research and Education (BMBF) as part of the ADAPTEX and
 PADME-AM projects. Development work was performed as part of the Helmholtz School
