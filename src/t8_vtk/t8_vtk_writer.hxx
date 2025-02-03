@@ -427,6 +427,10 @@ class vtk_writer {
   {
 #if T8_WITH_VTK
     T8_ASSERT (!fileprefix.empty ());
+    if (!grid_has_geometry(grid)){
+      t8_errorf("Error: Grid could not be written as vtk since it does not have geometries.\n");
+      return false;
+    }
 
     /* 
    * Write file: First we construct the unstructured Grid that will store the points and elements. It requires 
@@ -511,6 +515,15 @@ class vtk_writer {
     return false;
 #endif
   }
+
+  /**
+   * Checks if a grid has a geometry.
+   * \param [in] grid   The grid
+   * \return            Returns true if the grid has at least one geometry.
+   * 
+   */
+  bool
+  grid_has_geometry(const grid_t grid);
 
   bool write_treeid = false;
   bool write_mpirank = false;
