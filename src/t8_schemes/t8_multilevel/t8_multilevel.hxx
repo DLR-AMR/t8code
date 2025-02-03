@@ -355,6 +355,7 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (element_is_valid (child));
     multilevel_element *elem_m = static_cast<multilevel_element *> (elem);
+    T8_ASSERT (elem_m->is_child_of_itself == 0);
     multilevel_element *child_m = static_cast<multilevel_element *> (child);
     if (childid == 0) {
       /* The first child is the element itself. */
@@ -384,6 +385,7 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (length == element_get_num_children (elem));
     multilevel_element *elem_m = static_cast<multilevel_element *> (elem);
+    T8_ASSERT (elem_m->is_child_of_itself == 0);
     multilevel_element **children_m = static_cast<multilevel_element **> (children);
 
     /* The first child is the element itself. */
@@ -452,6 +454,13 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
   elements_are_family (t8_element_t *const *fam) const
   {
     T8_ASSERT (element_is_valid (fam[0]));
+    /* The first element should be parent of the other elements. */
+    const multilevel_element *elem_m0 = static_cast<multilevel_element *> (fam[0]);
+    const multilevel_element *elem_m1 = static_cast<multilevel_element *> (fam[1]);
+    const t8_element_t *parent = this->underlying ().element_get_parent (elem_m1->linear_element);
+    if (this->underlying ().element_is_equal (elem_m0, parent))
+      return 0;
+    /* The other elements should be siblings. */
     const t8_element_t elem[] return this->underlying ().elements_are_family (fam);
   }
 
@@ -466,7 +475,19 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
    *                      \b elem1 and \b elem2.
    */
   inline void
-  element_get_nca (const t8_element_t *elem1, const t8_element_t *elem2, t8_element_t *nca) const;
+  element_get_nca (const t8_element_t *elem1, const t8_element_t *elem2, t8_element_t *nca) const
+  {
+    T8_ASSERT (element_is_valid (elem1));
+    T8_ASSERT (element_is_valid (elem2));
+    T8_ASSERT (element_is_valid (nca));
+    const multilevel_element *elem_m1 = static_cast<multilevel_element *> (elem1);
+    const multilevel_element *elem_m2 = static_cast<multilevel_element *> (elem2);
+    multilevel_element *nca_m = static_cast<multilevel_element *> (nca);
+    /* The nca does not change due to the tree being multilevelized */
+    this->underlying ().element_get_nca (&elem_m1->linear_element, &elem_m2->linear_element, &nca_m->linear_element);
+    /* The ancestor cannot be child of itself since then it cannot get any ancestors. */
+    nca_m->is_child_of_itself = 0;
+  }
 
   /** Compute the shape of the face of an element.
    * \param [in] elem     The element.
@@ -474,7 +495,11 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
    * \return              The element shape of the face.
    */
   inline t8_element_shape_t
-  element_get_face_shape (const t8_element_t *elem, int face) const;
+  element_get_face_shape (const t8_element_t *elem, const int face) const
+  {
+    T8_ASSERT (element_is_valid (elem));
+    return this->underlying ().element_get_face_shape (&static_cast<multilevel_element *> (elem)->linear_element);
+  }
 
   /** Given an element and a face of the element, compute all children of
    * the element that touch the face.
@@ -489,10 +514,18 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
    * \param [in,out] child_indices If not NULL, an array of num_children integers must be given,
    *                      on output its i-th entry is the child_id of the i-th face_child.
    * It is valid to call this function with elem = children[0].
+   * TODO: Decide it the element itself is also a child at all faces.
    */
   inline void
-  element_get_children_at_face (const t8_element_t *elem, int face, t8_element_t *children[], int num_children,
-                                int *child_indices) const;
+  element_get_children_at_face (const t8_element_t *elem, const int face, t8_element_t *children[],
+                                const int num_children, int *child_indices) const
+  {
+    T8_ASSERT (element_is_valid (elem));
+    multilevel_element *elem_m = static_cast<multilevel_element *> (elem);
+    T8_ASSERT (elem_m->is_child_of_itself == 0);
+    return this->underlying ().element_get_children_at_face (&elem_m->linear_element, face, children, num_children,
+                                                             child_indices);
+  }
 
   /** Given a face of an element and a child number of a child of that face, return the face number
    * of the child of the element that matches the child face.
@@ -515,7 +548,13 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
    *                      that coincides with \a face_child.
    */
   inline int
-  element_face_get_child_face (const t8_element_t *elem, int face, int face_child) const;
+  element_face_get_child_face (const t8_element_t *elem, const int face, const int face_child) const
+  {
+    T8_ASSERT (element_is_valid (elem));
+    multilevel_element *elem_m = static_cast<multilevel_element *> (elem);
+    T8_ASSERT (elem_m->is_child_of_itself == 0);
+    return this->underlying ().element_face_get_child_face (&elem_m->linear_element, face, face_child);
+  }
 
   /** Given a face of an element return the face number
      * of the parent of the element that matches the element's face. Or return -1 if
@@ -528,7 +567,16 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
      * \note For the root element this function always returns \a face.
      */
   inline int
-  element_face_get_parent_face (const t8_element_t *elem, int face) const;
+  element_face_get_parent_face (const t8_element_t *elem, const int face) const
+  {
+    T8_ASSERT (element_is_valid (elem));
+    multilevel_element *elem_m = static_cast<multilevel_element *> (elem);
+    if (elem_m->is_child_of_itself) {
+      /* The parent of an element that is child of itself is the element itself. */
+      return face;
+    }
+    return this->underlying ().element_face_get_parent_face (&elem_m->linear_element, face);
+  }
 
   /** Given an element and a face of this element. If the face lies on the
    *  tree boundary, return the face number of the tree face.
@@ -540,7 +588,11 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
    *         Any arbitrary integer if \a is not at a tree boundary.
    */
   inline int
-  element_get_tree_face (const t8_element_t *elem, int face) const;
+  element_get_tree_face (const t8_element_t *elem, const int face) const
+  {
+    T8_ASSERT (element_is_valid (elem));
+    return this->underlying ().element_get_tree_face (&static_cast<multilevel_element *> (elem)->linear_element, face);
+  }
 
   /** Suppose we have two trees that share a common face f.
    *  Given an element e that is a subface of f in one of the trees
@@ -564,8 +616,17 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
    * \note \a elem1 and \a elem2 may point to the same element.
    */
   inline void
-  element_transform_face (const t8_element_t *elem1, t8_element_t *elem2, int orientation, int sign,
-                          int is_smaller_face) const;
+  element_transform_face (const t8_element_t *elem1, t8_element_t *elem2, const int orientation, const int sign,
+                          const int is_smaller_face) const
+  {
+    T8_ASSERT (element_is_valid (elem1));
+    T8_ASSERT (element_is_valid (elem2));
+    const multilevel_element *elem_m1 = static_cast<const multilevel_element *> (elem1);
+    const multilevel_element *elem_m2 = static_cast<const multilevel_element *> (elem2);
+    this->underlying ().element_transform_face (&elem_m1->linear_element, &elem_m2->linear_element, orientation, sign,
+                                                is_smaller_face);
+    elem_m2->is_child_of_itself = elem_m1->is_child_of_itself;
+  }
 
   /** Given a boundary face inside a root tree's face construct
    *  the element inside the root tree that has the given face as a
@@ -581,7 +642,17 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
    *                      with \a face.
    */
   inline int
-  element_extrude_face (const t8_element_t *face, t8_element_t *elem, int root_face, const t8_scheme *scheme) const;
+  element_extrude_face (const t8_element_t *face, t8_element_t *elem, int root_face, const t8_scheme *scheme) const
+  {
+    T8_ASSERT (element_is_valid (face));
+    T8_ASSERT (element_is_valid (elem));
+    const multilevel_element *face_m = static_cast<const multilevel_element *> (face);
+    multilevel_element *elem_m = static_cast<multilevel_element *> (elem);
+    const int face_num
+      = this->underlying ().element_extrude_face (&face_m->linear_element, &elem_m->linear_element, root_face, scheme);
+    elem_m->is_child_of_itself = face_m->is_child_of_itself;
+    return face_num;
+  }
 
   /** Construct the first descendant of an element at a given level that touches a given face.
    * \param [in] elem      The input element.
@@ -592,7 +663,18 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
    * \param [in] level     The level, at which the first descendant is constructed
    */
   inline void
-  element_get_first_descendant_face (const t8_element_t *elem, int face, t8_element_t *first_desc, int level) const;
+  element_get_first_descendant_face (const t8_element_t *elem, const int face, t8_element_t *first_desc,
+                                     const int level) const
+  {
+    T8_ASSERT (element_is_valid (elem));
+    T8_ASSERT (element_is_valid (first_desc));
+    const multilevel_element *elem_m = static_cast<const multilevel_element *> (elem);
+    T8_ASSERT (elem_m->is_child_of_itself == 0);
+    multilevel_element *first_desc_m = static_cast<multilevel_element *> (first_desc);
+    this->underlying ().element_get_first_descendant_face (&elem_m->linear_element, face, &first_desc_m->linear_element,
+                                                           level);
+    first_desc_m->is_child_of_itself = 0;
+  }
 
   /** Construct the last descendant of an element at a given level that touches a given face.
    * \param [in] elem      The input element.
@@ -603,7 +685,18 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
    * \param [in] level     The level, at which the last descendant is constructed
    */
   inline void
-  element_get_last_descendant_face (const t8_element_t *elem, int face, t8_element_t *last_desc, int level) const;
+  element_get_last_descendant_face (const t8_element_t *elem, const int face, t8_element_t *last_desc,
+                                    const int level) const
+  {
+    T8_ASSERT (element_is_valid (elem));
+    T8_ASSERT (element_is_valid (last_desc));
+    const multilevel_element *elem_m = static_cast<const multilevel_element *> (elem);
+    T8_ASSERT (elem_m->is_child_of_itself == 0);
+    multilevel_element *last_desc_m = static_cast<multilevel_element *> (last_desc);
+    this->underlying ().element_get_last_descendant_face (&elem_m->linear_element, face, &last_desc_m->linear_element,
+                                                          level);
+    last_desc_m->is_child_of_itself = 0;
+  }
 
   /** Construct the boundary element at a specific face.
    * \param [in] elem     The input element.
@@ -615,7 +708,16 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
    * \param [in] scheme   The scheme containing an eclass scheme for the boundary face.
    */
   inline void
-  element_get_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary, const t8_scheme *scheme) const;
+  element_get_boundary_face (const t8_element_t *elem, const int face, t8_element_t *boundary,
+                             const t8_scheme *scheme) const
+  {
+    T8_ASSERT (element_is_valid (elem));
+    T8_ASSERT (element_is_valid (boundary));
+    const multilevel_element *elem_m = static_cast<const multilevel_element *> (elem);
+    multilevel_element *boundary_m = static_cast<multilevel_element *> (boundary);
+    this->underlying ().element_get_boundary_face (&elem_m->linear_element, face, &boundary_m->linear_element, scheme);
+    boundary_m->is_child_of_itself = elem_m->is_child_of_itself;
+  }
 
   /** Compute whether a given element shares a given face with its root tree.
    * \param [in] elem     The input element.
@@ -623,7 +725,12 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
    * \return              True if \a face is a subface of the element's root element.
    */
   inline int
-  element_is_root_boundary (const t8_element_t *elem, int face) const;
+  element_is_root_boundary (const t8_element_t *elem, const int face) const
+  {
+    T8_ASSERT (element_is_valid (elem));
+    return this->underlying ().element_is_root_boundary (
+      &static_cast<const multilevel_element *> (elem)->linear_element, face);
+  }
 
   /** Construct the face neighbor of a given element if this face neighbor
    * is inside the root tree. Return 0 otherwise.
@@ -641,7 +748,19 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
    *                  on output.
    */
   inline int
-  element_get_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, int face, int *neigh_face) const;
+  element_get_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, const int face,
+                                    int *neigh_face) const
+  {
+    T8_ASSERT (element_is_valid (elem));
+    T8_ASSERT (element_is_valid (neigh));
+    const multilevel_element *elem_m = static_cast<const multilevel_element *> (elem);
+    multilevel_element *neigh_m = static_cast<multilevel_element *> (neigh);
+    const int inside = this->underlying ().element_get_face_neighbor_inside (
+      &elem_m->linear_element, &neigh_m->linear_element, face, neigh_face);
+    if (inside)
+      neigh_m->is_child_of_itself = 0;
+    return inside;
+  }
 
   /** Initialize the entries of an allocated element according to a
    *  given linear id in a uniform refinement.
