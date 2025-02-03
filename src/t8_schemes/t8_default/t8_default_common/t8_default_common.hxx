@@ -273,6 +273,25 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclassScheme> {
     return count_leaves_from_level (0, level, dim);
   }
 
+  inline int
+  element_max_num_vertex_neighbors () const
+  {
+    SC_ABORT ("Not implemented for this eclass\n");
+  }
+
+  inline void
+  element_vertex_neighbors (const t8_element_t *element, const int vertex, int *num_neighbors, t8_element_t **neighbors,
+                            int *neigh_ivertices) const
+  {
+    SC_ABORT ("Not implemented for this eclass\n");
+  }
+
+  inline void
+  element_corner_descendant (const t8_element_t *element, int vertex, int level, t8_element_t *descendant) const
+  {
+    SC_ABORT ("Not implemented for this eclass\n");
+  }
+
 #if T8_ENABLE_DEBUG
   inline void
   element_debug_print (const t8_element_t *elem) const
