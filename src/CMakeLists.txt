@@ -60,7 +60,7 @@ endif()
 
 if( T8CODE_ENABLE_OCC )
     target_compile_definitions( T8 PUBLIC T8_WITH_OCC=1 )
-    target_include_directories( T8 PUBLIC ${OpenCASCADE_INCLUDE_DIR} )
+    target_include_directories( T8 SYSTEM PUBLIC ${OpenCASCADE_INCLUDE_DIR} )
     target_link_libraries( T8 PUBLIC ${OpenCASCADE_LIBRARIES} )
 endif()
 
@@ -122,7 +122,8 @@ target_sources( T8 PRIVATE
     t8_forest/t8_forest_ghost.cxx 
     t8_forest/t8_forest_iterate.cxx 
     t8_forest/t8_forest_balance.cxx 
-    t8_forest/t8_forest_netcdf.cxx 
+    t8_forest/t8_forest_netcdf.cxx
+    t8_forest/t8_forest_search/t8_forest_search.cxx 
     t8_geometry/t8_geometry.cxx 
     t8_geometry/t8_geometry_helpers.c 
     t8_geometry/t8_geometry_base.cxx 
@@ -147,7 +148,7 @@ target_sources( T8 PRIVATE
     t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.c
     t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_connectivity.c 
     t8_schemes/t8_default/t8_default_quad/t8_default_quad.cxx
-    t8_schemes/t8_default/t8_default_quad/t8_dquad_bits.c
+    t8_schemes/t8_default/t8_default_quad/t8_default_quad_bits.cxx
     t8_schemes/t8_default/t8_default_tet/t8_default_tet.cxx
     t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.c
     t8_schemes/t8_default/t8_default_tet/t8_dtet_connectivity.c
@@ -156,6 +157,7 @@ target_sources( T8 PRIVATE
     t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.c
     t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.cxx
     t8_schemes/t8_default/t8_default_vertex/t8_dvertex_bits.c
+    t8_schemes/t8_standalone/t8_standalone.cxx
     t8_vtk/t8_vtk_polydata.cxx 
     t8_vtk/t8_vtk_unstructured.cxx 
     t8_vtk/t8_vtk_parallel.cxx 
