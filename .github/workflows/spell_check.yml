@@ -17,3 +17,12 @@ jobs:
         uses: actions/checkout@v4
       - name: Check spelling
         uses: crate-ci/typos@master
+      - name: check macros
+        run: |
+          git diff --name-only --diff-filter=A | xargs ./scripts/check_macros.scp &> >(tee -a indent_script_output.txt)
+      - name: Archive script output
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: t8code indentation report
+          path: indent_script_output.txt
