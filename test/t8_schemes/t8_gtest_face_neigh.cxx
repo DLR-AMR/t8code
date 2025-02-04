@@ -199,4 +199,4 @@ TEST_P (face_neigh, recursive_check_diff)
   t8_recursive_check_diff (child, element, neigh, scheme, eclass, maxlvl, level);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_face_neigh, face_neigh, DefaultSchemes);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_face_neigh, face_neigh, DefaultScheme);

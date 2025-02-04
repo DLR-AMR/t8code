@@ -29,6 +29,7 @@
 #include <t8_forest/t8_forest_private.h>
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
 #include <test/t8_gtest_macros.hxx>
+#include <test/t8_gtest_schemes.hxx>
 
 /* In this test we adapt, balance and partition a uniform forest.
  * We do this in two ways:
@@ -38,15 +39,18 @@
  * After these two forests are created, we check for equality.
  */
 
-class forest_commit: public testing::TestWithParam<cmesh_example_base *> {
+class forest_commit: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>> {
  protected:
   void
   SetUp () override
   {
+    const int scheme_id = std::get<0> (GetParam ());
+    scheme = create_from_scheme_id (scheme_id);
     /* Construct a cmesh */
-    cmesh = GetParam ()->cmesh_create ();
+    cmesh = std::get<1> (GetParam ())->cmesh_create ();
     if (t8_cmesh_is_empty (cmesh)) {
       /* forest_commit does not support empty cmeshes*/
+      scheme->unref ();
       GTEST_SKIP ();
     }
   }
@@ -56,6 +60,7 @@ class forest_commit: public testing::TestWithParam<cmesh_example_base *> {
     t8_cmesh_destroy (&cmesh);
   }
   t8_cmesh_t cmesh;
+  const t8_scheme *scheme;
 };
 
 /* Adapt a forest such that always the first child of a
@@ -138,8 +143,6 @@ TEST_P (forest_commit, test_forest_commit)
 
   const int level_step = 2;
 
-  const t8_scheme *scheme = t8_scheme_new_default ();
-
   /* Compute the first level, such that no process is empty */
   int min_level = t8_forest_min_nonempty_level (cmesh, scheme);
   /* Use one level with empty processes */
@@ -167,4 +170,5 @@ TEST_P (forest_commit, test_forest_commit)
   t8_debugf ("Done testing forest commit.");
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_forest_commit, forest_commit, AllCmeshsParam, pretty_print_base_example);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_forest_commit, forest_commit,
+                          testing::Combine (AllSchemeCollections, AllCmeshsParam), pretty_print_base_example_scheme);
