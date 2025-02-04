@@ -146,6 +146,22 @@ t8_search_base::do_search ()
 }
 
 void
+t8_partition_search_base::search_tree (const t8_locidx_t ltreeid, int pfirst, int plast)
+{
+  const t8_eclass_t eclass = t8_cmesh_get_tree_class (forest->cmesh, ltreeid);
+  const t8_scheme *ts = t8_forest_get_scheme (forest);
+
+  /* compute the root element */
+  t8_element_t *root;
+  ts->element_new (eclass, 1, &root);
+  t8_element_get_root (ts, eclass, root);
+
+  /* start the top-down search */
+
+  ts->element_destroy (eclass, 1, &root);
+}
+
+void
 t8_partition_search_base::do_search ()
 {
   T8_ASSERT (t8_forest_is_committed (forest));
@@ -163,6 +179,7 @@ t8_partition_search_base::do_search ()
     plast = t8_offset_last_owner_of_tree (num_procs, itree, tree_offsets, &plast);
 
     /* go into recursion for this tree */
+    search_tree (itree, pfirst, plast);
   }
 }
 

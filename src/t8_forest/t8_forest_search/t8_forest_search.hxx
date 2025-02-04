@@ -566,6 +566,16 @@ class t8_partition_search_base {
   t8_forest_t forest;
 
  private:
+ /** @brief Searches a tree within the forest.
+   *
+   * This function performs a search operation on a tree identified by the given local tree ID.
+   * It uses the \a search_recursion function to perform the search.
+   *
+   * \param[in] ltreeid The local tree ID of the tree to be searched.
+   */
+  void
+  search_tree (const t8_locidx_t ltreeid, int pfirst, int plast);
+
   /** \brief Checks if the search should stop due to empty queries.
    *
    */
