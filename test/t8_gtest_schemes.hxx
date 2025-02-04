@@ -48,8 +48,7 @@ auto print_all_schemes = [] (const testing::TestParamInfo<std::tuple<int, t8_ecl
          + t8_eclass_to_string[std::get<1> (info.param)];
 };
 
-#define AllSchemes ::testing::Combine (::testing::Range (0, 2), ::testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT))
 #define AllSchemeCollections ::testing::Range (0, 2)
-#define DefaultScheme ::testing::Combine (::testing::Values (0), ::testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT))
+#define AllSchemes ::testing::Combine (AllSchemeCollections, ::testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT))
 
 #endif /* T8_GTEST_SCHEMES_HXX */

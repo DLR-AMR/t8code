@@ -949,11 +949,8 @@ struct t8_standalone_scheme
 
     /**Adapt coordinates*/
     t8_element_coord length = element_get_len (el->level);
-    t8_debugf ("length: %i, sign:%i\n", length, sign);
 
-    t8_debugf ("neigh_coords[%i]: %i\n", facenormal_dim, neighbor->coords[facenormal_dim]);
     neighbor->coords[facenormal_dim] += length * sign;
-    t8_debugf ("neigh_coords[%i]: %i\n", facenormal_dim, neighbor->coords[facenormal_dim]);
 
     *neigh_face = face ^ 1;
 
@@ -1997,7 +1994,6 @@ struct t8_standalone_scheme
 
     boundary->level = el->level;
     for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
-      t8_debugf ("consider dimension idim %i\n", idim);
       int ifacedim;
       if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
         int facenormal_dim = root_face / 2;
@@ -2014,13 +2010,10 @@ struct t8_standalone_scheme
       else {
         SC_ABORT ("Only implemented for hypercubes.\n");
       }
-      t8_debugf ("found ifacedim %i\n", ifacedim);
       if (ifacedim != -1) {
         if constexpr (face_TEclass != T8_ECLASS_VERTEX && T8_ELEMENT_DIM[face_TEclass] < T8_ELEMENT_DIM[TEclass]) {
-          t8_debugf ("set boundary coords %i\n", ifacedim);
           boundary->coords[ifacedim] = el->coords[idim]
                                        << (T8_ELEMENT_MAXLEVEL[face_TEclass] - T8_ELEMENT_MAXLEVEL[TEclass]);
-          t8_debugf ("to %i\n", boundary->coords[ifacedim]);
         }
         else {
           SC_ABORT_NOT_REACHED ();
@@ -2078,7 +2071,6 @@ struct t8_standalone_scheme
       }
       if (ifacedim != -1) {
         if constexpr (face_TEclass != T8_ECLASS_VERTEX && T8_ELEMENT_DIM[face_TEclass] < T8_ELEMENT_DIM[TEclass]) {
-          t8_debugf ("shift right by %i\n", (T8_ELEMENT_MAXLEVEL[face_TEclass] - T8_ELEMENT_MAXLEVEL[TEclass]));
           el->coords[idim]
             = face->coords[ifacedim] >> (T8_ELEMENT_MAXLEVEL[face_TEclass] - T8_ELEMENT_MAXLEVEL[TEclass]);
         }
@@ -2095,14 +2087,12 @@ struct t8_standalone_scheme
           SC_ABORT ("Only implemented for hypercubes.\n");
         }
         if (is_1_boundary) {
-          t8_debugf ("set to h\n");
           el->coords[idim] = h;
         }
         else {
           el->coords[idim] = 0;
         }
       }
-      t8_debugf ("set elem->coords[%i] to %i\n", idim, el->coords[idim]);
     }
     if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
       return root_face;
