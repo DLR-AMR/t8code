@@ -19,7 +19,9 @@ jobs:
         uses: crate-ci/typos@master
       - name: check macros
         run: |
-          git diff --name-only --diff-filter=A | xargs ./scripts/check_macros.scp &> >(tee -a indent_script_output.txt)
+          for file in $(git diff --name-only --diff-filter=A); do
+            ./scripts/check_macros.scp "$file" &>> indent_script_output.txt
+          done
       - name: Archive script output
         if: failure()
         uses: actions/upload-artifact@v4
