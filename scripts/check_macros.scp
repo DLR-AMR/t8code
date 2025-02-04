@@ -8,7 +8,7 @@ fi
 file_path=$1
 
 # 
-# This script searches for lines containing the macro definition '#ifdef T8_ENABLE_' 
+# This script searches for lines containing a macro definition in the style of '#ifdef T8_ENABLE_' 
 # in the specified file and processes each matching line.
 # # It uses 'grep' to find all occurrences of '#ifdef T8_ENABLE_' in the file located 
 # at the path stored in the variable 'file_path'. The '-n' option with 'grep' 
