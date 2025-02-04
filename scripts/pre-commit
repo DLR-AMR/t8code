@@ -95,11 +95,16 @@ do
       nocontinue=1
     fi
 
-    $CHECK_MACROS $file > /dev/null 2>&1
+    # This script checks for the usage of #ifdef T8_ENABLE_ macros in the specified file.
+    # If such macros are found, it suggests using #if T8_ENABLE_ instead and sets a flag to indicate the issue.
+    # - $CHECK_MACROS: Command or script to check the macros in the file.
+    # - $file: The file being checked.
+    # - status: The exit status of the $CHECK_MACROS command.
+    # - nocontinue: Flag set to 1 if the incorrect macro usage is found.
+    $CHECK_MACROS $file
     status=$?
     if test $status -ne 0 
     then
-      echo "File $file uses #ifdef T8_ENABLE_. Use #if T8_ENABLE_ instead."
       nocontinue=1
     fi
   fi
