@@ -135,7 +135,7 @@ class vtk_writer {
    * \return true 
    * \return false 
    */
-  inline bool
+  bool
   write_ASCII (const grid_t grid);
 
   /**
