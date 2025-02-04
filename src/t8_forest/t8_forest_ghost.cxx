@@ -1385,7 +1385,7 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
 
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  t8_global_productionf ("Into t8_forest_ghost with %i local elements.\n", t8_forest_get_local_num_elements (forest));
+  t8_debugf ("Into t8_forest_ghost with %i local elements.\n", t8_forest_get_local_num_elements (forest));
 
   /* In parallel, check forest for deleted elements. The ghost algorithm currently
   * does not work on forests with deleted elements.
@@ -1433,7 +1433,7 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
     /* Initialize the ghost structure */
     t8_forest_ghost_init (&forest->ghosts, forest->ghost_type);
     ghost = forest->ghosts;
-
+    t8_debugf ("before ghost fill\n");
     if (unbalanced_version == -1) {
       t8_forest_ghost_fill_remote_v3 (forest);
     }
@@ -1441,15 +1441,19 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
       /* Construct the remote elements and processes. */
       t8_forest_ghost_fill_remote (forest, ghost, unbalanced_version != 0);
     }
+    t8_debugf ("after ghost fill, before sendstart\n");
 
     /* Start sending the remote elements */
     send_info = t8_forest_ghost_send_start (forest, ghost, &requests);
+    t8_debugf ("after sendstart before recieve\n");
 
     /* Receive the ghost elements from the remote processes */
     t8_forest_ghost_receive (forest, ghost);
+    t8_debugf ("after recieve\n");
 
     /* End sending the remote elements */
     t8_forest_ghost_send_end (forest, ghost, send_info, requests);
+    t8_debugf ("after send end\n");
   }
 
   if (forest->profile != NULL) {
