@@ -1,0 +1,12 @@
+#!/bin/bash
+
+if [ "$#" -ne 1 ]; then
+    echo "Usage: $0 <file_path>"
+    exit 1
+fi
+
+file_path=$1
+
+grep -n '#ifdef T8_ENABLE_' "$file_path" | while IFS=: read -r line_number line; do
+    echo "Macro found in $file_path on line $line_number: $line"
+done
