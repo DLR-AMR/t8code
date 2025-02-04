@@ -26,6 +26,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_schemes/t8_scheme.hxx>
+#include <t8_cmesh/t8_cmesh_offset.h>
 
 void
 t8_search_base::search_recursion (const t8_locidx_t ltreeid, t8_element_t *element, const t8_scheme *ts,
@@ -141,6 +142,27 @@ t8_search_base::do_search ()
   const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (this->forest);
   for (t8_locidx_t itree = 0; itree < num_local_trees; itree++) {
     this->search_tree (itree);
+  }
+}
+
+void
+t8_partition_search_base::do_search ()
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (!t8_cmesh_is_partitioned (t8_forest_get_cmesh (forest)));
+  T8_ASSERT (forest->tree_offsets != NULL);
+
+  const t8_gloidx_t num_global_trees = t8_forest_get_num_global_trees (this->forest);
+  int pfirst, plast;
+  int num_procs = forest->mpisize;
+  const t8_gloidx_t *tree_offsets = t8_shmem_array_get_gloidx_array (forest->tree_offsets);
+  for (t8_locidx_t itree = 0; itree < (t8_locidx_t) num_global_trees; itree++) {
+    pfirst = -1;
+    plast = -1;
+    pfirst = t8_offset_first_owner_of_tree (num_procs, itree, tree_offsets, &pfirst);
+    plast = t8_offset_last_owner_of_tree (num_procs, itree, tree_offsets, &plast);
+
+    /* go into recursion for this tree */
   }
 }
 
