@@ -34,7 +34,7 @@
 # This is the indent script in the project's directory
 CHECK_INDENT=./scripts/check_if_file_indented.scp
 
-CHECK_MAKROS=./scripts/check_makros.scp
+CHECK_MACROS=./scripts/check_makros.scp
 
 TYPOS=`which typos 2> /dev/null`
 TYPOS_CONFIG_FILE=./.typos.toml
@@ -95,12 +95,13 @@ do
       nocontinue=1
     fi
 
-    $CHECK_MAKROS $file > /dev/null 2>&1
+    $CHECK_MACROS $file > /dev/null 2>&1
     status=$?
     if test $status -ne 0 
     then
       echo "File $file uses #ifdef T8_ENABLE_. Use #if T8_ENABLE_ instead."
       nocontinue=1
+    fi
   fi
 done
 
