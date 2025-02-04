@@ -154,4 +154,4 @@ TEST_P (class_successor, test_recursive_and_deep_successor)
   t8_deep_successor (element, successor, last, scheme, tree_class);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_successor, class_successor, AllSchemes);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_successor, class_successor, AllSchemes, print_all_schemes);
