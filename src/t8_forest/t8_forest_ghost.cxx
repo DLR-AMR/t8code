@@ -1449,7 +1449,7 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
 
     /* Receive the ghost elements from the remote processes */
     t8_forest_ghost_receive (forest, ghost);
-    t8_debugf ("after recieve\n");
+    t8_debugf ("after receive\n");
 
     /* End sending the remote elements */
     t8_forest_ghost_send_end (forest, ghost, send_info, requests);
