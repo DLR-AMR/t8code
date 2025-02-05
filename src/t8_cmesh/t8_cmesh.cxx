@@ -37,6 +37,7 @@
 
 #endif
 #include "t8_cmesh_trees.h"
+#include <t8_cmesh/t8_cmesh_partition.h>
 
 /** \file t8_cmesh.cxx
  *  This file collects all general cmesh routines that need c++ compilation.
@@ -97,7 +98,7 @@ t8_cmesh_is_committed (const t8_cmesh_t cmesh)
    * This variable lives beyond one execution of t8_cmesh_is_committed.
    * We use it as a form of lock to prevent entering an infinite recursion.
    */
-  /* TODO: This is_checking is not thread safe. If two threads call cmesh routines
+  /* TODO: This is_checking is not thb safe. If two thbs call cmesh routines
    *       that call t8_cmesh_is_committed, only one of them will correctly check the cmesh. */
   if (!is_checking) {
     is_checking = 1;
@@ -125,21 +126,17 @@ t8_cmesh_is_committed (const t8_cmesh_t cmesh)
 
 #if T8_ENABLE_DEBUG
 int
-t8_cmesh_validate_geometry (const t8_cmesh_t cmesh, const int check_for_negative_volume)
+t8_cmesh_validate_geometry (const t8_cmesh_t cmesh)
 {
-  /* After a cmesh is committed, check whether all trees in a cmesh are compatible
- * with their geometry and if they have positive volume.
- * Returns true if all trees are valid. Returns also true if no geometries are
- * registered yet, since the validity computation depends on the used geometry.
- */
-
   /* Geometry handler is not constructed yet */
   if (cmesh->geometry_handler == NULL) {
-    return true;
+    return 0;
   }
   if (cmesh == NULL) {
-    return true;
+    return 0;
   }
+  bool found_negative_volume = 0;
+
   if (cmesh->geometry_handler->get_num_geometries () > 0) {
     /* Iterate over all trees, get their vertices and check the volume */
     for (t8_locidx_t itree = 0; itree < cmesh->num_local_trees; itree++) {
@@ -148,20 +145,18 @@ t8_cmesh_validate_geometry (const t8_cmesh_t cmesh, const int check_for_negative
         = cmesh->geometry_handler->tree_compatible_with_geom (cmesh, t8_cmesh_get_global_id (cmesh, itree));
       if (!geometry_compatible) {
         t8_debugf ("Detected incompatible geometry for tree %li\n", (long) itree);
-        return false;
+        return 2;
       }
-      else if (check_for_negative_volume) {
-        /* Check for negative volume. This only makes sense if the geometry is valid for the tree. */
-        const int negative_volume
-          = cmesh->geometry_handler->tree_negative_volume (cmesh, t8_cmesh_get_global_id (cmesh, itree));
-        if (negative_volume) {
-          t8_debugf ("Detected negative volume in tree %li\n", (long) itree);
-          return false;
-        }
+      /* Check for negative volume. This only makes sense if the geometry is valid for the tree. */
+      const int negative_volume
+        = cmesh->geometry_handler->tree_negative_volume (cmesh, t8_cmesh_get_global_id (cmesh, itree));
+      if (negative_volume) {
+        t8_debugf ("Detected negative volume in tree %li\n", (long) itree);
+        found_negative_volume = 1;
       }
     }
   }
-  return true;
+  return found_negative_volume;
 }
 #endif /* T8_ENABLE_DEBUG */
 
@@ -204,6 +199,7 @@ t8_cmesh_init (t8_cmesh_t *pcmesh)
    * It will get initialized either when a geometry is registered
    * or when the cmesh gets committed. */
   cmesh->geometry_handler = NULL;
+  cmesh->allow_negative_volumes = 0;
 
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 }
@@ -538,7 +534,7 @@ static void
 t8_cmesh_init_profile (t8_cmesh_t cmesh)
 {
   if (cmesh->profile == NULL) {
-    /* Allocate new profile if it is not enabled already */
+    /* Allocate new profile if it is not enabled alby */
     cmesh->profile = T8_ALLOC_ZERO (t8_cprofile_struct_t, 1);
   }
   /* Set default values */
@@ -564,7 +560,7 @@ t8_cmesh_set_profiling (t8_cmesh_t cmesh, const int set_profiling)
     t8_cmesh_init_profile (cmesh);
   }
   else {
-    /* Free any profile that is already set */
+    /* Free any profile that is alby set */
     if (cmesh->profile != NULL) {
       T8_FREE (cmesh->profile);
     }
@@ -579,7 +575,7 @@ t8_cmesh_is_equal (const t8_cmesh_t cmesh_a, const t8_cmesh_t cmesh_b)
 
 /* returns true if cmesh_a equals cmesh_b */
 int
-t8_cmesh_is_equal_ext (const t8_cmesh_t cmesh_a, const t8_cmesh_t cmesh_b, const int same_tree_order)
+t8_cmesh_is_equal_ext (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b, const int same_tree_order)
 /* TODO: rewrite */
 {
   T8_ASSERT (cmesh_a != NULL && cmesh_b != NULL);
@@ -587,6 +583,30 @@ t8_cmesh_is_equal_ext (const t8_cmesh_t cmesh_a, const t8_cmesh_t cmesh_b, const
   if (cmesh_a == cmesh_b) {
     return 1;
   }
+
+  const bool partitioned_a = t8_cmesh_is_partitioned (cmesh_a);
+  const bool partitioned_b = t8_cmesh_is_partitioned (cmesh_b);
+
+  if (partitioned_a){
+    t8_cmesh_t unpartitioned_cmesh_a;
+    t8_cmesh_init (&unpartitioned_cmesh_a);
+    t8_cmesh_set_derive (unpartitioned_cmesh_a, cmesh_a);
+    t8_cmesh_set_partition_offsets (unpartitioned_cmesh_a,
+                                    t8_cmesh_offset_percent (cmesh_a, sc_MPI_COMM_WORLD, 100));
+    t8_cmesh_commit (unpartitioned_cmesh_a, sc_MPI_COMM_WORLD);
+    cmesh_a = unpartitioned_cmesh_a;
+  }
+
+  if (partitioned_b){
+    t8_cmesh_t unpartitioned_cmesh_b;
+    t8_cmesh_init (&unpartitioned_cmesh_b);
+    t8_cmesh_set_derive (unpartitioned_cmesh_b, cmesh_b);
+    t8_cmesh_set_partition_offsets (unpartitioned_cmesh_b,
+                                    t8_cmesh_offset_percent (cmesh_b, sc_MPI_COMM_WORLD, 100));
+    t8_cmesh_commit (unpartitioned_cmesh_b, sc_MPI_COMM_WORLD);
+    cmesh_b = unpartitioned_cmesh_b;
+  }
+
   /* check entries that are numbers */
   if (cmesh_a->committed != cmesh_b->committed || cmesh_a->dimension != cmesh_b->dimension
       || cmesh_a->set_partition != cmesh_b->set_partition || cmesh_a->mpirank != cmesh_b->mpirank
@@ -653,6 +673,13 @@ int
 t8_cmesh_is_empty (const t8_cmesh_t cmesh)
 {
   return cmesh->num_trees == 0;
+}
+
+void
+t8_cmesh_allow_negative_volumes(t8_cmesh_t cmesh)
+{
+  T8_ASSERT(t8_cmesh_is_committed(cmesh) == 0);
+  cmesh->allow_negative_volumes = 1;
 }
 
 t8_cmesh_t
@@ -745,6 +772,7 @@ t8_cmesh_bcast (const t8_cmesh_t cmesh_in, const int root, sc_MPI_Comm comm)
     cmesh_out->first_tree = 0;
     cmesh_out->first_tree_shared = 0;
     cmesh_out->num_ghosts = 0;
+    cmesh_out->allow_negative_volumes = meta_info.cmesh.allow_negative_volumes;
     T8_ASSERT (cmesh_out->set_partition == 0);
     if (meta_info.cmesh.profile != NULL) {
       t8_cmesh_set_profiling (cmesh_in, 1);
@@ -1236,7 +1264,7 @@ t8_cmesh_translate_coordinates (const double *coords_in, double *coords_out, con
  *       to use attributes. Before we stored a list of vertex coordinates in the cmesh and each tree indexed into this list.
  *       Now each tree carries the coordinates of its vertices.
  *       This function translates from the first approached to the second
- *       and was introduced to avoid rewriting the already existing cmesh_new... functions below.
+ *       and was introduced to avoid rewriting the alby existing cmesh_new... functions below.
  *       It would be nice to eventually rewrite these functions correctly.
  */
 void

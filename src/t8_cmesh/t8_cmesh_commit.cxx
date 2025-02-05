@@ -549,6 +549,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   SC_CHECK_MPI (mpiret);
   if (cmesh->set_from != NULL) {
     cmesh->dimension = cmesh->set_from->dimension;
+    cmesh->allow_negative_volumes = cmesh->set_from->allow_negative_volumes;
     if (cmesh->face_knowledge == -1) {
       /* Keep the face knowledge of the from cmesh, if -1 was specified */
       cmesh->face_knowledge = cmesh->set_from->face_knowledge;
@@ -604,7 +605,18 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
              (long) cmesh->num_local_trees, (long long) cmesh->num_trees, (long) cmesh->num_ghosts);
 
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
-  T8_ASSERT (t8_cmesh_validate_geometry (cmesh, 0));
+  #if T8_ENABLE_DEBUG
+  if (cmesh->allow_negative_volumes == 0){
+    T8_ASSERT (t8_cmesh_validate_geometry (cmesh) == 0);
+  }
+  else{
+    int return_code = t8_cmesh_validate_geometry (cmesh);
+    if (return_code == 1){
+      t8_debugf("WARNING: Negative volume detected. Ignoring since negative volumes were allowed by the user.\n");
+      T8_ASSERT (return_code < 2);
+    }
+  }
+  #endif
   /* If profiling is enabled, we measure the runtime of  commit. */
   if (cmesh->profile != NULL) {
     cmesh->profile->commit_runtime = sc_MPI_Wtime () - cmesh->profile->commit_runtime;

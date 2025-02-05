@@ -143,8 +143,9 @@ typedef struct t8_cmesh
   t8_locidx_t inserted_ghosts; /**< Count the number of inserted ghosts to
                                            check at commit if it equals the total number. */
 #endif
-  t8_stash_t stash;       /**< Used as temporary storage for the trees before commit. */
-  t8_cprofile_t *profile; /**< Used to measure runtimes and statistics of the cmesh algorithms. */
+  t8_stash_t stash;           /**< Used as temporary storage for the trees before commit. */
+  t8_cprofile_t *profile;     /**< Used to measure runtimes and statistics of the cmesh algorithms. */
+  int allow_negative_volumes; /**< Used to define if a cmesh can have negative volumes. */
 } t8_cmesh_struct_t;
 
 /* TODO: cghost could be the same type as ctree.

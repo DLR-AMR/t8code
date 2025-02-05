@@ -39,7 +39,7 @@ class vtk_write_read_test: public testing::TestWithParam<cmesh_example_base *> {
   void
   SetUp () override
   {
-    cmesh = GetParam ()->cmesh_create (); /* create a cmesh from example base */
+    cmesh_write = GetParam ()->cmesh_create (); /* create a cmesh from example base */
   }
 
   void
@@ -47,50 +47,25 @@ class vtk_write_read_test: public testing::TestWithParam<cmesh_example_base *> {
   {
     std::remove ("test_vtk_0.vtu");
     std::remove ("test_vtk.pvtu"); /* delete files after test finished */
+    t8_cmesh_destroy (&cmesh_write);
   }
-  t8_cmesh_t cmesh;
+  t8_cmesh_t cmesh_write;
 };
 
 TEST_P (vtk_write_read_test, write_read_vtk)
 {
-  t8_cmesh_t unpartitioned_cmesh_read, unpartitioned_cmesh_write;
+  const int write_success = t8_cmesh_vtk_write_file_via_API (cmesh_write, "test_vtk", sc_MPI_COMM_WORLD);
+  const int partitioned = t8_cmesh_is_partitioned (cmesh_write);
+  t8_cmesh_t cmesh_read = t8_vtk_reader_cmesh ("test_vtk.pvtu", partitioned, 0, sc_MPI_COMM_WORLD, VTK_SERIAL_FILE);
+  ASSERT_EQ (cmesh_read != NULL, write_success);
 
-  const int write_success = t8_cmesh_vtk_write_file_via_API (cmesh, "test_vtk", sc_MPI_COMM_WORLD);
-  const bool partitioned = t8_cmesh_is_partitioned (cmesh);
-  t8_cmesh_t cmesh2 = t8_vtk_reader_cmesh ("test_vtk.pvtu", partitioned, 0, sc_MPI_COMM_WORLD, VTK_SERIAL_FILE);
-  ASSERT_EQ (cmesh2 != NULL, write_success);
-
-  if (cmesh2 != NULL) {
-    if (partitioned) { /* repartition if cmesh is partitioned */
-      t8_cmesh_init (&unpartitioned_cmesh_write);
-      t8_cmesh_set_derive (unpartitioned_cmesh_write, cmesh);
-      t8_cmesh_set_partition_offsets (unpartitioned_cmesh_write,
-                                      t8_cmesh_offset_percent (cmesh, sc_MPI_COMM_WORLD, 100));
-      t8_cmesh_commit (unpartitioned_cmesh_write, sc_MPI_COMM_WORLD);
-      t8_cmesh_init (&unpartitioned_cmesh_read);
-      t8_cmesh_set_derive (unpartitioned_cmesh_read, cmesh2);
-      t8_cmesh_set_partition_offsets (unpartitioned_cmesh_read,
-                                      t8_cmesh_offset_percent (cmesh2, sc_MPI_COMM_WORLD, 100));
-      t8_cmesh_commit (unpartitioned_cmesh_read, sc_MPI_COMM_WORLD);
-
-      /* check equality of repartioned cmeshes */
-      const t8_gloidx_t num_trees_cmesh_1 = t8_cmesh_get_num_trees (unpartitioned_cmesh_write);
-      const t8_gloidx_t num_trees_cmesh_2 = t8_cmesh_get_num_trees (unpartitioned_cmesh_read);
-      ASSERT_EQ (num_trees_cmesh_1, num_trees_cmesh_2);
-      EXPECT_CMESH_EQ (unpartitioned_cmesh_write, unpartitioned_cmesh_read);
-
-      /* destroy both cmeshes */
-      t8_cmesh_unref (&unpartitioned_cmesh_read);
-      t8_cmesh_unref (&unpartitioned_cmesh_write);
-    }
-    else { /* continue normally without repartitioning */
-      const t8_gloidx_t num_trees_cmesh_1 = t8_cmesh_get_num_trees (cmesh);
-      const t8_gloidx_t num_trees_cmesh_2 = t8_cmesh_get_num_trees (cmesh2);
-      ASSERT_EQ (num_trees_cmesh_1, num_trees_cmesh_2);
-      EXPECT_CMESH_EQ (cmesh, cmesh2);
-      t8_cmesh_unref (&cmesh2);
-      t8_cmesh_unref (&cmesh);
-    }
+  if (cmesh_read != NULL) {
+    /* check equality of cmeshes */
+    const t8_gloidx_t num_trees_cmesh_1 = t8_cmesh_get_num_trees (cmesh_write);
+    const t8_gloidx_t num_trees_cmesh_2 = t8_cmesh_get_num_trees (cmesh_read);
+    ASSERT_EQ (num_trees_cmesh_1, num_trees_cmesh_2);
+    EXPECT_CMESH_EQ (cmesh_write, cmesh_read);
+    t8_cmesh_destroy (&cmesh_read);
   }
 }
 
