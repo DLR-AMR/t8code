@@ -841,6 +841,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
   int entity_dim;
   long node_indices[T8_ECLASS_MAX_CORNERS], *stored_indices, num_ele_in_block;
   double tree_vertices[T8_ECLASS_MAX_CORNERS * 3];
+  t8_gloidx_t global_id_of_node[T8_ECLASS_MAX_CORNERS];
 
   T8_ASSERT (fp != NULL);
   /* Search for the line beginning with "$Elements" */
@@ -950,7 +951,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
         }
         /* Now the nodes are read and we get their coordinates from
          * the stored nodes */
-        for (i = 0; i < num_nodes; i++) {
+        for (i = 0; i < num_nodes; i++) { 
           Node.index = node_indices[i];
           sc_hash_lookup (vertices, (void *) &Node, (void ***) &found_node);
           /* Add node coordinates to the tree vertices */
@@ -959,6 +960,8 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
           tree_vertices[3 * t8_vertex_num] = (*found_node)->coordinates[0];
           tree_vertices[3 * t8_vertex_num + 1] = (*found_node)->coordinates[1];
           tree_vertices[3 * t8_vertex_num + 2] = (*found_node)->coordinates[2];
+          /* Add global index of node */
+          global_id_of_node[t8_vertex_num] = num_nodes % vertices->elem_count;
         }
         /* Detect and correct negative volumes */
         if (t8_cmesh_tree_vertices_negative_volume (eclass, tree_vertices, num_nodes)) {
@@ -1017,12 +1020,18 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
             }
             temp_node = tree_nodes[iswitch];
             tree_nodes[iswitch] = tree_nodes[switch_indices[iswitch]];
-            tree_nodes[switch_indices[iswitch]] = temp_node;
+            tree_nodes[switch_indices[iswitch]] = temp_node; 
+            /* Switch global indices */
+            t8_gloidx_t temp_index = global_id_of_node[iswitch];
+            global_id_of_node[iswitch] = global_id_of_node[switch_indices[iswitch]];
+            global_id_of_node[switch_indices[iswitch]] = temp_index; 
           }
           T8_ASSERT (!t8_cmesh_tree_vertices_negative_volume (eclass, tree_vertices, num_nodes));
         } /* End of negative volume handling */
         /* Set the vertices of this tree */
         t8_cmesh_set_tree_vertices (cmesh, tree_count, tree_vertices, num_nodes);
+        /* Set the global indices of the nodes of this tree */
+        t8_cmesh_set_global_vertices_of_tree (cmesh, tree_count, global_id_of_node, num_nodes);
         /* If wished, we store the vertex indices of that tree. */
         if (vertex_indices != NULL) {
           /* Allocate memory for the indices */
