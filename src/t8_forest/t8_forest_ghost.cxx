@@ -1910,7 +1910,10 @@ t8_forest_ghost_definition_unref (t8_forest_ghost_definition_c **pghost_definiti
   ghost_definition = *pghost_definition;
   T8_ASSERT (ghost_definition != NULL);
 
-  ghost_definition->unref ();
+  if (ghost_definition->unref () == 0)
+  {
+    ghost_definition = NULL;
+  }
 }
 
 /**
@@ -1958,15 +1961,15 @@ void
 t8_forest_ghost_definition::clean_up (t8_forest_t forest)
 {
   if (memory_flag & CREATE_GFIRST_DESC_ARRAY) {
-    /* Free the offset memory, if created */
+    /* Free the offset memory, if allocated */
     t8_shmem_array_destroy (&forest->element_offsets);
   }
   if (memory_flag & CREATE_TREE_ARRAY) {
-    /* Free the offset memory, if created */
+    /* Free the offset memory, if allocated */
     t8_shmem_array_destroy (&forest->tree_offsets);
   }
   if (memory_flag & CREATE_GFIRST_DESC_ARRAY) {
-    /* Free the offset memory, if created */
+    /* Free the offset memory, if allocated */
     t8_shmem_array_destroy (&forest->global_first_desc);
   }
 }
@@ -2052,17 +2055,13 @@ t8_forest_ghost_face::t8_forest_ghost_face (const int version)
 void
 t8_forest_ghost_face::search_for_ghost_elements (t8_forest_t forest)
 {
-  t8_global_productionf (" t8_forest_ghost_face::step_2 \n");
   T8_ASSERT (forest->ghosts != NULL);
   t8_forest_ghost_t ghost = forest->ghosts;
   if (version == 3) {
-    t8_global_productionf ("t8_forest_ghost_face::step_2: t8_forest_ghost_fill_remote_v3(forest)\n");
     t8_forest_ghost_fill_remote_v3 (forest);
   }
   else {
     /* Construct the remote elements and processes. */
-    t8_global_productionf (
-      "t8_forest_ghost_face::step_2: t8_forest_ghost_fill_remote (forest, ghost, ghost_version != 1)\n");
     t8_forest_ghost_fill_remote (forest, ghost, version != 1);
   }
 }
@@ -2071,18 +2070,15 @@ t8_forest_ghost_face::search_for_ghost_elements (t8_forest_t forest)
 t8_forest_ghost_definition_c *
 t8_forest_ghost_definition_face_new (const int version)
 {
-  t8_debugf ("Call t8_forest_ghost_definition_face_new.\n");
   T8_ASSERT (1 <= version && version <= 3);
-  t8_forest_ghost_face *ghost_definition = new t8_forest_ghost_face (version);
-  return (t8_forest_ghost_definition_c *) ghost_definition;
+  return new t8_forest_ghost_face (version);
 }
 
 t8_forest_ghost_definition_c *
 t8_forest_ghost_definition_stencil_new ()
 {
   t8_debugf ("Call t8_forest_ghost_definition_stencil_new.\n");
-  t8_forest_ghost_stencil *ghost_definition = new t8_forest_ghost_stencil ();
-  return (t8_forest_ghost_definition_c *) ghost_definition;
+  return new t8_forest_ghost_stencil ();
 }
 
 int
@@ -2131,9 +2127,7 @@ t8_forest_ghost_stencil::do_ghost (t8_forest_t forest)
  * \param [in]      eclass_scheme should fit to the element
  * \param [in]      element compute owner of this
  * \return          owner of element
- * \note: the function use, that the linear id of the element is the same as the global index
- * for example this is true for uniform meshes.
- * the function also use, that the forest is partitioned.
+ * \note: Only valid on partitioned and uniform forests.
  * The owner is found in O(1)
  */
 int

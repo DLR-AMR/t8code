@@ -84,14 +84,14 @@ struct t8_forest_ghost_w_search: public t8_forest_ghost_definition
   /**
    * Constructor for the derivided classes to set the type and the search_function.
    * \param [in] ghost_type       The type (faces, edges, userdefind, ...) of the ghost_definition
-   * \param [in] search_function  Function of type t8_forest_search_fn, used as callbackfunktion in search_for_ghost_elements
+   * \param [in] search_function  Function of type t8_forest_search_fn, used as callback function in search_for_ghost_elements
    */
   t8_forest_ghost_w_search (const t8_ghost_type_t ghost_type, const t8_forest_search_fn search_function)
     : t8_forest_ghost_definition (ghost_type), search_fn (search_function)
   {
     T8_ASSERT (ghost_type != T8_GHOST_NONE);
   }
-  /** Callbackfunction for t8_forest_search in search_for_ghost_elements */
+  /** Callback function for t8_forest_search in search_for_ghost_elements */
   t8_forest_search_fn search_fn {};
 };
 

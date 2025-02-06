@@ -49,7 +49,7 @@ t8_forest_ghost_definition_stencil_new ();
  * \param [in]    ghost_definition Pointer to object of class t8_forest_ghost_face
  */
 int
-t8_forest_ghost_definition_face_version (t8_forest_ghost_definition_c *ghost_definition);
+t8_forest_ghost_definition_face_get_version (t8_forest_ghost_definition_c *ghost_definition);
 
 /**
  * Satisfy the C interface of forest

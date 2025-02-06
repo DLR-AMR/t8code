@@ -365,7 +365,7 @@ t8_forest_set_ghost (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_typ
  *                                If 2, the iterative algorithm for unbalanced forests.
  *                                If 3, the top-down search algorithm for unbalanced forests.
  * \see t8_forest_set_ghost
- * \note this function creates an ghost_definition obcejct and call \ref t8_forest_set_ghost_ext_new
+ * \note This function creates an ghost_definition object and calls \ref t8_forest_set_ghost_ext_new
  */
 void
 t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_type, int ghost_version);

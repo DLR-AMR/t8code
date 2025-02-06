@@ -77,7 +77,7 @@ struct t8_forest_ghost_definition
   /**
    * Increase the reference count of the ghost_definition.
    */
-  virtual inline void
+  inline void
   ref ()
   {
     t8_refcount_ref (&rc);
@@ -87,13 +87,15 @@ struct t8_forest_ghost_definition
    * Decrease the reference count of the ghost_definition.
    * If the reference count reaches zero, the ghost_definition is deleted.
    */
-  virtual inline void
+  inline void
   unref ()
   {
+    const int remaining = rc.refcount - 1;
     if (t8_refcount_unref (&rc)) {
       t8_debugf ("Deleting the ghost_definition.\n");
       delete this;
     }
+    return remaining;
   }
 
   /** Create one layer of ghost elements for a forest.
