@@ -4265,9 +4265,10 @@ t8_forest_reset (t8_forest_t *pforest)
   if (forest->ghosts != NULL) {
     t8_forest_ghost_unref (&forest->ghosts);
   }
-  /* Destroy the ghost_definition class if it exist */
+  /* Unref the ghost_definition class if it exist */
   if (forest->ghost_definition != NULL) {
-    t8_forest_ghost_definition_unref (&(forest->ghost_definition));
+    forest->ghost_definition.unref();
+    forest->ghost_definition = NULL;
   }
   /* we have taken ownership on calling t8_forest_set_* */
   if (forest->scheme_cxx != NULL) {
