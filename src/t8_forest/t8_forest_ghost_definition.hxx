@@ -87,7 +87,7 @@ struct t8_forest_ghost_definition
    * Decrease the reference count of the ghost_definition.
    * If the reference count reaches zero, the ghost_definition is deleted.
    */
-  inline void
+  inline const int
   unref ()
   {
     const int remaining = rc.refcount - 1;

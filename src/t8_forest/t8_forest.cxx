@@ -2952,26 +2952,31 @@ t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from, int no_re
 }
 
 void
-t8_forest_set_ghost_ext_new (t8_forest_t forest, const int do_ghost, t8_forest_ghost_definition_c *ghost_definition)
+t8_forest_set_ghost_ext (t8_forest_t forest, const int do_ghost, t8_forest_ghost_definition_c *ghost_definition)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
   T8_ASSERT (!(do_ghost == 1 && ghost_definition == NULL));
   if (forest->ghost_definition != NULL) {
     t8_forest_ghost_definition_unref (&(forest->ghost_definition));
   }
-  forest->do_ghost = do_ghost;
+  if (ghost_definition == NULL) {
+    forest->do_ghost = 0;
+    forest->ghost_definition = NULL;
+  }
+  else {
+    forest->do_ghost = (do_ghost != 0); /* True if and only if do_ghost != 0 */
+  }
+  if (forest->do_ghost) {
   forest->ghost_definition = ghost_definition;
+}
 }
 
 void
-t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_type, int ghost_version)
+t8_forest_set_ghost (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_type)
 {
-  T8_ASSERT (t8_forest_is_initialized (forest));
-  /* We currently only support face ghosts */
+  /* Use ghost version 3, top-down search and for unbalanced forests. */
   SC_CHECK_ABORT (do_ghost == 0 || ghost_type == T8_GHOST_FACES,
                   "Ghost neighbors other than face-neighbors are not supported.\n");
-  SC_CHECK_ABORT (1 <= ghost_version && ghost_version <= 3, "Invalid choice for ghost version. Choose 1, 2, or 3.\n");
-
   if (ghost_type == T8_GHOST_NONE) {
     /* none type disables ghost */
     forest->do_ghost = 0;
@@ -2980,16 +2985,8 @@ t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost
     forest->do_ghost = (do_ghost != 0); /* True if and only if do_ghost != 0 */
   }
   if (forest->do_ghost) {
-    t8_forest_ghost_definition_c *ghost_definition = t8_forest_ghost_definition_face_new (ghost_version);
-    t8_forest_set_ghost_ext_new (forest, do_ghost, ghost_definition);
+    t8_forest_set_ghost_ext (forest, do_ghost, new t8_forest_ghost_face (3););
   }
-}
-
-void
-t8_forest_set_ghost (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_type)
-{
-  /* Use ghost version 3, top-down search and for unbalanced forests. */
-  t8_forest_set_ghost_ext (forest, do_ghost, ghost_type, 3);
 }
 
 void
@@ -3247,7 +3244,7 @@ t8_forest_commit (t8_forest_t forest)
 
     if (forest->ghost_definition == NULL && forest->set_from->ghost_definition != NULL) {
       forest->ghost_definition = forest->set_from->ghost_definition;
-      forest->ghost_definition.ref();
+      forest->ghost_definition->ref ();
     }
 
     /* Compute the maximum allowed refinement level */
@@ -4267,7 +4264,7 @@ t8_forest_reset (t8_forest_t *pforest)
   }
   /* Unref the ghost_definition class if it exist */
   if (forest->ghost_definition != NULL) {
-    forest->ghost_definition.unref();
+    forest->ghost_definition->unref ();
     forest->ghost_definition = NULL;
   }
   /* we have taken ownership on calling t8_forest_set_* */

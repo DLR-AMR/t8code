@@ -358,18 +358,6 @@ t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from, int no_re
 void
 t8_forest_set_ghost (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_type);
 
-/** Like \ref t8_forest_set_ghost but with the additional options to change the
- * ghost algorithm. This is used for debugging and timing the algorithm.
- * An application should almost always use \ref t8_forest_set_ghost.
- * \param [in]      ghost_version If 1, the iterative ghost algorithm for balanced forests is used.
- *                                If 2, the iterative algorithm for unbalanced forests.
- *                                If 3, the top-down search algorithm for unbalanced forests.
- * \see t8_forest_set_ghost
- * \note This function creates an ghost_definition object and calls \ref t8_forest_set_ghost_ext_new
- */
-void
-t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_type, int ghost_version);
-
 /** Set a ghost_definition
  * In application schoud only used if the user creates its own ghost_definition class (type = userderdefined)
  * \param [in]    forest          The forest
@@ -379,7 +367,7 @@ t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost
  * \note if the forest has already a ghost_definition, the old one will be unref and the new one will be set.
 */
 void
-t8_forest_set_ghost_ext_new (t8_forest_t forest, const int do_ghost, t8_forest_ghost_definition_c *ghost_definition);
+t8_forest_set_ghost_ext (t8_forest_t forest, const int do_ghost, t8_forest_ghost_definition_c *ghost_definition);
 
 /* TODO: use assertions and document that the forest_set (..., from) and
  *       set_load are mutually exclusive. */

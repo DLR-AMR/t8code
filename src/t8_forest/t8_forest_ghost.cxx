@@ -1450,7 +1450,7 @@ t8_forest_ghost_create (t8_forest_t forest)
   T8_ASSERT (t8_forest_is_committed (forest));
   if (forest->mpisize > 1) {
     /* call unbalanced version of ghost algorithm */
-    T8_ASSERT (t8_forest_ghost_definition_face_version (forest->ghost_definition) == 2);
+    T8_ASSERT (t8_forest_ghost_definition_face_get_version (forest->ghost_definition) == 2);
     t8_forest_ghost_create_ext (forest);
   }
 }
@@ -1462,7 +1462,7 @@ t8_forest_ghost_create_balanced_only (t8_forest_t forest)
   if (forest->mpisize > 1) {
     /* TODO: assert that forest is balanced */
     /* Call balanced version of ghost algorithm */
-    T8_ASSERT (t8_forest_ghost_definition_face_version (forest->ghost_definition) == 1);
+    T8_ASSERT (t8_forest_ghost_definition_face_get_version (forest->ghost_definition) == 1);
     t8_forest_ghost_create_ext (forest);
   }
 }
@@ -1472,7 +1472,7 @@ t8_forest_ghost_create_topdown (t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (forest->ghost_definition != NULL);
-  T8_ASSERT (t8_forest_ghost_definition_face_version (forest->ghost_definition) == 3);
+  T8_ASSERT (t8_forest_ghost_definition_face_get_version (forest->ghost_definition) == 3);
   t8_forest_ghost_create_ext (forest);
 }
 
@@ -1910,8 +1910,7 @@ t8_forest_ghost_definition_unref (t8_forest_ghost_definition_c **pghost_definiti
   ghost_definition = *pghost_definition;
   T8_ASSERT (ghost_definition != NULL);
 
-  if (ghost_definition->unref () == 0)
-  {
+  if (ghost_definition->unref () == 0) {
     ghost_definition = NULL;
   }
 }
@@ -1994,14 +1993,15 @@ void
 t8_forest_ghost_w_search::do_ghost (t8_forest_t forest)
 {
 
-  communicate_ownerships (forest);
-
-  if (t8_forest_get_local_num_elements (forest) > 0) {
     if (t8_ghost_get_type () == T8_GHOST_NONE) {
       t8_debugf ("WARNING: Trying to construct ghosts with ghost_type NONE. "
                  "Ghost layer is not constructed.\n");
       return;
     }
+
+  communicate_ownerships (forest);
+
+  if (t8_forest_get_local_num_elements (forest) > 0) {
 
     /* Initialize the ghost structure */
     t8_forest_ghost_init (&forest->ghosts, ghost_type);
@@ -2082,7 +2082,7 @@ t8_forest_ghost_definition_stencil_new ()
 }
 
 int
-t8_forest_ghost_definition_face_version (t8_forest_ghost_definition_c *ghost_definition)
+t8_forest_ghost_definition_face_get_version (t8_forest_ghost_definition_c *ghost_definition)
 {
   T8_ASSERT (ghost_definition != NULL);
   T8_ASSERT (ghost_definition->t8_ghost_get_type () == T8_GHOST_FACES);

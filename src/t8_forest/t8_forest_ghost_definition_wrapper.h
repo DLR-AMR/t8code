@@ -70,7 +70,7 @@ t8_forest_ghost_definition_ref (t8_forest_ghost_definition_c *ghost_definition);
 /** 
  * Satisfy the C interface of forest
  * Do a unref on the ghost_definition
- * Needed in t8_forest_commit and t8_forest_set_ghost_ext_new
+ * Needed in t8_forest_commit and t8_forest_set_ghost_ext
  */
 void
 t8_forest_ghost_definition_unref (t8_forest_ghost_definition_c **pghost_definition);
