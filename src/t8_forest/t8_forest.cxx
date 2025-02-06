@@ -3247,7 +3247,7 @@ t8_forest_commit (t8_forest_t forest)
 
     if (forest->ghost_definition == NULL && forest->set_from->ghost_definition != NULL) {
       forest->ghost_definition = forest->set_from->ghost_definition;
-      t8_forest_ghost_definition_ref (forest->ghost_definition);
+      forest->ghost_definition.ref();
     }
 
     /* Compute the maximum allowed refinement level */
