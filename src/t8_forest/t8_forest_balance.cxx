@@ -172,7 +172,7 @@ t8_forest_balance (t8_forest_t forest, int repartition)
   /* This function is reference neutral regarding forest_from */
   t8_forest_ref (forest_from);
 
-  /* if the set_from forest of forest has no ghost layer computed,
+  /* if the set_from forest of the current forest has no ghost layer computed,
    * compute a ghost layer for the set_from forest */
   if (forest->set_from->ghosts == NULL) {
     /* If the forest does not yet have a ghost_definition */
