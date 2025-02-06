@@ -2985,7 +2985,7 @@ t8_forest_set_ghost (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_typ
     forest->do_ghost = (do_ghost != 0); /* True if and only if do_ghost != 0 */
   }
   if (forest->do_ghost) {
-    t8_forest_set_ghost_ext (forest, do_ghost, new t8_forest_ghost_face (3););
+    t8_forest_set_ghost_ext (forest, do_ghost, new t8_forest_ghost_face (3));
   }
 }
 
