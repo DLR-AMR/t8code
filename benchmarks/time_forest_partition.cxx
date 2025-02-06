@@ -391,7 +391,7 @@ main (int argc, char *argv[])
                          "Use a cad cmesh to compare linear and cad geometry performance."
                          " If this option is used -o is enabled automatically. Not allowed with -f and -c.");
   sc_options_add_switch (opt, 'C', "test-hybridcube", &test_hybrid_cube,
-                         "Use a hypercube with Hybercube with Tets, Prism and Hex elements as cmesh."
+                         "Use a hypercube with Tet, Prism and Hex elements as cmesh."
                          " If this option is used -o is enabled automatically. Not allowed with -f and -c.");
   sc_options_add_switch (opt, 'H', "test-hexcube", &test_hex_cube,
                          "Use a hypercube with Hex elements as cmesh."
