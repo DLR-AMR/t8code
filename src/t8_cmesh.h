@@ -327,12 +327,11 @@ t8_cmesh_set_join (t8_cmesh_t cmesh, t8_gloidx_t gtree1, t8_gloidx_t gtree2, int
 void
 t8_cmesh_set_profiling (t8_cmesh_t cmesh, int set_profiling);
 
-
 /** Check whether two given cmeshes carry the same information, even if the order of trees does not match.
  * 
  * \param [in] cmesh_a            The first of the two cmeshes to be checked.
  * \param [in] cmesh_b            The second of the two cmeshes to be checked
- * \param [in] same_tree_order    Specify wether the order of trees is the same in both cmeshes.
+ * \param [in] same_tree_order    Specify whether the order of trees is the same in both cmeshes.
  * \return                        True if both cmeshes carry the same information.
  */
 int
@@ -363,9 +362,10 @@ t8_cmesh_is_empty (const t8_cmesh_t cmesh);
 /** Overrides the negative volume check during \ref t8_cmesh_commit.
  * This way cmesh trees are allowed to have negative volumes.
  * Use with caution.
- * \param [in] cmesh                    An uncommited cmesh.
+ * \param [in] cmesh                    An uncommitted cmesh.
  */
-void t8_cmesh_allow_negative_volumes(t8_cmesh_t cmesh);
+void
+t8_cmesh_allow_negative_volumes (t8_cmesh_t cmesh);
 
 /** Broadcast a cmesh structure that exists only on one process to all
  *  processes in the cmesh's communicator.

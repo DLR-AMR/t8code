@@ -587,22 +587,20 @@ t8_cmesh_is_equal_ext (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b, const int same_tr
   const bool partitioned_a = t8_cmesh_is_partitioned (cmesh_a);
   const bool partitioned_b = t8_cmesh_is_partitioned (cmesh_b);
 
-  if (partitioned_a){
+  if (partitioned_a) {
     t8_cmesh_t unpartitioned_cmesh_a;
     t8_cmesh_init (&unpartitioned_cmesh_a);
     t8_cmesh_set_derive (unpartitioned_cmesh_a, cmesh_a);
-    t8_cmesh_set_partition_offsets (unpartitioned_cmesh_a,
-                                    t8_cmesh_offset_percent (cmesh_a, sc_MPI_COMM_WORLD, 100));
+    t8_cmesh_set_partition_offsets (unpartitioned_cmesh_a, t8_cmesh_offset_percent (cmesh_a, sc_MPI_COMM_WORLD, 100));
     t8_cmesh_commit (unpartitioned_cmesh_a, sc_MPI_COMM_WORLD);
     cmesh_a = unpartitioned_cmesh_a;
   }
 
-  if (partitioned_b){
+  if (partitioned_b) {
     t8_cmesh_t unpartitioned_cmesh_b;
     t8_cmesh_init (&unpartitioned_cmesh_b);
     t8_cmesh_set_derive (unpartitioned_cmesh_b, cmesh_b);
-    t8_cmesh_set_partition_offsets (unpartitioned_cmesh_b,
-                                    t8_cmesh_offset_percent (cmesh_b, sc_MPI_COMM_WORLD, 100));
+    t8_cmesh_set_partition_offsets (unpartitioned_cmesh_b, t8_cmesh_offset_percent (cmesh_b, sc_MPI_COMM_WORLD, 100));
     t8_cmesh_commit (unpartitioned_cmesh_b, sc_MPI_COMM_WORLD);
     cmesh_b = unpartitioned_cmesh_b;
   }
@@ -676,9 +674,9 @@ t8_cmesh_is_empty (const t8_cmesh_t cmesh)
 }
 
 void
-t8_cmesh_allow_negative_volumes(t8_cmesh_t cmesh)
+t8_cmesh_allow_negative_volumes (t8_cmesh_t cmesh)
 {
-  T8_ASSERT(t8_cmesh_is_committed(cmesh) == 0);
+  T8_ASSERT (t8_cmesh_is_committed (cmesh) == 0);
   cmesh->allow_negative_volumes = 1;
 }
 
