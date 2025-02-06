@@ -45,7 +45,7 @@ typedef enum {
   T8_GHOST_FACES,      /**< Consider all face (codimension 1) neighbors. */
   T8_GHOST_EDGES,      /**< Consider all edge (codimension 2) and face neighbors. */
   T8_GHOST_VERTICES,   /**< Consider all vertex (codimension 3) and edge and face neighbors. */
-  T8_GHOST_USERDEFINED /**< for user-defined neighborhoods */
+  T8_GHOST_USERDEFINED /**< For user-defined neighborhoods */
 } t8_ghost_type_t;
 
 /** This typedef is needed as a helper construct to 
