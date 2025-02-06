@@ -680,12 +680,6 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
 
   SC_CHECK_ABORT (eclass != T8_ECLASS_PYRAMID || !periodic, "The pyramid cube mesh cannot be periodic.\n");
 
-  if (do_partition) {
-    t8_global_errorf (
-      "WARNING: Partitioning the hypercube cmesh is currently not supported.\n"
-      "Using this cmesh will crash when vertices are used. See also https://github.com/DLR-AMR/t8code/issues/79\n");
-  }
-
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
   if (!do_bcast || mpirank == 0) {
