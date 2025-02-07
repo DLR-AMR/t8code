@@ -27,26 +27,40 @@
 #include <test/t8_gtest_macros.hxx>
 #include "t8_gtest_dfs_base.hxx"
 
-class class_test_equal: public TestDFS {
+/** In this test we iterate through all elements. 
+ * For every leaf we check if the element is equal to the element we get when setting it from the linear id.
+ * The id_counter is then increased to match the id of the next leaf.
+ */
+class class_test_linear_id: public TestDFS {
   void
   check_element () override
   {
-    int level = 5;
-    const t8_linearidx_t num_desc = scheme->count_leaves_from_root (eclass, level);
-
-    for (t8_linearidx_t id = 0; id < num_desc; id++) {
-
-      scheme->element_set_linear_id (eclass, element, level, id);
-
-      while (scheme->element_get_level (eclass, test_element) < level) {
-        scheme->element_get_child (eclass, test_element, id, test_element);
-      }
-      // EXPECT_ELEM_EQ (scheme, eclass, element, test_element);
-      EXPECT_EQ (scheme->element_get_level (eclass, element), scheme->element_get_level (eclass, test_element));
+    t8_debugf ("maxlvl: %i\n", maxlvl);
+    t8_debugf ("level: %d\n", scheme->element_get_level (eclass, element));
+    if (scheme->element_get_level (eclass, element) == maxlvl) {
+      scheme->element_copy (eclass, element, test_element);
+      scheme->element_set_linear_id (eclass, test_element, maxlvl, id_counter);
+      id_counter++;
+      EXPECT_ELEM_EQ (scheme, eclass, element, test_element);
+    }
+    else {
+      return;
     }
   }
 
  protected:
+  int
+  set_maxlvl ()
+  {
+#if T8_ENABLE_LESS_TESTS
+    const int maxlevel = 3;
+#else
+    const int maxlevel = 5;
+#endif
+    t8_debugf ("start maxlvl: %i\n", maxlevel);
+    return maxlevel;
+  }
+
   void
   SetUp () override
   {
@@ -54,6 +68,7 @@ class class_test_equal: public TestDFS {
     /* Get element and initialize it */
     scheme->element_new (eclass, 1, &test_element);
     scheme->element_copy (eclass, element, test_element);
+    maxlvl = set_maxlvl ();
   }
   void
   TearDown () override
@@ -65,16 +80,13 @@ class class_test_equal: public TestDFS {
     dfs_test_teardown ();
   }
   t8_element_t *test_element;
+  int id_counter = 0;
+  int maxlvl;
 };
 
-TEST_P (class_test_equal, test_equal_dfs)
+TEST_P (class_test_linear_id, test_linear_id_dfs)
 {
-#ifdef T8_ENABLE_LESS_TESTS
-  const int maxlvl = 3;
-#else
-  const int maxlvl = 5;
-#endif
   check_recursive_dfs_to_max_lvl (maxlvl);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_equal, AllSchemes, print_all_schemes);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_linear_id, AllSchemes, print_all_schemes);
