@@ -770,7 +770,26 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
    *                      id must fulfil 0 <= id < 'number of leaves in the uniform refinement'
    */
   inline void
-  element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id) const;
+  element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id) const
+  {
+#ifdef T8_ENABLE_DEBUG
+    const int dim = t8_eclass_to_dim[this->underlying ().get_eclass ()];
+    int id_max = 0;
+    for (int i_level = 0; i_level <= level; i_level++) {
+      id_max += ((t8_linearidx_t) 1) << dim * i_level;
+    }
+    T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << dim * id_max);
+#endif
+    /* The multilevel conversion happens via the following formula:
+     * #\f$\mathrm{id_{multilevel}} (\mathrm{id_{linear}, lvl}) = \mathrm{lvl} + \sum_{n = 0}^{\mathrm{lvl_{max}-1}} \lfloor \mathrm{id_{linear}} / 2^{n \cdot d} \rfloor \f$
+     */
+    t8_linearidx_t id_linear = 0;
+    for (int i_level = 0; i_level < level; i_level++) {
+      id_linear |= ((id - level) & (1 << i_level)) << i_level;
+    }
+    this->underlying ().element_set_linear_id (&static_cast<multilevel_element *> (elem)->linear_element, level,
+                                               id_linear);
+  }
 
   /** Compute the linear id of a given element in a hypothetical uniform
    * refinement of a given level.
