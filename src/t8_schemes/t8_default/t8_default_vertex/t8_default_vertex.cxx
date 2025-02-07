@@ -23,7 +23,7 @@
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 #include <t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.hxx>
 
-inline void
+void
 t8_dvertex_init_linear_id (t8_dvertex_t *v, int level, t8_linearidx_t id)
 {
   T8_ASSERT (0 <= level && level <= T8_DVERTEX_MAXLEVEL);

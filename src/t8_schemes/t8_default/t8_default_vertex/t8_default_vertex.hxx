@@ -36,7 +36,7 @@
  * \param [in] id     Index to be considered.
  * \param [in] level  level of uniform grid to be considered.
  */
-inline void
+void
 t8_dvertex_init_linear_id (t8_dvertex_t *v, int level, t8_linearidx_t id);
 
 /* Forward declaration of the scheme so we can use it as an argument in the eclass schemes function. */
