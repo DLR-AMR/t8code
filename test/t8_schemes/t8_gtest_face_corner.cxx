@@ -32,46 +32,46 @@ class class_face_corner_test: public TestDFS {
   void
   check_element () override
   {
-    int num_faces = scheme->element_get_num_faces (eclass, element);
+    const int num_faces = scheme->element_get_num_faces (eclass, element);
 
     const int max_num_faces = scheme->element_get_max_num_faces (eclass, element);
     EXPECT_LE (num_faces, max_num_faces);
 
     for (int iface = 0; iface < num_faces; iface++) {
-      t8_element_shape_t face_shape = scheme->element_get_face_shape (eclass, element, iface);
-      int num_vertices = t8_element_shape_num_vertices (face_shape);
+      const t8_element_shape_t face_shape = scheme->element_get_face_shape (eclass, element, iface);
+      const int num_vertices = t8_element_shape_num_vertices (face_shape);
       for (int ivertex = 0; ivertex < num_vertices; ivertex++) {
-        int corner = scheme->element_get_face_corner (eclass, element, iface, ivertex);
+        const int corner = scheme->element_get_face_corner (eclass, element, iface, ivertex);
         /* Only valid for hypercubes*/
-        int num_corner_faces = t8_eclass_to_dimension[eclass];
+        const int num_corner_faces = t8_eclass_to_dimension[eclass];
 
-        int found_face = 0;
+        bool found_face = false;
         for (int icorner_face = 0; icorner_face < num_corner_faces; icorner_face++) {
-          int face = scheme->element_get_corner_face (eclass, element, corner, icorner_face);
+          const int face = scheme->element_get_corner_face (eclass, element, corner, icorner_face);
           if (face == iface) {
-            found_face = 1;
+            found_face = true;
           }
         }
         EXPECT_TRUE (found_face);
       }
     }
 
-    int num_corners = scheme->element_get_num_corners (eclass, element);
+    const int num_corners = scheme->element_get_num_corners (eclass, element);
 
     for (int icorner = 0; icorner < num_corners; icorner++) {
       /* Only valid for hypercubes*/
-      int num_faces = t8_eclass_to_dimension[eclass];
+      const int num_faces = t8_eclass_to_dimension[eclass];
       for (int iface = 0; iface < num_faces; iface++) {
-        int face = scheme->element_get_corner_face (eclass, element, icorner, iface);
+        const int face = scheme->element_get_corner_face (eclass, element, icorner, iface);
 
-        t8_element_shape_t face_shape = scheme->element_get_face_shape (eclass, element, face);
-        int num_face_corners = t8_element_shape_num_vertices (face_shape);
+        const t8_element_shape_t face_shape = scheme->element_get_face_shape (eclass, element, face);
+        const int num_face_corners = t8_element_shape_num_vertices (face_shape);
 
-        int found_corner = 0;
+        bool found_corner = false;
         for (int iface_corner = 0; iface_corner < num_face_corners; iface_corner++) {
-          int corner = scheme->element_get_face_corner (eclass, element, face, iface_corner);
+          const int corner = scheme->element_get_face_corner (eclass, element, face, iface_corner);
           if (corner == icorner) {
-            found_corner = 1;
+            found_corner = true;
           }
         }
         EXPECT_TRUE (found_corner);
