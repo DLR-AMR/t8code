@@ -27,6 +27,10 @@
 #include <test/t8_gtest_macros.hxx>
 #include "t8_gtest_dfs_base.hxx"
 
+/** This test is used to test the corner_face and face_corner scheme functions.
+ * The first test gets the corners of all faces of an element and checks if the reverse function can get the correct face of the corner.
+ * The second test does the same but in reverse order.
+ */
 class class_face_corner_test: public TestDFS {
 
   void
@@ -107,4 +111,5 @@ TEST_P (class_face_corner_test, test_equal_dfs)
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_face_corner_test,
                           testing::Combine (AllSchemeCollections,
-                                            ::testing::Range (T8_ECLASS_VERTEX, (t8_eclass_t) (T8_ECLASS_HEX + 1))));
+                                            ::testing::Range (T8_ECLASS_VERTEX, (t8_eclass_t) (T8_ECLASS_HEX + 1))),
+                          print_all_schemes);
