@@ -212,7 +212,7 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
    * \return              The face number of the \a face-th face at \a corner.
    */
   int
-  element_get_corner_face (const t8_element_t *element, int corner, int face) const;
+  element_get_corner_face (const t8_element_t *element, const int corner, const int face) const;
 
   /** Construct the child element of a given number.
    * \param [in] elem     This must be a valid element, bigger than maxlevel.
