@@ -249,7 +249,7 @@ t8_forest_set_copy (t8_forest_t forest, const t8_forest_t from);
  *                          and it is recursive otherwise.
  * \note This setting can be combined with \ref t8_forest_set_partition and \ref
  * t8_forest_set_balance. The order in which these operations are executed is always
- * 1) Adapt 2) Balance 3) Partition
+ * 1) Adapt 2) Partition 3) Balance.
  * \note This setting may not be combined with \ref t8_forest_set_copy and overwrites
  * this setting.
  */
@@ -312,7 +312,7 @@ t8_forest_get_user_function (const t8_forest_t forest);
  *                          operation.
  * \note This setting can be combined with \ref t8_forest_set_adapt and \ref
  * t8_forest_set_balance. The order in which these operations are executed is always
- * 1) Adapt 2) Balance 3) Partition
+ * 1) Adapt 2) Partition 3) Balance.
  * If \ref t8_forest_set_balance is called with the \a no_repartition parameter set as
  * false, it is not necessary to call \ref t8_forest_set_partition additionally.
  * \note This setting may not be combined with \ref t8_forest_set_copy and overwrites
@@ -339,8 +339,8 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from, int set
  *                          If \a no_repartition is false, an additional call of \ref t8_forest_set_partition is not
  *                          necessary.
  * \note This setting can be combined with \ref t8_forest_set_adapt and \ref
- * t8_forest_set_balance. The order in which these operations are executed is always
- * 1) Adapt 2) Balance 3) Partition.
+ * t8_forest_set_partition. The order in which these operations are executed is always
+ * 1) Adapt 2) Partition 3) Balance.
  * \note This setting may not be combined with \ref t8_forest_set_copy and overwrites
  * this setting.
  */
