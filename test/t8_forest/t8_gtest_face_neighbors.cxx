@@ -119,9 +119,9 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
                                                           : t8_forest_ghost_get_tree_elements (forest, ghost_tree_id);
       const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
       const t8_scheme *scheme = t8_forest_get_scheme (forest);
-      const t8_locidx_t num_leafs = t8_element_array_get_count (leaf_elements);
+      const t8_locidx_t num_leaves = t8_element_array_get_count (leaf_elements);
       const t8_locidx_t cmesh_tree = t8_forest_ltreeid_to_cmesh_ltreeid (forest, itree);
-      for (t8_locidx_t ileaf = 0; ileaf < num_leafs; ++ileaf, ++ielement_index) {
+      for (t8_locidx_t ileaf = 0; ileaf < num_leaves; ++ileaf, ++ielement_index) {
         // Iterate over each leaf element
         const t8_element_t *element = t8_element_array_index_locidx (leaf_elements, ileaf);
         const int num_faces = scheme->element_get_num_faces (tree_class, element);

@@ -1692,7 +1692,7 @@ t8_forest_leaf_face_neighbors_iterate (t8_forest_t forest, t8_locidx_t ltreeid, 
                                        t8_locidx_t tree_leaf_index, void *user_data)
 {
   // Output of iterate_faces:
-  //  Array of indices in tree_leafs of all the face neighbor elements
+  //  Array of indices in tree_leaves of all the face neighbor elements
   //  Assign pneighbor_leaves
   //  Assign dual_faces
   //  Assign pelement_indices
@@ -1840,7 +1840,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
   t8_element_t *nca_of_face_desc;
   scheme->element_new (neigh_class, 1, &nca_of_face_desc);
 
-  // The neighbor leafs could be distributed across a local tree and a ghost
+  // The neighbor leaves could be distributed across a local tree and a ghost
   // tree. We thus possibly need to search in two different arrays.
   // We store these in a vector and iterate over the entries.
   // The leaf arrays themself do not store any information about their tree,
@@ -1869,9 +1869,9 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
     t8_debugf ("Adding local tree to search.\n");
     if (0 <= local_neighbor_tree) {
       // The neighbor tree is a local tree and hence there may be local neighbor elements.
-      const t8_element_array_t *tree_leafs = t8_forest_tree_get_leaves (forest, local_neighbor_tree);
-      if (tree_leafs != nullptr) {
-        neighbor_leaf_array leaf_array (tree_leafs, false);
+      const t8_element_array_t *tree_leaves = t8_forest_tree_get_leaves (forest, local_neighbor_tree);
+      if (tree_leaves != nullptr) {
+        neighbor_leaf_array leaf_array (tree_leaves, false);
         leaf_arrays.push_back (&leaf_array);
       }
     }
@@ -1886,9 +1886,9 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
         // The neighbor tree is also a ghost tree and face neighbors of our element might
         // be ghost elements.
         // We add the ghost elements of that tree to our search array.
-        const t8_element_array_t *ghost_leafs = t8_forest_ghost_get_tree_elements (forest, local_neighbor_ghost_treeid);
-        if (ghost_leafs != nullptr) {
-          neighbor_leaf_array leaf_array (ghost_leafs, true);
+        const t8_element_array_t *ghost_leaves = t8_forest_ghost_get_tree_elements (forest, local_neighbor_ghost_treeid);
+        if (ghost_leaves != nullptr) {
+          neighbor_leaf_array leaf_array (ghost_leaves, true);
           leaf_arrays.push_back (&leaf_array);
         }
       }
@@ -1909,10 +1909,10 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
   *pelement_indices = NULL;
   *dual_faces = NULL;
   for (auto &leaf_array : leaf_arrays) {
-    auto &tree_leafs = leaf_array->first;
+    auto &tree_leaves = leaf_array->first;
     const bool leaf_array_is_ghost = leaf_array->second;
-    const t8_locidx_t first_desc_search = t8_forest_bin_search_lower (tree_leafs, first_face_desc_id, maxlevel);
-    const t8_locidx_t last_desc_search = t8_forest_bin_search_lower (tree_leafs, last_face_desc_id, maxlevel);
+    const t8_locidx_t first_desc_search = t8_forest_bin_search_lower (tree_leaves, first_face_desc_id, maxlevel);
+    const t8_locidx_t last_desc_search = t8_forest_bin_search_lower (tree_leaves, last_face_desc_id, maxlevel);
     if (first_desc_search >= 0 || last_desc_search >= 0) {
       // There may be face neighbors in this leaf array.
       // The first descendant may not be in the leaf array, we then
@@ -1921,8 +1921,8 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
       const t8_locidx_t last_desc_index = last_desc_search;
 
       // Get the actual leaf elements that contain the first and last face desc
-      const t8_element_t *first_face_leaf = t8_element_array_index_locidx (tree_leafs, first_desc_index);
-      const t8_element_t *last_face_leaf = t8_element_array_index_locidx (tree_leafs, last_desc_index);
+      const t8_element_t *first_face_leaf = t8_element_array_index_locidx (tree_leaves, first_desc_index);
+      const t8_element_t *last_face_leaf = t8_element_array_index_locidx (tree_leaves, last_desc_index);
       // Compute their nearest common ancestor
       scheme->element_get_nca (neigh_class, first_face_leaf, last_face_leaf, nca_of_face_desc);
       /* Check whether the computed nca element does contain or is contained by the same level
@@ -1942,23 +1942,23 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
         SC_CHECK_ABORT (scheme_is_default_quad_hex,
                         "Computing leaf face neighbors currently only works for default quad or hex schemes.");
 
-        // Restrict search array to the leafs from first to last face desc
-        t8_element_array_t face_leafs;
+        // Restrict search array to the leaves from first to last face desc
+        t8_element_array_t face_leaves;
         const size_t face_leaf_count = last_desc_index - first_desc_index + 1;
         T8_ASSERT (face_leaf_count > 0);
         t8_debugf ("Starting search with element indices %i to %i (including).\n", first_desc_index, last_desc_index);
-        t8_element_array_init_view (&face_leafs, tree_leafs, first_desc_index, face_leaf_count);
-        // Iterate over all leafs at the face and collect them as neighbors.
+        t8_element_array_init_view (&face_leaves, tree_leaves, first_desc_index, face_leaf_count);
+        // Iterate over all leaves at the face and collect them as neighbors.
         const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
         // Compute the local or ghost tree id depending on whether this leaf array corresponds to a local
         // tree or ghost tree.
         const t8_locidx_t face_iterate_tree_id
           = leaf_array_is_ghost ? t8_forest_ghost_get_ghost_treeid (forest, *gneigh_tree) + num_local_trees
                                 : local_neighbor_tree;
-        t8_forest_iterate_faces (forest, face_iterate_tree_id, nca_of_face_desc, face_of_nca, &face_leafs,
+        t8_forest_iterate_faces (forest, face_iterate_tree_id, nca_of_face_desc, face_of_nca, &face_leaves,
                                  first_desc_index, t8_forest_leaf_face_neighbors_iterate, &user_data);
         // Output of iterate_faces:
-        //  Array of indices in tree_leafs of all the face neighbor elements
+        //  Array of indices in tree_leaves of all the face neighbor elements
         //  Assign pneighbor_leaves
         //  Assign dual_faces
         //  Assign pelement_indices
