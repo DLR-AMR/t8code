@@ -37,6 +37,7 @@
 #include <test/t8_gtest_macros.hxx>
 #include <test/t8_gtest_adapt_callbacks.hxx>
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
+#include <test/t8_gtest_schemes.hxx>
 
 bool
 test_face_neighbors_skip_cmesh (const t8_cmesh_t cmesh)
@@ -55,24 +56,25 @@ test_face_neighbors_skip_cmesh (const t8_cmesh_t cmesh)
   return t8_cmesh_is_empty (cmesh);
 }
 
-class forest_face_neighbors: public testing::TestWithParam<cmesh_example_base *> {
+class forest_face_neighbors: public testing::TestWithParam<std::tuple<int, cmesh_example_base *> > {
  protected:
   void
   SetUp () override
   {
-    t8_cmesh_t cmesh = GetParam ()->cmesh_create ();
+    const int scheme_id = std::get<0> (GetParam ());
+    const t8_scheme *scheme = create_from_scheme_id (scheme_id);
+    t8_cmesh_t cmesh = std::get<1> (GetParam ())->cmesh_create ();
     if (test_face_neighbors_skip_cmesh (cmesh)) {
       /* we skip empty cmeshes case */
       t8_cmesh_unref (&cmesh);
       GTEST_SKIP ();
     }
-    t8_scheme_cxx_t *default_scheme = t8_scheme_new_default_cxx ();
     const int level = 1;
     const int adapt_levels = 2;
     const int max_adapt_level = level + adapt_levels;
     const bool do_ghost = true;
     const bool do_recursive_adapt = true;
-    forests[0] = t8_forest_new_uniform (cmesh, default_scheme, level, do_ghost, sc_MPI_COMM_WORLD);
+    forests[0] = t8_forest_new_uniform (cmesh, scheme, level, do_ghost, sc_MPI_COMM_WORLD);
     cmesh = t8_forest_get_cmesh (forests[0]);
     t8_forest_ref (forests[0]);
     forests[1] = t8_forest_new_adapt (forests[0], t8_test_adapt_first_child, do_recursive_adapt, do_ghost,
@@ -116,13 +118,13 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
       const t8_element_array_t *leaf_elements = !is_ghost ? t8_forest_get_tree_element_array (forest, itree)
                                                           : t8_forest_ghost_get_tree_elements (forest, ghost_tree_id);
       const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
-      const t8_eclass_scheme_c *scheme = t8_forest_get_eclass_scheme (forest, tree_class);
+      const t8_scheme *scheme = t8_forest_get_scheme (forest);
       const t8_locidx_t num_leafs = t8_element_array_get_count (leaf_elements);
       const t8_locidx_t cmesh_tree = t8_forest_ltreeid_to_cmesh_ltreeid (forest, itree);
       for (t8_locidx_t ileaf = 0; ileaf < num_leafs; ++ileaf, ++ielement_index) {
         // Iterate over each leaf element
         const t8_element_t *element = t8_element_array_index_locidx (leaf_elements, ileaf);
-        const int num_faces = scheme->t8_element_num_faces (element);
+        const int num_faces = scheme->element_get_num_faces (tree_class, element);
         for (int iface = 0; iface < num_faces; ++iface) {
           // Iterate over all faces and compute the face neighbors
 
@@ -131,7 +133,7 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
           int *dual_faces;
           int num_neighbors = 0;
           t8_locidx_t *element_indices;
-          t8_eclass_scheme_c *neigh_scheme;
+          t8_eclass_t neigh_class;
           t8_gloidx_t gneigh_tree;
           int orientation;
 
@@ -140,7 +142,7 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
 
           // Actual computation of the face neighbors
           t8_forest_leaf_face_neighbors_ext (forest, itree, element, &neighbor_leaves, iface, &dual_faces,
-                                             &num_neighbors, &element_indices, &neigh_scheme, &gneigh_tree,
+                                             &num_neighbors, &element_indices, &neigh_class, &gneigh_tree,
                                              &orientation);
 
           t8_debugf ("Tree %i element %i at face %i has %i face neighbors.\n", itree, ileaf, iface, num_neighbors);
@@ -177,8 +179,8 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
           // Compute whether this element is a boundary element or not.
           // An element is a boundary element if it lies on the tree boundary
           // and if the corresponding tree face is at the domain boundary.
-          const bool is_root_boundary = scheme->t8_element_is_root_boundary (element, iface);
-          const int tree_face = scheme->t8_element_tree_face (element, iface);
+          const bool is_root_boundary = scheme->element_is_root_boundary (tree_class, element, iface);
+          const int tree_face = scheme->element_get_tree_face (tree_class, element, iface);
           const bool is_boundary_element
             = is_root_boundary && t8_cmesh_tree_face_is_boundary (cmesh, cmesh_tree, tree_face);
 
@@ -222,7 +224,7 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
             t8_debugf ("Checking neighbor element %p in (global) tree %li.\n", (void *) neighbor, gneigh_tree);
             t8_debugf ("dual face is %i, index is %i\n", dual_face, neigh_index);
 
-            ASSERT_TRUE (neigh_scheme->t8_element_is_valid (neighbor))
+            ASSERT_TRUE (scheme->element_is_valid (neigh_class, neighbor))
               << "Neighbor element " << ineigh << " is not valid";
 
             t8_locidx_t neigh_ltreeid_from_index;
@@ -230,7 +232,7 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
             if (neigh_index < num_local_elements) {
               const t8_element_t *neighbor_from_index
                 = t8_forest_get_element (forest, neigh_index, &neigh_ltreeid_from_index);
-              EXPECT_TRUE (neigh_scheme->t8_element_equal (neighbor_from_index, neighbor));
+              EXPECT_TRUE (scheme->element_is_equal (neigh_class, neighbor_from_index, neighbor));
             }
             // TODO: Check neighbor index if the element is a ghost element
 
@@ -248,20 +250,20 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
             int *neigh_dual_faces;
             int neigh_num_neighbors = 0;
             t8_locidx_t *neigh_element_indices;
-            t8_eclass_scheme_c *neigh_neigh_scheme;
+            t8_eclass_t neigh_neigh_class;
             t8_gloidx_t neigh_gneigh_tree;
             int neigh_orientation;
             // Actual computation of the neighbor's face neighbors
             t8_forest_leaf_face_neighbors_ext (forest, neigh_ltreeid, neighbor, &neigh_neighbor_leaves, dual_face,
                                                &neigh_dual_faces, &neigh_num_neighbors, &neigh_element_indices,
-                                               &neigh_neigh_scheme, &neigh_gneigh_tree, &neigh_orientation);
+                                               &neigh_neigh_class, &neigh_gneigh_tree, &neigh_orientation);
 
             // We must have found at least one face neighbor, namely the original element.
             EXPECT_GE (neigh_num_neighbors, 1);
             // The neighbor's neighbor tree must be the current tree
             EXPECT_EQ (gtree_id, neigh_gneigh_tree);
             // The neighbor's scheme must be the current scheme
-            EXPECT_EQ (scheme, neigh_neigh_scheme);
+            EXPECT_EQ (tree_class, neigh_neigh_class);
             // The neighbor's orientation must be the orientation
             EXPECT_EQ (orientation, neigh_orientation);
 
@@ -274,7 +276,7 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
             for (int ineighneigh = 0; ineighneigh < neigh_num_neighbors && !found_original; ++ineighneigh) {
               // Check that the neighbor of the neighbor element is the original element
               const t8_element_t *neigh_of_neigh = neigh_neighbor_leaves[ineighneigh];
-              if (scheme->t8_element_equal (element, neigh_of_neigh)) {
+              if (scheme->element_is_equal (tree_class, element, neigh_of_neigh)) {
                 position_of_original_element = ineighneigh;
                 found_original = true;  // Stop the for loop
               }
@@ -319,4 +321,5 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_face_neighbors, forest_face_neighbors, AllCmeshsParam, pretty_print_base_example);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_face_neighbors, forest_face_neighbors,
+                          testing::Combine (AllSchemeCollections, AllCmeshsParam), pretty_print_base_example_scheme);

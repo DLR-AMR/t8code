@@ -1,22 +1,34 @@
 cmake_minimum_required( VERSION 3.16 )
 
-include(cmake/GitProjectVersion.cmake)
+include( cmake/GitProjectVersion.cmake )
 
-project( T8CODE
-  DESCRIPTION "Parallel algorithms and data structures for tree-based AMR with arbitrary element shapes."
-  LANGUAGES C CXX Fortran
-  VERSION "${T8CODE_VERSION_MAJOR}.${T8CODE_VERSION_MINOR}.${T8CODE_VERSION_PATCH}" )
+project( 
+    T8CODE
+    DESCRIPTION "Parallel algorithms and data structures for tree-based AMR with arbitrary element shapes."
+    LANGUAGES C CXX
+    VERSION "${T8CODE_VERSION_MAJOR}.${T8CODE_VERSION_MINOR}.${T8CODE_VERSION_PATCH}" 
+)
+
 include( CTest )
+include( CMakeDependentOption )
 
 option( T8CODE_BUILD_AS_SHARED_LIBRARY "Whether t8code should be built as a shared or a static library" ON )
-option( T8CODE_BUILD_PEDANTIC "Compile t8code with `-Wall -pedantic -Werror` as done in the Github CI." OFF )
+option( T8CODE_BUILD_PEDANTIC "Compile t8code with `-pedantic` as done in the Github CI." OFF )
+option( T8CODE_BUILD_WALL "Compile t8code with `-Wall` as done in the Github CI." OFF )
+option( T8CODE_BUILD_WERROR "Compile t8code with `-Werror` as done in the Github CI." OFF )
+option( T8CODE_BUILD_EXTRA_WARNINGS "Compile t8code with extra warnings as done in the Github CI." OFF )
 option( T8CODE_EXPORT_COMPILE_COMMANDS "Export the compile commands as json. Can be used by IDEs for code completion (e.g. intellisense, clangd)" OFF )
+
 option( T8CODE_BUILD_TESTS "Build t8code's automated tests" ON )
-option( T8CODE_BUILD_TUTORIALS "Build t8code's tutorials" ON )
+cmake_dependent_option( T8CODE_BUILD_TPL_TESTS "Build the tests from libsc and p4est" ON "T8CODE_BUILD_TESTS" OFF )
+cmake_dependent_option( T8CODE_ENABLE_LESS_TESTS "Tests not as thoroughly to speed up the test suite. Tests the same functionality. (WARNING: Use with care.)" OFF "T8CODE_BUILD_TESTS" OFF )
+
 option( T8CODE_BUILD_EXAMPLES "Build t8code's examples" ON )
+cmake_dependent_option( T8CODE_BUILD_TPL_EXAMPLES "Build the examples from libsc and p4est" OFF "T8CODE_BUILD_EXAMPLES" OFF )
+
+option( T8CODE_BUILD_TUTORIALS "Build t8code's tutorials" ON )
 option( T8CODE_BUILD_BENCHMARKS "Build t8code's benchmarks" ON )
 option( T8CODE_BUILD_FORTRAN_INTERFACE "Build t8code's Fortran interface" OFF )
-option( T8CODE_ENABLE_LESS_TESTS "Tests not as thoroughly to speed up the test suite. Tests the same functionality. (WARNING: Use with care.)" OFF )
 
 option( T8CODE_ENABLE_MPI "Enable t8code's features which rely on MPI" ON )
 option( T8CODE_ENABLE_VTK "Enable t8code's features which rely on VTK" OFF )
@@ -27,8 +39,6 @@ option( T8CODE_USE_SYSTEM_SC "Use system-installed sc library" OFF )
 option( T8CODE_USE_SYSTEM_P4EST "Use system-installed p4est library" OFF )
 
 option( T8CODE_BUILD_DOCUMENTATION "Build t8code's documentation" OFF )
-
-include(CMakeDependentOption)
 cmake_dependent_option( T8CODE_BUILD_DOCUMENTATION_SPHINX "Build t8code's documentation using sphinx" OFF "T8CODE_BUILD_DOCUMENTATION" OFF )
 
 set(T8CODE_CUSTOM_PARALLEL_TEST_COMMAND "" CACHE STRING "Define a custom command for parallel tests , e.g.: mpirun -np 8 (overwrites standard mpirun -np 4 if build with mpi)")
@@ -64,6 +74,10 @@ set( CMAKE_CXX_EXTENSIONS OFF )
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
+if( T8CODE_BUILD_FORTRAN_INTERFACE )
+    enable_language( Fortran )
+endif()
+
 if( T8CODE_ENABLE_MPI )
     if( T8CODE_BUILD_FORTRAN_INTERFACE )
       find_package( MPI COMPONENTS C Fortran REQUIRED )
@@ -74,8 +88,7 @@ if( T8CODE_ENABLE_MPI )
     if( NOT MPIEXEC_EXECUTABLE )
         message( FATAL_ERROR "MPIEXEC was not found" )
     endif()
-    set( mpi ON ) # This is very dirty and will be fixed in the libsc repo (https://github.com/cburstedde/libsc/pull/178)
-    # set( SC_ENABLE_MPI ON ) # When the fix gets merged, replace the previous line with this one
+    set( SC_ENABLE_MPI ON )
 endif()
 
 if( T8CODE_ENABLE_VTK )
@@ -120,12 +133,16 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH true)
 if ( T8CODE_USE_SYSTEM_SC )
     find_package( SC REQUIRED PATHS /path/to/system/sc )
 else()
+    set( SC_BUILD_EXAMPLES ${T8CODE_BUILD_TPL_EXAMPLES} )
+    set( SC_BUILD_TESTING ${T8CODE_BUILD_TPL_TESTS} )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/sc )
 endif()
 
 if ( T8CODE_USE_SYSTEM_P4EST )
     find_package( P4EST REQUIRED PATHS /path/to/system/p4est )
 else()
+    set( P4EST_BUILD_EXAMPLES ${T8CODE_BUILD_TPL_EXAMPLES} )
+    set( P4EST_BUILD_TESTING ${T8CODE_BUILD_TPL_TESTS} )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/p4est )
 endif()
 
@@ -152,7 +169,6 @@ if ( T8CODE_BUILD_DOCUMENTATION )
 endif()
 
 if( T8CODE_BUILD_FORTRAN_INTERFACE )
-    enable_language( Fortran )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/api/t8_fortran_interface )
 
     if( NOT T8CODE_ENABLE_MPI )

@@ -26,19 +26,16 @@ name: CMake Tarball
 
 env:
   MAKEFLAGS: "-j2 V=0"
+  DEBUG_CONFIG: "-O1"
 
 
 on:
-  push:
-    branches:
-      - main
-      - develop
-      - CI-*tarball* # for testing this script, all feature branches with "tarball" in their name
-  pull_request:
-    branches:
-      - main
-      - develop
-  workflow_dispatch: 
+  workflow_call: 
+    inputs:
+      LESS_TESTS:
+        required: true
+        type: boolean
+        description: 'Enable less tests option for configuring'
 
 jobs:
   build:
@@ -57,6 +54,11 @@ jobs:
         fetch-depth: 0    # required to get all history, especially the version tags    
     - name: install sudo
       run: apt update && apt install sudo
+    # Start building tarball
+    - name: Install pandoc
+      uses: nikeee/setup-pandoc@v1
+    - name: Test pandoc
+      run: pandoc --version
     # On the github Ubuntu 20.04, sudo is not available by default
     # we need it, however, to update/upgrade our packages.    
     - name: Update packages
@@ -68,19 +70,14 @@ jobs:
       run: git submodule init
     - name: update submodules
       run: git submodule update
-    - name: bootstrap
-      run: ./bootstrap
+
 #
 #  T8CODE 
 #     with p4est and sc as internal dependencies which is needed for make dist
 #
 #
-    - name: less-test option
-      if: ${{ inputs.LESS_TESTS }}
-      run: export LESS_TEST_OPTION="-DT8CODE_ENABLE_LESS_TESTS=ON"
-          && echo LESS_TEST_OPTION="$LESS_TEST_OPTION" >> $GITHUB_ENV
     - name: build config variables
-      run: export CONFIG_OPTIONS="${LESS_TEST_OPTION} -GNinja -DT8CODE_USE_SYSTEM_SC=OFF -DT8CODE_USE_SYSTEM_P4EST=OFF -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE"
+      run: export CONFIG_OPTIONS="${LESS_TEST_OPTION} -GNinja -DCMAKE_C_FLAGS_DEBUG=$DEBUG_FLAGS -DCMAKE_CXX_FLAGS_DEBUG=$DEBUG_FLAGS -DT8CODE_USE_SYSTEM_SC=OFF -DT8CODE_USE_SYSTEM_P4EST=OFF -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=ON -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE"
         && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
     - name: cmake
       run: mkdir build && cd build && cmake ../ $CONFIG_OPTIONS
@@ -90,11 +87,6 @@ jobs:
       with:
         name: config.log
         path: build/config.log
-# Start building tarball
-    - name: Install pandoc
-      uses: nikeee/setup-pandoc@v1
-    - name: Test pandoc
-      run: pandoc --version
 # Build the tarball
     - name: Make tarball
       run: cd build && ninja GenerateVersionFile && ninja package_source && mkdir tarballs && mv package/*Source.tar.gz tarballs
@@ -131,11 +123,11 @@ jobs:
           
 # build config vars
     - name: less-test-option
-      if: github.event_name == 'pull_request'
+      if: ${{ inputs.LESS_TESTS }}
       run: export LESS_TEST_OPTION="-DT8CODE_ENABLE_LESS_TESTS=ON"
            && echo LESS_TEST_OPTION="$LESS_TEST_OPTION" >> $GITHUB_ENV
     - name: build config variables
-      run: export CONFIG_OPTIONS="${LESS_TEST_OPTION} -GNinja -DT8CODE_USE_SYSTEM_SC=OFF -DT8CODE_USE_SYSTEM_P4EST=OFF -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE"
+      run: export CONFIG_OPTIONS="${LESS_TEST_OPTION} -GNinja -DCMAKE_C_FLAGS_DEBUG=${DEBUG_CONFIG} -DCMAKE_CXX_FLAGS_DEBUG=${DEBUG_CONFIG} -DT8CODE_USE_SYSTEM_SC=OFF -DT8CODE_USE_SYSTEM_P4EST=OFF -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=ON  -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE"
         && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
     - name: Check vars
       run: echo "[$CONFIG_DEBUG]"

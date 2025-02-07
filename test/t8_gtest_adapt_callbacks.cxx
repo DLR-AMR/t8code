@@ -24,7 +24,6 @@
 * Provide forest adapt callback functions that we use in our tests.
 */
 
-#include <src/t8_element.hxx>
 #include <test/t8_gtest_adapt_callbacks.hxx>
 
 /* Adapt a forest such that always the first child of a
@@ -35,13 +34,13 @@
  * This integer is the maximum refinement level.
  */
 int
-t8_test_adapt_first_child (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                           t8_eclass_scheme_c *scheme, const int is_family, const int num_elements,
-                           t8_element_t *elements[])
+t8_test_adapt_first_child (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
+                           const t8_eclass_t eclass, t8_locidx_t lelement_id, const t8_scheme *scheme,
+                           const int is_family, const int num_elements, t8_element_t *elements[])
 {
-  T8_ASSERT (!is_family || (is_family && num_elements == scheme->t8_element_num_children (elements[0])));
+  T8_ASSERT (!is_family || (is_family && num_elements == scheme->element_get_num_children (eclass, elements[0])));
 
-  int level = scheme->t8_element_level (elements[0]);
+  int level = scheme->element_get_level (eclass, elements[0]);
 
   /* we set a maximum refinement level as forest user data */
   int maxlevel = *(int *) t8_forest_get_user_data (forest);
@@ -49,7 +48,7 @@ t8_test_adapt_first_child (t8_forest_t forest, t8_forest_t forest_from, t8_locid
     /* Do not refine after the maxlevel */
     return 0;
   }
-  int child_id = scheme->t8_element_child_id (elements[0]);
+  int child_id = scheme->element_get_child_id (eclass, elements[0]);
   if (child_id == 1) {
     return 1;
   }

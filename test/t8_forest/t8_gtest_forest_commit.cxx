@@ -29,6 +29,7 @@
 #include <t8_forest/t8_forest_private.h>
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
 #include <test/t8_gtest_macros.hxx>
+#include <test/t8_gtest_schemes.hxx>
 
 /* In this test we adapt, balance and partition a uniform forest.
  * We do this in two ways:
@@ -38,15 +39,18 @@
  * After these two forests are created, we check for equality.
  */
 
-class forest_commit: public testing::TestWithParam<cmesh_example_base *> {
+class forest_commit: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>> {
  protected:
   void
   SetUp () override
   {
+    const int scheme_id = std::get<0> (GetParam ());
+    scheme = create_from_scheme_id (scheme_id);
     /* Construct a cmesh */
-    cmesh = GetParam ()->cmesh_create ();
+    cmesh = std::get<1> (GetParam ())->cmesh_create ();
     if (t8_cmesh_is_empty (cmesh)) {
       /* forest_commit does not support empty cmeshes*/
+      scheme->unref ();
       GTEST_SKIP ();
     }
   }
@@ -56,18 +60,20 @@ class forest_commit: public testing::TestWithParam<cmesh_example_base *> {
     t8_cmesh_destroy (&cmesh);
   }
   t8_cmesh_t cmesh;
+  const t8_scheme *scheme;
 };
 
 /* Adapt a forest such that always the first child of a
  * tree is refined and no other elements. This results in a highly
  * imbalanced forest. */
 static int
-t8_test_adapt_balance (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                       t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+t8_test_adapt_balance (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
+                       t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family, const int num_elements,
+                       t8_element_t *elements[])
 {
-  T8_ASSERT (!is_family || (is_family && num_elements == ts->t8_element_num_children (elements[0])));
+  T8_ASSERT (!is_family || (is_family && num_elements == scheme->element_get_num_children (tree_class, elements[0])));
 
-  int level = ts->t8_element_level (elements[0]);
+  const int level = scheme->element_get_level (tree_class, elements[0]);
 
   /* we set a maximum refinement level as forest user data */
   int maxlevel = *(int *) t8_forest_get_user_data (forest);
@@ -75,7 +81,7 @@ t8_test_adapt_balance (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t 
     /* Do not refine after the maxlevel */
     return 0;
   }
-  int child_id = ts->t8_element_child_id (elements[0]);
+  const int child_id = scheme->element_get_child_id (tree_class, elements[0]);
   if (child_id == 1) {
     return 1;
   }
@@ -137,8 +143,6 @@ TEST_P (forest_commit, test_forest_commit)
 
   const int level_step = 2;
 
-  t8_scheme_cxx_t *scheme = t8_scheme_new_default_cxx ();
-
   /* Compute the first level, such that no process is empty */
   int min_level = t8_forest_min_nonempty_level (cmesh, scheme);
   /* Use one level with empty processes */
@@ -158,12 +162,13 @@ TEST_P (forest_commit, test_forest_commit)
     forest_abp_3part = t8_test_forest_commit_abp_3step (forest, maxlevel);
 
     ASSERT_TRUE (t8_forest_is_equal (forest_abp_3part, forest_ada_bal_part)) << "The forests are not equal";
-    t8_scheme_cxx_ref (scheme);
+    scheme->ref ();
     t8_forest_unref (&forest_ada_bal_part);
     t8_forest_unref (&forest_abp_3part);
   }
-  t8_scheme_cxx_unref (&scheme);
+  scheme->unref ();
   t8_debugf ("Done testing forest commit.");
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_forest_commit, forest_commit, AllCmeshsParam, pretty_print_base_example);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_forest_commit, forest_commit,
+                          testing::Combine (AllSchemeCollections, AllCmeshsParam), pretty_print_base_example_scheme);
