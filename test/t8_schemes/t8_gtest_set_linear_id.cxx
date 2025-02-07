@@ -31,7 +31,7 @@
  * For every leaf we check if the element is equal to the element we get when setting it from the linear id.
  * The id_counter is then increased to match the id of the next leaf.
  */
-class class_test_linear_id: public TestDFS {
+class class_test_set_linear_id: public TestDFS {
   void
   check_element () override
   {
@@ -84,9 +84,9 @@ class class_test_linear_id: public TestDFS {
   int maxlvl;
 };
 
-TEST_P (class_test_linear_id, test_linear_id_dfs)
+TEST_P (class_test_set_linear_id, test_linear_id_dfs)
 {
   check_recursive_dfs_to_max_lvl (maxlvl);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_linear_id, AllSchemes, print_all_schemes);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_set_linear_id, AllSchemes, print_all_schemes);
