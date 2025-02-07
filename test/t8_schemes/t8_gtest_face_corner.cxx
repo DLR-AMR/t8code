@@ -87,13 +87,11 @@ class class_face_corner_test: public TestDFS {
   void
   SetUp () override
   {
-
     dfs_test_setup ();
   }
   void
   TearDown () override
   {
-
     /* Destroy DFS test */
     dfs_test_teardown ();
   }
