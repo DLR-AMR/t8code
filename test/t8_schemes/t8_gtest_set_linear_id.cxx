@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2025 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -35,40 +35,19 @@ class class_test_set_linear_id: public TestDFS {
   void
   check_element () override
   {
-    t8_debugf ("maxlvl: %i\n", maxlvl);
-    t8_debugf ("level: %d\n", scheme->element_get_level (eclass, element));
-    if (scheme->element_get_level (eclass, element) == maxlvl) {
-      scheme->element_copy (eclass, element, test_element);
-      scheme->element_set_linear_id (eclass, test_element, maxlvl, id_counter);
-      id_counter++;
-      EXPECT_ELEM_EQ (scheme, eclass, element, test_element);
-    }
-    else {
-      return;
-    }
+    int level = scheme->element_get_level (eclass, element);
+    scheme->element_set_linear_id (eclass, test_element, level, id_counter[level]);
+    id_counter[level]++;
+    EXPECT_ELEM_EQ (scheme, eclass, element, test_element);
   }
 
  protected:
-  int
-  set_maxlvl ()
-  {
-#if T8_ENABLE_LESS_TESTS
-    const int maxlevel = 3;
-#else
-    const int maxlevel = 5;
-#endif
-    t8_debugf ("start maxlvl: %i\n", maxlevel);
-    return maxlevel;
-  }
-
   void
   SetUp () override
   {
     dfs_test_setup ();
     /* Get element and initialize it */
     scheme->element_new (eclass, 1, &test_element);
-    scheme->element_copy (eclass, element, test_element);
-    maxlvl = set_maxlvl ();
   }
   void
   TearDown () override
@@ -80,8 +59,13 @@ class class_test_set_linear_id: public TestDFS {
     dfs_test_teardown ();
   }
   t8_element_t *test_element;
-  int id_counter = 0;
-  int maxlvl;
+#if T8_ENABLE_LESS_TESTS
+  const int maxlvl = 3;
+#else
+  const int maxlvl = 5;
+#endif
+
+  std::vector<t8_linearidx_t> id_counter = std::vector<t8_linearidx_t> (maxlvl + 1);
 };
 
 TEST_P (class_test_set_linear_id, test_linear_id_dfs)
