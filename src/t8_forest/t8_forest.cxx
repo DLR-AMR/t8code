@@ -1449,11 +1449,6 @@ t8_eclass_t
 t8_forest_element_neighbor_eclass (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *elem,
                                    const int face)
 {
-  t8_ctree_t coarse_tree;
-  int tree_face;
-  t8_locidx_t lcoarse_neighbor;
-  t8_cmesh_t cmesh;
-
   /* Get a pointer to the tree to read its element class */
   const t8_tree_t tree = t8_forest_get_tree (forest, ltreeid);
   const t8_eclass_t tree_class = tree->eclass;
@@ -1710,7 +1705,7 @@ t8_forest_leaf_face_neighbors_iterate (t8_forest_t forest, t8_locidx_t ltreeid, 
   struct t8_lfn_user_data *lfn_data = reinterpret_cast<struct t8_lfn_user_data *> (user_data);
   // face is the face of the considered leaf neighbor element and thus the
   // corresponding dual face
-  t8_debugf ("Adding new face neighbor (leaf index %li) with dual face %i.\n", tree_leaf_index, face);
+  t8_debugf ("Adding new face neighbor (leaf index %i) with dual face %i.\n", tree_leaf_index, face);
   lfn_data->dual_faces.push_back (face);
   // Compute the index of the element
   const t8_locidx_t num_local_elements = t8_forest_get_local_num_elements (forest);
@@ -1886,7 +1881,8 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
         // The neighbor tree is also a ghost tree and face neighbors of our element might
         // be ghost elements.
         // We add the ghost elements of that tree to our search array.
-        const t8_element_array_t *ghost_leaves = t8_forest_ghost_get_tree_elements (forest, local_neighbor_ghost_treeid);
+        const t8_element_array_t *ghost_leaves
+          = t8_forest_ghost_get_tree_elements (forest, local_neighbor_ghost_treeid);
         if (ghost_leaves != nullptr) {
           neighbor_leaf_array leaf_array (ghost_leaves, true);
           leaf_arrays.push_back (&leaf_array);
@@ -2006,7 +2002,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
   // All neighbor elements must be valid
   for (int ineigh = 0; ineigh < *num_neighbors; ++ineigh) {
     T8_ASSERT (scheme->element_is_valid (neigh_class, (*pneighbor_leaves)[ineigh]));
-    t8_debugf ("Face neighbor %p is valid.\n", (*pneighbor_leaves)[ineigh]);
+    t8_debugf ("Face neighbor %p is valid.\n", (void *) (*pneighbor_leaves)[ineigh]);
   }
 #endif  // T8_ENABLE_DEBUG
 
