@@ -20,19 +20,24 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_default_vertex.h
- * The default implementation for vertices. Interface between the
- * \file t8_default_common.hxx definitions and the element type specific
- * implementations in \file t8_dvertex_bits.h
- */
-
 #ifndef T8_DEFAULT_VERTEX_HXX
 #define T8_DEFAULT_VERTEX_HXX
 
 #include <t8_element.h>
 #include <t8_schemes/t8_default/t8_default_tri/t8_default_tri.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
-#include <t8_schemes/t8_default/t8_default_vertex/t8_dvertex_bits.h>
+
+// The following function is part of the header to be callable from
+// t8_default_scheme_line::element_get_boundary_face:
+
+/** Initialize a vertex as the vertex with a given global id in a uniform
+ *  refinement of a given level. *
+ * \param [in,out] l  Existing vertex whose data will be filled.
+ * \param [in] id     Index to be considered.
+ * \param [in] level  level of uniform grid to be considered.
+ */
+void
+t8_dvertex_init_linear_id (t8_dvertex_t *v, int level, t8_linearidx_t id);
 
 /* Forward declaration of the scheme so we can use it as an argument in the eclass schemes function. */
 class t8_scheme;
