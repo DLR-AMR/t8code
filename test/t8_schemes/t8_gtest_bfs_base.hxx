@@ -56,9 +56,10 @@ class TestBFS: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
         // Process the current element
         check_element ();
 
-        // Add all children of the current element to the queue
-        const int num_children = scheme->element_get_num_children (eclass, element);
+        // Stop at maximum recursion level.
         if (current_level < max_bfs_recursion_level) {
+          // Add all children of the current element to the queue
+          const int num_children = scheme->element_get_num_children (eclass, element);
           for (int jchild = 0; jchild < num_children; ++jchild) {
             t8_element_t *child;
             scheme->element_new (eclass, 1, &child);
@@ -66,6 +67,7 @@ class TestBFS: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
             queue.push (child);
           }
         }
+        // Free the current element
         scheme->element_destroy (eclass, 1, &element);
       }
       ++current_level;
