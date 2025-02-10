@@ -134,6 +134,9 @@ to install the package on your system.
   [6] **Geometry controlled refinement for hexahedra**:
   Elsweijer, Sandro and Holke, Johannes and Kleinert, Jan and Reith, Dirk  (2022) *Constructing a Volume Geometry Map for Hexahedra with Curved Boundary Geometries*.   In: SIAM International Meshing Roundtable Workshop 2022.  SIAM International Meshing Roundtable Workshop 2022, 22. - 25. Feb. 2022, [Full text available](https://elib.dlr.de/186570/1/ConstructingAVolumeGeometryMapForHexahedraWithCurvedBoundaryGeometries.pdf) 
   
+  [7] **JOSS paper**:
+  Holke, Johannes and Markert, Johannes, et. al. (2025) *t8code - modular adaptive mesh refinement in the exascale era*. In: Journal of Open Source Software 2025, [![DOI](https://joss.theoj.org/papers/10.21105/joss.06887/status.svg)](https://doi.org/10.21105/joss.06887) [Full text available](https://www.theoj.org/joss-papers/joss.06887/10.21105.joss.06887.pdf)
+ 
 ### Theses with t8code relations
 
   An (incomplete) list of theses written with or about t8code:
