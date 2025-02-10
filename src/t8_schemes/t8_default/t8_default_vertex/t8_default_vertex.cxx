@@ -24,7 +24,7 @@
 #include <t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.hxx>
 
 void
-t8_dvertex_init_linear_id (t8_dvertex_t *v, int level, t8_linearidx_t id)
+t8_dvertex_init_linear_id (t8_dvertex_t *v, const int level, const t8_linearidx_t id)
 {
   T8_ASSERT (0 <= level && level <= T8_DVERTEX_MAXLEVEL);
   T8_ASSERT (0 == id);
@@ -40,7 +40,7 @@ T8_EXTERN_C_BEGIN ();
 
 /** Copy all values from one vertex to another.
  * \param [in] l    The vertex to be copied.
- * \param [in,out] dest Existing vertex whose data will be filled with the data
+ * \param [in,out] dest Allocated vertex whose data will be filled with the data
  *                   of \a l.
  */
 inline static void
