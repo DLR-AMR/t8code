@@ -31,13 +31,13 @@
 // t8_default_scheme_line::element_get_boundary_face:
 
 /** Initialize a vertex as the vertex with a given global id in a uniform
- *  refinement of a given level. *
+ *  refinement of a given level.
  * \param [in,out] l  Existing vertex whose data will be filled.
  * \param [in] id     Index to be considered.
  * \param [in] level  level of uniform grid to be considered.
  */
 void
-t8_dvertex_init_linear_id (t8_dvertex_t *v, int level, t8_linearidx_t id);
+t8_dvertex_init_linear_id (t8_dvertex_t *v, const int level, const t8_linearidx_t id);
 
 /* Forward declaration of the scheme so we can use it as an argument in the eclass schemes function. */
 class t8_scheme;
