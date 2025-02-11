@@ -1093,20 +1093,23 @@ struct t8_standalone_scheme
   element_extrude_face (const t8_element_t *face, t8_element_t *elem, const int root_face,
                         const t8_scheme *face_scheme) noexcept
   {
-    T8_ASSERT (element_is_valid (face));
     const t8_eclass_t face_TEclass = get_face_eclass ();
 
     switch (face_TEclass) {
     case T8_ECLASS_ZERO:
+      t8_standalone_scheme<T8_ECLASS_ZERO>::element_is_valid (face);
       return extrude_face<T8_ECLASS_ZERO> ((t8_standalone_element<T8_ECLASS_ZERO> *) face, elem, root_face);
       break;
     case T8_ECLASS_LINE:
+      t8_standalone_scheme<T8_ECLASS_LINE>::element_is_valid (face);
       return extrude_face<T8_ECLASS_LINE> ((t8_standalone_element<T8_ECLASS_LINE> *) face, elem, root_face);
       break;
     case T8_ECLASS_QUAD:
+      t8_standalone_scheme<T8_ECLASS_QUAD>::element_is_valid (face);
       return extrude_face<T8_ECLASS_QUAD> ((t8_standalone_element<T8_ECLASS_QUAD> *) face, elem, root_face);
       break;
     case T8_ECLASS_HEX:
+      t8_standalone_scheme<T8_ECLASS_HEX>::element_is_valid (face);
       return extrude_face<T8_ECLASS_HEX> ((t8_standalone_element<T8_ECLASS_HEX> *) face, elem, root_face);
       break;
     default:
@@ -1138,8 +1141,8 @@ struct t8_standalone_scheme
     const t8_eclass_t face_TEclass = get_face_eclass ();
 
     switch (face_TEclass) {
-    case T8_ECLASS_ZERO:
-      compute_boundary_face<T8_ECLASS_ZERO> (elem, root_face, (t8_standalone_element<T8_ECLASS_ZERO> *) boundary);
+    case T8_ECLASS_VERTEX:
+      compute_boundary_face<T8_ECLASS_VERTEX> (elem, root_face, (t8_standalone_element<T8_ECLASS_VERTEX> *) boundary);
       break;
     case T8_ECLASS_LINE:
       compute_boundary_face<T8_ECLASS_LINE> (elem, root_face, (t8_standalone_element<T8_ECLASS_LINE> *) boundary);
@@ -1992,6 +1995,8 @@ struct t8_standalone_scheme
   compute_boundary_face (const t8_element_t *elem, const int root_face,
                          t8_standalone_element<face_TEclass> *boundary) noexcept
   {
+    T8_ASSERT (element_is_valid (elem));
+    element_debug_print ((t8_element_t *) boundary);
     const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
 
     if constexpr (T8_ELEMENT_DIM[face_TEclass] >= T8_ELEMENT_DIM[TEclass]) {
@@ -2029,6 +2034,7 @@ struct t8_standalone_scheme
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
       SC_ABORT ("Only implemented for hypercubes.\n");
     }
+    T8_ASSERT (t8_standalone_scheme<face_TEclass>::element_is_valid ((t8_element_t *) boundary));
   }
 
   /** Given a boundary face inside a root tree's face construct
