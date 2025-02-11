@@ -207,8 +207,8 @@ class t8_default_scheme_line: public t8_default_scheme_common<t8_default_scheme_
   int
   element_get_face_corner (const t8_element_t *element, const int face, const int corner) const
   {
-    SC_ABORT ("Not implemented.\n");
-    return 0; /* prevents compiler warning */
+    T8_ASSERT (corner == 0);
+    return face;
   }
 
   /** Return the face numbers of the faces sharing an element's corner.
@@ -220,8 +220,8 @@ class t8_default_scheme_line: public t8_default_scheme_common<t8_default_scheme_
   int
   element_get_corner_face (const t8_element_t *element, int corner, int face) const
   {
-    SC_ABORT ("Not implemented.\n");
-    return 0; /* prevents compiler warning */
+    T8_ASSERT (face == 0);
+    return corner;
   }
 
   /** Construct the child element of a given number.
