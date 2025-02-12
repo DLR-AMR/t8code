@@ -28,8 +28,9 @@
 #include "t8_gtest_bfs_base.hxx"
 
 /** In this test we iterate through all elements. 
- * For every leaf we check if the element is equal to the element we get when setting it from the linear id.
- * The id_counter is then increased to match the id of the next leaf.
+ * On every level we check if the element is equal to the element we get when setting it from the linear id.
+ * The id_counter is then increased to match the id of the next leaf. After we have reached the last element on a level, 
+ * we increase the level and reset the id_counter to 0.
  */
 class class_test_set_linear_id: public TestBFS {
   void
