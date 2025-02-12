@@ -60,7 +60,7 @@ endif()
 
 if( T8CODE_ENABLE_OCC )
     target_compile_definitions( T8 PUBLIC T8_WITH_OCC=1 )
-    target_include_directories( T8 PUBLIC ${OpenCASCADE_INCLUDE_DIR} )
+    target_include_directories( T8 SYSTEM PUBLIC ${OpenCASCADE_INCLUDE_DIR} )
     target_link_libraries( T8 PUBLIC ${OpenCASCADE_LIBRARIES} )
 endif()
 
@@ -223,6 +223,7 @@ install( DIRECTORY t8_forest DESTINATION include FILES_MATCHING PATTERN "*.hxx" 
 install( DIRECTORY t8_geometry DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
 install( DIRECTORY t8_schemes DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
 install( DIRECTORY t8_vtk DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
+install( DIRECTORY t8_types DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
 
 install( TARGETS T8 DESTINATION lib )
 install( TARGETS T8 EXPORT ${PROJECT_NAME}-targets )
