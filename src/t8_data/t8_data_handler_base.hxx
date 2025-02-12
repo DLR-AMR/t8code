@@ -42,8 +42,7 @@ is_internal_data (const int type)
 };
 
 /**
- * \class t8_single_data_handler
- * \brief A template class for handling single data items.
+ * Template class for handling single data items.
  *
  * This class implements methods for packing, unpacking, and determining the size of single data items.
  *

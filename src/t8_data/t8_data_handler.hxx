@@ -130,8 +130,7 @@ class t8_abstract_data_handler {
 };
 
 /**
- * \class t8_data_handler
- * \brief A template class for handling data in a distributed environment.
+ * A template class for handling data in a distributed environment.
  *
  * This class inherits from t8_abstract_data_handler and provides methods for
  * packing, unpacking, sending, and receiving data using MPI.
@@ -161,7 +160,7 @@ class t8_data_handler: public t8_abstract_data_handler {
   }
 
   /**
-   * \brief Get the data.
+   * Get the data.
    * 
    * \return std::shared_ptr<std::vector<TType>> 
    */
@@ -253,12 +252,12 @@ class t8_data_handler: public t8_abstract_data_handler {
 
  private:
   /**
-  * \brief A shared pointer to a vector of data. 
+  * A shared pointer to a vector of data. 
   * This data will be packed, unpacked, and communicated via MPI.
   */
   std::shared_ptr<std::vector<TType>> m_data;
   /**
-   * \brief A single data handler for the data type T.
+   * A single data handler for the data type T.
    * This handler will be used to pack and unpack individual data items.
    */
   t8_single_data_handler<TType> single_handler;
