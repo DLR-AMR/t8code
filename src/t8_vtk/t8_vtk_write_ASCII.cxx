@@ -801,7 +801,7 @@ t8_forest_vtk_write_ASCII (t8_forest_t forest, const char *fileprefix, const int
   /* process 0 creates the .pvtu file */
   if (forest->mpirank == 0) {
     if (!t8_write_pvtu (fileprefix, forest->mpisize, write_treeid, write_mpirank, write_level, write_element_id,
-                       num_data, data)) {
+                        num_data, data)) {
       t8_errorf ("Error when writing file %s.pvtu\n", fileprefix);
       goto t8_forest_vtk_failure;
     }
