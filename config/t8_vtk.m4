@@ -19,7 +19,7 @@ T8_ARG_WITH([vtk],
   [vtk library (optionally use --with-vtk=<VTK_LIBS>)],
   [VTK])
 
-  
+
   if test "x$T8_WITH_VTK" != xno ; then
     if test "x$T8_WITH_VTK_VERSION_MANUALLY_PROVIDED" != xno ; then
       t8_vtk_version=$T8_WITH_VTK_VERSION_MANUALLY_PROVIDED
