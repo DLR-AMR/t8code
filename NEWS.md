@@ -1,3 +1,18 @@
+# Updates for t8code v4.0.0
+A first batch of changes of this major update has been described below. If you not have read them yet we recommend to do so. This update of t8code is mostly about introducing a new scheme, which is independent of our original space-filling curve based implementation of element specific functions. 
+You can find all about it in this [section](#A_new_scheme).
+We also added some functionalities for developers and users that improve the usage of t8ode and/or work with it. Have a look [here] (#Semantic_versioning_workflow) if you are interested in our improved way to keep track of the version. TLDR; major and minor version will be tagged consistently from now on, making it easier to reference to the right version of t8code. 
+For updates on our buildsystem have a look [here](#Buildsystem)
+
+## A new scheme
+Detailed description of schemes
+
+## Semantic versioning workflow
+With this version we also introduce a workflow that automatically keeps track of the correct version of t8code and adds a tag to each pull request that is merged into main. We hope to provide you with an easy way to reference the version of t8code that you need that way. 
+As a developer you add a label (major-release, minor-release, or patch-release) to your pull request, depending on the changes that you have made. If your review was successful another empty commit with the message "Update Version" will trigger the workflow to update the version. Our bot t8ddy will figure out the correct next version for you and tag your branch accordingly. If more than on pull request want to merge simultaneously the workflow will fail for all but the first one to get merged. Update your pull request with main and retrigger the workflow to get the correct version number. 
+
+## Buildsystem
+
 # User Updates for the upcoming t8code v4.0.0
 
 We have just merged another branch into our main branch that introduces a lot of changes. Here, we want to explain what is new, why we decided on this feature, what we intend with the feature in the (near) future and most importantly what do you as a user have to [change](#what-do-you-have-to-change) to be on par with the upcoming t8code v4.0.0
