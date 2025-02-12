@@ -1431,19 +1431,6 @@ t8_forest_ghost_create_ext (t8_forest_t forest)
     t8_global_productionf ("End ghost at %f  %f\n", sc_MPI_Wtime (), forest->profile->ghost_runtime);
   }
 
-  if (create_element_array) {
-    /* Free the offset memory, if created */
-    t8_shmem_array_destroy (&forest->element_offsets);
-  }
-  if (create_tree_array) {
-    /* Free the offset memory, if created */
-    t8_shmem_array_destroy (&forest->tree_offsets);
-  }
-  if (create_gfirst_desc_array) {
-    /* Free the offset memory, if created */
-    t8_shmem_array_destroy (&forest->global_first_desc);
-  }
-
   t8_global_productionf ("Done t8_forest_ghost with %i local elements and %i"
                          " ghost elements.\n",
                          t8_forest_get_local_num_elements (forest), t8_forest_get_num_ghosts (forest));
