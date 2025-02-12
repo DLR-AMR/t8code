@@ -25,19 +25,23 @@
 #include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <test/t8_gtest_macros.hxx>
-#include "t8_gtest_dfs_base.hxx"
+#include "t8_gtest_bfs_base.hxx"
 
 /** In this test we iterate through all elements. 
- * For every leaf we check if the element is equal to the element we get when setting it from the linear id.
- * The id_counter is then increased to match the id of the next leaf.
+ * On every level we check if the element is equal to the element we get when setting it from the linear id.
+ * The id_counter is then increased to match the id of the next leaf. After we have reached the last element on a level, 
+ * we increase the level and reset the id_counter to 0.
  */
-class class_test_set_linear_id: public TestDFS {
+class class_test_set_linear_id: public TestBFS {
   void
   check_element () override
   {
-    int level = scheme->element_get_level (eclass, element);
-    scheme->element_set_linear_id (eclass, test_element, level, id_counter[level]);
-    id_counter[level]++;
+    if (computed_level < current_level) {
+      computed_level = current_level;
+      id_counter = 0;
+    }
+    scheme->element_set_linear_id (eclass, test_element, current_level, id_counter);
+    id_counter++;
     EXPECT_ELEM_EQ (scheme, eclass, element, test_element);
   }
 
@@ -45,7 +49,7 @@ class class_test_set_linear_id: public TestDFS {
   void
   SetUp () override
   {
-    dfs_test_setup ();
+    bfs_test_setup ();
     /* Get element and initialize it */
     scheme->element_new (eclass, 1, &test_element);
   }
@@ -55,22 +59,22 @@ class class_test_set_linear_id: public TestDFS {
     /* Destroy element */
     scheme->element_destroy (eclass, 1, &test_element);
 
-    /* Destroy DFS test */
-    dfs_test_teardown ();
+    /* Destroy BFS test */
+    bfs_test_teardown ();
   }
-  t8_element_t *test_element;
 #if T8_ENABLE_LESS_TESTS
   const int maxlvl = 3;
 #else
   const int maxlvl = 5;
 #endif
-
-  std::vector<t8_linearidx_t> id_counter = std::vector<t8_linearidx_t> (maxlvl + 1);
+  int computed_level = 0;
+  t8_linearidx_t id_counter = 0;
+  t8_element_t *test_element;
 };
 
-TEST_P (class_test_set_linear_id, test_linear_id_dfs)
+TEST_P (class_test_set_linear_id, test_linear_id_bfs)
 {
-  check_recursive_dfs_to_max_lvl (maxlvl);
+  check_recursive_bfs_to_max_lvl (maxlvl);
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_set_linear_id, AllSchemes, print_all_schemes);
