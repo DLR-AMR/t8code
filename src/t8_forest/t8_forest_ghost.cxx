@@ -2017,7 +2017,7 @@ t8_forest_ghost_w_search::search_for_ghost_elements (t8_forest_t forest)
    * These are set in t8_forest_ghost_search_boundary each time a new tree is entered */
   data.eclass = T8_ECLASS_COUNT;
   data.gtreeid = -1;
-  data.ts = NULL;
+  data.scheme = NULL;
 #ifdef T8_ENABLE_DEBUG
   data.left_out = 0;
 #endif
