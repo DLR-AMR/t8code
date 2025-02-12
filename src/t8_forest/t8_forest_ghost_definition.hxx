@@ -102,7 +102,7 @@ struct t8_forest_ghost_definition
    * \param [in,out]    forest     The forest.
    * \a forest must be committed before calling this function.
    */
-  virtual void
+  virtual bool
   do_ghost (t8_forest_t forest)
     = 0;
 

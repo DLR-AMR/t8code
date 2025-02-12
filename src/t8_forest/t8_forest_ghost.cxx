@@ -1989,15 +1989,15 @@ t8_forest_ghost_w_search::t8_forest_ghost_w_search (const t8_ghost_type_t ghost_
                   "use t8_forest_ghost_w_search(t8_forest_search_fn search_function) for userdefined ghost");
 }
 
-void
+bool
 t8_forest_ghost_w_search::do_ghost (t8_forest_t forest)
 {
 
-    if (t8_ghost_get_type () == T8_GHOST_NONE) {
-      t8_debugf ("WARNING: Trying to construct ghosts with ghost_type NONE. "
-                 "Ghost layer is not constructed.\n");
-      return;
-    }
+  if (t8_ghost_get_type () == T8_GHOST_NONE) {
+    t8_debugf ("WARNING: Trying to construct ghosts with ghost_type NONE. "
+               "Ghost layer is not constructed.\n");
+    return T8_SUBROUTINE_FAILED;
+  }
 
   communicate_ownerships (forest);
 
@@ -2011,6 +2011,8 @@ t8_forest_ghost_w_search::do_ghost (t8_forest_t forest)
     communicate_ghost_elements (forest);
   }
   clean_up (forest);
+
+  return T8_SUBROUTINE_SUCCESS;
 }
 
 void
@@ -2095,9 +2097,14 @@ t8_forest_ghost_definition_face_get_version (t8_forest_ghost_definition_c *ghost
  * Derived class for a stencil on an uniform mesh.
  */
 
-void
+bool
 t8_forest_ghost_stencil::do_ghost (t8_forest_t forest)
 {
+  if (t8_ghost_get_type () == T8_GHOST_NONE) {
+    t8_debugf ("WARNING: Trying to construct ghosts with ghost_type NONE. "
+               "Ghost layer is not constructed.\n");
+    return T8_SUBROUTINE_FAILED;
+  }
   t8_forest_ghost_init (&forest->ghosts, ghost_type);
 
   t8_locidx_t current_index;                   // counter over all local elements
@@ -2119,6 +2126,8 @@ t8_forest_ghost_stencil::do_ghost (t8_forest_t forest)
   }
 
   communicate_ghost_elements (forest);
+
+  return T8_SUBROUTINE_SUCCESS;
 }
 
 /**

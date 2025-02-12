@@ -2967,8 +2967,8 @@ t8_forest_set_ghost_ext (t8_forest_t forest, const int do_ghost, t8_forest_ghost
     forest->do_ghost = (do_ghost != 0); /* True if and only if do_ghost != 0 */
   }
   if (forest->do_ghost) {
-  forest->ghost_definition = ghost_definition;
-}
+    forest->ghost_definition = ghost_definition;
+  }
 }
 
 void
