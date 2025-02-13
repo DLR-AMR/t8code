@@ -21,7 +21,7 @@
 */
 
 /**
- * \file t8_data_handler.hxx
+ * \file t8_vector_handler.hxx
  * 
  * This file provides functions to pack and unpack data for communication and to send and receive it using MPI.
  * 
@@ -32,7 +32,7 @@
 
 #include <t8.h>
 #include <vector>
-#include <t8_data/t8_data_handler_base.hxx>
+#include <t8_data/t8_data_handler.hxx>
 #include <algorithm>
 #include <memory>
 #include <numeric>

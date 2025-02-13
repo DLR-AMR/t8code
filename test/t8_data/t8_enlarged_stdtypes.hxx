@@ -24,7 +24,7 @@
 #define T8_ENLARGED_STDTYPES
 
 #include <test/t8_data/t8_data_handler_specs.hxx>
-#include <t8_data/t8_data_handler_base.hxx>
+#include <t8_data/t8_data_handler.hxx>
 
 /**
  * \file t8_enlarged_stdtypes.hxx 

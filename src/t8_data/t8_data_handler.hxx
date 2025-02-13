@@ -20,11 +20,11 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#ifndef T8_DATA_HANDLER_BASE_HXX
-#define T8_DATA_HANDLER_BASE_HXX
+#ifndef T8_DATA_HANDLER_HXX
+#define T8_DATA_HANDLER_HXX
 
 /**
- * \file t8_data_handler_base.hxx
+ * \file t8_data_handler.hxx
  * 
  * This file provides a templated class for handling single data items.
  * 
@@ -106,4 +106,4 @@ class t8_data_handler {
   ~t8_data_handler () {};
 };
 
-#endif /* T8_DATA_HANDLER_BASE_HXX */
+#endif /* T8_DATA_HANDLER_HXX */
