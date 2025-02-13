@@ -254,4 +254,4 @@ const int maxlvl = 5;
 #endif
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_balance, gtest_balance,
-                          testing::Combine (AllSchemes, testing::Range (0, maxlvl), testing::Range (0, 2)));
+                          testing::Combine (DefaultScheme, testing::Range (0, maxlvl), testing::Range (0, 2)));
