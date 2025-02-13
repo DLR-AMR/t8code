@@ -146,7 +146,7 @@ struct AddAssignable: t8_crtp_operator<TUnderlying, AddAssignable>
 template <typename TUnderlying>
 struct PrefixIncrementable: t8_crtp_operator<TUnderlying, PrefixIncrementable>
 {
-  constexpr TUnderlying&
+  TUnderlying&
   operator++ () noexcept
   {
     ++this->underlying ().get ();
@@ -164,7 +164,7 @@ struct PrefixIncrementable: t8_crtp_operator<TUnderlying, PrefixIncrementable>
 template <typename TUnderlying>
 struct PrefixDecrementable: t8_crtp_operator<TUnderlying, PrefixDecrementable>
 {
-  constexpr TUnderlying&
+  TUnderlying&
   operator-- () noexcept
   {
     --this->underlying ().get ();
