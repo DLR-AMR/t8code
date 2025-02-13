@@ -89,7 +89,7 @@ class t8_data_handler<pseudo_tree> {
     SC_CHECK_MPI (mpiret);
 
     for (const auto &handler : data.tree_data) {
-      const int type = handler->type ();
+      const t8_data_handler_type type = handler->type ();
       /* Pack type of tree data */
       mpiret = sc_MPI_Pack (&type, 1, sc_MPI_INT, buffer, num_bytes, &pos, comm);
       SC_CHECK_MPI (mpiret);
@@ -119,17 +119,17 @@ class t8_data_handler<pseudo_tree> {
 
     data.tree_data.resize (num_handler);
     for (auto &ihandler : data.tree_data) {
-      int type;
+      t8_data_handler_type type;
       mpiret = sc_MPI_Unpack (buffer, num_bytes, &pos, &type, 1, sc_MPI_INT, comm);
       SC_CHECK_MPI (mpiret);
 
       if (!is_internal_data (type)) {
 
         /* TODO: This is currently only a placeholder for actual internal data types. */
-        if (type == 0) {
+        if (type.underlying ().get () == 0) {
           ihandler = std::make_shared<t8_vector_handler<enlarged_data<int>>> ();
         }
-        else if (type == 1) {
+        else if (type.underlying ().get () == 1) {
           ihandler = std::make_shared<t8_vector_handler<enlarged_data<double>>> ();
         }
         else {
@@ -144,10 +144,10 @@ class t8_data_handler<pseudo_tree> {
     }
   }
 
-  int
+  constexpr t8_data_handler_type
   type ()
   {
-    return -1;
+    return t8_data_handler_type (-1);
   }
 };
 

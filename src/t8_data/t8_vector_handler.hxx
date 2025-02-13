@@ -122,7 +122,7 @@ class t8_abstract_vector_handler {
    * \return An integer representing the type.
    * TODO: implement a proper type/enum for this. 
    */
-  virtual int
+  virtual t8_data_handler_type
   type ()
     = 0;
 
@@ -244,10 +244,10 @@ class t8_vector_handler: public t8_abstract_vector_handler {
     return mpiret;
   }
 
-  int
+  t8_data_handler_type
   type () override
   {
-    return single_handler.type ();
+    return t8_data_handler_type (single_handler.type ());
   }
 
  private:
@@ -264,9 +264,9 @@ class t8_vector_handler: public t8_abstract_vector_handler {
 };
 
 inline t8_abstract_vector_handler *
-create_internal_handler (const int type)
+create_internal_handler (const t8_data_handler_type type)
 {
-  switch (type) {
+  switch (type.underlying ().get ()) {
     /* Place holder to create a handler for internal data structures */
   default:
     return nullptr;

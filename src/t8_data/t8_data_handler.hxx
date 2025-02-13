@@ -30,11 +30,12 @@
  * 
  */
 #include <t8.h>
+#include <t8_types/t8_data_handler_type.hxx>
 
-inline bool
-is_internal_data (const int type)
+constexpr bool
+is_internal_data (const t8_data_handler_type type)
 {
-  switch (type) {
+  switch (type.underlying ().get ()) {
   // Placeholder for future internal data, which is handled here.
   default:
     return false;
@@ -100,7 +101,7 @@ class t8_data_handler {
    *
    * \return An integer representing the type.
    */
-  int
+  t8_data_handler_type
   type ();
 
   ~t8_data_handler () {};
