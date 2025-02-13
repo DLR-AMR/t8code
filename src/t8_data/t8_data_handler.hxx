@@ -37,7 +37,7 @@
 #include <memory>
 #include <numeric>
 
-class t8_abstract_data_handler {
+class t8_abstract_vector_handler {
  public:
   /**
    * Pure virtual function to determine the buffer size.
@@ -126,7 +126,7 @@ class t8_abstract_data_handler {
   type ()
     = 0;
 
-  virtual ~t8_abstract_data_handler () {};
+  virtual ~t8_abstract_vector_handler () {};
 };
 
 /**
@@ -138,13 +138,13 @@ class t8_abstract_data_handler {
  * \tparam TType The type of data to be handled.
  */
 template <typename TType>
-class t8_data_handler: public t8_abstract_data_handler {
+class t8_vector_handler: public t8_abstract_vector_handler {
  public:
   /**
    * Construct a new t8 data handler.
    * m_data is initialized to nullptr.
    */
-  t8_data_handler (): single_handler ()
+  t8_vector_handler (): single_handler ()
   {
     m_data = nullptr;
   }
@@ -154,7 +154,7 @@ class t8_data_handler: public t8_abstract_data_handler {
    *
    * \param[in] data The data to be handled.
    */
-  t8_data_handler (const std::vector<TType> &data)
+  t8_vector_handler (const std::vector<TType> &data)
     : m_data (std::make_shared<std::vector<TType>> (data)), single_handler ()
   {
   }
@@ -260,10 +260,10 @@ class t8_data_handler: public t8_abstract_data_handler {
    * A single data handler for the data type T.
    * This handler will be used to pack and unpack individual data items.
    */
-  t8_single_data_handler<TType> single_handler;
+  t8_data_handler<TType> single_handler;
 };
 
-inline t8_abstract_data_handler *
+inline t8_abstract_vector_handler *
 create_internal_handler (const int type)
 {
   switch (type) {

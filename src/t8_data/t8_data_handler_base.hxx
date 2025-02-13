@@ -49,13 +49,13 @@ is_internal_data (const int type)
  * \tparam TType The type of data to be handled.
  */
 template <typename TType>
-class t8_single_data_handler {
+class t8_data_handler {
  public:
   /**
    * Construct a new t8 single data handler.
    * 
    */
-  t8_single_data_handler () {};
+  t8_data_handler () {};
 
   /** 
    * Returns the size of the data.
@@ -103,7 +103,7 @@ class t8_single_data_handler {
   int
   type ();
 
-  ~t8_single_data_handler () {};
+  ~t8_data_handler () {};
 };
 
 #endif /* T8_DATA_HANDLER_BASE_HXX */

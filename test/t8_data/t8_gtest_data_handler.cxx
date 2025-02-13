@@ -51,7 +51,7 @@ class data_handler_test: public testing::Test {
     SC_CHECK_MPI (mpiret);
     creator = data_creator<enlarged_data<TType>> ();
     creator.create (max_num_data);
-    data_handler = new t8_data_handler<enlarged_data<TType>> (creator.large_data);
+    data_handler = new t8_vector_handler<enlarged_data<TType>> (creator.large_data);
   }
 
   void
@@ -60,7 +60,7 @@ class data_handler_test: public testing::Test {
     delete data_handler;
   }
 
-  t8_data_handler<enlarged_data<TType>> *data_handler;
+  t8_vector_handler<enlarged_data<TType>> *data_handler;
   data_creator<enlarged_data<TType>> creator;
   std::vector<enlarged_data<TType>> recv_data;
   int mpirank;
@@ -149,9 +149,9 @@ TEST (data_handler_test, multiple_handler)
     double_data[idata].data = (double) idata + fraction;
     double_data[idata].check = mpirank;
   }
-  t8_data_handler<enlarged_data<int>> int_handler (int_data);
-  t8_data_handler<enlarged_data<double>> double_handler (double_data);
-  std::vector<t8_abstract_data_handler *> handler;
+  t8_vector_handler<enlarged_data<int>> int_handler (int_data);
+  t8_vector_handler<enlarged_data<double>> double_handler (double_data);
+  std::vector<t8_abstract_vector_handler *> handler;
 
   handler.push_back (&int_handler);
   handler.push_back (&double_handler);
@@ -161,7 +161,7 @@ TEST (data_handler_test, multiple_handler)
   int send_to = (mpirank + 1) % mpisize;
   /* Compute the rank this rank receives from. */
   int recv_from = (mpirank == 0) ? (mpisize - 1) : (mpirank - 1);
-  for (t8_abstract_data_handler *ihandler : handler) {
+  for (t8_abstract_vector_handler *ihandler : handler) {
 
     mpiret = ihandler->send (send_to, 0, comm);
     SC_CHECK_MPI (mpiret);
@@ -171,9 +171,9 @@ TEST (data_handler_test, multiple_handler)
     mpiret = ihandler->recv (recv_from, 0, comm, &status, outcount);
   }
 
-  std::vector<enlarged_data<int>> recv_ints = *((t8_data_handler<enlarged_data<int>> *) (handler[0]))->get_data ();
+  std::vector<enlarged_data<int>> recv_ints = *((t8_vector_handler<enlarged_data<int>> *) (handler[0]))->get_data ();
   std::vector<enlarged_data<double>> recv_doubles
-    = *((t8_data_handler<enlarged_data<double>> *) (handler[1]))->get_data ();
+    = *((t8_vector_handler<enlarged_data<double>> *) (handler[1]))->get_data ();
 
   SC_CHECK_MPI (mpiret);
   for (int idata = 0; idata < num_data; idata++) {
@@ -198,13 +198,13 @@ TEST (data_handler_test, pseudo_tree_test)
     int_data[idata].data = idata;
   }
   tree.tree_data.resize (1);
-  tree.tree_data[0] = std::make_shared<t8_data_handler<enlarged_data<int>>> (std::move (int_data));
+  tree.tree_data[0] = std::make_shared<t8_vector_handler<enlarged_data<int>>> (std::move (int_data));
 
   pseudo_tree tree_copy (tree);
   EXPECT_EQ (tree.topo_data.size (), tree_copy.topo_data.size ());
   EXPECT_EQ (tree.tree_data.size (), tree_copy.tree_data.size ());
 
-  auto handler = std::dynamic_pointer_cast<t8_data_handler<enlarged_data<int>>> (tree_copy.tree_data[0]).get ();
+  auto handler = std::dynamic_pointer_cast<t8_vector_handler<enlarged_data<int>>> (tree_copy.tree_data[0]).get ();
   ASSERT_NE (handler, nullptr);
   std::vector<enlarged_data<int>> copied_data = *(handler->get_data ());
 
@@ -218,7 +218,8 @@ TEST (data_handler_test, pseudo_tree_test)
   EXPECT_EQ (tree.topo_data.size (), tree_equal.topo_data.size ());
   EXPECT_EQ (tree.tree_data.size (), tree_equal.tree_data.size ());
 
-  auto handler_equal = std::dynamic_pointer_cast<t8_data_handler<enlarged_data<int>>> (tree_equal.tree_data[0]).get ();
+  auto handler_equal
+    = std::dynamic_pointer_cast<t8_vector_handler<enlarged_data<int>>> (tree_equal.tree_data[0]).get ();
   ASSERT_NE (handler_equal, nullptr);
   std::vector<enlarged_data<int>> equal_data = *(handler_equal->get_data ());
 
@@ -259,7 +260,7 @@ TEST (data_handler_test, tree_test)
           int_data[idata].check = mpirank;
           int_data[idata].data = idata;
         }
-        tree.tree_data[itree_data] = std::make_shared<t8_data_handler<enlarged_data<int>>> (std::move (int_data));
+        tree.tree_data[itree_data] = std::make_shared<t8_vector_handler<enlarged_data<int>>> (std::move (int_data));
       }
       else {
         std::vector<enlarged_data<double>> double_data (num_data);
@@ -267,13 +268,14 @@ TEST (data_handler_test, tree_test)
           double_data[idata].check = mpirank;
           double_data[idata].data = static_cast<double> (idata) + fraction;
         }
-        tree.tree_data[itree_data] = std::make_shared<t8_data_handler<enlarged_data<double>>> (std::move (double_data));
+        tree.tree_data[itree_data]
+          = std::make_shared<t8_vector_handler<enlarged_data<double>>> (std::move (double_data));
       }
     }
     trees[itree] = std::move (tree);
   }
 
-  t8_data_handler<pseudo_tree> tree_handler (trees);
+  t8_vector_handler<pseudo_tree> tree_handler (trees);
 
   const int send_to = (mpirank + 1) % mpisize;
   const int recv_from = (mpirank == 0) ? (mpisize - 1) : (mpirank - 1);
@@ -302,7 +304,7 @@ TEST (data_handler_test, tree_test)
     for (int itree_data = 0; itree_data < num_recv_tree_data; ++itree_data) {
       if (itree_data == 0) {
         auto int_handler
-          = std::dynamic_pointer_cast<t8_data_handler<enlarged_data<int>>> (recv_trees[itree].tree_data[itree_data])
+          = std::dynamic_pointer_cast<t8_vector_handler<enlarged_data<int>>> (recv_trees[itree].tree_data[itree_data])
               .get ();
         ASSERT_NE (int_handler, nullptr);
         std::vector<enlarged_data<int>> recv_ints = *(int_handler->get_data ());
@@ -314,9 +316,9 @@ TEST (data_handler_test, tree_test)
         }
       }
       else {
-        auto double_handler
-          = std::dynamic_pointer_cast<t8_data_handler<enlarged_data<double>>> (recv_trees[itree].tree_data[itree_data])
-              .get ();
+        auto double_handler = std::dynamic_pointer_cast<t8_vector_handler<enlarged_data<double>>> (
+                                recv_trees[itree].tree_data[itree_data])
+                                .get ();
         ASSERT_NE (double_handler, nullptr);
         std::vector<enlarged_data<double>> recv_double = *(double_handler->get_data ());
         ASSERT_EQ (static_cast<int> (recv_double.size ()), num_data);

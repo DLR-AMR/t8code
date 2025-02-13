@@ -47,11 +47,11 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 class pseudo_tree {
  public:
   std::vector<int> topo_data;
-  std::vector<std::shared_ptr<t8_abstract_data_handler>> tree_data;
+  std::vector<std::shared_ptr<t8_abstract_vector_handler>> tree_data;
 };
 
 template <>
-class t8_single_data_handler<pseudo_tree> {
+class t8_data_handler<pseudo_tree> {
  public:
   int
   size (const pseudo_tree &item, sc_MPI_Comm comm)
@@ -127,17 +127,17 @@ class t8_single_data_handler<pseudo_tree> {
 
         /* TODO: This is currently only a placeholder for actual internal data types. */
         if (type == 0) {
-          ihandler = std::make_shared<t8_data_handler<enlarged_data<int>>> ();
+          ihandler = std::make_shared<t8_vector_handler<enlarged_data<int>>> ();
         }
         else if (type == 1) {
-          ihandler = std::make_shared<t8_data_handler<enlarged_data<double>>> ();
+          ihandler = std::make_shared<t8_vector_handler<enlarged_data<double>>> ();
         }
         else {
           SC_ABORT_NOT_REACHED ();
         }
       }
       else {
-        ihandler = std::shared_ptr<t8_abstract_data_handler> (create_internal_handler (type));
+        ihandler = std::shared_ptr<t8_abstract_vector_handler> (create_internal_handler (type));
       }
       int outcount = 0;
       ihandler->unpack_vector_prefix (buffer, num_bytes, pos, outcount, comm);
