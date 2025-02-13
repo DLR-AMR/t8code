@@ -950,8 +950,7 @@ struct t8_standalone_scheme
       /* get id in subtree of child */
       id -= sum_descendants_of_children_before;
     }
-    T8_ASSERT (id < T8_ELEMENT_NUM_CHILDREN[TEclass]);
-    element_get_child ((const t8_element_t *) el, id, (t8_element_t *) el);
+    T8_ASSERT (id == 0);
     return;
   }
 
