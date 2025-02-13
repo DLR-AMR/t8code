@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2024 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -35,6 +35,7 @@
 #include <t8_data/t8_containers.h>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_ghost_definition.h>
 
 typedef struct t8_profile t8_profile_t;            /* Defined below */
 typedef struct t8_forest_ghost *t8_forest_ghost_t; /* Defined below */
@@ -98,15 +99,13 @@ typedef struct t8_forest
                                              If 0, no balance. If 1 balance with repartitioning, if 2 balance without
                                              repartitioning, \see t8_forest_balance */
   int do_ghost;                   /**< If True, a ghost layer will be created when the forest is committed. */
-  t8_ghost_type_t ghost_type;     /**< If a ghost layer will be created, the type of neighbors that count as ghost. */
-  int ghost_algorithm;            /**< Controls the algorithm used for ghost. 1 = balanced only. 2 = also unbalanced
-                                             3 = top-down search and unbalanced. */
-  void *user_data;                /**< Pointer for arbitrary user data. \see t8_forest_set_user_data. */
-  void (*user_function) ();       /**< Pointer for arbitrary user function. \see t8_forest_set_user_function. */
-  void *t8code_data;              /**< Pointer for arbitrary data that is used internally. */
-  int committed;                  /**< \ref t8_forest_commit called? */
-  int mpisize;                    /**< Number of MPI processes. */
-  int mpirank;                    /**< Number of this MPI process. */
+  t8_forest_ghost_definition_c *ghost_definition; /**< The definition of the ghost as class, with a ghost_type > */
+  void *user_data;                                /**< Pointer for arbitrary user data. \see t8_forest_set_user_data. */
+  void (*user_function) (); /**< Pointer for arbitrary user function. \see t8_forest_set_user_function. */
+  void *t8code_data;        /**< Pointer for arbitrary data that is used internally. */
+  int committed;            /**< \ref t8_forest_commit called? */
+  int mpisize;              /**< Number of MPI processes. */
+  int mpirank;              /**< Number of this MPI process. */
 
   t8_gloidx_t first_local_tree; /**< The global index of the first local tree on this process. 
                                              If first_local_tree is larger than last_local_tree then 
