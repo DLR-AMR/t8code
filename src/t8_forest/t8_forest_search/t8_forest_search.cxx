@@ -168,6 +168,26 @@ t8_partition_search_base::search_recursion (const t8_locidx_t ltreeid, t8_elemen
     /* The function returned false. We abort the recursion */
     return;
   }
+
+  std::vector<size_t> new_active_queries;
+  this->check_queries (new_active_queries, ltreeid, element, pfirst, plast);
+
+  if (pfirst == plast) {
+    return; /* the partition search recursion stops on single processes */
+  }
+
+  /* Enter the recursion (the element is definitely not a leaf at this point) */
+  /* We compute all children of E, compute their leaf arrays and call search_recursion */
+  /* allocate the memory to store the children */
+  const int num_children = ts->element_get_num_children (eclass, element);
+  t8_element_t **children = T8_ALLOC (t8_element_t *, num_children);
+  ts->element_new (eclass, num_children, children);
+  /* Compute the children */
+  ts->element_get_children (eclass, element, num_children, children);
+
+  /* clean-up */
+  ts->element_destroy (eclass, num_children, children);
+  T8_FREE (children);
 }
 
 void
