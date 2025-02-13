@@ -495,7 +495,7 @@ t8_tutorial_build_cmesh_main (int argc, char **argv)
   t8_cmesh_vtk_write_file (cmesh_2D, prefix_2D);
   t8_global_productionf ("[tutorial] Wrote the 2D cmesh to %s*.\n", prefix_2D);
   t8_cmesh_vtk_write_file (cmesh_3D, prefix_3D);
-  t8_global_productionf ("[tutorial] Wrote the 3D cmesh  %s*.\n", prefix_3D);
+  t8_global_productionf ("[tutorial] Wrote the 3D cmesh to %s*.\n", prefix_3D);
 
   /*
    * Clean-up

@@ -420,7 +420,7 @@ t8_step6_main (int argc, char **argv)
 
   /* Output the data to vtu files. */
   t8_step6_output_data_to_vtu (forest, data, prefix_forest_with_data);
-  t8_global_productionf (" Wrote forest and data to %s*.\n", prefix_forest_with_data);
+  t8_global_productionf (" [step6] Wrote forest and data to %s*.\n", prefix_forest_with_data);
 
   /*
    * Clean-up
@@ -431,7 +431,7 @@ t8_step6_main (int argc, char **argv)
 
   /* Destroy the forest. */
   t8_forest_unref (&forest);
-  t8_global_productionf (" Destroyed forest.\n");
+  t8_global_productionf (" [step6] Destroyed forest.\n");
 
   sc_finalize ();
 

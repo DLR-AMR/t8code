@@ -334,7 +334,7 @@ t8_interpolation ()
   /* Write vtu file */
   const char *prefix_uniform_forest = "t8_step7_uniform_forest";
   t8_write_vtu (forest, data, prefix_uniform_forest);
-  t8_global_productionf (" Wrote uniform forest with data to %s*.\n", prefix_uniform_forest);
+  t8_global_productionf (" [step7] Wrote uniform forest with data to %s*.\n", prefix_uniform_forest);
 
   /* Build a second forest to store the adapted forest - keep the old one */
   t8_forest_ref (forest);
@@ -363,7 +363,7 @@ t8_interpolation ()
 
   const char *prefix_adapted_forest = "t8_step7_adapt_forest";
   t8_write_vtu (forest_adapt, adapt_data, prefix_adapted_forest);
-  t8_global_productionf (" Wrote adapted forest with data to %s*.\n", prefix_adapted_forest);
+  t8_global_productionf (" [step7] Wrote adapted forest with data to %s*.\n", prefix_adapted_forest);
 
   /* Free the memory */
   sc_array_destroy (adapt_data->element_data);
