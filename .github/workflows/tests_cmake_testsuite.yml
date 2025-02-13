@@ -31,9 +31,10 @@ name: t8code CMake testsuite
 #       IGNORE_CACHE to true in the respective steps.
 
 on:
-  merge_group:
+  push:
+    branches:
+      - main
   pull_request:
-    types: [opened, synchronize, ready_for_review, reopened]
   workflow_dispatch: # Be able to trigger this manually on github.com
   # Run every night at 1:10
   schedule:
