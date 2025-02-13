@@ -576,6 +576,21 @@ class t8_partition_search_base {
   void
   search_tree (const t8_locidx_t ltreeid, int pfirst, int plast);
 
+  /** \brief Recursively searches the tree.
+   *
+   * This function performs a recursive search operation on the tree identified by the given local tree ID.
+   * It uses the given \a element_callback function to process each element encountered during the search.
+   * If a query_callback function is provided, it is used to process queries during the search.
+   *
+   * \param[in] ltreeid The local tree ID of the tree to be searched.
+   * \param[in] element The element to be searched.
+   * \param[in] ts The element class scheme.
+   * \param[in] pfirst The first processor that owns part of \a element. Guaranteed to be non-empty.
+   * \param[in] plast The last processor that owns part of \a element. Guaranteed to be non-empty.
+   */
+  void
+  search_recursion (const t8_locidx_t ltreeid, t8_element_t *element, const t8_scheme *ts, int pfirst, int plast);
+
   /** \brief Checks if the search should stop due to empty queries.
    *
    */
