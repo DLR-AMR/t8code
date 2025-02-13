@@ -110,10 +110,10 @@ class t8_data_handler<enlarged_data<int>> {
    * 
    * \return An integer representing the type.
    */
-  constexpr int
+  constexpr t8_data_handler_type
   type ()
   {
-    return T8_ENLARGED_INT;
+    return t8_data_handler_type (T8_ENLARGED_INT);
   }
 };
 
@@ -192,10 +192,10 @@ class t8_data_handler<enlarged_data<double>> {
    * 
    * \return An integer representing the type.
    */
-  constexpr int
+  constexpr t8_data_handler_type
   type ()
   {
-    return T8_ENLARGED_DOUBLE;
+    return t8_data_handler_type (T8_ENLARGED_DOUBLE);
   }
 };
 

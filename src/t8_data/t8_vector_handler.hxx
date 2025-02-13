@@ -244,7 +244,7 @@ class t8_vector_handler: public t8_abstract_vector_handler {
     return mpiret;
   }
 
-  t8_data_handler_type
+  constexpr t8_data_handler_type
   type () override
   {
     return t8_data_handler_type (single_handler.type ());
@@ -266,7 +266,7 @@ class t8_vector_handler: public t8_abstract_vector_handler {
 inline t8_abstract_vector_handler *
 create_internal_handler (const t8_data_handler_type type)
 {
-  switch (type.underlying ().get ()) {
+  switch (type.get ()) {
     /* Place holder to create a handler for internal data structures */
   default:
     return nullptr;

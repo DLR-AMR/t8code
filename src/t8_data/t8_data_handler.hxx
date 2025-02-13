@@ -35,7 +35,7 @@
 constexpr bool
 is_internal_data (const t8_data_handler_type type)
 {
-  switch (type.underlying ().get ()) {
+  switch (type.get ()) {
   // Placeholder for future internal data, which is handled here.
   default:
     return false;

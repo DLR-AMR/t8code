@@ -126,10 +126,10 @@ class t8_data_handler<pseudo_tree> {
       if (!is_internal_data (type)) {
 
         /* TODO: This is currently only a placeholder for actual internal data types. */
-        if (type.underlying ().get () == 0) {
+        if (type.get () == 0) {
           ihandler = std::make_shared<t8_vector_handler<enlarged_data<int>>> ();
         }
-        else if (type.underlying ().get () == 1) {
+        else if (type.get () == 1) {
           ihandler = std::make_shared<t8_vector_handler<enlarged_data<double>>> ();
         }
         else {
