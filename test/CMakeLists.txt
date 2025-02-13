@@ -1,5 +1,5 @@
 add_library( gtest ${CMAKE_CURRENT_LIST_DIR}/../thirdparty/googletest-mpi/gtest/gtest-all.cc )
-target_include_directories( gtest PUBLIC ${CMAKE_CURRENT_LIST_DIR}/../thirdparty/googletest-mpi ${CMAKE_CURRENT_LIST_DIR}/.. )
+target_include_directories( gtest SYSTEM PUBLIC ${CMAKE_CURRENT_LIST_DIR}/../thirdparty/googletest-mpi ${CMAKE_CURRENT_LIST_DIR}/.. )
 
 function( add_t8_test )
     set( options "" )
@@ -73,6 +73,8 @@ add_t8_test( NAME t8_gtest_version_serial           SOURCES t8_gtest_main.cxx t8
 add_t8_test( NAME t8_gtest_basics_serial            SOURCES t8_gtest_main.cxx t8_gtest_basics.cxx )
 add_t8_test( NAME t8_gtest_netcdf_linkage_serial    SOURCES t8_gtest_main.cxx t8_gtest_netcdf_linkage.cxx )
 add_t8_test( NAME t8_gtest_vtk_linkage_serial       SOURCES t8_gtest_main.cxx t8_gtest_vtk_linkage.cxx )
+
+add_t8_test( NAME t8_gtest_type_serial              SOURCES t8_gtest_main.cxx t8_types/t8_gtest_type.cxx )
 
 add_t8_test( NAME t8_gtest_hypercube_parallel                           SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_hypercube.cxx )
 add_t8_test( NAME t8_gtest_cmesh_readmshfile_serial                     SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_readmshfile.cxx )
