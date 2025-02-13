@@ -566,7 +566,7 @@ class t8_partition_search_base {
   t8_forest_t forest;
 
  private:
- /** @brief Searches a tree within the forest.
+  /** @brief Searches a tree within the forest.
    *
    * This function performs a search operation on a tree identified by the given local tree ID.
    * It uses the \a search_recursion function to perform the search.
@@ -585,14 +585,13 @@ class t8_partition_search_base {
 
   /** \brief Checks an element during the search.
    *
-   * This function is called for each element encountered during the search.
+   * This function is called for each element encountered during the partition search.
    * It passes the arguments to the callback function provided by the user.
    *
-   * \param[in] ltreeid The local tree ID of the current element.
+   * \param[in] ltreeid The local tree ID of the current tree in the cmesh.
    * \param[in] element A pointer to the current element being processed.
-   * \param[in] is_leaf A bool indicating whether the current element is a leaf (non-zero) or not (zero).
-   * \param[in] leaf_elements A pointer to an array of leaf elements.
-   * \param[in] tree_leaf_index The index of the current leaf element within the tree.
+   * \param[in] pfirst The first processor that owns part of \a element. Guaranteed to be non-empty.
+   * \param[in] plast The last processor that owns part of \a element. Guaranteed to be non-empty.
    *
    * \return True if the search should continue, false otherwise.
    */
@@ -602,15 +601,14 @@ class t8_partition_search_base {
 
   /** \brief Checks queries during the search.
    *
-   * This function is called to check queries during the search.
+   * This function is called to check queries during the partition search.
    * It passes the arguments to the callback function provided by the user.
    *
    * \param[in] new_active_queries A vector of indices of active queries.
-   * \param[in] ltreeid The local tree ID of the current element.
-   * \param[in] element A pointer to the current element being processed.
-   * \param[in] is_leaf A bool indicating whether the current element is a leaf (non-zero) or not (zero).
-   * \param[in] leaf_elements A pointer to an array of leaf elements.
-   * \param[in] tree_leaf_index The index of the current leaf element within the tree.
+   * \param[in] ltreeid The local tree ID within the forest.
+   * \param[in] element The element being queried.
+   * \param[in] pfirst The first processor that owns part of \a element. Guaranteed to be non-empty.
+   * \param[in] plast The last processor that owns part of \a element. Guaranteed to be non-empty.
    */
   virtual void
   check_queries (std::vector<size_t> &new_active_queries, const t8_locidx_t ltreeid, const t8_element_t *element,
