@@ -2901,19 +2901,29 @@ void
 t8_forest_set_ghost_ext (t8_forest_t forest, const int do_ghost, t8_forest_ghost_definition_c *ghost_definition)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
-  T8_ASSERT (!(do_ghost == 1 && ghost_definition == NULL));
-  if (forest->ghost_definition != NULL) {
-    t8_forest_ghost_definition_unref (&(forest->ghost_definition));
-  }
-  if (ghost_definition == NULL) {
-    forest->do_ghost = 0;
-    forest->ghost_definition = NULL;
+
+  if (do_ghost != 0) {
+    if (ghost_definition == NULL) {
+      /* If forest has a ghost_definition, activate ghost, otherwise abort. */
+      if (forest->ghost_definition != NULL) {
+        forest->do_ghost = 1;
+      }
+      else {
+        SC_ABORT ("Want to aktivat ghost, without ghost_definiton.\n");
+      }
+    }
+    else {
+      /* Unref the old ghost_definition (if it exists) and set the new one. */
+      if (forest->ghost_definition != NULL) {
+        t8_forest_ghost_definition_unref (&(forest->ghost_definition));
+      }
+      forest->do_ghost = 1;
+      forest->ghost_definition = ghost_definition;
+    }
   }
   else {
-    forest->do_ghost = (do_ghost != 0); /* True if and only if do_ghost != 0 */
-  }
-  if (forest->do_ghost) {
-    forest->ghost_definition = ghost_definition;
+    /* Deactivate ghost for the forest, but do not overwrite an old ghost_definition of the forest. */
+    forest->do_ghost = 0;
   }
 }
 
