@@ -951,7 +951,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
         }
         /* Now the nodes are read and we get their coordinates from
          * the stored nodes */
-        for (i = 0; i < num_nodes; i++) { 
+        for (i = 0; i < num_nodes; i++) {
           Node.index = node_indices[i];
           sc_hash_lookup (vertices, (void *) &Node, (void ***) &found_node);
           /* Add node coordinates to the tree vertices */
@@ -1020,11 +1020,11 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
             }
             temp_node = tree_nodes[iswitch];
             tree_nodes[iswitch] = tree_nodes[switch_indices[iswitch]];
-            tree_nodes[switch_indices[iswitch]] = temp_node; 
+            tree_nodes[switch_indices[iswitch]] = temp_node;
             /* Switch global indices */
             t8_gloidx_t temp_index = global_id_of_node[iswitch];
             global_id_of_node[iswitch] = global_id_of_node[switch_indices[iswitch]];
-            global_id_of_node[switch_indices[iswitch]] = temp_index; 
+            global_id_of_node[switch_indices[iswitch]] = temp_index;
           }
           T8_ASSERT (!t8_cmesh_tree_vertices_negative_volume (eclass, tree_vertices, num_nodes));
         } /* End of negative volume handling */
