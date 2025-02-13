@@ -38,6 +38,13 @@ t8_forest_ghost_definition_face_new (const int version);
 
 /**
  * Satisfy the C interface of forest
+ * Create a new ghost_definition of type stencil
+ */
+t8_forest_ghost_definition_c *
+t8_forest_ghost_definition_stencil_new ();
+
+/**
+ * Satisfy the C interface of forest
  * Return for a ghost_definition of Type FACE the ghost_algorithm / ghost_version (1, 2 or 3)
  * \param [in]    ghost_definition Pointer to object of class t8_forest_ghost_face
  */
