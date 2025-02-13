@@ -40,16 +40,16 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 template <typename TUnderlying, template <typename> class crtpType>
 struct t8_crtp_operator
 {
-  inline TUnderlying&
-  underlying ()
+  constexpr TUnderlying&
+  underlying () noexcept
   {
     return static_cast<TUnderlying&> (*this);
   }
 
-  inline TUnderlying const&
-  underlying () const
+  constexpr const TUnderlying&
+  underlying () const noexcept
   {
-    return static_cast<TUnderlying const&> (*this);
+    return static_cast<const TUnderlying&> (*this);
   }
 };
 
@@ -68,8 +68,8 @@ template <typename TUnderlying>
 struct Addable: t8_crtp_operator<TUnderlying, Addable>
 {
 
-  TUnderlying
-  operator+ (TUnderlying const& other)
+  constexpr TUnderlying
+  operator+ (const TUnderlying& other) const noexcept
   {
     return TUnderlying (this->underlying ().get () + other.get ());
   }
@@ -83,8 +83,8 @@ struct Addable: t8_crtp_operator<TUnderlying, Addable>
 template <typename TUnderlying>
 struct Subtractable: t8_crtp_operator<TUnderlying, Subtractable>
 {
-  TUnderlying
-  operator- (TUnderlying const& other)
+  constexpr TUnderlying
+  operator- (const TUnderlying& other) const noexcept
   {
     return TUnderlying (this->underlying ().get () - other.get ());
   }
@@ -98,8 +98,8 @@ struct Subtractable: t8_crtp_operator<TUnderlying, Subtractable>
 template <typename TUnderlying>
 struct Multipliable: t8_crtp_operator<TUnderlying, Multipliable>
 {
-  TUnderlying
-  operator* (TUnderlying const& other)
+  constexpr TUnderlying
+  operator* (const TUnderlying& other) const noexcept
   {
     return TUnderlying (this->underlying ().get () * other.get ());
   }
@@ -113,8 +113,8 @@ struct Multipliable: t8_crtp_operator<TUnderlying, Multipliable>
 template <typename TUnderlying>
 struct Dividable: t8_crtp_operator<TUnderlying, Dividable>
 {
-  TUnderlying
-  operator/ (TUnderlying const& other)
+  constexpr TUnderlying
+  operator/ (const TUnderlying& other) const noexcept
   {
     return TUnderlying (this->underlying ().get () / other.get ());
   }
@@ -128,8 +128,8 @@ struct Dividable: t8_crtp_operator<TUnderlying, Dividable>
 template <typename TUnderlying>
 struct AddAssignable: t8_crtp_operator<TUnderlying, AddAssignable>
 {
-  TUnderlying&
-  operator+= (TUnderlying const& other)
+  constexpr TUnderlying&
+  operator+= (const TUnderlying& other) noexcept
   {
     this->underlying ().get () += other.get ();
     return this->underlying ();
@@ -146,10 +146,10 @@ struct AddAssignable: t8_crtp_operator<TUnderlying, AddAssignable>
 template <typename TUnderlying>
 struct PrefixIncrementable: t8_crtp_operator<TUnderlying, PrefixIncrementable>
 {
-  TUnderlying&
-  operator++ ()
+  constexpr TUnderlying&
+  operator++ () noexcept
   {
-    this->underlying ().get ()++;
+    ++this->underlying ().get ();
     return this->underlying ();
   }
 };
@@ -164,10 +164,10 @@ struct PrefixIncrementable: t8_crtp_operator<TUnderlying, PrefixIncrementable>
 template <typename TUnderlying>
 struct PrefixDecrementable: t8_crtp_operator<TUnderlying, PrefixDecrementable>
 {
-  TUnderlying&
-  operator-- ()
+  constexpr TUnderlying&
+  operator-- () noexcept
   {
-    this->underlying ().get ()--;
+    --this->underlying ().get ();
     return this->underlying ();
   }
 };
@@ -190,10 +190,10 @@ struct Printable: t8_crtp_operator<TUnderlying, Printable>
 template <typename TUnderlying>
 struct Swapable: t8_crtp_operator<TUnderlying, Swapable>
 {
-  void
-  swap (TUnderlying& other)
+  constexpr void
+  swap (TUnderlying& lhs, TUnderlying& other) noexcept
   {
-    std::swap (this->underlying ().get (), other.get ());
+    std::swap (lhs.get (), other.get ());
   }
 };
 
@@ -205,8 +205,8 @@ struct Swapable: t8_crtp_operator<TUnderlying, Swapable>
 template <typename TUnderlying>
 struct EqualityComparable: t8_crtp_operator<TUnderlying, EqualityComparable>
 {
-  bool
-  operator== (TUnderlying const& other) const
+  constexpr bool
+  operator== (TUnderlying const& other) const noexcept
   {
     return this->underlying ().get () == other.get ();
   }
