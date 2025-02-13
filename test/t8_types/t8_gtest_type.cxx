@@ -177,6 +177,7 @@ TEST (t8_gtest_type, use_constexpr)
   static_assert (my_result_int4.get () == 0, "constexpr operator/ failed");
   constexpr DummyInt my_int_eq (5);
   static_assert (my_int_eq == my_int, "constexpr operator== failed");
+  static_assert (my_int_eq != my_other_int, "constexpr operator!= failed");
 }
 
 /**
