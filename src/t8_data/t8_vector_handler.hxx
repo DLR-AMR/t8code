@@ -27,8 +27,8 @@
  * 
  */
 
-#ifndef T8_DATA_HANDLER_HXX
-#define T8_DATA_HANDLER_HXX
+#ifndef T8_VECTOR_HANDLER_HXX
+#define T8_VECTOR_HANDLER_HXX
 
 #include <t8.h>
 #include <vector>
@@ -273,4 +273,4 @@ create_internal_handler (const int type)
   }
 }
 
-#endif /* T8_DATA_HANDLER_HXX */
+#endif /* T8_VECTOR_HANDLER_HXX */
