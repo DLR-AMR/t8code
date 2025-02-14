@@ -23,69 +23,7 @@
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 #include <t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.hxx>
 
-void
-t8_dvertex_init_linear_id (t8_dvertex_t *v, const int level, const t8_linearidx_t id)
-{
-  T8_ASSERT (0 <= level && level <= T8_DVERTEX_MAXLEVEL);
-  T8_ASSERT (0 == id);
-
-  /* Set the level */
-  v->level = level;
-}
-
-/* We want to export the whole implementation to be callable from "C" */
-T8_EXTERN_C_BEGIN ();
-
-// ########################## STATIC HELPER FUNCTIONS ###########################
-
-/** Copy all values from one vertex to another.
- * \param [in] l    The vertex to be copied.
- * \param [in,out] dest Allocated vertex whose data will be filled with the data
- *                   of \a l.
- */
-inline static void
-t8_dvertex_copy (const t8_dvertex_t *v, t8_dvertex_t *dest)
-{
-  memcpy (dest, v, sizeof (t8_dvertex_t));
-}
-
-/** Query whether all entries of a vertex are in valid ranges.
- * \param [in] l  vertex to be considered.
- * \return        True, if \a l is a valid vertex and it is safe to call any
- *                function in this file on \a l.
- *                False otherwise.
- */
-inline static int
-t8_dvertex_is_valid (const t8_dvertex_t *v)
-{
-  /* A vertex is valid if its level is in the valid range */
-  return 0 <= v->level && v->level <= T8_DVERTEX_MAXLEVEL;
-}
-
-/** Test if a vertex lies inside of the root vertex,
- *  that is the vertex of level 0, anchor node (0,0)
- *  \param [in]     l Input vertex.
- *  \return true    If \a l lies inside of the root vertex.
- */
-static inline int
-t8_dvertex_is_inside_root (const t8_dvertex_t *v)
-{
-  /* A vertex is always inside root */
-  return 1;
-}
-
-/** Computes the linear position of a vertex in an uniform grid.
- * \param [in] vertex  vertex whose id will be computed.
- * \return Returns the linear position of this vertex on a grid.
- */
-inline static t8_linearidx_t
-t8_dvertex_linear_id (const t8_dvertex_t *elem, int level)
-{
-  T8_ASSERT (level <= T8_DVERTEX_MAXLEVEL && level >= 0);
-  return 0;
-}
-
-/** Print a vertex
+/** Print a vertex (unused static helper function for debugging)
  * \param [in] v  vertex to be considered.
  */
 inline static void
@@ -93,8 +31,6 @@ t8_dvertex_debug_print (const t8_dvertex_t *v)
 {
   t8_debugf ("level: %i\n", v->level);
 }
-
-// ##############################################################################
 
 size_t
 t8_default_scheme_vertex::get_element_size (void) const
@@ -120,7 +56,7 @@ t8_default_scheme_vertex::element_copy (const t8_element_t *source, t8_element_t
 {
   T8_ASSERT (element_is_valid (source));
   T8_ASSERT (element_is_valid (dest));
-  t8_dvertex_copy ((const t8_dvertex_t *) source, (t8_dvertex_t *) dest);
+  memcpy ((t8_dvertex_t *) dest, (const t8_dvertex_t *) source, sizeof (t8_dvertex_t));
 }
 
 int
@@ -150,16 +86,13 @@ t8_default_scheme_vertex::element_get_parent (const t8_element_t *elem, t8_eleme
 }
 
 void
-t8_default_scheme_vertex::element_get_sibling (const t8_element_t *elem, int sibid, t8_element_t *sibling) const
+t8_default_scheme_vertex::element_get_sibling (const t8_element_t *elem, const int sibid, t8_element_t *sibling) const
 {
-  const t8_dvertex_t *v = (const t8_dvertex_t *) elem;
-  t8_dvertex_t *s = (t8_dvertex_t *) sibling;
-
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (element_is_valid (sibling));
   T8_ASSERT (sibid == 0);
 
-  t8_dvertex_copy (v, s);
+  this->element_copy (elem, sibling);
 }
 
 int
@@ -280,13 +213,14 @@ t8_default_scheme_vertex::element_is_root_boundary (const t8_element_t *elem, in
 }
 
 void
-t8_default_scheme_vertex::element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id) const
+t8_default_scheme_vertex::element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id)
 {
   T8_ASSERT (0 <= level && level <= T8_DVERTEX_MAXLEVEL);
-  T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << 3 * level);
+  T8_ASSERT (0 == id);
   T8_ASSERT (element_is_valid (elem));
 
-  t8_dvertex_init_linear_id ((t8_dvertex_t *) elem, level, id);
+  /* Set the level */
+  ((t8_dvertex_t *) elem)->level = level;
 }
 
 t8_linearidx_t
@@ -355,7 +289,6 @@ t8_default_scheme_vertex::element_get_reference_coords (const t8_element_t *elem
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (fabs (ref_coords[0]) <= T8_PRECISION_EPS);
-  T8_ASSERT (t8_dvertex_is_valid ((const t8_dvertex_t *) elem));
 
   for (size_t coord = 0; coord < num_coords; ++coord) {
     out_coords[coord] = 0;
@@ -364,10 +297,11 @@ t8_default_scheme_vertex::element_get_reference_coords (const t8_element_t *elem
 
 #ifdef T8_ENABLE_DEBUG
 int
-t8_default_scheme_vertex::element_is_valid (const t8_element_t *elem) const
+t8_default_scheme_vertex::element_is_valid (const t8_element_t *elem)
 
 {
-  return t8_dvertex_is_valid ((const t8_dvertex_t *) elem);
+  const t8_dvertex *v = (const t8_dvertex_t *) elem;
+  return 0 <= v->level && v->level <= T8_DVERTEX_MAXLEVEL;
 }
 
 void
@@ -460,5 +394,3 @@ t8_default_scheme_vertex::element_MPI_Unpack (void *recvbuf, const int buffer_si
     SC_CHECK_MPI (mpiret);
   }
 }
-
-T8_EXTERN_C_END ();

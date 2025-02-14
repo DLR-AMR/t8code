@@ -27,18 +27,6 @@
 #include <t8_schemes/t8_default/t8_default_tri/t8_default_tri.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 
-// The following function is part of the header to be callable from
-// t8_default_scheme_line::element_get_boundary_face:
-
-/** Initialize a vertex as the vertex with a given global id in a uniform
- *  refinement of a given level.
- * \param [in,out] l  Existing vertex whose data will be filled.
- * \param [in] id     Index to be considered.
- * \param [in] level  level of uniform grid to be considered.
- */
-void
-t8_dvertex_init_linear_id (t8_dvertex_t *v, const int level, const t8_linearidx_t id);
-
 /* Forward declaration of the scheme so we can use it as an argument in the eclass schemes function. */
 class t8_scheme;
 
@@ -507,8 +495,8 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
    * \param [in] id       The linear id.
    *                      id must fulfil 0 <= id < 'number of leaves in the uniform refinement'
    */
-  void
-  element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id) const;
+  static void
+  element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id);
 
   /** Compute the linear id of a given element in a hypothetical uniform
    * refinement of a given level.
@@ -623,8 +611,8 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
    * \note            We recommend to use the assertion T8_ASSERT (element_is_valid (elem))
    *                  in the implementation of each of the functions in this file.
    */
-  int
-  element_is_valid (const t8_element_t *t) const;
+  static int
+  element_is_valid (const t8_element_t *t);
 
   /**
   * Print a given element. For a example for a triangle print the coordinates
