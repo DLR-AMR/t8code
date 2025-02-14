@@ -192,7 +192,7 @@ t8_default_scheme_line::element_get_boundary_face (const t8_element_t *elem, int
 
   /* Since each vertex is the same, we just construct a vertex of the same level
    * as elem. */
-  t8_dvertex_init_linear_id ((t8_dvertex_t *) boundary, element_get_level (elem), 0);
+  t8_default_scheme_vertex::element_set_linear_id (boundary, element_get_level (elem), 0);
 }
 
 /** Construct the first descendant of an element that touches a given face.   */
