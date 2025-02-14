@@ -66,7 +66,7 @@ struct int_and_double_tag
 
 /* Strong types for testing */
 using DummyInt = T8Type<int, dummy_int, Addable, Subtractable, AddAssignable, Multipliable, Dividable,
-                        PrefixDecrementable, PrefixIncrementable>;
+                        PrefixDecrementable, PrefixIncrementable, EqualityComparable>;
 using DummyInt2 = T8Type<int, dummy_int_2>;
 using DummyDouble = T8Type<double, dummy_double>;
 using DummyRefInt = T8Type<int &, dummy_ref_int>;
@@ -158,9 +158,25 @@ TEST (t8_gtest_type, operators)
   EXPECT_EQ (vec1, vec2);
   Dummy3DVec vec3 ({ 2.0, 2.0, 3.0 });
   EXPECT_NE (vec1, vec3);
-  vec2.swap (vec3);
-  EXPECT_EQ (vec1, vec3);
-  EXPECT_NE (vec1, vec2);
+  swap (vec1, vec3);
+  EXPECT_NE (vec1, vec3);
+  EXPECT_EQ (vec3, vec2);
+}
+
+TEST (t8_gtest_type, use_constexpr)
+{
+  constexpr DummyInt my_int (5);
+  constexpr DummyInt my_other_int (10);
+  constexpr DummyInt my_result_int = my_int + my_other_int;
+  static_assert (my_result_int.get () == 15, "constexpr operator+ failed");
+  constexpr DummyInt my_result_int2 = my_int - my_other_int;
+  static_assert (my_result_int2.get () == -5, "constexpr operator- failed");
+  constexpr DummyInt my_result_int3 = my_int * my_other_int;
+  static_assert (my_result_int3.get () == 50, "constexpr operator* failed");
+  constexpr DummyInt my_result_int4 = my_int / my_other_int;
+  static_assert (my_result_int4.get () == 0, "constexpr operator/ failed");
+  constexpr DummyInt my_int_eq (5);
+  static_assert (my_int_eq == my_int, "constexpr operator== failed");
 }
 
 /**
