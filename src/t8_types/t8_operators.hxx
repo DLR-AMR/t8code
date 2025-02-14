@@ -210,6 +210,11 @@ struct EqualityComparable: t8_crtp_operator<TUnderlying, EqualityComparable>
   {
     return this->underlying ().get () == other.get ();
   }
+  bool
+  operator!= (T const& other) const
+  {
+    return !(*this == other);
+  }
 };
 
 /**
@@ -236,4 +241,61 @@ struct Hashable
   static constexpr bool is_hashable = true;
 };
 
-#endif /* T8_OPERATORS_HXX */
+/**
+ * \brief A template for random accessible types. Provides the [] operator.
+ * 
+ * \tparam T 
+ */
+template <typename T>
+struct RandomAccessible: crtp<T, RandomAccessible>
+{
+  auto
+  operator[] (std::size_t index) -> decltype (auto)
+  {
+    return this->underlying ().get ()[index];
+  }
+
+  auto
+  operator[] (std::size_t index) const -> decltype (auto)
+  {
+    return this->underlying ().get ()[index];
+  }
+
+  auto
+  begin () -> decltype (auto)
+  {
+    return this->underlying ().get ().begin ();
+  }
+
+  auto
+  begin () const -> decltype (auto)
+  {
+    return this->underlying ().get ().begin ();
+  }
+
+  auto
+  end () -> decltype (auto)
+  {
+    return this->underlying ().get ().end ();
+  }
+
+  auto
+  end () const -> decltype (auto)
+  {
+    return this->underlying ().get ().end ();
+  }
+
+  auto
+  data () -> decltype (auto)
+  {
+    return this->underlying ().get ().data ();
+  }
+
+  auto
+  data () const -> decltype (auto)
+  {
+    return this->underlying ().get ().data ();
+  }
+};
+
+#endif  // T8_OPERATORS_HXX
