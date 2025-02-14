@@ -366,7 +366,7 @@ t8_forest_set_ghost (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_typ
  * \param [in]    do_ghost        If 0 no ghost layer will be computed
  * \param [in]    ghost_definition Pointer to an object of the class ghost_definition or a derived class
  *                                The forest takes ownership of the ghost_definition
- * \note Only if do_ghost is not 0 and ghost_defintion is not NULL would an old ghost_defintion of the forest be overwritten.
+ * \note Only if do_ghost is not 0 and ghost_definition is not NULL would an old ghost_definition of the forest be overwritten.
 */
 void
 t8_forest_set_ghost_ext (t8_forest_t forest, const int do_ghost, t8_forest_ghost_definition_c *ghost_definition);
