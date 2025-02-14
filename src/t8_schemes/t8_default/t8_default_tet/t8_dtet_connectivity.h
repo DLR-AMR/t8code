@@ -28,6 +28,7 @@
 #define T8_DTET_CONNECTIVITY_H
 
 #include <t8.h>
+#include <t8_eclass.h>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -73,7 +74,7 @@ extern const int t8_dtet_parenttype_Iloc_to_cid[6][8];
  *  of the respective boundary triangle.
  * I.e. {2, 1} means the boundary triangle is of category 2 and type 1.
  * The category determines how the coordinates of the triangle are computed
- * from the parent. \see t8_default_scheme_tet_c::t8_element_boundary.
+ * from the parent. \see t8_default_scheme_tet::t8_element_boundary.
  * Invalid inpute values are represented by -1.
  */
 extern const int t8_dtet_type_face_to_boundary[6][4][2];
@@ -91,7 +92,7 @@ extern const int t8_dtet_face_child_id_by_type[6][4][4];
  * The other 2 corner are given in counterclockwise order as seen from
  * outside of the tet.
  */
-extern const int t8_dtet_face_corner[4][3];
+#define t8_dtet_face_corner t8_face_vertex_to_tree_vertex[T8_ECLASS_TET]
 
 /** For each combination parent_type, type with parent_type != type,
  * provide the face number of the face of a tet that lies within a face of

@@ -127,7 +127,7 @@ vector_to_iter_pair (const std::vector<Args>& vec)
 }
 
 /**
- * A helper function to recursively create the next tuple of parameters in a cartesion product way
+ * A helper function to recursively create the next tuple of parameters in a cartesian product way
  * 
  * @tparam Args 
  * @tparam B 
@@ -148,7 +148,7 @@ increment (const B& begins, std::pair<Args, Args>& r)
 }
 
 /**
- * A helper function to recursively create the next tuple of parameters in a cartesion product way
+ * A helper function to recursively create the next tuple of parameters in a cartesian product way
  * 
  * @tparam T 
  * @tparam TT 

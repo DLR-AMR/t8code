@@ -25,15 +25,15 @@
 
 #include <vector>
 
-#include "test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_prism_cake_param.hxx"
-#include "test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_from_class_param.hxx"
-#include "test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_bigmesh_param.hxx"
-#include "test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_disjoint_bricks_param.hxx"
-#include "test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_comm.hxx"
-#include "test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_hypercube_pad.hxx"
-#include "test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_hypercube_param.hxx"
-#include "test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_empty.hxx"
-#include "test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_periodic.hxx"
+#include "test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_new_prism_cake_param.hxx"
+#include "test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_new_from_class_param.hxx"
+#include "test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_new_bigmesh_param.hxx"
+#include "test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_new_disjoint_bricks_param.hxx"
+#include "test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_new_comm.hxx"
+#include "test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_new_hypercube_pad.hxx"
+#include "test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_new_hypercube_param.hxx"
+#include "test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_new_empty.hxx"
+#include "test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_new_periodic.hxx"
 #include "test/t8_cmesh_generator/t8_gtest_cmesh_cartestian_product.hxx"
 #include "test/t8_cmesh_generator/t8_gtest_cmesh_sum_of_sets.hxx"
 
@@ -46,6 +46,14 @@ T8_EXTERN_C_BEGIN ();
 auto pretty_print_base_example = [] (const testing::TestParamInfo<cmesh_example_base *> &info) {
   std::string name;
   info.param->param_to_string (name);
+  return name;
+};
+
+auto pretty_print_base_example_scheme = [] (const testing::TestParamInfo<std::tuple<int, cmesh_example_base *>> &info) {
+  std::string name;
+  std::get<1> (info.param)->param_to_string (name);
+  name += std::string ("scheme_") + std::to_string (std::get<0> (info.param));
+  name += std::string ("_") + std::to_string (info.index);
   return name;
 };
 

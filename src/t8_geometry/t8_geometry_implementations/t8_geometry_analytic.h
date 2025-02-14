@@ -27,6 +27,9 @@
 #ifndef T8_GEOMETRY_ANALYTIC_H
 #define T8_GEOMETRY_ANALYTIC_H
 
+#include <t8.h>
+#include <t8_cmesh.h>
+
 /**
  * Definition of an analytic geometry function.
  * This function maps reference coordinates to physical

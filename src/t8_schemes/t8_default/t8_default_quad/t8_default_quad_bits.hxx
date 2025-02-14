@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_dquad_bits.h
+/** \file t8_default_quad_bits.hxx
  * Definitions of quad-specific functions.
  */
 
@@ -28,7 +28,7 @@
 #define T8_DQUAD_BITS_H
 
 #include <t8_element.h>
-#include <t8_schemes/t8_default/t8_default_quad/t8_dquad.h>
+#include <t8_schemes/t8_default/t8_default_quad/t8_default_quad.hxx>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -43,7 +43,7 @@ T8_EXTERN_C_BEGIN ();
  *                         of the points on the quad.
  */
 void
-t8_dquad_compute_reference_coords (const t8_dquad_t *elem, const double *ref_coords, const size_t num_coords,
+t8_dquad_compute_reference_coords (const t8_pquad_t *elem, const double *ref_coords, const size_t num_coords,
                                    double *out_coords);
 
 T8_EXTERN_C_END ();

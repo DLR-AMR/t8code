@@ -37,54 +37,12 @@
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid.hxx>
 #include <test/t8_gtest_macros.hxx>
 
-class gtest_default_scheme: public testing::TestWithParam<t8_eclass_t> {
- protected:
-  void
-  SetUp () override
-  {
-    /* Construct every eclass scheme explixitly */
-    const t8_eclass_t eclass = GetParam ();
-    switch (eclass) {
-    case T8_ECLASS_VERTEX:
-      eclass_scheme = new t8_default_scheme_vertex_c ();
-      break;
-    case T8_ECLASS_LINE:
-      eclass_scheme = new t8_default_scheme_line_c ();
-      break;
-    case T8_ECLASS_QUAD:
-      eclass_scheme = new t8_default_scheme_quad_c ();
-      break;
-    case T8_ECLASS_TRIANGLE:
-      eclass_scheme = new t8_default_scheme_tri_c ();
-      break;
-    case T8_ECLASS_HEX:
-      eclass_scheme = new t8_default_scheme_hex_c ();
-      break;
-    case T8_ECLASS_TET:
-      eclass_scheme = new t8_default_scheme_tet_c ();
-      break;
-    case T8_ECLASS_PRISM:
-      eclass_scheme = new t8_default_scheme_prism_c ();
-      break;
-    case T8_ECLASS_PYRAMID:
-      eclass_scheme = new t8_default_scheme_pyramid_c ();
-      break;
-    default:
-      SC_ABORT_NOT_REACHED ();
-    }
-  }
-  void
-  TearDown () override
-  {
-    delete (eclass_scheme);
-  }
-  t8_eclass_scheme_c *eclass_scheme;
-};
-
-TEST_P (gtest_default_scheme, is_default)
+TEST (gtest_default_scheme, is_default)
 {
   /* TODO: Implement an EXPECT_FALSE check for non-default schemes */
-  EXPECT_TRUE (t8_eclass_scheme_is_default (eclass_scheme));
+  const t8_scheme *scheme = t8_scheme_new_default ();
+  for (int eclass = T8_ECLASS_VERTEX; eclass < T8_ECLASS_COUNT; ++eclass) {
+    EXPECT_TRUE (t8_eclass_scheme_is_default (scheme, static_cast<t8_eclass_t> (eclass)));
+  }
+  scheme->unref ();
 }
-
-INSTANTIATE_TEST_SUITE_P (t8_gtest_default_scheme, gtest_default_scheme, AllEclasses, print_eclass);

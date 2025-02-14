@@ -99,11 +99,11 @@
  *  Those are all leaves in the forest and hence the search will stop after
  *  executing the query callback.
  *  
- *  Afterwards the search will continue simarly in the second tree.
+ *  Afterwards the search will continue similarly in the second tree.
  * 
  *  Note that the performance of the search could be improved by using an approximative check
  *  on all but the leaf elements.
- *  This check should return true whenenever a particle is inside an element, but may have false positives.
+ *  This check should return true whenever a particle is inside an element, but may have false positives.
  * 
  */
 
@@ -118,20 +118,20 @@
 #include <tutorials/general/t8_step3.h>         /* Example forest adaptation from step 3 */
 
 /* Our search query, a particle together with a flag. */
-typedef struct
+struct t8_tutorial_search_particle_t
 {
   double coordinates[3];   /* The coordinates of our particle. */
   int is_inside_partition; /* Will be set to true if the particles lies inside this process' parallel partition. */
-} t8_tutorial_search_particle_t;
+};
 
 /* Additional user data that we process during search.
  * For each element we count the number of particles that it contains
  * and we count the total number of elements that we constructed during search. */
-typedef struct
+struct t8_tutorial_search_user_data_t
 {
   sc_array *particles_per_element;   /* For each element the number of particles inside it. */
   t8_locidx_t num_elements_searched; /* The total number of elements created. */
-} t8_tutorial_search_user_data_t;
+};
 
 /*
  * The search callback.
@@ -305,7 +305,7 @@ t8_tutorial_search_for_particles (t8_forest_t forest, sc_array *particles)
   sc_array_reset (&particles_per_element);
 }
 
-/* Create an array of a given number of particles on the root process
+/** Create an array of a given number of particles on the root process
  * and broadcast it to all other processes.
  * \param [in] num_particles  The number of particles to create.
  * \param [in] seed           The seed to be used for the random number generator.
@@ -405,7 +405,7 @@ main (int argc, char **argv)
   /* Build a cube cmesh with tet, hex, and prism trees. */
   cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
   /* Build a uniform forest on it. */
-  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0, comm);
+  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, comm);
 
   /* Adapt the forest. We can reuse the forest variable, since the new adapted
    * forest will take ownership of the old forest and destroy it.

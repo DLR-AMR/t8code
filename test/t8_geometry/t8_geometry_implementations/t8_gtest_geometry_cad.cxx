@@ -637,7 +637,7 @@ class class_2d_element_cad_curve: public testing::TestWithParam<std::tuple<t8_ec
   const double vertices_quad[48] = { 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0,
                                      1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0,
                                      0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0 };
-  /* Edges are parametrized in one parameter u. The array contains the parameters
+  /* Edges are parameterized in one parameter u. The array contains the parameters
    * each vertex of the edge has on the linked curve. */
   double params_tri[6] = { 0, 1, 1, 0, 0, 1 };
   double params_quad[8] = { 0, 1, 1, 0, 1, 0, 0, 1 };
@@ -777,7 +777,7 @@ TEST_P (class_2d_element_linear_cad_surface, t8_check_2d_element_linear_cad_surf
 
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices, num_vertices);
 
-  /* Surfaces are parametrized in two parameters u and v. The arrays contain the parameters
+  /* Surfaces are parameterized in two parameters u and v. The arrays contain the parameters
    * each vertex of the element has on the linked surface. The parameters are stored in
    * u0, v0, u1, v1... in order of the element vertices. */
   double params_quad[8] = { 0, 1, 1, 1, 0, 0, 1, 0 };
@@ -888,7 +888,7 @@ TEST_P (class_2d_element_curved_cad_surface, t8_check_2d_element_curved_cad_surf
 
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices, num_vertices);
 
-  /* Surfaces are parametrized in two parameters u and v. The arrays contain the parameters
+  /* Surfaces are parameterized in two parameters u and v. The arrays contain the parameters
    * each vertex of the element has on the linked surface. The parameters are stored in
    * u0, v0, u1, v1... in order of the element vertices. */
   double params_quad[8] = { 0, 1, 1, 1, 0, 0, 1, 0 };

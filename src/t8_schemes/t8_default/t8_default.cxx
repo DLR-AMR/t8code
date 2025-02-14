@@ -20,81 +20,48 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <new>
 #include <t8_schemes/t8_default/t8_default.hxx>
-#include <t8_refcount.h>
-
-#include <t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.hxx>
-#include <t8_schemes/t8_default/t8_default_line/t8_default_line.hxx>
-#include <t8_schemes/t8_default/t8_default_quad/t8_default_quad.hxx>
-#include <t8_schemes/t8_default/t8_default_hex/t8_default_hex.hxx>
-#include <t8_schemes/t8_default/t8_default_tri/t8_default_tri.hxx>
-#include <t8_schemes/t8_default/t8_default_tet/t8_default_tet.hxx>
-#include <t8_schemes/t8_default/t8_default_prism/t8_default_prism.hxx>
-#include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid.hxx>
+#include <t8_schemes/t8_scheme_builder.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
-t8_scheme_cxx_t *
-t8_scheme_new_default_cxx (void)
+const t8_scheme *
+t8_scheme_new_default (void)
 {
-  t8_scheme_cxx_t *s;
+  t8_scheme_builder builder;
 
-  s = T8_ALLOC_ZERO (t8_scheme_cxx_t, 1);
-  t8_refcount_init (&s->rc);
-
-  s->eclass_schemes[T8_ECLASS_VERTEX] = new t8_default_scheme_vertex_c ();
-  s->eclass_schemes[T8_ECLASS_LINE] = new t8_default_scheme_line_c ();
-  s->eclass_schemes[T8_ECLASS_QUAD] = new t8_default_scheme_quad_c ();
-  s->eclass_schemes[T8_ECLASS_HEX] = new t8_default_scheme_hex_c ();
-  s->eclass_schemes[T8_ECLASS_TRIANGLE] = new t8_default_scheme_tri_c ();
-  s->eclass_schemes[T8_ECLASS_TET] = new t8_default_scheme_tet_c ();
-  s->eclass_schemes[T8_ECLASS_PRISM] = new t8_default_scheme_prism_c ();
-  s->eclass_schemes[T8_ECLASS_PYRAMID] = new t8_default_scheme_pyramid_c ();
-
-  T8_ASSERT (s->eclass_schemes[T8_ECLASS_VERTEX]->t8_element_maxlevel ()
-             >= s->eclass_schemes[T8_ECLASS_LINE]->t8_element_maxlevel ());
-  T8_ASSERT (s->eclass_schemes[T8_ECLASS_LINE]->t8_element_maxlevel ()
-             >= s->eclass_schemes[T8_ECLASS_QUAD]->t8_element_maxlevel ());
-  T8_ASSERT (s->eclass_schemes[T8_ECLASS_LINE]->t8_element_maxlevel ()
-             >= s->eclass_schemes[T8_ECLASS_TRIANGLE]->t8_element_maxlevel ());
-  T8_ASSERT (s->eclass_schemes[T8_ECLASS_TRIANGLE]->t8_element_maxlevel ()
-             >= s->eclass_schemes[T8_ECLASS_TET]->t8_element_maxlevel ());
-  T8_ASSERT (s->eclass_schemes[T8_ECLASS_TRIANGLE]->t8_element_maxlevel ()
-             >= s->eclass_schemes[T8_ECLASS_PRISM]->t8_element_maxlevel ());
-  T8_ASSERT (s->eclass_schemes[T8_ECLASS_TRIANGLE]->t8_element_maxlevel ()
-             >= s->eclass_schemes[T8_ECLASS_PYRAMID]->t8_element_maxlevel ());
-  T8_ASSERT (s->eclass_schemes[T8_ECLASS_QUAD]->t8_element_maxlevel ()
-             >= s->eclass_schemes[T8_ECLASS_HEX]->t8_element_maxlevel ());
-  T8_ASSERT (s->eclass_schemes[T8_ECLASS_QUAD]->t8_element_maxlevel ()
-             >= s->eclass_schemes[T8_ECLASS_PRISM]->t8_element_maxlevel ());
-  T8_ASSERT (s->eclass_schemes[T8_ECLASS_QUAD]->t8_element_maxlevel ()
-             >= s->eclass_schemes[T8_ECLASS_PYRAMID]->t8_element_maxlevel ());
-
-  return s;
+  builder.add_eclass_scheme<t8_default_scheme_vertex> ();
+  builder.add_eclass_scheme<t8_default_scheme_line> ();
+  builder.add_eclass_scheme<t8_default_scheme_quad> ();
+  builder.add_eclass_scheme<t8_default_scheme_tri> ();
+  builder.add_eclass_scheme<t8_default_scheme_hex> ();
+  builder.add_eclass_scheme<t8_default_scheme_tet> ();
+  builder.add_eclass_scheme<t8_default_scheme_prism> ();
+  builder.add_eclass_scheme<t8_default_scheme_pyramid> ();
+  return builder.build_scheme ();
 }
 
 int
-t8_eclass_scheme_is_default (t8_eclass_scheme_c *ts)
+t8_eclass_scheme_is_default (const t8_scheme *scheme, const t8_eclass_t eclass)
 {
-  switch (ts->eclass) {
+  switch (eclass) {
   case T8_ECLASS_VERTEX:
-    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_vertex_c *);
+    return scheme->check_eclass_scheme_type<t8_default_scheme_vertex> (T8_ECLASS_VERTEX);
   case T8_ECLASS_LINE:
-    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_line_c *);
+    return scheme->check_eclass_scheme_type<t8_default_scheme_line> (T8_ECLASS_LINE);
   case T8_ECLASS_QUAD:
-    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_quad_c *);
+    return scheme->check_eclass_scheme_type<t8_default_scheme_quad> (T8_ECLASS_QUAD);
   case T8_ECLASS_TRIANGLE:
-    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_tri_c *);
+    return scheme->check_eclass_scheme_type<t8_default_scheme_tri> (T8_ECLASS_TRIANGLE);
   case T8_ECLASS_HEX:
-    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_hex_c *);
+    return scheme->check_eclass_scheme_type<t8_default_scheme_hex> (T8_ECLASS_HEX);
   case T8_ECLASS_TET:
-    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_tet_c *);
+    return scheme->check_eclass_scheme_type<t8_default_scheme_tet> (T8_ECLASS_TET);
   case T8_ECLASS_PRISM:
-    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_prism_c *);
+    return scheme->check_eclass_scheme_type<t8_default_scheme_prism> (T8_ECLASS_PRISM);
   case T8_ECLASS_PYRAMID:
-    return T8_COMMON_IS_TYPE (ts, t8_default_scheme_pyramid_c *);
+    return scheme->check_eclass_scheme_type<t8_default_scheme_pyramid> (T8_ECLASS_PYRAMID);
   default:
     SC_ABORT_NOT_REACHED ();
   }

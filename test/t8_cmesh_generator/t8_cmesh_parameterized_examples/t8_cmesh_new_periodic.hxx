@@ -20,39 +20,34 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#ifndef T8_CMESH_NEW_EMPTY_HXX
-#define T8_CMESH_NEW_EMPTY_HXX
+#ifndef T8_CMESH_NEW_PERIODIC_HXX
+#define T8_CMESH_NEW_PERIODIC_HXX
 
 #include <test/t8_cmesh_generator/t8_gtest_cmesh_cartestian_product.hxx>
-#include <test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_params.hxx>
+#include <test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_params.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_eclass.h>
 
-namespace new_empty
+namespace new_periodic
 {
 
 std::string
-make_param_string (const sc_MPI_Comm &comm, const int do_partition, const int dim)
+make_param_string (const sc_MPI_Comm &comm, const int dim)
 {
   std::string delimiter = std::string ("_");
-  std::string partition = do_partition ? std::string ("partition") : std::string ("noPartition");
-  std::string params
-    = delimiter + cmesh_params::comm_to_string (comm) + delimiter + partition + delimiter + std::to_string (dim);
+  std::string params = delimiter + cmesh_params::comm_to_string (comm) + delimiter + std::to_string (dim);
   return params;
 }
 
-std::function<std::string (const sc_MPI_Comm &, const int, const int)> print_function = make_param_string;
+std::function<std::string (const sc_MPI_Comm &, const int)> print_function = make_param_string;
 
-std::function<t8_cmesh_t (sc_MPI_Comm, const int, const int)> new_from_class_wrapper = t8_cmesh_new_empty;
-
+std::function<t8_cmesh_t (sc_MPI_Comm, int)> new_from_periodic_wrapper = t8_cmesh_new_periodic;
 example_set *cmesh_example
   = (example_set *) new cmesh_cartesian_product_params<decltype (cmesh_params::my_comms.begin ()),
-                                                       decltype (cmesh_params::partition.begin ()),
-                                                       decltype (cmesh_params::do_bcast.begin ())> (
+                                                       decltype (cmesh_params::dims.begin ())> (
     std::make_pair (cmesh_params::my_comms.begin (), cmesh_params::my_comms.end ()),
-    std::make_pair (cmesh_params::partition.begin (), cmesh_params::partition.end ()),
-    std::make_pair (cmesh_params::do_bcast.begin (), cmesh_params::do_bcast.end ()), new_from_class_wrapper,
-    print_function, "t8_cmesh_new_empty_");
-} /* namespace new_empty */
+    std::make_pair (cmesh_params::dims.begin (), cmesh_params::dims.end ()), new_from_periodic_wrapper, print_function,
+    "t8_cmesh_new_periodic_");
+}  // namespace new_periodic
 
-#endif /* T8_CMESH_NEW_EMPTY_HXX */
+#endif /* T8_CMESH_NEW_PERIODIC_HXX */

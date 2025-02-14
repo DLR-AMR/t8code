@@ -58,7 +58,7 @@ typedef struct
 /* TODO: deprecated. was replaced by t8_common_midpoint. */
 static void
 t8_anchor_element (t8_forest_t forest, t8_locidx_t which_tree,
-                   t8_eclass_scheme_c *ts, t8_element_t *element,
+                   const t8_scheme *scheme, t8_element_t *element,
                    double elem_anchor_f[3])
 {
   double             *tree_vertices;
@@ -71,8 +71,8 @@ t8_anchor_element (t8_forest_t forest, t8_locidx_t which_tree,
                                 0, elem_anchor_f);
 #if 0
   /* get the element anchor node */
-  ts->t8_element_anchor (element, elem_anchor);
-  maxlevel = ts->t8_element_maxlevel ();
+  scheme->t8_element_anchor (element, elem_anchor);
+  maxlevel = scheme->t8_element_maxlevel ();
   for (i = 0; i < 3; i++) {
     /* Calculate the anchor coordinate in [0,1]^3 */
     elem_anchor_f[i] = elem_anchor[i] / (1 << maxlevel);
@@ -84,16 +84,17 @@ t8_anchor_element (t8_forest_t forest, t8_locidx_t which_tree,
 /* refine the forest in a band, given by a plane E and two constants
  * c_min, c_max. We refine the cells in the band c_min*E, c_max*E */
 static int
-t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-               t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
+               t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family, const int num_elements,
+               t8_element_t *elements[])
 {
   int level, base_level, max_level;
   t8_3D_vec elem_midpoint;
   t8_3D_vec normal;
   adapt_data_t *adapt_data;
 
-  T8_ASSERT (!is_family || num_elements == ts->t8_element_num_children (elements[0]));
-  level = ts->t8_element_level (elements[0]);
+  T8_ASSERT (!is_family || num_elements == scheme->element_get_num_children (tree_class, elements[0]));
+  level = scheme->element_get_level (tree_class, elements[0]);
   /* Get the minimum and maximum x-coordinate from the user data pointer of forest */
   adapt_data = (adapt_data_t *) t8_forest_get_user_data (forest);
   normal = adapt_data->normal;
@@ -172,7 +173,7 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix, sc_MPI_C
   t8_forest_init (&forest);
   t8_forest_set_cmesh (forest, cmesh, comm);
   /* Set the element scheme */
-  t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
+  t8_forest_set_scheme (forest, t8_scheme_new_default ());
   /* Set the initial refinement level */
   t8_forest_set_level (forest, init_level);
   /* Commit the forest */
@@ -297,7 +298,7 @@ t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim, const char *cme
     /* partition the cmesh uniformly */
     t8_cmesh_init (&cmesh_partition);
     t8_cmesh_set_derive (cmesh_partition, cmesh);
-    t8_cmesh_set_partition_uniform (cmesh_partition, init_level, t8_scheme_new_default_cxx ());
+    t8_cmesh_set_partition_uniform (cmesh_partition, init_level, t8_scheme_new_default ());
     t8_cmesh_set_profiling (cmesh_partition, 1);
     t8_cmesh_commit (cmesh_partition, comm);
     return cmesh_partition;

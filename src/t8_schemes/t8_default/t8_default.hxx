@@ -26,22 +26,34 @@
  * This scheme points to a consistent implementation of all element classes.
  */
 
-#pragma once
+#ifndef T8_DEFAULT_HXX
+#define T8_DEFAULT_HXX
 
-#include <t8_element.hxx>
+#include <t8_schemes/t8_scheme.hxx>
+#include <t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.hxx>
+#include <t8_schemes/t8_default/t8_default_line/t8_default_line.hxx>
+#include <t8_schemes/t8_default/t8_default_quad/t8_default_quad.hxx>
+#include <t8_schemes/t8_default/t8_default_hex/t8_default_hex.hxx>
+#include <t8_schemes/t8_default/t8_default_tri/t8_default_tri.hxx>
+#include <t8_schemes/t8_default/t8_default_tet/t8_default_tet.hxx>
+#include <t8_schemes/t8_default/t8_default_prism/t8_default_prism.hxx>
+#include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid.hxx>
 
 T8_EXTERN_C_BEGIN ();
 
 /** Return the default element implementation of t8code. */
-t8_scheme_cxx_t *
-t8_scheme_new_default_cxx (void);
+const t8_scheme *
+t8_scheme_new_default (void);
 
 /** Check whether a given eclass_scheme is one of the default schemes.
- * \param [in] ts   A (pointer to a) scheme
- * \return          True (non-zero) if \a ts is one of the default schemes,
- *                  false (zero) otherwise.
+ * \param [in] scheme   A (pointer to a) scheme
+ * \param [in] eclass   The eclass to check
+ * \return              True (non-zero) if \a scheme is one of the default schemes,
+ *                      false (zero) otherwise.
  */
 int
-t8_eclass_scheme_is_default (t8_eclass_scheme_c *ts);
+t8_eclass_scheme_is_default (const t8_scheme *scheme, const t8_eclass_t eclass);
 
 T8_EXTERN_C_END ();
+
+#endif /* !T8_DEFAULT_HXX */

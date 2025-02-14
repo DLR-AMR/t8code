@@ -22,7 +22,7 @@
 
 /** \file t8_gtest_geometry_lagrange.cxx
 * Provide tests to check the geometry mappings via Lagrange interpolation.
-* The tests are parametrized on the element type and the polynomial degree.
+* The tests are parameterized on the element type and the polynomial degree.
 */
 
 #include <array>

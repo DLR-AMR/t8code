@@ -267,12 +267,11 @@ t8_dpyramid_is_family (t8_dpyramid_t **fam)
 {
   const int level = fam[0]->pyramid.level;
   if (t8_dpyramid_shape (fam[0]) == T8_ECLASS_TET) {
-    t8_dtet_t **tet_fam = T8_ALLOC (t8_dtet_t *, T8_DTET_CHILDREN);
+    t8_dtet_t *tet_fam[T8_DTET_CHILDREN];
     for (int i = 0; i < T8_DTET_CHILDREN; i++) {
       tet_fam[i] = &fam[i]->pyramid;
     }
     const int is_family = t8_dtet_is_familypv ((const t8_dtet_t **) tet_fam);
-    T8_FREE (tet_fam);
     return is_family;
   }
   else {
@@ -1328,17 +1327,15 @@ t8_dpyramid_children_at_face (const t8_dpyramid_t *p, const int face, t8_dpyrami
   T8_ASSERT (0 <= face && face < T8_DPYRAMID_FACES);
   if (t8_dpyramid_shape (p) == T8_ECLASS_TET) {
     /* Use tet-algo */
-    t8_dtet_t **tet_children = T8_ALLOC (t8_dtet_t *, T8_DTET_FACE_CHILDREN);
-    for (int i = 0; i < T8_DTET_FACE_CHILDREN; i++) {
-      tet_children[i] = T8_ALLOC (t8_dtet_t, 1);
-    }
+    t8_dtet_t face_children[T8_DTET_FACE_CHILDREN];
+    t8_dtet_t *tet_children[T8_DTET_FACE_CHILDREN]
+      = { &face_children[0], &face_children[1], &face_children[2], &face_children[3] };
+
     t8_dtet_children_at_face (&(p->pyramid), face, tet_children, num_children, child_indices);
     for (int i = 0; i < T8_DTET_FACE_CHILDREN; i++) {
       t8_dtet_copy (tet_children[i], &(children[i]->pyramid));
       children[i]->switch_shape_at_level = p->switch_shape_at_level;
-      T8_FREE (tet_children[i]);
     }
-    T8_FREE (tet_children);
   }
   else {
     int *children_at_face_id, children_at_face_id_local[T8_DPYRAMID_FACE_CHILDREN];
@@ -1540,6 +1537,7 @@ t8_dpyramid_compute_integer_coords (const t8_dpyramid_t *elem, const int vertex,
     }
   }
   else {
+    T8_ASSERT (t8_dpyramid_shape (elem) == T8_ECLASS_TET);
     T8_ASSERT (0 <= vertex && vertex < T8_DTET_CORNERS);
     t8_dtet_compute_integer_coords (&(elem->pyramid), vertex, coords);
   }

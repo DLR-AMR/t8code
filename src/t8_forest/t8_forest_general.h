@@ -63,7 +63,8 @@ T8_EXTERN_C_BEGIN ();
  * \param [in] forest_old      The forest that is adapted
  * \param [in] forest_new      The forest that is newly constructed from \a forest_old
  * \param [in] which_tree      The local tree containing \a first_outgoing and \a first_incoming
- * \param [in] ts              The eclass scheme of the tree
+ * \param [in] tree_class      The eclass of the local tree containing \a first_outgoing and \a first_incoming
+ * \param [in] scheme              The scheme of the forest
  * \param [in] refine          -1 if family in \a forest_old got coarsened, 0 if element
  *                             has not been touched, 1 if element got refined and -2 if
  *                             element got removed. See return of t8_forest_adapt_t.
@@ -84,8 +85,8 @@ T8_EXTERN_C_BEGIN ();
  * \see t8_forest_iterate_replace
  */
 typedef void (*t8_forest_replace_t) (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree,
-                                     t8_eclass_scheme_c *ts, const int refine, const int num_outgoing,
-                                     const t8_locidx_t first_outgoing, const int num_incoming,
+                                     const t8_eclass_t tree_class, const t8_scheme_c *scheme, const int refine,
+                                     const int num_outgoing, const t8_locidx_t first_outgoing, const int num_incoming,
                                      const t8_locidx_t first_incoming);
 
 /** Callback function prototype to decide for refining and coarsening.
@@ -95,13 +96,14 @@ typedef void (*t8_forest_replace_t) (t8_forest_t forest_old, t8_forest_t forest_
  * Otherwise \a is_family must equal zero and we consider the first entry
  * of the element array for refinement. 
  * Entries of the element array beyond the first \a num_elements are undefined.
- * \param [in] forest       the forest to which the new elements belong
- * \param [in] forest_from  the forest that is adapted.
- * \param [in] which_tree   the local tree containing \a elements
- * \param [in] lelement_id  the local element id in \a forest_old in the tree of the current element
- * \param [in] ts           the eclass scheme of the tree
- * \param [in] is_family    if 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
- * \param [in] num_elements the number of entries in \a elements that are defined
+ * \param [in] forest       The forest to which the new elements belong.
+ * \param [in] forest_from  The forest that is adapted.
+ * \param [in] which_tree   The local tree containing \a elements.
+ * \param [in] tree_class   The eclass of \a which_tree.
+ * \param [in] lelement_id  The local element id in \a forest_old in the tree of the current element.
+ * \param [in] scheme           The scheme of the forest.
+ * \param [in] is_family    If 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
+ * \param [in] num_elements The number of entries in \a elements that are defined
  * \param [in] elements     Pointers to a family or, if \a is_family is zero,
  *                          pointer to one element.
  * \return 1 if the first entry in \a elements should be refined,
@@ -112,8 +114,8 @@ typedef void (*t8_forest_replace_t) (t8_forest_t forest_old, t8_forest_t forest_
 /* TODO: Do we really need the forest argument? Since the forest is not committed yet it
  *       seems dangerous to expose to the user. */
 typedef int (*t8_forest_adapt_t) (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                                  t8_locidx_t lelement_id, t8_eclass_scheme_c *ts, const int is_family,
-                                  const int num_elements, t8_element_t *elements[]);
+                                  const t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme_c *scheme,
+                                  const int is_family, const int num_elements, t8_element_t *elements[]);
 
 /** Create a new forest with reference count one.
  * This forest needs to be specialized with the t8_forest_set_* calls.
@@ -198,7 +200,7 @@ t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh, sc_MPI_Comm comm);
  *                              This can be prevented by referencing \b scheme.
  */
 void
-t8_forest_set_scheme (t8_forest_t forest, t8_scheme_cxx_t *scheme);
+t8_forest_set_scheme (t8_forest_t forest, const t8_scheme_c *scheme);
 
 /** Set the initial refinement level to be used when \b forest is committed.
  * \param [in,out] forest      The forest whose level will be set.
@@ -247,7 +249,7 @@ t8_forest_set_copy (t8_forest_t forest, const t8_forest_t from);
  *                          and it is recursive otherwise.
  * \note This setting can be combined with \ref t8_forest_set_partition and \ref
  * t8_forest_set_balance. The order in which these operations are executed is always
- * 1) Adapt 2) Balance 3) Partition
+ * 1) Adapt 2) Partition 3) Balance.
  * \note This setting may not be combined with \ref t8_forest_set_copy and overwrites
  * this setting.
  */
@@ -310,7 +312,7 @@ t8_forest_get_user_function (const t8_forest_t forest);
  *                          operation.
  * \note This setting can be combined with \ref t8_forest_set_adapt and \ref
  * t8_forest_set_balance. The order in which these operations are executed is always
- * 1) Adapt 2) Balance 3) Partition
+ * 1) Adapt 2) Partition 3) Balance.
  * If \ref t8_forest_set_balance is called with the \a no_repartition parameter set as
  * false, it is not necessary to call \ref t8_forest_set_partition additionally.
  * \note This setting may not be combined with \ref t8_forest_set_copy and overwrites
@@ -337,8 +339,8 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from, int set
  *                          If \a no_repartition is false, an additional call of \ref t8_forest_set_partition is not
  *                          necessary.
  * \note This setting can be combined with \ref t8_forest_set_adapt and \ref
- * t8_forest_set_balance. The order in which these operations are executed is always
- * 1) Adapt 2) Balance 3) Partition.
+ * t8_forest_set_partition. The order in which these operations are executed is always
+ * 1) Adapt 2) Partition 3) Balance.
  * \note This setting may not be combined with \ref t8_forest_set_copy and overwrites
  * this setting.
  */
@@ -469,7 +471,7 @@ t8_forest_get_local_id (const t8_forest_t forest, const t8_gloidx_t gtreeid);
  * \return                 The tree's local id in \a forest, if it is a local tree.
  *                         num_local_trees + the ghosts id, if it is a ghost tree.
  *                         A negative number if not.
- * \see https://github.com/DLR-AMR/t8code/wiki/Tree-indexing for more details about tree indexing.
+ * \see https://github.com/DLR-AMR/t8code/wiki/Tree-indexing for more details about tree indexing
  */
 t8_locidx_t
 t8_forest_get_local_or_ghost_id (const t8_forest_t forest, const t8_gloidx_t gtreeid);
@@ -520,7 +522,7 @@ t8_forest_element_is_leaf (const t8_forest_t forest, const t8_element_t *element
 /** Compute the leaf face orientation at given face in a forest.
  * \param [in]    forest  The forest. Must have a valid ghost layer.
  * \param [in]    ltreeid A local tree id.
- * \param [in]    ts      The eclass scheme of the element.
+ * \param [in]    scheme      The eclass scheme of the element.
  * \param [in]    leaf    A leaf in tree \a ltreeid of \a forest.
  * \param [in]    face    The index of the face across which the face neighbors
  *                        are searched.
@@ -529,8 +531,8 @@ t8_forest_element_is_leaf (const t8_forest_t forest, const t8_element_t *element
  * For more information about the encoding of face orientation refer to \ref t8_cmesh_get_face_neighbor.
  */
 int
-t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_eclass_scheme_c *ts,
-                                 const t8_element_t *leaf, int face);
+t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_scheme_c *scheme,
+                                 const t8_element_t *leaf, const int face);
 
 /** Compute the leaf face neighbors of a forest.
  * \param [in]    forest  The forest. Must have a valid ghost layer.
@@ -546,7 +548,7 @@ t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, 
  *                        of the neighbor leaves are stored here.
  *                        0, 1, ... num_local_el - 1 for local leaves and
  *                        num_local_el , ... , num_local_el + num_ghosts - 1 for ghosts.
- * \param [out]   pneigh_scheme On output the eclass scheme of the neighbor elements.
+ * \param [out]   pneigh_eclass On output the eclass of the neighbor elements.
  * \param [in]    forest_is_balanced True if we know that \a forest is balanced, false
  *                        otherwise.
  * \note If there are no face neighbors, then *neighbor_leaves = NULL, num_neighbors = 0,
@@ -557,7 +559,7 @@ t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, 
  * \note Important! This routine allocates memory which must be freed. Do it like this:
  *
  *   if (num_neighbors > 0) {
- *     eclass_scheme->t8_element_destroy (num_neighbors, neighbors);
+ *     scheme->element_destroy (pneigh_eclass, num_neighbors, neighbors);
  *     T8_FREE (pneighbor_leaves);
  *     T8_FREE (pelement_indices);
  *     T8_FREE (dual_faces);
@@ -567,8 +569,7 @@ t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, 
 void
 t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf,
                                t8_element_t **pneighbor_leaves[], int face, int *dual_faces[], int *num_neighbors,
-                               t8_locidx_t **pelement_indices, t8_eclass_scheme_c **pneigh_scheme,
-                               int forest_is_balanced);
+                               t8_locidx_t **pelement_indices, t8_eclass_t *pneigh_eclass, int forest_is_balanced);
 
 /** Like \ref t8_forest_leaf_face_neighbors but also provides information about the global neighbors and the orientation. 
  * \param [in]    forest  The forest. Must have a valid ghost layer.
@@ -584,7 +585,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8
  *                        of the neighbor leaves are stored here.
  *                        0, 1, ... num_local_el - 1 for local leaves and
  *                        num_local_el , ... , num_local_el + num_ghosts - 1 for ghosts.
- * \param [out]   pneigh_scheme On output the eclass scheme of the neighbor elements.
+ * \param [out]   pneigh_eclass On output the eclass of the neighbor elements.
  * \param [in]    forest_is_balanced True if we know that \a forest is balanced, false
  *                        otherwise.
  * \param [out]   gneigh_tree  The global tree IDs of the neighbor trees.
@@ -600,7 +601,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8
  * \note Important! This routine allocates memory which must be freed. Do it like this:
  *
  *   if (num_neighbors > 0) {
- *     eclass_scheme->t8_element_destroy (num_neighbors, neighbors);
+ *     scheme->element_destroy (pneigh_eclass, num_neighbors, neighbors);
  *     T8_FREE (pneighbor_leaves);
  *     T8_FREE (pelement_indices);
  *     T8_FREE (dual_faces);
@@ -610,8 +611,8 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8
 void
 t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf,
                                    t8_element_t **pneighbor_leaves[], int face, int *dual_faces[], int *num_neighbors,
-                                   t8_locidx_t **pelement_indices, t8_eclass_scheme_c **pneigh_scheme,
-                                   int forest_is_balanced, t8_gloidx_t *gneigh_tree, int *orientation);
+                                   t8_locidx_t **pelement_indices, t8_eclass_t *pneigh_eclass, int forest_is_balanced,
+                                   t8_gloidx_t *gneigh_tree, int *orientation);
 
 /** Exchange ghost information of user defined element data.
  * \param[in] forest       The forest. Must be committed.
@@ -798,18 +799,8 @@ t8_forest_get_first_local_element_id (t8_forest_t forest);
  * \return          The element scheme of the forest.
  * \see t8_forest_set_scheme
  */
-t8_scheme_cxx_t *
+const t8_scheme_c *
 t8_forest_get_scheme (const t8_forest_t forest);
-
-/** Return the eclass scheme of a given element class associated to a forest.
- * \param [in]      forest.     A committed forest.
- * \param [in]      eclass.     An element class.
- * \return          The eclass scheme of \a eclass associated to forest.
- * \see t8_forest_set_scheme
- * \note  The forest is not required to have trees of class \a eclass.
- */
-t8_eclass_scheme_c *
-t8_forest_get_eclass_scheme (t8_forest_t forest, t8_eclass_t eclass);
 
 /** Return the eclass of the tree in which a face neighbor of a given element
  * lies.
@@ -832,7 +823,7 @@ t8_forest_element_neighbor_eclass (t8_forest_t forest, t8_locidx_t ltreeid, cons
  *                  On output, this element's data is filled with the
  *                  data of the face neighbor. If the neighbor does not exist
  *                  the data could be modified arbitrarily.
- * \param [in] neigh_scheme The eclass scheme of \a neigh.
+ * \param [in] neigh_eclass The eclass of \a neigh.
  * \param [in] face The number of the face along which the neighbor should be
  *                  constructed.
  * \param [out] neigh_face The number of the face viewed from perspective of \a neigh.
@@ -841,7 +832,7 @@ t8_forest_element_neighbor_eclass (t8_forest_t forest, t8_locidx_t ltreeid, cons
  */
 t8_gloidx_t
 t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *elem, t8_element_t *neigh,
-                                 const t8_eclass_scheme_c *neigh_scheme, int face, int *neigh_face);
+                                 const t8_eclass_t neigh_eclass, int face, int *neigh_face);
 
 /* TODO: implement */
 void
@@ -883,7 +874,7 @@ t8_forest_element_points_inside (t8_forest_t forest, t8_locidx_t ltreeid, const 
  * \ref t8_forest_set_scheme, \ref t8_forest_set_level, and \ref t8_forest_commit.
  */
 t8_forest_t
-t8_forest_new_uniform (t8_cmesh_t cmesh, t8_scheme_cxx_t *scheme, const int level, const int do_face_ghost,
+t8_forest_new_uniform (t8_cmesh_t cmesh, const t8_scheme_c *scheme, const int level, const int do_face_ghost,
                        sc_MPI_Comm comm);
 
 /** Build a adapted forest from another forest.

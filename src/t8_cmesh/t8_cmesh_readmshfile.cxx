@@ -419,9 +419,9 @@ t8_msh_file_4_read_nodes (FILE *fp, t8_locidx_t *num_nodes, sc_mempool_t **node_
     /* Read all coordinates and parameters in this block */
     for (ln = 0; ln < num_nodes_in_block; ++ln) {
       /* Read the next line. Its format should be
-       * %f %f %f         if not parametrized,
-       * %f %f %f %f      if parametrized and entity_dim == 1,
-       * %f %f %f %f %f   if parametrized and entity_dim == 2.
+       * %f %f %f         if not parameterized,
+       * %f %f %f %f      if parameterized and entity_dim == 1,
+       * %f %f %f %f %f   if parameterized and entity_dim == 2.
        * The coordinates followed by their parameters. */
       retval = t8_cmesh_msh_read_next_line (&line, &linen, fp);
       if (retval < 0) {

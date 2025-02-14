@@ -14,16 +14,16 @@ t8code_googletest_internal_headers = \
   test/t8_cmesh_generator/t8_cmesh_example_sets.hxx \
   test/t8_cmesh_generator/t8_gtest_cmesh_cartestian_product.hxx \
   test/t8_cmesh_generator/t8_gtest_cmesh_sum_of_sets.hxx \
-  test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_bigmesh_param.hxx \
-  test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_comm.hxx \
-  test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_disjoint_bricks_param.hxx \
-  test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_empty.hxx \
-  test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_from_class_param.hxx \
-  test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_hypercube_pad.hxx \
-  test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_hypercube_param.hxx \
-  test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_prism_cake_param.hxx \
-  test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_params.hxx \
-  test/t8_cmesh_generator/t8_cmesh_parametrized_examples/t8_cmesh_new_periodic.hxx
+  test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_new_bigmesh_param.hxx \
+  test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_new_comm.hxx \
+  test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_new_disjoint_bricks_param.hxx \
+  test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_new_empty.hxx \
+  test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_new_from_class_param.hxx \
+  test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_new_hypercube_pad.hxx \
+  test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_new_hypercube_param.hxx \
+  test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_new_prism_cake_param.hxx \
+  test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_params.hxx \
+  test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_new_periodic.hxx
   
 t8code_googletest_programs = \
   test/t8_geometry/t8_geometry_implementations/t8_gtest_geometry_lagrange \
