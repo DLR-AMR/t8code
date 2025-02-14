@@ -146,7 +146,7 @@ struct AddAssignable: t8_crtp_operator<TUnderlying, AddAssignable>
 template <typename TUnderlying>
 struct PrefixIncrementable: t8_crtp_operator<TUnderlying, PrefixIncrementable>
 {
-  constexpr TUnderlying&
+  TUnderlying&
   operator++ () noexcept
   {
     ++this->underlying ().get ();
@@ -164,7 +164,7 @@ struct PrefixIncrementable: t8_crtp_operator<TUnderlying, PrefixIncrementable>
 template <typename TUnderlying>
 struct PrefixDecrementable: t8_crtp_operator<TUnderlying, PrefixDecrementable>
 {
-  constexpr TUnderlying&
+  TUnderlying&
   operator-- () noexcept
   {
     --this->underlying ().get ();
@@ -175,10 +175,11 @@ struct PrefixDecrementable: t8_crtp_operator<TUnderlying, PrefixDecrementable>
 template <typename TUnderlying>
 struct Printable: t8_crtp_operator<TUnderlying, Printable>
 {
-  void
-  print (std::ostream& os) const
+  friend std::ostream&
+  operator<< (std::ostream& os, const TUnderlying& obj)
   {
-    os << this->underlying ().get ();
+    os << obj.get ();
+    return os;
   }
 };
 
@@ -211,19 +212,6 @@ struct EqualityComparable: t8_crtp_operator<TUnderlying, EqualityComparable>
     return this->underlying ().get () == other.get ();
   }
 };
-
-/**
- * \brief A template for << types. Provides the << operator.
- * 
- * \tparam T 
- */
-template <typename TUnderlying, typename Parameter>
-std::ostream&
-operator<< (std::ostream& os, T8Type<TUnderlying, Parameter> const& p)
-{
-  p.print (os);
-  return os;
-}
 
 /**
  * \brief A template for hashable types. Used to make a type hashable.
