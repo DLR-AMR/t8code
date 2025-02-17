@@ -40,7 +40,7 @@
 #include <t8_vtk/t8_vtk_writer.h>       /* cmesh-writer interface. */
 #include <t8_cmesh/t8_cmesh_examples.h> /* A collection of exemplary cmeshes */
 
-/* Builds cmesh of 6 tetrahedra that build up a unit cube.
+/** Builds cmesh of 6 tetrahedra that build up a unit cube.
  * \param [in] comm   MPI Communicator to use.
  * \return            The coarse mesh.
  */
@@ -65,7 +65,7 @@ t8_step1_build_tetcube_coarse_mesh (sc_MPI_Comm comm)
   return cmesh;
 }
 
-/* Write vtk (or more accurately vtu) files of the cmesh.
+/** Write vtk (or more accurately vtu) files of the cmesh.
  * \param [in] cmesh    A coarse mesh.
  * \param [in] prefix   A string that is used as a prefix of the output files.
  * 
@@ -79,7 +79,7 @@ t8_step1_write_cmesh_vtk (t8_cmesh_t cmesh, const char *prefix)
   t8_cmesh_vtk_write_file (cmesh, prefix);
 }
 
-/* Destroy a cmesh. This will free all allocated memory.
+/** Destroy a cmesh. This will free all allocated memory.
  * \param [in] cmesh    A cmesh.
  */
 static void

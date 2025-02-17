@@ -159,7 +159,7 @@ t8_ghost_remote_equal_function (const void *remote_dataa, const void *remote_dat
 }
 
 /** This struct is used during a ghost data exchange.
- * Since we use asynchronuous communication, we store the
+ * Since we use asynchronous communication, we store the
  * send buffers and mpi requests until we end the communication.
  */
 typedef struct
