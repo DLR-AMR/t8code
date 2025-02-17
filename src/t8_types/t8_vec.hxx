@@ -70,7 +70,7 @@ t8_norm (const t8_vec<dim> &vec)
  * \param [in,out] vec  An N-dimensional vector.
  */
 template <std::size_t dim>
-static inline void
+constexpr void
 t8_normalize (t8_vec<dim> &vec)
 {
   const double norm = t8_norm (vec);
@@ -87,14 +87,14 @@ static inline void
 t8_copy (const T &src, T &dest);
 
 template <std::size_t dim>
-static inline void
+constexpr void
 t8_copy (const t8_vec<dim> &src, t8_vec<dim> &dest)
 {
   std::copy (src.begin (), src.end (), dest.begin ());
 }
 
 template <std::size_t dim>
-static inline void
+constexpr void
 t8_copy (const t8_point<dim> &src, t8_point<dim> &dest)
 {
   std::copy (src.begin (), src.end (), dest.begin ());
@@ -120,7 +120,7 @@ t8_dist (const t8_point<dim> &point_x, const t8_point<dim> &point_y)
  * \param [in]     alpha  A factor.
  */
 template <std::size_t dim>
-static inline void
+constexpr void
 t8_ax (t8_vec<dim> &vec_x, const double alpha)
 {
   std::transform (vec_x.begin (), vec_x.end (), vec_x.begin (), [alpha] (double v) { return v * alpha; });
@@ -132,7 +132,7 @@ t8_ax (t8_vec<dim> &vec_x, const double alpha)
  * \param [in]  alpha  A factor.
  */
 template <std::size_t dim>
-static inline void
+constexpr void
 t8_axy (const t8_vec<dim> &vec_x, t8_vec<dim> &vec_y, const double alpha)
 {
   std::transform (vec_x.begin (), vec_x.end (), vec_y.begin (), [alpha] (double v) { return v * alpha; });
@@ -147,7 +147,7 @@ t8_axy (const t8_vec<dim> &vec_x, t8_vec<dim> &vec_y, const double alpha)
  * \note It is possible that vec_x = vec_y on input to overwrite x
  */
 template <std::size_t dim>
-static inline void
+constexpr void
 t8_axb (const t8_vec<dim> &vec_x, t8_vec<dim> &vec_y, const double alpha, const double b)
 {
   std::transform (vec_x.begin (), vec_x.end (), vec_y.begin (), [alpha, b] (double v) { return alpha * v + b; });
@@ -160,7 +160,7 @@ t8_axb (const t8_vec<dim> &vec_x, t8_vec<dim> &vec_y, const double alpha, const 
  * \param [in]  alpha  A factor.
  */
 template <std::size_t dim>
-static inline void
+constexpr void
 t8_axpy (const t8_vec<dim> &vec_x, t8_vec<dim> &vec_y, const double alpha)
 {
   std::transform (vec_x.begin (), vec_x.end (), vec_y.begin (), vec_y.begin (),
@@ -173,7 +173,7 @@ t8_axpy (const t8_vec<dim> &vec_x, t8_vec<dim> &vec_y, const double alpha)
  * \param [out] vec_z  On output set \a to vec_y + \a alpha * \a vec_x
  */
 template <std::size_t dim>
-static inline void
+constexpr void
 t8_axpyz (const t8_vec<dim> &vec_x, const t8_vec<dim> &vec_y, t8_vec<dim> &vec_z, const double alpha)
 {
   std::transform (vec_x.begin (), vec_x.end (), vec_y.begin (), vec_z.begin (),
@@ -186,7 +186,7 @@ t8_axpyz (const t8_vec<dim> &vec_x, const t8_vec<dim> &vec_y, t8_vec<dim> &vec_z
  * \return             The dot product \a vec_x * \a vec_y
  */
 template <std::size_t dim>
-static inline double
+constexpr double
 t8_dot (const t8_vec<dim> &vec_x, const t8_vec<dim> &vec_y)
 {
   return std::inner_product (vec_x.begin (), vec_x.end (), vec_y.begin (), 0.0);
@@ -221,7 +221,7 @@ t8_cross_3D (const t8_3D_vec &vec_x, const t8_3D_vec &vec_y, t8_3D_vec &cross)
  * \param [out] diff   On output, the difference of \a vec_x and \a vec_y.
  */
 template <std::size_t dim>
-static inline void
+constexpr void
 t8_diff (const t8_vec<dim> &vec_x, const t8_vec<dim> &vec_y, t8_vec<dim> &diff)
 {
   std::transform (vec_x.begin (), vec_x.end (), vec_y.begin (), diff.begin (), std::minus<double> ());
@@ -236,7 +236,7 @@ t8_diff (const t8_vec<dim> &vec_x, const t8_vec<dim> &vec_y, t8_vec<dim> &diff)
  * \return true, if the vectors are equal up to \a tol 
  */
 template <typename T>
-static inline bool
+constexpr bool
 t8_eq (const T &vec_x, const T &vec_y, const double tol)
 {
   return std::equal (vec_x.begin (), vec_x.end (), vec_y.begin (),
