@@ -52,7 +52,7 @@
 #include <t8_schemes/t8_default/t8_default.hxx> /* default refinement scheme. */
 #include <string>
 
-/* Builds cmesh of 2 prisms that build up a unit cube. 
+/** Builds cmesh of 2 prisms that build up a unit cube. 
  * See step1 for a detailed description.
  * \param [in] comm   MPI Communicator to use.
  * \return            The coarse mesh.
@@ -69,7 +69,7 @@ t8_step2_build_prismcube_coarse_mesh (sc_MPI_Comm comm)
   return cmesh;
 }
 
-/* Build a uniform forest on a cmesh 
+/** Build a uniform forest on a cmesh 
  * using the default refinement scheme.
  * \param [in] comm   MPI Communicator to use.
  * \param [in] cmesh  The coarse mesh to use.
@@ -81,17 +81,15 @@ static t8_forest_t
 t8_step2_build_uniform_forest (sc_MPI_Comm comm, t8_cmesh_t cmesh, int level)
 {
   t8_forest_t forest;
-  t8_scheme_cxx_t *scheme;
+  const t8_scheme *scheme = t8_scheme_new_default ();
 
-  /* Create the refinement scheme. */
-  scheme = t8_scheme_new_default_cxx ();
-  /* Creat the uniform forest. */
+  /* Create the uniform forest. */
   forest = t8_forest_new_uniform (cmesh, scheme, level, 0, comm);
 
   return forest;
 }
 
-/* Write vtk (or more accurately vtu) files of the forest.
+/** Write vtk (or more accurately vtu) files of the forest.
  * \param [in] forest   A forest.
  * \param [in] prefix   A string that is used as a prefix of the output files.
  * 
@@ -104,7 +102,7 @@ t8_step2_write_forest_vtk (t8_forest_t forest, const char *prefix)
   t8_forest_write_vtk (forest, prefix);
 }
 
-/* Destroy a forest. This will free all allocated memory.
+/** Destroy a forest. This will free all allocated memory.
  * \param [in] forest    A forest.
  * NOTE: This will also free the memory of the scheme and the cmesh, since
  *       the forest took ownership of them.
