@@ -203,7 +203,7 @@ install( FILES
     t8_mesh.h
     t8_netcdf.h
     t8_refcount.h
-    t8_vec.hxx
+    t8_types/t8_vec.hxx
     t8_version.h
     t8_vtk.h
     t8_windows.h DESTINATION include
