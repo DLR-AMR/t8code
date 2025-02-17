@@ -28,7 +28,6 @@ libt8_installed_headers = \
   src/t8_cmesh_tetgen.h src/t8_cmesh_readmshfile.h \
   src/t8_cmesh_vtk_reader.hxx \
   src/t8_vec.hxx \
-  src/t8_vec.h
   src/t8_mat.h \
   src/t8_version.h \
   src/t8_vtk.h \
