@@ -45,9 +45,11 @@
 template <typename T, typename Parameter, template <typename> class... competence>
 class T8Type: public competence<T8Type<T, Parameter, competence...>>... {
  public:
-  explicit T8Type () = default;
+  using value_type = T;
 
-  explicit T8Type (T const& value): value_ (value)
+  explicit constexpr T8Type () = default;
+
+  explicit constexpr T8Type (const T& value): value_ (value)
   {
   }
 
@@ -60,21 +62,29 @@ class T8Type: public competence<T8Type<T, Parameter, competence...>>... {
    * \note This constructor is only enabled if T is not a reference.
    */
   template <typename T_ref = T>
-  explicit T8Type (T&& value, typename std::enable_if<!std::is_reference<T_ref> {}, std::nullptr_t>::type = nullptr)
+  explicit constexpr T8Type (T&& value,
+                             typename std::enable_if<!std::is_reference<T_ref> {}, std::nullptr_t>::type = nullptr)
     : value_ (std::move (value))
   {
   }
 
-  T&
-  get ()
+  constexpr T8Type&
+  operator= (const T& value)
+  {
+    value_ = value;
+    return *this;
+  }
+
+  constexpr T&
+  get () noexcept
   {
     return value_;
   }
 
-  T const&
-  get () const
+  constexpr T const&
+  get () const noexcept
   {
-    return value_;
+    return std::move (value_);
   }
 
  private:
