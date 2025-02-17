@@ -28,6 +28,7 @@
 #ifndef T8_GEOMETRY_WITH_VERTICES_H
 #define T8_GEOMETRY_WITH_VERTICES_H
 
+#include <t8.h>
 #include <t8_cmesh.h>
 
 T8_EXTERN_C_BEGIN ();

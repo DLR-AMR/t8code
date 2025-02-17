@@ -27,6 +27,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <typeinfo>
 #include <numeric>
 
+/* Tags to differencce between strong types */
 struct dummy_int
 {
 };
@@ -63,8 +64,9 @@ struct int_and_double_tag
 {
 };
 
+/* Strong types for testing */
 using DummyInt = T8Type<int, dummy_int, Addable, Subtractable, AddAssignable, Multipliable, Dividable,
-                        PrefixDecrementable, PrefixIncrementable>;
+                        PrefixDecrementable, PrefixIncrementable, EqualityComparable>;
 using DummyInt2 = T8Type<int, dummy_int_2>;
 using DummyDouble = T8Type<double, dummy_double>;
 using DummyRefInt = T8Type<int &, dummy_ref_int>;
@@ -73,7 +75,11 @@ using Dummy3DVec = T8Type<std::array<double, 3>, dummy_double_3, EqualityCompara
 using DummyName = T8Type<std::string, dummy_name_tag, EqualityComparable, Hashable>;
 using int_and_double = T8Type<int_and_double_struct, int_and_double_tag>;
 
-TEST (t8_gtest_type, strong_type)
+/**
+ * Test if the the strong types are different.
+ * 
+ */
+TEST (t8_gtest_type, strong_type_equality)
 {
   EXPECT_TRUE ((std::is_same<DummyInt, DummyInt>::value));
   EXPECT_TRUE ((std::is_same<DummyInt2, DummyInt2>::value));
@@ -85,7 +91,13 @@ TEST (t8_gtest_type, strong_type)
   EXPECT_FALSE ((std::is_same<DummyInt2, DummyDouble>::value));
   EXPECT_FALSE ((std::is_same<DummyDouble, DummyInt>::value));
   EXPECT_FALSE ((std::is_same<DummyDouble, DummyInt2>::value));
+}
 
+/**
+ *  Check the sizes of the strong types.
+ */
+TEST (t8_gtest_type, strong_type_size)
+{
   EXPECT_EQ (sizeof (DummyInt), sizeof (int));
   EXPECT_EQ (sizeof (DummyDouble), sizeof (double));
   EXPECT_EQ (sizeof (DummyRefInt), sizeof (int *));
@@ -95,6 +107,10 @@ TEST (t8_gtest_type, strong_type)
   EXPECT_EQ (sizeof (int_and_double), sizeof (int_and_double_struct));
 }
 
+/**
+ * Test if each strong type holds the correct values (e.g. the get operator works).
+ * 
+ */
 TEST (t8_gtest_type, strong_type_get)
 {
   DummyInt dummy_int (5);
@@ -117,6 +133,9 @@ TEST (t8_gtest_type, strong_type_get)
   std::for_each (vec.begin (), vec.end (), [n = 5] (const DummyInt &i) mutable { EXPECT_EQ (i.get (), n++); });
 }
 
+/**
+ * Test if the operators of the strong types work.
+ */
 TEST (t8_gtest_type, operators)
 {
   DummyInt my_int (5);
@@ -139,11 +158,30 @@ TEST (t8_gtest_type, operators)
   EXPECT_EQ (vec1, vec2);
   Dummy3DVec vec3 ({ 2.0, 2.0, 3.0 });
   EXPECT_NE (vec1, vec3);
-  vec2.swap (vec3);
-  EXPECT_EQ (vec1, vec3);
-  EXPECT_NE (vec1, vec2);
+  swap (vec1, vec3);
+  EXPECT_NE (vec1, vec3);
+  EXPECT_EQ (vec3, vec2);
 }
 
+TEST (t8_gtest_type, use_constexpr)
+{
+  constexpr DummyInt my_int (5);
+  constexpr DummyInt my_other_int (10);
+  constexpr DummyInt my_result_int = my_int + my_other_int;
+  static_assert (my_result_int.get () == 15, "constexpr operator+ failed");
+  constexpr DummyInt my_result_int2 = my_int - my_other_int;
+  static_assert (my_result_int2.get () == -5, "constexpr operator- failed");
+  constexpr DummyInt my_result_int3 = my_int * my_other_int;
+  static_assert (my_result_int3.get () == 50, "constexpr operator* failed");
+  constexpr DummyInt my_result_int4 = my_int / my_other_int;
+  static_assert (my_result_int4.get () == 0, "constexpr operator/ failed");
+  constexpr DummyInt my_int_eq (5);
+  static_assert (my_int_eq == my_int, "constexpr operator== failed");
+}
+
+/**
+ * Test if the strong types are hashable.
+ */
 TEST (t8_gtest_type, hashable)
 {
   std::unordered_map<DummyName, int> my_map
