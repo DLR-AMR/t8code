@@ -65,7 +65,7 @@ class forest_permute: public testing::TestWithParam<t8_eclass_t> {
   SetUp () override
   {
     eclass = GetParam ();
-#if T8_ENABLE_LESS_TESTS
+#if T8CODE_TEST_LEVEL == 1
     level = 1;
 #else
     level = eclass < 4 ? 2 : 1;
