@@ -88,8 +88,7 @@ jobs:
       MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
       MPI: ${{ matrix.MPI }}
       BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
-      LESS_TESTS: ${{ github.event_name == 'pull_request'  }}
-
+      TEST_LEVEL: ${{ github.event_name == 'pull_request' && 1 || 0 }} # Set TEST_LEVEL to 1 if the event is a PR, otherwise 0.
       
   # Run t8code linkage tests with and without MPI and in serial and debug mode
   t8code_linkage_tests:
@@ -107,7 +106,7 @@ jobs:
       MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
       MPI: ${{ matrix.MPI }}
       BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
-      LESS_TESTS: ${{ github.event_name == 'pull_request'  }}
+      TEST_LEVEL: ${{ github.event_name == 'pull_request' && 1 || 0 }} # Set TEST_LEVEL to 1 if the event is a PR, otherwise 0.
 
   # Run t8code linkage tests with and without MPI and in serial and debug mode
   t8code_api_tests:
@@ -125,7 +124,7 @@ jobs:
       MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
       MPI: ${{ matrix.MPI }}
       BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
-      LESS_TESTS: ${{ github.event_name == 'pull_request'  }}
+      TEST_LEVEL: ${{ github.event_name == 'pull_request' && 1 || 0 }} # Set TEST_LEVEL to 1 if the event is a PR, otherwise 0.
   
   # Run t8code tests with shipped submodules. This test is only for the build system, so only one config is tested.
   t8code_w_shipped_submodules_tests:
@@ -135,11 +134,11 @@ jobs:
       MAKEFLAGS: -j4
       MPI: ON
       BUILD_TYPE: Debug
-      LESS_TESTS: ${{ github.event_name == 'pull_request'  }}
+      TEST_LEVEL: ${{ github.event_name == 'pull_request' && 1 || 0 }} # Set TEST_LEVEL to 1 if the event is a PR, otherwise 0.
 
   t8code_tarball:
     if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
     uses: ./.github/workflows/build_cmake_tarball.yml
     needs: [preparation, sc_p4est_tests, t8code_tests, t8code_linkage_tests, t8code_api_tests, t8code_w_shipped_submodules_tests]
     with:
-      LESS_TESTS: ${{ github.event_name == 'pull_request'  }}
+      TEST_LEVEL: ${{ github.event_name == 'pull_request' && 1 || 0 }} # Set TEST_LEVEL to 1 if the event is a PR, otherwise 0.
