@@ -364,7 +364,7 @@ class t8_search: public t8_search_base {
   }
 
   void
-  update_queries ([[maybe_unused]] std::vector<size_t> &old_query_indices)
+  update_queries ([[maybe_unused]] std::vector<size_t> &old_query_indices) override
   {
     return;
   }
@@ -428,7 +428,7 @@ class t8_search_with_queries: public t8_search<Udata> {
   }
 
   void
-  update_queries (std::vector<size_t> &old_query_indices)
+  update_queries (std::vector<size_t> &old_query_indices) override
   {
     std::swap (this->active_queries, old_query_indices);
   }
@@ -496,7 +496,7 @@ class t8_search_with_batched_queries: public t8_search<Udata> {
   }
 
   void
-  update_queries (std::vector<size_t> &old_query_indices)
+  update_queries (std::vector<size_t> &old_query_indices) override
   {
     std::swap (this->active_queries, old_query_indices);
   }
