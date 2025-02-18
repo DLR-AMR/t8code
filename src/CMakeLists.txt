@@ -64,10 +64,6 @@ if( T8CODE_ENABLE_OCC )
     target_link_libraries( T8 PUBLIC ${OpenCASCADE_LIBRARIES} )
 endif()
 
-if( T8CODE_ENABLE_LESS_TESTS )
-    target_compile_definitions( T8 PUBLIC T8_ENABLE_LESS_TESTS=1 )
-endif()
-
 if( T8CODE_BUILD_PEDANTIC )
   target_compile_options( T8 PUBLIC -pedantic )
   set (T8_CXXFLAGS "${T8_CXXFLAGS} -Wpedantic")

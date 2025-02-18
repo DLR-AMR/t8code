@@ -93,7 +93,7 @@ jobs:
         && echo CXXFLAGS_var="-Wall -pedantic -O3" >> $GITHUB_ENV
     - name: build config variables
       if: ${{ env.MINOR_RELEASE == 'true' }}
-      run: export CONFIG_OPTIONS="--without-blas ${LESS_TEST_OPTION}"
+      run: export CONFIG_OPTIONS="--without-blas ${TEST_LEVEL_FLAG}"
            && export CONFIG_SERIAL_DEBUG="$CONFIG_OPTIONS --enable-debug --with-sc=$SC_SERIAL_DEBUG/install --with-p4est=$P4EST_SERIAL_DEBUG/install"
     - name: Check vars
       if: ${{ env.MINOR_RELEASE == 'true' }}
