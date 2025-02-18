@@ -35,15 +35,15 @@ t8_geometry_linear::~t8_geometry_linear ()
 }
 
 void
-t8_geometry_linear::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
+t8_geometry_linear::t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid, const double *ref_coords,
                                       const size_t num_coords, double *out_coords) const
 {
   t8_geom_compute_linear_geometry (active_tree_class, active_tree_vertices, ref_coords, num_coords, out_coords);
 }
 
 void
-t8_geometry_linear::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                               const size_t num_coords, double *jacobian) const
+t8_geometry_linear::t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid, [[maybe_unused]] const double *ref_coords,
+    [[maybe_unused]] const size_t num_coords, [[maybe_unused]] double *jacobian) const
 {
   SC_ABORT ("Not implemented.");
 }
