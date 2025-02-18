@@ -1,6 +1,7 @@
 name: spell_check
 
 on:
+  merge_group:
   push:
     branches:
       - main
