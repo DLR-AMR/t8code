@@ -20,6 +20,12 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/**
+ * /file t8_pseudo_trees.hxx
+ * 
+ * This file provides a pseudo tree structure for testing purposes.
+ */
+
 #ifndef T8_PSEUDO_TREES_HXX
 #define T8_PSEUDO_TREES_HXX
 
@@ -30,12 +36,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <memory>
 
 /**
- *  /file This file provides a pseudo tree structure for testing purposes.
- * 
- */
-
-/**
- * \class pseudo_tree
+ * pseudo_tree
  * Represents a pseudo tree structure containing topological and tree data.
  * 
  * \note This class is used for testing purposes only.
@@ -53,6 +54,13 @@ class pseudo_tree {
 template <>
 class t8_data_handler<pseudo_tree> {
  public:
+  /**
+   * Returns the size of a pseudo_tree.
+   * 
+   * \param[in] item The data to compute the size of. 
+   * \param[in] comm The MPI communicator used for communication.
+   * \return An integer representing the size of the data.
+   */
   int
   size (const pseudo_tree &item, sc_MPI_Comm comm)
   {
@@ -73,6 +81,15 @@ class t8_data_handler<pseudo_tree> {
     return total_size;
   }
 
+  /**
+   * Packs a pseudo_tree into a buffer for communication.
+   * 
+   * \param[in] data The data to be packed.
+   * \param[in] pos The current position in the buffer where the data should be packed.
+   * \param[in, out] buffer The buffer where the data will be packed.
+   * \param[in] num_bytes The number of bytes available in the buffer.
+   * \param[in] comm The MPI communicator used for communication.
+   */
   void
   pack (const pseudo_tree &data, int &pos, void *buffer, const int num_bytes, sc_MPI_Comm comm)
   {
@@ -98,6 +115,15 @@ class t8_data_handler<pseudo_tree> {
     }
   }
 
+  /**
+   * Unpacks a pseudo_tree from a buffer.
+   * 
+   * \param[in] buffer A pointer to the buffer containing the packed data.
+   * \param[in] num_bytes The number of bytes in the buffer.
+   * \param[in] pos A reference to an integer representing the current position in the buffer.
+   * \param[in, out] data A pointer to the data structure where the unpacked data will be stored.
+   * \param[in] comm The MPI communicator used for communication.
+   */
   void
   unpack (const void *buffer, const int num_bytes, int &pos, pseudo_tree &data, sc_MPI_Comm comm)
   {
@@ -144,6 +170,13 @@ class t8_data_handler<pseudo_tree> {
     }
   }
 
+  /**
+   * Returns the type of the data handler.
+   * 
+   * This function returns the type of the data handler.
+   * 
+   * \return An integer representing the type.
+   */
   constexpr t8_data_handler_type
   type ()
   {

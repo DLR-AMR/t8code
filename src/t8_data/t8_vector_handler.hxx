@@ -120,7 +120,6 @@ class t8_abstract_vector_handler {
    * This function must be overridden in derived classes to return the type.
    * 
    * \return An integer representing the type.
-   * TODO: implement a proper type/enum for this. 
    */
   virtual t8_data_handler_type
   type ()
@@ -170,6 +169,12 @@ class t8_vector_handler: public t8_abstract_vector_handler {
     return m_data;
   }
 
+  /**
+   * Compute the size of the buffer that is needed to pack the data.
+   * 
+   * \param[in] data The data to be set.
+   * \return int The size of the buffer.
+   */
   int
   buffer_size (sc_MPI_Comm comm) override
   {
@@ -184,6 +189,14 @@ class t8_vector_handler: public t8_abstract_vector_handler {
     return total_size;
   }
 
+  /**
+   * Packs a vector into a buffer. The vector data will be prefixed with the number of elements in the vector.
+   *
+   * \param[in, out] buffer A pointer to the buffer where the vector prefix will be packed.
+   * \param[in] num_bytes The number of bytes to be packed.
+   * \param[in, out] pos A reference to an integer representing the current position in the buffer. This will be updated as bytes are packed.
+   * \param[in] comm The MPI communicator used for the operation.
+   */
   void
   pack_vector_prefix (void *buffer, const int num_bytes, int &pos, sc_MPI_Comm comm) override
   {
@@ -195,6 +208,15 @@ class t8_vector_handler: public t8_abstract_vector_handler {
                    [&] (const TType &item) { single_handler.pack (item, pos, buffer, num_bytes, comm); });
   }
 
+  /**
+   * Unpacks a vector from a buffer. Expected to be prefixed with the number of elements in the vector.
+   *
+   * \param[in] buffer Pointer to the buffer containing the packed data.
+   * \param[in] num_bytes The number of bytes in the buffer.
+   * \param[in] pos Reference to an integer representing the current position in the buffer. This will be updated as data is unpacked.
+   * \param[in] outcount Reference to an integer where the count of unpacked elements will be stored.
+   * \param[in] comm The MPI communicator used for the operation.
+   */
   void
   unpack_vector_prefix (const void *buffer, const int num_bytes, int &pos, int &outcount, sc_MPI_Comm comm) override
   {
@@ -213,6 +235,17 @@ class t8_vector_handler: public t8_abstract_vector_handler {
                    [&] (TType &item) { single_handler.unpack (buffer, num_bytes, pos, item, comm); });
   }
 
+  /**
+   * Sends a message to a specified destination.
+   *
+   * This function is responsible for packing and sending data to a given destination
+   * with a specific tag using the provided MPI communicator.
+   *
+   * \param[in] dest The destination rank to which the data will be sent.
+   * \param[in] tag The tag associated with the message to be sent.
+   * \param[in] comm The MPI communicator used for the communication.
+   * \return An integer indicating the status of the send operation.
+   */
   int
   send (const int dest, const int tag, sc_MPI_Comm comm) override
   {
@@ -226,6 +259,20 @@ class t8_vector_handler: public t8_abstract_vector_handler {
     return mpiret;
   }
 
+  /**
+   * Receives a message from a specified source.
+   *
+   * This function is responsible for receiving and unpacking a message from a given source
+   * with a specific tag within the provided MPI communicator. The function will also
+   * update the status and output count of the received message.
+   *
+   * \param[in] source The rank of the source process from which the message is received.
+   * \param[in] tag The tag of the message to be received.
+   * \param[in] comm The MPI communicator within which the message is received.
+   * \param[in] status A pointer to an MPI status object that will be updated with the status of the received message.
+   * \param[in] outcount A reference to an integer that will be updated with the count of received elements.
+   * \return An integer indicating the success or failure of the receive operation.
+   */
   int
   recv (const int source, const int tag, sc_MPI_Comm comm, sc_MPI_Status *status, int &outcount) override
   {
@@ -244,6 +291,11 @@ class t8_vector_handler: public t8_abstract_vector_handler {
     return mpiret;
   }
 
+  /**
+   * Get the type of the data handler.
+   * 
+   * \return constexpr t8_data_handler_type 
+   */
   constexpr t8_data_handler_type
   type () override
   {
@@ -263,6 +315,13 @@ class t8_vector_handler: public t8_abstract_vector_handler {
   t8_data_handler<TType> single_handler;
 };
 
+/**
+ * Create an internal handler for the given data type. Can be used for complex data types that use
+ * data structures implemented by t8code. 
+ * 
+ * \param[in] type 
+ * \return t8_abstract_vector_handler* A handler for the given data type.
+ */
 inline t8_abstract_vector_handler *
 create_internal_handler (const t8_data_handler_type type)
 {

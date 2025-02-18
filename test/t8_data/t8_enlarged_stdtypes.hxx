@@ -20,18 +20,18 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#ifndef T8_ENLARGED_STDTYPES
-#define T8_ENLARGED_STDTYPES
-
-#include <test/t8_data/t8_data_handler_specs.hxx>
-#include <t8_data/t8_data_handler.hxx>
-
 /**
  * \file t8_enlarged_stdtypes.hxx 
  * 
  * This file provides a templated class for testing single data items.
  * 
  */
+
+#ifndef T8_ENLARGED_STDTYPES
+#define T8_ENLARGED_STDTYPES
+
+#include <test/t8_data/t8_data_handler_specs.hxx>
+#include <t8_data/t8_data_handler.hxx>
 
 /**
  * pseudo_types for testing
@@ -118,8 +118,8 @@ class t8_data_handler<enlarged_data<int>> {
 };
 
 /**
- * \class t8_single_data_handler
- * \brief A template specialisation for handling single enlarged doubles (double plus an additional int, this 
+ * t8_single_data_handler
+ * A template specialization for handling single enlarged doubles (double plus an additional int, this 
  * data-type is meant for testing).
  * 
  * This class implements methods for packing, unpacking, and determining the size of single data items.

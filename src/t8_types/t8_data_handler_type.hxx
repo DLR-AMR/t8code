@@ -20,16 +20,19 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_data_handler_type.hxx
+ * This file provides a strong type for the data handler.
+ */
+
 #ifndef T8_DATA_HANDLER_TYPE_HXX
 #define T8_DATA_HANDLER_TYPE_HXX
 
 #include <t8_types/t8_type.hxx>
 #include <t8_types/t8_operators.hxx>
 
-/** \file
- * This file provides a strong type for the data handler.
+/**
+ * Tag to identify the data handler type.
  */
-
 struct t8_data_handler_tag
 {
 };

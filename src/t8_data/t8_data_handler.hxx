@@ -20,18 +20,25 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#ifndef T8_DATA_HANDLER_HXX
-#define T8_DATA_HANDLER_HXX
-
 /**
  * \file t8_data_handler.hxx
  * 
  * This file provides a templated class for handling single data items.
- * 
  */
+
+#ifndef T8_DATA_HANDLER_HXX
+#define T8_DATA_HANDLER_HXX
+
 #include <t8.h>
 #include <t8_types/t8_data_handler_type.hxx>
 
+/**
+ * Check if type is referring to a type that is already handled internally.
+ * 
+ * \param[in] type A type of data
+ * \return true If the type is handled internally.
+ * \return false otherwise
+ */
 constexpr bool
 is_internal_data (const t8_data_handler_type type)
 {

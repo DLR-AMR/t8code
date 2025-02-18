@@ -20,6 +20,13 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/**
+ * \file t8_gtest_data_handler.cxx
+ * 
+ * Test to check the functionality of the t8_data_handler class. 
+ * 
+ */
+
 #include <gtest/gtest.h>
 #include <test/t8_data/t8_enlarged_stdtypes.hxx>
 #include <test/t8_data/t8_data_handler_specs.hxx>
@@ -27,11 +34,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_data/t8_vector_handler.hxx>
 #include <vector>
 #include <numeric>
-
-/**
- * \file Test to check the functionality of the t8_data_handler class. 
- * 
- */
 
 /**
  * Templated testing class. Creates enlarged data (original data + a checking integer) and a 

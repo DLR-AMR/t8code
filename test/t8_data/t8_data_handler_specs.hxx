@@ -20,21 +20,21 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#ifndef T8_DATA_HANDLER_SPECS_HXX
-#define T8_DATA_HANDLER_SPECS_HXX
-
 /**
- * \file This file provides a templated class that enlarges a data type by a check-int. 
+ * \file t8_data_handler_specx.hxx
+ * This file provides a templated class that enlarges a data type by a check-int. 
  * Should only be used for testing purposes.
  */
+
+#ifndef T8_DATA_HANDLER_SPECS_HXX
+#define T8_DATA_HANDLER_SPECS_HXX
 
 #include <t8.h>
 #include <vector>
 #include <t8_data/t8_vector_handler.hxx>
 
 /**
- * \class enlarged_data
- * \brief A template class to handle data with an additional check value.
+ * A template class to handle data with an additional check value.
  *
  * This class is designed to store a piece of data along with an integer 
  * value that can be used for additional checks or validations.
@@ -75,6 +75,11 @@ class data_creator {
     large_data = std::vector<TType> (0);
   };
 
+  /**
+   * Create several data items.
+   * 
+   * \param[in] num_data  The number of data items to create.
+   */
   void
   create (const int num_data);
 
