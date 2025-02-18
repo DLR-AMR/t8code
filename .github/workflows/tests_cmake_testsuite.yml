@@ -181,7 +181,7 @@ jobs:
       MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
       MPI: ${{ matrix.MPI }}
       BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
-       TEST_LEVEL: ${{ github.event_name == 'pull_request' && 1 || 0 }} # Set TEST_LEVEL to 1 if the event is a PR, otherwise 0.
+      TEST_LEVEL: ${{ github.event_name == 'pull_request' && 1 || 0 }} # Set TEST_LEVEL to 1 if the event is a PR, otherwise 0.
   
   # Run t8code tests with shipped submodules. This test is only for the build system, so only one config is tested.
   t8code_w_shipped_submodules_tests:
