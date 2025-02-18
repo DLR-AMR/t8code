@@ -34,7 +34,7 @@ on:
     inputs:
       TEST_LEVEL:
         required: true
-        type: number
+        type: integer
         description: 'Test level used for configuring (0 for full tests, 1 for less thorough tests, 2 for minimal tests)'
 
 jobs:
