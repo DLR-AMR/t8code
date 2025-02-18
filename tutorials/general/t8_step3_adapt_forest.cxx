@@ -33,7 +33,7 @@
  * of any element will change by at most +-1.
  * 
  * How you can experiment here:
- *   - Look at the paraview output files of the unifomr and the adapted forest.
+ *   - Look at the paraview output files of the uniform and the adapted forest.
  *     For the adapted forest you can apply a slice filter to look into the cube.
  *   - Run the program with different process numbers. You should see that refining is
  *     independent of the number of processes, but coarsening is not.
@@ -45,7 +45,7 @@
  *   - Use t8_productionf to print the local number of elements on each process.
  *     Notice, that the uniform forest is evenly distributed, but that the adapted forest
  *     is not. This is due to the fact that we do not repartition our forest here.
- *   - Add a maximum refinement level to the adapt_data struct and use non-recursive refinement.
+ *   - Add a maximum refinement level to the adapt_data struct and use recursive refinement.
  *     Do not refine an element if it has reached the maximum level. (Hint: scheme->element_get_level)
  */
 
@@ -60,9 +60,6 @@
 #include <tutorials/general/t8_step3.h>
 
 T8_EXTERN_C_BEGIN ();
-
-/* This is our own defined data that we will pass on to the
- * adaptation callback. */
 
 /** The adaptation callback function. This function will be called once for each element
  * and the return value decides whether this element should be refined or not.
@@ -80,8 +77,8 @@ T8_EXTERN_C_BEGIN ();
  * \param [in] which_tree   The process local id of the current tree.
  * \param [in] tree_class   The eclass of \a which_tree.
  * \param [in] lelement_id  The tree local index of the current element (or the first of the family).
- * \param [in] scheme           The refinement scheme for this tree's element class.
- * \param [in] is_family    if 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
+ * \param [in] scheme       The refinement scheme for this tree's element class.
+ * \param [in] is_family    If 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
  * \param [in] num_elements The number of entries in \a elements elements that are defined.
  * \param [in] elements     The element or family of elements to consider for refinement/coarsening.
  */

@@ -20,19 +20,12 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_default_vertex.h
- * The default implementation for vertices. Interface between the
- * \file t8_default_common.hxx definitions and the element type specific
- * implementations in \file t8_dvertex_bits.h
- */
-
 #ifndef T8_DEFAULT_VERTEX_HXX
 #define T8_DEFAULT_VERTEX_HXX
 
 #include <t8_element.h>
 #include <t8_schemes/t8_default/t8_default_tri/t8_default_tri.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
-#include <t8_schemes/t8_default/t8_default_vertex/t8_dvertex_bits.h>
 
 /* Forward declaration of the scheme so we can use it as an argument in the eclass schemes function. */
 class t8_scheme;
@@ -502,8 +495,8 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
    * \param [in] id       The linear id.
    *                      id must fulfil 0 <= id < 'number of leaves in the uniform refinement'
    */
-  void
-  element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id) const;
+  static void
+  element_set_linear_id (t8_element_t *elem, const int level, const t8_linearidx_t id);
 
   /** Compute the linear id of a given element in a hypothetical uniform
    * refinement of a given level.
@@ -618,8 +611,8 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
    * \note            We recommend to use the assertion T8_ASSERT (element_is_valid (elem))
    *                  in the implementation of each of the functions in this file.
    */
-  int
-  element_is_valid (const t8_element_t *t) const;
+  static int
+  element_is_valid (const t8_element_t *t);
 
   /**
   * Print a given element. For a example for a triangle print the coordinates
