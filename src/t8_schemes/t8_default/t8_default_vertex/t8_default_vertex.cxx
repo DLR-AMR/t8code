@@ -265,7 +265,7 @@ t8_default_scheme_vertex::element_get_anchor ([[maybe_unused]] const t8_element_
 }
 
 void
-t8_default_scheme_vertex::element_get_vertex_integer_coords ([[maybe_unused]] const t8_element_t *elem, int vertex, int coords[]) const
+t8_default_scheme_vertex::element_get_vertex_integer_coords ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] int vertex, int coords[]) const
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (vertex == 0);
@@ -284,7 +284,7 @@ t8_default_scheme_vertex::element_get_vertex_reference_coords ([[maybe_unused]] 
 }
 
 void
-t8_default_scheme_vertex::element_get_reference_coords (const t8_element_t *elem, const double *ref_coords,
+t8_default_scheme_vertex::element_get_reference_coords ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const double *ref_coords,
                                                         const size_t num_coords, double *out_coords) const
 {
   T8_ASSERT (element_is_valid (elem));
@@ -338,7 +338,7 @@ t8_default_scheme_vertex::element_new (int length, t8_element_t **elem) const
 }
 
 void
-t8_default_scheme_vertex::element_init (int length, t8_element_t *elem) const
+t8_default_scheme_vertex::element_init ([[maybe_unused]] int length, [[maybe_unused]] t8_element_t *elem) const
 {
 #ifdef T8_ENABLE_DEBUG
   t8_dvertex_t *vertexs = (t8_dvertex_t *) elem;
