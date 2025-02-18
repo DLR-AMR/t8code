@@ -334,7 +334,7 @@ t8_flow_stokes_sphere_f_component (double radius, double alpha, double beta, int
 }
 
 void
-t8_flow_stokes_flow_sphere_shell (const double x[3], [[maybe_unused]] double t, double x_out[])
+t8_flow_stokes_flow_sphere_shell (const double x[3], [[maybe_unused]] double t, double x_out[3])
 {
   double radius;
   double theta, phi;
