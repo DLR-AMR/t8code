@@ -85,8 +85,8 @@ struct t8_naca_geometry_adapt_data
  */
 int
 t8_naca_geometry_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                                 t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme *scheme,
-                                 const int is_family, const int num_elements, t8_element_t *elements[])
+                                 t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+                                 [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements, t8_element_t *elements[])
 {
   /* We retrieve the adapt data */
   const struct t8_naca_geometry_adapt_data *adapt_data
@@ -228,7 +228,7 @@ struct t8_naca_plane_adapt_data
  */
 int
 t8_naca_plane_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                              t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme *scheme,
+                              t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
                               const int is_family, const int num_elements, t8_element_t *elements[])
 {
   double elem_midpoint[3];
