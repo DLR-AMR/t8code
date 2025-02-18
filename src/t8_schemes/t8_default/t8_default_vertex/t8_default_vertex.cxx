@@ -213,7 +213,7 @@ t8_default_scheme_vertex::element_is_root_boundary (const t8_element_t *elem, in
 }
 
 void
-t8_default_scheme_vertex::element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id)
+t8_default_scheme_vertex::element_set_linear_id (t8_element_t *elem, const int level, const t8_linearidx_t id)
 {
   T8_ASSERT (0 <= level && level <= T8_DVERTEX_MAXLEVEL);
   T8_ASSERT (0 == id);
