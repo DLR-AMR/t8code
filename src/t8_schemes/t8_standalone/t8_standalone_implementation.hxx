@@ -1995,7 +1995,6 @@ struct t8_standalone_scheme
                          t8_standalone_element<face_TEclass> *boundary) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
-    element_debug_print ((t8_element_t *) boundary);
     const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
 
     if constexpr (T8_ELEMENT_DIM[face_TEclass] >= T8_ELEMENT_DIM[TEclass]) {
