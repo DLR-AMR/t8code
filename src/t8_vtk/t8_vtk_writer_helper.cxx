@@ -168,7 +168,8 @@ grid_element_shape<t8_forest_t> (const t8_forest_t grid, const t8_locidx_t itree
 
 template <>
 t8_element_shape_t
-grid_element_shape<t8_cmesh_t> (const t8_cmesh_t grid, const t8_locidx_t itree, const t8_element_t *element)
+grid_element_shape<t8_cmesh_t> (const t8_cmesh_t grid, const t8_locidx_t itree,
+                                [[maybe_unused]] const t8_element_t *element)
 {
   return t8_cmesh_get_tree_class (grid, itree);
 }
@@ -176,17 +177,17 @@ grid_element_shape<t8_cmesh_t> (const t8_cmesh_t grid, const t8_locidx_t itree, 
 template <>
 void
 grid_element_to_coords<t8_forest_t> (const t8_forest_t grid, const t8_locidx_t itree, const t8_element_t *element,
-                                     const int curved_flag, double *coordinates, const int num_node,
-                                     const t8_element_shape_t shape)
+                                     const int curved_flag, double *coordinates, [[maybe_unused]] const int num_node,
+                                     [[maybe_unused]] const t8_element_shape_t shape)
 {
   t8_forest_vtk_get_element_nodes (grid, itree, element, 0, curved_flag, coordinates);
 }
 
 template <>
 void
-grid_element_to_coords<t8_cmesh_t> (const t8_cmesh_t grid, const t8_locidx_t itree, const t8_element_t *element,
-                                    const int curved_flag, double *coordinates, const int num_node,
-                                    const t8_element_shape_t shape)
+grid_element_to_coords<t8_cmesh_t> (const t8_cmesh_t grid, const t8_locidx_t itree,
+                                    [[maybe_unused]] const t8_element_t *element, const int curved_flag,
+                                    double *coordinates, const int num_node, const t8_element_shape_t shape)
 {
   const double *ref_coords = t8_forest_vtk_point_to_element_ref_coords[shape][curved_flag];
   const t8_gloidx_t gtree_id = t8_cmesh_get_global_id (grid, itree);
@@ -203,7 +204,8 @@ grid_element_level<t8_forest_t> (const t8_forest_t grid, const t8_locidx_t itree
 }
 template <>
 int
-grid_element_level<t8_cmesh_t> (const t8_cmesh_t grid, const t8_locidx_t itree, const t8_element_t *element)
+grid_element_level<t8_cmesh_t> ([[maybe_unused]] const t8_cmesh_t grid, [[maybe_unused]] const t8_locidx_t itree,
+                                [[maybe_unused]] const t8_element_t *element)
 {
   return 0;
 }

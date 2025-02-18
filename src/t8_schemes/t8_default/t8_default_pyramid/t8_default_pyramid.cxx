@@ -55,7 +55,7 @@ t8_default_scheme_pyramid::element_new (int length, t8_element_t **elem) const
 }
 
 void
-t8_default_scheme_pyramid::element_init (int length, t8_element_t *elem) const
+t8_default_scheme_pyramid::element_init ([[maybe_unused]] int length, [[maybe_unused]] t8_element_t *elem) const
 {
 #ifdef T8_ENABLE_DEBUG
   t8_dpyramid_t *pyramid = (t8_dpyramid_t *) elem;
@@ -155,7 +155,8 @@ t8_default_scheme_pyramid::element_get_child (const t8_element_t *elem, int chil
 }
 
 void
-t8_default_scheme_pyramid::element_get_children (const t8_element_t *elem, int length, t8_element_t *c[]) const
+t8_default_scheme_pyramid::element_get_children (const t8_element_t *elem, [[maybe_unused]] int length,
+                                                 t8_element_t *c[]) const
 {
   T8_ASSERT (element_is_valid (elem));
   t8_dpyramid_children ((const t8_dpyramid_t *) elem, (t8_dpyramid_t **) c);
@@ -275,7 +276,7 @@ t8_default_scheme_pyramid::element_is_root_boundary (const t8_element_t *elem, i
 
 void
 t8_default_scheme_pyramid::element_get_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
-                                                      const t8_scheme *scheme) const
+                                                      [[maybe_unused]] const t8_scheme *scheme) const
 {
   T8_ASSERT (element_is_valid (elem));
   t8_dpyramid_boundary_face ((const t8_dpyramid_t *) elem, face, boundary);
@@ -285,7 +286,7 @@ t8_default_scheme_pyramid::element_get_boundary_face (const t8_element_t *elem, 
 
 int
 t8_default_scheme_pyramid::element_extrude_face (const t8_element_t *face, t8_element_t *elem, int root_face,
-                                                 const t8_scheme *scheme) const
+                                                 [[maybe_unused]] const t8_scheme *scheme) const
 {
 #if T8_ENABLE_DEBUG
   const t8_eclass_t face_eclass = (t8_eclass_t) t8_eclass_face_types[T8_ECLASS_PYRAMID][root_face];
@@ -323,7 +324,8 @@ t8_default_scheme_pyramid::element_get_tree_face (const t8_element_t *elem, int 
 }
 
 int
-t8_default_scheme_pyramid::element_get_num_face_children (const t8_element_t *elem, int face) const
+t8_default_scheme_pyramid::element_get_num_face_children ([[maybe_unused]] const t8_element_t *elem,
+                                                          [[maybe_unused]] int face) const
 {
   T8_ASSERT (element_is_valid (elem));
   return T8_DPYRAMID_FACE_CHILDREN;
