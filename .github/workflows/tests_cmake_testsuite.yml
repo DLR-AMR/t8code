@@ -34,12 +34,7 @@ on:
   push:
     branches:
       - main
-      - develop
-      - feature-*CI* # for testing this script, all feature branches with "CI" in their name
   pull_request:
-    branches:
-      - main
-      - develop
   workflow_dispatch: # Be able to trigger this manually on github.com
   # Run every night at 1:10
   schedule:
