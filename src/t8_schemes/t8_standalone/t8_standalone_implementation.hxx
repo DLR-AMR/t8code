@@ -1097,27 +1097,19 @@ struct t8_standalone_scheme
 
     switch (face_TEclass) {
     case T8_ECLASS_ZERO:
-#if T8_ENABLE_DEBUG
-      t8_standalone_scheme<T8_ECLASS_ZERO>::element_is_valid (face);
-#endif
+      T8_ASSERT (t8_standalone_scheme<T8_ECLASS_ZERO>::element_is_valid (face));
       return extrude_face<T8_ECLASS_ZERO> ((t8_standalone_element<T8_ECLASS_ZERO> *) face, elem, root_face);
       break;
     case T8_ECLASS_LINE:
-#if T8_ENABLE_DEBUG
-      t8_standalone_scheme<T8_ECLASS_LINE>::element_is_valid (face);
-#endif
+      T8_ASSERT (t8_standalone_scheme<T8_ECLASS_LINE>::element_is_valid (face));
       return extrude_face<T8_ECLASS_LINE> ((t8_standalone_element<T8_ECLASS_LINE> *) face, elem, root_face);
       break;
     case T8_ECLASS_QUAD:
-#if T8_ENABLE_DEBUG
-      t8_standalone_scheme<T8_ECLASS_QUAD>::element_is_valid (face);
-#endif
+      T8_ASSERT (t8_standalone_scheme<T8_ECLASS_QUAD>::element_is_valid (face));
       return extrude_face<T8_ECLASS_QUAD> ((t8_standalone_element<T8_ECLASS_QUAD> *) face, elem, root_face);
       break;
     case T8_ECLASS_HEX:
-#if T8_ENABLE_DEBUG
-      t8_standalone_scheme<T8_ECLASS_HEX>::element_is_valid (face);
-#endif
+      T8_ASSERT (t8_standalone_scheme<T8_ECLASS_HEX>::element_is_valid (face));
       return extrude_face<T8_ECLASS_HEX> ((t8_standalone_element<T8_ECLASS_HEX> *) face, elem, root_face);
       break;
     default:
