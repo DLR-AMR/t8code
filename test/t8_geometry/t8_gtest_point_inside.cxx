@@ -342,7 +342,7 @@ auto print_test = [] (const testing::TestParamInfo<std::tuple<t8_eclass, int, in
   return name;
 };
 
-#if T8_ENABLE_LESS_TESTS
+#if T8CODE_TEST_LEVEL == 1
 INSTANTIATE_TEST_SUITE_P (t8_gtest_point_inside, geometry_point_inside,
                           testing::Combine (testing::Range (T8_ECLASS_LINE, T8_ECLASS_QUAD), testing::Range (0, 4),
                                             testing::Range (0, 2)),

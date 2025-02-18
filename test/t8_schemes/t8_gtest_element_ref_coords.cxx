@@ -33,7 +33,7 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <test/t8_gtest_macros.hxx>
 
-#if T8_ENABLE_LESS_TESTS
+#if T8CODE_TEST_LEVEL == 1
 #define MAX_LEVEL_REF_COORD_TEST 3
 #else
 #define MAX_LEVEL_REF_COORD_TEST 4
