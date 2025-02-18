@@ -103,7 +103,7 @@ t8_default_scheme_line::element_get_nca (const t8_element_t *elem1, const t8_ele
 }
 
 t8_element_shape_t
-t8_default_scheme_line::element_get_face_shape (const t8_element_t *elem, int face) const
+t8_default_scheme_line::element_get_face_shape ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] int face) const
 {
   T8_ASSERT (element_is_valid (elem));
   return T8_ECLASS_VERTEX;
@@ -111,7 +111,7 @@ t8_default_scheme_line::element_get_face_shape (const t8_element_t *elem, int fa
 
 void
 t8_default_scheme_line::element_get_children_at_face (const t8_element_t *elem, int face, t8_element_t *children[],
-                                                      int num_children, int *child_indices) const
+    [[maybe_unused]] int num_children, int *child_indices) const
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (0 <= face && face < T8_DLINE_FACES);
@@ -127,7 +127,7 @@ t8_default_scheme_line::element_get_children_at_face (const t8_element_t *elem, 
 }
 
 int
-t8_default_scheme_line::element_face_get_child_face (const t8_element_t *elem, int face, int face_child) const
+t8_default_scheme_line::element_face_get_child_face ([[maybe_unused]] const t8_element_t *elem, int face, [[maybe_unused]] int face_child) const
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (0 <= face && face < T8_DLINE_FACES);
@@ -147,7 +147,7 @@ t8_default_scheme_line::element_face_get_parent_face (const t8_element_t *elem, 
 }
 
 int
-t8_default_scheme_line::element_get_tree_face (const t8_element_t *elem, int face) const
+t8_default_scheme_line::element_get_tree_face ([[maybe_unused]] const t8_element_t *elem, int face) const
 {
   /* The number of faces does not change from tree to element */
   T8_ASSERT (element_is_valid (elem));
@@ -157,7 +157,7 @@ t8_default_scheme_line::element_get_tree_face (const t8_element_t *elem, int fac
 
 void
 t8_default_scheme_line::element_transform_face (const t8_element_t *elem1, t8_element_t *elem2, int orientation,
-                                                int sign, int is_smaller_face) const
+    [[maybe_unused]] int sign, [[maybe_unused]] int is_smaller_face) const
 {
   T8_ASSERT (element_is_valid (elem1));
   T8_ASSERT (element_is_valid (elem2));
@@ -173,7 +173,7 @@ t8_default_scheme_line::element_transform_face (const t8_element_t *elem1, t8_el
  *  face. */
 int
 t8_default_scheme_line::element_extrude_face (const t8_element_t *face, t8_element_t *elem, int root_face,
-                                              const t8_scheme *scheme) const
+    [[maybe_unused]] const t8_scheme *scheme) const
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (scheme->element_is_valid (T8_ECLASS_VERTEX, face));
@@ -183,8 +183,8 @@ t8_default_scheme_line::element_extrude_face (const t8_element_t *face, t8_eleme
 
 /** Construct the boundary element at a specific face. */
 void
-t8_default_scheme_line::element_get_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
-                                                   const t8_scheme *scheme) const
+t8_default_scheme_line::element_get_boundary_face (const t8_element_t *elem, [[maybe_unused]] int face, t8_element_t *boundary,
+    [[maybe_unused]] const t8_scheme *scheme) const
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (scheme->element_is_valid (T8_ECLASS_VERTEX, boundary));
@@ -323,28 +323,28 @@ t8_default_scheme_line::element_get_linear_id (const t8_element_t *elem, int lev
 }
 
 int
-t8_default_scheme_line::element_get_num_faces (const t8_element_t *elem) const
+t8_default_scheme_line::element_get_num_faces ([[maybe_unused]] const t8_element_t *elem) const
 {
   T8_ASSERT (element_is_valid (elem));
   return T8_DLINE_FACES;
 }
 
 int
-t8_default_scheme_line::element_get_max_num_faces (const t8_element_t *elem) const
+t8_default_scheme_line::element_get_max_num_faces ([[maybe_unused]] const t8_element_t *elem) const
 {
   T8_ASSERT (element_is_valid (elem));
   return T8_DLINE_FACES;
 }
 
 int
-t8_default_scheme_line::element_get_num_children (const t8_element_t *elem) const
+t8_default_scheme_line::element_get_num_children ([[maybe_unused]] const t8_element_t *elem) const
 {
   T8_ASSERT (element_is_valid (elem));
   return T8_DLINE_CHILDREN;
 }
 
 int
-t8_default_scheme_line::element_get_num_face_children (const t8_element_t *elem, int face) const
+t8_default_scheme_line::element_get_num_face_children ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] int face) const
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (0 <= face && face < T8_DLINE_FACES);
@@ -360,7 +360,7 @@ t8_default_scheme_line::element_get_child_id (const t8_element_t *elem) const
 }
 
 void
-t8_default_scheme_line::element_get_children (const t8_element_t *elem, int length, t8_element_t *c[]) const
+t8_default_scheme_line::element_get_children (const t8_element_t *elem, [[maybe_unused]] int length, t8_element_t *c[]) const
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (length == T8_DLINE_CHILDREN);
@@ -428,7 +428,7 @@ t8_default_scheme_line::element_new (int length, t8_element_t **elem) const
 }
 
 void
-t8_default_scheme_line::element_init (int length, t8_element_t *elem) const
+t8_default_scheme_line::element_init ([[maybe_unused]] int length, [[maybe_unused]] t8_element_t *elem) const
 {
 #ifdef T8_ENABLE_DEBUG
   t8_dline_t *lines = (t8_dline_t *) elem;
