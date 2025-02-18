@@ -36,7 +36,7 @@
 #include <t8_schemes/t8_default/t8_default_prism/t8_dprism_bits.h>
 
 /* Forward declaration of the scheme so we can use it as an argument in the eclass schemes function. */
-class t8_scheme;
+struct t8_scheme;
 
 /** Provide an implementation for the prism element class.
  * It is written as a self-contained library in the t8_dprism_* files.
