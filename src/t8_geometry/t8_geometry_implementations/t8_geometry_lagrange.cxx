@@ -41,8 +41,8 @@ t8_geometry_lagrange::~t8_geometry_lagrange ()
 }
 
 void
-t8_geometry_lagrange::t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid, const double *ref_coords,
-                                        const size_t num_points, double *out_coords) const
+t8_geometry_lagrange::t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                                        const double *ref_coords, const size_t num_points, double *out_coords) const
 {
   if (num_points != 1)
     SC_ABORT ("Error: Batch computation of geometry not yet supported.");
@@ -61,8 +61,11 @@ t8_geometry_lagrange::t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, [[may
 }
 
 void
-t8_geometry_lagrange::t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid, [[maybe_unused]] const double *ref_coords,
-    [[maybe_unused]] const size_t num_points, [[maybe_unused]] double *jacobian) const
+t8_geometry_lagrange::t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh,
+                                                 [[maybe_unused]] t8_gloidx_t gtreeid,
+                                                 [[maybe_unused]] const double *ref_coords,
+                                                 [[maybe_unused]] const size_t num_points,
+                                                 [[maybe_unused]] double *jacobian) const
 {
   SC_ABORT_NOT_REACHED ();
 }
