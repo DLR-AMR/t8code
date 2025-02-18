@@ -30,12 +30,12 @@
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_ghost.h>
-#include <example/common/t8_example_common.h>
+#include <example/common/t8_example_common.hxx>
 #include <t8_cmesh.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_vtk/t8_vtk_writer.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_vec.h>
+#include <t8_types/t8_vec.hxx>
 
 #define MAX_FACES 8 /* The maximum number of faces of an element */
 /* TODO: This is not memory efficient. If we run out of memory, we can optimize here. */
@@ -139,7 +139,7 @@ typedef struct
 /** The per element data */
 typedef struct
 {
-  double midpoint[3];             /**< coordinates of element midpoint in R^3 */
+  t8_3D_point midpoint;           /**< coordinates of element midpoint in R^3 */
   double vol;                     /**< Volume of this element */
   double phi_new;                 /**< Value of solution at midpoint in next time step */
   double *fluxes[MAX_FACES];      /**< The fluxes to each neeighbor at a given face */
@@ -324,9 +324,9 @@ static double
 t8_advect_flux_upwind_1d (const t8_advect_problem_t *problem, const t8_locidx_t el_plus, const t8_locidx_t el_minus,
                           int face)
 {
-  double x_j_half[3];
+  t8_3D_point x_j_half;
   int idim;
-  double u_at_x_j_half[3];
+  t8_3D_vec u_at_x_j_half;
   double phi;
   int sign;
   t8_advect_element_data_t *el_data_plus;
@@ -366,10 +366,10 @@ static double
 t8_advect_flux_upwind (const t8_advect_problem_t *problem, double el_plus_phi, double el_minus_phi, t8_locidx_t ltreeid,
                        const t8_element_t *element_plus, int face)
 {
-  double face_center[3];
-  double u_at_face_center[3];
-  double normal[3], normal_times_u;
-  double area;
+  t8_3D_point face_center;
+  t8_3D_vec u_at_face_center;
+  t8_3D_vec normal;
+  double area, normal_times_u;
 
   /*
    *    | --x-- | --x-- |   Two elements, midpoints marked with 'x'
@@ -378,16 +378,16 @@ t8_advect_flux_upwind (const t8_advect_problem_t *problem, double el_plus_phi, d
    */
 
   /* Compute the center coordinate of the face */
-  t8_forest_element_face_centroid (problem->forest, ltreeid, element_plus, face, face_center);
+  t8_forest_element_face_centroid (problem->forest, ltreeid, element_plus, face, face_center.data ());
   /* Compute u at the face center. */
   problem->u (face_center, problem->t, u_at_face_center);
   /* Compute the normal of the element at this face */
-  t8_forest_element_face_normal (problem->forest, ltreeid, element_plus, face, normal);
+  t8_forest_element_face_normal (problem->forest, ltreeid, element_plus, face, normal.data ());
   /* Compute the area of the face */
   area = t8_forest_element_face_area (problem->forest, ltreeid, element_plus, face);
 
   /* Compute the dot-product of u and the normal vector */
-  normal_times_u = t8_vec_dot (normal, u_at_face_center);
+  normal_times_u = t8_dot (normal, u_at_face_center);
 
   if (normal_times_u >= 0) {
     return -el_plus_phi * normal_times_u * area;
@@ -519,7 +519,7 @@ t8_advect_compute_element_data (t8_advect_problem_t *problem, t8_advect_element_
                                 const t8_element_t *element, const t8_locidx_t ltreeid)
 {
   /* Compute the midpoint coordinates of element */
-  t8_forest_element_centroid (problem->forest, ltreeid, element, elem_data->midpoint);
+  t8_forest_element_centroid (problem->forest, ltreeid, element, elem_data->midpoint.data ());
   /* Compute the length of this element */
   elem_data->vol = t8_forest_element_volume (problem->forest, ltreeid, element);
 }
@@ -989,7 +989,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t *problem)
   const t8_scheme *scheme = t8_forest_get_scheme (problem->forest);
   t8_eclass_t neigh_eclass;
   double speed, max_speed = 0, min_diam = -1, delta_t, min_delta_t;
-  double u[3];
+  t8_3D_vec u;
   double diam;
   double min_vol = 1e9;
 
@@ -1010,7 +1010,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t *problem)
       min_diam = min_diam < 0 ? diam : SC_MIN (min_diam, diam);
       /* Compute the maximum velocity */
       problem->u (elem_data->midpoint, problem->t, u);
-      speed = t8_vec_norm (u);
+      speed = t8_norm (u);
       max_speed = SC_MAX (max_speed, speed);
 
       /* Compute minimum necessary time step */
@@ -1068,7 +1068,8 @@ t8_advect_problem_init_elements (t8_advect_problem_t *problem)
 static void
 t8_advect_write_vtk (t8_advect_problem_t *problem)
 {
-  double *u_and_phi_array[4], u_temp[3];
+  double *u_and_phi_array[4];
+  t8_3D_vec u_temp;
   t8_locidx_t num_local_elements, ielem;
   t8_vtk_data_field_t vtk_data[5];
   t8_advect_element_data_t *elem_data;

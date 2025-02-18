@@ -274,7 +274,7 @@ t8_test_geometry_cad_hex (double *rot_vec, int face, int edge, double *parameter
   for (size_t coord = 0; coord < num_coords; ++coord) {
     const int offset_3d = coord * 3;
     t8_geometry_evaluate (cmesh, 0, rotated_test_ref_coords, num_coords, out_coords);
-    EXPECT_VEC3_EQ (out_coords + offset_3d, test_return_coords + offset_3d, tol);
+    EXPECT_VEC_EQ (out_coords + offset_3d, test_return_coords + offset_3d, tol);
   }
   T8_FREE (out_coords);
   t8_cmesh_destroy (&cmesh);
@@ -477,7 +477,7 @@ t8_test_geometry_cad_tet (int face, int edge, double *parameters, double *test_r
     t8_geometry_evaluate (cmesh, 0, test_ref_coords + offset_3d + (face >= 0 ? face * 12 : edge * 6), 1,
                           out_coords + offset_3d);
 
-    EXPECT_VEC3_EQ (out_coords + offset_3d, test_return_coords + offset_3d, tol);
+    EXPECT_VEC_EQ (out_coords + offset_3d, test_return_coords + offset_3d, tol);
   }
   T8_FREE (out_coords);
   t8_cmesh_destroy (&cmesh);
@@ -698,7 +698,7 @@ TEST_P (class_2d_element_cad_curve, t8_check_2d_element_cad_curve)
                               + i_coord * T8_ECLASS_MAX_DIM + i_orientation * 9,
                             1, out_coords);
 
-      EXPECT_VEC3_EQ (
+      EXPECT_VEC_EQ (
         (curvature == 0 ? test_ref_coords_out_linear : test_ref_coords_out_curved) + i_coord * T8_ECLASS_MAX_DIM,
         out_coords, T8_PRECISION_EPS);
     }
@@ -801,7 +801,7 @@ TEST_P (class_2d_element_linear_cad_surface, t8_check_2d_element_linear_cad_surf
   for (size_t i_coord = 0; i_coord < (eclass == T8_ECLASS_QUAD ? 9 : 6); ++i_coord) {
     t8_geometry_evaluate (cmesh, 0, test_ref_coords + i_coord * 3, 1, out_coords);
 
-    EXPECT_VEC3_EQ (test_ref_coords + i_coord * 3, out_coords, T8_PRECISION_EPS);
+    EXPECT_VEC_EQ (test_ref_coords + i_coord * 3, out_coords, T8_PRECISION_EPS);
   }
 }
 
@@ -910,7 +910,7 @@ TEST_P (class_2d_element_curved_cad_surface, t8_check_2d_element_curved_cad_surf
   for (size_t i_coord = 0; i_coord < (eclass == T8_ECLASS_QUAD ? 9 : 6); ++i_coord) {
     t8_geometry_evaluate (cmesh, 0, test_ref_coords_in + i_coord * 3, 1, out_coords);
 
-    EXPECT_VEC3_EQ (test_ref_coords_out + i_coord * 3, out_coords, T8_PRECISION_EPS);
+    EXPECT_VEC_EQ (test_ref_coords_out + i_coord * 3, out_coords, T8_PRECISION_EPS);
   }
 }
 
@@ -1014,7 +1014,7 @@ t8_test_geometry_cad_prism (int face, int edge, double *parameters, double *test
   for (int i_coord = 0; i_coord < (face >= 0 ? face_vertices : 3); ++i_coord) {
     t8_geometry_evaluate (cmesh, 0, test_ref_coords + i_coord * 3 + (face >= 0 ? face * 12 : edge * 9), 1, out_coords);
 
-    EXPECT_VEC3_EQ (out_coords, test_return_coords + i_coord * 3, tol);
+    EXPECT_VEC_EQ (out_coords, test_return_coords + i_coord * 3, tol);
   }
   t8_cmesh_destroy (&cmesh);
 
