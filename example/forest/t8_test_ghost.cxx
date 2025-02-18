@@ -44,8 +44,8 @@ typedef enum {
  * This function comes from the timings2.c example of p4est.
  */
 int
-t8_refine_p8est (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, const t8_eclass_t tree_class,
-                 t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family, const int num_elements,
+t8_refine_p8est ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from, [[maybe_unused]] t8_locidx_t which_tree, const t8_eclass_t tree_class,
+    [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme, [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
                  t8_element_t *elements[])
 {
 
@@ -57,9 +57,9 @@ t8_refine_p8est (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_
 
 /* Refine every third element. */
 static int
-t8_adapt_every_third_element (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                              const t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme *scheme,
-                              const int is_family, const int num_elements, t8_element_t *elements[])
+t8_adapt_every_third_element ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from, [[maybe_unused]] t8_locidx_t which_tree,
+                              const t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+                              [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements, t8_element_t *elements[])
 {
   T8_ASSERT (!is_family || num_elements == scheme->element_get_num_children (tree_class, elements[0]));
   const int level = scheme->element_get_level (tree_class, elements[0]);
