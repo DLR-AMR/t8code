@@ -1097,19 +1097,27 @@ struct t8_standalone_scheme
 
     switch (face_TEclass) {
     case T8_ECLASS_ZERO:
+#if T8_ENABLE_DEBUG
       t8_standalone_scheme<T8_ECLASS_ZERO>::element_is_valid (face);
+#endif
       return extrude_face<T8_ECLASS_ZERO> ((t8_standalone_element<T8_ECLASS_ZERO> *) face, elem, root_face);
       break;
     case T8_ECLASS_LINE:
+#if T8_ENABLE_DEBUG
       t8_standalone_scheme<T8_ECLASS_LINE>::element_is_valid (face);
+#endif
       return extrude_face<T8_ECLASS_LINE> ((t8_standalone_element<T8_ECLASS_LINE> *) face, elem, root_face);
       break;
     case T8_ECLASS_QUAD:
+#if T8_ENABLE_DEBUG
       t8_standalone_scheme<T8_ECLASS_QUAD>::element_is_valid (face);
+#endif
       return extrude_face<T8_ECLASS_QUAD> ((t8_standalone_element<T8_ECLASS_QUAD> *) face, elem, root_face);
       break;
     case T8_ECLASS_HEX:
+#if T8_ENABLE_DEBUG
       t8_standalone_scheme<T8_ECLASS_HEX>::element_is_valid (face);
+#endif
       return extrude_face<T8_ECLASS_HEX> ((t8_standalone_element<T8_ECLASS_HEX> *) face, elem, root_face);
       break;
     default:
@@ -1466,7 +1474,7 @@ struct t8_standalone_scheme
     }
 
 /* in debug mode, set sensible default values. */
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
     {
       int i;
       for (i = 0; i < length; i++) {
@@ -1535,7 +1543,7 @@ struct t8_standalone_scheme
 
   // ################################################____DEBUG____################################################
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is
    *  safe to perform any of the above algorithms on it.
    *  For example this could mean that all coordinates are in valid ranges
