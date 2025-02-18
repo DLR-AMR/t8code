@@ -127,7 +127,7 @@ add_t8_test( NAME t8_gtest_vtk_writer_parallel  SOURCES t8_gtest_main.cxx t8_IO/
 add_t8_test( NAME t8_gtest_nca_serial                   SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_nca.cxx )
 add_t8_test( NAME t8_gtest_pyra_connectivity_serial     SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_pyra_connectivity.cxx )
 add_t8_test( NAME t8_gtest_face_neigh_serial            SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_face_neigh.cxx )
-add_t8_test( NAME t8_gtest_get_linear_id_serial    SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_get_linear_id.cxx )
+add_t8_test( NAME t8_gtest_get_linear_id_serial         SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_get_linear_id.cxx )
 add_t8_test( NAME t8_gtest_ancestor_serial              SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_ancestor.cxx )
 add_t8_test( NAME t8_gtest_ancestor_id_serial           SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_ancestor_id.cxx )
 add_t8_test( NAME t8_gtest_element_count_leaves_serial  SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_element_count_leaves.cxx )

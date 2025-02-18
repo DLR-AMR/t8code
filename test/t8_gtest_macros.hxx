@@ -43,7 +43,7 @@ auto print_eclass = [] (const testing::TestParamInfo<t8_eclass> &info) { return 
  * Number of points to use in tests
  * 
  */
-#ifdef T8_ENABLE_LESS_TESTS
+#if T8CODE_TEST_LEVEL == 1
 #define T8_NUM_SAMPLE_POINTS 1000
 #else
 #define T8_NUM_SAMPLE_POINTS 10000

@@ -75,7 +75,7 @@ class class_ancestor_id: public TestDFS {
 
 TEST_P (class_ancestor_id, t8_recursive_dfs_ancestor_id)
 {
-#ifdef T8_ENABLE_LESS_TESTS
+#if T8CODE_TEST_LEVEL == 1
   const int maxlvl = 4;
 #else
   const int maxlvl = 6;

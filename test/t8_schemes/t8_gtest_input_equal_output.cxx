@@ -88,7 +88,7 @@ class class_test_equal: public TestDFS {
 
 TEST_P (class_test_equal, test_equal_dfs)
 {
-#ifdef T8_ENABLE_LESS_TESTS
+#if T8CODE_TEST_LEVEL == 1
   const int maxlvl = 3;
 #else
   const int maxlvl = 5;
