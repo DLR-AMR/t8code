@@ -356,15 +356,15 @@ class t8_search: public t8_search_base {
   }
 
   void
-  check_queries (std::vector<size_t> &new_active_queries, const t8_locidx_t ltreeid, const t8_element_t *element,
-                 const bool is_leaf, const t8_element_array_t *leaf_elements,
-                 const t8_locidx_t tree_leaf_index) override
+  check_queries ([[maybe_unused]] std::vector<size_t> &new_active_queries, [[maybe_unused]] const t8_locidx_t ltreeid, [[maybe_unused]] const t8_element_t *element,
+    [[maybe_unused]] const bool is_leaf, [[maybe_unused]] const t8_element_array_t *leaf_elements,
+    [[maybe_unused]] const t8_locidx_t tree_leaf_index) override
   {
     return;
   }
 
   void
-  update_queries (std::vector<size_t> &old_query_indices)
+  update_queries ([[maybe_unused]] std::vector<size_t> &old_query_indices)
   {
     return;
   }
@@ -661,14 +661,14 @@ class t8_partition_search: public t8_partition_search_base {
   }
 
   void
-  check_queries (std::vector<size_t> &new_active_queries, const t8_locidx_t ltreeid, const t8_element_t *element,
-                 const int pfirst, const int plast) override
+  check_queries ([[maybe_unused]] std::vector<size_t> &new_active_queries, [[maybe_unused]] const t8_locidx_t ltreeid, [[maybe_unused]] const t8_element_t *element,
+    [[maybe_unused]] const int pfirst, [[maybe_unused]] const int plast) override
   {
     return;
   }
 
   void
-  update_queries (std::vector<size_t> &old_query_indices)
+  update_queries ([[maybe_unused]] std::vector<size_t> &old_query_indices)
   {
     return;
   }
