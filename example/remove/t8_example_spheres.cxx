@@ -40,8 +40,8 @@ struct t8_adapt_data
 /* Refine, if element is within a given radius. */
 static int
 t8_adapt_callback_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                          const t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme *scheme,
-                          const int is_family, const int num_elements, t8_element_t *elements[])
+    [[maybe_unused]] const t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id, [[maybe_unused]] const t8_scheme *scheme,
+    [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements, t8_element_t *elements[])
 {
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
   T8_ASSERT (adapt_data != NULL);
@@ -61,8 +61,8 @@ t8_adapt_callback_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx
 /* Remove, element if it is within a given radius. */
 static int
 t8_adapt_callback_remove (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                          const t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme *scheme,
-                          const int is_family, const int num_elements, t8_element_t *elements[])
+    [[maybe_unused]] const t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id, [[maybe_unused]] const t8_scheme *scheme,
+    [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements, t8_element_t *elements[])
 {
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
   T8_ASSERT (adapt_data != NULL);
