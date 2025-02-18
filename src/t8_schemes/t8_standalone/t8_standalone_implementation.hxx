@@ -162,8 +162,12 @@ struct t8_standalone_scheme
   static constexpr int
   element_get_num_faces (const t8_element_t *elem) noexcept
   {
-    SC_ABORT ("This function is not implemented in this scheme yet.\n");
-    return 0;
+    T8_ASSERT (element_is_valid (elem));
+#if T8_ENABLE_DEBUG
+    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
+    T8_ASSERT (0 <= el->level && el->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
+#endif
+    return T8_ELEMENT_NUM_FACES[TEclass];
   }
 
   /** Compute the maximum number of faces of a given element and all of its
@@ -174,8 +178,12 @@ struct t8_standalone_scheme
   static constexpr int
   element_get_max_num_faces (const t8_element_t *elem) noexcept
   {
-    SC_ABORT ("This function is not implemented in this scheme yet.\n");
-    return 0;
+    T8_ASSERT (element_is_valid (elem));
+#if T8_ENABLE_DEBUG
+    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
+    T8_ASSERT (0 <= el->level && el->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
+#endif
+    return T8_ELEMENT_NUM_FACES[TEclass];
   }
 
   /** Return the shape of an allocated element according its type.
@@ -212,8 +220,10 @@ struct t8_standalone_scheme
   static constexpr int
   element_get_face_corner (const t8_element_t *element, const int face, const int corner) noexcept
   {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0;
+    T8_ASSERT (element_is_valid (element));
+    const int face_sign = face % 2;
+    const int face_dim = face / 2;
+    return get_face_corner_index (corner, face_sign, face_dim);
   }
 
   /** Return the face numbers of the faces sharing an element's corner.
@@ -231,8 +241,7 @@ struct t8_standalone_scheme
   static constexpr int
   element_get_corner_face (const t8_element_t *element, const int corner, const int face) noexcept
   {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0;
+    return 2 * face + ((corner & (1 << face)) >> face);
   }
 
   /** Compute the shape of the face of an element.
@@ -246,8 +255,19 @@ struct t8_standalone_scheme
   static constexpr t8_element_shape_t
   element_get_face_shape (const t8_element_t *elem, const int face) noexcept
   {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return T8_ECLASS_ZERO;
+    T8_ASSERT (element_is_valid (elem));
+    switch (TEclass) {
+    case T8_ECLASS_VERTEX:
+      SC_ABORT ("Vertices do not have faces.\n");
+    case T8_ECLASS_LINE:
+      return T8_ECLASS_VERTEX;
+    case T8_ECLASS_QUAD:
+      return T8_ECLASS_LINE;
+    case T8_ECLASS_HEX:
+      return T8_ECLASS_QUAD;
+    default:
+      SC_ABORT ("This function is not implemented yet.\n");
+    }
   }
 
   // ################################################____GENERAL HELPER____################################################
@@ -664,8 +684,9 @@ struct t8_standalone_scheme
   static constexpr int
   element_get_num_face_children (const t8_element_t *elem, const int face) noexcept
   {
-    SC_ABORT ("This function is not implemented in this scheme yet.\n");
-    return 0;
+    T8_ASSERT (t8_standalone_scheme<TEclass>::element_is_valid (elem));
+    // Not true anymore for 4D with pyramids as faces
+    return (TEclass == T8_ECLASS_VERTEX) ? 0 : 1 << (T8_ELEMENT_DIM[TEclass] - 1);
   }
 
   /** Given an element and a face of the element, compute all children of
@@ -686,7 +707,23 @@ struct t8_standalone_scheme
   element_get_children_at_face (const t8_element_t *elem, int face, t8_element_t *children[], const int num_children,
                                 int *child_indices) noexcept
   {
-    SC_ABORT ("This function is not implemented in this scheme yet.\n");
+    T8_ASSERT (element_is_valid (elem));
+    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
+    t8_standalone_element<TEclass> **children_els = (t8_standalone_element<TEclass> **) children;
+    int local_indices[T8_ELEMENT_NUM_CHILDREN[TEclass]];
+
+    if (child_indices == NULL) {
+      child_indices = local_indices;
+    }
+    const int face_sign = face % 2;
+    const int face_dim = face / 2;
+    for (int ifacechild = 0; ifacechild < num_children; ifacechild++) {
+      child_indices[ifacechild] = get_face_corner_index (ifacechild, face_sign, face_dim);
+    }
+    for (int ifacechild = num_children - 1; ifacechild >= 0; ifacechild--) {
+      t8_standalone_scheme<TEclass>::element_get_child ((const t8_element_t *) el, child_indices[ifacechild],
+                                                        (t8_element_t *) children_els[ifacechild]);
+    }
   }
 
   /** Given a face of an element and a child number of a child of that face, return the face number
@@ -712,8 +749,7 @@ struct t8_standalone_scheme
   static constexpr int
   element_face_get_child_face (const t8_element_t *elem, const int face, const int face_child) noexcept
   {
-    SC_ABORT ("This function is not implemented in this scheme yet.\n");
-    return 0;
+    return face;
   }
 
   /** Given a face of an element return the face number
@@ -729,8 +765,20 @@ struct t8_standalone_scheme
   static constexpr int
   element_face_get_parent_face (const t8_element_t *elem, const int face) noexcept
   {
-    SC_ABORT ("This function is not implemented in this scheme yet.\n");
-    return 0;
+    T8_ASSERT (element_is_valid (elem));
+    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
+    if (el->level == 0)
+      return -1;
+    if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      if ((face % 2) != ((el->coords[face / 2]) >> (T8_ELEMENT_MAXLEVEL[TEclass] - el->level)) % 2) {
+        return -1;
+      }
+      return face;
+    }
+    else {
+      SC_ABORT ("Only implemented for hypercubes.\n");
+      return 0;
+    }
   }
 
   /** Construct the first descendant of an element at a given level that touches a given face.
@@ -745,7 +793,28 @@ struct t8_standalone_scheme
   element_get_first_descendant_face (const t8_element_t *elem, const int face, t8_element_t *first_desc,
                                      const t8_element_level level) noexcept
   {
-    SC_ABORT ("This function is not implemented in this scheme yet.\n");
+    T8_ASSERT (element_is_valid (elem));
+    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
+    t8_standalone_element<TEclass> *first_descendant = (t8_standalone_element<TEclass> *) first_desc;
+
+    first_descendant->level = level;
+    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      SC_ABORT ("Only implemented for hypercubes.\n");
+    }
+    for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
+      first_descendant->coords[idim] = el->coords[idim];
+    }
+    const int face_is_1_boundary = face % 2;
+
+    if (face_is_1_boundary) {  //the face is a xi=1 boundary
+      int facenormal_dim;
+      facenormal_dim = face / 2;
+
+      t8_element_coord coord_offset = t8_standalone_scheme<TEclass>::element_get_len (el->level)
+                                      - t8_standalone_scheme<TEclass>::element_get_len (level);
+
+      first_descendant->coords[facenormal_dim] += coord_offset;
+    }
   }
 
   /** Construct the last descendant of an element at a given level that touches a given face.
@@ -760,7 +829,22 @@ struct t8_standalone_scheme
   element_get_last_descendant_face (const t8_element_t *elem, const int face, t8_element_t *last_desc,
                                     const t8_element_level level) noexcept
   {
-    SC_ABORT ("This function is not implemented in this scheme yet.\n");
+    T8_ASSERT (element_is_valid (elem));
+    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
+    t8_standalone_element<TEclass> *last_descendant = (t8_standalone_element<TEclass> *) last_desc;
+
+    last_descendant->level = level;
+    t8_element_coord coord_offset = t8_standalone_scheme<TEclass>::element_get_len (el->level)
+                                    - t8_standalone_scheme<TEclass>::element_get_len (level);
+
+    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      SC_ABORT ("Only implemented for hypercubes.\n");
+    }
+
+    for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
+      const int multiplier = (idim == face / 2) ? face % 2 : 1;
+      last_descendant->coords[idim] = el->coords[idim] + multiplier * coord_offset;
+    }
   }
 
   // ################################################____FACE NEIGHBOR____################################################
@@ -774,8 +858,46 @@ struct t8_standalone_scheme
   static constexpr int
   element_is_root_boundary (const t8_element_t *elem, const int face) noexcept
   {
-    SC_ABORT ("This function is not implemented in this scheme yet.\n");
-    return 0;
+    T8_ASSERT (element_is_valid (elem));
+    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
+
+    if (!element_is_face_internal (el, face)) {
+      const int dimid = element_face_normal_dim (el, face);
+      if (element_face_is_1st_boundary (el, face)) {
+        // a_d must be full of 1s up to level l
+        const t8_element_coord coord_offset = get_root_len () - element_get_len (el->level);
+        if (el->coords[dimid] != coord_offset) {
+          return 0;
+        }
+        // all edges containing dimid must be fulfilled with x_d-a_d >= x_j-a_j or x_j-a_j <= x_d-a_d
+        if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+          SC_ABORT ("Only implemented for hypercubes.\n");
+        }
+      }
+      else {
+        //zeroboundary
+        // x_d must be full of 0s up to level l
+        if (el->coords[dimid] != 0) {
+          return 0;
+        }
+        // all edges containing dimid must be fulfilled with x_d-a_d <= x_j-a_j or x_j-a_j >= x_d-a_d
+        if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+          SC_ABORT ("Only implemented for hypercubes.\n");
+        }
+      }
+    }
+    else {
+      // internalface
+      // get graph edge e (or ieq) = (xi,xj)
+      // ai = aj is necessary and sufficient
+      if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+        SC_ABORT ("Only implemented for hypercubes.\n");
+      }
+      else {
+        SC_ABORT ("Cubes should not have internal faces!\n");
+      }
+    }
+    return 1;
   }
 
   /** Given an element and a face of this element. If the face lies on the
@@ -794,8 +916,8 @@ struct t8_standalone_scheme
   static constexpr int
   element_get_tree_face (const t8_element_t *elem, const int face) noexcept
   {
-    SC_ABORT ("This function is not implemented in this scheme yet.\n");
-    return 0;
+    T8_ASSERT (element_is_valid (elem));
+    return face;
   }
 
   /** Construct the face neighbor of a given element if this face neighbor
@@ -817,8 +939,29 @@ struct t8_standalone_scheme
   element_get_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, const int face,
                                     int *neigh_face) noexcept
   {
-    SC_ABORT ("This function is not implemented in this scheme yet.\n");
-    return 0;
+    T8_ASSERT (element_is_valid (elem));
+    T8_ASSERT (element_get_level (elem) >= 0);
+    element_copy (elem, neigh);
+
+    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
+    t8_standalone_element<TEclass> *neighbor = (t8_standalone_element<TEclass> *) neigh;
+
+    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      SC_ABORT ("Only implemented for hypercubes.\n");
+    }
+    const int facenormal_dim = face / 2;
+    const int sign = face % 2 ? 1 : -1;
+
+    /**Adapt coordinates*/
+    const t8_element_coord length = element_get_len (el->level);
+
+    neighbor->coords[facenormal_dim] += length * sign;
+
+    *neigh_face = face ^ 1;
+
+    T8_ASSERT (element_is_valid ((t8_element_t *) neighbor));
+    /**check inside root*/
+    return element_is_inside_root (neighbor);
   }
 
   // ################################################____TREE FACE TRANSFORMATION____################################################  */
@@ -845,12 +988,94 @@ struct t8_standalone_scheme
    * \note \a elem1 and \a elem2 may point to the same element.
    */
   static constexpr void
-  element_transform_face (const t8_element_t *elem1, t8_element_t *elem2, const int orientation, const int sign,
+  element_transform_face (const t8_element_t *elem1, t8_element_t *elem2, int orientation, const int sign,
                           const int is_smaller_face) noexcept
   {
-    SC_ABORT ("This function is not implemented in this scheme yet.\n");
-  }
+    T8_ASSERT (element_is_valid (elem1));
+    const t8_standalone_element<TEclass> *el1 = (const t8_standalone_element<TEclass> *) elem1;
+    t8_standalone_element<TEclass> *el2 = (t8_standalone_element<TEclass> *) elem2;
 
+    if constexpr (TEclass == T8_ECLASS_VERTEX) {
+      return;
+    }
+    const int level = el1->level;
+    if constexpr (TEclass == T8_ECLASS_LINE) {
+      element_copy ((const t8_element_t *) el1, (t8_element_t *) el2);
+      if (orientation) {
+        const t8_element_coord total_length = 1 << T8_ELEMENT_MAXLEVEL[TEclass];
+        const t8_element_coord refined_length = 1 << (T8_ELEMENT_MAXLEVEL[TEclass] - level);
+        el2->coords[0] = total_length - refined_length - el2->coords[0];
+      }
+      return;
+    }
+    if constexpr (TEclass == T8_ECLASS_QUAD) {
+      t8_standalone_element<TEclass> tmp;
+      if (sign) {
+        /* The tree faces have the same topological orientation, and
+      * thus we have to perform a coordinate switch. */
+        /* We use p as storage, since el1 and el2 are allowed to
+      * point to the same quad */
+        element_copy ((const t8_element_t *) el1, (t8_element_t *) &tmp);
+        tmp.coords[0] = el1->coords[1];
+        tmp.coords[1] = el1->coords[0];
+      }
+      else {
+        element_copy ((const t8_element_t *) el1, (t8_element_t *) &tmp);
+      }
+
+      /*
+    * The faces of the root quadrant are enumerated like this:
+    *
+    *   v_2      v_3
+    *     x -->-- x
+    *     |       |
+    *     ^       ^
+    *     |       |
+    *     x -->-- x
+    *   v_0      v_1
+    *
+    * Orientation is the corner number of the bigger face that coincides
+    * with the corner v_0 of the smaller face.
+    */
+      /* If this face is not smaller, switch the orientation:
+    *  sign = 0   sign = 1
+    *  0 -> 0     0 -> 0
+    *  1 -> 2     1 -> 1
+    *  2 -> 1     2 -> 2
+    *  3 -> 3     3 -> 3
+    */
+      if (!is_smaller_face && (orientation == 1 || orientation == 2) && !sign) {
+        orientation = 3 - orientation;
+      }
+      const t8_element_coord root_len = get_root_len ();
+      const t8_element_coord h = element_get_len (el1->level);
+      switch (orientation) {
+      case 0: /* Nothing to do */
+        el2->coords[0] = tmp.coords[0];
+        el2->coords[1] = tmp.coords[1];
+        break;
+      case 1:
+        el2->coords[0] = root_len - tmp.coords[1] - h;
+        el2->coords[1] = tmp.coords[0];
+        break;
+      case 2:
+        el2->coords[0] = tmp.coords[1];
+        el2->coords[1] = root_len - tmp.coords[0] - h;
+        break;
+      case 3:
+        el2->coords[0] = root_len - tmp.coords[0] - h;
+        el2->coords[1] = root_len - tmp.coords[1] - h;
+        break;
+      default:
+        SC_ABORT_NOT_REACHED ();
+      }
+      el2->level = tmp.level;
+      return;
+    }
+    if constexpr (TEclass == T8_ECLASS_TRIANGLE) {
+      SC_ABORT ("Only implemented for hypercubes.\n");
+    }
+  }
   /** Given a boundary face inside a root tree's face construct
    *  the element inside the root tree that has the given face as a
    *  face.
@@ -868,8 +1093,32 @@ struct t8_standalone_scheme
   element_extrude_face (const t8_element_t *face, t8_element_t *elem, const int root_face,
                         const t8_scheme *face_scheme) noexcept
   {
-    SC_ABORT ("This function is not implemented in this scheme yet.\n");
-    return 0;
+    const t8_eclass_t face_TEclass = get_face_eclass ();
+
+    switch (face_TEclass) {
+    case T8_ECLASS_ZERO:
+      T8_ASSERT (t8_standalone_scheme<T8_ECLASS_ZERO>::element_is_valid (face));
+      return extrude_face<T8_ECLASS_ZERO> ((t8_standalone_element<T8_ECLASS_ZERO> *) face, elem, root_face);
+      break;
+    case T8_ECLASS_LINE:
+      T8_ASSERT (t8_standalone_scheme<T8_ECLASS_LINE>::element_is_valid (face));
+      return extrude_face<T8_ECLASS_LINE> ((t8_standalone_element<T8_ECLASS_LINE> *) face, elem, root_face);
+      break;
+    case T8_ECLASS_QUAD:
+      T8_ASSERT (t8_standalone_scheme<T8_ECLASS_QUAD>::element_is_valid (face));
+      return extrude_face<T8_ECLASS_QUAD> ((t8_standalone_element<T8_ECLASS_QUAD> *) face, elem, root_face);
+      break;
+    case T8_ECLASS_HEX:
+      T8_ASSERT (t8_standalone_scheme<T8_ECLASS_HEX>::element_is_valid (face));
+      return extrude_face<T8_ECLASS_HEX> ((t8_standalone_element<T8_ECLASS_HEX> *) face, elem, root_face);
+      break;
+    default:
+      if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+        SC_ABORT ("Only implemented for hypercubes.\n");
+      }
+      return 0;
+      break;
+    }
   }
 
   /** Construct the boundary element at a specific face.
@@ -879,7 +1128,7 @@ struct t8_standalone_scheme
    * \param [in,out] boundary An allocated element of dimension of \a element
    *                      minus 1. The entries will be filled with the entries
    *                      of the face of \a element.
-   * \param [in] boundary_scheme The scheme for the eclass of the boundary face.
+   * \param [in] boundary_scheme The scheme collection 
    * If \a elem is of class T8_ECLASS_VERTEX, then \a boundary must be NULL
    * and will not be modified.
    */
@@ -887,7 +1136,29 @@ struct t8_standalone_scheme
   element_get_boundary_face (const t8_element_t *elem, const int face, t8_element_t *boundary,
                              const t8_scheme *boundary_scheme) noexcept
   {
-    SC_ABORT ("This function is not implemented in this scheme yet.\n");
+    T8_ASSERT (element_is_valid (elem));
+    int root_face = element_get_tree_face (elem, face);
+    const t8_eclass_t face_TEclass = get_face_eclass ();
+
+    switch (face_TEclass) {
+    case T8_ECLASS_VERTEX:
+      compute_boundary_face<T8_ECLASS_VERTEX> (elem, root_face, (t8_standalone_element<T8_ECLASS_VERTEX> *) boundary);
+      break;
+    case T8_ECLASS_LINE:
+      compute_boundary_face<T8_ECLASS_LINE> (elem, root_face, (t8_standalone_element<T8_ECLASS_LINE> *) boundary);
+      break;
+    case T8_ECLASS_QUAD:
+      compute_boundary_face<T8_ECLASS_QUAD> (elem, root_face, (t8_standalone_element<T8_ECLASS_QUAD> *) boundary);
+      break;
+    case T8_ECLASS_HEX:
+      compute_boundary_face<T8_ECLASS_HEX> (elem, root_face, (t8_standalone_element<T8_ECLASS_HEX> *) boundary);
+      break;
+    default:
+      if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+        SC_ABORT ("Only implemented for hypercubes.\n");
+      }
+      break;
+    }
   }
 
   // ################################################____LINEAR ID____################################################
@@ -1195,7 +1466,7 @@ struct t8_standalone_scheme
     }
 
 /* in debug mode, set sensible default values. */
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
     {
       int i;
       for (i = 0; i < length; i++) {
@@ -1264,7 +1535,7 @@ struct t8_standalone_scheme
 
   // ################################################____DEBUG____################################################
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is
    *  safe to perform any of the above algorithms on it.
    *  For example this could mean that all coordinates are in valid ranges
@@ -1287,7 +1558,7 @@ struct t8_standalone_scheme
     T8_ASSERT (elem != NULL);
 
     const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
-    const t8_element_coord max_coord = get_root_len () - 1;
+    const t8_element_coord max_coord = 2LL * get_root_len () - 1;
 
     /* Check the level */
     int is_valid = 0 <= el->level && el->level <= T8_ELEMENT_MAXLEVEL[TEclass];
@@ -1457,6 +1728,7 @@ struct t8_standalone_scheme
   element_get_ancestor (const t8_standalone_element<TEclass> *elem, const t8_element_level level,
                         t8_standalone_element<TEclass> *ancestor) noexcept
   {
+    T8_ASSERT (element_is_valid ((t8_element_t *) elem));
     T8_ASSERT (0 <= level && level <= elem->level);
     if (elem != ancestor) {
       element_copy ((const t8_element_t *) elem, (t8_element_t *) ancestor);
@@ -1614,6 +1886,243 @@ struct t8_standalone_scheme
         coords[idim] = elem->coords[idim] + ((vertex & (1 << idim)) >> idim) * element_get_len (elem->level);
       }
     }
+  }
+
+  /** Check if the element is inside the root tree
+   * \param [in] elem  The input element.
+   * \return 1 if the element is inside the root tree, 0 otherwise.
+   */
+  static inline int
+  element_is_inside_root (const t8_standalone_element<TEclass> *elem) noexcept
+  {
+    T8_ASSERT (element_is_valid ((const t8_element_t *) elem));
+
+    t8_standalone_element<TEclass> ancestor;
+    t8_standalone_scheme<TEclass>::element_get_ancestor (elem, 0, &ancestor);
+
+    /**Check that we are in the correct cube*/
+    for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
+      if (ancestor.coords[idim])
+        return 0;
+    }
+    return 1;
+  }
+
+  /** Check if the face is an internal face
+   * \param [in] elem  The input element.
+   * \param [in] face  The input face.
+   * \return 1 if the face is internal, 0 otherwise.
+   */
+  static constexpr int
+  element_is_face_internal (const t8_standalone_element<TEclass> *elem, const int face) noexcept
+  {
+    if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      return 0;
+    }
+    else {
+      SC_ABORT ("Only implemented for hypercubes.\n");
+    }
+  }
+
+  /** Get the normal dim of the face
+   * \param [in] elem  The input element.
+   * \param [in] face  The input face.
+   * \return          The normal dimension of the face.
+   */
+  static constexpr int
+  element_face_normal_dim (const t8_standalone_element<TEclass> *elem, const int face) noexcept
+  {
+    if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      return face / 2;
+    }
+    else {
+      SC_ABORT ("Only implemented for hypercubes.\n");
+    }
+  }
+
+  /** Get the faces first boundary
+   * \param [in] elem  The input element.
+   * \param [in] face  The input face.
+   * \return          The first boundary of the face.
+   */
+  static constexpr int
+  element_face_is_1st_boundary (const t8_standalone_element<TEclass> *elem, const int face) noexcept
+  {
+    if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      return face % 2;
+    }
+    else {
+      SC_ABORT ("Only implemented for hypercubes.\n");
+    }
+  }
+
+  /** Get the eclass of the face for the element eclass
+   * \return The eclass of the face.
+   * Note: Only implemented for hypercubes
+   */
+  static constexpr t8_eclass_t
+  get_face_eclass () noexcept
+  {
+    switch (TEclass) {
+    case T8_ECLASS_VERTEX:
+      SC_ABORT_NOT_REACHED ();
+      return T8_ECLASS_INVALID;
+    case T8_ECLASS_LINE:
+      return T8_ECLASS_VERTEX;
+    case T8_ECLASS_QUAD:
+      return T8_ECLASS_LINE;
+    case T8_ECLASS_HEX:
+      return T8_ECLASS_QUAD;
+    default:
+      if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+        SC_ABORT ("Only implemented for hypercubes.\n");
+      }
+      return T8_ECLASS_INVALID;
+    }
+  }
+
+  /** Construct the boundary element at a specific face.
+   * \param [in] elem           The input element.
+   * \param [in] root_face      The index of the face of the root tree in which \a face
+   *                            lies.
+   * \param [in,out] boundary   An allocated element of dimension of \a element
+   *                            minus 1. The entries will be filled with the entries
+   *                            of the face of \a element.
+   */
+  template <t8_eclass_t face_TEclass>
+  static constexpr void
+  compute_boundary_face (const t8_element_t *elem, const int root_face,
+                         t8_standalone_element<face_TEclass> *boundary) noexcept
+  {
+    T8_ASSERT (element_is_valid (elem));
+    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
+
+    if constexpr (T8_ELEMENT_DIM[face_TEclass] >= T8_ELEMENT_DIM[TEclass]) {
+      return;
+    }
+
+    boundary->level = el->level;
+    for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
+      int ifacedim;
+      if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+        const int facenormal_dim = root_face / 2;
+        if (idim == facenormal_dim) {
+          ifacedim = -1;
+        }
+        else if (idim > facenormal_dim) {
+          ifacedim = idim - 1;
+        }
+        else {
+          ifacedim = idim;
+        }
+      }
+      else {
+        SC_ABORT ("Only implemented for hypercubes.\n");
+      }
+      if (ifacedim != -1) {
+        if constexpr (face_TEclass != T8_ECLASS_VERTEX && T8_ELEMENT_DIM[face_TEclass] < T8_ELEMENT_DIM[TEclass]) {
+          boundary->coords[ifacedim] = el->coords[idim]
+                                       << (T8_ELEMENT_MAXLEVEL[face_TEclass] - T8_ELEMENT_MAXLEVEL[TEclass]);
+        }
+        else {
+          SC_ABORT_NOT_REACHED ();
+        }
+      }
+    }
+    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      SC_ABORT ("Only implemented for hypercubes.\n");
+    }
+    T8_ASSERT (t8_standalone_scheme<face_TEclass>::element_is_valid ((t8_element_t *) boundary));
+  }
+
+  /** Given a boundary face inside a root tree's face construct
+   *  the element inside the root tree that has the given face as a
+   *  face.
+   * \param [in] face     A face element.
+   * \param [in,out] elem An allocated element. The entries will be filled with
+   *                      the data of the element that has \a face as a face and
+   *                      lies within the root tree.
+   * \param [in] root_face The index of the face of the root tree in which \a face
+   *                      lies.
+   * \return              The face number of the face of \a elem that coincides
+   *                      with \a face.
+   */
+  template <t8_eclass_t face_TEclass>
+  static constexpr int
+  extrude_face (const t8_standalone_element<face_TEclass> *face, t8_element_t *elem, int root_face) noexcept
+  {
+    t8_standalone_element<TEclass> *el = (t8_standalone_element<TEclass> *) elem;
+    /** Loop over elemdim, get corresponding facedim and set elem coord accordingly 
+   * If elemdim is faceboundary, find out if 0 or 1 boundary
+   */
+    T8_ASSERT (0 <= face->level && face->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
+    if constexpr (T8_ELEMENT_DIM[face_TEclass] >= T8_ELEMENT_DIM[TEclass]) {
+      return -1;
+    }
+
+    el->level = face->level;
+    const t8_element_coord h = get_root_len () - element_get_len (el->level);
+    for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
+      int ifacedim;
+      if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+        const int facenormal_dim = root_face / 2;
+        if (idim == facenormal_dim) {
+          ifacedim = -1;
+        }
+        else if (idim > facenormal_dim) {
+          ifacedim = idim - 1;
+        }
+        else {
+          ifacedim = idim;
+        }
+      }
+      else {
+        SC_ABORT ("Only implemented for hypercubes.\n");
+      }
+      if (ifacedim != -1) {
+        if constexpr (face_TEclass != T8_ECLASS_VERTEX && T8_ELEMENT_DIM[face_TEclass] < T8_ELEMENT_DIM[TEclass]) {
+          el->coords[idim]
+            = face->coords[ifacedim] >> (T8_ELEMENT_MAXLEVEL[face_TEclass] - T8_ELEMENT_MAXLEVEL[TEclass]);
+        }
+        else {
+          SC_ABORT_NOT_REACHED ();
+        }
+      }
+      else {
+        int is_1st_boundary;
+        if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+          is_1st_boundary = root_face % 2;
+        }
+        else {
+          SC_ABORT ("Only implemented for hypercubes.\n");
+        }
+        if (is_1st_boundary) {
+          el->coords[idim] = h;
+        }
+        else {
+          el->coords[idim] = 0;
+        }
+      }
+    }
+    if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      return root_face;
+    }
+    else {
+      SC_ABORT ("Only implemented for hypercubes.\n");
+    }
+  }
+
+  /* Compute the index of the corner of a face 
+  \ref element_get_face_corner
+  */
+  static constexpr int
+  get_face_corner_index (int corner, int face_sign, int face_dim) noexcept
+  {
+    /* corner aaaabb, iface = x, then element_corner = aaaaxbb*/
+    const t8_element_coord first_part = (corner >> face_dim) << (face_dim + 1);
+    const t8_element_coord last_part = corner & ((1 << face_dim) - 1);
+    const t8_element_coord face_part = face_sign << face_dim;
+    return first_part + face_part + last_part;
   }
 };
 
