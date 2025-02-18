@@ -76,7 +76,7 @@ t8_cmesh_triangle_read_next_line (char **line, size_t *n, FILE *fp)
  * On success the index of the first node is returned (0 or 1).
  * On failure -1 is returned. */
 static int
-t8_cmesh_triangle_read_nodes (t8_cmesh_t cmesh, char *filename, double **vertices, long *num_corners, int dim)
+t8_cmesh_triangle_read_nodes ([[maybe_unused]] t8_cmesh_t cmesh, char *filename, double **vertices, long *num_corners, int dim)
 {
   FILE *fp;
   char *line = (char *) malloc (1024);
@@ -511,7 +511,7 @@ die_neigh:
 
 /* TODO: remove do_dup argument */
 static t8_cmesh_t
-t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_Comm comm, int do_dup, int dim)
+t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_Comm comm, [[maybe_unused]] int do_dup, int dim)
 {
   int mpirank, mpisize, mpiret;
   t8_cmesh_t cmesh;
@@ -591,7 +591,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_C
 }
 
 static t8_cmesh_t
-t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix, int partition, sc_MPI_Comm comm, int do_dup, int dim,
+t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix, int partition, sc_MPI_Comm comm, [[maybe_unused]] int do_dup, int dim,
                                             sc_flopinfo_t *fi, sc_flopinfo_t *snapshot, sc_statinfo_t *stats,
                                             int statindex)
 {

@@ -35,7 +35,7 @@
  *  Opaque pointer for C interface.
  *  Detailed documentation at \ref t8_scheme.
  */
-typedef class t8_scheme t8_scheme_c;
+typedef struct t8_scheme t8_scheme_c;
 
 T8_EXTERN_C_BEGIN ();
 

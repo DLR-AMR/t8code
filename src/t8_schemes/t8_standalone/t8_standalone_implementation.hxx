@@ -1584,7 +1584,7 @@ struct t8_standalone_scheme
    * Note Caller is responsible for taking the absolute value of leveldiff
   */
   static constexpr t8_linearidx_t
-  num_descendants_at_leveldiff (const t8_element_t *elem, const t8_element_level leveldiff) noexcept
+  num_descendants_at_leveldiff ([[maybe_unused]] const t8_element_t *elem, const t8_element_level leveldiff) noexcept
   {
     if (leveldiff < 0)
       return 0;
