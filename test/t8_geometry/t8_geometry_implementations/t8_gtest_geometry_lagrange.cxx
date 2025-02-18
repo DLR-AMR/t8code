@@ -273,8 +273,8 @@ TEST (test_geometry_lagrange, incompatible_geometry)
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   /* Register the t8_geometry_lagrange geometry to this cmesh. */
   t8_cmesh_register_geometry<t8_geometry_lagrange> (cmesh);
-  /* Should return true since the t8_geometry_lagrange geometry is compatible with quads. */
-  ASSERT_TRUE (t8_cmesh_validate_geometry (cmesh));
+  /* Should return 0 since the t8_geometry_lagrange geometry is compatible with quads. */
+  ASSERT_EQ (t8_cmesh_validate_geometry (cmesh), 0);
   t8_cmesh_destroy (&cmesh);
 
   /* Build a simple set geometries for the tree. */
@@ -293,8 +293,8 @@ TEST (test_geometry_lagrange, incompatible_geometry)
    * We register it after committing because it would throw an assertion and we do not have death tests.*/
   t8_cmesh_register_geometry<t8_geometry_lagrange> (cmesh);
   /* Check validity after committing to circumvent the assertion.
-   * Should return false since the t8_geometry_lagrange geometry is not compatible with prisms. */
-  ASSERT_FALSE (t8_cmesh_validate_geometry (cmesh));
+   * Should return 2 since the t8_geometry_lagrange geometry is not compatible with prisms. */
+  ASSERT_EQ (t8_cmesh_validate_geometry (cmesh), 2);
   t8_cmesh_destroy (&cmesh);
 
   degree = T8_GEOMETRY_MAX_POLYNOMIAL_DEGREE + 1;
@@ -310,8 +310,8 @@ TEST (test_geometry_lagrange, incompatible_geometry)
    * We register it after committing because it would throw an assertion and we do not have death tests.*/
   t8_cmesh_register_geometry<t8_geometry_lagrange> (cmesh);
   /* Check validity after committing to circumvent the assertion.
-   * Should return false since the maximum polynomial degree is exceeded. */
-  ASSERT_FALSE (t8_cmesh_validate_geometry (cmesh));
+   * Should return 2 since the maximum polynomial degree is exceeded. */
+  ASSERT_EQ (t8_cmesh_validate_geometry (cmesh), 2);
   t8_cmesh_destroy (&cmesh);
 }
 #endif /* T8_ENABLE_DEBUG */

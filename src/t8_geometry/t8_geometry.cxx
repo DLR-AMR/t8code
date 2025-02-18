@@ -69,3 +69,12 @@ t8_geometry_tree_negative_volume (const t8_cmesh_t cmesh, const t8_gloidx_t gtre
 {
   return cmesh->geometry_handler->tree_negative_volume (cmesh, gtreeid);
 }
+
+int
+t8_geometry_get_num_geometries (const t8_cmesh_t cmesh)
+{
+  if (cmesh->geometry_handler == nullptr) {
+    return 0;
+  }
+  return cmesh->geometry_handler->get_num_geometries ();
+}

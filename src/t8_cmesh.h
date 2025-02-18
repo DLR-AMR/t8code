@@ -99,45 +99,34 @@ int
 t8_cmesh_is_committed (const t8_cmesh_t cmesh);
 
 #ifdef T8_ENABLE_DEBUG
-/** Check the geometry of the mesh for validity.
- * \param [in] cmesh            This cmesh is examined.
- * \return                      True if the geometry of the cmesh is valid.
+/** Check whether all trees in a cmesh are compatible
+ * with their geometry and if they have positive volumes.
+ *
+ * \param [in] cmesh                      This cmesh is examined.
+ * \return                                Returns 0 if all trees are valid. 
+ *                                        Returns also 0 if no geometries are registered yet,
+ *                                        since the validity computation depends on the used geometry.
+ *                                        Returns 2 if an incompatible geometry was found.
+ *                                        Returns 1 if all geometries are compatible but
+ *                                        a negative volume was found.
  */
 int
 t8_cmesh_validate_geometry (const t8_cmesh_t cmesh);
 #endif
 
-/** Given a set of vertex coordinates for a tree of a given eclass.
- * Query whether the geometric volume of the tree with this coordinates
- * would be negative.
- * \param [in]  eclass          The eclass of a tree.
- * \param [in]  vertices        The coordinates of the tree's vertices.
- * \param [in]  num_vertices    The number of vertices. \a vertices must hold
- *                              3 * \a num_vertices many doubles.
- *                              \a num_vertices must match \ref t8_eclass_num_vertices[\a eclass]
- * \return                      True if the geometric volume describe by \a vertices is negative.
- *                              False otherwise.
- * Returns true if a tree of the given eclass with the given vertex
- * coordinates does have negative volume.
- */
-/* TODO: write a test for this function */
-int
-t8_cmesh_tree_vertices_negative_volume (const t8_eclass_t eclass, const double *vertices, const int num_vertices);
-
-/* TODO: Currently it is not possible to destroy set_from before
- *       cmesh is destroyed. */
 /** This function sets a cmesh to be derived from.
  * The default is to create a cmesh standalone by specifying all data manually.
  * A coarse mesh can also be constructed by deriving it from an existing one.
  * The derivation from another cmesh may optionally be combined with a
  * repartition or uniform refinement of each tree.
  * This function overrides a previously set cmesh to be derived from.
+ * TODO: Currently it is not possible to destroy \a set_from before
+ *       cmesh is destroyed.
  * \param [in,out] cmesh        Must be initialized, but not committed.
  *                              May even be NULL to revert to standalone.
- * \param [in,out] set_from     Reference counter on this cmesh is bumped.
- *                              It will be unbumped by \ref t8_cmesh_commit,
- *                              after which \a from is no longer remembered.
- *                              Other than that the from object is not changed.
+ * \param [in] set_from         cmesh to be derived from. \a cmesh takes ownership of \a set_from.
+ *                              \a set_from will be unreferenced after \ref t8_cmesh_commit.
+ *                              \a set_from can be kept by manually referencing it. 
  */
 void
 t8_cmesh_set_derive (t8_cmesh_t cmesh, t8_cmesh_t set_from);
@@ -338,6 +327,16 @@ t8_cmesh_set_join (t8_cmesh_t cmesh, t8_gloidx_t gtree1, t8_gloidx_t gtree2, int
 void
 t8_cmesh_set_profiling (t8_cmesh_t cmesh, int set_profiling);
 
+/** Check whether two given cmeshes carry the same information, even if the order of trees does not match.
+ * 
+ * \param [in] cmesh_a            The first of the two cmeshes to be checked.
+ * \param [in] cmesh_b            The second of the two cmeshes to be checked
+ * \param [in] same_tree_order    Specify whether the order of trees is the same in both cmeshes.
+ * \return                        True if both cmeshes carry the same information.
+ */
+int
+t8_cmesh_is_equal_ext (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b, const int same_tree_order);
+
 /* returns true if cmesh_a equals cmesh_b */
 /* TODO: document
  * collective or serial */
@@ -351,14 +350,22 @@ t8_cmesh_set_profiling (t8_cmesh_t cmesh, int set_profiling);
  * This function works on committed and uncommitted cmeshes.
  */
 int
-t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b);
+t8_cmesh_is_equal (const t8_cmesh_t cmesh_a, const t8_cmesh_t cmesh_b);
 
 /** Check whether a cmesh is empty on all processes.
  * \param [in]  cmesh           A committed cmesh.
  * \return                      True (non-zero) if and only if the cmesh has trees at all.
  */
 int
-t8_cmesh_is_empty (t8_cmesh_t cmesh);
+t8_cmesh_is_empty (const t8_cmesh_t cmesh);
+
+/** Overrides the negative volume check during \ref t8_cmesh_commit.
+ * This way cmesh trees are allowed to have negative volumes.
+ * Use with caution.
+ * \param [in] cmesh                    An uncommitted cmesh.
+ */
+void
+t8_cmesh_allow_negative_volumes (t8_cmesh_t cmesh);
 
 /** Broadcast a cmesh structure that exists only on one process to all
  *  processes in the cmesh's communicator.
