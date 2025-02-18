@@ -98,8 +98,8 @@ struct t8_geometry_sincos: public t8_geometry
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double *out_coords) const
+  t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
+                    const size_t num_coords, double *out_coords) const
   {
     for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
       const int offset_2d = 2 * i_coord;
@@ -118,8 +118,9 @@ struct t8_geometry_sincos: public t8_geometry
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid, [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
-    [[maybe_unused]] double *jacobian) const
+  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                             [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
+                             [[maybe_unused]] double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -189,8 +190,8 @@ struct t8_geometry_moebius: public t8_geometry_with_vertices
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double *out_coords) const
+  t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid, const double *ref_coords,
+                    const size_t num_coords, double *out_coords) const
   {
     double t;
     double phi;
@@ -213,8 +214,9 @@ struct t8_geometry_moebius: public t8_geometry_with_vertices
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid, [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
-    [[maybe_unused]] double *jacobian) const
+  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                             [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
+                             [[maybe_unused]] double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -270,8 +272,8 @@ struct t8_geometry_cylinder: public t8_geometry
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double *out_coords) const
+  t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid, const double *ref_coords,
+                    const size_t num_coords, double *out_coords) const
   {
     for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
       const int offset_3d = i_coord * 3;
@@ -284,8 +286,9 @@ struct t8_geometry_cylinder: public t8_geometry
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid, [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
-    [[maybe_unused]] double *jacobian) const
+  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                             [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
+                             [[maybe_unused]] double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -357,8 +360,8 @@ struct t8_geometry_circle: public t8_geometry_with_vertices
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double *out_coords) const
+  t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid, const double *ref_coords,
+                    const size_t num_coords, double *out_coords) const
   {
     double x;
     double y;
@@ -383,8 +386,9 @@ struct t8_geometry_circle: public t8_geometry_with_vertices
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid, [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
-    [[maybe_unused]] double *jacobian) const
+  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                             [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
+                             [[maybe_unused]] double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -445,8 +449,8 @@ struct t8_geometry_moving: public t8_geometry
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double *out_coords) const
+  t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid, const double *ref_coords,
+                    const size_t num_coords, double *out_coords) const
   {
     double x, y, radius_sqr, phi, rho;
     int sign;
@@ -477,8 +481,9 @@ struct t8_geometry_moving: public t8_geometry
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid, [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
-    [[maybe_unused]] double *jacobian) const
+  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                             [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
+                             [[maybe_unused]] double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -548,8 +553,8 @@ struct t8_geometry_cube_zdistorted: public t8_geometry
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double *out_coords) const
+  t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid, const double *ref_coords,
+                    const size_t num_coords, double *out_coords) const
   {
     for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
       const int offset_3d = i_coord * 3;
@@ -563,8 +568,9 @@ struct t8_geometry_cube_zdistorted: public t8_geometry
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid, [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
-    [[maybe_unused]] double *jacobian) const
+  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                             [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
+                             [[maybe_unused]] double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -615,7 +621,8 @@ struct t8_geometry_cube_zdistorted: public t8_geometry
  * domain boundary up to a given maximum refinement level. */
 static int
 t8_geom_adapt_boundary (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t ltree_id, const t8_eclass_t tree_class,
-    [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme, [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
+                        [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+                        [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
                         t8_element_t *elements[])
 {
   t8_cmesh_t cmesh = t8_forest_get_cmesh (forest_from);
@@ -650,8 +657,9 @@ t8_geom_adapt_boundary (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t
 }
 
 void
-quad_to_sphere_callback ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                         double *out_coords, [[maybe_unused]] const void *tree_data, [[maybe_unused]] const void *user_data)
+quad_to_sphere_callback ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                         const double *ref_coords, const size_t num_coords, double *out_coords,
+                         [[maybe_unused]] const void *tree_data, [[maybe_unused]] const void *user_data)
 {
   for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
     const size_t offset = 3 * i_coord;

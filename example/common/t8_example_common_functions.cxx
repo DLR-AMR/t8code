@@ -38,7 +38,7 @@ t8_levelset_sphere (const double x[3], [[maybe_unused]] double t, void *data)
 }
 
 double
-t8_scalar3d_constant_one ([[maybe_unused]] const double x[3],[[maybe_unused]]  double t)
+t8_scalar3d_constant_one ([[maybe_unused]] const double x[3], [[maybe_unused]] double t)
 {
   return 1;
 }
@@ -50,7 +50,7 @@ t8_scalar3d_constant_zero ([[maybe_unused]] const double x[3], [[maybe_unused]] 
 }
 
 double
-t8_scalar3d_project_x (const double x[3],[[maybe_unused]]  double t)
+t8_scalar3d_project_x (const double x[3], [[maybe_unused]] double t)
 {
   return x[0];
 }
@@ -69,7 +69,7 @@ t8_scalar3d_exp_distribution (const double x[3], double t)
 
 /* This function is =1 if 0.25 <= x <= 0.75 and 0 else */
 double
-t8_scalar3d_step_function (const double x[3],[[maybe_unused]]  double t)
+t8_scalar3d_step_function (const double x[3], [[maybe_unused]] double t)
 {
   return 0.25 <= x[0] && x[0] <= 0.75;
 }

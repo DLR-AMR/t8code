@@ -1237,7 +1237,8 @@ t8_cmesh_partition_receive_message (t8_cmesh_t cmesh, sc_MPI_Comm comm, const in
 /* TODO: Remove the const qualifier at the cmesh_from parameter */
 static void
 t8_cmesh_partition_recvloop (t8_cmesh_t cmesh, const t8_cmesh *cmesh_from, const t8_gloidx_t *tree_offset,
-                             char *my_buffer, size_t my_buffer_bytes, sc_MPI_Comm comm, [[maybe_unused]] int fr, [[maybe_unused]] int lr)
+                             char *my_buffer, size_t my_buffer_bytes, sc_MPI_Comm comm, [[maybe_unused]] int fr,
+                             [[maybe_unused]] int lr)
 {
   int num_receive, *local_procid; /* ranks of the processor from which we will receive */
   int mpiret, proc_recv, iproc;

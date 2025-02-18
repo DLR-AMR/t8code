@@ -67,9 +67,10 @@
  *           scheme (see t8_scheme_new_default in t8_default/t8_default.hxx).
  */
 static int
-t8_ghost_fractal_adapt (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from, [[maybe_unused]] t8_locidx_t which_tree,
-                        const t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme, [[maybe_unused]] int is_family,
-                        [[maybe_unused]] int num_elements, t8_element_t *elements[])
+t8_ghost_fractal_adapt (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                        [[maybe_unused]] t8_locidx_t which_tree, const t8_eclass_t tree_class,
+                        [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+                        [[maybe_unused]] int is_family, [[maybe_unused]] int num_elements, t8_element_t *elements[])
 {
   int level;
   int type, child_id;

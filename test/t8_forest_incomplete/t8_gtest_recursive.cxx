@@ -83,9 +83,11 @@ class recursive_tree: public testing::TestWithParam<std::tuple<int, t8_eclass_t>
 
 /** Remove every element except last and first of a family. */
 static int
-t8_adapt_remove_but_last_first ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from, [[maybe_unused]] t8_locidx_t which_tree,
-                                const t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
-                                [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements, t8_element_t *elements[])
+t8_adapt_remove_but_last_first ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                                [[maybe_unused]] t8_locidx_t which_tree, const t8_eclass_t tree_class,
+                                [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+                                [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
+                                t8_element_t *elements[])
 {
   const int num_children = scheme->element_get_num_children (tree_class, elements[0]);
   const int child_id = scheme->element_get_child_id (tree_class, elements[0]);
@@ -97,9 +99,11 @@ t8_adapt_remove_but_last_first ([[maybe_unused]] t8_forest_t forest, [[maybe_unu
 
 /** Refine the first element of a family. */
 static int
-t8_adapt_refine_first ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from, [[maybe_unused]] t8_locidx_t which_tree,
-                       const t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
-                       [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements, t8_element_t *elements[])
+t8_adapt_refine_first ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                       [[maybe_unused]] t8_locidx_t which_tree, const t8_eclass_t tree_class,
+                       [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+                       [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
+                       t8_element_t *elements[])
 {
   const int level = scheme->element_get_level (tree_class, elements[0]);
   const int level_max = scheme->get_maxlevel (tree_class);
@@ -112,18 +116,22 @@ t8_adapt_refine_first ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_
 
 /** Refine every element. */
 static int
-t8_adapt_refine_all ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from, [[maybe_unused]] t8_locidx_t which_tree, [[maybe_unused]] const t8_eclass_t tree_class,
-    [[maybe_unused]] t8_locidx_t lelement_id, [[maybe_unused]] const t8_scheme *scheme, [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
-    [[maybe_unused]] t8_element_t *elements[])
+t8_adapt_refine_all ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                     [[maybe_unused]] t8_locidx_t which_tree, [[maybe_unused]] const t8_eclass_t tree_class,
+                     [[maybe_unused]] t8_locidx_t lelement_id, [[maybe_unused]] const t8_scheme *scheme,
+                     [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
+                     [[maybe_unused]] t8_element_t *elements[])
 {
   return 1;
 }
 
 /** Coarse every family. */
 static int
-t8_adapt_coarse_all ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from, [[maybe_unused]] t8_locidx_t which_tree, [[maybe_unused]] const t8_eclass_t tree_class,
-    [[maybe_unused]] t8_locidx_t lelement_id, [[maybe_unused]] const t8_scheme *scheme, const int is_family, [[maybe_unused]] const int num_elements,
-    [[maybe_unused]] t8_element_t *elements[])
+t8_adapt_coarse_all ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                     [[maybe_unused]] t8_locidx_t which_tree, [[maybe_unused]] const t8_eclass_t tree_class,
+                     [[maybe_unused]] t8_locidx_t lelement_id, [[maybe_unused]] const t8_scheme *scheme,
+                     const int is_family, [[maybe_unused]] const int num_elements,
+                     [[maybe_unused]] t8_element_t *elements[])
 {
   if (is_family) {
     return -1;

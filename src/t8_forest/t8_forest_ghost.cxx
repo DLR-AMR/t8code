@@ -122,7 +122,8 @@ t8_ghost_process_hash_function (const void *process_data, [[maybe_unused]] const
 /* The equal function for the process_offsets array.
  * Two entries are the same if their mpiranks are equal. */
 static int
-t8_ghost_process_equal_function (const void *process_dataa, const void *process_datab, [[maybe_unused]] const void *user)
+t8_ghost_process_equal_function (const void *process_dataa, const void *process_datab,
+                                 [[maybe_unused]] const void *user)
 {
   const t8_ghost_process_hash_t *processa = (const t8_ghost_process_hash_t *) process_dataa;
   const t8_ghost_process_hash_t *processb = (const t8_ghost_process_hash_t *) process_datab;
@@ -503,7 +504,8 @@ typedef struct
 
 static int
 t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                 const int is_leaf, [[maybe_unused]] const t8_element_array_t *leaves, const t8_locidx_t tree_leaf_index)
+                                 const int is_leaf, [[maybe_unused]] const t8_element_array_t *leaves,
+                                 const t8_locidx_t tree_leaf_index)
 {
   t8_forest_ghost_boundary_data_t *data = (t8_forest_ghost_boundary_data_t *) t8_forest_get_user_data (forest);
   int num_faces, iface, faces_totally_owned, level;
@@ -941,8 +943,8 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost, sc_MPI_
 }
 
 static void
-t8_forest_ghost_send_end ([[maybe_unused]] t8_forest_t forest, t8_forest_ghost_t ghost, t8_ghost_mpi_send_info_t *send_info,
-                          sc_MPI_Request *requests)
+t8_forest_ghost_send_end ([[maybe_unused]] t8_forest_t forest, t8_forest_ghost_t ghost,
+                          t8_ghost_mpi_send_info_t *send_info, sc_MPI_Request *requests)
 {
   int num_remotes;
   int proc_pos, mpiret;

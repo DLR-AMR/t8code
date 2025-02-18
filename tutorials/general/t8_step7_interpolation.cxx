@@ -109,8 +109,9 @@ t8_element_get_value (const t8_step7_adapt_data *adapt_data, t8_locidx_t ielemen
  */
 int
 t8_step7_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-    [[maybe_unused]] const t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id, [[maybe_unused]] const t8_scheme *scheme,
-                         const int is_family, [[maybe_unused]] const int num_elements, t8_element_t *elements[])
+                         [[maybe_unused]] const t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
+                         [[maybe_unused]] const t8_scheme *scheme, const int is_family,
+                         [[maybe_unused]] const int num_elements, t8_element_t *elements[])
 {
   /* Our adaptation criterion is to look at the midpoint coordinates of the current element and if
    * they are inside a sphere around a given midpoint we refine, if they are outside, we coarsen. */
@@ -163,7 +164,8 @@ t8_step7_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_
  * \param [in] user_data        User-defined data array to store on the forest
  */
 t8_forest_t
-t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn, [[maybe_unused]] int do_partition, int recursive, void *user_data)
+t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn, [[maybe_unused]] int do_partition, int recursive,
+                 void *user_data)
 {
   t8_forest_t forest_new;
 
@@ -197,9 +199,9 @@ t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn, [[maybe_un
  * \param [in] first_incoming    index of the new element
  */
 void
-t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree, [[maybe_unused]] const t8_eclass_t tree_class,
-    [[maybe_unused]] const t8_scheme *scheme, int refine, int num_outgoing, t8_locidx_t first_outgoing, int num_incoming,
-                   t8_locidx_t first_incoming)
+t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree,
+                   [[maybe_unused]] const t8_eclass_t tree_class, [[maybe_unused]] const t8_scheme *scheme, int refine,
+                   int num_outgoing, t8_locidx_t first_outgoing, int num_incoming, t8_locidx_t first_incoming)
 {
   struct t8_step7_adapt_data *adapt_data_new = (struct t8_step7_adapt_data *) t8_forest_get_user_data (forest_new);
   const struct t8_step7_adapt_data *adapt_data_old

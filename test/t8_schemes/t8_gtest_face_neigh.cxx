@@ -81,8 +81,8 @@ t8_test_face_neighbor_inside (int num_faces, t8_element_t *element, t8_element_t
 }
 
 int
-t8_test_get_middle_child (const t8_eclass_t eclass, [[maybe_unused]] int ilevel, t8_element_t *element, t8_element_t *child,
-                          const t8_scheme *scheme)
+t8_test_get_middle_child (const t8_eclass_t eclass, [[maybe_unused]] int ilevel, t8_element_t *element,
+                          t8_element_t *child, const t8_scheme *scheme)
 {
   /* Get the child number of the child in the middle of the element, depending of the shape of the element. */
   switch (eclass) {

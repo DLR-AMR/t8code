@@ -122,9 +122,10 @@ struct t8_geometry
  *                              due to rounding errors.
  */
   virtual void
-  t8_geom_point_batch_inside_element ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_locidx_t ltreeid, [[maybe_unused]] const t8_element_t *element,
-                                      [[maybe_unused]] const double *points, [[maybe_unused]] const int num_points, [[maybe_unused]] int *is_inside,
-                                      [[maybe_unused]] const double tolerance) const
+  t8_geom_point_batch_inside_element ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_locidx_t ltreeid,
+                                      [[maybe_unused]] const t8_element_t *element,
+                                      [[maybe_unused]] const double *points, [[maybe_unused]] const int num_points,
+                                      [[maybe_unused]] int *is_inside, [[maybe_unused]] const double tolerance) const
   {
     SC_ABORTF ("Point batch inside element function not implemented");
   };

@@ -163,7 +163,8 @@ class t8_default_scheme_line: public t8_default_scheme_common<t8_default_scheme_
    *                    and match the element class of the sibling.
    */
   void
-  element_get_sibling ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int sibid, [[maybe_unused]] t8_element_t *sibling) const
+  element_get_sibling ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int sibid,
+                       [[maybe_unused]] t8_element_t *sibling) const
   {
     SC_ABORT ("This function is not implemented yet.\n");
     return; /* suppresses compiler warning */
@@ -205,7 +206,8 @@ class t8_default_scheme_line: public t8_default_scheme_common<t8_default_scheme_
    * \return              The corner number of the \a corner-th vertex of \a face.
    */
   int
-  element_get_face_corner ([[maybe_unused]] const t8_element_t *element, [[maybe_unused]] const int face, [[maybe_unused]] const int corner) const
+  element_get_face_corner ([[maybe_unused]] const t8_element_t *element, [[maybe_unused]] const int face,
+                           [[maybe_unused]] const int corner) const
   {
     SC_ABORT ("Not implemented.\n");
     return 0; /* prevents compiler warning */
@@ -218,7 +220,8 @@ class t8_default_scheme_line: public t8_default_scheme_common<t8_default_scheme_
    * \return              The face number of the \a face-th face at \a corner.
    */
   int
-  element_get_corner_face ([[maybe_unused]] const t8_element_t *element, [[maybe_unused]] int corner, [[maybe_unused]] int face) const
+  element_get_corner_face ([[maybe_unused]] const t8_element_t *element, [[maybe_unused]] int corner,
+                           [[maybe_unused]] int face) const
   {
     SC_ABORT ("Not implemented.\n");
     return 0; /* prevents compiler warning */

@@ -232,7 +232,7 @@ t8_default_scheme_prism::element_get_tree_face (const t8_element_t *elem, int fa
 
 int
 t8_default_scheme_prism::element_extrude_face (const t8_element_t *face, t8_element_t *elem, int root_face,
-    [[maybe_unused]] const t8_scheme *scheme) const
+                                               [[maybe_unused]] const t8_scheme *scheme) const
 {
 #if T8_ENABLE_DEBUG
   const t8_eclass_t face_eclass = (t8_eclass_t) t8_eclass_face_types[T8_ECLASS_PRISM][root_face];
@@ -274,7 +274,7 @@ t8_default_scheme_prism::element_get_nca (const t8_element_t *elem1, const t8_el
 
 void
 t8_default_scheme_prism::element_get_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
-    [[maybe_unused]] const t8_scheme *scheme) const
+                                                    [[maybe_unused]] const t8_scheme *scheme) const
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);

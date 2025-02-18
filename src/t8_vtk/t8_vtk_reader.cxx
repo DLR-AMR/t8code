@@ -498,8 +498,9 @@ t8_vtk_reader_pointSet (const char *filename, const int partition, const int mai
 #endif /* T8_WITH_VTK */
 
 t8_cmesh_t
-t8_vtk_reader_cmesh ([[maybe_unused]] const char *filename, [[maybe_unused]] const int partition, [[maybe_unused]] const int main_proc, [[maybe_unused]] sc_MPI_Comm comm,
-    [[maybe_unused]] const vtk_file_type_t vtk_file_type)
+t8_vtk_reader_cmesh ([[maybe_unused]] const char *filename, [[maybe_unused]] const int partition,
+                     [[maybe_unused]] const int main_proc, [[maybe_unused]] sc_MPI_Comm comm,
+                     [[maybe_unused]] const vtk_file_type_t vtk_file_type)
 {
 #if T8_WITH_VTK
   vtkSmartPointer<vtkDataSet> vtkGrid = t8_vtk_reader (filename, partition, main_proc, comm, vtk_file_type);

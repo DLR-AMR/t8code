@@ -210,7 +210,8 @@ struct t8_standalone_scheme
    *                      'outside' of the element.
    */
   static constexpr int
-  element_get_face_corner ([[maybe_unused]] const t8_element_t *element, [[maybe_unused]] const int face, [[maybe_unused]] const int corner) noexcept
+  element_get_face_corner ([[maybe_unused]] const t8_element_t *element, [[maybe_unused]] const int face,
+                           [[maybe_unused]] const int corner) noexcept
   {
     SC_ABORT ("This function is not implemented yet.\n");
     return 0;
@@ -229,7 +230,8 @@ struct t8_standalone_scheme
    * \return              The face number of the \a face-th face at \a corner.
    */
   static constexpr int
-  element_get_corner_face ([[maybe_unused]] const t8_element_t *element, [[maybe_unused]] const int corner, [[maybe_unused]] const int face) noexcept
+  element_get_corner_face ([[maybe_unused]] const t8_element_t *element, [[maybe_unused]] const int corner,
+                           [[maybe_unused]] const int face) noexcept
   {
     SC_ABORT ("This function is not implemented yet.\n");
     return 0;
@@ -397,7 +399,8 @@ struct t8_standalone_scheme
    *                    and match the element class of the sibling.
    */
   static constexpr void
-  element_get_sibling ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int sibid, [[maybe_unused]] t8_element_t *sibling) noexcept
+  element_get_sibling ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int sibid,
+                       [[maybe_unused]] t8_element_t *sibling) noexcept
   {
     SC_ABORT ("This function is not implemented yet.\n");
   }
@@ -683,8 +686,9 @@ struct t8_standalone_scheme
    * It is valid to call this function with elem = children[0].
    */
   static constexpr void
-  element_get_children_at_face ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] int face, [[maybe_unused]] t8_element_t *children[], [[maybe_unused]] const int num_children,
-    [[maybe_unused]] int *child_indices) noexcept
+  element_get_children_at_face ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] int face,
+                                [[maybe_unused]] t8_element_t *children[], [[maybe_unused]] const int num_children,
+                                [[maybe_unused]] int *child_indices) noexcept
   {
     SC_ABORT ("This function is not implemented in this scheme yet.\n");
   }
@@ -710,7 +714,8 @@ struct t8_standalone_scheme
     *                      that coincides with \a face_child.
     */
   static constexpr int
-  element_face_get_child_face ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int face, [[maybe_unused]] const int face_child) noexcept
+  element_face_get_child_face ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int face,
+                               [[maybe_unused]] const int face_child) noexcept
   {
     SC_ABORT ("This function is not implemented in this scheme yet.\n");
     return 0;
@@ -742,8 +747,9 @@ struct t8_standalone_scheme
    * \param [in] level     The level, at which the first descendant is constructed
    */
   static constexpr void
-  element_get_first_descendant_face ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int face, [[maybe_unused]] t8_element_t *first_desc,
-    [[maybe_unused]] const t8_element_level level) noexcept
+  element_get_first_descendant_face ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int face,
+                                     [[maybe_unused]] t8_element_t *first_desc,
+                                     [[maybe_unused]] const t8_element_level level) noexcept
   {
     SC_ABORT ("This function is not implemented in this scheme yet.\n");
   }
@@ -757,8 +763,9 @@ struct t8_standalone_scheme
    * \param [in] level     The level, at which the last descendant is constructed
    */
   static constexpr void
-  element_get_last_descendant_face ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int face, [[maybe_unused]] t8_element_t *last_desc,
-    [[maybe_unused]] const t8_element_level level) noexcept
+  element_get_last_descendant_face ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int face,
+                                    [[maybe_unused]] t8_element_t *last_desc,
+                                    [[maybe_unused]] const t8_element_level level) noexcept
   {
     SC_ABORT ("This function is not implemented in this scheme yet.\n");
   }
@@ -814,8 +821,8 @@ struct t8_standalone_scheme
    *                  on output.
    */
   static constexpr int
-  element_get_face_neighbor_inside ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] t8_element_t *neigh, [[maybe_unused]] const int face,
-    [[maybe_unused]] int *neigh_face) noexcept
+  element_get_face_neighbor_inside ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] t8_element_t *neigh,
+                                    [[maybe_unused]] const int face, [[maybe_unused]] int *neigh_face) noexcept
   {
     SC_ABORT ("This function is not implemented in this scheme yet.\n");
     return 0;
@@ -845,8 +852,9 @@ struct t8_standalone_scheme
    * \note \a elem1 and \a elem2 may point to the same element.
    */
   static constexpr void
-  element_transform_face ([[maybe_unused]] const t8_element_t *elem1, [[maybe_unused]] t8_element_t *elem2, [[maybe_unused]] const int orientation, [[maybe_unused]] const int sign,
-    [[maybe_unused]] const int is_smaller_face) noexcept
+  element_transform_face ([[maybe_unused]] const t8_element_t *elem1, [[maybe_unused]] t8_element_t *elem2,
+                          [[maybe_unused]] const int orientation, [[maybe_unused]] const int sign,
+                          [[maybe_unused]] const int is_smaller_face) noexcept
   {
     SC_ABORT ("This function is not implemented in this scheme yet.\n");
   }
@@ -865,8 +873,8 @@ struct t8_standalone_scheme
    *                      with \a face.
    */
   static constexpr int
-  element_extrude_face ([[maybe_unused]] const t8_element_t *face, [[maybe_unused]] t8_element_t *elem, [[maybe_unused]] const int root_face,
-    [[maybe_unused]] const t8_scheme *face_scheme) noexcept
+  element_extrude_face ([[maybe_unused]] const t8_element_t *face, [[maybe_unused]] t8_element_t *elem,
+                        [[maybe_unused]] const int root_face, [[maybe_unused]] const t8_scheme *face_scheme) noexcept
   {
     SC_ABORT ("This function is not implemented in this scheme yet.\n");
     return 0;
@@ -884,8 +892,9 @@ struct t8_standalone_scheme
    * and will not be modified.
    */
   static constexpr void
-  element_get_boundary_face ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int face, [[maybe_unused]] t8_element_t *boundary,
-    [[maybe_unused]] const t8_scheme *boundary_scheme) noexcept
+  element_get_boundary_face ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int face,
+                             [[maybe_unused]] t8_element_t *boundary,
+                             [[maybe_unused]] const t8_scheme *boundary_scheme) noexcept
   {
     SC_ABORT ("This function is not implemented in this scheme yet.\n");
   }

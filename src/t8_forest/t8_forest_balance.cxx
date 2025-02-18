@@ -42,8 +42,9 @@ T8_EXTERN_C_BEGIN ();
  * if we refine recursively. */
 static int
 t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from, const t8_locidx_t ltree_id,
-                         const t8_eclass_t tree_class, [[maybe_unused]] const t8_locidx_t lelement_id, const t8_scheme *scheme,
-                         [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements, t8_element_t *elements[])
+                         const t8_eclass_t tree_class, [[maybe_unused]] const t8_locidx_t lelement_id,
+                         const t8_scheme *scheme, [[maybe_unused]] const int is_family,
+                         [[maybe_unused]] const int num_elements, t8_element_t *elements[])
 {
   int *pdone, iface, num_faces, num_half_neighbors, ineigh;
   t8_gloidx_t neighbor_tree;

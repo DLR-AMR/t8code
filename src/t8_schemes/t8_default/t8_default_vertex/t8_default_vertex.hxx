@@ -191,7 +191,8 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
    * \return              The corner number of the \a corner-th vertex of \a face.
    */
   int
-  element_get_face_corner ([[maybe_unused]] const t8_element_t *element, [[maybe_unused]] int face, [[maybe_unused]] int corner) const
+  element_get_face_corner ([[maybe_unused]] const t8_element_t *element, [[maybe_unused]] int face,
+                           [[maybe_unused]] int corner) const
   {
     SC_ABORT_NOT_REACHED (); /* it is impossible to have a face of a vertex */
     return 0;                /* prevents compiler warning */
@@ -204,7 +205,8 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
    * \return              The face number of the \a face-th face at \a corner.
    */
   int
-  element_get_corner_face ([[maybe_unused]] const t8_element_t *element, [[maybe_unused]] int corner, [[maybe_unused]] int face) const
+  element_get_corner_face ([[maybe_unused]] const t8_element_t *element, [[maybe_unused]] int corner,
+                           [[maybe_unused]] int face) const
   {
     SC_ABORT ("Not implemented.\n");
     return 0; /* prevents compiler warning */
@@ -300,8 +302,9 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
    * It is valid to call this function with elem = children[0].
    */
   void
-  element_get_children_at_face ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] int face, [[maybe_unused]] t8_element_t *children[], [[maybe_unused]] int num_children,
-    [[maybe_unused]] int *child_indices) const
+  element_get_children_at_face ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] int face,
+                                [[maybe_unused]] t8_element_t *children[], [[maybe_unused]] int num_children,
+                                [[maybe_unused]] int *child_indices) const
   {
     SC_ABORT ("Not implemented.\n");
     return; /* prevents compiler warning */
@@ -328,7 +331,8 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
    *                      that coincides with \a face_child.
    */
   int
-  element_face_get_child_face ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] int face, [[maybe_unused]] int face_child) const
+  element_face_get_child_face ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] int face,
+                               [[maybe_unused]] int face_child) const
   {
     SC_ABORT ("Not implemented.\n");
     return 0; /* prevents compiler warning */
@@ -406,7 +410,8 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
    *                      with \a face.
    */
   int
-  element_extrude_face ([[maybe_unused]] const t8_element_t *face, [[maybe_unused]] t8_element_t *elem, [[maybe_unused]] int root_face, [[maybe_unused]] const t8_scheme *scheme) const
+  element_extrude_face ([[maybe_unused]] const t8_element_t *face, [[maybe_unused]] t8_element_t *elem,
+                        [[maybe_unused]] int root_face, [[maybe_unused]] const t8_scheme *scheme) const
   {
     SC_ABORT ("Not implemented.\n");
     return 0; /* prevents compiler warning */
@@ -421,7 +426,8 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
    * \param [in] level     The level, at which the first descendant is constructed
    */
   void
-  element_get_first_descendant_face ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] int face, [[maybe_unused]] t8_element_t *first_desc, [[maybe_unused]] int level) const
+  element_get_first_descendant_face ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] int face,
+                                     [[maybe_unused]] t8_element_t *first_desc, [[maybe_unused]] int level) const
   {
     SC_ABORT ("Not implemented.\n");
     return; /* prevents compiler warning */
@@ -436,7 +442,8 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
    * \param [in] level     The level, at which the last descendant is constructed
    */
   void
-  element_get_last_descendant_face ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] int face, [[maybe_unused]] t8_element_t *last_desc, [[maybe_unused]] int level) const
+  element_get_last_descendant_face ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] int face,
+                                    [[maybe_unused]] t8_element_t *last_desc, [[maybe_unused]] int level) const
   {
     SC_ABORT ("Not implemented.\n");
     return; /* prevents compiler warning */
@@ -452,7 +459,8 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
    * \param [in] scheme   The scheme containing an eclass scheme for the boundary face.
    */
   void
-  element_get_boundary_face ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] int face, [[maybe_unused]] t8_element_t *boundary, [[maybe_unused]] const t8_scheme *scheme) const
+  element_get_boundary_face ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] int face,
+                             [[maybe_unused]] t8_element_t *boundary, [[maybe_unused]] const t8_scheme *scheme) const
   {
     SC_ABORT ("Not implemented.\n");
     return; /* prevents compiler warning */
@@ -482,7 +490,8 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
    *                  on output.
    */
   int
-  element_get_face_neighbor_inside ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] t8_element_t *neigh, [[maybe_unused]] int face, [[maybe_unused]] int *neigh_face) const
+  element_get_face_neighbor_inside ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] t8_element_t *neigh,
+                                    [[maybe_unused]] int face, [[maybe_unused]] int *neigh_face) const
   {
     SC_ABORT ("Not implemented.\n");
     return 0; /* prevents compiler warning */

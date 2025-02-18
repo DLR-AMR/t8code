@@ -62,8 +62,10 @@ class forest_ghost_owner: public testing::TestWithParam<std::tuple<int, cmesh_ex
 };
 
 static int
-t8_test_gao_adapt (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from, [[maybe_unused]] t8_locidx_t which_tree, t8_eclass_t tree_class,
-    [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme, [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
+t8_test_gao_adapt (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                   [[maybe_unused]] t8_locidx_t which_tree, t8_eclass_t tree_class,
+                   [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+                   [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
                    t8_element_t *elements[])
 {
   /* refine every second element up to the maximum level */
