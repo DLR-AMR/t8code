@@ -83,8 +83,8 @@ T8_EXTERN_C_BEGIN ();
  * \param [in] elements     The element or family of elements to consider for refinement/coarsening.
  */
 int
-t8_step3_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
-                         t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family, const int num_elements,
+t8_step3_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, [[maybe_unused]] t8_eclass_t tree_class,
+    [[maybe_unused]] t8_locidx_t lelement_id, [[maybe_unused]] const t8_scheme *scheme, const int is_family, [[maybe_unused]] const int num_elements,
                          t8_element_t *elements[])
 {
   /* Our adaptation criterion is to look at the midpoint coordinates of the current element and if
