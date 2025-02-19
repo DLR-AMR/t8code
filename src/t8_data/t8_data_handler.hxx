@@ -36,8 +36,7 @@
  * Check if type is referring to a type that is already handled internally.
  * 
  * \param[in] type A type of data
- * \return true If the type is handled internally.
- * \return false otherwise
+ * \return True if the type is handled internally, false otherwise
  */
 constexpr bool
 is_internal_data (const t8_data_handler_type type)
@@ -60,7 +59,7 @@ template <typename TType>
 class t8_data_handler {
  public:
   /**
-   * Construct a new t8 single data handler.
+   * Construct a t8_data_handler.
    * 
    */
   t8_data_handler () {};

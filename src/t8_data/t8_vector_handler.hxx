@@ -140,7 +140,7 @@ template <typename TType>
 class t8_vector_handler: public t8_abstract_vector_handler {
  public:
   /**
-   * Construct a new t8 data handler.
+   * Construct a t8_vector_handler.
    * m_data is initialized to nullptr.
    */
   t8_vector_handler (): single_handler ()
@@ -149,7 +149,7 @@ class t8_vector_handler: public t8_abstract_vector_handler {
   }
 
   /**
-   * Construct a new t8 data handler with the given data.
+   * Construct a t8_vector_handler with the given data.
    *
    * \param[in] data The data to be handled.
    */
@@ -161,7 +161,7 @@ class t8_vector_handler: public t8_abstract_vector_handler {
   /**
    * Get the data.
    * 
-   * \return std::shared_ptr<std::vector<TType>> 
+   * \return The data.
    */
   std::shared_ptr<std::vector<TType>>
   get_data () const
@@ -173,7 +173,7 @@ class t8_vector_handler: public t8_abstract_vector_handler {
    * Compute the size of the buffer that is needed to pack the data.
    * 
    * \param[in] data The data to be set.
-   * \return int The size of the buffer.
+   * \return The size of the buffer.
    */
   int
   buffer_size (sc_MPI_Comm comm) override
@@ -320,7 +320,7 @@ class t8_vector_handler: public t8_abstract_vector_handler {
  * data structures implemented by t8code. 
  * 
  * \param[in] type 
- * \return t8_abstract_vector_handler* A handler for the given data type.
+ * \return A handler for the given data type.
  */
 inline t8_abstract_vector_handler *
 create_internal_handler (const t8_data_handler_type type)
