@@ -65,7 +65,7 @@ class enlarged_data {
 /**
  * A template class to create data of type T.
  * 
- * \tparam TType 
+ * \tparam TType The type of the data to be stored.
  */
 template <typename TType>
 class data_creator {

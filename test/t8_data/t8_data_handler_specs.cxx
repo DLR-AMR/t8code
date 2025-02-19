@@ -33,7 +33,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 /**
  * Specialization of the create function for enlarged ints. 
  * 
- * \tparam              enlarged_data<int>
  * \param[in] num_data  Number of data items to create.
  */
 template <>
@@ -49,7 +48,6 @@ data_creator<enlarged_data<int>>::create (const int num_data)
 /**
  * Specialization of the create function for enlarged doubles. 
  * 
- * \tparam              enlarged_data<double>
  * \param[in] num_data  Number of data items to create.
  */
 template <>
