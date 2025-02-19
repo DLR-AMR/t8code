@@ -38,7 +38,7 @@
 #define T8_CMESH_BINARY 2
 #define T8_CMESH_DIM_RANGE 4 /* this is the dim range for hypercube hybrid and empty cmesh */
 #define T8_CMESH_MAX_TEST_DIMS 3
-#if T8CODE_TEST_LEVEL == 1
+#if T8CODE_TEST_LEVEL >= 1
 #define T8_CMESH_MAX_NUM_OF_TREES 5
 #define T8_CMESH_MAX_NUM_OF_PRISMS 5
 #define T8_CMESH_MAX_NUM_XYZ_TREES 2
