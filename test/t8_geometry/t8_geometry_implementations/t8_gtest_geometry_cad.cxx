@@ -469,9 +469,7 @@ t8_test_geometry_cad_tet (int face, int edge, double *parameters, double *test_r
    * 2 coords for edge --> 2 vertices of edge 
    * muliplied by 3 it is equal to the dimension template parameter
    */
-  t8_debugf ("Testing face %i, edge %i, dimension %i\n", face, edge, dimension);
   const int num_coords = (face >= 0 ? 4 : 2);
-  t8_debugf ("num_coords %i\n", num_coords);
   t8_vec<dimension> out_coords;
   double tol = T8_PRECISION_EPS > 1e-10 ? T8_PRECISION_EPS : 1e-10;
 
