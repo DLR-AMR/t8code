@@ -37,17 +37,19 @@
 #include <t8_forest/t8_forest_types.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest_partition.h>
+#include <test/t8_gtest_schemes.hxx>
 
-class forest_transform: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
+class forest_transform: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass>, int>> {
  protected:
   void
   SetUp () override
   {
-    tree_class = std::get<0> (GetParam ());
+    const int scheme_id = std::get<0> (std::get<0> (GetParam ()));
+    scheme = create_from_scheme_id (scheme_id);
+    tree_class = std::get<1> (std::get<0> (GetParam ()));
     level = std::get<1> (GetParam ());
 
     t8_debugf ("\n\n\nTesting eclass %s with level %i", t8_eclass_to_string[tree_class], level);
-    default_scheme = t8_scheme_new_default ();
     /* Construct a coarse mesh of one tree */
     cmesh = t8_cmesh_new_from_class (tree_class, sc_MPI_COMM_WORLD);
 
@@ -55,7 +57,7 @@ class forest_transform: public testing::TestWithParam<std::tuple<t8_eclass, int>
     t8_forest_init (&forest);
     t8_forest_set_level (forest, level);
     t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
-    t8_forest_set_scheme (forest, default_scheme);
+    t8_forest_set_scheme (forest, scheme);
     t8_forest_commit (forest);
   }
   void
@@ -65,7 +67,7 @@ class forest_transform: public testing::TestWithParam<std::tuple<t8_eclass, int>
   }
   t8_eclass_t tree_class;
   t8_cmesh_t cmesh;
-  const t8_scheme *default_scheme;
+  const t8_scheme *scheme;
   t8_forest_t forest;
   int level;
 };
@@ -170,10 +172,11 @@ TEST_P (forest_transform, test_forest_transform_elements)
     /* Get a pointer to the element */
     t8_element_t *element = t8_forest_get_element (forest, ielem, NULL);
     /* perform the transform test */
-    t8_test_transform_element (default_scheme, element, tree_class);
+    t8_test_transform_element (scheme, element, tree_class);
   }
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_forest_transform, forest_transform,
-                          testing::Combine (testing::Range (T8_ECLASS_QUAD, T8_ECLASS_TRIANGLE),
+                          testing::Combine (::testing::Combine (AllSchemeCollections,
+                                                                ::testing::Range (T8_ECLASS_QUAD, T8_ECLASS_TRIANGLE)),
                                             testing::Range (0, 6)));

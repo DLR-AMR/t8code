@@ -143,7 +143,7 @@ class vtk_writer {
    * 
    * \param[in] write_treeid true or false
    */
-  void
+  inline void
   set_write_treeid (const bool write_treeid)
   {
     this->write_treeid = write_treeid;
@@ -154,7 +154,7 @@ class vtk_writer {
    * 
    * \param[in] write_mpirank true or false
    */
-  void
+  inline void
   set_write_mpirank (const bool write_mpirank)
   {
     this->write_mpirank = write_mpirank;
@@ -165,7 +165,7 @@ class vtk_writer {
    * 
    * \param[in] write_level true or false
    */
-  void
+  inline void
   set_write_level (const bool write_level)
   {
     this->write_level = write_level;
@@ -176,7 +176,7 @@ class vtk_writer {
    * 
    * \param[in] write_element_id true or false
    */
-  void
+  inline void
   set_write_element_id (const bool write_element_id)
   {
     this->write_element_id = write_element_id;
@@ -187,7 +187,7 @@ class vtk_writer {
    * 
    * \param[in] write_ghosts true or false
    */
-  void
+  inline void
   set_write_ghosts (const bool write_ghosts)
   {
     this->write_ghosts = write_ghosts;
@@ -199,7 +199,7 @@ class vtk_writer {
    * 
    * \param[in] curved_flag true or false
    */
-  void
+  inline void
   set_curved_flag (const bool curved_flag)
   {
     this->curved_flag = curved_flag;
@@ -209,7 +209,7 @@ class vtk_writer {
    * Set the fileprefix for the output files.
    * \param[in] fileprefix 
    */
-  void
+  inline void
   set_fileprefix (std::string fileprefix)
   {
     this->fileprefix = fileprefix;
