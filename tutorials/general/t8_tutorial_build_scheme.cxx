@@ -21,21 +21,20 @@
 */
 
 /*
- * In this tutorial we discuss how to use schemes in t8code. 
+ * In this tutorial we discuss how to use schemes in t8code.
  * Schemes are used to define the refinement and coarsening behavior of the forest. Upon building the forest from a cmesh, 
  * the user can define a scheme that will be used for all tree-specific operations in the forest. That way the scheme
- * influences how the forest is manipulated in your pipeline. 
- * 
+ * influences how the forest is manipulated in your pipeline.
+ *
  * In this example we will use the default scheme that is provided by t8code. This scheme uses the morton-type 
  * space-filling curves to order the elements in the forest.
- * 
+ *
  * Furthermore we will also show how to mix the default scheme with a custom scheme. For that we will use the 
  * default scheme and the standalone scheme that is provided by t8code. If you have a custom scheme, you can follow
- * the steps in this example to use it with your code. 
- * 
+ * the steps in this example to use it with your code.
+ *
  * The currently provided schemes are equivalent. Therefore we expect the output to be equivalent. 
  * In the future, when the standalone scheme is extended, the output will differ for some element classes.
- * 
  */
 
 #include <t8.h>                                       /* General t8code header, always include this. */
@@ -53,7 +52,7 @@
 const t8_scheme *
 t8_scheme_default_build_manually (void)
 {
-  /* A scheme builder creates a scheme. The schemes should be in this order to 
+  /* A scheme builder creates a scheme. The schemes should be in this order to
      * match the expected order of eclasses. The schemes are ordered from 1D to 3D */
   t8_scheme_builder builder;
 
@@ -68,7 +67,7 @@ t8_scheme_default_build_manually (void)
   return builder.build_scheme ();
 }
 
-/** 
+/**
  * A function to mix the standalone scheme with the default scheme. 
 */
 const t8_scheme *
@@ -146,7 +145,7 @@ main (int argc, char **argv)
   /* Check if the writer was successful.  */
   T8_ASSERT (vtk_written);
 
-  /* increase the reference counter because we reuse the cmesh. */
+  /* increase the reference counter to avoid deallocation because we reuse the cmesh. */
   t8_cmesh_ref (cmesh);
   /* Create a forest using the scheme that we build manually.  */
   t8_forest_t forest_manual_scheme = t8_forest_new_uniform (cmesh, t8_scheme_default_build_manually (), 3, 0, comm);
