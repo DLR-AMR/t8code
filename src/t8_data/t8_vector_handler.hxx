@@ -294,7 +294,7 @@ class t8_vector_handler: public t8_abstract_vector_handler {
   /**
    * Get the type of the data handler.
    * 
-   * \return constexpr t8_data_handler_type 
+   * \return The type of the data handler.
    */
   constexpr t8_data_handler_type
   type () override
@@ -319,7 +319,7 @@ class t8_vector_handler: public t8_abstract_vector_handler {
  * Create an internal handler for the given data type. Can be used for complex data types that use
  * data structures implemented by t8code. 
  * 
- * \param[in] type 
+ * \param[in] type The type of the data handler to create. 
  * \return A handler for the given data type.
  */
 inline t8_abstract_vector_handler *

@@ -21,7 +21,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 */
 
 /**
- * \file t8_data_handler_specx.hxx
+ * \file t8_data_handler_specs.hxx
  * This file provides a templated class that enlarges a data type by a check-int. 
  * Should only be used for testing purposes.
  */

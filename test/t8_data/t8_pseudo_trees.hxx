@@ -36,7 +36,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <memory>
 
 /**
- * pseudo_tree
  * Represents a pseudo tree structure containing topological and tree data.
  * 
  * \note This class is used for testing purposes only.

@@ -39,7 +39,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * Templated testing class. Creates enlarged data (original data + a checking integer) and a 
  * data handler. 
  * 
- * @tparam T the type of data
+ * \tparam T the type of data
  */
 template <typename TType>
 class data_handler_test: public testing::Test {
