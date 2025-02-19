@@ -138,9 +138,9 @@ main (int argc, char **argv)
   /* write the forest into a vtk file. If t8code has been configured with VTK we can use the vtk-library. 
      * Otherwise vtk-compatible ASCII-output is created.  */
 #if T8_WITH_VTK
-  vtk_written = vtk_writer.write_with_API (forest_default);
+  vtk_written &= vtk_writer.write_with_API (forest_default);
 #else
-  vtk_written = vtk_writer.write_ASCII (forest_default);
+  vtk_written &= vtk_writer.write_ASCII (forest_default);
 #endif
   /* Check if the writer was successful.  */
   T8_ASSERT (vtk_written);
@@ -154,9 +154,9 @@ main (int argc, char **argv)
   /* Update the name of the output file.  */
   vtk_writer.set_fileprefix (std::string ("forest_with_manual_scheme"));
 #if T8_WITH_VTK
-  vtk_written = vtk_writer.write_with_API (forest_manual_scheme);
+  vtk_written &= vtk_writer.write_with_API (forest_manual_scheme);
 #else
-  vtk_written = vtk_writer.write_ASCII (forest_manual_scheme);
+  vtk_written &= vtk_writer.write_ASCII (forest_manual_scheme);
 #endif
   T8_ASSERT (vtk_written);
 
@@ -168,9 +168,9 @@ main (int argc, char **argv)
   vtk_written = false;
   vtk_writer.set_fileprefix (std::string ("forest_with_mixed_scheme"));
 #if T8_WITH_VTK
-  vtk_written = vtk_writer.write_with_API (forest_mixed_scheme);
+  vtk_written &= vtk_writer.write_with_API (forest_mixed_scheme);
 #else
-  vtk_written = vtk_writer.write_ASCII (forest_mixed_scheme);
+  vtk_written &= vtk_writer.write_ASCII (forest_mixed_scheme);
 #endif
   T8_ASSERT (vtk_written);
 
