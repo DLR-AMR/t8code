@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2025 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -21,9 +21,9 @@
 */
 
 /*
- * In this tutorial we discuss how to use schemes in t8ocde. 
+ * In this tutorial we discuss how to use schemes in t8code. 
  * Schemes are used to define the refinement and coarsening behavior of the forest. Upon building the forest from a cmesh, 
- * the user can define a scheme that will be used for all tree specific operations in the forest. That way the scheme
+ * the user can define a scheme that will be used for all tree-specific operations in the forest. That way the scheme
  * influences how the forest is manipulated in your pipeline. 
  * 
  * In this example we will use the default scheme that is provided by t8code. This scheme uses the morton-type 
@@ -100,7 +100,7 @@ main (int argc, char **argv)
 
   /* Initialize the sc library, has to happen before we initialize t8code. */
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-  /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the leg levels. */
+  /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
   t8_init (SC_LP_PRODUCTION);
 
   /* We will use MPI_COMM_WORLD as a communicator. */
@@ -109,7 +109,7 @@ main (int argc, char **argv)
   /* Print a message on the root process. */
   t8_global_productionf (" [scheme] \n");
   t8_global_productionf (" [scheme] Hello, this is the scheme example of t8code.\n");
-  t8_global_productionf (" [scheme] We will use the default scheme, a hand build replica of the default scheme and the "
+  t8_global_productionf (" [scheme] We will use the default scheme, a hand-built replica of the default scheme and the "
                          "standalone scheme.\n");
   t8_global_productionf (" [scheme] \n");
 
