@@ -31,15 +31,11 @@ name: t8code indentation check
 # The output is uploaded as an artifact to the github page.
 
 on:
+  merge_group:
   push:
     branches:
       - main
-      - develop
-      - feature-*CI* # for testing this script, all feature branches with "CI" in their name
   pull_request:
-    branches:
-      - main
-      - develop
   workflow_dispatch: # Be able to trigger this manually on github.com
   # Run every night at 1:05
   schedule:
@@ -48,7 +44,7 @@ on:
 jobs:
   indent:
     if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
     - uses: actions/checkout@v4
@@ -58,8 +54,6 @@ jobs:
     # Deactivated the install sudo because it failed.
     #- name: install sudo
     #  run: apt update && apt install sudo
-    # On the github Ubuntu 20.04, sudo is not available by default
-    # we need it, however, to update/upgrade our packages.
     - name: Update packages
       run: sudo apt-get update && sudo apt-get upgrade -y
     # This step is necessary to get the newest package data

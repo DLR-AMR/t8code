@@ -61,9 +61,6 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/* This is our own defined data that we will pass on to the
- * adaptation callback. */
-
 /** The adaptation callback function. This function will be called once for each element
  * and the return value decides whether this element should be refined or not.
  *   return > 0 -> This element should get refined.
@@ -81,7 +78,7 @@ T8_EXTERN_C_BEGIN ();
  * \param [in] tree_class   The eclass of \a which_tree.
  * \param [in] lelement_id  The tree local index of the current element (or the first of the family).
  * \param [in] scheme       The refinement scheme for this tree's element class.
- * \param [in] is_family    if 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
+ * \param [in] is_family    If 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
  * \param [in] num_elements The number of entries in \a elements elements that are defined.
  * \param [in] elements     The element or family of elements to consider for refinement/coarsening.
  */
