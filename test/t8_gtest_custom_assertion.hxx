@@ -89,7 +89,7 @@ element_equality (const char *ts_expr, const char *tree_class_expr, const char *
  * \return testing::AssertionResult 
  */
 template <typename T>
-testing::AssertionResult
+constexpr testing::AssertionResult
 vec_equality (const char *vec_1_expr, const char *vec_2_expr, const char *precision_expr, const T &vec_1,
               const T &vec_2, const double precision)
 {
