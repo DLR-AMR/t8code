@@ -26,6 +26,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_types/t8_operators.hxx>
 #include <typeinfo>
 #include <numeric>
+#include <iostream>
 
 /* Tags to differencce between strong types */
 struct dummy_int
@@ -66,7 +67,7 @@ struct int_and_double_tag
 
 /* Strong types for testing */
 using DummyInt = T8Type<int, dummy_int, Addable, Subtractable, AddAssignable, Multipliable, Dividable,
-                        PrefixDecrementable, PrefixIncrementable, EqualityComparable>;
+                        PrefixDecrementable, PrefixIncrementable, EqualityComparable, Printable>;
 using DummyInt2 = T8Type<int, dummy_int_2>;
 using DummyDouble = T8Type<double, dummy_double>;
 using DummyRefInt = T8Type<int &, dummy_ref_int>;
@@ -114,6 +115,7 @@ TEST (t8_gtest_type, strong_type_size)
 TEST (t8_gtest_type, strong_type_get)
 {
   DummyInt dummy_int (5);
+  std::cout << "dummy_int: " << dummy_int << "\n";
   DummyInt2 dummy_int_2 (10);
   DummyDouble dummy_double (3.14);
   DummyRefInt dummy_ref_int (dummy_int.get ());
@@ -177,6 +179,7 @@ TEST (t8_gtest_type, use_constexpr)
   static_assert (my_result_int4.get () == 0, "constexpr operator/ failed");
   constexpr DummyInt my_int_eq (5);
   static_assert (my_int_eq == my_int, "constexpr operator== failed");
+  static_assert (my_int_eq != my_other_int, "constexpr operator!= failed");
 }
 
 /**
