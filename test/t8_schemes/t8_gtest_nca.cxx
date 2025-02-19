@@ -224,7 +224,7 @@ t8_recursive_nca_check (t8_element_t *check_nca, t8_element_t *desc_a, t8_elemen
  * output of element_get_nca.*/
 TEST_P (nca, recursive_check)
 {
-#if T8CODE_TEST_LEVEL == 1
+#if T8CODE_TEST_LEVEL >= 1
   const int recursion_depth = 3;
 #else
   /* User lower recursion depth for pyramids, it takes to much time otherwise */
