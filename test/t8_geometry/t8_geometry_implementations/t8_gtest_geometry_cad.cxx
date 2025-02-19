@@ -1075,15 +1075,16 @@ TEST (t8_gtest_geometry_cad_prism, linked_faces)
   /* clang-format on */
 
   for (int i_faces = 0; i_faces < 5; i_faces++) {
-    t8_3D_vec surface_test_return_coords;
     if (i_faces <= 2) {
       t8_vec<12> surface_test_return_coords = surface_test_return_coords_quad;
+      t8_test_geometry_cad_prism (i_faces, -1, surface_parameters + i_faces * 8, test_ref_coords,
+                                  surface_test_return_coords);
     }
     else {
       t8_vec<9> surface_test_return_coords = surface_test_return_coords_tri;
+      t8_test_geometry_cad_prism (i_faces, -1, surface_parameters + i_faces * 8, test_ref_coords,
+                                  surface_test_return_coords);
     }
-    t8_test_geometry_cad_prism (i_faces, -1, surface_parameters + i_faces * 8, test_ref_coords,
-                                surface_test_return_coords);
   }
 }
 
