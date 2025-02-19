@@ -220,7 +220,7 @@ t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn, int do_ada
 
 TEST_P (forest_iterate, test_iterate_replace)
 {
-#if T8CODE_TEST_LEVEL == 1
+#if T8CODE_TEST_LEVEL >= 1
   const int runs = 1;
 #else
   const int runs = 2;
