@@ -106,7 +106,7 @@ TEST_P (gtest_eclass, eclass_face_orientation)
       t8_axpyz (vertices + 3 * v[1], vertices + 3 * v[0], vec_0, -1.0);
       t8_axpyz (vertices + 3 * v[2], vertices + 3 * v[0], vec_1, -1.0);
       double normal[3];
-      t8_cross_3D_c_interface (vec_0, vec_1, normal);
+      t8_cross_3D (vec_0, vec_1, normal);
       double centroid[3] = { 0.0 };
       for (int ivertex = 0; ivertex < t8_eclass_num_vertices[ieclass]; ivertex++) {
         centroid[0] += vertices[3 * ivertex];
