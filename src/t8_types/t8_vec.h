@@ -49,7 +49,7 @@ t8_normalize (double vec[3]);
  * \param [out] vec_out
  */
 void
-t8_copy_c_interface (const double vec_in[3], double vec_out[3]);
+t8_copy (const double vec_in[3], double vec_out[3]);
 
 /** Euclidean distance of X and Y.
  * \param [in]  vec_x  A 3D vector.
