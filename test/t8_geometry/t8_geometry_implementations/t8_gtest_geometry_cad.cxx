@@ -257,7 +257,7 @@ t8_create_cad_hypercube (double *rot_vec, int face, int edge, double *parameters
  */
 void
 t8_test_geometry_cad_hex (double *rot_vec, int face, int edge, double *parameters, double *test_ref_coords,
-                          t8_vec<24> test_return_coords)
+                          const t8_vec<24> &test_return_coords)
 {
 #if T8_WITH_OCC
   const int num_coords = 8; /* Number of reference coordinates to test */
@@ -295,7 +295,7 @@ TEST (t8_gtest_geometry_cad_hex, linked_faces)
                                  0.9, 0.25, 0.95, 
                                  0.1,  0.9, 0.9, 
                                  0.95, 0.85, 0.8 };
-  t8_vec<24> surface_test_return_coords ({ 0.0396282769,  0.1897542602, 0.0396282769, 
+  const t8_vec<24> surface_test_return_coords ({ 0.0396282769,  0.1897542602, 0.0396282769, 
                                             0.8553975402, 0.1510451803, -0.0012778561, 
                                             0.1434278361, 0.9117760771, 0.0909403721, 
                                             0.9149739120, 0.8893780561,  0.2953610950, 
@@ -338,7 +338,7 @@ TEST (t8_gtest_geometry_cad_hex, linked_edges)
                                  0.9, 0.25, 0.95, 
                                  0.1,  0.9, 0.9, 
                                  0.95, 0.85, 0.8 };
-  t8_vec<24> curve_test_return_coords ({ 0.0955204602, 0.2235162028, 0.1217553783, 
+  const t8_vec<24> curve_test_return_coords ({ 0.0955204602, 0.2235162028, 0.1217553783, 
                                           0.7995278713, -0.0659838746, 0.2083328730, 
                                           0.1494299582, 0.9170222805, 0.1069555502, 
                                           0.8999105642, 0.8892289094, 0.3015732294, 
@@ -461,8 +461,8 @@ t8_create_cad_reference_tet (int face, int edge, double *parameters)
  */
 template <size_t dimension>
 void
-t8_test_geometry_cad_tet (int face, int edge, double *parameters, double *test_ref_coords,
-                          t8_vec<dimension> &test_return_coords)
+t8_test_geometry_cad_tet (const int face, const int edge, double *parameters, double *test_ref_coords,
+                          const t8_vec<dimension> &test_return_coords)
 {
 #if T8_WITH_OCC
   /* 4 coords for face --> 3 vertices of face & element centroid
@@ -503,7 +503,7 @@ TEST (t8_gtest_geometry_cad_tet, linked_faces)
         0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0,    // face 3
         0.75, 0.25, 0.5 };                              // element centroid
 
-  t8_vec<12> surface_test_return_coords
+  const t8_vec<12> surface_test_return_coords
      ({ 0.0, 0.0, 0.0,                      // face vertex 0
         1.0, 0.0, 0.0,                      // face vertex 1
         1.0, 0.0, 1.0,                      // face vertex 2
@@ -1017,8 +1017,8 @@ t8_create_cad_reference_prism (int face, int edge, double *parameters)
  */
 template <size_t dimension>
 void
-t8_test_geometry_cad_prism (int face, int edge, double *parameters, double *test_ref_coords,
-                            t8_vec<dimension> &test_return_coords)
+t8_test_geometry_cad_prism (const int face, const int edge, double *parameters, double *test_ref_coords,
+                            const t8_vec<dimension> &test_return_coords)
 {
 #if T8_WITH_OCC
   t8_3D_vec out_coords;
@@ -1055,12 +1055,12 @@ TEST (t8_gtest_geometry_cad_prism, linked_faces)
         1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 2.0, 2.0, 2.0 }; // face 4
     /* The 2.0's at face 3 and 4 are placeholders, because both faces only have 3 vertices. */
 
-  t8_vec<12> surface_test_return_coords_quad
+  const t8_vec<12> surface_test_return_coords_quad
     ({ 0.0, 0.0, 0.0,    // face vertex 0
         1.0, 0.0, 0.0,    // face vertex 1
         0.0, 0.0, 1.0,    // face vertex 2
         1.0, 0.0, 1.0 });  // face vertex 3
-  t8_vec<9> surface_test_return_coords_tri
+  const t8_vec<9> surface_test_return_coords_tri
     ({ 0.0, 0.0, 0.0,    // face vertex 0
         1.0, 0.0, 0.0,    // face vertex 1
         1.0, 1.0, 0.0 });  // face vertex 2
@@ -1076,12 +1076,12 @@ TEST (t8_gtest_geometry_cad_prism, linked_faces)
 
   for (int i_faces = 0; i_faces < 5; i_faces++) {
     if (i_faces <= 2) {
-      t8_vec<12> surface_test_return_coords = surface_test_return_coords_quad;
+      const t8_vec<12> surface_test_return_coords = surface_test_return_coords_quad;
       t8_test_geometry_cad_prism (i_faces, -1, surface_parameters + i_faces * 8, test_ref_coords,
                                   surface_test_return_coords);
     }
     else {
-      t8_vec<9> surface_test_return_coords = surface_test_return_coords_tri;
+      const t8_vec<9> surface_test_return_coords = surface_test_return_coords_tri;
       t8_test_geometry_cad_prism (i_faces, -1, surface_parameters + i_faces * 8, test_ref_coords,
                                   surface_test_return_coords);
     }

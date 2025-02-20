@@ -215,7 +215,7 @@ struct EqualityComparable: t8_crtp_operator<TUnderlying, EqualityComparable>
   bool
   operator!= (TUnderlying const& other) const
   {
-    return !(*this == other);
+    return this->underlying ().get () != other.get ();
   }
 };
 
