@@ -163,7 +163,7 @@ t8_orthogonal_tripod (const double v1[3], double v2[3], double v3[3])
 }
 
 void
-t8_swap_c_interface (double p1[3], double p2[3])
+t8_swap (double p1[3], double p2[3])
 {
   t8_3D_vec *p1_array = reinterpret_cast<t8_3D_vec *> (p1);
   t8_3D_vec *p2_array = reinterpret_cast<t8_3D_vec *> (p2);
