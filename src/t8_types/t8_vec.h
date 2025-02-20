@@ -124,7 +124,7 @@ t8_cross_3D (const double vec_x[3], const double vec_y[3], double cross[3]);
  * \param [out] cross  On output, the cross product of \a vec_x and \a vec_y.
  */
 double
-t8_cross_2D_c_interface (const double vec_x[2], const double vec_y[2]);
+t8_cross_2D (const double vec_x[2], const double vec_y[2]);
 
 /** Compute the difference of two vectors.
  * \param [in]  vec_x  A 3D vector.
