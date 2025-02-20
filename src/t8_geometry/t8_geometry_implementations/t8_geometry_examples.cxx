@@ -149,7 +149,7 @@ t8_geometry_tessellated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh, t
   double tangent2[3];  // Second tangent vector.
 
   // Compute normal vector of the current cmesh cell.
-  t8_normal_of_tri_c_interface (active_tree_vertices, active_tree_vertices + 3, active_tree_vertices + 6, normal);
+  t8_normal_of_tri (active_tree_vertices, active_tree_vertices + 3, active_tree_vertices + 6, normal);
   t8_normalize (normal);
 
   // Compute sphere's radius over cube root which is the shortest distance to the origin (0,0,0).
@@ -205,7 +205,7 @@ t8_geometry_cubed_spherical_shell::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx
   double tangent2[3];  // Second tangent vector.
 
   // Compute normal vector of the current cmesh cell.
-  t8_normal_of_tri_c_interface (active_tree_vertices, active_tree_vertices + 3, active_tree_vertices + 6, normal);
+  t8_normal_of_tri (active_tree_vertices, active_tree_vertices + 3, active_tree_vertices + 6, normal);
   t8_normalize (normal);
 
   // Compute sphere's radius over cube root which is the shortest distance to the origin (0,0,0).
