@@ -590,7 +590,7 @@ t8_line_point_inside (const double *p_0, const double *vec, const double *point,
      * is actually true.
      */
   double vec_check[3] = { vec[0], vec[1], vec[2] };
-  t8_ax_c_interface (vec_check, x);
+  t8_ax (vec_check, x);
   if (t8_dist (vec_check, b) > tolerance) {
     /* Point does not lie on the line. */
     return 0;
