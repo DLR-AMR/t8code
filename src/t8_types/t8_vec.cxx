@@ -70,7 +70,7 @@ t8_axy (const double vec_x[3], double vec_y[3], const double alpha)
 }
 
 void
-t8_axb_c_interface (const double vec_x[3], double vec_y[3], const double alpha, const double b)
+t8_axb (const double vec_x[3], double vec_y[3], const double alpha, const double b)
 {
   const t8_3D_vec *vec_array_x = reinterpret_cast<const t8_3D_vec *> (vec_x);
   t8_3D_vec *vec_array_y = reinterpret_cast<t8_3D_vec *> (vec_y);
