@@ -378,7 +378,7 @@ t8_msh_file_2_read_nodes (FILE *fp)
       free (line);
       return std::nullopt;
     }
-    T8_ASSERT (emplaced.first ().index == index);
+    T8_ASSERT (emplaced.first->index == index);
     last_index = index;
   }
 
@@ -526,7 +526,7 @@ t8_msh_file_4_read_nodes (FILE *fp)
         free (line);
         return std::nullopt;
       }
-      T8_ASSERT (emplaced.first ().index == index);
+      T8_ASSERT (emplaced.first->index == index_buffer[ln]);
       last_index = index_buffer[ln];
     }
     T8_FREE (index_buffer);
@@ -732,7 +732,7 @@ t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
             tree_vertices[3 * switch_indices[iswitch] + i_dim] = temp;
           }
         }
-        T8_ASSERT (!t8_cmesh_tree_vertices_negative_volume (eclass, tree_vertices, num_nodes));
+        T8_ASSERT (!t8_cmesh_tree_vertices_negative_volume (eclass, tree_vertices.data (), num_nodes));
       } /* End of negative volume handling */
       /* Set the vertices of this tree */
       t8_cmesh_set_tree_vertices (cmesh, tree_count, tree_vertices.data (), num_nodes);
@@ -1082,7 +1082,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
             tree_nodes[iswitch] = tree_nodes[switch_indices[iswitch]];
             tree_nodes[switch_indices[iswitch]] = temp_node;
           }
-          T8_ASSERT (!t8_cmesh_tree_vertices_negative_volume (eclass, tree_vertices, num_nodes));
+          T8_ASSERT (!t8_cmesh_tree_vertices_negative_volume (eclass, tree_vertices.data (), num_nodes));
         } /* End of negative volume handling */
         /* Set the vertices of this tree */
         t8_cmesh_set_tree_vertices (cmesh, tree_count, tree_vertices.data (), num_nodes);
