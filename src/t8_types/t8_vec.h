@@ -132,7 +132,7 @@ t8_cross_2D (const double vec_x[2], const double vec_y[2]);
  * \param [out] diff   On output, the difference of \a vec_x and \a vec_y.
  */
 void
-t8_diff_c_interface (const double vec_x[3], const double vec_y[3], double diff[3]);
+t8_diff (const double vec_x[3], const double vec_y[3], double diff[3]);
 
 /**
  * Check the equality of two vectors elementwise 
