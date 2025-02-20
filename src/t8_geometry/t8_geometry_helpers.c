@@ -546,7 +546,7 @@ int
 t8_vertex_point_inside (const double vertex_coords[3], const double point[3], const double tolerance)
 {
   T8_ASSERT (tolerance > 0);
-  if (t8_dist_c_interface (vertex_coords, point) > tolerance) {
+  if (t8_dist (vertex_coords, point) > tolerance) {
     return 0;
   }
   return 1;
@@ -591,7 +591,7 @@ t8_line_point_inside (const double *p_0, const double *vec, const double *point,
      */
   double vec_check[3] = { vec[0], vec[1], vec[2] };
   t8_ax_c_interface (vec_check, x);
-  if (t8_dist_c_interface (vec_check, b) > tolerance) {
+  if (t8_dist (vec_check, b) > tolerance) {
     /* Point does not lie on the line. */
     return 0;
   }

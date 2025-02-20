@@ -107,7 +107,7 @@ t8_step3_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
 
   /* Compute the distance to our sphere midpoint. */
-  dist = t8_dist_c_interface (centroid, adapt_data->midpoint);
+  dist = t8_dist (centroid, adapt_data->midpoint);
   if (dist < adapt_data->refine_if_inside_radius) {
     /* Refine this element. */
     return 1;
