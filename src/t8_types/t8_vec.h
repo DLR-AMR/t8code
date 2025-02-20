@@ -65,7 +65,7 @@ t8_dist (const double vec_x[3], const double vec_y[3]);
  * \param [in]     alpha  A factor.
  */
 void
-t8_ax_c_interface (double vec_x[3], const double alpha);
+t8_ax (double vec_x[3], const double alpha);
 
 /** Compute Y = alpha * X
  * \param [in]  vec_x  A 3D vector.

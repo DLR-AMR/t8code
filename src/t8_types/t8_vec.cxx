@@ -55,7 +55,7 @@ t8_dist (const double vec_x[3], const double vec_y[3])
 }
 
 void
-t8_ax_c_interface (double vec_x[3], const double alpha)
+t8_ax (double vec_x[3], const double alpha)
 {
   t8_3D_vec *vec_array_x = reinterpret_cast<t8_3D_vec *> (vec_x);
   t8_ax (*vec_array_x, alpha);
