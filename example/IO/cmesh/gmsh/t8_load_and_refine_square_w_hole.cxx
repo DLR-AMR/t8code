@@ -69,7 +69,7 @@ t8_midpoint (t8_forest_t forest, t8_locidx_t which_tree, t8_element_t *element, 
     for (j = 0; j < 3; j++) {
       corner[0][j] -= elem_mid_point[j];
     }
-    *h = sqrt (t8_dot_c_interface (corner[0], corner[0]));
+    *h = sqrt (t8_dot (corner[0], corner[0]));
 
     T8_FREE (corner[0]);
     T8_FREE (corner[1]);
@@ -91,7 +91,7 @@ t8_midpoint (t8_forest_t forest, t8_locidx_t which_tree, t8_element_t *element, 
       t8_axy (corner[i], elem_mid_point, 1);
       /* Set the size of the element to the euclidean distance of the two
        * vertices if it is bigger than the previous distance */
-      *h = SC_MAX (sqrt (t8_dot_c_interface (corner[i], corner[i])), *h);
+      *h = SC_MAX (sqrt (t8_dot (corner[i], corner[i])), *h);
       T8_FREE (corner[i]);
     }
   }

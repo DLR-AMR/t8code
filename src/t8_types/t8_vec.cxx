@@ -95,7 +95,7 @@ t8_axpyz (const double vec_x[3], const double vec_y[3], double vec_z[3], const d
 }
 
 double
-t8_dot_c_interface (const double vec_x[3], const double vec_y[3])
+t8_dot (const double vec_x[3], const double vec_y[3])
 {
   const t8_3D_vec *vec_array_x = reinterpret_cast<const t8_3D_vec *> (vec_x);
   const t8_3D_vec *vec_array_y = reinterpret_cast<const t8_3D_vec *> (vec_y);
