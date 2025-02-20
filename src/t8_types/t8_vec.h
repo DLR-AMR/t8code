@@ -73,7 +73,7 @@ t8_ax (double vec_x[3], const double alpha);
  * \param [in]  alpha  A factor.
  */
 void
-t8_axy_c_interface (const double vec_x[3], double vec_y[3], const double alpha);
+t8_axy (const double vec_x[3], double vec_y[3], const double alpha);
 
 /** Y = alpha * X + b
  * \param [in]  vec_x  A 3D vector.

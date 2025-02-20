@@ -86,7 +86,7 @@ t8_geometry_quadrangulated_disk::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t
     const double out_radius = t8_dot_c_interface (p, n) * inv_denominator;
 
     /* Linear blend from flat to curved: `out_coords = (1.0 - r_ref)*p + r_ref_ * out_radius * s`. */
-    t8_axy_c_interface (p, out_coords + offset_3d, 1.0 - r_ref);
+    t8_axy (p, out_coords + offset_3d, 1.0 - r_ref);
     t8_axpy_c_interface (s, out_coords + offset_3d, r_ref * out_radius);
   }
 }
@@ -163,7 +163,7 @@ t8_geometry_tessellated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh, t
 
   // Compute anchor of the tripod on the cmesh element's plane.
   double anchor[3];
-  t8_axy_c_interface (normal, anchor, distance);
+  t8_axy (normal, anchor, distance);
 
   // Loop over given reference coordinates.
   for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
@@ -224,7 +224,7 @@ t8_geometry_cubed_spherical_shell::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx
 
   // Compute anchor of the tripod on the cmesh element's plane.
   double anchor[3];
-  t8_axy_c_interface (normal, anchor, distance);
+  t8_axy (normal, anchor, distance);
 
   t8_eclass_t interpolation_eclass;
   switch (active_tree_class) {
@@ -327,7 +327,7 @@ t8_geometry_cubed_sphere::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreei
     const double out_radius = t8_dot_c_interface (p, n) * inv_denominator;
 
     /* Linear blend from flat to curved: `out_coords = (1.0 - r_ref)*p + r_ref_ * out_radius * s`. */
-    t8_axy_c_interface (p, out_coords + offset, 1.0 - r_ref);
+    t8_axy (p, out_coords + offset, 1.0 - r_ref);
     t8_axpy_c_interface (s, out_coords + offset, r_ref * out_radius);
   }
 }
