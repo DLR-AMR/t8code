@@ -112,7 +112,7 @@ t8_cross_3D (const double vec_x[3], const double vec_y[3], double cross[3])
 }
 
 double
-t8_cross_2D_c_interface (const double vec_x[2], const double vec_y[2])
+t8_cross_2D (const double vec_x[2], const double vec_y[2])
 {
   const t8_vec<2> *vec_array_x = reinterpret_cast<const t8_vec<2> *> (vec_x);
   const t8_vec<2> *vec_array_y = reinterpret_cast<const t8_vec<2> *> (vec_y);
