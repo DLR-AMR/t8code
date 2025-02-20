@@ -74,7 +74,8 @@ add_t8_test( NAME t8_gtest_basics_serial            SOURCES t8_gtest_main.cxx t8
 add_t8_test( NAME t8_gtest_netcdf_linkage_serial    SOURCES t8_gtest_main.cxx t8_gtest_netcdf_linkage.cxx )
 add_t8_test( NAME t8_gtest_vtk_linkage_serial       SOURCES t8_gtest_main.cxx t8_gtest_vtk_linkage.cxx )
 
-add_t8_test( NAME t8_gtest_type_serial              SOURCES t8_gtest_main.cxx t8_types/t8_gtest_type.cxx )
+add_t8_test( NAME t8_gtest_type_serial                  SOURCES t8_gtest_main.cxx t8_types/t8_gtest_type.cxx )
+add_t8_test( NAME t8_gtest_random_accessible_serial     SOURCES t8_gtest_main.cxx t8_types/t8_gtest_random_accessible.cxx )
 
 add_t8_test( NAME t8_gtest_hypercube_parallel                           SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_hypercube.cxx )
 add_t8_test( NAME t8_gtest_cmesh_readmshfile_serial                     SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_readmshfile.cxx )
