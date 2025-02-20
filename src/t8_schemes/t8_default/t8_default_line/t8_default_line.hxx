@@ -204,7 +204,7 @@ class t8_default_scheme_line: public t8_default_scheme_common<t8_default_scheme_
    * \param [in] corner   A corner index for the face 0 <= \a corner < num_face_corners.
    * \return              The corner number of the \a corner-th vertex of \a face.
    */
-  int
+  constexpr int
   element_get_face_corner (const t8_element_t *element, const int face, const int corner) const
   {
     T8_ASSERT (corner == 0);
@@ -217,8 +217,8 @@ class t8_default_scheme_line: public t8_default_scheme_common<t8_default_scheme_
    * \param [in] face     A face index for \a corner.
    * \return              The face number of the \a face-th face at \a corner.
    */
-  int
-  element_get_corner_face (const t8_element_t *element, int corner, int face) const
+  constexpr int
+  element_get_corner_face (const t8_element_t *element, const int corner, const int face) const
   {
     T8_ASSERT (face == 0);
     return corner;
