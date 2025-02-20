@@ -28,7 +28,6 @@
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
 #include <t8_types/t8_vec.h>
-#include <t8_element.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
