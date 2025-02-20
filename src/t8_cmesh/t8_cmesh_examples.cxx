@@ -868,14 +868,14 @@ t8_update_box_face_edges (const int dim, const double *box_corners, double *box_
     const double *v_1 = box_corners + (t8_edge_vertex_to_tree_vertex[eclass][edge][0] * 3);
     const double *v_2 = box_corners + (t8_edge_vertex_to_tree_vertex[eclass][edge][1] * 3);
     /* Get the direction vector between v_1 and v_2 and store it in box_dir. */
-    t8_axpyz_c_interface (v_1, v_2, box_dir + (edge * 3), -1.0);
+    t8_axpyz (v_1, v_2, box_dir + (edge * 3), -1.0);
     /* Get number of quads or hexs along current edge. */
     const double num_cubes = eclass == T8_ECLASS_QUAD ? (double) axes[(edge / 2 + 1) % 2] : (double) axes[edge / 4];
     /* Set length of directional vector to length of one quad or hex. */
     double length_edge;
-    length_edge = t8_norm_c_interface (box_dir + (edge * 3)) * num_cubes;
-    length_edge = t8_dist_c_interface (v_1, v_2) / length_edge;
-    t8_ax_c_interface (box_dir + (edge * 3), length_edge);
+    length_edge = t8_norm (box_dir + (edge * 3)) * num_cubes;
+    length_edge = t8_dist (v_1, v_2) / length_edge;
+    t8_ax (box_dir + (edge * 3), length_edge);
   }
 }
 
@@ -900,7 +900,7 @@ t8_resize_box (const int dim, double *box_corners, const double *box_dir, const 
   for (int face_corner = 0; face_corner < num_face_corner; face_corner++) {
     const int box_vertex = t8_face_vertex_to_tree_vertex[eclass][face][face_corner];
     const int box_edge = t8_face_to_edge_neighbor[eclass][face][face_corner];
-    t8_axpy_c_interface (box_dir + (box_edge * 3), box_corners + (box_vertex * 3), (double) factor);
+    t8_axpy (box_dir + (box_edge * 3), box_corners + (box_vertex * 3), (double) factor);
   }
   axes[face / 2] += face % 2 ? factor : -factor;
 }
@@ -969,15 +969,15 @@ t8_cmesh_set_vertices_2D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
    */
   for (t8_locidx_t quad_y_id = 0; quad_y_id < quads_y; quad_y_id++) {
     for (t8_locidx_t quad_x_id = 0; quad_x_id < quads_x; quad_x_id++) {
-      memcpy (vertices, box, 3 * sizeof (double));            /* Vertex 0 */
-      t8_axpyz_c_interface (box, box_dir, vertices + 6, 1.0); /* Vertex 2 */
+      memcpy (vertices, box, 3 * sizeof (double)); /* Vertex 0 */
+      t8_axpyz (box, box_dir, vertices + 6, 1.0);  /* Vertex 2 */
 
       /* Reduce box along x axis */
       t8_resize_box (2, box, box_dir, 0, 1, box_quads);
       t8_update_box_face_edges (2, box, box_dir, 0, box_quads);
 
-      t8_axy_c_interface (box, vertices + 3, 1.0);            /* Vertex 1 */
-      t8_axpyz_c_interface (box, box_dir, vertices + 9, 1.0); /* Vertex 3 */
+      t8_axy (box, vertices + 3, 1.0);            /* Vertex 1 */
+      t8_axpyz (box, box_dir, vertices + 9, 1.0); /* Vertex 3 */
       if (use_axis_aligned_geom && eclass == T8_ECLASS_QUAD) {
         /* Copy vertex 3 into the place of vertex 1. The box-procedure has to be done to compute 
          * vertex 3 correctly. */
@@ -1118,29 +1118,29 @@ t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
   for (t8_locidx_t hex_z_id = 0; hex_z_id < hexs_z; hex_z_id++) {
     for (t8_locidx_t hex_y_id = 0; hex_y_id < hexs_y; hex_y_id++) {
       for (t8_locidx_t hex_x_id = 0; hex_x_id < hexs_x; hex_x_id++) {
-        memcpy (vertices, box, 3 * sizeof (double));                 /* Vertex 0 */
-        t8_axpyz_c_interface (box, box_dir + 12, vertices + 6, 1.0); /* Vertex 2 */
+        memcpy (vertices, box, 3 * sizeof (double));     /* Vertex 0 */
+        t8_axpyz (box, box_dir + 12, vertices + 6, 1.0); /* Vertex 2 */
 
         /* Reduce box along z axis and face 4. */
         t8_resize_box (3, box, box_dir, 4, 1, box_hexs);
         t8_update_box_face_edges (3, box, box_dir, 4, box_hexs);
 
-        t8_axy_c_interface (box, vertices + 12, 1.0);                 /* Vertex 4 */
-        t8_axpyz_c_interface (box, box_dir + 12, vertices + 18, 1.0); /* Vertex 6 */
+        t8_axy (box, vertices + 12, 1.0);                 /* Vertex 4 */
+        t8_axpyz (box, box_dir + 12, vertices + 18, 1.0); /* Vertex 6 */
 
         /* Reduce box along x axis and face 0. */
         t8_resize_box (3, box, box_dir, 0, 1, box_hexs);
         t8_update_box_face_edges (3, box, box_dir, 0, box_hexs);
 
-        t8_axy_c_interface (box, vertices + 15, 1.0);                 /* Vertex 5 */
-        t8_axpyz_c_interface (box, box_dir + 12, vertices + 21, 1.0); /* Vertex 7 */
+        t8_axy (box, vertices + 15, 1.0);                 /* Vertex 5 */
+        t8_axpyz (box, box_dir + 12, vertices + 21, 1.0); /* Vertex 7 */
 
         /* Increase box along z axis and and face 4 */
         t8_resize_box (3, box, box_dir, 4, -1, box_hexs);
         t8_update_box_face_edges (3, box, box_dir, 4, box_hexs);
 
-        t8_axy_c_interface (box, vertices + 3, 1.0);                 /* Vertex 1 */
-        t8_axpyz_c_interface (box, box_dir + 12, vertices + 9, 1.0); /* Vertex 3 */
+        t8_axy (box, vertices + 3, 1.0);                 /* Vertex 1 */
+        t8_axpyz (box, box_dir + 12, vertices + 9, 1.0); /* Vertex 3 */
 
         if (use_axis_aligned_geom && eclass == T8_ECLASS_HEX) {
           /* Copy vertex 7 into the place of vertex 1. The box-procedure has to be done to compute 
@@ -1313,24 +1313,24 @@ t8_cmesh_new_hypercube_pad_ext (const t8_eclass_t eclass, sc_MPI_Comm comm, cons
     T8_ASSERT (boundary[3] > boundary[0]);
     /* Get the direction of the line */
     double line_dir[3];
-    t8_axpyz_c_interface (boundary, boundary + 3, line_dir, -1.0);
+    t8_axpyz (boundary, boundary + 3, line_dir, -1.0);
     /* Get length of one tree */
     double length;
-    length = t8_norm_c_interface (line_dir) * (double) polygons_x;
-    length = t8_dist_c_interface (boundary, boundary + 3) / length;
-    t8_ax_c_interface (line_dir, length);
+    length = t8_norm (line_dir) * (double) polygons_x;
+    length = t8_dist (boundary, boundary + 3) / length;
+    t8_ax (line_dir, length);
 
     double vertices[6];
     /* Set first vertex to lower end of line */
     memcpy (vertices, boundary, 3 * sizeof (double));
     /* Set second vertex to lower end of line + line_dir */
-    t8_axpyz_c_interface (line_dir, boundary, vertices + 3, 1.0);
+    t8_axpyz (line_dir, boundary, vertices + 3, 1.0);
 
     for (t8_gloidx_t tree_x = 0; tree_x < polygons_x; tree_x++) {
       t8_cmesh_set_tree_vertices (cmesh, tree_x + offset, vertices, 2);
       /* Update vertices for next tree */
-      t8_axy_c_interface (vertices, vertices + 3, 1.0);
-      t8_axpy_c_interface (line_dir, vertices + 3, 1.0);
+      t8_axy (vertices, vertices + 3, 1.0);
+      t8_axpy (line_dir, vertices + 3, 1.0);
     }
   }
   else {
@@ -1338,7 +1338,7 @@ t8_cmesh_new_hypercube_pad_ext (const t8_eclass_t eclass, sc_MPI_Comm comm, cons
     T8_ASSERT (eclass == T8_ECLASS_VERTEX);
     double vertex[3];
     /* Vertex == boundary. */
-    t8_axy_c_interface (boundary, vertex, 1.0);
+    t8_axy (boundary, vertex, 1.0);
     t8_cmesh_set_tree_vertices (cmesh, offset, vertex, 1);
   }
 
@@ -3366,10 +3366,10 @@ t8_cmesh_new_spherical_shell (t8_eclass_t eclass, t8_geometry_c *geometry,
          * Note, this works for triangles and quads.
          */
         double normal[3];
-        t8_normal_of_tri_c_interface (elem_vertices_2d, elem_vertices_2d + 3, elem_vertices_2d + 6, normal);
+        t8_normal_of_tri (elem_vertices_2d, elem_vertices_2d + 3, elem_vertices_2d + 6, normal);
 
-        if (t8_dot_c_interface (elem_vertices_2d, normal) < 0.0) {
-          t8_swap_c_interface (elem_vertices_2d + 3, elem_vertices_2d + 6);
+        if (t8_dot (elem_vertices_2d, normal) < 0.0) {
+          t8_swap (elem_vertices_2d + 3, elem_vertices_2d + 6);
         }
       }
 

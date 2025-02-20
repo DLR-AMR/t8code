@@ -25,21 +25,21 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <memory>
 
 double
-t8_norm_c_interface (const double vec[3])
+t8_norm (const double vec[3])
 {
   const t8_3D_vec *vec_array = reinterpret_cast<const t8_3D_vec *> (vec);
   return t8_norm (*vec_array);
 }
 
 void
-t8_normalize_c_interface (double vec[3])
+t8_normalize (double vec[3])
 {
   t8_3D_vec *vec_array = reinterpret_cast<t8_3D_vec *> (vec);
   t8_normalize (*vec_array);
 }
 
 void
-t8_copy_c_interface (const double vec_in[3], double vec_out[3])
+t8_copy (const double vec_in[3], double vec_out[3])
 {
   const t8_3D_vec *vec_array_in = reinterpret_cast<const t8_3D_vec *> (vec_in);
   t8_3D_vec *vec_array_out = reinterpret_cast<t8_3D_vec *> (vec_out);
@@ -47,7 +47,7 @@ t8_copy_c_interface (const double vec_in[3], double vec_out[3])
 }
 
 double
-t8_dist_c_interface (const double vec_x[3], const double vec_y[3])
+t8_dist (const double vec_x[3], const double vec_y[3])
 {
   const t8_3D_point *vec_array_x = reinterpret_cast<const t8_3D_point *> (vec_x);
   const t8_3D_point *vec_array_y = reinterpret_cast<const t8_3D_point *> (vec_y);
@@ -55,14 +55,14 @@ t8_dist_c_interface (const double vec_x[3], const double vec_y[3])
 }
 
 void
-t8_ax_c_interface (double vec_x[3], const double alpha)
+t8_ax (double vec_x[3], const double alpha)
 {
   t8_3D_vec *vec_array_x = reinterpret_cast<t8_3D_vec *> (vec_x);
   t8_ax (*vec_array_x, alpha);
 }
 
 void
-t8_axy_c_interface (const double vec_x[3], double vec_y[3], const double alpha)
+t8_axy (const double vec_x[3], double vec_y[3], const double alpha)
 {
   const t8_3D_vec *vec_array_x = reinterpret_cast<const t8_3D_vec *> (vec_x);
   t8_3D_vec *vec_array_y = reinterpret_cast<t8_3D_vec *> (vec_y);
@@ -70,7 +70,7 @@ t8_axy_c_interface (const double vec_x[3], double vec_y[3], const double alpha)
 }
 
 void
-t8_axb_c_interface (const double vec_x[3], double vec_y[3], const double alpha, const double b)
+t8_axb (const double vec_x[3], double vec_y[3], const double alpha, const double b)
 {
   const t8_3D_vec *vec_array_x = reinterpret_cast<const t8_3D_vec *> (vec_x);
   t8_3D_vec *vec_array_y = reinterpret_cast<t8_3D_vec *> (vec_y);
@@ -78,7 +78,7 @@ t8_axb_c_interface (const double vec_x[3], double vec_y[3], const double alpha, 
 }
 
 void
-t8_axpy_c_interface (const double vec_x[3], double vec_y[3], const double alpha)
+t8_axpy (const double vec_x[3], double vec_y[3], const double alpha)
 {
   const t8_3D_vec *vec_array_x = reinterpret_cast<const t8_3D_vec *> (vec_x);
   t8_3D_vec *vec_array_y = reinterpret_cast<t8_3D_vec *> (vec_y);
@@ -86,7 +86,7 @@ t8_axpy_c_interface (const double vec_x[3], double vec_y[3], const double alpha)
 }
 
 void
-t8_axpyz_c_interface (const double vec_x[3], const double vec_y[3], double vec_z[3], const double alpha)
+t8_axpyz (const double vec_x[3], const double vec_y[3], double vec_z[3], const double alpha)
 {
   const t8_3D_vec *vec_array_x = reinterpret_cast<const t8_3D_vec *> (vec_x);
   const t8_3D_vec *vec_array_y = reinterpret_cast<const t8_3D_vec *> (vec_y);
@@ -95,7 +95,7 @@ t8_axpyz_c_interface (const double vec_x[3], const double vec_y[3], double vec_z
 }
 
 double
-t8_dot_c_interface (const double vec_x[3], const double vec_y[3])
+t8_dot (const double vec_x[3], const double vec_y[3])
 {
   const t8_3D_vec *vec_array_x = reinterpret_cast<const t8_3D_vec *> (vec_x);
   const t8_3D_vec *vec_array_y = reinterpret_cast<const t8_3D_vec *> (vec_y);
@@ -103,7 +103,7 @@ t8_dot_c_interface (const double vec_x[3], const double vec_y[3])
 }
 
 void
-t8_cross_3D_c_interface (const double vec_x[3], const double vec_y[3], double cross[3])
+t8_cross_3D (const double vec_x[3], const double vec_y[3], double cross[3])
 {
   const t8_3D_vec *vec_array_x = reinterpret_cast<const t8_3D_vec *> (vec_x);
   const t8_3D_vec *vec_array_y = reinterpret_cast<const t8_3D_vec *> (vec_y);
@@ -112,7 +112,7 @@ t8_cross_3D_c_interface (const double vec_x[3], const double vec_y[3], double cr
 }
 
 double
-t8_cross_2D_c_interface (const double vec_x[2], const double vec_y[2])
+t8_cross_2D (const double vec_x[2], const double vec_y[2])
 {
   const t8_vec<2> *vec_array_x = reinterpret_cast<const t8_vec<2> *> (vec_x);
   const t8_vec<2> *vec_array_y = reinterpret_cast<const t8_vec<2> *> (vec_y);
@@ -120,7 +120,7 @@ t8_cross_2D_c_interface (const double vec_x[2], const double vec_y[2])
 }
 
 void
-t8_diff_c_interface (const double vec_x[3], const double vec_y[3], double diff[3])
+t8_diff (const double vec_x[3], const double vec_y[3], double diff[3])
 {
   const t8_3D_vec *vec_array_x = reinterpret_cast<const t8_3D_vec *> (vec_x);
   const t8_3D_vec *vec_array_y = reinterpret_cast<const t8_3D_vec *> (vec_y);
@@ -129,7 +129,7 @@ t8_diff_c_interface (const double vec_x[3], const double vec_y[3], double diff[3
 }
 
 int
-t8_eq_c_interface (const double vec_x[3], const double vec_y[3], const double tol)
+t8_eq (const double vec_x[3], const double vec_y[3], const double tol)
 {
   const t8_3D_vec *vec_array_x = reinterpret_cast<const t8_3D_vec *> (vec_x);
   const t8_3D_vec *vec_array_y = reinterpret_cast<const t8_3D_vec *> (vec_y);
@@ -137,14 +137,14 @@ t8_eq_c_interface (const double vec_x[3], const double vec_y[3], const double to
 }
 
 void
-t8_rescale_c_interface (double vec[3], const double new_length)
+t8_rescale (double vec[3], const double new_length)
 {
   t8_3D_vec *vec_array = reinterpret_cast<t8_3D_vec *> (vec);
   t8_rescale (*vec_array, new_length);
 }
 
 void
-t8_normal_of_tri_c_interface (const double p1[3], const double p2[3], const double p3[3], double normal[3])
+t8_normal_of_tri (const double p1[3], const double p2[3], const double p3[3], double normal[3])
 {
   const t8_3D_vec *p1_array = reinterpret_cast<const t8_3D_vec *> (p1);
   const t8_3D_vec *p2_array = reinterpret_cast<const t8_3D_vec *> (p2);
@@ -154,7 +154,7 @@ t8_normal_of_tri_c_interface (const double p1[3], const double p2[3], const doub
 }
 
 void
-t8_orthogonal_tripod_c_interface (const double v1[3], double v2[3], double v3[3])
+t8_orthogonal_tripod (const double v1[3], double v2[3], double v3[3])
 {
   const t8_3D_vec *v1_array = reinterpret_cast<const t8_3D_vec *> (v1);
   t8_3D_vec *v2_array = reinterpret_cast<t8_3D_vec *> (v2);
@@ -163,7 +163,7 @@ t8_orthogonal_tripod_c_interface (const double v1[3], double v2[3], double v3[3]
 }
 
 void
-t8_swap_c_interface (double p1[3], double p2[3])
+t8_swap (double p1[3], double p2[3])
 {
   t8_3D_vec *p1_array = reinterpret_cast<t8_3D_vec *> (p1);
   t8_3D_vec *p2_array = reinterpret_cast<t8_3D_vec *> (p2);
