@@ -206,10 +206,10 @@ struct Swapable: t8_crtp_operator<TUnderlying, Swapable>
 template <typename TUnderlying>
 struct EqualityComparable: t8_crtp_operator<TUnderlying, EqualityComparable>
 {
-  constexpr bool
-  operator== (TUnderlying const& other) const noexcept
+  friend constexpr bool
+  operator== (const TUnderlying& lhs, const TUnderlying& rhs) noexcept
   {
-    return this->underlying ().get () == other.get ();
+    return lhs.get () == rhs.get ();
   }
 };
 
