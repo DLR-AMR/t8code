@@ -532,9 +532,9 @@ t8_forest_element_triangle_area (double coordinates[3][3])
 
   /* Compute vectors v_1 and v_2 */
   /* v_1 = v_1 - v_0 */
-  t8_axpy_c_interface (coordinates[0], coordinates[1], -1);
+  t8_axpy (coordinates[0], coordinates[1], -1);
   /* v_2 = v_2 - v_0 */
-  t8_axpy_c_interface (coordinates[0], coordinates[2], -1);
+  t8_axpy (coordinates[0], coordinates[2], -1);
   /* compute scalar products */
   v_1v_1 = t8_dot_c_interface (coordinates[1], coordinates[1]);
   v_1v_2 = t8_dot_c_interface (coordinates[1], coordinates[2]);
@@ -668,7 +668,7 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid, const t8_elem
 
     /* Compute the difference of each corner with corner 0 */
     for (i = 1; i < 4; i++) {
-      t8_axpy_c_interface (coordinates[0], coordinates[i], -1);
+      t8_axpy (coordinates[0], coordinates[i], -1);
     }
 
     /* Compute the cross product of the 2nd and 3rd */
@@ -835,7 +835,7 @@ t8_forest_element_face_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const 
 
     /* Compute the average of those coordinates */
     /* centroid = centroid + vertex_a */
-    t8_axpy_c_interface (vertex_a, centroid, 1);
+    t8_axpy (vertex_a, centroid, 1);
     /* centroid /= 2 */
     t8_ax (centroid, 0.5);
     return;
@@ -854,7 +854,7 @@ t8_forest_element_face_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const 
 
     for (i = 1; i < num_corners; i++) {
       /* coordinates[0] = SUM (coordinates[i]) */
-      t8_axpy_c_interface (coordinates[i], coordinates[0], 1);
+      t8_axpy (coordinates[i], coordinates[0], 1);
     }
     /* centroid = coordinates[0] */
     t8_axb (coordinates[0], centroid, 1, 0);
@@ -941,7 +941,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
     t8_forest_element_coordinate (forest, ltreeid, element, 1, normal);
 
     /* Compute normal = v_1 - v_0 */
-    t8_axpy_c_interface (v_0, normal, -1);
+    t8_axpy (v_0, normal, -1);
 
     /* Compute the norm */
     norm = t8_norm (normal);
@@ -986,9 +986,9 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
        * Compute the dot products */
     vb_vb = c_vb = 0;
     /* vertex_b = vertex_b - vertex_a */
-    t8_axpy_c_interface (vertex_a, vertex_b, -1);
+    t8_axpy (vertex_a, vertex_b, -1);
     /* center = center - vertex_a */
-    t8_axpy_c_interface (vertex_a, center, -1);
+    t8_axpy (vertex_a, center, -1);
     /* vertex_b * vertex_b */
     vb_vb = t8_dot_c_interface (vertex_b, vertex_b);
     /* center * vertex_b */
@@ -1052,8 +1052,8 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
       t8_forest_element_coordinate (forest, ltreeid, element, corner, corner_vertices[i]);
     }
     /* Subtract vertex 0 from the other two */
-    t8_axpy_c_interface (corner_vertices[0], corner_vertices[1], -1);
-    t8_axpy_c_interface (corner_vertices[0], corner_vertices[2], -1);
+    t8_axpy (corner_vertices[0], corner_vertices[1], -1);
+    t8_axpy (corner_vertices[0], corner_vertices[2], -1);
 
     /* Compute the cross product of the two,
      * and the norm of the cross product */
@@ -1063,7 +1063,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
     /* Compute the coordinates of the center of the element */
     t8_forest_element_centroid (forest, ltreeid, element, center);
     /* Compute center = center - vertex_0 */
-    t8_axpy_c_interface (corner_vertices[0], center, -1);
+    t8_axpy (corner_vertices[0], center, -1);
     /* Compute the dot-product of normal and center */
     c_n = t8_dot_c_interface (center, normal);
     /* if c_n is positive, the computed normal points inwards, so we have to reverse it */

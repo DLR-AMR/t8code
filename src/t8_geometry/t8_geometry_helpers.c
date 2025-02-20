@@ -658,7 +658,7 @@ t8_plane_point_inside (const double point_on_face[3], const double face_normal[3
 {
   /* Set x = x - p */
   double pof[3] = { point_on_face[0], point_on_face[1], point_on_face[2] };
-  t8_axpy_c_interface (point, pof, -1);
+  t8_axpy (point, pof, -1);
   /* Compute <x-p,n> */
   const double dot_product = t8_dot_c_interface (pof, face_normal);
   if (dot_product < 0) {
