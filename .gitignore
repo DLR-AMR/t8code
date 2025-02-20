@@ -1,7 +1,3 @@
-.cache/
-.vscode/
-tutorials/
-
 sc/
 p4est/
 build-aux/
