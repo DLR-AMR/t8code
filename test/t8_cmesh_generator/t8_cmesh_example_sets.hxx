@@ -59,6 +59,8 @@ auto pretty_print_base_example_scheme = [] (const testing::TestParamInfo<std::tu
 
 namespace cmesh_list
 {
+#if T8CODE_TEST_LEVEL >= 2
+// Do not test bigmesh
 std::vector<example_set *> cart_prod_vec = { new_from_class::cmesh_example,
                                              new_prism_cake::cmesh_example,
                                              new_bigmesh::cmesh_example,
@@ -70,6 +72,19 @@ std::vector<example_set *> cart_prod_vec = { new_from_class::cmesh_example,
                                              new_disjoint_bricks::cmesh_example,
                                              new_empty::cmesh_example,
                                              new_periodic::cmesh_example };
+#else
+std::vector<example_set *> cart_prod_vec = { new_from_class::cmesh_example,
+                                             new_prism_cake::cmesh_example,
+                                             new_bigmesh::cmesh_example,
+                                             new_cmesh_comm::cmesh_example,
+                                             new_hypercube_pad::cmesh_example_non_periodic_boundaries,
+                                             new_hypercube_pad::cmesh_example_periodic_boundaries,
+                                             new_hypercube_cmesh::cmesh_example,
+                                             new_hypercube_cmesh::cmesh_example_pyra,
+                                             new_disjoint_bricks::cmesh_example,
+                                             new_empty::cmesh_example,
+                                             new_periodic::cmesh_example };
+#endif
 
 cmesh_sum_of_sets cmesh_sums (cart_prod_vec);
 
