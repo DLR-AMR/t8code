@@ -873,7 +873,7 @@ t8_update_box_face_edges (const int dim, const double *box_corners, double *box_
     const double num_cubes = eclass == T8_ECLASS_QUAD ? (double) axes[(edge / 2 + 1) % 2] : (double) axes[edge / 4];
     /* Set length of directional vector to length of one quad or hex. */
     double length_edge;
-    length_edge = t8_norm_c_interface (box_dir + (edge * 3)) * num_cubes;
+    length_edge = t8_norm (box_dir + (edge * 3)) * num_cubes;
     length_edge = t8_dist_c_interface (v_1, v_2) / length_edge;
     t8_ax_c_interface (box_dir + (edge * 3), length_edge);
   }
@@ -1316,7 +1316,7 @@ t8_cmesh_new_hypercube_pad_ext (const t8_eclass_t eclass, sc_MPI_Comm comm, cons
     t8_axpyz_c_interface (boundary, boundary + 3, line_dir, -1.0);
     /* Get length of one tree */
     double length;
-    length = t8_norm_c_interface (line_dir) * (double) polygons_x;
+    length = t8_norm (line_dir) * (double) polygons_x;
     length = t8_dist_c_interface (boundary, boundary + 3) / length;
     t8_ax_c_interface (line_dir, length);
 

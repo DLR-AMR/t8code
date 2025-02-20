@@ -25,14 +25,14 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <memory>
 
 double
-t8_norm_c_interface (const double vec[3])
+t8_norm (const double vec[3])
 {
   const t8_3D_vec *vec_array = reinterpret_cast<const t8_3D_vec *> (vec);
   return t8_norm (*vec_array);
 }
 
 void
-t8_normalize_c_interface (double vec[3])
+t8_normalize (double vec[3])
 {
   t8_3D_vec *vec_array = reinterpret_cast<t8_3D_vec *> (vec);
   t8_normalize (*vec_array);

@@ -36,13 +36,13 @@ T8_EXTERN_C_BEGIN ();
  * \return          The norm of \a vec.
  */
 double
-t8_norm_c_interface (const double vec[3]);
+t8_norm (const double vec[3]);
 
 /** Normalize a vector.
  * \param [in,out] vec  A 3D vector.
  */
 void
-t8_normalize_c_interface (double vec[3]);
+t8_normalize (double vec[3]);
 
 /** Make a copy of a vector.
  * \param [in]  vec_in

@@ -46,11 +46,11 @@ t8_geometry_quadrangulated_disk::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t
 
   /* Normal vector along one of the straight edges of the quad. */
   t8_copy_c_interface (active_tree_vertices, n);
-  t8_normalize_c_interface (n);
+  t8_normalize (n);
 
   /* Radial vector parallel to one of the tilted edges of the quad. */
   t8_copy_c_interface (active_tree_vertices + 9, r);
-  t8_normalize_c_interface (r);
+  t8_normalize (r);
 
   const double inv_denominator = 1.0 / t8_dot_c_interface (r, n);
 
@@ -76,7 +76,7 @@ t8_geometry_quadrangulated_disk::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t
 
       /* Compute and normalize vector `s`. */
       t8_geom_linear_interpolation (corr_ref_coords, active_tree_vertices, 3, 2, s);
-      t8_normalize_c_interface (s);
+      t8_normalize (s);
     }
 
     /* Correction in order to rectify elements near the corners. */
@@ -98,7 +98,7 @@ t8_geom_evaluate_sphere_tri_prism (const double *active_tree_vertices, const t8_
   // All elements are aligned such that the reference z-direction follows the
   // outward radial direction of the sphere. Hence the inner radius is equal to
   // the norm of the first position vector of `active_tree_vertices`.
-  const double inner_radius = t8_norm_c_interface (active_tree_vertices);
+  const double inner_radius = t8_norm (active_tree_vertices);
 
   t8_geom_compute_linear_geometry (eclass, active_tree_vertices, ref_coords, num_coords, out_coords);
 
@@ -110,7 +110,7 @@ t8_geom_evaluate_sphere_tri_prism (const double *active_tree_vertices, const t8_
   }
   else {
     const size_t outer_vertex_offset = 3 * 3;
-    const double shell_thickness = t8_norm_c_interface (active_tree_vertices + outer_vertex_offset) - inner_radius;
+    const double shell_thickness = t8_norm (active_tree_vertices + outer_vertex_offset) - inner_radius;
     for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
       const size_t offset = 3 * i_coord;
       const double z = ref_coords[offset + 2];
@@ -150,7 +150,7 @@ t8_geometry_tessellated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh, t
 
   // Compute normal vector of the current cmesh cell.
   t8_normal_of_tri_c_interface (active_tree_vertices, active_tree_vertices + 3, active_tree_vertices + 6, normal);
-  t8_normalize_c_interface (normal);
+  t8_normalize (normal);
 
   // Compute sphere's radius over cube root which is the shortest distance to the origin (0,0,0).
   const double distance = std::abs (t8_dot_c_interface (active_tree_vertices, normal));
@@ -206,7 +206,7 @@ t8_geometry_cubed_spherical_shell::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx
 
   // Compute normal vector of the current cmesh cell.
   t8_normal_of_tri_c_interface (active_tree_vertices, active_tree_vertices + 3, active_tree_vertices + 6, normal);
-  t8_normalize_c_interface (normal);
+  t8_normalize (normal);
 
   // Compute sphere's radius over cube root which is the shortest distance to the origin (0,0,0).
   const double distance = std::abs (t8_dot_c_interface (active_tree_vertices, normal));
@@ -282,10 +282,10 @@ t8_geometry_cubed_sphere::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreei
   }
 
   t8_copy_c_interface (active_tree_vertices, n);
-  t8_normalize_c_interface (n);
+  t8_normalize (n);
 
   t8_copy_c_interface (active_tree_vertices + 7 * 3, r);
-  t8_normalize_c_interface (r);
+  t8_normalize (r);
 
   const double inv_denominator = 1.0 / t8_dot_c_interface (r, n);
 
@@ -318,7 +318,7 @@ t8_geometry_cubed_sphere::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreei
 
       /* Compute and normalize vector `s`. */
       t8_geom_linear_interpolation (corr_ref_coords, active_tree_vertices, 3, 3, s);
-      t8_normalize_c_interface (s);
+      t8_normalize (s);
     }
 
     t8_geom_linear_interpolation (ref_coords + offset, active_tree_vertices, 3, 3, p);
