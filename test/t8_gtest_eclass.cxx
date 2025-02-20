@@ -114,7 +114,7 @@ TEST_P (gtest_eclass, eclass_face_orientation)
         centroid[2] += vertices[3 * ivertex + 2];
       }
       t8_ax (centroid, 1.0 / t8_eclass_num_vertices[ieclass]);
-      t8_axpy_c_interface (vertices + 3 * v[0], centroid, -1.0);
+      t8_axpy (vertices + 3 * v[0], centroid, -1.0);
       const double c_n = t8_dot_c_interface (centroid, normal);
       const int orientation = c_n > 0 ? 0 : 1;
       EXPECT_EQ (orientation, t8_eclass_face_orientation[ieclass][iface]);

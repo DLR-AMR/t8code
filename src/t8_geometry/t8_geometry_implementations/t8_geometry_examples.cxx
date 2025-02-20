@@ -87,7 +87,7 @@ t8_geometry_quadrangulated_disk::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t
 
     /* Linear blend from flat to curved: `out_coords = (1.0 - r_ref)*p + r_ref_ * out_radius * s`. */
     t8_axy (p, out_coords + offset_3d, 1.0 - r_ref);
-    t8_axpy_c_interface (s, out_coords + offset_3d, r_ref * out_radius);
+    t8_axpy (s, out_coords + offset_3d, r_ref * out_radius);
   }
 }
 
@@ -186,8 +186,8 @@ t8_geometry_tessellated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh, t
     // Compute the final transformed coordinates.
     double *out_vec = out_coords + offset_3d;
     t8_copy (anchor, out_vec);
-    t8_axpy_c_interface (tangent1, out_vec, alpha1);
-    t8_axpy_c_interface (tangent2, out_vec, alpha2);
+    t8_axpy (tangent1, out_vec, alpha1);
+    t8_axpy (tangent2, out_vec, alpha2);
     t8_rescale_c_interface (out_vec, radius);
   }
 }
@@ -257,8 +257,8 @@ t8_geometry_cubed_spherical_shell::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx
     // Compute the final transformed coordinates.
     double *out_vec = out_coords + offset_3d;
     t8_copy (anchor, out_vec);
-    t8_axpy_c_interface (tangent1, out_vec, alpha1);
-    t8_axpy_c_interface (tangent2, out_vec, alpha2);
+    t8_axpy (tangent1, out_vec, alpha1);
+    t8_axpy (tangent2, out_vec, alpha2);
     t8_rescale_c_interface (out_vec, inner_radius + ref_coords[offset_3d + 2] * shell_thickness);
   }
 }
@@ -328,7 +328,7 @@ t8_geometry_cubed_sphere::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreei
 
     /* Linear blend from flat to curved: `out_coords = (1.0 - r_ref)*p + r_ref_ * out_radius * s`. */
     t8_axy (p, out_coords + offset, 1.0 - r_ref);
-    t8_axpy_c_interface (s, out_coords + offset, r_ref * out_radius);
+    t8_axpy (s, out_coords + offset, r_ref * out_radius);
   }
 }
 

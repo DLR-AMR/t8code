@@ -900,7 +900,7 @@ t8_resize_box (const int dim, double *box_corners, const double *box_dir, const 
   for (int face_corner = 0; face_corner < num_face_corner; face_corner++) {
     const int box_vertex = t8_face_vertex_to_tree_vertex[eclass][face][face_corner];
     const int box_edge = t8_face_to_edge_neighbor[eclass][face][face_corner];
-    t8_axpy_c_interface (box_dir + (box_edge * 3), box_corners + (box_vertex * 3), (double) factor);
+    t8_axpy (box_dir + (box_edge * 3), box_corners + (box_vertex * 3), (double) factor);
   }
   axes[face / 2] += face % 2 ? factor : -factor;
 }
@@ -1330,7 +1330,7 @@ t8_cmesh_new_hypercube_pad_ext (const t8_eclass_t eclass, sc_MPI_Comm comm, cons
       t8_cmesh_set_tree_vertices (cmesh, tree_x + offset, vertices, 2);
       /* Update vertices for next tree */
       t8_axy (vertices, vertices + 3, 1.0);
-      t8_axpy_c_interface (line_dir, vertices + 3, 1.0);
+      t8_axpy (line_dir, vertices + 3, 1.0);
     }
   }
   else {

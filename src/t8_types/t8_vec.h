@@ -92,7 +92,7 @@ t8_axb (const double vec_x[3], double vec_y[3], const double alpha, const double
  * \param [in]  alpha  A factor.
  */
 void
-t8_axpy_c_interface (const double vec_x[3], double vec_y[3], const double alpha);
+t8_axpy (const double vec_x[3], double vec_y[3], const double alpha);
 
 /** Z = Y + alpha * X
  * \param [in]  vec_x  A 3D vector.
