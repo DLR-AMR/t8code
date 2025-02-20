@@ -150,7 +150,7 @@ t8_eq (const double vec_x[3], const double vec_y[3], const double tol);
  * \param [in]  new_length  New length of the vector.
  */
 void
-t8_rescale_c_interface (double vec[3], const double new_length);
+t8_rescale (double vec[3], const double new_length);
 
 /** Compute the normal of a triangle given by its three vertices.
  * \param [in]  p1  A 3D vector.

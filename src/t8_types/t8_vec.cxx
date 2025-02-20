@@ -137,7 +137,7 @@ t8_eq (const double vec_x[3], const double vec_y[3], const double tol)
 }
 
 void
-t8_rescale_c_interface (double vec[3], const double new_length)
+t8_rescale (double vec[3], const double new_length)
 {
   t8_3D_vec *vec_array = reinterpret_cast<t8_3D_vec *> (vec);
   t8_rescale (*vec_array, new_length);
