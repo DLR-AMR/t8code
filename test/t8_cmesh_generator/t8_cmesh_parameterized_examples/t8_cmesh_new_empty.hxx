@@ -52,7 +52,7 @@ example_set *cmesh_example
     std::make_pair (cmesh_params::my_comms.begin (), cmesh_params::my_comms.end ()),
     std::make_pair (cmesh_params::partition.begin (), cmesh_params::partition.end ()),
     std::make_pair (cmesh_params::do_bcast.begin (), cmesh_params::do_bcast.end ()), new_from_class_wrapper,
-    print_function, "t8_cmesh_new_empty_");
+    print_function, "t8_cmesh_new_empty");
 } /* namespace new_empty */
 
 #endif /* T8_CMESH_NEW_EMPTY_HXX */
