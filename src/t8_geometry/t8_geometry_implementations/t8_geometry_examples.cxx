@@ -176,7 +176,7 @@ t8_geometry_tessellated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh, t
 
     // Compute difference vector between position and tripod's anchor.
     double diff_vec[3];
-    t8_diff_c_interface (position, anchor, diff_vec);
+    t8_diff (position, anchor, diff_vec);
 
     // Compute the coefficients of the difference vector in the local
     // coordinate system of the tripod and apply equi-angular correction.
@@ -246,7 +246,7 @@ t8_geometry_cubed_spherical_shell::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx
 
     // Compute difference vector between position and tripod's anchor.
     double diff_vec[3];
-    t8_diff_c_interface (position, anchor, diff_vec);
+    t8_diff (position, anchor, diff_vec);
 
     // Compute the coefficients of the difference vector in the local
     // coordinate system of the tripod and apply equi-angular correction.
