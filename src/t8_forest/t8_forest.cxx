@@ -857,7 +857,7 @@ t8_forest_element_face_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const 
       t8_axpy_c_interface (coordinates[i], coordinates[0], 1);
     }
     /* centroid = coordinates[0] */
-    t8_axb_c_interface (coordinates[0], centroid, 1, 0);
+    t8_axb (coordinates[0], centroid, 1, 0);
     /* divide by num corners */
     t8_ax (centroid, 1. / num_corners);
     return;
