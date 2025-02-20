@@ -173,7 +173,7 @@ t8_orthogonal_tripod (const double v1[3], double v2[3], double v3[3]);
  * \param [in,out]  p2  A 3D vector.
  */
 void
-t8_swap_c_interface (double p1[3], double p2[3]);
+t8_swap (double p1[3], double p2[3]);
 
 T8_EXTERN_C_END ();
 
