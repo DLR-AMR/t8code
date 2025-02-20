@@ -159,7 +159,7 @@ t8_rescale (double vec[3], const double new_length);
  * \param [out] Normal vector of the triangle. (Not necessarily of length 1!)
  */
 void
-t8_normal_of_tri_c_interface (const double p1[3], const double p2[3], const double p3[3], double normal[3]);
+t8_normal_of_tri (const double p1[3], const double p2[3], const double p3[3], double normal[3]);
 
 /** Compute an orthogonal coordinate system from a given vector.
  * \param [in]   v1 3D vector.

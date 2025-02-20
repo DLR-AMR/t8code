@@ -144,7 +144,7 @@ t8_rescale (double vec[3], const double new_length)
 }
 
 void
-t8_normal_of_tri_c_interface (const double p1[3], const double p2[3], const double p3[3], double normal[3])
+t8_normal_of_tri (const double p1[3], const double p2[3], const double p3[3], double normal[3])
 {
   const t8_3D_vec *p1_array = reinterpret_cast<const t8_3D_vec *> (p1);
   const t8_3D_vec *p2_array = reinterpret_cast<const t8_3D_vec *> (p2);
