@@ -103,8 +103,8 @@ TEST_P (gtest_eclass, eclass_face_orientation)
       /* clang-format on */
       double vec_0[3];
       double vec_1[3];
-      t8_axpyz_c_interface (vertices + 3 * v[1], vertices + 3 * v[0], vec_0, -1.0);
-      t8_axpyz_c_interface (vertices + 3 * v[2], vertices + 3 * v[0], vec_1, -1.0);
+      t8_axpyz (vertices + 3 * v[1], vertices + 3 * v[0], vec_0, -1.0);
+      t8_axpyz (vertices + 3 * v[2], vertices + 3 * v[0], vec_1, -1.0);
       double normal[3];
       t8_cross_3D_c_interface (vec_0, vec_1, normal);
       double centroid[3] = { 0.0 };

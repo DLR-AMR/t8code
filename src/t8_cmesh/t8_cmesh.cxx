@@ -1335,7 +1335,7 @@ t8_cmesh_coords_axb (const double *coords_in, double *coords_out, int num_vertic
   int i;
 
   for (i = 0; i < num_vertices; i++) {
-    t8_axpyz_c_interface (coords_in + i * 3, b, coords_out + i * 3, alpha);
+    t8_axpyz (coords_in + i * 3, b, coords_out + i * 3, alpha);
   }
 }
 

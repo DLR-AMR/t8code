@@ -558,7 +558,7 @@ t8_line_point_inside (const double *p_0, const double *vec, const double *point,
   T8_ASSERT (tolerance > 0);
   double b[3];
   /* b = p - p_0 */
-  t8_axpyz_c_interface (p_0, point, b, -1);
+  t8_axpyz (p_0, point, b, -1);
   double x = 0; /* Initialized to prevent compiler warning. */
   int i;
   /* So x is the solution to
@@ -617,7 +617,7 @@ t8_triangle_point_inside (const double p_0[3], const double v[3], const double w
   T8_ASSERT (tolerance > 0); /* negative values and zero are not allowed */
   double b[3];
   /* b = point - p_0 */
-  t8_axpyz_c_interface (p_0, point, b, -1);
+  t8_axpyz (p_0, point, b, -1);
 
   /* Let d = det (v w e_3) */
   const double det_vwe3 = v[0] * w[1] - v[1] * w[0];
