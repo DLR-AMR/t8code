@@ -536,9 +536,9 @@ t8_forest_element_triangle_area (double coordinates[3][3])
   /* v_2 = v_2 - v_0 */
   t8_axpy (coordinates[0], coordinates[2], -1);
   /* compute scalar products */
-  v_1v_1 = t8_dot_c_interface (coordinates[1], coordinates[1]);
-  v_1v_2 = t8_dot_c_interface (coordinates[1], coordinates[2]);
-  v_2v_2 = t8_dot_c_interface (coordinates[2], coordinates[2]);
+  v_1v_1 = t8_dot (coordinates[1], coordinates[1]);
+  v_1v_2 = t8_dot (coordinates[1], coordinates[2]);
+  v_2v_2 = t8_dot (coordinates[2], coordinates[2]);
 
   /* compute determinant and half it */
   return 0.5 * sqrt (fabs (v_1v_1 * v_2v_2 - v_1v_2 * v_1v_2));
@@ -567,7 +567,7 @@ t8_forest_element_tet_volume (const double coordinates[4][3])
   t8_cross_3D_c_interface (coordinates_tmp[1], coordinates_tmp[2], cross);
 
   /* return |(a-d) * ((b-d)x(c-d))| / 6 */
-  return fabs (t8_dot_c_interface (coordinates_tmp[0], cross)) / 6;
+  return fabs (t8_dot (coordinates_tmp[0], cross)) / 6;
 }
 
 /* Compute an element's volume */
@@ -675,7 +675,7 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid, const t8_elem
     t8_cross_3D_c_interface (coordinates[2], coordinates[3], cross);
 
     /* return |(a-d) * ((b-d)x(c-d))| */
-    return fabs (t8_dot_c_interface (coordinates[1], cross));
+    return fabs (t8_dot (coordinates[1], cross));
   }
   case T8_ECLASS_PRISM:
 
@@ -990,9 +990,9 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
     /* center = center - vertex_a */
     t8_axpy (vertex_a, center, -1);
     /* vertex_b * vertex_b */
-    vb_vb = t8_dot_c_interface (vertex_b, vertex_b);
+    vb_vb = t8_dot (vertex_b, vertex_b);
     /* center * vertex_b */
-    c_vb = t8_dot_c_interface (center, vertex_b);
+    c_vb = t8_dot (center, vertex_b);
 
     /* Compute N = C - <C,V>/<V,V> V
        * compute the norm of N
@@ -1000,7 +1000,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
     t8_axpyz (vertex_b, center, normal, -1 * c_vb / vb_vb);
     norm = t8_norm (normal);
     T8_ASSERT (norm != 0);
-    c_n = t8_dot_c_interface (center, normal);
+    c_n = t8_dot (center, normal);
 
     /* If N*C > 0 then N points inwards, so we have to reverse it */
     if (c_n > 0) {
@@ -1065,7 +1065,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
     /* Compute center = center - vertex_0 */
     t8_axpy (corner_vertices[0], center, -1);
     /* Compute the dot-product of normal and center */
-    c_n = t8_dot_c_interface (center, normal);
+    c_n = t8_dot (center, normal);
     /* if c_n is positive, the computed normal points inwards, so we have to reverse it */
     if (c_n > 0) {
       norm = -norm;
