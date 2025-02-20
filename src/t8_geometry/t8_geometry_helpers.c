@@ -174,7 +174,7 @@ t8_geom_compute_linear_geometry (t8_eclass_t tree_class, const double *tree_vert
       /* Get a quad interpolation of the base */
       t8_geom_linear_interpolation (base_coords, tree_vertices, T8_ECLASS_MAX_DIM, 2, out_coords + offset_domain_dim);
       /* Get vector from base to pyramid tip */
-      t8_diff_c_interface (tree_vertices + 4 * T8_ECLASS_MAX_DIM, out_coords + offset_domain_dim, vec);
+      t8_diff (tree_vertices + 4 * T8_ECLASS_MAX_DIM, out_coords + offset_domain_dim, vec);
       /* Add vector to base */
       for (i_dim = 0; i_dim < 3; i_dim++) {
         out_coords[offset_domain_dim + i_dim] += vec[i_dim] * ref_coords[offset_tree_dim + 2];
@@ -217,7 +217,7 @@ t8_geom_compute_linear_axis_aligned_geometry (const t8_eclass_t tree_class, cons
   const int dimension = t8_eclass_to_dimension[tree_class];
   /* Compute vector between both points */
   double vector[3];
-  t8_diff_c_interface (tree_vertices + T8_ECLASS_MAX_DIM, tree_vertices, vector);
+  t8_diff (tree_vertices + T8_ECLASS_MAX_DIM, tree_vertices, vector);
 
   /* Compute the coordinates of the reference point. */
   for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
@@ -446,7 +446,7 @@ t8_geom_get_tet_face_intersection (const int face, const double *ref_coords, dou
   /* Calculate the vector from the opposite vertex to the
    * reference coordinate in reference space */
   double vector[3] = { 0 };
-  t8_diff_c_interface (ref_coords, ref_opposite_vertex, vector);
+  t8_diff (ref_coords, ref_opposite_vertex, vector);
 
   /* Calculate t to get the point on the ray (extension of vector), which lies on the face.
    * The vector will later be multiplied by t to get the exact distance from the opposite vertex to the face intersection. 
