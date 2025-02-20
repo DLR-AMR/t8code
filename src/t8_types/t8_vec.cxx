@@ -47,7 +47,7 @@ t8_copy (const double vec_in[3], double vec_out[3])
 }
 
 double
-t8_dist_c_interface (const double vec_x[3], const double vec_y[3])
+t8_dist (const double vec_x[3], const double vec_y[3])
 {
   const t8_3D_point *vec_array_x = reinterpret_cast<const t8_3D_point *> (vec_x);
   const t8_3D_point *vec_array_y = reinterpret_cast<const t8_3D_point *> (vec_y);
