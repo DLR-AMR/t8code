@@ -105,7 +105,7 @@ t8_geom_evaluate_sphere_tri_prism (const double *active_tree_vertices, const t8_
   if (eclass == T8_ECLASS_TRIANGLE) {
     for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
       const size_t offset = 3 * i_coord;
-      t8_rescale_c_interface (out_coords + offset, inner_radius);
+      t8_rescale (out_coords + offset, inner_radius);
     }
   }
   else {
@@ -114,7 +114,7 @@ t8_geom_evaluate_sphere_tri_prism (const double *active_tree_vertices, const t8_
     for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
       const size_t offset = 3 * i_coord;
       const double z = ref_coords[offset + 2];
-      t8_rescale_c_interface (out_coords + offset, inner_radius + z * shell_thickness);
+      t8_rescale (out_coords + offset, inner_radius + z * shell_thickness);
     }
   }
 }
@@ -188,7 +188,7 @@ t8_geometry_tessellated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh, t
     t8_copy (anchor, out_vec);
     t8_axpy (tangent1, out_vec, alpha1);
     t8_axpy (tangent2, out_vec, alpha2);
-    t8_rescale_c_interface (out_vec, radius);
+    t8_rescale (out_vec, radius);
   }
 }
 
@@ -258,7 +258,7 @@ t8_geometry_cubed_spherical_shell::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx
     t8_copy (anchor, out_vec);
     t8_axpy (tangent1, out_vec, alpha1);
     t8_axpy (tangent2, out_vec, alpha2);
-    t8_rescale_c_interface (out_vec, inner_radius + ref_coords[offset_3d + 2] * shell_thickness);
+    t8_rescale (out_vec, inner_radius + ref_coords[offset_3d + 2] * shell_thickness);
   }
 }
 
