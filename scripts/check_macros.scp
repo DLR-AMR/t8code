@@ -1,0 +1,38 @@
+#!/bin/bash
+
+if [ "$#" -ne 1 ]; then
+    echo "Usage: $0 <file_path>"
+    exit 1
+fi
+
+file_path=$1
+
+# 
+# This script searches for lines containing a macro definition in the style of '#ifdef T8_ENABLE_' 
+# in the specified file and processes each matching line.
+# It uses 'grep' to find all occurrences of '#ifdef T8_ENABLE_' in the file located 
+# at the path stored in the variable 'file_path'. The '-n' option with 'grep' 
+# ensures that the line numbers of the matching lines are included in the output.
+# The output of 'grep' is then piped into a 'while' loop, which reads each line 
+# and splits it into the line number and the line content using ':' as the delimiter.
+# Variables:
+# - file_path: The path to the file to be searched.
+# - line_number: The line number where the macro definition is found.
+# - line: The content of the line where the macro definition is found.
+# 
+
+found_macros=FALSE
+
+while IFS=: read -r line_number line; do
+    macro_name=$(echo "$line" | grep -o 'T8_ENABLE_[^ ]*')
+    echo "Macro found in $file_path on line $line_number: $macro_name"
+    found_macros=TRUE
+done < <(grep -n '#ifdef T8_ENABLE_' "$file_path")
+
+if [ "$found_macros" = "TRUE" ]; then
+    echo "Incorrect macro usage found in $file_path. Please use '#if T8_ENABLE_' instead."
+    exit 1
+else
+    echo "No incorrect macro usage found in $file_path."
+    exit 0
+fi
