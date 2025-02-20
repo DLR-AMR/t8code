@@ -45,11 +45,11 @@ t8_geometry_quadrangulated_disk::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t
   }
 
   /* Normal vector along one of the straight edges of the quad. */
-  t8_copy_c_interface (active_tree_vertices, n);
+  t8_copy (active_tree_vertices, n);
   t8_normalize (n);
 
   /* Radial vector parallel to one of the tilted edges of the quad. */
-  t8_copy_c_interface (active_tree_vertices + 9, r);
+  t8_copy (active_tree_vertices + 9, r);
   t8_normalize (r);
 
   const double inv_denominator = 1.0 / t8_dot_c_interface (r, n);
@@ -185,7 +185,7 @@ t8_geometry_tessellated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh, t
 
     // Compute the final transformed coordinates.
     double *out_vec = out_coords + offset_3d;
-    t8_copy_c_interface (anchor, out_vec);
+    t8_copy (anchor, out_vec);
     t8_axpy_c_interface (tangent1, out_vec, alpha1);
     t8_axpy_c_interface (tangent2, out_vec, alpha2);
     t8_rescale_c_interface (out_vec, radius);
@@ -256,7 +256,7 @@ t8_geometry_cubed_spherical_shell::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx
 
     // Compute the final transformed coordinates.
     double *out_vec = out_coords + offset_3d;
-    t8_copy_c_interface (anchor, out_vec);
+    t8_copy (anchor, out_vec);
     t8_axpy_c_interface (tangent1, out_vec, alpha1);
     t8_axpy_c_interface (tangent2, out_vec, alpha2);
     t8_rescale_c_interface (out_vec, inner_radius + ref_coords[offset_3d + 2] * shell_thickness);
@@ -281,10 +281,10 @@ t8_geometry_cubed_sphere::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreei
     return;
   }
 
-  t8_copy_c_interface (active_tree_vertices, n);
+  t8_copy (active_tree_vertices, n);
   t8_normalize (n);
 
-  t8_copy_c_interface (active_tree_vertices + 7 * 3, r);
+  t8_copy (active_tree_vertices + 7 * 3, r);
   t8_normalize (r);
 
   const double inv_denominator = 1.0 / t8_dot_c_interface (r, n);

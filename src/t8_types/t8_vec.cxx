@@ -39,7 +39,7 @@ t8_normalize (double vec[3])
 }
 
 void
-t8_copy_c_interface (const double vec_in[3], double vec_out[3])
+t8_copy (const double vec_in[3], double vec_out[3])
 {
   const t8_3D_vec *vec_array_in = reinterpret_cast<const t8_3D_vec *> (vec_in);
   t8_3D_vec *vec_array_out = reinterpret_cast<t8_3D_vec *> (vec_out);
