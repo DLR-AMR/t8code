@@ -20,11 +20,11 @@ jobs:
       - name: check macros
         run: |
           for file in $(git diff --name-only --diff-filter=A); do
-            ./scripts/check_macros.scp "$file" &>> indent_script_output.txt
+            ./scripts/check_macros.scp "$file" &>> check_macros.txt
           done
       - name: Archive script output
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: t8code indentation report
-          path: indent_script_output.txt
+          name: t8code check macros report
+          path: check_macros.txt
