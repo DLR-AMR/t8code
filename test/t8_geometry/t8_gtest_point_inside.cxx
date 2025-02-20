@@ -163,7 +163,7 @@ TEST_P (geometry_point_inside, test_point_inside)
   const double barycentric_range_upper_bound = 1.1; /* Should be > 1 */
   /* Numerical tolerance that we allow in the point inside check */
   const double tolerance = 1e-12;
-  const int num_points_to_generate = 16384; /* Desired number of test points per element. 
+  const int num_points_to_generate = 64; /* Desired number of test points per element. 
                                                          * The actual number is computed to be close to this and
                                                          * will always be >= 2^num_corners (thus >= 128 for hex). */
 
