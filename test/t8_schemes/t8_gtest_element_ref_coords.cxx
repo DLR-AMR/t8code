@@ -94,7 +94,7 @@ t8_element_centroid_by_vertex_coords (const t8_forest_t forest, const t8_locidx_
     t8_axpy_c_interface (vertex_out_coords, coordinates, 1);
   }
   /* Divide each coordinate by num_vertices */
-  t8_ax_c_interface (coordinates, 1. / num_vertices);
+  t8_ax (coordinates, 1. / num_vertices);
 }
 
 /**

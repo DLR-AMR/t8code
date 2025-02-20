@@ -843,7 +843,7 @@ t8_forest_element_face_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const 
     /* centroid = centroid + vertex_a */
     t8_axpy_c_interface (vertex_a, centroid, 1);
     /* centroid /= 2 */
-    t8_ax_c_interface (centroid, 0.5);
+    t8_ax (centroid, 0.5);
     return;
   } break;
   case T8_ECLASS_TRIANGLE:
@@ -865,7 +865,7 @@ t8_forest_element_face_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const 
     /* centroid = coordinates[0] */
     t8_axb_c_interface (coordinates[0], centroid, 1, 0);
     /* divide by num corners */
-    t8_ax_c_interface (centroid, 1. / num_corners);
+    t8_ax (centroid, 1. / num_corners);
     return;
   } break;
   default:
@@ -956,7 +956,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
      *         normal = -normal/norm if face = 0
      */
     sign = face == 0 ? -1 : 1;
-    t8_ax_c_interface (normal, sign / norm);
+    t8_ax (normal, sign / norm);
 
     return;
   case T8_ECLASS_LINE: {
@@ -1013,7 +1013,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
       norm *= -1;
     }
     /* divide normal by its normal to normalize it */
-    t8_ax_c_interface (normal, 1. / norm);
+    t8_ax (normal, 1. / norm);
 
     return;
   } break;
@@ -1077,7 +1077,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
       norm = -norm;
     }
     /* Divide normal by norm to normalize it */
-    t8_ax_c_interface (normal, 1. / norm);
+    t8_ax (normal, 1. / norm);
   } break;
   default:
     SC_ABORT ("Not implemented.\n");
