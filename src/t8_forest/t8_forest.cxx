@@ -560,7 +560,7 @@ t8_forest_element_tet_volume (const double coordinates[4][3])
 
   /* subtract the 4-th vector from the other 3 */
   for (i = 0; i < 3; i++) {
-    t8_axpyz_c_interface (coordinates[3], coordinates[i], coordinates_tmp[i], -1);
+    t8_axpyz (coordinates[3], coordinates[i], coordinates_tmp[i], -1);
   }
 
   /* Compute the cross product of the 2nd and 3rd */
@@ -885,15 +885,15 @@ t8_four_points_coplanar (const double p_0[3], const double p_1[3], const double 
 
   /* A = p1 - p0 */
   double A[3];
-  t8_axpyz_c_interface (p_0, p_1, A, -1);
+  t8_axpyz (p_0, p_1, A, -1);
 
   /* B = p2 - p0 */
   double B[3];
-  t8_axpyz_c_interface (p_0, p_2, B, -1);
+  t8_axpyz (p_0, p_2, B, -1);
 
   /* C = p3 - p0 */
   double C[3];
-  t8_axpyz_c_interface (p_0, p_3, C, -1);
+  t8_axpyz (p_0, p_3, C, -1);
 
   /* n1 = A x B */
   double A_cross_B[3];
@@ -997,7 +997,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
     /* Compute N = C - <C,V>/<V,V> V
        * compute the norm of N
        * compute N*C */
-    t8_axpyz_c_interface (vertex_b, center, normal, -1 * c_vb / vb_vb);
+    t8_axpyz (vertex_b, center, normal, -1 * c_vb / vb_vb);
     norm = t8_norm (normal);
     T8_ASSERT (norm != 0);
     c_n = t8_dot_c_interface (center, normal);

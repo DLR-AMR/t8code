@@ -100,7 +100,7 @@ t8_axpy (const double vec_x[3], double vec_y[3], const double alpha);
  * \param [out] vec_z  On output set \a to vec_y + \a alpha * \a vec_x
  */
 void
-t8_axpyz_c_interface (const double vec_x[3], const double vec_y[3], double vec_z[3], const double alpha);
+t8_axpyz (const double vec_x[3], const double vec_y[3], double vec_z[3], const double alpha);
 
 /** Dot product of X and Y.
  * \param [in]  vec_x  A 3D vector.
