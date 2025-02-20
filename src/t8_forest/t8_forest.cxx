@@ -908,7 +908,7 @@ t8_four_points_coplanar (const double p_0[3], const double p_1[3], const double 
   t8_cross_3D_c_interface (A_cross_B, A_cross_C, n1_cross_n2);
 
   /* || n1 x n2 || */
-  const double norm = t8_norm_c_interface (n1_cross_n2);
+  const double norm = t8_norm (n1_cross_n2);
   return norm < tolerance;
 }
 #endif
@@ -944,7 +944,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
     t8_axpy_c_interface (v_0, normal, -1);
 
     /* Compute the norm */
-    norm = t8_norm_c_interface (normal);
+    norm = t8_norm (normal);
 
     /* Compute normal =  normal/norm if face = 1
      *         normal = -normal/norm if face = 0
@@ -998,7 +998,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
        * compute the norm of N
        * compute N*C */
     t8_axpyz_c_interface (vertex_b, center, normal, -1 * c_vb / vb_vb);
-    norm = t8_norm_c_interface (normal);
+    norm = t8_norm (normal);
     T8_ASSERT (norm != 0);
     c_n = t8_dot_c_interface (center, normal);
 
@@ -1058,7 +1058,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
     /* Compute the cross product of the two,
      * and the norm of the cross product */
     t8_cross_3D_c_interface (corner_vertices[1], corner_vertices[2], normal);
-    norm = t8_norm_c_interface (normal);
+    norm = t8_norm (normal);
     T8_ASSERT (norm > 1e-14);
     /* Compute the coordinates of the center of the element */
     t8_forest_element_centroid (forest, ltreeid, element, center);
