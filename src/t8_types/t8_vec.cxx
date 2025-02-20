@@ -129,7 +129,7 @@ t8_diff (const double vec_x[3], const double vec_y[3], double diff[3])
 }
 
 int
-t8_eq_c_interface (const double vec_x[3], const double vec_y[3], const double tol)
+t8_eq (const double vec_x[3], const double vec_y[3], const double tol)
 {
   const t8_3D_vec *vec_array_x = reinterpret_cast<const t8_3D_vec *> (vec_x);
   const t8_3D_vec *vec_array_y = reinterpret_cast<const t8_3D_vec *> (vec_y);
