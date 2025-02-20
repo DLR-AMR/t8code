@@ -143,7 +143,7 @@ t8_diff (const double vec_x[3], const double vec_y[3], double diff[3]);
  * \return true, if the vectors are equal up to \a tol 
  */
 int
-t8_eq_c_interface (const double vec_x[3], const double vec_y[3], const double tol);
+t8_eq (const double vec_x[3], const double vec_y[3], const double tol);
 
 /** Rescale a vector to a new length.
  * \param [in,out] vec  A 3D vector.
