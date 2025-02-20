@@ -159,7 +159,7 @@ t8_geometry_tessellated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh, t
   const double radius = distance * std::sqrt (3.0);
 
   // Compute orthogonal coordinate system anchored on the cmesh element.
-  t8_orthogonal_tripod_c_interface (normal, tangent1, tangent2);
+  t8_orthogonal_tripod (normal, tangent1, tangent2);
 
   // Compute anchor of the tripod on the cmesh element's plane.
   double anchor[3];
@@ -219,7 +219,7 @@ t8_geometry_cubed_spherical_shell::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx
       - inner_radius;
 
   // Compute orthogonal coordinate system anchored on the cmesh element.
-  t8_orthogonal_tripod_c_interface (normal, tangent1, tangent2);
+  t8_orthogonal_tripod (normal, tangent1, tangent2);
 
   // Compute anchor of the tripod on the cmesh element's plane.
   double anchor[3];
