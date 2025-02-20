@@ -52,7 +52,7 @@ t8_geometry_quadrangulated_disk::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t
   t8_copy (active_tree_vertices + 9, r);
   t8_normalize (r);
 
-  const double inv_denominator = 1.0 / t8_dot_c_interface (r, n);
+  const double inv_denominator = 1.0 / t8_dot (r, n);
 
   /* Radial reference coordinate index. */
   const int r_coord = ((gtreeid - 2) % 3 == 0) ? 0 : 1;
@@ -83,7 +83,7 @@ t8_geometry_quadrangulated_disk::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t
     t8_geom_linear_interpolation (ref_coords + offset_2d, active_tree_vertices, 3, 2, p);
 
     /* Compute intersection of line with a plane. */
-    const double out_radius = t8_dot_c_interface (p, n) * inv_denominator;
+    const double out_radius = t8_dot (p, n) * inv_denominator;
 
     /* Linear blend from flat to curved: `out_coords = (1.0 - r_ref)*p + r_ref_ * out_radius * s`. */
     t8_axy (p, out_coords + offset_3d, 1.0 - r_ref);
@@ -153,7 +153,7 @@ t8_geometry_tessellated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh, t
   t8_normalize (normal);
 
   // Compute sphere's radius over cube root which is the shortest distance to the origin (0,0,0).
-  const double distance = std::abs (t8_dot_c_interface (active_tree_vertices, normal));
+  const double distance = std::abs (t8_dot (active_tree_vertices, normal));
 
   // Compute actual radius of the sphere.
   const double radius = distance * std::sqrt (3.0);
@@ -180,8 +180,8 @@ t8_geometry_tessellated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh, t
 
     // Compute the coefficients of the difference vector in the local
     // coordinate system of the tripod and apply equi-angular correction.
-    const double alpha1 = distance * tan (0.25 * M_PI * t8_dot_c_interface (tangent1, diff_vec) / distance);
-    const double alpha2 = distance * tan (0.25 * M_PI * t8_dot_c_interface (tangent2, diff_vec) / distance);
+    const double alpha1 = distance * tan (0.25 * M_PI * t8_dot (tangent1, diff_vec) / distance);
+    const double alpha2 = distance * tan (0.25 * M_PI * t8_dot (tangent2, diff_vec) / distance);
 
     // Compute the final transformed coordinates.
     double *out_vec = out_coords + offset_3d;
@@ -209,14 +209,13 @@ t8_geometry_cubed_spherical_shell::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx
   t8_normalize (normal);
 
   // Compute sphere's radius over cube root which is the shortest distance to the origin (0,0,0).
-  const double distance = std::abs (t8_dot_c_interface (active_tree_vertices, normal));
+  const double distance = std::abs (t8_dot (active_tree_vertices, normal));
 
   // Compute actual radius of the sphere.
   const double SQRT3 = std::sqrt (3.0);
   const double inner_radius = distance * SQRT3;
   const double shell_thickness
-    = std::abs (t8_dot_c_interface (active_tree_vertices + t8_eclass_num_vertices[active_tree_class] * 3 / 2, normal))
-        * SQRT3
+    = std::abs (t8_dot (active_tree_vertices + t8_eclass_num_vertices[active_tree_class] * 3 / 2, normal)) * SQRT3
       - inner_radius;
 
   // Compute orthogonal coordinate system anchored on the cmesh element.
@@ -251,8 +250,8 @@ t8_geometry_cubed_spherical_shell::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx
 
     // Compute the coefficients of the difference vector in the local
     // coordinate system of the tripod and apply equi-angular correction.
-    const double alpha1 = distance * tan (0.25 * M_PI * t8_dot_c_interface (tangent1, diff_vec) / distance);
-    const double alpha2 = distance * tan (0.25 * M_PI * t8_dot_c_interface (tangent2, diff_vec) / distance);
+    const double alpha1 = distance * tan (0.25 * M_PI * t8_dot (tangent1, diff_vec) / distance);
+    const double alpha2 = distance * tan (0.25 * M_PI * t8_dot (tangent2, diff_vec) / distance);
 
     // Compute the final transformed coordinates.
     double *out_vec = out_coords + offset_3d;
@@ -287,7 +286,7 @@ t8_geometry_cubed_sphere::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreei
   t8_copy (active_tree_vertices + 7 * 3, r);
   t8_normalize (r);
 
-  const double inv_denominator = 1.0 / t8_dot_c_interface (r, n);
+  const double inv_denominator = 1.0 / t8_dot (r, n);
 
   /* Radial reference coordinate index. */
   const int r_coord_lookup[4] = { -1, 1, 0, 2 };
@@ -324,7 +323,7 @@ t8_geometry_cubed_sphere::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreei
     t8_geom_linear_interpolation (ref_coords + offset, active_tree_vertices, 3, 3, p);
 
     /* Compute intersection of line with a plane. */
-    const double out_radius = t8_dot_c_interface (p, n) * inv_denominator;
+    const double out_radius = t8_dot (p, n) * inv_denominator;
 
     /* Linear blend from flat to curved: `out_coords = (1.0 - r_ref)*p + r_ref_ * out_radius * s`. */
     t8_axy (p, out_coords + offset, 1.0 - r_ref);

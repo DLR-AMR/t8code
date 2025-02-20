@@ -3368,7 +3368,7 @@ t8_cmesh_new_spherical_shell (t8_eclass_t eclass, t8_geometry_c *geometry,
         double normal[3];
         t8_normal_of_tri_c_interface (elem_vertices_2d, elem_vertices_2d + 3, elem_vertices_2d + 6, normal);
 
-        if (t8_dot_c_interface (elem_vertices_2d, normal) < 0.0) {
+        if (t8_dot (elem_vertices_2d, normal) < 0.0) {
           t8_swap_c_interface (elem_vertices_2d + 3, elem_vertices_2d + 6);
         }
       }

@@ -108,7 +108,7 @@ t8_axpyz (const double vec_x[3], const double vec_y[3], double vec_z[3], const d
  * \return             The dot product \a vec_x * \a vec_y
  */
 double
-t8_dot_c_interface (const double vec_x[3], const double vec_y[3]);
+t8_dot (const double vec_x[3], const double vec_y[3]);
 
 /** Cross product of X and Y
  * \param [in]  vec_x  A 3D vector.
