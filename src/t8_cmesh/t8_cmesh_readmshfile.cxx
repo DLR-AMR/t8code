@@ -219,7 +219,7 @@ struct t8_msh_node_equal
   }
 };
 
-/** Hashtable to stor msh file nodes. */
+/** Hashtable to store msh file nodes. */
 typedef std::unordered_set<t8_msh_file_node, t8_msh_node_hasher, t8_msh_node_equal> t8_msh_node_table;
 
 /** Vector which stores the vertex indices of each tree in the t8code order. */
