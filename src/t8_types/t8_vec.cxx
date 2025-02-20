@@ -154,7 +154,7 @@ t8_normal_of_tri (const double p1[3], const double p2[3], const double p3[3], do
 }
 
 void
-t8_orthogonal_tripod_c_interface (const double v1[3], double v2[3], double v3[3])
+t8_orthogonal_tripod (const double v1[3], double v2[3], double v3[3])
 {
   const t8_3D_vec *v1_array = reinterpret_cast<const t8_3D_vec *> (v1);
   t8_3D_vec *v2_array = reinterpret_cast<t8_3D_vec *> (v2);

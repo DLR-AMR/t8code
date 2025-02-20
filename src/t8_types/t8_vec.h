@@ -167,7 +167,7 @@ t8_normal_of_tri (const double p1[3], const double p2[3], const double p3[3], do
  * \param [out]  v3 3D vector.
  */
 void
-t8_orthogonal_tripod_c_interface (const double v1[3], double v2[3], double v3[3]);
+t8_orthogonal_tripod (const double v1[3], double v2[3], double v3[3]);
 /** Swap the components of two vectors.
  * \param [in,out]  p1  A 3D vector.
  * \param [in,out]  p2  A 3D vector.
