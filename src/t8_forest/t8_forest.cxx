@@ -480,7 +480,7 @@ t8_forest_element_diam (t8_forest_t forest, t8_locidx_t ltreeid, const t8_elemen
     /* Compute coordinates of this corner */
     t8_forest_element_coordinate (forest, ltreeid, element, i, coordinates);
     /* Compute the distance to the midpoint */
-    dist += t8_dist_c_interface (coordinates, centroid);
+    dist += t8_dist (coordinates, centroid);
   }
 
   /* We approximate the diameter as twice the average of the distances
@@ -519,7 +519,7 @@ t8_forest_element_line_length (t8_forest_t forest, t8_locidx_t ltreeid, const t8
   t8_forest_element_coordinate (forest, ltreeid, element, corner_b, coordinates_b);
 
   /* Compute the euclidean distance */
-  length = t8_dist_c_interface (coordinates_a, coordinates_b);
+  length = t8_dist (coordinates_a, coordinates_b);
   /* return it */
   return length;
 }

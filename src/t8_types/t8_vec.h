@@ -58,7 +58,7 @@ t8_copy (const double vec_in[3], double vec_out[3]);
  *                     Equivalent to norm (X-Y).
  */
 double
-t8_dist_c_interface (const double vec_x[3], const double vec_y[3]);
+t8_dist (const double vec_x[3], const double vec_y[3]);
 
 /** Compute X = alpha * X
  * \param [in,out] vec_x  A 3D vector. On output set to \a alpha * \a vec_x.
