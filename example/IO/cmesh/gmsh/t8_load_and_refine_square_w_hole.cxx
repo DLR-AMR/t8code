@@ -69,7 +69,7 @@ t8_midpoint (t8_forest_t forest, t8_locidx_t which_tree, t8_element_t *element, 
     for (j = 0; j < 3; j++) {
       corner[0][j] -= elem_mid_point[j];
     }
-    *h = sqrt (t8_dot (corner[0], corner[0]));
+    *h = t8_norm (corner[0]);
 
     T8_FREE (corner[0]);
     T8_FREE (corner[1]);
