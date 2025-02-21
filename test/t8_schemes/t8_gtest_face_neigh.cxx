@@ -56,7 +56,7 @@ class face_neigh: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
   const t8_scheme *scheme;
   t8_eclass_t eclass;
 
-#if T8CODE_TEST_LEVEL == 1
+#if T8CODE_TEST_LEVEL >= 1
   const int maxlvl = 3;
 #else
   const int maxlvl = 4;

@@ -127,7 +127,7 @@ class class_test_pack: public TestDFS {
 
 TEST_P (class_test_pack, test_equal_dfs)
 {
-#if T8CODE_TEST_LEVEL == 1
+#if T8CODE_TEST_LEVEL >= 1
   const int maxlvl = 4;
 #else
   const int maxlvl = 6;

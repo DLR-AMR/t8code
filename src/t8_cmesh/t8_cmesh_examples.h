@@ -140,7 +140,7 @@ t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass, sc_MPI_Comm comm, const do
  * \param [in] polygons_x   The number of polygons along the x-axis.
  * \param [in] polygons_y   The number of polygons along the y-axis.
  *                              Only required if \a eclass is 2D or 3D.
- * \param [in] polygons_z       The number of polygons along the z-axis.
+ * \param [in] polygons_z   The number of polygons along the z-axis.
  *                              Only required if \a eclass is 3D.
  * \param [in] periodic_x   Connect opposite sides of the hypercube in x-direction.
  * \param [in] periodic_y   Connect opposite sides of the hypercube in y-direction.
