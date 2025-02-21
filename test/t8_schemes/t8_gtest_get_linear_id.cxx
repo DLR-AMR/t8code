@@ -72,7 +72,9 @@ TEST_P (get_linear_id, uniform_forest)
 {
   t8_forest_t forest, forest_adapt;
   t8_cmesh_t cmesh;
-#if T8CODE_TEST_LEVEL >= 1
+#if T8CODE_TEST_LEVEL >= 2
+  const int maxlvl = 4;
+#elif T8CODE_TEST_LEVEL >= 1
   const int maxlvl = 5;
 #else
   const int maxlvl = 6;
