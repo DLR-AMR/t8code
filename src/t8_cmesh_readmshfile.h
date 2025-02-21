@@ -39,37 +39,6 @@
 
 const int t8_cmesh_supported_msh_file_versions[T8_CMESH_N_SUPPORTED_MSH_FILE_VERSIONS] = { 2, 4 };
 
-/* put typedefs here */
-
-/* The nodes are stored in the .msh file in the format
- *
- * $Nodes
- * n_nodes     // The number of nodes
- * i x_i y_i z_i  // the node index and the node coordinates
- * j x_j y_j z_j
- * .....
- * $EndNodes
- *
- * The node indices do not need to be in consecutive order.
- * We thus use a hash table to read all node indices and coordinates.
- * The hash value is the node index modulo the number of nodes.
- */
-typedef struct
-{
-  t8_locidx_t index;
-  double coordinates[3];
-} t8_msh_file_node_t;
-
-typedef struct
-{
-  t8_locidx_t index;
-  double coordinates[3];
-  double parameters[2];
-  int parametric;
-  int entity_dim;
-  t8_locidx_t entity_tag;
-} t8_msh_file_node_parametric_t;
-
 T8_EXTERN_C_BEGIN ();
 
 /* put declarations here */
