@@ -102,7 +102,7 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
  * \param [in] polygons_x   The number of polygons along the x-axis.
  * \param [in] polygons_y   The number of polygons along the y-axis.
  *                              Only required if \a eclass is 2D or 3D.
- * \param [in] polygons_z       The number of polygons along the z-axis.
+ * \param [in] polygons_z   The number of polygons along the z-axis.
  *                              Only required if \a eclass is 3D.
  * \param [in] use_axis_aligned Use the axis-aligned geometry. If used, only two points per tree are stored.
  * \return                      A committed t8_cmesh structure with 
