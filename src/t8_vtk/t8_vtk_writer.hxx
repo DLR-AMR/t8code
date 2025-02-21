@@ -34,7 +34,7 @@
 
 #include <string>
 #include <t8_vtk.h>
-#include <t8_vec.h>
+#include <t8_types/t8_vec.hxx>
 
 #if T8_WITH_VTK
 #include <vtkUnstructuredGrid.h>

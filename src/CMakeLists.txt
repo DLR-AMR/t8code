@@ -152,6 +152,7 @@ target_sources( T8 PRIVATE
     t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.c
     t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.c
     t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.cxx
+    t8_types/t8_vec.cxx
     t8_schemes/t8_standalone/t8_standalone.cxx
     t8_vtk/t8_vtk_polydata.cxx 
     t8_vtk/t8_vtk_unstructured.cxx 
@@ -197,7 +198,7 @@ install( FILES
     t8_mesh.h
     t8_netcdf.h
     t8_refcount.h
-    t8_vec.h
+    t8_types/t8_vec.hxx
     t8_version.h
     t8_vtk.h
     t8_windows.h DESTINATION include
