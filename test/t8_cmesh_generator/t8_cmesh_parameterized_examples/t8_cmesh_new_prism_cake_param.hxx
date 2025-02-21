@@ -46,7 +46,7 @@ example_set *cmesh_example
                                                        decltype (cmesh_params::num_prisms.begin ())> (
     std::make_pair (cmesh_params::my_comms.begin (), cmesh_params::my_comms.end ()),
     std::make_pair (cmesh_params::num_prisms.begin (), cmesh_params::num_prisms.end ()), prism_cake,
-    make_param_string_wrapper, "t8_cmesh_new_prism_cake_");
+    make_param_string_wrapper, "t8_cmesh_new_prism_cake");
 }  // namespace new_prism_cake
 
 #endif /* T8_CMESH_NEW_PRISM_CAKE_PARAM_HXX */
