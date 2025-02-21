@@ -34,10 +34,6 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx>
 
-#define T8_CMESH_TEST_NUM_COMMS 1
-#define T8_CMESH_BINARY 2
-#define T8_CMESH_DIM_RANGE 4 /* this is the dim range for hypercube hybrid and empty cmesh */
-#define T8_CMESH_MAX_TEST_DIMS 3
 #if T8CODE_TEST_LEVEL == 1
 #define T8_CMESH_MAX_NUM_OF_TREES 5
 #define T8_CMESH_MAX_NUM_OF_PRISMS 5
@@ -90,8 +86,6 @@ std::vector<t8_eclass_t> all_eclasses
 
 std::vector<int> do_bcast = { 0, 1 };
 std::vector<int> partition = { 0, 1 };
-/* Currently a dummy vector for examples that have partition argument but not fully support it yet */
-std::vector<int> no_partition = { 0 };
 
 std::vector<int> periodic = { 0, 1 };
 /* Currently a dummy vector for examples that have periodic argument but not fully support it yet */

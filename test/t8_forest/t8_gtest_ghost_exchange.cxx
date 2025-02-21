@@ -31,8 +31,6 @@
 #include <test/t8_gtest_macros.hxx>
 #include <test/t8_gtest_schemes.hxx>
 
-/* TODO: when this test works for all cmeshes remove if statement in test_cmesh_ghost_exchange_all () */
-
 /* This test program tests the forest ghost exchange routine.
  * Given a forest for which the ghost layer was created and an array
  * storing data for the local elements and the ghost elements, ghost_exchange
