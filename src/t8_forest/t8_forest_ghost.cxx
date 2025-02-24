@@ -159,7 +159,7 @@ t8_ghost_remote_equal_function (const void *remote_dataa, const void *remote_dat
 }
 
 /** This struct is used during a ghost data exchange.
- * Since we use asynchronuous communication, we store the
+ * Since we use asynchronous communication, we store the
  * send buffers and mpi requests until we end the communication.
  */
 typedef struct
@@ -2249,7 +2249,7 @@ t8_forest_ghost_stencil::do_ghost (t8_forest_t forest)
     }
   }
 
-  /** iterat over all elements of the tree and add stencil to remote or if the element is in one nodestring */
+  /** iterate over all elements of the tree and add stencil to remote or if the element is in one nodestring */
   for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement) {
     element = t8_forest_get_element_in_tree (forest, 0, ielement);
     /** compute the stencil elements and add to suitable remote */
