@@ -223,7 +223,7 @@ struct t8_standalone_scheme
     T8_ASSERT (element_is_valid (element));
     const int face_sign = face % 2;
     const int face_dim = face / 2;
-    return get_face_corner_index (corner, face_sign, face_dim);
+    return get_hypercube_face_corner_index (face_dim, face_sign, corner);
   }
 
   /** Return the face numbers of the faces sharing an element's corner.
@@ -718,7 +718,7 @@ struct t8_standalone_scheme
     const int face_sign = face % 2;
     const int face_dim = face / 2;
     for (int ifacechild = 0; ifacechild < num_children; ifacechild++) {
-      child_indices[ifacechild] = get_face_corner_index (ifacechild, face_sign, face_dim);
+      child_indices[ifacechild] = get_hypercube_face_corner_index (face_dim, face_sign, ifacechild);
     }
     for (int ifacechild = num_children - 1; ifacechild >= 0; ifacechild--) {
       t8_standalone_scheme<TEclass>::element_get_child ((const t8_element_t *) el, child_indices[ifacechild],
@@ -770,7 +770,10 @@ struct t8_standalone_scheme
     if (el->level == 0)
       return -1;
     if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      if ((face % 2) != ((el->coords[face / 2]) >> (T8_ELEMENT_MAXLEVEL[TEclass] - el->level)) % 2) {
+      /* Check if the least significant bit of the face normal coord is equal to the face_sign bit to get a valid parent face.*/
+      const int least_significant_bit = ((el->coords[face / 2]) >> (T8_ELEMENT_MAXLEVEL[TEclass] - el->level)) % 2;
+      bool invalid_parent_face = (element_face_is_1_boundary (el, face) != least_significant_bit);
+      if (invalid_parent_face) {
         return -1;
       }
       return face;
@@ -863,7 +866,7 @@ struct t8_standalone_scheme
 
     if (!element_is_face_internal (el, face)) {
       const int dimid = element_face_normal_dim (el, face);
-      if (element_face_is_1st_boundary (el, face)) {
+      if (element_face_is_1_boundary (el, face)) {
         // a_d must be full of 1s up to level l
         const t8_element_coord coord_offset = get_root_len () - element_get_len (el->level);
         if (el->coords[dimid] != coord_offset) {
@@ -1940,18 +1943,34 @@ struct t8_standalone_scheme
     }
   }
 
-  /** Get the faces first boundary
-   * \param [in] elem  The input element.
-   * \param [in] face  The input face.
-   * \return          The first boundary of the face.
+  /** Given a face of an element that is also a hypercube face, determine if it is the boundary x_i == 1.
+   * \param [in] elem   The input element.
+   * \param [in] face   The input face. Needs to be a face of the hypercube the element is embedded in.
+   * \return            1 if the face is the boundary x_i == 1, 0 otherwise.
    */
   static constexpr int
-  element_face_is_1st_boundary (const t8_standalone_element<TEclass> *elem, const int face) noexcept
+  element_face_is_1_boundary (const t8_standalone_element<TEclass> *elem, const int face) noexcept
   {
     if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
       return face % 2;
     }
     else {
+      SC_ABORT ("Only implemented for hypercubes.\n");
+    }
+  }
+
+  /** Given a root_face that is also a hypercube face, determine if it is the boundary x_i == 1.
+   * \param [in] root_face    The root_face. Needs to be a face of the hypercube the element is embedded in.
+   * \return                  1 if the root_face is the boundary x_i == 1, 0 otherwise.
+   */
+  static constexpr int
+  root_face_is_1_boundary (const int root_face) noexcept
+  {
+    if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      return root_face % 2;
+    }
+    else {
+      /* Get root element or type*/
       SC_ABORT ("Only implemented for hypercubes.\n");
     }
   }
@@ -2002,25 +2021,16 @@ struct t8_standalone_scheme
     }
 
     boundary->level = el->level;
+    /* Delete the coordinate orthogonal to the given face and combine the remaining coordinates*/
     for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
-      int ifacedim;
-      if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-        const int facenormal_dim = root_face / 2;
-        if (idim == facenormal_dim) {
-          ifacedim = -1;
-        }
-        else if (idim > facenormal_dim) {
-          ifacedim = idim - 1;
-        }
-        else {
-          ifacedim = idim;
-        }
-      }
-      else {
-        SC_ABORT ("Only implemented for hypercubes.\n");
-      }
+      const int ifacedim = get_facedim (idim, root_face);
+
       if (ifacedim != -1) {
+        /** Currently this part of the code is also compiled for vertices and faces of higher dim than the element. 
+       * This leads to invalid shift inputs.*/
         if constexpr (face_TEclass != T8_ECLASS_VERTEX && T8_ELEMENT_DIM[face_TEclass] < T8_ELEMENT_DIM[TEclass]) {
+          /** Set the boundary coordinates to the corresponding coordinates of the element,  
+           * adjusted to the maxlevel of the face-scheme*/
           boundary->coords[ifacedim] = el->coords[idim]
                                        << (T8_ELEMENT_MAXLEVEL[face_TEclass] - T8_ELEMENT_MAXLEVEL[TEclass]);
         }
@@ -2056,31 +2066,19 @@ struct t8_standalone_scheme
    * If elemdim is faceboundary, find out if 0 or 1 boundary
    */
     T8_ASSERT (0 <= face->level && face->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
+    /* Avoid porblmes for unneeded instantiations*/
     if constexpr (T8_ELEMENT_DIM[face_TEclass] >= T8_ELEMENT_DIM[TEclass]) {
       return -1;
     }
 
     el->level = face->level;
-    const t8_element_coord h = get_root_len () - element_get_len (el->level);
     for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
-      int ifacedim;
-      if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-        const int facenormal_dim = root_face / 2;
-        if (idim == facenormal_dim) {
-          ifacedim = -1;
-        }
-        else if (idim > facenormal_dim) {
-          ifacedim = idim - 1;
-        }
-        else {
-          ifacedim = idim;
-        }
-      }
-      else {
-        SC_ABORT ("Only implemented for hypercubes.\n");
-      }
+      const int ifacedim = get_facedim (idim, root_face);
+
       if (ifacedim != -1) {
+        /** Currently this part of the code is also compiled for vertices and faces of higher dim than the element.*/
         if constexpr (face_TEclass != T8_ECLASS_VERTEX && T8_ELEMENT_DIM[face_TEclass] < T8_ELEMENT_DIM[TEclass]) {
+          /* Set the element coordinates to the corresponding coordinates of the face, adjusted to the maxlevel of the element-scheme*/
           el->coords[idim]
             = face->coords[ifacedim] >> (T8_ELEMENT_MAXLEVEL[face_TEclass] - T8_ELEMENT_MAXLEVEL[TEclass]);
         }
@@ -2089,17 +2087,13 @@ struct t8_standalone_scheme
         }
       }
       else {
-        int is_1st_boundary;
-        if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-          is_1st_boundary = root_face % 2;
+        /* Set the coordinate orthogonal to the face.*/
+        if (root_face_is_1_boundary (root_face)) {
+          /* Anchor coordinate is its own length smaller than the length of the root element.*/
+          el->coords[idim] = get_root_len () - element_get_len (el->level);
         }
         else {
-          SC_ABORT ("Only implemented for hypercubes.\n");
-        }
-        if (is_1st_boundary) {
-          el->coords[idim] = h;
-        }
-        else {
+          /* If root_face is a 0 boundary the anchor coordinate is 0.*/
           el->coords[idim] = 0;
         }
       }
@@ -2116,13 +2110,43 @@ struct t8_standalone_scheme
   \ref element_get_face_corner
   */
   static constexpr int
-  get_face_corner_index (int corner, int face_sign, int face_dim) noexcept
+  get_hypercube_face_corner_index (int face_dim, int face_sign, int corner) noexcept
   {
-    /* corner aaaabb, iface = x, then element_corner = aaaaxbb*/
+    /** Put the face_sign bit at the face_dim position in the binary representation of corner.
+     *  corner = aaaabb, face_sign = x, then element_corner = aaaaxbb */
     const t8_element_coord first_part = (corner >> face_dim) << (face_dim + 1);
     const t8_element_coord last_part = corner & ((1 << face_dim) - 1);
     const t8_element_coord face_part = face_sign << face_dim;
     return first_part + face_part + last_part;
+  }
+
+  /** Delete the coordinate orthogonal to the given face and combine the remaining coordinates
+   * \param [in] idim      The input coordinate index.
+   * \param [in] root_face The root_face
+   * \return               The facedim
+  */
+  static inline int
+  get_facedim (int idim, int root_face) noexcept
+  {
+    if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      const int facenormal_dim = root_face / 2;
+      if (idim == facenormal_dim) {
+        /* Coordinate direction is orthogonal to face, therefore it does not influence boundary face representation.*/
+        return -1;
+      }
+      else if (idim > facenormal_dim) {
+        /* Coordinate direction is after the face normal direction, therefore we need to shift the coordinate index.*/
+        return idim - 1;
+      }
+      else {
+        /* Coordinate direction is before the face normal direction, therefore we keep the coordinate index.*/
+        return idim;
+      }
+    }
+    else {
+      SC_ABORT ("Only implemented for hypercubes.\n");
+    }
+    return 0;
   }
 };
 
