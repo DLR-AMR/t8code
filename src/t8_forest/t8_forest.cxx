@@ -2300,13 +2300,13 @@ t8_forest_same_level_leaf_face_neighbor_index (t8_forest_t forest, const t8_loci
   int *dual_faces;
   int num_neighbors = 0;
   t8_locidx_t *element_indices;
-  t8_eclass_scheme_c *neigh_scheme;
+  t8_eclass_t neigh_class;
 
   t8_debugf ("Same level leaf neighbor for index %i. Which is %s element %i in tree %i.\n", element_index,
              element_index < num_local_elements ? "local" : "ghost", element_index_in_tree, local_tree);
 
   t8_forest_leaf_face_neighbors (forest, local_tree, element, NULL, face_index, &dual_faces, &num_neighbors,
-                                 &element_indices, &neigh_scheme);
+                                 &element_indices, &neigh_class);
 
   T8_ASSERT (num_neighbors == 0 || num_neighbors == 1);
 
