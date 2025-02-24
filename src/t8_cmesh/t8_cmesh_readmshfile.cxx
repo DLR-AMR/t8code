@@ -665,7 +665,13 @@ t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
 
         /* Get node from the hashtable */
         Node.index = node_indices[t8_vertex_num];
-        auto found_node = vertices.find (Node);
+        const auto found_node = vertices.find (Node);
+        if (found_node == vertices.end ()) {
+          t8_global_errorf ("Could not find Node %li.\n", node_indices[t8_vertex_num]);
+          free (line);
+          t8_cmesh_destroy (&cmesh);
+          return std::nullopt;
+        }
 
         /* Add node coordinates to the tree vertices */
         tree_vertices[3 * t8_vertex_num] = found_node->coordinates[0];
@@ -878,7 +884,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
   long lnum_trees, lnum_blocks, entity_tag;
   int retval;
   int ele_type;
-  int num_nodes;
   int entity_dim;
   long num_ele_in_block;
   std::array<t8_msh_file_node, T8_ECLASS_MAX_CORNERS> tree_nodes;
@@ -994,7 +999,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
         (void) strsep (&line_modify, " ");
 
         /* At this point line_modify contains only the node indices. */
-        num_nodes = t8_eclass_num_vertices[eclass];
+        const int num_nodes = t8_eclass_num_vertices[eclass];
         std::vector<t8_gloidx_t> node_indices (num_nodes, -1);
         for (int i_node = 0; i_node < num_nodes; i_node++) {
           const int t8_vertex_num = t8_msh_tree_vertex_to_t8_vertex_num[eclass][i_node];
@@ -1012,9 +1017,9 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
           tree_nodes[t8_vertex_num] = *vertices.find (Node);
 
           /* Add node coordinates to the tree vertices */
-          tree_vertices[3 * i_node] = tree_nodes[t8_vertex_num].coordinates[0];
-          tree_vertices[3 * i_node + 1] = tree_nodes[t8_vertex_num].coordinates[1];
-          tree_vertices[3 * i_node + 2] = tree_nodes[t8_vertex_num].coordinates[2];
+          tree_vertices[3 * t8_vertex_num] = tree_nodes[t8_vertex_num].coordinates[0];
+          tree_vertices[3 * t8_vertex_num + 1] = tree_nodes[t8_vertex_num].coordinates[1];
+          tree_vertices[3 * t8_vertex_num + 2] = tree_nodes[t8_vertex_num].coordinates[2];
 
           /* move line_modify to the next word in the line */
           (void) strsep (&line_modify, " ");
@@ -1237,7 +1242,8 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
                   if (face_nodes[i_face_nodes].entity_dim == 0) {
                     if (cad_geometry->t8_geom_is_vertex_on_face (face_nodes[i_face_nodes].entity_tag, surface_index)) {
                       cad_geometry->t8_geom_get_parameters_of_vertex_on_face (
-                        face_nodes[i_face_nodes].entity_tag, surface_index, face_nodes[i_face_nodes].parameters);
+                        face_nodes[i_face_nodes].entity_tag, surface_index,
+                        face_nodes[i_face_nodes].parameters.data ());
                       face_nodes[i_face_nodes].entity_dim = 2;
                     }
                     else {
@@ -1249,7 +1255,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
                     if (cad_geometry->t8_geom_is_edge_on_face (face_nodes[i_face_nodes].entity_tag, surface_index)) {
                       cad_geometry->t8_geom_edge_parameter_to_face_parameters (
                         face_nodes[i_face_nodes].entity_tag, surface_index, num_face_nodes,
-                        face_nodes[i_face_nodes].parameters[0], NULL, face_nodes[i_face_nodes].parameters);
+                        face_nodes[i_face_nodes].parameters[0], NULL, face_nodes[i_face_nodes].parameters.data ());
                       face_nodes[i_face_nodes].entity_dim = 2;
                     }
                     else {
@@ -1412,7 +1418,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
               for (int i_edge_node = 0; i_edge_node < 2; ++i_edge_node) {
                 /* Some error checking */
                 if (edge_nodes[i_edge_node].entity_dim == 2) {
-                  t8_global_errorf ("Error: Node %i should lie on a vertex or an edge, "
+                  t8_global_errorf ("Error: Node %li should lie on a vertex or an edge, "
                                     "but it lies on a surface.\n",
                                     edge_nodes[i_edge_node].index);
                   free (line);
@@ -1421,7 +1427,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
                 }
                 if (edge_nodes[i_edge_node].entity_dim == 1
                     && edge_nodes[i_edge_node].entity_tag != edge_geometry_tag) {
-                  t8_global_errorf ("Error: Node %i should lie on a specific edge, "
+                  t8_global_errorf ("Error: Node %li should lie on a specific edge, "
                                     "but it lies on another edge.\n",
                                     edge_nodes[i_edge_node].index);
                   free (line);
@@ -1431,7 +1437,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
                 if (edge_nodes[i_edge_node].entity_dim == 0) {
                   if (!cad_geometry->t8_geom_is_vertex_on_edge (edge_nodes[i_edge_node].entity_tag,
                                                                 edge_geometry_tag)) {
-                    t8_global_errorf ("Error: Node %i should lie on a vertex which lies on an edge, "
+                    t8_global_errorf ("Error: Node %li should lie on a vertex which lies on an edge, "
                                       "but the vertex does not lie on that edge.\n",
                                       edge_nodes[i_edge_node].index);
                     free (line);
@@ -1443,7 +1449,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
                 /* If the node lies on a vertex we retrieve its parameter on the curve */
                 if (edge_nodes[i_edge_node].entity_dim == 0) {
                   cad_geometry->t8_geom_get_parameter_of_vertex_on_edge (
-                    edge_nodes[i_edge_node].entity_tag, edge_geometry_tag, edge_nodes[i_edge_node].parameters);
+                    edge_nodes[i_edge_node].entity_tag, edge_geometry_tag, edge_nodes[i_edge_node].parameters.data ());
                   edge_nodes[i_edge_node].entity_dim = 1;
                 }
               }
@@ -1475,7 +1481,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
                 /* Some error checking */
                 if (edge_nodes[i_edge_node].entity_dim == 2
                     && edge_nodes[i_edge_node].entity_tag != edge_geometry_tag) {
-                  t8_global_errorf ("Error: Node %i should lie on a specific face, but it lies on another face.\n",
+                  t8_global_errorf ("Error: Node %li should lie on a specific face, but it lies on another face.\n",
                                     edge_nodes[i_edge_node].index);
                   free (line);
                   t8_cmesh_destroy (&cmesh);
@@ -1484,7 +1490,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
                 if (edge_nodes[i_edge_node].entity_dim == 0) {
                   if (!cad_geometry->t8_geom_is_vertex_on_face (edge_nodes[i_edge_node].entity_tag,
                                                                 edge_geometry_tag)) {
-                    t8_global_errorf ("Error: Node %i should lie on a vertex which lies on a face, "
+                    t8_global_errorf ("Error: Node %li should lie on a vertex which lies on a face, "
                                       "but the vertex does not lie on that face.\n",
                                       edge_nodes[i_edge_node].index);
                     free (line);
@@ -1494,7 +1500,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
                 }
                 if (edge_nodes[i_edge_node].entity_dim == 1) {
                   if (!cad_geometry->t8_geom_is_edge_on_face (edge_nodes[i_edge_node].entity_tag, edge_geometry_tag)) {
-                    t8_global_errorf ("Error: Node %i should lie on an edge which lies on a face, "
+                    t8_global_errorf ("Error: Node %li should lie on an edge which lies on a face, "
                                       "but the edge does not lie on that face.\n",
                                       edge_nodes[i_edge_node].index);
                     free (line);
@@ -1506,7 +1512,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
                 /* If the node lies on a vertex we retrieve its parameters on the surface */
                 if (edge_nodes[i_edge_node].entity_dim == 0) {
                   cad_geometry->t8_geom_get_parameters_of_vertex_on_face (
-                    edge_nodes[i_edge_node].entity_tag, edge_geometry_tag, edge_nodes[i_edge_node].parameters);
+                    edge_nodes[i_edge_node].entity_tag, edge_geometry_tag, edge_nodes[i_edge_node].parameters.data ());
                   edge_nodes[i_edge_node].entity_dim = 2;
                 }
                 /* If the node lies on an edge we have to do the same */
@@ -1514,7 +1520,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
                   const int num_face_nodes = t8_eclass_num_vertices[eclass];
                   cad_geometry->t8_geom_edge_parameter_to_face_parameters (
                     edge_nodes[i_edge_node].entity_tag, edge_geometry_tag, num_face_nodes,
-                    edge_nodes[i_edge_node].parameters[0], parameters, edge_nodes[i_edge_node].parameters);
+                    edge_nodes[i_edge_node].parameters[0], parameters, edge_nodes[i_edge_node].parameters.data ());
                   edge_nodes[i_edge_node].entity_dim = 2;
                 }
               }
