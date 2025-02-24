@@ -62,13 +62,13 @@ class forest_face_neighbors: public testing::TestWithParam<std::tuple<int, cmesh
   SetUp () override
   {
     const int scheme_id = std::get<0> (GetParam ());
-    const t8_scheme *scheme = create_from_scheme_id (scheme_id);
     t8_cmesh_t cmesh = std::get<1> (GetParam ())->cmesh_create ();
     if (test_face_neighbors_skip_cmesh (cmesh)) {
       /* we skip empty cmeshes case */
       t8_cmesh_unref (&cmesh);
       GTEST_SKIP ();
     }
+    const t8_scheme *scheme = create_from_scheme_id (scheme_id);
     const int level = 1;
     const int adapt_levels = 2;
     const int max_adapt_level = level + adapt_levels;
