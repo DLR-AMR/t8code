@@ -206,17 +206,23 @@ struct Swapable: t8_crtp_operator<TUnderlying, Swapable>
 template <typename TUnderlying>
 struct EqualityComparable: t8_crtp_operator<TUnderlying, EqualityComparable>
 {
-  constexpr bool
-  operator== (TUnderlying const& other) const noexcept
+  friend constexpr bool
+  operator== (const TUnderlying& lhs, const TUnderlying& rhs) noexcept
   {
-    return this->underlying ().get () == other.get ();
+    return lhs.get () == rhs.get ();
+  }
+
+  constexpr bool
+  operator!= (TUnderlying const& other) const
+  {
+    return this->underlying ().get () != other.get ();
   }
 };
 
 /**
  * \brief A template for hashable types. Used to make a type hashable.
  * 
- * \tparam T 
+ * \tparam TUnderlying
  */
 template <typename TUnderlying>
 struct Hashable
@@ -224,4 +230,61 @@ struct Hashable
   static constexpr bool is_hashable = true;
 };
 
-#endif /* T8_OPERATORS_HXX */
+/**
+ * \brief A template for random accessible types. Provides the [] operator.
+ * 
+ * \tparam TUnderlying
+ */
+template <typename TUnderlying>
+struct RandomAccessible: t8_crtp_operator<TUnderlying, RandomAccessible>
+{
+  auto
+  operator[] (std::size_t index) -> decltype (auto)
+  {
+    return this->underlying ().get ()[index];
+  }
+
+  auto
+  operator[] (std::size_t index) const -> decltype (auto)
+  {
+    return this->underlying ().get ()[index];
+  }
+
+  auto
+  begin () -> decltype (auto)
+  {
+    return this->underlying ().get ().begin ();
+  }
+
+  auto
+  begin () const -> decltype (auto)
+  {
+    return this->underlying ().get ().begin ();
+  }
+
+  auto
+  end () -> decltype (auto)
+  {
+    return this->underlying ().get ().end ();
+  }
+
+  auto
+  end () const -> decltype (auto)
+  {
+    return this->underlying ().get ().end ();
+  }
+
+  auto
+  data () -> decltype (auto)
+  {
+    return this->underlying ().get ().data ();
+  }
+
+  auto
+  data () const -> decltype (auto)
+  {
+    return this->underlying ().get ().data ();
+  }
+};
+
+#endif  // T8_OPERATORS_HXX
