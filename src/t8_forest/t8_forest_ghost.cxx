@@ -37,6 +37,7 @@
 #include <t8_forest/t8_forest_ghost_stencil.hxx>
 
 #include <unordered_map>
+#include <algorithm>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
