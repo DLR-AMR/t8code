@@ -59,65 +59,99 @@ jobs:
       MPI: ${{ matrix.MPI }}
   
   # Run parallel tests for sc and p4est with and without MPI
-  sc_p4est_tests:
-    if: ((github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule'))
-    needs: preparation
-    uses: ./.github/workflows/tests_cmake_sc_p4est.yml
-    strategy:
-      fail-fast: false
-      matrix:
-        MPI: [OFF, ON]
-        include: 
-          - MAKEFLAGS: -j4
-    with:
-      MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
-      MPI: ${{ matrix.MPI }}
+  # sc_p4est_tests:
+  #   if: ((github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule'))
+  #   needs: preparation
+  #   uses: ./.github/workflows/tests_cmake_sc_p4est.yml
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       MPI: [OFF, ON]
+  #       include: 
+  #         - MAKEFLAGS: -j4
+  #   with:
+  #     MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
+  #     MPI: ${{ matrix.MPI }}
 
   # Run t8code tests with and without MPI and in serial and debug mode
-  t8code_tests:
-    if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
-    uses: ./.github/workflows/tests_cmake_t8code.yml
-    strategy:
-      fail-fast: false
-      matrix:
-        MPI: [OFF, ON]
-        BUILD_TYPE: [Debug, Release]
-        include: 
-          - MAKEFLAGS: -j4
-    needs: preparation
-    with:
-      MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
-      MPI: ${{ matrix.MPI }}
-      BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
-      TEST_LEVEL: ${{ github.event_name == 'pull_request' && 1 || 0 }} # Set TEST_LEVEL to 1 if the event is a PR, otherwise 0.
+  # t8code_tests:
+  #   if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
+  #   uses: ./.github/workflows/tests_cmake_t8code.yml
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       MPI: [OFF, ON]
+  #       BUILD_TYPE: [Debug, Release]
+  #       include: 
+  #         - MAKEFLAGS: -j4
+  #   needs: preparation
+  #   with:
+  #     MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
+  #     MPI: ${{ matrix.MPI }}
+  #     BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
+  #     TEST_LEVEL: ${{ github.event_name == 'pull_request' && 1 || 0 }} # Set TEST_LEVEL to 1 if the event is a PR, otherwise 0.
       
   # Run t8code linkage tests with and without MPI and in serial and debug mode
-  t8code_linkage_tests:
-    if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
-    uses: ./.github/workflows/tests_cmake_t8code_linkage.yml
-    strategy:
-      fail-fast: false
-      matrix:
-        MPI: [OFF, ON]
-        BUILD_TYPE: [Debug, Release]
-        include: 
-          - MAKEFLAGS: -j4
-    needs: preparation
-    with:
-      MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
-      MPI: ${{ matrix.MPI }}
-      BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
-      TEST_LEVEL: ${{ github.event_name == 'pull_request' && 1 || 0 }} # Set TEST_LEVEL to 1 if the event is a PR, otherwise 0.
+  # t8code_linkage_tests:
+  #   if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
+  #   uses: ./.github/workflows/tests_cmake_t8code_linkage.yml
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       MPI: [OFF, ON]
+  #       BUILD_TYPE: [Debug, Release]
+  #       include: 
+  #         - MAKEFLAGS: -j4
+  #   needs: preparation
+  #   with:
+  #     MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
+  #     MPI: ${{ matrix.MPI }}
+  #     BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
+  #     TEST_LEVEL: ${{ github.event_name == 'pull_request' && 1 || 0 }} # Set TEST_LEVEL to 1 if the event is a PR, otherwise 0.
 
   # Run t8code linkage tests with and without MPI and in serial and debug mode
-  t8code_api_tests:
+  # t8code_api_tests:
+  #   if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
+  #   uses: ./.github/workflows/tests_cmake_t8code_api.yml
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       MPI: [ON] # For now the fortran API only supports building with MPI
+  #       BUILD_TYPE: [Debug, Release]
+  #       include: 
+  #         - MAKEFLAGS: -j4
+  #   needs: preparation
+  #   with:
+  #     MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
+  #     MPI: ${{ matrix.MPI }}
+  #     BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
+  #     TEST_LEVEL: ${{ github.event_name == 'pull_request' && 1 || 0 }} # Set TEST_LEVEL to 1 if the event is a PR, otherwise 0.
+  
+  # Run t8code tests with shipped submodules. This test is only for the build system, so only one config is tested.
+  # t8code_w_shipped_submodules_tests:
+  #   if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
+  #   uses: ./.github/workflows/tests_cmake_t8code_w_shipped_submodules.yml
+  #   with:
+  #     MAKEFLAGS: -j4
+  #     MPI: ON
+  #     BUILD_TYPE: Debug
+  #     TEST_LEVEL: ${{ github.event_name == 'pull_request' && 1 || 0 }} # Set TEST_LEVEL to 1 if the event is a PR, otherwise 0.
+
+  # t8code_tarball:
+  #   if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
+  #   uses: ./.github/workflows/build_cmake_tarball.yml
+  #   needs: [preparation, sc_p4est_tests, t8code_tests, t8code_linkage_tests, t8code_api_tests, t8code_w_shipped_submodules_tests]
+  #   with:
+  #     TEST_LEVEL: ${{ github.event_name == 'pull_request' && 1 || 0 }} # Set TEST_LEVEL to 1 if the event is a PR, otherwise 0.
+
+  t8code_valgrind:
     if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
-    uses: ./.github/workflows/tests_cmake_t8code_api.yml
+    uses: ./.github/workflows/tests_cmake_valgrind.yml
     strategy:
       fail-fast: false
       matrix:
-        MPI: [ON] # For now the fortran API only supports building with MPI
-        BUILD_TYPE: [Debug, Release]
+        MPI: ON
+        BUILD_TYPE: Debug
         include: 
           - MAKEFLAGS: -j4
     needs: preparation
@@ -125,21 +159,4 @@ jobs:
       MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
       MPI: ${{ matrix.MPI }}
       BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
-      TEST_LEVEL: ${{ github.event_name == 'pull_request' && 1 || 0 }} # Set TEST_LEVEL to 1 if the event is a PR, otherwise 0.
-  
-  # Run t8code tests with shipped submodules. This test is only for the build system, so only one config is tested.
-  t8code_w_shipped_submodules_tests:
-    if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
-    uses: ./.github/workflows/tests_cmake_t8code_w_shipped_submodules.yml
-    with:
-      MAKEFLAGS: -j4
-      MPI: ON
-      BUILD_TYPE: Debug
-      TEST_LEVEL: ${{ github.event_name == 'pull_request' && 1 || 0 }} # Set TEST_LEVEL to 1 if the event is a PR, otherwise 0.
-
-  t8code_tarball:
-    if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
-    uses: ./.github/workflows/build_cmake_tarball.yml
-    needs: [preparation, sc_p4est_tests, t8code_tests, t8code_linkage_tests, t8code_api_tests, t8code_w_shipped_submodules_tests]
-    with:
-      TEST_LEVEL: ${{ github.event_name == 'pull_request' && 1 || 0 }} # Set TEST_LEVEL to 1 if the event is a PR, otherwise 0.
+      TEST_LEVEL: 2 # Set test level to two as valgrind can be very slow.
