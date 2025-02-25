@@ -32,9 +32,6 @@ name: t8code CMake testsuite
 
 on:
   merge_group:
-  push:
-    branches:
-      - main
   pull_request:
   workflow_dispatch: # Be able to trigger this manually on github.com
   # Run every night at 1:10
