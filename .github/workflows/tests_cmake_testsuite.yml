@@ -67,7 +67,7 @@ jobs:
           echo "Scheduled run for DLR-AMR/t8code, proceeding with CI."
           exit 0
         fi
-        if [["${{ github.event_name }}" != "schedule" ]]; then
+        if [[ "${{ github.event_name }}" != "schedule" ]]; then
           if [[ "${{ github.event.pull_request.draft }}" == "false" ]]; then
             echo "Not a draft PR, proceeding with CI."
             exit 0
