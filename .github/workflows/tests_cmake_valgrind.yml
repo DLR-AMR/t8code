@@ -5,7 +5,7 @@ name: Valgrind check
 #  t8code is a C library to manage a collection (a forest) of multiple
 #  connected adaptive space-trees of general element types in parallel.
 #
-#  Copyright (C) 2024 the developers
+#  Copyright (C) 2025 the developers
 #
 #  t8code is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -114,7 +114,7 @@ jobs:
       with:
         name: test-suite_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
         path: build/Testing/Temporary/LastTest.log
-    - name: Run Valgrind
+    - name: Valgrind Checker
       uses: Ximaz/valgrind-action@1.2.1
       with:
         binary_path: build/test/t8_gtest_cmesh_bcast_parallel
