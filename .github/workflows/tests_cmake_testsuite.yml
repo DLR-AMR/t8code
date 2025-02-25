@@ -41,7 +41,7 @@ on:
 # The CI pipeline should:
 # - fully run in the merge queue with the full test suite
 # - not run on draft PRs
-# - run on draft PRs, if the latest commit message contains '[run ci]'
+# - run on draft PRs, if the latest commit message contains '[run CI]'
 # - run on scheduled runs for the DLR-AMR/t8code repository
 # - run on all other pull request events
 # These conditions are checked in the fine_grained_trigger job. If it completes successfully, it triggers the preparation job, 
