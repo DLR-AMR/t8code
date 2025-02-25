@@ -27,6 +27,7 @@
 #include <t8_vtk/t8_vtk_types.h>
 #include <t8_cmesh.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity.hxx>
 
 #if T8_WITH_VTK
 #include <vtkCellIterator.h>
@@ -233,10 +234,9 @@ t8_vtk_iterate_cells (vtkSmartPointer<vtkDataSet> vtkGrid, t8_cmesh_t cmesh, con
   vtkCellIterator *cell_it;
   vtkSmartPointer<vtkPoints> points;
   vtkSmartPointer<vtkCellData> cell_data = vtkGrid->GetCellData ();
-  const int max_cell_points = vtkGrid->GetMaxCellSize ();
 
-  T8_ASSERT (max_cell_points >= 0);
-  double *vertices = T8_ALLOC (double, 3 * max_cell_points);
+  std::array<double, T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM> vertices;
+  std::array<t8_gloidx_t, T8_ECLASS_MAX_CORNERS> global_vertex_indices;
   /* Get cell iterator */
   cell_it = vtkGrid->NewCellIterator ();
   /* get the number of data-arrays per cell */
@@ -259,7 +259,6 @@ t8_vtk_iterate_cells (vtkSmartPointer<vtkDataSet> vtkGrid, t8_cmesh_t cmesh, con
 
   /* Iterate over all cells */
   for (cell_it->InitTraversal (); !cell_it->IsDoneWithTraversal (); cell_it->GoToNextCell ()) {
-
     /* Set the t8_eclass of the cell */
     const t8_eclass_t cell_type = t8_cmesh_vtk_type_to_t8_type[cell_it->GetCellType ()];
     SC_CHECK_ABORTF (t8_eclass_is_valid (cell_type), "vtk-cell-type %i not supported by t8code\n", cell_type);
@@ -270,13 +269,23 @@ t8_vtk_iterate_cells (vtkSmartPointer<vtkDataSet> vtkGrid, t8_cmesh_t cmesh, con
     points = cell_it->GetPoints ();
 
     for (int ipoint = 0; ipoint < num_points; ipoint++) {
-      points->GetPoint (t8_element_shape_vtk_corner_number (cell_type, ipoint), &vertices[3 * ipoint]);
+      points->GetPoint (t8_element_shape_t8_to_vtk_corner_number (cell_type, ipoint), &vertices[3 * ipoint]);
     }
     /* The order of the vertices in vtk might give a tree with negative \param */
-    if (t8_cmesh_tree_vertices_negative_volume (cell_type, vertices, num_points)) {
-      t8_cmesh_correct_volume (vertices, cell_type);
+    if (t8_cmesh_tree_vertices_negative_volume (cell_type, vertices.data (), num_points)) {
+      t8_cmesh_correct_volume (vertices.data (), cell_type);
     }
-    t8_cmesh_set_tree_vertices (cmesh, tree_id, vertices, num_points);
+    t8_cmesh_set_tree_vertices (cmesh, tree_id, vertices.data (), num_points);
+    vtkIdList *id_list = cell_it->GetPointIds ();
+    const int num_id = id_list->GetNumberOfIds ();
+    T8_ASSERT (num_id == num_points);
+
+    for (int i_vertex = 0; i_vertex < num_id; i_vertex++) {
+      global_vertex_indices[i_vertex] = id_list->GetId (t8_element_shape_t8_to_vtk_corner_number (cell_type, i_vertex));
+      t8_debugf ("Iteration: %i\t Tree_ID = %li\t Vertex_T8_ID = %li\n", i_vertex + 1, tree_id,
+                 global_vertex_indices[i_vertex]);
+    }
+    t8_cmesh_set_global_vertices_of_tree (cmesh, tree_id, global_vertex_indices.data (), num_id);
 
     /* TODO: Avoid magic numbers in the attribute setting. */
     /* Get and set the data of each cell */
@@ -297,7 +306,6 @@ t8_vtk_iterate_cells (vtkSmartPointer<vtkDataSet> vtkGrid, t8_cmesh_t cmesh, con
     }
     T8_FREE (tuples);
   }
-  T8_FREE (vertices);
   return;
 }
 
@@ -381,7 +389,6 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer<vtkDataSet> vtkGrid, const int partition, c
   if (partition) {
     first_tree = t8_vtk_partition (cmesh, mpirank, mpisize, num_trees, dim, comm);
   }
-
   /* Translation of vtkGrid to cmesh 
    * We translate the file if:
    * - We do not use a partitioned read, every process has read the vtk-file and shall now translate it, or if
