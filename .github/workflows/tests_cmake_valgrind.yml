@@ -102,4 +102,4 @@ jobs:
     - name: Valgrind Checker
       uses: Ximaz/valgrind-action@1.2.1
       with:
-        binary_path: build/test/t8_gtest_cmesh_bcast_parallel
+        binary_path: build/test/t8_cmesh/t8_gtest_cmesh_bcast_parallel
