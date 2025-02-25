@@ -57,21 +57,19 @@ jobs:
         repository: ${{ github.event.pull_request.head.repo.full_name }}
         ref: ${{ github.event.pull_request.head.ref }}
         fetch-depth: 0
-    - name: get the latest commit message
-      run: |
-        latest_commit_message=$(git log -1 --pretty=%B)
-        echo "Latest commit message: $latest_commit_message"
     - name: trigger the testsuite
       run: |
         if [[ "${{ github.event_name }}" == "schedule" && "${{ github.repository }}" == "DLR-AMR/t8code" ]]; then
           echo "Scheduled run for DLR-AMR/t8code, proceeding with CI."
           exit 0
         fi
+        latest_commit_message=$(git log -1 --pretty=%B)
+        echo "Latest commit message: $latest_commit_message"
         if [[ "${{ github.event_name }}" != "schedule" ]]; then
           if [[ "${{ github.event.pull_request.draft }}" == "false" ]]; then
             echo "Not a draft PR, proceeding with CI."
             exit 0
-          elif [[ "${{ github.event.pull_request.draft }}" == "true" && "$latest_commit_message" == *"[run CI]"* ]]; then
+            elif [[ "${{ github.event.pull_request.draft }}" == "true" && "$latest_commit_message" == *"[run CI]"* ]]; then
             echo "Draft PR with '[run CI]' in the latest commit message, proceeding with CI."
             exit 0
           fi
