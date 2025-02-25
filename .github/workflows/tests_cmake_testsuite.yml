@@ -51,16 +51,20 @@ on:
 jobs:
   fine_grained_trigger:
     runs-on: ubuntu-latest
+    outputs:
+      run_ci: ${{ steps.set_run_ci.outputs.RUN_CI }}
     steps:
     - uses: actions/checkout@v4
       with:
         repository: ${{ github.event.pull_request.head.repo.full_name }}
         ref: ${{ github.event.pull_request.head.ref }}
         fetch-depth: 0
-    - name: trigger the testsuite
+    - name: set the run_ci variable for the testsuite
+      id: set_run_ci
       run: |
         if [[ "${{ github.event_name }}" == "schedule" && "${{ github.repository }}" == "DLR-AMR/t8code" ]]; then
           echo "Scheduled run for DLR-AMR/t8code, proceeding with CI."
+          echo "RUN_CI=true" >> $GITHUB_ENV
           exit 0
         fi
         latest_commit_message=$(git log -1 --pretty=%B)
@@ -68,17 +72,21 @@ jobs:
         if [[ "${{ github.event_name }}" != "schedule" ]]; then
           if [[ "${{ github.event.pull_request.draft }}" == "false" ]]; then
             echo "Not a draft PR, proceeding with CI."
+            echo "RUN_CI=true" >> $GITHUB_ENV
             exit 0
           elif [[ "${{ github.event.pull_request.draft }}" == "true" && "$latest_commit_message" == *"[run CI]"* ]]; then
             echo "Draft PR with '[run CI]' in the latest commit message, proceeding with CI."
+            echo "RUN_CI=true" >> $GITHUB_ENV
             exit 0
           else
             echo "Draft PR without '[run CI]' in the latest commit message, skipping CI."
-            exit 1
+            echo "RUN_CI=false" >> $GITHUB_ENV
+            exit 0
           fi
         else
           echo "Conditions not met, skipping CI."
-          exit 1
+          echo "RUN_CI=false" >> $GITHUB_ENV
+          exit 0
         fi
 
 
@@ -86,6 +94,8 @@ jobs:
   # Preparation step for tests. Repo is cloned and sc + p4est are compiled with and without MPI.
   preparation:
     needs: [fine_grained_trigger]
+    secrets: inherit
+    if: ${{ needs.fine_grained_trigger.outputs.run_ci == 'true' }}
     uses: ./.github/workflows/tests_cmake_preparation.yml
     strategy:
       fail-fast: false
@@ -175,6 +185,7 @@ jobs:
       TEST_LEVEL: ${{ github.event_name == 'pull_request' && 1 || 0 }} # Set TEST_LEVEL to 1 if the event is a PR, otherwise 0.
 
   t8code_tarball:
+    if: github.event.pull_request == false
     uses: ./.github/workflows/build_cmake_tarball.yml
     needs: [preparation, sc_p4est_tests, t8code_tests, t8code_linkage_tests, t8code_api_tests, t8code_w_shipped_submodules_tests]
     with:
