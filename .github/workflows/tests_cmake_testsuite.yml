@@ -69,9 +69,12 @@ jobs:
           if [[ "${{ github.event.pull_request.draft }}" == "false" ]]; then
             echo "Not a draft PR, proceeding with CI."
             exit 0
-            elif [[ "${{ github.event.pull_request.draft }}" == "true" && "$latest_commit_message" == *"[run CI]"* ]]; then
+          elif [[ "${{ github.event.pull_request.draft }}" == "true" && "$latest_commit_message" == *"[run CI]"* ]]; then
             echo "Draft PR with '[run CI]' in the latest commit message, proceeding with CI."
             exit 0
+          else
+            echo "Draft PR without '[run CI]' in the latest commit message, skipping CI."
+            exit 1
           fi
         else
           echo "Conditions not met, skipping CI."
