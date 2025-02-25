@@ -130,7 +130,7 @@ t8_scalar3d_sphere (const t8_3D_vec &x, t8_3D_vec &M, const double radius)
 }
 
 double
-t8_scalar3d_sphere_75_radius (const t8_3D_vec x, const [[maybe_unused]] double t)
+t8_scalar3d_sphere_75_radius (const t8_3D_vec x, [[maybe_unused]] const double t)
 {
   t8_3D_vec M ({ 0, 0, 0 });
   return t8_scalar3d_sphere (x, M, 0.75);
@@ -145,7 +145,7 @@ t8_scalar3d_sphere_05_midpoint_375_radius (const t8_3D_vec x, [[maybe_unused]] d
 }
 
 double
-t8_scalar3d_sphere_03_midpoint_25_radius (const t8_3D_vec &x, const [[maybe_unused]] double t)
+t8_scalar3d_sphere_03_midpoint_25_radius (const t8_3D_vec &x, [[maybe_unused]] const double t)
 {
   t8_3D_vec M ({ 0.3, 0.3, 0.3 });
 
@@ -153,7 +153,7 @@ t8_scalar3d_sphere_03_midpoint_25_radius (const t8_3D_vec &x, const [[maybe_unus
 }
 
 double
-t8_scalar3d_sphere_05_0z_midpoint_375_radius (const t8_3D_vec &x, const [[maybe_unused]] double t)
+t8_scalar3d_sphere_05_0z_midpoint_375_radius (const t8_3D_vec &x, [[maybe_unused]] const double t)
 {
   t8_3D_vec M ({ 0.5, 0.5, 0 });
 
@@ -161,20 +161,20 @@ t8_scalar3d_sphere_05_0z_midpoint_375_radius (const t8_3D_vec &x, const [[maybe_
 }
 
 void
-t8_flow_constant_one_vec ([[maybe_unused]] const t8_3D_point &x, const [[maybe_unused]] double t, t8_3D_vec &x_out)
+t8_flow_constant_one_vec ([[maybe_unused]] const t8_3D_point &x, [[maybe_unused]] const double t, t8_3D_vec &x_out)
 {
   x_out[0] = x_out[1] = x_out[2] = 1;
 }
 
 void
-t8_flow_constant_one_x_vec ([[maybe_unused]] const t8_3D_point &x, const [[maybe_unused]] double t, t8_3D_vec &x_out)
+t8_flow_constant_one_x_vec ([[maybe_unused]] const t8_3D_point &x, [[maybe_unused]] const double t, t8_3D_vec &x_out)
 {
   x_out[0] = 1;
   x_out[1] = x_out[2] = 0;
 }
 
 void
-t8_flow_constant_one_xy_vec ([[maybe_unused]] const t8_3D_point &x, const [[maybe_unused]] double t, t8_3D_vec &x_out)
+t8_flow_constant_one_xy_vec ([[maybe_unused]] const t8_3D_point &x, [[maybe_unused]] const double t, t8_3D_vec &x_out)
 {
   x_out[0] = 1;
   x_out[1] = 0.8;
@@ -182,7 +182,7 @@ t8_flow_constant_one_xy_vec ([[maybe_unused]] const t8_3D_point &x, const [[mayb
 }
 
 void
-t8_flow_constant_one_xyz_vec ([[maybe_unused]] const t8_3D_point &x, const [[maybe_unused]] double t, t8_3D_vec &x_out)
+t8_flow_constant_one_xyz_vec ([[maybe_unused]] const t8_3D_point &x, [[maybe_unused]] const double t, t8_3D_vec &x_out)
 {
   x_out[0] = 1;
   x_out[1] = 0.8;
@@ -190,7 +190,7 @@ t8_flow_constant_one_xyz_vec ([[maybe_unused]] const t8_3D_point &x, const [[may
 }
 
 void
-t8_flow_rotation_2d (const t8_3D_point &x_in, const [[maybe_unused]] double t, t8_3D_vec &x_out)
+t8_flow_rotation_2d (const t8_3D_point &x_in, [[maybe_unused]] const double t, t8_3D_vec &x_out)
 {
   double x = x_in[0], y = x_in[1];
 
@@ -205,7 +205,7 @@ t8_flow_rotation_2d (const t8_3D_point &x_in, const [[maybe_unused]] double t, t
 }
 
 void
-t8_flow_compressible (const t8_3D_point &x_in, const [[maybe_unused]] double t, t8_3D_vec &x_out)
+t8_flow_compressible (const t8_3D_point &x_in, [[maybe_unused]] const double t, t8_3D_vec &x_out)
 {
   x_out[0] = (1. / 2 - x_in[0]);
   x_out[1] = 0;
@@ -276,7 +276,7 @@ t8_flow_2d_cart_coords (const t8_vec<2> &polar_values, const t8_vec<2> &polar_co
 /* 2d flow around a circle with radius R = 1 and
  * constant inflow with x-speed U = 1. */
 void
-t8_flow_around_circle (const t8_3D_point &x, const [[maybe_unused]] double t, t8_3D_vec &x_out)
+t8_flow_around_circle (const t8_3D_point &x, [[maybe_unused]] const double t, t8_3D_vec &x_out)
 {
   t8_vec<2> polar;
   t8_vec<2> polar_speed;
@@ -335,7 +335,7 @@ t8_flow_stokes_sphere_f_component (double radius, double alpha, double beta, int
 }
 
 void
-t8_flow_stokes_flow_sphere_shell (const t8_3D_point &x_in, const [[maybe_unused]] double t, t8_3D_vec &x_out)
+t8_flow_stokes_flow_sphere_shell (const t8_3D_point &x_in, [[maybe_unused]] const double t, t8_3D_vec &x_out)
 {
   double radius;
   double theta, phi;
@@ -375,7 +375,7 @@ t8_flow_stokes_flow_sphere_shell (const t8_3D_point &x_in, const [[maybe_unused]
 }
 
 void
-t8_flow_around_circle_with_angular_velocity (const t8_3D_point &x, const [[maybe_unused]] double t, t8_3D_vec &x_out)
+t8_flow_around_circle_with_angular_velocity (const t8_3D_point &x, [[maybe_unused]] const double t, t8_3D_vec &x_out)
 {
   const double radius = 0.5;
   const double omega = 1.5 * M_PI;
