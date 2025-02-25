@@ -46,11 +46,13 @@ T8_EXTERN_C_BEGIN ();
  * \param[in] main_proc     The main reading processor
  * \param[in] comm          An mpi-communicator
  * \param[in] vtk_file_type A vtk-filetype that is readable by t8code. 
+ * \param[in] package_id    The package id of the application. It is generated with the usage of \ref sc_package_register.  
+ * \param[in] starting_key  If the application already registered attributes, the starting key is used so that the existing attributes are not overwritten.
  * \return                  A committed cmesh.
  */
 t8_cmesh_t
 t8_cmesh_vtk_reader (const char *filename, const int partition, const int main_proc, sc_MPI_Comm comm,
-                     const vtk_file_type_t vtk_file_type);
+                     const vtk_file_type_t vtk_file_type, const int package_id, const int starting_key);
 
 T8_EXTERN_C_END ();
 

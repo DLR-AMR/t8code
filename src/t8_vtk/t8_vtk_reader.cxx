@@ -224,7 +224,7 @@ t8_get_dimension (vtkSmartPointer<vtkDataSet> vtkGrid)
 
 static void
 t8_vtk_iterate_cells (vtkSmartPointer<vtkDataSet> vtkGrid, t8_cmesh_t cmesh, const t8_gloidx_t first_tree,
-                      sc_MPI_Comm comm)
+                      sc_MPI_Comm comm, const int package_id, const int starting_key)
 {
   double **tuples = NULL;
   size_t *data_size = NULL;
@@ -284,7 +284,7 @@ t8_vtk_iterate_cells (vtkSmartPointer<vtkDataSet> vtkGrid, t8_cmesh_t cmesh, con
       const t8_gloidx_t cell_id = cell_it->GetCellId ();
       vtkDataArray *data = cell_data->GetArray (dtype);
       data->GetTuple (cell_id, tuples[dtype]);
-      t8_cmesh_set_attribute (cmesh, tree_id, t8_get_package_id (), dtype + 1, tuples[dtype], data_size[dtype], 0);
+      t8_cmesh_set_attribute (cmesh, tree_id, package_id, dtype + starting_key, tuples[dtype], data_size[dtype], 0);
     }
     tree_id++;
   }
@@ -342,7 +342,7 @@ t8_vtk_partition (t8_cmesh_t cmesh, const int mpirank, const int mpisize, t8_glo
 
 t8_cmesh_t
 t8_vtkGrid_to_cmesh (vtkSmartPointer<vtkDataSet> vtkGrid, const int partition, const int main_proc,
-                     const int distributed_grid, sc_MPI_Comm comm)
+                     const int distributed_grid, sc_MPI_Comm comm, const int package_id, const int starting_key)
 {
   t8_cmesh_t cmesh;
   int mpisize;
@@ -389,7 +389,7 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer<vtkDataSet> vtkGrid, const int partition, c
    * - We use a parallel file-type and use a partitioned read, every proc translates its chunk of the grid. 
    */
   if (!partition || mpirank == main_proc || distributed_grid) {
-    t8_vtk_iterate_cells (vtkGrid, cmesh, first_tree, comm);
+    t8_vtk_iterate_cells (vtkGrid, cmesh, first_tree, comm, package_id, starting_key);
   }
 
   if (cmesh != NULL) {
@@ -499,13 +499,14 @@ t8_vtk_reader_pointSet (const char *filename, const int partition, const int mai
 
 t8_cmesh_t
 t8_vtk_reader_cmesh (const char *filename, const int partition, const int main_proc, sc_MPI_Comm comm,
-                     const vtk_file_type_t vtk_file_type)
+                     const vtk_file_type_t vtk_file_type, const int package_id, const int starting_key)
 {
 #if T8_WITH_VTK
   vtkSmartPointer<vtkDataSet> vtkGrid = t8_vtk_reader (filename, partition, main_proc, comm, vtk_file_type);
   if (vtkGrid != NULL) {
     const int distributed_grid = (vtk_file_type & VTK_PARALLEL_FILE) && partition;
-    t8_cmesh_t cmesh = t8_vtkGrid_to_cmesh (vtkGrid, partition, main_proc, distributed_grid, comm);
+    t8_cmesh_t cmesh
+      = t8_vtkGrid_to_cmesh (vtkGrid, partition, main_proc, distributed_grid, comm, package_id, starting_key);
     T8_ASSERT (cmesh != NULL);
     return cmesh;
   }
