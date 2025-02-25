@@ -158,5 +158,10 @@ TEST_P (forest_search, test_search_one_query_matches_all)
 
   t8_forest_unref (&forest);
 }
+#if T8CODE_TEST_LEVEL >= 2
+const int maxlvl = 5;
+#else
+const int maxlvl = 6;
+#endif
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_search, forest_search, testing::Combine (DefaultScheme, testing::Range (0, 6)));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_search, forest_search, testing::Combine (DefaultScheme, testing::Range (0, maxlvl)));

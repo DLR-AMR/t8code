@@ -124,13 +124,17 @@ t8_test_gao_check (t8_forest_t forest)
 
 TEST_P (forest_ghost_owner, test_ghost_owner)
 {
-
   /* Compute the minimum level, such that the forest is nonempty */
   int min_level = t8_forest_min_nonempty_level (cmesh, scheme);
   /* start with an empty level */
   min_level = SC_MAX (0, min_level - 1);
   t8_debugf ("Testing ghost exchange with start level %i\n", min_level);
-  for (int level = min_level; level < min_level + 3; level++) {
+#if T8CODE_TEST_LEVEL >= 2
+  const int max_level = min_level + 2;
+#else
+  const int max_level = min_level + 3;
+#endif
+  for (int level = min_level; level < max_level; level++) {
     /* ref the scheme since we reuse it */
     scheme->ref ();
     /* ref the cmesh since we reuse it */
