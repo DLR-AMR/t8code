@@ -60,7 +60,7 @@ jobs:
         repository: ${{ github.event.pull_request.head.repo.full_name }}
         ref: ${{ github.event.pull_request.head.ref }}
         fetch-depth: 0
-    - name: set the run_ci variable for the testsuite
+    - name: set the run_ci variable for the testsute
       id: set_run_ci
       run: |
         if [[ "${{ github.event_name }}" == "schedule" && "${{ github.repository }}" == "DLR-AMR/t8code" ]]; then
@@ -94,7 +94,7 @@ jobs:
   preparation:
     needs: [fine_grained_trigger]
     secrets: inherit
-    if: ${{ needs.fine_grained_trigger.outputs.run_ci == 'true' }}
+    if: needs.fine_grained_trigger.outputs.run_ci == 'true'
     uses: ./.github/workflows/tests_cmake_preparation.yml
     strategy:
       fail-fast: false
