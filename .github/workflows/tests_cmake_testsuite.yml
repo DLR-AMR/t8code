@@ -40,8 +40,8 @@ on:
 
 # The CI pipeline should:
 # - fully run in the merge queue with the full test suite
-# - not run on draft PRs
-# - run on draft PRs, if the latest commit message contains '[run ci]'
+# - not run on Draft PRs
+# - run on Draft PRs, IF the latest commit message contains '[run CI]'
 # - run on scheduled runs for the DLR-AMR/t8code repository
 # - run on all other pull request events
 # These conditions are checked in the fine_grained_trigger job. If it completes successfully, it triggers the preparation job, 
@@ -49,60 +49,42 @@ on:
 # The job to build the tarball is only triggered on merge_group events for the DLR-AMR/t8code repository.
 
 jobs:
-
   fine_grained_trigger:
     runs-on: ubuntu-latest
-    outputs:
-      run_ci: ${{ steps.set_run_ci.outputs.RUN_CI }}
     steps:
     - uses: actions/checkout@v4
       with:
         repository: ${{ github.event.pull_request.head.repo.full_name }}
         ref: ${{ github.event.pull_request.head.ref }}
         fetch-depth: 0
-    - name: set the run_ci variable for the testsute
-      id: set_run_ci
+    - name: get the latest commit message
       run: |
-        if [[ "${{ github.event_name }}" == "schedule" && "${{ github.repository }}" == "DLR-AMR/t8code" ]]; then
-          echo "Scheduled run for DLR-AMR/t8code, proceeding with CI."
-          echo "RUN_CI=true" >> $GITHUB_OUTPUT
-          exit 0
-        elif [[ "${{ github.event_name }}" == "merge_group" ]]; then
-          echo "Merge group event, proceeding with CI."
-          echo "RUN_CI=true" >> $GITHUB_OUTPUT
-          exit 0
-        fi
         latest_commit_message=$(git log -1 --pretty=%B)
         echo "Latest commit message: $latest_commit_message"
-        if [[ "${{ github.event_name }}" != "schedule" ]]; then
-          if [[ "${{ github.event.pull_request.draft }}" == "false" ]]; then
-            echo "Not a draft PR, proceeding with CI."
-            echo "RUN_CI=true" >> $GITHUB_OUTPUT
-            exit 0
-          elif [[ "${{ github.event.pull_request.draft }}" == "true" && "$latest_commit_message" == *"[run ci]"* ]]; then
-            echo "Draft PR with '[run ci]' in the latest commit message, proceeding with CI."
-            echo "RUN_CI=true" >> $GITHUB_OUTPUT
-            exit 0
-          elif [[ "${{github.event.pull_request.ready_for_review}}" == "true" ]]; then
-            echo "PR ready for review, proceeding with CI."
-            echo "RUN_CI=true" >> $GITHUB_OUTPUT
-            exit 0
-          else
-            echo "Draft PR without '[run ci]' in the latest commit message, skipping CI."
-            echo "RUN_CI=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
+    - name: trigger the testsuite
+      run: |
+        if [[ "${{ github.event.pull_request.draft }}" == "false" ]]; then
+          echo "Not a draft PR, proceeding with CI."
+          exit 0
+        elif [[ "${{ github.event.pull_request.draft }}" == "true" && "$latest_commit_message" == *"[run CI]"* ]]; then
+          echo "Draft PR with '[run CI]' in the latest commit message, proceeding with CI."
+          exit 0
+        elif [[ "${{ github.event_name }}" == "schedule" && "${{ github.repository }}" == "DLR-AMR/t8code" ]]; then
+          echo "Scheduled run for DLR-AMR/t8code, proceeding with CI."
+          exit 0
+        elif [[ "${{ github.event_name }}" != "schedule" ]]; then
+          echo "Event is not schedule, proceeding with CI."
+          exit 0
         else
           echo "Conditions not met, skipping CI."
-          echo "RUN_CI=false" >> $GITHUB_OUTPUT
-          exit 0
+          exit 1
         fi
+
+
 
   # Preparation step for tests. Repo is cloned and sc + p4est are compiled with and without MPI.
   preparation:
     needs: [fine_grained_trigger]
-    secrets: inherit
-    if: needs.fine_grained_trigger.outputs.run_ci == 'true'
     uses: ./.github/workflows/tests_cmake_preparation.yml
     strategy:
       fail-fast: false
@@ -184,8 +166,6 @@ jobs:
   # Run t8code tests with shipped submodules. This test is only for the build system, so only one config is tested.
   t8code_w_shipped_submodules_tests:
     needs: fine_grained_trigger
-    secrets: inherit
-    if: ${{ needs.fine_grained_trigger.outputs.run_ci == 'true' }}
     uses: ./.github/workflows/tests_cmake_t8code_w_shipped_submodules.yml
     with:
       MAKEFLAGS: -j4
@@ -194,7 +174,7 @@ jobs:
       TEST_LEVEL: ${{ github.event_name == 'pull_request' && 1 || 0 }} # Set TEST_LEVEL to 1 if the event is a PR, otherwise 0.
 
   t8code_tarball:
-    if: (github.event_name == 'schedule' || github.event_name == 'merge_group') && github.repository == 'DLR-AMR/t8code'
+    if: github.event_name == 'merge_group' && github.repository == 'DLR-AMR/t8code'
     uses: ./.github/workflows/build_cmake_tarball.yml
     needs: [preparation, sc_p4est_tests, t8code_tests, t8code_linkage_tests, t8code_api_tests, t8code_w_shipped_submodules_tests]
     with:
