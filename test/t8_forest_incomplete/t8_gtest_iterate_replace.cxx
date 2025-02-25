@@ -95,7 +95,7 @@ t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
     ASSERT_EQ (num_incoming, 1);
   }
   /* Element/family got coarsened. */
-  if (refine == -1) {
+  else if (refine == -1) {
     ASSERT_EQ (num_incoming, 1);
 
     /* Begin check family */
@@ -124,13 +124,13 @@ t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
     }
   }
   /* Element got removed. */
-  if (refine == -2) {
+  else if (refine == -2) {
     ASSERT_EQ (num_outgoing, 1);
     ASSERT_EQ (num_incoming, 0);
     ASSERT_EQ (first_incoming, -1);
   }
   /* Element got refined. */
-  if (refine == 1) {
+  else if (refine == 1) {
     ASSERT_EQ (num_outgoing, 1);
     const t8_element_t *element = t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing);
     const t8_locidx_t family_size = scheme->element_get_num_children (tree_class, element);
@@ -220,7 +220,7 @@ t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn, int do_ada
 
 TEST_P (forest_iterate, test_iterate_replace)
 {
-#if T8CODE_TEST_LEVEL == 1
+#if T8CODE_TEST_LEVEL >= 1
   const int runs = 1;
 #else
   const int runs = 2;
@@ -243,10 +243,11 @@ TEST_P (forest_iterate, test_iterate_replace)
 
     t8_forest_iterate_replace (forest_adapt, forest, t8_forest_replace);
     t8_forest_unref (&forest);
-
-    /* Partition the forest. This is useful,
-     * if we run the test a second time with the adapted forest. */
-    forest_adapt = t8_adapt_forest (forest_adapt, NULL, 0, 1, NULL);
+    if (runs > 1) {
+      /* Partition the forest. This is useful,
+      * if we run the test a second time with the adapted forest. */
+      forest_adapt = t8_adapt_forest (forest_adapt, NULL, 0, 1, NULL);
+    }
 
     T8_FREE (adapt_callbacks);
     forest = forest_adapt;
