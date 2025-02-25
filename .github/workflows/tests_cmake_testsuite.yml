@@ -147,16 +147,9 @@ jobs:
   t8code_valgrind:
     if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
     uses: ./.github/workflows/tests_cmake_valgrind.yml
-    strategy:
-      fail-fast: false
-      matrix:
-        MPI: ON
-        BUILD_TYPE: Debug
-        include: 
-          - MAKEFLAGS: -j4
     needs: preparation
     with:
-      MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
-      MPI: ${{ matrix.MPI }}
-      BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
-      TEST_LEVEL: 2 # Set test level to two as valgrind can be very slow.
+      MAKEFLAGS: -j4
+      MPI: ON
+      BUILD_TYPE: Debug
+      TEST_LEVEL: 2
