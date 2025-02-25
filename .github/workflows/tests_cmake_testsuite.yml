@@ -65,7 +65,7 @@ jobs:
       run: |
         if [[ "${{ github.event_name }}" == "schedule" && "${{ github.repository }}" == "DLR-AMR/t8code" ]]; then
           echo "Scheduled run for DLR-AMR/t8code, proceeding with CI."
-          echo "RUN_CI=true" >> $GITHUB_ENV
+          echo "RUN_CI=true" >> $GITHUB_OUTPUT
           exit 0
         fi
         latest_commit_message=$(git log -1 --pretty=%B)
@@ -73,20 +73,20 @@ jobs:
         if [[ "${{ github.event_name }}" != "schedule" ]]; then
           if [[ "${{ github.event.pull_request.draft }}" == "false" ]]; then
             echo "Not a draft PR, proceeding with CI."
-            echo "RUN_CI=true" >> $GITHUB_ENV
+            echo "RUN_CI=true" >> $GITHUB_OUTPUT
             exit 0
           elif [[ "${{ github.event.pull_request.draft }}" == "true" && "$latest_commit_message" == *"[run CI]"* ]]; then
             echo "Draft PR with '[run CI]' in the latest commit message, proceeding with CI."
-            echo "RUN_CI=true" >> $GITHUB_ENV
+            echo "RUN_CI=true" >> $GITHUB_OUTPUT
             exit 0
           else
             echo "Draft PR without '[run CI]' in the latest commit message, skipping CI."
-            echo "RUN_CI=false" >> $GITHUB_ENV
+            echo "RUN_CI=false" >> $GITHUB_OUTPUT
             exit 0
           fi
         else
           echo "Conditions not met, skipping CI."
-          echo "RUN_CI=false" >> $GITHUB_ENV
+          echo "RUN_CI=false" >> $GITHUB_OUTPUT
           exit 0
         fi
 
