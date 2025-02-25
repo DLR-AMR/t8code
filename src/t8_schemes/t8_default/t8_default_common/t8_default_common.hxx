@@ -28,7 +28,7 @@
 #define T8_DEFAULT_COMMON_HXX
 
 #include <t8_element.h>
-#include <t8_schemes/t8_crtp.hxx>
+#include <t8_types/t8_operators.hxx>
 #include <sc_functions.h>
 #include <sc_containers.h>
 
@@ -84,7 +84,7 @@ count_leaves_from_level (const int element_level, const int refinement_level, co
 }
 
 template <class TUnderlyingEclassScheme>
-class t8_default_scheme_common: public t8_crtp<TUnderlyingEclassScheme> {
+class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme, t8_default_scheme_common> {
  private:
   friend TUnderlyingEclassScheme;
   /** Private constructor which can only be used by derived schemes.

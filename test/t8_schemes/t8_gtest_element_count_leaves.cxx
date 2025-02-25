@@ -128,4 +128,4 @@ TEST_P (class_element_leaves, test_element_count_leaves_one_level)
   scheme->element_destroy (eclass, 1, &element);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_element_count_leaves, class_element_leaves, AllSchemes);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_element_count_leaves, class_element_leaves, AllSchemes, print_all_schemes);

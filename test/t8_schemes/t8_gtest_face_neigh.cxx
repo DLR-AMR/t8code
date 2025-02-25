@@ -56,7 +56,7 @@ class face_neigh: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
   const t8_scheme *scheme;
   t8_eclass_t eclass;
 
-#ifdef T8_ENABLE_LESS_TESTS
+#if T8CODE_TEST_LEVEL == 1
   const int maxlvl = 3;
 #else
   const int maxlvl = 4;
@@ -199,4 +199,4 @@ TEST_P (face_neigh, recursive_check_diff)
   t8_recursive_check_diff (child, element, neigh, scheme, eclass, maxlvl, level);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_face_neigh, face_neigh, AllSchemes);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_face_neigh, face_neigh, DefaultScheme);

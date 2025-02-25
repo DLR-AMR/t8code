@@ -27,13 +27,13 @@
 
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
-#include <t8_vec.h>
+#include <t8_types/t8_vec.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <test/t8_gtest_macros.hxx>
 
-#if T8_ENABLE_LESS_TESTS
+#if T8CODE_TEST_LEVEL == 1
 #define MAX_LEVEL_REF_COORD_TEST 3
 #else
 #define MAX_LEVEL_REF_COORD_TEST 4
@@ -90,10 +90,10 @@ t8_element_centroid_by_vertex_coords (const t8_forest_t forest, const t8_locidx_
     /* Evaluate the geometry */
     t8_geometry_evaluate (cmesh, gtreeid, vertex_ref_coords, 1, vertex_out_coords);
     /* coordinates = coordinates + vertex_coords */
-    t8_vec_axpy (vertex_out_coords, coordinates, 1);
+    t8_axpy (vertex_out_coords, coordinates, 1);
   }
   /* Divide each coordinate by num_vertices */
-  t8_vec_ax (coordinates, 1. / num_vertices);
+  t8_ax (coordinates, 1. / num_vertices);
 }
 
 /**

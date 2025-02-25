@@ -152,7 +152,7 @@ t8_ghost_remote_equal_function (const void *remote_dataa, const void *remote_dat
 }
 
 /** This struct is used during a ghost data exchange.
- * Since we use asynchronuous communication, we store the
+ * Since we use asynchronous communication, we store the
  * send buffers and mpi requests until we end the communication.
  */
 typedef struct
@@ -682,7 +682,7 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int gh
   t8_locidx_t num_local_trees, num_tree_elems;
   t8_locidx_t itree, ielem;
   t8_tree_t tree;
-  t8_eclass_t neigh_class, last_class;
+  t8_eclass_t last_class;
   t8_gloidx_t neighbor_tree;
 
   int iface, num_faces;
@@ -726,7 +726,7 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int gh
          *       Currently we perform this check in the half_neighbors function. */
 
         /* Get the element class of the neighbor tree */
-        neigh_class = t8_forest_element_neighbor_eclass (forest, itree, elem, iface);
+        const t8_eclass_t neigh_class = t8_forest_element_neighbor_eclass (forest, itree, elem, iface);
         if (ghost_method == 0) {
           /* Use half neighbors */
           /* Get the number of face children of the element at this face */
@@ -735,11 +735,6 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int gh
            * We also need to reallocate it, if the element class of the neighbor
            * changes */
           if (max_num_face_children < num_face_children || last_class != neigh_class) {
-            if (max_num_face_children > 0) {
-              /* Clean-up memory */
-              scheme->element_destroy (last_class, max_num_face_children, half_neighbors);
-              T8_FREE (half_neighbors);
-            }
             half_neighbors = T8_ALLOC (t8_element_t *, num_face_children);
             /* Allocate memory for the half size face neighbors */
             scheme->element_new (neigh_class, num_face_children, half_neighbors);
@@ -770,6 +765,8 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int gh
               }
             }
           }
+          scheme->element_destroy (neigh_class, num_face_children, half_neighbors);
+          T8_FREE (half_neighbors);
         } /* end ghost_method 0 */
         else {
           size_t iowner;
@@ -797,13 +794,7 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int gh
     forest->profile->ghosts_remotes = ghost->remote_processes->elem_count;
   }
   /* Clean-up memory */
-  if (ghost_method == 0) {
-    if (half_neighbors != NULL) {
-      scheme->element_destroy (neigh_class, max_num_face_children, half_neighbors);
-      T8_FREE (half_neighbors);
-    }
-  }
-  else {
+  if (ghost_method != 0) {
     sc_array_reset (&owners);
     sc_array_reset (&tree_owners);
   }
