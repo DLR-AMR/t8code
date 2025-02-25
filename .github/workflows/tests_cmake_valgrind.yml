@@ -45,7 +45,7 @@ on:
         description: 'Test level used for configuring (0 for full tests, 1 for less thorough tests, 2 for minimal tests)'
 
 jobs:  
-  t8code_valgrind:
+  valgrind_build:
     timeout-minutes: 60
     runs-on: ubuntu-latest
     container: dlramr/t8code-ubuntu:t8-dependencies
@@ -99,7 +99,33 @@ jobs:
       run: cd build && ninja $MAKEFLAGS
     - name: ninja install
       run: cd build && ninja install $MAKEFLAGS
+    - name: create build dir archive
+      shell: bash
+      run: tar -czf build.tar.gz build
+    - name: Upload directory
+      uses: actions/upload-artifact@v4
+      with:
+        name: valgrind-build-${{ inputs.MAKEFLAGS }}-${{ inputs.MPI }}-${{ inputs.BUILD_TYPE }}-${{ inputs.TEST_LEVEL }}
+        path: build.tar.gz
+        retention-days: 1
+
+  jobs_valgrind:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    container: dlramr/t8code-ubuntu:t8-dependencies
+    needs: valgrind_build
+    strategy:
+      matrix:
+        BIN_PATHS: [build/test/t8_cmesh/t8_gtest_cmesh_bcast_parallel, build/test/t8_gtest_cmesh_copy_serial]
+    steps:
+    - name: Download directory
+      uses: actions/download-artifact@v4
+      with:
+        name: valgrind-build-${{ inputs.MAKEFLAGS }}-${{ inputs.MPI }}-${{ inputs.BUILD_TYPE }}-${{ inputs.TEST_LEVEL }}
+    - name: extract build archive
+      shell: bash
+      run: tar -xzf build.tar.gz
     - name: Valgrind Checker
       uses: Ximaz/valgrind-action@1.2.1
       with:
-        binary_path: build/test/t8_cmesh/t8_gtest_cmesh_bcast_parallel
+        binary_path: ${{ matrix.BIN_PATHS }}
