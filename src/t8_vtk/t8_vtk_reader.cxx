@@ -344,6 +344,9 @@ t8_cmesh_t
 t8_vtkGrid_to_cmesh (vtkSmartPointer<vtkDataSet> vtkGrid, const int partition, const int main_proc,
                      const int distributed_grid, sc_MPI_Comm comm, const int package_id, const int starting_key)
 {
+  T8_ASSERT (package_id != t8_get_package_id ());
+  T8_ASSERT (package_id != sc_get_package_id ());
+  T8_ASSERT (sc_package_is_registered (package_id));
   t8_cmesh_t cmesh;
   int mpisize;
   int mpirank;
