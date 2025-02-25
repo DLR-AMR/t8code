@@ -60,8 +60,10 @@ typedef struct t8_cprofile t8_cprofile_t; /* Defined below */
 #define T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY \
   T8_CMESH_CAD_FACE_ATTRIBUTE_KEY + 1 /* Used to store face parameters */
 #define T8_CMESH_LAGRANGE_POLY_DEGREE_KEY T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + T8_ECLASS_MAX_FACES
-#define T8_CMESH_NEXT_POSSIBLE_KEY \
-  T8_CMESH_LAGRANGE_POLY_DEGREE_KEY + 1 /* The next free value for a t8code attribute key */
+#define T8_CMESH_TESTING_KEY T8_CMESH_LAGRANGE_POLY_DEGREE_KEY + 1 /* A testing key for cmesh attributes */
+#define T8_CMESH_TESTING_KEY_2 \
+  T8_CMESH_TESTING_KEY + 1 /* A second testing key for testing with multiple cmesh attributes */
+#define T8_CMESH_NEXT_POSSIBLE_KEY T8_CMESH_TESTING_KEY_2 + 1 /* The next free value for a t8code attribute key */
 
 /** This structure holds the connectivity data of the coarse mesh.
  *  It can either be replicated, then each process stores a copy of the whole
