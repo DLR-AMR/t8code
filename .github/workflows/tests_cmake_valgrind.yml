@@ -118,7 +118,29 @@ jobs:
       matrix:
         BIN_PATHS: [build/test/t8_cmesh/t8_gtest_cmesh_bcast_parallel, build/test/t8_gtest_cmesh_copy_serial]
     steps:
-    - name: Download directory
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: SC_P4EST_MPI_${{ inputs.MPI }}
+    - name: untar artifact
+      run: tar -xf artifact.tar && rm artifact.tar
+    - name: Update packages
+      run: apt-get update && apt-get upgrade -y
+      # This seems to be necessary because of the docker container
+    - name: disable ownership checks
+      run: git config --global --add safe.directory '*'
+    - name: Get input vars
+      run: export MAKEFLAGS="${{ inputs.MAKEFLAGS }}"
+        && export MPI="${{ inputs.MPI }}"
+        && export BUILD_TYPE="${{ inputs.BUILD_TYPE }}"
+        && export SC_PATH=$PWD/sc/build/$BUILD_TYPE
+        && export P4EST_PATH=$PWD/p4est/build/$BUILD_TYPE
+        && echo MAKEFLAGS="$MAKEFLAGS" >> $GITHUB_ENV
+        && echo MPI="$MPI" >> $GITHUB_ENV
+        && echo BUILD_TYPE="$BUILD_TYPE" >> $GITHUB_ENV
+        && echo SC_PATH="$SC_PATH" >> $GITHUB_ENV
+        && echo P4EST_PATH="$P4EST_PATH" >> $GITHUB_ENV
+    - name: Download build directory
       uses: actions/download-artifact@v4
       with:
         name: valgrind-build-${{ inputs.MAKEFLAGS }}-${{ inputs.MPI }}-${{ inputs.BUILD_TYPE }}-${{ inputs.TEST_LEVEL }}
