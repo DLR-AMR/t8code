@@ -197,7 +197,7 @@ jobs:
       TEST_LEVEL: ${{ github.event_name == 'pull_request' && 1 || 0 }} # Set TEST_LEVEL to 1 if the event is a PR, otherwise 0.
 
   t8code_tarball:
-    if: github.event.pull_request.draft == false
+    if: (github.event_name == 'schedule' || github.event_name == 'merge_group') && github.repository == 'DLR-AMR/t8code'
     uses: ./.github/workflows/build_cmake_tarball.yml
     needs: [preparation, sc_p4est_tests, t8code_tests, t8code_linkage_tests, t8code_api_tests, t8code_w_shipped_submodules_tests]
     with:
