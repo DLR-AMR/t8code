@@ -282,8 +282,6 @@ t8_vtk_iterate_cells (vtkSmartPointer<vtkDataSet> vtkGrid, t8_cmesh_t cmesh, con
 
     for (int i_vertex = 0; i_vertex < num_id; i_vertex++) {
       global_vertex_indices[i_vertex] = id_list->GetId (t8_element_shape_t8_to_vtk_corner_number (cell_type, i_vertex));
-      t8_debugf ("Iteration: %i\t Tree_ID = %li\t Vertex_T8_ID = %li\n", i_vertex + 1, tree_id,
-                 global_vertex_indices[i_vertex]);
     }
     t8_cmesh_set_global_vertices_of_tree (cmesh, tree_id, global_vertex_indices.data (), num_id);
 
