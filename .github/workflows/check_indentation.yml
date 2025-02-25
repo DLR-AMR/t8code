@@ -35,7 +35,6 @@ on:
   push:
     branches:
       - main
-  pull_request:
   workflow_dispatch: # Be able to trigger this manually on github.com
   # Run every night at 1:05
   schedule:

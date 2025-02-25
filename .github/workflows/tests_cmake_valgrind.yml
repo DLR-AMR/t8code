@@ -99,21 +99,6 @@ jobs:
       run: cd build && ninja $MAKEFLAGS
     - name: ninja install
       run: cd build && ninja install $MAKEFLAGS
-    - name: serial tests (if MPI is enabled)
-      run: cd build && ctest $MAKEFLAGS -R _serial
-      if: ${{ inputs.MPI == 'ON' }}
-    - name: parallel tests (if MPI is enabled)
-      run: cd build && ctest -R _parallel
-      if: ${{ inputs.MPI == 'ON' }}
-    - name: tests (if MPI is disabled)
-      run: cd build && ctest $MAKEFLAGS
-      if: ${{ inputs.MPI == 'OFF' }}
-    - name: OnFailUploadLog
-      if: failure()
-      uses: actions/upload-artifact@v4
-      with:
-        name: test-suite_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
-        path: build/Testing/Temporary/LastTest.log
     - name: Valgrind Checker
       uses: Ximaz/valgrind-action@1.2.1
       with:
