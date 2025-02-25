@@ -41,7 +41,7 @@ on:
 # The CI pipeline should:
 # - fully run in the merge queue with the full test suite
 # - not run on draft PRs
-# - run on draft PRs, if the latest commit message contains '[run CI]'
+# - run on draft PRs, if the latest commit message contains '[run ci]'
 # - run on scheduled runs for the DLR-AMR/t8code repository
 # - run on all other pull request events
 # These conditions are checked in the fine_grained_trigger job. If it completes successfully, it triggers the preparation job, 
@@ -75,12 +75,12 @@ jobs:
             echo "Not a draft PR, proceeding with CI."
             echo "RUN_CI=true" >> $GITHUB_OUTPUT
             exit 0
-          elif [[ "${{ github.event.pull_request.draft }}" == "true" && "$latest_commit_message" == *"[run CI]"* ]]; then
-            echo "Draft PR with '[run CI]' in the latest commit message, proceeding with CI."
+          elif [[ "${{ github.event.pull_request.draft }}" == "true" && "$latest_commit_message" == *"[run ci]"* ]]; then
+            echo "Draft PR with '[run ci]' in the latest commit message, proceeding with CI."
             echo "RUN_CI=true" >> $GITHUB_OUTPUT
             exit 0
           else
-            echo "Draft PR without '[run CI]' in the latest commit message, skipping CI."
+            echo "Draft PR without '[run ci]' in the latest commit message, skipping CI."
             echo "RUN_CI=false" >> $GITHUB_OUTPUT
             exit 0
           fi
