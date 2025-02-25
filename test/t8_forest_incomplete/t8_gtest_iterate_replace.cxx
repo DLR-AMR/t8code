@@ -117,7 +117,7 @@ t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
     ASSERT_EQ (num_outgoing, family_size);
     /* End check family */
 
-    /* If element got coarsen, only the first element
+    /* If element got coarsened, only the first element
      * should be called in the callback of forest_adapt. */
     for (t8_locidx_t i = 1; i < num_outgoing; i++) {
       ASSERT_EQ (adapt_data->callbacks[elidx_old + i], -3);
@@ -138,7 +138,7 @@ t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
   }
 }
 
-/** For each locale element: Remove, coarsen, leave untouched, or refine it depending on its index.
+/** For each local element: Remove, coarsen, leave untouched, or refine it depending on its index.
  *      if \a lelement_id mod 12 < 3  -> leave element untouched
  * else if \a lelement_id mod 12 < 6  -> coarse element
  * else if \a lelement_id mod 12 < 9  -> remove element
@@ -220,7 +220,7 @@ t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn, int do_ada
 
 TEST_P (forest_iterate, test_iterate_replace)
 {
-#if T8_ENABLE_LESS_TESTS
+#if T8CODE_TEST_LEVEL == 1
   const int runs = 1;
 #else
   const int runs = 2;

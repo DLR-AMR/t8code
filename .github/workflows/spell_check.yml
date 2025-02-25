@@ -1,10 +1,10 @@
 name: spell_check
 
 on:
+  merge_group:
   push:
     branches:
       - main
-      - feature-*CI* # for testing this script, all feature branches with "CI" in their name
   pull_request:
   workflow_dispatch: # Be able to trigger this manually on github.com
 
@@ -17,3 +17,14 @@ jobs:
         uses: actions/checkout@v4
       - name: Check spelling
         uses: crate-ci/typos@master
+      - name: check macros
+        run: |
+          for file in $(git diff --name-only --diff-filter=A); do
+            ./scripts/check_macros.scp "$file" &>> check_macros.txt
+          done
+      - name: Archive script output
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: t8code check macros report
+          path: check_macros.txt
