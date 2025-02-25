@@ -151,7 +151,7 @@ TEST_P (nca, nca_check_deep)
  * \param[in] parent_a          An initialized element, descendant of \a correct_nca, not a descendant or ancestor of \a parent_b. \a desc_a will be a child of it
  * \param[in] parent_b          An initialized element, descendant of \a correct_nca, not a descendant or ancestor of \a parent_a. \a desc_b will be a child of it
  * \param[in] max_lvl           The maximal depth of the recursion
- * \param[in] scheme                the scheme to use
+ * \param[in] scheme            The scheme to use
  */
 static void
 t8_recursive_nca_check (t8_element_t *check_nca, t8_element_t *desc_a, t8_element_t *desc_b, t8_element_t *check,
@@ -224,7 +224,7 @@ t8_recursive_nca_check (t8_element_t *check_nca, t8_element_t *desc_a, t8_elemen
  * output of element_get_nca.*/
 TEST_P (nca, recursive_check)
 {
-#ifdef T8_ENABLE_LESS_TESTS
+#if T8CODE_TEST_LEVEL == 1
   const int recursion_depth = 3;
 #else
   /* User lower recursion depth for pyramids, it takes to much time otherwise */
@@ -284,7 +284,7 @@ TEST_P (nca, recursive_check_higher_level)
     /* Initialization for recursive_nca_check */
     num_children = scheme->element_get_num_children (tree_class, correct_nca_high_level);
     if (num_children > 1) {
-      /* Compute children on to different branches in the tree an test them. 
+      /* Compute children on two different branches in the tree an test them. 
        * This ensures, that the nca of all their descendants has to be correct_nca_high_level*/
       for (k = 0; k < num_children; k++) {
         scheme->element_get_child (tree_class, correct_nca_high_level, k, parent_a);

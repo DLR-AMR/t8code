@@ -36,7 +36,7 @@
 #define NC_COLLECTIVE 1
 #endif
 #include <t8_eclass.h>
-#include <t8_vec.h>
+#include <t8_types/t8_vec.hxx>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
@@ -60,7 +60,7 @@ T8_EXTERN_C_BEGIN ();
 */
 struct t8_example_netcdf_adapt_data
 {
-  double midpoint[3];               /* Midpoint of a aphere */
+  t8_3D_point midpoint;             /* Midpoint of a aphere */
   double refine_if_inside_radius;   /* refine all elements inside this radius from the sphere's midpoint */
   double coarsen_if_outside_radius; /* coarsen all element families outside of this radius from the sphere's midpoint */
 };
@@ -75,7 +75,7 @@ t8_example_netcdf_adapt_fn (t8_forest_t forest, t8_forest_t forest_from, t8_loci
                             [[maybe_unused]] const t8_scheme *scheme, const int is_family,
                             [[maybe_unused]] const int num_elements, t8_element_t *elements[])
 {
-  double element_centroid[3];
+  t8_3D_point element_centroid;
   double distance;
 
   /* Retrieve the adapt_data which holds the information regarding the adaption process of a forest */
@@ -83,10 +83,10 @@ t8_example_netcdf_adapt_fn (t8_forest_t forest, t8_forest_t forest_from, t8_loci
     = (const struct t8_example_netcdf_adapt_data *) t8_forest_get_user_data (forest);
 
   /* Compute the element's centroid */
-  t8_forest_element_centroid (forest_from, which_tree, elements[0], element_centroid);
+  t8_forest_element_centroid (forest_from, which_tree, elements[0], element_centroid.data ());
 
   /* Compute the distance from the element's midpoint to the midpoint of the centered sphere inside the hypercube */
-  distance = t8_vec_dist (element_centroid, adapt_data->midpoint);
+  distance = t8_dist (element_centroid, adapt_data->midpoint);
 
   /* Decide whether the element (or its family) has to be refined or coarsened */
   if (distance < adapt_data->refine_if_inside_radius) {
@@ -117,9 +117,9 @@ t8_example_netcdf_adapt (t8_forest_t forest)
 
   /* The adapt data which controls which elements will be refined or corsened based on the given radii */
   struct t8_example_netcdf_adapt_data adapt_data = {
-    { 0.5, 0.5, 0.5 }, /* Midpoints of the sphere. */
-    0.2,               /* Refine if inside this radius. */
-    0.4                /* Coarsen if outside this radius. */
+    t8_3D_point ({ 0.5, 0.5, 0.5 }), /* Midpoints of the sphere. */
+    0.2,                             /* Refine if inside this radius. */
+    0.4                              /* Coarsen if outside this radius. */
   };
 
   /* Create the adapted forest with the given adapt_function. */

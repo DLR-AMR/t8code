@@ -56,7 +56,7 @@
 #include <t8_forest/t8_forest_io.h>             /* save forest */
 #include <t8_forest/t8_forest_geometrical.h>    /* geometrical information of the forest */
 #include <t8_schemes/t8_default/t8_default.hxx> /* default refinement scheme. */
-#include <t8_vec.h>                             /* Basic operations on 3D vectors. */
+#include <t8_types/t8_vec.h>                    /* Basic operations on 3D vectors. */
 #include <tutorials/general/t8_step3.h>
 
 T8_EXTERN_C_BEGIN ();
@@ -108,7 +108,7 @@ t8_step3_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
 
   /* Compute the distance to our sphere midpoint. */
-  dist = t8_vec_dist (centroid, adapt_data->midpoint);
+  dist = t8_dist (centroid, adapt_data->midpoint);
   if (dist < adapt_data->refine_if_inside_radius) {
     /* Refine this element. */
     return 1;

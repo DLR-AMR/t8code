@@ -22,7 +22,7 @@
 
 #include <t8.h>
 #include <t8_forest/t8_forest.h>
-#include <t8_vec.h>
+#include <t8_types/t8_vec.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <sc_options.h>
@@ -34,11 +34,11 @@ struct t8_adapt_data
   const int remove_scope;
   const double spheres_radius_inner;
   const double spheres_radius_outer;
-  const double midpoint[3];
+  const t8_3D_point midpoint;
 };
 
 static double
-t8_gausss_blob (const double center_elem[3], const double center_cube[3], const double radius)
+t8_gausss_blob (const t8_3D_point &center_elem, const t8_3D_point &center_cube, const double radius)
 {
   double expo = 0;
   for (int i = 0; i < 3; i++) {
@@ -49,7 +49,7 @@ t8_gausss_blob (const double center_elem[3], const double center_cube[3], const 
 }
 
 static double *
-t8_create_element_data (t8_forest_t forest, const double sphere_center[3], const double sphere_radius)
+t8_create_element_data (t8_forest_t forest, const t8_3D_point &sphere_center, const double sphere_radius)
 {
   t8_locidx_t num_local_elements;
   t8_locidx_t num_ghost_elements;
@@ -68,8 +68,8 @@ t8_create_element_data (t8_forest_t forest, const double sphere_center[3], const
     t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
     for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
       element = t8_forest_get_element_in_tree (forest, itree, ielement);
-      double center[3];
-      t8_forest_element_centroid (forest, itree, element, center);
+      t8_3D_point center;
+      t8_forest_element_centroid (forest, itree, element, center.data ());
       element_data[current_index] = t8_gausss_blob (center, sphere_center, sphere_radius);
     }
   }
@@ -104,10 +104,10 @@ t8_adapt_refine (t8_forest_t forest, t8_forest_t forest_from, const t8_locidx_t 
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
   T8_ASSERT (adapt_data != NULL);
 
-  double centroid[3];
-  t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
+  t8_3D_point centroid;
+  t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid.data ());
 
-  const double dist = t8_vec_dist (adapt_data->midpoint, centroid);
+  const double dist = t8_dist (adapt_data->midpoint, centroid);
   if (dist < adapt_data->spheres_radius_outer) {
     return 1;
   }
@@ -124,10 +124,10 @@ t8_adapt_remove (t8_forest_t forest, t8_forest_t forest_from, const t8_locidx_t 
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
   T8_ASSERT (adapt_data != NULL);
 
-  double centroid[3];
-  t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
+  t8_3D_point centroid;
+  t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid.data ());
 
-  const double dist = t8_vec_dist (adapt_data->midpoint, centroid);
+  const double dist = t8_dist (adapt_data->midpoint, centroid);
   if ((dist < adapt_data->spheres_radius_inner && adapt_data->remove_scope == 1)
       || (dist > adapt_data->spheres_radius_outer && adapt_data->remove_scope == 2)) {
     return -2;
@@ -151,9 +151,11 @@ t8_construct_spheres (const int initial_level, const double radius_inner, const 
     cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
   }
 
+  t8_3D_point midpoint ({ 0.5, 0.5, 0.5 });
+
   /* On each face of a cube, a sphere rises halfway in. 
    * Its center is therefore the center of the corresponding surface. */
-  struct t8_adapt_data adapt_data = { remove_scope, radius_inner, radius_outer, { 0.5, 0.5, 0.5 } };
+  struct t8_adapt_data adapt_data = { remove_scope, radius_inner, radius_outer, midpoint };
 
   forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), initial_level, 0, sc_MPI_COMM_WORLD);
   forest = t8_forest_new_adapt (forest, t8_adapt_refine, 0, 0, &adapt_data);

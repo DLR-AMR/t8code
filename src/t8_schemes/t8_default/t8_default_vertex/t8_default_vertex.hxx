@@ -190,12 +190,12 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
    * \param [in] corner   A corner index for the face 0 <= \a corner < num_face_corners.
    * \return              The corner number of the \a corner-th vertex of \a face.
    */
-  int
-  element_get_face_corner ([[maybe_unused]] const t8_element_t *element, [[maybe_unused]] int face,
-                           [[maybe_unused]] int corner) const
+  constexpr int
+  element_get_face_corner (const t8_element_t *element, const int face, const int corner) const
   {
-    SC_ABORT_NOT_REACHED (); /* it is impossible to have a face of a vertex */
-    return 0;                /* prevents compiler warning */
+    T8_ASSERT (corner == 0);
+    T8_ASSERT (face == 0);
+    return 0;
   }
 
   /** Return the face numbers of the faces sharing an element's corner.
@@ -204,12 +204,12 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
    * \param [in] face     A face index for \a corner.
    * \return              The face number of the \a face-th face at \a corner.
    */
-  int
-  element_get_corner_face ([[maybe_unused]] const t8_element_t *element, [[maybe_unused]] int corner,
-                           [[maybe_unused]] int face) const
+  constexpr int
+  element_get_corner_face (const t8_element_t *element, const int corner, const int face) const
   {
-    SC_ABORT ("Not implemented.\n");
-    return 0; /* prevents compiler warning */
+    T8_ASSERT (corner == 0);
+    T8_ASSERT (face == 0);
+    return 0;
   }
 
   /** Construct the child element of a given number.

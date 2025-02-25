@@ -24,7 +24,7 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_geometry/t8_geometry_helpers.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
-#include <t8_vec.h>
+#include <t8_types/t8_vec.hxx>
 
 t8_geometry_linear::t8_geometry_linear (): t8_geometry_with_vertices ("t8_geom_linear")
 {
@@ -54,7 +54,7 @@ t8_geometry_linear::t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh
 /* Test whether four given points in 3D are coplanar up to a given tolerance.
  */
 static int
-t8_four_points_coplanar (const double p_0[3], const double p_1[3], const double p_2[3], const double p_3[3],
+t8_four_points_coplanar (const t8_3D_vec p_0, const t8_3D_vec p_1, const t8_3D_vec p_2, const t8_3D_vec p_3,
                          const double tolerance)
 {
   /* Let p0, p1, p2, p3 be the four points.
@@ -67,31 +67,31 @@ t8_four_points_coplanar (const double p_0[3], const double p_1[3], const double 
    * Hence we check if || n1 x n2 || < tolerance. */
 
   /* A = p1 - p0 */
-  double A[3];
-  t8_vec_axpyz (p_0, p_1, A, -1);
+  t8_3D_vec A;
+  t8_axpyz (p_0, p_1, A, -1);
 
   /* B = p2 - p0 */
-  double B[3];
-  t8_vec_axpyz (p_0, p_2, B, -1);
+  t8_3D_vec B;
+  t8_axpyz (p_0, p_2, B, -1);
 
   /* C = p3 - p0 */
-  double C[3];
-  t8_vec_axpyz (p_0, p_3, C, -1);
+  t8_3D_vec C;
+  t8_axpyz (p_0, p_3, C, -1);
 
   /* n1 = A x B */
-  double A_cross_B[3];
-  t8_vec_cross (A, B, A_cross_B);
+  t8_3D_vec A_cross_B;
+  t8_cross_3D (A, B, A_cross_B);
 
   /* n2 = A x C */
-  double A_cross_C[3];
-  t8_vec_cross (A, C, A_cross_C);
+  t8_3D_vec A_cross_C;
+  t8_cross_3D (A, C, A_cross_C);
 
   /* n1 x n2 */
-  double n1_cross_n2[3];
-  t8_vec_cross (A_cross_B, A_cross_C, n1_cross_n2);
+  t8_3D_vec n1_cross_n2;
+  t8_cross_3D (A_cross_B, A_cross_C, n1_cross_n2);
 
   /* || n1 x n2 || */
-  const double norm = t8_vec_norm (n1_cross_n2);
+  const double norm = t8_norm (n1_cross_n2);
   return norm < tolerance;
 }
 #endif
@@ -125,27 +125,27 @@ t8_geometry_linear::t8_geom_point_batch_inside_element (t8_forest_t forest, t8_l
      * (p_1 - p_0)x = p - p_0
      * has a solution x with 0 <= x <= 1
      */
-    double p_0[3], v[3];
+    t8_3D_vec p_0, v;
 
     /* Compute the vertex coordinates of the line */
-    t8_forest_element_coordinate (forest, ltreeid, element, 0, p_0);
+    t8_forest_element_coordinate (forest, ltreeid, element, 0, p_0.data ());
     /* v = p_1 */
-    t8_forest_element_coordinate (forest, ltreeid, element, 1, v);
+    t8_forest_element_coordinate (forest, ltreeid, element, 1, v.data ());
     /* v = p_1 - p_0 */
-    t8_vec_axpy (p_0, v, -1);
+    t8_axpy (p_0, v, -1);
     for (int ipoint = 0; ipoint < num_points; ipoint++) {
-      is_inside[ipoint] = t8_line_point_inside (p_0, v, &points[ipoint * 3], tolerance);
+      is_inside[ipoint] = t8_line_point_inside (p_0.data (), v.data (), &points[ipoint * 3], tolerance);
     }
     return;
   }
   case T8_ECLASS_QUAD: {
     /* We divide the quad in two triangles and use the triangle check. */
-    double p_0[3], p_1[3], p_2[3], p_3[3];
+    t8_3D_vec p_0, p_1, p_2, p_3;
     /* Compute the vertex coordinates of the quad */
-    t8_forest_element_coordinate (forest, ltreeid, element, 0, p_0);
-    t8_forest_element_coordinate (forest, ltreeid, element, 1, p_1);
-    t8_forest_element_coordinate (forest, ltreeid, element, 2, p_2);
-    t8_forest_element_coordinate (forest, ltreeid, element, 3, p_3);
+    t8_forest_element_coordinate (forest, ltreeid, element, 0, p_0.data ());
+    t8_forest_element_coordinate (forest, ltreeid, element, 1, p_1.data ());
+    t8_forest_element_coordinate (forest, ltreeid, element, 2, p_2.data ());
+    t8_forest_element_coordinate (forest, ltreeid, element, 3, p_3.data ());
 
 #if T8_ENABLE_DEBUG
     /* Issue a warning if the points of the quad do not lie in the same plane */
@@ -153,45 +153,46 @@ t8_geometry_linear::t8_geom_point_batch_inside_element (t8_forest_t forest, t8_l
       t8_debugf ("WARNING: Testing if point is inside a quad that is not coplanar. This test will be inaccurate.\n");
     }
 #endif
-    double v[3];
-    double w[3];
+    t8_3D_vec v;
+    t8_3D_vec w;
     /* v = v - p_0 = p_1 - p_0 */
-    t8_vec_axpyz (p_0, p_1, v, -1);
+    t8_axpyz (p_0, p_1, v, -1);
     /* w = w - p_0 = p_2 - p_0 */
-    t8_vec_axpyz (p_0, p_2, w, -1);
+    t8_axpyz (p_0, p_2, w, -1);
     /* Check whether the point is inside the first triangle. */
     for (int ipoint = 0; ipoint < num_points; ipoint++) {
-      is_inside[ipoint] = t8_triangle_point_inside (p_0, v, w, &points[ipoint * 3], tolerance);
+      is_inside[ipoint] = t8_triangle_point_inside (p_0.data (), v.data (), w.data (), &points[ipoint * 3], tolerance);
     }
     /* If not, check whether the point is inside the second triangle. */
     /* v = v - p_0 = p_1 - p_0 */
-    t8_vec_axpyz (p_1, p_2, v, -1);
+    t8_axpyz (p_1, p_2, v, -1);
     /* w = w - p_0 = p_2 - p_0 */
-    t8_vec_axpyz (p_1, p_3, w, -1);
+    t8_axpyz (p_1, p_3, w, -1);
     for (int ipoint = 0; ipoint < num_points; ipoint++) {
       if (!is_inside[ipoint]) {
         /* point_inside is true if the point was inside the first or second triangle. Otherwise it is false. */
-        is_inside[ipoint] = t8_triangle_point_inside (p_1, v, w, &points[ipoint * 3], tolerance);
+        is_inside[ipoint]
+          = t8_triangle_point_inside (p_1.data (), v.data (), w.data (), &points[ipoint * 3], tolerance);
       }
     }
     return;
   }
   case T8_ECLASS_TRIANGLE: {
-    double p_0[3], p_1[3], p_2[3];
+    t8_3D_vec p_0, p_1, p_2;
 
     /* Compute the vertex coordinates of the triangle */
-    t8_forest_element_coordinate (forest, ltreeid, element, 0, p_0);
-    t8_forest_element_coordinate (forest, ltreeid, element, 1, p_1);
-    t8_forest_element_coordinate (forest, ltreeid, element, 2, p_2);
-    double v[3];
-    double w[3];
+    t8_forest_element_coordinate (forest, ltreeid, element, 0, p_0.data ());
+    t8_forest_element_coordinate (forest, ltreeid, element, 1, p_1.data ());
+    t8_forest_element_coordinate (forest, ltreeid, element, 2, p_2.data ());
+    t8_3D_vec v;
+    t8_3D_vec w;
     /* v = v - p_0 = p_1 - p_0 */
-    t8_vec_axpyz (p_0, p_1, v, -1);
+    t8_axpyz (p_0, p_1, v, -1);
     /* w = w - p_0 = p_2 - p_0 */
-    t8_vec_axpyz (p_0, p_2, w, -1);
+    t8_axpyz (p_0, p_2, w, -1);
 
     for (int ipoint = 0; ipoint < num_points; ipoint++) {
-      is_inside[ipoint] = t8_triangle_point_inside (p_0, v, w, &points[ipoint * 3], tolerance);
+      is_inside[ipoint] = t8_triangle_point_inside (p_0.data (), v.data (), w.data (), &points[ipoint * 3], tolerance);
     }
     return;
   }

@@ -129,7 +129,7 @@ t8_test_forest_commit_abp_3step (t8_forest_t forest, int maxlevel)
   t8_forest_set_balance (forest_balance, forest_adapt, 0);
   t8_forest_commit (forest_balance);
 
-  /* partrition the forest */
+  /* partition the forest */
   t8_forest_set_partition (forest_partition, forest_balance, 0);
   t8_forest_commit (forest_partition);
 
