@@ -191,7 +191,7 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
    * \return              The corner number of the \a corner-th vertex of \a face.
    */
   constexpr int
-  element_get_face_corner (const t8_element_t *element, const int face, const int corner) const
+  element_get_face_corner ([[maybe_unused]] const t8_element_t *element, [[maybe_unused]] const int face, [[maybe_unused]] const int corner) const
   {
     T8_ASSERT (corner == 0);
     T8_ASSERT (face == 0);
@@ -205,7 +205,7 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
    * \return              The face number of the \a face-th face at \a corner.
    */
   constexpr int
-  element_get_corner_face (const t8_element_t *element, const int corner, const int face) const
+  element_get_corner_face ([[maybe_unused]] const t8_element_t *element, [[maybe_unused]] const int corner, [[maybe_unused]] const int face) const
   {
     T8_ASSERT (corner == 0);
     T8_ASSERT (face == 0);
