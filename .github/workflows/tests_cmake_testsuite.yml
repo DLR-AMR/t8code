@@ -60,16 +60,12 @@ jobs:
         repository: ${{ github.event.pull_request.head.repo.full_name }}
         ref: ${{ github.event.pull_request.head.ref }}
         fetch-depth: 0
-    - name: set the run_ci variable for the testsute
+    - name: set the run_ci variable for the testsuite
       id: set_run_ci
       run: |
         if [[ "${{ github.event_name }}" == "schedule" && "${{ github.repository }}" == "DLR-AMR/t8code" ]]; then
           echo "Scheduled run for DLR-AMR/t8code, proceeding with CI."
-          echo "RUN_CI=true" >> $GITHUB_OUTPUT
-          exit 0
-        elif [[ "${{ github.event_name }}" == "merge_group" ]]; then
-          echo "Merge group event, proceeding with CI."
-          echo "RUN_CI=true" >> $GITHUB_OUTPUT
+          echo "RUN_CI=true" >> $GITHUB_ENV
           exit 0
         fi
         latest_commit_message=$(git log -1 --pretty=%B)
@@ -77,27 +73,20 @@ jobs:
         if [[ "${{ github.event_name }}" != "schedule" ]]; then
           if [[ "${{ github.event.pull_request.draft }}" == "false" ]]; then
             echo "Not a draft PR, proceeding with CI."
-            echo "RUN_CI=true" >> $GITHUB_OUTPUT
+            echo "RUN_CI=true" >> $GITHUB_ENV
             exit 0
-          elif [[ "${{ github.event.pull_request.draft }}" == "true" && "$latest_commit_message" == *"[run ci]"* ]]; then
-            echo "Draft PR with '[run ci]' in the latest commit message, proceeding with CI."
-            echo "RUN_CI=true" >> $GITHUB_OUTPUT
-            exit 0
-          elif [[ "${{github.event.pull_request.ready_for_review}}" == "true" ]]; then
-            echo "PR ready for review, proceeding with CI."
-            echo "RUN_CI=true" >> $GITHUB_OUTPUT
-            exit 0
-          else
-            echo "Draft PR without '[run ci]' in the latest commit message, skipping CI."
-            echo "RUN_CI=false" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event.pull_request.draft }}" == "true" && "$latest_commit_message" == *"[run CI]"* ]]; then
+            echo "Draft PR with '[run CI]' in the latest commit message, proceeding with CI."
+            echo "RUN_CI=true" >> $GITHUB_ENV
             exit 0
           else
             echo "Draft PR without '[run CI]' in the latest commit message, skipping CI."
-            exit 1
+            echo "RUN_CI=false" >> $GITHUB_ENV
+            exit 0
           fi
         else
           echo "Conditions not met, skipping CI."
-          echo "RUN_CI=false" >> $GITHUB_OUTPUT
+          echo "RUN_CI=false" >> $GITHUB_ENV
           exit 0
         fi
 
@@ -105,7 +94,7 @@ jobs:
   preparation:
     needs: [fine_grained_trigger]
     secrets: inherit
-    if: needs.fine_grained_trigger.outputs.run_ci == 'true'
+    if: ${{ needs.fine_grained_trigger.outputs.run_ci == 'true' }}
     uses: ./.github/workflows/tests_cmake_preparation.yml
     strategy:
       fail-fast: false
@@ -197,7 +186,7 @@ jobs:
       TEST_LEVEL: ${{ github.event_name == 'pull_request' && 1 || 0 }} # Set TEST_LEVEL to 1 if the event is a PR, otherwise 0.
 
   t8code_tarball:
-    if: github.event.pull_request.draft == false
+    if: github.event.pull_request == false
     uses: ./.github/workflows/build_cmake_tarball.yml
     needs: [preparation, sc_p4est_tests, t8code_tests, t8code_linkage_tests, t8code_api_tests, t8code_w_shipped_submodules_tests]
     with:
