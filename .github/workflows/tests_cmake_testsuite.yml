@@ -91,6 +91,9 @@ jobs:
             echo "Draft PR without '[run ci]' in the latest commit message, skipping CI."
             echo "RUN_CI=false" >> $GITHUB_OUTPUT
             exit 0
+          else
+            echo "Draft PR without '[run CI]' in the latest commit message, skipping CI."
+            exit 1
           fi
         else
           echo "Conditions not met, skipping CI."
