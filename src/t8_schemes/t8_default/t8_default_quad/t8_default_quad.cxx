@@ -707,7 +707,7 @@ t8_default_scheme_quad::element_new (int length, t8_element_t **elem) const
   /* in debug mode, set sensible default values. */
   {
     for (int i = 0; i < length; i++) {
-      get_root (elem[i]);
+      set_to_root (elem[i]);
       T8_QUAD_SET_TDIM ((p4est_quadrant_t *) elem[i], 2);
     }
   }
@@ -757,7 +757,7 @@ t8_default_scheme_quad::element_to_string (const t8_element_t *elem, char *debug
 #endif
 
 void
-t8_default_scheme_quad::get_root (t8_element_t *elem) const
+t8_default_scheme_quad::set_to_root (t8_element_t *elem) const
 {
   t8_pquad_t *quad = (t8_pquad_t *) elem;
   p4est_quadrant_set_morton (quad, 0, 0);

@@ -524,7 +524,7 @@ t8_default_scheme_tri::element_new (int length, t8_element_t **elem) const
   {
     int i;
     for (i = 0; i < length; i++) {
-      get_root (elem[i]);
+      set_to_root (elem[i]);
     }
   }
 #endif
@@ -542,7 +542,7 @@ t8_default_scheme_tri::element_init (int length, t8_element_t *elem) const
 }
 
 void
-t8_default_scheme_tri::get_root (t8_element_t *elem) const
+t8_default_scheme_tri::set_to_root (t8_element_t *elem) const
 {
   t8_dtri_t *tri = (t8_dtri_t *) elem;
   tri->level = 0;

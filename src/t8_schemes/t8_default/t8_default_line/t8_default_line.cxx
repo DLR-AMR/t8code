@@ -421,7 +421,7 @@ t8_default_scheme_line::element_new (int length, t8_element_t **elem) const
 #ifdef T8_ENABLE_DEBUG
   {
     for (int i = 0; i < length; i++) {
-      get_root (elem[i]);
+      set_to_root (elem[i]);
     }
   }
 #endif
@@ -488,7 +488,7 @@ t8_default_scheme_line::element_MPI_Unpack (void *recvbuf, const int buffer_size
 }
 
 void
-t8_default_scheme_line::get_root (t8_element_t *elem) const
+t8_default_scheme_line::set_to_root (t8_element_t *elem) const
 {
   t8_dline_t *line = (t8_dline_t *) elem;
   line->level = 0;
