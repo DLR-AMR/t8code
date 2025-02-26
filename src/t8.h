@@ -30,16 +30,11 @@
 #define T8_H
 
 /* include config headers */
-#ifndef T8_CMAKE_BUILD
+#if !T8_CMAKE_BUILD
 #include <t8_config.h>
 #endif
+
 #include <sc_config.h>
-#if (defined(T8_ENABLE_MPI) && !defined(SC_ENABLE_MPI)) || (!defined(T8_ENABLE_MPI) && defined(SC_ENABLE_MPI))
-#error "MPI configured differently in t8code and libsc"
-#endif
-#if (defined(T8_ENABLE_MPIIO) && !defined(SC_ENABLE_MPIIO)) || (!defined(T8_ENABLE_MPIIO) && defined(SC_ENABLE_MPIIO))
-#error "MPI I/O configured differently in t8code and libsc"
-#endif
 
 /* indirectly also include sc.h */
 #include <sc_containers.h>
@@ -67,14 +62,14 @@ T8_EXTERN_C_BEGIN ();
  * since then the assertion would not trigger if sc is not configured in debugging mode.
  * However, we want it to trigger any time t8code is in debugging mode, independent of sc.
  */
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 #define T8_ASSERT(c) SC_CHECK_ABORT ((c), "Assertion '" #c "'")
 #else
 #define T8_ASSERT(c) SC_NOOP ()
 #endif
 
 /**Extended T8_ASSERT assertion with custom error message. Only active in debug-mode. */
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 #define T8_ASSERTF(c, msg) SC_CHECK_ABORT ((c), "Assertion '" #c "': " msg)
 #else
 #define T8_ASSERTF(c, msg) SC_NOOP ()

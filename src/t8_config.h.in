@@ -1,0 +1,8 @@
+#cmakedefine01 T8_ENABLE_DEBUG
+#cmakedefine01 T8_ENABLE_MPI
+#cmakedefine01 T8_ENABLE_MPIIO
+#cmakedefine01 T8_ENABLE_NETCDF
+#cmakedefine01 T8_ENABLE_NETCDF_PAR
+#cmakedefine01 T8_ENABLE_VTK
+#cmakedefine01 T8_ENABLE_OCC
+#cmakedefine01 T8_ENABLE_LESS_TESTS
