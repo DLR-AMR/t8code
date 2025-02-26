@@ -2097,9 +2097,6 @@ t8_standalone_scheme<T8_ECLASS_VERTEX>::element_transform_face (const t8_element
                                                                 const int is_smaller_face) noexcept
 {
   T8_ASSERT (t8_standalone_scheme<T8_ECLASS_VERTEX>::element_is_valid (elem1));
-  const t8_standalone_element<T8_ECLASS_VERTEX> *el1 = (const t8_standalone_element<T8_ECLASS_VERTEX> *) elem1;
-  t8_standalone_element<T8_ECLASS_VERTEX> *el2 = (t8_standalone_element<T8_ECLASS_VERTEX> *) elem2;
-
   return;
 };
 
