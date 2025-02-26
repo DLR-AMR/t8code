@@ -72,7 +72,7 @@ class class_child_parent_face: public TestDFS {
 
 TEST_P (class_child_parent_face, t8_recursive_dfs_child_parent_face)
 {
-#ifdef T8_ENABLE_LESS_TESTS
+#if T8CODE_TEST_LEVEL >= 1
   const int maxlvl = 4;
 #else
   const int maxlvl = 6;
