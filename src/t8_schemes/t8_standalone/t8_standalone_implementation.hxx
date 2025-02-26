@@ -996,92 +996,7 @@ struct t8_standalone_scheme
   {
     SC_ABORT ("Not implemented for this eclass.\n");
   }
-  // {
-  //   T8_ASSERT (element_is_valid (elem1));
-  //   const t8_standalone_element<TEclass> *el1 = (const t8_standalone_element<TEclass> *) elem1;
-  //   t8_standalone_element<TEclass> *el2 = (t8_standalone_element<TEclass> *) elem2;
 
-  //   if constexpr (TEclass == T8_ECLASS_VERTEX) {
-  //     return;
-  //   }
-  //   const int level = el1->level;
-  //   if constexpr (TEclass == T8_ECLASS_LINE) {
-  //     element_copy ((const t8_element_t *) el1, (t8_element_t *) el2);
-  //     if (orientation) {
-  //       const t8_element_coord total_length = 1 << T8_ELEMENT_MAXLEVEL[TEclass];
-  //       const t8_element_coord refined_length = 1 << (T8_ELEMENT_MAXLEVEL[TEclass] - level);
-  //       el2->coords[0] = total_length - refined_length - el2->coords[0];
-  //     }
-  //     return;
-  //   }
-  //   if constexpr (TEclass == T8_ECLASS_QUAD) {
-  //     t8_standalone_element<TEclass> tmp;
-  //     if (sign) {
-  //       /* The tree faces have the same topological orientation, and
-  //     * thus we have to perform a coordinate switch. */
-  //       /* We use p as storage, since el1 and el2 are allowed to
-  //     * point to the same quad */
-  //       element_copy ((const t8_element_t *) el1, (t8_element_t *) &tmp);
-  //       tmp.coords[0] = el1->coords[1];
-  //       tmp.coords[1] = el1->coords[0];
-  //     }
-  //     else {
-  //       element_copy ((const t8_element_t *) el1, (t8_element_t *) &tmp);
-  //     }
-
-  //     /*
-  //   * The faces of the root quadrant are enumerated like this:
-  //   *
-  //   *   v_2      v_3
-  //   *     x -->-- x
-  //   *     |       |
-  //   *     ^       ^
-  //   *     |       |
-  //   *     x -->-- x
-  //   *   v_0      v_1
-  //   *
-  //   * Orientation is the corner number of the bigger face that coincides
-  //   * with the corner v_0 of the smaller face.
-  //   */
-  //     /* If this face is not smaller, switch the orientation:
-  //   *  sign = 0   sign = 1
-  //   *  0 -> 0     0 -> 0
-  //   *  1 -> 2     1 -> 1
-  //   *  2 -> 1     2 -> 2
-  //   *  3 -> 3     3 -> 3
-  //   */
-  //     if (!is_smaller_face && (orientation == 1 || orientation == 2) && !sign) {
-  //       orientation = 3 - orientation;
-  //     }
-  //     const t8_element_coord root_len = get_root_len ();
-  //     const t8_element_coord h = element_get_len (el1->level);
-  //     switch (orientation) {
-  //     case 0: /* Nothing to do */
-  //       el2->coords[0] = tmp.coords[0];
-  //       el2->coords[1] = tmp.coords[1];
-  //       break;
-  //     case 1:
-  //       el2->coords[0] = root_len - tmp.coords[1] - h;
-  //       el2->coords[1] = tmp.coords[0];
-  //       break;
-  //     case 2:
-  //       el2->coords[0] = tmp.coords[1];
-  //       el2->coords[1] = root_len - tmp.coords[0] - h;
-  //       break;
-  //     case 3:
-  //       el2->coords[0] = root_len - tmp.coords[0] - h;
-  //       el2->coords[1] = root_len - tmp.coords[1] - h;
-  //       break;
-  //     default:
-  //       SC_ABORT_NOT_REACHED ();
-  //     }
-  //     el2->level = tmp.level;
-  //     return;
-  //   }
-  //   if constexpr (TEclass == T8_ECLASS_TRIANGLE) {
-  //     SC_ABORT ("Only implemented for hypercubes.\n");
-  //   }
-  // }
   /** Given a boundary face inside a root tree's face construct
    *  the element inside the root tree that has the given face as a
    *  face.
@@ -2152,6 +2067,28 @@ struct t8_standalone_scheme
     return 0;
   }
 };
+
+/** Suppose we have two trees that share a common face f.
+ *  Given an element e that is a subface of f in one of the trees
+ *  and given the orientation of the tree connection, construct the face
+ *  element of the respective tree neighbor that logically coincides with e
+ *  but lies in the coordinate system of the neighbor tree.
+ *  \param [in] elem1     The face element.
+ *  \param [in,out] elem2 On return the face element \a elem1 with respective
+ *                        to the coordinate system of the other tree.
+ *  \param [in] orientation The orientation of the tree-tree connection.
+ *                        \see t8_cmesh_set_join
+ *  \param [in] sign      Depending on the topological orientation of the two tree faces,
+ *                        either 0 (both faces have opposite orientation)
+ *                        or 1 (both faces have the same top. orientation).
+ *                        \ref t8_eclass_face_orientation
+ *  \param [in] is_smaller_face Flag to declare whether \a elem1 belongs to
+ *                        the smaller face. A face f of tree T is smaller than
+ *                        f' of T' if either the eclass of T is smaller or if
+ *                        the classes are equal and f<f'. The orientation is
+ *                        defined in relation to the smaller face.
+ * \note \a elem1 and \a elem2 may point to the same element.
+ */
 
 template <>
 inline void
