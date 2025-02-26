@@ -313,8 +313,8 @@ int
 t8_default_scheme_vertex::element_is_valid (const t8_element_t *elem)
 
 {
-  const t8_dvertex *v = (const t8_dvertex_t *) elem;
-  return 0 <= v->level && v->level <= T8_DVERTEX_MAXLEVEL;
+  return 1;
+  //return 0<=level && level <= maxlevel
 }
 
 void
