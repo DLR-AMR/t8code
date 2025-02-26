@@ -1038,6 +1038,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
       }
     }
 #endif
+  [[fallthrough]];
   case T8_ECLASS_TRIANGLE: {
     /* We construct the normal as the cross product of two spanning
      * vectors for the triangle*/
