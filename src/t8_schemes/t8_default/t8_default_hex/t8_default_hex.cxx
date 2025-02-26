@@ -131,8 +131,6 @@ t8_default_scheme_hex::element_get_face_corner (const t8_element_t *element, con
   return p8est_face_corners[face][corner];
 }
 
-<<<<<<< HEAD
-=======
 int
 t8_default_scheme_hex::element_get_corner_face (const t8_element_t *element, const int corner, const int face) const
 {
@@ -143,7 +141,6 @@ t8_default_scheme_hex::element_get_corner_face (const t8_element_t *element, con
   return p8est_corner_faces[corner][face];
 }
 
->>>>>>> origin/main
 void
 t8_default_scheme_hex::element_get_child (const t8_element_t *elem, const int childid, t8_element_t *child) const
 {
