@@ -3566,7 +3566,7 @@ static int
 t8_forest_compare_elem_tree (const void *lelement_id, const void *ltree)
 {
   t8_locidx_t leid = *(const t8_locidx_t *) lelement_id;
-  const t8_tree_t tree = (const t8_tree_t) ltree;
+  const t8_tree_t tree = (t8_tree_t)ltree;
 
   if (tree->elements_offset > leid) {
     /* We have to look further to the left */
