@@ -994,91 +994,94 @@ struct t8_standalone_scheme
   element_transform_face (const t8_element_t *elem1, t8_element_t *elem2, int orientation, const int sign,
                           const int is_smaller_face) noexcept
   {
-    T8_ASSERT (element_is_valid (elem1));
-    const t8_standalone_element<TEclass> *el1 = (const t8_standalone_element<TEclass> *) elem1;
-    t8_standalone_element<TEclass> *el2 = (t8_standalone_element<TEclass> *) elem2;
-
-    if constexpr (TEclass == T8_ECLASS_VERTEX) {
-      return;
-    }
-    const int level = el1->level;
-    if constexpr (TEclass == T8_ECLASS_LINE) {
-      element_copy ((const t8_element_t *) el1, (t8_element_t *) el2);
-      if (orientation) {
-        const t8_element_coord total_length = 1 << T8_ELEMENT_MAXLEVEL[TEclass];
-        const t8_element_coord refined_length = 1 << (T8_ELEMENT_MAXLEVEL[TEclass] - level);
-        el2->coords[0] = total_length - refined_length - el2->coords[0];
-      }
-      return;
-    }
-    if constexpr (TEclass == T8_ECLASS_QUAD) {
-      t8_standalone_element<TEclass> tmp;
-      if (sign) {
-        /* The tree faces have the same topological orientation, and
-      * thus we have to perform a coordinate switch. */
-        /* We use p as storage, since el1 and el2 are allowed to
-      * point to the same quad */
-        element_copy ((const t8_element_t *) el1, (t8_element_t *) &tmp);
-        tmp.coords[0] = el1->coords[1];
-        tmp.coords[1] = el1->coords[0];
-      }
-      else {
-        element_copy ((const t8_element_t *) el1, (t8_element_t *) &tmp);
-      }
-
-      /*
-    * The faces of the root quadrant are enumerated like this:
-    *
-    *   v_2      v_3
-    *     x -->-- x
-    *     |       |
-    *     ^       ^
-    *     |       |
-    *     x -->-- x
-    *   v_0      v_1
-    *
-    * Orientation is the corner number of the bigger face that coincides
-    * with the corner v_0 of the smaller face.
-    */
-      /* If this face is not smaller, switch the orientation:
-    *  sign = 0   sign = 1
-    *  0 -> 0     0 -> 0
-    *  1 -> 2     1 -> 1
-    *  2 -> 1     2 -> 2
-    *  3 -> 3     3 -> 3
-    */
-      if (!is_smaller_face && (orientation == 1 || orientation == 2) && !sign) {
-        orientation = 3 - orientation;
-      }
-      const t8_element_coord root_len = get_root_len ();
-      const t8_element_coord h = element_get_len (el1->level);
-      switch (orientation) {
-      case 0: /* Nothing to do */
-        el2->coords[0] = tmp.coords[0];
-        el2->coords[1] = tmp.coords[1];
-        break;
-      case 1:
-        el2->coords[0] = root_len - tmp.coords[1] - h;
-        el2->coords[1] = tmp.coords[0];
-        break;
-      case 2:
-        el2->coords[0] = tmp.coords[1];
-        el2->coords[1] = root_len - tmp.coords[0] - h;
-        break;
-      case 3:
-        el2->coords[0] = root_len - tmp.coords[0] - h;
-        el2->coords[1] = root_len - tmp.coords[1] - h;
-        break;
-      default:
-        SC_ABORT_NOT_REACHED ();
-      }
-      el2->level = tmp.level;
-      return;
-    }
-    if constexpr (TEclass == T8_ECLASS_TRIANGLE) {
-      SC_ABORT ("Only implemented for hypercubes.\n");
-    }
+    SC_ABORT ("Not implemented for this eclass.\n");
   }
+  // {
+  //   T8_ASSERT (element_is_valid (elem1));
+  //   const t8_standalone_element<TEclass> *el1 = (const t8_standalone_element<TEclass> *) elem1;
+  //   t8_standalone_element<TEclass> *el2 = (t8_standalone_element<TEclass> *) elem2;
+
+  //   if constexpr (TEclass == T8_ECLASS_VERTEX) {
+  //     return;
+  //   }
+  //   const int level = el1->level;
+  //   if constexpr (TEclass == T8_ECLASS_LINE) {
+  //     element_copy ((const t8_element_t *) el1, (t8_element_t *) el2);
+  //     if (orientation) {
+  //       const t8_element_coord total_length = 1 << T8_ELEMENT_MAXLEVEL[TEclass];
+  //       const t8_element_coord refined_length = 1 << (T8_ELEMENT_MAXLEVEL[TEclass] - level);
+  //       el2->coords[0] = total_length - refined_length - el2->coords[0];
+  //     }
+  //     return;
+  //   }
+  //   if constexpr (TEclass == T8_ECLASS_QUAD) {
+  //     t8_standalone_element<TEclass> tmp;
+  //     if (sign) {
+  //       /* The tree faces have the same topological orientation, and
+  //     * thus we have to perform a coordinate switch. */
+  //       /* We use p as storage, since el1 and el2 are allowed to
+  //     * point to the same quad */
+  //       element_copy ((const t8_element_t *) el1, (t8_element_t *) &tmp);
+  //       tmp.coords[0] = el1->coords[1];
+  //       tmp.coords[1] = el1->coords[0];
+  //     }
+  //     else {
+  //       element_copy ((const t8_element_t *) el1, (t8_element_t *) &tmp);
+  //     }
+
+  //     /*
+  //   * The faces of the root quadrant are enumerated like this:
+  //   *
+  //   *   v_2      v_3
+  //   *     x -->-- x
+  //   *     |       |
+  //   *     ^       ^
+  //   *     |       |
+  //   *     x -->-- x
+  //   *   v_0      v_1
+  //   *
+  //   * Orientation is the corner number of the bigger face that coincides
+  //   * with the corner v_0 of the smaller face.
+  //   */
+  //     /* If this face is not smaller, switch the orientation:
+  //   *  sign = 0   sign = 1
+  //   *  0 -> 0     0 -> 0
+  //   *  1 -> 2     1 -> 1
+  //   *  2 -> 1     2 -> 2
+  //   *  3 -> 3     3 -> 3
+  //   */
+  //     if (!is_smaller_face && (orientation == 1 || orientation == 2) && !sign) {
+  //       orientation = 3 - orientation;
+  //     }
+  //     const t8_element_coord root_len = get_root_len ();
+  //     const t8_element_coord h = element_get_len (el1->level);
+  //     switch (orientation) {
+  //     case 0: /* Nothing to do */
+  //       el2->coords[0] = tmp.coords[0];
+  //       el2->coords[1] = tmp.coords[1];
+  //       break;
+  //     case 1:
+  //       el2->coords[0] = root_len - tmp.coords[1] - h;
+  //       el2->coords[1] = tmp.coords[0];
+  //       break;
+  //     case 2:
+  //       el2->coords[0] = tmp.coords[1];
+  //       el2->coords[1] = root_len - tmp.coords[0] - h;
+  //       break;
+  //     case 3:
+  //       el2->coords[0] = root_len - tmp.coords[0] - h;
+  //       el2->coords[1] = root_len - tmp.coords[1] - h;
+  //       break;
+  //     default:
+  //       SC_ABORT_NOT_REACHED ();
+  //     }
+  //     el2->level = tmp.level;
+  //     return;
+  //   }
+  //   if constexpr (TEclass == T8_ECLASS_TRIANGLE) {
+  //     SC_ABORT ("Only implemented for hypercubes.\n");
+  //   }
+  // }
   /** Given a boundary face inside a root tree's face construct
    *  the element inside the root tree that has the given face as a
    *  face.
@@ -2148,6 +2151,122 @@ struct t8_standalone_scheme
     }
     return 0;
   }
+};
+
+template <>
+inline void
+t8_standalone_scheme<T8_ECLASS_VERTEX>::element_transform_face (const t8_element_t *elem1, t8_element_t *elem2,
+                                                                int orientation, const int sign,
+                                                                const int is_smaller_face) noexcept
+{
+  T8_ASSERT (t8_standalone_scheme<T8_ECLASS_VERTEX>::element_is_valid (elem1));
+  const t8_standalone_element<T8_ECLASS_VERTEX> *el1 = (const t8_standalone_element<T8_ECLASS_VERTEX> *) elem1;
+  t8_standalone_element<T8_ECLASS_VERTEX> *el2 = (t8_standalone_element<T8_ECLASS_VERTEX> *) elem2;
+
+  return;
+};
+
+template <>
+inline void
+t8_standalone_scheme<T8_ECLASS_LINE>::element_transform_face (const t8_element_t *elem1, t8_element_t *elem2,
+                                                              int orientation, const int sign,
+                                                              const int is_smaller_face) noexcept
+{
+  T8_ASSERT (t8_standalone_scheme<T8_ECLASS_LINE>::element_is_valid (elem1));
+  const t8_standalone_element<T8_ECLASS_LINE> *el1 = (const t8_standalone_element<T8_ECLASS_LINE> *) elem1;
+  t8_standalone_element<T8_ECLASS_LINE> *el2 = (t8_standalone_element<T8_ECLASS_LINE> *) elem2;
+
+  const int level = el1->level;
+  element_copy ((const t8_element_t *) el1, (t8_element_t *) el2);
+  if (orientation) {
+    const t8_element_coord total_length = 1 << T8_ELEMENT_MAXLEVEL[T8_ECLASS_LINE];
+    const t8_element_coord refined_length = 1 << (T8_ELEMENT_MAXLEVEL[T8_ECLASS_LINE] - level);
+    el2->coords[0] = total_length - refined_length - el2->coords[0];
+  }
+  return;
+};
+
+template <>
+inline void
+t8_standalone_scheme<T8_ECLASS_QUAD>::element_transform_face (const t8_element_t *elem1, t8_element_t *elem2,
+                                                              int orientation, const int sign,
+                                                              const int is_smaller_face) noexcept
+{
+  T8_ASSERT (t8_standalone_scheme<T8_ECLASS_QUAD>::element_is_valid (elem1));
+  const t8_standalone_element<T8_ECLASS_QUAD> *el1 = (const t8_standalone_element<T8_ECLASS_QUAD> *) elem1;
+  t8_standalone_element<T8_ECLASS_QUAD> *el2 = (t8_standalone_element<T8_ECLASS_QUAD> *) elem2;
+
+  t8_standalone_element<T8_ECLASS_QUAD> tmp;
+  if (sign) {
+    /* The tree faces have the same topological orientation, and
+      * thus we have to perform a coordinate switch. */
+    /* We use p as storage, since el1 and el2 are allowed to
+      * point to the same quad */
+    element_copy ((const t8_element_t *) el1, (t8_element_t *) &tmp);
+    tmp.coords[0] = el1->coords[1];
+    tmp.coords[1] = el1->coords[0];
+  }
+  else {
+    element_copy ((const t8_element_t *) el1, (t8_element_t *) &tmp);
+  }
+
+  /*
+    * The faces of the root quadrant are enumerated like this:
+    *
+    *   v_2      v_3
+    *     x -->-- x
+    *     |       |
+    *     ^       ^
+    *     |       |
+    *     x -->-- x
+    *   v_0      v_1
+    *
+    * Orientation is the corner number of the bigger face that coincides
+    * with the corner v_0 of the smaller face.
+    */
+  /* If this face is not smaller, switch the orientation:
+    *  sign = 0   sign = 1
+    *  0 -> 0     0 -> 0
+    *  1 -> 2     1 -> 1
+    *  2 -> 1     2 -> 2
+    *  3 -> 3     3 -> 3
+    */
+  if (!is_smaller_face && (orientation == 1 || orientation == 2) && !sign) {
+    orientation = 3 - orientation;
+  }
+  const t8_element_coord root_len = t8_standalone_scheme<T8_ECLASS_QUAD>::get_root_len ();
+  const t8_element_coord h = t8_standalone_scheme<T8_ECLASS_QUAD>::element_get_len (el1->level);
+  switch (orientation) {
+  case 0: /* Nothing to do */
+    el2->coords[0] = tmp.coords[0];
+    el2->coords[1] = tmp.coords[1];
+    break;
+  case 1:
+    el2->coords[0] = root_len - tmp.coords[1] - h;
+    el2->coords[1] = tmp.coords[0];
+    break;
+  case 2:
+    el2->coords[0] = tmp.coords[1];
+    el2->coords[1] = root_len - tmp.coords[0] - h;
+    break;
+  case 3:
+    el2->coords[0] = root_len - tmp.coords[0] - h;
+    el2->coords[1] = root_len - tmp.coords[1] - h;
+    break;
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
+  el2->level = tmp.level;
+  return;
+};
+
+template <>
+inline void
+t8_standalone_scheme<T8_ECLASS_TRIANGLE>::element_transform_face (const t8_element_t *elem1, t8_element_t *elem2,
+                                                                  int orientation, const int sign,
+                                                                  const int is_smaller_face) noexcept
+{
+  SC_ABORT ("Only implemented for hypercubes.\n");
 };
 
 #endif /* T8_STANDALONE_IMPLEMENTATION_HXX */
