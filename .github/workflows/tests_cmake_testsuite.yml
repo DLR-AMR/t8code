@@ -67,6 +67,10 @@ jobs:
           echo "Scheduled run for DLR-AMR/t8code, proceeding with CI."
           echo "RUN_CI=true" >> $GITHUB_OUTPUT
           exit 0
+        elif [[ "${{ github.event_name }}" == "merge_group" ]]; then
+          echo "Merge group event, proceeding with CI."
+          echo "RUN_CI=true" >> $GITHUB_OUTPUT
+          exit 0
         fi
         latest_commit_message=$(git log -1 --pretty=%B)
         echo "Latest commit message: $latest_commit_message"
