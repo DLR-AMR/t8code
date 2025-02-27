@@ -43,7 +43,7 @@ if( T8CODE_ENABLE_NETCDF )
   t8_cmesh_netcdf.h
   t8_forest_netcdf.h
   t8_netcdf.h
-  )
+  DESTINATION include)
 endif()
 
 set_target_properties( T8 PROPERTIES OUTPUT_NAME t8 )
