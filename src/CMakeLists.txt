@@ -98,7 +98,6 @@ target_sources( T8 PRIVATE
     t8_eclass.c 
     t8_element_shape.c
     t8_element.cxx
-    t8_mesh.c
     t8_refcount.c 
     t8_version.c 
     t8_vtk.c 
@@ -200,7 +199,6 @@ install( FILES
     t8_element.h
     t8_element_shape.h
     t8_mat.h
-    t8_mesh.h
     t8_refcount.h
     t8_types/t8_vec.hxx
     t8_version.h
