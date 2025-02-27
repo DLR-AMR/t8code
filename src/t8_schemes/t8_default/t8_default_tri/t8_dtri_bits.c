@@ -830,7 +830,7 @@ t8_dtri_children_at_face (const t8_dtri_t *tri, int face, t8_dtri_t *children[],
 }
 
 int
-t8_dtri_tree_face (__attribute__((unused)) t8_dtri_t *t, int face)
+t8_dtri_tree_face (__attribute__ ((unused)) t8_dtri_t *t, int face)
 {
   T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
   /* TODO: Assert if boundary */
@@ -910,7 +910,8 @@ t8_dtri_root_face_to_face (t8_dtri_t *t, int root_face)
 }
 
 int
-t8_dtri_face_child_face (__attribute__((unused))const t8_dtri_t *triangle, int face, __attribute__((unused))int face_child)
+t8_dtri_face_child_face (__attribute__ ((unused)) const t8_dtri_t *triangle, int face,
+                         __attribute__ ((unused)) int face_child)
 {
   T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
   T8_ASSERT (0 <= face_child && face_child < T8_DTRI_FACE_CHILDREN);

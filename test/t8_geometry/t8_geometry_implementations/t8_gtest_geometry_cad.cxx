@@ -52,7 +52,6 @@
 
 #include <test/t8_gtest_custom_assertion.hxx>
 
-
 /* In this file we collect tests for t8code's OpenCASCADE geometry module.
  * These tests are
  *  - linked_edges: Checks if the geometry mapping works. 
@@ -429,7 +428,6 @@ t8_create_cad_reference_tet ([[maybe_unused]] int face, [[maybe_unused]] int edg
   t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges, 12 * sizeof (int), 0);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   return cmesh;
-
 }
 
 /** Tests the cad geometry functions for tetrahedra.
@@ -464,7 +462,6 @@ t8_test_geometry_cad_tet (const int face, const int edge, double *parameters, do
 
   EXPECT_VEC_EQ (out_coords, test_return_coords, tol);
   t8_cmesh_destroy (&cmesh);
-
 }
 
 TEST (t8_gtest_geometry_cad_tet, linked_faces)
@@ -689,7 +686,6 @@ TEST_P (class_2d_element_cad_curve, t8_check_2d_element_cad_curve)
 INSTANTIATE_TEST_SUITE_P (t8_gtest_check_2d_element_cad_curve, class_2d_element_cad_curve,
                           testing::Combine (AllEclasses2D, testing::Values (0, 1)));
 
-
 /* The test checks if the mapping algorithms for curved 2d elements do not shift values on a surface which is not curved.
  * In that case, the cad geometry should output the same out_coords as the linear geometry function. */
 class class_2d_element_linear_cad_surface: public testing::TestWithParam<t8_eclass_t> {
@@ -788,7 +784,6 @@ TEST_P (class_2d_element_linear_cad_surface, t8_check_2d_element_linear_cad_surf
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_check_2d_element_linear_cad_surface, class_2d_element_linear_cad_surface,
                           AllEclasses2D, print_eclass);
-
 
 /* The test checks if the mapping algorithms for curved 2d elements shift values on a curved surface correctly. */
 class class_2d_element_curved_cad_surface: public testing::TestWithParam<t8_eclass_t> {
@@ -900,7 +895,6 @@ TEST_P (class_2d_element_curved_cad_surface, t8_check_2d_element_curved_cad_surf
 INSTANTIATE_TEST_SUITE_P (t8_gtest_check_2d_element_curved_cad_surface, class_2d_element_curved_cad_surface,
                           AllEclasses2D, print_eclass);
 
-
 /** Constructs a cmesh with an cad geometry linked prism.
  * \param [in] face                   The index of the face to link a surface to. -1 for no face.
  * \param [in] edge                   The index of the edge to link a curve to. -1 for no edge.
@@ -1000,7 +994,6 @@ t8_test_geometry_cad_prism (const int face, const int edge, double *parameters, 
     EXPECT_VEC_EQ (out_coords, checked_coords, tol);
   }
   t8_cmesh_destroy (&cmesh);
-
 }
 
 TEST (t8_gtest_geometry_cad_prism, linked_faces)

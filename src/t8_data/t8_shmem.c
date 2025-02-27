@@ -254,8 +254,8 @@ t8_compute_recvcounts_displs (int sendcount, int *recvcounts, int *displs, sc_MP
  */
 static void
 t8_shmem_array_allgatherv_common (void *sendbuf, const int sendcount, sc_MPI_Datatype sendtype,
-                                  t8_shmem_array_t recvarray, sc_MPI_Datatype recvtype,
-                                  sc_MPI_Comm intranode_comm, sc_MPI_Comm internode_comm)
+                                  t8_shmem_array_t recvarray, sc_MPI_Datatype recvtype, sc_MPI_Comm intranode_comm,
+                                  sc_MPI_Comm internode_comm)
 {
   size_t typesize;
   int mpiret;
@@ -276,8 +276,7 @@ t8_shmem_array_allgatherv_common (void *sendbuf, const int sendcount, sc_MPI_Dat
   /* intranode-gatherv */
   int *intra_displ = T8_ALLOC_ZERO (int, intrasize);
   int *intra_recvcounts = T8_ALLOC_ZERO (int, intrasize);
-  int intra_recv_total
-    = t8_compute_recvcounts_displs (sendcount, intra_recvcounts, intra_displ, intranode_comm);
+  int intra_recv_total = t8_compute_recvcounts_displs (sendcount, intra_recvcounts, intra_displ, intranode_comm);
   if (intrarank == 0) {
     noderecvchar = T8_ALLOC (char, intra_recv_total *typesize);
   }
