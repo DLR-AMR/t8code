@@ -21,8 +21,8 @@ endif()
 if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
   set (T8_CXXFLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG}")
   set (T8_CFLAGS "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_DEBUG}")
-
-    target_compile_definitions( T8 PUBLIC T8_ENABLE_DEBUG )
+#  target_compile_definitions(T8 PUBLIC T8_ENABLE_DEBUG)
+  set( T8_ENABLE_DEBUG 1)
 endif()
 
 if( T8CODE_EXPORT_COMPILE_COMMANDS )
@@ -34,32 +34,43 @@ if( T8CODE_ENABLE_NETCDF )
   target_compile_definitions(T8 PUBLIC
     T8_WITH_NETCDF
     $<$<AND:$<BOOL:${NETCDF_HAVE_NETCDF_PAR}>,$<BOOL:${T8CODE_ENABLE_MPI}>>:T8_WITH_NETCDF_PAR> )
+  set( T8_WITH_NETCDF 1 )
+  if ( NETCDF_HAVE_NETCDF_PAR AND T8CODE_ENABLE_MPI)
+    set( T8_WITH_NETCDF_PAR 1 )
+  endif()
 endif()
 
 set_target_properties( T8 PROPERTIES OUTPUT_NAME t8 )
 
 target_include_directories( T8 PUBLIC
+  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include>
+  $<INSTALL_INTERFACE:include>
 )
+configure_file("${PROJECT_SOURCE_DIR}/src/t8_config.h.in" "${PROJECT_BINARY_DIR}/include/t8_config.h")
+
 
 target_link_libraries( T8 PUBLIC P4EST::P4EST SC::SC )
 
 if ( T8CODE_ENABLE_MPI )
     target_compile_definitions( T8 PUBLIC T8_ENABLE_MPI )
     target_compile_definitions( T8 PUBLIC T8_ENABLE_MPIIO )
+    set ( T8_ENABLE_MPI 1 )
+    set ( T8_ENABLE_MPIIO 1 )
     target_link_libraries( T8 PUBLIC MPI::MPI_C )
 endif()
 
 if( T8CODE_ENABLE_VTK )
     target_compile_definitions( T8 PUBLIC T8_VTK_VERSION_USED="${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}" )
     target_compile_definitions( T8 PUBLIC T8_WITH_VTK=1 )
+    set  (T8_WITH_VTK 1)
     target_include_directories( T8 PUBLIC ${VTK_INCLUDE_DIR} )
     target_link_libraries( T8 PUBLIC ${VTK_LIBRARIES} )
 endif()
 
 if( T8CODE_ENABLE_OCC )
     target_compile_definitions( T8 PUBLIC T8_WITH_OCC=1 )
+    set  (T8_WITH_OCC 1)
     target_include_directories( T8 SYSTEM PUBLIC ${OpenCASCADE_INCLUDE_DIR} )
     target_link_libraries( T8 PUBLIC ${OpenCASCADE_LIBRARIES} )
 endif()
@@ -161,24 +172,14 @@ target_sources( T8 PRIVATE
     t8_vtk/t8_vtk_write_ASCII.cxx
     t8_vtk/t8_vtk_writer_helper.cxx
 )
-
 target_compile_definitions( T8 PUBLIC T8_CMAKE_BUILD )
-target_compile_definitions( T8 PUBLIC T8_CC="${CMAKE_C_COMPILER}" )
-target_compile_definitions( T8 PUBLIC T8_CFLAGS="${T8_CFLAGS}" )
-target_compile_definitions( T8 PUBLIC T8_CXX="${CMAKE_CXX_COMPILER}" )
-target_compile_definitions( T8 PUBLIC T8_CXXFLAGS="${T8_CXXFLAGS}" )
-target_compile_definitions( T8 PUBLIC T8_LDFLAGS="${CMAKE_SHARED_LINKER_FLAGS}" )
+set_source_files_properties ( t8_version.c PROPERTIES COMPILE_DEFINITIONS "T8_PACKAGE_STRING=\"t8 ${T8CODE_VERSION}\";T8_VERSION=\"${T8CODE_VERSION}\";T8_VERSION_MAJOR=${T8CODE_VERSION_MAJOR};T8_VERSION_MINOR=${T8CODE_VERSION_MINOR};T8_VERSION_PATCH=${T8CODE_VERSION_PATCH};T8_VERSION_POINT=\"${T8CODE_VERSION_POINT}\"")
 
-target_compile_definitions( T8 PUBLIC T8_PACKAGE_STRING="t8 ${T8CODE_VERSION}" )
-target_compile_definitions( T8 PUBLIC T8_VERSION="${T8CODE_VERSION}" )
-target_compile_definitions( T8 PUBLIC T8_VERSION_MAJOR=${T8CODE_VERSION_MAJOR} )
-target_compile_definitions( T8 PUBLIC T8_VERSION_MINOR=${T8CODE_VERSION_MINOR} )
-target_compile_definitions( T8 PUBLIC T8_VERSION_PATCH=${T8CODE_VERSION_PATCH} )
-target_compile_definitions( T8 PUBLIC T8_VERSION_POINT=${T8CODE_VERSION_POINT} )
 
-get_target_property( T8_LIBS_LIST T8 LINK_LIBRARIES )
-string( REPLACE ";" " " T8_LIBS "${T8_LIBS_LIST}" )
-target_compile_definitions( T8 PUBLIC T8_LIBS="${T8_LIBS}" )
+set_source_files_properties( t8.c PROPERTIES COMPILE_DEFINITIONS "T8_CXX=\"t8\";T8_CC=\"t8\";T8_CXXFLAGS=\"t8\";T8_CFLAGS=\"t8\";T8_LDFLAGS=\"t8\";T8_LIBS=\"t8\"")
+#get_target_property( T8_LIBS_LIST T8 LINK_LIBRARIES )
+#string( REPLACE ";" " " T8_LIBS "${T8_LIBS_LIST}" )
+#target_compile_definitions( T8 PUBLIC T8_LIBS="${T8_LIBS}" )
 
 install( FILES
     t8.h
@@ -201,6 +202,7 @@ install( FILES
     t8_vtk.h
     t8_windows.h DESTINATION include
 )
+install (FILES ${CMAKE_CURRENT_BINARY_DIR}/../include/t8_config.h DESTINATION include)
 
 install( DIRECTORY t8_cmesh DESTINATION include FILES_MATCHING PATTERN "*.h" )
 install( DIRECTORY t8_data DESTINATION include FILES_MATCHING PATTERN "*.h" )

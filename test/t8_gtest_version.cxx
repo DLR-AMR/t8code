@@ -52,7 +52,6 @@ TEST (t8_gtest_version, minor_version)
 TEST (t8_gtest_version, getter_function)
 {
   const char *version_string = t8_get_package_string ();
-
   EXPECT_STREQ (version_string, T8_PACKAGE_STRING);
 }
 

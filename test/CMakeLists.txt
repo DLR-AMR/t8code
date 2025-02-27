@@ -164,3 +164,5 @@ copy_test_file( test_msh_file_vers2_ascii.msh )
 copy_test_file( test_msh_file_vers4_ascii.msh )
 copy_test_file( test_msh_file_vers2_bin.msh )
 copy_test_file( test_msh_file_vers4_bin.msh )
+
+set_source_files_properties( t8_gtest_version.cxx PROPERTIES COMPILE_DEFINITIONS "T8_PACKAGE_STRING=\"t8 ${T8CODE_VERSION}\"") 
