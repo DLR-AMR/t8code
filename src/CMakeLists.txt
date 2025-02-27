@@ -34,6 +34,16 @@ if( T8CODE_ENABLE_NETCDF )
   target_compile_definitions(T8 PUBLIC
     T8_WITH_NETCDF
     $<$<AND:$<BOOL:${NETCDF_HAVE_NETCDF_PAR}>,$<BOOL:${T8CODE_ENABLE_MPI}>>:T8_WITH_NETCDF_PAR> )
+  target_sources( T8 PRIVATE
+  t8_netcdf.c
+  t8_cmesh/t8_cmesh_netcdf.c
+  t8_forest/t8_forest_netcdf.cxx
+  )
+  install( FILES
+  t8_cmesh_netcdf.h
+  t8_forest_netcdf.h
+  t8_netcdf.h
+  DESTINATION include)
 endif()
 
 set_target_properties( T8 PROPERTIES OUTPUT_NAME t8 )
@@ -88,7 +98,6 @@ target_sources( T8 PRIVATE
     t8_eclass.c 
     t8_element_shape.c
     t8_element.cxx
-    t8_netcdf.c 
     t8_refcount.c 
     t8_version.c 
     t8_vtk.c 
@@ -98,7 +107,6 @@ target_sources( T8 PRIVATE
     t8_cmesh/t8_cmesh_stash.c 
     t8_cmesh/t8_cmesh_vtk_reader.cxx 
     t8_cmesh/t8_cmesh_save.cxx 
-    t8_cmesh/t8_cmesh_netcdf.c 
     t8_cmesh/t8_cmesh_trees.cxx 
     t8_cmesh/t8_cmesh_commit.cxx 
     t8_cmesh/t8_cmesh_partition.cxx 
@@ -117,7 +125,6 @@ target_sources( T8 PRIVATE
     t8_forest/t8_forest_ghost.cxx 
     t8_forest/t8_forest_iterate.cxx 
     t8_forest/t8_forest_balance.cxx 
-    t8_forest/t8_forest_netcdf.cxx
     t8_forest/t8_forest_search/t8_forest_search.cxx 
     t8_geometry/t8_geometry.cxx 
     t8_geometry/t8_geometry_helpers.c 
@@ -184,7 +191,6 @@ install( FILES
     t8.h
     t8_cmesh.h
     t8_cmesh.hxx
-    t8_cmesh_netcdf.h
     t8_cmesh_readmshfile.h
     t8_cmesh_tetgen.h
     t8_cmesh_triangle.h
@@ -192,9 +198,7 @@ install( FILES
     t8_eclass.h
     t8_element.h
     t8_element_shape.h
-    t8_forest_netcdf.h
     t8_mat.h
-    t8_netcdf.h
     t8_refcount.h
     t8_types/t8_vec.hxx
     t8_version.h
