@@ -63,13 +63,13 @@ class cmesh_attribute_gloidx_array: public testing::TestWithParam<std::tuple<int
     /* Attribute at tree 0, data_persist = 0 */
     t8_gloidx_t tree_with_attribute = 0;
     int data_persists = 0;
-    t8_cmesh_set_attribute_gloidx_array (cmesh, tree_with_attribute, t8_get_package_id (), T8_CMESH_NEXT_POSSIBLE_KEY,
+    t8_cmesh_set_attribute_gloidx_array (cmesh, tree_with_attribute, t8_get_package_id (), T8_CMESH_TESTING_KEY,
                                          entries, num_entries, data_persists);
 
     /* Attribute at tree 1, data_persist = 1 */
     tree_with_attribute = 1;
     data_persists = 1;
-    t8_cmesh_set_attribute_gloidx_array (cmesh, tree_with_attribute, t8_get_package_id (), T8_CMESH_NEXT_POSSIBLE_KEY,
+    t8_cmesh_set_attribute_gloidx_array (cmesh, tree_with_attribute, t8_get_package_id (), T8_CMESH_TESTING_KEY,
                                          entries, num_entries, data_persists);
 
     /* Commit the cmesh */
@@ -94,8 +94,8 @@ class cmesh_attribute_gloidx_array: public testing::TestWithParam<std::tuple<int
 /** Check attribute values of the trees against reference values. */
 TEST_P (cmesh_attribute_gloidx_array, check_values_data)
 {
-  get_entries = t8_cmesh_get_attribute_gloidx_array (cmesh, t8_get_package_id (), T8_CMESH_NEXT_POSSIBLE_KEY,
-                                                     check_tree_id, num_entries);
+  get_entries = t8_cmesh_get_attribute_gloidx_array (cmesh, t8_get_package_id (), T8_CMESH_TESTING_KEY, check_tree_id,
+                                                     num_entries);
 
   /* If we did not store any values, we except to get the NULL pointer back. */
   if (entries == NULL) {
