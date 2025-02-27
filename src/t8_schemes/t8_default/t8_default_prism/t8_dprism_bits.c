@@ -249,7 +249,7 @@ t8_dprism_child (const t8_dprism_t *p, int childid, t8_dprism_t *child)
 }
 
 t8_element_shape_t
-t8_dprism_face_shape (const t8_dprism_t *p, int face)
+t8_dprism_face_shape (int face)
 {
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
   if (face < 3) {
@@ -259,7 +259,7 @@ t8_dprism_face_shape (const t8_dprism_t *p, int face)
 }
 
 int
-t8_dprism_num_face_children (const t8_dprism_t *p, int face)
+t8_dprism_num_face_children (int face)
 {
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
   /*Bottom and top have T8_DTRI_CHILDREN, the other three faces depend on
@@ -293,7 +293,7 @@ t8_dprism_face_neighbour (const t8_dprism_t *p, int face, t8_dprism_t *neigh)
 }
 
 int
-t8_dprism_get_face_corner (const t8_dprism_t *p, int face, int corner)
+t8_dprism_get_face_corner (int face, int corner)
 {
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
   T8_ASSERT (0 <= corner);
@@ -326,7 +326,7 @@ void
 t8_dprism_children_at_face (const t8_dprism_t *p, int face, t8_dprism_t **children, int num_children,
                             int *child_indices)
 {
-  T8_ASSERT (num_children == t8_dprism_num_face_children (p, face));
+  T8_ASSERT (num_children == t8_dprism_num_face_children (face));
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
   if (face < 3) {
     for (int ichild = 3; ichild >= 0; ichild--) {
@@ -354,7 +354,7 @@ t8_dprism_children_at_face (const t8_dprism_t *p, int face, t8_dprism_t **childr
 }
 
 int
-t8_dprism_face_child_face (const t8_dprism_t *elem, int face, int face_child)
+t8_dprism_face_child_face (int face)
 {
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
   /* For prisms the face number of the children is the same as the one
@@ -379,7 +379,7 @@ t8_dprism_face_parent_face (const t8_dprism_t *prism, int face)
 }
 
 int
-t8_dprism_tree_face (const t8_dprism_t *p, int face)
+t8_dprism_tree_face (int face)
 {
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
   /*For prisms, the face number coincides with the number of the root
