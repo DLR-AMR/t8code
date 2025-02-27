@@ -37,7 +37,7 @@
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 
 /* Forward declaration of the scheme so we can use it as an argument in the eclass schemes function. */
-struct t8_scheme;
+class t8_scheme;
 
 /** The structure holding a quadrilateral element in the default scheme.
  * We make this definition public for interoperability of element classes.
