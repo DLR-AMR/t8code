@@ -92,9 +92,9 @@ t8_geometry_lagrange::t8_geom_compute_basis (const double *ref_coords) const
       return t8_geometry_lagrange::t8_geom_s3_basis (ref_coords);
     default:
       SC_ABORTF ("Error: Lagrange geometry for degree %i %s not yet implemented. \n", *degree,
-               t8_eclass_to_string[active_tree_class]);
+                 t8_eclass_to_string[active_tree_class]);
     }
-    
+
   case T8_ECLASS_TRIANGLE:
     switch (*degree) {
     case 1:
@@ -103,7 +103,7 @@ t8_geometry_lagrange::t8_geom_compute_basis (const double *ref_coords) const
       return t8_geometry_lagrange::t8_geom_t6_basis (ref_coords);
     default:
       SC_ABORTF ("Error: Lagrange geometry for degree %i %s not yet implemented. \n", *degree,
-               t8_eclass_to_string[active_tree_class]);
+                 t8_eclass_to_string[active_tree_class]);
     }
   case T8_ECLASS_QUAD:
     switch (*degree) {
@@ -113,7 +113,7 @@ t8_geometry_lagrange::t8_geom_compute_basis (const double *ref_coords) const
       return t8_geometry_lagrange::t8_geom_q9_basis (ref_coords);
     default:
       SC_ABORTF ("Error: Lagrange geometry for degree %i %s not yet implemented. \n", *degree,
-               t8_eclass_to_string[active_tree_class]);
+                 t8_eclass_to_string[active_tree_class]);
     }
   case T8_ECLASS_HEX:
     switch (*degree) {
@@ -123,7 +123,7 @@ t8_geometry_lagrange::t8_geom_compute_basis (const double *ref_coords) const
       return t8_geometry_lagrange::t8_geom_h27_basis (ref_coords);
     default:
       SC_ABORTF ("Error: Lagrange geometry for degree %i %s not yet implemented. \n", *degree,
-               t8_eclass_to_string[active_tree_class]);
+                 t8_eclass_to_string[active_tree_class]);
     }
   default:
     SC_ABORTF ("Error: Lagrange geometry for eclass %s not yet implemented. \n",

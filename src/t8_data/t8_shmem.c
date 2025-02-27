@@ -56,8 +56,7 @@ t8_shmem_array_is_writing_possible (const t8_shmem_array_t array)
 int
 t8_shmem_array_is_initialized (const t8_shmem_array_t array)
 {
-  return (array != NULL && array->elem_size > 0 && array->array != NULL
-          && array->comm != sc_MPI_COMM_NULL);
+  return (array != NULL && array->elem_size > 0 && array->array != NULL && array->comm != sc_MPI_COMM_NULL);
 }
 #endif
 

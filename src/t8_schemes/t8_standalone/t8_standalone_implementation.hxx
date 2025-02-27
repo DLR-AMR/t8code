@@ -922,7 +922,7 @@ struct t8_standalone_scheme
       return;
     }
 
-    T8_ASSERT (id < (size_t)element_count_leaves(elem, level));
+    T8_ASSERT (id < (size_t) element_count_leaves (elem, level));
     T8_ASSERT (1 <= level && level <= T8_ELEMENT_MAXLEVEL[TEclass]);
     t8_standalone_element<TEclass> child;
 
@@ -1004,7 +1004,7 @@ struct t8_standalone_scheme
       }
       id += parent_id;
     }
-    T8_ASSERT (id < (size_t)element_count_leaves(elem, level));
+    T8_ASSERT (id < (size_t) element_count_leaves (elem, level));
     return id;
   }
 
@@ -1595,7 +1595,7 @@ struct t8_standalone_scheme
   static constexpr t8_linearidx_t
   num_descendants_at_leveldiff ([[maybe_unused]] const t8_element_t *elem, const t8_element_level leveldiff) noexcept
   {
-    T8_ASSERT(leveldiff <= get_maxlevel());
+    T8_ASSERT (leveldiff <= get_maxlevel ());
     if constexpr (TEclass == T8_ECLASS_PYRAMID) {
       SC_ABORT ("Not implemented yet.\n");
     }
