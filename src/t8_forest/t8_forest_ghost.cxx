@@ -90,7 +90,7 @@ typedef struct
 /* The hash function for the global tree hash.
  * As hash value we just return the global tree id. */
 static unsigned
-t8_ghost_gtree_hash_function (const void *ghost_gtree_hash, const void *data)
+t8_ghost_gtree_hash_function (const void *ghost_gtree_hash, [[maybe_unused]] const void *data)
 {
   const t8_ghost_gtree_hash_t *object = (const t8_ghost_gtree_hash_t *) ghost_gtree_hash;
 
@@ -101,7 +101,7 @@ t8_ghost_gtree_hash_function (const void *ghost_gtree_hash, const void *data)
  * Two t8_ghost_gtree_hash_t are considered equal if theit global tree ids are the same.
  */
 static int
-t8_ghost_gtree_equal_function (const void *ghost_gtreea, const void *ghost_gtreeb, const void *user)
+t8_ghost_gtree_equal_function (const void *ghost_gtreea, const void *ghost_gtreeb, [[maybe_unused]] const void *user)
 {
   const t8_ghost_gtree_hash_t *objecta = (const t8_ghost_gtree_hash_t *) ghost_gtreea;
   const t8_ghost_gtree_hash_t *objectb = (const t8_ghost_gtree_hash_t *) ghost_gtreeb;
@@ -112,7 +112,7 @@ t8_ghost_gtree_equal_function (const void *ghost_gtreea, const void *ghost_gtree
 
 /* The hash value for an entry of the process_offsets hash is the processes mpirank. */
 static unsigned
-t8_ghost_process_hash_function (const void *process_data, const void *user_data)
+t8_ghost_process_hash_function (const void *process_data, [[maybe_unused]] const void *user_data)
 {
   const t8_ghost_process_hash_t *process = (const t8_ghost_process_hash_t *) process_data;
 
@@ -122,7 +122,8 @@ t8_ghost_process_hash_function (const void *process_data, const void *user_data)
 /* The equal function for the process_offsets array.
  * Two entries are the same if their mpiranks are equal. */
 static int
-t8_ghost_process_equal_function (const void *process_dataa, const void *process_datab, const void *user)
+t8_ghost_process_equal_function (const void *process_dataa, const void *process_datab,
+                                 [[maybe_unused]] const void *user)
 {
   const t8_ghost_process_hash_t *processa = (const t8_ghost_process_hash_t *) process_dataa;
   const t8_ghost_process_hash_t *processb = (const t8_ghost_process_hash_t *) process_datab;
@@ -133,7 +134,7 @@ t8_ghost_process_equal_function (const void *process_dataa, const void *process_
 /* The hash function for the remote_ghosts hash table.
  * The hash value for an mpirank is just the rank */
 static unsigned
-t8_ghost_remote_hash_function (const void *remote_data, const void *user_data)
+t8_ghost_remote_hash_function (const void *remote_data, [[maybe_unused]] const void *user_data)
 {
   const t8_ghost_remote_t *remote = (const t8_ghost_remote_t *) remote_data;
 
@@ -143,7 +144,7 @@ t8_ghost_remote_hash_function (const void *remote_data, const void *user_data)
 /* The equal function for the remote hash table.
  * Two entries are the same if they have the same rank. */
 static int
-t8_ghost_remote_equal_function (const void *remote_dataa, const void *remote_datab, const void *user)
+t8_ghost_remote_equal_function (const void *remote_dataa, const void *remote_datab, [[maybe_unused]] const void *user)
 {
   const t8_ghost_remote_t *remotea = (const t8_ghost_remote_t *) remote_dataa;
   const t8_ghost_remote_t *remoteb = (const t8_ghost_remote_t *) remote_datab;
@@ -503,7 +504,8 @@ typedef struct
 
 static int
 t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                 const int is_leaf, const t8_element_array_t *leaves, const t8_locidx_t tree_leaf_index)
+                                 const int is_leaf, [[maybe_unused]] const t8_element_array_t *leaves,
+                                 const t8_locidx_t tree_leaf_index)
 {
   t8_forest_ghost_boundary_data_t *data = (t8_forest_ghost_boundary_data_t *) t8_forest_get_user_data (forest);
   int num_faces, iface, faces_totally_owned, level;
@@ -772,7 +774,6 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int gh
           size_t iowner;
           /* Construct the owners at the face of the neighbor element */
           t8_forest_element_owners_at_neigh_face (forest, itree, elem, iface, &owners);
-          T8_ASSERT (owners.elem_count >= 0);
           /* Iterate over all owners and if any is not the current process,
            * add this element as remote */
           for (iowner = 0; iowner < owners.elem_count; iowner++) {
@@ -932,8 +933,8 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost, sc_MPI_
 }
 
 static void
-t8_forest_ghost_send_end (t8_forest_t forest, t8_forest_ghost_t ghost, t8_ghost_mpi_send_info_t *send_info,
-                          sc_MPI_Request *requests)
+t8_forest_ghost_send_end ([[maybe_unused]] t8_forest_t forest, t8_forest_ghost_t ghost,
+                          t8_ghost_mpi_send_info_t *send_info, sc_MPI_Request *requests)
 {
   int num_remotes;
   int proc_pos, mpiret;
@@ -1131,7 +1132,7 @@ typedef struct t8_recv_list_entry_struct
 
 /* We hash these entries by their rank */
 unsigned
-t8_recv_list_entry_hash (const void *v1, const void *u)
+t8_recv_list_entry_hash (const void *v1, [[maybe_unused]] const void *u)
 {
   const t8_recv_list_entry_t *e1 = (const t8_recv_list_entry_t *) v1;
 
@@ -1140,7 +1141,7 @@ t8_recv_list_entry_hash (const void *v1, const void *u)
 
 /* two entries are considered equal if they have the same rank. */
 int
-t8_recv_list_entry_equal (const void *v1, const void *v2, const void *u)
+t8_recv_list_entry_equal (const void *v1, const void *v2, [[maybe_unused]] const void *u)
 {
   const t8_recv_list_entry_t *e1 = (const t8_recv_list_entry_t *) v1;
   const t8_recv_list_entry_t *e2 = (const t8_recv_list_entry_t *) v2;

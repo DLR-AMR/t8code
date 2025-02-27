@@ -117,8 +117,6 @@ t8_search_base::search_tree (const t8_locidx_t ltreeid)
   const t8_scheme *ts = t8_forest_get_scheme (this->forest);
   t8_element_array_t *leaf_elements = t8_forest_tree_get_leaves (this->forest, ltreeid);
 
-  /* assert for empty tree */
-  T8_ASSERT (t8_element_array_get_count (leaf_elements) >= 0);
   /* Get the first and last leaf of this tree */
   const t8_element_t *first_el = t8_element_array_index_locidx (leaf_elements, 0);
   const t8_element_t *last_el

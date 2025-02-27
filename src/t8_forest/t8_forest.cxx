@@ -275,7 +275,7 @@ t8_forest_min_nonempty_level (t8_cmesh_t cmesh, const t8_scheme *scheme)
 }
 
 int
-t8_forest_no_overlap (t8_forest_t forest)
+t8_forest_no_overlap ([[maybe_unused]] t8_forest_t forest)
 {
 #if T8_ENABLE_DEBUG
   T8_ASSERT (t8_forest_is_committed (forest));
@@ -1038,6 +1038,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
       }
     }
 #endif
+    [[fallthrough]];
   case T8_ECLASS_TRIANGLE: {
     /* We construct the normal as the cross product of two spanning
      * vectors for the triangle*/
@@ -3010,9 +3011,11 @@ t8_forest_comm_global_num_elements (t8_forest_t forest)
  * \return                  Always return 1, to refine every element
  */
 static int
-t8_forest_refine_everything (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                             t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme *scheme,
-                             const int is_family, const int num_elements, t8_element_t *elements[])
+t8_forest_refine_everything ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                             [[maybe_unused]] t8_locidx_t which_tree, [[maybe_unused]] t8_eclass_t tree_class,
+                             [[maybe_unused]] t8_locidx_t lelement_id, [[maybe_unused]] const t8_scheme *scheme,
+                             [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
+                             [[maybe_unused]] t8_element_t *elements[])
 {
 
   return 1;
@@ -3563,7 +3566,7 @@ static int
 t8_forest_compare_elem_tree (const void *lelement_id, const void *ltree)
 {
   t8_locidx_t leid = *(const t8_locidx_t *) lelement_id;
-  const t8_tree_t tree = (const t8_tree_t) ltree;
+  const t8_tree_t tree = (t8_tree_t) ltree;
 
   if (tree->elements_offset > leid) {
     /* We have to look further to the left */

@@ -34,7 +34,7 @@
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 
 /* Forward declaration of the scheme so we can use it as an argument in the eclass schemes function. */
-class t8_scheme;
+struct t8_scheme;
 
 /** The class holding a hexahedral element in the default scheme.
  * We make this definition public for interoperability of element classes.
@@ -373,8 +373,9 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
    * \note \a elem1 and \a elem2 may point to the same element.
    */
   void
-  element_transform_face (const t8_element_t *elem1, t8_element_t *elem2, int orientation, int sign,
-                          int is_smaller_face) const
+  element_transform_face ([[maybe_unused]] const t8_element_t *elem1, [[maybe_unused]] t8_element_t *elem2,
+                          [[maybe_unused]] int orientation, [[maybe_unused]] int sign,
+                          [[maybe_unused]] int is_smaller_face) const
   {
     SC_ABORT ("This function is not implemented yet.\n");
     return; /* suppresses compiler warning */
