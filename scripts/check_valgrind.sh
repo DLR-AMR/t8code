@@ -20,6 +20,11 @@
 #  along with t8code; if not, write to the Free Software Foundation, Inc.,
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
+#
+# This script runs Valgrind on an input binary paths with specified memory leak detection flags. 
+# The Valgrind output is parsed. If any errors are found, they are printed and the script exits with a status of 1.
+#
+
 # Check that an argument is given and that the argument is a file
 # Check if argument given
 if [ ${1-x} = x ]
@@ -45,21 +50,26 @@ else
   fi
 fi
 
-# Write valgrind output to variable OUTPUT_FILE
+# Write valgrind output to variable OUTPUT_FILE.
 OUTPUT_FILE="valgrind-output.log"
 # Set valgrind flags.
-VALGRIND_FLAGS="--leak-check=full --track-origins=yes --read-var-info=yes --trace-children=yes"
-VALGRIND_FLAGS="$VALGRIND_FLAGS --show-leak-kinds=all --read-inline-info=yes --errors-for-leak-kinds=all"
-VALGRIND_FLAGS="$VALGRIND_FLAGS --expensive-definedness-checks=yes --gen-suppressions=all --redzone-size=16"
-VALGRIND_FLAGS="$VALGRIND_FLAGS --track-fds=yes"
+VALGRIND_FLAGS="--leak-check=full --track-origins=yes \
+    --trace-children=yes --show-leak-kinds=definite,indirect,possible \
+    --errors-for-leak-kinds=definite,indirect,possible"
+# There are some more flags that can be reasonable to use, e.g., for debugging reasons if you found an error.
+# We used minimal flags for performance reasons.
+# Further flags include (but of course are not limited to): --expensive-definedness-checks=yes --track-fds=yes
+# For more detailed outputs: -read-var-info=yes --read-inline-info=yes --gen-suppressions=all
+# Warning: --show-leak-kinds=all will find a lot of still reachable leaks. This is not necessarily a problem.
 
 # Run valgrind on given file with flags and write output to OUTPUT_FILE.
 valgrind $VALGRIND_FLAGS "${FILE}" 2>"${OUTPUT_FILE}"
 
-# Parse valgrind output
+# Parse valgrind output.
 declare -a VALGRIND_RULES=(
         "^==.*== .* bytes in .* blocks are definitely lost in loss record .* of .*$"
-        "^==.*== .* bytes in .* blocks are still reachable in loss record .* of .*$"
+        "^==.*== .* bytes in .* blocks are indirectly lost in loss record .* of .*$"
+        "^==.*== .* bytes in .* blocks are possibly lost in loss record .* of .*$"
         "^==.*== Invalid .* of size .*$"
         "^==.*== Open file descriptor .*: .*$"
         "^==.*== Invalid free() / delete / delete\[\] / realloc()$"
@@ -73,25 +83,39 @@ declare -a VALGRIND_RULES=(
 report_id=1
 status=0
 error=""
-kind="error"
+echo ""
 
 while IFS= read -r line; do
     if [[ "${error}" != "" ]]; then
+        # Error message of valgrind always end with a line ==.*== without any further information.
+        # Only print if we collected every line of the error message.
         if [[ $(echo "${line}" | grep '^==.*== $') ]]; then
-            echo "::${kind} title=Valgrind Report '${FILE}' (${report_id})::${error}"
+            echo "::Error found in valgrind report '${FILE}' (${report_id})::"
+            echo -e "${error}"
+            echo ""
             report_id=$(( $report_id + 1 ))
             error=""
             status=1
         else
-            error="${error}%0A${line}"
+            # Add to error message that is printed with the last line of the error.
+            error="${error}\n${line}"
         fi
     fi
     for rule in "${VALGRIND_RULES[@]}"; do
+        # Check if we found one of the errors defined in VALGRIND_RULES.
         if [[ $(echo "${line}" | grep "${rule}") ]]; then
             error="${line}"
             break
         fi
     done
+    if [[ $(echo "${line}" | grep '^==.*== ERROR SUMMARY:') ]]; then
+        if ! [[ $(echo "${line}" | grep '^==.*== ERROR SUMMARY: 0 ') ]]; then
+            # Set status to 1 if an error was found that is not included in VALGRIND_RULES.
+            status=1
+        fi
+        echo "${line}"
+    fi
 done < "${OUTPUT_FILE}"
+
 rm -f "${OUTPUT_FILE}"
 exit "${status}"
