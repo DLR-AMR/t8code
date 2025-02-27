@@ -1586,8 +1586,6 @@ struct t8_standalone_scheme
   static constexpr t8_linearidx_t
   num_descendants_at_leveldiff (const t8_element_t *elem, const t8_element_level leveldiff) noexcept
   {
-    if (leveldiff < 0)
-      return 0;
     if constexpr (TEclass == T8_ECLASS_PYRAMID) {
       SC_ABORT ("Not implemented yet.\n");
     }
