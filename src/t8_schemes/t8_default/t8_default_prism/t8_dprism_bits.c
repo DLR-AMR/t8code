@@ -304,7 +304,7 @@ t8_dprism_get_face_corner (int face, int corner)
 }
 
 void
-t8_dprism_childrenpv (const t8_dprism_t *p, int length, t8_dprism_t *c[])
+t8_dprism_childrenpv (const t8_dprism_t *p, __attribute__ ((unused)) int length, t8_dprism_t *c[])
 {
   int i;
   T8_ASSERT (length == T8_DPRISM_CHILDREN);
@@ -323,8 +323,8 @@ t8_dprism_ancestor_id (t8_dprism_t *p, int level)
 const int children_at_face[2][12] = { { 1, 3, 5, 7, 0, 3, 4, 7, 0, 1, 4, 5 }, { 2, 3, 6, 7, 0, 3, 4, 7, 0, 2, 4, 6 } };
 
 void
-t8_dprism_children_at_face (const t8_dprism_t *p, int face, t8_dprism_t **children, int num_children,
-                            int *child_indices)
+t8_dprism_children_at_face (const t8_dprism_t *p, int face, t8_dprism_t **children,
+                            __attribute__ ((unused)) int num_children, int *child_indices)
 {
   T8_ASSERT (num_children == t8_dprism_num_face_children (face));
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
