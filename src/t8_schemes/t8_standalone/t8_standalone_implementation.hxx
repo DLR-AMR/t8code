@@ -1004,7 +1004,7 @@ struct t8_standalone_scheme
       }
       id += parent_id;
     }
-    T8_ASSERT (id < (size_t) element_count_leaves (elem, level));
+    T8_ASSERT (id < (size_t) element_count_leaves ((t8_element_t *) &ancestor, level));
     return id;
   }
 
