@@ -564,7 +564,7 @@ t8_forest_ghost_search_vertex_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
 
 static int
 t8_forest_ghost_search_face_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                      const int is_leaf, const [[maybe_unused]] t8_element_array_t *leaves,
+                                      const int is_leaf, [[maybe_unused]] const t8_element_array_t *leaves,
                                       const t8_locidx_t tree_leaf_index)
 {
   t8_forest_ghost_boundary_data_t *data = (t8_forest_ghost_boundary_data_t *) t8_forest_get_user_data (forest);
