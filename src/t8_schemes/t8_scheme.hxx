@@ -41,6 +41,8 @@
 #include <t8_schemes/t8_default/t8_default_tet/t8_default_tet.hxx>
 #include <t8_schemes/t8_default/t8_default_prism/t8_default_prism.hxx>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone_implementation.hxx>
 #include <string>
 #if T8_ENABLE_DEBUG
 // Only needed for t8_debug_print_type
@@ -92,7 +94,11 @@ class t8_scheme {
                                 t8_default_scheme_hex,
                                 t8_default_scheme_tet,
                                 t8_default_scheme_prism,
-                                t8_default_scheme_pyramid
+                                t8_default_scheme_pyramid,
+                                t8_standalone_scheme<T8_ECLASS_VERTEX>,
+                                t8_standalone_scheme<T8_ECLASS_LINE>,
+                                t8_standalone_scheme<T8_ECLASS_QUAD>,
+                                t8_standalone_scheme<T8_ECLASS_HEX>
                                 >;
   /* clang-format on */
 

@@ -49,7 +49,7 @@ example_set *cmesh_example
                                                        decltype (cmesh_params::my_comms.begin ())> (
     std::make_pair (cmesh_params::eclasses.begin (), cmesh_params::eclasses.end ()),
     std::make_pair (cmesh_params::my_comms.begin (), cmesh_params::my_comms.end ()), new_from_class_wrapper,
-    print_function, "t8_cmesh_new_from_class_");
+    print_function, "t8_cmesh_new_from_class");
 
 }  // namespace new_from_class
 

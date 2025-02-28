@@ -25,7 +25,7 @@
  * This is step4 of the t8code tutorials.
  * After generating a coarse mesh (step1), building a uniform forest
  * on it (step2) and adapting this forest (step3) 
- * we will now lear how to control the forest creation in more detail,
+ * we will now learn how to control the forest creation in more detail,
  * how to partition and balance a forest and how to generate a layer of ghost elements.
  * 
  * Partition: Each forest is distributed among the MPI processes. Partitioning a forest means
@@ -245,6 +245,8 @@ t8_step4_main (int argc, char **argv)
   t8_step3_print_forest_information (forest);
   /* Write forest to vtu files. */
   t8_forest_write_vtk_ext (forest, prefix_partition_ghost, 1, 1, 1, 1, 1, 0, 1, 0, NULL);
+  t8_global_productionf (" [step4] Wrote repartitioned forest with ghost layer to vtu files: %s*\n",
+                         prefix_partition_ghost);
 
   /*
    * clean-up
