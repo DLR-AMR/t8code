@@ -34,7 +34,7 @@
 #include <t8_schemes/t8_default/t8_default_line/t8_dline_bits.h>
 
 /* Forward declaration of the scheme so we can use it as an argument in the eclass schemes function. */
-struct t8_scheme;
+class t8_scheme;
 
 /** Provide an implementation for the line element class.
  * It is written as a self-contained library in the t8_dline_* files.
