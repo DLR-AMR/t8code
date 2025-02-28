@@ -1170,6 +1170,24 @@ struct t8_standalone_scheme
     }
   }
 
+  // ################################################____VERTEX____################################################
+
+  inline void
+  element_vertex_neighbors (const t8_element_t *element, const int vertex, int *num_neighbors, t8_element_t **neighbors,
+                            int *neigh_ivertices) const
+  {
+    SC_ABORT_NOT_REACHED ();
+  }
+  inline void
+  element_corner_descendant (const t8_element_t *element, int vertex, int level, t8_element_t *descendant) const
+  {
+    SC_ABORT_NOT_REACHED ();
+  }
+  inline int
+  element_max_num_vertex_neighbors () const
+  {
+    SC_ABORT_NOT_REACHED ();
+  }
   // ################################################____MEMORY____################################################
 
   /** Allocate memory for an array of elements of a given class and initialize them.
