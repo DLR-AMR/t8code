@@ -526,7 +526,7 @@ t8_offset_range_send (const int start, const int end, const int mpirank, const t
 }
 
 void
-t8_offset_print (const t8_shmem_array_t offset, sc_MPI_Comm comm)
+t8_offset_print (__attribute__ ((unused)) const t8_shmem_array_t offset, __attribute__ ((unused)) sc_MPI_Comm comm)
 {
 #if T8_ENABLE_DEBUG
   char buf[BUFSIZ] = "| ";

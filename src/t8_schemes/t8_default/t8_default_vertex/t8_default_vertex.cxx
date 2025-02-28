@@ -310,11 +310,10 @@ t8_default_scheme_vertex::element_get_reference_coords ([[maybe_unused]] const t
 
 #ifdef T8_ENABLE_DEBUG
 int
-t8_default_scheme_vertex::element_is_valid (const t8_element_t *elem)
+t8_default_scheme_vertex::element_is_valid ([[maybe_unused]] const t8_element_t *elem)
 
 {
   return 1;
-  //return 0<=level && level <= maxlevel
 }
 
 void

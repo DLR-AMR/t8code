@@ -794,7 +794,8 @@ t8_dtri_nearest_common_ancestor (const t8_dtri_t *t1, const t8_dtri_t *t2, t8_dt
 }
 
 void
-t8_dtri_children_at_face (const t8_dtri_t *tri, int face, t8_dtri_t *children[], int num_children, int *child_indices)
+t8_dtri_children_at_face (const t8_dtri_t *tri, int face, t8_dtri_t *children[],
+                          __attribute__ ((unused)) int num_children, int *child_indices)
 {
   int child_ids_local[T8_DTRI_FACE_CHILDREN], i, *child_ids;
 
@@ -830,7 +831,7 @@ t8_dtri_children_at_face (const t8_dtri_t *tri, int face, t8_dtri_t *children[],
 }
 
 int
-t8_dtri_tree_face (t8_dtri_t *t, int face)
+t8_dtri_tree_face (__attribute__ ((unused)) t8_dtri_t *t, int face)
 {
   T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
   /* TODO: Assert if boundary */
@@ -869,7 +870,7 @@ t8_dtri_tree_face (t8_dtri_t *t, int face)
 }
 
 int
-t8_dtri_root_face_to_face (t8_dtri_t *t, int root_face)
+t8_dtri_root_face_to_face (__attribute__ ((unused)) t8_dtri_t *t, int root_face)
 {
   T8_ASSERT (0 <= root_face && root_face < T8_DTRI_FACES);
 #ifndef T8_DTRI_TO_DTET
@@ -910,7 +911,8 @@ t8_dtri_root_face_to_face (t8_dtri_t *t, int root_face)
 }
 
 int
-t8_dtri_face_child_face (const t8_dtri_t *triangle, int face, int face_child)
+t8_dtri_face_child_face (__attribute__ ((unused)) const t8_dtri_t *triangle, int face,
+                         __attribute__ ((unused)) int face_child)
 {
   T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
   T8_ASSERT (0 <= face_child && face_child < T8_DTRI_FACE_CHILDREN);
