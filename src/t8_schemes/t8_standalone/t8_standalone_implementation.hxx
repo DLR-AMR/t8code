@@ -994,6 +994,7 @@ struct t8_standalone_scheme
   element_transform_face (const t8_element_t *elem1, t8_element_t *elem2, int orientation, const int sign,
                           const int is_smaller_face) noexcept
   {
+    /* This function has an explicit template specialization outside of t8_standalone_scheme*/
     SC_ABORT ("Not implemented for this eclass.\n");
   }
 
@@ -1028,10 +1029,6 @@ struct t8_standalone_scheme
     case T8_ECLASS_QUAD:
       T8_ASSERT (t8_standalone_scheme<T8_ECLASS_QUAD>::element_is_valid (face));
       return extrude_face<T8_ECLASS_QUAD> ((t8_standalone_element<T8_ECLASS_QUAD> *) face, elem, root_face);
-      break;
-    case T8_ECLASS_HEX:
-      T8_ASSERT (t8_standalone_scheme<T8_ECLASS_HEX>::element_is_valid (face));
-      return extrude_face<T8_ECLASS_HEX> ((t8_standalone_element<T8_ECLASS_HEX> *) face, elem, root_face);
       break;
     default:
       if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
@@ -1070,9 +1067,6 @@ struct t8_standalone_scheme
       break;
     case T8_ECLASS_QUAD:
       compute_boundary_face<T8_ECLASS_QUAD> (elem, root_face, (t8_standalone_element<T8_ECLASS_QUAD> *) boundary);
-      break;
-    case T8_ECLASS_HEX:
-      compute_boundary_face<T8_ECLASS_HEX> (elem, root_face, (t8_standalone_element<T8_ECLASS_HEX> *) boundary);
       break;
     default:
       if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
@@ -1934,26 +1928,29 @@ struct t8_standalone_scheme
     T8_ASSERT (element_is_valid (elem));
     const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
 
+    /* Avoid porblmes for unneeded instantiations*/
     if constexpr (T8_ELEMENT_DIM[face_TEclass] >= T8_ELEMENT_DIM[TEclass]) {
       return;
     }
 
-    boundary->level = el->level;
-    /* Delete the coordinate orthogonal to the given face and combine the remaining coordinates*/
-    for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
-      const int ifacedim = get_facedim (idim, root_face);
+    else {
+      boundary->level = el->level;
+      /* Delete the coordinate orthogonal to the given face and combine the remaining coordinates*/
+      for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
+        const int ifacedim = get_facedim (idim, root_face);
 
-      if (ifacedim != -1) {
-        /** Currently this part of the code is also compiled for vertices and faces of higher dim than the element. 
-       * This leads to invalid shift inputs.*/
-        if constexpr (face_TEclass != T8_ECLASS_VERTEX && T8_ELEMENT_DIM[face_TEclass] < T8_ELEMENT_DIM[TEclass]) {
-          /** Set the boundary coordinates to the corresponding coordinates of the element,  
+        if (ifacedim != -1) {
+          /** Currently this part of the code is also compiled for vertices and faces of higher dim than the element. 
+          * This leads to invalid shift inputs.*/
+          if constexpr (face_TEclass != T8_ECLASS_VERTEX) {
+            /** Set the boundary coordinates to the corresponding coordinates of the element,  
            * adjusted to the maxlevel of the face-scheme*/
-          boundary->coords[ifacedim] = el->coords[idim]
-                                       << (T8_ELEMENT_MAXLEVEL[face_TEclass] - T8_ELEMENT_MAXLEVEL[TEclass]);
-        }
-        else {
-          SC_ABORT_NOT_REACHED ();
+            boundary->coords[ifacedim] = el->coords[idim]
+                                         << (T8_ELEMENT_MAXLEVEL[face_TEclass] - T8_ELEMENT_MAXLEVEL[TEclass]);
+          }
+          else {
+            SC_ABORT_NOT_REACHED ();
+          }
         }
       }
     }
@@ -1989,30 +1986,32 @@ struct t8_standalone_scheme
       return -1;
     }
 
-    el->level = face->level;
-    for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
-      const int ifacedim = get_facedim (idim, root_face);
+    else {
+      el->level = face->level;
+      for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
+        const int ifacedim = get_facedim (idim, root_face);
 
-      if (ifacedim != -1) {
-        /** Currently this part of the code is also compiled for vertices and faces of higher dim than the element.*/
-        if constexpr (face_TEclass != T8_ECLASS_VERTEX && T8_ELEMENT_DIM[face_TEclass] < T8_ELEMENT_DIM[TEclass]) {
-          /* Set the element coordinates to the corresponding coordinates of the face, adjusted to the maxlevel of the element-scheme*/
-          el->coords[idim]
-            = face->coords[ifacedim] >> (T8_ELEMENT_MAXLEVEL[face_TEclass] - T8_ELEMENT_MAXLEVEL[TEclass]);
+        if (ifacedim != -1) {
+          /** Currently this part of the code is also compiled for vertices and faces of higher dim than the element.*/
+          if constexpr (face_TEclass != T8_ECLASS_VERTEX) {
+            /* Set the element coordinates to the corresponding coordinates of the face, adjusted to the maxlevel of the element-scheme*/
+            el->coords[idim]
+              = face->coords[ifacedim] >> (T8_ELEMENT_MAXLEVEL[face_TEclass] - T8_ELEMENT_MAXLEVEL[TEclass]);
+          }
+          else {
+            SC_ABORT_NOT_REACHED ();
+          }
         }
         else {
-          SC_ABORT_NOT_REACHED ();
-        }
-      }
-      else {
-        /* Set the coordinate orthogonal to the face.*/
-        if (root_face_is_1_boundary (root_face)) {
-          /* Anchor coordinate is its own length smaller than the length of the root element.*/
-          el->coords[idim] = get_root_len () - element_get_len (el->level);
-        }
-        else {
-          /* If root_face is a 0 boundary the anchor coordinate is 0.*/
-          el->coords[idim] = 0;
+          /* Set the coordinate orthogonal to the face.*/
+          if (root_face_is_1_boundary (root_face)) {
+            /* Anchor coordinate is its own length smaller than the length of the root element.*/
+            el->coords[idim] = get_root_len () - element_get_len (el->level);
+          }
+          else {
+            /* If root_face is a 0 boundary the anchor coordinate is 0.*/
+            el->coords[idim] = 0;
+          }
         }
       }
     }
