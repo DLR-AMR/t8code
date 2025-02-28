@@ -21,7 +21,8 @@
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 #
-# This file lists all binary paths to test files. This can be used to run the check_valgrind script for every test binary. 
+# This file lists all binary paths to test files except the tests for the api.
+# The script can be used to run the check_valgrind script for every test binary. 
 # The CMakeLists.txt file in the test folder is used to generate the list of binary paths.
 # The paths are relative paths assuming an execution from the current folder to a build folder in the main t8code folder.
 #
@@ -62,7 +63,10 @@ while IFS= read -r line; do
     fi
     # Set correct path and add it to the list.
     name="../build/test/${name}"
-    test_bin_paths="${test_bin_paths} ${name}"
+    # Do not include api in the binary paths as we do not want to check them with valgrind.
+    if ! [[ "$name" =~ "/api/" ]]; then
+      test_bin_paths="${test_bin_paths} ${name}"
+    fi
   fi
 done < "$cmake_file"
 
