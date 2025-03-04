@@ -640,7 +640,7 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
  * \param [in,out] elem   The element to be filled with root.
  */
   void
-  get_root (t8_element_t *elem) const;
+  set_to_root (t8_element_t *elem) const;
 
   /** Pack multiple elements into contiguous memory, so they can be sent via MPI.
    * \param [in] elements Array of elements that are to be packed

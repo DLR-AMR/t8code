@@ -39,7 +39,7 @@ class face_neigh: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
     scheme->element_new (eclass, 1, &element);
     scheme->element_new (eclass, 1, &child);
     scheme->element_new (eclass, 1, &neigh);
-    scheme->get_root (eclass, element);
+    scheme->set_to_root (eclass, element);
   }
 
   void
