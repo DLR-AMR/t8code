@@ -40,13 +40,18 @@ class forest_iterate: public testing::TestWithParam<cmesh_example_base *> {
   void
   SetUp () override
   {
+#if T8CODE_TEST_LEVEL >= 2
+    constexpr int level = 3;
+#else
+    constexpr int level = 4;
+#endif
     t8_cmesh_t cmesh = GetParam ()->cmesh_create ();
     if (t8_cmesh_is_empty (cmesh)) {
       /* empty cmeshes are currently not supported */
       t8_cmesh_unref (&cmesh);
       GTEST_SKIP ();
     }
-    forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), 4, 0, sc_MPI_COMM_WORLD);
+    forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, sc_MPI_COMM_WORLD);
   }
   void
   TearDown () override
