@@ -83,6 +83,10 @@ jobs:
             echo "Draft PR with '[run ci]' in the latest commit message, proceeding with CI."
             echo "RUN_CI=true" >> $GITHUB_OUTPUT
             exit 0
+          elif [[ "${{github.event.pull_request.ready_for_review}}" == "true" ]]; then
+            echo "PR ready for review, proceeding with CI."
+            echo "RUN_CI=true" >> $GITHUB_OUTPUT
+            exit 0
           else
             echo "Draft PR without '[run ci]' in the latest commit message, skipping CI."
             echo "RUN_CI=false" >> $GITHUB_OUTPUT
