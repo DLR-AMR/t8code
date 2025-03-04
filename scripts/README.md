@@ -18,19 +18,19 @@ Sometimes `t8indent` does produce undesired results. Therefore, after indenting 
 
 This script should be copied to your `.git/hooks` folder. `git` then automatically checks the indentation of committed files and prevents you from committing wrongly indented files. See [Git indentation workflow](https://github.com/DLR-AMR/t8code/wiki/Coding-Guideline#git-indentation-workflow).
 
-#### check_if_file_indented.scp
+#### check_if_file_indented.sh
 
 Check for a single source file whether it is indented according to `t8indent`.
 
-#### check_if_all_files_indented.scp
+#### check_if_all_files_indented.sh
 
 Check whether all t8code source files are properly indented.
 
-#### indent_all_files.scp
+#### indent_all_files.sh
 
 This script indents all t8code source files at once. This script should only be used by the main developers of t8code. Handle with care.
 
-#### find_all_source_files.scp
+#### find_all_source_files.sh
 
 List all source files of t8code in the `src/` `example/` and `test/` subfolders.
 
