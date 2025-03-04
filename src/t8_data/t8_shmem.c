@@ -56,8 +56,7 @@ t8_shmem_array_is_writing_possible (const t8_shmem_array_t array)
 int
 t8_shmem_array_is_initialized (const t8_shmem_array_t array)
 {
-  return (array != NULL && array->elem_size > 0 && array->elem_count >= 0 && array->array != NULL
-          && array->comm != sc_MPI_COMM_NULL);
+  return (array != NULL && array->elem_size > 0 && array->array != NULL && array->comm != sc_MPI_COMM_NULL);
 }
 #endif
 
@@ -465,7 +464,7 @@ t8_shmem_array_index (t8_shmem_array_t array, size_t index)
 {
   T8_ASSERT (t8_shmem_array_is_initialized (array));
   T8_ASSERT (!t8_shmem_array_is_writing_possible (array));
-  T8_ASSERT (0 <= index && index < array->elem_count);
+  T8_ASSERT (index < array->elem_count);
 
   return ((char *) array->array) + index * array->elem_size;
 }
@@ -475,7 +474,7 @@ t8_shmem_array_index_for_writing (t8_shmem_array_t array, size_t index)
 {
   T8_ASSERT (t8_shmem_array_is_initialized (array));
   T8_ASSERT (t8_shmem_array_is_writing_possible (array));
-  T8_ASSERT (0 <= index && index < array->elem_count);
+  T8_ASSERT (index < array->elem_count);
 
   return ((char *) array->array) + index * array->elem_size;
 }

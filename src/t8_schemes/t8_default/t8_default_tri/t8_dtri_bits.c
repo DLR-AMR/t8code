@@ -1456,7 +1456,7 @@ t8_dtri_init_linear_id_with_level (t8_dtri_t *t, t8_linearidx_t id, const int st
   t8_linearidx_t local_index;
   t8_dtri_cube_id_t cid;
   t8_dtri_type_t type;
-  T8_ASSERT (0 <= id && id <= ((t8_linearidx_t) 1) << (T8_DTRI_DIM * end_level));
+  T8_ASSERT (id <= ((t8_linearidx_t) 1) << (T8_DTRI_DIM * end_level));
   /*Ensure, that the function is called with a valid element */
   T8_ASSERT (t->level == start_level);
   T8_ASSERT (t8_dtri_is_valid (t));
@@ -1490,7 +1490,7 @@ t8_dtri_init_linear_id (t8_dtri_t *t, t8_linearidx_t id, int level)
   t8_linearidx_t local_index;
   t8_dtri_cube_id_t cid;
   t8_dtri_type_t type;
-  T8_ASSERT (0 <= id && id <= ((t8_linearidx_t) 1) << (T8_DTRI_DIM * level));
+  T8_ASSERT (id <= ((t8_linearidx_t) 1) << (T8_DTRI_DIM * level));
 
   t->level = level;
   t->x = 0;

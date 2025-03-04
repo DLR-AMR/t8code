@@ -47,11 +47,14 @@ get_vertices_ids (const t8_eclass_t eclass, int vertices_ids[T8_ECLASS_MAX_CORNE
     vertices_ids[5] = 5;
     vertices_ids[6] = 6;
     vertices_ids[7] = 7;
+    [[fallthrough]];
   case T8_ECLASS_QUAD:
     vertices_ids[3] = 3;
     vertices_ids[2] = 2;
+    [[fallthrough]];
   case T8_ECLASS_LINE:
     vertices_ids[1] = 1;
+    [[fallthrough]];
   case T8_ECLASS_VERTEX:
     vertices_ids[0] = 0;
     break;
@@ -59,6 +62,7 @@ get_vertices_ids (const t8_eclass_t eclass, int vertices_ids[T8_ECLASS_MAX_CORNE
     vertices_ids[3] = 4;
     vertices_ids[4] = 5;
     vertices_ids[5] = 7;
+    [[fallthrough]];
   case T8_ECLASS_TRIANGLE:
     vertices_ids[0] = 0;
     vertices_ids[1] = 1;
