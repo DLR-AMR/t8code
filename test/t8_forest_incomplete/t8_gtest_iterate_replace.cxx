@@ -40,7 +40,7 @@ class forest_iterate: public testing::TestWithParam<cmesh_example_base *> {
   void
   SetUp () override
   {
-#if T8CODE_TEST_LEVEL >= 2
+#if T8CODE_TEST_LEVEL >= 1
     constexpr int level = 3;
 #else
     constexpr int level = 4;
@@ -226,11 +226,8 @@ t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn, int do_ada
 
 TEST_P (forest_iterate, test_iterate_replace)
 {
-#if T8CODE_TEST_LEVEL >= 1
-  const int runs = 1;
-#else
   const int runs = 2;
-#endif
+
   for (int run = 0; run < runs; run++) {
     t8_locidx_t num_elements = t8_forest_get_local_num_elements (forest);
     int *adapt_callbacks = T8_ALLOC (int, num_elements);
@@ -249,11 +246,9 @@ TEST_P (forest_iterate, test_iterate_replace)
 
     t8_forest_iterate_replace (forest_adapt, forest, t8_forest_replace);
     t8_forest_unref (&forest);
-    if (runs > 1) {
-      /* Partition the forest. This is useful,
-      * if we run the test a second time with the adapted forest. */
-      forest_adapt = t8_adapt_forest (forest_adapt, NULL, 0, 1, NULL);
-    }
+
+    /* Partition the forest. This is useful as preparation for the second run with the adapted forest. */
+    forest_adapt = t8_adapt_forest (forest_adapt, NULL, 0, 1, NULL);
 
     T8_FREE (adapt_callbacks);
     forest = forest_adapt;
