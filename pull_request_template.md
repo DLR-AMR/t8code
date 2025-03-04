@@ -23,8 +23,14 @@ If the Pull request introduces code that is not covered by the github action (fo
   - [ ] Should this use case be added to the github action?
   - [ ] If not, does the specific use case compile and all tests pass (check manually).
 #### Scripts and Wiki
-- [ ] If a new directory with source files is added, it must be covered by the `script/find_all_source_files.scp` to check the indentation of these files.
-- [ ] If this PR introduces a new feature, it must be covered in an example or tutorial and a Wiki article.
+
+- [ ] If a new directory with source-files is added, it must be covered by the `script/find_all_source_files.sh` to check the indentation of these files.
+- [ ] If this PR introduces a new feature, it must be covered in an example/tutorial and a Wiki article.
+
+#### License
+
+- [ ] The author added a BSD statement to `doc/` (or already has one)
+
 #### Tag Label
 - [ ] The author added the patch/minor/major label in accordance to semantic versioning.
 #### License

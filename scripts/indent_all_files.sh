@@ -43,7 +43,7 @@ fi
 
 # Find all files with the appropriate suffix.
 # Excluding the sc/ and p4est/ subfolders.
-files=`./find_all_source_files.scp`
+files=`./find_all_source_files.sh`
 
 notallindented=0
 
