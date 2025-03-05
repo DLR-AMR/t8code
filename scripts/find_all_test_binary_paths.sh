@@ -64,7 +64,7 @@ while IFS= read -r line; do
     
     # Do not include api in the binary paths as we do not want to check them with valgrind.
     if ! [[ "$name" =~ "/api/" ]]; then
-      test_bin_paths="${test_bin_paths} ${name}"
+      test_bin_paths="${test_bin_paths} ./${name}"
     fi
   fi
 done < "$cmake_file"
