@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2024 the developers
+  Copyright (C) 2025 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -117,7 +117,7 @@ t8_cmesh_new_periodic_tri_wrap (sc_MPI_Comm *Ccomm)
 t8_forest_t
 t8_forest_new_uniform_default (t8_cmesh_t cmesh, int level, int do_face_ghost, sc_MPI_Comm *comm)
 {
-  t8_scheme_c *default_scheme = t8_scheme_new_default ();
+  const t8_scheme_c *default_scheme = t8_scheme_new_default ();
 
   T8_ASSERT (comm != NULL);
   return t8_forest_new_uniform (cmesh, default_scheme, level, do_face_ghost, *comm);

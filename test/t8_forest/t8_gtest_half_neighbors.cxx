@@ -32,17 +32,17 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
-#include <test/t8_gtest_macros.hxx>
+#include <test/t8_gtest_schemes.hxx>
 
-class forest_half_neighbors: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
+class forest_half_neighbors: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass>, int>> {
  protected:
   void
   SetUp () override
   {
-    eclass = std::get<0> (GetParam ());
+    const int scheme_id = std::get<0> (std::get<0> (GetParam ()));
+    scheme = create_from_scheme_id (scheme_id);
+    eclass = std::get<1> (std::get<0> (GetParam ()));
     cmesh_type = std::get<1> (GetParam ());
-
-    default_scheme = t8_scheme_new_default ();
     /* Construct a coarse mesh of one tree */
     cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
   }
@@ -50,7 +50,7 @@ class forest_half_neighbors: public testing::TestWithParam<std::tuple<t8_eclass,
   t8_eclass_t eclass;
   int cmesh_type;
   t8_cmesh_t cmesh;
-  t8_scheme *default_scheme;
+  const t8_scheme *scheme;
   t8_element_t *neighbor;
 };
 
@@ -88,8 +88,7 @@ TEST_P (forest_half_neighbors, test_half_neighbors)
   /* initialize the array of owners to store ints */
   sc_array_init (&owners, sizeof (int));
   /* Build a uniform forest */
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, default_scheme, level, 0, sc_MPI_COMM_WORLD);
-  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
   /* iterate over all elements */
   for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++) {
     for (t8_locidx_t ielement = 0; ielement < t8_forest_get_tree_num_elements (forest, itree); ielement++) {
@@ -135,4 +134,4 @@ TEST_P (forest_half_neighbors, test_half_neighbors)
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_half_neighbors, forest_half_neighbors,
-                          testing::Combine (AllEclasses, testing::Range (0, 3)));
+                          testing::Combine (DefaultScheme, testing::Range (0, 3)));

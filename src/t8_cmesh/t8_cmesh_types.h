@@ -92,25 +92,25 @@ typedef struct t8_cmesh
 
   int set_partition;  /**< If nonzero the cmesh is partitioned.
                                             If zero each process has the whole cmesh. */
-  int face_knowledge; /**< If partitioned the level of face knowledge that is expected. \ref t8_mesh_set_partitioned;
+  int face_knowledge; /**< If partitioned the level of face knowledge that is expected. \ref t8_cmesh_set_partitioned;
                             see \ref t8_cmesh_set_partition.
 */
 
-  t8_scheme_c *set_partition_scheme; /**< If the cmesh is to be partitioned according to a uniform level,
+  const t8_scheme_c *set_partition_scheme; /**< If the cmesh is to be partitioned according to a uniform level,
                                                 the scheme that describes the refinement pattern. See \ref t8_cmesh_set_partition. */
-  int8_t set_partition_level;        /**< Non-negative if the cmesh should be partitioned from an already existing cmesh
+  int8_t set_partition_level;  /**< Non-negative if the cmesh should be partitioned from an already existing cmesh
                                          with an assumed \a level uniform mesh underneath. */
-  struct t8_cmesh *set_from;         /**< If this cmesh shall be derived from an
+  struct t8_cmesh *set_from;   /**< If this cmesh shall be derived from an
                                   existing cmesh by copy or more elaborate
                                   modification, we store a pointer to this
                                   other cmesh here. */
-  int mpirank;                       /**< Number of this MPI process. */
-  int mpisize;                       /**< Number of MPI processes. */
-  t8_refcount_t rc;                  /**< The reference count of the cmesh. */
-  t8_gloidx_t num_trees;             /**< The global number of trees */
-  t8_locidx_t num_local_trees;       /**< If partitioned the number of trees on this process. 
+  int mpirank;                 /**< Number of this MPI process. */
+  int mpisize;                 /**< Number of MPI processes. */
+  t8_refcount_t rc;            /**< The reference count of the cmesh. */
+  t8_gloidx_t num_trees;       /**< The global number of trees */
+  t8_locidx_t num_local_trees; /**< If partitioned the number of trees on this process. 
                                     Otherwise the global number of trees. */
-  t8_locidx_t num_ghosts;            /**< If partitioned the number of neighbor trees
+  t8_locidx_t num_ghosts;      /**< If partitioned the number of neighbor trees
                                     owned by different processes. */
   /* TODO: wouldnt a local num_trees_per_eclass be better?
    *       only as an additional info. we need the global count. i.e. for forest_maxlevel computation.

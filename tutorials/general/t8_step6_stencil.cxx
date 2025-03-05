@@ -40,7 +40,7 @@
 
 #include <cmath>
 #include <t8.h>                                 /* General t8code header, always include this. */
-#include <t8_vec.h>                             /* Basic operations on 3D vectors. */
+#include <t8_types/t8_vec.hxx>                  /* Basic operations on 3D vectors. */
 #include <t8_cmesh.h>                           /* cmesh definition and basic interface. */
 #include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
 #include <t8_forest/t8_forest_io.h>             /* save forest */
@@ -83,7 +83,7 @@ t8_step6_build_forest (sc_MPI_Comm comm, int dim, int level)
 {
   t8_cmesh_t cmesh = t8_cmesh_new_periodic (comm, dim);
 
-  t8_scheme *scheme = t8_scheme_new_default ();
+  const t8_scheme *scheme = t8_scheme_new_default ();
   struct t8_step3_adapt_data adapt_data = {
     { 0.0, 0.0, 0.0 }, /* Midpoints of the sphere. */
     0.5,               /* Refine if inside this radius. */
@@ -107,7 +107,7 @@ t8_step6_build_forest (sc_MPI_Comm comm, int dim, int level)
 }
 
 /* Allocate and fill the element data array with `heights` from an arbitrary
- * mathematical function. Returns a pointer to the array which is then ownded
+ * mathematical function. Returns a pointer to the array which is then owned
  * by the calling scope. */
 static struct data_per_element *
 t8_step6_create_element_data (t8_forest_t forest)
@@ -120,7 +120,7 @@ t8_step6_create_element_data (t8_forest_t forest)
   /* Get the number of ghost elements of forest. */
   t8_locidx_t num_ghost_elements = t8_forest_get_num_ghosts (forest);
   /* Get the scheme of the forest */
-  t8_scheme *scheme = t8_forest_get_scheme (forest);
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
 
   /* Build an array of our data that is as long as the number of elements plus the number of ghosts. */
   struct data_per_element *element_data = T8_ALLOC (struct data_per_element, num_local_elements + num_ghost_elements);
@@ -180,7 +180,7 @@ t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_d
   /* Get the number of trees that have elements of this process. */
   t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
   /* Get the scheme of the forest */
-  t8_scheme *scheme = t8_forest_get_scheme (forest);
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
 
   double stencil[3][3] = { 0 };
   double dx[3] = { 0 };
@@ -420,7 +420,7 @@ t8_step6_main (int argc, char **argv)
 
   /* Output the data to vtu files. */
   t8_step6_output_data_to_vtu (forest, data, prefix_forest_with_data);
-  t8_global_productionf (" Wrote forest and data to %s*.\n", prefix_forest_with_data);
+  t8_global_productionf (" [step6] Wrote forest and data to %s*.\n", prefix_forest_with_data);
 
   /*
    * Clean-up
@@ -431,7 +431,7 @@ t8_step6_main (int argc, char **argv)
 
   /* Destroy the forest. */
   t8_forest_unref (&forest);
-  t8_global_productionf (" Destroyed forest.\n");
+  t8_global_productionf (" [step6] Destroyed forest.\n");
 
   sc_finalize ();
 

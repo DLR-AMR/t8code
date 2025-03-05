@@ -122,7 +122,7 @@ t8_forest_partition_test_desc (t8_forest_t forest)
   t8_element_t *elem_desc;
   t8_linearidx_t first_desc_id;
   t8_locidx_t ielem;
-  t8_scheme *scheme;
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
   t8_tree_t tree;
   int level;
 
@@ -132,7 +132,6 @@ t8_forest_partition_test_desc (t8_forest_t forest)
   }
 
   tree = t8_forest_get_tree (forest, 0);
-  scheme = t8_forest_get_scheme (forest);
   const t8_eclass_t tree_class = tree->eclass;
   /* Get the first descendant id of this rank */
   first_desc_id = *(t8_linearidx_t *) t8_shmem_array_index (forest->global_first_desc, forest->mpirank);
@@ -152,7 +151,7 @@ t8_forest_partition_test_desc (t8_forest_t forest)
 #endif
 
 void
-t8_forest_partition_test_boundary_element (const t8_forest_t forest)
+t8_forest_partition_test_boundary_element ([[maybe_unused]] const t8_forest_t forest)
 {
 #ifdef T8_ENABLE_DEBUG
   T8_ASSERT (t8_forest_is_committed (forest));
@@ -257,7 +256,6 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
   sc_MPI_Comm comm;
   t8_linearidx_t local_first_desc;
   t8_element_t *first_desc = NULL;
-  t8_scheme *scheme;
 
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -298,7 +296,7 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
     /* This process is not empty, the element was found, so we compute its first descendant. */
     if (first_element != NULL) {
       /* Get the eclass_scheme of the element. */
-      scheme = t8_forest_get_scheme (forest);
+      const t8_scheme *scheme = t8_forest_get_scheme (forest);
       const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, 0);
       scheme->element_new (tree_class, 1, &first_desc);
       scheme->element_get_first_descendant (tree_class, first_element, first_desc, forest->maxlevel);
@@ -664,7 +662,7 @@ t8_forest_partition_fill_buffer (t8_forest_t forest_from, char **send_buffer, in
  * \param [in]  last_element_send The local id of the last element that we need to send.
  */
 static void
-t8_forest_partition_fill_buffer_data (t8_forest_t forest_from, char **send_buffer, int *buffer_alloc,
+t8_forest_partition_fill_buffer_data ([[maybe_unused]] t8_forest_t forest_from, char **send_buffer, int *buffer_alloc,
                                       t8_locidx_t first_element_send, t8_locidx_t last_element_send,
                                       const sc_array_t *data)
 {

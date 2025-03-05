@@ -24,7 +24,7 @@
 #include <t8.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_macros.hxx>
 
 /* In this test, we recursively constructs a mesh containing only the first 
@@ -37,17 +37,22 @@
  * Note, that each rank has its own local/global tree. No trees are shared.
  */
 
-class recursive_tree: public testing::TestWithParam<t8_eclass_t> {
+class recursive_tree: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
  protected:
   void
   SetUp () override
   {
-    tree_class = GetParam ();
+    const int scheme_id = std::get<0> (GetParam ());
+    scheme = create_from_scheme_id (scheme_id);
+    tree_class = std::get<1> (GetParam ());
+
+    if (tree_class == T8_ECLASS_ZERO) {
+      GTEST_SKIP ();
+    }
     sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &MPI_size);
 
     /* Construct a cmesh such that each process will get one rooted tree */
     cmesh = t8_cmesh_new_bigmesh (tree_class, MPI_size, sc_MPI_COMM_WORLD);
-    scheme = t8_scheme_new_default ();
 
     scheme->ref ();
     t8_cmesh_ref (cmesh);
@@ -60,12 +65,17 @@ class recursive_tree: public testing::TestWithParam<t8_eclass_t> {
   void
   TearDown () override
   {
-    t8_forest_unref (&forest);
-    t8_forest_unref (&forest_base);
+    if (tree_class != T8_ECLASS_ZERO) {
+      t8_forest_unref (&forest);
+      t8_forest_unref (&forest_base);
+    }
+    else {
+      scheme->unref ();
+    }
   }
   int MPI_size;
   t8_eclass_t tree_class;
-  t8_scheme *scheme;
+  const t8_scheme *scheme;
   t8_cmesh_t cmesh;
   t8_forest_t forest;
   t8_forest_t forest_base;
@@ -73,9 +83,11 @@ class recursive_tree: public testing::TestWithParam<t8_eclass_t> {
 
 /** Remove every element except last and first of a family. */
 static int
-t8_adapt_remove_but_last_first (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                                const t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme *scheme,
-                                const int is_family, const int num_elements, t8_element_t *elements[])
+t8_adapt_remove_but_last_first ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                                [[maybe_unused]] t8_locidx_t which_tree, const t8_eclass_t tree_class,
+                                [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+                                [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
+                                t8_element_t *elements[])
 {
   const int num_children = scheme->element_get_num_children (tree_class, elements[0]);
   const int child_id = scheme->element_get_child_id (tree_class, elements[0]);
@@ -87,9 +99,11 @@ t8_adapt_remove_but_last_first (t8_forest_t forest, t8_forest_t forest_from, t8_
 
 /** Refine the first element of a family. */
 static int
-t8_adapt_refine_first (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                       const t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme *scheme,
-                       const int is_family, const int num_elements, t8_element_t *elements[])
+t8_adapt_refine_first ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                       [[maybe_unused]] t8_locidx_t which_tree, const t8_eclass_t tree_class,
+                       [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+                       [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
+                       t8_element_t *elements[])
 {
   const int level = scheme->element_get_level (tree_class, elements[0]);
   const int level_max = scheme->get_maxlevel (tree_class);
@@ -102,18 +116,22 @@ t8_adapt_refine_first (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t 
 
 /** Refine every element. */
 static int
-t8_adapt_refine_all (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, const t8_eclass_t tree_class,
-                     t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family, const int num_elements,
-                     t8_element_t *elements[])
+t8_adapt_refine_all ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                     [[maybe_unused]] t8_locidx_t which_tree, [[maybe_unused]] const t8_eclass_t tree_class,
+                     [[maybe_unused]] t8_locidx_t lelement_id, [[maybe_unused]] const t8_scheme *scheme,
+                     [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
+                     [[maybe_unused]] t8_element_t *elements[])
 {
   return 1;
 }
 
 /** Coarse every family. */
 static int
-t8_adapt_coarse_all (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, const t8_eclass_t tree_class,
-                     t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family, const int num_elements,
-                     t8_element_t *elements[])
+t8_adapt_coarse_all ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                     [[maybe_unused]] t8_locidx_t which_tree, [[maybe_unused]] const t8_eclass_t tree_class,
+                     [[maybe_unused]] t8_locidx_t lelement_id, [[maybe_unused]] const t8_scheme *scheme,
+                     const int is_family, [[maybe_unused]] const int num_elements,
+                     [[maybe_unused]] t8_element_t *elements[])
 {
   if (is_family) {
     return -1;
@@ -145,5 +163,4 @@ TEST_P (recursive_tree, test_recursive)
   ASSERT_TRUE (t8_forest_is_equal (forest, forest_base));
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_recursive, recursive_tree, testing::Range (T8_ECLASS_LINE, T8_ECLASS_COUNT),
-                          print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_recursive, recursive_tree, AllSchemes, print_all_schemes);

@@ -61,10 +61,10 @@ T8_EXTERN_C_BEGIN ();
  * of the new forest that are either refined, coarsened or the same as elements in the old forest.
  *
  * \param [in] forest_old      The forest that is adapted
- * \param [in] forest_new      The forest that is newly constructed from \a forest_old
+ * \param [in, out] forest_new The forest that is newly constructed from \a forest_old
  * \param [in] which_tree      The local tree containing \a first_outgoing and \a first_incoming
  * \param [in] tree_class      The eclass of the local tree containing \a first_outgoing and \a first_incoming
- * \param [in] scheme              The scheme of the forest
+ * \param [in] scheme          The scheme of the forest
  * \param [in] refine          -1 if family in \a forest_old got coarsened, 0 if element
  *                             has not been touched, 1 if element got refined and -2 if
  *                             element got removed. See return of t8_forest_adapt_t.
@@ -101,7 +101,7 @@ typedef void (*t8_forest_replace_t) (t8_forest_t forest_old, t8_forest_t forest_
  * \param [in] which_tree   The local tree containing \a elements.
  * \param [in] tree_class   The eclass of \a which_tree.
  * \param [in] lelement_id  The local element id in \a forest_old in the tree of the current element.
- * \param [in] scheme           The scheme of the forest.
+ * \param [in] scheme       The scheme of the forest.
  * \param [in] is_family    If 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
  * \param [in] num_elements The number of entries in \a elements that are defined
  * \param [in] elements     Pointers to a family or, if \a is_family is zero,
@@ -119,7 +119,7 @@ typedef int (*t8_forest_adapt_t) (t8_forest_t forest, t8_forest_t forest_from, t
 
 /** Create a new forest with reference count one.
  * This forest needs to be specialized with the t8_forest_set_* calls.
- * Currently it is manatory to either call the functions \ref
+ * Currently it is mandatory to either call the functions \ref
  * t8_forest_set_mpicomm, \ref t8_forest_set_cmesh, and \ref t8_forest_set_scheme,
  * or to call one of \ref t8_forest_set_copy, \ref t8_forest_set_adapt, or
  * \ref t8_forest_set_partition.  It is illegal to mix these calls, or to
@@ -200,7 +200,7 @@ t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh, sc_MPI_Comm comm);
  *                              This can be prevented by referencing \b scheme.
  */
 void
-t8_forest_set_scheme (t8_forest_t forest, t8_scheme_c *scheme);
+t8_forest_set_scheme (t8_forest_t forest, const t8_scheme_c *scheme);
 
 /** Set the initial refinement level to be used when \b forest is committed.
  * \param [in,out] forest      The forest whose level will be set.
@@ -249,7 +249,7 @@ t8_forest_set_copy (t8_forest_t forest, const t8_forest_t from);
  *                          and it is recursive otherwise.
  * \note This setting can be combined with \ref t8_forest_set_partition and \ref
  * t8_forest_set_balance. The order in which these operations are executed is always
- * 1) Adapt 2) Balance 3) Partition
+ * 1) Adapt 2) Partition 3) Balance.
  * \note This setting may not be combined with \ref t8_forest_set_copy and overwrites
  * this setting.
  */
@@ -312,7 +312,7 @@ t8_forest_get_user_function (const t8_forest_t forest);
  *                          operation.
  * \note This setting can be combined with \ref t8_forest_set_adapt and \ref
  * t8_forest_set_balance. The order in which these operations are executed is always
- * 1) Adapt 2) Balance 3) Partition
+ * 1) Adapt 2) Partition 3) Balance.
  * If \ref t8_forest_set_balance is called with the \a no_repartition parameter set as
  * false, it is not necessary to call \ref t8_forest_set_partition additionally.
  * \note This setting may not be combined with \ref t8_forest_set_copy and overwrites
@@ -339,8 +339,8 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from, int set
  *                          If \a no_repartition is false, an additional call of \ref t8_forest_set_partition is not
  *                          necessary.
  * \note This setting can be combined with \ref t8_forest_set_adapt and \ref
- * t8_forest_set_balance. The order in which these operations are executed is always
- * 1) Adapt 2) Balance 3) Partition.
+ * t8_forest_set_partition. The order in which these operations are executed is always
+ * 1) Adapt 2) Partition 3) Balance.
  * \note This setting may not be combined with \ref t8_forest_set_copy and overwrites
  * this setting.
  */
@@ -615,8 +615,8 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
                                    t8_gloidx_t *gneigh_tree, int *orientation);
 
 /** Exchange ghost information of user defined element data.
- * \param[in] forest       The forest. Must be committed.
- * \param[in] element_data An array of length num_local_elements + num_ghosts
+ * \param [in] forest       The forest. Must be committed.
+ * \param [in] element_data An array of length num_local_elements + num_ghosts
  *                         storing one value for each local element and ghost in \a forest.
  *                         After calling this function the entries for the ghost elements
  *                         are update with the entries in the \a element_data array of
@@ -799,7 +799,7 @@ t8_forest_get_first_local_element_id (t8_forest_t forest);
  * \return          The element scheme of the forest.
  * \see t8_forest_set_scheme
  */
-t8_scheme_c *
+const t8_scheme_c *
 t8_forest_get_scheme (const t8_forest_t forest);
 
 /** Return the eclass of the tree in which a face neighbor of a given element
@@ -874,7 +874,7 @@ t8_forest_element_points_inside (t8_forest_t forest, t8_locidx_t ltreeid, const 
  * \ref t8_forest_set_scheme, \ref t8_forest_set_level, and \ref t8_forest_commit.
  */
 t8_forest_t
-t8_forest_new_uniform (t8_cmesh_t cmesh, t8_scheme_c *scheme, const int level, const int do_face_ghost,
+t8_forest_new_uniform (t8_cmesh_t cmesh, const t8_scheme_c *scheme, const int level, const int do_face_ghost,
                        sc_MPI_Comm comm);
 
 /** Build a adapted forest from another forest.

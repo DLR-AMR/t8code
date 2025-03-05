@@ -22,23 +22,26 @@
 
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <test/t8_gtest_macros.hxx>
 
-class class_successor: public testing::TestWithParam<t8_eclass_t> {
+class class_successor: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
  protected:
   void
   SetUp () override
   {
-    tree_class = GetParam ();
-    scheme = t8_scheme_new_default ();
+    const int scheme_id = std::get<0> (GetParam ());
+    scheme = create_from_scheme_id (scheme_id);
+    tree_class = std::get<1> (GetParam ());
     scheme->element_new (tree_class, 1, &element);
     scheme->element_new (tree_class, 1, &successor);
     scheme->element_new (tree_class, 1, &child);
     scheme->element_new (tree_class, 1, &last);
 
     scheme->get_root (tree_class, element);
+
+    tree_class = scheme->get_eclass_scheme_eclass (tree_class);
     if (tree_class == T8_ECLASS_VERTEX)
       GTEST_SKIP ();
   }
@@ -51,12 +54,12 @@ class class_successor: public testing::TestWithParam<t8_eclass_t> {
     scheme->element_destroy (tree_class, 1, &last);
     scheme->unref ();
   }
-  t8_eclass_t tree_class;
-  t8_scheme *scheme;
+  const t8_scheme *scheme;
   t8_element_t *element;
   t8_element_t *successor;
   t8_element_t *child;
   t8_element_t *last;
+  t8_eclass_t tree_class;
 };
 
 /* Check the computation of the successor recursively. Iterate through the elements
@@ -65,7 +68,7 @@ class class_successor: public testing::TestWithParam<t8_eclass_t> {
  */
 static void
 t8_recursive_successor (t8_element_t *element, t8_element_t *successor, t8_element_t *child, t8_element_t *last,
-                        t8_scheme *scheme, const t8_eclass_t tree_class, const int maxlvl)
+                        const t8_scheme *scheme, const t8_eclass_t tree_class, const int maxlvl)
 {
   const int level = scheme->element_get_level (tree_class, element);
   ASSERT_TRUE (scheme->element_get_level (tree_class, element) <= maxlvl
@@ -109,7 +112,7 @@ t8_recursive_successor (t8_element_t *element, t8_element_t *successor, t8_eleme
  * maximum level are computed. The successor runs through all these children.
  */
 static void
-t8_deep_successor (t8_element_t *element, t8_element_t *successor, t8_element_t *child, t8_scheme *scheme,
+t8_deep_successor (t8_element_t *element, t8_element_t *successor, t8_element_t *child, const t8_scheme *scheme,
                    const t8_eclass_t tree_class)
 {
   const int maxlvl = scheme->get_maxlevel (tree_class);
@@ -133,7 +136,7 @@ t8_deep_successor (t8_element_t *element, t8_element_t *successor, t8_element_t 
 
 TEST_P (class_successor, test_recursive_and_deep_successor)
 {
-#ifdef T8_ENABLE_LESS_TESTS
+#if T8CODE_TEST_LEVEL >= 1
   const int maxlvl = 3;
 #else
   const int maxlvl = 4;
@@ -151,4 +154,4 @@ TEST_P (class_successor, test_recursive_and_deep_successor)
   t8_deep_successor (element, successor, last, scheme, tree_class);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_successor, class_successor, AllEclasses, print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_successor, class_successor, AllSchemes, print_all_schemes);

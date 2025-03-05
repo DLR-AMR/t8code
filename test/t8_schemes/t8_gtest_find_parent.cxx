@@ -22,7 +22,7 @@
 
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include "t8_gtest_dfs_base.hxx"
 #include <test/t8_gtest_macros.hxx>
@@ -31,13 +31,13 @@ class class_find_parent: public TestDFS {
   void
   check_element () override
   {
-    const int num_children = scheme->element_get_num_children (tree_class, element);
+    const int num_children = scheme->element_get_num_children (eclass, element);
     for (int ichild = 0; ichild < num_children; ichild++) {
-      scheme->element_get_child (tree_class, element, ichild, child);
+      scheme->element_get_child (eclass, element, ichild, child);
       /* Compute parent of child */
-      scheme->element_get_parent (tree_class, child, test_parent);
+      scheme->element_get_parent (eclass, child, test_parent);
       /* Check that it is equal to the original element */
-      EXPECT_ELEM_EQ (scheme, tree_class, element, test_parent);
+      EXPECT_ELEM_EQ (scheme, eclass, element, test_parent);
     }
   }
 
@@ -47,15 +47,15 @@ class class_find_parent: public TestDFS {
   {
     dfs_test_setup ();
     /* Get element and initialize it */
-    scheme->element_new (tree_class, 1, &child);
-    scheme->element_new (tree_class, 1, &test_parent);
+    scheme->element_new (eclass, 1, &child);
+    scheme->element_new (eclass, 1, &test_parent);
   }
   void
   TearDown () override
   {
     /* Destroy element */
-    scheme->element_destroy (tree_class, 1, &child);
-    scheme->element_destroy (tree_class, 1, &test_parent);
+    scheme->element_destroy (eclass, 1, &child);
+    scheme->element_destroy (eclass, 1, &test_parent);
 
     /* Destroy DFS test */
     dfs_test_teardown ();
@@ -66,7 +66,7 @@ class class_find_parent: public TestDFS {
 
 TEST_P (class_find_parent, t8_compute_child_find_parent)
 {
-#ifdef T8_ENABLE_LESS_TESTS
+#if T8CODE_TEST_LEVEL >= 1
   const int maxlvl = 4;
 #else
   const int maxlvl = 6;
@@ -74,4 +74,4 @@ TEST_P (class_find_parent, t8_compute_child_find_parent)
   check_recursive_dfs_to_max_lvl (maxlvl);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_find_parent, class_find_parent, AllEclasses, print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_find_parent, class_find_parent, AllSchemes, print_all_schemes);
