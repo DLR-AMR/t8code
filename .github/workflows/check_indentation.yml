@@ -27,13 +27,11 @@ name: t8code indentation check
 # It is triggered for pull requests into main and develop and will also run once a day
 # on main.
 #
-# The script runs the scripts/check_if_all_files_indented.scp script of t8code.
+# The script runs the scripts/check_if_all_files_indented.sh script of t8code.
 # The output is uploaded as an artifact to the github page.
 
 on:
-  push:
-    branches:
-      - main
+  merge_group:
   pull_request:
   workflow_dispatch: # Be able to trigger this manually on github.com
   # Run every night at 1:05
@@ -59,7 +57,7 @@ jobs:
     - name: Install indent
       run: pip install clang-format==17.0.1
     - name: Indentation check
-      run: cd scripts/ && ./check_if_all_files_indented.scp &> >(tee -a indent_script_output.txt)
+      run: cd scripts/ && ./check_if_all_files_indented.sh &> >(tee -a indent_script_output.txt)
     - name: Archive script output
     # Do this regardess of the result of the previous step.
     # We especially want to upload the result when the check fails.

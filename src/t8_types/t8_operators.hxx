@@ -146,7 +146,7 @@ struct AddAssignable: t8_crtp_operator<TUnderlying, AddAssignable>
 template <typename TUnderlying>
 struct PrefixIncrementable: t8_crtp_operator<TUnderlying, PrefixIncrementable>
 {
-  constexpr TUnderlying&
+  TUnderlying&
   operator++ () noexcept
   {
     ++this->underlying ().get ();
@@ -164,7 +164,7 @@ struct PrefixIncrementable: t8_crtp_operator<TUnderlying, PrefixIncrementable>
 template <typename TUnderlying>
 struct PrefixDecrementable: t8_crtp_operator<TUnderlying, PrefixDecrementable>
 {
-  constexpr TUnderlying&
+  TUnderlying&
   operator-- () noexcept
   {
     --this->underlying ().get ();
@@ -175,10 +175,11 @@ struct PrefixDecrementable: t8_crtp_operator<TUnderlying, PrefixDecrementable>
 template <typename TUnderlying>
 struct Printable: t8_crtp_operator<TUnderlying, Printable>
 {
-  void
-  print (std::ostream& os) const
+  friend std::ostream&
+  operator<< (std::ostream& os, const TUnderlying& obj)
   {
-    os << this->underlying ().get ();
+    os << obj.get ();
+    return os;
   }
 };
 
@@ -205,30 +206,23 @@ struct Swapable: t8_crtp_operator<TUnderlying, Swapable>
 template <typename TUnderlying>
 struct EqualityComparable: t8_crtp_operator<TUnderlying, EqualityComparable>
 {
-  constexpr bool
-  operator== (TUnderlying const& other) const noexcept
+  friend constexpr bool
+  operator== (const TUnderlying& lhs, const TUnderlying& rhs) noexcept
   {
-    return this->underlying ().get () == other.get ();
+    return lhs.get () == rhs.get ();
+  }
+
+  constexpr bool
+  operator!= (TUnderlying const& other) const
+  {
+    return this->underlying ().get () != other.get ();
   }
 };
 
 /**
- * \brief A template for << types. Provides the << operator.
- * 
- * \tparam T 
- */
-template <typename TUnderlying, typename Parameter>
-std::ostream&
-operator<< (std::ostream& os, T8Type<TUnderlying, Parameter> const& p)
-{
-  p.print (os);
-  return os;
-}
-
-/**
  * \brief A template for hashable types. Used to make a type hashable.
  * 
- * \tparam T 
+ * \tparam TUnderlying
  */
 template <typename TUnderlying>
 struct Hashable
@@ -236,4 +230,61 @@ struct Hashable
   static constexpr bool is_hashable = true;
 };
 
-#endif /* T8_OPERATORS_HXX */
+/**
+ * \brief A template for random accessible types. Provides the [] operator.
+ * 
+ * \tparam TUnderlying
+ */
+template <typename TUnderlying>
+struct RandomAccessible: t8_crtp_operator<TUnderlying, RandomAccessible>
+{
+  auto
+  operator[] (std::size_t index) -> decltype (auto)
+  {
+    return this->underlying ().get ()[index];
+  }
+
+  auto
+  operator[] (std::size_t index) const -> decltype (auto)
+  {
+    return this->underlying ().get ()[index];
+  }
+
+  auto
+  begin () -> decltype (auto)
+  {
+    return this->underlying ().get ().begin ();
+  }
+
+  auto
+  begin () const -> decltype (auto)
+  {
+    return this->underlying ().get ().begin ();
+  }
+
+  auto
+  end () -> decltype (auto)
+  {
+    return this->underlying ().get ().end ();
+  }
+
+  auto
+  end () const -> decltype (auto)
+  {
+    return this->underlying ().get ().end ();
+  }
+
+  auto
+  data () -> decltype (auto)
+  {
+    return this->underlying ().get ().data ();
+  }
+
+  auto
+  data () const -> decltype (auto)
+  {
+    return this->underlying ().get ().data ();
+  }
+};
+
+#endif  // T8_OPERATORS_HXX
