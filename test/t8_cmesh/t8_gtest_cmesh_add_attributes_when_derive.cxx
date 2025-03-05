@@ -50,10 +50,9 @@ class DISABLED_t8_cmesh_add_attributes: public testing::TestWithParam<cmesh_exam
       const t8_gloidx_t gtreeid = t8_cmesh_get_global_id (cmesh, itree);
       const int data_persists = 0;
 
-      t8_cmesh_set_attribute (cmesh_derived, gtreeid, t8_get_package_id (), T8_CMESH_TESTING_KEY, &locidx_attribute,
+      t8_cmesh_set_attribute (cmesh_derived, gtreeid, t8_testsuite_package_id, 0, &locidx_attribute,
                               sizeof (t8_locidx_t), data_persists);
-      t8_cmesh_set_attribute_string (cmesh_derived, gtreeid, t8_get_package_id (), T8_CMESH_TESTING_KEY_2,
-                                     string_attribute);
+      t8_cmesh_set_attribute_string (cmesh_derived, gtreeid, t8_testsuite_package_id, 1, string_attribute);
     }
     t8_cmesh_commit (cmesh_derived, sc_MPI_COMM_WORLD);
   }
@@ -78,10 +77,10 @@ TEST_P (DISABLED_t8_cmesh_add_attributes, check_attributes)
 
   for (t8_locidx_t itree = 0; itree < num_local_and_ghost; ++itree) {
     const t8_locidx_t check_locidx_attribute
-      = *(t8_locidx_t *) t8_cmesh_get_attribute (cmesh_derived, t8_get_package_id (), T8_CMESH_TESTING_KEY, itree);
+      = *(t8_locidx_t *) t8_cmesh_get_attribute (cmesh_derived, t8_testsuite_package_id, 0, itree);
 
     const char *check_string_attribute
-      = (const char *) t8_cmesh_get_attribute (cmesh_derived, t8_get_package_id (), T8_CMESH_TESTING_KEY_2, itree);
+      = (const char *) t8_cmesh_get_attribute (cmesh_derived, t8_testsuite_package_id, 1, itree);
     EXPECT_EQ (itree, check_locidx_attribute);
     EXPECT_STREQ (check_string_attribute, string_attribute);
   }
