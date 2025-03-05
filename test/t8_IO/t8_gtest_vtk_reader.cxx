@@ -22,6 +22,7 @@
 
 #include <gtest/gtest.h>
 #include <t8_cmesh_vtk_reader.hxx>
+#include <test/t8_gtest_macros.hxx>
 
 #define T8_VTK_TEST_NUM_PROCS 2
 
@@ -74,10 +75,8 @@ class vtk_reader: public testing::TestWithParam<std::tuple<int, int, int>> {
 TEST_P (vtk_reader, vtk_to_cmesh_fail)
 {
 #if T8_WITH_VTK
-  const int test_package_id
-    = sc_package_register (NULL, SC_LP_DEFAULT, "test_application", "Dummy application for testing purposes.");
   t8_cmesh_t cmesh
-    = t8_cmesh_vtk_reader (failing_files[file], 0, main_proc, sc_MPI_COMM_WORLD, file_type, test_package_id, 0);
+    = t8_cmesh_vtk_reader (failing_files[file], 0, main_proc, sc_MPI_COMM_WORLD, file_type, t8_testsuite_package_id, 0);
   EXPECT_TRUE (cmesh == NULL);
 #else
 #endif
@@ -90,10 +89,8 @@ TEST_P (vtk_reader, vtk_to_cmesh_success)
   int mpirank;
   int mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
-  const int test_package_id
-    = sc_package_register (NULL, SC_LP_DEFAULT, "test_application", "Dummy application for testing purposes.");
-  t8_cmesh_t cmesh
-    = t8_cmesh_vtk_reader (test_files[file], partition, main_proc, sc_MPI_COMM_WORLD, file_type, test_package_id, 0);
+  t8_cmesh_t cmesh = t8_cmesh_vtk_reader (test_files[file], partition, main_proc, sc_MPI_COMM_WORLD, file_type,
+                                          t8_testsuite_package_id, 0);
   if (file_type != VTK_FILE_ERROR) {
     EXPECT_FALSE (cmesh == NULL);
     const int test_num_trees = t8_cmesh_get_num_local_trees (cmesh);
