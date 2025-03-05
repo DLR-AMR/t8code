@@ -13,7 +13,7 @@ include( CTest )
 include( CMakeDependentOption )
 
 option( T8CODE_BUILD_AS_SHARED_LIBRARY "Whether t8code should be built as a shared or a static library" ON )
-option( T8CODE_BUILD_PEDANTIC "Compile t8code with `-pedantic` as done in the Github CI." OFF )
+option( T8CODE_BUILD_WPEDANTIC "Compile t8code with `-Wpedantic` as done in the Github CI." OFF )
 option( T8CODE_BUILD_WALL "Compile t8code with `-Wall` as done in the Github CI." OFF )
 option( T8CODE_BUILD_WERROR "Compile t8code with `-Werror` as done in the Github CI." OFF )
 option( T8CODE_BUILD_EXTRA_WARNINGS "Compile t8code with extra warnings as done in the Github CI." OFF )
@@ -146,6 +146,102 @@ else()
     set( P4EST_BUILD_TESTING ${T8CODE_BUILD_TPL_TESTS} )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/p4est )
 endif()
+
+function(t8_add_cmake_properties target)
+    
+    if( CMAKE_BUILD_TYPE STREQUAL "Release" )
+        set (T8_CXXFLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE}")
+        set (T8_CFLAGS "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_RELEASE}")
+    endif()
+
+    if( CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo" )
+        set (T8_CXXFLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+        set (T8_CFLAGS "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_RELWITHDEBINFO}")
+    endif()
+
+    if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
+        set (T8_CXXFLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG}")
+        set (T8_CFLAGS "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_DEBUG}")
+        target_compile_definitions( ${target} PUBLIC T8_ENABLE_DEBUG )
+    endif()
+
+    if( T8CODE_EXPORT_COMPILE_COMMANDS )
+        set_target_properties( ${target} PROPERTIES EXPORT_COMPILE_COMMANDS ON )
+    endif( T8CODE_EXPORT_COMPILE_COMMANDS )
+    
+    target_link_libraries( ${target} PUBLIC P4EST::P4EST SC::SC )
+
+    if ( T8CODE_ENABLE_MPI )
+        target_compile_definitions( ${target} PUBLIC T8_ENABLE_MPI )
+        target_compile_definitions( ${target} PUBLIC T8_ENABLE_MPIIO )
+        target_link_libraries( ${target} PUBLIC MPI::MPI_C )
+    endif()
+
+    if( T8CODE_ENABLE_VTK )
+        target_compile_definitions( ${target} PUBLIC T8_VTK_VERSION_USED="${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}" )
+        target_compile_definitions( ${target} PUBLIC T8_WITH_VTK=1 )
+        target_include_directories( ${target} PUBLIC ${VTK_INCLUDE_DIR} )
+        target_link_libraries( ${target} PUBLIC ${VTK_LIBRARIES} )
+    endif()
+
+    if( T8CODE_ENABLE_OCC )
+        target_compile_definitions( ${target} PUBLIC T8_WITH_OCC=1 )
+        target_include_directories( ${target} SYSTEM PUBLIC ${OpenCASCADE_INCLUDE_DIR} )
+        target_link_libraries( ${target} PUBLIC ${OpenCASCADE_LIBRARIES} )
+    endif()
+
+    if( T8CODE_ENABLE_NETCDF )
+        target_link_libraries( T8 PUBLIC netCDF::netcdf )
+        target_compile_definitions(T8 PUBLIC
+            T8_WITH_NETCDF
+            $<$<AND:$<BOOL:${NETCDF_HAVE_NETCDF_PAR}>,$<BOOL:${T8CODE_ENABLE_MPI}>>:T8_WITH_NETCDF_PAR>
+        )
+        target_sources( T8 PRIVATE
+        t8_netcdf.c
+        t8_cmesh/t8_cmesh_netcdf.c
+        t8_forest/t8_forest_netcdf.cxx
+        )
+        install( FILES
+            t8_cmesh_netcdf.h
+            t8_forest_netcdf.h
+            t8_netcdf.h
+            DESTINATION include
+        )
+    endif()
+
+    if( T8CODE_BUILD_WPEDANTIC )
+      target_compile_options( ${target} PUBLIC -Wpedantic )
+      set (T8_CXXFLAGS "${T8_CXXFLAGS} -Wpedantic")
+      set (T8_CFLAGS "${T8_CFLAGS} -Wpedantic")
+    endif()
+
+    if( T8CODE_BUILD_WALL)
+      target_compile_options( ${target} PUBLIC -Wall )
+      set (T8_CXXFLAGS "${T8_CXXFLAGS} -Wall")
+      set (T8_CFLAGS "${T8_CFLAGS} -Wall")
+    endif()
+
+    if( T8CODE_BUILD_WERROR )
+      target_compile_options( ${target} PUBLIC -Werror )
+      set (T8_CXXFLAGS "${T8_CXXFLAGS} -Werror")
+      set (T8_CFLAGS "${T8_CFLAGS} -Werror")
+    endif()
+
+    target_compile_definitions( ${target} PUBLIC T8_CMAKE_BUILD )
+    target_compile_definitions( ${target} PUBLIC T8_CC="${CMAKE_C_COMPILER}" )
+    target_compile_definitions( ${target} PUBLIC T8_CFLAGS="${T8_CFLAGS}" )
+    target_compile_definitions( ${target} PUBLIC T8_CXX="${CMAKE_CXX_COMPILER}" )
+    target_compile_definitions( ${target} PUBLIC T8_CXXFLAGS="${T8_CXXFLAGS}" )
+    target_compile_definitions( ${target} PUBLIC T8_LDFLAGS="${CMAKE_SHARED_LINKER_FLAGS}" )
+
+    target_compile_definitions( ${target} PUBLIC T8_PACKAGE_STRING="t8 ${T8CODE_VERSION}" )
+    target_compile_definitions( ${target} PUBLIC T8_VERSION="${T8CODE_VERSION}" )
+    target_compile_definitions( ${target} PUBLIC T8_VERSION_MAJOR=${T8CODE_VERSION_MAJOR} )
+    target_compile_definitions( ${target} PUBLIC T8_VERSION_MINOR=${T8CODE_VERSION_MINOR} )
+    target_compile_definitions( ${target} PUBLIC T8_VERSION_PATCH=${T8CODE_VERSION_PATCH} )
+    target_compile_definitions( ${target} PUBLIC T8_VERSION_POINT=${T8CODE_VERSION_POINT} )
+
+endfunction(t8_add_cmake_properties)
 
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/src )
 

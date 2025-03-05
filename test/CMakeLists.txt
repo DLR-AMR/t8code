@@ -29,16 +29,13 @@ function( add_t8_test )
     else()
       target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 gtest pthread )
     endif ()
+    t8_add_cmake_properties ( ${ADD_T8_TEST_NAME} )
 
     set_target_properties(${ADD_T8_TEST_NAME} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${TEST_BUILD_DIR}"
         LIBRARY_OUTPUT_DIRECTORY "${TEST_BUILD_DIR}"
         ARCHIVE_OUTPUT_DIRECTORY "${TEST_BUILD_DIR}"
     )
-
-    if( T8CODE_EXPORT_COMPILE_COMMANDS )
-        set_target_properties( ${ADD_T8_TEST_NAME} PROPERTIES EXPORT_COMPILE_COMMANDS ON )
-    endif( T8CODE_EXPORT_COMPILE_COMMANDS )
 
     # Split custom test command into a list by whitespace.
     # If MPI is enabled, and no custom test command is provided, use mpirun -np 4 as the default command.

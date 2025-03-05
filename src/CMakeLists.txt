@@ -8,44 +8,6 @@ endif()
 
 add_library( T8CODE::T8 ALIAS T8 )
 
-if( CMAKE_BUILD_TYPE STREQUAL "Release" )
-  set (T8_CXXFLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE}")
-  set (T8_CFLAGS "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_RELEASE}")
-endif()
-
-if( CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo" )
-  set (T8_CXXFLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
-  set (T8_CFLAGS "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_RELWITHDEBINFO}")
-endif()
-
-if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
-  set (T8_CXXFLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG}")
-  set (T8_CFLAGS "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_DEBUG}")
-
-    target_compile_definitions( T8 PUBLIC T8_ENABLE_DEBUG )
-endif()
-
-if( T8CODE_EXPORT_COMPILE_COMMANDS )
-  set_target_properties( T8 PROPERTIES EXPORT_COMPILE_COMMANDS ON )
-endif( T8CODE_EXPORT_COMPILE_COMMANDS )
-
-if( T8CODE_ENABLE_NETCDF )
-  target_link_libraries( T8 PUBLIC netCDF::netcdf )
-  target_compile_definitions(T8 PUBLIC
-    T8_WITH_NETCDF
-    $<$<AND:$<BOOL:${NETCDF_HAVE_NETCDF_PAR}>,$<BOOL:${T8CODE_ENABLE_MPI}>>:T8_WITH_NETCDF_PAR> )
-  target_sources( T8 PRIVATE
-  t8_netcdf.c
-  t8_cmesh/t8_cmesh_netcdf.c
-  t8_forest/t8_forest_netcdf.cxx
-  )
-  install( FILES
-  t8_cmesh_netcdf.h
-  t8_forest_netcdf.h
-  t8_netcdf.h
-  DESTINATION include)
-endif()
-
 set_target_properties( T8 PROPERTIES OUTPUT_NAME t8 )
 
 target_include_directories( T8 PUBLIC
@@ -53,45 +15,7 @@ target_include_directories( T8 PUBLIC
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include>
 )
 
-target_link_libraries( T8 PUBLIC P4EST::P4EST SC::SC )
-
-if ( T8CODE_ENABLE_MPI )
-    target_compile_definitions( T8 PUBLIC T8_ENABLE_MPI )
-    target_compile_definitions( T8 PUBLIC T8_ENABLE_MPIIO )
-    target_link_libraries( T8 PUBLIC MPI::MPI_C )
-endif()
-
-if( T8CODE_ENABLE_VTK )
-    target_compile_definitions( T8 PUBLIC T8_VTK_VERSION_USED="${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}" )
-    target_compile_definitions( T8 PUBLIC T8_WITH_VTK=1 )
-    target_include_directories( T8 PUBLIC ${VTK_INCLUDE_DIR} )
-    target_link_libraries( T8 PUBLIC ${VTK_LIBRARIES} )
-endif()
-
-if( T8CODE_ENABLE_OCC )
-    target_compile_definitions( T8 PUBLIC T8_WITH_OCC=1 )
-    target_include_directories( T8 SYSTEM PUBLIC ${OpenCASCADE_INCLUDE_DIR} )
-    target_link_libraries( T8 PUBLIC ${OpenCASCADE_LIBRARIES} )
-endif()
-
-if( T8CODE_BUILD_PEDANTIC )
-  target_compile_options( T8 PUBLIC -pedantic )
-  set (T8_CXXFLAGS "${T8_CXXFLAGS} -Wpedantic")
-  set (T8_CFLAGS "${T8_CFLAGS} -Wpedantic")
-endif()
-
-if( T8CODE_BUILD_WALL)
-  target_compile_options( T8 PUBLIC -Wall )
-  set (T8_CXXFLAGS "${T8_CXXFLAGS} -Wall")
-  set (T8_CFLAGS "${T8_CFLAGS} -Wall")
-endif()
-
-if( T8CODE_BUILD_WERROR )
-  target_compile_options( T8 PUBLIC -Werror )
-  set (T8_CXXFLAGS "${T8_CXXFLAGS} -Werror")
-  set (T8_CFLAGS "${T8_CFLAGS} -Werror")
-endif()
-
+t8_add_cmake_properties (T8)
 
 target_sources( T8 PRIVATE 
     t8.c 
@@ -168,20 +92,6 @@ target_sources( T8 PRIVATE
     t8_vtk/t8_vtk_write_ASCII.cxx
     t8_vtk/t8_vtk_writer_helper.cxx
 )
-
-target_compile_definitions( T8 PUBLIC T8_CMAKE_BUILD )
-target_compile_definitions( T8 PUBLIC T8_CC="${CMAKE_C_COMPILER}" )
-target_compile_definitions( T8 PUBLIC T8_CFLAGS="${T8_CFLAGS}" )
-target_compile_definitions( T8 PUBLIC T8_CXX="${CMAKE_CXX_COMPILER}" )
-target_compile_definitions( T8 PUBLIC T8_CXXFLAGS="${T8_CXXFLAGS}" )
-target_compile_definitions( T8 PUBLIC T8_LDFLAGS="${CMAKE_SHARED_LINKER_FLAGS}" )
-
-target_compile_definitions( T8 PUBLIC T8_PACKAGE_STRING="t8 ${T8CODE_VERSION}" )
-target_compile_definitions( T8 PUBLIC T8_VERSION="${T8CODE_VERSION}" )
-target_compile_definitions( T8 PUBLIC T8_VERSION_MAJOR=${T8CODE_VERSION_MAJOR} )
-target_compile_definitions( T8 PUBLIC T8_VERSION_MINOR=${T8CODE_VERSION_MINOR} )
-target_compile_definitions( T8 PUBLIC T8_VERSION_PATCH=${T8CODE_VERSION_PATCH} )
-target_compile_definitions( T8 PUBLIC T8_VERSION_POINT=${T8CODE_VERSION_POINT} )
 
 get_target_property( T8_LIBS_LIST T8 LINK_LIBRARIES )
 string( REPLACE ";" " " T8_LIBS "${T8_LIBS_LIST}" )
