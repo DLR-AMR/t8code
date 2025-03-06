@@ -1013,7 +1013,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
             return std::nullopt;
           }
           /* Get node from the hashtable */
-          Node.index = node_indices[i_node];
+          Node.index = node_indices[t8_vertex_num];
           tree_nodes[t8_vertex_num] = *vertices.find (Node);
 
           /* Add node coordinates to the tree vertices */
