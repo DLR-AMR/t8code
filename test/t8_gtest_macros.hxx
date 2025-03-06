@@ -37,7 +37,13 @@
  * lambda to pass to an INSTANTIATE_TEST_SUITE_P to print the current cmesh_example_base
  * 
  */
-auto print_eclass = [] (const testing::TestParamInfo<t8_eclass> &info) { return t8_eclass_to_string[info.param]; };
+inline auto print_eclass
+  = [] (const testing::TestParamInfo<t8_eclass> &info) { return t8_eclass_to_string[info.param]; };
+
+/**
+ * Package id for the testsuite. Used for attributes.
+ */
+static int t8_testsuite_package_id;
 
 /**
  * Number of points to use in tests

@@ -22,6 +22,7 @@
 
 #include <gtest/gtest.h>
 #include <t8.h>
+#include <test/t8_gtest_macros.hxx>
 
 int
 main (int argc, char **argv)
@@ -36,6 +37,8 @@ main (int argc, char **argv)
   mpic = sc_MPI_COMM_WORLD;
   sc_init (mpic, 1, 1, NULL, SC_LP_PRODUCTION);
   t8_init (SC_LP_DEFAULT);
+  t8_testsuite_package_id = sc_package_register (
+    NULL, SC_LP_DEFAULT, "t8code_testsuite", "t8code testsuite package. Used for testing of external user attributes.");
 
   ::testing::InitGoogleTest (&argc, argv);
 
