@@ -1016,11 +1016,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
           Node.index = node_indices[t8_vertex_num];
           tree_nodes[t8_vertex_num] = *vertices.find (Node);
 
-          /* Add node coordinates to the tree vertices */
-          tree_vertices[3 * t8_vertex_num] = tree_nodes[t8_vertex_num].coordinates[0];
-          tree_vertices[3 * t8_vertex_num + 1] = tree_nodes[t8_vertex_num].coordinates[1];
-          tree_vertices[3 * t8_vertex_num + 2] = tree_nodes[t8_vertex_num].coordinates[2];
-
           /* move line_modify to the next word in the line */
           (void) strsep (&line_modify, " ");
         }
@@ -1077,19 +1072,20 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
           }
 
           for (iswitch = 0; iswitch < num_switches; ++iswitch) {
-            /* We switch vertex 0 + iswitch and vertex switch_indices[iswitch] */
-            for (int i_dim = 0; i_dim < 3; i_dim++) {
-              temp = tree_vertices[3 * iswitch + i_dim];
-              tree_vertices[3 * iswitch + i_dim] = tree_vertices[3 * switch_indices[iswitch] + i_dim];
-              tree_vertices[3 * switch_indices[iswitch] + i_dim] = temp;
-            }
+            /* We switch node 0 + iswitch and node switch_indices[iswitch] */
             temp_node = tree_nodes[iswitch];
             tree_nodes[iswitch] = tree_nodes[switch_indices[iswitch]];
             tree_nodes[switch_indices[iswitch]] = temp_node;
           }
           T8_ASSERT (!t8_cmesh_tree_vertices_negative_volume (eclass, tree_vertices.data (), num_nodes));
         } /* End of negative volume handling */
+
         /* Set the vertices of this tree */
+        for (int i_node = 0; i_node < num_nodes; i_node++) {
+          tree_vertices[3 * i_node] = tree_nodes[i_node].coordinates[0];
+          tree_vertices[3 * i_node + 1] = tree_nodes[i_node].coordinates[1];
+          tree_vertices[3 * i_node + 2] = tree_nodes[i_node].coordinates[2];
+        }
         t8_cmesh_set_tree_vertices (cmesh, tree_count, tree_vertices.data (), num_nodes);
 
         if (!use_cad_geometry) {
