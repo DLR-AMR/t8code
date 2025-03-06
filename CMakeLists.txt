@@ -118,6 +118,12 @@ if( T8CODE_ENABLE_NETCDF )
         message("Found netCDF")
         include(cmake/CheckNetCDFPar.cmake)
     endif (netCDF_FOUND)
+    install( FILES
+        ${PROJECT_SOURCE_DIR}/src/t8_netcdf.c
+        ${PROJECT_SOURCE_DIR}/src/t8_cmesh/t8_cmesh_netcdf.c
+        ${PROJECT_SOURCE_DIR}/src/t8_forest/t8_forest_netcdf.cxx
+        DESTINATION include
+    )
 endif( T8CODE_ENABLE_NETCDF )
 
 # Override default for this libsc option
@@ -191,21 +197,15 @@ function(t8_add_cmake_properties target)
     endif()
 
     if( T8CODE_ENABLE_NETCDF )
-        target_link_libraries( T8 PUBLIC netCDF::netcdf )
-        target_compile_definitions(T8 PUBLIC
+        target_link_libraries( ${target} PUBLIC netCDF::netcdf )
+        target_compile_definitions(${target} PUBLIC
             T8_WITH_NETCDF
             $<$<AND:$<BOOL:${NETCDF_HAVE_NETCDF_PAR}>,$<BOOL:${T8CODE_ENABLE_MPI}>>:T8_WITH_NETCDF_PAR>
         )
-        target_sources( T8 PRIVATE
-        t8_netcdf.c
-        t8_cmesh/t8_cmesh_netcdf.c
-        t8_forest/t8_forest_netcdf.cxx
-        )
-        install( FILES
-            t8_cmesh_netcdf.h
-            t8_forest_netcdf.h
-            t8_netcdf.h
-            DESTINATION include
+        target_sources( ${target} PRIVATE
+        ${PROJECT_SOURCE_DIR}/src/t8_netcdf.c
+        ${PROJECT_SOURCE_DIR}/src/t8_cmesh/t8_cmesh_netcdf.c
+        ${PROJECT_SOURCE_DIR}/src/t8_forest/t8_forest_netcdf.cxx
         )
     endif()
 
