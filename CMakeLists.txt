@@ -21,7 +21,6 @@ option( T8CODE_EXPORT_COMPILE_COMMANDS "Export the compile commands as json. Can
 
 option( T8CODE_BUILD_TESTS "Build t8code's automated tests" ON )
 cmake_dependent_option( T8CODE_BUILD_TPL_TESTS "Build the tests from libsc and p4est" ON "T8CODE_BUILD_TESTS" OFF )
-cmake_dependent_option( T8CODE_ENABLE_LESS_TESTS "Tests not as thoroughly to speed up the test suite. Tests the same functionality. (WARNING: Use with care.)" OFF "T8CODE_BUILD_TESTS" OFF )
 
 option( T8CODE_BUILD_EXAMPLES "Build t8code's examples" ON )
 cmake_dependent_option( T8CODE_BUILD_TPL_EXAMPLES "Build the examples from libsc and p4est" OFF "T8CODE_BUILD_EXAMPLES" OFF )
@@ -41,6 +40,8 @@ option( T8CODE_USE_SYSTEM_P4EST "Use system-installed p4est library" OFF )
 option( T8CODE_BUILD_DOCUMENTATION "Build t8code's documentation" OFF )
 cmake_dependent_option( T8CODE_BUILD_DOCUMENTATION_SPHINX "Build t8code's documentation using sphinx" OFF "T8CODE_BUILD_DOCUMENTATION" OFF )
 
+set(T8CODE_TEST_LEVEL 0 CACHE STRING "Test level: 0 for full tests, 1 for less thorough tests, 2 for minimal tests. (WARNING: Use with care.)")
+add_definitions(-DT8CODE_TEST_LEVEL=${T8CODE_TEST_LEVEL})
 set(T8CODE_CUSTOM_PARALLEL_TEST_COMMAND "" CACHE STRING "Define a custom command for parallel tests , e.g.: mpirun -np 8 (overwrites standard mpirun -np 4 if build with mpi)")
 set(T8CODE_CUSTOM_SERIAL_TEST_COMMAND "" CACHE STRING "Define a custom command for serial tests.")
 
