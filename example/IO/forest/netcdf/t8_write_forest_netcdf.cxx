@@ -71,8 +71,9 @@ struct t8_example_netcdf_adapt_data
 */
 int
 t8_example_netcdf_adapt_fn (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                            const t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme *scheme,
-                            const int is_family, const int num_elements, t8_element_t *elements[])
+                            [[maybe_unused]] const t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
+                            [[maybe_unused]] const t8_scheme *scheme, const int is_family,
+                            [[maybe_unused]] const int num_elements, t8_element_t *elements[])
 {
   t8_3D_point element_centroid;
   double distance;
@@ -138,9 +139,11 @@ t8_example_netcdf_adapt (t8_forest_t forest)
 * \note It is assumed that each user-variable in \a ext_vars holds one value for each element in the mesh/forest. If no additional variables should be written in the netCDF file, set \a num_additional_vars equal to zero and pass a NULL-pointer as \a ext_vars.
 */
 static void
-t8_example_time_netcdf_writing_operation (t8_forest_t forest, sc_MPI_Comm comm, int netcdf_var_storage_mode,
-                                          int netcdf_var_mpi_access, const char *title, int num_additional_vars,
-                                          t8_netcdf_variable_t *ext_vars[])
+t8_example_time_netcdf_writing_operation ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] sc_MPI_Comm comm,
+                                          [[maybe_unused]] int netcdf_var_storage_mode,
+                                          [[maybe_unused]] int netcdf_var_mpi_access,
+                                          [[maybe_unused]] const char *title, [[maybe_unused]] int num_additional_vars,
+                                          [[maybe_unused]] t8_netcdf_variable_t *ext_vars[])
 {
 #if T8_WITH_NETCDF_PAR
   double start_time, end_time, duration, global;

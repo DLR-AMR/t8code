@@ -21,7 +21,7 @@ defaultpyramidincludedir = $(schemesdefaultincludedir)/t8_default_pyramid
 
 libt8_generated_headers = src/t8_config.h
 libt8_installed_headers = \
-  src/t8.h src/t8_eclass.h src/t8_mesh.h \
+  src/t8.h src/t8_eclass.h \
   src/t8_element.hxx src/t8_element.h \
   src/t8_element_c_interface.h \
   src/t8_refcount.h src/t8_cmesh.hxx src/t8_cmesh.h src/t8_cmesh_triangle.h \
@@ -108,7 +108,7 @@ libt8_internal_headers = \
   src/t8_vtk/t8_vtk_writer_helper.hxx \
   src/t8_vtk/t8_vtk_write_ASCII.hxx
 libt8_compiled_sources = \
-  src/t8.c src/t8_eclass.c src/t8_mesh.c \
+  src/t8.c src/t8_eclass.c \
   src/t8_element.cxx \
   src/t8_vec.cxx \
   src/t8_element_c_interface.cxx \

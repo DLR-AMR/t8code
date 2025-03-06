@@ -49,7 +49,9 @@ static int t8_testsuite_package_id;
  * Number of points to use in tests
  * 
  */
-#if T8CODE_TEST_LEVEL == 1
+#if T8CODE_TEST_LEVEL >= 2
+#define T8_NUM_SAMPLE_POINTS 500
+#elif T8CODE_TEST_LEVEL >= 1
 #define T8_NUM_SAMPLE_POINTS 1000
 #else
 #define T8_NUM_SAMPLE_POINTS 10000
