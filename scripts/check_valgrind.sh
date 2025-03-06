@@ -59,7 +59,7 @@ VALGRIND_FLAGS="--leak-check=full --track-origins=yes \
 # There are some more flags that can be reasonable to use, e.g., for debugging reasons if you found an error.
 # We used minimal flags for performance reasons.
 # Further flags include (but of course are not limited to): --expensive-definedness-checks=yes --track-fds=yes
-# For more detailed outputs: -read-var-info=yes --read-inline-info=yes --gen-suppressions=all
+# For more detailed outputs: --read-var-info=yes --read-inline-info=yes --gen-suppressions=all
 # Warning: --show-leak-kinds=all will find a lot of still reachable leaks. This is not necessarily a problem.
 
 # Run valgrind on given file with flags and write output to OUTPUT_FILE.
