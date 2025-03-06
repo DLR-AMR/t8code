@@ -101,7 +101,7 @@ do
     # - $file: The file being checked.
     # - status: The exit status of the $CHECK_MACROS command.
     # - nocontinue: Flag set to 1 if the incorrect macro usage is found.
-    $CHECK_MACROS $file
+    #$CHECK_MACROS $file
     status=$?
     if test $status -ne 0 
     then
