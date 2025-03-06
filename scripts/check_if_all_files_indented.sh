@@ -44,7 +44,7 @@ fi
 
 # Find all files with the appropriate suffix.
 # Excluding the sc/ and p4est/ subfolders.
-files=`./find_all_source_files.scp`
+files=`./find_all_source_files.sh`
 
 notallindented=0
 for file in $files
@@ -54,7 +54,7 @@ do
   # file before checking for indentation.
   if [ -f $file ]
   then
-    ./check_if_file_indented.scp $file > /dev/null 2>&1
+    ./check_if_file_indented.sh $file > /dev/null 2>&1
     status=$?
     if test $status -ne 0
     then

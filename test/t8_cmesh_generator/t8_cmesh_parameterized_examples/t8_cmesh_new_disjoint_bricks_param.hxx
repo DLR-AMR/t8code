@@ -60,7 +60,7 @@ example_set *cmesh_example = (example_set *) new cmesh_cartesian_product_params<
   std::make_pair (cmesh_params::periodic.begin (), cmesh_params::periodic.end ()),
   std::make_pair (cmesh_params::periodic.begin (), cmesh_params::periodic.end ()),
   std::make_pair (cmesh_params::my_comms.begin (), cmesh_params::my_comms.end ()), disjoint_bricks,
-  make_param_string_wrapper, "t8_cmesh_new_disjoint_brick_");
+  make_param_string_wrapper, "t8_cmesh_new_disjoint_brick");
 }  // namespace new_disjoint_bricks
 
 #endif /* T8_CMESH_NEW_DISJOINT_BRICKS_PARAM_HXX */

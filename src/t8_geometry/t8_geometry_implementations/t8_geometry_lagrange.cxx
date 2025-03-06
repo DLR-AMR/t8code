@@ -41,8 +41,8 @@ t8_geometry_lagrange::~t8_geometry_lagrange ()
 }
 
 void
-t8_geometry_lagrange::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                        const size_t num_points, double *out_coords) const
+t8_geometry_lagrange::t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                                        const double *ref_coords, const size_t num_points, double *out_coords) const
 {
   if (num_points != 1)
     SC_ABORT ("Error: Batch computation of geometry not yet supported.");
@@ -61,8 +61,11 @@ t8_geometry_lagrange::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, c
 }
 
 void
-t8_geometry_lagrange::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                                 const size_t num_points, double *jacobian) const
+t8_geometry_lagrange::t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh,
+                                                 [[maybe_unused]] t8_gloidx_t gtreeid,
+                                                 [[maybe_unused]] const double *ref_coords,
+                                                 [[maybe_unused]] const size_t num_points,
+                                                 [[maybe_unused]] double *jacobian) const
 {
   SC_ABORT_NOT_REACHED ();
 }
@@ -289,12 +292,15 @@ t8_lagrange_element::t8_lagrange_element (t8_eclass_t eclass, uint32_t degree, s
   // TODO: Check if the number of nodes corresponds to the element type and degree.
   // if (nodes.size () != parametric_nodes.size ())
   //   SC_ABORTF ("Provide the 3 coordinates of the nodes.\n");
+
+  // Assert that the vector of nodes contains nodes with 3 coordinates each.
+  T8_ASSERT (0 == nodes.size () % 3);
   /* Create a cmesh with a single element */
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_LAGRANGE_POLY_DEGREE_KEY, &degree, sizeof (int), 1);
   t8_cmesh_register_geometry<t8_geometry_lagrange> (cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, eclass);
-  t8_cmesh_set_tree_vertices (cmesh, 0, nodes.data (), nodes.size ());
+  t8_cmesh_set_tree_vertices (cmesh, 0, nodes.data (), (int) (nodes.size () / 3.0));
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 }
 

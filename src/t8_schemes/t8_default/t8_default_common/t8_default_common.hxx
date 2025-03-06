@@ -28,7 +28,7 @@
 #define T8_DEFAULT_COMMON_HXX
 
 #include <t8_element.h>
-#include <t8_schemes/t8_crtp.hxx>
+#include <t8_types/t8_operators.hxx>
 #include <sc_functions.h>
 #include <sc_containers.h>
 
@@ -84,7 +84,7 @@ count_leaves_from_level (const int element_level, const int refinement_level, co
 }
 
 template <class TUnderlyingEclassScheme>
-class t8_default_scheme_common: public t8_crtp<TUnderlyingEclassScheme> {
+class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme, t8_default_scheme_common> {
  private:
   friend TUnderlyingEclassScheme;
   /** Private constructor which can only be used by derived schemes.
@@ -183,7 +183,7 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclassScheme> {
    * \note This function is overwritten by the pyramid implementation.
   */
   inline int
-  element_get_num_corners (const t8_element_t *elem) const
+  element_get_num_corners ([[maybe_unused]] const t8_element_t *elem) const
   {
     /* use the lookup table of the eclasses.
      * Pyramids should implement their own version of this function. */
@@ -208,7 +208,7 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclassScheme> {
   }
 
   inline void
-  element_deinit (int length, t8_element_t *elem) const
+  element_deinit ([[maybe_unused]] int length, [[maybe_unused]] t8_element_t *elem) const
   {
   }
 
@@ -218,7 +218,7 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclassScheme> {
    * \note This function is overwritten by the pyramid implementation.
   */
   inline t8_element_shape_t
-  element_get_shape (const t8_element_t *elem) const
+  element_get_shape ([[maybe_unused]] const t8_element_t *elem) const
   {
     /* use the lookup table of the eclasses.
      * Pyramids should implement their own version of this function. */
@@ -250,7 +250,7 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclassScheme> {
    * \note that this number is >= 1, since we count the element itself as a sibling.
    */
   inline int
-  element_get_num_siblings (const t8_element_t *elem) const
+  element_get_num_siblings ([[maybe_unused]] const t8_element_t *elem) const
   {
     const int dim = t8_eclass_to_dimension[eclass];
     T8_ASSERT (eclass != T8_ECLASS_PYRAMID);

@@ -28,9 +28,7 @@
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
-#include <example/common/t8_example_common.h>
-
-T8_EXTERN_C_BEGIN ();
+#include <example/common/t8_example_common.hxx>
 
 /* Adapt a forest such that always the second child of the first
  * tree is refined and no other elements. This results in a highly
@@ -39,8 +37,9 @@ T8_EXTERN_C_BEGIN ();
  */
 int
 t8_common_adapt_balance (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                         const t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme *scheme,
-                         const int is_family, const int num_elements, t8_element_t *elements[])
+                         const t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
+                         const t8_scheme *scheme, [[maybe_unused]] const int is_family,
+                         [[maybe_unused]] const int num_elements, t8_element_t *elements[])
 {
   int level;
   int maxlevel, child_id;
@@ -66,7 +65,8 @@ int
 t8_common_within_levelset (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
                            t8_example_level_set_fn levelset, double band_width, double t, void *udata)
 {
-  double elem_midpoint[3], elem_diam;
+  t8_3D_point elem_midpoint;
+  double elem_diam;
   double value;
   const t8_eclass_t tree_class = t8_forest_get_eclass (forest, ltreeid);
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
@@ -76,17 +76,17 @@ t8_common_within_levelset (t8_forest_t forest, const t8_locidx_t ltreeid, const 
     /* If bandwidth = 0, we only refine the elements that are intersected by the zero level-set */
     const int num_corners = scheme->element_get_num_corners (tree_class, element);
     int sign = 1, icorner;
-    double coords[3];
+    t8_3D_point coords;
 
     /* Compute LS function at first corner */
-    t8_forest_element_coordinate (forest, ltreeid, element, 0, coords);
+    t8_forest_element_coordinate (forest, ltreeid, element, 0, coords.data ());
     /* compute the level-set function at this corner */
     value = levelset (coords, t, udata);
     /* sign = 1 if value > 0, -1 if value < 0, 0 if value = 0 */
     sign = value > 0 ? 1 : -(value < 0);
     /* iterate over all corners */
     for (icorner = 1; icorner < num_corners; icorner++) {
-      t8_forest_element_coordinate (forest, ltreeid, element, icorner, coords);
+      t8_forest_element_coordinate (forest, ltreeid, element, icorner, coords.data ());
       /* compute the level-set function at this corner */
       value = levelset (coords, t, udata);
       if ((value > 0 && sign <= 0) || (value == 0 && sign != 0) || (value < 0 && sign >= 0)) {
@@ -98,7 +98,7 @@ t8_common_within_levelset (t8_forest_t forest, const t8_locidx_t ltreeid, const 
   }
 
   /* Compute the coordinates of the anchor node X. */
-  t8_forest_element_centroid (forest, ltreeid, element, elem_midpoint);
+  t8_forest_element_centroid (forest, ltreeid, element, elem_midpoint.data ());
   /* Compute the element's diameter */
   elem_diam = t8_forest_element_diam (forest, ltreeid, element);
   /* Compute L(X) */
@@ -119,8 +119,9 @@ t8_common_within_levelset (t8_forest_t forest, const t8_locidx_t ltreeid, const 
 /* TODO: Currently the band_width control is not working yet. */
 int
 t8_common_adapt_level_set (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                           const t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme *scheme,
-                           const int is_family, const int num_elements, t8_element_t *elements[])
+                           const t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
+                           const t8_scheme *scheme, const int is_family, [[maybe_unused]] const int num_elements,
+                           t8_element_t *elements[])
 {
   t8_example_level_set_struct_t *data;
   int within_band;
@@ -155,5 +156,3 @@ t8_common_adapt_level_set (t8_forest_t forest, t8_forest_t forest_from, t8_locid
   }
   return 0;
 }
-
-T8_EXTERN_C_END ();

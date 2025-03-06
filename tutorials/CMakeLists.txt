@@ -25,7 +25,7 @@ function( add_t8_tutorial )
         set_target_properties( ${ADD_T8_TUTORIAL_NAME} PROPERTIES EXPORT_COMPILE_COMMANDS ON )
     endif( T8CODE_EXPORT_COMPILE_COMMANDS )
 
-    install( TARGETS ${ADD_T8_TUTORIAL_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+    install( TARGETS ${ADD_T8_TUTORIAL_NAME} DESTINATION bin )
 endfunction()
 
 #copy tutorial files to the exact same location in the builddir as they are in the source dir
@@ -44,7 +44,7 @@ add_t8_tutorial( NAME t8_step7_interpolation            SOURCES general/t8_step7
 add_t8_tutorial( NAME t8_tutorial_build_cmesh           SOURCES general/t8_tutorial_build_cmesh.cxx general/t8_tutorial_build_cmesh_main.cxx)
 add_t8_tutorial( NAME t8_tutorial_search                SOURCES general/t8_tutorial_search.cxx general/t8_step3_adapt_forest.cxx )
 add_t8_tutorial( NAME t8_features_curved_meshes         SOURCES features/t8_features_curved_meshes.cxx)
-
+add_t8_tutorial( NAME t8_tutorial_build_scheme          SOURCES general/t8_tutorial_build_scheme.cxx)   
 copy_tutorial_file (features/t8_features_curved_meshes_generate_cmesh_hex.geo)
 copy_tutorial_file (features/t8_features_curved_meshes_generate_cmesh_quad.geo)
 copy_tutorial_file (features/t8_features_curved_meshes_generate_cmesh_tet.geo)

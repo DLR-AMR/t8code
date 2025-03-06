@@ -35,9 +35,11 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 
 static int
-t8_basic_adapt_refine_type (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
-                            t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family,
-                            const int num_elements, t8_element_t *elements[])
+t8_basic_adapt_refine_type (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                            [[maybe_unused]] t8_locidx_t which_tree, t8_eclass_t tree_class,
+                            [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+                            [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
+                            t8_element_t *elements[])
 {
   int level;
   int type;
@@ -58,9 +60,11 @@ t8_basic_adapt_refine_type (t8_forest_t forest, t8_forest_t forest_from, t8_loci
 }
 
 static int
-t8_basic_adapt_refine_tet (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
-                           t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family,
-                           const int num_elements, t8_element_t *elements[])
+t8_basic_adapt_refine_tet (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                           [[maybe_unused]] t8_locidx_t which_tree, t8_eclass_t tree_class,
+                           [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+                           [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
+                           t8_element_t *elements[])
 {
   int level;
   int type;
@@ -81,7 +85,7 @@ t8_basic_adapt_refine_tet (t8_forest_t forest, t8_forest_t forest_from, t8_locid
 }
 
 static void
-t8_time_refine (int start_level, int end_level, int create_forest, int cube, int adapt, int do_balance,
+t8_time_refine (int start_level, int end_level, [[maybe_unused]] int create_forest, int cube, int adapt, int do_balance,
                 t8_eclass_t eclass)
 {
   t8_forest_t forest, forest_adapt, forest_partition;

@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 #  This file is part of t8code.
 #  t8code is a C library to manage a collection (a forest) of multiple
 #  connected adaptive space-trees of general element classes in parallel.

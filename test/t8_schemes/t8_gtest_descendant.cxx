@@ -159,4 +159,4 @@ TEST_P (class_schemes_descendant, test_recursive_descendant)
   t8_large_step_descendant (elem, desc, test, scheme, eclass, maxlvl);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_descendant, class_schemes_descendant, AllSchemes);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_descendant, class_schemes_descendant, AllSchemes, print_all_schemes);

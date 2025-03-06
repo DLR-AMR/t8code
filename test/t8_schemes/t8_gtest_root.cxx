@@ -70,4 +70,4 @@ TEST_P (root, equals_linear_id_0_0)
   scheme->element_destroy (eclass, 1, &root_compare);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_root, root, AllSchemes);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_root, root, AllSchemes, print_all_schemes);

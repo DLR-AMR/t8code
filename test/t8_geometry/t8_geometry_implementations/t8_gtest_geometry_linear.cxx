@@ -34,6 +34,7 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx>
 #include <t8_element.h>
+#include <t8_types/t8_vec.hxx>
 
 class geometry_test: public testing::TestWithParam<std::tuple<int, t8_eclass>> {
  public:
@@ -89,10 +90,14 @@ class geometry_test: public testing::TestWithParam<std::tuple<int, t8_eclass>> {
   void
   TearDown () override
   {
+    if (geom != nullptr) {
+      delete geom;
+      geom = nullptr;
+    }
     t8_cmesh_unref (&cmesh);
   }
   t8_eclass_t eclass;
-  t8_geometry_with_vertices *geom;
+  t8_geometry_with_vertices *geom = nullptr;
   t8_cmesh_t cmesh;
 };
 
@@ -108,7 +113,7 @@ TEST_P (geometry_test, cmesh_geometry)
 
   /* Create random points in [0,1]^d and check if they are mapped correctly. */
 
-  double point_mapped[3];
+  t8_3D_point point_mapped;
   const t8_geometry_c *cmesh_geom;
 
   /* Double check that the geometry is the linear axis aligned geometry. */
@@ -119,7 +124,7 @@ TEST_P (geometry_test, cmesh_geometry)
 
   srand (seed);
   for (int ipoint = 0; ipoint < T8_NUM_SAMPLE_POINTS; ++ipoint) {
-    double point[3] = { 0 };
+    t8_3D_point point ({ 0.0, 0.0, 0.0 });
     /* Compute random coordinates in [0,1].
      * These are seen as reference coordinates in the single
      * cmesh tree. Our geometry will map them into the physical
@@ -131,9 +136,9 @@ TEST_P (geometry_test, cmesh_geometry)
     }
 
     /* Evaluate the geometry */
-    t8_geometry_evaluate (cmesh, 0, point, 1, point_mapped);
+    t8_geometry_evaluate (cmesh, 0, point.data (), 1, point_mapped.data ());
     /* Check that the first dim coordinates are the same */
-    EXPECT_VEC3_EQ (point, point_mapped, T8_PRECISION_SQRT_EPS);
+    EXPECT_VEC_EQ (point, point_mapped, T8_PRECISION_SQRT_EPS);
   }
 }
 

@@ -136,7 +136,7 @@ t8_deep_successor (t8_element_t *element, t8_element_t *successor, t8_element_t 
 
 TEST_P (class_successor, test_recursive_and_deep_successor)
 {
-#ifdef T8_ENABLE_LESS_TESTS
+#if T8CODE_TEST_LEVEL >= 1
   const int maxlvl = 3;
 #else
   const int maxlvl = 4;
@@ -154,4 +154,4 @@ TEST_P (class_successor, test_recursive_and_deep_successor)
   t8_deep_successor (element, successor, last, scheme, tree_class);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_successor, class_successor, AllSchemes);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_successor, class_successor, AllSchemes, print_all_schemes);
