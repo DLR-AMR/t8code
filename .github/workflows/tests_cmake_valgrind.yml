@@ -106,13 +106,5 @@ jobs:
       run: cd build && ninja install $MAKEFLAGS
     # Execute script that runs a Valgrind check for all test binaries. 
     - name: Valgrind check
-      run: cd scripts/ && bash ./check_all_test_binaries_valgrind.sh &> >(tee -a valgrind_script_output.txt)
-    - name: Archive script output
-    # Do this regardless of the result of the previous step.
-    # We especially want to upload the result when the check fails.
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: t8code indentation report
-        path: scripts/valgrind_script_output.txt
+      run: cd scripts/ && bash ./check_all_test_binaries_valgrind.sh
     
