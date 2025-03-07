@@ -57,7 +57,7 @@ counter=0
 
 for bin_path in $test_bin_paths; do
   # Run check_valgrind script for each test binary.
-  bash ../../scripts/check_valgrind.sh $bin_path > /dev/null 2>&1
+  bash ../../scripts/check_valgrind.sh $bin_path 2>&1
   status=$?
   # If status is not 0, an error occurred.
   if test $status -ne 0; then
