@@ -74,6 +74,13 @@ jobs:
         && echo BUILD_TYPE="$BUILD_TYPE" >> $GITHUB_ENV
         && echo SC_PATH="$SC_PATH" >> $GITHUB_ENV
         && echo P4EST_PATH="$P4EST_PATH" >> $GITHUB_ENV
+    ## Install Valgrind.
+    - name: Update packages
+      run: sudo apt-get update && sudo apt-get upgrade -y
+    # This step is necessary to get the newest package data
+    - name: Install Valgrind
+      run: sudo apt-get install -y valgrind
+
 #
 #  T8CODE
 #
