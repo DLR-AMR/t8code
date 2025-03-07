@@ -92,13 +92,13 @@ target_sources( T8 PRIVATE
     t8_vtk/t8_vtk_write_ASCII.cxx
     t8_vtk/t8_vtk_writer_helper.cxx
 )
-if (T8_WITH_NETCDF)
+if (T8CODE_ENABLE_NETCDF)
   target_sources( T8 PRIVATE
     t8_netcdf.c
     t8_cmesh/t8_cmesh_netcdf.c
     t8_forest/t8_forest_netcdf.cxx
   )
-endif(T8_WITH_NETCDF)
+endif(T8CODE_ENABLE_NETCDF)
 
 get_target_property( T8_LIBS_LIST T8 LINK_LIBRARIES )
 string( REPLACE ";" " " T8_LIBS "${T8_LIBS_LIST}" )
@@ -124,9 +124,9 @@ install( FILES
 )
 if (T8CODE_ENABLE_NETCDF)
   install( FILES
-    t8_netcdf.c
-    t8_cmesh/t8_cmesh_netcdf.c
-    t8_forest/t8_forest_netcdf.cxx
+    t8_cmesh_netcdf.h
+    t8_forest_netcdf.h
+    t8_netcdf.h
     DESTINATION include
   )
 endif(T8CODE_ENABLE_NETCDF)
