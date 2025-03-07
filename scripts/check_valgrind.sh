@@ -55,7 +55,7 @@ OUTPUT_FILE="valgrind-output.log"
 # Set valgrind flags.
 VALGRIND_FLAGS="--leak-check=full --track-origins=yes \
     --trace-children=yes --show-leak-kinds=definite,indirect,possible \
-    --errors-for-leak-kinds=definite,indirect,possible"
+    --errors-for-leak-kinds=definite,indirect,possible --gen-suppressions=all"
 # There are some more flags that can be reasonable to use, e.g., for debugging reasons if you found an error.
 # We used minimal flags for performance reasons.
 # Further flags include (but of course are not limited to): --expensive-definedness-checks=yes --track-fds=yes
