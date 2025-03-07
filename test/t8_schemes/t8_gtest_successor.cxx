@@ -39,7 +39,7 @@ class class_successor: public testing::TestWithParam<std::tuple<int, t8_eclass_t
     scheme->element_new (tree_class, 1, &child);
     scheme->element_new (tree_class, 1, &last);
 
-    scheme->get_root (tree_class, element);
+    scheme->set_to_root (tree_class, element);
 
     tree_class = scheme->get_eclass_scheme_eclass (tree_class);
     if (tree_class == T8_ECLASS_VERTEX)
