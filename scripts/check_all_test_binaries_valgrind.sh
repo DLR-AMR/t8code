@@ -41,6 +41,7 @@ fi
 
 # Find all test binary paths.
 test_bin_paths=`bash ./find_all_test_binary_paths.sh`
+num_paths=$(echo $test_bin_paths | wc -w)
 
 # This is necessary because some tests use test files specified by relative paths. 
 # These tests only work when run from the build/test/ directory. 
@@ -54,10 +55,11 @@ fi
 
 status=0
 counter=0
+valgrind_suppressions_file=../../scripts/valgrind_suppressions_file.supp
 
 for bin_path in $test_bin_paths; do
   # Run check_valgrind script for each test binary.
-  bash ../../scripts/check_valgrind.sh $bin_path 2>&1
+  bash ../../scripts/check_valgrind.sh $bin_path $valgrind_suppressions_file 2>&1
   status=$?
   # If status is not 0, an error occurred.
   if test $status -ne 0; then
@@ -65,7 +67,7 @@ for bin_path in $test_bin_paths; do
     exit 1
   fi
   counter=$(( $counter + 1 ))
-  echo "Checked $counter files."
+  echo "Checked $counter of $num_paths files."
 done
 
 echo "Valgrind found no errors in the test executables."
