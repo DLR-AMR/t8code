@@ -20,9 +20,6 @@ name: Valgrind check
 #  along with t8code; if not, write to the Free Software Foundation, Inc.,
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-env:
-  DEBUG_CONFIG: "-O1"
-
 on:
   workflow_call:
     inputs:
@@ -75,11 +72,10 @@ jobs:
         && echo SC_PATH="$SC_PATH" >> $GITHUB_ENV
         && echo P4EST_PATH="$P4EST_PATH" >> $GITHUB_ENV
     ## Install Valgrind.
-    - name: Update packages
-      run: sudo apt-get update && sudo apt-get upgrade -y
-    # This step is necessary to get the newest package data
     - name: Install Valgrind
-      run: sudo apt-get install -y valgrind
+      run: apt-get install -y valgrind
+    - name: Print Valgrind version
+      run: valgrind --version
 
 #
 #  T8CODE
@@ -90,13 +86,9 @@ jobs:
       run: export TEST_LEVEL_FLAG="-DT8CODE_TEST_LEVEL=${{ inputs.TEST_LEVEL }}"
            && echo TEST_LEVEL_FLAG="$TEST_LEVEL_FLAG" >> $GITHUB_ENV
     - name: build config variables
-      run: export CONFIG_OPTIONS="${TEST_LEVEL_FLAG} -GNinja -DCMAKE_C_FLAGS_DEBUG=${DEBUG_CONFIG} -DCMAKE_CXX_FLAGS_DEBUG=${DEBUG_CONFIG} -DT8CODE_USE_SYSTEM_SC=ON -DT8CODE_USE_SYSTEM_P4EST=ON -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=ON -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSC_DIR=$SC_PATH/install/cmake -DP4EST_DIR=$P4EST_PATH/install/cmake"
+      run: export CONFIG_OPTIONS="${TEST_LEVEL_FLAG} -GNinja -DT8CODE_USE_SYSTEM_SC=ON -DT8CODE_USE_SYSTEM_P4EST=ON -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=ON -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSC_DIR=$SC_PATH/install/cmake -DP4EST_DIR=$P4EST_PATH/install/cmake"
         && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
     # cmake
-    - name: Printing MPI compiler info
-      run: mpicc --version && mpirun --version
-    - name: Printing GCC compiler info
-      run: gcc --version && g++ --version
     - name: echo cmake line
       run: echo cmake ../ $CONFIG_OPTIONS
     - name: cmake
@@ -113,5 +105,5 @@ jobs:
       run: cd build && ninja install $MAKEFLAGS
     # Execute script that runs a Valgrind check for all test binaries. 
     - name: Valgrind check
-      run: cd scripts/ && bash ./check_all_test_binaries_valgrind.sh
+      run: cd scripts && bash ./check_all_test_binaries_valgrind.sh
     
