@@ -14,16 +14,13 @@ function( add_t8_benchmark )
     add_executable( ${ADD_T8_BENCHMARK_NAME} ${ADD_T8_BENCHMARK_SOURCES} )
     target_include_directories( ${ADD_T8_BENCHMARK_NAME} PRIVATE ${PROJECT_SOURCE_DIR} )
     target_link_libraries( ${ADD_T8_BENCHMARK_NAME} PRIVATE T8 SC::SC )
+    t8_add_cmake_properties( ${ADD_T8_BENCHMARK_NAME} )
 
     set_target_properties(${ADD_T8_BENCHMARK_NAME} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${BENCHMARK_BUILD_DIR}"
         LIBRARY_OUTPUT_DIRECTORY "${BENCHMARK_BUILD_DIR}"
         ARCHIVE_OUTPUT_DIRECTORY "${BENCHMARK_BUILD_DIR}"
     )
-
-    if( T8CODE_EXPORT_COMPILE_COMMANDS )
-        set_target_properties( ${ADD_T8_BENCHMARK_NAME} PROPERTIES EXPORT_COMPILE_COMMANDS ON )
-    endif( T8CODE_EXPORT_COMPILE_COMMANDS )
 
     install( TARGETS ${ADD_T8_BENCHMARK_NAME} DESTINATION bin )
 endfunction()
