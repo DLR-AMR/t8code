@@ -59,7 +59,7 @@ jobs:
     - name: Indentation check
       run: cd scripts/ && ./check_if_all_files_indented.sh &> >(tee -a indent_script_output.txt)
     - name: Archive script output
-    # Do this regardess of the result of the previous step.
+    # Do this regardless of the result of the previous step.
     # We especially want to upload the result when the check fails.
       if: always()
       uses: actions/upload-artifact@v4

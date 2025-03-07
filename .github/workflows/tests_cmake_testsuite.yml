@@ -61,7 +61,7 @@ jobs:
         repository: ${{ github.event.pull_request.head.repo.full_name }}
         ref: ${{ github.event.pull_request.head.ref }}
         fetch-depth: 0
-    - name: set the run_ci variable for the testsute
+    - name: set the run_ci variable for the testsuite
       id: set_run_ci
       run: |
         if [[ "${{ github.event_name }}" == "schedule" && "${{ github.repository }}" == "DLR-AMR/t8code" ]]; then
@@ -181,6 +181,16 @@ jobs:
       MPI: ${{ matrix.MPI }}
       BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
       TEST_LEVEL: ${{ github.event_name == 'pull_request' && 1 || 0 }} # Set TEST_LEVEL to 1 if the event is a PR, otherwise 0.
+
+  # Run valgrind check for every t8code test binary.
+  t8code_valgrind_tests:
+    needs: preparation
+    uses: ./.github/workflows/tests_cmake_valgrind.yml
+    with:
+      MAKEFLAGS: -j4
+      MPI: ON
+      BUILD_TYPE: Debug
+      TEST_LEVEL: 2 # Do valgrind check for test level 2 for performance reasons.
   
   # Run t8code tests with shipped submodules. This test is only for the build system, so only one config is tested.
   t8code_w_shipped_submodules_tests:
