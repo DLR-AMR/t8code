@@ -35,7 +35,7 @@
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.h>
 
 /* Forward declaration of the scheme so we can use it as an argument in the eclass schemes function. */
-struct t8_scheme;
+class t8_scheme;
 
 class t8_default_scheme_tri: public t8_default_scheme_common<t8_default_scheme_tri> {
  public:

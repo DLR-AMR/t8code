@@ -305,12 +305,15 @@ t8_lagrange_element::t8_lagrange_element (t8_eclass_t eclass, uint32_t degree, s
   // TODO: Check if the number of nodes corresponds to the element type and degree.
   // if (nodes.size () != parametric_nodes.size ())
   //   SC_ABORTF ("Provide the 3 coordinates of the nodes.\n");
+
+  // Assert that the vector of nodes contains nodes with 3 coordinates each.
+  T8_ASSERT (0 == nodes.size () % 3);
   /* Create a cmesh with a single element */
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_LAGRANGE_POLY_DEGREE_KEY, &degree, sizeof (int), 1);
   t8_cmesh_register_geometry<t8_geometry_lagrange> (cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, eclass);
-  t8_cmesh_set_tree_vertices (cmesh, 0, nodes.data (), nodes.size ());
+  t8_cmesh_set_tree_vertices (cmesh, 0, nodes.data (), (int) (nodes.size () / 3.0));
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 }
 
