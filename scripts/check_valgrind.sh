@@ -55,7 +55,7 @@ OUTPUT_FILE="valgrind-output.log"
 # Set valgrind flags.
 VALGRIND_FLAGS="--leak-check=full --track-origins=yes \
     --trace-children=yes --show-leak-kinds=definite,indirect,possible \
-    --errors-for-leak-kinds=definite,indirect,possible --gen-suppressions=all"
+    --errors-for-leak-kinds=definite,indirect,possible --gen-suppressions=all --suppressions=../../scripts/valgrind_suppressions_file.supp"
 # There are some more flags that can be reasonable to use, e.g., for debugging reasons if you found an error.
 # We used minimal flags for performance reasons.
 # Further flags include (but of course are not limited to): --expensive-definedness-checks=yes --track-fds=yes
@@ -63,62 +63,59 @@ VALGRIND_FLAGS="--leak-check=full --track-origins=yes \
 # Warning: --show-leak-kinds=all will find a lot of still reachable leaks. This is not necessarily a problem.
 
 # Run valgrind on given file with flags and write output to OUTPUT_FILE.
-valgrind $VALGRIND_FLAGS "${FILE}" 
-
-#2>"${OUTPUT_FILE}"
+valgrind $VALGRIND_FLAGS "${FILE}" 2>"${OUTPUT_FILE}"
 
 # Parse valgrind output.
-# declare -a VALGRIND_RULES=(
-#         "^==.*== .* bytes in .* blocks are definitely lost in loss record .* of .*$"
-#         "^==.*== .* bytes in .* blocks are indirectly lost in loss record .* of .*$"
-#         "^==.*== .* bytes in .* blocks are possibly lost in loss record .* of .*$"
-#         "^==.*== Invalid .* of size .*$"
-#         "^==.*== Open file descriptor .*: .*$"
-#         "^==.*== Invalid free() / delete / delete\[\] / realloc()$"
-#         "^==.*== Mismatched free() / delete / delete \[\].*$"
-#         "^==.*== Syscall param .* points to uninitialised byte(s).*$"
-#         "^==.*== Source and destination overlap in .*$"
-#         "^==.*== Argument .* of function .* has a fishy (possibly negative) value: .*$"
-#         "^==.*== .*alloc() with size 0$"
-#         "^==.*== Invalid alignment value: .* (should be power of 2)$"
-#     )
-# report_id=1
-# status=0
-# error=""
-# echo ""
+declare -a VALGRIND_RULES=(
+        "^==.*== .* bytes in .* blocks are definitely lost in loss record .* of .*$"
+        "^==.*== .* bytes in .* blocks are indirectly lost in loss record .* of .*$"
+        "^==.*== .* bytes in .* blocks are possibly lost in loss record .* of .*$"
+        "^==.*== Invalid .* of size .*$"
+        "^==.*== Open file descriptor .*: .*$"
+        "^==.*== Invalid free() / delete / delete\[\] / realloc()$"
+        "^==.*== Mismatched free() / delete / delete \[\].*$"
+        "^==.*== Syscall param .* points to uninitialised byte(s).*$"
+        "^==.*== Source and destination overlap in .*$"
+        "^==.*== Argument .* of function .* has a fishy (possibly negative) value: .*$"
+        "^==.*== .*alloc() with size 0$"
+        "^==.*== Invalid alignment value: .* (should be power of 2)$"
+    )
+report_id=1
+status=0
+error=""
+echo ""
 
-# while IFS= read -r line; do
-#     if [[ "${error}" != "" ]]; then
-#         # Error message of valgrind always end with a line ==.*== without any further information.
-#         # Only print if we collected every line of the error message.
-#         if [[ $(echo "${line}" | grep '^==.*== $') ]]; then
-#             echo "::Error found in valgrind report '${FILE}' (${report_id})::"
-#             echo -e "${error}"
-#             echo ""
-#             report_id=$(( $report_id + 1 ))
-#             error=""
-#             status=1
-#         else
-#             # Add to error message that is printed with the last line of the error.
-#             error="${error}\n${line}"
-#         fi
-#     fi
-#     for rule in "${VALGRIND_RULES[@]}"; do
-#         # Check if we found one of the errors defined in VALGRIND_RULES.
-#         if [[ $(echo "${line}" | grep "${rule}") ]]; then
-#             error="${line}"
-#             break
-#         fi
-#     done
-#     if [[ $(echo "${line}" | grep '^==.*== ERROR SUMMARY:') ]]; then
-#         if ! [[ $(echo "${line}" | grep '^==.*== ERROR SUMMARY: 0 ') ]]; then
-#             # Set status to 1 if an error was found that is not included in VALGRIND_RULES.
-#             status=1
-#         fi
-#         echo "${line}"
-#     fi
-# done < "${OUTPUT_FILE}"
+while IFS= read -r line; do
+    if [[ "${error}" != "" ]]; then
+        # Error message of valgrind always end with a line ==.*== without any further information.
+        # Only print if we collected every line of the error message.
+        if [[ $(echo "${line}" | grep '^==.*== $') ]]; then
+            echo "::Error found in valgrind report '${FILE}' (${report_id})::"
+            echo -e "${error}"
+            echo ""
+            report_id=$(( $report_id + 1 ))
+            error=""
+            status=1
+        else
+            # Add to error message that is printed with the last line of the error.
+            error="${error}\n${line}"
+        fi
+    fi
+    for rule in "${VALGRIND_RULES[@]}"; do
+        # Check if we found one of the errors defined in VALGRIND_RULES.
+        if [[ $(echo "${line}" | grep "${rule}") ]]; then
+            error="${line}"
+            break
+        fi
+    done
+    if [[ $(echo "${line}" | grep '^==.*== ERROR SUMMARY:') ]]; then
+        if ! [[ $(echo "${line}" | grep '^==.*== ERROR SUMMARY: 0 ') ]]; then
+            # Set status to 1 if an error was found that is not included in VALGRIND_RULES.
+            status=1
+        fi
+        echo "${line}"
+    fi
+done < "${OUTPUT_FILE}"
 
-# rm -f "${OUTPUT_FILE}"
-# exit "${status}"
-exit 1
+rm -f "${OUTPUT_FILE}"
+exit "${status}"
