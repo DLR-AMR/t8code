@@ -64,6 +64,7 @@ VALGRIND_FLAGS="--leak-check=full --track-origins=yes \
 
 # Run valgrind on given file with flags and write output to OUTPUT_FILE.
 valgrind $VALGRIND_FLAGS "${FILE}" 
+
 #2>"${OUTPUT_FILE}"
 
 # Parse valgrind output.
