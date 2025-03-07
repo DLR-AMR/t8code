@@ -92,7 +92,7 @@ if( T8CODE_BUILD_WERROR )
   set (T8_CFLAGS "${T8_CFLAGS} -Werror")
 endif()
 
-if( T8CODE_BUILD_EXTRA_WARNINGS )
+if( T8CODE_BUILD_WEXTRA )
   target_compile_options( T8 PUBLIC -Wextra )
   set (T8_CXXFLAGS "${T8_CXXFLAGS} -Wextra")
   set (T8_CFLAGS "${T8_CFLAGS} -Wextra")
