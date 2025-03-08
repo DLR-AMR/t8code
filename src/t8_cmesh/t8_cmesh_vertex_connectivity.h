@@ -28,6 +28,8 @@
 #ifndef T8_CMESH_VERTEX_CONNECTIVITY_H
 #define T8_CMESH_VERTEX_CONNECTIVITY_H
 
+T8_EXTERN_C_BEGIN ();
+
 typedef struct t8_cmesh_vertex_connectivity *t8_cmesh_vertex_connectivity_c;
 
 /** Set all global vertex ids of a local tree.
@@ -82,5 +84,7 @@ t8_cmesh_get_global_vertex_of_tree (const t8_cmesh_t cmesh, const t8_locidx_t lo
  */
 const int
 t8_cmesh_get_num_trees_at_vertex (const t8_cmesh_t cmesh, t8_gloidx_t global_vertex);
+
+T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_VERTEX_CONNECTIVITY_H */
