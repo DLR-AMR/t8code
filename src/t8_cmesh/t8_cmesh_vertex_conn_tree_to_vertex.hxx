@@ -54,7 +54,12 @@ class t8_cmesh_vertex_conn_tree_to_vertex {
   {
   }
 
-  /** Constructor from a cmesh where all the attributes are set. */
+  /** Constructor from a cmesh where all the attributes are set.
+   * Currently unclear if we implement this eventually.
+   * If we do so: Should the cmesh be already committed, or in pre-commit state but attributes set?
+   * 
+   * \note This function is not implemented yet.
+   */
   t8_cmesh_vertex_conn_tree_to_vertex (const t8_cmesh_t cmesh)
   {
     SC_ABORT ("not implemented.");
