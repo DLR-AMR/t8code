@@ -80,7 +80,14 @@ t8_cmesh_vertex_conn_vertex_to_tree::add_vertex_to_tree (const t8_cmesh_t cmesh,
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
 
 #if T8_ENABLE_DEBUG
-  const t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, ltreeid);
+  const bool is_local_tree = t8_cmesh_treeid_is_local_tree (cmesh, ltreeid);
+  t8_eclass_t tree_class;
+  if (is_local_tree) {
+    tree_class = t8_cmesh_get_tree_class (cmesh, ltreeid);
+  }
+  else {
+    tree_class = t8_cmesh_get_ghost_class (cmesh, ltreeid - t8_cmesh_get_num_local_trees (cmesh));
+  }
   const int num_tree_vertices = t8_eclass_num_vertices[tree_class];
   T8_ASSERT (0 <= tree_vertex && tree_vertex < num_tree_vertices);
 #endif
