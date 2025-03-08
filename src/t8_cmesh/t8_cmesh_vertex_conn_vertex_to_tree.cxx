@@ -34,7 +34,6 @@
 void
 t8_cmesh_vertex_conn_vertex_to_tree::build_from_ttv (const t8_cmesh_t cmesh, t8_cmesh_vertex_conn_tree_to_vertex& ttv)
 {
-  /* Call standard constructor */
   T8_ASSERT (state == INITIALIZED);
 
   const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
