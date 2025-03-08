@@ -59,7 +59,7 @@ t8_cmesh_vertex_conn_vertex_to_tree::build_from_ttv (const t8_cmesh_t cmesh, t8_
   state = COMMITTED;
 }
 
-const t8_cmesh_vertex_conn_vertex_to_tree::tree_vertex_list&
+inline const t8_cmesh_vertex_conn_vertex_to_tree::tree_vertex_list&
 t8_cmesh_vertex_conn_vertex_to_tree::get_tree_list_of_vertex (t8_gloidx_t global_vertex_id) const
 {
   T8_ASSERT (is_committed ());
@@ -77,19 +77,19 @@ t8_cmesh_vertex_conn_vertex_to_tree::get_tree_list_of_vertex (t8_gloidx_t global
   }
 }
 
-int
+inline const int
 t8_cmesh_vertex_conn_vertex_to_tree::is_committed () const
 {
   return state == COMMITTED;
 }
 
-bool
+inline bool
 t8_cmesh_vertex_conn_vertex_to_tree::operator== (const t8_cmesh_vertex_conn_vertex_to_tree& other) const
 {
   return is_equal (other);
 }
 
-int
+inline int
 t8_cmesh_vertex_conn_vertex_to_tree::is_equal (const t8_cmesh_vertex_conn_vertex_to_tree& other) const
 {
   /* Two instances are equal if and only if their
@@ -138,7 +138,7 @@ t8_cmesh_vertex_conn_vertex_to_tree::add_vertex_to_tree (const t8_cmesh_t cmesh,
  * (tree_id_B, vertex_id_B) if either
  *  tree_id_A < tree_id_B or
  *  tree_id_A == tree_id_B and vertex_id_A < vertex_id_B */
-static int
+static inline bool
 t8_cmesh_tree_vertex_pair_compare (t8_cmesh_vertex_conn_vertex_to_tree::tree_vertex_pair const& pair_a,
                                    t8_cmesh_vertex_conn_vertex_to_tree::tree_vertex_pair const& pair_b)
 {
@@ -147,7 +147,7 @@ t8_cmesh_tree_vertex_pair_compare (t8_cmesh_vertex_conn_vertex_to_tree::tree_ver
                                       : pair_a.first < pair_b.first; /* else check tree_id_A < tree_id_B */
 }
 
-void
+inline void
 t8_cmesh_vertex_conn_vertex_to_tree::sort_list_by_tree_id ()
 {
   T8_ASSERT (!is_committed ());

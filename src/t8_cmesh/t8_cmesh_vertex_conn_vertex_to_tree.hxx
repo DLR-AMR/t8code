@@ -107,7 +107,7 @@ class t8_cmesh_vertex_conn_vertex_to_tree {
   const tree_vertex_list&
   get_tree_list_of_vertex (t8_gloidx_t global_vertex_id) const;
 
-  const int
+  inline const int
   get_state ()
   {
     return state;
@@ -129,7 +129,7 @@ class t8_cmesh_vertex_conn_vertex_to_tree {
     *
     * \return int True if committed. Thus all entries have been set.
     */
-  int
+  inline int
   is_committed () const;
 
   /** Compare with another instance of this class.
@@ -137,7 +137,7 @@ class t8_cmesh_vertex_conn_vertex_to_tree {
     * \param [in] other   The other list to compare.
     * \return             True if and only if the stored vertex indices match.
     */
-  int
+  inline int
   is_equal (const t8_cmesh_vertex_conn_vertex_to_tree& other) const;
 
   /** Equality operator. Implement
@@ -145,18 +145,19 @@ class t8_cmesh_vertex_conn_vertex_to_tree {
     * \param [in] other   The other list to compare.
     * \return             True if and only if the stored vertex indices match.
     */
-  bool
+  inline bool
   operator== (const t8_cmesh_vertex_conn_vertex_to_tree& other) const;
 
   /** Typedef for the iterator type */
   typedef vtt_storage_type::const_iterator const_iterator;
 
-  const_iterator
+  inline const_iterator
   begin () const
   {
     return vertex_to_tree.begin ();
   }
-  const_iterator
+
+  inline const_iterator
   end () const
   {
     return vertex_to_tree.end ();

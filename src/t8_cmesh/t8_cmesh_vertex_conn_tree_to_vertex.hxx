@@ -97,10 +97,10 @@ class t8_cmesh_vertex_conn_tree_to_vertex {
   get_global_vertex (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int local_tree_vertex,
                      const int num_tree_vertices) const;
 
-  const t8_gloidx_t *
+  inline const t8_gloidx_t *
   get_global_vertices (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int num_vertices) const;
 
-  const int
+  inline const int
   get_state ()
   {
     return state;
