@@ -81,8 +81,8 @@ t8_cmesh_vertex_conn_vertex_to_tree::add_vertex_to_tree (const t8_cmesh_t cmesh,
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
 
 #if T8_ENABLE_DEBUG
-  t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, ltreeid);
-  int num_tree_vertices = t8_eclass_num_vertices[tree_class];
+  const t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, ltreeid);
+  const int num_tree_vertices = t8_eclass_num_vertices[tree_class];
   T8_ASSERT (0 <= tree_vertex && tree_vertex < num_tree_vertices);
 #endif
   if (state != INITIALIZED) {
