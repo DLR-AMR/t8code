@@ -94,7 +94,7 @@ t8_cmesh_vertex_conn_tree_to_vertex::t8_cmesh_vertex_conn_tree_to_vertex (
 
 /** Set all global vertex ids of a local tree.
   * \param [in] cmesh The considered cmesh
-  * \param [in] local_tree A local tree id of \a cmesh
+  * \param [in] global_tree A global tree id of \a cmesh
   * \param [in] global_vertex_id The ids of the global vertices in order of \a local_tree's vertices.
   * \param [in] num_vertices Must match the number of vertices of \a local_tree
   *
