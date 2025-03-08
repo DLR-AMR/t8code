@@ -24,7 +24,6 @@
  *  This file implements the routines for the t8_cmesh_conn_vertex_to_tree struct.
  */
 
-#include <stdexcept>
 #include <algorithm>
 #include <memory>
 #include <t8_cmesh.h>
@@ -57,44 +56,6 @@ t8_cmesh_vertex_conn_vertex_to_tree::build_from_ttv (const t8_cmesh_t cmesh, t8_
 
   /* Set state to committed. */
   state = COMMITTED;
-}
-
-inline const t8_cmesh_vertex_conn_vertex_to_tree::tree_vertex_list&
-t8_cmesh_vertex_conn_vertex_to_tree::get_tree_list_of_vertex (t8_gloidx_t global_vertex_id) const
-{
-  T8_ASSERT (is_committed ());
-  T8_ASSERT (0 <= global_vertex_id);
-
-  /* Use at() to look for the vertex entry.
-   * If the entry does not exist an exception of
-   * type std::out_of_range is thrown. */
-
-  try {
-    return vertex_to_tree.at (global_vertex_id);
-  } catch (const std::out_of_range& e) {
-    t8_errorf ("ERROR: Could not find vertex %li for cmesh.\n", global_vertex_id);
-    SC_ABORTF ("Caught exception 'out of range': %s\n", e.what ());
-  }
-}
-
-inline const int
-t8_cmesh_vertex_conn_vertex_to_tree::is_committed () const
-{
-  return state == COMMITTED;
-}
-
-inline bool
-t8_cmesh_vertex_conn_vertex_to_tree::operator== (const t8_cmesh_vertex_conn_vertex_to_tree& other) const
-{
-  return is_equal (other);
-}
-
-inline int
-t8_cmesh_vertex_conn_vertex_to_tree::is_equal (const t8_cmesh_vertex_conn_vertex_to_tree& other) const
-{
-  /* Two instances are equal if and only if their
-   * states are equal and the stored vertices are equal. */
-  return state == other.state && vertex_to_tree == other.vertex_to_tree;
 }
 
 /* Mark as ready for commit. Meaning that all 
@@ -147,7 +108,7 @@ t8_cmesh_tree_vertex_pair_compare (t8_cmesh_vertex_conn_vertex_to_tree::tree_ver
                                       : pair_a.first < pair_b.first; /* else check tree_id_A < tree_id_B */
 }
 
-inline void
+void
 t8_cmesh_vertex_conn_vertex_to_tree::sort_list_by_tree_id ()
 {
   T8_ASSERT (!is_committed ());
@@ -157,7 +118,7 @@ t8_cmesh_vertex_conn_vertex_to_tree::sort_list_by_tree_id ()
     /* Check that the list contains at least one entry. */
     T8_ASSERT (tree_vertex_list.size () > 0);
     /* Sort the list of local tree vertices according to their 
-     * local tree id. */
+    * local tree id. */
     std::sort (tree_vertex_list.begin (), tree_vertex_list.end (), t8_cmesh_tree_vertex_pair_compare);
   }
 }

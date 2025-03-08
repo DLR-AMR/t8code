@@ -27,6 +27,7 @@
 #ifndef T8_CMESH_VERTEX_CONN_VERTEX_TO_TREE_HXX
 #define T8_CMESH_VERTEX_CONN_VERTEX_TO_TREE_HXX
 
+#include <stdexcept>
 #include <vector>
 #include <unordered_map>
 #include <t8_cmesh.h>
@@ -105,7 +106,22 @@ class t8_cmesh_vertex_conn_vertex_to_tree {
   set_vertex_to_tree_list (const t8_cmesh_t cmesh);
 
   const tree_vertex_list&
-  get_tree_list_of_vertex (t8_gloidx_t global_vertex_id) const;
+  get_tree_list_of_vertex (t8_gloidx_t global_vertex_id) const
+  {
+    T8_ASSERT (is_committed ());
+    T8_ASSERT (0 <= global_vertex_id);
+
+    /* Use at() to look for the vertex entry.
+    * If the entry does not exist an exception of
+    * type std::out_of_range is thrown. */
+
+    try {
+      return vertex_to_tree.at (global_vertex_id);
+    } catch (const std::out_of_range& e) {
+      t8_errorf ("ERROR: Could not find vertex %li for cmesh.\n", global_vertex_id);
+      SC_ABORTF ("Caught exception 'out of range': %s\n", e.what ());
+    }
+  }
 
   inline const int
   get_state ()
@@ -130,7 +146,10 @@ class t8_cmesh_vertex_conn_vertex_to_tree {
     * \return int True if committed. Thus all entries have been set.
     */
   inline int
-  is_committed () const;
+  is_committed () const
+  {
+    return state == COMMITTED;
+  }
 
   /** Compare with another instance of this class.
     *
@@ -138,7 +157,12 @@ class t8_cmesh_vertex_conn_vertex_to_tree {
     * \return             True if and only if the stored vertex indices match.
     */
   inline int
-  is_equal (const t8_cmesh_vertex_conn_vertex_to_tree& other) const;
+  is_equal (const t8_cmesh_vertex_conn_vertex_to_tree& other) const
+  {
+    /* Two instances are equal if and only if their
+    * states are equal and the stored vertices are equal. */
+    return state == other.state && vertex_to_tree == other.vertex_to_tree;
+  }
 
   /** Equality operator. Implement
     *
@@ -146,7 +170,10 @@ class t8_cmesh_vertex_conn_vertex_to_tree {
     * \return             True if and only if the stored vertex indices match.
     */
   inline bool
-  operator== (const t8_cmesh_vertex_conn_vertex_to_tree& other) const;
+  operator== (const t8_cmesh_vertex_conn_vertex_to_tree& other) const
+  {
+    return is_equal (other);
+  }
 
   /** Typedef for the iterator type */
   typedef vtt_storage_type::const_iterator const_iterator;
@@ -166,7 +193,7 @@ class t8_cmesh_vertex_conn_vertex_to_tree {
   friend struct t8_cmesh_vertex_connectivity;
 
  private:
-  /* For each global vertex id sort the list of
+  /** For each global vertex id sort the list of
    * (tree_id, tree_vertex) pairs according to
    * tree_id and tree_vertex index.
    * Example: (1, 3), (0, 0), (1, 0)

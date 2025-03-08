@@ -42,6 +42,7 @@
 
 #include <algorithm>
 #include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
 
 /* forward declaration of ttv class needed since the two class headers include each other. */
@@ -93,12 +94,44 @@ class t8_cmesh_vertex_conn_tree_to_vertex {
   set_global_vertex_ids_of_tree_vertices (const t8_cmesh_t, const t8_gloidx_t global_tree,
                                           const t8_gloidx_t *global_tree_vertices, const int num_vertices);
 
+  /* TODO: What if the attribute is not set? error handling */
+  inline const t8_gloidx_t *
+  get_global_vertices (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int num_vertices) const
+  {
+    T8_ASSERT (t8_cmesh_is_committed (cmesh));
+
+#if T8_ENABLE_DEBUG
+    /* Verify that num_vertices matches the number of tree vertices */
+    const t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, local_tree);
+    const int num_tree_vertices = t8_eclass_num_vertices[tree_class];
+
+    T8_ASSERT (num_vertices == num_tree_vertices);
+#endif
+
+    t8_debugf ("Getting %i global vertices for local tree %i.\n", num_vertices, local_tree);
+    const t8_gloidx_t *global_vertices = t8_cmesh_get_attribute_gloidx_array (
+      cmesh, t8_get_package_id (), T8_CMESH_GLOBAL_VERTICES_ATTRIBUTE_KEY, local_tree, num_vertices);
+    T8_ASSERT (global_vertices != NULL);
+    return global_vertices;
+  }
+
+  /* TODO: What if the attribute is not set? error handling */
   t8_gloidx_t
   get_global_vertex (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int local_tree_vertex,
-                     const int num_tree_vertices) const;
+                     const int num_tree_vertices) const
+  {
+    T8_ASSERT (t8_cmesh_is_committed (cmesh));
 
-  inline const t8_gloidx_t *
-  get_global_vertices (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int num_vertices) const;
+    /* Verify that local_tree_vertex is in fact a local vertex of the tree */
+    /* Note: We only perform this check in debugging mode.
+    *       In non-debugging mode, using a vertex index beyond the trees index allows
+    *       for a potential attacker to gain access to memory possibly not owned by the caller.
+    *       We do not check in non-debugging mode for (obvious) performance reasons. */
+    T8_ASSERT (0 <= local_tree_vertex);
+    T8_ASSERT (local_tree_vertex < num_tree_vertices);
+
+    return get_global_vertices (cmesh, local_tree, num_tree_vertices)[local_tree_vertex];
+  }
 
   inline const int
   get_state ()
