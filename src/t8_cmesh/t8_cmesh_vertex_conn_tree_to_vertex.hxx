@@ -67,6 +67,12 @@ class t8_cmesh_vertex_conn_tree_to_vertex {
 
   /** Constructor from a cmesh and a given vertex to tree connectivity.
    *
+   * \param [in] cmesh_from A committed cmesh.
+   * \param [in] cmesh      An initialized but not committed cmesh that is to be derived from \a cmesh_from.
+   * \param [in] vtt        A committed vertex to tree connectivity for \a cmesh_from.
+   * 
+   * As a result a tree to vertec connectivity for \a cmesh will be constructed.
+   * \note \a cmesh_from must be committed.
    * \note \a cmesh must not be committed.
    * \note \a vtt must be committed.
    * \note This does not work until issue #923 https://github.com/DLR-AMR/t8code/issues/923 is resolved.
