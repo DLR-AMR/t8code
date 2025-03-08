@@ -58,6 +58,7 @@ global tree id -> vertex_list
 
 /* Setter functions */
 
+T8_EXTERN_C_BEGIN ();
 void
 t8_cmesh_set_global_vertices_of_tree (const t8_cmesh_t cmesh, const t8_gloidx_t global_tree,
                                       const t8_gloidx_t *global_tree_vertices, const int num_vertices)
@@ -112,3 +113,5 @@ t8_cmesh_get_num_trees_at_vertex (const t8_cmesh_t cmesh, t8_gloidx_t global_ver
 
   return cmesh->vertex_connectivity->get_tree_list_of_vertex (global_vertex).size ();
 }
+
+T8_EXTERN_C_END ();
