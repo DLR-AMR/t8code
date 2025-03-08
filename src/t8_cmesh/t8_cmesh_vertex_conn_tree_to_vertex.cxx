@@ -45,7 +45,7 @@ t8_cmesh_vertex_conn_tree_to_vertex::t8_cmesh_vertex_conn_tree_to_vertex (
   const t8_locidx_t num_ghosts = t8_cmesh_get_num_ghosts (cmesh_from);
   const t8_locidx_t num_local_trees_and_ghosts = num_local_trees + num_ghosts;
 
-  /* Stores for each tree an array of local index and mapped global vertex.
+  /* Stores an array of local indices and mapped global vertices for each tree.
    * We need to store the local indices as well, since they will not be
    * sorted. Hence we need to sort later. */
   using global_local_index_pair = std::pair<t8_gloidx_t, t8_locidx_t>;
