@@ -71,6 +71,7 @@ t8_locidx_t
 t8_cmesh_get_num_local_vertices (const t8_cmesh_t cmesh)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERTF (!t8_cmesh_is_partitioned (cmesh), "Global vertex ids currently not supported for partitioned cmeshes.");
   return cmesh->vertex_connectivity->get_local_number_of_vertices ();
 }
 
