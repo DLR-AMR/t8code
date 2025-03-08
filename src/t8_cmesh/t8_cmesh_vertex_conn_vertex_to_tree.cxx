@@ -64,6 +64,7 @@ t8_cmesh_vertex_conn_vertex_to_tree::build_from_ttv (const t8_cmesh_t cmesh, t8_
 void
 t8_cmesh_vertex_conn_vertex_to_tree::commit (const t8_cmesh_t cmesh)
 {
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
   sort_list_by_tree_id ();
   state = COMMITTED;
 
@@ -132,6 +133,7 @@ t8_cmesh_vertex_conn_vertex_to_tree::contains_all_vertices (const t8_cmesh_t cme
    * number of vertices for each tree and count down for each occurrence.
    * At the end the values must be zero. */
 
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
   T8_ASSERT (is_committed ());
 
   const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
