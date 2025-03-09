@@ -1023,6 +1023,12 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
         /* Add the node indices to return vector. */
         vertex_indices[tree_count] = std::move (node_indices);
 
+        /* Set the vertices of this tree (can be removed with negative volume check) */
+        for (int i_node = 0; i_node < num_nodes; i_node++) {
+          tree_vertices[3 * i_node] = tree_nodes[i_node].coordinates[0];
+          tree_vertices[3 * i_node + 1] = tree_nodes[i_node].coordinates[1];
+          tree_vertices[3 * i_node + 2] = tree_nodes[i_node].coordinates[2];
+        }
         /* Detect and correct negative volumes */
         if (t8_cmesh_tree_vertices_negative_volume (eclass, tree_vertices.data (), num_nodes)) {
           /* The volume described is negative. We need to change vertices.
@@ -1076,8 +1082,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
             tree_nodes[iswitch] = tree_nodes[switch_indices[iswitch]];
             tree_nodes[switch_indices[iswitch]] = temp_node;
           }
-          T8_ASSERT (!t8_cmesh_tree_vertices_negative_volume (eclass, tree_vertices.data (), num_nodes));
-        } /* End of negative volume handling */
+        }
 
         /* Set the vertices of this tree */
         for (int i_node = 0; i_node < num_nodes; i_node++) {
@@ -1085,6 +1090,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
           tree_vertices[3 * i_node + 1] = tree_nodes[i_node].coordinates[1];
           tree_vertices[3 * i_node + 2] = tree_nodes[i_node].coordinates[2];
         }
+        T8_ASSERT (!t8_cmesh_tree_vertices_negative_volume (eclass, tree_vertices.data (), num_nodes));
         t8_cmesh_set_tree_vertices (cmesh, tree_count, tree_vertices.data (), num_nodes);
 
         if (!use_cad_geometry) {
