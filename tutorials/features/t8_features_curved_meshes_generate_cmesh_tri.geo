@@ -35,7 +35,7 @@ SetFactory("OpenCASCADE");
 lc = 1;
 center_chi = -0.12;
 center_eta = 0.08;
-radius = sqrt(((1 - center_chi) * (1 - center_chi)) + center_eta);
+radius = Sqrt(((1 - center_chi) * (1 - center_chi)) + center_eta);
 delta_angle = (2 * Pi) / 100;
 
 Macro XYCoords
