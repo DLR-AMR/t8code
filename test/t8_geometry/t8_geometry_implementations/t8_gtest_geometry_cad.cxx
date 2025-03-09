@@ -195,7 +195,8 @@ t8_create_cad_curve_shape ()
  * \return                            A valid cmesh, as if _init and _commit had been called.
  */
 t8_cmesh_t
-t8_create_cad_hypercube (double *rot_vec, int face, int edge, double *parameters)
+t8_create_cad_hypercube ([[maybe_unused]] double *rot_vec, [[maybe_unused]] int face, [[maybe_unused]] int edge,
+                         [[maybe_unused]] double *parameters)
 {
 #if T8_WITH_OCC
   if (edge >= 0 && face >= 0) {
@@ -390,7 +391,7 @@ TEST (t8_gtest_geometry_cad_hex, linked_edges)
  * \return                            A valid cmesh, as if _init and _commit had been called.
  */
 t8_cmesh_t
-t8_create_cad_reference_tet (int face, int edge, double *parameters)
+t8_create_cad_reference_tet ([[maybe_unused]] int face, [[maybe_unused]] int edge, [[maybe_unused]] double *parameters)
 {
 #if T8_WITH_OCC
   if (edge >= 0 && face >= 0) {
@@ -940,7 +941,8 @@ INSTANTIATE_TEST_SUITE_P (t8_gtest_check_2d_element_curved_cad_surface, class_2d
  * \return                            A valid cmesh, as if _init and _commit had been called.
  */
 t8_cmesh_t
-t8_create_cad_reference_prism (int face, int edge, double *parameters)
+t8_create_cad_reference_prism ([[maybe_unused]] int face, [[maybe_unused]] int edge,
+                               [[maybe_unused]] double *parameters)
 {
 #if T8_WITH_OCC
   if (edge >= 0 && face >= 0) {

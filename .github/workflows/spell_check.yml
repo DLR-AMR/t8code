@@ -2,9 +2,6 @@ name: spell_check
 
 on:
   merge_group:
-  push:
-    branches:
-      - main
   pull_request:
   workflow_dispatch: # Be able to trigger this manually on github.com
 
@@ -20,7 +17,7 @@ jobs:
       - name: check macros
         run: |
           for file in $(git diff --name-only --diff-filter=A); do
-            ./scripts/check_macros.scp "$file" &>> check_macros.txt
+            ./scripts/check_macros.sh "$file" &>> check_macros.txt
           done
       - name: Archive script output
         if: failure()
