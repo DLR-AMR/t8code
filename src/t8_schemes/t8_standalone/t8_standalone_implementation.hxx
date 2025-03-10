@@ -1127,7 +1127,7 @@ struct t8_standalone_scheme
       T8_ASSERT (0 <= vertex && vertex < T8_ELEMENT_NUM_CORNERS[TEclass]);
       element_compute_coords (el, vertex, coords_int);
       for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
-        coords[idim] = coords_int[idim] / (double) set_to_root_len ();
+        coords[idim] = coords_int[idim] / (double) get_root_len ();
       }
     }
   }
@@ -1153,7 +1153,7 @@ struct t8_standalone_scheme
         current_out_coords[dim]
           = ((t8_standalone_element<TEclass> *) elem)->coords[dim] + current_ref_coords[dim] * length;
 
-        current_out_coords[dim] /= (double) set_to_root_len ();
+        current_out_coords[dim] /= (double) get_root_len ();
       }
 
       current_ref_coords += T8_ECLASS_MAX_DIM;
@@ -1287,13 +1287,13 @@ struct t8_standalone_scheme
     T8_ASSERT (elem != NULL);
 
     const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
-    const t8_element_coord max_coord = set_to_root_len () - 1;
+    const t8_element_coord max_coord = get_root_len () - 1;
 
     /* Check the level */
     int is_valid = 0 <= el->level && el->level <= T8_ELEMENT_MAXLEVEL[TEclass];
     /* Check coordinates, we allow a boundary layer around the root-element */
     for (int i = 0; i < T8_ELEMENT_DIM[TEclass]; i++) {
-      is_valid = is_valid && -(int64_t) set_to_root_len () <= el->coords[i] && el->coords[i] <= max_coord;
+      is_valid = is_valid && -(int64_t) get_root_len () <= el->coords[i] && el->coords[i] <= max_coord;
     }
 
     return is_valid;
@@ -1567,7 +1567,7 @@ struct t8_standalone_scheme
   */
 
   static constexpr t8_element_coord
-  set_to_root_len () noexcept
+  get_root_len () noexcept
   {
     if constexpr (TEclass == T8_ECLASS_VERTEX) {
       return 0;
