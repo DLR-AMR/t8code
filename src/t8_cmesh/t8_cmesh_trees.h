@@ -514,7 +514,7 @@ int
 t8_cmesh_trees_is_face_consistent (t8_cmesh_t cmesh, t8_cmesh_trees_t trees);
 
 int
-t8_cmesh_trees_is_equal (t8_cmesh_t cmesh, t8_cmesh_trees_t trees_a, t8_cmesh_trees_t trees_b);
+t8_cmesh_trees_is_equal (t8_cmesh_t cmesh, t8_cmesh_trees_t trees_a, t8_cmesh_trees_t trees_b, int same_tree_order);
 
 /** Free all memory allocated with a trees structure.
  *  This means that all coarse trees and ghosts, their face neighbor entries

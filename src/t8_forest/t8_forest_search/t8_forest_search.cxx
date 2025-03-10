@@ -48,12 +48,10 @@ t8_search_base::search_recursion (const t8_locidx_t ltreeid, t8_element_t *eleme
   }
 
   const t8_eclass_t eclass = t8_forest_get_eclass (this->forest, ltreeid);
-
   bool is_leaf = false;
   if (elem_count == 1) {
     /* There is only one leaf left, we check whether it is the same as element and if so call the callback function */
     const t8_element_t *leaf = t8_element_array_index_locidx (leaf_elements, 0);
-
     SC_CHECK_ABORT (ts->element_get_level (eclass, element) <= ts->element_get_level (eclass, leaf),
                     "Search: element level greater than leaf level\n");
     if (ts->element_get_level (eclass, element) == ts->element_get_level (eclass, leaf)) {
@@ -130,7 +128,6 @@ t8_search_base::search_tree (const t8_locidx_t ltreeid)
 
   /* Start the top-down search */
   this->search_recursion (ltreeid, nca, ts, leaf_elements, 0);
-
   ts->element_destroy (eclass, 1, &nca);
 }
 
