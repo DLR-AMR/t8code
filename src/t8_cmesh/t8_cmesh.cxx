@@ -24,6 +24,7 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_geometry.h>
 #include <t8_geometry/t8_geometry_handler.hxx>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
 #include <t8_schemes/t8_scheme.hxx>
@@ -204,6 +205,7 @@ t8_cmesh_init (t8_cmesh_t *pcmesh)
    * It will get initialized either when a geometry is registered
    * or when the cmesh gets committed. */
   cmesh->geometry_handler = NULL;
+  cmesh->vertex_connectivity = new t8_cmesh_vertex_connectivity ();
 
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 }
@@ -1005,11 +1007,9 @@ t8_cmesh_get_num_ghosts (const t8_cmesh_t cmesh)
 }
 
 int
-t8_cmesh_tree_face_is_boundary (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid, const int face)
+t8_cmesh_tree_face_is_boundary_before_commit (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid, const int face)
 {
   int8_t *ttf;
-
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
 
   if (t8_cmesh_treeid_is_local_tree (cmesh, ltreeid)) {
     /* The local tree id belongs to a tree */
@@ -1038,6 +1038,13 @@ t8_cmesh_tree_face_is_boundary (const t8_cmesh_t cmesh, const t8_locidx_t ltreei
   }
 
   return 0;
+}
+
+int
+t8_cmesh_tree_face_is_boundary (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid, const int face)
+{
+  T8_ASSERT (cmesh->committed);
+  return t8_cmesh_tree_face_is_boundary_before_commit (cmesh, ltreeid, face);
 }
 
 t8_eclass_t
