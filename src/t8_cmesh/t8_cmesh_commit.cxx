@@ -55,7 +55,7 @@ t8_ghost_facejoins_compare (const void *fj1, const void *fj2)
 }
 
 static int
-t8_ghost_facejoin_equal (const void *v1, const void *v2, const void *u)
+t8_ghost_facejoin_equal (const void *v1, const void *v2, [[maybe_unused]] const void *u)
 {
   return t8_ghost_facejoins_compare (v1, v2) == 0;
 }
