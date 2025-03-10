@@ -66,7 +66,7 @@ class class_find_parent: public TestDFS {
 
 TEST_P (class_find_parent, t8_compute_child_find_parent)
 {
-#ifdef T8_ENABLE_LESS_TESTS
+#if T8CODE_TEST_LEVEL >= 1
   const int maxlvl = 4;
 #else
   const int maxlvl = 6;
@@ -74,4 +74,4 @@ TEST_P (class_find_parent, t8_compute_child_find_parent)
   check_recursive_dfs_to_max_lvl (maxlvl);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_find_parent, class_find_parent, AllSchemes);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_find_parent, class_find_parent, AllSchemes, print_all_schemes);

@@ -149,7 +149,7 @@ t8_msh_file_node_hash (const void *node, const void *num_nodes)
  * u_data is not needed.
  */
 static int
-t8_msh_file_node_compare (const void *node_a, const void *node_b, const void *u_data)
+t8_msh_file_node_compare (const void *node_a, const void *node_b, [[maybe_unused]] const void *u_data)
 {
   t8_msh_file_node_t *Node_a, *Node_b;
 
@@ -765,7 +765,7 @@ t8_cmesh_correct_parameters_on_closed_geometry (const int geometry_dim, const in
 static int
 t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, sc_array_t **vertex_indices,
                                const int dim, const t8_geometry_c *linear_geometry_base, const int use_cad_geometry,
-                               const t8_geometry_c *cad_geometry_base)
+                               [[maybe_unused]] const t8_geometry_c *cad_geometry_base)
 {
   char *line = (char *) malloc (1024), *line_modify;
   char first_word[2048] = "\0";
@@ -1411,7 +1411,7 @@ typedef struct
 
 /* Hash a face. The hash value is the sum of its vertex indices */
 static unsigned
-t8_msh_file_face_hash (const void *face, const void *data)
+t8_msh_file_face_hash (const void *face, [[maybe_unused]] const void *data)
 {
   t8_msh_file_face_t *Face;
   int iv;
@@ -1428,7 +1428,7 @@ t8_msh_file_face_hash (const void *face, const void *data)
 /* Two face are considered equal if they have the same vertices up
  * to renumeration. */
 static int
-t8_msh_file_face_equal (const void *facea, const void *faceb, const void *data)
+t8_msh_file_face_equal (const void *facea, const void *faceb, [[maybe_unused]] const void *data)
 {
   int iv, jv, ret;
   long vertex;
@@ -1460,7 +1460,7 @@ t8_msh_file_face_equal (const void *facea, const void *faceb, const void *data)
 /* We use this function in a loop over all elements
  * in the hash table, to free the memory of the vertices array */
 static int
-t8_msh_file_face_free (void **face, const void *data)
+t8_msh_file_face_free (void **face, [[maybe_unused]] const void *data)
 {
   t8_msh_file_face_t *Face;
 
@@ -1647,7 +1647,8 @@ T8_EXTERN_C_BEGIN ();
  * no cad geometry is used.
  */
 static int
-t8_cmesh_from_msh_file_register_geometries (t8_cmesh_t cmesh, const int use_cad_geometry, const char *fileprefix,
+t8_cmesh_from_msh_file_register_geometries (t8_cmesh_t cmesh, const int use_cad_geometry,
+                                            [[maybe_unused]] const char *fileprefix,
                                             const t8_geometry_c **linear_geometry, const t8_geometry_c **cad_geometry)
 {
   /* Register linear geometry */

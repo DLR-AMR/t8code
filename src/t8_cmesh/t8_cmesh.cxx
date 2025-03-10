@@ -29,7 +29,7 @@
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_refcount.h>
 #include <t8_data/t8_shmem.h>
-#include <t8_vec.h>
+#include <t8_types/t8_vec.h>
 #include <t8_eclass.h>
 #include "t8_cmesh_types.h"
 #ifdef T8_WITH_METIS
@@ -445,7 +445,7 @@ t8_cmesh_get_attribute (const t8_cmesh_t cmesh, const int package_id, const int 
 
 t8_gloidx_t *
 t8_cmesh_get_attribute_gloidx_array (const t8_cmesh_t cmesh, const int package_id, const int key,
-                                     const t8_locidx_t ltree_id, const size_t data_count)
+                                     const t8_locidx_t ltree_id, [[maybe_unused]] const size_t data_count)
 {
   T8_ASSERT (0 <= data_count);
   return (t8_gloidx_t *) t8_cmesh_get_attribute (cmesh, package_id, key, ltree_id);
@@ -1259,7 +1259,7 @@ t8_cmesh_coords_axb (const double *coords_in, double *coords_out, int num_vertic
   int i;
 
   for (i = 0; i < num_vertices; i++) {
-    t8_vec_axpyz (coords_in + i * 3, b, coords_out + i * 3, alpha);
+    t8_axpyz (coords_in + i * 3, b, coords_out + i * 3, alpha);
   }
 }
 
@@ -1294,7 +1294,7 @@ t8_cmesh_print_local_trees (const t8_cmesh_t cmesh)
 #endif
 
 void
-t8_cmesh_debug_print_trees (const t8_cmesh_t cmesh, sc_MPI_Comm comm)
+t8_cmesh_debug_print_trees ([[maybe_unused]] const t8_cmesh_t cmesh, [[maybe_unused]] sc_MPI_Comm comm)
 {
 #ifdef T8_ENABLE_DEBUG
   /* This function is probably rather slow, linear in the number of processes and therefore
