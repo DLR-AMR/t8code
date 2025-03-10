@@ -38,6 +38,7 @@
 typedef struct t8_part_tree *t8_part_tree_t;
 typedef struct t8_cmesh_trees *t8_cmesh_trees_t;
 typedef struct t8_cprofile t8_cprofile_t; /* Defined below */
+typedef struct t8_boundary_node_list t8_boundary_node_list_c;
 
 /* TODO: no longer needed.
  *       User may use set_derived_from, then set_from is non-NULL.
@@ -140,7 +141,9 @@ typedef struct t8_cmesh
   t8_geometry_handler_c *geometry_handler; /**< Handles all geometries that are used by trees in this cmesh. */
 
   struct t8_cmesh_vertex_connectivity
-    *vertex_connectivity; /**< Structure that manages tree_to_vertex and vertex_to_tree connectivity. */
+    *vertex_connectivity;         /**< Structure that manages tree_to_vertex and vertex_to_tree connectivity. */
+  int compute_boundary_node_list; /**< If true, compute the boundary node list during commit. */
+  struct t8_boundary_node_list *boundary_node_list;
 
 #ifdef T8_ENABLE_DEBUG
   t8_locidx_t inserted_trees;  /**< Count the number of inserted trees to
