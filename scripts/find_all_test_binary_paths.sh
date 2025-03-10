@@ -63,7 +63,7 @@ while IFS= read -r line; do
     fi
     
     # Do not include api in the binary paths as we do not want to check them with valgrind.
-    if ! [[ "$name" =~ "/api/" ]]; then
+    if ! [[ "$name" =~ "api/" ]]; then
       test_bin_paths="${test_bin_paths} ./${name}"
     fi
   fi
