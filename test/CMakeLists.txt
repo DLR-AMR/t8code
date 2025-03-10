@@ -101,6 +101,7 @@ add_t8_test( NAME t8_gtest_transform_serial             SOURCES t8_gtest_main.cx
 add_t8_test( NAME t8_gtest_ghost_exchange_parallel      SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_ghost_exchange.cxx )
 add_t8_test( NAME t8_gtest_ghost_delete_parallel        SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_ghost_delete.cxx )
 add_t8_test( NAME t8_gtest_ghost_and_owner_parallel     SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_ghost_and_owner.cxx )
+add_t8_test( NAME t8_gtest_ghost_nodestring_parallel    SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_ghost_nodestring.cxx )
 add_t8_test( NAME t8_gtest_balance_parallel             SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_balance.cxx )
 add_t8_test( NAME t8_gtest_forest_commit_parallel       SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_forest_commit.cxx )
 add_t8_test( NAME t8_gtest_forest_face_normal_serial    SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_forest_face_normal.cxx )
