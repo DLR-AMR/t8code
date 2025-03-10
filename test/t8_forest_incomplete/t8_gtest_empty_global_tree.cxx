@@ -25,7 +25,7 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest.h>
 #include <t8_forest/t8_forest_types.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <test/t8_gtest_macros.hxx>
 
 /** In this test, we are given a forest with 3 global trees. 
@@ -45,8 +45,8 @@ class DISABLED_global_tree: public testing::TestWithParam<std::tuple<t8_eclass, 
   {
     eclass = std::get<0> (GetParam ());
     testcase = std::get<1> (GetParam ());
-    forest = t8_forest_new_uniform (t8_cmesh_new_bigmesh (eclass, 3, sc_MPI_COMM_WORLD), t8_scheme_new_default_cxx (),
-                                    0, 0, sc_MPI_COMM_WORLD);
+    forest = t8_forest_new_uniform (t8_cmesh_new_bigmesh (eclass, 3, sc_MPI_COMM_WORLD), t8_scheme_new_default (), 0, 0,
+                                    sc_MPI_COMM_WORLD);
   }
   void
   TearDown () override
@@ -61,8 +61,10 @@ class DISABLED_global_tree: public testing::TestWithParam<std::tuple<t8_eclass, 
 /** Removes all elements of local trees if they belong to the corresponding
  *  global trees which are defined by the current testcase of test. */
 static int
-t8_adapt_remove (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                 t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+t8_adapt_remove (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
+                 [[maybe_unused]] const t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
+                 [[maybe_unused]] const t8_scheme *scheme, [[maybe_unused]] const int is_family,
+                 [[maybe_unused]] const int num_elements, [[maybe_unused]] t8_element_t *elements[])
 {
   const int *testcase = (const int *) t8_forest_get_user_data (forest);
   const t8_gloidx_t global_tree_id = t8_forest_global_tree_id (forest_from, which_tree);

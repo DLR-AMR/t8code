@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_vec.h>
+#include <t8_types/t8_vec.h>
 #include <t8_eclass.h>
 #include <t8_geometry/t8_geometry_helpers.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.h>
@@ -29,6 +29,11 @@ void
 t8_geom_linear_interpolation (const double *coefficients, const double *corner_values, const int corner_value_dim,
                               const int interpolation_dim, double *evaluated_function)
 {
+  T8_ASSERT (0 <= corner_value_dim && corner_value_dim <= 3);
+  T8_ASSERT (1 <= interpolation_dim && interpolation_dim <= 3);
+
+  /* Temporary storage for result. Using this allows evaluated_function to use the same space as  
+   * coefficients or corner_values if needed. */
   double temp[3] = { 0 };
   for (int i_dim = 0; i_dim < corner_value_dim; i_dim++) {
     temp[i_dim] = corner_values[0 * corner_value_dim + i_dim] * (1 - coefficients[0]) /* x=0 y=0 z=0 */
@@ -57,20 +62,28 @@ void
 t8_geom_triangular_interpolation (const double *coefficients, const double *corner_values, const int corner_value_dim,
                                   const int interpolation_dim, double *evaluated_function)
 {
-  /* The algorithm is able to calculate any point in a triangle or tetrahedron using barycentric coordinates.
+  T8_ASSERT (0 <= corner_value_dim && corner_value_dim <= 3);
+  T8_ASSERT (2 <= interpolation_dim && interpolation_dim <= 3);
+
+  /* The algorithm is able to calculate any point in a triangle or tetrahedron using cartesian coordinates.
    * All points are calculated by the sum of each corner point (e.g. p1 -> corner point 1) multiplied by a
    * scalar, which in this case are the reference coordinates (ref_coords).
    */
+
+  /* Temporary storage for result. Using this allows evaluated_function to use the same space as  
+   * coefficients or corner_values if needed. */
   double temp[3] = { 0 };
 
   for (int i_dim = 0; i_dim < corner_value_dim; i_dim++) {
     temp[i_dim] = (corner_values[corner_value_dim + i_dim] - /* (p2 - p1) * ref_coords */
                    corner_values[i_dim])
                     * coefficients[0]
+
                   + (interpolation_dim == 3
                        ? (corner_values[3 * corner_value_dim + i_dim] - corner_values[2 * corner_value_dim + i_dim])
                            * coefficients[1]
                        : 0.) /* (p4 - p3) * ref_coords */
+
                   + (corner_values[2 * corner_value_dim + i_dim] - corner_values[corner_value_dim + i_dim])
                       * coefficients[interpolation_dim - 1] /* (p3 - p2) * ref_coords */
                   + corner_values[i_dim];                   /* p1 */
@@ -161,7 +174,7 @@ t8_geom_compute_linear_geometry (t8_eclass_t tree_class, const double *tree_vert
       /* Get a quad interpolation of the base */
       t8_geom_linear_interpolation (base_coords, tree_vertices, T8_ECLASS_MAX_DIM, 2, out_coords + offset_domain_dim);
       /* Get vector from base to pyramid tip */
-      t8_vec_diff (tree_vertices + 4 * T8_ECLASS_MAX_DIM, out_coords + offset_domain_dim, vec);
+      t8_diff (tree_vertices + 4 * T8_ECLASS_MAX_DIM, out_coords + offset_domain_dim, vec);
       /* Add vector to base */
       for (i_dim = 0; i_dim < 3; i_dim++) {
         out_coords[offset_domain_dim + i_dim] += vec[i_dim] * ref_coords[offset_tree_dim + 2];
@@ -189,7 +202,7 @@ t8_geom_compute_linear_axis_aligned_geometry (const t8_eclass_t tree_class, cons
      * axis-aligned. A quad needs one matching coordinate. */
     int n_equal_coords = 0;
     for (int i_dim = 0; i_dim < T8_ECLASS_MAX_DIM; ++i_dim) {
-      if (abs (tree_vertices[i_dim] - tree_vertices[T8_ECLASS_MAX_DIM + i_dim]) <= SC_EPS) {
+      if (fabs (tree_vertices[i_dim] - tree_vertices[T8_ECLASS_MAX_DIM + i_dim]) <= SC_EPS) {
         ++n_equal_coords;
       }
     }
@@ -204,7 +217,7 @@ t8_geom_compute_linear_axis_aligned_geometry (const t8_eclass_t tree_class, cons
   const int dimension = t8_eclass_to_dimension[tree_class];
   /* Compute vector between both points */
   double vector[3];
-  t8_vec_diff (tree_vertices + T8_ECLASS_MAX_DIM, tree_vertices, vector);
+  t8_diff (tree_vertices + T8_ECLASS_MAX_DIM, tree_vertices, vector);
 
   /* Compute the coordinates of the reference point. */
   for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
@@ -385,7 +398,7 @@ t8_geom_get_scaling_factor_of_edge_on_face_tet (const int edge, const int face, 
    *      /   --|--face
    *     /      |
    *    /    <~~| orthogonal direction
-   *   /<----o--| maximum othogonal direction
+   *   /<----o--| maximum orthogonal direction
    *  /_________|
    */
 
@@ -433,7 +446,7 @@ t8_geom_get_tet_face_intersection (const int face, const double *ref_coords, dou
   /* Calculate the vector from the opposite vertex to the
    * reference coordinate in reference space */
   double vector[3] = { 0 };
-  t8_vec_diff (ref_coords, ref_opposite_vertex, vector);
+  t8_diff (ref_coords, ref_opposite_vertex, vector);
 
   /* Calculate t to get the point on the ray (extension of vector), which lies on the face.
    * The vector will later be multiplied by t to get the exact distance from the opposite vertex to the face intersection. 
@@ -460,11 +473,80 @@ t8_geom_get_tet_face_intersection (const int face, const double *ref_coords, dou
   }
 }
 
+double
+t8_geom_get_scaling_factor_of_edge_on_face_prism (const int edge, const int face, const double *ref_coords)
+{
+  /* Save the orthogonal direction and the maximum of that direction
+   * of an edge in reference space on one of the neighbouring faces. 
+   *           /|
+   *          / |
+   *         /  |
+   *        /   |
+   *       /    |--edge
+   *      /   --|--face
+   *     /      |
+   *    /    <~~| orthogonal direction
+   *   /<----o--| maximum orthogonal direction
+   *  /_________|
+   */
+  const double orthogonal_direction[9][5] = { { ref_coords[2], 0, 0, (1 - ref_coords[0]), 0 },
+                                              { 0, ref_coords[2], 0, (ref_coords[0] - ref_coords[1]), 0 },
+                                              { 0, 0, ref_coords[2], ref_coords[1], 0 },
+                                              { (1 - ref_coords[2]), 0, 0, 0, (1 - ref_coords[0]) },
+                                              { 0, (1 - ref_coords[2]), 0, 0, (ref_coords[0] - ref_coords[1]) },
+                                              { 0, 0, (1 - ref_coords[2]), 0, ref_coords[1] },
+                                              { ref_coords[1], 0, (1 - ref_coords[0]), 0, 0 },
+                                              { (1 - ref_coords[1]), (1 - ref_coords[0]), 0, 0, 0 },
+                                              { 0, ref_coords[0], ref_coords[0], 0, 0 } };
+  const double max_orthogonal_direction[9][5] = { { 1, 0, 0, (1 - ref_coords[1]), 0 },
+                                                  { 0, 1, 0, ref_coords[0], 0 },
+                                                  { 0, 0, 1, ref_coords[0], 0 },
+                                                  { 1, 0, 0, 0, (1 - ref_coords[1]) },
+                                                  { 0, 1, 0, 0, ref_coords[0] },
+                                                  { 0, 0, 1, 0, ref_coords[0] },
+                                                  { 1, 0, 1, 0, 0 },
+                                                  { 1, 1, 0, 0, 0 },
+                                                  { 0, 1, 1, 0, 0 } };
+
+  /* Check that the combination of edge and face is valid */
+  T8_ASSERT (face == t8_edge_to_face[T8_ECLASS_PRISM][edge][0] || face == t8_edge_to_face[T8_ECLASS_PRISM][edge][1]);
+
+  /* If the maximum orthogonal direction is 1, the reference coordinate lies on
+   * one of the edge nodes and the scaling factor is therefore 0, because the displacement
+   * at the nodes is always 0.
+   * In all other cases the scaling factor is determined with one minus the relation of the orthogonal direction
+   * to the maximum orthogonal direction. */
+  if (max_orthogonal_direction[edge][face] == 0) {
+    return 0;
+  }
+  else {
+    return (1.0 - (orthogonal_direction[edge][face] / max_orthogonal_direction[edge][face]));
+  }
+}
+
+double
+t8_geom_get_scaling_factor_face_through_volume_prism (const int face, const double *ref_coords)
+{
+  /* The function computes the scaling factor of any displacement of a prism face, throughout the
+   * volume of the element. The scaling factor is calculated accordingly to 
+   * t8_geom_get_scaling_factor_of_edge_on_face_prism with 1 - (orthogonal_direction / max_orthogonal_direction) */
+
+  const double orthogonal_direction[5]
+    = { (1 - ref_coords[0]), (ref_coords[0] - ref_coords[1]), ref_coords[1], ref_coords[2], (1 - ref_coords[2]) };
+  const double max_orthogonal_direction[5] = { (1 - ref_coords[1]), ref_coords[0], ref_coords[0], 1, 1 };
+
+  if (max_orthogonal_direction[face] == 0) {
+    return 0;
+  }
+
+  return (1.0 - (orthogonal_direction[face] / max_orthogonal_direction[face]));
+}
+
 int
 t8_vertex_point_inside (const double vertex_coords[3], const double point[3], const double tolerance)
 {
   T8_ASSERT (tolerance > 0);
-  if (t8_vec_dist (vertex_coords, point) > tolerance) {
+  if (t8_dist (vertex_coords, point) > tolerance) {
     return 0;
   }
   return 1;
@@ -476,7 +558,7 @@ t8_line_point_inside (const double *p_0, const double *vec, const double *point,
   T8_ASSERT (tolerance > 0);
   double b[3];
   /* b = p - p_0 */
-  t8_vec_axpyz (p_0, point, b, -1);
+  t8_axpyz (p_0, point, b, -1);
   double x = 0; /* Initialized to prevent compiler warning. */
   int i;
   /* So x is the solution to
@@ -508,8 +590,8 @@ t8_line_point_inside (const double *p_0, const double *vec, const double *point,
      * is actually true.
      */
   double vec_check[3] = { vec[0], vec[1], vec[2] };
-  t8_vec_ax (vec_check, x);
-  if (t8_vec_dist (vec_check, b) > tolerance) {
+  t8_ax (vec_check, x);
+  if (t8_dist (vec_check, b) > tolerance) {
     /* Point does not lie on the line. */
     return 0;
   }
@@ -535,7 +617,7 @@ t8_triangle_point_inside (const double p_0[3], const double v[3], const double w
   T8_ASSERT (tolerance > 0); /* negative values and zero are not allowed */
   double b[3];
   /* b = point - p_0 */
-  t8_vec_axpyz (p_0, point, b, -1);
+  t8_axpyz (p_0, point, b, -1);
 
   /* Let d = det (v w e_3) */
   const double det_vwe3 = v[0] * w[1] - v[1] * w[0];
@@ -576,9 +658,9 @@ t8_plane_point_inside (const double point_on_face[3], const double face_normal[3
 {
   /* Set x = x - p */
   double pof[3] = { point_on_face[0], point_on_face[1], point_on_face[2] };
-  t8_vec_axpy (point, pof, -1);
+  t8_axpy (point, pof, -1);
   /* Compute <x-p,n> */
-  const double dot_product = t8_vec_dot (pof, face_normal);
+  const double dot_product = t8_dot (pof, face_normal);
   if (dot_product < 0) {
     /* The point is on the wrong side of the plane */
     return 0;

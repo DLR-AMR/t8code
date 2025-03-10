@@ -22,14 +22,13 @@
 
 #include <t8.h>
 #include <t8_forest/t8_forest.h>
-#include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <sc_refcount.h>
 #include <sc_flops.h>
 #include <sc_statistics.h>
@@ -46,16 +45,19 @@
  *
  */
 static int
-t8_adapt_menger_quad (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                      t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+t8_adapt_menger_quad (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                      [[maybe_unused]] t8_locidx_t which_tree, t8_eclass_t tree_class,
+                      [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+                      [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
+                      t8_element_t *elements[])
 {
   const int *adapt_data = (const int *) t8_forest_get_user_data (forest);
   const int level_max = adapt_data[0];
   const int ret = adapt_data[1]; /* -2 if elements get removed, 0 else */
 
-  const int child_id = ts->t8_element_child_id (elements[0]);
-  const int level_element = ts->t8_element_level (elements[0]);
-  const int ancestor_id = ts->t8_element_ancestor_id (elements[0], level_element - 1);
+  const int child_id = scheme->element_get_child_id (tree_class, elements[0]);
+  const int level_element = scheme->element_get_level (tree_class, elements[0]);
+  const int ancestor_id = scheme->element_get_ancestor_id (tree_class, elements[0], level_element - 1);
 
   if (0 == level_element % 2) {
     /* ancestor_id == 0 && child_id == 3
@@ -77,15 +79,18 @@ t8_adapt_menger_quad (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t w
  * of the mesh or leave it untouched. Refine the remaining elements.
  */
 static int
-t8_adapt_sierpinski_tri (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                         t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+t8_adapt_sierpinski_tri (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                         [[maybe_unused]] t8_locidx_t which_tree, t8_eclass_t tree_class,
+                         [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+                         [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
+                         t8_element_t *elements[])
 {
   const int *adapt_data = (const int *) t8_forest_get_user_data (forest);
   const int level_max = adapt_data[0];
   const int ret = adapt_data[1]; /* -2 if elements shall be removed, 0 else */
 
-  const int child_id = ts->t8_element_child_id (elements[0]);
-  const int level = ts->t8_element_level (elements[0]);
+  const int child_id = scheme->element_get_child_id (tree_class, elements[0]);
+  const int level = scheme->element_get_level (tree_class, elements[0]);
 
   if (child_id == 2) {
     return ret;
@@ -101,16 +106,19 @@ t8_adapt_sierpinski_tri (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_
  * of the mesh or leave them untouched. Refine the remaining elements.
  */
 static int
-t8_adapt_menger_hex (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                     t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+t8_adapt_menger_hex (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                     [[maybe_unused]] t8_locidx_t which_tree, t8_eclass_t tree_class,
+                     [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+                     [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
+                     t8_element_t *elements[])
 {
   const int *adapt_data = (const int *) t8_forest_get_user_data (forest);
   const int level_max = adapt_data[0];
   const int ret = adapt_data[1]; /* -2 if elements shall be removed, 0 else */
 
-  const int child_id = ts->t8_element_child_id (elements[0]);
-  const int level_element = ts->t8_element_level (elements[0]);
-  const int ancestor_id = ts->t8_element_ancestor_id (elements[0], level_element - 1);
+  const int child_id = scheme->element_get_child_id (tree_class, elements[0]);
+  const int level_element = scheme->element_get_level (tree_class, elements[0]);
+  const int ancestor_id = scheme->element_get_ancestor_id (tree_class, elements[0], level_element - 1);
 
   if (0 == level_element % 2) {
     if (ancestor_id < 4) {
@@ -149,15 +157,18 @@ t8_adapt_menger_hex (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t wh
  * of the mesh or leave it untouched. Refine the remaining elements.
  */
 static int
-t8_adapt_sierpinski_tet (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                         t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+t8_adapt_sierpinski_tet (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                         [[maybe_unused]] t8_locidx_t which_tree, t8_eclass_t tree_class,
+                         [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+                         [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
+                         t8_element_t *elements[])
 {
   const int *adapt_data = (const int *) t8_forest_get_user_data (forest);
   const int level_max = adapt_data[0];
   const int ret = adapt_data[1]; /* -2 if elements shall be removed, 0 else */
 
-  const int child_id = ts->t8_element_child_id (elements[0]);
-  const int level = ts->t8_element_level (elements[0]);
+  const int child_id = scheme->element_get_child_id (tree_class, elements[0]);
+  const int level = scheme->element_get_level (tree_class, elements[0]);
 
   if (child_id == 2 || child_id == 3 || child_id == 5 || child_id == 6) {
     return ret;
@@ -173,16 +184,18 @@ t8_adapt_sierpinski_tet (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_
  * of the mesh or leave it untouched. Refine the remaining elements.
  */
 static int
-t8_adapt_sierpinski_prism (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                           t8_eclass_scheme_c *ts, const int is_family, const int num_elements,
+t8_adapt_sierpinski_prism (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                           [[maybe_unused]] t8_locidx_t which_tree, t8_eclass_t tree_class,
+                           [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+                           [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
                            t8_element_t *elements[])
 {
   const int *adapt_data = (const int *) t8_forest_get_user_data (forest);
   const int level_max = adapt_data[0];
   const int ret = adapt_data[1]; /* -2 if elements shall be removed, 0 else */
 
-  const int child_id = ts->t8_element_child_id (elements[0]);
-  const int level = ts->t8_element_level (elements[0]);
+  const int child_id = scheme->element_get_child_id (tree_class, elements[0]);
+  const int level = scheme->element_get_level (tree_class, elements[0]);
 
   if (child_id == 2 || child_id == 6) {
     return ret;
@@ -198,16 +211,18 @@ t8_adapt_sierpinski_prism (t8_forest_t forest, t8_forest_t forest_from, t8_locid
  * of the mesh or leave it untouched. Refine the remaining elements.
  */
 static int
-t8_adapt_sierpinski_pyramid (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                             t8_locidx_t lelement_id, t8_eclass_scheme_c *ts, const int is_family,
-                             const int num_elements, t8_element_t *elements[])
+t8_adapt_sierpinski_pyramid (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                             [[maybe_unused]] t8_locidx_t which_tree, t8_eclass_t tree_class,
+                             [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+                             [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
+                             t8_element_t *elements[])
 {
   const int *adapt_data = (const int *) t8_forest_get_user_data (forest);
   const int level_max = adapt_data[0];
   const int ret = adapt_data[1]; /* -2 if elements shall be removed, 0 else */
 
-  const int child_id = ts->t8_element_child_id (elements[0]);
-  const int level = ts->t8_element_level (elements[0]);
+  const int child_id = scheme->element_get_child_id (tree_class, elements[0]);
+  const int level = scheme->element_get_level (tree_class, elements[0]);
 
   if (child_id == 1 || child_id == 3 || child_id == 5 || child_id == 6 || child_id == 8) {
     return ret;
@@ -220,8 +235,11 @@ t8_adapt_sierpinski_pyramid (t8_forest_t forest, t8_forest_t forest_from, t8_loc
 
 /* Coarse every family in the mesh. */
 static int
-t8_adapt_coarse (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                 t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+t8_adapt_coarse ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                 [[maybe_unused]] t8_locidx_t which_tree, [[maybe_unused]] t8_eclass_t tree_class,
+                 [[maybe_unused]] t8_locidx_t lelement_id, [[maybe_unused]] const t8_scheme *scheme,
+                 const int is_family, [[maybe_unused]] const int num_elements,
+                 [[maybe_unused]] t8_element_t *elements[])
 {
   if (is_family) {
     return -1;
@@ -280,7 +298,7 @@ t8_construct_fractal (int level_initial, int level_end, const int iterative, con
 
     t8_forest_init (&forest);
     t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
-    t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
+    t8_forest_set_scheme (forest, t8_scheme_new_default ());
     t8_forest_set_level (forest, level_initial);
     t8_forest_commit (forest);
 

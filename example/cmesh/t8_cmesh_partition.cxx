@@ -23,20 +23,20 @@
 #include <sc_refcount.h>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_cmesh_vtk_writer.h>
+#include <t8_vtk/t8_vtk_writer.h>
+
 #include <t8_cmesh/t8_cmesh_partition.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <p4est_connectivity.h>
 #include <p8est_connectivity.h>
 #include <sc_shmem.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 
 static void
-t8_random_partition (int level)
+t8_random_partition ([[maybe_unused]] int level)
 {
   t8_cmesh_t cmesh, cmesh_part, cmesh_part2;
   char file[BUFSIZ];
-  p8est_connectivity_t *conn;
   int mpirank, mpiret, mpisize;
 
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
@@ -44,10 +44,8 @@ t8_random_partition (int level)
   mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
   SC_CHECK_MPI (mpiret);
 
-  conn = p8est_connectivity_new_brick (2, 2, 2, 0, 0, 0);
+  cmesh = t8_cmesh_new_brick_3d (2, 2, 2, 0, 0, 0, sc_MPI_COMM_WORLD);
 
-  cmesh = t8_cmesh_new_from_p8est (conn, sc_MPI_COMM_WORLD, 1);
-  p8est_connectivity_destroy (conn);
   snprintf (file, BUFSIZ, "t8_brick_random");
   t8_cmesh_vtk_write_file (cmesh, file);
 
@@ -90,11 +88,10 @@ t8_random_partition (int level)
  * will also be partitioned. Otherwise replicated.
  */
 static void
-t8_partition (int level, int partition_from)
+t8_partition (int level, [[maybe_unused]] int partition_from)
 {
   t8_cmesh_t cmesh, cmesh_part, cmesh_part2;
   char file[BUFSIZ];
-  p4est_connectivity_t *conn;
   int mpirank, mpiret, mpisize;
 
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
@@ -102,9 +99,8 @@ t8_partition (int level, int partition_from)
   mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
   SC_CHECK_MPI (mpiret);
 
-  conn = p4est_connectivity_new_brick (3, 2, 0, 0);
-  cmesh = t8_cmesh_new_from_p4est (conn, sc_MPI_COMM_WORLD, partition_from);
-  p4est_connectivity_destroy (conn);
+  cmesh = t8_cmesh_new_brick_2d (3, 2, 0, 0, sc_MPI_COMM_WORLD);
+
   snprintf (file, BUFSIZ, "t8_brick");
   t8_cmesh_vtk_write_file (cmesh, file);
 
@@ -112,7 +108,7 @@ t8_partition (int level, int partition_from)
   /* We still need access to cmesh later */
   t8_cmesh_ref (cmesh);
   t8_cmesh_set_derive (cmesh_part, cmesh);
-  t8_cmesh_set_partition_uniform (cmesh_part, level, t8_scheme_new_default_cxx ());
+  t8_cmesh_set_partition_uniform (cmesh_part, level, t8_scheme_new_default ());
   t8_cmesh_commit (cmesh_part, sc_MPI_COMM_WORLD);
   if (mpisize > 1 && 1) {
     t8_cmesh_init (&cmesh_part2);

@@ -1,23 +1,23 @@
 /*
-This file is part of t8code.
-t8code is a C library to manage a collection (a forest) of multiple
-connected adaptive space-trees of general element classes in parallel.
+  This file is part of t8code.
+  t8code is a C library to manage a collection (a forest) of multiple
+  connected adaptive space-trees of general element classes in parallel.
 
-Copyright (C) 2015 the developers
+  Copyright (C) 2015 the developers
 
-t8code is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
+  t8code is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
 
-t8code is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+  t8code is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with t8code; if not, write to the Free Software Foundation, Inc.,
-51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+  You should have received a copy of the GNU General Public License
+  along with t8code; if not, write to the Free Software Foundation, Inc.,
+  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
 /** \file t8_gtest_balance.cxx
@@ -26,6 +26,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <gtest/gtest.h>
 #include <test/t8_gtest_macros.hxx>
+#include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
 
 #include <t8_eclass.h>
@@ -33,14 +34,14 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest_balance.h>
 
 #include <array>
 #include <vector>
 #include <algorithm>
 
-class gtest_balance: public testing::TestWithParam<std::tuple<t8_eclass, int, int>> {
+class gtest_balance: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, int, int>> {
  public:
   static const int kNumTrees = 4;
 
@@ -48,11 +49,14 @@ class gtest_balance: public testing::TestWithParam<std::tuple<t8_eclass, int, in
   void
   SetUp () override
   {
-    ieclass = std::get<0> (GetParam ());
+    const int scheme_id = std::get<0> (std::get<0> (GetParam ()));
+    scheme = create_from_scheme_id (scheme_id);
+    eclass = std::get<1> (std::get<0> (GetParam ()));
     ilevel = std::get<1> (GetParam ());
     ido_periodic = std::get<2> (GetParam ());
   }
-  t8_eclass_t ieclass;
+  t8_eclass_t eclass;
+  const t8_scheme *scheme;
   int ilevel;
   int ido_periodic;
 };
@@ -62,12 +66,12 @@ class gtest_balance: public testing::TestWithParam<std::tuple<t8_eclass, int, in
  */
 TEST_P (gtest_balance, confirm_is_balanced_check_for_uniform_forests)
 {
-  if (ieclass == t8_eclass_t::T8_ECLASS_PYRAMID && ido_periodic == 1)
+  if (eclass == t8_eclass_t::T8_ECLASS_PYRAMID && ido_periodic == 1) {
+    scheme->unref ();
     GTEST_SKIP_ ("The pyramid cube mesh cannot be periodic.");
-
-  t8_scheme_cxx_t *default_scheme = t8_scheme_new_default_cxx ();
-  t8_cmesh_t cmesh = t8_cmesh_new_hypercube (ieclass, sc_MPI_COMM_WORLD, 0, 0, ido_periodic);
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, default_scheme, ilevel, 0, sc_MPI_COMM_WORLD);
+  }
+  t8_cmesh_t cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, ido_periodic);
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, ilevel, 0, sc_MPI_COMM_WORLD);
 
   EXPECT_EQ (t8_forest_is_balanced (forest), 1);
 
@@ -82,8 +86,9 @@ struct gtest_balance_adapt_data
 
 static int
 t8_gtest_balance_refine_certain_trees (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                                       t8_locidx_t lelement_id, t8_eclass_scheme_c *ts, const int is_family,
-                                       const int num_elements, t8_element_t *elements[])
+                                       const t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
+                                       const t8_scheme *scheme, [[maybe_unused]] const int is_family,
+                                       [[maybe_unused]] const int num_elements, t8_element_t *elements[])
 {
   gtest_balance_adapt_data *adapt_data = static_cast<gtest_balance_adapt_data *> (t8_forest_get_user_data (forest));
 
@@ -91,7 +96,7 @@ t8_gtest_balance_refine_certain_trees (t8_forest_t forest, t8_forest_t forest_fr
 
   if (std::find (adapt_data->trees_to_refine.begin (), adapt_data->trees_to_refine.end (), gtree_id)
         != adapt_data->trees_to_refine.end ()
-      && ts->t8_element_level (elements[0]) < adapt_data->max_refinement_level) {
+      && scheme->element_get_level (tree_class, elements[0]) < adapt_data->max_refinement_level) {
     return 1;
   }
   else {
@@ -122,7 +127,7 @@ t8_gtest_balance_refine_certain_trees (t8_forest_t forest, t8_forest_t forest_fr
  * \return The adapted forest; as shown above
  */
 static t8_forest_t
-t8_gtest_obtain_forest_for_balance_tests (const std::vector<t8_gloidx_t> &trees_to_refine,
+t8_gtest_obtain_forest_for_balance_tests (const std::vector<t8_gloidx_t> &trees_to_refine, const t8_scheme *scheme,
                                           int additional_refinement = 0)
 {
   const double boundary_coords[12] = { 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0 };
@@ -132,7 +137,7 @@ t8_gtest_obtain_forest_for_balance_tests (const std::vector<t8_gloidx_t> &trees_
   t8_forest_t forest;
   t8_forest_init (&forest);
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
-  t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
+  t8_forest_set_scheme (forest, scheme);
   t8_forest_commit (forest);
 
   gtest_balance_adapt_data adapt_data;
@@ -160,14 +165,13 @@ t8_gtest_check_custom_balanced_forest (t8_forest_t balanced_forest,
     const t8_locidx_t num_tree_local_elems = t8_forest_get_tree_num_elements (balanced_forest, tree_id);
 
     const t8_gloidx_t gtree_id = t8_forest_global_tree_id (balanced_forest, tree_id);
-
-    const t8_eclass_scheme_c *ts
-      = t8_forest_get_eclass_scheme (balanced_forest, t8_forest_get_tree_class (balanced_forest, tree_id));
+    const t8_eclass_t tree_class = t8_forest_get_tree_class (balanced_forest, tree_id);
+    const t8_scheme *scheme = t8_forest_get_scheme (balanced_forest);
 
     for (t8_locidx_t elem_id = 0; elem_id < num_tree_local_elems; ++elem_id) {
       const t8_element_t *element = t8_forest_get_element_in_tree (balanced_forest, tree_id, elem_id);
 
-      const int elem_level = ts->t8_element_level (element);
+      const int elem_level = scheme->element_get_level (tree_class, element);
 
       if (elem_level != expected_elem_level_per_tree[gtree_id]) {
         return false;
@@ -195,10 +199,10 @@ t8_gtest_check_custom_balanced_forest (t8_forest_t balanced_forest,
  *    |__|__|__|__|__ __ __ __|         |__|__|__|__|__ __|__ __|
  * 
  */
-TEST (gtest_balance, balance_adapted_forest_no_repartition)
+TEST_P (gtest_balance, balance_adapted_forest_no_repartition)
 {
   std::vector<t8_gloidx_t> trees_to_refine { 0 };
-  t8_forest_t forest = t8_gtest_obtain_forest_for_balance_tests (trees_to_refine);
+  t8_forest_t forest = t8_gtest_obtain_forest_for_balance_tests (trees_to_refine, scheme, 0);
 
   const int flag_no_repartition = 1;
 
@@ -217,12 +221,12 @@ TEST (gtest_balance, balance_adapted_forest_no_repartition)
 /**
  * \brief Tests whether an already balanced forest remains unchanged after another balance iteration.
  */
-TEST (gtest_balance, balance_consistency_test)
+TEST_P (gtest_balance, balance_consistency_test)
 {
   const int additional_refinement = 2;
   std::vector<t8_gloidx_t> trees_to_refine { 1, 2 };
 
-  t8_forest_t forest = t8_gtest_obtain_forest_for_balance_tests (trees_to_refine, additional_refinement);
+  t8_forest_t forest = t8_gtest_obtain_forest_for_balance_tests (trees_to_refine, scheme, additional_refinement);
 
   int flag_no_repartition = 0;
   t8_forest_t balanced_forest;
@@ -243,6 +247,13 @@ TEST (gtest_balance, balance_consistency_test)
   t8_forest_unref (&balanced_forest);
   t8_forest_unref (&already_balanced_forest);
 }
+#if T8CODE_TEST_LEVEL >= 2
+const int maxlvl = 3;
+#elif T8CODE_TEST_LEVEL >= 1
+const int maxlvl = 4;
+#else
+const int maxlvl = 5;
+#endif
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_balance, gtest_balance,
-                          testing::Combine (AllEclasses, testing::Range (0, 5), testing::Range (0, 2)));
+                          testing::Combine (DefaultScheme, testing::Range (0, maxlvl), testing::Range (0, 2)));

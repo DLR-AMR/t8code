@@ -22,36 +22,38 @@
 
 #include <gtest/gtest.h>
 #include <t8_cmesh.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_cmesh/t8_cmesh_partition.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
+#include <test/t8_gtest_schemes.hxx>
 
 /* Test if multiple attributes are partitioned correctly. */
 
 /** Return a partitioned cmesh from \a cmesh. */
 static t8_cmesh_t
-t8_cmesh_partition_cmesh (t8_cmesh_t cmesh, sc_MPI_Comm comm)
+t8_cmesh_partition_cmesh (t8_cmesh_t cmesh, const t8_scheme *scheme, sc_MPI_Comm comm)
 {
   t8_cmesh_t cmesh_partition;
   t8_cmesh_init (&cmesh_partition);
   t8_cmesh_set_derive (cmesh_partition, cmesh);
-  t8_cmesh_set_partition_uniform (cmesh_partition, 0, t8_scheme_new_default_cxx ());
+  t8_cmesh_set_partition_uniform (cmesh_partition, 0, scheme);
   t8_cmesh_commit (cmesh_partition, comm);
   return cmesh_partition;
 }
 
-class cmesh_multiple_attributes: public testing::TestWithParam<int> {
+class cmesh_multiple_attributes: public testing::TestWithParam<std::tuple<int, int>> {
  protected:
   void
   SetUp () override
   {
-    num_trees = GetParam ();
+    const int scheme_id = std::get<0> (GetParam ());
+    num_trees = std::get<1> (GetParam ());
 
     cmesh_one_at = t8_cmesh_new_row_of_cubes (num_trees, 0, 0, sc_MPI_COMM_WORLD);
-    cmesh_one_at = t8_cmesh_partition_cmesh (cmesh_one_at, sc_MPI_COMM_WORLD);
+    cmesh_one_at = t8_cmesh_partition_cmesh (cmesh_one_at, create_from_scheme_id (scheme_id), sc_MPI_COMM_WORLD);
 
     cmesh_mult_at = t8_cmesh_new_row_of_cubes (num_trees, 1, 0, sc_MPI_COMM_WORLD);
-    cmesh_mult_at = t8_cmesh_partition_cmesh (cmesh_mult_at, sc_MPI_COMM_WORLD);
+    cmesh_mult_at = t8_cmesh_partition_cmesh (cmesh_mult_at, create_from_scheme_id (scheme_id), sc_MPI_COMM_WORLD);
 
     cmesh_mult_at_from_stash = t8_cmesh_new_row_of_cubes (num_trees, 1, 1, sc_MPI_COMM_WORLD);
   }
@@ -124,8 +126,7 @@ TEST_P (cmesh_multiple_attributes, multiple_attributes)
   t8_locidx_t num_ghosts = t8_cmesh_get_num_ghosts (cmesh_mult_at_from_stash);
   for (t8_locidx_t ltree_id = 0; ltree_id < num_local_trees + num_ghosts; ltree_id++) {
     const t8_gloidx_t gtree_id = t8_cmesh_get_global_id (cmesh_mult_at_from_stash, ltree_id);
-    const double *vertices_partition = (double *) t8_cmesh_get_attribute (
-      cmesh_mult_at_from_stash, t8_get_package_id (), T8_CMESH_VERTICES_ATTRIBUTE_KEY, ltree_id);
+    const double *vertices_partition = t8_cmesh_get_tree_vertices (cmesh_mult_at_from_stash, ltree_id);
     const t8_eclass_t eclass = (ltree_id < num_local_trees)
                                  ? t8_cmesh_get_tree_class (cmesh_one_at, ltree_id)
                                  : t8_cmesh_get_ghost_class (cmesh_one_at, ltree_id - num_local_trees);
@@ -133,9 +134,12 @@ TEST_P (cmesh_multiple_attributes, multiple_attributes)
 
     /* Compare vertices with reference vertices. */
     for (int v_id = 0; v_id < 8; v_id++) {
-      EXPECT_EQ (vertices_partition[v_id * 3], vertices_ref[v_id * 3] + gtree_id);
-      EXPECT_EQ (vertices_partition[v_id * 3 + 1], vertices_ref[v_id * 3 + 1]);
-      EXPECT_EQ (vertices_partition[v_id * 3 + 2], vertices_ref[v_id * 3 + 2]);
+      EXPECT_EQ (vertices_partition[v_id * 3], vertices_ref[v_id * 3] + gtree_id)
+        << " at tree id " << ltree_id << " and vertex " << v_id;
+      EXPECT_EQ (vertices_partition[v_id * 3 + 1], vertices_ref[v_id * 3 + 1])
+        << " at tree id " << ltree_id << " and rtex " << v_id;
+      EXPECT_EQ (vertices_partition[v_id * 3 + 2], vertices_ref[v_id * 3 + 2])
+        << " at tree id " << ltree_id << " and vertex " << v_id;
     }
     /* Compare second attribute with global tree id. */
     t8_locidx_t att;
@@ -150,4 +154,5 @@ TEST_P (cmesh_multiple_attributes, multiple_attributes)
 }
 
 /* Test for different number of trees. */
-INSTANTIATE_TEST_SUITE_P (t8_gtest_multiple_attributes, cmesh_multiple_attributes, testing::Range (1, 4));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_multiple_attributes, cmesh_multiple_attributes,
+                          testing::Combine (AllSchemeCollections, testing::Range (1, 10)));

@@ -20,12 +20,12 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* See also: https://github.com/holke/t8code/wiki/Step-4---Partition,-Balance,-Ghost
+/* See also: https://github.com/DLR-AMR/t8code/wiki/Step-4---Partition,-Balance,-Ghost
  *
  * This is step4 of the t8code tutorials.
  * After generating a coarse mesh (step1), building a uniform forest
  * on it (step2) and adapting this forest (step3) 
- * we will now lear how to control the forest creation in more detail,
+ * we will now learn how to control the forest creation in more detail,
  * how to partition and balance a forest and how to generate a layer of ghost elements.
  * 
  * Partition: Each forest is distributed among the MPI processes. Partitioning a forest means
@@ -85,12 +85,12 @@
  *           partition of the resulting forest changes.
  *  */
 
-#include <t8.h>                                     /* General t8code header, always include this. */
-#include <t8_cmesh.h>                               /* cmesh definition and basic interface. */
-#include <t8_cmesh/t8_cmesh_examples.h>             /* A collection of exemplary cmeshes */
-#include <t8_forest/t8_forest_general.h>            /* forest definition and basic interface. */
-#include <t8_forest/t8_forest_io.h>                 /* save forest */
-#include <t8_schemes/t8_default/t8_default_cxx.hxx> /* default refinement scheme. */
+#include <t8.h>                                 /* General t8code header, always include this. */
+#include <t8_cmesh.h>                           /* cmesh definition and basic interface. */
+#include <t8_cmesh/t8_cmesh_examples.h>         /* A collection of exemplary cmeshes */
+#include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
+#include <t8_forest/t8_forest_io.h>             /* save forest */
+#include <t8_schemes/t8_default/t8_default.hxx> /* default refinement scheme. */
 #include <tutorials/general/t8_step3.h>
 
 T8_EXTERN_C_BEGIN ();
@@ -232,7 +232,7 @@ t8_step4_main (int argc, char **argv)
   /* Build a cube cmesh with tet, hex, and prism trees. */
   cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
   t8_global_productionf (" [step4] Created coarse mesh.\n");
-  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0, comm);
+  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, comm);
 
   /* Print information of the forest. */
   t8_step3_print_forest_information (forest);
@@ -269,6 +269,8 @@ t8_step4_main (int argc, char **argv)
   t8_step3_print_forest_information (forest);
   /* Write forest to vtu files. */
   t8_forest_write_vtk_ext (forest, prefix_partition_ghost, 1, 1, 1, 1, 1, 0, 1, 0, NULL);
+  t8_global_productionf (" [step4] Wrote repartitioned forest with ghost layer to vtu files: %s*\n",
+                         prefix_partition_ghost);
 
   /*
    * Balance

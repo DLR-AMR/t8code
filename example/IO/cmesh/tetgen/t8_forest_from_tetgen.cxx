@@ -25,8 +25,8 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_partition.h>
 #include <t8_cmesh_tetgen.h>
-#include <t8_cmesh_vtk_writer.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_vtk/t8_vtk_writer.h>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>
 
@@ -67,7 +67,7 @@ t8_forest_from_cmesh (t8_cmesh_t cmesh, int level, const char *prefix)
   t8_debugf ("Construct Forest from Tetmesh\n");
   t8_forest_init (&forest);
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
-  t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
+  t8_forest_set_scheme (forest, t8_scheme_new_default ());
   t8_forest_set_level (forest, level);
   t8_forest_commit (forest);
   t8_debugf ("Committed forest. Has %i elements.\n", t8_forest_get_local_num_elements (forest));

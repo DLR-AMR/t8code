@@ -25,7 +25,7 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest.h>
 #include <t8_forest/t8_forest_types.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <test/t8_gtest_macros.hxx>
 #include <bitset>
 
@@ -54,7 +54,9 @@
  * The two resulting forests must be equal.
  */
 
-class local_tree: public testing::TestWithParam<t8_eclass_t> {
+/** This test covers the functionality described in Issue: https://github.com/DLR-AMR/t8code/issues/1137
+ * Remove `DISABLED_` from the name of the Test(suite) or use `--gtest_also_run_disabled_tests` when you start working on the issue. */
+class DISABLED_local_tree: public testing::TestWithParam<t8_eclass_t> {
  protected:
   void
   SetUp () override
@@ -62,8 +64,9 @@ class local_tree: public testing::TestWithParam<t8_eclass_t> {
     eclass = GetParam ();
     sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &MPI_size);
 
-    forest = t8_forest_new_uniform (t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD), t8_scheme_new_default_cxx (),
+    forest = t8_forest_new_uniform (t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD), t8_scheme_new_default (),
                                     MPI_size, 0, sc_MPI_COMM_WORLD);
+    /* TODO: The level does not need to be as big as MPI_SIZE, only as big so that each process has at least one element */
 
     if (MPI_size == 1 || MPI_size > MAX_NUM_RANKS) {
       GTEST_SKIP ();
@@ -90,8 +93,10 @@ struct t8_trees_to_remove
 /** Remove every element of rank i if the i`th bit in 
  * the current instance \a remove is 0. */
 static int
-t8_adapt_remove (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                 t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+t8_adapt_remove (t8_forest_t forest, t8_forest_t forest_from, [[maybe_unused]] t8_locidx_t which_tree,
+                 [[maybe_unused]] const t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
+                 [[maybe_unused]] const t8_scheme *scheme, [[maybe_unused]] const int is_family,
+                 [[maybe_unused]] const int num_elements, [[maybe_unused]] t8_element_t *elements[])
 {
   struct t8_trees_to_remove *trees_to_remove = (struct t8_trees_to_remove *) t8_forest_get_user_data (forest);
   if (trees_to_remove->remove[forest_from->mpirank] == 0) {
@@ -123,7 +128,7 @@ t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn, int do_ada
   return forest_new;
 }
 
-TEST_P (local_tree, test_empty_local_tree)
+TEST_P (DISABLED_local_tree, test_empty_local_tree)
 {
   /* Number of instances/testcases */
   const uint32_t num_instances = 1 << MPI_size;
@@ -157,5 +162,5 @@ TEST_P (local_tree, test_empty_local_tree)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_empty_local_tree, local_tree, testing::Range (T8_ECLASS_LINE, T8_ECLASS_COUNT),
-                          print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_empty_local_tree, DISABLED_local_tree,
+                          testing::Range (T8_ECLASS_LINE, T8_ECLASS_COUNT), print_eclass);

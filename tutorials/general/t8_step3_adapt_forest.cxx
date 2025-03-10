@@ -33,7 +33,7 @@
  * of any element will change by at most +-1.
  * 
  * How you can experiment here:
- *   - Look at the paraview output files of the unifomr and the adapted forest.
+ *   - Look at the paraview output files of the uniform and the adapted forest.
  *     For the adapted forest you can apply a slice filter to look into the cube.
  *   - Run the program with different process numbers. You should see that refining is
  *     independent of the number of processes, but coarsening is not.
@@ -45,26 +45,23 @@
  *   - Use t8_productionf to print the local number of elements on each process.
  *     Notice, that the uniform forest is evenly distributed, but that the adapted forest
  *     is not. This is due to the fact that we do not repartition our forest here.
- *   - Add a maximum refinement level to the adapt_data struct and use non-recursive refinement.
- *     Do not refine an element if it has reached the maximum level. (Hint: ts->t8_element_level)
+ *   - Add a maximum refinement level to the adapt_data struct and use recursive refinement.
+ *     Do not refine an element if it has reached the maximum level. (Hint: scheme->element_get_level)
  */
 
-#include <t8.h>                                     /* General t8code header, always include this. */
-#include <t8_cmesh.h>                               /* cmesh definition and basic interface. */
-#include <t8_cmesh/t8_cmesh_examples.h>             /* A collection of exemplary cmeshes */
-#include <t8_forest/t8_forest_general.h>            /* forest definition and basic interface. */
-#include <t8_forest/t8_forest_io.h>                 /* save forest */
-#include <t8_forest/t8_forest_geometrical.h>        /* geometrical information of the forest */
-#include <t8_schemes/t8_default/t8_default_cxx.hxx> /* default refinement scheme. */
-#include <t8_vec.h>                                 /* Basic operations on 3D vectors. */
+#include <t8.h>                                 /* General t8code header, always include this. */
+#include <t8_cmesh.h>                           /* cmesh definition and basic interface. */
+#include <t8_cmesh/t8_cmesh_examples.h>         /* A collection of exemplary cmeshes */
+#include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
+#include <t8_forest/t8_forest_io.h>             /* save forest */
+#include <t8_forest/t8_forest_geometrical.h>    /* geometrical information of the forest */
+#include <t8_schemes/t8_default/t8_default.hxx> /* default refinement scheme. */
+#include <t8_types/t8_vec.h>                    /* Basic operations on 3D vectors. */
 #include <tutorials/general/t8_step3.h>
 
 T8_EXTERN_C_BEGIN ();
 
-/* This is our own defined data that we will pass on to the
- * adaptation callback. */
-
-/* The adaptation callback function. This function will be called once for each element
+/** The adaptation callback function. This function will be called once for each element
  * and the return value decides whether this element should be refined or not.
  *   return > 0 -> This element should get refined.
  *   return = 0 -> This element should not get refined.
@@ -78,15 +75,18 @@ T8_EXTERN_C_BEGIN ();
  * \param [in] forest       The current forest that is in construction.
  * \param [in] forest_from  The forest from which we adapt the current forest (in our case, the uniform forest)
  * \param [in] which_tree   The process local id of the current tree.
+ * \param [in] tree_class   The eclass of \a which_tree.
  * \param [in] lelement_id  The tree local index of the current element (or the first of the family).
- * \param [in] ts           The refinement scheme for this tree's element class.
- * \param [in] is_family    if 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
+ * \param [in] scheme       The refinement scheme for this tree's element class.
+ * \param [in] is_family    If 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
  * \param [in] num_elements The number of entries in \a elements elements that are defined.
  * \param [in] elements     The element or family of elements to consider for refinement/coarsening.
  */
 int
-t8_step3_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                         t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+t8_step3_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
+                         [[maybe_unused]] t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
+                         [[maybe_unused]] const t8_scheme *scheme, const int is_family,
+                         [[maybe_unused]] const int num_elements, t8_element_t *elements[])
 {
   /* Our adaptation criterion is to look at the midpoint coordinates of the current element and if
    * they are inside a sphere around a given midpoint we refine, if they are outside, we coarsen. */
@@ -108,7 +108,7 @@ t8_step3_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
 
   /* Compute the distance to our sphere midpoint. */
-  dist = t8_vec_dist (centroid, adapt_data->midpoint);
+  dist = t8_dist (centroid, adapt_data->midpoint);
   if (dist < adapt_data->refine_if_inside_radius) {
     /* Refine this element. */
     return 1;
@@ -168,7 +168,7 @@ t8_step3_print_forest_information (t8_forest_t forest)
   /* Get the global number of elements. */
   global_num_elements = t8_forest_get_global_num_elements (forest);
   t8_global_productionf (" [step3] Local number of elements:\t\t%i\n", local_num_elements);
-  t8_global_productionf (" [step3] Global number of elements:\t%li\n", global_num_elements);
+  t8_global_productionf (" [step3] Global number of elements:\t%li\n", static_cast<long> (global_num_elements));
 }
 
 int
@@ -211,7 +211,7 @@ t8_step3_main (int argc, char **argv)
   /* Build a cube cmesh with tet, hex, and prism trees. */
   cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
   t8_global_productionf (" [step3] Created coarse mesh.\n");
-  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0, comm);
+  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, comm);
 
   /* Print information of the forest. */
   t8_global_productionf (" [step3] Created uniform forest.\n");

@@ -35,13 +35,13 @@
  *   - Refine the mesh at different geometries.
  *  */
 
-#include <t8.h>                                     /* General t8code header, always include this. */
-#include <sc_options.h>                             /* CLI parser */
-#include <t8_cmesh.h>                               /* cmesh definition and basic interface. */
-#include <t8_forest/t8_forest_general.h>            /* forest definition and basic interface. */
-#include <t8_forest/t8_forest_io.h>                 /* save forest */
-#include <t8_forest/t8_forest_geometrical.h>        /* geometrical information of the forest */
-#include <t8_schemes/t8_default/t8_default_cxx.hxx> /* default refinement scheme. */
+#include <t8.h>                                 /* General t8code header, always include this. */
+#include <sc_options.h>                         /* CLI parser */
+#include <t8_cmesh.h>                           /* cmesh definition and basic interface. */
+#include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
+#include <t8_forest/t8_forest_io.h>             /* save forest */
+#include <t8_forest/t8_forest_geometrical.h>    /* geometrical information of the forest */
+#include <t8_schemes/t8_default/t8_default.hxx> /* default refinement scheme. */
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx> /* Linear geometry calculation of trees */
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>    /* Curved geometry calculation of trees */
 #include <t8_cmesh_readmshfile.h>                                         /* msh file reader */
@@ -78,15 +78,16 @@ struct t8_naca_geometry_adapt_data
  * \param [in] forest_from  The forest from which we adapt the current forest (in our case, the uniform forest)
  * \param [in] which_tree   The process local id of the current tree.
  * \param [in] lelement_id  The tree local index of the current element (or the first of the family).
- * \param [in] ts           The refinement scheme for this tree's element class.
+ * \param [in] scheme           The refinement scheme for this tree's element class.
  * \param [in] is_family    if 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
  * \param [in] num_elements The number of entries in \a elements elements that are defined.
  * \param [in] elements     The element or family of elements to consider for refinement/coarsening.
  */
 int
 t8_naca_geometry_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                                 t8_locidx_t lelement_id, t8_eclass_scheme_c *ts, const int is_family,
-                                 const int num_elements, t8_element_t *elements[])
+                                 t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
+                                 const t8_scheme *scheme, [[maybe_unused]] const int is_family,
+                                 [[maybe_unused]] const int num_elements, t8_element_t *elements[])
 {
   /* We retrieve the adapt data */
   const struct t8_naca_geometry_adapt_data *adapt_data
@@ -94,19 +95,19 @@ t8_naca_geometry_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8
   /* And check if it was retrieved successfully. */
   T8_ASSERT (adapt_data != NULL);
   /* Refine element to the uniform refinement level */
-  if (ts->t8_element_level (elements[0]) < adapt_data->level) {
+  if (scheme->element_get_level (tree_class, elements[0]) < adapt_data->level) {
     return 1;
   }
   /* We retrieve the number of faces of this element. */
-  const int num_faces = ts->t8_element_num_faces (elements[0]);
+  const int num_faces = scheme->element_get_num_faces (tree_class, elements[0]);
   for (int iface = 0; iface < num_faces; ++iface) {
     /* We look if a face of the element lies on a face of the tree */
-    if (ts->t8_element_is_root_boundary (elements[0], iface)) {
+    if (scheme->element_is_root_boundary (tree_class, elements[0], iface)) {
       /* We retrieve the face it lies on */
-      int tree_face = ts->t8_element_tree_face (elements[0], iface);
+      int tree_face = scheme->element_get_tree_face (tree_class, elements[0], iface);
       const t8_locidx_t cmesh_ltreeid = t8_forest_ltreeid_to_cmesh_ltreeid (forest_from, which_tree);
       /* Retrieve the element dimension */
-      const int element_dim = t8_eclass_to_dimension[ts->eclass];
+      const int element_dim = t8_eclass_to_dimension[tree_class];
       /* We retrieve the geometry information of the tree.
        * In the 3D case, we look for linked surfaces, but in 2D, we look for linked edges. */
       const int attribute_key = element_dim == 3 ? T8_CMESH_CAD_FACE_ATTRIBUTE_KEY : T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY;
@@ -115,7 +116,7 @@ t8_naca_geometry_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8
       /* If the tree face has a linked surface and it is in the list we refine it */
       for (int igeom = 0; igeom < adapt_data->n_geometries; ++igeom) {
         if (linked_geometries[tree_face] == adapt_data->geometries[igeom]
-            && ts->t8_element_level (elements[0]) < adapt_data->levels[igeom]) {
+            && scheme->element_get_level (tree_class, elements[0]) < adapt_data->levels[igeom]) {
           /* Refine this element */
           return 1;
         }
@@ -221,21 +222,21 @@ struct t8_naca_plane_adapt_data
  * \param [in] forest_from  The forest from which we adapt the current forest (in our case, the uniform forest)
  * \param [in] which_tree   The process local id of the current tree.
  * \param [in] lelement_id  The tree local index of the current element (or the first of the family).
- * \param [in] ts           The refinement scheme for this tree's element class.
+ * \param [in] scheme           The refinement scheme for this tree's element class.
  * \param [in] is_family    if 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
  * \param [in] num_elements The number of entries in \a elements elements that are defined.
  * \param [in] elements     The element or family of elements to consider for refinement/coarsening.
  */
 int
 t8_naca_plane_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                              t8_locidx_t lelement_id, t8_eclass_scheme_c *ts, const int is_family,
-                              const int num_elements, t8_element_t *elements[])
+                              t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+                              const int is_family, const int num_elements, t8_element_t *elements[])
 {
   double elem_midpoint[3];
   int elem_level;
 
   /* Get the level of the element */
-  elem_level = ts->t8_element_level (elements[0]);
+  elem_level = scheme->element_get_level (tree_class, elements[0]);
   /* We retrieve the adapt data */
   const struct t8_naca_plane_adapt_data *adapt_data
     = (const struct t8_naca_plane_adapt_data *) t8_forest_get_user_data (forest);
@@ -393,8 +394,8 @@ main (int argc, char **argv)
   /* initialize command line argument parser */
   opt = sc_options_new (argv[0]);
   sc_options_add_switch (opt, 'h', "help", &helpme, "Display a short help message.");
-  sc_options_add_string (opt, 'f', "fileprefix", &fileprefix, "./naca6412",
-                         "Fileprefix of the msh and brep files. Default: \"./naca6412\"");
+  sc_options_add_string (opt, 'f', "fileprefix", &fileprefix, "./airfoil_windtunnel_hexahedra",
+                         "Fileprefix of the msh and brep files. Default: \"./airfoil_windtunnel_hexahedra\"");
   sc_options_add_int (opt, 'd', "dimension", &dim, 3, "The dimension of the mesh. Default: 3");
   sc_options_add_switch (opt, 'g', "geometry", &geometry,
                          "Refine the forest based on the geometries the elements lie on. "
@@ -427,7 +428,7 @@ main (int argc, char **argv)
     if (!plane && !geometry) {
       t8_global_productionf ("%s\n", help);
       t8_global_productionf ("\n\tERROR: Wrong usage.\n"
-                             "\tPlease specify either the '-p' or the '-s' option as described above.\n\n");
+                             "\tPlease specify either the '-p' or the '-g' option as described above.\n\n");
     }
     else {
       t8_global_productionf ("\n\tERROR: Wrong usage.\n\n");
@@ -439,7 +440,7 @@ main (int argc, char **argv)
     /* Read in the naca mesh from the msh file and the naca geometry from the brep file */
     cmesh = t8_cmesh_from_msh_file (fp.c_str (), 0, sc_MPI_COMM_WORLD, dim, 0, cad || geometry);
     /* Construct a forest from the cmesh */
-    forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0, comm);
+    forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, comm);
     T8_ASSERT (t8_forest_is_committed (forest));
     if (geometry) {
       t8_naca_geometry_refinement (forest, fp, level, rlevel_dorsal, rlevel_ventral, dim);

@@ -26,7 +26,7 @@
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
 #include <t8_forest/t8_forest.h>
 #include <t8_forest/t8_forest_iterate.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <test/t8_gtest_macros.hxx>
 
 /* In this test, we first adapt a forest and store every callback return value.
@@ -40,25 +40,27 @@ class forest_iterate: public testing::TestWithParam<cmesh_example_base *> {
   void
   SetUp () override
   {
-    cmesh = GetParam ()->cmesh_create ();
+#if T8CODE_TEST_LEVEL >= 1
+    constexpr int level = 3;
+#else
+    constexpr int level = 4;
+#endif
+    t8_cmesh_t cmesh = GetParam ()->cmesh_create ();
     if (t8_cmesh_is_empty (cmesh)) {
       /* empty cmeshes are currently not supported */
+      t8_cmesh_unref (&cmesh);
       GTEST_SKIP ();
     }
-    forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), 4, 0, sc_MPI_COMM_WORLD);
+    forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, sc_MPI_COMM_WORLD);
   }
   void
   TearDown () override
   {
-    if (t8_cmesh_is_empty (cmesh)) {
-      t8_cmesh_unref (&cmesh);
-    }
-    else {
+    if (forest != NULL) {
       t8_forest_unref (&forest);
     }
   }
-  t8_cmesh_t cmesh;
-  t8_forest_t forest;
+  t8_forest_t forest { NULL };
 };
 
 /** This structure contains an array with all return values of all
@@ -74,8 +76,8 @@ struct t8_return_data
  * If true, we check the parameter \a num_outgoing, \a first_outgoing
  * \a num_incoming and \a first_incoming for correctness. */
 void
-t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree, t8_eclass_scheme_c *ts,
-                   int refine, int num_outgoing, t8_locidx_t first_outgoing, int num_incoming,
+t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree, const t8_eclass_t tree_class,
+                   const t8_scheme *scheme, int refine, int num_outgoing, t8_locidx_t first_outgoing, int num_incoming,
                    t8_locidx_t first_incoming)
 {
   /* Note, the new forest contains the callback returns of the old forest */
@@ -98,82 +100,94 @@ t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
     ASSERT_EQ (num_incoming, 1);
   }
   /* Element/family got coarsened. */
-  if (refine == -1) {
+  else if (refine == -1) {
     ASSERT_EQ (num_incoming, 1);
 
     /* Begin check family */
     const t8_element_t *parent = t8_forest_get_element_in_tree (forest_new, which_tree, first_incoming);
     t8_element_t *parent_compare;
-    ts->t8_element_new (1, &parent_compare);
+    scheme->element_new (tree_class, 1, &parent_compare);
     int family_size = 1;
     t8_locidx_t tree_num_elements_old = t8_forest_get_tree_num_elements (forest_old, which_tree);
-    for (t8_locidx_t elidx = 1;
-         elidx < ts->t8_element_num_children (parent) && elidx + first_outgoing < tree_num_elements_old; elidx++) {
+    for (t8_locidx_t elidx = 1; elidx < scheme->element_get_num_children (tree_class, parent)
+                                && elidx + first_outgoing < tree_num_elements_old;
+         elidx++) {
       const t8_element_t *child = t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing + elidx);
-      ts->t8_element_parent (child, parent_compare);
-      if (ts->t8_element_equal (parent, parent_compare)) {
+      scheme->element_get_parent (tree_class, child, parent_compare);
+      if (scheme->element_is_equal (tree_class, parent, parent_compare)) {
         family_size++;
       }
     }
-    ts->t8_element_destroy (1, &parent_compare);
+    scheme->element_destroy (tree_class, 1, &parent_compare);
     ASSERT_EQ (num_outgoing, family_size);
     /* End check family */
 
-    /* If element got coarsen, only the first element
+    /* If element got coarsened, only the first element
      * should be called in the callback of forest_adapt. */
     for (t8_locidx_t i = 1; i < num_outgoing; i++) {
       ASSERT_EQ (adapt_data->callbacks[elidx_old + i], -3);
     }
   }
   /* Element got removed. */
-  if (refine == -2) {
+  else if (refine == -2) {
     ASSERT_EQ (num_outgoing, 1);
     ASSERT_EQ (num_incoming, 0);
     ASSERT_EQ (first_incoming, -1);
   }
   /* Element got refined. */
-  if (refine == 1) {
+  else if (refine == 1) {
     ASSERT_EQ (num_outgoing, 1);
     const t8_element_t *element = t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing);
-    const t8_locidx_t family_size = ts->t8_element_num_children (element);
+    const t8_locidx_t family_size = scheme->element_get_num_children (tree_class, element);
     ASSERT_EQ (num_incoming, family_size);
   }
 }
 
-/** For each locale element: Remove, coarsen, leave untouched, or refine it depending on its index.
- *      if \a lelement_id mod 12 < 3  -> remove element
+/** For each local element: Remove, coarsen, leave untouched, or refine it depending on its index.
+ *      if \a lelement_id mod 12 < 3  -> leave element untouched
  * else if \a lelement_id mod 12 < 6  -> coarse element
- * else if \a lelement_id mod 12 < 9  -> leave element untouched
+ * else if \a lelement_id mod 12 < 9  -> remove element
  * else if \a lelement_id mod 12 < 12 -> refine element
 */
 int
-t8_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                   t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+t8_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
+                   [[maybe_unused]] const t8_eclass_t tree_class, t8_locidx_t lelement_id,
+                   [[maybe_unused]] const t8_scheme *scheme, const int is_family,
+                   [[maybe_unused]] const int num_elements, [[maybe_unused]] t8_element_t *elements[])
 {
   struct t8_return_data *return_data = (struct t8_return_data *) t8_forest_get_user_data (forest);
   T8_ASSERT (return_data != NULL);
 
-  int return_val = lelement_id % 12;
-  if (return_val < 3) {
-    return_val = -2;
-    if (t8_forest_get_eclass (forest_from, which_tree) == T8_ECLASS_VERTEX) {
-      return_val = 0;
-    }
-  }
-  else if (return_val < 6) {
+  const int id_mod_12 = lelement_id % 12;
+  int return_val;
+  switch (id_mod_12) {
+  case 0:
+  case 1:
+  case 2:
+    /* < 3 */
+    return_val = 0;  // keep element
+    break;
+  case 3:
+  case 4:
+  case 5:
+    /* < 6 */
     if (is_family) {
-      return_val = -1;
+      return_val = -1;  // Coarsen family
     }
     else {
-      return_val = 0;
+      return_val = 0;  // keep if not part of a family
     }
+    break;
+  case 6:
+  case 7:
+  case 8:
+    return_val = -2;  // remove
+    break;
+  default:
+    return_val = 1;  // refine
+    break;
   }
-  else if (return_val < 9) {
-    return_val = 0;
-  }
-  else {
-    return_val = 1;
-  }
+
   T8_ASSERT (-3 < return_val);
   T8_ASSERT (return_val < 2);
 
@@ -212,11 +226,8 @@ t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn, int do_ada
 
 TEST_P (forest_iterate, test_iterate_replace)
 {
-#if T8_ENABLE_LESS_TESTS
-  const int runs = 1;
-#else
   const int runs = 2;
-#endif
+
   for (int run = 0; run < runs; run++) {
     t8_locidx_t num_elements = t8_forest_get_local_num_elements (forest);
     int *adapt_callbacks = T8_ALLOC (int, num_elements);
@@ -236,8 +247,7 @@ TEST_P (forest_iterate, test_iterate_replace)
     t8_forest_iterate_replace (forest_adapt, forest, t8_forest_replace);
     t8_forest_unref (&forest);
 
-    /* Partition the forest. This is useful,
-     * if we run the test a second time with the adapted forest. */
+    /* Partition the forest. This is useful as preparation for the second run with the adapted forest. */
     forest_adapt = t8_adapt_forest (forest_adapt, NULL, 0, 1, NULL);
 
     T8_FREE (adapt_callbacks);

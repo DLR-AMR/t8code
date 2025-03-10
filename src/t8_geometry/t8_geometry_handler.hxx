@@ -24,7 +24,8 @@
  * General geometry definitions
  */
 
-#pragma once
+#ifndef T8_GEOMETRY_HANDLER_HXX
+#define T8_GEOMETRY_HANDLER_HXX
 
 #include <t8.h>
 #include <t8_geometry/t8_geometry.h>
@@ -39,12 +40,23 @@ struct t8_geometry_handler
   /**
    * Constructor.
    */
-  t8_geometry_handler (): active_geometry (nullptr), active_tree (-1) {};
+  t8_geometry_handler (): active_geometry (nullptr), active_tree (-1)
+  {
+    t8_refcount_init (&rc);
+    t8_debugf ("Constructed the geometry_handler.\n");
+  };
 
   /**
    * Destructor.
    */
-  ~t8_geometry_handler () {};
+  ~t8_geometry_handler ()
+  {
+    if (sc_refcount_is_active (&rc)) {
+      T8_ASSERT (t8_refcount_is_last (&rc));
+      t8_refcount_unref (&rc);
+    }
+    t8_debugf ("Deleted the geometry_handler.\n");
+  };
 
   /**
    * Register a geometry with the geometry handler.
@@ -67,7 +79,7 @@ struct t8_geometry_handler
    * \param [in]  geom  The geometry to register.
    */
   void
-  register_geometry (t8_geometry **geom);
+  register_geometry (t8_geometry *geom);
 
   /**
    * Find a geometry by its name.
@@ -200,6 +212,41 @@ struct t8_geometry_handler
     return active_geometry->t8_geom_tree_negative_volume ();
   }
 
+  /**
+   * Check for compatibility of the tree with the assigned geometry.
+   * \param [in] cmesh   The cmesh.
+   * \param [in] gtreeid The global tree id of the tree to check.
+   * \return             True if the tree and assigned geometry are compatible.
+   */
+  inline bool
+  tree_compatible_with_geom (const t8_cmesh_t cmesh, const t8_gloidx_t gtreeid)
+  {
+    update_tree (cmesh, gtreeid);
+    return active_geometry->t8_geom_check_tree_compatibility ();
+  }
+
+  /**
+   * Increase the reference count of the geometry handler.
+   */
+  inline void
+  ref ()
+  {
+    t8_refcount_ref (&rc);
+  }
+
+  /**
+   * Decrease the reference count of the geometry handler.
+   * If the reference count reaches zero, the geometry handler is deleted.
+   */
+  inline void
+  unref ()
+  {
+    if (t8_refcount_unref (&rc)) {
+      t8_debugf ("Deleting the geometry_handler.\n");
+      delete this;
+    }
+  }
+
  private:
   /**
    * Add a geometry to the geometry handler.
@@ -216,6 +263,12 @@ struct t8_geometry_handler
     if (registered_geometries.find (hash) == registered_geometries.end ()) {
       registered_geometries.emplace (hash, std::move (geom));
     }
+    else {
+      t8_productionf ("WARNING: Did not register the geometry %s because it is already registered.\n"
+                      "Geometries only need to be registered once per process.\n"
+                      "If you are registering a new geometry it probably has the same name as another one.\n",
+                      geom->t8_geom_get_name ().c_str ());
+    }
     if (registered_geometries.size () == 1) {
       active_geometry = registered_geometries.at (hash).get ();
     }
@@ -230,10 +283,14 @@ struct t8_geometry_handler
   void
   update_tree (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 
-  /**< Stores all geometries that are handled by this geometry_handler. */
+  /** Stores all geometries that are handled by this geometry_handler. */
   std::unordered_map<size_t, std::unique_ptr<t8_geometry>> registered_geometries;
-  /**< Points to the currently loaded geometry (the geometry that was used last and is likely to be used next). */
+  /** Points to the currently loaded geometry (the geometry that was used last and is likely to be used next). */
   t8_geometry *active_geometry;
-  /**< The global tree id of the last tree for which geometry was used. */
+  /** The global tree id of the last tree for which geometry was used. */
   t8_gloidx_t active_tree;
+  /** The reference count of the geometry handler. TODO: Replace by shared_ptr when cmesh becomes a class. */
+  t8_refcount_t rc;
 };
+
+#endif /* !T8_GEOMETRY_HANDLER_HXX */

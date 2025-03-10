@@ -43,21 +43,20 @@ T8_EXTERN_C_BEGIN ();
  * \param [in]      ltree_id        The index of considered local tree.
  * \param [in]      el_considered   The local id of the first element in 
  *                                  \a elements in the local tree of the forest.
- * \param [in]      tscheme         The scheme for the local tree.
  * \param [in]      elements        Array of elements to consider.
  * \param [in]      elements_size   Number of elements in \a elements.
  * \return          Size of family or zero, if \a elements does not contain a
  *                  family. 
  * \note            The check works for complete and incomplete forests.
  *                  In the case of complete forests, the scheme based element 
- *                  function \see t8_element_is_family is recommended.
+ *                  function \see t8_elements_are_family is recommended.
  * \note            If the element with id \a el_considered is not the first
- *                  family member, return 0. Therefore, if \return is x > 0, 
+ *                  family member, return 0. Therefore, if return is x > 0, 
  *                  the first x elements in \a elements form a family.
  */
 int
 t8_forest_is_incomplete_family (const t8_forest_t forest, const t8_locidx_t ltree_id, const t8_locidx_t el_considered,
-                                t8_eclass_scheme_c *tscheme, t8_element_t **elements, const int elements_size);
+                                t8_element_t **elements, const int elements_size);
 
 /* For each tree in a forest compute its first and last descendant */
 void
@@ -68,20 +67,18 @@ t8_forest_compute_desc (t8_forest_t forest);
 void
 t8_forest_populate (t8_forest_t forest);
 
-/** Return the eclass scheme of a given element class associated to a forest.
+/** Return the scheme associated to a forest.
  * This function does not check whether the given forest is committed, use with
  * caution and only if you are sure that the eclass_scheme was set.
  * \param [in]      forest     A nearly committed forest.
- * \param [in]      eclass     An element class.
- * \return          The eclass scheme of \a eclass associated to forest.
+ * \return          The scheme associated to forest.
  * \see t8_forest_set_scheme
- * \note  The forest is not required to have trees of class \a eclass.
  */
-t8_eclass_scheme_c *
-t8_forest_get_eclass_scheme_before_commit (t8_forest_t forest, t8_eclass_t eclass);
+const t8_scheme_c *
+t8_forest_get_scheme_before_commit (t8_forest_t forest);
 
 /** Compute the maximum possible refinement level in a forest.
- * This is the minimum over all maimum refinement level of the present element
+ * This is the minimum over all maximum refinement level of the present element
  * classes.
  * \param [in,out] forest The forest.
  */
@@ -89,7 +86,7 @@ void
 t8_forest_compute_maxlevel (t8_forest_t forest);
 
 /** Compute the minimum possible uniform refinement level on a cmesh such
- * that no process is empty.
+ * that no process is empty. Returns -1, if cmesh contains a vertex tree.
  * \param [in]  cmesh       The cmesh.
  * \param [in]  scheme      The element scheme for which refinement is considered.
  * \return                  The smallest refinement level l, such that a
@@ -98,7 +95,7 @@ t8_forest_compute_maxlevel (t8_forest_t forest);
  * \see t8_forest_new_uniform.
  */
 int
-t8_forest_min_nonempty_level (t8_cmesh_t cmesh, t8_scheme_cxx_t *scheme);
+t8_forest_min_nonempty_level (t8_cmesh_t cmesh, const t8_scheme_c *scheme);
 
 /** return nonzero if the first tree of a forest is shared with a smaller
  * process.
@@ -159,23 +156,41 @@ t8_forest_get_coarse_tree_ext (t8_forest_t forest, t8_locidx_t ltreeid, t8_locid
 void
 t8_forest_compute_elements_offset (t8_forest_t forest);
 
-/** Return an element of a tree.
+/** Return an element of a tree. Const version.
+ * \param [in]  tree  The tree.
+ * \param [in]  elem_in_tree The index of the element within the tree.
+ * \return      Returns the element with index \a elem_in_tree of the
+ *              element array of \a tree.
+ */
+const t8_element_t *
+t8_forest_get_tree_element (t8_tree_t tree, t8_locidx_t elem_in_tree);
+
+/** Return an element of a tree. Mutable version.
  * \param [in]  tree  The tree.
  * \param [in]  elem_in_tree The index of the element within the tree.
  * \return      Returns the element with index \a elem_in_tree of the
  *              element array of \a tree.
  */
 t8_element_t *
-t8_forest_get_tree_element (t8_tree_t tree, t8_locidx_t elem_in_tree);
+t8_forest_get_tree_element_mutable (t8_tree_t tree, t8_locidx_t elem_in_tree);
 
-/** Return the array of elements of a tree.
+/** Return the array of elements of a tree. Const version.
+ * \param [in]  forest   The forest.
+ * \param [in]  ltreeid  The local id of a local tree. Must be a valid local tree id.
+ * \return      Returns the array of elements of the tree.
+ * \a forest must be committed before calling this function.
+ */
+const t8_element_array_t *
+t8_forest_get_tree_element_array (t8_forest_t forest, t8_locidx_t ltreeid);
+
+/** Return the array of elements of a tree. Mutable version.
  * \param [in]  forest   The forest.
  * \param [in]  ltreeid  The local id of a local tree. Must be a valid local tree id.
  * \return      Returns the array of elements of the tree.
  * \a forest must be committed before calling this function.
  */
 t8_element_array_t *
-t8_forest_get_tree_element_array (t8_forest_t forest, t8_locidx_t ltreeid);
+t8_forest_get_tree_element_array_mutable (const t8_forest_t forest, t8_locidx_t ltreeid);
 
 /** Find the owner process of a given element, deprecated version.
  * Use t8_forest_element_find_owner instead.
@@ -368,7 +383,7 @@ t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t forest, t8_locidx_t l
  * \param [in,out] neighs An array of allocated elements of the correct element class.
  *                        On output the face neighbors of \a elem across \a face of one
  *                        bigger refinement level are stored.
- * \param [in]     neigh_scheme The eclass scheme of the neighbors.
+ * \param [in]     neigh_class The eclass of the neighbors.
  * \param [in]     face    The number of the face of \a elem.
  * \param [in]     num_neighs The number of allocated element in \a neighs. Must match the
  *                         number of face neighbors of one bigger refinement level.
@@ -378,8 +393,8 @@ t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t forest, t8_locidx_t l
  */
 t8_gloidx_t
 t8_forest_element_half_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *elem,
-                                       t8_element_t *neighs[], t8_eclass_scheme_c *neigh_scheme, int face,
-                                       int num_neighs, int dual_faces[]);
+                                       t8_element_t *neighs[], const t8_eclass_t neigh_class, const int face,
+                                       const int num_neighs, int dual_faces[]);
 
 /** Iterate over all leaves of a forest and for each face compute the face neighbor
  * leaves with \ref t8_forest_leaf_face_neighbors and print their local element ids.
@@ -396,7 +411,7 @@ t8_forest_print_all_leaf_neighbors (t8_forest_t forest);
  * \param [in]  forest    The forest.
  * \param [in]  gtreeid   The global id of the tree the element is in
  * \param [in]  element   The element
- * \param [in]  ts        The eclass scheme of \a element.
+ * \param [in]  scheme        The eclass of \a element.
  * \return                True if in the forest there exists a local leaf or ghost
  *                        leaf that is a descendant of \a element but not equal to \a element.
  * \note If no ghost layer was created for the forest, only local elements are tested.
@@ -404,7 +419,7 @@ t8_forest_print_all_leaf_neighbors (t8_forest_t forest);
  */
 int
 t8_forest_element_has_leaf_desc (t8_forest_t forest, t8_gloidx_t gtreeid, const t8_element_t *element,
-                                 t8_eclass_scheme_c *ts);
+                                 const t8_eclass_t tree_class);
 
 T8_EXTERN_C_END ();
 

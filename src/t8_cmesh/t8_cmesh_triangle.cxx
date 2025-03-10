@@ -76,7 +76,8 @@ t8_cmesh_triangle_read_next_line (char **line, size_t *n, FILE *fp)
  * On success the index of the first node is returned (0 or 1).
  * On failure -1 is returned. */
 static int
-t8_cmesh_triangle_read_nodes (t8_cmesh_t cmesh, char *filename, double **vertices, long *num_corners, int dim)
+t8_cmesh_triangle_read_nodes ([[maybe_unused]] t8_cmesh_t cmesh, char *filename, double **vertices, long *num_corners,
+                              int dim)
 {
   FILE *fp;
   char *line = (char *) malloc (1024);
@@ -262,7 +263,7 @@ t8_cmesh_triangle_read_eles (t8_cmesh_t cmesh, int corner_offset, char *filename
       double temp;
 
       T8_ASSERT (dim == 3);
-      t8_debugf ("Correcting negative volume of tree %li\n", (long) triangle - triangle_offset);
+      t8_debugf ("Correcting negative volume of tree %li\n", static_cast<long> (triangle - triangle_offset));
       /* We switch vertex 0 and vertex 1 */
       for (i = 0; i < 3; i++) {
         temp = tree_vertices[i];
@@ -511,7 +512,8 @@ die_neigh:
 
 /* TODO: remove do_dup argument */
 static t8_cmesh_t
-t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_Comm comm, int do_dup, int dim)
+t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_Comm comm, [[maybe_unused]] int do_dup,
+                                       int dim)
 {
   int mpirank, mpisize, mpiret;
   t8_cmesh_t cmesh;
@@ -531,7 +533,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_C
 
     t8_cmesh_init (&cmesh);
     /* We will use linear geometry. */
-    t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, dim);
+    t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
     /* read .node file */
     snprintf (current_file, BUFSIZ, "%s.node", fileprefix);
     retval = t8_cmesh_triangle_read_nodes (cmesh, current_file, &vertices, &num_vertices, dim);
@@ -591,9 +593,9 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_C
 }
 
 static t8_cmesh_t
-t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix, int partition, sc_MPI_Comm comm, int do_dup, int dim,
-                                            sc_flopinfo_t *fi, sc_flopinfo_t *snapshot, sc_statinfo_t *stats,
-                                            int statindex)
+t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix, int partition, sc_MPI_Comm comm,
+                                            [[maybe_unused]] int do_dup, int dim, sc_flopinfo_t *fi,
+                                            sc_flopinfo_t *snapshot, sc_statinfo_t *stats, int statindex)
 {
   int mpirank, mpisize, mpiret;
   t8_cmesh_t cmesh;
@@ -658,7 +660,7 @@ t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix, int partition, sc_
   if (cmesh != NULL) {
     /* Use linear geometry.
      * We need to set the geometry after the broadcast. */
-    t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, dim);
+    t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
     if (partition) {
       first_tree = (mpirank * cmesh->num_trees) / mpisize;
       last_tree = ((mpirank + 1) * cmesh->num_trees) / mpisize - 1;

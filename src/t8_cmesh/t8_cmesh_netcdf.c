@@ -43,6 +43,7 @@ These functions write a file in the netCDF-format which represents the given 2D-
 #include <t8_cmesh_netcdf.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_schemes/t8_scheme.h>
 
 /* Contains all Variables used in order to work with the NetCDF-File */
 typedef struct
@@ -101,7 +102,7 @@ typedef struct
 
 /* The UGRID conventions are applied for dimension and variable descriptions */
 static void
-t8_cmesh_init_ugrid_namespace_context (t8_cmesh_netcdf_ugrid_namespace_t *namespace_conv, int dim)
+t8_cmesh_init_ugrid_namespace_context (t8_cmesh_netcdf_ugrid_namespace_t *namespace_conv, const int dim)
 {
   if (dim == 2) {
     namespace_conv->mesh = "Mesh2";

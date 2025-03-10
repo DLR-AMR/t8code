@@ -152,85 +152,8 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
   const int do_partition = 0;
 
   /* 
-   * Tests with 2D and 3D example meshes from `t8code`.
+   * Tests from `t8code` that are not included in AllCmeshsParam.
    */
-
-  {
-    const int dim = 2;
-    t8_cmesh_t cmesh = t8_cmesh_new_periodic (comm, dim);
-    test_with_cmesh (cmesh);
-    t8_cmesh_destroy (&cmesh);
-  }
-
-  {
-    const int dim = 3;
-    t8_cmesh_t cmesh = t8_cmesh_new_periodic (comm, dim);
-    test_with_cmesh (cmesh);
-    t8_cmesh_destroy (&cmesh);
-  }
-
-  {
-    t8_cmesh_t cmesh = t8_cmesh_new_hybrid_gate (comm);
-    test_with_cmesh (cmesh);
-    t8_cmesh_destroy (&cmesh);
-  }
-
-  {
-    t8_cmesh_t cmesh = t8_cmesh_new_periodic_tri (comm);
-    test_with_cmesh (cmesh);
-    t8_cmesh_destroy (&cmesh);
-  }
-
-  {
-    t8_cmesh_t cmesh = t8_cmesh_new_periodic_hybrid (comm);
-    test_with_cmesh (cmesh);
-    t8_cmesh_destroy (&cmesh);
-  }
-
-  {
-    t8_cmesh_t cmesh = t8_cmesh_new_hybrid_gate_deformed (comm);
-    test_with_cmesh (cmesh);
-    t8_cmesh_destroy (&cmesh);
-  }
-
-  {
-    const int num_of_prisms = 5;
-    t8_cmesh_t cmesh = t8_cmesh_new_prism_cake (comm, num_of_prisms);
-    test_with_cmesh (cmesh);
-    t8_cmesh_destroy (&cmesh);
-  }
-
-  {
-    const int num_of_prisms = 28;
-    t8_cmesh_t cmesh = t8_cmesh_new_prism_cake (comm, num_of_prisms);
-    test_with_cmesh (cmesh);
-    t8_cmesh_destroy (&cmesh);
-  }
-
-  {
-    t8_cmesh_t cmesh = t8_cmesh_new_prism_geometry (comm);
-    test_with_cmesh (cmesh);
-    t8_cmesh_destroy (&cmesh);
-  }
-
-  {
-    // Note: `t8_set_join_by_vertices` finds more face connections than stored in the cmesh.
-    t8_cmesh_t cmesh = t8_cmesh_new_prism_cake_funny_oriented (comm);
-    test_with_cmesh (cmesh);
-    t8_cmesh_destroy (&cmesh);
-  }
-
-  {
-    t8_cmesh_t cmesh = t8_cmesh_new_line_zigzag (comm);
-    test_with_cmesh (cmesh);
-    t8_cmesh_destroy (&cmesh);
-  }
-
-  {
-    t8_cmesh_t cmesh = t8_cmesh_new_periodic_line_more_trees (comm);
-    test_with_cmesh (cmesh);
-    t8_cmesh_destroy (&cmesh);
-  }
 
   {
     const int periodic = 0;
@@ -239,7 +162,7 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
     t8_cmesh_destroy (&cmesh);
   }
 
-  {
+  {  // Test additionally to AllCmeshsParams with interesting boundary_coords.
     const double boundary_coords[24] = { 1, 0, 0, 4, 0, 0, 0, 6, 0, 5, 5, 0, -1, -2, 8, 9, 0, 10, 0, 8, 9, 10, 10, 10 };
 
     t8_eclass_t eclass = T8_ECLASS_HEX;
@@ -250,13 +173,19 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
   }
 
   {
-    t8_cmesh_t cmesh = t8_cmesh_new_full_hybrid (comm);
+    t8_cmesh_t cmesh = t8_cmesh_new_brick_2d (3, 4, 1, 1, comm);
+    test_with_cmesh (cmesh);
+    t8_cmesh_destroy (&cmesh);
+  }
+
+  {
+    t8_cmesh_t cmesh = t8_cmesh_new_brick_3d (3, 4, 5, 1, 1, 1, comm);
     test_with_cmesh (cmesh);
     t8_cmesh_destroy (&cmesh);
   }
 
   /* {
-   *   // This test does not work.
+   *   // Side note: This test does not work.
    *   // Problem: Crashes with memory error.
    *   // Reason: There are no tree vertices set. Thus it cannot work.
    *   int num_trees = 1;
@@ -372,11 +301,15 @@ class t8_cmesh_set_join_by_vertices_class: public testing::TestWithParam<cmesh_e
   {
     size_t found = GetParam ()->name.find (std::string ("bigmesh"));
     if (found != std::string::npos) {
-      /* skip bigmeshes as they get to large */
+      /* skip bigmeshes as they do not have vertices from which to build the connectivity */
       GTEST_SKIP ();
     }
 
     cmesh = GetParam ()->cmesh_create ();
+    if (cmesh->set_partition) {
+      /* skip partitioned cmeshes, as they do not have all necessary vertex information for the neighbors */
+      GTEST_SKIP ();
+    }
   }
 
   void
@@ -391,7 +324,7 @@ class t8_cmesh_set_join_by_vertices_class: public testing::TestWithParam<cmesh_e
   t8_cmesh_t cmesh = NULL;
 };
 
-TEST_P (t8_cmesh_set_join_by_vertices_class, test_cmesh_set_join_by_vertices_parametrized)
+TEST_P (t8_cmesh_set_join_by_vertices_class, test_cmesh_set_join_by_vertices_parameterized)
 {
   test_with_cmesh (cmesh);
 }

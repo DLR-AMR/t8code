@@ -24,8 +24,9 @@
 #include <t8.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh_triangle.h>
-#include <t8_cmesh_vtk_writer.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_vtk/t8_vtk_writer.h>
+
+#include <t8_schemes/t8_default/t8_default.hxx>
 
 void
 t8_read_triangle_file_build_cmesh (const char *prefix, int do_dup, int do_partition)
@@ -45,7 +46,7 @@ t8_read_triangle_file_build_cmesh (const char *prefix, int do_dup, int do_partit
       t8_cmesh_init (&cmesh_part);
       t8_cmesh_ref (cmesh);
       t8_cmesh_set_derive (cmesh_part, cmesh);
-      t8_cmesh_set_partition_uniform (cmesh_part, 1, t8_scheme_new_default_cxx ());
+      t8_cmesh_set_partition_uniform (cmesh_part, 1, t8_scheme_new_default ());
       t8_cmesh_commit (cmesh_part, sc_MPI_COMM_WORLD);
       snprintf (fileprefix, BUFSIZ, "%s_t8_triangle_partition", prefix);
       if (!t8_cmesh_vtk_write_file (cmesh_part, fileprefix)) {

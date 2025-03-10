@@ -73,6 +73,13 @@ T8_EXTERN_C_BEGIN ();
 #define T8_ASSERT(c) SC_NOOP ()
 #endif
 
+/**Extended T8_ASSERT assertion with custom error message. Only active in debug-mode. */
+#ifdef T8_ENABLE_DEBUG
+#define T8_ASSERTF(c, msg) SC_CHECK_ABORT ((c), "Assertion '" #c "': " msg)
+#else
+#define T8_ASSERTF(c, msg) SC_NOOP ()
+#endif
+
 /** Allocate a \a t-array with \a n elements. */
 #define T8_ALLOC(t, n) (t *) sc_malloc (t8_get_package_id (), (n) * sizeof (t))
 
@@ -147,7 +154,7 @@ typedef enum {
 int
 t8_get_package_id (void);
 
-/** Logging function parametrized by local/global category and priority.
+/** Logging function parameterized by local/global category and priority.
  * \param [in] category     Either SC_LC_NORMAL for outputting on every rank
  *                          or SC_LC_GLOBAL for outputting on the root rank.
  * \param [in] priority     Please see sc.h for legal log priorities.
@@ -157,7 +164,7 @@ t8_get_package_id (void);
 void
 t8_logv (int category, int priority, const char *fmt, va_list ap);
 
-/** Logging function parametrized by local/global category and priority.
+/** Logging function parameterized by local/global category and priority.
  * \param [in] category     Either SC_LC_NORMAL for outputting on every rank
  *                          or SC_LC_GLOBAL for outputting on the root rank.
  * \param [in] priority     Please see sc.h for legal log priorities.

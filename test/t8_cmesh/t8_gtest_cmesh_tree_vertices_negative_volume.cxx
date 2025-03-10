@@ -1,23 +1,23 @@
 /*
-This file is part of t8code.
-t8code is a C library to manage a collection (a forest) of multiple
-connected adaptive space-trees of general element classes in parallel.
+  This file is part of t8code.
+  t8code is a C library to manage a collection (a forest) of multiple
+  connected adaptive space-trees of general element classes in parallel.
 
-Copyright (C) 2023 the developers
+  Copyright (C) 2023 the developers
 
-t8code is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
+  t8code is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
 
-t8code is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+  t8code is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with t8code; if not, write to the Free Software Foundation, Inc.,
-51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+  You should have received a copy of the GNU General Public License
+  along with t8code; if not, write to the Free Software Foundation, Inc.,
+  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
 /** \file t8_gtest_cmesh_tree_vertices_negative_volume.cxx
@@ -87,15 +87,15 @@ class tree_vertices_negative_volume: public testing::TestWithParam<t8_eclass_t> 
   void
   SetUp () override
   {
-    eclass = GetParam ();
-    num_vertices = t8_eclass_num_vertices[eclass];
-    get_vertices_ids (eclass, vertices_ids);
+    tree_class = GetParam ();
+    num_vertices = t8_eclass_num_vertices[tree_class];
+    get_vertices_ids (tree_class, vertices_ids);
   }
   void
   TearDown () override
   {
   }
-  t8_eclass_t eclass;
+  t8_eclass_t tree_class;
   int num_vertices;
   int vertices_ids[T8_ECLASS_MAX_CORNERS];
 };
@@ -118,7 +118,7 @@ TEST_P (tree_vertices_negative_volume, positive_volume)
   double *elem_vertices = T8_ALLOC (double, 3 * num_vertices);
   t8_cmesh_new_translate_vertices_to_attributes (vertices_ids, vertices_coords, elem_vertices, num_vertices);
 
-  EXPECT_FALSE (t8_cmesh_tree_vertices_negative_volume (eclass, elem_vertices, num_vertices));
+  EXPECT_FALSE (t8_cmesh_tree_vertices_negative_volume (tree_class, elem_vertices, num_vertices));
   T8_FREE (elem_vertices);
 }
 
@@ -140,11 +140,11 @@ TEST_P (tree_vertices_negative_volume, negative_volume)
   /* clang-format on */
   double *elem_vertices = T8_ALLOC (double, 3 * num_vertices);
   t8_cmesh_new_translate_vertices_to_attributes (vertices_ids, vertices_coords, elem_vertices, num_vertices);
-  if (t8_eclass_to_dimension[eclass] <= 2) {
-    EXPECT_FALSE (t8_cmesh_tree_vertices_negative_volume (eclass, elem_vertices, num_vertices));
+  if (t8_eclass_to_dimension[tree_class] <= 2) {
+    EXPECT_FALSE (t8_cmesh_tree_vertices_negative_volume (tree_class, elem_vertices, num_vertices));
   }
   else {
-    EXPECT_TRUE (t8_cmesh_tree_vertices_negative_volume (eclass, elem_vertices, num_vertices));
+    EXPECT_TRUE (t8_cmesh_tree_vertices_negative_volume (tree_class, elem_vertices, num_vertices));
   }
   T8_FREE (elem_vertices);
 }

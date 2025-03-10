@@ -50,39 +50,36 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
 {
  public:
   /**
-   * Constructor of the cad geometry with a given dimension. The geometry
+   * Constructor of the cad geometry. The geometry
    * is currently viable with quad/hex and triangle trees. Tets will be supported soon.
    * The geometry uses as many vertices as the tree type has, as well as
    * additional geometry information, which is extracted from a .brep file.
    * The vertices are saved via the \ref t8_cmesh_set_tree_vertices function.
    * Since the internals of this geometry are finely tuned to the .brep file
    * it is recommended to only use it with the \ref t8_cmesh_readmshfile function.
-   * \param [in] dim        The dimension of this geometry.
    * \param [in] fileprefix Prefix of a .brep file from which to extract an cad geometry.
    * \param [in] name       The name to give this geometry.
    */
-  t8_geometry_cad (int dim, std::string fileprefix, std::string name = "t8_geom_cad");
+  t8_geometry_cad (std::string fileprefix, std::string name = "t8_geom_cad");
 
   /**
-   * Constructor of the cad geometry with a given dimension. The geometry
+   * Constructor of the cad geometry. The geometry
    * is currently viable with quad/hex and triangle trees. Tets will be supported soon.
    * The geometry uses as many vertices as the tree type has, as well as
    * additional geometry information, which is given via the \a cad_shape.
    * The vertices are saved via the \ref t8_cmesh_set_tree_vertices function.
    * This constructor can be used in short scripts or in combination with a
    * mesh generator, to omit the file IO of the 
-   * \ref t8_geometry_cad (int dim, std::string fileprefix,  std::string name) constructor.
-   * \param [in] dim        The dimension of this geometry.
+   * \ref t8_geometry_cad (std::string fileprefix,  std::string name) constructor.
    * \param [in] cad_shape  cad shape geometry.
    * \param [in] name       The name to give this geometry.
    */
-  t8_geometry_cad (int dim, const TopoDS_Shape cad_shape, std::string name = "t8_geom_cad");
+  t8_geometry_cad (const TopoDS_Shape cad_shape, std::string name = "t8_geom_cad");
 
   /**
    * Constructor of the cad geometry for testing purposes. Sets an invalid cad_shape.
-   * \param [in] dim        The dimension of this geometry.
    */
-  t8_geometry_cad (int dim);
+  t8_geometry_cad ();
 
   /** The destructor. */
   virtual ~t8_geometry_cad ()
@@ -104,8 +101,8 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
    * Maps points in the reference space \f$ [0,1]^\mathrm{dim} \to \mathbb{R}^3 \f$.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
-   * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [in]  ref_coords  Array of tree dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  num_coords  Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   virtual void
@@ -116,8 +113,8 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
    * Compute the jacobian of the \a t8_geom_evaluate map at a point in the reference space \f$ [0,1]^\mathrm{dim} \f$.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
-   * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [in]  ref_coords  Array of tree dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  num_coords  Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] jacobian    The jacobian at \a ref_coords. Array of size \a num_coords x dimension x 3. Indices \f$ 3 \cdot i\f$ , \f$ 3 \cdot i+1 \f$ , \f$ 3 \cdot i+2 \f$
    *                          correspond to the \f$ i \f$-th column of the jacobian  (Entry \f$ 3 \cdot i + j \f$ is \f$ \frac{\partial f_j}{\partial x_i} \f$).
    */
@@ -134,6 +131,17 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
    */
   virtual void
   t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
+
+  /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * This geometry supports all element types, hence it returns true.
+   * \return                True if the geometry is compatible with the tree.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const
+  {
+    return true;
+  }
 
   /** Check if a cad_curve is a line.
    * \param [in] curve_index      The index of the cad_curve.
@@ -301,7 +309,7 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords  Array of 2 entries, specifying a point in \f$ [0,1]^2 \f$.
-   * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [in]  num_coords  Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
    */
   void
@@ -312,8 +320,8 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
    * Maps points in the reference space \f$ [0,1]^2 \f$ to \f$ \mathbb{R}^3 \f$. Only for quad trees.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
-   * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [in]  ref_coords  Array of tree dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  num_coords  Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
@@ -324,7 +332,7 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
    * Map a point in the reference space $$[0,1]^3$$ to $$\mathbb R^3$$. Only for tet trees.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  ref_coords  Array of tree dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
    * \param [in]  num_coords  The number of points to map.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords.
    */
@@ -336,13 +344,25 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
    * Map a point in the reference space \f$ \f$ [0,1]^3 \f$ \f$ to \f$ \mathbb{R}^3 \f$. Only for hex trees.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords  Array of \a dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
-   * \param [in]  num_coords  Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [in]  ref_coords  Array of tree dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  num_coords  Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
   t8_geom_evaluate_cad_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
                             double *out_coords) const;
+
+  /**
+   * Maps points in the reference space \f$ \f$ [0,1]^3 \f$ \f$ to \f$ \mathbb{R}^3 \f$. Only for prism trees.
+   * \param [in]  cmesh      The cmesh in which the point lies.
+   * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
+   * \param [in]  ref_coords  Array of tree dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  num_coords  Amount of points of \f$ \mathrm{dim} \f$ to map.
+   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
+   */
+  void
+  t8_geom_evaluate_cad_prism (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                              double *out_coords) const;
 
   const int *edges;                                /**< The linked edges of the currently active tree. */
   const int *faces;                                /**< The linked faces of the currently active tree. */

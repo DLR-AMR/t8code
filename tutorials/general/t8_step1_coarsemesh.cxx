@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* See also: https://github.com/holke/t8code/wiki/Step-1---Creating-a-coarse-mesh
+/* See also: https://github.com/DLR-AMR/t8code/wiki/Step-1---Creating-a-coarse-mesh
  *
  * In this example we build a coarse mesh with a cube geometry.
  * The cube is meshed with 6 coarse tetrahedra.
@@ -37,10 +37,10 @@
 
 #include <t8.h>                         /* General t8code header, always include this. */
 #include <t8_cmesh.h>                   /* cmesh definition and basic interface. */
-#include <t8_cmesh_vtk_writer.h>        /* cmesh-writer interface. */
+#include <t8_vtk/t8_vtk_writer.h>       /* cmesh-writer interface. */
 #include <t8_cmesh/t8_cmesh_examples.h> /* A collection of exemplary cmeshes */
 
-/* Builds cmesh of 6 tetrahedra that build up a unit cube.
+/** Builds cmesh of 6 tetrahedra that build up a unit cube.
  * \param [in] comm   MPI Communicator to use.
  * \return            The coarse mesh.
  */
@@ -65,7 +65,7 @@ t8_step1_build_tetcube_coarse_mesh (sc_MPI_Comm comm)
   return cmesh;
 }
 
-/* Write vtk (or more accurately vtu) files of the cmesh.
+/** Write vtk (or more accurately vtu) files of the cmesh.
  * \param [in] cmesh    A coarse mesh.
  * \param [in] prefix   A string that is used as a prefix of the output files.
  * 
@@ -79,7 +79,7 @@ t8_step1_write_cmesh_vtk (t8_cmesh_t cmesh, const char *prefix)
   t8_cmesh_vtk_write_file (cmesh, prefix);
 }
 
-/* Destroy a cmesh. This will free all allocated memory.
+/** Destroy a cmesh. This will free all allocated memory.
  * \param [in] cmesh    A cmesh.
  */
 static void
@@ -106,7 +106,7 @@ main (int argc, char **argv)
   /* Initialize the sc library, has to happen before we initialize t8code. */
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
-  t8_init (SC_LP_PRODUCTION);
+  t8_init (SC_LP_DEBUG);
 
   /* Print a message on the root process. */
   t8_global_productionf (" [step1] \n");
@@ -121,7 +121,7 @@ main (int argc, char **argv)
   global_num_trees = t8_cmesh_get_num_trees (cmesh);
   t8_global_productionf (" [step1] Created coarse mesh.\n");
   t8_global_productionf (" [step1] Local number of trees:\t%i\n", local_num_trees);
-  t8_global_productionf (" [step1] Global number of trees:\t%li\n", global_num_trees);
+  t8_global_productionf (" [step1] Global number of trees:\t%li\n", static_cast<long> (global_num_trees));
   t8_step1_write_cmesh_vtk (cmesh, prefix);
   t8_global_productionf (" [step1] Wrote coarse mesh to vtu files: %s*\n", prefix);
   t8_step1_destroy_cmesh (cmesh);

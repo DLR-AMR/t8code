@@ -22,10 +22,10 @@
 
 #include <sc_options.h>
 #include <t8_cmesh.h>
-#include <t8_cmesh_vtk_writer.h>
-#include <t8_cmesh_readmshfile.h>
+#include <t8_vtk/t8_vtk_writer.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_cmesh_readmshfile.h>
+#include <t8_schemes/t8_default/t8_default.hxx>
 
 static void
 t8_cmesh_load_distribute (const char *fileprefix, int num_files, int no_vtk)
@@ -44,7 +44,7 @@ t8_cmesh_load_distribute (const char *fileprefix, int num_files, int no_vtk)
     }
     t8_cmesh_init (&cmesh_partition);
     t8_cmesh_set_derive (cmesh_partition, cmesh);
-    t8_cmesh_set_partition_uniform (cmesh_partition, 0, t8_scheme_new_default_cxx ());
+    t8_cmesh_set_partition_uniform (cmesh_partition, 0, t8_scheme_new_default ());
     t8_cmesh_commit (cmesh_partition, sc_MPI_COMM_WORLD);
     if (!no_vtk) {
       t8_cmesh_vtk_write_file (cmesh_partition, "cmesh_dist_loaded_partition");
@@ -67,7 +67,7 @@ t8_cmesh_save_cmesh (const char *mshfile, int dim)
     cmesh = t8_cmesh_from_msh_file (mshfile, 1, sc_MPI_COMM_WORLD, dim, 0, 0);
     t8_cmesh_init (&cmesh_partition);
     t8_cmesh_set_derive (cmesh_partition, cmesh);
-    t8_cmesh_set_partition_uniform (cmesh_partition, 0, t8_scheme_new_default_cxx ());
+    t8_cmesh_set_partition_uniform (cmesh_partition, 0, t8_scheme_new_default ());
     t8_cmesh_commit (cmesh_partition, sc_MPI_COMM_WORLD);
     cmesh = cmesh_partition;
   }

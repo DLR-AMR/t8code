@@ -37,11 +37,11 @@
  *   - Create an own mesh.
  *  */
 
-#include <t8.h>                                     /* General t8code header, always include this. */
-#include <t8_cmesh.hxx>                             /* cmesh definition and basic interface. */
-#include <t8_forest/t8_forest_general.h>            /* forest definition and basic interface. */
-#include <t8_schemes/t8_default/t8_default_cxx.hxx> /* default refinement scheme. */
-#include <t8_cmesh_vtk_writer.h>                    /* write file in vtu file */
+#include <t8.h>                                 /* General t8code header, always include this. */
+#include <t8_cmesh.hxx>                         /* cmesh definition and basic interface. */
+#include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
+#include <t8_schemes/t8_default/t8_default.hxx> /* default refinement scheme. */
+#include <t8_vtk/t8_vtk_writer.h>               /* write file in vtu file */
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx> /* linear geometry of the cmesh */
 
 T8_EXTERN_C_BEGIN ();
@@ -144,20 +144,21 @@ t8_cmesh_new_periodic_hybrid_2d (sc_MPI_Comm comm)
 
   /* 1. Defining an array with all vertices */
   /* Just all vertices of all trees. partly duplicated */
-  double vertices[60] = { 0,   0,   0,                                        /* tree 0, triangle */
-                          0.5, 0,   0, 0.5, 0.5, 0, 0,   0,   0,              /* tree 1, triangle */
-                          0.5, 0.5, 0, 0,   0.5, 0, 0.5, 0,   0,              /* tree 2, quad */
-                          1,   0,   0, 0.5, 0.5, 0, 1,   0.5, 0, 0,   0.5, 0, /* tree 3, quad */
-                          0.5, 0.5, 0, 0,   1,   0, 0.5, 1,   0, 0.5, 0.5, 0, /* tree 4, triangle */
-                          1,   0.5, 0, 1,   1,   0, 0.5, 0.5, 0,              /* tree 5, triangle */
-                          1,   1,   0, 0.5, 1,   0 };
+  double vertices[60] = {
+    0,   0,   0, 0.5, 0,   0, 0.5, 0.5, 0,              /* tree 0, triangle */
+    0,   0,   0, 0.5, 0.5, 0, 0,   0.5, 0,              /* tree 1, triangle */
+    0.5, 0,   0, 1,   0,   0, 0.5, 0.5, 0, 1,   0.5, 0, /* tree 2, quad */
+    0,   0.5, 0, 0.5, 0.5, 0, 0,   1,   0, 0.5, 1,   0, /* tree 3, quad */
+    0.5, 0.5, 0, 1,   0.5, 0, 1,   1,   0,              /* tree 4, triangle */
+    0.5, 0.5, 0, 1,   1,   0, 0.5, 1,   0               /* tree 5, triangle */
+  };
 
   /* 2. Initialization of the mesh */
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
 
   /* 3. Definition of the geometry */
-  t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, 2);
+  t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
   ; /* Use linear geometry */
 
   /* 4. Definition of the classes of the different trees */
@@ -253,7 +254,7 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
    * t8_cmesh_init (&cmesh);
    *
    * // 3. Definition of the geometry
-   * t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, 3);;    // Use linear geometry 
+   * t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);    // Use linear geometry 
    * 
    * // 4. Definition of the classes of the different trees
    * t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TET);
@@ -276,7 +277,7 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
    * t8_cmesh_set_join (cmesh, 1, 3, 0, 4, 0);
    * t8_cmesh_set_join (cmesh, 2, 5, 0, 0, 0);
    * t8_cmesh_set_join (cmesh, 3, 5, 1, 1, 0);
-   * t8_cmesh_set_join (cmesh, 4, 5, 4, 2, 0);
+   * t8_cmesh_set_join (cmesh, 4, 5, 4, 2, 2);
    *
    * // 7. Commit the mesh
    * t8_cmesh_commit (cmesh, comm);
@@ -300,10 +301,10 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
   t8_cmesh_init (&cmesh);
 
   /*  Definition of the geometry */
-  t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, 3);
+  t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
   /* Use linear geometry */
 
-  /* Defitition of the classes of the different trees */
+  /* Definition of the classes of the different trees */
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TET);
   t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_TET);
   t8_cmesh_set_tree_class (cmesh, 2, T8_ECLASS_PRISM);
@@ -316,7 +317,7 @@ t8_cmesh_new_hybrid_gate_3d (sc_MPI_Comm comm)
   t8_cmesh_set_join (cmesh, 1, 3, 0, 4, 0);
   t8_cmesh_set_join (cmesh, 2, 5, 0, 0, 0);
   t8_cmesh_set_join (cmesh, 3, 5, 1, 1, 0);
-  t8_cmesh_set_join (cmesh, 4, 5, 4, 2, 0);
+  t8_cmesh_set_join (cmesh, 4, 5, 4, 2, 2);
 
   /*
    * Definition of the first tree
@@ -457,8 +458,8 @@ int
 t8_tutorial_build_cmesh_main (int argc, char **argv)
 {
   /* The prefix for our output files. */
-  const char *prefix_2D = "t8_step8_user_defined_mesh_2D";
-  const char *prefix_3D = "t8_step8_user_defined_mesh_3D";
+  const char *prefix_2D = "t8_user_defined_mesh_2D";
+  const char *prefix_3D = "t8_user_defined_mesh_3D";
 
   /*
    * Initialization.
@@ -492,9 +493,9 @@ t8_tutorial_build_cmesh_main (int argc, char **argv)
 
   /* Output the meshes to vtu files. */
   t8_cmesh_vtk_write_file (cmesh_2D, prefix_2D);
-  t8_global_productionf ("[tutorial] Wrote the 2D cmesh to vtu files.\n");
+  t8_global_productionf ("[tutorial] Wrote the 2D cmesh to %s*.\n", prefix_2D);
   t8_cmesh_vtk_write_file (cmesh_3D, prefix_3D);
-  t8_global_productionf ("[tutorial] Wrote the 3D cmesh to vtu files.\n");
+  t8_global_productionf ("[tutorial] Wrote the 3D cmesh to %s*.\n", prefix_3D);
 
   /*
    * Clean-up

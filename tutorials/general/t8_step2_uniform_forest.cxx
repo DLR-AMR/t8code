@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* See also: https://github.com/holke/t8code/wiki/Step-2---Creating-a-uniform-forest
+/* See also: https://github.com/DLR-AMR/t8code/wiki/Step-2---Creating-a-uniform-forest
  *
  * After we learned how to create a cmesh in step1, we will
  * now build our first partitioned forest, get its local and global
@@ -32,7 +32,7 @@
  * Together with the cmesh, we also need a refinement scheme. This scheme tells the
  * forest how elements of each shape (t8_eclass_t) are refined, what their neighbor
  * are etc.
- * The default scheme in t8_schemes/t8_default/t8_default_cxx.hxx provides an implementation for
+ * The default scheme in t8_schemes/t8_default/t8_default.hxx provides an implementation for
  * all element shapes that t8code supports (with pyramids currently under construction).
  * 
  * How you can experiment here:
@@ -44,14 +44,15 @@
  *    forest (for example the number of local trees).
  */
 
-#include <t8.h>                                     /* General t8code header, always include this. */
-#include <t8_cmesh.h>                               /* cmesh definition and basic interface. */
-#include <t8_cmesh/t8_cmesh_examples.h>             /* A collection of exemplary cmeshes */
-#include <t8_forest/t8_forest_general.h>            /* forest definition and general interface. */
-#include <t8_forest/t8_forest_io.h>                 /* forest io interface. */
-#include <t8_schemes/t8_default/t8_default_cxx.hxx> /* default refinement scheme. */
+#include <t8.h>                                 /* General t8code header, always include this. */
+#include <t8_cmesh.h>                           /* cmesh definition and basic interface. */
+#include <t8_cmesh/t8_cmesh_examples.h>         /* A collection of exemplary cmeshes */
+#include <t8_forest/t8_forest_general.h>        /* forest definition and general interface. */
+#include <t8_forest/t8_forest_io.h>             /* forest io interface. */
+#include <t8_schemes/t8_default/t8_default.hxx> /* default refinement scheme. */
+#include <string>
 
-/* Builds cmesh of 2 prisms that build up a unit cube. 
+/** Builds cmesh of 2 prisms that build up a unit cube. 
  * See step1 for a detailed description.
  * \param [in] comm   MPI Communicator to use.
  * \return            The coarse mesh.
@@ -68,7 +69,7 @@ t8_step2_build_prismcube_coarse_mesh (sc_MPI_Comm comm)
   return cmesh;
 }
 
-/* Build a uniform forest on a cmesh 
+/** Build a uniform forest on a cmesh 
  * using the default refinement scheme.
  * \param [in] comm   MPI Communicator to use.
  * \param [in] cmesh  The coarse mesh to use.
@@ -80,17 +81,15 @@ static t8_forest_t
 t8_step2_build_uniform_forest (sc_MPI_Comm comm, t8_cmesh_t cmesh, int level)
 {
   t8_forest_t forest;
-  t8_scheme_cxx_t *scheme;
+  const t8_scheme *scheme = t8_scheme_new_default ();
 
-  /* Create the refinement scheme. */
-  scheme = t8_scheme_new_default_cxx ();
-  /* Creat the uniform forest. */
+  /* Create the uniform forest. */
   forest = t8_forest_new_uniform (cmesh, scheme, level, 0, comm);
 
   return forest;
 }
 
-/* Write vtk (or more accurately vtu) files of the forest.
+/** Write vtk (or more accurately vtu) files of the forest.
  * \param [in] forest   A forest.
  * \param [in] prefix   A string that is used as a prefix of the output files.
  * 
@@ -103,7 +102,7 @@ t8_step2_write_forest_vtk (t8_forest_t forest, const char *prefix)
   t8_forest_write_vtk (forest, prefix);
 }
 
-/* Destroy a forest. This will free all allocated memory.
+/** Destroy a forest. This will free all allocated memory.
  * \param [in] forest    A forest.
  * NOTE: This will also free the memory of the scheme and the cmesh, since
  *       the forest took ownership of them.
@@ -138,7 +137,7 @@ main (int argc, char **argv)
   /* Initialize the sc library, has to happen before we initialize t8code. */
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
-  t8_init (SC_LP_PRODUCTION);
+  t8_init (SC_LP_DEBUG);
 
   /* Print a message on the root process. */
   t8_global_productionf (" [step2] \n");
@@ -162,7 +161,7 @@ main (int argc, char **argv)
   t8_global_productionf (" [step2] Created uniform forest.\n");
   t8_global_productionf (" [step2] Refinement level:\t\t\t%i\n", level);
   t8_global_productionf (" [step2] Local number of elements:\t\t%i\n", local_num_elements);
-  t8_global_productionf (" [step2] Global number of elements:\t%li\n", global_num_elements);
+  t8_global_productionf (" [step2] Global number of elements:\t%li\n", static_cast<long> (global_num_elements));
 
   /* Write forest to vtu files. */
   t8_step2_write_forest_vtk (forest, prefix);

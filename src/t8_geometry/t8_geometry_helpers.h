@@ -68,8 +68,12 @@ void
 t8_geom_linear_interpolation (const double *coefficients, const double *corner_values, int corner_value_dim,
                               int interpolation_dim, double *evaluated_function);
 
-/** Triangular interpolation between 3 points (triangle) or 4 points (tetrahedron) using barycentric coordinates.
- * \param [in]    coefficients        An array of size \a interpolation_dim giving the coefficients used for the interpolation
+/** Triangular interpolation between 3 points (triangle) or 4 points (tetrahedron) using cartesian coordinates.
+ * The input coefficients have to be given as coordinates in the reference triangle (interpolation_dim = 2) with points
+ * (0,0) (1,0) (1,1)
+ * or the reference tet (interpolation_dim = 3) with points
+ * (0,0,0) (1,0,0) (1,1,0) (1,1,1).
+ * \param [in]    coefficients        An array of size \a interpolation_dim giving the coefficients in the reference triangle/tet used for the interpolation
  * \param [in]    corner_values       An array of size 
                                                        3 * \a corner_value_dim for \a interpolation_dim == 2 or
                                                        4 * \a corner_value_dim for \a interpolation_dim == 3, 
@@ -152,6 +156,26 @@ t8_geom_get_scaling_factor_of_edge_on_face_tet (int edge_index, int face_index, 
  */
 void
 t8_geom_get_tet_face_intersection (const int face_index, const double *ref_coords, double face_intersection[3]);
+
+/** Calculates the scaling factor for the displacement of an edge over a face of a prism element.
+ * \param [in]         edge_index          Index of the edge, whose displacement should be scaled.
+ * \param [in]         face_index          Index of the face, the displacement should be scaled on.
+ * \param [in]         ref_coords          Array containing the coordinates of the reference point.
+ * \return                                 The scaling factor of the edge displacement on the face
+ *                                         at the point of the reference coordinates.
+ */
+double
+t8_geom_get_scaling_factor_of_edge_on_face_prism (int edge_index, int face_index, const double *ref_coords);
+
+/** Calculates the scaling factor for the displacement of an face through the volume of a prism element.
+ * \param [in]         face_index          Index of the displaced face.
+ * \param [in]         ref_coords          Array containing the coordinates of the reference point.
+ * \return                                 The scaling factor of the face displacement
+ *                                         at the point of the reference coordinates inside the prism volume.
+ */
+double
+t8_geom_get_scaling_factor_face_through_volume_prism (const int face, const double *ref_coords);
+
 /** Check if a point lies inside a vertex
  * 
  * \param[in] vertex_coords The coordinates of the vertex

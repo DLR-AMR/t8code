@@ -59,9 +59,9 @@ typedef struct t8_cprofile t8_cprofile_t; /* Defined below */
   +T8_ECLASS_MAX_EDGES /* Used to store which face is linked to which surface */
 #define T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY \
   T8_CMESH_CAD_FACE_ATTRIBUTE_KEY + 1 /* Used to store face parameters */
-#define T8_CMESH_LAGRANGE_POLY_DEGREE T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + T8_ECLASS_MAX_FACES
+#define T8_CMESH_LAGRANGE_POLY_DEGREE_KEY T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + T8_ECLASS_MAX_FACES
 #define T8_CMESH_NEXT_POSSIBLE_KEY \
-  T8_CMESH_LAGRANGE_POLY_DEGREE + 1 /* The next free value for a t8code attribute key */
+  T8_CMESH_LAGRANGE_POLY_DEGREE_KEY + 1 /* The next free value for a t8code attribute key */
 
 /** This structure holds the connectivity data of the coarse mesh.
  *  It can either be replicated, then each process stores a copy of the whole
@@ -92,11 +92,11 @@ typedef struct t8_cmesh
 
   int set_partition;  /**< If nonzero the cmesh is partitioned.
                                             If zero each process has the whole cmesh. */
-  int face_knowledge; /**< If partitioned the level of face knowledge that is expected. \ref t8_mesh_set_partitioned;
+  int face_knowledge; /**< If partitioned the level of face knowledge that is expected. \ref t8_cmesh_set_partitioned;
                             see \ref t8_cmesh_set_partition.
 */
 
-  t8_scheme_cxx_t *set_partition_scheme; /**< If the cmesh is to be partitioned according to a uniform level,
+  const t8_scheme_c *set_partition_scheme; /**< If the cmesh is to be partitioned according to a uniform level,
                                                 the scheme that describes the refinement pattern. See \ref t8_cmesh_set_partition. */
   int8_t set_partition_level;  /**< Non-negative if the cmesh should be partitioned from an already existing cmesh
                                          with an assumed \a level uniform mesh underneath. */

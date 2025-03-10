@@ -44,7 +44,13 @@ jobs:
 #
 # Setup and bootstrap
 #
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v4    
+      with:
+        fetch-tags: true # required to get version tags
+        fetch-depth: 0    # required to get all history, especially the version tags
+    - name: Update packages
+      run: sudo apt-get update && sudo apt-get upgrade -y
+    # This step is necessary to get the newest package data
     - name: Install zlib
       run: sudo apt-get install libz-dev
     - name: Install doxygen
@@ -61,7 +67,7 @@ jobs:
       run: echo CFLAGS_var="-Wall -pedantic -O3" >> $GITHUB_ENV
         && echo CXXFLAGS_var="-Wall -pedantic -O3" >> $GITHUB_ENV
     - name: build config variables
-      run: export CONFIG_OPTIONS="--without-blas ${LESS_TEST_OPTION}"
+      run: export CONFIG_OPTIONS="--without-blas ${TEST_LEVEL_FLAG}"
            && export CONFIG_SERIAL_DEBUG="$CONFIG_OPTIONS --enable-debug --with-sc=$SC_SERIAL_DEBUG/install --with-p4est=$P4EST_SERIAL_DEBUG/install"
     - name: Check vars
       run: echo "[$CONFIG_SERIAL_DEBUG]"
@@ -78,7 +84,6 @@ jobs:
       uses: actions/checkout@v4
       with:
         ref: ${{ github.head_ref }}
-        fetch-depth: 0
         repository: DLR-AMR/t8code-website
         path: t8code-website
         token: ${{ secrets.T8DDY_TOKEN }}

@@ -28,12 +28,11 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.h>
 #include <t8_eclass.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>
 
-t8_geometry_lagrange::t8_geometry_lagrange (int dim)
-  : t8_geometry_with_vertices (dim, "t8_geom_lagrange_" + std::to_string (dim))
+t8_geometry_lagrange::t8_geometry_lagrange (): t8_geometry_with_vertices ("t8_geom_lagrange")
 {
 }
 
@@ -42,11 +41,12 @@ t8_geometry_lagrange::~t8_geometry_lagrange ()
 }
 
 void
-t8_geometry_lagrange::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                        const size_t num_points, double *out_coords) const
+t8_geometry_lagrange::t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                                        const double *ref_coords, const size_t num_points, double *out_coords) const
 {
   if (num_points != 1)
     SC_ABORT ("Error: Batch computation of geometry not yet supported.");
+  T8_ASSERT (t8_geom_check_tree_compatibility ());
   const auto basis_functions = t8_geometry_lagrange::t8_geom_compute_basis (ref_coords);
   const size_t n_vertex = basis_functions.size ();
   for (size_t i_component = 0; i_component < T8_ECLASS_MAX_DIM; i_component++) {
@@ -61,8 +61,11 @@ t8_geometry_lagrange::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, c
 }
 
 void
-t8_geometry_lagrange::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                                 const size_t num_points, double *jacobian) const
+t8_geometry_lagrange::t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh,
+                                                 [[maybe_unused]] t8_gloidx_t gtreeid,
+                                                 [[maybe_unused]] const double *ref_coords,
+                                                 [[maybe_unused]] const size_t num_points,
+                                                 [[maybe_unused]] double *jacobian) const
 {
   SC_ABORT_NOT_REACHED ();
 }
@@ -71,8 +74,9 @@ inline void
 t8_geometry_lagrange::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 {
   t8_geometry_with_vertices::t8_geom_load_tree_data (cmesh, gtreeid);
-  t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
-  degree = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_LAGRANGE_POLY_DEGREE, ltreeid);
+  const t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
+  degree
+    = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_LAGRANGE_POLY_DEGREE_KEY, ltreeid);
   T8_ASSERT (degree != NULL);
 }
 
@@ -112,6 +116,25 @@ t8_geometry_lagrange::t8_geom_compute_basis (const double *ref_coords) const
     SC_ABORTF ("Error: Lagrange geometry for degree %i %s not yet implemented. \n", *degree,
                t8_eclass_to_string[active_tree_class]);
   }
+}
+
+bool
+t8_geometry_lagrange::t8_geom_check_tree_compatibility () const
+{
+  if (*degree > T8_GEOMETRY_MAX_POLYNOMIAL_DEGREE) {
+    t8_debugf ("Lagrange tree with degree %i detected.\n"
+               "Only degrees up to %i are supported.",
+               *degree, T8_GEOMETRY_MAX_POLYNOMIAL_DEGREE);
+    return false;
+  }
+  if (active_tree_class != T8_ECLASS_LINE && active_tree_class != T8_ECLASS_TRIANGLE
+      && active_tree_class != T8_ECLASS_QUAD && active_tree_class != T8_ECLASS_HEX) {
+    t8_debugf ("Lagrange tree with class %i detected.\n"
+               "Only lines, triangles, quadrilaterals and hexahedra are supported with the lagrangian geometry.\n",
+               active_tree_class);
+    return false;
+  }
+  return true;
 }
 
 inline std::vector<double>
@@ -259,7 +282,7 @@ t8_forest_t
 t8_lagrange_element::create_uniform_forest (t8_cmesh_t cmesh, uint32_t level) const
 {
   t8_forest_t forest;
-  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0, sc_MPI_COMM_WORLD);
+  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, sc_MPI_COMM_WORLD);
   return forest;
 }
 
@@ -269,13 +292,15 @@ t8_lagrange_element::t8_lagrange_element (t8_eclass_t eclass, uint32_t degree, s
   // TODO: Check if the number of nodes corresponds to the element type and degree.
   // if (nodes.size () != parametric_nodes.size ())
   //   SC_ABORTF ("Provide the 3 coordinates of the nodes.\n");
+
+  // Assert that the vector of nodes contains nodes with 3 coordinates each.
+  T8_ASSERT (0 == nodes.size () % 3);
   /* Create a cmesh with a single element */
-  int dim = t8_eclass_to_dimension[eclass];
   t8_cmesh_init (&cmesh);
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_LAGRANGE_POLY_DEGREE, &degree, sizeof (int), 1);
-  t8_cmesh_register_geometry<t8_geometry_lagrange> (cmesh, dim);
+  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_LAGRANGE_POLY_DEGREE_KEY, &degree, sizeof (int), 1);
+  t8_cmesh_register_geometry<t8_geometry_lagrange> (cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, eclass);
-  t8_cmesh_set_tree_vertices (cmesh, 0, nodes.data (), nodes.size ());
+  t8_cmesh_set_tree_vertices (cmesh, 0, nodes.data (), (int) (nodes.size () / 3.0));
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 }
 
@@ -501,11 +526,11 @@ t8_lagrange_element::write () const
 T8_EXTERN_C_BEGIN ();
 
 /* Satisfy the C interface from t8_geometry_lagrange.h.
- * Create a new geometry with given dimension. */
+ * Create a new geometry. */
 t8_geometry_c *
-t8_geometry_lagrange_new (int dimension)
+t8_geometry_lagrange_new ()
 {
-  t8_geometry_lagrange *geom = new t8_geometry_lagrange (dimension);
+  t8_geometry_lagrange *geom = new t8_geometry_lagrange ();
   return (t8_geometry_c *) geom;
 }
 

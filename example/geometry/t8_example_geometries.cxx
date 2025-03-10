@@ -22,7 +22,7 @@
 
 #include <sc_options.h>
 #include <sc_refcount.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_geometry/t8_geometry_base.hxx>
@@ -81,8 +81,8 @@ typedef enum {
 struct t8_geometry_sincos: public t8_geometry
 {
  public:
-  /* Basic constructor that sets the dimension and the name. */
-  t8_geometry_sincos (): t8_geometry (2, "t8_sincos_geometry")
+  /* Basic constructor that sets the name. */
+  t8_geometry_sincos (): t8_geometry ("t8_sincos_geometry")
   {
   }
 
@@ -93,13 +93,13 @@ struct t8_geometry_sincos: public t8_geometry
    * models the rectangle [0,2] x [0,1].
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
-   * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [in]  ref_coords Array of tree dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
+   * \param [in]  num_coords Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double *out_coords) const
+  t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
+                    const size_t num_coords, double *out_coords) const
   {
     for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
       const int offset_2d = 2 * i_coord;
@@ -118,8 +118,9 @@ struct t8_geometry_sincos: public t8_geometry
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                             double *jacobian) const
+  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                             [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
+                             [[maybe_unused]] double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -127,7 +128,7 @@ struct t8_geometry_sincos: public t8_geometry
   /* Load tree data is empty since we have no tree data.
    * We need to provide an implementation anyways. */
   void
-  t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
+  t8_geom_load_tree_data ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid)
   {
     /* Do nothing */
   }
@@ -137,6 +138,22 @@ struct t8_geometry_sincos: public t8_geometry
   t8_geom_tree_negative_volume () const
   {
     return 0;
+  }
+
+  /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * Only quad elements are supported by this geometry.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const
+  {
+    if (active_tree_class != T8_ECLASS_QUAD) {
+      t8_productionf (
+        "t8_geometry_sincos is not compatible with tree type %s\n It is only compatible with quad elements.\n",
+        t8_eclass_to_string[active_tree_class]);
+      return false;
+    }
+    return true;
   }
 
   /**
@@ -159,8 +176,8 @@ struct t8_geometry_sincos: public t8_geometry
 struct t8_geometry_moebius: public t8_geometry_with_vertices
 {
  public:
-  /* Basic constructor that sets the dimension and the name. */
-  t8_geometry_moebius (): t8_geometry_with_vertices (2, "t8_moebius_geometry")
+  /* Basic constructor that sets the name. */
+  t8_geometry_moebius (): t8_geometry_with_vertices ("t8_moebius_geometry")
   {
   }
 
@@ -168,13 +185,13 @@ struct t8_geometry_moebius: public t8_geometry_with_vertices
    * Maps points in \f$ [0,1]^2 \f$ to the moebius band.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
-   * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [in]  ref_coords Array of tree dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
+   * \param [in]  num_coords Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double *out_coords) const
+  t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid, const double *ref_coords,
+                    const size_t num_coords, double *out_coords) const
   {
     double t;
     double phi;
@@ -197,10 +214,27 @@ struct t8_geometry_moebius: public t8_geometry_with_vertices
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                             double *jacobian) const
+  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                             [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
+                             [[maybe_unused]] double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
+  }
+
+  /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * Only quad elements are supported by this geometry.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const
+  {
+    if (active_tree_class != T8_ECLASS_QUAD) {
+      t8_productionf (
+        "t8_geometry_moebius is not compatible with tree type %s\n It is only compatible with quad elements.\n",
+        t8_eclass_to_string[active_tree_class]);
+      return false;
+    }
+    return true;
   }
 
   /**
@@ -224,8 +258,8 @@ struct t8_geometry_moebius: public t8_geometry_with_vertices
 struct t8_geometry_cylinder: public t8_geometry
 {
  public:
-  /* Basic constructor that sets the dimension and the name. */
-  t8_geometry_cylinder (): t8_geometry (2, "t8_cylinder_geometry")
+  /* Basic constructor that sets the name. */
+  t8_geometry_cylinder (): t8_geometry ("t8_cylinder_geometry")
   {
   }
 
@@ -233,13 +267,13 @@ struct t8_geometry_cylinder: public t8_geometry
    * Map a reference point in the unit square to a cylinder.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
-   * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [in]  ref_coords Array of tree dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
+   * \param [in]  num_coords Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double *out_coords) const
+  t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid, const double *ref_coords,
+                    const size_t num_coords, double *out_coords) const
   {
     for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
       const int offset_3d = i_coord * 3;
@@ -252,8 +286,9 @@ struct t8_geometry_cylinder: public t8_geometry
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                             double *jacobian) const
+  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                             [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
+                             [[maybe_unused]] double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -261,7 +296,7 @@ struct t8_geometry_cylinder: public t8_geometry
   /* Load tree data is empty since we have no tree data.
    * We need to provide an implementation anyways. */
   void
-  t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
+  t8_geom_load_tree_data ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid)
   {
     /* Do nothing */
   }
@@ -271,6 +306,22 @@ struct t8_geometry_cylinder: public t8_geometry
   t8_geom_tree_negative_volume () const
   {
     return 0;
+  }
+
+  /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * Only quad elements are supported by this geometry.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const
+  {
+    if (active_tree_class != T8_ECLASS_QUAD) {
+      t8_productionf (
+        "t8_geometry_cylinder is not compatible with tree type %s\n It is only compatible with quad elements.\n",
+        t8_eclass_to_string[active_tree_class]);
+      return false;
+    }
+    return true;
   }
 
   /**
@@ -295,8 +346,8 @@ struct t8_geometry_cylinder: public t8_geometry
 struct t8_geometry_circle: public t8_geometry_with_vertices
 {
  public:
-  /* Basic constructor that sets the dimension and the name. */
-  t8_geometry_circle (): t8_geometry_with_vertices (2, "t8_circle_geometry")
+  /* Basic constructor that sets the name. */
+  t8_geometry_circle (): t8_geometry_with_vertices ("t8_circle_geometry")
   {
   }
 
@@ -304,13 +355,13 @@ struct t8_geometry_circle: public t8_geometry_with_vertices
    * Map a reference point in the unit square to a circle.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
-   * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [in]  ref_coords Array of tree dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
+   * \param [in]  num_coords Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double *out_coords) const
+  t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid, const double *ref_coords,
+                    const size_t num_coords, double *out_coords) const
   {
     double x;
     double y;
@@ -335,10 +386,27 @@ struct t8_geometry_circle: public t8_geometry_with_vertices
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                             double *jacobian) const
+  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                             [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
+                             [[maybe_unused]] double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
+  }
+
+  /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * Only quad elements are supported by this geometry.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const
+  {
+    if (active_tree_class != T8_ECLASS_QUAD) {
+      t8_productionf (
+        "t8_geometry_circle is not compatible with tree type %s\n It is only compatible with quad elements.\n",
+        t8_eclass_to_string[active_tree_class]);
+      return false;
+    }
+    return true;
   }
 
   /**
@@ -367,8 +435,8 @@ struct t8_geometry_circle: public t8_geometry_with_vertices
 struct t8_geometry_moving: public t8_geometry
 {
  public:
-  /* Basic constructor that sets the dimension the name and the time pointer. */
-  t8_geometry_moving (const double *time): t8_geometry (2, "t8_moving_geometry"), ptime (time)
+  /* Basic constructor that sets the name and the time pointer. */
+  t8_geometry_moving (const double *time): t8_geometry ("t8_moving_geometry"), ptime (time)
   {
   }
 
@@ -376,13 +444,13 @@ struct t8_geometry_moving: public t8_geometry
    * Map a reference point in the unit square to a square distorted with time.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
-   * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [in]  ref_coords Array of tree dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
+   * \param [in]  num_coords Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double *out_coords) const
+  t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid, const double *ref_coords,
+                    const size_t num_coords, double *out_coords) const
   {
     double x, y, radius_sqr, phi, rho;
     int sign;
@@ -413,8 +481,9 @@ struct t8_geometry_moving: public t8_geometry
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                             double *jacobian) const
+  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                             [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
+                             [[maybe_unused]] double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -422,7 +491,7 @@ struct t8_geometry_moving: public t8_geometry
   /* Load tree data is empty since we have no tree data.
    * We need to provide an implementation anyways. */
   void
-  t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
+  t8_geom_load_tree_data ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid)
   {
     /* Do nothing */
   }
@@ -432,6 +501,22 @@ struct t8_geometry_moving: public t8_geometry
   t8_geom_tree_negative_volume () const
   {
     return 0;
+  }
+
+  /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * Only quad elements are supported by this geometry.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const
+  {
+    if (active_tree_class != T8_ECLASS_QUAD) {
+      t8_productionf (
+        "t8_geometry_moving is not compatible with tree type %s\n It is only compatible with quad elements.\n",
+        t8_eclass_to_string[active_tree_class]);
+      return false;
+    }
+    return true;
   }
 
   /**
@@ -455,21 +540,21 @@ struct t8_geometry_moving: public t8_geometry
 struct t8_geometry_cube_zdistorted: public t8_geometry
 {
  public:
-  /* Basic constructor that sets the dimension and the name. */
-  t8_geometry_cube_zdistorted (): t8_geometry (3, "t8_cube_zdistorted_geometry")
+  /* Basic constructor that sets the name. */
+  t8_geometry_cube_zdistorted (): t8_geometry ("t8_cube_zdistorted_geometry")
   {
   }
   /**
    * Map a reference point in the unit cube to a cube distorted in the z axis.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
-   * \param [in]  ref_coords Array of \a dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
-   * \param [in]  num_coords Amount of points of /f$ \mathrm{dim} /f$ to map.
+   * \param [in]  ref_coords Array of tree dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^2 \f$.
+   * \param [in]  num_coords Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double *out_coords) const
+  t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid, const double *ref_coords,
+                    const size_t num_coords, double *out_coords) const
   {
     for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
       const int offset_3d = i_coord * 3;
@@ -483,8 +568,9 @@ struct t8_geometry_cube_zdistorted: public t8_geometry
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                             double *jacobian) const
+  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                             [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
+                             [[maybe_unused]] double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -492,7 +578,7 @@ struct t8_geometry_cube_zdistorted: public t8_geometry
   /* Load tree data is empty since we have no tree data.
    * We need to provide an implementation anyways. */
   void
-  t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
+  t8_geom_load_tree_data ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid)
   {
     /* Do nothing */
   }
@@ -502,6 +588,22 @@ struct t8_geometry_cube_zdistorted: public t8_geometry
   t8_geom_tree_negative_volume () const
   {
     return 0;
+  }
+
+  /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * Only hex elements are supported by this geometry.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const
+  {
+    if (active_tree_class != T8_ECLASS_HEX) {
+      t8_productionf (
+        "t8_geometry_cube_zdistorted is not compatible with tree type %s\n It is only compatible with hex elements.\n",
+        t8_eclass_to_string[active_tree_class]);
+      return false;
+    }
+    return true;
   }
 
   /**
@@ -518,29 +620,31 @@ struct t8_geometry_cube_zdistorted: public t8_geometry
 /* This adapt callback function will refine all elements at the
  * domain boundary up to a given maximum refinement level. */
 static int
-t8_geom_adapt_boundary (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t ltree_id, t8_locidx_t lelement_id,
-                        t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+t8_geom_adapt_boundary (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t ltree_id, const t8_eclass_t tree_class,
+                        [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+                        [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
+                        t8_element_t *elements[])
 {
   t8_cmesh_t cmesh = t8_forest_get_cmesh (forest_from);
   /* Get the number of faces of the element. */
-  int num_faces = ts->t8_element_num_faces (elements[0]);
+  const int num_faces = scheme->element_get_num_faces (tree_class, elements[0]);
   int iface;
   /* Get the maximum level from the forest's user data 
    * (must be set before using the callback). */
   int maxlevel = *(int *) t8_forest_get_user_data (forest);
 
   /* We do not refine more then the given maximum level. */
-  if (ts->t8_element_level (elements[0]) >= maxlevel) {
+  if (scheme->element_get_level (tree_class, elements[0]) >= maxlevel) {
     return 0;
   }
 
   /* Check for each face of the element whether it lies on the 
    * domain boundary. If so, the element is refined. */
   for (iface = 0; iface < num_faces; ++iface) {
-    if (ts->t8_element_is_root_boundary (elements[0], iface)) {
+    if (scheme->element_is_root_boundary (tree_class, elements[0], iface)) {
       /* This element's face is at its tree boundary. Check whether
          the tree's face is at the domain boundary. */
-      int tree_face = ts->t8_element_tree_face (elements[0], iface);
+      int tree_face = scheme->element_get_tree_face (tree_class, elements[0], iface);
       t8_locidx_t lctreeid = t8_forest_ltreeid_to_cmesh_ltreeid (forest_from, ltree_id);
       if (t8_cmesh_tree_face_is_boundary (cmesh, lctreeid, tree_face)) {
         /* The tree's face is at the domain boundary, we refine the element. */
@@ -553,8 +657,9 @@ t8_geom_adapt_boundary (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t
 }
 
 void
-quad_to_sphere_callback (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                         double *out_coords, const void *tree_data, const void *user_data)
+quad_to_sphere_callback ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                         const double *ref_coords, const size_t num_coords, double *out_coords,
+                         [[maybe_unused]] const void *tree_data, [[maybe_unused]] const void *user_data)
 {
   for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
     const size_t offset = 3 * i_coord;
@@ -652,8 +757,8 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     break;
   case T8_GEOM_ANALYTIC_QUAD_TO_SPHERE:
     t8_global_productionf ("Wrapping a quad around a sphere.\n");
-    t8_cmesh_register_geometry<t8_geometry_analytic> (cmesh, 3, "geom_quad_to_sphere", quad_to_sphere_callback, nullptr,
-                                                      nullptr, nullptr, nullptr);
+    t8_cmesh_register_geometry<t8_geometry_analytic> (cmesh, "geom_quad_to_sphere", quad_to_sphere_callback, nullptr,
+                                                      nullptr, nullptr, nullptr, nullptr);
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
     t8_cmesh_set_join (cmesh, 0, 0, 1, 0, 0);
 
@@ -680,7 +785,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     shape = BRepBuilderAPI_MakeEdge (cad_curve).Edge ();
 
     /* Create a cad geometry. */
-    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 2, shape);
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, shape);
 
     /* The arrays indicate which face/edge carries a geometry. 
        * 0 means no geometry and any other number indicates the position of the geometry 
@@ -744,7 +849,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     shape = BRepAlgoAPI_Fuse (shape, BRepBuilderAPI_MakeEdge (cad_curve1).Edge ());
 
     /* Create a cad geometry. */
-    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, shape);
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, shape);
 
     /* The arrays indicate which face/edge carries a geometry. 
      * 0 means no geometry and any other number indicates the position of the geometry 
@@ -845,7 +950,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     int edges[24] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
     /* Create cad geometry. */
-    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, shape);
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, shape);
 
     /* Create tree 0 */
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
@@ -942,7 +1047,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     int edges[24] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
     /* Create a cad geometry. */
-    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, 3, shape);
+    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, shape);
 
     /* Create corresponding trees and parameters. 
      * Here we create num trees by a coordinate transformation from cylinder to cartesian coordinates. */
@@ -1022,7 +1127,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
    * 2 and refine recursively only along the boundary. */
   uniform_level = geom_type == T8_GEOM_CIRCLE ? SC_MIN (2, level) : level;
   /* Create a uniform forest */
-  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), uniform_level, 0, sc_MPI_COMM_WORLD);
+  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), uniform_level, 0, sc_MPI_COMM_WORLD);
   if (geom_type == T8_GEOM_CIRCLE) {
     t8_forest_t forest_adapt;
     /* Create a forest that is only refined at the tree boundaries. 

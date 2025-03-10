@@ -42,8 +42,8 @@ correct_point_order (const double tree_vertices[6])
 }
 #endif
 
-t8_geometry_linear_axis_aligned::t8_geometry_linear_axis_aligned (int dim)
-  : t8_geometry_with_vertices (dim, "t8_geom_linear_axis_aligned_" + std::to_string (dim))
+t8_geometry_linear_axis_aligned::t8_geometry_linear_axis_aligned ()
+  : t8_geometry_with_vertices ("t8_geom_linear_axis_aligned")
 {
 }
 
@@ -52,7 +52,8 @@ t8_geometry_linear_axis_aligned::~t8_geometry_linear_axis_aligned ()
 }
 
 void
-t8_geometry_linear_axis_aligned::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
+t8_geometry_linear_axis_aligned::t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh,
+                                                   [[maybe_unused]] t8_gloidx_t gtreeid, const double *ref_coords,
                                                    const size_t num_coords, double *out_coords) const
 {
   T8_ASSERT (correct_point_order (active_tree_vertices));
@@ -61,9 +62,11 @@ t8_geometry_linear_axis_aligned::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t
 }
 
 void
-t8_geometry_linear_axis_aligned::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
-                                                            const double *ref_coords, const size_t num_coords,
-                                                            double *jacobian) const
+t8_geometry_linear_axis_aligned::t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh,
+                                                            [[maybe_unused]] t8_gloidx_t gtreeid,
+                                                            [[maybe_unused]] const double *ref_coords,
+                                                            [[maybe_unused]] const size_t num_coords,
+                                                            [[maybe_unused]] double *jacobian) const
 {
   SC_ABORT ("Not implemented.");
 }
@@ -115,9 +118,9 @@ T8_EXTERN_C_BEGIN ();
 /* Satisfy the C interface from t8_geometry_linear_axis_aligned.h.
  * Create a new geometry with given dimension. */
 t8_geometry_c *
-t8_geometry_linear_axis_aligned_new (int dimension)
+t8_geometry_linear_axis_aligned_new ()
 {
-  t8_geometry_linear_axis_aligned *geom = new t8_geometry_linear_axis_aligned (dimension);
+  t8_geometry_linear_axis_aligned *geom = new t8_geometry_linear_axis_aligned ();
   return (t8_geometry_c *) geom;
 }
 

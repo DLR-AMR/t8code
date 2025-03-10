@@ -1,10 +1,9 @@
 /*
   This file is part of t8code.
   t8code is a C library to manage a collection (a forest) of multiple
-  connected adaptive space-trees of general element types in parallel.
+  connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2010 The University of Texas System
-  Written by Carsten Burstedde, Lucas C. Wilcox, and Tobin Isaac
+  Copyright (C) 2024 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -29,12 +28,10 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_iterate.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
-#include <t8_element_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_cmesh/t8_cmesh_geometry.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx>
-#include <t8_forest/t8_forest_vtk.h>
 
 /* In this test we define a triangle in the x-y plane
  * and a point that lies in a triangle that is parallel
@@ -58,9 +55,9 @@ TEST (t8_point_inside, test_point_inside_specific_triangle)
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 3);
   /* We use standard linear geometry */
-  t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, 2);
+  t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), 0, 0, sc_MPI_COMM_WORLD);
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), 0, 0, sc_MPI_COMM_WORLD);
 
   if (t8_forest_get_local_num_elements (forest) <= 0) {
     /* Skip empty forests (can occur when executed in parallel) */
@@ -99,9 +96,9 @@ TEST (t8_point_inside, test_point_inside_specific_quad)
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 4);
   /* We use standard linear geometry */
-  t8_cmesh_register_geometry<t8_geometry_linear> (cmesh, 2);
+  t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), 0, 0, sc_MPI_COMM_WORLD);
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), 0, 0, sc_MPI_COMM_WORLD);
 
   if (t8_forest_get_local_num_elements (forest) <= 0) {
     /* Skip empty forests (can occur when executed in parallel) */
@@ -172,7 +169,7 @@ TEST_P (geometry_point_inside, test_point_inside)
 
   t8_debugf ("Testing eclass %s, uniform level %i with approx. %i points per element.\n", t8_eclass_to_string[eclass],
              level, num_points_to_generate);
-  t8_scheme_cxx_t *default_scheme = t8_scheme_new_default_cxx ();
+  const t8_scheme *default_scheme = t8_scheme_new_default ();
 
   /* We translate the coordinates of the cmesh to create a non-standard case.
    * In particular, we want the 1D and 2D elements to move outside of axis
@@ -205,13 +202,13 @@ TEST_P (geometry_point_inside, test_point_inside)
     const t8_locidx_t num_elements = t8_forest_get_tree_num_elements (forest, itree);
     /* Get the associated eclass scheme */
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
-    const t8_eclass_scheme_c *eclass_scheme = t8_forest_get_eclass_scheme (forest, tree_class);
+    const t8_scheme *scheme = t8_forest_get_scheme (forest);
     for (t8_locidx_t ielement = 0; ielement < num_elements; ++ielement) {
       /* Get a pointer to the element */
       const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
 
       /* Compute the corner coordinates of the element */
-      const int num_corners = eclass_scheme->t8_element_num_corners (element);
+      const int num_corners = scheme->element_get_num_corners (tree_class, element);
       /* For each corner get its coordinates */
       for (int icorner = 0; icorner < num_corners; ++icorner) {
         t8_forest_element_coordinate (forest, itree, element, icorner, element_vertices[icorner]);
@@ -345,7 +342,7 @@ auto print_test = [] (const testing::TestParamInfo<std::tuple<t8_eclass, int, in
   return name;
 };
 
-#if T8_ENABLE_LESS_TESTS
+#if T8CODE_TEST_LEVEL >= 1
 INSTANTIATE_TEST_SUITE_P (t8_gtest_point_inside, geometry_point_inside,
                           testing::Combine (testing::Range (T8_ECLASS_LINE, T8_ECLASS_QUAD), testing::Range (0, 4),
                                             testing::Range (0, 2)),

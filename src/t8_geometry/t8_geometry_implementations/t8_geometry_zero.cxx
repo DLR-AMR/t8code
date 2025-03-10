@@ -22,7 +22,7 @@
 
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx>
 
-t8_geometry_zero::t8_geometry_zero (int dim): t8_geometry (dim, "t8_geom_zero_" + std::to_string (dim))
+t8_geometry_zero::t8_geometry_zero (): t8_geometry ("t8_geom_zero")
 {
 }
 
@@ -31,8 +31,9 @@ t8_geometry_zero::~t8_geometry_zero ()
 }
 
 void
-t8_geometry_zero::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                    const size_t num_coords, double *out_coords) const
+t8_geometry_zero::t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                                    [[maybe_unused]] const double *ref_coords, const size_t num_coords,
+                                    double *out_coords) const
 {
   /* Set the out_coords to 0 */
   for (size_t coord = 0; coord < num_coords; coord++) {
@@ -43,15 +44,17 @@ t8_geometry_zero::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const
 }
 
 void
-t8_geometry_zero::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                             const size_t num_coords, double *jacobian) const
+t8_geometry_zero::t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                                             [[maybe_unused]] const double *ref_coords, const size_t num_coords,
+                                             double *jacobian) const
 {
   /* Set the jacobian to 0 */
-  memset (jacobian, 0, sizeof (double) * 3 * dimension * num_coords);
+  const int tree_dim = t8_eclass_to_dimension[active_tree_class];
+  memset (jacobian, 0, sizeof (double) * 3 * tree_dim * num_coords);
 }
 
 inline void
-t8_geometry_zero::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
+t8_geometry_zero::t8_geom_load_tree_data ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid)
 {
   /* Do nothing. */
 }
@@ -59,11 +62,11 @@ t8_geometry_zero::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 T8_EXTERN_C_BEGIN ();
 
 /* Satisfy the C interface from t8_geometry_zero.h.
- * Create a new geometry with given dimension. */
+ * Create a new geometry. */
 t8_geometry_c *
-t8_geometry_zero_new (int dimension)
+t8_geometry_zero_new ()
 {
-  t8_geometry_zero *geom = new t8_geometry_zero (dimension);
+  t8_geometry_zero *geom = new t8_geometry_zero ();
   return (t8_geometry_c *) geom;
 }
 

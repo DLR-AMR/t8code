@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element types in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2024 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -22,10 +22,10 @@
 
 #include <sc_options.h>
 #include <t8.h>
-#include <t8_cmesh_vtk_writer.h>
+#include <t8_vtk/t8_vtk_writer.h>
 #include <t8_cmesh/t8_cmesh_partition.h>
 #include <t8_cmesh_readmshfile.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 
 /* Output a cmesh in .vtk format. Process i writes to the file
  * prefix_t8_msh_i.vtk
@@ -59,7 +59,7 @@ t8_read_msh_partition (t8_cmesh_t cmesh, const char *prefix)
 
   t8_cmesh_init (&p_mesh);
   t8_cmesh_set_derive (p_mesh, cmesh);
-  t8_cmesh_set_partition_uniform (p_mesh, 0, t8_scheme_new_default_cxx ());
+  t8_cmesh_set_partition_uniform (p_mesh, 0, t8_scheme_new_default ());
   t8_cmesh_commit (p_mesh, sc_MPI_COMM_WORLD);
   snprintf (vtk_prefix, BUFSIZ, "%s_partition", prefix);
   t8_read_msh_file_vtk (p_mesh, vtk_prefix);
@@ -140,7 +140,7 @@ main (int argc, char *argv[])
 
   opt = sc_options_new (argv[0]);
   sc_options_add_switch (opt, 'h', "help", &helpme, "Display a short help message.");
-  sc_options_add_string (opt, 'f', "prefix", &prefix, "", "The prefix of the tetgen files.");
+  sc_options_add_string (opt, 'f', "prefix", &prefix, "", "The prefix of the gmsh files.");
   sc_options_add_switch (opt, 'p', "partition", &partition, "If true the generated cmesh is repartitioned uniformly.");
   sc_options_add_int (opt, 'd', "dim", &dim, 2, "The dimension of the mesh");
   sc_options_add_int (opt, 'm', "master", &master, -1,

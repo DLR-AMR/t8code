@@ -23,7 +23,7 @@
 #include <gtest/gtest.h>
 #include <test/t8_gtest_macros.hxx>
 #include <t8_cmesh.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include "t8_cmesh/t8_cmesh_trees.h"
 #include "t8_cmesh/t8_cmesh_partition.h"
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_zero.h>
@@ -110,7 +110,7 @@ class cmesh_set_partition_offsets_commit: public testing::TestWithParam<std::tup
 TEST_P (cmesh_set_partition_offsets_nocommit, test_set_offsets)
 {
 
-  t8_debugf ("Testing t8_cmesh_set_partition_offset (no commit) with %li trees.\n", inum_trees);
+  t8_debugf ("Testing t8_cmesh_set_partition_offset (no commit) with %li trees.\n", static_cast<long> (inum_trees));
 
   /* Build a valid offset array. For this test it is only necessary that 
    * the array corresponds to any valid partition.
@@ -128,8 +128,8 @@ TEST_P (cmesh_set_partition_offsets_nocommit, test_set_offsets)
 TEST_P (cmesh_set_partition_offsets_commit, test_set_offsets)
 {
 
-  t8_debugf ("Testing t8_cmesh_set_partition_offset (with commit) with %li trees of class %s.\n", inum_trees,
-             t8_eclass_to_string[ieclass]);
+  t8_debugf ("Testing t8_cmesh_set_partition_offset (with commit) with %li trees of class %s.\n",
+             static_cast<long> (inum_trees), t8_eclass_to_string[ieclass]);
 
   /* Build a valid offset array. For this test it is only necessary that 
    * the array corresponds to any valid partition.

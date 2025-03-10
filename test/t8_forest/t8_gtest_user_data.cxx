@@ -25,20 +25,31 @@
  */
 
 #include <gtest/gtest.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
+#include <test/t8_gtest_schemes.hxx>
 
 /* Test t8_forest_set/get_user_data.
  * We build a forest and set user data for it.
  * We then retrieve the data and check whether it is the same.
  */
-TEST (user_data, test_user_data)
+class forest_user_data: public testing::TestWithParam<int> {
+ protected:
+  void
+  SetUp () override
+  {
+    const int scheme_id = GetParam ();
+    scheme = create_from_scheme_id (scheme_id);
+  }
+  const t8_scheme *scheme;
+};
+
+TEST_P (forest_user_data, test_user_data)
 {
   /* Build a forest */
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, 0, 0, 0);
-  t8_scheme_cxx_t *scheme = t8_scheme_new_default_cxx ();
   t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, 1, 0, sc_MPI_COMM_WORLD);
   /* Define user data */
   double data = 42.42;
@@ -92,11 +103,10 @@ t8_test_function_second (void)
  * We build a forest and set a user function for it.
  * We then retrieve the function and check whether it is the same.
  */
-TEST (user_data, test_user_function)
+TEST_P (forest_user_data, test_user_function)
 {
   /* Build a forest */
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, 0, 0, 0);
-  t8_scheme_cxx_t *scheme = t8_scheme_new_default_cxx ();
   t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, 1, 0, sc_MPI_COMM_WORLD);
 
   double (*funpointer) (int);
@@ -123,3 +133,5 @@ TEST (user_data, test_user_function)
   /* clean up */
   t8_forest_unref (&forest);
 }
+
+INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_user_data, forest_user_data, AllSchemeCollections);

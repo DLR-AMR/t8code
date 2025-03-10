@@ -22,11 +22,11 @@
 
 #include <t8.h>
 #include <t8_cmesh.h>
-#include <t8_cmesh_vtk_writer.h>
+#include <t8_vtk/t8_vtk_writer.h>
+
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_forest/t8_forest_vtk.h>
 int
 main (int argc, char **argv)
 {
@@ -53,8 +53,8 @@ main (int argc, char **argv)
   global_num_trees = t8_cmesh_get_num_trees (cmesh);
   t8_global_productionf (" [step1] Created coarse mesh.\n");
   t8_global_productionf (" [step1] Local number of trees:\t%i\n", local_num_trees);
-  t8_global_productionf (" [step1] Global number of trees:\t%li\n", global_num_trees);
-  t8_scheme_cxx *scheme = t8_scheme_new_default_cxx ();
+  t8_global_productionf (" [step1] Global number of trees:\t%li\n", static_cast<long> (global_num_trees));
+  const t8_scheme *scheme = t8_scheme_new_default ();
   t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, 0, 0, sc_MPI_COMM_WORLD);
   t8_forest_vtk_write_file (forest, prefix, 1, 1, 1, 1, 0, 0, NULL);
   t8_forest_unref (&forest);
