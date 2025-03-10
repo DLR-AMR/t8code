@@ -250,7 +250,7 @@ void
 t8_dline_init_linear_id (t8_dline_t *l, int level, t8_linearidx_t id)
 {
   T8_ASSERT (0 <= level && level <= T8_DLINE_MAXLEVEL);
-  T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << level);
+  T8_ASSERT (id < ((t8_linearidx_t) 1) << level);
 
   /* Set the level */
   l->level = level;
