@@ -1053,9 +1053,9 @@ class t8_scheme {
    * \param [in,out] elem The element that is filled with the root
    */
   inline void
-  get_root (const t8_eclass_t tree_class, t8_element_t *elem) const
+  set_to_root (const t8_eclass_t tree_class, t8_element_t *elem) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.get_root (elem); }, eclass_schemes[tree_class]);
+    return std::visit ([&] (auto &&scheme) { return scheme.set_to_root (elem); }, eclass_schemes[tree_class]);
   };
 
   /** Pack multiple elements into contiguous memory, so they can be sent via MPI.
