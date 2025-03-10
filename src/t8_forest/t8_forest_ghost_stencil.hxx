@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2024 the developers
+  Copyright (C) 2025 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -39,10 +39,15 @@ struct t8_forest_ghost_stencil: t8_forest_ghost_definition
    */
   t8_forest_ghost_stencil (): t8_forest_ghost_definition (T8_GHOST_USERDEFINED) {};
 
+  /** 
+   * Construct a ghost_definition with a list of nodestring
+   * \param               list_of_nodestrings A nodestring is a list of global ids in a tree.
+   */
   t8_forest_ghost_stencil (std::vector<std::vector<t8_gloidx_t>> list_of_nodestrings)
     : t8_forest_ghost_definition (T8_GHOST_USERDEFINED), list_of_nodestrings { list_of_nodestrings } {};
 
-  /** Create one layer of ghost elements for a forest.
+  /** 
+   * Create one layer of ghost elements for a forest.
    * The neighborhood for this is defined by an stencil.
    * \see add_stencil_to_ghost
    * \param [in,out]    forest     The forest.
@@ -57,14 +62,26 @@ struct t8_forest_ghost_stencil: t8_forest_ghost_definition
     return list_of_nodestrings;
   }
 
-  std::vector<std::vector<std::tuple<t8_locidx_t, t8_locidx_t>>>
+  std::vector<std::vector<std::tuple<t8_locidx_t, bool>>>
   get_list_of_local_nodestring_ids () const
   {
     return list_of_local_nodestring_ids;
   }
 
+  /** 
+   * A nodestring is a list of global ids in a tree.
+   * The owner of at least one element of a nodestring should get all other elements of the nodestring (as ghost elements).
+   * If a process owns one of the elements in a nodestring, it shares it with all other processes that own at least one element in the nodestring.
+   */
   const std::vector<std::vector<t8_gloidx_t>> list_of_nodestrings {};
-  std::vector<std::vector<std::tuple<t8_locidx_t, t8_locidx_t>>> list_of_local_nodestring_ids {};
+  /** 
+   * During the ghost routine, the elements of the nodestrings are shared between the relevant processes.
+   * To get access to the elements, the list of local nodestring ids has a list of tupels to each nodestring of list_of_nodestrings.
+   * The first entry of the tuple is the local id for the corresponding global id of the nodestring.
+   * The second entry is a bool. It is true if the element is a ghost element, otherwise it is false.
+   * \note The corresponding list is empty if a process does not own an element in a nodestring.
+   */
+  std::vector<std::vector<std::tuple<t8_locidx_t, bool>>> list_of_local_nodestring_ids {};
 
  protected:
   /**
@@ -92,12 +109,6 @@ struct t8_forest_ghost_stencil: t8_forest_ghost_definition
   add_stencil_to_ghost (t8_forest_t forest, const t8_element_t *element, const t8_scheme *eclass_scheme,
                         const int level, const t8_eclass_t tree_class, const t8_locidx_t ltreeid,
                         const t8_locidx_t ielement);
-
-  const std::vector<std::vector<std::tuple<t8_locidx_t, t8_locidx_t>>>
-  get_list_of_local_nodestring_ids ()
-  {
-    return list_of_local_nodestring_ids;
-  }
 };
 
 T8_EXTERN_C_END ();
