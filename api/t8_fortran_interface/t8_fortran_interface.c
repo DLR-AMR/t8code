@@ -125,7 +125,7 @@ t8_forest_new_uniform_default (t8_cmesh_t cmesh, int level, int do_face_ghost, s
 
 int
 t8_fortran_adapt_by_coordinates_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                                          const t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
+                                          const t8_eclass_t tree_class, __attribute__ ((unused)) t8_locidx_t lelement_id,
                                           const t8_scheme_c *scheme, const int is_family, const int num_elements,
                                           t8_element_t *elements[])
 {

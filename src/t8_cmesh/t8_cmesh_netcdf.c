@@ -481,7 +481,7 @@ t8_cmesh_write_netcdf_variables (t8_cmesh_netcdf_context_t *context,
 /* Declare the user-defined elementwise NetCDF-variables which were passed to function. */
 static void
 t8_cmesh_write_user_netcdf_vars (t8_cmesh_netcdf_context_t *context,
-                                 [[maybe_unused]] t8_cmesh_netcdf_ugrid_namespace_t *namespace_context,
+                                 __attribute__ ((unused)) t8_cmesh_netcdf_ugrid_namespace_t *namespace_context,
                                  int num_extern_netcdf_vars, t8_netcdf_variable_t *ext_variables[], sc_MPI_Comm comm)
 {
 #if T8_WITH_NETCDF
@@ -731,7 +731,7 @@ t8_cmesh_write_netcdf_data (t8_cmesh_t cmesh, t8_cmesh_netcdf_context_t *context
 /* It is only possible to write exactly one value per element per variable */
 static void
 t8_cmesh_write_user_netcdf_data (t8_cmesh_t cmesh, t8_cmesh_netcdf_context_t *context, int num_extern_netcdf_vars,
-                                 t8_netcdf_variable_t *ext_variables[], [[maybe_unused]] sc_MPI_Comm comm)
+                                 t8_netcdf_variable_t *ext_variables[], __attribute__ ((unused)) sc_MPI_Comm comm)
 {
 #if T8_WITH_NETCDF
   if (num_extern_netcdf_vars > 0 && ext_variables != NULL) {
