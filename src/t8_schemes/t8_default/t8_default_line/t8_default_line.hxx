@@ -573,7 +573,7 @@ class t8_default_scheme_line: public t8_default_scheme_common<t8_default_scheme_
   int
   refines_irregular (void) const;
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is
    *  safe to perform any of the above algorithms on it.
    * \param [in]      elem  The element to be checked.

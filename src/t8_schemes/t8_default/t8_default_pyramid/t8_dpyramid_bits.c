@@ -1486,7 +1486,7 @@ void
 t8_dpyramid_successor (const t8_dpyramid_t *elem, t8_dpyramid_t *succ, const int level)
 {
   t8_dpyramid_successor_recursion (elem, succ, level);
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   if (t8_dpyramid_shape (succ) == T8_ECLASS_PYRAMID) {
     T8_ASSERT (succ->switch_shape_at_level < 0);
   }

@@ -98,7 +98,7 @@ t8_cmesh_is_initialized (t8_cmesh_t cmesh);
 int
 t8_cmesh_is_committed (const t8_cmesh_t cmesh);
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 /** Check the geometry of the mesh for validity.
  * \param [in] cmesh            This cmesh is examined.
  * \return                      True if the geometry of the cmesh is valid.
@@ -381,7 +381,7 @@ t8_cmesh_is_empty (t8_cmesh_t cmesh);
 t8_cmesh_t
 t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm);
 
-#ifdef T8_ENABLE_METIS
+#if T8_ENABLE_METIS
 /* TODO: document this. */
 /* TODO: think about making this a pre-commit set_reorder function. */
 void

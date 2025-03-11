@@ -345,7 +345,7 @@ t8_element_count_leaves_from_root (const t8_scheme_c *scheme, const t8_eclass_t 
   return scheme->count_leaves_from_root (tree_class, level);
 }
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 int
 t8_element_is_valid (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *elem)
 {

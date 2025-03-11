@@ -168,7 +168,7 @@ t8_dtri_ancestor (const t8_dtri_t *t, int level, t8_dtri_t *ancestor)
   t8_dtri_coord_t delta_z, diff_xz, diff_yz;
   t8_dtet_type_t possible_types[6] = { 1, 1, 1, 1, 1, 1 };
   int i;
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   int set_type = 0;
 #endif
 #endif /* T8_DTRI_TO_DTET */
@@ -273,7 +273,7 @@ t8_dtri_ancestor (const t8_dtri_t *t, int level, t8_dtri_t *ancestor)
     T8_ASSERT (possible_types[i] == 0 || possible_types[i] == 1);
     if (possible_types[i] == 1) {
       ancestor->type = i;
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
       T8_ASSERT (set_type != 1);
       set_type = 1;
 #endif
@@ -511,7 +511,7 @@ t8_dtri_compute_all_coords (const t8_dtri_t *elem, t8_dtri_coord_t coordinates[T
   coordinates[2][ei] += h;
   coordinates[2][ej] += h;
 #endif
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   /* We check whether the results are the same as with the
    * t8_dtri_compute_integer_coords function.
    */
@@ -609,7 +609,7 @@ t8_dtri_childrenpv (const t8_dtri_t *t, t8_dtri_t *c[T8_DTRI_CHILDREN])
 #endif
     c[i]->type = t8_dtri_type_of_child[t_type][Bey_cid];
     c[i]->level = level;
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
     {
       /* We check whether the child computed here equals to the child
        * computed in the t8_dtri_child function. */
@@ -1125,7 +1125,7 @@ t8_dtri_is_inside_root (t8_dtri_t *t)
               ((t->x == t->y && t->y == t->z) ? t->type == 0 : 1) &&
 #endif
               1;
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   /* Check if is_inside gives the same result as is_ancestor for the root element. */
   {
     t8_dtri_t root;

@@ -43,7 +43,7 @@ t8_default_scheme_prism::element_new (int length, t8_element_t **elem) const
   t8_default_scheme_common::element_new (length, elem);
 
   /* in debug mode, set sensible default values. */
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   {
     for (int i = 0; i < length; i++) {
       set_to_root (elem[i]);
@@ -55,7 +55,7 @@ t8_default_scheme_prism::element_new (int length, t8_element_t **elem) const
 void
 t8_default_scheme_prism::element_init ([[maybe_unused]] int length, [[maybe_unused]] t8_element_t *elem) const
 {
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   t8_dprism_t *prism = (t8_dprism_t *) elem;
   /* Set all values to 0 */
   for (int i = 0; i < length; i++) {
@@ -251,7 +251,7 @@ t8_default_scheme_prism::element_extrude_face (const t8_element_t *face, t8_elem
 int
 t8_default_scheme_prism::elements_are_family (t8_element_t *const *fam) const
 {
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   for (int i = 0; i < T8_DPRISM_CHILDREN; i++) {
     T8_ASSERT (element_is_valid (fam[i]));
   }
@@ -431,7 +431,7 @@ t8_default_scheme_prism::refines_irregular (void) const
   return 0;
 }
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 
 int
 t8_default_scheme_prism::element_is_valid (const t8_element_t *elem) const

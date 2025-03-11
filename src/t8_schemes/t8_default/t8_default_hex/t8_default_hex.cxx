@@ -171,7 +171,7 @@ t8_default_scheme_hex::element_get_children (const t8_element_t *elem, [[maybe_u
                                              t8_element_t *c[]) const
 {
   T8_ASSERT (element_is_valid (elem));
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   {
     for (int i = 0; i < P8EST_CHILDREN; i++) {
       T8_ASSERT (element_is_valid (c[i]));
@@ -199,7 +199,7 @@ t8_default_scheme_hex::element_get_ancestor_id (const t8_element_t *elem, const 
 int
 t8_default_scheme_hex::elements_are_family (t8_element_t *const *fam) const
 {
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   {
     for (int i = 0; i < P8EST_CHILDREN; i++) {
       T8_ASSERT (element_is_valid (fam[i]));
@@ -233,7 +233,7 @@ t8_default_scheme_hex::element_get_children_at_face (const t8_element_t *elem, c
   int child_ids_local[4], *child_ids;
 
   T8_ASSERT (element_is_valid (elem));
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   {
     for (int j = 0; j < P4EST_CHILDREN; j++) {
       T8_ASSERT (element_is_valid (children[j]));
@@ -606,7 +606,7 @@ t8_default_scheme_hex::element_new (const int length, t8_element_t **elem) const
   t8_default_scheme_common::element_new (length, elem);
 
   /* in debug mode, set sensible default values. */
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   {
     for (int i = 0; i < length; i++) {
       set_to_root (elem[i]);
@@ -619,7 +619,7 @@ t8_default_scheme_hex::element_new (const int length, t8_element_t **elem) const
 void
 t8_default_scheme_hex::element_init ([[maybe_unused]] const int length, [[maybe_unused]] t8_element_t *elem) const
 {
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   p8est_quadrant_t *quads = (p8est_quadrant_t *) elem;
   for (int i = 0; i < length; i++) {
     p8est_quadrant_set_morton (quads + i, 0, 0);
@@ -629,7 +629,7 @@ t8_default_scheme_hex::element_init ([[maybe_unused]] const int length, [[maybe_
 #endif
 }
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 int
 t8_default_scheme_hex::element_is_valid (const t8_element_t *elem) const
 {

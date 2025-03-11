@@ -963,7 +963,7 @@ t8_cmesh_vtk_write_file_ext (const t8_cmesh_t cmesh, const char *fileprefix, con
     int k, sk;
     long long offset, count_vertices;
     t8_locidx_t ighost, num_ghosts = 0, num_loc_trees;
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
     t8_cghost_t ghost;
 #endif
     t8_eclass_t eclass;
@@ -1138,7 +1138,7 @@ t8_cmesh_vtk_write_file_ext (const t8_cmesh_t cmesh, const char *fileprefix, con
     if (write_ghosts) {
       /* ghost offset types */
       for (ighost = 0; ighost < num_ghosts; ighost++, ++sk) {
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
         ghost = t8_cmesh_trees_get_ghost (cmesh->trees, ighost);
         /* Check for conversion errors */
         T8_ASSERT (ghost->treeid == (t8_gloidx_t) ((long) ghost->treeid));
