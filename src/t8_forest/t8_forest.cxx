@@ -254,7 +254,7 @@ t8_forest_min_nonempty_level (t8_cmesh_t cmesh, const t8_scheme *scheme)
     if (cmesh->num_trees_per_eclass[eclass] > 0) {
       /* Compute the number of children of the root tree. */
       scheme->element_new ((t8_eclass_t) eclass, 1, &element);
-      scheme->get_root ((t8_eclass_t) eclass, element);
+      scheme->set_to_root ((t8_eclass_t) eclass, element);
       min_num_children = SC_MIN (min_num_children, scheme->element_get_num_children ((t8_eclass_t) eclass, element));
       scheme->element_destroy ((t8_eclass_t) eclass, 1, &element);
       /* Compute the minimum possible maximum refinement level */
@@ -275,7 +275,7 @@ t8_forest_min_nonempty_level (t8_cmesh_t cmesh, const t8_scheme *scheme)
 }
 
 int
-t8_forest_no_overlap (t8_forest_t forest)
+t8_forest_no_overlap ([[maybe_unused]] t8_forest_t forest)
 {
 #if T8_ENABLE_DEBUG
   T8_ASSERT (t8_forest_is_committed (forest));
@@ -1320,7 +1320,7 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
     /* we do this by first creating a level 0 child of the tree, then
      * calculating its first/last descendant */
     scheme->element_new (eclass, 1, &element);
-    scheme->get_root (eclass, element);
+    scheme->set_to_root (eclass, element);
     scheme->element_new (eclass, 1, &desc);
     if (first_or_last == 0) {
       scheme->element_get_first_descendant (eclass, element, desc, forest->maxlevel);
@@ -3010,9 +3010,11 @@ t8_forest_comm_global_num_elements (t8_forest_t forest)
  * \return                  Always return 1, to refine every element
  */
 static int
-t8_forest_refine_everything (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                             t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme *scheme,
-                             const int is_family, const int num_elements, t8_element_t *elements[])
+t8_forest_refine_everything ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                             [[maybe_unused]] t8_locidx_t which_tree, [[maybe_unused]] t8_eclass_t tree_class,
+                             [[maybe_unused]] t8_locidx_t lelement_id, [[maybe_unused]] const t8_scheme *scheme,
+                             [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
+                             [[maybe_unused]] t8_element_t *elements[])
 {
 
   return 1;

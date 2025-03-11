@@ -163,7 +163,8 @@ class t8_default_scheme_line: public t8_default_scheme_common<t8_default_scheme_
    *                    and match the element class of the sibling.
    */
   void
-  element_get_sibling (const t8_element_t *elem, const int sibid, t8_element_t *sibling) const
+  element_get_sibling ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int sibid,
+                       [[maybe_unused]] t8_element_t *sibling) const
   {
     SC_ABORT ("This function is not implemented yet.\n");
     return; /* suppresses compiler warning */
@@ -205,7 +206,8 @@ class t8_default_scheme_line: public t8_default_scheme_common<t8_default_scheme_
    * \return              The corner number of the \a corner-th vertex of \a face.
    */
   constexpr int
-  element_get_face_corner (const t8_element_t *element, const int face, const int corner) const
+  element_get_face_corner ([[maybe_unused]] const t8_element_t *element, const int face,
+                           [[maybe_unused]] const int corner) const
   {
     T8_ASSERT (corner == 0);
     return face;
@@ -218,7 +220,8 @@ class t8_default_scheme_line: public t8_default_scheme_common<t8_default_scheme_
    * \return              The face number of the \a face-th face at \a corner.
    */
   constexpr int
-  element_get_corner_face (const t8_element_t *element, const int corner, const int face) const
+  element_get_corner_face ([[maybe_unused]] const t8_element_t *element, const int corner,
+                           [[maybe_unused]] const int face) const
   {
     T8_ASSERT (face == 0);
     return corner;
@@ -518,7 +521,7 @@ class t8_default_scheme_line: public t8_default_scheme_common<t8_default_scheme_
    * \param [out] anchor The integer coordinates of the anchor node in the cube [0,1]^(dL)
    */
   void
-  element_get_anchor (const t8_element_t *elem, int anchor[3]) const
+  element_get_anchor ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] int anchor[3]) const
   {
     SC_ABORT ("This function is not implemented yet.\n");
     return; /* suppresses compiler warning */
@@ -602,7 +605,7 @@ class t8_default_scheme_line: public t8_default_scheme_common<t8_default_scheme_
  * \param [in,out] elem   The element to be filled with root.
  */
   void
-  get_root (t8_element_t *elem) const;
+  set_to_root (t8_element_t *elem) const;
 
   /** Pack multiple elements into contiguous memory, so they can be sent via MPI.
    * \param [in] elements Array of elements that are to be packed
