@@ -556,20 +556,18 @@ class t8_default_scheme_quad: public t8_default_scheme_common<t8_default_scheme_
   element_vertex_neighbors (const t8_element_t *element, const int vertex, int *num_neighbors, t8_element_t **neighbors,
                             int *neigh_ivertices) const
   {
-    p4est_quadrant_t *elem = (p4est_quadrant_t *) element;
-    p4est_qcoord_t len = P4EST_QUADRANT_LEN (elem->level);
+    const p4est_quadrant_t *elem = (p4est_quadrant_t *) element;
+    const p4est_qcoord_t len = P4EST_QUADRANT_LEN (elem->level);
     *num_neighbors = 0;
-    const int dim = 2;
-    for (int icube = 0; icube < (1 << dim); icube++) {
-      int idim = 0;
-      p4est_qcoord_t shift = (vertex & 1 << idim) + (icube & 1 << idim);
-      shift >>= idim;
+    constexpr int num_possible_neighbors = 4;
+    for (int icube = 0; icube < num_possible_neighbors; icube++) {
+      p4est_qcoord_t shift = (vertex & 1) + (icube & 1);
       shift -= 1;
       shift *= len;
       ((p4est_quadrant_t *) neighbors[*num_neighbors])->x = elem->x + shift;
-      idim = 1;
-      shift = (vertex & 1 << idim) + (icube & 1 << idim);
-      shift >>= idim;
+      const int mask = 1 << 1;
+      shift = (vertex & mask) + (icube & mask);
+      shift >>= 1;
       shift -= 1;
       shift *= len;
       ((p4est_quadrant_t *) neighbors[*num_neighbors])->y = elem->y + shift;
