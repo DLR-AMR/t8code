@@ -85,8 +85,10 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
 
   T8_ASSERT (t8_forest_is_committed (forest));
   const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
+#if T8_ENABLE_DEBUG
   const t8_locidx_t num_ghost_trees = t8_forest_get_num_ghost_trees (forest);
   const t8_locidx_t num_local_and_ghost_trees = num_local_trees + num_ghost_trees;
+#endif
   T8_ASSERT (0 <= ltreeid && ltreeid < num_local_and_ghost_trees);
 
   // Check whether we are in a local tree or ghost tree
