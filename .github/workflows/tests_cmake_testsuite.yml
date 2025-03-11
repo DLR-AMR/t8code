@@ -182,15 +182,16 @@ jobs:
       BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
       TEST_LEVEL: ${{ github.event_name == 'pull_request' && 1 || 0 }} # Set TEST_LEVEL to 1 if the event is a PR, otherwise 0.
 
-  # Run valgrind check for every t8code test binary.
+  # Run Valgrind check for every t8code test binary.
   t8code_valgrind_tests:
+    if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') # Only run the Valgrind check in the scheduled run.
     needs: preparation
     uses: ./.github/workflows/tests_cmake_valgrind.yml
     with:
       MAKEFLAGS: -j4
       MPI: ON
       BUILD_TYPE: Debug
-      TEST_LEVEL: 2 # Do valgrind check for test level 2 for performance reasons.
+      TEST_LEVEL: 2 # Do Valgrind check for test level 2 for performance reasons.
   
   # Run t8code tests with shipped submodules. This test is only for the build system, so only one config is tested.
   t8code_w_shipped_submodules_tests:
