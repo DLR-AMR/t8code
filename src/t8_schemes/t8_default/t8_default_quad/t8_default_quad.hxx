@@ -590,9 +590,9 @@ class t8_default_scheme_quad: public t8_default_scheme_common<t8_default_scheme_
   inline void
   element_corner_descendant (const t8_element_t *element, int vertex, int level, t8_element_t *descendant) const
   {
-    p4est_quadrant_t *elem = (p4est_quadrant_t *) element;
+    const p4est_quadrant_t *elem = (const p4est_quadrant_t *) element;
     p4est_quadrant_t *desc = (p4est_quadrant_t *) descendant;
-    p4est_qcoord_t coord_offset = P4EST_QUADRANT_LEN (elem->level) - P4EST_QUADRANT_LEN (level);
+    const p4est_qcoord_t coord_offset = P4EST_QUADRANT_LEN (elem->level) - P4EST_QUADRANT_LEN (level);
     desc->x = elem->x + coord_offset * ((vertex & 1 << 0) >> 0);
     desc->y = elem->y + coord_offset * ((vertex & 1 << 1) >> 1);
     desc->level = level;
