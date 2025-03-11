@@ -21,7 +21,8 @@
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 #
-# This file lists all binary paths to test files except the tests for the api.
+# This file lists all binary paths to test files, except for the tests for the api 
+# (as the Fortran interface needs to be built for that).
 # The script can be used to run the check_valgrind script for every test binary. 
 # The CMakeLists.txt file in the test folder is used to generate the list of binary paths.
 # The paths are relative paths assuming an execution from the test/ folder in the build directory.
