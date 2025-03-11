@@ -28,12 +28,14 @@
 
 # Check that an argument is given and that the argument is a file
 # Check if argument given
+
 if [ ${1-x} = x ]; then
   echo ERROR: Need to provide a file as first argument.
   exit 1
 fi
 
 # Check if first argument is a file and store it in variable
+
 if [ -f "$1" ]; then
   FILE="$1"
 else
@@ -51,7 +53,7 @@ OUTPUT_FILE="valgrind-output.log"
 # Set valgrind flags.
 VALGRIND_FLAGS="--leak-check=full --track-origins=yes \
     --trace-children=yes --show-leak-kinds=definite,indirect,possible \
-    --errors-for-leak-kinds=definite,indirect,possible "
+    --errors-for-leak-kinds=definite,indirect,possible"
 # There are some more flags that can be reasonable to use, e.g., for debugging reasons if you found an error.
 # We used minimal flags for performance reasons.
 # Further flags include (but of course are not limited to): --expensive-definedness-checks=yes --track-fds=yes
