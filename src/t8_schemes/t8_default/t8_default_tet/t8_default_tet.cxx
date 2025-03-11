@@ -517,7 +517,7 @@ t8_default_scheme_tet::element_new (int length, t8_element_t **elem) const
 #ifdef T8_ENABLE_DEBUG
   {
     for (int i = 0; i < length; i++) {
-      get_root (elem[i]);
+      set_to_root (elem[i]);
     }
   }
 #endif
@@ -535,7 +535,7 @@ t8_default_scheme_tet::element_init ([[maybe_unused]] int length, [[maybe_unused
 }
 
 void
-t8_default_scheme_tet::get_root (t8_element_t *elem) const
+t8_default_scheme_tet::set_to_root (t8_element_t *elem) const
 {
   t8_dtet_t *tet = (t8_dtet_t *) elem;
   tet->level = 0;

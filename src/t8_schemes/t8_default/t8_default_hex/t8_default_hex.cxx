@@ -609,7 +609,7 @@ t8_default_scheme_hex::element_new (const int length, t8_element_t **elem) const
 #ifdef T8_ENABLE_DEBUG
   {
     for (int i = 0; i < length; i++) {
-      get_root (elem[i]);
+      set_to_root (elem[i]);
       T8_QUAD_SET_TDIM ((p8est_quadrant_t *) elem[i], 3);
     }
   }
@@ -650,7 +650,7 @@ t8_default_scheme_hex::element_to_string (const t8_element_t *elem, char *debug_
 #endif
 
 void
-t8_default_scheme_hex::get_root (t8_element_t *elem) const
+t8_default_scheme_hex::set_to_root (t8_element_t *elem) const
 {
   p8est_quadrant_t *hex = (p8est_quadrant_t *) elem;
   p8est_quadrant_set_morton (hex, 0, 0);

@@ -46,7 +46,7 @@ t8_default_scheme_prism::element_new (int length, t8_element_t **elem) const
 #ifdef T8_ENABLE_DEBUG
   {
     for (int i = 0; i < length; i++) {
-      get_root (elem[i]);
+      set_to_root (elem[i]);
     }
   }
 #endif
@@ -455,7 +455,7 @@ t8_default_scheme_prism::element_to_string (const t8_element_t *elem, char *debu
 #endif /* T8_ENABLE_DEBUG */
 
 void
-t8_default_scheme_prism::get_root (t8_element_t *elem) const
+t8_default_scheme_prism::set_to_root (t8_element_t *elem) const
 {
   t8_dprism_t *prism = (t8_dprism_t *) elem;
   prism->line.level = 0;
