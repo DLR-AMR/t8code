@@ -90,10 +90,14 @@ class geometry_test: public testing::TestWithParam<std::tuple<int, t8_eclass>> {
   void
   TearDown () override
   {
+    if (geom != nullptr) {
+      delete geom;
+      geom = nullptr;
+    }
     t8_cmesh_unref (&cmesh);
   }
   t8_eclass_t eclass;
-  t8_geometry_with_vertices *geom;
+  t8_geometry_with_vertices *geom = nullptr;
   t8_cmesh_t cmesh;
 };
 

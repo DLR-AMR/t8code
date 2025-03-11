@@ -40,13 +40,18 @@ class forest_iterate: public testing::TestWithParam<cmesh_example_base *> {
   void
   SetUp () override
   {
+#if T8CODE_TEST_LEVEL >= 1
+    constexpr int level = 3;
+#else
+    constexpr int level = 4;
+#endif
     t8_cmesh_t cmesh = GetParam ()->cmesh_create ();
     if (t8_cmesh_is_empty (cmesh)) {
       /* empty cmeshes are currently not supported */
       t8_cmesh_unref (&cmesh);
       GTEST_SKIP ();
     }
-    forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), 4, 0, sc_MPI_COMM_WORLD);
+    forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, sc_MPI_COMM_WORLD);
   }
   void
   TearDown () override
@@ -145,9 +150,10 @@ t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
  * else if \a lelement_id mod 12 < 12 -> refine element
 */
 int
-t8_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, const t8_eclass_t tree_class,
-                   t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family, const int num_elements,
-                   t8_element_t *elements[])
+t8_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
+                   [[maybe_unused]] const t8_eclass_t tree_class, t8_locidx_t lelement_id,
+                   [[maybe_unused]] const t8_scheme *scheme, const int is_family,
+                   [[maybe_unused]] const int num_elements, [[maybe_unused]] t8_element_t *elements[])
 {
   struct t8_return_data *return_data = (struct t8_return_data *) t8_forest_get_user_data (forest);
   T8_ASSERT (return_data != NULL);
@@ -220,11 +226,8 @@ t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn, int do_ada
 
 TEST_P (forest_iterate, test_iterate_replace)
 {
-#if T8CODE_TEST_LEVEL >= 1
-  const int runs = 1;
-#else
   const int runs = 2;
-#endif
+
   for (int run = 0; run < runs; run++) {
     t8_locidx_t num_elements = t8_forest_get_local_num_elements (forest);
     int *adapt_callbacks = T8_ALLOC (int, num_elements);
@@ -243,11 +246,9 @@ TEST_P (forest_iterate, test_iterate_replace)
 
     t8_forest_iterate_replace (forest_adapt, forest, t8_forest_replace);
     t8_forest_unref (&forest);
-    if (runs > 1) {
-      /* Partition the forest. This is useful,
-      * if we run the test a second time with the adapted forest. */
-      forest_adapt = t8_adapt_forest (forest_adapt, NULL, 0, 1, NULL);
-    }
+
+    /* Partition the forest. This is useful as preparation for the second run with the adapted forest. */
+    forest_adapt = t8_adapt_forest (forest_adapt, NULL, 0, 1, NULL);
 
     T8_FREE (adapt_callbacks);
     forest = forest_adapt;
