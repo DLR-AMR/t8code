@@ -818,7 +818,7 @@ struct t8_standalone_scheme
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
       SC_ABORT ("Only implemented for hypercubes.\n");
     }
-    std::copy (el->coords, el->coords + T8_ELEMENT_DIM[TEclass], first_descendant->coords);
+    std::copy (el->coords.begin (), el->coords.end (), first_descendant->coords.begin ());
 
     const bool face_is_1_boundary = face % 2;
 
@@ -1424,7 +1424,7 @@ struct t8_standalone_scheme
   static inline void
   element_init ([[maybe_unused]] const int length, [[maybe_unused]] t8_element_t *elem) noexcept
   {
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
     int ielem;
     t8_standalone_element<TEclass> *el = (t8_standalone_element<TEclass> *) elem;
     /* Set all values to 0 */
