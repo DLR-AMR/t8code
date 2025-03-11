@@ -1453,8 +1453,7 @@ t8_forest_element_neighbor_eclass (const t8_forest_t forest, const t8_locidx_t l
                                    const int face)
 {
   /* Get a pointer to the tree to read its element class */
-  const t8_tree_t tree = t8_forest_get_tree (forest, ltreeid);
-  const t8_eclass_t tree_class = tree->eclass;
+  const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
   if (!scheme->element_is_root_boundary (tree_class, elem, face)) {
     /* The neighbor element is inside the current tree. */
@@ -1489,8 +1488,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const 
                                  t8_eclass_t neigh_eclass, int face, int *neigh_face)
 {
   /* Get a pointer to the tree to read its element class */
-  const t8_tree_t tree = t8_forest_get_tree (forest, ltreeid);
-  const t8_eclass_t eclass = tree->eclass;
+  const t8_eclass_t eclass = t8_forest_get_tree_class (forest, ltreeid);
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
   if (neigh_eclass == eclass && scheme->element_get_face_neighbor_inside (eclass, elem, neigh, face, neigh_face)) {
     /* The neighbor was constructed and is inside the current tree. */
@@ -1772,8 +1770,8 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
 
   T8_ASSERT (t8_forest_is_committed (forest));
 
-#if T8_ENABLE_DEBUG
   const bool tree_is_local = t8_forest_tree_is_local (forest, ltreeid);
+#if T8_ENABLE_DEBUG
   if (tree_is_local) {
     T8_ASSERT (t8_forest_element_is_leaf (forest, leaf_or_ghost, ltreeid));
   }

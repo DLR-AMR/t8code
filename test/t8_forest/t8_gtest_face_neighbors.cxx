@@ -240,9 +240,10 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
             t8_debugf ("Checking neighbor element %p in (global) tree %li.\n", (void *) neighbor, gneigh_tree);
             t8_debugf ("dual face is %i, index is %i\n", dual_face, neigh_index);
 
+#if T8_ENABLE_DEBUG
             ASSERT_TRUE (scheme->element_is_valid (neigh_class, neighbor))
               << "Neighbor element " << ineigh << " is not valid";
-
+#endif
             t8_locidx_t neigh_ltreeid_from_index;
             // Check that neighbor index correctly yields neighbor element.
             if (neigh_index < num_local_elements) {
