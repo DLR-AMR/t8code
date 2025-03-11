@@ -446,7 +446,6 @@ t8_forest_write_netcdf_data ([[maybe_unused]] t8_forest_t forest, [[maybe_unused
 
   /* After counting the number of nodes, the  NetCDF-dimension 'nMesh_node' can be created => Store the 'nMesh_node' dimension */
   context->nMesh_node = num_nodes;
-
 }
 
 /* Define NetCDF-coordinate-dimension */
@@ -787,7 +786,6 @@ t8_forest_write_netcdf_coordinate_data ([[maybe_unused]] t8_forest_t forest,
   T8_FREE (Mesh_node_y);
   T8_FREE (Mesh_node_z);
   T8_FREE (Mesh_elem_nodes);
-
 }
 
 /* Function that writes user-defined data to user-defined variables, if some were passed */

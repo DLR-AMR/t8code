@@ -708,7 +708,6 @@ t8_cmesh_write_netcdf_data (t8_cmesh_t cmesh, t8_cmesh_netcdf_context_t *context
   retval = sc_MPI_Allreduce (&num, &num_nodes, 1, T8_MPI_GLOIDX, sc_MPI_SUM, comm);
   SC_CHECK_MPI (retval);
   context->nMesh_node = num_nodes;
-
 }
 
 /* Function that writes user-defined data to user-defined variables, if some were passed */
