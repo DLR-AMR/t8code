@@ -3,7 +3,7 @@
 
 **_All these boxes must be checked by the AUTHOR before requesting review:_**
 - [ ] The PR is *small enough* to be reviewed easily. If not, consider splitting up the changes in multiple PRs.
-- [ ] The title starts with one of the following prefixes: `Documentation:`, `Bugfix:`, `Feature:` or `Improvement:`.
+- [ ] The title starts with one of the following prefixes: `Documentation:`, `Bugfix:`, `Feature:`, `Improvement:` or `Other:`.
 - [ ] If the PR is related to an issue, make sure to link it.
 - [ ] The author made sure that, as a reviewer, he/she would check all boxes below.
 
