@@ -546,7 +546,7 @@ class t8_default_scheme_quad: public t8_default_scheme_common<t8_default_scheme_
   void
   element_get_anchor (const t8_element_t *elem, int anchor[3]) const;
 
-  inline int
+  constexpr int
   element_max_num_vertex_neighbors () const
   {
     return 4;
