@@ -27,13 +27,13 @@
 #include <t8_vtk.h>
 #include <t8_forest/t8_forest_types.h>
 
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
 #include <vtkUnstructuredGrid.h>
 #endif
 
 T8_EXTERN_C_BEGIN ();
 
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
 /**
  * Translate a forest into a vtkUnstructuredGrid with respect to the given flags. 
  * This function uses the vtk library. t8code must be configured with

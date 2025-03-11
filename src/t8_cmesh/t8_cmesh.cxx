@@ -32,7 +32,7 @@
 #include <t8_types/t8_vec.h>
 #include <t8_eclass.h>
 #include "t8_cmesh_types.h"
-#ifdef T8_WITH_METIS
+#ifdef T8_ENABLE_METIS
 #include <metis.h>
 
 #endif
@@ -864,7 +864,7 @@ t8_cmesh_bcast (const t8_cmesh_t cmesh_in, const int root, sc_MPI_Comm comm)
   return cmesh_out;
 }
 
-#ifdef T8_WITH_METIS
+#ifdef T8_ENABLE_METIS
 void
 t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {

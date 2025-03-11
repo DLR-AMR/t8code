@@ -28,7 +28,7 @@
 #include <t8_cmesh.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
 #include <vtkCellIterator.h>
 #include <vtkCellData.h>
 #include <vtkCellDataToPointData.h>
@@ -108,7 +108,7 @@ t8_cmesh_correct_volume (double *tree_vertices, t8_eclass_t eclass)
   T8_ASSERT (!t8_cmesh_tree_vertices_negative_volume (eclass, tree_vertices, t8_eclass_num_vertices[eclass]));
 }
 
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
 
 vtk_read_success_t
 t8_file_to_vtkGrid (const char *filename, vtkSmartPointer<vtkDataSet> vtkGrid, const int partition, const int main_proc,
@@ -484,7 +484,7 @@ vtkSmartPointer<vtkPointSet>
 t8_vtk_reader_pointSet (const char *filename, const int partition, const int main_proc, sc_MPI_Comm comm,
                         const vtk_file_type_t vtk_file_type)
 {
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
   vtkSmartPointer<vtkDataSet> vtkGrid = t8_vtk_reader (filename, partition, main_proc, comm, vtk_file_type);
   return t8_vtkGrid_to_vtkPointSet (vtkGrid);
 #else
@@ -495,14 +495,14 @@ t8_vtk_reader_pointSet (const char *filename, const int partition, const int mai
   return NULL;
 }
 
-#endif /* T8_WITH_VTK */
+#endif /* T8_ENABLE_VTK */
 
 t8_cmesh_t
 t8_vtk_reader_cmesh ([[maybe_unused]] const char *filename, [[maybe_unused]] const int partition,
                      [[maybe_unused]] const int main_proc, [[maybe_unused]] sc_MPI_Comm comm,
                      [[maybe_unused]] const vtk_file_type_t vtk_file_type)
 {
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
   vtkSmartPointer<vtkDataSet> vtkGrid = t8_vtk_reader (filename, partition, main_proc, comm, vtk_file_type);
   if (vtkGrid != NULL) {
     const int distributed_grid = (vtk_file_type & VTK_PARALLEL_FILE) && partition;

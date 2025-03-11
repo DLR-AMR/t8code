@@ -15,11 +15,11 @@ AC_DEFUN([T8_CHECK_OCC], [
 T8_ARG_WITH([occ],
   [OpenCASCADE library (optionally use --with-occ=<OCC_LIBS>)],
   [OCC])
-  if test "x$T8_WITH_OCC" != xno ; then
+  if test "x$T8_ENABLE_OCC" != xno ; then
     T8_OCC_LIBS="-lTKernel -lTKMath -lTKG3d -lTKGeomAlgo -lTKTopAlgo -lTKBRep \
      -lTKPrim -lTKBO"
-    if test "x$T8_WITH_OCC" != xyes ; then
-      T8_OCC_LIBS="$T8_WITH_OCC"
+    if test "x$T8_ENABLE_OCC" != xyes ; then
+      T8_OCC_LIBS="$T8_ENABLE_OCC"
       dnl AC_MSG_ERROR([Please provide --with-occ without arguments])
     fi
     PRE_OCC_LIBS="$LIBS"

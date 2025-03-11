@@ -26,7 +26,7 @@
 static void
 t8_check_netcdf_compilation ()
 {
-#ifdef T8_WITH_NETCDF
+#ifdef T8_ENABLE_NETCDF
   t8_global_productionf ("This version of t8code is compiled with netcdf support.\n");
 #else
   t8_global_productionf ("This version of t8code is not compiled with netcdf support.\n");

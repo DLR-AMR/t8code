@@ -381,7 +381,7 @@ t8_cmesh_is_empty (t8_cmesh_t cmesh);
 t8_cmesh_t
 t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm);
 
-#ifdef T8_WITH_METIS
+#ifdef T8_ENABLE_METIS
 /* TODO: document this. */
 /* TODO: think about making this a pre-commit set_reorder function. */
 void

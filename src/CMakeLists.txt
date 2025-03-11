@@ -32,8 +32,8 @@ endif( T8CODE_EXPORT_COMPILE_COMMANDS )
 if( T8CODE_ENABLE_NETCDF )
   target_link_libraries( T8 PUBLIC netCDF::netcdf )
   target_compile_definitions(T8 PUBLIC
-    T8_WITH_NETCDF
-    $<$<AND:$<BOOL:${NETCDF_HAVE_NETCDF_PAR}>,$<BOOL:${T8CODE_ENABLE_MPI}>>:T8_WITH_NETCDF_PAR> )
+    T8_ENABLE_NETCDF
+    $<$<AND:$<BOOL:${NETCDF_HAVE_NETCDF_PAR}>,$<BOOL:${T8CODE_ENABLE_MPI}>>:T8_ENABLE_NETCDF_PAR> )
   target_sources( T8 PRIVATE
   t8_netcdf.c
   t8_cmesh/t8_cmesh_netcdf.c
@@ -63,13 +63,13 @@ endif()
 
 if( T8CODE_ENABLE_VTK )
     target_compile_definitions( T8 PUBLIC T8_VTK_VERSION_USED="${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}" )
-    target_compile_definitions( T8 PUBLIC T8_WITH_VTK=1 )
+    target_compile_definitions( T8 PUBLIC T8_ENABLE_VTK=1 )
     target_include_directories( T8 PUBLIC ${VTK_INCLUDE_DIR} )
     target_link_libraries( T8 PUBLIC ${VTK_LIBRARIES} )
 endif()
 
 if( T8CODE_ENABLE_OCC )
-    target_compile_definitions( T8 PUBLIC T8_WITH_OCC=1 )
+    target_compile_definitions( T8 PUBLIC T8_ENABLE_OCC=1 )
     target_include_directories( T8 SYSTEM PUBLIC ${OpenCASCADE_INCLUDE_DIR} )
     target_link_libraries( T8 PUBLIC ${OpenCASCADE_LIBRARIES} )
 endif()

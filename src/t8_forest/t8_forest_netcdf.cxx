@@ -26,7 +26,7 @@ These functions write a file in the NetCDF-format which represents the given 2D-
 */
 
 #include <t8.h>
-#if T8_WITH_NETCDF
+#if T8_ENABLE_NETCDF
 #include <netcdf.h>
 /* Standard netcdf error function */
 #define ERRCODE 2
@@ -44,7 +44,7 @@ These functions write a file in the NetCDF-format which represents the given 2D-
 #ifndef NC_CONTIGUOUS
 #define NC_CONTIGUOUS 1
 #endif
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
 #include <netcdf_par.h>
 #else
 /* Macros usually defined in 'netcdf_par.h' */
@@ -163,7 +163,7 @@ static void
 t8_forest_write_netcdf_dimensions ([[maybe_unused]] t8_forest_netcdf_context_t *context,
                                    [[maybe_unused]] t8_forest_netcdf_ugrid_namespace_t *namespace_context)
 {
-#if T8_WITH_NETCDF
+#if T8_ENABLE_NETCDF
   /* *Define dimensions in the NetCDF file.* */
 
   /* Return value in order to check NetCDF commands */
@@ -193,7 +193,7 @@ static void
 t8_forest_write_netcdf_variables ([[maybe_unused]] t8_forest_netcdf_context_t *context,
                                   [[maybe_unused]] t8_forest_netcdf_ugrid_namespace_t *namespace_context)
 {
-#if T8_WITH_NETCDF
+#if T8_ENABLE_NETCDF
   /* *Define variables in the NetCDF file.* */
 
   /* Return value in order to check NetCDF commands */
@@ -257,7 +257,7 @@ t8_forest_write_netcdf_variables ([[maybe_unused]] t8_forest_netcdf_context_t *c
     ERR (retval);
   }
   /* Define whether an independent or collective variable access is used */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   if ((retval = nc_var_par_access (context->ncid, context->var_elem_types_id, context->netcdf_mpi_access))) {
     ERR (retval);
   }
@@ -298,7 +298,7 @@ t8_forest_write_netcdf_variables ([[maybe_unused]] t8_forest_netcdf_context_t *c
     ERR (retval);
   }
   /* Define whether an independent or collective variable access is used */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   if ((retval = nc_var_par_access (context->ncid, context->var_elem_tree_id, context->netcdf_mpi_access))) {
     ERR (retval);
   }
@@ -338,7 +338,7 @@ t8_forest_write_netcdf_variables ([[maybe_unused]] t8_forest_netcdf_context_t *c
     ERR (retval);
   }
   /* Define whether an independent or collective variable access is used */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   if ((retval = nc_var_par_access (context->ncid, context->var_elem_nodes_id, context->netcdf_mpi_access))) {
     ERR (retval);
   }
@@ -372,7 +372,7 @@ static void
 t8_forest_write_netcdf_data ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_netcdf_context_t *context,
                              [[maybe_unused]] sc_MPI_Comm comm)
 {
-#if T8_WITH_NETCDF
+#if T8_ENABLE_NETCDF
   t8_eclass_t tree_class;
   t8_locidx_t num_local_trees;
   t8_locidx_t num_local_elements;
@@ -463,7 +463,7 @@ static void
 t8_forest_write_netcdf_coordinate_dimension ([[maybe_unused]] t8_forest_netcdf_context_t *context,
                                              [[maybe_unused]] t8_forest_netcdf_ugrid_namespace_t *namespace_context)
 {
-#if T8_WITH_NETCDF
+#if T8_ENABLE_NETCDF
   /* Define dimension: number of nodes */
   int retval;
   if ((retval = nc_def_dim (context->ncid, namespace_context->dim_nMesh_node, context->nMesh_node,
@@ -478,7 +478,7 @@ static void
 t8_forest_write_netcdf_coordinate_variables ([[maybe_unused]] t8_forest_netcdf_context_t *context,
                                              [[maybe_unused]] t8_forest_netcdf_ugrid_namespace_t *namespace_context)
 {
-#if T8_WITH_NETCDF
+#if T8_ENABLE_NETCDF
   /* Define the Mesh_node_x  variable. */
   int retval;
   if ((retval = nc_def_var (context->ncid, namespace_context->var_Mesh_node_x, NC_DOUBLE, 1, &context->nMesh_node_dimid,
@@ -490,7 +490,7 @@ t8_forest_write_netcdf_coordinate_variables ([[maybe_unused]] t8_forest_netcdf_c
     ERR (retval);
   }
   /* Define whether an independent or collective variable access is used */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   if ((retval = nc_var_par_access (context->ncid, context->var_node_x_id, context->netcdf_mpi_access))) {
     ERR (retval);
   }
@@ -526,7 +526,7 @@ t8_forest_write_netcdf_coordinate_variables ([[maybe_unused]] t8_forest_netcdf_c
     ERR (retval);
   }
   /* Define whether an independent or collective variable access is used */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   if ((retval = nc_var_par_access (context->ncid, context->var_node_y_id, context->netcdf_mpi_access))) {
     ERR (retval);
   }
@@ -562,7 +562,7 @@ t8_forest_write_netcdf_coordinate_variables ([[maybe_unused]] t8_forest_netcdf_c
     ERR (retval);
   }
   /* Define whether an independent or collective variable access is used */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   if ((retval = nc_var_par_access (context->ncid, context->var_node_z_id, context->netcdf_mpi_access))) {
     ERR (retval);
   }
@@ -596,7 +596,7 @@ t8_forest_write_user_netcdf_vars ([[maybe_unused]] t8_forest_netcdf_context_t *c
                                   [[maybe_unused]] t8_netcdf_variable_t *ext_variables[],
                                   [[maybe_unused]] sc_MPI_Comm comm)
 {
-#if T8_WITH_NETCDF
+#if T8_ENABLE_NETCDF
   /* Check whether user-defined variables should be written */
   if (num_extern_netcdf_vars > 0 && ext_variables != NULL) {
     int retval, i;
@@ -639,7 +639,7 @@ t8_forest_write_user_netcdf_vars ([[maybe_unused]] t8_forest_netcdf_context_t *c
           ERR (retval);
         }
         /* Define whether an independent or collective variable access is used */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
         if ((retval
              = nc_var_par_access (context->ncid, ext_variables[i]->var_user_dimid, context->netcdf_mpi_access))) {
           ERR (retval);
@@ -669,7 +669,7 @@ t8_forest_write_netcdf_coordinate_data ([[maybe_unused]] t8_forest_t forest,
                                         [[maybe_unused]] t8_forest_netcdf_context_t *context,
                                         [[maybe_unused]] sc_MPI_Comm comm)
 {
-#if T8_WITH_NETCDF
+#if T8_ENABLE_NETCDF
   double vertex_coords[3];
   t8_eclass_t tree_class;
   t8_locidx_t num_local_trees;
@@ -816,7 +816,7 @@ t8_forest_write_user_netcdf_data ([[maybe_unused]] t8_forest_t forest,
                                   [[maybe_unused]] t8_netcdf_variable_t *ext_variables[],
                                   [[maybe_unused]] sc_MPI_Comm comm)
 {
-#if T8_WITH_NETCDF
+#if T8_ENABLE_NETCDF
   if (num_extern_netcdf_vars > 0 && ext_variables != NULL) {
     int retval;
     size_t start_ptr;
@@ -868,7 +868,7 @@ t8_forest_write_netcdf_file (t8_forest_t forest, t8_forest_netcdf_context_t *con
                              t8_forest_netcdf_ugrid_namespace_t *namespace_context, int num_extern_netcdf_vars,
                              t8_netcdf_variable_t *ext_variables[], sc_MPI_Comm comm)
 {
-#if T8_WITH_NETCDF
+#if T8_ENABLE_NETCDF
   int retval;
 #endif
   t8_gloidx_t num_glo_elem;
@@ -884,13 +884,13 @@ t8_forest_write_netcdf_file (t8_forest_t forest, t8_forest_netcdf_context_t *con
 
   /* Create a parallel NetCDF-File (NetCDF-4/HDF5 file) */
   /* NC_MPIIO seems to be redundant since NetCDF version 4.6.2 */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   if ((retval = nc_create_par (context->filename, NC_CLOBBER | NC_NETCDF4 | NC_MPIIO, comm, sc_MPI_INFO_NULL,
                                &context->ncid))) {
     ERR (retval);
   }
   t8_debugf ("A parallel netCDf-file has been created.\n");
-#elif T8_WITH_NETCDF
+#elif T8_ENABLE_NETCDF
   if ((retval = nc_create (context->filename, NC_CLOBBER | NC_NETCDF4, &context->ncid))) {
     ERR (retval);
     t8_debugf ("A serial netCDf-file has been created.\n");
@@ -903,7 +903,7 @@ t8_forest_write_netcdf_file (t8_forest_t forest, t8_forest_netcdf_context_t *con
   /* Define NetCDF-variables */
   t8_forest_write_netcdf_variables (context, namespace_context);
 
-#if T8_WITH_NETCDF
+#if T8_ENABLE_NETCDF
   /* Disable the default fill-value-mode. */
   if ((retval = nc_set_fill (context->ncid, NC_NOFILL, &context->old_fill_mode))) {
     ERR (retval);
@@ -931,7 +931,7 @@ t8_forest_write_netcdf_file (t8_forest_t forest, t8_forest_netcdf_context_t *con
   t8_forest_write_netcdf_data (forest, context, comm);
 
   /* Leave the NetCDF-data-mode and re-enter the define-mode. */
-#if T8_WITH_NETCDF
+#if T8_ENABLE_NETCDF
   if ((retval = nc_redef (context->ncid))) {
     ERR (retval);
   }
@@ -946,7 +946,7 @@ t8_forest_write_netcdf_file (t8_forest_t forest, t8_forest_netcdf_context_t *con
   /* Eventuallay declare user-defined elementwise NetCDF-variables, if some were passed */
   t8_forest_write_user_netcdf_vars (context, namespace_context, num_extern_netcdf_vars, ext_variables, comm);
 
-#if T8_WITH_NETCDF
+#if T8_ENABLE_NETCDF
   /* Disable the default fill-value-mode. */
   if ((retval = nc_set_fill (context->ncid, NC_NOFILL, &context->old_fill_mode))) {
     ERR (retval);
@@ -965,7 +965,7 @@ t8_forest_write_netcdf_file (t8_forest_t forest, t8_forest_netcdf_context_t *con
   t8_forest_write_user_netcdf_data (forest, context, num_extern_netcdf_vars, ext_variables, comm);
 
   /* All data has been written to the NetCDF-file, therefore, close the file. */
-#if T8_WITH_NETCDF
+#if T8_ENABLE_NETCDF
   if ((retval = nc_close (context->ncid))) {
     ERR (retval);
   }
@@ -990,7 +990,7 @@ t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix, const c
   /* Create the NetCDF-Filename */
   snprintf (file_name, BUFSIZ, "%s.nc", file_prefix);
 
-#if !T8_WITH_NETCDF_PAR
+#if !T8_ENABLE_NETCDF_PAR
   /* In case of a parallel configuration without parallel netCDF routines */
   int retval;
   int mpirank, mpisize;
@@ -1032,7 +1032,7 @@ t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix, const c
   context.start_index = 0;
   context.convention = "UGRID v1.0";
 
-#if T8_WITH_NETCDF
+#if T8_ENABLE_NETCDF
   /* Check the given 'netcdf_storage_mode' */
   if (netcdf_var_storage_mode != NC_CONTIGUOUS && netcdf_var_storage_mode != NC_CHUNKED) {
     t8_global_productionf ("Illegal input parameter for the storage-mode (NC_CONTIGUOUS or NC_CHUNKED) was "
@@ -1043,7 +1043,7 @@ t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix, const c
     context.netcdf_var_storage_mode = netcdf_var_storage_mode;
   }
 #endif
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   /* Check the given 'netcdf_mpi_access' */
   if (netcdf_mpi_access != NC_INDEPENDENT && netcdf_mpi_access != NC_COLLECTIVE) {
     t8_global_productionf ("Illegal input parameter for the variable-mpi-access (NC_INDEPENDENT or NC_COLLECTIVE) was "
