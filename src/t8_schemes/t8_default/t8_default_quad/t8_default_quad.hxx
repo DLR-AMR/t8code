@@ -574,7 +574,7 @@ class t8_default_scheme_quad: public t8_default_scheme_common<t8_default_scheme_
 
       ((p4est_quadrant_t *) neighbors[*num_neighbors])->level = elem->level;
 
-      const int neigh_cube_vertex = (1 << dim) - 1 - icube;
+      const int neigh_cube_vertex = num_possible_neighbors - 1 - icube;
       neigh_ivertices[*num_neighbors] = neigh_cube_vertex;
       if (element_is_equal (element, neighbors[*num_neighbors])
           || ((p4est_quadrant_t *) neighbors[*num_neighbors])->x < 0
