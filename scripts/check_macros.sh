@@ -45,14 +45,12 @@ found_macros=FALSE
 
 while IFS=: read -r line_number line; do
     macro_name=$(echo "$line" | grep -o 'T8_ENABLE_[^ ]*')
-    echo "Macro found in $file_path on line $line_number: $macro_name"
+    echo "Incorrect macro found in $file_path on line $line_number: $macro_name. Please use '#if T8_ENABLE_' instead."
     found_macros=TRUE
 done < <(grep -n '#ifdef T8_ENABLE_' "$file_path")
 
 if [ "$found_macros" = "TRUE" ]; then
-    echo "Incorrect macro usage found in $file_path. Please use '#if T8_ENABLE_' instead."
     exit 1
 else
-    echo "No incorrect macro usage found in $file_path."
     exit 0
 fi
