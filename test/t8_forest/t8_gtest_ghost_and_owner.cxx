@@ -62,10 +62,8 @@ class forest_ghost_owner: public testing::TestWithParam<std::tuple<int, cmesh_ex
 };
 
 static int
-t8_test_gao_adapt (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
-                   [[maybe_unused]] t8_locidx_t which_tree, t8_eclass_t tree_class,
-                   [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
-                   [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
+t8_test_gao_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
+                   t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family, const int num_elements,
                    t8_element_t *elements[])
 {
   /* refine every second element up to the maximum level */
@@ -124,17 +122,13 @@ t8_test_gao_check (t8_forest_t forest)
 
 TEST_P (forest_ghost_owner, test_ghost_owner)
 {
+
   /* Compute the minimum level, such that the forest is nonempty */
   int min_level = t8_forest_min_nonempty_level (cmesh, scheme);
   /* start with an empty level */
   min_level = SC_MAX (0, min_level - 1);
   t8_debugf ("Testing ghost exchange with start level %i\n", min_level);
-#if T8CODE_TEST_LEVEL >= 2
-  const int max_level = min_level + 2;
-#else
-  const int max_level = min_level + 3;
-#endif
-  for (int level = min_level; level < max_level; level++) {
+  for (int level = min_level; level < min_level + 3; level++) {
     /* ref the scheme since we reuse it */
     scheme->ref ();
     /* ref the cmesh since we reuse it */

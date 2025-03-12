@@ -42,7 +42,7 @@ struct t8_key_id_pair
 /* The hash function for the global to local hash table.
  * We hash the global_id */
 static unsigned
-t8_cmesh_trees_glo_lo_hash_func (const void *v, [[maybe_unused]] const void *u)
+t8_cmesh_trees_glo_lo_hash_func (const void *v, const void *u)
 {
   const t8_trees_glo_lo_hash_t *entry = (const t8_trees_glo_lo_hash_t *) v;
   return (unsigned) entry->global_id;
@@ -51,7 +51,7 @@ t8_cmesh_trees_glo_lo_hash_func (const void *v, [[maybe_unused]] const void *u)
 /* The equality function for the global to local hash table.
  * We consider two entries equal, if their global id's match. */
 static int
-t8_cmesh_trees_glo_lo_hash_equal (const void *v1, const void *v2, [[maybe_unused]] const void *u)
+t8_cmesh_trees_glo_lo_hash_equal (const void *v1, const void *v2, const void *u)
 {
   const t8_trees_glo_lo_hash_t *entry1 = (const t8_trees_glo_lo_hash_t *) v1;
   const t8_trees_glo_lo_hash_t *entry2 = (const t8_trees_glo_lo_hash_t *) v2;
@@ -939,7 +939,7 @@ t8_cmesh_tree_to_face_decode (const int dimension, const int8_t tree_to_face, in
 }
 
 void
-t8_cmesh_trees_print ([[maybe_unused]] const t8_cmesh_t cmesh, [[maybe_unused]] const t8_cmesh_trees_t trees)
+t8_cmesh_trees_print (const t8_cmesh_t cmesh, const t8_cmesh_trees_t trees)
 {
 #ifdef T8_ENABLE_DEBUG
   t8_locidx_t itree, ighost;

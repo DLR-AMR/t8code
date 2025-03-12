@@ -38,38 +38,11 @@
  */
 
 /* Maximum uniform level for forest. */
-#if T8CODE_TEST_LEVEL >= 1
+#ifdef T8_ENABLE_LESS_TESTS
 #define T8_IS_LEAF_MAX_LVL 3
 #else
 #define T8_IS_LEAF_MAX_LVL 4
 #endif
-
-/* Adapt a forest such that always the first child of a
- * family is refined and no other elements. This results in a highly
- * imbalanced forest. */
-static int
-t8_test_adapt_first_child (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
-                           [[maybe_unused]] t8_locidx_t which_tree, const t8_eclass_t tree_class,
-                           [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
-                           [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
-                           t8_element_t *elements[])
-{
-  T8_ASSERT (!is_family || (is_family && num_elements == scheme->element_get_num_children (tree_class, elements[0])));
-
-  const int level = scheme->element_get_level (tree_class, elements[0]);
-
-  /* we set a maximum refinement level as forest user data */
-  int maxlevel = *(int *) t8_forest_get_user_data (forest);
-  if (level >= maxlevel) {
-    /* Do not refine after the maxlevel */
-    return 0;
-  }
-  const int child_id = scheme->element_get_child_id (tree_class, elements[0]);
-  if (child_id == 1) {
-    return 1;
-  }
-  return 0;
-}
 
 class element_is_leaf_or_ghost: public testing::TestWithParam<std::tuple<int, int, cmesh_example_base *>> {
  protected:

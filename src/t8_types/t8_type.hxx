@@ -28,7 +28,6 @@
 #define T8_TYPE_HXX
 
 #include <t8.h>
-#include <functional>
 
 /**
  * \brief An implementation of strong type with additional competences.

@@ -40,18 +40,13 @@ class forest_iterate: public testing::TestWithParam<cmesh_example_base *> {
   void
   SetUp () override
   {
-#if T8CODE_TEST_LEVEL >= 1
-    constexpr int level = 3;
-#else
-    constexpr int level = 4;
-#endif
     t8_cmesh_t cmesh = GetParam ()->cmesh_create ();
     if (t8_cmesh_is_empty (cmesh)) {
       /* empty cmeshes are currently not supported */
       t8_cmesh_unref (&cmesh);
       GTEST_SKIP ();
     }
-    forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, sc_MPI_COMM_WORLD);
+    forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), 4, 0, sc_MPI_COMM_WORLD);
   }
   void
   TearDown () override
@@ -100,7 +95,7 @@ t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
     ASSERT_EQ (num_incoming, 1);
   }
   /* Element/family got coarsened. */
-  else if (refine == -1) {
+  if (refine == -1) {
     ASSERT_EQ (num_incoming, 1);
 
     /* Begin check family */
@@ -122,20 +117,20 @@ t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
     ASSERT_EQ (num_outgoing, family_size);
     /* End check family */
 
-    /* If element got coarsened, only the first element
+    /* If element got coarsen, only the first element
      * should be called in the callback of forest_adapt. */
     for (t8_locidx_t i = 1; i < num_outgoing; i++) {
       ASSERT_EQ (adapt_data->callbacks[elidx_old + i], -3);
     }
   }
   /* Element got removed. */
-  else if (refine == -2) {
+  if (refine == -2) {
     ASSERT_EQ (num_outgoing, 1);
     ASSERT_EQ (num_incoming, 0);
     ASSERT_EQ (first_incoming, -1);
   }
   /* Element got refined. */
-  else if (refine == 1) {
+  if (refine == 1) {
     ASSERT_EQ (num_outgoing, 1);
     const t8_element_t *element = t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing);
     const t8_locidx_t family_size = scheme->element_get_num_children (tree_class, element);
@@ -143,17 +138,16 @@ t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
   }
 }
 
-/** For each local element: Remove, coarsen, leave untouched, or refine it depending on its index.
+/** For each locale element: Remove, coarsen, leave untouched, or refine it depending on its index.
  *      if \a lelement_id mod 12 < 3  -> leave element untouched
  * else if \a lelement_id mod 12 < 6  -> coarse element
  * else if \a lelement_id mod 12 < 9  -> remove element
  * else if \a lelement_id mod 12 < 12 -> refine element
 */
 int
-t8_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                   [[maybe_unused]] const t8_eclass_t tree_class, t8_locidx_t lelement_id,
-                   [[maybe_unused]] const t8_scheme *scheme, const int is_family,
-                   [[maybe_unused]] const int num_elements, [[maybe_unused]] t8_element_t *elements[])
+t8_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, const t8_eclass_t tree_class,
+                   t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family, const int num_elements,
+                   t8_element_t *elements[])
 {
   struct t8_return_data *return_data = (struct t8_return_data *) t8_forest_get_user_data (forest);
   T8_ASSERT (return_data != NULL);
@@ -226,8 +220,11 @@ t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn, int do_ada
 
 TEST_P (forest_iterate, test_iterate_replace)
 {
+#if T8_ENABLE_LESS_TESTS
+  const int runs = 1;
+#else
   const int runs = 2;
-
+#endif
   for (int run = 0; run < runs; run++) {
     t8_locidx_t num_elements = t8_forest_get_local_num_elements (forest);
     int *adapt_callbacks = T8_ALLOC (int, num_elements);
@@ -247,7 +244,8 @@ TEST_P (forest_iterate, test_iterate_replace)
     t8_forest_iterate_replace (forest_adapt, forest, t8_forest_replace);
     t8_forest_unref (&forest);
 
-    /* Partition the forest. This is useful as preparation for the second run with the adapted forest. */
+    /* Partition the forest. This is useful,
+     * if we run the test a second time with the adapted forest. */
     forest_adapt = t8_adapt_forest (forest_adapt, NULL, 0, 1, NULL);
 
     T8_FREE (adapt_callbacks);

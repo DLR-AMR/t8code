@@ -39,7 +39,7 @@ class get_linear_id: public testing::TestWithParam<std::tuple<int, t8_eclass_t>>
     scheme->element_new (eclass, 1, &element);
     scheme->element_new (eclass, 1, &child);
     scheme->element_new (eclass, 1, &test);
-    scheme->set_to_root (eclass, element);
+    scheme->get_root (eclass, element);
   }
 
   void
@@ -59,13 +59,10 @@ class get_linear_id: public testing::TestWithParam<std::tuple<int, t8_eclass_t>>
 };
 
 static int
-t8_test_init_linear_id_refine_everything ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
-                                          [[maybe_unused]] t8_locidx_t which_tree,
-                                          [[maybe_unused]] const t8_eclass_t tree_class,
-                                          [[maybe_unused]] t8_locidx_t lelement_id,
-                                          [[maybe_unused]] const t8_scheme *scheme,
-                                          [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
-                                          [[maybe_unused]] t8_element_t *elements[])
+t8_test_init_linear_id_refine_everything (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
+                                          const t8_eclass_t tree_class, t8_locidx_t lelement_id,
+                                          const t8_scheme *scheme, const int is_family, const int num_elements,
+                                          t8_element_t *elements[])
 {
   return 1;
 }
@@ -75,9 +72,7 @@ TEST_P (get_linear_id, uniform_forest)
 {
   t8_forest_t forest, forest_adapt;
   t8_cmesh_t cmesh;
-#if T8CODE_TEST_LEVEL >= 2
-  const int maxlvl = 4;
-#elif T8CODE_TEST_LEVEL >= 1
+#ifdef T8_ENABLE_LESS_TESTS
   const int maxlvl = 5;
 #else
   const int maxlvl = 6;
@@ -122,7 +117,7 @@ TEST_P (get_linear_id, uniform_forest)
  * (on the level defined by the element) */
 TEST_P (get_linear_id, id_at_other_level)
 {
-#if T8CODE_TEST_LEVEL >= 1
+#ifdef T8_ENABLE_LESS_TESTS
   const int max_lvl = 3; /* Maximal level to compute elements on */
   const int add_lvl = 3; /* maxlvl + add_lvl is the level of the descendants*/
 #else

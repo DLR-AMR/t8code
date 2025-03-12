@@ -47,7 +47,7 @@ example_set *cmesh_example
                                                        decltype (cmesh_params::dims.begin ())> (
     std::make_pair (cmesh_params::my_comms.begin (), cmesh_params::my_comms.end ()),
     std::make_pair (cmesh_params::dims.begin (), cmesh_params::dims.end ()), new_from_periodic_wrapper, print_function,
-    "t8_cmesh_new_periodic");
+    "t8_cmesh_new_periodic_");
 }  // namespace new_periodic
 
 #endif /* T8_CMESH_NEW_PERIODIC_HXX */

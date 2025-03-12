@@ -92,7 +92,7 @@ typedef struct t8_cmesh
 
   int set_partition;  /**< If nonzero the cmesh is partitioned.
                                             If zero each process has the whole cmesh. */
-  int face_knowledge; /**< If partitioned the level of face knowledge that is expected. \ref t8_cmesh_set_partitioned;
+  int face_knowledge; /**< If partitioned the level of face knowledge that is expected. \ref t8_mesh_set_partitioned;
                             see \ref t8_cmesh_set_partition.
 */
 

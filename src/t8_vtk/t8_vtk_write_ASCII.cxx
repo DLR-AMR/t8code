@@ -24,7 +24,7 @@
 #include "t8_vtk/t8_vtk_writer_helper.hxx"
 #include <t8_vtk.h>
 #include <t8_forest/t8_forest_ghost.h>
-#include <t8_types/t8_vec.hxx>
+#include <t8_vec.h>
 #include "t8_forest/t8_forest_types.h"
 #include "t8_cmesh/t8_cmesh_trees.h"
 #include "t8_cmesh/t8_cmesh_types.h"
@@ -115,11 +115,10 @@ t8_forest_num_points (t8_forest_t forest, const int count_ghosts)
 }
 
 static int
-t8_forest_vtk_cells_vertices_kernel (t8_forest_t forest, const t8_locidx_t ltree_id,
-                                     [[maybe_unused]] const t8_tree_t tree,
-                                     [[maybe_unused]] const t8_locidx_t element_index, const t8_element_t *element,
-                                     const t8_eclass_t tree_class, [[maybe_unused]] const int is_ghost, FILE *vtufile,
-                                     int *columns, [[maybe_unused]] void **data, T8_VTK_KERNEL_MODUS modus)
+t8_forest_vtk_cells_vertices_kernel (t8_forest_t forest, const t8_locidx_t ltree_id, const t8_tree_t tree,
+                                     const t8_locidx_t element_index, const t8_element_t *element,
+                                     const t8_eclass_t tree_class, const int is_ghost, FILE *vtufile, int *columns,
+                                     void **data, T8_VTK_KERNEL_MODUS modus)
 {
   double element_coordinates[3];
   int num_el_vertices, ivertex;
@@ -162,11 +161,10 @@ t8_forest_vtk_cells_vertices_kernel (t8_forest_t forest, const t8_locidx_t ltree
 }
 
 static int
-t8_forest_vtk_cells_connectivity_kernel (t8_forest_t forest, [[maybe_unused]] const t8_locidx_t ltree_id,
-                                         [[maybe_unused]] const t8_tree_t tree,
-                                         [[maybe_unused]] const t8_locidx_t element_index, const t8_element_t *element,
-                                         const t8_eclass_t tree_class, [[maybe_unused]] const int is_ghost,
-                                         FILE *vtufile, int *columns, void **data, T8_VTK_KERNEL_MODUS modus)
+t8_forest_vtk_cells_connectivity_kernel (t8_forest_t forest, const t8_locidx_t ltree_id, const t8_tree_t tree,
+                                         const t8_locidx_t element_index, const t8_element_t *element,
+                                         const t8_eclass_t tree_class, const int is_ghost, FILE *vtufile, int *columns,
+                                         void **data, T8_VTK_KERNEL_MODUS modus)
 {
   int ivertex, num_vertices;
   int freturn;
@@ -199,11 +197,10 @@ t8_forest_vtk_cells_connectivity_kernel (t8_forest_t forest, [[maybe_unused]] co
 }
 
 static int
-t8_forest_vtk_cells_offset_kernel (t8_forest_t forest, [[maybe_unused]] const t8_locidx_t ltree_id,
-                                   [[maybe_unused]] const t8_tree_t tree,
-                                   [[maybe_unused]] const t8_locidx_t element_index, const t8_element_t *element,
-                                   const t8_eclass_t tree_class, [[maybe_unused]] const int is_ghost, FILE *vtufile,
-                                   int *columns, void **data, T8_VTK_KERNEL_MODUS modus)
+t8_forest_vtk_cells_offset_kernel (t8_forest_t forest, const t8_locidx_t ltree_id, const t8_tree_t tree,
+                                   const t8_locidx_t element_index, const t8_element_t *element,
+                                   const t8_eclass_t tree_class, const int is_ghost, FILE *vtufile, int *columns,
+                                   void **data, T8_VTK_KERNEL_MODUS modus)
 {
   long long *offset;
   int freturn;
@@ -234,11 +231,10 @@ t8_forest_vtk_cells_offset_kernel (t8_forest_t forest, [[maybe_unused]] const t8
 }
 
 static int
-t8_forest_vtk_cells_type_kernel (t8_forest_t forest, [[maybe_unused]] const t8_locidx_t ltree_id,
-                                 [[maybe_unused]] const t8_tree_t tree,
-                                 [[maybe_unused]] const t8_locidx_t element_index, const t8_element_t *element,
-                                 const t8_eclass_t tree_class, [[maybe_unused]] const int is_ghost, FILE *vtufile,
-                                 int *columns, [[maybe_unused]] void **data, T8_VTK_KERNEL_MODUS modus)
+t8_forest_vtk_cells_type_kernel (t8_forest_t forest, const t8_locidx_t ltree_id, const t8_tree_t tree,
+                                 const t8_locidx_t element_index, const t8_element_t *element,
+                                 const t8_eclass_t tree_class, const int is_ghost, FILE *vtufile, int *columns,
+                                 void **data, T8_VTK_KERNEL_MODUS modus)
 {
   int freturn;
   if (modus == T8_VTK_KERNEL_EXECUTE) {
@@ -254,11 +250,10 @@ t8_forest_vtk_cells_type_kernel (t8_forest_t forest, [[maybe_unused]] const t8_l
 }
 
 static int
-t8_forest_vtk_cells_level_kernel (t8_forest_t forest, [[maybe_unused]] const t8_locidx_t ltree_id,
-                                  [[maybe_unused]] const t8_tree_t tree,
-                                  [[maybe_unused]] const t8_locidx_t element_index, const t8_element_t *element,
-                                  const t8_eclass_t tree_class, [[maybe_unused]] const int is_ghost, FILE *vtufile,
-                                  int *columns, [[maybe_unused]] void **data, T8_VTK_KERNEL_MODUS modus)
+t8_forest_vtk_cells_level_kernel (t8_forest_t forest, const t8_locidx_t ltree_id, const t8_tree_t tree,
+                                  const t8_locidx_t element_index, const t8_element_t *element,
+                                  const t8_eclass_t tree_class, const int is_ghost, FILE *vtufile, int *columns,
+                                  void **data, T8_VTK_KERNEL_MODUS modus)
 {
   if (modus == T8_VTK_KERNEL_EXECUTE) {
     const t8_scheme *scheme = t8_forest_get_scheme (forest);
@@ -269,12 +264,10 @@ t8_forest_vtk_cells_level_kernel (t8_forest_t forest, [[maybe_unused]] const t8_
 }
 
 static int
-t8_forest_vtk_cells_rank_kernel (t8_forest_t forest, [[maybe_unused]] const t8_locidx_t ltree_id,
-                                 [[maybe_unused]] const t8_tree_t tree,
-                                 [[maybe_unused]] const t8_locidx_t element_index,
-                                 [[maybe_unused]] const t8_element_t *element,
-                                 [[maybe_unused]] const t8_eclass_t tree_class, [[maybe_unused]] const int is_ghost,
-                                 FILE *vtufile, int *columns, [[maybe_unused]] void **data, T8_VTK_KERNEL_MODUS modus)
+t8_forest_vtk_cells_rank_kernel (t8_forest_t forest, const t8_locidx_t ltree_id, const t8_tree_t tree,
+                                 const t8_locidx_t element_index, const t8_element_t *element,
+                                 const t8_eclass_t tree_class, const int is_ghost, FILE *vtufile, int *columns,
+                                 void **data, T8_VTK_KERNEL_MODUS modus)
 {
   if (modus == T8_VTK_KERNEL_EXECUTE) {
     fprintf (vtufile, "%i ", forest->mpirank);
@@ -284,12 +277,10 @@ t8_forest_vtk_cells_rank_kernel (t8_forest_t forest, [[maybe_unused]] const t8_l
 }
 
 static int
-t8_forest_vtk_cells_treeid_kernel (t8_forest_t forest, const t8_locidx_t ltree_id,
-                                   [[maybe_unused]] const t8_tree_t tree,
-                                   [[maybe_unused]] const t8_locidx_t element_index,
-                                   [[maybe_unused]] const t8_element_t *element,
-                                   [[maybe_unused]] const t8_eclass_t tree_class, const int is_ghost, FILE *vtufile,
-                                   int *columns, [[maybe_unused]] void **data, T8_VTK_KERNEL_MODUS modus)
+t8_forest_vtk_cells_treeid_kernel (t8_forest_t forest, const t8_locidx_t ltree_id, const t8_tree_t tree,
+                                   const t8_locidx_t element_index, const t8_element_t *element,
+                                   const t8_eclass_t tree_class, const int is_ghost, FILE *vtufile, int *columns,
+                                   void **data, T8_VTK_KERNEL_MODUS modus)
 {
   if (modus == T8_VTK_KERNEL_EXECUTE) {
     long long tree_id;
@@ -308,11 +299,10 @@ t8_forest_vtk_cells_treeid_kernel (t8_forest_t forest, const t8_locidx_t ltree_i
 }
 
 static int
-t8_forest_vtk_cells_elementid_kernel (t8_forest_t forest, [[maybe_unused]] const t8_locidx_t ltree_id,
-                                      const t8_tree_t tree, [[maybe_unused]] const t8_locidx_t element_index,
-                                      [[maybe_unused]] const t8_element_t *element,
-                                      [[maybe_unused]] const t8_eclass_t tree_class, const int is_ghost, FILE *vtufile,
-                                      int *columns, [[maybe_unused]] void **data, T8_VTK_KERNEL_MODUS modus)
+t8_forest_vtk_cells_elementid_kernel (t8_forest_t forest, const t8_locidx_t ltree_id, const t8_tree_t tree,
+                                      const t8_locidx_t element_index, const t8_element_t *element,
+                                      const t8_eclass_t tree_class, const int is_ghost, FILE *vtufile, int *columns,
+                                      void **data, T8_VTK_KERNEL_MODUS modus)
 {
   if (modus == T8_VTK_KERNEL_EXECUTE) {
     if (!is_ghost) {
@@ -328,11 +318,10 @@ t8_forest_vtk_cells_elementid_kernel (t8_forest_t forest, [[maybe_unused]] const
 }
 
 static int
-t8_forest_vtk_cells_scalar_kernel (t8_forest_t forest, const t8_locidx_t ltree_id,
-                                   [[maybe_unused]] const t8_tree_t tree, const t8_locidx_t element_index,
-                                   [[maybe_unused]] const t8_element_t *element,
-                                   [[maybe_unused]] const t8_eclass_t tree_class, const int is_ghost, FILE *vtufile,
-                                   int *columns, void **data, T8_VTK_KERNEL_MODUS modus)
+t8_forest_vtk_cells_scalar_kernel (t8_forest_t forest, const t8_locidx_t ltree_id, const t8_tree_t tree,
+                                   const t8_locidx_t element_index, const t8_element_t *element,
+                                   const t8_eclass_t tree_class, const int is_ghost, FILE *vtufile, int *columns,
+                                   void **data, T8_VTK_KERNEL_MODUS modus)
 {
   double element_value = 0;
   t8_locidx_t scalar_index;
@@ -353,11 +342,10 @@ t8_forest_vtk_cells_scalar_kernel (t8_forest_t forest, const t8_locidx_t ltree_i
 }
 
 static int
-t8_forest_vtk_cells_vector_kernel (t8_forest_t forest, const t8_locidx_t ltree_id,
-                                   [[maybe_unused]] const t8_tree_t tree, const t8_locidx_t element_index,
-                                   [[maybe_unused]] const t8_element_t *element,
-                                   [[maybe_unused]] const t8_eclass_t tree_class, const int is_ghost, FILE *vtufile,
-                                   int *columns, void **data, T8_VTK_KERNEL_MODUS modus)
+t8_forest_vtk_cells_vector_kernel (t8_forest_t forest, const t8_locidx_t ltree_id, const t8_tree_t tree,
+                                   const t8_locidx_t element_index, const t8_element_t *element,
+                                   const t8_eclass_t tree_class, const int is_ghost, FILE *vtufile, int *columns,
+                                   void **data, T8_VTK_KERNEL_MODUS modus)
 {
   double *element_values, null_vec[3] = { 0, 0, 0 };
   int dim, idim;
@@ -385,10 +373,10 @@ t8_forest_vtk_cells_vector_kernel (t8_forest_t forest, const t8_locidx_t ltree_i
 
 /* The point data version of the scalar kernel */
 static int
-t8_forest_vtk_vertices_scalar_kernel (t8_forest_t forest, const t8_locidx_t ltree_id,
-                                      [[maybe_unused]] const t8_tree_t tree, const t8_locidx_t element_index,
-                                      const t8_element_t *element, const t8_eclass_t tree_class, const int is_ghost,
-                                      FILE *vtufile, int *columns, void **data, T8_VTK_KERNEL_MODUS modus)
+t8_forest_vtk_vertices_scalar_kernel (t8_forest_t forest, const t8_locidx_t ltree_id, const t8_tree_t tree,
+                                      const t8_locidx_t element_index, const t8_element_t *element,
+                                      const t8_eclass_t tree_class, const int is_ghost, FILE *vtufile, int *columns,
+                                      void **data, T8_VTK_KERNEL_MODUS modus)
 {
   double element_value = 0;
   int num_vertex, ivertex;
@@ -416,10 +404,10 @@ t8_forest_vtk_vertices_scalar_kernel (t8_forest_t forest, const t8_locidx_t ltre
 
 /* The point data version of the vector kernel */
 static int
-t8_forest_vtk_vertices_vector_kernel (t8_forest_t forest, const t8_locidx_t ltree_id,
-                                      [[maybe_unused]] const t8_tree_t tree, const t8_locidx_t element_index,
-                                      const t8_element_t *element, const t8_eclass_t tree_class, const int is_ghost,
-                                      FILE *vtufile, int *columns, void **data, T8_VTK_KERNEL_MODUS modus)
+t8_forest_vtk_vertices_vector_kernel (t8_forest_t forest, const t8_locidx_t ltree_id, const t8_tree_t tree,
+                                      const t8_locidx_t element_index, const t8_element_t *element,
+                                      const t8_eclass_t tree_class, const int is_ghost, FILE *vtufile, int *columns,
+                                      void **data, T8_VTK_KERNEL_MODUS modus)
 {
   double *element_values, null_vec[3] = { 0, 0, 0 };
   int dim, idim;

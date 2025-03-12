@@ -24,7 +24,7 @@
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_types/t8_vec.h>
+#include <t8_vec.h>
 #include <test/t8_gtest_macros.hxx>
 
 class gtest_eclass: public testing::TestWithParam<t8_eclass_t> {
@@ -103,19 +103,19 @@ TEST_P (gtest_eclass, eclass_face_orientation)
       /* clang-format on */
       double vec_0[3];
       double vec_1[3];
-      t8_axpyz (vertices + 3 * v[1], vertices + 3 * v[0], vec_0, -1.0);
-      t8_axpyz (vertices + 3 * v[2], vertices + 3 * v[0], vec_1, -1.0);
+      t8_vec_axpyz (vertices + 3 * v[1], vertices + 3 * v[0], vec_0, -1.0);
+      t8_vec_axpyz (vertices + 3 * v[2], vertices + 3 * v[0], vec_1, -1.0);
       double normal[3];
-      t8_cross_3D (vec_0, vec_1, normal);
+      t8_vec_cross (vec_0, vec_1, normal);
       double centroid[3] = { 0.0 };
       for (int ivertex = 0; ivertex < t8_eclass_num_vertices[ieclass]; ivertex++) {
         centroid[0] += vertices[3 * ivertex];
         centroid[1] += vertices[3 * ivertex + 1];
         centroid[2] += vertices[3 * ivertex + 2];
       }
-      t8_ax (centroid, 1.0 / t8_eclass_num_vertices[ieclass]);
-      t8_axpy (vertices + 3 * v[0], centroid, -1.0);
-      const double c_n = t8_dot (centroid, normal);
+      t8_vec_ax (centroid, 1.0 / t8_eclass_num_vertices[ieclass]);
+      t8_vec_axpy (vertices + 3 * v[0], centroid, -1.0);
+      const double c_n = t8_vec_dot (centroid, normal);
       const int orientation = c_n > 0 ? 0 : 1;
       EXPECT_EQ (orientation, t8_eclass_face_orientation[ieclass][iface]);
     }

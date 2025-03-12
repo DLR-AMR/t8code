@@ -52,18 +52,18 @@ std::vector<std::function<t8_cmesh_t (sc_MPI_Comm)>> cmesh_functions = { t8_cmes
                                                                          t8_cmesh_new_hybrid_gate_deformed,
                                                                          t8_cmesh_new_full_hybrid };
 
-std::vector<std::string> names = { "t8_cmesh_new_periodic_tri",
-                                   "t8_cmesh_new_periodic_hybrid",
-                                   "t8_cmesh_new_periodic_line_more_trees",
-                                   "t8_cmesh_new_line_zigzag",
-                                   "t8_cmesh_new_prism_deformed",
-                                   "t8_cmesh_new_pyramid_deformed",
-                                   "t8_cmesh_new_prism_cake_funny_oriented",
-                                   "t8_cmesh_new_prism_geometry",
-                                   "t8_cmesh_new_tet_orientation_test",
-                                   "t8_cmesh_new_hybrid_gate",
-                                   "t8_cmesh_new_hybrid_gate_deformed",
-                                   "t8_cmesh_new_full_hybrid" };
+std::vector<std::string> names = { "t8_cmesh_new_periodic_tri_",
+                                   "t8_cmesh_new_periodic_hybrid_",
+                                   "t8_cmesh_new_periodic_line_more_trees_",
+                                   "t8_cmesh_new_line_zigzag_",
+                                   "t8_cmesh_new_prism_deformed_",
+                                   "t8_cmesh_new_pyramid_deformed_",
+                                   "t8_cmesh_new_prism_cake_funny_oriented_",
+                                   "t8_cmesh_new_prism_geometry_",
+                                   "t8_cmesh_new_tet_orientation_test_",
+                                   "t8_cmesh_new_hybrid_gate_",
+                                   "t8_cmesh_new_hybrid_gate_deformed_",
+                                   "t8_cmesh_new_full_hybrid_" };
 
 example_set *cmesh_example
   = (example_set *) new cmesh_cartesian_product_params<decltype (cmesh_params::my_comms.begin ())> (

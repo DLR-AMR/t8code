@@ -40,7 +40,7 @@
 
 #include <cmath>
 #include <t8.h>                                 /* General t8code header, always include this. */
-#include <t8_types/t8_vec.hxx>                  /* Basic operations on 3D vectors. */
+#include <t8_vec.h>                             /* Basic operations on 3D vectors. */
 #include <t8_cmesh.h>                           /* cmesh definition and basic interface. */
 #include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
 #include <t8_forest/t8_forest_io.h>             /* save forest */

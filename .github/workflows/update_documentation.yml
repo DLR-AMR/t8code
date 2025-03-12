@@ -67,7 +67,7 @@ jobs:
       run: echo CFLAGS_var="-Wall -pedantic -O3" >> $GITHUB_ENV
         && echo CXXFLAGS_var="-Wall -pedantic -O3" >> $GITHUB_ENV
     - name: build config variables
-      run: export CONFIG_OPTIONS="--without-blas ${TEST_LEVEL_FLAG}"
+      run: export CONFIG_OPTIONS="--without-blas ${LESS_TEST_OPTION}"
            && export CONFIG_SERIAL_DEBUG="$CONFIG_OPTIONS --enable-debug --with-sc=$SC_SERIAL_DEBUG/install --with-p4est=$P4EST_SERIAL_DEBUG/install"
     - name: Check vars
       run: echo "[$CONFIG_SERIAL_DEBUG]"
