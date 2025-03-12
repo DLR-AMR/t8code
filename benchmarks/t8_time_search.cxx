@@ -19,6 +19,11 @@
   along with t8code; if not, write to the Free Software Foundation, Inc.,
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
+#include <sc_refcount.h>
+#include <sc_flops.h>
+#include <sc_functions.h>
+#include <sc_statistics.h>
+#include <sc_options.h>
 
 #include <t8.h>                                 /* General t8code header, always include this. */
 #include <t8_cmesh.h>                           /* cmesh definition and basic interface. */
@@ -237,7 +242,7 @@ t8_time_search_for_particles (t8_forest_t forest, sc_array *particles)
  * \param [in] comm           MPI communicator to specify on which processes we create this array.
  */
 static sc_array *
-t8_tutorial_search_build_particles (size_t num_particles, unsigned int seed, sc_MPI_Comm comm)
+t8_time_search_build_particles (size_t num_particles, unsigned int seed, sc_MPI_Comm comm)
 {
   /* Specify lower and upper bounds for the coordinates in each dimension. */
   double boundary_low[3] = { 0.2, 0.3, 0.1 };
@@ -259,6 +264,7 @@ t8_tutorial_search_build_particles (size_t num_particles, unsigned int seed, sc_
     /* Rank 0 fills this array with random particles. */
     size_t iparticle;
     srand (seed);
+
     for (iparticle = 0; iparticle < num_particles; ++iparticle) {
       int dim;
       /* Get this particle's pointer. */
@@ -285,6 +291,22 @@ t8_tutorial_search_build_particles (size_t num_particles, unsigned int seed, sc_
   return particles;
 }
 
+static sc_array *
+t8_time_choose_build_particles (int particle_option, size_t num_particles, unsigned int seed, sc_MPI_Comm comm)
+{
+  sc_array *particles = NULL;
+  switch (particle_option) {
+  case 0:
+    particles = t8_time_search_build_particles (num_particles, seed, comm);
+    break;
+  default:
+    t8_global_errorf (" [search] Unknown particle option %d.\n", particle_option);
+    SC_ABORT ("Not implemented.");
+    break;
+  }
+  return particles;
+}
+
 /* Print the local and global number of elements of a forest. */
 void
 t8_benchmark_print_forest_information (t8_forest_t forest)
@@ -308,17 +330,17 @@ main (int argc, char **argv)
 {
   int mpiret;
   sc_MPI_Comm comm;
+
   t8_cmesh_t cmesh;
   t8_forest_t forest;
-  /* The uniform refinement level of the forest. */
   const int level = 5;
-  /* The number of particles to generate. */
   const size_t num_particles = 2000;
-  /* The seed for the random number generator. */
   const unsigned seed = 0;
   double num_particles_per_element;
+  sc_options_t *opt;
+  int particle_option;
   t8_tutorial_search_user_data_t user_data;
-  std::vector<double> particles_per_element (0.0, 0.0);
+  std::vector<double> particles_per_element (0, 0.0);
 
   /* Initialize the user data with the particles per element array and 0 elements searched. */
   user_data.particles_per_element = &particles_per_element;
@@ -330,13 +352,8 @@ main (int argc, char **argv)
   mpiret = sc_MPI_Init (&argc, &argv);
   /* Error check the MPI return value. */
   SC_CHECK_MPI (mpiret);
-
-  /* Initialize the sc library, has to happen before we initialize t8code. */
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-  /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the leg levels. */
   t8_init (SC_LP_DEBUG);
-
-  /* We will use MPI_COMM_WORLD as a communicator. */
   comm = sc_MPI_COMM_WORLD;
 
   /* Print a message on the root process. */
@@ -346,15 +363,24 @@ main (int argc, char **argv)
     " [search] We will search for all elements in a forest that contain randomly created particles.\n");
   t8_global_productionf (" [search] \n");
 
+  opt = sc_options_new (argv[0]);
+  sc_options_add_int (opt, 'p', "particle_fill", &particle_option, 1,
+                      "Option to fill the particles, 1: random, 2: one per leaf, 3: only one particle, ...");
+  sc_options_parse (t8_get_package_id (), SC_LP_DEFAULT, opt, argc, argv);
+
+  double total_time = 0;
+  total_time -= sc_MPI_Wtime ();
+  sc_statinfo_t times[1];
+
   /* Build a cube cmesh with tet, hex, and prism trees. */
   cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
   /* Build a uniform forest on it. */
-  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_standalone (), level, 0, comm);
+  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, comm);
 
   /* Create an array with random particles. */
-  sc_array_t *particles = t8_tutorial_search_build_particles (num_particles, seed, comm);
+  sc_array_t *particles = t8_time_choose_build_particles (particle_option, num_particles, seed, comm);
 
-  bool multiple_particles;
+  int multiple_particles;
   int iter = 0;
   do {
     t8_forest_set_user_data (forest, &user_data);
@@ -380,22 +406,27 @@ main (int argc, char **argv)
     /* Ensure that the data is actually set. */
     T8_ASSERT (particles_per_element != NULL);
 
-    multiple_particles = false;
+    multiple_particles = 0;
+    int global_multiple_particles = 0;
     const size_t element_count = particles_per_element->size ();
-    t8_debugf ("element_count: %li \n", element_count);
+    // t8_debugf ("element_count: %li \n", element_count);
     for (size_t ielement = 0; ielement < element_count; ielement++) {
-      t8_debugf ("ielement: %li \n", ielement);
+      // t8_debugf ("ielement: %li \n", ielement);
       num_particles_per_element = (*particles_per_element)[ielement];
-      t8_debugf ("num_particles: %f \n", num_particles_per_element);
+      // t8_debugf ("num_particles: %f \n", num_particles_per_element);
       if (num_particles_per_element > 1.0) {
-        multiple_particles = true;
+        multiple_particles = 1;
         break;
       }
     }
+    sc_MPI_Allreduce (&multiple_particles, &global_multiple_particles, 1, sc_MPI_INT, sc_MPI_MAX, comm);
     forest = t8_time_adapt_forest (forest);
     const size_t element_count_after = particles_per_element->size ();
     t8_debugf ("element_count_after: %li \n", element_count_after);
     iter++;
+    t8_debugf ("global_multiple_particles: %i \n", global_multiple_particles);
+    t8_debugf ("multiple_particles: %i \n", multiple_particles);
+    multiple_particles = global_multiple_particles;
   } while (multiple_particles);
   /*
    * clean-up
@@ -405,6 +436,11 @@ main (int argc, char **argv)
   t8_forest_unref (&forest);
   sc_array_destroy (particles);
 
+  total_time += sc_MPI_Wtime ();
+  sc_stats_set1 (&times[0], total_time, "total");
+  sc_stats_compute (comm, 1, times);
+  sc_stats_print (t8_get_package_id (), SC_LP_ESSENTIAL, 1, times, 1, 1);
+  sc_options_destroy (opt);
   sc_finalize ();
 
   mpiret = sc_MPI_Finalize ();
