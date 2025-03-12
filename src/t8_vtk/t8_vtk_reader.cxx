@@ -185,7 +185,7 @@ t8_file_to_vtkGrid (const char *filename, vtkSmartPointer<vtkDataSet> vtkGrid, c
  * \return The dimension of \a vtkGrid. 
  */
 int
-t8_get_dimension (vtkSmartPointer<vtkDataSet> vtkGrid)
+t8_vtk_grid_get_dimension (vtkSmartPointer<vtkDataSet> vtkGrid)
 {
   /* This array contains the type of each cell */
   vtkSmartPointer<vtkCellTypes> cell_type_of_each_cell = vtkSmartPointer<vtkCellTypes>::New ();
@@ -363,7 +363,7 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer<vtkDataSet> vtkGrid, const int partition, c
   }
 
   /* Set the dimension on all procs (even empty procs). */
-  int dim = num_trees > 0 ? t8_get_dimension (vtkGrid) : 0;
+  int dim = num_trees > 0 ? t8_vtk_grid_get_dimension (vtkGrid) : 0;
   int dim_buf = dim;
   mpiret = sc_MPI_Allreduce ((void *) &dim, &dim_buf, 1, sc_MPI_INT, sc_MPI_MAX, comm);
   SC_CHECK_MPI (mpiret);
