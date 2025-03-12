@@ -1421,7 +1421,7 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
 static t8_locidx_t
 t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_linearidx_t element_id, const int maxlevel)
 {
-  T8_ASSERT (elements != NULL);
+  T8_ASSERT (elements != nullptr);
   const t8_scheme *scheme = t8_element_array_get_scheme (elements);
   const t8_eclass_t tree_class = t8_element_array_get_tree_class (elements);
   /* At first, we check whether any element has smaller id than the
@@ -1432,6 +1432,17 @@ t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_lineari
     /* No element has id smaller than the given one. */
     return -1;
   }
+#if T8_ENABLE_DEBUG
+  t8_debugf ("[D] print array.\n", element_id);
+  const size_t num_elements = t8_element_array_get_count (elements);
+  for (size_t ielem = 0; ielem < num_elements; ++ielem) {
+    const t8_element_t *elem = t8_element_array_index_int (elements, ielem);
+    scheme->element_is_valid (tree_class, elem);
+    scheme->element_debug_print (tree_class, elem);
+  }
+  t8_debugf ("[D] start binary search \n");
+  fflush (stdout);
+#endif
 
   /* We search for the first element in the array that is greater than the given element id. */
   auto elem_iter
@@ -1774,6 +1785,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
 #if T8_ENABLE_DEBUG
   const bool tree_is_local = t8_forest_tree_is_local (forest, ltreeid);
   if (tree_is_local) {
+    t8_debugf ("[D] tree_id: %i is local.\n", ltreeid);
     T8_ASSERT (t8_forest_element_is_leaf (forest, leaf_or_ghost, ltreeid));
   }
   else {
@@ -2407,7 +2419,7 @@ t8_forest_tree_is_local (const t8_forest_t forest, const t8_locidx_t local_tree)
 int
 t8_forest_element_is_leaf (const t8_forest_t forest, const t8_element_t *element, const t8_locidx_t local_tree)
 {
-  bool check_ghost = false;
+  const bool check_ghost = false;
   T8_ASSERT (t8_forest_tree_is_local (forest, local_tree));
   return t8_forest_element_is_leaf_or_ghost (forest, element, local_tree, check_ghost);
 }
@@ -2423,6 +2435,7 @@ t8_forest_element_is_leaf_or_ghost (const t8_forest_t forest, const t8_element_t
   }
   else {
     T8_ASSERT (0 <= local_tree && local_tree < t8_forest_get_num_ghost_trees (forest));
+    T8_ASSERT (!t8_forest_tree_is_local (forest, local_tree));
   }
 #endif
 
@@ -3993,8 +4006,8 @@ t8_element_array_t *
 t8_forest_tree_get_leaves (const t8_forest_t forest, const t8_locidx_t ltree_id)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
-  T8_ASSERT (0 <= ltree_id && ltree_id < t8_forest_get_num_local_trees (forest));
-
+  T8_ASSERT (t8_forest_tree_is_local (forest, ltree_id));
+  t8_debugf ("[D] get leaves of tree %d\n", ltree_id);
   return &t8_forest_get_tree (forest, ltree_id)->elements;
 }
 
