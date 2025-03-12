@@ -1770,8 +1770,8 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
 
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  const bool tree_is_local = t8_forest_tree_is_local (forest, ltreeid);
 #if T8_ENABLE_DEBUG
+  const bool tree_is_local = t8_forest_tree_is_local (forest, ltreeid);
   if (tree_is_local) {
     T8_ASSERT (t8_forest_element_is_leaf (forest, leaf_or_ghost, ltreeid));
   }
