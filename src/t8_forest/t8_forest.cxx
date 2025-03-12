@@ -1987,10 +1987,19 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
                    total_num_neighbors);
         // Copy neighbor element pointers
         if (pneighbor_leaves != NULL) {
+          // Is element_destroy compatible with T8_REALLOC?
+          // Meaning: Do we move memory around in Realloc that may later not be picked up
+          //          by t8_element_destroy correctly?
+          T8_ASSERT (0);  // Blocker since the code below does not work yet.
           *pneighbor_leaves = T8_REALLOC (*pneighbor_leaves, t8_element_t *, total_num_neighbors);
+          scheme->element_new (eclass, total_num_neighbors + *num_neighbors, *pneighbor_leaves);
           T8_ASSERT (*pneighbor_leaves != NULL);
-          memcpy (*pneighbor_leaves + *num_neighbors, user_data.neighbors.data () + *num_neighbors,
-                  num_neighbors_current_tree * sizeof (t8_element_t *));
+          // TODO: Call element copy for each element
+          for (t8_locidx_t ielem = 0; ielem < *num_neighbors; ++ielem) {
+            t8_element_t *new_element = (*pneighbor_leaves)[ielem];
+            const t8_element_t *forest_leaf = user_data.neighbors.data ()[*num_neighbors + ielem];
+            scheme->element_copy (eclass, forest_leaf, new_element);
+          }
         }
         // Copy element indices
         *pelement_indices = T8_REALLOC (*pelement_indices, t8_locidx_t, total_num_neighbors);
