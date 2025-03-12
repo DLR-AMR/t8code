@@ -67,8 +67,10 @@ class forest_commit: public testing::TestWithParam<std::tuple<int, cmesh_example
  * tree is refined and no other elements. This results in a highly
  * imbalanced forest. */
 static int
-t8_test_adapt_balance (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
-                       t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family, const int num_elements,
+t8_test_adapt_balance (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                       [[maybe_unused]] t8_locidx_t which_tree, t8_eclass_t tree_class,
+                       [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+                       [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
                        t8_element_t *elements[])
 {
   T8_ASSERT (!is_family || (is_family && num_elements == scheme->element_get_num_children (tree_class, elements[0])));
@@ -127,7 +129,7 @@ t8_test_forest_commit_abp_3step (t8_forest_t forest, int maxlevel)
   t8_forest_set_balance (forest_balance, forest_adapt, 0);
   t8_forest_commit (forest_balance);
 
-  /* partrition the forest */
+  /* partition the forest */
   t8_forest_set_partition (forest_partition, forest_balance, 0);
   t8_forest_commit (forest_partition);
 
