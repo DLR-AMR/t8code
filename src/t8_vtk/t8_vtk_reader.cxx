@@ -54,7 +54,7 @@
  * \param[in, out] tree_vertices The vertices of a tree
  * \param[in] eclass             The eclass of the tree.
  */
-void
+static void
 t8_cmesh_correct_volume (double *tree_vertices, t8_eclass_t eclass)
 {
   /* The \param described is negative. We need to change vertices.
