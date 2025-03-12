@@ -232,8 +232,8 @@ install( DIRECTORY t8_vtk DESTINATION include FILES_MATCHING PATTERN "*.hxx"
   PATTERN "t8_vtk/t8_vtk_parallel.hxx"      EXCLUDE
   PATTERN "t8_vtk/t8_vtk_polydata.hxx"      EXCLUDE
   PATTERN "t8_vtk/t8_vtk_unstructured.hxx"  EXCLUDE
-  PATTERN "t8_vtk/t8_vtk_writer_helper.hxx" EXCLUDE
   PATTERN "t8_vtk/t8_vtk_write_ASCII.hxx"   EXCLUDE
+  PATTERN "t8_vtk/t8_vtk_writer_helper.hxx" EXCLUDE
   )
 install( DIRECTORY t8_types DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
 
