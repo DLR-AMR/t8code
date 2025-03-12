@@ -1872,8 +1872,9 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
       // The neighbor tree is a local tree and hence there may be local neighbor elements.
       const t8_element_array_t *tree_leaves = t8_forest_tree_get_leaves (forest, local_neighbor_tree);
       if (tree_leaves != nullptr) {
-        neighbor_leaf_array leaf_array (tree_leaves, false);
-        leaf_arrays.push_back (&leaf_array);
+        neighbor_leaf_array *leaf_array = new neighbor_leaf_array (tree_leaves, false);
+        leaf_arrays.push_back (leaf_array);
+        // TODO: Is this memory properly cleaned-up? Check with valgrind after debugging is done.
       }
     }
   }
@@ -1890,8 +1891,9 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
         const t8_element_array_t *ghost_leaves
           = t8_forest_ghost_get_tree_elements (forest, local_neighbor_ghost_treeid);
         if (ghost_leaves != nullptr) {
-          neighbor_leaf_array leaf_array (ghost_leaves, true);
-          leaf_arrays.push_back (&leaf_array);
+          neighbor_leaf_array *leaf_array = new neighbor_leaf_array (ghost_leaves, true);
+          leaf_arrays.push_back (leaf_array);
+          // TODO: Is this memory properly cleaned-up? Check with valgrind after debugging is done.
         }
       }
     }
