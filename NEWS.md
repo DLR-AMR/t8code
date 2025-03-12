@@ -108,7 +108,7 @@ A list of all renamings (without considering the deletion of the prefix) is here
 - `t8_element_vertex_integer_coords` -> `element_get_vertex_integer_coords`
 - `t8_element_vertex_reference_coords` -> `element_get_vertex_reference_coords`
 - `t8_element_refines_irregular` -> `refines_irregular`
-- `t8_element_root` -> `t8_element_get_root`
+- `t8_element_root` -> `t8_element_set_to_root`
 
 
 ### Usage of the default scheme
