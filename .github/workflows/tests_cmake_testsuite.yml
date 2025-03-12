@@ -33,9 +33,7 @@ name: t8code CMake testsuite
 on:
   push:
     branches:
-      - main
-      - develop
-      - feature-*CI* # for testing this script, all feature branches with "CI" in their name
+      - Branch_H
   pull_request:
     branches:
       - main
