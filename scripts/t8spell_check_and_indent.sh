@@ -70,7 +70,7 @@ then
   if [[ $REPLY =~ ^[Yy]$ ]]
   then
     echo Indenting all files...
-    (cd $repo_main_dir && ./scripts/t8indent $changed_files)
+    (cd $repo_main_dir && ./scripts/t8indent.sh $changed_files)
     echo done.
   else
     echo Aborted.

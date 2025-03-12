@@ -34,7 +34,7 @@
 
 #include <string>
 #include <t8_vtk.h>
-#include <t8_vec.h>
+#include <t8_types/t8_vec.hxx>
 
 #if T8_WITH_VTK
 #include <vtkUnstructuredGrid.h>
@@ -500,7 +500,7 @@ class vtk_writer {
    * \return T8_SUBROUTINE_FAILED if writing was not successful.
    */
   bool
-  write_vtk (const grid_t grid)
+  write_vtk ([[maybe_unused]] const grid_t grid)
   {
 #if T8_WITH_VTK
     T8_ASSERT (!fileprefix.empty ());
