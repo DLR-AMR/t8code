@@ -47,6 +47,8 @@
 #include <vtkXMLPolyDataReader.h>
 #endif
 
+#if T8_WITH_VTK
+
 /**
  * If the vertices of a tree describe a negative \param, 
  * permute the tree vertices. 
@@ -105,8 +107,6 @@ t8_cmesh_correct_volume (double *tree_vertices, t8_eclass_t eclass)
   }
   T8_ASSERT (!t8_cmesh_tree_vertices_negative_volume (eclass, tree_vertices, t8_eclass_num_vertices[eclass]));
 }
-
-#if T8_WITH_VTK
 
 vtk_read_success_t
 t8_file_to_vtkGrid (const char *filename, vtkSmartPointer<vtkDataSet> vtkGrid, const int partition, const int main_proc,
