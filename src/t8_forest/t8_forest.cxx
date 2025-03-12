@@ -1912,11 +1912,13 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
   if (pneighbor_leaves != NULL) {
     *pneighbor_leaves = NULL;
   }
+
   *pelement_indices = NULL;
   *dual_faces = NULL;
   for (auto &leaf_array : leaf_arrays) {
     auto &tree_leaves = leaf_array->first;
     const bool leaf_array_is_ghost = leaf_array->second;
+    T8_ASSERT (tree_leaves != NULL);
     const t8_locidx_t first_desc_search = t8_forest_bin_search_lower (tree_leaves, first_face_desc_id, maxlevel);
     const t8_locidx_t last_desc_search = t8_forest_bin_search_lower (tree_leaves, last_face_desc_id, maxlevel);
     if (first_desc_search >= 0 || last_desc_search >= 0) {
