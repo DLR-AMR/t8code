@@ -279,13 +279,15 @@ t8_vtk_partition (t8_cmesh_t cmesh, const int mpirank, const int mpisize, t8_glo
 
 t8_cmesh_t
 t8_vtkGrid_to_cmesh (vtkSmartPointer<vtkDataSet> vtkGrid, const int partition, const int main_proc,
-                     const int distributed_grid, sc_MPI_Comm comm)
+                     const int distributed_grid, sc_MPI_Comm comm, const int negative_volume_check)
 {
   t8_cmesh_t cmesh;
   int mpisize;
   int mpirank;
   int mpiret;
   t8_cmesh_init (&cmesh);
+  if (!negative_volume_check)
+    t8_cmesh_disable_negative_volume_check (cmesh);
   /* Get the size of the communicator and the rank of the process. */
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);

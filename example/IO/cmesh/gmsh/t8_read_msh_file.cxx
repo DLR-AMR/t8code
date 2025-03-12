@@ -84,7 +84,7 @@ t8_read_msh_file_build_cmesh (const char *prefix, int do_partition, int dim, int
   /* If the master argument is positive, then we read the cmesh
    * only on the master rank and is directly partitioned. */
   partitioned_read = master >= 0;
-  cmesh = t8_cmesh_from_msh_file ((char *) prefix, partitioned_read, sc_MPI_COMM_WORLD, dim, master, 0);
+  cmesh = t8_cmesh_from_msh_file ((char *) prefix, partitioned_read, sc_MPI_COMM_WORLD, dim, master, 0, true);
   if (cmesh != NULL) {
     t8_global_productionf ("Successfully constructed cmesh from %s.msh file.\n", prefix);
     t8_global_productionf ("cmesh is of dimension %i and has %lli elements.\n", dim,

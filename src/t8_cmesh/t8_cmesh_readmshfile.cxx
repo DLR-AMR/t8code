@@ -1665,8 +1665,8 @@ t8_cmesh_from_msh_file_register_geometries (t8_cmesh_t cmesh, const int use_cad_
 }
 
 t8_cmesh_t
-t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm comm, const int dim,
-                        const int main_proc, const int use_cad_geometry)
+t8_cmesh_from_msh_file (const char *fileprefix, const int partition, const sc_MPI_Comm comm, const int dim,
+                        const int main_proc, const int use_cad_geometry, const int negative_volume_check)
 {
   int mpirank, mpisize, mpiret;
   t8_cmesh_t cmesh;
@@ -1695,6 +1695,8 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
 
   /* initialize cmesh structure */
   t8_cmesh_init (&cmesh);
+  if (!negative_volume_check)
+    t8_cmesh_disable_negative_volume_check (cmesh);
   /* Setting the dimension by hand is necessary for partitioned
    * commit, since there are process without any trees. So the cmesh would
    * not know its dimension on these processes. */

@@ -64,7 +64,7 @@ t8_cmesh_save_cmesh (const char *mshfile, int dim)
   }
   else {
     t8_cmesh_t cmesh_partition;
-    cmesh = t8_cmesh_from_msh_file (mshfile, 1, sc_MPI_COMM_WORLD, dim, 0, 0);
+    cmesh = t8_cmesh_from_msh_file (mshfile, 1, sc_MPI_COMM_WORLD, dim, 0, 0, true);
     t8_cmesh_init (&cmesh_partition);
     t8_cmesh_set_derive (cmesh_partition, cmesh);
     t8_cmesh_set_partition_uniform (cmesh_partition, 0, t8_scheme_new_default ());

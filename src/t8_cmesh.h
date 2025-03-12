@@ -347,6 +347,12 @@ t8_cmesh_is_equal_ext (const t8_cmesh_t cmesh_a, const t8_cmesh_t cmesh_b, const
 int
 t8_cmesh_is_equal (const t8_cmesh_t cmesh_a, const t8_cmesh_t cmesh_b);
 
+/** Disable the check for negative volumes in trees during \ref t8_cmesh_commit.
+ * \param [in, out] cmesh
+ */
+void
+t8_cmesh_disable_negative_volume_check (t8_cmesh_t cmesh);
+
 int
 t8_cmesh_is_empty (t8_cmesh_t cmesh);
 

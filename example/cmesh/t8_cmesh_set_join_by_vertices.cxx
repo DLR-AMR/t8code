@@ -200,7 +200,7 @@ main (int argc, char **argv)
     const int use_cad_geometry = 0;
 
     t8_cmesh_t cmesh
-      = t8_cmesh_from_msh_file (meshfile, partition, sc_MPI_COMM_WORLD, dim, main_proc, use_cad_geometry);
+      = t8_cmesh_from_msh_file (meshfile, partition, sc_MPI_COMM_WORLD, dim, main_proc, use_cad_geometry, true);
 
     test_with_cmesh (cmesh);
 

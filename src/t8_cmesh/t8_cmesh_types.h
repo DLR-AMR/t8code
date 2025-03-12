@@ -136,6 +136,7 @@ typedef struct t8_cmesh
                                         Since this is very memory consuming we only fill it when needed. */
 
   t8_geometry_handler_c *geometry_handler; /**< Handles all geometries that are used by trees in this cmesh. */
+  int negative_volume_check;               /**< Check cmesh for negative volumes during commit. */
 
 #ifdef T8_ENABLE_DEBUG
   t8_locidx_t inserted_trees;  /**< Count the number of inserted trees to

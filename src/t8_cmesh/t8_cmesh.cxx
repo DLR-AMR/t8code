@@ -204,6 +204,7 @@ t8_cmesh_init (t8_cmesh_t *pcmesh)
    * It will get initialized either when a geometry is registered
    * or when the cmesh gets committed. */
   cmesh->geometry_handler = NULL;
+  cmesh->negative_volume_check = 1;
 
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 }
@@ -647,6 +648,12 @@ t8_cmesh_is_equal_ext (const t8_cmesh_t cmesh_a, const t8_cmesh_t cmesh_b, const
   }
 
   return 1;
+}
+
+void
+t8_cmesh_disable_negative_volume_check (t8_cmesh_t cmesh)
+{
+  cmesh->negative_volume_check = 0;
 }
 
 int

@@ -155,7 +155,7 @@ t8_load_refine_build_forest (t8_cmesh_t cmesh, sc_MPI_Comm comm, int level)
 t8_cmesh_t
 t8_load_refine_load_cmesh (const char *mshfile_prefix, sc_MPI_Comm comm, int dim)
 {
-  return t8_cmesh_from_msh_file (mshfile_prefix, 1, comm, dim, 0, 0);
+  return t8_cmesh_from_msh_file (mshfile_prefix, 1, comm, dim, 0, 0, true);
 }
 
 int

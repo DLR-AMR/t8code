@@ -136,7 +136,7 @@ t8_ghost_large_level_diff (const char *prefix, int dim, int level, int refine, i
   sc_statinfo_t stats[1];
 
   if (prefix != NULL) {
-    cmesh = t8_cmesh_from_msh_file (prefix, 1, comm, dim, 0, 0);
+    cmesh = t8_cmesh_from_msh_file (prefix, 1, comm, dim, 0, 0, true);
   }
   /* If no prefix given, create hypercube */
   else {

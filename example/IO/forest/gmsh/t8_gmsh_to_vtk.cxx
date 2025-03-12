@@ -93,7 +93,7 @@ main (int argc, char **argv)
   }
   else {
     // Read in the msh file.
-    cmesh = t8_cmesh_from_msh_file (fileprefix, 0, sc_MPI_COMM_WORLD, dim, 0, use_cad);
+    cmesh = t8_cmesh_from_msh_file (fileprefix, 0, sc_MPI_COMM_WORLD, dim, 0, use_cad, true);
 
     // Construct a forest from the cmesh.
     forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, comm);
