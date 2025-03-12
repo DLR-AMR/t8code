@@ -849,7 +849,6 @@ t8_cmesh_write_netcdf_file (t8_cmesh_t cmesh, t8_cmesh_netcdf_context_t *context
   t8_cmesh_write_user_netcdf_data (cmesh, context, num_extern_netcdf_vars, ext_variables, comm);
 
   /* All data has been written to the NetCDF-file, therefore, close the file. */
-
   if ((retval = nc_close (context->ncid))) {
     ERR (retval);
   }

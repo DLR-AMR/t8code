@@ -34,10 +34,6 @@ These functions write a file in the NetCDF-format which represents the given 2D-
     t8_global_productionf ("Error: %s\n", nc_strerror (e)); \
     exit (ERRCODE); \
   }
-/* Macros usually defined in 'netcdf.h' */
-#ifndef NC_CHUNKED
-#define NC_CHUNKED 0
-#endif
 #ifndef NC_CONTIGUOUS
 #define NC_CONTIGUOUS 1
 #endif
