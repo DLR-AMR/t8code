@@ -44,6 +44,7 @@
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_profiling.h>
+#include <t8_forest/t8_forest_ghost_search.hxx>
 #include <t8_schemes/t8_default/t8_default.hxx>
 
 /* The refinement criterion
@@ -67,10 +68,9 @@
  *           scheme (see t8_scheme_new_default in t8_default/t8_default.hxx).
  */
 static int
-t8_ghost_fractal_adapt (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
-                        [[maybe_unused]] t8_locidx_t which_tree, const t8_eclass_t tree_class,
-                        [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
-                        [[maybe_unused]] int is_family, [[maybe_unused]] int num_elements, t8_element_t *elements[])
+t8_ghost_fractal_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
+                        const t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme *scheme, int is_family,
+                        int num_elements, t8_element_t *elements[])
 {
   int level;
   int type, child_id;
@@ -180,7 +180,7 @@ t8_ghost_large_level_diff (const char *prefix, int dim, int level, int refine, i
   /* Partition */
   t8_forest_init (&forest_partition);
   t8_forest_set_partition (forest_partition, forest_adapt, 0);
-  t8_forest_set_ghost_ext (forest_partition, 1, T8_GHOST_FACES, 3);
+  t8_forest_set_ghost_ext (forest_partition, 1, new t8_forest_ghost_face (3));
   t8_forest_set_profiling (forest_partition, 1);
   t8_forest_commit (forest_partition);
   if (!no_vtk) {

@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_types/t8_vec.h>
+#include <t8_vec.h>
 #include <t8_eclass.h>
 #include <t8_geometry/t8_geometry_helpers.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.h>
@@ -174,7 +174,7 @@ t8_geom_compute_linear_geometry (t8_eclass_t tree_class, const double *tree_vert
       /* Get a quad interpolation of the base */
       t8_geom_linear_interpolation (base_coords, tree_vertices, T8_ECLASS_MAX_DIM, 2, out_coords + offset_domain_dim);
       /* Get vector from base to pyramid tip */
-      t8_diff (tree_vertices + 4 * T8_ECLASS_MAX_DIM, out_coords + offset_domain_dim, vec);
+      t8_vec_diff (tree_vertices + 4 * T8_ECLASS_MAX_DIM, out_coords + offset_domain_dim, vec);
       /* Add vector to base */
       for (i_dim = 0; i_dim < 3; i_dim++) {
         out_coords[offset_domain_dim + i_dim] += vec[i_dim] * ref_coords[offset_tree_dim + 2];
@@ -217,7 +217,7 @@ t8_geom_compute_linear_axis_aligned_geometry (const t8_eclass_t tree_class, cons
   const int dimension = t8_eclass_to_dimension[tree_class];
   /* Compute vector between both points */
   double vector[3];
-  t8_diff (tree_vertices + T8_ECLASS_MAX_DIM, tree_vertices, vector);
+  t8_vec_diff (tree_vertices + T8_ECLASS_MAX_DIM, tree_vertices, vector);
 
   /* Compute the coordinates of the reference point. */
   for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
@@ -446,7 +446,7 @@ t8_geom_get_tet_face_intersection (const int face, const double *ref_coords, dou
   /* Calculate the vector from the opposite vertex to the
    * reference coordinate in reference space */
   double vector[3] = { 0 };
-  t8_diff (ref_coords, ref_opposite_vertex, vector);
+  t8_vec_diff (ref_coords, ref_opposite_vertex, vector);
 
   /* Calculate t to get the point on the ray (extension of vector), which lies on the face.
    * The vector will later be multiplied by t to get the exact distance from the opposite vertex to the face intersection. 
@@ -546,7 +546,7 @@ int
 t8_vertex_point_inside (const double vertex_coords[3], const double point[3], const double tolerance)
 {
   T8_ASSERT (tolerance > 0);
-  if (t8_dist (vertex_coords, point) > tolerance) {
+  if (t8_vec_dist (vertex_coords, point) > tolerance) {
     return 0;
   }
   return 1;
@@ -558,7 +558,7 @@ t8_line_point_inside (const double *p_0, const double *vec, const double *point,
   T8_ASSERT (tolerance > 0);
   double b[3];
   /* b = p - p_0 */
-  t8_axpyz (p_0, point, b, -1);
+  t8_vec_axpyz (p_0, point, b, -1);
   double x = 0; /* Initialized to prevent compiler warning. */
   int i;
   /* So x is the solution to
@@ -590,8 +590,8 @@ t8_line_point_inside (const double *p_0, const double *vec, const double *point,
      * is actually true.
      */
   double vec_check[3] = { vec[0], vec[1], vec[2] };
-  t8_ax (vec_check, x);
-  if (t8_dist (vec_check, b) > tolerance) {
+  t8_vec_ax (vec_check, x);
+  if (t8_vec_dist (vec_check, b) > tolerance) {
     /* Point does not lie on the line. */
     return 0;
   }
@@ -617,7 +617,7 @@ t8_triangle_point_inside (const double p_0[3], const double v[3], const double w
   T8_ASSERT (tolerance > 0); /* negative values and zero are not allowed */
   double b[3];
   /* b = point - p_0 */
-  t8_axpyz (p_0, point, b, -1);
+  t8_vec_axpyz (p_0, point, b, -1);
 
   /* Let d = det (v w e_3) */
   const double det_vwe3 = v[0] * w[1] - v[1] * w[0];
@@ -658,9 +658,9 @@ t8_plane_point_inside (const double point_on_face[3], const double face_normal[3
 {
   /* Set x = x - p */
   double pof[3] = { point_on_face[0], point_on_face[1], point_on_face[2] };
-  t8_axpy (point, pof, -1);
+  t8_vec_axpy (point, pof, -1);
   /* Compute <x-p,n> */
-  const double dot_product = t8_dot (pof, face_normal);
+  const double dot_product = t8_vec_dot (pof, face_normal);
   if (dot_product < 0) {
     /* The point is on the wrong side of the plane */
     return 0;

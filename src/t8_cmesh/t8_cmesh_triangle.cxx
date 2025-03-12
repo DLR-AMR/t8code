@@ -76,8 +76,7 @@ t8_cmesh_triangle_read_next_line (char **line, size_t *n, FILE *fp)
  * On success the index of the first node is returned (0 or 1).
  * On failure -1 is returned. */
 static int
-t8_cmesh_triangle_read_nodes ([[maybe_unused]] t8_cmesh_t cmesh, char *filename, double **vertices, long *num_corners,
-                              int dim)
+t8_cmesh_triangle_read_nodes (t8_cmesh_t cmesh, char *filename, double **vertices, long *num_corners, int dim)
 {
   FILE *fp;
   char *line = (char *) malloc (1024);
@@ -291,8 +290,8 @@ die_ele:
 }
 
 /* Open .neigh file and read element neighbor information
- * On success 0 is returned.
- * On failure -1 is returned. */
+ * On success T8_SUBROUTINE_SUCCESS is returned.
+ * On failure T8_SUBROUTINE_FAILED is returned. */
 static int
 t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset, char *filename, int dim)
 {
@@ -498,7 +497,7 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset, char *filena
   }
   T8_FREE (tneighbors);
   free (line);
-  return 0;
+  return T8_SUBROUTINE_SUCCESS;
 die_neigh:
   /* Clean up on error. */
   T8_FREE (tneighbors);
@@ -507,13 +506,12 @@ die_neigh:
     fclose (fp);
   }
   free (line);
-  return -1;
+  return T8_SUBROUTINE_FAILED;
 }
 
 /* TODO: remove do_dup argument */
 static t8_cmesh_t
-t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_Comm comm, [[maybe_unused]] int do_dup,
-                                       int dim)
+t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_Comm comm, int do_dup, int dim)
 {
   int mpirank, mpisize, mpiret;
   t8_cmesh_t cmesh;
@@ -561,7 +559,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_C
         /* read .neigh file */
         snprintf (current_file, BUFSIZ, "%s.neigh", fileprefix);
         retval = t8_cmesh_triangle_read_neigh (cmesh, corner_offset, current_file, dim);
-        if (retval != 0) {
+        if (retval == T8_SUBROUTINE_FAILED) {
           t8_global_errorf ("Error while parsing file %s.\n", current_file);
           t8_cmesh_unref (&cmesh);
           return NULL;
@@ -593,9 +591,9 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_C
 }
 
 static t8_cmesh_t
-t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix, int partition, sc_MPI_Comm comm,
-                                            [[maybe_unused]] int do_dup, int dim, sc_flopinfo_t *fi,
-                                            sc_flopinfo_t *snapshot, sc_statinfo_t *stats, int statindex)
+t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix, int partition, sc_MPI_Comm comm, int do_dup, int dim,
+                                            sc_flopinfo_t *fi, sc_flopinfo_t *snapshot, sc_statinfo_t *stats,
+                                            int statindex)
 {
   int mpirank, mpisize, mpiret;
   t8_cmesh_t cmesh;
@@ -641,7 +639,7 @@ t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix, int partition, sc_
         /* read .neigh file */
         snprintf (current_file, BUFSIZ, "%s.neigh", fileprefix);
         retval = t8_cmesh_triangle_read_neigh (cmesh, corner_offset, current_file, dim);
-        if (retval != 0) {
+        if (retval == T8_SUBROUTINE_FAILED) {
           t8_global_errorf ("Error while parsing file %s.\n", current_file);
           t8_cmesh_unref (&cmesh);
         }

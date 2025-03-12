@@ -40,7 +40,7 @@
 
 #include <cmath>
 #include <t8.h>                                 /* General t8code header, always include this. */
-#include <t8_types/t8_vec.hxx>                  /* Basic operations on 3D vectors. */
+#include <t8_vec.h>                             /* Basic operations on 3D vectors. */
 #include <t8_cmesh.h>                           /* cmesh definition and basic interface. */
 #include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
 #include <t8_forest/t8_forest_io.h>             /* save forest */
@@ -214,7 +214,7 @@ t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_d
 
         /* Collect all neighbors at the current face. */
         t8_forest_leaf_face_neighbors (forest, itree, element, &neighbors, iface, &dual_faces, &num_neighbors,
-                                       &neighids, &neigh_class, 1);
+                                       &neighids, &neigh_class);
 
         /* Retrieve the `height` of the face neighbor. Account for two neighbors in case
            of a non-conforming interface by computing the average. */

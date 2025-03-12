@@ -51,7 +51,7 @@ example_set *cmesh_example
     std::make_pair (cmesh_params::eclasses.begin (), cmesh_params::eclasses.end ()),
     std::make_pair (cmesh_params::large_mesh.begin (), cmesh_params::large_mesh.end ()),
     std::make_pair (cmesh_params::my_comms.begin (), cmesh_params::my_comms.end ()), bigmesh, make_param_string_wrapper,
-    "t8_cmesh_new_bigmesh");
+    "t8_cmesh_new_bigmesh_");
 }  // namespace new_bigmesh
 
 #endif /* T8_CMESH_NEW_BIGMESH_PARAM_HXX */

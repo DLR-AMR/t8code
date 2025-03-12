@@ -86,7 +86,7 @@ TEST_P (forest_find_owner, find_owner)
   const t8_scheme  scheme = scheme->eclass_schemes[tree_class];
   scheme->element_new (tree_class, 1, &element);
   /* Compute the number of elements per tree */
-  scheme->set_to_root (tree_class, element);
+  scheme->get_root (tree_class, element);
   /* TODO: This computation fails with pyramids */
   t8_gloidx_t         elements_per_tree =
     pow (scheme->element_get_num_children (tree_class, element), level);

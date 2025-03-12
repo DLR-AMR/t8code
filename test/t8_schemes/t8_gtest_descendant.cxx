@@ -40,7 +40,7 @@ class class_schemes_descendant: public testing::TestWithParam<std::tuple<int, t8
     scheme->element_new (eclass, 1, &elem);
     scheme->element_new (eclass, 1, &desc);
     scheme->element_new (eclass, 1, &test);
-    scheme->set_to_root (eclass, elem);
+    scheme->get_root (eclass, elem);
   }
   void
   TearDown () override

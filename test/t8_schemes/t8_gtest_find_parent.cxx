@@ -66,7 +66,7 @@ class class_find_parent: public TestDFS {
 
 TEST_P (class_find_parent, t8_compute_child_find_parent)
 {
-#if T8CODE_TEST_LEVEL >= 1
+#ifdef T8_ENABLE_LESS_TESTS
   const int maxlvl = 4;
 #else
   const int maxlvl = 6;

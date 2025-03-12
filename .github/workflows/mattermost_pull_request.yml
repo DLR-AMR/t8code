@@ -28,7 +28,7 @@ name: Mattermost_message_pull_request
 on:
   # Triggers the workflow on pull request events on the feature-CI_mattermost_messages, develop or main branch
   pull_request:
-    branches:
+    branches: [ feature-CI_mattermost_messages, develop, main ]
     types: [ opened, synchronize, reopened, closed]
 
   # Allows you to run this workflow manually from the Actions tab

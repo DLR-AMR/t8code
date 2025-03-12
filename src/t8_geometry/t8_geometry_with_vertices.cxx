@@ -26,7 +26,7 @@
 
 #include <t8_geometry/t8_geometry_with_vertices.hxx>
 #include <t8_geometry/t8_geometry_with_vertices.h>
-#include <t8_types/t8_vec.hxx>
+#include <t8_vec.h>
 
 /* Load the coordinates of the newly active tree to the active_tree_vertices variable. */
 void
@@ -74,25 +74,25 @@ t8_geometry_with_vertices::t8_geom_tree_negative_volume () const
    */
 
   /* build the vectors v_i as vertices_i - vertices_0 */
-  t8_3D_vec v_1, v_2, v_j, cross;
-  int jvector_source;
+  double v_1[3], v_2[3], v_j[3], cross[3], sc_prod;
+  int i, j;
   if (active_tree_class == T8_ECLASS_TET || active_tree_class == T8_ECLASS_PRISM) {
     /* In the tet/prism case, the third vector is v_3 */
-    jvector_source = 3;
+    j = 3;
   }
   else {
     /* For pyramids and Hexes, the third vector is v_4 */
-    jvector_source = 4;
+    j = 4;
   }
-  for (int dim = 0; dim < T8_ECLASS_MAX_DIM; dim++) {
-    v_1[dim] = active_tree_vertices[3 + dim] - active_tree_vertices[dim];
-    v_2[dim] = active_tree_vertices[6 + dim] - active_tree_vertices[dim];
-    v_j[dim] = active_tree_vertices[3 * jvector_source + dim] - active_tree_vertices[dim];
+  for (i = 0; i < 3; i++) {
+    v_1[i] = active_tree_vertices[3 + i] - active_tree_vertices[i];
+    v_2[i] = active_tree_vertices[6 + i] - active_tree_vertices[i];
+    v_j[i] = active_tree_vertices[3 * j + i] - active_tree_vertices[i];
   }
   /* compute cross = v_1 x v_2 */
-  t8_cross_3D (v_1, v_2, cross);
+  t8_vec_cross (v_1, v_2, cross);
   /* Compute sc_prod = <v_j, cross> */
-  double sc_prod = t8_dot (v_j, cross);
+  sc_prod = t8_vec_dot (v_j, cross);
 
   T8_ASSERT (sc_prod != 0);
   return active_tree_class == T8_ECLASS_TET ? sc_prod > 0 : sc_prod < 0;

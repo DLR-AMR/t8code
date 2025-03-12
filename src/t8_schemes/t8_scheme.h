@@ -740,7 +740,7 @@ t8_element_destroy (const t8_scheme_c *scheme, const t8_eclass_t tree_class, con
  * \param [in,out] elem   The element to be filled with root.
  */
 void
-t8_element_set_to_root (const t8_scheme_c *scheme, const t8_eclass_t tree_class, t8_element_t *elem);
+t8_element_get_root (const t8_scheme_c *scheme, const t8_eclass_t tree_class, t8_element_t *elem);
 
 /** Pack multiple elements into contiguous memory, so they can be sent via MPI.
  * \param [in] scheme        The scheme of the forest.

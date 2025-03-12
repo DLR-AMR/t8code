@@ -84,14 +84,15 @@ TEST_P (class_forest_face_normal, back_and_forth)
 
         t8_element_t **neighbors;
         int num_neighbors;
-        const int forest_is_balanced = 1;
         t8_eclass_t neigh_eclass;
         int *dual_faces;
         t8_locidx_t *neigh_ids;
 
         t8_gloidx_t gneightree;
+        scheme->element_debug_print (tree_class, element);
+        t8_debugf("[D] iface %d\n", iface);
         t8_forest_leaf_face_neighbors_ext (forest, itree, element, &neighbors, iface, &dual_faces, &num_neighbors,
-                                           &neigh_ids, &neigh_eclass, forest_is_balanced, &gneightree, NULL);
+                                           &neigh_ids, &neigh_eclass, &gneightree, NULL);
 
         /* Iterate and compute their facenormal */
         for (int ineigh = 0; ineigh < num_neighbors; ineigh++) {
@@ -115,4 +116,6 @@ TEST_P (class_forest_face_normal, back_and_forth)
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_forest_face_normal, class_forest_face_normal,
-                          testing::Combine (DefaultScheme, testing::Range (0, 2)));
+                          testing::Combine (testing::Combine (testing::Range (0, 1),
+                                                              testing::Values (T8_ECLASS_QUAD, T8_ECLASS_HEX)),
+                                            testing::Range (0, 2)));

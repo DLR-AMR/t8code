@@ -31,7 +31,6 @@
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <t8_element.h>
 #include <t8_vtk/t8_vtk_writer.h>
-#include <t8_types/t8_vec.hxx>
 
 #include <t8_schemes/t8_default/t8_default_hex/t8_dhex.h>
 #include <array>
@@ -195,8 +194,7 @@ t8_create_cad_curve_shape ()
  * \return                            A valid cmesh, as if _init and _commit had been called.
  */
 t8_cmesh_t
-t8_create_cad_hypercube ([[maybe_unused]] double *rot_vec, [[maybe_unused]] int face, [[maybe_unused]] int edge,
-                         [[maybe_unused]] double *parameters)
+t8_create_cad_hypercube (double *rot_vec, int face, int edge, double *parameters)
 {
 #if T8_WITH_OCC
   if (edge >= 0 && face >= 0) {
@@ -258,11 +256,11 @@ t8_create_cad_hypercube ([[maybe_unused]] double *rot_vec, [[maybe_unused]] int 
  */
 void
 t8_test_geometry_cad_hex (double *rot_vec, int face, int edge, double *parameters, double *test_ref_coords,
-                          const t8_vec<24> &test_return_coords)
+                          double *test_return_coords)
 {
 #if T8_WITH_OCC
   const int num_coords = 8; /* Number of reference coordinates to test */
-  t8_vec<num_coords * 3> out_coords;
+  double *out_coords = T8_ALLOC (double, num_coords * 3);
   double rotated_test_ref_coords[24];
   double rotation_origin[3] = { 0.5, 0.5, 0.5 };
   double inversed_rot_vec[3];
@@ -274,9 +272,11 @@ t8_test_geometry_cad_hex (double *rot_vec, int face, int edge, double *parameter
   }
   t8_euler_rotation (test_ref_coords, inversed_rot_vec, rotated_test_ref_coords, rotation_origin, num_coords);
   for (size_t coord = 0; coord < num_coords; ++coord) {
-    t8_geometry_evaluate (cmesh, 0, rotated_test_ref_coords, num_coords, out_coords.data ());
-    EXPECT_VEC_EQ (out_coords, test_return_coords, tol);
+    const int offset_3d = coord * 3;
+    t8_geometry_evaluate (cmesh, 0, rotated_test_ref_coords, num_coords, out_coords);
+    EXPECT_VEC3_EQ (out_coords + offset_3d, test_return_coords + offset_3d, tol);
   }
+  T8_FREE (out_coords);
   t8_cmesh_destroy (&cmesh);
 
 #else  /* !T8_WITH_OCC */
@@ -296,14 +296,14 @@ TEST (t8_gtest_geometry_cad_hex, linked_faces)
                                  0.9, 0.25, 0.95, 
                                  0.1,  0.9, 0.9, 
                                  0.95, 0.85, 0.8 };
-  const t8_vec<24> surface_test_return_coords ({ 0.0396282769,  0.1897542602, 0.0396282769, 
+  double surface_test_return_coords[24] = { 0.0396282769,  0.1897542602, 0.0396282769, 
                                             0.8553975402, 0.1510451803, -0.0012778561, 
                                             0.1434278361, 0.9117760771, 0.0909403721, 
                                             0.9149739120, 0.8893780561,  0.2953610950, 
                                             0.2190065733, 0.1000000000, 0.7809934267,
                                             0.9318450385,  0.1898146343, 0.9989190836, 
                                             0.0932920308, 0.9000000000, 0.9067079692,  
-                                            0.9673042609, 0.8312979801, 0.8063743210 });
+                                            0.9673042609, 0.8312979801, 0.8063743210 };
 
     /* clang-format off */
   double surface_rot_vecs[18] = {
@@ -339,14 +339,14 @@ TEST (t8_gtest_geometry_cad_hex, linked_edges)
                                  0.9, 0.25, 0.95, 
                                  0.1,  0.9, 0.9, 
                                  0.95, 0.85, 0.8 };
-  const t8_vec<24> curve_test_return_coords ({ 0.0955204602, 0.2235162028, 0.1217553783, 
+  double curve_test_return_coords[24] = { 0.0955204602, 0.2235162028, 0.1217553783, 
                                           0.7995278713, -0.0659838746, 0.2083328730, 
                                           0.1494299582, 0.9170222805, 0.1069555502, 
                                           0.8999105642, 0.8892289094, 0.3015732294, 
                                           0.2987855815, 0.1481519479, 0.7726155646,
                                           0.8999520880, 0.2442297729, 0.9508428015, 
                                           0.0999446970, 0.9015248914, 0.9002685849, 
-                                          0.9499697383, 0.8472575225, 0.7998496263 });
+                                          0.9499697383, 0.8472575225, 0.7998496263 };
   /* clang-format on */
 
   double curve_rot_vecs[36] = {
@@ -391,7 +391,7 @@ TEST (t8_gtest_geometry_cad_hex, linked_edges)
  * \return                            A valid cmesh, as if _init and _commit had been called.
  */
 t8_cmesh_t
-t8_create_cad_reference_tet ([[maybe_unused]] int face, [[maybe_unused]] int edge, [[maybe_unused]] double *parameters)
+t8_create_cad_reference_tet (int face, int edge, double *parameters)
 {
 #if T8_WITH_OCC
   if (edge >= 0 && face >= 0) {
@@ -460,18 +460,14 @@ t8_create_cad_reference_tet ([[maybe_unused]] int face, [[maybe_unused]] int edg
  * \param [in] comm                   The mpi communicator to use.
  * \return                            Returns 1 if passed, 0 if failed.
  */
-template <size_t dimension>
 void
-t8_test_geometry_cad_tet (const int face, const int edge, double *parameters, double *test_ref_coords,
-                          const t8_vec<dimension> &test_return_coords)
+t8_test_geometry_cad_tet (int face, int edge, double *parameters, double *test_ref_coords, double *test_return_coords)
 {
 #if T8_WITH_OCC
   /* 4 coords for face --> 3 vertices of face & element centroid
-   * 2 coords for edge --> 2 vertices of edge 
-   * muliplied by 3 it is equal to the dimension template parameter
-   */
+   * 2 coords for edge --> 2 vertices of edge */
   const int num_coords = (face >= 0 ? 4 : 2);
-  t8_vec<dimension> out_coords;
+  double *out_coords = T8_ALLOC (double, num_coords * 3);
   double tol = T8_PRECISION_EPS > 1e-10 ? T8_PRECISION_EPS : 1e-10;
 
   t8_cmesh_t cmesh = t8_create_cad_reference_tet (face, edge, parameters);
@@ -479,10 +475,11 @@ t8_test_geometry_cad_tet (const int face, const int edge, double *parameters, do
   for (int i_coord = 0; i_coord < num_coords; ++i_coord) {
     const int offset_3d = i_coord * 3;
     t8_geometry_evaluate (cmesh, 0, test_ref_coords + offset_3d + (face >= 0 ? face * 12 : edge * 6), 1,
-                          &out_coords[offset_3d]);
-  }
+                          out_coords + offset_3d);
 
-  EXPECT_VEC_EQ (out_coords, test_return_coords, tol);
+    EXPECT_VEC3_EQ (out_coords + offset_3d, test_return_coords + offset_3d, tol);
+  }
+  T8_FREE (out_coords);
   t8_cmesh_destroy (&cmesh);
 
 #else  /* !T8_WITH_OCC */
@@ -504,11 +501,11 @@ TEST (t8_gtest_geometry_cad_tet, linked_faces)
         0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0,    // face 3
         0.75, 0.25, 0.5 };                              // element centroid
 
-  const t8_vec<12> surface_test_return_coords
-     ({ 0.0, 0.0, 0.0,                      // face vertex 0
+  double surface_test_return_coords[48]
+    = { 0.0, 0.0, 0.0,                      // face vertex 0
         1.0, 0.0, 0.0,                      // face vertex 1
         1.0, 0.0, 1.0,                      // face vertex 2
-        0.7953692655, 0.25, 0.4546307344});  // element centroid (shifted)
+        0.7953692655, 0.25, 0.4546307344};  // element centroid (shifted)
 
   double surface_parameters[27]
     = { 0, 1, 0, 0, 1, 1,   // face 0
@@ -518,8 +515,8 @@ TEST (t8_gtest_geometry_cad_tet, linked_faces)
   /* clang-format on */
 
   for (int i_faces = 0; i_faces < 4; i_faces++) {
-    t8_test_geometry_cad_tet<12> (i_faces, -1, surface_parameters + i_faces * 6, test_ref_coords,
-                                  surface_test_return_coords);
+    t8_test_geometry_cad_tet (i_faces, -1, surface_parameters + i_faces * 6, test_ref_coords,
+                              surface_test_return_coords);
   }
 }
 
@@ -533,9 +530,9 @@ TEST (t8_gtest_geometry_cad_tet, linked_edges)
         1.0, 0.0, 0.0, 1.0, 0.0, 1.0,   // edge 3
         1.0, 0.0, 0.0, 1.0, 1.0, 1.0,   // edge 4
         1.0, 1.0, 1.0, 1.0, 0.0, 1.0 }; // edge 5
-  t8_vec<6> curve_test_return_coords
-     ({ 0.0, 0.0, 0.0,    // edge vertex 0
-        1.0, 0.0, 0.0 });  // edge vertex 1
+  double curve_test_return_coords[6]
+    = { 0.0, 0.0, 0.0,    // edge vertex 0
+        1.0, 0.0, 0.0 };  // edge vertex 1
   double curve_parameters[12] = {
     0, 1,  // edge 0
     1, 0,  // edge 1
@@ -547,8 +544,7 @@ TEST (t8_gtest_geometry_cad_tet, linked_edges)
   /* clang-format on */
 
   for (int i_edges = 0; i_edges < 6; ++i_edges) {
-    t8_test_geometry_cad_tet<6> (-1, i_edges, curve_parameters + i_edges * 2, test_ref_coords,
-                                 curve_test_return_coords);
+    t8_test_geometry_cad_tet (-1, i_edges, curve_parameters + i_edges * 2, test_ref_coords, curve_test_return_coords);
   }
 }
 #endif /* T8_WITH_OCC */
@@ -657,8 +653,8 @@ class class_2d_element_cad_curve: public testing::TestWithParam<std::tuple<t8_ec
   const double test_ref_coords_quad_in[36]
     = { 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0,
         1.0, 1.0, 0.0, 0.5, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.5, 0.0, 1.0, 1.0, 0.0 };
-  const t8_vec<9> test_ref_coords_out_linear = t8_vec<9> ({ 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0 });
-  const t8_vec<9> test_ref_coords_out_curved = t8_vec<9> ({ 0.0, 0.0, 0.0, 0.5, -0.2, 0.0, 1.0, 0.0, 0.0 });
+  const double test_ref_coords_out_linear[9] = { 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0 };
+  const double test_ref_coords_out_curved[9] = { 0.0, 0.0, 0.0, 0.5, -0.2, 0.0, 1.0, 0.0, 0.0 };
 };
 
 TEST_P (class_2d_element_cad_curve, t8_check_2d_element_cad_curve)
@@ -693,22 +689,18 @@ TEST_P (class_2d_element_cad_curve, t8_check_2d_element_cad_curve)
     /* Commit the cmesh */
     t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 
-    t8_3D_vec out_coords;
+    double out_coords[3];
 
     /* out_coords should be equal to the input ref_coords. */
     for (size_t i_coord = 0; i_coord < T8_ECLASS_MAX_DIM; ++i_coord) {
       t8_geometry_evaluate (cmesh, 0,
                             (eclass == T8_ECLASS_QUAD ? test_ref_coords_quad_in : test_ref_coords_tri_in)
                               + i_coord * T8_ECLASS_MAX_DIM + i_orientation * 9,
-                            1, out_coords.data ());
+                            1, out_coords);
 
-      //t8_vec<9> checked_coords = (curvature == 0 ? test_ref_coords_out_linear : test_ref_coords_out_curved);
-      t8_3D_vec checked_coords;
-      for (int i = 0; i < 3; ++i) {
-        checked_coords[i]
-          = (curvature == 0 ? test_ref_coords_out_linear : test_ref_coords_out_curved)[i_coord * T8_ECLASS_MAX_DIM + i];
-      }
-      EXPECT_VEC_EQ (checked_coords, out_coords, T8_PRECISION_EPS);
+      EXPECT_VEC3_EQ (
+        (curvature == 0 ? test_ref_coords_out_linear : test_ref_coords_out_curved) + i_coord * T8_ECLASS_MAX_DIM,
+        out_coords, T8_PRECISION_EPS);
     }
     t8_cmesh_destroy (&cmesh);
   }
@@ -772,8 +764,8 @@ class class_2d_element_linear_cad_surface: public testing::TestWithParam<t8_ecla
   int faces[1] = { 1 };
   int edges[8] = { 0 };
   /* First 6 ref_coords for triangle and all 9 ref_coords for quad */
-  t8_vec<27> test_ref_coords = t8_vec<27> ({ 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 1.0,
-                                             0.0, 0.0, 0.5, 0.0, 0.5, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.5, 0.0 });
+  const double test_ref_coords[27] = { 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 1.0,
+                                       0.0, 0.0, 0.5, 0.0, 0.5, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.5, 0.0 };
   /* TODO: use randomised test_ref_coords, because the out_coords should be the same, no matter the test_ref_coord. */
 };
 
@@ -803,16 +795,13 @@ TEST_P (class_2d_element_linear_cad_surface, t8_check_2d_element_linear_cad_surf
   /* Commit the cmesh */
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 
-  t8_3D_vec out_coords;
+  double out_coords[3];
 
   /* `out_coords` should be equal to the input `ref_coords`. */
   for (size_t i_coord = 0; i_coord < (eclass == T8_ECLASS_QUAD ? 9 : 6); ++i_coord) {
-    t8_geometry_evaluate (cmesh, 0, &test_ref_coords[i_coord * 3], 1, out_coords.data ());
-    t8_3D_vec checked_coords;
-    for (int i = 0; i < 3; ++i) {
-      checked_coords[i] = test_ref_coords[i_coord * T8_ECLASS_MAX_DIM + i];
-    }
-    EXPECT_VEC_EQ (checked_coords, out_coords, T8_PRECISION_EPS);
+    t8_geometry_evaluate (cmesh, 0, test_ref_coords + i_coord * 3, 1, out_coords);
+
+    EXPECT_VEC3_EQ (test_ref_coords + i_coord * 3, out_coords, T8_PRECISION_EPS);
   }
 }
 
@@ -885,11 +874,10 @@ class class_2d_element_curved_cad_surface: public testing::TestWithParam<t8_ecla
   int edges[8] = { 0 };
 
   /* First 6 ref_coords for triangle and all 9 ref_coords for quad */
-  t8_vec<27> test_ref_coords_out = t8_vec<27> ({ 0.0, 0.0,  0.0, 0.5, -0.2, 0.0, 1.0, 0.0, 0.0, 0.5, 0.5, 0.2, 0.0, 1.0,
-                                                 0.0, -0.2, 0.5, 0.0, 0.5,  1.2, 0.0, 1.0, 1.0, 0.0, 1.2, 0.5, 0.0 });
-  const t8_vec<27> test_ref_coords_in
-    = t8_vec<27> ({ 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 1.0,
-                    0.0, 0.0, 0.5, 0.0, 0.5, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.5, 0.0 });
+  const double test_ref_coords_out[27] = { 0.0, 0.0,  0.0, 0.5, -0.2, 0.0, 1.0, 0.0, 0.0, 0.5, 0.5, 0.2, 0.0, 1.0,
+                                           0.0, -0.2, 0.5, 0.0, 0.5,  1.2, 0.0, 1.0, 1.0, 0.0, 1.2, 0.5, 0.0 };
+  const double test_ref_coords_in[27] = { 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 1.0, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 1.0,
+                                          0.0, 0.0, 0.5, 0.0, 0.5, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.5, 0.0 };
 };
 
 TEST_P (class_2d_element_curved_cad_surface, t8_check_2d_element_curved_cad_surface)
@@ -916,16 +904,13 @@ TEST_P (class_2d_element_curved_cad_surface, t8_check_2d_element_curved_cad_surf
   /* Commit the cmesh */
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 
-  t8_3D_vec out_coords;
+  double out_coords[3];
 
   /* out_coords should be equal to the input ref_coords. */
   for (size_t i_coord = 0; i_coord < (eclass == T8_ECLASS_QUAD ? 9 : 6); ++i_coord) {
-    t8_geometry_evaluate (cmesh, 0, test_ref_coords_in.data () + i_coord * 3, 1, out_coords.data ());
-    t8_3D_vec checked_coords;
-    for (int i = 0; i < 3; ++i) {
-      checked_coords[i] = test_ref_coords_out[i_coord * T8_ECLASS_MAX_DIM + i];
-    }
-    EXPECT_VEC_EQ (checked_coords, out_coords, T8_PRECISION_EPS);
+    t8_geometry_evaluate (cmesh, 0, test_ref_coords_in + i_coord * 3, 1, out_coords);
+
+    EXPECT_VEC3_EQ (test_ref_coords_out + i_coord * 3, out_coords, T8_PRECISION_EPS);
   }
 }
 
@@ -941,8 +926,7 @@ INSTANTIATE_TEST_SUITE_P (t8_gtest_check_2d_element_curved_cad_surface, class_2d
  * \return                            A valid cmesh, as if _init and _commit had been called.
  */
 t8_cmesh_t
-t8_create_cad_reference_prism ([[maybe_unused]] int face, [[maybe_unused]] int edge,
-                               [[maybe_unused]] double *parameters)
+t8_create_cad_reference_prism (int face, int edge, double *parameters)
 {
 #if T8_WITH_OCC
   if (edge >= 0 && face >= 0) {
@@ -1017,26 +1001,20 @@ t8_create_cad_reference_prism ([[maybe_unused]] int face, [[maybe_unused]] int e
  * \param [in] comm                   The mpi communicator to use.
  * \return                            Returns 1 if passed, 0 if failed.
  */
-template <size_t dimension>
 void
-t8_test_geometry_cad_prism (const int face, const int edge, double *parameters, double *test_ref_coords,
-                            const t8_vec<dimension> &test_return_coords)
+t8_test_geometry_cad_prism (int face, int edge, double *parameters, double *test_ref_coords, double *test_return_coords)
 {
 #if T8_WITH_OCC
-  t8_3D_vec out_coords;
+  double out_coords[3];
   double tol = T8_PRECISION_EPS > 1e-10 ? T8_PRECISION_EPS : 1e-10;
   const int face_vertices = (face <= 2 ? 4 : 3);
 
   t8_cmesh_t cmesh = t8_create_cad_reference_prism (face, edge, parameters);
 
   for (int i_coord = 0; i_coord < (face >= 0 ? face_vertices : 3); ++i_coord) {
-    t8_geometry_evaluate (cmesh, 0, test_ref_coords + i_coord * 3 + (face >= 0 ? face * 12 : edge * 9), 1,
-                          out_coords.data ());
-    t8_3D_vec checked_coords;
-    for (int i = 0; i < 3; ++i) {
-      checked_coords[i] = test_return_coords[i_coord * T8_ECLASS_MAX_DIM + i];
-    }
-    EXPECT_VEC_EQ (out_coords, checked_coords, tol);
+    t8_geometry_evaluate (cmesh, 0, test_ref_coords + i_coord * 3 + (face >= 0 ? face * 12 : edge * 9), 1, out_coords);
+
+    EXPECT_VEC3_EQ (out_coords, test_return_coords + i_coord * 3, tol);
   }
   t8_cmesh_destroy (&cmesh);
 
@@ -1057,15 +1035,15 @@ TEST (t8_gtest_geometry_cad_prism, linked_faces)
         1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 2.0, 2.0, 2.0 }; // face 4
     /* The 2.0's at face 3 and 4 are placeholders, because both faces only have 3 vertices. */
 
-  const t8_vec<12> surface_test_return_coords_quad
-    ({ 0.0, 0.0, 0.0,    // face vertex 0
+  double surface_test_return_coords_quad[12]
+    = { 0.0, 0.0, 0.0,    // face vertex 0
         1.0, 0.0, 0.0,    // face vertex 1
         0.0, 0.0, 1.0,    // face vertex 2
-        1.0, 0.0, 1.0 });  // face vertex 3
-  const t8_vec<9> surface_test_return_coords_tri
-    ({ 0.0, 0.0, 0.0,    // face vertex 0
+        1.0, 0.0, 1.0 };  // face vertex 3
+  double surface_test_return_coords_tri[9]
+    = { 0.0, 0.0, 0.0,    // face vertex 0
         1.0, 0.0, 0.0,    // face vertex 1
-        1.0, 1.0, 0.0 });  // face vertex 2
+        1.0, 1.0, 0.0 };  // face vertex 2
 
   double surface_parameters[40]
     = { 1, 1, 1, 0, 0, 1, 0, 0,   // face 0
@@ -1077,16 +1055,8 @@ TEST (t8_gtest_geometry_cad_prism, linked_faces)
   /* clang-format on */
 
   for (int i_faces = 0; i_faces < 5; i_faces++) {
-    if (i_faces <= 2) {
-      const t8_vec<12> surface_test_return_coords = surface_test_return_coords_quad;
-      t8_test_geometry_cad_prism (i_faces, -1, surface_parameters + i_faces * 8, test_ref_coords,
-                                  surface_test_return_coords);
-    }
-    else {
-      const t8_vec<9> surface_test_return_coords = surface_test_return_coords_tri;
-      t8_test_geometry_cad_prism (i_faces, -1, surface_parameters + i_faces * 8, test_ref_coords,
-                                  surface_test_return_coords);
-    }
+    t8_test_geometry_cad_prism (i_faces, -1, surface_parameters + i_faces * 8, test_ref_coords,
+                                (i_faces <= 2 ? surface_test_return_coords_quad : surface_test_return_coords_tri));
   }
 }
 
@@ -1103,10 +1073,10 @@ TEST (t8_gtest_geometry_cad_prism, linked_edges)
         1.0, 0.0, 1.0, 1.0, 0.0, 0.5, 1.0, 0.0, 0.0,   // edge 6
         1.0, 1.0, 0.0, 1.0, 1.0, 0.5, 1.0, 1.0, 1.0,   // edge 7
         0.0, 0.0, 1.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0 }; // edge 8
-  t8_vec<9> curve_test_return_coords
-    ({ 0.0, 0.0, 0.0,                            // edge vertex 0
+  double curve_test_return_coords[9]
+    = { 0.0, 0.0, 0.0,                            // edge vertex 0
         0.4999500215, 0.0000523914, 0.4000007585, // center of edge
-        1.0, 0.0, 0.0 });                          // edge vertex 1
+        1.0, 0.0, 0.0 };                          // edge vertex 1
   double curve_parameters[18] = {
     0, 1,  // edge 0
     1, 0,  // edge 1

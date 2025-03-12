@@ -31,9 +31,8 @@ t8_geometry_zero::~t8_geometry_zero ()
 }
 
 void
-t8_geometry_zero::t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
-                                    [[maybe_unused]] const double *ref_coords, const size_t num_coords,
-                                    double *out_coords) const
+t8_geometry_zero::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
+                                    const size_t num_coords, double *out_coords) const
 {
   /* Set the out_coords to 0 */
   for (size_t coord = 0; coord < num_coords; coord++) {
@@ -44,9 +43,8 @@ t8_geometry_zero::t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_u
 }
 
 void
-t8_geometry_zero::t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
-                                             [[maybe_unused]] const double *ref_coords, const size_t num_coords,
-                                             double *jacobian) const
+t8_geometry_zero::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
+                                             const size_t num_coords, double *jacobian) const
 {
   /* Set the jacobian to 0 */
   const int tree_dim = t8_eclass_to_dimension[active_tree_class];
@@ -54,7 +52,7 @@ t8_geometry_zero::t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, 
 }
 
 inline void
-t8_geometry_zero::t8_geom_load_tree_data ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid)
+t8_geometry_zero::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 {
   /* Do nothing. */
 }

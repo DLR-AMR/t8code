@@ -74,8 +74,7 @@ add_t8_test( NAME t8_gtest_basics_serial            SOURCES t8_gtest_main.cxx t8
 add_t8_test( NAME t8_gtest_netcdf_linkage_serial    SOURCES t8_gtest_main.cxx t8_gtest_netcdf_linkage.cxx )
 add_t8_test( NAME t8_gtest_vtk_linkage_serial       SOURCES t8_gtest_main.cxx t8_gtest_vtk_linkage.cxx )
 
-add_t8_test( NAME t8_gtest_type_serial                  SOURCES t8_gtest_main.cxx t8_types/t8_gtest_type.cxx )
-add_t8_test( NAME t8_gtest_random_accessible_serial     SOURCES t8_gtest_main.cxx t8_types/t8_gtest_random_accessible.cxx )
+add_t8_test( NAME t8_gtest_type_serial              SOURCES t8_gtest_main.cxx t8_types/t8_gtest_type.cxx )
 
 add_t8_test( NAME t8_gtest_hypercube_parallel                           SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_hypercube.cxx )
 add_t8_test( NAME t8_gtest_cmesh_readmshfile_serial                     SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_readmshfile.cxx )
@@ -95,6 +94,7 @@ add_t8_test( NAME t8_gtest_shmem_parallel  SOURCES t8_gtest_main.cxx t8_data/t8_
 add_t8_test( NAME t8_gtest_element_volume_serial        SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_element_volume.cxx )
 add_t8_test( NAME t8_gtest_search_parallel              SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_search.cxx )
 add_t8_test( NAME t8_gtest_half_neighbors_parallel      SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_half_neighbors.cxx )
+add_t8_test( NAME t8_gtest_face_neighbors_parallel      SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_face_neighbors.cxx t8_gtest_adapt_callbacks.cxx )
 add_t8_test( NAME t8_gtest_find_owner_parallel          SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_find_owner.cxx )
 add_t8_test( NAME t8_gtest_user_data_parallel           SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_user_data.cxx )
 add_t8_test( NAME t8_gtest_transform_serial             SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_transform.cxx )
@@ -104,7 +104,7 @@ add_t8_test( NAME t8_gtest_ghost_and_owner_parallel     SOURCES t8_gtest_main.cx
 add_t8_test( NAME t8_gtest_balance_parallel             SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_balance.cxx )
 add_t8_test( NAME t8_gtest_forest_commit_parallel       SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_forest_commit.cxx )
 add_t8_test( NAME t8_gtest_forest_face_normal_serial    SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_forest_face_normal.cxx )
-add_t8_test( NAME t8_gtest_element_is_leaf_serial       SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_element_is_leaf.cxx )
+add_t8_test( NAME t8_gtest_element_is_leaf_parallel     SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_element_is_leaf.cxx t8_gtest_adapt_callbacks.cxx )
 add_t8_test( NAME t8_gtest_partition_data_parallel      SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_partition_data.cxx )
 
 add_t8_test( NAME t8_gtest_permute_hole_serial          SOURCES t8_gtest_main.cxx t8_forest_incomplete/t8_gtest_permute_hole.cxx )
@@ -126,7 +126,7 @@ add_t8_test( NAME t8_gtest_vtk_writer_parallel  SOURCES t8_gtest_main.cxx t8_IO/
 add_t8_test( NAME t8_gtest_nca_serial                   SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_nca.cxx )
 add_t8_test( NAME t8_gtest_pyra_connectivity_serial     SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_pyra_connectivity.cxx )
 add_t8_test( NAME t8_gtest_face_neigh_serial            SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_face_neigh.cxx )
-add_t8_test( NAME t8_gtest_get_linear_id_serial         SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_get_linear_id.cxx )
+add_t8_test( NAME t8_gtest_get_linear_id_serial    SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_get_linear_id.cxx )
 add_t8_test( NAME t8_gtest_ancestor_serial              SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_ancestor.cxx )
 add_t8_test( NAME t8_gtest_ancestor_id_serial           SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_ancestor_id.cxx )
 add_t8_test( NAME t8_gtest_element_count_leaves_serial  SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_element_count_leaves.cxx )
@@ -143,7 +143,6 @@ add_t8_test( NAME t8_gtest_pack_unpack_serial           SOURCES t8_gtest_main.cx
 add_t8_test( NAME t8_gtest_root_serial                  SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_root.cxx )
 add_t8_test( NAME t8_gtest_scheme_consistency_serial    SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_scheme_consistency.cxx )
 add_t8_test( NAME t8_gtest_input_equal_output_serial    SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_input_equal_output.cxx )
-add_t8_test( NAME t8_gtest_face_corner_serial           SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_face_corner.cxx )
 add_t8_test( NAME t8_gtest_set_linear_id_serial         SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_set_linear_id.cxx )
 
 if( T8CODE_BUILD_FORTRAN_INTERFACE AND T8CODE_ENABLE_MPI )

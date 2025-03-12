@@ -115,11 +115,9 @@ struct t8_geometry_analytic: public t8_geometry
    * \param[in] tolerance         Tolerance of the inside-check
    */
   void
-  t8_geom_point_batch_inside_element ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_locidx_t ltreeid,
-                                      [[maybe_unused]] const t8_element_t *element,
-                                      [[maybe_unused]] const double *points, [[maybe_unused]] const int num_points,
-                                      [[maybe_unused]] int *is_inside,
-                                      [[maybe_unused]] const double tolerance) const override
+  t8_geom_point_batch_inside_element (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
+                                      const double *points, const int num_points, int *is_inside,
+                                      const double tolerance) const override
   {
     SC_ABORTF ("Function not yet implemented");
   }

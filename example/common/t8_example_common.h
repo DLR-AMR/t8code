@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** file t8_example_common.hxx
+/** file t8_example_common.h
  * This header declares datatypes and functions that are used by multiple
  * examples of t8code. This includes adaptation function to adapt at a zero
  * level-set of a level-set function and various 2 and 3 dimensional vector
@@ -32,10 +32,9 @@
 
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_types/t8_vec.hxx>
 
 /** A levelset function in 3+1 space dimensions. */
-typedef double (*t8_example_level_set_fn) (const t8_3D_point &, double, void *);
+typedef double (*t8_example_level_set_fn) (const double[3], double, void *);
 
 /** Struct to handle refinement around a level-set function. */
 typedef struct
@@ -51,10 +50,12 @@ typedef struct
 /** Function pointer for real valued functions from d+1 space dimensions
  * functions f: R^d x R -> R */
 typedef double (*t8_scalar_function_1d_fn) (double x, double t);
-typedef double (*t8_scalar_function_2d_fn) (const t8_point<2> &x, const double t);
-typedef double (*t8_scalar_function_3d_fn) (const t8_3D_point &x, const double t);
+typedef double (*t8_scalar_function_2d_fn) (const double x[2], double t);
+typedef double (*t8_scalar_function_3d_fn) (const double x[3], double t);
 /** Function pointer for a vector valued function f: R^3 x R -> R */
-typedef void (*t8_flow_function_3d_fn) (const t8_3D_point &x_in, const double t, t8_3D_vec &x_out);
+typedef void (*t8_flow_function_3d_fn) (const double x_in[3], double t, double x_out[3]);
+
+T8_EXTERN_C_BEGIN ();
 
 /* function declarations */
 
@@ -103,7 +104,7 @@ t8_common_adapt_level_set (t8_forest_t forest, t8_forest_t forest_from, t8_locid
 
 typedef struct
 {
-  t8_3D_point M;
+  double M[3];
   /**< midpoint */
   double radius;
   /**< radius */
@@ -114,7 +115,7 @@ typedef struct
   * \return     dist (x,data->M) - data->radius
   */
 double
-t8_levelset_sphere (const t8_3D_point &x, double t, void *data);
+t8_levelset_sphere (const double x[3], double t, void *data);
 
 /** Returns always 1.
  * \return 1
@@ -176,66 +177,68 @@ t8_scalar3d_sint (const double x[3], double t);
  * \return |x| - 0.75
  */
 double
-t8_scalar3d_sphere_75_radius (const t8_3D_vec &x, const double t);
+t8_scalar3d_sphere_75_radius (const double x[3], double t);
 
 /** Level-set function of a sphere around M = (0.5,0.5,0.5) with radius 0.375
  * \return |x - M| - 0.375
  */
 double
-t8_scalar3d_sphere_05_midpoint_375_radius (const t8_3D_vec &x, const double t);
+t8_scalar3d_sphere_05_midpoint_375_radius (const double x[3], double t);
 
 /** Level-set function of a sphere around M = (0.3,0.3,0.3) with radius 0.25
  * \return |x - M| - 0.25
  */
 double
-t8_scalar3d_sphere_03_midpoint_25_radius (const t8_3D_vec &x, const double t);
+t8_scalar3d_sphere_03_midpoint_25_radius (const double x[3], double t);
 
 /** Level-set function of a sphere around M = (0.5,0.5,0) with radius 0.375
  * \return |x - M| - 0.375
  */
 double
-t8_scalar3d_sphere_05_0z_midpoint_375_radius (const t8_3D_vec &x, const double t);
+t8_scalar3d_sphere_05_0z_midpoint_375_radius (const double x[3], double t);
 /** Flow functions */
 
 /** Returns always 1 in each coordinate.
  */
 void
-t8_flow_constant_one_vec (const t8_3D_point &x, const double t, t8_3D_vec &x_out);
+t8_flow_constant_one_vec (const double x[3], double t, double x_out[3]);
 
 /** Sets the first coordinate to 1, all other to 0. */
 void
-t8_flow_constant_one_x_vec (const t8_3D_point &x, const double t, t8_3D_vec &x_ou);
+t8_flow_constant_one_x_vec (const double x[3], double t, double x_out[3]);
 
 /** Sets the first and second coordinate to 1, the third to 0. */
 void
-t8_flow_constant_one_xy_vec (const t8_3D_point &x, const double t, t8_3D_vec &x_out);
+t8_flow_constant_one_xy_vec (const double x[3], double t, double x_out[3]);
 
 /** Sets all coordinates to a nonzero constant. */
 void
-t8_flow_constant_one_xyz_vec (const t8_3D_point &x, const double t, t8_3D_vec &x_out);
+t8_flow_constant_one_xyz_vec (const double x[3], double t, double x_out[3]);
 
 /** Transform the unit square to [-0.5,0.5]^2 and computes
  * x = 2pi*y, y = -2pi*x
  */
 void
-t8_flow_rotation_2d (const t8_3D_point &x, const double t, t8_3D_vec &x_out);
+t8_flow_rotation_2d (const double x[3], double t, double x_out[3]);
 
 void
-t8_flow_compressible (const t8_3D_point &x_in, const double t, t8_3D_vec &x_out);
+t8_flow_compressible (const double x_in[3], double t, double x_out[3]);
 /** Incompressible flow in unit cube */
 void
-t8_flow_incomp_cube_flow (const t8_3D_point &x, const double t, t8_3D_vec &x_out);
+t8_flow_incomp_cube_flow (const double x[3], double t, double x_out[3]);
 
 /** 2d flow around a circle with radius R = 1 and
  * constant inflow with x-speed U = 1. 
  * See https://doi.org/10.13140/RG.2.2.34714.11203 */
 void
-t8_flow_around_circle (const t8_3D_point &x, const double t, t8_3D_vec &x_out);
+t8_flow_around_circle (const double x[3], double t, double x_out[3]);
 
 void
-t8_flow_stokes_flow_sphere_shell (const t8_3D_point &x_in, const double t, t8_3D_vec &x_out);
+t8_flow_stokes_flow_sphere_shell (const double x[3], double t, double x_out[3]);
 
 void
-t8_flow_around_circle_with_angular_velocity (const t8_3D_point &x, const double t, t8_3D_vec &x_out);
+t8_flow_around_circle_with_angular_velocity (const double x[3], double t, double x_out[]);
+
+T8_EXTERN_C_END ();
 
 #endif /* !T8_EXAMPLE_COMMON_H */

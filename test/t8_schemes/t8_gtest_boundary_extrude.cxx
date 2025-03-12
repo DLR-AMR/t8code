@@ -84,7 +84,7 @@ class class_test_boundary_extrude: public TestDFS {
 
 TEST_P (class_test_boundary_extrude, test_boundary_extrude_dfs)
 {
-#if T8CODE_TEST_LEVEL >= 1
+#ifdef T8_ENABLE_LESS_TESTS
   const int maxlvl = 4;
 #else
   const int maxlvl = 6;

@@ -36,7 +36,7 @@
 #define NC_COLLECTIVE 1
 #endif
 #include <t8_eclass.h>
-#include <t8_types/t8_vec.hxx>
+#include <t8_vec.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
@@ -60,7 +60,7 @@ T8_EXTERN_C_BEGIN ();
 */
 struct t8_example_netcdf_adapt_data
 {
-  t8_3D_point midpoint;             /* Midpoint of a aphere */
+  double midpoint[3];               /* Midpoint of a aphere */
   double refine_if_inside_radius;   /* refine all elements inside this radius from the sphere's midpoint */
   double coarsen_if_outside_radius; /* coarsen all element families outside of this radius from the sphere's midpoint */
 };
@@ -71,11 +71,10 @@ struct t8_example_netcdf_adapt_data
 */
 int
 t8_example_netcdf_adapt_fn (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                            [[maybe_unused]] const t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
-                            [[maybe_unused]] const t8_scheme *scheme, const int is_family,
-                            [[maybe_unused]] const int num_elements, t8_element_t *elements[])
+                            const t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme *scheme,
+                            const int is_family, const int num_elements, t8_element_t *elements[])
 {
-  t8_3D_point element_centroid;
+  double element_centroid[3];
   double distance;
 
   /* Retrieve the adapt_data which holds the information regarding the adaption process of a forest */
@@ -83,10 +82,10 @@ t8_example_netcdf_adapt_fn (t8_forest_t forest, t8_forest_t forest_from, t8_loci
     = (const struct t8_example_netcdf_adapt_data *) t8_forest_get_user_data (forest);
 
   /* Compute the element's centroid */
-  t8_forest_element_centroid (forest_from, which_tree, elements[0], element_centroid.data ());
+  t8_forest_element_centroid (forest_from, which_tree, elements[0], element_centroid);
 
   /* Compute the distance from the element's midpoint to the midpoint of the centered sphere inside the hypercube */
-  distance = t8_dist (element_centroid, adapt_data->midpoint);
+  distance = t8_vec_dist (element_centroid, adapt_data->midpoint);
 
   /* Decide whether the element (or its family) has to be refined or coarsened */
   if (distance < adapt_data->refine_if_inside_radius) {
@@ -117,9 +116,9 @@ t8_example_netcdf_adapt (t8_forest_t forest)
 
   /* The adapt data which controls which elements will be refined or corsened based on the given radii */
   struct t8_example_netcdf_adapt_data adapt_data = {
-    t8_3D_point ({ 0.5, 0.5, 0.5 }), /* Midpoints of the sphere. */
-    0.2,                             /* Refine if inside this radius. */
-    0.4                              /* Coarsen if outside this radius. */
+    { 0.5, 0.5, 0.5 }, /* Midpoints of the sphere. */
+    0.2,               /* Refine if inside this radius. */
+    0.4                /* Coarsen if outside this radius. */
   };
 
   /* Create the adapted forest with the given adapt_function. */
@@ -139,11 +138,9 @@ t8_example_netcdf_adapt (t8_forest_t forest)
 * \note It is assumed that each user-variable in \a ext_vars holds one value for each element in the mesh/forest. If no additional variables should be written in the netCDF file, set \a num_additional_vars equal to zero and pass a NULL-pointer as \a ext_vars.
 */
 static void
-t8_example_time_netcdf_writing_operation ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] sc_MPI_Comm comm,
-                                          [[maybe_unused]] int netcdf_var_storage_mode,
-                                          [[maybe_unused]] int netcdf_var_mpi_access,
-                                          [[maybe_unused]] const char *title, [[maybe_unused]] int num_additional_vars,
-                                          [[maybe_unused]] t8_netcdf_variable_t *ext_vars[])
+t8_example_time_netcdf_writing_operation (t8_forest_t forest, sc_MPI_Comm comm, int netcdf_var_storage_mode,
+                                          int netcdf_var_mpi_access, const char *title, int num_additional_vars,
+                                          t8_netcdf_variable_t *ext_vars[])
 {
 #if T8_WITH_NETCDF_PAR
   double start_time, end_time, duration, global;
