@@ -315,7 +315,7 @@ struct t8_standalone_scheme
    * \param [in,out] elem The element that is filled with the root
    */
   static constexpr void
-  get_root (t8_element_t *elem) noexcept
+  set_to_root (t8_element_t *elem) noexcept
   {
     t8_standalone_element<TEclass> *el = (t8_standalone_element<TEclass> *) elem;
     el->level = 0;
@@ -914,7 +914,7 @@ struct t8_standalone_scheme
 
     t8_standalone_element<TEclass> *el = (t8_standalone_element<TEclass> *) elem;
 
-    get_root ((t8_element_t *) el);
+    set_to_root ((t8_element_t *) el);
 
     /* There is only one element at level 0, so it must be root */
     if (level == 0) {

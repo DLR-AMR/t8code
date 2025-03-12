@@ -254,7 +254,7 @@ t8_forest_min_nonempty_level (t8_cmesh_t cmesh, const t8_scheme *scheme)
     if (cmesh->num_trees_per_eclass[eclass] > 0) {
       /* Compute the number of children of the root tree. */
       scheme->element_new ((t8_eclass_t) eclass, 1, &element);
-      scheme->get_root ((t8_eclass_t) eclass, element);
+      scheme->set_to_root ((t8_eclass_t) eclass, element);
       min_num_children = SC_MIN (min_num_children, scheme->element_get_num_children ((t8_eclass_t) eclass, element));
       scheme->element_destroy ((t8_eclass_t) eclass, 1, &element);
       /* Compute the minimum possible maximum refinement level */
@@ -1320,7 +1320,7 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
     /* we do this by first creating a level 0 child of the tree, then
      * calculating its first/last descendant */
     scheme->element_new (eclass, 1, &element);
-    scheme->get_root (eclass, element);
+    scheme->set_to_root (eclass, element);
     scheme->element_new (eclass, 1, &desc);
     if (first_or_last == 0) {
       scheme->element_get_first_descendant (eclass, element, desc, forest->maxlevel);
