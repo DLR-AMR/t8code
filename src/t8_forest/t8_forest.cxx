@@ -2424,7 +2424,6 @@ t8_forest_element_is_leaf_or_ghost (const t8_forest_t forest, const t8_element_t
   }
   else {
     T8_ASSERT (0 <= local_tree && local_tree < t8_forest_get_num_ghost_trees (forest));
-    T8_ASSERT (!t8_forest_tree_is_local (forest, local_tree));
   }
 #endif
 
