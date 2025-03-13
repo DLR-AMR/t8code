@@ -111,6 +111,15 @@ t8_geometry_get_type (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 int
 t8_geometry_tree_negative_volume (const t8_cmesh_t cmesh, const t8_gloidx_t gtreeid);
 
+/**
+ * Returns the number of geometries in a cmesh.
+ * 
+ * \param [in] cmesh    The cmesh.
+ * \return              The number of geometries.
+ */
+int
+t8_geometry_get_num_geometries (const t8_cmesh_t cmesh);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_GEOMETRY_H */

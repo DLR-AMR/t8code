@@ -280,7 +280,7 @@ t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim, const char *cme
       partition = 1;
     }
     /* Create a cmesh from the given mesh files */
-    cmesh = t8_cmesh_from_msh_file ((char *) msh_file, partition, comm, mesh_dim, 0, use_cad);
+    cmesh = t8_cmesh_from_msh_file ((char *) msh_file, partition, comm, mesh_dim, 0, use_cad, true);
   }
   else {
     T8_ASSERT (cmesh_file != NULL);

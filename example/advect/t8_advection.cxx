@@ -841,7 +841,7 @@ t8_advect_create_cmesh (sc_MPI_Comm comm, int cube_type, const char *mshfile, in
     t8_cmesh_t cmesh, cmesh_partition;
     T8_ASSERT (mshfile != NULL);
 
-    cmesh = t8_cmesh_from_msh_file (mshfile, 0, comm, dim, 0, use_cad_geometry);
+    cmesh = t8_cmesh_from_msh_file (mshfile, 0, comm, dim, 0, use_cad_geometry, true);
     /* The partitioning of the cad geometry is not yet available */
     if (use_cad_geometry) {
       t8_productionf ("cmesh was not partitioned. Partitioning is not yet "

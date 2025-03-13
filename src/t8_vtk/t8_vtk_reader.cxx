@@ -49,65 +49,6 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/**
- * If the vertices of a tree describe a negative \param, 
- * permute the tree vertices. 
- * 
- * \param[in, out] tree_vertices The vertices of a tree
- * \param[in] eclass             The eclass of the tree.
- */
-void
-t8_cmesh_correct_volume (double *tree_vertices, t8_eclass_t eclass)
-{
-  /* The \param described is negative. We need to change vertices.
-   * For tets we switch 0 and 3.
-   * For prisms we switch 0 and 3, 1 and 4, 2 and 5.
-   * For hexahedra we switch 0 and 4, 1 and 5, 2 and 6, 3 and 7.
-   * For pyramids we switch 0 and 4 */
-  double temp;
-  int num_switches = 0;
-  int switch_indices[4] = { 0 };
-  int iswitch;
-  T8_ASSERT (t8_eclass_to_dimension[eclass] == 3);
-  t8_debugf ("Correcting negative volume.\n");
-  switch (eclass) {
-  case T8_ECLASS_TET:
-    /* We switch vertex 0 and vertex 3 */
-    num_switches = 1;
-    switch_indices[0] = 3;
-    break;
-  case T8_ECLASS_PRISM:
-    num_switches = 3;
-    switch_indices[0] = 3;
-    switch_indices[1] = 4;
-    switch_indices[2] = 5;
-    break;
-  case T8_ECLASS_HEX:
-    num_switches = 4;
-    switch_indices[0] = 4;
-    switch_indices[1] = 5;
-    switch_indices[2] = 6;
-    switch_indices[3] = 7;
-    break;
-  case T8_ECLASS_PYRAMID:
-    num_switches = 1;
-    switch_indices[0] = 4;
-    break;
-  default:
-    SC_ABORT_NOT_REACHED ();
-  }
-
-  for (iswitch = 0; iswitch < num_switches; ++iswitch) {
-    /* We switch vertex 0 + iswitch and vertex switch_indices[iswitch] */
-    for (int i = 0; i < 3; i++) {
-      temp = tree_vertices[3 * iswitch + i];
-      tree_vertices[3 * iswitch + i] = tree_vertices[3 * switch_indices[iswitch] + i];
-      tree_vertices[3 * switch_indices[iswitch] + i] = temp;
-    }
-  }
-  T8_ASSERT (!t8_cmesh_tree_vertices_negative_volume (eclass, tree_vertices, t8_eclass_num_vertices[eclass]));
-}
-
 #if T8_WITH_VTK
 
 vtk_read_success_t
@@ -272,10 +213,6 @@ t8_vtk_iterate_cells (vtkSmartPointer<vtkDataSet> vtkGrid, t8_cmesh_t cmesh, con
     for (int ipoint = 0; ipoint < num_points; ipoint++) {
       points->GetPoint (t8_element_shape_vtk_corner_number (cell_type, ipoint), &vertices[3 * ipoint]);
     }
-    /* The order of the vertices in vtk might give a tree with negative \param */
-    if (t8_cmesh_tree_vertices_negative_volume (cell_type, vertices, num_points)) {
-      t8_cmesh_correct_volume (vertices, cell_type);
-    }
     t8_cmesh_set_tree_vertices (cmesh, tree_id, vertices, num_points);
 
     /* TODO: Avoid magic numbers in the attribute setting. */
@@ -342,13 +279,15 @@ t8_vtk_partition (t8_cmesh_t cmesh, const int mpirank, const int mpisize, t8_glo
 
 t8_cmesh_t
 t8_vtkGrid_to_cmesh (vtkSmartPointer<vtkDataSet> vtkGrid, const int partition, const int main_proc,
-                     const int distributed_grid, sc_MPI_Comm comm)
+                     const int distributed_grid, sc_MPI_Comm comm, const int negative_volume_check)
 {
   t8_cmesh_t cmesh;
   int mpisize;
   int mpirank;
   int mpiret;
   t8_cmesh_init (&cmesh);
+  if (!negative_volume_check)
+    t8_cmesh_disable_negative_volume_check (cmesh);
   /* Get the size of the communicator and the rank of the process. */
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);

@@ -41,16 +41,19 @@ T8_EXTERN_C_BEGIN ();
  * Given a pointer to a vtkDataSet a cmesh representing the vtkDataSet is
  * constructed and can be shared over the processes. 
  * 
- * \param[in] vtkGrid A pointer to a vtkDataSet
- * \param[in] partition Flag if the cmesh should be partitioned
- * \param[in] main_proc The main reading process
- * \param[in] distributed_grid Flag if the vtkGrid is distributed over several procs. 
- * \param[in] comm The communicator. 
- * \return t8_cmesh_t 
+ * \param[in] vtkGrid               A pointer to a vtkDataSet.
+ * \param[in] partition             Flag if the cmesh should be partitioned.
+ * \param[in] main_proc             The main reading process.
+ * \param[in] distributed_grid      Flag if the vtkGrid is distributed over several procs.
+ * \param[in] comm                  The communicator.
+ * \param[in] negative_volume_check false disables the check for cells with negative volumes.
+ *                                  The negative volume check is generally only done in debug mode.
+ *                                  We recommend to enable the negative volume check.
+ * \return                          The committed cmesh.
  */
 t8_cmesh_t
 t8_vtkGrid_to_cmesh (vtkSmartPointer<vtkDataSet> vtkGrid, const int partition, const int main_proc,
-                     const int distributed_grid, sc_MPI_Comm comm);
+                     const int distributed_grid, sc_MPI_Comm comm, const int negative_volume_check = 1);
 
 /**
  * Given a pointer to a vtkDataSet a vtkPointSet storing a set of points of
@@ -112,16 +115,19 @@ t8_vtk_reader_pointSet (const char *filename, const int partition, const int mai
  * t8code is linked against VTK. 
  * 
  * 
- * \param[in] filename      The name of the file
- * \param[in] partition     Flag if the constructed mesh should be partitioned
- * \param[in] main_proc     The main reading processor
- * \param[in] comm          An mpi-communicator
- * \param[in] vtk_file_type A vtk-filetype that is readable by t8code. 
- * \return                  A committed cmesh.
+ * \param[in] filename              The name of the file.
+ * \param[in] partition             Flag if the constructed mesh should be partitioned.
+ * \param[in] main_proc             The main reading processor.
+ * \param[in] comm                  An mpi-communicator.
+ * \param[in] vtk_file_type         A vtk-filetype that is readable by t8code. 
+ * \param[in] negative_volume_check false disables the check for cells with negative volumes.
+ *                                  The negative volume check is generally only done in debug mode.
+ *                                  We recommend to enable the negative volume check.
+ * \return                          A committed cmesh.
  */
 t8_cmesh_t
 t8_vtk_reader_cmesh (const char *filename, const int partition, const int main_proc, sc_MPI_Comm comm,
-                     const vtk_file_type_t vtk_file_type);
+                     const vtk_file_type_t vtk_file_type, const int negative_volume_check = 1);
 
 T8_EXTERN_C_END ();
 

@@ -125,7 +125,7 @@ t8_cmesh_is_committed (const t8_cmesh_t cmesh)
 
 #if T8_ENABLE_DEBUG
 int
-t8_cmesh_validate_geometry (const t8_cmesh_t cmesh)
+t8_cmesh_validate_geometry (const t8_cmesh_t cmesh, const int check_for_negative_volume)
 {
   /* After a cmesh is committed, check whether all trees in a cmesh are compatible
  * with their geometry and if they have positive volume.
@@ -150,7 +150,7 @@ t8_cmesh_validate_geometry (const t8_cmesh_t cmesh)
         t8_debugf ("Detected incompatible geometry for tree %li\n", (long) itree);
         return false;
       }
-      if (geometry_compatible) {
+      else if (check_for_negative_volume) {
         /* Check for negative volume. This only makes sense if the geometry is valid for the tree. */
         const int negative_volume
           = cmesh->geometry_handler->tree_negative_volume (cmesh, t8_cmesh_get_global_id (cmesh, itree));
@@ -204,6 +204,7 @@ t8_cmesh_init (t8_cmesh_t *pcmesh)
    * It will get initialized either when a geometry is registered
    * or when the cmesh gets committed. */
   cmesh->geometry_handler = NULL;
+  cmesh->negative_volume_check = 1;
 
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 }
@@ -509,107 +510,6 @@ t8_cmesh_set_tree_class (t8_cmesh_t cmesh, const t8_gloidx_t gtree_id, const t8_
 #endif
 }
 
-/* Given a set of vertex coordinates for a tree of a given eclass.
- * Query whether the geometric volume of the tree with this coordinates
- * would be negative.
- * Returns true if a tree of the given eclass with the given vertex
- * coordinates does have negative volume.
- */
-int
-t8_cmesh_tree_vertices_negative_volume (const t8_eclass_t eclass, const double *vertices, const int num_vertices)
-{
-  T8_ASSERT (num_vertices == t8_eclass_num_vertices[eclass]);
-
-  /* Points and lines do not have a volume orientation. */
-  if (t8_eclass_to_dimension[eclass] < 2) {
-    return 0;
-  }
-
-  T8_ASSERT (eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_TET
-             || eclass == T8_ECLASS_HEX || eclass == T8_ECLASS_PRISM || eclass == T8_ECLASS_PYRAMID);
-
-  /* Skip negative volume check (orientation of face normal) of 2D elements
-   * when z-coordinates are not (almost) zero. */
-  if (t8_eclass_to_dimension[eclass] < 3) {
-    for (int ivert = 0; ivert < num_vertices; ivert++) {
-      const double z_coordinate = vertices[3 * ivert + 2];
-      if (std::abs (z_coordinate) > 10 * T8_PRECISION_EPS) {
-        return false;
-      }
-    }
-  }
-
-  /*
-   *      z             For 2D meshes we enforce the right-hand-rule in terms
-   *      |             of node ordering. The volume is defined by the parallelepiped
-   *      | 2- - -(3)   spanned by the vectors between nodes 0:1 and 0:2 as well as the
-   *      |/____ /      unit vector in z-direction. This definition works for both triangles and quads.
-   *      0     1
-   *
-   *      6 ______  7   For Hexes and pyramids, if the vertex 4 is below the 0-1-2-3 plane,
-   *       /|     /     the volume is negative. This is the case if and only if
-   *    4 /_____5/|     the scalar product of v_4 with the cross product of v_1 and v_2 is
-   *      | | _ |_|     smaller 0:
-   *      | 2   | / 3   < v_4, v_1 x v_2 > < 0
-   *      |/____|/
-   *     0      1
-   *
-   *
-   *    For tets/prisms, if the vertex 3 is below/above the 0-1-2 plane, the volume
-   *    is negative. This is the case if and only if
-   *    the scalar product of v_3 with the cross product of v_1 and v_2 is
-   *    greater 0:
-   *
-   *    < v_3, v_1 x v_2 > > 0
-   *
-   */
-
-  /* Build the vectors v_i as vertices_i - vertices_0. */
-  double v_1[3], v_2[3], v_j[3], cross[3], sc_prod;
-
-  if (eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_QUAD) {
-    for (int i = 0; i < 3; i++) {
-      v_1[i] = vertices[3 + i] - vertices[i];
-      v_2[i] = vertices[6 + i] - vertices[i];
-    }
-
-    /* Unit vector in z-direction. */
-    v_j[0] = 0.0;
-    v_j[1] = 0.0;
-    v_j[2] = 1.0;
-
-    /* Compute cross = v_1 x v_2. */
-    t8_cross_3D (v_1, v_2, cross);
-    /* Compute sc_prod = <v_j, cross>. */
-    sc_prod = t8_dot (v_j, cross);
-
-    T8_ASSERT (sc_prod != 0);
-    return sc_prod < 0;
-  }
-
-  int j;
-  if (eclass == T8_ECLASS_TET || eclass == T8_ECLASS_PRISM) {
-    /* In the tet/prism case, the third vector is v_3 */
-    j = 3;
-  }
-  else {
-    /* For pyramids and Hexes, the third vector is v_4 */
-    j = 4;
-  }
-  for (int i = 0; i < 3; i++) {
-    v_1[i] = vertices[3 + i] - vertices[i];
-    v_2[i] = vertices[6 + i] - vertices[i];
-    v_j[i] = vertices[3 * j + i] - vertices[i];
-  }
-  /* compute cross = v_1 x v_2 */
-  t8_cross_3D (v_1, v_2, cross);
-  /* Compute sc_prod = <v_j, cross> */
-  sc_prod = t8_dot (v_j, cross);
-
-  T8_ASSERT (sc_prod != 0);
-  return eclass == T8_ECLASS_TET ? sc_prod > 0 : sc_prod < 0;
-}
-
 void
 t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, const t8_gloidx_t gtree_id, const double *vertices,
                             const int num_vertices)
@@ -672,57 +572,88 @@ t8_cmesh_set_profiling (t8_cmesh_t cmesh, const int set_profiling)
   }
 }
 
-/* returns true if cmesh_a equals cmesh_b */
 int
 t8_cmesh_is_equal (const t8_cmesh_t cmesh_a, const t8_cmesh_t cmesh_b)
+{
+  return t8_cmesh_is_equal_ext (cmesh_a, cmesh_b, 1);
+};
+
+/* returns true if cmesh_a equals cmesh_b */
+int
+t8_cmesh_is_equal_ext (const t8_cmesh_t cmesh_a, const t8_cmesh_t cmesh_b, const int same_tree_order)
 /* TODO: rewrite */
 {
-  int is_equal;
   T8_ASSERT (cmesh_a != NULL && cmesh_b != NULL);
 
   if (cmesh_a == cmesh_b) {
     return 1;
   }
   /* check entries that are numbers */
-  is_equal = cmesh_a->committed != cmesh_b->committed || cmesh_a->dimension != cmesh_b->dimension
-             || cmesh_a->set_partition != cmesh_b->set_partition || cmesh_a->mpirank != cmesh_b->mpirank
-             || cmesh_a->mpisize != cmesh_b->mpisize || cmesh_a->num_trees != cmesh_b->num_trees
-             || cmesh_a->num_local_trees != cmesh_b->num_local_trees || cmesh_a->num_ghosts != cmesh_b->num_ghosts
-             || cmesh_a->first_tree != cmesh_b->first_tree;
-  if (is_equal != 0) {
+  if (cmesh_a->committed != cmesh_b->committed || cmesh_a->dimension != cmesh_b->dimension
+      || cmesh_a->set_partition != cmesh_b->set_partition || cmesh_a->mpirank != cmesh_b->mpirank
+      || cmesh_a->mpisize != cmesh_b->mpisize || cmesh_a->num_trees != cmesh_b->num_trees
+      || cmesh_a->num_local_trees != cmesh_b->num_local_trees || cmesh_a->num_ghosts != cmesh_b->num_ghosts
+      || cmesh_a->first_tree != cmesh_b->first_tree) {
     return 0;
   }
   /* check arrays */
-  is_equal
-    = memcmp (cmesh_a->num_trees_per_eclass, cmesh_b->num_trees_per_eclass, T8_ECLASS_COUNT * sizeof (t8_gloidx_t));
-  is_equal = is_equal
-             || memcmp (cmesh_a->num_local_trees_per_eclass, cmesh_b->num_local_trees_per_eclass,
-                        T8_ECLASS_COUNT * sizeof (t8_locidx_t));
+  if (memcmp (cmesh_a->num_trees_per_eclass, cmesh_b->num_trees_per_eclass, T8_ECLASS_COUNT * sizeof (t8_gloidx_t))) {
+    return 0;
+  }
 
-  /* check tree_offsets */
-  if (cmesh_a->tree_offsets != NULL) {
-    if (cmesh_b->tree_offsets == NULL) {
+  if (memcmp (cmesh_a->num_local_trees_per_eclass, cmesh_b->num_local_trees_per_eclass,
+              T8_ECLASS_COUNT * sizeof (t8_locidx_t))) {
+    return 0;
+  }
+
+  if (same_tree_order) {
+    /* check tree_offsets */
+    if (cmesh_a->tree_offsets != NULL) {
+      if (cmesh_b->tree_offsets == NULL) {
+        return 0;
+      }
+      else {
+        if (!t8_shmem_array_is_equal (cmesh_a->tree_offsets, cmesh_b->tree_offsets))
+          return 0;
+      }
+    }
+  }
+  /* check trees */
+  if (same_tree_order) {
+    if (cmesh_a->committed && !t8_cmesh_trees_is_equal (cmesh_a, cmesh_a->trees, cmesh_b->trees, 1)) {
+      /* if we have committed check tree arrays */
+      t8_global_productionf ("Failed on equal trees");
       return 0;
     }
     else {
-      is_equal = is_equal || !t8_shmem_array_is_equal (cmesh_a->tree_offsets, cmesh_b->tree_offsets);
+      if (!cmesh_a->committed && !t8_stash_is_equal (cmesh_a->stash, cmesh_b->stash)) {
+        /* if we have not committed check stash arrays */
+        return 0;
+      }
     }
-  }
-  if (is_equal != 0) {
-    return 0;
-  }
-  /* check trees */
-  if (cmesh_a->committed && !t8_cmesh_trees_is_equal (cmesh_a, cmesh_a->trees, cmesh_b->trees)) {
-    /* if we have committed check tree arrays */
-    return 0;
   }
   else {
-    if (!cmesh_a->committed && !t8_stash_is_equal (cmesh_a->stash, cmesh_b->stash)) {
-      /* if we have not committed check stash arrays */
+    if (cmesh_a->committed && !t8_cmesh_trees_is_equal (cmesh_a, cmesh_a->trees, cmesh_b->trees, 0)) {
+      /* if we have committed check tree arrays */
+      t8_global_productionf ("Failed on equal trees %i",
+                             t8_cmesh_trees_is_equal (cmesh_a, cmesh_a->trees, cmesh_b->trees, 0));
       return 0;
     }
+    else {
+      if (!cmesh_a->committed && !t8_stash_is_equal (cmesh_a->stash, cmesh_b->stash)) {
+        /* if we have not committed check stash arrays */
+        return 0;
+      }
+    }
   }
+
   return 1;
+}
+
+void
+t8_cmesh_disable_negative_volume_check (t8_cmesh_t cmesh)
+{
+  cmesh->negative_volume_check = 0;
 }
 
 int

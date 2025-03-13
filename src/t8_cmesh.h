@@ -99,30 +99,15 @@ int
 t8_cmesh_is_committed (const t8_cmesh_t cmesh);
 
 #ifdef T8_ENABLE_DEBUG
-/** Check the geometry of the mesh for validity.
- * \param [in] cmesh            This cmesh is examined.
- * \return                      True if the geometry of the cmesh is valid.
+/** Check the geometry of the mesh for validity, this means checking if trees and their geometries 
+ *  are compatible and if they have negative volume.
+ * \param [in] cmesh                      This cmesh is examined.
+ * \param [in] check_for_negative_volume  Enable the negative volume check.
+ * \return                                True if the geometry of the cmesh is valid.
  */
 int
-t8_cmesh_validate_geometry (const t8_cmesh_t cmesh);
+t8_cmesh_validate_geometry (const t8_cmesh_t cmesh, const int check_for_negative_volume);
 #endif
-
-/** Given a set of vertex coordinates for a tree of a given eclass.
- * Query whether the geometric volume of the tree with this coordinates
- * would be negative.
- * \param [in]  eclass          The eclass of a tree.
- * \param [in]  vertices        The coordinates of the tree's vertices.
- * \param [in]  num_vertices    The number of vertices. \a vertices must hold
- *                              3 * \a num_vertices many doubles.
- *                              \a num_vertices must match \ref t8_eclass_num_vertices[\a eclass]
- * \return                      True if the geometric volume describe by \a vertices is negative.
- *                              False otherwise.
- * Returns true if a tree of the given eclass with the given vertex
- * coordinates does have negative volume.
- */
-/* TODO: write a test for this function */
-int
-t8_cmesh_tree_vertices_negative_volume (const t8_eclass_t eclass, const double *vertices, const int num_vertices);
 
 /* TODO: Currently it is not possible to destroy set_from before
  *       cmesh is destroyed. */
@@ -350,13 +335,24 @@ t8_cmesh_set_profiling (t8_cmesh_t cmesh, int set_profiling);
  *                              Orders, sequences, equivalences?
  * This function works on committed and uncommitted cmeshes.
  */
+
 int
-t8_cmesh_is_equal (t8_cmesh_t cmesh_a, t8_cmesh_t cmesh_b);
+t8_cmesh_is_equal_ext (const t8_cmesh_t cmesh_a, const t8_cmesh_t cmesh_b, const int same_tree_order);
 
 /** Check whether a cmesh is empty on all processes.
  * \param [in]  cmesh           A committed cmesh.
  * \return                      True (non-zero) if and only if the cmesh has trees at all.
  */
+
+int
+t8_cmesh_is_equal (const t8_cmesh_t cmesh_a, const t8_cmesh_t cmesh_b);
+
+/** Disable the check for negative volumes in trees during \ref t8_cmesh_commit.
+ * \param [in, out] cmesh
+ */
+void
+t8_cmesh_disable_negative_volume_check (t8_cmesh_t cmesh);
+
 int
 t8_cmesh_is_empty (t8_cmesh_t cmesh);
 

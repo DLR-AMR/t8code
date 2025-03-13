@@ -337,7 +337,6 @@ class t8_search: public t8_search_base {
   }
 
   virtual ~t8_search () = default;
-
   Udata *user_data;
 
  private:

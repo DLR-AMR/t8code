@@ -438,7 +438,7 @@ main (int argc, char **argv)
   else {
     std::string fp (fileprefix);
     /* Read in the naca mesh from the msh file and the naca geometry from the brep file */
-    cmesh = t8_cmesh_from_msh_file (fp.c_str (), 0, sc_MPI_COMM_WORLD, dim, 0, cad || geometry);
+    cmesh = t8_cmesh_from_msh_file (fp.c_str (), 0, sc_MPI_COMM_WORLD, dim, 0, cad || geometry, true);
     /* Construct a forest from the cmesh */
     forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, comm);
     T8_ASSERT (t8_forest_is_committed (forest));
