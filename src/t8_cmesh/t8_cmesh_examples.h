@@ -374,13 +374,16 @@ t8_cmesh_new_long_brick_pyramid (sc_MPI_Comm comm, int num_cubes);
 
 /** Construct \a num_trees many cubes each of length 1 connected along the x-axis 
  * without any additional attributes than the tree-vertices, or with additional attributes.
- * \param [in] num_trees     The number of trees along the x-axis
- * \param [in] set_attributes    If 1, set tree_id and num_trees as additional attribute for each tree.
- * \param [in] comm          The MPI communicator used to commit the cmesh
- * \return                   A cmesh with \a num_trees many hexahedrons.
+ * \param [in] num_trees       The number of trees along the x-axis
+ * \param [in] set_attributes  If 1, set tree_id and num_trees as additional attribute for each tree.
+ * \param [in] do_partition    Partition the cmesh.
+ * \param [in] comm            The MPI communicator used to commit the cmesh.
+ * \param [in] package_id      The package id to use for the cmesh. Cannot be the t8 or sc package id.
+ * \return                     A cmesh with \a num_trees many hexahedrons.
  */
 t8_cmesh_t
-t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees, const int set_attributes, const int do_partition, sc_MPI_Comm comm);
+t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees, const int set_attributes, const int do_partition, sc_MPI_Comm comm,
+                           const int package_id);
 
 /** Construct a quadrangulated disk of given radius.
  * \param [in] radius        Radius of the sphere.

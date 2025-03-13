@@ -22,6 +22,7 @@
 
 #include <gtest/gtest.h>
 #include <t8.h>
+#include <test/t8_gtest_macros.hxx>
 
 int
 main (int argc, char **argv)
