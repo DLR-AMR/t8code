@@ -1432,17 +1432,6 @@ t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_lineari
     /* No element has id smaller than the given one. */
     return -1;
   }
-#if T8_ENABLE_DEBUG
-  t8_debugf("[D] print array.\n", element_id);
-  const size_t num_elements = t8_element_array_get_count (elements);
-  for(size_t ielem = 0; ielem < num_elements; ++ielem){
-    const t8_element_t *elem = t8_element_array_index_int (elements, ielem);
-    scheme->element_is_valid (tree_class, elem);
-    scheme->element_debug_print (tree_class, elem);
-  }
-  t8_debugf("[D] start binary search \n");
-  fflush(stdout);
-#endif
 
   /* We search for the first element in the array that is greater than the given element id. */
   auto elem_iter
@@ -4005,7 +3994,6 @@ t8_forest_tree_get_leaves (const t8_forest_t forest, const t8_locidx_t ltree_id)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (t8_forest_tree_is_local (forest, ltree_id));
-  t8_debugf("[D] get leaves of tree %d\n", ltree_id);
   return &t8_forest_get_tree (forest, ltree_id)->elements;
 }
 
