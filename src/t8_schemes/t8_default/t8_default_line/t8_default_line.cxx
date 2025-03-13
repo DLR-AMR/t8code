@@ -258,7 +258,7 @@ t8_default_scheme_line::element_set_linear_id (t8_element_t *elem, int level, t8
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= T8_DLINE_MAXLEVEL);
-  T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << level);
+  T8_ASSERT (id < ((t8_linearidx_t) 1) << level);
 
   t8_dline_init_linear_id ((t8_default_line_t *) elem, level, id);
 }

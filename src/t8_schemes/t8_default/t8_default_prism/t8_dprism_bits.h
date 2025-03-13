@@ -156,19 +156,18 @@ void
 t8_dprism_child (const t8_dprism_t *p, int childid, t8_dprism_t *child);
 
 /** Return the shape of a face.
- * \param [in] p    Input prism.
  * \param [in] face A face id for \a p.
  * \return  The shape of \a face.
  */
 t8_element_shape_t
-t8_dprism_face_shape (const t8_dprism_t *p, int face);
+t8_dprism_face_shape (int face);
 
 /** Compute the number of children at a given face.
   * \param [in] p   Input prism.
   * \param [in] face The face number
   * \return     Number of Children at \a face*/
 int
-t8_dprism_num_face_children (const t8_dprism_t *p, int face);
+t8_dprism_num_face_children (int face);
 
 /** Compute the face neighbor of a prism.
  * \param [in]     p      Input prism.
@@ -181,16 +180,14 @@ int
 t8_dprism_face_neighbour (const t8_dprism_t *p, int face, t8_dprism_t *neigh);
 
 /** Return the corner number of a prism corresponding to a given face corner.
-  * \param [in] p       Input prism.
   * \param [in] face    The face number.
   * \param [in] corner  A corner of \a face
   * \return             The corner index of \a p corresponding to the \a corner-th corner of \a face.
   */
 int
-t8_dprism_get_face_corner (const t8_dprism_t *p, int face, int corner);
+t8_dprism_get_face_corner (int face, int corner);
 
 /** Compute the 8 children of a prism, array version.
- * \param [in]     p  Input prism.
  * \param [in,out] c  Pointers to the 8 computed children in Morton order.
  *
  */
@@ -218,13 +215,11 @@ t8_dprism_children_at_face (const t8_dprism_t *p, int face, t8_dprism_t **childr
 
 /** Given a face of a prism and a child number of a child of that face, return the face number of the child of the 
  * prism that matches the child face.
- * \param [in]  elem        The prism.
  * \param [in]  face        The number of the face.
- * \param [in]  face_child  The child number of a child of the face prism.
  * \return                  The face number of the face of a child of \a p that coincides with \a face_child.
  */
 int
-t8_dprism_face_child_face (const t8_dprism_t *elem, int face, int face_child);
+t8_dprism_face_child_face (int face);
 
 /** Given a face of a prism return the face number of the parent of the prism that matches the prism's face. 
  * Or return -1 if no face of the parent matches the face.
@@ -238,13 +233,12 @@ t8_dprism_face_parent_face (const t8_dprism_t *prism, int face);
 
 /** Given a prism and a face of this prism. If the face lies on the tree boundary, return the face number of the tree 
  * face. If not the return value is arbitrary.
- * \param [in] p    The prism.
  * \param [in] face The index of a face of \a elem.
  * \return          The index of the tree face that \a face is a subface of, if \a face is on a tree boundary.
  *                  Any arbitrary integer if \a is not at a tree boundary.
  */
 int
-t8_dprism_tree_face (const t8_dprism_t *p, int face);
+t8_dprism_tree_face (int face);
 
 /** Given a boundary face inside a root tree's face construct the element inside the root tree that has the given face 
  * as a face.
