@@ -291,7 +291,7 @@ die_ele:
 
 /* Open .neigh file and read element neighbor information
  * On success T8_SUBROUTINE_SUCCESS is returned.
- * On failure T8_SUBROUTINE_FAILED is returned. */
+ * On failure T8_SUBROUTINE_FAILURE is returned. */
 static int
 t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset, char *filename, int dim)
 {
@@ -506,7 +506,7 @@ die_neigh:
     fclose (fp);
   }
   free (line);
-  return T8_SUBROUTINE_FAILED;
+  return T8_SUBROUTINE_FAILURE;
 }
 
 /* TODO: remove do_dup argument */
@@ -559,7 +559,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_C
         /* read .neigh file */
         snprintf (current_file, BUFSIZ, "%s.neigh", fileprefix);
         retval = t8_cmesh_triangle_read_neigh (cmesh, corner_offset, current_file, dim);
-        if (retval == T8_SUBROUTINE_FAILED) {
+        if (retval == T8_SUBROUTINE_FAILURE) {
           t8_global_errorf ("Error while parsing file %s.\n", current_file);
           t8_cmesh_unref (&cmesh);
           return NULL;
@@ -639,7 +639,7 @@ t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix, int partition, sc_
         /* read .neigh file */
         snprintf (current_file, BUFSIZ, "%s.neigh", fileprefix);
         retval = t8_cmesh_triangle_read_neigh (cmesh, corner_offset, current_file, dim);
-        if (retval == T8_SUBROUTINE_FAILED) {
+        if (retval == T8_SUBROUTINE_FAILURE) {
           t8_global_errorf ("Error while parsing file %s.\n", current_file);
           t8_cmesh_unref (&cmesh);
         }

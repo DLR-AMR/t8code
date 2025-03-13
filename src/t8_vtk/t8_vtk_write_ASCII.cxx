@@ -696,7 +696,7 @@ t8_forest_vtk_write_cells (t8_forest_t forest, FILE *vtufile, const int write_tr
 t8_forest_vtk_cell_failure:
   /* Something went wrong */
   t8_errorf ("Error when writing cell data to forest vtk file.\n");
-  return T8_SUBROUTINE_FAILED;
+  return T8_SUBROUTINE_FAILURE;
 }
 
 /* Write the cell data to an open file stream.
@@ -776,7 +776,7 @@ t8_forest_vtk_write_points (t8_forest_t forest, FILE *vtufile, const int write_g
 t8_forest_vtk_cell_failure:
   /* Something went wrong */
   t8_errorf ("Error when writing cell data to forest vtk file.\n");
-  return T8_SUBROUTINE_FAILED;
+  return T8_SUBROUTINE_FAILURE;
 }
 
 int
@@ -800,8 +800,9 @@ t8_forest_vtk_write_ASCII (t8_forest_t forest, const char *fileprefix, const int
 
   /* process 0 creates the .pvtu file */
   if (forest->mpirank == 0) {
-    if (!t8_write_pvtu (fileprefix, forest->mpisize, write_treeid, write_mpirank, write_level, write_element_id,
-                        num_data, data)) {
+    if (t8_write_pvtu (fileprefix, forest->mpisize, write_treeid, write_mpirank, write_level, write_element_id,
+                       num_data, data)
+        == T8_SUBROUTINE_FAILURE) {
       t8_errorf ("Error when writing file %s.pvtu\n", fileprefix);
       goto t8_forest_vtk_failure;
     }
@@ -891,7 +892,7 @@ t8_forest_vtk_failure:
     fclose (vtufile);
   }
   t8_errorf ("Error when writing vtk file.\n");
-  return T8_SUBROUTINE_FAILED;
+  return T8_SUBROUTINE_FAILURE;
 }
 
 /* Return the local number of vertices in a cmesh.
@@ -934,7 +935,7 @@ t8_cmesh_vtk_write_file_ext (const t8_cmesh_t cmesh, const char *fileprefix, con
   if (cmesh->mpirank == 0) {
     /* Write the pvtu header file. */
     int num_ranks_that_write = cmesh->set_partition ? cmesh->mpisize : 1;
-    if (!t8_write_pvtu (fileprefix, num_ranks_that_write, 1, 1, 0, 0, 0, NULL)) {
+    if (t8_write_pvtu (fileprefix, num_ranks_that_write, 1, 1, 0, 0, 0, NULL) == T8_SUBROUTINE_FAILURE) {
       SC_ABORTF ("Error when writing file %s.pvtu\n", fileprefix);
     }
   }

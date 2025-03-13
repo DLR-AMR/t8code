@@ -120,7 +120,7 @@ class vtk_writer {
    * 
    * \param[in] grid The forest or cmesh that is translated.
    * \return T8_SUBROUTINE_SUCCESS, if writing was successful. 
-   * \return T8_SUBROUTINE_FAILED if writing was not successful. 
+   * \return T8_SUBROUTINE_FAILURE if writing was not successful. 
    */
   bool
   write_with_API (const grid_t grid)
@@ -497,7 +497,7 @@ class vtk_writer {
    * 
    * \param[in] grid a forest or a cmesh that will be translated into a vtk-file.
    * \return T8_SUBROUTINE_SUCCESS if writing was successful.
-   * \return T8_SUBROUTINE_FAILED if writing was not successful.
+   * \return T8_SUBROUTINE_FAILURE if writing was not successful.
    */
   bool
   write_vtk (const grid_t grid)
@@ -580,12 +580,12 @@ class vtk_writer {
     }
 
     /* Return whether writing was successful */
-    return T8_SUBROUTINE_FAILED;
+    return T8_SUBROUTINE_FAILURE;
 
 #else
     t8_global_errorf ("Warning: t8code is not linked against vtk library. Vtk output will not be generated.\n");
     t8_global_productionf ("Consider calling 't8_forest_write_vtk' or 't8_forest_vtk_write_file' instead.\n");
-    return T8_SUBROUTINE_FAILED;
+    return T8_SUBROUTINE_FAILURE;
 #endif
   }
 

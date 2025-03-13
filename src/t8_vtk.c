@@ -50,7 +50,7 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree, int write_ra
   pvtufile = fopen (pvtufilename, "wb");
   if (!pvtufile) {
     t8_global_errorf ("Could not open %s for output\n", pvtufilename);
-    return T8_SUBROUTINE_FAILED;
+    return T8_SUBROUTINE_FAILURE;
   }
 
   fprintf (pvtufile, "<?xml version=\"1.0\"?>\n");
@@ -261,11 +261,11 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree, int write_ra
   if (ferror (pvtufile)) {
     t8_global_errorf ("t8_vtk: Error writing parallel footer\n");
     fclose (pvtufile);
-    return T8_SUBROUTINE_FAILED;
+    return T8_SUBROUTINE_FAILURE;
   }
   if (fclose (pvtufile)) {
     t8_global_errorf ("t8_vtk: Error closing parallel footer\n");
-    return T8_SUBROUTINE_FAILED;
+    return T8_SUBROUTINE_FAILURE;
   }
   return T8_SUBROUTINE_SUCCESS;
 }
