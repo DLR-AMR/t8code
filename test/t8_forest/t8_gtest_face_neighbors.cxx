@@ -319,6 +319,7 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
 
             // clean-up neighbor's neighbors
             if (neigh_num_neighbors > 0) {
+              scheme->element_destroy (neigh_class, neigh_num_neighbors, neigh_neighbor_leaves);
               T8_FREE (neigh_neighbor_leaves);
               T8_FREE (neigh_element_indices);
               T8_FREE (neigh_dual_faces);
@@ -327,6 +328,7 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
 
           // clean-up original element neighbors
           if (num_neighbors > 0) {
+            scheme->element_destroy (neigh_class, num_neighbors, neighbor_leaves);
             T8_FREE (neighbor_leaves);
             T8_FREE (element_indices);
             T8_FREE (dual_faces);
