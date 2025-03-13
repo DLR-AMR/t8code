@@ -30,7 +30,7 @@
 
 #include <t8.h>
 #include "t8_vtk_types.h"
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
 #include <vtkDataSet.h>
 #include <vtkSmartPointer.h>
 

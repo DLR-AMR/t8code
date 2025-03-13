@@ -21,13 +21,13 @@ AC_FC_MODULE_EXTENSION
 AC_FC_MODULE_FLAG
 AC_FC_MODULE_OUTPUT_FLAG
 
-if test "x$T8_WITH_MODDIR" = xyes ; then
+if test "x$T8_ENABLE_MODDIR" = xyes ; then
     dnl The option is given without a directory
     AC_MSG_ERROR([missing directory path for the module directory])
-elif test "x$T8_WITH_MODDIR" != xno ; then
+elif test "x$T8_ENABLE_MODDIR" != xno ; then
     AC_MSG_NOTICE([we have set a module dir var])
     dnl Substitute the variable in the makefile
-    AC_SUBST(T8_FORTRAN_MODULE_DIR, $T8_WITH_MODDIR)
+    AC_SUBST(T8_FORTRAN_MODULE_DIR, $T8_ENABLE_MODDIR)
 fi
 
 fi

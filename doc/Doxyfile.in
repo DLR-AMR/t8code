@@ -2206,10 +2206,10 @@ INCLUDE_FILE_PATTERNS  =
 
 PREDEFINED             = @PACKAGE_PREFIX@_DOXYGEN \
                          T8_ENABLE_DEBUG \
-                         T8_WITH_VTK \
-                         T8_WITH_OCC \
-                         T8_WITH_NETCDF \
-                         T8_WITH_NETCDF_PAR
+                         T8_ENABLE_VTK \
+                         T8_ENABLE_OCC \
+                         T8_ENABLE_NETCDF \
+                         T8_ENABLE_NETCDF_PAR
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The

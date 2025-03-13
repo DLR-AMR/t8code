@@ -10,8 +10,8 @@ T8_ARG_WITH([custom-test-command],
   [Define custom test command, e.g.: mpirun -n 4.],
   [CUSTOM_TEST_COMMAND])
 
-  if test "x$T8_WITH_CUSTOM_TEST_COMMAND" != xno ; then
-    T8_MPI_TEST_FLAGS=$T8_WITH_CUSTOM_TEST_COMMAND
+  if test "x$T8_ENABLE_CUSTOM_TEST_COMMAND" != xno ; then
+    T8_MPI_TEST_FLAGS=$T8_ENABLE_CUSTOM_TEST_COMMAND
 
   fi
 ])

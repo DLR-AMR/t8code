@@ -106,7 +106,7 @@ main (int argc, char **argv)
       const int write_level = 1;
       const int write_element_id = 1;
       const int write_ghosts = 0;
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
       const int write_curved = 1;
 #else
       const int write_curved = 0;

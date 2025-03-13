@@ -22,7 +22,7 @@
 
 #include "t8_vtk_parallel.hxx"
 
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
 #include <vtkUnstructuredGrid.h>
 #include <vtkXMLPDataReader.h>
 #include <vtkXMLPUnstructuredGridReader.h>
