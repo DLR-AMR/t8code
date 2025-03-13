@@ -21,14 +21,13 @@
 */
 
 #include <t8.h>
-#if T8_ENABLE_NETCDF
 #include <netcdf.h>
 #else
 /* Normally defined in 'netcdf.h' */
 #define NC_CHUNKED 1
 #define NC_CONTIGUOUS 1
 #endif
-#if T8_ENABLE_NETCDF_PAR
+#if T8_WITH_NETCDF_PAR
 #include <netcdf_par.h>
 #else
 /* Normally defined in 'netcdf_par.h' */
@@ -409,9 +408,8 @@ t8_example_netcdf_write_forest (sc_MPI_Comm comm, int forest_refinement_level, i
   t8_forest_write_netcdf (forest, "T8_Example_NetCDF_Forest_With_Add_Vars", "Example Uniform Forest", 3, 2, ext_vars,
                           comm);
 
-#if T8_ENABLE_NETCDF
+#if T8_WITH_NETCDF
   t8_global_productionf ("The forest has been written to a netCDF file\n");
-#endif
 
   /* Destroy the forest */
   t8_forest_unref (&forest);
