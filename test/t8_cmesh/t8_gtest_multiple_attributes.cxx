@@ -26,7 +26,6 @@
 #include <t8_cmesh/t8_cmesh_partition.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <test/t8_gtest_schemes.hxx>
-#include <test/t8_gtest_macros.hxx>
 
 /* Test if multiple attributes are partitioned correctly. */
 
@@ -42,7 +41,22 @@ t8_cmesh_partition_cmesh (t8_cmesh_t cmesh, const t8_scheme *scheme, sc_MPI_Comm
   return cmesh_partition;
 }
 
-class cmesh_multiple_attributes: public t8_test_with_attributes<testing::TestWithParam<std::tuple<int, int>>> {
+class cmesh_multiple_attributes: public testing::TestWithParam<std::tuple<int, int>> {
+ public:
+  static void
+  SetUpTestSuite ()
+  {
+    t8_package_id = sc_package_register (NULL, SC_LP_DEFAULT, "GoogleTest",
+                                         "t8code testsuite package. Used for testing of external user attributes.");
+  }
+
+  static void
+  TearDownTestSuite ()
+  {
+  }
+
+  static int t8_package_id;
+
  protected:
   void
   SetUp () override
@@ -50,14 +64,13 @@ class cmesh_multiple_attributes: public t8_test_with_attributes<testing::TestWit
     const int scheme_id = std::get<0> (GetParam ());
     num_trees = std::get<1> (GetParam ());
 
-    cmesh_one_at = t8_cmesh_new_row_of_cubes (num_trees, 0, 0, sc_MPI_COMM_WORLD, get_testsuite_package_id ());
+    cmesh_one_at = t8_cmesh_new_row_of_cubes (num_trees, 0, 0, sc_MPI_COMM_WORLD, t8_package_id);
     cmesh_one_at = t8_cmesh_partition_cmesh (cmesh_one_at, create_from_scheme_id (scheme_id), sc_MPI_COMM_WORLD);
 
-    cmesh_mult_at = t8_cmesh_new_row_of_cubes (num_trees, 1, 0, sc_MPI_COMM_WORLD, get_testsuite_package_id ());
+    cmesh_mult_at = t8_cmesh_new_row_of_cubes (num_trees, 1, 0, sc_MPI_COMM_WORLD, t8_package_id);
     cmesh_mult_at = t8_cmesh_partition_cmesh (cmesh_mult_at, create_from_scheme_id (scheme_id), sc_MPI_COMM_WORLD);
 
-    cmesh_mult_at_from_stash
-      = t8_cmesh_new_row_of_cubes (num_trees, 1, 1, sc_MPI_COMM_WORLD, get_testsuite_package_id ());
+    cmesh_mult_at_from_stash = t8_cmesh_new_row_of_cubes (num_trees, 1, 1, sc_MPI_COMM_WORLD, t8_package_id);
   }
   void
   TearDown () override
@@ -72,6 +85,8 @@ class cmesh_multiple_attributes: public t8_test_with_attributes<testing::TestWit
   t8_cmesh_t cmesh_mult_at_from_stash;
   t8_locidx_t num_trees;
 };
+
+int cmesh_multiple_attributes::t8_package_id = -1;
 
 /** Check attribute values of cmeshes against reference values. */
 TEST_P (cmesh_multiple_attributes, multiple_attributes)
@@ -114,10 +129,10 @@ TEST_P (cmesh_multiple_attributes, multiple_attributes)
     }
     /* Compare second attribute with global tree id. */
     t8_locidx_t att;
-    att = *(t8_locidx_t *) t8_cmesh_get_attribute (cmesh_mult_at, get_testsuite_package_id (), 0, ltree_id);
+    att = *(t8_locidx_t *) t8_cmesh_get_attribute (cmesh_mult_at, t8_package_id, 0, ltree_id);
     EXPECT_EQ (gtree_id, att);
     /* Compare third attribute with global number of trees. */
-    att = *(t8_locidx_t *) t8_cmesh_get_attribute (cmesh_mult_at, get_testsuite_package_id (), 1, ltree_id);
+    att = *(t8_locidx_t *) t8_cmesh_get_attribute (cmesh_mult_at, t8_package_id, 1, ltree_id);
     EXPECT_EQ (att, t8_cmesh_get_num_trees (cmesh_mult_at));
   }
   /* Check partitioned cmesh from stash with three attributes. */
@@ -143,10 +158,10 @@ TEST_P (cmesh_multiple_attributes, multiple_attributes)
     }
     /* Compare second attribute with global tree id. */
     t8_locidx_t att;
-    att = *(t8_locidx_t *) t8_cmesh_get_attribute (cmesh_mult_at_from_stash, get_testsuite_package_id (), 0, ltree_id);
+    att = *(t8_locidx_t *) t8_cmesh_get_attribute (cmesh_mult_at_from_stash, t8_package_id, 0, ltree_id);
     EXPECT_EQ (gtree_id, att);
     /* Compare third attribute with global number of trees. */
-    att = *(t8_locidx_t *) t8_cmesh_get_attribute (cmesh_mult_at_from_stash, get_testsuite_package_id (), 1, ltree_id);
+    att = *(t8_locidx_t *) t8_cmesh_get_attribute (cmesh_mult_at_from_stash, t8_package_id, 1, ltree_id);
     EXPECT_EQ (att, t8_cmesh_get_num_trees (cmesh_mult_at_from_stash));
   }
 }
