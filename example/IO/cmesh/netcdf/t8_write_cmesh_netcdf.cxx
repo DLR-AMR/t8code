@@ -25,7 +25,6 @@
  */
 
 #include <t8.h>
-#if T8_ENABLE_NETCDF
 #include <netcdf.h>
 /* Standard netcdf error function */
 #define ERRCODE 2
@@ -34,7 +33,6 @@
     t8_global_productionf ("Error: %s\n", nc_strerror (e)); \
     exit (ERRCODE); \
   }
-#endif
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh_netcdf.h>
@@ -105,9 +103,7 @@ t8_example_netcdf_write_cmesh (sc_MPI_Comm comm)
   /* Write the cmesh to NetCDF */
   t8_cmesh_write_netcdf (cmesh, mesh_name, "Example 3D parallel cmesh", 3, 2, ext_vars, comm);
 
-#if T8_ENABLE_NETCDF
   t8_global_productionf ("NetCDF output of the cmesh has been written.\n");
-#endif
 
   /* Destroy the cmesh */
   t8_cmesh_destroy (&cmesh);
