@@ -35,7 +35,7 @@
 
 #define T8_ATTRIBUTE_TEST_MAX_NUM_ENTRIES 1000
 
-class cmesh_attribute_gloidx_array: public testing::TestWithParam<std::tuple<int, int>> {
+class cmesh_attribute_gloidx_array: public t8_test_with_attributes<testing::TestWithParam<std::tuple<int, int>>> {
  protected:
   /* in Setup we build a two tree cmesh, fill an array with entries
    * and set the array as attribute for both trees with different data_persists settings. */
@@ -64,14 +64,14 @@ class cmesh_attribute_gloidx_array: public testing::TestWithParam<std::tuple<int
     /* Attribute at tree 0, data_persist = 0 */
     t8_gloidx_t tree_with_attribute = 0;
     int data_persists = 0;
-    t8_cmesh_set_attribute_gloidx_array (cmesh, tree_with_attribute, t8_testsuite_package_id, 0, entries, num_entries,
-                                         data_persists);
+    t8_cmesh_set_attribute_gloidx_array (cmesh, tree_with_attribute, get_testsuite_package_id (), 0, entries,
+                                         num_entries, data_persists);
 
     /* Attribute at tree 1, data_persist = 1 */
     tree_with_attribute = 1;
     data_persists = 1;
-    t8_cmesh_set_attribute_gloidx_array (cmesh, tree_with_attribute, t8_testsuite_package_id, 0, entries, num_entries,
-                                         data_persists);
+    t8_cmesh_set_attribute_gloidx_array (cmesh, tree_with_attribute, get_testsuite_package_id (), 0, entries,
+                                         num_entries, data_persists);
 
     /* Commit the cmesh */
     t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
@@ -95,7 +95,7 @@ class cmesh_attribute_gloidx_array: public testing::TestWithParam<std::tuple<int
 /** Check attribute values of the trees against reference values. */
 TEST_P (cmesh_attribute_gloidx_array, check_values_data)
 {
-  get_entries = t8_cmesh_get_attribute_gloidx_array (cmesh, t8_testsuite_package_id, 0, check_tree_id, num_entries);
+  get_entries = t8_cmesh_get_attribute_gloidx_array (cmesh, get_testsuite_package_id (), 0, check_tree_id, num_entries);
 
   /* If we did not store any values, we except to get the NULL pointer back. */
   if (entries == NULL) {
