@@ -1204,7 +1204,7 @@ struct t8_standalone_scheme
     }
 
 /* in debug mode, set sensible default values. */
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
     {
       int i;
       for (i = 0; i < length; i++) {
@@ -1229,7 +1229,7 @@ struct t8_standalone_scheme
   static inline void
   element_init ([[maybe_unused]] const int length, [[maybe_unused]] t8_element_t *elem) noexcept
   {
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
     int ielem;
     t8_standalone_element<TEclass> *el = (t8_standalone_element<TEclass> *) elem;
     /* Set all values to 0 */
@@ -1273,7 +1273,7 @@ struct t8_standalone_scheme
 
   // ################################################____DEBUG____################################################
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is
    *  safe to perform any of the above algorithms on it.
    *  For example this could mean that all coordinates are in valid ranges

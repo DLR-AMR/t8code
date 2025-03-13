@@ -161,7 +161,7 @@ TEST_P (forest_find_owner, find_multiple_owners)
     t8_debugf ("%s\n", buffer);
     sc_array_truncate (&owners);
   }
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   /* write vtk file in debug mode */
   t8_forest_write_vtk (forest, "test_owners_forest");
 #endif

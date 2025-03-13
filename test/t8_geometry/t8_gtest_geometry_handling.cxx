@@ -57,9 +57,9 @@ TEST (test_geometry, test_geometry_handler_register)
 
   geometries.push_back (geom_handler.register_geometry<t8_geometry_linear> ());
   geometries.push_back (geom_handler.register_geometry<t8_geometry_zero> ());
-#if T8_WITH_OCC
+#if T8_ENABLE_OCC
   geometries.push_back (geom_handler.register_geometry<t8_geometry_cad> ());
-#endif /* T8_WITH_OCC */
+#endif /* T8_ENABLE_OCC */
   geometries.push_back (geom_handler.register_geometry<t8_geometry_analytic> ("analytic_geom"));
   geometries.push_back (geom_handler.register_geometry<t8_geometry_linear_axis_aligned> ());
   geometries.push_back (geom_handler.register_geometry<t8_geometry_lagrange> ());

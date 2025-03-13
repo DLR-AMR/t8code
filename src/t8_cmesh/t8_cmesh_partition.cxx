@@ -88,7 +88,7 @@ t8_partition_new_ghost_ids (const t8_cmesh_t cmesh, const t8_part_tree_t recv_pa
   int8_t *ttf;
   int iface, face_tree;
   t8_trees_glo_lo_hash_t *new_hash;
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   int ret;
 #endif
 
@@ -114,7 +114,7 @@ t8_partition_new_ghost_ids (const t8_cmesh_t cmesh, const t8_part_tree_t recv_pa
     /* The new local ghost id is the concurrent id of this ghost plus the
      * number of local trees */
     new_hash->local_id = ghost_it + first_ghost + cmesh->num_local_trees;
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
     ret =
 #endif
       sc_hash_insert_unique (cmesh->trees->ghost_globalid_to_local_id, new_hash, NULL);
@@ -165,7 +165,7 @@ t8_cmesh_gather_trees_per_eclass (const t8_cmesh_t cmesh, sc_MPI_Comm comm)
       cmesh->num_trees_per_eclass[ieclass] = cmesh->num_local_trees_per_eclass[ieclass];
     }
   }
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   /* Count the number of trees and check if it matches cmesh->num_trees */
   {
     t8_gloidx_t num_trees = 0;
@@ -915,7 +915,7 @@ t8_cmesh_partition_sendtreeloop (t8_cmesh_t cmesh, const t8_cmesh *cmesh_from, c
   t8_locidx_t neighbor, *face_neighbor, itree;
   int8_t *ttf;
   int iface;
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   const t8_gloidx_t *offset_from, *offset_to;
 
   if (cmesh_from->set_partition) {
@@ -1646,7 +1646,7 @@ t8_cmesh_offset_concentrate (const int proc, sc_MPI_Comm comm, const t8_gloidx_t
   int mpirank, mpiret, mpisize, iproc;
   t8_shmem_array_t shmem_array;
   t8_gloidx_t *offsets;
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   char out[BUFSIZ] = "";
 #endif
 
@@ -1666,11 +1666,11 @@ t8_cmesh_offset_concentrate (const int proc, sc_MPI_Comm comm, const t8_gloidx_t
       else {
         offsets[iproc] = offsets[iproc - 1];
       }
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
       snprintf (out + strlen (out), BUFSIZ - strlen (out), "%li,", offsets[iproc]);
 #endif
     }
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
     t8_debugf ("Partition with offsets:0,%s\n", out);
 #endif
   }

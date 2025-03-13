@@ -34,7 +34,7 @@
 #include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.h>
 
-#if T8_WITH_OCC
+#if T8_ENABLE_OCC
 
 #include <TopoDS_Shape.hxx>
 #include <TopExp.hxx>
@@ -376,6 +376,6 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
     cad_shape_edge2face_map; /**< Maps all TopoDS_Edge of shape to all its connected TopoDS_Face */
 };
 
-#endif /* T8_WITH_OCC */
+#endif /* T8_ENABLE_OCC */
 
 #endif /* !T8_GEOMETRY_CAD_HXX */

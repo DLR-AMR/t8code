@@ -29,13 +29,13 @@
 
 #include <gtest/gtest.h>
 #include <t8.h>
-#if T8_WITH_NETCDF
+#if T8_ENABLE_NETCDF
 #include <netcdf.h>
 #endif
 
 TEST (t8_gtest_netcdf_linkage, test_linking_with_netcdf)
 {
-#if T8_WITH_NETCDF
+#if T8_ENABLE_NETCDF
 
   /* Create an in-memory netcdf file. This file will not be stored on
  * the disk. */

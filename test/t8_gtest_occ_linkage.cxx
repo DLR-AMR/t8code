@@ -29,14 +29,14 @@
 
 #include <t8.h>
 #include <gtest/gtest.h>
-#if T8_WITH_OCC
+#if T8_ENABLE_OCC
 #include <gp_Pnt.hxx>
 #endif
 
 /* Check whether we can successfully execute VTK code */
 TEST (t8_test_occ_linkage, test_gp_Pnt)
 {
-#if T8_WITH_OCC
+#if T8_ENABLE_OCC
 
   EXPECT_NO_THROW (gp_Pnt pnt = gp_Pnt (); pnt.SetX (1););
   t8_global_productionf ("Successfully created occ gp_Pnt object.\n");

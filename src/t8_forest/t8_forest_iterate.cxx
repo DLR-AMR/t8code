@@ -112,7 +112,7 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
       return;
     }
   }
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   /* Check whether element has greater level than the first leaf */
   const t8_element_t *leaf = t8_element_array_index_locidx (leaf_elements, 0);
   T8_ASSERT (t8_forest_element_is_leaf (forest, leaf, ltreeid));

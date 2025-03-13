@@ -24,13 +24,13 @@ T8_ARG_WITH([netcdf],
   [NETCDF])
 AH_TEMPLATE([WITH_NETCDF_PAR],
   [Accessibility of parallel netCDF routines])
-if test "x$T8_WITH_NETCDF" != xno ; then
+if test "x$T8_ENABLE_NETCDF" != xno ; then
   T8_NETCDF_LIBS="-lnetcdf"
   t8_netcdf_use_serial=no
-  if test "x$T8_WITH_NETCDF" = "xserial" ; then
+  if test "x$T8_ENABLE_NETCDF" = "xserial" ; then
     t8_netcdf_use_serial=yes
-  elif test "x$T8_WITH_NETCDF" != xyes ; then
-    T8_NETCDF_LIBS="$T8_WITH_NETCDF"
+  elif test "x$T8_ENABLE_NETCDF" != xyes ; then
+    T8_NETCDF_LIBS="$T8_ENABLE_NETCDF"
     dnl AC_MSG_ERROR([Please provide --with-netcdf without arguments])
   fi
   PRE_NETCDF_LIBS="$LIBS"
