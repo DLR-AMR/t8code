@@ -570,14 +570,14 @@ t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, 
  *                        0, 1, ... num_local_el - 1 for local leaves and
  *                        num_local_el , ... , num_local_el + num_ghosts - 1 for ghosts.
  * \param [out]   pneigh_eclass On output the eclass of the neighbor elements.
- * \note If there are no face neighbors, then *neighbor_leaves = NULL, num_neighbors = 0,
+ * \note If there are no face neighbors, then *pneighbor_leaves = NULL, num_neighbors = 0,
  * and *pelement_indices = NULL on output.
  * \note \a forest must be committed before calling this function.
  *
  * \note Important! This routine allocates memory which must be freed. Do it like this:
  *
  *   if (num_neighbors > 0) {
- *     scheme->element_destroy (pneigh_eclass, num_neighbors, neighbors);
+ *     scheme->element_destroy (pneigh_eclass, num_neighbors, pneighbor_leaves);
  *     T8_FREE (pneighbor_leaves);
  *     T8_FREE (pelement_indices);
  *     T8_FREE (dual_faces);
@@ -609,14 +609,14 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8
  *                                         Thus, if the face connection is an inter-tree connection the orientation of the tree-to-tree connection is stored. 
  *                                         Otherwise, the value 0 is stored.
  * All other parameters and behavior are identical to \ref `t8_forest_leaf_face_neighbors`.
- * \note If there are no face neighbors, then *neighbor_leaves = NULL, num_neighbors = 0,
+ * \note If there are no face neighbors, then *pneighbor_leaves = NULL, num_neighbors = 0,
  * and *pelement_indices = NULL on output.
  * \note \a forest must be committed before calling this function.
  *
  * \note Important! This routine allocates memory which must be freed. Do it like this:
  *
  *   if (num_neighbors > 0) {
- *     scheme->element_destroy (pneigh_eclass, num_neighbors, neighbors);
+ *     scheme->element_destroy (pneigh_eclass, num_neighbors, pneighbor_leaves);
  *     T8_FREE (pneighbor_leaves);
  *     T8_FREE (pelement_indices);
  *     T8_FREE (dual_faces);
