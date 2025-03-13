@@ -2132,7 +2132,7 @@ t8_forest_ghost_definition_stencil_get_localid_by_globalid (const t8_forest_t fo
   /* Calculation with reminder of number of elements with number of processes: N = P * b_0 + r */
   const t8_linearidx_t b_0 = global_num_elements / forest->mpisize;
   const t8_linearidx_t r = global_num_elements % forest->mpisize;
-  /* Comput the owner process of the element. */
+  /* Compute the owner process of the element. */
   const int owner_process = t8_forest_ghost_definition_stencil_get_rank_by_globalid (forest, glob_element_id);
 
   const t8_locidx_t loc_id = glob_element_id - (((owner_process * r) / forest->mpisize) + owner_process * b_0);
