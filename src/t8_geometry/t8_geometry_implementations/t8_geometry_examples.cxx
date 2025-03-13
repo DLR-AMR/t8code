@@ -26,8 +26,9 @@
 #include <t8_types/t8_vec.h>
 
 void
-t8_geometry_quadrangulated_disk::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                                   const size_t num_coords, double *out_coords) const
+t8_geometry_quadrangulated_disk::t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
+                                                   const double *ref_coords, const size_t num_coords,
+                                                   double *out_coords) const
 {
   double n[3] = { 0.0 }; /* Normal vector. */
   double r[3] = { 0.0 }; /* Radial vector. */
@@ -120,7 +121,8 @@ t8_geom_evaluate_sphere_tri_prism (const double *active_tree_vertices, const t8_
 }
 
 void
-t8_geometry_triangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
+t8_geometry_triangulated_spherical_surface::t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh,
+                                                              [[maybe_unused]] t8_gloidx_t gtreeid,
                                                               const double *ref_coords, const size_t num_coords,
                                                               double *out_coords) const
 {
@@ -128,7 +130,8 @@ t8_geometry_triangulated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh, 
 }
 
 void
-t8_geometry_prismed_spherical_shell::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
+t8_geometry_prismed_spherical_shell::t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh,
+                                                       [[maybe_unused]] t8_gloidx_t gtreeid, const double *ref_coords,
                                                        const size_t num_coords, double *out_coords) const
 
 {
@@ -136,7 +139,8 @@ t8_geometry_prismed_spherical_shell::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloi
 }
 
 void
-t8_geometry_tessellated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
+t8_geometry_tessellated_spherical_surface::t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh,
+                                                             [[maybe_unused]] t8_gloidx_t gtreeid,
                                                              const double *ref_coords, const size_t num_coords,
                                                              double *out_coords) const
 {
@@ -193,7 +197,8 @@ t8_geometry_tessellated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh, t
 }
 
 void
-t8_geometry_cubed_spherical_shell::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
+t8_geometry_cubed_spherical_shell::t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh,
+                                                     [[maybe_unused]] t8_gloidx_t gtreeid, const double *ref_coords,
                                                      const size_t num_coords, double *out_coords) const
 {
   // Note, all elements are aligned such that the face normal follows the
@@ -263,8 +268,8 @@ t8_geometry_cubed_spherical_shell::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx
 }
 
 void
-t8_geometry_cubed_sphere::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
-                                            const size_t num_coords, double *out_coords) const
+t8_geometry_cubed_sphere::t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
+                                            const double *ref_coords, const size_t num_coords, double *out_coords) const
 {
   double n[3] = { 0.0 }; /* Normal vector. */
   double r[3] = { 0.0 }; /* Radial vector. */
