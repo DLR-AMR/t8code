@@ -36,7 +36,24 @@ const vtk_file_type_t gtest_vtk_filetypes[VTK_NUM_TYPES]
   = { VTK_FILE_ERROR, VTK_UNSTRUCTURED_FILE, VTK_POLYDATA_FILE, VTK_PARALLEL_UNSTRUCTURED_FILE,
       VTK_PARALLEL_POLYDATA_FILE };
 
-class vtk_reader: public t8_test_with_attributes<testing::TestWithParam<std::tuple<int, int, int>>> {
+class vtk_reader: public testing::TestWithParam<std::tuple<int, int, int>> {
+ public:
+  static void
+  SetUpTestSuite ()
+  {
+    t8_debugf ("[D] Register package \n");
+    t8_package_id = sc_package_register (NULL, SC_LP_DEFAULT, "GoogleTest",
+                                         "t8code testsuite package. Used for testing of external user attributes.");
+  }
+
+  static void
+  TearDownTestSuite ()
+  {
+    t8_debugf ("[D] TearDown \n");
+  }
+
+  static int t8_package_id;
+
  protected:
   void
   SetUp () override
@@ -56,6 +73,7 @@ class vtk_reader: public t8_test_with_attributes<testing::TestWithParam<std::tup
     main_proc = std::get<2> (GetParam ());
     distributed = (file_type & VTK_PARALLEL_FILE) && partition;
   }
+
   int file;
   vtk_file_type_t file_type;
   int partition;
@@ -71,12 +89,14 @@ class vtk_reader: public t8_test_with_attributes<testing::TestWithParam<std::tup
   const int num_trees[5] = { 0, 200, 12, 1024, 1680 };
 };
 
+int vtk_reader::t8_package_id;
+
 /* All readers should fail properly with a non-existing file. */
 TEST_P (vtk_reader, vtk_to_cmesh_fail)
 {
 #if T8_WITH_VTK
-  t8_cmesh_t cmesh = t8_cmesh_vtk_reader (failing_files[file], 0, main_proc, sc_MPI_COMM_WORLD, file_type,
-                                          get_testsuite_package_id (), 0);
+  t8_cmesh_t cmesh
+    = t8_cmesh_vtk_reader (failing_files[file], 0, main_proc, sc_MPI_COMM_WORLD, file_type, t8_package_id, 0);
   EXPECT_TRUE (cmesh == NULL);
 #else
 #endif
@@ -89,8 +109,8 @@ TEST_P (vtk_reader, vtk_to_cmesh_success)
   int mpirank;
   int mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
-  t8_cmesh_t cmesh = t8_cmesh_vtk_reader (test_files[file], partition, main_proc, sc_MPI_COMM_WORLD, file_type,
-                                          get_testsuite_package_id (), 0);
+  t8_cmesh_t cmesh
+    = t8_cmesh_vtk_reader (test_files[file], partition, main_proc, sc_MPI_COMM_WORLD, file_type, t8_package_id, 0);
   if (file_type != VTK_FILE_ERROR) {
     EXPECT_FALSE (cmesh == NULL);
     const int test_num_trees = t8_cmesh_get_num_local_trees (cmesh);

@@ -41,46 +41,6 @@ inline auto print_eclass
   = [] (const testing::TestParamInfo<t8_eclass> &info) { return t8_eclass_to_string[info.param]; };
 
 /**
- * Concept which checks if a class implements the function SetUpTestsuite ()
- * \tparam TTestingClass The class to check
- */
-template <typename TTestingClass>
-concept HasSetUpTestSuite = requires (TTestingClass testing_class) {
-  {
-    testing_class.SetUpTestSuite ()
-  } -> std::same_as<void>;
-};
-
-/**
- * Testing class which registers a package so that the attribute system can be used.
- * \tparam TTestingClass The underlying parameterized testing class. Has to implement SetUpTestsuite ()
- */
-template <class TTestingClass>
-  requires HasSetUpTestSuite<TTestingClass>
-class t8_test_with_attributes: public TTestingClass {
- public:
-  /**
-   * Registers a package id for the test system
-   */
-  static void
-  SetUpTestSuite ()
-  {
-    TTestingClass::SetUpTestSuite ();
-    t8_testsuite_package_id
-      = sc_package_register (NULL, SC_LP_DEFAULT, ::testing::UnitTest::GetInstance ()->current_test_info ()->name (),
-                             "t8code testsuite package. Used for testing of external user attributes.");
-  }
-
-  static int
-  get_testsuite_package_id (void)
-  {
-    return t8_testsuite_package_id;
-  }
-
- private:
-  static int t8_testsuite_package_id; /** Package id of the testsuite */
-};
-
 /**
  * Number of points to use in tests
  * 
