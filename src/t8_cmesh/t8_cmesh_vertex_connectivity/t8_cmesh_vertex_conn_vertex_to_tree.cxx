@@ -101,11 +101,16 @@ t8_cmesh_vertex_conn_vertex_to_tree::add_vertex_to_tree (const t8_cmesh_t cmesh,
   list_of_globalid.push_back (pair);
 }
 
-/* Compare two tree vertex pairs. 
+/** Compare function callback for two tree vertex pairs. Implements the '<' operation for tree_vertex_pair
  * (tree_id_A, vertex_id_A) is consider smaller than
  * (tree_id_B, vertex_id_B) if either
  *  tree_id_A < tree_id_B or
- *  tree_id_A == tree_id_B and vertex_id_A < vertex_id_B */
+ *  tree_id_A == tree_id_B and vertex_id_A < vertex_id_B
+ * \param [in] pair_a A pair of (local_tree_id_a, local_tree_vertex_a)
+ * \param [in] pair_b A pair of (local_tree_id_b, local_tree_vertex_b)
+ * \return True if  \a pair_a < \a pair_b meaning either \a local_tree_id_a < \a local_tree_id_b or
+ *    (\a local_tree_id_a == \a local_tree_id_b and \a local_tree_vertex_a < \a local_tree_vertex_b)
+ */
 static inline bool
 t8_cmesh_tree_vertex_pair_compare (t8_cmesh_vertex_conn_vertex_to_tree::tree_vertex_pair const& pair_a,
                                    t8_cmesh_vertex_conn_vertex_to_tree::tree_vertex_pair const& pair_b)
