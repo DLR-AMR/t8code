@@ -91,4 +91,3 @@ t8_cmesh_vertex_conn_tree_to_vertex::t8_cmesh_vertex_conn_tree_to_vertex (
     T8_FREE (global_tree_indices);
   }
 }
-
