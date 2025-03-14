@@ -242,7 +242,7 @@ t8_time_search_for_particles (t8_forest_t forest, sc_array *particles)
  * \param [in] comm           MPI communicator to specify on which processes we create this array.
  */
 static sc_array *
-t8_time_search_build_particles (size_t num_particles, unsigned int seed, sc_MPI_Comm comm)
+t8_time_search_random_particles (size_t num_particles, unsigned int seed, sc_MPI_Comm comm)
 {
   /* Specify lower and upper bounds for the coordinates in each dimension. */
   double boundary_low[3] = { 0.2, 0.3, 0.1 };
@@ -292,12 +292,103 @@ t8_time_search_build_particles (size_t num_particles, unsigned int seed, sc_MPI_
 }
 
 static sc_array *
-t8_time_choose_build_particles (int particle_option, size_t num_particles, unsigned int seed, sc_MPI_Comm comm)
+t8_time_search_leaf_particles (t8_forest_t forest, sc_MPI_Comm comm)
+{
+  sc_array *local_particles;
+  sc_array *global_particles;
+  t8_element_array_t *leaf_elements;
+  t8_locidx_t itree, num_trees;
+  int mpiret;
+  int mpirank;
+  int rank, size;
+  sc_MPI_Comm_rank (comm, &rank);
+  sc_MPI_Comm_size (comm, &size);
+
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+
+  const int local_count = t8_forest_get_local_num_elements (forest);
+  const int global_count = t8_forest_get_global_num_elements (forest);
+
+  local_particles = sc_array_new_count (sizeof (t8_tutorial_search_particle_t), local_count);
+  int iparticle = 0;
+
+  num_trees = t8_forest_get_num_local_trees (forest);
+  t8_debugf ("num_trees: %i\n", num_trees);
+  for (itree = 0; itree < num_trees; itree++) {
+    t8_debugf ("itree: %i\n", itree);
+    leaf_elements = t8_forest_tree_get_leaves (forest, itree);
+    t8_debugf ("leaf_elements: %i\n", leaf_elements->array.elem_count);
+    for (t8_locidx_t ielement = 0; ielement < leaf_elements->array.elem_count; ielement++) {
+      if (iparticle >= local_count) {
+        SC_ABORT ("WARNING: iparticle exceeded local_count \n");
+        break;
+      }
+      t8_element_t *element = (t8_element_t *) sc_array_index (&leaf_elements->array, ielement);
+      double coords[3];
+      const t8_scheme *scheme = t8_forest_get_scheme (forest);
+      scheme->element_get_vertex_reference_coords (leaf_elements->tree_class, element, 0, coords);
+      // t8_debugf ("coords: %f %f %f\n", coords[0], coords[1], coords[2]);
+      t8_tutorial_search_particle_t *particle
+        = (t8_tutorial_search_particle_t *) sc_array_index_int (local_particles, iparticle);
+      std::copy (std::begin (coords), std::end (coords), std::begin (particle->coordinates));
+      particle->is_inside_partition = 0;
+
+      iparticle++;
+      t8_debugf ("iparticle: %i\n", iparticle);
+    }
+  }
+
+  std::vector<int> recvcounts (size, 0), displs (size, 0);
+  global_particles = sc_array_new_count (sizeof (t8_tutorial_search_particle_t), global_count);
+  sc_MPI_Allgather (local_particles->array, local_count, MPI_BYTE, global_particles->array, local_count, MPI_BYTE,
+                    comm);
+
+  // // Rank 0 computes offsets and allocates global array
+  // sc_array *global_particles = nullptr;
+  // t8_debugf ("Rank %d: local_count = %d, global_count = %d\n", rank, local_count, global_count);
+  // t8_debugf ("Rank %d: local_particles = %ld\n", rank, local_particles->elem_count);
+  // if (rank == 0) {
+  //   displs[0] = 0;
+  //   for (int i = 1; i < size; i++) {
+  //     if (recvcounts[i] < 0 || recvcounts[i] > global_count) {
+  //       t8_debugf ("ERROR: Invalid recvcounts[%d] = %d\n", i, recvcounts[i]);
+  //       MPI_Abort (comm, 1);
+  //     }
+  //     displs[i] = displs[i - 1] + recvcounts[i - 1];
+  //     t8_debugf ("displs[%d] = %d\n", i, displs[i]);
+  //     t8_debugf ("recvcounts[%d] = %d\n", i, recvcounts[i]);
+  //   }
+  // }
+
+  //
+
+  // sc_MPI_Gatherv (local_particles->array, local_count * sizeof (t8_tutorial_search_particle_t), MPI_BYTE,
+  //                 global_particles->array, recvcounts.data (), displs.data (), MPI_BYTE, 0, comm);
+
+  // t8_debugf ("Rank %d: global_particles = %ld\n", rank, global_particles->elem_count);
+
+  // Rank 0 has the array after gather, so we can broadcast it to all ranks
+  // if (rank == 0) {
+  //   mpiret = sc_MPI_Bcast (global_particles->array, sizeof (t8_tutorial_search_particle_t) * global_count, sc_MPI_BYTE,
+  //                          0, comm);
+  // }
+
+  SC_CHECK_MPI (mpiret);
+  return global_particles;
+}
+
+static sc_array *
+t8_time_choose_build_particles (int particle_option, size_t num_particles, unsigned int seed, sc_MPI_Comm comm,
+                                t8_forest_t forest)
 {
   sc_array *particles = NULL;
   switch (particle_option) {
-  case 0:
-    particles = t8_time_search_build_particles (num_particles, seed, comm);
+  case 1:
+    particles = t8_time_search_random_particles (num_particles, seed, comm);
+    break;
+  case 2:
+    particles = t8_time_search_leaf_particles (forest, comm);
     break;
   default:
     t8_global_errorf (" [search] Unknown particle option %d.\n", particle_option);
@@ -364,7 +455,7 @@ main (int argc, char **argv)
   t8_global_productionf (" [search] \n");
 
   opt = sc_options_new (argv[0]);
-  sc_options_add_int (opt, 'p', "particle_fill", &particle_option, 1,
+  sc_options_add_int (opt, 'p', "particle_fill", &particle_option, 2,
                       "Option to fill the particles, 1: random, 2: one per leaf, 3: only one particle, ...");
   sc_options_parse (t8_get_package_id (), SC_LP_DEFAULT, opt, argc, argv);
 
@@ -378,7 +469,7 @@ main (int argc, char **argv)
   forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, comm);
 
   /* Create an array with random particles. */
-  sc_array_t *particles = t8_time_choose_build_particles (particle_option, num_particles, seed, comm);
+  sc_array_t *particles = t8_time_choose_build_particles (particle_option, num_particles, seed, comm, forest);
 
   int multiple_particles;
   int iter = 0;
