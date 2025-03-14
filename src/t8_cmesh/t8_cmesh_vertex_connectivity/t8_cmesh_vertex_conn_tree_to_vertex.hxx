@@ -168,20 +168,20 @@ class t8_cmesh_vertex_conn_tree_to_vertex {
     return get_global_vertices (cmesh, local_tree, num_tree_vertices)[local_tree_vertex];
   }
 
-  /** Return the state of this object.*/
-  inline const int
+  friend struct t8_cmesh_vertex_connectivity;
+
+ private:
+  enum state {
+    EMPTY, /*< Is initialized but empty. */
+    FILLED /*< Is filled with at least one entry. */
+  } state;
+
+  /** Return the state of this object. */
+  inline const enum state
   get_state ()
   {
     return state;
   }
-
-  friend struct t8_cmesh_vertex_connectivity;
-
- private:
-  enum {
-    EMPTY, /*< Is initialized but empty. */
-    FILLED /*< Is filled with at least one entry. */
-  } state;
 };
 
 #endif /* !T8_CMESH_VERTEX_CONN_TREE_TO_VERTEX_HXX */
