@@ -1401,8 +1401,7 @@ struct t8_standalone_scheme
 /* in debug mode, set sensible default values. */
 #if T8_ENABLE_DEBUG
     {
-      int i;
-      for (i = 0; i < length; i++) {
+      for (int i = 0; i < length; i++) {
         element_init (1, elem[i]);
       }
     }
@@ -1425,10 +1424,9 @@ struct t8_standalone_scheme
   element_init ([[maybe_unused]] const int length, [[maybe_unused]] t8_element_t *elem) noexcept
   {
 #if T8_ENABLE_DEBUG
-    int ielem;
     t8_standalone_element<TEclass> *el = (t8_standalone_element<TEclass> *) elem;
     /* Set all values to 0 */
-    for (ielem = 0; ielem < length; ielem++) {
+    for (int ielem = 0; ielem < length; ielem++) {
       element_set_linear_id ((t8_element_t *) (el + ielem), 0, 0);
       T8_ASSERT (element_is_valid ((t8_element_t *) (el + ielem)));
     }
@@ -1834,8 +1832,8 @@ struct t8_standalone_scheme
     t8_standalone_scheme<TEclass>::element_get_ancestor (elem, 0, &ancestor);
 
     /**Check that we are in the correct cube*/
-    if (std::all_of (ancestor.coords.begin (), ancestor.coords.begin () + T8_ELEMENT_DIM[TEclass],
-                     [] (int coord) { return coord == 0; })) {
+    if constexpr (std::all_of (ancestor.coords.begin (), ancestor.coords.end (),
+                               [] (int coord) { return coord == 0; })) {
       return 1;
     }
     else {
