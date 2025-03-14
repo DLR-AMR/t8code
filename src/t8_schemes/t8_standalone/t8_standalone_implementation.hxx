@@ -215,8 +215,7 @@ struct t8_standalone_scheme
    *                      'outside' of the element.
    */
   static constexpr int
-  element_get_face_corner ([[maybe_unused]] const t8_element_t *element, [[maybe_unused]] const int face,
-                           [[maybe_unused]] const int corner) noexcept
+  element_get_face_corner ([[maybe_unused]] const t8_element_t *element, const int face, const int corner) noexcept
   {
     T8_ASSERT (element_is_valid (element));
     T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
@@ -239,8 +238,7 @@ struct t8_standalone_scheme
    * \return              The face number of the \a face-th face at \a corner.
    */
   static constexpr int
-  element_get_corner_face ([[maybe_unused]] const t8_element_t *element, [[maybe_unused]] const int corner,
-                           [[maybe_unused]] const int face) noexcept
+  element_get_corner_face ([[maybe_unused]] const t8_element_t *element, const int corner, const int face) noexcept
   {
     T8_ASSERT (element_is_valid (element));
     T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
@@ -756,7 +754,7 @@ struct t8_standalone_scheme
     *                      that coincides with \a face_child.
     */
   static constexpr int
-  element_face_get_child_face ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int face,
+  element_face_get_child_face ([[maybe_unused]] const t8_element_t *elem, const int face,
                                [[maybe_unused]] const int face_child) noexcept
   {
     return face;
@@ -804,8 +802,7 @@ struct t8_standalone_scheme
    * \param [in] level     The level, at which the first descendant is constructed
    */
   static constexpr void
-  element_get_first_descendant_face ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int face,
-                                     [[maybe_unused]] t8_element_t *first_desc,
+  element_get_first_descendant_face (const t8_element_t *elem, const int face, t8_element_t *first_desc,
                                      [[maybe_unused]] const t8_element_level level) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
@@ -841,8 +838,7 @@ struct t8_standalone_scheme
    */
   static constexpr void
   element_get_last_descendant_face ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int face,
-                                    [[maybe_unused]] t8_element_t *last_desc,
-                                    [[maybe_unused]] const t8_element_level level) noexcept
+                                    t8_element_t *last_desc, const t8_element_level level) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
@@ -872,7 +868,7 @@ struct t8_standalone_scheme
    * \note You can compute the corresponding face number of the tree via \ref t8_element_tree_face.
    */
   static constexpr int
-  element_is_root_boundary ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int face) noexcept
+  element_is_root_boundary (const t8_element_t *elem, const int face) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
@@ -931,7 +927,7 @@ struct t8_standalone_scheme
    *   the element does not lie on the root boundary.
    */
   static constexpr int
-  element_get_tree_face ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int face) noexcept
+  element_get_tree_face ([[maybe_unused]] const t8_element_t *elem, const int face) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
@@ -954,8 +950,8 @@ struct t8_standalone_scheme
    *                  on output.
    */
   static constexpr int
-  element_get_face_neighbor_inside ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] t8_element_t *neigh,
-                                    [[maybe_unused]] const int face, [[maybe_unused]] int *neigh_face) noexcept
+  element_get_face_neighbor_inside ([[maybe_unused]] const t8_element_t *elem, t8_element_t *neigh, const int face,
+                                    int *neigh_face) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
@@ -1067,8 +1063,7 @@ struct t8_standalone_scheme
    * and will not be modified.
    */
   static constexpr void
-  element_get_boundary_face ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int face,
-                             [[maybe_unused]] t8_element_t *boundary,
+  element_get_boundary_face (const t8_element_t *elem, const int face, [[maybe_unused]] t8_element_t *boundary,
                              [[maybe_unused]] const t8_scheme *boundary_scheme) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
