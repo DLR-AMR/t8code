@@ -22,13 +22,13 @@
 
 #include <t8_vtk/t8_vtk_reader.hxx>
 #include <t8_vtk/t8_vtk_unstructured.hxx>
-#include <t8_vtk/t8_vtk_polydata.hxx>
-#include <t8_vtk/t8_vtk_parallel.hxx>
 #include <t8_vtk/t8_vtk_types.h>
 #include <t8_cmesh.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 
 #if T8_WITH_VTK
+#include <t8_vtk/t8_with_vtk/t8_vtk_polydata.hxx>
+#include <t8_vtk/t8_with_vtk/t8_vtk_parallel.hxx>
 #include <vtkCellIterator.h>
 #include <vtkCellData.h>
 #include <vtkCellDataToPointData.h>
