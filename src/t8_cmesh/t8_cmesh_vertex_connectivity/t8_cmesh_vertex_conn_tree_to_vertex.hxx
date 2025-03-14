@@ -91,7 +91,7 @@ class t8_cmesh_vertex_conn_tree_to_vertex {
    * \note \a cmesh must not be committed.
   */
   inline void
-  set_global_vertex_ids_of_tree_vertices (const t8_cmesh_t, const t8_gloidx_t global_tree,
+  set_global_vertex_ids_of_tree_vertices (const t8_cmesh_t cmesh, const t8_gloidx_t global_tree,
                                           const t8_gloidx_t *global_tree_vertices, const int num_vertices)
   {
     T8_ASSERT (t8_cmesh_is_initialized (cmesh));
