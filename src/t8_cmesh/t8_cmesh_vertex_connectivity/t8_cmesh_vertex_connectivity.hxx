@@ -69,26 +69,31 @@ struct t8_cmesh_vertex_connectivity
   set_global_vertex_ids_of_tree_vertices (const t8_cmesh_t cmesh, const t8_gloidx_t global_tree,
                                           const t8_gloidx_t *global_tree_vertices, const int num_vertices)
   {
+    T8_ASSERT (t8_cmesh_is_initialized (cmesh));
     return tree_to_vertex.set_global_vertex_ids_of_tree_vertices (cmesh, global_tree, global_tree_vertices,
                                                                   num_vertices);
   }
 
-  inline void
-  set_global_vertices_of_tree (const t8_cmesh_t cmesh, const t8_gloidx_t global_tree,
-                               const t8_gloidx_t *global_tree_vertices, const int num_vertices)
-  {
-    T8_ASSERT (t8_cmesh_is_initialized (cmesh));
-    set_global_vertex_ids_of_tree_vertices (cmesh, global_tree, global_tree_vertices, num_vertices);
-  }
-
+  /** The state this connectivity can be in. */
   enum t8_cmesh_vertex_connectivity_state_t {
-    INITIALIZED,
-    VERTEX_TO_TREE_VALID,
-    TREE_TO_VERTEX_VALID,
-    VTT_AND_TTV_VALID
+    INITIALIZED,          /*< Initialized but not valid. I.e. not ready to use. */
+    VERTEX_TO_TREE_VALID, /*< Ready to use, but only vertex_to_tree functionality. */
+    TREE_TO_VERTEX_VALID, /*< Ready to use, but only tree_to_vertex functionality. */
+    VTT_AND_TTV_VALID     /*< Ready to use with both ttv and vtt functinoality. */
   };
 
-  /* Build vertex_to_tree from existing tree_to_vertex */
+  /** Build vertex_to_tree from existing tree_to_vertex
+   * \param [in] cmesh A 
+   */
+
+  /** Function to fill vtt from a cmesh with ttv information.
+   * Sets all global ids and associated tree vertices from
+   * the given input cmesh.
+   * Afterwards, the vtt is set to committed and can be used.
+   *
+   * \param [in] cmesh A committed cmesh with set tree to vertex entries (stored in this object)
+   * \param [in] ttv A filled tree to vertex list for \a cmesh.
+  */
   void
   build_vertex_to_tree (const t8_cmesh_t cmesh)
   {
