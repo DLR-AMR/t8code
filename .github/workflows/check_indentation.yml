@@ -33,6 +33,10 @@ name: t8code indentation check
 on:
   merge_group:
   pull_request:
+    branches:
+      - main
+      - develop
+      - Branch_H
   workflow_dispatch: # Be able to trigger this manually on github.com
   # Run every night at 1:05
   schedule:
