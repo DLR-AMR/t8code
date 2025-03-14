@@ -114,8 +114,13 @@ class t8_cmesh_vertex_conn_tree_to_vertex {
     state = FILLED;
   }
 
-  //TODO: document
   /* TODO: What if the attribute is not set? error handling */
+  /** Return the global vertex indices of a local tree.
+   * \param [in] cmesh A committed cmesh.
+   * \param [in] local_tree A local tree in \a cmesh.
+   * \param [in] num_vertices The count of local vertices of \a local_tree
+   * \return An array of length \a num_vertices containing the global vertex ids of \a local_tree's vertices.
+  */
   inline const t8_gloidx_t *
   get_global_vertices (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int num_vertices) const
   {
@@ -137,6 +142,15 @@ class t8_cmesh_vertex_conn_tree_to_vertex {
   }
 
   /* TODO: What if the attribute is not set? error handling */
+  /** Return a single global vertex id of a single local vertex.
+   * 
+   * 
+   * \param [in] cmesh A committed cmesh.
+   * \param [in] local_tree A local tree of \a cmesh.
+   * \param [in] local_tree_vertex A local vertex of \a local_tree
+   * \param [in] num_tree_vertices The count of vertices of \a local_tree
+   * \return The global id of the local vertex \a local_tree_vertex of \a local_tree. 
+   */
   t8_gloidx_t
   get_global_vertex (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int local_tree_vertex,
                      const int num_tree_vertices) const
@@ -154,6 +168,7 @@ class t8_cmesh_vertex_conn_tree_to_vertex {
     return get_global_vertices (cmesh, local_tree, num_tree_vertices)[local_tree_vertex];
   }
 
+  /** Return the state of this object.*/
   inline const int
   get_state ()
   {
