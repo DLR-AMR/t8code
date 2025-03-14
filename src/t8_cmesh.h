@@ -592,7 +592,7 @@ t8_cmesh_get_tree_class (t8_cmesh_t cmesh, t8_locidx_t ltree_id);
  * \param [in]    face          The number of a face of the tree.
  * \return                      True if the face is at the domain boundary.
  *                              False otherwise.
- * Only use this function if you know what you do, else use \a t8_cmesh_tree_face_is_boundary
+ * Only use this function if you know what you do, else use \a t8_cmesh_tree_face_is_boundary. Does not work for ghost elements.
  */
 int
 t8_cmesh_tree_face_is_boundary_before_commit (t8_cmesh_t cmesh, t8_locidx_t ltree_id, int face);
@@ -603,7 +603,7 @@ t8_cmesh_tree_face_is_boundary_before_commit (t8_cmesh_t cmesh, t8_locidx_t ltre
  * \param [in]    face          The number of a face of the tree.
  * \return                      True if the face is at the domain boundary.
  *                              False otherwise.
- * Only use this function if you know what you do, else use \a t8_cmesh_tree_face_is_boundary
+ * \a cmesh must be commited. Works on ghost elements.
  */
 int
 t8_cmesh_tree_face_is_boundary (t8_cmesh_t cmesh, t8_locidx_t ltree_id, int face);

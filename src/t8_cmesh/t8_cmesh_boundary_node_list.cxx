@@ -26,36 +26,51 @@
  */
 
 #include <t8_cmesh.h>
+#include <t8_eclass.h>
 #include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_trees.h>
-#include <t8_cmesh_boundary_node_list.hxx>
-#include <unordered_set>
+#include <t8_cmesh/t8_cmesh_boundary_node_list.hxx>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity.hxx>
 
-t8_boundary_node_list::t8_boundary_node_list(t8_cmesh_t cmesh) : cmesh(cmesh){
-  boundary_node_list = compute_boundary_node(cmesh);
+t8_boundary_node_list::t8_boundary_node_list (t8_cmesh_t cmesh_in): cmesh (cmesh_in)
+{
+  boundary_node_list = compute_boundary_node ();
 }
 
-std::unordered_set<t8_gloidx_t> t8_boundary_node_list::compute_boundary_node(t8_cmesh_t cmesh){
-    std::unordered_set<t8_gloidx_t> boundary_node_list = {};
-    const t8_locidx_t num_trees = t8_cmesh_get_num_local_trees(cmesh);
-    
-    for (t8_locidx_t i_tree = 0; i_tree < num_trees; i_tree++){
-      int8_t *ttf;
-      t8_locidx_t *face_neighbor;
-      const t8_eclass_t eclass = t8_cmesh_get_tree_class (cmesh, i_tree);
-      int num_faces = t8_eclass_num_faces[(int) eclass];
-      (void) t8_cmesh_trees_get_tree_ext (cmesh->trees, i_tree, &face_neighbor, &ttf);
+std::unordered_set<t8_gloidx_t>
+t8_boundary_node_list::compute_boundary_node ()
+{
+  std::unordered_set<t8_gloidx_t> boundary_node_list = {};
+  const t8_locidx_t num_trees = t8_cmesh_get_num_local_trees (cmesh);
 
-      for (int i_face = 0; i_face < num_faces; i_face++)
-        if (face_neighbor[i_face] == i_tree && ttf[i_face] == i_face) {
+  for (t8_locidx_t i_tree = 0; i_tree < num_trees; i_tree++) {
+    int8_t *ttf;
+    t8_locidx_t *face_neighbor;
+    const t8_eclass_t eclass = t8_cmesh_get_tree_class (cmesh, i_tree);
+    int num_faces = t8_eclass_num_faces[(int) eclass];
+    int num_vertices = t8_eclass_num_vertices[eclass];
+
+    (void) t8_cmesh_trees_get_tree_ext (cmesh->trees, i_tree, &face_neighbor, &ttf);
+    const t8_gloidx_t *global_vertices_of_tree = t8_cmesh_get_global_vertices_of_tree (cmesh, i_tree, num_vertices);
+
+    for (int i_face = 0; i_face < num_faces; i_face++) {
+      const int vertex_per_face = t8_eclass_num_vertices_per_face[i_tree][i_face];
+      if (face_neighbor[i_face] == i_tree && ttf[i_face] == i_face) {
         /* The tree is connected to itself at the same face.
         * Thus this is a domain boundary */
-          boundary_node_list.insert(t8_cmesh_get_global_id(cmesh, i_tree));
+        int i = i_face;
+        for (int count = 0; count < vertex_per_face; count++) {
+          i = (i + 1) % num_vertices;
+          boundary_node_list.insert (global_vertices_of_tree[i]);
+        }
       }
-  }
+    }
     return boundary_node_list;
+  }
 }
 
-std::unordered_set<t8_gloidx_t> t8_boundary_node_list::get_boundary_node_list() {
-    return this->boundary_node_list;
+std::unordered_set<t8_gloidx_t>
+t8_boundary_node_list::get_boundary_node_list ()
+{
+  return this->boundary_node_list;
 }

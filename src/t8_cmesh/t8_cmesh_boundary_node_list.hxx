@@ -31,15 +31,19 @@
 #include <t8_cmesh/t8_cmesh_types.h>
 #include <unordered_set>
 
+class t8_boundary_node_list {
+ public:
+  t8_boundary_node_list (t8_cmesh_t cmesh_in);
 
-class t8_boundary_node_list{
-        t8_cmesh_t cmesh;
-        std::unordered_set<t8_gloidx_t> boundary_node_list;
-        std::unordered_set<t8_gloidx_t> compute_boundary_node(t8_cmesh_t cmesh);
-    public:
-        t8_boundary_node_list(t8_cmesh_t cmesh);
-        void compute_boundary_node_id(t8_gloidx_t boundary_node_id);
-        std::unordered_set<t8_gloidx_t> get_boundary_node_list(); 
+  std::unordered_set<t8_gloidx_t>
+  get_boundary_node_list ();
+
+ private:
+  std::unordered_set<t8_gloidx_t>
+  compute_boundary_node ();
+
+  t8_cmesh_t cmesh;
+  std::unordered_set<t8_gloidx_t> boundary_node_list;
 };
 
 #endif /* T8_CMESH_BOUNDARY_NODE_LIST_HXX */

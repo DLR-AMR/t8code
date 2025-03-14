@@ -143,7 +143,7 @@ typedef struct t8_cmesh
   struct t8_cmesh_vertex_connectivity
     *vertex_connectivity;         /**< Structure that manages tree_to_vertex and vertex_to_tree connectivity. */
   int compute_boundary_node_list; /**< If true, compute the boundary node list during commit. */
-  struct t8_boundary_node_list *boundary_node_list;
+  t8_boundary_node_list_c *boundary_node_list;
 
 #ifdef T8_ENABLE_DEBUG
   t8_locidx_t inserted_trees;  /**< Count the number of inserted trees to

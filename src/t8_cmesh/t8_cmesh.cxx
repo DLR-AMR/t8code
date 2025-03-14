@@ -1011,30 +1011,14 @@ t8_cmesh_tree_face_is_boundary_before_commit (const t8_cmesh_t cmesh, const t8_l
 {
   int8_t *ttf;
 
-  if (t8_cmesh_treeid_is_local_tree (cmesh, ltreeid)) {
-    /* The local tree id belongs to a tree */
-    t8_locidx_t *face_neighbor;
-    (void) t8_cmesh_trees_get_tree_ext (cmesh->trees, ltreeid, &face_neighbor, &ttf);
+  /* The local tree id belongs to a tree */
+  t8_locidx_t *face_neighbor;
+  (void) t8_cmesh_trees_get_tree_ext (cmesh->trees, ltreeid, &face_neighbor, &ttf);
 
-    if (face_neighbor[face] == ltreeid && ttf[face] == face) {
-      /* The tree is connected to itself at the same face.
+  if (face_neighbor[face] == ltreeid && ttf[face] == face) {
+    /* The tree is connected to itself at the same face.
        * Thus this is a domain boundary */
-      return 1;
-    }
-  }
-  else {
-    /* The local tree id belongs to a ghost */
-    T8_ASSERT (t8_cmesh_treeid_is_ghost (cmesh, ltreeid));
-
-    t8_gloidx_t *face_neighbor;
-    const t8_locidx_t lghostid = t8_cmesh_ltreeid_to_ghostid (cmesh, ltreeid);
-    (void) t8_cmesh_trees_get_ghost_ext (cmesh->trees, lghostid, &face_neighbor, &ttf);
-
-    if (face_neighbor[face] == t8_cmesh_get_global_id (cmesh, ltreeid) && ttf[face] == face) {
-      /* The ghost is connected to itself at the same face.
-       * Thus this is a domain boundary */
-      return 1;
-    }
+    return 1;
   }
 
   return 0;
@@ -1044,7 +1028,25 @@ int
 t8_cmesh_tree_face_is_boundary (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid, const int face)
 {
   T8_ASSERT (cmesh->committed);
-  return t8_cmesh_tree_face_is_boundary_before_commit (cmesh, ltreeid, face);
+  if (t8_cmesh_treeid_is_local_tree (cmesh, ltreeid)) {
+    return t8_cmesh_tree_face_is_boundary_before_commit (cmesh, ltreeid, face);
+  }
+  else {
+    /* The local tree id belongs to a ghost */
+    T8_ASSERT (t8_cmesh_treeid_is_ghost (cmesh, ltreeid));
+
+    int8_t *ttf;
+    t8_gloidx_t *face_neighbor;
+    const t8_locidx_t lghostid = t8_cmesh_ltreeid_to_ghostid (cmesh, ltreeid);
+    (void) t8_cmesh_trees_get_ghost_ext (cmesh->trees, lghostid, &face_neighbor, &ttf);
+
+    if (face_neighbor[face] == t8_cmesh_get_global_id (cmesh, ltreeid) && ttf[face] == face) {
+      /* The ghost is connected to itself at the same face.
+        * Thus this is a domain boundary */
+      return 1;
+    }
+  }
+  return 0;
 }
 
 t8_eclass_t
