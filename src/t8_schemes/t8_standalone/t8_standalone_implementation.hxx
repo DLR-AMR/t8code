@@ -1827,8 +1827,7 @@ struct t8_standalone_scheme
     t8_standalone_scheme<TEclass>::element_get_ancestor (elem, 0, &ancestor);
 
     /**Check that we are in the correct cube*/
-    if constexpr (std::all_of (ancestor.coords.begin (), ancestor.coords.end (),
-                               [] (int coord) { return coord == 0; })) {
+    if (std::all_of (ancestor.coords.begin (), ancestor.coords.end (), [] (int coord) { return coord == 0; })) {
       return 1;
     }
     else {
