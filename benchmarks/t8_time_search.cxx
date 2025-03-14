@@ -318,8 +318,8 @@ t8_time_search_leaf_particles (t8_forest_t forest, sc_MPI_Comm comm)
   for (itree = 0; itree < num_trees; itree++) {
     t8_debugf ("itree: %i\n", itree);
     leaf_elements = t8_forest_tree_get_leaves (forest, itree);
-    t8_debugf ("leaf_elements: %i\n", leaf_elements->array.elem_count);
-    for (t8_locidx_t ielement = 0; ielement < leaf_elements->array.elem_count; ielement++) {
+    t8_debugf ("leaf_elements: %li\n", leaf_elements->array.elem_count);
+    for (t8_locidx_t ielement = 0; (size_t) ielement < leaf_elements->array.elem_count; ielement++) {
       if (iparticle >= local_count) {
         SC_ABORT ("WARNING: iparticle exceeded local_count \n");
         break;
