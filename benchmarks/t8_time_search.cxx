@@ -34,6 +34,7 @@
 #include <t8_types/t8_vec.hxx>                  /* Basic operations on 3D vectors. */
 #include <t8_forest/t8_forest_iterate.h>        /* For the search algorithm. */
 #include <tutorials/general/t8_step3.h>         /* Example forest adaptation from step 3 */
+#include <t8_forest/t8_forest_geometrical.h>
 
 /* Our search query, a particle together with a flag. */
 struct t8_tutorial_search_particle_t
@@ -298,17 +299,17 @@ t8_time_search_leaf_particles (t8_forest_t forest, sc_MPI_Comm comm)
   sc_array *global_particles;
   t8_element_array_t *leaf_elements;
   t8_locidx_t itree, num_trees;
-  int mpiret;
-  int mpirank;
-  int rank, size;
-  sc_MPI_Comm_rank (comm, &rank);
-  sc_MPI_Comm_size (comm, &size);
+  // int mpiret;
+  // int mpirank;
+  // int rank, size;
+  // sc_MPI_Comm_rank (comm, &rank);
+  // sc_MPI_Comm_size (comm, &size);
 
-  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
-  SC_CHECK_MPI (mpiret);
+  // mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  // SC_CHECK_MPI (mpiret);
 
   const int local_count = t8_forest_get_local_num_elements (forest);
-  const int global_count = t8_forest_get_global_num_elements (forest);
+  // const int global_count = t8_forest_get_global_num_elements (forest);
 
   local_particles = sc_array_new_count (sizeof (t8_tutorial_search_particle_t), local_count);
   int iparticle = 0;
@@ -327,7 +328,8 @@ t8_time_search_leaf_particles (t8_forest_t forest, sc_MPI_Comm comm)
       t8_element_t *element = (t8_element_t *) sc_array_index (&leaf_elements->array, ielement);
       double coords[3];
       const t8_scheme *scheme = t8_forest_get_scheme (forest);
-      scheme->element_get_vertex_reference_coords (leaf_elements->tree_class, element, 0, coords);
+      // scheme->element_get_vertex_reference_coords (leaf_elements->tree_class, element, 0, coords);
+      t8_forest_element_centroid (forest, itree, element, coords);
       // t8_debugf ("coords: %f %f %f\n", coords[0], coords[1], coords[2]);
       t8_tutorial_search_particle_t *particle
         = (t8_tutorial_search_particle_t *) sc_array_index_int (local_particles, iparticle);
@@ -339,43 +341,12 @@ t8_time_search_leaf_particles (t8_forest_t forest, sc_MPI_Comm comm)
     }
   }
 
-  std::vector<int> recvcounts (size, 0), displs (size, 0);
-  global_particles = sc_array_new_count (sizeof (t8_tutorial_search_particle_t), global_count);
-  sc_MPI_Allgather (local_particles->array, local_count, MPI_BYTE, global_particles->array, local_count, MPI_BYTE,
-                    comm);
+  // global_particles = sc_array_new_count (sizeof (t8_tutorial_search_particle_t), global_count);
+  // sc_MPI_Allgather (local_particles->array, local_count, MPI_BYTE, global_particles->array, local_count, MPI_BYTE,
+  //                   comm);
 
-  // // Rank 0 computes offsets and allocates global array
-  // sc_array *global_particles = nullptr;
-  // t8_debugf ("Rank %d: local_count = %d, global_count = %d\n", rank, local_count, global_count);
-  // t8_debugf ("Rank %d: local_particles = %ld\n", rank, local_particles->elem_count);
-  // if (rank == 0) {
-  //   displs[0] = 0;
-  //   for (int i = 1; i < size; i++) {
-  //     if (recvcounts[i] < 0 || recvcounts[i] > global_count) {
-  //       t8_debugf ("ERROR: Invalid recvcounts[%d] = %d\n", i, recvcounts[i]);
-  //       MPI_Abort (comm, 1);
-  //     }
-  //     displs[i] = displs[i - 1] + recvcounts[i - 1];
-  //     t8_debugf ("displs[%d] = %d\n", i, displs[i]);
-  //     t8_debugf ("recvcounts[%d] = %d\n", i, recvcounts[i]);
-  //   }
-  // }
-
-  //
-
-  // sc_MPI_Gatherv (local_particles->array, local_count * sizeof (t8_tutorial_search_particle_t), MPI_BYTE,
-  //                 global_particles->array, recvcounts.data (), displs.data (), MPI_BYTE, 0, comm);
-
-  // t8_debugf ("Rank %d: global_particles = %ld\n", rank, global_particles->elem_count);
-
-  // Rank 0 has the array after gather, so we can broadcast it to all ranks
-  // if (rank == 0) {
-  //   mpiret = sc_MPI_Bcast (global_particles->array, sizeof (t8_tutorial_search_particle_t) * global_count, sc_MPI_BYTE,
-  //                          0, comm);
-  // }
-
-  SC_CHECK_MPI (mpiret);
-  return global_particles;
+  // SC_CHECK_MPI (mpiret);
+  return local_particles;
 }
 
 static sc_array *
@@ -396,6 +367,25 @@ t8_time_choose_build_particles (int particle_option, size_t num_particles, unsig
     break;
   }
   return particles;
+}
+
+static const t8_scheme *
+t8_time_search_scheme (int scheme_option)
+{
+  const t8_scheme *scheme = NULL;
+  switch (scheme_option) {
+  case 1:
+    scheme = t8_scheme_new_standalone ();
+    break;
+  case 2:
+    scheme = t8_scheme_new_default ();
+    break;
+  default:
+    t8_global_errorf (" [search] Unknown scheme option %d.\n", scheme_option);
+    SC_ABORT ("Not implemented.");
+    break;
+  }
+  return scheme;
 }
 
 /* Print the local and global number of elements of a forest. */
@@ -430,6 +420,7 @@ main (int argc, char **argv)
   double num_particles_per_element;
   sc_options_t *opt;
   int particle_option;
+  int scheme_option;
   t8_tutorial_search_user_data_t user_data;
   std::vector<double> particles_per_element (0, 0.0);
 
@@ -454,9 +445,11 @@ main (int argc, char **argv)
     " [search] We will search for all elements in a forest that contain randomly created particles.\n");
   t8_global_productionf (" [search] \n");
 
-  opt = sc_options_new (argv[0]);
+  opt = sc_options_new (argv[1]);
   sc_options_add_int (opt, 'p', "particle_fill", &particle_option, 2,
                       "Option to fill the particles, 1: random, 2: one per leaf, 3: only one particle, ...");
+  sc_options_add_int (opt, 's', "scheme", &scheme_option, 2,
+                      "Option to choose the scheme, 1: standalone scheme, 2: default scheme");
   sc_options_parse (t8_get_package_id (), SC_LP_DEFAULT, opt, argc, argv);
 
   double total_time = 0;
@@ -464,9 +457,9 @@ main (int argc, char **argv)
   sc_statinfo_t times[1];
 
   /* Build a cube cmesh with tet, hex, and prism trees. */
-  cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
+  cmesh = t8_cmesh_new_hypercube (T8_ECLASS_HEX, comm, 0, 0, 0);
   /* Build a uniform forest on it. */
-  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, comm);
+  forest = t8_forest_new_uniform (cmesh, t8_time_search_scheme (scheme_option), level, 0, comm);
 
   /* Create an array with random particles. */
   sc_array_t *particles = t8_time_choose_build_particles (particle_option, num_particles, seed, comm, forest);
@@ -475,9 +468,6 @@ main (int argc, char **argv)
   int iter = 0;
   do {
     t8_forest_set_user_data (forest, &user_data);
-    /* Adapt the forest. We can reuse the forest variable, since the new adapted
-   * forest will take ownership of the old forest and destroy it.
-   * Note that the adapted forest is a new forest, though. */
 
     /* Print information of our new forest. */
     t8_global_productionf (" [search] Created an adapted forest with hybrid elements on a unit cube geometry.\n");
@@ -512,6 +502,7 @@ main (int argc, char **argv)
     }
     sc_MPI_Allreduce (&multiple_particles, &global_multiple_particles, 1, sc_MPI_INT, sc_MPI_MAX, comm);
     forest = t8_time_adapt_forest (forest);
+
     const size_t element_count_after = particles_per_element->size ();
     t8_debugf ("element_count_after: %li \n", element_count_after);
     iter++;
