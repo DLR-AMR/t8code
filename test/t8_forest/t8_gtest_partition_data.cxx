@@ -267,4 +267,4 @@ TEST_P (t8_test_partition_data_test, test_partition_data)
   t8_forest_unref (&partitioned_forest);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_partititon_data, t8_test_partition_data_test, DefaultScheme);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_partititon_data, t8_test_partition_data_test, AllSchemes, print_all_schemes);

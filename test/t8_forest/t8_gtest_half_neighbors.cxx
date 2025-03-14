@@ -134,4 +134,4 @@ TEST_P (forest_half_neighbors, test_half_neighbors)
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_half_neighbors, forest_half_neighbors,
-                          testing::Combine (DefaultScheme, testing::Range (0, 3)));
+                          testing::Combine (AllSchemes, testing::Range (0, 3)));
