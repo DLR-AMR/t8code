@@ -240,9 +240,10 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
             t8_debugf ("Checking neighbor element %p in (global) tree %li.\n", (void *) neighbor, gneigh_tree);
             t8_debugf ("dual face is %i, index is %i\n", dual_face, neigh_index);
 
+#if T8_ENABLE_DEBUG
             ASSERT_TRUE (scheme->element_is_valid (neigh_class, neighbor))
               << "Neighbor element " << ineigh << " is not valid";
-
+#endif
             t8_locidx_t neigh_ltreeid_from_index;
             // Check that neighbor index correctly yields neighbor element.
             if (neigh_index < num_local_elements) {
@@ -318,6 +319,7 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
 
             // clean-up neighbor's neighbors
             if (neigh_num_neighbors > 0) {
+              scheme->element_destroy (neigh_class, neigh_num_neighbors, neigh_neighbor_leaves);
               T8_FREE (neigh_neighbor_leaves);
               T8_FREE (neigh_element_indices);
               T8_FREE (neigh_dual_faces);
@@ -326,6 +328,7 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
 
           // clean-up original element neighbors
           if (num_neighbors > 0) {
+            scheme->element_destroy (neigh_class, num_neighbors, neighbor_leaves);
             T8_FREE (neighbor_leaves);
             T8_FREE (element_indices);
             T8_FREE (dual_faces);

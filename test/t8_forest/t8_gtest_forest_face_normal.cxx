@@ -89,8 +89,6 @@ TEST_P (class_forest_face_normal, back_and_forth)
         t8_locidx_t *neigh_ids;
 
         t8_gloidx_t gneightree;
-        scheme->element_debug_print (tree_class, element);
-        t8_debugf("[D] iface %d\n", iface);
         t8_forest_leaf_face_neighbors_ext (forest, itree, element, &neighbors, iface, &dual_faces, &num_neighbors,
                                            &neigh_ids, &neigh_eclass, &gneightree, NULL);
 
