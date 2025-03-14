@@ -244,7 +244,8 @@ class cmesh_vertex_conn_ttv_with_cmesh_functions: public testing::TestWithParam<
       for (t8_locidx_t ientry = start_index; ientry < num_tree_vertices; ++ientry) {
         global_indices[ientry] = ientry;
       }
-      t8_cmesh_set_global_vertices_of_tree (cmesh, itree, global_indices, num_tree_vertices);
+      const t8_gloidx_t global_tree_id = t8_cmesh_get_global_id (cmesh, itree);
+      t8_cmesh_set_global_vertices_of_tree (cmesh, global_tree_id, global_indices, num_tree_vertices);
       /* It is save to free the entries after commit, since the value got copied. */
       T8_FREE (global_indices);
     }
