@@ -33,18 +33,21 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
 
-/* forward declaration of ttv class needed since the two class headers include each other. */
+/** forward declaration of ttv class needed since the two class headers include each other. */
 class t8_cmesh_vertex_conn_tree_to_vertex;
 
-/*
- *  notes during development
- *
- * This class stores the lookup
+/** This class stores the vertex to tree lookup for
+ * global vertex indices for a cmesh.
+ * Thus, given a global vertex id the class provides
+ * information about the trees the vertex belongs to and 
+ * the corresponding local vertex ids inside these trees.
+ * 
+ * In particular, this class stores the lookup
  *
  * global_vertex_id -> List of (tree, tree_local_vertex)
  *
  * for a cmesh.
- * It is the opposite lookup as t8_cmesh_vertex_conn_tree_to_vertex
+ * It is the opposite lookup as \ref t8_cmesh_vertex_conn_tree_to_vertex.hxx
  *
  * The global vertex ids must not be contiguous, that is, we have some set
  *
@@ -52,24 +55,16 @@ class t8_cmesh_vertex_conn_tree_to_vertex;
  *
  * I_0 does not have to be 0 and I_N does not have to be N.
  *
- *
  * So we need lookup: I_i -> i
  *  store this in a hash table.
  *
- * dattypes:
+ * datatypes:
  *
  * global id: t8_gloidx_t
  * (tree_id, tree_vertex): std::pair<t8_locidx_t, int> = TV_PAIR
  * List of (tree_id, tree_vertex): std::vector<PAIR> = TV_LIST
  * Table global_id -> TV_LIST: std::unordered_map<t8_gloidx_t, TV_LIST>
  *
-*/
-
-/** This class stores the vertex to tree lookup for
- * global vertex indices for a cmesh.
- * Thus, given a global vertex id the class provides
- * information about the trees the vertex belongs to and 
- * the corresponding local vertex ids inside these trees.
  */
 class t8_cmesh_vertex_conn_vertex_to_tree {
  public:
