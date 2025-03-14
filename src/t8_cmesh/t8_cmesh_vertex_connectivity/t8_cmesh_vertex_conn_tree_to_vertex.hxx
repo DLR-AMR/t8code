@@ -90,10 +90,31 @@ class t8_cmesh_vertex_conn_tree_to_vertex {
    *
    * \note \a cmesh must not be committed.
   */
-  void
+  inline void
   set_global_vertex_ids_of_tree_vertices (const t8_cmesh_t, const t8_gloidx_t global_tree,
-                                          const t8_gloidx_t *global_tree_vertices, const int num_vertices);
+                                          const t8_gloidx_t *global_tree_vertices, const int num_vertices)
+  {
+    T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+    T8_ASSERT (num_vertices >= 0);
+    T8_ASSERT (global_tree_vertices != NULL);
 
+    /* TODO: we currently do not check whether the num_vertices argument
+    *       matches the number of vertices of the tree.
+    *       We cannot do it here, since this function call happens before commit,
+    *       thus we might not even know the eclass of the tree.
+    *       Maybe it is possible to check this during t8_cmesh_add_attributes?
+    */
+
+    /* We copy the data directly, hence set data_persiss to 0 */
+    const int data_persists = 0;
+    t8_debugf ("Setting %i global vertices for global tree %li.\n", num_vertices, global_tree);
+    t8_cmesh_set_attribute_gloidx_array (cmesh, global_tree, t8_get_package_id (),
+                                         T8_CMESH_GLOBAL_VERTICES_ATTRIBUTE_KEY, global_tree_vertices, num_vertices,
+                                         data_persists);
+    state = FILLED;
+  }
+
+  //TODO: document
   /* TODO: What if the attribute is not set? error handling */
   inline const t8_gloidx_t *
   get_global_vertices (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int num_vertices) const

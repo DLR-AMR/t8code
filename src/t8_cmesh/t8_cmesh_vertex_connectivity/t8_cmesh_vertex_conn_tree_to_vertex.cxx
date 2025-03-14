@@ -100,7 +100,7 @@ t8_cmesh_vertex_conn_tree_to_vertex::t8_cmesh_vertex_conn_tree_to_vertex (
   *
   * \note Cmesh must not be committed.
   */
-inline void
+void
 t8_cmesh_vertex_conn_tree_to_vertex::set_global_vertex_ids_of_tree_vertices (const t8_cmesh_t cmesh,
                                                                              const t8_gloidx_t global_tree,
                                                                              const t8_gloidx_t *global_tree_vertices,
