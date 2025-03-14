@@ -27,7 +27,7 @@
 
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_types.h>
-#include <t8_cmesh/t8_cmesh_vertex_connectivity.hxx>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
 
 /*
 Use case

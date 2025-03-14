@@ -43,7 +43,7 @@
 #include <algorithm>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_types.h>
-#include <t8_cmesh/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
 
 /* forward declaration of ttv class needed since the two class headers include each other. */
 class t8_cmesh_vertex_conn_vertex_to_tree;

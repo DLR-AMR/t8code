@@ -36,7 +36,7 @@
 #include <t8_cmesh/t8_cmesh_copy.h>
 #include <t8_cmesh/t8_cmesh_geometry.h>
 #include <t8_geometry/t8_geometry_handler.hxx>
-#include <t8_cmesh/t8_cmesh_vertex_connectivity.hxx>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
 
 typedef struct ghost_facejoins_struct
 {

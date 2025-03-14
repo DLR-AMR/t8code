@@ -23,9 +23,9 @@
 #include <gtest/gtest.h>
 #include <test/t8_gtest_macros.hxx>
 #include <t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_vertex_connectivity.hxx>
-#include <t8_cmesh/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
-#include <t8_cmesh/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <test/t8_cmesh_generator/t8_cmesh_example_sets.hxx>
 

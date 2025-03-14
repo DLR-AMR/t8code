@@ -115,9 +115,9 @@ target_sources( T8 PRIVATE
     t8_cmesh/t8_cmesh_examples.cxx 
     t8_cmesh/t8_cmesh_helpers.cxx 
     t8_cmesh/t8_cmesh_offset.c 
-    t8_cmesh/t8_cmesh_vertex_conn_tree_to_vertex.cxx 
-    t8_cmesh/t8_cmesh_vertex_conn_vertex_to_tree.cxx 
-    t8_cmesh/t8_cmesh_vertex_connectivity.cxx 
+    t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_tree_to_vertex.cxx 
+    t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.cxx 
+    t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.cxx 
     t8_cmesh/t8_cmesh_readmshfile.cxx 
     t8_data/t8_shmem.c 
     t8_data/t8_containers.cxx 

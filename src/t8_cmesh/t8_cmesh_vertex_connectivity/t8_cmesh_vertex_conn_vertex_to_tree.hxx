@@ -31,7 +31,7 @@
 #include <vector>
 #include <unordered_map>
 #include <t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
 
 /* forward declaration of ttv class needed since the two class headers include each other. */
 class t8_cmesh_vertex_conn_tree_to_vertex;

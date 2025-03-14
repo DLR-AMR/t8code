@@ -26,7 +26,7 @@
 
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_types.h>
-#include <t8_cmesh/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
 
 /* constructor from a given vertex to tree list. */
 t8_cmesh_vertex_conn_tree_to_vertex::t8_cmesh_vertex_conn_tree_to_vertex (
