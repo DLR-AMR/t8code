@@ -1450,8 +1450,7 @@ t8_forest_element_neighbor_eclass (const t8_forest_t forest, const t8_locidx_t l
                                    const int face)
 {
   /* Get a pointer to the tree to read its element class */
-  const t8_tree_t tree = t8_forest_get_tree (forest, ltreeid);
-  const t8_eclass_t tree_class = tree->eclass;
+  const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
   if (!scheme->element_is_root_boundary (tree_class, elem, face)) {
     /* The neighbor element is inside the current tree. */
@@ -1486,8 +1485,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const 
                                  t8_eclass_t neigh_eclass, int face, int *neigh_face)
 {
   /* Get a pointer to the tree to read its element class */
-  const t8_tree_t tree = t8_forest_get_tree (forest, ltreeid);
-  const t8_eclass_t eclass = tree->eclass;
+  const t8_eclass_t eclass = t8_forest_get_tree_class (forest, ltreeid);
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
   if (neigh_eclass == eclass && scheme->element_get_face_neighbor_inside (eclass, elem, neigh, face, neigh_face)) {
     /* The neighbor was constructed and is inside the current tree. */
@@ -1804,16 +1802,21 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
   t8_element_t *same_level_neighbor;
   scheme->element_new (neigh_class, 1, &same_level_neighbor);
   int neigh_face;
-  *gneigh_tree = t8_forest_element_face_neighbor (forest, ltreeid, leaf_or_ghost, same_level_neighbor, neigh_class,
-                                                  face, &neigh_face);
+  const t8_gloidx_t computed_gneigh_tree = t8_forest_element_face_neighbor (
+    forest, ltreeid, leaf_or_ghost, same_level_neighbor, neigh_class, face, &neigh_face);
 
-  if (*gneigh_tree < 0) {
+  if (computed_gneigh_tree < 0) {
     // There is no face neighbor across this face
     scheme->element_destroy (neigh_class, 1, &same_level_neighbor);
     *dual_faces = NULL;
     *num_neighbors = 0;
     *pelement_indices = NULL;
-    *pneighbor_leaves = NULL;
+    if (pneighbor_leaves) {
+      *pneighbor_leaves = NULL;
+    }
+    if (gneigh_tree != NULL) {
+      *gneigh_tree = -1;
+    }
     return;
   }
 
@@ -1852,12 +1855,12 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
   int face_owners_lower_bound = 0;
   int face_owners_upper_bound = forest->mpisize - 1;
   const int mpirank = forest->mpirank;
-  t8_forest_element_owners_at_face_bounds (forest, *gneigh_tree, same_level_neighbor, neigh_class, neigh_face,
+  t8_forest_element_owners_at_face_bounds (forest, computed_gneigh_tree, same_level_neighbor, neigh_class, neigh_face,
                                            &face_owners_lower_bound, &face_owners_upper_bound);
 
   std::vector<const neighbor_leaf_array *> leaf_arrays;
 
-  const t8_locidx_t local_neighbor_tree = t8_forest_get_local_id (forest, *gneigh_tree);
+  const t8_locidx_t local_neighbor_tree = t8_forest_get_local_id (forest, computed_gneigh_tree);
   if (face_owners_lower_bound <= mpirank && mpirank <= face_owners_upper_bound) {
     // Add the local neighbor tree's elements to the search array.
     // Compute the local id of the neighbor tree and check if it is a local tree
@@ -1866,8 +1869,8 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
       // The neighbor tree is a local tree and hence there may be local neighbor elements.
       const t8_element_array_t *tree_leaves = t8_forest_tree_get_leaves (forest, local_neighbor_tree);
       if (tree_leaves != nullptr) {
-        neighbor_leaf_array leaf_array (tree_leaves, false);
-        leaf_arrays.push_back (&leaf_array);
+        neighbor_leaf_array *leaf_array = new neighbor_leaf_array (tree_leaves, false);
+        leaf_arrays.push_back (leaf_array);
       }
     }
   }
@@ -1876,7 +1879,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
     if (face_owners_lower_bound != mpirank || face_owners_upper_bound != mpirank) {
       // Add the neighbor tree ghost elements to the search array
       t8_debugf ("Adding ghost tree to search.\n");
-      const t8_locidx_t local_neighbor_ghost_treeid = t8_forest_ghost_get_ghost_treeid (forest, *gneigh_tree);
+      const t8_locidx_t local_neighbor_ghost_treeid = t8_forest_ghost_get_ghost_treeid (forest, computed_gneigh_tree);
       if (local_neighbor_ghost_treeid >= 0) {
         // The neighbor tree is also a ghost tree and face neighbors of our element might
         // be ghost elements.
@@ -1884,8 +1887,8 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
         const t8_element_array_t *ghost_leaves
           = t8_forest_ghost_get_tree_elements (forest, local_neighbor_ghost_treeid);
         if (ghost_leaves != nullptr) {
-          neighbor_leaf_array leaf_array (ghost_leaves, true);
-          leaf_arrays.push_back (&leaf_array);
+          neighbor_leaf_array *leaf_array = new neighbor_leaf_array (ghost_leaves, true);
+          leaf_arrays.push_back (leaf_array);
         }
       }
     }
@@ -1901,12 +1904,16 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
   // This will trigger REALLOC to allocate the memory in the initial call.
   // Not setting them to NULL but keeping them possibly uninitialized, will
   // call REALLOC on uninitialized memory and result in memory errors.
-  *pneighbor_leaves = NULL;
+  if (pneighbor_leaves != NULL) {
+    *pneighbor_leaves = NULL;
+  }
+
   *pelement_indices = NULL;
   *dual_faces = NULL;
   for (auto &leaf_array : leaf_arrays) {
     auto &tree_leaves = leaf_array->first;
     const bool leaf_array_is_ghost = leaf_array->second;
+    T8_ASSERT (tree_leaves != NULL);
     const t8_locidx_t first_desc_search = t8_forest_bin_search_lower (tree_leaves, first_face_desc_id, maxlevel);
     const t8_locidx_t last_desc_search = t8_forest_bin_search_lower (tree_leaves, last_face_desc_id, maxlevel);
     if (first_desc_search >= 0 || last_desc_search >= 0) {
@@ -1949,7 +1956,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
         // Compute the local or ghost tree id depending on whether this leaf array corresponds to a local
         // tree or ghost tree.
         const t8_locidx_t face_iterate_tree_id
-          = leaf_array_is_ghost ? t8_forest_ghost_get_ghost_treeid (forest, *gneigh_tree) + num_local_trees
+          = leaf_array_is_ghost ? t8_forest_ghost_get_ghost_treeid (forest, computed_gneigh_tree) + num_local_trees
                                 : local_neighbor_tree;
         t8_forest_iterate_faces (forest, face_iterate_tree_id, nca_of_face_desc, face_of_nca, &face_leaves,
                                  first_desc_index, t8_forest_leaf_face_neighbors_iterate, &user_data);
@@ -1965,6 +1972,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
         // neighbor data.
         // TODO: Since there is no other way, we copy them from the vectors.
         //       This should be improved in the future to get around the copy.
+        //       Indeed it would be more beneficial to just return const pointers to the actual internal leaves.
 
         // num_neighbors counts the already inserted neighbors before this tree
         // num_neighbors_current_tree counts the neighbors added in this tree
@@ -1974,10 +1982,21 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
         t8_debugf ("Found %i neighbors in tree. Adding up to %i total neighbors.\n", num_neighbors_current_tree,
                    total_num_neighbors);
         // Copy neighbor element pointers
-        *pneighbor_leaves = T8_REALLOC (*pneighbor_leaves, t8_element_t *, total_num_neighbors);
-        T8_ASSERT (*pneighbor_leaves != NULL);
-        memcpy (*pneighbor_leaves + *num_neighbors, user_data.neighbors.data () + *num_neighbors,
-                num_neighbors_current_tree * sizeof (t8_element_t *));
+        if (pneighbor_leaves != NULL) {
+          // Note element_destroy call after this function on *pneighbor_leaves
+          // is compatible with using T8_REALLOC on *pneighbor_leaves.
+          // REALLOC moving the storage of the pointers. The pointers store the element storage.
+          // So the element storage allocated by t8_element_new is not affected by the call to REALLOC.
+          *pneighbor_leaves = T8_REALLOC (*pneighbor_leaves, t8_element_t *, total_num_neighbors);
+          scheme->element_new (eclass, num_neighbors_current_tree, *pneighbor_leaves + *num_neighbors);
+          T8_ASSERT (*pneighbor_leaves != NULL);
+          // Call element copy for each element
+          for (t8_locidx_t ielem = 0; ielem < num_neighbors_current_tree; ++ielem) {
+            t8_element_t *new_element = (*pneighbor_leaves)[ielem];
+            const t8_element_t *forest_leaf = user_data.neighbors.data ()[*num_neighbors + ielem];
+            scheme->element_copy (eclass, forest_leaf, new_element);
+          }
+        }
         // Copy element indices
         *pelement_indices = T8_REALLOC (*pelement_indices, t8_locidx_t, total_num_neighbors);
         T8_ASSERT (*pelement_indices != NULL);
@@ -1991,6 +2010,8 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
         *num_neighbors = total_num_neighbors;
       }
     }
+    // clean up memory allocated with new
+    delete leaf_array;
   }
   scheme->element_destroy (neigh_class, 1, &same_level_neighbor);
 #if T8_ENABLE_DEBUG
@@ -2000,11 +2021,17 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
     T8_ASSERT (*num_neighbors > 0);
   }
   // All neighbor elements must be valid
-  for (int ineigh = 0; ineigh < *num_neighbors; ++ineigh) {
-    T8_ASSERT (scheme->element_is_valid (neigh_class, (*pneighbor_leaves)[ineigh]));
-    t8_debugf ("Face neighbor %p is valid.\n", (void *) (*pneighbor_leaves)[ineigh]);
+  if (pneighbor_leaves != NULL) {
+    for (int ineigh = 0; ineigh < *num_neighbors; ++ineigh) {
+      T8_ASSERT (scheme->element_is_valid (neigh_class, (*pneighbor_leaves)[ineigh]));
+      t8_debugf ("Face neighbor %p is valid.\n", (void *) (*pneighbor_leaves)[ineigh]);
+    }
   }
 #endif  // T8_ENABLE_DEBUG
+
+  if (gneigh_tree != NULL) {
+    *gneigh_tree = computed_gneigh_tree;
+  }
 
   // clean-up
   scheme->element_destroy (eclass, 1, &nca_of_face_desc);
@@ -2250,6 +2277,60 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8
 {
   t8_forest_leaf_face_neighbors_ext (forest, ltreeid, leaf, pneighbor_leaves, face, dual_faces, num_neighbors,
                                      pelement_indices, pneigh_eclass, NULL, NULL);
+}
+
+t8_locidx_t
+t8_forest_same_level_leaf_face_neighbor_index (t8_forest_t forest, const t8_locidx_t element_index,
+                                               const int face_index, const t8_gloidx_t global_treeid, int *dual_face)
+{
+  const t8_locidx_t num_local_elements = t8_forest_get_local_num_elements (forest);
+#if T8_ENABLE_DEBUG
+  const t8_locidx_t num_ghosts = t8_forest_get_num_ghosts (forest);
+  T8_ASSERT (0 <= element_index && element_index < num_local_elements + num_ghosts);
+#endif
+  const bool is_local = element_index < num_local_elements;
+
+  t8_locidx_t local_tree;
+  t8_locidx_t element_index_in_tree;
+  const t8_element_t *element;
+  if (is_local) {
+    local_tree = t8_forest_get_local_id (forest, global_treeid);
+    element_index_in_tree = element_index - t8_forest_get_tree_element_offset (forest, local_tree);
+    element = t8_forest_get_element_in_tree (forest, local_tree, element_index_in_tree);
+  }
+  else {
+    local_tree = t8_forest_ghost_get_ghost_treeid (forest, global_treeid);
+    const t8_locidx_t ghost_offset_in_tree = t8_forest_ghost_get_tree_element_offset (forest, local_tree);
+    element_index_in_tree = element_index - num_local_elements - ghost_offset_in_tree;
+    element = t8_forest_ghost_get_element (forest, local_tree, element_index_in_tree);
+    local_tree += t8_forest_get_num_local_trees (forest);
+  }
+
+  int *dual_faces;
+  int num_neighbors = 0;
+  t8_locidx_t *element_indices;
+  t8_eclass_t neigh_class;
+
+  t8_debugf ("Same level leaf neighbor for index %i. Which is %s element %i in tree %i.\n", element_index,
+             element_index < num_local_elements ? "local" : "ghost", element_index_in_tree, local_tree);
+
+  t8_forest_leaf_face_neighbors (forest, local_tree, element, NULL, face_index, &dual_faces, &num_neighbors,
+                                 &element_indices, &neigh_class);
+
+  T8_ASSERT (num_neighbors == 0 || num_neighbors == 1);
+
+  if (num_neighbors == 0) {
+    *dual_face = -1;
+    return -1;
+  }
+
+  *dual_face = dual_faces[0];
+  const t8_locidx_t neigh_index = element_indices[0];
+
+  T8_FREE (element_indices);
+  T8_FREE (dual_faces);
+
+  return neigh_index;
 }
 
 void
