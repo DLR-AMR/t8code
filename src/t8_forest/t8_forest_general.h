@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2024 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -568,14 +568,14 @@ t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, 
  *                        0, 1, ... num_local_el - 1 for local leaves and
  *                        num_local_el , ... , num_local_el + num_ghosts - 1 for ghosts.
  * \param [out]   pneigh_eclass On output the eclass of the neighbor elements.
- * \note If there are no face neighbors, then *neighbor_leaves = NULL, num_neighbors = 0,
+ * \note If there are no face neighbors, then *pneighbor_leaves = NULL, num_neighbors = 0,
  * and *pelement_indices = NULL on output.
  * \note \a forest must be committed before calling this function.
  *
  * \note Important! This routine allocates memory which must be freed. Do it like this:
  *
  *   if (num_neighbors > 0) {
- *     scheme->element_destroy (pneigh_eclass, num_neighbors, neighbors);
+ *     scheme->element_destroy (pneigh_eclass, num_neighbors, pneighbor_leaves);
  *     T8_FREE (pneighbor_leaves);
  *     T8_FREE (pelement_indices);
  *     T8_FREE (dual_faces);
@@ -607,14 +607,14 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8
  *                                         Thus, if the face connection is an inter-tree connection the orientation of the tree-to-tree connection is stored. 
  *                                         Otherwise, the value 0 is stored.
  * All other parameters and behavior are identical to \ref `t8_forest_leaf_face_neighbors`.
- * \note If there are no face neighbors, then *neighbor_leaves = NULL, num_neighbors = 0,
+ * \note If there are no face neighbors, then *pneighbor_leaves = NULL, num_neighbors = 0,
  * and *pelement_indices = NULL on output.
  * \note \a forest must be committed before calling this function.
  *
  * \note Important! This routine allocates memory which must be freed. Do it like this:
  *
  *   if (num_neighbors > 0) {
- *     scheme->element_destroy (pneigh_eclass, num_neighbors, neighbors);
+ *     scheme->element_destroy (pneigh_eclass, num_neighbors, pneighbor_leaves);
  *     T8_FREE (pneighbor_leaves);
  *     T8_FREE (pelement_indices);
  *     T8_FREE (dual_faces);
@@ -626,6 +626,24 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
                                    t8_element_t **pneighbor_leaves[], int face, int *dual_faces[], int *num_neighbors,
                                    t8_locidx_t **pelement_indices, t8_eclass_t *pneigh_eclass, t8_gloidx_t *gneigh_tree,
                                    int *orientation);
+
+/** Given a leaf element or ghost index in "all local elements + ghosts" enumeration
+ * compute the index of the face neighbor of the element - provided that only one or no
+ * face neighbors exists.
+ * HANDLE WITH CARE. DO NOT CALL IF THE FOREST IS ADAPTED.
+ * 
+ * \param[in] forest        The forest. Must be committed.
+ * \param[in] element_index Index of an element in \a forest. Must have only one or no facen neighbors across the given face.
+ *                          0 <= \a element_index < num_local_elements + num_ghosts
+ * \param[in] face_index    Index of a face of \a element.
+ * \param[in] global_treeid Global index of the tree that contains \a element.
+ * \param[out] dual_face    Return value, the dual_face index of the face neighbor.
+ * \return The index of the face neighbor leaf (local element or ghost).
+ * \note Do not call if you are unsure about the number of face neighbors. In particular if the forest is adapted and not uniform.
+ */
+t8_locidx_t
+t8_forest_same_level_leaf_face_neighbor_index (t8_forest_t forest, const t8_locidx_t element_index,
+                                               const int face_index, const t8_gloidx_t global_treeid, int *dual_face);
 
 /** Exchange ghost information of user defined element data.
  * \param [in] forest       The forest. Must be committed.
@@ -873,22 +891,6 @@ t8_forest_iterate (t8_forest_t forest);
 void
 t8_forest_element_points_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
                                  const double *points, int num_points, int *is_inside, const double tolerance);
-
-/** Find the owner process of a given element.
- * \param [in]    forest  The forest.
- * \param [in]    gtreeid The global id of the tree in which the element lies.
- * \param [in]    element The element to look for.
- * \param [in]    eclass  The element class of the tree \a gtreeid.
- * \return                The mpirank of the process that owns \a element.
- * \note The element must not exist in the forest, but an ancestor of its first
- *       descendant has to. If the element's owner is not unique, the owner of the element's
- *       first descendant is returned.
- * \note \a forest must be committed before calling this function.
- * \see t8_forest_element_find_owner_ext
- * \see t8_forest_element_owners_bounds
- */
-int
-t8_forest_element_find_owner (t8_forest_t forest, t8_gloidx_t gtreeid, t8_element_t *element, t8_eclass_t eclass);
 
 /* TODO: if set level and partition/adapt/balance all give NULL, then
  * refine uniformly and partition/adapt/balance the uniform forest. */
