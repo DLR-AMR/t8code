@@ -62,13 +62,13 @@ class forest_face_neighbors: public testing::TestWithParam<std::tuple<int, cmesh
   SetUp () override
   {
     const int scheme_id = std::get<0> (GetParam ());
-    const t8_scheme *scheme = create_from_scheme_id (scheme_id);
     t8_cmesh_t cmesh = std::get<1> (GetParam ())->cmesh_create ();
     if (test_face_neighbors_skip_cmesh (cmesh)) {
       /* we skip empty cmeshes case */
       t8_cmesh_unref (&cmesh);
       GTEST_SKIP ();
     }
+    const t8_scheme *scheme = create_from_scheme_id (scheme_id);
     const int level = 1;
     const int adapt_levels = 2;
     const int max_adapt_level = level + adapt_levels;
@@ -215,6 +215,22 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
                                          << ".";
           }
 
+          if (forest_is_uniform) {
+            ASSERT_TRUE (num_neighbors == 0 || num_neighbors == 1);
+            // Check the index computation function and that it computes the correct neighbor index.
+            int check_dual_face;
+            const t8_locidx_t check_same_level_index = t8_forest_same_level_leaf_face_neighbor_index (
+              forest, ielement_index, iface, gtree_id, &check_dual_face);
+
+            if (check_dual_face < 0) {
+              EXPECT_EQ (num_neighbors, 0);
+            }
+            if (check_dual_face >= 0) {
+              EXPECT_EQ (dual_faces[0], check_dual_face);
+              EXPECT_EQ (element_indices[0], check_same_level_index);
+            }
+          }
+
           // Check that the neighbor of the neighbor is the original element.
           for (int ineigh = 0; ineigh < num_neighbors; ++ineigh) {
             const t8_element_t *neighbor = neighbor_leaves[ineigh];
@@ -224,9 +240,10 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
             t8_debugf ("Checking neighbor element %p in (global) tree %li.\n", (void *) neighbor, gneigh_tree);
             t8_debugf ("dual face is %i, index is %i\n", dual_face, neigh_index);
 
+#if T8_ENABLE_DEBUG
             ASSERT_TRUE (scheme->element_is_valid (neigh_class, neighbor))
               << "Neighbor element " << ineigh << " is not valid";
-
+#endif
             t8_locidx_t neigh_ltreeid_from_index;
             // Check that neighbor index correctly yields neighbor element.
             if (neigh_index < num_local_elements) {
@@ -302,6 +319,7 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
 
             // clean-up neighbor's neighbors
             if (neigh_num_neighbors > 0) {
+              scheme->element_destroy (neigh_class, neigh_num_neighbors, neigh_neighbor_leaves);
               T8_FREE (neigh_neighbor_leaves);
               T8_FREE (neigh_element_indices);
               T8_FREE (neigh_dual_faces);
@@ -310,6 +328,7 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
 
           // clean-up original element neighbors
           if (num_neighbors > 0) {
+            scheme->element_destroy (neigh_class, num_neighbors, neighbor_leaves);
             T8_FREE (neighbor_leaves);
             T8_FREE (element_indices);
             T8_FREE (dual_faces);
