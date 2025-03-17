@@ -24,8 +24,7 @@
 #include <sc_options.h>
 #include <sc_refcount.h>
 #include <t8_eclass.h>
-#include <t8_element.hxx>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <t8_schemes/t8_scheme.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_geometrical.h>
@@ -59,14 +58,15 @@ t8_test_fiterate_callback (t8_forest_t forest, t8_locidx_t ltreeid, const t8_ele
 
 /* Only refine the first tree on a process. */
 static int
-t8_basic_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+t8_basic_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, const t8_eclass_t tree_class,
+                t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family, const int num_elements,
+                t8_element_t *elements[])
 {
   int mpirank, mpiret;
-  T8_ASSERT (!is_family || num_elements == ts->t8_element_num_children (elements[0]));
+  T8_ASSERT (!is_family || num_elements == scheme->element_get_num_children (tree_class, elements[0]));
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
-  if (which_tree == 0 && mpirank == 0 && ts->t8_element_level (elements[0]) < 2) {
+  if (which_tree == 0 && mpirank == 0 && scheme->element_get_level (tree_class, elements[0]) < 2) {
     return 1;
   }
   return 0;
@@ -82,7 +82,7 @@ t8_test_fiterate (t8_forest_t forest)
   const t8_locidx_t num_trees = num_local_trees + t8_forest_get_num_ghost_trees (forest);
   for (t8_locidx_t itree = 0; itree < num_trees; itree++) {
     const t8_eclass_t eclass = t8_forest_get_tree_class (forest, itree);
-    const t8_eclass_scheme_c *ts = t8_forest_get_eclass_scheme (forest, eclass);
+    const t8_scheme *scheme = t8_forest_get_scheme (forest);
     // Query whether this tree is a ghost and compute its ghost tree id.
     const bool is_ghost = itree >= num_local_trees;
     const t8_locidx_t ghost_tree_id = is_ghost ? itree - num_local_trees : -1;
@@ -98,16 +98,16 @@ t8_test_fiterate (t8_forest_t forest)
       = (const t8_element_t *) t8_element_array_index_locidx (leaf_elements, num_tree_elements - 1);
 
     t8_element_t *nca;
-    ts->t8_element_new (1, &nca);
-    ts->t8_element_nca (first_el, last_el, nca);
+    scheme->element_new (eclass, 1, &nca);
+    scheme->element_get_nca (eclass, first_el, last_el, nca);
 
     //
-    for (int iface = 0; iface < ts->t8_element_num_faces (nca); iface++) {
+    for (int iface = 0; iface < scheme->element_get_num_faces (eclass, nca); iface++) {
       udata.count = 0;
       t8_forest_iterate_faces (forest, itree, nca, iface, leaf_elements, 0, t8_test_fiterate_callback, &udata);
       t8_debugf ("Leaf elements at face %i:\t%i\n", iface, udata.count);
     }
-    ts->t8_element_destroy (1, &nca);
+    scheme->element_destroy (eclass, 1, &nca);
   }
 }
 
@@ -124,7 +124,7 @@ t8_test_fiterate_refine_and_partition (t8_cmesh_t cmesh, int level, sc_MPI_Comm 
     /* partition the initial cmesh according to a uniform forest */
     t8_cmesh_init (&cmesh_partition);
     t8_cmesh_set_derive (cmesh_partition, cmesh);
-    t8_cmesh_set_partition_uniform (cmesh_partition, level, t8_scheme_new_default_cxx ());
+    t8_cmesh_set_partition_uniform (cmesh_partition, level, t8_scheme_new_default ());
     t8_cmesh_commit (cmesh_partition, comm);
   }
   else {
@@ -134,7 +134,7 @@ t8_test_fiterate_refine_and_partition (t8_cmesh_t cmesh, int level, sc_MPI_Comm 
   if (!no_vtk) {
     t8_cmesh_vtk_write_file (cmesh_partition, "test_fiterate_cmesh1");
   }
-  forest = t8_forest_new_uniform (cmesh_partition, t8_scheme_new_default_cxx (), level, 0, comm);
+  forest = t8_forest_new_uniform (cmesh_partition, t8_scheme_new_default (), level, 0, comm);
 
   t8_test_fiterate (forest);
   t8_forest_init (&forest_adapt);

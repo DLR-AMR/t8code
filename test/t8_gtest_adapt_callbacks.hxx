@@ -28,6 +28,7 @@
 #define T8_GTEST_ADAPT_CALLBACKS
 
 #include <src/t8_forest/t8_forest_general.h>
+#include <t8_schemes/t8_scheme.hxx>
 
 /* Adapt a forest such that always the first child of a
  * family is refined and no other elements. This results in a highly
@@ -37,8 +38,8 @@
  * This integer is the maximum refinement level.
  */
 int
-t8_test_adapt_first_child (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                           t8_eclass_scheme_c *scheme, const int is_family, const int num_elements,
-                           t8_element_t *elements[]);
+t8_test_adapt_first_child (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
+                           const t8_eclass_t eclass, t8_locidx_t lelement_id, const t8_scheme *scheme,
+                           const int is_family, const int num_elements, t8_element_t *elements[]);
 
 #endif /* T8_GTEST_ADAPT_CALLBACKS */

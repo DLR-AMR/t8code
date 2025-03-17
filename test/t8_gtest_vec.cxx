@@ -26,7 +26,7 @@
 #include <t8_vec.h>
 #include <test/t8_gtest_custom_assertion.hxx>
 
-/* Wrapper for 3D vector dataype */
+/* Wrapper for 3D vector datatype */
 typedef double t8_test_vec[3];
 /* Accuracy used for comparisons with correct result */
 #define epsilon 1e-9

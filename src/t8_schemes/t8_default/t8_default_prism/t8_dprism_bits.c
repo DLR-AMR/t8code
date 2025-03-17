@@ -127,16 +127,14 @@ t8_dprism_child_id (const t8_dprism_t *p)
 int
 t8_dprism_is_familypv (t8_dprism_t **fam)
 {
-  t8_dtri_t **tri_fam = T8_ALLOC (t8_dtri_t *, T8_DTRI_CHILDREN);
-  t8_dline_t **line_fam = T8_ALLOC (t8_dline_t *, T8_DLINE_CHILDREN);
+  t8_dtri_t *tri_fam[T8_DPRISM_CHILDREN];
+  t8_dline_t *line_fam[T8_DLINE_CHILDREN];
 
   for (int i = 0; i < T8_DLINE_CHILDREN; i++) {
     for (int j = 0; j < T8_DTRI_CHILDREN; j++) {
       tri_fam[j] = &fam[j + i * T8_DTRI_CHILDREN]->tri;
     }
     if (!t8_dtri_is_familypv ((const t8_dtri_t **) tri_fam)) {
-      T8_FREE (tri_fam);
-      T8_FREE (line_fam);
       return 0;
     }
   }
@@ -151,21 +149,15 @@ t8_dprism_is_familypv (t8_dprism_t **fam)
           && (fam[i]->tri.type == fam[i + T8_DTRI_CHILDREN]->tri.type)
           && (fam[i]->tri.x == fam[i + T8_DTRI_CHILDREN]->tri.x)
           && (fam[i]->tri.y == fam[i + T8_DTRI_CHILDREN]->tri.y))) {
-      T8_FREE (tri_fam);
-      T8_FREE (line_fam);
       return 0;
     }
   }
 
   for (int i = 0; i < T8_DPRISM_CHILDREN; i++) {
     if (fam[i]->line.level != fam[i]->tri.level) {
-      T8_FREE (tri_fam);
-      T8_FREE (line_fam);
       return 0;
     }
   }
-  T8_FREE (tri_fam);
-  T8_FREE (line_fam);
   return 1;
 }
 
@@ -337,24 +329,24 @@ t8_dprism_children_at_face (const t8_dprism_t *p, int face, t8_dprism_t **childr
   T8_ASSERT (num_children == t8_dprism_num_face_children (p, face));
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
   if (face < 3) {
-    for (int ichild = 0; ichild < 4; ichild++) {
+    for (int ichild = 3; ichild >= 0; ichild--) {
       t8_dprism_child (p, children_at_face[p->tri.type][face * 4 + ichild], children[ichild]);
     }
   }
   else {
-    for (int ichild = 0; ichild < 4; ichild++) {
+    for (int ichild = 3; ichild >= 0; ichild--) {
       t8_dprism_child (p, (face % 3) * 4 + ichild, children[ichild]);
     }
   }
   /* Fill child-indices array */
   if (child_indices != NULL) {
     if (face < 3) {
-      for (int ichild = 0; ichild < 4; ichild++) {
+      for (int ichild = 3; ichild >= 0; ichild--) {
         child_indices[ichild] = children_at_face[p->tri.type][face * 4 + ichild];
       }
     }
     else {
-      for (int ichild = 0; ichild < 4; ichild++) {
+      for (int ichild = 3; ichild >= 0; ichild--) {
         child_indices[ichild] = (face % 3) * 4 + ichild;
       }
     }
