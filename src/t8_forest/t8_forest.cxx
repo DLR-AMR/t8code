@@ -1876,7 +1876,6 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
       if (tree_leaves != nullptr) {
         neighbor_leaf_array *leaf_array = new neighbor_leaf_array (tree_leaves, false);
         leaf_arrays.push_back (leaf_array);
-        // TODO: Is this memory properly cleaned-up? Check with valgrind after debugging is done.
       }
     }
   }
@@ -1895,7 +1894,6 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
         if (ghost_leaves != nullptr) {
           neighbor_leaf_array *leaf_array = new neighbor_leaf_array (ghost_leaves, true);
           leaf_arrays.push_back (leaf_array);
-          // TODO: Is this memory properly cleaned-up? Check with valgrind after debugging is done.
         }
       }
     }
