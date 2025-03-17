@@ -44,6 +44,7 @@ struct t8_forest_ghost_w_search: public t8_forest_ghost_definition
    * If do_ghost is called on this object, 
    * the ghost layer will be created by an treesearch (t8_forest_search)
    * with search_function as callbackfunction.
+   * \param search_function   the function used for the callback
    * \note the t8_ghost_type_t of the object will we userdefined
    */
   explicit t8_forest_ghost_w_search (t8_forest_search_fn search_function)
@@ -55,6 +56,7 @@ struct t8_forest_ghost_w_search: public t8_forest_ghost_definition
   /**
    * Constructr of t8_forest_ghost_w_search by type
    * The search_function is chosen by the type
+   * \param ghost_type    type (FACES, EDGES, VERTICES) for the ghost definition
    * \note currently only the type face is supported
    */
   explicit t8_forest_ghost_w_search (const t8_ghost_type_t ghost_type);
@@ -65,6 +67,7 @@ struct t8_forest_ghost_w_search: public t8_forest_ghost_definition
 
   /** Create one layer of ghost elements for a forest.
    * \param [in,out]    forest     The forest.
+   * \return T8_SUBROUTINE_SUCCESS if successful, T8_SUBROUTINE_FAILURE if not.
    * \a forest must be committed before calling this function.
    */
   virtual bool
@@ -77,6 +80,7 @@ struct t8_forest_ghost_w_search: public t8_forest_ghost_definition
      * Only the search_fn parameter for t8_forest_search 
      * is not the same as in t8_forest_ghost_fill_remote_v3.
      * Use the member variable of the class.
+     * \param [in,out]    forest     The forest.
     */
   virtual void
   search_for_ghost_elements (t8_forest_t forest);
@@ -101,11 +105,15 @@ struct t8_forest_ghost_face: public t8_forest_ghost_w_search
   /**
    * Constructor for the ghost class face.
    * do_ghost will construct a ghost layer with face neighbors
-   * \param [in] version    one of tree versions (1,2,3) can be used
+   * \param [in] version    one of search versions (1,2,3) can be used
    * \note version 3 is the same treesearch as in t8_forest_ghost_w_search
    */
   explicit t8_forest_ghost_face (const int version);
 
+  /**
+   * Get the version (1,2 or 3) of the ghost defniniton for faces.
+   * \return version
+   */
   inline int
   get_version () const
   {
