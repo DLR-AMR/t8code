@@ -29,8 +29,12 @@
  */
 
 #include <t8.h>
+<<<<<<< HEAD:src/t8_vtk/t8_vtk_unstructured.hxx
 #include "t8_vtk_types.h"
 #if T8_ENABLE_VTK
+=======
+#include <t8_vtk/t8_vtk_types.h>
+>>>>>>> 71709116f (chore: restructure t8_vtk_unstructured):src/t8_vtk/t8_with_vtk/t8_vtk_unstructured.hxx
 #include <vtkDataSet.h>
 #include <vtkSmartPointer.h>
 
@@ -45,5 +49,4 @@
  */
 vtk_read_success_t
 t8_read_unstructured (const char *filename, vtkSmartPointer<vtkDataSet> grid);
-#endif
 #endif /* T8_CMESH_VTK_UNSTRUCTURED_READER */

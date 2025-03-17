@@ -70,10 +70,12 @@ if( T8CODE_ENABLE_VTK )
     target_sources(T8 PRIVATE
       t8_vtk/t8_with_vtk/t8_vtk_parallel.cxx
       t8_vtk/t8_with_vtk/t8_vtk_polydata.cxx
+      t8_vtk/t8_with_vtk/t8_vtk_unstructured.cxx
     )
     install( FILES
       t8_vtk/t8_with_vtk/t8_vtk_parallel.hxx
       t8_vtk/t8_with_vtk/t8_vtk_polydata.hxx
+      t8_vtk/t8_with_vtk/t8_vtk_unstructured.hxx
     DESTINATION include)
 endif()
 
@@ -175,7 +177,6 @@ target_sources( T8 PRIVATE
     t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.cxx
     t8_types/t8_vec.cxx
     t8_schemes/t8_standalone/t8_standalone.cxx
-    t8_vtk/t8_vtk_unstructured.cxx 
     t8_vtk/t8_vtk_reader.cxx 
     t8_vtk/t8_vtk_writer.cxx
     t8_vtk/t8_vtk_write_ASCII.cxx
