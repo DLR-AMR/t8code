@@ -56,7 +56,7 @@
 #include <t8_forest/t8_forest_io.h>             /* save forest */
 #include <t8_forest/t8_forest_geometrical.h>    /* geometrical information of the forest */
 #include <t8_schemes/t8_default/t8_default.hxx> /* default refinement scheme. */
-#include <t8_vec.h>                             /* Basic operations on 3D vectors. */
+#include <t8_types/t8_vec.h>                    /* Basic operations on 3D vectors. */
 #include <tutorials/general/t8_step3.h>
 
 T8_EXTERN_C_BEGIN ();
@@ -83,9 +83,10 @@ T8_EXTERN_C_BEGIN ();
  * \param [in] elements     The element or family of elements to consider for refinement/coarsening.
  */
 int
-t8_step3_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
-                         t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family, const int num_elements,
-                         t8_element_t *elements[])
+t8_step3_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
+                         [[maybe_unused]] t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
+                         [[maybe_unused]] const t8_scheme *scheme, const int is_family,
+                         [[maybe_unused]] const int num_elements, t8_element_t *elements[])
 {
   /* Our adaptation criterion is to look at the midpoint coordinates of the current element and if
    * they are inside a sphere around a given midpoint we refine, if they are outside, we coarsen. */
@@ -107,7 +108,7 @@ t8_step3_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
 
   /* Compute the distance to our sphere midpoint. */
-  dist = t8_vec_dist (centroid, adapt_data->midpoint);
+  dist = t8_dist (centroid, adapt_data->midpoint);
   if (dist < adapt_data->refine_if_inside_radius) {
     /* Refine this element. */
     return 1;

@@ -169,7 +169,8 @@ class t8_default_scheme_pyramid: public t8_default_scheme_common<t8_default_sche
    *                          The storage for this element must exist and match the element class of the sibling.
    */
   void
-  element_get_sibling (const t8_element_t *elem, const int sibid, t8_element_t *sibling) const
+  element_get_sibling ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int sibid,
+                       [[maybe_unused]] t8_element_t *sibling) const
   {
     SC_ABORT ("This function is not implemented yet.\n");
     return; /* suppresses compiler warning */
@@ -226,7 +227,8 @@ class t8_default_scheme_pyramid: public t8_default_scheme_common<t8_default_sche
    * \return              The face number of the \a face-th face at \a corner.
    */
   int
-  element_get_corner_face (const t8_element_t *element, const int corner, const int face) const
+  element_get_corner_face ([[maybe_unused]] const t8_element_t *element, [[maybe_unused]] const int corner,
+                           [[maybe_unused]] const int face) const
   {
     SC_ABORT ("Not implemented.\n");
     return 0; /* prevents compiler warning */
@@ -388,8 +390,9 @@ class t8_default_scheme_pyramid: public t8_default_scheme_common<t8_default_sche
    * \note \a elem1 and \a elem2 may point to the same element.
    */
   void
-  element_transform_face (const t8_element_t *elem1, t8_element_t *elem2, const int orientation, const int sign,
-                          int is_smaller_face) const
+  element_transform_face ([[maybe_unused]] const t8_element_t *elem1, [[maybe_unused]] t8_element_t *elem2,
+                          [[maybe_unused]] const int orientation, [[maybe_unused]] const int sign,
+                          [[maybe_unused]] int is_smaller_face) const
   {
     SC_ABORT ("This function is not implemented yet.\n");
   }
@@ -593,7 +596,7 @@ class t8_default_scheme_pyramid: public t8_default_scheme_common<t8_default_sche
  * \param [in,out] elem   The element to be filled with root.
  */
   void
-  get_root (t8_element_t *elem) const;
+  set_to_root (t8_element_t *elem) const;
 
   /** Pack multiple elements into contiguous memory, so they can be sent via MPI.
    * \param [in] elements Array of elements that are to be packed
