@@ -798,7 +798,21 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
    * \return              The linear id of the element.
    */
   inline t8_linearidx_t
-  element_get_linear_id (const t8_element_t *elem, int level) const;
+  element_get_linear_id (const t8_element_t *elem, int level) const
+  {
+    const int maxlevel = get_maxlevel ();
+    T8_ASSERT (t8_element_is_valid (elem));
+    T8_ASSERT (0 <= level && level <= maxlevel);
+
+    const t8_linearidx_t id
+      = this->underlying ().element_get_linear_id (&static_cast<multilevel_element *> (elem)->linear_element, level);
+
+    int id_multilevel = level;
+    for (int i_level = 0; i_level < maxlevel; i_level++) {
+      id_multilevel += id >> (i_level * 2);
+    }
+    return id_multilevel;
+  }
 
   /** Compute the first descendant of a given element.
    * \param [in] elem     The element whose descendant is computed.
@@ -807,7 +821,15 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
    * \param [in] level    The level, at which the descendant is computed.
    */
   inline void
-  element_get_first_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
+  element_get_first_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const
+  {
+    T8_ASSERT (element_is_valid (elem));
+    T8_ASSERT (static_cast<const multilevel_element *> (elem)->is_child_of_itself == 0);
+    /* The first descendant is the elem itself. */
+    element_copy (elem, desc);
+    const multilevel_element *desc_m = static_cast<const multilevel_element *> (desc);
+    desc_m->is_child_of_itself = 1;
+  }
 
   /** Compute the last descendant of a given element.
    * \param [in] elem     The element whose descendant is computed.
@@ -816,7 +838,17 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
    * \param [in] level    The level, at which the descendant is computed.
    */
   inline void
-  element_get_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
+  element_get_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const
+  {
+    T8_ASSERT (element_is_valid (elem));
+    const multilevel_element *elem_m = static_cast<const multilevel_element *> (elem);
+    const multilevel_element *desc_m = static_cast<const multilevel_element *> (desc);
+    T8_ASSERT (elem_m->is_child_of_itself == 0);
+    /* The last descendant is given by the underlying scheme. */
+    desc_m->linear_element
+      = this->underlying ().element_get_last_descendant (elem_m->linear_element, desc_m->linear_element);
+    desc_m->is_child_of_itself = 0;
+  }
 
   /** Construct the successor in a uniform refinement of a given element.
    * \param [in] elem1    The element whose successor should be constructed.
@@ -824,7 +856,10 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
    * \param [in] level    The level of the uniform refinement to consider.
    */
   inline void
-  element_construct_successor (const t8_element_t *elem, t8_element_t *succ) const;
+  element_construct_successor (const t8_element_t *elem, t8_element_t *succ) const
+  {
+    SC_ABORTF ("Not implemented.");
+  }
 
   /** Get the integer coordinates of the anchor node of an element.
    * The default scheme implements the Morton type SFCs. In these SFCs the
@@ -837,7 +872,10 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
    * \param [out] anchor The integer coordinates of the anchor node in the cube [0,1]^(dL)
    */
   inline void
-  element_get_anchor (const t8_element_t *elem, int anchor[3]) const;
+  element_get_anchor (const t8_element_t *elem, int anchor[3]) const
+  {
+    SC_ABORTF ("Not implemented.");
+  }
 
   /** Compute the integer coordinates of a given element vertex.
    * The default scheme implements the Morton type SFCs. In these SFCs the
@@ -850,7 +888,10 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
    *                      whose entries will be filled with the coordinates of \a vertex.
    */
   inline void
-  element_get_vertex_integer_coords (const t8_element_t *elem, int vertex, int coords[]) const;
+  element_get_vertex_integer_coords (const t8_element_t *elem, int vertex, int coords[]) const
+  {
+    SC_ABORTF ("Not implemented.");
+  }
 
   /** Compute the coordinates of a given element vertex inside a reference tree
    *  that is embedded into [0,1]^d (d = dimension).
@@ -862,7 +903,10 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
    *                      all coords might be used. 
    */
   inline void
-  element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex, double coords[]) const;
+  element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex, double coords[]) const
+  {
+    SC_ABORTF ("Not implemented.");
+  }
 
   /** Convert points in the reference space of an element to points in the
    *  reference space of the tree.
@@ -876,14 +920,20 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
    */
   inline void
   element_get_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
-                                double *out_coords) const;
+                                double *out_coords) const
+  {
+    SC_ABORTF ("Not implemented.");
+  }
 
   /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
    * Returns false otherwise.
    * * \return           0 if the tree is regular, 1 if it is irregular.
    */
   inline int
-  refines_irregular (void) const;
+  refines_irregular (void) const
+  {
+    SC_ABORTF ("Not implemented.");
+  }
 
 #ifdef T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is
@@ -901,7 +951,10 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
    *                  in the implementation of each of the functions in this file.
    */
   inline int
-  element_is_valid (const t8_element_t *t) const;
+  element_is_valid (const t8_element_t *t) const
+  {
+    SC_ABORTF ("Not implemented.");
+  }
 
   /**
   * Print a given element. For a example for a triangle print the coordinates
@@ -911,14 +964,20 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
   * \param [in]        elem  The element to print
   */
   inline void
-  element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const;
+  element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const
+  {
+    SC_ABORTF ("Not implemented.");
+  }
 #endif
 
   /** Fills an element with the root element.
  * \param [in,out] elem   The element to be filled with root.
  */
   inline void
-  get_root (t8_element_t *elem) const;
+  get_root (t8_element_t *elem) const
+  {
+    SC_ABORTF ("Not implemented.");
+  }
 
   /** Pack multiple elements into contiguous memory, so they can be sent via MPI.
    * \param [in] elements Array of elements that are to be packed
@@ -930,7 +989,10 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
   */
   inline void
   element_MPI_Pack (t8_element_t **const elements, const unsigned int count, void *send_buffer, int buffer_size,
-                    int *position, sc_MPI_Comm comm) const;
+                    int *position, sc_MPI_Comm comm) const
+  {
+    SC_ABORTF ("Not implemented.");
+  }
 
   /** Determine an upper bound for the size of the packed message of \b count elements
    * \param [in] count Number of elements to pack
@@ -938,7 +1000,10 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
    * \param [out] pack_size upper bound on the message size
   */
   inline void
-  element_MPI_Pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size) const;
+  element_MPI_Pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size) const
+  {
+    SC_ABORTF ("Not implemented.");
+  }
 
   /** Unpack multiple elements from contiguous memory that was received via MPI.
    * \param [in] recvbuf Buffer from which to unpack the elements
@@ -950,7 +1015,10 @@ class t8_multilevel_scheme: private t8_crtp<TUnderlyingEclassScheme> {
   */
   inline void
   element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements,
-                      const unsigned int count, sc_MPI_Comm comm) const;
+                      const unsigned int count, sc_MPI_Comm comm) const
+  {
+    SC_ABORTF ("Not implemented.");
+  }
 };
 
 #endif /* !T8_MULTILEVEL_HXX */
