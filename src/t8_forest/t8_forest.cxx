@@ -2017,6 +2017,8 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
         *num_neighbors = total_num_neighbors;
       }
     }
+    // clean up memory allocated with new
+    delete leaf_array;
   }
   scheme->element_destroy (neigh_class, 1, &same_level_neighbor);
 #if T8_ENABLE_DEBUG
