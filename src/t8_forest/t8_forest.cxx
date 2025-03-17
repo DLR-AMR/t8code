@@ -1977,7 +1977,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
         // neighbor data.
         // TODO: Since there is no other way, we copy them from the vectors.
         //       This should be improved in the future to get around the copy.
-        //       Indeed it would be more beneficial to just return const pointers to the actual internal leafs  .
+        //       Indeed it would be more beneficial to just return const pointers to the actual internal leaves.
 
         // num_neighbors counts the already inserted neighbors before this tree
         // num_neighbors_current_tree counts the neighbors added in this tree
