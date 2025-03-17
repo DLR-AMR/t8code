@@ -32,7 +32,9 @@
 #
 
 # This is the indent script in the project's directory
-CHECK_INDENT=./scripts/check_if_file_indented.scp
+CHECK_INDENT=./scripts/check_if_file_indented.sh
+
+CHECK_MACROS=./scripts/check_macros.sh
 
 TYPOS=`which typos 2> /dev/null`
 TYPOS_CONFIG_FILE=./.typos.toml
@@ -92,6 +94,19 @@ do
       echo "File $file is not indented."
       nocontinue=1
     fi
+
+    # This script checks for the usage of #ifdef T8_ENABLE_ macros in the specified file.
+    # If such macros are found, it suggests using #if T8_ENABLE_ instead and sets a flag to indicate the issue.
+    # - $CHECK_MACROS: Command or script to check the macros in the file.
+    # - $file: The file being checked.
+    # - status: The exit status of the $CHECK_MACROS command.
+    # - nocontinue: Flag set to 1 if the incorrect macro usage is found.
+  #  $CHECK_MACROS $file
+  #  status=$?
+  #  if test $status -ne 0 
+  #  then
+  #    nocontinue=1
+  #  fi
   fi
 done
 

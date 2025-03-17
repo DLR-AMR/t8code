@@ -34,6 +34,16 @@ if( T8CODE_ENABLE_NETCDF )
   target_compile_definitions(T8 PUBLIC
     T8_WITH_NETCDF
     $<$<AND:$<BOOL:${NETCDF_HAVE_NETCDF_PAR}>,$<BOOL:${T8CODE_ENABLE_MPI}>>:T8_WITH_NETCDF_PAR> )
+  target_sources( T8 PRIVATE
+  t8_netcdf.c
+  t8_cmesh/t8_cmesh_netcdf.c
+  t8_forest/t8_forest_netcdf.cxx
+  )
+  install( FILES
+  t8_cmesh_netcdf.h
+  t8_forest_netcdf.h
+  t8_netcdf.h
+  DESTINATION include)
 endif()
 
 set_target_properties( T8 PROPERTIES OUTPUT_NAME t8 )
@@ -64,10 +74,6 @@ if( T8CODE_ENABLE_OCC )
     target_link_libraries( T8 PUBLIC ${OpenCASCADE_LIBRARIES} )
 endif()
 
-if( T8CODE_ENABLE_LESS_TESTS )
-    target_compile_definitions( T8 PUBLIC T8_ENABLE_LESS_TESTS=1 )
-endif()
-
 if( T8CODE_BUILD_PEDANTIC )
   target_compile_options( T8 PUBLIC -pedantic )
   set (T8_CXXFLAGS "${T8_CXXFLAGS} -Wpedantic")
@@ -92,8 +98,6 @@ target_sources( T8 PRIVATE
     t8_eclass.c 
     t8_element_shape.c
     t8_element.cxx
-    t8_mesh.c
-    t8_netcdf.c 
     t8_refcount.c 
     t8_version.c 
     t8_vtk.c 
@@ -103,7 +107,6 @@ target_sources( T8 PRIVATE
     t8_cmesh/t8_cmesh_stash.c 
     t8_cmesh/t8_cmesh_vtk_reader.cxx 
     t8_cmesh/t8_cmesh_save.cxx 
-    t8_cmesh/t8_cmesh_netcdf.c 
     t8_cmesh/t8_cmesh_trees.cxx 
     t8_cmesh/t8_cmesh_commit.cxx 
     t8_cmesh/t8_cmesh_partition.cxx 
@@ -122,7 +125,6 @@ target_sources( T8 PRIVATE
     t8_forest/t8_forest_ghost.cxx 
     t8_forest/t8_forest_iterate.cxx 
     t8_forest/t8_forest_balance.cxx 
-    t8_forest/t8_forest_netcdf.cxx
     t8_forest/t8_forest_search/t8_forest_search.cxx 
     t8_geometry/t8_geometry.cxx 
     t8_geometry/t8_geometry_helpers.c 
@@ -156,7 +158,7 @@ target_sources( T8 PRIVATE
     t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.c
     t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.c
     t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.cxx
-    t8_schemes/t8_default/t8_default_vertex/t8_dvertex_bits.c
+    t8_types/t8_vec.cxx
     t8_schemes/t8_standalone/t8_standalone.cxx
     t8_vtk/t8_vtk_polydata.cxx 
     t8_vtk/t8_vtk_unstructured.cxx 
@@ -189,7 +191,6 @@ install( FILES
     t8.h
     t8_cmesh.h
     t8_cmesh.hxx
-    t8_cmesh_netcdf.h
     t8_cmesh_readmshfile.h
     t8_cmesh_tetgen.h
     t8_cmesh_triangle.h
@@ -197,34 +198,32 @@ install( FILES
     t8_eclass.h
     t8_element.h
     t8_element_shape.h
-    t8_forest_netcdf.h
     t8_mat.h
-    t8_mesh.h
-    t8_netcdf.h
     t8_refcount.h
-    t8_vec.h
+    t8_types/t8_vec.hxx
     t8_version.h
     t8_vtk.h
-    t8_windows.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include
+    t8_windows.h DESTINATION include
 )
 
-install( DIRECTORY t8_cmesh DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.h" )
-install( DIRECTORY t8_data DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.h" )
-install( DIRECTORY t8_forest DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING
+install( DIRECTORY t8_cmesh DESTINATION include FILES_MATCHING PATTERN "*.h" )
+install( DIRECTORY t8_data DESTINATION include FILES_MATCHING PATTERN "*.h" )
+install( DIRECTORY t8_forest DESTINATION include FILES_MATCHING
   PATTERN "*.h"
   PATTERN "*private.h" EXCLUDE )
-install( DIRECTORY t8_geometry DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.h" )
-install( DIRECTORY t8_schemes DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.h" )
-install( DIRECTORY t8_vtk DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.h" )
+install( DIRECTORY t8_geometry DESTINATION include FILES_MATCHING PATTERN "*.h" )
+install( DIRECTORY t8_schemes DESTINATION include FILES_MATCHING PATTERN "*.h" )
+install( DIRECTORY t8_vtk DESTINATION include FILES_MATCHING PATTERN "*.h" )
 
-install( DIRECTORY t8_cmesh DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.hxx" )
-install( DIRECTORY t8_data DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.hxx" )
-install( DIRECTORY t8_forest DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.hxx" )
-install( DIRECTORY t8_geometry DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.hxx" )
-install( DIRECTORY t8_schemes DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.hxx" )
-install( DIRECTORY t8_vtk DESTINATION ${CMAKE_INSTALL_PREFIX}/include FILES_MATCHING PATTERN "*.hxx" )
+install( DIRECTORY t8_cmesh DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
+install( DIRECTORY t8_data DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
+install( DIRECTORY t8_forest DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
+install( DIRECTORY t8_geometry DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
+install( DIRECTORY t8_schemes DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
+install( DIRECTORY t8_vtk DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
+install( DIRECTORY t8_types DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
 
-install( TARGETS T8 DESTINATION ${CMAKE_INSTALL_PREFIX}/lib )
+install( TARGETS T8 DESTINATION lib )
 install( TARGETS T8 EXPORT ${PROJECT_NAME}-targets )
 
 include( CMakePackageConfigHelpers )

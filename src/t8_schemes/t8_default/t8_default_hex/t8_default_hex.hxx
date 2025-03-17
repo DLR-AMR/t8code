@@ -215,11 +215,7 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
    * \return              The face number of the \a face-th face at \a corner.
    */
   int
-  element_get_corner_face (const t8_element_t *element, int corner, int face) const
-  {
-    SC_ABORT ("This function is not implemented yet.\n");
-    return 0; /* suppresses compiler warning */
-  }
+  element_get_corner_face (const t8_element_t *element, const int corner, const int face) const;
 
   /** Construct the child element of a given number.
    * \param [in] elem     This must be a valid element, bigger than maxlevel.
@@ -380,8 +376,9 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
    * \note \a elem1 and \a elem2 may point to the same element.
    */
   void
-  element_transform_face (const t8_element_t *elem1, t8_element_t *elem2, int orientation, int sign,
-                          int is_smaller_face) const
+  element_transform_face ([[maybe_unused]] const t8_element_t *elem1, [[maybe_unused]] t8_element_t *elem2,
+                          [[maybe_unused]] int orientation, [[maybe_unused]] int sign,
+                          [[maybe_unused]] int is_smaller_face) const
   {
     SC_ABORT ("This function is not implemented yet.\n");
     return; /* suppresses compiler warning */
@@ -600,7 +597,7 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
  * \param [in,out] elem   The element to be filled with root.
  */
   void
-  get_root (t8_element_t *elem) const;
+  set_to_root (t8_element_t *elem) const;
 
   /** Pack multiple elements into contiguous memory, so they can be sent via MPI.
    * \param [in] elements Array of elements that are to be packed

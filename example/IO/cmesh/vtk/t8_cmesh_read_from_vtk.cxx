@@ -131,7 +131,7 @@ main (int argc, char **argv)
   snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS> <ARGUMENTS>\n\t%s -h\t for a brief overview of all options.",
             basename (argv[0]), basename (argv[0]));
   sreturn = snprintf (help, BUFSIZ,
-                      "This program reads a .vtk-file and constructs a mesh representing the given Data."
+                      "This program reads a .vtk-file and constructs a mesh representing the given Data.\n"
                       "Arguments can be passed via:\n%s\n\n",
                       usage);
   if (sreturn >= BUFSIZ) {
@@ -151,7 +151,7 @@ main (int argc, char **argv)
   sc_options_add_string (opt, 'f', "vtk-file", &vtk_file, "", "The prefix of the .vtk file.");
   sc_options_add_string (opt, 'o', "output", &out_file, "output", "The prefix of the output-file.");
   sc_options_add_int (opt, 'c', "num_cell_values", &num_keys, 0, "Number of values per cell stored in the vtk-file.");
-  sc_options_add_bool (opt, 'p', "partition", &partition, 0, "If set, partition the cmesh uniformly.");
+  sc_options_add_switch (opt, 'p', "partition", &partition, "If set, partition the cmesh uniformly.");
   sc_options_add_int (opt, 't', "type_of_file", &vtk_file_type_int, -1,
                       "Set the type of the data in the file.\n"
                       "\t\t\t\t\t0 for vtkUnstructuredGrid,\n"

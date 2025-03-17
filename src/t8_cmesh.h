@@ -769,11 +769,6 @@ t8_cmesh_unref (t8_cmesh_t *pcmesh);
 void
 t8_cmesh_destroy (t8_cmesh_t *pcmesh);
 
-/* Functions for constructing complete and committed cmeshes */
-
-t8_cmesh_t
-t8_cmesh_new_testhybrid (sc_MPI_Comm comm);
-
 /** Compute y = ax + b on an array of doubles, interpreting
  * each 3 as one vector x 
  * \param[in]   coords_in         The incoming coordinates of the vectors
