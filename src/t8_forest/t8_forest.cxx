@@ -1979,6 +1979,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
         // neighbor data.
         // TODO: Since there is no other way, we copy them from the vectors.
         //       This should be improved in the future to get around the copy.
+        //       Indeed it would be more beneficial to just return const pointers to the actual internal leafs  .
 
         // num_neighbors counts the already inserted neighbors before this tree
         // num_neighbors_current_tree counts the neighbors added in this tree
@@ -1989,9 +1990,10 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
                    total_num_neighbors);
         // Copy neighbor element pointers
         if (pneighbor_leaves != NULL) {
-          // Note element_destroy is compatible with T8_REALLOC
-          // Meaning: We properly move memory around in Realloc and is is later picked up
-          //          by t8_element_destroy correctly.
+          // Note element_destroy call after this function on *pneighbor_leaves
+          // is compatible with using T8_REALLOC on *pneighbor_leaves.
+          // REALLOC moving the storage of the pointers. The pointers store the element storage.
+          // So the element storage allocated by t8_element_new is not affected by the call to REALLOC.
           *pneighbor_leaves = T8_REALLOC (*pneighbor_leaves, t8_element_t *, total_num_neighbors);
           scheme->element_new (eclass, num_neighbors_current_tree, *pneighbor_leaves + *num_neighbors);
           T8_ASSERT (*pneighbor_leaves != NULL);
