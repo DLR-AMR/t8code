@@ -85,9 +85,6 @@ extern const int t8_eclass_num_faces[T8_ECLASS_COUNT];
 /** For each dimension the maximum possible number of faces of an eclass of that dimension. */
 extern const int t8_eclass_max_num_faces[T8_ECLASS_MAX_DIM + 1];
 
-/** The number of vertices per face */
-extern const int t8_eclass_num_vertices_per_face[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES];
-
 /** For each eclass and each face f the entry i gives the vertex number
  * of f's i-th vertex within all vertices of the tree. */
 extern const int t8_face_vertex_to_tree_vertex[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_CORNERS_2D];

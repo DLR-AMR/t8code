@@ -70,7 +70,7 @@ endif()
 
 if( T8CODE_ENABLE_OCC )
     target_compile_definitions( T8 PUBLIC T8_WITH_OCC=1 )
-    target_include_directories( T8 SYSTEM PUBLIC ${OpenCASCADE_INCLUDE_DIR} )
+    target_include_directories( T8 PUBLIC ${OpenCASCADE_INCLUDE_DIR} )
     target_link_libraries( T8 PUBLIC ${OpenCASCADE_LIBRARIES} )
 endif()
 
@@ -119,7 +119,8 @@ target_sources( T8 PRIVATE
     t8_cmesh/t8_cmesh_vertex_conn_vertex_to_tree.cxx 
     t8_cmesh/t8_cmesh_vertex_connectivity.cxx 
     t8_cmesh/t8_cmesh_readmshfile.cxx
-    t8_cmesh/t8_cmesh_boundary_node_list.cxx 
+    t8_cmesh/t8_cmesh_cad/t8_cmesh_boundary_node_list.cxx
+    t8_cmesh/t8_cmesh_cad/t8_cmesh_cad.cxx 
     t8_data/t8_shmem.c 
     t8_data/t8_containers.cxx 
     t8_forest/t8_forest_adapt.cxx 
