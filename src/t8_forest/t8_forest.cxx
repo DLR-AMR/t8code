@@ -1928,9 +1928,36 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
       const t8_element_t *last_face_leaf = t8_element_array_index_locidx (tree_leaves, last_desc_index);
       // Compute their nearest common ancestor
       scheme->element_get_nca (neigh_class, first_face_leaf, last_face_leaf, nca_of_face_desc);
+      
       /* Check whether the computed nca element does contain or is contained by the same level
        * face neighbor. If not, then there are no face neighbors and we do not continue.
        * Otherwise, face neighbors exist and are descendants of nca_of_face_desc. */
+
+      /* There may occur situations where a neighbor exists but the search returns an element
+       * that is not an ancestor of either first_face_leaf nor last_face_leaf. 
+       * This might happen when computer face neighbors of ghosts. Consider the following situation
+       * 
+       *   __ __
+       *  |  |  |
+       *  |__|__|    p_1   The top elements belong to p_1
+       *  |G |_|     p_0   The bottom elements belong to p_0
+       *  |__|
+       * 
+       *  If we compute the neighbor of ghost element G across the right face (face number 1) 
+       *  we should get the level 2 element in the bottom right.
+       *  However, the search for the first face desc will return G, since the element array does not
+       *  contain any elements that are descendants of the first face desc and have a smaller or equal linear
+       *  index.
+       * 
+       * TODO: Try this approach
+       *   - build first and last desc from their id
+       *   - compute their nca
+       *   - search for nca
+       *   - if not ancestor of nca (including not found)
+       *     - add 1 to index (use 0 if element was not found)
+       *   - if not ancestor -> no neighbor
+       *   - else iterate faces
+       * */
 
       if (t8_forest_elements_are_ancestor (scheme, neigh_class, same_level_neighbor, nca_of_face_desc)) {
         const int face_of_nca = neigh_face;
