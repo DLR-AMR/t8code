@@ -35,6 +35,9 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
   /** Constructor which calls the specialized constructor for the base. */
   t8_default_scheme_vertex (): t8_default_scheme_common (T8_ECLASS_VERTEX, sizeof (t8_dvertex_t)) {};
 
+  /** Constructor with a custom element size. */
+  t8_default_scheme_vertex (size_t elem_size): t8_default_scheme_common (T8_ECLASS_VERTEX, elem_size) {};
+
   /** Destructor */
   ~t8_default_scheme_vertex () {};
 
@@ -537,12 +540,13 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
   element_get_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
 
   /** Construct the successor in a uniform refinement of a given element.
-   * \param [in] elem1    The element whose successor should be constructed.
-   * \param [in,out] elem2  The element whose entries will be set.
-   * \param [in] level    The level of the uniform refinement to consider.
+   * \param [in] elem           The element whose successor should be constructed.
+   * \param [in] uniform_level  The level of the uniform refinement.
+   * \param [in,out] succ       The element whose entries will be set.
    */
   void
-  element_construct_successor ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] t8_element_t *succ) const
+  element_construct_successor ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int uniform_level,
+                               [[maybe_unused]] t8_element_t *succ) const
   {
     SC_ABORT ("Not implemented.\n");
     return; /* prevents compiler warning */
