@@ -817,7 +817,7 @@ struct t8_standalone_scheme
     if (face_is_1_boundary) {  //the face is a xi=1 boundary
       const int facenormal_dim = face / 2;
 
-      t8_element_coord coord_offset = element_get_len (el->level) - element_get_len (level);
+      const t8_element_coord coord_offset = element_get_len (el->level) - element_get_len (level);
 
       first_descendant->coords[facenormal_dim] += coord_offset;
     }
@@ -842,7 +842,7 @@ struct t8_standalone_scheme
     t8_standalone_element<TEclass> *last_descendant = (t8_standalone_element<TEclass> *) last_desc;
 
     last_descendant->level = level;
-    t8_element_coord coord_offset = element_get_len (el->level) - element_get_len (level);
+    const t8_element_coord coord_offset = element_get_len (el->level) - element_get_len (level);
 
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
       SC_ABORT ("Only implemented for hypercubes.\n");
