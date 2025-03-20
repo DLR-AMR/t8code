@@ -941,14 +941,16 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
     /* If the element is the last child of the parent, we need to go to the parent's successor (go to a coarser level)*/
     if (child_id == num_siblings - 1) {
       element_get_parent (succ, succ);
-      element_construct_successor (succ, succ);
-      element_get_child (succ, 0, succ);
+      element_construct_successor (succ, uniform_level, succ);
     }
     else {
       element_get_parent (succ, succ);
       element_get_child (succ, child_id + 1, succ);
+      if (!succ_m->is_child_of_itself && element_get_level (succ) < uniform_level) {
+        element_get_child (succ, 0, succ);
+      }
+      T8_ASSERT (succ_m->is_child_of_itself || element_get_level == uniform_level);
     }
-
     T8_ASSERT (element_is_valid (elem2));
   }
 
