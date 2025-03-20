@@ -460,6 +460,20 @@ struct t8_standalone_scheme
     return T8_ELEMENT_NUM_CHILDREN[TEclass];
   }
 
+  /**
+   * Indicates if an element is refinable. Possible reasons for being not refinable could be
+   * that the element has reached its max level.
+   * \param [in] elem   The element to check.
+   * \return            True if the element is refinable.
+   */
+  static constexpr bool
+  element_is_refinable (const t8_element_t *elem) noexcept
+  {
+    T8_ASSERT (element_is_valid (elem));
+
+    return element_get_level (elem) < get_maxlevel ();
+  }
+
   /** Construct all children of a given element.
    * \param [in] elem     This must be a valid element, bigger than maxlevel.
    * \param [in] length   The length of the output array \a c must match
