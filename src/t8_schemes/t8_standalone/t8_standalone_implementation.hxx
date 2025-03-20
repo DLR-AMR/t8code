@@ -998,8 +998,9 @@ struct t8_standalone_scheme
    * \note \a elem1 and \a elem2 may point to the same element.
    */
   static constexpr void
-  element_transform_face (const t8_element_t *elem1, t8_element_t *elem2, const int orientation, const int sign,
-                          const int is_smaller_face) noexcept
+  element_transform_face ([[maybe_unused]] const t8_element_t *elem1, [[maybe_unused]] t8_element_t *elem2,
+                          [[maybe_unused]] const int orientation, [[maybe_unused]] const int sign,
+                          [[maybe_unused]] const int is_smaller_face) noexcept
   {
     /* This function has an explicit template specialization outside of t8_standalone_scheme*/
     SC_ABORT ("Not implemented for this eclass.\n");
