@@ -20,24 +20,39 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_cad.cxx
- * This geometry implements OpenCASCADE geometries. It enables the option to link different 
- * 1 and 2 dimensional cad geometries to the edges and faces of refinement trees. 
- * The geometry of the refinement tree is extended into the volume accordingly.
- */
-
 #include <t8_cmesh.h>
+#include <gtest/gtest.h>
+#include <test/t8_gtest_macros.hxx>
 #include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_trees.h>
 #include <t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh/t8_cmesh_cad/t8_cmesh_boundary_node_list.hxx>
+#include <test/t8_cmesh_generator/t8_cmesh_example_sets.hxx>
 #include <unordered_set>
 
-struct t8_geom_data
-{
-  t8_locidx_t node_idx;
-  int entity_dim;
-  int entity_tag;
-  double u, v;
+class t8_test_boundary_node_list: public testing::Test {
+ protected:
+  void
+  SetUp () override
+  {
+    cmesh = t8_cmesh_hyperquad ();
+  }
+  void
+  TearDown () override
+  {
+    t8_cmesh_unref (&cmesh);
+  }
+
+  t8_cmesh_t cmesh;
 };
+
+TEST_F (t8_test_boundary_node_list, some_random_ass_name)
+{
+  std::unordered_set<t8_gloidx_t> boundary_list = cmesh->boundary_node_list->get_boundary_node_list ();
+  const int num_boundary_nodes = cmesh->boundary_node_list->get_boundary_node_list ().size ();
+
+  EXPECT_TRUE (cmesh->compute_boundary_node_list);
+  EXPECT_TRUE (num_boundary_nodes == 10);
+  EXPECT_TRUE (t8_cmesh_is_committed (cmesh));
+}

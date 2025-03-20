@@ -120,7 +120,7 @@ target_sources( T8 PRIVATE
     t8_cmesh/t8_cmesh_vertex_connectivity.cxx 
     t8_cmesh/t8_cmesh_readmshfile.cxx
     t8_cmesh/t8_cmesh_cad/t8_cmesh_boundary_node_list.cxx
-    t8_cmesh/t8_cmesh_cad/t8_cmesh_cad.cxx 
+    t8_cmesh/t8_cmesh_cad/t8_cmesh_cad_boundary.cxx 
     t8_data/t8_shmem.c 
     t8_data/t8_containers.cxx 
     t8_forest/t8_forest_adapt.cxx 
