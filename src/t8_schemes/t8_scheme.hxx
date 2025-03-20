@@ -256,7 +256,7 @@ class t8_scheme {
 
   /**
    * Indicates if an element is refinable. Possible reasons for being not refinable could be
-   * that the element has reached its max level or that it is a subelement.
+   * that the element has reached its max level.
    * \param [in] elem   The element to check.
    * \return            True if the element is refinable.
    */

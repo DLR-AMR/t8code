@@ -127,7 +127,7 @@ t8_element_is_equal (const t8_scheme_c *scheme, const t8_eclass_t tree_class, co
 
 /**
  * Indicates if an element is refinable. Possible reasons for being not refinable could be
- * that the element has reached its max level or that it is a subelement.
+ * that the element has reached its max level.
  * \param [in] scheme      The scheme of the forest.
  * \param [in] tree_class  The eclass of tree the elements are part of.
  * \param [in] elem        The element to check.
