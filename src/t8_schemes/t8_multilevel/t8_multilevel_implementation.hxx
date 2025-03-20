@@ -446,15 +446,17 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
    * \param [in] elem   The element to check.
    * \return            True if the element is refinable.
    */
-  static constexpr bool
-  element_is_refinable (const t8_element_t *elem) noexcept
+  inline bool
+  element_is_refinable (const t8_element_t *elem) const
   {
     T8_ASSERT (element_is_valid (elem));
     multilevel_element *elem_m = static_cast<multilevel_element *> (elem);
     /* An element which is child of itself cannot be refined. */
     if (elem_m->is_child_of_itself)
       return false;
-    return element_get_level (elem) != get_maxlevel ();
+    if (element_get_level (elem) >= get_maxlevel ())
+      return false;
+    return TUnderlyingEclassScheme::element_is_refinable (&elem_m->linear_element);
   }
 
   /** Construct all children of a given element.
