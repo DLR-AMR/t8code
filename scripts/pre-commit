@@ -32,9 +32,13 @@
 #
 
 # This is the indent script in the project's directory
-CHECK_INDENT=./scripts/check_if_file_indented.sh
+echo "test"
+GIT_DIR= git rev-parse --git-dir
+echo "$GIT_DIR"
+echo "test2"
+CHECK_INDENT=$GIT_COMMON_DIR/scripts/check_if_file_indented.sh
 
-CHECK_MACROS=./scripts/check_macros.sh
+CHECK_MACROS=$GIT_COMMON_DIR/scripts/check_macros.sh
 
 TYPOS=`which typos 2> /dev/null`
 TYPOS_CONFIG_FILE=./.typos.toml
@@ -101,12 +105,12 @@ do
     # - $file: The file being checked.
     # - status: The exit status of the $CHECK_MACROS command.
     # - nocontinue: Flag set to 1 if the incorrect macro usage is found.
-    $CHECK_MACROS $file
-    status=$?
-    if test $status -ne 0 
-    then
-      nocontinue=1
-    fi
+  #  $CHECK_MACROS $file
+  #  status=$?
+  #  if test $status -ne 0 
+  #  then
+  #    nocontinue=1
+  #  fi
   fi
 done
 

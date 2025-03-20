@@ -498,7 +498,7 @@ t8_default_scheme_hex::element_set_linear_id (t8_element_t *elem, const int leve
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= HEX_LINEAR_MAXLEVEL);
-  T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << P8EST_DIM * level);
+  T8_ASSERT (id < ((t8_linearidx_t) 1) << P8EST_DIM * level);
 
   p8est_quadrant_set_morton ((p8est_quadrant_t *) elem, level, id);
 }
@@ -609,7 +609,7 @@ t8_default_scheme_hex::element_new (const int length, t8_element_t **elem) const
 #ifdef T8_ENABLE_DEBUG
   {
     for (int i = 0; i < length; i++) {
-      get_root (elem[i]);
+      set_to_root (elem[i]);
       T8_QUAD_SET_TDIM ((p8est_quadrant_t *) elem[i], 3);
     }
   }
@@ -650,7 +650,7 @@ t8_default_scheme_hex::element_to_string (const t8_element_t *elem, char *debug_
 #endif
 
 void
-t8_default_scheme_hex::get_root (t8_element_t *elem) const
+t8_default_scheme_hex::set_to_root (t8_element_t *elem) const
 {
   p8est_quadrant_t *hex = (p8est_quadrant_t *) elem;
   p8est_quadrant_set_morton (hex, 0, 0);

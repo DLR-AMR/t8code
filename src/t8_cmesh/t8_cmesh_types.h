@@ -174,15 +174,13 @@ typedef struct t8_cghost
  * the tree_to_face index is computed as follows.
  * Let F be the maximal number of faces of any eclass of the cmesh's dimension, then
  * ttf % F is the face number and ttf / F is the orientation. (\ref t8_eclass_max_num_faces)
- * The orientation is determined as follows.  Let my_face and other_face
+ * The orientation is determined as follows. Let my_face and other_face
  * be the two face numbers of the connecting trees.
  * We chose a main_face from them as follows: Either both trees have the same
  * element class, then the face with the lower face number is the main_face or
  * the trees belong to different classes in which case the face belonging to the
  * tree with the lower class according to the ordering
- * triangle < square,
- * hex < tet < prism < pyramid,
- * is the main_face.
+ * triangle < quad, hex < tet < prism < pyramid, is the main_face.
  * Then face corner 0 of the main_face connects to a face
  * corner k in the other face.  The face orientation is defined as the number k.
  * If the classes are equal and my_face == other_face, treating
