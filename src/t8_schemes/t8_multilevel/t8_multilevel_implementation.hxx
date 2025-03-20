@@ -922,11 +922,12 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
   }
 
   /** Construct the successor in a uniform refinement of a given element.
-   * \param [in] elem1    The element whose successor should be constructed.
-   * \param [in,out] elem2  The element whose entries will be set.
+   * \param [in] elem           The element whose successor should be constructed.
+   * \param [in] uniform_level  The level of the uniform refinement.
+   * \param [in,out] succ       The element whose entries will be set.
    */
   inline void
-  element_construct_successor (const t8_element_t *elem, t8_element_t *succ) const
+  element_construct_successor (const t8_element_t *elem, const t8_element_level uniform_level, t8_element_t *succ) const
   {
     T8_ASSERT (element_is_valid (elem1));
     const multilevel_element *elem_m = static_cast<const multilevel_element *> (elem);
