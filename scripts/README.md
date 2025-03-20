@@ -36,7 +36,7 @@ List all source files of t8code in the `src/` `example/` and `test/` subfolders.
 
 #### check_valgrind.sh
 
-This script runs Valgrind on a binary paths provided as a parameter with specified memory leak detection flags. The Valgrind output is parsed. As a second argument, you can provide a path to a suppression file that is used by Valgrind to suppress certain errors (e.g. [valgrind_suppressions_file](valgrind_suppressions_file.supp)).
+This script runs Valgrind on a binary path provided as a parameter with specified memory leak detection flags. The Valgrind output is parsed. As a second argument, you can provide a path to a suppression file that is used by Valgrind to suppress certain errors (e.g. [valgrind_suppressions_file](valgrind_suppressions_file.supp)).
 
 #### find_all_test_binary_paths.sh
 
