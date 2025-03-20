@@ -2120,8 +2120,8 @@ t8_standalone_scheme<T8_ECLASS_VERTEX>::element_transform_face (const t8_element
 template <>
 inline void
 t8_standalone_scheme<T8_ECLASS_LINE>::element_transform_face (const t8_element_t *elem1, t8_element_t *elem2,
-                                                              const int orientation, const int sign,
-                                                              const int is_smaller_face) noexcept
+                                                              const int orientation, [[maybe_unused]] const int sign,
+                                                              [[maybe_unused]] const int is_smaller_face) noexcept
 {
   T8_ASSERT (t8_standalone_scheme<T8_ECLASS_LINE>::element_is_valid (elem1));
   const t8_standalone_element<T8_ECLASS_LINE> *el1 = (const t8_standalone_element<T8_ECLASS_LINE> *) elem1;
@@ -2141,8 +2141,8 @@ t8_standalone_scheme<T8_ECLASS_LINE>::element_transform_face (const t8_element_t
 template <>
 inline void
 t8_standalone_scheme<T8_ECLASS_QUAD>::element_transform_face (const t8_element_t *elem1, t8_element_t *elem2,
-                                                              int orientation, const int sign,
-                                                              const int is_smaller_face) noexcept
+                                                              [[maybe_unused]] int orientation, const int sign,
+                                                              [[maybe_unused]] const int is_smaller_face) noexcept
 {
   T8_ASSERT (t8_standalone_scheme<T8_ECLASS_QUAD>::element_is_valid (elem1));
   const t8_standalone_element<T8_ECLASS_QUAD> *el1 = (const t8_standalone_element<T8_ECLASS_QUAD> *) elem1;
@@ -2211,9 +2211,11 @@ t8_standalone_scheme<T8_ECLASS_QUAD>::element_transform_face (const t8_element_t
 
 template <>
 inline void
-t8_standalone_scheme<T8_ECLASS_TRIANGLE>::element_transform_face (const t8_element_t *elem1, t8_element_t *elem2,
-                                                                  int orientation, const int sign,
-                                                                  const int is_smaller_face) noexcept
+t8_standalone_scheme<T8_ECLASS_TRIANGLE>::element_transform_face ([[maybe_unused]] const t8_element_t *elem1,
+                                                                  [[maybe_unused]] t8_element_t *elem2,
+                                                                  [[maybe_unused]] int orientation,
+                                                                  [[maybe_unused]] const int sign,
+                                                                  [[maybe_unused]] const int is_smaller_face) noexcept
 {
   SC_ABORT ("Only implemented for hypercubes.\n");
 };
