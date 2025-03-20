@@ -1237,7 +1237,8 @@ t8_cmesh_partition_receive_message (t8_cmesh_t cmesh, sc_MPI_Comm comm, const in
 /* TODO: Remove the const qualifier at the cmesh_from parameter */
 static void
 t8_cmesh_partition_recvloop (t8_cmesh_t cmesh, const t8_cmesh *cmesh_from, const t8_gloidx_t *tree_offset,
-                             char *my_buffer, size_t my_buffer_bytes, sc_MPI_Comm comm, int fr, int lr)
+                             char *my_buffer, size_t my_buffer_bytes, sc_MPI_Comm comm, [[maybe_unused]] int fr,
+                             [[maybe_unused]] int lr)
 {
   int num_receive, *local_procid; /* ranks of the processor from which we will receive */
   int mpiret, proc_recv, iproc;
@@ -1545,7 +1546,6 @@ t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   t8_cmesh_t cmesh_from;
   t8_gloidx_t last_tree;
   const t8_gloidx_t *tree_offsets;
-  const t8_scheme *scheme;
 
   T8_ASSERT (t8_cmesh_is_committed (cmesh->set_from));
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
@@ -1565,9 +1565,9 @@ t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   /*         and trees per proc array           */
   /**********************************************/
   if (cmesh->set_partition_level >= 0) {
+    const t8_scheme *scheme = cmesh->set_partition_scheme; /* The refinement scheme */
     /* Compute first and last tree index */
     T8_ASSERT (cmesh->tree_offsets == NULL);
-    scheme = cmesh->set_partition_scheme; /* The refinement scheme */
     T8_ASSERT (scheme != NULL);
     t8_cmesh_uniform_bounds (cmesh_from, cmesh->set_partition_level, scheme, &cmesh->first_tree, NULL, &last_tree, NULL,
                              &cmesh->first_tree_shared);
@@ -1616,7 +1616,7 @@ t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 }
 
 void
-t8_cmesh_offset_print (const t8_cmesh_t cmesh, sc_MPI_Comm comm)
+t8_cmesh_offset_print ([[maybe_unused]] const t8_cmesh_t cmesh, [[maybe_unused]] sc_MPI_Comm comm)
 {
 #if T8_ENABLE_DEBUG
   int offset_isnew = 0;

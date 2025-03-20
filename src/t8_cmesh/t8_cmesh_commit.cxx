@@ -54,7 +54,7 @@ t8_ghost_facejoins_compare (const void *fj1, const void *fj2)
 }
 
 static int
-t8_ghost_facejoin_equal (const void *v1, const void *v2, const void *u)
+t8_ghost_facejoin_equal (const void *v1, const void *v2, [[maybe_unused]] const void *u)
 {
   return t8_ghost_facejoins_compare (v1, v2) == 0;
 }
@@ -90,9 +90,9 @@ t8_cmesh_add_attributes (const t8_cmesh_t cmesh, sc_hash_t *ghost_ids)
   const t8_stash_t stash = cmesh->stash;
   t8_locidx_t ltree;
   size_t si, sj;
-  t8_ghost_facejoin_t *temp_facejoin, **facejoin_pp; /* used to lookup global ghost ids in the hash */
+  t8_ghost_facejoin_t **facejoin_pp; /* used to lookup global ghost ids in the hash */
 
-  temp_facejoin = T8_ALLOC_ZERO (t8_ghost_facejoin_t, 1);
+  t8_ghost_facejoin_t temp_facejoin = { 0, 0, 0 };
 
   t8_locidx_t ghosts_inserted = 0;
   ltree = -1;
@@ -111,8 +111,8 @@ t8_cmesh_add_attributes (const t8_cmesh_t cmesh, sc_hash_t *ghost_ids)
     }
     else {
       T8_ASSERT (ghost_ids != NULL);
-      temp_facejoin->ghost_id = attribute->id;
-      if (sc_hash_lookup (ghost_ids, temp_facejoin, (void ***) &facejoin_pp)) {
+      temp_facejoin.ghost_id = attribute->id;
+      if (sc_hash_lookup (ghost_ids, &temp_facejoin, (void ***) &facejoin_pp)) {
         T8_ASSERT ((t8_locidx_t) sj == (t8_locidx_t) (*facejoin_pp)->attr_id);
         if (sj == 0) {
           ghosts_inserted++;
@@ -124,7 +124,6 @@ t8_cmesh_add_attributes (const t8_cmesh_t cmesh, sc_hash_t *ghost_ids)
       }
     }
   }
-  T8_FREE (temp_facejoin);
 }
 
 static void

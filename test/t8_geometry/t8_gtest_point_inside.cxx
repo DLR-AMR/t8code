@@ -169,7 +169,7 @@ TEST_P (geometry_point_inside, test_point_inside)
 
   t8_debugf ("Testing eclass %s, uniform level %i with approx. %i points per element.\n", t8_eclass_to_string[eclass],
              level, num_points_to_generate);
-  t8_scheme *default_scheme = t8_scheme_new_default ();
+  const t8_scheme *default_scheme = t8_scheme_new_default ();
 
   /* We translate the coordinates of the cmesh to create a non-standard case.
    * In particular, we want the 1D and 2D elements to move outside of axis
@@ -342,7 +342,7 @@ auto print_test = [] (const testing::TestParamInfo<std::tuple<t8_eclass, int, in
   return name;
 };
 
-#if T8_ENABLE_LESS_TESTS
+#if T8CODE_TEST_LEVEL >= 1
 INSTANTIATE_TEST_SUITE_P (t8_gtest_point_inside, geometry_point_inside,
                           testing::Combine (testing::Range (T8_ECLASS_LINE, T8_ECLASS_QUAD), testing::Range (0, 4),
                                             testing::Range (0, 2)),

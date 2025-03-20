@@ -74,7 +74,7 @@ t8_forest_populate (t8_forest_t forest);
  * \return          The scheme associated to forest.
  * \see t8_forest_set_scheme
  */
-t8_scheme_c *
+const t8_scheme_c *
 t8_forest_get_scheme_before_commit (t8_forest_t forest);
 
 /** Compute the maximum possible refinement level in a forest.
@@ -95,7 +95,7 @@ t8_forest_compute_maxlevel (t8_forest_t forest);
  * \see t8_forest_new_uniform.
  */
 int
-t8_forest_min_nonempty_level (t8_cmesh_t cmesh, t8_scheme_c *scheme);
+t8_forest_min_nonempty_level (t8_cmesh_t cmesh, const t8_scheme_c *scheme);
 
 /** return nonzero if the first tree of a forest is shared with a smaller
  * process.
@@ -218,22 +218,6 @@ t8_forest_get_tree_element_array_mutable (const t8_forest_t forest, t8_locidx_t 
 int
 t8_forest_element_find_owner_old (t8_forest_t forest, t8_gloidx_t gtreeid, t8_element_t *element, t8_eclass_t eclass,
                                   sc_array_t *all_owners_of_tree);
-
-/** Find the owner process of a given element.
- * \param [in]    forest  The forest.
- * \param [in]    gtreeid The global id of the tree in which the element lies.
- * \param [in]    element The element to look for.
- * \param [in]    eclass  The element class of the tree \a gtreeid.
- * \return                The mpirank of the process that owns \a element.
- * \note The element must not exist in the forest, but an ancestor of its first
- *       descendant has to. If the element's owner is not unique, the owner of the element's
- *       first descendant is returned.
- * \note \a forest must be committed before calling this function.
- * \see t8_forest_element_find_owner_ext
- * \see t8_forest_element_owners_bounds
- */
-int
-t8_forest_element_find_owner (t8_forest_t forest, t8_gloidx_t gtreeid, t8_element_t *element, t8_eclass_t eclass);
 
 /** Find the owner process of a given element, if bounds for the owner process are known.
  * \param [in]    forest  The forest.

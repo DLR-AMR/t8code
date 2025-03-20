@@ -26,44 +26,48 @@
 #include <gtest/gtest.h>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <test/t8_gtest_macros.hxx>
+#include <test/t8_gtest_schemes.hxx>
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
+#include <test/t8_gtest_macros.hxx>
 
-class root: public testing::TestWithParam<t8_eclass> {
+class root: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
  protected:
   void
   SetUp () override
   {
-    tree_class = GetParam ();
-    scheme = t8_scheme_new_default ();
-    scheme->element_new (tree_class, 1, &element);
-    scheme->get_root (tree_class, element);
+    const int scheme_id = std::get<0> (GetParam ());
+    scheme = create_from_scheme_id (scheme_id);
+    eclass = std::get<1> (GetParam ());
+    scheme->element_new (eclass, 1, &element);
+    scheme->set_to_root (eclass, element);
   }
   void
   TearDown () override
   {
-    scheme->element_destroy (tree_class, 1, &element);
+    scheme->element_destroy (eclass, 1, &element);
     scheme->unref ();
   }
+
   t8_element_t *element;
-  t8_scheme *scheme;
-  t8_eclass_t tree_class;
+  const t8_scheme *scheme;
+  t8_eclass_t eclass;
 };
 
 /*Test root*/
 
 TEST_P (root, has_level_zero)
 {
-  EXPECT_EQ (scheme->element_get_level (tree_class, element), 0);
+  EXPECT_EQ (scheme->element_get_level (eclass, element), 0);
 }
 
 TEST_P (root, equals_linear_id_0_0)
 {
   t8_element_t *root_compare;
-  scheme->element_new (tree_class, 1, &root_compare);
-  scheme->element_set_linear_id (tree_class, root_compare, 0, 0);
-  EXPECT_ELEM_EQ (scheme, tree_class, element, root_compare);
-  scheme->element_destroy (tree_class, 1, &root_compare);
+  scheme->element_new (eclass, 1, &root_compare);
+  scheme->element_set_linear_id (eclass, root_compare, 0, 0);
+  EXPECT_ELEM_EQ (scheme, eclass, element, root_compare);
+  scheme->element_destroy (eclass, 1, &root_compare);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_root, root, AllEclasses, print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_root, root, AllSchemes, print_all_schemes);

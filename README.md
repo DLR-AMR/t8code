@@ -1,8 +1,5 @@
-
-
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7034838.svg)](https://doi.org/10.5281/zenodo.7034838)
-[![t8code tests serial](https://github.com/DLR-AMR/t8code/actions/workflows/tests_t8code_serial.yml/badge.svg)](https://github.com/DLR-AMR/t8code/actions/workflows/tests_t8code_serial.yml)
-[![t8code tests parallel](https://github.com/DLR-AMR/t8code/actions/workflows/tests_t8code_parallel.yml/badge.svg)](https://github.com/DLR-AMR/t8code/actions/workflows/tests_t8code_parallel.yml)
+[![t8code CI](https://github.com/DLR-AMR/t8code/actions/workflows/tests_cmake_testsuite.yml/badge.svg)](https://github.com/DLR-AMR/t8code/actions/workflows/tests_cmake_testsuite.yml)
 
 <p align="center">
   <img width="300px" src=t8code_logo.png>
@@ -75,15 +72,10 @@ We provide a short guide to install t8code in our Wiki [Installation guide](http
 
 ### Documentation
 
-t8code uses [Doxygen](https://doxygen.nl/) to generate the code documentation. You can build the documentation with
+t8code uses [Doxygen](https://doxygen.nl/) to generate the code documentation. 
+You can find the documentation of our releases on the [t8code website](https://dlr-amr.github.io/t8code/pages/documentation.html).
+Follow the steps described in our Wiki [Documentation](https://github.com/DLR-AMR/t8code/wiki/Documentation) to create the documentation locally.
 
-```
-make doxygen
-```
-
-and then find the generated files in the `/doc` subfolder.
-
-You can also find the documentation of our releases on the [t8code website](https://dlr-amr.github.io/t8code/pages/documentation.html).
 
 ### License and contributing
 t8code is licensed under GPLv2 (see [COPYING](COPYING)). We appreciate
@@ -137,6 +129,9 @@ to install the package on your system.
   [6] **Geometry controlled refinement for hexahedra**:
   Elsweijer, Sandro and Holke, Johannes and Kleinert, Jan and Reith, Dirk  (2022) *Constructing a Volume Geometry Map for Hexahedra with Curved Boundary Geometries*.   In: SIAM International Meshing Roundtable Workshop 2022.  SIAM International Meshing Roundtable Workshop 2022, 22. - 25. Feb. 2022, [Full text available](https://elib.dlr.de/186570/1/ConstructingAVolumeGeometryMapForHexahedraWithCurvedBoundaryGeometries.pdf) 
   
+  [7] **JOSS entry**:
+  Holke, Johannes and Markert, Johannes, et. al. (2025) *t8code - modular adaptive mesh refinement in the exascale era*. In: Journal of Open Source Software, [Full text available](https://www.theoj.org/joss-papers/joss.06887/10.21105.joss.06887.pdf)
+ 
 ### Theses with t8code relations
 
   An (incomplete) list of theses written with or about t8code:

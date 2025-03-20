@@ -230,10 +230,12 @@ class t8_default_scheme_tri: public t8_default_scheme_common<t8_default_scheme_t
   int
   element_get_child_id (const t8_element_t *elem) const;
 
-  /** Compute the ancestor id of an element, that is the child id at a given level.
+  /** Compute the ancestor id of an element, that is the child id
+   * at a given level.
    * \param [in] elem     This must be a valid element.
-   * \param [in] level    A refinement level. Must satisfy \a level < elem.level
+   * \param [in] level    A refinement level. Must satisfy \a level <= elem.level
    * \return              The child_id of \a elem in regard to its \a level ancestor.
+   * \note The ancestor id at elem.level is the same as the child id.
    */
   int
   element_get_ancestor_id (const t8_element_t *elem, int level) const;
@@ -535,7 +537,7 @@ class t8_default_scheme_tri: public t8_default_scheme_common<t8_default_scheme_t
  * \param [in,out] elem   The element to be filled with root.
  */
   void
-  get_root (t8_element_t *elem) const;
+  set_to_root (t8_element_t *elem) const;
 
   /** Pack multiple elements into contiguous memory, so they can be sent via MPI.
    * \param [in] elements Array of elements that are to be packed

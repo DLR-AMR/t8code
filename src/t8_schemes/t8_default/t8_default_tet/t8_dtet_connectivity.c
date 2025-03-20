@@ -135,8 +135,6 @@ const int t8_dtet_face_child_id_by_type[6][4][4] = {
   { { 3, 5, 6, 7 }, { 0, 4, 6, 7 }, { 0, 2, 3, 7 }, { 0, 1, 3, 6 } }  /* type 5 */
 };
 
-const int t8_dtet_face_corner[4][3] = { { 1, 3, 2 }, { 0, 2, 3 }, { 0, 3, 1 }, { 0, 1, 2 } };
-
 const int t8_dtet_parent_type_type_to_face[6][6] = { 
   { -1, 0, 2, -1, 1, 3 }, 
   { 0, -1, 3, 1, -1, 2 }, 

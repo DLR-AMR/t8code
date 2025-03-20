@@ -49,7 +49,7 @@ t8_forest_t
 make_grid<t8_forest_t> ()
 {
   t8_cmesh_t cmesh = make_grid<t8_cmesh_t> ();
-  t8_scheme *scheme = t8_scheme_new_default ();
+  const t8_scheme *scheme = t8_scheme_new_default ();
   return t8_forest_new_uniform (cmesh, scheme, 2, 0, sc_MPI_COMM_WORLD);
 }
 
@@ -87,8 +87,8 @@ template <>
 int
 use_c_interface<t8_forest_t> (const t8_forest_t grid, const char *fileprefix, const int write_treeid,
                               const int write_mpirank, const int write_level, const int write_element_id,
-                              const int curved_flag, const int write_ghosts, const int num_data,
-                              t8_vtk_data_field_t *data, sc_MPI_Comm comm)
+                              [[maybe_unused]] const int curved_flag, const int write_ghosts, const int num_data,
+                              t8_vtk_data_field_t *data, [[maybe_unused]] sc_MPI_Comm comm)
 {
 #if T8_WITH_VTK
   return t8_forest_vtk_write_file_via_API (grid, fileprefix, write_treeid, write_mpirank, write_level, write_element_id,
@@ -101,10 +101,11 @@ use_c_interface<t8_forest_t> (const t8_forest_t grid, const char *fileprefix, co
 
 template <>
 int
-use_c_interface<t8_cmesh_t> (const t8_cmesh_t grid, const char *fileprefix, const int write_treeid,
-                             const int write_mpirank, const int write_level, const int write_element_id,
-                             const int curved_flag, const int write_ghosts, const int num_data,
-                             t8_vtk_data_field_t *data, sc_MPI_Comm comm)
+use_c_interface<t8_cmesh_t> (const t8_cmesh_t grid, const char *fileprefix, [[maybe_unused]] const int write_treeid,
+                             [[maybe_unused]] const int write_mpirank, [[maybe_unused]] const int write_level,
+                             [[maybe_unused]] const int write_element_id, [[maybe_unused]] const int curved_flag,
+                             [[maybe_unused]] const int write_ghosts, [[maybe_unused]] const int num_data,
+                             [[maybe_unused]] t8_vtk_data_field_t *data, [[maybe_unused]] sc_MPI_Comm comm)
 {
 #if T8_WITH_VTK
   return t8_cmesh_vtk_write_file_via_API (grid, fileprefix, comm);
@@ -169,6 +170,10 @@ class vtk_writer_test: public testing::Test {
   void
   TearDown () override
   {
+    if (writer != nullptr) {
+      delete writer;
+      writer = nullptr;
+    }
     destroy_grid (&grid);
   }
 
