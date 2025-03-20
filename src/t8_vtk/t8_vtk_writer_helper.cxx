@@ -57,6 +57,20 @@ grid_local_num_elements<t8_forest_t> (const t8_forest_t grid)
 
 template <>
 t8_locidx_t
+grid_local_num_ghost_elements<t8_forest_t> (const t8_forest_t grid)
+{
+  return t8_forest_get_num_ghosts (grid);
+}
+
+template <>
+t8_locidx_t
+grid_local_num_ghost_elements<t8_cmesh_t> (const t8_cmesh_t grid)
+{
+  return t8_cmesh_get_num_ghosts (grid);
+}
+
+template <>
+t8_locidx_t
 grid_local_num_elements<t8_cmesh_t> (const t8_cmesh_t grid)
 {
   return t8_cmesh_get_num_local_trees (grid);

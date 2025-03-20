@@ -112,6 +112,17 @@ t8_locidx_t
 grid_local_num_elements (const grid_t grid);
 
 /**
+ * Templated getter functions to use one call to get the local number of ghost elements for a forest(cmesh).
+ * 
+ * \tparam grid_t Either a cmesh or a forest.
+ * \param[in] grid The forest/cmesh to use.
+ * \return Number of local elements/trees.
+ */
+template <typename grid_t>
+t8_locidx_t
+grid_local_num_ghost_elements (const grid_t grid);
+
+/**
  * Templated getter functions to use one call to get the local number of trees  for a forest(cmesh).
  * 
  * \tparam grid_t Either a cmesh or a forest.

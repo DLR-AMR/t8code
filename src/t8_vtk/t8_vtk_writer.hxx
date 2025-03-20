@@ -470,7 +470,8 @@ class vtk_writer {
     /* Write the user defined data fields. For that we iterate over the idata, set the name, the array and then give 
      * this data to the unstructured Grid Object.We differentiate between scalar and vector data.
      */
-    const t8_locidx_t num_elements = grid_local_num_elements (grid);
+    const t8_locidx_t num_elements
+      = grid_local_num_elements (grid) + do_ghosts ? grid_local_num_ghost_elements (grid) : 0;
     for (int idata = 0; idata < num_data; idata++) {
       dataArrays[idata] = vtkDoubleArray::New ();
       const int num_components = this->data[idata].type == T8_VTK_SCALAR ? 1 : 3;
