@@ -242,6 +242,20 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
     return count_leaves_from_level (element_level, level, dim);
   }
 
+  /**
+   * Indicates if an element is refinable. Possible reasons for being not refinable could be
+   * that the element has reached its max level or that it is a subelement.
+   * \param [in] elem   The element to check.
+   * \return            True if the element is refinable.
+   */
+  inline bool
+  element_is_refinable (const t8_element_t *elem) const
+  {
+    T8_ASSERT (this->underlying ().element_is_valid (elem));
+
+    return this->underlying ().element_get_level (elem) != this->underlying ().get_maxlevel ();
+  }
+
   /** Compute the number of siblings of an element. That is the number of 
    * Children of its parent.
    * \param [in] elem The element.
