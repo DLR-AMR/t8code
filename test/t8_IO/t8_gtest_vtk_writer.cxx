@@ -50,7 +50,9 @@ make_grid<t8_forest_t> ()
 {
   t8_cmesh_t cmesh = make_grid<t8_cmesh_t> ();
   const t8_scheme *scheme = t8_scheme_new_default ();
-  return t8_forest_new_uniform (cmesh, scheme, 2, 0, sc_MPI_COMM_WORLD);
+  const int uniform_level = 2;
+  const int do_ghosts = 1;
+  return t8_forest_new_uniform (cmesh, scheme, uniform_level, do_ghosts, sc_MPI_COMM_WORLD);
 }
 
 /**
