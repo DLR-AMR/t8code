@@ -1837,7 +1837,8 @@ struct t8_standalone_scheme
    * \return 1 if the face is internal, 0 otherwise.
    */
   static constexpr int
-  element_is_face_internal (const t8_standalone_element<TEclass> *elem, const int face) noexcept
+  element_is_face_internal ([[maybe_unused]] const t8_standalone_element<TEclass> *elem,
+                            [[maybe_unused]] const int face) noexcept
   {
     T8_ASSERT (element_is_valid ((const t8_element_t *) elem));
     T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
@@ -1855,7 +1856,7 @@ struct t8_standalone_scheme
    * \return          The normal dimension of the face.
    */
   static constexpr int
-  element_face_normal_dim (const t8_standalone_element<TEclass> *elem, const int face) noexcept
+  element_face_normal_dim ([[maybe_unused]] const t8_standalone_element<TEclass> *elem, const int face) noexcept
   {
     T8_ASSERT (element_is_valid ((const t8_element_t *) elem));
     T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
@@ -1873,7 +1874,7 @@ struct t8_standalone_scheme
    * \return            1 if the face is the boundary x_i == 1, 0 otherwise.
    */
   static constexpr int
-  element_face_is_1_boundary (const t8_standalone_element<TEclass> *elem, const int face) noexcept
+  element_face_is_1_boundary ([[maybe_unused]] const t8_standalone_element<TEclass> *elem, const int face) noexcept
   {
     T8_ASSERT (element_is_valid ((const t8_element_t *) elem));
     T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
