@@ -176,10 +176,6 @@ struct t8_standalone_scheme
   element_get_max_num_faces ([[maybe_unused]] const t8_element_t *elem) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
-#if T8_ENABLE_DEBUG
-    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
-    T8_ASSERT (0 <= el->level && el->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
-#endif
     return T8_ELEMENT_NUM_FACES[TEclass];
   }
 
@@ -709,9 +705,8 @@ struct t8_standalone_scheme
    * It is valid to call this function with elem = children[0].
    */
   static constexpr void
-  element_get_children_at_face ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int face,
-                                [[maybe_unused]] t8_element_t *children[], [[maybe_unused]] const int num_children,
-                                [[maybe_unused]] int *child_indices) noexcept
+  element_get_children_at_face ([[maybe_unused]] const t8_element_t *elem, const int face, t8_element_t *children[],
+                                const int num_children, [[maybe_unused]] int *child_indices) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (0 <= num_children && num_children == element_get_num_face_children (elem, face));
@@ -771,7 +766,7 @@ struct t8_standalone_scheme
     * \note For the root element this function always returns \a face.
     */
   static constexpr int
-  element_face_get_parent_face ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int face) noexcept
+  element_face_get_parent_face ([[maybe_unused]] const t8_element_t *elem, const int face) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
@@ -803,7 +798,7 @@ struct t8_standalone_scheme
    */
   static constexpr void
   element_get_first_descendant_face (const t8_element_t *elem, const int face, t8_element_t *first_desc,
-                                     [[maybe_unused]] const t8_element_level level) noexcept
+                                     const t8_element_level level) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
@@ -837,8 +832,8 @@ struct t8_standalone_scheme
    * \param [in] level     The level, at which the last descendant is constructed
    */
   static constexpr void
-  element_get_last_descendant_face ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int face,
-                                    t8_element_t *last_desc, const t8_element_level level) noexcept
+  element_get_last_descendant_face ([[maybe_unused]] const t8_element_t *elem, const int face, t8_element_t *last_desc,
+                                    const t8_element_level level) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
@@ -1068,7 +1063,7 @@ struct t8_standalone_scheme
   {
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
-    int root_face = element_get_tree_face (elem, face);
+    const int root_face = element_get_tree_face (elem, face);
     const t8_eclass_t face_TEclass = get_face_eclass ();
 
     switch (face_TEclass) {
@@ -2050,7 +2045,8 @@ struct t8_standalone_scheme
   static constexpr int
   get_hypercube_face_corner_index (const int face_dim, const int face_sign, const int corner) noexcept
   {
-    /** Put the face_sign bit at the face_dim position in the binary representation of corner.
+    /** Bitoperation to put the face_sign bit at the face_dim position in the binary representation of corner.
+     *  Example with the binary representation shown as aaaabb:
      *  corner = aaaabb, face_sign = x, then element_corner = aaaaxbb */
     const t8_element_coord first_part = (corner >> face_dim) << (face_dim + 1);
     const t8_element_coord last_part = corner & ((1 << face_dim) - 1);
