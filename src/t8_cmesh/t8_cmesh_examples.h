@@ -466,6 +466,13 @@ t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shel
 t8_cmesh_t
 t8_cmesh_new_cubed_sphere (const double radius, sc_MPI_Comm comm);
 
+/**
+ * Four quads joined together for global index testing purposes
+ * 
+ */
+t8_cmesh_t
+t8_cmesh_hyperquad ();
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_EXAMPLES */
