@@ -253,7 +253,7 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
   {
     T8_ASSERT (this->underlying ().element_is_valid (elem));
 
-    return this->underlying ().element_get_level (elem) != this->underlying ().get_maxlevel ();
+    return this->underlying ().element_get_level (elem) < this->underlying ().get_maxlevel ();
   }
 
   /** Compute the number of siblings of an element. That is the number of 

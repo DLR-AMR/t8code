@@ -471,7 +471,7 @@ struct t8_standalone_scheme
   {
     T8_ASSERT (element_is_valid (elem));
 
-    return element_get_level (elem) != get_maxlevel ();
+    return element_get_level (elem) < get_maxlevel ();
   }
 
   /** Construct all children of a given element.
