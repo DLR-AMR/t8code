@@ -1009,11 +1009,13 @@ struct t8_standalone_scheme
   }
 
   /** Construct the successor in a uniform refinement of a given element.
-   * \param [in] elem1    The element whose successor should be constructed.
-   * \param [in,out] elem2  The element whose entries will be set.
+   * \param [in] elem1          The element whose successor should be constructed.
+   * \param [in] uniform_level  The level of the uniform refinement.
+   * \param [in,out] elem2      The element whose entries will be set.
    */
   static constexpr void
-  element_construct_successor (const t8_element_t *elem1, t8_element_t *elem2) noexcept
+  element_construct_successor (const t8_element_t *elem1, [[maybe_unused]] const int uniform_level,
+                               t8_element_t *elem2) noexcept
   {
     T8_ASSERT (element_is_valid (elem1));
 
@@ -1028,7 +1030,7 @@ struct t8_standalone_scheme
     /* If the element is the last child of the parent, we need to go to the parent's successor (go to a coarser level)*/
     if (child_id == num_siblings - 1) {
       element_get_parent ((const t8_element_t *) succ, (t8_element_t *) succ);
-      element_construct_successor ((const t8_element_t *) succ, (t8_element_t *) succ);
+      element_construct_successor ((const t8_element_t *) succ, uniform_level, (t8_element_t *) succ);
       element_get_child ((const t8_element_t *) succ, 0, (t8_element_t *) succ);
     }
     else {

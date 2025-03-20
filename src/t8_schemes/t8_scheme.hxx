@@ -832,14 +832,16 @@ class t8_scheme {
   };
 
   /** Construct the successor in a uniform refinement of a given element.
-   * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] elem1    The element whose successor should be constructed.
-   * \param [in,out] elem2  The element whose entries will be set.
+   * \param [in] tree_class     The eclass of the current tree.
+   * \param [in] elem           The element whose successor should be constructed.
+   * \param [in] uniform_level  The level of the uniform refinement.
+   * \param [in,out] succ       The element whose entries will be set.
    */
   inline void
-  element_construct_successor (const t8_eclass_t tree_class, const t8_element_t *t, t8_element_t *s) const
+  element_construct_successor (const t8_eclass_t tree_class, const t8_element_t *elem, const int uniform_level,
+                               t8_element_t *succ) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_construct_successor (t, s); },
+    return std::visit ([&] (auto &&scheme) { return scheme.element_construct_successor (elem, uniform_level, succ); },
                        eclass_schemes[tree_class]);
   };
 

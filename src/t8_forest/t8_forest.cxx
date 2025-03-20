@@ -1201,7 +1201,7 @@ t8_forest_populate (t8_forest_t forest)
       for (et = start + 1; et < end; et++, count_elements++) {
         element_succ = t8_element_array_index_locidx_mutable (telements, et - start);
         T8_ASSERT (scheme->element_get_level (tree_class, element) == forest->set_level);
-        scheme->element_construct_successor (tree_class, element, element_succ);
+        scheme->element_construct_successor (tree_class, element, forest->set_level, element_succ);
         /* TODO: process elements here */
         element = element_succ;
       }
