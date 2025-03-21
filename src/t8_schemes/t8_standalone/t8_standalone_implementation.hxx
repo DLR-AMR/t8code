@@ -1957,7 +1957,7 @@ struct t8_standalone_scheme
     T8_ASSERT (0 <= root_face && root_face < T8_ELEMENT_NUM_FACES[TEclass]);
     const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
 
-    /* Avoid porblmes for unneeded instantiations*/
+    /* Avoid problems for unneeded instantiations*/
     if constexpr (T8_ELEMENT_DIM[TFaceEclass] >= T8_ELEMENT_DIM[TEclass]) {
       return;
     }
