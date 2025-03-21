@@ -1037,9 +1037,9 @@ struct t8_standalone_scheme
   element_extrude_face ([[maybe_unused]] const t8_element_t *face, [[maybe_unused]] t8_element_t *elem,
                         [[maybe_unused]] const int root_face, [[maybe_unused]] const t8_scheme *face_scheme) noexcept
   {
-    const t8_eclass_t face_TEclass = get_face_eclass ();
+    const t8_eclass_t TFaceEclass = get_face_eclass ();
     T8_ASSERT (0 <= root_face && root_face < T8_ELEMENT_NUM_FACES[TEclass]);
-    switch (face_TEclass) {
+    switch (TFaceEclass) {
     case T8_ECLASS_ZERO:
       T8_ASSERT (t8_standalone_scheme<T8_ECLASS_ZERO>::element_is_valid (face));
       return extrude_face<T8_ECLASS_ZERO> ((t8_standalone_element<T8_ECLASS_ZERO> *) face, elem, root_face);
@@ -1079,9 +1079,9 @@ struct t8_standalone_scheme
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
     const int root_face = element_get_tree_face (elem, face);
-    const t8_eclass_t face_TEclass = get_face_eclass ();
+    const t8_eclass_t TFaceEclass = get_face_eclass ();
 
-    switch (face_TEclass) {
+    switch (TFaceEclass) {
     case T8_ECLASS_VERTEX:
       compute_boundary_face<T8_ECLASS_VERTEX> (elem, root_face, (t8_standalone_element<T8_ECLASS_VERTEX> *) boundary);
       return;
@@ -1948,17 +1948,17 @@ struct t8_standalone_scheme
    *                            minus 1. The entries will be filled with the entries
    *                            of the face of \a element.
    */
-  template <t8_eclass_t face_TEclass>
+  template <t8_eclass_t TFaceEclass>
   static constexpr void
   compute_boundary_face (const t8_element_t *elem, const int root_face,
-                         t8_standalone_element<face_TEclass> *boundary) noexcept
+                         t8_standalone_element<TFaceEclass> *boundary) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (0 <= root_face && root_face < T8_ELEMENT_NUM_FACES[TEclass]);
     const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
 
     /* Avoid porblmes for unneeded instantiations*/
-    if constexpr (T8_ELEMENT_DIM[face_TEclass] >= T8_ELEMENT_DIM[TEclass]) {
+    if constexpr (T8_ELEMENT_DIM[TFaceEclass] >= T8_ELEMENT_DIM[TEclass]) {
       return;
     }
 
@@ -1971,11 +1971,11 @@ struct t8_standalone_scheme
         if (ifacedim != -1) {
           /** Currently this part of the code is also compiled for vertices and faces of higher dim than the element. 
           * This leads to invalid shift inputs.*/
-          if constexpr (face_TEclass != T8_ECLASS_VERTEX) {
+          if constexpr (TFaceEclass != T8_ECLASS_VERTEX) {
             /** Set the boundary coordinates to the corresponding coordinates of the element,  
            * adjusted to the maxlevel of the face-scheme*/
             boundary->coords[ifacedim] = el->coords[idim]
-                                         << (T8_ELEMENT_MAXLEVEL[face_TEclass] - T8_ELEMENT_MAXLEVEL[TEclass]);
+                                         << (T8_ELEMENT_MAXLEVEL[TFaceEclass] - T8_ELEMENT_MAXLEVEL[TEclass]);
           }
           else {
             SC_ABORT_NOT_REACHED ();
@@ -1986,7 +1986,7 @@ struct t8_standalone_scheme
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
       SC_ABORT ("Only implemented for hypercubes.\n");
     }
-    T8_ASSERT (t8_standalone_scheme<face_TEclass>::element_is_valid ((t8_element_t *) boundary));
+    T8_ASSERT (t8_standalone_scheme<TFaceEclass>::element_is_valid ((t8_element_t *) boundary));
   }
 
   /** Given a boundary face inside a root tree's face construct
@@ -2001,19 +2001,19 @@ struct t8_standalone_scheme
    * \return              The face number of the face of \a elem that coincides
    *                      with \a face.
    */
-  template <t8_eclass_t face_TEclass>
+  template <t8_eclass_t TFaceEclass>
   static constexpr int
-  extrude_face (const t8_standalone_element<face_TEclass> *face, t8_element_t *elem, const int root_face) noexcept
+  extrude_face (const t8_standalone_element<TFaceEclass> *face, t8_element_t *elem, const int root_face) noexcept
   {
     t8_standalone_element<TEclass> *el = (t8_standalone_element<TEclass> *) elem;
-    T8_ASSERT (t8_standalone_scheme<face_TEclass>::element_is_valid ((t8_element_t *) face));
+    T8_ASSERT (t8_standalone_scheme<TFaceEclass>::element_is_valid ((t8_element_t *) face));
     T8_ASSERT (0 <= root_face && root_face < T8_ELEMENT_NUM_FACES[TEclass]);
     /** Loop over elemdim, get corresponding facedim and set elem coord accordingly 
    * If elemdim is faceboundary, find out if 0 or 1 boundary
    */
     T8_ASSERT (0 <= face->level && face->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
     /* Avoid porblmes for unneeded instantiations*/
-    if constexpr (T8_ELEMENT_DIM[face_TEclass] >= T8_ELEMENT_DIM[TEclass]) {
+    if constexpr (T8_ELEMENT_DIM[TFaceEclass] >= T8_ELEMENT_DIM[TEclass]) {
       return -1;
     }
 
@@ -2024,10 +2024,10 @@ struct t8_standalone_scheme
 
         if (ifacedim != -1) {
           /** Currently this part of the code is also compiled for vertices and faces of higher dim than the element.*/
-          if constexpr (face_TEclass != T8_ECLASS_VERTEX) {
+          if constexpr (TFaceEclass != T8_ECLASS_VERTEX) {
             /* Set the element coordinates to the corresponding coordinates of the face, adjusted to the maxlevel of the element-scheme*/
             el->coords[idim]
-              = face->coords[ifacedim] >> (T8_ELEMENT_MAXLEVEL[face_TEclass] - T8_ELEMENT_MAXLEVEL[TEclass]);
+              = face->coords[ifacedim] >> (T8_ELEMENT_MAXLEVEL[TFaceEclass] - T8_ELEMENT_MAXLEVEL[TEclass]);
           }
           else {
             SC_ABORT_NOT_REACHED ();
