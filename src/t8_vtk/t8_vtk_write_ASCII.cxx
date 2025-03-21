@@ -397,23 +397,13 @@ t8_forest_vtk_vertices_scalar_kernel (t8_forest_t forest, const t8_locidx_t ltre
                                       const t8_element_t *element, const t8_eclass_t tree_class, const int is_ghost,
                                       FILE *vtufile, int *columns, void **data, T8_VTK_KERNEL_MODUS modus)
 {
-  double element_value = 0;
-  int num_vertex, ivertex;
-  t8_locidx_t scalar_index;
-
   if (modus == T8_VTK_KERNEL_EXECUTE) {
     const t8_scheme *scheme = t8_forest_get_scheme (forest);
-    num_vertex = scheme->element_get_num_corners (tree_class, element);
+    const int num_vertex = scheme->element_get_num_corners (tree_class, element);
 
-    for (ivertex = 0; ivertex < num_vertex; ivertex++) {
-      /* For local elements access the data array, for ghosts, write 0 */
-      if (!is_ghost) {
-        scalar_index = t8_forest_get_tree_element_offset (forest, ltree_id) + element_index;
-        element_value = ((double *) *data)[scalar_index];
-      }
-      else {
-        element_value = 0;
-      }
+    for (int ivertex = 0; ivertex < num_vertex; ivertex++) {
+      const t8_locidx_t scalar_index = t8_forest_compute_data_index (forest, ltree_id, element_index);
+      const double element_value = ((double *) *data)[scalar_index];
       fprintf (vtufile, "%g ", element_value);
       *columns += 1;
     }
@@ -428,27 +418,16 @@ t8_forest_vtk_vertices_vector_kernel (t8_forest_t forest, const t8_locidx_t ltre
                                       const t8_element_t *element, const t8_eclass_t tree_class, const int is_ghost,
                                       FILE *vtufile, int *columns, void **data, T8_VTK_KERNEL_MODUS modus)
 {
-  double *element_values, null_vec[3] = { 0, 0, 0 };
-  int dim, idim;
-  int num_vertex, ivertex;
-  t8_locidx_t tree_offset;
-
   if (modus == T8_VTK_KERNEL_EXECUTE) {
     const t8_scheme *scheme = t8_forest_get_scheme (forest);
-    num_vertex = scheme->element_get_num_corners (tree_class, element);
-    for (ivertex = 0; ivertex < num_vertex; ivertex++) {
-      dim = 3;
+    const int num_vertex = scheme->element_get_num_corners (tree_class, element);
+    for (int ivertex = 0; ivertex < num_vertex; ivertex++) {
+      constexpr int dim = 3;
       T8_ASSERT (forest->dimension <= 3);
-      /* For local elements access the data array, for ghosts, write 0 */
-      if (!is_ghost) {
-        tree_offset = t8_forest_get_tree_element_offset (forest, ltree_id);
-        /* Get a pointer to the start of the element's vector data */
-        element_values = ((double *) *data) + (tree_offset + element_index) * dim;
-      }
-      else {
-        element_values = null_vec;
-      }
-      for (idim = 0; idim < dim; idim++) {
+      /* Get a pointer to the start of the element's vector data */
+      const t8_locidx_t data_index = t8_forest_compute_data_index (forest, ltree_id, element_index);
+      const double *element_values = ((double *) *data) + (data_index) *dim;
+      for (int idim = 0; idim < dim; idim++) {
         fprintf (vtufile, "%g ", element_values[idim]);
       }
       *columns += dim;
