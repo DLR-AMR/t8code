@@ -445,9 +445,9 @@ t8_cmesh_get_attribute (const t8_cmesh_t cmesh, const int package_id, const int 
 
 t8_gloidx_t *
 t8_cmesh_get_attribute_gloidx_array (const t8_cmesh_t cmesh, const int package_id, const int key,
-                                     const t8_locidx_t ltree_id, const size_t data_count)
+                                     const t8_locidx_t ltree_id,
+                                     [[maybe_unused]] const size_t data_count)  //TODO: remove data_count
 {
-  T8_ASSERT (0 <= data_count);
   return (t8_gloidx_t *) t8_cmesh_get_attribute (cmesh, package_id, key, ltree_id);
 }
 

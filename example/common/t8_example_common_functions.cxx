@@ -29,7 +29,7 @@
 T8_EXTERN_C_BEGIN ();
 
 double
-t8_levelset_sphere (const double x[3], double t, void *data)
+t8_levelset_sphere (const t8_3D_point &x, [[maybe_unused]] const double t, void *data)
 {
   t8_levelset_sphere_data_t *ls_data = (t8_levelset_sphere_data_t *) data;
 

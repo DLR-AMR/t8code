@@ -800,7 +800,6 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int gh
           size_t iowner;
           /* Construct the owners at the face of the neighbor element */
           t8_forest_element_owners_at_neigh_face (forest, itree, elem, iface, &owners);
-          T8_ASSERT (owners.elem_count >= 0);
           /* Iterate over all owners and if any is not the current process,
            * add this element as remote */
           for (iowner = 0; iowner < owners.elem_count; iowner++) {

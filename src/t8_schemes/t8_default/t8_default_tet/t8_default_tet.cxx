@@ -397,7 +397,7 @@ void
 t8_default_scheme_tet::element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id) const
 {
   T8_ASSERT (0 <= level && level <= T8_DTET_MAXLEVEL);
-  T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << 3 * level);
+  T8_ASSERT (id < ((t8_linearidx_t) 1) << 3 * level);
   T8_ASSERT (element_is_valid (elem));
 
   t8_dtet_init_linear_id ((t8_default_tet_t *) elem, id, level);
@@ -498,7 +498,7 @@ t8_default_scheme_tet::element_to_string (const t8_element_t *elem, char *debug_
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (debug_string != NULL);
   t8_dtet_t *tet = (t8_dtet_t *) elem;
-  snprintf (debug_string, BUFSIZ, "x: %i, y: %i, z: %i, type: %i, level: %i", tet->x, tet->y, tet->z, tet->type,
+  snprintf (debug_string, string_size, "x: %i, y: %i, z: %i, type: %i, level: %i", tet->x, tet->y, tet->z, tet->type,
             tet->level);
 }
 #endif

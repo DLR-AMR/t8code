@@ -272,10 +272,12 @@ t8_default_scheme_vertex::element_get_reference_coords (const t8_element_t *elem
 
 #ifdef T8_ENABLE_DEBUG
 int
-t8_default_scheme_vertex::element_is_valid (const t8_element_t *elem) const
+t8_default_scheme_vertex::element_is_valid ([[maybe_unused]] const t8_element_t *elem)
 
 {
-  return t8_dvertex_is_valid ((const t8_dvertex_t *) elem);
+  /* A vertex is always valid, since it only saves the level as uint8, 
+     which therefore automatically is >= 0 and <= 255 (=MAXLEVEL)*/
+  return 1;
 }
 
 void
