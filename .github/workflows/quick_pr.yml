@@ -1,0 +1,64 @@
+name: "Create an issue in the repository for a PR that does not have one yet"
+
+on:
+  workflow_call:
+    secrets:
+        PAT:
+          required: true
+    outputs:
+        ISSUE_NUMBER:
+            description: 'The number of the issue that was created'
+            value: ${{ jobs.create_issue.outputs.ISSUE_NUMBER }}
+
+jobs:
+    create_issue:
+        runs-on: ubuntu-latest
+        outputs:
+            ISSUE_NUMBER: ${{ steps.create_issue_and_output_number.outputs.ISSUE_NUMBER }}
+        steps:
+        - uses: actions/checkout@v4
+          with:
+                repository: ${{ github.event.repository.full_name }}
+                ref: ${{ github.event.pull_request.head.ref }}
+                fetch-depth: 0
+
+        - name: "Set up environment"
+          run: echo "GITHUB_TOKEN=${{ secrets.PAT }}" >> $GITHUB_ENV
+
+        - name: "Create Issue"
+          id: create_issue_and_output_number
+          run: |
+                # Get the title of the triggering PR
+                TITLE="${{ github.event.pull_request.title }}"
+                AUTHOR="${{ github.event.pull_request.user.login }}"
+                echo "TITLE=$TITLE"
+                echo "AUTHOR=$AUTHOR"
+                new_issue_url=$(gh issue create \
+                    --title "$TITLE" \
+                    --assignee "$AUTHOR" \
+                    --body "This Issue was created because the PR did not reference an Issue."
+                )
+                echo "new_issue_url=$new_issue_url"
+                # Extract the issue number from the URL. 
+                # The URL is in the format https://github.com/orga-name/repo-name/issues/issues_number
+                ISSUE_NUMBER=$(echo "$new_issue_url" | awk -F'/' '{print $NF}')
+                echo "ISSUE_NUMBER=$ISSUE_NUMBER"
+                echo "ISSUE_NUMBER=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
+
+        - name: "Link Issue to PR"
+          id: link_issue
+          run: |
+                # Add "Closes #ISSUE_NUMBER" to the PR body
+                ISSUE_NUMBER="${{ steps.create_issue_and_output_number.outputs.ISSUE_NUMBER }}"
+                PR_NUMBER="${{ github.event.pull_request.number }}"
+                echo "ISSUE_NUMBER=$ISSUE_NUMBER"
+                echo "PR_NUMBER=$PR_NUMBER"
+                # Get the PR body
+                pr_body=$(jq -r '.pull_request.body // ""' < $GITHUB_EVENT_PATH)
+                echo "pr_body=$pr_body"
+                # Add the issue number to the PR body
+                # Add "Closes #ISSUE_NUMBER" to the top of the PR body
+                new_pr_body=$(printf "Closes #%s\n\n%s" "$ISSUE_NUMBER" "$pr_body")
+                echo "new_pr_body=$new_pr_body"
+                # Update the PR body
+                gh pr edit "$PR_NUMBER" --body "$new_pr_body"
