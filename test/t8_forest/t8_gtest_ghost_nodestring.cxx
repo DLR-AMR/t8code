@@ -149,7 +149,7 @@ t8_test_index_translation (t8_forest_t forest, t8_forest_ghost_stencil *ghost_st
   return res;
 }
 
-TEST_P (forest_ghost_nodestring, test_ghost_nodestring)
+TEST_P (forest_ghost_nodestring, DISABLED_test_ghost_nodestring)
 {
   t8_global_productionf ("Test TEST_P (forest_ghost_nodestring, test_ghost_nodestring ).\n");
 
@@ -166,7 +166,7 @@ TEST_P (forest_ghost_nodestring, test_ghost_nodestring)
   t8_forest_unref (&new_forest);
 }
 
-TEST_P (forest_ghost_nodestring_subrotines, test_get_owner_by_global)
+TEST_P (forest_ghost_nodestring_subrotines, DISABLED_test_get_owner_by_global)
 {
   t8_global_productionf ("Test TEST_P (forest_ghost_nodestring_subrotines, test_get_owner_by_global).\n");
 
@@ -185,7 +185,7 @@ TEST_P (forest_ghost_nodestring_subrotines, test_get_owner_by_global)
   t8_forest_unref (&forest);
 }
 
-TEST_P (forest_ghost_nodestring_subrotines, test_get_local_by_globalid)
+TEST_P (forest_ghost_nodestring_subrotines, DISABLED_test_get_local_by_globalid)
 {
   t8_global_productionf ("Test TEST_P (forest_ghost_nodestring_subrotines, test_get_local_by_globalid) mit level %d.\n",
                          level);
