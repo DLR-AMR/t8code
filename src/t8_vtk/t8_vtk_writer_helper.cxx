@@ -147,7 +147,7 @@ template <>
 t8_locidx_t
 num_cells_to_write<t8_forest_t> (const t8_forest_t grid, const int write_ghosts)
 {
-  return grid_local_num_elements (grid) + (write_ghosts ? t8_forest_get_num_ghost_trees (grid) : 0);
+  return grid_local_num_elements (grid) + (write_ghosts ? t8_forest_get_num_ghosts (grid) : 0);
 }
 
 template <>
