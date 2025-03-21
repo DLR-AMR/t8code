@@ -125,10 +125,22 @@ int
 t8_element_is_equal (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *elem1,
                      const t8_element_t *elem2);
 
-/** Compute the parent of a given element \b elem and store it in \b parent.
- *  \b parent needs to be an existing element. No memory is allocated by this function.
- *  \b elem and \b parent can point to the same element, then the entries of
- *  \b elem are overwritten by the ones of its parent.
+/**
+ * Indicates if an element is refinable. Possible reasons for being not refinable could be
+ * that the element has reached its max level.
+ * \param [in] scheme      The scheme of the forest.
+ * \param [in] tree_class  The eclass of tree the elements are part of.
+ * \param [in] elem        The element to check.
+ * \return                 1 if the element is refinable, 0 otherwise.
+ */
+int
+element_is_refinable (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *elem);
+
+/**
+ * Compute the parent of a given element \b elem and store it in \b parent.
+ * \b parent needs to be an existing element. No memory is allocated by this function.
+ * \b elem and \b parent can point to the same element, then the entries of
+ * \b elem are overwritten by the ones of its parent.
  * \param [in] scheme        The scheme of the forest.
  * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elem   The element whose parent will be computed.
@@ -740,7 +752,7 @@ t8_element_destroy (const t8_scheme_c *scheme, const t8_eclass_t tree_class, con
  * \param [in,out] elem   The element to be filled with root.
  */
 void
-t8_element_get_root (const t8_scheme_c *scheme, const t8_eclass_t tree_class, t8_element_t *elem);
+t8_element_set_to_root (const t8_scheme_c *scheme, const t8_eclass_t tree_class, t8_element_t *elem);
 
 /** Pack multiple elements into contiguous memory, so they can be sent via MPI.
  * \param [in] scheme        The scheme of the forest.

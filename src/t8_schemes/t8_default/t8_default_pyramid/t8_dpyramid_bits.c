@@ -440,7 +440,6 @@ t8_dpyramid_update_index (t8_linearidx_t *id, const t8_dpyramid_type_t type, con
   t8_linearidx_t test = 0;
   t8_linearidx_t shift;
   T8_ASSERT (id != NULL);
-  T8_ASSERT (*id >= 0);
   int remain = -1;
   do {
     /* Iterate through the local-id. Get the current shift by the type of the
@@ -465,7 +464,7 @@ t8_dpyramid_init_linear_id (t8_dpyramid_t *p, const int level, t8_linearidx_t id
   t8_linearidx_t p_sum2 = sc_intpow64u (6, level);
 
   T8_ASSERT (0 <= level && level <= T8_DPYRAMID_MAXLEVEL);
-  T8_ASSERT (0 <= id && id <= 2 * p_sum1 - p_sum2);
+  T8_ASSERT (id <= 2 * p_sum1 - p_sum2);
 
   p->pyramid.level = level;
   p->pyramid.x = 0;
