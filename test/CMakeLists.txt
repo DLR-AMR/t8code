@@ -94,6 +94,7 @@ add_t8_test( NAME t8_gtest_shmem_parallel  SOURCES t8_gtest_main.cxx t8_data/t8_
 add_t8_test( NAME t8_gtest_element_volume_serial        SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_element_volume.cxx )
 add_t8_test( NAME t8_gtest_search_parallel              SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_search.cxx )
 add_t8_test( NAME t8_gtest_half_neighbors_parallel      SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_half_neighbors.cxx )
+add_t8_test( NAME t8_gtest_face_neighbors_parallel      SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_face_neighbors.cxx t8_gtest_adapt_callbacks.cxx )
 add_t8_test( NAME t8_gtest_find_owner_parallel          SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_find_owner.cxx )
 add_t8_test( NAME t8_gtest_user_data_parallel           SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_user_data.cxx )
 add_t8_test( NAME t8_gtest_transform_serial             SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_transform.cxx )
@@ -104,7 +105,7 @@ add_t8_test( NAME t8_gtest_ghost_nodestring_parallel    SOURCES t8_gtest_main.cx
 add_t8_test( NAME t8_gtest_balance_parallel             SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_balance.cxx )
 add_t8_test( NAME t8_gtest_forest_commit_parallel       SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_forest_commit.cxx )
 add_t8_test( NAME t8_gtest_forest_face_normal_serial    SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_forest_face_normal.cxx )
-add_t8_test( NAME t8_gtest_element_is_leaf_serial       SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_element_is_leaf.cxx )
+add_t8_test( NAME t8_gtest_element_is_leaf_parallel     SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_element_is_leaf.cxx t8_gtest_adapt_callbacks.cxx )
 add_t8_test( NAME t8_gtest_partition_data_parallel      SOURCES t8_gtest_main.cxx t8_forest/t8_gtest_partition_data.cxx )
 
 add_t8_test( NAME t8_gtest_permute_hole_serial          SOURCES t8_gtest_main.cxx t8_forest_incomplete/t8_gtest_permute_hole.cxx )

@@ -30,6 +30,7 @@
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_ghost.h>
+#include <t8_forest/t8_forest_general.h>
 #include <example/common/t8_example_common.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh_readmshfile.h>
@@ -1034,7 +1035,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t *problem)
 
         t8_forest_leaf_face_neighbors (problem->forest, itree, element, &neighbors, iface,
                                        &elem_data->dual_faces[iface], &elem_data->num_neighbors[iface],
-                                       &elem_data->neighs[iface], &neigh_eclass, 1);
+                                       &elem_data->neighs[iface], &neigh_eclass);
         for (ineigh = 0; ineigh < elem_data->num_neighbors[iface]; ineigh++) {
           elem_data->neigh_level[iface] = scheme->element_get_level (neigh_eclass, neighbors[ineigh]);
         }
@@ -1288,7 +1289,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u, t8_example_level_se
               neighbor_time = -sc_MPI_Wtime ();
               t8_forest_leaf_face_neighbors (problem->forest, itree, elem, &neighs, iface,
                                              &elem_data->dual_faces[iface], &elem_data->num_neighbors[iface],
-                                             &elem_data->neighs[iface], &neigh_eclass, 1);
+                                             &elem_data->neighs[iface], &neigh_eclass);
               for (ineigh = 0; ineigh < elem_data->num_neighbors[iface]; ineigh++) {
                 elem_data->neigh_level[iface] = scheme->element_get_level (neigh_eclass, neighs[ineigh]);
               }

@@ -521,6 +521,25 @@ t8_forest_get_coarse_tree (t8_forest_t forest, t8_locidx_t ltreeid);
 int
 t8_forest_element_is_leaf (const t8_forest_t forest, const t8_element_t *element, const t8_locidx_t local_tree);
 
+/**
+ * Query whether a given element or a ghost is a leaf of a local or ghost tree in a forest.
+ * 
+ * \param [in]  forest    The forest.
+ * \param [in]  element   An element of a local tree in \a forest.
+ * \param [in]  local_tree A local tree id of \a forest or a ghost tree id
+ * \param [in]  check_ghost If true \a element is interpreted as a ghost element and
+ *                         \a local_tree as the id of a ghost tree (0 <= \a local_tree < num_ghost_trees).
+ *                         If false \a element is interpreted as an element and \a local_tree as
+ *                         the id of a local tree (0 <= \a local_tree < num_local_trees).
+ * \return True (non-zero) if and only if \a element is a leaf (or ghost) in \a local_tree of \a forest.
+ * \note \a forest must be committed before calling this function.
+ * \ref t8_forest_element_is_leaf
+ * \ref t8_forest_element_is_ghost
+ */
+int
+t8_forest_element_is_leaf_or_ghost (const t8_forest_t forest, const t8_element_t *element, const t8_locidx_t local_tree,
+                                    const int check_ghost);
+
 /** Compute the leaf face orientation at given face in a forest.
  * \param [in]    forest  The forest. Must have a valid ghost layer.
  * \param [in]    ltreeid A local tree id.
@@ -538,7 +557,7 @@ t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, 
 
 /** Compute the leaf face neighbors of a forest.
  * \param [in]    forest  The forest. Must have a valid ghost layer.
- * \param [in]    ltreeid A local tree id.
+ * \param [in]    ltreeid A local tree id (could also be a ghost tree). 0 <= \a ltreeid < num_local trees+num_ghost_trees
  * \param [in]    leaf    A leaf in tree \a ltreeid of \a forest.
  * \param [out]   pneighbor_leaves Unallocated on input. On output the neighbor
  *                        leaves are stored here.
@@ -551,17 +570,14 @@ t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, 
  *                        0, 1, ... num_local_el - 1 for local leaves and
  *                        num_local_el , ... , num_local_el + num_ghosts - 1 for ghosts.
  * \param [out]   pneigh_eclass On output the eclass of the neighbor elements.
- * \param [in]    forest_is_balanced True if we know that \a forest is balanced, false
- *                        otherwise.
- * \note If there are no face neighbors, then *neighbor_leaves = NULL, num_neighbors = 0,
+ * \note If there are no face neighbors, then *pneighbor_leaves = NULL, num_neighbors = 0,
  * and *pelement_indices = NULL on output.
- * \note Currently \a forest must be balanced.
  * \note \a forest must be committed before calling this function.
  *
  * \note Important! This routine allocates memory which must be freed. Do it like this:
  *
  *   if (num_neighbors > 0) {
- *     scheme->element_destroy (pneigh_eclass, num_neighbors, neighbors);
+ *     scheme->element_destroy (pneigh_eclass, num_neighbors, pneighbor_leaves);
  *     T8_FREE (pneighbor_leaves);
  *     T8_FREE (pelement_indices);
  *     T8_FREE (dual_faces);
@@ -571,11 +587,11 @@ t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, 
 void
 t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf,
                                t8_element_t **pneighbor_leaves[], int face, int *dual_faces[], int *num_neighbors,
-                               t8_locidx_t **pelement_indices, t8_eclass_t *pneigh_eclass, int forest_is_balanced);
+                               t8_locidx_t **pelement_indices, t8_eclass_t *pneigh_eclass);
 
 /** Like \ref t8_forest_leaf_face_neighbors but also provides information about the global neighbors and the orientation. 
  * \param [in]    forest  The forest. Must have a valid ghost layer.
- * \param [in]    ltreeid A local tree id.
+ * \param [in]    ltreeid A local tree id (could also be a ghost tree). 0 <= \a ltreeid < num_local trees+num_ghost_trees
  * \param [in]    leaf    A leaf in tree \a ltreeid of \a forest.
  * \param [out]   pneighbor_leaves Unallocated on input. On output the neighbor
  *                        leaves are stored here.
@@ -588,22 +604,19 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8
  *                        0, 1, ... num_local_el - 1 for local leaves and
  *                        num_local_el , ... , num_local_el + num_ghosts - 1 for ghosts.
  * \param [out]   pneigh_eclass On output the eclass of the neighbor elements.
- * \param [in]    forest_is_balanced True if we know that \a forest is balanced, false
- *                        otherwise.
  * \param [out]   gneigh_tree  The global tree IDs of the neighbor trees.
  * \param [out]   orientation  If not NULL on input, the face orientation is computed and stored here. 
  *                                         Thus, if the face connection is an inter-tree connection the orientation of the tree-to-tree connection is stored. 
  *                                         Otherwise, the value 0 is stored.
  * All other parameters and behavior are identical to \ref `t8_forest_leaf_face_neighbors`.
- * \note If there are no face neighbors, then *neighbor_leaves = NULL, num_neighbors = 0,
+ * \note If there are no face neighbors, then *pneighbor_leaves = NULL, num_neighbors = 0,
  * and *pelement_indices = NULL on output.
- * \note Currently \a forest must be balanced.
  * \note \a forest must be committed before calling this function.
  *
  * \note Important! This routine allocates memory which must be freed. Do it like this:
  *
  *   if (num_neighbors > 0) {
- *     scheme->element_destroy (pneigh_eclass, num_neighbors, neighbors);
+ *     scheme->element_destroy (pneigh_eclass, num_neighbors, pneighbor_leaves);
  *     T8_FREE (pneighbor_leaves);
  *     T8_FREE (pelement_indices);
  *     T8_FREE (dual_faces);
@@ -611,10 +624,28 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8
  *
  */
 void
-t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf,
+t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf_or_ghost,
                                    t8_element_t **pneighbor_leaves[], int face, int *dual_faces[], int *num_neighbors,
-                                   t8_locidx_t **pelement_indices, t8_eclass_t *pneigh_eclass, int forest_is_balanced,
-                                   t8_gloidx_t *gneigh_tree, int *orientation);
+                                   t8_locidx_t **pelement_indices, t8_eclass_t *pneigh_eclass, t8_gloidx_t *gneigh_tree,
+                                   int *orientation);
+
+/** Given a leaf element or ghost index in "all local elements + ghosts" enumeration
+ * compute the index of the face neighbor of the element - provided that only one or no
+ * face neighbors exists.
+ * HANDLE WITH CARE. DO NOT CALL IF THE FOREST IS ADAPTED.
+ * 
+ * \param[in] forest        The forest. Must be committed.
+ * \param[in] element_index Index of an element in \a forest. Must have only one or no facen neighbors across the given face.
+ *                          0 <= \a element_index < num_local_elements + num_ghosts
+ * \param[in] face_index    Index of a face of \a element.
+ * \param[in] global_treeid Global index of the tree that contains \a element.
+ * \param[out] dual_face    Return value, the dual_face index of the face neighbor.
+ * \return The index of the face neighbor leaf (local element or ghost).
+ * \note Do not call if you are unsure about the number of face neighbors. In particular if the forest is adapted and not uniform.
+ */
+t8_locidx_t
+t8_forest_same_level_leaf_face_neighbor_index (t8_forest_t forest, const t8_locidx_t element_index,
+                                               const int face_index, const t8_gloidx_t global_treeid, int *dual_face);
 
 /** Exchange ghost information of user defined element data.
  * \param[in] forest       The forest. Must be committed.
@@ -804,17 +835,18 @@ t8_forest_get_first_local_element_id (t8_forest_t forest);
 const t8_scheme_c *
 t8_forest_get_scheme (const t8_forest_t forest);
 
-/** Return the eclass of the tree in which a face neighbor of a given element
+/** Return the eclass of the tree in which a face neighbor of a given element or ghost
  * lies.
- * \param [in]      forest.     A committed forest.
- * \param [in]      ltreeid.    The local tree in which the element lies.
- * \param [in]      elem.       An element in the tree \a ltreeid.
- * \param [in]      face.       A face number of \a elem.
+ * \param [in]      forest      A committed forest.
+ * \param [in]      ltreeid     The local tree or ghost tree in which the element lies. 0 <= \a ltreeid < num_local_trees + num_ghost_trees
+ * \param [in]      elem        An element or ghost in the tree \a ltreeid.
+ * \param [in]      face        A face number of \a elem.
  * \return                      The local tree id of the tree in which the face
  *                              neighbor of \a elem across \a face lies.
  */
 t8_eclass_t
-t8_forest_element_neighbor_eclass (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *elem, int face);
+t8_forest_element_neighbor_eclass (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *elem,
+                                   const int face);
 
 /** Construct the face neighbor of an element, possibly across tree boundaries.
  * Returns the global tree-id of the tree in which the neighbor element lies in.
