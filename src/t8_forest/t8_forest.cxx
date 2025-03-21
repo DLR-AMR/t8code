@@ -1928,7 +1928,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
       const t8_element_t *last_face_leaf = t8_element_array_index_locidx (tree_leaves, last_desc_index);
       // Compute their nearest common ancestor
       scheme->element_get_nca (neigh_class, first_face_leaf, last_face_leaf, nca_of_face_desc);
-      
+
       /* Check whether the computed nca element does contain or is contained by the same level
        * face neighbor. If not, then there are no face neighbors and we do not continue.
        * Otherwise, face neighbors exist and are descendants of nca_of_face_desc. */
@@ -1951,12 +1951,13 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
        * 
        * TODO: Try this approach
        *   - build first and last desc from their id
-       *   - compute their nca
-       *   - search for nca
-       *   - if not ancestor of nca (including not found)
-       *     - add 1 to index (use 0 if element was not found)
-       *   - if not ancestor -> no neighbor
-       *   - else iterate faces
+       *   - do a "find ancestor/desc search"
+       *     - if not ancestor of nca (including not found)
+       *       - add 1 to index (use 0 if element was not found)
+       *     - if not ancestor -> not found
+       *   - if one is found then both must have been found
+       *   - build nca 
+       *   - iterate faces
        * */
 
       if (t8_forest_elements_are_ancestor (scheme, neigh_class, same_level_neighbor, nca_of_face_desc)) {
