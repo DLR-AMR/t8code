@@ -127,7 +127,7 @@ vtk_writer_test_fill_data (const t8_locidx_t cells_to_write_count, std::vector<d
   for (t8_locidx_t icell = 0; icell < cells_to_write_count; ++icell) {
     const double scalar_value = icell / 10.;
     const double vector_values[3] = { scalar_value, -scalar_value, 42. };
-    scalar_data.push_back (icell);
+    scalar_data.push_back (scalar_value);
     vector_data.push_back (vector_values[0]);
     vector_data.push_back (vector_values[1]);
     vector_data.push_back (vector_values[2]);
