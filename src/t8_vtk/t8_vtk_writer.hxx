@@ -331,6 +331,7 @@ class vtk_writer {
     cellArray->InsertNextCell (pvtkCell);
 
     /* Write additional information if desired. */
+    t8_debugf ("[D] writing to %ld, elem_id: %d, offset: %ld \n", elem_id - offset, elem_id, offset);
     if (curved_flag == 0) {
       cellTypes[elem_id - offset] = t8_eclass_vtk_type[element_shape];
     }
@@ -424,8 +425,11 @@ class vtk_writer {
 
     /* Check if we have to write ghosts on this process. */
     bool do_ghosts = grid_do_ghosts (grid, write_ghosts);
+
     /* Compute the number of cells on this process. */
-    t8_locidx_t num_cells = num_cells_to_write (grid, do_ghosts);
+    const t8_locidx_t num_cells = num_cells_to_write (grid, write_ghosts);
+    t8_debugf ("[D] num_cells %d cells\n", num_cells);
+    t8_debugf ("[D] do_ghosts: %d\n", do_ghosts);
 
     int *cellTypes = T8_ALLOC (int, num_cells);
     T8_ASSERT (cellTypes != NULL);
@@ -471,7 +475,8 @@ class vtk_writer {
      * this data to the unstructured Grid Object.We differentiate between scalar and vector data.
      */
     const t8_locidx_t num_elements
-      = grid_local_num_elements (grid) + do_ghosts ? grid_local_num_ghost_elements (grid) : 0;
+      = grid_local_num_elements (grid) + (do_ghosts ? grid_local_num_ghost_elements (grid) : 0);
+    t8_debugf ("[D] write %d elements\n", num_elements);
     for (int idata = 0; idata < num_data; idata++) {
       dataArrays[idata] = vtkDoubleArray::New ();
       const int num_components = this->data[idata].type == T8_VTK_SCALAR ? 1 : 3;

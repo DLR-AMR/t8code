@@ -24,6 +24,7 @@
 #include <t8.h>
 #include <t8_forest/t8_forest.h>
 #include <t8_forest/t8_forest_types.h>
+#include <t8_forest/t8_forest_ghost.h>
 #include <t8_schemes/t8_scheme.hxx>
 
 int
@@ -137,7 +138,7 @@ bool
 grid_do_ghosts<t8_forest_t> (const t8_forest_t grid, const int write_ghosts)
 {
   bool ghosts = write_ghosts;
-  if (grid->ghosts == NULL || grid->ghosts->num_ghosts_elements == 0) {
+  if (t8_forest_get_num_ghosts (grid) == 0) {
     /* Never write ghost elements if there aren't any */
     ghosts = false;
   }
@@ -159,14 +160,14 @@ grid_do_ghosts<t8_cmesh_t> (const t8_cmesh_t grid, const int write_ghosts)
 
 template <>
 t8_locidx_t
-num_cells_to_write<t8_forest_t> (const t8_forest_t grid, const int write_ghosts)
+num_cells_to_write<t8_forest_t> (const t8_forest_t grid, const bool write_ghosts)
 {
-  return grid_local_num_elements (grid) + (write_ghosts ? t8_forest_get_num_ghost_trees (grid) : 0);
+  return grid_local_num_elements (grid) + (write_ghosts ? t8_forest_get_num_ghosts (grid) : 0);
 }
 
 template <>
 t8_locidx_t
-num_cells_to_write<t8_cmesh_t> (const t8_cmesh_t grid, const int write_ghosts)
+num_cells_to_write<t8_cmesh_t> (const t8_cmesh_t grid, const bool write_ghosts)
 {
   return grid_local_num_elements (grid) + (write_ghosts ? t8_cmesh_get_num_ghosts (grid) : 0);
 }
@@ -175,7 +176,10 @@ template <>
 t8_element_shape_t
 grid_element_shape<t8_forest_t> (const t8_forest_t grid, const t8_locidx_t itree, const t8_element_t *element)
 {
-  const t8_eclass_t eclass = t8_forest_get_eclass (grid, itree);
+  const bool is_local = t8_forest_tree_is_local (grid, itree);
+  const t8_eclass_t eclass = !is_local
+                               ? t8_forest_ghost_get_tree_class (grid, itree - t8_forest_get_num_local_trees (grid))
+                               : t8_forest_get_eclass (grid, itree);
   const t8_scheme *scheme = t8_forest_get_scheme (grid);
   return scheme->element_get_shape (eclass, element);
 }
@@ -211,7 +215,10 @@ template <>
 int
 grid_element_level<t8_forest_t> (const t8_forest_t grid, const t8_locidx_t itree, const t8_element_t *element)
 {
-  const t8_eclass_t eclass = t8_forest_get_eclass (grid, itree);
+  const bool is_local = t8_forest_tree_is_local (grid, itree);
+  const t8_eclass_t eclass = !is_local
+                               ? t8_forest_ghost_get_tree_class (grid, itree - t8_forest_get_num_local_trees (grid))
+                               : t8_forest_get_eclass (grid, itree);
   const t8_scheme *scheme = t8_forest_get_scheme (grid);
   return scheme->element_get_level (eclass, element);
 }

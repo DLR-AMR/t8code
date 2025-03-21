@@ -190,7 +190,7 @@ grid_do_ghosts (const grid_t grid, const int write_ghosts);
  */
 template <typename grid_t>
 t8_locidx_t
-num_cells_to_write (const grid_t grid, const int write_ghosts);
+num_cells_to_write (const grid_t grid, const bool write_ghosts);
 
 /**
  * Templated function to get the shape of an element for forests or cmeshes. If grid is a cmesh the input for
