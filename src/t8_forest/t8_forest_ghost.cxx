@@ -2124,31 +2124,18 @@ t8_forest_ghost_definition_face_get_version (t8_forest_ghost_definition_c *ghost
 int
 t8_forest_ghost_definition_stencil_get_rank_by_globalid (const t8_forest_t forest, const t8_gloidx_t element_id);
 
-/**
- * Function to compute the local id of an element by its global id
- * \param [in]      forest a commit uniform forest which is partitioned
- * \param [in]      glob_element_id global id of an element of the forest (not in ghost)
- * \return          local id of the element (also if the element is not owned by the process)
- * \note the function use, that the linear id of the element is the same as the global index.
- * For example this is true for uniform meshes.
- * the function also use, that the forest is partitioned.
- * The owner is found in O(1)
- */
 t8_locidx_t
-t8_forest_ghost_definition_stencil_get_local_id (const t8_forest_t forest, const t8_gloidx_t glob_element_id)
+t8_forest_ghost_definition_stencil_get_localid_by_globalid (const t8_forest_t forest, const t8_gloidx_t glob_element_id)
 {
   const int global_num_elements = t8_forest_get_global_num_elements (forest);
   T8_ASSERT (glob_element_id < global_num_elements);
+  /* Calculation with reminder of number of elements with number of processes: N = P * b_0 + r */
   const t8_linearidx_t b_0 = global_num_elements / forest->mpisize;
   const t8_linearidx_t r = global_num_elements % forest->mpisize;
+  /* Compute the owner process of the element. */
+  const int owner_process = t8_forest_ghost_definition_stencil_get_rank_by_globalid (forest, glob_element_id);
 
-  const int p_guess = glob_element_id / b_0;
-  if (p_guess < 2 || r == 0) {
-    const t8_locidx_t loc_id = glob_element_id - forest->mpirank * b_0;
-    T8_ASSERT (0 <= loc_id);
-    return loc_id;
-  }
-  const t8_locidx_t loc_id = glob_element_id - (((p_guess * r) / forest->mpisize) + forest->mpirank * b_0);
+  const t8_locidx_t loc_id = glob_element_id - (((owner_process * r) / forest->mpisize) + owner_process * b_0);
   T8_ASSERT (0 <= loc_id);
   return loc_id;
 }
@@ -2157,50 +2144,52 @@ t8_forest_ghost_definition_stencil_get_local_id (const t8_forest_t forest, const
  * Function to creat a list of local ids for a given ghost nodesting.
  * \param [in]      forest a commit uniform forest, with only one tree.
  * \param [in]      list_of_globalidx nodstring, list of globalidx.
- * \return          a list of tupels with local three and element id (lthreeid, lelementid),
- *                  the local element id with respect to the tree (not the forest).
+ * \return          a list of tupels with local element id and a bool is ghost element
  * \note if an element of the list cannot be found by the process 
  * (in own or ghost elements), no valid output is guaranteed.
  */
-std::vector<std::tuple<t8_locidx_t, t8_locidx_t>>
-t8_forest_global_elementid_to_local_tree_and_elementid (const t8_forest_t forest,
-                                                        const std::vector<t8_gloidx_t> &list_of_globalidx)
+std::vector<std::tuple<t8_locidx_t, bool>>
+t8_forest_global_elementid_to_local_elementid_and_ghost_bool (const t8_forest_t forest,
+                                                              const std::vector<t8_gloidx_t> &list_of_globalidx)
 {
+  /* Expect the list of global ids to be sorted. */
   T8_ASSERT (std::is_sorted (std::begin (list_of_globalidx), std::end (list_of_globalidx)));
 
-  /* the stencil ghost use a uniform mehs, the tree_class is the same for all */
+  /* The stencil ghost use a uniform mehs, the tree_class is the same for all. */
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, 0);
   const t8_scheme *eclass_scheme = t8_forest_get_scheme (forest);
 
-  std::vector<int> owner {};
-  std::vector<std::tuple<t8_locidx_t, t8_locidx_t>> result {};
+  std::vector<int> owner {}; /* List of owners of the element for the global ids. */
+  std::vector<std::tuple<t8_locidx_t, bool>> result {};
 
+  /* Fill the list owner. */
   for (const t8_gloidx_t &glob_id : list_of_globalidx) {
     owner.push_back (t8_forest_ghost_definition_stencil_get_rank_by_globalid (forest, glob_id));
   }
   T8_ASSERT (owner.size () == list_of_globalidx.size ());
 
+  /* Iterate over the owner and add the corresponding tuple of the global id to the result list. */
   t8_locidx_t start_element_in_tree = 0;
   for (int index = 0; index < (int) owner.size (); ++index) {
-    /* the element is owned by the process */
+    /* The element is owned by the process. */
     if (owner[index] == forest->mpirank) {
-      /* compute the local id of the element with the global id */
-      result.push_back ({ 0, t8_forest_ghost_definition_stencil_get_local_id (forest, list_of_globalidx[index]) });
+      /* Compute the local id of the element with the global id. */
+      result.push_back (
+        { t8_forest_ghost_definition_stencil_get_localid_by_globalid (forest, list_of_globalidx[index]), false });
     }
-    else { /* the element is not owned by the process, look in ghost  */
+    else { /* The element is not owned by the process, look in ghost.  */
       const t8_locidx_t lghost_tree = t8_forest_ghost_remote_first_tree (forest, owner[index]);
-      /* iterate over the ghost elements of the three and check if its the right element */
+      /* Iterate over the ghost elements of the three and check if its the right element. */
       for (t8_locidx_t ielement = start_element_in_tree;
            ielement < t8_forest_ghost_tree_num_elements (forest, lghost_tree); ielement++) {
         const t8_element_t *ghost_element = t8_forest_ghost_get_element (forest, lghost_tree, ielement);
-        /* calculate the linear id of the element, in an uniform grid, the global id is the same as the linear id */
+        /* Calculate the linear id of the element. In an uniform grid with one tree, the global id is the same as the linear id. */
         const t8_linearidx_t lin_id = eclass_scheme->element_get_linear_id (
           tree_class, ghost_element, eclass_scheme->element_get_level (tree_class, ghost_element));
         if ((t8_gloidx_t) lin_id == list_of_globalidx[index]) { /* the element in the global index list is found */
-          /* add the tuple to the result vector */
-          result.push_back ({ forest->global_num_trees + lghost_tree, ielement });
-          /** update the start_element
-           * us that the global index list and the ghost elements are sorted */
+          /* Add the tuple to the result vector. */
+          result.push_back ({ ielement, true });
+          /* Update the start_element us that the global index list and the ghost elements are sorted */
           start_element_in_tree
             = ((index + 1 < (int) owner.size () || owner[index] == owner[index + 1]) ? ielement : 0);
           break;
@@ -2209,7 +2198,7 @@ t8_forest_global_elementid_to_local_tree_and_elementid (const t8_forest_t forest
       T8_ASSERT (index + 1 == (int) result.size ());  // check that an element is added
     }
   }
-  T8_ASSERT (result.size () == list_of_globalidx.size ());  // check if the list is full
+  T8_ASSERT (result.size () == list_of_globalidx.size ());  // check that the list is full
   return result;
 }
 
@@ -2221,14 +2210,13 @@ t8_forest_ghost_stencil::do_ghost (t8_forest_t forest)
                "Ghost layer is not constructed.\n");
     return T8_SUBROUTINE_FAILED;
   }
+  /* init the ghost arrays. */
   t8_forest_ghost_init (&forest->ghosts, ghost_type);
 
-  const t8_element_t *element;
-
-  SC_CHECK_ABORT (t8_forest_get_num_global_trees (forest) == 1, "more than one tree in ghost for stencil");
+  SC_CHECK_ABORT (t8_forest_get_num_global_trees (forest) == 1, "More than one tree in ghost for stencil.\n");
 
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, 0);
-  SC_CHECK_ABORT (tree_class == T8_ECLASS_QUAD, "only forest with eclass quad are possible for ghost for stencil");
+  SC_CHECK_ABORT (tree_class == T8_ECLASS_QUAD, "Only forest with eclass quad are possible for ghost for stencil.\n");
   const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, 0);
   const t8_scheme *eclass_scheme = t8_forest_get_scheme (forest);
 
@@ -2240,47 +2228,46 @@ t8_forest_ghost_stencil::do_ghost (t8_forest_t forest)
   /* maps a local element to the indices of the nodestring in which the element is contained. */
   std::unordered_map<t8_locidx_t, std::vector<int>> owne_elements_to_indice_of_list;
 
-  if (!list_of_nodestrings.empty ()) {
-    /** iterate over all elements in all nodestrings, 
-     * calculate the owner of the element, and if it is owned, 
-     * add an entry to the unordered map and mark this nodestring as relevant.
-    */
-    for (int list_index = 0; list_index < (int) list_of_nodestrings.size (); ++list_index) {
-      bool relevant_list = false;
-      std::vector<int> temp;
-      for (const t8_gloidx_t glob_id : list_of_nodestrings[list_index]) {
-        const int owner = t8_forest_ghost_definition_stencil_get_rank_by_globalid (forest, glob_id);
-        temp.push_back (owner);
-        if (owner == forest->mpirank) { /* found an owend element */
-          relevant_list = true;
-          t8_locidx_t loc_id = t8_forest_ghost_definition_stencil_get_local_id (forest, glob_id);
-          /* if the element is not in the map, add a new element to the unordered map */
-          if (owne_elements_to_indice_of_list.count (loc_id) < 1) {
-            owne_elements_to_indice_of_list[loc_id] = { list_index };
-          }
-          else { /* else update the entry of the element with the current list_index */
-            owne_elements_to_indice_of_list[loc_id].push_back (list_index);
-          }
+  const t8_element_t *element;
+
+  /** iterate over all elements in all nodestrings, 
+   * calculate the owner of the element, and if it is owned, 
+   * add an entry to the unordered map and mark this nodestring as relevant.
+  */
+  for (int list_index = 0; list_index < (int) list_of_nodestrings.size (); ++list_index) {
+    bool relevant_list = false;
+    std::vector<int> temp;
+    for (const t8_gloidx_t glob_id : list_of_nodestrings[list_index]) {
+      const int owner = t8_forest_ghost_definition_stencil_get_rank_by_globalid (forest, glob_id);
+      temp.push_back (owner);
+      if (owner == forest->mpirank) { /* found an owend element */
+        relevant_list = true;
+        t8_locidx_t loc_id = t8_forest_ghost_definition_stencil_get_localid_by_globalid (forest, glob_id);
+        /* if the element is not in the map, add a new element to the unordered map */
+        if (owne_elements_to_indice_of_list.count (loc_id) < 1) {
+          owne_elements_to_indice_of_list[loc_id] = { list_index };
+        }
+        else { /* else update the entry of the element with the current list_index */
+          owne_elements_to_indice_of_list[loc_id].push_back (list_index);
         }
       }
-      list_of_owners.push_back (temp);
-      is_list_relevant.push_back (relevant_list);
     }
+    list_of_owners.push_back (temp);
+    is_list_relevant.push_back (relevant_list);
   }
 
-  /** iterate over all elements of the tree and add stencil to remote or if the element is in one nodestring */
+  /** Iterate over all elements of the tree and add stencil to remote or if the element is in one nodestring */
   for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement) {
     element = t8_forest_get_element_in_tree (forest, 0, ielement);
-    /** compute the stencil elements and add to suitable remote */
+    /** Compute the stencil elements and add to suitable remote */
     add_stencil_to_ghost (forest, element, eclass_scheme, eclass_scheme->element_get_level (tree_class, element),
                           tree_class, 0, ielement);
-    /** if the element E is in one of the nodestring lists 
-     * add this element as a remote to all others of the list */
-    for (int list_index :
-         owne_elements_to_indice_of_list[ielement]) { /* iterate over the nodestrings containing the element E */
-      for (int index = 0; index < (int) list_of_nodestrings[list_index].size ();
-           ++index) { /* iterate over the nodestring */
-        /* if the element is not owned by this process, add element E as remote */
+    /** If the element E is in one of the nodestring lists add this element as a remote to all others of the list. */
+    /* Iterate over the nodestrings containing the element E. */
+    for (int list_index : owne_elements_to_indice_of_list[ielement]) {
+      /* Iterate over the nodestring. */
+      for (int index = 0; index < (int) list_of_nodestrings[list_index].size (); ++index) {
+        /* If the element is not owned by this process, add element E as remote. */
         if (list_of_owners[list_index][index] != forest->mpirank) {
           t8_ghost_add_remote (forest, forest->ghosts, list_of_owners[list_index][index], 0, element, ielement);
         }
@@ -2298,10 +2285,10 @@ t8_forest_ghost_stencil::do_ghost (t8_forest_t forest)
   for (int list_index = 0; list_index < (int) list_of_nodestrings.size (); ++list_index) {
     if (is_list_relevant[list_index]) {
       list_of_local_nodestring_ids.push_back (
-        t8_forest_global_elementid_to_local_tree_and_elementid (forest, list_of_nodestrings[list_index]));
+        t8_forest_global_elementid_to_local_elementid_and_ghost_bool (forest, list_of_nodestrings[list_index]));
     }
     else {
-      list_of_local_nodestring_ids.push_back (std::vector<std::tuple<t8_locidx_t, t8_locidx_t>> ());
+      list_of_local_nodestring_ids.push_back (std::vector<std::tuple<t8_locidx_t, bool>> ());
     }
   }
 

@@ -234,6 +234,33 @@ t8_forest_ghost_create_balanced_only (t8_forest_t forest);
 void
 t8_forest_ghost_create_topdown (t8_forest_t forest);
 
+/**
+ * Function to compute the owner of an element
+ * \param [in]      forest a commit uniform forest which is partitioned
+ * \param [in]      glob_element_id global id of an element of the forest (not in ghost)
+ * \return          owner of element
+ * \note: the function use, that the linear id of the element is the same as the global index
+ * for example this is true for uniform meshes.
+ * the function also use, that the forest is partitioned.
+ * The owner is found in O(1)
+ */
+int
+t8_forest_ghost_definition_stencil_get_rank_by_globalid (const t8_forest_t forest, const t8_gloidx_t element_id);
+
+/**
+ * Function to compute the local id of an element by its global id
+ * \param [in]      forest a commit uniform forest which is partitioned
+ * \param [in]      glob_element_id global id of an element of the forest (not in ghost)
+ * \return          local id of the element (also if the element is not owned by the process)
+ * \note the function use, that the linear id of the element is the same as the global index.
+ * For example this is true for uniform meshes.
+ * the function also use, that the forest is partitioned.
+ * The owner is found in O(1)
+ */
+t8_locidx_t
+t8_forest_ghost_definition_stencil_get_localid_by_globalid (const t8_forest_t forest,
+                                                            const t8_gloidx_t glob_element_id);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_FOREST_GHOST_H */
