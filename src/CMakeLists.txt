@@ -209,14 +209,22 @@ install( FILES
     t8_types/t8_vec.hxx
     t8_version.h
     t8_vtk.h
-    t8_windows.h DESTINATION include
+    DESTINATION include
 )
 
-install( DIRECTORY t8_cmesh DESTINATION include FILES_MATCHING PATTERN "*.h" )
+install( DIRECTORY t8_cmesh DESTINATION include FILES_MATCHING PATTERN "*.h" 
+  PATTERN "t8_cmesh/t8_cmesh_copy.h"      EXCLUDE
+  PATTERN "t8_cmesh/t8_cmesh_offset.h"    EXCLUDE 
+  PATTERN "t8_cmesh/t8_cmesh_partition.h" EXCLUDE
+  PATTERN "t8_cmesh/t8_cmesh_trees.h"     EXCLUDE 
+  )
 install( DIRECTORY t8_data DESTINATION include FILES_MATCHING PATTERN "*.h" )
-install( DIRECTORY t8_forest DESTINATION include FILES_MATCHING
-  PATTERN "*.h"
-  PATTERN "*private.h" EXCLUDE )
+install( DIRECTORY t8_forest DESTINATION include FILES_MATCHING PATTERN "*.h"
+  PATTERN "t8_forest/t8_forest_balance.h" EXCLUDE
+  PATTERN "t8_forest/t8_forest_ghost.h "  EXCLUDE
+  PATTERN "t8_forest/t8_forest_private.h" EXCLUDE
+  PATTERN "t8_forest/t8_forest_types.h"   EXCLUDE
+  )
 install( DIRECTORY t8_geometry DESTINATION include FILES_MATCHING PATTERN "*.h" )
 install( DIRECTORY t8_schemes DESTINATION include FILES_MATCHING PATTERN "*.h" )
 install( DIRECTORY t8_vtk DESTINATION include FILES_MATCHING PATTERN "*.h" )
@@ -226,7 +234,13 @@ install( DIRECTORY t8_data DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
 install( DIRECTORY t8_forest DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
 install( DIRECTORY t8_geometry DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
 install( DIRECTORY t8_schemes DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
-install( DIRECTORY t8_vtk DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
+install( DIRECTORY t8_vtk DESTINATION include FILES_MATCHING PATTERN "*.hxx" 
+  PATTERN "t8_vtk/t8_vtk_parallel.hxx"      EXCLUDE
+  PATTERN "t8_vtk/t8_vtk_polydata.hxx"      EXCLUDE
+  PATTERN "t8_vtk/t8_vtk_unstructured.hxx"  EXCLUDE
+  PATTERN "t8_vtk/t8_vtk_write_ASCII.hxx"   EXCLUDE
+  PATTERN "t8_vtk/t8_vtk_writer_helper.hxx" EXCLUDE
+  )
 install( DIRECTORY t8_types DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
 
 install( TARGETS T8 DESTINATION lib )
