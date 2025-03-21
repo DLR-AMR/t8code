@@ -330,32 +330,32 @@ t8_forest_vtk_cells_elementid_kernel (t8_forest_t forest, [[maybe_unused]] const
 // TODO: Move to forest_general.h
 static t8_locidx_t
 t8_forest_compute_data_index (const t8_forest_t forest,
-                              const t8_locidx_t ltree_or_ghost_id, // 0<= ID < num_local_trees + num_ghosts
+                              const t8_locidx_t ltree_or_ghost_id,  // 0<= ID < num_local_trees + num_ghosts
                               const t8_locidx_t element_in_tree_index)
 {
   const bool is_local = t8_forest_tree_is_local (forest, ltree_or_ghost_id);
 
   if (is_local) {
-      const t8_locidx_t element_offset = t8_forest_get_tree_element_offset (forest, ltree_or_ghost_id);
-      return element_offset + element_in_tree_index;
+    const t8_locidx_t element_offset = t8_forest_get_tree_element_offset (forest, ltree_or_ghost_id);
+    return element_offset + element_in_tree_index;
   }
   else {
-      // Compute the tree id of the ghost tree
-      const t8_locidx_t ghost_tree_id = ltree_or_ghost_id - t8_forest_get_num_local_trees (forest);
-      // Compute the offset among ghost elements
-      const t8_locidx_t ghost_tree_offset = t8_forest_ghost_get_tree_element_offset (forest, ghost_tree_id);
-      // Add the local element count
-      const t8_locidx_t ghost_element_offset = ghost_tree_offset + t8_forest_get_local_num_elements (forest);
-      return ghost_element_offset + element_in_tree_index;
+    // Compute the tree id of the ghost tree
+    const t8_locidx_t ghost_tree_id = ltree_or_ghost_id - t8_forest_get_num_local_trees (forest);
+    // Compute the offset among ghost elements
+    const t8_locidx_t ghost_tree_offset = t8_forest_ghost_get_tree_element_offset (forest, ghost_tree_id);
+    // Add the local element count
+    const t8_locidx_t ghost_element_offset = ghost_tree_offset + t8_forest_get_local_num_elements (forest);
+    return ghost_element_offset + element_in_tree_index;
   }
-}                              
+}
 
 static int
 t8_forest_vtk_cells_scalar_kernel (t8_forest_t forest, const t8_locidx_t ltree_id,
                                    [[maybe_unused]] const t8_tree_t tree, const t8_locidx_t element_index,
                                    [[maybe_unused]] const t8_element_t *element,
-                                   [[maybe_unused]] const t8_eclass_t tree_class, const int is_ghost, FILE *vtufile,
-                                   int *columns, void **data, T8_VTK_KERNEL_MODUS modus)
+                                   [[maybe_unused]] const t8_eclass_t tree_class, [[maybe_unused]] const int is_ghost,
+                                   FILE *vtufile, int *columns, void **data, T8_VTK_KERNEL_MODUS modus)
 {
   if (modus == T8_VTK_KERNEL_EXECUTE) {
     /* For local elements access the data array, for ghosts, write 0 */
@@ -371,8 +371,8 @@ static int
 t8_forest_vtk_cells_vector_kernel (t8_forest_t forest, const t8_locidx_t ltree_id,
                                    [[maybe_unused]] const t8_tree_t tree, const t8_locidx_t element_index,
                                    [[maybe_unused]] const t8_element_t *element,
-                                   [[maybe_unused]] const t8_eclass_t tree_class, const int is_ghost, FILE *vtufile,
-                                   int *columns, void **data, T8_VTK_KERNEL_MODUS modus)
+                                   [[maybe_unused]] const t8_eclass_t tree_class, [[maybe_unused]] const int is_ghost,
+                                   FILE *vtufile, int *columns, void **data, T8_VTK_KERNEL_MODUS modus)
 {
   int dim, idim;
 
