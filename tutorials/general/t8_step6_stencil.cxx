@@ -48,6 +48,7 @@
 #include <t8_cmesh/t8_cmesh_examples.h>         /* A collection of exemplary cmeshes */
 #include <t8_schemes/t8_default/t8_default.hxx> /* default refinement scheme. */
 #include <tutorials/general/t8_step3.h>
+#include <t8_vtk/t8_vtk_writer.hxx> /* VTK writer for forests and cmeshes. */
 
 T8_EXTERN_C_BEGIN ();
 
@@ -309,8 +310,8 @@ t8_step6_exchange_ghost_data (t8_forest_t forest, struct data_per_element *data)
 static void
 t8_step6_output_data_to_vtu (t8_forest_t forest, struct data_per_element *data, const char *prefix)
 {
-  t8_locidx_t num_elements = t8_forest_get_local_num_elements (forest);
-
+  const t8_locidx_t num_elements = t8_forest_get_local_num_elements (forest) + t8_forest_get_num_ghosts (forest);
+  t8_debugf (" [step6] Writing %d elements to vtu file.\n", num_elements);
   /* We need to allocate a new array to store the data on their own.
    * These arrays have one entry per local element. */
   double *heights = T8_ALLOC (double, num_elements);
@@ -348,13 +349,15 @@ t8_step6_output_data_to_vtu (t8_forest_t forest, struct data_per_element *data, 
 
   {
     /* Write user defined data to vtu file. */
-    const int write_treeid = 1;
-    const int write_mpirank = 1;
-    const int write_level = 1;
-    const int write_element_id = 1;
-    const int write_ghosts = 0;
-    t8_forest_write_vtk_ext (forest, prefix, write_treeid, write_mpirank, write_level, write_element_id, write_ghosts,
-                             0, 0, num_data, vtk_data);
+    const bool write_treeid = true;
+    const bool write_mpirank = true;
+    const bool write_level = true;
+    const bool write_element_id = true;
+    const bool write_ghosts = true;
+    const bool curved_flag = false;
+    vtk_writer<t8_forest_t> writer (write_treeid, write_mpirank, write_level, write_element_id, write_ghosts,
+                                    curved_flag, prefix, 3, vtk_data, sc_MPI_COMM_WORLD);
+    writer.write_with_API (forest);
   }
 
   T8_FREE (heights);
@@ -397,7 +400,7 @@ t8_step6_main (int argc, char **argv)
   /* Initialize the sc library, has to happen before we initialize t8code. */
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
-  t8_init (SC_LP_PRODUCTION);
+  t8_init (SC_LP_DEBUG);
 
   /* We will use MPI_COMM_WORLD as a communicator. */
   comm = sc_MPI_COMM_WORLD;
