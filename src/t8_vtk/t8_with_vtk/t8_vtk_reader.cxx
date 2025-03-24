@@ -448,8 +448,9 @@ t8_vtk_reader (const char *filename, const int partition, const int main_proc, s
 }
 
 vtkSmartPointer<vtkPointSet>
-t8_vtk_reader_pointSet (const char *filename, const int partition, const int main_proc, sc_MPI_Comm comm,
-                        const vtk_file_type_t vtk_file_type)
+t8_vtk_reader_pointSet ([[maybe_unused]] const char *filename, [[maybe_unused]] const int partition,
+                        [[maybe_unused]] const int main_proc, [[maybe_unused]] sc_MPI_Comm comm, 
+                        [[maybe_unused]] const vtk_file_type_t vtk_file_type)
 {
       vtkSmartPointer<vtkDataSet> vtkGrid = t8_vtk_reader (filename, partition, main_proc, comm, vtk_file_type);
       return t8_vtkGrid_to_vtkPointSet (vtkGrid);
