@@ -129,7 +129,7 @@ jobs:
         PRIORITY: ${{ needs.evaluate_issues.outputs.PRIORITY }}
         WORKLOAD: ${{ needs.evaluate_issues.outputs.WORKLOAD }}
     secrets:
-        PAT: ${{ secrets.T8DDY_TOKEN }}
+        PAT: ${{ secrets.T8DDY_PROJECTS }}
   
   # Move the Issue card to In Progress if the workload and priority are set and the issue is assigned
   move_card_to_InProgress:
@@ -140,7 +140,7 @@ jobs:
         ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
         COLUMN_NAME: 'In Progress'
     secrets:
-        PAT: ${{ secrets.T8DDY_TOKEN }}
+        PAT: ${{ secrets.T8DDY_PROJECTS }}
 
   # Move the Issue card back to ToDo if the workload and priority are set and the issue is unassigned
   move_card_back_to_ToDo:
@@ -151,7 +151,7 @@ jobs:
         ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
         COLUMN_NAME: 'ToDo'
     secrets:
-        PAT: ${{ secrets.T8DDY_TOKEN }}
+        PAT: ${{ secrets.T8DDY_PROJECTS }}
   
   # Move the Issue card back to In-Box if the workload and priority are unset
   move_card_back_to_In-Box:
@@ -162,7 +162,7 @@ jobs:
         ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
         COLUMN_NAME: 'In-Box'
     secrets:
-        PAT: ${{ secrets.T8DDY_TOKEN }}
+        PAT: ${{ secrets.T8DDY_PROJECTS }}
 
   # For a PR event, move the card to Needs Review if the PR is opened, ready for review, or reopened
   move_card_to_Needs_Review:
@@ -174,7 +174,7 @@ jobs:
         COLUMN_NAME: 'Needs Review'
         REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
     secrets:
-        PAT: ${{ secrets.T8DDY_TOKEN }}
+        PAT: ${{ secrets.T8DDY_PROJECTS }}
 
   # For a PR event move the card to In Review if a review is requested
   move_card_to_In_Review:
@@ -186,7 +186,7 @@ jobs:
         COLUMN_NAME: 'In Review'
         REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
     secrets:
-        PAT: ${{ secrets.T8DDY_TOKEN }}
+        PAT: ${{ secrets.T8DDY_PROJECTS }}
 
   # For a PR event move the card back to Needs Review if a review is removed
   move_card_back_to_Needs_Review:
@@ -198,7 +198,7 @@ jobs:
         COLUMN_NAME: 'Needs Review'
         REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
     secrets:
-        PAT: ${{ secrets.T8DDY_TOKEN }}
+        PAT: ${{ secrets.T8DDY_PROJECTS }}
 
   # For a PR event move the card back to In Progress if the PR is closed and not merged
   move_card_back_to_In_Progress:
@@ -210,7 +210,7 @@ jobs:
         COLUMN_NAME: 'In Progress'
         REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
     secrets:
-        PAT: ${{ secrets.T8DDY_TOKEN }}
+        PAT: ${{ secrets.T8DDY_PROJECTS }}
 
   # For a PR event where no issue is linked, open a new issue and add "Closes #ISSUE_NUMBER" to the PR body
   open_issue_for_quick_pr:
@@ -218,7 +218,7 @@ jobs:
     if: ${{ github.event_name == 'pull_request' && needs.evaluate_pr.outputs.NUMBER_IS_SET == 'false' }}
     uses: ./.github/workflows/quick_pr.yml
     secrets:
-        PAT: ${{ secrets.T8DDY_TOKEN }}
+        PAT: ${{ secrets.T8DDY_PROJECTS }}
 
   # After the issue has been created by open_issue_for_quick_pr, move the card to Needs Review
   move_quick_pr_issue_to_Needs_Review:
@@ -229,4 +229,4 @@ jobs:
         COLUMN_NAME: 'Needs Review'
         REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
     secrets:
-        PAT: ${{ secrets.T8DDY_TOKEN }}
+        PAT: ${{ secrets.T8DDY_PROJECTS }}
