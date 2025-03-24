@@ -498,7 +498,7 @@ t8_default_scheme_hex::element_set_linear_id (t8_element_t *elem, const int leve
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= HEX_LINEAR_MAXLEVEL);
-  T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << P8EST_DIM * level);
+  T8_ASSERT (id < ((t8_linearidx_t) 1) << P8EST_DIM * level);
 
   p8est_quadrant_set_morton ((p8est_quadrant_t *) elem, level, id);
 }
