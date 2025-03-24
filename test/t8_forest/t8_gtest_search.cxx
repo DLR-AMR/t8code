@@ -164,4 +164,4 @@ const int maxlvl = 5;
 const int maxlvl = 6;
 #endif
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_search, forest_search, testing::Combine (DefaultScheme, testing::Range (0, maxlvl)));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_search, forest_search, testing::Combine (AllSchemes, testing::Range (0, maxlvl)));
