@@ -71,11 +71,13 @@ if( T8CODE_ENABLE_VTK )
       t8_vtk/t8_with_vtk/t8_vtk_parallel.cxx
       t8_vtk/t8_with_vtk/t8_vtk_polydata.cxx
       t8_vtk/t8_with_vtk/t8_vtk_unstructured.cxx
+      t8_vtk/t8_with_vtk/t8_vtk_reader.cxx
     )
     install( FILES
       t8_vtk/t8_with_vtk/t8_vtk_parallel.hxx
       t8_vtk/t8_with_vtk/t8_vtk_polydata.hxx
       t8_vtk/t8_with_vtk/t8_vtk_unstructured.hxx
+      t8_vtk/t8_with_vtk/t8_vtk_reader.hxx
     DESTINATION include)
 endif()
 
