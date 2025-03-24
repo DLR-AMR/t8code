@@ -37,8 +37,9 @@ T8_EXTERN_C_BEGIN ();
  */
 
 void
-t8_vtk_reader_pointSet (const char *filename, const int partition, const int main_proc, sc_MPI_Comm comm,
-                        const vtk_file_type_t vtk_file_type)
+t8_vtk_reader_pointSet ([[maybe_unused]] const char *filename, [[maybe_unused]] const int partition,
+                        [[maybe_unused]] const int main_proc, [[maybe_unused]] sc_MPI_Comm comm,
+                        [[maybe_unused]] const vtk_file_type_t vtk_file_type)
 {
   /* Return NULL since not linked against vtk */
   t8_global_errorf (
