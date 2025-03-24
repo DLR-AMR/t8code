@@ -1024,18 +1024,18 @@ struct t8_standalone_scheme
    *  the element inside the root tree that has the given face as a
    *  face.
    * \param [in] face     A face element.
-   * \param [in] face_scheme The scheme for the face element.
    * \param [in,out] elem An allocated element. The entries will be filled with
    *                      the data of the element that has \a face as a face and
    *                      lies within the root tree.
    * \param [in] root_face The index of the face of the root tree in which \a face
    *                      lies.
+   * \param [in] scheme   The scheme collection with a scheme for the eclass of the face.
    * \return              The face number of the face of \a elem that coincides
    *                      with \a face.
    */
   static constexpr int
   element_extrude_face ([[maybe_unused]] const t8_element_t *face, [[maybe_unused]] t8_element_t *elem,
-                        [[maybe_unused]] const int root_face, [[maybe_unused]] const t8_scheme *face_scheme) noexcept
+                        [[maybe_unused]] const int root_face, [[maybe_unused]] const t8_scheme *scheme) noexcept
   {
     const t8_eclass_t TFaceEclass = get_face_eclass ();
     T8_ASSERT (0 <= root_face && root_face < T8_ELEMENT_NUM_FACES[TEclass]);
@@ -1068,13 +1068,13 @@ struct t8_standalone_scheme
    * \param [in,out] boundary An allocated element of dimension of \a element
    *                      minus 1. The entries will be filled with the entries
    *                      of the face of \a element.
-   * \param [in] boundary_scheme The scheme collection 
+   * \param [in] scheme   The scheme containing an eclass scheme for the boundary face.
    * If \a elem is of class T8_ECLASS_VERTEX, then \a boundary must be NULL
    * and will not be modified.
    */
   static constexpr void
   element_get_boundary_face (const t8_element_t *elem, const int face, [[maybe_unused]] t8_element_t *boundary,
-                             [[maybe_unused]] const t8_scheme *boundary_scheme) noexcept
+                             [[maybe_unused]] const t8_scheme *scheme) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
