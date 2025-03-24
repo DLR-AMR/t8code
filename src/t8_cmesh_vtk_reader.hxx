@@ -27,7 +27,11 @@
 #ifndef T8_CMESH_VTK_READER
 #define T8_CMESH_VTK_READER
 
-#include <t8_vtk/t8_vtk_reader.hxx>
+#if T8_WITH_VTK
+#include <t8_vtk/t8_with_vtk/t8_vtk_reader.hxx>
+#else
+#include<t8_vtk/t8_vtk_reader.hxx>
+#endif
 
 T8_EXTERN_C_BEGIN ();
 
