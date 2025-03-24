@@ -67,8 +67,9 @@ typedef struct
  * \param [in]  num_extern_netcdf_vars    The number of extern user-defined variables which hold elementwise data (if none, set it to 0).
  */
 t8_netcdf_variable_t *
-t8_netcdf_create_var (t8_netcdf_variable_type_t var_type, const char *var_name, const char *var_long_name,
-                      const char *var_unit, sc_array_t *var_data);
+t8_netcdf_create_var ([[maybe_unused]] t8_netcdf_variable_type_t var_type, [[maybe_unused]] const char *var_name,
+                      [[maybe_unused]] const char *var_long_name, [[maybe_unused]] const char *var_unit,
+                      [[maybe_unused]] sc_array_t *var_data);
 
 /** Create an extern integer variable which additionally should be put out to the NetCDF File (The distinction if it will be a NC_INT or NC_INT64 variable is based on the elementsize of the given sc_array_t)
  * \param [in]  var_name    A String which will be the name of the created variable.
@@ -78,8 +79,8 @@ t8_netcdf_create_var (t8_netcdf_variable_type_t var_type, const char *var_name, 
  * \param [in]  num_extern_netcdf_vars    The number of extern user-defined variables which hold elementwise data (if none, set it to 0).
  */
 t8_netcdf_variable_t *
-t8_netcdf_create_integer_var (const char *var_name, const char *var_long_name, const char *var_unit,
-                              sc_array_t *var_data);
+t8_netcdf_create_integer_var ([[maybe_unused]] const char *var_name, [[maybe_unused]] const char *var_long_name,
+                              [[maybe_unused]] const char *var_unit, [[maybe_unused]] sc_array_t *var_data);
 
 /** Create an extern double variable which additionally should be put out to the NetCDF File
  * \param [in]  var_name    A String which will be the name of the created variable.
@@ -89,15 +90,15 @@ t8_netcdf_create_integer_var (const char *var_name, const char *var_long_name, c
  * \param [in]  num_extern_netcdf_vars    The number of extern user-defined variables which hold elementwise data (if none, set it to 0).
  */
 t8_netcdf_variable_t *
-t8_netcdf_create_double_var (const char *var_name, const char *var_long_name, const char *var_unit,
-                             sc_array_t *var_data);
+t8_netcdf_create_double_var ([[maybe_unused]] const char *var_name, [[maybe_unused]] const char *var_long_name,
+                             [[maybe_unused]] const char *var_unit, [[maybe_unused]] sc_array_t *var_data);
 
 /** Free the allocated memory of the a t8_netcdf_variable_t
  * \param [in]  var_destroy    A t8_netcdf_t variable whose allocated memory should be freed.
  */
 /* Free the allocated NetCDF variable */
 void
-t8_netcdf_variable_destroy (t8_netcdf_variable_t *var_destroy);
+t8_netcdf_variable_destroy ([[maybe_unused]] t8_netcdf_variable_t *var_destroy);
 
 T8_EXTERN_C_END ();
 
