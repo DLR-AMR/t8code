@@ -254,7 +254,7 @@ t8_forest_min_nonempty_level (t8_cmesh_t cmesh, const t8_scheme *scheme)
     if (cmesh->num_trees_per_eclass[eclass] > 0) {
       /* Compute the number of children of the root tree. */
       scheme->element_new ((t8_eclass_t) eclass, 1, &element);
-      scheme->get_root ((t8_eclass_t) eclass, element);
+      scheme->set_to_root ((t8_eclass_t) eclass, element);
       min_num_children = SC_MIN (min_num_children, scheme->element_get_num_children ((t8_eclass_t) eclass, element));
       scheme->element_destroy ((t8_eclass_t) eclass, 1, &element);
       /* Compute the minimum possible maximum refinement level */
@@ -1038,6 +1038,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
       }
     }
 #endif
+    [[fallthrough]];
   case T8_ECLASS_TRIANGLE: {
     /* We construct the normal as the cross product of two spanning
      * vectors for the triangle*/
@@ -1222,7 +1223,7 @@ t8_forest_populate (t8_forest_t forest)
  * not the first possible descendant of that tree.
  */
 static int
-t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
+t8_forest_tree_shared ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] int first_or_last)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (first_or_last == 0 || first_or_last == 1);
@@ -1320,7 +1321,7 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
     /* we do this by first creating a level 0 child of the tree, then
      * calculating its first/last descendant */
     scheme->element_new (eclass, 1, &element);
-    scheme->get_root (eclass, element);
+    scheme->set_to_root (eclass, element);
     scheme->element_new (eclass, 1, &desc);
     if (first_or_last == 0) {
       scheme->element_get_first_descendant (eclass, element, desc, forest->maxlevel);
@@ -3567,7 +3568,7 @@ static int
 t8_forest_compare_elem_tree (const void *lelement_id, const void *ltree)
 {
   t8_locidx_t leid = *(const t8_locidx_t *) lelement_id;
-  const t8_tree_t tree = (const t8_tree_t) ltree;
+  const t8_tree_t tree = (t8_tree_t) ltree;
 
   if (tree->elements_offset > leid) {
     /* We have to look further to the left */

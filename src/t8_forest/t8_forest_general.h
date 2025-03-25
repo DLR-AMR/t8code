@@ -860,6 +860,22 @@ void
 t8_forest_element_points_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
                                  const double *points, int num_points, int *is_inside, const double tolerance);
 
+/** Find the owner process of a given element.
+ * \param [in]    forest  The forest.
+ * \param [in]    gtreeid The global id of the tree in which the element lies.
+ * \param [in]    element The element to look for.
+ * \param [in]    eclass  The element class of the tree \a gtreeid.
+ * \return                The mpirank of the process that owns \a element.
+ * \note The element must not exist in the forest, but an ancestor of its first
+ *       descendant has to. If the element's owner is not unique, the owner of the element's
+ *       first descendant is returned.
+ * \note \a forest must be committed before calling this function.
+ * \see t8_forest_element_find_owner_ext
+ * \see t8_forest_element_owners_bounds
+ */
+int
+t8_forest_element_find_owner (t8_forest_t forest, t8_gloidx_t gtreeid, t8_element_t *element, t8_eclass_t eclass);
+
 /* TODO: if set level and partition/adapt/balance all give NULL, then
  * refine uniformly and partition/adapt/balance the uniform forest. */
 /** Build a uniformly refined forest on a coarse mesh.

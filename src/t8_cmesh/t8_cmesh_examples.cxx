@@ -696,17 +696,20 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
       if (periodic) {
         t8_cmesh_set_join (cmesh, 0, 0, 4, 5, 0);
       }
+      [[fallthrough]];
     case T8_ECLASS_QUAD:
       vertices[3] = 3;
       vertices[2] = 2;
       if (periodic) {
         t8_cmesh_set_join (cmesh, 0, 0, 2, 3, 0);
       }
+      [[fallthrough]];
     case T8_ECLASS_LINE:
       vertices[1] = 1;
       if (periodic) {
         t8_cmesh_set_join (cmesh, 0, 0, 0, 1, 0);
       }
+      [[fallthrough]];
     case T8_ECLASS_VERTEX:
       vertices[0] = 0;
       t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords, attr_vertices,
@@ -1268,10 +1271,13 @@ t8_cmesh_new_hypercube_pad_ext (const t8_eclass_t eclass, sc_MPI_Comm comm, cons
   switch (dim) {
   case 0:
     polygons_x = 1;
+    [[fallthrough]];
   case 1:
     polygons_y = 1;
+    [[fallthrough]];
   case 2:
     polygons_z = 1;
+    [[fallthrough]];
   default:
     T8_ASSERT (polygons_x > 0);
     T8_ASSERT (polygons_y > 0);

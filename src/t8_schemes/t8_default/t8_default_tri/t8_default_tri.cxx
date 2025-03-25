@@ -418,7 +418,7 @@ t8_default_scheme_tri::element_set_linear_id (t8_element_t *elem, int level, t8_
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= T8_DTRI_MAXLEVEL);
-  T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << (2 * level));
+  T8_ASSERT (id < ((t8_linearidx_t) 1) << (2 * level));
 
   t8_dtri_init_linear_id ((t8_dtri_t *) elem, id, level);
 }
@@ -529,7 +529,7 @@ t8_default_scheme_tri::element_new (int length, t8_element_t **elem) const
   {
     int i;
     for (i = 0; i < length; i++) {
-      get_root (elem[i]);
+      set_to_root (elem[i]);
     }
   }
 #endif
@@ -547,7 +547,7 @@ t8_default_scheme_tri::element_init ([[maybe_unused]] int length, [[maybe_unused
 }
 
 void
-t8_default_scheme_tri::get_root (t8_element_t *elem) const
+t8_default_scheme_tri::set_to_root (t8_element_t *elem) const
 {
   t8_dtri_t *tri = (t8_dtri_t *) elem;
   tri->level = 0;
