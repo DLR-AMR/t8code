@@ -470,14 +470,13 @@ class vtk_writer {
     /* Write the user defined data fields. For that we iterate over the idata, set the name, the array and then give 
      * this data to the unstructured Grid Object.We differentiate between scalar and vector data.
      */
-    const t8_locidx_t num_elements = grid_local_num_elements (grid);
     for (int idata = 0; idata < num_data; idata++) {
       dataArrays[idata] = vtkDoubleArray::New ();
       const int num_components = this->data[idata].type == T8_VTK_SCALAR ? 1 : 3;
       dataArrays[idata]->SetName (this->data[idata].description); /* Set the name of the array. */
-      dataArrays[idata]->SetNumberOfTuples (num_elements);        /* We want number of tuples=number of elements. */
+      dataArrays[idata]->SetNumberOfTuples (num_cells);           /* We want number of tuples=number of elements. */
       dataArrays[idata]->SetNumberOfComponents (num_components);  /* Each tuples has 3 values. */
-      dataArrays[idata]->SetVoidArray (this->data[idata].data, num_elements * num_components, 1);
+      dataArrays[idata]->SetVoidArray (this->data[idata].data, num_cells * num_components, 1);
       unstructuredGrid->GetCellData ()->AddArray (dataArrays[idata]);
     }
 
