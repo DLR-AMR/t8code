@@ -202,7 +202,10 @@ template <>
 int
 grid_element_level<t8_forest_t> (const t8_forest_t grid, const t8_locidx_t itree, const t8_element_t *element)
 {
-  const t8_eclass_t eclass = t8_forest_get_eclass (grid, itree);
+  const bool is_local = t8_forest_tree_is_local (grid, itree);
+  const t8_eclass_t eclass = is_local
+                               ? t8_forest_get_eclass (grid, itree)
+                               : t8_forest_ghost_get_tree_class (grid, itree - t8_forest_get_num_local_trees (grid));
   const t8_scheme *scheme = t8_forest_get_scheme (grid);
   return scheme->element_get_level (eclass, element);
 }
