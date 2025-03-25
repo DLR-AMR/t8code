@@ -123,25 +123,16 @@ template <>
 bool
 grid_do_ghosts<t8_forest_t> (const t8_forest_t grid, const int write_ghosts)
 {
-  bool ghosts = write_ghosts;
-  if (grid->ghosts == NULL || grid->ghosts->num_ghosts_elements == 0) {
-    /* Never write ghost elements if there aren't any */
-    ghosts = false;
-  }
-  T8_ASSERT (grid->ghosts != NULL || !ghosts);
-  return ghosts;
+  // Do not write ghost elements if there aren't any.
+  return write_ghosts && t8_forest_get_num_ghost_trees (grid) > 0 && t8_forest_get_num_ghost_elements (grid) > 0;
 }
 
 template <>
 bool
 grid_do_ghosts<t8_cmesh_t> (const t8_cmesh_t grid, const int write_ghosts)
 {
-  bool ghosts = write_ghosts;
-  if (t8_cmesh_get_num_ghosts (grid) == 0) {
-    /* Never write ghost elements if there aren't any */
-    ghosts = false;
-  }
-  return ghosts;
+  // Do not write ghost elements if there aren't any.
+  return write_ghosts && t8_cmesh_get_num_ghosts (grid) > 0;
 }
 
 template <>
