@@ -25,6 +25,7 @@
 #include <t8_forest/t8_forest.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_schemes/t8_scheme.hxx>
+#include <t8_forest/t8_forest_ghost.h>
 
 int
 t8_get_number_of_vtk_nodes (const t8_element_shape_t eclass, const int curved_flag)
@@ -161,7 +162,10 @@ template <>
 t8_element_shape_t
 grid_element_shape<t8_forest_t> (const t8_forest_t grid, const t8_locidx_t itree, const t8_element_t *element)
 {
-  const t8_eclass_t eclass = t8_forest_get_eclass (grid, itree);
+  const bool is_local = t8_forest_tree_is_local (grid, itree);
+  const t8_eclass_t eclass = is_local
+                               ? t8_forest_get_eclass (grid, itree)
+                               : t8_forest_ghost_get_tree_class (grid, itree - t8_forest_get_num_local_trees (grid));
   const t8_scheme *scheme = t8_forest_get_scheme (grid);
   return scheme->element_get_shape (eclass, element);
 }
