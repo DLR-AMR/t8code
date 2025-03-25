@@ -124,7 +124,22 @@ bool
 grid_do_ghosts<t8_forest_t> (const t8_forest_t grid, const int write_ghosts)
 {
   // Do not write ghost elements if there aren't any.
-  return write_ghosts && t8_forest_get_num_ghost_trees (grid) > 0 && t8_forest_get_num_ghost_elements (grid) > 0;
+  if (write_ghosts) {
+    const t8_locidx_t num_ghost_trees = t8_forest_get_num_ghost_trees (grid);
+    if (num_ghost_trees > 0) {
+      return true;
+    }
+    else {
+      t8_locidx_t num_ghost_elements = 0;
+      for (t8_locidx_t itree = 0; itree < num_ghost_trees; itree++) {
+        num_ghost_elements += t8_forest_ghost_tree_num_elements (grid, itree);
+      }
+      return num_ghost_elements > 0;
+    }
+  }
+  else {
+    return false;
+  }
 }
 
 template <>

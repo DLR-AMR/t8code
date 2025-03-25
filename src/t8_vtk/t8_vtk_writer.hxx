@@ -423,9 +423,9 @@ class vtk_writer {
     t8_gloidx_t elem_id = offset;
 
     /* Check if we have to write ghosts on this process. */
-    bool do_ghosts = grid_do_ghosts (grid, write_ghosts);
+    const bool do_ghosts = grid_do_ghosts (grid, write_ghosts);
     /* Compute the number of cells on this process. */
-    t8_locidx_t num_cells = num_cells_to_write (grid, do_ghosts);
+    const t8_locidx_t num_cells = num_cells_to_write (grid, do_ghosts);
 
     int *cellTypes = T8_ALLOC (int, num_cells);
     T8_ASSERT (cellTypes != NULL);
