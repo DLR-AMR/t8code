@@ -58,7 +58,7 @@ vtk_writer<t8_forest_t>::t8_grid_tree_to_vtk_cells (
     for (t8_locidx_t ielement = 0; ielement < elems_in_tree; ielement++) {
       const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
       T8_ASSERT (element != NULL);
-      this->t8_grid_element_to_vtk_cell (forest, element, itree, offset, true, *elem_id, point_id, cellTypes, points,
+      this->t8_grid_element_to_vtk_cell (forest, element, itree, offset, false, *elem_id, point_id, cellTypes, points,
                                          cellArray, vtk_treeid, vtk_mpirank, vtk_level, vtk_element_id);
       (*elem_id)++;
 
