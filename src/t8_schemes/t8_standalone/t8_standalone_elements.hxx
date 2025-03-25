@@ -30,7 +30,7 @@
 #define t8_standalone_element t8_standalone
 
 constexpr uint8_t T8_ELEMENT_DIM[T8_ECLASS_COUNT] = { 0, 1, 2, 2, 3, 3, 3, 3 };
-constexpr uint8_t T8_ELEMENT_MAXLEVEL[T8_ECLASS_COUNT] = { 255, 30, 29, 29, 21, 21, 21, 18 };
+constexpr uint8_t T8_ELEMENT_MAXLEVEL[T8_ECLASS_COUNT] = { 255, 30, 30, 29, 21, 21, 21, 18 };
 constexpr uint8_t T8_ELEMENT_MAX_NUM_FACES[T8_ECLASS_COUNT] = { 1, 2, 4, 3, 6, 4, 5, 5 };
 constexpr uint8_t T8_ELEMENT_NUM_CHILDREN[T8_ECLASS_COUNT] = { 1, 2, 4, 4, 8, 8, 8, 10 };
 constexpr uint8_t T8_ELEMENT_NUM_CORNERS[T8_ECLASS_COUNT] = { 1, 2, 4, 3, 8, 4, 6, 5 };
@@ -39,7 +39,7 @@ constexpr uint8_t T8_ELEMENT_MAX_NUM_FACECHILDREN[T8_ECLASS_COUNT] = { 0, 1, 2, 
 
 constexpr uint8_t T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_COUNT] = { 0, 0, 0, 1, 0, 3, 1, 2 };
 
-typedef uint32_t t8_element_coord;
+typedef int32_t t8_element_coord;
 typedef uint8_t t8_element_level;
 typedef uint8_t t8_cube_id;
 typedef uint8_t t8_child_id;
@@ -49,15 +49,13 @@ using t8_element_type = std::bitset<T8_ELEMENT_NUM_EQUATIONS[TEclass]>;
 
 template <t8_eclass_t TEclass>
 using t8_element_coords = std::array<t8_element_coord, T8_ELEMENT_DIM[TEclass]>;
-
 template <t8_eclass_t TEclass>
 struct t8_standalone_element
 {
-  /** The refinement level of the element relative to the root at level 0. */
-  t8_element_level level;
-
   /** The coordinates of the anchor vertex of the element. */
   t8_element_coords<TEclass> coords;
+  /** The refinement level of the element relative to the root at level 0. */
+  t8_element_level level;
 };
 
 #endif /* T8_STANDALONE_ELEMENTS_HXX */

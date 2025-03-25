@@ -38,7 +38,6 @@
 #include <memory>
 #include <iostream>
 
-#if T8_ENABLE_OCC
 #include <GeomAPI_PointsToBSpline.hxx>
 #include <GeomAPI_PointsToBSplineSurface.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
@@ -52,7 +51,6 @@
 #include <t8_element.h>
 
 #include <test/t8_gtest_custom_assertion.hxx>
-#endif
 
 /* In this file we collect tests for t8code's OpenCASCADE geometry module.
  * These tests are
@@ -67,7 +65,6 @@
  *  - jacobian:     Checks the resulting jacobian of an identity.
  */
 
-#if T8_ENABLE_OCC
 /** Euler rotation around intrinsic zxz. 
  * \param [in] pos_vec                Position vector of three dimensional points to rotate.
  * \param [in] rot_vec                Three dimensional rotation vector around z, x and z in rad.
@@ -185,7 +182,6 @@ t8_create_cad_curve_shape ()
   shape = BRepBuilderAPI_MakeEdge (curve).Edge ();
   return shape;
 }
-#endif /* T8_ENABLE_OCC */
 
 /** Constructs a cmesh with an cad geometry linked hypercube.
  * \param [in] rot_vec                The rotation vector to rotate the cube before linking a geometry to it.
@@ -198,7 +194,6 @@ t8_cmesh_t
 t8_create_cad_hypercube ([[maybe_unused]] double *rot_vec, [[maybe_unused]] int face, [[maybe_unused]] int edge,
                          [[maybe_unused]] double *parameters)
 {
-#if T8_ENABLE_OCC
   if (edge >= 0 && face >= 0) {
     SC_ABORTF ("Please specify only an edge or a face.");
   }
@@ -240,10 +235,6 @@ t8_create_cad_hypercube ([[maybe_unused]] double *rot_vec, [[maybe_unused]] int 
   t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges, 24 * sizeof (int), 0);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   return cmesh;
-
-#else  /* !T8_ENABLE_OCC */
-  SC_ABORTF ("OCC not linked");
-#endif /* T8_ENABLE_OCC */
 }
 
 /** Tests the cad geometry functions for hexahedra.
@@ -260,7 +251,6 @@ void
 t8_test_geometry_cad_hex (double *rot_vec, int face, int edge, double *parameters, double *test_ref_coords,
                           const t8_vec<24> &test_return_coords)
 {
-#if T8_ENABLE_OCC
   const int num_coords = 8; /* Number of reference coordinates to test */
   t8_vec<num_coords * 3> out_coords;
   double rotated_test_ref_coords[24];
@@ -278,13 +268,8 @@ t8_test_geometry_cad_hex (double *rot_vec, int face, int edge, double *parameter
     EXPECT_VEC_EQ (out_coords, test_return_coords, tol);
   }
   t8_cmesh_destroy (&cmesh);
-
-#else  /* !T8_ENABLE_OCC */
-  SC_ABORTF ("OCC not linked");
-#endif /* T8_ENABLE_OCC */
 }
 
-#if T8_ENABLE_OCC
 TEST (t8_gtest_geometry_cad_hex, linked_faces)
 {
   /* clang-format off */
@@ -382,7 +367,6 @@ TEST (t8_gtest_geometry_cad_hex, linked_edges)
                               test_ref_coords, curve_test_return_coords);
   }
 }
-#endif /* T8_ENABLE_OCC */
 
 /** Constructs a cmesh with an cad geometry linked tetrahedron.
  * \param [in] face                   The index of the face to link a surface to. -1 for no face.
@@ -393,7 +377,6 @@ TEST (t8_gtest_geometry_cad_hex, linked_edges)
 t8_cmesh_t
 t8_create_cad_reference_tet ([[maybe_unused]] int face, [[maybe_unused]] int edge, [[maybe_unused]] double *parameters)
 {
-#if T8_ENABLE_OCC
   if (edge >= 0 && face >= 0) {
     SC_ABORTF ("Please specify only an edge or a face.");
   }
@@ -445,10 +428,6 @@ t8_create_cad_reference_tet ([[maybe_unused]] int face, [[maybe_unused]] int edg
   t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges, 12 * sizeof (int), 0);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   return cmesh;
-
-#else  /* !T8_ENABLE_OCC */
-  SC_ABORTF ("OCC not linked");
-#endif /* T8_ENABLE_OCC */
 }
 
 /** Tests the cad geometry functions for tetrahedra.
@@ -465,7 +444,6 @@ void
 t8_test_geometry_cad_tet (const int face, const int edge, double *parameters, double *test_ref_coords,
                           const t8_vec<dimension> &test_return_coords)
 {
-#if T8_ENABLE_OCC
   /* 4 coords for face --> 3 vertices of face & element centroid
    * 2 coords for edge --> 2 vertices of edge 
    * muliplied by 3 it is equal to the dimension template parameter
@@ -484,13 +462,8 @@ t8_test_geometry_cad_tet (const int face, const int edge, double *parameters, do
 
   EXPECT_VEC_EQ (out_coords, test_return_coords, tol);
   t8_cmesh_destroy (&cmesh);
-
-#else  /* !T8_ENABLE_OCC */
-  SC_ABORTF ("OCC not linked");
-#endif /* T8_ENABLE_OCC */
 }
 
-#if T8_ENABLE_OCC
 TEST (t8_gtest_geometry_cad_tet, linked_faces)
 {
   /* clang-format off */
@@ -551,9 +524,6 @@ TEST (t8_gtest_geometry_cad_tet, linked_edges)
                                  curve_test_return_coords);
   }
 }
-#endif /* T8_ENABLE_OCC */
-
-#if T8_ENABLE_OCC
 TEST (t8_gtest_geometry_cad, jacobian)
 {
   t8_cmesh_t cmesh;
@@ -570,9 +540,6 @@ TEST (t8_gtest_geometry_cad, jacobian)
   }
   t8_cmesh_destroy (&cmesh);
 }
-#endif /* T8_ENABLE_OCC */
-
-#if T8_ENABLE_OCC
 /* The test checks if the mapping algorithms for curved 2d elements do not shift values on an edge which is not curved.
  * In that case, the cad geometry should output the same out_coords as the linear geometry function. */
 class class_2d_element_cad_curve: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
@@ -717,9 +684,6 @@ TEST_P (class_2d_element_cad_curve, t8_check_2d_element_cad_curve)
 INSTANTIATE_TEST_SUITE_P (t8_gtest_check_2d_element_cad_curve, class_2d_element_cad_curve,
                           testing::Combine (AllEclasses2D, testing::Values (0, 1)));
 
-#endif /* T8_ENABLE_OCC */
-
-#if T8_ENABLE_OCC
 /* The test checks if the mapping algorithms for curved 2d elements do not shift values on a surface which is not curved.
  * In that case, the cad geometry should output the same out_coords as the linear geometry function. */
 class class_2d_element_linear_cad_surface: public testing::TestWithParam<t8_eclass_t> {
@@ -819,9 +783,6 @@ TEST_P (class_2d_element_linear_cad_surface, t8_check_2d_element_linear_cad_surf
 INSTANTIATE_TEST_SUITE_P (t8_gtest_check_2d_element_linear_cad_surface, class_2d_element_linear_cad_surface,
                           AllEclasses2D, print_eclass);
 
-#endif /* T8_ENABLE_OCC */
-
-#if T8_ENABLE_OCC
 /* The test checks if the mapping algorithms for curved 2d elements shift values on a curved surface correctly. */
 class class_2d_element_curved_cad_surface: public testing::TestWithParam<t8_eclass_t> {
  protected:
@@ -932,8 +893,6 @@ TEST_P (class_2d_element_curved_cad_surface, t8_check_2d_element_curved_cad_surf
 INSTANTIATE_TEST_SUITE_P (t8_gtest_check_2d_element_curved_cad_surface, class_2d_element_curved_cad_surface,
                           AllEclasses2D, print_eclass);
 
-#endif /* T8_ENABLE_OCC */
-
 /** Constructs a cmesh with an cad geometry linked prism.
  * \param [in] face                   The index of the face to link a surface to. -1 for no face.
  * \param [in] edge                   The index of the edge to link a curve to. -1 for no edge.
@@ -944,71 +903,64 @@ t8_cmesh_t
 t8_create_cad_reference_prism ([[maybe_unused]] int face, [[maybe_unused]] int edge,
                                [[maybe_unused]] double *parameters)
 {
-#if T8_ENABLE_OCC
   if (edge >= 0 && face >= 0) {
-    SC_ABORTF ("Please specify only an edge or a face.");
-  }
+    const int face_vertices = (face <= 2 ? 4 : 3); /* The number of vertices of the prism face */
 
-  const int num_vertices = t8_eclass_num_vertices[T8_ECLASS_PRISM];
-  const int face_vertices = (face <= 2 ? 4 : 3); /* The number of vertices of the prism face */
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_PRISM);
 
-  t8_cmesh_t cmesh;
-  t8_cmesh_init (&cmesh);
-  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_PRISM);
+    double vertices_face[90] = { 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0,   /* linked face: 0 */
+                                 1, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 0, 0, 1,   /* linked face: 1 */
+                                 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1,   /* linked face: 2 */
+                                 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1,   /* linked face: 3 */
+                                 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0 }; /* linked face: 4 */
 
-  double vertices_face[90] = { 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0,   /* linked face: 0 */
-                               1, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 0, 0, 1,   /* linked face: 1 */
-                               0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1,   /* linked face: 2 */
-                               0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1,   /* linked face: 3 */
-                               1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0 }; /* linked face: 4 */
+    double vertices_edge[162] = { 1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 1,   /* linked edge: 0 */
+                                  1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 0, 0, 1,   /* linked edge: 1 */
+                                  0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1,   /* linked edge: 2 */
+                                  1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0,   /* linked edge: 3 */
+                                  0, 0, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0,   /* linked edge: 4 */
+                                  1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0,   /* linked edge: 5 */
+                                  1, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1,   /* linked edge: 6 */
+                                  0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0,   /* linked edge: 7 */
+                                  1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0 }; /* linked edge: 8 */
 
-  double vertices_edge[162] = { 1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 1,   /* linked edge: 0 */
-                                1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 0, 0, 1,   /* linked edge: 1 */
-                                0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1,   /* linked edge: 2 */
-                                1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0,   /* linked edge: 3 */
-                                0, 0, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0,   /* linked edge: 4 */
-                                1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0,   /* linked edge: 5 */
-                                1, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1,   /* linked edge: 6 */
-                                0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0,   /* linked edge: 7 */
-                                1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0 }; /* linked edge: 8 */
+    t8_cmesh_set_tree_vertices (cmesh, 0, (face >= 0 ? vertices_face + face * 18 : vertices_edge + edge * 18),
+                                num_vertices);
 
-  t8_cmesh_set_tree_vertices (cmesh, 0, (face >= 0 ? vertices_face + face * 18 : vertices_edge + edge * 18),
-                              num_vertices);
-
-  int faces[5] = { 0 };
-  int edges[18] = { 0 };
-  T8_ASSERT (face < 0 || edge < 0);
-  if (face >= 0) {
-    faces[face] = 1;
-    t8_cmesh_register_geometry<t8_geometry_cad> (
-      cmesh, (face <= 2 ? t8_create_cad_surface_shape_x_z () : t8_create_cad_surface_shape_x_y ()));
-    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + face,
-                            parameters, 2 * face_vertices * sizeof (double), 0);
-  }
-  else if (edge >= 0) {
-    edges[edge] = 1;
-    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, t8_create_cad_curve_shape ());
-    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + edge,
-                            parameters, 2 * sizeof (double), 0);
-  }
-  else {
-    /* Even if we do not want to link any geometry to the edges or faces, 
+    int faces[5] = { 0 };
+    int edges[18] = { 0 };
+    T8_ASSERT (face < 0 || edge < 0);
+    if (face >= 0) {
+      faces[face] = 1;
+      t8_cmesh_register_geometry<t8_geometry_cad> (
+        cmesh, (face <= 2 ? t8_create_cad_surface_shape_x_z () : t8_create_cad_surface_shape_x_y ()));
+      t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + face,
+                              parameters, 2 * face_vertices * sizeof (double), 0);
+    }
+    else if (edge >= 0) {
+      edges[edge] = 1;
+      t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, t8_create_cad_curve_shape ());
+      t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + edge,
+                              parameters, 2 * sizeof (double), 0);
+    }
+    else {
+      /* Even if we do not want to link any geometry to the edges or faces, 
      * we have to create a geometry. Hence a cad geometry can only be created
      * with an actual shape, we just create a geometry with a curve and do not
      * link the curve to any edge. */
-    t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, t8_create_cad_curve_shape ());
+      t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, t8_create_cad_curve_shape ());
+    }
+    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, faces, 5 * sizeof (int),
+                            0);
+    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges, 18 * sizeof (int),
+                            0);
+    t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
+    return cmesh;
   }
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, faces, 5 * sizeof (int), 0);
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges, 18 * sizeof (int), 0);
-  t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
-  return cmesh;
 
-#else  /* !T8_ENABLE_OCC */
-  SC_ABORTF ("OCC not linked");
-#endif /* T8_ENABLE_OCC */
-}
-
-/** Tests the cad geometry functions for prisms.
+  /** Tests the cad geometry functions for prisms.
  * \param [in] face                   The face to test. -1 for no face.
  * \param [in] edge                   The edge to test. -1 for no edge.
  * \param [in] parameters             The parameters of the curve/surface.
@@ -1017,38 +969,31 @@ t8_create_cad_reference_prism ([[maybe_unused]] int face, [[maybe_unused]] int e
  * \param [in] comm                   The mpi communicator to use.
  * \return                            Returns 1 if passed, 0 if failed.
  */
-template <size_t dimension>
-void
-t8_test_geometry_cad_prism (const int face, const int edge, double *parameters, double *test_ref_coords,
-                            const t8_vec<dimension> &test_return_coords)
-{
-#if T8_ENABLE_OCC
-  t8_3D_vec out_coords;
-  double tol = T8_PRECISION_EPS > 1e-10 ? T8_PRECISION_EPS : 1e-10;
-  const int face_vertices = (face <= 2 ? 4 : 3);
+  template <size_t dimension>
+  void t8_test_geometry_cad_prism (const int face, const int edge, double *parameters, double *test_ref_coords,
+                                   const t8_vec<dimension> &test_return_coords)
+  {
+    t8_3D_vec out_coords;
+    double tol = T8_PRECISION_EPS > 1e-10 ? T8_PRECISION_EPS : 1e-10;
+    const int face_vertices = (face <= 2 ? 4 : 3);
 
-  t8_cmesh_t cmesh = t8_create_cad_reference_prism (face, edge, parameters);
+    t8_cmesh_t cmesh = t8_create_cad_reference_prism (face, edge, parameters);
 
-  for (int i_coord = 0; i_coord < (face >= 0 ? face_vertices : 3); ++i_coord) {
-    t8_geometry_evaluate (cmesh, 0, test_ref_coords + i_coord * 3 + (face >= 0 ? face * 12 : edge * 9), 1,
-                          out_coords.data ());
-    t8_3D_vec checked_coords;
-    for (int i = 0; i < 3; ++i) {
-      checked_coords[i] = test_return_coords[i_coord * T8_ECLASS_MAX_DIM + i];
+    for (int i_coord = 0; i_coord < (face >= 0 ? face_vertices : 3); ++i_coord) {
+      t8_geometry_evaluate (cmesh, 0, test_ref_coords + i_coord * 3 + (face >= 0 ? face * 12 : edge * 9), 1,
+                            out_coords.data ());
+      t8_3D_vec checked_coords;
+      for (int i = 0; i < 3; ++i) {
+        checked_coords[i] = test_return_coords[i_coord * T8_ECLASS_MAX_DIM + i];
+      }
+      EXPECT_VEC_EQ (out_coords, checked_coords, tol);
     }
-    EXPECT_VEC_EQ (out_coords, checked_coords, tol);
+    t8_cmesh_destroy (&cmesh);
   }
-  t8_cmesh_destroy (&cmesh);
 
-#else  /* !T8_ENABLE_OCC */
-  SC_ABORTF ("OCC not linked");
-#endif /* T8_ENABLE_OCC */
-}
-
-#if T8_ENABLE_OCC
-TEST (t8_gtest_geometry_cad_prism, linked_faces)
-{
-  /* clang-format off */
+  TEST (t8_gtest_geometry_cad_prism, linked_faces)
+  {
+    /* clang-format off */
   double test_ref_coords[60]
     = { 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0,   // face 0
         1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0,   // face 1
@@ -1074,25 +1019,25 @@ TEST (t8_gtest_geometry_cad_prism, linked_faces)
         0, 0, 0, 1, 1, 1, 2, 2,   // face 3
         1, 1, 0, 1, 0, 0, 2, 2 }; // face 4
     /* The 2's of face 3 and 4 are placeholders, because both faces only have 3 vertices. */
-  /* clang-format on */
+    /* clang-format on */
 
-  for (int i_faces = 0; i_faces < 5; i_faces++) {
-    if (i_faces <= 2) {
-      const t8_vec<12> surface_test_return_coords = surface_test_return_coords_quad;
-      t8_test_geometry_cad_prism (i_faces, -1, surface_parameters + i_faces * 8, test_ref_coords,
-                                  surface_test_return_coords);
-    }
-    else {
-      const t8_vec<9> surface_test_return_coords = surface_test_return_coords_tri;
-      t8_test_geometry_cad_prism (i_faces, -1, surface_parameters + i_faces * 8, test_ref_coords,
-                                  surface_test_return_coords);
+    for (int i_faces = 0; i_faces < 5; i_faces++) {
+      if (i_faces <= 2) {
+        const t8_vec<12> surface_test_return_coords = surface_test_return_coords_quad;
+        t8_test_geometry_cad_prism (i_faces, -1, surface_parameters + i_faces * 8, test_ref_coords,
+                                    surface_test_return_coords);
+      }
+      else {
+        const t8_vec<9> surface_test_return_coords = surface_test_return_coords_tri;
+        t8_test_geometry_cad_prism (i_faces, -1, surface_parameters + i_faces * 8, test_ref_coords,
+                                    surface_test_return_coords);
+      }
     }
   }
-}
 
-TEST (t8_gtest_geometry_cad_prism, linked_edges)
-{
-  /* clang-format off */
+  TEST (t8_gtest_geometry_cad_prism, linked_edges)
+  {
+    /* clang-format off */
   double test_ref_coords[81]
     = { 1.0, 0.0, 0.0, 1.0, 0.5, 0.0, 1.0, 1.0, 0.0,   // edge 0
         1.0, 1.0, 0.0, 0.5, 0.5, 0.0, 0.0, 0.0, 0.0,   // edge 1
@@ -1117,10 +1062,10 @@ TEST (t8_gtest_geometry_cad_prism, linked_edges)
     1, 0,  // edge 6
     0, 1,  // edge 7
     1, 0 };// edge 8
-  /* clang-format on */
+    /* clang-format on */
 
-  for (int i_edges = 0; i_edges < 9; ++i_edges) {
-    t8_test_geometry_cad_prism (-1, i_edges, curve_parameters + i_edges * 2, test_ref_coords, curve_test_return_coords);
+    for (int i_edges = 0; i_edges < 9; ++i_edges) {
+      t8_test_geometry_cad_prism (-1, i_edges, curve_parameters + i_edges * 2, test_ref_coords,
+                                  curve_test_return_coords);
+    }
   }
-}
-#endif /* T8_ENABLE_OCC */
