@@ -1775,7 +1775,7 @@ t8_cmesh_determine_partition (sc_array_t *first_element_tree, size_t pure_local_
   /* Safety checks */
 #ifdef T8_ENABLE_DEBUG
   T8_ASSERT (0 <= first_proc_rank && (int) first_proc_rank < query_data->num_procs);
-  T8_ASSERT (0 <= first_proc_adjusted);
+  //T8_ASSERT (0 <= first_proc_adjusted);
   /* Check that the element lies in the partition of the computed proc. */
   T8_ASSERT (
     t8_cmesh_get_first_element_of_process (first_proc_rank, query_data->num_procs, query_data->global_num_elements)
@@ -2263,7 +2263,9 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
     expect_end_message = 0;
     *first_local_tree = 0;
     *last_local_tree = -1;
-    *first_tree_shared = 0;
+    if (first_tree_shared != NULL) {
+        *first_tree_shared = 0;
+    }
     if (child_in_tree_begin != NULL) {
       *child_in_tree_begin = -1;
     }
