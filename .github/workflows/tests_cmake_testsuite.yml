@@ -114,7 +114,7 @@ jobs:
     with:
       MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
       IGNORE_CACHE: false # Use this to force a new installation of sc and p4est for this specific workflow run
-      CACHE_COUNTER: 0 # Increase this number to force a new installation of sc and p4est and to update the cache once
+      CACHE_COUNTER: 1 # Increase this number to force a new installation of sc and p4est and to update the cache once
       MPI: ${{ matrix.MPI }}
   
   # Run parallel tests for sc and p4est with and without MPI
