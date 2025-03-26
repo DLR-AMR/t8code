@@ -34,6 +34,11 @@ T8_EXTERN_C_BEGIN ();
 /** The spatial dimension */
 #define T8_DTRI_DIM (2)
 
+extern const int t8_tri_lut_type_vertex_to_cubevertex[2][4];
+extern const int t8_tri_lut_cubevertex_to_num_adj[4];
+extern const int t8_tri_lut_cubevertex_adj_to_type[4][2];
+extern const int t8_tri_lut_cubevertex_adj_to_elementvertex[4][2];
+
 /** Store the type of parent for each (cube-id,type) combination. */
 extern const int t8_dtri_cid_type_to_parenttype[4][2];
 

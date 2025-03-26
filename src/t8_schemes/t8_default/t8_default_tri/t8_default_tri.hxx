@@ -33,6 +33,7 @@
 #include <t8_schemes/t8_default/t8_default_line/t8_default_line.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.h>
+#include <t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.h>
 
 /* Forward declaration of the scheme so we can use it as an argument in the eclass schemes function. */
 class t8_scheme;
@@ -459,6 +460,69 @@ class t8_default_scheme_tri: public t8_default_scheme_common<t8_default_scheme_t
    */
   void
   element_get_anchor (const t8_element_t *elem, int anchor[3]) const;
+
+  constexpr int
+  element_max_num_vertex_neighbors () const
+  {
+    return 6;
+  }
+
+  constexpr void
+  element_vertex_neighbors (const t8_element_t *element, const int vertex, int *num_neighbors, t8_element_t **neighbors,
+                            int *neigh_ivertices) const
+  {
+    t8_dtri_t *elem = (t8_dtri_t *) element;
+    t8_dtri_t **neighs = (t8_dtri_t **) neighbors;
+    t8_dtri_coord_t len = T8_DTRI_LEN (elem->level);
+    *num_neighbors = 0;
+    const int dim = 2;
+    int cubevertex = t8_tri_lut_type_vertex_to_cubevertex[elem->type][vertex];
+
+    for (int icube = 0; icube < 1 << dim; icube++) {
+      int idim = 0;
+      t8_dtri_coord_t shift = (cubevertex & 1 << idim) + (icube & 1 << idim);
+      shift >>= idim;
+      shift -= 1;
+      shift *= len;
+      neighs[*num_neighbors]->x = elem->x + shift;
+
+      idim = 1;
+      shift = (cubevertex & 1 << idim) + (icube & 1 << idim);
+      shift >>= idim;
+      shift -= 1;
+      shift *= len;
+      neighs[*num_neighbors]->y = elem->y + shift;
+
+      neighs[*num_neighbors]->level = elem->level;
+      const int neigh_cube_vertex = (1 << dim) - 1 - icube;
+      //iterate over all possible neighbor types
+      const int num_adj = t8_tri_lut_cubevertex_to_num_adj[neigh_cube_vertex];
+      for (int i_adj = 0; i_adj < num_adj; i_adj++) {
+        neighs[*num_neighbors]->type = t8_tri_lut_cubevertex_adj_to_type[neigh_cube_vertex][i_adj];
+        neigh_ivertices[*num_neighbors] = t8_tri_lut_cubevertex_adj_to_elementvertex[neigh_cube_vertex][i_adj];
+        if (*num_neighbors + 1 < element_max_num_vertex_neighbors ()) {
+          element_copy ((const t8_element_t *) neighs[*num_neighbors], (t8_element_t *) neighbors[*num_neighbors + 1]);
+        }
+        if (element_is_equal (element, neighbors[*num_neighbors]) || !t8_dtri_is_inside_root (neighs[*num_neighbors])) {
+          continue;
+        }
+        ++(*num_neighbors);
+      }
+    }
+  }
+
+  inline void
+  element_corner_descendant (const t8_element_t *element, int vertex, int level, t8_element_t *descendant) const
+  {
+    const t8_dtri_t *elem = (const t8_dtri_t *) element;
+    t8_dtri_t *desc = (t8_dtri_t *) descendant;
+    int cubevertex = t8_tri_lut_type_vertex_to_cubevertex[elem->type][vertex];
+    t8_dtri_coord_t coord_offset = T8_DTRI_LEN (elem->level) - T8_DTRI_LEN (level);
+    desc->x = elem->x + coord_offset * ((cubevertex & 1 << 0) >> 0);
+    desc->y = elem->y + coord_offset * ((cubevertex & 1 << 1) >> 1);
+    desc->level = level;
+    desc->type = elem->type;
+  }
 
   /** Compute the integer coordinates of a given element vertex. The default scheme implements the Morton type SFCs. 
    * In these SFCs the elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and L the maximum 
