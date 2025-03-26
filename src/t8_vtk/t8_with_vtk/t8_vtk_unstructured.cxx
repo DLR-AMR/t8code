@@ -20,9 +20,8 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include "t8_vtk/t8_vtk_unstructured.hxx"
+#include "t8_vtk_unstructured.hxx"
 
-#if T8_WITH_VTK
 #include <vtkUnstructuredGrid.h>
 #include <vtkUnstructuredGridReader.h>
 #include <vtkXMLUnstructuredGridReader.h>
@@ -85,4 +84,3 @@ t8_read_unstructured (const char *filename, vtkSmartPointer<vtkDataSet> grid)
     return read_failure;
   }
 }
-#endif

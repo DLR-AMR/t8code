@@ -21,8 +21,7 @@
 */
 
 #include "t8_vtk_polydata.hxx"
-#include "t8_vtk_types.h"
-#if T8_WITH_VTK
+#include <t8_vtk/t8_vtk_types.h>
 #include <vtkPolyData.h>
 #include <vtkBYUReader.h>
 #include <vtkOBJReader.h>
@@ -146,4 +145,3 @@ t8_read_polyData (const char *filename, vtkDataSet *grid)
   grid->DeepCopy (vtkDataSet::SafeDownCast (tri_filter->GetOutput ()));
   return read_successful;
 }
-#endif /* T8_WITH_VTK */
