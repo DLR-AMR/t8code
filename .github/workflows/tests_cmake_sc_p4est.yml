@@ -72,10 +72,10 @@ jobs:
 #
     ## save variables  
     - name: Save variables
-      run: export SC_DEBUG=$PWD/sc/build/Debug
-        && export SC_RELEASE=$PWD/sc/build/Release
-        && export P4EST_DEBUG=$PWD/p4est/build/Debug
-        && export P4EST_RELEASE=$PWD/p4est/build/Release
+      run: export SC_DEBUG=$PWD/sc_build/Debug
+        && export SC_RELEASE=$PWD/sc_build/Release
+        && export P4EST_DEBUG=$PWD/p4est_build/Debug
+        && export P4EST_RELEASE=$PWD/p4est_build/Release
         && echo SC_DEBUG="$SC_DEBUG" >> $GITHUB_ENV
         && echo SC_RELEASE="$SC_RELEASE" >> $GITHUB_ENV
         && echo P4EST_DEBUG="$P4EST_DEBUG" >> $GITHUB_ENV
