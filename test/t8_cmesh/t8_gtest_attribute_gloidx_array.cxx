@@ -39,8 +39,8 @@ class cmesh_attribute_gloidx_array: public testing::TestWithParam<std::tuple<int
   static void
   SetUpTestSuite ()
   {
-    t8_package_id = sc_package_register (NULL, SC_LP_DEFAULT, "GoogleTest",
-                                         "t8code testsuite package. Used for testing of external user attributes.");
+    t8_gtest_package_id = sc_package_register (
+      NULL, SC_LP_DEFAULT, "GoogleTest", "t8code testsuite package. Used for testing of external user attributes.");
   }
 
   static void
@@ -48,7 +48,7 @@ class cmesh_attribute_gloidx_array: public testing::TestWithParam<std::tuple<int
   {
   }
 
-  static int t8_package_id;
+  static int t8_gtest_package_id;
 
  protected:
   /* in Setup we build a two tree cmesh, fill an array with entries
@@ -78,14 +78,14 @@ class cmesh_attribute_gloidx_array: public testing::TestWithParam<std::tuple<int
     /* Attribute at tree 0, data_persist = 0 */
     t8_gloidx_t tree_with_attribute = 0;
     int data_persists = 0;
-    t8_cmesh_set_attribute_gloidx_array (cmesh, tree_with_attribute, t8_package_id, T8_CMESH_NEXT_POSSIBLE_KEY, entries,
-                                         num_entries, data_persists);
+    t8_cmesh_set_attribute_gloidx_array (cmesh, tree_with_attribute, t8_gtest_package_id, T8_CMESH_NEXT_POSSIBLE_KEY,
+                                         entries, num_entries, data_persists);
 
     /* Attribute at tree 1, data_persist = 1 */
     tree_with_attribute = 1;
     data_persists = 1;
-    t8_cmesh_set_attribute_gloidx_array (cmesh, tree_with_attribute, t8_package_id, T8_CMESH_NEXT_POSSIBLE_KEY, entries,
-                                         num_entries, data_persists);
+    t8_cmesh_set_attribute_gloidx_array (cmesh, tree_with_attribute, t8_gtest_package_id, T8_CMESH_NEXT_POSSIBLE_KEY,
+                                         entries, num_entries, data_persists);
 
     /* Commit the cmesh */
     t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
@@ -106,13 +106,13 @@ class cmesh_attribute_gloidx_array: public testing::TestWithParam<std::tuple<int
   t8_gloidx_t *get_entries;
 };
 
-int cmesh_attribute_gloidx_array::t8_package_id = -1;
+int cmesh_attribute_gloidx_array::t8_gtest_package_id = -1;
 
 /** Check attribute values of the trees against reference values. */
 TEST_P (cmesh_attribute_gloidx_array, check_values_data)
 {
-  get_entries = t8_cmesh_get_attribute_gloidx_array (cmesh, t8_package_id, T8_CMESH_NEXT_POSSIBLE_KEY, check_tree_id,
-                                                     num_entries);
+  get_entries = t8_cmesh_get_attribute_gloidx_array (cmesh, t8_gtest_package_id, T8_CMESH_NEXT_POSSIBLE_KEY,
+                                                     check_tree_id, num_entries);
 
   /* If we did not store any values, we except to get the NULL pointer back. */
   if (entries == NULL) {

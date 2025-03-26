@@ -42,8 +42,8 @@ class vtk_reader: public testing::TestWithParam<std::tuple<int, int, int>> {
   SetUpTestSuite ()
   {
     t8_debugf ("[D] Register package \n");
-    t8_package_id = sc_package_register (NULL, SC_LP_DEFAULT, "GoogleTest",
-                                         "t8code testsuite package. Used for testing of external user attributes.");
+    t8_gtest_package_id = sc_package_register (
+      NULL, SC_LP_DEFAULT, "GoogleTest", "t8code testsuite package. Used for testing of external user attributes.");
   }
 
   static void
@@ -52,7 +52,7 @@ class vtk_reader: public testing::TestWithParam<std::tuple<int, int, int>> {
     t8_debugf ("[D] TearDown \n");
   }
 
-  static int t8_package_id;
+  static int t8_gtest_package_id;
 
  protected:
   void
@@ -89,14 +89,14 @@ class vtk_reader: public testing::TestWithParam<std::tuple<int, int, int>> {
   const int num_trees[5] = { 0, 200, 12, 1024, 1680 };
 };
 
-int vtk_reader::t8_package_id;
+int vtk_reader::t8_gtest_package_id;
 
 /* All readers should fail properly with a non-existing file. */
 TEST_P (vtk_reader, vtk_to_cmesh_fail)
 {
 #if T8_WITH_VTK
   t8_cmesh_t cmesh
-    = t8_cmesh_vtk_reader (failing_files[file], 0, main_proc, sc_MPI_COMM_WORLD, file_type, t8_package_id, 0);
+    = t8_cmesh_vtk_reader (failing_files[file], 0, main_proc, sc_MPI_COMM_WORLD, file_type, t8_gtest_package_id, 0);
   EXPECT_TRUE (cmesh == NULL);
 #else
 #endif
@@ -109,8 +109,8 @@ TEST_P (vtk_reader, vtk_to_cmesh_success)
   int mpirank;
   int mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
-  t8_cmesh_t cmesh
-    = t8_cmesh_vtk_reader (test_files[file], partition, main_proc, sc_MPI_COMM_WORLD, file_type, t8_package_id, 0);
+  t8_cmesh_t cmesh = t8_cmesh_vtk_reader (test_files[file], partition, main_proc, sc_MPI_COMM_WORLD, file_type,
+                                          t8_gtest_package_id, 0);
   if (file_type != VTK_FILE_ERROR) {
     EXPECT_FALSE (cmesh == NULL);
     const int test_num_trees = t8_cmesh_get_num_local_trees (cmesh);
