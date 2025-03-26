@@ -34,6 +34,21 @@ This script indents all t8code source files at once. This script should only be 
 
 List all source files of t8code in the `src/` `example/` and `test/` subfolders.
 
+#### check_valgrind.sh
+
+This script runs Valgrind on a binary path provided as a parameter with specified memory leak detection flags. The Valgrind output is parsed. As a second argument, you can provide a path to a suppression file that is used by Valgrind to suppress certain errors (e.g. [valgrind_suppressions_file](valgrind_suppressions_file.supp)).
+
+#### find_all_test_binary_paths.sh
+
+This file lists all binary paths to test files, except for the tests for the api (as the Fortran interface needs to be built for that).
+The [CMakeLists.txt file in the test folder](../test/CMakeLists.txt) is used to generate the list of binary paths.
+The paths are relative paths assuming an execution from the test/ folder in the build directory.
+
+#### check_all_test_binaries_valgrind.sh
+
+This script performs a valgrind check on each test binary found by [find_all_test_binary_paths.sh](find_all_test_binary_paths.sh).
+The valgrind check is done by [check_valgrind.sh](check_valgrind.sh). It is assumed that the build folder ../build/test/ with the correct test binaries exists.
+
 ## Others
 
 #### su2_mesh_to_gmsh.py
