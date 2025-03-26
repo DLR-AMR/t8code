@@ -145,6 +145,35 @@ t8_search_base::do_search ()
   }
 }
 
+typedef struct
+{
+  const t8_scheme_c *ts;
+  t8_eclass_t eclass;
+  int level;
+  int num_children;
+  int maxlevel;
+} t8_forest_child_type_query_t;
+
+static size_t
+t8_forest_determine_childid (sc_array_t *global_first_desc, size_t index, void *data)
+{
+  T8_ASSERT (data != NULL);
+  T8_ASSERT (global_first_desc->elem_size = sizeof (t8_linearidx_t));
+  T8_ASSERT (index < global_first_desc->elem_count);
+
+  t8_linearidx_t linearid = *(t8_linearidx_t *) sc_array_index (global_first_desc, index);
+  t8_forest_child_type_query_t *query_data = (t8_forest_child_type_query_t *) data;
+
+  /* Create an element from the linear_id and compute its child_id. */
+  t8_element_t *element;
+  query_data->ts->element_new (query_data->eclass, 1, &element);
+  query_data->ts->element_set_linear_id (query_data->eclass, element, query_data->maxlevel, linearid);
+  size_t child_id = query_data->ts->element_get_ancestor_id (query_data->eclass, element, query_data->level);
+  query_data->ts->element_destroy (query_data->eclass, 1, &element);
+
+  return child_id;
+}
+
 void
 t8_partition_search_base::search_recursion (const t8_locidx_t ltreeid, t8_element_t *element, const t8_scheme *ts,
                                             int pfirst, int plast)
@@ -185,7 +214,81 @@ t8_partition_search_base::search_recursion (const t8_locidx_t ltreeid, t8_elemen
   /* Compute the children */
   ts->element_get_children (eclass, element, num_children, children);
 
+  /* Get a view of the relevant section of the forest's element_offsets */
+  sc_array_t *global_first_desc = sc_array_new_data (
+    (void *) ((t8_linearidx_t *) t8_shmem_array_get_array (forest->global_first_desc) + pfirst + 1),
+    sizeof (t8_linearidx_t), plast - pfirst);
+  /* Adapt global_first_desc to be monotonously increasing */
+  for (int iproc = plast - pfirst - 2; iproc >= 0; iproc--) {
+    if (t8_shmem_array_get_gloidx (forest->element_offsets, pfirst + 1 + iproc)
+        == t8_shmem_array_get_gloidx (forest->element_offsets, pfirst + 1 + iproc + 1)) {
+      /* use next global_first_desc instead of 0 if iproc is empty */
+      *(t8_linearidx_t *) sc_array_index_int (global_first_desc, iproc)
+        = *(t8_linearidx_t *) sc_array_index_int (global_first_desc, iproc + 1);
+    }
+  }
+
+  /* Prepare relevant information for child_id computation. */
+  t8_forest_child_type_query_t query_data;
+  query_data.num_children = num_children;
+  query_data.ts = ts;
+  query_data.eclass = eclass;
+  query_data.level = ts->element_get_level (eclass, element) + 1;
+  query_data.maxlevel = forest->maxlevel;
+
+  /* Split global first descendants by child id with respect to element */
+  sc_array_t *split_offsets = sc_array_new_count (sizeof (size_t), num_children + 1);
+  sc_array_split (global_first_desc, split_offsets, num_children, t8_forest_determine_childid, &query_data);
+  T8_ASSERT (*(size_t *) sc_array_index (split_offsets, (size_t) num_children) == (size_t) (plast - pfirst));
+  T8_ASSERT (*(size_t *) sc_array_index (split_offsets, 0) == 0);
+
+  int cpfirst, ichild, cpnext, cplast;
+  for (cpfirst = pfirst + 1, ichild = 0; ichild < num_children; cpfirst = cpnext, ichild++) {
+    /* determine the exclusive upper bound of processors starting in child */
+    cpnext = *(int *) sc_array_index (split_offsets, ichild + 1) + pfirst + 1;
+    T8_ASSERT (cpfirst <= cpnext && cpnext <= plast + 1);
+
+    /* fix the last processor in child, which is known at this point */
+    T8_ASSERT (cpnext > 0);
+    cplast = cpnext - 1;
+
+    /* now check multiple cases for the beginning processor */
+    if (cpfirst < cpnext) {
+      /* at least one processor starts in this child */
+      t8_linearidx_t global_first_descendant
+        = *(t8_linearidx_t *) t8_shmem_array_index (forest->global_first_desc, cpfirst);
+      t8_linearidx_t element_id = ts->element_get_linear_id (eclass, children[ichild], forest->maxlevel);
+
+      if (global_first_descendant == element_id) {
+        /* cpfirst starts at the tree's first descendant but may be empty */
+        T8_ASSERT (ichild > 0);
+        while (t8_shmem_array_get_gloidx (forest->element_offsets, cpfirst)
+               == t8_shmem_array_get_gloidx (forest->element_offsets, cpfirst + 1)) {
+          ++cpfirst;
+          T8_ASSERT (t8_forest_determine_childid (global_first_desc, cpfirst - pfirst - 1, &query_data)
+                     == (size_t) ichild);
+        }
+      }
+      else {
+        /* there must be exactly one processor before us in this child */
+        --cpfirst;
+        T8_ASSERT (cpfirst == pfirst
+                   || t8_forest_determine_childid (global_first_desc, cpfirst - pfirst - 1, &query_data)
+                        == (size_t) ichild);
+      }
+    }
+    else {
+      /* this whole child is owned by one processor */
+      cpfirst = cplast;
+    }
+
+    search_recursion (ltreeid, children[ichild], ts, cpfirst, cplast);
+    update_queries (new_active_queries);
+  }
+
   /* clean-up */
+  sc_array_destroy (split_offsets);
+  sc_array_destroy (global_first_desc);
   ts->element_destroy (eclass, num_children, children);
   T8_FREE (children);
 }
