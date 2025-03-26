@@ -1,3 +1,25 @@
+/*
+  This file is part of t8code.
+  t8code is a C library to manage a collection (a forest) of multiple
+  connected adaptive space-trees of general element classes in parallel.
+
+  Copyright (C) 2023 the developers
+
+  t8code is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  t8code is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with t8code; if not, write to the Free Software Foundation, Inc.,
+  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+*/
+
 #include <t8_vtk/t8_with_vtk/t8_vtk_reader.hxx>
 #include <t8_vtk/t8_vtk_reader.hxx>
 #include <t8_vtk/t8_vtk_types.h>
@@ -191,7 +213,7 @@ t8_get_dimension (vtkSmartPointer<vtkDataSet> vtkGrid)
 
 static void
 t8_vtk_iterate_cells (vtkSmartPointer<vtkDataSet> vtkGrid, t8_cmesh_t cmesh, const t8_gloidx_t first_tree,
-                      sc_MPI_Comm comm)
+                      [[maybe_unused]] sc_MPI_Comm comm)
 {
   double **tuples = NULL;
   size_t *data_size = NULL;
@@ -280,7 +302,7 @@ t8_vtk_iterate_cells (vtkSmartPointer<vtkDataSet> vtkGrid, t8_cmesh_t cmesh, con
  * \return            the global id of the first tree on this proc. 
  */
 static t8_gloidx_t
-t8_vtk_partition (t8_cmesh_t cmesh, const int mpirank, const int mpisize, t8_gloidx_t num_trees, int dim,
+t8_vtk_partition (t8_cmesh_t cmesh, const int mpirank, const int mpisize, t8_gloidx_t num_trees,[[maybe_unused]] int dim,
                   sc_MPI_Comm comm)
 {
   t8_gloidx_t first_tree = 0;
