@@ -178,6 +178,10 @@ jobs:
       run: cd $P4EST_RELEASE && ninja $MAKEFLAGS && ninja $MAKEFLAGS install
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
     
+    ## deinit submodules
+    - name: deinit submodules
+      run: git submodule deinit --all -f
+
     ## output cache info
     - name: output cache info
       id: used_cache
