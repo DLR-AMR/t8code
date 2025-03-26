@@ -139,6 +139,10 @@ class vtk_writer_test: public testing::Test {
   void
   TearDown () override
   {
+    if (writer != nullptr) {
+      delete writer;
+      writer = nullptr;
+    }
     destroy_grid (&grid);
   }
 

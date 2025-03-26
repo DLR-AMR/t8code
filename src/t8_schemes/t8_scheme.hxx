@@ -843,6 +843,10 @@ class t8_scheme {
                        eclass_schemes[tree_class]);
   };
 
+  /** Returns the maximal number of same level vertex neighbors in a uniform refinement .
+   * \param [in] tree_class    The eclass of the current tree.
+   * \return                   maximal number of same level elements that touch at a vertex
+   */
   inline int
   element_max_num_vertex_neighbors (const t8_eclass_t tree_class) const
   {
@@ -850,6 +854,14 @@ class t8_scheme {
                        eclass_schemes[tree_class]);
   }
 
+  /** Construct the vertex neighbors in a uniform refinement of a given element.
+   * \param [in] tree_class    The eclass of the current tree.
+   * \param [in] element    The element whose neighbors should be constructed.
+   * \param [in] vertex     The vertex
+   * \param [out] num_neighbors The actual number of neighbors found.
+   * \param [out] neighbors The constructed neighbors
+   * \param [out] neigh_ivertices The vertex ids of the common vertex in the reference of the neighbors
+   */
   inline void
   element_vertex_neighbors (const t8_eclass_t tree_class, const t8_element_t *element, const int vertex,
                             int *num_neighbors, t8_element_t **neighbors, int *neigh_ivertices) const
@@ -861,6 +873,14 @@ class t8_scheme {
       eclass_schemes[tree_class]);
   }
 
+  /** Construct the corner descendant of a given element.
+   * \param [in] tree_class    The eclass of the current tree.
+   * \param [in] element     The element whose descendant is computed.
+   * \param [in] vertex   The vertex, for which the descendant should be constructed
+   * \param [in] level    The level, at which the descendant is computed.
+   * \param [out] descendant The descendant of \a element in a uniform refinement of \a level touching
+   *                      \a vertex of \a element.
+   */
   inline void
   element_corner_descendant (const t8_eclass_t tree_class, const t8_element_t *element, int vertex, int level,
                              t8_element_t *descendant) const
@@ -1080,9 +1100,9 @@ class t8_scheme {
    * \param [in,out] elem The element that is filled with the root
    */
   inline void
-  get_root (const t8_eclass_t tree_class, t8_element_t *elem) const
+  set_to_root (const t8_eclass_t tree_class, t8_element_t *elem) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.get_root (elem); }, eclass_schemes[tree_class]);
+    return std::visit ([&] (auto &&scheme) { return scheme.set_to_root (elem); }, eclass_schemes[tree_class]);
   };
 
   /** Pack multiple elements into contiguous memory, so they can be sent via MPI.

@@ -254,7 +254,7 @@ t8_forest_min_nonempty_level (t8_cmesh_t cmesh, const t8_scheme *scheme)
     if (cmesh->num_trees_per_eclass[eclass] > 0) {
       /* Compute the number of children of the root tree. */
       scheme->element_new ((t8_eclass_t) eclass, 1, &element);
-      scheme->get_root ((t8_eclass_t) eclass, element);
+      scheme->set_to_root ((t8_eclass_t) eclass, element);
       min_num_children = SC_MIN (min_num_children, scheme->element_get_num_children ((t8_eclass_t) eclass, element));
       scheme->element_destroy ((t8_eclass_t) eclass, 1, &element);
       /* Compute the minimum possible maximum refinement level */
@@ -1320,7 +1320,7 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
     /* we do this by first creating a level 0 child of the tree, then
      * calculating its first/last descendant */
     scheme->element_new (eclass, 1, &element);
-    scheme->get_root (eclass, element);
+    scheme->set_to_root (eclass, element);
     scheme->element_new (eclass, 1, &desc);
     if (first_or_last == 0) {
       scheme->element_get_first_descendant (eclass, element, desc, forest->maxlevel);
@@ -2898,11 +2898,12 @@ void
 t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_type, int ghost_version)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
-  /* We currently only support face ghosts */
-  SC_CHECK_ABORT (do_ghost == 0 || ghost_type == T8_GHOST_FACES || ghost_type == T8_GHOST_VERTICES,
-                  "Ghost neighbors other than face-neighbors are not supported.\n");
+  /* We currently only support face ghosts or vertex ghosts on a single tree. */
+  SC_CHECK_ABORT (do_ghost == 0 || ghost_type == T8_GHOST_FACES
+                    || (ghost_type == T8_GHOST_VERTICES && t8_forest_get_num_global_trees (forest) == 1),
+                  "Only face-neighbors and vertex-neighbors on a single tree are supported.\n");
   SC_CHECK_ABORT (1 <= ghost_version && ghost_version <= 3, "Invalid choice for ghost version. Choose 1, 2, or 3.\n");
-
+  SC_CHECK_ABORT (ghost_type != T8_GHOST_VERTICES || ghost_version == 3, "vertex ghosts only supported in version 3.");
   if (ghost_type == T8_GHOST_NONE) {
     /* none type disables ghost */
     forest->do_ghost = 0;
