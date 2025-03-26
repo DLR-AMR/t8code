@@ -222,9 +222,7 @@ install( DIRECTORY t8_cmesh DESTINATION include FILES_MATCHING PATTERN "*.h"
 install( DIRECTORY t8_data DESTINATION include FILES_MATCHING PATTERN "*.h" )
 install( DIRECTORY t8_forest DESTINATION include FILES_MATCHING PATTERN "*.h"
   PATTERN "t8_forest/t8_forest_balance.h" EXCLUDE
-  PATTERN "t8_forest/t8_forest_ghost.h "  EXCLUDE
-  PATTERN "t8_forest/t8_forest_private.h" EXCLUDE
-  PATTERN "t8_forest/t8_forest_types.h"   EXCLUDE
+  PATTERN "t8_forest/t8_forest_private.h"   EXCLUDE
   )
 install( DIRECTORY t8_geometry DESTINATION include FILES_MATCHING PATTERN "*.h" )
 install( DIRECTORY t8_schemes DESTINATION include FILES_MATCHING PATTERN "*.h" )
@@ -243,6 +241,7 @@ install( DIRECTORY t8_vtk DESTINATION include FILES_MATCHING PATTERN "*.hxx"
   PATTERN "t8_vtk/t8_vtk_writer_helper.hxx" EXCLUDE
   )
 install( DIRECTORY t8_types DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
+install( DIRECTORY t8_types DESTINATION include FILES_MATCHING PATTERN "*.h" )
 
 install( TARGETS T8 DESTINATION lib )
 install( TARGETS T8 EXPORT ${PROJECT_NAME}-targets )
