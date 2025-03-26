@@ -294,14 +294,16 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
   }
 
   inline void
-  element_vertex_neighbors (const t8_element_t *element, const int vertex, int *num_neighbors, t8_element_t **neighbors,
-                            int *neigh_ivertices) const
+  element_vertex_neighbors ([[maybe_unused]] const t8_element_t *element, [[maybe_unused]] const int vertex,
+                            [[maybe_unused]] int *num_neighbors, [[maybe_unused]] t8_element_t **neighbors,
+                            [[maybe_unused]] int *neigh_ivertices) const
   {
     SC_ABORT ("Not implemented for this eclass\n");
   }
 
   inline void
-  element_corner_descendant (const t8_element_t *element, int vertex, int level, t8_element_t *descendant) const
+  element_corner_descendant ([[maybe_unused]] const t8_element_t *element, [[maybe_unused]] int vertex,
+                             [[maybe_unused]] int level, [[maybe_unused]] t8_element_t *descendant) const
   {
     SC_ABORT ("Not implemented for this eclass\n");
   }
