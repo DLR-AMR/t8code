@@ -274,7 +274,7 @@ t8_partition_search_base::search_recursion (const t8_locidx_t ltreeid, t8_elemen
         --cpfirst;
         T8_ASSERT (cpfirst == pfirst
                    || t8_forest_determine_childid (global_first_desc, cpfirst - pfirst - 1, &query_data)
-                        == (size_t) ichild);
+                        < (size_t) ichild);
       }
     }
     else {
