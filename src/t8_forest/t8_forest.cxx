@@ -1044,6 +1044,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
       }
     }
 #endif
+    [[fallthrough]];
   case T8_ECLASS_TRIANGLE: {
     /* We construct the normal as the cross product of two spanning
      * vectors for the triangle*/
@@ -1228,7 +1229,7 @@ t8_forest_populate (t8_forest_t forest)
  * not the first possible descendant of that tree.
  */
 static int
-t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
+t8_forest_tree_shared ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] int first_or_last)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (first_or_last == 0 || first_or_last == 1);
@@ -1945,8 +1946,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
         //        Output: The face id of the corresponding ancestor/descendant face of B
         //
         //      Currently we hardcode this algorithm for quads. In that case the face id of B is always f.
-        const bool scheme_is_default_quad_hex
-          = t8_eclass_scheme_is_default (scheme, eclass) && (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX);
+        const bool scheme_is_default_quad_hex = (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX);
         SC_CHECK_ABORT (scheme_is_default_quad_hex,
                         "Computing leaf face neighbors currently only works for default quad or hex schemes.");
 
@@ -4016,7 +4016,7 @@ static int
 t8_forest_compare_elem_tree (const void *lelement_id, const void *ltree)
 {
   t8_locidx_t leid = *(const t8_locidx_t *) lelement_id;
-  const t8_tree_t tree = (const t8_tree_t) ltree;
+  const t8_tree_t tree = (t8_tree_t) ltree;
 
   if (tree->elements_offset > leid) {
     /* We have to look further to the left */

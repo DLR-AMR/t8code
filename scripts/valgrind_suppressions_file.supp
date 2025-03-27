@@ -1,0 +1,8 @@
+{
+   <mpi_suppression_1>
+   Memcheck:Leak
+   ...
+   obj:/usr/*libmpich*
+   fun:PMPI_Init
+   fun:main
+}

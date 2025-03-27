@@ -364,8 +364,8 @@ main (int argc, char **argv)
   /* long help message */
   sreturn = snprintf (
     help, BUFSIZ,
-    "Demonstrates the some of the geometry capabitlities of t8code.\n"
-    "You can read in a msh and brep file of a naca profile and refine elements touching certain geometries, \n"
+    "Demonstrates some of the geometry capabilities of t8code.\n"
+    "You can read in a msh and brep file of a NACA profile and refine elements touching certain geometries, \n"
     "or advance a refinement plane through that NACA profile mesh.\n"
     "The brep and msh have to be generated with the gmsh software, using the .geo file in this directory.\n"
     "Usage: %s\n",

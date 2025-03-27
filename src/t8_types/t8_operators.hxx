@@ -212,25 +212,12 @@ struct EqualityComparable: t8_crtp_operator<TUnderlying, EqualityComparable>
     return lhs.get () == rhs.get ();
   }
 
-  bool
+  constexpr bool
   operator!= (TUnderlying const& other) const
   {
     return this->underlying ().get () != other.get ();
   }
 };
-
-/**
- * \brief A template for << types. Provides the << operator.
- * 
- * \tparam TUnderlying
- */
-template <typename TUnderlying, typename Parameter>
-std::ostream&
-operator<< (std::ostream& os, T8Type<TUnderlying, Parameter> const& p)
-{
-  p.print (os);
-  return os;
-}
 
 /**
  * \brief A template for hashable types. Used to make a type hashable.
@@ -300,15 +287,4 @@ struct RandomAccessible: t8_crtp_operator<TUnderlying, RandomAccessible>
   }
 };
 
-/**
- * \brief A template for hashable types. Used to make a type hashable.
- * 
- * \tparam T 
- */
-template <typename TUnderlying>
-struct Hashable
-{
-  static constexpr bool is_hashable = true;
-};
-
-#endif /* T8_OPERATORS_HXX */
+#endif  // T8_OPERATORS_HXX

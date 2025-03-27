@@ -121,7 +121,7 @@ t8_load_refine_adapt ([[maybe_unused]] t8_forest_t forest, t8_forest_t forest_fr
   }
   /* Refine along the inner boundary.
    * The factor in front of h controls the width of the refinement region. */
-  if (tree_class == T8_ECLASS_TRIANGLE && t8_vec3_dot (elem_midpoint, elem_midpoint) < 1 + 5 * h) {
+  if (tree_class == T8_ECLASS_TRIANGLE && t8_dot (elem_midpoint, elem_midpoint) < 1 + 5 * h) {
     return 1;
   }
 

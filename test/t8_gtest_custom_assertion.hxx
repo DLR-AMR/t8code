@@ -24,12 +24,12 @@
 * Provide customized GoogleTest functions for improved error-output
 */
 
-#ifndef T8_GTEST_CUSTOM_ASSERTION_HXX
-#define T8_GTEST_CUSTOM_ASSERTION_HXX
-
 #include <gtest/gtest.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_types/t8_vec.hxx>
+
+#ifndef CUSTOM_ASSERTION_HXX
+#define CUSTOM_ASSERTION_HXX
 
 /**
  * \brief Test two elements for equality and print the elements if they aren't equal
@@ -104,4 +104,4 @@ vec_equality (const char *vec_1_expr, const char *vec_2_expr, const char *precis
 
 #define EXPECT_VEC_EQ(vec_1, vec_2, precision) EXPECT_PRED_FORMAT3 (vec_equality, (vec_1), (vec_2), (precision))
 
-#endif /* T8_GTEST_CUSTOM_ASSERTION_HXX */
+#endif /* CUSTOM_ASSERTION_HXX */
