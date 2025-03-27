@@ -33,8 +33,6 @@
 #include <vtkPointSet.h>
 #endif
 
-T8_EXTERN_C_BEGIN ();
-
 #if T8_WITH_VTK
 
 /**
@@ -122,7 +120,5 @@ t8_vtk_reader_pointSet (const char *filename, const int partition, const int mai
 t8_cmesh_t
 t8_vtk_reader_cmesh (const char *filename, const int partition, const int main_proc, sc_MPI_Comm comm,
                      const vtk_file_type_t vtk_file_type);
-
-T8_EXTERN_C_END ();
 
 #endif /* T8_VTK_READER */
