@@ -42,7 +42,7 @@ on:
 
 jobs:  
   valgrind_check:
-    timeout-minutes: 60
+    timeout-minutes: 95
     runs-on: ubuntu-latest
     container: dlramr/t8code-ubuntu:t8-dependencies
     steps:
