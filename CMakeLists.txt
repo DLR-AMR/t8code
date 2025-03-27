@@ -1,6 +1,7 @@
 cmake_minimum_required( VERSION 3.16 )
 
 include( cmake/GitProjectVersion.cmake )
+include( GNUInstallDirs)
 
 project( 
     T8CODE
@@ -127,8 +128,11 @@ set( BUILD_SHARED_LIBS ON CACHE BOOL "Build libsc as a shared library" )
 set(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT FALSE)
 
 # Rpath options necessary for shared library install to work correctly in user projects.
-set(CMAKE_INSTALL_NAME_DIR ${CMAKE_INSTALL_PREFIX}/lib)
-set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
+file(RELATIVE_PATH relativeRpath
+    ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}
+    ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}
+)
+set(CMAKE_INSTALL_RPATH $ORIGIN $ORIGIN/${relativeRpath})
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH true)
 
 if ( T8CODE_USE_SYSTEM_SC )
