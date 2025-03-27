@@ -424,7 +424,7 @@ struct t8_geometry_circle: public t8_geometry_with_vertices
 
 /* This geometry rotates \f$ [0,1]^2 \f$ with time around the origin.
  * The rotation direction is reversed after 2 seconds.
- * Additionally, the z coordinate is modifyied according to the
+ * Additionally, the z coordinate is modified according to the
  * sincos function and multiplied with the current time.
  * To use this, a pointer to a double variable time is added to the geometry.
  * This variable can be modified from outside.
@@ -689,7 +689,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
    * and set the output file name. */
   switch (geom_type) {
   case T8_GEOM_SINCOS:
-    t8_global_productionf ("Creating uniform level %i forest with a sinus/cosinus geometry.\n", level);
+    t8_global_productionf ("Creating uniform level %i forest with a sine/cosine geometry.\n", level);
     /* Sin/cos geometry. Has two quad trees. */
     t8_cmesh_register_geometry<t8_geometry_sincos> (cmesh);
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
@@ -1220,7 +1220,7 @@ main (int argc, char **argv)
   sc_options_add_int (opt, 'l', "level", &level, 2, "The uniform refinement level of the mesh. Default: 2");
   sc_options_add_int (opt, 'g', "geometry", &geom_type, -1,
                       "Specify the geometry to use.\n"
-                      "\t\t0 - The graph of sin(x) * cos (y) with two 2D quad trees.\n"
+                      "\t\t0 - The graph of sin(x) * cos(y) with two 2D quad trees.\n"
                       "\t\t1 - A cylinder with one 2D quad tree.\n"
                       "\t\t2 - A moebius strip on a hybrid mesh with 4 triangles and 2 quads.\n"
                       "\t\t3 - A mesh of two trees with different geometries each.\n\t\t    Using the cylinder for the "
