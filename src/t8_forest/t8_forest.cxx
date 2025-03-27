@@ -29,6 +29,7 @@
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_ghost.h>
+#include <t8_forest/t8_forest_ghost_definition_wrapper.h>
 #include <t8_forest/t8_forest_balance.h>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_cmesh/t8_cmesh_trees.h>
@@ -38,6 +39,8 @@
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_vtk/t8_vtk_writer.h>
 #include <t8_geometry/t8_geometry_base.hxx>
+#include <t8_forest/t8_forest_ghost_definition.hxx>
+#include <t8_forest/t8_forest_ghost_search.hxx>
 #if T8_ENABLE_DEBUG
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
@@ -2896,14 +2899,41 @@ t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from, int no_re
 }
 
 void
-t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_type, int ghost_version)
+t8_forest_set_ghost_ext (t8_forest_t forest, const int do_ghost, t8_forest_ghost_definition_c *ghost_definition)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
-  /* We currently only support face ghosts */
+
+  if (do_ghost != 0) {
+    if (ghost_definition == NULL) {
+      /* If forest has a ghost_definition, activate ghost, otherwise abort. */
+      if (forest->ghost_definition != NULL) {
+        forest->do_ghost = 1;
+      }
+      else {
+        SC_ABORT ("Want to aktivat ghost, without ghost_definition.\n");
+      }
+    }
+    else {
+      /* Unref the old ghost_definition (if it exists) and set the new one. */
+      if (forest->ghost_definition != NULL) {
+        t8_forest_ghost_definition_unref (&(forest->ghost_definition));
+      }
+      forest->do_ghost = 1;
+      forest->ghost_definition = ghost_definition;
+    }
+  }
+  else {
+    /* Deactivate ghost for the forest, but do not overwrite an old ghost_definition of the forest. */
+    forest->do_ghost = 0;
+  }
+}
+
+void
+t8_forest_set_ghost (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_type)
+{
+  /* Use ghost version 3, top-down search and for unbalanced forests. */
   SC_CHECK_ABORT (do_ghost == 0 || ghost_type == T8_GHOST_FACES,
                   "Ghost neighbors other than face-neighbors are not supported.\n");
-  SC_CHECK_ABORT (1 <= ghost_version && ghost_version <= 3, "Invalid choice for ghost version. Choose 1, 2, or 3.\n");
-
   if (ghost_type == T8_GHOST_NONE) {
     /* none type disables ghost */
     forest->do_ghost = 0;
@@ -2912,16 +2942,8 @@ t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost
     forest->do_ghost = (do_ghost != 0); /* True if and only if do_ghost != 0 */
   }
   if (forest->do_ghost) {
-    forest->ghost_type = ghost_type;
-    forest->ghost_algorithm = ghost_version;
+    t8_forest_set_ghost_ext (forest, do_ghost, new t8_forest_ghost_face (3));
   }
-}
-
-void
-t8_forest_set_ghost (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_type)
-{
-  /* Use ghost version 3, top-down search and for unbalanced forests. */
-  t8_forest_set_ghost_ext (forest, do_ghost, ghost_type, 3);
 }
 
 void
@@ -3204,6 +3226,11 @@ t8_forest_commit (t8_forest_t forest)
     forest->scheme = forest->set_from->scheme;
     forest->global_num_trees = forest->set_from->global_num_trees;
 
+    if (forest->ghost_definition == NULL && forest->set_from->ghost_definition != NULL) {
+      forest->ghost_definition = forest->set_from->ghost_definition;
+      forest->ghost_definition->ref ();
+    }
+
     /* Compute the maximum allowed refinement level */
     t8_forest_compute_maxlevel (forest);
     if (forest->from_method == T8_FOREST_FROM_COPY) {
@@ -3358,19 +3385,7 @@ t8_forest_commit (t8_forest_t forest)
     /* Construct a ghost layer, if desired */
     if (forest->do_ghost) {
       /* TODO: ghost type */
-      switch (forest->ghost_algorithm) {
-      case 1:
-        t8_forest_ghost_create_balanced_only (forest);
-        break;
-      case 2:
-        t8_forest_ghost_create (forest);
-        break;
-      case 3:
-        t8_forest_ghost_create_topdown (forest);
-        break;
-      default:
-        SC_ABORT ("Invalid choice of ghost algorithm");
-      }
+      t8_forest_ghost_create_ext (forest);
     }
     forest->do_ghost = 0;
   }
@@ -4219,6 +4234,11 @@ t8_forest_reset (t8_forest_t *pforest)
   /* Destroy the ghost layer if it exists */
   if (forest->ghosts != NULL) {
     t8_forest_ghost_unref (&forest->ghosts);
+  }
+  /* Unref the ghost_definition class if it exist */
+  if (forest->ghost_definition != NULL) {
+    forest->ghost_definition->unref ();
+    forest->ghost_definition = NULL;
   }
   /* we have taken ownership on calling t8_forest_set_* */
   if (forest->scheme != NULL) {
