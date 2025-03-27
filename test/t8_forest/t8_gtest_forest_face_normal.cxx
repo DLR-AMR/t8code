@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <sc/src/sc_functions.h>
+#include <sc_functions.h>
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
