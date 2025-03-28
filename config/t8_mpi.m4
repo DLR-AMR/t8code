@@ -6,7 +6,7 @@ dnl This will overwrite the variable T8_MPI_TEST_FLAGS.
 
 AC_DEFUN([T8_CHECK_MPI_TEST_FLAGS], [
 	AC_MSG_CHECKING([number of MPI processes used for testing])
-T8_ARG_WITH([custom-test-command],
+T8_ARG_ENABLE([custom-test-command],
   [Define custom test command, e.g.: mpirun -n 4.],
   [CUSTOM_TEST_COMMAND])
 
