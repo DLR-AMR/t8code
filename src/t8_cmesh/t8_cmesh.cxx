@@ -2277,6 +2277,7 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
              last_element_index_of_current_proc);
 
   if (first_element_index_of_current_proc > last_element_index_of_current_proc) {
+    /* We do not expect a start/end message if this proc is empty. */
     expect_start_message = false;
     expect_end_message = false;
     *first_local_tree = 0;
