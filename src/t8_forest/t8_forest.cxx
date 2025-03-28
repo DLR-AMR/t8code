@@ -209,7 +209,7 @@ t8_forest_get_maxlevel (const t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (forest->maxlevel >= 0);
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   /* Ensure that the maxlevel does not increase the maximum level of any
    * class in the forest */
   int eclass_it;
@@ -1597,7 +1597,7 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, 
   t8_tree_t tree;
   t8_element_t **children_at_face;
   t8_gloidx_t neighbor_tree = -1;
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   t8_gloidx_t last_neighbor_tree = -1;
 #endif
   int num_children_at_face, child_it;
@@ -1643,7 +1643,7 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, 
     }
     /* For each of the neighbors, the neighbor tree must be the same. */
     T8_ASSERT (child_it == 0 || neighbor_tree == last_neighbor_tree);
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
     last_neighbor_tree = neighbor_tree;
 #endif
   }
@@ -2424,7 +2424,7 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest, t8_gloidx_t gtre
   else {
     last_face_desc = last_desc;
   }
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   {
     /* Check if the computed or given descendants are the correct descendant */
     t8_element_t *test_desc;
@@ -3091,7 +3091,7 @@ t8_forest_populate_irregular (t8_forest_t forest)
   t8_forest_unref (&forest_tmp_partition);
 }
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 /**
  * Checks if a scheme is valid. This is an intermediate check, which requires the schemes eclass schemes
  * to be in the same order as the eclass enum. This is only needed as long as the trees access the eclass scheme
@@ -3374,7 +3374,7 @@ t8_forest_commit (t8_forest_t forest)
     }
     forest->do_ghost = 0;
   }
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   t8_forest_partition_test_boundary_element (forest);
 #endif
 }
@@ -3587,7 +3587,7 @@ t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id, t8_locidx_t 
 {
   t8_tree_t tree;
   t8_locidx_t ltree;
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   t8_locidx_t ltreedebug;
 #endif
 
@@ -3599,7 +3599,7 @@ t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id, t8_locidx_t 
   /* We optimized the binary search out by using sc_bsearch,
    * but keep it in for debugging. We check whether the hand-written
    * binary search matches the sc_array_bsearch. */
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   {
     t8_locidx_t ltree_a, ltree_b;
     ltree_a = 0;

@@ -41,7 +41,7 @@ typedef int (*t8_fortran_adapt_coordinate_callback) (double x, double y, double 
 
 /* A fallback type if t8code is not built with MPI */
 typedef
-#ifdef T8_ENABLE_MPI
+#if T8_ENABLE_MPI
   MPI_Fint
 #else
   int

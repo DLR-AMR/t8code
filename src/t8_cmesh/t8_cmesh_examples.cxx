@@ -172,7 +172,7 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm, int set_part
       /* Set the partition (with offsets) */
       t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
       t8_gloidx_t num_global_trees;
       /* The global number of trees is the sum over all numbers of trees in conn on each process */
       mpiret = sc_MPI_Allreduce (&num_local_trees, &num_global_trees, 1, T8_MPI_GLOIDX, sc_MPI_SUM, comm);
@@ -1482,7 +1482,7 @@ t8_cmesh_new_hypercube_pad_ext (const t8_eclass_t eclass, sc_MPI_Comm comm, cons
       /* Set the partition (with offsets) */
       t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
       t8_gloidx_t num_global_trees;
       /* The global number of trees is the sum over all numbers of trees in conn on each process */
       int mpiret = sc_MPI_Allreduce (&num_local_trees, &num_global_trees, 1, T8_MPI_GLOIDX, sc_MPI_SUM, comm);

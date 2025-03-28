@@ -206,7 +206,7 @@ t8_default_scheme_quad::element_get_children (const t8_element_t *elem, [[maybe_
   const p4est_quadrant_t *q = (const p4est_quadrant_t *) elem;
 
   T8_ASSERT (element_is_valid (elem));
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   {
     for (int j = 0; j < P4EST_CHILDREN; j++) {
       T8_ASSERT (element_is_valid (c[j]));
@@ -237,7 +237,7 @@ t8_default_scheme_quad::element_get_ancestor_id (const t8_element_t *elem, int l
 int
 t8_default_scheme_quad::elements_are_family (t8_element_t *const *fam) const
 {
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   for (int i = 0; i < P4EST_CHILDREN; i++) {
     T8_ASSERT (element_is_valid (fam[i]));
   }
@@ -323,7 +323,7 @@ t8_default_scheme_quad::element_get_children_at_face (const t8_element_t *elem, 
 {
   int first_child, second_child;
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   {
     for (int i = 0; i < num_children; i++) {
       T8_ASSERT (element_is_valid (children[i]));
@@ -722,7 +722,7 @@ t8_default_scheme_quad::element_new (int length, t8_element_t **elem) const
 void
 t8_default_scheme_quad::element_init ([[maybe_unused]] int length, [[maybe_unused]] t8_element_t *elem) const
 {
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   p4est_quadrant_t *quads = (p4est_quadrant_t *) elem;
   /* Set all values to 0 */
   for (int i = 0; i < length; i++) {
@@ -743,7 +743,7 @@ t8_default_scheme_quad::refines_irregular () const
   return 0;
 }
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 int
 t8_default_scheme_quad::element_is_valid (const t8_element_t *elem) const
 {

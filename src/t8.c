@@ -122,7 +122,7 @@ t8_productionf (const char *fmt, ...)
 void
 t8_debugf (__attribute__ ((unused)) const char *fmt, ...)
 {
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   va_list ap;
 
   va_start (ap, fmt);

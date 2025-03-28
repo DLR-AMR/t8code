@@ -30,7 +30,7 @@
 
 T8_EXTERN_C_BEGIN ();
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 /* Query whether an element array is initialized properly. */
 static int
 t8_element_array_is_valid (const t8_element_array_t *element_array)
@@ -151,7 +151,7 @@ t8_element_array_init_copy (t8_element_array_t *element_array, const t8_scheme_c
   t8_element_array_init (element_array, scheme, tree_class);
 
   array = &element_array->array;
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   /* Check if the elements in data are valid for scheme */
   {
     size_t ielem;
