@@ -23,7 +23,7 @@ AC_DEFUN([T8_ARG_DISABLE],
          [SC_ARG_DISABLE_PREFIX([$1], [$2], [$3], [T8])])
 
 dnl T8_ARG_WITH(NAME, COMMENT, TOKEN)
-dnl Check for --with/without-NAME using shell variable T8_ENABLE_TOKEN
+dnl Check for --with/without-NAME using shell variable T8_WITH_TOKEN
 dnl If shell variable is set beforehand it overrides the option
 dnl If with, define TOKEN to 1 and set conditional T8_TOKEN
 dnl Default is without
@@ -32,7 +32,7 @@ AC_DEFUN([T8_ARG_WITH],
          [SC_ARG_WITH_PREFIX([$1], [$2], [$3], [T8])])
 
 dnl T8_ARG_WITHOUT(NAME, COMMENT, TOKEN)
-dnl Check for --with/without-NAME using shell variable T8_ENABLE_TOKEN
+dnl Check for --with/without-NAME using shell variable T8_WITH_TOKEN
 dnl If shell variable is set beforehand it overrides the option
 dnl If with, define TOKEN to 1 and set conditional T8_TOKEN
 dnl Default is with
