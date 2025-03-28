@@ -6,7 +6,7 @@ else()
     add_library( T8 STATIC )
 endif()
 
-target_compile_features( T8 PUBLIC cxx_std_20 )
+target_compile_features( T8 PUBLIC c_std_11 cxx_std_20 )
 add_library( T8CODE::T8 ALIAS T8 )
 
 if( CMAKE_BUILD_TYPE STREQUAL "Release" )
