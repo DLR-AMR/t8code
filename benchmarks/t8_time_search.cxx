@@ -333,7 +333,7 @@ t8_time_search_leaf_particles (t8_forest_t forest, sc_MPI_Comm comm)
       // t8_debugf ("coords: %f %f %f\n", coords[0], coords[1], coords[2]);
       t8_tutorial_search_particle_t *particle
         = (t8_tutorial_search_particle_t *) sc_array_index_int (local_particles, iparticle);
-      std::copy (std::begin (coords), std::end (coords), std::begin (particle->coordinates));
+      std::ranges::copy (coords, std::begin (particle->coordinates));
       particle->is_inside_partition = 0;
 
       iparticle++;
