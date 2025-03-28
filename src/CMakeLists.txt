@@ -32,8 +32,8 @@ endif( T8CODE_EXPORT_COMPILE_COMMANDS )
 if( T8CODE_ENABLE_NETCDF )
   target_link_libraries( T8 PUBLIC netCDF::netcdf )
   target_compile_definitions(T8 PUBLIC
-    T8_WITH_NETCDF
-    $<$<AND:$<BOOL:${NETCDF_HAVE_NETCDF_PAR}>,$<BOOL:${T8CODE_ENABLE_MPI}>>:T8_WITH_NETCDF_PAR> )
+    T8_ENABLE_NETCDF
+    $<$<AND:$<BOOL:${NETCDF_HAVE_NETCDF_PAR}>,$<BOOL:${T8CODE_ENABLE_MPI}>>:T8_ENABLE_NETCDF_PAR> )
   target_sources( T8 PRIVATE
   t8_netcdf.c
   t8_cmesh/t8_cmesh_netcdf.c
@@ -63,13 +63,13 @@ endif()
 
 if( T8CODE_ENABLE_VTK )
     target_compile_definitions( T8 PUBLIC T8_VTK_VERSION_USED="${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}" )
-    target_compile_definitions( T8 PUBLIC T8_WITH_VTK=1 )
+    target_compile_definitions( T8 PUBLIC T8_ENABLE_VTK=1 )
     target_include_directories( T8 PUBLIC ${VTK_INCLUDE_DIR} )
     target_link_libraries( T8 PUBLIC ${VTK_LIBRARIES} )
 endif()
 
 if( T8CODE_ENABLE_OCC )
-    target_compile_definitions( T8 PUBLIC T8_WITH_OCC=1 )
+    target_compile_definitions( T8 PUBLIC T8_ENABLE_OCC=1 )
     target_include_directories( T8 SYSTEM PUBLIC ${OpenCASCADE_INCLUDE_DIR} )
     target_link_libraries( T8 PUBLIC ${OpenCASCADE_LIBRARIES} )
 endif()
@@ -90,6 +90,12 @@ if( T8CODE_BUILD_WERROR )
   target_compile_options( T8 PUBLIC -Werror )
   set (T8_CXXFLAGS "${T8_CXXFLAGS} -Werror")
   set (T8_CFLAGS "${T8_CFLAGS} -Werror")
+endif()
+
+if( T8CODE_BUILD_WEXTRA )
+  target_compile_options( T8 PUBLIC -Wextra )
+  set (T8_CXXFLAGS "${T8_CXXFLAGS} -Wextra")
+  set (T8_CFLAGS "${T8_CFLAGS} -Wextra")
 endif()
 
 
@@ -203,14 +209,22 @@ install( FILES
     t8_types/t8_vec.hxx
     t8_version.h
     t8_vtk.h
-    t8_windows.h DESTINATION include
+    DESTINATION include
 )
 
-install( DIRECTORY t8_cmesh DESTINATION include FILES_MATCHING PATTERN "*.h" )
+install( DIRECTORY t8_cmesh DESTINATION include FILES_MATCHING PATTERN "*.h" 
+  PATTERN "t8_cmesh/t8_cmesh_copy.h"      EXCLUDE
+  PATTERN "t8_cmesh/t8_cmesh_offset.h"    EXCLUDE 
+  PATTERN "t8_cmesh/t8_cmesh_partition.h" EXCLUDE
+  PATTERN "t8_cmesh/t8_cmesh_trees.h"     EXCLUDE 
+  )
 install( DIRECTORY t8_data DESTINATION include FILES_MATCHING PATTERN "*.h" )
-install( DIRECTORY t8_forest DESTINATION include FILES_MATCHING
-  PATTERN "*.h"
-  PATTERN "*private.h" EXCLUDE )
+install( DIRECTORY t8_forest DESTINATION include FILES_MATCHING PATTERN "*.h"
+  PATTERN "t8_forest/t8_forest_balance.h" EXCLUDE
+  PATTERN "t8_forest/t8_forest_ghost.h "  EXCLUDE
+  PATTERN "t8_forest/t8_forest_private.h" EXCLUDE
+  PATTERN "t8_forest/t8_forest_types.h"   EXCLUDE
+  )
 install( DIRECTORY t8_geometry DESTINATION include FILES_MATCHING PATTERN "*.h" )
 install( DIRECTORY t8_schemes DESTINATION include FILES_MATCHING PATTERN "*.h" )
 install( DIRECTORY t8_vtk DESTINATION include FILES_MATCHING PATTERN "*.h" )
@@ -220,7 +234,13 @@ install( DIRECTORY t8_data DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
 install( DIRECTORY t8_forest DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
 install( DIRECTORY t8_geometry DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
 install( DIRECTORY t8_schemes DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
-install( DIRECTORY t8_vtk DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
+install( DIRECTORY t8_vtk DESTINATION include FILES_MATCHING PATTERN "*.hxx" 
+  PATTERN "t8_vtk/t8_vtk_parallel.hxx"      EXCLUDE
+  PATTERN "t8_vtk/t8_vtk_polydata.hxx"      EXCLUDE
+  PATTERN "t8_vtk/t8_vtk_unstructured.hxx"  EXCLUDE
+  PATTERN "t8_vtk/t8_vtk_write_ASCII.hxx"   EXCLUDE
+  PATTERN "t8_vtk/t8_vtk_writer_helper.hxx" EXCLUDE
+  )
 install( DIRECTORY t8_types DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
 
 install( TARGETS T8 DESTINATION lib )

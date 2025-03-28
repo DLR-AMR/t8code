@@ -112,8 +112,10 @@ add_t8_test( NAME t8_gtest_recursive_serial             SOURCES t8_gtest_main.cx
 add_t8_test( NAME t8_gtest_iterate_replace_serial       SOURCES t8_gtest_main.cxx t8_forest_incomplete/t8_gtest_iterate_replace.cxx )
 add_t8_test( NAME t8_gtest_empty_local_tree_parallel    SOURCES t8_gtest_main.cxx t8_forest_incomplete/t8_gtest_empty_local_tree.cxx )
 add_t8_test( NAME t8_gtest_empty_global_tree_parallel   SOURCES t8_gtest_main.cxx t8_forest_incomplete/t8_gtest_empty_global_tree.cxx )
+if( T8_ENABLE_OCC )
+    add_t8_test( NAME t8_gtest_geometry_cad_serial                      SOURCES t8_gtest_main.cxx t8_geometry/t8_geometry_implementations/t8_gtest_geometry_cad.cxx )
+endif()
 
-add_t8_test( NAME t8_gtest_geometry_cad_serial                      SOURCES t8_gtest_main.cxx t8_geometry/t8_geometry_implementations/t8_gtest_geometry_cad.cxx )
 add_t8_test( NAME t8_gtest_geometry_linear_serial                   SOURCES t8_gtest_main.cxx t8_geometry/t8_geometry_implementations/t8_gtest_geometry_linear.cxx )
 add_t8_test( NAME t8_gtest_geometry_lagrange_serial                 SOURCES t8_gtest_main.cxx t8_geometry/t8_geometry_implementations/t8_gtest_geometry_lagrange.cxx )
 add_t8_test( NAME t8_gtest_geometry_triangular_interpolation_serial SOURCES t8_gtest_main.cxx t8_geometry/t8_gtest_geometry_triangular_interpolation.cxx )

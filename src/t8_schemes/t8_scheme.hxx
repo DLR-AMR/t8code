@@ -254,6 +254,18 @@ class t8_scheme {
                        eclass_schemes[tree_class]);
   };
 
+  /**
+   * Indicates if an element is refinable. Possible reasons for being not refinable could be
+   * that the element has reached its max level.
+   * \param [in] elem   The element to check.
+   * \return            True if the element is refinable.
+   */
+  inline bool
+  element_is_refinable (const t8_eclass_t tree_class, const t8_element_t *elem) const
+  {
+    return std::visit ([&] (auto &&scheme) { return scheme.element_is_refinable (elem); }, eclass_schemes[tree_class]);
+  };
+
   /** Compute the parent of a given element \a elem and store it in \a parent.
    *  \a parent needs to be an existing element. No memory is allocated by this function.
    *  \a elem and \a parent can point to the same element, then the entries of

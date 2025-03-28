@@ -1038,6 +1038,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
       }
     }
 #endif
+    [[fallthrough]];
   case T8_ECLASS_TRIANGLE: {
     /* We construct the normal as the cross product of two spanning
      * vectors for the triangle*/
@@ -1222,7 +1223,7 @@ t8_forest_populate (t8_forest_t forest)
  * not the first possible descendant of that tree.
  */
 static int
-t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
+t8_forest_tree_shared ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] int first_or_last)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (first_or_last == 0 || first_or_last == 1);
@@ -3565,7 +3566,7 @@ static int
 t8_forest_compare_elem_tree (const void *lelement_id, const void *ltree)
 {
   t8_locidx_t leid = *(const t8_locidx_t *) lelement_id;
-  const t8_tree_t tree = (const t8_tree_t) ltree;
+  const t8_tree_t tree = (t8_tree_t) ltree;
 
   if (tree->elements_offset > leid) {
     /* We have to look further to the left */
@@ -4064,7 +4065,7 @@ t8_forest_write_vtk_ext (t8_forest_t forest, const char *fileprefix, const int w
   T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (forest->committed);
 
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
   if (do_not_use_API && write_curved) {
     t8_errorf ("WARNING: Export of curved elements not yet available with the inbuild function. "
                "Using the VTK API instead.\n");
