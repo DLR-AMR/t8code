@@ -414,8 +414,8 @@ main (int argc, char **argv)
 
   t8_cmesh_t cmesh;
   t8_forest_t forest;
-  const int level = 5;
-  const size_t num_particles = 2000;
+  int level;
+  size_t num_particles;
   const unsigned seed = 0;
   int num_particles_per_element;
   sc_options_t *opt;
@@ -450,6 +450,9 @@ main (int argc, char **argv)
                       "Option to fill the particles, 1: random, 2: one per leaf, 3: only one particle, ...");
   sc_options_add_int (opt, 's', "scheme", &scheme_option, 2,
                       "Option to choose the scheme, 1: standalone scheme, 2: default scheme");
+  sc_options_add_int (opt, 'l', "level", &level, 5, "The level of the forest.");
+  sc_options_add_size_t (opt, 'n', "num_particles", &num_particles, 2000, "The number of particles.");
+
   sc_options_parse (t8_get_package_id (), SC_LP_DEFAULT, opt, argc, argv);
 
   double total_time = 0;
