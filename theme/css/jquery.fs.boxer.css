@@ -1,0 +1,120 @@
+/* 
+ * Boxer v3.1.0 - 2014-07-08 
+ * A jQuery plugin for displaying images, videos or content in a modal overlay. Part of the Formstone Library. 
+ * http://formstone.it/boxer/ 
+ * 
+ * Copyright 2014 Ben Plum; MIT Licensed 
+ */ 
+
+ 	.boxer-open {  }
+ 	.boxer-lock { overflow: hidden !important; }
+
+ 	#boxer-overlay {
+		-webkit-transition: opacity 0.25s linear;
+		   	 	transition: opacity 0.25s linear;
+	}
+
+	#boxer * {
+		-webkit-transition: none;
+		   	 	transition: none;
+	}
+
+	#boxer.animating {
+		-webkit-transition: left 0.25s ease, opacity 0.25s linear, top 0.25s ease;
+		   	 	transition: left 0.25s ease, opacity 0.25s linear, top 0.25s ease;
+	}
+	#boxer.animating .boxer-container {
+		-webkit-transition: height 0.25s ease, width 0.25s ease;
+		   	 	transition: height 0.25s ease, width 0.25s ease;
+	}
+
+ 	#boxer.animating .boxer-content {
+		-webkit-transition: opacity 0.25s linear;
+		   	 	transition: opacity 0.25s linear;
+	}
+
+	#boxer-overlay { background: #000; height: 100%; left: 0; opacity: 0; position: fixed; top: 0; width: 100%; z-index: 105; }
+	#boxer { background: #fff; border-radius: 3px; box-shadow: 0 0 25px #000; opacity: 0; padding: 10px; position: absolute; z-index: 105; }
+	#boxer.inline { padding: 30px; }
+
+
+	.boxer-open #boxer-overlay  { opacity: 0.75; }
+	.boxer-open #boxer,
+	.boxer-open #boxer .boxer-content { opacity: 1; }
+
+	.boxer-open #boxer.loading .boxer-content { opacity: 0; }
+
+
+	#boxer .boxer-close { background: #fff url(../images/jquery.fs.boxer-icons.png) no-repeat -70px 10px; border-radius: 100%; cursor: pointer; display: block; height: 30px; position: absolute; padding: 0; right: -8px; top: -8px; width: 30px; text-indent: -99999px; z-index: 106; }
+
+	#boxer .boxer-container { background: #fff; height: 100%; overflow: hidden; position: relative; width: 100%; z-index: 105; zoom: 1; }
+	#boxer .boxer-content { background: #fff; opacity: 0; overflow: hidden; padding: 0; width: 10000px; }
+	#boxer .boxer-image { float: left; }
+	#boxer .boxer-video { height: 100%; width: 100%; }
+	#boxer .boxer-iframe { border: none; float: left; height: 100%; overflow: auto; width: 100%; }
+	#boxer .boxer-meta { clear: both; }
+
+	#boxer .boxer-control { background: #fff url(../images/jquery.fs.boxer-icons.png) no-repeat 0 0; border-radius: 100%; box-shadow: 0 0 6px rgba(0, 0, 0, 0.4); cursor: pointer; display: block; height: 40px; margin-right: auto; margin-left: auto; position: absolute; text-indent: -99999px; top: 0; width: 40px;
+		-webkit-transition: opacity 0.25s linear;
+		   	 	transition: opacity 0.25s linear;
+	}
+	#boxer .boxer-control.previous { left: 20px; }
+	#boxer .boxer-control.next { background-position: -40px 0; right: 20px; }
+	#boxer .boxer-control.disabled { opacity: 0.3; }
+
+	#boxer .boxer-position { color: #999; font-size: 11px; margin: 0; padding: 15px 10px 5px; }
+	#boxer .boxer-caption p { margin: 0; padding: 15px 10px 10px 10px; }
+	#boxer .boxer-caption.gallery p { padding-top: 0; }
+
+	#boxer.loading .boxer-container { background: #fff url(../images/jquery.fs.boxer-loading.gif) no-repeat center; }
+
+	/* Mobile */
+	#boxer.mobile { background: #000; border-radius: 0; height: 100%; left: 0; padding: 30px 0 0; position: fixed; top: 0; width: 100%; }
+	#boxer.mobile .boxer-close { background-color: #000; background-position: -70px -60px; border-radius: 0; right: 0; top: 0; }
+	#boxer.mobile .boxer-container { background: #000; position: relative; }
+	#boxer.mobile .boxer-content { background-color: #000; }
+	#boxer.mobile .boxer-control { background-color: transparent; border-radius: 0; box-shadow: none; margin: -20px 0 0; top: 50%; }
+	#boxer.mobile .boxer-control.previous { background-position: 0 -40px; float: left; left: 0; }
+	#boxer.mobile .boxer-control.next { background-position: -40px -40px; float: right; right: 0; }
+	#boxer.mobile .boxer-control.disabled { opacity: 0.3; }
+
+	#boxer.mobile .boxer-meta { bottom: 0; background-color: rgba(0, 0, 0, 0.75); left: 0; padding: 15px 50px 10px; position: absolute; width: 100%; }
+	#boxer.mobile .boxer-position { padding: 0; }
+	#boxer.mobile .boxer-caption p { color: #eee; padding: 10px 0 0; }
+
+	#boxer.mobile .boxer-image {
+		-webkit-transition: none !important;
+		        transition: none !important;
+		-webkit-transform: translate(0px, 0px);
+		    -ms-transform: translate(0px, 0px);
+		        transform: translate(0px, 0px);
+	}
+	#boxer.mobile.animated .boxer-image {
+		-webkit-transition: -webkit-transform 0.25s ease-out !important;
+		        transition: 		transform 0.25s ease-out !important;
+	}
+
+	#boxer.mobile.loading .boxer-container { background: #000 url(../images/jquery.fs.boxer-loading-dark.gif) no-repeat center; }
+
+	#boxer.mobile.inline .boxer-content,
+	#boxer.mobile.iframe .boxer-content { overflow-x: hidden; overflow-y: scroll;
+		-webkit-overflow-scrolling: touch;
+	}
+
+	@media screen and (min-width: 980px) {
+		#boxer .boxer-close:hover { background-position: -70px -20px; }
+
+		#boxer .boxer-control,
+		#boxer .boxer-control.disabled { opacity: 0; }
+		#boxer .boxer-content:hover .boxer-control { opacity: 0.75; }
+
+		#boxer .boxer-content:hover .boxer-control:hover { opacity: 1; }
+		#boxer .boxer-content:hover .boxer-control.disabled { opacity: 0.3; cursor: default !important; }
+
+		#boxer.mobile .boxer-control { opacity: 1 !important; }
+		#boxer.mobile .boxer-control.disabled { opacity: 0.3 !important; }
+	}
+
+	@media screen and (max-width: 980px) {
+		#boxer.mobile { position: fixed; }
+    }
