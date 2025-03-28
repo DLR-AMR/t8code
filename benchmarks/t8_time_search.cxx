@@ -48,8 +48,8 @@ struct t8_tutorial_search_particle_t
  * and we count the total number of elements that we constructed during search. */
 struct t8_tutorial_search_user_data_t
 {
-  std::vector<double> *particles_per_element; /* For each element the number of particles inside it. */
-  t8_locidx_t num_elements_searched;          /* The total number of elements created. */
+  std::vector<int> *particles_per_element; /* For each element the number of particles inside it. */
+  t8_locidx_t num_elements_searched;       /* The total number of elements created. */
 };
 
 static int
@@ -92,7 +92,7 @@ t8_time_search_query_callback (t8_forest_t forest, const t8_locidx_t ltreeid, co
   t8_tutorial_search_user_data_t *user_data = (t8_tutorial_search_user_data_t *) t8_forest_get_user_data (forest);
   /* Ensure user_data is present. */
   T8_ASSERT (user_data != NULL);
-  std::vector<double> *particles_per_element = user_data->particles_per_element;
+  std::vector<int> *particles_per_element = user_data->particles_per_element;
   /* Ensure that the data is actually set. */
   T8_ASSERT (particles_per_element != NULL);
   T8_ASSERT (queries != NULL);
@@ -142,7 +142,7 @@ t8_time_search_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_l
 
   t8_locidx_t element_index = t8_forest_get_tree_element_offset (forest_from, which_tree) + lelement_id;
   T8_ASSERT (&user_data != NULL);
-  std::vector<double> *particles_per_element = user_data->particles_per_element;
+  std::vector<int> *particles_per_element = user_data->particles_per_element;
   T8_ASSERT (&particles_per_element != NULL);
 
   double num_particles = (*particles_per_element)[element_index];
@@ -154,7 +154,7 @@ t8_time_search_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_l
   if (is_family == 1) {
     double sum_particles = 0;
     for (int isiblling = element_index; isiblling < element_index + num_elements; isiblling++) {
-      double num_particles_sibling = (*particles_per_element)[isiblling];
+      int num_particles_sibling = (*particles_per_element)[isiblling];
       sum_particles = sum_particles + num_particles_sibling;
     }
     if (sum_particles <= 1) {
@@ -179,12 +179,12 @@ t8_time_adapt_forest (t8_forest_t forest)
 /* Write the forest to vtu files and also write the particles_per_element
  * data. */
 static void
-t8_time_search_vtk (t8_forest_t forest, std::vector<double> *particles_per_element, const char *prefix)
+t8_time_search_vtk (t8_forest_t forest, std::vector<int> *particles_per_element, const char *prefix)
 {
   /* Define the additional vtu data that we want to write. */
   t8_vtk_data_field_t vtk_data;
-
-  vtk_data.data = particles_per_element->data ();
+  std::vector<double> particles_per_element_double (particles_per_element->begin (), particles_per_element->end ());
+  vtk_data.data = particles_per_element_double.data ();
   strcpy (vtk_data.description, "Number of particles");
   vtk_data.type = T8_VTK_SCALAR;
   /* Write vtu files with our user define number of particles data. */
@@ -206,7 +206,7 @@ t8_time_search_for_particles (t8_forest_t forest, sc_array *particles)
   t8_global_productionf (" [search] Starting search for %zd particles.\n", particles->elem_count);
   t8_tutorial_search_user_data_t *user_data = (t8_tutorial_search_user_data_t *) t8_forest_get_user_data (forest);
   T8_ASSERT (user_data != NULL);
-  std::vector<double> *particles_per_element = user_data->particles_per_element;
+  std::vector<int> *particles_per_element = user_data->particles_per_element;
   T8_ASSERT (particles_per_element != NULL);
 
   user_data->particles_per_element->resize (num_local_elements);
@@ -417,12 +417,12 @@ main (int argc, char **argv)
   const int level = 5;
   const size_t num_particles = 2000;
   const unsigned seed = 0;
-  double num_particles_per_element;
+  int num_particles_per_element;
   sc_options_t *opt;
   int particle_option;
   int scheme_option;
   t8_tutorial_search_user_data_t user_data;
-  std::vector<double> particles_per_element (0, 0.0);
+  std::vector<int> particles_per_element (0, 0);
 
   /* Initialize the user data with the particles per element array and 0 elements searched. */
   user_data.particles_per_element = &particles_per_element;
@@ -483,7 +483,7 @@ main (int argc, char **argv)
     t8_tutorial_search_user_data_t *user_data = (t8_tutorial_search_user_data_t *) t8_forest_get_user_data (forest);
     /* Ensure user_data is present. */
     T8_ASSERT (user_data != NULL);
-    std::vector<double> *particles_per_element = user_data->particles_per_element;
+    std::vector<int> *particles_per_element = user_data->particles_per_element;
     /* Ensure that the data is actually set. */
     T8_ASSERT (particles_per_element != NULL);
 
@@ -495,7 +495,7 @@ main (int argc, char **argv)
       // t8_debugf ("ielement: %li \n", ielement);
       num_particles_per_element = (*particles_per_element)[ielement];
       // t8_debugf ("num_particles: %f \n", num_particles_per_element);
-      if (num_particles_per_element > 1.0) {
+      if (num_particles_per_element > 1) {
         multiple_particles = 1;
         break;
       }
