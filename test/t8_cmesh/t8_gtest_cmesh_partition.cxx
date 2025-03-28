@@ -82,6 +82,7 @@ TEST_P (t8_cmesh_partition_class, test_cmesh_partition_concentrate)
 
   mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
   SC_CHECK_MPI (mpiret);
+  t8_debugf ("############### compute uniform partition ###############\n");
   /* Set up the partitioned cmesh */
   for (int i = 0; i < 2; i++) {
     t8_cmesh_init (&cmesh_partition);
@@ -107,6 +108,7 @@ TEST_P (t8_cmesh_partition_class, test_cmesh_partition_concentrate)
 
   /* We repartition the cmesh to be concentrated on each rank once */
   for (int irank = 0; irank < mpisize; irank++) {
+    t8_debugf ("############### compute concentrate partition %i ###############\n", irank);
     t8_cmesh_init (&cmesh_partition_new2);
     t8_cmesh_set_derive (cmesh_partition_new2, cmesh_partition_new1);
     /* Create an offset array where each tree resides on irank */

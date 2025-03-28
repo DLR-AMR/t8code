@@ -1868,10 +1868,10 @@ t8_cmesh_bounds_send_start (t8_cmesh_t cmesh, const int proc_is_empty, const t8_
                             sc_array *send_buffer, int *current_pos_in_send_buffer,
                             const t8_gloidx_t first_element_in_tree_index_of_current_proc,
                             t8_gloidx_t *first_local_tree, int8_t *first_tree_shared, t8_gloidx_t *child_in_tree_begin,
-                            int *expect_start_message, t8_cmesh_partition_query_t *data, sc_MPI_Comm comm
+                            bool *expect_start_message, t8_cmesh_partition_query_t *data, sc_MPI_Comm comm
 #ifdef T8_ENABLE_DEBUG
                             ,
-                            int *num_received_start_messages
+                            int *num_received_start_messages, int *num_message_sent
 #endif
 )
 {
@@ -1897,6 +1897,7 @@ t8_cmesh_bounds_send_start (t8_cmesh_t cmesh, const int proc_is_empty, const t8_
     const int mpiret
       = sc_MPI_Isend (message, num_entries, T8_MPI_GLOIDX, iproc, T8_MPI_CMESH_UNIFORM_BOUNDS_START, comm, request);
     SC_CHECK_MPI (mpiret);
+    (*num_message_sent)++;
     t8_debugf ("Sending start message (%li, %li) to %li (global num el %li)\n", message[0], message[1], iproc,
                data->global_num_elements);
 
@@ -1922,7 +1923,8 @@ t8_cmesh_bounds_send_start (t8_cmesh_t cmesh, const int proc_is_empty, const t8_
       *child_in_tree_begin = first_element_in_tree_index_of_current_proc;
     }
     /* We do not expect this message from another proc */
-    *expect_start_message = 0;
+    *expect_start_message = false;
+    t8_debugf ("[D] proc does not expect another start message\n");
 #ifdef T8_ENABLE_DEBUG
     (*num_received_start_messages)++;
 #endif
@@ -1938,6 +1940,8 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
 #ifdef T8_ENABLE_DEBUG
   int num_received_start_messages = 0;
   int num_received_end_messages = 0;
+  int num_message_sent = 0;
+  int num_message_recv = 0;
 #endif
   t8_shmem_array_t offset_array;
   t8_shmem_array_init (&offset_array, sizeof (t8_gloidx_t), cmesh->mpisize + 1, comm);
@@ -1957,8 +1961,8 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
   const int first_tree_shared_shift = cmesh->first_tree_shared ? 1 : 0;
   const t8_locidx_t pure_local_trees = cmesh->num_local_trees - first_tree_shared_shift;
   sc_array send_requests;
-  int expect_start_message = 1;
-  int expect_end_message = 1;
+  bool expect_start_message = true;
+  bool expect_end_message = true;
   if (pure_local_trees > 0) {
     /* Compute which trees and elements to send to which process.
      * We skip empty processes. */
@@ -2075,8 +2079,11 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
       const t8_gloidx_t last_element_index_of_current_proc
         = t8_cmesh_get_first_element_of_process (iproc + 1, data.num_procs, data.global_num_elements) - 1;
       const int proc_is_empty = last_element_index_of_current_proc < first_element_index_of_current_proc;
-      int send_start_message = 1;
-      int send_end_message = 1;
+      bool send_start_message = true;
+      bool send_end_message = true;
+      t8_debugf ("[D] proc %li: first tree %li, last tree %li\n", iproc, first_element_index_of_current_proc,
+                 last_element_index_of_current_proc);
+      t8_debugf ("[D] proc %li is empty: %i\n", iproc, proc_is_empty);
 
       t8_locidx_t first_puretree_of_current_proc = -1;
       t8_locidx_t last_puretree_of_current_proc = -1;
@@ -2091,11 +2098,10 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
           = *((size_t *) sc_array_index_int (&offset_partition, iproc + 1 - send_first));
         const t8_gloidx_t first_el_index_of_first_tree
           = *(t8_gloidx_t *) t8_sc_array_index_gloidx (&first_element_tree, possibly_first_puretree_of_current_proc);
-
         if (first_element_index_of_current_proc >= last_el_index_of_last_tree + 1) {
           /* We do not send to this process at all. Its first element belongs 
            * to the next process. */
-          send_start_message = send_end_message = 0;
+          send_start_message = send_end_message = false;
           first_puretree_of_current_proc = -1;
           last_puretree_of_current_proc = -1;
         }
@@ -2106,7 +2112,7 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
              * We check whether we own this tree and if not we do not send anything. */
             if (possibly_first_puretree_of_current_proc - 1 < 0) {
               /* We do not send any Start message to the proc. */
-              send_start_message = 0;
+              send_start_message = false;
               first_puretree_of_current_proc = -1;
             }
             else {
@@ -2131,7 +2137,7 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
           if (last_el_index_of_last_tree < last_element_index_of_current_proc) {
             /* The last element of this proc does not lie in our partition.
              * We do not need to send any End information to this process. */
-            send_end_message = 0;
+            send_end_message = false;
             last_puretree_of_current_proc = -1;
           }
           else {
@@ -2198,7 +2204,7 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
                                     child_in_tree_begin, &expect_start_message, &data, comm
 #ifdef T8_ENABLE_DEBUG
                                     ,
-                                    &num_received_start_messages
+                                    &num_received_start_messages, &num_message_sent
 
 #endif
         );
@@ -2229,6 +2235,9 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
           const int mpiret
             = sc_MPI_Isend (message, num_entries, T8_MPI_GLOIDX, iproc, T8_MPI_CMESH_UNIFORM_BOUNDS_END, comm, request);
           SC_CHECK_MPI (mpiret);
+#ifdef T8_ENABLE_DEBUG
+          num_message_sent++;
+#endif
           t8_debugf ("Sending end message (%li, %li) to %li\n", message[0], message[1], iproc);
           T8_ASSERT (proc_is_empty || (0 <= message[0] && message[0] < t8_cmesh_get_num_trees (cmesh)));
           T8_ASSERT (proc_is_empty || (0 <= message[1] && message[1] < data.global_num_elements));
@@ -2241,7 +2250,7 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
             *child_in_tree_end = last_element_in_tree_index_of_current_proc + 1;
           }
           /* We do not expect this message from another proc */
-          expect_end_message = 0;
+          expect_end_message = false;
 #ifdef T8_ENABLE_DEBUG
           num_received_end_messages++;
 #endif
@@ -2258,13 +2267,16 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
   const t8_gloidx_t last_element_index_of_current_proc
     = t8_cmesh_get_first_element_of_process (cmesh->mpirank + 1, data.num_procs, data.global_num_elements) - 1;
 
+  t8_debugf ("[D] proc %i first %li last %li\n", cmesh->mpirank, first_element_index_of_current_proc,
+             last_element_index_of_current_proc);
+
   if (first_element_index_of_current_proc > last_element_index_of_current_proc) {
-    expect_start_message = 0;
-    expect_end_message = 0;
+    expect_start_message = false;
+    expect_end_message = false;
     *first_local_tree = 0;
     *last_local_tree = -1;
     if (first_tree_shared != NULL) {
-        *first_tree_shared = 0;
+      *first_tree_shared = 0;
     }
     if (child_in_tree_begin != NULL) {
       *child_in_tree_begin = -1;
@@ -2288,6 +2300,7 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
     SC_CHECK_MPI (mpiret);
 
 #ifdef T8_ENABLE_DEBUG
+    num_message_recv++;
     num_received_start_messages++;
 #endif
     /* Copy the received data to output parameters */
@@ -2320,6 +2333,7 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
     SC_CHECK_MPI (mpiret);
 #ifdef T8_ENABLE_DEBUG
     num_received_end_messages++;
+    num_message_recv++;
 #endif
     t8_debugf ("Receiving end message (%li, %li) global num %li\n", message[0], message[1], data.global_num_elements);
 
@@ -2345,7 +2359,7 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
     }
   }
   t8_gloidx_t num_messages_sent = 0;
-  const int mpiret = sc_MPI_Waitall (num_messages_sent, (sc_MPI_Request *) send_requests.array, sc_MPI_STATUSES_IGNORE);
+  int mpiret = sc_MPI_Waitall (num_messages_sent, (sc_MPI_Request *) send_requests.array, sc_MPI_STATUSES_IGNORE);
   SC_CHECK_MPI (mpiret);
   T8_ASSERT (num_received_start_messages == 1);
   T8_ASSERT (num_received_end_messages == 1);
@@ -2355,6 +2369,17 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
   }
 
   t8_shmem_array_destroy (&offset_array);
+
+#ifdef T8_ENABLE_DEBUG
+  int total_num_sent = 0;
+  int total_num_recv = 0;
+
+  mpiret = sc_MPI_Allreduce (&num_message_sent, &total_num_sent, 1, sc_MPI_INT, sc_MPI_SUM, comm);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Allreduce (&num_message_recv, &total_num_recv, 1, sc_MPI_INT, sc_MPI_SUM, comm);
+  SC_CHECK_MPI (mpiret);
+  T8_ASSERT (total_num_sent == total_num_recv);
+#endif
 
   t8_debugf ("Done with t8_cmesh_uniform_bounds_hybrid.\n");
   return;
