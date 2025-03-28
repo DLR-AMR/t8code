@@ -21,7 +21,7 @@
 */
 
 #include <t8_vtk/t8_with_vtk/t8_vtk_reader.hxx>
-#include <t8_vtk/t8_vtk_reader.hxx>
+#include <t8_vtk/t8_with_vtk/t8_vtk_reader.hxx>
 #include <t8_vtk/t8_vtk_types.h>
 #include <t8_cmesh.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
@@ -45,7 +45,6 @@
 #include <vtkPolyDataReader.h>
 #include <vtkSTLReader.h>
 #include <vtkXMLPolyDataReader.h>
-
 
 void
 t8_cmesh_correct_volume (double *tree_vertices, t8_eclass_t eclass)
@@ -302,8 +301,8 @@ t8_vtk_iterate_cells (vtkSmartPointer<vtkDataSet> vtkGrid, t8_cmesh_t cmesh, con
  * \return            the global id of the first tree on this proc. 
  */
 static t8_gloidx_t
-t8_vtk_partition (t8_cmesh_t cmesh, const int mpirank, const int mpisize, t8_gloidx_t num_trees,[[maybe_unused]] int dim,
-                  sc_MPI_Comm comm)
+t8_vtk_partition (t8_cmesh_t cmesh, const int mpirank, const int mpisize, t8_gloidx_t num_trees,
+                  [[maybe_unused]] int dim, sc_MPI_Comm comm)
 {
   t8_gloidx_t first_tree = 0;
   t8_gloidx_t last_tree = 1;
@@ -471,11 +470,11 @@ t8_vtk_reader (const char *filename, const int partition, const int main_proc, s
 
 vtkSmartPointer<vtkPointSet>
 t8_vtk_reader_pointSet ([[maybe_unused]] const char *filename, [[maybe_unused]] const int partition,
-                        [[maybe_unused]] const int main_proc, [[maybe_unused]] sc_MPI_Comm comm, 
+                        [[maybe_unused]] const int main_proc, [[maybe_unused]] sc_MPI_Comm comm,
                         [[maybe_unused]] const vtk_file_type_t vtk_file_type)
 {
-      vtkSmartPointer<vtkDataSet> vtkGrid = t8_vtk_reader (filename, partition, main_proc, comm, vtk_file_type);
-      return t8_vtkGrid_to_vtkPointSet (vtkGrid);
+  vtkSmartPointer<vtkDataSet> vtkGrid = t8_vtk_reader (filename, partition, main_proc, comm, vtk_file_type);
+  return t8_vtkGrid_to_vtkPointSet (vtkGrid);
 }
 t8_cmesh_t
 t8_vtk_reader_cmesh ([[maybe_unused]] const char *filename, [[maybe_unused]] const int partition,
