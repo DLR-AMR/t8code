@@ -28,7 +28,7 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <test/t8_gtest_macros.hxx>
 
-class linear_id: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
+class get_linear_id: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
  protected:
   void
   SetUp () override
@@ -39,7 +39,7 @@ class linear_id: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
     scheme->element_new (eclass, 1, &element);
     scheme->element_new (eclass, 1, &child);
     scheme->element_new (eclass, 1, &test);
-    scheme->get_root (eclass, element);
+    scheme->set_to_root (eclass, element);
   }
 
   void
@@ -59,20 +59,25 @@ class linear_id: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
 };
 
 static int
-t8_test_init_linear_id_refine_everything (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                                          const t8_eclass_t tree_class, t8_locidx_t lelement_id,
-                                          const t8_scheme *scheme, const int is_family, const int num_elements,
-                                          t8_element_t *elements[])
+t8_test_init_linear_id_refine_everything ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                                          [[maybe_unused]] t8_locidx_t which_tree,
+                                          [[maybe_unused]] const t8_eclass_t tree_class,
+                                          [[maybe_unused]] t8_locidx_t lelement_id,
+                                          [[maybe_unused]] const t8_scheme *scheme,
+                                          [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
+                                          [[maybe_unused]] t8_element_t *elements[])
 {
   return 1;
 }
 
 /* Iterate over the leaves of a uniformly refined forest and check the id*/
-TEST_P (linear_id, uniform_forest)
+TEST_P (get_linear_id, uniform_forest)
 {
   t8_forest_t forest, forest_adapt;
   t8_cmesh_t cmesh;
-#ifdef T8_ENABLE_LESS_TESTS
+#if T8CODE_TEST_LEVEL >= 2
+  const int maxlvl = 4;
+#elif T8CODE_TEST_LEVEL >= 1
   const int maxlvl = 5;
 #else
   const int maxlvl = 6;
@@ -115,9 +120,9 @@ TEST_P (linear_id, uniform_forest)
 
 /* Test, if the linear_id of descendants of an element is the same as the id of element 
  * (on the level defined by the element) */
-TEST_P (linear_id, id_at_other_level)
+TEST_P (get_linear_id, id_at_other_level)
 {
-#ifdef T8_ENABLE_LESS_TESTS
+#if T8CODE_TEST_LEVEL >= 1
   const int max_lvl = 3; /* Maximal level to compute elements on */
   const int add_lvl = 3; /* maxlvl + add_lvl is the level of the descendants*/
 #else
@@ -148,4 +153,4 @@ TEST_P (linear_id, id_at_other_level)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_test_init_linear_id, linear_id, AllSchemes);
+INSTANTIATE_TEST_SUITE_P (t8_test_get_linear_id, get_linear_id, AllSchemes, print_all_schemes);

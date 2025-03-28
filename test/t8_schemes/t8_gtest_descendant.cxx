@@ -40,7 +40,7 @@ class class_schemes_descendant: public testing::TestWithParam<std::tuple<int, t8
     scheme->element_new (eclass, 1, &elem);
     scheme->element_new (eclass, 1, &desc);
     scheme->element_new (eclass, 1, &test);
-    scheme->get_root (eclass, elem);
+    scheme->set_to_root (eclass, elem);
   }
   void
   TearDown () override
@@ -159,4 +159,4 @@ TEST_P (class_schemes_descendant, test_recursive_descendant)
   t8_large_step_descendant (elem, desc, test, scheme, eclass, maxlvl);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_descendant, class_schemes_descendant, AllSchemes);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_descendant, class_schemes_descendant, AllSchemes, print_all_schemes);

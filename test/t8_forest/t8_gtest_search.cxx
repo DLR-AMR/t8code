@@ -29,20 +29,22 @@
 #include <t8_forest/t8_forest_search/t8_forest_search.hxx>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <test/t8_gtest_macros.hxx>
+#include <test/t8_gtest_schemes.hxx>
 
-class forest_search: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
+class forest_search: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass>, int>> {
  protected:
   void
   SetUp () override
   {
-    eclass = std::get<0> (GetParam ());
+    const int scheme_id = std::get<0> (std::get<0> (GetParam ()));
+    scheme = create_from_scheme_id (scheme_id);
+    eclass = std::get<1> (std::get<0> (GetParam ()));
     level = std::get<1> (GetParam ());
 
-    default_scheme = t8_scheme_new_default ();
     /* Construct a cube coarse mesh */
     cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
     /* Build a uniform forest */
-    forest = t8_forest_new_uniform (cmesh, default_scheme, level, 0, sc_MPI_COMM_WORLD);
+    forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
   }
   void
   TearDown () override
@@ -52,7 +54,7 @@ class forest_search: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
   int level;
   t8_cmesh_t cmesh;
   t8_forest_t forest;
-  const t8_scheme *default_scheme;
+  const t8_scheme *scheme;
 };
 
 /* A search function that matches all elements.
@@ -62,8 +64,8 @@ class forest_search: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
  */
 bool
 t8_test_search_all_fn (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
-                       const bool is_leaf, const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index,
-                       std::vector<bool> *user_data)
+                       const bool is_leaf, [[maybe_unused]] const t8_element_array_t *leaf_elements,
+                       const t8_locidx_t tree_leaf_index, std::vector<bool> *user_data)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (user_data != nullptr);
@@ -85,8 +87,9 @@ t8_test_search_all_fn (const t8_forest_t forest, const t8_locidx_t ltreeid, cons
 
 inline bool
 t8_test_search_query_all_fn (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
-                             const bool is_leaf, const t8_element_array_t *leaf_elements,
-                             const t8_locidx_t tree_leaf_index, const int &querie, std::vector<bool> *user_data)
+                             const bool is_leaf, [[maybe_unused]] const t8_element_array_t *leaf_elements,
+                             const t8_locidx_t tree_leaf_index, const int &querie,
+                             [[maybe_unused]] std::vector<bool> *user_data)
 {
   /* The query is an int with value 42 (see below) */
   EXPECT_EQ (querie, 42) << "Wrong query argument passed to query callback.";
@@ -155,5 +158,10 @@ TEST_P (forest_search, test_search_one_query_matches_all)
 
   t8_forest_unref (&forest);
 }
+#if T8CODE_TEST_LEVEL >= 2
+const int maxlvl = 5;
+#else
+const int maxlvl = 6;
+#endif
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_search, forest_search, testing::Combine (AllEclasses, testing::Range (0, 6)));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_search, forest_search, testing::Combine (AllSchemes, testing::Range (0, maxlvl)));

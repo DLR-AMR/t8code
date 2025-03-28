@@ -85,8 +85,9 @@ struct t8_naca_geometry_adapt_data
  */
 int
 t8_naca_geometry_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                                 t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme *scheme,
-                                 const int is_family, const int num_elements, t8_element_t *elements[])
+                                 t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
+                                 const t8_scheme *scheme, [[maybe_unused]] const int is_family,
+                                 [[maybe_unused]] const int num_elements, t8_element_t *elements[])
 {
   /* We retrieve the adapt data */
   const struct t8_naca_geometry_adapt_data *adapt_data
@@ -228,7 +229,7 @@ struct t8_naca_plane_adapt_data
  */
 int
 t8_naca_plane_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                              t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme *scheme,
+                              t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
                               const int is_family, const int num_elements, t8_element_t *elements[])
 {
   double elem_midpoint[3];
@@ -363,8 +364,8 @@ main (int argc, char **argv)
   /* long help message */
   sreturn = snprintf (
     help, BUFSIZ,
-    "Demonstrates the some of the geometry capabitlities of t8code.\n"
-    "You can read in a msh and brep file of a naca profile and refine elements touching certain geometries, \n"
+    "Demonstrates some of the geometry capabilities of t8code.\n"
+    "You can read in a msh and brep file of a NACA profile and refine elements touching certain geometries, \n"
     "or advance a refinement plane through that NACA profile mesh.\n"
     "The brep and msh have to be generated with the gmsh software, using the .geo file in this directory.\n"
     "Usage: %s\n",
