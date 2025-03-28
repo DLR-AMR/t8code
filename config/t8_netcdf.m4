@@ -3,12 +3,12 @@ dnl Check for netcdf support and link a test program
 dnl
 dnl This macro tries to link to the netcdf library.
 dnl Use the LIBS variable on the configure line to specify a different library
-dnl or use --with-netcdf=<LIBRARY>
+dnl or use --enable-netcdf=<LIBRARY>
 dnl
-dnl Using --with-netcdf without any argument defaults to -lnetcdf.
+dnl Using --enable-netcdf without any argument defaults to -lnetcdf.
 dnl
 dnl By default, parallel netCDF routines are linked if accessible
-dnl (optionally use '--with-netcdf=serial' to enforce serial netCDF file access) 
+dnl (optionally use '--enable-netcdf=serial' to enforce serial netCDF file access) 
 dnl
 
 AC_DEFUN([T8_CHECK_NETCDF], [
@@ -19,8 +19,8 @@ dnl T8_CHECK_LIB([netcdf], [nc_open], [NETCDF])
 dnl LIBS="$SAVE_LIBS"
 AC_MSG_CHECKING([for netcdf linkage])
 
-T8_ARG_WITH([netcdf],
-  [netcdf library, by default parallel file access is enabled if possible (to enforce serial file access use --with-netcdf=serial), (optionally use --with-netcdf=<NETCDF_LIBS>)],
+T8_ARG_ENABLE([netcdf],
+  [netcdf library, by default parallel file access is enabled if possible (to enforce serial file access use --enable-netcdf=serial), (optionally use --enable-netcdf=<NETCDF_LIBS>)],
   [NETCDF])
 AH_TEMPLATE([WITH_NETCDF_PAR],
   [Accessibility of parallel netCDF routines])
@@ -31,7 +31,7 @@ if test "x$T8_ENABLE_NETCDF" != xno ; then
     t8_netcdf_use_serial=yes
   elif test "x$T8_ENABLE_NETCDF" != xyes ; then
     T8_NETCDF_LIBS="$T8_ENABLE_NETCDF"
-    dnl AC_MSG_ERROR([Please provide --with-netcdf without arguments])
+    dnl AC_MSG_ERROR([Please provide --enable-netcdf without arguments])
   fi
   PRE_NETCDF_LIBS="$LIBS"
   LIBS="$LIBS $T8_NETCDF_LIBS"
@@ -57,7 +57,7 @@ dnl LIBS="$PRE_NETCDF_LIBS"
       ])
       else
         AC_DEFINE([WITH_NETCDF_PAR], [0])
-        AC_MSG_WARN([Parallel netCDF routines are accessible, but this configuration does not enable MPI. Please consider a reconfiguration with MPI or '--with-netcdf=serial'.])
+        AC_MSG_WARN([Parallel netCDF routines are accessible, but this configuration does not enable MPI. Please consider a reconfiguration with MPI or '--enable-netcdf=serial'.])
       fi
   else
     AC_DEFINE([WITH_NETCDF_PAR], [0])

@@ -124,24 +124,27 @@ t8_geometry_cad::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreei
   double h = 1e-9;
   double in1[3], in2[3];
   double out1[3], out2[3];
-  for (int dim = 0; dim < 3; ++dim) {
-    memcpy (in1, ref_coords, sizeof (double) * 3);
-    memcpy (in2, ref_coords, sizeof (double) * 3);
+  for (size_t icoord = 0; icoord < num_coords; icoord++) {
 
-    if (ref_coords[dim] < h) {
-      in2[dim] += ref_coords[dim] + h;
-    }
-    else if (ref_coords[dim] > 1 - h) {
-      in1[dim] -= h;
-    }
-    else {
-      in1[dim] -= 0.5 * h;
-      in2[dim] += 0.5 * h;
-    }
-    t8_geometry_cad::t8_geom_evaluate (cmesh, gtreeid, in1, 1, out1);
-    t8_geometry_cad::t8_geom_evaluate (cmesh, gtreeid, in2, 1, out2);
-    for (int dim2 = 0; dim2 < 3; ++dim2) {
-      jacobian_out[dim * 3 + dim2] = (out2[dim2] - out1[dim2]) / h;
+    for (int dim = 0; dim < 3; ++dim) {
+      memcpy (in1, ref_coords, sizeof (double) * 3);
+      memcpy (in2, ref_coords, sizeof (double) * 3);
+
+      if (ref_coords[dim] < h) {
+        in2[dim] += ref_coords[dim] + h;
+      }
+      else if (ref_coords[dim] > 1 - h) {
+        in1[dim] -= h;
+      }
+      else {
+        in1[dim] -= 0.5 * h;
+        in2[dim] += 0.5 * h;
+      }
+      t8_geometry_cad::t8_geom_evaluate (cmesh, gtreeid, in1, 1, out1);
+      t8_geometry_cad::t8_geom_evaluate (cmesh, gtreeid, in2, 1, out2);
+      for (int dim2 = 0; dim2 < 3; ++dim2) {
+        jacobian_out[9 * icoord + dim * 3 + dim2] = (out2[dim2] - out1[dim2]) / h;
+      }
     }
   }
 }

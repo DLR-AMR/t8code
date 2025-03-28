@@ -22,7 +22,7 @@
 
 #include <t8.h>
 #include <netcdf.h>
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
 #include <netcdf_par.h>
 #else
 /* Normally defined in 'netcdf_par.h' */

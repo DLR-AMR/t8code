@@ -250,7 +250,7 @@ t8_default_scheme_quad::element_set_linear_id (t8_element_t *elem, int level, t8
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= P4EST_QMAXLEVEL);
-  T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << P4EST_DIM * level);
+  T8_ASSERT (id < ((t8_linearidx_t) 1) << P4EST_DIM * level);
 
   p4est_quadrant_set_morton ((p4est_quadrant_t *) elem, level, id);
   T8_QUAD_SET_TDIM ((p4est_quadrant_t *) elem, 2);

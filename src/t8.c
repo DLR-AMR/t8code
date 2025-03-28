@@ -120,7 +120,7 @@ t8_productionf (const char *fmt, ...)
 }
 
 void
-t8_debugf (const char *fmt, ...)
+t8_debugf (__attribute__ ((unused)) const char *fmt, ...)
 {
 #if T8_ENABLE_DEBUG
   va_list ap;

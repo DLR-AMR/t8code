@@ -1004,7 +1004,7 @@ t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix, const c
   else {
     context.netcdf_var_storage_mode = netcdf_var_storage_mode;
   }
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   /* Check the given 'netcdf_mpi_access' */
   if (netcdf_mpi_access != NC_INDEPENDENT && netcdf_mpi_access != NC_COLLECTIVE) {
     t8_global_productionf ("Illegal input parameter for the variable-mpi-access (NC_INDEPENDENT or NC_COLLECTIVE) was "
