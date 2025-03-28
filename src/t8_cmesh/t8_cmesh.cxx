@@ -2188,6 +2188,12 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
           last_element_in_tree_index_of_current_proc = last_element_index_of_current_proc - first_el_of_last_tree;
         }
       }
+      else {
+        /* This process is empty. */
+        send_start_message = send_end_message = false;
+        first_puretree_of_current_proc = -1;
+        last_puretree_of_current_proc = -1;
+      }
 
       /*
        *
