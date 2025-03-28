@@ -1897,7 +1897,9 @@ t8_cmesh_bounds_send_start (t8_cmesh_t cmesh, const int proc_is_empty, const t8_
     const int mpiret
       = sc_MPI_Isend (message, num_entries, T8_MPI_GLOIDX, iproc, T8_MPI_CMESH_UNIFORM_BOUNDS_START, comm, request);
     SC_CHECK_MPI (mpiret);
+#ifdef T8_ENABLE_DEBUG
     (*num_message_sent)++;
+#endif
     t8_debugf ("Sending start message (%li, %li) to %li (global num el %li)\n", message[0], message[1], iproc,
                data->global_num_elements);
 
@@ -1924,7 +1926,6 @@ t8_cmesh_bounds_send_start (t8_cmesh_t cmesh, const int proc_is_empty, const t8_
     }
     /* We do not expect this message from another proc */
     *expect_start_message = false;
-    t8_debugf ("[D] proc does not expect another start message\n");
 #ifdef T8_ENABLE_DEBUG
     (*num_received_start_messages)++;
 #endif
@@ -2081,9 +2082,6 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
       const int proc_is_empty = last_element_index_of_current_proc < first_element_index_of_current_proc;
       bool send_start_message = true;
       bool send_end_message = true;
-      t8_debugf ("[D] proc %li: first tree %li, last tree %li\n", iproc, first_element_index_of_current_proc,
-                 last_element_index_of_current_proc);
-      t8_debugf ("[D] proc %li is empty: %i\n", iproc, proc_is_empty);
 
       t8_locidx_t first_puretree_of_current_proc = -1;
       t8_locidx_t last_puretree_of_current_proc = -1;
@@ -2272,9 +2270,6 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
     = t8_cmesh_get_first_element_of_process (cmesh->mpirank, data.num_procs, data.global_num_elements);
   const t8_gloidx_t last_element_index_of_current_proc
     = t8_cmesh_get_first_element_of_process (cmesh->mpirank + 1, data.num_procs, data.global_num_elements) - 1;
-
-  t8_debugf ("[D] proc %i first %li last %li\n", cmesh->mpirank, first_element_index_of_current_proc,
-             last_element_index_of_current_proc);
 
   if (first_element_index_of_current_proc > last_element_index_of_current_proc) {
     /* We do not expect a start/end message if this proc is empty. */
