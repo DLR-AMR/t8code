@@ -1,0 +1,237 @@
+name: "Move the Issue after workload and urgency is evaluated"
+
+on:
+  issues:
+    types: [labeled, assigned, unassigned, unlabeled]
+  pull_request:
+    types: [opened, reopened, ready_for_review, review_requested, review_request_removed, closed]
+
+jobs:
+  evaluate_issues:
+    if: ${{ github.event_name == 'issues' }}
+    runs-on: ubuntu-latest
+    outputs:
+      WORKLOAD_SET: ${{ steps.check_workload.outputs.WORKLOAD_SET || 'false' }}
+      PRIORITY_SET: ${{ steps.check_urgency.outputs.PRIORITY_SET || 'false' }}
+      WORKLOAD: ${{ steps.check_workload.outputs.WORKLOAD || 'false' }}
+      PRIORITY: ${{ steps.check_urgency.outputs.PRIORITY || 'false' }}
+    steps:
+      - name: "Check if workload is set"
+        id: check_workload
+        # Check if the issue has a workload label
+        if: |
+          contains(join(github.event.issue.labels.*.name, ','), 'workload:high') ||
+          contains(join(github.event.issue.labels.*.name, ','), 'workload:medium') ||
+          contains(join(github.event.issue.labels.*.name, ','), 'workload:low')
+        run: |
+            # Set WORKLOAD_SET to true
+            WORKLOAD_SET=true
+            echo "WORKLOAD_SET=$WORKLOAD_SET" >> $GITHUB_OUTPUT
+            # extract the workload value
+            labels=$(echo '${{ toJSON(github.event.issue.labels) }}' | jq -r '.[].name')
+            workload=$(echo "$labels" | grep -oE 'workload:(high|medium|low)' | cut -d: -f2)
+            echo "WORKLOAD=$workload"
+            WORKLOAD=$workload
+            echo "WORKLOAD=$WORKLOAD" >> $GITHUB_OUTPUT
+            echo "WORKLOAD=$WORKLOAD"
+            echo "WORKLOAD_SET=$WORKLOAD_SET"
+            echo "${{ github.event.action }}"
+      - name: "Check if workload has not been set"
+        id: check_workload_not_set
+        if: |
+          !contains(join(github.event.issue.labels.*.name, ','), 'workload:high') &&
+          !contains(join(github.event.issue.labels.*.name, ','), 'workload:medium') &&
+          !contains(join(github.event.issue.labels.*.name, ','), 'workload:low')
+        run: |
+            # Set WORKLOAD_SET to false
+            WORKLOAD_SET=false
+            echo "WORKLOAD_SET=$WORKLOAD_SET" >> $GITHUB_OUTPUT
+            echo "WORKLOAD_SET=$WORKLOAD_SET"
+      - name: "Check if priority is set"
+        id: check_urgency
+        # Check if the issue has a priority label
+        if: |
+          contains(join(github.event.issue.labels.*.name, ','), 'priority:high') ||
+          contains(join(github.event.issue.labels.*.name, ','), 'priority:medium') ||
+          contains(join(github.event.issue.labels.*.name, ','), 'priority:low')
+        run: |
+            # Set PRIORITY_SET to true
+            PRIORITY_SET=true
+            echo "PRIORITY_SET=$PRIORITY_SET" >> $GITHUB_OUTPUT
+            # extract the priority value
+            labels=$(echo '${{ toJSON(github.event.issue.labels) }}' | jq -r '.[].name')
+            priority=$(echo "$labels" | grep -oE 'priority:(high|medium|low)' | cut -d: -f2)
+            echo "PRIORITY=$priority"
+            PRIORITY=$priority
+            echo "PRIORITY=$PRIORITY" >> $GITHUB_OUTPUT
+            echo "PRIORITY=$PRIORITY"
+            echo "PRIORITY_SET=$PRIORITY_SET"
+            echo "${{ github.event.action }}"
+      - name: "Check if priority has not been set"
+        id: check_urgency_not_set
+        if: |
+          !contains(join(github.event.issue.labels.*.name, ','), 'priority:high') &&
+          !contains(join(github.event.issue.labels.*.name, ','), 'priority:medium') &&
+          !contains(join(github.event.issue.labels.*.name, ','), 'priority:low')
+        run: |
+            # Set PRIORITY_SET to false
+            PRIORITY_SET=false
+            echo "PRIORITY_SET=$PRIORITY_SET" >> $GITHUB_OUTPUT
+            echo "PRIORITY_SET=$PRIORITY_SET"
+  
+  evaluate_pr:
+    runs-on: ubuntu-latest
+    outputs:
+      NUMBER_IS_SET: ${{ steps.get_pr_issue_link.outputs.NUMBER_IS_SET }}
+      CLEAN_ISSUE_NUMBER: ${{ steps.get_pr_issue_link.outputs.CLEAN_ISSUE_NUMBER }}
+      REPO_NODE_ID: ${{ steps.get_pr_issue_link.outputs.REPO_NODE_ID }}
+    if: ${{ github.event_name == 'pull_request' }}
+    steps:
+      - name: "Get link between PR and Issue"
+        id: get_pr_issue_link
+        run: |
+            # Extract the repository node ID from the pull request event
+            REPO_NODE_ID=$(jq -r '.repository.node_id' < $GITHUB_EVENT_PATH)
+            echo "REPO_NODE_ID=$REPO_NODE_ID"
+            echo "REPO_NODE_ID=$REPO_NODE_ID" >> $GITHUB_OUTPUT
+            # Extract the issue number from the pull request body
+            CLEAN_ISSUE_NUMBER=$(jq -r '.pull_request.body // ""' < $GITHUB_EVENT_PATH | grep -oE 'Closes #[0-9]+' | grep -oE '[0-9]+' | paste -sd ',' -)
+            # Set the issue number to an empty string if no issue number is found
+            CLEAN_ISSUE_NUMBER=${CLEAN_ISSUE_NUMBER:-""}
+            echo "CLEAN_ISSUE_NUMBER=$CLEAN_ISSUE_NUMBER"
+            # If no issue number is found, set NUMBER_IS_SET to false
+            if [ -z "$CLEAN_ISSUE_NUMBER" ]; then
+                echo "No issue number found in the pull request body."
+                NUMBER_IS_SET=false
+                echo "NUMBER_IS_SET=$NUMBER_IS_SET" >> $GITHUB_OUTPUT
+                echo "NUMBER_IS_SET=$NUMBER_IS_SET"
+                exit 0
+            fi
+            echo "CLEAN_ISSUE_NUMBER=$CLEAN_ISSUE_NUMBER" >> $GITHUB_OUTPUT
+            NUMBER_IS_SET=true
+            echo "NUMBER_IS_SET=true" >> $GITHUB_OUTPUT
+            # Debug output!
+            echo "NUMBER_IS_SET=$NUMBER_IS_SET"
+            echo "${{ github.event.action }}"
+
+  # Move the issue card to ToDo if the workload and priority are set
+  move_card_to_ToDo:
+    needs: [evaluate_issues]
+    if: ${{ github.event.action == 'labeled' && needs.evaluate_issues.outputs.WORKLOAD_SET == 'true' && needs.evaluate_issues.outputs.PRIORITY_SET == 'true' }}
+    uses: ./.github/workflows/issue_event_moves_card.yml
+    with:
+        ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
+        CURRENT_COLUMN_NAME: 'In-Box'
+        COLUMN_NAME: 'ToDo'
+        PRIORITY: ${{ needs.evaluate_issues.outputs.PRIORITY }}
+        WORKLOAD: ${{ needs.evaluate_issues.outputs.WORKLOAD }}
+    secrets:
+        PAT: ${{ secrets.T8DDY_PROJECTS }}
+  
+  # Move the Issue card to In Progress if the workload and priority are set and the issue is assigned
+  move_card_to_InProgress:
+    needs: [evaluate_issues]
+    if: ${{ needs.evaluate_issues.outputs.WORKLOAD_SET == 'true' && needs.evaluate_issues.outputs.PRIORITY_SET == 'true' && github.event.action == 'assigned' }}
+    uses: ./.github/workflows/issue_event_moves_card.yml
+    with:
+        ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
+        CURRENT_COLUMN_NAME: 'ToDo'
+        COLUMN_NAME: 'In Progress'
+    secrets:
+        PAT: ${{ secrets.T8DDY_PROJECTS }}
+
+  # Move the Issue card back to ToDo if the workload and priority are set and the issue is unassigned
+  move_card_back_to_ToDo:
+    needs: [evaluate_issues]
+    if: ${{ needs.evaluate_issues.outputs.WORKLOAD_SET == 'true' && needs.evaluate_issues.outputs.PRIORITY_SET == 'true' && github.event.action == 'unassigned' }}
+    uses: ./.github/workflows/issue_event_moves_card.yml
+    with:
+        ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
+        CURRENT_COLUMN_NAME: 'In Progress'
+        COLUMN_NAME: 'ToDo'
+    secrets:
+        PAT: ${{ secrets.T8DDY_PROJECTS }}
+  
+  # Move the Issue card back to In-Box if the workload and priority are unset
+  move_card_back_to_In-Box:
+    needs: [evaluate_issues]
+    if: ${{ github.event.action == 'unlabeled' && (needs.evaluate_issues.outputs.WORKLOAD_SET == 'false' || needs.evaluate_issues.outputs.PRIORITY_SET == 'false') }}
+    uses: ./.github/workflows/issue_event_moves_card.yml
+    with:
+        ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
+        CURRENT_COLUMN_NAME: 'ToDo'
+        COLUMN_NAME: 'In-Box'
+    secrets:
+        PAT: ${{ secrets.T8DDY_PROJECTS }}
+
+  # For a PR event, move the card to Needs Review if the PR is opened, ready for review, or reopened
+  move_card_to_Needs_Review:
+    needs: [evaluate_pr]
+    if: ${{ needs.evaluate_pr.outputs.NUMBER_IS_SET == 'true'  && (github.event.action == 'opened' || github.event.action == 'ready_for_review' || github.event.action == 'reopened') }}
+    uses: ./.github/workflows/pr_event_moves_card.yml
+    with:
+        ISSUE_NUMBER: ${{ needs.evaluate_pr.outputs.CLEAN_ISSUE_NUMBER }}
+        CURRENT_COLUMN_NAME: 'In Progress'
+        COLUMN_NAME: 'Needs Review'
+        REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
+    secrets:
+        PAT: ${{ secrets.T8DDY_PROJECTS }}
+
+  # For a PR event move the card to In Review if a review is requested
+  move_card_to_In_Review:
+    needs: [evaluate_pr]
+    if: ${{ needs.evaluate_pr.outputs.NUMBER_IS_SET == 'true'  && github.event.action == 'review_requested' }}
+    uses: ./.github/workflows/pr_event_moves_card.yml
+    with:
+        ISSUE_NUMBER: ${{ needs.evaluate_pr.outputs.CLEAN_ISSUE_NUMBER }}
+        CURRENT_COLUMN_NAME: 'Needs Review'
+        COLUMN_NAME: 'In Review'
+        REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
+    secrets:
+        PAT: ${{ secrets.T8DDY_PROJECTS }}
+
+  # For a PR event move the card back to Needs Review if a review is removed
+  move_card_back_to_Needs_Review:
+    needs: [evaluate_pr]
+    if: ${{ needs.evaluate_pr.outputs.NUMBER_IS_SET == 'true'  && github.event.action == 'review_request_removed' }}
+    uses: ./.github/workflows/pr_event_moves_card.yml
+    with:
+        ISSUE_NUMBER: ${{ needs.evaluate_pr.outputs.CLEAN_ISSUE_NUMBER }}
+        CURRENT_COLUMN_NAME: 'In Review'
+        COLUMN_NAME: 'Needs Review'
+        REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
+    secrets:
+        PAT: ${{ secrets.T8DDY_PROJECTS }}
+
+  # For a PR event move the card back to In Progress if the PR is closed and not merged
+  move_card_back_to_In_Progress:
+    needs: [evaluate_pr]
+    if: ${{ needs.evaluate_pr.outputs.NUMBER_IS_SET == 'true'  && github.event.action == 'closed' && github.event.pull_request.merged == false }}
+    uses: ./.github/workflows/pr_event_moves_card.yml
+    with:
+        ISSUE_NUMBER: ${{ needs.evaluate_pr.outputs.CLEAN_ISSUE_NUMBER }}
+        CURRENT_COLUMN_NAME: 'Needs Review'
+        COLUMN_NAME: 'In Progress'
+        REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
+    secrets:
+        PAT: ${{ secrets.T8DDY_PROJECTS }}
+
+  # For a PR event where no issue is linked, open a new issue and add "Closes #ISSUE_NUMBER" to the PR body
+  open_issue_for_quick_pr:
+    needs: [evaluate_pr]
+    if: ${{ github.event_name == 'pull_request' && needs.evaluate_pr.outputs.NUMBER_IS_SET == 'false' }}
+    uses: ./.github/workflows/quick_pr.yml
+    secrets:
+        PAT: ${{ secrets.T8DDY_PROJECTS }}
+
+  # After the issue has been created by open_issue_for_quick_pr, move the card to Needs Review
+  move_quick_pr_issue_to_Needs_Review:
+    needs: [open_issue_for_quick_pr, evaluate_pr]
+    uses: ./.github/workflows/pr_event_moves_card.yml
+    with:
+        ISSUE_NUMBER: ${{ needs.open_issue_for_quick_pr.outputs.ISSUE_NUMBER }}
+        CURRENT_COLUMN_NAME: 'IGNORE'
+        COLUMN_NAME: 'Needs Review'
+        REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
+    secrets:
+        PAT: ${{ secrets.T8DDY_PROJECTS }}
