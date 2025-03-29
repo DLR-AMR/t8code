@@ -95,27 +95,23 @@ jobs:
             echo "REPO_NODE_ID=$REPO_NODE_ID"
             echo "REPO_NODE_ID=$REPO_NODE_ID" >> $GITHUB_OUTPUT
             # Extract the issue number from the pull request body
-            ISSUE_NUMBER=$(jq -r '.pull_request.body // ""' < $GITHUB_EVENT_PATH | grep -oE '#[0-9]+' || true)
+            CLEAN_ISSUE_NUMBER=$(jq -r '.pull_request.body // ""' < $GITHUB_EVENT_PATH | grep -oE 'Closes #[0-9]+' | grep -oE '[0-9]+' | paste -sd ',' -)
             # Set the issue number to an empty string if no issue number is found
-            ISSUE_NUMBER=${ISSUE_NUMBER:-""}
-            echo "ISSUE_NUMBER=$ISSUE_NUMBER"
+            CLEAN_ISSUE_NUMBER=${CLEAN_ISSUE_NUMBER:-""}
+            echo "CLEAN_ISSUE_NUMBER=$CLEAN_ISSUE_NUMBER"
             # If no issue number is found, set NUMBER_IS_SET to false
-            if [ -z "$ISSUE_NUMBER" ]; then
+            if [ -z "$CLEAN_ISSUE_NUMBER" ]; then
                 echo "No issue number found in the pull request body."
                 NUMBER_IS_SET=false
                 echo "NUMBER_IS_SET=$NUMBER_IS_SET" >> $GITHUB_OUTPUT
                 echo "NUMBER_IS_SET=$NUMBER_IS_SET"
                 exit 0
             fi
-            # Remove the '#' from the issue number
-            CLEAN_ISSUE_NUMBER=$(echo $ISSUE_NUMBER | tr -d '#')
-            # Set the cleaned issue number and NUMBER_IS_SET to true
             echo "CLEAN_ISSUE_NUMBER=$CLEAN_ISSUE_NUMBER" >> $GITHUB_OUTPUT
             NUMBER_IS_SET=true
             echo "NUMBER_IS_SET=true" >> $GITHUB_OUTPUT
             # Debug output!
             echo "NUMBER_IS_SET=$NUMBER_IS_SET"
-            echo "CLEAN_ISSUE_NUMBER=$CLEAN_ISSUE_NUMBER"
             echo "${{ github.event.action }}"
 
   # Move the issue card to ToDo if the workload and priority are set
@@ -125,6 +121,7 @@ jobs:
     uses: ./.github/workflows/issue_event_moves_card.yml
     with:
         ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
+        CURRENT_COLUMN_NAME: 'In-Box'
         COLUMN_NAME: 'ToDo'
         PRIORITY: ${{ needs.evaluate_issues.outputs.PRIORITY }}
         WORKLOAD: ${{ needs.evaluate_issues.outputs.WORKLOAD }}
@@ -138,6 +135,7 @@ jobs:
     uses: ./.github/workflows/issue_event_moves_card.yml
     with:
         ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
+        CURRENT_COLUMN_NAME: 'ToDo'
         COLUMN_NAME: 'In Progress'
     secrets:
         PAT: ${{ secrets.T8DDY_PROJECTS }}
@@ -149,6 +147,7 @@ jobs:
     uses: ./.github/workflows/issue_event_moves_card.yml
     with:
         ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
+        CURRENT_COLUMN_NAME: 'In Progress'
         COLUMN_NAME: 'ToDo'
     secrets:
         PAT: ${{ secrets.T8DDY_PROJECTS }}
@@ -160,6 +159,7 @@ jobs:
     uses: ./.github/workflows/issue_event_moves_card.yml
     with:
         ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
+        CURRENT_COLUMN_NAME: 'ToDo'
         COLUMN_NAME: 'In-Box'
     secrets:
         PAT: ${{ secrets.T8DDY_PROJECTS }}
@@ -171,6 +171,7 @@ jobs:
     uses: ./.github/workflows/pr_event_moves_card.yml
     with:
         ISSUE_NUMBER: ${{ needs.evaluate_pr.outputs.CLEAN_ISSUE_NUMBER }}
+        CURRENT_COLUMN_NAME: 'In Progress'
         COLUMN_NAME: 'Needs Review'
         REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
     secrets:
@@ -183,6 +184,7 @@ jobs:
     uses: ./.github/workflows/pr_event_moves_card.yml
     with:
         ISSUE_NUMBER: ${{ needs.evaluate_pr.outputs.CLEAN_ISSUE_NUMBER }}
+        CURRENT_COLUMN_NAME: 'Needs Review'
         COLUMN_NAME: 'In Review'
         REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
     secrets:
@@ -195,6 +197,7 @@ jobs:
     uses: ./.github/workflows/pr_event_moves_card.yml
     with:
         ISSUE_NUMBER: ${{ needs.evaluate_pr.outputs.CLEAN_ISSUE_NUMBER }}
+        CURRENT_COLUMN_NAME: 'In Review'
         COLUMN_NAME: 'Needs Review'
         REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
     secrets:
@@ -207,6 +210,7 @@ jobs:
     uses: ./.github/workflows/pr_event_moves_card.yml
     with:
         ISSUE_NUMBER: ${{ needs.evaluate_pr.outputs.CLEAN_ISSUE_NUMBER }}
+        CURRENT_COLUMN_NAME: 'Needs Review'
         COLUMN_NAME: 'In Progress'
         REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
     secrets:
@@ -226,6 +230,7 @@ jobs:
     uses: ./.github/workflows/pr_event_moves_card.yml
     with:
         ISSUE_NUMBER: ${{ needs.open_issue_for_quick_pr.outputs.ISSUE_NUMBER }}
+        CURRENT_COLUMN_NAME: 'IGNORE'
         COLUMN_NAME: 'Needs Review'
         REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
     secrets:
