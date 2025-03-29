@@ -11,6 +11,10 @@ on:
         type: string
         default: 'In Progress'
         description: 'The name of the column to move the issue card to'
+      CURRENT_COLUMN_NAME:
+        type: string
+        default: 'In-Box'
+        description: 'The name of the column the issue card was in before'
       REPO_NODE_ID:
         type: string
         required: true
@@ -28,8 +32,14 @@ jobs:
         run: |
           ISSUE_NUMBER="${{ inputs.ISSUE_NUMBER }}"
           COLUMN_NAME="${{ inputs.COLUMN_NAME }}"
+          CURRENT_COLUMN_NAME="${{ inputs.CURRENT_COLUMN_NAME }}"
           echo "ISSUE_NUMBER=$ISSUE_NUMBER"
           echo "COLUMN_NAME=$COLUMN_NAME"
+          echo "CURRENT_COLUMN_NAME=$CURRENT_COLUMN_NAME"
+
+          #ISSUE_NUMBER can be a list of referenced issue numbers separated by ","
+          # Split ISSUE_NUMBER into an array
+            IFS=',' read -r -a issue_numbers_array <<< "$ISSUE_NUMBER"
 
           # Get the projects associated with the organization
           projects=$(curl --request POST \
@@ -43,14 +53,19 @@ jobs:
           for project_id in $project_ids; do
               echo "project_id is $project_id"
               # Get the issues within the project
-              issues=$(curl --request POST \
-                      --url https://api.github.com/graphql \
-                      --header "Authorization: Bearer ${{ secrets.PAT }}" \
-                      --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { items(first: 100) { nodes { id fieldValues(first: 8) { nodes { ... on ProjectV2ItemFieldTextValue { text field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldDateValue { date field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldSingleSelectValue { name field { ... on ProjectV2FieldCommon { name } } } } } content { ... on Issue { id number repository { id } } } } } } } }\"}")
-              echo "issues=$issues"
-             # Extract the issue ids, PVII ids, and issue numbers. The issue_id is the global_id, the PVII id is the project specific id, and the issue number is the issue number (eg. #123)
+              #issues=$(curl --request POST \
+              #        --url https://api.github.com/graphql \
+              #        --header "Authorization: Bearer ${{ secrets.PAT }}" \
+              #        --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { items(first: 100) { nodes { id fieldValues(first: 8) { nodes { ... on ProjectV2ItemFieldTextValue { text field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldDateValue { date field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldSingleSelectValue { name field { ... on ProjectV2FieldCommon { name } } } } } content { ... on Issue { id number repository { id } } } } } } } }\"}")
+              #echo "issues=$issues"
+              project_fields_and_issues=$(curl --request POST \
+                --url https://api.github.com/graphql \
+                --header "Authorization: Bearer ${{ secrets.PAT }}" \
+                --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { items(first: 100) { nodes { id fieldValues(first: 8) { nodes { ... on ProjectV2ItemFieldTextValue { text field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldDateValue { date field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldSingleSelectValue { name field { ... on ProjectV2FieldCommon { name } } } } } content { ... on Issue { id number repository { id } } } } } fields(first: 20) { nodes { ... on ProjectV2SingleSelectField { id name options { id name } } } } } } }\"}")
+              echo "issues=$project_fields_and_issues"
+              # Extract the issue ids, PVII ids, and issue numbers. The issue_id is the global_id, the PVII id is the project specific id, and the issue number is the issue number (eg. #123)
               # The issue number is not unique over all projects. So we check if the repository of the issue and the PR are the same.
-              issue_numbers=$(echo $issues | jq -r '.data.node.items.nodes[].content.number')
+              issue_numbers=$(echo $project_fields_and_issues | jq -r '.data.node.items.nodes[].content.number')
               issue_ids=$(echo $issues | jq -r '.data.node.items.nodes[].content.id')
               PVII_ids=$(echo $issues | jq -r '.data.node.items.nodes[].id')
               # extract the repository id from the issue
@@ -67,26 +82,41 @@ jobs:
                 echo "issue_number is $issue_number"
                 echo "repository_id is $repository_id"
                 # Check if the issue number matches the cleaned issue number from the pull request
-                if [ "$issue_number" = "$ISSUE_NUMBER" ] && [ "$repository_id" = "${{ inputs.REPO_NODE_ID }}" ]; then
-                  # An Issue number is not unique per project. We need to check if the issue is in the correct project
-                  detailed_project=$(curl --request POST \
-                        --url https://api.github.com/graphql \
-                        --header "Authorization: Bearer ${{ secrets.PAT }}" \
-                        --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { fields(first: 20) { nodes { ... on ProjectV2SingleSelectField { id name options { id name } } } } items(first: 100) { nodes { content { ... on Issue { id number } } } } } } }\"}")
-                  echo "detailed_project=$detailed_project"
+                # An Issue number is not unique per project. We need to check if the issue is in the correct project
+                if [[ " ${issue_numbers_array[@]} " =~ " $issue_number " ]] && [ "$repository_id" = "${{ inputs.REPO_NODE_ID }}" ]; then
+                  # Remove the issue_number from issue_numbers_array
+                  issue_numbers_array=("${issue_numbers_array[@]/$issue_number}")
+                  
+                  #detailed_project=$(curl --request POST \
+                  #      --url https://api.github.com/graphql \
+                  #      --header "Authorization: Bearer ${{ secrets.PAT }}" \
+                  #      --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { fields(first: 20) { nodes { ... on ProjectV2SingleSelectField { id name options { id name } } } } items(first: 100) { nodes { content { ... on Issue { id number } } fieldValues(first: 8) { nodes { ... on ProjectV2ItemFieldSingleSelectValue { name field { ... on ProjectV2FieldCommon { name } } } } } } } } } }\"}")
+                  #echo "detailed_project=$detailed_project"
                   # Extract the status field id
-                  status_field_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Status") | .id')
+                  #status_field_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Status") | .id')
+                  status_field_id=$(echo $project_fields_and_issues | jq -r '.data.node.fields.nodes[] | select(.name == "Status") | .id')
+
                   echo "status_field_id is $status_field_id"
-                  # Extract the option id for the new status
-                  Option_id=$(echo $detailed_project | jq -r --arg COLUMN_NAME "$COLUMN_NAME" '.data.node.fields.nodes[] | select(.name == "Status") | .options[] | select(.name == $COLUMN_NAME) | .id')
-                  echo "Option_id is $Option_id"
-                  # Change the status of the issue to the new status
-                  echo "change field $status_field_id of issue $issue_id in project $project_id to $COLUMN_NAME"
-                  response=$(curl --request POST \
-                    --url https://api.github.com/graphql \
-                    --header "Authorization: Bearer ${{ secrets.PAT }}" \
-                    --data '{"query":"mutation {updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$status_field_id'\", value: { singleSelectOptionId: \"'$Option_id'\"}}) {projectV2Item {id}}}"}')
-                  echo "response=$response"
+                  # Extract the current status of the issue
+                  #current_status=$(echo "$detailed_project" | jq -r --arg PVII_id "$PVII_id" '.data.node.items.nodes[] | select(.id == $PVII_id) | .fieldValues.nodes[] | select(.field.name == "Status") | .name')
+                  current_status=$(echo $project_fields_and_issues | jq -r --arg PVII_id "$PVII_id" '.data.node.items.nodes[] | select(.id == $PVII_id) | .fieldValues.nodes[] | select(.field.name == "Status") | .text')
+
+                  echo "current_status is $current_status"
+                  if [[ "$current_status" == "$CURRENT_COLUMN_NAME" || "$CURRENT_COLUMN_NAME" == "IGNORE" ]]; then
+                    # Extract the option id for the new status
+                    #Option_id=$(echo $detailed_project | jq -r --arg COLUMN_NAME "$COLUMN_NAME" '.data.node.fields.nodes[] | select(.name == "Status") | .options[] | select(.name == $COLUMN_NAME) | .id')
+                    Option_id=$(echo $project_fields_and_issues | jq -r --arg COLUMN_NAME "$COLUMN_NAME" '.data.node.fields.nodes[] | select(.name == "Status") | .options[] | select(.name == $COLUMN_NAME) | .id')
+                    echo "Option_id is $Option_id"
+                    # Change the status of the issue to the new status
+                    echo "change field $status_field_id of issue $issue_id in project $project_id to $COLUMN_NAME"
+                    response=$(curl --request POST \
+                      --url https://api.github.com/graphql \
+                      --header "Authorization: Bearer ${{ secrets.PAT }}" \
+                      --data '{"query":"mutation {updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$status_field_id'\", value: { singleSelectOptionId: \"'$Option_id'\"}}) {projectV2Item {id}}}"}')
+                    echo "response=$response"
+                  else
+                    echo "The issue is not in the correct column"
+                  fi
                 fi
               done
             done
