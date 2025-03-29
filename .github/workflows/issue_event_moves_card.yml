@@ -21,7 +21,127 @@ on:
         description: 'The workload of the issue'
     secrets:
         PAT:
+          required: truename: Move an Issue Card to a different Column triggered by an Issue event
+
+on:
+  workflow_call:
+    inputs:
+      ISSUE_NODE_ID:
+        required: true
+        type: string
+        description: 'The node id of the issue that triggered the workflow'
+      COLUMN_NAME:
+        type: string
+        default: 'In-Box'
+        description: 'The name of the column to move the issue card to'
+      CURRENT_COLUMN_NAME:
+        type: string
+        default: 'In-Box'
+        description: 'The name of the column the issue card was in before'
+      PRIORITY:
+        type: string
+        default: 'NONE'
+        description: 'The priority of the issue'
+      WORKLOAD:
+        type: string
+        default: 'NONE'
+        description: 'The workload of the issue'
+    secrets:
+        PAT:
           required: true
+
+jobs:
+  Move_card:
+    runs-on: ubuntu-latest
+    steps:
+    - name: "Move card in projects"
+      id: move_cards
+      run: |
+        ISSUE_NODE_ID="${{ inputs.ISSUE_NODE_ID }}"
+        PRIORITY="${{ inputs.PRIORITY }}"
+        WORKLOAD="${{ inputs.WORKLOAD }}"
+        COLUMN_NAME="${{ inputs.COLUMN_NAME }}"
+        CURRENT_COLUMN_NAME="${{ inputs.CURRENT_COLUMN_NAME }}"
+        echo "ISSUE_NODE_ID=$ISSUE_NODE_ID"
+        echo "PRIORITY=$PRIORITY"
+        echo "WORKLOAD=$WORKLOAD"
+        echo "COLUMN_NAME=$COLUMN_NAME"
+        # Get the projects associated with the organization
+        projects=$(curl --request POST \
+            --url https://api.github.com/graphql \
+            --header "Authorization: Bearer ${{ secrets.PAT }}" \
+            --data '{"query":"{organization(login: \"DLR-AMR\") {projectsV2(first: 20) {nodes {id title}}}}"}')
+        echo "projects=$projects"
+        # Get the project IDs
+        project_ids=$(echo $projects | jq -r '.data.organization.projectsV2.nodes[].id')
+        for project_id in $project_ids; do
+          echo "project_id is $project_id"
+          # Get the issues within the project
+          project_fields_and_issues=$(curl --request POST \
+            --url https://api.github.com/graphql \
+            --header "Authorization: Bearer ${{ secrets.PAT }}" \
+            --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { items(first: 100) { nodes { id fieldValues(first: 8) { nodes { ... on ProjectV2ItemFieldTextValue { text field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldDateValue { date field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldSingleSelectValue { name field { ... on ProjectV2FieldCommon { name } } } } } content { ... on Issue { id } } } } fields(first: 20) { nodes { ... on ProjectV2SingleSelectField { id name options { id name } } } } } } }\"}")
+          echo "issues=$project_fields_and_issues"
+          # Extract the issue ids and PVII ids. The issue_id is the global_id, the PVII id is the project specific id
+          issue_ids=$(echo $project_fields_and_issues | jq -r '.data.node.items.nodes[].content.id')
+          PVII_ids=$(echo $project_fields_and_issues | jq -r '.data.node.items.nodes[].id')
+          # In the following loop we need both values, so we combine them into a single string
+          combined_ids=$(paste -d, <(echo "$issue_ids") <(echo "$PVII_ids"))
+          for combined_id in $combined_ids; do
+            issue_id=$(echo $combined_id | cut -d, -f1)
+            echo "issue_id is $issue_id"
+            PVII_id=$(echo $combined_id | cut -d, -f2)
+            echo "PVII_id is $PVII_id"
+            if [ "$issue_id" == "$ISSUE_NODE_ID" ]; then
+              # Extract the status field id
+              status_field_id=$(echo $project_fields_and_issues | jq -r '.data.node.fields.nodes[] | select(.name == "Status") | .id')
+              # Get the current status of the issue
+              current_status=$(echo $project_fields_and_issues | jq -r --arg PVII_id "$PVII_id" '.data.node.items.nodes[] | select(.id == $PVII_id) | .fieldValues.nodes[] | select(.field.name == "Status") | .text')
+              echo "current_status is $current_status"
+              priority_message=""
+              workload_message=""
+              status_message=""
+              if [ "$current_status" != "$COLUMN_NAME" ]; then
+                # Move the issue to the specified column
+                Option_id=$(echo $project_fields_and_issues | jq -r --arg COLUMN_NAME "$COLUMN_NAME" '.data.node.fields.nodes[] | select(.name == "Status") | .options[] | select(.name == $COLUMN_NAME) | .id')
+                echo "Option_id is $Option_id"
+                echo "change field $status_field_id of issue $issue_id in project $project_id to $COLUMN_NAME"
+                status_message="updateProjectV2ItemFieldValue: updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$status_field_id'\", value: { singleSelectOptionId: \"'$Option_id'\"}}) {projectV2Item {id}}"
+                echo "status_message is $status_message"
+              fi
+              if [ "$PRIORITY" != 'NONE' ]; then
+                priority_field_id=$(echo $project_fields_and_issues | jq -r '.data.node.fields.nodes[] | select(.name == "Priority") | .id')
+                priority_option_id=$(echo $project_fields_and_issues | jq -r --arg PRIORITY "$PRIORITY" '.data.node.fields.nodes[] | select(.name == "Priority") | .options[] | select(.name == $PRIORITY) | .id')
+                priority_message="updateProjectV2ItemFieldValue1: updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$priority_field_id'\", value: { singleSelectOptionId: \"'$priority_option_id'\"}}) {projectV2Item {id}}"
+                echo "priority_message is $priority_message"
+              fi
+              if [ "$WORKLOAD" != 'NONE' ]; then
+                workload_field_id=$(echo $project_fields_and_issues | jq -r '.data.node.fields.nodes[] | select(.name == "Workload") | .id')
+                workload_option_id=$(echo $project_fields_and_issues | jq -r --arg WORKLOAD "$WORKLOAD" '.data.node.fields.nodes[] | select(.name == "Workload") | .options[] | select(.name == $WORKLOAD) | .id')
+                workload_message="updateProjectV2ItemFieldValue2: updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$workload_field_id'\", value: { singleSelectOptionId: \"'$workload_option_id'\"}}) {projectV2Item {id}}"
+                echo "workload_message is $workload_message"
+              fi
+
+              # Construct the query to move the issue to the specified column.
+              # The query is a mutation that updates the status, priority, and workload fields of the issue.
+              # If priority or workload are not set, the corresponding message is empty.
+              # The query is constructed using jq and sed to remove null values and extra whitespace.
+              query=$(jq -n --arg sm "$status_message" \
+                      --arg pm "$priority_message" \
+                      --arg wm "$workload_message" \
+                      '{"query": "mutation { \($sm) \($pm) \($wm) }"}' | \
+                    jq '.query |= gsub("null"; "") | .query |= gsub("\\s+"; " ") | .query |= sub("\\{\\s*\\}"; "{}")' | \
+                    sed 's/\\\\"/"/g' | \
+                    sed "s/'//g")
+              echo "query=$query"
+              response=$(curl --request POST \
+                --url https://api.github.com/graphql \
+                --header "Authorization: Bearer ${{ secrets.PAT }}" \
+                --data "$query")
+              echo "response=$response"
+            fi
+          done
+        done
 
 jobs:
   Move_card:
