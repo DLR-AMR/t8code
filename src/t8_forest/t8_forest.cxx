@@ -4065,7 +4065,7 @@ t8_forest_write_vtk_ext (t8_forest_t forest, const char *fileprefix, const int w
   T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (forest->committed);
 
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
   if (do_not_use_API && write_curved) {
     t8_errorf ("WARNING: Export of curved elements not yet available with the inbuild function. "
                "Using the VTK API instead.\n");

@@ -77,7 +77,7 @@ t8_dprism_init_linear_id (t8_dprism_t *p, int level, t8_linearidx_t id)
   t8_linearidx_t tri_id = 0;
   t8_linearidx_t line_id = 0;
   int i;
-  int triangles_of_size_i = 1;
+  t8_linearidx_t triangles_of_size_i = 1;
 
   T8_ASSERT (0 <= level && level <= T8_DPRISM_MAXLEVEL);
   T8_ASSERT (id < sc_intpow64u (T8_DPRISM_CHILDREN, level));

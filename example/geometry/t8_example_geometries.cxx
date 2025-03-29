@@ -33,7 +33,7 @@
 #include <t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 
-#if T8_WITH_OCC
+#if T8_ENABLE_OCC
 #include <GeomAPI_PointsToBSpline.hxx>
 #include <GeomAPI_PointsToBSplineSurface.hxx>
 #include <Geom_BSplineCurve.hxx>
@@ -765,7 +765,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     snprintf (vtuname, BUFSIZ, "forest_quad_to_sphere");
     break;
   case T8_GEOM_CAD_TRIANGLE: {
-#if T8_WITH_OCC
+#if T8_ENABLE_OCC
     t8_global_productionf ("Creating uniform level %i forests with an cad triangle geometry.\n", level);
 
     /* Constructing a triangle with one curved edge (f1) */
@@ -811,12 +811,12 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
 
     snprintf (vtuname, BUFSIZ, "forest_cad_triangle_lvl_%i", level);
     break;
-#else  /* !T8_WITH_OCC */
+#else  /* !T8_ENABLE_OCC */
     SC_ABORTF ("OCC not linked");
-#endif /* T8_WITH_OCC */
+#endif /* T8_ENABLE_OCC */
   }
   case T8_GEOM_CAD_CURVE_CUBE: {
-#if T8_WITH_OCC
+#if T8_ENABLE_OCC
     t8_global_productionf ("Creating uniform level %i forests with cad curve geometries.\n", level);
 
     /* Create two cad bsplines which oscillate along the x-axis. 
@@ -880,12 +880,12 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
 
     snprintf (vtuname, BUFSIZ, "forest_cad_curve_cube_lvl_%i", level);
     break;
-#else  /* !T8_WITH_cad */
+#else  /* !T8_ENABLE_OCC */
     SC_ABORTF ("OCC not linked");
-#endif /* T8_WITH_cad */
+#endif /* T8_ENABLE_OCC */
   }
   case T8_GEOM_CAD_SURFACE_CUBES: {
-#if T8_WITH_OCC
+#if T8_ENABLE_OCC
     t8_global_productionf ("Creating uniform level %i forests with a cad surface geometry.\n", level);
 
     /* Create a cad bspline surface with 2D array of knots */
@@ -1005,12 +1005,12 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
 
     snprintf (vtuname, BUFSIZ, "forest_cad_surface_cubes_lvl_%i", level);
     break;
-#else  /* !T8_WITH_OCC */
+#else  /* !T8_ENABLE_OCC */
     SC_ABORTF ("OCC not linked");
-#endif /* T8_WITH_OCC */
+#endif /* T8_ENABLE_OCC */
   }
   case T8_GEOM_CAD_SURFACE_CYLINDER: {
-#if T8_WITH_OCC
+#if T8_ENABLE_OCC
     t8_global_productionf ("Creating uniform level %i forests with an cad cylinder geometry.\n", level);
 
     /* Create cad cylinder surfaces. We use an outer radius of 0.5 to get a diameter of 1. */
@@ -1112,9 +1112,9 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     T8_FREE (parameters);
     snprintf (vtuname, BUFSIZ, "forest_geometry_cylinder_lvl_%i", level);
     break;
-#else  /* !T8_WITH_cad */
+#else  /* !TT8_ENABLE_OCC */
     SC_ABORTF ("OCC not linked");
-#endif /* T8_WITH_cad */
+#endif /* T8_ENABLE_OCC */
   }
   default:
     SC_ABORT_NOT_REACHED ();
