@@ -31,11 +31,7 @@ struct t8_forest_ghost_w_search: public t8_forest_ghost_definition
 {
  public:
   /**
-    * Constructors:
-    * there are three ways to construct a object of t8_forest_ghost_w_search
-    * t8_forest_ghost_w_search (), 
-    * t8_forest_ghost_w_search (t8_forest_search_fn search_function),
-    * t8_forest_ghost_w_search (const t8_ghost_type_t ghost_type)
+    * Constructors of a t8_forest_ghost_w_search of type NONE
     */
   t8_forest_ghost_w_search ();
 
@@ -124,6 +120,7 @@ struct t8_forest_ghost_face: public t8_forest_ghost_w_search
   /**
    * Equal to t8_forest_ghost_fill_remote_v3 for version = 3
    * and t8_forest_ghost_fill_remote for version 1 and 2
+   * \param [in, out]   forest The forest.
    */
   void
   search_for_ghost_elements (t8_forest_t forest) override;

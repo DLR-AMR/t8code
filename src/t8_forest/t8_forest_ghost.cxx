@@ -1388,7 +1388,7 @@ t8_forest_ghost_create_ext (t8_forest_t forest)
 
   ghost_definition = forest->ghost_definition;
 
-  t8_global_productionf ("Into t8_forest_ghost with %i local elements.\n", t8_forest_get_local_num_elements (forest));
+  t8_productionf ("Into t8_forest_ghost with %i local elements.\n", t8_forest_get_local_num_elements (forest));
 
   /* In parallel, check forest for deleted elements. The ghost algorithm currently
   * does not work on forests with deleted elements.
@@ -1431,9 +1431,8 @@ t8_forest_ghost_create_ext (t8_forest_t forest)
     t8_global_productionf ("End ghost at %f  %f\n", sc_MPI_Wtime (), forest->profile->ghost_runtime);
   }
 
-  t8_global_productionf ("Done t8_forest_ghost with %i local elements and %i"
-                         " ghost elements.\n",
-                         t8_forest_get_local_num_elements (forest), t8_forest_get_num_ghosts (forest));
+  t8_productionf ("Done t8_forest_ghost with %i local elements and %i ghost elements.\n",
+                  t8_forest_get_local_num_elements (forest), t8_forest_get_num_ghosts (forest));
 }
 
 void
