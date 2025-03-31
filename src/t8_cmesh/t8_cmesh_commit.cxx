@@ -323,7 +323,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   t8_cmesh_trees_init (&cmesh->trees, 1, cmesh->num_local_trees, cmesh->num_ghosts);
   t8_cmesh_trees_start_part (cmesh->trees, 0, 0, cmesh->num_local_trees, 0, cmesh->num_ghosts, 1);
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   if (cmesh->num_local_trees == 0) {
     t8_debugf ("Empty partition.\n");
   }
