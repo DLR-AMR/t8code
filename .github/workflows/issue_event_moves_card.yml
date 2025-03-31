@@ -73,12 +73,12 @@ jobs:
               # Extract the status field id
               status_field_id=$(echo $project_fields_and_issues | jq -r '.data.node.fields.nodes[] | select(.name == "Status") | .id')
               # Get the current status of the issue
-              current_status=$(echo $project_fields_and_issues | jq -r --arg PVII_id "$PVII_id" '.data.node.items.nodes[] | select(.id == $PVII_id) | .fieldValues.nodes[] | select(.field.name == "Status") | .text')
+              current_status=$(echo $project_fields_and_issues | jq -r --arg PVII_id "$PVII_id" '.data.node.items.nodes[] | select(.id == $PVII_id) | .fieldValues.nodes[] | select(.field.name == "Status") | .name')
               echo "current_status is $current_status"
               priority_message=""
               workload_message=""
               status_message=""
-              if [ "$current_status" != "$COLUMN_NAME" ]; then
+              if [ "$current_status" == "$CURRENT_COLUMN_NAME" ]; then
                 # Move the issue to the specified column
                 Option_id=$(echo $project_fields_and_issues | jq -r --arg COLUMN_NAME "$COLUMN_NAME" '.data.node.fields.nodes[] | select(.name == "Status") | .options[] | select(.name == $COLUMN_NAME) | .id')
                 echo "Option_id is $Option_id"
