@@ -150,7 +150,33 @@ typedef struct
   int level;
   int num_children;
   int maxlevel;
+  int pfirst;
+  t8_shmem_array_t element_offsets;
 } t8_forest_child_type_query_t;
+
+static t8_linearidx_t
+t8_forest_get_monotonous_gfd (sc_array_t *global_first_desc, size_t index, t8_forest_child_type_query_t *query_data)
+{
+  t8_linearidx_t linearid = *(t8_linearidx_t *) sc_array_index (global_first_desc, index);
+
+  if (linearid == 0
+      && t8_shmem_array_get_gloidx (query_data->element_offsets, query_data->pfirst + 1 + index)
+           == t8_shmem_array_get_gloidx (query_data->element_offsets, query_data->pfirst + 1 + index + 1)) {
+    /* On empty processes global_first_desc is always set to 0. However,
+     * for split_array the array has to increase monotonously. Use the next
+     * non-zero entry of global_first_desc instead. */
+    size_t nonzero_index = index + 1;
+    while (t8_shmem_array_get_gloidx (query_data->element_offsets, query_data->pfirst + 1 + nonzero_index)
+           == t8_shmem_array_get_gloidx (query_data->element_offsets, query_data->pfirst + 1 + nonzero_index + 1)) {
+      nonzero_index++;
+    }
+    linearid = *(t8_linearidx_t *) sc_array_index (global_first_desc, nonzero_index);
+    T8_ASSERT (t8_shmem_array_get_gloidx (query_data->element_offsets, query_data->pfirst + 1 + nonzero_index)
+               != t8_shmem_array_get_gloidx (query_data->element_offsets, query_data->pfirst + 1 + nonzero_index + 1));
+  }
+
+  return linearid;
+}
 
 static size_t
 t8_forest_determine_childid (sc_array_t *global_first_desc, size_t index, void *data)
@@ -159,8 +185,11 @@ t8_forest_determine_childid (sc_array_t *global_first_desc, size_t index, void *
   T8_ASSERT (global_first_desc->elem_size = sizeof (t8_linearidx_t));
   T8_ASSERT (index < global_first_desc->elem_count);
 
-  t8_linearidx_t linearid = *(t8_linearidx_t *) sc_array_index (global_first_desc, index);
+  /* Get the global first descendant of the process with rank index. For empty
+   * processes we choose the next non-zero global_first_descendat to obtain a
+   * monotonously increasing array to sort. */
   t8_forest_child_type_query_t *query_data = (t8_forest_child_type_query_t *) data;
+  t8_linearidx_t linearid = t8_forest_get_monotonous_gfd (global_first_desc, index, query_data);
 
   /* Create an element from the linear_id and compute its child_id. */
   t8_element_t *element;
@@ -216,15 +245,6 @@ t8_partition_search_base::search_recursion (const t8_locidx_t ltreeid, t8_elemen
   sc_array_t *global_first_desc = sc_array_new_data (
     (void *) ((t8_linearidx_t *) t8_shmem_array_get_array (forest->global_first_desc) + pfirst + 1),
     sizeof (t8_linearidx_t), plast - pfirst);
-  /* Adapt global_first_desc to be monotonously increasing */
-  for (int iproc = plast - pfirst - 2; iproc >= 0; iproc--) {
-    if (t8_shmem_array_get_gloidx (forest->element_offsets, pfirst + 1 + iproc)
-        == t8_shmem_array_get_gloidx (forest->element_offsets, pfirst + 1 + iproc + 1)) {
-      /* use next global_first_desc instead of 0 if iproc is empty */
-      *(t8_linearidx_t *) sc_array_index_int (global_first_desc, iproc)
-        = *(t8_linearidx_t *) sc_array_index_int (global_first_desc, iproc + 1);
-    }
-  }
 
   /* Prepare relevant information for child_id computation. */
   t8_forest_child_type_query_t query_data;
@@ -233,6 +253,8 @@ t8_partition_search_base::search_recursion (const t8_locidx_t ltreeid, t8_elemen
   query_data.eclass = eclass;
   query_data.level = ts->element_get_level (eclass, element) + 1;
   query_data.maxlevel = forest->maxlevel;
+  query_data.pfirst = pfirst;
+  query_data.element_offsets = forest->element_offsets;
 
   /* Split global first descendants by child id with respect to element */
   sc_array_t *split_offsets = sc_array_new_count (sizeof (size_t), num_children + 1);
@@ -254,7 +276,7 @@ t8_partition_search_base::search_recursion (const t8_locidx_t ltreeid, t8_elemen
     if (cpfirst < cpnext) {
       /* at least one processor starts in this child */
       t8_linearidx_t global_first_descendant
-        = *(t8_linearidx_t *) t8_shmem_array_index (forest->global_first_desc, cpfirst);
+        = t8_forest_get_monotonous_gfd (global_first_desc, cpfirst - pfirst - 1, &query_data);
       t8_linearidx_t element_id = ts->element_get_linear_id (eclass, children[ichild], forest->maxlevel);
 
       if (global_first_descendant == element_id) {
