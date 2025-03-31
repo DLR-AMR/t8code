@@ -66,10 +66,11 @@ jobs:
               # Extract the issue ids, PVII ids, and issue numbers. The issue_id is the global_id, the PVII id is the project specific id, and the issue number is the issue number (eg. #123)
               # The issue number is not unique over all projects. So we check if the repository of the issue and the PR are the same.
               issue_numbers=$(echo $project_fields_and_issues | jq -r '.data.node.items.nodes[].content.number')
-              issue_ids=$(echo $issues | jq -r '.data.node.items.nodes[].content.id')
-              PVII_ids=$(echo $issues | jq -r '.data.node.items.nodes[].id')
+              
+              issue_ids=$(echo $project_fields_and_issues | jq -r '.data.node.items.nodes[].content.id')
+              PVII_ids=$(echo $project_fields_and_issues | jq -r '.data.node.items.nodes[].id')
               # extract the repository id from the issue
-              repository_ids=$(echo $issues | jq -r '.data.node.items.nodes[].content.repository.id')
+              repository_ids=$(echo $project_fields_and_issues | jq -r '.data.node.items.nodes[].content.repository.id')
               # In the following loop we need all three values, so we combine them into a single string
               combined_ids=$(paste -d, <(echo "$issue_ids") <(echo "$PVII_ids") <(echo "$issue_numbers") <(echo "$repository_ids"))
               for combined_id in $combined_ids; do
@@ -99,7 +100,7 @@ jobs:
                   echo "status_field_id is $status_field_id"
                   # Extract the current status of the issue
                   #current_status=$(echo "$detailed_project" | jq -r --arg PVII_id "$PVII_id" '.data.node.items.nodes[] | select(.id == $PVII_id) | .fieldValues.nodes[] | select(.field.name == "Status") | .name')
-                  current_status=$(echo $project_fields_and_issues | jq -r --arg PVII_id "$PVII_id" '.data.node.items.nodes[] | select(.id == $PVII_id) | .fieldValues.nodes[] | select(.field.name == "Status") | .text')
+                  current_status=$(echo $project_fields_and_issues | jq -r --arg PVII_id "$PVII_id" '.data.node.items.nodes[] | select(.id == $PVII_id) | .fieldValues.nodes[] | select(.field.name == "Status") | .name')
 
                   echo "current_status is $current_status"
                   if [[ "$current_status" == "$CURRENT_COLUMN_NAME" || "$CURRENT_COLUMN_NAME" == "IGNORE" ]]; then
