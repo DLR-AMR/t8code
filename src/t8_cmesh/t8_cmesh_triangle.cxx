@@ -173,7 +173,7 @@ die_node:
  */
 static int
 t8_cmesh_triangle_read_eles (t8_cmesh_t cmesh, int corner_offset, char *filename, double *vertices, int dim
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
                              ,
                              long num_vertices
 #endif
@@ -547,7 +547,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_C
       corner_offset = retval;
       snprintf (current_file, BUFSIZ, "%s.ele", fileprefix);
       retval = t8_cmesh_triangle_read_eles (cmesh, corner_offset, current_file, vertices, dim
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
                                             ,
                                             num_vertices
 #endif
@@ -583,7 +583,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_C
     }
     t8_cmesh_commit (cmesh, comm);
   }
-#ifdef T8_ENABLE_METIS
+#if T8_ENABLE_METIS
   if (cmesh != NULL && !partition) {
     t8_cmesh_reorder (cmesh, comm);
     t8_debugf ("Reordered mesh with METIS.\n");
@@ -627,7 +627,7 @@ t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix, int partition, sc_
       corner_offset = retval;
       snprintf (current_file, BUFSIZ, "%s.ele", fileprefix);
       retval = t8_cmesh_triangle_read_eles (cmesh, corner_offset, current_file, vertices, dim
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
                                             ,
                                             num_vertices
 #endif
