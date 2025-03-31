@@ -143,6 +143,8 @@ t8_search_base::do_search ()
   }
 }
 
+/* Contains the necessary context data to determine the child id of a global
+ * first descendant on a specific level in t8_forest_determine_childid. */
 typedef struct
 {
   const t8_scheme_c *ts;
@@ -302,6 +304,7 @@ t8_partition_search_base::search_recursion (const t8_locidx_t ltreeid, t8_elemen
       cpfirst = cplast;
     }
 
+    /* enter the recursion for the current child */
     search_recursion (ltreeid, children[ichild], ts, cpfirst, cplast);
     update_queries (new_active_queries);
   }
@@ -342,6 +345,7 @@ t8_partition_search_base::do_search ()
   int num_procs = forest->mpisize;
   const t8_gloidx_t *tree_offsets = t8_shmem_array_get_gloidx_array (forest->tree_offsets);
   for (t8_locidx_t itree = 0; itree < (t8_locidx_t) num_global_trees; itree++) {
+    /* compute process range for the current tree */
     pfirst = -1;
     plast = -1;
     pfirst = t8_offset_first_owner_of_tree (num_procs, itree, tree_offsets, &pfirst);
