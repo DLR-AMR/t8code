@@ -354,7 +354,7 @@ t8_default_scheme_vertex::element_new (int length, t8_element_t **elem) const
 void
 t8_default_scheme_vertex::element_init ([[maybe_unused]] int length, [[maybe_unused]] t8_element_t *elem) const
 {
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   t8_dvertex_t *vertices = (t8_dvertex_t *) elem;
   for (int i = 0; i < length; i++) {
     vertices[i].level = 0;
