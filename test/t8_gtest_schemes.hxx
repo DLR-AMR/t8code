@@ -24,7 +24,7 @@
 #define T8_GTEST_SCHEMES_HXX
 
 #include <t8_schemes/t8_default/t8_default.hxx>
-#include <t8_schemes/t8_scheme_builder.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <gtest/gtest.h>
 
 const t8_scheme *
