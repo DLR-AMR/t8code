@@ -52,12 +52,6 @@ jobs:
           # Iterate over the project Ids and find the issue within the project
           for project_id in $project_ids; do
               echo "project_id is $project_id"
-              # Get the issues within the project
-              #issues=$(curl --request POST \
-              #        --url https://api.github.com/graphql \
-              #        --header "Authorization: Bearer ${{ secrets.PAT }}" \
-              #        --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { items(first: 100) { nodes { id fieldValues(first: 8) { nodes { ... on ProjectV2ItemFieldTextValue { text field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldDateValue { date field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldSingleSelectValue { name field { ... on ProjectV2FieldCommon { name } } } } } content { ... on Issue { id number repository { id } } } } } } } }\"}")
-              #echo "issues=$issues"
               project_fields_and_issues=$(curl --request POST \
                 --url https://api.github.com/graphql \
                 --header "Authorization: Bearer ${{ secrets.PAT }}" \
@@ -88,13 +82,6 @@ jobs:
                   # Remove the issue_number from issue_numbers_array
                   issue_numbers_array=("${issue_numbers_array[@]/$issue_number}")
                   
-                  #detailed_project=$(curl --request POST \
-                  #      --url https://api.github.com/graphql \
-                  #      --header "Authorization: Bearer ${{ secrets.PAT }}" \
-                  #      --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { fields(first: 20) { nodes { ... on ProjectV2SingleSelectField { id name options { id name } } } } items(first: 100) { nodes { content { ... on Issue { id number } } fieldValues(first: 8) { nodes { ... on ProjectV2ItemFieldSingleSelectValue { name field { ... on ProjectV2FieldCommon { name } } } } } } } } } }\"}")
-                  #echo "detailed_project=$detailed_project"
-                  # Extract the status field id
-                  #status_field_id=$(echo $detailed_project | jq -r '.data.node.fields.nodes[] | select(.name == "Status") | .id')
                   status_field_id=$(echo $project_fields_and_issues | jq -r '.data.node.fields.nodes[] | select(.name == "Status") | .id')
 
                   echo "status_field_id is $status_field_id"
