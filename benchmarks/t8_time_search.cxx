@@ -35,6 +35,7 @@
 #include <t8_forest/t8_forest_iterate.h>        /* For the search algorithm. */
 #include <tutorials/general/t8_step3.h>         /* Example forest adaptation from step 3 */
 #include <t8_forest/t8_forest_geometrical.h>
+#include <t8_forest/t8_forest_profiling.h>
 
 /* Our search query, a particle together with a flag. */
 struct t8_tutorial_search_particle_t
@@ -421,6 +422,7 @@ main (int argc, char **argv)
   sc_options_t *opt;
   int particle_option;
   int scheme_option;
+  int eclass_option;
   t8_tutorial_search_user_data_t user_data;
   std::vector<int> particles_per_element (0, 0);
 
@@ -440,7 +442,7 @@ main (int argc, char **argv)
 
   /* Print a message on the root process. */
   t8_global_productionf (" [search] \n");
-  t8_global_productionf (" [search] Hello, this is the search example of t8code.\n");
+  t8_global_productionf (" [search] Hello, this is the search benchmark of t8code.\n");
   t8_global_productionf (
     " [search] We will search for all elements in a forest that contain randomly created particles.\n");
   t8_global_productionf (" [search] \n");
@@ -452,15 +454,26 @@ main (int argc, char **argv)
                       "Option to choose the scheme, 1: standalone scheme, 2: default scheme");
   sc_options_add_int (opt, 'l', "level", &level, 5, "The level of the forest.");
   sc_options_add_size_t (opt, 'n', "num_particles", &num_particles, 2000, "The number of particles.");
+  sc_options_add_int (opt, 'e', "elements", &eclass_option, 4,
+                      "Specify the type of elements to use.\n"
+                      "\t\t\t\t\t2 - quadrilateral\n"
+                      "\t\t\t\t\t3 - triangle\n"
+                      "\t\t\t\t\t4 - hexahedron (default)\n"
+                      "\t\t\t\t\t5 - tetrahedron\n"
+                      "\t\t\t\t\t6 - prism\n"
+                      "\t\t\t\t\t7 - pyramid");
 
   sc_options_parse (t8_get_package_id (), SC_LP_DEFAULT, opt, argc, argv);
 
   double total_time = 0;
+  double time_refine = 0;
+  sc_statinfo_t times[2];
+  sc_stats_init (&times[0], "total");
+  sc_stats_init (&times[1], "refine");
   total_time -= sc_MPI_Wtime ();
-  sc_statinfo_t times[1];
 
   /* Build a cube cmesh with tet, hex, and prism trees. */
-  cmesh = t8_cmesh_new_hypercube (T8_ECLASS_HEX, comm, 0, 0, 0);
+  cmesh = t8_cmesh_new_hypercube ((t8_eclass) eclass_option, comm, 0, 0, 0);
   /* Build a uniform forest on it. */
   forest = t8_forest_new_uniform (cmesh, t8_time_search_scheme (scheme_option), level, 0, comm);
 
@@ -504,7 +517,11 @@ main (int argc, char **argv)
       }
     }
     sc_MPI_Allreduce (&multiple_particles, &global_multiple_particles, 1, sc_MPI_INT, sc_MPI_MAX, comm);
+    // t8_forest_set_profiling (forest, 1);
+    time_refine -= sc_MPI_Wtime ();
     forest = t8_time_adapt_forest (forest);
+    time_refine += sc_MPI_Wtime ();
+    // time_refine += t8_forest_profile_get_adapt_time (forest);
 
     const size_t element_count_after = particles_per_element->size ();
     t8_debugf ("element_count_after: %li \n", element_count_after);
@@ -522,9 +539,12 @@ main (int argc, char **argv)
   sc_array_destroy (particles);
 
   total_time += sc_MPI_Wtime ();
-  sc_stats_set1 (&times[0], total_time, "total");
+  sc_stats_accumulate (&times[0], total_time);
+  sc_stats_accumulate (&times[1], time_refine);
+
+  // sc_stats_set1 (&times[0], total_time, "total");
   sc_stats_compute (comm, 1, times);
-  sc_stats_print (t8_get_package_id (), SC_LP_ESSENTIAL, 1, times, 1, 1);
+  sc_stats_print (t8_get_package_id (), SC_LP_ESSENTIAL, 2, times, 1, 1);
   sc_options_destroy (opt);
   sc_finalize ();
 
