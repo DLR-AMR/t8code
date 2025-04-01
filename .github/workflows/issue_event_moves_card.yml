@@ -92,6 +92,7 @@ jobs:
                 priority_option_id=$(echo $project_fields_and_issues | jq -r --arg PRIORITY "$PRIORITY" '.data.node.fields.nodes[] | select(.name == "Priority") | .options[] | select(.name == $PRIORITY) | .id')
                 priority_message="updateProjectV2ItemFieldValue1: updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$priority_field_id'\", value: { singleSelectOptionId: \"'$priority_option_id'\"}}) {projectV2Item {id}}"
                 echo "priority_message is $priority_message"
+                echo "change priority field $priority_field_id of issue $issue_id in project $project_id to $PRIORITY"
               fi
               if [ "$WORKLOAD" != 'NONE' ]; then
                 workload_field_id=$(echo $project_fields_and_issues | jq -r '.data.node.fields.nodes[] | select(.name == "Workload") | .id')
