@@ -86,6 +86,8 @@ jobs:
                 echo "change field $status_field_id of issue $issue_id in project $project_id to $COLUMN_NAME"
                 status_message="updateProjectV2ItemFieldValue: updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$status_field_id'\", value: { singleSelectOptionId: \"'$Option_id'\"}}) {projectV2Item {id}}"
                 echo "status_message is $status_message"
+              else
+                    echo "The issue is not in the correct column"
               fi
               if [ "$PRIORITY" != 'NONE' ]; then
                 priority_field_id=$(echo $project_fields_and_issues | jq -r '.data.node.fields.nodes[] | select(.name == "Priority") | .id')
