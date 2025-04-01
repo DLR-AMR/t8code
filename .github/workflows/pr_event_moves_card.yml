@@ -78,10 +78,7 @@ jobs:
                 echo "repository_id is $repository_id"
                 # Check if the issue number matches the cleaned issue number from the pull request
                 # An Issue number is not unique per project. We need to check if the issue is in the correct project
-                if [[ " ${issue_numbers_array[@]} " =~ " $issue_number " ]] && [ "$repository_id" = "${{ inputs.REPO_NODE_ID }}" ]; then
-                  # Remove the issue_number from issue_numbers_array
-                  issue_numbers_array=("${issue_numbers_array[@]/$issue_number}")
-                  
+                if [[ " ${issue_numbers_array[@]} " =~ " $issue_number " ]] && [ "$repository_id" = "${{ inputs.REPO_NODE_ID }}" ]; then                 
                   status_field_id=$(echo $project_fields_and_issues | jq -r '.data.node.fields.nodes[] | select(.name == "Status") | .id')
 
                   echo "status_field_id is $status_field_id"
