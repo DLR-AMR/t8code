@@ -43,6 +43,7 @@ jobs:
         echo "PRIORITY=$PRIORITY"
         echo "WORKLOAD=$WORKLOAD"
         echo "COLUMN_NAME=$COLUMN_NAME"
+        echo "CURRENT_COLUMN_NAME=$CURRENT_COLUMN_NAME"
         # Get the projects associated with the organization
         projects=$(curl --request POST \
             --url https://api.github.com/graphql \
@@ -66,10 +67,10 @@ jobs:
           combined_ids=$(paste -d, <(echo "$issue_ids") <(echo "$PVII_ids"))
           for combined_id in $combined_ids; do
             issue_id=$(echo $combined_id | cut -d, -f1)
-            echo "issue_id is $issue_id"
             PVII_id=$(echo $combined_id | cut -d, -f2)
             echo "PVII_id is $PVII_id"
             if [ "$issue_id" == "$ISSUE_NODE_ID" ]; then
+              echo "Found issue $issue_id in project $project_id"
               # Extract the status field id
               status_field_id=$(echo $project_fields_and_issues | jq -r '.data.node.fields.nodes[] | select(.name == "Status") | .id')
               # Get the current status of the issue
@@ -97,6 +98,7 @@ jobs:
                 workload_option_id=$(echo $project_fields_and_issues | jq -r --arg WORKLOAD "$WORKLOAD" '.data.node.fields.nodes[] | select(.name == "Workload") | .options[] | select(.name == $WORKLOAD) | .id')
                 workload_message="updateProjectV2ItemFieldValue2: updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$workload_field_id'\", value: { singleSelectOptionId: \"'$workload_option_id'\"}}) {projectV2Item {id}}"
                 echo "workload_message is $workload_message"
+                echo "change workload field $workload_field_id of issue $issue_id in project $project_id to $WORKLOAD"
               fi
 
               # Construct the query to move the issue to the specified column.
