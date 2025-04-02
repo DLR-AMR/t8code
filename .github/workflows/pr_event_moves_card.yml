@@ -83,13 +83,11 @@ jobs:
 
                   echo "status_field_id is $status_field_id"
                   # Extract the current status of the issue
-                  #current_status=$(echo "$detailed_project" | jq -r --arg PVII_id "$PVII_id" '.data.node.items.nodes[] | select(.id == $PVII_id) | .fieldValues.nodes[] | select(.field.name == "Status") | .name')
                   current_status=$(echo $project_fields_and_issues | jq -r --arg PVII_id "$PVII_id" '.data.node.items.nodes[] | select(.id == $PVII_id) | .fieldValues.nodes[] | select(.field.name == "Status") | .name')
 
                   echo "current_status is $current_status"
                   if [[ "$current_status" == "$CURRENT_COLUMN_NAME" || "$CURRENT_COLUMN_NAME" == "IGNORE" ]]; then
                     # Extract the option id for the new status
-                    #Option_id=$(echo $detailed_project | jq -r --arg COLUMN_NAME "$COLUMN_NAME" '.data.node.fields.nodes[] | select(.name == "Status") | .options[] | select(.name == $COLUMN_NAME) | .id')
                     Option_id=$(echo $project_fields_and_issues | jq -r --arg COLUMN_NAME "$COLUMN_NAME" '.data.node.fields.nodes[] | select(.name == "Status") | .options[] | select(.name == $COLUMN_NAME) | .id')
                     echo "Option_id is $Option_id"
                     # Change the status of the issue to the new status
