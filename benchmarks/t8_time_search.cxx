@@ -467,9 +467,11 @@ main (int argc, char **argv)
 
   double total_time = 0;
   double time_refine = 0;
-  sc_statinfo_t times[2];
+  double time_search = 0;
+  sc_statinfo_t times[3];
   sc_stats_init (&times[0], "total");
   sc_stats_init (&times[1], "refine");
+  sc_stats_init (&times[2], "search");
   total_time -= sc_MPI_Wtime ();
 
   /* Build a cube cmesh with tet, hex, and prism trees. */
@@ -492,7 +494,9 @@ main (int argc, char **argv)
     /* 
    * Search for particles.
    */
+    time_search -= sc_MPI_Wtime ();
     t8_time_search_for_particles (forest, particles);
+    time_search += sc_MPI_Wtime ();
 
     t8_debugf ("iteratrion: %i \n", iter);
 
@@ -541,10 +545,11 @@ main (int argc, char **argv)
   total_time += sc_MPI_Wtime ();
   sc_stats_accumulate (&times[0], total_time);
   sc_stats_accumulate (&times[1], time_refine);
+  sc_stats_accumulate (&times[2], time_search);
 
   // sc_stats_set1 (&times[0], total_time, "total");
-  sc_stats_compute (comm, 1, times);
-  sc_stats_print (t8_get_package_id (), SC_LP_ESSENTIAL, 2, times, 1, 1);
+  sc_stats_compute (comm, 3, times);
+  sc_stats_print (t8_get_package_id (), SC_LP_ESSENTIAL, 3, times, 1, 1);
   sc_options_destroy (opt);
   sc_finalize ();
 
