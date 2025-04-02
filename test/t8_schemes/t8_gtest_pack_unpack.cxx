@@ -63,10 +63,15 @@ class class_test_pack: public TestDFS {
     /* Probe size and allocate */
     sc_MPI_Status status;
     sc_MPI_Probe (rank, T8_MPI_TEST_ELEMENT_PACK_TAG, comm, &status);
+    int message_size;
+    sc_MPI_Get_count (&status, sc_MPI_PACKED, &message_size);
+
+    ASSERT_EQ (message_size, pack_size);
+    ASSERT_EQ (message_size, position);
 
     /* receive data */
-    mpiret
-      = sc_MPI_Recv (recvbuf, position, sc_MPI_PACKED, rank, T8_MPI_TEST_ELEMENT_PACK_TAG, comm, sc_MPI_STATUS_IGNORE);
+    mpiret = sc_MPI_Recv (recvbuf, message_size, sc_MPI_PACKED, rank, T8_MPI_TEST_ELEMENT_PACK_TAG, comm,
+                          sc_MPI_STATUS_IGNORE);
     SC_CHECK_MPI (mpiret);
 
     /* Finalize non-blocking send communication */

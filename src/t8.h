@@ -104,6 +104,7 @@ typedef int32_t t8_locidx_t;
 #define t8_compare_locidx(v, w) sc_int32_compare (v, w)
 
 /** A type for global indexing that holds really big numbers. */
+typedef int t8_procidx_t;
 typedef int64_t t8_gloidx_t;
 /** The MPI Datatype of t8_gloidx_t */
 #define T8_MPI_GLOIDX sc_MPI_LONG_LONG_INT

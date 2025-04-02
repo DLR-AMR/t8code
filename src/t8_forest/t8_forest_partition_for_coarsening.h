@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2023 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,30 +20,21 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** file t8_step4.h
- * This is the header file to the step4 example of t8code. It collects
- * functions of t8_step4 that we reuse in other examples.
- * In this example we discuss the forest creation process in more detail including
- * partitioning and balancing a forest and creating a ghost layer.
- * The main program is t8_step4_main.
- * See \ref t8_step4_partition_balance_ghost.cxx for more details.
+/** \file t8_forest_partition_for_coarsening.h
+ * adjust the partition of the receiving forest so that all elements from a family
+ * belong to the same process before applying the partition
  */
 
-#ifndef T8_STEP4_H
-#define T8_STEP4_H
+#ifndef T8_FOREST_PFC_H
+#define T8_FOREST_ITERATE_H
 
 #include <t8.h>
-#include <t8_forest/t8_forest.h>
+#include <t8_forest/t8_forest_general.h>
 
 T8_EXTERN_C_BEGIN ();
 
-/** This is the main program of this example.
- */
-int
-t8_step4_main (int argc, char **argv);
+void
+t8_forest_pfc_correction_offsets (t8_forest_t forest);
 
-t8_forest_t
-t8_step4_partition_for_coarsening (t8_forest_t forest);
 T8_EXTERN_C_END ();
-
-#endif /* !T8_STEP4_H */
+#endif /* T8_FOREST_ITERATE_H */
