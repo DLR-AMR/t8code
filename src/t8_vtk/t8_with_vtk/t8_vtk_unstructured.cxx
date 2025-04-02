@@ -22,10 +22,6 @@
 
 #include "t8_vtk_unstructured.hxx"
 
-<<<<<<< HEAD:src/t8_vtk/t8_vtk_unstructured.cxx
-#if T8_ENABLE_VTK
-=======
->>>>>>> 71709116f (chore: restructure t8_vtk_unstructured):src/t8_vtk/t8_with_vtk/t8_vtk_unstructured.cxx
 #include <vtkUnstructuredGrid.h>
 #include <vtkUnstructuredGridReader.h>
 #include <vtkXMLUnstructuredGridReader.h>
