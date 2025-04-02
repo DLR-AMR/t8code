@@ -42,7 +42,7 @@ t8_forest_construct_from_vtk (const char *prefix, sc_MPI_Comm comm, const int va
   /* Read a poly-data file (.ply, .vtp, .obj, .stl, .vtk, .g) and construct a cmesh 
    * representing the mesh. If  there is any cell-data, it will be read too. 
    * Triangle-strips and polygons will be broken down to multiple triangles. */
-  t8_cmesh_t cmesh_in =  t8_vtk_reader_cmesh (prefix, partition, 0, comm, vtk_file_type);
+  t8_cmesh_t cmesh_in = t8_vtk_reader_cmesh (prefix, partition, 0, comm, vtk_file_type);
   if (cmesh_in == NULL) {
     t8_errorf ("Error reading file.\n");
     return;

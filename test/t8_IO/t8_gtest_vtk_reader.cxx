@@ -83,7 +83,7 @@ TEST_P (vtk_reader, vtk_to_cmesh_success)
   int mpirank;
   int mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
-  t8_cmesh_t cmesh =  t8_vtk_reader_cmesh (test_files[file], partition, main_proc, sc_MPI_COMM_WORLD, file_type);
+  t8_cmesh_t cmesh = t8_vtk_reader_cmesh (test_files[file], partition, main_proc, sc_MPI_COMM_WORLD, file_type);
   if (file_type != VTK_FILE_ERROR) {
     EXPECT_FALSE (cmesh == NULL);
     const int test_num_trees = t8_cmesh_get_num_local_trees (cmesh);
