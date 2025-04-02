@@ -68,7 +68,6 @@ jobs:
           for combined_id in $combined_ids; do
             issue_id=$(echo $combined_id | cut -d, -f1)
             PVII_id=$(echo $combined_id | cut -d, -f2)
-            echo "PVII_id is $PVII_id"
             if [ "$issue_id" == "$ISSUE_NODE_ID" ]; then
               echo "Found issue $issue_id in project $project_id"
               # Extract the status field id
