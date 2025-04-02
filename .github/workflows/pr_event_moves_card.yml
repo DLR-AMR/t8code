@@ -72,15 +72,11 @@ jobs:
                 PVII_id=$(echo $combined_id | cut -d, -f2)
                 issue_number=$(echo $combined_id | cut -d, -f3)
                 repository_id=$(echo $combined_id | cut -d, -f4)
-                echo "issue_id is $issue_id"
-                echo "PVII_id is $PVII_id"
-                echo "issue_number is $issue_number"
-                echo "repository_id is $repository_id"
                 # Check if the issue number matches the cleaned issue number from the pull request
                 # An Issue number is not unique per project. We need to check if the issue is in the correct project
                 if [[ " ${issue_numbers_array[@]} " =~ " $issue_number " ]] && [ "$repository_id" = "${{ inputs.REPO_NODE_ID }}" ]; then                 
+                  echo "found issue $issue_id in project $project_id"
                   status_field_id=$(echo $project_fields_and_issues | jq -r '.data.node.fields.nodes[] | select(.name == "Status") | .id')
-
                   echo "status_field_id is $status_field_id"
                   # Extract the current status of the issue
                   current_status=$(echo $project_fields_and_issues | jq -r --arg PVII_id "$PVII_id" '.data.node.items.nodes[] | select(.id == $PVII_id) | .fieldValues.nodes[] | select(.field.name == "Status") | .name')
