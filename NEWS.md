@@ -7,7 +7,7 @@ With the latest version of t8code we decided to use github project boards to hav
 We tried to minimize the additional overhead for you as much as possible. Nearly all of the steps that an Issue-card will do on the Issue-board are automated. An Issue should have the following life-cycle:
 
 1. Opening an Issue: It will automatically added to the Project and have the status "In-Box"
-2. Labeling an Issue: If you already know the priority and the workload of the issue you can give it a label according to its weight. Otherwise we will do it. The Issue will be moved to the "ToDo"-column by the t8ddy-bot.
+2. Labeling an Issue: If you already know the priority and the workload of the issue you can give it a label according to its weight. Otherwise we will do it. The Issue will be moved to the "ToDo"-column by the t8ddy-bot. Soon we will provide labels to sort Issues into different topics. The Issue will then also occur on the specialized Issue boards.
 3. Assigning: You want to work on an Issue? You can assign yourself on it, the Issue will get the status "In Progress". That way we want to prevent that multiple people are simultaneously working on a solution.
 4. Opening a PR: You implemented a solution for the Issue on a branch and now you want to merge it into main. Reference the Issue by "Closes #ISSUE_NUMBER". The Issue gets the status "Needs Review" and we will request a review from somebody of the main-developer Team. 
 5. Review is requested: You are almost done. Somebody is doing the review for your pull request. The linked Issue will get the status "In Review". 
