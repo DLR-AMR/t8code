@@ -27,8 +27,7 @@ jobs:
             # Set WORKLOAD_SET to true
             WORKLOAD_SET=true
             echo "WORKLOAD_SET=$WORKLOAD_SET" >> $GITHUB_OUTPUT
-            # extract the workload value
-            labels=$(echo '${{ toJSON(github.event.issue.labels) }}' | jq -r '.[].name')
+            labels=$(echo '${{ toJSON(github.event.issue.labels) }}' | jq -r '.[]?.name' 2>/dev/null || echo "")
             workload=$(echo "$labels" | grep -oE 'workload:(high|medium|low)' | cut -d: -f2)
             echo "WORKLOAD=$workload"
             WORKLOAD=$workload
@@ -58,8 +57,8 @@ jobs:
             # Set PRIORITY_SET to true
             PRIORITY_SET=true
             echo "PRIORITY_SET=$PRIORITY_SET" >> $GITHUB_OUTPUT
-            # extract the priority value
-            labels=$(echo '${{ toJSON(github.event.issue.labels) }}' | jq -r '.[].name')
+            # extract the priority value. Suppresses error messages from jq. If the label can not be found, an empty string is added.
+            labels=$(echo '${{ toJSON(github.event.issue.labels) }}' | jq -r '.[]?.name' 2>/dev/null || echo "")
             priority=$(echo "$labels" | grep -oE 'priority:(high|medium|low)' | cut -d: -f2)
             echo "PRIORITY=$priority"
             PRIORITY=$priority
@@ -228,10 +227,24 @@ jobs:
   move_quick_pr_issue_to_Needs_Review:
     needs: [open_issue_for_quick_pr, evaluate_pr]
     uses: ./.github/workflows/pr_event_moves_card.yml
+    if: ${{ !github.event.pull_request.draft }}
     with:
         ISSUE_NUMBER: ${{ needs.open_issue_for_quick_pr.outputs.ISSUE_NUMBER }}
         CURRENT_COLUMN_NAME: 'IGNORE'
         COLUMN_NAME: 'Needs Review'
+        REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
+    secrets:
+        PAT: ${{ secrets.T8DDY_PROJECTS }}
+
+   # After the issue has been created by open_issue_for_quick_pr, move the card to Needs Review
+  move_quick_draft_pr_issue_to_In_Progress:
+    needs: [open_issue_for_quick_pr, evaluate_pr]
+    uses: ./.github/workflows/pr_event_moves_card.yml
+    if: ${{ github.event.pull_request.draft }}
+    with:
+        ISSUE_NUMBER: ${{ needs.open_issue_for_quick_pr.outputs.ISSUE_NUMBER }}
+        CURRENT_COLUMN_NAME: 'IGNORE'
+        COLUMN_NAME: 'In Progress'
         REPO_NODE_ID: ${{ needs.evaluate_pr.outputs.REPO_NODE_ID }}
     secrets:
         PAT: ${{ secrets.T8DDY_PROJECTS }}
