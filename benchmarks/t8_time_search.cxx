@@ -197,7 +197,7 @@ t8_time_search_vtk (t8_forest_t forest, std::vector<int> *particles_per_element,
 /* Perform the actual search and write the forest with the number of particles per element
  * to vtu files. */
 static void
-t8_time_search_for_particles (t8_forest_t forest, sc_array *particles)
+t8_time_search_for_particles (t8_forest_t forest, sc_array *particles, sc_statinfo_t *times)
 {
   t8_locidx_t num_local_elements = t8_forest_get_local_num_elements (forest);
   t8_locidx_t ielement;
@@ -218,8 +218,11 @@ t8_time_search_for_particles (t8_forest_t forest, sc_array *particles)
 
   /* Perform the search of the forest. The second argument is the search callback function,
    * then the query callback function and the last argument is the array of queries. */
+  double time_search = -sc_MPI_Wtime ();
   t8_forest_search (forest, t8_time_search_callback, t8_time_search_query_callback, particles);
+  time_search += sc_MPI_Wtime ();
 
+  sc_stats_accumulate (times, time_search);
   /*
    * Output
    */
@@ -494,9 +497,9 @@ main (int argc, char **argv)
     /* 
    * Search for particles.
    */
-    time_search -= sc_MPI_Wtime ();
-    t8_time_search_for_particles (forest, particles);
-    time_search += sc_MPI_Wtime ();
+    // time_search -= sc_MPI_Wtime ();
+    t8_time_search_for_particles (forest, particles, &times[2]);
+    // time_search += sc_MPI_Wtime ();
 
     t8_debugf ("iteratrion: %i \n", iter);
 
@@ -545,7 +548,7 @@ main (int argc, char **argv)
   total_time += sc_MPI_Wtime ();
   sc_stats_accumulate (&times[0], total_time);
   sc_stats_accumulate (&times[1], time_refine);
-  sc_stats_accumulate (&times[2], time_search);
+  // sc_stats_accumulate (&times[2], time_search);
 
   // sc_stats_set1 (&times[0], total_time, "total");
   sc_stats_compute (comm, 3, times);
