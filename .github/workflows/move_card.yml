@@ -27,8 +27,8 @@ jobs:
             # Set WORKLOAD_SET to true
             WORKLOAD_SET=true
             echo "WORKLOAD_SET=$WORKLOAD_SET" >> $GITHUB_OUTPUT
-            # extract the workload value
-            labels=$(echo '${{ toJSON(github.event.issue.labels) }}' | jq -r '.[].name')
+            # extract the workload value. Suppresses error messages from jq. If the label can not be found, an empty string is added.
+            labels=$(echo '${{ toJSON(github.event.issue.labels) }}' | jq -r '.[]?.name' 2>/dev/null || echo "")
             workload=$(echo "$labels" | grep -oE 'workload:(high|medium|low)' | cut -d: -f2)
             echo "WORKLOAD=$workload"
             WORKLOAD=$workload
@@ -58,8 +58,8 @@ jobs:
             # Set PRIORITY_SET to true
             PRIORITY_SET=true
             echo "PRIORITY_SET=$PRIORITY_SET" >> $GITHUB_OUTPUT
-            # extract the priority value
-            labels=$(echo '${{ toJSON(github.event.issue.labels) }}' | jq -r '.[].name')
+            # extract the priority value. Suppresses error messages from jq. If the label can not be found, an empty string is added.
+            labels=$(echo '${{ toJSON(github.event.issue.labels) }}' | jq -r '.[]?.name' 2>/dev/null || echo "")
             priority=$(echo "$labels" | grep -oE 'priority:(high|medium|low)' | cut -d: -f2)
             echo "PRIORITY=$priority"
             PRIORITY=$priority
