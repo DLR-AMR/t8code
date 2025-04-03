@@ -207,8 +207,8 @@ t8_time_search_for_particles (t8_forest_t forest, sc_array *particles)
   t8_global_productionf (" [search] Starting search for %zd particles.\n", particles->elem_count);
   t8_tutorial_search_user_data_t *user_data = (t8_tutorial_search_user_data_t *) t8_forest_get_user_data (forest);
   T8_ASSERT (user_data != NULL);
-  std::vector<int> *particles_per_element = user_data->particles_per_element;
-  T8_ASSERT (particles_per_element != NULL);
+  // std::vector<int> *particles_per_element = user_data->particles_per_element;
+  T8_ASSERT (user_data->particles_per_element != NULL);
 
   user_data->particles_per_element->resize (num_local_elements);
   /* Set the entry of each element to 0 */
