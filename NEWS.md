@@ -13,6 +13,8 @@ We tried to minimize the additional overhead for you as much as possible. Nearly
 5. Review is requested: You are almost done. Somebody is doing the review for your pull request. The linked issue will get the status "In Review". 
 6. Merged into main: You are done, and the issue will be moved into "Done". We will talk about the solution shortly in our developer-meeting. Then the issue will be moved into "Can be archived".
 
+Please execute the steps in this order to ensure that your issue has the correct status.
+
 ## Do I have to do this for my typo/quick-fix/tiny-PR?
 No! If your code is only a couple of lines long AND has very little impact on the algorithms of t8code (a single line of changed code can have a big impact) we encourage you to directly open a PR. If no issues are referenced using the Closes-keyword, an issue is automatically created and moved into "Needs Review". That way we shouldn't miss the opening of your PR.
 
