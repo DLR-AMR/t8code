@@ -9,9 +9,9 @@ We tried to minimize the additional overhead for you as much as possible. Nearly
 1. Opening an issue: It will automatically added to the project and have the status "In-Box".
 2. Labeling an issue: If you already know the priority and the workload of the issue, you can give it a label according to its weight. Otherwise we will do it. The issue will be moved to the "ToDo"-column by the t8ddy-bot. Soon we will provide labels to sort issues into different topics. The issue will then also occur on the specialized issue boards.
 3. Assigning: You want to work on an issue? You can assign yourself on it, the issue will get the status "In Progress". That way we want to prevent that multiple people are simultaneously working on a solution.
-4. Opening a PR: You implemented a solution for the issue on a branch and now you want to merge it into main. Reference the issue by "Closes #ISSUE_NUMBER". The issue gets the status "Needs Review" and we will request a review from somebody of the main-developer Team. 
-5. Review is requested: You are almost done. Somebody is doing the review for your pull request. The linked issue will get the status "In Review". 
-6. Merged into main: You are done, and the issue will be moved into "Done". We will talk about the solution shortly in our developer-meeting. Then the issue will be moved into "Can be archived".
+4. Opening a PR: You implemented a solution for the issue on a branch and now you want to merge it into main. Reference the issue by "Closes #ISSUE_NUMBER". The issue gets the status "Needs Review" and we will request a review from somebody of the main-developer Team.
+5. Review is requested: You are almost done. Somebody is doing the review for your pull request. The linked issue will get the status "In Review".
+6. Merged into main: You are done, and the issue will be moved into "Done". We will talk about the solution shortly in our developer-meeting. Then the issue will be moved into "Can be archived". After two weeks the issue is archived automatically.
 
 Please execute the steps in this order to ensure that your issue has the correct status.
 
