@@ -2007,6 +2007,8 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
    * the uniform partition.
    * (0, l_n_c_0, l_n_c_0 + l_n_c_1, l_n_c_0 + l_n_c_1 + l_n_c_2, ...) */
   t8_shmem_prefix (&local_num_children, offset_array, 1, T8_MPI_GLOIDX, sc_MPI_SUM);
+  bool proc_is_empty_shared = false;
+  int next_non_empty_proc = -1;
 
   t8_cmesh_partition_query_t data;
   data.num_procs = cmesh->mpisize;
@@ -2330,9 +2332,11 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
 
   if (first_element_index_of_current_proc > last_element_index_of_current_proc) {
     /* We do not expect a start/end message if this proc is empty. */
+    proc_is_empty_shared = true;
+    t8_debugf("[D] empty proc start/end message\n");
     expect_start_message = false;
     expect_end_message = false;
-    *first_local_tree = 0;
+    *first_local_tree = -1;
     *last_local_tree = -1;
     if (first_tree_shared != NULL) {
       *first_tree_shared = 0;
@@ -2343,6 +2347,7 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
     if (child_in_tree_end != NULL) {
       *child_in_tree_end = -1;
     }
+    
 #ifdef T8_ENABLE_DEBUG
     num_received_end_messages++;
     num_received_start_messages++;
@@ -2410,11 +2415,13 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
     /* Check for empty partition */
     if (*child_in_tree_end < 0 || *child_in_tree_begin < 0) {
       /* This partition is empty */
+      t8_debugf ("[D] empty proc, end_message\n");
       t8_debugf ("[H] EMPTY hybrid %li %li %li %li\n", *first_local_tree, *last_local_tree, *child_in_tree_begin,
                  *child_in_tree_end);
 
       t8_cmesh_uniform_set_return_parameters_to_empty (first_local_tree, child_in_tree_begin, last_local_tree,
                                                        child_in_tree_end, first_tree_shared);
+      proc_is_empty_shared = true;
     }
   }
   t8_gloidx_t num_messages_sent = 0;
@@ -2423,34 +2430,47 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
   T8_ASSERT (num_received_start_messages == 1);
   T8_ASSERT (num_received_end_messages == 1);
 
-  //t8_gloidx_t *first_local_trees = T8_ALLOC_ZERO (t8_gloidx_t, cmesh->mpisize);
-  //mpiret = sc_MPI_Allgather (first_local_tree, 1, T8_MPI_GLOIDX, first_local_trees, 1, T8_MPI_GLOIDX, comm);
+  t8_gloidx_t *first_local_trees = T8_ALLOC_ZERO (t8_gloidx_t, cmesh->mpisize);
+  mpiret = sc_MPI_Allgather (first_local_tree, 1, T8_MPI_GLOIDX, first_local_trees, 1, T8_MPI_GLOIDX, comm);
 
-  //for(int i = 0; i < cmesh->mpisize; i++) {
-  //  t8_debugf ("[%i] first_local_tree %li\n", i, first_local_trees[i]);
-  //}
+  for(int i = 0; i < cmesh->mpisize; i++) {
+    t8_debugf ("[%i] first_local_tree %li\n", i, first_local_trees[i]);
+  }
 
 
   /* Compute shared tree indices for empty procs */
-  //if (child_in_tree_begin != NULL && child_in_tree_end != NULL){
-  //  /* Check for empty partition */
-  //  t8_debugf("[D] child_in_tree_begin %li child_in_tree_end %li\n", *child_in_tree_begin, *child_in_tree_end);
-  //  if (*child_in_tree_begin < 0 || *child_in_tree_end < 0) {
-  //    /* This partition is empty */
-  //    t8_debugf ("[D] empty proc");
-  //    t8_debugf ("[D] EMPTY hybrid %li %li %li %li\n", *first_local_tree, *last_local_tree, *child_in_tree_begin,
-  //               *child_in_tree_end);
-  //    int next_non_empty_proc = cmesh->mpirank + 1;
-  //    while (next_non_empty_proc < cmesh->mpisize && first_local_trees[next_non_empty_proc] == -1) {
-  //      next_non_empty_proc++;
-  //    }
-  //    T8_ASSERT (next_non_empty_proc < cmesh->mpisize);
-  //    T8_ASSERT (first_local_trees[next_non_empty_proc] != -1);
-  //    *first_local_tree = first_local_trees[next_non_empty_proc];
-  //    *last_local_tree = *first_local_tree - 1;
-  //    *first_tree_shared = 1;
-  //  }
-  //}
+  if ( proc_is_empty_shared ){
+    next_non_empty_proc = cmesh->mpirank + 1;
+    t8_gloidx_t first_child_next_non_empty = 0;
+    while (next_non_empty_proc < cmesh->mpisize && first_local_trees[next_non_empty_proc] == -1) {
+      next_non_empty_proc++;
+    }
+    //t8_gloidx_t last_child_next_non_empty = 0;
+    //do {
+    //  first_child_next_non_empty
+    //    = t8_cmesh_get_first_element_of_process (next_non_empty_proc, data.num_procs, data.global_num_elements);
+    //  last_child_next_non_empty
+    //    = t8_cmesh_get_first_element_of_process (next_non_empty_proc + 1, data.num_procs,
+    //                                            data.global_num_elements)
+    //      - 1;
+    //  next_non_empty_proc++;
+    //}
+    //while (last_child_next_non_empty < first_child_next_non_empty
+    //       && next_non_empty_proc < cmesh->mpisize - 1);
+    //next_non_empty_proc--;
+    //if (next_non_empty_proc >= cmesh->mpisize - 1) {
+    //  next_non_empty_proc = cmesh->mpisize - 1;
+    //  first_child_next_non_empty = t8_cmesh_get_first_element_of_process (next_non_empty_proc, data.num_procs,
+    //                                          data.global_num_elements);
+    //  last_child_next_non_empty = data.global_num_elements - 1;
+    //}
+    //t8_debugf ("[D] next non empty: %i\n", next_non_empty_proc);
+    *first_local_tree = first_local_trees[next_non_empty_proc];
+    *last_local_tree = *first_local_tree - 1;
+    *first_tree_shared = 0;
+    t8_debugf ("[D] empty proc, first_local_tree %li, last_local_tree: %li\n", *first_local_tree, *last_local_tree);
+  }
+  T8_FREE (first_local_trees);
 
   if (pure_local_trees > 0) {
     sc_array_reset (&send_requests);
