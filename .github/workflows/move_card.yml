@@ -237,7 +237,8 @@ jobs:
     secrets:
         PAT: ${{ secrets.T8DDY_PROJECTS }}
 
-   # After the issue has been created by open_issue_for_quick_pr, move the card to Needs Review
+   # After the issue has been created by open_issue_for_quick_pr, move the card to In Progress. The triggering PR is a draft PR,
+   # therefore we don't want to move the card to Needs Review.
   move_quick_draft_pr_issue_to_In_Progress:
     needs: [open_issue_for_quick_pr, evaluate_pr]
     uses: ./.github/workflows/pr_event_moves_card.yml
