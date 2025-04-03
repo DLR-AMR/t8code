@@ -2,6 +2,12 @@ name: "Create an issue in the repository for a PR that does not have one yet"
 
 on:
   workflow_call:
+    inputs:
+      DEFAULT_PROJECT:
+        type: string
+        description: 'The default project to use for the issue'
+        required: true
+        default: ''
     secrets:
         PAT:
           required: true
@@ -40,10 +46,14 @@ jobs:
                 fi
                 echo "TITLE=$TITLE"
                 echo "AUTHOR=$AUTHOR"
+                # Create the new issue. Use the DEFAULT_PROJECT to directly add it to the project. 
+                # Letting GH add the Issue to the project by automatization can lead to a delay, 
+                # and the following worfkflows will try to move a card that doesn't exist yet.
                 new_issue_url=$(gh issue create \
                     --title "$TITLE" \
                     --assignee "$AUTHOR" \
-                    --body "$ISSUE_BODY"
+                    --body "$ISSUE_BODY" \
+                    --project "${{ inputs.DEFAULT_PROJECT }}"
                 )
                 echo "new_issue_url=$new_issue_url"
                 # Extract the issue number from the URL. 

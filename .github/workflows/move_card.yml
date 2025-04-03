@@ -221,6 +221,8 @@ jobs:
     needs: [evaluate_pr]
     if: ${{ github.event_name == 'pull_request' && needs.evaluate_pr.outputs.NUMBER_IS_SET == 'false' }}
     uses: ./.github/workflows/quick_pr.yml
+    with:
+        DEFAULT_PROJECT: "t8code's Issue Landing page"
     secrets:
         PAT: ${{ secrets.T8DDY_PROJECTS }}
 
