@@ -1798,7 +1798,7 @@ t8_cmesh_uniform_bounds_from_unpartioned (t8_cmesh_t cmesh, const t8_gloidx_t lo
                                           t8_gloidx_t *child_in_tree_end, int8_t *first_tree_shared)
 {
   const t8_gloidx_t num_trees = t8_cmesh_get_num_trees (cmesh);
-  t8_debugf ("Cmesh is not partitioned.\n");
+  t8_debugf ("Cmesh uniform bounds from unpartitioned \n");
   /* Compute the first and last element of this process. Then loop over
      * all trees to find the trees in which these are contained.
      * We cast to long double and double to prevent overflow. */
@@ -1836,6 +1836,9 @@ t8_cmesh_uniform_bounds_from_unpartioned (t8_cmesh_t cmesh, const t8_gloidx_t lo
          */
       t8_cmesh_uniform_set_return_parameters_to_empty (first_local_tree, child_in_tree_begin, last_local_tree,
                                                        child_in_tree_end, first_tree_shared);
+      /* We set the first local tree to the first local tree of the next process. */
+      /* We set the last local tree to the first local tree - 1. */
+      
       *first_local_tree = 0;
       return;
     }
@@ -2366,6 +2369,35 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
   T8_ASSERT (num_received_start_messages == 1);
   T8_ASSERT (num_received_end_messages == 1);
 
+  //t8_gloidx_t *first_local_trees = T8_ALLOC_ZERO (t8_gloidx_t, cmesh->mpisize);
+  //mpiret = sc_MPI_Allgather (first_local_tree, 1, T8_MPI_GLOIDX, first_local_trees, 1, T8_MPI_GLOIDX, comm);
+
+  //for(int i = 0; i < cmesh->mpisize; i++) {
+  //  t8_debugf ("[%i] first_local_tree %li\n", i, first_local_trees[i]);
+  //}
+
+
+  /* Compute shared tree indices for empty procs */
+  //if (child_in_tree_begin != NULL && child_in_tree_end != NULL){
+  //  /* Check for empty partition */
+  //  t8_debugf("[D] child_in_tree_begin %li child_in_tree_end %li\n", *child_in_tree_begin, *child_in_tree_end);
+  //  if (*child_in_tree_begin < 0 || *child_in_tree_end < 0) {
+  //    /* This partition is empty */
+  //    t8_debugf ("[D] empty proc");
+  //    t8_debugf ("[D] EMPTY hybrid %li %li %li %li\n", *first_local_tree, *last_local_tree, *child_in_tree_begin,
+  //               *child_in_tree_end);
+  //    int next_non_empty_proc = cmesh->mpirank + 1;
+  //    while (next_non_empty_proc < cmesh->mpisize && first_local_trees[next_non_empty_proc] == -1) {
+  //      next_non_empty_proc++;
+  //    }
+  //    T8_ASSERT (next_non_empty_proc < cmesh->mpisize);
+  //    T8_ASSERT (first_local_trees[next_non_empty_proc] != -1);
+  //    *first_local_tree = first_local_trees[next_non_empty_proc];
+  //    *last_local_tree = *first_local_tree - 1;
+  //    *first_tree_shared = 1;
+  //  }
+  //}
+
   if (pure_local_trees > 0) {
     sc_array_reset (&send_requests);
   }
@@ -2440,6 +2472,7 @@ t8_cmesh_uniform_bounds_for_irregular_refinement (const t8_cmesh_t cmesh, const 
   /* If the initial cmesh is not partitioned, every process knows "everything" and we do not
    * need any communication.*/
   if (!cmesh->set_partition) {
+    t8_debugf ("Cmesh is not partitioned.\n");
     t8_cmesh_uniform_bounds_from_unpartioned (cmesh, local_num_children, level, scheme, first_local_tree,
                                               child_in_tree_begin, last_local_tree, child_in_tree_end,
                                               first_tree_shared);
@@ -2451,6 +2484,7 @@ t8_cmesh_uniform_bounds_for_irregular_refinement (const t8_cmesh_t cmesh, const 
     *  Cmesh is partitioned
     * 
     */
+    t8_debugf ("Cmesh is partitioned.\n");
     t8_cmesh_uniform_bounds_from_partition (cmesh, local_num_children, level, scheme, first_local_tree,
                                             child_in_tree_begin, last_local_tree, child_in_tree_end, first_tree_shared,
                                             comm);
