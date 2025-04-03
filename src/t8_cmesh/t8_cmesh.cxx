@@ -1811,6 +1811,59 @@ t8_cmesh_uniform_bounds_from_unpartioned (t8_cmesh_t cmesh, const t8_gloidx_t lo
      * -> No, we cannot. Since we need in any case compute the t8_element_count_leaves_from_root
      *    for each tree.
      */
+  if (last_child < first_child) {
+    /* This process is empty. */
+    /* Find the next non-empty proc */
+    int next_non_empty = cmesh->mpirank + 1;
+    t8_gloidx_t first_child_next_non_empty = 0;
+    t8_gloidx_t last_child_next_non_empty = 0;
+    do {
+      first_child_next_non_empty = t8_cmesh_get_first_element_of_process (next_non_empty, cmesh->mpisize,
+                                                                           local_num_children);
+      last_child_next_non_empty = t8_cmesh_get_first_element_of_process (next_non_empty + 1, cmesh->mpisize,
+                                                                          local_num_children) - 1;
+      next_non_empty++;
+    }
+    while (last_child_next_non_empty < first_child_next_non_empty
+           && next_non_empty < cmesh->mpisize-1);
+    if (next_non_empty >= cmesh->mpisize - 1) {
+      next_non_empty = cmesh->mpisize - 1;
+      first_child_next_non_empty = t8_cmesh_get_first_element_of_process (cmesh->mpisize - 1, cmesh->mpisize,
+                                                                           local_num_children);
+     last_child_next_non_empty = t8_cmesh_get_first_element_of_process (cmesh->mpisize, cmesh->mpisize,
+                                                                           local_num_children) - 1;
+    }
+    t8_debugf ("[D] next_non_empty: %i, first_child_next_non_empty: %li, last_child_next_non_empty: %li\n",
+               next_non_empty, first_child_next_non_empty, last_child_next_non_empty);
+    T8_ASSERT (first_child_next_non_empty <= last_child_next_non_empty);
+
+    t8_gloidx_t current_tree_element_offset = 0;
+    for (t8_gloidx_t igtree = 0; igtree < num_trees; ++igtree){
+      const t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, (t8_locidx_t) igtree);
+      const t8_gloidx_t elem_in_tree = scheme->count_leaves_from_root (tree_class, level);
+
+      if (current_tree_element_offset <= first_child_next_non_empty
+          && first_child_next_non_empty < current_tree_element_offset + elem_in_tree) {
+        t8_debugf ("[D] first_child_next_non_empty: %li, current_tree_element_offset: %li, elem_in_tree: %li\n",
+                   first_child_next_non_empty, current_tree_element_offset, elem_in_tree);
+        if (child_in_tree_begin != NULL) {
+          *child_in_tree_begin = first_child_next_non_empty - current_tree_element_offset;
+        }
+        /* We have found the first tree and can immediately return,
+           * ending the for loop. */
+        *first_local_tree = igtree;
+        *last_local_tree = igtree - 1;
+        t8_debugf("[D] first_local_tree: %li, last_local_tree: %li\n", *first_local_tree, *last_local_tree);
+        /* If our first element is not the very first element in the tree, we share
+           * this tree with the previous process. */
+        if (first_tree_shared != NULL) {
+          *first_tree_shared = current_tree_element_offset < first_child_next_non_empty ? 1 : 0;
+        }
+      }
+      current_tree_element_offset += elem_in_tree;
+    }
+    return;
+  }
   t8_gloidx_t current_tree_element_offset = 0;
   for (t8_gloidx_t igtree = 0; igtree < num_trees; ++igtree) {
     const t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, (t8_locidx_t) igtree);
@@ -1838,7 +1891,7 @@ t8_cmesh_uniform_bounds_from_unpartioned (t8_cmesh_t cmesh, const t8_gloidx_t lo
                                                        child_in_tree_end, first_tree_shared);
       /* We set the first local tree to the first local tree of the next process. */
       /* We set the last local tree to the first local tree - 1. */
-      
+      t8_debugf ("[D] Cmesh is empty. First local tree: %li, last local tree: %li\n", *first_local_tree, *last_local_tree);
       *first_local_tree = 0;
       return;
     }
@@ -1862,6 +1915,7 @@ t8_cmesh_uniform_bounds_from_unpartioned (t8_cmesh_t cmesh, const t8_gloidx_t lo
   T8_ASSERT (num_trees == 0);
   t8_cmesh_uniform_set_return_parameters_to_empty (first_local_tree, child_in_tree_begin, last_local_tree,
                                                    child_in_tree_end, first_tree_shared);
+  t8_debugf ("[D] Cmesh is empty 2. First local tree: %li, last local tree: %li\n", *first_local_tree, *last_local_tree);
   return;
 }
 
