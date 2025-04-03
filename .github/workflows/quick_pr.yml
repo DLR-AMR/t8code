@@ -31,12 +31,19 @@ jobs:
                 # Get the title of the triggering PR
                 TITLE="${{ github.event.pull_request.title }}"
                 AUTHOR="${{ github.event.pull_request.user.login }}"
+                ISSUE_BODY=""
+                DRAFT=$([[ "${{ github.event.pull_request.draft }}" == "true" ]] && echo "true" || echo "false")
+                if [[ "$DRAFT" == "true" ]]; then
+                  ISSUE_BODY="This Issue was created because the draft PR did not reference an Issue. Please @${AUTHOR} describe the Issue that you are solving."
+                else
+                  ISSUE_BODY="This Issue was created because the PR did not reference an Issue."
+                fi
                 echo "TITLE=$TITLE"
                 echo "AUTHOR=$AUTHOR"
                 new_issue_url=$(gh issue create \
                     --title "$TITLE" \
                     --assignee "$AUTHOR" \
-                    --body "This Issue was created because the PR did not reference an Issue."
+                    --body "$ISSUE_BODY"
                 )
                 echo "new_issue_url=$new_issue_url"
                 # Extract the issue number from the URL. 
