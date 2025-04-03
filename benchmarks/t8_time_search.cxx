@@ -297,7 +297,7 @@ static sc_array *
 t8_time_search_leaf_particles (t8_forest_t forest, sc_MPI_Comm comm)
 {
   sc_array *local_particles;
-  sc_array *global_particles;
+  // sc_array *global_particles;
   t8_element_array_t *leaf_elements;
   t8_locidx_t itree, num_trees;
   // int mpiret;
@@ -328,7 +328,7 @@ t8_time_search_leaf_particles (t8_forest_t forest, sc_MPI_Comm comm)
       }
       t8_element_t *element = (t8_element_t *) sc_array_index (&leaf_elements->array, ielement);
       double coords[3];
-      const t8_scheme *scheme = t8_forest_get_scheme (forest);
+      // const t8_scheme *scheme = t8_forest_get_scheme (forest);
       // scheme->element_get_vertex_reference_coords (leaf_elements->tree_class, element, 0, coords);
       t8_forest_element_centroid (forest, itree, element, coords);
       // t8_debugf ("coords: %f %f %f\n", coords[0], coords[1], coords[2]);
