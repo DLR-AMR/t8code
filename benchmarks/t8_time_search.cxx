@@ -197,7 +197,7 @@ t8_time_search_vtk (t8_forest_t forest, std::vector<int> *particles_per_element,
 /* Perform the actual search and write the forest with the number of particles per element
  * to vtu files. */
 static void
-t8_time_search_for_particles (t8_forest_t forest, sc_array *particles, sc_statinfo_t *times)
+t8_time_search_for_particles (t8_forest_t forest, sc_array *particles, sc_statinfo_t *times, int with_vtk)
 {
   t8_locidx_t num_local_elements = t8_forest_get_local_num_elements (forest);
   t8_locidx_t ielement;
@@ -227,8 +227,9 @@ t8_time_search_for_particles (t8_forest_t forest, sc_array *particles, sc_statin
    * Output
    */
   /* Write the forest and particles per element to vtu. */
-  t8_time_search_vtk (forest, user_data->particles_per_element, prefix);
-
+  if (with_vtk) {
+    t8_time_search_vtk (forest, user_data->particles_per_element, prefix);
+  }
   /* Compute the process global number of searched elements. */
   sc_MPI_Reduce (&user_data->num_elements_searched, &global_num_searched_elements, 1, T8_MPI_LOCIDX, sc_MPI_SUM, 0,
                  t8_forest_get_mpicomm (forest));
@@ -300,17 +301,9 @@ static sc_array *
 t8_time_search_leaf_particles (t8_forest_t forest, sc_MPI_Comm comm)
 {
   sc_array *local_particles;
-  // sc_array *global_particles;
+
   t8_element_array_t *leaf_elements;
   t8_locidx_t itree, num_trees;
-  // int mpiret;
-  // int mpirank;
-  // int rank, size;
-  // sc_MPI_Comm_rank (comm, &rank);
-  // sc_MPI_Comm_size (comm, &size);
-
-  // mpiret = sc_MPI_Comm_rank (comm, &mpirank);
-  // SC_CHECK_MPI (mpiret);
 
   const int local_count = t8_forest_get_local_num_elements (forest);
   // const int global_count = t8_forest_get_global_num_elements (forest);
@@ -344,13 +337,21 @@ t8_time_search_leaf_particles (t8_forest_t forest, sc_MPI_Comm comm)
       t8_debugf ("iparticle: %i\n", iparticle);
     }
   }
-
-  // global_particles = sc_array_new_count (sizeof (t8_tutorial_search_particle_t), global_count);
-  // sc_MPI_Allgather (local_particles->array, local_count, MPI_BYTE, global_particles->array, local_count, MPI_BYTE,
-  //                   comm);
-
-  // SC_CHECK_MPI (mpiret);
   return local_particles;
+}
+
+static sc_array *
+t8_time_search_one_particele (t8_forest_t forest, sc_MPI_Comm comm)
+{
+  sc_array *particles;
+  particles = sc_array_new_count (sizeof (t8_tutorial_search_particle_t), 1);
+  t8_tutorial_search_particle_t *particle = (t8_tutorial_search_particle_t *) sc_array_index_int (particles, 0);
+  particle->coordinates[0] = 0.5;
+  particle->coordinates[1] = 0.5;
+  particle->coordinates[2] = 0.5;
+  particle->is_inside_partition = 0;
+
+  return particles;
 }
 
 static sc_array *
@@ -364,6 +365,9 @@ t8_time_choose_build_particles (int particle_option, size_t num_particles, unsig
     break;
   case 2:
     particles = t8_time_search_leaf_particles (forest, comm);
+    break;
+  case 3:
+    particles = t8_time_search_one_particele (forest, comm);
     break;
   default:
     t8_global_errorf (" [search] Unknown particle option %d.\n", particle_option);
@@ -426,6 +430,7 @@ main (int argc, char **argv)
   int particle_option;
   int scheme_option;
   int eclass_option;
+  int help = 0, with_vtk = 0;
   t8_tutorial_search_user_data_t user_data;
   std::vector<int> particles_per_element (0, 0);
 
@@ -451,8 +456,10 @@ main (int argc, char **argv)
   t8_global_productionf (" [search] \n");
 
   opt = sc_options_new (argv[1]);
+  sc_options_add_switch (opt, 'h', "help", &help, "Display a short help message.");
+  sc_options_add_switch (opt, 'v', "with-vtk", &with_vtk, "Write vtk output.");
   sc_options_add_int (opt, 'p', "particle_fill", &particle_option, 2,
-                      "Option to fill the particles, 1: random, 2: one per leaf, 3: only one particle, ...");
+                      "Option to fill the particles, 1: random, 2: one per leaf, 3: only one particle");
   sc_options_add_int (opt, 's', "scheme", &scheme_option, 2,
                       "Option to choose the scheme, 1: standalone scheme, 2: default scheme");
   sc_options_add_int (opt, 'l', "level", &level, 5, "The level of the forest.");
@@ -467,6 +474,12 @@ main (int argc, char **argv)
                       "\t\t\t\t\t7 - pyramid");
 
   sc_options_parse (t8_get_package_id (), SC_LP_DEFAULT, opt, argc, argv);
+
+  if (help) {
+    /* Display help message */
+    sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
+    return 0;
+  }
 
   double total_time = 0;
   double time_refine = 0;
@@ -497,9 +510,7 @@ main (int argc, char **argv)
     /* 
    * Search for particles.
    */
-    // time_search -= sc_MPI_Wtime ();
-    t8_time_search_for_particles (forest, particles, &times[2]);
-    // time_search += sc_MPI_Wtime ();
+    t8_time_search_for_particles (forest, particles, &times[2], with_vtk);
 
     t8_debugf ("iteratrion: %i \n", iter);
 
@@ -513,22 +524,17 @@ main (int argc, char **argv)
     multiple_particles = 0;
     int global_multiple_particles = 0;
     const size_t element_count = particles_per_element->size ();
-    // t8_debugf ("element_count: %li \n", element_count);
     for (size_t ielement = 0; ielement < element_count; ielement++) {
-      // t8_debugf ("ielement: %li \n", ielement);
       num_particles_per_element = (*particles_per_element)[ielement];
-      // t8_debugf ("num_particles: %f \n", num_particles_per_element);
       if (num_particles_per_element > 1) {
         multiple_particles = 1;
         break;
       }
     }
     sc_MPI_Allreduce (&multiple_particles, &global_multiple_particles, 1, sc_MPI_INT, sc_MPI_MAX, comm);
-    // t8_forest_set_profiling (forest, 1);
     time_refine -= sc_MPI_Wtime ();
     forest = t8_time_adapt_forest (forest);
     time_refine += sc_MPI_Wtime ();
-    // time_refine += t8_forest_profile_get_adapt_time (forest);
 
     const size_t element_count_after = particles_per_element->size ();
     t8_debugf ("element_count_after: %li \n", element_count_after);
@@ -548,9 +554,7 @@ main (int argc, char **argv)
   total_time += sc_MPI_Wtime ();
   sc_stats_accumulate (&times[0], total_time);
   sc_stats_accumulate (&times[1], time_refine);
-  // sc_stats_accumulate (&times[2], time_search);
 
-  // sc_stats_set1 (&times[0], total_time, "total");
   sc_stats_compute (comm, 3, times);
   sc_stats_print (t8_get_package_id (), SC_LP_ESSENTIAL, 3, times, 1, 1);
   sc_options_destroy (opt);
