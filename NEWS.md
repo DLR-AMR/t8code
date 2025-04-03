@@ -1,20 +1,20 @@
 # Updated contribution workflow. 
 
 The team of main-developers of t8code and contributors to t8code is getting bigger and we needed an improved workflow to manage all of our contributions.
-With the latest version of t8code we decided to use github project boards to have a good track of our development. Having a look at [t8code's Issue Landing page](https://github.com/orgs/DLR-AMR/projects/13) you will find the state of all issues concerning t8code. If you have a good solution for an Issue that has the state "ToDo" / is in the "ToDo"-column, feel free to assign yourself and work on it. It is highly appreciated. In the future we will have specialized Project-boards, where Issues to a certain topic are summarized. But at first, all Issues will occur on t8code's Issue Landing page.
+With the latest version of t8code, we decided to use github project boards to have a good track of our development. Having a look at [t8code's Issue Landing page](https://github.com/orgs/DLR-AMR/projects/13), you will find the state of all issues concerning t8code. If you have a good solution for an issue that has the state "ToDo" / is in the "ToDo"-column, feel free to assign yourself and work on it. It is highly appreciated. In the future we will have specialized Project-boards, where issues to a certain topic are summarized. But at first, all issues will occur on t8code's Issue Landing page.
 
 ## What does change for me as a developer/contributer?
-We tried to minimize the additional overhead for you as much as possible. Nearly all of the steps that an Issue-card will do on the Issue-board are automated. An Issue should have the following life-cycle:
+We tried to minimize the additional overhead for you as much as possible. Nearly all of the steps that an issue will do on the project board are automated. An issue should have the following life-cycle:
 
-1. Opening an Issue: It will automatically added to the Project and have the status "In-Box"
-2. Labeling an Issue: If you already know the priority and the workload of the issue you can give it a label according to its weight. Otherwise we will do it. The Issue will be moved to the "ToDo"-column by the t8ddy-bot. Soon we will provide labels to sort Issues into different topics. The Issue will then also occur on the specialized Issue boards.
-3. Assigning: You want to work on an Issue? You can assign yourself on it, the Issue will get the status "In Progress". That way we want to prevent that multiple people are simultaneously working on a solution.
-4. Opening a PR: You implemented a solution for the Issue on a branch and now you want to merge it into main. Reference the Issue by "Closes #ISSUE_NUMBER". The Issue gets the status "Needs Review" and we will request a review from somebody of the main-developer Team. 
-5. Review is requested: You are almost done. Somebody is doing the review for your pull request. The linked Issue will get the status "In Review". 
-6. Merged Into main: You are done, and the issue will be moved into done. We will talk about the solution shortly in our developer-meeting. Then the issue will be moved into "Can be archived"
+1. Opening an issue: It will automatically added to the project and have the status "In-Box".
+2. Labeling an issue: If you already know the priority and the workload of the issue, you can give it a label according to its weight. Otherwise we will do it. The issue will be moved to the "ToDo"-column by the t8ddy-bot. Soon we will provide labels to sort issues into different topics. The issue will then also occur on the specialized issue boards.
+3. Assigning: You want to work on an issue? You can assign yourself on it, the issue will get the status "In Progress". That way we want to prevent that multiple people are simultaneously working on a solution.
+4. Opening a PR: You implemented a solution for the issue on a branch and now you want to merge it into main. Reference the issue by "Closes #ISSUE_NUMBER". The issue gets the status "Needs Review" and we will request a review from somebody of the main-developer Team. 
+5. Review is requested: You are almost done. Somebody is doing the review for your pull request. The linked issue will get the status "In Review". 
+6. Merged into main: You are done, and the issue will be moved into "Done". We will talk about the solution shortly in our developer-meeting. Then the issue will be moved into "Can be archived".
 
 ## Do I have to do this for my typo/quick-fix/tiny-PR?
-No! If your code is only a couple of lines long AND has very little impact on the algorithms of t8code (a single line of changed code can have a big impact) we encourage you to directly open a PR. If no Issues are referenced using the Closes-keyword an Issue is automatically created and moved into "Needs Review". That way we shouldn't miss the opening of your PR.
+No! If your code is only a couple of lines long AND has very little impact on the algorithms of t8code (a single line of changed code can have a big impact) we encourage you to directly open a PR. If no issues are referenced using the Closes-keyword, an issue is automatically created and moved into "Needs Review". That way we shouldn't miss the opening of your PR.
 
 
 # User Updates for the upcoming t8code v4.0.0
