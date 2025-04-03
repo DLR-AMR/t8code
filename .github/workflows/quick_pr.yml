@@ -2,6 +2,12 @@ name: "Create an issue in the repository for a PR that does not have one yet"
 
 on:
   workflow_call:
+    inputs:
+      DEFAULT_PROJECT:
+        type: string
+        description: 'The default project to use for the issue'
+        required: true
+        default: ''
     secrets:
         PAT:
           required: true
@@ -37,6 +43,7 @@ jobs:
                     --title "$TITLE" \
                     --assignee "$AUTHOR" \
                     --body "This Issue was created because the PR did not reference an Issue."
+                    --project "${{ inputs.DEFAULT_PROJECT }}"
                 )
                 echo "new_issue_url=$new_issue_url"
                 # Extract the issue number from the URL. 

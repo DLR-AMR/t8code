@@ -6,6 +6,9 @@ on:
   pull_request:
     types: [opened, reopened, ready_for_review, review_requested, review_request_removed, closed]
 
+env:
+  DEFAULT_PROJECT: "t8code's Issue Landing page"
+
 jobs:
   evaluate_issues:
     if: ${{ github.event_name == 'issues' }}
@@ -221,6 +224,8 @@ jobs:
     needs: [evaluate_pr]
     if: ${{ github.event_name == 'pull_request' && needs.evaluate_pr.outputs.NUMBER_IS_SET == 'false' }}
     uses: ./.github/workflows/quick_pr.yml
+    with:
+        DEFAULT_PROJECT: ${{ env.DEFAULT_PROJECT }}
     secrets:
         PAT: ${{ secrets.T8DDY_PROJECTS }}
 
