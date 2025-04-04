@@ -41,11 +41,13 @@ t8_forest_pfc_determine_recv_range (t8_shmem_array_t partition_shmem, int rank, 
                                     t8_procidx_t &end_procid, t8_procidx_t &num_recvs, bool skip_self);
 
 t8_locidx_t
-t8_forest_pfc_extreme_local_sibling (t8_eclass_scheme_c *scheme, t8_tree_t tree, t8_locidx_t start_element_id_in_tree,
+t8_forest_pfc_extreme_local_sibling (const t8_scheme_c *newscheme, t8_tree_t tree, t8_locidx_t start_element_id_in_tree,
                                      bool min_instead_max);
+// t8_locidx_t
+// t8_forest_pfc_extreme_local_sibling (t8_eclass_scheme_c *scheme, t8_tree_t tree, t8_locidx_t start_element_id_in_tree,
+//                                      bool min_instead_max);
 
 void
 t8_forest_pfc_helper_index_in_tree_from_globalid (t8_forest_t forest, t8_gloidx_t gelement_id, t8_gloidx_t &gtree_id,
-                                                  t8_eclass_scheme_c *&scheme, t8_tree_t &tree,
-                                                  t8_locidx_t &index_in_tree, t8_element_t *&element);
+                                                  t8_tree_t &tree, t8_locidx_t &index_in_tree, t8_element_t *&element);
 #endif

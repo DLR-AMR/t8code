@@ -147,6 +147,35 @@ t8_step4_partition_for_coarsening (t8_forest_t forest)
   return new_forest;
 }
 
+/* In this function we adapt a forest as in step3 and balance it. 
+ * In our main program the input forest is already adapted and then the resulting twice adapted forest will be unbalanced.
+ */
+static t8_forest_t
+t8_step4_balance (t8_forest_t forest)
+{
+  t8_forest_t balanced_forest;
+  /* Adapt the input forest. */
+  t8_forest_t unbalanced_forest = t8_step3_adapt_forest (forest);
+
+  /* Output to vtk. */
+  t8_forest_write_vtk (unbalanced_forest, "t8_step4_unbalanced_forest");
+  t8_global_productionf (" [step4] Wrote unbalanced forest to vtu files: %s*\n", "t8_step4_unbalanced_forest");
+
+  /* Initialize new forest. */
+  t8_forest_init (&balanced_forest);
+  /* Specify that this forest should result from balancing unbalanced_forest.
+   * The last argument is the flag 'no_repartition'.
+   * Since balancing will refine elements, the load-balance will be broken afterwards.
+   * Setting this flag to false (no_repartition = false -> yes repartition) will repartition
+   * the forest after balance, such that every process has the same number of elements afterwards.
+   */
+  t8_forest_set_balance (balanced_forest, unbalanced_forest, 0);
+  /* Commit the forest. */
+  t8_forest_commit (balanced_forest);
+
+  return balanced_forest;
+}
+
 int
 t8_step4_main (int argc, char **argv)
 {
@@ -156,6 +185,9 @@ t8_step4_main (int argc, char **argv)
   t8_forest_t forest;
   /* The prefix for our output files. */
   const char *prefix_uniform = "t8_step4_uniform_forest";
+  // const char *prefix_adapt = "t8_step4_adapted_forest";
+  const char *prefix_partition_ghost = "t8_step4_partitioned_ghost_forest";
+  const char *prefix_balance = "t8_step4_balanced_forest";
   const char *prefix_partition_for_coarsening = "t8_step4_pfc_forest";
   /* The uniform refinement level of the forest. */
   const int level = 4;
@@ -216,8 +248,8 @@ t8_step4_main (int argc, char **argv)
   t8_global_productionf (" [step4] Repartitioned forest for coarsening.\n");
   t8_step3_print_forest_information (forest);
   /* Write forest to vtu files. */
-  // t8_forest_write_vtk_ext (forest, prefix_partition_for_coarsening, 1, 1, 1, 1, 1, 0, 1, 0, NULL);
-  t8_forest_write_vtk_ext (forest, prefix_partition_ghost, 1, 1, 1, 1, 1, 0, 1, 0, NULL);
+  t8_forest_write_vtk_ext (forest, prefix_partition_for_coarsening, 1, 1, 1, 1, 1, 0, 1, 0, NULL);
+  // t8_forest_write_vtk_ext (forest, prefix_partition_ghost, 1, 1, 1, 1, 1, 0, 1, 0, NULL);
   t8_global_productionf (" [step4] Wrote repartitioned forest with ghost layer to vtu files: %s*\n",
                          prefix_partition_ghost);
 

@@ -4,7 +4,8 @@
 #include <t8_forest/t8_forest_pfc_message.hxx>
 #include <t8_forest/t8_forest_pfc_helper.hxx>
 #include <t8_data/t8_shmem.h>
-#include <t8_element_cxx.hxx>
+#include <t8_element.h>
+#include <t8_forest/t8_forest_partition_for_coarsening.h>
 #include <vector>
 #include <algorithm>
 
@@ -23,7 +24,7 @@ proc_owner_end (const t8_gloidx_t *partition, t8_procidx_t mpisize, t8_gloidx_t 
 }
 
 int
-t8_forest_max_num_children (t8_forest_t forest)
+t8_forest_max_num_children ([[maybe_unused]] t8_forest_t forest)
 {
   return 10;
 }
@@ -54,7 +55,10 @@ t8_forest_pfc_send_loop_range (t8_forest_t forest, std::vector<sc_MPI_Request> &
       continue;
 
     /* Fill message */
-    MessageType message (forest->scheme_cxx, iproc, forest->mpicomm);
+
+    // MYTODO: Correct scheme
+    // t8_scheme_c* tmpscheme = t8_scheme_new_default ();
+    MessageType message (forest->scheme, iproc, forest->mpicomm);
     message.fill (forest);
 
     sc_MPI_Request request;
@@ -89,7 +93,9 @@ t8_forest_pfc_recv_loop_range (t8_forest_t forest, std::vector<MessageType> &mes
     if (partition[iproc] >= partition[iproc + 1] || iproc == forest->mpirank)
       continue;
 
-    MessageType message (forest->scheme_cxx, iproc, forest->mpicomm);
+    // MYTODO: Correct scheme
+    // t8_scheme_c* tmpscheme = t8_scheme_new_default ();
+    MessageType message (forest->scheme, iproc, forest->mpicomm);
     t8_debugf ("receive message from %i\n", message.iproc);
     int buf_size;
     char *recv_buf;
@@ -109,31 +115,38 @@ t8_forest_pfc_family_range_around_border (t8_forest_t forest, t8_gloidx_t border
 {
   t8_gloidx_t gtree_id;
   t8_tree_t tree;
-  t8_eclass_scheme_c *scheme;
+  // t8_eclass_scheme_c *scheme;
+  // t8_scheme_c *newscheme;
   t8_element_t *parent, *element;
   t8_locidx_t index_in_tree;
-  t8_forest_pfc_helper_index_in_tree_from_globalid (forest, border_element_id, gtree_id, scheme, tree, index_in_tree,
-                                                    element);
+  t8_forest_pfc_helper_index_in_tree_from_globalid (forest, border_element_id, gtree_id, tree, index_in_tree, element);
 
-  if (scheme->t8_element_level (element) == 0) {
+  const t8_scheme_c *newscheme = t8_forest_get_scheme (forest);
+  t8_eclass_t eclass = tree->eclass;
+
+  if (newscheme->element_get_level (eclass, element) == 0) {
     family_begin = border_element_id;
     family_end = border_element_id;
     return false;
   }
 
-  scheme->t8_element_new (1, &parent);
-  scheme->t8_element_parent (element, parent);
+  // scheme->t8_element_new (1, &parent);
+  t8_element_new (newscheme, eclass, 1, &parent);
+  // scheme->t8_element_parent (element, parent);
+  newscheme->element_get_parent (eclass, element, parent);
 
   t8_gloidx_t first_tree_element = t8_forest_get_first_local_element_id (forest) + tree->elements_offset;
-  family_begin = first_tree_element + t8_forest_pfc_extreme_local_sibling (scheme, tree, index_in_tree, true);
+  family_begin = first_tree_element + t8_forest_pfc_extreme_local_sibling (newscheme, tree, index_in_tree, true);
   /* end iterator is one behind last element */
-  family_end = first_tree_element + t8_forest_pfc_extreme_local_sibling (scheme, tree, index_in_tree, false) + 1;
+  family_end = first_tree_element + t8_forest_pfc_extreme_local_sibling (newscheme, tree, index_in_tree, false) + 1;
 
   /* check if other processes have the same parent as we do, so we need to adjust our range */
   for (t8_procidx_t imessage = 0; imessage < (t8_procidx_t) messages.size (); imessage++) {
     t8_debugf ("process message from %i\n", messages[imessage].iproc);
     /* on the same tree we can use our scheme to compare, because we know that the eclasses are equal */
-    if (messages[imessage].itree == gtree_id && scheme->t8_element_equal (parent, messages[imessage].get_parent ())) {
+    // if (messages[imessage].itree == gtree_id && scheme->t8_element_equal (parent, messages[imessage].get_parent ())) {
+    if (messages[imessage].itree == gtree_id
+        && newscheme->element_is_equal (eclass, parent, messages[imessage].get_parent ())) {
       /* if our parents are equal, adjust left or right range border by num_siblings*/
       if (messages[imessage].iproc < forest->mpirank) {
         family_begin -= messages[imessage].num_siblings;
@@ -144,15 +157,17 @@ t8_forest_pfc_family_range_around_border (t8_forest_t forest, t8_gloidx_t border
     }
   }
 
-  int num_children = scheme->t8_element_num_children (parent);
-  scheme->t8_element_destroy (1, &parent);
+  // int num_children = scheme->t8_element_num_children (parent);
+  int num_children = newscheme->element_get_num_children (eclass, parent);
+  // scheme->t8_element_destroy (1, &parent);
+  t8_element_destroy (newscheme, eclass, 1, &parent);
   return (family_end - family_begin == num_children);
 }
 
 /* Maybe replace by all to rank with most elements */
 static int
-t8_forest_pfc_family_split_rank_all_to_first (t8_shmem_array_t partition_new_shmem, int rank, t8_gloidx_t family_begin,
-                                              t8_gloidx_t family_end)
+t8_forest_pfc_family_split_rank_all_to_first (t8_shmem_array_t partition_new_shmem, [[maybe_unused]] int rank,
+                                              t8_gloidx_t family_begin, [[maybe_unused]] t8_gloidx_t family_end)
 {
   int num_ranks = t8_shmem_array_get_elem_count (partition_new_shmem);
   const t8_gloidx_t *partition_new = t8_shmem_array_get_gloidx_array (partition_new_shmem);
