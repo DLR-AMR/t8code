@@ -121,8 +121,10 @@ add_t8_test( NAME t8_gtest_geometry_lagrange_serial                 SOURCES t8_g
 add_t8_test( NAME t8_gtest_geometry_triangular_interpolation_serial SOURCES t8_gtest_main.cxx t8_geometry/t8_gtest_geometry_triangular_interpolation.cxx )
 add_t8_test( NAME t8_gtest_geometry_handling_serial                 SOURCES t8_gtest_main.cxx t8_geometry/t8_gtest_geometry_handling.cxx )
 add_t8_test( NAME t8_gtest_point_inside_serial                      SOURCES t8_gtest_main.cxx t8_geometry/t8_gtest_point_inside.cxx )
-
+if( T8_WITH_VTK )
 add_t8_test( NAME t8_gtest_vtk_reader_parallel  SOURCES t8_gtest_main.cxx t8_IO/t8_gtest_vtk_reader.cxx )
+endif()
+
 add_t8_test( NAME t8_gtest_vtk_writer_parallel  SOURCES t8_gtest_main.cxx t8_IO/t8_gtest_vtk_writer.cxx )
 
 add_t8_test( NAME t8_gtest_nca_serial                   SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_nca.cxx )
