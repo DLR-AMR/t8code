@@ -7,7 +7,7 @@ endif()
 target_sources( t8example PRIVATE common/t8_example_common.cxx common/t8_example_common_functions.cxx )
 target_include_directories( t8example PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. ${SC_INCLUDE_DIR} )
 target_link_libraries( t8example PRIVATE T8 ${SC_LIBRARIES} m )
-install( TARGETS t8example DESTINATION lib )
+install( TARGETS t8example LIBRARY )
 
 function( add_t8_example )
     set( options "" )
@@ -36,7 +36,7 @@ function( add_t8_example )
         set_target_properties( ${ADD_T8_EXAMPLE_NAME} PROPERTIES EXPORT_COMPILE_COMMANDS ON )
     endif( T8CODE_EXPORT_COMPILE_COMMANDS )
 
-    install( TARGETS ${ADD_T8_EXAMPLE_NAME} DESTINATION bin )
+    install( TARGETS ${ADD_T8_EXAMPLE_NAME} DESTINATION ${CMAKE_INSTALL_BINDIR} )
 endfunction()
 
 add_t8_example( NAME t8_advection                       SOURCES advect/t8_advection.cxx )
