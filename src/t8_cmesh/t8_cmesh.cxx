@@ -2467,7 +2467,7 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
     *first_local_tree = first_local_trees[next_non_empty_proc];
     *last_local_tree = *first_local_tree - 1;
     if (first_tree_shared != NULL) {
-      *first_tree_shared = 1;
+      *first_tree_shared = 0;
     }
     t8_debugf ("[D] empty proc, first_local_tree %li, last_local_tree: %li\n", *first_local_tree, *last_local_tree);
   }
