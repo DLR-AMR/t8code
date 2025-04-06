@@ -1818,25 +1818,27 @@ t8_cmesh_uniform_bounds_from_unpartioned (t8_cmesh_t cmesh, const t8_gloidx_t lo
     t8_gloidx_t first_child_next_non_empty = 0;
     t8_gloidx_t last_child_next_non_empty = 0;
     do {
-      first_child_next_non_empty
-        = t8_cmesh_get_first_element_of_process (next_non_empty, cmesh->mpisize, local_num_children);
-      last_child_next_non_empty
-        = t8_cmesh_get_first_element_of_process (next_non_empty + 1, cmesh->mpisize, local_num_children) - 1;
+      first_child_next_non_empty = t8_cmesh_get_first_element_of_process (next_non_empty, cmesh->mpisize,
+                                                                           local_num_children);
+      last_child_next_non_empty = t8_cmesh_get_first_element_of_process (next_non_empty + 1, cmesh->mpisize,
+                                                                          local_num_children) - 1;
       next_non_empty++;
-    } while (last_child_next_non_empty < first_child_next_non_empty && next_non_empty < cmesh->mpisize - 1);
+    }
+    while (last_child_next_non_empty < first_child_next_non_empty
+           && next_non_empty < cmesh->mpisize-1);
     if (next_non_empty >= cmesh->mpisize - 1) {
       next_non_empty = cmesh->mpisize - 1;
-      first_child_next_non_empty
-        = t8_cmesh_get_first_element_of_process (cmesh->mpisize - 1, cmesh->mpisize, local_num_children);
-      last_child_next_non_empty
-        = t8_cmesh_get_first_element_of_process (cmesh->mpisize, cmesh->mpisize, local_num_children) - 1;
+      first_child_next_non_empty = t8_cmesh_get_first_element_of_process (cmesh->mpisize - 1, cmesh->mpisize,
+                                                                           local_num_children);
+     last_child_next_non_empty = t8_cmesh_get_first_element_of_process (cmesh->mpisize, cmesh->mpisize,
+                                                                           local_num_children) - 1;
     }
     t8_debugf ("[D] next_non_empty: %i, first_child_next_non_empty: %li, last_child_next_non_empty: %li\n",
                next_non_empty, first_child_next_non_empty, last_child_next_non_empty);
     T8_ASSERT (first_child_next_non_empty <= last_child_next_non_empty);
 
     t8_gloidx_t current_tree_element_offset = 0;
-    for (t8_gloidx_t igtree = 0; igtree < num_trees; ++igtree) {
+    for (t8_gloidx_t igtree = 0; igtree < num_trees; ++igtree){
       const t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, (t8_locidx_t) igtree);
       const t8_gloidx_t elem_in_tree = scheme->count_leaves_from_root (tree_class, level);
 
@@ -1851,7 +1853,7 @@ t8_cmesh_uniform_bounds_from_unpartioned (t8_cmesh_t cmesh, const t8_gloidx_t lo
            * ending the for loop. */
         *first_local_tree = igtree;
         *last_local_tree = igtree - 1;
-        t8_debugf ("[D] first_local_tree: %li, last_local_tree: %li\n", *first_local_tree, *last_local_tree);
+        t8_debugf("[D] first_local_tree: %li, last_local_tree: %li\n", *first_local_tree, *last_local_tree);
         /* If our first element is not the very first element in the tree, we share
            * this tree with the previous process. */
         if (first_tree_shared != NULL) {
@@ -1889,8 +1891,7 @@ t8_cmesh_uniform_bounds_from_unpartioned (t8_cmesh_t cmesh, const t8_gloidx_t lo
                                                        child_in_tree_end, first_tree_shared);
       /* We set the first local tree to the first local tree of the next process. */
       /* We set the last local tree to the first local tree - 1. */
-      t8_debugf ("[D] Cmesh is empty. First local tree: %li, last local tree: %li\n", *first_local_tree,
-                 *last_local_tree);
+      t8_debugf ("[D] Cmesh is empty. First local tree: %li, last local tree: %li\n", *first_local_tree, *last_local_tree);
       *first_local_tree = 0;
       return;
     }
@@ -1914,8 +1915,7 @@ t8_cmesh_uniform_bounds_from_unpartioned (t8_cmesh_t cmesh, const t8_gloidx_t lo
   T8_ASSERT (num_trees == 0);
   t8_cmesh_uniform_set_return_parameters_to_empty (first_local_tree, child_in_tree_begin, last_local_tree,
                                                    child_in_tree_end, first_tree_shared);
-  t8_debugf ("[D] Cmesh is empty 2. First local tree: %li, last local tree: %li\n", *first_local_tree,
-             *last_local_tree);
+  t8_debugf ("[D] Cmesh is empty 2. First local tree: %li, last local tree: %li\n", *first_local_tree, *last_local_tree);
   return;
 }
 
@@ -2023,6 +2023,8 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
   sc_array send_requests;
   bool expect_start_message = true;
   bool expect_end_message = true;
+  t8_gloidx_t child_in_tree_begin_temp = -1;
+  t8_gloidx_t child_in_tree_end_temp = -1;
   if (pure_local_trees > 0) {
     /* Compute which trees and elements to send to which process.
      * We skip empty processes. */
@@ -2271,6 +2273,9 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
 
 #endif
         );
+        if (iproc == cmesh->mpirank) {
+          child_in_tree_begin_temp = first_element_in_tree_index_of_current_proc;
+        }
       } /* End sending of start message */
 
       t8_debugf ("End message: %i\n", send_end_message);
@@ -2309,6 +2314,7 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
         }
         else { /* We are the current proc, so we just copy the data. */
           *last_local_tree = global_id_of_last_tree;
+          child_in_tree_end_temp = last_element_in_tree_index_of_current_proc + 1;
           if (child_in_tree_end != NULL) {
             *child_in_tree_end = last_element_in_tree_index_of_current_proc + 1;
           }
@@ -2333,7 +2339,7 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
   if (first_element_index_of_current_proc > last_element_index_of_current_proc) {
     /* We do not expect a start/end message if this proc is empty. */
     proc_is_empty_shared = true;
-    t8_debugf ("[D] empty proc start/end message\n");
+    t8_debugf("[D] empty proc start/end message\n");
     expect_start_message = false;
     expect_end_message = false;
     *first_local_tree = -1;
@@ -2347,7 +2353,7 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
     if (child_in_tree_end != NULL) {
       *child_in_tree_end = -1;
     }
-
+    
 #ifdef T8_ENABLE_DEBUG
     num_received_end_messages++;
     num_received_start_messages++;
@@ -2382,6 +2388,7 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
         *first_tree_shared = 0;
       }
     }
+    child_in_tree_begin_temp = message[1];
     if (child_in_tree_begin != NULL) {
       *child_in_tree_begin = message[1];
       T8_ASSERT (*child_in_tree_begin == -1
@@ -2404,6 +2411,7 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
     /* Copy the received data to output parameters */
     *last_local_tree = message[0];
     T8_ASSERT (*last_local_tree == -1 || (0 <= *last_local_tree && *last_local_tree <= t8_cmesh_get_num_trees (cmesh)));
+    child_in_tree_end_temp = message[1] + 1;
     if (child_in_tree_end != NULL) {
       *child_in_tree_end = message[1] + 1;
       T8_ASSERT (*child_in_tree_end == -1
@@ -2432,13 +2440,29 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
 
   t8_gloidx_t *first_local_trees = T8_ALLOC_ZERO (t8_gloidx_t, cmesh->mpisize);
   mpiret = sc_MPI_Allgather (first_local_tree, 1, T8_MPI_GLOIDX, first_local_trees, 1, T8_MPI_GLOIDX, comm);
+  SC_CHECK_MPI (mpiret);
 
-  for (int i = 0; i < cmesh->mpisize; i++) {
+  for(int i = 0; i < cmesh->mpisize; i++) {
     t8_debugf ("[%i] first_local_tree %li\n", i, first_local_trees[i]);
   }
 
+  t8_debugf("[D] first_local_tree: %li, last_local_tree: %li\n", *first_local_tree, *last_local_tree);
+  t8_debugf("[D] child_in_tree_begin: %li, child_in_tree_end: %li\n", 
+              child_in_tree_begin_temp, child_in_tree_end_temp);
+  const bool this_proc_is_empty = *first_local_tree >= *last_local_tree &&
+                                  child_in_tree_begin_temp >= child_in_tree_end_temp;
+  if (first_tree_shared != NULL) {
+    if (!this_proc_is_empty && cmesh->mpirank > 0 && child_in_tree_begin_temp > 0) {
+      /* The first tree is shared */
+      *first_tree_shared = 1;
+    }
+    else {
+      *first_tree_shared = 0;
+    }
+    t8_debugf ("[D] first_tree_shared: %i\n", *first_tree_shared);
+  }
   /* Compute shared tree indices for empty procs */
-  if (proc_is_empty_shared) {
+  if ( this_proc_is_empty ){
     next_non_empty_proc = cmesh->mpirank + 1;
     t8_gloidx_t first_child_next_non_empty = 0;
     while (next_non_empty_proc < cmesh->mpisize && first_local_trees[next_non_empty_proc] == -1) {
@@ -2466,9 +2490,9 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
     //t8_debugf ("[D] next non empty: %i\n", next_non_empty_proc);
     *first_local_tree = first_local_trees[next_non_empty_proc];
     *last_local_tree = *first_local_tree - 1;
-    if (first_tree_shared != NULL) {
-      *first_tree_shared = 0;
-    }
+    //if (first_tree_shared != NULL) {
+    //  *first_tree_shared = 0;
+    //}
     t8_debugf ("[D] empty proc, first_local_tree %li, last_local_tree: %li\n", *first_local_tree, *last_local_tree);
   }
   T8_FREE (first_local_trees);
