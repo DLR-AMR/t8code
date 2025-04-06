@@ -121,7 +121,7 @@ typedef int (*t8_forest_adapt_t) (t8_forest_t forest, t8_forest_t forest_from, t
 
 /** Create a new forest with reference count one.
  * This forest needs to be specialized with the t8_forest_set_* calls.
- * Currently it is manatory to either call the functions \ref
+ * Currently it is mandatory to either call the functions \ref
  * t8_forest_set_mpicomm, \ref t8_forest_set_cmesh, and \ref t8_forest_set_scheme,
  * or to call one of \ref t8_forest_set_copy, \ref t8_forest_set_adapt, or
  * \ref t8_forest_set_partition.  It is illegal to mix these calls, or to
