@@ -1,0 +1,4 @@
+test-job-other file:
+  stage: test
+  script:
+    - echo "This job tests something from another file"
