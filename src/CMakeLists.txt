@@ -9,6 +9,13 @@ endif()
 target_compile_features( T8 PUBLIC c_std_11 cxx_std_20 )
 add_library( T8CODE::T8 ALIAS T8 )
 
+if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
+  option( T8CODE_CODE_COVERAGE "Enable coverage reporting" ON)
+  if(T8CODE_CODE_COVERAGE)
+    include(CodeCoverage)
+  endif()
+endif()
+
 if( CMAKE_BUILD_TYPE STREQUAL "Release" )
   set (T8_CXXFLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE}")
   set (T8_CFLAGS "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_RELEASE}")
