@@ -8,6 +8,9 @@ test-job1:
   script:
     - echo "This job tests something"
 
+include:
+- local '.gitlab-CB/someJob.yml'
+
 deploy-prod:
   stage: deploy
   script:
