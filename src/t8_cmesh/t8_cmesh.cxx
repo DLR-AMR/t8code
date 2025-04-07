@@ -2468,26 +2468,7 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
     while (next_non_empty_proc < cmesh->mpisize && first_local_trees[next_non_empty_proc] == -1) {
       next_non_empty_proc++;
     }
-    //t8_gloidx_t last_child_next_non_empty = 0;
-    //do {
-    //  first_child_next_non_empty
-    //    = t8_cmesh_get_first_element_of_process (next_non_empty_proc, data.num_procs, data.global_num_elements);
-    //  last_child_next_non_empty
-    //    = t8_cmesh_get_first_element_of_process (next_non_empty_proc + 1, data.num_procs,
-    //                                            data.global_num_elements)
-    //      - 1;
-    //  next_non_empty_proc++;
-    //}
-    //while (last_child_next_non_empty < first_child_next_non_empty
-    //       && next_non_empty_proc < cmesh->mpisize - 1);
-    //next_non_empty_proc--;
-    //if (next_non_empty_proc >= cmesh->mpisize - 1) {
-    //  next_non_empty_proc = cmesh->mpisize - 1;
-    //  first_child_next_non_empty = t8_cmesh_get_first_element_of_process (next_non_empty_proc, data.num_procs,
-    //                                          data.global_num_elements);
-    //  last_child_next_non_empty = data.global_num_elements - 1;
-    //}
-    //t8_debugf ("[D] next non empty: %i\n", next_non_empty_proc);
+
     *first_local_tree = first_local_trees[next_non_empty_proc];
     *last_local_tree = *first_local_tree - 1;
     //if (first_tree_shared != NULL) {
