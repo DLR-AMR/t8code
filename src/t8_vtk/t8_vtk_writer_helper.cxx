@@ -121,7 +121,7 @@ tree_local_to_global_id<t8_cmesh_t> (const t8_cmesh_t grid, t8_locidx_t ltree)
 
 template <>
 bool
-grid_do_ghosts<t8_forest_t> (const t8_forest_t grid, const int write_ghosts)
+grid_do_ghosts<t8_forest_t> (const t8_forest_t grid, const bool write_ghosts)
 {
   // Do not write ghost elements if there aren't any.
   if (write_ghosts) {
@@ -144,7 +144,7 @@ grid_do_ghosts<t8_forest_t> (const t8_forest_t grid, const int write_ghosts)
 
 template <>
 bool
-grid_do_ghosts<t8_cmesh_t> (const t8_cmesh_t grid, const int write_ghosts)
+grid_do_ghosts<t8_cmesh_t> (const t8_cmesh_t grid, const bool write_ghosts)
 {
   // Do not write ghost elements if there aren't any.
   return write_ghosts && t8_cmesh_get_num_ghosts (grid) > 0;
@@ -152,14 +152,14 @@ grid_do_ghosts<t8_cmesh_t> (const t8_cmesh_t grid, const int write_ghosts)
 
 template <>
 t8_locidx_t
-num_cells_to_write<t8_forest_t> (const t8_forest_t grid, const int write_ghosts)
+num_cells_to_write<t8_forest_t> (const t8_forest_t grid, const bool write_ghosts)
 {
   return grid_local_num_elements (grid) + (write_ghosts ? t8_forest_get_num_ghosts (grid) : 0);
 }
 
 template <>
 t8_locidx_t
-num_cells_to_write<t8_cmesh_t> (const t8_cmesh_t grid, const int write_ghosts)
+num_cells_to_write<t8_cmesh_t> (const t8_cmesh_t grid, const bool write_ghosts)
 {
   return grid_local_num_elements (grid) + (write_ghosts ? t8_cmesh_get_num_ghosts (grid) : 0);
 }

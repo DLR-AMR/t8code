@@ -239,7 +239,7 @@ class vtk_writer {
  */
   void
   t8_grid_element_to_vtk_cell (const grid_t grid, const t8_element_t *element, const t8_locidx_t itree,
-                               const t8_gloidx_t offset, const int is_ghost, const int elem_id, long int *point_id,
+                               const t8_gloidx_t offset, const bool is_ghost, const int elem_id, long int *point_id,
                                int *cellTypes, vtkSmartPointer<vtkPoints> points,
                                vtkSmartPointer<vtkCellArray> cellArray,
                                vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_treeid,
@@ -474,7 +474,7 @@ class vtk_writer {
       dataArrays[idata] = vtkDoubleArray::New ();
       const int num_components = this->data[idata].type == T8_VTK_SCALAR ? 1 : 3;
       dataArrays[idata]->SetName (this->data[idata].description); /* Set the name of the array. */
-      dataArrays[idata]->SetNumberOfTuples (num_cells);           /* We want number of tuples=number of elements. */
+      dataArrays[idata]->SetNumberOfTuples (num_cells);           /* We want number of tuples=number of cells. */
       dataArrays[idata]->SetNumberOfComponents (num_components);  /* Each tuples has 3 values. */
       dataArrays[idata]->SetVoidArray (this->data[idata].data, num_cells * num_components, 1);
       unstructuredGrid->GetCellData ()->AddArray (dataArrays[idata]);
