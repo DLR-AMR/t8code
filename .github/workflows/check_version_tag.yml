@@ -1,0 +1,140 @@
+name: "t8ddy checks if the version tag is correct"
+
+#  This file is part of t8code.
+#  t8code is a C library to manage a collection (a forest) of multiple
+#  connected adaptive space-trees of general element types in parallel.
+#
+#  Copyright (C) 2025 the developers
+#
+#  t8code is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  t8code is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with t8code; if not, write to the Free Software Foundation, Inc.,
+#  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+on:
+    pull_request:
+        types: [synchronize]
+        branches:
+        paths:
+            - 'CITATION.cff'
+
+
+jobs:
+    check_version:
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        
+        steps:
+        - uses: actions/checkout@v4
+          with:
+            repository: ${{ github.event.pull_request.head.repo.full_name }}
+            ref: ${{ github.event.pull_request.head.ref }}
+            fetch-depth: 0
+        - name: Check commit message format
+          run: |
+                COMMIT_MESSAGE=$(git log -1 --pretty=%B)
+                if [[ ! "$COMMIT_MESSAGE" =~ ^Updated\ the\ version\ to\ [0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                    echo "Commit message does not match the required format."
+                    exit 1
+                fi
+        - name: Extract version number
+          run: |
+            COMMIT_MESSAGE=$(git log -1 --pretty=%B)
+            VERSION=$(echo "$COMMIT_MESSAGE" | grep -oP '\d+\.\d+\.\d+')
+            MAJOR=$(echo "$VERSION" | cut -d. -f1)
+            MINOR=$(echo "$VERSION" | cut -d. -f2)
+            PATCH=$(echo "$VERSION" | cut -d. -f3)
+            echo "VERSION=$VERSION" >> $GITHUB_ENV
+            echo "MAJOR=$MAJOR" >> $GITHUB_ENV
+            echo "MINOR=$MINOR" >> $GITHUB_ENV
+            echo "PATCH=$PATCH" >> $GITHUB_ENV
+        - name: Get version from tag
+          run: |
+            TAG_VERSION=$(git describe --tags --abbrev=0)
+            TAG_VERSION=$(echo "$TAG_VERSION" | sed 's/^v//')
+            TAG_MAJOR=$(echo "$TAG_VERSION" | cut -d. -f1)
+            TAG_MINOR=$(echo "$TAG_VERSION" | cut -d. -f2)
+            TAG_PATCH=$(echo "$TAG_VERSION" | cut -d. -f3)
+            echo "TAG_VERSION=$TAG_VERSION" >> $GITHUB_ENV
+            echo "TAG_MAJOR=$TAG_MAJOR" >> $GITHUB_ENV
+            echo "TAG_MINOR=$TAG_MINOR" >> $GITHUB_ENV
+            echo "TAG_PATCH=$TAG_PATCH" >> $GITHUB_ENV
+        - name: Check tag
+          run: |
+            if [[ "$MAJOR" -ne "$TAG_MAJOR" ]]; then
+                echo "Major version does not match the tag."
+                exit 1
+            fi
+            if [[ "$MINOR" -ne "$TAG_MINOR" ]]; then
+                echo "Minor version does not match the tag."
+                exit 1
+            fi
+            if [[ "$PATCH" -ne "$TAG_PATCH" ]]; then
+                echo "Patch version does not match the tag."
+                exit 1
+            fi
+        - name: Fetch latest version from main branch
+          run: |
+            git fetch origin main
+            LATEST_MAIN_VERSION=$(git show origin/main:CITATION.cff | grep '^version:' | awk '{print $2}')
+            LATEST_MAIN_MAJOR=$(echo "$LATEST_MAIN_VERSION" | cut -d. -f1)
+            LATEST_MAIN_MINOR=$(echo "$LATEST_MAIN_VERSION" | cut -d. -f2)
+            LATEST_MAIN_PATCH=$(echo "$LATEST_MAIN_VERSION" | cut -d. -f3)
+            echo "LATEST_MAIN_VERSION=$LATEST_MAIN_VERSION" >> $GITHUB_ENV
+            echo "LATEST_MAIN_MAJOR=$LATEST_MAIN_MAJOR" >> $GITHUB_ENV
+            echo "LATEST_MAIN_MINOR=$LATEST_MAIN_MINOR" >> $GITHUB_ENV
+            echo "LATEST_MAIN_PATCH=$LATEST_MAIN_PATCH" >> $GITHUB_ENV
+        - name: Check correct major version
+          if: contains(github.event.pull_request.labels.*.name, 'major')
+          run: |
+            if [[ "$MAJOR" -ne $((LATEST_MAIN_MAJOR + 1)) ]]; then
+                echo "Major version is not the next major version."
+                exit 1
+            fi
+            if [[ "$MINOR" -ne 0 ]]; then
+                echo "Minor version is not 0."
+                exit 1
+            fi
+            if [[ "$PATCH" -ne 0 ]]; then
+                echo "Patch version is not zero."
+                exit 1
+            fi
+        - name: Check correct minor version
+          if: contains(github.event.pull_request.labels.*.name, 'minor')
+          run: |
+            if [[ "$MAJOR" -ne "$LATEST_MAIN_MAJOR" ]]; then
+                echo "Major version does not match the latest main branch version."
+                exit 1
+            fi
+            if [[ "$MINOR" -ne $((LATEST_MAIN_MINOR + 1)) ]]; then
+                echo "Minor version is not the next minor version."
+                exit 1
+            fi
+            if [[ "$PATCH" -ne 0 ]]; then
+                echo "Patch version is not zero."
+                exit 1
+            fi
+        - name: Check correct patch version
+          if: contains(github.event.pull_request.labels.*.name, 'patch')
+          run: |
+            if [[ "$MAJOR" -ne "$LATEST_MAIN_MAJOR" ]]; then
+                echo "Major version does not match the latest main branch version.."
+                exit 1
+            fi
+            if [[ "$MINOR" -ne $LATEST_MAIN_MINOR ]]; then
+                echo "MINOR version does not match the latest main branch version."
+                exit 1
+            fi
+            if [[ "$PATCH" -ne $((LATEST_MAIN_PATCH + 1)) ]]; then
+                echo "Patch version is not the next patch version."
+                exit 1
+            fi

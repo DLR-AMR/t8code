@@ -211,3 +211,40 @@ jobs:
     needs: [preparation, sc_p4est_tests, t8code_tests, t8code_linkage_tests, t8code_api_tests, t8code_w_shipped_submodules_tests]
     with:
       TEST_LEVEL: ${{ github.event_name == 'pull_request' && 1 || 0 }} # Set TEST_LEVEL to 1 if the event is a PR, otherwise 0.
+  
+  check_commit_message:
+    runs-on: ubuntu-latest
+    outputs: 
+      trigger_version_update: ${{ steps.check_commit_message.outputs.VERSION_UPDATE }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        repository: ${{ github.event.pull_request.head.repo.full_name }}
+        ref: ${{ github.event.pull_request.head.ref }}
+        fetch-depth: 0
+    - name: Check commit message
+      id: check_commit_message
+      run: |
+        if ! git diff --quiet HEAD~1 HEAD; then
+          echo "The latest commit is not empty. Exiting."
+          echo "Do not update version"
+          echo "VERSION_UPDATE=false" >> $GITHUB_OUTPUT
+          exit 0
+        fi
+        COMMIT_MESSAGE=$(git log -1 --pretty=%B)
+        echo "message: $COMMIT_MESSAGE"
+        if [[ "$COMMIT_MESSAGE" == "Update Version" ]]; then
+          echo "Update version"
+          echo "VERSION_UPDATE=true" >> $GITHUB_OUTPUT
+        else
+          echo "Do not update version"
+          echo "VERSION_UPDATE=false" >> $GITHUB_OUTPUT
+        fi
+
+  t8code_version:
+    if: (github.event_name == 'pull_request' && needs.check_commit_message.outputs.trigger_version_update == 'true')
+    uses: ./.github/workflows/create_version_tag.yml
+    secrets: inherit
+    needs: [check_commit_message, t8code_tarball]
+
+  
