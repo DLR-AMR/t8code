@@ -106,8 +106,9 @@ jobs:
     # Generate Code coverage report.
     - name: Generate code coverage report.
       run: cd build && cmake --build . --target coverage
+    # Upload coverage report to codecov.
     - name: Upload coverage to codecov.
-      uses: codecov/codecov-action@latest
+      uses: codecov/codecov-action@v5
       with:
         file: ./coverage.info
         fail_ci_if_error: true
