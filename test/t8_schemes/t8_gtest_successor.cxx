@@ -39,7 +39,7 @@ class class_successor: public testing::TestWithParam<std::tuple<int, t8_eclass_t
     scheme->element_new (tree_class, 1, &child);
     scheme->element_new (tree_class, 1, &last);
 
-    scheme->get_root (tree_class, element);
+    scheme->set_to_root (tree_class, element);
 
     tree_class = scheme->get_eclass_scheme_eclass (tree_class);
     if (tree_class == T8_ECLASS_VERTEX)
@@ -136,7 +136,7 @@ t8_deep_successor (t8_element_t *element, t8_element_t *successor, t8_element_t 
 
 TEST_P (class_successor, test_recursive_and_deep_successor)
 {
-#if T8CODE_TEST_LEVEL == 1
+#if T8CODE_TEST_LEVEL >= 1
   const int maxlvl = 3;
 #else
   const int maxlvl = 4;

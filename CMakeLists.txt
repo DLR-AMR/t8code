@@ -16,7 +16,7 @@ option( T8CODE_BUILD_AS_SHARED_LIBRARY "Whether t8code should be built as a shar
 option( T8CODE_BUILD_PEDANTIC "Compile t8code with `-pedantic` as done in the Github CI." OFF )
 option( T8CODE_BUILD_WALL "Compile t8code with `-Wall` as done in the Github CI." OFF )
 option( T8CODE_BUILD_WERROR "Compile t8code with `-Werror` as done in the Github CI." OFF )
-option( T8CODE_BUILD_EXTRA_WARNINGS "Compile t8code with extra warnings as done in the Github CI." OFF )
+option( T8CODE_BUILD_WEXTRA "Compile t8code with extra warnings as done in the Github CI." OFF )
 option( T8CODE_EXPORT_COMPILE_COMMANDS "Export the compile commands as json. Can be used by IDEs for code completion (e.g. intellisense, clangd)" OFF )
 
 option( T8CODE_BUILD_TESTS "Build t8code's automated tests" ON )
@@ -56,22 +56,6 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
     "Debug" "Release" "RelWithDebInfo")
 endif()
-
-if( NOT DEFINED CMAKE_C_STANDARD ) 
-  set( CMAKE_C_STANDARD 11 )
-elseif( CMAKE_C_STANDARD LESS 11 )
-  message( FATAL_ERROR "The CMAKE_C_STANDARD variable has been set to ${CMAKE_C_STANDARD}, but t8code requires C11" )
-endif()
-set( CMAKE_C_STANDARD_REQUIRED ON )
-set( CMAKE_C_EXTENSIONS OFF )
-
-if( NOT DEFINED CMAKE_CXX_STANDARD ) 
-  set( CMAKE_CXX_STANDARD 20 )
-elseif( CMAKE_CXX_STANDARD LESS 20 )
-  message( FATAL_ERROR "The CMAKE_CXX_STANDARD variable has been set to ${CMAKE_CXX_STANDARD}, but t8code requires C++20" )
-endif()
-set( CMAKE_CXX_STANDARD_REQUIRED ON )
-set( CMAKE_CXX_EXTENSIONS OFF )
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 

@@ -183,7 +183,7 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
    * \note This function is overwritten by the pyramid implementation.
   */
   inline int
-  element_get_num_corners (const t8_element_t *elem) const
+  element_get_num_corners ([[maybe_unused]] const t8_element_t *elem) const
   {
     /* use the lookup table of the eclasses.
      * Pyramids should implement their own version of this function. */
@@ -208,7 +208,7 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
   }
 
   inline void
-  element_deinit (int length, t8_element_t *elem) const
+  element_deinit ([[maybe_unused]] int length, [[maybe_unused]] t8_element_t *elem) const
   {
   }
 
@@ -218,7 +218,7 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
    * \note This function is overwritten by the pyramid implementation.
   */
   inline t8_element_shape_t
-  element_get_shape (const t8_element_t *elem) const
+  element_get_shape ([[maybe_unused]] const t8_element_t *elem) const
   {
     /* use the lookup table of the eclasses.
      * Pyramids should implement their own version of this function. */
@@ -242,6 +242,20 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
     return count_leaves_from_level (element_level, level, dim);
   }
 
+  /**
+   * Indicates if an element is refinable. Possible reasons for being not refinable could be
+   * that the element has reached its max level.
+   * \param [in] elem   The element to check.
+   * \return            True if the element is refinable.
+   */
+  inline bool
+  element_is_refinable (const t8_element_t *elem) const
+  {
+    T8_ASSERT (this->underlying ().element_is_valid (elem));
+
+    return this->underlying ().element_get_level (elem) < this->underlying ().get_maxlevel ();
+  }
+
   /** Compute the number of siblings of an element. That is the number of 
    * Children of its parent.
    * \param [in] elem The element.
@@ -250,7 +264,7 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
    * \note that this number is >= 1, since we count the element itself as a sibling.
    */
   inline int
-  element_get_num_siblings (const t8_element_t *elem) const
+  element_get_num_siblings ([[maybe_unused]] const t8_element_t *elem) const
   {
     const int dim = t8_eclass_to_dimension[eclass];
     T8_ASSERT (eclass != T8_ECLASS_PYRAMID);

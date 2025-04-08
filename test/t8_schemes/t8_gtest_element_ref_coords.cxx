@@ -33,7 +33,7 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <test/t8_gtest_macros.hxx>
 
-#if T8CODE_TEST_LEVEL == 1
+#if T8CODE_TEST_LEVEL >= 1
 #define MAX_LEVEL_REF_COORD_TEST 3
 #else
 #define MAX_LEVEL_REF_COORD_TEST 4
@@ -163,7 +163,7 @@ t8_generate_additional_info_centroid (const t8_element_shape_t shape, const doub
  * \param [in] tol    The tolerance.
  * \return True if the arrays are equal, false otherwise.
  */
-const bool
+bool
 t8_compare_arrays (const double *array1, const double *array2, const int dim, const double tol)
 {
   for (int i_dim = 0; i_dim < dim; ++i_dim) {

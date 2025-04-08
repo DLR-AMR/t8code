@@ -172,7 +172,7 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm, int set_part
       /* Set the partition (with offsets) */
       t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
       t8_gloidx_t num_global_trees;
       /* The global number of trees is the sum over all numbers of trees in conn on each process */
       mpiret = sc_MPI_Allreduce (&num_local_trees, &num_global_trees, 1, T8_MPI_GLOIDX, sc_MPI_SUM, comm);
@@ -435,7 +435,7 @@ t8_cmesh_new_from_class (const t8_eclass_t eclass, const sc_MPI_Comm comm)
 }
 
 t8_cmesh_t
-t8_cmesh_new_empty (sc_MPI_Comm comm, const int do_partition, const int dimension)
+t8_cmesh_new_empty (sc_MPI_Comm comm, [[maybe_unused]] const int do_partition, const int dimension)
 {
   t8_cmesh_t cmesh;
 
@@ -447,7 +447,7 @@ t8_cmesh_new_empty (sc_MPI_Comm comm, const int do_partition, const int dimensio
 }
 
 t8_cmesh_t
-t8_cmesh_new_hypercube_hybrid (sc_MPI_Comm comm, int do_partition, int periodic)
+t8_cmesh_new_hypercube_hybrid (sc_MPI_Comm comm, [[maybe_unused]] int do_partition, int periodic)
 {
   int i;
   t8_cmesh_t cmesh;
@@ -696,17 +696,20 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
       if (periodic) {
         t8_cmesh_set_join (cmesh, 0, 0, 4, 5, 0);
       }
+      [[fallthrough]];
     case T8_ECLASS_QUAD:
       vertices[3] = 3;
       vertices[2] = 2;
       if (periodic) {
         t8_cmesh_set_join (cmesh, 0, 0, 2, 3, 0);
       }
+      [[fallthrough]];
     case T8_ECLASS_LINE:
       vertices[1] = 1;
       if (periodic) {
         t8_cmesh_set_join (cmesh, 0, 0, 0, 1, 0);
       }
+      [[fallthrough]];
     case T8_ECLASS_VERTEX:
       vertices[0] = 0;
       t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords, attr_vertices,
@@ -1268,10 +1271,13 @@ t8_cmesh_new_hypercube_pad_ext (const t8_eclass_t eclass, sc_MPI_Comm comm, cons
   switch (dim) {
   case 0:
     polygons_x = 1;
+    [[fallthrough]];
   case 1:
     polygons_y = 1;
+    [[fallthrough]];
   case 2:
     polygons_z = 1;
+    [[fallthrough]];
   default:
     T8_ASSERT (polygons_x > 0);
     T8_ASSERT (polygons_y > 0);
@@ -1476,7 +1482,7 @@ t8_cmesh_new_hypercube_pad_ext (const t8_eclass_t eclass, sc_MPI_Comm comm, cons
       /* Set the partition (with offsets) */
       t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
       t8_gloidx_t num_global_trees;
       /* The global number of trees is the sum over all numbers of trees in conn on each process */
       int mpiret = sc_MPI_Allreduce (&num_local_trees, &num_global_trees, 1, T8_MPI_GLOIDX, sc_MPI_SUM, comm);

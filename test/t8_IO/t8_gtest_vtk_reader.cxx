@@ -74,7 +74,7 @@ class vtk_reader: public testing::TestWithParam<std::tuple<int, int, int>> {
 /* All readers should fail properly with a non-existing file. */
 TEST_P (vtk_reader, vtk_to_cmesh_fail)
 {
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
   t8_cmesh_t cmesh
     = t8_cmesh_vtk_reader (failing_files[file], 0, main_proc, sc_MPI_COMM_WORLD, file_type, t8_testsuite_package_id, 0);
   EXPECT_TRUE (cmesh == NULL);
@@ -85,7 +85,7 @@ TEST_P (vtk_reader, vtk_to_cmesh_fail)
 /* All readers should construct a cmesh from a file. */
 TEST_P (vtk_reader, vtk_to_cmesh_success)
 {
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
   int mpirank;
   int mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
@@ -120,7 +120,7 @@ TEST_P (vtk_reader, vtk_to_cmesh_success)
 /* Read a file as a pointSet and compare the number of points with the known number of points. */
 TEST_P (vtk_reader, vtk_to_pointSet)
 {
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
   if (file_type != VTK_FILE_ERROR) {
     vtkSmartPointer<vtkPointSet> points
       = t8_vtk_reader_pointSet (test_files[file], partition, main_proc, sc_MPI_COMM_WORLD, file_type);
