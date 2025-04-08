@@ -39,6 +39,9 @@ on:
         required: true
         type: number
         description: 'Test level used for configuring (0 for full tests, 1 for less thorough tests, 2 for minimal tests)'
+    # secrets:
+    #     PAT:
+    #       required: true
 
 jobs:  
   generate-codecov:
@@ -106,11 +109,12 @@ jobs:
     # Generate Code coverage report.
     - name: Generate code coverage report.
       run: cd build && cmake --build . --target coverage
-    - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.T8DDY_TOKEN }}
-          file: ./coverage.info
-          fail_ci_if_error: true
-          verbose: true
+    # - name: Upload coverage to Codecov
+    #     uses: codecov/codecov-action@v5
+    #     with:
+    #       file: ./coverage.info
+    #       fail_ci_if_error: true
+    #       verbose: true
+    #     env:
+    #       CODECOV_TOKEN: ${{ secrets.PAT }}
     

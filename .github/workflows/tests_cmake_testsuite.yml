@@ -202,6 +202,8 @@ jobs:
       MPI: ON
       BUILD_TYPE: Debug
       TEST_LEVEL: 0
+    # secrets:
+    #     PAT: ${{ secrets.CODE_COVERAGE }}
   
   # Run t8code tests with shipped submodules. This test is only for the build system, so only one config is tested.
   t8code_w_shipped_submodules_tests:
