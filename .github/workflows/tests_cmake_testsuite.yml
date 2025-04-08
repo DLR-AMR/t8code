@@ -192,6 +192,16 @@ jobs:
       MPI: ON
       BUILD_TYPE: Debug
       TEST_LEVEL: 2 # Do Valgrind check for test level 2 for performance reasons.
+
+  # Generate Code Coverage.
+  t8code_code_coverage:
+    needs: preparation
+    uses: ./.github/workflows/code_coverage.yml
+    with:
+      MAKEFLAGS: -j4
+      MPI: ON
+      BUILD_TYPE: Debug
+      TEST_LEVEL: 0
   
   # Run t8code tests with shipped submodules. This test is only for the build system, so only one config is tested.
   t8code_w_shipped_submodules_tests:
