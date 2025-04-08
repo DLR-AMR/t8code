@@ -56,6 +56,7 @@ function( add_t8_test )
     endif ( T8CODE_ENABLE_MPI )
 
     add_test( NAME ${ADD_T8_TEST_NAME} COMMAND ${T8CODE_TEST_COMMAND_LIST} ${TEST_BUILD_DIR}/${ADD_T8_TEST_NAME} )
+    # Only necessary to collect coverage information with test level 0. Otherwise, default timeout is never reached.
     set_tests_properties(${ADD_T8_TEST_NAME} PROPERTIES TIMEOUT 2000) 
 endfunction()
 
