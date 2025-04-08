@@ -107,11 +107,11 @@ jobs:
     - name: Generate code coverage report.
       run: cd build && cmake --build . --target coverage
     - name: Upload coverage to codecov.
-        uses: codecov/codecov-action@v5
-        with:
-          file: ./coverage.info
-          fail_ci_if_error: true
-          verbose: true
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV }}
+      uses: codecov/codecov-action@latest
+      with:
+        file: ./coverage.info
+        fail_ci_if_error: true
+        verbose: true
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV }}
     
