@@ -39,9 +39,6 @@ on:
         required: true
         type: number
         description: 'Test level used for configuring (0 for full tests, 1 for less thorough tests, 2 for minimal tests)'
-    # secrets:
-    #     PAT:
-    #       required: true
 
 jobs:  
   generate-codecov:
@@ -75,7 +72,7 @@ jobs:
         && echo SC_PATH="$SC_PATH" >> $GITHUB_ENV
         && echo P4EST_PATH="$P4EST_PATH" >> $GITHUB_ENV
     ## Install lcov.
-    - name: Install Lcov
+    - name: Install lcov
       run: apt-get install -y lcov
     - name: Print lcov version
       run: lcov --version
@@ -109,12 +106,12 @@ jobs:
     # Generate Code coverage report.
     - name: Generate code coverage report.
       run: cd build && cmake --build . --target coverage
-    # - name: Upload coverage to Codecov
-    #     uses: codecov/codecov-action@v5
-    #     with:
-    #       file: ./coverage.info
-    #       fail_ci_if_error: true
-    #       verbose: true
-    #     env:
-    #       CODECOV_TOKEN: ${{ secrets.PAT }}
+    - name: Upload coverage to codecov.
+        uses: codecov/codecov-action@v5
+        with:
+          file: ./coverage.info
+          fail_ci_if_error: true
+          verbose: true
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV }}
     
