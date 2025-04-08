@@ -1,4 +1,4 @@
-name: Generate Code coverage report and deploy to Codecov
+name: Generate Code coverage report and deploy to Codecov.
 
 #  This file is part of t8code.
 #  t8code is a C library to manage a collection (a forest) of multiple
@@ -103,16 +103,15 @@ jobs:
       run: cd build && cmake --build . $MAKEFLAGS
     - name: install
       run: cd build && cmake --install .
-    # Generate Code coverage report.
-    - name: Generate code coverage report.
+    # Generate code coverage report.
+    - name: Generate code coverage report
       run: cd build && cmake --build . --target coverage
-    # Upload coverage report to codecov.
-    - name: Upload coverage to codecov.
+    # Upload coverage report to Codecov.
+    - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v5
       with:
-        file: ./coverage.info
+        files: ./coverage.info
         fail_ci_if_error: true
         verbose: true
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV }}
+        token: ${{ secrets.CODECOV }}
     
