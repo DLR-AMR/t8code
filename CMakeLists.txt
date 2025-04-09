@@ -123,9 +123,10 @@ else()
     
     # Capture the list of variables before adding the subdirectory to mark the added ones as advanced.
     get_cmake_property(_vars_before_sc VARIABLES)
-    add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/sc )# Compute the difference (new variables added by the subdirectory)
+    add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/sc )
     # Capture the list of variables after adding the subdirectory
     get_cmake_property(_vars_after_sc VARIABLES)
+    # Compute the difference (new variables added by the subdirectory)
     set(_new_sc_vars)
     foreach(_var IN LISTS _vars_after_sc)
         if(NOT _var IN_LIST _vars_before_sc)
@@ -148,6 +149,7 @@ else()
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/p4est )
     # Capture the list of variables after adding the subdirectory
     get_cmake_property(_vars_after_p4est VARIABLES)
+    # Compute the difference (new variables added by the subdirectory)
     set(_new_p4est_vars)
     foreach(_var IN LISTS _vars_after_p4est)
         if(NOT _var IN_LIST _vars_before_p4est)
