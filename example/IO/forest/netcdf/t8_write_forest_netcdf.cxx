@@ -36,7 +36,7 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_iterate.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <t8_forest_netcdf.h>
 #include <t8_netcdf.h>
 
@@ -174,7 +174,7 @@ t8_example_compare_performance_netcdf_var_properties (sc_MPI_Comm comm, int fore
 {
   t8_cmesh_t cmesh;
   t8_forest_t forest;
-  const t8_scheme *default_scheme = t8_scheme_new_default ();
+  const t8_scheme *scheme = t8_scheme_new_standalone ();
   t8_gloidx_t num_elements;
   t8_nc_int64_t *var_rank;
   double *random_values;
@@ -196,7 +196,7 @@ t8_example_compare_performance_netcdf_var_properties (sc_MPI_Comm comm, int fore
   cmesh = t8_cmesh_new_hypercube_hybrid (comm, 1, 0);
 
   /* Build a (partioined) uniform forest */
-  forest = t8_forest_new_uniform (cmesh, default_scheme, forest_refinement_level, 0, comm);
+  forest = t8_forest_new_uniform (cmesh, scheme, forest_refinement_level, 0, comm);
 
   /* If the adapt_forest flag is set, the forest will be adapted */
   if (adapt_forest) {
@@ -319,7 +319,7 @@ t8_example_netcdf_write_forest (sc_MPI_Comm comm, int forest_refinement_level, i
 {
   t8_cmesh_t cmesh;
   t8_forest_t forest;
-  const t8_scheme *default_scheme = t8_scheme_new_default ();
+  const t8_scheme *scheme = t8_scheme_new_standalone ();
   t8_gloidx_t num_elements;
   t8_nc_int32_t *var_rank;
   double *random_values;
@@ -344,7 +344,7 @@ t8_example_netcdf_write_forest (sc_MPI_Comm comm, int forest_refinement_level, i
   t8_global_productionf ("New cmesh was created\n");
 
   /* Build a (partioined) uniform forest */
-  forest = t8_forest_new_uniform (cmesh, default_scheme, level, 0, comm);
+  forest = t8_forest_new_uniform (cmesh, scheme, level, 0, comm);
 
   t8_global_productionf ("New forest was created\n");
 

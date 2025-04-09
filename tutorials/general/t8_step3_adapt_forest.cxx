@@ -49,14 +49,14 @@
  *     Do not refine an element if it has reached the maximum level. (Hint: scheme->element_get_level)
  */
 
-#include <t8.h>                                 /* General t8code header, always include this. */
-#include <t8_cmesh.h>                           /* cmesh definition and basic interface. */
-#include <t8_cmesh/t8_cmesh_examples.h>         /* A collection of exemplary cmeshes */
-#include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
-#include <t8_forest/t8_forest_io.h>             /* save forest */
-#include <t8_forest/t8_forest_geometrical.h>    /* geometrical information of the forest */
-#include <t8_schemes/t8_default/t8_default.hxx> /* default refinement scheme. */
-#include <t8_types/t8_vec.h>                    /* Basic operations on 3D vectors. */
+#include <t8.h>                              /* General t8code header, always include this. */
+#include <t8_cmesh.h>                        /* cmesh definition and basic interface. */
+#include <t8_cmesh/t8_cmesh_examples.h>      /* A collection of exemplary cmeshes */
+#include <t8_forest/t8_forest_general.h>     /* forest definition and basic interface. */
+#include <t8_forest/t8_forest_io.h>          /* save forest */
+#include <t8_forest/t8_forest_geometrical.h> /* geometrical information of the forest */
+#include <t8_schemes/t8_standalone/t8_standalone.hxx>
+#include <t8_types/t8_vec.h> /* Basic operations on 3D vectors. */
 #include <tutorials/general/t8_step3.h>
 
 T8_EXTERN_C_BEGIN ();
@@ -211,7 +211,7 @@ t8_step3_main (int argc, char **argv)
   /* Build a cube cmesh with tet, hex, and prism trees. */
   cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
   t8_global_productionf (" [step3] Created coarse mesh.\n");
-  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, comm);
+  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_standalone (), level, 0, comm);
 
   /* Print information of the forest. */
   t8_global_productionf (" [step3] Created uniform forest.\n");

@@ -25,8 +25,8 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest.h>
 #include <t8_forest/t8_forest_types.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
 #include <test/t8_gtest_macros.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <bitset>
 
 #define MAX_NUM_RANKS 8
@@ -64,7 +64,7 @@ class DISABLED_local_tree: public testing::TestWithParam<t8_eclass_t> {
     eclass = GetParam ();
     sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &MPI_size);
 
-    forest = t8_forest_new_uniform (t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD), t8_scheme_new_default (),
+    forest = t8_forest_new_uniform (t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD), t8_scheme_new_standalone (),
                                     MPI_size, 0, sc_MPI_COMM_WORLD);
     /* TODO: The level does not need to be as big as MPI_SIZE, only as big so that each process has at least one element */
 

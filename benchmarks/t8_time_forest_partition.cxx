@@ -37,7 +37,7 @@
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_profiling.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <example/common/t8_example_common.hxx>
 #include <t8_types/t8_vec.hxx>
 
@@ -172,7 +172,7 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix, sc_MPI_C
   t8_forest_init (&forest);
   t8_forest_set_cmesh (forest, cmesh, comm);
   /* Set the element scheme */
-  t8_forest_set_scheme (forest, t8_scheme_new_default ());
+  t8_forest_set_scheme (forest, t8_scheme_new_standalone ());
   /* Set the initial refinement level */
   t8_forest_set_level (forest, init_level);
   /* Commit the forest */
@@ -297,7 +297,7 @@ t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim, const char *cme
     /* partition the cmesh uniformly */
     t8_cmesh_init (&cmesh_partition);
     t8_cmesh_set_derive (cmesh_partition, cmesh);
-    t8_cmesh_set_partition_uniform (cmesh_partition, init_level, t8_scheme_new_default ());
+    t8_cmesh_set_partition_uniform (cmesh_partition, init_level, t8_scheme_new_standalone ());
     t8_cmesh_set_profiling (cmesh_partition, 1);
     t8_cmesh_commit (cmesh_partition, comm);
     return cmesh_partition;

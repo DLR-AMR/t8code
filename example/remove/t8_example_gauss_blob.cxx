@@ -24,7 +24,7 @@
 #include <t8_forest/t8_forest.h>
 #include <t8_types/t8_vec.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <sc_options.h>
 
 T8_EXTERN_C_BEGIN ();
@@ -157,7 +157,7 @@ t8_construct_spheres (const int initial_level, const double radius_inner, const 
    * Its center is therefore the center of the corresponding surface. */
   struct t8_adapt_data adapt_data = { remove_scope, radius_inner, radius_outer, midpoint };
 
-  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), initial_level, 0, sc_MPI_COMM_WORLD);
+  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_standalone (), initial_level, 0, sc_MPI_COMM_WORLD);
   forest = t8_forest_new_adapt (forest, t8_adapt_refine, 0, 0, &adapt_data);
   if (remove_scope > 0) {
     forest = t8_forest_new_adapt (forest, t8_adapt_remove, 0, 0, &adapt_data);

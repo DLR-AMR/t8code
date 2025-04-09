@@ -24,7 +24,6 @@
 #include <t8_cmesh.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_vtk.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <test/t8_gtest_macros.hxx>
@@ -33,7 +32,6 @@
 #include <t8_vtk/t8_vtk_writer.h>
 #include <t8_types/t8_vec.hxx>
 
-#include <t8_schemes/t8_default/t8_default_hex/t8_dhex.h>
 #include <array>
 #include <memory>
 #include <iostream>

@@ -115,7 +115,7 @@ t8_test_fiterate_refine_and_partition (t8_cmesh_t cmesh, int level, sc_MPI_Comm 
     /* partition the initial cmesh according to a uniform forest */
     t8_cmesh_init (&cmesh_partition);
     t8_cmesh_set_derive (cmesh_partition, cmesh);
-    t8_cmesh_set_partition_uniform (cmesh_partition, level, t8_scheme_new_default ());
+    t8_cmesh_set_partition_uniform (cmesh_partition, level, t8_scheme_new_standalone ());
     t8_cmesh_commit (cmesh_partition, comm);
   }
   else {
@@ -125,7 +125,7 @@ t8_test_fiterate_refine_and_partition (t8_cmesh_t cmesh, int level, sc_MPI_Comm 
   if (!no_vtk) {
     t8_cmesh_vtk_write_file (cmesh_partition, "test_fiterate_cmesh1");
   }
-  forest = t8_forest_new_uniform (cmesh_partition, t8_scheme_new_default (), level, 0, comm);
+  forest = t8_forest_new_uniform (cmesh_partition, t8_scheme_new_standalone (), level, 0, comm);
 
   t8_test_fiterate (forest);
   t8_forest_init (&forest_adapt);

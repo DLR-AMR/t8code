@@ -25,7 +25,7 @@
 #include <t8_vtk/t8_vtk_writer.h>
 
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <t8_forest/t8_forest_general.h>
 int
 main (int argc, char **argv)
@@ -54,7 +54,7 @@ main (int argc, char **argv)
   t8_global_productionf (" [step1] Created coarse mesh.\n");
   t8_global_productionf (" [step1] Local number of trees:\t%i\n", local_num_trees);
   t8_global_productionf (" [step1] Global number of trees:\t%li\n", static_cast<long> (global_num_trees));
-  const t8_scheme *scheme = t8_scheme_new_default ();
+  const t8_scheme *scheme = t8_scheme_new_standalone ();
   t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, 0, 0, sc_MPI_COMM_WORLD);
   t8_forest_vtk_write_file (forest, prefix, 1, 1, 1, 1, 0, 0, NULL);
   t8_forest_unref (&forest);

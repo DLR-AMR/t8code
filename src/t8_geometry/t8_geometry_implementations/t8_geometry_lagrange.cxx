@@ -28,7 +28,7 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.h>
 #include <t8_eclass.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>
 
@@ -295,7 +295,7 @@ t8_forest_t
 t8_lagrange_element::create_uniform_forest (t8_cmesh_t cmesh, uint32_t level) const
 {
   t8_forest_t forest;
-  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, sc_MPI_COMM_WORLD);
+  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_standalone (), level, 0, sc_MPI_COMM_WORLD);
   return forest;
 }
 

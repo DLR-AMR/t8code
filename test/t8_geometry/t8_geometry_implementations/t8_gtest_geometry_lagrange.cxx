@@ -36,7 +36,6 @@
 #include <t8_types/t8_vec.hxx>
 #include <t8_cmesh.hxx>
 #include <t8_vtk/t8_vtk_writer.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.hxx>

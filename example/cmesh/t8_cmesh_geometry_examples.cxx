@@ -22,11 +22,11 @@
 
 /* Show-case several cmesh examples with curvilinear geometries. */
 
-#include <t8.h>                                 /* General t8code header, always include this. */
-#include <t8_cmesh.h>                           /* Cmesh definition and basic interface. */
-#include <t8_forest/t8_forest_general.h>        /* Forest definition and basic interface. */
-#include <t8_forest/t8_forest_geometrical.h>    /* Forest-related geometry operations. */
-#include <t8_schemes/t8_default/t8_default.hxx> /* Default refinement scheme. */
+#include <t8.h>                              /* General t8code header, always include this. */
+#include <t8_cmesh.h>                        /* Cmesh definition and basic interface. */
+#include <t8_forest/t8_forest_general.h>     /* Forest definition and basic interface. */
+#include <t8_forest/t8_forest_geometrical.h> /* Forest-related geometry operations. */
+#include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <t8_vtk/t8_vtk_writer.h>
 /* Write file in vtu file */
 #include <t8_forest/t8_forest_io.h>
@@ -119,7 +119,7 @@ main (int argc, char **argv)
 
     t8_cmesh_t cmesh = t8_cmesh_new_quadrangulated_disk (radius, comm);
 
-    t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), uniform_level, 0, comm);
+    t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_standalone (), uniform_level, 0, comm);
 
     t8_cmesh_vtk_write_file (cmesh, prefix_cmesh);
     t8_global_productionf ("Wrote %s.pvtu\n", prefix_cmesh);
@@ -139,7 +139,7 @@ main (int argc, char **argv)
 
     t8_cmesh_t cmesh = t8_cmesh_new_triangulated_spherical_surface_octahedron (radius, comm);
 
-    t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), uniform_level, 0, comm);
+    t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_standalone (), uniform_level, 0, comm);
 
     t8_cmesh_vtk_write_file (cmesh, prefix_cmesh);
     t8_global_productionf ("Wrote %s.pvtu\n", prefix_cmesh);
@@ -159,7 +159,7 @@ main (int argc, char **argv)
 
     t8_cmesh_t cmesh = t8_cmesh_new_triangulated_spherical_surface_icosahedron (radius, comm);
 
-    t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), uniform_level, 0, comm);
+    t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_standalone (), uniform_level, 0, comm);
 
     t8_cmesh_vtk_write_file (cmesh, prefix_cmesh);
     t8_global_productionf ("Wrote %s.pvtu\n", prefix_cmesh);
@@ -179,7 +179,7 @@ main (int argc, char **argv)
 
     t8_cmesh_t cmesh = t8_cmesh_new_triangulated_spherical_surface_cube (radius, comm);
 
-    t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), uniform_level, 0, comm);
+    t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_standalone (), uniform_level, 0, comm);
 
     t8_cmesh_vtk_write_file (cmesh, prefix_cmesh);
     t8_global_productionf ("Wrote %s.pvtu\n", prefix_cmesh);
@@ -199,7 +199,7 @@ main (int argc, char **argv)
 
     t8_cmesh_t cmesh = t8_cmesh_new_quadrangulated_spherical_surface (radius, comm);
 
-    t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), uniform_level, 0, comm);
+    t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_standalone (), uniform_level, 0, comm);
 
     t8_cmesh_vtk_write_file (cmesh, prefix_cmesh);
     t8_global_productionf ("Wrote %s.pvtu\n", prefix_cmesh);
@@ -224,7 +224,7 @@ main (int argc, char **argv)
 
     t8_cmesh_t cmesh = t8_cmesh_new_cubed_spherical_shell (inner_radius, shell_thickness, num_levels, num_layers, comm);
 
-    t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), uniform_level, 0, comm);
+    t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_standalone (), uniform_level, 0, comm);
 
     t8_cmesh_vtk_write_file (cmesh, prefix_cmesh);
     t8_global_productionf ("Wrote %s.pvtu\n", prefix_cmesh);
@@ -248,7 +248,7 @@ main (int argc, char **argv)
     t8_cmesh_t cmesh
       = t8_cmesh_new_prismed_spherical_shell_octahedron (inner_radius, shell_thickness, num_levels, num_layers, comm);
 
-    t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), uniform_level, 0, comm);
+    t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_standalone (), uniform_level, 0, comm);
 
     t8_cmesh_vtk_write_file (cmesh, prefix_cmesh);
     t8_global_productionf ("Wrote %s.pvtu\n", prefix_cmesh);
@@ -272,7 +272,7 @@ main (int argc, char **argv)
     t8_cmesh_t cmesh
       = t8_cmesh_new_prismed_spherical_shell_icosahedron (inner_radius, shell_thickness, num_levels, num_layers, comm);
 
-    t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), uniform_level, 0, comm);
+    t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_standalone (), uniform_level, 0, comm);
 
     t8_cmesh_vtk_write_file (cmesh, prefix_cmesh);
     t8_global_productionf ("Wrote %s.pvtu\n", prefix_cmesh);
@@ -292,7 +292,7 @@ main (int argc, char **argv)
 
     t8_cmesh_t cmesh = t8_cmesh_new_cubed_sphere (radius, comm);
 
-    t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), uniform_level, 0, comm);
+    t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_standalone (), uniform_level, 0, comm);
 
     t8_cmesh_vtk_write_file (cmesh, prefix_cmesh);
     t8_global_productionf ("Wrote %s.pvtu\n", prefix_cmesh);

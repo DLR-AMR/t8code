@@ -28,7 +28,7 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_iterate.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <t8_cmesh/t8_cmesh_geometry.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx>
@@ -57,7 +57,7 @@ TEST (t8_point_inside, test_point_inside_specific_triangle)
   /* We use standard linear geometry */
   t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), 0, 0, sc_MPI_COMM_WORLD);
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_standalone (), 0, 0, sc_MPI_COMM_WORLD);
 
   if (t8_forest_get_local_num_elements (forest) <= 0) {
     /* Skip empty forests (can occur when executed in parallel) */
@@ -98,7 +98,7 @@ TEST (t8_point_inside, test_point_inside_specific_quad)
   /* We use standard linear geometry */
   t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), 0, 0, sc_MPI_COMM_WORLD);
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_standalone (), 0, 0, sc_MPI_COMM_WORLD);
 
   if (t8_forest_get_local_num_elements (forest) <= 0) {
     /* Skip empty forests (can occur when executed in parallel) */
@@ -169,7 +169,7 @@ TEST_P (geometry_point_inside, test_point_inside)
 
   t8_debugf ("Testing eclass %s, uniform level %i with approx. %i points per element.\n", t8_eclass_to_string[eclass],
              level, num_points_to_generate);
-  const t8_scheme *default_scheme = t8_scheme_new_default ();
+  const t8_scheme *default_scheme = t8_scheme_new_standalone ();
 
   /* We translate the coordinates of the cmesh to create a non-standard case.
    * In particular, we want the 1D and 2D elements to move outside of axis

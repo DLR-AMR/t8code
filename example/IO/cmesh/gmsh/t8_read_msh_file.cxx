@@ -25,7 +25,7 @@
 #include <t8_vtk/t8_vtk_writer.h>
 #include <t8_cmesh/t8_cmesh_partition.h>
 #include <t8_cmesh_readmshfile.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone.hxx>
 
 /* Output a cmesh in .vtk format. Process i writes to the file
  * prefix_t8_msh_i.vtk
@@ -59,7 +59,7 @@ t8_read_msh_partition (t8_cmesh_t cmesh, const char *prefix)
 
   t8_cmesh_init (&p_mesh);
   t8_cmesh_set_derive (p_mesh, cmesh);
-  t8_cmesh_set_partition_uniform (p_mesh, 0, t8_scheme_new_default ());
+  t8_cmesh_set_partition_uniform (p_mesh, 0, t8_scheme_new_standalone ());
   t8_cmesh_commit (p_mesh, sc_MPI_COMM_WORLD);
   snprintf (vtk_prefix, BUFSIZ, "%s_partition", prefix);
   t8_read_msh_file_vtk (p_mesh, vtk_prefix);

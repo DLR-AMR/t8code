@@ -26,7 +26,7 @@
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
 #include <t8_forest/t8_forest.h>
 #include <t8_forest/t8_forest_iterate.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <test/t8_gtest_macros.hxx>
 
 /* In this test, we first adapt a forest and store every callback return value.
@@ -51,7 +51,7 @@ class forest_iterate: public testing::TestWithParam<cmesh_example_base *> {
       t8_cmesh_unref (&cmesh);
       GTEST_SKIP ();
     }
-    forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, sc_MPI_COMM_WORLD);
+    forest = t8_forest_new_uniform (cmesh, t8_scheme_new_standalone (), level, 0, sc_MPI_COMM_WORLD);
   }
   void
   TearDown () override

@@ -35,13 +35,13 @@
  *   - Refine the mesh at different geometries.
  *  */
 
-#include <t8.h>                                 /* General t8code header, always include this. */
-#include <sc_options.h>                         /* CLI parser */
-#include <t8_cmesh.h>                           /* cmesh definition and basic interface. */
-#include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
-#include <t8_forest/t8_forest_io.h>             /* save forest */
-#include <t8_forest/t8_forest_geometrical.h>    /* geometrical information of the forest */
-#include <t8_schemes/t8_default/t8_default.hxx> /* default refinement scheme. */
+#include <t8.h>                              /* General t8code header, always include this. */
+#include <sc_options.h>                      /* CLI parser */
+#include <t8_cmesh.h>                        /* cmesh definition and basic interface. */
+#include <t8_forest/t8_forest_general.h>     /* forest definition and basic interface. */
+#include <t8_forest/t8_forest_io.h>          /* save forest */
+#include <t8_forest/t8_forest_geometrical.h> /* geometrical information of the forest */
+#include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx> /* Linear geometry calculation of trees */
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>    /* Curved geometry calculation of trees */
 #include <t8_cmesh_readmshfile.h>                                         /* msh file reader */
@@ -440,7 +440,7 @@ main (int argc, char **argv)
     /* Read in the naca mesh from the msh file and the naca geometry from the brep file */
     cmesh = t8_cmesh_from_msh_file (fp.c_str (), 0, sc_MPI_COMM_WORLD, dim, 0, cad || geometry);
     /* Construct a forest from the cmesh */
-    forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, comm);
+    forest = t8_forest_new_uniform (cmesh, t8_scheme_new_standalone (), level, 0, comm);
     T8_ASSERT (t8_forest_is_committed (forest));
     if (geometry) {
       t8_naca_geometry_refinement (forest, fp, level, rlevel_dorsal, rlevel_ventral, dim);

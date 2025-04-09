@@ -32,7 +32,7 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_geometrical.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <t8_types/t8_vec.h>
 
 /* Compute the coordinates of the midpoint
@@ -135,12 +135,12 @@ t8_load_refine_build_forest (t8_cmesh_t cmesh, sc_MPI_Comm comm, int level)
   t8_cmesh_t cmesh_partition;
 
   t8_cmesh_init (&cmesh_partition);
-  t8_cmesh_set_partition_uniform (cmesh_partition, level, t8_scheme_new_default ());
+  t8_cmesh_set_partition_uniform (cmesh_partition, level, t8_scheme_new_standalone ());
   t8_cmesh_set_derive (cmesh_partition, cmesh);
   t8_cmesh_commit (cmesh_partition, comm);
 
   t8_forest_init (&forest);
-  t8_forest_set_scheme (forest, t8_scheme_new_default ());
+  t8_forest_set_scheme (forest, t8_scheme_new_standalone ());
   t8_forest_set_cmesh (forest, cmesh_partition, comm);
   t8_forest_set_level (forest, level);
   t8_forest_commit (forest);

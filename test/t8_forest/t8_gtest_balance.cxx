@@ -34,7 +34,6 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
-#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest_balance.h>
 
 #include <array>

@@ -42,13 +42,13 @@
  *     data into the output file.
  *  */
 
-#include <t8.h>                                 /* General t8code header, always include this. */
-#include <t8_cmesh.h>                           /* cmesh definition and basic interface. */
-#include <t8_cmesh/t8_cmesh_examples.h>         /* A collection of exemplary cmeshes */
-#include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
-#include <t8_forest/t8_forest_io.h>             /* save forest */
-#include <t8_forest/t8_forest_geometrical.h>    /* geometrical information */
-#include <t8_schemes/t8_default/t8_default.hxx> /* default refinement scheme. */
+#include <t8.h>                              /* General t8code header, always include this. */
+#include <t8_cmesh.h>                        /* cmesh definition and basic interface. */
+#include <t8_cmesh/t8_cmesh_examples.h>      /* A collection of exemplary cmeshes */
+#include <t8_forest/t8_forest_general.h>     /* forest definition and basic interface. */
+#include <t8_forest/t8_forest_io.h>          /* save forest */
+#include <t8_forest/t8_forest_geometrical.h> /* geometrical information */
+#include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <tutorials/general/t8_step3.h>
 
 T8_EXTERN_C_BEGIN ();
@@ -65,7 +65,7 @@ static t8_forest_t
 t8_step5_build_forest (sc_MPI_Comm comm, int level)
 {
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
-  const t8_scheme *scheme = t8_scheme_new_default ();
+  const t8_scheme *scheme = t8_scheme_new_standalone ();
   struct t8_step3_adapt_data adapt_data = {
     { 0.5, 0.5, 1 }, /* Midpoints of the sphere. */
     0.2,             /* Refine if inside this radius. */

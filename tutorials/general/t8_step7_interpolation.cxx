@@ -34,7 +34,7 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h> /* geometrical information of the forest */
 #include <t8_types/t8_vec.hxx>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_partition.h>
@@ -287,7 +287,7 @@ t8_interpolation ()
   t8_step7_adapt_data *data;
   t8_3D_point centroid;
   const t8_3D_point midpoint ({ 0.5, 0.5, 1 });
-  const t8_scheme *scheme = t8_scheme_new_default ();
+  const t8_scheme *scheme = t8_scheme_new_standalone ();
 
   /* Construct a cmesh */
   t8_cmesh_t cmesh = t8_cmesh_new_from_class (T8_ECLASS_HEX, sc_MPI_COMM_WORLD);

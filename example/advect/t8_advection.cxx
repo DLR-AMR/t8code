@@ -22,7 +22,7 @@
 
 #include <sc_options.h>
 #include <sc_statistics.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_geometrical.h>
@@ -850,7 +850,7 @@ t8_advect_create_cmesh (sc_MPI_Comm comm, int cube_type, const char *mshfile, in
     }
     /* partition this cmesh according to the initial refinement level */
     t8_cmesh_init (&cmesh_partition);
-    t8_cmesh_set_partition_uniform (cmesh_partition, level, t8_scheme_new_default ());
+    t8_cmesh_set_partition_uniform (cmesh_partition, level, t8_scheme_new_standalone ());
     t8_cmesh_set_derive (cmesh_partition, cmesh);
     t8_cmesh_commit (cmesh_partition, comm);
     return cmesh_partition;
@@ -902,7 +902,7 @@ t8_advect_problem_init (t8_cmesh_t cmesh, t8_flow_function_3d_fn u, t8_example_l
                         int dummy_op, int volume_refine)
 {
   t8_advect_problem_t *problem;
-  const t8_scheme *default_scheme = t8_scheme_new_default ();
+  const t8_scheme *default_scheme = t8_scheme_new_standalone ();
   int i;
 
   T8_ASSERT (1 <= dim && dim <= 3);

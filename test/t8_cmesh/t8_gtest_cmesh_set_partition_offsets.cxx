@@ -23,7 +23,6 @@
 #include <gtest/gtest.h>
 #include <test/t8_gtest_macros.hxx>
 #include <t8_cmesh.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
 #include "t8_cmesh/t8_cmesh_trees.h"
 #include "t8_cmesh/t8_cmesh_partition.h"
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_zero.h>

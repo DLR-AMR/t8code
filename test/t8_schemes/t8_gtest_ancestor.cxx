@@ -38,7 +38,7 @@ class ancestor: public testing::TestWithParam<t8_eclass> {
   SetUp () override
   {
     eclass = GetParam ();
-    scheme = t8_scheme_new_default ();
+    scheme = t8_scheme_new_standalone ();
     scheme->element_new (eclass, 1, &correct_ancestor);
     scheme->element_new (eclass, 1, &desc_a);
     scheme->element_new (eclass, 1, &check);

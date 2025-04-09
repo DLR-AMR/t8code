@@ -23,8 +23,9 @@
 #include <t8.h>
 #include <t8_forest/t8_forest.h>
 #include <t8_types/t8_vec.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+
 #include <sc_options.h>
 
 T8_EXTERN_C_BEGIN ();
@@ -115,7 +116,7 @@ t8_construct_spheres (const int initial_level, const double radius_inner, const 
         t8_3D_point ({ 0.0, 0.5, 0.5 }), t8_3D_point ({ 0.5, 0.0, 0.5 }), t8_3D_point ({ 0.5, 0.5, 0.0 }) };
   struct t8_adapt_data adapt_data = { num_spheres, radius_inner, radius_outer, midpoints };
 
-  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), initial_level, 0, sc_MPI_COMM_WORLD);
+  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_standalone (), initial_level, 0, sc_MPI_COMM_WORLD);
   forest = t8_forest_new_adapt (forest, t8_adapt_callback_refine, 0, 0, &adapt_data);
   forest = t8_forest_new_adapt (forest, t8_adapt_callback_remove, 0, 0, &adapt_data);
 

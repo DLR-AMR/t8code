@@ -24,7 +24,7 @@
 #include <t8_vtk/t8_vtk_writer.hxx>
 #include <t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone.hxx>
 
 #include <t8_vtk/t8_vtk_writer.h>
 
@@ -49,7 +49,7 @@ t8_forest_t
 make_grid<t8_forest_t> ()
 {
   t8_cmesh_t cmesh = make_grid<t8_cmesh_t> ();
-  const t8_scheme *scheme = t8_scheme_new_default ();
+  const t8_scheme *scheme = t8_scheme_new_standalone ();
   return t8_forest_new_uniform (cmesh, scheme, 2, 0, sc_MPI_COMM_WORLD);
 }
 

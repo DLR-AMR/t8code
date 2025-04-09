@@ -28,7 +28,7 @@
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <sc_refcount.h>
 #include <sc_flops.h>
 #include <sc_statistics.h>
@@ -298,7 +298,7 @@ t8_construct_fractal (int level_initial, int level_end, const int iterative, con
 
     t8_forest_init (&forest);
     t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
-    t8_forest_set_scheme (forest, t8_scheme_new_default ());
+    t8_forest_set_scheme (forest, t8_scheme_new_standalone ());
     t8_forest_set_level (forest, level_initial);
     t8_forest_commit (forest);
 

@@ -24,7 +24,6 @@
 #include <t8.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
 #include <bitset>
 #include <test/t8_gtest_macros.hxx>
 
@@ -70,7 +69,7 @@ class forest_permute: public testing::TestWithParam<t8_eclass_t> {
 #else
     level = eclass < 4 ? 2 : 1;
 #endif
-    forest = t8_forest_new_uniform (t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD), t8_scheme_new_default (),
+    forest = t8_forest_new_uniform (t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD), t8_scheme_new_standalone (),
                                     level, 0, sc_MPI_COMM_WORLD);
 
     sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &MPI_size);
