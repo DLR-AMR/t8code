@@ -105,7 +105,7 @@ jobs:
       run: cd build && cmake --install .
     # Generate code coverage report.
     - name: "Set up environment"
-      run: echo "GITHUB_TOKEN=${{ secrets.CODECOV }}" >> $GITHUB_ENV
+      run: echo "GITHUB_TOKEN=${{ secrets.CODE_COV }}" >> $GITHUB_ENV
     - name: Generate code coverage report
       run: cd build && cmake --build . --target coverage
     # Upload coverage report to Codecov.
@@ -114,6 +114,7 @@ jobs:
       with:
         files: ./build/coverage.info
         fail_ci_if_error: true
+        disable_search: true
         #verbose: true
-        token: ${{ secrets.CODECOV }}
+        token: ${{ secrets.CODE_COV }}
     
