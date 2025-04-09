@@ -49,7 +49,10 @@ add_t8_example( NAME t8_cmesh_hypercube_pad             SOURCES cmesh/t8_cmesh_h
 
 add_t8_example( NAME t8_test_ghost                      SOURCES forest/t8_test_ghost.cxx )
 add_t8_example( NAME t8_test_face_iterate               SOURCES forest/t8_test_face_iterate.cxx )
+
+if(T8CODE_ENABLE_P4EST)
 add_t8_example( NAME t8_test_ghost_large_level_diff     SOURCES forest/t8_test_ghost_large_level_diff.cxx )
+endif()
 
 add_t8_example( NAME t8_example_geometries              SOURCES geometry/t8_example_geometries.cxx )
 

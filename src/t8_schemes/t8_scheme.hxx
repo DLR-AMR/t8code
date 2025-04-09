@@ -32,11 +32,7 @@
 #include <vector>
 #include <t8_refcount.h>
 #include <t8_eclass.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
-#include <t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.hxx>
-#include <t8_schemes/t8_default/t8_default_line/t8_default_line.hxx>
-#include <t8_schemes/t8_default/t8_default_quad/t8_default_quad.hxx>
-#include <t8_schemes/t8_default/t8_default_hex/t8_default_hex.hxx>
+
 #include <t8_schemes/t8_default/t8_default_tri/t8_default_tri.hxx>
 #include <t8_schemes/t8_default/t8_default_tet/t8_default_tet.hxx>
 #include <t8_schemes/t8_default/t8_default_prism/t8_default_prism.hxx>
@@ -44,6 +40,15 @@
 #include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone_implementation.hxx>
 #include <string>
+
+#if T8_ENABLE_P4EST
+#include <t8_schemes/t8_default/t8_default.hxx>
+#include <t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.hxx>
+#include <t8_schemes/t8_default/t8_default_line/t8_default_line.hxx>
+#include <t8_schemes/t8_default/t8_default_quad/t8_default_quad.hxx>
+#include <t8_schemes/t8_default/t8_default_hex/t8_default_hex.hxx>
+#endif  // T8_ENABLE_P4EST
+
 #if T8_ENABLE_DEBUG
 // Only needed for t8_debug_print_type
 #include <typeinfo>
@@ -85,6 +90,7 @@ class t8_scheme {
   /* clang-format off */
   
   /** Variant to hold an eclass scheme. */
+  #if T8_ENABLE_P4EST
   using scheme_var = std::variant<
                                 /* Default schemes */
                                 t8_default_scheme_vertex,
@@ -100,6 +106,18 @@ class t8_scheme {
                                 t8_standalone_scheme<T8_ECLASS_QUAD>,
                                 t8_standalone_scheme<T8_ECLASS_HEX>
                                 >;
+  #else
+    using scheme_var = std::variant<
+                                t8_default_scheme_tri,
+                                t8_default_scheme_tet,
+                                t8_default_scheme_prism,
+                                t8_default_scheme_pyramid,
+                                t8_standalone_scheme<T8_ECLASS_VERTEX>,
+                                t8_standalone_scheme<T8_ECLASS_LINE>,
+                                t8_standalone_scheme<T8_ECLASS_QUAD>,
+                                t8_standalone_scheme<T8_ECLASS_HEX>
+                                >;
+  #endif  // T8_ENABLE_P4EST
   /* clang-format on */
 
   using scheme_container = std::vector<scheme_var>; /**< Container type for holding eclass schemes. */

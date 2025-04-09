@@ -20,11 +20,11 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <p4est_bits.h>
 #include <sc_functions.h>
 #include <t8_schemes/t8_default/t8_default_line/t8_dline_bits.h>
 #include <t8_schemes/t8_default/t8_default_prism/t8_dprism_bits.h>
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.h>
+#include <t8_schemes/t8_standalone/t8_standalone_elements.hxx>
 
 int t8_dprism_face_corners[5][4] = { { 1, 2, 4, 5 }, { 0, 2, 3, 5 }, { 0, 1, 3, 4 }, { 0, 1, 2, -1 }, { 3, 4, 5, -1 } };
 
@@ -189,7 +189,7 @@ void
 t8_dprism_boundary_face (const t8_dprism_t *p, int face, t8_element_t *boundary)
 {
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
-  p4est_quadrant_t *q = (p4est_quadrant_t *) boundary;
+  t8_standalone_element<T8_ECLASS_QUAD> *q = (t8_standalone_element<T8_ECLASS_QUAD> *) boundary;
   if (face >= 3) {
     t8_dtri_t *t = (t8_dtri_t *) boundary;
     t8_dtri_copy (&p->tri, t);
@@ -197,18 +197,18 @@ t8_dprism_boundary_face (const t8_dprism_t *p, int face, t8_element_t *boundary)
   }
   switch (face) {
   case 0:
-    q->x = ((int64_t) p->tri.y * P4EST_ROOT_LEN) / T8_DTRI_ROOT_LEN;
-    q->y = ((int64_t) p->line.x * P4EST_ROOT_LEN) / T8_DLINE_ROOT_LEN;
+    q->coords[0] = ((int64_t) p->tri.y * (1 << T8_ELEMENT_MAXLEVEL[T8_ECLASS_QUAD])) / T8_DTRI_ROOT_LEN;
+    q->coords[1] = ((int64_t) p->line.x * (1 << T8_ELEMENT_MAXLEVEL[T8_ECLASS_QUAD])) / T8_DLINE_ROOT_LEN;
     q->level = p->tri.level;
     break;
   case 1:
-    q->x = ((int64_t) p->tri.x * P4EST_ROOT_LEN) / T8_DTRI_ROOT_LEN;
-    q->y = ((int64_t) p->line.x * P4EST_ROOT_LEN) / T8_DLINE_ROOT_LEN;
+    q->coords[0] = ((int64_t) p->tri.x * (1 << T8_ELEMENT_MAXLEVEL[T8_ECLASS_QUAD])) / T8_DTRI_ROOT_LEN;
+    q->coords[1] = ((int64_t) p->line.x * (1 << T8_ELEMENT_MAXLEVEL[T8_ECLASS_QUAD])) / T8_DLINE_ROOT_LEN;
     q->level = p->tri.level;
     break;
   case 2:
-    q->x = ((int64_t) p->tri.x * P4EST_ROOT_LEN) / T8_DTRI_ROOT_LEN;
-    q->y = ((int64_t) p->line.x * P4EST_ROOT_LEN) / T8_DLINE_ROOT_LEN;
+    q->coords[0] = ((int64_t) p->tri.x * (1 << T8_ELEMENT_MAXLEVEL[T8_ECLASS_QUAD])) / T8_DTRI_ROOT_LEN;
+    q->coords[1] = ((int64_t) p->line.x * (1 << T8_ELEMENT_MAXLEVEL[T8_ECLASS_QUAD])) / T8_DLINE_ROOT_LEN;
     q->level = p->tri.level;
     break;
   default:
@@ -392,7 +392,7 @@ t8_dprism_extrude_face (const t8_element_t *face, t8_element_t *elem, const int 
 {
   t8_dprism_t *p = (t8_dprism_t *) elem;
   const t8_dtri_t *t = (const t8_dtri_t *) face;
-  const p4est_quadrant_t *q = (const p4est_quadrant_t *) face;
+  t8_standalone_element<T8_ECLASS_QUAD> *q = (t8_standalone_element<T8_ECLASS_QUAD> *) face;
   T8_ASSERT (0 <= root_face && root_face < T8_DPRISM_FACES);
   switch (root_face) {
   case 0:
@@ -400,24 +400,24 @@ t8_dprism_extrude_face (const t8_element_t *face, t8_element_t *elem, const int 
     p->line.level = q->level;
     p->tri.level = q->level;
     p->tri.x = T8_DTRI_ROOT_LEN - T8_DTRI_LEN (p->tri.level);
-    p->tri.y = ((int64_t) q->x * T8_DTRI_ROOT_LEN) / P4EST_ROOT_LEN;
-    p->line.x = ((int64_t) q->y * T8_DLINE_ROOT_LEN) / P4EST_ROOT_LEN;
+    p->tri.y = ((int64_t) q->coords[0] * T8_DTRI_ROOT_LEN) / (1 << T8_ELEMENT_MAXLEVEL[T8_ECLASS_QUAD]);
+    p->line.x = ((int64_t) q->coords[1] * T8_DLINE_ROOT_LEN) / (1 << T8_ELEMENT_MAXLEVEL[T8_ECLASS_QUAD]);
     break;
   case 1:
     p->tri.type = 0;
     p->line.level = q->level;
     p->tri.level = q->level;
-    p->tri.x = ((int64_t) q->x * T8_DTRI_ROOT_LEN) / P4EST_ROOT_LEN;
-    p->tri.y = ((int64_t) q->x * T8_DTRI_ROOT_LEN) / P4EST_ROOT_LEN;
-    p->line.x = ((int64_t) q->y * T8_DLINE_ROOT_LEN) / P4EST_ROOT_LEN;
+    p->tri.x = ((int64_t) q->coords[0] * T8_DTRI_ROOT_LEN) / (1 << T8_ELEMENT_MAXLEVEL[T8_ECLASS_QUAD]);
+    p->tri.y = ((int64_t) q->coords[0] * T8_DTRI_ROOT_LEN) / (1 << T8_ELEMENT_MAXLEVEL[T8_ECLASS_QUAD]);
+    p->line.x = ((int64_t) q->coords[1] * T8_DLINE_ROOT_LEN) / (1 << T8_ELEMENT_MAXLEVEL[T8_ECLASS_QUAD]);
     break;
   case 2:
     p->tri.type = 0;
     p->line.level = q->level;
     p->tri.level = q->level;
-    p->tri.x = ((int64_t) q->x * T8_DTRI_ROOT_LEN) / P4EST_ROOT_LEN;
+    p->tri.x = ((int64_t) q->coords[0] * T8_DTRI_ROOT_LEN) / (1 << T8_ELEMENT_MAXLEVEL[T8_ECLASS_QUAD]);
     p->tri.y = 0;
-    p->line.x = ((int64_t) q->y * T8_DLINE_ROOT_LEN) / P4EST_ROOT_LEN;
+    p->line.x = ((int64_t) q->coords[1] * T8_DLINE_ROOT_LEN) / (1 << T8_ELEMENT_MAXLEVEL[T8_ECLASS_QUAD]);
     break;
   case 3:
     p->tri.type = t->type;

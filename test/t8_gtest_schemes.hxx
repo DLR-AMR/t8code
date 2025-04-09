@@ -23,10 +23,14 @@
 #ifndef T8_GTEST_SCHEMES_HXX
 #define T8_GTEST_SCHEMES_HXX
 
-#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <gtest/gtest.h>
 
+#if T8_ENABLE_P4EST
+#include <t8_schemes/t8_default/t8_default.hxx>
+#endif  // T8_ENABLE_P4EST
+
+#if T8_ENABLE_P4EST
 const t8_scheme *
 create_from_scheme_id (const int scheme_id)
 {
@@ -40,6 +44,22 @@ create_from_scheme_id (const int scheme_id)
     return nullptr;
   }
 }
+#else
+const t8_scheme *
+create_from_scheme_id (const int scheme_id)
+{
+  switch (scheme_id) {
+  case 0:
+    SC_ABORT_NOT_REACHED ();
+    return nullptr;
+  case 1:
+    return t8_scheme_new_standalone ();
+  default:
+    SC_ABORT_NOT_REACHED ();
+    return nullptr;
+  }
+}
+#endif  // T8_ENABLE_P4EST
 
 static const char *t8_scheme_to_string[] = { "default", "standalone" };
 
@@ -48,7 +68,12 @@ auto print_all_schemes = [] (const testing::TestParamInfo<std::tuple<int, t8_ecl
          + t8_eclass_to_string[std::get<1> (info.param)];
 };
 
+#if T8_ENABLE_P4EST
 #define AllSchemeCollections ::testing::Range (0, 2)
+#else
+#define AllSchemeCollections ::testing::Values (1)
+#endif  // T8_ENABLE_P4EST
+
 #define AllSchemes ::testing::Combine (AllSchemeCollections, ::testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT))
 
 #endif /* T8_GTEST_SCHEMES_HXX */

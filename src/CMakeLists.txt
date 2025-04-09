@@ -54,7 +54,12 @@ target_include_directories( T8 PUBLIC
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include>
 )
 
-target_link_libraries( T8 PUBLIC P4EST::P4EST SC::SC )
+if ( T8CODE_ENABLE_P4EST )
+    target_compile_definitions( T8 PUBLIC T8_ENABLE_P4EST=1 )
+    target_link_libraries( T8 PUBLIC P4EST::P4EST )
+endif()
+
+target_link_libraries( T8 PUBLIC SC::SC )
 
 if ( T8CODE_ENABLE_MPI )
     target_compile_definitions( T8 PUBLIC T8_ENABLE_MPI=1 )
@@ -146,25 +151,20 @@ target_sources( T8 PRIVATE
     t8_geometry/t8_geometry_implementations/t8_geometry_zero.cxx 
     t8_geometry/t8_geometry_implementations/t8_geometry_examples.cxx 
     t8_schemes/t8_scheme.cxx
-    t8_schemes/t8_default/t8_default.cxx
-    t8_schemes/t8_default/t8_default_hex/t8_default_hex.cxx
-    t8_schemes/t8_default/t8_default_hex/t8_dhex_bits.c
-    t8_schemes/t8_default/t8_default_line/t8_default_line.cxx
-    t8_schemes/t8_default/t8_default_line/t8_dline_bits.c
     t8_schemes/t8_default/t8_default_prism/t8_default_prism.cxx
-    t8_schemes/t8_default/t8_default_prism/t8_dprism_bits.c
+    t8_schemes/t8_default/t8_default_prism/t8_dprism_bits.cxx
+    t8_schemes/t8_default/t8_default_line/t8_default_line.cxx
+    t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.cxx
+    t8_schemes/t8_default/t8_default_line/t8_dline_bits.c
     t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid.cxx
-    t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.c
+    t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.cxx
     t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_connectivity.c 
-    t8_schemes/t8_default/t8_default_quad/t8_default_quad.cxx
-    t8_schemes/t8_default/t8_default_quad/t8_default_quad_bits.cxx
-    t8_schemes/t8_default/t8_default_tet/t8_default_tet.cxx
-    t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.c
-    t8_schemes/t8_default/t8_default_tet/t8_dtet_connectivity.c
     t8_schemes/t8_default/t8_default_tri/t8_default_tri.cxx
     t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.c
     t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.c
-    t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.cxx
+    t8_schemes/t8_default/t8_default_tet/t8_default_tet.cxx
+    t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.c
+    t8_schemes/t8_default/t8_default_tet/t8_dtet_connectivity.c
     t8_types/t8_vec.cxx
     t8_schemes/t8_standalone/t8_standalone.cxx
     t8_vtk/t8_vtk_polydata.cxx 
@@ -174,7 +174,18 @@ target_sources( T8 PRIVATE
     t8_vtk/t8_vtk_writer.cxx
     t8_vtk/t8_vtk_write_ASCII.cxx
     t8_vtk/t8_vtk_writer_helper.cxx
-)
+    )
+    
+if (T8CODE_ENABLE_P4EST)
+  target_sources( T8 PRIVATE 
+    t8_cmesh/t8_cmesh_p4est_examples.cxx 
+    t8_schemes/t8_default/t8_default.cxx
+    t8_schemes/t8_default/t8_default_hex/t8_default_hex.cxx
+    t8_schemes/t8_default/t8_default_hex/t8_dhex_bits.c
+    t8_schemes/t8_default/t8_default_quad/t8_default_quad.cxx
+    t8_schemes/t8_default/t8_default_quad/t8_default_quad_bits.cxx
+  )
+endif()
 
 target_compile_definitions( T8 PUBLIC T8_CMAKE_BUILD )
 target_compile_definitions( T8 PUBLIC T8_CC="${CMAKE_C_COMPILER}" )

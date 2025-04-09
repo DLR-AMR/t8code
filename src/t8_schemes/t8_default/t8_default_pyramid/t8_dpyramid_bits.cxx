@@ -23,10 +23,10 @@
 #include "t8_dpyramid_bits.h"
 #include "t8_dpyramid_connectivity.h"
 #include <sc_functions.h>
-#include <p4est_bits.h>
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.h>
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtet_connectivity.h>
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.h>
+#include <t8_schemes/t8_standalone/t8_standalone_elements.hxx>
 
 typedef int8_t t8_dpyramid_cube_id_t;
 
@@ -1135,9 +1135,9 @@ t8_dpyramid_boundary_face (const t8_dpyramid_t *p, const int face, t8_element_t 
   if (face == 4) {
     /*On the bottom every face is a quad */
     /*Coordinates are scaled, because quad and pyra might have different root-len */
-    p4est_quadrant_t *q = (p4est_quadrant_t *) boundary;
-    q->x = ((int64_t) p->pyramid.x * P4EST_ROOT_LEN) / T8_DPYRAMID_ROOT_LEN;
-    q->y = ((int64_t) p->pyramid.y * P4EST_ROOT_LEN) / T8_DPYRAMID_ROOT_LEN;
+    t8_standalone_element<T8_ECLASS_QUAD> *q = (t8_standalone_element<T8_ECLASS_QUAD> *) boundary;
+    q->coords[0] = ((int64_t) p->pyramid.x * (1 << T8_ELEMENT_MAXLEVEL[T8_ECLASS_QUAD])) / T8_DPYRAMID_ROOT_LEN;
+    q->coords[1] = ((int64_t) p->pyramid.y * (1 << T8_ELEMENT_MAXLEVEL[T8_ECLASS_QUAD])) / T8_DPYRAMID_ROOT_LEN;
     q->level = p->pyramid.level;
   }
   else {
@@ -1199,10 +1199,10 @@ t8_dpyramid_extrude_face (const t8_element_t *face, t8_dpyramid_t *p, const int 
     /* Pyramids on the bottom are always type 6 pyramids at the bottom. We need to
      * scale the coordinates, since a quad and a pyra can have different root-len,
      * depending on their maxlvl.*/
-    p4est_quadrant_t *q = (p4est_quadrant_t *) face;
+    t8_standalone_element<T8_ECLASS_QUAD> *q = (t8_standalone_element<T8_ECLASS_QUAD> *) face;
     /*Typecast to int64, we multiply two (possible at max) int32 */
-    p->pyramid.x = ((int64_t) q->x * T8_DPYRAMID_ROOT_LEN) / P4EST_ROOT_LEN;
-    p->pyramid.y = ((int64_t) q->y * T8_DPYRAMID_ROOT_LEN) / P4EST_ROOT_LEN;
+    p->pyramid.x = ((int64_t) q->coords[0] * T8_DPYRAMID_ROOT_LEN) / (1 << T8_ELEMENT_MAXLEVEL[T8_ECLASS_QUAD]);
+    p->pyramid.y = ((int64_t) q->coords[1] * T8_DPYRAMID_ROOT_LEN) / (1 << T8_ELEMENT_MAXLEVEL[T8_ECLASS_QUAD]);
     p->pyramid.z = 0;
     p->pyramid.type = T8_DPYRAMID_ROOT_TYPE;
     p->pyramid.level = q->level;

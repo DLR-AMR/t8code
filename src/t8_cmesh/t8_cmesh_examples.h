@@ -28,38 +28,10 @@
 #ifndef T8_CMESH_EXAMPLES
 #define T8_CMESH_EXAMPLES
 #include <t8_cmesh.h>
-#include <p4est_connectivity.h>
-#include <p8est_connectivity.h>
+#include <t8_cmesh/t8_cmesh_p4est_examples.h>
 #include <t8_cmesh/t8_cmesh_geometry.h>
 
 T8_EXTERN_C_BEGIN ();
-
-/** Constructs a cmesh from a given p4est_connectivity structure.
- * \param[in]       conn       The p4est connectivity.
- * \param[in]       comm       mpi communicator to be used with the new cmesh.
- * \param[in]       do_partition Flag whether the cmesh should be partitioned or not.
- * \return          A t8_cmesh structure that holds the same connectivity information
- *                  as \a conn.
- * \note This function requires that p4est is initialized. Make sure to call
- * \ref p4est_init before using this routine. If this is not the case, a
- * warning is issued and \ref p4est_init is called from within this function.
- */
-t8_cmesh_t
-t8_cmesh_new_from_p4est (p4est_connectivity_t *conn, sc_MPI_Comm comm, int do_partition);
-
-/** Constructs a cmesh from a given p8est_connectivity structure.
- * \param[in]       conn       The p8est connectivity.
- * \param[in]       comm       mpi communicator to be used with the new cmesh.
- * \param[in]       do_dup     Flag whether the communicator shall be duplicated or not.
- * \param[in]       do_partition Flag whether the cmesh should be partitioned or not.
- * \return          A t8_cmesh structure that holds the same connectivity information
- *                  as \a conn.
- * \note This function requires that p4est is initialized. Make sure to call
- * \ref p4est_init before using this routine. If this is not the case, a
- * warning is issued and \ref p4est_init is called from within this function.
- */
-t8_cmesh_t
-t8_cmesh_new_from_p8est (p8est_connectivity_t *conn, sc_MPI_Comm comm, int do_partition);
 
 /** Construct a cmesh that has no trees. We do not know a special use case,
  * this function is merely for debugging and to show the possibility.

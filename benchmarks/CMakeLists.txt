@@ -33,4 +33,7 @@ add_t8_benchmark( NAME t8_time_forest_partition SOURCES t8_time_forest_partition
 add_t8_benchmark( NAME t8_time_prism_adapt SOURCES t8_time_prism_adapt.cxx )
 add_t8_benchmark( NAME t8_time_fractal SOURCES t8_time_fractal.cxx )
 add_t8_benchmark( NAME t8_time_set_join_by_vertices SOURCES t8_time_set_join_by_vertices.cxx )
+
+if( T8CODE_ENABLE_P4EST )
 add_t8_benchmark( NAME t8_time_new_refine SOURCES t8_time_new_refine.c )
+endif()

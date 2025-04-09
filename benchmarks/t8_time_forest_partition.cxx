@@ -25,7 +25,6 @@
 #include <sc_functions.h>
 #include <sc_statistics.h>
 #include <sc_options.h>
-#include <p4est_connectivity.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_vtk/t8_vtk_writer.h>
@@ -333,7 +332,9 @@ main (int argc, char *argv[])
   SC_CHECK_MPI (mpiret);
 
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
+#if T8_USE_P4EST
   p4est_init (NULL, SC_LP_ESSENTIAL);
+#endif
   t8_init (SC_LP_STATISTICS);
 
   /* Setup for command line options */
