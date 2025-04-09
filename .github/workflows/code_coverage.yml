@@ -74,7 +74,7 @@ jobs:
     ## Install lcov.
     - name: Install lcov
       run: apt-get install -y lcov
-    - name: Install lcov
+    - name: Install requirements for codecov
       run: apt-get install -y curl git gpg
     - name: Print lcov version
       run: lcov --version
@@ -117,6 +117,6 @@ jobs:
         files: ./build/coverage.info
         fail_ci_if_error: true
         disable_search: true
-        #verbose: true
+        verbose: true
         token: ${{ secrets.CODE_COV }}
     
