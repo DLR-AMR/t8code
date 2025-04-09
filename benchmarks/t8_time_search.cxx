@@ -489,9 +489,10 @@ main (int argc, char **argv)
   sc_stats_init (&times[1], "refine");
   sc_stats_init (&times[2], "search");
   total_time -= sc_MPI_Wtime ();
-
+  double boundary[24] = { 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0,
+                          0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0 };
   /* Build a cube cmesh with tet, hex, and prism trees. */
-  cmesh = t8_cmesh_new_hypercube ((t8_eclass) eclass_option, comm, 0, 0, 0);
+  cmesh = t8_cmesh_new_hypercube_pad_ext ((t8_eclass) eclass_option, comm, boundary, 1, 1, 1, 0, 0, 0, 1, 0, 0);
   /* Build a uniform forest on it. */
   forest = t8_forest_new_uniform (cmesh, t8_time_search_scheme (scheme_option), level, 0, comm);
 
