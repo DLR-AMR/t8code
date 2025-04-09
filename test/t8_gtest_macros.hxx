@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2023 the developers
+  Copyright (C) 2025 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -41,9 +41,25 @@ inline auto print_eclass
   = [] (const testing::TestParamInfo<t8_eclass> &info) { return t8_eclass_to_string[info.param]; };
 
 /**
- * Package id for the testsuite. Used for attributes.
+ * Initializes everything needed for the t8code testsuite.
+ * MPI is initialized with MPI_COMM_WORLD and SC with loglevel SC_LP_PRODUCTION.
+ * \param [in] log_threshold    The log threshold used to initialize t8code.
  */
-static int t8_testsuite_package_id;
+void
+t8_testsuite_init (int *argc, char ***argv, int log_threshold);
+
+/**
+ * Finalizes everything needed in the t8code testsuite.
+ */
+void
+t8_testsuite_finalize ();
+
+/**
+ * Returns the attribute package id of the t8code testsuite.
+ * \return The package id.
+ */
+int
+t8_testsuite_get_package_id ();
 
 /**
  * Number of points to use in tests

@@ -50,13 +50,14 @@ class cmesh_multiple_attributes: public testing::TestWithParam<std::tuple<int, i
     const int scheme_id = std::get<0> (GetParam ());
     num_trees = std::get<1> (GetParam ());
 
-    cmesh_one_at = t8_cmesh_new_row_of_cubes (num_trees, 0, 0, sc_MPI_COMM_WORLD, t8_testsuite_package_id);
+    cmesh_one_at = t8_cmesh_new_row_of_cubes (num_trees, 0, 0, sc_MPI_COMM_WORLD, t8_testsuite_get_package_id ());
     cmesh_one_at = t8_cmesh_partition_cmesh (cmesh_one_at, create_from_scheme_id (scheme_id), sc_MPI_COMM_WORLD);
 
-    cmesh_mult_at = t8_cmesh_new_row_of_cubes (num_trees, 1, 0, sc_MPI_COMM_WORLD, t8_testsuite_package_id);
+    cmesh_mult_at = t8_cmesh_new_row_of_cubes (num_trees, 1, 0, sc_MPI_COMM_WORLD, t8_testsuite_get_package_id ());
     cmesh_mult_at = t8_cmesh_partition_cmesh (cmesh_mult_at, create_from_scheme_id (scheme_id), sc_MPI_COMM_WORLD);
 
-    cmesh_mult_at_from_stash = t8_cmesh_new_row_of_cubes (num_trees, 1, 1, sc_MPI_COMM_WORLD, t8_testsuite_package_id);
+    cmesh_mult_at_from_stash
+      = t8_cmesh_new_row_of_cubes (num_trees, 1, 1, sc_MPI_COMM_WORLD, t8_testsuite_get_package_id ());
   }
   void
   TearDown () override
@@ -113,10 +114,10 @@ TEST_P (cmesh_multiple_attributes, multiple_attributes)
     }
     /* Compare second attribute with global tree id. */
     t8_locidx_t att;
-    att = *(t8_locidx_t *) t8_cmesh_get_attribute (cmesh_mult_at, t8_testsuite_package_id, 0, ltree_id);
+    att = *(t8_locidx_t *) t8_cmesh_get_attribute (cmesh_mult_at, t8_testsuite_get_package_id (), 0, ltree_id);
     EXPECT_EQ (gtree_id, att);
     /* Compare third attribute with global number of trees. */
-    att = *(t8_locidx_t *) t8_cmesh_get_attribute (cmesh_mult_at, t8_testsuite_package_id, 1, ltree_id);
+    att = *(t8_locidx_t *) t8_cmesh_get_attribute (cmesh_mult_at, t8_testsuite_get_package_id (), 1, ltree_id);
     EXPECT_EQ (att, t8_cmesh_get_num_trees (cmesh_mult_at));
   }
   /* Check partitioned cmesh from stash with three attributes. */
@@ -142,10 +143,12 @@ TEST_P (cmesh_multiple_attributes, multiple_attributes)
     }
     /* Compare second attribute with global tree id. */
     t8_locidx_t att;
-    att = *(t8_locidx_t *) t8_cmesh_get_attribute (cmesh_mult_at_from_stash, t8_testsuite_package_id, 0, ltree_id);
+    att
+      = *(t8_locidx_t *) t8_cmesh_get_attribute (cmesh_mult_at_from_stash, t8_testsuite_get_package_id (), 0, ltree_id);
     EXPECT_EQ (gtree_id, att);
     /* Compare third attribute with global number of trees. */
-    att = *(t8_locidx_t *) t8_cmesh_get_attribute (cmesh_mult_at_from_stash, t8_testsuite_package_id, 1, ltree_id);
+    att
+      = *(t8_locidx_t *) t8_cmesh_get_attribute (cmesh_mult_at_from_stash, t8_testsuite_get_package_id (), 1, ltree_id);
     EXPECT_EQ (att, t8_cmesh_get_num_trees (cmesh_mult_at_from_stash));
   }
 }
