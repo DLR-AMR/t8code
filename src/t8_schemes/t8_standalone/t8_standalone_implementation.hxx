@@ -558,10 +558,14 @@ struct t8_standalone_scheme
 
     const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
     t8_standalone_element<TEclass> ancestor;
+    const int length = element_get_len (level);
     T8_ASSERT (0 <= el->level && el->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
-
-    element_get_ancestor (el, level, &ancestor);
-    return element_get_child_id ((const t8_element_t *) &ancestor);
+    int id = 0;
+#pragma GCC unroll 4
+    for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
+      id |= (el->coords[idim] & length) ? (1 << idim) : 0;
+    }
+    return id;
   }
 
   /** Query whether a given set of elements is a family or not.
