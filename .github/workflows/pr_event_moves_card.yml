@@ -62,8 +62,8 @@ jobs:
             # start a while loop to get all the issues in the project, until hasNextPage is false
             while [ "$hasNextPage" == "true" ] && [ "$iter" -lt "$max_iter" ]; do
               # Increment the iteration counter
+              echo "retrieve page $iter"
               iter=$((iter + 1))
-              echo "retrieve page"
               project_fields_and_issues=$(curl --request POST \
                 --url https://api.github.com/graphql \
                 --header "Authorization: Bearer ${{ secrets.PAT }}" \

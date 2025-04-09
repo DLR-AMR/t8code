@@ -63,6 +63,7 @@ jobs:
           iter=0
           # start a while loop to get all the issues in the project, until hasNextPage is false
           while [ "$hasNextPage" == "true" ] && [ "$iter" -lt "$max_iter" ]; do
+            echo "retrieve page $iter"
             # Increment the iteration counter
             iter=$((iter + 1))
             # Get the issues within the project
