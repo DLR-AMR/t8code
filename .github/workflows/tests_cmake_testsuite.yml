@@ -206,6 +206,8 @@ jobs:
       MPI: ON
       BUILD_TYPE: Debug
       TEST_LEVEL: 2 #TODO: Attention: Change to zero.
+    secrets:
+      CODE_COV: ${{ secrets.CODE_COV }}
   
   # Run t8code tests with shipped submodules. This test is only for the build system, so only one config is tested.
   t8code_w_shipped_submodules_tests:

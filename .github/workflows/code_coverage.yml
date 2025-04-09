@@ -39,6 +39,9 @@ on:
         required: true
         type: number
         description: 'Test level used for configuring (0 for full tests, 1 for less thorough tests, 2 for minimal tests)'
+    secrets:
+      CODE_COV:
+        required: true
 
 jobs:  
   generate-codecov:
@@ -83,6 +86,8 @@ jobs:
 #  T8CODE
 #
     # Build config vars
+    - name: "Set up environment"
+      run: echo "GITHUB_TOKEN=${{ secrets.CODE_COV }}" >> $GITHUB_ENV
     - name: Set test level
       if: ${{ inputs.TEST_LEVEL != 0 }}
       run: export TEST_LEVEL_FLAG="-DT8CODE_TEST_LEVEL=${{ inputs.TEST_LEVEL }}"
@@ -106,8 +111,6 @@ jobs:
     - name: install
       run: cd build && cmake --install .
     # Generate code coverage report.
-    - name: "Set up environment"
-      run: echo "GITHUB_TOKEN=${{ secrets.CODE_COV }}" >> $GITHUB_ENV
     - name: Generate code coverage report
       run: cd build && cmake --build . --target coverage
     # Upload coverage report to Codecov.
