@@ -46,6 +46,7 @@ on:
 
 jobs:  
   generate-codecov:
+    #if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || ("${{ github.event_name }}" == "merge_group")
     timeout-minutes: 100
     runs-on: ubuntu-latest
     container: dlramr/t8code-ubuntu:t8-dependencies
