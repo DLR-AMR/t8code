@@ -51,12 +51,30 @@ jobs:
           project_ids=$(echo $projects | jq -r '.data.organization.projectsV2.nodes[].id')
           # Iterate over the project Ids and find the issue within the project
           for project_id in $project_ids; do
-              echo "project_id is $project_id"
+            echo "project_id is $project_id"
+            # set hasNextPage initially to true
+            hasNextPage=true
+            # initially set the startCursor to null
+            startCursor=""
+            max_iter=100
+            # set the iteration counter to 0
+            iter=0
+            # start a while loop to get all the issues in the project, until hasNextPage is false
+            while [ "$hasNextPage" == "true" ] && [ "$iter" -lt "$max_iter" ]; do
+              # Increment the iteration counter
+              echo "retrieve page $iter"
+              iter=$((iter + 1))
               project_fields_and_issues=$(curl --request POST \
                 --url https://api.github.com/graphql \
                 --header "Authorization: Bearer ${{ secrets.PAT }}" \
-                --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { items(first: 100) { nodes { id fieldValues(first: 8) { nodes { ... on ProjectV2ItemFieldTextValue { text field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldDateValue { date field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldSingleSelectValue { name field { ... on ProjectV2FieldCommon { name } } } } } content { ... on Issue { id number repository { id } } } } } fields(first: 20) { nodes { ... on ProjectV2SingleSelectField { id name options { id name } } } } } } }\"}")
+                --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { items(first: 100, after: \\\"$startCursor\\\") { pageInfo {startCursor endCursor hasNextPage } nodes { id fieldValues(first: 8) { nodes { ... on ProjectV2ItemFieldTextValue { text field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldDateValue { date field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldSingleSelectValue { name field { ... on ProjectV2FieldCommon { name } } } } } content { ... on Issue { id number repository { id } } } } } fields(first: 20) { nodes { ... on ProjectV2SingleSelectField { id name options { id name } } } } } } }\"}")
               echo "issues=$project_fields_and_issues"
+              # Update hasNextPage
+              hasNextPage=$(echo $project_fields_and_issues | jq -r '.data.node.items.pageInfo.hasNextPage')
+              # Update startCursor
+              startCursor=$(echo $project_fields_and_issues | jq -r '.data.node.items.pageInfo.endCursor')
+              echo "hasNextPage=$hasNextPage"
+              echo "startCursor=$startCursor"
               # Extract the issue ids, PVII ids, and issue numbers. The issue_id is the global_id, the PVII id is the project specific id, and the issue number is the issue number (eg. #123)
               # The issue number is not unique over all projects. So we check if the repository of the issue and the PR are the same.
               issue_numbers=$(echo $project_fields_and_issues | jq -r '.data.node.items.nodes[].content.number')
@@ -99,3 +117,4 @@ jobs:
                 fi
               done
             done
+          done
