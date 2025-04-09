@@ -74,6 +74,8 @@ jobs:
     ## Install lcov.
     - name: Install lcov
       run: apt-get install -y lcov
+    - name: Install lcov
+      run: apt-get install -y curl git gpg
     - name: Print lcov version
       run: lcov --version
 
