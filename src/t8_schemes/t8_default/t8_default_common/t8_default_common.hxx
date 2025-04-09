@@ -56,7 +56,7 @@ t8_default_mempool_alloc (sc_mempool_t *ts_context, int length, t8_element_t **e
 }
 
 /** This class independent function assumes an sc_mempool_t as context.
- * It is suitable as the elem_destroy callback in \ref t8_eclass_scheme_t.
+ * It is suitable as the element_destroy callback in \ref t8_default_common.
  * We assume that the mempool has been created with the correct element size.
  * \param [in,out] ts_context   An element is returned to this sc_mempool_t.
  * \param [in]     length       Non-negative number of elements to destroy.
