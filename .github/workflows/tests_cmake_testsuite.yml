@@ -61,10 +61,6 @@ jobs:
         repository: ${{ github.event.pull_request.head.repo.full_name }}
         ref: ${{ github.event.pull_request.head.ref }}
         fetch-depth: 0
-    - name: "Set up environment"
-      run: echo "GITHUB_TOKEN=${{ secrets.CODE_COV }}" >> $GITHUB_ENV
-    - name: "Test with other token"
-      run: echo "GITHUB_TOKEN=${{ secrets.PAT }}" >> $GITHUB_ENV
     - name: set the run_ci variable for the testsuite
       id: set_run_ci
       run: |

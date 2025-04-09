@@ -1,4 +1,4 @@
-name: Generate Code coverage report and deploy to Codecov.
+name: Generate code coverage report and deploy to Codecov.
 
 #  This file is part of t8code.
 #  t8code is a C library to manage a collection (a forest) of multiple
@@ -42,6 +42,7 @@ on:
     secrets:
       CODE_COV:
         required: true
+        description: 'Token needed to publish coverage report on Codecov'
 
 jobs:  
   generate-codecov:
@@ -81,13 +82,13 @@ jobs:
       run: apt-get install -y curl git gpg
     - name: Print lcov version
       run: lcov --version
+    - name: Print ctest version
+      run: ctest --version
 
 #
 #  T8CODE
 #
     # Build config vars
-    - name: "Set up environment"
-      run: echo "GITHUB_TOKEN=${{ secrets.CODE_COV }}" >> $GITHUB_ENV
     - name: Set test level
       if: ${{ inputs.TEST_LEVEL != 0 }}
       run: export TEST_LEVEL_FLAG="-DT8CODE_TEST_LEVEL=${{ inputs.TEST_LEVEL }}"
@@ -120,6 +121,5 @@ jobs:
         files: ./build/coverage.info
         fail_ci_if_error: true
         disable_search: true
-        verbose: true
         token: ${{ secrets.CODE_COV }}
     
