@@ -166,7 +166,7 @@ INSTANTIATE_TEST_SUITE_P (
   ::testing::Combine (::testing::Values (T8_GEOMETRY_TYPE_LINEAR, T8_GEOMETRY_TYPE_LINEAR_AXIS_ALIGNED), AllEclasses),
   print_test);
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 TEST (test_geometry_linear, incompatible_geometry)
 {
   t8_cmesh_t cmesh;

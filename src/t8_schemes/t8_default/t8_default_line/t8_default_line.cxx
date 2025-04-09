@@ -258,7 +258,7 @@ t8_default_scheme_line::element_set_linear_id (t8_element_t *elem, int level, t8
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= T8_DLINE_MAXLEVEL);
-  T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << level);
+  T8_ASSERT (id < ((t8_linearidx_t) 1) << level);
 
   t8_dline_init_linear_id ((t8_default_line_t *) elem, level, id);
 }
@@ -386,7 +386,7 @@ t8_default_scheme_line::element_get_ancestor_id (const t8_element_t *elem, int l
 int
 t8_default_scheme_line::elements_are_family (t8_element_t *const *fam) const
 {
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   int i;
   for (i = 0; i < T8_DLINE_CHILDREN; i++) {
     T8_ASSERT (element_is_valid (fam[i]));
@@ -402,7 +402,7 @@ t8_default_scheme_line::refines_irregular () const
   return 0;
 }
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 int
 t8_default_scheme_line::element_is_valid (const t8_element_t *elem) const
 {
@@ -426,7 +426,7 @@ t8_default_scheme_line::element_new (int length, t8_element_t **elem) const
   t8_default_scheme_common::element_new (length, elem);
 
   /* in debug mode, set sensible default values. */
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   {
     for (int i = 0; i < length; i++) {
       set_to_root (elem[i]);
@@ -438,7 +438,7 @@ t8_default_scheme_line::element_new (int length, t8_element_t **elem) const
 void
 t8_default_scheme_line::element_init ([[maybe_unused]] int length, [[maybe_unused]] t8_element_t *elem) const
 {
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   t8_dline_t *lines = (t8_dline_t *) elem;
   for (int i = 0; i < length; i++) {
     t8_dline_init (lines + i);

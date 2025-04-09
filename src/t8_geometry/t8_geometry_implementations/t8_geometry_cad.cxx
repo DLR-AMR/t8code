@@ -26,7 +26,7 @@
 #include <t8_eclass.h>
 #include <t8_geometry/t8_geometry_helpers.h>
 
-#if T8_WITH_OCC
+#if T8_ENABLE_OCC
 
 #include <BRep_Builder.hxx>
 #include <BRep_Tool.hxx>
@@ -124,24 +124,27 @@ t8_geometry_cad::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreei
   double h = 1e-9;
   double in1[3], in2[3];
   double out1[3], out2[3];
-  for (int dim = 0; dim < 3; ++dim) {
-    memcpy (in1, ref_coords, sizeof (double) * 3);
-    memcpy (in2, ref_coords, sizeof (double) * 3);
+  for (size_t icoord = 0; icoord < num_coords; icoord++) {
 
-    if (ref_coords[dim] < h) {
-      in2[dim] += ref_coords[dim] + h;
-    }
-    else if (ref_coords[dim] > 1 - h) {
-      in1[dim] -= h;
-    }
-    else {
-      in1[dim] -= 0.5 * h;
-      in2[dim] += 0.5 * h;
-    }
-    t8_geometry_cad::t8_geom_evaluate (cmesh, gtreeid, in1, 1, out1);
-    t8_geometry_cad::t8_geom_evaluate (cmesh, gtreeid, in2, 1, out2);
-    for (int dim2 = 0; dim2 < 3; ++dim2) {
-      jacobian_out[dim * 3 + dim2] = (out2[dim2] - out1[dim2]) / h;
+    for (int dim = 0; dim < 3; ++dim) {
+      memcpy (in1, ref_coords, sizeof (double) * 3);
+      memcpy (in2, ref_coords, sizeof (double) * 3);
+
+      if (ref_coords[dim] < h) {
+        in2[dim] += ref_coords[dim] + h;
+      }
+      else if (ref_coords[dim] > 1 - h) {
+        in1[dim] -= h;
+      }
+      else {
+        in1[dim] -= 0.5 * h;
+        in2[dim] += 0.5 * h;
+      }
+      t8_geometry_cad::t8_geom_evaluate (cmesh, gtreeid, in1, 1, out1);
+      t8_geometry_cad::t8_geom_evaluate (cmesh, gtreeid, in2, 1, out2);
+      for (int dim2 = 0; dim2 < 3; ++dim2) {
+        jacobian_out[9 * icoord + dim * 3 + dim2] = (out2[dim2] - out1[dim2]) / h;
+      }
     }
   }
 }
@@ -203,7 +206,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
 
   /* Check if face has a linked geometry */
   if (*faces > 0) {
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
     for (int i_edge = 0; i_edge < num_edges; i_edge++) {
       /* If face carries a surface, edges can't carry surfaces too */
       T8_ASSERT (edges[i_edge + num_edges] == 0);
@@ -1653,4 +1656,4 @@ t8_geometry_cad_destroy (t8_geometry_cad_c **geom)
 
 T8_EXTERN_C_END ();
 
-#endif /* T8_WITH_OCC */
+#endif /* T8_ENABLE_OCC */
