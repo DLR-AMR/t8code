@@ -2432,6 +2432,12 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
       proc_is_empty_shared = true;
     }
   }
+  bool this_proc_is_empty = *first_local_tree >= *last_local_tree;
+
+  if (*first_local_tree == *last_local_tree) {
+    this_proc_is_empty = child_in_tree_begin_temp >= child_in_tree_end_temp;
+  }
+  t8_debugf ("[D] this_proc_is_empty %i\n", this_proc_is_empty);
   t8_gloidx_t num_messages_sent = 0;
   int mpiret = sc_MPI_Waitall (num_messages_sent, (sc_MPI_Request *) send_requests.array, sc_MPI_STATUSES_IGNORE);
   SC_CHECK_MPI (mpiret);
@@ -2439,18 +2445,19 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
   T8_ASSERT (num_received_end_messages == 1);
 
   t8_gloidx_t *first_local_trees = T8_ALLOC_ZERO (t8_gloidx_t, cmesh->mpisize);
-  mpiret = sc_MPI_Allgather (first_local_tree, 1, T8_MPI_GLOIDX, first_local_trees, 1, T8_MPI_GLOIDX, comm);
+  const bool first_tree_shared_temp = !this_proc_is_empty && child_in_tree_begin_temp > 0;
+  const t8_gloidx_t first_unshared_local_tree = *first_local_tree + (first_tree_shared_temp ? 1 : 0);
+
+  mpiret = sc_MPI_Allgather (&first_unshared_local_tree, 1, T8_MPI_GLOIDX, first_local_trees, 1, T8_MPI_GLOIDX, comm);
   SC_CHECK_MPI (mpiret);
 
   for(int i = 0; i < cmesh->mpisize; i++) {
-    t8_debugf ("[%i] first_local_tree %li\n", i, first_local_trees[i]);
+    t8_debugf ("[%i] first_local_tree %li\n", i, first_local_trees[i]);;
   }
 
   t8_debugf("[D] first_local_tree: %li, last_local_tree: %li\n", *first_local_tree, *last_local_tree);
   t8_debugf("[D] child_in_tree_begin: %li, child_in_tree_end: %li\n", 
               child_in_tree_begin_temp, child_in_tree_end_temp);
-  const bool this_proc_is_empty = *first_local_tree >= *last_local_tree &&
-                                  child_in_tree_begin_temp >= child_in_tree_end_temp;
   if (first_tree_shared != NULL) {
     if (!this_proc_is_empty && cmesh->mpirank > 0 && child_in_tree_begin_temp > 0) {
       /* The first tree is shared */
@@ -2461,6 +2468,8 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
     }
     t8_debugf ("[D] first_tree_shared: %i\n", *first_tree_shared);
   }
+  T8_ASSERT(first_local_tree != last_local_tree);
+
   /* Compute shared tree indices for empty procs */
   if ( this_proc_is_empty ){
     next_non_empty_proc = cmesh->mpirank + 1;
@@ -2468,15 +2477,22 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
     while (next_non_empty_proc < cmesh->mpisize && first_local_trees[next_non_empty_proc] == -1) {
       next_non_empty_proc++;
     }
-
     *first_local_tree = first_local_trees[next_non_empty_proc];
     *last_local_tree = *first_local_tree - 1;
-    //if (first_tree_shared != NULL) {
-    //  *first_tree_shared = 0;
-    //}
+
     t8_debugf ("[D] empty proc, first_local_tree %li, last_local_tree: %li\n", *first_local_tree, *last_local_tree);
   }
+#ifdef T8_ENABLE_DEBUG
+  mpiret = sc_MPI_Allgather(first_local_tree, 1, T8_MPI_GLOIDX, first_local_trees, 1, T8_MPI_GLOIDX, comm);
+  SC_CHECK_MPI (mpiret);
+  t8_debugf ("[D] final first trees\n");
+  for(int i = 0; i < cmesh->mpisize; i++) {
+    t8_debugf ("[%i] first_local_tree %li\n", i, first_local_trees[i]);
+  }
+#endif
+
   T8_FREE (first_local_trees);
+
 
   if (pure_local_trees > 0) {
     sc_array_reset (&send_requests);
