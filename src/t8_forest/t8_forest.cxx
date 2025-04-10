@@ -1150,17 +1150,22 @@ t8_forest_populate (t8_forest_t forest)
 
   SC_CHECK_ABORT (forest->set_level <= forest->maxlevel, "Given refinement level exceeds the maximum.\n");
   /* TODO: create trees and quadrants according to uniform refinement */
-  t8_cmesh_uniform_bounds (forest->cmesh, forest->set_level, forest->scheme, &forest->first_local_tree,
-                           &child_in_tree_begin, &forest->last_local_tree, &child_in_tree_end, NULL);
+  t8_debugf ("[D] Before uniform bounds cmesh_first_tree = %d, num_local_trees: = %d\n",  t8_cmesh_get_first_treeid (forest->cmesh),  t8_cmesh_get_num_local_trees (forest->cmesh));
 
+  t8_cmesh_uniform_bounds_for_irregular_refinement (
+    forest->cmesh, forest->set_level, forest->scheme, &forest->first_local_tree, &child_in_tree_begin,
+    &forest->last_local_tree, &child_in_tree_end, NULL, forest->mpicomm);
   /* True if the forest has no elements */
   is_empty = forest->first_local_tree > forest->last_local_tree
              || (forest->first_local_tree == forest->last_local_tree && child_in_tree_begin >= child_in_tree_end);
 
   cmesh_first_tree = t8_cmesh_get_first_treeid (forest->cmesh);
   cmesh_last_tree = cmesh_first_tree + t8_cmesh_get_num_local_trees (forest->cmesh) - 1;
+  t8_debugf ("[D] cmesh_first_tree = %d, num_local_trees: = %d\n", cmesh_first_tree,  t8_cmesh_get_num_local_trees (forest->cmesh));
 
   if (!is_empty) {
+    t8_debugf("[D] forest_first_local_tree = %d, forest_last_local_tree = %d\n", forest->first_local_tree, forest->last_local_tree);
+    t8_debugf("[D] cmesh_first_tree = %d, cmesh_last_tree = %d\n", cmesh_first_tree, cmesh_last_tree);
     SC_CHECK_ABORT (forest->first_local_tree >= cmesh_first_tree && forest->last_local_tree <= cmesh_last_tree,
                     "cmesh partition does not match the planned forest partition");
   }
@@ -3159,6 +3164,8 @@ t8_forest_commit (t8_forest_t forest)
     /* populate a new forest with tree and quadrant objects */
     if (t8_forest_refines_irregular (forest) && forest->set_level > 0) {
       /* On root level we will also use the normal algorithm */
+      t8_productionf ("You are using the forest populate algorithm for irregular refining trees, even though the "
+                      "t8_forest_populate function should be able to handle it.\n");
       t8_forest_populate_irregular (forest);
     }
     else {
