@@ -755,7 +755,7 @@ t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
   return std::make_optional<t8_msh_tree_vertex_indices> (vertex_indices);
 }
 
-#if T8_WITH_OCC
+#if T8_ENABLE_OCC
 /** Corrects the parameters on closed geometries to prevent disorted elements.
  * \param [in]      geometry_dim    The dimension of the geometry.
  *                                  1 for edges, 2 for surfaces.
@@ -857,7 +857,7 @@ t8_cmesh_correct_parameters_on_closed_geometry (const int geometry_dim, const in
     break;
   }
 }
-#endif /* T8_WITH_OCC */
+#endif /* T8_ENABLE_OCC */
 
 /**
  * This function stores the entity dimensions, tags, and parameters of each node in a given 
@@ -896,7 +896,7 @@ t8_store_element_node_data (t8_cmesh_t cmesh, t8_gloidx_t tree_count,
                           parameter_array, T8_ECLASS_MAX_CORNERS * 2 * sizeof (int), 0);
 }
 
-#if T8_WITH_OCC
+#if T8_ENABLE_OCC
 /**
  * This function calculates the parametric geometries of a tree based on its element class
  * and links it to either a CAD-based geometry or a linear geometry. It validates the element class
@@ -1370,7 +1370,7 @@ t8_cmesh_process_tree_geometry (t8_cmesh_t cmesh, t8_eclass_t eclass,
   }
   return 1;
 }
-#endif /* T8_WITH_OCC */
+#endif /* T8_ENABLE_OCC */
 
 /* fp should be set after the Nodes section, right before the tree section.
  * If vertex_indices is not NULL, it is allocated and will store
@@ -1391,9 +1391,10 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
   t8_gloidx_t tree_count;
   t8_eclass_t eclass;
   t8_msh_file_node Node;
-#if T8_WITH_OCC
+#if T8_ENABLE_OCC
   t8_msh_file_node face_nodes[T8_ECLASS_MAX_CORNERS_2D], edge_nodes[2];
-#endif /* T8_WITH_OCC */
+#endif /* T8_ENABLE_OCC */
+
   long lnum_trees, lnum_blocks, entity_tag;
   int retval;
   int ele_type;
@@ -1617,7 +1618,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
           t8_cmesh_set_tree_geometry (cmesh, tree_count, linear_geometry_base);
         }
         else {
-#if T8_WITH_OCC
+#if T8_ENABLE_OCC
           if (!t8_cmesh_process_tree_geometry (cmesh, eclass, tree_nodes, cad_geometry_base, dim, face_nodes,
                                                tree_count, edge_nodes, linear_geometry_base)) {
             free (line);
@@ -1625,9 +1626,9 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
             return std::nullopt;
           }
 
-#else  /* T8_WITH_OCC */
+#else  /* T8_ENABLE_OCC */
           SC_ABORTF ("OCC not linked.");
-#endif /* T8_WITH_OCC */
+#endif /* T8_ENABLE_OCC */
         }
       }
     }
@@ -1896,9 +1897,9 @@ t8_cmesh_from_msh_file_register_geometries (t8_cmesh_t cmesh, const int use_cad_
   /* Register linear geometry */
   *linear_geometry = t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
   if (use_cad_geometry) {
-#if T8_WITH_OCC
+#if T8_ENABLE_OCC
     *cad_geometry = t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, std::string (fileprefix));
-#else /* !T8_WITH_OCC */
+#else /* !T8_ENABLE_OCC */
     *cad_geometry = NULL;
     return 0;
 #endif

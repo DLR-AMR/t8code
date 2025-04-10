@@ -23,20 +23,20 @@
 /* In this test we create an occ gp_Pnt object.
  * The purpose of this test is to check whether t8code successfully links
  * against occ.
- * If t8code was not configured with --with-occ then this test
+ * If t8code was not configured with --enable-occ then this test
  * does nothing and is always passed.
  */
 
 #include <t8.h>
 #include <gtest/gtest.h>
-#if T8_WITH_OCC
+#if T8_ENABLE_OCC
 #include <gp_Pnt.hxx>
 #endif
 
 /* Check whether we can successfully execute VTK code */
 TEST (t8_test_occ_linkage, test_gp_Pnt)
 {
-#if T8_WITH_OCC
+#if T8_ENABLE_OCC
 
   EXPECT_NO_THROW (gp_Pnt pnt = gp_Pnt (); pnt.SetX (1););
   t8_global_productionf ("Successfully created occ gp_Pnt object.\n");
