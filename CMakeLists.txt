@@ -20,7 +20,7 @@ option( T8CODE_BUILD_WEXTRA "Compile t8code with extra warnings as done in the G
 option( T8CODE_EXPORT_COMPILE_COMMANDS "Export the compile commands as json. Can be used by IDEs for code completion (e.g. intellisense, clangd)" OFF )
 
 option( T8CODE_BUILD_TESTS "Build t8code's automated tests" ON )
-cmake_dependent_option( T8CODE_BUILD_TPL_TESTS "Build the tests from libsc and p4est" ON "T8CODE_BUILD_TESTS" OFF )
+cmake_dependent_option( T8CODE_BUILD_TPL_TESTS "Build the tests from libsc and p4est" OFF "T8CODE_BUILD_TESTS" OFF )
 
 option( T8CODE_BUILD_EXAMPLES "Build t8code's examples" ON )
 cmake_dependent_option( T8CODE_BUILD_TPL_EXAMPLES "Build the examples from libsc and p4est" OFF "T8CODE_BUILD_EXAMPLES" OFF )
