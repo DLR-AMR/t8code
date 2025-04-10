@@ -149,7 +149,7 @@ t8_msh_file_node_hash (const void *node, const void *num_nodes)
  * u_data is not needed.
  */
 static int
-t8_msh_file_node_compare (const void *node_a, const void *node_b, const void *u_data)
+t8_msh_file_node_compare (const void *node_a, const void *node_b, [[maybe_unused]] const void *u_data)
 {
   t8_msh_file_node_t *Node_a, *Node_b;
 
@@ -708,7 +708,7 @@ die_ele:
   return -1;
 }
 
-#if T8_WITH_OCC
+#if T8_ENABLE_OCC
 /** Corrects the parameters on closed geometries to prevent disorted elements.
  * \param [in]      geometry_dim    The dimension of the geometry.
  *                                  1 for edges, 2 for surfaces.
@@ -810,7 +810,7 @@ t8_cmesh_correct_parameters_on_closed_geometry (const int geometry_dim, const in
     break;
   }
 }
-#endif /* T8_WITH_OCC */
+#endif /* T8_ENABLE_OCC */
 
 /* fp should be set after the Nodes section, right before the tree section.
  * If vertex_indices is not NULL, it is allocated and will store
@@ -822,7 +822,7 @@ t8_cmesh_correct_parameters_on_closed_geometry (const int geometry_dim, const in
 static int
 t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, sc_array_t **vertex_indices,
                                const int dim, const t8_geometry_c *linear_geometry_base, const int use_cad_geometry,
-                               const t8_geometry_c *cad_geometry_base)
+                               [[maybe_unused]] const t8_geometry_c *cad_geometry_base)
 {
   char *line = (char *) malloc (1024), *line_modify;
   char first_word[2048] = "\0";
@@ -831,9 +831,9 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
   t8_gloidx_t tree_count;
   t8_eclass_t eclass;
   t8_msh_file_node_parametric_t Node, **found_node, tree_nodes[T8_ECLASS_MAX_CORNERS];
-#if T8_WITH_OCC
+#if T8_ENABLE_OCC
   t8_msh_file_node_parametric_t face_nodes[T8_ECLASS_MAX_CORNERS_2D], edge_nodes[2];
-#endif /* T8_WITH_OCC */
+#endif /* T8_ENABLE_OCC */
   long lnum_trees, lnum_blocks, entity_tag;
   int retval, i;
   int ele_type;
@@ -1043,7 +1043,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
         }
         else {
           /* Calculate the parametric geometries of the tree */
-#if T8_WITH_OCC
+#if T8_ENABLE_OCC
           T8_ASSERT (cad_geometry_base->t8_geom_get_type () == T8_GEOMETRY_TYPE_CAD);
           const t8_geometry_cad_c *cad_geometry = dynamic_cast<const t8_geometry_cad_c *> (cad_geometry_base);
           /* Check for right element class */
@@ -1497,9 +1497,9 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
             t8_debugf ("Registering tree %li with geometry %s \n", tree_count,
                        linear_geometry_base->t8_geom_get_name ().c_str ());
           }
-#else  /* !T8_WITH_OCC */
+#else  /* !T8_ENABLE_OCC */
           SC_ABORTF ("OCC not linked");
-#endif /* T8_WITH_OCC */
+#endif /* T8_ENABLE_OCC */
         }
       }
     }
@@ -1529,7 +1529,7 @@ typedef struct
 
 /* Hash a face. The hash value is the sum of its vertex indices */
 static unsigned
-t8_msh_file_face_hash (const void *face, const void *data)
+t8_msh_file_face_hash (const void *face, [[maybe_unused]] const void *data)
 {
   t8_msh_file_face_t *Face;
   int iv;
@@ -1546,7 +1546,7 @@ t8_msh_file_face_hash (const void *face, const void *data)
 /* Two face are considered equal if they have the same vertices up
  * to renumeration. */
 static int
-t8_msh_file_face_equal (const void *facea, const void *faceb, const void *data)
+t8_msh_file_face_equal (const void *facea, const void *faceb, [[maybe_unused]] const void *data)
 {
   int iv, jv, ret;
   long vertex;
@@ -1578,7 +1578,7 @@ t8_msh_file_face_equal (const void *facea, const void *faceb, const void *data)
 /* We use this function in a loop over all elements
  * in the hash table, to free the memory of the vertices array */
 static int
-t8_msh_file_face_free (void **face, const void *data)
+t8_msh_file_face_free (void **face, [[maybe_unused]] const void *data)
 {
   t8_msh_file_face_t *Face;
 
@@ -1765,15 +1765,16 @@ T8_EXTERN_C_BEGIN ();
  * no cad geometry is used.
  */
 static int
-t8_cmesh_from_msh_file_register_geometries (t8_cmesh_t cmesh, const int use_cad_geometry, const char *fileprefix,
+t8_cmesh_from_msh_file_register_geometries (t8_cmesh_t cmesh, const int use_cad_geometry,
+                                            [[maybe_unused]] const char *fileprefix,
                                             const t8_geometry_c **linear_geometry, const t8_geometry_c **cad_geometry)
 {
   /* Register linear geometry */
   *linear_geometry = t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
   if (use_cad_geometry) {
-#if T8_WITH_OCC
+#if T8_ENABLE_OCC
     *cad_geometry = t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, std::string (fileprefix));
-#else /* !T8_WITH_OCC */
+#else /* !T8_ENABLE_OCC */
     *cad_geometry = NULL;
     return 0;
 #endif

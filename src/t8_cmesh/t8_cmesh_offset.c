@@ -81,7 +81,7 @@ t8_offset_last (const int proc, const t8_gloidx_t *offset)
   return T8_GLOIDX_ABS (offset[proc + 1]) - 1;
 }
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 /* Query whether a given global tree is in a valid range of a partition */
 static int
 t8_offset_valid_tree (const t8_gloidx_t gtree, const int mpisize, const t8_gloidx_t *offset)
@@ -526,7 +526,7 @@ t8_offset_range_send (const int start, const int end, const int mpirank, const t
 }
 
 void
-t8_offset_print (const t8_shmem_array_t offset, sc_MPI_Comm comm)
+t8_offset_print (__attribute__ ((unused)) const t8_shmem_array_t offset, __attribute__ ((unused)) sc_MPI_Comm comm)
 {
 #if T8_ENABLE_DEBUG
   char buf[BUFSIZ] = "| ";

@@ -94,34 +94,36 @@ t8_default_scheme_tet::element_get_sibling (const t8_element_t *elem, int sibid,
 }
 
 int
-t8_default_scheme_tet::element_get_num_faces (const t8_element_t *elem) const
+t8_default_scheme_tet::element_get_num_faces ([[maybe_unused]] const t8_element_t *elem) const
 {
   T8_ASSERT (element_is_valid (elem));
   return T8_DTET_FACES;
 }
 
 int
-t8_default_scheme_tet::element_get_max_num_faces (const t8_element_t *elem) const
+t8_default_scheme_tet::element_get_max_num_faces ([[maybe_unused]] const t8_element_t *elem) const
 {
   return T8_DTET_FACES;
 }
 
 int
-t8_default_scheme_tet::element_get_num_children (const t8_element_t *elem) const
+t8_default_scheme_tet::element_get_num_children ([[maybe_unused]] const t8_element_t *elem) const
 {
   T8_ASSERT (element_is_valid (elem));
   return T8_DTET_CHILDREN;
 }
 
 int
-t8_default_scheme_tet::element_get_num_face_children (const t8_element_t *elem, int face) const
+t8_default_scheme_tet::element_get_num_face_children ([[maybe_unused]] const t8_element_t *elem,
+                                                      [[maybe_unused]] int face) const
 {
   T8_ASSERT (element_is_valid (elem));
   return T8_DTET_FACE_CHILDREN;
 }
 
 int
-t8_default_scheme_tet::element_get_face_corner (const t8_element_t *element, int face, int corner) const
+t8_default_scheme_tet::element_get_face_corner ([[maybe_unused]] const t8_element_t *element, int face,
+                                                int corner) const
 {
   T8_ASSERT (0 <= face && face < T8_DTET_FACES);
   T8_ASSERT (0 <= corner && corner < 3);
@@ -140,11 +142,12 @@ t8_default_scheme_tet::element_get_child (const t8_element_t *elem, int childid,
 }
 
 void
-t8_default_scheme_tet::element_get_children (const t8_element_t *elem, int length, t8_element_t *c[]) const
+t8_default_scheme_tet::element_get_children (const t8_element_t *elem, [[maybe_unused]] int length,
+                                             t8_element_t *c[]) const
 {
   T8_ASSERT (length == T8_DTET_CHILDREN);
   T8_ASSERT (element_is_valid (elem));
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   for (int i = 0; i < T8_DTET_CHILDREN; i++) {
     T8_ASSERT (element_is_valid (c[i]));
   }
@@ -168,7 +171,7 @@ t8_default_scheme_tet::element_get_ancestor_id (const t8_element_t *elem, int le
 int
 t8_default_scheme_tet::elements_are_family (t8_element_t *const *fam) const
 {
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   for (int i = 0; i < T8_DTET_CHILDREN; i++) {
     T8_ASSERT (element_is_valid (fam[i]));
   }
@@ -189,7 +192,8 @@ t8_default_scheme_tet::element_get_nca (const t8_element_t *elem1, const t8_elem
 }
 
 t8_element_shape_t
-t8_default_scheme_tet::element_get_face_shape (const t8_element_t *elem, int face) const
+t8_default_scheme_tet::element_get_face_shape ([[maybe_unused]] const t8_element_t *elem,
+                                               [[maybe_unused]] int face) const
 {
   T8_ASSERT (element_is_valid (elem));
   return T8_ECLASS_TRIANGLE;
@@ -206,7 +210,7 @@ t8_default_scheme_tet::element_get_children_at_face (const t8_element_t *elem, i
   T8_ASSERT (0 <= face && face < T8_DTET_FACES);
   T8_ASSERT (num_children == T8_DTET_FACE_CHILDREN);
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   /* debugging check that all children elements are valid */
   {
     for (int i = 0; i < num_children; i++) {
@@ -250,7 +254,7 @@ t8_default_scheme_tet::element_get_tree_face (const t8_element_t *elem, int face
  * for tets. */
 int
 t8_default_scheme_tet::element_extrude_face (const t8_element_t *face, t8_element_t *elem, int root_face,
-                                             const t8_scheme *scheme) const
+                                             [[maybe_unused]] const t8_scheme *scheme) const
 {
   const t8_dtri_t *b = (const t8_dtri_t *) face;
   t8_dtet_t *t = (t8_dtet_t *) elem;
@@ -324,7 +328,7 @@ t8_default_scheme_tet::element_get_last_descendant_face (const t8_element_t *ele
  * both in t8_dtet_bits.c. */
 void
 t8_default_scheme_tet::element_get_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
-                                                  const t8_scheme *scheme) const
+                                                  [[maybe_unused]] const t8_scheme *scheme) const
 {
   const t8_default_tet_t *t = (const t8_default_tet_t *) elem;
   t8_dtri_t *b = (t8_dtri_t *) boundary;
@@ -397,7 +401,7 @@ void
 t8_default_scheme_tet::element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id) const
 {
   T8_ASSERT (0 <= level && level <= T8_DTET_MAXLEVEL);
-  T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << 3 * level);
+  T8_ASSERT (id < ((t8_linearidx_t) 1) << 3 * level);
   T8_ASSERT (element_is_valid (elem));
 
   t8_dtet_init_linear_id ((t8_default_tet_t *) elem, id, level);
@@ -484,7 +488,7 @@ t8_default_scheme_tet::refines_irregular () const
   return 0;
 }
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 int
 t8_default_scheme_tet::element_is_valid (const t8_element_t *t) const
 
@@ -498,7 +502,7 @@ t8_default_scheme_tet::element_to_string (const t8_element_t *elem, char *debug_
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (debug_string != NULL);
   t8_dtet_t *tet = (t8_dtet_t *) elem;
-  snprintf (debug_string, BUFSIZ, "x: %i, y: %i, z: %i, type: %i, level: %i", tet->x, tet->y, tet->z, tet->type,
+  snprintf (debug_string, string_size, "x: %i, y: %i, z: %i, type: %i, level: %i", tet->x, tet->y, tet->z, tet->type,
             tet->level);
 }
 #endif
@@ -510,19 +514,19 @@ t8_default_scheme_tet::element_new (int length, t8_element_t **elem) const
   t8_default_scheme_common::element_new (length, elem);
 
   /* in debug mode, set sensible default values. */
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   {
     for (int i = 0; i < length; i++) {
-      get_root (elem[i]);
+      set_to_root (elem[i]);
     }
   }
 #endif
 }
 
 void
-t8_default_scheme_tet::element_init (int length, t8_element_t *elem) const
+t8_default_scheme_tet::element_init ([[maybe_unused]] int length, [[maybe_unused]] t8_element_t *elem) const
 {
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   t8_dtet_t *tets = (t8_dtet_t *) elem;
   for (int i = 0; i < length; i++) {
     t8_dtet_init (tets + i);
@@ -531,7 +535,7 @@ t8_default_scheme_tet::element_init (int length, t8_element_t *elem) const
 }
 
 void
-t8_default_scheme_tet::get_root (t8_element_t *elem) const
+t8_default_scheme_tet::set_to_root (t8_element_t *elem) const
 {
   t8_dtet_t *tet = (t8_dtet_t *) elem;
   tet->level = 0;

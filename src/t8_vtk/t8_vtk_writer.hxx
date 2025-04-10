@@ -36,7 +36,7 @@
 #include <t8_vtk.h>
 #include <t8_types/t8_vec.hxx>
 
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
 #include <vtkUnstructuredGrid.h>
 #include <vtkXMLPUnstructuredGridWriter.h>
 #include <vtkDoubleArray.h>
@@ -63,7 +63,7 @@
 #include <vtkMPICommunicator.h>
 #include <vtkMPIController.h>
 #endif /* T8_ENABLE_MPI */
-#endif /* T8_WITH_VTK */
+#endif /* T8_ENABLE_VTK */
 
 /**
  * A class that controls the writing of vtk files for cmeshes or forests. 
@@ -107,13 +107,13 @@ class vtk_writer {
   {
   }
 
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
   void
   grid_to_vtkUnstructuredGrid (const grid_t grid, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid)
   {
     this->t8_grid_to_vtkUnstructuredGrid (grid, unstructuredGrid);
   }
-#endif /* T8_WITH_VTK */
+#endif /* T8_ENABLE_VTK */
 
   /**
    * A vtk-writer function that uses the vtk API.
@@ -216,7 +216,7 @@ class vtk_writer {
   }
 
  private:
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
   /**
  * Translate a single element from the forest into a vtkCell and fill the vtkArrays with
  * the data related to the element (not element_data).
@@ -490,7 +490,7 @@ class vtk_writer {
     T8_FREE (dataArrays);
     return;
   }
-#endif /* T8_WITH_VTK */
+#endif /* T8_ENABLE_VTK */
 
   /**
    * Write a vtk file given a forest or a cmesh.
@@ -500,9 +500,9 @@ class vtk_writer {
    * \return false if writing was not successful.
    */
   bool
-  write_vtk (const grid_t grid)
+  write_vtk ([[maybe_unused]] const grid_t grid)
   {
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
     T8_ASSERT (!fileprefix.empty ());
 
     /* 
