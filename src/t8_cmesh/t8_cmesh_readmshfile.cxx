@@ -1606,7 +1606,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
         }
         t8_cmesh_set_tree_vertices (cmesh, tree_count, tree_vertices.data (), num_nodes);
 
-        /* Add two arrays if store_node_data is true. One with the dimension and indicies of the nodes and one with the coordinates. */
+        /* Add two arrays if store_node_data is true. One with the dimension and indices of the nodes and one with the coordinates. */
         if (store_node_data) {
           t8_store_element_node_data (cmesh, tree_count, &tree_nodes, num_nodes);
         }
