@@ -35,7 +35,7 @@ t8_scheme_new_standalone (void);
 /** Check whether a given eclass_scheme is one of the standalone schemes.
  * \param [in] scheme   A (pointer to a) scheme
  * \param [in] eclass   The eclass to check
- * \return              True (non-zero) if \a scheme is one of the default schemes,
+ * \return              True (non-zero) if \a scheme is one of the standalone schemes,
  *                      false (zero) otherwise.
  */
 int

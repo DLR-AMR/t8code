@@ -22,7 +22,7 @@
 
 #include "t8_vtk/t8_vtk_unstructured.hxx"
 
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
 #include <vtkUnstructuredGrid.h>
 #include <vtkUnstructuredGridReader.h>
 #include <vtkXMLUnstructuredGridReader.h>

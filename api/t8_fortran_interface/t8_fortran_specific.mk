@@ -8,7 +8,7 @@ AM_FCFLAGS += @FCFLAGS@
 # Define a variable holding the module directory (for a rule below)
 t8_current_moddir = 
 
-if T8_WITH_MODDIR
+if T8_ENABLE_MODDIR
 # Updates for the module output and include path (if a separate module directory has been specified)
 AM_FCFLAGS += $(FC_MODOUT)@T8_FORTRAN_MODULE_DIR@ $(FC_MODINC)@T8_FORTRAN_MODULE_DIR@
 AM_CPPFLAGS += -I@T8_FORTRAN_MODULE_DIR@
@@ -26,7 +26,7 @@ create-moddir:
 # Save the module directory
 t8_current_moddir += @T8_FORTRAN_MODULE_DIR@/
 
-# End if T8_WITH_MODDIR
+# End if T8_ENABLE_MODDIR
 endif
 
 # If the install target is made, we will copy the module files into the include directory (after the installation of the header files)

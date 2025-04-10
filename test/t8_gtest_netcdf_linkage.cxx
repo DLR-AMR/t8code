@@ -23,19 +23,19 @@
 /* In this test we create a netcdf in memory file and close it.
  * The purpose of this test is to check whether t8code successfully links
  * against netcdf.
- * If t8code was not configured with --with-netcdf then this test
+ * If t8code was not configured with --enable-netcdf then this test
  * does nothing and is always passed.
  */
 
 #include <gtest/gtest.h>
 #include <t8.h>
-#if T8_WITH_NETCDF
+#if T8_ENABLE_NETCDF
 #include <netcdf.h>
 #endif
 
 TEST (t8_gtest_netcdf_linkage, test_linking_with_netcdf)
 {
-#if T8_WITH_NETCDF
+#if T8_ENABLE_NETCDF
 
   /* Create an in-memory netcdf file. This file will not be stored on
  * the disk. */

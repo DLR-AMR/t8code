@@ -26,7 +26,7 @@
 #include <t8_eclass.h>
 #include <t8_geometry/t8_geometry_helpers.h>
 
-#if T8_WITH_OCC
+#if T8_ENABLE_OCC
 
 #include <BRep_Builder.hxx>
 #include <BRep_Tool.hxx>
@@ -206,7 +206,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
 
   /* Check if face has a linked geometry */
   if (*faces > 0) {
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
     for (int i_edge = 0; i_edge < num_edges; i_edge++) {
       /* If face carries a surface, edges can't carry surfaces too */
       T8_ASSERT (edges[i_edge + num_edges] == 0);
@@ -1656,4 +1656,4 @@ t8_geometry_cad_destroy (t8_geometry_cad_c **geom)
 
 T8_EXTERN_C_END ();
 
-#endif /* T8_WITH_OCC */
+#endif /* T8_ENABLE_OCC */

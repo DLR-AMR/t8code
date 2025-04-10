@@ -77,7 +77,7 @@ t8_dprism_init_linear_id (t8_dprism_t *p, int level, t8_linearidx_t id)
   t8_linearidx_t tri_id = 0;
   t8_linearidx_t line_id = 0;
   int i;
-  int triangles_of_size_i = 1;
+  t8_linearidx_t triangles_of_size_i = 1;
 
   T8_ASSERT (0 <= level && level <= T8_DPRISM_MAXLEVEL);
   T8_ASSERT (id < sc_intpow64u (T8_DPRISM_CHILDREN, level));
@@ -483,7 +483,7 @@ t8_dprism_first_descendant (const t8_dprism_t *p, t8_dprism_t *s, int level)
   /*First prism descendant = first triangle desc x first line desc */
   t8_dtri_first_descendant (&p->tri, &s->tri, level);
   t8_dline_first_descendant (&p->line, &s->line, level);
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   {
     t8_linearidx_t id;
     id = t8_dprism_linear_id (p, level);

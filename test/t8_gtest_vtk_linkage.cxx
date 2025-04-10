@@ -25,12 +25,12 @@
  * linked.
  * The purpose of this test is to check whether t8code successfully links
  * against vtk.
- * If t8code was not configured with --with-vtk then this test
+ * If t8code was not configured with --enable-vtk then this test
  * does nothing and is always passed.
  */
 #include <gtest/gtest.h>
 #include <t8.h>
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
 #include <vtkUnstructuredGrid.h>
 #include <vtkVersionMacros.h>
 #include <vtkNew.h>
@@ -38,18 +38,18 @@
 
 /* Test correct macro dependencies.
  * Will throw a compile time error if T8_VTK_VERSION_USED
- * is defined but T8_WITH_VTK is not. */
-#ifndef T8_WITH_VTK
+ * is defined but T8_ENABLE_VTK is not. */
+#ifndef T8_ENABLE_VTK
 #ifdef T8_VTK_VERSION_USED
 #error Configuration error: T8_VTK_VERSION_USED is defined despite \
- T8_WITH_VTK not being defined.
+ T8_ENABLE_VTK not being defined.
 #endif
 #endif
 
 /* Check whether T8_VTK_VERSION_USED equals VTK_MAJOR_VERSION.VTK_MINOR_VERSION */
 TEST (t8_gtest_vtk_linkage, t8_test_vtk_version_number)
 {
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
   char vtk_version[BUFSIZ];
   snprintf (vtk_version, BUFSIZ, "%i.%i", VTK_MAJOR_VERSION, VTK_MINOR_VERSION);
   ASSERT_FALSE (strcmp (T8_VTK_VERSION_USED, vtk_version))
@@ -64,7 +64,7 @@ TEST (t8_gtest_vtk_linkage, t8_test_vtk_version_number)
 /* Check whether we can successfully execute VTK code */
 TEST (t8_gtest_vtk_linkage, t8_test_vtk_linkage)
 {
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
   vtkNew<vtkUnstructuredGrid> unstructuredGrid;
 
   t8_debugf ("Successfully created VTK unstructuredGrid object.\n");

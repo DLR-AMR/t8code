@@ -37,7 +37,7 @@ These functions write a file in the NetCDF-format which represents the given 2D-
 #ifndef NC_CONTIGUOUS
 #define NC_CONTIGUOUS 1
 #endif
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
 #include <netcdf_par.h>
 #else
 /* Macros usually defined in 'netcdf_par.h' */
@@ -247,7 +247,7 @@ t8_forest_write_netcdf_variables ([[maybe_unused]] t8_forest_netcdf_context_t *c
     ERR (retval);
   }
   /* Define whether an independent or collective variable access is used */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   if ((retval = nc_var_par_access (context->ncid, context->var_elem_types_id, context->netcdf_mpi_access))) {
     ERR (retval);
   }
@@ -288,7 +288,7 @@ t8_forest_write_netcdf_variables ([[maybe_unused]] t8_forest_netcdf_context_t *c
     ERR (retval);
   }
   /* Define whether an independent or collective variable access is used */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   if ((retval = nc_var_par_access (context->ncid, context->var_elem_tree_id, context->netcdf_mpi_access))) {
     ERR (retval);
   }
@@ -328,7 +328,7 @@ t8_forest_write_netcdf_variables ([[maybe_unused]] t8_forest_netcdf_context_t *c
     ERR (retval);
   }
   /* Define whether an independent or collective variable access is used */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   if ((retval = nc_var_par_access (context->ncid, context->var_elem_nodes_id, context->netcdf_mpi_access))) {
     ERR (retval);
   }
@@ -473,7 +473,7 @@ t8_forest_write_netcdf_coordinate_variables ([[maybe_unused]] t8_forest_netcdf_c
     ERR (retval);
   }
   /* Define whether an independent or collective variable access is used */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   if ((retval = nc_var_par_access (context->ncid, context->var_node_x_id, context->netcdf_mpi_access))) {
     ERR (retval);
   }
@@ -509,7 +509,7 @@ t8_forest_write_netcdf_coordinate_variables ([[maybe_unused]] t8_forest_netcdf_c
     ERR (retval);
   }
   /* Define whether an independent or collective variable access is used */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   if ((retval = nc_var_par_access (context->ncid, context->var_node_y_id, context->netcdf_mpi_access))) {
     ERR (retval);
   }
@@ -545,7 +545,7 @@ t8_forest_write_netcdf_coordinate_variables ([[maybe_unused]] t8_forest_netcdf_c
     ERR (retval);
   }
   /* Define whether an independent or collective variable access is used */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   if ((retval = nc_var_par_access (context->ncid, context->var_node_z_id, context->netcdf_mpi_access))) {
     ERR (retval);
   }
@@ -620,7 +620,7 @@ t8_forest_write_user_netcdf_vars ([[maybe_unused]] t8_forest_netcdf_context_t *c
           ERR (retval);
         }
         /* Define whether an independent or collective variable access is used */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
         if ((retval
              = nc_var_par_access (context->ncid, ext_variables[i]->var_user_dimid, context->netcdf_mpi_access))) {
           ERR (retval);
@@ -857,7 +857,7 @@ t8_forest_write_netcdf_file (t8_forest_t forest, t8_forest_netcdf_context_t *con
 
   /* Create a parallel NetCDF-File (NetCDF-4/HDF5 file) */
   /* NC_MPIIO seems to be redundant since NetCDF version 4.6.2 */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   if ((retval = nc_create_par (context->filename, NC_CLOBBER | NC_NETCDF4 | NC_MPIIO, comm, sc_MPI_INFO_NULL,
                                &context->ncid))) {
     ERR (retval);
@@ -953,7 +953,7 @@ t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix, const c
   /* Create the NetCDF-Filename */
   snprintf (file_name, BUFSIZ, "%s.nc", file_prefix);
 
-#if !T8_WITH_NETCDF_PAR
+#if !T8_ENABLE_NETCDF_PAR
   /* In case of a parallel configuration without parallel netCDF routines */
   int retval;
   int mpirank, mpisize;
@@ -1004,7 +1004,7 @@ t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix, const c
   else {
     context.netcdf_var_storage_mode = netcdf_var_storage_mode;
   }
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   /* Check the given 'netcdf_mpi_access' */
   if (netcdf_mpi_access != NC_INDEPENDENT && netcdf_mpi_access != NC_COLLECTIVE) {
     t8_global_productionf ("Illegal input parameter for the variable-mpi-access (NC_INDEPENDENT or NC_COLLECTIVE) was "

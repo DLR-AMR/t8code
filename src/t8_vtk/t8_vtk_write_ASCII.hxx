@@ -29,7 +29,7 @@
 /** Write the forest in .pvtu file format. Writes one .vtu file per
  * process and a meta .pvtu file.
  * This function writes ASCII files and can be used when
- * t8code is not configure with "--with-vtk" and
+ * t8code is not configure with "--enable-vtk" and
  * \ref t8_forest_vtk_write_file_via_API is not available.
  * \param [in]  forest    The forest.
  * \param [in]  fileprefix  The prefix of the output files.
