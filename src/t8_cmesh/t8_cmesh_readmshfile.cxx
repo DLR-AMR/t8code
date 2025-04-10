@@ -895,15 +895,16 @@ t8_store_element_node_data (t8_cmesh_t cmesh, t8_gloidx_t tree_count,
   t8_cmesh_set_attribute (cmesh, tree_count, t8_get_package_id (), T8_CMESH_NODE_PARAMETERS_ATTRIBUTE_KEY,
                           parameter_array, T8_ECLASS_MAX_CORNERS * 2 * sizeof (int), 0);
 }
+
+#if T8_WITH_OCC
 /**
  * This function calculates the parametric geometries of a tree based on its element class
  * and links it to either a CAD-based geometry or a linear geometry. It validates the element class
  * and assigns geometric attributes (e.g., face and edge parameters) to the tree. If the geometry
- * cannot be processed, the function returns `std::nullopt`.
+ * cannot be processed, the function returns 0.
  *
  * \param [in, out] cmesh The computational mesh to which the tree belongs.
  * \param [in] eclass The element class of the tree (e.g., triangle, quadrilateral, tetrahedron).
- * \param [in] line A character buffer containing input data for the tree.
  * \param [in] tree_nodes An array of nodes representing the vertices of the tree.
  * \param [in] cad_geometry_base A pointer to the CAD-based geometry object.
  * \param [in] dim The dimension of the geometry (e.g., 2D or 3D).
@@ -914,17 +915,16 @@ t8_store_element_node_data (t8_cmesh_t cmesh, t8_gloidx_t tree_count,
  *
  * \return std::optional<t8_msh_tree_vertex_indices>
  *         - Returns a valid `t8_msh_tree_vertex_indices` object if the tree geometry is successfully processed.
- *         - Returns `std::nullopt` if the geometry processing fails.
+ *         - Returns 0 if the geometry processing fails.
  */
-static std::optional<t8_msh_tree_vertex_indices>
-t8_cmesh_process_tree_geometry (t8_cmesh_t cmesh, t8_eclass_t eclass, char *line,
+static bool
+t8_cmesh_process_tree_geometry (t8_cmesh_t cmesh, t8_eclass_t eclass,
                                 std::array<t8_msh_file_node, T8_ECLASS_MAX_CORNERS> tree_nodes,
                                 const t8_geometry_c *cad_geometry_base, const int dim, t8_msh_file_node face_nodes[],
                                 t8_gloidx_t tree_count, t8_msh_file_node edge_nodes[],
                                 const t8_geometry_c *linear_geometry_base)
 {
   /* Calculate the parametric geometries of the tree */
-#if T8_WITH_OCC
   T8_ASSERT (cad_geometry_base->t8_geom_get_type () == T8_GEOMETRY_TYPE_CAD);
   const t8_geometry_cad_c *cad_geometry = dynamic_cast<const t8_geometry_cad_c *> (cad_geometry_base);
   /* Check for right element class */
@@ -932,9 +932,7 @@ t8_cmesh_process_tree_geometry (t8_cmesh_t cmesh, t8_eclass_t eclass, char *line
       && eclass != T8_ECLASS_PRISM) {
     t8_errorf ("%s element detected. The cad geometry currently only supports quad, tri, hex and prism elements.",
                t8_eclass_to_string[eclass]);
-    free (line);
-    t8_cmesh_destroy (&cmesh);
-    return std::nullopt;
+    return 0;
   }
   int tree_is_linked = 0;
   double parameters[T8_ECLASS_MAX_CORNERS_2D * 2];
@@ -1227,9 +1225,7 @@ t8_cmesh_process_tree_geometry (t8_cmesh_t cmesh, t8_eclass_t eclass, char *line
                 edge_geometry_tag, face_geometries[t8_edge_to_face[eclass][i_tree_edges][i_adjacent_face]])) {
             t8_global_errorf ("Error: Adjacent edge and face of a tree carry "
                               "incompatible geometries.\n");
-            free (line);
-            t8_cmesh_destroy (&cmesh);
-            return std::nullopt;
+            return 0;
           }
         }
       }
@@ -1239,26 +1235,20 @@ t8_cmesh_process_tree_geometry (t8_cmesh_t cmesh, t8_eclass_t eclass, char *line
           t8_global_errorf ("Error: Node %li should lie on a vertex or an edge, "
                             "but it lies on a surface.\n",
                             edge_nodes[i_edge_node].index);
-          free (line);
-          t8_cmesh_destroy (&cmesh);
-          return std::nullopt;
+          return 0;
         }
         if (edge_nodes[i_edge_node].entity_dim == 1 && edge_nodes[i_edge_node].entity_tag != edge_geometry_tag) {
           t8_global_errorf ("Error: Node %li should lie on a specific edge, "
                             "but it lies on another edge.\n",
                             edge_nodes[i_edge_node].index);
-          free (line);
-          t8_cmesh_destroy (&cmesh);
-          return std::nullopt;
+          return 0;
         }
         if (edge_nodes[i_edge_node].entity_dim == 0) {
           if (!cad_geometry->t8_geom_is_vertex_on_edge (edge_nodes[i_edge_node].entity_tag, edge_geometry_tag)) {
             t8_global_errorf ("Error: Node %li should lie on a vertex which lies on an edge, "
                               "but the vertex does not lie on that edge.\n",
                               edge_nodes[i_edge_node].index);
-            free (line);
-            t8_cmesh_destroy (&cmesh);
-            return std::nullopt;
+            return 0;
           }
         }
 
@@ -1298,18 +1288,14 @@ t8_cmesh_process_tree_geometry (t8_cmesh_t cmesh, t8_eclass_t eclass, char *line
         if (edge_nodes[i_edge_node].entity_dim == 2 && edge_nodes[i_edge_node].entity_tag != edge_geometry_tag) {
           t8_global_errorf ("Error: Node %li should lie on a specific face, but it lies on another face.\n",
                             edge_nodes[i_edge_node].index);
-          free (line);
-          t8_cmesh_destroy (&cmesh);
-          return std::nullopt;
+          return 0;
         }
         if (edge_nodes[i_edge_node].entity_dim == 0) {
           if (!cad_geometry->t8_geom_is_vertex_on_face (edge_nodes[i_edge_node].entity_tag, edge_geometry_tag)) {
             t8_global_errorf ("Error: Node %li should lie on a vertex which lies on a face, "
                               "but the vertex does not lie on that face.\n",
                               edge_nodes[i_edge_node].index);
-            free (line);
-            t8_cmesh_destroy (&cmesh);
-            return std::nullopt;
+            return 0;
           }
         }
         if (edge_nodes[i_edge_node].entity_dim == 1) {
@@ -1317,9 +1303,7 @@ t8_cmesh_process_tree_geometry (t8_cmesh_t cmesh, t8_eclass_t eclass, char *line
             t8_global_errorf ("Error: Node %li should lie on an edge which lies on a face, "
                               "but the edge does not lie on that face.\n",
                               edge_nodes[i_edge_node].index);
-            free (line);
-            t8_cmesh_destroy (&cmesh);
-            return std::nullopt;
+            return 0;
           }
         }
 
@@ -1384,10 +1368,9 @@ t8_cmesh_process_tree_geometry (t8_cmesh_t cmesh, t8_eclass_t eclass, char *line
     t8_debugf ("Registering tree %li with geometry %s \n", tree_count,
                linear_geometry_base->t8_geom_get_name ().c_str ());
   }
-#else  /* !T8_WITH_OCC */
-  SC_ABORTF ("OCC not linked");
-#endif /* T8_WITH_OCC */
+  return 1;
 }
+#endif /* T8_WITH_OCC */
 
 /* fp should be set after the Nodes section, right before the tree section.
  * If vertex_indices is not NULL, it is allocated and will store
@@ -1634,8 +1617,17 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
           t8_cmesh_set_tree_geometry (cmesh, tree_count, linear_geometry_base);
         }
         else {
-          t8_cmesh_process_tree_geometry (cmesh, eclass, line, tree_nodes, cad_geometry_base, dim, face_nodes,
-                                          tree_count, edge_nodes, linear_geometry_base);
+#if T8_WITH_OCC
+          if (!t8_cmesh_process_tree_geometry (cmesh, eclass, tree_nodes, cad_geometry_base, dim, face_nodes,
+                                               tree_count, edge_nodes, linear_geometry_base)) {
+            free (line);
+            t8_cmesh_destroy (&cmesh);
+            return std::nullopt;
+          }
+
+#else  /* T8_WITH_OCC */
+          SC_ABORTF ("OCC not linked.");
+#endif /* T8_WITH_OCC */
         }
       }
     }
