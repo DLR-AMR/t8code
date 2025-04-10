@@ -65,8 +65,8 @@ const int t8_msh_tree_vertex_to_t8_vertex_num[T8_ECLASS_COUNT][8] = {
   { 0, 1, 3, 2 },             /* QUAD */
   { 0, 1, 2 },                /* TRIANGLE */
   { 0, 1, 3, 2, 4, 5, 7, 6 }, /* HEX */
-  { 0, 1, 2, 3 },             /* TET */
-  { 0, 1, 2, 3, 4, 5, 6 },    /* PRISM */
+  { 0, 2, 1, 3 },             /* TET */
+  { 0, 1, 2, 3, 4, 5 },       /* PRISM */
   { 0, 1, 3, 2, 4 }           /* PYRAMID */
 };
 
@@ -79,8 +79,8 @@ const int t8_vertex_to_msh_vertex_num[T8_ECLASS_COUNT][8] = {
   { 0, 1, 3, 2 },             /* QUAD */
   { 0, 1, 2 },                /* TRIANGLE */
   { 0, 1, 3, 2, 4, 5, 7, 6 }, /* HEX */
-  { 0, 1, 2, 3 },             /* TET */
-  { 0, 1, 2, 3, 4, 5, 6 },    /* PRISM */
+  { 0, 2, 1, 3 },             /* TET */
+  { 0, 1, 2, 3, 4, 5 },       /* PRISM */
   { 0, 1, 3, 2, 4 }           /* PYRAMID */
 };
 
