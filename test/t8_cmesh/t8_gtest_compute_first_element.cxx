@@ -51,13 +51,13 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, small_numbers)
   for (uint32_t size_growth = rank_growth; size_growth < 10; ++size_growth) {
     uint64_t num_elems = 1;
     for (uint32_t ielem = 1; ielem < max_iter; ++ielem) {
-      num_elems *= global_num_elems_growth;
+      num_elems += global_num_elems_growth;
       uint32_t size = 1;
       for (uint32_t isize = 1; isize < max_iter; ++isize) {
-        size *= size_growth;
+        size += size_growth;
         uint32_t rank = 1;
         for (uint32_t irank = 1; irank < size && irank < max_iter; ++irank) {
-          rank *= rank_growth;
+          rank += rank_growth;
           /* We only test for small numbers (much smaller that 2^64-1 here) */
           uint64_t check_result = rank * num_elems / size;
           /** As soon as this check is enabled call function to check with 
