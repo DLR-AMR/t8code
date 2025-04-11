@@ -1620,6 +1620,107 @@ struct t8_standalone_scheme
     }
   }
 
+  inline void
+  element_get_point ([[maybe_unused]] const t8_element_t *element, [[maybe_unused]] int vertex,
+                     t8_scheme_point *point) const
+  {
+    t8_standalone_point<T8_ELEMENT_DIM[TEclass]> *sp = (t8_standalone_point<T8_ELEMENT_DIM[TEclass]> *) point;
+    int cubevertex = vertex;
+    int length = element_get_len (element_get_level (element));
+    //add length to anchor coords
+  }
+
+  inline int
+  get_max_num_descendants_at_point () const
+  {
+    return 1 << T8_ELEMENT_DIM[TEclass];  //correct only for hypercube
+  }
+
+  inline void
+  construct_descendants_at_point ([[maybe_unused]] const t8_scheme_point *point, [[maybe_unused]] t8_element_t **descs,
+                                  [[maybe_unused]] int *num_neighbors) const
+  {
+    //loop over adjacent_cubes
+    for (int icube = 0; icube < (1 << T8_ELEMENT_DIM[TEclass]); icube++) {
+      //construct anchors
+      //check inside
+    }
+  }
+
+  inline bool
+  point_is_on_boundary ([[maybe_unused]] const t8_scheme_point *point, [[maybe_unused]] int boundary_dim,
+                        [[maybe_unused]] int boundary_id) const
+  {
+    //Construct checks to find out if point is on boundary
+    // TODO: How to check?
+    return false;
+  }
+
+  inline int
+  get_num_boundaries (int boundary_dim) const
+  {
+    // 2^d * (D chose d)
+    return 1;
+  }
+
+  inline void
+  point_get_lowest_boundary ([[maybe_unused]] const t8_scheme_point *point, [[maybe_unused]] int *boundary_dim,
+                             [[maybe_unused]] int *boundary_id) const
+  {
+    *boundary_dim = -1;
+    for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
+      int num_boundaries = get_num_boundaries (idim);
+      for (int bdyid = 0; bdyid < num_boundaries; bdyid++) {
+        if (point_is_on_boundary (point, idim, bdyid)) {
+          *boundary_dim = idim;
+          *boundary_id = bdyid;
+          return;
+        }
+      }
+    }
+  }
+  inline bool
+  point_on_boundary ([[maybe_unused]] const t8_scheme_point *point, [[maybe_unused]] int boundary_dim,
+                     [[maybe_unused]] int boundary_id) const
+  {
+    SC_ABORT ("Not implemented for this eclass\n");
+  }
+
+  inline void
+  element_extract_boundary_point ([[maybe_unused]] const t8_element_t *element,
+                                  [[maybe_unused]] const t8_scheme_point *el_point, [[maybe_unused]] int boundary_dim,
+                                  [[maybe_unused]] int boundary_id, [[maybe_unused]] t8_scheme_point *bdy_point) const
+  {
+    //mapping
+  }
+
+  inline void
+  point_transform ([[maybe_unused]] const t8_scheme_point *point, [[maybe_unused]] int orientation,
+                   [[maybe_unused]] t8_scheme_point *neigh_point) const
+  {
+    //mapping
+  }
+
+  inline void
+  boundary_point_extrude ([[maybe_unused]] const t8_scheme_point *bdy_point, [[maybe_unused]] int bdy_dim,
+                          [[maybe_unused]] int bdy_id, [[maybe_unused]] t8_scheme_point *point) const
+  {
+    //mapping
+  }
+
+  inline void
+  point_new ([[maybe_unused]] t8_scheme_point **ppoint) const
+  {
+    *ppoint = (t8_scheme_point *) T8_ALLOC (t8_standalone_point<T8_ELEMENT_DIM[TEclass]>, 1);
+  }
+
+  inline void
+  point_destroy ([[maybe_unused]] t8_scheme_point **ppoint) const
+  {
+    T8_FREE (*ppoint);
+    *ppoint = nullptr;
+  }
+
  private:
   // ################################################____HELPER____################################################
 

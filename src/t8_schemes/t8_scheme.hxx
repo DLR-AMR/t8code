@@ -1120,6 +1120,85 @@ class t8_scheme {
       [&] (auto &&scheme) { return scheme.element_MPI_Unpack (recvbuf, buffer_size, position, elements, count, comm); },
       eclass_schemes[tree_class]);
   };
+
+  inline void
+  element_get_point (t8_eclass_t tree_class, const t8_element_t *element, int vertex, t8_scheme_point *point) const
+  {
+    return std::visit ([&] (auto &&scheme) { return scheme.element_get_point (element, vertex, point); },
+                       eclass_schemes[tree_class]);
+  }
+
+  inline int
+  get_max_num_descendants_at_point (t8_eclass_t tree_class) const
+  {
+    return std::visit ([&] (auto &&scheme) { return scheme.get_max_num_descendants_at_point (); },
+                       eclass_schemes[tree_class]);
+  }
+
+  inline void
+  construct_descendants_at_point (t8_eclass_t tree_class, const t8_scheme_point *point, t8_element_t **descs,
+                                  int *num_neighbors) const
+  {
+    return std::visit (
+      [&] (auto &&scheme) { return scheme.construct_descendants_at_point (point, descs, num_neighbors); },
+      eclass_schemes[tree_class]);
+  }
+
+  inline void
+  point_get_lowest_boundary (t8_eclass_t tree_class, const t8_scheme_point *point, int *boundary_dim,
+                             int *boundary_id) const
+  {
+    return std::visit (
+      [&] (auto &&scheme) { return scheme.point_get_lowest_boundary (point, boundary_dim, boundary_id); },
+      eclass_schemes[tree_class]);
+  }
+
+  inline bool
+  point_on_boundary (t8_eclass_t tree_class, const t8_scheme_point *point, int boundary_dim, int boundary_id) const
+  {
+    return std::visit ([&] (auto &&scheme) { return scheme.point_on_boundary (point, boundary_dim, boundary_id); },
+                       eclass_schemes[tree_class]);
+  }
+
+  inline void
+  element_extract_boundary_point (t8_eclass_t tree_class, const t8_element_t *element, const t8_scheme_point *el_point,
+                                  int boundary_dim, int boundary_id, t8_scheme_point *bdy_point) const
+  {
+    return std::visit (
+      [&] (auto &&scheme) {
+        return scheme.element_extract_boundary_point (element, el_point, boundary_dim, boundary_id, bdy_point);
+      },
+      eclass_schemes[tree_class]);
+  }
+
+  inline void
+  point_transform (t8_eclass_t tree_class, const t8_scheme_point *point, int orientation,
+                   t8_scheme_point *neigh_point) const
+  {
+    return std::visit ([&] (auto &&scheme) { return scheme.point_transform (point, orientation, neigh_point); },
+                       eclass_schemes[tree_class]);
+  }
+
+  inline void
+  boundary_point_extrude (t8_eclass_t tree_class, const t8_scheme_point *bdy_point, int bdy_dim, int bdy_id,
+                          t8_scheme_point *point) const
+  {
+    return std::visit (
+      [&] (auto &&scheme) { return scheme.boundary_point_extrude (bdy_point, bdy_dim, bdy_id, point); },
+      eclass_schemes[tree_class]);
+  }
+
+  inline void
+  point_new (t8_eclass_t tree_class, t8_scheme_point **ppoint) const
+  {
+    return std::visit ([&] (auto &&scheme) { return scheme.point_new (ppoint); }, eclass_schemes[tree_class]);
+  }
+
+  inline void
+  point_destroy (t8_eclass_t tree_class, t8_scheme_point **ppoint) const
+  {
+    return std::visit ([&] (auto &&scheme) { return scheme.point_destroy (ppoint); }, eclass_schemes[tree_class]);
+  }
 };
 
 #endif /* !T8_SCHEME_HXX */

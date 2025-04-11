@@ -33,6 +33,7 @@
 #include <t8_schemes/t8_default/t8_default_line/t8_default_line.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.h>
+#include <t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.h>
 
 /* Forward declaration of the scheme so we can use it as an argument in the eclass schemes function. */
 class t8_scheme;
@@ -570,6 +571,219 @@ class t8_default_scheme_tri: public t8_default_scheme_common<t8_default_scheme_t
   void
   element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements,
                       const unsigned int count, sc_MPI_Comm comm) const;
+
+  inline void
+  element_get_point ([[maybe_unused]] const t8_element_t *element, [[maybe_unused]] int vertex,
+                     t8_scheme_point *point) const
+  {
+    t8_scheme_point_dim<2> *sp = (t8_scheme_point_dim<2> *) point;
+    t8_dtri_t *tri = (t8_dtri_t *) element;
+    int length = T8_DTRI_LEN (tri->level);
+
+    (*sp)[0] = tri->x;
+    (*sp)[1] = tri->y;
+    t8_debugf ("start coords: %i, %i\n", (*sp)[0], (*sp)[1]);
+    if ((!tri->type && vertex >= 1) || (tri->type && vertex == 2)) {
+      t8_debugf ("add to x\n");
+      (*sp)[0] += length;
+    }
+    if ((tri->type && vertex >= 1) || (!tri->type && vertex == 2)) {
+      t8_debugf ("add to y\n");
+      (*sp)[1] += length;
+    }
+    t8_debugf ("end coords: %i, %i\n", (*sp)[0], (*sp)[1]);
+    //add length to anchor coords
+  }
+
+  inline int
+  get_max_num_descendants_at_point () const
+  {
+    return 6;
+  }
+
+  inline void
+  construct_descendants_at_point ([[maybe_unused]] const t8_scheme_point *point, [[maybe_unused]] t8_element_t **descs,
+                                  [[maybe_unused]] int *num_neighbors) const
+  {
+    t8_scheme_point_dim<2> *sp = (t8_scheme_point_dim<2> *) point;
+    t8_dtri_t **descendants = (t8_dtri_t **) descs;
+    t8_dtri_coord_t len = T8_DTRI_LEN (T8_DTRI_MAXLEVEL);
+
+    *num_neighbors = 0;
+    const int dim = 2;
+
+    for (int icube = 0; icube < 1 << dim; icube++) {
+      const int neigh_cube_vertex = (1 << dim) - 1 - icube;
+      const int num_adj = t8_tri_lut_cubevertex_to_num_adj[neigh_cube_vertex];
+
+      for (int i_adj = 0; i_adj < num_adj; i_adj++) {
+
+        int idim = 0;
+        t8_dtri_coord_t shift = (icube & 1 << idim);
+        shift >>= idim;
+        shift -= 1;
+        shift *= len;
+        descendants[*num_neighbors]->x = (*sp)[0] + shift;
+
+        idim = 1;
+        shift = (icube & 1 << idim);
+        shift >>= idim;
+        shift -= 1;
+        shift *= len;
+        descendants[*num_neighbors]->y = (*sp)[1] + shift;
+
+        descendants[*num_neighbors]->level = T8_DTRI_MAXLEVEL;
+        descendants[*num_neighbors]->type = t8_tri_lut_cubevertex_adj_to_type[neigh_cube_vertex][i_adj];
+        t8_debugf ("neighbor icube %i iadj %i neighb_cube_vertex %i \n", icube, i_adj, neigh_cube_vertex);
+        element_debug_print ((t8_element_t *) descendants[*num_neighbors]);
+        if (!t8_dtri_is_inside_root (descendants[*num_neighbors])) {
+          t8_debugf ("neighbor not inside\n");
+          continue;
+        }
+        t8_debugf ("neighbor found\n");
+        ++(*num_neighbors);
+      }
+    }
+  }
+
+  inline int
+  get_num_boundaries (int boundary_dim) const
+  {
+    return 3;
+  }
+
+  inline void
+  point_get_lowest_boundary ([[maybe_unused]] const t8_scheme_point *point, [[maybe_unused]] int *boundary_dim,
+                             [[maybe_unused]] int *boundary_id) const
+  {
+    *boundary_dim = -1;
+    const t8_scheme_point_dim<2> *sp = (const t8_scheme_point_dim<2> *) point;
+    if ((*sp)[1] == 0) {
+      if ((*sp)[0] == 0) {
+        *boundary_dim = 0;
+        *boundary_id = 0;
+      }
+      else if ((*sp)[0] == 1 << (get_maxlevel () + 1)) {
+        *boundary_dim = 0;
+        *boundary_id = 1;
+      }
+      else {
+        *boundary_dim = 1;
+        *boundary_id = 2;
+      }
+    }
+    else if ((*sp)[0] == 1) {
+      if ((*sp)[1] == 1) {
+        *boundary_dim = 0;
+        *boundary_id = 2;
+      }
+      else {
+        *boundary_dim = 1;
+        *boundary_id = 0;
+      }
+    }
+    else if ((*sp)[0] == (*sp)[1]) {
+      *boundary_dim = 1;
+      *boundary_id = 1;
+    }
+  }
+
+  inline void
+  element_extract_boundary_point ([[maybe_unused]] const t8_element_t *element,
+                                  [[maybe_unused]] const t8_scheme_point *el_point, [[maybe_unused]] int boundary_dim,
+                                  [[maybe_unused]] int boundary_id, [[maybe_unused]] t8_scheme_point *bdy_point) const
+  {
+    if (boundary_dim == 0) {
+      return;
+    }
+    else if (boundary_dim == 1) {
+      const t8_scheme_point_dim<2> *el_p = (const t8_scheme_point_dim<2> *) el_point;
+      t8_scheme_point_dim<1> *face_p = (t8_scheme_point_dim<1> *) bdy_point;
+      int facedim = boundary_id / 2;
+      (*face_p)[0] = (*el_p)[1 - facedim] << (T8_DLINE_MAXLEVEL - get_maxlevel ());
+    }
+  }
+  inline bool
+  point_on_boundary ([[maybe_unused]] const t8_scheme_point *point, [[maybe_unused]] int boundary_dim,
+                     [[maybe_unused]] int boundary_id) const
+  {
+    if (boundary_dim == 0) {
+      SC_ABORT ("Not implemented");
+    }
+    else {
+      T8_ASSERT (boundary_dim == 1);
+      const t8_scheme_point_dim<2> *p = (const t8_scheme_point_dim<2> *) point;
+      if (boundary_id == 0) {
+        return (*p)[0] == (1 << T8_DTRI_MAXLEVEL);
+      }
+      else if (boundary_id == 1) {
+        return (*p)[0] == (*p)[1];
+      }
+      else {
+        T8_ASSERT (boundary_id == 2);
+        return (*p)[1] == 0;
+      }
+    }
+  }
+
+  inline void
+  point_transform ([[maybe_unused]] const t8_scheme_point *point, [[maybe_unused]] int orientation,
+                   [[maybe_unused]] t8_scheme_point *neigh_point) const
+  {
+    const t8_scheme_point_dim<2> *p = (const t8_scheme_point_dim<2> *) point;
+    t8_scheme_point_dim<2> *np = (t8_scheme_point_dim<2> *) neigh_point;
+    *np = *p;
+    if (orientation) {
+      std::swap ((*np)[0], (*np)[1]);
+    }
+  }
+
+  inline void
+  boundary_point_extrude ([[maybe_unused]] const t8_scheme_point *bdy_point, [[maybe_unused]] int bdy_dim,
+                          [[maybe_unused]] int bdy_id, [[maybe_unused]] t8_scheme_point *point) const
+  {
+    t8_scheme_point_dim<2> *el_p = (t8_scheme_point_dim<2> *) point;
+
+    if (bdy_dim == 0) {
+      int cubevertex = t8_tri_lut_type_vertex_to_cubevertex[0][bdy_id];
+      int length = 1 << (get_maxlevel () + 1);
+      (*el_p)[0] = (cubevertex & 1 >> 0) * length;
+      (*el_p)[1] = (cubevertex & 2 >> 1) * length;
+    }
+    else if (bdy_dim == 1) {
+      const t8_scheme_point_dim<1> *face_p = (const t8_scheme_point_dim<1> *) bdy_point;
+      switch (bdy_id) {
+      case 0:
+        (*el_p)[0] = 1 << T8_DTRI_MAXLEVEL;
+        (*el_p)[1] = (*face_p)[0] >> (T8_DLINE_MAXLEVEL - T8_DTRI_MAXLEVEL);
+        //x = 1, y = facepoint
+        break;
+      case 1:
+        (*el_p)[0] = (*face_p)[0] >> (T8_DLINE_MAXLEVEL - T8_DTRI_MAXLEVEL);
+        (*el_p)[1] = (*el_p)[0];
+        // x = y = facepoint
+        break;
+      case 2:
+        (*el_p)[0] = (*face_p)[0] >> (T8_DLINE_MAXLEVEL - T8_DTRI_MAXLEVEL);
+        (*el_p)[1] = 0;
+        //x = facepoint, y=0
+        break;
+      }
+    }
+  }
+
+  inline void
+  point_new ([[maybe_unused]] t8_scheme_point **ppoint) const
+  {
+    *ppoint = (t8_scheme_point *) T8_ALLOC (t8_scheme_point_dim<2>, 1);
+  }
+
+  inline void
+  point_destroy ([[maybe_unused]] t8_scheme_point **ppoint) const
+  {
+    T8_FREE (*ppoint);
+    *ppoint = nullptr;
+  }
 };
 
 #endif /* !T8_DEFAULT_TRI_HXX */

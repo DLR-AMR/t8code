@@ -58,4 +58,6 @@ struct t8_standalone_element
   t8_element_level level;
 };
 
+template <int dim>
+using t8_standalone_point = std::array<t8_element_coord, dim>;
 #endif /* T8_STANDALONE_ELEMENTS_HXX */

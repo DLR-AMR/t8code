@@ -638,6 +638,31 @@ class t8_default_scheme_line: public t8_default_scheme_common<t8_default_scheme_
   void
   element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements,
                       const unsigned int count, sc_MPI_Comm comm) const;
+
+  inline void
+  point_new ([[maybe_unused]] t8_scheme_point **ppoint) const
+  {
+    *ppoint = (t8_scheme_point *) T8_ALLOC (t8_scheme_point_dim<1>, 1);
+  }
+
+  inline void
+  point_destroy ([[maybe_unused]] t8_scheme_point **ppoint) const
+  {
+    T8_FREE (*ppoint);
+    *ppoint = nullptr;
+  }
+  inline void
+  point_transform (const t8_scheme_point *point, int orientation, t8_scheme_point *neigh_point) const
+  {
+    t8_scheme_point_dim<1> *p = (t8_scheme_point_dim<1> *) point;
+    t8_scheme_point_dim<1> *np = (t8_scheme_point_dim<1> *) neigh_point;
+    if (orientation) {
+      (*np)[0] = (1 << T8_DLINE_MAXLEVEL) - (*p)[0];
+    }
+    else {
+      (*np)[0] = (*p)[0];
+    }
+  }
 };
 
 #endif /* !T8_DEFAULT_LINES_HXX */

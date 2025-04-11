@@ -31,6 +31,10 @@
 #include <t8_types/t8_operators.hxx>
 #include <sc_functions.h>
 #include <sc_containers.h>
+#include <array>
+
+template <int dim>
+using t8_scheme_point_dim = std::array<int, dim>;
 
 /* Macro to check whether a pointer (VAR) to a base class, comes from an
  * implementation of a child class (TYPE). */
@@ -296,6 +300,73 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
     t8_debugf ("%s\n", debug_string);
   }
 #endif
+
+  inline void
+  element_get_point ([[maybe_unused]] const t8_element_t *element, [[maybe_unused]] int vertex,
+                     [[maybe_unused]] t8_scheme_point *point) const
+  {
+    SC_ABORT ("Not implemented for this eclass\n");
+  }
+
+  inline int
+  get_max_num_descendants_at_point () const
+  {
+    SC_ABORT ("Not implemented for this eclass\n");
+  }
+
+  inline void
+  construct_descendants_at_point ([[maybe_unused]] const t8_scheme_point *point, [[maybe_unused]] t8_element_t **descs,
+                                  [[maybe_unused]] int *num_neighbors) const
+  {
+    SC_ABORT ("Not implemented for this eclass\n");
+  }
+
+  inline void
+  point_get_lowest_boundary ([[maybe_unused]] const t8_scheme_point *point, [[maybe_unused]] int *boundary_dim,
+                             [[maybe_unused]] int *boundary_id) const
+  {
+    SC_ABORT ("Not implemented for this eclass\n");
+  }
+
+  inline bool
+  point_on_boundary ([[maybe_unused]] const t8_scheme_point *point, [[maybe_unused]] int boundary_dim,
+                     [[maybe_unused]] int boundary_id) const
+  {
+    SC_ABORT ("Not implemented for this eclass\n");
+  }
+  inline void
+  element_extract_boundary_point ([[maybe_unused]] const t8_element_t *element,
+                                  [[maybe_unused]] const t8_scheme_point *el_point, [[maybe_unused]] int boundary_dim,
+                                  [[maybe_unused]] int boundary_id, [[maybe_unused]] t8_scheme_point *bdy_point) const
+  {
+    SC_ABORT ("Not implemented for this eclass\n");
+  }
+
+  inline void
+  point_transform ([[maybe_unused]] const t8_scheme_point *point, [[maybe_unused]] int orientation,
+                   [[maybe_unused]] t8_scheme_point *neigh_point) const
+  {
+    SC_ABORT ("Not implemented for this eclass\n");
+  }
+
+  inline void
+  boundary_point_extrude ([[maybe_unused]] const t8_scheme_point *bdy_point, [[maybe_unused]] int bdy_dim,
+                          [[maybe_unused]] int bdy_id, [[maybe_unused]] t8_scheme_point *point) const
+  {
+    SC_ABORT ("Not implemented for this eclass\n");
+  }
+
+  inline void
+  point_new ([[maybe_unused]] t8_scheme_point **) const
+  {
+    SC_ABORT ("Not implemented for this eclass\n");
+  }
+
+  inline void
+  point_destroy ([[maybe_unused]] t8_scheme_point **) const
+  {
+    SC_ABORT ("Not implemented for this eclass\n");
+  }
 };
 
 #endif /* !T8_DEFAULT_COMMON_HXX */

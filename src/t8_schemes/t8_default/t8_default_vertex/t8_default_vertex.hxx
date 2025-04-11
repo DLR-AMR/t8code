@@ -673,6 +673,21 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
   void
   element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements,
                       const unsigned int count, sc_MPI_Comm comm) const;
+
+  inline void
+  point_new ([[maybe_unused]] t8_scheme_point **) const
+  {
+  }
+
+  inline void
+  point_destroy ([[maybe_unused]] t8_scheme_point **) const
+  {
+  }
+  inline void
+  point_transform ([[maybe_unused]] const t8_scheme_point *point, [[maybe_unused]] int orientation,
+                   [[maybe_unused]] t8_scheme_point *neigh_point) const
+  {
+  }
 };
 
 #endif /* !T8_DEFAULT_VERTEX_HXX */
