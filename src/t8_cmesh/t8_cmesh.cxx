@@ -22,6 +22,7 @@
 
 #include <sc_statistics.h>
 #include <t8_cmesh.h>
+#include <t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_geometry.h>
 #include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
@@ -1529,4 +1530,47 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, const int level, const t8_scheme *sch
 
     *last_local_tree = *first_local_tree - 1;
   }
+}
+
+std::vector<t8_neigh_info>
+t8_cmesh_get_neighs (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, int bdy_dim, int bdy_id)
+{
+  std::vector<t8_neigh_info> result;
+  if (bdy_dim == 0) {
+
+#if 1
+    if (bdy_id == 0) {
+      t8_neigh_info info { 1 - gtreeid, 0, 0 };
+      result.push_back (info);
+    }
+    else if (gtreeid + bdy_id == 2) {
+      t8_neigh_info info { 1 - gtreeid, 0, 3 - bdy_id };
+      result.push_back (info);
+    }
+#endif
+
+#if 0
+    //hardcoded dealii subdivided hypercube with simplices orientation
+    if(bdy_id > 0){
+      t8_neigh_info info{1-ltreeid, 0, 3 - bdy_id};
+      result.push_back(info);
+    }
+#endif
+  }
+  else if (bdy_dim == 1) {
+    int8_t *ttf;
+    t8_locidx_t *face_neighbor;
+    t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
+    (void) t8_cmesh_trees_get_tree_ext (cmesh->trees, ltreeid, &face_neighbor, &ttf);
+    t8_locidx_t neigh_ltreeid = face_neighbor[bdy_id];
+    int F = t8_eclass_max_num_faces[cmesh->dimension];
+    /* compute the neighbor face */
+    int tree_neigh_face = ttf[bdy_id] % F;
+    int orientation = ttf[bdy_id] / F;
+    t8_neigh_info info { t8_cmesh_get_global_id (cmesh, neigh_ltreeid), orientation, tree_neigh_face };
+    if (neigh_ltreeid != ltreeid || bdy_id != tree_neigh_face) {
+      result.push_back (info);
+    }
+  }
+  return result;
 }

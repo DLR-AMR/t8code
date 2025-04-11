@@ -30,7 +30,7 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_geometry/t8_geometry_handler.hxx>
-
+#include <vector>
 /**
  * Create and register a geometry with the coarse mesh. The coarse mesh takes the ownership of the geometry.
  * @tparam geometry_type 
@@ -49,5 +49,15 @@ t8_cmesh_register_geometry (t8_cmesh_t cmesh, _args &&...args)
   }
   return cmesh->geometry_handler->register_geometry<geometry_type> (std::forward<_args> (args)...);
 }
+
+typedef class t8_neigh_info {
+ public:
+  t8_gloidx_t neighid;
+  int orientation;
+  int neigh_bdy_id;
+} t8_neigh_info;
+
+std::vector<t8_neigh_info>
+t8_cmesh_get_neighs (t8_cmesh_t cmesh, t8_gloidx_t treeid, int bdy_dim, int bdy_id);
 
 #endif /* T8_CMESH_HXX */
