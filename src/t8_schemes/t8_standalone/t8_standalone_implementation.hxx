@@ -151,7 +151,12 @@ struct t8_standalone_scheme
   element_get_num_corners ([[maybe_unused]] const t8_element_t *elem) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
-
+    if constexpr (TEclass == T8_ECLASS_PYRAMID) {
+      if (element_get_shape (elem) == T8_ECLASS_PYRAMID) {
+        return 5;
+      }
+      return 4;
+    }
     return T8_ELEMENT_NUM_CORNERS[TEclass];
   }
 
@@ -163,7 +168,12 @@ struct t8_standalone_scheme
   element_get_num_faces ([[maybe_unused]] const t8_element_t *elem) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
-    /* Note: With the introduction of pyramids the implementation will be adjusted. */
+    if constexpr (TEclass == T8_ECLASS_PYRAMID) {
+      if (element_get_shape (elem) == T8_ECLASS_PYRAMID) {
+        return 5;
+      }
+      return 4;
+    }
     return T8_ELEMENT_NUM_FACES[TEclass];
   }
 
@@ -189,6 +199,15 @@ struct t8_standalone_scheme
   element_get_shape ([[maybe_unused]] const t8_element_t *elem) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
+    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
+    if constexpr (TEclass == T8_ECLASS_PYRAMID) {
+      if (el->type == T8_DPYRAMID_FIRST_PYRA_TYPE || el->type == T8_DPYRAMID_SECOND_PYRA_TYPE) {
+        return T8_ECLASS_PYRAMID;
+      }
+      else {
+        return T8_ECLASS_TET;
+      }
+    }
     return TEclass;
   }
 
@@ -308,9 +327,7 @@ struct t8_standalone_scheme
       if (el1->coords[idim] != el2->coords[idim])
         return 0;
     }
-    /* return el1->type == el2->type;
-    ToDo-Type */
-    return 1;
+    return el1->type == el2->type;
   }
 
   // ################################################____ACCESSOR____################################################
@@ -339,9 +356,7 @@ struct t8_standalone_scheme
     for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
       el->coords[idim] = 0;
     }
-    /* el->type = 0;
-    ToDo-Type */
-    return;
+    el->type = 0;
   }
 
   /** Compute the parent of a given element \b elem and store it in \b parent.
@@ -367,7 +382,8 @@ struct t8_standalone_scheme
     T8_ASSERT (el->level > 0);
 
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      SC_ABORT ("Only implemented for hypercubes.\n");
+      const t8_cube_id cube_id = compute_cubeid (el, el->level);
+      parent_elem->type = t8_element_type_cubeid_to_parenttype<TEclass>[el->type.to_ulong ()][cube_id];
     }
 
     const t8_element_coord length = element_get_len ((el->level));
@@ -397,7 +413,9 @@ struct t8_standalone_scheme
     T8_ASSERT (0 < el->level && el->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
     /* To get the number siblings, we first get the parent and then get the number of children of that parent*/
     if constexpr (refines_irregular ()) {
-      SC_ABORT ("This function is not implemented yet.\n");
+      t8_standalone_element<TEclass> parent;
+      element_get_parent ((t8_element_t *) el, (t8_element_t *) &parent);
+      return element_get_num_children ((t8_element_t *) &parent);
     }
     else {
       return T8_ELEMENT_NUM_CHILDREN[TEclass];
@@ -450,7 +468,8 @@ struct t8_standalone_scheme
     /* Compute the cube id and shift the coordinates accordingly */
     t8_cube_id cube_id;
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      SC_ABORT ("Only implemented for hypercubes.\n");
+      cube_id = t8_element_type_cubeid_to_Iloc<TEclass>[el->type.to_ulong ()][childid];
+      c->type = t8_element_type_Iloc_to_childtype<TEclass>[el->type.to_ulong ()][childid];
     }
     else {
       cube_id = childid;
@@ -473,7 +492,12 @@ struct t8_standalone_scheme
   element_get_num_children ([[maybe_unused]] const t8_element_t *elem) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
-
+    if constexpr (TEclass == T8_ECLASS_PYRAMID) {
+      if (element_get_shape (elem) == T8_ECLASS_PYRAMID) {
+        return 10;
+      }
+      return 6;
+    }
     return T8_ELEMENT_NUM_CHILDREN[TEclass];
   }
 
@@ -536,7 +560,7 @@ struct t8_standalone_scheme
     const t8_cube_id cube_id = compute_cubeid (el, el->level);
     t8_child_id child_id;
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      SC_ABORT ("Only implemented for hypercubes.\n");
+      child_id = t8_element_type_cubeid_to_Iloc<TEclass>[el->type.to_ulong ()][cube_id];
     }
     else {
       child_id = cube_id;
@@ -622,13 +646,17 @@ struct t8_standalone_scheme
     const t8_standalone_element<TEclass> *el2 = (const t8_standalone_element<TEclass> *) elem2;
     /* get the first possible level of the nca*/
     int cube_ancestor_level = element_get_cube_nca_level (el1, el2);
-    int real_level;
+    int real_level = cube_ancestor_level;
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      SC_ABORT ("Only implemented for hypercubes.\n");
+      t8_element_type<TEclass> ancestor_type, ancestor2_type;
+      do {
+        ancestor_type = element_compute_type_at_level (el1, real_level);
+        ancestor2_type = element_compute_type_at_level (el2, real_level);
+        real_level--;
+      } while (ancestor_type != ancestor2_type);
+      real_level++; /* we subtracted once too much*/
     }
-    else {
-      real_level = cube_ancestor_level;
-    }
+
     /* get the ancestor at the calculated level*/
     element_get_ancestor (el1, real_level, (t8_standalone_element<TEclass> *) nca);
     T8_ASSERT (element_is_valid (nca));
@@ -685,7 +713,7 @@ struct t8_standalone_scheme
       d->coords[idim] |= coord_offset;
     }
 
-    T8_ASSERT (element_is_valid (desc));
+    T8_ASSERT (element_is_valid ((t8_element_t *) d));
   }
 
   // ################################################____FACE REFINEMENT____################################################
@@ -731,10 +759,19 @@ struct t8_standalone_scheme
     if (child_indices == NULL) {
       child_indices = local_indices;
     }
-    const int face_sign = face % 2;
-    const int face_dim = face / 2;
-    for (int ifacechild = 0; ifacechild < num_children; ifacechild++) {
-      child_indices[ifacechild] = get_hypercube_face_corner_index (face_dim, face_sign, ifacechild);
+    if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      const int face_sign = face % 2;
+      const int face_dim = face / 2;
+      for (int ifacechild = 0; ifacechild < num_children; ifacechild++) {
+        child_indices[ifacechild] = get_hypercube_face_corner_index (face_dim, face_sign, ifacechild);
+      }
+    }
+    else {
+      for (int ifacechild = 0; ifacechild < num_children; ifacechild++) {
+        child_indices[ifacechild]
+          = t8_standalone_lut_type_face_facechildid_to_childid<TEclass>[el->type.to_ulong ()][face][ifacechild];
+        //      t8_debugf("looked up child index %i for type %i, face %i, ifacechild %i\n", child_indices[ifacechild], elem->type.to_ulong(), face, ifacechild);
+      }
     }
     for (int ifacechild = num_children - 1; ifacechild >= 0; ifacechild--) {
       element_get_child ((const t8_element_t *) el, child_indices[ifacechild],
@@ -766,7 +803,15 @@ struct t8_standalone_scheme
   element_face_get_child_face ([[maybe_unused]] const t8_element_t *elem, const int face,
                                [[maybe_unused]] const int face_child) noexcept
   {
-    return face;
+    if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      return face;
+    }
+    else {
+      t8_standalone_element<TEclass> *el = (t8_standalone_element<TEclass> *) elem;
+      int child_id
+        = t8_standalone_lut_type_face_facechildid_to_childid<TEclass>[el->type.to_ulong ()][face][face_child];
+      return t8_standalone_lut_type_childid_face_to_childface<TEclass>[el->type.to_ulong ()][child_id][face];
+    }
   }
 
   /** Given a face of an element return the face number
@@ -797,8 +842,8 @@ struct t8_standalone_scheme
       return face;
     }
     else {
-      SC_ABORT ("Only implemented for hypercubes.\n");
-      return 0;
+      t8_cube_id cube_id = compute_cubeid (el, el->level);
+      return t8_standalone_lut_type_cubeid_face_to_parentface<TEclass>[el->type.to_ulong ()][cube_id][face];
     }
   }
 
@@ -822,16 +867,22 @@ struct t8_standalone_scheme
 
     first_descendant->level = level;
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      SC_ABORT ("Only implemented for hypercubes.\n");
+      first_descendant->type = el->type;
     }
     std::copy (el->coords.begin (), el->coords.end (), first_descendant->coords.begin ());
 
     const bool face_is_1_boundary = face % 2;
 
     if (face_is_1_boundary) {  //the face is a xi=1 boundary
-      const int facenormal_dim = face / 2;
-
-      const t8_element_coord coord_offset = element_get_len (el->level) - element_get_len (level);
+      int facenormal_dim;
+      if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+        facenormal_dim = face / 2;
+      }
+      else {
+        facenormal_dim = t8_standalone_lut_type_face_to_facenormal_dim<TEclass>[el->type.to_ulong ()][face];
+        T8_ASSERT (facenormal_dim != -1);
+      }
+      t8_element_coord coord_offset = element_get_len (el->level) - element_get_len (level);
 
       first_descendant->coords[facenormal_dim] += coord_offset;
     }
@@ -859,11 +910,18 @@ struct t8_standalone_scheme
     const t8_element_coord coord_offset = element_get_len (el->level) - element_get_len (level);
 
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      SC_ABORT ("Only implemented for hypercubes.\n");
+      last_descendant->type = el->type; /**TODO: Check if this is always true! */
     }
 
     for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
-      const int multiplier = (idim == face / 2) ? face % 2 : 1;
+      int multiplier = 1;
+      if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+        multiplier = (idim == face / 2) ? face % 2 : 1;
+      }
+      else {
+        t8_cube_id cube_id = t8_standalone_lut_type_face_to_last_facechilds_cubeid<TEclass>[el->type.to_ulong ()][face];
+        multiplier = (cube_id & (1 << idim)) >> idim;  // = cubeid[idim];
+      }
       last_descendant->coords[idim] = el->coords[idim] + multiplier * coord_offset;
     }
   }
@@ -893,7 +951,18 @@ struct t8_standalone_scheme
         }
         // all edges containing dim must be fulfilled with x_d-a_d >= x_j-a_j or x_j-a_j <= x_d-a_d
         if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-          SC_ABORT ("Only implemented for hypercubes.\n");
+          for (int ieq = 0; ieq < T8_ELEMENT_NUM_EQUATIONS[TEclass]; ieq++) {
+            if (t8_type_edge_equations<TEclass>[ieq][0] == dim) {
+              if (el->type[ieq]) {
+                return 0;
+              }
+            }
+            else if (t8_type_edge_equations<TEclass>[ieq][1] == dim) {
+              if (!el->type[ieq]) {
+                return 0;
+              }
+            }
+          }
         }
       }
       else {
@@ -904,7 +973,18 @@ struct t8_standalone_scheme
         }
         // all edges containing dimid must be fulfilled with x_d-a_d <= x_j-a_j or x_j-a_j >= x_d-a_d
         if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-          SC_ABORT ("Only implemented for hypercubes.\n");
+          for (int ieq = 0; ieq < T8_ELEMENT_NUM_EQUATIONS[TEclass]; ieq++) {
+            if (t8_type_edge_equations<TEclass>[ieq][0] == dim) {
+              if (!el->type[ieq]) {
+                return 0;
+              }
+            }
+            else if (t8_type_edge_equations<TEclass>[ieq][1] == dim) {
+              if (el->type[ieq]) {
+                return 0;
+              }
+            }
+          }
         }
       }
     }
@@ -913,8 +993,13 @@ struct t8_standalone_scheme
       // get graph edge e (or ieq) = (xi,xj)
       // ai = aj is necessary and sufficient
       if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-        SC_ABORT ("Only implemented for hypercubes.\n");
+        int ieq = t8_standalone_lut_type_face_to_typebit<TEclass>[el->type.to_ulong ()][face];
+        if (el->coords[t8_type_edge_equations<TEclass>[ieq][0]]
+            != el->coords[t8_type_edge_equations<TEclass>[ieq][1]]) {
+          return 0;
+        }
       }
+
       else {
         SC_ABORT ("Cubes should not have internal faces!\n");
       }
@@ -939,8 +1024,13 @@ struct t8_standalone_scheme
   element_get_tree_face ([[maybe_unused]] const t8_element_t *elem, const int face) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
-    T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
-    return face;
+    if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      return face;
+    }
+    else {
+      const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
+      return t8_standalone_lut_type_face_to_tree_face<TEclass>[el->type.to_ulong ()][face];
+    }
   }
 
   /** Construct the face neighbor of a given element if this face neighbor
@@ -971,17 +1061,46 @@ struct t8_standalone_scheme
     t8_standalone_element<TEclass> *neighbor = (t8_standalone_element<TEclass> *) neigh;
 
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      SC_ABORT ("Only implemented for hypercubes.\n");
+      int internal_face = t8_standalone_lut_face_internal<TEclass>[el->type.to_ulong ()][face];
+      if (internal_face) {
+        /**Determine typebit*/
+        int typebit = t8_standalone_lut_type_face_to_typebit<TEclass>[el->type.to_ulong ()][face];
+        /**Change typebit*/
+        neighbor->type.flip (typebit);
+        *neigh_face = t8_standalone_lut_type_face_to_neighface<TEclass>[el->type.to_ulong ()][face];
+        return element_is_inside_root (neighbor);
+      }
     }
-    const int facenormal_dim = face / 2;
-    const int sign = face % 2 ? 1 : -1;
+
+    int facenormal_dim, sign;
+
+    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      sign = t8_standalone_lut_type_face_to_sign<TEclass>[el->type.to_ulong ()][face];
+      facenormal_dim = t8_standalone_lut_type_face_to_facenormal_dim<TEclass>[el->type.to_ulong ()][face];
+      T8_ASSERT (facenormal_dim != -1);
+    }
+    else {
+      sign = face % 2 ? 1 : -1;
+      facenormal_dim = face / 2;
+    }
 
     /**Adapt coordinates*/
     const t8_element_coord length = element_get_len (el->level);
-
     neighbor->coords[facenormal_dim] += length * sign;
 
-    *neigh_face = face ^ 1;
+    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      for (size_t ieq = 0; ieq < T8_ELEMENT_NUM_EQUATIONS[TEclass]; ieq++) {
+        /**For all neighboring typebits, change typebit*/
+        if (t8_type_edge_equations<TEclass>[ieq][0] == facenormal_dim
+            || t8_type_edge_equations<TEclass>[ieq][1] == facenormal_dim) {
+          neighbor->type.flip (ieq); /*ASSERT that flip is in correct direction */
+        }
+      }
+      *neigh_face = t8_standalone_lut_type_face_to_neighface<TEclass>[el->type.to_ulong ()][face];
+    }
+    else {
+      *neigh_face = face ^ 1;
+    }
 
     T8_ASSERT (element_is_valid ((t8_element_t *) neighbor));
     /**check inside root*/
@@ -1037,7 +1156,7 @@ struct t8_standalone_scheme
   element_extrude_face ([[maybe_unused]] const t8_element_t *face, [[maybe_unused]] t8_element_t *elem,
                         [[maybe_unused]] const int root_face, [[maybe_unused]] const t8_scheme *scheme) noexcept
   {
-    const t8_eclass_t TFaceEclass = get_face_eclass ();
+    const t8_eclass_t TFaceEclass = get_root_face_eclass (root_face);
     T8_ASSERT (0 <= root_face && root_face < T8_ELEMENT_NUM_FACES[TEclass]);
     switch (TFaceEclass) {
     case T8_ECLASS_ZERO:
@@ -1052,10 +1171,12 @@ struct t8_standalone_scheme
       T8_ASSERT (t8_standalone_scheme<T8_ECLASS_QUAD>::element_is_valid (face));
       return extrude_face<T8_ECLASS_QUAD> ((t8_standalone_element<T8_ECLASS_QUAD> *) face, elem, root_face);
       break;
+    case T8_ECLASS_TRIANGLE:
+      T8_ASSERT (t8_standalone_scheme<T8_ECLASS_TRIANGLE>::element_is_valid (face));
+      return extrude_face<T8_ECLASS_TRIANGLE> ((t8_standalone_element<T8_ECLASS_TRIANGLE> *) face, elem, root_face);
+      break;
     default:
-      if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-        SC_ABORT ("Only implemented for hypercubes.\n");
-      }
+      SC_ABORT ("Only useful for two-dimensional eclasses.\n");
       return 0;
       break;
     }
@@ -1079,7 +1200,7 @@ struct t8_standalone_scheme
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
     const int root_face = element_get_tree_face (elem, face);
-    const t8_eclass_t TFaceEclass = get_face_eclass ();
+    const t8_eclass_t TFaceEclass = get_root_face_eclass (root_face);
 
     switch (TFaceEclass) {
     case T8_ECLASS_VERTEX:
@@ -1091,10 +1212,12 @@ struct t8_standalone_scheme
     case T8_ECLASS_QUAD:
       compute_boundary_face<T8_ECLASS_QUAD> (elem, root_face, (t8_standalone_element<T8_ECLASS_QUAD> *) boundary);
       return;
+    case T8_ECLASS_TRIANGLE:
+      compute_boundary_face<T8_ECLASS_TRIANGLE> (elem, root_face,
+                                                 (t8_standalone_element<T8_ECLASS_TRIANGLE> *) boundary);
+      return;
     default:
-      if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-        SC_ABORT ("Only implemented for hypercubes.\n");
-      }
+      SC_ABORT ("Only useful for two-dimensional eclasses.\n");
       return;
     }
   }
@@ -1277,7 +1400,9 @@ struct t8_standalone_scheme
     T8_ASSERT (level <= T8_ELEMENT_MAXLEVEL[TEclass]);
     T8_ASSERT (level >= 0);
     if constexpr (TEclass == T8_ECLASS_PYRAMID) {
-      SC_ABORT ("Not implemented yet.\n");
+      t8_linearidx_t two_to_l = 1LL << level;
+      t8_linearidx_t eight_to_l = 1LL << (3 * level);
+      return ((eight_to_l << 2) - two_to_l) / 3;
     }
     return 1LL << (level * T8_ELEMENT_DIM[TEclass]);
   }
@@ -1675,7 +1800,7 @@ struct t8_standalone_scheme
 
     /* Set type */
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      SC_ABORT ("Only implemented for hypercubes.\n");
+      ancestor->type = element_compute_type_at_level (ancestor, level);
     }
 
     /* The coordinates and the type of the ancestor are defined by the level. */
@@ -1796,7 +1921,14 @@ struct t8_standalone_scheme
   {
     T8_ASSERT (leveldiff <= get_maxlevel ());
     if constexpr (TEclass == T8_ECLASS_PYRAMID) {
-      SC_ABORT ("Not implemented yet.\n");
+      t8_linearidx_t two_to_l = 1LL << leveldiff;
+      t8_linearidx_t eight_to_l = 1LL << (3 * leveldiff);
+      if (element_get_shape (elem) == T8_ECLASS_PYRAMID) {
+        return ((eight_to_l << 2) - two_to_l) / 3;
+      }
+      else {
+        return ((eight_to_l << 1) + two_to_l) / 3;
+      }
     }
     return 1LL << (T8_ELEMENT_DIM[TEclass] * leveldiff);
   }
@@ -1813,7 +1945,12 @@ struct t8_standalone_scheme
     T8_ASSERT (0 <= vertex && vertex < element_get_num_corners ((const t8_element_t *) elem));
 
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      SC_ABORT ("Only implemented for hypercubes.\n");
+      t8_standalone_element<TEclass> *el = (t8_standalone_element<TEclass> *) elem;
+      int8_t type = el->type.to_ulong ();
+      for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
+        coords[idim]
+          = el->coords[idim] + t8_type_vertex_dim_to_binary<TEclass>[type][vertex][idim] * element_get_len (el->level);
+      }
     }
     else {
       //Hypercubes
@@ -1859,7 +1996,7 @@ struct t8_standalone_scheme
       return 0;
     }
     else {
-      SC_ABORT ("Only implemented for hypercubes.\n");
+      return t8_standalone_lut_face_internal<TEclass>[elem->type.to_ulong ()][face];
     }
   }
 
@@ -1877,10 +2014,9 @@ struct t8_standalone_scheme
       return face / 2;
     }
     else {
-      SC_ABORT ("Only implemented for hypercubes.\n");
+      return t8_standalone_lut_type_face_to_facenormal_dim<TEclass>[elem->type.to_ulong ()][face];
     }
   }
-
   /** Given a face of an element that is also a hypercube face, determine if it is the boundary x_i == 1.
    * \param [in] elem   The input element.
    * \param [in] face   The input face. Needs to be a face of the hypercube the element is embedded in.
@@ -1895,7 +2031,7 @@ struct t8_standalone_scheme
       return face % 2;
     }
     else {
-      SC_ABORT ("Only implemented for hypercubes.\n");
+      return t8_standalone_lut_type_face_to_is_1_boundary<TEclass>[elem->type.to_ulong ()][face];
     }
   }
 
@@ -1911,7 +2047,8 @@ struct t8_standalone_scheme
     }
     else {
       /* Get root element or type*/
-      SC_ABORT ("Only implemented for hypercubes.\n");
+      int root_type = 0;  //TODO: Make other root_types possible
+      return t8_standalone_lut_type_face_to_is_1_boundary<TEclass>[root_type][root_face];
     }
   }
 
@@ -1920,7 +2057,7 @@ struct t8_standalone_scheme
    * Note: Only implemented for hypercubes
    */
   static constexpr t8_eclass_t
-  get_face_eclass () noexcept
+  get_root_face_eclass (const int root_face) noexcept
   {
     switch (TEclass) {
     case T8_ECLASS_VERTEX:
@@ -1934,7 +2071,7 @@ struct t8_standalone_scheme
       return T8_ECLASS_QUAD;
     default:
       if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-        SC_ABORT ("Only implemented for hypercubes.\n");
+        return t8_standalone_lut_rootface_to_eclass<TEclass>[root_face];
       }
       return T8_ECLASS_INVALID;
     }
@@ -1984,11 +2121,15 @@ struct t8_standalone_scheme
       }
     }
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      SC_ABORT ("Only implemented for hypercubes.\n");
+      for (int ieq = 0; ieq < T8_ELEMENT_NUM_EQUATIONS[TEclass]; ieq++) {
+        int ifaceeq = t8_standalone_lut_rootface_eq_to_faceeq<TEclass>[root_face][ieq];
+        if (ifaceeq != -1) {
+          boundary->type[ifaceeq] = el->type[ieq];
+        }
+      }
+      T8_ASSERT (t8_standalone_scheme<TFaceEclass>::element_is_valid ((t8_element_t *) boundary));
     }
-    T8_ASSERT (t8_standalone_scheme<TFaceEclass>::element_is_valid ((t8_element_t *) boundary));
   }
-
   /** Given a boundary face inside a root tree's face construct
    *  the element inside the root tree that has the given face as a
    *  face.
@@ -2034,6 +2175,7 @@ struct t8_standalone_scheme
           }
         }
         else {
+
           /* Set the coordinate orthogonal to the face.*/
           if (root_face_is_1_boundary (root_face)) {
             /* Anchor coordinate is its own length smaller than the length of the root element.*/
@@ -2050,7 +2192,25 @@ struct t8_standalone_scheme
       return root_face;
     }
     else {
-      SC_ABORT ("Only implemented for hypercubes.\n");
+      t8_element_type<TEclass> root_type = 0;
+      el->type = root_type;
+      for (int ieq = 0; ieq < T8_ELEMENT_NUM_EQUATIONS[TEclass]; ieq++) {
+        int ifaceeq = t8_standalone_lut_rootface_eq_to_faceeq<TEclass>[root_face][ieq];
+        if (ifaceeq != -1) {
+          el->type[ieq] = face->type[ifaceeq];
+        }
+      }
+      /** Set those typebits, that are connected to the face_normaldim of root_face*/
+      for (int ieq = 0; ieq < T8_ELEMENT_NUM_EQUATIONS[TEclass]; ieq++) {
+        int facenormal_dim = t8_standalone_lut_type_face_to_facenormal_dim<TEclass>[root_type.to_ulong ()][root_face];
+        if (t8_type_edge_equations<TEclass>[ieq][0] == facenormal_dim) {
+          el->type[ieq] = !t8_standalone_lut_type_face_to_is_1_boundary<TEclass>[root_type.to_ulong ()][root_face];
+        }
+        else if (t8_type_edge_equations<TEclass>[ieq][1] == facenormal_dim) {
+          el->type[ieq] = t8_standalone_lut_type_face_to_is_1_boundary<TEclass>[root_type.to_ulong ()][root_face];
+        }
+      }
+      return t8_standalone_lut_type_rootface_to_face<TEclass>[el->type.to_ulong ()][root_face];
     }
   }
 
@@ -2093,9 +2253,38 @@ struct t8_standalone_scheme
       }
     }
     else {
-      SC_ABORT ("Only implemented for hypercubes.\n");
+      return t8_standalone_lut_rootface_dim_to_facedim<TEclass>[root_face][idim];
     }
-    return 0;
+  }
+
+  /* For each typebit, consider the coordinate information between level and p->level |10...11|xxxx|0...0| 
+ * of both inequality defining dimensions */
+
+  static inline t8_element_type<TEclass>
+  element_compute_type_at_level (const t8_standalone_element<TEclass> *el, const int level)
+  {
+    t8_element_type<TEclass> type = 0;
+    T8_ASSERT (0 <= el->level && el->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
+
+    for (int e = 0; e < T8_ELEMENT_NUM_EQUATIONS[TEclass]; e++) {
+      t8_element_coord coord_v0 = el->coords[t8_type_edge_equations<TEclass>[e][0]];
+      t8_element_coord coord_v1 = el->coords[t8_type_edge_equations<TEclass>[e][1]];
+
+      coord_v0 = (coord_v0 << level) & ((1 << T8_ELEMENT_MAXLEVEL[TEclass]) - 1);
+      coord_v1 = (coord_v1 << level) & ((1 << T8_ELEMENT_MAXLEVEL[TEclass]) - 1);
+
+      if (coord_v0 == coord_v1) {
+        type[e] = el->type[e] | type[e];
+      }
+      else if (coord_v0 < coord_v1) {
+        type |= (1 << e);
+      }
+      else {
+        T8_ASSERT (coord_v0 > coord_v1);
+        T8_ASSERT (!(type & (t8_element_type<TEclass>) (1 << e)).all ());
+      }
+    }
+    return type;
   }
 };
 
@@ -2235,7 +2424,77 @@ t8_standalone_scheme<T8_ECLASS_TRIANGLE>::element_transform_face ([[maybe_unused
                                                                   [[maybe_unused]] const int sign,
                                                                   [[maybe_unused]] const int is_smaller_face) noexcept
 {
-  SC_ABORT ("Only implemented for hypercubes.\n");
+  T8_ASSERT (0 <= orientation && orientation <= 2);
+  const t8_standalone_element<T8_ECLASS_TRIANGLE> *el1 = (const t8_standalone_element<T8_ECLASS_TRIANGLE> *) elem1;
+  t8_standalone_element<T8_ECLASS_TRIANGLE> *el2 = (t8_standalone_element<T8_ECLASS_TRIANGLE> *) elem2;
+
+  t8_element_coord h = element_get_len (el1->level);
+
+  // copy elem1 in tmp so that results can directly be set in elem2
+  t8_element_t *temp;
+  element_copy (elem1, temp);
+  t8_standalone_element<T8_ECLASS_TRIANGLE> *tmp = (t8_standalone_element<T8_ECLASS_TRIANGLE> *) temp;
+
+  /*
+    * The corners of the triangle are enumerated like this
+    *        type 0                    type 1
+    *      also root tree
+    *         v_2                     v_1  v_2
+    *         x                         x--x
+    *        /|                         | /
+    *       / |                         |/
+    *      x--x                         x
+    *    v_0  v_1                      v_0
+    *
+    */
+  if (sign) {
+    /* The tree faces have the same topological orientation, and
+      * thus we have to perform a coordinate switch. */
+    if (el1->type == 0) {
+      tmp->coords[1] = el1->coords[0] - el1->coords[1];
+    }
+    else {
+      tmp->coords[1] = el1->coords[0] - el1->coords[1] - h;
+    }
+  }
+
+  if (!is_smaller_face && orientation != 0 && !sign) {
+    /* Translate orientation if triangle1 is not on the smaller face.
+      *  sign = 0  sign = 1
+      *  0 -> 0    0 -> 0
+      *  1 -> 2    1 -> 1
+      *  2 -> 1    2 -> 2
+      */
+    orientation = 3 - orientation;
+  }
+
+  el2->level = tmp->level;
+  el2->type = tmp->type;
+  switch (orientation) {
+  case 0:
+    element_copy ((t8_element_t *) tmp, (t8_element_t *) el2);
+    break;
+  case 1:
+    el2->coords[0] = get_root_len () - h - tmp->coords[1];
+    if (tmp->type == 0) {
+      el2->coords[1] = tmp->coords[0] - tmp->coords[1];
+    }
+    else {
+      el2->coords[1] = tmp->coords[0] - tmp->coords[1] - h;
+    }
+    break;
+  case 2:
+    if (tmp->type == 0) {
+      el2->coords[0] = get_root_len () - h + tmp->coords[1] - tmp->coords[0];
+    }
+    else {
+      el2->coords[0] = get_root_len () + tmp->coords[1] - tmp->coords[0];
+    }
+    el2->coords[1] = get_root_len () - h - tmp->coords[0];
+    break;
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
 };
 
 #endif /* T8_STANDALONE_IMPLEMENTATION_HXX */
