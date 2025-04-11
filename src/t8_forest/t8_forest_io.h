@@ -67,7 +67,7 @@ t8_forest_save (t8_forest_t forest);
  *                                      providing the user defined per element data.
  *                                      If scalar and vector fields are used, all scalar fields
  *                                      must come first in the array.
- * \return  True if successful, false if not (process local).
+ * \return  T8_SUBROUTINE_SUCCESS if successful, T8_SUBROUTINE_FAILURE if not (process local).
  * See also \ref t8_forest_write_vtk .
  */
 int
@@ -88,7 +88,7 @@ t8_forest_write_vtk_ext (t8_forest_t forest, const char *fileprefix, const int w
  *                                      be stored. The master file is then fileprefix.pvtu
  *                                      and the process with rank r writes in the file
  *                                      fileprefix_r.vtu.
- * \return  True if successful, false if not (process local).
+ * \return  T8_SUBROUTINE_SUCCESS if successful, T8_SUBROUTINE_FAILURE if not (process local).
  */
 int
 t8_forest_write_vtk (t8_forest_t forest, const char *fileprefix);

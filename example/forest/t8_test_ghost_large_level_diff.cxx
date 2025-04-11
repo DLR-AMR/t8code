@@ -44,6 +44,7 @@
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_profiling.h>
+#include <t8_forest/t8_forest_ghost_search.hxx>
 #include <t8_schemes/t8_default/t8_default.hxx>
 
 /* The refinement criterion
@@ -180,7 +181,7 @@ t8_ghost_large_level_diff (const char *prefix, int dim, int level, int refine, i
   /* Partition */
   t8_forest_init (&forest_partition);
   t8_forest_set_partition (forest_partition, forest_adapt, 0);
-  t8_forest_set_ghost_ext (forest_partition, 1, T8_GHOST_FACES, 3);
+  t8_forest_set_ghost (forest_partition, 1, T8_GHOST_FACES);
   t8_forest_set_profiling (forest_partition, 1);
   t8_forest_commit (forest_partition);
   if (!no_vtk) {

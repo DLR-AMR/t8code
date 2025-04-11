@@ -313,7 +313,7 @@ main (int argc, char *argv[])
   int level, level_diff;
   int help = 0, no_vtk, do_ghost, do_balance, use_cad;
   int dim, num_files;
-  int test_tet, test_linear_cylinder, test_cad_cylinder;
+  int test_tet, test_linear_cylinder, test_cad_cylinder, test_hybrid_cube, test_hex_cube;
   int stride;
   int cmesh_level;
   double T, delta_t, cfl;
@@ -363,6 +363,12 @@ main (int argc, char *argv[])
   sc_options_add_switch (opt, 'O', "test-cad-cylinder", &test_cad_cylinder,
                          "Use a cad cmesh to compare linear and cad geometry performance."
                          " If this option is used -o is enabled automatically. Not allowed with -f and -c.");
+  sc_options_add_switch (opt, 'C', "test-hybridcube", &test_hybrid_cube,
+                         "Use a hypercube with Tet, Prism and Hex elements as cmesh."
+                         " If this option is used -o is enabled automatically. Not allowed with -f and -c.");
+  sc_options_add_switch (opt, 'H', "test-hexcube", &test_hex_cube,
+                         "Use a hypercube with Hex elements as cmesh."
+                         " If this option is used -o is enabled automatically. Not allowed with -f and -c.");
   sc_options_add_int (opt, 'l', "level", &level, 0, "The initial uniform refinement level of the forest.");
   sc_options_add_int (opt, 'r', "rlevel", &level_diff, 1,
                       "The number of levels that the forest is refined from the initial level.");
@@ -388,11 +394,12 @@ main (int argc, char *argv[])
   /* check for wrong usage of arguments */
   if (first_argc < 0 || first_argc != argc || dim < 2 || dim > 3
       || (cmeshfileprefix == NULL && mshfileprefix == NULL && test_tet == 0 && test_cad_cylinder == 0
-          && test_linear_cylinder == 0)
+          && test_linear_cylinder == 0 && test_hybrid_cube == 0 && test_hex_cube == 0)
       || stride <= 0 || (num_files - 1) * stride >= mpisize || cfl < 0 || T <= 0
-      || test_tet + test_linear_cylinder + test_cad_cylinder > 1
-      || (cmesh_level >= 0 && (!test_linear_cylinder && !test_cad_cylinder))
-      || ((mshfileprefix != NULL || cmeshfileprefix != NULL) && (test_linear_cylinder || test_cad_cylinder || test_tet))
+      || test_tet + test_linear_cylinder + test_cad_cylinder + test_hybrid_cube + test_hex_cube > 1
+      || (cmesh_level >= 0 && (!test_linear_cylinder && !test_cad_cylinder && !test_hybrid_cube && !test_hex_cube))
+      || ((mshfileprefix != NULL || cmeshfileprefix != NULL)
+          && (test_linear_cylinder || test_cad_cylinder || test_tet || test_hybrid_cube || test_hex_cube))
       || (mshfileprefix == NULL && use_cad)) {
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
     return 1;
@@ -426,6 +433,14 @@ main (int argc, char *argv[])
       cmesh = t8_cmesh_new_hollow_cylinder (sc_MPI_COMM_WORLD, 4 * sc_intpow (2, cmesh_level),
                                             sc_intpow (2, cmesh_level), sc_intpow (2, cmesh_level), test_cad_cylinder);
       test_linear_cylinder ? vtu_prefix = "test_linear_cylinder" : vtu_prefix = "test_cad_cylinder";
+    }
+    else if (test_hybrid_cube) {
+      cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
+      vtu_prefix = "test_hypercube_hybrid";
+    }
+    else if (test_hex_cube) {
+      cmesh = t8_cmesh_new_hypercube (T8_ECLASS_HEX, sc_MPI_COMM_WORLD, 0, 0, 0);
+      vtu_prefix = "test_hypercube_hex";
     }
     else {
       T8_ASSERT (cmeshfileprefix != NULL);

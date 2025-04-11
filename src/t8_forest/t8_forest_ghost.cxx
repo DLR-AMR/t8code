@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2024 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -30,6 +30,10 @@
 #include <t8_cmesh/t8_cmesh_trees.h>
 #include <t8_data/t8_containers.h>
 #include <sc_statistics.h>
+
+#include <t8_forest/t8_forest_ghost_definition.h>
+#include <t8_forest/t8_forest_ghost_definition.hxx>
+#include <t8_forest/t8_forest_ghost_search.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -173,8 +177,7 @@ t8_forest_ghost_init (t8_forest_ghost_t *pghost, t8_ghost_type_t ghost_type)
 {
   t8_forest_ghost_t ghost;
 
-  /* We currently only support face-neighbor ghosts */
-  T8_ASSERT (ghost_type == T8_GHOST_FACES);
+  T8_ASSERT (ghost_type != T8_GHOST_NONE);
 
   /* Allocate memory for ghost */
   ghost = *pghost = T8_ALLOC_ZERO (t8_forest_ghost_struct_t, 1);
@@ -633,7 +636,7 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const 
  * remote_ghosts array of ghost.
  * We also fill the remote_processes here.
  */
-static void
+void
 t8_forest_ghost_fill_remote_v3 (t8_forest_t forest)
 {
   t8_forest_ghost_boundary_data_t data;
@@ -677,7 +680,7 @@ t8_forest_ghost_fill_remote_v3 (t8_forest_t forest)
  * construct the remote processes by looking at the half neighbors of an element.
  * Otherwise, we use the owners_at_face method.
  */
-static void
+void
 t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int ghost_method)
 {
   t8_element_t **half_neighbors = NULL;
@@ -1367,17 +1370,17 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
  * for unbalanced_version = -1
  */
 void
-t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
+t8_forest_ghost_create_ext (t8_forest_t forest)
 {
-  t8_forest_ghost_t ghost = NULL;
-  t8_ghost_mpi_send_info_t *send_info;
-  sc_MPI_Request *requests;
-  int create_tree_array = 0, create_gfirst_desc_array = 0;
-  int create_element_array = 0;
+  t8_forest_ghost_t ghost;
+  t8_forest_ghost_definition_c *ghost_definition;
 
   T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (forest->ghost_definition != NULL);
 
-  t8_global_productionf ("Into t8_forest_ghost with %i local elements.\n", t8_forest_get_local_num_elements (forest));
+  ghost_definition = forest->ghost_definition;
+
+  t8_productionf ("Into t8_forest_ghost with %i local elements.\n", t8_forest_get_local_num_elements (forest));
 
   /* In parallel, check forest for deleted elements. The ghost algorithm currently
   * does not work on forests with deleted elements.
@@ -1396,53 +1399,10 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
      * Only delete the line, if you know what you are doing. */
     t8_global_productionf ("Start ghost at %f  %f\n", sc_MPI_Wtime (), forest->profile->ghost_runtime);
   }
+  /* Call the dot_ghost function on the ghost_definition class of the forest to compute the ghost layer */
+  ghost_definition->do_ghost (forest);
 
-  if (forest->element_offsets == NULL) {
-    /* create element offset array if not done already */
-    create_element_array = 1;
-    t8_forest_partition_create_offsets (forest);
-  }
-  if (forest->tree_offsets == NULL) {
-    /* Create tree offset array if not done already */
-    create_tree_array = 1;
-    t8_forest_partition_create_tree_offsets (forest);
-  }
-  if (forest->global_first_desc == NULL) {
-    /* Create global first desc array if not done already */
-    create_gfirst_desc_array = 1;
-    t8_forest_partition_create_first_desc (forest);
-  }
-
-  if (t8_forest_get_local_num_elements (forest) > 0) {
-    if (forest->ghost_type == T8_GHOST_NONE) {
-      t8_debugf ("WARNING: Trying to construct ghosts with ghost_type NONE. "
-                 "Ghost layer is not constructed.\n");
-      return;
-    }
-    /* Currently we only support face ghosts */
-    T8_ASSERT (forest->ghost_type == T8_GHOST_FACES);
-
-    /* Initialize the ghost structure */
-    t8_forest_ghost_init (&forest->ghosts, forest->ghost_type);
-    ghost = forest->ghosts;
-
-    if (unbalanced_version == -1) {
-      t8_forest_ghost_fill_remote_v3 (forest);
-    }
-    else {
-      /* Construct the remote elements and processes. */
-      t8_forest_ghost_fill_remote (forest, ghost, unbalanced_version != 0);
-    }
-
-    /* Start sending the remote elements */
-    send_info = t8_forest_ghost_send_start (forest, ghost, &requests);
-
-    /* Receive the ghost elements from the remote processes */
-    t8_forest_ghost_receive (forest, ghost);
-
-    /* End sending the remote elements */
-    t8_forest_ghost_send_end (forest, ghost, send_info, requests);
-  }
+  ghost = forest->ghosts;
 
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of ghost_create */
@@ -1463,22 +1423,8 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
     t8_global_productionf ("End ghost at %f  %f\n", sc_MPI_Wtime (), forest->profile->ghost_runtime);
   }
 
-  if (create_element_array) {
-    /* Free the offset memory, if created */
-    t8_shmem_array_destroy (&forest->element_offsets);
-  }
-  if (create_tree_array) {
-    /* Free the offset memory, if created */
-    t8_shmem_array_destroy (&forest->tree_offsets);
-  }
-  if (create_gfirst_desc_array) {
-    /* Free the offset memory, if created */
-    t8_shmem_array_destroy (&forest->global_first_desc);
-  }
-
-  t8_global_productionf ("Done t8_forest_ghost with %i local elements and %i"
-                         " ghost elements.\n",
-                         t8_forest_get_local_num_elements (forest), t8_forest_get_num_ghosts (forest));
+  t8_productionf ("Done t8_forest_ghost with %i local elements and %i ghost elements.\n",
+                  t8_forest_get_local_num_elements (forest), t8_forest_get_num_ghosts (forest));
 }
 
 void
@@ -1487,7 +1433,8 @@ t8_forest_ghost_create (t8_forest_t forest)
   T8_ASSERT (t8_forest_is_committed (forest));
   if (forest->mpisize > 1) {
     /* call unbalanced version of ghost algorithm */
-    t8_forest_ghost_create_ext (forest, 1);
+    T8_ASSERT (t8_forest_ghost_definition_face_get_version (forest->ghost_definition) == 2);
+    t8_forest_ghost_create_ext (forest);
   }
 }
 
@@ -1498,7 +1445,8 @@ t8_forest_ghost_create_balanced_only (t8_forest_t forest)
   if (forest->mpisize > 1) {
     /* TODO: assert that forest is balanced */
     /* Call balanced version of ghost algorithm */
-    t8_forest_ghost_create_ext (forest, 0);
+    T8_ASSERT (t8_forest_ghost_definition_face_get_version (forest->ghost_definition) == 1);
+    t8_forest_ghost_create_ext (forest);
   }
 }
 
@@ -1506,8 +1454,9 @@ void
 t8_forest_ghost_create_topdown (t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
-
-  t8_forest_ghost_create_ext (forest, -1);
+  T8_ASSERT (forest->ghost_definition != NULL);
+  T8_ASSERT (t8_forest_ghost_definition_face_get_version (forest->ghost_definition) == 3);
+  t8_forest_ghost_create_ext (forest);
 }
 
 /** Return the array of remote ranks.
@@ -1912,6 +1861,212 @@ t8_forest_ghost_destroy (t8_forest_ghost_t *pghost)
   T8_ASSERT (pghost != NULL && *pghost != NULL && t8_refcount_is_last (&(*pghost)->rc));
   t8_forest_ghost_unref (pghost);
   T8_ASSERT (*pghost == NULL);
+}
+
+/**
+ * Implementation of the ghost-interface
+ * wrapper for the abstract base classes and
+ * implementation of the communication steps
+ * and implementation of the derived class search
+*/
+
+t8_ghost_type_t
+t8_forest_ghost_definition_get_type (const t8_forest_ghost_definition_c *ghost_definition)
+{
+  T8_ASSERT (ghost_definition != NULL);
+  return ghost_definition->t8_ghost_get_type ();
+}
+
+void
+t8_forest_ghost_definition_ref (t8_forest_ghost_definition_c *ghost_definition)
+{
+  T8_ASSERT (ghost_definition != NULL);
+  ghost_definition->ref ();
+}
+
+void
+t8_forest_ghost_definition_unref (t8_forest_ghost_definition_c **pghost_definition)
+{
+  t8_forest_ghost_definition_c *ghost_definition;
+
+  T8_ASSERT (pghost_definition != NULL);
+  ghost_definition = *pghost_definition;
+  T8_ASSERT (ghost_definition != NULL);
+
+  if (ghost_definition->unref () == 0) {
+    ghost_definition = NULL;
+  }
+}
+
+/**
+ * Abstract base class
+*/
+
+void
+t8_forest_ghost_definition::communicate_ownerships (t8_forest_t forest)
+{
+  if (forest->element_offsets == NULL) {
+    /* create element offset array if not done already */
+    memory_flag = memory_flag | CREATE_ELEMENT_ARRAY;
+    t8_forest_partition_create_offsets (forest);
+  }
+  if (forest->tree_offsets == NULL) {
+    /* Create tree offset array if not done already */
+    memory_flag = memory_flag | CREATE_TREE_ARRAY;
+    t8_forest_partition_create_tree_offsets (forest);
+  }
+  if (forest->global_first_desc == NULL) {
+    /* Create global first desc array if not done already */
+    memory_flag = memory_flag | CREATE_GFIRST_DESC_ARRAY;
+    t8_forest_partition_create_first_desc (forest);
+  }
+}
+
+void
+t8_forest_ghost_definition::communicate_ghost_elements (t8_forest_t forest)
+{
+  t8_forest_ghost_t ghost = forest->ghosts;
+  t8_ghost_mpi_send_info_t *send_info;
+  sc_MPI_Request *requests;
+
+  /* Start sending the remote elements */
+  send_info = t8_forest_ghost_send_start (forest, ghost, &requests);
+
+  /* Receive the ghost elements from the remote processes */
+  t8_forest_ghost_receive (forest, ghost);
+
+  /* End sending the remote elements */
+  t8_forest_ghost_send_end (forest, ghost, send_info, requests);
+}
+
+void
+t8_forest_ghost_definition::clean_up (t8_forest_t forest)
+{
+  if (memory_flag & CREATE_GFIRST_DESC_ARRAY) {
+    /* Free the offset memory, if allocated */
+    t8_shmem_array_destroy (&forest->element_offsets);
+  }
+  if (memory_flag & CREATE_TREE_ARRAY) {
+    /* Free the offset memory, if allocated */
+    t8_shmem_array_destroy (&forest->tree_offsets);
+  }
+  if (memory_flag & CREATE_GFIRST_DESC_ARRAY) {
+    /* Free the offset memory, if allocated */
+    t8_shmem_array_destroy (&forest->global_first_desc);
+  }
+}
+
+/**
+ * Derived class ghost_w_search
+*/
+
+t8_forest_ghost_w_search::t8_forest_ghost_w_search (const t8_ghost_type_t ghost_type)
+  : t8_forest_ghost_definition (ghost_type)
+{
+  T8_ASSERT (ghost_type != T8_GHOST_NONE);
+  T8_ASSERT (ghost_type == T8_GHOST_FACES);  // currently no other types are supported
+  if (ghost_type == T8_GHOST_FACES) {
+    search_fn = t8_forest_ghost_search_boundary;
+  }
+  SC_CHECK_ABORT (ghost_type != T8_GHOST_USERDEFINED,
+                  "use t8_forest_ghost_w_search(t8_forest_search_fn search_function) for userdefined ghost");
+}
+
+bool
+t8_forest_ghost_w_search::do_ghost (t8_forest_t forest)
+{
+
+  if (t8_ghost_get_type () == T8_GHOST_NONE) {
+    t8_debugf ("WARNING: Trying to construct ghosts with ghost_type NONE. "
+               "Ghost layer is not constructed.\n");
+    return T8_SUBROUTINE_FAILURE;
+  }
+
+  communicate_ownerships (forest);
+
+  if (t8_forest_get_local_num_elements (forest) > 0) {
+
+    /* Initialize the ghost structure */
+    t8_forest_ghost_init (&forest->ghosts, ghost_type);
+
+    search_for_ghost_elements (forest);
+
+    communicate_ghost_elements (forest);
+  }
+  clean_up (forest);
+
+  return T8_SUBROUTINE_SUCCESS;
+}
+
+void
+t8_forest_ghost_w_search::search_for_ghost_elements (t8_forest_t forest)
+{
+  t8_forest_ghost_boundary_data_t data;
+  void *store_user_data = NULL;
+
+  /* Start with invalid entries in the user data.
+   * These are set in t8_forest_ghost_search_boundary each time a new tree is entered */
+  data.eclass = T8_ECLASS_COUNT;
+  data.gtreeid = -1;
+  data.scheme = NULL;
+#ifdef T8_ENABLE_DEBUG
+  data.left_out = 0;
+#endif
+  sc_array_init (&data.face_owners, sizeof (int));
+  /* This is a dummy init, since we call sc_array_reset in ghost_search_boundary
+   * and we should not call sc_array_reset on a non-initialized array */
+  sc_array_init (&data.bounds_per_level, 1);
+  /* Store any user data that may reside on the forest */
+  store_user_data = t8_forest_get_user_data (forest);
+  /* Set the user data for the search routine */
+  t8_forest_set_user_data (forest, &data);
+  /* Loop over the trees of the forest */
+  t8_forest_search (forest, search_fn, NULL, NULL);
+
+  /* Reset the user data from before search */
+  t8_forest_set_user_data (forest, store_user_data);
+
+  /* Reset the data arrays */
+  sc_array_reset (&data.face_owners);
+  sc_array_reset (&data.bounds_per_level);
+}
+
+t8_forest_ghost_face::t8_forest_ghost_face (const int version)
+  : t8_forest_ghost_w_search (T8_GHOST_FACES, t8_forest_ghost_search_boundary), version (version)
+{
+  T8_ASSERT (1 <= version && version <= 3);
+}
+
+void
+t8_forest_ghost_face::search_for_ghost_elements (t8_forest_t forest)
+{
+  T8_ASSERT (forest->ghosts != NULL);
+  t8_forest_ghost_t ghost = forest->ghosts;
+  if (version == 3) {
+    t8_forest_ghost_fill_remote_v3 (forest);
+  }
+  else {
+    /* Construct the remote elements and processes. */
+    t8_forest_ghost_fill_remote (forest, ghost, version != 1);
+  }
+}
+
+/* Wrapper for derived face class */
+t8_forest_ghost_definition_c *
+t8_forest_ghost_definition_face_new (const int version)
+{
+  T8_ASSERT (1 <= version && version <= 3);
+  return new t8_forest_ghost_face (version);
+}
+
+int
+t8_forest_ghost_definition_face_get_version (t8_forest_ghost_definition_c *ghost_definition)
+{
+  T8_ASSERT (ghost_definition != NULL);
+  T8_ASSERT (ghost_definition->t8_ghost_get_type () == T8_GHOST_FACES);
+  t8_forest_ghost_face *ghost_definition_passed = (t8_forest_ghost_face *) ghost_definition;
+
+  return ghost_definition_passed->get_version ();
 }
 
 T8_EXTERN_C_END ();
