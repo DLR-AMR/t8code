@@ -22,54 +22,125 @@
 
 #include <gtest/gtest.h>
 #include <limits>
+#include <cmath>
+#include <t8.h>
 
-class DISABLED_t8_gtest_rank_times_global_num_elems_over_size: public testing::Test {
+class DISABLED_t8_gtest_rank_times_global_num_elems_over_size:
+  public testing::TestWithParam<std::tuple<int, int, int>> {
  protected:
   void
   SetUp () override
   {
     rank_growth = std::get<0> (GetParam ());
-    global_num_elems_growth = std::get<1> (GetParam ());
+    elem_growth = std::get<1> (GetParam ());
+    size_growth = std::get<2> (GetParam ());
+    rank_iter = log (std::numeric_limits<uint32_t>::max ()) / log (rank_growth);
+    elem_iter = log (std::numeric_limits<uint64_t>::max ()) / log (elem_growth);
+    size_iter = log (std::numeric_limits<uint32_t>::max ()) / log (size_growth);
   }
   void
   TearDown () override
   {
     /* nothing to do */
   }
-  const uint32_t rank_growth;
-  const uint32_t global_num_elems_growth;
-  const int max_iter = 1000;
+  uint32_t rank_growth;
+  uint32_t elem_growth;
+  uint32_t size_growth;
+#if T8CODE_TEST_LEVEL == 0
+  const uint32_t max_iter = 100;
+#elif T8CODE_TEST_LEVEL == 1
+  const uint32_t max_iter = 50;
+#else
+  const uint32_t max_iter = 10;
+#endif
+  uint32_t rank_iter;
+  uint32_t elem_iter;
+  uint32_t size_iter;
 };
 
 TEST_P (DISABLED_t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
 {
-  /* we use exponential growth for all parts of the formular to get to large numbers quickly */
+  /** 
+   * We test the formula rank * num_elems / size for large numbers.
+   * The formula is used in the t8code library to compute the number of elements
+   * that are owned by a rank.
+   * 
+   * We use a recursive approach to compute the result.
+   * The result in the innermost loop is computed by:
+   * check_result(n, m) = num_elems^n * rank^m / size
+   * 
+   * To prevent overflow we use the following approach:
+   * floor (A^n*B/C) = A * floor (A^(n-1)*B/C) + floor(A/C)*(A^(n-1)*B % C) 
+   * and + (A % C)*((A^(n-1)B) % C) / C is used to compute the remainder of the next step. 
+   * for the inner and outer loop. 
+   * We use integer division, therefore we store the remainder of each update to 
+   * prevent rounding errors.
+  */
+  uint64_t size = 1;
+  for (uint32_t isize = 1; isize < size_iter; ++isize) {
+    /* The very first result is 1 * 1 / size */
+    uint64_t check_result_elem = 1 / size;
+    uint64_t check_result_elem_remain = 1;
+
+    /* Precompute some values, that only depend on the size, so we do not recompute them 
+         * in the inner loop. */
+    const uint64_t elem_mod_size = elem_growth % size;
+    const uint64_t rank_mod_size = rank_growth % size;
+
+    uint64_t num_elems = 1;
+    /* Initialize factors */
+    for (uint32_t ielem = 1; ielem < elem_iter; ++ielem) {
+      uint32_t rank = 1;
+
+      /** Used to compute elem^n * rank^m / size, where n is fixed. */
+      uint64_t check_result = check_result_elem;
+      uint64_t rank_remainder = check_result_elem_remain;
+      for (uint32_t irank = 1; irank < rank_iter && rank <= size; ++irank) {
+        /* check a potential implementation here.  */
+
+        /*Dummy check */
+        EXPECT_GE (check_result, 0);
+
+        /* Update the result with respect to the updated rank */
+        check_result *= rank_growth;
+        check_result += (rank_growth / size) * rank_mod_size;
+        check_result += rank_mod_size * rank_remainder / size;
+        rank_remainder = (rank_mod_size * rank_remainder) % size;
+
+        rank *= rank_growth;
+      }
+      /* Update the result with respect to the updated number of elements. */
+      check_result_elem *= elem_growth;
+      check_result_elem += (elem_growth / size) * elem_mod_size;
+      check_result_elem += elem_mod_size * check_result_elem_remain / size;
+      check_result_elem_remain = (elem_mod_size * check_result_elem_remain) % size;
+
+      num_elems *= elem_growth;
+    }
+    size *= size_growth;
+  }
 }
 
-TEST_P (t8_gtest_rank_times_global_num_elems_over_size, small_numbers)
+TEST_P (DISABLED_t8_gtest_rank_times_global_num_elems_over_size, small_numbers)
 {
-  for (uint32_t size_growth = rank_growth; size_growth < 10; ++size_growth) {
-    uint64_t num_elems = 1;
-    for (uint32_t ielem = 1; ielem < max_iter; ++ielem) {
-      num_elems += global_num_elems_growth;
-      uint32_t size = 1;
-      for (uint32_t isize = 1; isize < max_iter; ++isize) {
-        size += size_growth;
-        uint32_t rank = 1;
-        for (uint32_t irank = 1; irank < size && irank < max_iter; ++irank) {
-          rank += rank_growth;
-          /* We only test for small numbers (much smaller that 2^64-1 here) */
-          uint64_t check_result = rank * num_elems / size;
-          /** As soon as this check is enabled call function to check with 
-                     * rank, num_elems & size and compare the results. 
-                     */
-        }
+  uint64_t num_elems = 1;
+  for (uint32_t ielem = 1; ielem < max_iter; ++ielem) {
+    num_elems += elem_growth;
+    uint32_t size = 1;
+    for (uint32_t isize = 1; isize < max_iter; ++isize) {
+      size += size_growth;
+      uint32_t rank = 1;
+      for (uint32_t irank = 1; irank < size && irank < max_iter; ++irank) {
+        rank += rank_growth;
+        /* We only test for small numbers (much smaller that 2^64-1 here) */
+        uint64_t check_result = rank * num_elems / size;
+        /* Dummy Test to silence unused variable */
+        EXPECT_EQ (check_result, rank * num_elems / size);
       }
     }
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_rank_times_global_num_elems_over_size,
-                          t8_gtest_rank_times_global_num_elems_over_size,
-                          testing::Combine (testing::Values (1, 2, 3, 4, 5, 6, 7, 8, 9), testing
-                                            : Values (1, 2, 3, 4, 5, 6, 7, 8, 9)));
+INSTANTIATE_TEST_SUITE_P (DISABLED_t8_gtest_rank_times_global_num_elems_over_size,
+                          DISABLED_t8_gtest_rank_times_global_num_elems_over_size,
+                          testing::Combine (testing::Range (1, 10), testing::Range (1, 10), testing::Range (1, 10)));
