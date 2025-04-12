@@ -24,8 +24,9 @@
 #include <limits>
 #include <cmath>
 #include <t8.h>
+#include <t8_cmesh.hxx>
 
-class DISABLED_t8_gtest_rank_times_global_num_elems_over_size:
+class t8_gtest_rank_times_global_num_elems_over_size:
   public testing::TestWithParam<std::tuple<int, int, int>> {
  protected:
   void
@@ -58,7 +59,7 @@ class DISABLED_t8_gtest_rank_times_global_num_elems_over_size:
   uint32_t size_iter;
 };
 
-TEST_P (DISABLED_t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
+TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
 {
   /** 
    * We test the formula rank * num_elems / size for large numbers.
@@ -96,14 +97,17 @@ TEST_P (DISABLED_t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
       uint64_t check_result = check_result_elem;
       uint64_t rank_remainder = check_result_elem_remain;
       for (uint32_t irank = 1; irank < rank_iter && rank <= size; ++irank) {
-        /* check a potential implementation here.  */
-
-        /*Dummy check */
-        EXPECT_GE (check_result, 0);
+        const uint64_t computed_result = t8_cmesh_get_first_element_of_process (rank, size, num_elems);
+        t8_debugf ("rank: %u num_elems: %lu size: %lu computed_result: %lu check_result: %lu\n", rank, num_elems, size,
+                  computed_result, check_result);
+        ASSERT_EQ (computed_result, check_result) << "rank: " << rank << " num_elems: " << num_elems
+                                                  << " size: " << size;
 
         /* Update the result with respect to the updated rank */
+        t8_debugf ("[D] current check Result: %lu\n", check_result);
+        t8_debugf("[D] rank_growth: %u rank_mod_size: %lu rank_remainder: %lu, size %lu\n", rank_growth, rank_mod_size, rank_remainder, size);
         check_result *= rank_growth;
-        check_result += (rank_growth / size) * rank_mod_size;
+        check_result += (rank_growth / size) * rank_remainder;
         check_result += rank_mod_size * rank_remainder / size;
         rank_remainder = (rank_mod_size * rank_remainder) % size;
 
@@ -121,26 +125,27 @@ TEST_P (DISABLED_t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
   }
 }
 
-TEST_P (DISABLED_t8_gtest_rank_times_global_num_elems_over_size, small_numbers)
-{
-  uint64_t num_elems = 1;
-  for (uint32_t ielem = 1; ielem < max_iter; ++ielem) {
-    num_elems += elem_growth;
-    uint32_t size = 1;
-    for (uint32_t isize = 1; isize < max_iter; ++isize) {
-      size += size_growth;
-      uint32_t rank = 1;
-      for (uint32_t irank = 1; irank < size && irank < max_iter; ++irank) {
-        rank += rank_growth;
-        /* We only test for small numbers (much smaller that 2^64-1 here) */
-        uint64_t check_result = rank * num_elems / size;
-        /* Dummy Test to silence unused variable */
-        EXPECT_EQ (check_result, rank * num_elems / size);
-      }
-    }
-  }
-}
+//TEST_P (t8_gtest_rank_times_global_num_elems_over_size, small_numbers)
+//{
+//  uint64_t num_elems = 1;
+//  for (uint32_t ielem = 1; ielem < max_iter; ++ielem) {
+//    num_elems += elem_growth;
+//    uint32_t size = 1;
+//    for (uint32_t isize = 1; isize < max_iter; ++isize) {
+//      size += size_growth;
+//      uint32_t rank = 1;
+//      for (uint32_t irank = 1; irank < size && irank < max_iter; ++irank) {
+//        rank += rank_growth;
+//        /* We only test for small numbers (much smaller that 2^64-1 here) */
+//        const uint64_t check_result = rank * num_elems / size;
+//        const uint64_t computed_result = t8_cmesh_get_first_element_of_process (rank, size, num_elems);
+//        EXPECT_EQ (check_result, computed_result) << "rank: " << rank << " num_elems: " << num_elems
+//                                                  << " size: " << size;
+//      }
+//    }
+//  }
+//}
 
-INSTANTIATE_TEST_SUITE_P (DISABLED_t8_gtest_rank_times_global_num_elems_over_size,
-                          DISABLED_t8_gtest_rank_times_global_num_elems_over_size,
+INSTANTIATE_TEST_SUITE_P (t8_gtest_rank_times_global_num_elems_over_size,
+                          t8_gtest_rank_times_global_num_elems_over_size,
                           testing::Combine (testing::Range (1, 10), testing::Range (1, 10), testing::Range (1, 10)));
