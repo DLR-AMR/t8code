@@ -115,7 +115,7 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
       }
       /* Update the result with respect to the updated number of elements. */
       check_result_elem *= elem_growth;
-      check_result_elem += (elem_growth / size) * elem_mod_size;
+      check_result_elem += (elem_growth / size) * check_result_elem_remain;
       check_result_elem += elem_mod_size * check_result_elem_remain / size;
       check_result_elem_remain = (elem_mod_size * check_result_elem_remain) % size;
 
