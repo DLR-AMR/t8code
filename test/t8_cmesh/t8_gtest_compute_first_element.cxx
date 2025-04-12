@@ -103,7 +103,7 @@ TEST_P (DISABLED_t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
 
         /* Update the result with respect to the updated rank */
         check_result *= rank_growth;
-        check_result += (rank_growth / size) * rank_mod_size;
+        check_result += (rank_growth / size) * rank_remainder;
         check_result += rank_mod_size * rank_remainder / size;
         rank_remainder = (rank_mod_size * rank_remainder) % size;
 
@@ -111,7 +111,7 @@ TEST_P (DISABLED_t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
       }
       /* Update the result with respect to the updated number of elements. */
       check_result_elem *= elem_growth;
-      check_result_elem += (elem_growth / size) * elem_mod_size;
+      check_result_elem += (elem_growth / size) * check_result_elem_remain;
       check_result_elem += elem_mod_size * check_result_elem_remain / size;
       check_result_elem_remain = (elem_mod_size * check_result_elem_remain) % size;
 
