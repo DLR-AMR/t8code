@@ -23,11 +23,9 @@
 #include <gtest/gtest.h>
 #include <limits>
 #include <cmath>
-#include <t8.h>
 #include <t8_cmesh.hxx>
 
-class t8_gtest_rank_times_global_num_elems_over_size:
-  public testing::TestWithParam<std::tuple<int, int, int>> {
+class t8_gtest_rank_times_global_num_elems_over_size: public testing::TestWithParam<std::tuple<int, int, int>> {
  protected:
   void
   SetUp () override
@@ -83,11 +81,6 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
     uint64_t check_result_elem = 1 / size;
     uint64_t check_result_elem_remain = 1;
 
-    /* Precompute some values, that only depend on the size, so we do not recompute them 
-         * in the inner loop. */
-    const uint64_t elem_mod_size = elem_growth % size;
-    const uint64_t rank_mod_size = rank_growth % size;
-
     uint64_t num_elems = 1;
     /* Initialize factors */
     for (uint32_t ielem = 1; ielem < elem_iter; ++ielem) {
@@ -98,26 +91,22 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
       uint64_t rank_remainder = check_result_elem_remain;
       for (uint32_t irank = 1; irank < rank_iter && rank <= size; ++irank) {
         const uint64_t computed_result = t8_cmesh_get_first_element_of_process (rank, size, num_elems);
-        t8_debugf ("rank: %u num_elems: %lu size: %lu computed_result: %lu check_result: %lu\n", rank, num_elems, size,
-                  computed_result, check_result);
-        ASSERT_EQ (computed_result, check_result) << "rank: " << rank << " num_elems: " << num_elems
-                                                  << " size: " << size;
+
+        check_result = (rank == size) ? num_elems : check_result;
+        ASSERT_EQ (computed_result, check_result)
+          << "rank: " << rank << " num_elems: " << num_elems << " size: " << size;
 
         /* Update the result with respect to the updated rank */
-        t8_debugf ("[D] current check Result: %lu\n", check_result);
-        t8_debugf("[D] rank_growth: %u rank_mod_size: %lu rank_remainder: %lu, size %lu\n", rank_growth, rank_mod_size, rank_remainder, size);
         check_result *= rank_growth;
-        check_result += (rank_growth / size) * rank_remainder;
-        check_result += rank_mod_size * rank_remainder / size;
-        rank_remainder = (rank_mod_size * rank_remainder) % size;
+        check_result += rank_growth * rank_remainder / size;
+        rank_remainder = (rank_growth * rank_remainder) % size;
 
         rank *= rank_growth;
       }
       /* Update the result with respect to the updated number of elements. */
       check_result_elem *= elem_growth;
-      check_result_elem += (elem_growth / size) * check_result_elem_remain;
-      check_result_elem += elem_mod_size * check_result_elem_remain / size;
-      check_result_elem_remain = (elem_mod_size * check_result_elem_remain) % size;
+      check_result_elem += elem_growth * check_result_elem_remain / size;
+      check_result_elem_remain = (elem_growth * check_result_elem_remain) % size;
 
       num_elems *= elem_growth;
     }
@@ -125,26 +114,26 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
   }
 }
 
-//TEST_P (t8_gtest_rank_times_global_num_elems_over_size, small_numbers)
-//{
-//  uint64_t num_elems = 1;
-//  for (uint32_t ielem = 1; ielem < max_iter; ++ielem) {
-//    num_elems += elem_growth;
-//    uint32_t size = 1;
-//    for (uint32_t isize = 1; isize < max_iter; ++isize) {
-//      size += size_growth;
-//      uint32_t rank = 1;
-//      for (uint32_t irank = 1; irank < size && irank < max_iter; ++irank) {
-//        rank += rank_growth;
-//        /* We only test for small numbers (much smaller that 2^64-1 here) */
-//        const uint64_t check_result = rank * num_elems / size;
-//        const uint64_t computed_result = t8_cmesh_get_first_element_of_process (rank, size, num_elems);
-//        EXPECT_EQ (check_result, computed_result) << "rank: " << rank << " num_elems: " << num_elems
-//                                                  << " size: " << size;
-//      }
-//    }
-//  }
-//}
+TEST_P (t8_gtest_rank_times_global_num_elems_over_size, small_numbers)
+{
+  uint64_t num_elems = 1;
+  for (uint32_t ielem = 1; ielem < max_iter; ++ielem) {
+    num_elems += elem_growth;
+    uint32_t size = 1;
+    for (uint32_t isize = 1; isize < max_iter; ++isize) {
+      size += size_growth;
+      uint32_t rank = 1;
+      for (uint32_t irank = 1; irank < size && irank < max_iter; ++irank) {
+        rank += rank_growth;
+        /* We only test for small numbers (much smaller that 2^64-1 here) */
+        const uint64_t check_result = rank * num_elems / size;
+        const uint64_t computed_result = t8_cmesh_get_first_element_of_process (rank, size, num_elems);
+        EXPECT_EQ (check_result, computed_result)
+          << "rank: " << rank << " num_elems: " << num_elems << " size: " << size;
+      }
+    }
+  }
+}
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_rank_times_global_num_elems_over_size,
                           t8_gtest_rank_times_global_num_elems_over_size,

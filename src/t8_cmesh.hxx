@@ -31,25 +31,29 @@
 #include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_geometry/t8_geometry_handler.hxx>
 
-constexpr t8_gloidx_t
+constexpr uint64_t
 t8_cmesh_get_first_element_of_process (const uint32_t process, const uint32_t mpisize,
                                        const uint64_t global_num_elements)
 {
-  const uint64_t a_0 = global_num_elements >> 32;
+  const uint64_t a_0 = (global_num_elements >> 32);
 
   const uint64_t a_1 = (global_num_elements << 32) >> 32;
 
-  const uint64_t sum_0 = ((a_0 * process) / mpisize) << 32;
+  const uint64_t process_64 = static_cast<uint64_t> (process);
+  const uint64_t mpisize_64 = static_cast<uint64_t> (mpisize);
 
-  const uint64_t sum_1 = (((a_0 * process) % mpisize) << 32) / mpisize;
+  const uint64_t sum_0 = (a_0 << 32) / mpisize_64 * process_64;
 
-  const uint64_t sum_2 = (a_1 * process) / mpisize;
+  const uint64_t sum_1 = (((a_0 << 32) % mpisize_64) * process_64) / mpisize_64;
 
-  // Ensure the result does not overflow and cast explicitly to t8_gloidx_t
-  const t8_gloidx_t result = (t8_gloidx_t) (sum_0 + sum_1 + sum_2);
-  T8_ASSERT (result >= 0);
-  return result;
-} 
+  const uint64_t sum_2 = (a_1 * process_64) / mpisize_64;
+
+  const uint64_t sum_3_1 = ((a_0 << 32) % mpisize_64 * (process_64 % mpisize_64)) % mpisize_64;
+  const uint64_t sum_3_2 = (a_1 * process_64) % mpisize_64;
+  const uint64_t sum_3 = (sum_3_1 + sum_3_2) / mpisize_64;
+
+  return (sum_0 + sum_1 + sum_2 + sum_3);
+}
 
 /**
  * Create and register a geometry with the coarse mesh. The coarse mesh takes the ownership of the geometry.
