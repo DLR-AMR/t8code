@@ -39,8 +39,7 @@
 #include <cmath>
 #include <t8_cmesh.hxx>
 
-class DISABLED_t8_gtest_rank_times_global_num_elems_over_size:
-  public testing::TestWithParam<std::tuple<int, int, int>> {
+class t8_gtest_rank_times_global_num_elems_over_size: public testing::TestWithParam<std::tuple<int, int, int>> {
  protected:
   void
   SetUp () override
@@ -72,7 +71,7 @@ class DISABLED_t8_gtest_rank_times_global_num_elems_over_size:
   uint32_t size_iter;
 };
 
-TEST_P (DISABLED_t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
+TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
 {
   /** 
    * We test the formula rank * num_elems / size for large numbers.
@@ -107,10 +106,9 @@ TEST_P (DISABLED_t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
       /* The remainder of the rank update */
       uint64_t rank_remainder = check_result_elem_remain;
       for (uint32_t irank = 1; irank < rank_iter && rank <= size; ++irank) {
-        /* Place the computation here. */
-        const uint64_t computed_result = 0;
-
+        const uint64_t computed_result = t8_cmesh_get_first_element_of_process (rank, size, num_elems);
         check_result = (rank == size) ? num_elems : check_result;
+
         ASSERT_EQ (computed_result, check_result)
           << "rank: " << rank << " num_elems: " << num_elems << " size: " << size;
 
@@ -133,7 +131,7 @@ TEST_P (DISABLED_t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
   }
 }
 
-TEST_P (DISABLED_t8_gtest_rank_times_global_num_elems_over_size, small_numbers)
+TEST_P (t8_gtest_rank_times_global_num_elems_over_size, small_numbers)
 {
   uint64_t num_elems = 1;
   for (uint32_t ielem = 1; ielem < max_iter; ++ielem) {
@@ -148,7 +146,7 @@ TEST_P (DISABLED_t8_gtest_rank_times_global_num_elems_over_size, small_numbers)
         /* We only test for small numbers (much smaller that 2^64-1 here). Therefore this computation
          * will not overflow. */
         const uint64_t check_result = rank * num_elems / size;
-        const uint64_t computed_result = 0;
+        const uint64_t computed_result = t8_cmesh_get_first_element_of_process (rank, size, num_elems);
         EXPECT_EQ (check_result, computed_result)
           << "rank: " << rank << " num_elems: " << num_elems << " size: " << size;
       }
@@ -156,6 +154,6 @@ TEST_P (DISABLED_t8_gtest_rank_times_global_num_elems_over_size, small_numbers)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (DISABLED_t8_gtest_rank_times_global_num_elems_over_size,
-                          DISABLED_t8_gtest_rank_times_global_num_elems_over_size,
+INSTANTIATE_TEST_SUITE_P (t8_gtest_rank_times_global_num_elems_over_size,
+                          t8_gtest_rank_times_global_num_elems_over_size,
                           testing::Combine (testing::Range (1, 10), testing::Range (1, 10), testing::Range (1, 10)));
