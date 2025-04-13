@@ -20,6 +20,20 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/**
+ * \file t8_gtest_compute_first_element.cxx
+ * Test the computation of the first element of a tree. It is computed via mpirank * num_elems / mpisize.
+ * We assume: 
+ * - mpisize > 0
+ * - mpirank >= 0
+ * - num_elems >= 0
+ * - mpirank <= mpisize
+ * - num_elems <= 2^64-1
+ * - mpisize <= 2^32-1
+ * 
+ * The tests check the correctness for small and large numbers.
+ */
+
 #include <gtest/gtest.h>
 #include <limits>
 #include <cmath>
@@ -79,6 +93,7 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
   for (uint32_t isize = 1; isize < size_iter; ++isize) {
     /* The very first result is 1 * 1 / size */
     uint64_t check_result_elem = 1 / size;
+    /* The remainder of the element update */
     uint64_t check_result_elem_remain = 1;
 
     uint64_t num_elems = 1;
@@ -88,11 +103,12 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
 
       /** Used to compute elem^n * rank^m / size, where n is fixed. */
       uint64_t check_result = check_result_elem;
+      /* The remainder of the rank update */
       uint64_t rank_remainder = check_result_elem_remain;
       for (uint32_t irank = 1; irank < rank_iter && rank <= size; ++irank) {
         const uint64_t computed_result = t8_cmesh_get_first_element_of_process (rank, size, num_elems);
-
         check_result = (rank == size) ? num_elems : check_result;
+
         ASSERT_EQ (computed_result, check_result)
           << "rank: " << rank << " num_elems: " << num_elems << " size: " << size;
 
@@ -100,16 +116,17 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
         check_result *= rank_growth;
         check_result += rank_growth * rank_remainder / size;
         rank_remainder = (rank_growth * rank_remainder) % size;
-
+        /* Update the rank */
         rank *= rank_growth;
       }
       /* Update the result with respect to the updated number of elements. */
       check_result_elem *= elem_growth;
       check_result_elem += elem_growth * check_result_elem_remain / size;
       check_result_elem_remain = (elem_growth * check_result_elem_remain) % size;
-
+      /* Update the number of elements */
       num_elems *= elem_growth;
     }
+    /* Update mpisize */
     size *= size_growth;
   }
 }
@@ -123,9 +140,11 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, small_numbers)
     for (uint32_t isize = 1; isize < max_iter; ++isize) {
       size += size_growth;
       uint32_t rank = 1;
+      /* Enforce rank <= size */
       for (uint32_t irank = 1; irank * rank_growth < size && irank < max_iter; ++irank) {
         rank += rank_growth;
-        /* We only test for small numbers (much smaller that 2^64-1 here) */
+        /* We only test for small numbers (much smaller that 2^64-1 here). Therefore this computation
+         * will not overflow. */
         const uint64_t check_result = rank * num_elems / size;
         const uint64_t computed_result = t8_cmesh_get_first_element_of_process (rank, size, num_elems);
         EXPECT_EQ (check_result, computed_result)
