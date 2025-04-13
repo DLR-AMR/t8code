@@ -123,7 +123,7 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, small_numbers)
     for (uint32_t isize = 1; isize < max_iter; ++isize) {
       size += size_growth;
       uint32_t rank = 1;
-      for (uint32_t irank = 1; irank < size && irank < max_iter; ++irank) {
+      for (uint32_t irank = 1; irank * rank_growth < size && irank < max_iter; ++irank) {
         rank += rank_growth;
         /* We only test for small numbers (much smaller that 2^64-1 here) */
         const uint64_t check_result = rank * num_elems / size;

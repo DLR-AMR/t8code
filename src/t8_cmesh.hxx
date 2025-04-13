@@ -54,11 +54,16 @@
  * \param[in] mpisize   The size of the MPI communicator
  * \param[in] global_num_elements   The number of elements in the global mesh
  * \return The first element of the process in the partitioned mesh
+ * 
+ * \warning This function assumes that process <= mpisize. mpisize has to be greater than 0.
+ * Otherwise the result of process * global_num_elements / mpisize can exceed the range of uint64_t.
  */
 constexpr uint64_t
 t8_cmesh_get_first_element_of_process (const uint32_t process, const uint32_t mpisize,
                                        const uint64_t global_num_elements)
 {
+  T8_ASSERT (mpisize > 0);
+  T8_ASSERT (process <= mpisize);
   /* Split the uint64_t */
   const uint64_t a_0 = (global_num_elements >> 32);
   const uint64_t a_1 = (global_num_elements << 32) >> 32;
