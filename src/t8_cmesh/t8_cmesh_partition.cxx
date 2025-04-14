@@ -194,7 +194,6 @@ t8_cmesh_gather_treecount_ext (const t8_cmesh_t cmesh, sc_MPI_Comm comm, const i
   T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
 
   tree_offset = cmesh->first_tree_shared ? -cmesh->first_tree - 1 : cmesh->first_tree;
-  t8_debugf("[D] tree_offset = %lld\n", (long long) tree_offset);
   if (cmesh->tree_offsets == NULL) {
     t8_shmem_init (comm);
     t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
@@ -1577,8 +1576,6 @@ t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
                                                       &cmesh->first_tree_shared, comm);
 
     cmesh->num_local_trees = last_tree - cmesh->first_tree + 1;
-    t8_debugf("[D] first_tree: %lli last_tree: %lli\n", (long long) cmesh->first_tree, last_tree);
-    t8_debugf("[D] num_local_trees: %lli\n", (long long) cmesh->num_local_trees);
     /* Compute the tree offset */
     t8_cmesh_gather_treecount_nocommit (cmesh, comm);
     /* Set the tree offsets to the cmesh's offset array */

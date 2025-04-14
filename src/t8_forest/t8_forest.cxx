@@ -1150,7 +1150,6 @@ t8_forest_populate (t8_forest_t forest)
 
   SC_CHECK_ABORT (forest->set_level <= forest->maxlevel, "Given refinement level exceeds the maximum.\n");
   /* TODO: create trees and quadrants according to uniform refinement */
-  t8_debugf ("[D] Before uniform bounds cmesh_first_tree = %d, num_local_trees: = %d\n",  t8_cmesh_get_first_treeid (forest->cmesh),  t8_cmesh_get_num_local_trees (forest->cmesh));
 
   t8_cmesh_uniform_bounds_for_irregular_refinement (
     forest->cmesh, forest->set_level, forest->scheme, &forest->first_local_tree, &child_in_tree_begin,
@@ -1161,11 +1160,8 @@ t8_forest_populate (t8_forest_t forest)
 
   cmesh_first_tree = t8_cmesh_get_first_treeid (forest->cmesh);
   cmesh_last_tree = cmesh_first_tree + t8_cmesh_get_num_local_trees (forest->cmesh) - 1;
-  t8_debugf ("[D] cmesh_first_tree = %d, num_local_trees: = %d\n", cmesh_first_tree,  t8_cmesh_get_num_local_trees (forest->cmesh));
 
   if (!is_empty) {
-    t8_debugf("[D] forest_first_local_tree = %d, forest_last_local_tree = %d\n", forest->first_local_tree, forest->last_local_tree);
-    t8_debugf("[D] cmesh_first_tree = %d, cmesh_last_tree = %d\n", cmesh_first_tree, cmesh_last_tree);
     SC_CHECK_ABORT (forest->first_local_tree >= cmesh_first_tree && forest->last_local_tree <= cmesh_last_tree,
                     "cmesh partition does not match the planned forest partition");
   }

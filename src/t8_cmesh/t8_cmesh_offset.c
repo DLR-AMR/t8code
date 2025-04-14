@@ -132,21 +132,11 @@ t8_offset_consistent (const int mpisize, const t8_shmem_array_t offset_shmem, co
   const t8_gloidx_t *offset = t8_shmem_array_get_gloidx_array (offset_shmem);
 
   ret = offset[0] == 0;
-#ifdef T8_ENABLE_DEBUG
-  if (offset[0] != 0) {
-    t8_debugf ("First tree %lli of process 0 is not equal to 0\n", offset[0]);
-  }
-#endif
   last_tree = t8_offset_last (0, offset); /* stores the last tree of process i-1 */
   for (i = 1; i < mpisize && ret; i++) {
     if (t8_offset_empty (i, offset)) {
       /* If the process is empty, then its first tree must not be shared */
       ret &= offset[i] >= 0;
-#ifdef T8_ENABLE_DEBUG
-      if (offset[i] < 0){
-        t8_debugf ("Empty process %i, first tree %lli\n", i, t8_offset_first (i, offset));
-      }
-#endif
     }
     else {
       /* If the process is not empty its first local tree must be bigger or
@@ -154,37 +144,15 @@ t8_offset_consistent (const int mpisize, const t8_shmem_array_t offset_shmem, co
        * Equality must only hold, when the first tree is shared, thus offset[i] < 0 */
       if (offset[i] < 0) {
         ret &= t8_offset_first (i, offset) == last_tree;
-#ifdef T8_ENABLE_DEBUG
-        if (t8_offset_first (i, offset) != last_tree) {
-          t8_debugf ("First tree %lli of process %i is not equal to last tree %lli\n",
-                     t8_offset_first (i, offset), i, last_tree);
-        }
-#endif
       }
       else {
         ret &= t8_offset_first (i, offset) > last_tree;
-#ifdef T8_ENABLE_DEBUG
-        if (t8_offset_first (i, offset) <= last_tree) {
-          t8_debugf ("First tree %lli of process %i is not bigger than last tree %lli\n",
-                     t8_offset_first (i, offset), i, last_tree);
-        }
-#endif
       }
       last_tree = t8_offset_last (i, offset);
       ret &= (last_tree <= num_trees);
-#ifdef T8_ENABLE_DEBUG
-      if (last_tree > num_trees) {
-        t8_debugf ("Last tree %lli of process %i is bigger than number of trees %lli\n", last_tree, i, num_trees);
-      }
-#endif
     }
   }
   ret &= (offset[mpisize] == num_trees);
-#ifdef T8_ENABLE_DEBUG
-  if (offset[mpisize] != num_trees) {
-    t8_debugf ("Last tree %lli of process %i is not equal to number of trees %lli\n", offset[mpisize], i, num_trees);
-  }
-#endif
   t8_debugf ("Offset is %s %i\n", ret ? "consistent." : "not consistent!", i - 1);
   return ret;
 }
