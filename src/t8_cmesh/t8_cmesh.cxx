@@ -1959,7 +1959,7 @@ t8_cmesh_uniform_bounds_from_unpartioned (t8_cmesh_t cmesh, const t8_gloidx_t lo
  * \param[in, out] first_tree_shared The first tree shared flag. Only used if we send the start message. Set to NULL if not used. 
  * \param[in, out] child_in_tree_end_or_begin The tree-local id of the first/last element in the tree. Set to NULL if not used.
  * \param[in, out] expect_start_or_end_message If true, we expect a start or end message from the process.
- * \param[in] data The data pointer. Must point to a valid t8_cmesh_partition_query_t.
+ * \param[in] data The data pointer. Must point to a valid t8_cmesh_partition_query_t. Only used for debugging purpose. 
  * \param[in] comm The MPI communicator.
  * \param[in, out] num_received_start_or_end_messages The number of received start or end messages. Only used if T8_ENABLE_DEBUG is defined.
  * \param[in, out] num_message_sent The number of sent messages. Only used if T8_ENABLE_DEBUG is defined.
@@ -1973,8 +1973,8 @@ t8_cmesh_bounds_send_start_or_end (t8_cmesh_t cmesh, const bool start_message, c
                                    const t8_gloidx_t first_or_last_element_in_tree_index_of_current_proc,
                                    t8_gloidx_t *first_or_last_local_tree, [[maybe_unused]] int8_t *first_tree_shared,
                                    [[maybe_unused]] t8_gloidx_t *child_in_tree_end_or_begin,
-                                   bool *expect_start_or_end_message, const t8_cmesh_partition_query_t *data,
-                                   sc_MPI_Comm comm
+                                   bool *expect_start_or_end_message,
+                                   [[maybe_unused]] const t8_cmesh_partition_query_t *data, sc_MPI_Comm comm
 #if T8_ENABLE_DEBUG
                                    ,
                                    int *num_received_start_or_end_messages, int *num_message_sent
