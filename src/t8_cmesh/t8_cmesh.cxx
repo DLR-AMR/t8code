@@ -2366,17 +2366,8 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
     /* We do not expect a start/end message if this proc is empty. */
     expect_start_message = false;
     expect_end_message = false;
-    *first_local_tree = -1;
-    *last_local_tree = -1;
-    if (first_tree_shared != NULL) {
-      *first_tree_shared = 0;
-    }
-    if (child_in_tree_begin != NULL) {
-      *child_in_tree_begin = -1;
-    }
-    if (child_in_tree_end != NULL) {
-      *child_in_tree_end = -1;
-    }
+    t8_cmesh_uniform_set_return_parameters_to_empty (first_local_tree, child_in_tree_begin, last_local_tree,
+                                                     child_in_tree_end, first_tree_shared);
 
 #if T8_ENABLE_DEBUG
     num_received_end_messages++;
