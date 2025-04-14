@@ -2467,7 +2467,7 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
 
   t8_gloidx_t *first_local_trees = T8_ALLOC_ZERO (t8_gloidx_t, cmesh->mpisize);
   const bool first_tree_shared_temp = !this_proc_is_empty && child_in_tree_begin_temp > 0;
-  const t8_gloidx_t first_unshared_local_tree = *first_local_tree + (first_tree_shared_temp ? 1 : 0);
+  t8_gloidx_t first_unshared_local_tree = *first_local_tree + (first_tree_shared_temp ? 1 : 0);
 
   mpiret = sc_MPI_Allgather (&first_unshared_local_tree, 1, T8_MPI_GLOIDX, first_local_trees, 1, T8_MPI_GLOIDX, comm);
   SC_CHECK_MPI (mpiret);
