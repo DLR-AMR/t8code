@@ -1818,7 +1818,7 @@ t8_cmesh_determine_partition (sc_array_t *first_element_tree, size_t pure_local_
 #endif
   return first_proc_adjusted;
 }
-void
+static void
 t8_cmesh_uniform_bounds_from_unpartioned (t8_cmesh_t cmesh, const t8_gloidx_t local_num_children, const int level,
                                           const t8_scheme *scheme, t8_gloidx_t *first_local_tree,
                                           t8_gloidx_t *child_in_tree_begin, t8_gloidx_t *last_local_tree,
@@ -2011,7 +2011,7 @@ t8_cmesh_bounds_send_start (t8_cmesh_t cmesh, const int proc_is_empty, const t8_
   }
 }
 
-void
+static void
 t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_children, const int level,
                                         const t8_scheme *scheme, t8_gloidx_t *first_local_tree,
                                         t8_gloidx_t *child_in_tree_begin, t8_gloidx_t *last_local_tree,
@@ -2063,7 +2063,8 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
      * Example: 2 local trees, each has 8 Elements. First element index 12: | 12 | 20 | 28 | */
     for (t8_locidx_t itree = 0; itree < pure_local_trees; ++itree, ++igtree) {
       const t8_gloidx_t *first_element_of_tree = (const t8_gloidx_t *) sc_array_index_int (&first_element_tree, itree);
-      t8_gloidx_t *first_element_of_next_tree = (t8_gloidx_t *) sc_array_index_int (&first_element_tree, itree + 1);
+      t8_gloidx_t *const first_element_of_next_tree
+        = (t8_gloidx_t *) sc_array_index_int (&first_element_tree, itree + 1);
       const t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, igtree);
       /* Set the first element of the next tree by adding the number of element of the current tree. */
       *first_element_of_next_tree = *first_element_of_tree + scheme->count_leaves_from_root (tree_class, level);
@@ -2084,12 +2085,14 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
 
     /* Compute the process that may own the last element of our first tree. */
     t8_gloidx_t send_last = (t8_gloidx_t) t8_cmesh_determine_partition (&first_element_tree, pure_local_trees, &data);
+
+    /* t8_cmesh_determine_partition will return mpisize if we plug in the number of global
+      * trees as tree index, which happens on the last process that has data.
+      * We need to correct by subtracting 1. */
     if (send_last >= cmesh->mpisize) {
-      /* t8_cmesh_determine_partition will return mpisize if we plug in the number of global
-       * trees as tree index, which happens on the last process that has data.
-       * We need to correct by subtracting 1. */
       send_last = cmesh->mpisize - 1;
     }
+
     const t8_gloidx_t num_procs_we_send_to = send_last - send_first + 1;
     sc_array_t offset_partition;
     sc_array_init_size (&offset_partition, sizeof (size_t), num_procs_we_send_to);
@@ -2163,7 +2166,7 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
         = t8_cmesh_get_first_element_of_process ((uint32_t) iproc + 1, (uint32_t) data.num_procs,
                                                  (uint64_t) data.global_num_elements)
           - 1;
-      const int proc_is_empty = last_element_index_of_current_proc < first_element_index_of_current_proc;
+      const bool proc_is_empty = last_element_index_of_current_proc < first_element_index_of_current_proc;
       bool send_start_message = true;
       bool send_end_message = true;
 
