@@ -81,7 +81,7 @@ t8_offset_last (const int proc, const t8_gloidx_t *offset)
   return T8_GLOIDX_ABS (offset[proc + 1]) - 1;
 }
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 /* Query whether a given global tree is in a valid range of a partition */
 static int
 t8_offset_valid_tree (const t8_gloidx_t gtree, const int mpisize, const t8_gloidx_t *offset)

@@ -6,6 +6,7 @@ else()
     add_library( T8 STATIC )
 endif()
 
+target_compile_features( T8 PUBLIC c_std_11 cxx_std_20 )
 add_library( T8CODE::T8 ALIAS T8 )
 
 if( CMAKE_BUILD_TYPE STREQUAL "Release" )
@@ -22,7 +23,7 @@ if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
   set (T8_CXXFLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG}")
   set (T8_CFLAGS "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_DEBUG}")
 
-    target_compile_definitions( T8 PUBLIC T8_ENABLE_DEBUG )
+    target_compile_definitions( T8 PUBLIC T8_ENABLE_DEBUG=1 )
 endif()
 
 if( T8CODE_EXPORT_COMPILE_COMMANDS )
@@ -32,8 +33,8 @@ endif( T8CODE_EXPORT_COMPILE_COMMANDS )
 if( T8CODE_ENABLE_NETCDF )
   target_link_libraries( T8 PUBLIC netCDF::netcdf )
   target_compile_definitions(T8 PUBLIC
-    T8_WITH_NETCDF
-    $<$<AND:$<BOOL:${NETCDF_HAVE_NETCDF_PAR}>,$<BOOL:${T8CODE_ENABLE_MPI}>>:T8_WITH_NETCDF_PAR> )
+    T8_ENABLE_NETCDF=1
+    $<$<AND:$<BOOL:${NETCDF_HAVE_NETCDF_PAR}>,$<BOOL:${T8CODE_ENABLE_MPI}>>:T8_ENABLE_NETCDF_PAR=1> )
   target_sources( T8 PRIVATE
   t8_netcdf.c
   t8_cmesh/t8_cmesh_netcdf.c
@@ -56,20 +57,20 @@ target_include_directories( T8 PUBLIC
 target_link_libraries( T8 PUBLIC P4EST::P4EST SC::SC )
 
 if ( T8CODE_ENABLE_MPI )
-    target_compile_definitions( T8 PUBLIC T8_ENABLE_MPI )
-    target_compile_definitions( T8 PUBLIC T8_ENABLE_MPIIO )
+    target_compile_definitions( T8 PUBLIC T8_ENABLE_MPI=1 )
+    target_compile_definitions( T8 PUBLIC T8_ENABLE_MPIIO=1 )
     target_link_libraries( T8 PUBLIC MPI::MPI_C )
 endif()
 
 if( T8CODE_ENABLE_VTK )
     target_compile_definitions( T8 PUBLIC T8_VTK_VERSION_USED="${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}" )
-    target_compile_definitions( T8 PUBLIC T8_WITH_VTK=1 )
+    target_compile_definitions( T8 PUBLIC T8_ENABLE_VTK=1 )
     target_include_directories( T8 PUBLIC ${VTK_INCLUDE_DIR} )
     target_link_libraries( T8 PUBLIC ${VTK_LIBRARIES} )
 endif()
 
 if( T8CODE_ENABLE_OCC )
-    target_compile_definitions( T8 PUBLIC T8_WITH_OCC=1 )
+    target_compile_definitions( T8 PUBLIC T8_ENABLE_OCC=1 )
     target_include_directories( T8 SYSTEM PUBLIC ${OpenCASCADE_INCLUDE_DIR} )
     target_link_libraries( T8 PUBLIC ${OpenCASCADE_LIBRARIES} )
 endif()

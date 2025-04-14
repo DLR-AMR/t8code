@@ -58,6 +58,8 @@ counter=0
 valgrind_suppressions_file=../../scripts/valgrind_suppressions_file.supp
 
 for bin_path in $test_bin_paths; do
+  counter=$(( $counter + 1 ))
+  echo "[$counter/$num_paths] Valgrind check of $bin_path..."
   # Run check_valgrind script for each test binary.
   bash ../../scripts/check_valgrind.sh $bin_path $valgrind_suppressions_file 2>&1
   status=$?
@@ -66,8 +68,6 @@ for bin_path in $test_bin_paths; do
     echo "Error occurred during the valgrind check of $bin_path."
     exit 1
   fi
-  counter=$(( $counter + 1 ))
-  echo "Checked $counter of $num_paths files."
 done
 
 echo "Valgrind found no errors in the test executables."

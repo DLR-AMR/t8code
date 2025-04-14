@@ -671,7 +671,7 @@ t8_element_count_leaves (const t8_scheme_c *scheme, const t8_eclass_t tree_class
 t8_gloidx_t
 t8_element_count_leaves_from_root (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const int level);
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 /** Query whether a given element can be considered as 'valid' and it is
    *  safe to perform any of the above algorithms on it.
    *  For example this could mean that all coordinates are in valid ranges

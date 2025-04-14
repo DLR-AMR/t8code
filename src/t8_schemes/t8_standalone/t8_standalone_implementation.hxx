@@ -1011,7 +1011,7 @@ struct t8_standalone_scheme
    *                        defined in relation to the smaller face.
    * \note \a elem1 and \a elem2 may point to the same element.
    */
-  static constexpr void
+  static inline void
   element_transform_face ([[maybe_unused]] const t8_element_t *elem1, [[maybe_unused]] t8_element_t *elem2,
                           [[maybe_unused]] const int orientation, [[maybe_unused]] const int sign,
                           [[maybe_unused]] const int is_smaller_face) noexcept

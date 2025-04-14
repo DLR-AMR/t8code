@@ -40,8 +40,7 @@ This script runs Valgrind on a binary path provided as a parameter with specifie
 
 #### find_all_test_binary_paths.sh
 
-This file lists all binary paths to test files, except for the tests for the api (as the Fortran interface needs to be built for that).
-The [CMakeLists.txt file in the test folder](../test/CMakeLists.txt) is used to generate the list of binary paths.
+This file lists all paths to test binaries that exist in the build/test directory.
 The paths are relative paths assuming an execution from the test/ folder in the build directory.
 
 #### check_all_test_binaries_valgrind.sh
