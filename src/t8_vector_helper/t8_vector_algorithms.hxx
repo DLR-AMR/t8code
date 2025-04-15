@@ -53,7 +53,7 @@
 template <typename T, typename... Args>
 void
 vector_split (const std::vector<T> &vector, std::vector<size_t> &offsets, const size_t num_categories,
-              std::function<size_t (const T &, Args...)> &&category_func, Args... args)
+              std::function<size_t (const T, Args...)> &&category_func, Args... args)
 {
   T8_ASSERT (std::is_sorted (vector.begin (), vector.end ()));
   const size_t count = vector.size ();
