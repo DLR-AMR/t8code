@@ -2068,7 +2068,7 @@ t8_cmesh_bounds_for_empty_process (const int mpisize, const int mpirank, const b
 static void
 recv_message (t8_gloidx_t *first_local_tree, t8_gloidx_t *child_in_tree_begin, int8_t *first_tree_shared,
               t8_gloidx_t *child_in_tree_begin_temp, [[maybe_unused]] const t8_gloidx_t global_num_elements,
-              const t8_cmesh_t cmesh, sc_MPI_Comm comm)
+              [[maybe_unused]] const t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
   std::vector<t8_gloidx_t> message (2);
   const int mpiret = sc_MPI_Recv (message.data (), 2, T8_MPI_GLOIDX, sc_MPI_ANY_SOURCE,
