@@ -213,6 +213,8 @@ install( FILES
     DESTINATION include
 )
 
+install ( DIRECTORY t8_vector_helper DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
+
 install( DIRECTORY t8_cmesh DESTINATION include FILES_MATCHING PATTERN "*.h" 
   PATTERN "t8_cmesh/t8_cmesh_copy.h"      EXCLUDE
   PATTERN "t8_cmesh/t8_cmesh_offset.h"    EXCLUDE 
