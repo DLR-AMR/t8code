@@ -274,6 +274,7 @@ struct t8_standalone_scheme
   {
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
+    t8_standalone_element<TEclass> *el = (t8_standalone_element<TEclass> *) elem;
     switch (TEclass) {
     case T8_ECLASS_VERTEX:
       SC_ABORT ("Vertices do not have faces.\n");
@@ -281,8 +282,29 @@ struct t8_standalone_scheme
       return T8_ECLASS_VERTEX;
     case T8_ECLASS_QUAD:
       return T8_ECLASS_LINE;
+    case T8_ECLASS_TRIANGLE:
+      return T8_ECLASS_LINE;
     case T8_ECLASS_HEX:
       return T8_ECLASS_QUAD;
+    case T8_ECLASS_TET:
+      return T8_ECLASS_TRIANGLE;
+    case T8_ECLASS_PRISM:
+      if (face <= 2) {
+        return T8_ECLASS_QUAD;
+      }
+      else {
+        return T8_ECLASS_TRIANGLE;
+      }
+    case T8_ECLASS_PYRAMID:
+      if (el->type[0] != el->type[1]) {
+        return T8_ECLASS_TRIANGLE;
+      }
+      else {
+        if (face == 0)  // TODO: Check
+          return T8_ECLASS_QUAD;
+        else
+          return T8_ECLASS_TRIANGLE;
+      }
     default:
       SC_ABORT ("This function is not implemented yet.\n");
     }
@@ -468,7 +490,7 @@ struct t8_standalone_scheme
     /* Compute the cube id and shift the coordinates accordingly */
     t8_cube_id cube_id;
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      cube_id = t8_element_type_cubeid_to_Iloc<TEclass>[el->type.to_ulong ()][childid];
+      cube_id = t8_element_type_Iloc_to_childcubeid<TEclass>[el->type.to_ulong ()][childid];
       c->type = t8_element_type_Iloc_to_childtype<TEclass>[el->type.to_ulong ()][childid];
     }
     else {
@@ -871,7 +893,14 @@ struct t8_standalone_scheme
     }
     std::copy (el->coords.begin (), el->coords.end (), first_descendant->coords.begin ());
 
-    const bool face_is_1_boundary = face % 2;
+    int face_is_1_boundary;
+
+    if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      face_is_1_boundary = face % 2;
+    }
+    else {
+      face_is_1_boundary = t8_standalone_lut_type_face_to_is_1_boundary<TEclass>[el->type.to_ulong ()][face];
+    }
 
     if (face_is_1_boundary) {  //the face is a xi=1 boundary
       int facenormal_dim;
@@ -1088,6 +1117,7 @@ struct t8_standalone_scheme
     const t8_element_coord length = element_get_len (el->level);
     neighbor->coords[facenormal_dim] += length * sign;
 
+    /**Adapt typebits*/
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
       for (size_t ieq = 0; ieq < T8_ELEMENT_NUM_EQUATIONS[TEclass]; ieq++) {
         /**For all neighboring typebits, change typebit*/
@@ -1347,6 +1377,8 @@ struct t8_standalone_scheme
 
     const t8_child_id child_id = element_get_child_id ((const t8_element_t *) elem);
     const int num_siblings = element_get_num_siblings ((const t8_element_t *) elem);
+    t8_debugf ("child_id: %i\n", child_id);
+    t8_debugf ("num_siblings: %i\n", num_siblings);
     T8_ASSERT (0 <= child_id && child_id < num_siblings);
     /* If the element is the last child of the parent, we need to go to the parent's successor (go to a coarser level)*/
     if (child_id == num_siblings - 1) {
@@ -1392,7 +1424,7 @@ struct t8_standalone_scheme
    *      is the root (level 0) element.
    *
    * This is a convenience function, and can be implemented via
-   * \ref t8_element_count_leaves.
+   * \ref element_count_leaves.
    */
   static constexpr t8_gloidx_t
   count_leaves_from_root (const t8_element_level level) noexcept
@@ -1648,10 +1680,9 @@ struct t8_standalone_scheme
     for (int i = 0; i < T8_ELEMENT_DIM[TEclass]; i++) {
       t8_debugf ("x_%i: %i \n", i, el->coords[i]);
     }
-    /**  for (int e = 0; e < T8_ELEMENT_NUM_EQUATIONS[TEclass]; e++) {
-    *  t8_debugf ("t_%i: %i \n", e, el->type[e]);
-    *}
-    * ToDo-Type */
+    for (int e = 0; e < T8_ELEMENT_NUM_EQUATIONS[TEclass]; e++) {
+      t8_debugf ("t_%i: %i \n", e, el->type[e]);
+    }
   }
 
   static constexpr void
@@ -1692,6 +1723,10 @@ struct t8_standalone_scheme
       }
       mpiret = sc_MPI_Pack (&els[ielem]->level, 1, sc_MPI_INT8_T, send_buffer, buffer_size, position, comm);
       SC_CHECK_MPI (mpiret);
+
+      int8_t type = els[ielem]->type.to_ulong ();
+      mpiret = sc_MPI_Pack (&type, 1, sc_MPI_INT8_T, send_buffer, buffer_size, position, comm);
+      SC_CHECK_MPI (mpiret);
     }
   }
 
@@ -1712,10 +1747,10 @@ struct t8_standalone_scheme
     SC_CHECK_MPI (mpiret);
     singlesize += T8_ELEMENT_DIM[TEclass] * datasize;
 
-    /* level */
+    /* level & type */
     mpiret = sc_MPI_Pack_size (1, sc_MPI_INT8_T, comm, &datasize);
     SC_CHECK_MPI (mpiret);
-    singlesize += datasize;
+    singlesize += 2 * datasize;
 
     *pack_size = count * singlesize;
   }
@@ -1742,6 +1777,11 @@ struct t8_standalone_scheme
       }
       mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(els[ielem]->level), 1, sc_MPI_INT8_T, comm);
       SC_CHECK_MPI (mpiret);
+
+      int8_t type;
+      mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &type, 1, sc_MPI_INT8_T, comm);
+      SC_CHECK_MPI (mpiret);
+      els[ielem]->type = type;
     }
   }
 
@@ -1974,7 +2014,8 @@ struct t8_standalone_scheme
 
     /**Check that we are in the correct cube*/
     if (std::all_of (ancestor.coords.begin (), ancestor.coords.end (), [] (int coord) { return coord == 0; })) {
-      return 1;
+      return ancestor.type == 0;
+      //TODO: root type
     }
     else {
       return 0;
@@ -2054,7 +2095,6 @@ struct t8_standalone_scheme
 
   /** Get the eclass of the face for the element eclass
    * \return The eclass of the face.
-   * Note: Only implemented for hypercubes
    */
   static constexpr t8_eclass_t
   get_root_face_eclass (const int root_face) noexcept
@@ -2431,9 +2471,8 @@ t8_standalone_scheme<T8_ECLASS_TRIANGLE>::element_transform_face ([[maybe_unused
   t8_element_coord h = element_get_len (el1->level);
 
   // copy elem1 in tmp so that results can directly be set in elem2
-  t8_element_t *temp;
-  element_copy (elem1, temp);
-  t8_standalone_element<T8_ECLASS_TRIANGLE> *tmp = (t8_standalone_element<T8_ECLASS_TRIANGLE> *) temp;
+  t8_standalone_element<T8_ECLASS_TRIANGLE> tmp;
+  element_copy (elem1, (t8_element_t *) &tmp);
 
   /*
     * The corners of the triangle are enumerated like this
@@ -2451,10 +2490,10 @@ t8_standalone_scheme<T8_ECLASS_TRIANGLE>::element_transform_face ([[maybe_unused
     /* The tree faces have the same topological orientation, and
       * thus we have to perform a coordinate switch. */
     if (el1->type == 0) {
-      tmp->coords[1] = el1->coords[0] - el1->coords[1];
+      tmp.coords[1] = el1->coords[0] - el1->coords[1];
     }
     else {
-      tmp->coords[1] = el1->coords[0] - el1->coords[1] - h;
+      tmp.coords[1] = el1->coords[0] - el1->coords[1] - h;
     }
   }
 
@@ -2468,29 +2507,29 @@ t8_standalone_scheme<T8_ECLASS_TRIANGLE>::element_transform_face ([[maybe_unused
     orientation = 3 - orientation;
   }
 
-  el2->level = tmp->level;
-  el2->type = tmp->type;
+  el2->level = tmp.level;
+  el2->type = tmp.type;
   switch (orientation) {
   case 0:
-    element_copy ((t8_element_t *) tmp, (t8_element_t *) el2);
+    element_copy ((t8_element_t *) &tmp, (t8_element_t *) el2);
     break;
   case 1:
-    el2->coords[0] = get_root_len () - h - tmp->coords[1];
-    if (tmp->type == 0) {
-      el2->coords[1] = tmp->coords[0] - tmp->coords[1];
+    el2->coords[0] = get_root_len () - h - tmp.coords[1];
+    if (tmp.type == 0) {
+      el2->coords[1] = tmp.coords[0] - tmp.coords[1];
     }
     else {
-      el2->coords[1] = tmp->coords[0] - tmp->coords[1] - h;
+      el2->coords[1] = tmp.coords[0] - tmp.coords[1] - h;
     }
     break;
   case 2:
-    if (tmp->type == 0) {
-      el2->coords[0] = get_root_len () - h + tmp->coords[1] - tmp->coords[0];
+    if (tmp.type == 0) {
+      el2->coords[0] = get_root_len () - h + tmp.coords[1] - tmp.coords[0];
     }
     else {
-      el2->coords[0] = get_root_len () + tmp->coords[1] - tmp->coords[0];
+      el2->coords[0] = get_root_len () + tmp.coords[1] - tmp.coords[0];
     }
-    el2->coords[1] = get_root_len () - h - tmp->coords[0];
+    el2->coords[1] = get_root_len () - h - tmp.coords[0];
     break;
   default:
     SC_ABORT_NOT_REACHED ();
