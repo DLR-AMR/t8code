@@ -2483,10 +2483,6 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
     *first_local_tree = first_local_trees[next_non_empty_proc];
     *last_local_tree = *first_local_tree - 1;
   }
-#if T8_ENABLE_DEBUG
-  mpiret = sc_MPI_Allgather (first_local_tree, 1, T8_MPI_GLOIDX, first_local_trees, 1, T8_MPI_GLOIDX, comm);
-  SC_CHECK_MPI (mpiret);
-#endif
 
   T8_FREE (first_local_trees);
 
