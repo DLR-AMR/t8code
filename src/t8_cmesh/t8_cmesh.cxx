@@ -2078,31 +2078,44 @@ t8_cmesh_bounds_for_empty_process (const int mpisize, const int mpirank, const b
   T8_FREE (first_local_trees);
 }
 
-template <typename T>
+template <typename T, typename... Args>
 void
-vector_split (const std::vector<T> &vector, std::vector<size_t> &offsets, const size_t num_types,
-              std::function<size_t (const T &, const void *)> &&lambda, const void *data)
+vector_split (const std::vector<T> &vector, std::vector<size_t> &offsets, const size_t num_categories,
+              std::function<size_t (const T &, Args...)> &&category_func, Args... args)
 {
+  T8_ASSERT (std::is_sorted (vector.begin (), vector.end ()));
+
   const size_t count = vector.size ();
   /* Initialize everything with count, except for the first value. */
-  offsets.resize (num_types + 1);
+  offsets.resize (num_categories + 1);
   std::fill (offsets.begin (), offsets.end (), count);
+  /* The first offset is set to zero */
   offsets[0] = 0;
-  if (count == 0 || num_types <= 1) {
+  if (count == 0 || num_categories <= 1) {
     return;
   }
 
+  /* We search between low and high for the next category */
   size_t low = 0;
   size_t high = count;
-  for (size_t step = 1; step <= num_types; ++step) {
-    auto it = std::lower_bound (vector.begin () + low, vector.begin () + high, step,
-                                [&] (const T &value, const size_t &type) { return lambda (value, data) < type; });
-    offsets[step] = std::distance (vector.begin (), it);
-    low = offsets[step];
-    if (step == num_types) {
-      return;
+  size_t step = 1;
+  for (;;) {
+    size_t guess = low + (high - low) / 2;
+    const size_t category = category_func (vector[guess], args...);
+    if (category < step) {
+      low = guess + 1;
     }
-    high = offsets[step + 1];
+    else {
+      std::fill (offsets.begin () + step, offsets.begin () + category + 1, guess);
+      high = guess;
+    }
+    while (low == high) {
+      ++step;
+      high = offsets[step];
+      if (step == num_categories) {
+        return;
+      }
+    }
   }
 }
 
@@ -2198,8 +2211,9 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
     /* For each process that we send to find the first tree whose first element
      * belongs to this process.
      * These tree indices will be stored in offset_partition. */
-    vector_split<t8_gloidx_t> (first_element_tree, offset_partition, num_procs_we_send_to + 1,
-                               t8_cmesh_determine_partition, (void *) &data);
+    vector_split<t8_gloidx_t, const void *> (
+      first_element_tree, offset_partition, num_procs_we_send_to + 1,
+      std::function<size_t (const t8_gloidx_t &, const void *)> (t8_cmesh_determine_partition), &data);
     for (auto iproc : offset_partition) {
       t8_debugf ("[D] offset_partition[%li] = %li\n", iproc, offset_partition[iproc]);
     }
