@@ -26,10 +26,9 @@
 #include <t8.h>
 
 size_t
-split (const int& value, [[maybe_unused]] const void* data)
+split (const int &value, const size_t &num_types)
 {
-  const int* num_types = static_cast<const int*> (data);
-  return (size_t) value / (*num_types - 1);
+  return (size_t) value / (num_types - 1);
 }
 
 class test_vector_split: public testing::TestWithParam<int> {
@@ -61,7 +60,8 @@ class test_vector_split: public testing::TestWithParam<int> {
 
 TEST_P (test_vector_split, test_split)
 {
-  vector_split<int> (values, offsets, num_types, split, &num_types);
+  vector_split<int, const size_t &> (values, offsets, num_types,
+                                     std::function<size_t (const int &, const size_t &)> (split), num_types);
   EXPECT_EQ (offsets[0], 0);
   EXPECT_EQ (offsets.size (), num_types + 1);
   for (size_t i = 0; i < num_types; ++i) {

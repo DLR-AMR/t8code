@@ -26,6 +26,7 @@
 #include <vector>
 #include <algorithm>
 #include <functional>
+#include <t8.h>
 
 /**
  * Compute the offsets of a categories of elements in a sorted vector.
@@ -40,10 +41,10 @@
  * /param[in] category_func     A function that takes an element of type T and returns the category of the element.            
  * /param[in] data              A pointer to data that is passed to the category_func.
  */
-template <typename T>
+template <typename T, typename... Args>
 void
 vector_split (const std::vector<T> &vector, std::vector<size_t> &offsets, const size_t num_categories,
-              std::function<size_t (const T &, const void *)> &&category_func, const void *data)
+              std::function<size_t (const T &, Args...)> &&category_func, Args... args)
 {
   T8_ASSERT (std::is_sorted (vector.begin (), vector.end ()));
   const size_t count = vector.size ();
@@ -60,7 +61,7 @@ vector_split (const std::vector<T> &vector, std::vector<size_t> &offsets, const 
   for (size_t step = 1; step <= num_categories; ++step) {
     auto it
       = std::lower_bound (vector.begin () + low, vector.begin () + high, step,
-                          [&] (const T &value, const size_t &type) { return category_func (value, data) < type; });
+                          [&] (const T &value, const size_t &type) { return category_func (value, args...) < type; });
     offsets[step] = std::distance (vector.begin (), it);
     low = offsets[step];
     if (step == num_categories) {
