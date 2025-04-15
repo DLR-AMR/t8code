@@ -2097,7 +2097,6 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
   bool expect_start_message = true;
   bool expect_end_message = true;
   t8_gloidx_t child_in_tree_begin_temp = -1;
-  t8_gloidx_t child_in_tree_end_temp = -1;
   if (pure_local_trees > 0) {
     /* Compute which trees and elements to send to which process.
      * We skip empty processes. */
@@ -2123,9 +2122,7 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
     T8_ASSERT (first_element_tree[pure_local_trees] == t8_shmem_array_get_gloidx (offset_array, cmesh->mpirank + 1));
 
     /* Compute the range of mpiranks to minimize the loop over processes */
-
     /* Compute the process that will own the first element of our first tree. */
-
     const t8_gloidx_t send_first
       = (t8_gloidx_t) t8_cmesh_determine_partition (first_element_tree[0], global_num_elements, cmesh->mpisize, 0);
 
@@ -2209,6 +2206,7 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
                                                  (uint64_t) global_num_elements)
           - 1;
       const bool proc_is_empty = last_element_index_of_current_proc < first_element_index_of_current_proc;
+
       bool send_start_message = true;
       bool send_end_message = true;
 
@@ -2353,21 +2351,20 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
           &num_received_end_messages, &num_message_sent
 #endif
         );
-        if (iproc == cmesh->mpirank) {
-          child_in_tree_end_temp = last_element_in_tree_index_of_current_proc + 1;
-        }
+
       } /* End sending of end message */
     }   /* End loop over processes */
   }     /* if (pure_local_trees > 0) */
 
-  const t8_gloidx_t first_element_index_of_current_proc = t8_cmesh_get_first_element_of_process (
+  /* Check if this process will be empty */
+  const t8_gloidx_t first_element_index_of_this_proc = t8_cmesh_get_first_element_of_process (
     (uint32_t) cmesh->mpirank, (uint32_t) cmesh->mpisize, (uint64_t) global_num_elements);
-  const t8_gloidx_t last_element_index_of_current_proc
+  const t8_gloidx_t last_element_index_of_this_proc
     = t8_cmesh_get_first_element_of_process ((uint32_t) cmesh->mpirank + 1, (uint32_t) cmesh->mpisize,
                                              (uint64_t) global_num_elements)
       - 1;
-
-  if (first_element_index_of_current_proc > last_element_index_of_current_proc) {
+  const bool this_proc_is_empty = first_element_index_of_this_proc > last_element_index_of_this_proc;
+  if (this_proc_is_empty) {
     /* We do not expect a start/end message if this proc is empty. */
     expect_start_message = false;
     expect_end_message = false;
@@ -2382,7 +2379,6 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
 
   /* Post the receives. */
   if (expect_start_message) {
-    t8_debugf ("expect start message\n");
     const int num_entries = 2;
     t8_gloidx_t *message = T8_ALLOC (t8_gloidx_t, num_entries);
     const int mpiret = sc_MPI_Recv (message, num_entries, T8_MPI_GLOIDX, sc_MPI_ANY_SOURCE,
@@ -2431,7 +2427,6 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
     /* Copy the received data to output parameters */
     *last_local_tree = message[0];
     T8_ASSERT (*last_local_tree == -1 || (0 <= *last_local_tree && *last_local_tree <= t8_cmesh_get_num_trees (cmesh)));
-    child_in_tree_end_temp = message[1] + 1;
     if (child_in_tree_end != NULL) {
       *child_in_tree_end = message[1] + 1;
       T8_ASSERT (*child_in_tree_end == -1 || (0 <= *child_in_tree_end && *child_in_tree_end <= global_num_elements));
@@ -2457,13 +2452,6 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
   /* Check that (counting messages to self) one start and one end message has been received.  */
   T8_ASSERT (num_received_start_messages == 1);
   T8_ASSERT (num_received_end_messages == 1);
-
-  /* Check if this proc is empty in the new partition */
-  bool this_proc_is_empty = *first_local_tree >= *last_local_tree;
-
-  if (*first_local_tree == *last_local_tree) {
-    this_proc_is_empty = child_in_tree_begin_temp >= child_in_tree_end_temp;
-  }
 
   t8_cmesh_bounds_for_empty_process (cmesh->mpisize, cmesh->mpirank, this_proc_is_empty, child_in_tree_begin_temp,
                                      first_local_tree, last_local_tree, first_tree_shared, comm);
