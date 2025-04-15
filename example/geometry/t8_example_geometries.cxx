@@ -125,14 +125,6 @@ struct t8_geometry_sincos: public t8_geometry
     SC_ABORT_NOT_REACHED ();
   }
 
-  /* Load tree data is empty since we have no tree data.
-   * We need to provide an implementation anyways. */
-  void
-  t8_geom_load_tree_data ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid)
-  {
-    /* Do nothing */
-  }
-
   /** Check if  the currently active tree has a negative volume. In this case return zero. */
   bool
   t8_geom_tree_negative_volume () const
@@ -291,14 +283,6 @@ struct t8_geometry_cylinder: public t8_geometry
                              [[maybe_unused]] double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
-  }
-
-  /* Load tree data is empty since we have no tree data.
-   * We need to provide an implementation anyways. */
-  void
-  t8_geom_load_tree_data ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid)
-  {
-    /* Do nothing */
   }
 
   /** Check if  the currently active tree has a negative volume. In this case return zero. */
@@ -488,14 +472,6 @@ struct t8_geometry_moving: public t8_geometry
     SC_ABORT_NOT_REACHED ();
   }
 
-  /* Load tree data is empty since we have no tree data.
-   * We need to provide an implementation anyways. */
-  void
-  t8_geom_load_tree_data ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid)
-  {
-    /* Do nothing */
-  }
-
   /** Check if  the currently active tree has a negative volume. In this case return zero. */
   bool
   t8_geom_tree_negative_volume () const
@@ -573,14 +549,6 @@ struct t8_geometry_cube_zdistorted: public t8_geometry
                              [[maybe_unused]] double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
-  }
-
-  /* Load tree data is empty since we have no tree data.
-   * We need to provide an implementation anyways. */
-  void
-  t8_geom_load_tree_data ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid)
-  {
-    /* Do nothing */
   }
 
   /** Check if  the currently active tree has a negative volume. In this case return zero. */
