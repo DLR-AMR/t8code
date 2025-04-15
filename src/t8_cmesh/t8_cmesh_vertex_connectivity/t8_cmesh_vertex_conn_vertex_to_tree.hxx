@@ -35,7 +35,7 @@
 
 /** forward declaration of ttv class needed since the two class headers include each other. */
 class t8_cmesh_vertex_conn_tree_to_vertex;
-  
+
 /** This class stores the vertex to tree lookup for
  * global vertex indices for a cmesh.
  * Thus, given a global vertex id the class provides

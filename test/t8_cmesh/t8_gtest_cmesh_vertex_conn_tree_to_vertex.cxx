@@ -29,7 +29,6 @@
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <test/t8_cmesh_generator/t8_cmesh_example_sets.hxx>
 
-
 /*
 In this file we test the tree to vertex functionality.
 We create different cmeshes and add global vertex ids.
@@ -71,7 +70,6 @@ Note to future developers:
   If we are finally able to add attributes during derive of a cmesh, then
   the _temp tests should be replaced with the non-temp test suites..
 */
-
 
 class cmesh_vertex_conn_ttv_with_core_classes: public testing::TestWithParam<cmesh_example_base *> {
  protected:
@@ -195,7 +193,7 @@ class cmesh_vertex_conn_ttv_with_core_classes_temp:
 /** Check for correct ttv entries. */
 #if 0
 // Reactive this line when we enable the tests with derived attributes
-TEST_P (cmesh_vertex_conn_ttv, DISABLED_get_global)
+TEST_P (cmesh_vertex_conn_ttv, get_global)
 #else
 // Delete this line and the cmesh_vertex_conn_ttv_temp class wehen we enable the tests with derived attributes
 TEST_P (cmesh_vertex_conn_ttv_with_core_classes_temp, get_global)
@@ -224,7 +222,7 @@ TEST_P (cmesh_vertex_conn_ttv_with_core_classes_temp, get_global)
 
 #if 0
 // Reactive this line when we enable the tests with derived attributes
-TEST_P (cmesh_vertex_conn_ttv, DISABLED_get_global)
+TEST_P (cmesh_vertex_conn_ttv_with_core_classes, get_global)
 #else
 // Delete this line and the cmesh_vertex_conn_ttv_temp class wehen we enable the tests with derived attributes
 TEST_P (cmesh_vertex_conn_ttv_with_core_classes_temp, convert_to_vtt)
@@ -380,7 +378,7 @@ class cmesh_vertex_conn_ttv_with_cmesh_functions_temp:
 /** Check for correct ttv entries. */
 #if 0
 // Reactive this line when we enable the tests with derived attributes
-TEST_P (cmesh_vertex_conn_ttv, DISABLED_get_global)
+TEST_P (cmesh_vertex_conn_ttv, get_global)
 #else
 // Delete this line and the cmesh_vertex_conn_ttv_temp class wehen we enable the tests with derived attributes
 TEST_P (cmesh_vertex_conn_ttv_with_cmesh_functions_temp, get_global)
