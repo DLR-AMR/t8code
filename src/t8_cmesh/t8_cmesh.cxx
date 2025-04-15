@@ -2066,19 +2066,22 @@ t8_cmesh_bounds_for_empty_process (const int mpisize, const int mpirank, const b
 }
 
 static void
-recv_message (t8_gloidx_t *first_local_tree, t8_gloidx_t *child_in_tree_begin, int8_t *first_tree_shared,
-              t8_gloidx_t *child_in_tree_begin_temp, [[maybe_unused]] const t8_gloidx_t global_num_elements,
-              const t8_cmesh_t cmesh, sc_MPI_Comm comm)
+recv_message (const bool start, t8_gloidx_t *first_or_last_local_tree, t8_gloidx_t *child_in_tree_begin_or_end,
+              int8_t *first_tree_shared, t8_gloidx_t *child_in_tree_begin_temp,
+              [[maybe_unused]] const t8_gloidx_t global_num_elements, const t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
-  std::vector<t8_gloidx_t> message (2);
-  const int mpiret = sc_MPI_Recv (message.data (), 2, T8_MPI_GLOIDX, sc_MPI_ANY_SOURCE,
-                                  T8_MPI_CMESH_UNIFORM_BOUNDS_START, comm, sc_MPI_STATUS_IGNORE);
+  const int message_size = 2;
+  std::vector<t8_gloidx_t> message (message_size);
+  const t8_MPI_tag_t tag = start ? T8_MPI_CMESH_UNIFORM_BOUNDS_START : T8_MPI_CMESH_UNIFORM_BOUNDS_END;
+  const int mpiret
+    = sc_MPI_Recv (message.data (), message_size, T8_MPI_GLOIDX, sc_MPI_ANY_SOURCE, tag, comm, sc_MPI_STATUS_IGNORE);
   SC_CHECK_MPI (mpiret);
 
   /* Copy the received data to output parameters */
-  *first_local_tree = message[0];
-  T8_ASSERT (*first_local_tree == -1 || (0 <= *first_local_tree && *first_local_tree < t8_cmesh_get_num_trees (cmesh)));
-  if (message[1] > 0) {
+  *first_or_last_local_tree = message[0];
+  T8_ASSERT (*first_or_last_local_tree == -1
+             || (0 <= *first_or_last_local_tree && *first_or_last_local_tree < t8_cmesh_get_num_trees (cmesh)));
+  if (start && message[1] > 0) {
     /* The first tree is shared */
     if (first_tree_shared != NULL) {
       *first_tree_shared = 1;
@@ -2089,10 +2092,14 @@ recv_message (t8_gloidx_t *first_local_tree, t8_gloidx_t *child_in_tree_begin, i
       *first_tree_shared = 0;
     }
   }
-  *child_in_tree_begin_temp = message[1];
-  if (child_in_tree_begin != NULL) {
-    *child_in_tree_begin = message[1];
-    T8_ASSERT (*child_in_tree_begin == -1 || (0 <= *child_in_tree_begin && *child_in_tree_begin < global_num_elements));
+  if (start) {
+    *child_in_tree_begin_temp = message[1] + (!start ? 1 : 0);
+  }
+  if (child_in_tree_begin_or_end != NULL) {
+    *child_in_tree_begin_or_end = message[1] + (!start ? 1 : 0);
+    ;
+    T8_ASSERT (*child_in_tree_begin_or_end == -1
+               || (0 <= *child_in_tree_begin_or_end && *child_in_tree_begin_or_end < global_num_elements));
   }
 }
 
@@ -2410,7 +2417,7 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
 
   /* Post the receives. */
   if (expect_start_message) {
-    recv_message (first_local_tree, child_in_tree_begin, first_tree_shared, &child_in_tree_begin_temp,
+    recv_message (true, first_local_tree, child_in_tree_begin, first_tree_shared, &child_in_tree_begin_temp,
                   global_num_elements, cmesh, comm);
 #if T8_ENABLE_DEBUG
     num_message_recv++;
@@ -2418,25 +2425,11 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
 #endif
   } /* End receiving start message */
   if (expect_end_message) {
-    const int num_entries = 2;
-    t8_gloidx_t *message = T8_ALLOC (t8_gloidx_t, num_entries);
-    const int mpiret = sc_MPI_Recv (message, num_entries, T8_MPI_GLOIDX, sc_MPI_ANY_SOURCE,
-                                    T8_MPI_CMESH_UNIFORM_BOUNDS_END, comm, sc_MPI_STATUS_IGNORE);
-    SC_CHECK_MPI (mpiret);
+    recv_message (false, last_local_tree, child_in_tree_end, NULL, NULL, global_num_elements, cmesh, comm);
 #if T8_ENABLE_DEBUG
     num_received_end_messages++;
     num_message_recv++;
 #endif
-    t8_debugf ("Receiving end message (%li, %li) global num %li\n", message[0], message[1], global_num_elements);
-
-    /* Copy the received data to output parameters */
-    *last_local_tree = message[0];
-    T8_ASSERT (*last_local_tree == -1 || (0 <= *last_local_tree && *last_local_tree <= t8_cmesh_get_num_trees (cmesh)));
-    if (child_in_tree_end != NULL) {
-      *child_in_tree_end = message[1] + 1;
-      T8_ASSERT (*child_in_tree_end == -1 || (0 <= *child_in_tree_end && *child_in_tree_end <= global_num_elements));
-    }
-    T8_FREE (message);
   } /* End receiving end message */
   if (child_in_tree_begin != NULL && child_in_tree_end != NULL) {
     /* Check for empty partition */
