@@ -188,19 +188,6 @@ void
 t8_shmem_array_prefix (const void *sendbuf, t8_shmem_array_t recvarray, const int count, sc_MPI_Datatype type,
                        sc_MPI_Op op, sc_MPI_Comm comm);
 
-/** Fill a shmem array with an allgather of the prefix op over all processes.
- *
- * The return array will be
- * (0, send0, send0 op send1, send0 op send1 op send2, ...)
- * \param[in] sendbuf           the source from this process
- * \param[in, out] recvarray    the destination shmem array
- * \param[in] count             the number of items to allgather
- * \param[in] type              the type of items to allgather
- * \param[in] op                the operation to prefix
- */
-void
-t8_shmem_prefix (void *sendbuf, t8_shmem_array_t recvarray, int count, sc_MPI_Datatype type, sc_MPI_Op op);
-
 /** Return the MPI communicator associated with a shmem array.
  * \param [in]          array The shmem_array to be queried.
  * \return              The MPI communicator stored at \a array.

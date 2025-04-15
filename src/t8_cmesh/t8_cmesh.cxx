@@ -2057,7 +2057,7 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
   /* Fill the offset array for each process with the global index of its first element in
    * the uniform partition.
    * (0, l_n_c_0, l_n_c_0 + l_n_c_1, l_n_c_0 + l_n_c_1 + l_n_c_2, ...) */
-  t8_shmem_prefix (&local_num_children, offset_array, 1, T8_MPI_GLOIDX, sc_MPI_SUM);
+  t8_shmem_array_prefix (&local_num_children, offset_array, 1, T8_MPI_GLOIDX, sc_MPI_SUM, comm);
   int next_non_empty_proc = -1;
 
   t8_cmesh_partition_query_t data;

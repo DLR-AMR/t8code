@@ -387,15 +387,6 @@ t8_shmem_array_allgatherv (void *sendbuf, const int sendcount, sc_MPI_Datatype s
   }
 }
 
-void
-t8_shmem_prefix (void *sendbuf, t8_shmem_array_t recvarray, int count, sc_MPI_Datatype type, sc_MPI_Op op)
-{
-  T8_ASSERT (recvarray != NULL);
-  T8_ASSERT (recvarray->array != NULL);
-
-  sc_shmem_prefix (sendbuf, recvarray->array, count, type, op, recvarray->comm);
-}
-
 sc_MPI_Comm
 t8_shmem_array_get_comm (t8_shmem_array_t array)
 {
