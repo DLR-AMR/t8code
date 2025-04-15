@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <sc/src/sc_functions.h>
+#include <sc_functions.h>
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
 #include <test/t8_gtest_schemes.hxx>
@@ -120,4 +120,4 @@ TEST_P (t8_forest_volume, volume_check)
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_element_volume, t8_forest_volume,
-                          testing::Combine (DefaultScheme, testing::Range (0, 4)));
+                          testing::Combine (AllSchemes, testing::Range (0, 4)));
