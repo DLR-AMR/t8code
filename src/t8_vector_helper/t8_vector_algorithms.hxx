@@ -33,6 +33,7 @@
 #include <vector>
 #include <algorithm>
 #include <functional>
+#include <numeric>
 #include <t8.h>
 
 /**
@@ -71,23 +72,28 @@ vector_split (const std::vector<T> &vector, std::vector<size_t> &offsets, const 
   size_t high = count;
   size_t step = 1;
   while (step < num_categories) {
-    /* Using binary search we update low and high to minimize the section where we have to search */
-    size_t guess = low + (high - low) / 2;
+    // Using binary search to find the next category boundary
+    size_t guess = std::midpoint (low, high);
     const size_t category = category_func (vector[guess], args...);
-    T8_ASSERT (category < num_categories);
+
     if (category < step) {
+      // If the category is smaller than the current step, adjust low
       low = guess + 1;
     }
     else {
+      // Fill offsets for all categories between step and category
       std::fill (offsets.begin () + step, offsets.begin () + category + 1, guess);
+      // Minimize the high value to narrow the search space
       high = guess;
     }
+
+    // Advance step and update high when low equals high
     while (low == high) {
       ++step;
-      high = offsets[step];
       if (step == num_categories) {
         return;
       }
+      high = offsets[step];
     }
   }
 }

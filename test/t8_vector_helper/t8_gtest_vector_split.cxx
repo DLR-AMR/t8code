@@ -26,9 +26,9 @@
 #include <t8.h>
 
 size_t
-split (const int &value, const size_t &num_types)
+split (const int &value, const int &div)
 {
-  return (size_t) value / (num_types - 1);
+  return (size_t) value / div;
 }
 
 class test_vector_split: public testing::TestWithParam<int> {
@@ -36,7 +36,8 @@ class test_vector_split: public testing::TestWithParam<int> {
   void
   SetUp () override
   {
-    num_types = num_entries / GetParam ();
+    div = GetParam ();
+    num_types = num_entries / div + 1;
     values.resize (num_entries);
     std::iota (values.begin (), values.end (), 0);
   }
@@ -51,8 +52,9 @@ class test_vector_split: public testing::TestWithParam<int> {
 #elif T8CODE_TEST_LEVEL == 1
   const size_t num_entries = 100;
 #else
-  const size_t num_entries = 1000;
+  const size_t num_entries = 10000;
 #endif
+  int div;
   size_t num_types;
   std::vector<size_t> offsets;
   std::vector<int> values;
@@ -60,16 +62,20 @@ class test_vector_split: public testing::TestWithParam<int> {
 
 TEST_P (test_vector_split, test_split)
 {
-  vector_split<int, const size_t &> (values, offsets, num_types,
-                                     std::function<size_t (const int &, const size_t &)> (split), num_types);
+  vector_split<int, const int &> (values, offsets, num_types, std::function<size_t (const int &, const int &)> (split),
+                                  div);
+
   EXPECT_EQ (offsets[0], 0);
   EXPECT_EQ (offsets.size (), num_types + 1);
+  EXPECT_EQ (offsets[num_types], num_entries);
+
   for (size_t i = 0; i < num_types; ++i) {
-    EXPECT_LE (offsets[i], offsets[i + 1]);
+    EXPECT_LE (offsets[i], offsets[i + 1]) << " at " << i;
   }
   for (size_t i = 0; i < num_types; ++i) {
     for (size_t j = offsets[i]; j < offsets[i + 1]; ++j) {
-      EXPECT_EQ (values[j] / (num_types - 1), i);
+      EXPECT_EQ (values[j] / div, i) << " at " << j << " with value " << values[j] << ", num_types " << num_types
+                                     << " num_entries " << num_entries;
     }
   }
 }
