@@ -64,38 +64,77 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
    */
   template <typename... _args>
   t8_multilevel_scheme (_args &&...args)
+    : multilevel_element_size (sizeof (multilevel_element)),
+      multilevel_scheme_pool (sc_mempool_new (multilevel_element_size))
   {
     /* Use constructor with modifiable elem size of base class */
-    TUnderlyingEclassScheme::TUnderlyingEclassScheme (sizeof (multilevel_element), std::forward<_args> (args)...);
+    TUnderlyingEclassScheme::TUnderlyingEclassScheme (std::forward<_args> (args)...);
   }
+
+ protected:
+  size_t multilevel_element_size; /**< The size in bytes of an element of 
+                                       t8_multilevel_element<TUnderlyingElementType> */
+  void *multilevel_scheme_pool;   /**< Memory pool for multilevel elements. */
 
   ~t8_multilevel_scheme ()
   {
+    T8_ASSERT (multilevel_scheme_pool != NULL);
+    SC_ASSERT (((sc_mempool_t *) multilevel_scheme_pool)->elem_count == 0);
+    sc_mempool_destroy ((sc_mempool_t *) multilevel_scheme_pool);
     TUnderlyingEclassScheme::~TUnderlyingEclassScheme ();
   }
 
   /** Move constructor */
-  t8_multilevel_scheme (t8_multilevel_scheme &&other) const: TUnderlyingEclassScheme (std::move (other)) {};
+  t8_multilevel_scheme (t8_multilevel_scheme &&other): TUnderlyingEclassScheme (std::move (other))
+  {
+    other.multilevel_scheme_pool = nullptr;
+  };
 
   /** Move assignment operator */
   t8_multilevel_scheme &
   operator= (t8_multilevel_scheme &&other) const
   {
+    if (this != &other) {
+      // Free existing resources of moved-to object
+      if (multilevel_scheme_pool) {
+        sc_mempool_destroy ((sc_mempool_t *) multilevel_scheme_pool);
+      }
+
+      // Transfer ownership of resources
+      multilevel_element_size = other.multilevel_element_size;
+      multilevel_scheme_pool = other.multilevel_scheme_pool;
+
+      // Leave the source object in a valid state
+      other.multilevel_scheme_pool = nullptr;
+    }
     TUnderlyingEclassScheme::operator= (std::move (other));
     return *this;
   }
 
   /** Copy constructor */
-  t8_multilevel_scheme (const t8_multilevel_scheme &other): TUnderlyingEclassScheme (other) {};
+  t8_multilevel_scheme (const t8_multilevel_scheme &other)
+    : multilevel_element_size (other.multilevel_element_size),
+      multilevel_scheme_pool (sc_mempool_new (other.multilevel_element_size)), TUnderlyingEclassScheme (other) {};
 
   /** Copy assignment operator */
   t8_multilevel_scheme &
   operator= (const t8_multilevel_scheme &other)
   {
+    if (this != &other) {
+      // Free existing resources of assigned-to object
+      if (multilevel_scheme_pool) {
+        sc_mempool_destroy ((sc_mempool_t *) multilevel_scheme_pool);
+      }
+
+      // Copy the values from the source object
+      multilevel_element_size = other.multilevel_element_size;
+      multilevel_scheme_pool = sc_mempool_new (other.multilevel_element_size);
+    }
     TUnderlyingEclassScheme::operator= (other);
     return *this;
   }
 
+ public:
   // ################################################____GENERAL INFO____################################################
 
   /** Return the tree class of this scheme.
@@ -113,7 +152,7 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
   inline size_t
   get_element_size (void) const
   {
-    return TUnderlyingEclassScheme::get_element_size ();
+    return multilevel_element_size;
   }
 
   /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
@@ -356,7 +395,7 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
       return 1;
     /* In this scheme every element except the root has one more sibling. */
     return TUnderlyingEclassScheme::element_get_num_siblings (
-             &(static_cast<multilevel_element *> (elem1))->linear_element)
+             &(static_cast<multilevel_element *> (elem))->linear_element)
            + 1;
   }
 
@@ -460,18 +499,18 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
   }
 
   /** Construct all children of a given element.
-   * \param [in] elem     This must be a valid element, bigger than maxlevel.
-   * \param [in] length   The length of the output array \a c must match
-   *                      the number of children.
-   * \param [in,out] c    The storage for these \a length elements must exist
-   *                      and match the element class in the children's ordering.
-   *                      On output, all children are valid.
+   * \param [in] elem           This must be a valid element, bigger than maxlevel.
+   * \param [in] length         The length of the output array \a c must match
+   *                            the number of children.
+   * \param [in,out] children   The storage for these \a length elements must exist
+   *                            and match the element class in the children's ordering.
+   *                            On output, all children are valid.
    * It is valid to call this function with elem = c[0].
    * \see t8_element_num_children
    * \see t8_element_child_eclass
    */
   inline void
-  element_get_children (const t8_element_t *elem, const int length, t8_element_t *c[]) const
+  element_get_children (const t8_element_t *elem, const int length, t8_element_t *children[]) const
   {
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (length == element_get_num_children (elem));
@@ -546,10 +585,18 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
     const multilevel_element *elem_m0 = static_cast<multilevel_element *> (fam[0]);
     const multilevel_element *elem_m1 = static_cast<multilevel_element *> (fam[1]);
     const t8_element_t *parent = TUnderlyingEclassScheme::element_get_parent (elem_m1->linear_element);
-    if (TUnderlyingEclassScheme::element_is_equal (elem_m0, parent))
+    if (!TUnderlyingEclassScheme::element_is_equal (elem_m0, parent))
       return 0;
     /* The other elements should be siblings. */
-    const t8_element_t elem[] return TUnderlyingEclassScheme::elements_are_family (fam);
+    const t8_child_id num_siblings = TUnderlyingEclassScheme::element_get_num_siblings (elem_m1->linear_element);
+    underlying_element *siblings;
+    TUnderlyingEclassScheme::element_new (num_siblings, &siblings);
+    for (t8_child_id i_sibling = 0; i_sibling < num_siblings; ++i_sibling) {
+      TUnderlyingEclassScheme::element_copy (&(elem_m1[i_sibling].linear_element), &siblings[i_sibling]);
+    }
+    const bool is_fam = TUnderlyingEclassScheme::elements_are_family (siblings);
+    TUnderlyingEclassScheme::element_destroy (num_siblings, &siblings);
+    return is_fam;
   }
 
   /** Compute the nearest common ancestor of two elements. That is,
@@ -648,7 +695,6 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
                                 [[maybe_unused]] int *child_indices) const
   {
     SC_ABORTF ("Not implemented.");
-    return 0;
   }
 
   /** Given a face of an element and a child number of a child of that face, return the face number
@@ -715,7 +761,6 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
                                      [[maybe_unused]] const t8_element_level level) const
   {
     SC_ABORTF ("Not implemented.");
-    return 0;
   }
 
   /** Construct the last descendant of an element at a given level that touches a given face.
@@ -732,7 +777,6 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
                                     [[maybe_unused]] const t8_element_level level) const
   {
     SC_ABORTF ("Not implemented.");
-    return 0;
   }
 
   // ################################################____FACE NEIGHBOR____################################################
@@ -824,7 +868,6 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
                           [[maybe_unused]] const int is_smaller_face) const
   {
     SC_ABORTF ("Not implemented.");
-    return 0;
   }
 
   /** Given a boundary face inside a root tree's face construct
@@ -864,7 +907,6 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
                              [[maybe_unused]] t8_element_t *boundary, [[maybe_unused]] const t8_scheme *scheme) const
   {
     SC_ABORTF ("Not implemented.");
-    return;
   }
 
   // ################################################____LINEAR ID____################################################
@@ -877,25 +919,39 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
    *                      id must fulfil 0 <= id < 'number of leaves in the uniform refinement'
    */
   inline void
-  element_set_linear_id (t8_element_t *elem, const t8_element_level level, t8_linearidx_t id) const
+  element_set_linear_id (t8_element_t *elem, const t8_element_level uniform_level, t8_linearidx_t id) const
   {
-#ifdef T8_ENABLE_DEBUG
-    const int dim = t8_eclass_to_dim[TUnderlyingEclassScheme::get_eclass ()];
-    int id_max = 0;
-    for (int i_level = 0; i_level <= level; i_level++) {
-      id_max += ((t8_linearidx_t) 1) << dim * i_level;
-    }
-    T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << dim * id_max);
+    multilevel_element *elem_m = static_cast<const multilevel_element *> (elem);
+    const int dim = t8_eclass_to_dimension[TUnderlyingEclassScheme::get_eclass ()];
+    const int maxlvl = get_maxlevel ();
+#if T8_ENABLE_DEBUG
+    const int id_max = get_num_elem_in_regular_subtree (dim, get_maxlevel ());
+    T8_ASSERT (0 <= id && id < id_max);
 #endif
-    /* The multilevel conversion happens via the following formula:
-     * #\f$\mathrm{id_{multilevel}} (\mathrm{id_{linear}, lvl}) = \mathrm{lvl} + \sum_{n = 0}^{\mathrm{lvl_{max}-1}} \lfloor \mathrm{id_{linear}} / 2^{n \cdot d} \rfloor \f$
-     */
-    t8_linearidx_t id_linear = 0;
-    for (int i_level = 0; i_level < level; i_level++) {
-      id_linear |= ((id - level) & (1 << i_level)) << i_level;
+    int level = 0;                 /* current operating level */
+    int id_linear = id;            /* linear id */
+    int id_in_subtree = id_linear; /* id in subtree */
+    int subtree_id;                /* id of the subtree */
+    for (; level < maxlvl; ++level) {
+      /* if id in subtree is 0 this is the root */
+      if (id_in_subtree == 0) {
+        break;
+      }
+      /* Subtract the root of the current subtree */
+      id_linear--;
+      /* Subtract the subtrees before */
+      if (level < maxlvl - 1) {
+        /* compute the subtree id */
+        subtree_id = (id_in_subtree - 1) / get_num_elem_in_regular_subtree (dim, maxlvl - level - 1);
+        /* compute next id in subtree. For this we subtract all the subtrees before and the root of the current subtree */
+        id_in_subtree -= subtree_id * get_num_elem_in_regular_subtree (dim, maxlvl - level - 1) + 1;
+        /* subtract the multilevel elements of the subtrees before of the current subtree from the linear id */
+        id_linear -= subtree_id * get_num_elem_in_regular_subtree (dim, maxlvl - level - 2);
+      }
     }
-    TUnderlyingEclassScheme::element_set_linear_id (&static_cast<multilevel_element *> (elem)->linear_element, level,
-                                                    id_linear);
+    T8_ASSERT (level <= uniform_level);
+    elem_m->is_child_of_itself = level < uniform_level;
+    TUnderlyingEclassScheme::element_set_linear_id (elem_m->linear_element, level, id_linear);
   }
 
   /** Compute the linear id of a given element in a hypothetical uniform
@@ -908,17 +964,21 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
   element_get_linear_id (const t8_element_t *elem, const t8_element_level level) const
   {
     const int maxlevel = get_maxlevel ();
-    T8_ASSERT (t8_element_is_valid (elem));
+    T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (0 <= level && level <= maxlevel);
+    multilevel_element *elem_m = static_cast<const multilevel_element *> (elem);
+    const int dim = t8_eclass_to_dimension[get_eclass ()];
+    const t8_linearidx_t id_linear = TUnderlyingEclassScheme::element_get_linear_id (elem_m->linear_element, level);
+    const int multilevel_level = element_get_level (elem_m);
 
-    const t8_linearidx_t id = TUnderlyingEclassScheme::element_get_linear_id (
-      &static_cast<multilevel_element *> (elem)->linear_element, level);
-
-    int id_multilevel = level;
+    /* The multilevel conversion happens via the following formula:
+     * #\f$\mathrm{id_{multilevel}} (\mathrm{id_{linear}, lvl}) = \mathrm{lvl} + \sum_{n = 0}^{\mathrm{lvl_{max}-1}} \lfloor \mathrm{id_{linear}} / 2^{n \cdot d} \rfloor \f$
+     */
+    t8_linearidx_t id_multilevel = multilevel_level;
     for (int i_level = 0; i_level < maxlevel; i_level++) {
-      id_multilevel += id >> (i_level * 2);
+      /* This is just id_m2 += id_l / sc_intpow (2, i_level * dim); */
+      id_multilevel += id_linear >> (i_level * dim);
     }
-    return id_multilevel;
   }
 
   /** Construct the successor in a uniform refinement of a given element.
@@ -929,7 +989,7 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
   inline void
   element_construct_successor (const t8_element_t *elem, const t8_element_level uniform_level, t8_element_t *succ) const
   {
-    T8_ASSERT (element_is_valid (elem1));
+    T8_ASSERT (element_is_valid (elem));
     const multilevel_element *elem_m = static_cast<const multilevel_element *> (elem);
     multilevel_element *succ_m = static_cast<const multilevel_element *> (succ);
 
@@ -951,7 +1011,7 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
       }
       T8_ASSERT (succ_m->is_child_of_itself || element_get_level == uniform_level);
     }
-    T8_ASSERT (element_is_valid (elem2));
+    T8_ASSERT (element_is_valid (succ));
   }
 
   /** Count how many leaf descendants of a given uniform level an element would produce.
@@ -1090,20 +1150,30 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
    *                      On output all these pointers will point to an allocated
    *                      and initialized element.
    * \note Not every element that is created in t8code will be created by a call
-   * to this function. However, if an element is not created using \ref t8_element_new,
-   * then it is guaranteed that \ref t8_element_init is called on it.
-   * \note In debugging mode, an element that was created with \ref t8_element_new
-   * must pass \ref t8_element_is_valid.
-   * \note If an element was created by \ref t8_element_new then \ref t8_element_init
-   * may not be called for it. Thus, \ref t8_element_new should initialize an element
-   * in the same way as a call to \ref t8_element_init would.
-   * \see t8_element_init
-   * \see t8_element_is_valid
+   * to this function. However, if an element is not created using \ref element_new,
+   * then it is guaranteed that \ref element_init is called on it.
+   * \note In debugging mode, an element that was created with \ref element_new
+   * must pass \ref element_is_valid.
+   * \note If an element was created by \ref element_new then \ref element_init
+   * may not be called for it. Thus, \ref element_new should initialize an element
+   * in the same way as a call to \ref element_init would.
+   * \see element_init
+   * \see element_is_valid
    */
   inline void
   element_new (int length, t8_element_t **elem) const
   {
-    TUnderlyingEclassScheme::element_new (length, elem);
+    /* allocate memory */
+    T8_ASSERT (this->multilevel_scheme_pool != NULL);
+    T8_ASSERT (0 <= length);
+    T8_ASSERT (elem != NULL);
+    const multilevel_element **elem_m = static_cast<const multilevel_element **> (elem);
+
+    for (int i_elem = 0; i_elem < length; ++i_elem) {
+      elem[i_elem] = (t8_element_t *) sc_mempool_alloc ((sc_mempool_t *) this->multilevel_scheme_pool);
+      /* Init element with underlying scheme. */
+      TUnderlyingEclassScheme::element_init (1, &elem_m[i_elem]->linear_element);
+    }
   }
 
   /** Initialize an array of allocated elements.
@@ -1121,7 +1191,10 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
   inline void
   element_init (const int length, t8_element_t *elem) const
   {
-    TUnderlyingEclassScheme::element_init (length, elem);
+    const multilevel_element **elem_m = static_cast<const multilevel_element **> (elem);
+    for (int i_elem = 0; i_elem < length; ++i_elem) {
+      TUnderlyingEclassScheme::element_init (1, &(elem_m[i_elem]->linear_element));
+    }
   }
 
   /** Deinitialize an array of allocated elements.
@@ -1135,7 +1208,10 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
   inline void
   element_deinit (const int length, t8_element_t *elem) const
   {
-    TUnderlyingEclassScheme::element_deinit (length, elem);
+    const multilevel_element **elem_m = static_cast<const multilevel_element **> (elem);
+    for (int i_elem = 0; i_elem < length; ++i_elem) {
+      TUnderlyingEclassScheme::element_deinit (1, &(elem_m[i_elem]->linear_element));
+    }
   }
 
   /** Deallocate an array of elements.
@@ -1148,12 +1224,19 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
   inline void
   element_destroy (const int length, t8_element_t **elem) const
   {
-    TUnderlyingEclassScheme::element_destroy (length, elem);
+    T8_ASSERT (this->multilevel_scheme_pool != NULL);
+    T8_ASSERT (0 <= length);
+    T8_ASSERT (elem != NULL);
+    const multilevel_element **elem_m = static_cast<const multilevel_element **> (elem);
+    for (int i_elem = 0; i_elem < length; ++i_elem) {
+      TUnderlyingEclassScheme::element_deinit (1, &(elem_m[i_elem]->linear_element));
+      sc_mempool_free ((sc_mempool_t *) multilevel_scheme_pool, elem[i_elem]);
+    }
   }
 
   // ################################################____DEBUG____################################################
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is
    *  safe to perform any of the above algorithms on it.
    *  For example this could mean that all coordinates are in valid ranges
@@ -1178,12 +1261,27 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
   }
 
   /**
-  * Print a given element. For a example for a triangle print the coordinates
-  * and the level of the triangle. This function is only available in the
-  * debugging configuration. 
-  * 
-  * \param [in]        elem  The element to print
-  */
+   * Print a given element. For a example for a triangle print the coordinates
+   * and the level of the triangle. This function is only available in the
+   * debugging configuration. 
+   * 
+   * \param [in]        elem  The element to print
+   */
+  inline void
+  element_debug_print (const t8_element_t *elem) const
+  {
+    const multilevel_element *elem_m = static_cast<const multilevel_element *> (elem);
+    t8_debugf ("is_child_of_itself: %i\n", elem_m->is_child_of_itself);
+    TUnderlyingEclassScheme::element_debug_print (elem_m->is_child_of_itself);
+  }
+
+  /**
+   * Print a given element. For a example for a triangle print the coordinates
+   * and the level of the triangle. This function is only available in the
+   * debugging configuration. 
+   * 
+   * \param [in]        elem  The element to print
+   */
   inline void
   element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const
   {
@@ -1199,55 +1297,69 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
   // ################################################____MPI____################################################
 
   /** Pack multiple elements into contiguous memory, so they can be sent via MPI.
-     * \param [in] elements Array of elements that are to be packed
-     * \param [in] count Number of elements to pack
-     * \param [in,out] send_buffer Buffer in which to pack the elements
-     * \param [in] buffer_size size of the buffer (in order to check that we don't access out of range)
-     * \param [in, out] position the position of the first byte that is not already packed
-     * \param [in] comm MPI Communicator
-    */
+   * \param [in] elements Array of elements that are to be packed
+   * \param [in] count Number of elements to pack
+   * \param [in,out] send_buffer Buffer in which to pack the elements
+   * \param [in] buffer_size size of the buffer (in order to check that we don't access out of range)
+   * \param [in, out] position the position of the first byte that is not already packed
+   * \param [in] comm MPI Communicator
+  */
   inline void
   element_MPI_Pack ([[maybe_unused]] t8_element_t **const elements, [[maybe_unused]] const unsigned int count,
                     [[maybe_unused]] void *send_buffer, [[maybe_unused]] const int buffer_size,
-                    [[maybe_unused]] int *position, [[maybe_unused]] sc_MPI_Comm comm) const const
+                    [[maybe_unused]] int *position, [[maybe_unused]] sc_MPI_Comm comm) const
 
   {
     SC_ABORTF ("Not implemented.");
-    return 0;
   }
 
   /** Determine an upper bound for the size of the packed message of \a count elements
-     * \param [in] count Number of elements to pack
-     * \param [in] comm MPI Communicator
-     * \param [out] pack_size upper bound on the message size
-    */
+   * \param [in] count Number of elements to pack
+   * \param [in] comm MPI Communicator
+   * \param [out] pack_size upper bound on the message size
+  */
   inline void
   element_MPI_Pack_size ([[maybe_unused]] const unsigned int count, [[maybe_unused]] sc_MPI_Comm comm,
-                         [[maybe_unused]] int *pack_size) const const
+                         [[maybe_unused]] int *pack_size) const
   {
     SC_ABORTF ("Not implemented.");
-    return 0;
   }
 
   /** Unpack multiple elements from contiguous memory that was received via MPI.
-     * \param [in] recvbuf Buffer from which to unpack the elements
-     * \param [in] buffer_size size of the buffer (in order to check that we don't access out of range)
-     * \param [in, out] position the position of the first byte that is not already packed
-     * \param [in] elements Array of initialised elements that is to be filled from the message
-     * \param [in] count Number of elements to unpack
-     * \param [in] comm MPI Communicator
-    */
+   * \param [in] recvbuf Buffer from which to unpack the elements
+   * \param [in] buffer_size size of the buffer (in order to check that we don't access out of range)
+   * \param [in, out] position the position of the first byte that is not already packed
+   * \param [in] elements Array of initialised elements that is to be filled from the message
+   * \param [in] count Number of elements to unpack
+   * \param [in] comm MPI Communicator
+  */
   inline void
   element_MPI_Unpack ([[maybe_unused]] void *recvbuf, [[maybe_unused]] const int buffer_size,
                       [[maybe_unused]] int *position, [[maybe_unused]] t8_element_t **elements,
-                      [[maybe_unused]] const unsigned int count, [[maybe_unused]] sc_MPI_Comm comm) const const
+                      [[maybe_unused]] const unsigned int count, [[maybe_unused]] sc_MPI_Comm comm) const
   {
     SC_ABORTF ("Not implemented.");
-    return 0;
   }
 
  private:
   // ################################################____HELPER____################################################
+
+  /**
+   * Compute the amount of elements in a level \a level multilevel subtree with dimendion \a dim.
+   * \param [in] dim    The dimension of the subtree.
+   * \param [in] level  The level of the subtree.
+   * \return            The number of elements in that subtree.
+  */
+  constexpr int
+  get_num_elem_in_regular_subtree (const int dim, const int level) noexcept
+  {
+    int count = 0;
+    for (int i_level = 0; i_level <= level; ++i_level) {
+      // The following is "count += sc_intpow (2, dim * i_level);" in bitshift
+      count |= 1ULL << i_level * dim;
+    }
+    return count;
+  }
 };
 
 #endif /* !T8_MULTILEVEL_IMPLEMENTATION_HXX */
