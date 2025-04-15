@@ -61,7 +61,7 @@ class t8_cmesh_vertex_conn_tree_to_vertex {
    * 
    * \note This function is not implemented yet.
    */
-  t8_cmesh_vertex_conn_tree_to_vertex ([[maybe unused]] const t8_cmesh_t cmesh)
+  t8_cmesh_vertex_conn_tree_to_vertex ([[maybe_unused]] const t8_cmesh_t cmesh)
   {
     // TODO: Remove the [[maybe unused]] qualifier when implemented
     SC_ABORT ("not implemented.");
