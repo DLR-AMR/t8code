@@ -1969,7 +1969,7 @@ static void
 t8_cmesh_bounds_send_start_or_end (t8_cmesh_t cmesh, const bool start_message, const bool proc_is_empty,
                                    const t8_locidx_t first_or_last_puretree_of_current_proc,
                                    const int first_tree_shared_shift, const t8_gloidx_t iproc, sc_array *send_requests,
-                                   sc_array *send_buffer, int *current_pos_in_send_buffer,
+                                   std::vector<t8_gloidx_t> &send_buffer, int *current_pos_in_send_buffer,
                                    const t8_gloidx_t first_or_last_element_in_tree_index_of_current_proc,
                                    t8_gloidx_t *first_or_last_local_tree, [[maybe_unused]] int8_t *first_tree_shared,
                                    [[maybe_unused]] t8_gloidx_t *child_in_tree_end_or_begin,
@@ -1987,19 +1987,16 @@ t8_cmesh_bounds_send_start_or_end (t8_cmesh_t cmesh, const bool start_message, c
         : first_or_last_puretree_of_current_proc + t8_cmesh_get_first_treeid (cmesh) + first_tree_shared_shift;
   if (iproc != cmesh->mpirank) {
     const int num_entries = 2;
-    t8_gloidx_t *message;
     /* Allocate a new request */
     sc_MPI_Request *request = (sc_MPI_Request *) sc_array_push (send_requests);
 
     /* Grow total send buffer */
-    sc_array_push_count (send_buffer, num_entries);
-    /* Set message to current position in the buffer. */
-    message = (t8_gloidx_t *) sc_array_index_int (send_buffer, *current_pos_in_send_buffer);
+    send_buffer.push_back (global_id_of_first_or_last_tree);
+    send_buffer.push_back (first_or_last_element_in_tree_index_of_current_proc);
+    t8_gloidx_t *message = &send_buffer[*current_pos_in_send_buffer];
+
     *current_pos_in_send_buffer += num_entries;
 
-    message[0] = global_id_of_first_or_last_tree;
-    /* The index in the tree is the index of the element minus the offset of the tree. */
-    message[1] = first_or_last_element_in_tree_index_of_current_proc;
     /* The tag used for sending a start or a an end message. */
     const t8_MPI_tag_t tag = start_message ? T8_MPI_CMESH_UNIFORM_BOUNDS_START : T8_MPI_CMESH_UNIFORM_BOUNDS_END;
     /* Actual sending of the message. */
@@ -2228,8 +2225,8 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
      * Since we use MPI_Isend, we need to keep the buffers alive until
      * we post the MPI_Wait. Since we first send all messages, we need to
      * buffer them all. */
-    sc_array send_buffer;
-    sc_array_init (&send_buffer, sizeof (t8_gloidx_t));
+    std::vector<t8_gloidx_t> send_buffer;
+    //sc_array send_buffer;
     int current_pos_in_send_buffer = 0;
 
     /* Iterate over offset_partition to find boundaries
@@ -2370,7 +2367,7 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
       if (send_start_message) {
         t8_cmesh_bounds_send_start_or_end (
           cmesh, send_start_message, proc_is_empty, first_puretree_of_current_proc, first_tree_shared_shift, iproc,
-          &send_requests, &send_buffer, &current_pos_in_send_buffer, first_element_in_tree_index_of_current_proc,
+          &send_requests, send_buffer, &current_pos_in_send_buffer, first_element_in_tree_index_of_current_proc,
           first_local_tree, first_tree_shared, child_in_tree_begin, &expect_start_message, &data, comm
 #if T8_ENABLE_DEBUG
           ,
@@ -2387,7 +2384,7 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
        * and the index of the last element in this tree. */
       if (send_end_message) {
         t8_cmesh_bounds_send_start_or_end (cmesh, false, proc_is_empty, last_puretree_of_current_proc,
-                                           first_tree_shared_shift, iproc, &send_requests, &send_buffer,
+                                           first_tree_shared_shift, iproc, &send_requests, send_buffer,
                                            &current_pos_in_send_buffer, last_element_in_tree_index_of_current_proc,
                                            last_local_tree, NULL, child_in_tree_end, &expect_end_message, &data, comm
 #if T8_ENABLE_DEBUG
@@ -2402,7 +2399,6 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
     }   /* End loop over processes */
     sc_array_reset (&first_element_tree);
     sc_array_reset (&offset_partition);
-    sc_array_reset (&send_buffer);
   } /* if (pure_local_trees > 0) */
 
   const t8_gloidx_t first_element_index_of_current_proc = t8_cmesh_get_first_element_of_process (
