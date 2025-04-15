@@ -71,6 +71,7 @@ vector_split (const std::vector<T> &vector, std::vector<size_t> &offsets, const 
   size_t high = count;
   size_t step = 1;
   while (step < num_categories) {
+    /* Using binary search we update low and high to minimize the section where we have to search */
     size_t guess = low + (high - low) / 2;
     const size_t category = category_func (vector[guess], args...);
     T8_ASSERT (category < num_categories);
