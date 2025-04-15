@@ -1775,49 +1775,41 @@ t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, int level, t8_sch
  * 
  * This function is used standalone and as callback of sc_array_split. */
 static size_t
-t8_cmesh_determine_partition (sc_array_t *first_element_tree, size_t pure_local_tree, void *data)
+t8_cmesh_determine_partition(const t8_gloidx_t &element_index, const void *data)
 {
-  T8_ASSERT (data != NULL);
-  T8_ASSERT (first_element_tree != NULL);
-
   const t8_cmesh_partition_query_t *query_data = (const t8_cmesh_partition_query_t *) data;
-  size_t first_proc_adjusted;
-  const t8_gloidx_t element_index = *(t8_gloidx_t *) sc_array_index (first_element_tree, pure_local_tree);
   const t8_gloidx_t mirror_element_index = query_data->global_num_elements - element_index - 1;
-  int first_proc_rank;
-
   if (element_index == query_data->global_num_elements) {
     return query_data->num_procs - query_data->process_offset;
   }
   else {
-    first_proc_rank
-      = query_data->num_procs - 1
-        - t8_A_times_B_over_C_intA (query_data->num_procs, mirror_element_index, query_data->global_num_elements);
-
-    /* If this is called by array split, we need to adjust for relative processes starting
-     * add the first process. */
-    first_proc_adjusted = first_proc_rank - query_data->process_offset;
-  }
-
-  /* Safety checks */
-#if T8_ENABLE_DEBUG
-  T8_ASSERT (0 <= first_proc_rank && (int) first_proc_rank < query_data->num_procs);
-  //T8_ASSERT (0 <= first_proc_adjusted);
-  /* Check that the element lies in the partition of the computed proc. */
-  T8_ASSERT (t8_cmesh_get_first_element_of_process ((uint32_t) first_proc_rank, (uint32_t) query_data->num_procs,
-                                                    (uint64_t) query_data->global_num_elements)
-             <= element_index);
-  if ((int) first_proc_rank != query_data->num_procs - 1) {
-    T8_ASSERT (t8_cmesh_get_first_element_of_process ((uint32_t) first_proc_rank + 1, (uint32_t) query_data->num_procs,
+    const int first_proc_rank = query_data->num_procs - 1
+                          - t8_A_times_B_over_C_intA (query_data->num_procs, mirror_element_index, query_data->global_num_elements);
+    const int first_proc_adjusted = first_proc_rank - query_data->process_offset;
+  #if T8_ENABLE_DEBUG
+    T8_ASSERT (0 <= first_proc_rank &&  first_proc_rank < query_data->num_procs);
+    //T8_ASSERT (0 <= first_proc_adjusted);
+    /* Check that the element lies in the partition of the computed proc. */
+    T8_ASSERT (t8_cmesh_get_first_element_of_process ((uint32_t) first_proc_rank, (uint32_t) query_data->num_procs,
                                                       (uint64_t) query_data->global_num_elements)
-               > element_index);
-  }
-  if (element_index == query_data->global_num_elements) {
-    T8_ASSERT ((int) first_proc_rank == query_data->num_procs);
-  }
-#endif
+              <= element_index);
+    if ((int) first_proc_rank != query_data->num_procs - 1) {
+      T8_ASSERT (t8_cmesh_get_first_element_of_process ((uint32_t) first_proc_rank + 1, (uint32_t) query_data->num_procs,
+                                                        (uint64_t) query_data->global_num_elements)
+                > element_index);
+    }
+    if (element_index == query_data->global_num_elements) {
+      T8_ASSERT ((int) first_proc_rank == query_data->num_procs);
+    }
+  #endif
   return first_proc_adjusted;
+  }
+
 }
+
+
+
+
 static void
 t8_cmesh_uniform_bounds_from_unpartioned (t8_cmesh_t cmesh, const t8_gloidx_t local_num_children, const int level,
                                           const t8_scheme *scheme, t8_gloidx_t *first_local_tree,
@@ -2088,6 +2080,36 @@ t8_cmesh_bounds_for_empty_process (const int mpisize, const int mpirank, const b
   T8_FREE (first_local_trees);
 }
 
+template <typename T>
+void
+vector_split(const std::vector<T> &vector, std::vector<size_t> &offsets, const size_t num_types, 
+  std::function<size_t(const T &, const void *)> &&lambda, const void *data)
+{
+  const size_t count = vector.size();
+  /* Initialize everything with count, except for the first value. */
+  offsets.resize(num_types + 1);
+  std::fill(offsets.begin(), offsets.end(), count);
+  offsets[0] = 0;
+  if (count == 0 || num_types <= 1) {
+    return;
+  }
+
+  size_t low = 0;
+  size_t high = count;
+  for (size_t step = 1; step <= num_types; ++step) {
+    auto it = std::lower_bound(vector.begin() + low, vector.begin() + high, step, 
+      [&](const T &value, const size_t &type) {
+        return lambda(value, data) < type;
+      });
+    offsets[step] = std::distance(vector.begin(), it);
+    low = offsets[step];
+    if (step == num_types) {
+      return;
+    }
+    high = offsets[step + 1];
+  }
+}
+
 static void
 t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_children, const int level,
                                         const t8_scheme *scheme, t8_gloidx_t *first_local_tree,
@@ -2126,29 +2148,32 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
     /* Compute which trees and elements to send to which process.
      * We skip empty processes. */
     t8_locidx_t igtree = first_tree_shared_shift;
-    sc_array_t first_element_tree;
-    sc_array_init_size (&first_element_tree, sizeof (t8_gloidx_t), pure_local_trees + 1);
+    std::vector<t8_gloidx_t> first_element_tree(pure_local_trees + 1);
 
     /* Set the first entry of first_element_tree to the global index of
      * the first element of our first pure local tree. */
-    t8_gloidx_t *elem_index_pointer = (t8_gloidx_t *) sc_array_index_int (&first_element_tree, 0);
-    *elem_index_pointer = t8_shmem_array_get_gloidx (offset_array, cmesh->mpirank);
+     first_element_tree[0] = t8_shmem_array_get_gloidx (offset_array, cmesh->mpirank);
+    //t8_gloidx_t *elem_index_pointer = (t8_gloidx_t *) sc_array_index_int (&first_element_tree, 0);
+    //*elem_index_pointer = t8_shmem_array_get_gloidx (offset_array, cmesh->mpirank);
 
     /* Compute the first element in every pure local tree.
      * This array stores for each tree the global element index offset. 
      * Example: 2 local trees, each has 8 Elements. First element index 12: | 12 | 20 | 28 | */
     for (t8_locidx_t itree = 0; itree < pure_local_trees; ++itree, ++igtree) {
-      const t8_gloidx_t *first_element_of_tree = (const t8_gloidx_t *) sc_array_index_int (&first_element_tree, itree);
-      t8_gloidx_t *const first_element_of_next_tree
-        = (t8_gloidx_t *) sc_array_index_int (&first_element_tree, itree + 1);
       const t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, igtree);
+      const t8_gloidx_t first_element_of_tree = first_element_tree[itree];
+      first_element_tree[itree+1] = first_element_of_tree + scheme->count_leaves_from_root (tree_class,  level);
+      //const t8_gloidx_t *first_element_of_tree = (const t8_gloidx_t *) sc_array_index_int (&first_element_tree, itree);
+      //t8_gloidx_t *const first_element_of_next_tree
+      //  = (t8_gloidx_t *) sc_array_index_int (&first_element_tree, itree + 1);
       /* Set the first element of the next tree by adding the number of element of the current tree. */
-      *first_element_of_next_tree = *first_element_of_tree + scheme->count_leaves_from_root (tree_class, level);
+      //*first_element_of_next_tree = *first_element_of_tree + scheme->count_leaves_from_root (tree_class, level);
     }
 
     /* Check that the last tree + 1 stores as offset the start of the next process */
-    T8_ASSERT (*((t8_gloidx_t *) t8_sc_array_index_locidx (&first_element_tree, pure_local_trees))
-               == t8_shmem_array_get_gloidx (offset_array, cmesh->mpirank + 1));
+    T8_ASSERT (first_element_tree[pure_local_trees] == t8_shmem_array_get_gloidx (offset_array, cmesh->mpirank + 1));
+    //T8_ASSERT (*((t8_gloidx_t *) t8_sc_array_index_locidx (&first_element_tree, pure_local_trees))
+    //           == t8_shmem_array_get_gloidx (offset_array, cmesh->mpirank + 1));
 
     /* Compute the range of mpiranks to minimize the loop over processes */
 
@@ -2157,10 +2182,10 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
     data.process_offset = 0;
     /* Compute the process that will own the first element of our first tree. */
 
-    const t8_gloidx_t send_first = (t8_gloidx_t) t8_cmesh_determine_partition (&first_element_tree, 0, &data);
+    const t8_gloidx_t send_first = (t8_gloidx_t) t8_cmesh_determine_partition (first_element_tree[0], &data);
 
     /* Compute the process that may own the last element of our first tree. */
-    t8_gloidx_t send_last = (t8_gloidx_t) t8_cmesh_determine_partition (&first_element_tree, pure_local_trees, &data);
+    t8_gloidx_t send_last = (t8_gloidx_t) t8_cmesh_determine_partition (first_element_tree[pure_local_trees], &data);
 
     /* t8_cmesh_determine_partition will return mpisize if we plug in the number of global
       * trees as tree index, which happens on the last process that has data.
@@ -2170,16 +2195,18 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
     }
 
     const t8_gloidx_t num_procs_we_send_to = send_last - send_first + 1;
-    sc_array_t offset_partition;
-    sc_array_init_size (&offset_partition, sizeof (size_t), num_procs_we_send_to);
+    std::vector<size_t> offset_partition(num_procs_we_send_to);
     /* In array split the 'types' that we compute are the processes we send to,
      * but offset by the first process, so that they start at 0 and end at num_procs_we_send_to. */
     data.process_offset = send_first;
     /* For each process that we send to find the first tree whose first element
      * belongs to this process.
      * These tree indices will be stored in offset_partition. */
-    sc_array_split (&first_element_tree, &offset_partition, (size_t) num_procs_we_send_to + 1,
-                    t8_cmesh_determine_partition, (void *) &data);
+    vector_split<t8_gloidx_t>(
+        first_element_tree, offset_partition, num_procs_we_send_to + 1, t8_cmesh_determine_partition, (void *) &data);
+    for(auto iproc : offset_partition) {
+      t8_debugf ("[D] offset_partition[%li] = %li\n", iproc, offset_partition[iproc]);
+    }
 
     /* We know: Lowest process and highest process we need to send trees to
        Tree0 Tree1         TreeN
@@ -2232,8 +2259,8 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
     /* Iterate over offset_partition to find boundaries
      * and send the MPI messages. */
 
-    const t8_gloidx_t last_el_index_of_last_tree
-      = *(t8_gloidx_t *) t8_sc_array_index_gloidx (&first_element_tree, pure_local_trees) - 1;
+    const t8_gloidx_t last_el_index_of_last_tree = first_element_tree[pure_local_trees] - 1;
+    //  = *(t8_gloidx_t *) t8_sc_array_index_gloidx (&first_element_tree, pure_local_trees) - 1;
     for (t8_gloidx_t iproc = send_first; iproc <= send_last; iproc++) {
 
       const t8_gloidx_t first_element_index_of_current_proc = t8_cmesh_get_first_element_of_process (
@@ -2253,12 +2280,12 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
 
       if (!proc_is_empty) {
         /* This process' partition is not empty. */
-        const t8_locidx_t possibly_first_puretree_of_current_proc
-          = *((size_t *) sc_array_index_int (&offset_partition, iproc - send_first));
-        const t8_locidx_t possibly_first_puretree_of_next_proc
-          = *((size_t *) sc_array_index_int (&offset_partition, iproc + 1 - send_first));
-        const t8_gloidx_t first_el_index_of_first_tree
-          = *(t8_gloidx_t *) t8_sc_array_index_gloidx (&first_element_tree, possibly_first_puretree_of_current_proc);
+        const t8_locidx_t possibly_first_puretree_of_current_proc = offset_partition[iproc - send_first];
+        //  = *((size_t *) sc_array_index_int (&offset_partition, iproc - send_first));
+        const t8_locidx_t possibly_first_puretree_of_next_proc = offset_partition[iproc + 1 - send_first];
+        //  = *((size_t *) sc_array_index_int (&offset_partition, iproc + 1 - send_first));
+        const t8_gloidx_t first_el_index_of_first_tree = first_element_tree[possibly_first_puretree_of_current_proc];
+        //  = *(t8_gloidx_t *) t8_sc_array_index_gloidx (&first_element_tree, possibly_first_puretree_of_current_proc);
         if (first_element_index_of_current_proc >= last_el_index_of_last_tree + 1) {
           /* We do not send to this process at all. Its first element belongs 
            * to the next process. */
@@ -2338,14 +2365,14 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
 #endif
         if (send_start_message) {
           /* Compute the index int8_cmesh_uniform_bounds_equal_element_countside the tree of the first element. */
-          const t8_gloidx_t first_el_of_first_tree
-            = *(t8_gloidx_t *) t8_sc_array_index_gloidx (&first_element_tree, first_puretree_of_current_proc);
+          const t8_gloidx_t first_el_of_first_tree = first_element_tree[first_puretree_of_current_proc];
+          //  = *(t8_gloidx_t *) t8_sc_array_index_gloidx (&first_element_tree, first_puretree_of_current_proc);
           first_element_in_tree_index_of_current_proc = first_element_index_of_current_proc - first_el_of_first_tree;
         }
         if (send_end_message) {
           /* Compute the index inside the tree of the last element. */
-          const t8_gloidx_t first_el_of_last_tree
-            = *(t8_gloidx_t *) t8_sc_array_index_locidx (&first_element_tree, last_puretree_of_current_proc);
+          const t8_gloidx_t first_el_of_last_tree = first_element_tree[last_puretree_of_current_proc];
+          //  = *(t8_gloidx_t *) t8_sc_array_index_locidx (&first_element_tree, last_puretree_of_current_proc);
           last_element_in_tree_index_of_current_proc = last_element_index_of_current_proc - first_el_of_last_tree;
         }
       }
@@ -2397,8 +2424,7 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
         }
       } /* End sending of end message */
     }   /* End loop over processes */
-    sc_array_reset (&first_element_tree);
-    sc_array_reset (&offset_partition);
+    //sc_array_reset (&offset_partition);
   } /* if (pure_local_trees > 0) */
 
   const t8_gloidx_t first_element_index_of_current_proc = t8_cmesh_get_first_element_of_process (
