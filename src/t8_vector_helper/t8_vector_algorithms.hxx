@@ -20,6 +20,13 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/**
+ * \file t8_vector_algorithms.hxx
+ * 
+ * Contains specialized algorithms on std::vector
+ * 
+ */
+
 #ifndef T8_VECTOR_ALGORITHMS
 #define T8_VECTOR_ALGORITHMS
 
@@ -35,10 +42,10 @@
  * /tparam T 
  * /param[in] vector            A vector holding elements of type T
  * /param[in, out] offsets      A vector. Will be resized to num_categories + 1. Will hold indices
- *                              j of \a vector that contain objectos of category k, such that offsets[k] <0 j < offset[k+1]
+ *                              j of \a vector that contain objects of category k, such that offsets[k] <0 j < offset[k+1]
  *                              If there are no elements of category k then offsets[k] = offsets[k +1]
  * /param[in] num_categories    The number of categories
- * /param[in] category_func     A function that takes an element of type T and returns the category of the element.            
+ * /param[in] category_func     A function that takes an element of type T and returns the category of the element.
  * /param[in] data              A pointer to data that is passed to the category_func.
  */
 template <typename T, typename... Args>
@@ -51,24 +58,45 @@ vector_split (const std::vector<T> &vector, std::vector<size_t> &offsets, const 
   /* Initialize everything with count, except for the first value. */
   offsets.resize (num_categories + 1);
   std::fill (offsets.begin (), offsets.end (), count);
+  /* The first offset is set to zero */
   offsets[0] = 0;
   if (count == 0 || num_categories <= 1) {
     return;
   }
 
+  /* We search between low and high for the next category */
   size_t low = 0;
   size_t high = count;
-  for (size_t step = 1; step <= num_categories; ++step) {
-    auto it
-      = std::lower_bound (vector.begin () + low, vector.begin () + high, step,
-                          [&] (const T &value, const size_t &type) { return category_func (value, args...) < type; });
-    offsets[step] = std::distance (vector.begin (), it);
-    low = offsets[step];
-    if (step == num_categories) {
-      return;
+  size_t step = 1;
+  for (;;) {
+    size_t guess = low + (high - low) / 2;
+    size_t category = category_func (vector[guess], args...);
+    if (category < step) {
+      low = guess + 1;
     }
-    high = offsets[step + 1];
+    else {
+      std::fill (offsets.begin () + step, offsets.end () + category + 1, guess);
+      high = guess;
+    }
+    while (low == high) {
+      ++step;
+      high = offsets[step];
+      if (step == num_categories) {
+        return;
+      }
+    }
   }
+  //for (size_t step = 1; step <= num_categories; ++step) {
+  //  /* The next category is between low and high */
+  //  auto it
+  //    = std::lower_bound (vector.begin () + low, vector.begin () + high, step,
+  //                        [&] (const T &value, const size_t &category) {
+  //                          const size_t value_category = category_func (value, args...);
+  //                          return category_func (value, args...) < category; });
+  //  offsets[step] = std::distance (vector.begin (), it);
+  //  low = offsets[step];
+  //  high = offsets[step + 1];
+  //}
 }
 
 #endif /* T8_VECTOR_ALGORITHMS */
