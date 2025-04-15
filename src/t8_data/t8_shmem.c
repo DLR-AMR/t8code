@@ -206,6 +206,9 @@ t8_shmem_array_prefix (const void *sendbuf, t8_shmem_array_t recvarray, const in
 {
   T8_ASSERT (t8_shmem_array_is_initialized (recvarray));
   T8_ASSERT (!t8_shmem_array_is_writing_possible (recvarray));
+  T8_ASSERT (recvarray != NULL);
+  T8_ASSERT (recvarray->array != NULL);
+  T8_ASSERT (sendbuf != NULL);
 
   sc_shmem_prefix ((void *) sendbuf, recvarray->array, count, type, op, comm);
 }

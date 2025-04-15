@@ -177,12 +177,12 @@ t8_shmem_array_allgatherv (void *sendbuf, const int sendcount, sc_MPI_Datatype s
  * \note the first entry of \a recvarray will be set to 0 using memset. 
  * The entry can be changed after calling t8_shmem_array_prefix 
  * 
- * @param sendbuf 
- * @param recvarray 
- * @param count 
- * @param type 
- * @param op 
- * @param comm 
+ * \param[in] sendbuf           The source from this process
+ * \param[in, out] recvarray    The destination shmem array
+ * \param[in] count             The number of items to gather
+ * \param[in] type              The type of items to gather
+ * \param[in] op                The operation to be used
+ * \param[in] comm              The MPI communicator
  */
 void
 t8_shmem_array_prefix (const void *sendbuf, t8_shmem_array_t recvarray, const int count, sc_MPI_Datatype type,
