@@ -38,6 +38,7 @@
 /**
  * Compute the offsets of a categories of elements in a sorted vector.
  * T should be a type that can be compared with <.
+ * This is a re-implementation of sc_array_split
  * 
  * /tparam T 
  * /param[in] vector            A vector holding elements of type T
