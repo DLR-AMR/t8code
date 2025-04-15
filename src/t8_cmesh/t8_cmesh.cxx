@@ -2132,17 +2132,10 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
       const t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, igtree);
       const t8_gloidx_t first_element_of_tree = first_element_tree[itree];
       first_element_tree[itree + 1] = first_element_of_tree + scheme->count_leaves_from_root (tree_class, level);
-      //const t8_gloidx_t *first_element_of_tree = (const t8_gloidx_t *) sc_array_index_int (&first_element_tree, itree);
-      //t8_gloidx_t *const first_element_of_next_tree
-      //  = (t8_gloidx_t *) sc_array_index_int (&first_element_tree, itree + 1);
-      /* Set the first element of the next tree by adding the number of element of the current tree. */
-      //*first_element_of_next_tree = *first_element_of_tree + scheme->count_leaves_from_root (tree_class, level);
     }
 
     /* Check that the last tree + 1 stores as offset the start of the next process */
     T8_ASSERT (first_element_tree[pure_local_trees] == t8_shmem_array_get_gloidx (offset_array, cmesh->mpirank + 1));
-    //T8_ASSERT (*((t8_gloidx_t *) t8_sc_array_index_locidx (&first_element_tree, pure_local_trees))
-    //           == t8_shmem_array_get_gloidx (offset_array, cmesh->mpirank + 1));
 
     /* Compute the range of mpiranks to minimize the loop over processes */
 
@@ -2174,9 +2167,6 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
     vector_split<t8_gloidx_t, const void *> (
       first_element_tree, offset_partition, num_procs_we_send_to + 1,
       std::function<size_t (const t8_gloidx_t &, const void *)> (t8_cmesh_determine_partition), &data);
-    for (auto iproc : offset_partition) {
-      t8_debugf ("[D] offset_partition[%li] = %li\n", iproc, offset_partition[iproc]);
-    }
 
     /* We know: Lowest process and highest process we need to send trees to
        Tree0 Tree1         TreeN
@@ -2227,7 +2217,7 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
      * and send the MPI messages. */
 
     const t8_gloidx_t last_el_index_of_last_tree = first_element_tree[pure_local_trees] - 1;
-    //  = *(t8_gloidx_t *) t8_sc_array_index_gloidx (&first_element_tree, pure_local_trees) - 1;
+
     for (t8_gloidx_t iproc = send_first; iproc <= send_last; iproc++) {
 
       const t8_gloidx_t first_element_index_of_current_proc = t8_cmesh_get_first_element_of_process (
@@ -2239,7 +2229,6 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
       const bool proc_is_empty = last_element_index_of_current_proc < first_element_index_of_current_proc;
       bool send_start_message = true;
       bool send_end_message = true;
-      //sc_array_reset (&offset_partition);
 
       t8_locidx_t first_puretree_of_current_proc = -1;
       t8_locidx_t last_puretree_of_current_proc = -1;
@@ -2249,11 +2238,8 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
       if (!proc_is_empty) {
         /* This process' partition is not empty. */
         const t8_locidx_t possibly_first_puretree_of_current_proc = offset_partition[iproc - send_first];
-        //  = *((size_t *) sc_array_index_int (&offset_partition, iproc - send_first));
         const t8_locidx_t possibly_first_puretree_of_next_proc = offset_partition[iproc + 1 - send_first];
-        //  = *((size_t *) sc_array_index_int (&offset_partition, iproc + 1 - send_first));
         const t8_gloidx_t first_el_index_of_first_tree = first_element_tree[possibly_first_puretree_of_current_proc];
-        //  = *(t8_gloidx_t *) t8_sc_array_index_gloidx (&first_element_tree, possibly_first_puretree_of_current_proc);
         if (first_element_index_of_current_proc >= last_el_index_of_last_tree + 1) {
           /* We do not send to this process at all. Its first element belongs 
            * to the next process. */
@@ -2334,13 +2320,11 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
         if (send_start_message) {
           /* Compute the index int8_cmesh_uniform_bounds_equal_element_countside the tree of the first element. */
           const t8_gloidx_t first_el_of_first_tree = first_element_tree[first_puretree_of_current_proc];
-          //  = *(t8_gloidx_t *) t8_sc_array_index_gloidx (&first_element_tree, first_puretree_of_current_proc);
           first_element_in_tree_index_of_current_proc = first_element_index_of_current_proc - first_el_of_first_tree;
         }
         if (send_end_message) {
           /* Compute the index inside the tree of the last element. */
           const t8_gloidx_t first_el_of_last_tree = first_element_tree[last_puretree_of_current_proc];
-          //  = *(t8_gloidx_t *) t8_sc_array_index_locidx (&first_element_tree, last_puretree_of_current_proc);
           last_element_in_tree_index_of_current_proc = last_element_index_of_current_proc - first_el_of_last_tree;
         }
       }
