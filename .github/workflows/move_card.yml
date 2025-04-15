@@ -95,7 +95,7 @@ jobs:
             echo "REPO_NODE_ID=$REPO_NODE_ID"
             echo "REPO_NODE_ID=$REPO_NODE_ID" >> $GITHUB_OUTPUT
             # Extract the issue number from the pull request body
-            CLEAN_ISSUE_NUMBER=$(jq -r '.pull_request.body // ""' < $GITHUB_EVENT_PATH | grep -oE 'Closes #[0-9]+' | grep -oE '[0-9]+' | paste -sd ',' -)
+            CLEAN_ISSUE_NUMBER=$(jq -r '.pull_request.body // ""' < $GITHUB_EVENT_PATH | grep -oE '[cC]loses #[0-9]+' | grep -oE '[0-9]+' | paste -sd ',' -)
             # Set the issue number to an empty string if no issue number is found
             CLEAN_ISSUE_NUMBER=${CLEAN_ISSUE_NUMBER:-""}
             echo "CLEAN_ISSUE_NUMBER=$CLEAN_ISSUE_NUMBER"
