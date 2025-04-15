@@ -60,6 +60,7 @@ vector_split (const std::vector<T> &vector, std::vector<size_t> &offsets, const 
   std::fill (offsets.begin (), offsets.end (), count);
   /* The first offset is set to zero */
   offsets[0] = 0;
+
   if (count == 0 || num_categories <= 1) {
     return;
   }
@@ -68,14 +69,15 @@ vector_split (const std::vector<T> &vector, std::vector<size_t> &offsets, const 
   size_t low = 0;
   size_t high = count;
   size_t step = 1;
-  for (;;) {
+  while (step < num_categories) {
     size_t guess = low + (high - low) / 2;
-    size_t category = category_func (vector[guess], args...);
+    const size_t category = category_func (vector[guess], args...);
+    T8_ASSERT (category < num_categories);
     if (category < step) {
       low = guess + 1;
     }
     else {
-      std::fill (offsets.begin () + step, offsets.end () + category + 1, guess);
+      std::fill (offsets.begin () + step, offsets.begin () + category + 1, guess);
       high = guess;
     }
     while (low == high) {
@@ -86,17 +88,6 @@ vector_split (const std::vector<T> &vector, std::vector<size_t> &offsets, const 
       }
     }
   }
-  //for (size_t step = 1; step <= num_categories; ++step) {
-  //  /* The next category is between low and high */
-  //  auto it
-  //    = std::lower_bound (vector.begin () + low, vector.begin () + high, step,
-  //                        [&] (const T &value, const size_t &category) {
-  //                          const size_t value_category = category_func (value, args...);
-  //                          return category_func (value, args...) < category; });
-  //  offsets[step] = std::distance (vector.begin (), it);
-  //  low = offsets[step];
-  //  high = offsets[step + 1];
-  //}
 }
 
 #endif /* T8_VECTOR_ALGORITHMS */

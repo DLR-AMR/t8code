@@ -36,7 +36,7 @@ class test_vector_split: public testing::TestWithParam<int> {
   void
   SetUp () override
   {
-    num_types = GetParam ();
+    num_types = num_entries / GetParam ();
     values.resize (num_entries);
     std::iota (values.begin (), values.end (), 0);
   }
