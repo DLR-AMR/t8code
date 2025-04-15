@@ -1775,7 +1775,7 @@ t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, int level, t8_sch
  * 
  * This function is used standalone and as callback of sc_array_split. */
 static size_t
-t8_cmesh_determine_partition(const t8_gloidx_t &element_index, const void *data)
+t8_cmesh_determine_partition (const t8_gloidx_t &element_index, const void *data)
 {
   const t8_cmesh_partition_query_t *query_data = (const t8_cmesh_partition_query_t *) data;
   const t8_gloidx_t mirror_element_index = query_data->global_num_elements - element_index - 1;
@@ -1783,32 +1783,30 @@ t8_cmesh_determine_partition(const t8_gloidx_t &element_index, const void *data)
     return query_data->num_procs - query_data->process_offset;
   }
   else {
-    const int first_proc_rank = query_data->num_procs - 1
-                          - t8_A_times_B_over_C_intA (query_data->num_procs, mirror_element_index, query_data->global_num_elements);
+    const int first_proc_rank
+      = query_data->num_procs - 1
+        - t8_A_times_B_over_C_intA (query_data->num_procs, mirror_element_index, query_data->global_num_elements);
     const int first_proc_adjusted = first_proc_rank - query_data->process_offset;
-  #if T8_ENABLE_DEBUG
-    T8_ASSERT (0 <= first_proc_rank &&  first_proc_rank < query_data->num_procs);
+#if T8_ENABLE_DEBUG
+    T8_ASSERT (0 <= first_proc_rank && first_proc_rank < query_data->num_procs);
     //T8_ASSERT (0 <= first_proc_adjusted);
     /* Check that the element lies in the partition of the computed proc. */
     T8_ASSERT (t8_cmesh_get_first_element_of_process ((uint32_t) first_proc_rank, (uint32_t) query_data->num_procs,
                                                       (uint64_t) query_data->global_num_elements)
-              <= element_index);
+               <= element_index);
     if ((int) first_proc_rank != query_data->num_procs - 1) {
-      T8_ASSERT (t8_cmesh_get_first_element_of_process ((uint32_t) first_proc_rank + 1, (uint32_t) query_data->num_procs,
+      T8_ASSERT (t8_cmesh_get_first_element_of_process ((uint32_t) first_proc_rank + 1,
+                                                        (uint32_t) query_data->num_procs,
                                                         (uint64_t) query_data->global_num_elements)
-                > element_index);
+                 > element_index);
     }
     if (element_index == query_data->global_num_elements) {
       T8_ASSERT ((int) first_proc_rank == query_data->num_procs);
     }
-  #endif
-  return first_proc_adjusted;
+#endif
+    return first_proc_adjusted;
   }
-
 }
-
-
-
 
 static void
 t8_cmesh_uniform_bounds_from_unpartioned (t8_cmesh_t cmesh, const t8_gloidx_t local_num_children, const int level,
@@ -2082,13 +2080,13 @@ t8_cmesh_bounds_for_empty_process (const int mpisize, const int mpirank, const b
 
 template <typename T>
 void
-vector_split(const std::vector<T> &vector, std::vector<size_t> &offsets, const size_t num_types, 
-  std::function<size_t(const T &, const void *)> &&lambda, const void *data)
+vector_split (const std::vector<T> &vector, std::vector<size_t> &offsets, const size_t num_types,
+              std::function<size_t (const T &, const void *)> &&lambda, const void *data)
 {
-  const size_t count = vector.size();
+  const size_t count = vector.size ();
   /* Initialize everything with count, except for the first value. */
-  offsets.resize(num_types + 1);
-  std::fill(offsets.begin(), offsets.end(), count);
+  offsets.resize (num_types + 1);
+  std::fill (offsets.begin (), offsets.end (), count);
   offsets[0] = 0;
   if (count == 0 || num_types <= 1) {
     return;
@@ -2097,11 +2095,9 @@ vector_split(const std::vector<T> &vector, std::vector<size_t> &offsets, const s
   size_t low = 0;
   size_t high = count;
   for (size_t step = 1; step <= num_types; ++step) {
-    auto it = std::lower_bound(vector.begin() + low, vector.begin() + high, step, 
-      [&](const T &value, const size_t &type) {
-        return lambda(value, data) < type;
-      });
-    offsets[step] = std::distance(vector.begin(), it);
+    auto it = std::lower_bound (vector.begin () + low, vector.begin () + high, step,
+                                [&] (const T &value, const size_t &type) { return lambda (value, data) < type; });
+    offsets[step] = std::distance (vector.begin (), it);
     low = offsets[step];
     if (step == num_types) {
       return;
@@ -2148,11 +2144,11 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
     /* Compute which trees and elements to send to which process.
      * We skip empty processes. */
     t8_locidx_t igtree = first_tree_shared_shift;
-    std::vector<t8_gloidx_t> first_element_tree(pure_local_trees + 1);
+    std::vector<t8_gloidx_t> first_element_tree (pure_local_trees + 1);
 
     /* Set the first entry of first_element_tree to the global index of
      * the first element of our first pure local tree. */
-     first_element_tree[0] = t8_shmem_array_get_gloidx (offset_array, cmesh->mpirank);
+    first_element_tree[0] = t8_shmem_array_get_gloidx (offset_array, cmesh->mpirank);
     //t8_gloidx_t *elem_index_pointer = (t8_gloidx_t *) sc_array_index_int (&first_element_tree, 0);
     //*elem_index_pointer = t8_shmem_array_get_gloidx (offset_array, cmesh->mpirank);
 
@@ -2162,7 +2158,7 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
     for (t8_locidx_t itree = 0; itree < pure_local_trees; ++itree, ++igtree) {
       const t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, igtree);
       const t8_gloidx_t first_element_of_tree = first_element_tree[itree];
-      first_element_tree[itree+1] = first_element_of_tree + scheme->count_leaves_from_root (tree_class,  level);
+      first_element_tree[itree + 1] = first_element_of_tree + scheme->count_leaves_from_root (tree_class, level);
       //const t8_gloidx_t *first_element_of_tree = (const t8_gloidx_t *) sc_array_index_int (&first_element_tree, itree);
       //t8_gloidx_t *const first_element_of_next_tree
       //  = (t8_gloidx_t *) sc_array_index_int (&first_element_tree, itree + 1);
@@ -2195,16 +2191,16 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
     }
 
     const t8_gloidx_t num_procs_we_send_to = send_last - send_first + 1;
-    std::vector<size_t> offset_partition(num_procs_we_send_to);
+    std::vector<size_t> offset_partition (num_procs_we_send_to);
     /* In array split the 'types' that we compute are the processes we send to,
      * but offset by the first process, so that they start at 0 and end at num_procs_we_send_to. */
     data.process_offset = send_first;
     /* For each process that we send to find the first tree whose first element
      * belongs to this process.
      * These tree indices will be stored in offset_partition. */
-    vector_split<t8_gloidx_t>(
-        first_element_tree, offset_partition, num_procs_we_send_to + 1, t8_cmesh_determine_partition, (void *) &data);
-    for(auto iproc : offset_partition) {
+    vector_split<t8_gloidx_t> (first_element_tree, offset_partition, num_procs_we_send_to + 1,
+                               t8_cmesh_determine_partition, (void *) &data);
+    for (auto iproc : offset_partition) {
       t8_debugf ("[D] offset_partition[%li] = %li\n", iproc, offset_partition[iproc]);
     }
 
