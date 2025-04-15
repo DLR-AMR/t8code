@@ -29,7 +29,50 @@
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <test/t8_cmesh_generator/t8_cmesh_example_sets.hxx>
 
-/* TODO: write test case without existing cmesh to test before attribute bug is fixed */
+
+/*
+In this file we test the tree to vertex functionality.
+We create different cmeshes and add global vertex ids.
+In the tests we check whether the getter functions for these ids return
+the correct values.
+
+We use two test classes.
+1. *with_core_classes tests
+  test the functionality of the ttv class directly, using
+    ttv.set_global_vertex_ids_of_tree_vertices
+2. *with_cmesh_functions tests
+  test the functionality of the ttv via the provided cmesh interface, using
+    t8_cmesh_set_global_vertices_of_tree
+
+Note to future developers:
+  We would like to test all our cmesh test examples, but are currently not able to.
+  What we need to do is
+    1. Get the test cmesh
+    2. derive a cmesh from it
+    3. Add vertices to the direved cmesh
+    4. commit the derived cmesh
+  
+  This is implemented in the 
+    cmesh_vertex_conn_ttv_with_core_classes
+    cmesh_vertex_conn_ttv_with_cmesh_functions
+  test suites.
+  
+  However, as of now (i.e. April 2025), we cannot not add attributes (and hence vertices)
+  while deriving a cmesh.
+  It is only possible to add attributes when constructing a new cmesh from scratch.
+  Thus, the test suites are currently disabled/commented out with #if 0 blocks.
+
+  Instead, we currently create a bunch of test cmeshes ourself from scratch.
+  This is implemented in the 
+    cmesh_vertex_conn_ttv_with_core_classes_temp
+    cmesh_vertex_conn_ttv_with_cmesh_functions_temp
+  test suites.
+
+  If we are finally able to add attributes during derive of a cmesh, then
+  the _temp tests should be replaced with the non-temp test suites..
+*/
+
+
 class cmesh_vertex_conn_ttv_with_core_classes: public testing::TestWithParam<cmesh_example_base *> {
  protected:
   void
