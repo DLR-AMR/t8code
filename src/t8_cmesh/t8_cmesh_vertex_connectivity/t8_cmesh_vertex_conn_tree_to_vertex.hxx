@@ -177,7 +177,7 @@ class t8_cmesh_vertex_conn_tree_to_vertex {
   } state;
 
   /** Return the state of this object. */
-  inline const enum state
+  inline enum state
   get_state ()
   {
     return state;

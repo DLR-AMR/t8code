@@ -134,7 +134,7 @@ class t8_cmesh_vertex_conn_vertex_to_tree {
    * An object is either initialized (before commit) or committed (ready to use).
    * \return INITIALIZED or COMMITTED 
    */
-  inline const int
+  inline int
   get_state ()
   {
     return state;
