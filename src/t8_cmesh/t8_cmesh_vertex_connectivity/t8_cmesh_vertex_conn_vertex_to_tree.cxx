@@ -61,7 +61,7 @@ t8_cmesh_vertex_conn_vertex_to_tree::build_from_ttv (const t8_cmesh_t cmesh, t8_
   * global vertex ids have been added.
   * After commit, no vertex ids can be added anymore. */
 void
-t8_cmesh_vertex_conn_vertex_to_tree::commit (const t8_cmesh_t cmesh)
+t8_cmesh_vertex_conn_vertex_to_tree::commit ([[maybe_unused]] const t8_cmesh_t cmesh)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   sort_list_by_tree_id ();
@@ -71,8 +71,9 @@ t8_cmesh_vertex_conn_vertex_to_tree::commit (const t8_cmesh_t cmesh)
 }
 
 void
-t8_cmesh_vertex_conn_vertex_to_tree::add_vertex_to_tree (const t8_cmesh_t cmesh, t8_gloidx_t global_vertex_id,
-                                                         t8_locidx_t ltreeid, int tree_vertex)
+t8_cmesh_vertex_conn_vertex_to_tree::add_vertex_to_tree ([[maybe_unused]] const t8_cmesh_t cmesh,
+                                                         t8_gloidx_t global_vertex_id, t8_locidx_t ltreeid,
+                                                         int tree_vertex)
 {
   T8_ASSERT (!is_committed ());
   T8_ASSERT (0 <= global_vertex_id);
