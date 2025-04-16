@@ -98,7 +98,11 @@ class t8_scheme {
                                 t8_standalone_scheme<T8_ECLASS_VERTEX>,
                                 t8_standalone_scheme<T8_ECLASS_LINE>,
                                 t8_standalone_scheme<T8_ECLASS_QUAD>,
-                                t8_standalone_scheme<T8_ECLASS_HEX>
+                                t8_standalone_scheme<T8_ECLASS_TRIANGLE>,
+                                t8_standalone_scheme<T8_ECLASS_HEX>,
+                                t8_standalone_scheme<T8_ECLASS_TET>,
+                                t8_standalone_scheme<T8_ECLASS_PRISM>,
+                                t8_standalone_scheme<T8_ECLASS_PYRAMID>
                                 >;
   /* clang-format on */
 
