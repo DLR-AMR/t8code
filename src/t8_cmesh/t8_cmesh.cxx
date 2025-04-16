@@ -2246,8 +2246,6 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
     /* Iterate over offset_partition to find boundaries
      * and send the MPI messages. */
 
-    const t8_gloidx_t last_el_index_of_last_tree = first_element_tree[pure_local_trees] - 1;
-
     for (t8_gloidx_t iproc = send_first; iproc <= send_last; iproc++) {
 
       const t8_gloidx_t first_element_index_of_current_proc = t8_cmesh_get_first_element_of_process (
@@ -2271,7 +2269,7 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
         const t8_locidx_t possibly_first_puretree_of_current_proc = offset_partition[iproc - send_first];
         const t8_locidx_t possibly_first_puretree_of_next_proc = offset_partition[iproc + 1 - send_first];
         const t8_gloidx_t first_el_index_of_first_tree = first_element_tree[possibly_first_puretree_of_current_proc];
-        if (first_element_index_of_current_proc >= last_el_index_of_last_tree + 1) {
+        if (first_element_index_of_current_proc >= first_element_tree[pure_local_trees]) {
           /* We do not send to this process at all. Its first element belongs 
            * to the next process. */
           send_start_message = send_end_message = false;
@@ -2307,7 +2305,7 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
          * and this is our last tree.
          */
         if (send_end_message) {
-          if (last_el_index_of_last_tree < last_element_index_of_current_proc) {
+          if (first_element_tree[pure_local_trees] - 1 < last_element_index_of_current_proc) {
             /* The last element of this proc does not lie in our partition.
              * We do not need to send any End information to this process. */
             send_end_message = false;
