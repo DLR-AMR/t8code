@@ -39,18 +39,20 @@ T8_EXTERN_C_BEGIN ();
 
 /**
  * Given a pointer to a vtkDataSet a cmesh representing the vtkDataSet is
- * constructed and can be shared over the processes. 
+ * constructed and can be shared over the processes. The vtk data arrays will be associated with the trees.
  * 
  * \param[in] vtkGrid A pointer to a vtkDataSet
  * \param[in] partition Flag if the cmesh should be partitioned
  * \param[in] main_proc The main reading process
  * \param[in] distributed_grid Flag if the vtkGrid is distributed over several procs. 
  * \param[in] comm The communicator. 
- * \return t8_cmesh_t 
+ * \param[in] package_id The package id of the application. It is generated with the usage of \ref sc_package_register.
+ * \param[in] starting_key If the application already registered attributes, the starting key is used so that the existing attributes are not overwritten.
+ * \return The committed cmesh 
  */
 t8_cmesh_t
 t8_vtkGrid_to_cmesh (vtkSmartPointer<vtkDataSet> vtkGrid, const int partition, const int main_proc,
-                     const int distributed_grid, sc_MPI_Comm comm);
+                     const int distributed_grid, sc_MPI_Comm comm, const int package_id, const int starting_key);
 
 /**
  * Given a pointer to a vtkDataSet a vtkPointSet storing a set of points of
@@ -106,7 +108,9 @@ t8_vtk_reader_pointSet (const char *filename, const int partition, const int mai
  * Given a filename to a vtkUnstructuredGrid or vtkPolyData read the file and
  * construct a cmesh. This is a two stage process. First the file is read and
  * stored in a vtkDataSet using \a t8_vtk_reader and \a t8_file_to_vtkGrid. 
- * In the second stage a cmesh is constructed from the vtkDataSet using \a t8_vtkGrid_to_cmesh. 
+ * In the second stage a cmesh is constructed from the vtkDataSet using \a t8_vtkGrid_to_cmesh.
+ * The vtk data arrays will be associated with the cmesh trees and saved as tree attributes using the 
+ * provided user application \a package_id. The keys for the tree attributes start at \a starting_key.
  * 
  * Both stages use the vtk-library, therefore the function is only available if 
  * t8code is linked against VTK. 
@@ -116,12 +120,14 @@ t8_vtk_reader_pointSet (const char *filename, const int partition, const int mai
  * \param[in] partition     Flag if the constructed mesh should be partitioned
  * \param[in] main_proc     The main reading processor
  * \param[in] comm          An mpi-communicator
- * \param[in] vtk_file_type A vtk-filetype that is readable by t8code. 
+ * \param[in] vtk_file_type A vtk-filetype that is readable by t8code.
+ * \param[in] package_id    The package id of the application. It is generated with the usage of \ref sc_package_register.  
+ * \param[in] starting_key  If the application already registered attributes, the starting key is used so that the existing attributes are not overwritten.
  * \return                  A committed cmesh.
  */
 t8_cmesh_t
 t8_vtk_reader_cmesh (const char *filename, const int partition, const int main_proc, sc_MPI_Comm comm,
-                     const vtk_file_type_t vtk_file_type);
+                     const vtk_file_type_t vtk_file_type, const int package_id, const int starting_key);
 
 T8_EXTERN_C_END ();
 
