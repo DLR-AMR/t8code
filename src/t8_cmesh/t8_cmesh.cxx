@@ -2086,9 +2086,11 @@ recv_message (const bool start, t8_gloidx_t *first_local_tree, t8_gloidx_t *chil
   }
   if (child_in_tree_begin != NULL) {
     *child_in_tree_begin = message[1] + (start ? 0 : 1);
-    T8_ASSERT (*child_in_tree_begin == -1 || (0 <= *child_in_tree_begin && *child_in_tree_begin < global_num_elements));
+    T8_ASSERT (*child_in_tree_begin == -1
+               || ((start && 0 <= *child_in_tree_begin && *child_in_tree_begin < global_num_elements)
+                   || (!start && 0 < *child_in_tree_begin && *child_in_tree_begin <= global_num_elements)));
   }
-  if (message[1] > 0) {
+  if (message[1] > 0 && start) {
     /* The first tree is shared */
     if (first_tree_shared != NULL) {
       *first_tree_shared = 1;
