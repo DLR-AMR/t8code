@@ -43,22 +43,57 @@ class class_element_leaves: public testing::TestWithParam<std::tuple<int, t8_ecl
     scheme = create_from_scheme_id (scheme_id);
     eclass = std::get<1> (GetParam ());
     eclass = scheme->get_eclass_scheme_eclass (eclass);
+
+    scheme->element_new (eclass, 1, &element);
+    scheme->element_new (eclass, 1, &child);
+    scheme->element_new (eclass, 1, &parent);
   }
   void
   TearDown () override
   {
+    scheme->element_destroy (eclass, 1, &element);
+    scheme->element_destroy (eclass, 1, &child);
+    scheme->element_destroy (eclass, 1, &parent);
     scheme->unref ();
   }
+  t8_element_t *element;
+  t8_element_t *child;
+  t8_element_t *parent;
   const t8_scheme *scheme;
   t8_eclass_t eclass;
 };
 
+t8_gloidx_t
+helper (t8_element_t *child, const t8_scheme *scheme, t8_eclass_t eclass, int level)
+{
+  t8_gloidx_t num_leaves = 0;
+  if (scheme->element_get_level (eclass, child) < level) {
+    int num_children = scheme->element_get_num_children (eclass, child);
+    for (int ichild = 0; ichild < num_children; ichild++) {
+      scheme->element_get_child (eclass, child, ichild, child);
+      num_leaves = num_leaves + helper (child, scheme, eclass, level);
+      scheme->element_get_parent (eclass, child, child);
+    }
+  }
+  else {
+    return scheme->element_get_num_children (eclass, child);
+  }
+  return num_leaves;
+}
+
 TEST_P (class_element_leaves, test_element_count_leaves_root)
 {
+#if T8CODE_TEST_LEVEL >= 1
+  const int maxlevel = 4;
+#else
   const int maxlevel = scheme->get_maxlevel (eclass);
+  ;
+#endif
   t8_gloidx_t compare_value = 1;
+  t8_gloidx_t test_value = 1;
   t8_gloidx_t sum1 = 1;
   t8_gloidx_t sum2 = 1;
+  t8_gloidx_t num_leaves = 0;
 
   for (int level = 0; level <= maxlevel; ++level) {
     const t8_gloidx_t leaf_count = scheme->count_leaves_from_root (eclass, level);
@@ -66,13 +101,13 @@ TEST_P (class_element_leaves, test_element_count_leaves_root)
       << "Incorrect leaf count " << leaf_count << " at eclass " << t8_eclass_to_string[eclass] << " and level " << level
       << " (expecting " << compare_value << ")";
     /* Multiply the compare_value with 2^dim (= number of children per element) */
-    if (eclass == T8_ECLASS_PYRAMID) {
-      sum1 *= 8;
-      sum2 *= 6;
-      compare_value = 2 * sum1 - sum2;
-    }
-    else {
-      compare_value *= 1 << t8_eclass_to_dimension[eclass];
+
+    scheme->element_copy (eclass, element, child);
+    t8_gloidx_t num_leaves = helper (child, scheme, eclass, level);
+    compare_value = num_leaves;
+    if (!scheme->refines_irregular (eclass)) {
+      test_value *= 1 << t8_eclass_to_dimension[eclass];
+      EXPECT_EQ (test_value, compare_value);
     }
   }
 }
