@@ -2066,7 +2066,7 @@ t8_cmesh_bounds_for_empty_process (const int mpisize, const int mpirank, const b
 }
 
 static void
-recv_message (const bool start, t8_gloidx_t *first_local_tree, t8_gloidx_t *child_in_tree_begin,
+recv_message (const bool start, t8_gloidx_t *first_last_local_tree, t8_gloidx_t *child_in_tree_begin_end,
               int8_t *first_tree_shared, t8_gloidx_t *child_in_tree_begin_temp,
               [[maybe_unused]] const t8_gloidx_t global_num_elements, [[maybe_unused]] const t8_cmesh_t cmesh,
               sc_MPI_Comm comm)
@@ -2079,16 +2079,17 @@ recv_message (const bool start, t8_gloidx_t *first_local_tree, t8_gloidx_t *chil
   SC_CHECK_MPI (mpiret);
 
   /* Copy the received data to output parameters */
-  *first_local_tree = message[0];
-  T8_ASSERT (*first_local_tree == -1 || (0 <= *first_local_tree && *first_local_tree < t8_cmesh_get_num_trees (cmesh)));
+  *first_last_local_tree = message[0];
+  T8_ASSERT (*first_last_local_tree == -1
+             || (0 <= *first_last_local_tree && *first_last_local_tree < t8_cmesh_get_num_trees (cmesh)));
   if (start) {
     *child_in_tree_begin_temp = message[1];
   }
-  if (child_in_tree_begin != NULL) {
-    *child_in_tree_begin = message[1] + (start ? 0 : 1);
-    T8_ASSERT (*child_in_tree_begin == -1
-               || ((start && 0 <= *child_in_tree_begin && *child_in_tree_begin < global_num_elements)
-                   || (!start && 0 < *child_in_tree_begin && *child_in_tree_begin <= global_num_elements)));
+  if (child_in_tree_begin_end != NULL) {
+    *child_in_tree_begin_end = message[1] + (start ? 0 : 1);
+    T8_ASSERT (*child_in_tree_begin_end == -1
+               || (start ? (0 <= *child_in_tree_begin_end && *child_in_tree_begin_end < global_num_elements)
+                         : (0 < *child_in_tree_begin_end && *child_in_tree_begin_end <= global_num_elements)));
   }
   if (message[1] > 0 && start) {
     /* The first tree is shared */
@@ -2430,7 +2431,6 @@ t8_cmesh_uniform_bounds_from_partition (t8_cmesh_t cmesh, t8_gloidx_t local_num_
     num_received_end_messages++;
     num_message_recv++;
 #endif
-
   } /* End receiving end message */
   if (child_in_tree_begin != NULL && child_in_tree_end != NULL) {
     /* Check for empty partition */
