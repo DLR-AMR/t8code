@@ -165,10 +165,3 @@ t8_sc_array_index_locidx (const sc_array_t *array, const t8_locidx_t it)
 
   return array->array + array->elem_size * (size_t) it;
 }
-
-void *
-t8_sc_array_index_gloidx (const sc_array_t *array, const t8_gloidx_t it)
-{
-  T8_ASSERT (it >= 0 && (size_t) it < array->elem_count);
-  return array->array + array->elem_size * (size_t) it;
-}
