@@ -2065,6 +2065,18 @@ t8_cmesh_bounds_for_empty_process (const int mpisize, const int mpirank, const b
   T8_FREE (first_local_trees);
 }
 
+/**
+ * Receive a start or end message. Which is defined by the \a start flag. 
+ * 
+ * \param[in] start                           If true, receive the start message, otherwise receive the end message.
+ * \param[in, out] first_last_local_tree      On Input empty but allocated, on output the global id of the first or last tree of the current process.
+ * \param[in, out] child_in_tree_begin_end    On Input empty but allocated, on output the global id of the first or last element in the tree of the current process.
+ * \param[in, out] first_tree_shared          Only for start message. On input empty but allocated, on output the first tree shared flag.
+ * \param[in, out] child_in_tree_begin_temp   On input empty but allocated, on output the global id of the first element in the tree of the current process.
+ * \param[in] global_num_elements             The global number of elements in the mesh.
+ * \param[in] cmesh                           The cmesh.
+ * \param[in] comm                            The MPI communicator.
+ */
 static void
 recv_message (const bool start, t8_gloidx_t *first_last_local_tree, t8_gloidx_t *child_in_tree_begin_end,
               int8_t *first_tree_shared, t8_gloidx_t *child_in_tree_begin_temp,
