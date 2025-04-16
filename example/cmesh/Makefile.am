@@ -14,4 +14,3 @@ example_cmesh_t8_cmesh_set_join_by_vertices_SOURCES = example/cmesh/t8_cmesh_set
 example_cmesh_t8_cmesh_geometry_examples_SOURCES = example/cmesh/t8_cmesh_geometry_examples.cxx
 example_cmesh_t8_cmesh_create_partitioned_SOURCES = example/cmesh/t8_cmesh_create_partitioned.cxx
 example_cmesh_t8_cmesh_hypercube_pad_SOURCES = example/cmesh/t8_cmesh_hypercube_pad.cxx
-
