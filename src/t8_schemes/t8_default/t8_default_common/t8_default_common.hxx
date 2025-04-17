@@ -91,7 +91,7 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
    * \param [in] tree_class The tree class of this element scheme.
    * \param [in] elem_size  The size of the elements this scheme holds.
   */
-  t8_default_scheme_common (const t8_eclass_t tree_class, const size_t elem_size)
+  t8_default_scheme_common (const t8_eclass_t tree_class, const size_t elem_size) noexcept
     : element_size (elem_size), scheme_context (sc_mempool_new (elem_size)), eclass (tree_class) {};
 
  protected:

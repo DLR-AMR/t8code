@@ -34,7 +34,7 @@ struct t8_standalone_scheme
  public:
   /** Constructor
   */
-  t8_standalone_scheme ()
+  t8_standalone_scheme () noexcept
     : element_size (sizeof (t8_standalone_element<TEclass>)), scheme_context (sc_mempool_new (element_size)) {};
 
  protected:
