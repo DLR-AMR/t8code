@@ -33,7 +33,6 @@ struct t8_standalone_scheme
 {
  public:
   /** Constructor
-   * \param [in] elem_size  The size of the elements this scheme holds.
   */
   t8_standalone_scheme ()
     : element_size (sizeof (t8_standalone_element<TEclass>)), scheme_context (sc_mempool_new (element_size)) {};
