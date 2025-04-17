@@ -2339,8 +2339,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
           next_non_empty_proc++;
         } while (next_non_empty_proc < send_last && last_child_next_non_empty < first_child_next_non_empty);
         first_puretree_of_current_proc = offset_partition[next_non_empty_proc - send_first - 1];
-        const t8_gloidx_t first_el_index_of_first_tree
-          = first_element_tree[first_puretree_of_current_proc] - first_element_tree[first_puretree_of_current_proc];
+
         last_puretree_of_current_proc = -1;
       }
 
