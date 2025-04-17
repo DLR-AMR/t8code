@@ -1377,15 +1377,15 @@ struct t8_standalone_scheme
    *                      On output all these pointers will point to an allocated
    *                      and initialized element.
    * \note Not every element that is created in t8code will be created by a call
-   * to this function. However, if an element is not created using \ref t8_element_new,
-   * then it is guaranteed that \ref t8_element_init is called on it.
-   * \note In debugging mode, an element that was created with \ref t8_element_new
-   * must pass \ref t8_element_is_valid.
-   * \note If an element was created by \ref t8_element_new then \ref t8_element_init
-   * may not be called for it. Thus, \ref t8_element_new should initialize an element
-   * in the same way as a call to \ref t8_element_init would.
-   * \see t8_element_init
-   * \see t8_element_is_valid
+   * to this function. However, if an element is not created using \ref element_new,
+   * then it is guaranteed that \ref element_init is called on it.
+   * \note In debugging mode, an element that was created with \ref element_new
+   * must pass \ref element_is_valid.
+   * \note If an element was created by \ref element_new then \ref element_init
+   * may not be called for it. Thus, \ref element_new should initialize an element
+   * in the same way as a call to \ref element_init would.
+   * \see element_init
+   * \see element_is_valid
    */
   /* TODO: would it be better to directly allocate an array of elements,
    *       not element pointers? */
@@ -1415,13 +1415,13 @@ struct t8_standalone_scheme
    * \param [in] length   The number of elements to be initialized.
    * \param [in,out] elems On input an array of \b length many allocated
    *                       elements.
-   * \note In debugging mode, an element that was passed to \ref t8_element_init
-   * must pass \ref t8_element_is_valid.
-   * \note If an element was created by \ref t8_element_new then \ref t8_element_init
-   * may not be called for it. Thus, \ref t8_element_new should initialize an element
-   * in the same way as a call to \ref t8_element_init would.
-   * \see t8_element_new
-   * \see t8_element_is_valid
+   * \note In debugging mode, an element that was passed to \ref element_init
+   * must pass \ref element_is_valid.
+   * \note If an element was created by \ref element_new then \ref element_init
+   * may not be called for it. Thus, \ref element_new should initialize an element
+   * in the same way as a call to \ref element_init would.
+   * \see element_new
+   * \see element_is_valid
    */
   static inline void
   element_init ([[maybe_unused]] const int length, [[maybe_unused]] t8_element_t *elem) noexcept
@@ -1441,8 +1441,8 @@ struct t8_standalone_scheme
    * \param [in,out] elems On input an array of \a length many allocated
    *                       and initialized elements, on output an array of
    *                       \a length many allocated, but not initialized elements.
-   * \note Call this function if you called t8_element_init on the element pointers.
-   * \see t8_element_init
+   * \note Call this function if you called element_init on the element pointers.
+   * \see element_init
    */
   static constexpr void
   element_deinit ([[maybe_unused]] const int length, [[maybe_unused]] t8_element_t *elem) noexcept
@@ -1476,9 +1476,9 @@ struct t8_standalone_scheme
    *  and other membervariables do have meaningful values.
    * \param [in]      elem  The element to be checked.
    * \return          True if \a elem is safe to use. False otherwise.
-   * \note            An element that is constructed with \ref t8_element_new
+   * \note            An element that is constructed with \ref element_new
    *                  must pass this test.
-   * \note            An element for which \ref t8_element_init was called must pass
+   * \note            An element for which \ref element_init was called must pass
    *                  this test.
    * \note            This function is used for debugging to catch certain errors.
    *                  These can for example occur when an element points to a region
