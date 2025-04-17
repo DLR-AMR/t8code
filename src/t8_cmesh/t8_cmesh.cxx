@@ -2128,6 +2128,13 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
   const t8_gloidx_t global_num_elements = t8_shmem_array_get_gloidx (offset_array, cmesh->mpisize);
   SC_CHECK_ABORTF (0 <= global_num_elements && global_num_elements < T8_GLOIDX_MAX,
                    "Overflow in number of elements.\n");
+  
+  const t8_gloidx_t first_element = t8_cmesh_get_first_element_of_process (
+    (uint32_t) cmesh->mpirank, (uint32_t) cmesh->mpisize, (uint64_t) global_num_elements);
+  const t8_gloidx_t last_element = t8_cmesh_get_first_element_of_process (
+    (uint32_t) cmesh->mpirank + 1, (uint32_t) cmesh->mpisize, (uint64_t) global_num_elements)
+                                    - 1;
+  const bool this_proc_is_empty = last_element < first_element;
 
   /* Compute number of non-shared-trees and the local index of the first non-shared-tree */
   const int first_tree_shared_shift = cmesh->first_tree_shared ? 1 : 0;
@@ -2391,14 +2398,6 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
     }   /* End loop over processes */
   }     /* if (pure_local_trees > 0) */
 
-  /* Check if this process will be empty */
-  const t8_gloidx_t first_element_index_of_this_proc = t8_cmesh_get_first_element_of_process (
-    (uint32_t) cmesh->mpirank, (uint32_t) cmesh->mpisize, (uint64_t) global_num_elements);
-  const t8_gloidx_t last_element_index_of_this_proc
-    = t8_cmesh_get_first_element_of_process ((uint32_t) cmesh->mpirank + 1, (uint32_t) cmesh->mpisize,
-                                             (uint64_t) global_num_elements)
-      - 1;
-  const bool this_proc_is_empty = first_element_index_of_this_proc > last_element_index_of_this_proc;
   if (this_proc_is_empty) {
     /* We do not expect a start/end message if this proc is empty. */
     expect_start_message = false;
