@@ -40,7 +40,7 @@ class t8_scheme;
 class t8_default_scheme_tet: public t8_default_scheme_common<t8_default_scheme_tet> {
  public:
   /** Constructor which calls the specialized constructor for the base. */
-  t8_default_scheme_tet (): t8_default_scheme_common (T8_ECLASS_TET, sizeof (t8_dtet_t)) {};
+  t8_default_scheme_tet () noexcept: t8_default_scheme_common (T8_ECLASS_TET, sizeof (t8_dtet_t)) {};
 
   /** Destructor */
   ~t8_default_scheme_tet () {};
