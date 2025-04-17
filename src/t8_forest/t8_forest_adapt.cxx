@@ -538,8 +538,9 @@ t8_forest_adapt (t8_forest_t forest)
                                        is_family, num_elements_to_adapt_callback, elements_from);
 
         T8_ASSERT (is_family || refine != -1);
-        if (refine > 0 && scheme->element_get_level (tree->eclass, elements_from[0]) >= forest->maxlevel
-            && scheme->element_is_refinable (tree->eclass, elements_from[0])) {
+        if (refine > 0
+            && (scheme->element_get_level (tree->eclass, elements_from[0]) >= forest->maxlevel
+                || !scheme->element_is_refinable (tree->eclass, elements_from[0]))) {
           /* Only refine an element if it does not exceed the maximum level and if it is refinable */
           refine = 0;
         }
