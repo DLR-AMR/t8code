@@ -2443,8 +2443,6 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
   SC_CHECK_MPI (mpiret);
   T8_ASSERT (total_num_sent == total_num_recv);
 #endif
-  t8_debugf ("[D] first_local_tree: %li, last_local_tree: %li\n", *first_local_tree, *last_local_tree);
-
   t8_debugf ("Done with t8_cmesh_uniform_bounds_hybrid.\n");
   return;
 }
