@@ -52,9 +52,8 @@ struct t8_standalone_scheme
 
   /** Move constructor */
   t8_standalone_scheme (t8_standalone_scheme &&other) noexcept
-    : element_size (other.element_size), scheme_context (other.scheme_context)
+    : element_size (other.element_size), scheme_context (std::exchange (other.scheme_context, nullptr))
   {
-    other.scheme_context = nullptr;
   }
 
   /** Move assignment operator */

@@ -110,9 +110,9 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
 
   /** Move constructor */
   t8_default_scheme_common (t8_default_scheme_common &&other) noexcept
-    : element_size (other.element_size), scheme_context (other.scheme_context), eclass (other.eclass)
+    : element_size (other.element_size), scheme_context (std::exchange (other.scheme_context, nullptr)),
+      eclass (other.eclass)
   {
-    other.scheme_context = nullptr;
   }
 
   /** Move assignment operator */
