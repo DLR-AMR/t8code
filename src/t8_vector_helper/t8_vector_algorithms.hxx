@@ -50,13 +50,14 @@
  * /param[in] category_func     A function that takes an element of type T and returns the category of the element.
  * /param[in] data              A pointer to data that is passed to the category_func.
  */
-template <typename T, typename... Args>
+template <typename TType, typename... Args>
 void
-vector_split (const std::vector<T> &vector, std::vector<size_t> &offsets, const size_t num_categories,
-              std::function<size_t (const T &, Args...)> &&category_func, Args... args)
+vector_split (TType begin, TType end, std::vector<size_t> &offsets, const size_t num_categories,
+              std::function<size_t (typename std::iterator_traits<TType>::value_type, Args...)> &&category_func,
+              Args... args)
 {
-  T8_ASSERT (std::is_sorted (vector.begin (), vector.end ()));
-  const size_t count = vector.size ();
+  T8_ASSERT (std::is_sorted (begin, end));
+  const size_t count = std::distance (begin, end);
   /* Initialize everything with count, except for the first value. */
   offsets.resize (num_categories + 1);
   std::fill (offsets.begin (), offsets.end (), count);
@@ -74,7 +75,7 @@ vector_split (const std::vector<T> &vector, std::vector<size_t> &offsets, const 
   while (step < num_categories) {
     // Using binary search to find the next category boundary
     size_t guess = std::midpoint (low, high);
-    const size_t category = category_func (vector[guess], args...);
+    const size_t category = category_func (*(begin + guess), args...);
 
     if (category < step) {
       // If the category is smaller than the current step, adjust low

@@ -26,7 +26,7 @@
 #include <t8.h>
 
 size_t
-split (const int &value, const int &div)
+split (const int value, const int div)
 {
   return (size_t) value / div;
 }
@@ -62,8 +62,8 @@ class test_vector_split: public testing::TestWithParam<int> {
 
 TEST_P (test_vector_split, test_split)
 {
-  vector_split<int, const int &> (values, offsets, num_types, std::function<size_t (const int &, const int &)> (split),
-                                  div);
+  vector_split (values.begin (), values.end (), offsets, num_types,
+                std::function<size_t (const int, const int)> (split), div);
 
   EXPECT_EQ (offsets[0], 0);
   EXPECT_EQ (offsets.size (), num_types + 1);
