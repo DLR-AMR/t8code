@@ -37,30 +37,36 @@
 #include <t8.h>
 
 /**
- * Compute the offsets of a categories of elements in a sorted vector.
- * T should be a type that can be compared with <.
+ * Compute the offsets of a categories of elements in a sorted iterable range given by \a begin and \a end.
+ * The value type of the iterator should be comparable with <.
  * This is a re-implementation of sc_array_split
  * 
- * /tparam T 
- * /param[in] vector            A vector holding elements of type T
- * /param[in, out] offsets      A vector. Will be resized to num_categories + 1. Will hold indices
+ * /tparam T                    The type of the iterator of the sorted range
+ * /tparam TContainer           The type of the container that holds the offsets
+ * /tparam Args                 The type of the arguments passed to the category_func
+ *
+ * /param[in] begin             An iterator pointing to the first element of the range
+ * /param[in] end               An iterator pointing to the last element of the range
+ * /param[in, out] offsets      A Container holding num_categories + 1 elements. Will hold indices
  *                              j of \a vector that contain objects of category k, such that offsets[k] <0 j < offset[k+1]
  *                              If there are no elements of category k then offsets[k] = offsets[k +1]
  * /param[in] num_categories    The number of categories
- * /param[in] category_func     A function that takes an element of type T and returns the category of the element.
- * /param[in] data              A pointer to data that is passed to the category_func.
+ * /param[in] category_func     A function that takes an element of the value type of the iterators \a begin / \a end and
+ *                              returns the category of the element.
+ * /param[in] args              A parameter pack of arguments passed to the category_func
  */
-template <typename TType, typename... Args>
+template <typename TType, typename TContainer, typename... Args>
 void
-vector_split (TType begin, TType end, std::vector<size_t> &offsets, const size_t num_categories,
+vector_split (const TType begin, const TType end, TContainer &offsets, const size_t num_categories,
               std::function<size_t (typename std::iterator_traits<TType>::value_type, Args...)> &&category_func,
               Args... args)
 {
   T8_ASSERT (std::is_sorted (begin, end));
+  T8_ASSERT (num_categories > 0);
+  T8_ASSERT (offsets.size () == num_categories + 1);
   const size_t count = std::distance (begin, end);
   /* Initialize everything with count, except for the first value. */
-  offsets.resize (num_categories + 1);
-  std::fill (offsets.begin (), offsets.end (), count);
+  std::fill (std::begin (offsets), std::end (offsets), count);
   /* The first offset is set to zero */
   offsets[0] = 0;
 
@@ -74,7 +80,7 @@ vector_split (TType begin, TType end, std::vector<size_t> &offsets, const size_t
   size_t step = 1;
   while (step < num_categories) {
     // Using binary search to find the next category boundary
-    size_t guess = std::midpoint (low, high);
+    const size_t guess = std::midpoint (low, high);
     const size_t category = category_func (*(begin + guess), args...);
 
     if (category < step) {
@@ -83,7 +89,7 @@ vector_split (TType begin, TType end, std::vector<size_t> &offsets, const size_t
     }
     else {
       // Fill offsets for all categories between step and category
-      std::fill (offsets.begin () + step, offsets.begin () + category + 1, guess);
+      std::fill (std::begin (offsets) + step, std::begin (offsets) + category + 1, guess);
       // Minimize the high value to narrow the search space
       high = guess;
     }

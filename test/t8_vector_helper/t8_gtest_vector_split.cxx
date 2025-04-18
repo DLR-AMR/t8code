@@ -39,6 +39,7 @@ class test_vector_split: public testing::TestWithParam<int> {
     div = GetParam ();
     num_types = num_entries / div + 1;
     values.resize (num_entries);
+    offsets.resize (num_types + 1);
     std::iota (values.begin (), values.end (), 0);
   }
 
@@ -52,7 +53,7 @@ class test_vector_split: public testing::TestWithParam<int> {
 #elif T8CODE_TEST_LEVEL == 1
   const size_t num_entries = 100;
 #else
-  const size_t num_entries = 10000;
+  const size_t num_entries = 100000;
 #endif
   int div;
   size_t num_types;
