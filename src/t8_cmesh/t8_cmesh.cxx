@@ -2017,7 +2017,7 @@ recv_message (const bool start, t8_gloidx_t *first_last_local_tree, t8_gloidx_t 
               sc_MPI_Comm comm)
 {
   const int num_entries = 2;
-  std::vector<t8_gloidx_t> message (num_entries);
+  std::array<t8_gloidx_t, num_entries> message;
   const t8_MPI_tag_t tag = start ? T8_MPI_CMESH_UNIFORM_BOUNDS_START : T8_MPI_CMESH_UNIFORM_BOUNDS_END;
   const int mpiret
     = sc_MPI_Recv (message.data (), num_entries, T8_MPI_GLOIDX, sc_MPI_ANY_SOURCE, tag, comm, sc_MPI_STATUS_IGNORE);

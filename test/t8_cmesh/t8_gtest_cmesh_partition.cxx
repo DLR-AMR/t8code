@@ -124,6 +124,7 @@ TEST_P (t8_cmesh_partition_class, test_cmesh_partition_concentrate)
     */
     cmesh_partition_new1 = cmesh_partition_new2;
     cmesh_partition_new2 = NULL;
+
     for (int i = 0; i < 2; i++) {
       t8_cmesh_init (&cmesh_partition_new2);
       t8_cmesh_set_derive (cmesh_partition_new2, cmesh_partition_new1);
