@@ -48,7 +48,7 @@
  * /param[in] begin             An iterator pointing to the first element of the range
  * /param[in] end               An iterator pointing to the last element of the range
  * /param[in, out] offsets      A Container holding num_categories + 1 elements. Will hold indices
- *                              j of \a vector that contain objects of category k, such that offsets[k] <0 j < offset[k+1]
+ *                              j of the range \a begin and \a end that contain objects of category k, such that offsets[k] <0 j < offset[k+1]
  *                              If there are no elements of category k then offsets[k] = offsets[k +1]
  * /param[in] num_categories    The number of categories
  * /param[in] category_func     A function that takes an element of the value type of the iterators \a begin / \a end and
@@ -62,6 +62,7 @@ vector_split (const TType begin, const TType end, TContainer &offsets, const siz
               Args... args)
 {
   T8_ASSERT (std::is_sorted (begin, end));
+  T8_ASSERT (begin != end);
   T8_ASSERT (num_categories > 0);
   T8_ASSERT (offsets.size () == num_categories + 1);
   const size_t count = std::distance (begin, end);
