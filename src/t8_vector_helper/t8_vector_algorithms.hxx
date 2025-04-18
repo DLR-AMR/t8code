@@ -30,7 +30,6 @@
 #ifndef T8_VECTOR_ALGORITHMS
 #define T8_VECTOR_ALGORITHMS
 
-#include <vector>
 #include <algorithm>
 #include <functional>
 #include <numeric>
