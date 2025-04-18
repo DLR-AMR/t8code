@@ -2206,7 +2206,6 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
      * and send the MPI messages. */
 
     for (t8_gloidx_t iproc = send_first; iproc <= send_last; iproc++) {
-
       const t8_gloidx_t first_element_index_of_current_proc = t8_cmesh_get_first_element_of_process (
         (uint32_t) iproc, (uint32_t) cmesh->mpisize, (uint64_t) global_num_elements);
       const t8_gloidx_t last_element_index_of_current_proc
