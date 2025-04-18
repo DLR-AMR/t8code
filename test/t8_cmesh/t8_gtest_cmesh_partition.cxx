@@ -119,24 +119,25 @@ TEST_P (t8_cmesh_partition_class, test_cmesh_partition_concentrate)
     /* Commit the cmesh and test if successful */
     t8_cmesh_commit (cmesh_partition_new2, sc_MPI_COMM_WORLD);
     test_cmesh_committed (cmesh_partition_new2);
-
-    /* Switch the rolls of the cmeshes */
+    /* We partition the resulting cmesh according to a uniform level refinement.
+    * This cmesh should now be equal to the initial cmesh. 
+    */
     cmesh_partition_new1 = cmesh_partition_new2;
     cmesh_partition_new2 = NULL;
+    for (int i = 0; i < 2; i++) {
+      t8_cmesh_init (&cmesh_partition_new2);
+      t8_cmesh_set_derive (cmesh_partition_new2, cmesh_partition_new1);
+      scheme->ref ();
+      t8_cmesh_set_partition_uniform (cmesh_partition_new2, level, scheme);
+      t8_cmesh_commit (cmesh_partition_new2, sc_MPI_COMM_WORLD);
+      cmesh_partition_new1 = cmesh_partition_new2;
+      /* Switch the rolls of the cmeshes */
+      cmesh_partition_new1 = cmesh_partition_new2;
+      cmesh_partition_new2 = NULL;
+    }
+    ASSERT_TRUE (t8_cmesh_is_equal (cmesh_partition_new1, cmesh_partition)) << "Cmesh equality check failed.";
   }
-  /* We partition the resulting cmesh according to a uniform level refinement.
-   * This cmesh should now be equal to the initial cmesh. 
-   */
-  for (int i = 0; i < 2; i++) {
-    t8_cmesh_init (&cmesh_partition_new2);
-    t8_cmesh_set_derive (cmesh_partition_new2, cmesh_partition_new1);
-    scheme->ref ();
-    t8_cmesh_set_partition_uniform (cmesh_partition_new2, level, scheme);
-    t8_cmesh_commit (cmesh_partition_new2, sc_MPI_COMM_WORLD);
-    cmesh_partition_new1 = cmesh_partition_new2;
-  }
-  ASSERT_TRUE (t8_cmesh_is_equal (cmesh_partition_new2, cmesh_partition)) << "Cmesh equality check failed.";
-  t8_cmesh_destroy (&cmesh_partition_new2);
+  t8_cmesh_destroy (&cmesh_partition_new1);
   t8_cmesh_destroy (&cmesh_partition);
 }
 
