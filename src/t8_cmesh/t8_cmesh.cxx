@@ -1767,7 +1767,7 @@ t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, int level, t8_sch
  * This function is used standalone and as callback of sc_array_split. */
 static size_t
 t8_cmesh_determine_partition (const t8_gloidx_t element_index, const t8_gloidx_t global_num_elements,
-                              const int num_procs, const int process_offset)
+                              const int num_procs, const t8_gloidx_t process_offset)
 {
   const t8_gloidx_t mirror_element_index = global_num_elements - element_index - 1;
   if (element_index == global_num_elements) {
@@ -2148,14 +2148,13 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
     }
 
     const t8_gloidx_t num_procs_we_send_to = send_last - send_first + 1;
-    std::vector<size_t> offset_partition (num_procs_we_send_to);
+    std::vector<size_t> offset_partition (num_procs_we_send_to + 1);
     /* For each process that we send to find the first tree whose first element
      * belongs to this process.
      * These tree indices will be stored in offset_partition. */
-    vector_split<t8_gloidx_t, t8_gloidx_t, int, int> (
-      first_element_tree, offset_partition, num_procs_we_send_to + 1,
-      std::function<size_t (const t8_gloidx_t, const t8_gloidx_t, const int, const int)> (t8_cmesh_determine_partition),
-      global_num_elements, cmesh->mpisize, send_first);
+    vector_split (first_element_tree.begin (), first_element_tree.end (), offset_partition,
+                  std::function<size_t (t8_gloidx_t, t8_gloidx_t, int, t8_gloidx_t)> (t8_cmesh_determine_partition),
+                  global_num_elements, cmesh->mpisize, send_first);
 
     /* We know: Lowest process and highest process we need to send trees to
        Tree0 Tree1         TreeN

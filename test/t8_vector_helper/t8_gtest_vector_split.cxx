@@ -25,7 +25,7 @@
 #include <numeric>
 #include <t8.h>
 
-size_t
+constexpr size_t
 split (const int value, const int div)
 {
   return (size_t) value / div;
@@ -39,6 +39,7 @@ class test_vector_split: public testing::TestWithParam<int> {
     div = GetParam ();
     num_types = num_entries / div + 1;
     values.resize (num_entries);
+    offsets.resize (num_types + 1);
     std::iota (values.begin (), values.end (), 0);
   }
 
@@ -52,7 +53,7 @@ class test_vector_split: public testing::TestWithParam<int> {
 #elif T8CODE_TEST_LEVEL == 1
   const size_t num_entries = 100;
 #else
-  const size_t num_entries = 10000;
+  const size_t num_entries = 100000;
 #endif
   int div;
   size_t num_types;
@@ -62,7 +63,7 @@ class test_vector_split: public testing::TestWithParam<int> {
 
 TEST_P (test_vector_split, test_split)
 {
-  vector_split<int, int> (values, offsets, num_types, std::function<size_t (const int, const int)> (split), div);
+  vector_split (values.begin (), values.end (), offsets, std::function<size_t (int, int)> (split), div);
 
   EXPECT_EQ (offsets[0], 0);
   EXPECT_EQ (offsets.size (), num_types + 1);
