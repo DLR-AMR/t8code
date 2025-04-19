@@ -33,6 +33,7 @@
 #include <algorithm>
 #include <functional>
 #include <numeric>
+#include <iterator>
 #include <t8.h>
 
 /**
@@ -40,8 +41,9 @@
  * The value type of the iterator should be comparable with <.
  * This is a re-implementation of sc_array_split
  * 
- * /tparam T                    The type of the iterator of the sorted range
- * /tparam TContainer           The type of the container that holds the offsets
+ * /tparam TIterator            An input iterator type
+ * /tparam TSentinel            A sentinel type for the iterator
+ * /tparam TContainer           A container type that holds the offsets. It should be a contiguous container
  * /tparam Args                 The type of the arguments passed to the category_func
  *
  * /param[in] begin             An iterator pointing to the first element of the range
@@ -49,22 +51,22 @@
  * /param[in, out] offsets      A Container holding num_categories + 1 elements. Will hold indices
  *                              j of the range \a begin and \a end that contain objects of category k, such that offsets[k] <0 j < offset[k+1]
  *                              If there are no elements of category k then offsets[k] = offsets[k +1]
- * /param[in] num_categories    The number of categories
  * /param[in] category_func     A function that takes an element of the value type of the iterators \a begin / \a end and
  *                              returns the category of the element.
  * /param[in] args              A parameter pack of arguments passed to the category_func
  */
-template <typename TType, typename TContainer, typename... Args>
-void
-vector_split (const TType begin, const TType end, TContainer &offsets, const size_t num_categories,
-              std::function<size_t (typename std::iterator_traits<TType>::value_type, Args...)> &&category_func,
-              Args... args)
+template <std::input_iterator TIterator, std::sentinel_for<TIterator> TSentinel, typename TContainer, typename... Args>
+constexpr void
+vector_split (
+  const TIterator begin, const TSentinel end, TContainer &offsets,
+  std::function<size_t (const typename std::iterator_traits<TIterator>::value_type, Args...)> &&category_func,
+  Args... args)
 {
   T8_ASSERT (std::is_sorted (begin, end));
   T8_ASSERT (begin != end);
-  T8_ASSERT (num_categories > 0);
-  T8_ASSERT (offsets.size () == num_categories + 1);
+  T8_ASSERT (!offsets.empty ());
   const size_t count = std::distance (begin, end);
+  const size_t num_categories = offsets.size () - 1;
   /* Initialize everything with count, except for the first value. */
   std::fill (std::begin (offsets), std::end (offsets), count);
   /* The first offset is set to zero */
