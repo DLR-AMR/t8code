@@ -2328,12 +2328,32 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
                                                      (uint64_t) global_num_elements)
               - 1;
           next_non_empty_proc++;
-        } while (next_non_empty_proc < send_last && last_child_next_non_empty < first_child_next_non_empty);
+        } while (next_non_empty_proc < send_last && last_child_next_non_empty < first_child_next_non_empty
+                 && first_child_next_non_empty < first_element_tree[pure_local_trees]);
         first_puretree_of_current_proc = offset_partition[next_non_empty_proc - send_first - 1];
         last_puretree_of_current_proc = -1;
         /* Check if this proc has information about the first_child on the next non empty process.
           * If not, another process will send the information */
         send_start_message = first_child_next_non_empty < first_element_tree[pure_local_trees];
+        if (send_start_message) {
+          /* We might have detected a larger range of empty processes. We directly send to this range to avoid a recomputation
+           * of this information. We have to take into account, that in the last iteration of the above do-while-loop 
+           * next_non_empty_proc has been added up by one again, so this loop goes [iproc, next_non_empty_proc - 1). */
+          for (t8_gloidx_t iempty_proc = iproc; iempty_proc < next_non_empty_proc - 1; ++iempty_proc) {
+            t8_cmesh_bounds_send_start_or_end (cmesh, send_start_message, proc_is_empty, first_puretree_of_current_proc,
+                                               first_tree_shared_shift, iempty_proc, send_requests, send_buffer,
+                                               &current_pos_in_send_buffer, first_element_in_tree_index_of_current_proc,
+                                               first_local_tree, first_tree_shared, child_in_tree_begin,
+                                               &expect_start_message, global_num_elements, comm);
+#if T8_ENABLE_DEBUG
+            num_message_sent += (iempty_proc != cmesh->mpirank) ? 1 : 0;
+            num_received_start_messages += (iempty_proc != cmesh->mpirank) ? 0 : 1;
+#endif
+          }
+          /* iproc will be enlarged by the for loop again. So we subtract two to continue at the correct process.  */
+          iproc = next_non_empty_proc - 2;
+          continue;
+        }
       }
 
       /*
