@@ -25,9 +25,10 @@
 #include <numeric>
 #include <t8.h>
 
-constexpr size_t
+constexpr int
 split (const int value, const int div)
 {
+  T8_ASSERT (div > 0);
   return (size_t) value / div;
 }
 

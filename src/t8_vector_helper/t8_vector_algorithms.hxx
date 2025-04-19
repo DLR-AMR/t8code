@@ -44,6 +44,7 @@
  * /tparam TIterator            An input iterator type
  * /tparam TSentinel            A sentinel type for the iterator
  * /tparam TContainer           A container type that holds the offsets. It should be a contiguous container
+ * \tparam TCategory            The type of the category. It should be an integral and totally ordered type
  * /tparam Args                 The type of the arguments passed to the category_func
  *
  * /param[in] begin             An iterator pointing to the first element of the range
@@ -52,21 +53,23 @@
  *                              j of the range \a begin and \a end that contain objects of category k, such that offsets[k] <0 j < offset[k+1]
  *                              If there are no elements of category k then offsets[k] = offsets[k +1]
  * /param[in] category_func     A function that takes an element of the value type of the iterators \a begin / \a end and
- *                              returns the category of the element.
+ *                              returns the category of the element. A category should be in [0, num_categories) (However TCategory does not have to be unsigned)
  * /param[in] args              A parameter pack of arguments passed to the category_func
  */
-template <std::input_iterator TIterator, std::sentinel_for<TIterator> TSentinel, typename TContainer, typename... Args>
+template <std::input_iterator TIterator, std::sentinel_for<TIterator> TSentinel, typename TContainer,
+          typename TCategory, typename... Args>
+  requires std::is_integral_v<TCategory> && std::totally_ordered<TCategory>
 constexpr void
 vector_split (
   const TIterator begin, const TSentinel end, TContainer &offsets,
-  std::function<size_t (const typename std::iterator_traits<TIterator>::value_type, Args...)> &&category_func,
+  std::function<TCategory (const typename std::iterator_traits<TIterator>::value_type, Args...)> &&category_func,
   Args... args)
 {
   T8_ASSERT (std::is_sorted (begin, end));
   T8_ASSERT (begin != end);
   T8_ASSERT (!offsets.empty ());
-  const size_t count = std::distance (begin, end);
-  const size_t num_categories = offsets.size () - 1;
+  const TCategory count = std::distance (begin, end);
+  const TCategory num_categories = offsets.size () - 1;
   /* Initialize everything with count, except for the first value. */
   std::fill (std::begin (offsets), std::end (offsets), count);
   /* The first offset is set to zero */
@@ -77,13 +80,14 @@ vector_split (
   }
 
   /* We search between low and high for the next category */
-  size_t low = 0;
-  size_t high = count;
-  size_t step = 1;
+  TCategory low = 0;
+  TCategory high = count;
+  TCategory step = 1;
   while (step < num_categories) {
     // Using binary search to find the next category boundary
-    const size_t guess = std::midpoint (low, high);
-    const size_t category = category_func (*(begin + guess), args...);
+    const TCategory guess = std::midpoint (low, high);
+    const TCategory category = category_func (*(begin + guess), args...);
+    T8_ASSERT (0 <= category && category < num_categories);
 
     if (category < step) {
       // If the category is smaller than the current step, adjust low
