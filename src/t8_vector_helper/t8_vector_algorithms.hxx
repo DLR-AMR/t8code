@@ -44,7 +44,7 @@
  * /tparam TIterator            An input iterator type
  * /tparam TSentinel            A sentinel type for the iterator
  * /tparam TContainer           A container type that holds the offsets. It should be a contiguous container
- * \tparam TCategory            The type of the category. It should be an integral and totally ordered type
+ * /tparam TCategory            The type of the category. It should be an integral and totally ordered type
  * /tparam Args                 The type of the arguments passed to the category_func
  *
  * /param[in] begin             An iterator pointing to the first element of the range
