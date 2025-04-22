@@ -2328,6 +2328,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
                                                      (uint64_t) global_num_elements)
               - 1;
           next_non_empty_proc++;
+          /* check if the proc is in our send-range && the proc is empty && we have information about this process. */
         } while (next_non_empty_proc < send_last && last_child_next_non_empty < first_child_next_non_empty
                  && first_child_next_non_empty < first_element_tree[pure_local_trees]);
         first_puretree_of_current_proc = offset_partition[next_non_empty_proc - send_first - 1];
