@@ -25,10 +25,12 @@
 #include <numeric>
 #include <t8.h>
 
-constexpr size_t
+constexpr unsigned int
 split (const int value, const int div)
 {
-  return (size_t) value / div;
+  T8_ASSERT (div != 0);
+  T8_ASSERT ((value >= 0 && div > 0) || (value < 0 && div < 0));
+  return value / div;
 }
 
 class test_vector_split: public testing::TestWithParam<int> {
