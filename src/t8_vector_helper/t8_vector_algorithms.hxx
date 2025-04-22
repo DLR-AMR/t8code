@@ -86,7 +86,7 @@ vector_split (
     // Using binary search to find the next category boundary
     const TCategory guess = std::midpoint (low, high);
     const TCategory category = category_func (*(begin + guess), args...);
-    T8_ASSERT (0 <= category && category < num_categories);
+    T8_ASSERT (0 <= category && category <= num_categories);
 
     if (category < step) {
       // If the category is smaller than the current step, adjust low
