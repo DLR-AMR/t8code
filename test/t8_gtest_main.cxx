@@ -22,17 +22,31 @@
 
 #include <gtest/gtest.h>
 #include <t8.h>
-#include <test/t8_gtest_macros.hxx>
+#include <test/t8_gtest_memory_macros.hxx>
 
 int
 main (int argc, char **argv)
 {
-  t8_testsuite_init (&argc, &argv, SC_LP_DEFAULT);
+  /* Initialize mpi */
+  int mpiret = sc_MPI_Init (&argc, &argv);
+  SC_CHECK_MPI (mpiret);
+
+  /* Initialize sc and t8code */
+  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_PRODUCTION);
+  t8_init (SC_LP_DEFAULT);
+
+  /* Register a package id for the testsuite */
+  t8_testsuite_register_package_id ();
 
   ::testing::InitGoogleTest (&argc, argv);
 
   const int retval = RUN_ALL_TESTS ();
 
-  t8_testsuite_finalize ();
+  /* Finalize SC */
+  sc_finalize ();
+
+  /* Finalize and check mpi */
+  mpiret = sc_MPI_Finalize ();
+  SC_CHECK_MPI (mpiret);
   return retval;
 }
