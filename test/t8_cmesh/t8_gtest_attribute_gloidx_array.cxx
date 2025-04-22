@@ -52,7 +52,7 @@ class cmesh_attribute_gloidx_array: public testing::TestWithParam<std::tuple<int
     t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_TRIANGLE);
 
     /* Allocate space for entries. */
-    entries = T8_ALLOC (t8_gloidx_t, num_entries);
+    entries = T8_TESTSUITE_ALLOC (t8_gloidx_t, num_entries);
 
     /* Fill with 0, 1, 2, 3, 4 ... */
     for (t8_locidx_t ientry = 0; ientry < num_entries; ++ientry) {
@@ -76,7 +76,7 @@ class cmesh_attribute_gloidx_array: public testing::TestWithParam<std::tuple<int
     /* Commit the cmesh */
     t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
     /* It is save to free the entries after commit, since the value got copied. */
-    T8_FREE (entries);
+    T8_TESTSUITE_FREE (entries);
   }
 
   void
