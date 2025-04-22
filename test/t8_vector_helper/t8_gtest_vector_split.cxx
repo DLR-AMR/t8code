@@ -25,10 +25,11 @@
 #include <numeric>
 #include <t8.h>
 
-constexpr int
+constexpr unsigned int
 split (const int value, const int div)
 {
-  T8_ASSERT (div > 0);
+  T8_ASSERT (div != 0);
+  T8_ASSERT ((value >= 0 && div > 0) || (value < 0 && div < 0));
   return value / div;
 }
 
