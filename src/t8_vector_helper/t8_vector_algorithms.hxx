@@ -56,9 +56,8 @@
  *                              returns the category of the element. A category should be in [0, num_categories) (However TCategory does not have to be unsigned)
  * /param[in] args              A parameter pack of arguments passed to the category_func
  */
-template <std::input_iterator TIterator, std::sentinel_for<TIterator> TSentinel, typename TContainer,
-          typename TCategory, typename... Args>
-  requires std::is_integral_v<TCategory> && std::totally_ordered<TCategory>
+template <std::input_iterator TIterator, std::sentinel_for<TIterator> TSentinel,
+          std::ranges::contiguous_range TContainer, std::unsigned_integral TCategory, typename... Args>
 constexpr void
 vector_split (
   const TIterator begin, const TSentinel end, TContainer &offsets,

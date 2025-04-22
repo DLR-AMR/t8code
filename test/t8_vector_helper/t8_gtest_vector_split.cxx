@@ -29,7 +29,7 @@ constexpr int
 split (const int value, const int div)
 {
   T8_ASSERT (div > 0);
-  return (size_t) value / div;
+  return value / div;
 }
 
 class test_vector_split: public testing::TestWithParam<int> {
