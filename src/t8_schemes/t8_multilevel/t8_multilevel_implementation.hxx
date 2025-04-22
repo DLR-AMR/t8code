@@ -703,7 +703,11 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
     T8_ASSERT (element_is_valid (elem));
     const multilevel_element *elem_m = (const multilevel_element *) elem;
     multilevel_element *desc_m = (multilevel_element *) desc;
-    T8_ASSERT (elem_m->is_child_of_itself == 0);
+    /* TODO: I am not sure if this is right. */
+    if (elem_m->is_child_of_itself) {
+      element_copy (elem, desc);
+      return;
+    }
     /* The last descendant is given by the underlying scheme. */
     TUnderlyingEclassScheme::element_get_last_descendant ((const t8_element_t *) &elem_m->linear_element,
                                                           (t8_element_t *) &desc_m->linear_element, level);
