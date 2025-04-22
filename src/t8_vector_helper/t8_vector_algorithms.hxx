@@ -44,7 +44,7 @@
  * /tparam TIterator            An input iterator type
  * /tparam TSentinel            A sentinel type for the iterator
  * /tparam TContainer           A container type that holds the offsets. It should be a contiguous container
- * /tparam TCategory            The type of the category. It should be an integral and totally ordered type
+ * /tparam TCategory            The type of the category. It should be an unsigned integral type
  * /tparam Args                 The type of the arguments passed to the category_func
  *
  * /param[in] begin             An iterator pointing to the first element of the range
@@ -53,7 +53,7 @@
  *                              j of the range \a begin and \a end that contain objects of category k, such that offsets[k] <0 j < offset[k+1]
  *                              If there are no elements of category k then offsets[k] = offsets[k +1]
  * /param[in] category_func     A function that takes an element of the value type of the iterators \a begin / \a end and
- *                              returns the category of the element. A category should be in [0, num_categories) (However TCategory does not have to be unsigned)
+ *                              returns the category of the element. A category should be in [0, num_categories)
  * /param[in] args              A parameter pack of arguments passed to the category_func
  */
 template <std::input_iterator TIterator, std::sentinel_for<TIterator> TSentinel,
