@@ -216,6 +216,44 @@ constexpr int8_t t8_standalone_lut_type_rootface_to_face<T8_ECLASS_PRISM>[1<<T8_
 };
 
 template<>
+constexpr int8_t t8_standalone_lut_cornerface<T8_ECLASS_PRISM>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PRISM]][T8_ELEMENT_NUM_CORNERS[T8_ECLASS_PRISM]][T8_ELEMENT_NUM_CORNER_FACES[T8_ECLASS_PRISM]]={
+  {
+  {1,2,3},
+  {0,2,3},
+  {0,1,3},
+  {1,2,4},
+  {0,2,4},
+  {0,1,4}
+  },
+  {
+  {1,2,3},
+  {0,2,3},
+  {0,1,3},
+  {1,2,4},
+  {0,2,4},
+  {0,1,4}
+  }
+};
+
+template<>
+constexpr int8_t t8_standalone_lut_facecorner<T8_ECLASS_PRISM>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PRISM]][T8_ELEMENT_NUM_FACES[T8_ECLASS_PRISM]][T8_ELEMENT_NUM_FACE_CORNERS[T8_ECLASS_PRISM]]={
+  {
+  {1,2,4,5},
+  {0,2,3,5},
+  {0,1,3,4},
+  {0,1,2,-1},
+  {3,4,5,-1} 
+  },
+  {
+  {1,2,4,5},
+  {0,2,3,5},
+  {0,1,3,4},
+  {0,1,2,-1},
+  {3,4,5,-1} 
+  }
+};
+
+template<>
 constexpr t8_eclass_t t8_standalone_lut_rootface_to_eclass<T8_ECLASS_PRISM>[T8_ELEMENT_NUM_FACES[T8_ECLASS_PRISM]]={
   T8_ECLASS_QUAD,
   T8_ECLASS_QUAD,

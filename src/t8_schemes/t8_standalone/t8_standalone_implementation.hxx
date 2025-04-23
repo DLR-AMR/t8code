@@ -235,9 +235,19 @@ struct t8_standalone_scheme
     T8_ASSERT (element_is_valid (element));
     T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
     T8_ASSERT (0 <= corner && corner < T8_ELEMENT_NUM_CORNERS[TEclass]);
-    const int face_sign = face % 2;
-    const int face_dim = face / 2;
-    return get_hypercube_face_corner_index (face_dim, face_sign, corner);
+    if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      const int face_sign = face % 2;
+      const int face_dim = face / 2;
+      t8_debugf ("this will be the wrong answer:\n");
+      return get_hypercube_face_corner_index (face_dim, face_sign, corner);
+    }
+    else {
+      t8_standalone_element<TEclass> *el = (t8_standalone_element<TEclass> *) element;
+      t8_debugf ("face: %i, corner: %i \n", face, corner);
+      t8_debugf ("eclass: %i \n", TEclass);
+      t8_debugf ("return_value: %i \n", t8_standalone_lut_facecorner<TEclass>[1][face][corner]);
+      return t8_standalone_lut_facecorner<TEclass>[el->type.to_ulong ()][face][corner];
+    }
   }
 
   /** Return the face numbers of the faces sharing an element's corner.
@@ -258,7 +268,15 @@ struct t8_standalone_scheme
     T8_ASSERT (element_is_valid (element));
     T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
     T8_ASSERT (0 <= corner && corner < T8_ELEMENT_NUM_CORNERS[TEclass]);
-    return (corner >> face & 1) + 2 * face;
+    T8_ASSERTF (t8_standalone_lut_facecorner<T8_ECLASS_TRIANGLE>[0][1][1] == 2, "LUT falsch!");
+
+    if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      return (corner >> face & 1) + 2 * face;
+    }
+    else {
+      t8_standalone_element<TEclass> *el = (t8_standalone_element<TEclass> *) element;
+      return t8_standalone_lut_cornerface<TEclass>[el->type.to_ulong ()][corner][face];
+    }
   }
 
   /** Compute the shape of the face of an element.
@@ -1490,6 +1508,8 @@ struct t8_standalone_scheme
     }
     else {
       int coords_int[T8_ELEMENT_DIM[TEclass]];
+      t8_debugf ("vertex: %i\n", vertex);
+      t8_debugf ("T8_ELEMENT_NUM_CORNERS[TEclass]: %i\n", T8_ELEMENT_NUM_CORNERS[TEclass]);
       T8_ASSERT (0 <= vertex && vertex < T8_ELEMENT_NUM_CORNERS[TEclass]);
       element_compute_coords (el, vertex, coords_int);
       for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {

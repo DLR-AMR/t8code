@@ -36,6 +36,8 @@ constexpr uint8_t T8_ELEMENT_NUM_CHILDREN[T8_ECLASS_COUNT] = { 1, 2, 4, 4, 8, 8,
 constexpr uint8_t T8_ELEMENT_NUM_CORNERS[T8_ECLASS_COUNT] = { 1, 2, 4, 3, 8, 4, 6, 5 };
 constexpr uint8_t T8_ELEMENT_NUM_FACES[T8_ECLASS_COUNT] = { 0, 2, 4, 3, 6, 4, 5, 5 };
 constexpr uint8_t T8_ELEMENT_MAX_NUM_FACECHILDREN[T8_ECLASS_COUNT] = { 0, 1, 2, 2, 4, 4, 4, 4 };
+constexpr uint8_t T8_ELEMENT_NUM_CORNER_FACES[T8_ECLASS_COUNT] = { 0, 1, 2, 2, 3, 3, 3, 4 };
+constexpr uint8_t T8_ELEMENT_NUM_FACE_CORNERS[T8_ECLASS_COUNT] = { 0, 2, 2, 2, 4, 3, 4, 4 };
 
 constexpr uint8_t T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_COUNT] = { 0, 0, 0, 1, 0, 3, 1, 2 };
 
@@ -107,6 +109,14 @@ constexpr int8_t t8_standalone_lut_type_rootface_to_face[1 << T8_ELEMENT_NUM_EQU
                                                         [T8_ELEMENT_NUM_FACES[TEclass]];
 template <t8_eclass TEclass>
 constexpr t8_eclass t8_standalone_lut_rootface_to_eclass[T8_ELEMENT_NUM_FACES[TEclass]];
+
+template <t8_eclass TEclass>
+constexpr int8_t t8_standalone_lut_cornerface[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_NUM_CORNERS[TEclass]]
+                                             [T8_ELEMENT_NUM_CORNER_FACES[TEclass]];
+
+template <t8_eclass TEclass>
+constexpr int8_t t8_standalone_lut_facecorner[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_NUM_FACES[TEclass]]
+                                             [T8_ELEMENT_NUM_FACE_CORNERS[TEclass]];
 
 #include "t8_standalone_lut/t8_standalone_lut_triangle.hxx"
 #include "t8_standalone_lut/t8_standalone_lut_prism.hxx"
