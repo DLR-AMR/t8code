@@ -26,7 +26,31 @@
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
 #include <t8_cmesh/t8_cmesh_types.h>
 
-/* In this file we test TODO: document */
+/** \file In this file we test the global cmesh vertex numbers.
+ * 
+ * We build a test cmesh consisting of two coarse triangles joined together
+ * and associate global vertex numbers with the cmesh's vertices.
+ * This cmesh has 4 global vertices in total.
+ * 
+ * We then perform three tests
+ * 
+ * 1) check_tree_to_vertex
+ * Here we test the tree_to_vertex connectivity.
+ * That is, given a tree id, we get a list of the global vertices of that tree
+ * (in local vertex order) and check whether this list is correct.
+ * 
+ * 2) check_vertex_to_tree
+ * Here we test the vertex_to_tree connectivity.
+ * Given a global vertex index, the vertex_to_tree connectivity returns a list
+ * of pairs (local tree_id, local_vertex_id) of all the local trees and their local
+ * vertices that are connected to the global vertex.
+ * We check whether this list is correct.
+ * 
+ * 3) check_global_vertex_number
+ * We verify that the number of global vertices is 4.
+ * We additionally verify that the process local number of global vertices is 4 as well.
+ * This is true, since the cmesh is not partitioned.
+ */
 
 class t8_test_cmesh_vertex_conn: public testing::Test {
  protected:
@@ -108,20 +132,6 @@ TEST_F (t8_test_cmesh_vertex_conn, check_tree_to_vertex)
   EXPECT_EQ (check_global_vertices_tree_1[2], 2);
 }
 
-/** Check that the number of global/local unique vertices is correct.
- * Since the cmesh is not partitioned, both numbers should be equal to 4.
- */
-TEST_F (t8_test_cmesh_vertex_conn, check_global_vertex_number)
-{
-  ASSERT_TRUE (t8_cmesh_is_committed (cmesh));
-  ASSERT_FALSE (t8_cmesh_is_partitioned (cmesh));
-
-  const int num_global_vertices = t8_cmesh_get_num_global_vertices (cmesh);
-  const int num_local_vertices = t8_cmesh_get_num_local_vertices (cmesh);
-  EXPECT_EQ (num_global_vertices, testcase_num_global_vertices);
-  EXPECT_EQ (num_local_vertices, testcase_num_global_vertices);
-}
-
 /** */
 TEST_F (t8_test_cmesh_vertex_conn, check_vertex_to_tree)
 {
@@ -171,4 +181,18 @@ TEST_F (t8_test_cmesh_vertex_conn, check_vertex_to_tree)
     const t8_locidx_t num_trees_at_vertex = t8_cmesh_get_num_trees_at_vertex (cmesh, ivertex);
     EXPECT_EQ (num_trees_at_vertex, check_num_trees_at_vertex[ivertex]);
   }
+}
+
+/** Check that the number of global/local unique vertices is correct.
+ * Since the cmesh is not partitioned, both numbers should be equal to 4.
+ */
+TEST_F (t8_test_cmesh_vertex_conn, check_global_vertex_number)
+{
+  ASSERT_TRUE (t8_cmesh_is_committed (cmesh));
+  ASSERT_FALSE (t8_cmesh_is_partitioned (cmesh));
+
+  const int num_global_vertices = t8_cmesh_get_num_global_vertices (cmesh);
+  const int num_local_vertices = t8_cmesh_get_num_local_vertices (cmesh);
+  EXPECT_EQ (num_global_vertices, testcase_num_global_vertices);
+  EXPECT_EQ (num_local_vertices, testcase_num_global_vertices);
 }
