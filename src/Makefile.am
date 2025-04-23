@@ -1,6 +1,6 @@
-#This file is part of t8code
-#Non - recursive Makefile.am in src
-#Included from toplevel directory
+# This file is part of t8code
+# Non-recursive Makefile.am in src
+# Included from toplevel directory
 
 cmeshincludedir = $(includedir)/t8_cmesh
 dataincludedir = $(includedir)/t8_data

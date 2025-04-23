@@ -755,7 +755,7 @@ t8_default_scheme_quad::element_is_valid (const t8_element_t *elem) const
 void
 t8_default_scheme_quad::element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const
 {
-  //T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (debug_string != NULL);
   p4est_quadrant_t *quad = (p4est_quadrant_t *) elem;
   snprintf (debug_string, string_size, "x: %i, y: %i, level: %i", quad->x, quad->y, quad->level);
