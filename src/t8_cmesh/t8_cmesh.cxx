@@ -33,6 +33,7 @@
 #include <t8_eclass.h>
 #include "t8_cmesh_types.h"
 #include <t8_vector_helper/t8_vector_algorithms.hxx>
+#include <t8_cmesh.hxx>
 #if T8_ENABLE_METIS
 #include <metis.h>
 
@@ -1583,44 +1584,6 @@ t8_A_times_B_over_C_intA (const int proc, const t8_gloidx_t elem_index, const t8
   return t8_A_times_B_over_C_gloidx (proc, elem_index, global_num_elem);
 }
 
-/* Compute the first element of a process in a uniform partition.
- * We compute it via the formula process * global_num_elements / mpisize.
- * To prevent an overflow in the multiplication we split global_num_elements into
- * two parts: a_0 * e + a_1, with e = 2^32
- * The formula then becomes: a_0*e*process/mpisize + a_1*process/mpisize
- * If we store the result of each part in a 64-bit uint we can safely compute the second part (see sum_2). 
- * The first part is computed using integer division with a remainder. 
- * We can split it into two parts as well:
- * sum_0 = (a_0 * process) / mpisize * e, computing the integer part
- * sum_1 = ((a_0 * process) % mpisize) / mpisize * e, computing the remainder
- *
- * This restricts us to use a maximum of 2^32-1 processes. Update this formula if we have supercomputers 
- * with more than 2^32-1 processes.
- *
- * \param[in] process             The process number.
- * \param[in] mpisize             The number of processes.
- * \param[in] global_num_elements The number of elements in the global mesh.
- * \return                        The first element of the process.
- */
-static inline t8_gloidx_t
-t8_cmesh_get_first_element_of_process (const uint32_t process, const uint32_t mpisize,
-                                       const uint64_t global_num_elements)
-{
-  const uint64_t a_0 = global_num_elements >> 32;
-
-  const uint64_t a_1 = (global_num_elements << 32) >> 32;
-
-  const uint64_t sum_0 = ((a_0 * process) / mpisize) << 32;
-
-  const uint64_t sum_1 = (((a_0 * process) % mpisize) << 32) / mpisize;
-
-  const uint64_t sum_2 = (a_1 * process) / mpisize;
-
-  // Ensure the result does not overflow and cast explicitly to t8_gloidx_t
-  const t8_gloidx_t result = (t8_gloidx_t) (sum_0 + sum_1 + sum_2);
-  return result;
-}
-
 void
 t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, int level, t8_scheme *tree_scheme,
                                              t8_gloidx_t *first_local_tree, t8_gloidx_t *child_in_tree_begin,
@@ -1783,11 +1746,11 @@ t8_cmesh_determine_partition (const t8_gloidx_t element_index, const t8_gloidx_t
     /* Check that the element lies in the partition of the computed proc. */
     T8_ASSERT (t8_cmesh_get_first_element_of_process ((uint32_t) first_proc_rank, (uint32_t) num_procs,
                                                       (uint64_t) global_num_elements)
-               <= element_index);
+               <= (uint64_t) element_index);
     if ((int) first_proc_rank != num_procs - 1) {
       T8_ASSERT (t8_cmesh_get_first_element_of_process ((uint32_t) first_proc_rank + 1, (uint32_t) num_procs,
                                                         (uint64_t) global_num_elements)
-                 > element_index);
+                 > (uint64_t) element_index);
     }
     if (element_index == global_num_elements) {
       T8_ASSERT ((int) first_proc_rank == num_procs);
