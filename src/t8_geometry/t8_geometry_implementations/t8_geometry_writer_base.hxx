@@ -32,4 +32,9 @@ struct t8_geometry_writer_base : public t8_geometry_linear_axis_aligned
   t8_geometry_writer_base ();
   virtual ~t8_geometry_writer_base ();
   
-};
+virtual bool
+t8_geom_is_in_tree (t8_forest_t forest, t8_locidx_t ltreeid,
+                    const t8_element_t *element, const double *points,
+                    const int num_points, int *is_inside,
+                    const double tolerance);
+}
