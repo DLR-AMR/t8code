@@ -113,7 +113,7 @@ t8_forest_partition_create_offsets (t8_forest_t forest)
   t8_shmem_array_end_writing (forest->element_offsets);
 }
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 /* Test if all first descendants of the elements in the first tree have
  * a greater or equal linear id than the stored first descendant. */
 static void
@@ -151,9 +151,9 @@ t8_forest_partition_test_desc (t8_forest_t forest)
 #endif
 
 void
-t8_forest_partition_test_boundary_element (const t8_forest_t forest)
+t8_forest_partition_test_boundary_element ([[maybe_unused]] const t8_forest_t forest)
 {
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (forest->global_first_desc != NULL);
 
@@ -306,7 +306,7 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
     }
   }
   /* Collect all first global indices in the array */
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 #ifdef SC_ENABLE_MPI
   {
     /* We assert that we use the correct data size in the allgather call. */
@@ -318,7 +318,7 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
 #endif
 #endif
   t8_shmem_array_allgather (&local_first_desc, 1, T8_MPI_LINEARIDX, forest->global_first_desc, 1, T8_MPI_LINEARIDX);
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   {
     int iproc;
     char buffer[BUFSIZ] = {};
@@ -662,7 +662,7 @@ t8_forest_partition_fill_buffer (t8_forest_t forest_from, char **send_buffer, in
  * \param [in]  last_element_send The local id of the last element that we need to send.
  */
 static void
-t8_forest_partition_fill_buffer_data (t8_forest_t forest_from, char **send_buffer, int *buffer_alloc,
+t8_forest_partition_fill_buffer_data ([[maybe_unused]] t8_forest_t forest_from, char **send_buffer, int *buffer_alloc,
                                       t8_locidx_t first_element_send, t8_locidx_t last_element_send,
                                       const sc_array_t *data)
 {

@@ -592,7 +592,7 @@ class t8_default_scheme_quad: public t8_default_scheme_common<t8_default_scheme_
   int
   refines_irregular (void) const;
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is
    *  safe to perform any of the above algorithms on it.
    * \param [in]      elem  The element to be checked.
@@ -625,7 +625,7 @@ class t8_default_scheme_quad: public t8_default_scheme_common<t8_default_scheme_
  * \param [in,out] elem   The element to be filled with root.
  */
   void
-  get_root (t8_element_t *elem) const;
+  set_to_root (t8_element_t *elem) const;
 
   /** Pack multiple elements into contiguous memory, so they can be sent via MPI.
    * \param [in] elements Array of elements that are to be packed

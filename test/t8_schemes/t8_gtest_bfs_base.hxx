@@ -81,7 +81,7 @@ class TestBFS: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
     scheme = create_from_scheme_id (scheme_id);
     eclass = std::get<1> (GetParam ());
     scheme->element_new (eclass, 1, &element);
-    scheme->get_root (eclass, element);
+    scheme->set_to_root (eclass, element);
   }
 
   void

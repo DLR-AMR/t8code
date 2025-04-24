@@ -64,8 +64,8 @@ class forest_search: public testing::TestWithParam<std::tuple<std::tuple<int, t8
  */
 bool
 t8_test_search_all_fn (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
-                       const bool is_leaf, const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index,
-                       std::vector<bool> *user_data)
+                       const bool is_leaf, [[maybe_unused]] const t8_element_array_t *leaf_elements,
+                       const t8_locidx_t tree_leaf_index, std::vector<bool> *user_data)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (user_data != nullptr);
@@ -87,8 +87,9 @@ t8_test_search_all_fn (const t8_forest_t forest, const t8_locidx_t ltreeid, cons
 
 inline bool
 t8_test_search_query_all_fn (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
-                             const bool is_leaf, const t8_element_array_t *leaf_elements,
-                             const t8_locidx_t tree_leaf_index, const int &querie, std::vector<bool> *user_data)
+                             const bool is_leaf, [[maybe_unused]] const t8_element_array_t *leaf_elements,
+                             const t8_locidx_t tree_leaf_index, const int &querie,
+                             [[maybe_unused]] std::vector<bool> *user_data)
 {
   /* The query is an int with value 42 (see below) */
   EXPECT_EQ (querie, 42) << "Wrong query argument passed to query callback.";
@@ -157,5 +158,10 @@ TEST_P (forest_search, test_search_one_query_matches_all)
 
   t8_forest_unref (&forest);
 }
+#if T8CODE_TEST_LEVEL >= 2
+const int maxlvl = 5;
+#else
+const int maxlvl = 6;
+#endif
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_search, forest_search, testing::Combine (DefaultScheme, testing::Range (0, 6)));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_search, forest_search, testing::Combine (AllSchemes, testing::Range (0, maxlvl)));
