@@ -40,7 +40,7 @@
 TEST (gtest_default_scheme, is_default)
 {
   /* TODO: Implement an EXPECT_FALSE check for non-default schemes */
-  t8_scheme *scheme = t8_scheme_new_default ();
+  const t8_scheme *scheme = t8_scheme_new_default ();
   for (int eclass = T8_ECLASS_VERTEX; eclass < T8_ECLASS_COUNT; ++eclass) {
     EXPECT_TRUE (t8_eclass_scheme_is_default (scheme, static_cast<t8_eclass_t> (eclass)));
   }

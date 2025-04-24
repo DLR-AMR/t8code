@@ -22,7 +22,7 @@
 
 #include <sc_statistics.h>
 #include <t8_refcount.h>
-#include <t8_vec.h>
+#include <t8_types/t8_vec.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_types.h>
@@ -182,14 +182,13 @@ t8_forest_compute_maxlevel (t8_forest_t forest)
    * class in the forest */
   int eclass_it;
   int maxlevel;
-  t8_scheme *scheme;
 
   T8_ASSERT (t8_cmesh_is_committed (forest->cmesh));
   forest->maxlevel = -1;
   for (eclass_it = T8_ECLASS_VERTEX; eclass_it < T8_ECLASS_COUNT; eclass_it++) {
     if (forest->cmesh->num_trees_per_eclass[eclass_it] > 0) {
       /* If there are trees of this class, compute the maxlevel of the class */
-      scheme = t8_forest_get_scheme_before_commit (forest);
+      const t8_scheme *scheme = t8_forest_get_scheme_before_commit (forest);
       maxlevel = scheme->get_maxlevel ((t8_eclass_t) eclass_it);
       /* Compute the minimum of this level and the stored maxlevel */
       if (forest->maxlevel == -1) {
@@ -210,7 +209,7 @@ t8_forest_get_maxlevel (const t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (forest->maxlevel >= 0);
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   /* Ensure that the maxlevel does not increase the maximum level of any
    * class in the forest */
   int eclass_it;
@@ -236,7 +235,7 @@ t8_forest_get_dimension (const t8_forest_t forest)
 /* Compute the minimum refinement level, such that a uniform forest on a cmesh
  * does not have empty processes */
 int
-t8_forest_min_nonempty_level (t8_cmesh_t cmesh, t8_scheme *scheme)
+t8_forest_min_nonempty_level (t8_cmesh_t cmesh, const t8_scheme *scheme)
 {
   int level, min_num_children, maxlevel;
   int eclass;
@@ -255,7 +254,7 @@ t8_forest_min_nonempty_level (t8_cmesh_t cmesh, t8_scheme *scheme)
     if (cmesh->num_trees_per_eclass[eclass] > 0) {
       /* Compute the number of children of the root tree. */
       scheme->element_new ((t8_eclass_t) eclass, 1, &element);
-      scheme->get_root ((t8_eclass_t) eclass, element);
+      scheme->set_to_root ((t8_eclass_t) eclass, element);
       min_num_children = SC_MIN (min_num_children, scheme->element_get_num_children ((t8_eclass_t) eclass, element));
       scheme->element_destroy ((t8_eclass_t) eclass, 1, &element);
       /* Compute the minimum possible maximum refinement level */
@@ -276,7 +275,7 @@ t8_forest_min_nonempty_level (t8_cmesh_t cmesh, t8_scheme *scheme)
 }
 
 int
-t8_forest_no_overlap (t8_forest_t forest)
+t8_forest_no_overlap ([[maybe_unused]] t8_forest_t forest)
 {
 #if T8_ENABLE_DEBUG
   T8_ASSERT (t8_forest_is_committed (forest));
@@ -481,7 +480,7 @@ t8_forest_element_diam (t8_forest_t forest, t8_locidx_t ltreeid, const t8_elemen
     /* Compute coordinates of this corner */
     t8_forest_element_coordinate (forest, ltreeid, element, i, coordinates);
     /* Compute the distance to the midpoint */
-    dist += t8_vec_dist (coordinates, centroid);
+    dist += t8_dist (coordinates, centroid);
   }
 
   /* We approximate the diameter as twice the average of the distances
@@ -520,7 +519,7 @@ t8_forest_element_line_length (t8_forest_t forest, t8_locidx_t ltreeid, const t8
   t8_forest_element_coordinate (forest, ltreeid, element, corner_b, coordinates_b);
 
   /* Compute the euclidean distance */
-  length = t8_vec_dist (coordinates_a, coordinates_b);
+  length = t8_dist (coordinates_a, coordinates_b);
   /* return it */
   return length;
 }
@@ -533,13 +532,13 @@ t8_forest_element_triangle_area (double coordinates[3][3])
 
   /* Compute vectors v_1 and v_2 */
   /* v_1 = v_1 - v_0 */
-  t8_vec_axpy (coordinates[0], coordinates[1], -1);
+  t8_axpy (coordinates[0], coordinates[1], -1);
   /* v_2 = v_2 - v_0 */
-  t8_vec_axpy (coordinates[0], coordinates[2], -1);
+  t8_axpy (coordinates[0], coordinates[2], -1);
   /* compute scalar products */
-  v_1v_1 = t8_vec_dot (coordinates[1], coordinates[1]);
-  v_1v_2 = t8_vec_dot (coordinates[1], coordinates[2]);
-  v_2v_2 = t8_vec_dot (coordinates[2], coordinates[2]);
+  v_1v_1 = t8_dot (coordinates[1], coordinates[1]);
+  v_1v_2 = t8_dot (coordinates[1], coordinates[2]);
+  v_2v_2 = t8_dot (coordinates[2], coordinates[2]);
 
   /* compute determinant and half it */
   return 0.5 * sqrt (fabs (v_1v_1 * v_2v_2 - v_1v_2 * v_1v_2));
@@ -561,14 +560,14 @@ t8_forest_element_tet_volume (const double coordinates[4][3])
 
   /* subtract the 4-th vector from the other 3 */
   for (i = 0; i < 3; i++) {
-    t8_vec_axpyz (coordinates[3], coordinates[i], coordinates_tmp[i], -1);
+    t8_axpyz (coordinates[3], coordinates[i], coordinates_tmp[i], -1);
   }
 
   /* Compute the cross product of the 2nd and 3rd */
-  t8_vec_cross (coordinates_tmp[1], coordinates_tmp[2], cross);
+  t8_cross_3D (coordinates_tmp[1], coordinates_tmp[2], cross);
 
   /* return |(a-d) * ((b-d)x(c-d))| / 6 */
-  return fabs (t8_vec_dot (coordinates_tmp[0], cross)) / 6;
+  return fabs (t8_dot (coordinates_tmp[0], cross)) / 6;
 }
 
 /* Compute an element's volume */
@@ -669,14 +668,14 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid, const t8_elem
 
     /* Compute the difference of each corner with corner 0 */
     for (i = 1; i < 4; i++) {
-      t8_vec_axpy (coordinates[0], coordinates[i], -1);
+      t8_axpy (coordinates[0], coordinates[i], -1);
     }
 
     /* Compute the cross product of the 2nd and 3rd */
-    t8_vec_cross (coordinates[2], coordinates[3], cross);
+    t8_cross_3D (coordinates[2], coordinates[3], cross);
 
     /* return |(a-d) * ((b-d)x(c-d))| */
-    return fabs (t8_vec_dot (coordinates[1], cross));
+    return fabs (t8_dot (coordinates[1], cross));
   }
   case T8_ECLASS_PRISM:
 
@@ -836,9 +835,9 @@ t8_forest_element_face_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const 
 
     /* Compute the average of those coordinates */
     /* centroid = centroid + vertex_a */
-    t8_vec_axpy (vertex_a, centroid, 1);
+    t8_axpy (vertex_a, centroid, 1);
     /* centroid /= 2 */
-    t8_vec_ax (centroid, 0.5);
+    t8_ax (centroid, 0.5);
     return;
   } break;
   case T8_ECLASS_TRIANGLE:
@@ -855,12 +854,12 @@ t8_forest_element_face_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const 
 
     for (i = 1; i < num_corners; i++) {
       /* coordinates[0] = SUM (coordinates[i]) */
-      t8_vec_axpy (coordinates[i], coordinates[0], 1);
+      t8_axpy (coordinates[i], coordinates[0], 1);
     }
     /* centroid = coordinates[0] */
-    t8_vec_axb (coordinates[0], centroid, 1, 0);
+    t8_axb (coordinates[0], centroid, 1, 0);
     /* divide by num corners */
-    t8_vec_ax (centroid, 1. / num_corners);
+    t8_ax (centroid, 1. / num_corners);
     return;
   } break;
   default:
@@ -886,30 +885,30 @@ t8_four_points_coplanar (const double p_0[3], const double p_1[3], const double 
 
   /* A = p1 - p0 */
   double A[3];
-  t8_vec_axpyz (p_0, p_1, A, -1);
+  t8_axpyz (p_0, p_1, A, -1);
 
   /* B = p2 - p0 */
   double B[3];
-  t8_vec_axpyz (p_0, p_2, B, -1);
+  t8_axpyz (p_0, p_2, B, -1);
 
   /* C = p3 - p0 */
   double C[3];
-  t8_vec_axpyz (p_0, p_3, C, -1);
+  t8_axpyz (p_0, p_3, C, -1);
 
   /* n1 = A x B */
   double A_cross_B[3];
-  t8_vec_cross (A, B, A_cross_B);
+  t8_cross_3D (A, B, A_cross_B);
 
   /* n2 = A x C */
   double A_cross_C[3];
-  t8_vec_cross (A, C, A_cross_C);
+  t8_cross_3D (A, C, A_cross_C);
 
   /* n1 x n2 */
   double n1_cross_n2[3];
-  t8_vec_cross (A_cross_B, A_cross_C, n1_cross_n2);
+  t8_cross_3D (A_cross_B, A_cross_C, n1_cross_n2);
 
   /* || n1 x n2 || */
-  const double norm = t8_vec_norm (n1_cross_n2);
+  const double norm = t8_norm (n1_cross_n2);
   return norm < tolerance;
 }
 #endif
@@ -942,16 +941,16 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
     t8_forest_element_coordinate (forest, ltreeid, element, 1, normal);
 
     /* Compute normal = v_1 - v_0 */
-    t8_vec_axpy (v_0, normal, -1);
+    t8_axpy (v_0, normal, -1);
 
     /* Compute the norm */
-    norm = t8_vec_norm (normal);
+    norm = t8_norm (normal);
 
     /* Compute normal =  normal/norm if face = 1
      *         normal = -normal/norm if face = 0
      */
     sign = face == 0 ? -1 : 1;
-    t8_vec_ax (normal, sign / norm);
+    t8_ax (normal, sign / norm);
 
     return;
   case T8_ECLASS_LINE: {
@@ -987,28 +986,28 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
        * Compute the dot products */
     vb_vb = c_vb = 0;
     /* vertex_b = vertex_b - vertex_a */
-    t8_vec_axpy (vertex_a, vertex_b, -1);
+    t8_axpy (vertex_a, vertex_b, -1);
     /* center = center - vertex_a */
-    t8_vec_axpy (vertex_a, center, -1);
+    t8_axpy (vertex_a, center, -1);
     /* vertex_b * vertex_b */
-    vb_vb = t8_vec_dot (vertex_b, vertex_b);
+    vb_vb = t8_dot (vertex_b, vertex_b);
     /* center * vertex_b */
-    c_vb = t8_vec_dot (center, vertex_b);
+    c_vb = t8_dot (center, vertex_b);
 
     /* Compute N = C - <C,V>/<V,V> V
        * compute the norm of N
        * compute N*C */
-    t8_vec_axpyz (vertex_b, center, normal, -1 * c_vb / vb_vb);
-    norm = t8_vec_norm (normal);
+    t8_axpyz (vertex_b, center, normal, -1 * c_vb / vb_vb);
+    norm = t8_norm (normal);
     T8_ASSERT (norm != 0);
-    c_n = t8_vec_dot (center, normal);
+    c_n = t8_dot (center, normal);
 
     /* If N*C > 0 then N points inwards, so we have to reverse it */
     if (c_n > 0) {
       norm *= -1;
     }
     /* divide normal by its normal to normalize it */
-    t8_vec_ax (normal, 1. / norm);
+    t8_ax (normal, 1. / norm);
 
     return;
   } break;
@@ -1039,6 +1038,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
       }
     }
 #endif
+    [[fallthrough]];
   case T8_ECLASS_TRIANGLE: {
     /* We construct the normal as the cross product of two spanning
      * vectors for the triangle*/
@@ -1053,26 +1053,26 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
       t8_forest_element_coordinate (forest, ltreeid, element, corner, corner_vertices[i]);
     }
     /* Subtract vertex 0 from the other two */
-    t8_vec_axpy (corner_vertices[0], corner_vertices[1], -1);
-    t8_vec_axpy (corner_vertices[0], corner_vertices[2], -1);
+    t8_axpy (corner_vertices[0], corner_vertices[1], -1);
+    t8_axpy (corner_vertices[0], corner_vertices[2], -1);
 
     /* Compute the cross product of the two,
      * and the norm of the cross product */
-    t8_vec_cross (corner_vertices[1], corner_vertices[2], normal);
-    norm = t8_vec_norm (normal);
+    t8_cross_3D (corner_vertices[1], corner_vertices[2], normal);
+    norm = t8_norm (normal);
     T8_ASSERT (norm > 1e-14);
     /* Compute the coordinates of the center of the element */
     t8_forest_element_centroid (forest, ltreeid, element, center);
     /* Compute center = center - vertex_0 */
-    t8_vec_axpy (corner_vertices[0], center, -1);
+    t8_axpy (corner_vertices[0], center, -1);
     /* Compute the dot-product of normal and center */
-    c_n = t8_vec_dot (center, normal);
+    c_n = t8_dot (center, normal);
     /* if c_n is positive, the computed normal points inwards, so we have to reverse it */
     if (c_n > 0) {
       norm = -norm;
     }
     /* Divide normal by norm to normalize it */
-    t8_vec_ax (normal, 1. / norm);
+    t8_ax (normal, 1. / norm);
   } break;
   default:
     SC_ABORT ("Not implemented.\n");
@@ -1145,7 +1145,6 @@ t8_forest_populate (t8_forest_t forest)
   t8_element_t *element, *element_succ;
   t8_element_array_t *telements;
   t8_eclass_t tree_class;
-  t8_scheme *scheme;
   t8_gloidx_t cmesh_first_tree, cmesh_last_tree;
   int is_empty;
 
@@ -1186,7 +1185,7 @@ t8_forest_populate (t8_forest_t forest)
       tree = (t8_tree_t) t8_sc_array_index_locidx (forest->trees, jt - forest->first_local_tree);
       tree_class = tree->eclass = t8_cmesh_get_tree_class (forest->cmesh, jt - first_ctree);
       tree->elements_offset = count_elements;
-      scheme = forest->scheme;
+      const t8_scheme *scheme = forest->scheme;
       T8_ASSERT (scheme != NULL);
       telements = &tree->elements;
       /* calculate first and last element on this tree */
@@ -1224,7 +1223,7 @@ t8_forest_populate (t8_forest_t forest)
  * not the first possible descendant of that tree.
  */
 static int
-t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
+t8_forest_tree_shared ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] int first_or_last)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (first_or_last == 0 || first_or_last == 1);
@@ -1322,7 +1321,7 @@ t8_forest_tree_shared (t8_forest_t forest, int first_or_last)
     /* we do this by first creating a level 0 child of the tree, then
      * calculating its first/last descendant */
     scheme->element_new (eclass, 1, &element);
-    scheme->get_root (eclass, element);
+    scheme->set_to_root (eclass, element);
     scheme->element_new (eclass, 1, &desc);
     if (first_or_last == 0) {
       scheme->element_get_first_descendant (eclass, element, desc, forest->maxlevel);
@@ -1491,7 +1490,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const 
   /* Get a pointer to the tree to read its element class */
   const t8_tree_t tree = t8_forest_get_tree (forest, ltreeid);
   const t8_eclass_t eclass = tree->eclass;
-  t8_scheme *scheme = t8_forest_get_scheme (forest);
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
   if (neigh_eclass == eclass && scheme->element_get_face_neighbor_inside (eclass, elem, neigh, face, neigh_face)) {
     /* The neighbor was constructed and is inside the current tree. */
     return ltreeid + t8_forest_get_first_local_tree_id (forest);
@@ -1598,7 +1597,7 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, 
   t8_tree_t tree;
   t8_element_t **children_at_face;
   t8_gloidx_t neighbor_tree = -1;
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   t8_gloidx_t last_neighbor_tree = -1;
 #endif
   int num_children_at_face, child_it;
@@ -1644,7 +1643,7 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, 
     }
     /* For each of the neighbors, the neighbor tree must be the same. */
     T8_ASSERT (child_it == 0 || neighbor_tree == last_neighbor_tree);
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
     last_neighbor_tree = neighbor_tree;
 #endif
   }
@@ -1925,7 +1924,7 @@ t8_forest_print_all_leaf_neighbors (t8_forest_t forest)
   t8_element_t **neighbor_leaves;
   int iface, num_neighbors, ineigh;
   t8_eclass_t eclass, neigh_eclass;
-  t8_scheme *scheme;
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
   t8_locidx_t *element_indices;
   int *dual_faces;
   char buffer[BUFSIZ];
@@ -1948,7 +1947,6 @@ t8_forest_print_all_leaf_neighbors (t8_forest_t forest)
     /* Get a pointer to the ielem-th element, its eclass, treeid and scheme */
     const t8_element_t *leaf = t8_forest_get_element (forest, ielem, &ltree);
     eclass = t8_forest_get_tree_class (forest, ltree);
-    scheme = t8_forest_get_scheme (forest);
     /* Iterate over all faces */
     for (iface = 0; iface < scheme->element_get_num_faces (eclass, leaf); iface++) {
       t8_forest_leaf_face_neighbors (forest, ltree, leaf, &neighbor_leaves, iface, &dual_faces, &num_neighbors,
@@ -2029,7 +2027,6 @@ t8_forest_element_check_owner (t8_forest_t forest, t8_element_t *element, t8_glo
                                int rank, int element_is_desc)
 {
   t8_element_t *first_desc;
-  t8_scheme *scheme;
   t8_linearidx_t rfirst_desc_id, rnext_desc_id = -1, first_desc_id;
   int is_first, is_last, check_next;
   int next_nonempty;
@@ -2054,7 +2051,7 @@ t8_forest_element_check_owner (t8_forest_t forest, t8_element_t *element, t8_glo
       /* The tree is either the first or the last tree on rank, we thus
        * have to check whether element is in the range of the tree */
       /* Get the eclass scheme of the tree */
-      scheme = t8_forest_get_scheme (forest);
+      const t8_scheme *scheme = t8_forest_get_scheme (forest);
       /* Compute the linear id of the first descendant of element */
       if (!element_is_desc) {
         scheme->element_new (eclass, 1, &first_desc);
@@ -2146,7 +2143,7 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid, t8_el
                                   int lower_bound, int upper_bound, int guess, int element_is_desc)
 {
   t8_element_t *first_desc;
-  t8_scheme *scheme;
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
   t8_gloidx_t current_first_tree;
   t8_linearidx_t current_id, element_desc_id;
   t8_linearidx_t *first_descs;
@@ -2165,7 +2162,6 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid, t8_el
   if (upper_bound == lower_bound) {
     return upper_bound;
   }
-  scheme = t8_forest_get_scheme (forest);
   if (element_is_desc) {
     /* The element is already its own first_descendant */
     first_desc = element;
@@ -2428,7 +2424,7 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest, t8_gloidx_t gtre
   else {
     last_face_desc = last_desc;
   }
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   {
     /* Check if the computed or given descendants are the correct descendant */
     t8_element_t *test_desc;
@@ -2795,7 +2791,7 @@ t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh, sc_MPI_Comm comm)
 }
 
 void
-t8_forest_set_scheme (t8_forest_t forest, t8_scheme *scheme)
+t8_forest_set_scheme (t8_forest_t forest, const t8_scheme *scheme)
 {
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->rc.refcount > 0);
@@ -3015,9 +3011,11 @@ t8_forest_comm_global_num_elements (t8_forest_t forest)
  * \return                  Always return 1, to refine every element
  */
 static int
-t8_forest_refine_everything (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                             t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme *scheme,
-                             const int is_family, const int num_elements, t8_element_t *elements[])
+t8_forest_refine_everything ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                             [[maybe_unused]] t8_locidx_t which_tree, [[maybe_unused]] t8_eclass_t tree_class,
+                             [[maybe_unused]] t8_locidx_t lelement_id, [[maybe_unused]] const t8_scheme *scheme,
+                             [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
+                             [[maybe_unused]] t8_element_t *elements[])
 {
 
   return 1;
@@ -3093,7 +3091,7 @@ t8_forest_populate_irregular (t8_forest_t forest)
   t8_forest_unref (&forest_tmp_partition);
 }
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 /**
  * Checks if a scheme is valid. This is an intermediate check, which requires the schemes eclass schemes
  * to be in the same order as the eclass enum. This is only needed as long as the trees access the eclass scheme
@@ -3376,7 +3374,7 @@ t8_forest_commit (t8_forest_t forest)
     }
     forest->do_ghost = 0;
   }
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   t8_forest_partition_test_boundary_element (forest);
 #endif
 }
@@ -3568,7 +3566,7 @@ static int
 t8_forest_compare_elem_tree (const void *lelement_id, const void *ltree)
 {
   t8_locidx_t leid = *(const t8_locidx_t *) lelement_id;
-  const t8_tree_t tree = (const t8_tree_t) ltree;
+  const t8_tree_t tree = (t8_tree_t) ltree;
 
   if (tree->elements_offset > leid) {
     /* We have to look further to the left */
@@ -3589,7 +3587,7 @@ t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id, t8_locidx_t 
 {
   t8_tree_t tree;
   t8_locidx_t ltree;
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   t8_locidx_t ltreedebug;
 #endif
 
@@ -3601,7 +3599,7 @@ t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id, t8_locidx_t 
   /* We optimized the binary search out by using sc_bsearch,
    * but keep it in for debugging. We check whether the hand-written
    * binary search matches the sc_array_bsearch. */
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   {
     t8_locidx_t ltree_a, ltree_b;
     ltree_a = 0;
@@ -3690,7 +3688,6 @@ t8_eclass_t
 t8_forest_get_tree_class (const t8_forest_t forest, const t8_locidx_t ltreeid)
 {
   t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
-
   T8_ASSERT (0 <= ltreeid && ltreeid < num_local_trees + t8_forest_get_num_ghost_trees (forest));
   if (ltreeid < num_local_trees) {
     /* The id belongs to a local tree */
@@ -3714,7 +3711,7 @@ t8_forest_get_first_local_element_id (t8_forest_t forest)
   return -1;
 }
 
-t8_scheme *
+const t8_scheme *
 t8_forest_get_scheme (const t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
@@ -3723,7 +3720,7 @@ t8_forest_get_scheme (const t8_forest_t forest)
   return forest->scheme;
 }
 
-t8_scheme *
+const t8_scheme *
 t8_forest_get_scheme_before_commit (const t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
@@ -4068,7 +4065,7 @@ t8_forest_write_vtk_ext (t8_forest_t forest, const char *fileprefix, const int w
   T8_ASSERT (forest->rc.refcount > 0);
   T8_ASSERT (forest->committed);
 
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
   if (do_not_use_API && write_curved) {
     t8_errorf ("WARNING: Export of curved elements not yet available with the inbuild function. "
                "Using the VTK API instead.\n");
@@ -4090,7 +4087,6 @@ t8_forest_write_vtk_ext (t8_forest_t forest, const char *fileprefix, const int w
                                              write_element_id, write_ghosts, write_curved, num_data, data);
   }
   else {
-    T8_ASSERT (!write_curved);
     return t8_forest_vtk_write_file (forest, fileprefix, write_treeid, write_mpirank, write_level, write_element_id,
                                      write_ghosts, num_data, data);
   }
@@ -4103,7 +4099,8 @@ t8_forest_write_vtk (t8_forest_t forest, const char *fileprefix)
 }
 
 t8_forest_t
-t8_forest_new_uniform (t8_cmesh_t cmesh, t8_scheme *scheme, const int level, const int do_face_ghost, sc_MPI_Comm comm)
+t8_forest_new_uniform (t8_cmesh_t cmesh, const t8_scheme *scheme, const int level, const int do_face_ghost,
+                       sc_MPI_Comm comm)
 {
   t8_forest_t forest;
 

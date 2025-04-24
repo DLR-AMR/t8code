@@ -28,16 +28,17 @@
 #include <gtest/gtest.h>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <t8_eclass.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_macros.hxx>
 
-class nca: public testing::TestWithParam<t8_eclass> {
+class nca: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
  protected:
   void
   SetUp () override
   {
-    tree_class = GetParam ();
-    scheme = t8_scheme_new_default ();
+    const int scheme_id = std::get<0> (GetParam ());
+    scheme = create_from_scheme_id (scheme_id);
+    tree_class = std::get<1> (GetParam ());
     scheme->element_new (tree_class, 1, &correct_nca);
     scheme->element_new (tree_class, 1, &desc_a);
     scheme->element_new (tree_class, 1, &desc_b);
@@ -59,7 +60,7 @@ class nca: public testing::TestWithParam<t8_eclass> {
     * check        -> the computed nca of desc_a and desc_b, should be equal to correct_nca
     */
   t8_element_t *correct_nca, *desc_a, *desc_b, *check;
-  t8_scheme *scheme;
+  const t8_scheme *scheme;
   t8_eclass_t tree_class;
 };
 
@@ -150,11 +151,11 @@ TEST_P (nca, nca_check_deep)
  * \param[in] parent_a          An initialized element, descendant of \a correct_nca, not a descendant or ancestor of \a parent_b. \a desc_a will be a child of it
  * \param[in] parent_b          An initialized element, descendant of \a correct_nca, not a descendant or ancestor of \a parent_a. \a desc_b will be a child of it
  * \param[in] max_lvl           The maximal depth of the recursion
- * \param[in] scheme                the scheme to use
+ * \param[in] scheme            The scheme to use
  */
 static void
 t8_recursive_nca_check (t8_element_t *check_nca, t8_element_t *desc_a, t8_element_t *desc_b, t8_element_t *check,
-                        t8_element_t *parent_a, t8_element_t *parent_b, const int max_lvl, t8_scheme *scheme,
+                        t8_element_t *parent_a, t8_element_t *parent_b, const int max_lvl, const t8_scheme *scheme,
                         const t8_eclass_t tree_class)
 {
   T8_ASSERT (max_lvl <= scheme->get_maxlevel (tree_class) - 1);
@@ -223,7 +224,9 @@ t8_recursive_nca_check (t8_element_t *check_nca, t8_element_t *desc_a, t8_elemen
  * output of element_get_nca.*/
 TEST_P (nca, recursive_check)
 {
-#ifdef T8_ENABLE_LESS_TESTS
+#if T8CODE_TEST_LEVEL >= 2
+  const int recursion_depth = 2;
+#elif T8CODE_TEST_LEVEL >= 1
   const int recursion_depth = 3;
 #else
   /* User lower recursion depth for pyramids, it takes to much time otherwise */
@@ -259,8 +262,12 @@ TEST_P (nca, recursive_check)
  * Be careful when increasing the recursion_depth, as it increases the number of test-cases exponentially. */
 TEST_P (nca, recursive_check_higher_level)
 {
-
+#if T8CODE_TEST_LEVEL >= 2
+  const int recursion_depth = 2;
+#else
   const int recursion_depth = 3;
+#endif
+
   const int max_lvl = scheme->get_maxlevel (tree_class);
   t8_element_t *parent_a;
   t8_element_t *parent_b;
@@ -283,7 +290,7 @@ TEST_P (nca, recursive_check_higher_level)
     /* Initialization for recursive_nca_check */
     num_children = scheme->element_get_num_children (tree_class, correct_nca_high_level);
     if (num_children > 1) {
-      /* Compute children on to different branches in the tree an test them. 
+      /* Compute children on two different branches in the tree an test them. 
        * This ensures, that the nca of all their descendants has to be correct_nca_high_level*/
       for (k = 0; k < num_children; k++) {
         scheme->element_get_child (tree_class, correct_nca_high_level, k, parent_a);
@@ -314,4 +321,4 @@ TEST_P (nca, recursive_check_higher_level)
   scheme->element_destroy (tree_class, 1, &correct_nca_high_level);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_nca, nca, AllEclasses, print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_nca, nca, AllSchemes, print_all_schemes);

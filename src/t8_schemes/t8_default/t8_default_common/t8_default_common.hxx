@@ -28,7 +28,7 @@
 #define T8_DEFAULT_COMMON_HXX
 
 #include <t8_element.h>
-#include <t8_schemes/t8_crtp.hxx>
+#include <t8_types/t8_operators.hxx>
 #include <sc_functions.h>
 #include <sc_containers.h>
 
@@ -39,39 +39,39 @@
 /** This class independent function assumes an sc_mempool_t as context.
  * It is suitable as the element_new callback in \ref t8_eclass_scheme.
  * We assume that the mempool has been created with the correct element size.
- * \param [in,out] ts_context   An element is allocated in this sc_mempool_t.
+ * \param [in,out] scheme_context   An element is allocated in this sc_mempool_t.
  * \param [in]     length       Non-negative number of elements to allocate.
  * \param [in,out] elem         Array of correct size whose members are filled.
  */
 inline static void
-t8_default_mempool_alloc (sc_mempool_t *ts_context, int length, t8_element_t **elem)
+t8_default_mempool_alloc (sc_mempool_t *scheme_context, int length, t8_element_t **elem)
 {
-  T8_ASSERT (ts_context != NULL);
+  T8_ASSERT (scheme_context != NULL);
   T8_ASSERT (0 <= length);
   T8_ASSERT (elem != NULL);
 
   for (int i = 0; i < length; ++i) {
-    elem[i] = (t8_element_t *) sc_mempool_alloc (ts_context);
+    elem[i] = (t8_element_t *) sc_mempool_alloc (scheme_context);
   }
 }
 
 /** This class independent function assumes an sc_mempool_t as context.
- * It is suitable as the elem_destroy callback in \ref t8_eclass_scheme_t.
+ * It is suitable as the element_destroy callback in \ref t8_default_common.
  * We assume that the mempool has been created with the correct element size.
- * \param [in,out] ts_context   An element is returned to this sc_mempool_t.
+ * \param [in,out] scheme_context   An element is returned to this sc_mempool_t.
  * \param [in]     length       Non-negative number of elements to destroy.
  * \param [in,out] elem         Array whose members are returned to the mempool.
  */
 inline static void
-t8_default_mempool_free (sc_mempool_t *ts_context, int length, t8_element_t **elem)
+t8_default_mempool_free (sc_mempool_t *scheme_context, int length, t8_element_t **elem)
 {
 
-  T8_ASSERT (ts_context != NULL);
+  T8_ASSERT (scheme_context != NULL);
   T8_ASSERT (0 <= length);
   T8_ASSERT (elem != NULL);
 
   for (int i = 0; i < length; ++i) {
-    sc_mempool_free (ts_context, elem[i]);
+    sc_mempool_free (scheme_context, elem[i]);
   }
 }
 
@@ -84,7 +84,7 @@ count_leaves_from_level (const int element_level, const int refinement_level, co
 }
 
 template <class TUnderlyingEclassScheme>
-class t8_default_scheme_common: public t8_crtp<TUnderlyingEclassScheme> {
+class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme, t8_default_scheme_common> {
  private:
   friend TUnderlyingEclassScheme;
   /** Private constructor which can only be used by derived schemes.
@@ -92,28 +92,27 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclassScheme> {
    * \param [in] elem_size  The size of the elements this scheme holds.
   */
   t8_default_scheme_common (const t8_eclass_t tree_class, const size_t elem_size)
-    : element_size (elem_size), ts_context (sc_mempool_new (elem_size)), eclass (tree_class) {};
+    : element_size (elem_size), scheme_context (sc_mempool_new (elem_size)), eclass (tree_class) {};
 
  protected:
-  size_t element_size; /**< The size in bytes of an element of class \a eclass */
-  void *ts_context;    /**< Anonymous implementation context. */
+  size_t element_size;  /**< The size in bytes of an element of class \a eclass */
+  void *scheme_context; /**< Anonymous implementation context. */
+  t8_eclass_t eclass;   /**< The tree class */
 
  public:
-  t8_eclass_t eclass; /**< The tree class */
-
   /** Destructor for all default schemes */
   ~t8_default_scheme_common ()
   {
-    T8_ASSERT (ts_context != NULL);
-    SC_ASSERT (((sc_mempool_t *) ts_context)->elem_count == 0);
-    sc_mempool_destroy ((sc_mempool_t *) ts_context);
+    T8_ASSERT (scheme_context != NULL);
+    SC_ASSERT (((sc_mempool_t *) scheme_context)->elem_count == 0);
+    sc_mempool_destroy ((sc_mempool_t *) scheme_context);
   }
 
   /** Move constructor */
   t8_default_scheme_common (t8_default_scheme_common &&other) noexcept
-    : element_size (other.element_size), ts_context (other.ts_context), eclass (other.eclass)
+    : element_size (other.element_size), scheme_context (other.scheme_context), eclass (other.eclass)
   {
-    other.ts_context = nullptr;
+    other.scheme_context = nullptr;
   }
 
   /** Move assignment operator */
@@ -122,24 +121,24 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclassScheme> {
   {
     if (this != &other) {
       // Free existing resources of moved-to object
-      if (ts_context) {
-        sc_mempool_destroy ((sc_mempool_t *) ts_context);
+      if (scheme_context) {
+        sc_mempool_destroy ((sc_mempool_t *) scheme_context);
       }
 
       // Transfer ownership of resources
       element_size = other.element_size;
       eclass = other.eclass;
-      ts_context = other.ts_context;
+      scheme_context = other.scheme_context;
 
       // Leave the source object in a valid state
-      other.ts_context = nullptr;
+      other.scheme_context = nullptr;
     }
     return *this;
   }
 
   /** Copy constructor */
   t8_default_scheme_common (const t8_default_scheme_common &other)
-    : element_size (other.element_size), ts_context (sc_mempool_new (other.element_size)), eclass (other.eclass) {};
+    : element_size (other.element_size), scheme_context (sc_mempool_new (other.element_size)), eclass (other.eclass) {};
 
   /** Copy assignment operator */
   t8_default_scheme_common &
@@ -147,16 +146,25 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclassScheme> {
   {
     if (this != &other) {
       // Free existing resources of assigned-to object
-      if (ts_context) {
-        sc_mempool_destroy ((sc_mempool_t *) ts_context);
+      if (scheme_context) {
+        sc_mempool_destroy ((sc_mempool_t *) scheme_context);
       }
 
       // Copy the values from the source object
       element_size = other.element_size;
       eclass = other.eclass;
-      ts_context = sc_mempool_new (other.element_size);
+      scheme_context = sc_mempool_new (other.element_size);
     }
     return *this;
+  }
+
+  /** Return the tree class of this scheme.
+   * \return The tree class of this scheme.
+   */
+  inline t8_eclass_t
+  get_eclass (void) const
+  {
+    return eclass;
   }
 
   /** Return the size of any element of a given class.
@@ -175,7 +183,7 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclassScheme> {
    * \note This function is overwritten by the pyramid implementation.
   */
   inline int
-  element_get_num_corners (const t8_element_t *elem) const
+  element_get_num_corners ([[maybe_unused]] const t8_element_t *elem) const
   {
     /* use the lookup table of the eclasses.
      * Pyramids should implement their own version of this function. */
@@ -189,18 +197,18 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclassScheme> {
   inline void
   element_new (const int length, t8_element_t **elem) const
   {
-    t8_default_mempool_alloc ((sc_mempool_t *) ts_context, length, elem);
+    t8_default_mempool_alloc ((sc_mempool_t *) scheme_context, length, elem);
   }
 
   /** Deallocate space for a bunch of elements. */
   inline void
   element_destroy (const int length, t8_element_t **elem) const
   {
-    t8_default_mempool_free ((sc_mempool_t *) ts_context, length, elem);
+    t8_default_mempool_free ((sc_mempool_t *) scheme_context, length, elem);
   }
 
   inline void
-  element_deinit (int length, t8_element_t *elem) const
+  element_deinit ([[maybe_unused]] int length, [[maybe_unused]] t8_element_t *elem) const
   {
   }
 
@@ -210,7 +218,7 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclassScheme> {
    * \note This function is overwritten by the pyramid implementation.
   */
   inline t8_element_shape_t
-  element_get_shape (const t8_element_t *elem) const
+  element_get_shape ([[maybe_unused]] const t8_element_t *elem) const
   {
     /* use the lookup table of the eclasses.
      * Pyramids should implement their own version of this function. */
@@ -234,6 +242,20 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclassScheme> {
     return count_leaves_from_level (element_level, level, dim);
   }
 
+  /**
+   * Indicates if an element is refinable. Possible reasons for being not refinable could be
+   * that the element has reached its max level.
+   * \param [in] elem   The element to check.
+   * \return            True if the element is refinable.
+   */
+  inline bool
+  element_is_refinable (const t8_element_t *elem) const
+  {
+    T8_ASSERT (this->underlying ().element_is_valid (elem));
+
+    return this->underlying ().element_get_level (elem) < this->underlying ().get_maxlevel ();
+  }
+
   /** Compute the number of siblings of an element. That is the number of 
    * Children of its parent.
    * \param [in] elem The element.
@@ -242,7 +264,7 @@ class t8_default_scheme_common: public t8_crtp<TUnderlyingEclassScheme> {
    * \note that this number is >= 1, since we count the element itself as a sibling.
    */
   inline int
-  element_get_num_siblings (const t8_element_t *elem) const
+  element_get_num_siblings ([[maybe_unused]] const t8_element_t *elem) const
   {
     const int dim = t8_eclass_to_dimension[eclass];
     T8_ASSERT (eclass != T8_ECLASS_PYRAMID);

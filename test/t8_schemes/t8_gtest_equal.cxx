@@ -22,7 +22,7 @@
 
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
+#include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <test/t8_gtest_macros.hxx>
 #include "t8_gtest_dfs_base.hxx"
@@ -31,21 +31,21 @@ class class_test_equal: public TestDFS {
   void
   check_element () override
   {
-    const int num_children = scheme->element_get_num_children (tree_class, element);
+    const int num_children = scheme->element_get_num_children (eclass, element);
     for (int ichild1 = 0; ichild1 < num_children; ichild1++) {
-      scheme->element_get_child (tree_class, element, ichild1, child1);
+      scheme->element_get_child (eclass, element, ichild1, child1);
       /* the child must be different than its parent */
-      EXPECT_FALSE (scheme->element_is_equal (tree_class, element, child1));
+      EXPECT_FALSE (scheme->element_is_equal (eclass, element, child1));
       for (int ichild2 = 0; ichild2 < num_children; ichild2++) {
-        scheme->element_get_child (tree_class, element, ichild2, child2);
+        scheme->element_get_child (eclass, element, ichild2, child2);
         /* the child must be different than its parent */
-        EXPECT_FALSE (scheme->element_is_equal (tree_class, element, child2));
-        const int equal = scheme->element_is_equal (tree_class, child1, child2);
+        EXPECT_FALSE (scheme->element_is_equal (eclass, element, child2));
+        const int equal = scheme->element_is_equal (eclass, child1, child2);
         /* The children must be equal if and only if their indices are equal. */
         EXPECT_EQ (equal, ichild1 == ichild2);
         /* t8_element_equal should compute the same as t8_element_compare, 
          * when we only check if compare has 0 as result. */
-        const int compare_equal = !scheme->element_compare (tree_class, child1, child2);
+        const int compare_equal = !scheme->element_compare (eclass, child1, child2);
         EXPECT_EQ (equal, compare_equal);
       }
     }
@@ -57,15 +57,15 @@ class class_test_equal: public TestDFS {
   {
     dfs_test_setup ();
     /* Get element and initialize it */
-    scheme->element_new (tree_class, 1, &child1);
-    scheme->element_new (tree_class, 1, &child2);
+    scheme->element_new (eclass, 1, &child1);
+    scheme->element_new (eclass, 1, &child2);
   }
   void
   TearDown () override
   {
     /* Destroy element */
-    scheme->element_destroy (tree_class, 1, &child1);
-    scheme->element_destroy (tree_class, 1, &child2);
+    scheme->element_destroy (eclass, 1, &child1);
+    scheme->element_destroy (eclass, 1, &child2);
 
     /* Destroy DFS test */
     dfs_test_teardown ();
@@ -76,7 +76,7 @@ class class_test_equal: public TestDFS {
 
 TEST_P (class_test_equal, test_equal_dfs)
 {
-#ifdef T8_ENABLE_LESS_TESTS
+#if T8CODE_TEST_LEVEL >= 1
   const int maxlvl = 3;
 #else
   const int maxlvl = 5;
@@ -84,4 +84,4 @@ TEST_P (class_test_equal, test_equal_dfs)
   check_recursive_dfs_to_max_lvl (maxlvl);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_equal, AllEclasses, print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_equal, AllSchemes, print_all_schemes);

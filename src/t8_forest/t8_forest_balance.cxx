@@ -42,8 +42,9 @@ T8_EXTERN_C_BEGIN ();
  * if we refine recursively. */
 static int
 t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from, const t8_locidx_t ltree_id,
-                         const t8_eclass_t tree_class, const t8_locidx_t lelement_id, const t8_scheme *scheme,
-                         const int is_family, const int num_elements, t8_element_t *elements[])
+                         const t8_eclass_t tree_class, [[maybe_unused]] const t8_locidx_t lelement_id,
+                         const t8_scheme *scheme, [[maybe_unused]] const int is_family,
+                         [[maybe_unused]] const int num_elements, t8_element_t *elements[])
 {
   int *pdone, iface, num_faces, num_half_neighbors, ineigh;
   t8_gloidx_t neighbor_tree;
@@ -104,14 +105,13 @@ t8_forest_compute_max_element_level (t8_forest_t forest)
 {
   t8_locidx_t ielement, elem_in_tree;
   t8_locidx_t itree, num_trees;
-  t8_scheme *scheme;
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
   int local_max_level = 0;
 
   /* Iterate over all local trees and all local elements and comupte the maximum occurring level */
   num_trees = t8_forest_get_num_local_trees (forest);
   for (itree = 0; itree < num_trees; itree++) {
     elem_in_tree = t8_forest_get_tree_num_elements (forest, itree);
-    scheme = t8_forest_get_scheme (forest);
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
     for (ielement = 0; ielement < elem_in_tree; ielement++) {
       /* Get the element and compute its level */
@@ -317,11 +317,11 @@ t8_forest_is_balanced (t8_forest_t forest)
   t8_forest_t forest_from;
   t8_locidx_t num_trees, num_elements;
   t8_locidx_t itree, ielem;
-  t8_scheme *scheme;
   void *data_temp;
   int dummy_int;
 
   T8_ASSERT (t8_forest_is_committed (forest));
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
 
   /* temporarily save forest_from */
   forest_from = forest->set_from;
@@ -336,7 +336,6 @@ t8_forest_is_balanced (t8_forest_t forest)
   /* Iterate over all trees */
   for (itree = 0; itree < num_trees; itree++) {
     num_elements = t8_forest_get_tree_num_elements (forest, itree);
-    scheme = t8_forest_get_scheme (forest);
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
     /* Iterate over all elements of this tree */
     for (ielem = 0; ielem < num_elements; ielem++) {

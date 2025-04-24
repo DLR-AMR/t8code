@@ -47,13 +47,4 @@
 /** The length of a quad at a given level in integer coordinates. */
 #define T8_DQUAD_LEN(l) (1 << (T8_DQUAD_MAXLEVEL - (l)))
 
-typedef int32_t t8_dquad_coord_t;
-
-typedef struct t8_dquad
-{
-  int8_t level;
-  t8_dquad_coord_t x; /**< The x integer coordinate of the anchor node. */
-  t8_dquad_coord_t y; /**< The y integer coordinate of the anchor node. */
-} t8_dquad_t;
-
 #endif /* T8_DQUAD_H */

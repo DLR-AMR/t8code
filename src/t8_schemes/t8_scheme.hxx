@@ -41,6 +41,8 @@
 #include <t8_schemes/t8_default/t8_default_tet/t8_default_tet.hxx>
 #include <t8_schemes/t8_default/t8_default_prism/t8_default_prism.hxx>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone_implementation.hxx>
 #include <string>
 #if T8_ENABLE_DEBUG
 // Only needed for t8_debug_print_type
@@ -92,7 +94,11 @@ class t8_scheme {
                                 t8_default_scheme_hex,
                                 t8_default_scheme_tet,
                                 t8_default_scheme_prism,
-                                t8_default_scheme_pyramid
+                                t8_default_scheme_pyramid,
+                                t8_standalone_scheme<T8_ECLASS_VERTEX>,
+                                t8_standalone_scheme<T8_ECLASS_LINE>,
+                                t8_standalone_scheme<T8_ECLASS_QUAD>,
+                                t8_standalone_scheme<T8_ECLASS_HEX>
                                 >;
   /* clang-format on */
 
@@ -100,14 +106,15 @@ class t8_scheme {
 
  private:
   scheme_container eclass_schemes; /**< The container holding the eclass schemes. */
-  t8_refcount_t rc; /**< The reference count of the scheme. TODO: Replace by shared_ptr when forest becomes a class. */
+  mutable t8_refcount_t
+    rc; /**< The reference count of the scheme. Mutable so that the class can be const and the ref counter is still mutable. TODO: Replace by shared_ptr when forest becomes a class. */
 
  public:
   /**
    * Increase the reference count of the scheme.
    */
   inline void
-  ref ()
+  ref () const
   {
     t8_refcount_ref (&rc);
   }
@@ -118,7 +125,7 @@ class t8_scheme {
    * \return The remaining reference count. If 0 the scheme was deleted.
    */
   inline int
-  unref ()
+  unref () const
   {
     const int remaining = rc.refcount - 1;
     if (t8_refcount_unref (&rc)) {
@@ -149,7 +156,7 @@ class t8_scheme {
     return std::holds_alternative<TEclassScheme> (eclass_schemes[tree_class]);
   }
 
-  /** Get the eclass an eclas scheme is valid for. \Note: This function should return the input value as long as the
+  /** Get the eclass an eclass scheme is valid for. \Note: This function should return the input value as long as the
    * eclass schemes are soreted correctly. In the future, the trees will access the schemes by a key and then this
    * function will make more sense.
    * \param [in] tree_class     The eclass of the current tree.
@@ -158,7 +165,7 @@ class t8_scheme {
   inline t8_eclass_t
   get_eclass_scheme_eclass (const t8_eclass_t tree_class) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.eclass; }, eclass_schemes[tree_class]);
+    return std::visit ([&] (auto &&scheme) { return scheme.get_eclass (); }, eclass_schemes[tree_class]);
   }
 
   /** Return the size of any element of a given class.
@@ -245,6 +252,18 @@ class t8_scheme {
   {
     return std::visit ([&] (auto &&scheme) { return scheme.element_is_equal (elem1, elem2); },
                        eclass_schemes[tree_class]);
+  };
+
+  /**
+   * Indicates if an element is refinable. Possible reasons for being not refinable could be
+   * that the element has reached its max level.
+   * \param [in] elem   The element to check.
+   * \return            True if the element is refinable.
+   */
+  inline bool
+  element_is_refinable (const t8_eclass_t tree_class, const t8_element_t *elem) const
+  {
+    return std::visit ([&] (auto &&scheme) { return scheme.element_is_refinable (elem); }, eclass_schemes[tree_class]);
   };
 
   /** Compute the parent of a given element \a elem and store it in \a parent.
@@ -453,8 +472,9 @@ class t8_scheme {
    * at a given level.
    * \param [in] tree_class    The eclass of the current tree.
    * \param [in] elem     This must be a valid element.
-   * \param [in] level    A refinement level. Must satisfy \a level < elem.level
+   * \param [in] level    A refinement level. Must satisfy \a level <= elem.level
    * \return              The child_id of \a elem in regard to its \a level ancestor.
+   * \note The ancestor id at elem.level is the same as the child id.
    */
   inline int
   element_get_ancestor_id (const t8_eclass_t tree_class, const t8_element_t *elem, const int level) const
@@ -907,7 +927,7 @@ class t8_scheme {
                        eclass_schemes[tree_class]);
   };
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is
    *  safe to perform any of the above algorithms on it.
    *  For example this could mean that all coordinates are in valid ranges
@@ -1045,9 +1065,9 @@ class t8_scheme {
    * \param [in,out] elem The element that is filled with the root
    */
   inline void
-  get_root (const t8_eclass_t tree_class, t8_element_t *elem) const
+  set_to_root (const t8_eclass_t tree_class, t8_element_t *elem) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.get_root (elem); }, eclass_schemes[tree_class]);
+    return std::visit ([&] (auto &&scheme) { return scheme.set_to_root (elem); }, eclass_schemes[tree_class]);
   };
 
   /** Pack multiple elements into contiguous memory, so they can be sent via MPI.
