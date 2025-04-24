@@ -46,8 +46,6 @@
 #include <vtkSTLReader.h>
 #include <vtkXMLPolyDataReader.h>
 
-T8_EXTERN_C_BEGIN ();
-
 /**
  * If the vertices of a tree describe a negative \param, 
  * permute the tree vertices. 
