@@ -112,7 +112,7 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
       return;
     }
   }
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   /* Check whether element has greater level than the first leaf */
   const t8_element_t *leaf = t8_element_array_index_locidx (leaf_elements, 0);
   T8_ASSERT (t8_forest_element_is_leaf (forest, leaf, ltreeid));
@@ -300,8 +300,6 @@ t8_forest_search_tree (t8_forest_t forest, t8_locidx_t ltreeid, t8_forest_search
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
   t8_element_array_t *leaf_elements = t8_forest_tree_get_leaves (forest, ltreeid);
 
-  /* assert for empty tree */
-  T8_ASSERT (t8_element_array_get_count (leaf_elements) >= 0);
   /* Get the first and last leaf of this tree */
   const t8_element_t *first_el = t8_element_array_index_locidx (leaf_elements, 0);
   const t8_element_t *last_el

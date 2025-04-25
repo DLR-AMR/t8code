@@ -116,7 +116,7 @@ t8_cmesh_trees_add_ghost (const t8_cmesh_trees_t trees, const t8_locidx_t lghost
   t8_part_tree_t part;
   t8_cghost_t ghost;
   t8_trees_glo_lo_hash_t *hash_entry;
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   int ret;
 #endif
 
@@ -144,7 +144,7 @@ t8_cmesh_trees_add_ghost (const t8_cmesh_trees_t trees, const t8_locidx_t lghost
   hash_entry->global_id = gtree_id;
   hash_entry->local_id = lghost_index + part->first_ghost_id + num_local_trees;
   /* insert it */
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   ret =
 #endif
     sc_hash_insert_unique (trees->ghost_globalid_to_local_id, hash_entry, NULL);
@@ -152,7 +152,7 @@ t8_cmesh_trees_add_ghost (const t8_cmesh_trees_t trees, const t8_locidx_t lghost
   T8_ASSERT (ret);
 }
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 
 static int
 t8_cmesh_trees_get_num_procs (t8_cmesh_trees_t trees)
@@ -941,7 +941,7 @@ t8_cmesh_tree_to_face_decode (const int dimension, const int8_t tree_to_face, in
 void
 t8_cmesh_trees_print ([[maybe_unused]] const t8_cmesh_t cmesh, [[maybe_unused]] const t8_cmesh_trees_t trees)
 {
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   t8_locidx_t itree, ighost;
   t8_locidx_t *tree_neighbor;
   t8_gloidx_t tree_neighbor_global, *ghost_neighbor;
@@ -1027,7 +1027,7 @@ t8_cmesh_trees_bcast (const t8_cmesh_t cmesh_in, const int root, const sc_MPI_Co
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   /* Check if input cmesh is committed on root and initialized on other ranks */
   if (mpirank == root) {
     T8_ASSERT (t8_cmesh_is_committed (cmesh_in));
@@ -1126,7 +1126,7 @@ t8_cmesh_trees_is_face_consistent (const t8_cmesh_t cmesh, const t8_cmesh_trees_
         /* Check whether the ttf entry of neighbor is correct */
         ret = ttf2[face1] % F == iface && ttf2[face1] / F == orientation;
       }
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
       if (ret != 1) {
         t8_debugf ("Face connection mismatch at tree %i face %i\n", ltree, iface);
       }
@@ -1162,7 +1162,7 @@ t8_cmesh_trees_is_face_consistent (const t8_cmesh_t cmesh, const t8_cmesh_trees_
         /* Check whether the ttf entry of neighbor is correct */
         ret = ret && ttf2[face1] % F == iface && ttf2[face1] / F == orientation;
       }
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
       if (ret != 1) {
         t8_debugf ("Face connection mismatch at ghost %i face %i\n", lghost, iface);
       }

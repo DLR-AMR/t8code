@@ -26,14 +26,14 @@
 #include <t8_cmesh.h>
 #include "t8_vtk_types.h"
 
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
 #include <vtkSmartPointer.h>
 #include <vtkCellData.h>
 #include <vtkDataSet.h>
 #include <vtkPointSet.h>
 #endif
 
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
 
 /**
  * Given a pointer to a vtkDataSet a cmesh representing the vtkDataSet is
