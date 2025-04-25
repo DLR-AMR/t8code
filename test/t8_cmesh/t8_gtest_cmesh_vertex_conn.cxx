@@ -196,3 +196,91 @@ TEST_F (t8_test_cmesh_vertex_conn, check_global_vertex_number)
   EXPECT_EQ (num_global_vertices, testcase_num_global_vertices);
   EXPECT_EQ (num_local_vertices, testcase_num_global_vertices);
 }
+
+class t8_test_cmesh_vertex_conn_partitioned: public testing::Test {
+ protected:
+  void
+  SetUp () override
+  {
+
+    /*
+
+    We build a partitioned cmesh of mpirank many hex trees that are all connected in a long chain.
+    Each Hex is connected to the next via face 1 to face 0.
+    The last Hex is connected to the first.
+    All vertices are mapped to the single global vertex id 42.
+
+    */
+
+    /* We want to have as many trees as mpiranks, so that
+     * each rank has at least one tree when partitioned. 
+     * Compute the mpisize and assign it to the number of trees: 
+     * */
+    const sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
+    int mpiret = sc_MPI_Comm_size (comm, &mpisize);
+    SC_CHECK_MPI (mpiret);
+
+    const t8_locidx_t num_trees = mpisize;
+    /* Set the trees and join consecutive trees together,
+     * also joining the last tree to the first tree, all via faces 1 and 0.
+     *
+     * Then set all local vertices to point to the same global vertex. */
+    ASSERT_EQ (testcase_num_vertices_per_tree, t8_eclass_num_vertices[tree_class]);
+    t8_gloidx_t global_vertices_of_tree[testcase_num_vertices_per_tree];
+    // Fill array of global vertex ids per tree with unique vertex id.
+    std::fill_n (global_vertices_of_tree, testcase_num_vertices_per_tree, global_vertex_id);
+
+    t8_cmesh_init (&cmesh);
+    for (t8_gloidx_t itree = 0; itree < num_trees; ++itree) {
+      t8_cmesh_set_tree_class (cmesh, itree, tree_class);
+      const t8_gloidx_t join_with_tree = (itree + 1) % num_trees;
+      const int face_of_this_tree = 1;
+      const int face_of_join_tree = 0;
+      const int orientation = 0;
+      // Join this tree with the next tree
+      t8_debugf ("Adding join %li %li [%i %i]\n", itree, join_with_tree, face_of_this_tree, face_of_join_tree);
+      t8_cmesh_set_join (cmesh, itree, join_with_tree, face_of_this_tree, face_of_join_tree, orientation);
+      // Set all vertices of this tree to the same single global index.
+      t8_cmesh_set_global_vertices_of_tree (cmesh, itree, global_vertices_of_tree, testcase_num_vertices_per_tree);
+    }
+    // Partition the cmesh such that
+    // each process should have one tree and two ghost tree.
+    mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+    SC_CHECK_MPI (mpiret);
+    t8_cmesh_set_partition_range (cmesh, 3, mpirank, mpirank);
+    t8_cmesh_commit (cmesh, comm);
+    ASSERT_EQ (t8_cmesh_get_num_local_trees (cmesh), 1) << "Cmesh was not partitioned correctly.";
+    if (mpisize > 1) {
+      ASSERT_EQ (t8_cmesh_get_num_ghosts (cmesh), 2) << "CMesh was not partitioned correctly.";
+    }
+  }
+
+  void
+  TearDown () override
+  {
+    t8_cmesh_destroy (&cmesh);
+  }
+
+  /* This test cmesh has 1 global vertex. */
+  static constexpr t8_eclass_t tree_class = T8_ECLASS_HEX;
+  static constexpr int testcase_num_global_vertices = 1;
+  static constexpr int testcase_num_vertices_per_tree = 8;
+  static constexpr t8_gloidx_t global_vertex_id = 42;
+  int mpisize;
+  int mpirank;
+  t8_cmesh_t cmesh;
+};
+
+/** Check that the number of global/local unique vertices is correct.
+ * Both numbers should be equal to 1.
+ */
+TEST_F (t8_test_cmesh_vertex_conn_partitioned, check_global_vertex_number)
+{
+  ASSERT_TRUE (t8_cmesh_is_committed (cmesh));
+  ASSERT_TRUE (t8_cmesh_is_partitioned (cmesh));
+
+  const int num_global_vertices = t8_cmesh_get_num_global_vertices (cmesh);
+  const int num_local_vertices = t8_cmesh_get_num_local_vertices (cmesh);
+  EXPECT_EQ (num_global_vertices, testcase_num_global_vertices);
+  EXPECT_EQ (num_local_vertices, testcase_num_global_vertices);
+}
