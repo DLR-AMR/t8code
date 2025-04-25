@@ -100,10 +100,15 @@ constexpr int8_t t8_type_vertex_dim_to_binary<T8_ECLASS_PYRAMID>[1 << T8_ELEMENT
    },
   {
   /* PAY ATTENTION TO ORDERING OF ELEMENTS! **/
-   {0, 0, 1},
-   {1, 0, 1},
-   {0, 1, 1},
+  //  {0, 0, 1},
+  //  {1, 0, 1},
+  //  {0, 1, 1},
+  //  {1, 1, 1},
+  //  {0, 0, 0}
    {1, 1, 1},
+   {0, 1, 1},
+   {1, 0, 1},
+   {0, 0, 1},
    {0, 0, 0}
    }
 };
@@ -383,7 +388,30 @@ constexpr int8_t t8_standalone_lut_facecorner<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_N
   {0,1,4,-1},
   {0,1,2,3}
  },
+};
 
+template<>
+constexpr int8_t t8_standalone_lut_transform_coords<T8_ECLASS_PYRAMID>[1 << T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][T8_ELEMENT_DIM[T8_ECLASS_PYRAMID]][T8_ELEMENT_DIM[T8_ECLASS_PYRAMID]]={
+  {
+    {1, 0, 0},
+    {0, 1, 0},
+    {0, 0, 1}
+  },
+  {
+    {1, 0, 0},
+    {0, 1, 0},
+    {0, 0, 1}
+  },
+  {
+    {0, 1, 0},
+    {1, 0, 0},
+    {0, 0, 1}
+  },
+  {
+    {-1, 0, 0},
+    {0, -1, 0},
+    {0, 0, -1}
+  }
 };
 
 template<>

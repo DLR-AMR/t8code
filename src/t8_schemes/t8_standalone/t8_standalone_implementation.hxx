@@ -1530,20 +1530,46 @@ struct t8_standalone_scheme
   element_get_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
                                 double *out_coords) noexcept
   {
+    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
     double *current_ref_coords = (double *) ref_coords;
     double *current_out_coords = out_coords;
     t8_element_coord length = element_get_len (element_get_level (elem));
 
-    for (size_t coord = 0; coord < num_coords; ++coord) {
-      for (int dim = 0; dim < T8_ELEMENT_DIM[TEclass]; ++dim) {
-        current_out_coords[dim]
-          = ((t8_standalone_element<TEclass> *) elem)->coords[dim] + current_ref_coords[dim] * length;
-
-        current_out_coords[dim] /= (double) get_root_len ();
+    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      double tmp_coords[T8_ELEMENT_DIM[TEclass]] = {};
+      for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; ++idim) {
+        for (int jdim = 0; jdim < T8_ELEMENT_DIM[TEclass]; ++jdim) {
+          tmp_coords[idim]
+            += t8_standalone_lut_transform_coords<TEclass>[el->type.to_ulong ()][idim][jdim] * current_ref_coords[jdim];
+        }
+        if (TEclass == T8_ECLASS_PYRAMID && el->type == T8_DPYRAMID_SECOND_PYRA_TYPE) {
+          tmp_coords[idim] += 1.0;
+        }
       }
 
-      current_ref_coords += T8_ECLASS_MAX_DIM;
-      current_out_coords += T8_ELEMENT_DIM[TEclass];
+      for (size_t coord = 0; coord < num_coords; ++coord) {
+        for (int dim = 0; dim < T8_ELEMENT_DIM[TEclass]; ++dim) {
+          current_out_coords[dim] = el->coords[dim] + tmp_coords[dim] * length;
+
+          current_out_coords[dim] /= (double) get_root_len ();
+        }
+
+        current_ref_coords += T8_ECLASS_MAX_DIM;
+        current_out_coords += T8_ELEMENT_DIM[TEclass];
+      }
+    }
+
+    else {
+      for (size_t coord = 0; coord < num_coords; ++coord) {
+        for (int dim = 0; dim < T8_ELEMENT_DIM[TEclass]; ++dim) {
+          current_out_coords[dim] = el->coords[dim] + current_ref_coords[dim] * length;
+
+          current_out_coords[dim] /= (double) get_root_len ();
+        }
+
+        current_ref_coords += T8_ECLASS_MAX_DIM;
+        current_out_coords += T8_ELEMENT_DIM[TEclass];
+      }
     }
   }
 

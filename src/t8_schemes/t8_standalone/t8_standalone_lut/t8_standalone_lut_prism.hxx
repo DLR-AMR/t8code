@@ -254,6 +254,21 @@ constexpr int8_t t8_standalone_lut_facecorner<T8_ECLASS_PRISM>[1<<T8_ELEMENT_NUM
 };
 
 template<>
+constexpr int8_t t8_standalone_lut_transform_coords<T8_ECLASS_PRISM>[1 << T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PRISM]][T8_ELEMENT_DIM[T8_ECLASS_PRISM]][T8_ELEMENT_DIM[T8_ECLASS_PRISM]]={
+  {
+    {1, 0, 0},
+    {0, 1, 0},
+    {0, 0, 1}
+  },
+  {
+    {0, 1, 0},
+    {1, 0, 0},
+    {0, 0, 1}
+  }
+};
+
+
+template<>
 constexpr t8_eclass_t t8_standalone_lut_rootface_to_eclass<T8_ECLASS_PRISM>[T8_ELEMENT_NUM_FACES[T8_ECLASS_PRISM]]={
   T8_ECLASS_QUAD,
   T8_ECLASS_QUAD,

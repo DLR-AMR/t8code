@@ -117,6 +117,9 @@ constexpr int8_t t8_standalone_lut_cornerface[1 << T8_ELEMENT_NUM_EQUATIONS[TEcl
 template <t8_eclass TEclass>
 constexpr int8_t t8_standalone_lut_facecorner[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_NUM_FACES[TEclass]]
                                              [T8_ELEMENT_NUM_FACE_CORNERS[TEclass]];
+template <t8_eclass TEclass>
+constexpr int8_t t8_standalone_lut_transform_coords[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_DIM[TEclass]]
+                                                   [T8_ELEMENT_DIM[TEclass]];
 
 #include "t8_standalone_lut/t8_standalone_lut_triangle.hxx"
 #include "t8_standalone_lut/t8_standalone_lut_prism.hxx"
