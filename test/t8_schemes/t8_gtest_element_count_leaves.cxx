@@ -64,14 +64,14 @@ class class_element_leaves: public testing::TestWithParam<std::tuple<int, t8_ecl
 };
 
 t8_gloidx_t
-helper (t8_element_t *child, const t8_scheme *scheme, t8_eclass_t eclass, int level)
+count_leaves_recursive (t8_element_t *child, const t8_scheme *scheme, t8_eclass_t eclass, int level)
 {
   t8_gloidx_t num_leaves = 0;
   if (scheme->element_get_level (eclass, child) < level) {
     int num_children = scheme->element_get_num_children (eclass, child);
     for (int ichild = 0; ichild < num_children; ichild++) {
       scheme->element_get_child (eclass, child, ichild, child);
-      num_leaves = num_leaves + helper (child, scheme, eclass, level);
+      num_leaves = num_leaves + count_leaves_recursive (child, scheme, eclass, level);
       scheme->element_get_parent (eclass, child, child);
     }
   }
@@ -103,7 +103,7 @@ TEST_P (class_element_leaves, test_element_count_leaves_root)
     /* Multiply the compare_value with 2^dim (= number of children per element) */
 
     scheme->element_copy (eclass, element, child);
-    t8_gloidx_t num_leaves = helper (child, scheme, eclass, level);
+    t8_gloidx_t num_leaves = count_leaves_recursive (child, scheme, eclass, level);
     compare_value = num_leaves;
     if (!scheme->refines_irregular (eclass)) {
       test_value *= 1 << t8_eclass_to_dimension[eclass];
