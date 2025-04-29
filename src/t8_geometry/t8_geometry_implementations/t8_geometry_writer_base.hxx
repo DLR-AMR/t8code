@@ -26,12 +26,25 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 
-struct t8_geometry_writer_base : public t8_geometry_linear_axis_aligned
+class t8_geometry_writer_base : public t8_geometry_linear_axis_aligned
 {
  public:
   t8_geometry_writer_base ();
+
+  /** The destructor. 
+   */
   virtual ~t8_geometry_writer_base ();
   
+  /**
+   * Get the type of this geometry.
+   * \return The type.
+   */
+  inline t8_geometry_type_t
+  t8_geom_get_type () const
+  {
+    return T8_GEOMETRY_TYPE_LINEAR_AXIS_ALIGNED;
+  };
+
 virtual bool
 t8_geom_is_in_tree (t8_forest_t forest, t8_locidx_t ltreeid,
                     const t8_element_t *element, const double *points,
