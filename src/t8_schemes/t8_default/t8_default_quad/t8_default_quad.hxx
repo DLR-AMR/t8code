@@ -32,6 +32,7 @@
 #define T8_DEFAULT_QUAD_HXX
 
 #include <p4est.h>
+#include <p4est_bits.h>
 #include <t8_element.h>
 #include <t8_schemes/t8_default/t8_default_line/t8_default_line.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
@@ -658,6 +659,196 @@ class t8_default_scheme_quad: public t8_default_scheme_common<t8_default_scheme_
   void
   element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements,
                       const unsigned int count, sc_MPI_Comm comm) const;
+
+  inline void
+  element_get_point ([[maybe_unused]] const t8_element_t *element, [[maybe_unused]] int vertex,
+                     t8_scheme_point *point) const
+  {
+    t8_scheme_point_dim<2> *sp = (t8_scheme_point_dim<2> *) point;
+    p4est_quadrant_t *quad = (p4est_quadrant_t *) element;
+    int length = P4EST_QUADRANT_LEN (quad->level);
+
+    (*sp)[0] = quad->x;
+    (*sp)[1] = quad->y;
+    t8_debugf ("start coords: %i, %i\n", (*sp)[0], (*sp)[1]);
+    if (vertex == 1 || vertex == 3) {
+      t8_debugf ("add to x\n");
+      (*sp)[0] += length;
+    }
+    if (vertex >= 2) {
+      t8_debugf ("add to y\n");
+      (*sp)[1] += length;
+    }
+    t8_debugf ("end coords: %i, %i\n", (*sp)[0], (*sp)[1]);
+    //add length to anchor coords
+  }
+
+  inline int
+  get_max_num_descendants_at_point () const
+  {
+    return 4;
+  }
+
+  inline void
+  construct_descendants_at_point ([[maybe_unused]] const t8_scheme_point *point, [[maybe_unused]] t8_element_t **descs,
+                                  [[maybe_unused]] int *num_neighbors) const
+  {
+    t8_scheme_point_dim<2> *sp = (t8_scheme_point_dim<2> *) point;
+    p4est_quadrant_t **descendants = (p4est_quadrant_t **) descs;
+    p4est_qcoord_t len = P4EST_QUADRANT_LEN (get_maxlevel ());
+    t8_debugf ("len = %i\n", len);
+    *num_neighbors = 0;
+    const int dim = 2;
+
+    t8_debugf ("construct descendants around x= %i, y=%i\n", (*sp)[0], (*sp)[1]);
+
+    for (int icube = 0; icube < 1 << dim; icube++) {
+      const int neigh_cube_vertex = (1 << dim) - 1 - icube;
+
+      int idim = 0;
+      p4est_qcoord_t shift = (icube & 1 << idim);
+      shift >>= idim;
+      shift -= 1;
+      shift *= len;
+      descendants[*num_neighbors]->x = (*sp)[0] + shift;
+
+      idim = 1;
+      shift = (icube & 1 << idim);
+      shift >>= idim;
+      shift -= 1;
+      shift *= len;
+      descendants[*num_neighbors]->y = (*sp)[1] + shift;
+
+      descendants[*num_neighbors]->level = get_maxlevel ();
+      t8_debugf ("neighbor icube %i neighb_cube_vertex %i \n", icube, neigh_cube_vertex);
+      //        element_debug_print ((t8_element_t *) descendants[*num_neighbors]);
+      if (!p4est_quadrant_is_inside_root (descendants[*num_neighbors])) {
+        t8_debugf ("neighbor not inside\n");
+        continue;
+      }
+      t8_debugf ("neighbor found quad \n");
+      //        element_debug_print((const t8_element_t *) descendants[*num_neighbors]);
+      ++(*num_neighbors);
+    }
+  }
+
+  inline int
+  get_num_boundaries (int boundary_dim) const
+  {
+    return 3;
+  }
+
+  inline void
+  point_get_lowest_boundary ([[maybe_unused]] const t8_scheme_point *point, [[maybe_unused]] int *boundary_dim,
+                             [[maybe_unused]] int *boundary_id) const
+  {
+    *boundary_dim = -1;
+    const t8_scheme_point_dim<2> *sp = (const t8_scheme_point_dim<2> *) point;
+    // std::cout<<"enter get_lowest_boundary, x= "<<(*sp)[0]<<", y="<<(*sp)[1]<<std::endl;
+    if ((*sp)[0] == 0) {
+      if ((*sp)[1] == 0) {
+        *boundary_dim = 0;
+        *boundary_id = 0;
+      }
+      else if ((*sp)[1] == P4EST_ROOT_LEN) {
+        *boundary_dim = 0;
+        *boundary_id = 2;
+      }
+      else {
+        *boundary_dim = 1;
+        *boundary_id = 0;
+      }
+    }
+    else if ((*sp)[0] == P4EST_ROOT_LEN) {
+      if ((*sp)[1] == 0) {
+        *boundary_dim = 0;
+        *boundary_id = 1;
+      }
+      else if ((*sp)[1] == P4EST_ROOT_LEN) {
+        *boundary_dim = 0;
+        *boundary_id = 3;
+      }
+      else {
+        *boundary_dim = 1;
+        *boundary_id = 1;
+      }
+    }
+    else if ((*sp)[1] == 0) {
+      *boundary_dim = 1;
+      *boundary_id = 2;
+    }
+    else if ((*sp)[1] == P4EST_ROOT_LEN) {
+      *boundary_dim = 1;
+      *boundary_id = 3;
+    }
+  }
+
+  inline void
+  element_extract_boundary_point ([[maybe_unused]] const t8_element_t *element,
+                                  [[maybe_unused]] const t8_scheme_point *el_point, [[maybe_unused]] int boundary_dim,
+                                  [[maybe_unused]] int boundary_id, [[maybe_unused]] t8_scheme_point *bdy_point) const
+  {
+    if (boundary_dim == 0) {
+      return;
+    }
+    else if (boundary_dim == 1) {
+      const t8_scheme_point_dim<2> *el_p = (const t8_scheme_point_dim<2> *) el_point;
+      t8_scheme_point_dim<1> *face_p = (t8_scheme_point_dim<1> *) bdy_point;
+      int facedim = boundary_id / 2;
+      (*face_p)[0] = (*el_p)[1 - facedim] << (T8_DLINE_MAXLEVEL - P4EST_MAXLEVEL);
+    }
+  }
+  inline bool
+  point_on_boundary ([[maybe_unused]] const t8_scheme_point *point, [[maybe_unused]] int boundary_dim,
+                     [[maybe_unused]] int boundary_id) const
+  {
+    if (boundary_dim == 0) {
+      SC_ABORT ("Not implemented");
+    }
+    else {
+      T8_ASSERT (boundary_dim == 1);
+      const t8_scheme_point_dim<2> *p = (const t8_scheme_point_dim<2> *) point;
+      return (*p)[boundary_id / 2] == ((boundary_id % 2) ? P4EST_ROOT_LEN : 0);
+    }
+  }
+
+  inline void
+  boundary_point_extrude ([[maybe_unused]] const t8_scheme_point *bdy_point, [[maybe_unused]] int bdy_dim,
+                          [[maybe_unused]] int bdy_id, [[maybe_unused]] t8_scheme_point *point) const
+  {
+    t8_scheme_point_dim<2> *el_p = (t8_scheme_point_dim<2> *) point;
+
+    if (bdy_dim == 0) {
+      int cubevertex = bdy_id;
+      t8_debugf ("extrude quad at cubevertex %i\n", cubevertex);
+      int length = P4EST_ROOT_LEN;
+      (*el_p)[0] = ((cubevertex & 1) >> 0) * length;
+      (*el_p)[1] = ((cubevertex & 2) >> 1) * length;
+      t8_debugf ("x %i, y %i\n", (*el_p)[0], (*el_p)[1]);
+    }
+    else if (bdy_dim == 1) {
+      const t8_scheme_point_dim<1> *face_p = (const t8_scheme_point_dim<1> *) bdy_point;
+      int facedim = bdy_id / 2;
+      int facesign = bdy_id % 2;
+      t8_debugf ("extrude at face %i, facedim %i, facesign %i \n", bdy_id, facedim, facesign);
+      (*el_p)[1 - facedim] = (*face_p)[0] >> (T8_DLINE_MAXLEVEL - P4EST_MAXLEVEL);
+      (*el_p)[facedim] = facesign ? P4EST_ROOT_LEN : 0;
+    }
+    t8_debugf ("extruded point x: %i, y:%i", (*el_p)[0], (*el_p)[1]);
+  }
+
+  inline void
+  point_new ([[maybe_unused]] t8_scheme_point **ppoint) const
+  {
+    *ppoint = (t8_scheme_point *) T8_ALLOC (t8_scheme_point_dim<2>, 1);
+  }
+
+  inline void
+  point_destroy ([[maybe_unused]] t8_scheme_point **ppoint) const
+  {
+    T8_FREE (*ppoint);
+    *ppoint = nullptr;
+  }
 };
 
 #endif /* !T8_DEFAULT_QUAD_HXX */
