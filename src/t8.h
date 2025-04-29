@@ -28,6 +28,7 @@
 
 #ifndef T8_H
 #define T8_H
+#include <assert.h>
 
 /* include config headers */
 #ifndef T8_CMAKE_BUILD
@@ -67,18 +68,10 @@ T8_EXTERN_C_BEGIN ();
  * since then the assertion would not trigger if sc is not configured in debugging mode.
  * However, we want it to trigger any time t8code is in debugging mode, independent of sc.
  */
-#if T8_ENABLE_DEBUG
-#define T8_ASSERT(c) SC_CHECK_ABORT ((c), "Assertion '" #c "'")
-#else
-#define T8_ASSERT(c) SC_NOOP ()
-#endif
+#define T8_ASSERT(c) assert ((c))
 
 /**Extended T8_ASSERT assertion with custom error message. Only active in debug-mode. */
-#if T8_ENABLE_DEBUG
-#define T8_ASSERTF(c, msg) SC_CHECK_ABORT ((c), "Assertion '" #c "': " msg)
-#else
-#define T8_ASSERTF(c, msg) SC_NOOP ()
-#endif
+#define T8_ASSERTF(c, msg) assert ((c) && msg)
 
 /** Allocate a \a t-array with \a n elements. */
 #define T8_ALLOC(t, n) (t *) sc_malloc (t8_get_package_id (), (n) * sizeof (t))
