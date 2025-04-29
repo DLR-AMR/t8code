@@ -201,7 +201,7 @@ jobs:
       MAKEFLAGS: -j4
       MPI: ON
       BUILD_TYPE: Debug
-      TEST_LEVEL: 0
+      TEST_LEVEL: 1
     secrets:
       CODE_COV: ${{ secrets.CODE_COV }}
   

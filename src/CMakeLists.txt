@@ -8,6 +8,7 @@ endif()
 
 target_compile_features( T8 PUBLIC c_std_11 cxx_std_20 )
 add_library( T8CODE::T8 ALIAS T8 )
+target_compile_definitions( T8 PUBLIC T8CODE_TEST_LEVEL=${T8CODE_TEST_LEVEL})
 
 if( CMAKE_BUILD_TYPE STREQUAL "Release" )
   set (T8_CXXFLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE}")
@@ -24,6 +25,7 @@ if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
   option( T8CODE_CODE_COVERAGE "Enable code coverage reporting" OFF)
   if(T8CODE_CODE_COVERAGE)
     include(CodeCoverage)
+    target_compile_definitions( T8 PUBLIC T8_CODE_COVERAGE=1 )
   endif()
 
   set (T8_CXXFLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG}")
