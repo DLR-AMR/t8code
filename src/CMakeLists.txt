@@ -79,6 +79,7 @@ if( T8CODE_ENABLE_OCC )
     install( FILES 
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.h
+      DESTINATION include
     )
 endif()
 
