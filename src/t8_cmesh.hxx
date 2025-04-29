@@ -53,8 +53,8 @@ t8_cmesh_register_geometry (t8_cmesh_t cmesh, _args &&...args)
 typedef class t8_neigh_info {
  public:
   t8_gloidx_t neighid;
-  int orientation;
   int neigh_bdy_id;
+  int orientation;
 } t8_neigh_info;
 
 std::vector<t8_neigh_info>

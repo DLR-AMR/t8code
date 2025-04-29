@@ -1537,14 +1537,44 @@ t8_cmesh_get_neighs (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, int bdy_dim, int bdy
 {
   std::vector<t8_neigh_info> result;
   if (bdy_dim == 0) {
+#if 0 
+  t8_debugf("enter cmesh_get_neighs for gtreeid %li, bdy_dim %i, bdy_id %i for dealii example\n", gtreeid, bdy_dim, bdy_id);
+  if(gtreeid==0){
+    if(bdy_id == 1){
+      result.push_back (t8_neigh_info { 1, 2, 0 });
+      result.push_back (t8_neigh_info { 2, 0, 0 });
+    } else if(bdy_id == 2){
+      result.push_back (t8_neigh_info { 1, 1, 0 });
+    }
+  }else if(gtreeid==1){
+    if(bdy_id == 0){
+      result.push_back (t8_neigh_info { 2, 2, 0 });
+    } else if(bdy_id == 1){
+      result.push_back (t8_neigh_info { 0, 2, 0 });
+    } else if(bdy_id == 2){
+      result.push_back (t8_neigh_info { 0, 1, 0 });
+      result.push_back (t8_neigh_info { 2, 0, 0 });  
+    }
+  } else if(gtreeid==2){
+    if(bdy_id == 0){
+      result.push_back (t8_neigh_info { 0, 1, 0 });
+      result.push_back (t8_neigh_info { 1, 2, 0 });
+    } else if(bdy_id == 2){
+      result.push_back (t8_neigh_info { 1, 0, 0 });
+     
+    }
 
-#if 1
+  }
+
+#endif
+
+#if 0
     if (bdy_id == 0) {
       t8_neigh_info info { 1 - gtreeid, 0, 0 };
       result.push_back (info);
     }
     else if (gtreeid + bdy_id == 2) {
-      t8_neigh_info info { 1 - gtreeid, 0, 3 - bdy_id };
+      t8_neigh_info info { 1 - gtreeid, 3 - bdy_id, 0 };
       result.push_back (info);
     }
 #endif
@@ -1552,7 +1582,7 @@ t8_cmesh_get_neighs (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, int bdy_dim, int bdy
 #if 0
     //hardcoded dealii subdivided hypercube with simplices orientation
     if(bdy_id > 0){
-      t8_neigh_info info{1-ltreeid, 0, 3 - bdy_id};
+      t8_neigh_info info{1-gtreeid, 3 - bdy_id, 0};
       result.push_back(info);
     }
 #endif
@@ -1567,7 +1597,7 @@ t8_cmesh_get_neighs (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, int bdy_dim, int bdy
     /* compute the neighbor face */
     int tree_neigh_face = ttf[bdy_id] % F;
     int orientation = ttf[bdy_id] / F;
-    t8_neigh_info info { t8_cmesh_get_global_id (cmesh, neigh_ltreeid), orientation, tree_neigh_face };
+    t8_neigh_info info { t8_cmesh_get_global_id (cmesh, neigh_ltreeid), tree_neigh_face, orientation };
     if (neigh_ltreeid != ltreeid || bdy_id != tree_neigh_face) {
       result.push_back (info);
     }
