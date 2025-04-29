@@ -519,6 +519,10 @@ t8_forest_get_coarse_tree (t8_forest_t forest, t8_locidx_t ltreeid);
 int
 t8_forest_element_is_leaf (const t8_forest_t forest, const t8_element_t *element, const t8_locidx_t local_tree);
 
+
+t8_locidx_t
+t8_forest_element_leaf_index_in_tree (const t8_forest_t forest, const t8_element_t *element, const t8_locidx_t local_tree);
+
 /** Compute the leaf face orientation at given face in a forest.
  * \param [in]    forest  The forest. Must have a valid ghost layer.
  * \param [in]    ltreeid A local tree id.
