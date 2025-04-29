@@ -728,18 +728,6 @@ class t8_default_scheme_tri: public t8_default_scheme_common<t8_default_scheme_t
   }
 
   inline void
-  point_transform ([[maybe_unused]] const t8_scheme_point *point, [[maybe_unused]] int orientation,
-                   [[maybe_unused]] t8_scheme_point *neigh_point) const
-  {
-    const t8_scheme_point_dim<2> *p = (const t8_scheme_point_dim<2> *) point;
-    t8_scheme_point_dim<2> *np = (t8_scheme_point_dim<2> *) neigh_point;
-    *np = *p;
-    if (orientation) {
-      std::swap ((*np)[0], (*np)[1]);
-    }
-  }
-
-  inline void
   boundary_point_extrude ([[maybe_unused]] const t8_scheme_point *bdy_point, [[maybe_unused]] int bdy_dim,
                           [[maybe_unused]] int bdy_id, [[maybe_unused]] t8_scheme_point *point) const
   {
