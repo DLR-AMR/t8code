@@ -658,12 +658,13 @@ class t8_default_scheme_tri: public t8_default_scheme_common<t8_default_scheme_t
   {
     *boundary_dim = -1;
     const t8_scheme_point_dim<2> *sp = (const t8_scheme_point_dim<2> *) point;
+    // std::cout<<"enter get_lowest_boundary, x= "<<(*sp)[0]<<", y="<<(*sp)[1]<<std::endl;
     if ((*sp)[1] == 0) {
       if ((*sp)[0] == 0) {
         *boundary_dim = 0;
         *boundary_id = 0;
       }
-      else if ((*sp)[0] == 1 << (get_maxlevel () + 1)) {
+      else if ((*sp)[0] == (1 << get_maxlevel ())) {
         *boundary_dim = 0;
         *boundary_id = 1;
       }
@@ -672,7 +673,7 @@ class t8_default_scheme_tri: public t8_default_scheme_common<t8_default_scheme_t
         *boundary_id = 2;
       }
     }
-    else if ((*sp)[0] == 1) {
+    else if ((*sp)[0] == (1 << get_maxlevel ())) {
       if ((*sp)[1] == 1) {
         *boundary_dim = 0;
         *boundary_id = 2;
@@ -745,10 +746,12 @@ class t8_default_scheme_tri: public t8_default_scheme_common<t8_default_scheme_t
     t8_scheme_point_dim<2> *el_p = (t8_scheme_point_dim<2> *) point;
 
     if (bdy_dim == 0) {
+      t8_debugf ("boundary_id %i\n", bdy_id);
       int cubevertex = t8_tri_lut_type_vertex_to_cubevertex[0][bdy_id];
-      int length = 1 << (get_maxlevel () + 1);
-      (*el_p)[0] = (cubevertex & 1 >> 0) * length;
-      (*el_p)[1] = (cubevertex & 2 >> 1) * length;
+      t8_debugf ("cubevertex %i\n", cubevertex);
+      int length = 1 << get_maxlevel ();
+      (*el_p)[0] = ((cubevertex & 1) >> 0) * length;
+      (*el_p)[1] = ((cubevertex & 2) >> 1) * length;
     }
     else if (bdy_dim == 1) {
       const t8_scheme_point_dim<1> *face_p = (const t8_scheme_point_dim<1> *) bdy_point;
