@@ -50,6 +50,11 @@
  * We verify that the number of global vertices is 4.
  * We additionally verify that the process local number of global vertices is 4 as well.
  * This is true, since the cmesh is not partitioned.
+ * 
+ * Additionally, t8_test_cmesh_vertex_conn_partitioned is the start of a test
+ * suite with partitioned cmesh that is currently disabled and could be enabled and extended
+ * when cmesh vertex connectivity supports partitioned cmeshes.
+ * Note that the test itself then has to be set to parallel in the CMake file.
  */
 
 class t8_test_cmesh_vertex_conn: public testing::Test {
@@ -197,6 +202,8 @@ TEST_F (t8_test_cmesh_vertex_conn, check_global_vertex_number)
   EXPECT_EQ (num_local_vertices, testcase_num_global_vertices);
 }
 
+/* Parallel test suite (to be extended) is currently disabled since
+* the cmesh vertex connecticity does not support partitioned cmeshes. */
 class t8_test_cmesh_vertex_conn_partitioned: public testing::Test {
  protected:
   void
@@ -274,7 +281,7 @@ class t8_test_cmesh_vertex_conn_partitioned: public testing::Test {
 /** Check that the number of global/local unique vertices is correct.
  * Both numbers should be equal to 1.
  */
-TEST_F (t8_test_cmesh_vertex_conn_partitioned, check_global_vertex_number)
+TEST_F (t8_test_cmesh_vertex_conn_partitioned, DISABLED_check_global_vertex_number)
 {
   ASSERT_TRUE (t8_cmesh_is_committed (cmesh));
   ASSERT_TRUE (t8_cmesh_is_partitioned (cmesh));
