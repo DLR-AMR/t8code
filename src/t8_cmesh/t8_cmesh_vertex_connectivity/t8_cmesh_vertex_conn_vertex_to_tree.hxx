@@ -110,7 +110,7 @@ class t8_cmesh_vertex_conn_vertex_to_tree {
   /** Get the list of global trees and local vertex ids a global vertex is connected to.
    * 
    * \param [in] global_vertex_id The global id of a vertex in the cmesh.
-   * \return The list of global tree ids and local vertex ids of \a global_vertex_id.
+   * \return The list of local tree ids and local vertex ids of \a global_vertex_id.
    */
   inline const tree_vertex_list&
   get_tree_list_of_vertex (const t8_gloidx_t global_vertex_id) const
