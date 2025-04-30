@@ -10,7 +10,7 @@ endfunction() # append_coverage_compiler_flags
 # Lcov and genhtml are used to generate a coverage report and should be available.
 #
 # \param NAME: New target name.
-# \param EXCLUDE: "src/dir1/*" "src/dir2/*": Folder or Files to exclude from coverage report.
+# \param EXCLUDE: "src/dir1/*" "src/dir2/*": Folders or files to exclude from coverage report.
 # \param LCOV_ARGS: lcov arguments. 
 # 
 function(setup_target_for_coverage)
@@ -33,7 +33,7 @@ function(setup_target_for_coverage)
     message(FATAL_ERROR "genhtml not found! Aborting...")
   endif()
 
-  # Project dir is used as based dir for lcov.
+  # Project dir is used as base dir for lcov.
   set(PROJECT_DIR ${PROJECT_SOURCE_DIR})
 
   # If possible, use more than one job to execute the test suite.
@@ -56,7 +56,7 @@ function(setup_target_for_coverage)
     # Run tests and collect coverage information.
     COMMAND ctest -T Test -T Coverage -j ${N}
     
-    # Generate report using lcov
+    # Generate report using lcov.
     COMMAND ${LCOV_PATH} ${Coverage_LCOV_ARGS} --directory . --base-directory ${PROJECT_DIR} --capture --output-file ${Coverage_NAME}.capture
     # Add baseline counters created above.
     COMMAND ${LCOV_PATH} ${Coverage_LCOV_ARGS} --add-tracefile ${Coverage_NAME}.base --add-tracefile ${Coverage_NAME}.capture --output-file ${Coverage_NAME}.total
@@ -68,7 +68,6 @@ function(setup_target_for_coverage)
     # Show result in terminal.
     COMMAND ${LCOV_PATH} --list ${Coverage_NAME}.info
 
-    # Set output files as GENERATED
     BYPRODUCTS
       ${Coverage_NAME}.base
       ${Coverage_NAME}.capture
