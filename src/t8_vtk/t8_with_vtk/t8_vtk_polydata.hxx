@@ -20,20 +20,33 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_vtk_reader.cxx
-* Implementation of a Reader for vtk/vtu files using the vtk-library.
-* The functions can only be used when t8code is linked with the vtk-library.
-*/
+/**
+ * This file contains all helper functions to translate vtk-polydata. 
+ * 
+ */
 
-#include <t8_cmesh_vtk_reader.hxx>
+#ifndef T8_CMESH_VTK_POLYDATA
+#define T8_CMESH_VTK_POLYDATA
 
-T8_EXTERN_C_BEGIN ();
+#include <t8.h>
+#include <t8_vtk/t8_vtk_types.h>
+#include <vtkPolyData.h>
+#include <vtkSmartPointer.h>
+#include <vtkCellData.h>
+#include <vtkDataSet.h>
+#include <vtkPolyData.h>
 
-t8_cmesh_t
-t8_cmesh_vtk_reader (const char *filename, const int partition, const int main_proc, sc_MPI_Comm comm,
-                     const vtk_file_type_t vtk_file_type, const int package_id, const int starting_key)
-{
-  return t8_vtk_reader_cmesh (filename, partition, main_proc, comm, vtk_file_type, package_id, starting_key);
-}
+/**
+ * Given a filename to a file containing Polydata, read
+ * the file using the vtk-library. 
+ * 
+ * \param[in] filename  The name of the file
+ * \param[in, out] grid On input a vtkSmartPointer, that will hold the grid described in
+ *                      \a filename.
+ * \returns             non-zero on success, zero if the reading failed.              
+ * 
+ */
+vtk_read_success_t
+t8_read_polyData (const char *filename, vtkDataSet *grid);
 
-T8_EXTERN_C_END ();
+#endif /* T8_CMESH_VTK_POLYDATA */

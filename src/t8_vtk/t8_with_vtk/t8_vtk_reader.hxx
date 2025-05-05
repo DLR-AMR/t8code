@@ -24,18 +24,14 @@
 #define T8_VTK_READER
 
 #include <t8_cmesh.h>
-#include "t8_vtk_types.h"
+#include <t8_vtk/t8_vtk_types.h>
 
-#if T8_ENABLE_VTK
 #include <vtkSmartPointer.h>
 #include <vtkCellData.h>
 #include <vtkDataSet.h>
 #include <vtkPointSet.h>
-#endif
 
 T8_EXTERN_C_BEGIN ();
-
-#if T8_ENABLE_VTK
 
 /**
  * Given a pointer to a vtkDataSet a cmesh representing the vtkDataSet is
@@ -101,9 +97,6 @@ t8_vtk_reader (const char *filename, const int partition, const int main_proc, s
 vtkSmartPointer<vtkPointSet>
 t8_vtk_reader_pointSet (const char *filename, const int partition, const int main_proc, sc_MPI_Comm comm,
                         const vtk_file_type_t vtk_file_type);
-
-#endif
-
 /**
  * Given a filename to a vtkUnstructuredGrid or vtkPolyData read the file and
  * construct a cmesh. This is a two stage process. First the file is read and
