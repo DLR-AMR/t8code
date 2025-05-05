@@ -67,6 +67,18 @@ if( T8CODE_ENABLE_VTK )
     target_compile_definitions( T8 PUBLIC T8_ENABLE_VTK=1 )
     target_include_directories( T8 PUBLIC ${VTK_INCLUDE_DIR} )
     target_link_libraries( T8 PUBLIC ${VTK_LIBRARIES} )
+    target_sources(T8 PRIVATE
+      t8_vtk/t8_with_vtk/t8_vtk_parallel.cxx
+      t8_vtk/t8_with_vtk/t8_vtk_polydata.cxx
+      t8_vtk/t8_with_vtk/t8_vtk_unstructured.cxx
+      t8_vtk/t8_with_vtk/t8_vtk_reader.cxx
+    )
+    install( FILES
+      t8_vtk/t8_with_vtk/t8_vtk_parallel.hxx
+      t8_vtk/t8_with_vtk/t8_vtk_polydata.hxx
+      t8_vtk/t8_with_vtk/t8_vtk_unstructured.hxx
+      t8_vtk/t8_with_vtk/t8_vtk_reader.hxx
+    DESTINATION include)
 endif()
 
 if( T8CODE_ENABLE_OCC )
@@ -112,7 +124,6 @@ target_sources( T8 PRIVATE
     t8_cmesh/t8_cmesh_cad.cxx 
     t8_cmesh/t8_cmesh_triangle.cxx 
     t8_cmesh/t8_cmesh_stash.c 
-    t8_cmesh/t8_cmesh_vtk_reader.cxx 
     t8_cmesh/t8_cmesh_save.cxx 
     t8_cmesh/t8_cmesh_trees.cxx 
     t8_cmesh/t8_cmesh_commit.cxx 
@@ -170,10 +181,6 @@ target_sources( T8 PRIVATE
     t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.cxx
     t8_types/t8_vec.cxx
     t8_schemes/t8_standalone/t8_standalone.cxx
-    t8_vtk/t8_vtk_polydata.cxx 
-    t8_vtk/t8_vtk_unstructured.cxx 
-    t8_vtk/t8_vtk_parallel.cxx 
-    t8_vtk/t8_vtk_reader.cxx 
     t8_vtk/t8_vtk_writer.cxx
     t8_vtk/t8_vtk_write_ASCII.cxx
     t8_vtk/t8_vtk_writer_helper.cxx
@@ -204,7 +211,6 @@ install( FILES
     t8_cmesh_readmshfile.h
     t8_cmesh_tetgen.h
     t8_cmesh_triangle.h
-    t8_cmesh_vtk_reader.hxx
     t8_eclass.h
     t8_element.h
     t8_element_shape.h

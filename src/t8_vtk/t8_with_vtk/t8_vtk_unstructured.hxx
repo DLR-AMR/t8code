@@ -20,20 +20,28 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_vtk_reader.cxx
-* Implementation of a Reader for vtk/vtu files using the vtk-library.
-* The functions can only be used when t8code is linked with the vtk-library.
-*/
+#ifndef T8_CMESH_VTK_UNSTRUCTURED_READER
+#define T8_CMESH_VTK_UNSTRUCTURED_READER
 
-#include <t8_cmesh_vtk_reader.hxx>
+/**
+ * This file contains all helper-functions needed to read a vtkUnstructuredGrid
+ * from a file using the vtk-library. 
+ */
 
-T8_EXTERN_C_BEGIN ();
+#include <t8.h>
+#include <t8_vtk/t8_vtk_types.h>
+#include <vtkDataSet.h>
+#include <vtkSmartPointer.h>
 
-t8_cmesh_t
-t8_cmesh_vtk_reader (const char *filename, const int partition, const int main_proc, sc_MPI_Comm comm,
-                     const vtk_file_type_t vtk_file_type)
-{
-  return t8_vtk_reader_cmesh (filename, partition, main_proc, comm, vtk_file_type);
-}
-
-T8_EXTERN_C_END ();
+/**
+ * Given a filename to a file containing an vtkUnstructured Grid, read
+ * the file using the vtk-library. 
+ * 
+ * \param[in] filename  The name of the file
+ * \param[in, out] grid On input a vtkSmartPointer, that will hold the grid described in
+ *                      \a filename.
+ * \returns             non-zero on success, zero if the reading failed.
+ */
+vtk_read_success_t
+t8_read_unstructured (const char *filename, vtkSmartPointer<vtkDataSet> grid);
+#endif /* T8_CMESH_VTK_UNSTRUCTURED_READER */
