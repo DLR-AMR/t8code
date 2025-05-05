@@ -118,7 +118,9 @@ class t8_test_cmesh_vertex_conn: public testing::Test {
   t8_cmesh_t cmesh;
 };
 
-/** */
+/** In this test we retrieve the global vertex indices for each of the trees
+ * and verify that they are correct.
+*/
 TEST_F (t8_test_cmesh_vertex_conn, check_tree_to_vertex)
 {
   ASSERT_TRUE (t8_cmesh_is_committed (cmesh));
@@ -137,7 +139,10 @@ TEST_F (t8_test_cmesh_vertex_conn, check_tree_to_vertex)
   EXPECT_EQ (check_global_vertices_tree_1[2], 2);
 }
 
-/** */
+/** In this test we iterate over all global vertices and for
+ * each one check that the list of connected local trees and local tree vertices
+ * is correct.
+*/
 TEST_F (t8_test_cmesh_vertex_conn, check_vertex_to_tree)
 {
   ASSERT_TRUE (t8_cmesh_is_committed (cmesh));
