@@ -28,6 +28,7 @@
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
+#include <test/t8_gtest_memory_macros.hxx>
 
 /**
  * Given an eclass fill \a vertices_ids with the corner_ids of a cube [0,1]^3, such that 
@@ -119,11 +120,11 @@ TEST_P (tree_vertices_negative_volume, positive_volume)
     1, 1, 1 
   };
   /* clang-format on */
-  double *elem_vertices = T8_ALLOC (double, 3 * num_vertices);
+  double *elem_vertices = T8_TESTSUITE_ALLOC (double, 3 * num_vertices);
   t8_cmesh_new_translate_vertices_to_attributes (vertices_ids, vertices_coords, elem_vertices, num_vertices);
 
   EXPECT_FALSE (t8_cmesh_tree_vertices_negative_volume (tree_class, elem_vertices, num_vertices));
-  T8_FREE (elem_vertices);
+  T8_TESTSUITE_FREE (elem_vertices);
 }
 
 /* Test if negative volume is detected correctly */
@@ -142,7 +143,7 @@ TEST_P (tree_vertices_negative_volume, negative_volume)
     1, 1, 0
   };
   /* clang-format on */
-  double *elem_vertices = T8_ALLOC (double, 3 * num_vertices);
+  double *elem_vertices = T8_TESTSUITE_ALLOC (double, 3 * num_vertices);
   t8_cmesh_new_translate_vertices_to_attributes (vertices_ids, vertices_coords, elem_vertices, num_vertices);
   if (t8_eclass_to_dimension[tree_class] <= 2) {
     EXPECT_FALSE (t8_cmesh_tree_vertices_negative_volume (tree_class, elem_vertices, num_vertices));
@@ -150,7 +151,7 @@ TEST_P (tree_vertices_negative_volume, negative_volume)
   else {
     EXPECT_TRUE (t8_cmesh_tree_vertices_negative_volume (tree_class, elem_vertices, num_vertices));
   }
-  T8_FREE (elem_vertices);
+  T8_TESTSUITE_FREE (elem_vertices);
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_tree_vertices_negative_volume, tree_vertices_negative_volume,

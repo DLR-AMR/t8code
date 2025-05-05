@@ -20,33 +20,22 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <gtest/gtest.h>
-#include <t8.h>
 #include <test/t8_gtest_memory_macros.hxx>
 
-int
-main (int argc, char **argv)
+/**
+ * Package id for the testsuite. Used for attributes.
+ */
+static int testsuite_package_id = -1;
+
+void
+t8_testsuite_register_package_id ()
 {
-  /* Initialize mpi */
-  int mpiret = sc_MPI_Init (&argc, &argv);
-  SC_CHECK_MPI (mpiret);
+  /* Register a package id for the t8code testsuite */
+  testsuite_package_id = sc_package_register (NULL, SC_LP_DEFAULT, "t8code_testsuite", "t8code testsuite package.");
+}
 
-  /* Initialize sc and t8code */
-  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_PRODUCTION);
-  t8_init (SC_LP_DEFAULT);
-
-  /* Register a package id for the testsuite */
-  t8_testsuite_register_package_id ();
-
-  ::testing::InitGoogleTest (&argc, argv);
-
-  const int retval = RUN_ALL_TESTS ();
-
-  /* Finalize SC */
-  sc_finalize ();
-
-  /* Finalize and check mpi */
-  mpiret = sc_MPI_Finalize ();
-  SC_CHECK_MPI (mpiret);
-  return retval;
+int
+t8_testsuite_get_package_id ()
+{
+  return testsuite_package_id;
 }
