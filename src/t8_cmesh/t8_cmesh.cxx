@@ -1268,6 +1268,10 @@ t8_cmesh_reset (t8_cmesh_t *pcmesh)
     cmesh->set_partition_scheme->unref ();
   }
 
+  if (cmesh->vertex_connectivity != NULL) {
+    delete cmesh->vertex_connectivity;
+  }
+
   T8_FREE (cmesh);
   *pcmesh = NULL;
 }
