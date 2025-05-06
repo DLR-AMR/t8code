@@ -24,8 +24,10 @@
 #include <t8_cmesh_readmshfile.h>
 #include <t8_cmesh.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
+#if T8_ENABLE_OCC
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.h>
+#endif
 #include "t8_cmesh_types.h"
 #include "t8_cmesh_stash.h"
 

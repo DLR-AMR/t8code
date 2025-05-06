@@ -85,6 +85,14 @@ if( T8CODE_ENABLE_OCC )
     target_compile_definitions( T8 PUBLIC T8_ENABLE_OCC=1 )
     target_include_directories( T8 SYSTEM PUBLIC ${OpenCASCADE_INCLUDE_DIR} )
     target_link_libraries( T8 PUBLIC ${OpenCASCADE_LIBRARIES} )
+    target_sources(T8 PRIVATE 
+      t8_geometry/t8_geometry_implementations/t8_geometry_cad.cxx
+    )
+    install( FILES 
+      t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx
+      t8_geometry/t8_geometry_implementations/t8_geometry_cad.h
+      DESTINATION include
+    )
 endif()
 
 if( T8CODE_BUILD_PEDANTIC )
@@ -153,7 +161,6 @@ target_sources( T8 PRIVATE
     t8_geometry/t8_geometry_handler.cxx 
     t8_geometry/t8_geometry_with_vertices.cxx 
     t8_geometry/t8_geometry_implementations/t8_geometry_analytic.cxx 
-    t8_geometry/t8_geometry_implementations/t8_geometry_cad.cxx 
     t8_geometry/t8_geometry_implementations/t8_geometry_linear.cxx 
     t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.cxx 
     t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.cxx 
@@ -235,14 +242,16 @@ install( DIRECTORY t8_forest DESTINATION include FILES_MATCHING PATTERN "*.h"
   PATTERN "t8_forest/t8_forest_private.h" EXCLUDE
   PATTERN "t8_forest/t8_forest_types.h"   EXCLUDE
   )
-install( DIRECTORY t8_geometry DESTINATION include FILES_MATCHING PATTERN "*.h" )
+install( DIRECTORY t8_geometry DESTINATION include FILES_MATCHING PATTERN "*.h" 
+  PATTERN "t8_geometry/t8_geometry_implementations/t8_geometry_cad.h" EXCLUDE)
 install( DIRECTORY t8_schemes DESTINATION include FILES_MATCHING PATTERN "*.h" )
 install( DIRECTORY t8_vtk DESTINATION include FILES_MATCHING PATTERN "*.h" )
 
 install( DIRECTORY t8_cmesh DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
 install( DIRECTORY t8_data DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
 install( DIRECTORY t8_forest DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
-install( DIRECTORY t8_geometry DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
+install( DIRECTORY t8_geometry DESTINATION include FILES_MATCHING PATTERN "*.hxx" 
+  PATTERN "t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx" EXCLUDE)
 install( DIRECTORY t8_schemes DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
 install( DIRECTORY t8_vtk DESTINATION include FILES_MATCHING PATTERN "*.hxx" 
   PATTERN "t8_vtk/t8_vtk_parallel.hxx"      EXCLUDE
