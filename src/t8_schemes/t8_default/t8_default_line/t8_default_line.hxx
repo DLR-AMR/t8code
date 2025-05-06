@@ -43,7 +43,7 @@ class t8_scheme;
 class t8_default_scheme_line: public t8_default_scheme_common<t8_default_scheme_line> {
  public:
   /** Constructor which calls the specialized constructor for the base. */
-  t8_default_scheme_line (): t8_default_scheme_common (T8_ECLASS_LINE, sizeof (t8_dline_t)) {};
+  t8_default_scheme_line () noexcept: t8_default_scheme_common (T8_ECLASS_LINE, sizeof (t8_dline_t)) {};
 
   /** Destructor */
   ~t8_default_scheme_line () {};
