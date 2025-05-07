@@ -181,7 +181,7 @@ TEST_F (t8_test_cmesh_vertex_conn, check_vertex_to_tree)
   const int num_local_vertices = t8_cmesh_get_num_local_vertices (cmesh);
 
   for (int ivertex = 0; ivertex < num_local_vertices; ++ivertex) {
-    auto &vertex_to_tree_list = t8_cmesh_get_vertex_to_tree_list (ivertex);
+    auto &vertex_to_tree_list = t8_cmesh_get_vertex_to_tree_list (cmesh, ivertex);
     /* Check the values via the iterator */
     for (auto &[local_tree, local_vertex] : vertex_to_tree_list) {
       EXPECT_EQ (local_vertex, check_local_vertices[ivertex][local_tree]);
