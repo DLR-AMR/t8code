@@ -3331,7 +3331,7 @@ t8_cmesh_new_spherical_shell (t8_eclass_t eclass, t8_geometry_c *geometry,
                                               num_levels, 0, local_comm);
 
   /* clang-format off */
-  const int ntrees = t8_forest_get_local_num_elements (forest) * num_layers; /* Number of 3D cmesh elements resp. trees. */
+  const int ntrees = t8_forest_get_local_num_leaf_elements (forest) * num_layers; /* Number of 3D cmesh elements resp. trees. */
   const int nverts = t8_eclass_num_vertices[eclass]; /* Number of vertices per cmesh element. */
 
   /* Arrays for the face connectivity computations via vertices. */
@@ -3351,14 +3351,14 @@ t8_cmesh_new_spherical_shell (t8_eclass_t eclass, t8_geometry_c *geometry,
   for (t8_locidx_t itree_local = 0; itree_local < t8_forest_get_num_local_trees (forest); ++itree_local) {
 
     /* Get the number of elements of this tree. */
-    const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree_local);
+    const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree_local);
 
     /* Element class scheme of the current tree. */
     t8_eclass_t eclass_2d = t8_forest_get_eclass (forest, itree_local);
 
     /* Loop over all local elements in the tree. */
     for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement) {
-      const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree_local, ielement);
+      const t8_element_t *element = t8_forest_get_leaf_element_in_tree (forest, itree_local, ielement);
 
       /* Retrieve 2D element vertices. */
       double elem_vertices_2d[T8_ECLASS_MAX_CORNERS * 3];

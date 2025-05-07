@@ -145,7 +145,7 @@ t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn, void *user
 TEST_P (forest_permute, test_permute_hole)
 {
   /* number of instances/permutations */
-  const t8_locidx_t num_elements = t8_forest_get_tree_num_elements (forest, 0);
+  const t8_locidx_t num_elements = t8_forest_get_tree_num_leaf_elements (forest, 0);
   T8_ASSERT (num_elements < MAX_NUM_ELEMENTS);
   const uint32_t num_permutation = 1 << num_elements;
 
@@ -168,14 +168,14 @@ TEST_P (forest_permute, test_permute_hole)
         element_count++;
       }
     }
-    ASSERT_TRUE (element_count == t8_forest_get_tree_num_elements (forest_adapt, 0));
+    ASSERT_TRUE (element_count == t8_forest_get_tree_num_leaf_elements (forest_adapt, 0));
 
     /* check if coarsening results in overlapping elements */
     for (int l = 0; l < level + 1; l++) {
       forest_adapt = t8_adapt_forest (forest_adapt, t8_adapt_coarse, NULL);
       ASSERT_TRUE (t8_forest_no_overlap (forest_adapt));
     }
-    ASSERT_TRUE (1 == t8_forest_get_tree_num_elements (forest_adapt, 0));
+    ASSERT_TRUE (1 == t8_forest_get_tree_num_leaf_elements (forest_adapt, 0));
 
     t8_forest_unref (&forest_adapt);
   }

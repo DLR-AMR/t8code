@@ -145,13 +145,13 @@ static void
 TestPartitionData (const t8_forest_t initial_forest, const t8_forest_t partitioned_forest)
 {
   /* Define data which 'lives' on the forest. One datum per element. */
-  const t8_locidx_t in_forest_num_local_elems = t8_forest_get_local_num_elements (initial_forest);
+  const t8_locidx_t in_forest_num_local_elems = t8_forest_get_local_num_leaf_elements (initial_forest);
 
   /* Allocate the initial data. */
   std::vector<T> initial_data (in_forest_num_local_elems);
 
   /* Fill the initial data accordingly to the global element IDs. */
-  const t8_gloidx_t first_global_elem_id = t8_forest_get_first_local_element_id (initial_forest);
+  const t8_gloidx_t first_global_elem_id = t8_forest_get_first_local_leaf_element_id (initial_forest);
 
   /* Check that the number of elements is not greater than the representable maximum value of the given data_type_t. */
   if constexpr (std::is_arithmetic_v<T>) {
@@ -169,7 +169,7 @@ TestPartitionData (const t8_forest_t initial_forest, const t8_forest_t partition
   sc_array_t* in_data = sc_array_new_data (static_cast<void*> (initial_data.data ()), sizeof (T), initial_data.size ());
 
   /* Allocate memory for the partitioned data */
-  const t8_locidx_t out_forest_num_local_elems = t8_forest_get_local_num_elements (partitioned_forest);
+  const t8_locidx_t out_forest_num_local_elems = t8_forest_get_local_num_leaf_elements (partitioned_forest);
   std::vector<T> partitioned_data_vec (out_forest_num_local_elems);
 
   /* Create a wrapper for the allocated partitioned data. */
@@ -180,7 +180,8 @@ TestPartitionData (const t8_forest_t initial_forest, const t8_forest_t partition
   t8_forest_partition_data (initial_forest, partitioned_forest, in_data, partitioned_data);
 
   /* Get the new first local element id of the partitioned forest. */
-  const t8_gloidx_t partitioned_forest_first_global_elem_id = t8_forest_get_first_local_element_id (partitioned_forest);
+  const t8_gloidx_t partitioned_forest_first_global_elem_id
+    = t8_forest_get_first_local_leaf_element_id (partitioned_forest);
 
   /* Compare whether the data has been correctly partitioned accordingly to the forest */
   T global_elem_index = static_cast<T> (partitioned_forest_first_global_elem_id);

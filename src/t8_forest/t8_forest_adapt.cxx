@@ -442,7 +442,7 @@ t8_forest_adapt (t8_forest_t forest)
     telements_from = &tree_from->elements;
     /* Number of elements in the old tree */
     num_el_from = (t8_locidx_t) t8_element_array_get_count (telements_from);
-    T8_ASSERT (num_el_from == t8_forest_get_tree_num_elements (forest_from, ltree_id));
+    T8_ASSERT (num_el_from == t8_forest_get_tree_num_leaf_elements (forest_from, ltree_id));
     /* Continue only if tree_from is not empty.
      * Otherwise there is nothing to adapt, since elements can't be inserted. */
     if (num_el_from > 0) {
@@ -662,7 +662,7 @@ t8_forest_adapt (t8_forest_t forest)
 
   /* We now adapted all local trees */
   /* Compute the new global number of elements */
-  t8_forest_comm_global_num_elements (forest);
+  t8_forest_comm_global_num_leaf_elements (forest);
 
   /* Updating other processes about local (in)complete trees.
    * If the old forest already contained incomplete trees, 
