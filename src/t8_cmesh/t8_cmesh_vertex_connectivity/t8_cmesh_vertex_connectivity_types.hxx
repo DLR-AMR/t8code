@@ -20,8 +20,13 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/* This file is part of the public interface, while
+ * src/t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx 
+ * is not. */
+
 /** \file t8_cmesh_vertex_connectivity_types.hxx
- * TODO
+ * In this file we collect the data types required for cmesh 
+ * global vertex id storage.
  */
 
 #ifndef T8_CMESH_VERTEX_CONNECTIVITY_TYPES_HXX

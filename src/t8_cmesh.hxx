@@ -27,6 +27,8 @@
 #ifndef T8_CMESH_HXX
 #define T8_CMESH_HXX
 
+#include <vector>
+#include <unordered_map>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity_types.hxx>
@@ -57,7 +59,7 @@ t8_cmesh_register_geometry (t8_cmesh_t cmesh, _args &&...args)
  * \param [in] global_vertex_id The global id of a vertex in the cmesh.
  * \return The list of global tree ids and local vertex ids of \a global_vertex_id.
  */
-const t8_cmesh_vertex_conn_vertex_to_tree::tree_vertex_list &
+const tree_vertex_list &
 t8_cmesh_get_vertex_to_tree_list (const t8_cmesh_t cmesh, const t8_gloidx_t global_vertex);
 
 #endif /* T8_CMESH_HXX */
