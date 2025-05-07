@@ -33,9 +33,8 @@ struct t8_standalone_scheme
 {
  public:
   /** Constructor
-   * \param [in] elem_size  The size of the elements this scheme holds.
   */
-  t8_standalone_scheme ()
+  t8_standalone_scheme () noexcept
     : element_size (sizeof (t8_standalone_element<TEclass>)), scheme_context (sc_mempool_new (element_size)) {};
 
  protected:
@@ -53,9 +52,8 @@ struct t8_standalone_scheme
 
   /** Move constructor */
   t8_standalone_scheme (t8_standalone_scheme &&other) noexcept
-    : element_size (other.element_size), scheme_context (other.scheme_context)
+    : element_size (other.element_size), scheme_context (std::exchange (other.scheme_context, nullptr))
   {
-    other.scheme_context = nullptr;
   }
 
   /** Move assignment operator */
@@ -1011,7 +1009,7 @@ struct t8_standalone_scheme
    *                        defined in relation to the smaller face.
    * \note \a elem1 and \a elem2 may point to the same element.
    */
-  static constexpr void
+  static inline void
   element_transform_face ([[maybe_unused]] const t8_element_t *elem1, [[maybe_unused]] t8_element_t *elem2,
                           [[maybe_unused]] const int orientation, [[maybe_unused]] const int sign,
                           [[maybe_unused]] const int is_smaller_face) noexcept
@@ -1024,22 +1022,22 @@ struct t8_standalone_scheme
    *  the element inside the root tree that has the given face as a
    *  face.
    * \param [in] face     A face element.
-   * \param [in] face_scheme The scheme for the face element.
    * \param [in,out] elem An allocated element. The entries will be filled with
    *                      the data of the element that has \a face as a face and
    *                      lies within the root tree.
    * \param [in] root_face The index of the face of the root tree in which \a face
    *                      lies.
+   * \param [in] scheme   The scheme collection with a scheme for the eclass of the face.
    * \return              The face number of the face of \a elem that coincides
    *                      with \a face.
    */
   static constexpr int
   element_extrude_face ([[maybe_unused]] const t8_element_t *face, [[maybe_unused]] t8_element_t *elem,
-                        [[maybe_unused]] const int root_face, [[maybe_unused]] const t8_scheme *face_scheme) noexcept
+                        [[maybe_unused]] const int root_face, [[maybe_unused]] const t8_scheme *scheme) noexcept
   {
-    const t8_eclass_t face_TEclass = get_face_eclass ();
+    const t8_eclass_t TFaceEclass = get_face_eclass ();
     T8_ASSERT (0 <= root_face && root_face < T8_ELEMENT_NUM_FACES[TEclass]);
-    switch (face_TEclass) {
+    switch (TFaceEclass) {
     case T8_ECLASS_ZERO:
       T8_ASSERT (t8_standalone_scheme<T8_ECLASS_ZERO>::element_is_valid (face));
       return extrude_face<T8_ECLASS_ZERO> ((t8_standalone_element<T8_ECLASS_ZERO> *) face, elem, root_face);
@@ -1068,20 +1066,20 @@ struct t8_standalone_scheme
    * \param [in,out] boundary An allocated element of dimension of \a element
    *                      minus 1. The entries will be filled with the entries
    *                      of the face of \a element.
-   * \param [in] boundary_scheme The scheme collection 
+   * \param [in] scheme   The scheme containing an eclass scheme for the boundary face.
    * If \a elem is of class T8_ECLASS_VERTEX, then \a boundary must be NULL
    * and will not be modified.
    */
   static constexpr void
   element_get_boundary_face (const t8_element_t *elem, const int face, [[maybe_unused]] t8_element_t *boundary,
-                             [[maybe_unused]] const t8_scheme *boundary_scheme) noexcept
+                             [[maybe_unused]] const t8_scheme *scheme) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
     const int root_face = element_get_tree_face (elem, face);
-    const t8_eclass_t face_TEclass = get_face_eclass ();
+    const t8_eclass_t TFaceEclass = get_face_eclass ();
 
-    switch (face_TEclass) {
+    switch (TFaceEclass) {
     case T8_ECLASS_VERTEX:
       compute_boundary_face<T8_ECLASS_VERTEX> (elem, root_face, (t8_standalone_element<T8_ECLASS_VERTEX> *) boundary);
       return;
@@ -1379,15 +1377,15 @@ struct t8_standalone_scheme
    *                      On output all these pointers will point to an allocated
    *                      and initialized element.
    * \note Not every element that is created in t8code will be created by a call
-   * to this function. However, if an element is not created using \ref t8_element_new,
-   * then it is guaranteed that \ref t8_element_init is called on it.
-   * \note In debugging mode, an element that was created with \ref t8_element_new
-   * must pass \ref t8_element_is_valid.
-   * \note If an element was created by \ref t8_element_new then \ref t8_element_init
-   * may not be called for it. Thus, \ref t8_element_new should initialize an element
-   * in the same way as a call to \ref t8_element_init would.
-   * \see t8_element_init
-   * \see t8_element_is_valid
+   * to this function. However, if an element is not created using \ref element_new,
+   * then it is guaranteed that \ref element_init is called on it.
+   * \note In debugging mode, an element that was created with \ref element_new
+   * must pass \ref element_is_valid.
+   * \note If an element was created by \ref element_new then \ref element_init
+   * may not be called for it. Thus, \ref element_new should initialize an element
+   * in the same way as a call to \ref element_init would.
+   * \see element_init
+   * \see element_is_valid
    */
   /* TODO: would it be better to directly allocate an array of elements,
    *       not element pointers? */
@@ -1417,13 +1415,13 @@ struct t8_standalone_scheme
    * \param [in] length   The number of elements to be initialized.
    * \param [in,out] elems On input an array of \b length many allocated
    *                       elements.
-   * \note In debugging mode, an element that was passed to \ref t8_element_init
-   * must pass \ref t8_element_is_valid.
-   * \note If an element was created by \ref t8_element_new then \ref t8_element_init
-   * may not be called for it. Thus, \ref t8_element_new should initialize an element
-   * in the same way as a call to \ref t8_element_init would.
-   * \see t8_element_new
-   * \see t8_element_is_valid
+   * \note In debugging mode, an element that was passed to \ref element_init
+   * must pass \ref element_is_valid.
+   * \note If an element was created by \ref element_new then \ref element_init
+   * may not be called for it. Thus, \ref element_new should initialize an element
+   * in the same way as a call to \ref element_init would.
+   * \see element_new
+   * \see element_is_valid
    */
   static inline void
   element_init ([[maybe_unused]] const int length, [[maybe_unused]] t8_element_t *elem) noexcept
@@ -1443,8 +1441,8 @@ struct t8_standalone_scheme
    * \param [in,out] elems On input an array of \a length many allocated
    *                       and initialized elements, on output an array of
    *                       \a length many allocated, but not initialized elements.
-   * \note Call this function if you called t8_element_init on the element pointers.
-   * \see t8_element_init
+   * \note Call this function if you called element_init on the element pointers.
+   * \see element_init
    */
   static constexpr void
   element_deinit ([[maybe_unused]] const int length, [[maybe_unused]] t8_element_t *elem) noexcept
@@ -1478,9 +1476,9 @@ struct t8_standalone_scheme
    *  and other membervariables do have meaningful values.
    * \param [in]      elem  The element to be checked.
    * \return          True if \a elem is safe to use. False otherwise.
-   * \note            An element that is constructed with \ref t8_element_new
+   * \note            An element that is constructed with \ref element_new
    *                  must pass this test.
-   * \note            An element for which \ref t8_element_init was called must pass
+   * \note            An element for which \ref element_init was called must pass
    *                  this test.
    * \note            This function is used for debugging to catch certain errors.
    *                  These can for example occur when an element points to a region
@@ -1948,17 +1946,17 @@ struct t8_standalone_scheme
    *                            minus 1. The entries will be filled with the entries
    *                            of the face of \a element.
    */
-  template <t8_eclass_t face_TEclass>
+  template <t8_eclass_t TFaceEclass>
   static constexpr void
   compute_boundary_face (const t8_element_t *elem, const int root_face,
-                         t8_standalone_element<face_TEclass> *boundary) noexcept
+                         t8_standalone_element<TFaceEclass> *boundary) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (0 <= root_face && root_face < T8_ELEMENT_NUM_FACES[TEclass]);
     const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
 
-    /* Avoid porblmes for unneeded instantiations*/
-    if constexpr (T8_ELEMENT_DIM[face_TEclass] >= T8_ELEMENT_DIM[TEclass]) {
+    /* Avoid problems for unneeded instantiations*/
+    if constexpr (T8_ELEMENT_DIM[TFaceEclass] >= T8_ELEMENT_DIM[TEclass]) {
       return;
     }
 
@@ -1971,11 +1969,11 @@ struct t8_standalone_scheme
         if (ifacedim != -1) {
           /** Currently this part of the code is also compiled for vertices and faces of higher dim than the element. 
           * This leads to invalid shift inputs.*/
-          if constexpr (face_TEclass != T8_ECLASS_VERTEX) {
+          if constexpr (TFaceEclass != T8_ECLASS_VERTEX) {
             /** Set the boundary coordinates to the corresponding coordinates of the element,  
            * adjusted to the maxlevel of the face-scheme*/
             boundary->coords[ifacedim] = el->coords[idim]
-                                         << (T8_ELEMENT_MAXLEVEL[face_TEclass] - T8_ELEMENT_MAXLEVEL[TEclass]);
+                                         << (T8_ELEMENT_MAXLEVEL[TFaceEclass] - T8_ELEMENT_MAXLEVEL[TEclass]);
           }
           else {
             SC_ABORT_NOT_REACHED ();
@@ -1986,7 +1984,7 @@ struct t8_standalone_scheme
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
       SC_ABORT ("Only implemented for hypercubes.\n");
     }
-    T8_ASSERT (t8_standalone_scheme<face_TEclass>::element_is_valid ((t8_element_t *) boundary));
+    T8_ASSERT (t8_standalone_scheme<TFaceEclass>::element_is_valid ((t8_element_t *) boundary));
   }
 
   /** Given a boundary face inside a root tree's face construct
@@ -2001,19 +1999,19 @@ struct t8_standalone_scheme
    * \return              The face number of the face of \a elem that coincides
    *                      with \a face.
    */
-  template <t8_eclass_t face_TEclass>
+  template <t8_eclass_t TFaceEclass>
   static constexpr int
-  extrude_face (const t8_standalone_element<face_TEclass> *face, t8_element_t *elem, const int root_face) noexcept
+  extrude_face (const t8_standalone_element<TFaceEclass> *face, t8_element_t *elem, const int root_face) noexcept
   {
     t8_standalone_element<TEclass> *el = (t8_standalone_element<TEclass> *) elem;
-    T8_ASSERT (t8_standalone_scheme<face_TEclass>::element_is_valid ((t8_element_t *) face));
+    T8_ASSERT (t8_standalone_scheme<TFaceEclass>::element_is_valid ((t8_element_t *) face));
     T8_ASSERT (0 <= root_face && root_face < T8_ELEMENT_NUM_FACES[TEclass]);
     /** Loop over elemdim, get corresponding facedim and set elem coord accordingly 
    * If elemdim is faceboundary, find out if 0 or 1 boundary
    */
     T8_ASSERT (0 <= face->level && face->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
     /* Avoid porblmes for unneeded instantiations*/
-    if constexpr (T8_ELEMENT_DIM[face_TEclass] >= T8_ELEMENT_DIM[TEclass]) {
+    if constexpr (T8_ELEMENT_DIM[TFaceEclass] >= T8_ELEMENT_DIM[TEclass]) {
       return -1;
     }
 
@@ -2024,10 +2022,10 @@ struct t8_standalone_scheme
 
         if (ifacedim != -1) {
           /** Currently this part of the code is also compiled for vertices and faces of higher dim than the element.*/
-          if constexpr (face_TEclass != T8_ECLASS_VERTEX) {
+          if constexpr (TFaceEclass != T8_ECLASS_VERTEX) {
             /* Set the element coordinates to the corresponding coordinates of the face, adjusted to the maxlevel of the element-scheme*/
             el->coords[idim]
-              = face->coords[ifacedim] >> (T8_ELEMENT_MAXLEVEL[face_TEclass] - T8_ELEMENT_MAXLEVEL[TEclass]);
+              = face->coords[ifacedim] >> (T8_ELEMENT_MAXLEVEL[TFaceEclass] - T8_ELEMENT_MAXLEVEL[TEclass]);
           }
           else {
             SC_ABORT_NOT_REACHED ();

@@ -22,11 +22,11 @@
 
 #include <t8_vtk/t8_vtk_writer.hxx>
 
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
 #include <vtkUnstructuredGrid.h>
 #endif
 
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
 /**
  * \brief template specialization for forests. 
  * 
@@ -87,7 +87,7 @@ vtk_writer<t8_cmesh_t>::t8_grid_tree_to_vtk_cells (
   (*elem_id)++;
   return;
 }
-#endif /* T8_WITH_VTK */
+#endif /* T8_ENABLE_VTK */
 
 template <>
 bool
@@ -144,7 +144,7 @@ t8_cmesh_vtk_write_file (const t8_cmesh_t cmesh, const char *fileprefix)
   return writer.write_ASCII (cmesh);
 }
 
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
 void
 t8_forest_to_vtkUnstructuredGrid (const t8_forest_t forest, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
                                   const int write_treeid, const int write_mpirank, const int write_level,
