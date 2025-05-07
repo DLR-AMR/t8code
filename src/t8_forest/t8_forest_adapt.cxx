@@ -419,7 +419,7 @@ t8_forest_adapt (t8_forest_t forest)
 
   forest_from = forest->set_from;
   t8_global_productionf ("Into t8_forest_adapt from %lld total elements\n",
-                         (long long) forest_from->global_num_elements);
+                         (long long) forest_from->global_num_leaf_elements);
 
   T8_ASSERT (forest_from->incomplete_trees != -1);
   T8_ASSERT (forest->incomplete_trees == -1);
@@ -430,7 +430,7 @@ t8_forest_adapt (t8_forest_t forest)
   if (forest->set_adapt_recursive) {
     refine_list = sc_list_new (NULL);
   }
-  forest->local_num_elements = 0;
+  forest->local_num_leaf_elements = 0;
   el_offset = 0;
   num_trees = t8_forest_get_num_local_trees (forest);
   /* Iterate over the trees and build the new element arrays for each one. */
@@ -438,8 +438,8 @@ t8_forest_adapt (t8_forest_t forest)
     /* Get the new and old tree and the new and old element arrays */
     tree = t8_forest_get_tree (forest, ltree_id);
     tree_from = t8_forest_get_tree (forest_from, ltree_id);
-    telements = &tree->elements;
-    telements_from = &tree_from->elements;
+    telements = &tree->leaf_elements;
+    telements_from = &tree_from->leaf_elements;
     /* Number of elements in the old tree */
     num_el_from = (t8_locidx_t) t8_element_array_get_count (telements_from);
     T8_ASSERT (num_el_from == t8_forest_get_tree_num_elements (forest_from, ltree_id));
@@ -639,7 +639,7 @@ t8_forest_adapt (t8_forest_t forest)
       tree->elements_offset = el_offset;
       el_offset += el_inserted;
       /* Add to the new number of local elements. */
-      forest->local_num_elements += el_inserted;
+      forest->local_num_leaf_elements += el_inserted;
       /* Possibly shrink the telements array to the correct size */
       t8_element_array_resize (telements, el_inserted);
 
@@ -680,7 +680,8 @@ t8_forest_adapt (t8_forest_t forest)
     forest->incomplete_trees = 1;
   }
 
-  t8_global_productionf ("Done t8_forest_adapt with %lld total elements\n", (long long) forest->global_num_elements);
+  t8_global_productionf ("Done t8_forest_adapt with %lld total elements\n",
+                         (long long) forest->global_num_leaf_elements);
 
   /* if profiling is enabled, measure runtime */
   if (forest->profile != NULL) {
