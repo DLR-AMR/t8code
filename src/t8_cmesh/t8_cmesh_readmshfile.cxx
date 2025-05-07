@@ -732,7 +732,7 @@ t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
 
         for (iswitch = 0; iswitch < num_switches; ++iswitch) {
           /* We switch vertex 0 + iswitch and vertex switch_indices[iswitch] */
-          for (int i_dim = 0; i_dim < T8_ECLASS_MAX_DIM ; i_dim++) {
+          for (int i_dim = 0; i_dim < T8_ECLASS_MAX_DIM; i_dim++) {
             temp = tree_vertices[3 * iswitch + i_dim];
             tree_vertices[3 * iswitch + i_dim] = tree_vertices[3 * switch_indices[iswitch] + i_dim];
             tree_vertices[3 * switch_indices[iswitch] + i_dim] = temp;
