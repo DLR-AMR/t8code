@@ -178,7 +178,7 @@ class t8_forest_pfc_message_c {
 
   /* getter function to stay in control of memory management */
   const t8_element_t *
-  get_parent ()
+  get_parent () const
   {
     T8_ASSERT (parent);
     return parent;

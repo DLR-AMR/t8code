@@ -121,7 +121,7 @@ T8_EXTERN_C_BEGIN ();
  * and has a layer of ghost elements. 
  */
 static t8_forest_t
-t8_step4_partition_for_coarsening (t8_forest_t forest)
+t8_step4_partition_for_coarsening (t8_forest_t forest, int pfc_switch)
 {
   t8_forest_t new_forest;
 
@@ -141,7 +141,7 @@ t8_step4_partition_for_coarsening (t8_forest_t forest)
    * across multiple processes and thus one level coarsening is always possible (see also the
    * comments on coarsening in t8_step3).
    */
-  t8_forest_set_partition (new_forest, forest, 1);
+  t8_forest_set_partition (new_forest, forest, pfc_switch);
   t8_forest_commit (new_forest);
 
   return new_forest;
@@ -183,14 +183,16 @@ t8_step4_main (int argc, char **argv)
   sc_MPI_Comm comm;
   t8_cmesh_t cmesh;
   t8_forest_t forest;
+
   /* The prefix for our output files. */
   const char *prefix_uniform = "t8_step4_uniform_forest";
-  // const char *prefix_adapt = "t8_step4_adapted_forest";
+  const char *prefix_adapt = "t8_step4_adapted_forest";
   const char *prefix_partition_ghost = "t8_step4_partitioned_ghost_forest";
   const char *prefix_balance = "t8_step4_balanced_forest";
   const char *prefix_partition_for_coarsening = "t8_step4_pfc_forest";
+  const char *prefix_partition = "t8_step4_partitioned_forest";
   /* The uniform refinement level of the forest. */
-  const int level = 4;
+  const int level = 3;
 
   /* Initialize MPI. This has to happen before we initialize sc or t8code. */
   mpiret = sc_MPI_Init (&argc, &argv);
@@ -224,6 +226,7 @@ t8_step4_main (int argc, char **argv)
   /* Build a cube cmesh with tet, hex, and prism trees. */
   //  cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
   cmesh = t8_cmesh_new_from_class (T8_ECLASS_QUAD, comm);
+  // cmesh = t8_cmesh_new_from_class (T8_ECLASS_HEX, comm);
   t8_global_productionf (" [step4] Created coarse mesh.\n");
   forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, comm);
 
@@ -234,8 +237,27 @@ t8_step4_main (int argc, char **argv)
   t8_forest_write_vtk (forest, prefix_uniform);
   t8_global_productionf (" [step4] Wrote uniform level %i forest to vtu files: %s*\n", level, prefix_uniform);
 
+  /*
+   *  Adapt the forest.
+   */
+
+  /* Adapt the forest. We can reuse the forest variable, since the new adapted
+   * forest will take ownership of the old forest and destroy it.
+   * Note that the adapted forest is a new forest, though. */
+  forest = t8_step3_adapt_forest (forest);
+
   /* Print information of our new forest. */
   t8_step3_print_forest_information (forest);
+
+  /* Write forest to vtu files. */
+  t8_forest_write_vtk (forest, prefix_adapt);
+  t8_global_productionf (" [step4] Wrote adapted forest to vtu files: %s*\n", prefix_adapt);
+
+  t8_global_productionf (" [step4] Classic partitioning forest for coarsening.\n");
+
+  // forestB = forest;
+  forest = t8_step4_partition_for_coarsening (forest, 0);
+  t8_forest_write_vtk_ext (forest, prefix_partition, 1, 1, 1, 1, 1, 0, 1, 0, NULL);
 
   /*
    * Partition for coarsening
@@ -244,13 +266,15 @@ t8_step4_main (int argc, char **argv)
   t8_global_productionf (" [step4] \n");
   t8_global_productionf (" [step4] Repartitioning this forest for coarsening.\n");
   t8_global_productionf (" [step4] \n");
-  forest = t8_step4_partition_for_coarsening (forest);
+
+  forest = t8_step4_partition_for_coarsening (forest, 1);
+
   t8_global_productionf (" [step4] Repartitioned forest for coarsening.\n");
   t8_step3_print_forest_information (forest);
   /* Write forest to vtu files. */
   t8_forest_write_vtk_ext (forest, prefix_partition_for_coarsening, 1, 1, 1, 1, 1, 0, 1, 0, NULL);
   // t8_forest_write_vtk_ext (forest, prefix_partition_ghost, 1, 1, 1, 1, 1, 0, 1, 0, NULL);
-  t8_global_productionf (" [step4] Wrote repartitioned forest with ghost layer to vtu files: %s*\n",
+  t8_global_productionf (" [step4] Wrote repartitioned forest using partition for coarsening to vtu files: %s*\n",
                          prefix_partition_ghost);
 
   /*

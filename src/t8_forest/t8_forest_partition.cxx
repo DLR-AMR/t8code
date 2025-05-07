@@ -447,9 +447,9 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
   }
   t8_shmem_array_end_writing (forest->element_offsets);
 
-  /* In case the partition-for-coarsening flag is set */
+  // In case the partition-for-coarsening flag is set, correct the partitioning if a family of elements is
+  // split across process boundaries
   if (forest->set_for_coarsening != 0) {
-    /* Correct the equal partition between the ranks if a family of elements is split across process boundaries */
     t8_forest_pfc_correction_offsets (forest);
   }
 }
