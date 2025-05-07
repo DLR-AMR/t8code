@@ -85,6 +85,14 @@ t8_cmesh_get_global_vertex_of_tree (const t8_cmesh_t cmesh, const t8_locidx_t lo
 int
 t8_cmesh_get_num_trees_at_vertex (const t8_cmesh_t cmesh, t8_gloidx_t global_vertex);
 
+/** Get the list of global trees and local vertex ids a global vertex is connected to.
+ * 
+ * \param [in] global_vertex_id The global id of a vertex in the cmesh.
+ * \return The list of global tree ids and local vertex ids of \a global_vertex_id.
+ */
+const t8_cmesh_vertex_conn_vertex_to_tree::tree_vertex_list &
+t8_cmesh_get_vertex_to_tree_list (const t8_cmesh_t cmesh, const t8_gloidx_t global_vertex);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_VERTEX_CONNECTIVITY_H */
