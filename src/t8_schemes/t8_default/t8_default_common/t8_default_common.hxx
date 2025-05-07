@@ -31,6 +31,7 @@
 #include <t8_types/t8_operators.hxx>
 #include <sc_functions.h>
 #include <sc_containers.h>
+#include <utility>
 
 /* Macro to check whether a pointer (VAR) to a base class, comes from an
  * implementation of a child class (TYPE). */
