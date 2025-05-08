@@ -24,8 +24,10 @@
 #include <t8_cmesh_readmshfile.h>
 #include <t8_cmesh.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
+#if T8_ENABLE_OCC
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.h>
+#endif
 #include "t8_cmesh_types.h"
 #include "t8_cmesh_stash.h"
 #include <unordered_set>
@@ -732,7 +734,7 @@ t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
 
         for (iswitch = 0; iswitch < num_switches; ++iswitch) {
           /* We switch vertex 0 + iswitch and vertex switch_indices[iswitch] */
-          for (int i_dim = 0; T8_ECLASS_MAX_DIM < 3; i_dim++) {
+          for (int i_dim = 0; i_dim < T8_ECLASS_MAX_DIM; i_dim++) {
             temp = tree_vertices[3 * iswitch + i_dim];
             tree_vertices[3 * iswitch + i_dim] = tree_vertices[3 * switch_indices[iswitch] + i_dim];
             tree_vertices[3 * switch_indices[iswitch] + i_dim] = temp;
@@ -1394,7 +1396,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
 #if T8_ENABLE_OCC
   t8_msh_file_node face_nodes[T8_ECLASS_MAX_CORNERS_2D], edge_nodes[2];
 #endif /* T8_ENABLE_OCC */
-
   long lnum_trees, lnum_blocks, entity_tag;
   int retval;
   int ele_type;

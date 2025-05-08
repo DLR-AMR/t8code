@@ -20,7 +20,7 @@ option( T8CODE_BUILD_WEXTRA "Compile t8code with extra warnings as done in the G
 option( T8CODE_EXPORT_COMPILE_COMMANDS "Export the compile commands as json. Can be used by IDEs for code completion (e.g. intellisense, clangd)" OFF )
 
 option( T8CODE_BUILD_TESTS "Build t8code's automated tests" ON )
-cmake_dependent_option( T8CODE_BUILD_TPL_TESTS "Build the tests from libsc and p4est" ON "T8CODE_BUILD_TESTS" OFF )
+cmake_dependent_option( T8CODE_BUILD_TPL_TESTS "Build the tests from libsc and p4est" OFF "T8CODE_BUILD_TESTS" OFF )
 
 option( T8CODE_BUILD_EXAMPLES "Build t8code's examples" ON )
 cmake_dependent_option( T8CODE_BUILD_TPL_EXAMPLES "Build the examples from libsc and p4est" OFF "T8CODE_BUILD_EXAMPLES" OFF )
@@ -120,7 +120,22 @@ if ( T8CODE_USE_SYSTEM_SC )
 else()
     set( SC_BUILD_EXAMPLES ${T8CODE_BUILD_TPL_EXAMPLES} )
     set( SC_BUILD_TESTING ${T8CODE_BUILD_TPL_TESTS} )
+    
+    # Capture the list of variables before adding the subdirectory to mark the added ones as advanced.
+    get_cmake_property(_vars_before_sc VARIABLES )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/sc )
+    # Capture the list of variables after adding the subdirectory
+    get_cmake_property(_vars_after_sc VARIABLES )
+    # Compute the difference (new variables added by the subdirectory)
+    set( _new_sc_vars)
+    foreach( _var IN LISTS _vars_after_sc )
+        if( NOT _var IN_LIST _vars_before_sc )
+            list( APPEND _new_sc_vars ${_var} )
+        endif()
+    endforeach()
+    
+    # Mark the new variables as advanced
+    mark_as_advanced( FORCE ${_new_sc_vars} )
 endif()
 
 if ( T8CODE_USE_SYSTEM_P4EST )
@@ -128,7 +143,22 @@ if ( T8CODE_USE_SYSTEM_P4EST )
 else()
     set( P4EST_BUILD_EXAMPLES ${T8CODE_BUILD_TPL_EXAMPLES} )
     set( P4EST_BUILD_TESTING ${T8CODE_BUILD_TPL_TESTS} )
+    
+    # Capture the list of variables before adding the subdirectory to mark the added ones as advanced.
+    get_cmake_property( _vars_before_p4est VARIABLES )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/p4est )
+    # Capture the list of variables after adding the subdirectory
+    get_cmake_property( _vars_after_p4est VARIABLES )
+    # Compute the difference (new variables added by the subdirectory)
+    set( _new_p4est_vars )
+    foreach( _var IN LISTS _vars_after_p4est )
+        if( NOT _var IN_LIST _vars_before_p4est )
+            list( APPEND _new_p4est_vars ${_var} )
+        endif()
+    endforeach()
+    
+    # Mark the new variables as advanced
+    mark_as_advanced( FORCE ${_new_p4est_vars} )
 endif()
 
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/src )
