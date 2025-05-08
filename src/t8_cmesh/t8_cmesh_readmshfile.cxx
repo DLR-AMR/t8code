@@ -890,6 +890,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
   long num_ele_in_block;
   std::array<t8_msh_file_node, T8_ECLASS_MAX_CORNERS> tree_nodes;
   std::array<double, T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM> tree_vertices;
+  t8_gloidx_t global_id_of_node[T8_ECLASS_MAX_CORNERS];
 
   T8_ASSERT (fp != NULL);
   /* Search for the line beginning with "$Elements" */
@@ -1086,13 +1087,15 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
           }
         }
 
-        /* Set the vertices of this tree */
+        /* Set the vertices and global indices of this tree */
         for (int i_node = 0; i_node < num_nodes; i_node++) {
           tree_vertices[3 * i_node] = tree_nodes[i_node].coordinates[0];
           tree_vertices[3 * i_node + 1] = tree_nodes[i_node].coordinates[1];
           tree_vertices[3 * i_node + 2] = tree_nodes[i_node].coordinates[2];
+          global_id_of_node[i_node] = tree_nodes[i_node].index % vertices.size ();
         }
         t8_cmesh_set_tree_vertices (cmesh, tree_count, tree_vertices.data (), num_nodes);
+        t8_cmesh_set_global_vertices_of_tree (cmesh, tree_count, global_id_of_node, num_nodes);
 
         if (!use_cad_geometry) {
           /* Set the geometry of the tree to be linear.
