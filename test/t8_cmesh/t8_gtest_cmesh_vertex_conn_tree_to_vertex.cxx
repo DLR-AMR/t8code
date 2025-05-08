@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2025 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -23,13 +23,54 @@
 #include <gtest/gtest.h>
 #include <test/t8_gtest_macros.hxx>
 #include <t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_vertex_connectivity.hxx>
-#include <t8_cmesh/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
-#include <t8_cmesh/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <test/t8_cmesh_generator/t8_cmesh_example_sets.hxx>
 
-/* TODO: write test case without existing cmesh to test before attribute bug is fixed */
+/*
+In this file we test the tree to vertex functionality.
+We create different cmeshes and add global vertex ids.
+In the tests we check whether the getter functions for these ids return
+the correct values.
+
+We use two test classes.
+1. *with_core_classes tests
+  test the functionality of the ttv class directly, using
+    ttv.set_global_vertex_ids_of_tree_vertices
+2. *with_cmesh_functions tests
+  test the functionality of the ttv via the provided cmesh interface, using
+    t8_cmesh_set_global_vertices_of_tree
+
+Note to future developers:
+  We would like to test all our cmesh test examples, but are currently not able to.
+  What we need to do is
+    1. Get the test cmesh
+    2. derive a cmesh from it
+    3. Add vertices to the direved cmesh
+    4. commit the derived cmesh
+  
+  This is implemented in the 
+    cmesh_vertex_conn_ttv_with_core_classes
+    cmesh_vertex_conn_ttv_with_cmesh_functions
+  test suites.
+  
+  However, as of now (i.e. April 2025), we cannot not add attributes (and hence vertices)
+  while deriving a cmesh.
+  It is only possible to add attributes when constructing a new cmesh from scratch.
+  Thus, the test suites are currently disabled/commented out with #if 0 blocks.
+
+  Instead, we currently create a bunch of test cmeshes ourself from scratch.
+  This is implemented in the 
+    cmesh_vertex_conn_ttv_with_core_classes_temp
+    cmesh_vertex_conn_ttv_with_cmesh_functions_temp
+  test suites.
+
+  If we are finally able to add attributes during derive of a cmesh, then
+  the _temp tests should be replaced with the non-temp test suites..
+*/
+
 class cmesh_vertex_conn_ttv_with_core_classes: public testing::TestWithParam<cmesh_example_base *> {
  protected:
   void
@@ -152,7 +193,7 @@ class cmesh_vertex_conn_ttv_with_core_classes_temp:
 /** Check for correct ttv entries. */
 #if 0
 // Reactive this line when we enable the tests with derived attributes
-TEST_P (cmesh_vertex_conn_ttv, DISABLED_get_global)
+TEST_P (cmesh_vertex_conn_ttv, get_global)
 #else
 // Delete this line and the cmesh_vertex_conn_ttv_temp class wehen we enable the tests with derived attributes
 TEST_P (cmesh_vertex_conn_ttv_with_core_classes_temp, get_global)
@@ -181,7 +222,7 @@ TEST_P (cmesh_vertex_conn_ttv_with_core_classes_temp, get_global)
 
 #if 0
 // Reactive this line when we enable the tests with derived attributes
-TEST_P (cmesh_vertex_conn_ttv, DISABLED_get_global)
+TEST_P (cmesh_vertex_conn_ttv_with_core_classes, get_global)
 #else
 // Delete this line and the cmesh_vertex_conn_ttv_temp class wehen we enable the tests with derived attributes
 TEST_P (cmesh_vertex_conn_ttv_with_core_classes_temp, convert_to_vtt)
@@ -244,7 +285,8 @@ class cmesh_vertex_conn_ttv_with_cmesh_functions: public testing::TestWithParam<
       for (t8_locidx_t ientry = start_index; ientry < num_tree_vertices; ++ientry) {
         global_indices[ientry] = ientry;
       }
-      t8_cmesh_set_global_vertices_of_tree (cmesh, itree, global_indices, num_tree_vertices);
+      const t8_gloidx_t global_tree_id = t8_cmesh_get_global_id (cmesh, itree);
+      t8_cmesh_set_global_vertices_of_tree (cmesh, global_tree_id, global_indices, num_tree_vertices);
       /* It is save to free the entries after commit, since the value got copied. */
       T8_FREE (global_indices);
     }
@@ -336,7 +378,7 @@ class cmesh_vertex_conn_ttv_with_cmesh_functions_temp:
 /** Check for correct ttv entries. */
 #if 0
 // Reactive this line when we enable the tests with derived attributes
-TEST_P (cmesh_vertex_conn_ttv, DISABLED_get_global)
+TEST_P (cmesh_vertex_conn_ttv, get_global)
 #else
 // Delete this line and the cmesh_vertex_conn_ttv_temp class wehen we enable the tests with derived attributes
 TEST_P (cmesh_vertex_conn_ttv_with_cmesh_functions_temp, get_global)

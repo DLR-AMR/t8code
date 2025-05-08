@@ -40,7 +40,7 @@ class root: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
     scheme = create_from_scheme_id (scheme_id);
     eclass = std::get<1> (GetParam ());
     scheme->element_new (eclass, 1, &element);
-    scheme->get_root (eclass, element);
+    scheme->set_to_root (eclass, element);
   }
   void
   TearDown () override
@@ -70,4 +70,4 @@ TEST_P (root, equals_linear_id_0_0)
   scheme->element_destroy (eclass, 1, &root_compare);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_root, root, AllSchemes);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_root, root, AllSchemes, print_all_schemes);

@@ -24,7 +24,7 @@
 #define T8_GTEST_SCHEMES_HXX
 
 #include <t8_schemes/t8_default/t8_default.hxx>
-#include <t8_schemes/t8_scheme_builder.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <gtest/gtest.h>
 
 const t8_scheme *
@@ -33,12 +33,22 @@ create_from_scheme_id (const int scheme_id)
   switch (scheme_id) {
   case 0:
     return t8_scheme_new_default ();
+  case 1:
+    return t8_scheme_new_standalone ();
   default:
     SC_ABORT_NOT_REACHED ();
     return nullptr;
   }
 }
 
-#define AllSchemes ::testing::Combine (::testing::Values (0), ::testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT))
+static const char *t8_scheme_to_string[] = { "default", "standalone" };
+
+auto print_all_schemes = [] (const testing::TestParamInfo<std::tuple<int, t8_eclass_t>> &info) {
+  return std::string (t8_scheme_to_string[std::get<0> (info.param)]) + "_"
+         + t8_eclass_to_string[std::get<1> (info.param)];
+};
+
+#define AllSchemeCollections ::testing::Range (0, 2)
+#define AllSchemes ::testing::Combine (AllSchemeCollections, ::testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT))
 
 #endif /* T8_GTEST_SCHEMES_HXX */

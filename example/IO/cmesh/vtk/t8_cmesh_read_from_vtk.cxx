@@ -16,7 +16,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_cmesh_vtk_reader.hxx>
+#include <t8_vtk/t8_with_vtk/t8_vtk_reader.hxx>
 #include <t8_vtk/t8_vtk_writer.h>
 #include <t8_cmesh.h>
 #include <sc_options.h>
@@ -42,7 +42,7 @@ t8_forest_construct_from_vtk (const char *prefix, sc_MPI_Comm comm, const int va
   /* Read a poly-data file (.ply, .vtp, .obj, .stl, .vtk, .g) and construct a cmesh 
    * representing the mesh. If  there is any cell-data, it will be read too. 
    * Triangle-strips and polygons will be broken down to multiple triangles. */
-  t8_cmesh_t cmesh_in = t8_cmesh_vtk_reader (prefix, partition, 0, comm, vtk_file_type);
+  t8_cmesh_t cmesh_in = t8_vtk_reader_cmesh (prefix, partition, 0, comm, vtk_file_type);
   if (cmesh_in == NULL) {
     t8_errorf ("Error reading file.\n");
     return;
@@ -131,7 +131,7 @@ main (int argc, char **argv)
   snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS> <ARGUMENTS>\n\t%s -h\t for a brief overview of all options.",
             basename (argv[0]), basename (argv[0]));
   sreturn = snprintf (help, BUFSIZ,
-                      "This program reads a .vtk-file and constructs a mesh representing the given Data."
+                      "This program reads a .vtk-file and constructs a mesh representing the given Data.\n"
                       "Arguments can be passed via:\n%s\n\n",
                       usage);
   if (sreturn >= BUFSIZ) {
@@ -151,7 +151,7 @@ main (int argc, char **argv)
   sc_options_add_string (opt, 'f', "vtk-file", &vtk_file, "", "The prefix of the .vtk file.");
   sc_options_add_string (opt, 'o', "output", &out_file, "output", "The prefix of the output-file.");
   sc_options_add_int (opt, 'c', "num_cell_values", &num_keys, 0, "Number of values per cell stored in the vtk-file.");
-  sc_options_add_bool (opt, 'p', "partition", &partition, 0, "If set, partition the cmesh uniformly.");
+  sc_options_add_switch (opt, 'p', "partition", &partition, "If set, partition the cmesh uniformly.");
   sc_options_add_int (opt, 't', "type_of_file", &vtk_file_type_int, -1,
                       "Set the type of the data in the file.\n"
                       "\t\t\t\t\t0 for vtkUnstructuredGrid,\n"

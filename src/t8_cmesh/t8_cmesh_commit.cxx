@@ -36,7 +36,7 @@
 #include <t8_cmesh/t8_cmesh_copy.h>
 #include <t8_cmesh/t8_cmesh_geometry.h>
 #include <t8_geometry/t8_geometry_handler.hxx>
-#include <t8_cmesh/t8_cmesh_vertex_connectivity.hxx>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
 
 typedef struct ghost_facejoins_struct
 {
@@ -55,7 +55,7 @@ t8_ghost_facejoins_compare (const void *fj1, const void *fj2)
 }
 
 static int
-t8_ghost_facejoin_equal (const void *v1, const void *v2, const void *u)
+t8_ghost_facejoin_equal (const void *v1, const void *v2, [[maybe_unused]] const void *u)
 {
   return t8_ghost_facejoins_compare (v1, v2) == 0;
 }
@@ -324,7 +324,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   t8_cmesh_trees_init (&cmesh->trees, 1, cmesh->num_local_trees, cmesh->num_ghosts);
   t8_cmesh_trees_start_part (cmesh->trees, 0, 0, cmesh->num_local_trees, 0, cmesh->num_ghosts, 1);
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   if (cmesh->num_local_trees == 0) {
     t8_debugf ("Empty partition.\n");
   }
