@@ -30,6 +30,7 @@
 
 #include <memory>
 #include <t8_cmesh.h>
+#include <t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
 
@@ -137,7 +138,7 @@ struct t8_cmesh_vertex_connectivity
    * \param [in] vertex_id A global vertex id.
    * \return The trees and their local vertex ids matching \a vertex_id.
    */
-  inline const t8_cmesh_vertex_conn_vertex_to_tree::vtt_storage_type &
+  inline const vtt_storage_type &
   vertex_to_trees (const t8_gloidx_t vertex_id);
 
   /** Given a local tree (or ghost) return the list of global vertices
@@ -190,7 +191,7 @@ struct t8_cmesh_vertex_connectivity
    * \param [in] global_vertex_id The global id of a vertex in the cmesh.
    * \return The list of global tree ids and local vertex ids of \a global_vertex_id.
    */
-  inline const t8_cmesh_vertex_conn_vertex_to_tree::tree_vertex_list &
+  inline const tree_vertex_list &
   get_tree_list_of_vertex (const t8_gloidx_t global_vertex_id)
   {
     return vertex_to_tree.get_tree_list_of_vertex (global_vertex_id);
