@@ -2163,7 +2163,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
 
      */
 
-    send_buffer.resize (2 * num_procs_we_send_to);
+    send_buffer.resize (2 * 2 * num_procs_we_send_to);
 
     /* Iterate over offset_partition to find boundaries
      * and send the MPI messages. */
