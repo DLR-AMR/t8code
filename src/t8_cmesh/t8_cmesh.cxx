@@ -1924,9 +1924,9 @@ t8_cmesh_bounds_send_start_or_end (
     send_requests.emplace_back ();
     sc_MPI_Request *request = &send_requests.back ();
 
-    /* Grow total send buffer */
-    send_buffer.push_back (global_id_of_first_or_last_tree);
-    send_buffer.push_back (first_or_last_element_in_tree_index_of_current_proc);
+    /* Set send buffer */
+    send_buffer[*current_pos_in_send_buffer] = global_id_of_first_or_last_tree;
+    send_buffer[*current_pos_in_send_buffer + 1] = first_or_last_element_in_tree_index_of_current_proc;
     t8_gloidx_t *message = &send_buffer[*current_pos_in_send_buffer];
 
     *current_pos_in_send_buffer += num_entries;
@@ -2051,6 +2051,13 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
   const int first_tree_shared_shift = cmesh->first_tree_shared ? 1 : 0;
   const t8_locidx_t pure_local_trees = cmesh->num_local_trees - first_tree_shared_shift;
   std::vector<sc_MPI_Request> send_requests;
+  /* Initialize the send buffer for all messages.
+    * Since we use MPI_Isend, we need to keep the buffers alive until
+    * we post the MPI_Wait. Since we first send all messages, we need to
+    * buffer them all. */
+  std::vector<t8_gloidx_t> send_buffer;
+  //sc_array send_buffer;
+  int current_pos_in_send_buffer = 0;
 
   bool expect_start_message = true;
   bool expect_end_message = true;
@@ -2156,13 +2163,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
 
      */
 
-    /* Initialize the send buffer for all messages.
-     * Since we use MPI_Isend, we need to keep the buffers alive until
-     * we post the MPI_Wait. Since we first send all messages, we need to
-     * buffer them all. */
-    std::vector<t8_gloidx_t> send_buffer;
-    //sc_array send_buffer;
-    int current_pos_in_send_buffer = 0;
+    send_buffer.resize (2 * num_procs_we_send_to);
 
     /* Iterate over offset_partition to find boundaries
      * and send the MPI messages. */
@@ -2391,10 +2392,8 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
 #endif
   } /* End receiving end message */
 
-  t8_gloidx_t num_messages_sent = 0;
-
   /* Check that all messages have been sent.  */
-  int mpiret = sc_MPI_Waitall (num_messages_sent, send_requests.data (), sc_MPI_STATUSES_IGNORE);
+  int mpiret = sc_MPI_Waitall (send_requests.size (), send_requests.data (), sc_MPI_STATUSES_IGNORE);
   SC_CHECK_MPI (mpiret);
   /* Check that (counting messages to self) one start and one end message has been received.  */
   T8_ASSERT (num_received_start_messages == 1);
