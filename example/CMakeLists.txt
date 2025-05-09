@@ -36,7 +36,7 @@ function( add_t8_example )
         set_target_properties( ${ADD_T8_EXAMPLE_NAME} PROPERTIES EXPORT_COMPILE_COMMANDS ON )
     endif( T8CODE_EXPORT_COMPILE_COMMANDS )
 
-    install( TARGETS ${ADD_T8_EXAMPLE_NAME} DESTINATION ${CMAKE_INSTALL_BINDIR} )
+    install( TARGETS ${ADD_T8_EXAMPLE_NAME} DESTINATION RUNTIME)
 endfunction()
 
 add_t8_example( NAME t8_advection                       SOURCES advect/t8_advection.cxx )

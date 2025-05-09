@@ -112,9 +112,11 @@ set( BUILD_SHARED_LIBS ON CACHE BOOL "Build libsc as a shared library" )
 set(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT FALSE)
 
 # Rpath options necessary for shared library install to work correctly in user projects.
-file(RELATIVE_PATH relativeRpath
-    ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}
-    ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}
+# Compute the relative Rpath for proper library installation
+set(libPath ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}) # Library directory)
+cmake_path(RELATIVE_PATH libPath
+    BASE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR} # Binary directory
+    OUTPUT_VARIABLE relativeRpath 
 )
 set(CMAKE_INSTALL_RPATH $ORIGIN $ORIGIN/${relativeRpath})
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH true)
