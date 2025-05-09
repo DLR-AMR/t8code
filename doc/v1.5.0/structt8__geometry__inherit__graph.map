@@ -1,0 +1,10 @@
+<map id="t8_geometry" name="t8_geometry">
+<area shape="rect" id="node1" title=" " alt="" coords="5,81,111,108"/>
+<area shape="rect" id="node2" href="$structt8__geometry__analytic.html" title=" " alt="" coords="176,5,340,32"/>
+<area shape="rect" id="node3" href="$structt8__geometry__extended.html" title=" " alt="" coords="171,56,345,83"/>
+<area shape="rect" id="node4" href="$classt8__geometry__with__vertices.html" title=" " alt="" coords="159,107,357,133"/>
+<area shape="rect" id="node8" href="$structt8__geometry__zero.html" title=" " alt="" coords="188,157,328,184"/>
+<area shape="rect" id="node5" href="$structt8__geometry__linear.html" title=" " alt="" coords="405,48,555,75"/>
+<area shape="rect" id="node6" href="$structt8__geometry__linear__axis__aligned.html" title=" " alt="" coords="405,99,555,141"/>
+<area shape="rect" id="node7" href="$structt8__geometry__occ.html" title=" " alt="" coords="413,165,547,192"/>
+</map>
