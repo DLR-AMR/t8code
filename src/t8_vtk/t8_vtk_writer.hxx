@@ -430,6 +430,15 @@ class vtk_writer {
     int *cellTypes = T8_ALLOC (int, num_cells);
     T8_ASSERT (cellTypes != NULL);
 
+    /* Allocate VTK Memory for the arrays */
+    int iMaxCellSize = 20;
+    cellArray->AllocateEstimate(num_cells, iMaxCellSize);
+    points->Allocate(num_cells * iMaxCellSize);
+    vtk_treeid->Allocate(num_cells);
+    vtk_mpirank->Allocate(num_cells);
+    vtk_level->Allocate(num_cells);
+    vtk_element_id->Allocate(num_cells);
+
     /* Iterate over all trees and translate them. */
     const t8_locidx_t num_local_trees = grid_local_num_trees (grid);
     for (t8_locidx_t itree = 0; itree < num_local_trees; itree++) {
@@ -485,6 +494,9 @@ class vtk_writer {
     for (int idata = 0; idata < num_data; idata++) {
       dataArrays[idata]->Delete ();
     }
+
+    /* Release unused memory in the arrays */
+    unstructuredGrid->Squeeze();
 
     T8_FREE (cellTypes);
     T8_FREE (dataArrays);
