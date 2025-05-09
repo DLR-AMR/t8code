@@ -32,7 +32,7 @@
 #include <t8_geometry/t8_geometry_handler.hxx>
 
 /**
- * Compute the first element of a process in a partitioned mesh, via floor(process * mpisize / global_num_elements).
+ * Compute the first element of a process in a partitioned mesh, via floor(process * global_num_elements / mpisize).
  * Prevents overflow by splitting global_num_elements into two 32 bit integers.
  * global_num_elements = a_0 * tau + a_1, tau = 2^32.
  * 
