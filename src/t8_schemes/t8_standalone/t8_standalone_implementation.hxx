@@ -1722,9 +1722,12 @@ struct t8_standalone_scheme
 
     const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
 
+    t8_debugf ("level: %i\n", el->level);
     for (int i = 0; i < T8_ELEMENT_DIM[TEclass]; i++) {
+      t8_debugf ("x_%i: %i \n", i, el->coords[i]);
     }
     for (int e = 0; e < T8_ELEMENT_NUM_EQUATIONS[TEclass]; e++) {
+      t8_debugf ("t_%i: %i \n", e, el->type[e]);
     }
   }
 
