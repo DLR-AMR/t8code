@@ -4095,7 +4095,6 @@ t8_forest_write_vtk_ext (t8_forest_t forest, const char *fileprefix, const int w
                                              write_element_id, write_ghosts, write_curved, num_data, data);
   }
   else {
-    T8_ASSERT (!write_curved);
     return t8_forest_vtk_write_file (forest, fileprefix, write_treeid, write_mpirank, write_level, write_element_id,
                                      write_ghosts, num_data, data);
   }
