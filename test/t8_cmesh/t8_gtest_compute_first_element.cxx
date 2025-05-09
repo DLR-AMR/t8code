@@ -72,6 +72,29 @@ class DISABLED_t8_gtest_rank_times_global_num_elems_over_size:
   uint32_t size_iter;
 };
 
+TEST_P (DISABLED_t8_gtest_rank_times_global_num_elems_over_size, small_numbers)
+{
+  uint64_t num_elems = 1;
+  for (uint32_t ielem = 1; ielem < max_iter; ++ielem) {
+    num_elems += elem_growth;
+    uint32_t size = 1;
+    for (uint32_t isize = 1; isize < max_iter; ++isize) {
+      size += size_growth;
+      uint32_t rank = 1;
+      /* Enforce rank <= size */
+      for (uint32_t irank = 1; irank * rank_growth < size && irank < max_iter; ++irank) {
+        rank += rank_growth;
+        /* We only test for small numbers (much smaller that 2^64-1 here). Therefore this computation
+         * will not overflow. */
+        const uint64_t check_result = rank * num_elems / size;
+        const uint64_t computed_result = 0;
+        EXPECT_EQ (check_result, computed_result)
+          << "rank: " << rank << " num_elems: " << num_elems << " size: " << size;
+      }
+    }
+  }
+}
+
 TEST_P (DISABLED_t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
 {
   /** 
@@ -130,29 +153,6 @@ TEST_P (DISABLED_t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
     }
     /* Update mpisize */
     size *= size_growth;
-  }
-}
-
-TEST_P (DISABLED_t8_gtest_rank_times_global_num_elems_over_size, small_numbers)
-{
-  uint64_t num_elems = 1;
-  for (uint32_t ielem = 1; ielem < max_iter; ++ielem) {
-    num_elems += elem_growth;
-    uint32_t size = 1;
-    for (uint32_t isize = 1; isize < max_iter; ++isize) {
-      size += size_growth;
-      uint32_t rank = 1;
-      /* Enforce rank <= size */
-      for (uint32_t irank = 1; irank * rank_growth < size && irank < max_iter; ++irank) {
-        rank += rank_growth;
-        /* We only test for small numbers (much smaller that 2^64-1 here). Therefore this computation
-         * will not overflow. */
-        const uint64_t check_result = rank * num_elems / size;
-        const uint64_t computed_result = 0;
-        EXPECT_EQ (check_result, computed_result)
-          << "rank: " << rank << " num_elems: " << num_elems << " size: " << size;
-      }
-    }
   }
 }
 
