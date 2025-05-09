@@ -224,6 +224,7 @@ install( FILES
     t8_mat.h
     t8_refcount.h
     t8_types/t8_vec.hxx
+    t8_types/t8_vec.h
     t8_version.h
     t8_vtk.h
     DESTINATION include
@@ -240,7 +241,7 @@ install( DIRECTORY t8_forest DESTINATION include FILES_MATCHING PATTERN "*.h"
   PATTERN "t8_forest/t8_forest_balance.h" EXCLUDE
   PATTERN "t8_forest/t8_forest_ghost.h "  EXCLUDE
   PATTERN "t8_forest/t8_forest_private.h" EXCLUDE
-  PATTERN "t8_forest/t8_forest_types.h"   EXCLUDE
+  #PATTERN "t8_forest/t8_forest_types.h"   EXCLUDE
   )
 install( DIRECTORY t8_geometry DESTINATION include FILES_MATCHING PATTERN "*.h" 
   PATTERN "t8_geometry/t8_geometry_implementations/t8_geometry_cad.h" EXCLUDE)
