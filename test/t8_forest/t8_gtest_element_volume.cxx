@@ -95,7 +95,6 @@ pyramid_control_volume (t8_element_t *pyra, t8_eclass_t eclass, const t8_scheme 
     scheme->element_get_parent (eclass, pyra, pyra);
     t8_element_shape_t parent_shape = scheme->element_get_shape (eclass, pyra);
     control_volume = control_volume * shape_factor[shape][parent_shape];
-    int test_level = scheme->element_get_level (eclass, pyra);
   }
 
   return control_volume;
