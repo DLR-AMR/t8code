@@ -247,7 +247,8 @@ class vtk_writer {
                                vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_level,
                                vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_element_id)
   {
-    vtkSmartPointer<vtkCell> pvtkCell = NULL;
+    /* Array to store the point ids for that cell */
+    vtkIdType *vecCellIds = NULL;
 
     /* Get the shape of the current element and the respective shape of the vtk_cell. */
     const t8_element_shape_t element_shape = grid_element_shape (grid, itree, element);
@@ -256,28 +257,28 @@ class vtk_writer {
     if (curved_flag == 0) {
       switch (element_shape) {
       case T8_ECLASS_VERTEX:
-        pvtkCell = vtkSmartPointer<vtkVertex>::New ();
+        vecCellIds = new vtkIdType[num_node];
         break;
       case T8_ECLASS_LINE:
-        pvtkCell = vtkSmartPointer<vtkLine>::New ();
+        vecCellIds = new vtkIdType[num_node];
         break;
       case T8_ECLASS_QUAD:
-        pvtkCell = vtkSmartPointer<vtkQuad>::New ();
+        vecCellIds = new vtkIdType[num_node];
         break;
       case T8_ECLASS_TRIANGLE:
-        pvtkCell = vtkSmartPointer<vtkTriangle>::New ();
+        vecCellIds = new vtkIdType[num_node];
         break;
       case T8_ECLASS_HEX:
-        pvtkCell = vtkSmartPointer<vtkHexahedron>::New ();
+        vecCellIds = new vtkIdType[num_node];
         break;
       case T8_ECLASS_TET:
-        pvtkCell = vtkSmartPointer<vtkTetra>::New ();
+        vecCellIds = new vtkIdType[num_node];
         break;
       case T8_ECLASS_PRISM:
-        pvtkCell = vtkSmartPointer<vtkWedge>::New ();
+        vecCellIds = new vtkIdType[num_node];
         break;
       case T8_ECLASS_PYRAMID:
-        pvtkCell = vtkSmartPointer<vtkPyramid>::New ();
+        vecCellIds = new vtkIdType[num_node];
         break;
       default:
         SC_ABORT_NOT_REACHED ();
@@ -286,28 +287,28 @@ class vtk_writer {
     else { /* curved_flag != 0 */
       switch (element_shape) {
       case T8_ECLASS_VERTEX:
-        pvtkCell = vtkSmartPointer<vtkVertex>::New ();
+        vecCellIds = new vtkIdType[num_node];
         break;
       case T8_ECLASS_LINE:
-        pvtkCell = vtkSmartPointer<vtkQuadraticEdge>::New ();
+        vecCellIds = new vtkIdType[num_node];
         break;
       case T8_ECLASS_QUAD:
-        pvtkCell = vtkSmartPointer<vtkQuadraticQuad>::New ();
+        vecCellIds = new vtkIdType[num_node];
         break;
       case T8_ECLASS_TRIANGLE:
-        pvtkCell = vtkSmartPointer<vtkQuadraticTriangle>::New ();
+        vecCellIds = new vtkIdType[num_node];
         break;
       case T8_ECLASS_HEX:
-        pvtkCell = vtkSmartPointer<vtkQuadraticHexahedron>::New ();
+        vecCellIds = new vtkIdType[num_node];
         break;
       case T8_ECLASS_TET:
-        pvtkCell = vtkSmartPointer<vtkQuadraticTetra>::New ();
+        vecCellIds = new vtkIdType[num_node];
         break;
       case T8_ECLASS_PRISM:
-        pvtkCell = vtkSmartPointer<vtkQuadraticWedge>::New ();
+        vecCellIds = new vtkIdType[num_node];
         break;
       case T8_ECLASS_PYRAMID:
-        pvtkCell = vtkSmartPointer<vtkQuadraticPyramid>::New ();
+        vecCellIds = new vtkIdType[num_node];
         break;
       default:
         SC_ABORT_NOT_REACHED ();
@@ -323,12 +324,13 @@ class vtk_writer {
       const size_t offset_3d = 3 * ivertex;
       /* Insert the point in the points array. */
       points->InsertNextPoint (coordinates[offset_3d], coordinates[offset_3d + 1], coordinates[offset_3d + 2]);
-      pvtkCell->GetPointIds ()->SetId (ivertex, *point_id);
+      vecCellIds[ivertex] = *point_id;
     }
     T8_FREE (coordinates);
 
     /* Fill the cell array. */
-    cellArray->InsertNextCell (pvtkCell);
+    cellArray->InsertNextCell (num_node, vecCellIds);
+    delete[] vecCellIds;
 
     /* Write additional information if desired. */
     if (curved_flag == 0) {
