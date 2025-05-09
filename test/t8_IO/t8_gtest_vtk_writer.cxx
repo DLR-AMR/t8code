@@ -126,19 +126,9 @@ vtk_writer_test_fill_data (const t8_locidx_t cells_to_write_count, std::vector<d
   //    vector[n] = (n/10.)
   // Fill vector data vector with entries (0, 0, 42), (0.1,-0.1,42), ...
   //    vector[n] = (n/10.,-n/10., 42)
-#if 0
-  for (t8_locidx_t icell = 0; icell < cells_to_write_count; ++icell) {
-    const double scalar_value = icell / 10.;
-    const double vector_values[3] = { scalar_value, -scalar_value, 42. };
-    scalar_data.push_back (icell);
-    vector_data.push_back (vector_values[0]);
-    vector_data.push_back (vector_values[1]);
-    vector_data.push_back (vector_values[2]);
-  }
-#endif
-  std::generate (scalar_data.begin (), scalar_data.end (), [n = 0] () mutable { return n / 10.; });
-  std::generate (vector_data.begin (), vector_data.end (), [n = 0] () mutable {
-    double scalar_value = scalar_data[n];
+  std::generate (scalar_data.begin (), scalar_data.end (), [n = 0] () mutable { return (n++) / 10.; });
+  std::generate (vector_data.begin (), vector_data.end (), [n = 0, scalar_data] () mutable {
+    double scalar_value = scalar_data[n / 3];
     double vector_values[3] = { scalar_value, -scalar_value, 42. };
     return vector_values[n++ % 3];
   });
