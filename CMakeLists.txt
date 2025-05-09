@@ -7,8 +7,9 @@ project(
     DESCRIPTION "Parallel algorithms and data structures for tree-based AMR with arbitrary element shapes."
     LANGUAGES C CXX
     VERSION "${T8CODE_VERSION_MAJOR}.${T8CODE_VERSION_MINOR}.${T8CODE_VERSION_PATCH}" 
-)
-
+    )
+    
+include( GNUInstallDirs)
 include( CTest )
 include( CMakeDependentOption )
 
@@ -111,8 +112,13 @@ set( BUILD_SHARED_LIBS ON CACHE BOOL "Build libsc as a shared library" )
 set(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT FALSE)
 
 # Rpath options necessary for shared library install to work correctly in user projects.
-set(CMAKE_INSTALL_NAME_DIR ${CMAKE_INSTALL_PREFIX}/lib)
-set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
+# Compute the relative Rpath for proper library installation
+set(libPath ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}) # Library directory)
+cmake_path(RELATIVE_PATH libPath
+    BASE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR} # Binary directory
+    OUTPUT_VARIABLE relativeRpath 
+)
+set(CMAKE_INSTALL_RPATH $ORIGIN $ORIGIN/${relativeRpath})
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH true)
 
 if ( T8CODE_USE_SYSTEM_SC )
