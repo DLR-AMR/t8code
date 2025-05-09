@@ -30,7 +30,7 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_examples.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx>
-#include <t8_vec.h>
+#include <t8_types/t8_vec.h>
 #include <t8_mat.h>
 #include <t8_eclass.h>
 #include <t8_forest/t8_forest_general.h>
@@ -172,7 +172,7 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm, int set_part
       /* Set the partition (with offsets) */
       t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
       t8_gloidx_t num_global_trees;
       /* The global number of trees is the sum over all numbers of trees in conn on each process */
       mpiret = sc_MPI_Allreduce (&num_local_trees, &num_global_trees, 1, T8_MPI_GLOIDX, sc_MPI_SUM, comm);
@@ -435,7 +435,7 @@ t8_cmesh_new_from_class (const t8_eclass_t eclass, const sc_MPI_Comm comm)
 }
 
 t8_cmesh_t
-t8_cmesh_new_empty (sc_MPI_Comm comm, const int do_partition, const int dimension)
+t8_cmesh_new_empty (sc_MPI_Comm comm, [[maybe_unused]] const int do_partition, const int dimension)
 {
   t8_cmesh_t cmesh;
 
@@ -447,7 +447,7 @@ t8_cmesh_new_empty (sc_MPI_Comm comm, const int do_partition, const int dimensio
 }
 
 t8_cmesh_t
-t8_cmesh_new_hypercube_hybrid (sc_MPI_Comm comm, int do_partition, int periodic)
+t8_cmesh_new_hypercube_hybrid (sc_MPI_Comm comm, [[maybe_unused]] int do_partition, int periodic)
 {
   int i;
   t8_cmesh_t cmesh;
@@ -680,12 +680,6 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
 
   SC_CHECK_ABORT (eclass != T8_ECLASS_PYRAMID || !periodic, "The pyramid cube mesh cannot be periodic.\n");
 
-  if (do_partition) {
-    t8_global_errorf (
-      "WARNING: Partitioning the hypercube cmesh is currently not supported.\n"
-      "Using this cmesh will crash when vertices are used. See also https://github.com/DLR-AMR/t8code/issues/79\n");
-  }
-
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
   if (!do_bcast || mpirank == 0) {
@@ -702,17 +696,20 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
       if (periodic) {
         t8_cmesh_set_join (cmesh, 0, 0, 4, 5, 0);
       }
+      [[fallthrough]];
     case T8_ECLASS_QUAD:
       vertices[3] = 3;
       vertices[2] = 2;
       if (periodic) {
         t8_cmesh_set_join (cmesh, 0, 0, 2, 3, 0);
       }
+      [[fallthrough]];
     case T8_ECLASS_LINE:
       vertices[1] = 1;
       if (periodic) {
         t8_cmesh_set_join (cmesh, 0, 0, 0, 1, 0);
       }
+      [[fallthrough]];
     case T8_ECLASS_VERTEX:
       vertices[0] = 0;
       t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords, attr_vertices,
@@ -874,14 +871,14 @@ t8_update_box_face_edges (const int dim, const double *box_corners, double *box_
     const double *v_1 = box_corners + (t8_edge_vertex_to_tree_vertex[eclass][edge][0] * 3);
     const double *v_2 = box_corners + (t8_edge_vertex_to_tree_vertex[eclass][edge][1] * 3);
     /* Get the direction vector between v_1 and v_2 and store it in box_dir. */
-    t8_vec_axpyz (v_1, v_2, box_dir + (edge * 3), -1.0);
+    t8_axpyz (v_1, v_2, box_dir + (edge * 3), -1.0);
     /* Get number of quads or hexs along current edge. */
     const double num_cubes = eclass == T8_ECLASS_QUAD ? (double) axes[(edge / 2 + 1) % 2] : (double) axes[edge / 4];
     /* Set length of directional vector to length of one quad or hex. */
     double length_edge;
-    length_edge = t8_vec_norm (box_dir + (edge * 3)) * num_cubes;
-    length_edge = t8_vec_dist (v_1, v_2) / length_edge;
-    t8_vec_ax (box_dir + (edge * 3), length_edge);
+    length_edge = t8_norm (box_dir + (edge * 3)) * num_cubes;
+    length_edge = t8_dist (v_1, v_2) / length_edge;
+    t8_ax (box_dir + (edge * 3), length_edge);
   }
 }
 
@@ -906,7 +903,7 @@ t8_resize_box (const int dim, double *box_corners, const double *box_dir, const 
   for (int face_corner = 0; face_corner < num_face_corner; face_corner++) {
     const int box_vertex = t8_face_vertex_to_tree_vertex[eclass][face][face_corner];
     const int box_edge = t8_face_to_edge_neighbor[eclass][face][face_corner];
-    t8_vec_axpy (box_dir + (box_edge * 3), box_corners + (box_vertex * 3), (double) factor);
+    t8_axpy (box_dir + (box_edge * 3), box_corners + (box_vertex * 3), (double) factor);
   }
   axes[face / 2] += face % 2 ? factor : -factor;
 }
@@ -975,15 +972,15 @@ t8_cmesh_set_vertices_2D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
    */
   for (t8_locidx_t quad_y_id = 0; quad_y_id < quads_y; quad_y_id++) {
     for (t8_locidx_t quad_x_id = 0; quad_x_id < quads_x; quad_x_id++) {
-      memcpy (vertices, box, 3 * sizeof (double));    /* Vertex 0 */
-      t8_vec_axpyz (box, box_dir, vertices + 6, 1.0); /* Vertex 2 */
+      memcpy (vertices, box, 3 * sizeof (double)); /* Vertex 0 */
+      t8_axpyz (box, box_dir, vertices + 6, 1.0);  /* Vertex 2 */
 
       /* Reduce box along x axis */
       t8_resize_box (2, box, box_dir, 0, 1, box_quads);
       t8_update_box_face_edges (2, box, box_dir, 0, box_quads);
 
-      t8_vec_axy (box, vertices + 3, 1.0);            /* Vertex 1 */
-      t8_vec_axpyz (box, box_dir, vertices + 9, 1.0); /* Vertex 3 */
+      t8_axy (box, vertices + 3, 1.0);            /* Vertex 1 */
+      t8_axpyz (box, box_dir, vertices + 9, 1.0); /* Vertex 3 */
       if (use_axis_aligned_geom && eclass == T8_ECLASS_QUAD) {
         /* Copy vertex 3 into the place of vertex 1. The box-procedure has to be done to compute 
          * vertex 3 correctly. */
@@ -1124,29 +1121,29 @@ t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
   for (t8_locidx_t hex_z_id = 0; hex_z_id < hexs_z; hex_z_id++) {
     for (t8_locidx_t hex_y_id = 0; hex_y_id < hexs_y; hex_y_id++) {
       for (t8_locidx_t hex_x_id = 0; hex_x_id < hexs_x; hex_x_id++) {
-        memcpy (vertices, box, 3 * sizeof (double));         /* Vertex 0 */
-        t8_vec_axpyz (box, box_dir + 12, vertices + 6, 1.0); /* Vertex 2 */
+        memcpy (vertices, box, 3 * sizeof (double));     /* Vertex 0 */
+        t8_axpyz (box, box_dir + 12, vertices + 6, 1.0); /* Vertex 2 */
 
         /* Reduce box along z axis and face 4. */
         t8_resize_box (3, box, box_dir, 4, 1, box_hexs);
         t8_update_box_face_edges (3, box, box_dir, 4, box_hexs);
 
-        t8_vec_axy (box, vertices + 12, 1.0);                 /* Vertex 4 */
-        t8_vec_axpyz (box, box_dir + 12, vertices + 18, 1.0); /* Vertex 6 */
+        t8_axy (box, vertices + 12, 1.0);                 /* Vertex 4 */
+        t8_axpyz (box, box_dir + 12, vertices + 18, 1.0); /* Vertex 6 */
 
         /* Reduce box along x axis and face 0. */
         t8_resize_box (3, box, box_dir, 0, 1, box_hexs);
         t8_update_box_face_edges (3, box, box_dir, 0, box_hexs);
 
-        t8_vec_axy (box, vertices + 15, 1.0);                 /* Vertex 5 */
-        t8_vec_axpyz (box, box_dir + 12, vertices + 21, 1.0); /* Vertex 7 */
+        t8_axy (box, vertices + 15, 1.0);                 /* Vertex 5 */
+        t8_axpyz (box, box_dir + 12, vertices + 21, 1.0); /* Vertex 7 */
 
         /* Increase box along z axis and and face 4 */
         t8_resize_box (3, box, box_dir, 4, -1, box_hexs);
         t8_update_box_face_edges (3, box, box_dir, 4, box_hexs);
 
-        t8_vec_axy (box, vertices + 3, 1.0);                 /* Vertex 1 */
-        t8_vec_axpyz (box, box_dir + 12, vertices + 9, 1.0); /* Vertex 3 */
+        t8_axy (box, vertices + 3, 1.0);                 /* Vertex 1 */
+        t8_axpyz (box, box_dir + 12, vertices + 9, 1.0); /* Vertex 3 */
 
         if (use_axis_aligned_geom && eclass == T8_ECLASS_HEX) {
           /* Copy vertex 7 into the place of vertex 1. The box-procedure has to be done to compute 
@@ -1274,10 +1271,13 @@ t8_cmesh_new_hypercube_pad_ext (const t8_eclass_t eclass, sc_MPI_Comm comm, cons
   switch (dim) {
   case 0:
     polygons_x = 1;
+    [[fallthrough]];
   case 1:
     polygons_y = 1;
+    [[fallthrough]];
   case 2:
     polygons_z = 1;
+    [[fallthrough]];
   default:
     T8_ASSERT (polygons_x > 0);
     T8_ASSERT (polygons_y > 0);
@@ -1319,24 +1319,24 @@ t8_cmesh_new_hypercube_pad_ext (const t8_eclass_t eclass, sc_MPI_Comm comm, cons
     T8_ASSERT (boundary[3] > boundary[0]);
     /* Get the direction of the line */
     double line_dir[3];
-    t8_vec_axpyz (boundary, boundary + 3, line_dir, -1.0);
+    t8_axpyz (boundary, boundary + 3, line_dir, -1.0);
     /* Get length of one tree */
     double length;
-    length = t8_vec_norm (line_dir) * (double) polygons_x;
-    length = t8_vec_dist (boundary, boundary + 3) / length;
-    t8_vec_ax (line_dir, length);
+    length = t8_norm (line_dir) * (double) polygons_x;
+    length = t8_dist (boundary, boundary + 3) / length;
+    t8_ax (line_dir, length);
 
     double vertices[6];
     /* Set first vertex to lower end of line */
     memcpy (vertices, boundary, 3 * sizeof (double));
     /* Set second vertex to lower end of line + line_dir */
-    t8_vec_axpyz (line_dir, boundary, vertices + 3, 1.0);
+    t8_axpyz (line_dir, boundary, vertices + 3, 1.0);
 
     for (t8_gloidx_t tree_x = 0; tree_x < polygons_x; tree_x++) {
       t8_cmesh_set_tree_vertices (cmesh, tree_x + offset, vertices, 2);
       /* Update vertices for next tree */
-      t8_vec_axy (vertices, vertices + 3, 1.0);
-      t8_vec_axpy (line_dir, vertices + 3, 1.0);
+      t8_axy (vertices, vertices + 3, 1.0);
+      t8_axpy (line_dir, vertices + 3, 1.0);
     }
   }
   else {
@@ -1344,7 +1344,7 @@ t8_cmesh_new_hypercube_pad_ext (const t8_eclass_t eclass, sc_MPI_Comm comm, cons
     T8_ASSERT (eclass == T8_ECLASS_VERTEX);
     double vertex[3];
     /* Vertex == boundary. */
-    t8_vec_axy (boundary, vertex, 1.0);
+    t8_axy (boundary, vertex, 1.0);
     t8_cmesh_set_tree_vertices (cmesh, offset, vertex, 1);
   }
 
@@ -1482,7 +1482,7 @@ t8_cmesh_new_hypercube_pad_ext (const t8_eclass_t eclass, sc_MPI_Comm comm, cons
       /* Set the partition (with offsets) */
       t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
       t8_gloidx_t num_global_trees;
       /* The global number of trees is the sum over all numbers of trees in conn on each process */
       int mpiret = sc_MPI_Allreduce (&num_local_trees, &num_global_trees, 1, T8_MPI_GLOIDX, sc_MPI_SUM, comm);
@@ -2824,8 +2824,8 @@ t8_cmesh_new_quadrangulated_disk (const double radius, sc_MPI_Comm comm)
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
 
-  const double inner_radius = 0.6 * radius;
-  const double outer_radius = radius;
+  const double inner_radius = 0.6;
+  const double outer_radius = 1.0;
 
   const double inner_x = inner_radius / M_SQRT2;
   const double inner_y = inner_x;
@@ -2884,10 +2884,6 @@ t8_cmesh_new_quadrangulated_disk (const double radius, sc_MPI_Comm comm)
       t8_mat_mult_vec (rot_mat, &(vertices_bot[i][0]), &(rot_vertices_bot[i][0]));
     }
 
-    t8_cmesh_set_tree_vertices (cmesh, itree + 0, (double *) rot_vertices_mid, 4);
-    t8_cmesh_set_tree_vertices (cmesh, itree + 1, (double *) rot_vertices_top, 4);
-    t8_cmesh_set_tree_vertices (cmesh, itree + 2, (double *) rot_vertices_bot, 4);
-
     for (int ivert = 0; ivert < nverts; ivert++) {
       for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
         all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree + 0, ivert, icoord)]
@@ -2898,6 +2894,18 @@ t8_cmesh_new_quadrangulated_disk (const double radius, sc_MPI_Comm comm)
           = rot_vertices_bot[ivert][icoord];
       }
     }
+
+    for (int ivert = 0; ivert < nverts; ivert++) {
+      for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
+        rot_vertices_mid[ivert][icoord] = radius * rot_vertices_mid[ivert][icoord];
+        rot_vertices_top[ivert][icoord] = radius * rot_vertices_top[ivert][icoord];
+        rot_vertices_bot[ivert][icoord] = radius * rot_vertices_bot[ivert][icoord];
+      }
+    }
+
+    t8_cmesh_set_tree_vertices (cmesh, itree + 0, (double *) rot_vertices_mid, 4);
+    t8_cmesh_set_tree_vertices (cmesh, itree + 1, (double *) rot_vertices_top, 4);
+    t8_cmesh_set_tree_vertices (cmesh, itree + 2, (double *) rot_vertices_bot, 4);
 
     itree = itree + nquads;
   }
@@ -2932,12 +2940,10 @@ t8_cmesh_new_triangulated_spherical_surface_octahedron (const double radius, sc_
     all_eclasses[itree] = T8_ECLASS_TRIANGLE;
   }
 
-  double vertices_top[3][3] = { { radius, 0.0, 0.0 }, { 0.0, radius, 0.0 }, { 0.0, 0.0, radius } };
+  double vertices_top[3][3] = { { 1.0, 0.0, 0.0 }, { 0.0, 1.0, 0.0 }, { 0.0, 0.0, 1.0 } };
+  double vertices_bot[3][3] = { { 1.0, 0.0, 0.0 }, { 0.0, 1.0, 0.0 }, { 0.0, 0.0, -1.0 } };
 
-  double vertices_bot[3][3] = { { radius, 0.0, 0.0 }, { 0.0, radius, 0.0 }, { 0.0, 0.0, -radius } };
-
-  int itree = -1;
-  for (int turn = 0; turn < ntrees / 2; turn++) {
+  for (int turn = 0, itree = -1; turn < ntrees / 2; turn++) {
     double rot_mat[3][3];
     double rot_vertices_top[4][3];
     double rot_vertices_bot[4][3];
@@ -2949,7 +2955,7 @@ t8_cmesh_new_triangulated_spherical_surface_octahedron (const double radius, sc_
       t8_mat_mult_vec (rot_mat, &(vertices_bot[ivert][0]), &(rot_vertices_bot[ivert][0]));
     }
 
-    t8_cmesh_set_tree_vertices (cmesh, ++itree, (double *) rot_vertices_top, nverts);
+    ++itree;
 
     for (int ivert = 0; ivert < nverts; ivert++) {
       for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
@@ -2958,7 +2964,15 @@ t8_cmesh_new_triangulated_spherical_surface_octahedron (const double radius, sc_
       }
     }
 
-    t8_cmesh_set_tree_vertices (cmesh, ++itree, (double *) rot_vertices_bot, nverts);
+    for (int ivert = 0; ivert < nverts; ivert++) {
+      for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
+        rot_vertices_top[ivert][icoord] = radius * rot_vertices_top[ivert][icoord];
+      }
+    }
+
+    t8_cmesh_set_tree_vertices (cmesh, itree, (double *) rot_vertices_top, nverts);
+
+    ++itree;
 
     for (int ivert = 0; ivert < nverts; ivert++) {
       for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
@@ -2966,6 +2980,14 @@ t8_cmesh_new_triangulated_spherical_surface_octahedron (const double radius, sc_
           = rot_vertices_bot[ivert][icoord];
       }
     }
+
+    for (int ivert = 0; ivert < nverts; ivert++) {
+      for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
+        rot_vertices_bot[ivert][icoord] = radius * rot_vertices_bot[ivert][icoord];
+      }
+    }
+
+    t8_cmesh_set_tree_vertices (cmesh, itree, (double *) rot_vertices_bot, nverts);
   }
 
   /* Face connectivity. */
@@ -3009,7 +3031,7 @@ t8_cmesh_new_triangulated_spherical_surface_icosahedron (const double radius, sc
 
     vertices_top[0] = 0.0;
     vertices_top[1] = 0.0;
-    vertices_top[2] = radius;
+    vertices_top[2] = 1.0;
 
     t8_mat_init_yrot (rot_mat, alpha);
     t8_mat_mult_vec (rot_mat, vertices_top + 0, vertices_top + 3);
@@ -3025,7 +3047,7 @@ t8_cmesh_new_triangulated_spherical_surface_icosahedron (const double radius, sc
 
     vertices_bot[0] = 0.0;
     vertices_bot[1] = 0.0;
-    vertices_bot[2] = -radius;
+    vertices_bot[2] = -1.0;
 
     t8_mat_init_yrot (rot_mat, -alpha);
     t8_mat_mult_vec (rot_mat, vertices_bot + 0, tmp_vec);
@@ -3042,11 +3064,10 @@ t8_cmesh_new_triangulated_spherical_surface_icosahedron (const double radius, sc
    * The two triangles on the "belly" that are connecting the top and bottom triangle share vertices
    * with the top and bottom triangle, so we can construct them in one go as well.
    */
-  int itree = -1;
-  for (int turn = 0; turn < 5; turn++) {
+  for (int turn = 0, itree = -1; turn < 5; turn++) {
     double rot_mat[3][3];
-    double rot_vertices_top[4 * 3];
-    double rot_vertices_bot[4 * 3];
+    double rot_vertices_top[3 * 3];
+    double rot_vertices_bot[3 * 3];
 
     double belly_top[3 * 3];
     double belly_bot[3 * 3];
@@ -3070,38 +3091,49 @@ t8_cmesh_new_triangulated_spherical_surface_icosahedron (const double radius, sc
       belly_bot[6 + icoord] = rot_vertices_top[3 * 2 + icoord];
     }
 
-    /* Set the tree vertices and gather all vertices, so that the facejoins can in the end be deduced from global vertices */
-    t8_cmesh_set_tree_vertices (cmesh, ++itree, rot_vertices_top, nverts);
+    // Set the tree vertices and gather all vertices, so that the facejoins can
+    // in the end be deduced from global vertices.
     for (int ivert = 0; ivert < nverts; ivert++) {
       for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
-        all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree, ivert, icoord)]
+        all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree + 1, ivert, icoord)]
           = rot_vertices_top[3 * ivert + icoord];
       }
     }
 
-    t8_cmesh_set_tree_vertices (cmesh, ++itree, belly_top, nverts);
     for (int ivert = 0; ivert < nverts; ivert++) {
       for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
-        all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree, ivert, icoord)]
+        all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree + 2, ivert, icoord)]
           = belly_top[3 * ivert + icoord];
       }
     }
 
-    t8_cmesh_set_tree_vertices (cmesh, ++itree, belly_bot, nverts);
     for (int ivert = 0; ivert < nverts; ivert++) {
       for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
-        all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree, ivert, icoord)]
+        all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree + 3, ivert, icoord)]
           = belly_bot[3 * ivert + icoord];
       }
     }
 
-    t8_cmesh_set_tree_vertices (cmesh, ++itree, rot_vertices_bot, nverts);
     for (int ivert = 0; ivert < nverts; ivert++) {
       for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
-        all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree, ivert, icoord)]
+        all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree + 4, ivert, icoord)]
           = rot_vertices_bot[3 * ivert + icoord];
       }
     }
+
+    for (int ivert = 0; ivert < nverts; ivert++) {
+      for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
+        rot_vertices_top[ivert * 3 + icoord] = radius * rot_vertices_top[ivert * 3 + icoord];
+        rot_vertices_bot[ivert * 3 + icoord] = radius * rot_vertices_bot[ivert * 3 + icoord];
+        belly_top[ivert * 3 + icoord] = radius * belly_top[ivert * 3 + icoord];
+        belly_bot[ivert * 3 + icoord] = radius * belly_bot[ivert * 3 + icoord];
+      }
+    }
+
+    t8_cmesh_set_tree_vertices (cmesh, ++itree, rot_vertices_top, nverts);
+    t8_cmesh_set_tree_vertices (cmesh, ++itree, belly_top, nverts);
+    t8_cmesh_set_tree_vertices (cmesh, ++itree, belly_bot, nverts);
+    t8_cmesh_set_tree_vertices (cmesh, ++itree, rot_vertices_bot, nverts);
   }
 
   /* Face connectivity. */
@@ -3137,8 +3169,7 @@ t8_cmesh_new_triangulated_spherical_surface_cube (const double radius, sc_MPI_Co
     all_eclasses[itree] = T8_ECLASS_TRIANGLE;
   }
 
-  const double _CBRT = std::cbrt (1.0);
-  const double r = radius / _CBRT;
+  const double r = 1.0 / std::sqrt (3.0);
 
   const double vertices[3][3] = { { -r, -r, r }, { r, -r, r }, { 0.0, 0.0, r } };
 
@@ -3175,14 +3206,20 @@ t8_cmesh_new_triangulated_spherical_surface_cube (const double radius, sc_MPI_Co
         t8_mat_mult_vec (cube_rot_mat, &(face_rot_vertices[ivert][0]), &(cube_rot_vertices[ivert][0]));
       }
 
-      t8_cmesh_set_tree_vertices (cmesh, itree, (double *) cube_rot_vertices, nverts);
-
       for (int ivert = 0; ivert < nverts; ivert++) {
         for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
           all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree, ivert, icoord)]
             = cube_rot_vertices[ivert][icoord];
         }
       }
+
+      for (int ivert = 0; ivert < nverts; ivert++) {
+        for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
+          cube_rot_vertices[ivert][icoord] = radius * cube_rot_vertices[ivert][icoord];
+        }
+      }
+
+      t8_cmesh_set_tree_vertices (cmesh, itree, (double *) cube_rot_vertices, nverts);
 
       ++itree;
     }
@@ -3218,8 +3255,7 @@ t8_cmesh_new_quadrangulated_spherical_surface (const double radius, sc_MPI_Comm 
     all_eclasses[itree] = T8_ECLASS_QUAD;
   }
 
-  const double _CBRT = std::cbrt (1.0);
-  const double r = radius / _CBRT;
+  const double r = 1.0 / std::sqrt (3.0);
 
   const double vertices[4][3] = { { -r, -r, r }, { r, -r, r }, { -r, r, r }, { r, r, r } };
 
@@ -3242,14 +3278,20 @@ t8_cmesh_new_quadrangulated_spherical_surface (const double radius, sc_MPI_Comm 
       t8_mat_mult_vec (rot_mat, &(vertices[ivert][0]), &(rot_vertices[ivert][0]));
     }
 
-    t8_cmesh_set_tree_vertices (cmesh, itree, (double *) rot_vertices, nverts);
-
     for (int ivert = 0; ivert < nverts; ivert++) {
       for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
         all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree, ivert, icoord)]
           = rot_vertices[ivert][icoord];
       }
     }
+
+    for (int ivert = 0; ivert < nverts; ivert++) {
+      for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
+        rot_vertices[ivert][icoord] = radius * rot_vertices[ivert][icoord];
+      }
+    }
+
+    t8_cmesh_set_tree_vertices (cmesh, itree, (double *) rot_vertices, nverts);
   }
 
   /* Face connectivity. */
@@ -3285,8 +3327,8 @@ t8_cmesh_new_spherical_shell (t8_eclass_t eclass, t8_geometry_c *geometry,
   sc_MPI_Comm_split (comm, mpi_rank, mpi_rank, &local_comm);
 
   /* Create 2D quadrangulated spherical surface of given refinement level per patch. */
-  t8_forest_t forest = t8_forest_new_uniform (inner_sphere_creator (inner_radius, local_comm),
-                                              t8_scheme_new_default_cxx (), num_levels, 0, local_comm);
+  t8_forest_t forest = t8_forest_new_uniform (inner_sphere_creator (1.0, local_comm), t8_scheme_new_default (),
+                                              num_levels, 0, local_comm);
 
   /* clang-format off */
   const int ntrees = t8_forest_get_local_num_elements (forest) * num_layers; /* Number of 3D cmesh elements resp. trees. */
@@ -3330,34 +3372,50 @@ t8_cmesh_new_spherical_shell (t8_eclass_t eclass, t8_geometry_c *geometry,
          * Note, this works for triangles and quads.
          */
         double normal[3];
-        t8_vec_tri_normal (elem_vertices_2d, elem_vertices_2d + 3, elem_vertices_2d + 6, normal);
+        t8_normal_of_tri (elem_vertices_2d, elem_vertices_2d + 3, elem_vertices_2d + 6, normal);
 
-        if (t8_vec_dot (elem_vertices_2d, normal) < 0.0) {
-          t8_vec_swap (elem_vertices_2d + 3, elem_vertices_2d + 6);
+        if (t8_dot (elem_vertices_2d, normal) < 0.0) {
+          t8_swap (elem_vertices_2d + 3, elem_vertices_2d + 6);
         }
       }
 
       /* Transfer the coordinates from the 2D forest mesh to the cmesh via stacking 3D elements along radial direction. */
       for (int istack = 0; istack < num_layers; istack++) {
-        const double iscale = 1.0 + istack * shell_thickness / inner_radius / num_layers;
-        const double oscale = 1.0 + (istack + 1) * shell_thickness / inner_radius / num_layers;
+        {
+          const double iscale = 1.0 + istack / num_layers;
+          const double oscale = 1.0 + (istack + 1) / num_layers;
 
-        double elem_vertices_3d[T8_ECLASS_MAX_CORNERS * 3];
-        for (int ivert = 0; ivert < t8_eclass_num_vertices[eclass_2d]; ivert++) {
-          for (int i = 0; i < 3; i++) {
-            elem_vertices_3d[ivert * 3 + i] = iscale * elem_vertices_2d[ivert * 3 + i];
-            elem_vertices_3d[t8_eclass_num_vertices[eclass] / 2 * 3 + ivert * 3 + i]
-              = oscale * elem_vertices_2d[ivert * 3 + i];
+          double elem_vertices_3d[T8_ECLASS_MAX_CORNERS * 3];
+          for (int ivert = 0; ivert < t8_eclass_num_vertices[eclass_2d]; ivert++) {
+            for (int i = 0; i < 3; i++) {
+              elem_vertices_3d[ivert * 3 + i] = iscale * elem_vertices_2d[ivert * 3 + i];
+              elem_vertices_3d[t8_eclass_num_vertices[eclass] / 2 * 3 + ivert * 3 + i]
+                = oscale * elem_vertices_2d[ivert * 3 + i];
+            }
+          }
+
+          for (int ivert = 0; ivert < nverts; ivert++) {
+            for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
+              all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree, ivert, icoord)]
+                = elem_vertices_3d[ivert * 3 + icoord];
+            }
           }
         }
 
-        t8_cmesh_set_tree_vertices (cmesh, itree, elem_vertices_3d, nverts);
+        {
+          const double iscale = inner_radius + istack * shell_thickness / num_layers;
+          const double oscale = inner_radius + (istack + 1) * shell_thickness / num_layers;
 
-        for (int ivert = 0; ivert < nverts; ivert++) {
-          for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
-            all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree, ivert, icoord)]
-              = elem_vertices_3d[ivert * 3 + icoord];
+          double elem_vertices_3d[T8_ECLASS_MAX_CORNERS * 3];
+          for (int ivert = 0; ivert < t8_eclass_num_vertices[eclass_2d]; ivert++) {
+            for (int i = 0; i < 3; i++) {
+              elem_vertices_3d[ivert * 3 + i] = iscale * elem_vertices_2d[ivert * 3 + i];
+              elem_vertices_3d[t8_eclass_num_vertices[eclass] / 2 * 3 + ivert * 3 + i]
+                = oscale * elem_vertices_2d[ivert * 3 + i];
+            }
           }
+
+          t8_cmesh_set_tree_vertices (cmesh, itree, elem_vertices_3d, nverts);
         }
 
         itree++;
@@ -3427,13 +3485,11 @@ t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shel
 
   const double outer_radius = inner_radius + shell_thickness;
 
-  const double _CBRT = 1.7320508075688772;
-
-  const double r = inner_radius / _CBRT;
-  const double R = outer_radius / _CBRT;
+  const double r = 1.0 / std::sqrt(3.0); // inner radius
+  const double R = 2.0 / std::sqrt(3.0); // outer radius
 
   // Vertices of the template hex.
-  const double vertices[][3] = {
+  const double hex_vertices[][3] = {
     { -r, -r, r }, { r, -r, r }, { -r, r, r }, { r, r, r },
     { -R, -R, R }, { R, -R, R }, { -R, R, R }, { R, R, R } 
   };
@@ -3469,22 +3525,37 @@ t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shel
           };
 
           double tile_vertices[8][3];
-          t8_geom_compute_linear_geometry (T8_ECLASS_HEX, (double *) vertices, (double *) ref_coords, nverts, (double *) tile_vertices);
-
           double rot_vertices[8][3];
+
           for (int ivert = 0; ivert < nverts; ivert++) {
-            t8_mat_mult_vec (rot_mat, &(tile_vertices[ivert][0]), &(rot_vertices[ivert][0]));
+            t8_mat_mult_vec (rot_mat, &(hex_vertices[ivert][0]), &(rot_vertices[ivert][0]));
           }
 
-          t8_cmesh_set_tree_vertices (cmesh, itree, (double *) rot_vertices, nverts);
+          t8_geom_compute_linear_geometry (T8_ECLASS_HEX, (double *) rot_vertices, (double *) ref_coords, nverts, (double *) tile_vertices);
 
           for (int ivert = 0; ivert < nverts; ivert++) {
             for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
               all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree, ivert, icoord)]
-                = rot_vertices[ivert][icoord];
+                = tile_vertices[ivert][icoord];
+            }
+          }
+
+          for (int ivert = 0; ivert < nverts/2; ivert++) {
+            for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
+              rot_vertices[ivert][icoord] = inner_radius * rot_vertices[ivert][icoord];
+            }
+          }
+
+          for (int ivert = nverts/2; ivert < nverts; ivert++) {
+            for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
+              rot_vertices[ivert][icoord] = 0.5 * outer_radius * rot_vertices[ivert][icoord];
             }
           }
           
+          t8_geom_compute_linear_geometry (T8_ECLASS_HEX, (double *) rot_vertices, (double *) ref_coords, nverts, (double *) tile_vertices);
+
+          t8_cmesh_set_tree_vertices (cmesh, itree, (double *) tile_vertices, nverts);
+
           ++itree;
         }
       }
@@ -3509,16 +3580,14 @@ t8_cmesh_new_cubed_sphere (const double radius, sc_MPI_Comm comm)
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
 
-  const double inner_radius = 0.6 * radius;
-  const double outer_radius = radius;
+  const double inner_radius = 0.6;
+  const double outer_radius = 1.0;
 
-  const double _CBRT = std::cbrt(1.0);
-
-  const double inner_x = inner_radius / _CBRT;
+  const double inner_x = inner_radius / std::sqrt(3.0);
   const double inner_y = inner_x;
   const double inner_z = inner_x;
 
-  const double outer_x = outer_radius / _CBRT;
+  const double outer_x = outer_radius / std::sqrt(3.0);
   const double outer_y = outer_x;
   const double outer_z = outer_x;
 
@@ -3613,11 +3682,6 @@ t8_cmesh_new_cubed_sphere (const double radius, sc_MPI_Comm comm)
         t8_mat_mult_vec (yrot_mat, &(tmp_vertices_zen[i][0]), &(rot_vertices_zen[i][0]));
       }
 
-      t8_cmesh_set_tree_vertices (cmesh, itree + 0, (double *) rot_vertices_mid, 8);
-      t8_cmesh_set_tree_vertices (cmesh, itree + 1, (double *) rot_vertices_top, 8);
-      t8_cmesh_set_tree_vertices (cmesh, itree + 2, (double *) rot_vertices_bot, 8);
-      t8_cmesh_set_tree_vertices (cmesh, itree + 3, (double *) rot_vertices_zen, 8);
-
       for (int ivert = 0; ivert < nverts; ivert++) {
         for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
           all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree + 0, ivert, icoord)]
@@ -3630,6 +3694,20 @@ t8_cmesh_new_cubed_sphere (const double radius, sc_MPI_Comm comm)
             = rot_vertices_zen[ivert][icoord];
         }
       }
+
+      for (int ivert = 0; ivert < nverts; ivert++) {
+        for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
+          rot_vertices_mid[ivert][icoord] = radius * rot_vertices_mid[ivert][icoord];
+          rot_vertices_top[ivert][icoord] = radius * rot_vertices_top[ivert][icoord];
+          rot_vertices_bot[ivert][icoord] = radius * rot_vertices_bot[ivert][icoord];
+          rot_vertices_zen[ivert][icoord] = radius * rot_vertices_zen[ivert][icoord];
+        }
+      }
+
+      t8_cmesh_set_tree_vertices (cmesh, itree + 0, (double *) rot_vertices_mid, 8);
+      t8_cmesh_set_tree_vertices (cmesh, itree + 1, (double *) rot_vertices_top, 8);
+      t8_cmesh_set_tree_vertices (cmesh, itree + 2, (double *) rot_vertices_bot, 8);
+      t8_cmesh_set_tree_vertices (cmesh, itree + 3, (double *) rot_vertices_zen, 8);
 
       itree = itree + nhexs;
     }

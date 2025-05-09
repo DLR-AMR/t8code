@@ -24,7 +24,8 @@
  * We define the coarse mesh of trees in this file.
  */
 
-#pragma once
+#ifndef T8_CMESH_HXX
+#define T8_CMESH_HXX
 
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_types.h>
@@ -48,3 +49,5 @@ t8_cmesh_register_geometry (t8_cmesh_t cmesh, _args &&...args)
   }
   return cmesh->geometry_handler->register_geometry<geometry_type> (std::forward<_args> (args)...);
 }
+
+#endif /* T8_CMESH_HXX */

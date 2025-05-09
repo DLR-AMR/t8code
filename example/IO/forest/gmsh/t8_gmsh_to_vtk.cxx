@@ -96,7 +96,7 @@ main (int argc, char **argv)
     cmesh = t8_cmesh_from_msh_file (fileprefix, 0, sc_MPI_COMM_WORLD, dim, 0, use_cad);
 
     // Construct a forest from the cmesh.
-    forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0, comm);
+    forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, comm);
     T8_ASSERT (t8_forest_is_committed (forest));
 
     {
@@ -106,7 +106,7 @@ main (int argc, char **argv)
       const int write_level = 1;
       const int write_element_id = 1;
       const int write_ghosts = 0;
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
       const int write_curved = 1;
 #else
       const int write_curved = 0;

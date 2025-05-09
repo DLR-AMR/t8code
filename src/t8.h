@@ -67,10 +67,17 @@ T8_EXTERN_C_BEGIN ();
  * since then the assertion would not trigger if sc is not configured in debugging mode.
  * However, we want it to trigger any time t8code is in debugging mode, independent of sc.
  */
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 #define T8_ASSERT(c) SC_CHECK_ABORT ((c), "Assertion '" #c "'")
 #else
 #define T8_ASSERT(c) SC_NOOP ()
+#endif
+
+/**Extended T8_ASSERT assertion with custom error message. Only active in debug-mode. */
+#if T8_ENABLE_DEBUG
+#define T8_ASSERTF(c, msg) SC_CHECK_ABORT ((c), "Assertion '" #c "': " msg)
+#else
+#define T8_ASSERTF(c, msg) SC_NOOP ()
 #endif
 
 /** Allocate a \a t-array with \a n elements. */
@@ -143,7 +150,7 @@ typedef enum {
 int
 t8_get_package_id (void);
 
-/** Logging function parametrized by local/global category and priority.
+/** Logging function parameterized by local/global category and priority.
  * \param [in] category     Either SC_LC_NORMAL for outputting on every rank
  *                          or SC_LC_GLOBAL for outputting on the root rank.
  * \param [in] priority     Please see sc.h for legal log priorities.
@@ -153,7 +160,7 @@ t8_get_package_id (void);
 void
 t8_logv (int category, int priority, const char *fmt, va_list ap);
 
-/** Logging function parametrized by local/global category and priority.
+/** Logging function parameterized by local/global category and priority.
  * \param [in] category     Either SC_LC_NORMAL for outputting on every rank
  *                          or SC_LC_GLOBAL for outputting on the root rank.
  * \param [in] priority     Please see sc.h for legal log priorities.

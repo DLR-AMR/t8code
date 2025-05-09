@@ -36,6 +36,7 @@
 #include <t8_cmesh/t8_cmesh_copy.h>
 #include <t8_cmesh/t8_cmesh_geometry.h>
 #include <t8_geometry/t8_geometry_handler.hxx>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
 
 typedef struct ghost_facejoins_struct
 {
@@ -54,7 +55,7 @@ t8_ghost_facejoins_compare (const void *fj1, const void *fj2)
 }
 
 static int
-t8_ghost_facejoin_equal (const void *v1, const void *v2, const void *u)
+t8_ghost_facejoin_equal (const void *v1, const void *v2, [[maybe_unused]] const void *u)
 {
   return t8_ghost_facejoins_compare (v1, v2) == 0;
 }
@@ -90,9 +91,9 @@ t8_cmesh_add_attributes (const t8_cmesh_t cmesh, sc_hash_t *ghost_ids)
   const t8_stash_t stash = cmesh->stash;
   t8_locidx_t ltree;
   size_t si, sj;
-  t8_ghost_facejoin_t *temp_facejoin, **facejoin_pp; /* used to lookup global ghost ids in the hash */
+  t8_ghost_facejoin_t **facejoin_pp; /* used to lookup global ghost ids in the hash */
 
-  temp_facejoin = T8_ALLOC_ZERO (t8_ghost_facejoin_t, 1);
+  t8_ghost_facejoin_t temp_facejoin = { 0, 0, 0 };
 
   t8_locidx_t ghosts_inserted = 0;
   ltree = -1;
@@ -111,8 +112,8 @@ t8_cmesh_add_attributes (const t8_cmesh_t cmesh, sc_hash_t *ghost_ids)
     }
     else {
       T8_ASSERT (ghost_ids != NULL);
-      temp_facejoin->ghost_id = attribute->id;
-      if (sc_hash_lookup (ghost_ids, temp_facejoin, (void ***) &facejoin_pp)) {
+      temp_facejoin.ghost_id = attribute->id;
+      if (sc_hash_lookup (ghost_ids, &temp_facejoin, (void ***) &facejoin_pp)) {
         T8_ASSERT ((t8_locidx_t) sj == (t8_locidx_t) (*facejoin_pp)->attr_id);
         if (sj == 0) {
           ghosts_inserted++;
@@ -124,7 +125,6 @@ t8_cmesh_add_attributes (const t8_cmesh_t cmesh, sc_hash_t *ghost_ids)
       }
     }
   }
-  T8_FREE (temp_facejoin);
 }
 
 static void
@@ -324,7 +324,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   t8_cmesh_trees_init (&cmesh->trees, 1, cmesh->num_local_trees, cmesh->num_ghosts);
   t8_cmesh_trees_start_part (cmesh->trees, 0, 0, cmesh->num_local_trees, 0, cmesh->num_ghosts, 1);
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   if (cmesh->num_local_trees == 0) {
     t8_debugf ("Empty partition.\n");
   }
@@ -582,6 +582,15 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     t8_cmesh_gather_treecount (cmesh, comm);
   }
   T8_ASSERT (cmesh->set_partition || cmesh->tree_offsets == NULL);
+
+  /* Build vertex_to_tree instance from the cmesh and a tree_to_vertex instance,
+   * but only if the vertex_to_tree instance is not yet committed
+   * and if the tree_to_vertex instance is not empty.
+   */
+  if (cmesh->vertex_connectivity->get_vertex_to_tree_state () == 0
+      && cmesh->vertex_connectivity->get_tree_to_vertex_state () == 1) {
+    cmesh->vertex_connectivity->build_vertex_to_tree (cmesh);
+  }
 
 #if T8_ENABLE_DEBUG
   t8_debugf ("Cmesh is %spartitioned.\n", cmesh->set_partition ? "" : "not ");

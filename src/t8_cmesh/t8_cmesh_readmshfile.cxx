@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2025 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -24,10 +24,15 @@
 #include <t8_cmesh_readmshfile.h>
 #include <t8_cmesh.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
+#if T8_ENABLE_OCC
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.h>
+#endif
 #include "t8_cmesh_types.h"
 #include "t8_cmesh_stash.h"
+#include <unordered_set>
+#include <optional>
+#include <vector>
 
 #ifdef _WIN32
 #include "t8_windows.h"
@@ -122,42 +127,105 @@ t8_cmesh_msh_read_next_line (char **line, size_t *n, FILE *fp)
   return retval;
 }
 
-/* Return the hash value of a node.
- * \param [in]  node    The node whose hash value should be computed.
- * \param [in]  num_nodes A pointer to a locidx_t storing the total number of nodes.
- * \return              The hash value for a node. This is its index modulo the number of nodes.
+/* The nodes are stored in the .msh file in the format
+ *
+ * $Nodes
+ * n_nodes     // The number of nodes
+ * i x_i y_i z_i  // the node index and the node coordinates
+ * j x_j y_j z_j
+ * .....
+ * $EndNodes
+ *
+ * The node indices do not need to be in consecutive order.
+ * We thus use a hash table to read all node indices and coordinates.
+ * The hash value is the node index modulo the number of nodes.
  */
-static unsigned
-t8_msh_file_node_hash (const void *node, const void *num_nodes)
+
+struct t8_msh_file_node
 {
-  t8_msh_file_node_t *Node;
-  t8_locidx_t Num_nodes;
+  /**
+   * Default constructor.
+   */
+  t8_msh_file_node ()
+    : parameters ({ -1, -1 }), coordinates ({ -1, -1 }), index (-1), parametric (false), entity_dim (-1),
+      entity_tag (-1)
+  {
+  }
 
-  T8_ASSERT (node != NULL);
-  T8_ASSERT (num_nodes != NULL);
-  /* The data parameter stores the total number of nodes */
-  Num_nodes = *(t8_locidx_t *) num_nodes;
-  /* The node parameter stores a node structure */
-  Node = (t8_msh_file_node_t *) node;
-  /* The hash value of the node is its index modulo the number of nodes */
-  return Node->index % Num_nodes;
-}
+  /**
+   * Constructor for non-parametric nodes.
+   * \param [in, out] id        ID of the node.
+   * \param [in, out] coords    Coords of the node.
+   */
+  t8_msh_file_node (t8_gloidx_t id, std::array<double, 3> coords)
+    : parameters ({ -1, -1 }), coordinates (coords), index (id), parametric (false), entity_dim (-1), entity_tag (-1)
+  {
+  }
 
-/* Returns true if two given nodes are the same.
- * False otherwise.
- * Two nodes are considered equal if their indices are the same.
- * u_data is not needed.
- */
-static int
-t8_msh_file_node_compare (const void *node_a, const void *node_b, const void *u_data)
+  /**
+   * Constructor for parametric nodes.
+   * \param [in, out] id        ID of the node.
+   * \param [in, out] coords    Coords of the node.
+   */
+  t8_msh_file_node (t8_gloidx_t id, std::array<double, 3> coords, std::array<double, 2> params, bool parametric,
+                    int entity_dim, t8_locidx_t entity_tag)
+    : parameters (params), coordinates (coords), index (id), parametric (parametric), entity_dim (entity_dim),
+      entity_tag (entity_tag)
+  {
+  }
+
+  std::array<double, 2> parameters;
+  std::array<double, 3> coordinates;
+  t8_gloidx_t index;
+  bool parametric;
+  int entity_dim;
+  t8_locidx_t entity_tag;
+};
+
+struct t8_msh_node_hasher
 {
-  t8_msh_file_node_t *Node_a, *Node_b;
+  t8_locidx_t num_nodes;
 
-  Node_a = (t8_msh_file_node_t *) node_a;
-  Node_b = (t8_msh_file_node_t *) node_b;
+  /**
+   * Constructor of the node hasher
+   * \param [in, out] num_nodes   Number of nodes in the msh file.
+   */
+  t8_msh_node_hasher (t8_locidx_t num_nodes): num_nodes (num_nodes)
+  {
+  }
 
-  return Node_a->index == Node_b->index;
-}
+  /**
+   * Hasher function.
+   * \param [in, out] node        Msh node to create a hash value for.
+   * \return                      The hash.
+   */
+  t8_gloidx_t
+  operator() (const t8_msh_file_node &node) const
+  {
+    return node.index % num_nodes;
+  }
+};
+
+struct t8_msh_node_equal
+{
+  /**
+   * Checks two nodes for equality.
+   * \param [in, out] lhs       First node.
+   * \param [in, out] rhs       Second node.
+   * \return                    True if nodes are equal.
+   */
+  bool
+  operator() (const t8_msh_file_node &lhs, const t8_msh_file_node &rhs) const
+  {
+    return lhs.index == rhs.index;
+  }
+};
+
+/** Hashtable to store msh file nodes. */
+typedef std::unordered_set<t8_msh_file_node, t8_msh_node_hasher, t8_msh_node_equal> t8_msh_node_table;
+
+/** Vector which stores the vertex indices of each tree in the t8code order. */
+typedef std::vector<std::vector<t8_gloidx_t>> t8_msh_tree_vertex_indices;
 
 /* Reads an open msh-file and checks whether the MeshFormat-Version is supported by t8code or not. */
 static int
@@ -239,17 +307,15 @@ die_format:
 }
 
 /* Read an open .msh file of version 2 and parse the nodes into a hash table. */
-static sc_hash_t *
-t8_msh_file_2_read_nodes (FILE *fp, t8_locidx_t *num_nodes, sc_mempool_t **node_mempool)
+static std::optional<t8_msh_node_table>
+t8_msh_file_2_read_nodes (FILE *fp)
 {
-  t8_msh_file_node_t *Node;
-  sc_hash_t *node_table = NULL;
   t8_locidx_t ln, last_index;
   char *line = (char *) malloc (1024);
   char first_word[2048] = "\0";
   size_t linen = 1024;
   int retval;
-  long index, lnum_nodes;
+  long lnum_nodes;
 
   T8_ASSERT (fp != NULL);
   /* Go to the beginning of the file */
@@ -263,11 +329,11 @@ t8_msh_file_2_read_nodes (FILE *fp, t8_locidx_t *num_nodes, sc_mempool_t **node_
     /* Checking for read/write error */
     if (retval != 1) {
       t8_global_errorf ("Premature end of line while reading num nodes.\n");
-      t8_debugf ("The line is %s", line);
-      goto die_node;
+      t8_debugf ("The line is %s.", line);
+      free (line);
+      return std::nullopt;
     }
   }
-
   /* Read the line containing the number of nodes */
   (void) t8_cmesh_msh_read_next_line (&line, &linen, fp);
   /* Read the number of nodes in a long int before converting it
@@ -276,79 +342,63 @@ t8_msh_file_2_read_nodes (FILE *fp, t8_locidx_t *num_nodes, sc_mempool_t **node_
   /* Checking for read/write error */
   if (retval != 1) {
     t8_global_errorf ("Premature end of line while reading num nodes.\n");
-    t8_debugf ("The line is %s", line);
-    goto die_node;
+    t8_debugf ("The line is %s.", line);
+    free (line);
+    return std::nullopt;
   }
-  *num_nodes = lnum_nodes;
-  /* Check for type conversion error. */
-  T8_ASSERT (*num_nodes == lnum_nodes);
 
-  /* Create the mempool for the nodes */
-  *node_mempool = sc_mempool_new (sizeof (t8_msh_file_node_t));
   /* Create the hash table */
-  node_table = sc_hash_new (t8_msh_file_node_hash, t8_msh_file_node_compare, num_nodes, NULL);
+  t8_msh_node_hasher hasher (lnum_nodes);
+  t8_msh_node_table node_table (lnum_nodes, hasher);
 
   /* read each node and add it to the hash table */
   last_index = 0;
-  for (ln = 0; ln < *num_nodes; ln++) {
+  std::array<double, 3> coords;
+  t8_gloidx_t index;
+  for (ln = 0; ln < lnum_nodes; ln++) {
     /* Read the next line. Its format should be %i %f %f %f
      * The node index followed by its coordinates. */
     retval = t8_cmesh_msh_read_next_line (&line, &linen, fp);
     if (retval < 0) {
-      t8_global_errorf ("Error reading node file\n");
-      goto die_node;
+      t8_global_errorf ("Error reading node file.\n");
+      free (line);
+      return std::nullopt;
     }
-    /* Allocate a new node */
-    Node = (t8_msh_file_node_t *) sc_mempool_alloc (*node_mempool);
     /* Fill the node with the entries in the file */
-    retval
-      = sscanf (line, "%li %lf %lf %lf", &index, &Node->coordinates[0], &Node->coordinates[1], &Node->coordinates[2]);
+    retval = sscanf (line, "%li %lf %lf %lf", &index, &coords[0], &coords[1], &coords[2]);
     if (retval != 4) {
-      t8_global_errorf ("Error reading node file after node %li\n", (long) last_index);
-      goto die_node;
+      t8_global_errorf ("Error reading node file after node %li.\n", (long) last_index);
+      free (line);
+      return std::nullopt;
     }
-    Node->index = index;
-    /* Check for type conversion error */
-    T8_ASSERT (Node->index == index);
     /* Insert the node in the hash table */
-    retval = sc_hash_insert_unique (node_table, Node, NULL);
-    /* If retval is zero then the node was already in the hash table.
+    auto emplaced = node_table.emplace (t8_msh_file_node { index, coords });
+    /* If second value is false then the node was already in the hash table.
      * This case should not occur. */
-    T8_ASSERT (retval);
-    last_index = Node->index;
+    if (emplaced.second == false) {
+      t8_global_errorf ("Node %li defined more than once.\n", index);
+      free (line);
+      return std::nullopt;
+    }
+    T8_ASSERT (emplaced.first->index == index);
+    last_index = index;
   }
 
   free (line);
-  t8_debugf ("Successfully read all Nodes.\n");
-  return node_table;
-  /* If everything went well, the function ends here. */
-
-  /* This code is execute when a read/write error occurs */
-die_node:
-  /* If we allocated the hash table, destroy it */
-  if (node_table != NULL) {
-    sc_hash_destroy (node_table);
-    sc_mempool_destroy (*node_mempool);
-    node_mempool = NULL;
-  }
-  /* Free memory */
-  free (line);
-  /* Return NULL as error code */
-  return NULL;
+  t8_debugf ("Successfully read all nodes.\n");
+  return std::make_optional<t8_msh_node_table> (node_table);
 }
 
 /* Read an open .msh file of version 4 and parse the nodes into a hash table. */
-static sc_hash_t *
-t8_msh_file_4_read_nodes (FILE *fp, t8_locidx_t *num_nodes, sc_mempool_t **node_mempool)
+static std::optional<t8_msh_node_table>
+t8_msh_file_4_read_nodes (FILE *fp)
 {
-  t8_msh_file_node_parametric_t *Node;
-  sc_hash_t *node_table = NULL;
-  t8_locidx_t ln, last_index, num_blocks;
+  t8_locidx_t ln, last_index;
   char *line = (char *) malloc (1024);
   char first_word[2048] = "\0";
   size_t linen = 1024;
-  int retval, entity_dim, parametric;
-  long entity_tag, num_nodes_in_block, lnum_nodes, lnum_blocks;
+  int retval;
+  long num_nodes_in_block, lnum_nodes, lnum_blocks;
   long *index_buffer;
 
   T8_ASSERT (fp != NULL);
@@ -362,8 +412,9 @@ t8_msh_file_4_read_nodes (FILE *fp, t8_locidx_t *num_nodes, sc_mempool_t **node_
     /* Checking for read/write error */
     if (retval != 1) {
       t8_global_errorf ("Premature end of line while reading nodes.\n");
-      t8_debugf ("The line is %s", line);
-      goto die_node;
+      t8_debugf ("The line is %s.", line);
+      free (line);
+      return std::nullopt;
     }
   }
 
@@ -375,135 +426,129 @@ t8_msh_file_4_read_nodes (FILE *fp, t8_locidx_t *num_nodes, sc_mempool_t **node_
   /* Checking for read/write error */
   if (retval != 2) {
     t8_global_errorf ("Premature end of line while reading num nodes and num blocks.\n");
-    t8_debugf ("The line is %s", line);
-    goto die_node;
+    t8_debugf ("The line is %s.", line);
+    free (line);
+    return std::nullopt;
   }
-  num_blocks = lnum_blocks;
-  *num_nodes = lnum_nodes;
-  /* Check for type conversion error. */
-  T8_ASSERT (num_blocks == lnum_blocks);
-  T8_ASSERT (*num_nodes == lnum_nodes);
 
-  /* Create the mempool for the nodes */
-  *node_mempool = sc_mempool_new (sizeof (t8_msh_file_node_parametric_t));
   /* Create the hash table */
-  node_table = sc_hash_new (t8_msh_file_node_hash, t8_msh_file_node_compare, num_nodes, NULL);
+  t8_msh_node_hasher hasher (lnum_nodes);
+  t8_msh_node_table node_table (lnum_nodes, hasher);
 
   /* read each node and add it to the hash table */
   last_index = 0;
-  for (long n_block = 0; n_block < num_blocks; ++n_block) {
+  std::array<double, 3> coords;
+  std::array<double, 2> params;
+  int entity_dim;
+  t8_locidx_t entity_tag;
+  int parametric;
+  for (long n_block = 0; n_block < lnum_blocks; ++n_block) {
     retval = t8_cmesh_msh_read_next_line (&line, &linen, fp);
     if (retval < 0) {
-      t8_global_errorf ("Error reading node file\n");
-      goto die_node;
+      t8_global_errorf ("Error reading node file.\n");
+      free (line);
+      return std::nullopt;
     }
-    retval = sscanf (line, "%i %li %i %li", &entity_dim, &entity_tag, &parametric, &num_nodes_in_block);
+    retval = sscanf (line, "%i %i %i %li", &entity_dim, &entity_tag, &parametric, &num_nodes_in_block);
     if (retval != 4) {
-      t8_global_errorf ("Error reading block after node %li in nodes section \n", (long) last_index);
-      goto die_node;
+      t8_global_errorf ("Error reading block after node %li in $Nodes section.\n", (long) last_index);
+      free (line);
+      return std::nullopt;
     }
     /* Read all node indices in this block */
     index_buffer = T8_ALLOC (long, num_nodes_in_block);
     for (ln = 0; ln < num_nodes_in_block; ++ln) {
       retval = t8_cmesh_msh_read_next_line (&line, &linen, fp);
       if (retval < 0) {
-        t8_global_errorf ("Error reading node file\n");
-        goto die_node;
+        t8_global_errorf ("Error reading node file.\n");
+        free (line);
+        return std::nullopt;
       }
       retval = sscanf (line, "%li", &index_buffer[ln]);
       if (retval != 1) {
-        t8_global_errorf ("Error reading node file after node %li\n", (long) last_index);
-        goto die_node;
+        t8_global_errorf ("Error reading node file after node %li.\n", (long) last_index);
+        free (line);
+        return std::nullopt;
       }
     }
     /* Read all coordinates and parameters in this block */
     for (ln = 0; ln < num_nodes_in_block; ++ln) {
       /* Read the next line. Its format should be
-       * %f %f %f         if not parametrized,
-       * %f %f %f %f      if parametrized and entity_dim == 1,
-       * %f %f %f %f %f   if parametrized and entity_dim == 2.
+       * %f %f %f         if not parameterized,
+       * %f %f %f %f      if parameterized and entity_dim == 1,
+       * %f %f %f %f %f   if parameterized and entity_dim == 2.
        * The coordinates followed by their parameters. */
       retval = t8_cmesh_msh_read_next_line (&line, &linen, fp);
       if (retval < 0) {
         t8_global_errorf ("Error reading node file\n");
-        goto die_node;
+        free (line);
+        return std::nullopt;
       }
-      /* Allocate a new node */
-      Node = (t8_msh_file_node_parametric_t *) sc_mempool_alloc (*node_mempool);
       /* Fill the node with the entries in the file */
       if (!parametric) {
-        retval = sscanf (line, "%lf %lf %lf", &Node->coordinates[0], &Node->coordinates[1], &Node->coordinates[2]);
+        retval = sscanf (line, "%lf %lf %lf", &coords[0], &coords[1], &coords[2]);
         if (retval != 3) {
-          t8_global_errorf ("Error reading node file after node %li\n", (long) last_index);
-          goto die_node;
+          t8_global_errorf ("Error reading node file after node %li.\n", (long) last_index);
+          free (line);
+          return std::nullopt;
         }
-        Node->parametric = 0;
       }
       else {
         /* Check for entity_dim and retrieve parameters accordingly */
         switch (entity_dim) {
         case 1:
-          retval = sscanf (line, "%lf %lf %lf %lf", &Node->coordinates[0], &Node->coordinates[1], &Node->coordinates[2],
-                           &Node->parameters[0]);
+          retval = sscanf (line, "%lf %lf %lf %lf", &coords[0], &coords[1], &coords[2], &params[0]);
           if (retval != 4) {
-            t8_global_errorf ("Error reading node file after node %li\n", (long) last_index);
-            goto die_node;
+            t8_global_errorf ("Error reading node file after node %li.\n", (long) last_index);
+            free (line);
+            return std::nullopt;
           }
           break;
         case 2:
-          retval = sscanf (line, "%lf %lf %lf %lf %lf", &Node->coordinates[0], &Node->coordinates[1],
-                           &Node->coordinates[2], &Node->parameters[0], &Node->parameters[1]);
+          retval = sscanf (line, "%lf %lf %lf %lf %lf", &coords[0], &coords[1], &coords[2], &params[0], &params[1]);
           if (retval != 5) {
-            t8_global_errorf ("Error reading node file after node %li\n", (long) last_index);
-            goto die_node;
+            t8_global_errorf ("Error reading node file after node %li.\n", (long) last_index);
+            free (line);
+            return std::nullopt;
           }
           break;
         default:
-          t8_global_errorf ("Error reading node file after node %li\n", (long) last_index);
-          goto die_node;
+          t8_global_errorf ("Error reading node file after node %li.\n", (long) last_index);
+          free (line);
+          return std::nullopt;
         }
-        Node->parametric = 1;
       }
-      Node->index = index_buffer[ln];
-      Node->entity_dim = entity_dim;
-      Node->entity_tag = entity_tag;
-      /* Check for type conversion error */
-      T8_ASSERT (Node->index == index_buffer[ln]);
       /* Insert the node in the hash table */
-      retval = sc_hash_insert_unique (node_table, Node, NULL);
-      /* If retval is zero then the node was already in the hash table.
-       * This case should not occur. */
-      T8_ASSERT (retval);
-      last_index = Node->index;
+      auto emplaced = node_table.emplace (
+        t8_msh_file_node { index_buffer[ln], coords, params, (bool) parametric, entity_dim, entity_tag });
+      /* If second value is false then the node was already in the hash table.
+     * This case should not occur. */
+      if (emplaced.second == false) {
+        t8_global_errorf ("Node %li defined more than once.\n", index_buffer[ln]);
+        free (line);
+        return std::nullopt;
+      }
+      T8_ASSERT (emplaced.first->index == index_buffer[ln]);
+      last_index = index_buffer[ln];
     }
     T8_FREE (index_buffer);
   }
   free (line);
   t8_debugf ("Successfully read all Nodes.\n");
-  return node_table;
-  /* If everything went well, the function ends here. */
-
-  /* This code is execute when a read/write error occurs */
-die_node:
-  /* If we allocated the hash table, destroy it */
-  if (node_table != NULL) {
-    sc_hash_destroy (node_table);
-    sc_mempool_destroy (*node_mempool);
-    node_mempool = NULL;
-  }
-  /* Free memory */
-  free (line);
-  /* Return NULL as error code */
-  return NULL;
+  return std::make_optional<t8_msh_node_table> (node_table);
 }
 
-/* fp should be set after the Nodes section, right before the tree section.
- * If vertex_indices is not NULL, it is allocated and will store
- * for each tree the indices of its vertices.
- * They are stored as arrays of long ints. */
-static int
-t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, sc_array_t **vertex_indices,
-                               const int dim)
+/**
+ * Adds the elements of \a fp and dimension \a dim into the \a cmesh.
+ * Returns a list of all vertex indices of each tree. 
+ * \param [in, out] cmesh     The cmesh.
+ * \param [in, out] fp        The msh file.
+ * \param [in, out] vertices  A hashtable filled with the nodes of the msh file.
+ * \param [in, out] dim       The dimension of nodes to read in.
+ * \return 
+ */
+static std::optional<t8_msh_tree_vertex_indices>
+t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_table vertices, const int dim)
 {
   char *line = (char *) malloc (1024), *line_modify;
   char first_word[2048] = "\0";
@@ -511,13 +556,12 @@ t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
   t8_locidx_t num_trees, tree_loop;
   t8_gloidx_t tree_count;
   t8_eclass_t eclass;
-  t8_msh_file_node_t Node, **found_node;
+  t8_msh_file_node Node;
   long lnum_trees;
-  int retval, i;
+  int retval;
   int ele_type, num_tags;
-  int num_nodes, t8_vertex_num;
-  long node_indices[8], *stored_indices;
-  double tree_vertices[24];
+  int num_nodes;
+  std::array<double, T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM> tree_vertices;
 
   T8_ASSERT (fp != NULL);
   /* Search for the line beginning with "$Elements" */
@@ -530,7 +574,9 @@ t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
     if (retval != 1) {
       t8_global_errorf ("Premature end of line while reading num trees.\n");
       t8_debugf ("The line is %s", line);
-      goto die_ele;
+      free (line);
+      t8_cmesh_destroy (&cmesh);
+      return std::nullopt;
     }
   }
 
@@ -543,23 +589,27 @@ t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
   if (retval != 1) {
     t8_global_errorf ("Premature end of line while reading num trees.\n");
     t8_debugf ("The line is %s", line);
-    goto die_ele;
+    free (line);
+    t8_cmesh_destroy (&cmesh);
+    return std::nullopt;
   }
   num_trees = lnum_trees;
   /* Check for type conversion error */
   T8_ASSERT (num_trees == lnum_trees);
 
-  if (vertex_indices != NULL) {
-    /* We store a list of the vertex indices for each element */
-    *vertex_indices = sc_array_new (sizeof (long *));
-  }
+  /* Reserve memory for vertex indices */
+  t8_msh_tree_vertex_indices vertex_indices (num_trees);
+
   tree_count = 0; /* The index of the next tree to insert */
   for (tree_loop = 0; tree_loop < num_trees; tree_loop++) {
     /* Read the next line containing tree information */
     retval = t8_cmesh_msh_read_next_line (&line, &linen, fp);
     if (retval < 0) {
       t8_global_errorf ("Premature end of line while reading trees.\n");
-      goto die_ele;
+      t8_debugf ("The line is %s", line);
+      free (line);
+      t8_cmesh_destroy (&cmesh);
+      return std::nullopt;
     }
     /* The line describing the tree looks like
      * tree_number tree_type Number_tags tag_1 ... tag_n Node_1 ... Node_m
@@ -572,16 +622,18 @@ t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
     /* Check if the tree type is supported */
     if (ele_type > T8_NUM_GMSH_ELEM_CLASSES || ele_type < 0
         || t8_msh_tree_type_to_eclass[ele_type] == T8_ECLASS_COUNT) {
-      t8_global_errorf ("tree type %i is not supported by t8code.\n", ele_type);
-      goto die_ele;
+      t8_global_errorf ("Tree type %i is not supported by t8code.\n", ele_type);
+      free (line);
+      t8_cmesh_destroy (&cmesh);
+      return std::nullopt;
     }
     /* Continue if tree type is supported */
     eclass = t8_msh_tree_type_to_eclass[ele_type];
     T8_ASSERT (eclass != T8_ECLASS_COUNT);
 
     if (t8_eclass_to_dimension[eclass] > dim) {
-      t8_errorf (
-        "Warning: Encountered element which dimension is greater than %d. Did you set the correct dimension?\n", dim);
+      t8_debugf (
+        "Warning: Encountered an element with a dimension higher than %d. Did you set the correct dimension?\n", dim);
     }
 
     /* Check if the tree is of the correct dimension */
@@ -593,37 +645,48 @@ t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
       /* Since the tags are stored before the node indices, we need to
        * skip them first. But since the number of them is unknown and the
        * length (in characters) of them, we have to skip one by one. */
-      for (i = 0; i < 3 + num_tags; i++) {
+      for (int i_tag = 0; i_tag < 3 + num_tags; i_tag++) {
         T8_ASSERT (strcmp (line_modify, "\0"));
         /* move line_modify to the next word in the line */
         (void) strsep (&line_modify, " ");
       }
       /* At this point line_modify contains only the node indices. */
       num_nodes = t8_eclass_num_vertices[eclass];
-      for (i = 0; i < num_nodes; i++) {
+      std::vector<t8_gloidx_t> node_indices (num_nodes, -1);
+      for (int i_node = 0; i_node < num_nodes; i_node++) {
+        const int t8_vertex_num = t8_msh_tree_vertex_to_t8_vertex_num[eclass][i_node];
         T8_ASSERT (strcmp (line_modify, "\0"));
-        retval = sscanf (line_modify, "%li", node_indices + i);
+        retval = sscanf (line_modify, "%li", &node_indices[t8_vertex_num]);
         if (retval != 1) {
           t8_global_errorf ("Premature end of line while reading tree.\n");
           t8_debugf ("The line is %s", line);
-          goto die_ele;
+          free (line);
+          t8_cmesh_destroy (&cmesh);
+          return std::nullopt;
         }
+
+        /* Get node from the hashtable */
+        Node.index = node_indices[t8_vertex_num];
+        const auto found_node = vertices.find (Node);
+        if (found_node == vertices.end ()) {
+          t8_global_errorf ("Could not find Node %li.\n", node_indices[t8_vertex_num]);
+          free (line);
+          t8_cmesh_destroy (&cmesh);
+          return std::nullopt;
+        }
+
+        /* Add node coordinates to the tree vertices */
+        tree_vertices[3 * t8_vertex_num] = found_node->coordinates[0];
+        tree_vertices[3 * t8_vertex_num + 1] = found_node->coordinates[1];
+        tree_vertices[3 * t8_vertex_num + 2] = found_node->coordinates[2];
         /* move line_modify to the next word in the line */
         (void) strsep (&line_modify, " ");
       }
-      /* Now the nodes are read and we get their coordinates from
-       * the stored nodes */
-      for (i = 0; i < num_nodes; i++) {
-        Node.index = node_indices[i];
-        sc_hash_lookup (vertices, (void *) &Node, (void ***) &found_node);
-        /* Add node coordinates to the tree vertices */
-        t8_vertex_num = t8_msh_tree_vertex_to_t8_vertex_num[eclass][i];
-        tree_vertices[3 * t8_vertex_num] = (*found_node)->coordinates[0];
-        tree_vertices[3 * t8_vertex_num + 1] = (*found_node)->coordinates[1];
-        tree_vertices[3 * t8_vertex_num + 2] = (*found_node)->coordinates[2];
-      }
+
+      /* Add the node indices to return vector. */
+      vertex_indices[tree_count] = std::move (node_indices);
       /* Detect and correct negative volumes */
-      if (t8_cmesh_tree_vertices_negative_volume (eclass, tree_vertices, num_nodes)) {
+      if (t8_cmesh_tree_vertices_negative_volume (eclass, tree_vertices.data (), num_nodes)) {
         /* The volume described is negative. We need to change vertices.
          * For tets we switch 0 and 3.
          * For prisms we switch 0 and 3, 1 and 4, 2 and 5.
@@ -671,44 +734,30 @@ t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
 
         for (iswitch = 0; iswitch < num_switches; ++iswitch) {
           /* We switch vertex 0 + iswitch and vertex switch_indices[iswitch] */
-          for (i = 0; i < 3; i++) {
-            temp = tree_vertices[3 * iswitch + i];
-            tree_vertices[3 * iswitch + i] = tree_vertices[3 * switch_indices[iswitch] + i];
-            tree_vertices[3 * switch_indices[iswitch] + i] = temp;
+          for (int i_dim = 0; i_dim < T8_ECLASS_MAX_DIM; i_dim++) {
+            temp = tree_vertices[3 * iswitch + i_dim];
+            tree_vertices[3 * iswitch + i_dim] = tree_vertices[3 * switch_indices[iswitch] + i_dim];
+            tree_vertices[3 * switch_indices[iswitch] + i_dim] = temp;
           }
         }
-        T8_ASSERT (!t8_cmesh_tree_vertices_negative_volume (eclass, tree_vertices, num_nodes));
+        T8_ASSERT (!t8_cmesh_tree_vertices_negative_volume (eclass, tree_vertices.data (), num_nodes));
       } /* End of negative volume handling */
       /* Set the vertices of this tree */
-      t8_cmesh_set_tree_vertices (cmesh, tree_count, tree_vertices, num_nodes);
-      /* If wished, we store the vertex indices of that tree. */
-      if (vertex_indices != NULL) {
-        /* Allocate memory for the inices */
-        stored_indices = T8_ALLOC (long, t8_eclass_num_vertices[eclass]);
-        for (i = 0; i < t8_eclass_num_vertices[eclass]; i++) {
-          /* Get the i-th node index in t8code order and store it. */
-          stored_indices[i] = node_indices[t8_vertex_to_msh_vertex_num[eclass][i]];
-        }
-        /* Set the index array as a new entry in the array */
-        *(long **) sc_array_push (*vertex_indices) = stored_indices;
-      }
-      /* advance the tree counter */
-      tree_count++;
+      t8_cmesh_set_tree_vertices (cmesh, tree_count, tree_vertices.data (), num_nodes);
     }
+    /* advance the tree counter */
+    tree_count++;
   }
   free (line);
   if (tree_count == 0) {
     t8_global_errorf ("Warning: No %iD elements found in msh file.\n", dim);
+    t8_cmesh_destroy (&cmesh);
+    return std::nullopt;
   }
-  return 0;
-die_ele:
-  /* Error handling */
-  free (line);
-  t8_cmesh_destroy (&cmesh);
-  return -1;
+  return std::make_optional<t8_msh_tree_vertex_indices> (vertex_indices);
 }
 
-#if T8_WITH_OCC
+#if T8_ENABLE_OCC
 /** Corrects the parameters on closed geometries to prevent disorted elements.
  * \param [in]      geometry_dim    The dimension of the geometry.
  *                                  1 for edges, 2 for surfaces.
@@ -810,7 +859,7 @@ t8_cmesh_correct_parameters_on_closed_geometry (const int geometry_dim, const in
     break;
   }
 }
-#endif /* T8_WITH_OCC */
+#endif /* T8_ENABLE_OCC */
 
 /* fp should be set after the Nodes section, right before the tree section.
  * If vertex_indices is not NULL, it is allocated and will store
@@ -819,28 +868,29 @@ t8_cmesh_correct_parameters_on_closed_geometry (const int geometry_dim, const in
  * If cad geometry is used, the geometry is passed as a pointer here.
  * We cannot access this geometry over the cmesh interface since the cmesh
  * is not committed yet. */
-static int
-t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, sc_array_t **vertex_indices,
-                               const int dim, const t8_geometry_c *linear_geometry_base, const int use_cad_geometry,
-                               const t8_geometry_c *cad_geometry_base)
+static std::optional<t8_msh_tree_vertex_indices>
+t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_table vertices, const int dim,
+                               const t8_geometry_c *linear_geometry_base, const int use_cad_geometry,
+                               [[maybe_unused]] const t8_geometry_c *cad_geometry_base)
 {
   char *line = (char *) malloc (1024), *line_modify;
   char first_word[2048] = "\0";
   size_t linen = 1024;
-  t8_locidx_t tree_loop, block_loop;
+  t8_locidx_t tree_loop, block_loop, num_trees;
   t8_gloidx_t tree_count;
   t8_eclass_t eclass;
-  t8_msh_file_node_parametric_t Node, **found_node, tree_nodes[T8_ECLASS_MAX_CORNERS];
-#if T8_WITH_OCC
-  t8_msh_file_node_parametric_t face_nodes[T8_ECLASS_MAX_CORNERS_2D], edge_nodes[2];
-#endif /* T8_WITH_OCC */
+  t8_msh_file_node Node;
+#if T8_ENABLE_OCC
+  t8_msh_file_node face_nodes[T8_ECLASS_MAX_CORNERS_2D], edge_nodes[2];
+#endif /* T8_ENABLE_OCC */
   long lnum_trees, lnum_blocks, entity_tag;
-  int retval, i;
+  int retval;
   int ele_type;
-  int num_nodes, t8_vertex_num;
   int entity_dim;
-  long node_indices[T8_ECLASS_MAX_CORNERS], *stored_indices, num_ele_in_block;
-  double tree_vertices[T8_ECLASS_MAX_CORNERS * 3];
+  long num_ele_in_block;
+  std::array<t8_msh_file_node, T8_ECLASS_MAX_CORNERS> tree_nodes;
+  std::array<double, T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM> tree_vertices;
+  t8_gloidx_t global_id_of_node[T8_ECLASS_MAX_CORNERS];
 
   T8_ASSERT (fp != NULL);
   /* Search for the line beginning with "$Elements" */
@@ -853,7 +903,9 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
     if (retval != 1) {
       t8_global_errorf ("Premature end of line while reading num trees.\n");
       t8_debugf ("The line is %s", line);
-      goto die_ele;
+      free (line);
+      t8_cmesh_destroy (&cmesh);
+      return std::nullopt;
     }
   }
 
@@ -866,13 +918,17 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
   if (retval != 2) {
     t8_global_errorf ("Premature end of line while reading num trees and num blocks.\n");
     t8_debugf ("The line is %s", line);
-    goto die_ele;
+    free (line);
+    t8_cmesh_destroy (&cmesh);
+    return std::nullopt;
   }
+  num_trees = lnum_trees;
+  /* Check for type conversion error */
+  T8_ASSERT (num_trees == lnum_trees);
 
-  if (vertex_indices != NULL) {
-    /* We store a list of the vertex indices for each element */
-    *vertex_indices = sc_array_new (sizeof (long *));
-  }
+  /* Reserve memory for vertex indices */
+  t8_msh_tree_vertex_indices vertex_indices (num_trees);
+
   tree_count = 0; /* The index of the next tree to insert */
   for (block_loop = 0; block_loop < lnum_blocks; block_loop++) {
     /* The line describing the block information looks like
@@ -880,20 +936,26 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
     retval = t8_cmesh_msh_read_next_line (&line, &linen, fp);
     if (retval < 0) {
       t8_global_errorf ("Premature end of line while reading trees.\n");
-      goto die_ele;
+      free (line);
+      t8_cmesh_destroy (&cmesh);
+      return std::nullopt;
     }
     retval = sscanf (line, "%i %li %i %li", &entity_dim, &entity_tag, &ele_type, &num_ele_in_block);
     /* Checking for read/write error */
     if (retval != 4) {
       t8_global_errorf ("Error while reading element block information.\n");
       t8_debugf ("The line is %s", line);
-      goto die_ele;
+      free (line);
+      t8_cmesh_destroy (&cmesh);
+      return std::nullopt;
     }
     /* Check if the tree type is supported */
     if (ele_type > T8_NUM_GMSH_ELEM_CLASSES || ele_type < 0
         || t8_msh_tree_type_to_eclass[ele_type] == T8_ECLASS_COUNT) {
       t8_global_errorf ("tree type %i is not supported by t8code.\n", ele_type);
-      goto die_ele;
+      free (line);
+      t8_cmesh_destroy (&cmesh);
+      return std::nullopt;
     }
     eclass = t8_msh_tree_type_to_eclass[ele_type];
     T8_ASSERT (eclass != T8_ECLASS_COUNT);
@@ -911,7 +973,9 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
         retval = t8_cmesh_msh_read_next_line (&line, &linen, fp);
         if (retval < 0) {
           t8_global_errorf ("Premature end of line while reading trees.\n");
-          goto die_ele;
+          free (line);
+          t8_cmesh_destroy (&cmesh);
+          return std::nullopt;
         }
       }
     }
@@ -921,7 +985,9 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
         retval = t8_cmesh_msh_read_next_line (&line, &linen, fp);
         if (retval < 0) {
           t8_global_errorf ("Premature end of line while reading trees.\n");
-          goto die_ele;
+          free (line);
+          t8_cmesh_destroy (&cmesh);
+          return std::nullopt;
         }
         t8_cmesh_set_tree_class (cmesh, tree_count, eclass);
 
@@ -936,39 +1002,44 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
         (void) strsep (&line_modify, " ");
 
         /* At this point line_modify contains only the node indices. */
-        num_nodes = t8_eclass_num_vertices[eclass];
-        for (i = 0; i < num_nodes; i++) {
+        const int num_nodes = t8_eclass_num_vertices[eclass];
+        std::vector<t8_gloidx_t> node_indices (num_nodes, -1);
+        for (int i_node = 0; i_node < num_nodes; i_node++) {
+          const int t8_vertex_num = t8_msh_tree_vertex_to_t8_vertex_num[eclass][i_node];
           T8_ASSERT (strcmp (line_modify, "\0"));
-          retval = sscanf (line_modify, "%li", node_indices + i);
+          retval = sscanf (line_modify, "%li", &node_indices[t8_vertex_num]);
           if (retval != 1) {
             t8_global_errorf ("Premature end of line while reading tree.\n");
             t8_debugf ("The line is %s", line);
-            goto die_ele;
+            free (line);
+            t8_cmesh_destroy (&cmesh);
+            return std::nullopt;
           }
+          /* Get node from the hashtable */
+          Node.index = node_indices[t8_vertex_num];
+          tree_nodes[t8_vertex_num] = *vertices.find (Node);
+
           /* move line_modify to the next word in the line */
           (void) strsep (&line_modify, " ");
         }
-        /* Now the nodes are read and we get their coordinates from
-         * the stored nodes */
-        for (i = 0; i < num_nodes; i++) {
-          Node.index = node_indices[i];
-          sc_hash_lookup (vertices, (void *) &Node, (void ***) &found_node);
-          /* Add node coordinates to the tree vertices */
-          t8_vertex_num = t8_msh_tree_vertex_to_t8_vertex_num[eclass][i];
-          tree_nodes[t8_vertex_num] = **found_node;
-          tree_vertices[3 * t8_vertex_num] = (*found_node)->coordinates[0];
-          tree_vertices[3 * t8_vertex_num + 1] = (*found_node)->coordinates[1];
-          tree_vertices[3 * t8_vertex_num + 2] = (*found_node)->coordinates[2];
+
+        /* Add the node indices to return vector. */
+        vertex_indices[tree_count] = std::move (node_indices);
+
+        /* Set the vertices of this tree (can be removed with negative volume check) */
+        for (int i_node = 0; i_node < num_nodes; i_node++) {
+          tree_vertices[3 * i_node] = tree_nodes[i_node].coordinates[0];
+          tree_vertices[3 * i_node + 1] = tree_nodes[i_node].coordinates[1];
+          tree_vertices[3 * i_node + 2] = tree_nodes[i_node].coordinates[2];
         }
         /* Detect and correct negative volumes */
-        if (t8_cmesh_tree_vertices_negative_volume (eclass, tree_vertices, num_nodes)) {
+        if (t8_cmesh_tree_vertices_negative_volume (eclass, tree_vertices.data (), num_nodes)) {
           /* The volume described is negative. We need to change vertices.
            * For tets we switch 0 and 3.
            * For prisms we switch 0 and 3, 1 and 4, 2 and 5.
            * For hexahedra we switch 0 and 4, 1 and 5, 2 and 6, 3 and 7.
            * For pyramids we switch 0 and 4 */
-          double temp;
-          t8_msh_file_node_parametric_t temp_node;
+          t8_msh_file_node temp_node;
           int num_switches = 0;
           int switch_indices[4] = { 0 };
           int iswitch;
@@ -1009,31 +1080,22 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
           }
 
           for (iswitch = 0; iswitch < num_switches; ++iswitch) {
-            /* We switch vertex 0 + iswitch and vertex switch_indices[iswitch] */
-            for (i = 0; i < 3; i++) {
-              temp = tree_vertices[3 * iswitch + i];
-              tree_vertices[3 * iswitch + i] = tree_vertices[3 * switch_indices[iswitch] + i];
-              tree_vertices[3 * switch_indices[iswitch] + i] = temp;
-            }
+            /* We switch node 0 + iswitch and node switch_indices[iswitch] */
             temp_node = tree_nodes[iswitch];
             tree_nodes[iswitch] = tree_nodes[switch_indices[iswitch]];
             tree_nodes[switch_indices[iswitch]] = temp_node;
           }
-          T8_ASSERT (!t8_cmesh_tree_vertices_negative_volume (eclass, tree_vertices, num_nodes));
-        } /* End of negative volume handling */
-        /* Set the vertices of this tree */
-        t8_cmesh_set_tree_vertices (cmesh, tree_count, tree_vertices, num_nodes);
-        /* If wished, we store the vertex indices of that tree. */
-        if (vertex_indices != NULL) {
-          /* Allocate memory for the indices */
-          stored_indices = T8_ALLOC (long, t8_eclass_num_vertices[eclass]);
-          for (i = 0; i < t8_eclass_num_vertices[eclass]; i++) {
-            /* Get the i-th node index in t8code order and store it. */
-            stored_indices[i] = node_indices[t8_vertex_to_msh_vertex_num[eclass][i]];
-          }
-          /* Set the index array as a new entry in the array */
-          *(long **) sc_array_push (*vertex_indices) = stored_indices;
         }
+
+        /* Set the vertices and global indices of this tree */
+        for (int i_node = 0; i_node < num_nodes; i_node++) {
+          tree_vertices[3 * i_node] = tree_nodes[i_node].coordinates[0];
+          tree_vertices[3 * i_node + 1] = tree_nodes[i_node].coordinates[1];
+          tree_vertices[3 * i_node + 2] = tree_nodes[i_node].coordinates[2];
+          global_id_of_node[i_node] = tree_nodes[i_node].index % vertices.size ();
+        }
+        t8_cmesh_set_tree_vertices (cmesh, tree_count, tree_vertices.data (), num_nodes);
+        t8_cmesh_set_global_vertices_of_tree (cmesh, tree_count, global_id_of_node, num_nodes);
 
         if (!use_cad_geometry) {
           /* Set the geometry of the tree to be linear.
@@ -1043,7 +1105,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
         }
         else {
           /* Calculate the parametric geometries of the tree */
-#if T8_WITH_OCC
+#if T8_ENABLE_OCC
           T8_ASSERT (cad_geometry_base->t8_geom_get_type () == T8_GEOMETRY_TYPE_CAD);
           const t8_geometry_cad_c *cad_geometry = dynamic_cast<const t8_geometry_cad_c *> (cad_geometry_base);
           /* Check for right element class */
@@ -1052,7 +1114,9 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
             t8_errorf (
               "%s element detected. The cad geometry currently only supports quad, tri, hex and prism elements.",
               t8_eclass_to_string[eclass]);
-            goto die_ele;
+            free (line);
+            t8_cmesh_destroy (&cmesh);
+            return std::nullopt;
           }
           int tree_is_linked = 0;
           double parameters[T8_ECLASS_MAX_CORNERS_2D * 2];
@@ -1140,9 +1204,9 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
                 for (int i_face_edges = 0; i_face_edges < num_face_edges; ++i_face_edges) {
                   /* Save nodes separately */
                   const int node1_number = t8_face_vertex_to_tree_vertex[face_eclass][i_tree_faces][0];
-                  const t8_msh_file_node_parametric_t node1 = face_nodes[node1_number];
+                  const t8_msh_file_node node1 = face_nodes[node1_number];
                   const int node2_number = t8_face_vertex_to_tree_vertex[face_eclass][i_tree_faces][1];
-                  const t8_msh_file_node_parametric_t node2 = face_nodes[node2_number];
+                  const t8_msh_file_node node2 = face_nodes[node2_number];
 
                   /* If both nodes are on a vertex we look if both vertices share an edge */
                   if (node1.entity_dim == 0 && node2.entity_dim == 0) {
@@ -1183,7 +1247,8 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
                   if (face_nodes[i_face_nodes].entity_dim == 0) {
                     if (cad_geometry->t8_geom_is_vertex_on_face (face_nodes[i_face_nodes].entity_tag, surface_index)) {
                       cad_geometry->t8_geom_get_parameters_of_vertex_on_face (
-                        face_nodes[i_face_nodes].entity_tag, surface_index, face_nodes[i_face_nodes].parameters);
+                        face_nodes[i_face_nodes].entity_tag, surface_index,
+                        face_nodes[i_face_nodes].parameters.data ());
                       face_nodes[i_face_nodes].entity_dim = 2;
                     }
                     else {
@@ -1195,7 +1260,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
                     if (cad_geometry->t8_geom_is_edge_on_face (face_nodes[i_face_nodes].entity_tag, surface_index)) {
                       cad_geometry->t8_geom_edge_parameter_to_face_parameters (
                         face_nodes[i_face_nodes].entity_tag, surface_index, num_face_nodes,
-                        face_nodes[i_face_nodes].parameters[0], NULL, face_nodes[i_face_nodes].parameters);
+                        face_nodes[i_face_nodes].parameters[0], NULL, face_nodes[i_face_nodes].parameters.data ());
                       face_nodes[i_face_nodes].entity_dim = 2;
                     }
                     else {
@@ -1349,39 +1414,47 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
                         edge_geometry_tag, face_geometries[t8_edge_to_face[eclass][i_tree_edges][i_adjacent_face]])) {
                     t8_global_errorf ("Error: Adjacent edge and face of a tree carry "
                                       "incompatible geometries.\n");
-                    goto die_ele;
+                    free (line);
+                    t8_cmesh_destroy (&cmesh);
+                    return std::nullopt;
                   }
                 }
               }
               for (int i_edge_node = 0; i_edge_node < 2; ++i_edge_node) {
                 /* Some error checking */
                 if (edge_nodes[i_edge_node].entity_dim == 2) {
-                  t8_global_errorf ("Error: Node %i should lie on a vertex or an edge, "
+                  t8_global_errorf ("Error: Node %li should lie on a vertex or an edge, "
                                     "but it lies on a surface.\n",
                                     edge_nodes[i_edge_node].index);
-                  goto die_ele;
+                  free (line);
+                  t8_cmesh_destroy (&cmesh);
+                  return std::nullopt;
                 }
                 if (edge_nodes[i_edge_node].entity_dim == 1
                     && edge_nodes[i_edge_node].entity_tag != edge_geometry_tag) {
-                  t8_global_errorf ("Error: Node %i should lie on a specific edge, "
+                  t8_global_errorf ("Error: Node %li should lie on a specific edge, "
                                     "but it lies on another edge.\n",
                                     edge_nodes[i_edge_node].index);
-                  goto die_ele;
+                  free (line);
+                  t8_cmesh_destroy (&cmesh);
+                  return std::nullopt;
                 }
                 if (edge_nodes[i_edge_node].entity_dim == 0) {
                   if (!cad_geometry->t8_geom_is_vertex_on_edge (edge_nodes[i_edge_node].entity_tag,
                                                                 edge_geometry_tag)) {
-                    t8_global_errorf ("Error: Node %i should lie on a vertex which lies on an edge, "
+                    t8_global_errorf ("Error: Node %li should lie on a vertex which lies on an edge, "
                                       "but the vertex does not lie on that edge.\n",
                                       edge_nodes[i_edge_node].index);
-                    goto die_ele;
+                    free (line);
+                    t8_cmesh_destroy (&cmesh);
+                    return std::nullopt;
                   }
                 }
 
                 /* If the node lies on a vertex we retrieve its parameter on the curve */
                 if (edge_nodes[i_edge_node].entity_dim == 0) {
                   cad_geometry->t8_geom_get_parameter_of_vertex_on_edge (
-                    edge_nodes[i_edge_node].entity_tag, edge_geometry_tag, edge_nodes[i_edge_node].parameters);
+                    edge_nodes[i_edge_node].entity_tag, edge_geometry_tag, edge_nodes[i_edge_node].parameters.data ());
                   edge_nodes[i_edge_node].entity_dim = 1;
                 }
               }
@@ -1413,32 +1486,38 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
                 /* Some error checking */
                 if (edge_nodes[i_edge_node].entity_dim == 2
                     && edge_nodes[i_edge_node].entity_tag != edge_geometry_tag) {
-                  t8_global_errorf ("Error: Node %i should lie on a specific face, but it lies on another face.\n",
+                  t8_global_errorf ("Error: Node %li should lie on a specific face, but it lies on another face.\n",
                                     edge_nodes[i_edge_node].index);
-                  goto die_ele;
+                  free (line);
+                  t8_cmesh_destroy (&cmesh);
+                  return std::nullopt;
                 }
                 if (edge_nodes[i_edge_node].entity_dim == 0) {
                   if (!cad_geometry->t8_geom_is_vertex_on_face (edge_nodes[i_edge_node].entity_tag,
                                                                 edge_geometry_tag)) {
-                    t8_global_errorf ("Error: Node %i should lie on a vertex which lies on a face, "
+                    t8_global_errorf ("Error: Node %li should lie on a vertex which lies on a face, "
                                       "but the vertex does not lie on that face.\n",
                                       edge_nodes[i_edge_node].index);
-                    goto die_ele;
+                    free (line);
+                    t8_cmesh_destroy (&cmesh);
+                    return std::nullopt;
                   }
                 }
                 if (edge_nodes[i_edge_node].entity_dim == 1) {
                   if (!cad_geometry->t8_geom_is_edge_on_face (edge_nodes[i_edge_node].entity_tag, edge_geometry_tag)) {
-                    t8_global_errorf ("Error: Node %i should lie on an edge which lies on a face, "
+                    t8_global_errorf ("Error: Node %li should lie on an edge which lies on a face, "
                                       "but the edge does not lie on that face.\n",
                                       edge_nodes[i_edge_node].index);
-                    goto die_ele;
+                    free (line);
+                    t8_cmesh_destroy (&cmesh);
+                    return std::nullopt;
                   }
                 }
 
                 /* If the node lies on a vertex we retrieve its parameters on the surface */
                 if (edge_nodes[i_edge_node].entity_dim == 0) {
                   cad_geometry->t8_geom_get_parameters_of_vertex_on_face (
-                    edge_nodes[i_edge_node].entity_tag, edge_geometry_tag, edge_nodes[i_edge_node].parameters);
+                    edge_nodes[i_edge_node].entity_tag, edge_geometry_tag, edge_nodes[i_edge_node].parameters.data ());
                   edge_nodes[i_edge_node].entity_dim = 2;
                 }
                 /* If the node lies on an edge we have to do the same */
@@ -1446,7 +1525,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
                   const int num_face_nodes = t8_eclass_num_vertices[eclass];
                   cad_geometry->t8_geom_edge_parameter_to_face_parameters (
                     edge_nodes[i_edge_node].entity_tag, edge_geometry_tag, num_face_nodes,
-                    edge_nodes[i_edge_node].parameters[0], parameters, edge_nodes[i_edge_node].parameters);
+                    edge_nodes[i_edge_node].parameters[0], parameters, edge_nodes[i_edge_node].parameters.data ());
                   edge_nodes[i_edge_node].entity_dim = 2;
                 }
               }
@@ -1497,9 +1576,9 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
             t8_debugf ("Registering tree %li with geometry %s \n", tree_count,
                        linear_geometry_base->t8_geom_get_name ().c_str ());
           }
-#else  /* !T8_WITH_OCC */
+#else  /* !T8_ENABLE_OCC */
           SC_ABORTF ("OCC not linked");
-#endif /* T8_WITH_OCC */
+#endif /* T8_ENABLE_OCC */
         }
       }
     }
@@ -1507,13 +1586,10 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, sc_hash_t *vertices, 
   free (line);
   if (tree_count == 0) {
     t8_global_errorf ("Warning: No %iD elements found in msh file.\n", dim);
+    t8_cmesh_destroy (&cmesh);
+    return std::nullopt;
   }
-  return 0;
-die_ele:
-  /* Error handling */
-  free (line);
-  t8_cmesh_destroy (&cmesh);
-  return -1;
+  return std::make_optional<t8_msh_tree_vertex_indices> (vertex_indices);
 }
 
 /* This struct stores all information associated to a tree's face.
@@ -1522,14 +1598,14 @@ die_ele:
 typedef struct
 {
   t8_locidx_t ltree_id; /* The local id of the tree this face belongs to */
-  int8_t face_number;   /* The number of that face whitin the tree */
+  int8_t face_number;   /* The number of that face within the tree */
   int num_vertices;     /* The number of vertices of this face. */
   long *vertices;       /* The indices of these vertices. */
 } t8_msh_file_face_t;
 
 /* Hash a face. The hash value is the sum of its vertex indices */
 static unsigned
-t8_msh_file_face_hash (const void *face, const void *data)
+t8_msh_file_face_hash (const void *face, [[maybe_unused]] const void *data)
 {
   t8_msh_file_face_t *Face;
   int iv;
@@ -1546,7 +1622,7 @@ t8_msh_file_face_hash (const void *face, const void *data)
 /* Two face are considered equal if they have the same vertices up
  * to renumeration. */
 static int
-t8_msh_file_face_equal (const void *facea, const void *faceb, const void *data)
+t8_msh_file_face_equal (const void *facea, const void *faceb, [[maybe_unused]] const void *data)
 {
   int iv, jv, ret;
   long vertex;
@@ -1578,7 +1654,7 @@ t8_msh_file_face_equal (const void *facea, const void *faceb, const void *data)
 /* We use this function in a loop over all elements
  * in the hash table, to free the memory of the vertices array */
 static int
-t8_msh_file_face_free (void **face, const void *data)
+t8_msh_file_face_free (void **face, [[maybe_unused]] const void *data)
 {
   t8_msh_file_face_t *Face;
 
@@ -1665,7 +1741,7 @@ t8_msh_file_face_orientation (const t8_msh_file_face_t *Face_a, const t8_msh_fil
 /* This routine does only find neighbors between local trees.
  * Use with care if cmesh is partitioned. */
 static void
-t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh, const sc_array_t *vertex_indices)
+t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh, const t8_msh_tree_vertex_indices vertex_indices)
 {
   sc_hash_t *faces;
   t8_msh_file_face_t *Face, **pNeighbor, *Neighbor;
@@ -1675,7 +1751,6 @@ t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh, const sc_array_t *vertex_ind
   t8_eclass_t eclass, face_class, neighbor_tclass;
   int num_face_vertices, face_it, vertex_it;
   int retval, orientation;
-  long *tree_vertices;
   t8_stash_class_struct_t *class_entry;
 
   face_mempool = sc_mempool_new (sizeof (t8_msh_file_face_t));
@@ -1700,7 +1775,7 @@ t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh, const sc_array_t *vertex_ind
     T8_ASSERT (class_entry->id == gtree_it);
     eclass = class_entry->eclass;
     /* Get the vertices of that tree */
-    tree_vertices = *(long **) t8_sc_array_index_locidx (vertex_indices, gtree_it);
+    auto tree_vertices = vertex_indices[gtree_it];
     /* loop over all faces of the tree */
     for (face_it = 0; face_it < t8_eclass_num_faces[eclass]; face_it++) {
       /* Create the Face struct */
@@ -1765,15 +1840,16 @@ T8_EXTERN_C_BEGIN ();
  * no cad geometry is used.
  */
 static int
-t8_cmesh_from_msh_file_register_geometries (t8_cmesh_t cmesh, const int use_cad_geometry, const char *fileprefix,
+t8_cmesh_from_msh_file_register_geometries (t8_cmesh_t cmesh, const int use_cad_geometry,
+                                            [[maybe_unused]] const char *fileprefix,
                                             const t8_geometry_c **linear_geometry, const t8_geometry_c **cad_geometry)
 {
   /* Register linear geometry */
   *linear_geometry = t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
   if (use_cad_geometry) {
-#if T8_WITH_OCC
+#if T8_ENABLE_OCC
     *cad_geometry = t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, std::string (fileprefix));
-#else /* !T8_WITH_OCC */
+#else /* !T8_ENABLE_OCC */
     *cad_geometry = NULL;
     return 0;
 #endif
@@ -1787,11 +1863,6 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
 {
   int mpirank, mpisize, mpiret;
   t8_cmesh_t cmesh;
-  sc_hash_t *vertices = NULL;
-  t8_locidx_t num_vertices;
-  sc_mempool_t *node_mempool = NULL;
-  sc_array_t *vertex_indices = NULL;
-  long *indices_entry;
   char current_file[BUFSIZ];
   FILE *file;
   t8_gloidx_t num_trees, first_tree, last_tree = -1;
@@ -1822,7 +1893,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
     = t8_cmesh_from_msh_file_register_geometries (cmesh, use_cad_geometry, fileprefix, &linear_geometry, &cad_geometry);
   if (!registered_geom_success) {
     /* Registering failed */
-    t8_errorf ("cad is not linked. Cannot use cad geometry.\n");
+    t8_errorf ("OCC is not linked. Cannot use cad geometry.\n");
     t8_cmesh_destroy (&cmesh);
     return NULL;
   }
@@ -1859,8 +1930,9 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
       return NULL;
     }
     /* read nodes from the file */
+    std::optional<t8_msh_tree_vertex_indices> indices;
     switch (msh_version) {
-    case 2:
+    case 2: {
       if (use_cad_geometry) {
         fclose (file);
         t8_errorf ("WARNING: The cad geometry is only supported for msh files of version 4\n");
@@ -1872,31 +1944,54 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
         }
         return NULL;
       }
-      vertices = t8_msh_file_2_read_nodes (file, &num_vertices, &node_mempool);
-      t8_cmesh_msh_file_2_read_eles (cmesh, file, vertices, &vertex_indices, dim);
+      auto vertices_opt = t8_msh_file_2_read_nodes (file);
+      if (!vertices_opt) {
+        fclose (file);
+        t8_cmesh_destroy (&cmesh);
+        if (partition) {
+          /* Communicate to the other processes that reading failed. */
+          main_proc_read_successful = 0;
+          sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc, comm);
+        }
+        return NULL;
+      }
+      indices = t8_cmesh_msh_file_2_read_eles (cmesh, file, *vertices_opt, dim);
       break;
+    }
 
-    case 4:
-      vertices = t8_msh_file_4_read_nodes (file, &num_vertices, &node_mempool);
-      t8_cmesh_msh_file_4_read_eles (cmesh, file, vertices, &vertex_indices, dim, linear_geometry, use_cad_geometry,
-                                     cad_geometry);
+    case 4: {
+      auto vertices_opt = t8_msh_file_4_read_nodes (file);
+      if (!vertices_opt) {
+        fclose (file);
+        t8_cmesh_destroy (&cmesh);
+        if (partition) {
+          /* Communicate to the other processes that reading failed. */
+          main_proc_read_successful = 0;
+          sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc, comm);
+        }
+        return NULL;
+      }
+      indices = t8_cmesh_msh_file_4_read_eles (cmesh, file, *vertices_opt, dim, linear_geometry, use_cad_geometry,
+                                               cad_geometry);
       break;
+    }
 
     default:
       break;
     }
     /* close the file and free the memory for the nodes */
     fclose (file);
-    t8_cmesh_msh_file_find_neighbors (cmesh, vertex_indices);
-    if (vertices != NULL) {
-      sc_hash_destroy (vertices);
+    if (!indices) {
+      t8_cmesh_destroy (&cmesh);
+      if (partition) {
+        /* Communicate to the other processes that reading failed. */
+        main_proc_read_successful = 0;
+        sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc, comm);
+      }
+      return NULL;
     }
-    sc_mempool_destroy (node_mempool);
-    while (vertex_indices->elem_count > 0) {
-      indices_entry = *(long **) sc_array_pop (vertex_indices);
-      T8_FREE (indices_entry);
-    }
-    sc_array_destroy (vertex_indices);
+    else
+      t8_cmesh_msh_file_find_neighbors (cmesh, *indices);
 
     main_proc_read_successful = 1;
   }

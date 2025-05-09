@@ -34,10 +34,9 @@
 
 #include <string>
 #include <t8_vtk.h>
-#include <t8_element.hxx>
-#include <t8_vec.h>
+#include <t8_types/t8_vec.hxx>
 
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
 #include <vtkUnstructuredGrid.h>
 #include <vtkXMLPUnstructuredGridWriter.h>
 #include <vtkDoubleArray.h>
@@ -64,7 +63,7 @@
 #include <vtkMPICommunicator.h>
 #include <vtkMPIController.h>
 #endif /* T8_ENABLE_MPI */
-#endif /* T8_WITH_VTK */
+#endif /* T8_ENABLE_VTK */
 
 /**
  * A class that controls the writing of vtk files for cmeshes or forests. 
@@ -108,13 +107,13 @@ class vtk_writer {
   {
   }
 
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
   void
   grid_to_vtkUnstructuredGrid (const grid_t grid, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid)
   {
     this->t8_grid_to_vtkUnstructuredGrid (grid, unstructuredGrid);
   }
-#endif /* T8_WITH_VTK */
+#endif /* T8_ENABLE_VTK */
 
   /**
    * A vtk-writer function that uses the vtk API.
@@ -139,8 +138,85 @@ class vtk_writer {
   bool
   write_ASCII (const grid_t grid);
 
+  /**
+   * Set the write treeid flag. Set to true, if you want to write the tree id of every element.
+   * 
+   * \param[in] write_treeid true or false
+   */
+  inline void
+  set_write_treeid (const bool write_treeid)
+  {
+    this->write_treeid = write_treeid;
+  }
+
+  /**
+   * Set the write mpirank flag. Set to true, if you want to write the mpirank of every element.
+   * 
+   * \param[in] write_mpirank true or false
+   */
+  inline void
+  set_write_mpirank (const bool write_mpirank)
+  {
+    this->write_mpirank = write_mpirank;
+  }
+
+  /**
+   * Set the write level flag. Set to true, if you want to write the level of every element.
+   * 
+   * \param[in] write_level true or false
+   */
+  inline void
+  set_write_level (const bool write_level)
+  {
+    this->write_level = write_level;
+  }
+
+  /**
+   * Set the write element id flag. Set to true, if you want to write the element id of every element.
+   * 
+   * \param[in] write_element_id true or false
+   */
+  inline void
+  set_write_element_id (const bool write_element_id)
+  {
+    this->write_element_id = write_element_id;
+  }
+
+  /**
+   * Set the write ghosts flag. Set to true, if you want to write the ghost elements, too.
+   * 
+   * \param[in] write_ghosts true or false
+   */
+  inline void
+  set_write_ghosts (const bool write_ghosts)
+  {
+    this->write_ghosts = write_ghosts;
+  }
+
+  /**
+   * Set the curved flag. Set to true, if you want to use quadratic vtk cells. 
+   * Uses the geometry of the grid to evaluate points between corners.
+   * 
+   * \param[in] curved_flag true or false
+   */
+  inline void
+  set_curved_flag (const bool curved_flag)
+  {
+    this->curved_flag = curved_flag;
+  }
+
+  /**
+   * Set the fileprefix for the output files.
+   * \param[in] fileprefix 
+   */
+  inline void
+  set_fileprefix (std::string fileprefix)
+  {
+    this->fileprefix = fileprefix;
+  }
+
  private:
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
   /**
  * Translate a single element from the forest into a vtkCell and fill the vtkArrays with
  * the data related to the element (not element_data).
@@ -414,7 +490,7 @@ class vtk_writer {
     T8_FREE (dataArrays);
     return;
   }
-#endif /* T8_WITH_VTK */
+#endif /* T8_ENABLE_VTK */
 
   /**
    * Write a vtk file given a forest or a cmesh.
@@ -424,9 +500,9 @@ class vtk_writer {
    * \return false if writing was not successful.
    */
   bool
-  write_vtk (const grid_t grid)
+  write_vtk ([[maybe_unused]] const grid_t grid)
   {
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
     T8_ASSERT (!fileprefix.empty ());
 
     /* 

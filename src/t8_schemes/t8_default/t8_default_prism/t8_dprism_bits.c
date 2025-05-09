@@ -77,7 +77,7 @@ t8_dprism_init_linear_id (t8_dprism_t *p, int level, t8_linearidx_t id)
   t8_linearidx_t tri_id = 0;
   t8_linearidx_t line_id = 0;
   int i;
-  int triangles_of_size_i = 1;
+  t8_linearidx_t triangles_of_size_i = 1;
 
   T8_ASSERT (0 <= level && level <= T8_DPRISM_MAXLEVEL);
   T8_ASSERT (id < sc_intpow64u (T8_DPRISM_CHILDREN, level));
@@ -127,16 +127,14 @@ t8_dprism_child_id (const t8_dprism_t *p)
 int
 t8_dprism_is_familypv (t8_dprism_t **fam)
 {
-  t8_dtri_t **tri_fam = T8_ALLOC (t8_dtri_t *, T8_DTRI_CHILDREN);
-  t8_dline_t **line_fam = T8_ALLOC (t8_dline_t *, T8_DLINE_CHILDREN);
+  t8_dtri_t *tri_fam[T8_DPRISM_CHILDREN];
+  t8_dline_t *line_fam[T8_DLINE_CHILDREN];
 
   for (int i = 0; i < T8_DLINE_CHILDREN; i++) {
     for (int j = 0; j < T8_DTRI_CHILDREN; j++) {
       tri_fam[j] = &fam[j + i * T8_DTRI_CHILDREN]->tri;
     }
     if (!t8_dtri_is_familypv ((const t8_dtri_t **) tri_fam)) {
-      T8_FREE (tri_fam);
-      T8_FREE (line_fam);
       return 0;
     }
   }
@@ -151,21 +149,15 @@ t8_dprism_is_familypv (t8_dprism_t **fam)
           && (fam[i]->tri.type == fam[i + T8_DTRI_CHILDREN]->tri.type)
           && (fam[i]->tri.x == fam[i + T8_DTRI_CHILDREN]->tri.x)
           && (fam[i]->tri.y == fam[i + T8_DTRI_CHILDREN]->tri.y))) {
-      T8_FREE (tri_fam);
-      T8_FREE (line_fam);
       return 0;
     }
   }
 
   for (int i = 0; i < T8_DPRISM_CHILDREN; i++) {
     if (fam[i]->line.level != fam[i]->tri.level) {
-      T8_FREE (tri_fam);
-      T8_FREE (line_fam);
       return 0;
     }
   }
-  T8_FREE (tri_fam);
-  T8_FREE (line_fam);
   return 1;
 }
 
@@ -257,7 +249,7 @@ t8_dprism_child (const t8_dprism_t *p, int childid, t8_dprism_t *child)
 }
 
 t8_element_shape_t
-t8_dprism_face_shape (const t8_dprism_t *p, int face)
+t8_dprism_face_shape (int face)
 {
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
   if (face < 3) {
@@ -267,7 +259,7 @@ t8_dprism_face_shape (const t8_dprism_t *p, int face)
 }
 
 int
-t8_dprism_num_face_children (const t8_dprism_t *p, int face)
+t8_dprism_num_face_children (int face)
 {
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
   /*Bottom and top have T8_DTRI_CHILDREN, the other three faces depend on
@@ -301,7 +293,7 @@ t8_dprism_face_neighbour (const t8_dprism_t *p, int face, t8_dprism_t *neigh)
 }
 
 int
-t8_dprism_get_face_corner (const t8_dprism_t *p, int face, int corner)
+t8_dprism_get_face_corner (int face, int corner)
 {
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
   T8_ASSERT (0 <= corner);
@@ -312,7 +304,7 @@ t8_dprism_get_face_corner (const t8_dprism_t *p, int face, int corner)
 }
 
 void
-t8_dprism_childrenpv (const t8_dprism_t *p, int length, t8_dprism_t *c[])
+t8_dprism_childrenpv (const t8_dprism_t *p, __attribute__ ((unused)) int length, t8_dprism_t *c[])
 {
   int i;
   T8_ASSERT (length == T8_DPRISM_CHILDREN);
@@ -331,30 +323,30 @@ t8_dprism_ancestor_id (t8_dprism_t *p, int level)
 const int children_at_face[2][12] = { { 1, 3, 5, 7, 0, 3, 4, 7, 0, 1, 4, 5 }, { 2, 3, 6, 7, 0, 3, 4, 7, 0, 2, 4, 6 } };
 
 void
-t8_dprism_children_at_face (const t8_dprism_t *p, int face, t8_dprism_t **children, int num_children,
-                            int *child_indices)
+t8_dprism_children_at_face (const t8_dprism_t *p, int face, t8_dprism_t **children,
+                            __attribute__ ((unused)) int num_children, int *child_indices)
 {
-  T8_ASSERT (num_children == t8_dprism_num_face_children (p, face));
+  T8_ASSERT (num_children == t8_dprism_num_face_children (face));
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
   if (face < 3) {
-    for (int ichild = 0; ichild < 4; ichild++) {
+    for (int ichild = 3; ichild >= 0; ichild--) {
       t8_dprism_child (p, children_at_face[p->tri.type][face * 4 + ichild], children[ichild]);
     }
   }
   else {
-    for (int ichild = 0; ichild < 4; ichild++) {
+    for (int ichild = 3; ichild >= 0; ichild--) {
       t8_dprism_child (p, (face % 3) * 4 + ichild, children[ichild]);
     }
   }
   /* Fill child-indices array */
   if (child_indices != NULL) {
     if (face < 3) {
-      for (int ichild = 0; ichild < 4; ichild++) {
+      for (int ichild = 3; ichild >= 0; ichild--) {
         child_indices[ichild] = children_at_face[p->tri.type][face * 4 + ichild];
       }
     }
     else {
-      for (int ichild = 0; ichild < 4; ichild++) {
+      for (int ichild = 3; ichild >= 0; ichild--) {
         child_indices[ichild] = (face % 3) * 4 + ichild;
       }
     }
@@ -362,7 +354,7 @@ t8_dprism_children_at_face (const t8_dprism_t *p, int face, t8_dprism_t **childr
 }
 
 int
-t8_dprism_face_child_face (const t8_dprism_t *elem, int face, int face_child)
+t8_dprism_face_child_face (int face)
 {
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
   /* For prisms the face number of the children is the same as the one
@@ -387,7 +379,7 @@ t8_dprism_face_parent_face (const t8_dprism_t *prism, int face)
 }
 
 int
-t8_dprism_tree_face (const t8_dprism_t *p, int face)
+t8_dprism_tree_face (int face)
 {
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
   /*For prisms, the face number coincides with the number of the root
@@ -491,7 +483,7 @@ t8_dprism_first_descendant (const t8_dprism_t *p, t8_dprism_t *s, int level)
   /*First prism descendant = first triangle desc x first line desc */
   t8_dtri_first_descendant (&p->tri, &s->tri, level);
   t8_dline_first_descendant (&p->line, &s->line, level);
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   {
     t8_linearidx_t id;
     id = t8_dprism_linear_id (p, level);

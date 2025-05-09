@@ -27,6 +27,7 @@
 #define T8_DTRI_CONNECTIVITY_H
 
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri.h>
+#include <t8_eclass.h>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -69,7 +70,7 @@ extern const int t8_dtri_parenttype_Iloc_to_type[2][4];
 extern const int t8_dtri_parenttype_Iloc_to_cid[2][4];
 
 /** Store the indices of the corner of each face of a triangle. */
-extern const int t8_dtri_face_corner[3][2];
+#define t8_dtri_face_corner t8_face_vertex_to_tree_vertex[T8_ECLASS_TRIANGLE]
 
 /** Store the indices of the faces of each corner of a triangle. */
 extern const int t8_dtri_corner_face[3][2];

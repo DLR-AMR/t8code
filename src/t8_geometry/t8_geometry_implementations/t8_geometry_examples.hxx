@@ -68,8 +68,9 @@ struct t8_geometry_quadrangulated_disk: public t8_geometry_with_vertices
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                             double *jacobian) const
+  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                             [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
+                             [[maybe_unused]] double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -96,9 +97,9 @@ struct t8_geometry_quadrangulated_disk: public t8_geometry_with_vertices
       t8_productionf ("t8_geometry_quadrangulated_disk is not compatible with tree type %s\n"
                       "It is only compatible with quad elements.\n",
                       t8_eclass_to_string[active_tree_class]);
-      return true;
+      return false;
     }
-    return false;
+    return true;
   }
 
   /* Load tree data is inherited from t8_geometry_with_vertices. */
@@ -137,8 +138,9 @@ struct t8_geometry_triangulated_spherical_surface: public t8_geometry_with_verti
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                             double *jacobian) const
+  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                             [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
+                             [[maybe_unused]] double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -155,9 +157,9 @@ struct t8_geometry_triangulated_spherical_surface: public t8_geometry_with_verti
       t8_productionf ("t8_geometry_triangulated_spherical_surface is not compatible with tree type %s\n"
                       "It is only compatible with triangle elements.\n",
                       t8_eclass_to_string[active_tree_class]);
-      return true;
+      return false;
     }
-    return false;
+    return true;
   }
 
   /* Load tree data is inherited from t8_geometry_with_vertices. */
@@ -195,8 +197,9 @@ struct t8_geometry_tessellated_spherical_surface: public t8_geometry_with_vertic
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                             double *jacobian) const
+  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                             [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
+                             [[maybe_unused]] double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -209,12 +212,14 @@ struct t8_geometry_tessellated_spherical_surface: public t8_geometry_with_vertic
   bool
   t8_geom_check_tree_compatibility () const
   {
-    if (active_tree_class != T8_ECLASS_QUAD) {
-      t8_productionf ("t8_geometry_quadrangulated_spherical_surface is not compatible with tree type %s\n"
-                      "It is only compatible with quad elements.\n",
-                      t8_eclass_to_string[active_tree_class]);
+    if (active_tree_class == T8_ECLASS_TRIANGLE || active_tree_class == T8_ECLASS_QUAD) {
       return true;
     }
+
+    t8_productionf ("t8_geometry_tessellated_spherical_surface is not compatible with tree type %s\n"
+                    "It is only compatible with triangle and quad elements.\n",
+                    t8_eclass_to_string[active_tree_class]);
+
     return false;
   }
 
@@ -253,8 +258,9 @@ struct t8_geometry_cubed_spherical_shell: public t8_geometry_with_vertices
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                             double *jacobian) const
+  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                             [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
+                             [[maybe_unused]] double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -271,9 +277,9 @@ struct t8_geometry_cubed_spherical_shell: public t8_geometry_with_vertices
       t8_productionf ("t8_geometry_cubed_spherical_shell is not compatible with tree type %s\n"
                       "It is only compatible with hex elements.\n",
                       t8_eclass_to_string[active_tree_class]);
-      return true;
+      return false;
     }
-    return false;
+    return true;
   }
 
   /* Load tree data is inherited from t8_geometry_with_vertices. */
@@ -311,8 +317,9 @@ struct t8_geometry_prismed_spherical_shell: public t8_geometry_with_vertices
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                             double *jacobian) const
+  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                             [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
+                             [[maybe_unused]] double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -329,9 +336,9 @@ struct t8_geometry_prismed_spherical_shell: public t8_geometry_with_vertices
       t8_productionf ("t8_geometry_prismed_spherical_shell is not compatible with tree type %s\n"
                       "It is only compatible with prism elements.\n",
                       t8_eclass_to_string[active_tree_class]);
-      return true;
+      return false;
     }
-    return false;
+    return true;
   }
 
   /* Load tree data is inherited from t8_geometry_with_vertices. */
@@ -369,8 +376,9 @@ struct t8_geometry_cubed_sphere: public t8_geometry_with_vertices
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                             double *jacobian) const
+  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                             [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
+                             [[maybe_unused]] double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -387,9 +395,9 @@ struct t8_geometry_cubed_sphere: public t8_geometry_with_vertices
       t8_productionf ("t8_geometry_cubed_sphere is not compatible with tree type %s\n"
                       "It is only compatible with hex elements.\n",
                       t8_eclass_to_string[active_tree_class]);
-      return true;
+      return false;
     }
-    return false;
+    return true;
   }
 
   /* Load tree data is inherited from t8_geometry_with_vertices. */
