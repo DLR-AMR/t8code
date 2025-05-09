@@ -1416,7 +1416,7 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
 static t8_locidx_t
 t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_linearidx_t element_id, const int maxlevel)
 {
-  const t8_scheme *scheme = t8_element_array_get_scheme (elements);
+  const t8_scheme_c *scheme = t8_element_array_get_scheme (elements);
   const t8_eclass_t tree_class = t8_element_array_get_tree_class (elements);
   /* At first, we check whether any element has smaller id than the
    * given one. */
@@ -2030,10 +2030,10 @@ t8_forest_leaf_is_boundary (const t8_forest_t forest, t8_locidx_t local_tree, co
   T8_ASSERT (leaf != NULL);
 
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, local_tree);
-  const t8_eclass_scheme_c *scheme = t8_forest_get_eclass_scheme (forest, tree_class);
+  const t8_scheme_c *scheme = t8_forest_get_scheme (forest);
 
   /* Check whether this leaf is at the boundary of its tree. */
-  const int is_root_boundary = scheme->t8_element_is_root_boundary (leaf, face);
+  const int is_root_boundary = scheme->element_is_root_boundary (tree_class, leaf, face);
 
   if (is_root_boundary) {
     /* This leaf is at a tree's boundary.
@@ -2041,7 +2041,7 @@ t8_forest_leaf_is_boundary (const t8_forest_t forest, t8_locidx_t local_tree, co
      * then the element is as well.
      * If the tree face is not at the domain boundary, the element's face
      * could still be at an inner boundary. */
-    const int cmesh_face = scheme->t8_element_tree_face (leaf, face);
+    const int cmesh_face = scheme->element_get_tree_face (tree_class, leaf, face);
     const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
     const t8_locidx_t cmesh_local_tree = t8_forest_ltreeid_to_cmesh_ltreeid (forest, local_tree);
     int tree_boundary = t8_cmesh_tree_face_is_boundary (cmesh, cmesh_local_tree, cmesh_face);
@@ -2073,10 +2073,10 @@ t8_forest_leaf_is_boundary (const t8_forest_t forest, t8_locidx_t local_tree, co
   int num_neighbors;
   t8_element_t **neighbor_leaves;
   t8_locidx_t *pelement_indices;
-  t8_eclass_scheme_c *pneigh_scheme;
+  t8_eclass_t neighbor_eclass;
   /* The forest has holes, the leaf could lie inside a tree but its neighbor was deleted. */
   t8_forest_leaf_face_neighbors (forest, local_tree, leaf, &neighbor_leaves, face, NULL, &num_neighbors,
-                                 &pelement_indices, &pneigh_scheme, is_balanced);
+                                 &pelement_indices, &neighbor_eclass, is_balanced);
 
   if (num_neighbors == 0) {
     /* The element has no neighbors, it is a boundary element. */
