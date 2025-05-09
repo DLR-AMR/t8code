@@ -129,7 +129,7 @@ TEST_P (forest_ghost_owner, test_ghost_owner)
   /* start with an empty level */
   min_level = SC_MAX (0, min_level - 1);
   t8_debugf ("Testing ghost exchange with start level %i\n", min_level);
-#if T8CODE_TEST_LEVEL >= 2
+#if T8CODE_TEST_LEVEL >= 2 || T8_CODE_COVERAGE
   const int max_level = min_level + 2;
 #else
   const int max_level = min_level + 3;
