@@ -91,9 +91,9 @@ TEST_P (class_element_leaves, test_element_count_leaves_root)
 #endif
   t8_gloidx_t compare_value = 1;
   t8_gloidx_t test_value = 1;
-  t8_gloidx_t sum1 = 1;
-  t8_gloidx_t sum2 = 1;
-  t8_gloidx_t num_leaves = 0;
+  // t8_gloidx_t sum1 = 1;
+  // t8_gloidx_t sum2 = 1;
+  // t8_gloidx_t num_leaves = 0;
 
   for (int level = 0; level <= maxlevel; ++level) {
     const t8_gloidx_t leaf_count = scheme->count_leaves_from_root (eclass, level);
