@@ -64,27 +64,22 @@ t8_cmesh_get_first_element_of_process (const uint32_t process, const uint32_t mp
 {
   T8_ASSERT (mpisize > 0);
   T8_ASSERT (process <= mpisize);
-  /* Split the uint64_t */
-  const uint64_t a_0 = (global_num_elements >> 32);
-  const uint64_t a_1 = (global_num_elements << 32) >> 32;
 
   /* Cast everything into uint64_t */
   const uint64_t process_64 = static_cast<uint64_t> (process);
   const uint64_t mpisize_64 = static_cast<uint64_t> (mpisize);
 
-  /* sum_0 = floor(a_0 * tau / mpisize * process) */
-  const uint64_t sum_0 = (a_0 << 32) / mpisize_64 * process_64;
+  /* Split the uint64_t */
+  const uint64_t elem_over_size = global_num_elements / mpisize_64;
+  const uint64_t remainder_0 = global_num_elements % mpisize_64;
 
-  /* sum_1 = floor(a_0 * tau % mpisize * process / mpisize) */
-  const uint64_t sum_1 = (((a_0 << 32) % mpisize_64) * process_64) / mpisize_64;
+  const uint64_t proc_over_size = process_64 / mpisize_64;
+  const uint64_t remainder_1 = process_64 % mpisize_64;
 
-  /* sum_2 = floor(a_1 * process / mpisize) */
-  const uint64_t sum_2 = (a_1 * process_64) / mpisize_64;
-
-  /* sum_3 is the correction term of splitting the floor operation of the sum into two parts.  */
-  const uint64_t sum_3_1 = ((a_0 << 32) % mpisize_64 * (process_64 % mpisize_64)) % mpisize_64;
-  const uint64_t sum_3_2 = (a_1 * process_64) % mpisize_64;
-  const uint64_t sum_3 = (sum_3_1 + sum_3_2) / mpisize_64;
+  const uint64_t sum_0 = (elem_over_size * proc_over_size) * mpisize_64;
+  const uint64_t sum_1 = elem_over_size * (process_64 % mpisize_64);
+  const uint64_t sum_2 = proc_over_size * (global_num_elements % mpisize_64);
+  const uint64_t sum_3 = (remainder_0 * remainder_1) / mpisize_64;
 
   return (sum_0 + sum_1 + sum_2 + sum_3);
 }
