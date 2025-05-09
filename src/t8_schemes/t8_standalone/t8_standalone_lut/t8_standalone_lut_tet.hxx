@@ -634,6 +634,50 @@ constexpr int8_t t8_standalone_lut_transform_coords<T8_ECLASS_TET>[1 << T8_ELEME
 };
 
 template<>
+constexpr int8_t t8_standalone_lut_backtransform_coords<T8_ECLASS_TET>[1 << T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_TET]][T8_ELEMENT_DIM[T8_ECLASS_TET]][T8_ELEMENT_DIM[T8_ECLASS_TET]] = {
+  {
+    {1, 0, 0},
+    {0, 0, 1},
+    {0, 1, 0}
+  },
+  {
+    {0, 1, 0},
+    {0, 0, 1},
+    {1, 0, 0}
+  },
+  {
+    {1, 0, 0},
+    {0, 1, 0},
+    {0, 0, 1}
+  },
+  {
+    {0, 0, 0},
+    {0, 0, 0},
+    {0, 0, 0}
+  },
+  {
+    {0, 0, 0},
+    {0, 0, 0},
+    {0, 0, 0}
+  },
+  {
+    {0, 1, 0},
+    {1, 0, 0},
+    {0, 0, 1}
+  },
+  {
+    {0, 0, 1},
+    {0, 1, 0},
+    {1, 0, 0}
+  },
+  {
+    {0, 0, 1},
+    {1, 0, 0},
+    {0, 1, 0}
+  }
+};
+
+template<>
 constexpr t8_eclass_t t8_standalone_lut_rootface_to_eclass<T8_ECLASS_TET>[T8_ELEMENT_NUM_FACES[T8_ECLASS_TET]]={
   T8_ECLASS_TRIANGLE,
   T8_ECLASS_TRIANGLE,

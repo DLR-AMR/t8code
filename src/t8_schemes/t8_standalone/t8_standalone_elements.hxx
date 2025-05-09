@@ -121,6 +121,10 @@ template <t8_eclass TEclass>
 constexpr int8_t t8_standalone_lut_transform_coords[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_DIM[TEclass]]
                                                    [T8_ELEMENT_DIM[TEclass]];
 
+template <t8_eclass TEclass>
+constexpr int8_t t8_standalone_lut_backtransform_coords[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_DIM[TEclass]]
+                                                       [T8_ELEMENT_DIM[TEclass]];
+
 #include "t8_standalone_lut/t8_standalone_lut_triangle.hxx"
 #include "t8_standalone_lut/t8_standalone_lut_prism.hxx"
 #include "t8_standalone_lut/t8_standalone_lut_pyra.hxx"

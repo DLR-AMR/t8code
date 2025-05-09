@@ -238,14 +238,10 @@ struct t8_standalone_scheme
     if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
       const int face_sign = face % 2;
       const int face_dim = face / 2;
-      t8_debugf ("this will be the wrong answer:\n");
       return get_hypercube_face_corner_index (face_dim, face_sign, corner);
     }
     else {
       t8_standalone_element<TEclass> *el = (t8_standalone_element<TEclass> *) element;
-      t8_debugf ("face: %i, corner: %i \n", face, corner);
-      t8_debugf ("eclass: %i \n", TEclass);
-      t8_debugf ("return_value: %i \n", t8_standalone_lut_facecorner<TEclass>[1][face][corner]);
       return t8_standalone_lut_facecorner<TEclass>[el->type.to_ulong ()][face][corner];
     }
   }
@@ -318,7 +314,7 @@ struct t8_standalone_scheme
         return T8_ECLASS_TRIANGLE;
       }
       else {
-        if (face == 0)  // TODO: Check
+        if (face == 4)  // TODO: Check
           return T8_ECLASS_QUAD;
         else
           return T8_ECLASS_TRIANGLE;
@@ -810,7 +806,6 @@ struct t8_standalone_scheme
       for (int ifacechild = 0; ifacechild < num_children; ifacechild++) {
         child_indices[ifacechild]
           = t8_standalone_lut_type_face_facechildid_to_childid<TEclass>[el->type.to_ulong ()][face][ifacechild];
-        //      t8_debugf("looked up child index %i for type %i, face %i, ifacechild %i\n", child_indices[ifacechild], elem->type.to_ulong(), face, ifacechild);
       }
     }
     for (int ifacechild = num_children - 1; ifacechild >= 0; ifacechild--) {
@@ -1395,8 +1390,6 @@ struct t8_standalone_scheme
 
     const t8_child_id child_id = element_get_child_id ((const t8_element_t *) elem);
     const int num_siblings = element_get_num_siblings ((const t8_element_t *) elem);
-    t8_debugf ("child_id: %i\n", child_id);
-    t8_debugf ("num_siblings: %i\n", num_siblings);
     T8_ASSERT (0 <= child_id && child_id < num_siblings);
     /* If the element is the last child of the parent, we need to go to the parent's successor (go to a coarser level)*/
     if (child_id == num_siblings - 1) {
@@ -1508,8 +1501,6 @@ struct t8_standalone_scheme
     }
     else {
       int coords_int[T8_ELEMENT_DIM[TEclass]];
-      t8_debugf ("vertex: %i\n", vertex);
-      t8_debugf ("T8_ELEMENT_NUM_CORNERS[TEclass]: %i\n", T8_ELEMENT_NUM_CORNERS[TEclass]);
       T8_ASSERT (0 <= vertex && vertex < T8_ELEMENT_NUM_CORNERS[TEclass]);
       element_compute_coords (el, vertex, coords_int);
       for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
@@ -1548,12 +1539,22 @@ struct t8_standalone_scheme
       }
 
       for (size_t coord = 0; coord < num_coords; ++coord) {
+        double tmp_out_coords[T8_ELEMENT_DIM[TEclass]] = {};
         for (int dim = 0; dim < T8_ELEMENT_DIM[TEclass]; ++dim) {
           current_out_coords[dim] = el->coords[dim] + tmp_coords[dim] * length;
 
           current_out_coords[dim] /= (double) get_root_len ();
         }
-
+        for (int dim = 0; dim < T8_ELEMENT_DIM[TEclass]; ++dim) {
+          for (int jdim = 0; jdim < T8_ELEMENT_DIM[TEclass]; ++jdim) {
+            tmp_out_coords[dim]
+              += t8_standalone_lut_backtransform_coords<TEclass>[0][dim][jdim] * current_out_coords[jdim];
+          }
+        }
+        for (int dim = 0; dim < T8_ELEMENT_DIM[TEclass]; ++dim) {
+          current_out_coords[dim] = tmp_out_coords[dim];
+        }
+        // current_out_coords = tmp_out_coords;
         current_ref_coords += T8_ECLASS_MAX_DIM;
         current_out_coords += T8_ELEMENT_DIM[TEclass];
       }
@@ -1722,12 +1723,9 @@ struct t8_standalone_scheme
 
     const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
 
-    t8_debugf ("level: %i\n", el->level);
     for (int i = 0; i < T8_ELEMENT_DIM[TEclass]; i++) {
-      t8_debugf ("x_%i: %i \n", i, el->coords[i]);
     }
     for (int e = 0; e < T8_ELEMENT_NUM_EQUATIONS[TEclass]; e++) {
-      t8_debugf ("t_%i: %i \n", e, el->type[e]);
     }
   }
 
@@ -2033,10 +2031,20 @@ struct t8_standalone_scheme
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
       t8_standalone_element<TEclass> *el = (t8_standalone_element<TEclass> *) elem;
       int8_t type = el->type.to_ulong ();
+      int tmp_out_coords[T8_ELEMENT_DIM[TEclass]] = {};
       for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
         coords[idim]
           = el->coords[idim] + t8_type_vertex_dim_to_binary<TEclass>[type][vertex][idim] * element_get_len (el->level);
       }
+      for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; ++idim) {
+        for (int jdim = 0; jdim < T8_ELEMENT_DIM[TEclass]; ++jdim) {
+          tmp_out_coords[idim] += t8_standalone_lut_backtransform_coords<TEclass>[0][idim][jdim] * coords[jdim];
+        }
+      }
+      for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; ++idim) {
+        coords[idim] = tmp_out_coords[idim];
+      }
+      //coords = tmp_out_coords;
     }
     else {
       //Hypercubes
