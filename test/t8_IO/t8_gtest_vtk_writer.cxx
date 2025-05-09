@@ -92,7 +92,7 @@ use_c_interface<t8_forest_t> (const t8_forest_t grid, const char *fileprefix, co
                               [[maybe_unused]] const int curved_flag, const int write_ghosts, const int num_data,
                               t8_vtk_data_field_t *data, [[maybe_unused]] sc_MPI_Comm comm)
 {
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
   return t8_forest_vtk_write_file_via_API (grid, fileprefix, write_treeid, write_mpirank, write_level, write_element_id,
                                            curved_flag, write_ghosts, num_data, data);
 #else
@@ -109,7 +109,7 @@ use_c_interface<t8_cmesh_t> (const t8_cmesh_t grid, const char *fileprefix, [[ma
                              [[maybe_unused]] const int write_ghosts, [[maybe_unused]] const int num_data,
                              [[maybe_unused]] t8_vtk_data_field_t *data, [[maybe_unused]] sc_MPI_Comm comm)
 {
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
   return t8_cmesh_vtk_write_file_via_API (grid, fileprefix, comm);
 #else
   return t8_cmesh_vtk_write_file (grid, fileprefix);
@@ -195,7 +195,7 @@ TYPED_TEST_SUITE_P (vtk_writer_test);
  */
 TYPED_TEST_P (vtk_writer_test, write_vtk)
 {
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
   EXPECT_TRUE (this->writer->write_with_API (this->grid));
 #else
   EXPECT_TRUE (this->writer->write_ASCII (this->grid));

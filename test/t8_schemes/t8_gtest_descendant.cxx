@@ -50,7 +50,7 @@ class class_schemes_descendant: public testing::TestWithParam<std::tuple<int, t8
     scheme->element_destroy (eclass, 1, &test);
     scheme->unref ();
   }
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   const int maxlvl = 3;
 #else
   const int maxlvl = 4;
