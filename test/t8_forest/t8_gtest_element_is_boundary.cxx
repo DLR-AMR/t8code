@@ -42,9 +42,11 @@
  * family is refined and no other elements. This results in a highly
  * imbalanced forest. */
 static int
-t8_test_adapt_first_child (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                           const t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme_c *scheme,
-                           const int is_family, const int num_elements, t8_element_t *elements[])
+t8_test_adapt_first_child (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                           [[maybe_unused]] t8_locidx_t which_tree, const t8_eclass_t tree_class,
+                           [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme_c *scheme,
+                           [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
+                           t8_element_t *elements[])
 {
   int level = scheme->element_get_level (tree_class, elements[0]);
 
@@ -64,10 +66,12 @@ t8_test_adapt_first_child (t8_forest_t forest, t8_forest_t forest_from, t8_locid
  * This will reside in a forest where each element and each face is a boundary element.
  * */
 static int
-t8_test_adapt_quad_remove_first_and_fourth_child (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                                                  const t8_eclass_t tree_class, t8_locidx_t lelement_id,
-                                                  const t8_scheme_c *scheme, const int is_family,
-                                                  const int num_elements, t8_element_t *elements[])
+t8_test_adapt_quad_remove_first_and_fourth_child ([[maybe_unused]] t8_forest_t forest,
+                                                  [[maybe_unused]] t8_forest_t forest_from,
+                                                  [[maybe_unused]] t8_locidx_t which_tree, const t8_eclass_t tree_class,
+                                                  [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme_c *scheme,
+                                                  [[maybe_unused]] const int is_family,
+                                                  [[maybe_unused]] const int num_elements, t8_element_t *elements[])
 {
   /* For the purpose of this test, this function should only get called with quad elements. */
   SC_CHECK_ABORT (scheme->element_get_shape (tree_class, elements[0]) == T8_ECLASS_QUAD,
