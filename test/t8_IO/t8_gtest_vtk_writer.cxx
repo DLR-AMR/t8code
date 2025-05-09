@@ -120,6 +120,8 @@ void
 vtk_writer_test_fill_data (const t8_locidx_t cells_to_write_count, std::vector<double> &scalar_data,
                            std::vector<double> &vector_data)
 {
+  scalar_data.resize (cells_to_write_count);
+  vector_data.resize (3 * cells_to_write_count);
   // Fill scalar data vector with entries 0,1/10,...,(N-1)/10
   //    vector[n] = (n/10.)
   // Fill vector data vector with entries (0, 0, 42), (0.1,-0.1,42), ...
