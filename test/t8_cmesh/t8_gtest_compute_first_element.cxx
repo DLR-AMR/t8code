@@ -71,6 +71,30 @@ class t8_gtest_rank_times_global_num_elems_over_size: public testing::TestWithPa
   uint32_t size_iter;
 };
 
+
+TEST_P (t8_gtest_rank_times_global_num_elems_over_size, small_numbers)
+{
+  uint64_t num_elems = 1;
+  for (uint32_t ielem = 1; ielem < max_iter; ++ielem) {
+    num_elems += elem_growth;
+    uint32_t size = 1;
+    for (uint32_t isize = 1; isize < max_iter; ++isize) {
+      size += size_growth;
+      uint32_t rank = 1;
+      /* Enforce rank <= size */
+      for (uint32_t irank = 1; irank * rank_growth < size && irank < max_iter; ++irank) {
+        rank += rank_growth;
+        /* We only test for small numbers (much smaller that 2^64-1 here). Therefore this computation
+         * will not overflow. */
+        const uint64_t check_result = rank * num_elems / size;
+        const uint64_t computed_result = t8_cmesh_get_first_element_of_process (rank, size, num_elems);
+        EXPECT_EQ (check_result, computed_result)
+          << "rank: " << rank << " num_elems: " << num_elems << " size: " << size;
+      }
+    }
+  }
+}
+
 TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
 {
   /** 
@@ -78,14 +102,36 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
    * The formula is used in the t8code library to compute the number of elements
    * that are owned by a rank.
    * 
-   * We use a recursive approach to compute the result.
-   * The result in the innermost loop is computed by:
-   * check_result(n, m) = num_elems^n * rank^m / size
+   * We use a recursive approach to compute the result.The number of ranks and elements growth exponentially to 
+   * quickly reach the maximum values of uint32_t and uint64_t. We grow the number of elements in the outer loop 
+   * and the number of ranks in the inner loop. The rate of growth is determined by the input of the test. 
+   * Let n be the index of the outer loop and m the index of the inner loop.
    * 
-   * To prevent overflow we use the following approach:
-   * floor (A^n*B/C) = A * floor (A^(n-1)*B/C) + floor(A/C)*(A^(n-1)*B % C) 
+   * The result in the innermost loop is computed by:
+   * check_result(n, m) = num_elems * rank / size = elem_growth^n * rank_growth^m / size
+   * 
+   * To prevent overflow we use a recursive approach. Both in the inner and outer loop we use the following
+   * formula to compute the control result based on the previous result:
+   * floor (A^n*B/C) = A * floor (A^(n-1)*B/C) + floor (A * ((A^(n-1)B) % C) / C)
    * and + (A % C)*((A^(n-1)B) % C) / C is used to compute the remainder of the next step. 
-   * for the inner and outer loop. 
+   * for the inner and outer loop.
+   * We do this trick to compute the result with respect to ielem in the outer loop, 
+   * but also to compute the result with respect to irank in the inner loop.
+   * 
+   * 
+   * check_result is the result with respect to ielem and irank.
+   * check_result_elem is the result with respect to ielem.
+   * 
+   * check_result_elem is used as a starting point for check_result in the inner loop.
+   * check_result_elem_(n-1) ^= floor(A^(n-1)*B/C)
+   * elem_growth ^= A
+   * size ^= C
+   * check_result_elem_remain_(n-1) ^= (A % C)*((A^(n-1)B) % C)
+   * check_result_elem = check_result_elem * elem_growth + elem_growth * check_result_elem_remain / size
+   * check_result_elem_remain = (elem_growth * check_result_elem_remain) % size
+   * 
+   * For the inner loop the roles of A stays fixed and B is multiplied by rank_growth.
+   * 
    * We use integer division, therefore we store the remainder of each update to 
    * prevent rounding errors.
   */
@@ -131,28 +177,6 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
   }
 }
 
-TEST_P (t8_gtest_rank_times_global_num_elems_over_size, small_numbers)
-{
-  uint64_t num_elems = 1;
-  for (uint32_t ielem = 1; ielem < max_iter; ++ielem) {
-    num_elems += elem_growth;
-    uint32_t size = 1;
-    for (uint32_t isize = 1; isize < max_iter; ++isize) {
-      size += size_growth;
-      uint32_t rank = 1;
-      /* Enforce rank <= size */
-      for (uint32_t irank = 1; irank * rank_growth < size && irank < max_iter; ++irank) {
-        rank += rank_growth;
-        /* We only test for small numbers (much smaller that 2^64-1 here). Therefore this computation
-         * will not overflow. */
-        const uint64_t check_result = rank * num_elems / size;
-        const uint64_t computed_result = t8_cmesh_get_first_element_of_process (rank, size, num_elems);
-        EXPECT_EQ (check_result, computed_result)
-          << "rank: " << rank << " num_elems: " << num_elems << " size: " << size;
-      }
-    }
-  }
-}
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_rank_times_global_num_elems_over_size,
                           t8_gtest_rank_times_global_num_elems_over_size,
