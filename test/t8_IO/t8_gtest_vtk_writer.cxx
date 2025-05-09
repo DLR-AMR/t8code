@@ -159,14 +159,15 @@ class vtk_writer_test: public testing::Test {
     strncpy (vtk_data[1].description, "Testdata vector (i/10.,-i/10.,42)", BUFSIZ);
     vtk_data[1].data = vector_data.data ();
 
-    writer = new vtk_writer<grid_t> (true, true, true, true, true, true, std::string ("test_vtk"), num_vtk_data,
+    writer = new vtk_writer<grid_t> (true, true, true, true, true, true, std::string ("test_vtk_writer"), num_vtk_data,
                                      vtk_data, sc_MPI_COMM_WORLD);
   }
 
   int
   grid_c_interface ()
   {
-    return use_c_interface (grid, "test_vtk_c_interface", 1, 1, 1, 1, 1, 1, num_vtk_data, vtk_data, sc_MPI_COMM_WORLD);
+    return use_c_interface (grid, "test_vtk_writer_c_interface", 1, 1, 1, 1, 1, 1, num_vtk_data, vtk_data,
+                            sc_MPI_COMM_WORLD);
   }
 
   void
