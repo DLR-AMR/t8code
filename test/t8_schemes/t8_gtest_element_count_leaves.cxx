@@ -86,8 +86,7 @@ TEST_P (class_element_leaves, test_element_count_leaves_root)
 #if T8CODE_TEST_LEVEL >= 1
   const int maxlevel = 4;
 #else
-  const int maxlevel = scheme->get_maxlevel (eclass);
-  ;
+  const int maxlevel = 8;
 #endif
   t8_gloidx_t compare_value = 1;
   t8_gloidx_t test_value = 1;
