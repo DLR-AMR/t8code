@@ -48,7 +48,7 @@ struct t8_forest_ghost_definition
   t8_forest_ghost_definition ()
   {
     t8_refcount_init (&rc);
-    t8_debugf ("Constructed the a None ghost_definition.\n");
+    t8_debugf ("Constructed a None ghost_definition.\n");
   }
 
   /**

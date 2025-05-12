@@ -41,11 +41,11 @@ typedef struct t8_tree *t8_tree_t;
 /** This type controls, which neighbors count as ghost elements.
  * Currently, we support face-neighbors. Vertex and edge neighbors will eventually be added. */
 typedef enum {
-  T8_GHOST_NONE = 0,   /**< Do not create ghost layer. */
-  T8_GHOST_FACES,      /**< Consider all face (codimension 1) neighbors. */
-  T8_GHOST_EDGES,      /**< Consider all edge (codimension 2) and face neighbors. */
-  T8_GHOST_VERTICES,   /**< Consider all vertex (codimension 3) and edge and face neighbors. */
-  T8_GHOST_USERDEFINED /**< For user-defined neighborhoods */
+  T8_GHOST_NONE = 0,    /**< Do not create ghost layer. */
+  T8_GHOST_FACES,       /**< Consider all face (codimension 1) neighbors. */
+  T8_GHOST_EDGES,       /**< Consider all edge (codimension 2) and face neighbors. */
+  T8_GHOST_VERTICES,    /**< Consider all vertex (codimension 3) and edge and face neighbors. */
+  T8_GHOST_USER_DEFINED /**< For user-defined neighborhoods */
 } t8_ghost_type_t;
 
 /** This typedef is needed as a helper construct to 
@@ -362,8 +362,8 @@ t8_forest_set_ghost (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_typ
 
 /** Set a ghost_definition
  * In application schoud only used if the user creates its own ghost_definition class (type = userderdefined)
- * \param [in]    forest          The forest
- * \param [in]    do_ghost        If 0 no ghost layer will be computed
+ * \param [in]    forest          The forest.
+ * \param [in]    do_ghost        If 0 no ghost layer will be computed.
  * \param [in]    ghost_definition Pointer to an object of the class ghost_definition or a derived class
  *                                The forest takes ownership of the ghost_definition
  * \note Only if do_ghost is not 0 and ghost_definition is not NULL would an old ghost_definition of the forest be overwritten.

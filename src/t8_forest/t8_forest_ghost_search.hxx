@@ -30,6 +30,12 @@
 struct t8_forest_ghost_w_search: public t8_forest_ghost_definition
 {
  public:
+  /** There are tree different constructors for the class t8_forest_ghost_w_search: 
+   *  - t8_forest_ghost_w_search ()
+   *  - t8_forest_ghost_w_search (t8_forest_search_fn search_function)
+   *  - t8_forest_ghost_w_search (const t8_ghost_type_t ghost_type)
+   */
+
   /**
     * Constructors of a t8_forest_ghost_w_search of type NONE
     */
@@ -44,7 +50,7 @@ struct t8_forest_ghost_w_search: public t8_forest_ghost_definition
    * \note the t8_ghost_type_t of the object will we userdefined
    */
   explicit t8_forest_ghost_w_search (t8_forest_search_fn search_function)
-    : t8_forest_ghost_definition (T8_GHOST_USERDEFINED), search_fn (search_function)
+    : t8_forest_ghost_definition (T8_GHOST_USER_DEFINED), search_fn (search_function)
   {
     T8_ASSERT (search_function != nullptr);
   }
@@ -83,7 +89,7 @@ struct t8_forest_ghost_w_search: public t8_forest_ghost_definition
 
   /**
    * Constructor for the derivided classes to set the type and the search_function.
-   * \param [in] ghost_type       The type (faces, edges, userdefind, ...) of the ghost_definition
+   * \param [in] ghost_type       The type (faces, edges, user defined, ...) of the ghost_definition
    * \param [in] search_function  Function of type t8_forest_search_fn, used as callback function in search_for_ghost_elements
    */
   t8_forest_ghost_w_search (const t8_ghost_type_t ghost_type, const t8_forest_search_fn search_function)

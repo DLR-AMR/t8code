@@ -1872,10 +1872,10 @@ t8_forest_ghost_destroy (t8_forest_ghost_t *pghost)
 }
 
 /**
- * Implementation of the ghost-interface
+ * Implementation of the ghost-definition
  * wrapper for the abstract base classes and
  * implementation of the communication steps
- * and implementation of the derived class search
+ * and implementation of the derived class search.
 */
 
 t8_ghost_type_t
@@ -1976,8 +1976,8 @@ t8_forest_ghost_w_search::t8_forest_ghost_w_search (const t8_ghost_type_t ghost_
   if (ghost_type == T8_GHOST_FACES) {
     search_fn = t8_forest_ghost_search_boundary;
   }
-  SC_CHECK_ABORT (ghost_type != T8_GHOST_USERDEFINED,
-                  "use t8_forest_ghost_w_search(t8_forest_search_fn search_function) for userdefined ghost");
+  SC_CHECK_ABORT (ghost_type != T8_GHOST_USER_DEFINED,
+                  "use t8_forest_ghost_w_search(t8_forest_search_fn search_function) for user defined ghost");
 }
 
 bool
@@ -2068,7 +2068,7 @@ t8_forest_ghost_definition_face_new (const int version)
 }
 
 int
-t8_forest_ghost_definition_face_get_version (t8_forest_ghost_definition_c *ghost_definition)
+t8_forest_ghost_definition_face_get_version (const t8_forest_ghost_definition_c *ghost_definition)
 {
   T8_ASSERT (ghost_definition != NULL);
   T8_ASSERT (ghost_definition->t8_ghost_get_type () == T8_GHOST_FACES);

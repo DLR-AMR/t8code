@@ -43,9 +43,10 @@ t8_forest_ghost_definition_face_new (const int version);
  * Return for a ghost_definition of Type FACE the ghost_algorithm / ghost_version (1, 2 or 3)
  * \param [in]    ghost_definition Pointer to object of class t8_forest_ghost_face
  * \return the version of the ghost definition
+ * \note The function only works for ghost definition objects of the face class.
  */
 int
-t8_forest_ghost_definition_face_get_version (t8_forest_ghost_definition_c *ghost_definition);
+t8_forest_ghost_definition_face_get_version (const t8_forest_ghost_definition_c *ghost_definition);
 
 /**
  * Satisfy the C interface of forest
