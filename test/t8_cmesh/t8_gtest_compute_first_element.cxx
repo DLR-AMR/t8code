@@ -125,7 +125,7 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
    * check_result_elem_(n-1) ^= floor(A^(n-1)*B/C)
    * elem_growth ^= A
    * size ^= C
-   * check_result_elem_remain_(n-1) ^= (A % C)*((A^(n-1)B) % C)
+   * check_result_elem_remain_(n-1) ^= (A * A^(n-1)B) % C)
    * check_result_elem = check_result_elem * elem_growth + elem_growth * check_result_elem_remain / size
    * check_result_elem_remain = (elem_growth * check_result_elem_remain) % size
    * 
