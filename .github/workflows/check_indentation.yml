@@ -48,12 +48,6 @@ jobs:
       with:
         fetch-tags: true # required to get version tags
         fetch-depth: 0    # required to get all history, especially the version tags      
-    # Deactivated the install sudo because it failed.
-    #- name: install sudo
-    #  run: apt update && apt install sudo
-    - name: Update packages
-      run: sudo apt-get update && sudo apt-get upgrade -y
-    # This step is necessary to get the newest package data
     - name: Install indent
       run: pip install clang-format==17.0.1
     - name: Indentation check

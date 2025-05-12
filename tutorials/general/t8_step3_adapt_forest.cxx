@@ -129,7 +129,7 @@ t8_step3_adapt_forest (t8_forest_t forest)
 {
   t8_forest_t forest_adapt;
   struct t8_step3_adapt_data adapt_data = {
-    { 0.5, 0.5, 1 }, /* Midpoints of the sphere. */
+    { 0.5, 0.5, 0 }, /* Midpoints of the sphere. */
     0.2,             /* Refine if inside this radius. */
     0.4              /* Coarsen if outside this radius. */
   };
