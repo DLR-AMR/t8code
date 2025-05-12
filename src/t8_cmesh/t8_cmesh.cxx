@@ -1539,6 +1539,15 @@ t8_cmesh_get_neighs (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, int bdy_dim, int bdy
 {
   std::vector<t8_neigh_info> result;
   if (bdy_dim == 0) {
+    //get cmesh connectivity structure
+    t8_eclass_t eclass = t8_cmesh_get_tree_class (cmesh, t8_cmesh_get_local_id (cmesh, gtreeid));
+    t8_gloidx_t gvertexid
+      = cmesh->vertex_connectivity->get_global_vertex_of_tree (cmesh, gtreeid, bdy_id, t8_eclass_num_vertices[eclass]);
+    const auto tree_list = cmesh->vertex_connectivity->get_tree_list_of_vertex (gvertexid);
+    for (const auto &tree_connection : tree_list) {
+      result.push_back (t8_neigh_info { tree_connection.first, tree_connection.second, 0 });
+    }
+
 #if 0 
   t8_debugf("enter cmesh_get_neighs for gtreeid %li, bdy_dim %i, bdy_id %i for dealii example\n", gtreeid, bdy_dim, bdy_id);
   if(gtreeid==0){
