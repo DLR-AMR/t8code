@@ -71,7 +71,6 @@ class t8_gtest_rank_times_global_num_elems_over_size: public testing::TestWithPa
   uint32_t size_iter;
 };
 
-
 TEST_P (t8_gtest_rank_times_global_num_elems_over_size, small_numbers)
 {
   uint64_t num_elems = 1;
@@ -176,7 +175,6 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
     size *= size_growth;
   }
 }
-
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_rank_times_global_num_elems_over_size,
                           t8_gtest_rank_times_global_num_elems_over_size,
