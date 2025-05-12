@@ -32,20 +32,27 @@
 #include <t8_geometry/t8_geometry_handler.hxx>
 
 /**
- * Compute the first element of a process in a partitioned mesh, via floor(process * mpisize / global_num_elements).
- * Prevents overflow by splitting global_num_elements into two 32 bit integers.
- * global_num_elements = a_0 * tau + a_1, tau = 2^32.
+ * Compute the first element of a process in a partitioned mesh, via floor(process * global_num_elements / mpisize).
+ * Prevents overflowing by using division with remainder to store partial results in uint64_t.
+ * We also take into account that process <= mpisize.
+ * Both process and global_num_elements can be written as:
  * 
- * floor(a_0 * tau + a_1) * process / mpisize
- * = floor (a_0 * tau * process / mpisize + a_1 * process / mpisize)
- * (add the fractional part of the summands and take the floor) to split the computation into separate parts.
- * = floor (a_0 * tau * process / mpisize) + floor (a_1 * process / mpisize) + floor ((a_o*tau*process) % mpisize + a_1*process % mpisize) / mpisize)
- * the first term can computed as:
- * floor (a_0 * tau * process / mpisize)
- * = floor (floor (a_0 * tau / mpisize * process ) + (a_0 * tau % mpisize) * process / mpisize)
- * We divide a_0 * tau by mpisize first to prevent an overflow. The second term corrects for the rounding error.
+ * global_num_elements = elem_over_size * mpisize + remainder_0
+ * process = proc_over_size * mpisize + remainder_1
+ * with:
+ * elem_over_size = global_num_elements / mpisize
+ * proc_over_size = process / mpisize
+ * and remainders:
+ * remainder_0 = global_num_elements % mpisize
+ * remainder_1 = process % mpisize
+ * 
+ * Putting this together in the computation of first_element = global_num_elements * process / mpisize gives:
+ * 
+ * = elem_over_size * proc_over_size * mpisize + elem_over_size * process % mpisize
+ *   + proc_over_size * global_num_elements % mpisize + (remainder_0 * remainder_1) / mpisize
  *
- * Adding all summands gives the result.
+ * Each variable is less than 2^32-1 taking into account that process <= mpisize 
+ * we can assure that the first summand does not overflow
  *
  * This enables us to partition 2^64-1 elements over 2^32-1 processes.
  * Update this function if we have supercomputers with more than 2^32-1 processes, or need larger meshes.
@@ -64,27 +71,22 @@ t8_cmesh_get_first_element_of_process (const uint32_t process, const uint32_t mp
 {
   T8_ASSERT (mpisize > 0);
   T8_ASSERT (process <= mpisize);
-  /* Split the uint64_t */
-  const uint64_t a_0 = (global_num_elements >> 32);
-  const uint64_t a_1 = (global_num_elements << 32) >> 32;
 
   /* Cast everything into uint64_t */
   const uint64_t process_64 = static_cast<uint64_t> (process);
   const uint64_t mpisize_64 = static_cast<uint64_t> (mpisize);
 
-  /* sum_0 = floor(a_0 * tau / mpisize * process) */
-  const uint64_t sum_0 = (a_0 << 32) / mpisize_64 * process_64;
+  /* Split the uint64_t */
+  const uint64_t elem_over_size = global_num_elements / mpisize_64;
+  const uint64_t remainder_0 = global_num_elements % mpisize_64;
 
-  /* sum_1 = floor(a_0 * tau % mpisize * process / mpisize) */
-  const uint64_t sum_1 = (((a_0 << 32) % mpisize_64) * process_64) / mpisize_64;
+  const uint64_t proc_over_size = process_64 / mpisize_64;
+  const uint64_t remainder_1 = process_64 % mpisize_64;
 
-  /* sum_2 = floor(a_1 * process / mpisize) */
-  const uint64_t sum_2 = (a_1 * process_64) / mpisize_64;
-
-  /* sum_3 is the correction term of splitting the floor operation of the sum into two parts.  */
-  const uint64_t sum_3_1 = ((a_0 << 32) % mpisize_64 * (process_64 % mpisize_64)) % mpisize_64;
-  const uint64_t sum_3_2 = (a_1 * process_64) % mpisize_64;
-  const uint64_t sum_3 = (sum_3_1 + sum_3_2) / mpisize_64;
+  const uint64_t sum_0 = (elem_over_size * proc_over_size) * mpisize_64;
+  const uint64_t sum_1 = elem_over_size * (process_64 % mpisize_64);
+  const uint64_t sum_2 = proc_over_size * (global_num_elements % mpisize_64);
+  const uint64_t sum_3 = (remainder_0 * remainder_1) / mpisize_64;
 
   return (sum_0 + sum_1 + sum_2 + sum_3);
 }
