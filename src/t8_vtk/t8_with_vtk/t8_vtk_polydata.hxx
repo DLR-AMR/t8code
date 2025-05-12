@@ -29,8 +29,7 @@
 #define T8_CMESH_VTK_POLYDATA
 
 #include <t8.h>
-#include "t8_vtk_types.h"
-#if T8_ENABLE_VTK
+#include <t8_vtk/t8_vtk_types.h>
 #include <vtkPolyData.h>
 #include <vtkSmartPointer.h>
 #include <vtkCellData.h>
@@ -50,5 +49,4 @@
 vtk_read_success_t
 t8_read_polyData (const char *filename, vtkDataSet *grid);
 
-#endif /* T8_ENABLE_VTK */
 #endif /* T8_CMESH_VTK_POLYDATA */
