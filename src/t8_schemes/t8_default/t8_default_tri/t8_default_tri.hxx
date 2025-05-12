@@ -674,7 +674,7 @@ class t8_default_scheme_tri: public t8_default_scheme_common<t8_default_scheme_t
       }
     }
     else if ((*sp)[0] == (1 << get_maxlevel ())) {
-      if ((*sp)[1] == 1) {
+      if ((*sp)[1] == (1 << get_maxlevel ())) {
         *boundary_dim = 0;
         *boundary_id = 2;
       }
