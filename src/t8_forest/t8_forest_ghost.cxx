@@ -723,7 +723,10 @@ t8_forest_ghost_search_vertex_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
     const auto cmesh_neighs = t8_cmesh_get_neighs (cmesh, t8_forest_global_tree_id (forest, ltreeid), bdy_dim, bdy_id);
     t8_debugf ("$$$$$$$$$$$ num neighs: %i $$$$$$$$$$$$$\n", cmesh_neighs.size ());
     for (const auto &neigh : cmesh_neighs) {
-      t8_debugf ("look at cmesh neighbor %li \n", neigh.neighid);
+      t8_debugf ("look at cmesh neighbor %li with neigh_bdy_id %i \n", neigh.neighid, neigh.neigh_bdy_id);
+      if (neigh.neighid == t8_forest_global_tree_id (forest, ltreeid) && neigh.neigh_bdy_id == bdy_id) {
+        continue;
+      }
       t8_eclass neigh_class = t8_cmesh_get_class (cmesh, neigh.neighid);
       scheme->point_transform (bdy_class, bdy_point, neigh.orientation, neigh_bdy_point);
       scheme->point_new (neigh_class, &neigh_point);
