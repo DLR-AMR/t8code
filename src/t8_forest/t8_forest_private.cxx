@@ -20,10 +20,11 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <t8_schemes/t8_scheme.hxx>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_schemes/t8_scheme.hxx>
+#include <t8_data/t8_element_array_iterator.hxx>
 
 T8_EXTERN_C_BEGIN ();
 
