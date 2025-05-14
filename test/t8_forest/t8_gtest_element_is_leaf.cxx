@@ -86,8 +86,7 @@ class element_is_leaf_or_ghost: public testing::TestWithParam<std::tuple<int, in
       t8_cmesh_unref (&cmesh);
       GTEST_SKIP ();
     }
-    /* Build the default scheme (TODO: Test this with all schemes) */
-    scheme = t8_scheme_new_default ();
+
     forest = t8_forest_new_uniform (cmesh, scheme, level, 1, sc_MPI_COMM_WORLD);
     t8_forest_ref (forest);
     //const int maxlevel = t8_forest_get_maxlevel (forest);
