@@ -27,10 +27,10 @@ function(setup_target_for_coverage)
     GENHTML_PATH
   )
   if(NOT LCOV_PATH)
-    message(FATAL_ERROR "LCOV not found! Aborting...")
+    message(FATAL_ERROR "LCOV not found but required for code coverage report! Aborting...")
   endif()
   if(NOT GENHTML_PATH)
-    message(FATAL_ERROR "genhtml not found! Aborting...")
+    message(FATAL_ERROR "genhtml not found but required for code coverage report! Aborting...")
   endif()
 
   # Project dir is used as base dir for lcov.
