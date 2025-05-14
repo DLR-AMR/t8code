@@ -20,10 +20,11 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+#include <t8_schemes/t8_scheme.hxx>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_element.hxx>
+#include <t8_data/t8_element_array_iterator.hxx>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -61,7 +62,7 @@ t8_forest_get_tree_element_array_mutable (const t8_forest_t forest, t8_locidx_t 
  * such that the element at position i has a smaller id than the given one.
  * If no such i exists, return -1.
  */
-static t8_locidx_t
+t8_locidx_t
 t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_linearidx_t element_id, const int maxlevel)
 {
   const t8_scheme *scheme = t8_element_array_get_scheme (elements);
