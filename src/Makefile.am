@@ -143,7 +143,7 @@ libt8_compiled_sources = \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_zero.cxx \
   src/t8_geometry/t8_geometry_implementations/t8_geometry_examples.cxx \
   src/t8_forest/t8_forest_partition.cxx src/t8_forest/t8_forest.cxx \
-  src/t8_forest/t8_forest_private.c \
+  src/t8_forest/t8_forest_private.cxx \
   src/t8_forest/t8_forest_ghost.cxx src/t8_forest/t8_forest_iterate.cxx \
   src/t8_forest/t8_forest_search/t8_forest_search.cxx \
   src/t8_version.c \

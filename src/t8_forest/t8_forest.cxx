@@ -45,9 +45,6 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
 #endif
-#include <t8_data/t8_element_array_iterator.hxx>
-
-#include <algorithm>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -1408,41 +1405,6 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
     forest->global_num_elements = 0;
     forest->incomplete_trees = -1;
   }
-}
-
-/** \brief Search for a linear element id (at forest->maxlevel) in a sorted array of
- * elements. If the element does not exist, return the largest index i
- * such that the element at position i has a smaller id than the given one.
- * If no such i exists, return -1.
- */
-static t8_locidx_t
-t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_linearidx_t element_id, const int maxlevel)
-{
-  const t8_scheme *scheme = t8_element_array_get_scheme (elements);
-  const t8_eclass_t tree_class = t8_element_array_get_tree_class (elements);
-  /* At first, we check whether any element has smaller id than the
-   * given one. */
-  const t8_element_t *query = t8_element_array_index_int (elements, 0);
-  const t8_linearidx_t query_id = scheme->element_get_linear_id (tree_class, query, maxlevel);
-  if (query_id > element_id) {
-    /* No element has id smaller than the given one. */
-    return -1;
-  }
-
-  /* We search for the first element in the array that is greater than the given element id. */
-  auto elem_iter
-    = std::upper_bound (t8_element_array_begin (elements), t8_element_array_end (elements), element_id,
-                        [&maxlevel, &scheme, &tree_class] (const t8_linearidx_t element_id_,
-                                                           const t8_element_array_iterator::value_type &elem_ptr) {
-                          return (element_id_ < scheme->element_get_linear_id (tree_class, elem_ptr, maxlevel));
-                        });
-
-  /* After we found the element with an id greater than the given one, we are able to jump one index back.
-   * This guarantees us that the element at (index - 1) is smaller or equal to the given element id.
-   * In case we do not find an element that is greater than the given element_id, the binary search returns
-   * the end-iterator of the element array. In that case, we want to return the last index from the element
-   * array. */
-  return elem_iter.get_current_index () - 1;
 }
 
 t8_eclass_t
@@ -3657,11 +3619,10 @@ t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id, t8_locidx_t 
 const t8_element_t *
 t8_forest_get_element_in_tree (t8_forest_t forest, t8_locidx_t ltreeid, t8_locidx_t leid_in_tree)
 {
-  t8_tree_t tree;
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (0 <= ltreeid && ltreeid < t8_forest_get_num_local_trees (forest));
 
-  tree = t8_forest_get_tree (forest, ltreeid);
+  const t8_tree_t tree = t8_forest_get_tree (forest, ltreeid);
   const t8_element_t *element = t8_forest_get_tree_element (tree, leid_in_tree);
   T8_ASSERT (t8_forest_element_is_leaf (forest, element, ltreeid));
   return element;
