@@ -79,7 +79,7 @@ t8_dvertex_parent (const t8_dvertex_t *v, t8_dvertex_t *parent);
 void
 t8_dvertex_child (const t8_dvertex_t *v, t8_dvertex_t *child);
 
-/** Computes the nearest common ancestor of two vertexs in the same tree.
+/** Computes the nearest common ancestor of two vertices in the same tree.
  * \param [in]     l1 First input vertex.
  * \param [in]     l2 Second input vertex.
  * \param [in,out] r Existing vertex whose data will be filled.
@@ -121,9 +121,9 @@ t8_dvertex_sibling (const t8_dvertex_t *v, int sibid, t8_dvertex_t *s);
 void
 t8_dvertex_childrenpv (const t8_dvertex_t *t, t8_dvertex_t *c[T8_DVERTEX_CHILDREN]);
 
-/** Check whether a collection of two vertexs is a family in Morton order.
- * \param [in]     f  An array of two vertexs.
- * \return            Nonzero if \a f is a family of vertexs.
+/** Check whether a collection of two vertices is a family in Morton order.
+ * \param [in]     f  An array of two vertices.
+ * \return            Nonzero if \a f is a family of vertices.
  */
 int
 t8_dvertex_is_familypv (const t8_dvertex_t *f[]);
