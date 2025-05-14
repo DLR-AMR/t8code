@@ -23,7 +23,7 @@
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_element.hxx>
+#include <t8_schemes/t8_scheme.hxx>
 
 T8_EXTERN_C_BEGIN ();
 
