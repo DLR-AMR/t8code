@@ -75,13 +75,13 @@ typedef struct t8_forest
 
   sc_MPI_Comm mpicomm; /**< MPI communicator to use. */
   t8_cmesh_t cmesh;    /**< Coarse mesh to use. */
-  //t8_scheme_t        *scheme;        /**< Scheme for element types. */
-  t8_scheme_cxx_t *scheme_cxx; /**< Scheme for element types. */
-  int maxlevel;                /**< The maximum allowed refinement level for elements in this forest. */
-  int maxlevel_existing;       /**< If >= 0, the maximum occurring refinemnent level of a forest element. */
-  int do_dup;                  /**< Communicator shall be duped. */
-  int dimension;               /**< Dimension inferred from \b cmesh. */
-  int incomplete_trees;        /**< Flag to check whether the forest has (potential) incomplete trees.
+  //t8_scheme_c        *scheme;        /**< Scheme for element types. */
+  const t8_scheme_c *scheme; /**< Scheme for element types. */
+  int maxlevel;              /**< The maximum allowed refinement level for elements in this forest. */
+  int maxlevel_existing;     /**< If >= 0, the maximum occurring refinemnent level of a forest element. */
+  int do_dup;                /**< Communicator shall be duped. */
+  int dimension;             /**< Dimension inferred from \b cmesh. */
+  int incomplete_trees;      /**< Flag to check whether the forest has (potential) incomplete trees.
                                              A tree is incomplete if an element has been removed from it.
                                              Once an element got removed, the flag sets to 1 (true) and stays. 
                                              For a committed forest this flag is either true on all ranks or

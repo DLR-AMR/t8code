@@ -22,219 +22,253 @@
 
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 #include <t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.hxx>
-#include <t8_schemes/t8_default/t8_default_vertex/t8_dvertex_bits.h>
 
-/* We want to export the whole implementation to be callable from "C" */
-T8_EXTERN_C_BEGIN ();
+/** Print a vertex (unused static helper function for debugging)
+ * \param [in] v  vertex to be considered.
+ */
+inline static void
+t8_dvertex_debug_print (const t8_dvertex_t *v)
+{
+  t8_debugf ("level: %i\n", v->level);
+}
+
+size_t
+t8_default_scheme_vertex::get_element_size (void) const
+{
+  return sizeof (t8_dvertex_t);
+}
 
 int
-t8_default_scheme_vertex_c::t8_element_maxlevel (void) const
+t8_default_scheme_vertex::get_maxlevel (void) const
 {
   return T8_DVERTEX_MAXLEVEL;
 }
 
 int
-t8_default_scheme_vertex_c::t8_element_level (const t8_element_t *elem) const
+t8_default_scheme_vertex::element_get_level (const t8_element_t *elem) const
 {
-  T8_ASSERT (t8_element_is_valid (elem));
-  return t8_dvertex_get_level ((const t8_dvertex_t *) elem);
+  T8_ASSERT (element_is_valid (elem));
+  return ((const t8_dvertex_t *) elem)->level;
 }
 
 void
-t8_default_scheme_vertex_c::t8_element_copy (const t8_element_t *source, t8_element_t *dest) const
+t8_default_scheme_vertex::element_copy (const t8_element_t *source, t8_element_t *dest) const
 {
-  T8_ASSERT (t8_element_is_valid (source));
-  T8_ASSERT (t8_element_is_valid (dest));
-  t8_dvertex_copy ((const t8_dvertex_t *) source, (t8_dvertex_t *) dest);
+  T8_ASSERT (element_is_valid (source));
+  T8_ASSERT (element_is_valid (dest));
+  memcpy ((t8_dvertex_t *) dest, (const t8_dvertex_t *) source, sizeof (t8_dvertex_t));
 }
 
 int
-t8_default_scheme_vertex_c::t8_element_compare (const t8_element_t *elem1, const t8_element_t *elem2) const
+t8_default_scheme_vertex::element_compare (const t8_element_t *elem1, const t8_element_t *elem2) const
 {
-  return t8_dvertex_compare ((const t8_dvertex_t *) elem1, (const t8_dvertex_t *) elem2);
+  return ((const t8_dvertex_t *) elem1)->level - ((const t8_dvertex_t *) elem2)->level;
 }
 
 int
-t8_default_scheme_vertex_c::t8_element_equal (const t8_element_t *elem1, const t8_element_t *elem2) const
+t8_default_scheme_vertex::element_is_equal (const t8_element_t *elem1, const t8_element_t *elem2) const
 {
-  return t8_dvertex_equal ((const t8_dvertex_t *) elem1, (const t8_dvertex_t *) elem2);
+  return ((const t8_dvertex_t *) elem1)->level == ((const t8_dvertex_t *) elem2)->level;
 }
 
 void
-t8_default_scheme_vertex_c::t8_element_parent (const t8_element_t *elem, t8_element_t *parent) const
+t8_default_scheme_vertex::element_get_parent (const t8_element_t *elem, t8_element_t *parent) const
 {
   const t8_dvertex_t *v = (const t8_dvertex_t *) elem;
   t8_dvertex_t *p = (t8_dvertex_t *) parent;
 
-  T8_ASSERT (t8_element_is_valid (elem));
-  T8_ASSERT (t8_element_is_valid (parent));
-  t8_dvertex_parent (v, p);
+  T8_ASSERT (element_is_valid (elem));
+  T8_ASSERT (element_is_valid (parent));
+  T8_ASSERT (v->level > 0);
+
+  /* Set the parent's level */
+  p->level = v->level - 1;
 }
 
 void
-t8_default_scheme_vertex_c::t8_element_sibling (const t8_element_t *elem, int sibid, t8_element_t *sibling) const
+t8_default_scheme_vertex::element_get_sibling (const t8_element_t *elem, [[maybe_unused]] const int sibid,
+                                               t8_element_t *sibling) const
 {
-  const t8_dvertex_t *v = (const t8_dvertex_t *) elem;
-  t8_dvertex_t *s = (t8_dvertex_t *) sibling;
+  T8_ASSERT (element_is_valid (elem));
+  T8_ASSERT (element_is_valid (sibling));
+  T8_ASSERT (sibid == 0);
 
-  T8_ASSERT (t8_element_is_valid (elem));
-  T8_ASSERT (t8_element_is_valid (sibling));
-  t8_dvertex_sibling (v, sibid, s);
+  this->element_copy (elem, sibling);
 }
 
 int
-t8_default_scheme_vertex_c::t8_element_num_faces (const t8_element_t *elem) const
+t8_default_scheme_vertex::element_get_num_faces ([[maybe_unused]] const t8_element_t *elem) const
 {
-  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (element_is_valid (elem));
   return T8_DVERTEX_FACES;
 }
 
 int
-t8_default_scheme_vertex_c::t8_element_max_num_faces (const t8_element_t *elem) const
+t8_default_scheme_vertex::element_get_max_num_faces ([[maybe_unused]] const t8_element_t *elem) const
 {
   return T8_DVERTEX_FACES;
 }
 
 int
-t8_default_scheme_vertex_c::t8_element_num_children (const t8_element_t *elem) const
+t8_default_scheme_vertex::element_get_num_children ([[maybe_unused]] const t8_element_t *elem) const
 {
-  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (element_is_valid (elem));
   return T8_DVERTEX_CHILDREN;
 }
 
 int
-t8_default_scheme_vertex_c::t8_element_num_face_children (const t8_element_t *elem, int face) const
+t8_default_scheme_vertex::element_get_num_face_children ([[maybe_unused]] const t8_element_t *elem,
+                                                         [[maybe_unused]] int face) const
 {
-  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (element_is_valid (elem));
   return T8_DVERTEX_FACE_CHILDREN;
 }
 
 void
-t8_default_scheme_vertex_c::t8_element_child (const t8_element_t *elem, int childid, t8_element_t *child) const
+t8_default_scheme_vertex::element_get_child (const t8_element_t *elem, [[maybe_unused]] int childid,
+                                             t8_element_t *child) const
 {
   const t8_dvertex_t *v = (const t8_dvertex_t *) elem;
   t8_dvertex_t *c = (t8_dvertex_t *) child;
-  T8_ASSERT (t8_element_is_valid (elem));
-  T8_ASSERT (t8_element_is_valid (child));
+  T8_ASSERT (element_is_valid (elem));
+  T8_ASSERT (element_is_valid (child));
 
   T8_ASSERT (childid == 0);
-  t8_dvertex_child (v, c);
+  T8_ASSERT (v->level < T8_DVERTEX_MAXLEVEL);
+
+  /* The children level */
+  c->level = v->level + 1;
 }
 
 void
-t8_default_scheme_vertex_c::t8_element_children (const t8_element_t *elem, int length, t8_element_t *c[]) const
+t8_default_scheme_vertex::element_get_children (const t8_element_t *elem, [[maybe_unused]] int length,
+                                                t8_element_t *c[]) const
 {
   T8_ASSERT (length == T8_DVERTEX_CHILDREN);
-  T8_ASSERT (t8_element_is_valid (elem));
-#ifdef T8_ENABLE_DEBUG
-  int i;
-  for (i = 0; i < T8_DVERTEX_CHILDREN; i++) {
-    T8_ASSERT (t8_element_is_valid (c[i]));
+  T8_ASSERT (element_is_valid (elem));
+#if T8_ENABLE_DEBUG
+  for (int i = 0; i < T8_DVERTEX_CHILDREN; i++) {
+    T8_ASSERT (element_is_valid (c[i]));
   }
 #endif
-  t8_dvertex_childrenpv ((const t8_dvertex_t *) elem, (t8_dvertex_t **) c);
+  const t8_dvertex_t *v = (const t8_dvertex_t *) elem;
+  T8_ASSERT (v->level < T8_DVERTEX_MAXLEVEL);
+
+  /* Set the Level, Level increases */
+  ((t8_dvertex_t **) c)[0]->level = v->level + 1;
 }
 
 int
-t8_default_scheme_vertex_c::t8_element_child_id (const t8_element_t *elem) const
+t8_default_scheme_vertex::element_get_child_id ([[maybe_unused]] const t8_element_t *elem) const
 {
-  T8_ASSERT (t8_element_is_valid (elem));
-  return t8_dvertex_child_id ((const t8_dvertex_t *) elem);
+  T8_ASSERT (element_is_valid (elem));
+  return 0;
 }
 
 int
-t8_default_scheme_vertex_c::t8_element_ancestor_id (const t8_element_t *elem, int level) const
+t8_default_scheme_vertex::element_get_ancestor_id ([[maybe_unused]] const t8_element_t *elem,
+                                                   [[maybe_unused]] int level) const
 {
-  return t8_dvertex_ancestor_id ((const t8_dvertex_t *) elem, level);
+  return 0;
 }
 
 int
-t8_default_scheme_vertex_c::t8_element_is_family (t8_element_t *const *fam) const
+t8_default_scheme_vertex::elements_are_family (t8_element_t *const *fam) const
 {
-#ifdef T8_ENABLE_DEBUG
-  int i;
-  for (i = 0; i < T8_DVERTEX_CHILDREN; i++) {
-    T8_ASSERT (t8_element_is_valid (fam[i]));
+#if T8_ENABLE_DEBUG
+  for (int i = 0; i < T8_DVERTEX_CHILDREN; i++) {
+    T8_ASSERT (element_is_valid (fam[i]));
   }
 #endif
-  return t8_dvertex_is_familypv ((const t8_dvertex_t **) fam);
+  return ((const t8_dvertex_t **) fam)[0]->level > 0;
 }
 
 void
-t8_default_scheme_vertex_c::t8_element_nca (const t8_element_t *elem1, const t8_element_t *elem2,
-                                            t8_element_t *nca) const
+t8_default_scheme_vertex::element_get_nca (const t8_element_t *elem1, const t8_element_t *elem2,
+                                           t8_element_t *nca) const
 {
   const t8_dvertex_t *v1 = (const t8_dvertex_t *) elem1;
   const t8_dvertex_t *v2 = (const t8_dvertex_t *) elem2;
   t8_dvertex_t *c = (t8_dvertex_t *) nca;
 
-  T8_ASSERT (t8_element_is_valid (elem1));
-  T8_ASSERT (t8_element_is_valid (elem2));
-  t8_dvertex_nearest_common_ancestor (v1, v2, c);
+  T8_ASSERT (element_is_valid (elem1));
+  T8_ASSERT (element_is_valid (elem2));
+
+  /* The nca is the one of the two vertices with smaller level */
+  c->level = SC_MIN (v1->level, v2->level);
 }
 
 /** Transform the coordinates of a vertex considered as boundary element
  *  in a tree-tree connection. */
 void
-t8_default_scheme_vertex_c::t8_element_transform_face (const t8_element_t *elem1, t8_element_t *elem2, int orientation,
-                                                       int sign, int is_smaller_face) const
+t8_default_scheme_vertex::element_transform_face (const t8_element_t *elem1, t8_element_t *elem2,
+                                                  [[maybe_unused]] int orientation, [[maybe_unused]] int sign,
+                                                  [[maybe_unused]] int is_smaller_face) const
 {
-  T8_ASSERT (t8_element_is_valid (elem1));
-  T8_ASSERT (t8_element_is_valid (elem2));
+  T8_ASSERT (element_is_valid (elem1));
+  T8_ASSERT (element_is_valid (elem2));
 
-  t8_dvertex_transform_face ((const t8_dvertex_t *) elem1, (t8_dvertex_t *) elem2);
+  ((t8_dvertex_t *) elem2)->level = ((const t8_dvertex_t *) elem1)->level;
 }
 
 int
-t8_default_scheme_vertex_c::t8_element_is_root_boundary (const t8_element_t *elem, int face) const
+t8_default_scheme_vertex::element_is_root_boundary ([[maybe_unused]] const t8_element_t *elem,
+                                                    [[maybe_unused]] int face) const
 {
-  const t8_dvertex_t *v = (const t8_dvertex_t *) elem;
-
-  T8_ASSERT (t8_element_is_valid (elem));
-  return t8_dvertex_is_root_boundary (v, face);
+  T8_ASSERT (element_is_valid (elem));
+  return 1;
 }
 
 void
-t8_default_scheme_vertex_c::t8_element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id) const
+t8_default_scheme_vertex::element_set_linear_id (t8_element_t *elem, const int level,
+                                                 [[maybe_unused]] const t8_linearidx_t id)
 {
   T8_ASSERT (0 <= level && level <= T8_DVERTEX_MAXLEVEL);
-  T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << 3 * level);
-  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (0 == id);
+  T8_ASSERT (element_is_valid (elem));
 
-  t8_dvertex_init_linear_id ((t8_dvertex_t *) elem, level, id);
+  /* Set the level */
+  ((t8_dvertex_t *) elem)->level = level;
 }
 
 t8_linearidx_t
-t8_default_scheme_vertex_c::t8_element_get_linear_id (const t8_element_t *elem, int level) const
+t8_default_scheme_vertex::element_get_linear_id ([[maybe_unused]] const t8_element_t *elem,
+                                                 [[maybe_unused]] int level) const
 {
-  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= T8_DVERTEX_MAXLEVEL);
 
-  return t8_dvertex_linear_id ((const t8_dvertex_t *) elem, level);
+  return 0;
 }
 
 void
-t8_default_scheme_vertex_c::t8_element_first_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const
+t8_default_scheme_vertex::element_get_first_descendant ([[maybe_unused]] const t8_element_t *elem, t8_element_t *desc,
+                                                        int level) const
 {
-  T8_ASSERT (t8_element_is_valid (elem));
-  T8_ASSERT (t8_element_is_valid (desc));
+  T8_ASSERT (element_is_valid (elem));
+  T8_ASSERT (element_is_valid (desc));
   T8_ASSERT (0 <= level && level <= T8_DVERTEX_MAXLEVEL);
-  t8_dvertex_first_descendant ((const t8_dvertex_t *) elem, (t8_dvertex_t *) desc, level);
+  T8_ASSERT (level >= ((const t8_dvertex_t *) elem)->level);
+
+  ((t8_dvertex_t *) desc)->level = level;
 }
 
 void
-t8_default_scheme_vertex_c::t8_element_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const
+t8_default_scheme_vertex::element_get_last_descendant ([[maybe_unused]] const t8_element_t *elem, t8_element_t *desc,
+                                                       int level) const
 {
-  T8_ASSERT (t8_element_is_valid (elem));
-  T8_ASSERT (t8_element_is_valid (desc));
+  T8_ASSERT (element_is_valid (elem));
+  T8_ASSERT (element_is_valid (desc));
   T8_ASSERT (0 <= level && level <= T8_DVERTEX_MAXLEVEL);
-  t8_dvertex_last_descendant ((const t8_dvertex_t *) elem, (t8_dvertex_t *) desc, level);
+  T8_ASSERT (level >= ((const t8_dvertex_t *) elem)->level);
+
+  ((t8_dvertex_t *) desc)->level = level;
 }
 
 void
-t8_default_scheme_vertex_c::t8_element_anchor (const t8_element_t *elem, int anchor[3]) const
+t8_default_scheme_vertex::element_get_anchor ([[maybe_unused]] const t8_element_t *elem, int anchor[3]) const
 {
-  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (element_is_valid (elem));
 
   anchor[0] = 0;
   anchor[1] = 0;
@@ -242,43 +276,52 @@ t8_default_scheme_vertex_c::t8_element_anchor (const t8_element_t *elem, int anc
 }
 
 void
-t8_default_scheme_vertex_c::t8_element_vertex_integer_coords (const t8_element_t *elem, int vertex, int coords[]) const
+t8_default_scheme_vertex::element_get_vertex_integer_coords ([[maybe_unused]] const t8_element_t *elem,
+                                                             [[maybe_unused]] int vertex, int coords[]) const
 {
-  T8_ASSERT (t8_element_is_valid (elem));
-  t8_dvertex_vertex_integer_coords ((const t8_dvertex_t *) elem, vertex, coords);
-}
-
-void
-t8_default_scheme_vertex_c::t8_element_vertex_reference_coords (const t8_element_t *elem, const int vertex,
-                                                                double coords[]) const
-{
-  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (vertex == 0);
 
-  t8_dvertex_vertex_ref_coords ((const t8_dvertex_t *) elem, vertex, coords);
+  coords[0] = 0;
 }
 
 void
-t8_default_scheme_vertex_c::t8_element_reference_coords (const t8_element_t *elem, const double *ref_coords,
-                                                         const size_t num_coords, double *out_coords) const
+t8_default_scheme_vertex::element_get_vertex_reference_coords ([[maybe_unused]] const t8_element_t *elem,
+                                                               [[maybe_unused]] const int vertex, double coords[]) const
 {
-  T8_ASSERT (t8_element_is_valid (elem));
-  t8_dvertex_compute_reference_coords ((const t8_dvertex_t *) elem, ref_coords, num_coords, out_coords);
+  T8_ASSERT (element_is_valid (elem));
+  T8_ASSERT (vertex == 0);
+
+  coords[0] = 0;
 }
 
-#ifdef T8_ENABLE_DEBUG
+void
+t8_default_scheme_vertex::element_get_reference_coords ([[maybe_unused]] const t8_element_t *elem,
+                                                        [[maybe_unused]] const double *ref_coords,
+                                                        const size_t num_coords, double *out_coords) const
+{
+  T8_ASSERT (element_is_valid (elem));
+  T8_ASSERT (fabs (ref_coords[0]) <= T8_PRECISION_EPS);
+
+  for (size_t coord = 0; coord < num_coords; ++coord) {
+    out_coords[coord] = 0;
+  }
+}
+
+#if T8_ENABLE_DEBUG
 int
-t8_default_scheme_vertex_c::t8_element_is_valid (const t8_element_t *elem) const
+t8_default_scheme_vertex::element_is_valid ([[maybe_unused]] const t8_element_t *elem)
 
 {
-  return t8_dvertex_is_valid ((const t8_dvertex_t *) elem);
+  /* A vertex is always valid, since it only saves the level as uint8, 
+     which therefore automatically is >= 0 and <= 255 (=MAXLEVEL)*/
+  return 1;
 }
 
 void
-t8_default_scheme_vertex_c::t8_element_to_string (const t8_element_t *elem, char *debug_string,
-                                                  const int string_size) const
+t8_default_scheme_vertex::element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const
 {
-  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (debug_string != NULL);
   t8_dvertex_t *vertex = (t8_dvertex_t *) elem;
   snprintf (debug_string, string_size, "level: %i", vertex->level);
@@ -286,68 +329,49 @@ t8_default_scheme_vertex_c::t8_element_to_string (const t8_element_t *elem, char
 #endif
 
 int
-t8_default_scheme_vertex_c::t8_element_refines_irregular () const
+t8_default_scheme_vertex::refines_irregular () const
 {
   /*vertices refine regularly */
-  return 0;
+  return false;
 }
 
 void
-t8_default_scheme_vertex_c::t8_element_new (int length, t8_element_t **elem) const
+t8_default_scheme_vertex::element_new (int length, t8_element_t **elem) const
 {
   /* allocate memory for a vertex */
-  t8_default_scheme_common_c::t8_element_new (length, elem);
+  t8_default_scheme_common::element_new (length, elem);
 
   /* in debug mode, set sensible default values. */
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   {
-    int i;
-    for (i = 0; i < length; i++) {
-      t8_element_root (elem[i]);
+    for (int i = 0; i < length; i++) {
+      set_to_root (elem[i]);
     }
   }
 #endif
 }
 
 void
-t8_default_scheme_vertex_c::t8_element_init (int length, t8_element_t *elem) const
+t8_default_scheme_vertex::element_init ([[maybe_unused]] int length, [[maybe_unused]] t8_element_t *elem) const
 {
-#ifdef T8_ENABLE_DEBUG
-  t8_dvertex_t *vertexs = (t8_dvertex_t *) elem;
+#if T8_ENABLE_DEBUG
+  t8_dvertex_t *vertices = (t8_dvertex_t *) elem;
   for (int i = 0; i < length; i++) {
-    t8_dvertex_init (vertexs + i);
+    vertices[i].level = 0;
   }
 #endif
 }
 
-/* Constructor */
-t8_default_scheme_vertex_c::t8_default_scheme_vertex_c (void)
-{
-  eclass = T8_ECLASS_VERTEX;
-  element_size = sizeof (t8_dvertex_t);
-  ts_context = sc_mempool_new (element_size);
-}
-
-/* Destructor */
-t8_default_scheme_vertex_c::~t8_default_scheme_vertex_c ()
-{
-  /* This destructor is empty since the destructor of the
-   * default_common scheme is called automatically and it
-   * suffices to destroy the quad_scheme.
-   * However we need to provide an implementation of the destructor
-   * and hence this empty function. */
-}
 void
-t8_default_scheme_vertex_c::t8_element_root (t8_element_t *elem) const
+t8_default_scheme_vertex::set_to_root (t8_element_t *elem) const
 {
   t8_dvertex_t *vertex = (t8_dvertex_t *) elem;
   vertex->level = 0;
 }
 /* vertices are packed as the level */
 void
-t8_default_scheme_vertex_c::t8_element_MPI_Pack (t8_element_t **const elements, const unsigned int count,
-                                                 void *send_buffer, const int buffer_size, int *position,
-                                                 sc_MPI_Comm comm) const
+t8_default_scheme_vertex::element_MPI_Pack (t8_element_t **const elements, const unsigned int count, void *send_buffer,
+                                            const int buffer_size, int *position, sc_MPI_Comm comm) const
 {
   int mpiret;
   t8_dvertex_t **vertices = (t8_dvertex_t **) elements;
@@ -359,7 +383,7 @@ t8_default_scheme_vertex_c::t8_element_MPI_Pack (t8_element_t **const elements, 
 
 /* vertices are packed as the level */
 void
-t8_default_scheme_vertex_c::t8_element_MPI_Pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size) const
+t8_default_scheme_vertex::element_MPI_Pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size) const
 {
   int singlesize = 0;
   int datasize = 0;
@@ -374,9 +398,8 @@ t8_default_scheme_vertex_c::t8_element_MPI_Pack_size (const unsigned int count, 
 
 /* vertices are packed as the level */
 void
-t8_default_scheme_vertex_c::t8_element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position,
-                                                   t8_element_t **elements, const unsigned int count,
-                                                   sc_MPI_Comm comm) const
+t8_default_scheme_vertex::element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position,
+                                              t8_element_t **elements, const unsigned int count, sc_MPI_Comm comm) const
 {
   int mpiret;
   t8_dvertex_t **vertices = (t8_dvertex_t **) elements;
@@ -385,5 +408,3 @@ t8_default_scheme_vertex_c::t8_element_MPI_Unpack (void *recvbuf, const int buff
     SC_CHECK_MPI (mpiret);
   }
 }
-
-T8_EXTERN_C_END ();

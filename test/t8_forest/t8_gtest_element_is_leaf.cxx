@@ -21,6 +21,7 @@
 */
 
 #include <gtest/gtest.h>
+#include <test/t8_gtest_schemes.hxx>
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
 #include <t8_forest/t8_forest_general.h>
@@ -36,19 +37,25 @@
  */
 
 /* Maximum uniform level for forest. */
-#define T8_IS_LEAF_MAX_LVL 4
 
+#if T8CODE_TEST_LEVEL >= 1
+#define T8_IS_LEAF_MAX_LVL 3
+#else
+#define T8_IS_LEAF_MAX_LVL 4
+#endif
 /* Adapt a forest such that always the first child of a
  * family is refined and no other elements. This results in a highly
  * imbalanced forest. */
 static int
-t8_test_adapt_first_child (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                           t8_eclass_scheme_c *ts, const int is_family, const int num_elements,
+t8_test_adapt_first_child (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                           [[maybe_unused]] t8_locidx_t which_tree, const t8_eclass_t tree_class,
+                           [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+                           [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
                            t8_element_t *elements[])
 {
-  T8_ASSERT (!is_family || (is_family && num_elements == ts->t8_element_num_children (elements[0])));
+  T8_ASSERT (!is_family || (is_family && num_elements == scheme->element_get_num_children (tree_class, elements[0])));
 
-  int level = ts->t8_element_level (elements[0]);
+  const int level = scheme->element_get_level (tree_class, elements[0]);
 
   /* we set a maximum refinement level as forest user data */
   int maxlevel = *(int *) t8_forest_get_user_data (forest);
@@ -56,7 +63,7 @@ t8_test_adapt_first_child (t8_forest_t forest, t8_forest_t forest_from, t8_locid
     /* Do not refine after the maxlevel */
     return 0;
   }
-  int child_id = ts->t8_element_child_id (elements[0]);
+  const int child_id = scheme->element_get_child_id (tree_class, elements[0]);
   if (child_id == 1) {
     return 1;
   }
@@ -69,10 +76,13 @@ class element_is_leaf_or_ghost: public testing::TestWithParam<std::tuple<int, cm
   SetUp () override
   {
     /* Construct a cmesh */
-    const int level = std::get<0> (GetParam ());
-    t8_cmesh_t cmesh = std::get<1> (GetParam ())->cmesh_create ();
+    const int scheme_id = std::get<0> (GetParam ());
+    scheme = create_from_scheme_id (scheme_id);
+    const int level = std::get<1> (GetParam ());
+    t8_cmesh_t cmesh = std::get<2> (GetParam ())->cmesh_create ();
     if (t8_cmesh_is_empty (cmesh)) {
       /* forest_commit does not support empty cmeshes, we skip this case */
+      scheme->unref ();
       t8_cmesh_unref (&cmesh);
       GTEST_SKIP ();
     }
@@ -99,7 +109,7 @@ class element_is_leaf_or_ghost: public testing::TestWithParam<std::tuple<int, cm
 
   t8_forest_t forest { NULL };
   t8_forest_t forest_adapt { NULL };
-  t8_scheme_cxx_t *scheme;
+  const t8_scheme *scheme;
 };
 
 void
@@ -107,13 +117,13 @@ t8_test_element_is_leaf_for_forest (t8_forest_t forest)
 {
   const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
 
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
   for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree) {
     const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
-    const t8_eclass_scheme_c *scheme = t8_forest_get_eclass_scheme (forest, tree_class);
     /* Allocate memory to build a non-leaf element. */
     t8_element_t *not_leaf;
-    scheme->t8_element_new (1, &not_leaf);
+    scheme->element_new (tree_class, 1, &not_leaf);
     /* Iterate over all the tree's leaf elements, check whether the leaf
      * is correctly identified by t8_forest_element_is_leaf and t8_forest_element_is_leaf_or_ghost,
      * build its parent and its first child (if they exist), and verify
@@ -123,19 +133,19 @@ t8_test_element_is_leaf_for_forest (t8_forest_t forest)
       EXPECT_TRUE (t8_forest_element_is_leaf (forest, leaf_element, itree));
       EXPECT_TRUE (t8_forest_element_is_leaf_or_ghost (forest, leaf_element, itree, 0));
       /* Compute parent and first child of element and check that they are not in the tree */
-      const int element_level = scheme->t8_element_level (leaf_element);
+      const int element_level = scheme->element_get_level (tree_class, leaf_element);
       if (element_level > 0) {
-        scheme->t8_element_parent (leaf_element, not_leaf);
+        scheme->element_get_parent (tree_class, leaf_element, not_leaf);
         EXPECT_FALSE (t8_forest_element_is_leaf (forest, not_leaf, itree));
         EXPECT_FALSE (t8_forest_element_is_leaf_or_ghost (forest, not_leaf, itree, 0));
       }
-      if (element_level < scheme->t8_element_maxlevel ()) {
-        scheme->t8_element_child (leaf_element, 0, not_leaf);
+      if (element_level < scheme->get_maxlevel (tree_class)) {
+        scheme->element_get_child (tree_class, leaf_element, 0, not_leaf);
         EXPECT_FALSE (t8_forest_element_is_leaf (forest, not_leaf, itree));
         EXPECT_FALSE (t8_forest_element_is_leaf_or_ghost (forest, not_leaf, itree, 0));
       }
     }
-    scheme->t8_element_destroy (1, &not_leaf);
+    scheme->element_destroy (tree_class, 1, &not_leaf);
   }
 }
 
@@ -199,11 +209,13 @@ TEST_P (element_is_leaf_or_ghost, element_is_ghost_adapt)
 /* Define a lambda to beautify gtest output for tuples <level, cmesh>.
  * This will set the correct level and cmesh name as part of the test case name. */
 auto pretty_print_level_and_cmesh_params
-  = [] (const testing::TestParamInfo<std::tuple<int, cmesh_example_base *>> &info) {
-      std::string name = std::string ("Level_") + std::to_string (std::get<0> (info.param));
+  = [] (const testing::TestParamInfo<std::tuple<int, int, cmesh_example_base *>> &info) {
+      std::string name = std::string ("Level_") + std::to_string (std::get<1> (info.param));
       std::string cmesh_name;
-      std::get<1> (info.param)->param_to_string (cmesh_name);
+      std::get<2> (info.param)->param_to_string (cmesh_name);
       name += std::string ("_") + cmesh_name;
+      name += std::string ("scheme_") + std::to_string (std::get<0> (info.param));
+      name += std::string ("_") + std::to_string (info.index);
       return name;
     };
 

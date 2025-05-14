@@ -24,14 +24,13 @@
 #define T8_VTK_WRITER_HELPER
 
 #include <t8.h>
-#include <t8_element.hxx>
 #include <t8_forest/t8_forest.h>
 
 #define T8_FOREST_VTK_QUADRATIC_ELEMENT_MAX_CORNERS 20
 /** Lookup table for number of nodes for curved eclasses. */
 const int t8_curved_eclass_num_nodes[T8_ECLASS_COUNT] = { 1, 3, 8, 6, 20, 10, 15, 13 };
 
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
 /** Lookup table for vtk types of curved elements */
 const int t8_curved_eclass_vtk_type[T8_ECLASS_COUNT] = { 1, 21, 23, 22, 25, 24, 26, 27 };
 #endif

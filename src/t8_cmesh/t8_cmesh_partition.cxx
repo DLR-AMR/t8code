@@ -88,7 +88,7 @@ t8_partition_new_ghost_ids (const t8_cmesh_t cmesh, const t8_part_tree_t recv_pa
   int8_t *ttf;
   int iface, face_tree;
   t8_trees_glo_lo_hash_t *new_hash;
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   int ret;
 #endif
 
@@ -114,7 +114,7 @@ t8_partition_new_ghost_ids (const t8_cmesh_t cmesh, const t8_part_tree_t recv_pa
     /* The new local ghost id is the concurrent id of this ghost plus the
      * number of local trees */
     new_hash->local_id = ghost_it + first_ghost + cmesh->num_local_trees;
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
     ret =
 #endif
       sc_hash_insert_unique (cmesh->trees->ghost_globalid_to_local_id, new_hash, NULL);
@@ -165,7 +165,7 @@ t8_cmesh_gather_trees_per_eclass (const t8_cmesh_t cmesh, sc_MPI_Comm comm)
       cmesh->num_trees_per_eclass[ieclass] = cmesh->num_local_trees_per_eclass[ieclass];
     }
   }
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   /* Count the number of trees and check if it matches cmesh->num_trees */
   {
     t8_gloidx_t num_trees = 0;
@@ -915,7 +915,7 @@ t8_cmesh_partition_sendtreeloop (t8_cmesh_t cmesh, const t8_cmesh *cmesh_from, c
   t8_locidx_t neighbor, *face_neighbor, itree;
   int8_t *ttf;
   int iface;
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   const t8_gloidx_t *offset_from, *offset_to;
 
   if (cmesh_from->set_partition) {
@@ -1237,7 +1237,8 @@ t8_cmesh_partition_receive_message (t8_cmesh_t cmesh, sc_MPI_Comm comm, const in
 /* TODO: Remove the const qualifier at the cmesh_from parameter */
 static void
 t8_cmesh_partition_recvloop (t8_cmesh_t cmesh, const t8_cmesh *cmesh_from, const t8_gloidx_t *tree_offset,
-                             char *my_buffer, size_t my_buffer_bytes, sc_MPI_Comm comm, int fr, int lr)
+                             char *my_buffer, size_t my_buffer_bytes, sc_MPI_Comm comm, [[maybe_unused]] int fr,
+                             [[maybe_unused]] int lr)
 {
   int num_receive, *local_procid; /* ranks of the processor from which we will receive */
   int mpiret, proc_recv, iproc;
@@ -1545,7 +1546,6 @@ t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   t8_cmesh_t cmesh_from;
   t8_gloidx_t last_tree;
   const t8_gloidx_t *tree_offsets;
-  t8_scheme_cxx_t *ts;
 
   T8_ASSERT (t8_cmesh_is_committed (cmesh->set_from));
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
@@ -1565,11 +1565,11 @@ t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   /*         and trees per proc array           */
   /**********************************************/
   if (cmesh->set_partition_level >= 0) {
+    const t8_scheme *scheme = cmesh->set_partition_scheme; /* The refinement scheme */
     /* Compute first and last tree index */
     T8_ASSERT (cmesh->tree_offsets == NULL);
-    ts = cmesh->set_partition_scheme; /* The refinement scheme */
-    T8_ASSERT (ts != NULL);
-    t8_cmesh_uniform_bounds (cmesh_from, cmesh->set_partition_level, ts, &cmesh->first_tree, NULL, &last_tree, NULL,
+    T8_ASSERT (scheme != NULL);
+    t8_cmesh_uniform_bounds (cmesh_from, cmesh->set_partition_level, scheme, &cmesh->first_tree, NULL, &last_tree, NULL,
                              &cmesh->first_tree_shared);
     cmesh->num_local_trees = last_tree - cmesh->first_tree + 1;
     /* Compute the tree offset */
@@ -1616,7 +1616,7 @@ t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 }
 
 void
-t8_cmesh_offset_print (const t8_cmesh_t cmesh, sc_MPI_Comm comm)
+t8_cmesh_offset_print ([[maybe_unused]] const t8_cmesh_t cmesh, [[maybe_unused]] sc_MPI_Comm comm)
 {
 #if T8_ENABLE_DEBUG
   int offset_isnew = 0;
@@ -1646,7 +1646,7 @@ t8_cmesh_offset_concentrate (const int proc, sc_MPI_Comm comm, const t8_gloidx_t
   int mpirank, mpiret, mpisize, iproc;
   t8_shmem_array_t shmem_array;
   t8_gloidx_t *offsets;
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   char out[BUFSIZ] = "";
 #endif
 
@@ -1666,11 +1666,11 @@ t8_cmesh_offset_concentrate (const int proc, sc_MPI_Comm comm, const t8_gloidx_t
       else {
         offsets[iproc] = offsets[iproc - 1];
       }
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
       snprintf (out + strlen (out), BUFSIZ - strlen (out), "%li,", offsets[iproc]);
 #endif
     }
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
     t8_debugf ("Partition with offsets:0,%s\n", out);
 #endif
   }

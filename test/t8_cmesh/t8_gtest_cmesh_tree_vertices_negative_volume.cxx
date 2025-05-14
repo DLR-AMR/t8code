@@ -47,11 +47,14 @@ get_vertices_ids (const t8_eclass_t eclass, int vertices_ids[T8_ECLASS_MAX_CORNE
     vertices_ids[5] = 5;
     vertices_ids[6] = 6;
     vertices_ids[7] = 7;
+    [[fallthrough]];
   case T8_ECLASS_QUAD:
     vertices_ids[3] = 3;
     vertices_ids[2] = 2;
+    [[fallthrough]];
   case T8_ECLASS_LINE:
     vertices_ids[1] = 1;
+    [[fallthrough]];
   case T8_ECLASS_VERTEX:
     vertices_ids[0] = 0;
     break;
@@ -59,6 +62,7 @@ get_vertices_ids (const t8_eclass_t eclass, int vertices_ids[T8_ECLASS_MAX_CORNE
     vertices_ids[3] = 4;
     vertices_ids[4] = 5;
     vertices_ids[5] = 7;
+    [[fallthrough]];
   case T8_ECLASS_TRIANGLE:
     vertices_ids[0] = 0;
     vertices_ids[1] = 1;
@@ -87,15 +91,15 @@ class tree_vertices_negative_volume: public testing::TestWithParam<t8_eclass_t> 
   void
   SetUp () override
   {
-    eclass = GetParam ();
-    num_vertices = t8_eclass_num_vertices[eclass];
-    get_vertices_ids (eclass, vertices_ids);
+    tree_class = GetParam ();
+    num_vertices = t8_eclass_num_vertices[tree_class];
+    get_vertices_ids (tree_class, vertices_ids);
   }
   void
   TearDown () override
   {
   }
-  t8_eclass_t eclass;
+  t8_eclass_t tree_class;
   int num_vertices;
   int vertices_ids[T8_ECLASS_MAX_CORNERS];
 };
@@ -118,7 +122,7 @@ TEST_P (tree_vertices_negative_volume, positive_volume)
   double *elem_vertices = T8_ALLOC (double, 3 * num_vertices);
   t8_cmesh_new_translate_vertices_to_attributes (vertices_ids, vertices_coords, elem_vertices, num_vertices);
 
-  EXPECT_FALSE (t8_cmesh_tree_vertices_negative_volume (eclass, elem_vertices, num_vertices));
+  EXPECT_FALSE (t8_cmesh_tree_vertices_negative_volume (tree_class, elem_vertices, num_vertices));
   T8_FREE (elem_vertices);
 }
 
@@ -140,11 +144,11 @@ TEST_P (tree_vertices_negative_volume, negative_volume)
   /* clang-format on */
   double *elem_vertices = T8_ALLOC (double, 3 * num_vertices);
   t8_cmesh_new_translate_vertices_to_attributes (vertices_ids, vertices_coords, elem_vertices, num_vertices);
-  if (t8_eclass_to_dimension[eclass] <= 2) {
-    EXPECT_FALSE (t8_cmesh_tree_vertices_negative_volume (eclass, elem_vertices, num_vertices));
+  if (t8_eclass_to_dimension[tree_class] <= 2) {
+    EXPECT_FALSE (t8_cmesh_tree_vertices_negative_volume (tree_class, elem_vertices, num_vertices));
   }
   else {
-    EXPECT_TRUE (t8_cmesh_tree_vertices_negative_volume (eclass, elem_vertices, num_vertices));
+    EXPECT_TRUE (t8_cmesh_tree_vertices_negative_volume (tree_class, elem_vertices, num_vertices));
   }
   T8_FREE (elem_vertices);
 }

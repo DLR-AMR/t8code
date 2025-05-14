@@ -31,6 +31,7 @@
 #include <t8_data/t8_shmem.h>
 #include <t8_cmesh/t8_cmesh_save.h>
 #include <t8_element.h>
+#include <t8_schemes/t8_scheme.h>
 
 /* Forward pointer reference to hidden cmesh implementation.
  * This reference needs to be known by t8_geometry, hence we 
@@ -97,7 +98,7 @@ t8_cmesh_is_initialized (t8_cmesh_t cmesh);
 int
 t8_cmesh_is_committed (const t8_cmesh_t cmesh);
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 /** Check the geometry of the mesh for validity.
  * \param [in] cmesh            This cmesh is examined.
  * \return                      True if the geometry of the cmesh is valid.
@@ -206,19 +207,19 @@ t8_cmesh_set_partition_offsets (t8_cmesh_t cmesh, t8_shmem_array_t tree_offsets)
  * to \ref t8_cmesh_commit and when the cmesh will be derived.
  * \param [in,out] cmesh          The cmesh to be updated.
  * \param [in]     element_level  The refinement_level.
- * \param [in]     ts             The element scheme describing the refinement pattern.
+ * \param [in]     scheme             The element scheme describing the refinement pattern.
  *                                We take ownership. This can be prevented by
- *                                referencing \b ts before calling this function.
+ *                                referencing \b scheme before calling this function.
  */
 void
-t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, int element_level, t8_scheme_cxx_t *ts);
+t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, const int element_level, const t8_scheme_c *scheme);
 
 /** Refine the cmesh to a given level.
  * Thus split each tree into x^level subtrees
  * TODO: implement */
 /* If level = 0  then no refinement is performed */
 void
-t8_cmesh_set_refine (t8_cmesh_t cmesh, int level, t8_scheme_cxx_t *scheme);
+t8_cmesh_set_refine (t8_cmesh_t cmesh, const int level, const t8_scheme_c *scheme);
 
 /** Set the dimension of a cmesh. If any tree is inserted to the cmesh
  * via \a t8_cmesh_set_tree_class, then the dimension is set automatically
@@ -317,9 +318,19 @@ t8_cmesh_set_attribute_gloidx_array (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int
  * \param [in]     face1        The face number of the first tree.
  * \param [in]     face2        The face number of the second tree.
  * \param [in]     orientation  Specify how face1 and face2 are oriented to each other
- *                              TODO: orientation needs to be carefully defined
- *                              for all element classes.
- * TODO: document orientation
+ * 
+ * \note The orientation is defined as:
+ * Let my_face and other_face be the two face numbers of the connecting trees.
+ * We chose a main_face from them as follows: Either both trees have the same
+ * element class, then the face with the lower face number is the main_face or
+ * the trees belong to different classes in which case the face belonging to the
+ * tree with the lower class according to the ordering
+ * triangle < quad, hex < tet < prism < pyramid, is the main_face.
+ * Then face corner 0 of the main_face connects to a face
+ * corner k in the other face.  The face orientation is defined as the number k.
+ * If the classes are equal and my_face == other_face, treating
+ * either of both faces as the main_face leads to the same result.
+ * See https://arxiv.org/pdf/1611.02929.pdf for more details.
  */
 void
 t8_cmesh_set_join (t8_cmesh_t cmesh, t8_gloidx_t gtree1, t8_gloidx_t gtree2, int face1, int face2, int orientation);
@@ -380,7 +391,7 @@ t8_cmesh_is_empty (t8_cmesh_t cmesh);
 t8_cmesh_t
 t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm);
 
-#ifdef T8_WITH_METIS
+#if T8_ENABLE_METIS
 /* TODO: document this. */
 /* TODO: think about making this a pre-commit set_reorder function. */
 void
@@ -720,7 +731,7 @@ t8_cmesh_get_partition_table (t8_cmesh_t cmesh);
 /** Calculate the section of a uniform forest for the current rank.
  * \param [in]    cmesh         The cmesh to be considered.
  * \param [in]    level         The uniform refinement level to be created.
- * \param [in]    ts            The element scheme for which to compute the bounds.
+ * \param [in]    scheme            The element scheme for which to compute the bounds.
  * \param [out]   first_local_tree  The first tree that contains elements belonging to the calling processor.
  * \param [out]   child_in_tree_begin The global index of the first element belonging to the calling processor. Not computed if NULL.
  * \param [out]   last_local_tree  The last tree that contains elements belonging to the calling processor.
@@ -731,7 +742,7 @@ t8_cmesh_get_partition_table (t8_cmesh_t cmesh);
  * \a cmesh must be committed before calling this function. *
  */
 void
-t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, int level, const t8_scheme_cxx_t *ts, t8_gloidx_t *first_local_tree,
+t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, const int level, const t8_scheme_c *scheme, t8_gloidx_t *first_local_tree,
                          t8_gloidx_t *child_in_tree_begin, t8_gloidx_t *last_local_tree, t8_gloidx_t *child_in_tree_end,
                          int8_t *first_tree_shared);
 
@@ -767,11 +778,6 @@ t8_cmesh_unref (t8_cmesh_t *pcmesh);
  */
 void
 t8_cmesh_destroy (t8_cmesh_t *pcmesh);
-
-/* Functions for constructing complete and committed cmeshes */
-
-t8_cmesh_t
-t8_cmesh_new_testhybrid (sc_MPI_Comm comm);
 
 /** Compute y = ax + b on an array of doubles, interpreting
  * each 3 as one vector x 

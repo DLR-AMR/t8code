@@ -27,19 +27,12 @@ name: t8code indentation check
 # It is triggered for pull requests into main and develop and will also run once a day
 # on main.
 #
-# The script runs the scripts/check_if_all_files_indented.scp script of t8code.
+# The script runs the scripts/check_if_all_files_indented.sh script of t8code.
 # The output is uploaded as an artifact to the github page.
 
 on:
-  push:
-    branches:
-      - main
-      - develop
-      - feature-*CI* # for testing this script, all feature branches with "CI" in their name
+  merge_group:
   pull_request:
-    branches:
-      - main
-      - develop
   workflow_dispatch: # Be able to trigger this manually on github.com
   # Run every night at 1:05
   schedule:
@@ -48,27 +41,19 @@ on:
 jobs:
   indent:
     if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
     - uses: actions/checkout@v4
       with:
         fetch-tags: true # required to get version tags
         fetch-depth: 0    # required to get all history, especially the version tags      
-    # Deactivated the install sudo because it failed.
-    #- name: install sudo
-    #  run: apt update && apt install sudo
-    # On the github Ubuntu 20.04, sudo is not available by default
-    # we need it, however, to update/upgrade our packages.
-    - name: Update packages
-      run: sudo apt-get update && sudo apt-get upgrade -y
-    # This step is necessary to get the newest package data
     - name: Install indent
       run: pip install clang-format==17.0.1
     - name: Indentation check
-      run: cd scripts/ && ./check_if_all_files_indented.scp &> >(tee -a indent_script_output.txt)
+      run: cd scripts/ && ./check_if_all_files_indented.sh &> >(tee -a indent_script_output.txt)
     - name: Archive script output
-    # Do this regardess of the result of the previous step.
+    # Do this regardless of the result of the previous step.
     # We especially want to upload the result when the check fails.
       if: always()
       uses: actions/upload-artifact@v4

@@ -52,7 +52,8 @@ t8_geometry_linear_axis_aligned::~t8_geometry_linear_axis_aligned ()
 }
 
 void
-t8_geometry_linear_axis_aligned::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
+t8_geometry_linear_axis_aligned::t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh,
+                                                   [[maybe_unused]] t8_gloidx_t gtreeid, const double *ref_coords,
                                                    const size_t num_coords, double *out_coords) const
 {
   T8_ASSERT (correct_point_order (active_tree_vertices));
@@ -61,9 +62,11 @@ t8_geometry_linear_axis_aligned::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t
 }
 
 void
-t8_geometry_linear_axis_aligned::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid,
-                                                            const double *ref_coords, const size_t num_coords,
-                                                            double *jacobian) const
+t8_geometry_linear_axis_aligned::t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh,
+                                                            [[maybe_unused]] t8_gloidx_t gtreeid,
+                                                            [[maybe_unused]] const double *ref_coords,
+                                                            [[maybe_unused]] const size_t num_coords,
+                                                            [[maybe_unused]] double *jacobian) const
 {
   SC_ABORT ("Not implemented.");
 }
