@@ -56,7 +56,8 @@ t8_cmesh_register_geometry (t8_cmesh_t cmesh, _args &&...args)
 /** Get the list of global trees and local vertex ids a global vertex is connected to.
  * Cmesh Interface function.
  *  
- * \param [in] global_vertex_id The global id of a vertex in the cmesh.
+ * \param [in] cmesh A committed cmesh.
+ * \param [in] global_vertex_id The global id of a vertex in \a cmesh.
  * \return The list of global tree ids and local vertex ids of \a global_vertex_id.
  */
 const tree_vertex_list &
