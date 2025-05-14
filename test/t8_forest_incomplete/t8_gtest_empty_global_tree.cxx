@@ -150,7 +150,8 @@ TEST_P (DISABLED_global_tree, test_empty_global_tree)
   /* Global */
   ASSERT_EQ (t8_forest_get_num_global_trees (forest), t8_forest_get_num_global_trees (forest_adapt_a));
   ASSERT_EQ (t8_forest_get_num_global_trees (forest_adapt_b), t8_forest_get_num_global_trees (forest_adapt_a));
-  ASSERT_EQ (t8_forest_get_global_num_elements (forest_adapt_b), t8_forest_get_global_num_elements (forest_adapt_a));
+  ASSERT_EQ (t8_forest_get_global_num_leaf_elements (forest_adapt_b),
+             t8_forest_get_global_num_leaf_elements (forest_adapt_a));
 
   /* Compare forest->global_num_trees with the sum of all local trees
    * on all processes. Those numbers must be equal, since every tree

@@ -59,13 +59,13 @@ TEST (t8_point_inside, test_point_inside_specific_triangle)
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), 0, 0, sc_MPI_COMM_WORLD);
 
-  if (t8_forest_get_local_num_elements (forest) <= 0) {
+  if (t8_forest_get_local_num_leaf_elements (forest) <= 0) {
     /* Skip empty forests (can occur when executed in parallel) */
     t8_forest_unref (&forest);
     GTEST_SKIP ();
   }
 
-  t8_element_t *element = t8_forest_get_element (forest, 0, NULL);
+  t8_element_t *element = t8_forest_get_leaf_element (forest, 0, NULL);
 
   int point_is_inside;
   t8_forest_element_points_inside (forest, 0, element, test_point, 1, &point_is_inside, tolerance);
@@ -100,13 +100,13 @@ TEST (t8_point_inside, test_point_inside_specific_quad)
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), 0, 0, sc_MPI_COMM_WORLD);
 
-  if (t8_forest_get_local_num_elements (forest) <= 0) {
+  if (t8_forest_get_local_num_leaf_elements (forest) <= 0) {
     /* Skip empty forests (can occur when executed in parallel) */
     t8_forest_unref (&forest);
     GTEST_SKIP ();
   }
 
-  t8_element_t *element = t8_forest_get_element (forest, 0, NULL);
+  t8_element_t *element = t8_forest_get_leaf_element (forest, 0, NULL);
 
   int point_is_inside;
   t8_forest_element_points_inside (forest, 0, element, test_point, 1, &point_is_inside, tolerance);
@@ -198,13 +198,13 @@ TEST_P (geometry_point_inside, test_point_inside)
   const t8_locidx_t num_trees = t8_forest_get_num_local_trees (forest);
   for (t8_locidx_t itree = 0; itree < num_trees; ++itree) {
     t8_log_indent_push ();
-    const t8_locidx_t num_elements = t8_forest_get_tree_num_elements (forest, itree);
+    const t8_locidx_t num_elements = t8_forest_get_tree_num_leaf_elements (forest, itree);
     /* Get the associated eclass scheme */
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
     const t8_scheme *scheme = t8_forest_get_scheme (forest);
     for (t8_locidx_t ielement = 0; ielement < num_elements; ++ielement) {
       /* Get a pointer to the element */
-      const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      const t8_element_t *element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
 
       /* Compute the corner coordinates of the element */
       const int num_corners = scheme->element_get_num_corners (tree_class, element);

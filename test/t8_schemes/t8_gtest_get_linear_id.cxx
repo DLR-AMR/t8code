@@ -94,13 +94,13 @@ TEST_P (get_linear_id, uniform_forest)
     /*Iterate over trees */
     for (t8_locidx_t tree_id = 0; tree_id < num_local_trees; tree_id++) {
       /*Get the number of elements in the tree*/
-      const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, tree_id);
+      const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, tree_id);
       /*Manually compute the id of the first element*/
       const t8_locidx_t shift = tc_scheme->count_leaves_from_root (eclass, level) - num_elements_in_tree;
       /*Iterate over elements */
       for (t8_locidx_t id_iter = 0; id_iter < num_elements_in_tree; id_iter++) {
         /*Get the current element*/
-        const t8_element_t *element = t8_forest_get_element_in_tree (forest, tree_id, id_iter);
+        const t8_element_t *element = t8_forest_get_leaf_element_in_tree (forest, tree_id, id_iter);
         /*Get the ID of the element at current level */
         const t8_locidx_t id = tc_scheme->element_get_linear_id (eclass, element, level);
         /* Check the computed id*/

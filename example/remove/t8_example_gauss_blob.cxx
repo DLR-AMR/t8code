@@ -57,7 +57,7 @@ t8_create_element_data (t8_forest_t forest, const t8_3D_point &sphere_center, co
 
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  num_local_elements = t8_forest_get_local_num_elements (forest);
+  num_local_elements = t8_forest_get_local_num_leaf_elements (forest);
   num_ghost_elements = t8_forest_get_num_ghosts (forest);
 
   element_data = T8_ALLOC (double, num_local_elements + num_ghost_elements);
@@ -65,9 +65,9 @@ t8_create_element_data (t8_forest_t forest, const t8_3D_point &sphere_center, co
   const t8_element_t *element;
   t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
   for (t8_locidx_t itree = 0, current_index = 0; itree < num_local_trees; ++itree) {
-    t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+    t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
     for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
-      element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       t8_3D_point center;
       t8_forest_element_centroid (forest, itree, element, center.data ());
       element_data[current_index] = t8_gausss_blob (center, sphere_center, sphere_radius);

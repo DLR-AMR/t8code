@@ -156,41 +156,41 @@ t8_forest_get_coarse_tree_ext (t8_forest_t forest, t8_locidx_t ltreeid, t8_locid
 void
 t8_forest_compute_elements_offset (t8_forest_t forest);
 
-/** Return an element of a tree. Const version.
+/** Return a leaf element of a tree. Const version.
  * \param [in]  tree  The tree.
- * \param [in]  elem_in_tree The index of the element within the tree.
- * \return      Returns the element with index \a elem_in_tree of the
+ * \param [in]  elem_in_tree The index of the leaf element within the tree.
+ * \return      Returns the leaf element with index \a elem_in_tree of the
  *              element array of \a tree.
  */
 const t8_element_t *
-t8_forest_get_tree_element (t8_tree_t tree, t8_locidx_t elem_in_tree);
+t8_forest_get_tree_leaf_element (t8_tree_t tree, t8_locidx_t elem_in_tree);
 
-/** Return an element of a tree. Mutable version.
+/** Return a leaf element of a tree. Mutable version.
  * \param [in]  tree  The tree.
- * \param [in]  elem_in_tree The index of the element within the tree.
- * \return      Returns the element with index \a elem_in_tree of the
+ * \param [in]  elem_in_tree The index of the leaf element within the tree.
+ * \return      Returns the leaf element with index \a elem_in_tree of the
  *              element array of \a tree.
  */
 t8_element_t *
-t8_forest_get_tree_element_mutable (t8_tree_t tree, t8_locidx_t elem_in_tree);
+t8_forest_get_tree_leaf_element_mutable (t8_tree_t tree, t8_locidx_t elem_in_tree);
 
-/** Return the array of elements of a tree. Const version.
+/** Return the array of leaf elements of a tree. Const version.
  * \param [in]  forest   The forest.
  * \param [in]  ltreeid  The local id of a local tree. Must be a valid local tree id.
- * \return      Returns the array of elements of the tree.
+ * \return      Returns the array of leaf elements of the tree.
  * \a forest must be committed before calling this function.
  */
 const t8_element_array_t *
-t8_forest_get_tree_element_array (t8_forest_t forest, t8_locidx_t ltreeid);
+t8_forest_get_tree_leaf_element_array (t8_forest_t forest, t8_locidx_t ltreeid);
 
-/** Return the array of elements of a tree. Mutable version.
+/** Return the array of leaf elements of a tree. Mutable version.
  * \param [in]  forest   The forest.
  * \param [in]  ltreeid  The local id of a local tree. Must be a valid local tree id.
- * \return      Returns the array of elements of the tree.
+ * \return      Returns the array of leaf elements of the tree.
  * \a forest must be committed before calling this function.
  */
 t8_element_array_t *
-t8_forest_get_tree_element_array_mutable (const t8_forest_t forest, t8_locidx_t ltreeid);
+t8_forest_get_tree_leaf_element_array_mutable (const t8_forest_t forest, t8_locidx_t ltreeid);
 
 /** Find the owner process of a given element, deprecated version.
  * Use t8_forest_element_find_owner instead.
