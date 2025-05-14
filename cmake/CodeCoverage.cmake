@@ -1,3 +1,10 @@
+# This file defines and calls functions to collect code coverage information.
+# A code coverage report is created in a folder "coverage".
+# Lcov and genhtml are used to generate the report and should be available.
+
+#
+# Adds compiler flags necessary to be able to collect coverage information.
+# 
 function(append_coverage_compiler_flags)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g --coverage" PARENT_SCOPE)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g --coverage" PARENT_SCOPE)

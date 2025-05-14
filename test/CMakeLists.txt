@@ -57,7 +57,9 @@ function( add_t8_test )
 
     add_test( NAME ${ADD_T8_TEST_NAME} COMMAND ${T8CODE_TEST_COMMAND_LIST} ${TEST_BUILD_DIR}/${ADD_T8_TEST_NAME} )
     if ( T8CODE_CODE_COVERAGE )
-        # Only necessary to collect coverage information. Otherwise, default timeout is never reached.
+        # Extent time that a single test is allowed to run to collect coverage information (as this naturally takes more time).
+        # The default timeout of 1500 seconds is actually exceeded for some tests.
+        # Without the collection of coverage information, an extension of the default timeout is not needed.
         set_tests_properties(${ADD_T8_TEST_NAME} PROPERTIES TIMEOUT 3000) 
     endif ( T8CODE_CODE_COVERAGE )
 endfunction()

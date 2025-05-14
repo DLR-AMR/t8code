@@ -20,6 +20,8 @@ name: Generate code coverage report and deploy to Codecov.
 #  along with t8code; if not, write to the Free Software Foundation, Inc.,
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
+# This github CI script generates a code coverage report for t8code and uploads it to Codecov.
+
 on:
   workflow_call:
     inputs:
