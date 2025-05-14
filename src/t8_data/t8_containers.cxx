@@ -27,6 +27,7 @@
 #include <sc_containers.h>
 #include <t8_data/t8_containers.h>
 #include <t8_schemes/t8_scheme.hxx>
+#include <t8_forest/t8_forest_private.h>
 
 T8_EXTERN_C_BEGIN ();
 
