@@ -118,7 +118,7 @@ TEST_P (forest_ghost_in_tree, test_get_ghost_id_in_tree)
       const t8_element_t *ighost = t8_element_array_index_locidx (ghosts, ghost_index_in_tree);
       // Compute the index in the tree of the current ghost
       const t8_locidx_t check_ghost_index_in_tree = t8_ghost_get_ghost_id_in_tree (forest_adapt, ighost_tree, ighost);
-      ASSERT_GE (check_ghost_index_in_tree, 0) << "Ghost element was not found.";  // The ghost must have been found.
+      EXPECT_GE (check_ghost_index_in_tree, 0) << "Ghost element was not found.";  // The ghost must have been found.
       // Check that the index is correct
       EXPECT_EQ (check_ghost_index_in_tree, ghost_index_in_tree) << "Wrong index returned for ghost element.";
       // ++ghost_index_in_tree;
