@@ -97,7 +97,7 @@ t8_geom_evaluate_sphere_tri_prism (const double *active_tree_vertices, const t8_
 {
   // All elements are aligned such that the reference z-direction follows the
   // outward radial direction of the sphere. Hence the inner radius is equal to
-  // the norm of the first positition vector of `active_tree_vertices`.
+  // the norm of the first position vector of `active_tree_vertices`.
   const double inner_radius = t8_vec_norm (active_tree_vertices);
 
   t8_geom_compute_linear_geometry (eclass, active_tree_vertices, ref_coords, num_coords, out_coords);
@@ -156,7 +156,7 @@ t8_geometry_tessellated_spherical_surface::t8_geom_evaluate (t8_cmesh_t cmesh, t
   const double distance = std::abs (t8_vec_dot (active_tree_vertices, normal));
 
   // Compute actual radius of the sphere.
-  const double radius = distance * std::cbrt (1.0);
+  const double radius = distance * std::sqrt (3.0);
 
   // Compute orthogonal coordinate system anchored on the cmesh element.
   t8_vec_orthogonal_tripod (normal, tangent1, tangent2);
@@ -212,10 +212,10 @@ t8_geometry_cubed_spherical_shell::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx
   const double distance = std::abs (t8_vec_dot (active_tree_vertices, normal));
 
   // Compute actual radius of the sphere.
-  const double CBRT = std::cbrt (1.0);
-  const double inner_radius = distance * CBRT;
+  const double SQRT3 = std::sqrt (3.0);
+  const double inner_radius = distance * SQRT3;
   const double shell_thickness
-    = std::abs (t8_vec_dot (active_tree_vertices + t8_eclass_num_vertices[active_tree_class] * 3 / 2, normal)) * CBRT
+    = std::abs (t8_vec_dot (active_tree_vertices + t8_eclass_num_vertices[active_tree_class] * 3 / 2, normal)) * SQRT3
       - inner_radius;
 
   // Compute orthogonal coordinate system anchored on the cmesh element.

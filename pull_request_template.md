@@ -36,3 +36,7 @@ As a reviewer please read through all the code lines and make sure that the code
 #### License
 
 - [ ] The author added a BSD statement to `doc/` (or already has one)
+
+#### Tag Label
+
+- [ ] The author added the patch/minor/major label in accordance to semantic versioning.

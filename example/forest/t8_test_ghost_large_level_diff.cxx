@@ -44,6 +44,7 @@
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_profiling.h>
+#include <t8_forest/t8_forest_ghost_search.hxx>
 #include <t8_schemes/t8_default/t8_default.hxx>
 
 /* The refinement criterion
@@ -64,26 +65,27 @@
  *  If the mesh is not 3D then no element is refined.
  *
  *  Warning: this refinement schemes only works with the default element
- *           scheme (see t8_scheme_new_default_cxx in t8_default/t8_default.hxx).
+ *           scheme (see t8_scheme_new_default in t8_default/t8_default.hxx).
  */
 static int
-t8_ghost_fractal_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_locidx_t lelement_id,
-                        t8_eclass_scheme_c *ts, const int is_family, const int num_elements, t8_element_t *elements[])
+t8_ghost_fractal_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
+                        const t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme *scheme, int is_family,
+                        int num_elements, t8_element_t *elements[])
 {
   int level;
   int type, child_id;
-  T8_ASSERT (!is_family || num_elements == ts->t8_element_num_children (elements[0]));
-  T8_ASSERT (t8_eclass_scheme_is_default (ts));
+  T8_ASSERT (!is_family || num_elements == scheme->element_get_num_children (tree_class, elements[0]));
+  T8_ASSERT (t8_eclass_scheme_is_default (scheme, tree_class));
 
-  level = ts->t8_element_level (elements[0]);
+  level = scheme->element_get_level (tree_class, elements[0]);
   if (level >= *(int *) t8_forest_get_user_data (forest)) {
     return 0;
   }
-  if (ts->eclass == T8_ECLASS_PRISM) {
+  if (tree_class == T8_ECLASS_PRISM) {
     type = ((t8_dprism_t *) elements[0])->tri.type;
     /* refine type 0 except those with child_id 3 or 4 */
     if (type == 0) {
-      child_id = ts->t8_element_child_id (elements[0]);
+      child_id = scheme->element_get_child_id (tree_class, elements[0]);
       /* Not refining */
       if (child_id == 3 || child_id == 4) {
         return 0;
@@ -95,7 +97,7 @@ t8_ghost_fractal_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t
     }
     return 0;
   }
-  else if (ts->eclass == T8_ECLASS_TET) {
+  else if (tree_class == T8_ECLASS_TET) {
     type = ((t8_dtet_t *) elements[0])->type;
     /* Refine tets of type 0, 3 or 5 */
     if (type == 0 || type == 3 || type == 5) {
@@ -103,8 +105,8 @@ t8_ghost_fractal_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t
     }
     return 0;
   }
-  else if (ts->eclass == T8_ECLASS_HEX) {
-    child_id = ts->t8_element_child_id (elements[0]);
+  else if (tree_class == T8_ECLASS_HEX) {
+    child_id = scheme->element_get_child_id (tree_class, elements[0]);
     if (child_id == 0 || child_id == 3 || child_id == 5 || child_id == 6) {
       return 1;
     };
@@ -142,7 +144,7 @@ t8_ghost_large_level_diff (const char *prefix, int dim, int level, int refine, i
   }
   t8_cmesh_init (&cmesh_partition);
   t8_cmesh_set_derive (cmesh_partition, cmesh);
-  t8_cmesh_set_partition_uniform (cmesh_partition, level, t8_scheme_new_default_cxx ());
+  t8_cmesh_set_partition_uniform (cmesh_partition, level, t8_scheme_new_default ());
   t8_cmesh_commit (cmesh_partition, comm);
   if (!no_vtk) {
     t8_cmesh_vtk_write_file (cmesh_partition, "partitioned_cmesh");
@@ -151,7 +153,7 @@ t8_ghost_large_level_diff (const char *prefix, int dim, int level, int refine, i
   /* New */
   t8_forest_init (&forest);
   t8_forest_set_cmesh (forest, cmesh_partition, comm);
-  t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
+  t8_forest_set_scheme (forest, t8_scheme_new_default ());
   t8_forest_set_level (forest, level);
   sc_flops_start (&fi);
   sc_flops_snap (&fi, &snapshot);
@@ -178,7 +180,7 @@ t8_ghost_large_level_diff (const char *prefix, int dim, int level, int refine, i
   /* Partition */
   t8_forest_init (&forest_partition);
   t8_forest_set_partition (forest_partition, forest_adapt, 0);
-  t8_forest_set_ghost_ext (forest_partition, 1, T8_GHOST_FACES, 3);
+  t8_forest_set_ghost (forest_partition, 1, T8_GHOST_FACES);
   t8_forest_set_profiling (forest_partition, 1);
   t8_forest_commit (forest_partition);
   if (!no_vtk) {

@@ -419,9 +419,9 @@ t8_msh_file_4_read_nodes (FILE *fp, t8_locidx_t *num_nodes, sc_mempool_t **node_
     /* Read all coordinates and parameters in this block */
     for (ln = 0; ln < num_nodes_in_block; ++ln) {
       /* Read the next line. Its format should be
-       * %f %f %f         if not parametrized,
-       * %f %f %f %f      if parametrized and entity_dim == 1,
-       * %f %f %f %f %f   if parametrized and entity_dim == 2.
+       * %f %f %f         if not parameterized,
+       * %f %f %f %f      if parameterized and entity_dim == 1,
+       * %f %f %f %f %f   if parameterized and entity_dim == 2.
        * The coordinates followed by their parameters. */
       retval = t8_cmesh_msh_read_next_line (&line, &linen, fp);
       if (retval < 0) {
@@ -1522,7 +1522,7 @@ die_ele:
 typedef struct
 {
   t8_locidx_t ltree_id; /* The local id of the tree this face belongs to */
-  int8_t face_number;   /* The number of that face whitin the tree */
+  int8_t face_number;   /* The number of that face within the tree */
   int num_vertices;     /* The number of vertices of this face. */
   long *vertices;       /* The indices of these vertices. */
 } t8_msh_file_face_t;
@@ -1759,7 +1759,7 @@ T8_EXTERN_C_BEGIN ();
 /* This is a helper function to properly register the 
  * geometries for the cmesh created in t8_cmesh_from_msh_file.
  * It should be called by all processes of the cmesh.
- * Returns 1 on success, 0 on cad usage error: use_cad_geometry true, but OCC not linked.
+ * Returns T8_SUBROUTINE_SUCCESS on success, T8_SUBROUTINE_FAILURE on cad usage error: use_cad_geometry true, but OCC not linked.
  * The linear_geometry pointer will point to the newly created linear geometry.
  * The cad_geometry pointer will point to the newly created cad geometry, or to NULL if
  * no cad geometry is used.
@@ -1775,10 +1775,10 @@ t8_cmesh_from_msh_file_register_geometries (t8_cmesh_t cmesh, const int use_cad_
     *cad_geometry = t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, std::string (fileprefix));
 #else /* !T8_WITH_OCC */
     *cad_geometry = NULL;
-    return 0;
+    return T8_SUBROUTINE_FAILURE;
 #endif
   }
-  return 1;
+  return T8_SUBROUTINE_SUCCESS;
 }
 
 t8_cmesh_t

@@ -20,22 +20,24 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#ifndef T8_GHOST_INTERFACE_FACE_H
-#define T8_GHOST_INTERFACE_FACE_H
+#ifndef T8_GHOST_DEFINITION_FACE_H
+#define T8_GHOST_DEFINITION_FACE_H
 
-#include <t8_forest/t8_forest_ghost_interface.hxx>
+#include <t8_forest/t8_forest_ghost_definition.hxx>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_iterate.h>  // Definition of t8_forest_search_fn
 
-struct t8_forest_ghost_w_search: public t8_forest_ghost_interface
+struct t8_forest_ghost_w_search: public t8_forest_ghost_definition
 {
  public:
+  /** There are tree different constructors for the class t8_forest_ghost_w_search: 
+   *  - t8_forest_ghost_w_search ()
+   *  - t8_forest_ghost_w_search (t8_forest_search_fn search_function)
+   *  - t8_forest_ghost_w_search (const t8_ghost_type_t ghost_type)
+   */
+
   /**
-    * Constructors:
-    * there are three ways to construct a object of t8_forest_ghost_w_search
-    * t8_forest_ghost_w_search (), 
-    * t8_forest_ghost_w_search (t8_forest_search_fn search_function),
-    * t8_forest_ghost_w_search (const t8_ghost_type_t ghost_type)
+    * Constructors of a t8_forest_ghost_w_search of type NONE
     */
   t8_forest_ghost_w_search ();
 
@@ -44,10 +46,11 @@ struct t8_forest_ghost_w_search: public t8_forest_ghost_interface
    * If do_ghost is called on this object, 
    * the ghost layer will be created by an treesearch (t8_forest_search)
    * with search_function as callbackfunction.
+   * \param search_function   the function used for the callback
    * \note the t8_ghost_type_t of the object will we userdefined
    */
   explicit t8_forest_ghost_w_search (t8_forest_search_fn search_function)
-    : t8_forest_ghost_interface (T8_GHOST_USERDEFINED), search_fn (search_function)
+    : t8_forest_ghost_definition (T8_GHOST_USER_DEFINED), search_fn (search_function)
   {
     T8_ASSERT (search_function != nullptr);
   }
@@ -55,6 +58,7 @@ struct t8_forest_ghost_w_search: public t8_forest_ghost_interface
   /**
    * Constructr of t8_forest_ghost_w_search by type
    * The search_function is chosen by the type
+   * \param ghost_type    type (FACES, EDGES, VERTICES) for the ghost definition
    * \note currently only the type face is supported
    */
   explicit t8_forest_ghost_w_search (const t8_ghost_type_t ghost_type);
@@ -65,9 +69,10 @@ struct t8_forest_ghost_w_search: public t8_forest_ghost_interface
 
   /** Create one layer of ghost elements for a forest.
    * \param [in,out]    forest     The forest.
+   * \return T8_SUBROUTINE_SUCCESS if successful, T8_SUBROUTINE_FAILURE if not.
    * \a forest must be committed before calling this function.
    */
-  virtual void
+  virtual bool
   do_ghost (t8_forest_t forest) override;
 
  protected:
@@ -77,21 +82,22 @@ struct t8_forest_ghost_w_search: public t8_forest_ghost_interface
      * Only the search_fn parameter for t8_forest_search 
      * is not the same as in t8_forest_ghost_fill_remote_v3.
      * Use the member variable of the class.
+     * \param [in,out]    forest     The forest.
     */
   virtual void
   search_for_ghost_elements (t8_forest_t forest);
 
   /**
    * Constructor for the derivided classes to set the type and the search_function.
-   * \param [in] ghost_type       The type (faces, edges, userdefind, ...) of the ghost_interface
-   * \param [in] search_function  Function of type t8_forest_search_fn, used as callbackfunktion in search_for_ghost_elements
+   * \param [in] ghost_type       The type (faces, edges, user defined, ...) of the ghost_definition
+   * \param [in] search_function  Function of type t8_forest_search_fn, used as callback function in search_for_ghost_elements
    */
   t8_forest_ghost_w_search (const t8_ghost_type_t ghost_type, const t8_forest_search_fn search_function)
-    : t8_forest_ghost_interface (ghost_type), search_fn (search_function)
+    : t8_forest_ghost_definition (ghost_type), search_fn (search_function)
   {
     T8_ASSERT (ghost_type != T8_GHOST_NONE);
   }
-  /** Callbackfunction for t8_forest_search in search_for_ghost_elements */
+  /** Callback function for t8_forest_search in search_for_ghost_elements */
   t8_forest_search_fn search_fn {};
 };
 
@@ -101,11 +107,15 @@ struct t8_forest_ghost_face: public t8_forest_ghost_w_search
   /**
    * Constructor for the ghost class face.
    * do_ghost will construct a ghost layer with face neighbors
-   * \param [in] version    one of tree versions (1,2,3) can be used
+   * \param [in] version    one of search versions (1,2,3) can be used
    * \note version 3 is the same treesearch as in t8_forest_ghost_w_search
    */
   explicit t8_forest_ghost_face (const int version);
 
+  /**
+   * Get the version (1,2 or 3) of the ghost defniniton for faces.
+   * \return version
+   */
   inline int
   get_version () const
   {
@@ -116,6 +126,7 @@ struct t8_forest_ghost_face: public t8_forest_ghost_w_search
   /**
    * Equal to t8_forest_ghost_fill_remote_v3 for version = 3
    * and t8_forest_ghost_fill_remote for version 1 and 2
+   * \param [in, out]   forest The forest.
    */
   void
   search_for_ghost_elements (t8_forest_t forest) override;
@@ -124,4 +135,4 @@ struct t8_forest_ghost_face: public t8_forest_ghost_w_search
   int version {};
 };
 
-#endif /* !T8_GHOST_INTERFACE_FACE_H */
+#endif /* !T8_GHOST_DEFINITION_FACE_H */

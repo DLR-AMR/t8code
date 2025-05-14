@@ -24,7 +24,7 @@
 
 /* Writes the pvtu header file that links to the processor local files.
  * This function should only be called by one process.
- * Return 0 on success. */
+ * Return T8_SUBROUTINE_SUCCESS on success. */
 int
 t8_write_pvtu (const char *filename, int num_procs, int write_tree, int write_rank, int write_level, int write_id,
                int num_data, t8_vtk_data_field_t *data)
@@ -50,7 +50,7 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree, int write_ra
   pvtufile = fopen (pvtufilename, "wb");
   if (!pvtufile) {
     t8_global_errorf ("Could not open %s for output\n", pvtufilename);
-    return -1;
+    return T8_SUBROUTINE_FAILURE;
   }
 
   fprintf (pvtufile, "<?xml version=\"1.0\"?>\n");
@@ -261,11 +261,11 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree, int write_ra
   if (ferror (pvtufile)) {
     t8_global_errorf ("t8_vtk: Error writing parallel footer\n");
     fclose (pvtufile);
-    return -1;
+    return T8_SUBROUTINE_FAILURE;
   }
   if (fclose (pvtufile)) {
     t8_global_errorf ("t8_vtk: Error closing parallel footer\n");
-    return -1;
+    return T8_SUBROUTINE_FAILURE;
   }
-  return 0;
+  return T8_SUBROUTINE_SUCCESS;
 }
