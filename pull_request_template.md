@@ -18,6 +18,7 @@ As a reviewer please read through all the code lines and make sure that the code
 - [ ] All new algorithms and data structures are sufficiently optimal in terms of memory and runtime (If this should be merged, but there is still potential for optimization, create a new issue).
 #### Tests
 - [ ] The code is covered in an existing or new test case using Google Test.
+- [ ] Valgrind doesn't find any bugs in the new code. [This script](./scripts/check_valgrind.sh) can be used to check for errors; see also this [wiki article](https://github.com/DLR-AMR/t8code/wiki/Debugging-with-valgrind).
 
 If the Pull request introduces code that is not covered by the github action (for example coupling with a new library):
   - [ ] Should this use case be added to the github action?
