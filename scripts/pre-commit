@@ -32,13 +32,13 @@
 #
 
 # This is the indent script in the project's directory
-echo "test"
-GIT_DIR= git rev-parse --git-dir
-echo "$GIT_DIR"
-echo "test2"
-CHECK_INDENT=$GIT_COMMON_DIR/scripts/check_if_file_indented.sh
 
-CHECK_MACROS=$GIT_COMMON_DIR/scripts/check_macros.sh
+# Determine base directory of git repo
+GIT_REPO_PATH=$(git rev-parse --show-toplevel)
+
+# Set paths to check scripts
+CHECK_INDENT=$GIT_REPO_PATH/scripts/check_if_file_indented.sh
+CHECK_MACROS=$GIT_REPO_PATH/scripts/check_macros.sh
 
 TYPOS=`which typos 2> /dev/null`
 TYPOS_CONFIG_FILE=./.typos.toml

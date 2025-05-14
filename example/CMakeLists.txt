@@ -7,7 +7,7 @@ endif()
 target_sources( t8example PRIVATE common/t8_example_common.cxx common/t8_example_common_functions.cxx )
 target_include_directories( t8example PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. ${SC_INCLUDE_DIR} )
 target_link_libraries( t8example PRIVATE T8 ${SC_LIBRARIES} m )
-install( TARGETS t8example DESTINATION lib )
+install( TARGETS t8example LIBRARY )
 
 function( add_t8_example )
     set( options "" )
@@ -36,7 +36,7 @@ function( add_t8_example )
         set_target_properties( ${ADD_T8_EXAMPLE_NAME} PROPERTIES EXPORT_COMPILE_COMMANDS ON )
     endif( T8CODE_EXPORT_COMPILE_COMMANDS )
 
-    install( TARGETS ${ADD_T8_EXAMPLE_NAME} DESTINATION bin )
+    install( TARGETS ${ADD_T8_EXAMPLE_NAME} DESTINATION RUNTIME)
 endfunction()
 
 add_t8_example( NAME t8_advection                       SOURCES advect/t8_advection.cxx )
@@ -60,7 +60,10 @@ add_t8_example( NAME t8_read_tetgen                     SOURCES IO/cmesh/tetgen/
 add_t8_example( NAME t8_time_tetgen                     SOURCES IO/cmesh/tetgen/t8_time_tetgen_file.cxx )
 add_t8_example( NAME t8_forest_tetgen                   SOURCES IO/cmesh/tetgen/t8_forest_from_tetgen.cxx )
 add_t8_example( NAME t8_read_triangle                   SOURCES IO/cmesh/triangle/t8_read_triangle_file.cxx )
-add_t8_example( NAME t8_cmesh_read_from_vtk             SOURCES IO/cmesh/vtk/t8_cmesh_read_from_vtk.cxx )
+
+if(T8CODE_ENABLE_VTK)
+    add_t8_example( NAME t8_cmesh_read_from_vtk             SOURCES IO/cmesh/vtk/t8_cmesh_read_from_vtk.cxx )
+endif()
 
 if(T8CODE_ENABLE_NETCDF)
     add_t8_example( NAME t8_write_cmesh_netcdf              SOURCES IO/cmesh/netcdf/t8_write_cmesh_netcdf.cxx )

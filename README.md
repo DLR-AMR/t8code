@@ -1,4 +1,4 @@
-:rotating_light: **Become part of our Conference on Adaptive Mesh Refinement and Applications (AMR25) on September 02-04, 2025!** The abstract submission deadline is **April 15, 2025**. Visit the [AMR25 website](https://dlr.de/AMR25) for further information. :rotating_light:
+:rotating_light: **Become part of our Conference on Adaptive Mesh Refinement and Applications (AMR25) on September 02-04, 2025!** Although the abstract submission phase is already over, you can still register as a participant! Visit the [AMR25 website](https://dlr.de/AMR25) for further information. :rotating_light:
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7034838.svg)](https://doi.org/10.5281/zenodo.7034838)
 [![t8code CI](https://github.com/DLR-AMR/t8code/actions/workflows/tests_cmake_testsuite.yml/badge.svg)](https://github.com/DLR-AMR/t8code/actions/workflows/tests_cmake_testsuite.yml)
