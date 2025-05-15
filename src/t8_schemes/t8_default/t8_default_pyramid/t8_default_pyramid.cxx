@@ -97,12 +97,6 @@ t8_default_scheme_pyramid::element_get_num_children (const t8_element_t *elem) c
 }
 
 int
-t8_default_scheme_pyramid::get_max_num_children () const
-{
-  return 10;
-}
-
-int
 t8_default_scheme_pyramid::element_get_num_corners (const t8_element_t *elem) const
 {
   T8_ASSERT (element_is_valid (elem));
