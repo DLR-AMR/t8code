@@ -345,8 +345,9 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid, t8_ec
     T8_ASSERT (refine != -1);
     if (refine == 1) {
       /* The element should be refined */
-      if (scheme->element_get_level (tree_class, el_buffer[0]) < forest->maxlevel) {
-        /* only refine, if we do not exceed the maximum allowed level */
+      if (scheme->element_get_level (tree_class, el_buffer[0]) < forest->maxlevel
+          && scheme->element_is_refinable (tree_class, el_buffer[0])) {
+        /* only refine if element is refinable and if we do not exceed the maximum allowed level */
         /* Create the children and add them to the list */
         scheme->element_new (tree_class, num_children - 1, el_buffer + 1);
         scheme->element_get_children (tree_class, el_buffer[0], num_children, el_buffer);
@@ -536,8 +537,9 @@ t8_forest_adapt (t8_forest_t forest)
                                        is_family, num_elements_to_adapt_callback, elements_from);
 
         T8_ASSERT (is_family || refine != -1);
-        if (refine > 0 && scheme->element_get_level (tree->eclass, elements_from[0]) >= forest->maxlevel
-            && scheme->element_is_refinable (tree->eclass, elements_from[0])) {
+        if (refine > 0
+            && (scheme->element_get_level (tree->eclass, elements_from[0]) >= forest->maxlevel
+                || !scheme->element_is_refinable (tree->eclass, elements_from[0]))) {
           /* Only refine an element if it does not exceed the maximum level and if it is refinable */
           refine = 0;
         }

@@ -44,7 +44,7 @@ if( T8CODE_ENABLE_NETCDF )
   t8_cmesh_netcdf.h
   t8_forest_netcdf.h
   t8_netcdf.h
-  DESTINATION include)
+  TYPE INCLUDE )
 endif()
 
 set_target_properties( T8 PROPERTIES OUTPUT_NAME t8 )
@@ -226,17 +226,19 @@ install( FILES
     t8_types/t8_vec.hxx
     t8_version.h
     t8_vtk.h
-    DESTINATION include
+    TYPE INCLUDE
 )
 
-install( DIRECTORY t8_cmesh DESTINATION include FILES_MATCHING PATTERN "*.h" 
+install( DIRECTORY t8_cmesh TYPE INCLUDE FILES_MATCHING PATTERN "*.h" 
   PATTERN "t8_cmesh/t8_cmesh_copy.h"      EXCLUDE
   PATTERN "t8_cmesh/t8_cmesh_offset.h"    EXCLUDE 
   PATTERN "t8_cmesh/t8_cmesh_partition.h" EXCLUDE
   PATTERN "t8_cmesh/t8_cmesh_trees.h"     EXCLUDE 
-  )
-install( DIRECTORY t8_data DESTINATION include FILES_MATCHING PATTERN "*.h" )
-install( DIRECTORY t8_forest DESTINATION include FILES_MATCHING PATTERN "*.h"
+  PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/*.h"     EXCLUDE 
+)
+
+install( DIRECTORY t8_data TYPE INCLUDE FILES_MATCHING PATTERN "*.h" )
+install( DIRECTORY t8_forest TYPE INCLUDE FILES_MATCHING PATTERN "*.h"
   PATTERN "t8_forest/t8_forest_balance.h" EXCLUDE
   PATTERN "t8_forest/t8_forest_ghost.h "  EXCLUDE
   PATTERN "t8_forest/t8_forest_private.h" EXCLUDE
@@ -247,7 +249,12 @@ install( DIRECTORY t8_geometry DESTINATION include FILES_MATCHING PATTERN "*.h"
 install( DIRECTORY t8_schemes DESTINATION include FILES_MATCHING PATTERN "*.h" )
 install( DIRECTORY t8_vtk DESTINATION include FILES_MATCHING PATTERN "*.h" )
 
-install( DIRECTORY t8_cmesh DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
+install( DIRECTORY t8_cmesh DESTINATION include FILES_MATCHING PATTERN "*.hxx"
+  PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx" EXCLUDE 
+  PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.hxx" EXCLUDE 
+  PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_tree_to_vertex.hxx" EXCLUDE
+)
+
 install( DIRECTORY t8_data DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
 install( DIRECTORY t8_forest DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
 install( DIRECTORY t8_geometry DESTINATION include FILES_MATCHING PATTERN "*.hxx" 
@@ -260,9 +267,9 @@ install( DIRECTORY t8_vtk DESTINATION include FILES_MATCHING PATTERN "*.hxx"
   PATTERN "t8_vtk/t8_vtk_write_ASCII.hxx"   EXCLUDE
   PATTERN "t8_vtk/t8_vtk_writer_helper.hxx" EXCLUDE
   )
-install( DIRECTORY t8_types DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
+install( DIRECTORY t8_types TYPE INCLUDE FILES_MATCHING PATTERN "*.hxx" )
 
-install( TARGETS T8 DESTINATION lib )
+install( TARGETS T8 LIBRARY )
 install( TARGETS T8 EXPORT ${PROJECT_NAME}-targets )
 
 include( CMakePackageConfigHelpers )
