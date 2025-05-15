@@ -239,7 +239,7 @@ class vtk_writer {
 
     /* Create an array with the correct number of indices per cell */
     vtkIdType *vecCellIds = new vtkIdType[num_node];
-       
+
     /* Compute the coordinates of the element/tree. */
     double *coordinates = T8_ALLOC (double, 3 * num_node);
 
@@ -248,7 +248,7 @@ class vtk_writer {
     vtkIdType ptId = -1;
     for (int ivertex = 0; ivertex < num_node; ivertex++, (*point_id)++) {
       const size_t offset_3d = 3 * ivertex;
-      
+
       /* Insert the point in the points array. */
       double vtkCoords[3] = { coordinates[offset_3d], coordinates[offset_3d + 1], coordinates[offset_3d + 2] };
       points->InsertUniquePoint (vtkCoords, ptId);
