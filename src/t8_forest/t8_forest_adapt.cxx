@@ -395,7 +395,6 @@ t8_forest_adapt (t8_forest_t forest)
   int num_children;
   int num_siblings;
   int curr_size_elements_from;
-  int curr_size_elements;
   int num_elements_to_adapt_callback;
   int zz;
   int ci;
@@ -457,7 +456,6 @@ t8_forest_adapt (t8_forest_t forest)
        * array which could be coarsened recursively. */
       el_coarsen = 0;
       num_children = scheme->get_max_num_children (tree->eclass);
-      curr_size_elements = num_children;
       curr_size_elements_from = scheme->element_get_num_siblings (tree->eclass, first_element_from);
       /* Buffer for a family of new elements */
       elements = T8_ALLOC (t8_element_t *, num_children);
