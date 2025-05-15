@@ -131,9 +131,9 @@ typedef struct t8_forest
                                           Since this is memory consuming we only construct it when needed.
                                           This array follows the same logic as \a tree_offsets in \a t8_cmesh_t */
 
-  t8_locidx_t local_num_elements;  /**< Number of elements on this processor. */
-  t8_gloidx_t global_num_elements; /**< Number of elements on all processors. */
-  t8_profile_t *profile;           /**< If not NULL, runtimes and statistics about forest_commit are stored here. */
+  t8_locidx_t local_num_leaf_elements;  /**< Number of leaf elements on this processor. */
+  t8_gloidx_t global_num_leaf_elements; /**< Number of leaf elements on all processors. */
+  t8_profile_t *profile; /**< If not NULL, runtimes and statistics about forest_commit are stored here. */
   sc_statinfo_t stats[T8_PROFILE_NUM_STATS];
   int stats_computed;
 } t8_forest_struct_t;
@@ -141,8 +141,8 @@ typedef struct t8_forest
 /** The t8 tree datatype */
 typedef struct t8_tree
 {
-  t8_element_array_t elements; /**< locally stored elements */
-  t8_eclass_t eclass;          /**< The element class of this tree */
+  t8_element_array_t leaf_elements; /**< locally stored leaf elements */
+  t8_eclass_t eclass;               /**< The element class of this tree */
   /* TODO: We will need the *_desc variables later for sure. */
   t8_element_t *first_desc,    /**< first local descendant */
     *last_desc;                /**< last local descendant */

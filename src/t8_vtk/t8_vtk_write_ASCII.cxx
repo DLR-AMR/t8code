@@ -90,9 +90,9 @@ t8_forest_num_points (t8_forest_t forest, const int count_ghosts)
     /* Get the tree that stores the elements */
     t8_tree_t tree = (t8_tree_t) t8_sc_array_index_locidx (forest->trees, itree);
     /* Get the scheme of the current tree */
-    const size_t num_elements = t8_element_array_get_count (&tree->elements);
+    const size_t num_elements = t8_element_array_get_count (&tree->leaf_elements);
     for (t8_locidx_t ielem = 0; ielem < (t8_locidx_t) num_elements; ielem++) {
-      const t8_element_t *elem = t8_element_array_index_locidx (&tree->elements, ielem);
+      const t8_element_t *elem = t8_element_array_index_locidx (&tree->leaf_elements, ielem);
       num_points += scheme->element_get_num_corners (tree_class, elem);
     }
   }
@@ -494,7 +494,7 @@ t8_forest_vtk_write_cell_data (t8_forest_t forest, FILE *vtufile, const char *da
     tree = t8_forest_get_tree (forest, itree);
     /* Get the eclass scheme of the tree */
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
-    elems_in_tree = (t8_locidx_t) t8_element_array_get_count (&tree->elements);
+    elems_in_tree = (t8_locidx_t) t8_element_array_get_count (&tree->leaf_elements);
     for (element_index = 0; element_index < elems_in_tree; element_index++) {
       /* Get a pointer to the element */
       element = t8_forest_get_element (forest, tree->elements_offset + element_index, NULL);
@@ -670,7 +670,7 @@ t8_forest_vtk_write_cells (t8_forest_t forest, FILE *vtufile, const int write_tr
     const char *datatype;
 
     /* Use 32 bit ints if the global element count fits, 64 bit otherwise. */
-    datatype = forest->global_num_elements > T8_LOCIDX_MAX ? T8_VTK_GLOIDX : T8_VTK_LOCIDX;
+    datatype = forest->global_num_leaf_elements > T8_LOCIDX_MAX ? T8_VTK_GLOIDX : T8_VTK_LOCIDX;
     freturn = t8_forest_vtk_write_cell_data (forest, vtufile, "element_id", datatype, "", 8,
                                              t8_forest_vtk_cells_elementid_kernel, write_ghosts, NULL);
     if (!freturn) {
