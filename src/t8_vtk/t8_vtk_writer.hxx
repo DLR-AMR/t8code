@@ -233,74 +233,13 @@ class vtk_writer {
                                vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_level,
                                vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_element_id)
   {
-    /* Array to store the point ids for that cell */
-    vtkIdType *vecCellIds = NULL;
-
     /* Get the shape of the current element and the respective shape of the vtk_cell. */
     const t8_element_shape_t element_shape = grid_element_shape (grid, itree, element);
     const int num_node = t8_get_number_of_vtk_nodes (element_shape, curved_flag);
 
-    if (curved_flag == 0) {
-      switch (element_shape) {
-      case T8_ECLASS_VERTEX:
-        vecCellIds = new vtkIdType[num_node];
-        break;
-      case T8_ECLASS_LINE:
-        vecCellIds = new vtkIdType[num_node];
-        break;
-      case T8_ECLASS_QUAD:
-        vecCellIds = new vtkIdType[num_node];
-        break;
-      case T8_ECLASS_TRIANGLE:
-        vecCellIds = new vtkIdType[num_node];
-        break;
-      case T8_ECLASS_HEX:
-        vecCellIds = new vtkIdType[num_node];
-        break;
-      case T8_ECLASS_TET:
-        vecCellIds = new vtkIdType[num_node];
-        break;
-      case T8_ECLASS_PRISM:
-        vecCellIds = new vtkIdType[num_node];
-        break;
-      case T8_ECLASS_PYRAMID:
-        vecCellIds = new vtkIdType[num_node];
-        break;
-      default:
-        SC_ABORT_NOT_REACHED ();
-      }
-    }
-    else { /* curved_flag != 0 */
-      switch (element_shape) {
-      case T8_ECLASS_VERTEX:
-        vecCellIds = new vtkIdType[num_node];
-        break;
-      case T8_ECLASS_LINE:
-        vecCellIds = new vtkIdType[num_node];
-        break;
-      case T8_ECLASS_QUAD:
-        vecCellIds = new vtkIdType[num_node];
-        break;
-      case T8_ECLASS_TRIANGLE:
-        vecCellIds = new vtkIdType[num_node];
-        break;
-      case T8_ECLASS_HEX:
-        vecCellIds = new vtkIdType[num_node];
-        break;
-      case T8_ECLASS_TET:
-        vecCellIds = new vtkIdType[num_node];
-        break;
-      case T8_ECLASS_PRISM:
-        vecCellIds = new vtkIdType[num_node];
-        break;
-      case T8_ECLASS_PYRAMID:
-        vecCellIds = new vtkIdType[num_node];
-        break;
-      default:
-        SC_ABORT_NOT_REACHED ();
-      }
-    }
-
+    /* Create an array with the correct number of indices per cell */
+    vtkIdType *vecCellIds = new vtkIdType[num_node];
+       
     /* Compute the coordinates of the element/tree. */
     double *coordinates = T8_ALLOC (double, 3 * num_node);
 
@@ -309,6 +248,7 @@ class vtk_writer {
     vtkIdType ptId = -1;
     for (int ivertex = 0; ivertex < num_node; ivertex++, (*point_id)++) {
       const size_t offset_3d = 3 * ivertex;
+      
       /* Insert the point in the points array. */
       double vtkCoords[3] = { coordinates[offset_3d], coordinates[offset_3d + 1], coordinates[offset_3d + 2] };
       points->InsertUniquePoint (vtkCoords, ptId);
