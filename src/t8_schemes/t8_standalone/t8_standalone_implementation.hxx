@@ -476,6 +476,15 @@ struct t8_standalone_scheme
     return T8_ELEMENT_NUM_CHILDREN[TEclass];
   }
 
+  /** Return the max number of children of an eclass.
+   * \return            The max number of children of \a element.
+   */
+  static constexpr int
+  get_max_num_children () noexcept
+  {
+    return T8_ELEMENT_NUM_CHILDREN[TEclass];
+  }
+
   /**
    * Indicates if an element is refinable. Possible reasons for being not refinable could be
    * that the element has reached its max level.
