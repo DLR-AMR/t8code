@@ -199,6 +199,8 @@ t8_forest_get_tree_element_array_mutable (const t8_forest_t forest, t8_locidx_t 
  * \param [in]     elements    The array of elements.
  * \param [in]     element_id  The linear id of the element to search for.
  * \param [in]     maxlevel    The maximum level of the elements.
+ * \return                            The index \a i of an element with the linear_id \a element_id in \a elements if it exists.
+ *                                        -1 if no such element was found in \a elements.
  */
 t8_locidx_t
 t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_linearidx_t element_id, const int maxlevel);
