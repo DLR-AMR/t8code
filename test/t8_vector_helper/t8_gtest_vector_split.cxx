@@ -25,6 +25,7 @@
 #include <numeric>
 #include <t8.h>
 
+// Integer division function, used as example for the category_func argument of vector_split.
 constexpr unsigned int
 split (const int value, const int div)
 {
@@ -58,9 +59,9 @@ class test_vector_split: public testing::TestWithParam<int> {
   const size_t num_entries = 100000;
 #endif
   int div;
-  size_t num_types;
-  std::vector<size_t> offsets;
-  std::vector<int> values;
+  size_t num_types;             // divisor for split(...) function, set via testing parameters
+  std::vector<size_t> offsets;  // vector of category offsets
+  std::vector<int> values;      // example vector of integers used to test vector_split
 };
 
 TEST_P (test_vector_split, test_split)

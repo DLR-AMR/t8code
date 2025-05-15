@@ -37,9 +37,10 @@
 #include <t8.h>
 
 /**
- * Compute the offsets of a categories of elements in a sorted iterable range given by \a begin and \a end.
+ * Compute the offsets of categories of elements in a sorted iterable range given by \a begin and \a end, such as a std::vector.
  * The value type of the iterator should be comparable with <.
- * This is a re-implementation of sc_array_split
+ * The categories are defined by the std::function \a category_func passed as input argument.
+ * This is a re-implementation of sc_array_split.
  * 
  * /tparam TIterator            An input iterator type
  * /tparam TSentinel            A sentinel type for the iterator
