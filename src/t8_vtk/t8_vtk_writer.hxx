@@ -310,9 +310,9 @@ class vtk_writer {
     for (int ivertex = 0; ivertex < num_node; ivertex++, (*point_id)++) {
       const size_t offset_3d = 3 * ivertex;
       /* Insert the point in the points array. */
-      double vtkCoords[3] = {coordinates[offset_3d], coordinates[offset_3d + 1], coordinates[offset_3d + 2]};
-      points->InsertUniquePoint(vtkCoords, ptId);
-      
+      double vtkCoords[3] = { coordinates[offset_3d], coordinates[offset_3d + 1], coordinates[offset_3d + 2] };
+      points->InsertUniquePoint (vtkCoords, ptId);
+
       /* Add the returned point id to the cell ids*/
       vecCellIds[ivertex] = ptId;
     }
@@ -378,9 +378,9 @@ class vtk_writer {
                              vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_mpirank,
                              vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_level,
                              vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_element_id,
-                             vtkSmartPointer<vtkCellArray> cellArray, vtkSmartPointer<vtkMergePoints> points, int *cellTypes,
-                             const t8_locidx_t num_local_trees, t8_gloidx_t *elem_id, long int *point_id,
-                             const t8_gloidx_t offset, const bool ghosts, const t8_locidx_t itree);
+                             vtkSmartPointer<vtkCellArray> cellArray, vtkSmartPointer<vtkMergePoints> points,
+                             int *cellTypes, const t8_locidx_t num_local_trees, t8_gloidx_t *elem_id,
+                             long int *point_id, const t8_gloidx_t offset, const bool ghosts, const t8_locidx_t itree);
 
   /**
  * Construct an unstructuredGrid from either a forest or cmesh. The flags can be used to define what parameters we want to write. 
@@ -425,13 +425,13 @@ class vtk_writer {
 
     /* Allocate VTK Memory for the arrays */
     int iMaxCellSize = 20;
-    cellArray->AllocateEstimate(num_cells, iMaxCellSize);
-    points_store->Allocate(num_cells * iMaxCellSize);
-    points->InitPointInsertion(points_store, unstructuredGrid->GetBounds());
-    vtk_treeid->Allocate(num_cells);
-    vtk_mpirank->Allocate(num_cells);
-    vtk_level->Allocate(num_cells);
-    vtk_element_id->Allocate(num_cells);
+    cellArray->AllocateEstimate (num_cells, iMaxCellSize);
+    points_store->Allocate (num_cells * iMaxCellSize);
+    points->InitPointInsertion (points_store, unstructuredGrid->GetBounds ());
+    vtk_treeid->Allocate (num_cells);
+    vtk_mpirank->Allocate (num_cells);
+    vtk_level->Allocate (num_cells);
+    vtk_element_id->Allocate (num_cells);
 
     /* Iterate over all trees and translate them. */
     const t8_locidx_t num_local_trees = grid_local_num_trees (grid);
@@ -450,7 +450,7 @@ class vtk_writer {
     }
 
     /* Construct the unstructuredGrid. */
-    unstructuredGrid->SetPoints (points->GetPoints());
+    unstructuredGrid->SetPoints (points->GetPoints ());
     unstructuredGrid->SetCells (cellTypes, cellArray);
 
     if (this->write_treeid) {
@@ -490,7 +490,7 @@ class vtk_writer {
     }
 
     /* Release unused memory in the arrays */
-    unstructuredGrid->Squeeze();
+    unstructuredGrid->Squeeze ();
 
     T8_FREE (cellTypes);
     T8_FREE (dataArrays);
