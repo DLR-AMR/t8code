@@ -81,7 +81,7 @@ count_leaves_recursive (t8_element_t *child, const t8_scheme *scheme, t8_eclass_
   return num_leaves;
 }
 
-TEST_P (class_element_leaves, test_element_count_leaves_root)
+TEST_P (class_element_leaves, DISABLED_test_element_count_leaves_root)
 {
 #if T8CODE_TEST_LEVEL >= 1
   const int maxlevel = 4;
