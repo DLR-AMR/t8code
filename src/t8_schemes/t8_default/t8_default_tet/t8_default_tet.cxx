@@ -114,12 +114,6 @@ t8_default_scheme_tet::element_get_num_children ([[maybe_unused]] const t8_eleme
 }
 
 int
-t8_default_scheme_tet::get_max_num_children () const
-{
-  return 8;
-}
-
-int
 t8_default_scheme_tet::element_get_num_face_children ([[maybe_unused]] const t8_element_t *elem,
                                                       [[maybe_unused]] int face) const
 {

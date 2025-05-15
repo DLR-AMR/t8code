@@ -188,12 +188,6 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
   int
   element_get_num_children (const t8_element_t *elem) const;
 
-  /** Return the max number of children of an eclass.
-   * \return            The max number of children of \a element.
-   */
-  int
-  get_max_num_children () const;
-
   /** Return the number of children of an element's face when the element is refined.
    * \param [in] elem   The element whose face is considered.
    * \param [in] face   A face of \a elem.

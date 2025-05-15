@@ -191,6 +191,15 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
     return t8_eclass_num_vertices[eclass];
   }
 
+  /** Return the max number of children of an eclass.
+   * \return            The max number of children of \a element.
+   */
+  inline int
+  get_max_num_children () const
+  {
+    return t8_eclass_max_num_children[eclass];
+  }
+
   /** Allocate space for a bunch of elements.
    * \param [in] length The number of elements to allocate.
    * \param [out] elem  The elements to allocate.
