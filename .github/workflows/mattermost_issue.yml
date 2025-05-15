@@ -27,7 +27,7 @@ name: Mattermost_message_issue
 
 # Controls when the workflow will run
 on:
-  # Triggers the workflow on pull request events on the feature-CI_mattermost_messages, develop or main branch
+  # Triggers the workflow on issues.
   issues:
     types: [ opened, closed, reopened]
 
