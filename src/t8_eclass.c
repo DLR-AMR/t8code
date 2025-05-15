@@ -28,6 +28,8 @@ const int t8_eclass_num_faces[T8_ECLASS_COUNT] = { 0, 2, 4, 3, 6, 4, 5, 5 };
 
 const int t8_eclass_max_num_faces[T8_ECLASS_MAX_DIM + 1] = { 0, 2, 4, 6 };
 
+const int t8_eclass_max_num_children[T8_ECLASS_COUNT] = { 1, 2, 4, 4, 8, 8, 8, 10 };
+
 const int t8_face_vertex_to_tree_vertex[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES][T8_ECLASS_MAX_CORNERS_2D] = {
   { { -1 } },                                                                                         /* vertex */
   { { 0 }, { 1 } },                                                                                   /* line */

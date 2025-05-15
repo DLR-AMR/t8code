@@ -98,7 +98,11 @@ class t8_scheme {
                                 t8_standalone_scheme<T8_ECLASS_VERTEX>,
                                 t8_standalone_scheme<T8_ECLASS_LINE>,
                                 t8_standalone_scheme<T8_ECLASS_QUAD>,
-                                t8_standalone_scheme<T8_ECLASS_HEX>
+                                t8_standalone_scheme<T8_ECLASS_TRIANGLE>,
+                                t8_standalone_scheme<T8_ECLASS_HEX>,
+                                t8_standalone_scheme<T8_ECLASS_TET>,
+                                t8_standalone_scheme<T8_ECLASS_PRISM>,
+                                t8_standalone_scheme<T8_ECLASS_PYRAMID>
                                 >;
   /* clang-format on */
 
@@ -366,6 +370,16 @@ class t8_scheme {
   {
     return std::visit ([&] (auto &&scheme) { return scheme.element_get_num_children (elem); },
                        eclass_schemes[tree_class]);
+  };
+
+  /** Return the max number of children of an eclass.
+   * \param [in] tree_class    The eclass of tree the elements are part of.
+   * \return            The max number of children of \a element.
+   */
+  inline int
+  get_max_num_children (const t8_eclass_t tree_class) const
+  {
+    return std::visit ([&] (auto &&scheme) { return scheme.get_max_num_children (); }, eclass_schemes[tree_class]);
   };
 
   /** Return the number of children of an element's face when the element is refined.

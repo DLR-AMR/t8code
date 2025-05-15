@@ -139,6 +139,12 @@ t8_element_get_num_children (const t8_scheme_c *scheme, const t8_eclass_t tree_c
 }
 
 int
+t8_get_num_children (const t8_scheme_c *scheme, const t8_eclass_t tree_class)
+{
+  return scheme->get_max_num_children (tree_class);
+}
+
+int
 t8_element_get_num_face_children (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *elem,
                                   int face)
 {
