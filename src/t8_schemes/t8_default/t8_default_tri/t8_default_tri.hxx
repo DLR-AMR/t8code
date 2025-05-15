@@ -40,7 +40,7 @@ class t8_scheme;
 class t8_default_scheme_tri: public t8_default_scheme_common<t8_default_scheme_tri> {
  public:
   /** Constructor which calls the specialized constructor for the base. */
-  t8_default_scheme_tri (): t8_default_scheme_common (T8_ECLASS_TRIANGLE, sizeof (t8_dtri_t)) {};
+  t8_default_scheme_tri () noexcept: t8_default_scheme_common (T8_ECLASS_TRIANGLE, sizeof (t8_dtri_t)) {};
 
   /** Constructor with a custom element size. */
   t8_default_scheme_tri (size_t elem_size): t8_default_scheme_common (T8_ECLASS_TRIANGLE, elem_size) {};

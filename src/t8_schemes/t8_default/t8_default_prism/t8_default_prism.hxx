@@ -45,7 +45,7 @@ class t8_scheme;
 class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme_prism> {
  public:
   /** Constructor which calls the specialized constructor for the base. */
-  t8_default_scheme_prism (): t8_default_scheme_common (T8_ECLASS_PRISM, sizeof (t8_dprism_t)) {};
+  t8_default_scheme_prism () noexcept: t8_default_scheme_common (T8_ECLASS_PRISM, sizeof (t8_dprism_t)) {};
 
   /** Constructor with a custom element size. */
   t8_default_scheme_prism (size_t elem_size): t8_default_scheme_common (T8_ECLASS_PRISM, elem_size) {};

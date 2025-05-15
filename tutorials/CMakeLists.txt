@@ -25,7 +25,7 @@ function( add_t8_tutorial )
         set_target_properties( ${ADD_T8_TUTORIAL_NAME} PROPERTIES EXPORT_COMPILE_COMMANDS ON )
     endif( T8CODE_EXPORT_COMPILE_COMMANDS )
 
-    install( TARGETS ${ADD_T8_TUTORIAL_NAME} DESTINATION bin )
+    install( TARGETS ${ADD_T8_TUTORIAL_NAME} RUNTIME )
 endfunction()
 
 #copy tutorial files to the exact same location in the builddir as they are in the source dir

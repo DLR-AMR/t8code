@@ -33,7 +33,7 @@ class t8_scheme;
 class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_scheme_vertex> {
  public:
   /** Constructor which calls the specialized constructor for the base. */
-  t8_default_scheme_vertex (): t8_default_scheme_common (T8_ECLASS_VERTEX, sizeof (t8_dvertex_t)) {};
+  t8_default_scheme_vertex () noexcept: t8_default_scheme_common (T8_ECLASS_VERTEX, sizeof (t8_dvertex_t)) {};
 
   /** Constructor with a custom element size. */
   t8_default_scheme_vertex (size_t elem_size): t8_default_scheme_common (T8_ECLASS_VERTEX, elem_size) {};
