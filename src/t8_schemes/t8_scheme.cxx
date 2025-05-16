@@ -88,6 +88,12 @@ t8_element_is_equal (const t8_scheme_c *scheme, const t8_eclass_t tree_class, co
   return scheme->element_is_equal (tree_class, elem1, elem2);
 }
 
+int
+element_is_refinable (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *elem)
+{
+  return scheme->element_is_refinable (tree_class, elem);
+};
+
 void
 t8_element_get_parent (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *elem,
                        t8_element_t *parent)
@@ -345,7 +351,7 @@ t8_element_count_leaves_from_root (const t8_scheme_c *scheme, const t8_eclass_t 
   return scheme->count_leaves_from_root (tree_class, level);
 }
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 int
 t8_element_is_valid (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *elem)
 {

@@ -45,7 +45,7 @@ typedef p8est_quadrant_t t8_phex_t;
 class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_hex> {
  public:
   /** Constructor which calls the specialized constructor for the base. */
-  t8_default_scheme_hex (): t8_default_scheme_common (T8_ECLASS_HEX, sizeof (t8_phex_t)) {};
+  t8_default_scheme_hex () noexcept: t8_default_scheme_common (T8_ECLASS_HEX, sizeof (t8_phex_t)) {};
 
   /** Destructor */
   ~t8_default_scheme_hex () {};
@@ -561,7 +561,7 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
   int
   refines_irregular (void) const;
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is
    *  safe to perform any of the above algorithms on it.
    * \param [in]      elem  The element to be checked.

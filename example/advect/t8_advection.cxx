@@ -1131,7 +1131,7 @@ t8_advect_write_vtk (t8_advect_problem_t *problem)
   problem->vtk_count++;
 }
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 static void
 t8_advect_print_phi (t8_advect_problem_t *problem)
 {
@@ -1230,7 +1230,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u, t8_example_level_se
   start_volume = t8_advect_level_set_volume (problem);
   t8_global_essentialf ("[advect] Start volume %e\n", start_volume);
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   t8_advect_print_phi (problem);
 #endif
 
@@ -1505,7 +1505,7 @@ main (int argc, char *argv[])
   SC_CHECK_MPI (mpiret);
 
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   t8_init (SC_LP_DEBUG);
 #else
   t8_init (SC_LP_ESSENTIAL);

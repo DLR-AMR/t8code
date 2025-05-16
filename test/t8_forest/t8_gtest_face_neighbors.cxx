@@ -99,13 +99,19 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
   /* iterate over all elements */
   bool forest_is_uniform = true;  // The first forest is uniform. We set this to false at the end of the for loop.
   for (auto &forest : forests) {
+    const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
+#if T8_ENABLE_DEBUG
+    if (t8_cmesh_get_tree_geometry (cmesh, 0) != NULL) {
+      // Debug vtk output, only if cmesh has a registered geometry
+      t8_forest_write_vtk (forest, "debug_face_neigh");
+    }
+#endif
     if (!forest_is_uniform) {
       // Currently, adaptive forest is not working properly due to a bug in the
       // face neighbor computation.
       // We hence currently skip the test for adaptive forests.
-      break;
+      // break;
     }
-    const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
     const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
     const t8_locidx_t num_ghost_trees = t8_forest_get_num_ghost_trees (forest);
     const t8_locidx_t num_local_elements = t8_forest_get_local_num_elements (forest);
@@ -275,6 +281,11 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
                                                &neigh_dual_faces, &neigh_num_neighbors, &neigh_element_indices,
                                                &neigh_neigh_class, &neigh_gneigh_tree, &neigh_orientation);
 
+            t8_debugf ("original element\n");
+            scheme->element_debug_print (neigh_class, element);
+            t8_debugf ("neighbor element\n");
+            scheme->element_debug_print (neigh_class, neighbor);
+            fflush (stdout);
             // We must have found at least one face neighbor, namely the original element.
             EXPECT_GE (neigh_num_neighbors, 1);
             // The neighbor's neighbor tree must be the current tree

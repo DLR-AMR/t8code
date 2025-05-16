@@ -35,7 +35,8 @@ main (int argc, char **argv)
 
   mpic = sc_MPI_COMM_WORLD;
   sc_init (mpic, 1, 1, NULL, SC_LP_PRODUCTION);
-  t8_init (SC_LP_DEFAULT);
+  //t8_init (SC_LP_PRODUCTION);
+  t8_init (SC_LP_DEBUG);
 
   ::testing::InitGoogleTest (&argc, argv);
 
