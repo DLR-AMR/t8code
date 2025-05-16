@@ -40,7 +40,7 @@ struct t8_geometry_handler
   /**
    * Constructor.
    */
-  t8_geometry_handler (): active_geometry (nullptr), active_tree (-1)
+  t8_geometry_handler ()
   {
     t8_refcount_init (&rc);
     t8_debugf ("Constructed the geometry_handler.\n");
@@ -289,11 +289,11 @@ struct t8_geometry_handler
   update_tree (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 
   /** Stores all geometries that are handled by this geometry_handler. */
-  std::unordered_map<size_t, std::unique_ptr<t8_geometry>> registered_geometries;
+  std::unordered_map<size_t, std::unique_ptr<t8_geometry>> registered_geometries = {};
   /** Points to the currently loaded geometry (the geometry that was used last and is likely to be used next). */
-  t8_geometry *active_geometry;
+  t8_geometry *active_geometry = nullptr;
   /** The global tree id of the last tree for which geometry was used. */
-  t8_gloidx_t active_tree;
+  t8_gloidx_t active_tree = -1;
   /** The reference count of the geometry handler. TODO: Replace by shared_ptr when cmesh becomes a class. */
   t8_refcount_t rc;
 };
