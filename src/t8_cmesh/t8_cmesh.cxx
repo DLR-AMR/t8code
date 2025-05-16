@@ -1558,28 +1558,13 @@ t8_cmesh_get_local_bounding_box (const t8_cmesh_t cmesh, double bounds[6])
     tree_class = t8_cmesh_get_tree_class (cmesh, itree);
     vertices = t8_cmesh_get_tree_vertices (cmesh, itree);
     num_vertices = t8_eclass_num_vertices[tree_class];
-    for (int ivertex = 0; ivertex < num_vertices; ivertex++) {
-      const int vert_x = 3 * ivertex;
-      const int vert_y = 3 * ivertex + 1;
-      const int vert_z = 3 * ivertex + 2;
-      if (vertices[vert_x] < bounds[0]) {
-        bounds[0] = vertices[vert_x];
-      }
-      if (vertices[vert_x] > bounds[1]) {
-        bounds[1] = vertices[vert_x];
-      }
-      if (vertices[vert_y] < bounds[2]) {
-        bounds[2] = vertices[vert_y];
-      }
-      if (vertices[vert_y] > bounds[3]) {
-        bounds[3] = vertices[vert_y];
-      }
-      if (vertices[vert_z] < bounds[4]) {
-        bounds[4] = vertices[vert_z];
-      }
-      if (vertices[vert_z] > bounds[5]) {
-        bounds[5] = vertices[vert_z];
-      }
-    }
+    std::for_each (vertices, vertices + 3 * num_vertices, [&bounds] (double coord) {
+      bounds[0] = std::min (bounds[0], coord);
+      bounds[1] = std::max (bounds[1], coord);
+      bounds[2] = std::min (bounds[2], coord);
+      bounds[3] = std::max (bounds[3], coord);
+      bounds[4] = std::min (bounds[4], coord);
+      bounds[5] = std::max (bounds[5], coord);
+    });
   }
 }
