@@ -1536,3 +1536,50 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, const int level, const t8_scheme *sch
     *last_local_tree = *first_local_tree - 1;
   }
 }
+
+void
+t8_cmesh_get_local_bounding_box (const t8_cmesh_t cmesh, double bounds[6])
+{
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (cmesh->num_local_trees > 0);
+  const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
+
+  t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, 0);
+  const int num_vertices = t8_eclass_num_vertices[tree_class];
+
+  double *vertices = t8_cmesh_get_tree_vertices (cmesh, 0);
+  bounds[0] = vertices[0];  // min x
+  bounds[1] = vertices[0];  // max x
+  bounds[2] = vertices[1];  // min y
+  bounds[3] = vertices[1];  // max y
+  bounds[4] = vertices[2];  // min z
+  bounds[5] = vertices[2];  // max z
+  for (t8_locidx_t itree = 0; itree < num_local_trees; itree++) {
+    tree_class = t8_cmesh_get_tree_class (cmesh, itree);
+    vertices = t8_cmesh_get_tree_vertices (cmesh, itree);
+    num_vertices = t8_eclass_num_vertices[tree_class];
+    for (int ivertex = 0; ivertex < num_vertices; ivertex++) {
+      const int vert_x = 3 * ivertex;
+      const int vert_y = 3 * ivertex + 1;
+      const int vert_z = 3 * ivertex + 2;
+      if (vertices[vert_x] < bounds[0]) {
+        bounds[0] = vertices[vert_x];
+      }
+      if (vertices[vert_x] > bounds[1]) {
+        bounds[1] = vertices[vert_x];
+      }
+      if (vertices[vert_y] < bounds[2]) {
+        bounds[2] = vertices[vert_y];
+      }
+      if (vertices[vert_y] > bounds[3]) {
+        bounds[3] = vertices[vert_y];
+      }
+      if (vertices[vert_z] < bounds[4]) {
+        bounds[4] = vertices[vert_z];
+      }
+      if (vertices[vert_z] > bounds[5]) {
+        bounds[5] = vertices[vert_z];
+      }
+    }
+  }
+}
