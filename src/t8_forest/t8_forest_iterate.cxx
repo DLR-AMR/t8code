@@ -109,7 +109,7 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
   //        In that case, element is a leaf but elem_count is not 1.
   bool is_leaf = t8_forest_element_is_leaf_or_ghost (forest, element, local_or_ghost_tree_id, tree_is_ghost);
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   if (!is_leaf) {
     /* Check whether element has smaller level than the first leaf */
     const t8_element_t *leaf = t8_element_array_index_locidx (leaf_elements, 0);
