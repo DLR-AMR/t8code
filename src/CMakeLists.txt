@@ -25,7 +25,6 @@ if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
   option( T8CODE_CODE_COVERAGE "Enable code coverage reporting" OFF)
   if(T8CODE_CODE_COVERAGE)
     include(CodeCoverage)
-    target_compile_definitions( T8 PUBLIC T8_CODE_COVERAGE=1 )
   endif()
 
   set (T8_CXXFLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG}")
