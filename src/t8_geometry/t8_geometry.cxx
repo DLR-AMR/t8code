@@ -60,6 +60,9 @@ t8_geometry_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_c
 t8_geometry_type_t
 t8_geometry_get_type (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 {
+  if (cmesh->geometry_handler == nullptr) {
+    return T8_GEOMETRY_TYPE_INVALID
+  }
   /* Return the type. */
   return cmesh->geometry_handler->get_tree_geometry_type (cmesh, gtreeid);
 }
