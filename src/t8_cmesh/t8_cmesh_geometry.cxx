@@ -47,9 +47,9 @@ t8_cmesh_set_tree_geometry (t8_cmesh_t cmesh, const t8_gloidx_t gtreeid, const t
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   /* Add the hash of the geometry as an attribute to the tree. */
-  size_t hash = geom->t8_geom_get_hash ();
-  t8_cmesh_set_attribute (cmesh, gtreeid, t8_get_package_id (), T8_CMESH_GEOMETRY_ATTRIBUTE_KEY, &hash, sizeof (size_t),
-                          0);
+  t8_geometry_hash_t hash = geom->t8_geom_get_hash ();
+  t8_cmesh_set_attribute (cmesh, gtreeid, t8_get_package_id (), T8_CMESH_GEOMETRY_ATTRIBUTE_KEY, &hash,
+                          sizeof (t8_geometry_hash_t), 0);
 }
 
 const t8_geometry_c *
@@ -65,39 +65,46 @@ t8_cmesh_get_tree_geometry (const t8_cmesh_t cmesh, const t8_gloidx_t gtreeid)
      */
     return geom_handler->get_unique_geometry ();
   }
-  const size_t geom_hash = t8_cmesh_get_tree_geom_hash (cmesh, gtreeid);
+  const t8_geometry_hash_t geom_hash = t8_cmesh_get_tree_geom_hash (cmesh, gtreeid);
+
+  /* Look up the geometry in the geometry handler's hash table and return it. */
   return geom_handler->get_geometry (geom_hash);
 }
 
-size_t
+t8_geometry_hash_t
 t8_cmesh_get_tree_geom_hash (const t8_cmesh_t cmesh, const t8_gloidx_t gtreeid)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   t8_geometry_handler *geom_handler = cmesh->geometry_handler;
 
+  if (geom_handler == nullptr) {
+    /* If no geometry handler is present, no geometries have beed registered and 
+    * the tree does not have a geometry. */
+    return t8_geometry_empty_hash;
+  }
+
   if (geom_handler->get_num_geometries () == 1) {
     /* There is only one geometry registered in this cmesh, so we assume
      * that this geometry is used for all trees. */
     auto geom = geom_handler->get_unique_geometry ();
+    T8_ASSERT (geom != NULL);  // If there is exactly one geometry, then it must be active.
 #if T8_ENABLE_DEBUG
     /* In debug mode, get the tree's geometry anyways and check that it is either
      * NULL or the hash of the unique geometry. */
 
     t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
     /* Look up the hash of the geometry in the attributes. */
-    const size_t *geom_hash
-      = (const size_t *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_GEOMETRY_ATTRIBUTE_KEY, ltreeid);
-    T8_ASSERT (geom_hash == NULL || *geom_hash == geom->t8_geom_get_hash ());
+    const t8_geometry_hash_t *geom_hash = (const t8_geometry_hash_t *) t8_cmesh_get_attribute (
+      cmesh, t8_get_package_id (), T8_CMESH_GEOMETRY_ATTRIBUTE_KEY, ltreeid);
+    T8_ASSERT (geom_hash != NULL);
+    T8_ASSERT (*geom_hash == geom->t8_geom_get_hash ());
 #endif /* T8_ENABLE_DEBUG */
     return geom->t8_geom_get_hash ();
   }
 
   t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
   /* Look up the hash of the geometry in the attributes. */
-  const size_t *hash
-    = (const size_t *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_GEOMETRY_ATTRIBUTE_KEY, ltreeid);
-  if (hash == nullptr) {
-    SC_ABORTF ("Could not find geometry for tree %ld.", static_cast<long> (gtreeid));
-  }
-  return *hash;
+  const t8_geometry_hash_t *geometry_hash = (const t8_geometry_hash_t *) t8_cmesh_get_attribute (
+    cmesh, t8_get_package_id (), T8_CMESH_GEOMETRY_ATTRIBUTE_KEY, ltreeid);
+  return *geometry_hash;
 }

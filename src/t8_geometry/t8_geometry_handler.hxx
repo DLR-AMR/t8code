@@ -89,7 +89,7 @@ struct t8_geometry_handler
   inline t8_geometry *
   get_geometry (const std::string &name)
   {
-    const size_t hash = std::hash<std::string> {}(name);
+    const t8_geometry_hash_t hash = std::hash<std::string> {}(name);
     return t8_geometry_handler::get_geometry (hash);
   }
 
@@ -99,12 +99,17 @@ struct t8_geometry_handler
    * \return            An iterator to the geometry if found, NULL otherwise.
    */
   inline t8_geometry *
-  get_geometry (const size_t hash)
+  get_geometry (const t8_geometry_hash_t hash)
   {
+    if (t8_geometry_hash_is_null (hash)) {
+      /* The hash belongs to a non-existing geometry. */
+      return nullptr;
+    }
     auto found = registered_geometries.find (hash);
     if (found != registered_geometries.end ()) {
       return found->second.get ();
     }
+    t8_errorf ("Geometry with hash value %lu was not found.\n", hash);
     return nullptr;
   }
 
@@ -259,7 +264,7 @@ struct t8_geometry_handler
   add_geometry (std::unique_ptr<t8_geometry> geom)
   {
     t8_debugf ("Registering geometry with name %s\n", geom->t8_geom_get_name ().c_str ());
-    const size_t hash = geom->t8_geom_get_hash ();
+    const t8_geometry_hash_t hash = geom->t8_geom_get_hash ();
     if (registered_geometries.find (hash) == registered_geometries.end ()) {
       registered_geometries.emplace (hash, std::move (geom));
     }
