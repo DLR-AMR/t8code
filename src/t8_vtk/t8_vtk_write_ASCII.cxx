@@ -943,6 +943,11 @@ t8_cmesh_vtk_write_file_ext (const t8_cmesh_t cmesh, const char *fileprefix, con
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   T8_ASSERT (fileprefix != NULL);
 
+  /* Constants used as return values in order 
+   * to have more readable code. */
+  constexpr int write_successful = 1;
+  constexpr int write_failure = 0;
+
   if (cmesh->mpirank == 0) {
     /* Write the pvtu header file. */
     int num_ranks_that_write = cmesh->set_partition ? cmesh->mpisize : 1;
@@ -978,7 +983,8 @@ t8_cmesh_vtk_write_file_ext (const t8_cmesh_t cmesh, const char *fileprefix, con
     vtufile = fopen (vtufilename, "wb");
     if (vtufile == NULL) {
       t8_global_errorf ("Could not open file %s for output.\n", vtufilename);
-      return 0;
+      fclose (vtufile);
+      return write_failure;
     }
     fprintf (vtufile, "<?xml version=\"1.0\"?>\n");
     fprintf (vtufile, "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\"");
@@ -1001,6 +1007,12 @@ t8_cmesh_vtk_write_file_ext (const t8_cmesh_t cmesh, const char *fileprefix, con
     for (tree = t8_cmesh_get_first_tree (cmesh); tree != NULL; tree = t8_cmesh_get_next_tree (cmesh, tree)) {
       /*  TODO: Use new geometry here. Need cmesh_get_reference coords function. */
       vertices = t8_cmesh_get_tree_vertices (cmesh, tree->treeid);
+      if (vertices == nullptr) {
+        t8_errorf ("Error in writing file %s. Could not read vertex coordinates for cmesh tree %i.\n", vtufilename,
+                   tree->treeid);
+        fclose (vtufile);
+        return write_failure;
+      }
       for (ivertex = 0; ivertex < t8_eclass_num_vertices[tree->eclass]; ivertex++) {
         vertex = vertices + 3 * t8_eclass_t8_to_vtk_corner_number[tree->eclass][ivertex];
         x = vertex[0];
@@ -1023,6 +1035,13 @@ t8_cmesh_vtk_write_file_ext (const t8_cmesh_t cmesh, const char *fileprefix, con
         eclass = t8_cmesh_get_ghost_class (cmesh, ighost);
         /* Get a pointer to this ghosts vertices */
         vertices = (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), 0, ighost + num_loc_trees);
+        if (vertices == nullptr) {
+          t8_errorf ("Error in writing file %s. Could not read vertex coordinates for cmesh tree %i.\n", vtufilename,
+                     tree->treeid);
+          fclose (vtufile);
+          return write_failure;
+        }
+
         T8_ASSERT (vertices != NULL);
         /* TODO: This code is duplicated above */
         for (ivertex = 0; ivertex < t8_eclass_num_vertices[eclass]; ivertex++) {
@@ -1181,7 +1200,7 @@ t8_cmesh_vtk_write_file_ext (const t8_cmesh_t cmesh, const char *fileprefix, con
     fprintf (vtufile, "</VTKFile>\n");
     fclose (vtufile);
   }
-  return 1;
+  return write_successful;
 }
 
 int
