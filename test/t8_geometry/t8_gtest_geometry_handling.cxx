@@ -182,11 +182,17 @@ TEST (test_geometry, cmesh_no_geometry)
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 
+  // Check that the geometry type for tree 0 is invalid
   EXPECT_EQ (t8_geometry_get_type (cmesh, 0), T8_GEOMETRY_TYPE_INVALID);
+  // Check that the geometry hash corresponds to invalid geometry
   const t8_geometry_hash_t hash = t8_cmesh_get_tree_geom_hash (cmesh, 0);
   EXPECT_TRUE (t8_geometry_hash_is_null (hash));
+  // Check that we get nullptr when querying the geometry
   const t8_geometry_c *should_be_null = t8_cmesh_get_tree_geometry (cmesh, 0);
   EXPECT_EQ (should_be_null, nullptr);
-  t8_cmesh_vtk_write_file (cmesh, "file");
+  // Output to calm the nerves of people looking at the logfiles.
+  t8_global_productionf ("We expect an error message about not writing the vtk file here.\n");
+  // Try to write vtk file and expect failure
+  EXPECT_FALSE (t8_cmesh_vtk_write_file (cmesh, "file"));
   t8_cmesh_destroy (&cmesh);
 }
