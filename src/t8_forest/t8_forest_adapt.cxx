@@ -396,7 +396,6 @@ t8_forest_adapt (t8_forest_t forest)
   int num_children;
   int num_siblings;
   int curr_size_elements_from;
-  int curr_size_elements;
   int num_elements_to_adapt_callback;
   int zz;
   int ci;
@@ -457,8 +456,7 @@ t8_forest_adapt (t8_forest_t forest)
       /* el_coarsen is the index of the first element in the new element
        * array which could be coarsened recursively. */
       el_coarsen = 0;
-      num_children = scheme->element_get_num_children (tree->eclass, first_element_from);
-      curr_size_elements = num_children;
+      num_children = scheme->get_max_num_children (tree->eclass);
       curr_size_elements_from = scheme->element_get_num_siblings (tree->eclass, first_element_from);
       /* Buffer for a family of new elements */
       elements = T8_ALLOC (t8_element_t *, num_children);
@@ -548,10 +546,6 @@ t8_forest_adapt (t8_forest_t forest)
         if (refine == 1) {
           /* The first element is to be refined */
           num_children = scheme->element_get_num_children (tree->eclass, elements_from[0]);
-          if (num_children > curr_size_elements) {
-            elements = T8_REALLOC (elements, t8_element_t *, num_children);
-            curr_size_elements = num_children;
-          }
           if (forest->set_adapt_recursive) {
             /* Create the children of this element */
             scheme->element_new (tree->eclass, num_children, elements);
@@ -590,10 +584,6 @@ t8_forest_adapt (t8_forest_t forest)
            * as num_siblings is always associated with elements_from*/
           num_children = num_siblings;
           el_inserted++;
-          if (num_children > curr_size_elements) {
-            elements = T8_REALLOC (elements, t8_element_t *, num_children);
-            curr_size_elements = num_children;
-          }
           if (forest->set_adapt_recursive) {
             /* Adaptation is recursive.
              * We check whether the just generated parent is the last in its
