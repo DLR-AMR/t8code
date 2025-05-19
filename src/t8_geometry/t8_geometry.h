@@ -48,9 +48,9 @@ typedef enum t8_geometry_type {
   /** This is no geometry type but can be used as the number of geometry types. */
   T8_GEOMETRY_TYPE_COUNT,
   /** This is no geometry type but is used as error type to describe invalid geometries */
-  T8_GEOMETRY_TYPE_INVALID
-    /** This is no geometry type but is used for every geometry, where no type is defined */
-    T8_GEOMETRY_TYPE_UNDEFINED
+  T8_GEOMETRY_TYPE_INVALID,
+  /** This is no geometry type but is used for every geometry, where no type is defined */
+  T8_GEOMETRY_TYPE_UNDEFINED
 } t8_geometry_type_t;
 
 /** This typedef holds virtual functions for a particular geometry.
