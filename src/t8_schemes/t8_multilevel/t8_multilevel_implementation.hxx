@@ -363,7 +363,8 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
   {
     T8_ASSERT (element_is_valid (elem));
     const multilevel_element *elem_m = (const multilevel_element *) elem;
-    return TUnderlyingEclassScheme::element_get_level ((const t8_element_t *) &elem_m->linear_element);
+    return TUnderlyingEclassScheme::element_get_level ((const t8_element_t *) &elem_m->linear_element)
+           + elem_m->is_child_of_itself;
   }
 
   // ################################################____REFINEMENT____################################################
@@ -425,8 +426,15 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
     if (element_get_level (elem) == 0)
       return 1;
     /* In this scheme every element except the root has one more sibling. */
-    const multilevel_element *elem_m = (const multilevel_element *) elem;
-    return TUnderlyingEclassScheme::element_get_num_siblings ((const t8_element_t *) &elem_m->linear_element) + 1;
+    if (TUnderlyingEclassScheme::refines_irregular ()) {
+      SC_ABORT ("Not implemented yet.\n");
+    }
+    linear_element root;
+    TUnderlyingEclassScheme::element_init (1, (t8_element_t *) &root);
+    TUnderlyingEclassScheme::set_to_root ((t8_element_t *) &root);
+    const t8_child_id num_children = TUnderlyingEclassScheme::element_get_num_children ((t8_element_t *) &root);
+    TUnderlyingEclassScheme::element_deinit (1, (t8_element_t *) &root);
+    return num_children + 1;
   }
 
   /** Compute a specific sibling of a given element \b elem and store it in \b sibling.
@@ -593,11 +601,9 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
     multilevel_element *elem_m = (multilevel_element *) elem;
     const int elem_level = element_get_level (elem);
     T8_ASSERT (level <= elem_level);
-    if (level == elem_level) {
-      /* If the element is child of itself the id is always 0. */
-      if (elem_m->is_child_of_itself) {
-        return 0;
-      }
+    /* If the element is child of itself the id is always 0. */
+    if (elem_m->is_child_of_itself) {
+      return 0;
     }
     /* All other children are shifted by one to make space for the first child. */
     return 1 + TUnderlyingEclassScheme::element_get_ancestor_id ((const t8_element_t *) &elem_m->linear_element, level);
@@ -612,7 +618,12 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
   inline int
   elements_are_family (t8_element_t *const *fam) const
   {
-    T8_ASSERT (element_is_valid (fam[0]));
+#if T8_ENABLE_DEBUG
+    const int num_siblings = element_get_num_siblings (fam[0]);
+    for (int isib = 0; isib < num_siblings; isib++) {
+      T8_ASSERT (element_is_valid (fam[isib]));
+    }
+#endif
     /* The root is a family */
     if (element_get_level (fam[0]) == 0)
       return 1;
@@ -631,16 +642,16 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
       return 0;
 
     /* The other elements should be siblings. */
-    const t8_child_id num_siblings
+    const t8_child_id num_underlying_siblings
       = TUnderlyingEclassScheme::element_get_num_siblings ((const t8_element_t *) &fam_m[1]->linear_element);
-    t8_element_t **siblings = T8_ALLOC (t8_element_t *, num_siblings);
-    TUnderlyingEclassScheme::element_new (num_siblings, siblings);
-    for (t8_child_id i_sibling = 0; i_sibling < num_siblings; ++i_sibling) {
+    t8_element_t **siblings = T8_ALLOC (t8_element_t *, num_underlying_siblings);
+    TUnderlyingEclassScheme::element_new (num_underlying_siblings, siblings);
+    for (t8_child_id i_sibling = 0; i_sibling < num_underlying_siblings; ++i_sibling) {
       TUnderlyingEclassScheme::element_copy ((const t8_element_t *) &fam_m[i_sibling + 1]->linear_element,
                                              siblings[i_sibling]);
     }
     const bool is_fam = TUnderlyingEclassScheme::elements_are_family (siblings);
-    TUnderlyingEclassScheme::element_destroy (num_siblings, siblings);
+    TUnderlyingEclassScheme::element_destroy (num_underlying_siblings, siblings);
     T8_FREE (siblings);
     return is_fam;
   }
@@ -681,27 +692,14 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
   inline void
   element_get_first_descendant (const t8_element_t *elem, t8_element_t *desc, const t8_element_level level) const
   {
-    const multilevel_element *elem_m = (const multilevel_element *) elem;
     multilevel_element *desc_m = (multilevel_element *) desc;
     T8_ASSERT (element_is_valid (elem));
-
-    /* TODO: I am not sure if this is right. */
-    if (elem_m->is_child_of_itself) {
-      element_copy (elem, desc);
-      return;
-    }
-
     const t8_element_level elem_level = element_get_level (elem);
     T8_ASSERT (level >= elem_level);
 
     /* The first descendant is the first descendant one level above as child of itself. */
-    if (level > elem_level + 1) {
-      TUnderlyingEclassScheme::element_get_first_descendant ((const t8_element_t *) &elem_m->linear_element,
-                                                             (t8_element_t *) &desc_m->linear_element, level - 1);
-    }
-    else {
-      element_copy (elem, desc);
-    }
+    element_copy (elem, desc);
+
     /* The element is only child of itself if the requested level is higher than the elem level. */
     if (level > elem_level)
       desc_m->is_child_of_itself = 1;
@@ -721,7 +719,9 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
     T8_ASSERT (element_is_valid (elem));
     const multilevel_element *elem_m = (const multilevel_element *) elem;
     multilevel_element *desc_m = (multilevel_element *) desc;
-    /* TODO: I am not sure if this is right. */
+    const t8_element_level elem_level = element_get_level (elem);
+    T8_ASSERT (level >= elem_level);
+
     if (elem_m->is_child_of_itself) {
       element_copy (elem, desc);
       return;
@@ -1000,9 +1000,9 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
     T8_ASSERT (id < id_max);
 #endif
     t8_element_level level = 0;    /* current operating level */
-    int id_linear = id;            /* linear id */
+    t8_linearidx_t id_linear = id; /* linear id */
     int id_in_subtree = id_linear; /* id in subtree */
-    int subtree_id;                /* id of the subtree */
+    t8_linearidx_t subtree_id;     /* id of the subtree */
     for (; level < maxlvl; ++level) {
       /* if id in subtree is 0 this is the root */
       if (id_in_subtree == 0) {
@@ -1034,21 +1034,31 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
   inline t8_linearidx_t
   element_get_linear_id (const t8_element_t *elem, const t8_element_level level) const
   {
-    const int maxlevel = get_maxlevel ();
     T8_ASSERT (element_is_valid (elem));
+    const int maxlevel = get_maxlevel ();
     T8_ASSERT (0 <= level && level <= maxlevel);
     const multilevel_element *elem_m = (const multilevel_element *) elem;
+    const int underlying_element_level
+      = TUnderlyingEclassScheme::element_get_level ((t8_element_t *) &elem_m->linear_element);
+    if (level < underlying_element_level) {
+      /* The level of the element is higher than the requested level.
+         coarsen element until requested level is reached. */
+      multilevel_element parent;
+      element_init (1, (t8_element_t *) &parent);
+      element_get_parent (elem, (t8_element_t *) &parent);
+      return element_get_linear_id ((const t8_element_t *) &parent, level);
+    }
+
     const int dim = t8_eclass_to_dimension[get_eclass ()];
     const t8_linearidx_t id_linear
-      = TUnderlyingEclassScheme::element_get_linear_id ((const t8_element_t *) &elem_m->linear_element, level);
-    const int multilevel_level = element_get_level (elem);
+      = TUnderlyingEclassScheme::element_get_linear_id ((const t8_element_t *) &elem_m->linear_element, maxlevel);
 
     /* The multilevel conversion happens via the following formula:
      * #\f$\mathrm{id_{multilevel}} (\mathrm{id_{linear}, lvl}) = \mathrm{lvl} + \sum_{n = 0}^{\mathrm{lvl_{max}-1}} \lfloor \mathrm{id_{linear}} / 2^{n \cdot d} \rfloor \f$
      */
-    t8_linearidx_t id_multilevel = multilevel_level;
+    t8_linearidx_t id_multilevel = underlying_element_level;  //-elem_m->is_child_of_itself;
     for (int i_level = 0; i_level < maxlevel; i_level++) {
-      /* This is just id_m2 += id_l / sc_intpow (2, i_level * dim); */
+      /* This is just id_multilevel += id_linear / sc_intpow (2, i_level * dim); */
       id_multilevel += id_linear >> (i_level * dim);
     }
     return id_multilevel;
@@ -1064,6 +1074,12 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
   {
     T8_ASSERT (element_is_valid (elem));
     multilevel_element *succ_m = (multilevel_element *) succ;
+
+    if (element_get_level (elem) == 0) {
+      element_get_child (elem, 0, succ);
+      T8_ASSERT (element_is_valid (succ));
+      return;
+    }
 
     element_copy (elem, succ);
 
