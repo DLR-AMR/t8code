@@ -27,7 +27,7 @@
 
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_types.h>
-#include <t8_cmesh/t8_cmesh_geometry.h>
+#include <t8_cmesh/t8_cmesh_geometry.hxx>
 #include <t8_geometry/t8_geometry.h>
 #include <t8_geometry/t8_geometry_base.hxx>
 #include <t8_geometry/t8_geometry_handler.hxx>
