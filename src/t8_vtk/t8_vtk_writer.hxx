@@ -364,9 +364,10 @@ class vtk_writer {
     T8_ASSERT (cellTypes != NULL);
 
     /* Allocate VTK Memory for the arrays */
-    int iMaxCellSize = 20;
-    cellArray->AllocateEstimate (num_cells, iMaxCellSize);
-    points_store->Allocate (num_cells * iMaxCellSize);
+    const int grid_dim = grid_get_dim (grid);
+    const int maximum_cell_size = curved_flag ? t8_curved_dim_max_nodes[grid_dim] : t8_dim_max_nodes[grid_dim];
+    cellArray->AllocateEstimate (num_cells, maximum_cell_size);
+    points_store->Allocate (num_cells * maximum_cell_size);
     points->InitPointInsertion (points_store, unstructuredGrid->GetBounds ());
     vtk_treeid->Allocate (num_cells);
     vtk_mpirank->Allocate (num_cells);
