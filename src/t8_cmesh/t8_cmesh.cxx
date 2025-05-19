@@ -1541,30 +1541,20 @@ void
 t8_cmesh_get_local_bounding_box (const t8_cmesh_t cmesh, double bounds[6])
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
-  T8_ASSERT (cmesh->num_local_trees > 0);
   const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
+  T8_ASSERT (num_local_trees > 0);
+  double tree_bounds[6] = { 0.0 };
+  t8_geometry_handler *geom_handler = cmesh->geometry_handler;
+  geom_handler->get_tree_bounding_box (cmesh, 0, tree_bounds);
+  for (t8_locidx_t itree = 1; itree < num_local_trees; itree++) {
+    const t8_gloidx_t gtree_id = t8_cmesh_get_global_id (cmesh, itree);
+    geom_handler->get_tree_bounding_box (cmesh, gtree_id, tree_bounds);
 
-  t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, 0);
-  const int num_vertices = t8_eclass_num_vertices[tree_class];
-
-  double *vertices = t8_cmesh_get_tree_vertices (cmesh, 0);
-  bounds[0] = vertices[0];  // min x
-  bounds[1] = vertices[0];  // max x
-  bounds[2] = vertices[1];  // min y
-  bounds[3] = vertices[1];  // max y
-  bounds[4] = vertices[2];  // min z
-  bounds[5] = vertices[2];  // max z
-  for (t8_locidx_t itree = 0; itree < num_local_trees; itree++) {
-    tree_class = t8_cmesh_get_tree_class (cmesh, itree);
-    vertices = t8_cmesh_get_tree_vertices (cmesh, itree);
-    num_vertices = t8_eclass_num_vertices[tree_class];
-    std::for_each (vertices, vertices + 3 * num_vertices, [&bounds] (double coord) {
-      bounds[0] = std::min (bounds[0], coord);
-      bounds[1] = std::max (bounds[1], coord);
-      bounds[2] = std::min (bounds[2], coord);
-      bounds[3] = std::max (bounds[3], coord);
-      bounds[4] = std::min (bounds[4], coord);
-      bounds[5] = std::max (bounds[5], coord);
-    });
+    bounds[0] = std::min (bounds[0], tree_bounds[0]);
+    bounds[1] = std::max (bounds[1], tree_bounds[1]);
+    bounds[2] = std::min (bounds[2], tree_bounds[2]);
+    bounds[3] = std::max (bounds[3], tree_bounds[3]);
+    bounds[4] = std::min (bounds[4], tree_bounds[4]);
+    bounds[5] = std::max (bounds[5], tree_bounds[5]);
   }
 }

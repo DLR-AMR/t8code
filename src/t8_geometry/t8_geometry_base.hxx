@@ -163,6 +163,13 @@ struct t8_geometry
     return name;
   }
 
+  virtual void
+  t8_geom_get_tree_bounding_box ([[maybe_unused]] const t8_cmesh_t cmesh, [[maybe_unused]] const t8_gloidx_t gtreeid,
+                                 [[maybe_unused]] double bounds[6]) const
+  {
+    SC_ABORTF ("Tree bounding box function not implemented");
+  }
+
   inline size_t
   t8_geom_get_hash () const
   {
