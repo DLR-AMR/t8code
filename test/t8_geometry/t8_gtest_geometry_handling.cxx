@@ -27,7 +27,9 @@
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
 #include <t8_cmesh.hxx>
+#include <t8_vtk/t8_vtk_writer.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
+#include <t8_cmesh/t8_cmesh_geometry.hxx>
 #include <t8_geometry/t8_geometry.h>
 #include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
@@ -94,11 +96,13 @@ TEST (test_geometry, test_geometry_handler_register)
   }
 
   /* Try to find a different geometry via the name. Must return nullptr. */
+  std::string random_name ("random_name34823412414");
   auto found_geom = geom_handler.get_geometry ("random_name34823412414");
   ASSERT_TRUE (found_geom == nullptr) << "Found a geometry that should not exist.";
 
   /* Try to find a different geometry via the hash. Must return nullptr. */
-  found_geom = geom_handler.get_geometry (std::hash<std::string> {}("random_name34823412414"));
+  const t8_geometry_hash_t random_hash (std::hash<std::string> {}(random_name));
+  found_geom = geom_handler.get_geometry (random_hash);
   ASSERT_TRUE (found_geom == nullptr) << "Found a geometry that should not exist.";
 }
 
@@ -178,9 +182,11 @@ TEST (test_geometry, cmesh_no_geometry)
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 
+  EXPECT_EQ (t8_geometry_get_type (cmesh, 0), T8_GEOMETRY_TYPE_INVALID);
   const t8_geometry_hash_t hash = t8_cmesh_get_tree_geom_hash (cmesh, 0);
   EXPECT_TRUE (t8_geometry_hash_is_null (hash));
   const t8_geometry_c *should_be_null = t8_cmesh_get_tree_geometry (cmesh, 0);
   EXPECT_EQ (should_be_null, nullptr);
+  t8_cmesh_vtk_write_file (cmesh, "file");
   t8_cmesh_destroy (&cmesh);
 }

@@ -63,8 +63,8 @@ t8_geometry_handler::update_tree (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
       const t8_geometry_hash_t geom_hash = t8_cmesh_get_tree_geom_hash (cmesh, gtreeid);
       active_geometry = get_geometry (geom_hash);
       SC_CHECK_ABORTF (active_geometry != nullptr,
-                       "Could not find geometry with hash %zu or tree %ld has no registered geometry.", geom_hash,
-                       static_cast<long> (gtreeid));
+                       "Could not find geometry with hash %lu or tree %ld has no registered geometry.",
+                       static_cast<size_t> (geom_hash), static_cast<long> (gtreeid));
     }
     /* Get the user data for this geometry and this tree. */
     active_geometry->t8_geom_load_tree_data (cmesh, gtreeid);

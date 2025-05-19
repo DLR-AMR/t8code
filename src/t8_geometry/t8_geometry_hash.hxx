@@ -29,14 +29,22 @@
 #define T8_GEOMETRY_HASH_HXX
 
 #include <string>
+#include <t8_types/t8_type.hxx>
+#include <t8_types/t8_operators.hxx>
 
 T8_EXTERN_C_BEGIN ();
 
+/** Dummy tag for type trait usage of \ref t8_geometry_hash_t */
+struct t8_geometry_hash_tag
+{
+};
+
 /** Data type used for storing hash values of geometries. */
-using t8_geometry_hash_t = size_t;
+using t8_geometry_hash_t = T8Type<size_t, t8_geometry_hash_tag, Addable, Subtractable, AddAssignable, Multipliable,
+                                  Dividable, EqualityComparable, Hashable>;
 
 /** Constant that we use for hashes of non-existing geometries. */
-static const t8_geometry_hash_t t8_geometry_empty_hash = std::hash<std::string> {}("");
+static const t8_geometry_hash_t t8_geometry_empty_hash (std::hash<std::string> {}(""));
 
 /**
  * Compute the hash value of a geometry's name.
@@ -48,7 +56,7 @@ static const t8_geometry_hash_t t8_geometry_empty_hash = std::hash<std::string> 
 inline t8_geometry_hash_t
 t8_geometry_compute_hash (const std::string &name)
 {
-  t8_geometry_hash_t hash = std::hash<std::string> {}(name);
+  t8_geometry_hash_t hash (std::hash<std::string> {}(name));
   return hash;
 }
 
