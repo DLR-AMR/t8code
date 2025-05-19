@@ -191,6 +191,7 @@ target_sources( T8 PRIVATE
     t8_vtk/t8_vtk_writer.cxx
     t8_vtk/t8_vtk_write_ASCII.cxx
     t8_vtk/t8_vtk_writer_helper.cxx
+    t8_unstructured_mesh/t8_unstructured_mesh.cxx
 )
 
 target_compile_definitions( T8 PUBLIC T8_CMAKE_BUILD )
@@ -270,6 +271,7 @@ install( DIRECTORY t8_vtk DESTINATION include FILES_MATCHING PATTERN "*.hxx"
   PATTERN "t8_vtk/t8_vtk_writer_helper.hxx" EXCLUDE
   )
 install( DIRECTORY t8_types TYPE INCLUDE FILES_MATCHING PATTERN "*.hxx" )
+install( DIRECTORY t8_unstructured_mesh TYPE INCLUDE FILES_MATCHING PATTERN "*.hxx" )
 
 install( TARGETS T8 LIBRARY )
 install( TARGETS T8 EXPORT ${PROJECT_NAME}-targets )
