@@ -30,6 +30,11 @@
 
 #include <t8_element.h>
 #include <t8_schemes/t8_standalone/t8_standalone_elements.hxx>
+#include <utility>
+
+#if T8_ENABLE_DEBUG
+#include <limits>
+#endif
 
 /* Forward declaration of the scheme so we can use it as an argument in the eclass schemes function. */
 class t8_scheme;
@@ -173,9 +178,22 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
   inline int
   get_maxlevel (void) const
   {
-    /* The maxlevel is limited by the size of the linear id datatype. 
-       Since need to store all parents in the id as well, we can use one level less. */
-    return TUnderlyingEclassScheme::get_maxlevel () - 1;
+    /* The maxlevel is limited by the size of the linear id datatype.
+    So check if the level is valid. We use a double to calculate the max id, since it should
+    always be lange enough. */
+#if T8_ENABLE_DEBUG
+    T8_ASSERTF (!TUnderlyingEclassScheme::refines_irregular (),
+                "Multilevel scheme conversion currently does not work with irregular schemes.\n");
+    const t8_element_level maxlevel = TUnderlyingEclassScheme::get_maxlevel ();
+    double count = 0; /* Use double because it should hold bigger numbers than t8_linearidx_t */
+    const int dim = t8_eclass_to_dimension[get_eclass ()];
+    for (t8_element_level i_level = 0; i_level <= maxlevel; ++i_level) {
+      count += pow (2.0, dim * i_level * 1.0);
+    }
+    T8_ASSERTF (std::numeric_limits<t8_linearidx_t>::max () >= count,
+                "t8_linearidx_t cannot hold enough elements for multilevel conversion.\n");
+#endif
+    return TUnderlyingEclassScheme::get_maxlevel ();
   }
 
   // ################################################____SHAPE INFORMATION____################################################
