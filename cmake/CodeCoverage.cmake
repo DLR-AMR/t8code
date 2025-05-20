@@ -1,3 +1,10 @@
+# This file is inspired by the project cmake-modules (https://github.com/bilke/cmake-modules) 
+# of Lars Bilke but heavily adapted and rewritten!
+# The project is licensed with the BSD license. 
+# Copyright (c) 2012 - 2017, Lars Bilke
+# All rights reserved.
+# See also the license information in CodeCoverage.license.
+
 # This file defines and calls functions to collect code coverage information.
 # A code coverage report is created in a folder "coverage".
 # Lcov and genhtml are used to generate the report and should be available.
