@@ -229,7 +229,7 @@ struct t8_geometry_handler
   get_tree_bounding_box (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, double bounds[6])
   {
     update_tree (cmesh, gtreeid);
-    active_geometry->t8_geom_get_tree_bounding_box (cmesh, gtreeid, bounds);
+    active_geometry->t8_geom_get_tree_bounding_box (cmesh, bounds);
   }
 
   /**

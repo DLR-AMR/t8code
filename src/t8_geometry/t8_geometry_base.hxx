@@ -163,9 +163,11 @@ struct t8_geometry
     return name;
   }
 
+  /**
+   * Compute the bounding box of the currently active tree.
+   */
   virtual void
-  t8_geom_get_tree_bounding_box ([[maybe_unused]] const t8_cmesh_t cmesh, [[maybe_unused]] const t8_gloidx_t gtreeid,
-                                 [[maybe_unused]] double bounds[6]) const
+  t8_geom_get_tree_bounding_box ([[maybe_unused]] const t8_cmesh_t cmesh, [[maybe_unused]] double bounds[6]) const
   {
     SC_ABORTF ("Tree bounding box function not implemented");
   }
