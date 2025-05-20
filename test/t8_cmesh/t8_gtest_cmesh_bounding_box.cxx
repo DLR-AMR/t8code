@@ -25,42 +25,38 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <test/t8_gtest_macros.hxx>
 
-
 // Test fixture for bounding box tests
-class t8_cmesh_bounding_box: public testing::TestWithParam<t8_eclass> 
-{
-    protected:
-        void
-        SetUp() override {
-            eclass = GetParam();
-            cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
-        }
+class t8_cmesh_bounding_box: public testing::TestWithParam<t8_eclass> {
+ protected:
+  void
+  SetUp () override
+  {
+    eclass = GetParam ();
+    cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
+  }
 
-        void
-        TearDown() override {
-            t8_cmesh_unref(&cmesh);
-        }
+  void
+  TearDown () override
+  {
+    t8_cmesh_unref (&cmesh);
+  }
 
-        t8_cmesh_t cmesh;
-        t8_eclass eclass;
+  t8_cmesh_t cmesh;
+  t8_eclass eclass;
 };
 
+TEST_P (t8_cmesh_bounding_box, test_box)
+{
+  double bounds[6];
+  t8_cmesh_get_local_bounding_box (cmesh, bounds);
 
-TEST_P(t8_cmesh_bounding_box, test_box) {
-    double bounds[6];
-    t8_cmesh_get_local_bounding_box(cmesh, bounds);
+  const int dim = t8_eclass_to_dimension[eclass];
 
-    const int dim = t8_eclass_to_dimension[eclass];
-
-    for (int idim = 0; idim < dim; ++idim) {
-        EXPECT_DOUBLE_EQ(bounds[idim * 2], 0);
-        EXPECT_DOUBLE_EQ(bounds[idim * 2 + 1], 1);
-    }
+  for (int idim = 0; idim < dim; ++idim) {
+    EXPECT_DOUBLE_EQ (bounds[idim * 2], 0);
+    EXPECT_DOUBLE_EQ (bounds[idim * 2 + 1], 1);
+  }
 }
 
 // Parameterized test cases
-INSTANTIATE_TEST_SUITE_P(
-    t8_gtest_cmesh_bounding_box,
-    t8_cmesh_bounding_box,
-    AllEclasses, print_eclass
-);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_bounding_box, t8_cmesh_bounding_box, AllEclasses, print_eclass);
