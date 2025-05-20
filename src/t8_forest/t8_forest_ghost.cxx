@@ -2009,7 +2009,7 @@ t8_forest_ghost_w_search::search_for_ghost_elements (t8_forest_t forest)
   data.eclass = T8_ECLASS_COUNT;
   data.gtreeid = -1;
   data.scheme = NULL;
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   data.left_out = 0;
 #endif
   sc_array_init (&data.face_owners, sizeof (int));
