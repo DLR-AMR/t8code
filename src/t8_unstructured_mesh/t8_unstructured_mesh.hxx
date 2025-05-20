@@ -22,10 +22,14 @@
 #ifndef T8_UNSTRUCTURED_MESH_HXX
 #define T8_UNSTRUCTURED_MESH_HXX
 #include <t8.h>
+#include <t8_element.h>
 #include <t8_forest/t8_forest_general.h>
 #include <iterator>
 #include <cstddef>
 
+//TODO: Inspiration by t8_element_array_iterator
+/* We want to export the whole implementation to be callable from "C" */
+T8_EXTERN_C_BEGIN ();
 class t8_unstructured_mesh {
  public:
   t8_unstructured_mesh (t8_forest_t input_forest): forest (input_forest)
@@ -33,12 +37,84 @@ class t8_unstructured_mesh {
   }
 
  private:
+  /** \brief This iterator should iterate over all (local) elements.
+ */
   struct Element_Iterator
   {
     using iterator_category = std::forward_iterator_tag;  //TODO: do we maybe need a bidrirecIterator?
     using difference_type = std::ptrdiff_t;
+    using value_type = t8_element_t;
+    using pointer = value_type*;
+    using reference = value_type&;
+    // Constructor.
+    Element_Iterator (t8_forest_t forest, t8_locidx_t current_tree_id, t8_locidx_t current_element_id)
+      : m_current_tree_id (current_tree_id), m_current_element_id (current_element_id), m_forest (forest)
+    {
+      m_num_local_trees = t8_forest_get_num_local_trees (m_forest);
+      m_num_elements_current_tree = t8_forest_get_tree_num_elements (m_forest, m_current_tree_id);
+    }
+
+    reference
+    operator* () const
+    {
+      auto elem = t8_forest_get_element_in_tree (m_forest, m_current_tree_id, m_current_element_id);
+      if (elem == nullptr) {
+        SC_ABORT ("not implemented yet");
+      }
+      return &elem;
+    }
+
+    pointer
+    operator->() const
+    {
+      return &operator* ();
+    }
+
+    // Prefix version of ++.
+    Element_Iterator&
+    operator++ ()
+    {
+      if (m_current_element_id < m_num_elements_current_tree - 1) {
+        m_current_element_id++;
+      }
+      else {
+        m_current_element_id = 0;
+        m_current_tree_id++;
+        m_num_elements_current_tree
+          = t8_forest_get_tree_num_elements (m_forest, m_current_tree_id);  //Problem for last element, right?
+      }
+      return *this;
+    }
+    // Postfix version of ++.
+    Element_Iterator
+    operator++ (int)
+    {
+      Element_Iterator tmp = *this;
+      ++(*this);
+      return tmp;
+    }
+
+    bool
+    operator== (const Element_Iterator& other_iterator) const
+    {
+      return m_forest == other_iterator.m_forest && m_current_tree_id == other_iterator.m_current_tree_id
+             && m_current_element_id == other_iterator.m_current_element_id;
+    }
+    // Not needed in C++20 but for completion.
+    bool
+    operator!= (const Element_Iterator& other_iterator) const
+    {
+      return !(*this == other_iterator);
+    }
+
+   private:
+    t8_locidx_t m_current_tree_id, m_current_element_id;
+    t8_forest_t m_forest;
+    t8_locidx_t m_num_local_trees, m_num_elements_current_tree;
   };
   t8_forest_t forest;
 };
 
 #endif /* !T8_UNSTRUCTURED_MESH_HXX */
+
+T8_EXTERN_C_END ();
