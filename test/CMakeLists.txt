@@ -89,7 +89,7 @@ add_t8_test( NAME t8_gtest_cmesh_tree_vertices_negative_volume_serial   SOURCES 
 add_t8_test( NAME t8_gtest_cmesh_vertex_conn_tree_to_vertex_parallel    SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_vertex_conn_tree_to_vertex.cxx )
 add_t8_test( NAME t8_gtest_cmesh_vertex_conn_vertex_to_tree_parallel    SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_vertex_conn_vertex_to_tree.cxx )
 add_t8_test( NAME t8_gtest_cmesh_vertex_conn_serial                     SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_vertex_conn.cxx )
-
+add_t8_test( NAME t8_gtest_cmesh_bounding_box_serial                    SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_bounding_box.cxx )
 add_t8_test( NAME t8_gtest_multiple_attributes_parallel     SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_multiple_attributes.cxx )
 add_t8_test( NAME t8_gtest_attribute_gloidx_array_serial    SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_attribute_gloidx_array.cxx )
 

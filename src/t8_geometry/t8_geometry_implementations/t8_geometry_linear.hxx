@@ -108,7 +108,7 @@ struct t8_geometry_linear: public t8_geometry_with_vertices
   }
 
   virtual void
-  get_tree_bounding_box (const t8_cmesh_t cmesh, double bounds[6]);
+  get_tree_bounding_box ([[maybe_unused]] const t8_cmesh_t cmesh, double bounds[6]) const;
 
   /* Load tree data is inherited from t8_geometry_with_vertices. */
 };

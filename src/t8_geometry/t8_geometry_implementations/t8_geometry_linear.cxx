@@ -242,7 +242,7 @@ t8_geometry_linear::t8_geom_point_batch_inside_element (t8_forest_t forest, t8_l
 }
 
 void
-t8_geometry_linear::get_tree_bounding_box ([[maybe_unused]] const t8_cmesh_t cmesh, double bounds[6])
+t8_geometry_linear::get_tree_bounding_box ([[maybe_unused]] const t8_cmesh_t cmesh, double bounds[6]) const
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (active_tree_vertices != NULL);
@@ -253,7 +253,7 @@ t8_geometry_linear::get_tree_bounding_box ([[maybe_unused]] const t8_cmesh_t cme
   bounds[4] = active_tree_vertices[2];
   bounds[5] = active_tree_vertices[2];
   const int num_vertices = t8_eclass_num_vertices[active_tree_class];
-  for (int ivertex = 1; ivertex < num_vertices; ivertex++) {
+  for (int ivertex = 1; ivertex < num_vertices; ++ivertex) {
     bounds[0] = std::min (bounds[0], active_tree_vertices[3 * ivertex]);
     bounds[1] = std::max (bounds[1], active_tree_vertices[3 * ivertex]);
     bounds[2] = std::min (bounds[2], active_tree_vertices[3 * ivertex + 1]);

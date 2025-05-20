@@ -267,9 +267,9 @@ t8_cmesh_new_tet (sc_MPI_Comm comm)
   /* clang-format off */
   double vertices[12] = { 
     1, 1, 1, 
-    1, -1, -1, 
-    -1, 1, -1, 
-    -1, -1, 1 
+    1, 0, 0, 
+    0, 1, 0, 
+    0, 0, 1 
   };
   /* clang-format on */
 
@@ -359,11 +359,11 @@ t8_cmesh_new_pyramid (sc_MPI_Comm comm)
   t8_cmesh_t cmesh;
   /* clang-format off */
   double vertices[15] = { 
-    -1, -1, 0, 
-    1, -1, 0, 
-    -1, 1, 0, 
+    0, 0, 0, 
+    1, 0, 0, 
+    0, 1, 0, 
     1, 1, 0, 
-    0, 0, sqrt (2) 
+    0, 0, 1 
   };
   /* clang-format on */
 
