@@ -49,6 +49,21 @@ t8_forest_vtk_get_element_nodes (t8_forest_t forest, t8_locidx_t ltreeid, const 
 }
 
 template <>
+void
+grid_get_local_bounds<t8_cmesh_t> (const t8_cmesh_t grid, double bounds[6])
+{
+  t8_cmesh_get_local_bounding_box (grid, bounds);
+}
+
+template <>
+void
+grid_get_local_bounds<t8_forest_t> (const t8_forest_t grid, double bounds[6])
+{
+  auto cmesh = t8_forest_get_cmesh (grid);
+  t8_cmesh_get_local_bounding_box (cmesh, bounds);
+}
+
+template <>
 t8_locidx_t
 grid_local_num_elements<t8_forest_t> (const t8_forest_t grid)
 {

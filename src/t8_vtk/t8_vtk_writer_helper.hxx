@@ -116,6 +116,17 @@ t8_locidx_t
 grid_local_num_elements (const grid_t grid);
 
 /**
+ * Templated getter functions to get the local bounds of a forest or cmesh.
+ * 
+ * \tparam grid_t Either a cmesh or a forest.
+ * \param[in] grid The forest/cmesh to use.
+ * \param[in, out] Bounds defined by xmin, xmax, ymin, ymax, zmin, zmax.
+ */
+template <typename grid_t>
+void
+grid_get_local_bounds (const grid_t grid, double bounds[6]);
+
+/**
  * Templated getter functions to use one call to get the local number of trees  for a forest(cmesh).
  * 
  * \tparam grid_t Either a cmesh or a forest.

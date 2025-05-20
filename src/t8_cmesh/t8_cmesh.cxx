@@ -1545,7 +1545,7 @@ t8_cmesh_get_local_bounding_box (const t8_cmesh_t cmesh, double bounds[6])
   const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
 
   t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, 0);
-  const int num_vertices = t8_eclass_num_vertices[tree_class];
+  int num_vertices = t8_eclass_num_vertices[tree_class];
 
   double *vertices = t8_cmesh_get_tree_vertices (cmesh, 0);
   bounds[0] = vertices[0];  // min x

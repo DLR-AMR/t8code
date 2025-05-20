@@ -222,6 +222,8 @@ class vtk_writer {
  * \param[in, out] vtk_mpirank A vtk array to fill with the mpirank of each element/tree of \a grid.
  * \param[in, out] vtk_level A vtk array to fill with the level of each element/tree of \a grid.
  * \param[in, out] vtk_element_id A vtk array to fill with the id of each element/tree of \a grid.
+ * \param[in]      mergePoints A bool flag if points in the output should be merged (default = true).
+ * 
  */
   void
   t8_grid_element_to_vtk_cell (const grid_t grid, const t8_element_t *element, const t8_locidx_t itree,
@@ -231,7 +233,7 @@ class vtk_writer {
                                vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_treeid,
                                vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_mpirank,
                                vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_level,
-                               vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_element_id)
+                               vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_element_id, bool mergePoints = true)
   {
     /* Get the shape of the current element and the respective shape of the vtk_cell. */
     const t8_element_shape_t element_shape = grid_element_shape (grid, itree, element);
@@ -251,8 +253,12 @@ class vtk_writer {
 
       /* Insert the point in the points array. */
       double vtkCoords[3] = { coordinates[offset_3d], coordinates[offset_3d + 1], coordinates[offset_3d + 2] };
-      points->InsertUniquePoint (vtkCoords, ptId);
-
+      if (mergePoints) {
+        points->InsertUniquePoint (vtkCoords, ptId);
+      }
+      else {
+        ptId = points->InsertNextPoint (vtkCoords);
+      }
       /* Add the returned point id to the cell ids*/
       vecCellIds[ivertex] = ptId;
     }
@@ -357,22 +363,29 @@ class vtk_writer {
 
     /* Check if we have to write ghosts on this process. */
     bool do_ghosts = grid_do_ghosts (grid, write_ghosts);
+
     /* Compute the number of cells on this process. */
     t8_locidx_t num_cells = num_cells_to_write (grid, do_ghosts);
 
     int *cellTypes = T8_ALLOC (int, num_cells);
     T8_ASSERT (cellTypes != NULL);
 
+    /* Get the local bounds of the forest or cmesh */
+    double bounds[6];
+    grid_get_local_bounds (grid, bounds);
+
     /* Allocate VTK Memory for the arrays */
     const int grid_dim = grid_get_dim (grid);
     const int maximum_cell_size = curved_flag ? t8_curved_dim_max_nodes[grid_dim] : t8_dim_max_nodes[grid_dim];
     cellArray->AllocateEstimate (num_cells, maximum_cell_size);
     points_store->Allocate (num_cells * maximum_cell_size);
-    points->InitPointInsertion (points_store, unstructuredGrid->GetBounds ());
     vtk_treeid->Allocate (num_cells);
     vtk_mpirank->Allocate (num_cells);
     vtk_level->Allocate (num_cells);
     vtk_element_id->Allocate (num_cells);
+
+    /* Initialie vtkMergePoints for insertion. It needs the bounds to create the internal acceleration structure */
+    points->InitPointInsertion (points_store, bounds);
 
     /* Iterate over all trees and translate them. */
     const t8_locidx_t num_local_trees = grid_local_num_trees (grid);
