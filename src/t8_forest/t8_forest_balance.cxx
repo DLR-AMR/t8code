@@ -26,7 +26,7 @@
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition.hxx>
-#include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_wrapper.h>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_c_interface.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_profiling.h>
 #include <t8_schemes/t8_scheme.hxx>

@@ -20,8 +20,8 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#ifndef T8_FOREST_GHOST_DEFINITION_WRAPPER_H
-#define T8_FOREST_GHOST_DEFINITION_WRAPPER_H
+#ifndef T8_FOREST_GHOST_DEFINITION_C_INTERFACE_H
+#define T8_FOREST_GHOST_DEFINITION_C_INTERFACE_H
 
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
@@ -77,4 +77,4 @@ t8_forest_ghost_definition_unref (t8_forest_ghost_definition_c **pghost_definiti
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_FOREST_GHOST_DEFINITION_WRAPPER_H */
+#endif /* !T8_FOREST_GHOST_DEFINITION_C_INTERFACE_H */

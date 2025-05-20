@@ -29,7 +29,7 @@
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
-#include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_wrapper.h>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_c_interface.h>
 #include <t8_forest/t8_forest_balance.h>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_cmesh/t8_cmesh_trees.h>
