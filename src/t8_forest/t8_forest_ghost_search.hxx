@@ -27,24 +27,21 @@
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_iterate.h>  // Definition of t8_forest_search_fn
 
+/**
+ * Base class for all ghost definitions which use a tree-based search algorithm.
+ */
 struct t8_forest_ghost_w_search: public t8_forest_ghost_definition
 {
  public:
-  /** There are tree different constructors for the class t8_forest_ghost_w_search: 
-   *  - t8_forest_ghost_w_search ()
-   *  - t8_forest_ghost_w_search (t8_forest_search_fn search_function)
-   *  - t8_forest_ghost_w_search (const t8_ghost_type_t ghost_type)
-   */
-
   /**
-    * Constructors of a t8_forest_ghost_w_search of type NONE
+    * Constructors of a t8_forest_ghost_w_search of type T8_GHOST_NONE
     */
   t8_forest_ghost_w_search ();
 
   /**
-   * Constructr of t8_forest_ghost_w_search by search_function
+   * Constructor of t8_forest_ghost_w_search by search_function
    * If do_ghost is called on this object, 
-   * the ghost layer will be created by an treesearch (t8_forest_search)
+   * the ghost layer will be created by an tree search (t8_forest_search)
    * with search_function as callbackfunction.
    * \param search_function   the function used for the callback
    * \note the t8_ghost_type_t of the object will we userdefined
@@ -101,14 +98,18 @@ struct t8_forest_ghost_w_search: public t8_forest_ghost_definition
   t8_forest_search_fn search_fn {};
 };
 
+/**
+ * Face neighbor based ghost computation.
+ * This class computes the ghosts of a process via a face neighbor based ghost definition.
+ * It supports three different versions for this definition, but version 3 suffices for most applications.
+ */
 struct t8_forest_ghost_face: public t8_forest_ghost_w_search
 {
  public:
   /**
-   * Constructor for the ghost class face.
-   * do_ghost will construct a ghost layer with face neighbors
-   * \param [in] version    one of search versions (1,2,3) can be used
-   * \note version 3 is the same treesearch as in t8_forest_ghost_w_search
+   * Constructor for the face neighbor based ghost.
+   * \param [in] version    The version of the ghost algorithm.
+   * \note Version 3 should be sufficient for most applications.
    */
   explicit t8_forest_ghost_face (const int version);
 
