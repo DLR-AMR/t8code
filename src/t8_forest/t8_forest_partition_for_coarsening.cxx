@@ -308,22 +308,24 @@ t8_forest_pfc_correction_offsets (const t8_forest_t forest)
 {
   const t8_forest_t forest_old = forest->set_from; /* committed */
   const t8_shmem_array_t partition_new = forest->element_offsets;
-
-  // Send requests to other processes
-  std::vector<sc_MPI_Request> requests;
-  t8_forest_pfc_send_loop_range<t8_forest_pfc_message_c> (forest_old, requests);
-
-  // Receive messages from other processes
-  std::vector<t8_forest_pfc_message_c> messages;
-  t8_forest_pfc_recv_loop_range<t8_forest_pfc_message_c> (forest_old, messages);
-
-  // Wait for Isend requests.
-  int mpiret = sc_MPI_Waitall (requests.size (), requests.data (), sc_MPI_STATUSES_IGNORE);
-  SC_CHECK_MPI (mpiret);
-
-  // Compute local corrections to partitioning
   std::vector<t8_gloidx_t> corrected_local_offsets;
-  t8_forest_pfc_correct_local_offsets (forest_old, partition_new, messages, corrected_local_offsets);
+
+  if (t8_forest_get_local_num_elements (forest_old) != 0) {
+    // Send requests to other processes
+    std::vector<sc_MPI_Request> requests;
+    t8_forest_pfc_send_loop_range<t8_forest_pfc_message_c> (forest_old, requests);
+
+    // Receive messages from other processes
+    std::vector<t8_forest_pfc_message_c> messages;
+    t8_forest_pfc_recv_loop_range<t8_forest_pfc_message_c> (forest_old, messages);
+
+    // Wait for Isend requests.
+    int mpiret = sc_MPI_Waitall (requests.size (), requests.data (), sc_MPI_STATUSES_IGNORE);
+    SC_CHECK_MPI (mpiret);
+
+    // Compute local corrections to partitioning
+    t8_forest_pfc_correct_local_offsets (forest_old, partition_new, messages, corrected_local_offsets);
+  }
 
   // Allgather numbers of local corrections
   t8_shmem_array_t global_correction_counts;
