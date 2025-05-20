@@ -72,7 +72,7 @@ class class_child_parent_face: public TestDFS {
 
 TEST_P (class_child_parent_face, t8_recursive_dfs_child_parent_face)
 {
-#ifdef T8_ENABLE_LESS_TESTS
+#if T8CODE_TEST_LEVEL >= 1
   const int maxlvl = 4;
 #else
   const int maxlvl = 6;
@@ -80,4 +80,4 @@ TEST_P (class_child_parent_face, t8_recursive_dfs_child_parent_face)
   check_recursive_dfs_to_max_lvl (maxlvl);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_child_parent_face, class_child_parent_face, DefaultScheme);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_child_parent_face, class_child_parent_face, AllSchemes, print_all_schemes);

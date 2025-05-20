@@ -79,7 +79,7 @@ t8_cmesh_get_tree_geom_hash (const t8_cmesh_t cmesh, const t8_gloidx_t gtreeid)
     /* There is only one geometry registered in this cmesh, so we assume
      * that this geometry is used for all trees. */
     auto geom = geom_handler->get_unique_geometry ();
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
     /* In debug mode, get the tree's geometry anyways and check that it is either
      * NULL or the hash of the unique geometry. */
 

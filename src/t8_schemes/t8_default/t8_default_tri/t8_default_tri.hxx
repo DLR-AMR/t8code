@@ -40,7 +40,7 @@ class t8_scheme;
 class t8_default_scheme_tri: public t8_default_scheme_common<t8_default_scheme_tri> {
  public:
   /** Constructor which calls the specialized constructor for the base. */
-  t8_default_scheme_tri (): t8_default_scheme_common (T8_ECLASS_TRIANGLE, sizeof (t8_dtri_t)) {};
+  t8_default_scheme_tri () noexcept: t8_default_scheme_common (T8_ECLASS_TRIANGLE, sizeof (t8_dtri_t)) {};
 
   /** Destructor */
   ~t8_default_scheme_tri () {};
@@ -504,7 +504,7 @@ class t8_default_scheme_tri: public t8_default_scheme_common<t8_default_scheme_t
   int
   refines_irregular (void) const;
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is
    *  safe to perform any of the above algorithms on it.
    * \param [in]      elem  The element to be checked.
@@ -537,7 +537,7 @@ class t8_default_scheme_tri: public t8_default_scheme_common<t8_default_scheme_t
  * \param [in,out] elem   The element to be filled with root.
  */
   void
-  get_root (t8_element_t *elem) const;
+  set_to_root (t8_element_t *elem) const;
 
   /** Pack multiple elements into contiguous memory, so they can be sent via MPI.
    * \param [in] elements Array of elements that are to be packed

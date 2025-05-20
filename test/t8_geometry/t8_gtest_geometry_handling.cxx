@@ -32,12 +32,13 @@
 #include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_examples.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.hxx>
-
+#if T8_ENABLE_OCC
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
+#endif
 /* In this file we collect tests for t8code's cmesh geometry module.
  * These tests are
  *  - test_geometry.test_geometry_handler_register: Tests the geometry_handler register and find interface.
@@ -57,9 +58,9 @@ TEST (test_geometry, test_geometry_handler_register)
 
   geometries.push_back (geom_handler.register_geometry<t8_geometry_linear> ());
   geometries.push_back (geom_handler.register_geometry<t8_geometry_zero> ());
-#if T8_WITH_OCC
+#if T8_ENABLE_OCC
   geometries.push_back (geom_handler.register_geometry<t8_geometry_cad> ());
-#endif /* T8_WITH_OCC */
+#endif /* T8_ENABLE_OCC */
   geometries.push_back (geom_handler.register_geometry<t8_geometry_analytic> ("analytic_geom"));
   geometries.push_back (geom_handler.register_geometry<t8_geometry_linear_axis_aligned> ());
   geometries.push_back (geom_handler.register_geometry<t8_geometry_lagrange> ());
