@@ -88,6 +88,20 @@ class T8Type: public competence<T8Type<T, Parameter, competence...>>... {
     return std::move (value_);
   }
 
+  /** Implicit conversion to value type
+   * to cast a variable instance of this class into its
+   * value_type for example for printing.
+   * 
+   * \note to future devs: If this causes trouble in the future when we create a
+   *  type that is not easily (or should not be) convertible to its base type,
+   *  we can wrap this inside an enable_if condition and only allow the conversion
+   *  if explicitly stated. */
+  constexpr
+  operator value_type () const
+  {
+    return get ();
+  }
+
  private:
   T value_;
 };
