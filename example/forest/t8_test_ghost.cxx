@@ -27,7 +27,7 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_profiling.h>
-#include <t8_forest/t8_forest_ghost_search.hxx>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost_search.hxx>
 #include <t8_cmesh.h>
 #include <t8_cmesh_readmshfile.h>
 #include <t8_vtk/t8_vtk_writer.h>

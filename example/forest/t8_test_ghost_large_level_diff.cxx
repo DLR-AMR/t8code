@@ -44,7 +44,7 @@
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_profiling.h>
-#include <t8_forest/t8_forest_ghost_search.hxx>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost_search.hxx>
 #include <t8_schemes/t8_default/t8_default.hxx>
 
 /* The refinement criterion

@@ -23,7 +23,7 @@
 #ifndef T8_GHOST_DEFINITION_FACE_HXX
 #define T8_GHOST_DEFINITION_FACE_HXX
 
-#include <t8_forest/t8_forest_ghost_definition.hxx>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition.hxx>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_iterate.h>  // Definition of t8_forest_search_fn
 

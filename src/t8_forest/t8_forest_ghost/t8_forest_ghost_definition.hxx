@@ -26,8 +26,8 @@
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
 #include <memory>
-#include <t8_forest/t8_forest_ghost_definition.h>
-#include <t8_forest/t8_forest_ghost_definition_wrapper.h>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition.h>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_wrapper.h>
 
 T8_EXTERN_C_BEGIN ();
 

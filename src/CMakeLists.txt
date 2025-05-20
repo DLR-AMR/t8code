@@ -151,7 +151,7 @@ target_sources( T8 PRIVATE
     t8_forest/t8_forest_partition.cxx 
     t8_forest/t8_forest.cxx 
     t8_forest/t8_forest_private.c 
-    t8_forest/t8_forest_ghost.cxx 
+    t8_forest/t8_forest_ghost/t8_forest_ghost.cxx 
     t8_forest/t8_forest_iterate.cxx 
     t8_forest/t8_forest_balance.cxx 
     t8_forest/t8_forest_search/t8_forest_search.cxx 
@@ -242,7 +242,7 @@ install( DIRECTORY t8_cmesh TYPE INCLUDE FILES_MATCHING PATTERN "*.h"
 install( DIRECTORY t8_data TYPE INCLUDE FILES_MATCHING PATTERN "*.h" )
 install( DIRECTORY t8_forest TYPE INCLUDE FILES_MATCHING PATTERN "*.h"
   PATTERN "t8_forest/t8_forest_balance.h" EXCLUDE
-  PATTERN "t8_forest/t8_forest_ghost.h "  EXCLUDE
+  PATTERN "t8_forest/t8_forest_ghost/t8_forest_ghost.h "  EXCLUDE
   PATTERN "t8_forest/t8_forest_private.h" EXCLUDE
   PATTERN "t8_forest/t8_forest_types.h"   EXCLUDE
   )
