@@ -22,7 +22,22 @@
 #ifndef T8_UNSTRUCTURED_MESH_HXX
 #define T8_UNSTRUCTURED_MESH_HXX
 #include <t8.h>
+#include <t8_forest/t8_forest_general.h>  
+#include <iterator>
+#include <cstddef> 
 
-class unstructured_mesh {};
+class t8_unstructured_mesh {
+public:
+  t8_unstructured_mesh(t8_forest_t input_forest):forest(input_forest){}
+
+private:
+struct Element_Iterator{ 
+   using iterator_category = std::forward_iterator_tag; //TODO: do we maybe need a bidrirecIterator?
+   using difference_type   = std::ptrdiff_t;
+};
+  t8_forest_t forest;
+
+
+};
 
 #endif /* !T8_UNSTRUCTURED_MESH_HXX */
