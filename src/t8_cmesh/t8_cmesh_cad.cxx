@@ -28,9 +28,9 @@
 #include <t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_cad.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
 
 #if T8_ENABLE_OCC
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
 #include <gp_Pnt.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>

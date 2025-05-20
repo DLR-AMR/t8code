@@ -36,18 +36,109 @@ constexpr uint8_t T8_ELEMENT_NUM_CHILDREN[T8_ECLASS_COUNT] = { 1, 2, 4, 4, 8, 8,
 constexpr uint8_t T8_ELEMENT_NUM_CORNERS[T8_ECLASS_COUNT] = { 1, 2, 4, 3, 8, 4, 6, 5 };
 constexpr uint8_t T8_ELEMENT_NUM_FACES[T8_ECLASS_COUNT] = { 0, 2, 4, 3, 6, 4, 5, 5 };
 constexpr uint8_t T8_ELEMENT_MAX_NUM_FACECHILDREN[T8_ECLASS_COUNT] = { 0, 1, 2, 2, 4, 4, 4, 4 };
+constexpr uint8_t T8_ELEMENT_NUM_CORNER_FACES[T8_ECLASS_COUNT] = { 0, 1, 2, 2, 3, 3, 3, 4 };
+constexpr uint8_t T8_ELEMENT_NUM_FACE_CORNERS[T8_ECLASS_COUNT] = { 0, 2, 2, 2, 4, 3, 4, 4 };
 
 constexpr uint8_t T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_COUNT] = { 0, 0, 0, 1, 0, 3, 1, 2 };
+
+/**PARENT CHILD BIJECTION*/
+template <t8_eclass TEclass>
+constexpr int8_t t8_element_type_Iloc_to_childtype[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
+                                                  [T8_ELEMENT_NUM_CHILDREN[TEclass]];
+template <t8_eclass TEclass>
+constexpr int8_t t8_element_type_Iloc_to_childcubeid[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
+                                                    [T8_ELEMENT_NUM_CHILDREN[TEclass]];
+template <t8_eclass TEclass>
+constexpr int8_t t8_element_type_cubeid_to_parenttype[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
+                                                     [1 << T8_ELEMENT_DIM[TEclass]];
+template <t8_eclass TEclass>
+constexpr int8_t t8_element_type_cubeid_to_Iloc[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][1 << T8_ELEMENT_DIM[TEclass]];
+
+/**TYPE EQUATIONS*/
+template <t8_eclass TEclass>
+constexpr int8_t t8_type_edge_equations[T8_ELEMENT_NUM_EQUATIONS[TEclass]][2];
+
+/**VERTEX*/
+template <t8_eclass TEclass>
+constexpr int8_t t8_type_vertex_dim_to_binary[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_NUM_CORNERS[TEclass]]
+                                             [T8_ELEMENT_DIM[TEclass]];
+
+/**FACE*/
+template <t8_eclass TEclass>
+constexpr int8_t t8_standalone_lut_face_internal[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_NUM_FACES[TEclass]];
+template <t8_eclass TEclass>
+constexpr int8_t t8_standalone_lut_type_face_to_typebit[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
+                                                       [T8_ELEMENT_NUM_FACES[TEclass]];
+template <t8_eclass TEclass>
+constexpr int8_t t8_standalone_lut_type_face_to_sign[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
+                                                    [T8_ELEMENT_NUM_FACES[TEclass]];
+template <t8_eclass TEclass>
+constexpr int8_t t8_standalone_lut_type_face_to_facenormal_dim[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
+                                                              [T8_ELEMENT_NUM_FACES[TEclass]];
+template <t8_eclass TEclass>
+constexpr int8_t t8_standalone_lut_type_face_to_neighface[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
+                                                         [T8_ELEMENT_NUM_FACES[TEclass]];
+template <t8_eclass TEclass>
+constexpr int8_t t8_standalone_lut_type_cubeid_face_to_parentface[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
+                                                                 [1 << T8_ELEMENT_DIM[TEclass]]
+                                                                 [T8_ELEMENT_NUM_FACES[TEclass]];
+template <t8_eclass TEclass>
+constexpr int8_t t8_standalone_lut_type_face_to_is_1_boundary[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
+                                                             [T8_ELEMENT_NUM_FACES[TEclass]];
+template <t8_eclass TEclass>
+constexpr int8_t t8_standalone_lut_type_face_to_last_facechilds_cubeid[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
+                                                                      [T8_ELEMENT_NUM_FACES[TEclass]];
+template <t8_eclass TEclass>
+constexpr int8_t t8_standalone_lut_type_face_facechildid_to_childid[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
+                                                                   [T8_ELEMENT_NUM_FACES[TEclass]]
+                                                                   [T8_ELEMENT_MAX_NUM_FACECHILDREN[TEclass]];
+template <t8_eclass TEclass>
+constexpr int8_t t8_standalone_lut_type_childid_face_to_childface[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
+                                                                 [T8_ELEMENT_NUM_CHILDREN[TEclass]]
+                                                                 [T8_ELEMENT_MAX_NUM_FACECHILDREN[TEclass]];
+template <t8_eclass TEclass>
+constexpr int8_t t8_standalone_lut_type_face_to_tree_face[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
+                                                         [T8_ELEMENT_NUM_FACES[TEclass]];
+template <t8_eclass TEclass>
+constexpr int8_t t8_standalone_lut_rootface_dim_to_facedim[T8_ELEMENT_NUM_FACES[TEclass]][T8_ELEMENT_DIM[TEclass]];
+template <t8_eclass TEclass>
+constexpr int8_t t8_standalone_lut_rootface_eq_to_faceeq[T8_ELEMENT_NUM_FACES[TEclass]]
+                                                        [T8_ELEMENT_NUM_EQUATIONS[TEclass]];
+template <t8_eclass TEclass>
+constexpr int8_t t8_standalone_lut_type_rootface_to_face[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]]
+                                                        [T8_ELEMENT_NUM_FACES[TEclass]];
+template <t8_eclass TEclass>
+constexpr t8_eclass t8_standalone_lut_rootface_to_eclass[T8_ELEMENT_NUM_FACES[TEclass]];
+
+template <t8_eclass TEclass>
+constexpr int8_t t8_standalone_lut_cornerface[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_NUM_CORNERS[TEclass]]
+                                             [T8_ELEMENT_NUM_CORNER_FACES[TEclass]];
+
+template <t8_eclass TEclass>
+constexpr int8_t t8_standalone_lut_facecorner[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_NUM_FACES[TEclass]]
+                                             [T8_ELEMENT_NUM_FACE_CORNERS[TEclass]];
+template <t8_eclass TEclass>
+constexpr int8_t t8_standalone_lut_transform_coords[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_DIM[TEclass]]
+                                                   [T8_ELEMENT_DIM[TEclass]];
+
+template <t8_eclass TEclass>
+constexpr int8_t t8_standalone_lut_backtransform_coords[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_DIM[TEclass]]
+                                                       [T8_ELEMENT_DIM[TEclass]];
+
+#include "t8_standalone_lut/t8_standalone_lut_triangle.hxx"
+#include "t8_standalone_lut/t8_standalone_lut_prism.hxx"
+#include "t8_standalone_lut/t8_standalone_lut_pyra.hxx"
+#include "t8_standalone_lut/t8_standalone_lut_tet.hxx"
 
 typedef int32_t t8_element_coord;
 typedef uint8_t t8_element_level;
 typedef uint8_t t8_cube_id;
 typedef uint8_t t8_child_id;
 
-template <t8_eclass_t TEclass>
+template <t8_eclass TEclass>
 using t8_element_type = std::bitset<T8_ELEMENT_NUM_EQUATIONS[TEclass]>;
 
-template <t8_eclass_t TEclass>
+template <t8_eclass TEclass>
 using t8_element_coords = std::array<t8_element_coord, T8_ELEMENT_DIM[TEclass]>;
 template <t8_eclass_t TEclass>
 struct t8_standalone_element
@@ -56,6 +147,8 @@ struct t8_standalone_element
   t8_element_coords<TEclass> coords;
   /** The refinement level of the element relative to the root at level 0. */
   t8_element_level level;
+  /** Bit array: which inequality is fulfilled at which level. */
+  t8_element_type<TEclass> type;
 };
 
 #endif /* T8_STANDALONE_ELEMENTS_HXX */

@@ -27,6 +27,7 @@
 #include <t8_refcount.h>
 #include <t8_data/t8_shmem.h>
 #include <t8_geometry/t8_geometry.h>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.h>
 #include "t8_cmesh_stash.h"
 #include "t8_element.h"
 
@@ -51,9 +52,10 @@ typedef struct t8_cprofile t8_cprofile_t; /* Defined below */
 /* Definitions for attribute identifiers that are reserved for a special purpose. 
  * T8_CMESH_NEXT_POSSIBLE_KEY is the first unused key, hence it can be repurposed for different attributes.*/
 #define T8_CMESH_VERTICES_ATTRIBUTE_KEY 0            /* Used to store vertex coordinates. */
-#define T8_CMESH_GEOMETRY_ATTRIBUTE_KEY 1            /* Used to store the name of a tree's geometry. */
-#define T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY 2            /* Used to store which edge is linked to which geometry */
-#define T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY 3 /* Used to store edge parameters */
+#define T8_CMESH_GLOBAL_VERTICES_ATTRIBUTE_KEY 1     /* Used to store global vertex ids. */
+#define T8_CMESH_GEOMETRY_ATTRIBUTE_KEY 2            /* Used to store the name of a tree's geometry. */
+#define T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY 3            /* Used to store which edge is linked to which geometry */
+#define T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY 4 /* Used to store edge parameters */
 #define T8_CMESH_CAD_FACE_ATTRIBUTE_KEY \
   T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY \
   +T8_ECLASS_MAX_EDGES /* Used to store which face is linked to which surface */
@@ -137,7 +139,10 @@ typedef struct t8_cmesh
 
   t8_geometry_handler_c *geometry_handler; /**< Handles all geometries that are used by trees in this cmesh. */
 
-#ifdef T8_ENABLE_DEBUG
+  struct t8_cmesh_vertex_connectivity
+    *vertex_connectivity; /**< Structure that manages tree_to_vertex and vertex_to_tree connectivity. */
+
+#if T8_ENABLE_DEBUG
   t8_locidx_t inserted_trees;  /**< Count the number of inserted trees to
                                            check at commit if it equals the total number. */
   t8_locidx_t inserted_ghosts; /**< Count the number of inserted ghosts to

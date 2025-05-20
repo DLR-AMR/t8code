@@ -23,6 +23,9 @@
 #include <gtest/gtest.h>
 #include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_macros.hxx>
+#include <t8_cmesh.h>
+#include <t8_forest/t8_forest_general.h>
+#include <t8_cmesh/t8_cmesh_examples.h>
 
 /*
  * In this file we test whether the t8_element_count_leaves{_from_root}
@@ -43,38 +46,59 @@ class class_element_leaves: public testing::TestWithParam<std::tuple<int, t8_ecl
     scheme = create_from_scheme_id (scheme_id);
     eclass = std::get<1> (GetParam ());
     eclass = scheme->get_eclass_scheme_eclass (eclass);
+
+    scheme->element_new (eclass, 1, &element);
   }
   void
   TearDown () override
   {
+    scheme->element_destroy (eclass, 1, &element);
     scheme->unref ();
   }
+  t8_element_t *element;
   const t8_scheme *scheme;
   t8_eclass_t eclass;
 };
 
+static int
+adapt_all ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+           [[maybe_unused]] t8_locidx_t which_tree, [[maybe_unused]] const t8_eclass_t tree_class,
+           [[maybe_unused]] t8_locidx_t lelement_id, [[maybe_unused]] const t8_scheme_c *scheme,
+           [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
+           [[maybe_unused]] t8_element_t *elements[])
+{
+  return 1;
+}
+
 TEST_P (class_element_leaves, test_element_count_leaves_root)
 {
-  const int maxlevel = scheme->get_maxlevel (eclass);
+#if T8CODE_TEST_LEVEL >= 1
+  const int maxlevel = 4;
+#else
+  const int maxlevel = 6;
+#endif
   t8_gloidx_t compare_value = 1;
-  t8_gloidx_t sum1 = 1;
-  t8_gloidx_t sum2 = 1;
-
+  t8_gloidx_t test_value = 1;
+  t8_cmesh_t cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
+  t8_cmesh_ref (cmesh);
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, 0, 0, sc_MPI_COMM_WORLD);
+  scheme->ref ();
   for (int level = 0; level <= maxlevel; ++level) {
     const t8_gloidx_t leaf_count = scheme->count_leaves_from_root (eclass, level);
     ASSERT_EQ (leaf_count, compare_value)
       << "Incorrect leaf count " << leaf_count << " at eclass " << t8_eclass_to_string[eclass] << " and level " << level
       << " (expecting " << compare_value << ")";
-    /* Multiply the compare_value with 2^dim (= number of children per element) */
-    if (eclass == T8_ECLASS_PYRAMID) {
-      sum1 *= 8;
-      sum2 *= 6;
-      compare_value = 2 * sum1 - sum2;
-    }
-    else {
-      compare_value *= 1 << t8_eclass_to_dimension[eclass];
+    forest = t8_forest_new_adapt (forest, adapt_all, 0, 0, NULL);
+    t8_gloidx_t num_leaves = t8_forest_get_local_num_elements (forest);
+
+    compare_value = num_leaves;
+    if (!scheme->refines_irregular (eclass)) {
+      test_value *= 1 << t8_eclass_to_dimension[eclass];
+      EXPECT_EQ (test_value, compare_value);
     }
   }
+  t8_cmesh_unref (&cmesh);
+  t8_forest_unref (&forest);
 }
 
 /* Tests whether the leaf count for the same level is equal to 1

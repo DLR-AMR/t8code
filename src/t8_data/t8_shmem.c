@@ -40,7 +40,7 @@ typedef struct t8_shmem_array
   int writing_possible; /*< True if we can currently write into this array. False if not. */
   int
     write_start_called; /*< True if t8_shmem_array_start_writing was called and no call to t8_shmem_array_end_writing happened yet. */
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   sc_shmem_type_t shmem_type; /*< Shared memory type of the communicator (at time of initializing the array). */
 #endif
 } t8_shmem_array_struct_t;
@@ -140,7 +140,7 @@ t8_shmem_array_init (t8_shmem_array_t *parray, size_t elem_size, size_t elem_cou
   array->elem_size = elem_size;
   array->writing_possible = 0;
   array->write_start_called = 0;
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   array->shmem_type = T8_SHMEM_BEST_TYPE;
 #endif
 }
@@ -206,6 +206,9 @@ t8_shmem_array_prefix (const void *sendbuf, t8_shmem_array_t recvarray, const in
 {
   T8_ASSERT (t8_shmem_array_is_initialized (recvarray));
   T8_ASSERT (!t8_shmem_array_is_writing_possible (recvarray));
+  T8_ASSERT (recvarray != NULL);
+  T8_ASSERT (recvarray->array != NULL);
+  T8_ASSERT (sendbuf != NULL);
 
   sc_shmem_prefix ((void *) sendbuf, recvarray->array, count, type, op, comm);
 }
