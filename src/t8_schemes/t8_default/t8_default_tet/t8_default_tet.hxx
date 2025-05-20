@@ -42,9 +42,6 @@ class t8_default_scheme_tet: public t8_default_scheme_common<t8_default_scheme_t
   /** Constructor which calls the specialized constructor for the base. */
   t8_default_scheme_tet () noexcept: t8_default_scheme_common (T8_ECLASS_TET, sizeof (t8_dtet_t)) {};
 
-  /** Constructor with a custom element size. */
-  t8_default_scheme_tet (size_t elem_size): t8_default_scheme_common (T8_ECLASS_TET, elem_size) {};
-
   /** Destructor */
   ~t8_default_scheme_tet () {};
 

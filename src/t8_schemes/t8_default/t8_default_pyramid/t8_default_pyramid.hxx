@@ -45,9 +45,6 @@ class t8_default_scheme_pyramid: public t8_default_scheme_common<t8_default_sche
   /** Constructor which calls the specialized constructor for the base. */
   t8_default_scheme_pyramid () noexcept: t8_default_scheme_common (T8_ECLASS_PYRAMID, sizeof (t8_dpyramid_t)) {};
 
-  /** Constructor with a custom element size. */
-  t8_default_scheme_pyramid (size_t elem_size): t8_default_scheme_common (T8_ECLASS_PYRAMID, elem_size) {};
-
   /** Destructor */
   ~t8_default_scheme_pyramid () {};
 

@@ -47,9 +47,6 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
   /** Constructor which calls the specialized constructor for the base. */
   t8_default_scheme_hex () noexcept: t8_default_scheme_common (T8_ECLASS_HEX, sizeof (t8_phex_t)) {};
 
-  /** Constructor with a custom element size. */
-  t8_default_scheme_hex (size_t elem_size): t8_default_scheme_common (T8_ECLASS_HEX, elem_size) {};
-
   /** Destructor */
   ~t8_default_scheme_hex () {};
 
