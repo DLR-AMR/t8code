@@ -209,3 +209,17 @@ grid_element_level<t8_cmesh_t> ([[maybe_unused]] const t8_cmesh_t grid, [[maybe_
 {
   return 0;
 }
+
+template <>
+int
+grid_get_dim<t8_forest_t> (const t8_forest_t grid)
+{
+  return t8_forest_get_dimension (grid);
+}
+
+template <>
+int
+grid_get_dim<t8_cmesh_t> (const t8_cmesh_t grid)
+{
+  return t8_cmesh_get_dimension (grid);
+}
