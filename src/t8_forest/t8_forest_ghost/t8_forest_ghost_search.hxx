@@ -30,37 +30,37 @@
 /**
  * Base class for all ghost definitions which use a tree-based search algorithm.
  */
-struct t8_forest_ghost_w_search: public t8_forest_ghost_definition
+struct t8_forest_ghost_definition_w_search: public t8_forest_ghost_definition
 {
  public:
   /**
-    * Constructors of a t8_forest_ghost_w_search of type T8_GHOST_NONE
+    * Constructors of a t8_forest_ghost_definition_w_search of type T8_GHOST_NONE
     */
-  t8_forest_ghost_w_search ();
+  t8_forest_ghost_definition_w_search ();
 
   /**
-   * Constructor of t8_forest_ghost_w_search by search_function
+   * Constructor of t8_forest_ghost_definition_w_search by search_function
    * If do_ghost is called on this object, 
    * the ghost layer will be created by an tree search (t8_forest_search)
    * with search_function as callbackfunction.
    * \param search_function   the function used for the callback
    * \note the t8_ghost_type_t of the object will we userdefined
    */
-  explicit t8_forest_ghost_w_search (t8_forest_search_fn search_function)
+  explicit t8_forest_ghost_definition_w_search (t8_forest_search_fn search_function)
     : t8_forest_ghost_definition (T8_GHOST_USER_DEFINED), search_fn (search_function)
   {
     T8_ASSERT (search_function != nullptr);
   }
 
   /**
-   * Constructr of t8_forest_ghost_w_search by type
+   * Constructr of t8_forest_ghost_definition_w_search by type
    * The search_function is chosen by the type
    * \param ghost_type    type (FACES, EDGES, VERTICES) for the ghost definition
    * \note currently only the type face is supported
    */
-  explicit t8_forest_ghost_w_search (const t8_ghost_type_t ghost_type);
+  explicit t8_forest_ghost_definition_w_search (const t8_ghost_type_t ghost_type);
 
-  virtual ~t8_forest_ghost_w_search ()
+  virtual ~t8_forest_ghost_definition_w_search ()
   {
   }
 
@@ -89,7 +89,7 @@ struct t8_forest_ghost_w_search: public t8_forest_ghost_definition
    * \param [in] ghost_type       The type (faces, edges, user defined, ...) of the ghost_definition
    * \param [in] search_function  Function of type t8_forest_search_fn, used as callback function in search_for_ghost_elements
    */
-  t8_forest_ghost_w_search (const t8_ghost_type_t ghost_type, const t8_forest_search_fn search_function)
+  t8_forest_ghost_definition_w_search (const t8_ghost_type_t ghost_type, const t8_forest_search_fn search_function)
     : t8_forest_ghost_definition (ghost_type), search_fn (search_function)
   {
     T8_ASSERT (ghost_type != T8_GHOST_NONE);
@@ -103,7 +103,7 @@ struct t8_forest_ghost_w_search: public t8_forest_ghost_definition
  * This class computes the ghosts of a process via a face neighbor based ghost definition.
  * It supports three different versions for this definition, but version 3 suffices for most applications.
  */
-struct t8_forest_ghost_face: public t8_forest_ghost_w_search
+struct t8_forest_ghost_face: public t8_forest_ghost_definition_w_search
 {
  public:
   /**

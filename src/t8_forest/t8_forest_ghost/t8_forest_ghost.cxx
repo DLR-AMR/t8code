@@ -1959,7 +1959,7 @@ t8_forest_ghost_definition::clean_up (t8_forest_t forest)
  * Derived class ghost_w_search
 */
 
-t8_forest_ghost_w_search::t8_forest_ghost_w_search (const t8_ghost_type_t ghost_type)
+t8_forest_ghost_definition_w_search::t8_forest_ghost_definition_w_search (const t8_ghost_type_t ghost_type)
   : t8_forest_ghost_definition (ghost_type)
 {
   T8_ASSERT (ghost_type != T8_GHOST_NONE);
@@ -1967,12 +1967,13 @@ t8_forest_ghost_w_search::t8_forest_ghost_w_search (const t8_ghost_type_t ghost_
   if (ghost_type == T8_GHOST_FACES) {
     search_fn = t8_forest_ghost_search_boundary;
   }
-  SC_CHECK_ABORT (ghost_type != T8_GHOST_USER_DEFINED,
-                  "use t8_forest_ghost_w_search(t8_forest_search_fn search_function) for user defined ghost");
+  SC_CHECK_ABORT (
+    ghost_type != T8_GHOST_USER_DEFINED,
+    "use t8_forest_ghost_definition_w_search(t8_forest_search_fn search_function) for user defined ghost");
 }
 
 bool
-t8_forest_ghost_w_search::do_ghost (t8_forest_t forest)
+t8_forest_ghost_definition_w_search::do_ghost (t8_forest_t forest)
 {
 
   if (t8_ghost_get_type () == T8_GHOST_NONE) {
@@ -1998,7 +1999,7 @@ t8_forest_ghost_w_search::do_ghost (t8_forest_t forest)
 }
 
 void
-t8_forest_ghost_w_search::search_for_ghost_elements (t8_forest_t forest)
+t8_forest_ghost_definition_w_search::search_for_ghost_elements (t8_forest_t forest)
 {
   t8_forest_ghost_boundary_data_t data;
   void *store_user_data = NULL;
@@ -2031,7 +2032,7 @@ t8_forest_ghost_w_search::search_for_ghost_elements (t8_forest_t forest)
 }
 
 t8_forest_ghost_face::t8_forest_ghost_face (const int version)
-  : t8_forest_ghost_w_search (T8_GHOST_FACES, t8_forest_ghost_search_boundary), version (version)
+  : t8_forest_ghost_definition_w_search (T8_GHOST_FACES, t8_forest_ghost_search_boundary), version (version)
 {
   T8_ASSERT (1 <= version && version <= 3);
 }
