@@ -263,7 +263,7 @@ struct t8_standalone_scheme
     T8_ASSERT (element_is_valid (element));
     T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
     T8_ASSERT (0 <= corner && corner < T8_ELEMENT_NUM_CORNERS[TEclass]);
-    T8_ASSERTF (t8_standalone_lut_facecorner<T8_ECLASS_TRIANGLE>[0][1][1] == 2, "LUT falsch!");
+    T8_ASSERTF (t8_standalone_lut_facecorner<T8_ECLASS_TRIANGLE>[0][1][1] == 2, "LUT is wrong!");
 
     if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
       return (corner >> face & 1) + 2 * face;
@@ -851,7 +851,7 @@ struct t8_standalone_scheme
     }
     else {
       t8_standalone_element<TEclass> *el = (t8_standalone_element<TEclass> *) elem;
-      int child_id
+      const int child_id
         = t8_standalone_lut_type_face_facechildid_to_childid<TEclass>[el->type.to_ulong ()][face][face_child];
       return t8_standalone_lut_type_childid_face_to_childface<TEclass>[el->type.to_ulong ()][child_id][face];
     }
@@ -1001,16 +1001,10 @@ struct t8_standalone_scheme
         }
         // all edges containing dim must be fulfilled with x_d-a_d >= x_j-a_j or x_j-a_j <= x_d-a_d
         if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-          for (int ieq = 0; ieq < T8_ELEMENT_NUM_EQUATIONS[TEclass]; ieq++) {
-            if (t8_type_edge_equations<TEclass>[ieq][0] == dim) {
-              if (el->type[ieq]) {
-                return 0;
-              }
-            }
-            else if (t8_type_edge_equations<TEclass>[ieq][1] == dim) {
-              if (!el->type[ieq]) {
-                return 0;
-              }
+          for (int ieq = 0; ieq < T8_ELEMENT_NUM_EQUATIONS[TEclass]; ++ieq) {
+            if ((t8_type_edge_equations<TEclass>[ieq][0] == dim && el->type[ieq])
+                || (t8_type_edge_equations<TEclass>[ieq][1] == dim && !el->type[ieq])) {
+              return 0;
             }
           }
         }
@@ -1024,15 +1018,9 @@ struct t8_standalone_scheme
         // all edges containing dimid must be fulfilled with x_d-a_d <= x_j-a_j or x_j-a_j >= x_d-a_d
         if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
           for (int ieq = 0; ieq < T8_ELEMENT_NUM_EQUATIONS[TEclass]; ieq++) {
-            if (t8_type_edge_equations<TEclass>[ieq][0] == dim) {
-              if (!el->type[ieq]) {
-                return 0;
-              }
-            }
-            else if (t8_type_edge_equations<TEclass>[ieq][1] == dim) {
-              if (el->type[ieq]) {
-                return 0;
-              }
+            if ((t8_type_edge_equations<TEclass>[ieq][0] == dim && !el->type[ieq])
+                || (t8_type_edge_equations<TEclass>[ieq][1] == dim && el->type[ieq])) {
+              return 0;
             }
           }
         }
@@ -1043,7 +1031,7 @@ struct t8_standalone_scheme
       // get graph edge e (or ieq) = (xi,xj)
       // ai = aj is necessary and sufficient
       if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-        int ieq = t8_standalone_lut_type_face_to_typebit<TEclass>[el->type.to_ulong ()][face];
+        int const ieq = t8_standalone_lut_type_face_to_typebit<TEclass>[el->type.to_ulong ()][face];
         if (el->coords[t8_type_edge_equations<TEclass>[ieq][0]]
             != el->coords[t8_type_edge_equations<TEclass>[ieq][1]]) {
           return 0;
@@ -1111,7 +1099,7 @@ struct t8_standalone_scheme
     t8_standalone_element<TEclass> *neighbor = (t8_standalone_element<TEclass> *) neigh;
 
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      int internal_face = t8_standalone_lut_face_internal<TEclass>[el->type.to_ulong ()][face];
+      const int internal_face = t8_standalone_lut_face_internal<TEclass>[el->type.to_ulong ()][face];
       if (internal_face) {
         /**Determine typebit*/
         int typebit = t8_standalone_lut_type_face_to_typebit<TEclass>[el->type.to_ulong ()][face];
@@ -1140,7 +1128,7 @@ struct t8_standalone_scheme
 
     /**Adapt typebits*/
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      for (size_t ieq = 0; ieq < T8_ELEMENT_NUM_EQUATIONS[TEclass]; ieq++) {
+      for (int ieq = 0; ieq < T8_ELEMENT_NUM_EQUATIONS[TEclass]; ieq++) {
         /**For all neighboring typebits, change typebit*/
         if (t8_type_edge_equations<TEclass>[ieq][0] == facenormal_dim
             || t8_type_edge_equations<TEclass>[ieq][1] == facenormal_dim) {
@@ -1451,8 +1439,8 @@ struct t8_standalone_scheme
     T8_ASSERT (level <= T8_ELEMENT_MAXLEVEL[TEclass]);
     T8_ASSERT (level >= 0);
     if constexpr (TEclass == T8_ECLASS_PYRAMID) {
-      t8_linearidx_t two_to_l = 1LL << level;
-      t8_linearidx_t eight_to_l = 1LL << (3 * level);
+      const t8_linearidx_t two_to_l = 1LL << level;
+      const t8_linearidx_t eight_to_l = 1LL << (3 * level);
       return ((eight_to_l << 2) - two_to_l) / 3;
     }
     return 1LL << (level * T8_ELEMENT_DIM[TEclass]);
@@ -1535,7 +1523,7 @@ struct t8_standalone_scheme
     t8_element_coord length = element_get_len (element_get_level (elem));
 
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      double tmp_coords[T8_ELEMENT_DIM[TEclass]] = {};
+      double tmp_coords[T8_ELEMENT_DIM[TEclass]] = { 0.0 };
       for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; ++idim) {
         for (int jdim = 0; jdim < T8_ELEMENT_DIM[TEclass]; ++jdim) {
           tmp_coords[idim]
