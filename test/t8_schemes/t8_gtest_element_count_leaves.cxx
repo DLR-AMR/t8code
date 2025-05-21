@@ -89,9 +89,8 @@ TEST_P (class_element_leaves, test_element_count_leaves_root)
       << "Incorrect leaf count " << leaf_count << " at eclass " << t8_eclass_to_string[eclass] << " and level " << level
       << " (expecting " << compare_value << ")";
     forest = t8_forest_new_adapt (forest, adapt_all, 0, 0, NULL);
-    t8_gloidx_t num_leaves = t8_forest_get_local_num_elements (forest);
+    compare_value = t8_forest_get_local_num_leaf_elements (forest);
 
-    compare_value = num_leaves;
     if (!scheme->refines_irregular (eclass)) {
       test_value *= 1 << t8_eclass_to_dimension[eclass];
       EXPECT_EQ (test_value, compare_value);
