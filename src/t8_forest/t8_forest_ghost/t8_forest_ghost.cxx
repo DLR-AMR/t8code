@@ -32,7 +32,7 @@
 #include <sc_statistics.h>
 
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition.hxx>
-#include <t8_forest/t8_forest_ghost/t8_forest_ghost_search.hxx>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_w_search.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();

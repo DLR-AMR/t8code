@@ -39,7 +39,7 @@
 #include <t8_vtk/t8_vtk_writer.h>
 #include <t8_geometry/t8_geometry_base.hxx>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition.hxx>
-#include <t8_forest/t8_forest_ghost/t8_forest_ghost_search.hxx>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_w_search.hxx>
 #if T8_ENABLE_DEBUG
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
