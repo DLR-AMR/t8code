@@ -103,8 +103,8 @@ t8_forest_num_points (t8_forest_t forest, const int count_ghosts)
     for (t8_locidx_t itree = 0; itree < num_ghosts; itree++) {
       /* Get the element class of the ghost */
       const t8_eclass_t ghost_class = t8_forest_ghost_get_tree_class (forest, itree);
-      const t8_element_array_t *ghost_elem = t8_forest_ghost_get_tree_elements (forest, itree);
-      const size_t num_elements = t8_forest_ghost_tree_num_elements (forest, itree);
+      const t8_element_array_t *ghost_elem = t8_forest_ghost_get_tree_leaf_elements (forest, itree);
+      const size_t num_elements = t8_forest_ghost_tree_num_leaf_elements (forest, itree);
       for (t8_locidx_t ielem = 0; ielem < (t8_locidx_t) num_elements; ielem++) {
         const t8_element_t *elem = t8_element_array_index_locidx (ghost_elem, ielem);
         num_points += scheme->element_get_num_corners (ghost_class, elem);
@@ -317,7 +317,7 @@ t8_forest_vtk_cells_elementid_kernel (t8_forest_t forest, [[maybe_unused]] const
   if (modus == T8_VTK_KERNEL_EXECUTE) {
     if (!is_ghost) {
       fprintf (vtufile, "%lli ",
-               element_index + tree->elements_offset + (long long) t8_forest_get_first_local_element_id (forest));
+               element_index + tree->elements_offset + (long long) t8_forest_get_first_local_leaf_element_id (forest));
     }
     else {
       fprintf (vtufile, "%lli ", (long long) -1);
@@ -497,7 +497,7 @@ t8_forest_vtk_write_cell_data (t8_forest_t forest, FILE *vtufile, const char *da
     elems_in_tree = (t8_locidx_t) t8_element_array_get_count (&tree->leaf_elements);
     for (element_index = 0; element_index < elems_in_tree; element_index++) {
       /* Get a pointer to the element */
-      element = t8_forest_get_element (forest, tree->elements_offset + element_index, NULL);
+      element = t8_forest_get_leaf_element (forest, tree->elements_offset + element_index, NULL);
       T8_ASSERT (element != NULL);
       /* Execute the given callback on each element */
       if (!kernel (forest, itree, tree, element_index, element, tree_class, 0, vtufile, &countcols, &data,
@@ -532,10 +532,10 @@ t8_forest_vtk_write_cell_data (t8_forest_t forest, FILE *vtufile, const char *da
       /* Get the eclass of the ghost tree */
       const t8_eclass_t ghost_eclass = t8_forest_ghost_get_tree_class (forest, ighost);
       /* The number of ghosts in this tree */
-      num_ghosts_in_tree = t8_forest_ghost_tree_num_elements (forest, ighost);
+      num_ghosts_in_tree = t8_forest_ghost_tree_num_leaf_elements (forest, ighost);
       for (element_index = 0; element_index < num_ghosts_in_tree; element_index++) {
         /* Get a pointer to the element */
-        element = t8_forest_ghost_get_element (forest, ighost, element_index);
+        element = t8_forest_ghost_get_leaf_element (forest, ighost, element_index);
         /* Execute the given callback on each element */
         if (!kernel (forest, ighost + num_local_trees, NULL, element_index, element, ghost_eclass, 1, vtufile,
                      &countcols, &data, T8_VTK_KERNEL_EXECUTE)) {
@@ -820,7 +820,7 @@ t8_forest_vtk_write_ASCII (t8_forest_t forest, const char *fileprefix, const int
   }
 
   /* The local number of elements */
-  num_elements = t8_forest_get_local_num_elements (forest);
+  num_elements = t8_forest_get_local_num_leaf_elements (forest);
   if (write_ghosts) {
     num_elements += t8_forest_get_num_ghosts (forest);
   }

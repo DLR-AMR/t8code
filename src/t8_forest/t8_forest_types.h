@@ -191,8 +191,8 @@ typedef struct t8_forest_ghost
 {
   t8_refcount_t rc; /**< The reference counter. */
 
-  t8_locidx_t num_ghosts_elements; /**< The count of non-local ghost elements */
-  t8_locidx_t num_remote_elements; /**< The count of local elements that are ghost to another process. */
+  t8_locidx_t num_ghosts_elements; /**< The count of non-local ghost leaf elements */
+  t8_locidx_t num_remote_elements; /**< The count of local leaf elements that are ghost to another process. */
 
   t8_ghost_type_t ghost_type;           /**< Describes which neighbors are considered ghosts. */
   sc_array_t *ghost_trees;              /**< ghost tree data:
