@@ -32,6 +32,7 @@
 
 #include <t8.h>
 #include <t8_forest/t8_forest_types.h>
+#include <t8_forest/t8_forest_general.h>
 
 T8_EXTERN_C_BEGIN ();
 

@@ -31,7 +31,6 @@
 #include <t8_data/t8_containers.h>
 #include <sc_statistics.h>
 
-#include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition.h>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition.hxx>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_search.hxx>
 
