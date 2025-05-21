@@ -103,7 +103,7 @@ pyramid_control_volume (t8_element_t *pyra, t8_eclass_t eclass, const t8_scheme 
 TEST_P (t8_forest_volume, volume_check)
 {
   /* Compute the global number of elements */
-  const t8_gloidx_t global_num_elements = t8_forest_get_global_num_elements (forest);
+  const t8_gloidx_t global_num_elements = t8_forest_get_global_num_leaf_elements (forest);
   /* Vertices have a volume of 0. */
   const double control_volume = (eclass == T8_ECLASS_VERTEX) ? 0.0 : (1.0 / global_num_elements);
 
@@ -112,9 +112,9 @@ TEST_P (t8_forest_volume, volume_check)
   const t8_locidx_t local_num_trees = t8_forest_get_num_local_trees (forest);
   /* Iterate over all elements. */
   for (t8_locidx_t itree = 0; itree < local_num_trees; itree++) {
-    const t8_locidx_t tree_elements = t8_forest_get_tree_num_elements (forest, itree);
+    const t8_locidx_t tree_elements = t8_forest_get_tree_num_leaf_elements (forest, itree);
     for (t8_locidx_t ielement = 0; ielement < tree_elements; ielement++) {
-      const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      const t8_element_t *element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       const double volume = t8_forest_element_volume (forest, itree, element);
       if (eclass == T8_ECLASS_PYRAMID) {
         const double shape_volume = pyramid_control_volume ((t8_element_t *) element, eclass, scheme);

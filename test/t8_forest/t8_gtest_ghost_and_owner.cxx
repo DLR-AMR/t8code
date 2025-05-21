@@ -99,7 +99,7 @@ t8_test_gao_check (t8_forest_t forest)
   }
   /* loop over ghost trees */
   for (t8_locidx_t itree = 0, lelement_id = 0; itree < num_ghost_trees; itree++) {
-    t8_locidx_t num_elems_in_tree = t8_forest_ghost_tree_num_elements (forest, itree);
+    t8_locidx_t num_elems_in_tree = t8_forest_ghost_tree_num_leaf_elements (forest, itree);
     /* Get the global id and element class of this tree */
     t8_gloidx_t gtreeid = t8_forest_ghost_get_global_treeid (forest, itree);
     t8_eclass_t eclass = t8_forest_ghost_get_tree_class (forest, itree);
@@ -113,7 +113,7 @@ t8_test_gao_check (t8_forest_t forest)
         }
       }
 
-      t8_element_t *ghost_element = t8_forest_ghost_get_element (forest, itree, ielem);
+      t8_element_t *ghost_element = t8_forest_ghost_get_leaf_element (forest, itree, ielem);
       int is_owner = t8_forest_element_check_owner (forest, ghost_element, gtreeid, eclass, remote, 0);
       ASSERT_TRUE (is_owner) << "Owner check for ghost element failed.\n";
       int owner = t8_forest_element_find_owner (forest, gtreeid, ghost_element, eclass);
