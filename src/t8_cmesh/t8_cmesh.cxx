@@ -1536,3 +1536,25 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, const int level, const t8_scheme *sch
     *last_local_tree = *first_local_tree - 1;
   }
 }
+
+void
+t8_cmesh_get_local_bounding_box (const t8_cmesh_t cmesh, double bounds[6])
+{
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
+  T8_ASSERT (num_local_trees > 0);
+  double tree_bounds[6] = { 0.0 };
+  t8_geometry_handler *geom_handler = cmesh->geometry_handler;
+  geom_handler->get_tree_bounding_box (cmesh, 0, bounds);
+  for (t8_locidx_t itree = 1; itree < num_local_trees; itree++) {
+    const t8_gloidx_t gtree_id = t8_cmesh_get_global_id (cmesh, itree);
+    geom_handler->get_tree_bounding_box (cmesh, gtree_id, tree_bounds);
+
+    bounds[0] = std::min (bounds[0], tree_bounds[0]);
+    bounds[1] = std::max (bounds[1], tree_bounds[1]);
+    bounds[2] = std::min (bounds[2], tree_bounds[2]);
+    bounds[3] = std::max (bounds[3], tree_bounds[3]);
+    bounds[4] = std::min (bounds[4], tree_bounds[4]);
+    bounds[5] = std::max (bounds[5], tree_bounds[5]);
+  }
+}

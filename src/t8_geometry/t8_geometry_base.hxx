@@ -163,6 +163,15 @@ struct t8_geometry
     return name;
   }
 
+  /**
+   * Compute the bounding box of the currently active tree.
+   */
+  virtual void
+  get_tree_bounding_box ([[maybe_unused]] const t8_cmesh_t cmesh, [[maybe_unused]] double bounds[6]) const
+  {
+    SC_ABORTF ("Tree bounding box function not implemented");
+  }
+
   inline size_t
   t8_geom_get_hash () const
   {
