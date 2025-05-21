@@ -1115,14 +1115,14 @@ t8_forest_compute_desc (t8_forest_t forest)
     /* get the eclass associated to tree */
     const t8_eclass_t tree_class = itree->eclass;
     /* get a pointer to the first element of itree */
-    const t8_element_t *first_element = t8_element_array_index_locidx (&itree->elements, 0);
+    const t8_element_t *first_element = t8_element_array_index_locidx (&itree->leaf_elements, 0);
     /* get memory for the trees first descendant */
     scheme->element_new (tree_class, 1, &itree->first_desc);
     /* calculate the first descendant of the first element */
     scheme->element_get_first_descendant (tree_class, first_element, itree->first_desc, forest->maxlevel);
     /* get a pointer to the last element of itree */
-    num_elements = t8_element_array_get_count (&itree->elements);
-    const t8_element_t *last_element = t8_element_array_index_locidx (&itree->elements, num_elements - 1);
+    num_elements = t8_element_array_get_count (&itree->leaf_elements);
+    const t8_element_t *last_element = t8_element_array_index_locidx (&itree->leaf_elements, num_elements - 1);
     /* get memory for the trees first descendant */
     scheme->element_new (tree_class, 1, &itree->last_desc);
     /* calculate the last descendant of the first element */
@@ -1165,7 +1165,7 @@ t8_forest_populate (t8_forest_t forest)
                     "cmesh partition does not match the planned forest partition");
   }
 
-  forest->global_num_elements = forest->local_num_elements = 0;
+  forest->global_num_leaf_elements = forest->local_num_leaf_elements = 0;
   /* create only the non-empty tree objects */
   if (is_empty) {
     /* This processor is empty
@@ -1187,7 +1187,7 @@ t8_forest_populate (t8_forest_t forest)
       tree->elements_offset = count_elements;
       const t8_scheme *scheme = forest->scheme;
       T8_ASSERT (scheme != NULL);
-      telements = &tree->elements;
+      telements = &tree->leaf_elements;
       /* calculate first and last element on this tree */
       start = (jt == forest->first_local_tree) ? child_in_tree_begin : 0;
       end = (jt == forest->last_local_tree) ? child_in_tree_end
@@ -1208,8 +1208,8 @@ t8_forest_populate (t8_forest_t forest)
       }
     }
   }
-  forest->local_num_elements = count_elements;
-  /* TODO: if no tree has pyramid type we can optimize this to global_num_elements = global_num_trees * 2^(dim*level) */
+  forest->local_num_leaf_elements = count_elements;
+  /* TODO: if no tree has pyramid type we can optimize this to global_num_leaf_elements = global_num_trees * 2^(dim*level) */
   t8_forest_comm_global_num_leaf_elements (forest);
   /* TODO: figure out global_first_position, global_first_quadrant without comm */
 }
@@ -1300,7 +1300,7 @@ t8_forest_tree_shared ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] int
     return global_neighbour_tree_idx == forest->first_local_tree && forest->last_local_tree != -1;
   }
   else {
-    if (forest->local_num_elements <= 0 || forest->trees == NULL
+    if (forest->local_num_leaf_elements <= 0 || forest->trees == NULL
         || forest->first_local_tree > forest->last_local_tree) {
       /* This forest is empty and therefore the first tree is not shared */
       return 0;
@@ -1381,29 +1381,29 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
     tree = (t8_tree_t) t8_sc_array_index_locidx (forest->trees, jt);
     fromtree = (t8_tree_t) t8_sc_array_index_locidx (from->trees, jt);
     tree->eclass = fromtree->eclass;
-    num_tree_elements = t8_element_array_get_count (&fromtree->elements);
-    t8_element_array_init_size (&tree->elements, forest->scheme, tree->eclass, num_tree_elements);
+    num_tree_elements = t8_element_array_get_count (&fromtree->leaf_elements);
+    t8_element_array_init_size (&tree->leaf_elements, forest->scheme, tree->eclass, num_tree_elements);
     /* TODO: replace with t8_elem_copy (not existing yet), in order to
      * eventually copy additional pointer data stored in the elements?
      * -> i.m.o. we should not allow such pointer data at the elements */
     if (copy_elements) {
-      t8_element_array_copy (&tree->elements, &fromtree->elements);
+      t8_element_array_copy (&tree->leaf_elements, &fromtree->leaf_elements);
       tree->elements_offset = fromtree->elements_offset;
     }
     else {
-      t8_element_array_truncate (&tree->elements);
+      t8_element_array_truncate (&tree->leaf_elements);
     }
   }
   forest->first_local_tree = from->first_local_tree;
   forest->last_local_tree = from->last_local_tree;
   if (copy_elements) {
-    forest->local_num_elements = from->local_num_elements;
-    forest->global_num_elements = from->global_num_elements;
+    forest->local_num_leaf_elements = from->local_num_leaf_elements;
+    forest->global_num_leaf_elements = from->global_num_leaf_elements;
     forest->incomplete_trees = from->incomplete_trees;
   }
   else {
-    forest->local_num_elements = 0;
-    forest->global_num_elements = 0;
+    forest->local_num_leaf_elements = 0;
+    forest->global_num_leaf_elements = 0;
     forest->incomplete_trees = -1;
   }
 }
@@ -1795,8 +1795,8 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
         /* Add the number of ghost elements on previous ghost trees and the number of local elements. */
         element_index += t8_forest_ghost_get_tree_element_offset (forest, lghost_treeid);
         element_index += t8_forest_get_local_num_leaf_elements (forest);
-        T8_ASSERT (forest->local_num_elements <= element_index
-                   && element_index < forest->local_num_elements + t8_forest_get_num_ghosts (forest));
+        T8_ASSERT (forest->local_num_leaf_elements <= element_index
+                   && element_index < forest->local_num_leaf_elements + t8_forest_get_num_ghosts (forest));
       }
       else {
         /* the elements are local elements */
@@ -2732,7 +2732,7 @@ t8_forest_init (t8_forest_t *pforest)
   forest->mpisize = -1;
   forest->mpirank = -1;
   forest->first_local_tree = -1;
-  forest->global_num_elements = -1;
+  forest->global_num_leaf_elements = -1;
   forest->set_adapt_recursive = -1;
   forest->set_balance = -1;
   forest->maxlevel_existing = -1;
@@ -2990,10 +2990,10 @@ t8_forest_comm_global_num_leaf_elements (t8_forest_t forest)
   t8_gloidx_t local_num_el;
   t8_gloidx_t global_num_el;
 
-  local_num_el = (t8_gloidx_t) forest->local_num_elements;
+  local_num_el = (t8_gloidx_t) forest->local_num_leaf_elements;
   mpiret = sc_MPI_Allreduce (&local_num_el, &global_num_el, 1, T8_MPI_GLOIDX, sc_MPI_SUM, forest->mpicomm);
   SC_CHECK_MPI (mpiret);
-  forest->global_num_elements = global_num_el;
+  forest->global_num_leaf_elements = global_num_el;
 }
 
 /** Adapt callback function to refine every element in the forest.
@@ -3278,7 +3278,7 @@ t8_forest_commit (t8_forest_t forest)
       else {
         forest->incomplete_trees = forest->set_from->incomplete_trees;
         /* Partitioning is the last routine, no balance was set */
-        forest->global_num_elements = forest->set_from->global_num_elements;
+        forest->global_num_leaf_elements = forest->set_from->global_num_leaf_elements;
         /* Initialize the trees array of the forest */
         forest->trees = sc_array_new (sizeof (t8_tree_struct_t));
         /* partition the forest */
@@ -3326,7 +3326,7 @@ t8_forest_commit (t8_forest_t forest)
   forest->committed = 1;
   t8_debugf ("Committed forest with %li local elements and %lli "
              "global elements.\n\tTree range is from %lli to %lli.\n",
-             (long) forest->local_num_elements, (long long) forest->global_num_elements,
+             (long) forest->local_num_leaf_elements, (long long) forest->global_num_leaf_elements,
              (long long) forest->first_local_tree, (long long) forest->last_local_tree);
 
   if (forest->tree_offsets == NULL) {
@@ -3385,7 +3385,7 @@ t8_forest_get_local_num_leaf_elements (const t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  return forest->local_num_elements;
+  return forest->local_num_leaf_elements;
 }
 
 t8_gloidx_t
@@ -3393,7 +3393,7 @@ t8_forest_get_global_num_leaf_elements (const t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  return forest->global_num_elements;
+  return forest->global_num_leaf_elements;
 }
 
 t8_locidx_t
@@ -3548,7 +3548,7 @@ t8_forest_tree_get_leaf_elements (const t8_forest_t forest, const t8_locidx_t lt
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (0 <= ltree_id && ltree_id < t8_forest_get_num_local_trees (forest));
 
-  return &t8_forest_get_tree (forest, ltree_id)->elements;
+  return &t8_forest_get_tree (forest, ltree_id)->leaf_elements;
 }
 
 t8_cmesh_t
@@ -3573,7 +3573,7 @@ t8_forest_compare_elem_tree (const void *lelement_id, const void *ltree)
     /* We have to look further to the left */
     return -1;
   }
-  else if (tree->elements_offset + (t8_locidx_t) t8_element_array_get_count (&tree->elements) > leid) {
+  else if (tree->elements_offset + (t8_locidx_t) t8_element_array_get_count (&tree->leaf_elements) > leid) {
     /* We have found the tree */
     return 0;
   }
@@ -3613,7 +3613,7 @@ t8_forest_get_leaf_element (t8_forest_t forest, t8_locidx_t lelement_id, t8_loci
         /* We have to look further to the left */
         ltree_b = ltreedebug;
       }
-      else if (tree->elements_offset + (t8_locidx_t) t8_element_array_get_count (&tree->elements) > lelement_id) {
+      else if (tree->elements_offset + (t8_locidx_t) t8_element_array_get_count (&tree->leaf_elements) > lelement_id) {
         /* We have found the tree */
         ltree_a = ltree_b;
       }
@@ -3634,8 +3634,8 @@ t8_forest_get_leaf_element (t8_forest_t forest, t8_locidx_t lelement_id, t8_loci
    * Or the element is not a local element. */
   tree = t8_forest_get_tree (forest, ltree);
   if (tree->elements_offset <= lelement_id
-      && lelement_id < tree->elements_offset + (t8_locidx_t) t8_element_array_get_count (&tree->elements)) {
-    return t8_element_array_index_locidx_mutable (&tree->elements, lelement_id - tree->elements_offset);
+      && lelement_id < tree->elements_offset + (t8_locidx_t) t8_element_array_get_count (&tree->leaf_elements)) {
+    return t8_element_array_index_locidx_mutable (&tree->leaf_elements, lelement_id - tree->elements_offset);
   }
   /* The element was not found.
    * This case is covered by the first if and should therefore never happen. */
@@ -3670,9 +3670,9 @@ t8_forest_get_tree_leaf_element_count (t8_tree_t tree)
   t8_locidx_t element_count;
 
   T8_ASSERT (tree != NULL);
-  element_count = t8_element_array_get_count (&tree->elements);
+  element_count = t8_element_array_get_count (&tree->leaf_elements);
   /* check for type conversion errors */
-  T8_ASSERT ((size_t) element_count == t8_element_array_get_count (&tree->elements));
+  T8_ASSERT ((size_t) element_count == t8_element_array_get_count (&tree->leaf_elements));
   return element_count;
 }
 
@@ -4054,7 +4054,7 @@ t8_forest_compute_elements_offset (t8_forest_t forest)
     current_offset += t8_forest_get_tree_leaf_element_count (tree);
   }
   /* At the end, we counted all elements */
-  T8_ASSERT (current_offset == forest->local_num_elements);
+  T8_ASSERT (current_offset == forest->local_num_leaf_elements);
 }
 
 int
@@ -4132,7 +4132,7 @@ t8_forest_new_uniform (t8_cmesh_t cmesh, const t8_scheme *scheme, const int leve
   /* commit the forest */
   t8_forest_commit (forest);
   t8_global_productionf ("Constructed uniform forest with %lli global elements.\n",
-                         (long long) forest->global_num_elements);
+                         (long long) forest->global_num_leaf_elements);
 
   return forest;
 }
@@ -4178,7 +4178,7 @@ t8_forest_free_trees (t8_forest_t forest)
     else {
       T8_ASSERT (forest->incomplete_trees);
     }
-    t8_element_array_reset (&tree->elements);
+    t8_element_array_reset (&tree->leaf_elements);
   }
   sc_array_destroy (forest->trees);
 }
