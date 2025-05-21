@@ -161,8 +161,7 @@ auto pretty_print_level_and_cmesh_params
       std::string cmesh_name;
       std::get<2> (info.param)->param_to_string (cmesh_name);
       name += std::string ("_") + cmesh_name;
-      name += std::string ("scheme_") + std::to_string (std::get<0> (info.param));
-      name += std::string ("_") + std::to_string (info.index);
+      name += std::string ("_") + t8_scheme_to_string[std::get<0> (info.param)];
       return name;
     };
 
