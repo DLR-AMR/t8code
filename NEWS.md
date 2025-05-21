@@ -131,28 +131,6 @@ A list of all renamings (without considering the deletion of the prefix) is here
 - `t8_element_refines_irregular` -> `refines_irregular`
 - `t8_element_root` -> `t8_element_set_to_root`
 
-### Renaming of forest functions to explicitly say leaf elements
-
-To ease code readability and to avoid misunderstandings, the names of all forest functions referring exclusively to the leaf elements now explicitly say so.
-Specifically, the following functions were renamed:
-
-- `t8_forest_comm_global_num_elements` -> `t8_forest_comm_global_num_leaf_elements`
-- `t8_forest_get_global_num_elements` -> `t8_forest_get_global_num_leaf_elements`
-- `t8_forest_tree_get_leaves` -> `t8_forest_tree_get_leaf_elements`
-- `t8_forest_get_element` -> `t8_forest_get_leaf_element`
-- `t8_forest_get_element_in_tree` -> `t8_forest_get_leaf_element_in_tree`
-- `t8_forest_get_tree_num_elements` -> `t8_forest_get_tree_num_leaf_elements`
-- `t8_forest_get_tree_element_count` -> `t8_forest_get_tree_leaf_element_count`
-- `t8_forest_get_first_local_element_id` -> `t8_forest_get_first_local_leaf_element_id`
-- `t8_forest_ghost_tree_num_elements` -> `t8_forest_ghost_tree_num_leaf_elements`
-- `t8_forest_ghost_get_tree_elements` -> `t8_forest_ghost_get_tree_leaf_elements`
-- `t8_forest_ghost_get_element` -> `t8_forest_ghost_get_leaf_element`
-- `t8_forest_get_tree_element` -> `t8_forest_get_tree_leaf_element`
-- `t8_forest_get_tree_element_mutable` -> `t8_forest_get_tree_leaf_element_mutable`
-- `t8_forest_get_tree_element_array` -> `t8_forest_get_tree_leaf_element_array`
-- `t8_forest_get_tree_element_array_mutable` -> `t8_forest_get_tree_leaf_element_array_mutable`
-
-
 ### Renaming of forest functions and variables to explicitly say leaf elements
 
 To ease code readability and to avoid misunderstandings, the names of all forest functions referring exclusively to the leaf elements now explicitly say so.
