@@ -191,3 +191,7 @@ t8_scheme_new_default (void){
   return builder.build_scheme ();
 }
 ```
+
+## Renaming of macros T8_WITH_ to T8_ENABLE_
+We renamed the macros T8_WITH_... to T8_ENABLE_... for consistency reasons with the related cmake options (T8CODE_ENABLE...) and other macros. We are currently working on an automatized way to check for wrong usages.
+Moreover, we agreed to always use #if instead of #ifdef with macros. The #if option allows for more complex conditions and explicitly setting a macro to 0, which is why we chose this option. An incorrect usage of #if and #ifdef is checked in the check_macros.sh script. 
