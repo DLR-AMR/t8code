@@ -116,7 +116,7 @@ t8_test_element_is_leaf_for_forest (t8_forest_t forest)
 
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
   for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree) {
-    const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+    const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
     /* Allocate memory to build a non-leaf element. */
     t8_element_t *not_leaf;
@@ -126,7 +126,7 @@ t8_test_element_is_leaf_for_forest (t8_forest_t forest)
      * build its parent and its first child (if they exist), and verify
      * that t8_forest_element_is_leaf returns false. */
     for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement) {
-      const t8_element_t *leaf_element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      const t8_element_t *leaf_element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       EXPECT_TRUE (t8_forest_element_is_leaf (forest, leaf_element, itree));
       /* Compute parent and first child of element and check that they are not in the tree */
       const int element_level = scheme->element_get_level (tree_class, leaf_element);
@@ -161,8 +161,7 @@ auto pretty_print_level_and_cmesh_params
       std::string cmesh_name;
       std::get<2> (info.param)->param_to_string (cmesh_name);
       name += std::string ("_") + cmesh_name;
-      name += std::string ("scheme_") + std::to_string (std::get<0> (info.param));
-      name += std::string ("_") + std::to_string (info.index);
+      name += std::string ("_") + t8_scheme_to_string[std::get<0> (info.param)];
       return name;
     };
 
