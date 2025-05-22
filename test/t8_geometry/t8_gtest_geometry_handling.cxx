@@ -194,7 +194,6 @@ TEST (test_geometry, cmesh_no_geometry)
   t8_global_productionf ("We expect an error message about not writing the vtk file here.\n");
   // Try to write vtk file and expect failure
   EXPECT_FALSE (t8_cmesh_vtk_write_file (cmesh, "cmesh_vtk_file"));
-  t8_cmesh_vtk_write_file_via_API (cmesh, "cmesh_vtk_file_API", sc_MPI_COMM_WORLD);
 
   t8_cmesh_destroy (&cmesh);
 }
