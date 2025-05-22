@@ -61,11 +61,11 @@ t8_geometry_compute_hash (const std::string &name)
 }
 
 /**
- * Query wheyher a given hash value corresponds to en empty string and hence
+ * Query whether a given hash value corresponds to en empty string and hence
  * a non-existing geometry.
  * 
  * \param [in] hash A hash value of a geometry.
- * \return true If \a hash corresponds to e non-existing geometry,i.e. if \a hash == \a t8_geometry_empty_hash.
+ * \return true If \a hash corresponds to a non-existing geometry,i.e. if \a hash == \a t8_geometry_empty_hash.
  * \return false If \a hash corresponds to an existing geometry.
  */
 inline bool
