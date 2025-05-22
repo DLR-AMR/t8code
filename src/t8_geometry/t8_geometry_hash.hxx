@@ -41,7 +41,7 @@ struct t8_geometry_hash_tag
 
 /** Data type used for storing hash values of geometries. */
 using t8_geometry_hash = T8Type<size_t, t8_geometry_hash_tag, Addable, Subtractable, AddAssignable, Multipliable,
-                                  Dividable, EqualityComparable, Hashable>;
+                                Dividable, EqualityComparable, Hashable>;
 
 /** Constant that we use for hashes of non-existing geometries. */
 static const t8_geometry_hash t8_geometry_empty_hash (std::hash<std::string> {}(""));
