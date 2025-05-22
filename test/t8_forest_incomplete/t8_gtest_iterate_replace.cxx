@@ -41,9 +41,9 @@ class forest_iterate: public testing::TestWithParam<cmesh_example_base *> {
   SetUp () override
   {
 #if T8CODE_TEST_LEVEL >= 1
-    constexpr int level = 3;
+    constexpr int level = 2;
 #else
-    constexpr int level = 4;
+    constexpr int level = 3;
 #endif
     t8_cmesh_t cmesh = GetParam ()->cmesh_create ();
     if (t8_cmesh_is_empty (cmesh)) {

@@ -132,7 +132,7 @@ add_t8_test( NAME t8_gtest_partition_data_parallel      SOURCES t8_gtest_main.cx
 
 add_t8_test( NAME t8_gtest_permute_hole_serial          SOURCES t8_gtest_main.cxx t8_forest_incomplete/t8_gtest_permute_hole.cxx )
 add_t8_test( NAME t8_gtest_recursive_serial             SOURCES t8_gtest_main.cxx t8_forest_incomplete/t8_gtest_recursive.cxx )
-add_t8_test( NAME t8_gtest_iterate_replace_serial       SOURCES t8_gtest_main.cxx t8_forest_incomplete/t8_gtest_iterate_replace.cxx )
+add_t8_test( NAME t8_gtest_iterate_replace_parallel     SOURCES t8_gtest_main.cxx t8_forest_incomplete/t8_gtest_iterate_replace.cxx )
 add_t8_test( NAME t8_gtest_empty_local_tree_parallel    SOURCES t8_gtest_main.cxx t8_forest_incomplete/t8_gtest_empty_local_tree.cxx )
 add_t8_test( NAME t8_gtest_empty_global_tree_parallel   SOURCES t8_gtest_main.cxx t8_forest_incomplete/t8_gtest_empty_global_tree.cxx )
 if( T8_ENABLE_OCC )
