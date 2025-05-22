@@ -47,9 +47,9 @@ t8_cmesh_set_tree_geometry (t8_cmesh_t cmesh, const t8_gloidx_t gtreeid, const t
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   /* Add the hash of the geometry as an attribute to the tree. */
-  t8_geometry_hash_t hash = geom->t8_geom_get_hash ();
+  t8_geometry_hash hash = geom->t8_geom_get_hash ();
   t8_cmesh_set_attribute (cmesh, gtreeid, t8_get_package_id (), T8_CMESH_GEOMETRY_ATTRIBUTE_KEY, &hash,
-                          sizeof (t8_geometry_hash_t), 0);
+                          sizeof (t8_geometry_hash), 0);
 }
 
 const t8_geometry_c *
@@ -71,13 +71,13 @@ t8_cmesh_get_tree_geometry (const t8_cmesh_t cmesh, const t8_gloidx_t gtreeid)
      */
     return geom_handler->get_unique_geometry ();
   }
-  const t8_geometry_hash_t geom_hash = t8_cmesh_get_tree_geom_hash (cmesh, gtreeid);
+  const t8_geometry_hash geom_hash = t8_cmesh_get_tree_geom_hash (cmesh, gtreeid);
 
   /* Look up the geometry in the geometry handler's hash table and return it. */
   return geom_handler->get_geometry (geom_hash);
 }
 
-t8_geometry_hash_t
+t8_geometry_hash
 t8_cmesh_get_tree_geom_hash (const t8_cmesh_t cmesh, const t8_gloidx_t gtreeid)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
@@ -100,7 +100,7 @@ t8_cmesh_get_tree_geom_hash (const t8_cmesh_t cmesh, const t8_gloidx_t gtreeid)
 
     t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
     /* Look up the hash of the geometry in the attributes. */
-    const t8_geometry_hash_t *geom_hash = (const t8_geometry_hash_t *) t8_cmesh_get_attribute (
+    const t8_geometry_hash *geom_hash = (const t8_geometry_hash *) t8_cmesh_get_attribute (
       cmesh, t8_get_package_id (), T8_CMESH_GEOMETRY_ATTRIBUTE_KEY, ltreeid);
     T8_ASSERT (geom_hash != NULL);
     T8_ASSERT (*geom_hash == geom->t8_geom_get_hash ());
@@ -110,7 +110,7 @@ t8_cmesh_get_tree_geom_hash (const t8_cmesh_t cmesh, const t8_gloidx_t gtreeid)
 
   t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
   /* Look up the hash of the geometry in the attributes. */
-  const t8_geometry_hash_t *geometry_hash = (const t8_geometry_hash_t *) t8_cmesh_get_attribute (
+  const t8_geometry_hash *geometry_hash = (const t8_geometry_hash *) t8_cmesh_get_attribute (
     cmesh, t8_get_package_id (), T8_CMESH_GEOMETRY_ATTRIBUTE_KEY, ltreeid);
   return *geometry_hash;
 }

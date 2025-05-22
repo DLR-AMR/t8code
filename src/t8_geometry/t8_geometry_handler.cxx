@@ -60,7 +60,7 @@ t8_geometry_handler::update_tree (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
     if (num_geoms > 1) {
       /* Find and load the geometry of that tree. 
        * Only necessary if we have more than one geometry. */
-      const t8_geometry_hash_t geom_hash = t8_cmesh_get_tree_geom_hash (cmesh, gtreeid);
+      const t8_geometry_hash geom_hash = t8_cmesh_get_tree_geom_hash (cmesh, gtreeid);
       active_geometry = get_geometry (geom_hash);
       SC_CHECK_ABORTF (active_geometry != nullptr,
                        "Could not find geometry with hash %lu or tree %ld has no registered geometry.",

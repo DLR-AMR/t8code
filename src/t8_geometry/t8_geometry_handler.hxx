@@ -89,7 +89,7 @@ struct t8_geometry_handler
   inline t8_geometry *
   get_geometry (const std::string &name)
   {
-    const t8_geometry_hash_t hash = t8_geometry_compute_hash (name);
+    const t8_geometry_hash hash = t8_geometry_compute_hash (name);
     return t8_geometry_handler::get_geometry (hash);
   }
 
@@ -99,7 +99,7 @@ struct t8_geometry_handler
    * \return            An iterator to the geometry if found, NULL otherwise.
    */
   inline t8_geometry *
-  get_geometry (const t8_geometry_hash_t &hash)
+  get_geometry (const t8_geometry_hash &hash)
   {
     if (t8_geometry_hash_is_null (hash)) {
       /* The hash belongs to a non-existing geometry. */
@@ -264,7 +264,7 @@ struct t8_geometry_handler
   add_geometry (std::unique_ptr<t8_geometry> geom)
   {
     t8_debugf ("Registering geometry with name %s\n", geom->t8_geom_get_name ().c_str ());
-    const t8_geometry_hash_t hash = geom->t8_geom_get_hash ();
+    const t8_geometry_hash hash = geom->t8_geom_get_hash ();
     if (registered_geometries.find (hash) == registered_geometries.end ()) {
       registered_geometries.emplace (hash, std::move (geom));
     }
@@ -289,7 +289,7 @@ struct t8_geometry_handler
   update_tree (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 
   /** Stores all geometries that are handled by this geometry_handler. */
-  std::unordered_map<t8_geometry_hash_t, std::unique_ptr<t8_geometry>> registered_geometries = {};
+  std::unordered_map<t8_geometry_hash, std::unique_ptr<t8_geometry>> registered_geometries = {};
   /** Points to the currently loaded geometry (the geometry that was used last and is likely to be used next). */
   t8_geometry *active_geometry = nullptr;
   /** The global tree id of the last tree for which geometry was used. */

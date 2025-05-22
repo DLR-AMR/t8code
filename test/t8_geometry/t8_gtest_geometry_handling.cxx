@@ -101,7 +101,7 @@ TEST (test_geometry, test_geometry_handler_register)
   ASSERT_TRUE (found_geom == nullptr) << "Found a geometry that should not exist.";
 
   /* Try to find a different geometry via the hash. Must return nullptr. */
-  const t8_geometry_hash_t random_hash (std::hash<std::string> {}(random_name));
+  const t8_geometry_hash random_hash (std::hash<std::string> {}(random_name));
   found_geom = geom_handler.get_geometry (random_hash);
   ASSERT_TRUE (found_geom == nullptr) << "Found a geometry that should not exist.";
 }
@@ -185,7 +185,7 @@ TEST (test_geometry, cmesh_no_geometry)
   // Check that the geometry type for tree 0 is invalid
   EXPECT_EQ (t8_geometry_get_type (cmesh, 0), T8_GEOMETRY_TYPE_INVALID);
   // Check that the geometry hash corresponds to invalid geometry
-  const t8_geometry_hash_t hash = t8_cmesh_get_tree_geom_hash (cmesh, 0);
+  const t8_geometry_hash hash = t8_cmesh_get_tree_geom_hash (cmesh, 0);
   EXPECT_TRUE (t8_geometry_hash_is_null (hash));
   // Check that we get nullptr when querying the geometry
   const t8_geometry_c *should_be_null = t8_cmesh_get_tree_geometry (cmesh, 0);
@@ -193,6 +193,8 @@ TEST (test_geometry, cmesh_no_geometry)
   // Output to calm the nerves of people looking at the logfiles.
   t8_global_productionf ("We expect an error message about not writing the vtk file here.\n");
   // Try to write vtk file and expect failure
-  EXPECT_FALSE (t8_cmesh_vtk_write_file (cmesh, "file"));
+  EXPECT_FALSE (t8_cmesh_vtk_write_file (cmesh, "cmesh_vtk_file"));
+  t8_cmesh_vtk_write_file_via_API (cmesh, "cmesh_vtk_file_API", sc_MPI_COMM_WORLD);
+
   t8_cmesh_destroy (&cmesh);
 }

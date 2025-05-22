@@ -34,17 +34,17 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/** Dummy tag for type trait usage of \ref t8_geometry_hash_t */
+/** Dummy tag for type trait usage of \ref t8_geometry_hash */
 struct t8_geometry_hash_tag
 {
 };
 
 /** Data type used for storing hash values of geometries. */
-using t8_geometry_hash_t = T8Type<size_t, t8_geometry_hash_tag, Addable, Subtractable, AddAssignable, Multipliable,
+using t8_geometry_hash = T8Type<size_t, t8_geometry_hash_tag, Addable, Subtractable, AddAssignable, Multipliable,
                                   Dividable, EqualityComparable, Hashable>;
 
 /** Constant that we use for hashes of non-existing geometries. */
-static const t8_geometry_hash_t t8_geometry_empty_hash (std::hash<std::string> {}(""));
+static const t8_geometry_hash t8_geometry_empty_hash (std::hash<std::string> {}(""));
 
 /**
  * Compute the hash value of a geometry's name.
@@ -53,10 +53,10 @@ static const t8_geometry_hash_t t8_geometry_empty_hash (std::hash<std::string> {
  * \return The hash value of \a name.
  * \note \a name being empty here is explicitly allowed and used as hash values for non-existing geometries.
  */
-inline t8_geometry_hash_t
+inline t8_geometry_hash
 t8_geometry_compute_hash (const std::string &name)
 {
-  t8_geometry_hash_t hash (std::hash<std::string> {}(name));
+  t8_geometry_hash hash (std::hash<std::string> {}(name));
   return hash;
 }
 
@@ -69,7 +69,7 @@ t8_geometry_compute_hash (const std::string &name)
  * \return false If \a hash corresponds to an existing geometry.
  */
 inline bool
-t8_geometry_hash_is_null (const t8_geometry_hash_t &hash)
+t8_geometry_hash_is_null (const t8_geometry_hash &hash)
 {
   return hash == t8_geometry_empty_hash;
 }

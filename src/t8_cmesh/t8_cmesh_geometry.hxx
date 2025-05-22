@@ -40,7 +40,7 @@ T8_EXTERN_C_BEGIN ();
  * \param [in] gtreeid A global tree in \a cmesh.
  * \return             The hash of the tree's geometry. If the tree does not have a geometry, returns \ref t8_geometry_empty_hash.
  */
-t8_geometry_hash_t
+t8_geometry_hash
 t8_cmesh_get_tree_geom_hash (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 
 T8_EXTERN_C_END ();
