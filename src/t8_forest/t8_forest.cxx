@@ -2023,7 +2023,8 @@ t8_forest_element_is_leaf (const t8_forest_t forest, const t8_element_t *element
 }
 
 int
-t8_forest_leaf_is_boundary (const t8_forest_t forest, t8_locidx_t local_tree, const t8_element_t *leaf, int face)
+t8_forest_leaf_is_boundary (const t8_forest_t forest, const t8_locidx_t local_tree, const t8_element_t *leaf,
+                            const int face)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (t8_forest_element_is_leaf (forest, leaf, local_tree));

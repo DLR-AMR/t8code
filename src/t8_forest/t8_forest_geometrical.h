@@ -179,7 +179,8 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
  * \return True (non-zero) if face \a face of \a leaf lies at the domain boundary.
 */
 int
-t8_forest_leaf_is_boundary (const t8_forest_t forest, t8_locidx_t local_tree, const t8_element_t *leaf, int face);
+t8_forest_leaf_is_boundary (const t8_forest_t forest, const t8_locidx_t local_tree, const t8_element_t *leaf,
+                            const int face);
 
 T8_EXTERN_C_END ();
 
