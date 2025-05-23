@@ -105,7 +105,40 @@ class element_is_leaf: public testing::TestWithParam<std::tuple<std::tuple<int, 
   const t8_scheme *scheme;
 };
 
-void
+class element_is_leaf_hybrid: public testing::TestWithParam<int> {
+ protected:
+  void
+  SetUp () override
+  {
+    /* Construct a cmesh */
+    const int scheme_id = GetParam ();
+    scheme = create_from_scheme_id (scheme_id);
+    t8_cmesh_t cmesh = t8_cmesh_new_full_hybrid (sc_MPI_COMM_WORLD);
+    const int level = 0;
+    forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
+    t8_forest_ref (forest);
+    int maxlevel = 7;
+    const int recursive_adapt = 1;
+    forest_adapt = t8_forest_new_adapt (forest, t8_test_adapt_first_child, recursive_adapt, 0, &maxlevel);
+  }
+
+  void
+  TearDown () override
+  {
+    if (forest != NULL) {
+      t8_forest_unref (&forest);
+    }
+    if (forest_adapt != NULL) {
+      t8_forest_unref (&forest_adapt);
+    }
+  }
+
+  t8_forest_t forest { NULL };
+  t8_forest_t forest_adapt { NULL };
+  const t8_scheme *scheme;
+};
+
+static void
 t8_test_element_is_leaf_for_forest (t8_forest_t forest)
 {
   const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
@@ -149,6 +182,16 @@ TEST_P (element_is_leaf, element_is_leaf_adapt)
   t8_test_element_is_leaf_for_forest (forest_adapt);
 }
 
+TEST_P (element_is_leaf_hybrid, element_is_leaf)
+{
+  t8_test_element_is_leaf_for_forest (forest);
+}
+
+TEST_P (element_is_leaf_hybrid, element_is_leaf_adapt)
+{
+  t8_test_element_is_leaf_for_forest (forest_adapt);
+}
+
 /* Define a lambda to beatify gtest output for tuples <level, cmesh>.
  * This will set the correct level and cmesh name as part of the test case name. */
 auto pretty_print_eclass_scheme_and_level
@@ -162,3 +205,5 @@ auto pretty_print_eclass_scheme_and_level
 INSTANTIATE_TEST_SUITE_P (t8_gtest_element_is_leaf, element_is_leaf,
                           testing::Combine (AllSchemes, testing::Range (0, T8_IS_LEAF_MAX_LVL)),
                           pretty_print_eclass_scheme_and_level);
+
+INSTANTIATE_TEST_SUITE_P (t8_gtest_element_is_leaf_hybrid, element_is_leaf_hybrid, AllSchemeCollections, print_scheme);
