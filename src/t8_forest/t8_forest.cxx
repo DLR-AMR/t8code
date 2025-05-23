@@ -1416,7 +1416,7 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
 static t8_locidx_t
 t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_linearidx_t element_id, const int maxlevel)
 {
-  const t8_scheme *scheme = t8_element_array_get_scheme (elements);
+  const t8_scheme_c *scheme = t8_element_array_get_scheme (elements);
   const t8_eclass_t tree_class = t8_element_array_get_tree_class (elements);
   /* At first, we check whether any element has smaller id than the
    * given one. */
@@ -1992,6 +1992,7 @@ t8_forest_element_is_leaf (const t8_forest_t forest, const t8_element_t *element
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (t8_forest_tree_is_local (forest, local_tree));
+  T8_ASSERT (element != NULL);
 
   /* We get the array of the tree's elements and then search in the array of elements for our 
    * element candidate. */
@@ -2020,6 +2021,76 @@ t8_forest_element_is_leaf (const t8_forest_t forest, const t8_element_t *element
   const t8_element_t *check_element = t8_element_array_index_locidx (elements, search_result);
   T8_ASSERT (check_element != NULL);
   return (scheme->element_is_equal (tree_class, element, check_element));
+}
+
+int
+t8_forest_leaf_is_boundary (const t8_forest_t forest, const t8_locidx_t local_tree, const t8_element_t *leaf,
+                            const int face)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (t8_forest_element_is_leaf (forest, leaf, local_tree));
+  T8_ASSERT (leaf != NULL);
+
+  const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, local_tree);
+  const t8_scheme_c *scheme = t8_forest_get_scheme (forest);
+
+  /* Check whether this leaf is at the boundary of its tree. */
+  const int is_root_boundary = scheme->element_is_root_boundary (tree_class, leaf, face);
+
+  if (is_root_boundary) {
+    /* This leaf is at a tree's boundary.
+     * If the respective tree face is at the domain boundary,
+     * then the element is as well.
+     * If the tree face is not at the domain boundary, the element's face
+     * could still be at an inner boundary. */
+    const int cmesh_face = scheme->element_get_tree_face (tree_class, leaf, face);
+    const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
+    const t8_locidx_t cmesh_local_tree = t8_forest_ltreeid_to_cmesh_ltreeid (forest, local_tree);
+    int tree_boundary = t8_cmesh_tree_face_is_boundary (cmesh, cmesh_local_tree, cmesh_face);
+    if (tree_boundary) {
+      return 1;
+    }
+  }
+
+  /* This leaf is not at the tree's boundary.
+    * If the forest has holes, we need to check whether this leaf is at an internal boundary.*/
+
+  if (!forest->incomplete_trees) {
+    /* The forest has no holes, thus the leaf cannot be a boundary leaf. */
+    return 0;
+  }
+
+  /*
+   * The remaining code handles the case that the forest has holes and the element may thus 
+   * be an inner boundary.
+   * This case is not yet support due to issue #825. Hence, we currently abort.
+   * Once the issue is resolved, the abort message can be removed and the code should work.
+   * */
+
+  SC_ABORT ("This forest has holes and a computation of boundary elements is not supported. Once "
+            "https://github.com/DLR-AMR/t8code/issues/825 is resolved, the function will be available.\n");
+
+  /* we need to compute the face neighbors to know whether the element is a boundary element. */
+  const int is_balanced = t8_forest_is_balanced (forest);
+  int num_neighbors;
+  t8_element_t **neighbor_leaves;
+  t8_locidx_t *pelement_indices;
+  t8_eclass_t neighbor_eclass;
+  /* The forest has holes, the leaf could lie inside a tree but its neighbor was deleted. */
+  t8_forest_leaf_face_neighbors (forest, local_tree, leaf, &neighbor_leaves, face, NULL, &num_neighbors,
+                                 &pelement_indices, &neighbor_eclass, is_balanced);
+
+  if (num_neighbors == 0) {
+    /* The element has no neighbors, it is a boundary element. */
+    return 1;
+  }
+  else {
+    /* If neighbors were found, these arrays were allocated and need clean-up. */
+    T8_FREE (neighbor_leaves);
+    T8_FREE (pelement_indices);
+    /* This leaf is not a boundary leaf. */
+    return 0;
+  }
 }
 
 /* Check if an element is owned by a specific rank */
