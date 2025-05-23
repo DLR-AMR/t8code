@@ -28,6 +28,7 @@
 #include <t8_forest/t8_forest_private.h>
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
 #include <test/t8_gtest_macros.hxx>
+#include <test/t8_gtest_schemes.hxx>
 
 /* In this test we check the t8_forest_element_is_boundary function.
  * Iterating over all cmesh test cases, we create a uniform and an adaptive forest.
@@ -84,20 +85,22 @@ t8_test_adapt_quad_remove_first_and_fourth_child ([[maybe_unused]] t8_forest_t f
   return 0;
 }
 
-class element_is_boundary: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>> {
+class element_is_boundary:
+  public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass>, std::tuple<int, cmesh_example_base *>>> {
  protected:
   void
   SetUp () override
   {
     /* Construct a cmesh */
-    const int level = std::get<0> (GetParam ());
-    cmesh = std::get<1> (GetParam ())->cmesh_create ();
+    const int level = std::get<0> (std::get<1> (GetParam ()));
+    cmesh = std::get<1> (std::get<1> (GetParam ()))->cmesh_create ();
     if (t8_cmesh_is_empty (cmesh)) {
       /* forest_commit does not support empty cmeshes, we skip this case */
       GTEST_SKIP ();
     }
     /* Build the default scheme (TODO: Test this with all schemes) */
-    scheme = t8_scheme_new_default ();
+    const int scheme_id = std::get<0> (std::get<0> (GetParam ()));
+    scheme = create_from_scheme_id (scheme_id);
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
     t8_forest_ref (forest);
     int maxlevel = 7;
@@ -203,14 +206,15 @@ TEST (element_is_boundary, quad_forest_with_holes)
 /* This test class creates a single tree cmesh for each eclass and
  * builds a uniform level 0 forest on it.
  * For the single element in that forest all faces lie on the boundary. */
-class element_is_boundary_known_boundary: public testing::TestWithParam<t8_eclass_t> {
+class element_is_boundary_known_boundary: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
  protected:
   void
   SetUp () override
   {
-    eclass = GetParam ();
+    eclass = std::get<1> (GetParam ());
     cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
-    const t8_scheme *scheme = t8_scheme_new_default ();
+    const int scheme_id = std::get<0> (GetParam ());
+    const t8_scheme *scheme = create_from_scheme_id (scheme_id);
     forest = t8_forest_new_uniform (cmesh, scheme, 0, 0, sc_MPI_COMM_WORLD);
   }
 
@@ -243,17 +247,24 @@ TEST_P (element_is_boundary_known_boundary, level_0)
 
 /* Define a lambda to beautify gtest output for tuples <level, cmesh>.
  * This will set the correct level and cmesh name as part of the test case name. */
-auto pretty_print_level_and_cmesh_params
-  = [] (const testing::TestParamInfo<std::tuple<int, cmesh_example_base *>> &info) {
-      std::string name = std::string ("Level_") + std::to_string (std::get<0> (info.param));
-      std::string cmesh_name;
-      std::get<1> (info.param)->param_to_string (cmesh_name);
-      name += std::string ("_") + cmesh_name;
-      return name;
-    };
+auto pretty_print_level_and_cmesh_params =
+  [] (
+    const testing::TestParamInfo<std::tuple<std::tuple<int, t8_eclass>, std::tuple<int, cmesh_example_base *>>> &info) {
+    std::string name = std::string ("Level_") + std::to_string (std::get<0> (std::get<1> (info.param)));
+    std::string cmesh_name;
+    std::get<1> (std::get<1> (info.param))->param_to_string (cmesh_name);
+    name += std::string ("_") + cmesh_name;
+    return name;
+  };
+
+auto pretty_print_eclass = [] (const testing::TestParamInfo<std::tuple<int, t8_eclass>> &info) {
+  return t8_eclass_to_string[std::get<1> (info.param)];
+};
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_element_is_boundary, element_is_boundary,
-                          testing::Combine (testing::Range (0, T8_IS_BOUNDARY_MAX_LVL), AllCmeshsParam),
+                          testing::Combine (AllSchemes, testing::Combine (testing::Range (0, T8_IS_BOUNDARY_MAX_LVL),
+                                                                          AllCmeshsParam)),
                           pretty_print_level_and_cmesh_params);
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_element_is_boundary, element_is_boundary_known_boundary, AllEclasses, print_eclass);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_element_is_boundary, element_is_boundary_known_boundary, AllSchemes,
+                          pretty_print_eclass);
