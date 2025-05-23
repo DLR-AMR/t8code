@@ -76,6 +76,12 @@ function( add_t8_test )
     endif ( T8CODE_ENABLE_MPI )
 
     add_test( NAME ${ADD_T8_TEST_NAME} COMMAND ${T8CODE_TEST_COMMAND_LIST} ${TEST_BUILD_DIR}/${ADD_T8_TEST_NAME} )
+    if ( T8CODE_CODE_COVERAGE )
+        # Extent time that a single test is allowed to run to collect coverage information (as this naturally takes more time).
+        # The default timeout of 1500 seconds is actually exceeded for some tests.
+        # Without the collection of coverage information, an extension of the default timeout is not needed.
+        set_tests_properties(${ADD_T8_TEST_NAME} PROPERTIES TIMEOUT 3000) 
+    endif ( T8CODE_CODE_COVERAGE )
 endfunction()
 
 # Copy test files to build folder so that the t8_test programs can find them.
@@ -132,7 +138,7 @@ add_t8_test( NAME t8_gtest_partition_data_parallel      SOURCES t8_gtest_main.cx
 
 add_t8_test( NAME t8_gtest_permute_hole_serial          SOURCES t8_gtest_main.cxx t8_forest_incomplete/t8_gtest_permute_hole.cxx )
 add_t8_test( NAME t8_gtest_recursive_serial             SOURCES t8_gtest_main.cxx t8_forest_incomplete/t8_gtest_recursive.cxx )
-add_t8_test( NAME t8_gtest_iterate_replace_serial       SOURCES t8_gtest_main.cxx t8_forest_incomplete/t8_gtest_iterate_replace.cxx )
+add_t8_test( NAME t8_gtest_iterate_replace_parallel     SOURCES t8_gtest_main.cxx t8_forest_incomplete/t8_gtest_iterate_replace.cxx )
 add_t8_test( NAME t8_gtest_empty_local_tree_parallel    SOURCES t8_gtest_main.cxx t8_forest_incomplete/t8_gtest_empty_local_tree.cxx )
 add_t8_test( NAME t8_gtest_empty_global_tree_parallel   SOURCES t8_gtest_main.cxx t8_forest_incomplete/t8_gtest_empty_global_tree.cxx )
 if( T8_ENABLE_OCC )
