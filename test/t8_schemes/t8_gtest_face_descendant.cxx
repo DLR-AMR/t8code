@@ -69,7 +69,11 @@ class class_descendant: public TestDFS {
 
     const int level = scheme->element_get_level (eclass, element);
     const int num_faces = scheme->element_get_num_faces (eclass, element);
+#if T8CODE_TEST_LEVEL == 0
+    const int final_level = scheme->element_get_max_level (eclass);
+#else
     const int final_level = level + additional_test_lvl;
+#endif
     /* Testing the linear first descendant. */
     for (int ilevel = level + 1; ilevel <= final_level; ilevel++) {
       for (int jface = 0; jface < num_faces; jface++) {
