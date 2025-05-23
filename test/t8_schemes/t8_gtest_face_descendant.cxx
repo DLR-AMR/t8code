@@ -103,11 +103,11 @@ class class_descendant: public TestDFS {
     dfs_test_teardown ();
   }
 #if T8CODE_TEST_LEVEL == 0
-  int additional_test_lvl = 1;
+  int additional_test_lvl = 3;
 #elif T8CODE_TEST_LEVEL == 1
   int additional_test_lvl = 2;
 #elif T8CODE_TEST_LEVEL == 2
-  int additional_test_lvl = 3;
+  int additional_test_lvl = 1;
 #endif
   t8_element_t *manual_face_desc;
   t8_element_t *scheme_face_desc;
