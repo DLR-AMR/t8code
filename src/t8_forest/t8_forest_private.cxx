@@ -29,32 +29,32 @@
 T8_EXTERN_C_BEGIN ();
 
 const t8_element_t *
-t8_forest_get_tree_element (t8_tree_t tree, t8_locidx_t elem_in_tree)
+t8_forest_get_tree_leaf_element (t8_tree_t tree, t8_locidx_t elem_in_tree)
 {
   T8_ASSERT (tree != NULL);
-  T8_ASSERT (0 <= elem_in_tree && elem_in_tree < t8_forest_get_tree_element_count (tree));
-  return t8_element_array_index_locidx (&tree->elements, elem_in_tree);
+  T8_ASSERT (0 <= elem_in_tree && elem_in_tree < t8_forest_get_tree_leaf_element_count (tree));
+  return t8_element_array_index_locidx (&tree->leaf_elements, elem_in_tree);
 }
 
 t8_element_t *
-t8_forest_get_tree_element_mutable (t8_tree_t tree, t8_locidx_t elem_in_tree)
+t8_forest_get_tree_leaf_element_mutable (t8_tree_t tree, t8_locidx_t elem_in_tree)
 {
-  return (t8_element_t *) t8_forest_get_tree_element (tree, elem_in_tree);
+  return (t8_element_t *) t8_forest_get_tree_leaf_element (tree, elem_in_tree);
 }
 
 const t8_element_array_t *
-t8_forest_get_tree_element_array (const t8_forest_t forest, t8_locidx_t ltreeid)
+t8_forest_get_tree_leaf_element_array (const t8_forest_t forest, t8_locidx_t ltreeid)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (0 <= ltreeid && ltreeid < t8_forest_get_num_local_trees (forest));
 
-  return &t8_forest_get_tree (forest, ltreeid)->elements;
+  return &t8_forest_get_tree (forest, ltreeid)->leaf_elements;
 }
 
 t8_element_array_t *
-t8_forest_get_tree_element_array_mutable (const t8_forest_t forest, t8_locidx_t ltreeid)
+t8_forest_get_tree_leaf_element_array_mutable (const t8_forest_t forest, t8_locidx_t ltreeid)
 {
-  return (t8_element_array_t *) t8_forest_get_tree_element_array (forest, ltreeid);
+  return (t8_element_array_t *) t8_forest_get_tree_leaf_element_array (forest, ltreeid);
 }
 
 /** \brief Search for a linear element id (at level element_level) in a sorted array of
