@@ -672,19 +672,18 @@ struct t8_standalone_scheme
     //       }
     //     }
     //     return 1;
-    if (element_get_child_id (fam[0]) == 0) {
-      int num_siblings = element_get_num_siblings (fam[0]);
-      for (int ielement = 1; ielement < num_siblings; ielement++) {
-        if (element_get_level (fam[ielement]) == element_get_level (fam[ielement - 1])) {
-          return 1;
-        }
-        else {
-          return 0;
-        }
-      }
+    if (element_get_child_id (fam[0]) != 0) {
+      return 0;
     }
 
-    return 0;
+    const int num_siblings = element_get_num_siblings (fam[0]);
+    const int level = element_get_level (fam[0]);
+    for (int ielement = 1; ielement < num_siblings; ielement++) {
+      if (element_get_level (fam[ielement]) != level) {
+        return 0;
+      }
+    }
+    return 1;
   }
 
   /** Compute the nearest common ancestor of two elements. That is,
