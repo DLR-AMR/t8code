@@ -226,11 +226,8 @@ TEST_P (nca, recursive_check)
 {
 #if T8CODE_TEST_LEVEL >= 2
   const int recursion_depth = 2;
-#elif T8CODE_TEST_LEVEL >= 1
-  const int recursion_depth = 3;
 #else
-  /* User lower recursion depth for pyramids, it takes to much time otherwise */
-  const int recursion_depth = 4;
+  const int recursion_depth = 3;
 #endif
   t8_element_t *parent_a, *parent_b;
   int num_children;
@@ -263,29 +260,34 @@ TEST_P (nca, recursive_check)
 TEST_P (nca, recursive_check_higher_level)
 {
 #if T8CODE_TEST_LEVEL >= 2
-  const int recursion_depth = 2;
+  const int start_level = 2;
 #else
-  const int recursion_depth = 3;
+  const int start_level = 3;
 #endif
 
+#if T8CODE_TEST_LEVEL >= 1
+  const int max_lvl = scheme->get_maxlevel (tree_class) / 2;
+#else
   const int max_lvl = scheme->get_maxlevel (tree_class);
+#endif
+
   t8_element_t *parent_a;
   t8_element_t *parent_b;
   t8_element_t *correct_nca_high_level;
   int num_children;
   int i, k, l;
   t8_gloidx_t leaves_on_level;
-  EXPECT_TRUE (max_lvl - recursion_depth >= 0);
+  EXPECT_TRUE (max_lvl - start_level >= 0);
 
   scheme->element_new (tree_class, 1, &parent_a);
   scheme->element_new (tree_class, 1, &parent_b);
   scheme->element_new (tree_class, 1, &correct_nca_high_level);
 
   /* Test on different levels around the middle of the refinement tree */
-  for (i = recursion_depth; i < max_lvl; i++) {
-    leaves_on_level = scheme->element_count_leaves (tree_class, correct_nca, i - recursion_depth);
+  for (i = start_level; i < max_lvl; i++) {
+    leaves_on_level = scheme->element_count_leaves (tree_class, correct_nca, i - start_level);
     /* middle = leaves/2 */
-    scheme->element_set_linear_id (tree_class, correct_nca_high_level, i - recursion_depth, leaves_on_level / 2);
+    scheme->element_set_linear_id (tree_class, correct_nca_high_level, i - start_level, leaves_on_level / 2);
 
     /* Initialization for recursive_nca_check */
     num_children = scheme->element_get_num_children (tree_class, correct_nca_high_level);
@@ -320,5 +322,6 @@ TEST_P (nca, recursive_check_higher_level)
   scheme->element_destroy (tree_class, 1, &parent_b);
   scheme->element_destroy (tree_class, 1, &correct_nca_high_level);
 }
+
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_nca, nca, AllSchemes, print_all_schemes);
