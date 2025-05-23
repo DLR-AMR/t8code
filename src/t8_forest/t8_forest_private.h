@@ -198,12 +198,13 @@ t8_forest_get_tree_element_array_mutable (const t8_forest_t forest, t8_locidx_t 
  * If no such i exists, return -1.
  * \param [in]     elements    The array of elements.
  * \param [in]     element_id  The linear id of the element to search for.
- * \param [in]     maxlevel    The maximum level of the elements.
- * \return                            The index \a i of an element with the linear_id \a element_id in \a elements if it exists.
- *                                        -1 if no such element was found in \a elements.
+ * \param [in]     element_level The level of the element to search for. Thus, the level at which \a element_id was computed.
+ * \return                     The index \a i of an element with the linear_id \a element_id in \a elements if it exists.
+ *                             -1 if no such element was found in \a elements.
  */
 t8_locidx_t
-t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_linearidx_t element_id, const int maxlevel);
+t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_linearidx_t element_id,
+                            const int element_level);
 
 /** Find the owner process of a given element, deprecated version.
  * Use t8_forest_element_find_owner instead.
