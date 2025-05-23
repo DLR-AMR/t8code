@@ -107,7 +107,8 @@ class class_descendant: public TestDFS {
     dfs_test_teardown ();
   }
 #if T8CODE_TEST_LEVEL == 0
-  int additional_test_lvl = 3; // For level 0 additional_test_lvl is unused and we always test up to the maximum possible refinement level.
+  int additional_test_lvl
+    = 3;  // For level 0 additional_test_lvl is unused and we always test up to the maximum possible refinement level.
 #elif T8CODE_TEST_LEVEL == 1
   int additional_test_lvl = 2;
 #elif T8CODE_TEST_LEVEL == 2
