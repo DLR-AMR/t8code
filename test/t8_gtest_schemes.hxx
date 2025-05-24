@@ -48,6 +48,9 @@ auto print_all_schemes = [] (const testing::TestParamInfo<std::tuple<int, t8_ecl
          + t8_eclass_to_string[std::get<1> (info.param)];
 };
 
+auto print_scheme
+  = [] (const testing::TestParamInfo<int> &info) { return std::string (t8_scheme_to_string[info.param]); };
+
 #define AllSchemeCollections ::testing::Range (0, 2)
 #define AllSchemes ::testing::Combine (AllSchemeCollections, ::testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT))
 
