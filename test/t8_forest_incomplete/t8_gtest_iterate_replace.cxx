@@ -41,9 +41,9 @@ class forest_iterate: public testing::TestWithParam<cmesh_example_base *> {
   SetUp () override
   {
 #if T8CODE_TEST_LEVEL >= 1
-    constexpr int level = 3;
+    constexpr int level = 2;
 #else
-    constexpr int level = 4;
+    constexpr int level = 3;
 #endif
     t8_cmesh_t cmesh = GetParam ()->cmesh_create ();
     if (t8_cmesh_is_empty (cmesh)) {
@@ -88,8 +88,8 @@ t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
   t8_locidx_t elidx_old = first_outgoing;
   t8_locidx_t elidx_new = first_incoming;
   for (t8_locidx_t tidx = 0; tidx < which_tree; tidx++) {
-    elidx_new += t8_forest_get_tree_num_elements (forest_new, tidx);
-    elidx_old += t8_forest_get_tree_num_elements (forest_old, tidx);
+    elidx_new += t8_forest_get_tree_num_leaf_elements (forest_new, tidx);
+    elidx_old += t8_forest_get_tree_num_leaf_elements (forest_old, tidx);
   }
 
   ASSERT_EQ (adapt_data->callbacks[elidx_old], refine);
@@ -104,15 +104,15 @@ t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
     ASSERT_EQ (num_incoming, 1);
 
     /* Begin check family */
-    const t8_element_t *parent = t8_forest_get_element_in_tree (forest_new, which_tree, first_incoming);
+    const t8_element_t *parent = t8_forest_get_leaf_element_in_tree (forest_new, which_tree, first_incoming);
     t8_element_t *parent_compare;
     scheme->element_new (tree_class, 1, &parent_compare);
     int family_size = 1;
-    t8_locidx_t tree_num_elements_old = t8_forest_get_tree_num_elements (forest_old, which_tree);
+    t8_locidx_t tree_num_elements_old = t8_forest_get_tree_num_leaf_elements (forest_old, which_tree);
     for (t8_locidx_t elidx = 1; elidx < scheme->element_get_num_children (tree_class, parent)
                                 && elidx + first_outgoing < tree_num_elements_old;
          elidx++) {
-      const t8_element_t *child = t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing + elidx);
+      const t8_element_t *child = t8_forest_get_leaf_element_in_tree (forest_old, which_tree, first_outgoing + elidx);
       scheme->element_get_parent (tree_class, child, parent_compare);
       if (scheme->element_is_equal (tree_class, parent, parent_compare)) {
         family_size++;
@@ -137,7 +137,7 @@ t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
   /* Element got refined. */
   else if (refine == 1) {
     ASSERT_EQ (num_outgoing, 1);
-    const t8_element_t *element = t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing);
+    const t8_element_t *element = t8_forest_get_leaf_element_in_tree (forest_old, which_tree, first_outgoing);
     const t8_locidx_t family_size = scheme->element_get_num_children (tree_class, element);
     ASSERT_EQ (num_incoming, family_size);
   }
@@ -194,7 +194,7 @@ t8_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t whic
   /* Get the local index of current element in the local forest. */
   t8_locidx_t lelement_id_forest = lelement_id;
   for (t8_locidx_t tidx = 0; tidx < which_tree; tidx++) {
-    lelement_id_forest += t8_forest_get_tree_num_elements (forest_from, tidx);
+    lelement_id_forest += t8_forest_get_tree_num_leaf_elements (forest_from, tidx);
   }
   /* Store the return value. */
   return_data->callbacks[lelement_id_forest] = return_val;
@@ -229,7 +229,7 @@ TEST_P (forest_iterate, test_iterate_replace)
   const int runs = 2;
 
   for (int run = 0; run < runs; run++) {
-    t8_locidx_t num_elements = t8_forest_get_local_num_elements (forest);
+    t8_locidx_t num_elements = t8_forest_get_local_num_leaf_elements (forest);
     int *adapt_callbacks = T8_ALLOC (int, num_elements);
 
     for (t8_locidx_t elidx = 0; elidx < num_elements; elidx++) {
