@@ -21,12 +21,10 @@
 */
 
 #include <gtest/gtest.h>
-#include <test/t8_gtest_custom_assertion.hxx>
 #include <t8_eclass.h>
 #include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_macros.hxx>
 #include "t8_gtest_dfs_base.hxx"
-
 
 class are_family: public TestDFS {
 
@@ -36,9 +34,8 @@ class are_family: public TestDFS {
     if (eclass == T8_ECLASS_VERTEX) {
       GTEST_SKIP ();
     }
-    t8_element_t **element_array;
     const int num_children = scheme->element_get_num_children (eclass, element);
-    element_array = T8_ALLOC (t8_element_t *, num_children);
+    t8_element_t **element_array = T8_ALLOC (t8_element_t *, num_children);
     scheme->element_new (eclass, num_children, element_array);
     scheme->element_get_children (eclass, element, num_children, element_array);
     EXPECT_TRUE (scheme->elements_are_family (eclass, element_array));
