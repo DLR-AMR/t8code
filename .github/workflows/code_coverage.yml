@@ -113,9 +113,19 @@ jobs:
       run: cd build && cmake --build . --target coverage
     # Upload coverage report to Codecov.
     - name: Upload coverage to Codecov
+      if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code')
       uses: codecov/codecov-action@v5
       with:
         files: ./build/coverage.info
+        fail_ci_if_error: true
+        disable_search: true
+        token: ${{ secrets.CODE_COV }}
+    - name: Coverage to Codecov (dry run)
+      # if: (github.event_name == 'merge_group')
+      uses: codecov/codecov-action@v5
+      with:
+        files: ./build/coverage.info
+        dry_run: true 
         fail_ci_if_error: true
         disable_search: true
         token: ${{ secrets.CODE_COV }}
