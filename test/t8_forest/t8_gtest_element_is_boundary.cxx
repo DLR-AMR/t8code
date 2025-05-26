@@ -97,7 +97,6 @@ class element_is_boundary: public testing::TestWithParam<std::tuple<int, std::tu
       /* forest_commit does not support empty cmeshes, we skip this case */
       GTEST_SKIP ();
     }
-    /* Build the default scheme (TODO: Test this with all schemes) */
     const int scheme_id = std::get<0> (GetParam ());
     scheme = create_from_scheme_id (scheme_id);
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
