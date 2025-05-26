@@ -85,8 +85,7 @@ t8_test_adapt_quad_remove_first_and_fourth_child ([[maybe_unused]] t8_forest_t f
   return 0;
 }
 
-class element_is_boundary:
-  public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass>, std::tuple<int, cmesh_example_base *>>> {
+class element_is_boundary: public testing::TestWithParam<std::tuple<int, std::tuple<int, cmesh_example_base *>>> {
  protected:
   void
   SetUp () override
@@ -99,7 +98,7 @@ class element_is_boundary:
       GTEST_SKIP ();
     }
     /* Build the default scheme (TODO: Test this with all schemes) */
-    const int scheme_id = std::get<0> (std::get<0> (GetParam ()));
+    const int scheme_id = std::get<0> (GetParam ());
     scheme = create_from_scheme_id (scheme_id);
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
     t8_forest_ref (forest);
@@ -245,26 +244,25 @@ TEST_P (element_is_boundary_known_boundary, level_0)
   }
 }
 
-/* Define a lambda to beautify gtest output for tuples <level, cmesh>.
- * This will set the correct level and cmesh name as part of the test case name. */
-auto pretty_print_level_and_cmesh_params =
-  [] (
-    const testing::TestParamInfo<std::tuple<std::tuple<int, t8_eclass>, std::tuple<int, cmesh_example_base *>>> &info) {
-    std::string name = std::string ("Level_") + std::to_string (std::get<0> (std::get<1> (info.param)));
-    std::string cmesh_name;
-    std::get<1> (std::get<1> (info.param))->param_to_string (cmesh_name);
-    name += std::string ("_") + cmesh_name;
-    return name;
-  };
-
-auto pretty_print_eclass = [] (const testing::TestParamInfo<std::tuple<int, t8_eclass>> &info) {
-  return t8_eclass_to_string[std::get<1> (info.param)];
-};
+/* Define a lambda to beautify gtest output for <scheme_id, tuple{level, cmesh}>.
+ * This will set the correct scheme name, level and cmesh name as part of the test case name.
+ * For example "default_Level_0_t8_cmesh_new_bigmesh_Hex_1_sc_MPI_COMM_WORLD" */
+auto pretty_print_level_and_cmesh_params
+  = [] (const testing::TestParamInfo<std::tuple<int, std::tuple<int, cmesh_example_base *>>> &info) {
+      std::string scheme_name = t8_scheme_to_string[std::get<0> (info.param)];
+      std::string level_name
+        = std::string ("_Level_") + std::to_string (std::get<0> (std::get<1> (info.param)));  // Level
+      std::string cmesh_name;
+      std::get<1> (std::get<1> (info.param))->param_to_string (cmesh_name);
+      std::string name = scheme_name + level_name + std::string ("_") + cmesh_name;
+      return name;
+    };
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_element_is_boundary, element_is_boundary,
-                          testing::Combine (AllSchemes, testing::Combine (testing::Range (0, T8_IS_BOUNDARY_MAX_LVL),
-                                                                          AllCmeshsParam)),
+                          testing::Combine (AllSchemeCollections,
+                                            testing::Combine (testing::Range (0, T8_IS_BOUNDARY_MAX_LVL),
+                                                              AllCmeshsParam)),
                           pretty_print_level_and_cmesh_params);
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_element_is_boundary, element_is_boundary_known_boundary, AllSchemes,
-                          pretty_print_eclass);
+                          print_all_schemes);
