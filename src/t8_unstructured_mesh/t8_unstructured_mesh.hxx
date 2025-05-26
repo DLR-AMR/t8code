@@ -28,22 +28,19 @@
 #include <cstddef>
 
 //TODO: Inspiration by t8_element_array_iterator
-/* We want to export the whole implementation to be callable from "C" */
-T8_EXTERN_C_BEGIN ();
 class t8_unstructured_mesh {
  public:
   t8_unstructured_mesh (t8_forest_t input_forest): forest (input_forest)
   {
   }
 
- private:
   /** \brief This iterator should iterate over all (local) elements.
  */
   struct Element_Iterator
   {
     using iterator_category = std::forward_iterator_tag;  //TODO: do we maybe need a bidrirecIterator?
     using difference_type = std::ptrdiff_t;
-    using value_type = t8_element_t;
+    using value_type = t8_element_t*;
     using pointer = value_type*;
     using reference = value_type&;
     // Constructor.
@@ -54,20 +51,14 @@ class t8_unstructured_mesh {
       m_num_elements_current_tree = t8_forest_get_tree_num_elements (m_forest, m_current_tree_id);
     }
 
-    reference
+    const t8_element_t*
     operator* () const
     {
-      auto elem = t8_forest_get_element_in_tree (m_forest, m_current_tree_id, m_current_element_id);
+      const t8_element_t* elem = t8_forest_get_element_in_tree (m_forest, m_current_tree_id, m_current_element_id);
       if (elem == nullptr) {
         SC_ABORT ("not implemented yet");
       }
-      return &elem;
-    }
-
-    pointer
-    operator->() const
-    {
-      return &operator* ();
+      return elem;
     }
 
     // Prefix version of ++.
@@ -112,9 +103,9 @@ class t8_unstructured_mesh {
     t8_forest_t m_forest;
     t8_locidx_t m_num_local_trees, m_num_elements_current_tree;
   };
+
+ private:
   t8_forest_t forest;
 };
 
 #endif /* !T8_UNSTRUCTURED_MESH_HXX */
-
-T8_EXTERN_C_END ();
