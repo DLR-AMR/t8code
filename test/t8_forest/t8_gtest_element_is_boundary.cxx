@@ -135,14 +135,14 @@ t8_test_element_is_boundary_for_forest (t8_forest_t forest, t8_cmesh_t cmesh,
 
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
   for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree) {
-    const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+    const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
     /* Iterate over all the tree's leaf elements, check whether the leaf
      * is correctly identified by t8_forest_element_is_boundary,
      * build its parent and its first child (if they exist), and verify
      * that t8_forest_element_is_boundary returns false. */
     for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement) {
-      const t8_element_t *leaf_element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      const t8_element_t *leaf_element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       const int num_element_faces = scheme->element_get_num_faces (tree_class, leaf_element);
       for (int iface = 0; iface < num_element_faces; ++iface) {
         /* Iterate over all faces */
@@ -231,10 +231,10 @@ class element_is_boundary_known_boundary: public testing::TestWithParam<std::tup
  * be at the boundary. */
 TEST_P (element_is_boundary_known_boundary, level_0)
 {
-  const t8_locidx_t num_elements = t8_forest_get_local_num_elements (forest);
+  const t8_locidx_t num_elements = t8_forest_get_local_num_leaf_elements (forest);
   if (num_elements > 0) {
     T8_ASSERT (num_elements == 1);
-    const t8_element_t *element = t8_forest_get_element_in_tree (forest, 0, 0);
+    const t8_element_t *element = t8_forest_get_leaf_element_in_tree (forest, 0, 0);
     const t8_scheme *scheme = t8_forest_get_scheme (forest);
     const int num_faces = scheme->element_get_num_faces (eclass, element);
     for (int iface = 0; iface < num_faces; ++iface) {
