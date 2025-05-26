@@ -27,7 +27,6 @@
 #include <test/t8_gtest_macros.hxx>
 #include "t8_gtest_dfs_base.hxx"
 
-#include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.h>
 
 class are_family: public TestDFS {
 
