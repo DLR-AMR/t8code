@@ -195,7 +195,6 @@ jobs:
 
   # Generate code coverage and deploy to Codecov.
   t8code_code_coverage:
-    if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name == 'merge_group')
     needs: preparation
     uses: ./.github/workflows/code_coverage.yml
     with:
