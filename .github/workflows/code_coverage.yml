@@ -121,21 +121,21 @@ jobs:
     #     disable_search: true
     #     token: ${{ secrets.CODE_COV }}
     - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
     - name: Get commit 
       run: |
-          commit_hash=${{ github.sha }}
-          echo "Commit hash: $commit_hash"
-          commit_msg=$(git show -s --format=%B $commit_hash)
-          echo "Commit message:"
-          echo "$commit_msg"
-          branch=$(echo "$commit_msg" | grep -oP '(?<=DLR-AMR/)[^\s]+')
-          echo "branch: "
-          echo "$branch"
-          last_commit_hash=$(git rev-parse $branch)
-          echo "$last_commit_hash"
+        commit_hash=${{ github.sha }}
+        echo "Commit hash: $commit_hash"
+        commit_msg=$(git show -s --format=%B $commit_hash)
+        echo "Commit message:"
+        echo "$commit_msg"
+        branch=$(echo "$commit_msg" | grep -oP '(?<=DLR-AMR/)[^\s]+')
+        echo "branch: "
+        echo "$branch"
+        last_commit_hash=$(git rev-parse $branch)
+        echo "$last_commit_hash"
     # - name: Coverage to Codecov 
     #   # if: (github.event_name == 'merge_group')
     #   uses: codecov/codecov-action@v5
