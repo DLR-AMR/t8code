@@ -127,19 +127,21 @@ if [ -z "$WANTSOUT" ]; then
     if [[ $NO_CHANGE == "TRUE" ]]
     then
       $FORMAT $FORMAT_OPTIONS "$NAME" 2>&1
+      status=$?
     else
       $FORMAT $FORMAT_OPTIONS "$NAME"
+      status=$?
     fi
-    status=$?
   done
 else
   if [[ $NO_CHANGE == "TRUE" ]]
   then
     $FORMAT $FORMAT_OPTIONS ${newargs[@]} 2>&1
+    status=$?
   else
     $FORMAT $FORMAT_OPTIONS ${newargs[@]}
+    status=$?
   fi  
-  status=$?
 fi
 
 # If the file content was not change, the return
