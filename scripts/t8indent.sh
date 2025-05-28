@@ -73,11 +73,31 @@ while read line; do
     fi
 done <$IGNORE_FILE
 
+#
+# Check if first argument is "NO_CHANGE", if so
+# the file content is not changed.
+#
+OUTFILE_OPTION=
+NO_CHANGE=FALSE
+if [[ $1 == "NO_CHANGE" ]]
+then
+  shift # Removes first argument from $@ list
+  NO_CHANGE=TRUE
+fi
+
 
 # Iterate over all arguments and throw
 # aways those filenames that we should ignore.
+# Also check if suffix is ".c" ".cxx" ".h" or ".hxx"
 for arg in "$@"
 do
+  FILE_SUFFIX="${arg##*.}"
+  if ! [ $FILE_SUFFIX = "c" -o $FILE_SUFFIX = "h" -o $FILE_SUFFIX = "cxx" -o $FILE_SUFFIX = "hxx" ]
+  then
+    echo "ERROR: File "$arg" does not have valid suffix (.c .h .cxx .hxx)."
+    exit 1
+  fi
+
   ignore_arg=0
   # Iterate over each ignore filename
   for ignore_file in "${files_to_ignore[@]}"
@@ -104,8 +124,28 @@ for arg in "$@" ; do
 done
 if [ -z "$WANTSOUT" ]; then
   for NAME in "${newargs[@]}" ; do
-    $FORMAT $FORMAT_OPTIONS "$NAME"
+    if [[ $NO_CHANGE == "TRUE" ]]
+    then
+      $FORMAT $FORMAT_OPTIONS "$NAME" 2>&1
+    else
+      $FORMAT $FORMAT_OPTIONS "$NAME"
+    fi
+    status=$?
   done
 else
-  $FORMAT $FORMAT_OPTIONS ${newargs[@]}
+  if [[ $NO_CHANGE == "TRUE" ]]
+  then
+    $FORMAT $FORMAT_OPTIONS ${newargs[@]} 2>&1
+  else
+    $FORMAT $FORMAT_OPTIONS ${newargs[@]}
+  fi  
+  status=$?
+fi
+
+# If the file content was not change, the return
+# value determines whether or not the file was
+# indented.
+if [[ $NO_CHANGE == "TRUE" ]]
+then
+  exit $status
 fi

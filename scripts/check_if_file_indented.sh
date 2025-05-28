@@ -20,41 +20,11 @@
 # along with t8code; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-# We use clang-format to indent our code. There are different base styles
-# available, but we use a modification. The options for this modification
-# are located in the .clang-format file.
-# We have to use the --dry-run argument, so that clang-format does not change
-# anything. -Werror produces an error if the file is not indented cerrctly.
-# The --style=file arguments tells clang-format to look for a *.clang-format file.
-FORMAT_OPTIONS="--dry-run --Werror --style=file"
+GIT_REPO_PATH=$(git rev-parse --show-toplevel)
 
-# Required version of the clang format program.
-REQUIRED_VERSION_MAJOR="17"
-REQUIRED_VERSION_MINOR="0"
-REQUIRED_VERSION_STRING="${REQUIRED_VERSION_MAJOR}.${REQUIRED_VERSION_MINOR}"
+INDENT_SCRIPT=${GIT_REPO_PATH}/scripts/t8indent.sh
 
-FORMAT=`which clang-format 2> /dev/null`
-
-if [ -z "$FORMAT" ]
-then
-  # Exit if the spell checking script was not found
-  echo "ERROR: clang-format not found."
-  echo "Please install clang-format version ${REQUIRED_VERSION_STRING}."
-  echo "See https://github.com/ssciwr/clang-format-wheel"
-  exit 1
-fi
-
-CLANG_VERSION_STRING=`$FORMAT --version`
-
-VERSION=`echo $CLANG_VERSION_STRING | cut -d " " -f 3`
-MAJOR=`echo $VERSION | cut -d. -f1`
-MINOR=`echo $VERSION | cut -d. -f2`
-PATCH=`echo $VERSION | cut -d. -f3`
-
-if [[ "$MAJOR" != "$REQUIRED_VERSION_MAJOR" || $MINOR != "$REQUIRED_VERSION_MINOR" ]]; then
-  echo "Please install clang-format version $REQUIRED_VERSION_STRING"
-  exit 1
-fi
+usage="$0 [FILE_TO_INDENT]"
 
 # Check if first argument given
 if [ ${1-x} = x ]
@@ -80,20 +50,10 @@ else
   fi
 fi
 
-# Here is the actual checking part
 #
-# We only check files with .c, .h, .cxx, .hxx suffix
-FILE_SUFFIX="${file##*.}"
-if [ $FILE_SUFFIX = "c" -o $FILE_SUFFIX = "h" -o $FILE_SUFFIX = "cxx" -o $FILE_SUFFIX = "hxx" ]
-  then
-  $FORMAT $FORMAT_OPTIONS $file 2>&1
-  status=$?
-  if [ $status != 0 ]
-  then
-    echo $file is not indented.
-    echo
-  fi
-  exit $status
-else
-  echo "ERROR: File does not have valid suffix (.c .h .cxx .hxx)."
-fi
+# Check if the file is indented
+#
+$INDENT_SCRIPT NO_CHANGE $file
+status=$?
+exit $status
+
