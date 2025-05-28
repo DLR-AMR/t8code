@@ -218,6 +218,14 @@ t8_element_get_max_num_faces (const t8_scheme_c *scheme, const t8_eclass_t tree_
 int
 t8_element_get_num_children (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *elem);
 
+/** Return the max number of children of an eclass.
+ * \param [in] scheme        The scheme of the forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
+ * \return            The max number of children of \a element.
+ */
+int
+t8_get_max_num_children (const t8_scheme_c *scheme, const t8_eclass_t tree_class);
+
 /** Compute the number of children of an element's face when the element is refined.
  * \param [in] scheme        The scheme of the forest.
  * \param [in] tree_class    The eclass of tree the elements are part of.
@@ -671,7 +679,7 @@ t8_element_count_leaves (const t8_scheme_c *scheme, const t8_eclass_t tree_class
 t8_gloidx_t
 t8_element_count_leaves_from_root (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const int level);
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 /** Query whether a given element can be considered as 'valid' and it is
    *  safe to perform any of the above algorithms on it.
    *  For example this could mean that all coordinates are in valid ranges
