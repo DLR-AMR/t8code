@@ -54,7 +54,8 @@ class t8_cmesh_bounding_box: public testing::TestWithParam<t8_eclass> {
   t8_eclass eclass;
 };
 
-TEST_P (t8_cmesh_bounding_box, test_box)
+static void
+compute_and_check_bounds (const t8_cmesh_t cmesh, const t8_eclass eclass)
 {
   double bounds[6];
   t8_cmesh_get_local_bounding_box (cmesh, bounds);
@@ -70,5 +71,42 @@ TEST_P (t8_cmesh_bounding_box, test_box)
   }
 }
 
+TEST_P (t8_cmesh_bounding_box, test_box)
+{
+  compute_and_check_bounds (cmesh, eclass);
+}
+
+class t8_cmesh_bounding_box_multi_trees: public testing::TestWithParam<std::tuple<int, bool, t8_eclass_t>> {
+ protected:
+  void
+  SetUp () override
+  {
+    trees_per_dim = std::get<0> (GetParam ());
+    axis_aligned_geometry = std::get<1> (GetParam ());
+    eclass = std::get<2> (GetParam ());
+    if (axis_aligned_geometry && (eclass != T8_ECLASS_HEX && eclass != T8_ECLASS_QUAD)) {
+      GTEST_SKIP () << "Axis-aligned geometry is only supported for hex and quad elements.";
+    }
+  }
+
+  int trees_per_dim;
+  bool axis_aligned_geometry;
+  t8_eclass_t eclass;
+};
+
+TEST_P (t8_cmesh_bounding_box_multi_trees, hypercube)
+{
+  const double cube_bounds[24] = { 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1 };
+  t8_cmesh_t cmesh = t8_cmesh_new_hypercube_pad (eclass, sc_MPI_COMM_WORLD, cube_bounds, trees_per_dim, trees_per_dim,
+                                                 trees_per_dim, axis_aligned_geometry);
+  compute_and_check_bounds (cmesh, eclass);
+  t8_cmesh_unref (&cmesh);
+}
+
 // Parameterized test cases
 INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_bounding_box, t8_cmesh_bounding_box, AllEclasses, print_eclass);
+
+INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_bounding_box, t8_cmesh_bounding_box_multi_trees,
+                          testing::Combine (testing::Range (2, 5),  // trees_per_dim
+                                            testing::Bool (),       // axis_aligned_geometry
+                                            testing::Range (T8_ECLASS_ZERO, T8_ECLASS_PYRAMID)));
