@@ -1537,7 +1537,7 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, const int level, const t8_scheme *sch
   }
 }
 
-void
+int
 t8_cmesh_get_local_bounding_box (const t8_cmesh_t cmesh, double bounds[6])
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
@@ -1557,4 +1557,6 @@ t8_cmesh_get_local_bounding_box (const t8_cmesh_t cmesh, double bounds[6])
     bounds[4] = std::min (bounds[4], tree_bounds[4]);
     bounds[5] = std::max (bounds[5], tree_bounds[5]);
   }
+
+  return true;
 }
