@@ -256,7 +256,7 @@ TEST_P (nca, recursive_check)
 
 /* Test the nca recursively for elements in the middle of the uniform refinement tree
  * up to the maximal level. 
- * Be careful when increasing the recursion_depth, as it increases the number of test-cases exponentially. */
+ * Be careful when increasing the max_lvl, as it increases the number of test-cases exponentially. */
 TEST_P (nca, recursive_check_higher_level)
 {
 #if T8CODE_TEST_LEVEL >= 2
