@@ -233,11 +233,12 @@ struct t8_geometry_handler
    * 
    * \note This function updates the active tree to the provided \a gtreeid.
    */
-  inline void
+  inline bool
   get_tree_bounding_box (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, double bounds[6])
   {
     update_tree (cmesh, gtreeid);
     active_geometry->get_tree_bounding_box (cmesh, bounds);
+    return true;
   }
 
   /**
