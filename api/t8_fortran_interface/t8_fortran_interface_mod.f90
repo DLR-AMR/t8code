@@ -229,12 +229,12 @@ module t8_fortran_interface_mod
       end Interface
 
       Interface
-            integer (c_int) function t8_forest_get_local_num_elements (forest) &
-                                    bind (c, name = 't8_forest_get_local_num_elements')
+            integer (c_int) function t8_forest_get_local_num_leaf_elements (forest) &
+                                    bind (c, name = 't8_forest_get_local_num_leaf_elements')
                   use, intrinsic :: ISO_C_BINDING, only: c_ptr, c_int
                   IMPLICIT NONE
                   type (c_ptr), value :: forest
-            end function t8_forest_get_local_num_elements
+            end function t8_forest_get_local_num_leaf_elements
       end Interface
 
       Interface
