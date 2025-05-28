@@ -27,6 +27,14 @@ fi
 
 file_path=$1
 
+echo "$file_path"
+
+if [[ "$file_path" -ef "src/t8_with_macro_error.h" ]]
+then
+  echo The file \"src/t8_with_macro_error.h\" will be ignored by the check_macros.sh script.
+  exit 0
+fi
+
 # 
 # This script searches for lines containing a macro definition in the style of '#ifdef T8_ENABLE_' 
 # in the specified file and processes each matching line.
@@ -43,11 +51,19 @@ file_path=$1
 
 found_macros=FALSE
 
+# Check for #ifdef T8_ENABLE
 while IFS=: read -r line_number line; do
     macro_name=$(echo "$line" | grep -o 'T8_ENABLE_[^ ]*')
     echo "Incorrect macro found in $file_path on line $line_number: $macro_name. Please use '#if T8_ENABLE_' instead."
     found_macros=TRUE
 done < <(grep -n '#ifdef T8_ENABLE_' "$file_path")
+
+# Check for #ifdef T8_WITH or #if T8_WITH
+while IFS=: read -r line_number line; do
+    macro_name=$(echo "$line" | grep -o 'T8_WITH_[^ ]*')
+    echo "Incorrect macro found in $file_path on line $line_number: $macro_name. Please use '#if T8_ENABLE_' instead."
+    found_macros=TRUE
+done < <(grep -E -n '#if T8_WITH_|#ifdef T8_WITH' "$file_path")
 
 if [ "$found_macros" = "TRUE" ]; then
     exit 1
