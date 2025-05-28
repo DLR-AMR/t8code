@@ -38,8 +38,8 @@
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_vtk/t8_vtk_writer.h>
 #include <t8_geometry/t8_geometry_base.hxx>
-#include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition.hxx>
-#include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_w_search.hxx>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_base.hxx>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost_implementations/t8_forest_ghost_definition_face.hxx>
 #if T8_ENABLE_DEBUG
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
@@ -2941,7 +2941,7 @@ t8_forest_set_ghost (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_typ
     forest->do_ghost = (do_ghost != 0); /* True if and only if do_ghost != 0 */
   }
   if (forest->do_ghost) {
-    t8_forest_set_ghost_ext (forest, do_ghost, new t8_forest_ghost_face (3));
+    t8_forest_set_ghost_ext (forest, do_ghost, new t8_forest_ghost_definition_face (3));
   }
 }
 

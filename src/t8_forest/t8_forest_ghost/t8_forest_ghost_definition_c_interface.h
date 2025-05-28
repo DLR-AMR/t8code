@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2024 the developers
+  Copyright (C) 2025 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -26,7 +26,26 @@
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
 
+/** This typedef holds virtual functions for a particular ghost definition.
+ * We need it so that we can use t8_ghost_definition_c pointers in .c files
+ * without them seeing the actual C++ code (and then not compiling)
+ */
+typedef struct t8_forest_ghost_definition t8_forest_ghost_definition_c;
+
+/** This type controls, which neighbors count as ghost elements.
+ * Currently, we support face-neighbors. Vertex and edge neighbors will eventually be added. */
+typedef enum {
+  T8_GHOST_NONE = 0,     /**< Do not create ghost layer. */
+  T8_GHOST_FACES,        /**< Consider all face (codimension 1) neighbors. */
+  T8_GHOST_EDGES,        /**< Consider all edge (codimension 2) and face neighbors. */
+  T8_GHOST_VERTICES,     /**< Consider all vertex (codimension 3) and edge and face neighbors. */
+  T8_GHOST_USER_DEFINED, /**< For user-defined neighborhoods */
+  T8_GHOST_COUNT         /**< Number of ghost types */
+} t8_ghost_type_t;
+
 T8_EXTERN_C_BEGIN ();
+
+extern const char *t8_ghost_type_to_string[T8_GHOST_COUNT];
 
 /**
  * Satisfy the C interface of forest
@@ -40,7 +59,7 @@ t8_forest_ghost_definition_face_new (const int version);
 /**
  * Satisfy the C interface of forest
  * Return for a ghost_definition of Type FACE the ghost_algorithm / ghost_version (1, 2 or 3)
- * \param [in]    ghost_definition Pointer to object of class t8_forest_ghost_face
+ * \param [in]    ghost_definition Pointer to object of class t8_forest_ghost_definition_face
  * \return the version of the ghost definition
  * \note The function only works for ghost definition objects of the face class.
  */

@@ -32,26 +32,11 @@
 #include <t8_cmesh.h>
 #include <t8_element.h>
 #include <t8_data/t8_containers.h>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_c_interface.h>
 
 /** Opaque pointer to a forest implementation. */
 typedef struct t8_forest *t8_forest_t;
 typedef struct t8_tree *t8_tree_t;
-
-/** This type controls, which neighbors count as ghost elements.
- * Currently, we support face-neighbors. Vertex and edge neighbors will eventually be added. */
-typedef enum {
-  T8_GHOST_NONE = 0,    /**< Do not create ghost layer. */
-  T8_GHOST_FACES,       /**< Consider all face (codimension 1) neighbors. */
-  T8_GHOST_EDGES,       /**< Consider all edge (codimension 2) and face neighbors. */
-  T8_GHOST_VERTICES,    /**< Consider all vertex (codimension 3) and edge and face neighbors. */
-  T8_GHOST_USER_DEFINED /**< For user-defined neighborhoods */
-} t8_ghost_type_t;
-
-/** This typedef holds virtual functions for a particular ghost definition.
- * We need it so that we can use t8_ghost_definition_c pointers in .c files
- * without them seeing the actual C++ code (and then not compiling)
- */
-typedef struct t8_forest_ghost_definition t8_forest_ghost_definition_c;
 
 /** This typedef is needed as a helper construct to 
  * properly be able to define a function that returns

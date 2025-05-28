@@ -21,11 +21,8 @@
 */
 
 /** \file t8_forest_ghost.h
- * We define the ghost routine to create a layer of halo elements
- * for a forest of trees in this file.
+ * Routines to manage and access the ghost layer structure of a forest.
  */
-
-/* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest_ghost */
 
 #ifndef T8_FOREST_GHOST_H
 #define T8_FOREST_GHOST_H
@@ -35,6 +32,24 @@
 #include <t8_forest/t8_forest_general.h>
 
 T8_EXTERN_C_BEGIN ();
+
+/* The information stored for the remote trees.
+ * Each remote process stores an array of these */
+typedef struct
+{
+  t8_gloidx_t global_id;       /* global id of the tree */
+  int mpirank;                 /* The mpirank of the remote process */
+  t8_element_array_t elements; /* The remote elements of that tree */
+  sc_array_t element_indices;  /* The (tree) local indices of the ghost elements. */
+  t8_eclass_t eclass;          /* The trees element class */
+} t8_ghost_remote_tree_t;
+
+typedef struct
+{
+  int remote_rank;          /* The rank of the remote process */
+  t8_locidx_t num_elements; /* The number of remote elements for this process */
+  sc_array_t remote_trees;  /* Array of the remote trees of this process */
+} t8_ghost_remote_t;
 
 /* We enumerate the ghost trees by 0, 1, ..., num_ghost_trees - 1
  * In the context of a forest we add the number of local trees as offset,
@@ -47,10 +62,6 @@ T8_EXTERN_C_BEGIN ();
  * For the functions in this header an argument lghost_tree always
  * means a number 0 <= lghost_tree < num_ghost_trees - 1
  */
-
-/* TODO: comment */
-void
-t8_forest_ghost_init (t8_forest_ghost_t *pghost, t8_ghost_type_t ghost_type);
 
 /* TODO: document */
 /* returns 0 if ghost structure doesnt exist */
@@ -113,14 +124,6 @@ t8_forest_ghost_get_global_treeid (const t8_forest_t forest, const t8_locidx_t l
 t8_element_t *
 t8_forest_ghost_get_element (t8_forest_t forest, t8_locidx_t lghost_tree, t8_locidx_t lelement);
 
-/** Return the array of remote ranks.
- * \param [in] forest   A forest with constructed ghost layer.
- * \param [in,out] num_remotes On output the number of remote ranks is stored here.
- * \return              The array of remote ranks in ascending order.
- */
-int *
-t8_forest_ghost_get_remotes (t8_forest_t forest, int *num_remotes);
-
 /** Return the first local ghost tree of a remote rank.
  * \param [in] forest   A forest with constructed ghost layer.
  * \param [in] remote   A remote rank of the ghost layer in \a forest.
@@ -167,24 +170,6 @@ t8_forest_ghost_unref (t8_forest_ghost_t *pghost);
 void
 t8_forest_ghost_destroy (t8_forest_ghost_t *pghost);
 
-/** Part of search_for_ghost_elements of the ghost_creat_ext 
- * for ghost_type face
- * Is declared, so that ghost_definition_face can use it
- * \see t8_forest_ghost_definition_w_search::search_for_ghost_elements
- * \param [in,out]    forest     The forest.
- */
-void
-t8_forest_ghost_fill_remote_v3 (t8_forest_t forest);
-
-/** Part of step search_for_ghost_elements of the ghost_creat_ext 
- * for ghost_type face
- * Is declared, so that ghost_definition_face can use it
- * \see t8_forest_ghost_face::search_for_ghost_elements
- * \param [in,out]    forest     The forest.
- */
-void
-t8_forest_ghost_fill_remote (t8_forest_t forest, const t8_forest_ghost_t ghost, const int ghost_method);
-
 /** Create one layer of ghost elements for a forest.
  * \see t8_forest_set_ghost
  * \param [in,out]    forest     The forest.
@@ -192,27 +177,6 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, const t8_forest_ghost_t ghost, 
  */
 void
 t8_forest_ghost_create_ext (t8_forest_t forest);
-
-/** Create one layer of ghost elements for a forest.
- * \see t8_forest_set_ghost
- * \param [in,out]    forest     The forest.
- * \a forest must be committed before calling this function.
- * \a forest->ghost_definition must have the \a type FACE and the \a version 2
- */
-void
-t8_forest_ghost_create (t8_forest_t forest);
-
-/** Create one layer of ghost elements for a forest.
- * This version only works with balanced forests and is the original
- * algorithm from p4est: Scalable Algorithms For Parallel Adaptive
- *                Mesh Refinement On Forests of Octrees
- * \param [in,out]    forest     The balanced forest/
- * \a forest must be committed before calling this function.
- * \a forest->ghost_definition must have the \a type FACE and the \a version 1
- * \note The user should prefer \ref t8_forest_ghost_create even for balanced forests.
- */
-void
-t8_forest_ghost_create_balanced_only (t8_forest_t forest);
 
 /** Creating one layer of ghost elements for a forest. 
  * experimental version using the ghost_v3 algorithm
@@ -222,6 +186,18 @@ t8_forest_ghost_create_balanced_only (t8_forest_t forest);
  */
 void
 t8_forest_ghost_create_topdown (t8_forest_t forest);
+
+/* Return the remote struct of a given remote rank */
+t8_ghost_remote_t *
+t8_forest_ghost_get_remote (t8_forest_t forest, int remote);
+
+/** Return the array of remote ranks.
+ * \param [in] forest   A forest with constructed ghost layer.
+ * \param [in,out] num_remotes On output the number of remote ranks is stored here.
+ * \return              The array of remote ranks in ascending order.
+ */
+int *
+t8_forest_ghost_get_remotes (t8_forest_t forest, int *num_remotes);
 
 T8_EXTERN_C_END ();
 

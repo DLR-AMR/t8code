@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2024 the developers
+  Copyright (C) 2025 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,13 +20,19 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#ifndef T8_FOREST_GHOST_DEFINITION_HXX
-#define T8_FOREST_GHOST_DEFINITION_HXX
+/** \file t8_forest_ghost_definition_base.hxx
+ * Implements the base class to create ghosts definitions.
+ */
+
+#ifndef T8_FOREST_GHOST_DEFINITION_BASE_HXX
+#define T8_FOREST_GHOST_DEFINITION_BASE_HXX
 
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
-#include <memory>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_c_interface.h>
+#include <memory>
+#include <string_view>
+#include <array>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -34,7 +40,7 @@ T8_EXTERN_C_BEGIN ();
  * Flags for communicate_ownerships 
  * store in the flags which memory was allocated
  */
-enum t8_ghost_definition_face_flag { CREATE_ELEMENT_ARRAY = 1, CREATE_TREE_ARRAY = 2, CREATE_GFIRST_DESC_ARRAY = 4 };
+enum t8_ghost_definition_memory_flag { CREATE_ELEMENT_ARRAY = 1, CREATE_TREE_ARRAY = 2, CREATE_GFIRST_DESC_ARRAY = 4 };
 
 struct t8_forest_ghost_definition
 {
@@ -46,8 +52,7 @@ struct t8_forest_ghost_definition
    */
   t8_forest_ghost_definition ()
   {
-    t8_refcount_init (&rc);
-    t8_debugf ("Constructed a None ghost_definition.\n");
+    init ();
   }
 
   /**
@@ -60,7 +65,7 @@ struct t8_forest_ghost_definition
       T8_ASSERT (t8_refcount_is_last (&rc));
       t8_refcount_unref (&rc);
     }
-    t8_debugf ("Deleted the ghost_definition.\n");
+    t8_debugf ("Deleted t8_forest_ghost_definition of type %s.\n", t8_ghost_type_to_string[ghost_type]);
   }
 
   /**
@@ -92,7 +97,6 @@ struct t8_forest_ghost_definition
   {
     const int remaining = rc.refcount - 1;
     if (t8_refcount_unref (&rc)) {
-      t8_debugf ("Deleting the ghost_definition.\n");
       delete this;
     }
     return remaining;
@@ -130,14 +134,20 @@ struct t8_forest_ghost_definition
   virtual void
   clean_up (t8_forest_t forest);
 
+  void
+  init ()
+  {
+    t8_refcount_init (&rc);
+    t8_debugf ("Constructed a t8_forest_ghost_definition of type %s.\n", t8_ghost_type_to_string[ghost_type]);
+  }
+
   /**
    * Constructor for the derivided classes to set the correkt type for them.
    * \param [in] g_type   The type (faces, edges, userdefind, ...) of the ghost_definition
    */
   explicit t8_forest_ghost_definition (t8_ghost_type_t g_type): ghost_type (g_type)
   {
-    t8_refcount_init (&rc);
-    t8_debugf ("Constructed a ghost_definition.\n");
+    init ();
   };
   /** type of the ghost_definition */
   t8_ghost_type_t ghost_type { T8_GHOST_NONE };
@@ -149,4 +159,4 @@ struct t8_forest_ghost_definition
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_FOREST_GHOST_DEFINITION_HXX */
+#endif /* !T8_FOREST_GHOST_DEFINITION_BASE_HXX */

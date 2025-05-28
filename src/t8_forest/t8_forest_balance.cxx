@@ -25,8 +25,9 @@
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
-#include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition.hxx>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_base.hxx>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_c_interface.h>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost_implementations/t8_forest_ghost_definition_face.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_profiling.h>
 #include <t8_schemes/t8_scheme.hxx>
@@ -177,10 +178,16 @@ t8_forest_balance (t8_forest_t forest, int repartition)
    * compute a ghost layer for the set_from forest */
   if (forest->set_from->ghosts == NULL) {
     /* If the forest does not yet have a ghost_definition */
+    t8_productionf ("ghosts == NULL\n");
     if (forest->set_from->ghost_definition == NULL) {
+
+      t8_productionf ("create ghost definition\n");
       /* create a ghost_definition of type face with top-down-search */
-      forest->set_from->ghost_definition = t8_forest_ghost_definition_face_new (3);
+      forest->set_from->ghost_definition = new t8_forest_ghost_definition_face (3);
       create_ghost_definition = 1;
+    }
+    else {
+      t8_productionf ("type: %s\n", t8_ghost_type_to_string[forest->set_from->ghost_definition->t8_ghost_get_type ()]);
     }
     /* compute ghost layer for set_from forest */
     t8_forest_ghost_create_topdown (forest->set_from);

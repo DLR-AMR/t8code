@@ -38,7 +38,7 @@
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_c_interface.h>
 
 typedef struct t8_profile t8_profile_t;            /* Defined below */
-typedef struct t8_forest_ghost *t8_forest_ghost_t; /* Defined below */
+typedef struct t8_forest_ghost *t8_forest_ghost_t; /* The ghost elements of a forest. */
 
 /** If a forest is to be derived from another forest, there are different
  * possibilities how the original forest is modified.
