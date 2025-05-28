@@ -65,6 +65,9 @@ TEST_P (t8_cmesh_bounding_box, test_box)
     EXPECT_DOUBLE_EQ (bounds[idim * 2], 0);
     EXPECT_DOUBLE_EQ (bounds[idim * 2 + 1], 1);
   }
+  for (int idim = dim; idim < 3; ++idim) {
+    EXPECT_DOUBLE_EQ (bounds[idim * 2], bounds[idim * 2 + 1]);
+  }
 }
 
 // Parameterized test cases
