@@ -79,7 +79,7 @@ do
   # Iterate over each ignore filename
   for ignore_file in "${files_to_ignore[@]}"
     do
-    if [[ "$arg" = "$ignore_file" ]]
+    if [[ "$arg" -ef "$ignore_file" ]]
     then 
       # arg matches and will be ignored
       echo The file \"$arg\" will be ignored by indentation as specified in \"$IGNORE_FILE\".
