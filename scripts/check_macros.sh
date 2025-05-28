@@ -27,6 +27,14 @@ fi
 
 file_path=$1
 
+echo "$file_path"
+
+if [[ "$file_path" -ef "src/t8_with_macro_error.h" ]]
+then
+  echo The file \"src/t8_with_macro_error.h\" will be ignored by the check_macros.sh script.
+  exit 0
+fi
+
 # 
 # This script searches for lines containing a macro definition in the style of '#ifdef T8_ENABLE_' 
 # in the specified file and processes each matching line.
