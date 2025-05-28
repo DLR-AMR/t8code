@@ -1545,6 +1545,7 @@ t8_cmesh_get_local_bounding_box (const t8_cmesh_t cmesh, double bounds[6])
   T8_ASSERT (num_local_trees > 0);
   double tree_bounds[6] = { 0.0 };
   t8_geometry_handler *geom_handler = cmesh->geometry_handler;
+  T8_ASSERT (geom_handler != NULL);
   geom_handler->get_tree_bounding_box (cmesh, 0, bounds);
   for (t8_locidx_t itree = 1; itree < num_local_trees; itree++) {
     const t8_gloidx_t gtree_id = t8_cmesh_get_global_id (cmesh, itree);
