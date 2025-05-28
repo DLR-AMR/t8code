@@ -122,7 +122,7 @@ struct t8_geometry_linear_axis_aligned: public t8_geometry_with_vertices
     return true;
   }
 
-  void
+  inline bool
   get_tree_bounding_box ([[maybe_unused]] const t8_cmesh_t cmesh, double bounds[6])
   {
     T8_ASSERT (cmesh != NULL);

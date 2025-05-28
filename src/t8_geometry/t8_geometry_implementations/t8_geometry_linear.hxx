@@ -107,7 +107,13 @@ struct t8_geometry_linear: public t8_geometry_with_vertices
     return true;
   }
 
-  virtual void
+  /**
+   * Get the bounding box of the tree in the geometry.
+   * \param[in] cmesh   The cmesh containing the tree.
+   * \param[out] bounds The bounding box of the tree, stored as {xmin, xmax, ymin, ymax, zmin, zmax}.
+   * \return            True if the bounding box was successfully computed, false otherwise.
+   */
+  virtual bool
   get_tree_bounding_box ([[maybe_unused]] const t8_cmesh_t cmesh, double bounds[6]) const;
 
   /* Load tree data is inherited from t8_geometry_with_vertices. */
