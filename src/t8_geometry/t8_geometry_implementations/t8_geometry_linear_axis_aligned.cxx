@@ -113,6 +113,7 @@ t8_geometry_linear_axis_aligned::t8_geom_tree_negative_volume () const
   return false;
 }
 
+
 T8_EXTERN_C_BEGIN ();
 
 /* Satisfy the C interface from t8_geometry_linear_axis_aligned.h.

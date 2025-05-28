@@ -135,6 +135,8 @@ struct t8_geometry_linear_axis_aligned: public t8_geometry_with_vertices
     bounds[3] = active_tree_vertices[4];
     bounds[4] = active_tree_vertices[2];
     bounds[5] = active_tree_vertices[5];
+
+    return true;
   }
 };
 
