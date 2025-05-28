@@ -225,6 +225,14 @@ struct t8_geometry_handler
     return active_geometry->t8_geom_check_tree_compatibility ();
   }
 
+  /**
+   * Get the bounding box of the tree.
+   * \param [in]  cmesh    The cmesh.
+   * \param [in]  gtreeid  The global tree id of the tree for which the bounding box should be returned.
+   * \param [out] bounds   The bounding box of the tree, in the format [xmin, xmax, ymin, ymax, zmin, zmax].
+   * 
+   * \note This function updates the active tree to the provided \a gtreeid.
+   */
   inline void
   get_tree_bounding_box (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, double bounds[6])
   {
