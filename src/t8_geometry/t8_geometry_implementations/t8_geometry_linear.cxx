@@ -254,6 +254,7 @@ t8_geometry_linear::get_tree_bounding_box ([[maybe_unused]] const t8_cmesh_t cme
   bounds[4] = active_tree_vertices[2];
   bounds[5] = active_tree_vertices[2];
   const int num_vertices = t8_eclass_num_vertices[active_tree_class];
+  T8_ASSERT (num_vertices > 0);
   /* iterate over all vertices in the tree and update bounds */
   for (int ivertex = 1; ivertex < num_vertices; ++ivertex) {
     bounds[0] = std::min (bounds[0], active_tree_vertices[3 * ivertex]);

@@ -122,8 +122,8 @@ struct t8_geometry_linear_axis_aligned: public t8_geometry_with_vertices
     return true;
   }
 
-  inline bool
-  get_tree_bounding_box ([[maybe_unused]] const t8_cmesh_t cmesh, double bounds[6])
+  virtual bool
+  get_tree_bounding_box ([[maybe_unused]] const t8_cmesh_t cmesh, double bounds[6]) const
   {
     T8_ASSERT (cmesh != NULL);
     T8_ASSERT (active_tree_vertices != NULL);
