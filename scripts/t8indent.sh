@@ -56,15 +56,53 @@ if [[ "$MAJOR" != "$REQUIRED_VERSION_MAJOR" || $MINOR != "$REQUIRED_VERSION_MINO
   exit 1
 fi
 
+#
+#  Parsing of input files and throwing out files to be ignored
+#
+# Read all lines from the IGNORE_FILE 
+# that are not empty and are not comments (i.e. start with '#').
+IGNORE_FILE=./scripts/t8indent_ignore.sh
+files_to_ignore=()
+while read line; do
+    if [[ ${line:0:1} != "#" ]] && [[ $line != "" ]]
+    then
+        files_to_ignore+=("$line")
+    fi
+done <$IGNORE_FILE
+
+
+# Iterate over all arguments and throw
+# aways those filenames that we should ignore.
+for arg in "$@"
+do
+  ignore_arg=0
+  # Iterate over each ignore filename
+  for ignore_file in "${files_to_ignore[@]}"
+    do
+    if [[ "$arg" = "$ignore_file" ]]
+    then 
+      # arg matches and will be ignored
+      echo The file \"$arg\" will be ignored by indentation as specified in \"$IGNORE_FILE\".
+      ignore_arg=1
+    fi
+  done
+  # Now add all non-ignored files to a new argument array
+  if [[ $ignore_arg == 0 ]]
+  then
+    newargs+=("$arg")
+  fi
+done
+
+
 for arg in "$@" ; do
   if [ "x$arg" == "x-o" ]; then
     WANTSOUT=1
   fi
 done
 if [ -z "$WANTSOUT" ]; then
-  for NAME in "$@" ; do
+  for NAME in "${newargs[@]}" ; do
     $FORMAT $FORMAT_OPTIONS "$NAME"
   done
 else
-  $FORMAT $FORMAT_OPTIONS $@
+  $FORMAT $FORMAT_OPTIONS ${newargs[@]}
 fi
