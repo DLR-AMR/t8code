@@ -1558,6 +1558,12 @@ t8_cmesh_get_local_bounding_box (const t8_cmesh_t cmesh, double bounds[6])
     bounds[4] = std::min (bounds[4], tree_bounds[4]);
     bounds[5] = std::max (bounds[5], tree_bounds[5]);
   }
+#if T8_ENABLE_DEBUG
+  /* Check that the bounding box is valid */
+  for (int idim = 0; idim < 3; idim++) {
+    T8_ASSERT (bounds[2 * idim] <= bounds[2 * idim + 1]);
+  }
+#endif
 
   return true;
 }
