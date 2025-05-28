@@ -127,6 +127,8 @@ struct t8_geometry_linear_axis_aligned: public t8_geometry_with_vertices
   {
     T8_ASSERT (cmesh != NULL);
     T8_ASSERT (active_tree_vertices != NULL);
+    /* For axis aligned geometries the active tree vertices already describe the bounding box. 
+     * We only have to reorder them.  */
     bounds[0] = active_tree_vertices[0];
     bounds[1] = active_tree_vertices[3];
     bounds[2] = active_tree_vertices[1];
