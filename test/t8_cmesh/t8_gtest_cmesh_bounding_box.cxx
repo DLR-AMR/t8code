@@ -20,12 +20,21 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/**
+ * \file t8_gtest_cmesh_bounding_box.cxx
+ * 
+ * Test the computation of the bounding box of a t8_cmesh.
+ */
+
 #include <gtest/gtest.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <test/t8_gtest_macros.hxx>
 
-// Test fixture for bounding box tests
+/**
+ * \brief Test fixture for testing the bounding box of a t8_cmesh. Computes a cmesh inside
+ * the unit cube, computes the bounding box and checks that it is correct.
+ */
 class t8_cmesh_bounding_box: public testing::TestWithParam<t8_eclass> {
  protected:
   void
