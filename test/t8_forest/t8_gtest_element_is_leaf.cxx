@@ -172,6 +172,16 @@ t8_test_element_is_leaf_for_forest (t8_forest_t forest)
   }
 }
 
+TEST_P (element_is_leaf, element_is_leaf)
+{
+  t8_test_element_is_leaf_for_forest (forest);
+}
+
+TEST_P (element_is_leaf, element_is_leaf_adapt)
+{
+  t8_test_element_is_leaf_for_forest (forest_adapt);
+}
+
 TEST_P (element_is_leaf_hybrid, element_is_leaf)
 {
   t8_test_element_is_leaf_for_forest (forest);
@@ -182,7 +192,7 @@ TEST_P (element_is_leaf_hybrid, element_is_leaf_adapt)
   t8_test_element_is_leaf_for_forest (forest_adapt);
 }
 
-/* Define a lambda to beautify gtest output for tuples <level, cmesh>.
+/* Define a lambda to beatify gtest output for tuples <level, cmesh>.
  * This will set the correct level and cmesh name as part of the test case name. */
 auto pretty_print_eclass_scheme_and_level
   = [] (const testing::TestParamInfo<std::tuple<std::tuple<int, t8_eclass_t>, int>> &info) {
