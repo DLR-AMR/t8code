@@ -103,7 +103,7 @@ t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tr
   t8_forest_element_centroid (forest_from, which_tree, elements[0], elem_midpoint.data ());
 
   /* Calculate elem_midpoint - c_min n */
-  t8_axy (elem_midpoint, normal, adapt_data->c_min);
+  t8_axpy (normal, elem_midpoint, -adapt_data->c_min);
 
   /* The purpose of the factor C*h is that the levels get smaller, the
    * closer we get to the interface. We refine a cell if it is at most
@@ -113,7 +113,7 @@ t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tr
      * check if it is to the left of c_max*E */
 
     /* set elem_midpoint to the original anchor - c_max*normal */
-    t8_axy (elem_midpoint, normal, adapt_data->c_max - adapt_data->c_min);
+    t8_axpy (normal, elem_midpoint, adapt_data->c_min - adapt_data->c_max);
     if (t8_dot (elem_midpoint, normal) <= 0) {
       if (level < max_level) {
         /* We do refine if level smaller 1+base level and the anchor is
