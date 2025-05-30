@@ -121,6 +121,23 @@ struct t8_geometry_linear_axis_aligned: public t8_geometry_with_vertices
     }
     return true;
   }
+
+  virtual bool
+  get_tree_bounding_box ([[maybe_unused]] const t8_cmesh_t cmesh, double bounds[6]) const
+  {
+    T8_ASSERT (cmesh != NULL);
+    T8_ASSERT (active_tree_vertices != NULL);
+    /* For axis aligned geometries the active tree vertices already describe the bounding box. 
+     * We only have to reorder them.  */
+    bounds[0] = active_tree_vertices[0];
+    bounds[1] = active_tree_vertices[3];
+    bounds[2] = active_tree_vertices[1];
+    bounds[3] = active_tree_vertices[4];
+    bounds[4] = active_tree_vertices[2];
+    bounds[5] = active_tree_vertices[5];
+
+    return true;
+  }
 };
 
 #endif /* !T8_GEOMETRY_LINEAR_AXIS_ALIGNED_HXX */
