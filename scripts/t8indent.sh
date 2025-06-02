@@ -26,7 +26,10 @@
 # We have to use the -i argument, so that clang-format directly alters the
 # files instead of printing the changes to stdout. The --style=file
 # arguments tells clang-format to look for a *.clang-format file.
-FORMAT_OPTIONS="-i --style=file"
+#
+# If you call this script with "NO_CHANGE" as first argument it will run
+# in dry-mode, not changing the file contents.
+FORMAT_OPTIONS="--Werror -i --style=file"
 
 # Required version of the clang format program.
 REQUIRED_VERSION_MAJOR="17"
@@ -83,6 +86,7 @@ if [[ $1 == "NO_CHANGE" ]]
 then
   shift # Removes first argument from $@ list
   NO_CHANGE=TRUE
+  FORMAT_OPTIONS="${FORMAT_OPTIONS} --dry-run"
 fi
 
 
@@ -127,19 +131,21 @@ if [ -z "$WANTSOUT" ]; then
     if [[ $NO_CHANGE == "TRUE" ]]
     then
       $FORMAT $FORMAT_OPTIONS "$NAME" 2>&1
+      status=$?
     else
       $FORMAT $FORMAT_OPTIONS "$NAME"
+      status=$?
     fi
-    status=$?
   done
 else
   if [[ $NO_CHANGE == "TRUE" ]]
   then
     $FORMAT $FORMAT_OPTIONS ${newargs[@]} 2>&1
+    status=$?
   else
     $FORMAT $FORMAT_OPTIONS ${newargs[@]}
+    status=$?
   fi  
-  status=$?
 fi
 
 # If the file content was not change, the return

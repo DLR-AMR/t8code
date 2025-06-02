@@ -55,5 +55,10 @@ fi
 #
 $INDENT_SCRIPT NO_CHANGE $file
 status=$?
+if [ $status != 0 ]
+then
+  echo $file is not indented.
+  echo
+fi
 exit $status
 
