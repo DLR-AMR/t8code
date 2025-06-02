@@ -26,6 +26,9 @@
 # We have to use the -i argument, so that clang-format directly alters the
 # files instead of printing the changes to stdout. The --style=file
 # arguments tells clang-format to look for a *.clang-format file.
+#
+# If you call this script with "NO_CHANGE" as first argument it will run
+# in dry-mode, not changing the file contents.
 FORMAT_OPTIONS="--Werror -i --style=file"
 
 # Required version of the clang format program.
