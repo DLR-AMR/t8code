@@ -106,6 +106,7 @@ do
   # Iterate over each ignore filename
   for ignore_file in "${files_to_ignore[@]}"
     do
+      echo Checking "$arg" against "${GIT_REPO_PATH}/$ignore_file"
     if [[ "$arg" -ef "${GIT_REPO_PATH}/$ignore_file" ]]
     then 
       # arg matches and will be ignored
