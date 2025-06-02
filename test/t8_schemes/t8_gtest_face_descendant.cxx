@@ -69,9 +69,13 @@ class class_descendant: public TestDFS {
 
     const int level = scheme->element_get_level (eclass, element);
     const int num_faces = scheme->element_get_num_faces (eclass, element);
-
+#if T8CODE_TEST_LEVEL == 0
+    const int final_level = scheme->get_maxlevel (eclass);
+#else
+    const int final_level = level + additional_test_lvl;
+#endif
     /* Testing the linear first descendant. */
-    for (int ilevel = level + 1; ilevel < max_test_lvl; ilevel++) {
+    for (int ilevel = level + 1; ilevel <= final_level; ilevel++) {
       for (int jface = 0; jface < num_faces; jface++) {
 
         t8_test_manual_first_last_face_descendant (scheme, element, eclass, jface, ilevel, 0, manual_face_desc);
@@ -92,7 +96,6 @@ class class_descendant: public TestDFS {
   SetUp () override
   {
     dfs_test_setup ();
-    max_test_lvl = scheme->get_maxlevel (eclass);
     scheme->element_new (eclass, 1, &manual_face_desc);
     scheme->element_new (eclass, 1, &scheme_face_desc);
   }
@@ -103,7 +106,14 @@ class class_descendant: public TestDFS {
     scheme->element_destroy (eclass, 1, &scheme_face_desc);
     dfs_test_teardown ();
   }
-  int max_test_lvl;
+#if T8CODE_TEST_LEVEL == 0
+  int additional_test_lvl
+    = 3;  // For level 0 additional_test_lvl is unused and we always test up to the maximum possible refinement level.
+#elif T8CODE_TEST_LEVEL == 1
+  int additional_test_lvl = 2;
+#elif T8CODE_TEST_LEVEL == 2
+  int additional_test_lvl = 1;
+#endif
   t8_element_t *manual_face_desc;
   t8_element_t *scheme_face_desc;
 };
