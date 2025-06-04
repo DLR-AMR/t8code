@@ -24,6 +24,7 @@
 #include <t8_version.h>
 
 static int t8_package_id = -1;
+static void (*external_log_fcn) (int category, int priority, const char *msg) = NULL;
 
 int
 t8_get_package_id (void)
@@ -34,7 +35,20 @@ t8_get_package_id (void)
 void
 t8_logv (int category, int priority, const char *fmt, va_list ap)
 {
-  sc_logv ("unknown", -1, t8_package_id, category, priority, fmt, ap);
+  char                buffer[BUFSIZ];
+
+#ifdef SC_ENABLE_PTHREAD
+  sc_package_lock (t8_package_id);
+#endif
+  vsnprintf (buffer, BUFSIZ, fmt, ap);
+#ifdef SC_ENABLE_PTHREAD
+  sc_package_unlock (t8_package_id);
+#endif
+  if (external_log_fcn){
+    external_log_fcn (category, priority, buffer);
+    return;
+  }
+  sc_log ("unknown", -1, t8_package_id, category, priority, buffer);
 }
 
 void
@@ -139,6 +153,12 @@ t8_errorf (const char *fmt, ...)
   va_start (ap, fmt);
   t8_logv (SC_LC_NORMAL, SC_LP_ERROR, fmt, ap);
   va_end (ap);
+}
+
+void
+t8_set_external_log_fcn (void (*log_fcn) (int category, int priority, const char *msg))
+{
+  external_log_fcn = log_fcn;
 }
 
 void
