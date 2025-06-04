@@ -43,7 +43,7 @@ t8_logf (int category, int priority, const char *fmt, ...)
   va_list ap;
 
   va_start (ap, fmt);
-  sc_logv ("unknown", -1, t8_package_id, category, priority, fmt, ap);
+  t8_logv (category, priority, fmt, ap);
   va_end (ap);
 }
 
