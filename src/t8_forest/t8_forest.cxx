@@ -1411,41 +1411,6 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
   }
 }
 
-/** \brief Search for a linear element id maxlevel in a sorted array of
- * elements. If the element does not exist, return the largest index i
- * such that the element at position i has a smaller id than the given one.
- * If no such i exists, return -1.
- */
-static t8_locidx_t
-t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_linearidx_t element_id, const int maxlevel)
-{
-  const t8_scheme *scheme = t8_element_array_get_scheme (elements);
-  const t8_eclass_t tree_class = t8_element_array_get_tree_class (elements);
-  /* At first, we check whether any element has smaller id than the
-   * given one. */
-  const t8_element_t *query = t8_element_array_index_int (elements, 0);
-  const t8_linearidx_t query_id = scheme->element_get_linear_id (tree_class, query, maxlevel);
-  if (query_id > element_id) {
-    /* No element has id smaller than the given one. */
-    return -1;
-  }
-
-  /* We search for the first element in the array that is greater than the given element id. */
-  auto elem_iter
-    = std::upper_bound (t8_element_array_begin (elements), t8_element_array_end (elements), element_id,
-                        [&maxlevel, &scheme, &tree_class] (const t8_linearidx_t element_id_,
-                                                           const t8_element_array_iterator::value_type &elem_ptr) {
-                          return (element_id_ < scheme->element_get_linear_id (tree_class, elem_ptr, maxlevel));
-                        });
-
-  /* After we found the element with an id greater than the given one, we are able to jump one index back.
-   * This guarantees us that the element at (index - 1) is smaller or equal to the given element id.
-   * In case we do not find an element that is greater than the given element_id, the binary search returns
-   * the end-iterator of the element array. In that case, we want to return the last index from the element
-   * array. */
-  return elem_iter.get_current_index () - 1;
-}
-
 t8_eclass_t
 t8_forest_element_neighbor_eclass (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *elem,
                                    const int face)
@@ -2484,27 +2449,9 @@ t8_forest_element_is_leaf_or_ghost (const t8_forest_t forest, const t8_element_t
 
   T8_ASSERT (elements != NULL);
 
-  /* In order to find the element, we need to compute its linear id.
-   * To do so, we need the scheme and the level of the element. */
-  const t8_scheme *scheme = t8_element_array_get_scheme (elements);
-  const t8_eclass_t tree_class = t8_element_array_get_tree_class (elements);
-  const int element_level = scheme->element_get_level (tree_class, element);
-  /* Compute the linear id. */
-  const t8_linearidx_t element_id = scheme->element_get_linear_id (tree_class, element, element_level);
-  /* Search for the element.
-   * The search returns the largest index i,
-   * such that the element at position i has a smaller id than the given one.
-   * If no such i exists, it returns -1. */
-  const t8_locidx_t search_result = t8_forest_bin_search_lower (elements, element_id, element_level);
-  if (search_result < 0) {
-    /* The element was not found. */
-    return 0;
-  }
-  /* An element was found but it may not be the candidate element. 
-   * To identify whether the element was found, we compare these two. */
-  const t8_element_t *check_element = t8_element_array_index_locidx (elements, search_result);
-  T8_ASSERT (check_element != NULL);
-  return (scheme->element_is_equal (tree_class, element, check_element));
+  // Search for the element in the array, return true if it was found,
+  // false if not.
+  return t8_element_array_find (elements, element) >= 0;
 }
 
 /* Check if an element is owned by a specific rank */

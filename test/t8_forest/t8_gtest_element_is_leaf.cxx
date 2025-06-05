@@ -45,7 +45,7 @@
 #define T8_IS_LEAF_MAX_LVL 4
 #endif
 
-class element_is_leaf: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, int>> {
+class element_is_leaf_or_ghost: public testing::TestWithParam<std::tuple<int, int, cmesh_example_base *>> {
  protected:
   void
   SetUp () override
@@ -55,9 +55,15 @@ class element_is_leaf: public testing::TestWithParam<std::tuple<std::tuple<int, 
     scheme = create_from_scheme_id (scheme_id);
     const t8_eclass_t tree_class = std::get<1> (std::get<0> (GetParam ()));
     const int level = std::get<1> (GetParam ());
-    t8_cmesh_t cmesh = t8_cmesh_new_from_class (tree_class, sc_MPI_COMM_WORLD);
+    t8_cmesh_t cmesh = std::get<2> (GetParam ())->cmesh_create ();
+    if (t8_cmesh_is_empty (cmesh)) {
+      /* forest_commit does not support empty cmeshes, we skip this case */
+      scheme->unref ();
+      t8_cmesh_unref (&cmesh);
+      GTEST_SKIP ();
+    }
 
-    forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
+    forest = t8_forest_new_uniform (cmesh, scheme, level, 1, sc_MPI_COMM_WORLD);
     t8_forest_ref (forest);
     //const int maxlevel = t8_forest_get_maxlevel (forest);
     int maxlevel = 7;
@@ -81,7 +87,7 @@ class element_is_leaf: public testing::TestWithParam<std::tuple<std::tuple<int, 
   const t8_scheme *scheme;
 };
 
-class element_is_leaf_hybrid: public testing::TestWithParam<int> {
+class element_is_leaf_or_ghost_hybrid: public testing::TestWithParam<int> {
  protected:
   void
   SetUp () override
@@ -165,11 +171,10 @@ void
 t8_test_element_is_ghost_for_forest (t8_forest_t forest)
 {
   const t8_locidx_t num_ghost_trees = t8_forest_get_num_ghost_trees (forest);
-
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
   for (t8_locidx_t ighost_tree = 0; ighost_tree < num_ghost_trees; ++ighost_tree) {
     const t8_locidx_t num_elements_in_tree = t8_forest_ghost_tree_num_elements (forest, ighost_tree);
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ighost_tree);
-    const t8_scheme *scheme = t8_forest_get_scheme (forest);
     /* Allocate memory to build a non-ghost element. */
     t8_element_t *not_ghost;
     scheme->element_new (tree_class, 1, &not_ghost);
@@ -208,17 +213,17 @@ TEST_P (element_is_leaf_or_ghost, element_is_ghost_adapt)
   t8_test_element_is_leaf_for_forest (forest_adapt);
 }
 
-TEST_P (element_is_leaf_hybrid, element_is_leaf)
+TEST_P (element_is_leaf_or_ghost_hybrid, element_is_leaf)
 {
   t8_test_element_is_leaf_for_forest (forest);
 }
 
-TEST_P (element_is_leaf_hybrid, element_is_leaf_adapt)
+TEST_P (element_is_leaf_or_ghost_hybrid, element_is_leaf_adapt)
 {
   t8_test_element_is_leaf_for_forest (forest_adapt);
 }
 
-/* Define a lambda to beatify gtest output for tuples <level, cmesh>.
+/* Define a lambda to beautify gtest output for tuples <level, cmesh>.
  * This will set the correct level and cmesh name as part of the test case name. */
 auto pretty_print_eclass_scheme_and_level
   = [] (const testing::TestParamInfo<std::tuple<std::tuple<int, t8_eclass_t>, int>> &info) {
@@ -232,4 +237,10 @@ INSTANTIATE_TEST_SUITE_P (t8_gtest_element_is_leaf, element_is_leaf,
                           testing::Combine (AllSchemes, testing::Range (0, T8_IS_LEAF_MAX_LVL)),
                           pretty_print_eclass_scheme_and_level);
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_element_is_leaf_hybrid, element_is_leaf_hybrid, AllSchemeCollections, print_scheme);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_element_is_leaf_or_ghost_hybrid, element_is_leaf_or_ghost_hybrid,
+                          AllSchemeCollections, print_scheme);
+
+INSTANTIATE_TEST_SUITE_P (t8_gtest_element_is_leaf_or_ghost, element_is_leaf_or_ghost,
+                          testing::Combine (AllSchemeCollections, testing::Range (0, T8_IS_LEAF_MAX_LVL),
+                                            AllCmeshsParam),
+                          pretty_print_level_and_cmesh_params);
