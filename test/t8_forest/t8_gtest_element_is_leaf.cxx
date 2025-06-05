@@ -45,7 +45,7 @@
 #define T8_IS_LEAF_MAX_LVL 4
 #endif
 
-class element_is_leaf_or_ghost: public testing::TestWithParam<std::tuple<int, int, cmesh_example_base *>> {
+class element_is_leaf_or_ghost: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, int>> {
  protected:
   void
   SetUp () override
@@ -55,13 +55,7 @@ class element_is_leaf_or_ghost: public testing::TestWithParam<std::tuple<int, in
     scheme = create_from_scheme_id (scheme_id);
     const t8_eclass_t tree_class = std::get<1> (std::get<0> (GetParam ()));
     const int level = std::get<1> (GetParam ());
-    t8_cmesh_t cmesh = std::get<2> (GetParam ())->cmesh_create ();
-    if (t8_cmesh_is_empty (cmesh)) {
-      /* forest_commit does not support empty cmeshes, we skip this case */
-      scheme->unref ();
-      t8_cmesh_unref (&cmesh);
-      GTEST_SKIP ();
-    }
+    t8_cmesh_t cmesh = t8_cmesh_new_from_class (tree_class, sc_MPI_COMM_WORLD);
 
     forest = t8_forest_new_uniform (cmesh, scheme, level, 1, sc_MPI_COMM_WORLD);
     t8_forest_ref (forest);
@@ -173,7 +167,7 @@ t8_test_element_is_ghost_for_forest (t8_forest_t forest)
   const t8_locidx_t num_ghost_trees = t8_forest_get_num_ghost_trees (forest);
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
   for (t8_locidx_t ighost_tree = 0; ighost_tree < num_ghost_trees; ++ighost_tree) {
-    const t8_locidx_t num_elements_in_tree = t8_forest_ghost_tree_num_elements (forest, ighost_tree);
+    const t8_locidx_t num_elements_in_tree = t8_forest_ghost_tree_num_leaf_elements (forest, ighost_tree);
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ighost_tree);
     /* Allocate memory to build a non-ghost element. */
     t8_element_t *not_ghost;
@@ -183,7 +177,7 @@ t8_test_element_is_ghost_for_forest (t8_forest_t forest)
      * build its parent and its first child (if they exist), and verify
      * that t8_forest_element_is_leaf and t8_forest_element_is_leaf_or_ghost returns false. */
     for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement) {
-      const t8_element_t *ghost_element = t8_forest_ghost_get_element (forest, ighost_tree, ielement);
+      const t8_element_t *ghost_element = t8_forest_ghost_get_leaf_element (forest, ighost_tree, ielement);
       EXPECT_TRUE (t8_forest_element_is_ghost (forest, ghost_element, ighost_tree));
       EXPECT_TRUE (t8_forest_element_is_leaf_or_ghost (forest, ghost_element, ighost_tree, 1));
       /* Compute parent and first child of element and check that they are not in the tree */
@@ -233,14 +227,9 @@ auto pretty_print_eclass_scheme_and_level
       return scheme + "_" + eclass + level;
     };
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_element_is_leaf, element_is_leaf,
-                          testing::Combine (AllSchemes, testing::Range (0, T8_IS_LEAF_MAX_LVL)),
-                          pretty_print_eclass_scheme_and_level);
-
 INSTANTIATE_TEST_SUITE_P (t8_gtest_element_is_leaf_or_ghost_hybrid, element_is_leaf_or_ghost_hybrid,
                           AllSchemeCollections, print_scheme);
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_element_is_leaf_or_ghost, element_is_leaf_or_ghost,
-                          testing::Combine (AllSchemeCollections, testing::Range (0, T8_IS_LEAF_MAX_LVL),
-                                            AllCmeshsParam),
-                          pretty_print_level_and_cmesh_params);
+                          testing::Combine (AllSchemes, testing::Range (0, T8_IS_LEAF_MAX_LVL)),
+                          pretty_print_eclass_scheme_and_level);
