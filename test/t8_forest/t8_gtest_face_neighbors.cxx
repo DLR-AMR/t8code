@@ -114,15 +114,16 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
     }
     const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
     const t8_locidx_t num_ghost_trees = t8_forest_get_num_ghost_trees (forest);
-    const t8_locidx_t num_local_elements = t8_forest_get_local_num_elements (forest);
+    const t8_locidx_t num_local_elements = t8_forest_get_local_num_leaf_elements (forest);
     t8_locidx_t ielement_index = 0;
     for (t8_locidx_t itree = 0; itree < num_local_trees + num_ghost_trees; itree++) {
       const t8_gloidx_t gtree_id = t8_forest_global_tree_id (forest, itree);
       const bool is_ghost = itree >= num_local_trees;
       const t8_locidx_t ghost_tree_id = itree - num_local_trees;
       /* Get the leaf element array */
-      const t8_element_array_t *leaf_elements = !is_ghost ? t8_forest_get_tree_element_array (forest, itree)
-                                                          : t8_forest_ghost_get_tree_elements (forest, ghost_tree_id);
+      const t8_element_array_t *leaf_elements = !is_ghost
+                                                  ? t8_forest_get_tree_leaf_element_array (forest, itree)
+                                                  : t8_forest_ghost_get_tree_leaf_elements (forest, ghost_tree_id);
       const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
       const t8_scheme *scheme = t8_forest_get_scheme (forest);
       const t8_locidx_t num_leaves = t8_element_array_get_count (leaf_elements);
@@ -254,7 +255,7 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
             // Check that neighbor index correctly yields neighbor element.
             if (neigh_index < num_local_elements) {
               const t8_element_t *neighbor_from_index
-                = t8_forest_get_element (forest, neigh_index, &neigh_ltreeid_from_index);
+                = t8_forest_get_leaf_element (forest, neigh_index, &neigh_ltreeid_from_index);
               EXPECT_TRUE (scheme->element_is_equal (neigh_class, neighbor_from_index, neighbor));
             }
             // TODO: Check neighbor index if the element is a ghost element
@@ -322,7 +323,7 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
             EXPECT_GE (element_index, 0);
 
             if (element_index < num_local_elements) {
-              const t8_element_t *element_from_index = t8_forest_get_element (forest, element_index, NULL);
+              const t8_element_t *element_from_index = t8_forest_get_leaf_element (forest, element_index, NULL);
               EXPECT_EQ (element_from_index, element)
                 << "Neighbor neighbor element at index " << element_index << " is not original element.";
             }

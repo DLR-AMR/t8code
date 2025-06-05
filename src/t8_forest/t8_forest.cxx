@@ -1707,7 +1707,7 @@ t8_forest_leaf_face_neighbors_iterate (t8_forest_t forest, t8_locidx_t ltreeid, 
   t8_debugf ("Adding new face neighbor (leaf index %i) with dual face %i.\n", tree_leaf_index, face);
   lfn_data->dual_faces.push_back (face);
   // Compute the index of the element
-  const t8_locidx_t num_local_elements = t8_forest_get_local_num_elements (forest);
+  const t8_locidx_t num_local_elements = t8_forest_get_local_num_leaf_elements (forest);
   const t8_locidx_t tree_offset
     = !is_ghost_tree ? t8_forest_get_tree_element_offset (forest, ltreeid)
                      : t8_forest_ghost_get_tree_element_offset (forest, adjusted_tree_id) + num_local_elements;
@@ -1716,10 +1716,10 @@ t8_forest_leaf_face_neighbors_iterate (t8_forest_t forest, t8_locidx_t ltreeid, 
   // Add the pointer to the current element
   const t8_element_t *&pnew_element = lfn_data->neighbors.emplace_back ();
   if (!is_ghost_tree) {
-    pnew_element = t8_forest_get_element_in_tree (forest, ltreeid, tree_leaf_index);
+    pnew_element = t8_forest_get_leaf_element_in_tree (forest, ltreeid, tree_leaf_index);
   }
   else {
-    pnew_element = t8_forest_ghost_get_element (forest, adjusted_tree_id, tree_leaf_index);
+    pnew_element = t8_forest_ghost_get_leaf_element (forest, adjusted_tree_id, tree_leaf_index);
   }
   return 1;
 }
@@ -1868,7 +1868,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
     t8_debugf ("Adding local tree to search.\n");
     if (0 <= local_neighbor_tree) {
       // The neighbor tree is a local tree and hence there may be local neighbor elements.
-      const t8_element_array_t *tree_leaves = t8_forest_tree_get_leaves (forest, local_neighbor_tree);
+      const t8_element_array_t *tree_leaves = t8_forest_tree_get_leaf_elements (forest, local_neighbor_tree);
       if (tree_leaves != nullptr) {
         neighbor_leaf_array *leaf_array = new neighbor_leaf_array (tree_leaves, false);
         leaf_arrays.push_back (leaf_array);
@@ -1886,7 +1886,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
         // be ghost elements.
         // We add the ghost elements of that tree to our search array.
         const t8_element_array_t *ghost_leaves
-          = t8_forest_ghost_get_tree_elements (forest, local_neighbor_ghost_treeid);
+          = t8_forest_ghost_get_tree_leaf_elements (forest, local_neighbor_ghost_treeid);
         if (ghost_leaves != nullptr) {
           neighbor_leaf_array *leaf_array = new neighbor_leaf_array (ghost_leaves, true);
           leaf_arrays.push_back (leaf_array);
@@ -2302,14 +2302,14 @@ for (ineigh = 0; ineigh < num_children_at_face; ineigh++) {
     /* We check whether the element is really the element at this local id */
     {
       t8_element_t *check_element;
-      check_element = t8_forest_ghost_get_element (forest, lghost_treeid, element_indices[ineigh]);
+      check_element = t8_forest_ghost_get_leaf_element (forest, lghost_treeid, element_indices[ineigh]);
       T8_ASSERT (neigh_scheme->t8_element_equal (check_element, neighbor_leaves[ineigh]));
     }
 #endif
     /* Add the element offset of previous ghosts to this index */
     element_indices[ineigh] += t8_forest_ghost_get_tree_element_offset (forest, lghost_treeid);
     /* Add the number of all local elements to this index */
-    element_indices[ineigh] += t8_forest_get_local_num_elements (forest);
+    element_indices[ineigh] += t8_forest_get_local_num_leaf_elements (forest);
   }
 } /* End for loop over neighbor leaves */
 T8_FREE (owners);
@@ -2335,7 +2335,7 @@ t8_locidx_t
 t8_forest_same_level_leaf_face_neighbor_index (t8_forest_t forest, const t8_locidx_t element_index,
                                                const int face_index, const t8_gloidx_t global_treeid, int *dual_face)
 {
-  const t8_locidx_t num_local_elements = t8_forest_get_local_num_elements (forest);
+  const t8_locidx_t num_local_elements = t8_forest_get_local_num_leaf_elements (forest);
 #if T8_ENABLE_DEBUG
   const t8_locidx_t num_ghosts = t8_forest_get_num_ghosts (forest);
   T8_ASSERT (0 <= element_index && element_index < num_local_elements + num_ghosts);
@@ -2348,13 +2348,13 @@ t8_forest_same_level_leaf_face_neighbor_index (t8_forest_t forest, const t8_loci
   if (is_local) {
     local_tree = t8_forest_get_local_id (forest, global_treeid);
     element_index_in_tree = element_index - t8_forest_get_tree_element_offset (forest, local_tree);
-    element = t8_forest_get_element_in_tree (forest, local_tree, element_index_in_tree);
+    element = t8_forest_get_leaf_element_in_tree (forest, local_tree, element_index_in_tree);
   }
   else {
     local_tree = t8_forest_ghost_get_ghost_treeid (forest, global_treeid);
     const t8_locidx_t ghost_offset_in_tree = t8_forest_ghost_get_tree_element_offset (forest, local_tree);
     element_index_in_tree = element_index - num_local_elements - ghost_offset_in_tree;
-    element = t8_forest_ghost_get_element (forest, local_tree, element_index_in_tree);
+    element = t8_forest_ghost_get_leaf_element (forest, local_tree, element_index_in_tree);
     local_tree += t8_forest_get_num_local_trees (forest);
   }
 
