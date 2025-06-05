@@ -68,11 +68,11 @@ TEST_P (class_forest_face_normal, back_and_forth)
   const t8_locidx_t local_num_trees = t8_forest_get_num_local_trees (forest);
   /* Iterate over all elements. */
   for (t8_locidx_t itree = 0; itree < local_num_trees; itree++) {
-    const t8_locidx_t tree_elements = t8_forest_get_tree_num_elements (forest, itree);
+    const t8_locidx_t tree_elements = t8_forest_get_tree_num_leaf_elements (forest, itree);
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
     ASSERT_EQ (eclass, tree_class);
     for (t8_locidx_t ielement = 0; ielement < tree_elements; ielement++) {
-      const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      const t8_element_t *element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       const int num_faces = scheme->element_get_num_faces (tree_class, element);
       for (int iface = 0; iface < num_faces; iface++) {
         /* Compute facenormal */
