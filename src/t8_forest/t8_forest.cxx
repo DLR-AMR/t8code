@@ -1689,30 +1689,6 @@ t8_forest_leaf_face_neighbors_iterate (t8_forest_t forest, t8_locidx_t ltreeid, 
   return 1;
 }
 
-/** Compute whether two elements are ancestor of each other.
- * TODO: Move the function inside the element module */
-static bool
-t8_forest_elements_are_ancestor (const t8_scheme *scheme, t8_eclass_t eclass, const t8_element_t *element_A,
-                                 const t8_element_t *element_B)
-{
-  T8_ASSERT (scheme->element_is_valid (eclass, element_A));
-  T8_ASSERT (scheme->element_is_valid (eclass, element_B));
-
-  t8_element_t *nca;
-  scheme->element_new (eclass, 1, &nca);
-  scheme->element_get_nca (eclass, element_A, element_B, nca);
-
-  const bool nca_is_A = scheme->element_is_equal (eclass, element_A, nca);
-  if (!nca_is_A) {
-    if (!scheme->element_is_equal (eclass, element_B, nca)) {
-      scheme->element_destroy (eclass, 1, &nca);
-      return false;
-    }
-  }
-  scheme->element_destroy (eclass, 1, &nca);
-  return true;
-}
-
 void
 t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf_or_ghost,
                                    t8_element_t **pneighbor_leaves[], int face, int *dual_faces[], int *num_neighbors,
