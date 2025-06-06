@@ -130,8 +130,8 @@ t8_forest_bin_search_upper (const t8_element_array_t *elements, const t8_lineari
      Thus, E is the first element with ID(E) >= element_id . */
   auto elem_iter
     = std::lower_bound (t8_element_array_begin (elements), t8_element_array_end (elements), element_id,
-                        [&element_level, &scheme, &tree_class] (const t8_linearidx_t element_id_,
-                                                                const t8_element_array_iterator::value_type &elem_ptr) {
+                        [&element_level, &scheme, &tree_class] (const t8_element_array_iterator::value_type &elem_ptr,
+                                                                const t8_linearidx_t element_id_) {
                           return (element_id_ > scheme->element_get_linear_id (tree_class, elem_ptr, element_level));
                         });
 
@@ -142,7 +142,7 @@ t8_forest_bin_search_upper (const t8_element_array_t *elements, const t8_lineari
     return -1;
   }
   else {
-    return elem_iter.get_current_index ()
+    return elem_iter.get_current_index ();
   }
 }
 
