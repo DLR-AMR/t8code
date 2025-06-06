@@ -168,8 +168,8 @@ t8_forest_element_is_ancestor (const t8_scheme *scheme, t8_eclass_t eclass, cons
   T8_ASSERT (scheme->element_is_valid (eclass, element_A));
   T8_ASSERT (scheme->element_is_valid (eclass, element_B));
 
-  const int level_A = scheme->element_get_level (element_A);
-  const int level_B = scheme->element_get_level (element_B);
+  const int level_A = scheme->element_get_level (eclass, element_A);
+  const int level_B = scheme->element_get_level (eclass, element_B);
 
   if (level_A > level_B) {
     /* element A is finer than element B and thus cannot be 
@@ -177,8 +177,8 @@ t8_forest_element_is_ancestor (const t8_scheme *scheme, t8_eclass_t eclass, cons
     return false;
   }
 
-  const t8_locidx_t id_A = scheme->element_get_linear_id (element_A, level_A);
-  const t8_locidx_t id_B = scheme->element_get_linear_id (element_B, level_A);
+  const t8_linearidx_t id_A = scheme->element_get_linear_id (eclass, element_A, level_A);
+  const t8_linearidx_t id_B = scheme->element_get_linear_id (eclass, element_B, level_A);
 
   // If both elements have the same linear ID and level_A then A is an ancestor of B.
   return id_A == id_B;
