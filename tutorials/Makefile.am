@@ -10,6 +10,7 @@ bin_PROGRAMS += \
 	tutorials/general/t8_step4_partition_balance_ghost \
 	tutorials/general/t8_step5_element_data \
 	tutorials/general/t8_step5_element_data_c_interface \
+	tutorials/general/t8_step5_element_data_vector_input \
 	tutorials/general/t8_step6_stencil \
 	tutorials/general/t8_step7_interpolation \
 	tutorials/general/t8_tutorial_build_cmesh \
@@ -38,6 +39,10 @@ tutorials_general_t8_step4_partition_balance_ghost_SOURCES = \
 tutorials_general_t8_step5_element_data_SOURCES = \
 	tutorials/general/t8_step3_adapt_forest.cxx \
 	tutorials/general/t8_step5_element_data.cxx \
+	tutorials/general/t8_step5_main.cxx
+tutorials_general_t8_step5_element_data_vector_input_SOURCES = \
+	tutorials/general/t8_step3_adapt_forest.cxx \
+	tutorials/general/t8_step5_element_data_vector_input.cxx \
 	tutorials/general/t8_step5_main.cxx
 tutorials_general_t8_step5_element_data_c_interface_SOURCES = \
 	tutorials/general/t8_step3_adapt_forest.cxx \
