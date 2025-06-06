@@ -37,7 +37,7 @@ T8_EXTERN_C_BEGIN ();
 /** Get the hash of the geometry stored for a tree in a cmesh.
  * \param [in] cmesh   A committed cmesh.
  * \param [in] gtreeid A global tree in \a cmesh.
- * \return             The hash of the tree's geometry or if only one geometry exists, its hash.
+ * \return             The hash of the tree's geometry. If the tree does not have a geometry, returns \ref t8_geometry_empty_hash.
  */
 size_t
 t8_cmesh_get_tree_geom_hash (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);

@@ -192,6 +192,42 @@ t8_forest_get_tree_leaf_element_array (t8_forest_t forest, t8_locidx_t ltreeid);
 t8_element_array_t *
 t8_forest_get_tree_leaf_element_array_mutable (const t8_forest_t forest, t8_locidx_t ltreeid);
 
+/** Search for a linear element id (at forest->maxlevel) in a sorted array of
+ * elements. If the element does not exist, return the largest index i
+ * such that the element at position i has a smaller id than the given one.
+ * If no such i exists, return -1.
+ * \param [in]     elements    An array of elements. Must be sorted according to linear id at maximum level.
+ *                             Must correspond to a valid refinement (i.e. contain no duplicate elements or elements and their descendants).
+ * \param [in]     element_id  The linear id of the element to search for.
+ * \param [in]     element_level The level of the element to search for. Thus, the level at which \a element_id was computed.
+ * \return                     The largest index \a i of an element with linear_id smaller than or equal to \a element_id in \a elements if it exists.
+ *                             -1 if no such element was found in \a elements.
+ */
+t8_locidx_t
+t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_linearidx_t element_id,
+                            const int element_level);
+
+/** \brief Search for a linear element id (at level element_level) in a sorted array of
+ * elements. If the element does not exist, return the smallest index i
+ * such that the element at position i has a larger id than the given one.
+ * If no such i exists, return -1.
+ * \param [in]     elements    An array of elements. Must be sorted according to linear id at maximum level.
+ *                             Must correspond to a valid refinement (i.e. contain no duplicate elements or elements and their descendants).
+ * \param [in]     element_id  The linear id of the element to search for.
+ * \param [in]     element_level The level of the element to search for. Thus, the level at which \a element_id was computed.
+ * \return                     The smallest index \a i of an element with linear_id larger than or equal to \a element_id in \a elements if it exists.
+ *                             -1 if no such element was found in \a elements.
+ */
+t8_locidx_t
+t8_forest_bin_search_upper (const t8_element_array_t *elements, const t8_linearidx_t element_id,
+                            const int element_level);
+
+/** \brief TODO: document
+ */
+t8_locidx_t
+t8_forest_bin_search_first_descendant_ancenstor (const t8_element_array_t *elements, const t8_element_t *element,
+                                                 const t8_element_t **element_found);
+
 /** Find the owner process of a given element, deprecated version.
  * Use t8_forest_element_find_owner instead.
  * \param [in]     forest  The forest.
@@ -310,7 +346,7 @@ t8_forest_element_owners_bounds (t8_forest_t forest, t8_gloidx_t gtreeid, const 
  *                         on output a (better) bound.
  *
  * \note If on input \a lower >= \a upper, then the bounds are not changed by this
- *        algorithm. We interpret \a lower = \a such that the owner is unique and equals \a lower.
+ *        algorithm. We interpret \a lower = \a upper such that the owner is unique and equals \a lower.
  * \note \a forest must be committed before calling this function.
  */
 void
