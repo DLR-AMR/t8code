@@ -1747,9 +1747,6 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
   int same_level_neighbor_dual_face;
   const t8_gloidx_t computed_gneigh_tree = t8_forest_element_face_neighbor (
     forest, ltreeid, leaf_or_ghost, same_level_neighbor, neigh_class, face, &same_level_neighbor_dual_face);
-  const int element_level = scheme->element_get_level (eclass, leaf_or_ghost);
-  const t8_locidx_t same_level_neighbor_index
-    = scheme->element_get_linear_id (neigh_class, same_level_neighbor, element_level);
 
   if (computed_gneigh_tree < 0) {
     // There is no face neighbor across this face
@@ -1845,8 +1842,34 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
     const bool leaf_array_is_ghost = leaf_array->second;
     T8_ASSERT (tree_leaves != NULL);
     // TODO: Use anc/desc search here
+    const t8_element_t *first_descendant;
     const t8_locidx_t first_leaf_index
-      = t8_forest_bin_search_lower (tree_leaves, same_level_neighbor_index, element_level);
+      = t8_forest_bin_search_first_descendant_ancenstor (tree_leaves, same_level_neighbor, &first_descendant);
+    const int neighbor_level = scheme->element_get_level (neigh_class, same_level_neighbor);
+    const int first_desc_level = scheme->element_get_level (neigh_class, first_descendant);
+    /* If the same level neighbor is coarser than the first found leaf, then
+     * we iterate over the faces of the same level neighbor.
+     * Otherwise, there is only one face neighbor, the first_descendant.
+     * We will do the iteration over the first_descendant nevertheless, but it will stop immediately.
+     */
+    const bool neighbor_unique = first_desc_level <= neighbor_level;
+    const t8_element_t *search_this_element = neighbor_unique ? first_descendant : same_level_neighbor;
+    t8_debugf ("[H] Starting face search. neigh level %i, desc level %i\n", neighbor_level, first_desc_level);
+    if (neighbor_unique) {
+      t8_debugf ("[H] Starting search with first desc.");
+      // We need to update the dual face.
+      // TODO: Add function to calculate the dual face upward in the refinement hierarchy.
+      SC_CHECK_ABORT (
+        scheme->check_eclass_scheme_type<t8_default_scheme_hex> (eclass)
+          || scheme->check_eclass_scheme_type<t8_default_scheme_quad> (eclass)
+          || scheme->check_eclass_scheme_type<t8_default_scheme_line> (eclass)
+          || scheme->check_eclass_scheme_type<t8_default_scheme_vertex> (eclass)
+          || scheme->check_eclass_scheme_type<t8_standalone_scheme<T8_ECLASS_QUAD>> (eclass)
+          || scheme->check_eclass_scheme_type<t8_standalone_scheme<T8_ECLASS_HEX>> (eclass)
+          || scheme->check_eclass_scheme_type<t8_standalone_scheme<T8_ECLASS_LINE>> (eclass)
+          || scheme->check_eclass_scheme_type<t8_standalone_scheme<T8_ECLASS_VERTEX>> (eclass),
+        "Face neighbor computation currently only possible for default or standalone vertex/line/quad/hex scheme.");
+    }
     if (first_leaf_index >= 0) {
       // There may be face neighbors in this leaf array.
 
@@ -1866,7 +1889,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
       const t8_locidx_t face_iterate_tree_id
         = leaf_array_is_ghost ? t8_forest_ghost_get_ghost_treeid (forest, computed_gneigh_tree) + num_local_trees
                               : local_neighbor_tree;
-      t8_forest_iterate_faces (forest, face_iterate_tree_id, same_level_neighbor, same_level_neighbor_dual_face,
+      t8_forest_iterate_faces (forest, face_iterate_tree_id, search_this_element, same_level_neighbor_dual_face,
                                tree_leaves, first_leaf_index, t8_forest_leaf_face_neighbors_iterate, &user_data);
       // Output of iterate_faces:
       //  Array of indices in tree_leaves of all the face neighbor elements
