@@ -101,4 +101,49 @@ t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_lineari
   return elem_iter.get_current_index () - 1;
 }
 
+/** \brief Search for a linear element id (at level element_level) in a sorted array of
+ * elements. If the element does not exist, return the smallest index i
+ * such that the element at position i has a larger id than the given one.
+ * If no such i exists, return -1.
+ */
+t8_locidx_t
+t8_forest_bin_search_upper (const t8_element_array_t *elements, const t8_linearidx_t element_id,
+                            const int element_level)
+{
+  const t8_scheme *scheme = t8_element_array_get_scheme (elements);
+  const t8_eclass_t tree_class = t8_element_array_get_tree_class (elements);
+  /* At first, we check whether any element has smaller id than the
+   * given one. */
+  const t8_locidx_t num_elements = t8_element_array_get_count (elements);
+  if (num_elements == 0) {
+    /* This array is empty. */
+    return -1;
+  }
+  const t8_element_t *query = t8_element_array_index_int (elements, num_elements - 1);
+  const t8_linearidx_t query_id = scheme->element_get_linear_id (tree_class, query, element_level);
+  if (query_id < element_id) {
+    /* No element has id larger than the given one. */
+    return -1;
+  }
+
+  /* We search for the first element E in the array, where element_id > ID(E) is false.
+     Thus, E is the first element with ID(E) >= element_id . */
+  auto elem_iter
+    = std::lower_bound (t8_element_array_begin (elements), t8_element_array_end (elements), element_id,
+                        [&element_level, &scheme, &tree_class] (const t8_linearidx_t element_id_,
+                                                                const t8_element_array_iterator::value_type &elem_ptr) {
+                          return (element_id_ > scheme->element_get_linear_id (tree_class, elem_ptr, element_level));
+                        });
+
+  /* In case we do not find an element that is greater than the given element_id, the binary search returns
+   * the end-iterator of the element array. */
+  if (elem_iter == t8_element_array_end (elements)) {
+    // No element was found.
+    return -1;
+  }
+  else {
+    return elem_iter.get_current_index ()
+  }
+}
+
 T8_EXTERN_C_END ();
