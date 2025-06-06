@@ -57,6 +57,14 @@ t8_forest_get_tree_leaf_element_array_mutable (const t8_forest_t forest, t8_loci
   return (t8_element_array_t *) t8_forest_get_tree_leaf_element_array (forest, ltreeid);
 }
 
+/* TODO: does the search fail when element_level is smaller then levels in the array?
+         For example entering the search with the root element or a level 1 element
+         and the array contains much finer elements.
+         Will it still return the largest index, or just any index? 
+ */
+/* TODO: This may be implementable with std::partition_point, which would yield an easier implementation.
+         Need to check.
+ */
 /** \brief Search for a linear element id (at level element_level) in a sorted array of
  * elements. If the element does not exist, return the largest index i
  * such that the element at position i has a smaller id than the given one.
