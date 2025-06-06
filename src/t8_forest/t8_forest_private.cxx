@@ -146,4 +146,42 @@ t8_forest_bin_search_upper (const t8_element_array_t *elements, const t8_lineari
   }
 }
 
+/** Query whether one element is an ancestor of the other.
+ * An element A is ancestor of an element B if A == B or if B can 
+ * be obtained from A via successive refinement.
+ * \param [in] scheme A scheme.
+ * \param [in] eclass An eclass.
+ * \param [in] element_A An element of class \a eclass in scheme \a scheme.
+ * \param [in] element_B An element of class \a eclass in scheme \a scheme.
+ * \return     True if and only if \a element_A is an ancestor of \a element_B.
+*/
+// TODO: Move this function to the scheme class.
+static bool
+t8_forest_element_is_ancestor (const t8_scheme *scheme, t8_eclass_t eclass, const t8_element_t *element_A,
+                               const t8_element_t *element_B)
+{
+  /* A is ancestor of B if and only if it has smaller or equal level and
+    restricted to A's level, B has the same id as A.
+
+       level(A) <= level(B) and ID(A,level(A)) == ID(B,level(B))
+   */
+  T8_ASSERT (scheme->element_is_valid (eclass, element_A));
+  T8_ASSERT (scheme->element_is_valid (eclass, element_B));
+
+  const int level_A = scheme->element_get_level (element_A);
+  const int level_B = scheme->element_get_level (element_B);
+
+  if (level_A > level_B) {
+    /* element A is finer than element B and thus cannot be 
+     * an ancestor of B. */
+    return false;
+  }
+
+  const t8_locidx_t id_A = scheme->element_get_linear_id (element_A, level_A);
+  const t8_locidx_t id_B = scheme->element_get_linear_id (element_B, level_A);
+
+  // If both elements have the same linear ID and level_A then A is an ancestor of B.
+  return id_A == id_B;
+}
+
 T8_EXTERN_C_END ();
