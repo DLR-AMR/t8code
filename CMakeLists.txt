@@ -163,27 +163,30 @@ else()
     mark_as_advanced( FORCE ${_new_sc_vars} )
 endif()
 
-if ( T8CODE_USE_SYSTEM_P4EST )
-    find_package( P4EST REQUIRED PATHS /path/to/system/p4est )
+if (T8CODE_USE_SYSTEM_P4EST)
+    find_package(P4EST REQUIRED PATHS /path/to/system/p4est)
 else()
-    set( P4EST_BUILD_EXAMPLES ${T8CODE_BUILD_TPL_EXAMPLES} )
-    set( P4EST_BUILD_TESTING ${T8CODE_BUILD_TPL_TESTS} )
-    
-    # Capture the list of variables before adding the subdirectory to mark the added ones as advanced.
-    get_cmake_property( _vars_before_p4est VARIABLES )
-    add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/p4est )
-    # Capture the list of variables after adding the subdirectory
-    get_cmake_property( _vars_after_p4est VARIABLES )
-    # Compute the difference (new variables added by the subdirectory)
-    set( _new_p4est_vars )
-    foreach( _var IN LISTS _vars_after_p4est )
-        if( NOT _var IN_LIST _vars_before_p4est )
-            list( APPEND _new_p4est_vars ${_var} )
-        endif()
-    endforeach()
-    
+    include(FetchContent)
+    FetchContent_Declare(
+        p4est
+        GIT_REPOSITORY https://github.com/cburstedde/p4est.git
+        GIT_TAG master
+        GIT_SUBMODULES ""  
+        GIT_SHALLOW FALSE
+    )
+    FetchContent_GetProperties(p4est)
+
+    if(NOT p4est_POPULATED)
+        FetchContent_Populate(p4est)
+        add_subdirectory(${p4est_SOURCE_DIR} ${p4est_BINARY_DIR})
+    endif()
+
+    set(P4EST_BUILD_EXAMPLES ${T8CODE_BUILD_TPL_EXAMPLES})
+    set(P4EST_BUILD_TESTING ${T8CODE_BUILD_TPL_TESTS})
+
     # Mark the new variables as advanced
-    mark_as_advanced( FORCE ${_new_p4est_vars} )
+    mark_as_advanced(FORCE P4EST_BUILD_EXAMPLES P4EST_BUILD_TESTING)
+
 endif()
 
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/src )
