@@ -1901,7 +1901,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
 
       /* There may occur situations where a neighbor exists but the search returns an element
        * that is not an ancestor of either first_face_leaf nor last_face_leaf. 
-       * This might happen when computer face neighbors of ghosts. Consider the following situation
+       * This might happen when computing face neighbors of ghosts. Consider the following situation
        * 
        *   __ __
        *  |  |  |
@@ -1909,7 +1909,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
        *  |G |_|     p_0   The bottom elements belong to p_0
        *  |__|
        * 
-       *  If we compute the neighbor of ghost element G across the right face (face number 1) 
+       *  If p_1 computes the neighbor of ghost element G across the right face (face number 1) 
        *  we should get the level 2 element in the bottom right.
        *  However, the search for the first face desc will return G, since the element array does not
        *  contain any elements that are descendants of the first face desc and have a smaller or equal linear
@@ -1921,9 +1921,11 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
        *     - if not ancestor of nca (including not found)
        *       - add 1 to index (use 0 if element was not found)
        *     - if not ancestor -> not found
-       *   - if one is found then both must have been found
-       *   - build nca 
-       *   - iterate faces
+       *   - If for both no anc/desc is found, then there are no neighbors.
+       *   - If only for one an anc/desc is found, continue the face iteration with the found element.
+       *   - If for both an anc/desc is found, then:
+       *     - build nca 
+       *     - iterate faces (nca)
        * */
 
       if (t8_forest_elements_are_ancestor (scheme, neigh_class, same_level_neighbor, nca_of_face_desc)) {
