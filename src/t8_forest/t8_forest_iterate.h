@@ -152,6 +152,10 @@ t8_forest_split_array (const t8_element_t *element, const t8_element_array_t *le
  * - (index + 1) */
 /* Top-down iteration and callback is called on each intermediate level.
  * If it returns false, the current element is not traversed further */
+/**
+  \param [in] tree_lindex_of_first_leaf Index of the first leaf of \a element in \a leaf_elements.
+                                        The corresponding leaf does not necessarily lie on the face of \a element.
+*/
 void
 t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int face,
                          const t8_element_array_t *const leaf_elements, t8_locidx_t tree_lindex_of_first_leaf,
