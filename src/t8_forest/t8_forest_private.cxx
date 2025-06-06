@@ -184,4 +184,78 @@ t8_forest_element_is_ancestor (const t8_scheme *scheme, t8_eclass_t eclass, cons
   return id_A == id_B;
 }
 
+/** \brief Search for a linear element id (at level element_level) in a sorted array of
+ * elements. If the element does not exist, return the first index i such that
+ * the element at position i is an ancestor or descendant of the element corresponding to the element id.
+ * If no such i exists, return -1.
+ */
+t8_locidx_t
+t8_forest_bin_search_first_descendant_ancenstor (const t8_element_array_t *elements, const t8_element_t *element,
+                                                 const t8_element_t *element_found)
+{
+  /* This search works as follows:
+  
+  Let E denote the element with element_id at level L.
+  If an ancestor or descendant of E exists in the array then they are either:
+    A: The search result of t8_forest_bin_search_lower
+    B: The search result of t8_forest_bin_search_upper
+
+  Let ID(element,level) denote the linear id of an element at a given level.
+
+  Case A: There is an element F in the array that is E itself or an ancestor of E (i.e. level(F) <= level(E)).
+          In that case
+          ID(E,L) >= ID(F,L) and there can be no element with id in between (since it would also be an ancestor of E).
+          Then F will be the search result of t8_forest_bin_search_lower
+  Case B: There is an element F in the array that is a descendant of E and it has the smallest index in the array of all descendants.
+          Then
+          ID(E,L) = ID(F,L)
+          and also
+          ID(E,L) = ID(D,L) for all other descendants of E.
+          But since F is the first it will be the search result of t8_forest_bin_search_upper.
+  Case C: There is no descendant or ancestor of E in the array. In both cases t8_forest_bin_search_lower and
+          t8_forest_bin_search_upper may find elements but the results will not be ancestors/descendants of E.
+ 
+   From this, we determine the following algorithm:
+
+    1. Query t8_forest_bin_search_lower with N.
+    2. If no element was found, or the resulting element is not an ancestor of N.
+    3. Query t8_forest_bin_search_upper with N.
+    3. If an element was found and it is a descendant of N, we found our element.
+    4. If not, no element was found.
+  */
+
+  /* Compute the element's level and linear id. In order to do so,
+   * we first need the scheme and eclass. */
+  const t8_scheme *scheme = t8_element_array_get_scheme (elements);
+  const t8_eclass eclass = t8_element_array_get_tree_class (elements);
+  const int element_level = scheme->element_get_level (eclass, element);
+  const t8_linearidx_t element_id = scheme->element_get_linear_id (eclass, element, element_level);
+
+  const t8_locidx_t search_pos_lower = t8_forest_bin_search_lower (elements, element_id, element_level);
+
+  /* Get the element at the current position. */
+  if (search_pos_lower >= 0) {
+    element_found = t8_element_array_index_locidx (elements, search_pos_lower);
+    const bool is_ancestor = t8_forest_element_is_ancestor (scheme, eclass, element_found, element);
+    if (is_ancestor) {
+      /* The element at this position is an ancestor or descendant. */
+      return search_pos_lower;
+    }
+  }
+  /* t8_forest_bin_search_lower did not return a result or an ancestor. */
+
+  const t8_locidx_t search_pos_upper = t8_forest_bin_search_upper (elements, element_id, element_level);
+  if (search_pos_upper >= 0) {
+    element_found = t8_element_array_index_locidx (elements, search_pos_upper);
+    const bool is_descendant = t8_forest_element_is_ancestor (scheme, eclass, element, element_found);
+    if (is_descendant) {
+      /* The element at this position is an ancestor or descendant. */
+      return search_pos_upper;
+    }
+  }
+  // No ancestor or descendant was found
+  element_found = nullptr;
+  return -1;
+}
+
 T8_EXTERN_C_END ();
