@@ -1647,7 +1647,7 @@ struct t8_lfn_user_data
 
 static int
 t8_forest_leaf_face_neighbors_iterate (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int face,
-                                       int is_leaf, const t8_element_array_t *leaf_elements,
+                                       int is_leaf, const t8_element_array_t *const leaf_elements,
                                        t8_locidx_t tree_leaf_index, void *user_data)
 {
   // Output of iterate_faces:
