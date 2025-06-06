@@ -1721,14 +1721,15 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
 {
   /* We compute all face neighbor leaf elements of E via the following strategy:
    * - Compute the same level face neighbor N
-   * - Compute the first and last face descendants FD, LD, of N
    * - The neighbor tree could be a local tree or ghost (or both),
    *   for each variant get the leaf array of the neighbor tree and search in it:
-   *   - Search for FD and LD in the leaf array and get indices of the nearest matching leaf elements.
-   *   - For the matching leaf elements, compute their nca (nearest common ancestor) - that is the finest element that contains both of them.
-   *     This nca will contain all face neighbors (in the local tree or ghost tree).
-   *   - Use the nca as a starting point for a recursive search across its corresponding face.
-   *     Each element found on the face is a matching leaf face neighbor of E.
+   *   - Search for the first leaf element L overlapping with N.
+   *     If it exists, it is either an ancestor or descendant of N (or N itself which is included in both definitions).
+   *     If it does not exist, there are not leaf face neighbors in this tree.
+   *   - If L is an ancestor of N (i.e. Level(L) <= Level(N)) then L is the only face neighbor.
+   *   - Otherwise (Level(L) > Level (N)) we use a recursive face search across N's neighbor face,
+   *     adding all leaf elements on the face to the face neighbors.
+   *     This search will require L (more precise its position in the tree leaf array) as input.
    **/
 
   T8_ASSERT (t8_forest_is_committed (forest));
