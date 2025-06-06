@@ -226,7 +226,7 @@ t8_forest_bin_search_upper (const t8_element_array_t *elements, const t8_lineari
  */
 t8_locidx_t
 t8_forest_bin_search_first_descendant_ancenstor (const t8_element_array_t *elements, const t8_element_t *element,
-                                                 const t8_element_t *element_found);
+                                                 const t8_element_t **element_found);
 
 /** Find the owner process of a given element, deprecated version.
  * Use t8_forest_element_find_owner instead.
