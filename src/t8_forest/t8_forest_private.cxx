@@ -191,7 +191,7 @@ t8_forest_element_is_ancestor (const t8_scheme *scheme, t8_eclass_t eclass, cons
  */
 t8_locidx_t
 t8_forest_bin_search_first_descendant_ancenstor (const t8_element_array_t *elements, const t8_element_t *element,
-                                                 const t8_element_t *element_found)
+                                                 const t8_element_t **element_found)
 {
   /* This search works as follows:
   
@@ -235,8 +235,8 @@ t8_forest_bin_search_first_descendant_ancenstor (const t8_element_array_t *eleme
 
   /* Get the element at the current position. */
   if (search_pos_lower >= 0) {
-    element_found = t8_element_array_index_locidx (elements, search_pos_lower);
-    const bool is_ancestor = t8_forest_element_is_ancestor (scheme, eclass, element_found, element);
+    *element_found = t8_element_array_index_locidx (elements, search_pos_lower);
+    const bool is_ancestor = t8_forest_element_is_ancestor (scheme, eclass, *element_found, element);
     if (is_ancestor) {
       /* The element at this position is an ancestor or descendant. */
       return search_pos_lower;
@@ -246,15 +246,15 @@ t8_forest_bin_search_first_descendant_ancenstor (const t8_element_array_t *eleme
 
   const t8_locidx_t search_pos_upper = t8_forest_bin_search_upper (elements, element_id, element_level);
   if (search_pos_upper >= 0) {
-    element_found = t8_element_array_index_locidx (elements, search_pos_upper);
-    const bool is_descendant = t8_forest_element_is_ancestor (scheme, eclass, element, element_found);
+    *element_found = t8_element_array_index_locidx (elements, search_pos_upper);
+    const bool is_descendant = t8_forest_element_is_ancestor (scheme, eclass, element, *element_found);
     if (is_descendant) {
       /* The element at this position is an ancestor or descendant. */
       return search_pos_upper;
     }
   }
   // No ancestor or descendant was found
-  element_found = nullptr;
+  *element_found = nullptr;
   return -1;
 }
 
