@@ -2106,20 +2106,24 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
 
     /* If the process before us becomes empty we send this information to all non-empty processes 
      * of lower rank until another non-empty rank comes.  */
-    for (t8_gloidx_t isend_first = send_first - 1; isend_first >= 0; --isend_first) {
+    t8_gloidx_t low = 0;
+    t8_gloidx_t high = send_first - 1;
+
+    while (low <= high) {
+      t8_gloidx_t mid = low + (high - low) / 2;
       const t8_gloidx_t first_element_of_process = t8_cmesh_get_first_element_of_process (
-        (uint32_t) isend_first, (uint32_t) cmesh->mpisize, (uint64_t) global_num_elements);
+        (uint32_t) mid, (uint32_t) cmesh->mpisize, (uint64_t) global_num_elements);
       const t8_gloidx_t last_element_of_process
-        = t8_cmesh_get_first_element_of_process ((uint32_t) isend_first + 1, (uint32_t) cmesh->mpisize,
+        = t8_cmesh_get_first_element_of_process ((uint32_t) mid + 1, (uint32_t) cmesh->mpisize,
                                                  (uint64_t) global_num_elements)
           - 1;
-
-      if (last_element_of_process < first_element_of_process) {
+      if (last_element_of_process < first_element_of_process && first_element_of_process == first_element_tree[0]) {
         /* This process is empty. */
-        send_first = isend_first;
+        send_first = mid;
+        high = mid - 1;
       }
       else {
-        break;
+        low = mid + 1;
       }
     }
 
