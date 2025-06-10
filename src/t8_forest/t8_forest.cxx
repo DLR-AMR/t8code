@@ -1873,15 +1873,32 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
     if (first_leaf_index >= 0) {
       // There may be face neighbors in this leaf array.
 
-#if 0
-        // TODO: We can optimize the runtime by restricting the search array to the
-        //       descendants of the same level neighbor.
-        t8_element_array_t face_leaves;
-        const size_t face_leaf_count = last_desc_index - first_desc_index + 1;
-        T8_ASSERT (face_leaf_count > 0);
-        t8_debugf ("Starting search with element indices %i to %i (including).\n", first_desc_index, last_desc_index);
-        t8_element_array_init_view (&face_leaves, tree_leaves, first_desc_index, face_leaf_count);
-#endif
+      // We need to restrict the array such that it contains only elements inside the search element.
+      // Thus, we create a new view containing all elements starting at first_leaf_index.
+      t8_element_array_t reduced_leaves;
+      if (neighbor_unique) {
+        t8_debugf ("Starting search with element indices %i to %i (including).\n", first_leaf_index, first_leaf_index);
+        t8_element_array_init_view (&reduced_leaves, tree_leaves, first_leaf_index, 1);
+      }
+      else {
+        /* We need to compute the first element that is not longer contain in the same_level_neighbor.
+           * To do so, we compute the first ancestor of the successor of the same_level_neighbor */
+        t8_element_t *successor;
+        scheme->element_new (neigh_class, 1, &successor);
+        scheme->element_construct_successor (neigh_class, same_level_neighbor, successor);
+        const t8_element_t *first_succ_desc;
+        const t8_locidx_t first_succ_desc_index
+          = t8_forest_bin_search_first_descendant_ancenstor (tree_leaves, successor, &first_succ_desc);
+        scheme->element_destroy (neigh_class, 1, &successor);
+        const t8_locidx_t leaf_count = t8_element_array_get_count (tree_leaves);
+        const t8_locidx_t last_search_element_index
+          = first_succ_desc_index < 0 ? leaf_count - 1 : first_succ_desc_index;
+        const size_t reduced_leaf_count = last_search_element_index - first_leaf_index;
+        T8_ASSERT (reduced_leaf_count > 0);
+        t8_debugf ("Starting search with element indices %i to %i (including).\n", first_leaf_index,
+                   last_search_element_index);
+        t8_element_array_init_view (&reduced_leaves, tree_leaves, first_leaf_index, reduced_leaf_count);
+      }
       // Iterate over all leaves at the face and collect them as neighbors.
       const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
       // Compute the local or ghost tree id depending on whether this leaf array corresponds to a local
@@ -1890,7 +1907,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
         = leaf_array_is_ghost ? t8_forest_ghost_get_ghost_treeid (forest, computed_gneigh_tree) + num_local_trees
                               : local_neighbor_tree;
       t8_forest_iterate_faces (forest, face_iterate_tree_id, search_this_element, same_level_neighbor_dual_face,
-                               tree_leaves, first_leaf_index, t8_forest_leaf_face_neighbors_iterate, &user_data);
+                               &reduced_leaves, first_leaf_index, t8_forest_leaf_face_neighbors_iterate, &user_data);
       // Output of iterate_faces:
       //  Array of indices in tree_leaves of all the face neighbor elements
       //  Assign pneighbor_leaves
