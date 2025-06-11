@@ -1983,15 +1983,14 @@ static void
 recv_message (const bool start, t8_gloidx_t *first_last_local_tree, t8_gloidx_t *child_in_tree_begin_end,
               int8_t *first_tree_shared, t8_gloidx_t *child_in_tree_begin_temp,
               [[maybe_unused]] const t8_gloidx_t global_num_elements, [[maybe_unused]] const t8_cmesh_t cmesh,
-              sc_MPI_Comm comm)
+              const int recv_from, sc_MPI_Comm comm)
 {
   const int num_entries = 2;
   std::array<t8_gloidx_t, num_entries> message;
   const t8_MPI_tag_t tag = start ? T8_MPI_CMESH_UNIFORM_BOUNDS_START : T8_MPI_CMESH_UNIFORM_BOUNDS_END;
   const int mpiret
-    = sc_MPI_Recv (message.data (), num_entries, T8_MPI_GLOIDX, sc_MPI_ANY_SOURCE, tag, comm, sc_MPI_STATUS_IGNORE);
+    = sc_MPI_Recv (message.data (), num_entries, T8_MPI_GLOIDX, recv_from, tag, comm, sc_MPI_STATUS_IGNORE);
   SC_CHECK_MPI (mpiret);
-
   /* Copy the received data to output parameters */
   *first_last_local_tree = message[0];
   T8_ASSERT (*first_last_local_tree == -1
@@ -2108,9 +2107,8 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
      * of lower rank until another non-empty rank comes.  */
     t8_gloidx_t low = 0;
     t8_gloidx_t high = send_first - 1;
-
     while (low <= high) {
-      t8_gloidx_t mid = low + (high - low) / 2;
+      const t8_gloidx_t mid = low + (high - low) / 2;
       const t8_gloidx_t first_element_of_process = t8_cmesh_get_first_element_of_process (
         (uint32_t) mid, (uint32_t) cmesh->mpisize, (uint64_t) global_num_elements);
       const t8_gloidx_t last_element_of_process
@@ -2382,8 +2380,32 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
   }
   /* Post the receives. */
   if (expect_start_message) {
+    int low = 0;
+    int high = cmesh->mpisize - 1;
+    int recv_from = -1;
+
+    while (low <= high) {
+      int mid = low + (high - low) / 2;
+      const t8_gloidx_t first_elem_mid = t8_shmem_array_get_gloidx (offset_array, mid);
+      const t8_gloidx_t last_elem_mid = t8_shmem_array_get_gloidx (offset_array, mid + 1) - 1;
+
+      if (first_elem_mid <= first_element && last_elem_mid >= first_element) {
+        recv_from = mid;
+        break;
+      }
+      else if (first_element < first_elem_mid) {
+        high = mid - 1;
+      }
+      else {
+        low = mid + 1;
+      }
+    }
+
+    T8_ASSERT (recv_from != -1);
+    /* If the loop ends without finding an exact match, set recv_from to the closest lower process. */
+    T8_ASSERT (recv_from != -1);
     recv_message (true, first_local_tree, child_in_tree_begin, first_tree_shared, &child_in_tree_begin_temp,
-                  global_num_elements, cmesh, comm);
+                  global_num_elements, cmesh, recv_from, comm);
 #if T8_ENABLE_DEBUG
     num_message_recv++;
     num_received_start_messages++;
@@ -2395,7 +2417,30 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
     }
   } /* End receiving start message */
   if (expect_end_message) {
-    recv_message (false, last_local_tree, child_in_tree_end, NULL, NULL, global_num_elements, cmesh, comm);
+    int low = 0;
+    int high = cmesh->mpisize - 1;
+    int recv_from = -1;
+
+    while (low <= high) {
+      int mid = low + (high - low) / 2;
+      const t8_gloidx_t first_element_mid = t8_shmem_array_get_gloidx (offset_array, mid);
+      const t8_gloidx_t last_element_mid = t8_shmem_array_get_gloidx (offset_array, mid + 1) - 1;
+
+      if (first_element_mid <= last_element && last_element_mid >= last_element) {
+        recv_from = mid;
+        break;
+      }
+      else if (last_element < first_element_mid) {
+        high = mid - 1;
+      }
+      else {
+        low = mid + 1;
+      }
+    }
+
+    T8_ASSERT (recv_from != -1);
+    T8_ASSERT (recv_from != -1);
+    recv_message (false, last_local_tree, child_in_tree_end, NULL, NULL, global_num_elements, cmesh, recv_from, comm);
 #if T8_ENABLE_DEBUG
     num_received_end_messages++;
     num_message_recv++;
