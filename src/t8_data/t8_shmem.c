@@ -542,9 +542,11 @@ t8_shmem_array_binary_search (t8_shmem_array_t array, const t8_gloidx_t value, c
       return mid;
     }
     else if (eval < 0) {
+      /* mid points to a value that is less than \a value */
       high = mid - 1;
     }
     else {
+      /* mid points to a value that is greater than \a value */
       low = mid + 1;
     }
   }
