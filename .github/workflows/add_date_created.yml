@@ -92,7 +92,8 @@ jobs:
             
                 date_field_id=$(echo $project_fields_and_issues | jq -r '.data.node.fields.nodes[] | select(.name == "Date_Created") | .id')
                 echo "date_field_id is $date_field_id"
-                date_message="updateProjectV2ItemFieldValue3: updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$date_field_id'\", value: {date: \"'$CREATION_DATE'\"}}) {projectV2Item {id}}"
+                date_message="updateProjectV2ItemFieldValue: updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$date_field_id'\", value: {date: \"'$CREATION_DATE'\"}}) {projectV2Item {id}}"
+
           
                 # Construct the query to move the issue to the specified column.
                 # The query is a mutation that updates the status, priority, and workload fields of the issue.
