@@ -262,6 +262,16 @@ t8_element_array_get_array (const t8_element_array_t *element_array);
 sc_array_t *
 t8_element_array_get_array_mutable (t8_element_array_t *element_array);
 
+/** Search for an element in an array.
+ * \param [in] element_array Array structure.
+ * \param [in] element Element to be found in \a element_array. 
+ *                     The element must have been created with the scheme used in \a element_array.
+ * \return If \a element was found in \a element_array then the position in the array is returned.
+ *  If the element is not found, -1 is returned.
+*/
+t8_locidx_t
+t8_element_array_find (const t8_element_array_t *element_array, const t8_element_t *element);
+
 /** Sets the array count to zero and frees all elements.
  * \param [in,out]  element_array  Array structure to be reset.
  * \note Calling t8_element_array_init, then any array operations,

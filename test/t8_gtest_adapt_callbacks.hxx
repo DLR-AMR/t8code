@@ -20,30 +20,26 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <gtest/gtest.h>
-#include <t8.h>
+/** \file t8_gtest_adapt_callbacks.hxx
+* Provide forest adapt callback functions that we use in our tests.
+*/
 
+#ifndef T8_GTEST_ADAPT_CALLBACKS
+#define T8_GTEST_ADAPT_CALLBACKS
+
+#include <src/t8_forest/t8_forest_general.h>
+#include <t8_schemes/t8_scheme.hxx>
+
+/* Adapt a forest such that always the first child of a
+ * family is refined and no other elements. This results in a highly
+ * imbalanced forest.
+ * 
+ * This adapt callbacks requires an integer as forest user data.
+ * This integer is the maximum refinement level.
+ */
 int
-main (int argc, char **argv)
-{
+t8_test_adapt_first_child (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
+                           const t8_eclass_t eclass, t8_locidx_t lelement_id, const t8_scheme *scheme,
+                           const int is_family, const int num_elements, t8_element_t *elements[]);
 
-  int mpiret;
-  sc_MPI_Comm mpic;
-
-  mpiret = sc_MPI_Init (&argc, &argv);
-  SC_CHECK_MPI (mpiret);
-
-  mpic = sc_MPI_COMM_WORLD;
-  sc_init (mpic, 1, 1, NULL, SC_LP_PRODUCTION);
-  //t8_init (SC_LP_PRODUCTION);
-  t8_init (SC_LP_DEBUG);
-
-  ::testing::InitGoogleTest (&argc, argv);
-
-  int retval = RUN_ALL_TESTS ();
-
-  sc_finalize ();
-  mpiret = sc_MPI_Finalize ();
-  SC_CHECK_MPI (mpiret);
-  return retval;
-}
+#endif /* T8_GTEST_ADAPT_CALLBACKS */

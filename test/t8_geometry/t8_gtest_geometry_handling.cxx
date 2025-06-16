@@ -169,3 +169,18 @@ TEST (test_geometry, cmesh_geometry_unique)
   /* clean-up */
   t8_cmesh_destroy (&cmesh);
 }
+
+TEST (test_geometry, cmesh_no_geometry)
+{
+  /* Build a simple 1 tree cmesh with no geometry. */
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
+  t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
+
+  const t8_geometry_hash_t hash = t8_cmesh_get_tree_geom_hash (cmesh, 0);
+  EXPECT_TRUE (t8_geometry_hash_is_null (hash));
+  const t8_geometry_c *should_be_null = t8_cmesh_get_tree_geometry (cmesh, 0);
+  EXPECT_EQ (should_be_null, nullptr);
+  t8_cmesh_destroy (&cmesh);
+}
