@@ -265,6 +265,7 @@ t8_errorf (const char *fmt, ...)
 
 /**
  * Set a custom logging function to be used by t8code.
+ * When setting a custom logging function, the t8code internal logging function will be ignored.
  * \param [in] log_fcn      A function pointer to a logging function
  */
 void
