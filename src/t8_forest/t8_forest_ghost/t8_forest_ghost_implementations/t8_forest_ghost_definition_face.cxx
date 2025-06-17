@@ -398,8 +398,8 @@ int
 t8_forest_ghost_definition_face_get_version (const t8_forest_ghost_definition_c *ghost_definition)
 {
   T8_ASSERT (ghost_definition != NULL);
-  T8_ASSERT (ghost_definition->t8_ghost_get_type () == T8_GHOST_FACES);
-  t8_forest_ghost_definition_face *ghost_definition_passed = (t8_forest_ghost_definition_face *) ghost_definition;
+  T8_ASSERT (ghost_definition->ghost_get_type () == T8_GHOST_FACES);
+  const t8_forest_ghost_definition_face *ghost_definition_passed = (t8_forest_ghost_definition_face *) ghost_definition;
 
   return ghost_definition_passed->get_version ();
 }
