@@ -34,7 +34,7 @@ t8_ghost_type_t
 t8_forest_ghost_definition_get_type (const t8_forest_ghost_definition_c *ghost_definition)
 {
   T8_ASSERT (ghost_definition != NULL);
-  return ghost_definition->t8_ghost_get_type ();
+  return ghost_definition->ghost_get_type ();
 }
 
 void

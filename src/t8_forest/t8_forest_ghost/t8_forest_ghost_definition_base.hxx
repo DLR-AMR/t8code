@@ -73,7 +73,7 @@ struct t8_forest_ghost_definition
    * \return the type
    */
   inline t8_ghost_type_t
-  t8_ghost_get_type () const
+  ghost_get_type () const
   {
     return ghost_type;
   }

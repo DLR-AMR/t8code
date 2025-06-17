@@ -31,7 +31,7 @@ bool
 t8_forest_ghost_definition_w_search::do_ghost (t8_forest_t forest)
 {
 
-  if (t8_ghost_get_type () == T8_GHOST_NONE) {
+  if (ghost_get_type () == T8_GHOST_NONE) {
     t8_debugf ("WARNING: Trying to construct ghosts with ghost_type NONE. "
                "Ghost layer is not constructed.\n");
     return T8_SUBROUTINE_FAILURE;
