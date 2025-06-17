@@ -366,7 +366,8 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int gh
 
 t8_forest_ghost_definition_face::t8_forest_ghost_definition_face (const int version)
   : t8_forest_ghost_definition_w_search (T8_GHOST_FACES, t8_forest_ghost_search_boundary,
-                                         new t8_forest_ghost_definition_face_data)
+                                         new t8_forest_ghost_definition_face_data),
+    version (version)
 {
   T8_ASSERT (1 <= version && version <= 3);
 }
