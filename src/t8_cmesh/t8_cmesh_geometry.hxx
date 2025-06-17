@@ -20,20 +20,29 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_vtk_reader.cxx
-* Implementation of a Reader for vtk/vtu files using the vtk-library.
-* The functions can only be used when t8code is linked with the vtk-library.
-*/
+/** \file t8_cmesh_geometry.hxx
+ * Internal functions that we need for the cmesh geometry.
+ * TODO: document this file
+ */
 
-#include <t8_cmesh_vtk_reader.hxx>
+#ifndef T8_CMESH_GEOMETRY_H
+#define T8_CMESH_GEOMETRY_H
+
+#include <t8.h>
+#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_geometry/t8_geometry_hash.hxx>
 
 T8_EXTERN_C_BEGIN ();
 
-t8_cmesh_t
-t8_cmesh_vtk_reader (const char *filename, const int partition, const int main_proc, sc_MPI_Comm comm,
-                     const vtk_file_type_t vtk_file_type)
-{
-  return t8_vtk_reader_cmesh (filename, partition, main_proc, comm, vtk_file_type);
-}
+/** Get the hash of the geometry stored for a tree in a cmesh.
+ * \param [in] cmesh   A committed cmesh.
+ * \param [in] gtreeid A global tree in \a cmesh.
+ * \return             The hash of the tree's geometry. If the tree does not have a geometry, returns \ref t8_geometry_empty_hash.
+ */
+t8_geometry_hash
+t8_cmesh_get_tree_geom_hash (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 
 T8_EXTERN_C_END ();
+
+#endif /* !T8_CMESH_GEOMETRY_H */
