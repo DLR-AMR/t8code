@@ -177,23 +177,38 @@ t8_forest_balance (t8_forest_t forest, int repartition)
   /* if the set_from forest of the current forest has no ghost layer computed,
    * compute a ghost layer for the set_from forest */
   if (forest->set_from->ghosts == NULL) {
-    /* If the forest does not yet have a ghost_definition */
-    t8_productionf ("ghosts == NULL\n");
+    /* If the forest does not yet have a ghost_definition or it is not supported */
+    t8_forest_ghost_definition_c *temp_ghost_definition;
     if (forest->set_from->ghost_definition == NULL) {
-
-      t8_productionf ("create ghost definition\n");
-      /* create a ghost_definition of type face with top-down-search */
-      forest->set_from->ghost_definition = new t8_forest_ghost_definition_face (3);
+      t8_debugf ("Forest has ghosts but no ghost definition for balance.\n");
+      create_ghost_definition = 1;
+    }
+    else if (forest->set_from->ghost_definition->ghost_get_type () != T8_GHOST_FACES) {
+      t8_debugf ("Forest ghost definition of type %s not yet supported for balance.\n",
+                 t8_ghost_type_to_string[forest->set_from->ghost_definition->ghost_get_type ()]);
       create_ghost_definition = 1;
     }
     else {
-      t8_productionf ("type: %s\n", t8_ghost_type_to_string[forest->set_from->ghost_definition->t8_ghost_get_type ()]);
+      t8_forest_ghost_definition_face *ghost_definition
+        = (t8_forest_ghost_definition_face *) forest->set_from->ghost_definition;
+      if (ghost_definition->get_version () != 3) {
+        t8_debugf ("Forest ghost definition has an unsupported version for balance.\n");
+        create_ghost_definition = 1;
+      }
+    }
+    if (create_ghost_definition) {
+      t8_debugf ("Create a temporary face ghost definition of version 3.\n");
+      /* create a ghost_definition of type face with top-down-search */
+      temp_ghost_definition = forest->set_from->ghost_definition;
+      forest->set_from->ghost_definition = new t8_forest_ghost_definition_face (3);
     }
     /* compute ghost layer for set_from forest */
     t8_forest_ghost_create_topdown (forest->set_from);
-    if (create_ghost_definition) { /* if a ghost_definition has been created, it will be deleted here */
-      t8_forest_ghost_definition_unref (&(forest->set_from->ghost_definition));
-      forest->set_from->ghost_definition = NULL;
+    if (create_ghost_definition) {
+      /* if a ghost_definition has been created, it will be deleted here */
+      delete forest->set_from->ghost_definition;
+      forest->set_from->ghost_definition = temp_ghost_definition;
+      t8_debugf ("Deleted temporary face ghost definition.\n");
     }
   }
 
