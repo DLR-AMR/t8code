@@ -18,7 +18,6 @@ T8_ARG_ENABLE([vtk_version_number],
 T8_ARG_ENABLE([vtk],
   [vtk library (optionally use --enable-vtk=<VTK_LIBS>)],
   [VTK])
-
   
   if test "x$T8_ENABLE_VTK" != xno ; then
     if test "x$T8_ENABLE_VTK_VERSION_MANUALLY_PROVIDED" != xno ; then

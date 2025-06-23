@@ -96,7 +96,7 @@ t8_forest_ghost_get_tree_element_offset (const t8_forest_t forest, const t8_loci
 
 /* Given an index in the ghost_tree array, return this tree's number of elements */
 t8_locidx_t
-t8_forest_ghost_tree_num_elements (t8_forest_t forest, t8_locidx_t lghost_tree)
+t8_forest_ghost_tree_num_leaf_elements (t8_forest_t forest, t8_locidx_t lghost_tree)
 {
   t8_ghost_tree_t *ghost_tree;
 
@@ -107,7 +107,7 @@ t8_forest_ghost_tree_num_elements (t8_forest_t forest, t8_locidx_t lghost_tree)
 }
 
 t8_element_array_t *
-t8_forest_ghost_get_tree_elements (const t8_forest_t forest, const t8_locidx_t lghost_tree)
+t8_forest_ghost_get_tree_leaf_elements (const t8_forest_t forest, const t8_locidx_t lghost_tree)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (forest->ghosts != NULL);
@@ -160,14 +160,14 @@ t8_forest_ghost_get_global_treeid (const t8_forest_t forest, const t8_locidx_t l
 /* Given an index into the ghost_trees array and for that tree an element index,
  * return the corresponding element. */
 t8_element_t *
-t8_forest_ghost_get_element (t8_forest_t forest, t8_locidx_t lghost_tree, t8_locidx_t lelement)
+t8_forest_ghost_get_leaf_element (t8_forest_t forest, t8_locidx_t lghost_tree, t8_locidx_t lelement)
 {
   t8_ghost_tree_t *ghost_tree;
 
   T8_ASSERT (t8_forest_is_committed (forest));
 
   ghost_tree = t8_forest_ghost_get_tree (forest, lghost_tree);
-  T8_ASSERT (0 <= lelement && lelement < t8_forest_ghost_tree_num_elements (forest, lghost_tree));
+  T8_ASSERT (0 <= lelement && lelement < t8_forest_ghost_tree_num_leaf_elements (forest, lghost_tree));
   /* TODO: In future, make return type const (and offer additional mutable version) and call t8_element_array_index_locidx (the const version). */
   return t8_element_array_index_locidx_mutable (&ghost_tree->elements, lelement);
 }
@@ -183,7 +183,7 @@ t8_forest_ghost_create_ext (t8_forest_t forest)
 
   ghost_definition = forest->ghost_definition;
 
-  t8_productionf ("Into t8_forest_ghost with %i local elements.\n", t8_forest_get_local_num_elements (forest));
+  t8_productionf ("Into t8_forest_ghost with %i local elements.\n", t8_forest_get_local_num_leaf_elements (forest));
 
   /* In parallel, check forest for deleted elements. The ghost algorithm currently
   * does not work on forests with deleted elements.
@@ -227,7 +227,7 @@ t8_forest_ghost_create_ext (t8_forest_t forest)
   }
 
   t8_productionf ("Done t8_forest_ghost with %i local elements and %i ghost elements.\n",
-                  t8_forest_get_local_num_elements (forest), t8_forest_get_num_ghosts (forest));
+                  t8_forest_get_local_num_leaf_elements (forest), t8_forest_get_num_ghosts (forest));
 }
 
 void
@@ -453,7 +453,7 @@ t8_forest_ghost_exchange_begin (t8_forest_t forest, sc_array_t *element_data)
   }
 
   /* The index in element_data at which the ghost elements start */
-  ghost_start = t8_forest_get_local_num_elements (forest);
+  ghost_start = t8_forest_get_local_num_leaf_elements (forest);
   /* Receive the incoming messages */
   for (iremote = 0; iremote < data_exchange->num_remotes; iremote++) {
     /* We need to compute the offset in element_data to which we can receive the message */
@@ -537,7 +537,7 @@ t8_forest_ghost_exchange_data (t8_forest_t forest, sc_array_t *element_data)
   T8_ASSERT (forest->ghosts != NULL);
   T8_ASSERT (element_data != NULL);
   T8_ASSERT ((t8_locidx_t) element_data->elem_count
-             == t8_forest_get_local_num_elements (forest) + t8_forest_get_num_ghosts (forest));
+             == t8_forest_get_local_num_leaf_elements (forest) + t8_forest_get_num_ghosts (forest));
 
   data_exchange = t8_forest_ghost_exchange_begin (forest, element_data);
   if (forest->profile != NULL) {

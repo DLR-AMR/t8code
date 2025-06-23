@@ -179,7 +179,7 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const 
     }
   } /* end face loop */
   if (faces_totally_owned && element_is_owned) {
-    /* The element only has local descendants and all of its face neighbors are local as well. 
+    /* The element only has local descendants and all of its face neighbors are local as well.
      * We do not continue the search */
 #if T8_ENABLE_DEBUG
     if (tree_leaf_index < 0) {
@@ -272,10 +272,10 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int gh
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
 
     /* Loop over the elements of this tree */
-    num_tree_elems = t8_forest_get_tree_element_count (tree);
+    num_tree_elems = t8_forest_get_tree_leaf_element_count (tree);
     for (ielem = 0; ielem < num_tree_elems; ielem++) {
       /* Get the element of the tree */
-      const t8_element_t *elem = t8_forest_get_tree_element (tree, ielem);
+      const t8_element_t *elem = t8_forest_get_tree_leaf_element (tree, ielem);
       num_faces = scheme->element_get_num_faces (tree_class, elem);
       if (scheme->element_get_level (tree_class, elem) == scheme->get_maxlevel (tree_class)) {
         /* flag to decide whether this element is at the maximum level */

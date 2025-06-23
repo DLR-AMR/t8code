@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2025 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,28 +20,27 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_geometry.h
- * Internal functions that we need for the cmesh geometry.
- * TODO: document this file
+/** \file t8_data_handler_type.hxx
+ * This file provides a strong type for the data handler.
  */
 
-#ifndef T8_CMESH_GEOMETRY_H
-#define T8_CMESH_GEOMETRY_H
+#ifndef T8_DATA_HANDLER_TYPE_HXX
+#define T8_DATA_HANDLER_TYPE_HXX
 
-#include <t8.h>
-#include <t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_types/t8_type.hxx>
+#include <t8_types/t8_operators.hxx>
 
-T8_EXTERN_C_BEGIN ();
-
-/** Get the hash of the geometry stored for a tree in a cmesh.
- * \param [in] cmesh   A committed cmesh.
- * \param [in] gtreeid A global tree in \a cmesh.
- * \return             The hash of the tree's geometry or if only one geometry exists, its hash.
+/**
+ * Tag to identify the data handler type.
  */
-size_t
-t8_cmesh_get_tree_geom_hash (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
+struct t8_data_handler_tag
+{
+};
 
-T8_EXTERN_C_END ();
+/**
+ * Strong type to describe the data handler type.
+ * 
+ */
+using t8_data_handler_type = T8Type<int, t8_data_handler_tag, EqualityComparable>;
 
-#endif /* !T8_CMESH_GEOMETRY_H */
+#endif /* T8_DATA_HANDLER_TYPE_HXX */
