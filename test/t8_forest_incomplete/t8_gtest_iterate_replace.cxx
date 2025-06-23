@@ -229,7 +229,7 @@ TEST_P (forest_iterate, test_iterate_replace)
   const int runs = 2;
 
   for (int run = 0; run < runs; run++) {
-    t8_locidx_t num_elements = t8_forest_get_local_num_leaf_elements (forest);
+    const t8_locidx_t num_elements = t8_forest_get_local_num_leaf_elements (forest);
     int *adapt_callbacks = T8_TESTSUITE_ALLOC (int, num_elements);
 
     for (t8_locidx_t elidx = 0; elidx < num_elements; elidx++) {
