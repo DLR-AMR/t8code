@@ -190,8 +190,8 @@ t8_forest_element_is_ancestor (const t8_scheme *scheme, t8_eclass_t eclass, cons
  * If no such i exists, return -1.
  */
 t8_locidx_t
-t8_forest_bin_search_first_descendant_ancenstor (const t8_element_array_t *elements, const t8_element_t *element,
-                                                 const t8_element_t **element_found)
+t8_forest_bin_search_first_descendant_ancestor (const t8_element_array_t *elements, const t8_element_t *element,
+                                                const t8_element_t **element_found)
 {
   /* This search works as follows:
   
