@@ -32,8 +32,8 @@
 #include <t8_cmesh.h>
 #include <t8_forest/t8_forest.h>
 #include <t8_geometry/t8_geometry.h>
+#include <t8_geometry/t8_geometry_hash.hxx>
 
-#include <string>
 #include <functional>
 
 T8_EXTERN_C_BEGIN ();
@@ -48,8 +48,11 @@ struct t8_geometry
 {
  public:
   /* Basic constructor that sets the name. */
-  t8_geometry (std::string name): name (name), hash (std::hash<std::string> {}(name))
+  t8_geometry (std::string name): name (name), hash (t8_geometry_compute_hash (name))
   {
+    if (t8_geometry_hash_is_null (hash)) {
+      SC_ABORTF ("Registering geometry with invalid name\"%s\"\n.", name.c_str ());
+    }
   }
 
   /* Base constructor with no arguments. We need this since it
@@ -179,7 +182,7 @@ struct t8_geometry
     return false;
   }
 
-  inline size_t
+  inline t8_geometry_hash
   t8_geom_get_hash () const
   {
     return hash;
@@ -195,7 +198,7 @@ struct t8_geometry
 
  protected:
   std::string name;              /**< The name of this geometry. */
-  size_t hash;                   /**< The hash of the name of this geometry. */
+  t8_geometry_hash hash;         /**< The hash of the name of this geometry. See also \ref t8_geometry_compute_hash */
   t8_gloidx_t active_tree;       /**< The tree of which currently vertices are loaded. */
   t8_eclass_t active_tree_class; /**< The class of the currently active tree. */
 };

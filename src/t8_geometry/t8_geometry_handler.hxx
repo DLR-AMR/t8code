@@ -40,7 +40,7 @@ struct t8_geometry_handler
   /**
    * Constructor.
    */
-  t8_geometry_handler (): active_geometry (nullptr), active_tree (-1)
+  t8_geometry_handler ()
   {
     t8_refcount_init (&rc);
     t8_debugf ("Constructed the geometry_handler.\n");
@@ -89,7 +89,7 @@ struct t8_geometry_handler
   inline t8_geometry *
   get_geometry (const std::string &name)
   {
-    const size_t hash = std::hash<std::string> {}(name);
+    const t8_geometry_hash hash = t8_geometry_compute_hash (name);
     return t8_geometry_handler::get_geometry (hash);
   }
 
@@ -99,12 +99,17 @@ struct t8_geometry_handler
    * \return            An iterator to the geometry if found, NULL otherwise.
    */
   inline t8_geometry *
-  get_geometry (const size_t hash)
+  get_geometry (const t8_geometry_hash &hash)
   {
+    if (t8_geometry_hash_is_null (hash)) {
+      /* The hash belongs to a non-existing geometry. */
+      return nullptr;
+    }
     auto found = registered_geometries.find (hash);
     if (found != registered_geometries.end ()) {
       return found->second.get ();
     }
+    t8_errorf ("Geometry with hash value %lu was not found.\n", static_cast<size_t> (hash));
     return nullptr;
   }
 
@@ -274,7 +279,7 @@ struct t8_geometry_handler
   add_geometry (std::unique_ptr<t8_geometry> geom)
   {
     t8_debugf ("Registering geometry with name %s\n", geom->t8_geom_get_name ().c_str ());
-    const size_t hash = geom->t8_geom_get_hash ();
+    const t8_geometry_hash hash = geom->t8_geom_get_hash ();
     if (registered_geometries.find (hash) == registered_geometries.end ()) {
       registered_geometries.emplace (hash, std::move (geom));
     }
@@ -299,11 +304,11 @@ struct t8_geometry_handler
   update_tree (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 
   /** Stores all geometries that are handled by this geometry_handler. */
-  std::unordered_map<size_t, std::unique_ptr<t8_geometry>> registered_geometries;
+  std::unordered_map<t8_geometry_hash, std::unique_ptr<t8_geometry>> registered_geometries = {};
   /** Points to the currently loaded geometry (the geometry that was used last and is likely to be used next). */
-  t8_geometry *active_geometry;
+  t8_geometry *active_geometry = nullptr;
   /** The global tree id of the last tree for which geometry was used. */
-  t8_gloidx_t active_tree;
+  t8_gloidx_t active_tree = -1;
   /** The reference count of the geometry handler. TODO: Replace by shared_ptr when cmesh becomes a class. */
   t8_refcount_t rc;
 };

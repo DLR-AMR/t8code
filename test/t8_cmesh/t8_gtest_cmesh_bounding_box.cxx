@@ -22,7 +22,7 @@
 
 /**
  * \file t8_gtest_cmesh_bounding_box.cxx
- * 
+ *
  * Test the computation of the bounding box of a t8_cmesh.
  */
 
@@ -58,13 +58,14 @@ static void
 compute_and_check_bounds (const t8_cmesh_t cmesh, const t8_eclass eclass)
 {
   double bounds[6];
-  t8_cmesh_get_local_bounding_box (cmesh, bounds);
+  const bool bbox_success = t8_cmesh_get_local_bounding_box (cmesh, bounds);
+  EXPECT_TRUE (bbox_success) << "Bounding box computation failed for eclass " << t8_eclass_to_string[eclass];
 
   const int dim = t8_eclass_to_dimension[eclass];
 
   for (int idim = 0; idim < dim; ++idim) {
-    EXPECT_DOUBLE_EQ (bounds[idim * 2], 0);
-    EXPECT_DOUBLE_EQ (bounds[idim * 2 + 1], 1);
+    EXPECT_DOUBLE_EQ (bounds[idim * 2], 0) << "Lower bound of dimension " << idim << " should be 0.";
+    EXPECT_DOUBLE_EQ (bounds[idim * 2 + 1], 1) << "Upper bound of dimension " << idim << " should be 1.";
   }
   for (int idim = dim; idim < 3; ++idim) {
     EXPECT_DOUBLE_EQ (bounds[idim * 2], bounds[idim * 2 + 1]);
@@ -98,7 +99,7 @@ TEST_P (t8_cmesh_bounding_box_multi_trees, hypercube)
 {
   t8_debugf ("Created cmesh with %d trees per dimension and eclass %s.\n", trees_per_dim, t8_eclass_to_string[eclass]);
   /* clang-format off */
-  const double cube_bounds[24] = { 
+  const double cube_bounds[24] = {
     0, 0, 0,
     1, 0, 0,
     0, 1, 0,

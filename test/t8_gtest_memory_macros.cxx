@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2025 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,28 +20,22 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_geometry.h
- * Internal functions that we need for the cmesh geometry.
- * TODO: document this file
+#include <test/t8_gtest_memory_macros.hxx>
+
+/**
+ * Package id for the testsuite. Used for attributes.
  */
+static int testsuite_package_id = -1;
 
-#ifndef T8_CMESH_GEOMETRY_H
-#define T8_CMESH_GEOMETRY_H
+void
+t8_testsuite_register_package_id ()
+{
+  /* Register a package id for the t8code testsuite */
+  testsuite_package_id = sc_package_register (NULL, SC_LP_DEFAULT, "t8code_testsuite", "t8code testsuite package.");
+}
 
-#include <t8.h>
-#include <t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_types.h>
-
-T8_EXTERN_C_BEGIN ();
-
-/** Get the hash of the geometry stored for a tree in a cmesh.
- * \param [in] cmesh   A committed cmesh.
- * \param [in] gtreeid A global tree in \a cmesh.
- * \return             The hash of the tree's geometry or if only one geometry exists, its hash.
- */
-size_t
-t8_cmesh_get_tree_geom_hash (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
-
-T8_EXTERN_C_END ();
-
-#endif /* !T8_CMESH_GEOMETRY_H */
+int
+t8_testsuite_get_package_id ()
+{
+  return testsuite_package_id;
+}
