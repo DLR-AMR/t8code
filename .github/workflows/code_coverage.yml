@@ -62,7 +62,7 @@ jobs:
     - name: untar artifact
       run: tar -xf artifact.tar && rm artifact.tar
     - name: Update packages
-      run: apt-get update && apt-get upgrade -y
+      run: sudo apt-get update && sudo apt-get upgrade -y
       # This seems to be necessary because of the docker container.
     - name: disable ownership checks
       run: git config --global --add safe.directory '*'
@@ -79,7 +79,7 @@ jobs:
         && echo P4EST_PATH="$P4EST_PATH" >> $GITHUB_ENV
     ## Install lcov.
     - name: Install lcov
-      run: apt-get install -y lcov
+      run: sudo apt-get install -y lcov
     - name: Print lcov version
       run: lcov --version
 #

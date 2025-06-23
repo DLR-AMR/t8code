@@ -20,33 +20,27 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <gtest/gtest.h>
-#include <t8.h>
-#include <test/t8_gtest_memory_macros.hxx>
+/** \file t8_data_handler_type.hxx
+ * This file provides a strong type for the data handler.
+ */
 
-int
-main (int argc, char **argv)
+#ifndef T8_DATA_HANDLER_TYPE_HXX
+#define T8_DATA_HANDLER_TYPE_HXX
+
+#include <t8_types/t8_type.hxx>
+#include <t8_types/t8_operators.hxx>
+
+/**
+ * Tag to identify the data handler type.
+ */
+struct t8_data_handler_tag
 {
-  /* Initialize mpi */
-  int mpiret = sc_MPI_Init (&argc, &argv);
-  SC_CHECK_MPI (mpiret);
+};
 
-  /* Initialize sc and t8code */
-  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_PRODUCTION);
-  t8_init (SC_LP_DEFAULT);
+/**
+ * Strong type to describe the data handler type.
+ * 
+ */
+using t8_data_handler_type = T8Type<int, t8_data_handler_tag, EqualityComparable>;
 
-  /* Register a package id for the testsuite */
-  t8_testsuite_register_package_id ();
-
-  ::testing::InitGoogleTest (&argc, argv);
-
-  const int retval = RUN_ALL_TESTS ();
-
-  /* Finalize SC */
-  sc_finalize ();
-
-  /* Finalize and check mpi */
-  mpiret = sc_MPI_Finalize ();
-  SC_CHECK_MPI (mpiret);
-  return retval;
-}
+#endif /* T8_DATA_HANDLER_TYPE_HXX */
