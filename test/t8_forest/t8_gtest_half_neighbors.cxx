@@ -92,8 +92,8 @@ TEST_P (forest_half_neighbors, test_half_neighbors)
   t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
   /* iterate over all elements */
   for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++) {
-    for (t8_locidx_t ielement = 0; ielement < t8_forest_get_tree_num_elements (forest, itree); ielement++) {
-      const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
+    for (t8_locidx_t ielement = 0; ielement < t8_forest_get_tree_num_leaf_elements (forest, itree); ielement++) {
+      const t8_element_t *element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       /* iterate over the faces */
       for (int face = 0; face < scheme->element_get_num_faces (eclass, element); face++) {
         /* Get the eclass of the face neighbor and get the scheme */

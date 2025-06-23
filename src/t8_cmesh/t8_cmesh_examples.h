@@ -30,7 +30,6 @@
 #include <t8_cmesh.h>
 #include <p4est_connectivity.h>
 #include <p8est_connectivity.h>
-#include <t8_cmesh/t8_cmesh_geometry.h>
 
 T8_EXTERN_C_BEGIN ();
 

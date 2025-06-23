@@ -31,6 +31,7 @@
 #include <t8_types/t8_operators.hxx>
 #include <sc_functions.h>
 #include <sc_containers.h>
+#include <utility>
 
 /* Macro to check whether a pointer (VAR) to a base class, comes from an
  * implementation of a child class (TYPE). */
@@ -91,7 +92,7 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
    * \param [in] tree_class The tree class of this element scheme.
    * \param [in] elem_size  The size of the elements this scheme holds.
   */
-  t8_default_scheme_common (const t8_eclass_t tree_class, const size_t elem_size)
+  t8_default_scheme_common (const t8_eclass_t tree_class, const size_t elem_size) noexcept
     : element_size (elem_size), scheme_context (sc_mempool_new (elem_size)), eclass (tree_class) {};
 
  protected:
@@ -110,9 +111,9 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
 
   /** Move constructor */
   t8_default_scheme_common (t8_default_scheme_common &&other) noexcept
-    : element_size (other.element_size), scheme_context (other.scheme_context), eclass (other.eclass)
+    : element_size (other.element_size), scheme_context (std::exchange (other.scheme_context, nullptr)),
+      eclass (other.eclass)
   {
-    other.scheme_context = nullptr;
   }
 
   /** Move assignment operator */
@@ -188,6 +189,15 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
     /* use the lookup table of the eclasses.
      * Pyramids should implement their own version of this function. */
     return t8_eclass_num_vertices[eclass];
+  }
+
+  /** Return the max number of children of an eclass.
+   * \return            The max number of children of \a element.
+   */
+  inline int
+  get_max_num_children () const
+  {
+    return t8_eclass_max_num_children[eclass];
   }
 
   /** Allocate space for a bunch of elements.
