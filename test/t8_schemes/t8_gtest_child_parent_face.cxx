@@ -36,7 +36,7 @@ class class_child_parent_face: public TestDFS {
       /* Iterate over all faces and determine the facechildren*/
       const int num_face_children = scheme->element_get_num_face_children (eclass, element, iface);
       t8_element_t **children;
-      children = T8_ALLOC (t8_element_t *, num_face_children);
+      children = T8_TESTSUITE_ALLOC (t8_element_t *, num_face_children);
       scheme->element_new (eclass, num_face_children, children);
 
       scheme->element_get_children_at_face (eclass, element, iface, children, num_face_children, NULL);
@@ -51,7 +51,7 @@ class class_child_parent_face: public TestDFS {
         EXPECT_EQ (iface, parentface);
       }
       scheme->element_destroy (eclass, num_face_children, children);
-      T8_FREE (children);
+      T8_TESTSUITE_FREE (children);
     }
   }
 
