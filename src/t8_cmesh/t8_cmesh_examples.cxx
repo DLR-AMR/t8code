@@ -1335,7 +1335,7 @@ t8_cmesh_new_hypercube_pad_ext (const t8_eclass_t eclass, sc_MPI_Comm comm, cons
     for (t8_gloidx_t tree_x = 0; tree_x < polygons_x; tree_x++) {
       t8_cmesh_set_tree_vertices (cmesh, tree_x + offset, vertices, 2);
       /* Update vertices for next tree */
-      memcpy (vertices, vertices + 3, 3 * sizeof (double));
+      t8_axy (vertices, vertices + 3, 1.0);
       t8_axpy (line_dir, vertices + 3, 1.0);
     }
   }
