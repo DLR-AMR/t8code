@@ -33,7 +33,7 @@ main (int argc, char **argv)
 
   /* Initialize sc and t8code */
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_PRODUCTION);
-  t8_init (SC_LP_DEBUG);
+  t8_init (SC_LP_DEFAULT);
 
   /* Register a package id for the testsuite */
   t8_testsuite_register_package_id ();
