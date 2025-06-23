@@ -399,6 +399,13 @@ t8_cmesh_set_attribute (t8_cmesh_t cmesh, const t8_gloidx_t gtree_id, const int 
                         void *const data, const size_t data_size, const int data_persists)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (sc_package_is_registered (package_id));
+#if T8_ENABLE_DEBUG
+  // The key for t8code attributes must be in the range of possible keys.
+  if (package_id == t8_get_package_id ()) {
+    T8_ASSERT (key < T8_CMESH_NEXT_POSSIBLE_KEY && key >= 0);
+  }
+#endif
   SC_CHECK_ABORT (cmesh->set_from == NULL, "ERROR: Cannot add attributes to cmesh when deriving from another cmesh.\n");
 
   t8_stash_add_attribute (cmesh->stash, gtree_id, package_id, key, data_size, data, !data_persists);
