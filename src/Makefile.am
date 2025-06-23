@@ -45,6 +45,7 @@ libt8_installed_headers_cmesh = \
   src/t8_cmesh/t8_cmesh_stash.h
 libt8_installed_headers_data = \
   src/t8_data/t8_shmem.h src/t8_data/t8_containers.h \
+  src/t8_data/t8_data_handler.hxx \
   src/t8_data/t8_element_array_iterator.hxx
 libt8_installed_headers_forest = \
   src/t8_forest/t8_forest.h \
