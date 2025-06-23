@@ -1545,9 +1545,17 @@ t8_cmesh_get_local_bounding_box (const t8_cmesh_t cmesh, double bounds[6])
   T8_ASSERT (num_local_trees > 0);
   double tree_bounds[6] = { 0.0 };
   t8_geometry_handler *geom_handler = cmesh->geometry_handler;
-  T8_ASSERT (geom_handler != NULL);
+
+  if (geom_handler == NULL) {
+    t8_global_errorf ("t8_cmesh_get_local_bounding_box: No geometry handler set for cmesh.\n");
+    return false;
+  }
   const t8_gloidx_t first_tree = cmesh->first_tree;
-  geom_handler->get_tree_bounding_box (cmesh, first_tree, bounds);
+  const bool bbox_return = geom_handler->get_tree_bounding_box (cmesh, first_tree, bounds);
+  if (!bbox_return) {
+    /* If the bounding box is not available, we return false */
+    return false;
+  }
   for (t8_locidx_t itree = 1; itree < num_local_trees; itree++) {
     const t8_gloidx_t gtree_id = t8_cmesh_get_global_id (cmesh, itree);
     geom_handler->get_tree_bounding_box (cmesh, gtree_id, tree_bounds);
