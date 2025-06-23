@@ -1,3 +1,23 @@
+#  This file is part of t8code.
+#  t8code is a C library to manage a collection (a forest) of multiple
+#  connected adaptive space-trees of general element types in parallel.
+#
+#  Copyright (C) 2025 the developers
+#
+#  t8code is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  t8code is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with t8code; if not, write to the Free Software Foundation, Inc.,
+#  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
 add_library( gtest ${CMAKE_CURRENT_LIST_DIR}/../thirdparty/googletest-mpi/gtest/gtest-all.cc )
 target_include_directories( gtest SYSTEM PUBLIC ${CMAKE_CURRENT_LIST_DIR}/../thirdparty/googletest-mpi ${CMAKE_CURRENT_LIST_DIR}/.. )
 
@@ -56,6 +76,12 @@ function( add_t8_test )
     endif ( T8CODE_ENABLE_MPI )
 
     add_test( NAME ${ADD_T8_TEST_NAME} COMMAND ${T8CODE_TEST_COMMAND_LIST} ${TEST_BUILD_DIR}/${ADD_T8_TEST_NAME} )
+    if ( T8CODE_CODE_COVERAGE )
+        # Extent time that a single test is allowed to run to collect coverage information (as this naturally takes more time).
+        # The default timeout of 1500 seconds is actually exceeded for some tests.
+        # Without the collection of coverage information, an extension of the default timeout is not needed.
+        set_tests_properties(${ADD_T8_TEST_NAME} PROPERTIES TIMEOUT 3000) 
+    endif ( T8CODE_CODE_COVERAGE )
 endfunction()
 
 # Copy test files to build folder so that the t8_test programs can find them.
@@ -86,6 +112,9 @@ add_t8_test( NAME t8_gtest_cmesh_set_partition_offsets_parallel         SOURCES 
 add_t8_test( NAME t8_gtest_cmesh_set_join_by_vertices_serial            SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_set_join_by_vertices.cxx )
 add_t8_test( NAME t8_gtest_cmesh_add_attributes_when_derive_parallel    SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_add_attributes_when_derive.cxx )
 add_t8_test( NAME t8_gtest_cmesh_tree_vertices_negative_volume_serial   SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_tree_vertices_negative_volume.cxx )
+add_t8_test( NAME t8_gtest_cmesh_vertex_conn_tree_to_vertex_parallel    SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_vertex_conn_tree_to_vertex.cxx )
+add_t8_test( NAME t8_gtest_cmesh_vertex_conn_vertex_to_tree_parallel    SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_vertex_conn_vertex_to_tree.cxx )
+add_t8_test( NAME t8_gtest_cmesh_vertex_conn_serial                     SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_cmesh_vertex_conn.cxx )
 
 add_t8_test( NAME t8_gtest_multiple_attributes_parallel     SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_multiple_attributes.cxx )
 add_t8_test( NAME t8_gtest_attribute_gloidx_array_serial    SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_attribute_gloidx_array.cxx )
@@ -110,18 +139,22 @@ add_t8_test( NAME t8_gtest_partition_data_parallel      SOURCES t8_gtest_main.cx
 
 add_t8_test( NAME t8_gtest_permute_hole_serial          SOURCES t8_gtest_main.cxx t8_forest_incomplete/t8_gtest_permute_hole.cxx )
 add_t8_test( NAME t8_gtest_recursive_serial             SOURCES t8_gtest_main.cxx t8_forest_incomplete/t8_gtest_recursive.cxx )
-add_t8_test( NAME t8_gtest_iterate_replace_serial       SOURCES t8_gtest_main.cxx t8_forest_incomplete/t8_gtest_iterate_replace.cxx )
+add_t8_test( NAME t8_gtest_iterate_replace_parallel     SOURCES t8_gtest_main.cxx t8_forest_incomplete/t8_gtest_iterate_replace.cxx )
 add_t8_test( NAME t8_gtest_empty_local_tree_parallel    SOURCES t8_gtest_main.cxx t8_forest_incomplete/t8_gtest_empty_local_tree.cxx )
 add_t8_test( NAME t8_gtest_empty_global_tree_parallel   SOURCES t8_gtest_main.cxx t8_forest_incomplete/t8_gtest_empty_global_tree.cxx )
+if( T8_ENABLE_OCC )
+    add_t8_test( NAME t8_gtest_geometry_cad_serial                      SOURCES t8_gtest_main.cxx t8_geometry/t8_geometry_implementations/t8_gtest_geometry_cad.cxx )
+endif()
 
-add_t8_test( NAME t8_gtest_geometry_cad_serial                      SOURCES t8_gtest_main.cxx t8_geometry/t8_geometry_implementations/t8_gtest_geometry_cad.cxx )
 add_t8_test( NAME t8_gtest_geometry_linear_serial                   SOURCES t8_gtest_main.cxx t8_geometry/t8_geometry_implementations/t8_gtest_geometry_linear.cxx )
 add_t8_test( NAME t8_gtest_geometry_lagrange_serial                 SOURCES t8_gtest_main.cxx t8_geometry/t8_geometry_implementations/t8_gtest_geometry_lagrange.cxx )
 add_t8_test( NAME t8_gtest_geometry_triangular_interpolation_serial SOURCES t8_gtest_main.cxx t8_geometry/t8_gtest_geometry_triangular_interpolation.cxx )
 add_t8_test( NAME t8_gtest_geometry_handling_serial                 SOURCES t8_gtest_main.cxx t8_geometry/t8_gtest_geometry_handling.cxx )
 add_t8_test( NAME t8_gtest_point_inside_serial                      SOURCES t8_gtest_main.cxx t8_geometry/t8_gtest_point_inside.cxx )
-
+if( T8_WITH_VTK )
 add_t8_test( NAME t8_gtest_vtk_reader_parallel  SOURCES t8_gtest_main.cxx t8_IO/t8_gtest_vtk_reader.cxx )
+endif()
+
 add_t8_test( NAME t8_gtest_vtk_writer_parallel  SOURCES t8_gtest_main.cxx t8_IO/t8_gtest_vtk_writer.cxx )
 
 add_t8_test( NAME t8_gtest_nca_serial                   SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_nca.cxx )
@@ -146,10 +179,13 @@ add_t8_test( NAME t8_gtest_scheme_consistency_serial    SOURCES t8_gtest_main.cx
 add_t8_test( NAME t8_gtest_input_equal_output_serial    SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_input_equal_output.cxx )
 add_t8_test( NAME t8_gtest_face_corner_serial           SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_face_corner.cxx )
 add_t8_test( NAME t8_gtest_set_linear_id_serial         SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_set_linear_id.cxx )
-
+add_t8_test( NAME t8_gtest_elements_are_family_serial   SOURCES t8_gtest_main.cxx t8_schemes/t8_gtest_elements_are_family.cxx )
+add_t8_test( NAME t8_gtest_compute_first_element_serial  SOURCES t8_gtest_main.cxx t8_cmesh/t8_gtest_compute_first_element.cxx )
 if( T8CODE_BUILD_FORTRAN_INTERFACE AND T8CODE_ENABLE_MPI )
   add_t8_test( NAME t8_test_fortran_mpi_interface_init_parallel    SOURCES api/t8_fortran_interface/t8_test_mpi_init.f90 )
 endif()
+
+add_t8_test( NAME t8_gtest_vector_split_serial          SOURCES t8_gtest_main.cxx t8_vector_helper/t8_gtest_vector_split.cxx )
 
 copy_test_file( test_cube_unstructured_1.inp )
 copy_test_file( test_cube_unstructured_2.inp )

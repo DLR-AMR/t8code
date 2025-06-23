@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2023 the developers
+  Copyright (C) 2025 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,15 +20,15 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_vtk/t8_vtk_reader.hxx>
-#include <t8_vtk/t8_vtk_unstructured.hxx>
-#include <t8_vtk/t8_vtk_polydata.hxx>
-#include <t8_vtk/t8_vtk_parallel.hxx>
+#include <t8_vtk/t8_with_vtk/t8_vtk_reader.hxx>
+#include <t8_vtk/t8_with_vtk/t8_vtk_reader.hxx>
 #include <t8_vtk/t8_vtk_types.h>
 #include <t8_cmesh.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 
-#if T8_WITH_VTK
+#include <t8_vtk/t8_with_vtk/t8_vtk_polydata.hxx>
+#include <t8_vtk/t8_with_vtk/t8_vtk_parallel.hxx>
+#include <t8_vtk/t8_with_vtk/t8_vtk_unstructured.hxx>
 #include <vtkCellIterator.h>
 #include <vtkCellData.h>
 #include <vtkCellDataToPointData.h>
@@ -45,9 +45,6 @@
 #include <vtkPolyDataReader.h>
 #include <vtkSTLReader.h>
 #include <vtkXMLPolyDataReader.h>
-#endif
-
-T8_EXTERN_C_BEGIN ();
 
 /**
  * If the vertices of a tree describe a negative \param, 
@@ -107,8 +104,6 @@ t8_cmesh_correct_volume (double *tree_vertices, t8_eclass_t eclass)
   }
   T8_ASSERT (!t8_cmesh_tree_vertices_negative_volume (eclass, tree_vertices, t8_eclass_num_vertices[eclass]));
 }
-
-#if T8_WITH_VTK
 
 vtk_read_success_t
 t8_file_to_vtkGrid (const char *filename, vtkSmartPointer<vtkDataSet> vtkGrid, const int partition, const int main_proc,
@@ -224,7 +219,7 @@ t8_get_dimension (vtkSmartPointer<vtkDataSet> vtkGrid)
 
 static void
 t8_vtk_iterate_cells (vtkSmartPointer<vtkDataSet> vtkGrid, t8_cmesh_t cmesh, const t8_gloidx_t first_tree,
-                      sc_MPI_Comm comm)
+                      [[maybe_unused]] sc_MPI_Comm comm)
 {
   double **tuples = NULL;
   size_t *data_size = NULL;
@@ -313,8 +308,8 @@ t8_vtk_iterate_cells (vtkSmartPointer<vtkDataSet> vtkGrid, t8_cmesh_t cmesh, con
  * \return            the global id of the first tree on this proc. 
  */
 static t8_gloidx_t
-t8_vtk_partition (t8_cmesh_t cmesh, const int mpirank, const int mpisize, t8_gloidx_t num_trees, int dim,
-                  sc_MPI_Comm comm)
+t8_vtk_partition (t8_cmesh_t cmesh, const int mpirank, const int mpisize, t8_gloidx_t num_trees,
+                  [[maybe_unused]] int dim, sc_MPI_Comm comm)
 {
   t8_gloidx_t first_tree = 0;
   t8_gloidx_t last_tree = 1;
@@ -481,28 +476,18 @@ t8_vtk_reader (const char *filename, const int partition, const int main_proc, s
 }
 
 vtkSmartPointer<vtkPointSet>
-t8_vtk_reader_pointSet (const char *filename, const int partition, const int main_proc, sc_MPI_Comm comm,
-                        const vtk_file_type_t vtk_file_type)
+t8_vtk_reader_pointSet ([[maybe_unused]] const char *filename, [[maybe_unused]] const int partition,
+                        [[maybe_unused]] const int main_proc, [[maybe_unused]] sc_MPI_Comm comm,
+                        [[maybe_unused]] const vtk_file_type_t vtk_file_type)
 {
-#if T8_WITH_VTK
   vtkSmartPointer<vtkDataSet> vtkGrid = t8_vtk_reader (filename, partition, main_proc, comm, vtk_file_type);
   return t8_vtkGrid_to_vtkPointSet (vtkGrid);
-#else
-  /* Return NULL if not linked against vtk */
-  t8_global_errorf (
-    "WARNING: t8code is not linked against the vtk library. Without proper linking t8code cannot use the vtk-reader\n");
-#endif
-  return NULL;
 }
-
-#endif /* T8_WITH_VTK */
-
 t8_cmesh_t
 t8_vtk_reader_cmesh ([[maybe_unused]] const char *filename, [[maybe_unused]] const int partition,
                      [[maybe_unused]] const int main_proc, [[maybe_unused]] sc_MPI_Comm comm,
                      [[maybe_unused]] const vtk_file_type_t vtk_file_type)
 {
-#if T8_WITH_VTK
   vtkSmartPointer<vtkDataSet> vtkGrid = t8_vtk_reader (filename, partition, main_proc, comm, vtk_file_type);
   if (vtkGrid != NULL) {
     const int distributed_grid = (vtk_file_type & VTK_PARALLEL_FILE) && partition;
@@ -514,12 +499,4 @@ t8_vtk_reader_cmesh ([[maybe_unused]] const char *filename, [[maybe_unused]] con
     t8_global_errorf ("Error translating file \n");
     return NULL;
   }
-#else
-  /* Return NULL if not linked against vtk */
-  t8_global_errorf (
-    "WARNING: t8code is not linked against the vtk library. Without proper linking t8code cannot use the vtk-reader\n");
-#endif
-  return NULL;
 }
-
-T8_EXTERN_C_END ();

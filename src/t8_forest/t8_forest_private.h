@@ -156,41 +156,41 @@ t8_forest_get_coarse_tree_ext (t8_forest_t forest, t8_locidx_t ltreeid, t8_locid
 void
 t8_forest_compute_elements_offset (t8_forest_t forest);
 
-/** Return an element of a tree. Const version.
+/** Return a leaf element of a tree. Const version.
  * \param [in]  tree  The tree.
- * \param [in]  elem_in_tree The index of the element within the tree.
- * \return      Returns the element with index \a elem_in_tree of the
+ * \param [in]  elem_in_tree The index of the leaf element within the tree.
+ * \return      Returns the leaf element with index \a elem_in_tree of the
  *              element array of \a tree.
  */
 const t8_element_t *
-t8_forest_get_tree_element (t8_tree_t tree, t8_locidx_t elem_in_tree);
+t8_forest_get_tree_leaf_element (t8_tree_t tree, t8_locidx_t elem_in_tree);
 
-/** Return an element of a tree. Mutable version.
+/** Return a leaf element of a tree. Mutable version.
  * \param [in]  tree  The tree.
- * \param [in]  elem_in_tree The index of the element within the tree.
- * \return      Returns the element with index \a elem_in_tree of the
+ * \param [in]  elem_in_tree The index of the leaf element within the tree.
+ * \return      Returns the leaf element with index \a elem_in_tree of the
  *              element array of \a tree.
  */
 t8_element_t *
-t8_forest_get_tree_element_mutable (t8_tree_t tree, t8_locidx_t elem_in_tree);
+t8_forest_get_tree_leaf_element_mutable (t8_tree_t tree, t8_locidx_t elem_in_tree);
 
-/** Return the array of elements of a tree. Const version.
+/** Return the array of leaf elements of a tree. Const version.
  * \param [in]  forest   The forest.
  * \param [in]  ltreeid  The local id of a local tree. Must be a valid local tree id.
- * \return      Returns the array of elements of the tree.
+ * \return      Returns the array of leaf elements of the tree.
  * \a forest must be committed before calling this function.
  */
 const t8_element_array_t *
-t8_forest_get_tree_element_array (t8_forest_t forest, t8_locidx_t ltreeid);
+t8_forest_get_tree_leaf_element_array (t8_forest_t forest, t8_locidx_t ltreeid);
 
-/** Return the array of elements of a tree. Mutable version.
+/** Return the array of leaf elements of a tree. Mutable version.
  * \param [in]  forest   The forest.
  * \param [in]  ltreeid  The local id of a local tree. Must be a valid local tree id.
- * \return      Returns the array of elements of the tree.
+ * \return      Returns the array of leaf elements of the tree.
  * \a forest must be committed before calling this function.
  */
 t8_element_array_t *
-t8_forest_get_tree_element_array_mutable (const t8_forest_t forest, t8_locidx_t ltreeid);
+t8_forest_get_tree_leaf_element_array_mutable (const t8_forest_t forest, t8_locidx_t ltreeid);
 
 /** Find the owner process of a given element, deprecated version.
  * Use t8_forest_element_find_owner instead.
@@ -218,22 +218,6 @@ t8_forest_get_tree_element_array_mutable (const t8_forest_t forest, t8_locidx_t 
 int
 t8_forest_element_find_owner_old (t8_forest_t forest, t8_gloidx_t gtreeid, t8_element_t *element, t8_eclass_t eclass,
                                   sc_array_t *all_owners_of_tree);
-
-/** Find the owner process of a given element.
- * \param [in]    forest  The forest.
- * \param [in]    gtreeid The global id of the tree in which the element lies.
- * \param [in]    element The element to look for.
- * \param [in]    eclass  The element class of the tree \a gtreeid.
- * \return                The mpirank of the process that owns \a element.
- * \note The element must not exist in the forest, but an ancestor of its first
- *       descendant has to. If the element's owner is not unique, the owner of the element's
- *       first descendant is returned.
- * \note \a forest must be committed before calling this function.
- * \see t8_forest_element_find_owner_ext
- * \see t8_forest_element_owners_bounds
- */
-int
-t8_forest_element_find_owner (t8_forest_t forest, t8_gloidx_t gtreeid, t8_element_t *element, t8_eclass_t eclass);
 
 /** Find the owner process of a given element, if bounds for the owner process are known.
  * \param [in]    forest  The forest.

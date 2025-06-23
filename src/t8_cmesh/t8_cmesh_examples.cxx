@@ -24,7 +24,7 @@
 #include <t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh/t8_cmesh_helpers.h>
-#include <t8_cmesh/t8_cmesh_geometry.h>
+#include <t8_cmesh/t8_cmesh_geometry.hxx>
 #include <t8_geometry/t8_geometry_base.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx>
@@ -172,7 +172,7 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm, int set_part
       /* Set the partition (with offsets) */
       t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
       t8_gloidx_t num_global_trees;
       /* The global number of trees is the sum over all numbers of trees in conn on each process */
       mpiret = sc_MPI_Allreduce (&num_local_trees, &num_global_trees, 1, T8_MPI_GLOIDX, sc_MPI_SUM, comm);
@@ -696,17 +696,20 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
       if (periodic) {
         t8_cmesh_set_join (cmesh, 0, 0, 4, 5, 0);
       }
+      [[fallthrough]];
     case T8_ECLASS_QUAD:
       vertices[3] = 3;
       vertices[2] = 2;
       if (periodic) {
         t8_cmesh_set_join (cmesh, 0, 0, 2, 3, 0);
       }
+      [[fallthrough]];
     case T8_ECLASS_LINE:
       vertices[1] = 1;
       if (periodic) {
         t8_cmesh_set_join (cmesh, 0, 0, 0, 1, 0);
       }
+      [[fallthrough]];
     case T8_ECLASS_VERTEX:
       vertices[0] = 0;
       t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords, attr_vertices,
@@ -1268,10 +1271,13 @@ t8_cmesh_new_hypercube_pad_ext (const t8_eclass_t eclass, sc_MPI_Comm comm, cons
   switch (dim) {
   case 0:
     polygons_x = 1;
+    [[fallthrough]];
   case 1:
     polygons_y = 1;
+    [[fallthrough]];
   case 2:
     polygons_z = 1;
+    [[fallthrough]];
   default:
     T8_ASSERT (polygons_x > 0);
     T8_ASSERT (polygons_y > 0);
@@ -1476,7 +1482,7 @@ t8_cmesh_new_hypercube_pad_ext (const t8_eclass_t eclass, sc_MPI_Comm comm, cons
       /* Set the partition (with offsets) */
       t8_cmesh_set_partition_range (cmesh, 3, first_tree, last_tree);
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
       t8_gloidx_t num_global_trees;
       /* The global number of trees is the sum over all numbers of trees in conn on each process */
       int mpiret = sc_MPI_Allreduce (&num_local_trees, &num_global_trees, 1, T8_MPI_GLOIDX, sc_MPI_SUM, comm);
@@ -3325,7 +3331,7 @@ t8_cmesh_new_spherical_shell (t8_eclass_t eclass, t8_geometry_c *geometry,
                                               num_levels, 0, local_comm);
 
   /* clang-format off */
-  const int ntrees = t8_forest_get_local_num_elements (forest) * num_layers; /* Number of 3D cmesh elements resp. trees. */
+  const int ntrees = t8_forest_get_local_num_leaf_elements (forest) * num_layers; /* Number of 3D cmesh elements resp. trees. */
   const int nverts = t8_eclass_num_vertices[eclass]; /* Number of vertices per cmesh element. */
 
   /* Arrays for the face connectivity computations via vertices. */
@@ -3345,14 +3351,14 @@ t8_cmesh_new_spherical_shell (t8_eclass_t eclass, t8_geometry_c *geometry,
   for (t8_locidx_t itree_local = 0; itree_local < t8_forest_get_num_local_trees (forest); ++itree_local) {
 
     /* Get the number of elements of this tree. */
-    const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree_local);
+    const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree_local);
 
     /* Element class scheme of the current tree. */
     t8_eclass_t eclass_2d = t8_forest_get_eclass (forest, itree_local);
 
     /* Loop over all local elements in the tree. */
     for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement) {
-      const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree_local, ielement);
+      const t8_element_t *element = t8_forest_get_leaf_element_in_tree (forest, itree_local, ielement);
 
       /* Retrieve 2D element vertices. */
       double elem_vertices_2d[T8_ECLASS_MAX_CORNERS * 3];

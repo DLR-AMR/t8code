@@ -45,10 +45,10 @@ t8_default_scheme_pyramid::element_new (int length, t8_element_t **elem) const
   t8_default_scheme_common::element_new (length, elem);
 
   /* in debug mode, set sensible default values. */
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   {
     for (int i = 0; i < length; i++) {
-      get_root (elem[i]);
+      set_to_root (elem[i]);
     }
   }
 #endif
@@ -57,7 +57,7 @@ t8_default_scheme_pyramid::element_new (int length, t8_element_t **elem) const
 void
 t8_default_scheme_pyramid::element_init ([[maybe_unused]] int length, [[maybe_unused]] t8_element_t *elem) const
 {
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   t8_dpyramid_t *pyramid = (t8_dpyramid_t *) elem;
   /* Set all values to 0 */
   for (int i = 0; i < length; i++) {
@@ -424,7 +424,7 @@ t8_default_scheme_pyramid::refines_irregular () const
   return true;
 }
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 int
 t8_default_scheme_pyramid::element_is_valid (const t8_element_t *elem) const
 {
@@ -445,7 +445,7 @@ t8_default_scheme_pyramid::element_to_string (const t8_element_t *elem, char *de
 #endif
 
 void
-t8_default_scheme_pyramid::get_root (t8_element_t *elem) const
+t8_default_scheme_pyramid::set_to_root (t8_element_t *elem) const
 {
   t8_dpyramid_t *pyramid = (t8_dpyramid_t *) elem;
   pyramid->pyramid.level = 0;

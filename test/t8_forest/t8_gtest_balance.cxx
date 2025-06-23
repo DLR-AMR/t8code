@@ -162,14 +162,14 @@ t8_gtest_check_custom_balanced_forest (t8_forest_t balanced_forest,
   const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (balanced_forest);
 
   for (t8_locidx_t tree_id = 0; tree_id < num_local_trees; ++tree_id) {
-    const t8_locidx_t num_tree_local_elems = t8_forest_get_tree_num_elements (balanced_forest, tree_id);
+    const t8_locidx_t num_tree_local_elems = t8_forest_get_tree_num_leaf_elements (balanced_forest, tree_id);
 
     const t8_gloidx_t gtree_id = t8_forest_global_tree_id (balanced_forest, tree_id);
     const t8_eclass_t tree_class = t8_forest_get_tree_class (balanced_forest, tree_id);
     const t8_scheme *scheme = t8_forest_get_scheme (balanced_forest);
 
     for (t8_locidx_t elem_id = 0; elem_id < num_tree_local_elems; ++elem_id) {
-      const t8_element_t *element = t8_forest_get_element_in_tree (balanced_forest, tree_id, elem_id);
+      const t8_element_t *element = t8_forest_get_leaf_element_in_tree (balanced_forest, tree_id, elem_id);
 
       const int elem_level = scheme->element_get_level (tree_class, element);
 
@@ -256,4 +256,4 @@ const int maxlvl = 5;
 #endif
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_balance, gtest_balance,
-                          testing::Combine (DefaultScheme, testing::Range (0, maxlvl), testing::Range (0, 2)));
+                          testing::Combine (AllSchemes, testing::Range (0, maxlvl), testing::Range (0, 2)));

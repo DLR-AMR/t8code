@@ -251,8 +251,8 @@ TEST_P (class_ref_coords, t8_check_elem_ref_coords)
   t8_locidx_t itree, ielement;
   /* Check the reference coordinates of each element in each tree */
   for (itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++) {
-    for (ielement = 0; ielement < t8_forest_get_tree_num_elements (forest, itree); ielement++) {
-      const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
+    for (ielement = 0; ielement < t8_forest_get_tree_num_leaf_elements (forest, itree); ielement++) {
+      const t8_element_t *element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       t8_test_coords (forest, itree, element);
     }
   }

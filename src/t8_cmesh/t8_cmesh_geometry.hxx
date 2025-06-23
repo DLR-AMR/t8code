@@ -20,35 +20,29 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/**
- * This file contains all helper functions to translate vtk-polydata. 
- * 
+/** \file t8_cmesh_geometry.hxx
+ * Internal functions that we need for the cmesh geometry.
+ * TODO: document this file
  */
 
-#ifndef T8_CMESH_VTK_POLYDATA
-#define T8_CMESH_VTK_POLYDATA
+#ifndef T8_CMESH_GEOMETRY_H
+#define T8_CMESH_GEOMETRY_H
 
 #include <t8.h>
-#include "t8_vtk_types.h"
-#if T8_WITH_VTK
-#include <vtkPolyData.h>
-#include <vtkSmartPointer.h>
-#include <vtkCellData.h>
-#include <vtkDataSet.h>
-#include <vtkPolyData.h>
+#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_geometry/t8_geometry_hash.hxx>
 
-/**
- * Given a filename to a file containing Polydata, read
- * the file using the vtk-library. 
- * 
- * \param[in] filename  The name of the file
- * \param[in, out] grid On input a vtkSmartPointer, that will hold the grid described in
- *                      \a filename.
- * \returns             non-zero on success, zero if the reading failed.              
- * 
+T8_EXTERN_C_BEGIN ();
+
+/** Get the hash of the geometry stored for a tree in a cmesh.
+ * \param [in] cmesh   A committed cmesh.
+ * \param [in] gtreeid A global tree in \a cmesh.
+ * \return             The hash of the tree's geometry. If the tree does not have a geometry, returns \ref t8_geometry_empty_hash.
  */
-vtk_read_success_t
-t8_read_polyData (const char *filename, vtkDataSet *grid);
+t8_geometry_hash
+t8_cmesh_get_tree_geom_hash (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 
-#endif /* T8_WITH_VTK */
-#endif /* T8_CMESH_VTK_POLYDATA */
+T8_EXTERN_C_END ();
+
+#endif /* !T8_CMESH_GEOMETRY_H */

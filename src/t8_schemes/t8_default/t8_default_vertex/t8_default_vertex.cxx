@@ -146,7 +146,7 @@ t8_default_scheme_vertex::element_get_children (const t8_element_t *elem, [[mayb
 {
   T8_ASSERT (length == T8_DVERTEX_CHILDREN);
   T8_ASSERT (element_is_valid (elem));
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   for (int i = 0; i < T8_DVERTEX_CHILDREN; i++) {
     T8_ASSERT (element_is_valid (c[i]));
   }
@@ -175,7 +175,7 @@ t8_default_scheme_vertex::element_get_ancestor_id ([[maybe_unused]] const t8_ele
 int
 t8_default_scheme_vertex::elements_are_family (t8_element_t *const *fam) const
 {
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   for (int i = 0; i < T8_DVERTEX_CHILDREN; i++) {
     T8_ASSERT (element_is_valid (fam[i]));
   }
@@ -308,13 +308,14 @@ t8_default_scheme_vertex::element_get_reference_coords ([[maybe_unused]] const t
   }
 }
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 int
-t8_default_scheme_vertex::element_is_valid (const t8_element_t *elem)
+t8_default_scheme_vertex::element_is_valid ([[maybe_unused]] const t8_element_t *elem)
 
 {
-  const t8_dvertex *v = (const t8_dvertex_t *) elem;
-  return 0 <= v->level && v->level <= T8_DVERTEX_MAXLEVEL;
+  /* A vertex is always valid, since it only saves the level as uint8, 
+     which therefore automatically is >= 0 and <= 255 (=MAXLEVEL)*/
+  return 1;
 }
 
 void
@@ -341,10 +342,10 @@ t8_default_scheme_vertex::element_new (int length, t8_element_t **elem) const
   t8_default_scheme_common::element_new (length, elem);
 
   /* in debug mode, set sensible default values. */
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   {
     for (int i = 0; i < length; i++) {
-      get_root (elem[i]);
+      set_to_root (elem[i]);
     }
   }
 #endif
@@ -353,16 +354,16 @@ t8_default_scheme_vertex::element_new (int length, t8_element_t **elem) const
 void
 t8_default_scheme_vertex::element_init ([[maybe_unused]] int length, [[maybe_unused]] t8_element_t *elem) const
 {
-#ifdef T8_ENABLE_DEBUG
-  t8_dvertex_t *vertexs = (t8_dvertex_t *) elem;
+#if T8_ENABLE_DEBUG
+  t8_dvertex_t *vertices = (t8_dvertex_t *) elem;
   for (int i = 0; i < length; i++) {
-    vertexs[i].level = 0;
+    vertices[i].level = 0;
   }
 #endif
 }
 
 void
-t8_default_scheme_vertex::get_root (t8_element_t *elem) const
+t8_default_scheme_vertex::set_to_root (t8_element_t *elem) const
 {
   t8_dvertex_t *vertex = (t8_dvertex_t *) elem;
   vertex->level = 0;
