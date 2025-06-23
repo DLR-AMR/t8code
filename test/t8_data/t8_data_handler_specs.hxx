@@ -41,19 +41,24 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  *
  * \tparam TType The type of the data to be stored.
  *
- * \var TType data
- * The original data of type T.
- *
- * \var int check
- * An integer value used for additional checks or validations.
  */
 template <typename TType>
 class enlarged_data {
  public:
+  /**
+   * Default constructor.
+   * Creates an empty enlarged_data object.
+   */
   enlarged_data ()
   {
   }
 
+  /**
+   * Constructor that initializes the data and check value.
+   *
+   * \param[in] data The original data to be stored.
+   * \param[in] check An integer value for additional checks.
+   */
   enlarged_data (TType data, int check): data (data), check (check)
   {
   }
