@@ -27,8 +27,8 @@
  * 
  */
 
-#ifndef T8_ENLARGED_STDTYPES
-#define T8_ENLARGED_STDTYPES
+#ifndef T8_ENLARGED_STDTYPES_HXX
+#define T8_ENLARGED_STDTYPES_HXX
 
 #include <test/t8_data/t8_data_handler_specs.hxx>
 #include <t8_data/t8_data_handler.hxx>
@@ -118,7 +118,7 @@ class t8_data_handler<enlarged_data<int>> {
 };
 
 /**
- * t8_single_data_handler
+ * t8_data_handler
  * A template specialization for handling single enlarged doubles (double plus an additional int, this 
  * data-type is meant for testing).
  * 
@@ -199,4 +199,4 @@ class t8_data_handler<enlarged_data<double>> {
   }
 };
 
-#endif /* T8_ENLARGED_STDTYPES */
+#endif /* T8_ENLARGED_STDTYPES_HXX */
