@@ -246,6 +246,8 @@ t8_geometry_linear::get_tree_bounding_box ([[maybe_unused]] const t8_cmesh_t cme
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (active_tree_vertices != NULL);
+  /* For linear geometry the bounding box is determined by the minimum/maximum occurring
+   * vertex coordinates. */
   /* Set bounds to the first vertex */
   bounds[0] = active_tree_vertices[0];
   bounds[1] = active_tree_vertices[0];
