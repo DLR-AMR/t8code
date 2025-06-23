@@ -83,6 +83,7 @@ endfunction()
 
 # Function to add a test executable for C++ tests.
 # This function wraps the `add_t8_test` function to include common test sources.
+# Common test sources are t8_gtest_main.cpp and t8_gtest_memory_macros.cxx
 function ( add_t8_cpp_test)
     set( options "" )
     set( oneValueArgs "NAME" )  
