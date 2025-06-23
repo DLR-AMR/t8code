@@ -53,7 +53,7 @@ class t8_scheme_builder {
 #if T8_ENABLE_DEBUG
     t8_debugf ("Registering scheme of type %s with position %li.\n", t8_debug_print_type<TEclassScheme> ().c_str (),
                scheme->eclass_schemes.size ());
-#endif  // T8_ENABLE_DEBUG
+#endif /* T8_ENABLE_DEBUG */
     scheme->eclass_schemes.emplace_back (std::in_place_type<TEclassScheme>, std::forward<_Args> (args)...);
     return scheme->eclass_schemes.size ();
   }
