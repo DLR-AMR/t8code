@@ -1,2 +1,4 @@
 breathe
 exhale
+sphinx.ext.mathjax
+sphinx.ext.graphviz
