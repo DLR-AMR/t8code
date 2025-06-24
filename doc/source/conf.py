@@ -32,13 +32,6 @@ def configureDoxyfile(input_dir, output_dir):
     with open('../Doxyfile', 'w') as file:
         file.write(filedata)
 
-    try:
-        retcode = subprocess.call("cd ../; mkdir build; cd build; cmake .. -DT8CODE_BUILD_DOCUMENTATION=ON -DT8CODE_BUILD_DOCUMENTATION_SPHINX=ON && make -j V=0", shell=True)
-        if retcode < 0:
-            sys.stderr.write("doxygen terminated by signal %s\n" % (-retcode))
-    except OSError as e:
-        sys.stderr.write("doxygen execution failed: %s\n" % e)
-
 # Check if we're running on Read the Docs' servers
 read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
 
