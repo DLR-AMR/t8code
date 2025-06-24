@@ -18,12 +18,25 @@
 #  along with t8code; if not, write to the Free Software Foundation, Inc.,
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
+include(FindPackageHandleStandardArgs)
+
+find_package(PythonInterp)
+if(PYTHONINTERP_FOUND)
+    get_filename_component(_PYTHON_DIR "${PYTHON_EXECUTABLE}" DIRECTORY)
+    set(
+        _PYTHON_PATHS
+        "${_PYTHON_DIR}"
+        "{_PYTHON_DIR}/bin"
+        "{_PYTHON_DIR}/Scripts"
+    )
+endif()
+
 #Look for an executable called sphinx-build
 find_program(SPHINX_EXECUTABLE
              NAMES sphinx-build sphinx-build.exe sphinx-build.py
+             HINTS ${_PYTHON_PATHS}
              DOC "Path to sphinx-build executable")
 
-include(FindPackageHandleStandardArgs)
 
 #Handle standard arguments to find_package like REQUIRED and QUIET
 find_package_handle_standard_args(Sphinx
