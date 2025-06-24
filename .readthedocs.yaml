@@ -35,7 +35,7 @@ build:
   jobs:
     post_checkout:
       - git fetch --unshallow --tags || true  # Fetch all tags to ensure we can build documentation for any version
-    post_build:
+    post_install:
       - bash ./scripts/configure_for_rtd.sh
 
     # You can also specify other tool versions:
