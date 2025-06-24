@@ -167,6 +167,7 @@ else()
     
     # Mark the new variables as advanced
     mark_as_advanced( FORCE ${_new_sc_vars} )
+    FetchContent_MakeAvailable(sc)
 endif()
 
 if (T8CODE_USE_SYSTEM_P4EST)
@@ -177,6 +178,8 @@ else()
         p4est
         GIT_REPOSITORY https://github.com/cburstedde/p4est.git
         GIT_TAG master
+        GIT_SUBMODULES ""  
+        GIT_SHALLOW FALSE
     )
     FetchContent_GetProperties(p4est)
 
@@ -190,7 +193,7 @@ else()
 
     # Mark the new variables as advanced
     mark_as_advanced(FORCE P4EST_BUILD_EXAMPLES P4EST_BUILD_TESTING)
-
+    FetchContent_MakeAvailable(p4est)
 endif()
 
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/src )
