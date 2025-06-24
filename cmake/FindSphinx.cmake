@@ -20,7 +20,7 @@
 
 #Look for an executable called sphinx-build
 find_program(SPHINX_EXECUTABLE
-             NAMES sphinx-build
+             NAMES sphinx-build sphinx-build.exe sphinx-build.py
              DOC "Path to sphinx-build executable")
 
 include(FindPackageHandleStandardArgs)
