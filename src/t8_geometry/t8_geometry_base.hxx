@@ -166,6 +166,22 @@ struct t8_geometry
     return name;
   }
 
+  /**
+   * Compute the bounding box of the currently active tree.
+   * 
+   * \param [in]  cmesh   The cmesh.
+   * \param [out] bounds  The bounding box of the tree in the form (xmin, xmax, ymin, ymax, zmin, zmax).
+   * \return              True if the bounding box was computed successfully, false otherwise.
+   * 
+   * \note This function updates the active tree to the provided \a gtreeid.
+   */
+  virtual bool
+  get_tree_bounding_box ([[maybe_unused]] const t8_cmesh_t cmesh, [[maybe_unused]] double bounds[6]) const
+  {
+    t8_errorf ("Tree bounding box function not implemented");
+    return false;
+  }
+
   inline t8_geometry_hash
   t8_geom_get_hash () const
   {
