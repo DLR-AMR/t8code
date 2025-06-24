@@ -33,11 +33,7 @@ build:
     - cmake
   jobs:
     build:
-      - mkdir build
-      - cd build
-      - cmake .. -DT8CODE_BUILD_DOCUMENTATION=ON -DT8CODE_BUILD_DOCUMENTATION_SPHINX=ON
-      - make -j V=0
-      - cd ..
+    - bash ./scripts/configure_for_rtd.sh
 
     # You can also specify other tool versions:
     # nodejs: "20"
