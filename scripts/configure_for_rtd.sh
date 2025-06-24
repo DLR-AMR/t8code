@@ -7,7 +7,7 @@ mkdir build
 cd build
 
 # Run cmake with the specified options
-cmake .. -DT8CODE_BUILD_DOCUMENTATION=ON -DT8CODE_BUILD_DOCUMENTATION_SPHINX=ON
+cmake .. -DT8CODE_BUILD_DOCUMENTATION=ON -DT8CODE_BUILD_DOCUMENTATION_SPHINX=ON -DT8CODE_ENABLE_MPI=OFF
 
 # Build the project with make
 ninja -j V=0
