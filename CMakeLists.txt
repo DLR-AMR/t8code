@@ -143,6 +143,12 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH true)
 if ( T8CODE_USE_SYSTEM_SC )
     find_package( SC REQUIRED PATHS /path/to/system/sc )
 else()
+    include(FetchContent)
+    FetchContent_Declare(
+        sc
+        GIT_REPOSITORY https://github.com/cburstedde/libsc.git
+        GIT_TAG master
+    )
     set( SC_BUILD_EXAMPLES ${T8CODE_BUILD_TPL_EXAMPLES} )
     set( SC_BUILD_TESTING ${T8CODE_BUILD_TPL_TESTS} )
     
@@ -171,8 +177,6 @@ else()
         p4est
         GIT_REPOSITORY https://github.com/cburstedde/p4est.git
         GIT_TAG master
-        GIT_SUBMODULES ""  
-        GIT_SHALLOW FALSE
     )
     FetchContent_GetProperties(p4est)
 

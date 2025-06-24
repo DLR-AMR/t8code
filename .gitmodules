@@ -1,4 +1,0 @@
-[submodule "sc"]
-	path = sc
-	url = https://github.com/cburstedde/libsc.git
-	ignore = dirty
