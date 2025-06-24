@@ -31,6 +31,7 @@ build:
     python: "3.12"
   apt_packages:
     - cmake
+    - python3-sphinx
     # You can also specify other tool versions:
     # nodejs: "20"
     # rust: "1.70"
