@@ -32,8 +32,8 @@ build:
   apt_packages:
     - cmake
   jobs:
-    build:
-    - bash ./scripts/configure_for_rtd.sh
+    pre_install:
+      - bash ./scripts/configure_for_rtd.sh
 
     # You can also specify other tool versions:
     # nodejs: "20"
