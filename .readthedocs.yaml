@@ -31,6 +31,7 @@ build:
     python: "3.12"
   apt_packages:
     - cmake
+    - ninja-build
   jobs:
     pre_install:
       - bash ./scripts/configure_for_rtd.sh
