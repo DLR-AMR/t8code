@@ -36,7 +36,8 @@ build:
     pre_install:
       - bash ./scripts/configure_for_rtd.sh
     build:
-      - echo "$READTHEDOCS_OUTPUT"
+      pre_build:
+        - echo "$READTHEDOCS_OUTPUT"
 
     # You can also specify other tool versions:
     # nodejs: "20"
