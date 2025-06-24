@@ -33,6 +33,8 @@ build:
     - cmake
     - ninja-build
   jobs:
+    post_checkout:
+      - git fetch --unshallow --tags || true  # Fetch all tags to ensure we can build documentation for any version
     pre_install:
       - bash ./scripts/configure_for_rtd.sh
 
