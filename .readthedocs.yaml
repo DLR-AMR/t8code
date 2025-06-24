@@ -29,7 +29,7 @@ build:
   os: ubuntu-22.04
   tools:
     python: "3.12"
-    cmake: 3.16
+    cmake: "3.16"
     # You can also specify other tool versions:
     # nodejs: "20"
     # rust: "1.70"
