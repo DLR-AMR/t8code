@@ -44,7 +44,7 @@
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_profiling.h>
-#include <t8_forest/t8_forest_ghost/t8_forest_ghist_implementations/t8_forest_ghost_definition_w_search.hxx>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost_implementations/t8_forest_ghost_definition_face.hxx>
 #include <t8_schemes/t8_default/t8_default.hxx>
 
 /* The refinement criterion
@@ -220,7 +220,7 @@ main (int argc, char *argv[])
 
   if (sreturn >= BUFSIZ) {
     /* The help message was truncated */
-    /* Note: gcc >= 7.1 prints a warning if we 
+    /* Note: gcc >= 7.1 prints a warning if we
      * do not check the return value of snprintf. */
     t8_debugf ("Warning: Truncated help message to '%s'\n", help);
   }
