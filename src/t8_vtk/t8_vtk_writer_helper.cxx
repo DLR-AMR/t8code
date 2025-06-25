@@ -67,7 +67,7 @@ template <>
 t8_locidx_t
 grid_local_num_elements<t8_forest_t> (const t8_forest_t grid)
 {
-  return t8_forest_get_local_num_elements (grid);
+  return t8_forest_get_local_num_leaf_elements (grid);
 }
 
 template <>
@@ -109,7 +109,7 @@ template <>
 t8_gloidx_t
 grid_first_local_id<t8_forest_t> (const t8_forest_t grid)
 {
-  return t8_forest_get_first_local_element_id (grid);
+  return t8_forest_get_first_local_leaf_element_id (grid);
 }
 
 template <>
