@@ -39,8 +39,8 @@ class class_test_equal: public TestDFS {
 
       const int num_children = scheme->element_get_num_face_children (eclass, element, iface);
 
-      elems1 = T8_ALLOC (t8_element_t *, num_children);
-      elems2 = T8_ALLOC (t8_element_t *, num_children);
+      elems1 = T8_TESTSUITE_ALLOC (t8_element_t *, num_children);
+      elems2 = T8_TESTSUITE_ALLOC (t8_element_t *, num_children);
 
       scheme->element_new (eclass, num_children, elems1);
       scheme->element_new (eclass, num_children, elems2);
@@ -64,8 +64,8 @@ class class_test_equal: public TestDFS {
       scheme->element_destroy (eclass, num_children, elems1);
       scheme->element_destroy (eclass, num_children, elems2);
 
-      T8_FREE (elems1);
-      T8_FREE (elems2);
+      T8_TESTSUITE_FREE (elems1);
+      T8_TESTSUITE_FREE (elems2);
     }
   }
 

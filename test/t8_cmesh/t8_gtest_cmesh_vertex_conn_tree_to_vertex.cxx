@@ -91,7 +91,7 @@ class cmesh_vertex_conn_ttv_with_core_classes: public testing::TestWithParam<cme
       const t8_eclass_t tree_class = t8_cmesh_get_tree_class (committed_cmesh, itree);
       /* Allocate space for entries. */
       const int num_tree_vertices = t8_eclass_num_vertices[tree_class];
-      t8_gloidx_t *global_indices = T8_ALLOC (t8_gloidx_t, num_tree_vertices);
+      t8_gloidx_t *global_indices = T8_TESTSUITE_ALLOC (t8_gloidx_t, num_tree_vertices);
       /* Fill with 0, 1, 2, 3, 4 ... */
       const t8_gloidx_t start_index = itree * T8_ECLASS_MAX_CORNERS;
       for (t8_locidx_t ientry = start_index; ientry < num_tree_vertices; ++ientry) {
@@ -99,7 +99,7 @@ class cmesh_vertex_conn_ttv_with_core_classes: public testing::TestWithParam<cme
       }
       ttv.set_global_vertex_ids_of_tree_vertices (cmesh, itree, global_indices, num_tree_vertices);
       /* It is save to free the entries after commit, since the value got copied. */
-      T8_FREE (global_indices);
+      T8_TESTSUITE_FREE (global_indices);
     }
 
     /* Commit the cmesh */
@@ -163,7 +163,7 @@ class cmesh_vertex_conn_ttv_with_core_classes_temp:
       t8_cmesh_set_tree_class (cmesh, itree, tree_class);
       /* Allocate space for entries. */
       const int num_tree_vertices = t8_eclass_num_vertices[tree_class];
-      t8_gloidx_t *global_indices = T8_ALLOC (t8_gloidx_t, num_tree_vertices);
+      t8_gloidx_t *global_indices = T8_TESTSUITE_ALLOC (t8_gloidx_t, num_tree_vertices);
       /* Fill with i, i+1, i+2, i+3, ... */
       const t8_gloidx_t start_index = itree * T8_ECLASS_MAX_CORNERS;
       for (t8_locidx_t ientry = 0; ientry < num_tree_vertices; ++ientry) {
@@ -171,7 +171,7 @@ class cmesh_vertex_conn_ttv_with_core_classes_temp:
       }
       ttv.set_global_vertex_ids_of_tree_vertices (cmesh, itree, global_indices, num_tree_vertices);
       /* It is save to free the entries after commit, since the value got copied. */
-      T8_FREE (global_indices);
+      T8_TESTSUITE_FREE (global_indices);
     }
 
     /* Commit the cmesh */
@@ -279,7 +279,7 @@ class cmesh_vertex_conn_ttv_with_cmesh_functions: public testing::TestWithParam<
       const t8_eclass_t tree_class = t8_cmesh_get_tree_class (committed_cmesh, itree);
       /* Allocate space for entries. */
       const int num_tree_vertices = t8_eclass_num_vertices[tree_class];
-      t8_gloidx_t *global_indices = T8_ALLOC (t8_gloidx_t, num_tree_vertices);
+      t8_gloidx_t *global_indices = T8_TESTSUITE_ALLOC (t8_gloidx_t, num_tree_vertices);
       /* Fill with 0, 1, 2, 3, 4 ... */
       const t8_gloidx_t start_index = itree * T8_ECLASS_MAX_CORNERS;
       for (t8_locidx_t ientry = start_index; ientry < num_tree_vertices; ++ientry) {
@@ -288,7 +288,7 @@ class cmesh_vertex_conn_ttv_with_cmesh_functions: public testing::TestWithParam<
       const t8_gloidx_t global_tree_id = t8_cmesh_get_global_id (cmesh, itree);
       t8_cmesh_set_global_vertices_of_tree (cmesh, global_tree_id, global_indices, num_tree_vertices);
       /* It is save to free the entries after commit, since the value got copied. */
-      T8_FREE (global_indices);
+      T8_TESTSUITE_FREE (global_indices);
     }
 
     /* Commit the cmesh */
@@ -350,7 +350,7 @@ class cmesh_vertex_conn_ttv_with_cmesh_functions_temp:
       t8_cmesh_set_tree_class (cmesh, itree, tree_class);
       /* Allocate space for entries. */
       const int num_tree_vertices = t8_eclass_num_vertices[tree_class];
-      t8_gloidx_t *global_indices = T8_ALLOC (t8_gloidx_t, num_tree_vertices);
+      t8_gloidx_t *global_indices = T8_TESTSUITE_ALLOC (t8_gloidx_t, num_tree_vertices);
       /* Fill with i, i+1, i+2, i+3, ... */
       const t8_gloidx_t start_index = itree * T8_ECLASS_MAX_CORNERS;
       for (t8_locidx_t ientry = 0; ientry < num_tree_vertices; ++ientry) {
@@ -358,7 +358,7 @@ class cmesh_vertex_conn_ttv_with_cmesh_functions_temp:
       }
       t8_cmesh_set_global_vertices_of_tree (cmesh, itree, global_indices, num_tree_vertices);
       /* It is save to free the entries after commit, since the value got copied. */
-      T8_FREE (global_indices);
+      T8_TESTSUITE_FREE (global_indices);
     }
 
     /* Commit the cmesh */

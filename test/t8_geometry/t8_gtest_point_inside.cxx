@@ -21,6 +21,7 @@
 */
 
 #include <gtest/gtest.h>
+#include <test/t8_gtest_memory_macros.hxx>
 #include <sc_functions.h>
 #include <t8_eclass.h>
 #include <t8_cmesh.hxx>
@@ -214,7 +215,7 @@ TEST_P (geometry_point_inside, test_point_inside)
       }
 
       /* Allocate the barycentric coordinates */
-      double *barycentric_coordinates = T8_ALLOC (double, num_corners);
+      double *barycentric_coordinates = T8_TESTSUITE_ALLOC (double, num_corners);
 
       /* Fill the barycentric coordinates with test values */
       /* 1-Sum 0 0 0  ... start
@@ -250,9 +251,9 @@ TEST_P (geometry_point_inside, test_point_inside)
       const int min_points_outside = 6;
       const int num_points = sc_intpow (num_steps, num_corners - 1);
       const int total_points = num_points + min_points_outside;
-      double *test_point = T8_ALLOC_ZERO (double, total_points * 3);
-      int *point_is_inside = T8_ALLOC (int, total_points);
-      int *point_is_recognized_as_inside = T8_ALLOC (int, total_points);
+      double *test_point = T8_TESTSUITE_ALLOC_ZERO (double, total_points * 3);
+      int *point_is_inside = T8_TESTSUITE_ALLOC (int, total_points);
+      int *point_is_recognized_as_inside = T8_TESTSUITE_ALLOC (int, total_points);
       double step = (barycentric_range_upper_bound - barycentric_range_lower_bound) / (num_steps - 1);
       //t8_debugf ("step size %g, steps %i, points %i (corners %i)\n", step,
       //           num_steps, num_points, num_corners);
@@ -319,10 +320,10 @@ TEST_P (geometry_point_inside, test_point_inside)
           << " element, but is not detected as such.";
       } /* End loop over points. */
       t8_debugf ("%i (%.2f%%) test points are inside the element\n", num_in, (100.0 * num_in) / num_points);
-      T8_FREE (barycentric_coordinates);
-      T8_FREE (test_point);
-      T8_FREE (point_is_inside);
-      T8_FREE (point_is_recognized_as_inside);
+      T8_TESTSUITE_FREE (barycentric_coordinates);
+      T8_TESTSUITE_FREE (test_point);
+      T8_TESTSUITE_FREE (point_is_inside);
+      T8_TESTSUITE_FREE (point_is_recognized_as_inside);
     } /* End loop over elements */
   }   /* End loop over trees */
   t8_forest_unref (&forest);

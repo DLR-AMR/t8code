@@ -2760,7 +2760,8 @@ t8_cmesh_new_long_brick_pyramid (sc_MPI_Comm comm, int num_cubes)
 }
 
 t8_cmesh_t
-t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees, const int set_attributes, const int do_partition, sc_MPI_Comm comm)
+t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees, const int set_attributes, const int do_partition, sc_MPI_Comm comm,
+                           const int package_id)
 {
   T8_ASSERT (num_trees > 0);
 
@@ -2793,10 +2794,8 @@ t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees, const int set_attributes, cons
     }
     /* Set two more dummy attributes - tree_id & num_trees. */
     if (set_attributes) {
-      t8_cmesh_set_attribute (cmesh, tree_id, t8_get_package_id (), T8_CMESH_NEXT_POSSIBLE_KEY, &tree_id,
-                              sizeof (t8_locidx_t), 0);
-      t8_cmesh_set_attribute (cmesh, tree_id, t8_get_package_id (), T8_CMESH_NEXT_POSSIBLE_KEY + 1, &num_trees,
-                              sizeof (t8_locidx_t), 0);
+      t8_cmesh_set_attribute (cmesh, tree_id, package_id, 0, &tree_id, sizeof (t8_locidx_t), 0);
+      t8_cmesh_set_attribute (cmesh, tree_id, package_id, 1, &num_trees, sizeof (t8_locidx_t), 0);
     }
   }
 

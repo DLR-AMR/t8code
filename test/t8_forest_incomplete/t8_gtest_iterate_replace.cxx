@@ -229,8 +229,8 @@ TEST_P (forest_iterate, test_iterate_replace)
   const int runs = 2;
 
   for (int run = 0; run < runs; run++) {
-    t8_locidx_t num_elements = t8_forest_get_local_num_leaf_elements (forest);
-    int *adapt_callbacks = T8_ALLOC (int, num_elements);
+    const t8_locidx_t num_elements = t8_forest_get_local_num_leaf_elements (forest);
+    int *adapt_callbacks = T8_TESTSUITE_ALLOC (int, num_elements);
 
     for (t8_locidx_t elidx = 0; elidx < num_elements; elidx++) {
       adapt_callbacks[elidx] = -3;
@@ -250,7 +250,7 @@ TEST_P (forest_iterate, test_iterate_replace)
     /* Partition the forest. This is useful as preparation for the second run with the adapted forest. */
     forest_adapt = t8_adapt_forest (forest_adapt, NULL, 0, 1, NULL);
 
-    T8_FREE (adapt_callbacks);
+    T8_TESTSUITE_FREE (adapt_callbacks);
     forest = forest_adapt;
   }
 }
