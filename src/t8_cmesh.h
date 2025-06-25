@@ -816,6 +816,22 @@ t8_cmesh_new_translate_vertices_to_attributes (const t8_locidx_t *tvertices, con
  */
 void
 t8_cmesh_debug_print_trees (const t8_cmesh_t cmesh, sc_MPI_Comm comm);
+
+/**
+ * Compute the process local bounding box of the cmesh.
+ * The bounding box is stored in the array \a bounds in the following order:
+ * bounds[0] = x_min
+ * bounds[1] = x_max
+ * bounds[2] = y_min
+ * bounds[3] = y_max
+ * bounds[4] = z_min
+ * bounds[5] = z_max
+ * 
+ * \param [in] cmesh    The cmesh to be considered.
+ * \param [out] bounds  The bounding box of the cmesh.
+ */
+void
+t8_cmesh_get_local_bounding_box (const t8_cmesh_t cmesh, double bounds[6]);
 T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_H */
