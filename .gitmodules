@@ -6,3 +6,6 @@
 	path = sc
 	url = https://github.com/cburstedde/libsc.git
 	ignore = dirty
+[submodule "thirdparty/unordered_dense"]
+	path = thirdparty/unordered_dense
+	url = https://github.com/martinus/unordered_dense.git
