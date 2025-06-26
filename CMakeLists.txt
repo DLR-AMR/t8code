@@ -54,6 +54,7 @@ option( T8CODE_BUILD_FORTRAN_INTERFACE "Build t8code's Fortran interface" OFF )
 
 option( T8CODE_ENABLE_MPI "Enable t8code's features which rely on MPI" ON )
 option( T8CODE_ENABLE_VTK "Enable t8code's features which rely on VTK" OFF )
+option( T8CODE_ENABLE_MRA "Enable t8code's features which rely on MRA" OFF )
 option( T8CODE_ENABLE_OCC "Enable t8code's features which rely on OpenCASCADE" OFF )
 option( T8CODE_ENABLE_NETCDF "Enable t8code's features which rely on netCDF" OFF )
 
@@ -107,6 +108,21 @@ if( T8CODE_ENABLE_VTK )
         message("Found VTK")
     endif (VTK_FOUND)
 endif( T8CODE_ENABLE_VTK )
+
+if( T8CODE_ENABLE_MRA )
+  find_package(GSL REQUIRED)
+  if(GSL_FOUND)
+    message("Found GSL")
+  endif(GSL_FOUND)
+
+  if(NOT DEFINED UNORDERED_DENSE_FOUND)
+    if(NOT TARGET unordered_dense::unordered_dense) 
+      set(UNORDERED_DENSE_FOUND FALSE)
+    else() 
+      set(UNORDERED_DENSE_FOUND FALSE)
+    endif()
+  endif()
+endif(T8CODE_ENABLE_MRA)
 
 if( T8CODE_ENABLE_OCC )
     find_package( OpenCASCADE REQUIRED COMPONENTS

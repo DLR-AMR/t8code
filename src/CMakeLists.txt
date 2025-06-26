@@ -122,6 +122,42 @@ if( T8CODE_ENABLE_OCC )
     )
 endif()
 
+if( T8CODE_ENABLE_MRA )
+  # Add GSL library 
+  target_link_libraries( T8 PUBLIC GSL::gsl GSL::gslcblas )
+  target_compile_definitions( T8 PUBLIC T8_ENABLE_GSL=1 )
+
+  target_sources( T8 PRIVATE 
+    t8_mra/t8_gsl.cxx
+  )
+  install( FILES 
+    t8_mra/t8_gsl.hxx
+  DESTINATION include )
+
+  # Add unordered_dense library https://github.com/martinus/unordered_dense
+  target_include_directories( T8 PRIVATE ${CMAKE_SOURCE_DIR}/thirdparty/unordered_dense/include )
+  target_compile_definitions( T8 PUBLIC T8_ENABLE_UNORDERED_DENSE=1 )
+  add_library( unordered_dense INTERFACE ${CMAKE_SOURCE_DIR}/thirdparty/unordered_dense/include )
+  target_link_libraries( T8 PRIVATE unordered_dense )
+
+  target_sources( T8 PRIVATE
+    t8_mra/t8_unordered_dense.cxx
+    t8_mra/t8_mra.cxx
+    t8_mra/vecmat.cxx
+    t8_mra/basis_functions.cxx
+    t8_mra/dunavant.cxx
+    t8_mra/mask_coefficients.cxx
+  )
+  install( FILES
+    t8_mra/t8_unordered_dense.hxx
+    t8_mra/t8_mra.hxx
+    t8_mra/vecmat.hxx
+    t8_mra/basis_functions.hxx
+    t8_mra/dunavant.hxx
+    t8_mra/mask_coefficients.hxx
+    DESTINATION include)
+endif()
+
 if( T8CODE_BUILD_PEDANTIC )
   target_compile_options( T8 PUBLIC -pedantic )
   set (T8_CXXFLAGS "${T8_CXXFLAGS} -Wpedantic")
