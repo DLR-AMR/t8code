@@ -28,6 +28,8 @@ project(
     LANGUAGES C CXX
     VERSION "${T8CODE_VERSION_MAJOR}.${T8CODE_VERSION_MINOR}.${T8CODE_VERSION_PATCH}" 
     )
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
     
 include( GNUInstallDirs)
 include( CTest )
