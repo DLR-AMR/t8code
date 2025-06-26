@@ -22,9 +22,9 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 /**
  * \file t8_gtest_data_handler.cxx
- * 
- * Test to check the functionality of the t8_data_handler class. 
- * 
+ *
+ * Test to check the functionality of the t8_data_handler class.
+ *
  */
 
 #include <gtest/gtest.h>
@@ -36,9 +36,9 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <numeric>
 
 /**
- * Templated testing class. Creates enlarged data (original data + a checking integer) and a 
- * data handler. 
- * 
+ * Templated testing class. Creates enlarged data (original data + a checking integer) and a
+ * data handler.
+ *
  * \tparam T the type of data
  */
 template <typename TType>
@@ -74,7 +74,7 @@ class data_handler_test: public testing::Test {
 TYPED_TEST_SUITE_P (data_handler_test);
 
 /**
- * Test to pack and unpack a vector of elements of type T. 
+ * Test to pack and unpack a vector of elements of type T.
  */
 TYPED_TEST_P (data_handler_test, pack_unpack_vector_of_data)
 {
@@ -100,7 +100,7 @@ TYPED_TEST_P (data_handler_test, pack_unpack_vector_of_data)
 }
 
 /**
- * Use the send and receive routines for packed data. 
+ * Use the send and receive routines for packed data.
  */
 TYPED_TEST_P (data_handler_test, send_recv)
 {
@@ -109,6 +109,10 @@ TYPED_TEST_P (data_handler_test, send_recv)
   /* Pack and send the data. */
 #if T8_ENABLE_MPI
   int send_to = (this->mpirank + 1) % this->mpisize;
+  if (send_to == this->mpirank) {
+    t8_debugf ("Rank %d not sending data to itself\n", this->mpirank);
+    return;
+  }
   int mpiret = this->data_handler->send (send_to, 0, this->comm);
   SC_CHECK_MPI (mpiret);
 
@@ -163,14 +167,18 @@ TEST (data_handler_test, multiple_handler)
   int send_to = (mpirank + 1) % mpisize;
   /* Compute the rank this rank receives from. */
   int recv_from = (mpirank == 0) ? (mpisize - 1) : (mpirank - 1);
-  for (t8_abstract_vector_handler *ihandler : handler) {
-
-    mpiret = ihandler->send (send_to, 0, comm);
-    SC_CHECK_MPI (mpiret);
-    /* Receive and unpack the data. */
-    sc_MPI_Status status;
-    int outcount;
-    mpiret = ihandler->recv (recv_from, 0, comm, &status, outcount);
+  if (send_to != mpirank) {
+    for (t8_abstract_vector_handler *ihandler : handler) {
+      mpiret = ihandler->send (send_to, 0, comm);
+      SC_CHECK_MPI (mpiret);
+      /* Receive and unpack the data. */
+      sc_MPI_Status status;
+      int outcount;
+      mpiret = ihandler->recv (recv_from, 0, comm, &status, outcount);
+    }
+  }
+  else {
+    t8_debugf ("Rank %d not sending data to itself\n", mpirank);
   }
 
   std::vector<enlarged_data<int>> recv_ints = *((t8_vector_handler<enlarged_data<int>> *) (handler[0]))->get_data ();
@@ -281,7 +289,10 @@ TEST (data_handler_test, tree_test)
 
   const int send_to = (mpirank + 1) % mpisize;
   const int recv_from = (mpirank == 0) ? (mpisize - 1) : (mpirank - 1);
-
+  if (send_to == mpirank) {
+    t8_debugf ("Rank %d not sending data to itself\n", mpirank);
+    return;
+  }
   mpiret = tree_handler.send (send_to, 0, comm);
   SC_CHECK_MPI (mpiret);
   sc_MPI_Status status;
