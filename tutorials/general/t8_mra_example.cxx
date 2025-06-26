@@ -835,7 +835,7 @@ fill_zvalues_arr_for_Correlation_wf_spline (t8_forest_t forest, float fileData_w
   T8_ASSERT (t8_forest_is_committed (forest));
 
   /* Get the number of local elements of forest. */
-  num_local_elements = t8_forest_get_local_num_elements (forest);
+  num_local_elements = t8_forest_get_local_num_leaf_elements (forest);
   /* Get the number of ghost elements of forest. */
   num_ghost_elements = t8_forest_get_num_ghosts (forest);
   t8_locidx_t itree, num_local_trees;
@@ -852,7 +852,7 @@ fill_zvalues_arr_for_Correlation_wf_spline (t8_forest_t forest, float fileData_w
      * of a tree, we need to get its eclass_scheme, and in order to so we first get its eclass. */
     tree_class = t8_forest_get_tree_class (forest, itree);
     /* Get the number of elements of this tree. */
-    num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+    num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
     //t8_global_productionf ("test innen zwei \n");
     for (ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
       /* This loop iterates through all the local elements of the forest in the current tree. */
@@ -860,7 +860,7 @@ fill_zvalues_arr_for_Correlation_wf_spline (t8_forest_t forest, float fileData_w
        * data for this element. */
       /* Since in this example we want to compute the data based on the element in question,
        * we need to get a pointer to this element. */
-      element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       double volume = t8_forest_element_volume (forest, itree, element);
       double verts[3][3] = { 0 };
       t8_forest_element_coordinate (forest, itree, element, 0, verts[0]);
@@ -919,7 +919,7 @@ fill_zvalues_arr_for_Correlation_wb_spline (t8_forest_t forest, float fileData_w
   T8_ASSERT (t8_forest_is_committed (forest));
 
   /* Get the number of local elements of forest. */
-  num_local_elements = t8_forest_get_local_num_elements (forest);
+  num_local_elements = t8_forest_get_local_num_leaf_elements (forest);
   /* Get the number of ghost elements of forest. */
   num_ghost_elements = t8_forest_get_num_ghosts (forest);
   t8_locidx_t itree, num_local_trees;
@@ -936,7 +936,7 @@ fill_zvalues_arr_for_Correlation_wb_spline (t8_forest_t forest, float fileData_w
      * of a tree, we need to get its eclass_scheme, and in order to so we first get its eclass. */
     tree_class = t8_forest_get_tree_class (forest, itree);
     /* Get the number of elements of this tree. */
-    num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+    num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
     //t8_global_productionf ("test innen zwei \n");
     for (ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
       /* This loop iterates through all the local elements of the forest in the current tree. */
@@ -944,7 +944,7 @@ fill_zvalues_arr_for_Correlation_wb_spline (t8_forest_t forest, float fileData_w
        * data for this element. */
       /* Since in this example we want to compute the data based on the element in question,
        * we need to get a pointer to this element. */
-      element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       double volume = t8_forest_element_volume (forest, itree, element);
       double verts[3][3] = { 0 };
       t8_forest_element_coordinate (forest, itree, element, 0, verts[0]);
@@ -1332,9 +1332,9 @@ main (int argc, char** argv)
   for (int i = min_level; i < max_level - 1; i++) {
     //forest=t8_bottom_up_adapt(forest);
     t8_global_productionf (" i: %i\n", i);
-    global_num_elements = t8_forest_get_global_num_elements (forest);
+    global_num_elements = t8_forest_get_global_num_leaf_elements (forest);
     forest = t8_prediction_adapt_wf (forest);
-    global_num_elements_next = t8_forest_get_global_num_elements (forest);
+    global_num_elements_next = t8_forest_get_global_num_leaf_elements (forest);
     if (global_num_elements_next == global_num_elements) {
       break;
     }
