@@ -664,9 +664,9 @@ calculate_rescale_wb_1D_func (t8_forest_t forest)
   num_local_trees = t8_forest_get_num_local_trees (forest);
   for (itree = 0, current_index = 0; itree < num_local_trees; ++itree) {
     /* Get the number of elements of this tree. */
-    num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+    num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
     for (ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
-      element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       double A = t8_forest_element_volume (forest, itree, element);
       //t8_global_productionf ("A: %f\n",A);
       avg_per_dim_arr += A * t8_element_get_value_wb_1D_func (adapt_data, current_index).u_coeff[0]
@@ -697,9 +697,9 @@ calculate_rescale_wf_1D_func (t8_forest_t forest)
   num_local_trees = t8_forest_get_num_local_trees (forest);
   for (itree = 0, current_index = 0; itree < num_local_trees; ++itree) {
     /* Get the number of elements of this tree. */
-    num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+    num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
     for (ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
-      element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       double A = t8_forest_element_volume (forest, itree, element);
       //t8_global_productionf ("A: %f\n",A);
       avg_per_dim_arr += A * t8_element_get_value_wf_1D_func (adapt_data, current_index).u_coeff[0]
@@ -730,9 +730,9 @@ calculate_rescale_wb_1D_spline (t8_forest_t forest)
   num_local_trees = t8_forest_get_num_local_trees (forest);
   for (itree = 0, current_index = 0; itree < num_local_trees; ++itree) {
     /* Get the number of elements of this tree. */
-    num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+    num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
     for (ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
-      element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       double A = t8_forest_element_volume (forest, itree, element);
       //t8_global_productionf ("A: %f\n",A);
       avg_per_dim_arr += A * t8_element_get_value_wb_1D_spline (adapt_data, current_index).u_coeff[0]
@@ -763,9 +763,9 @@ calculate_rescale_wf_1D_spline (t8_forest_t forest)
   num_local_trees = t8_forest_get_num_local_trees (forest);
   for (itree = 0, current_index = 0; itree < num_local_trees; ++itree) {
     /* Get the number of elements of this tree. */
-    num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+    num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
     for (ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
-      element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       double A = t8_forest_element_volume (forest, itree, element);
       //t8_global_productionf ("A: %f\n",A);
       avg_per_dim_arr += A * t8_element_get_value_wf_1D_spline (adapt_data, current_index).u_coeff[0]
@@ -793,7 +793,7 @@ calculate_rescale_wf_1D_spline (t8_forest_t forest)
 //   num_local_trees = t8_forest_get_num_local_trees (grid_hierarchy.lev_arr[0].forest_arr);
 //   for (itree = 0, current_index = 0; itree < num_local_trees; ++itree) {
 //     /* Get the number of elements of this tree. */
-//     num_elements_in_tree = t8_forest_get_tree_num_elements (grid_hierarchy.lev_arr[0].forest_arr, itree);
+//     num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (grid_hierarchy.lev_arr[0].forest_arr, itree);
 //     for (ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
 //       element = t8_forest_get_element_in_tree (grid_hierarchy.lev_arr[0].forest_arr, itree, ielement);
 //       double A=t8_forest_element_volume (grid_hierarchy.lev_arr[0].forest_arr, itree, element);
@@ -1487,7 +1487,7 @@ AuswertungSinglescale (t8_forest_t forest, const t8_scheme *scheme, double x, do
   uint64_t lmi = element_data.lmi;
   t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
   const t8_element_t *element;
-  element = t8_forest_get_element_in_tree (forest, itree, ielement);
+  element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
   int level = scheme->element_get_level (tree_class, element);
   struct t8_data_per_element_1d_gh data_gh = adapt_data->grid_map_ptr->get (level, lmi);
   int first = data_gh.first;
@@ -1539,7 +1539,7 @@ AuswertungSinglescale_wf (t8_forest_t forest, const t8_scheme *scheme, double x,
   uint64_t lmi = element_data.lmi;
   t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
   const t8_element_t *element;
-  element = t8_forest_get_element_in_tree (forest, itree, ielement);
+  element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
   int level = scheme->element_get_level (tree_class, element);
   struct t8_data_per_element_waveletfree_1d_gh data_gh = adapt_data->grid_map_ptr->get (level, lmi);
   int first = data_gh.first;
@@ -1591,7 +1591,7 @@ AuswertungSinglescale_wf_spline (t8_forest_t forest, const t8_scheme *scheme, do
   uint64_t lmi = element_data.lmi;
   t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
   const t8_element_t *element;
-  element = t8_forest_get_element_in_tree (forest, itree, ielement);
+  element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
   int level = scheme->element_get_level (tree_class, element);
   struct t8_data_per_element_waveletfree_1d_gh data_gh = adapt_data->grid_map_ptr->get (level, lmi);
   int first = data_gh.first;
@@ -1643,7 +1643,7 @@ AuswertungSinglescale_wb_spline (t8_forest_t forest, const t8_scheme *scheme, do
   uint64_t lmi = element_data.lmi;
   t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
   const t8_element_t *element;
-  element = t8_forest_get_element_in_tree (forest, itree, ielement);
+  element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
   int level = scheme->element_get_level (tree_class, element);
   struct t8_data_per_element_1d_gh data_gh = adapt_data->grid_map_ptr->get (level, lmi);
   int first = data_gh.first;
@@ -1706,7 +1706,7 @@ ErrorSinglescale (t8_forest_t forest, int rule, const char *err_type)
   T8_ASSERT (t8_forest_is_committed (forest));
 
   /* Get the number of local elements of forest. */
-  num_local_elements = t8_forest_get_local_num_elements (forest);
+  num_local_elements = t8_forest_get_local_num_leaf_elements (forest);
   /* Get the number of ghost elements of forest. */
   num_ghost_elements = t8_forest_get_num_ghosts (forest);
   t8_locidx_t itree, num_local_trees;
@@ -1725,7 +1725,7 @@ ErrorSinglescale (t8_forest_t forest, int rule, const char *err_type)
      * of a tree, we need to get its eclass_scheme, and in order to so we first get its eclass. */
     tree_class = t8_forest_get_tree_class (forest, itree);
     /* Get the number of elements of this tree. */
-    num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+    num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
     //t8_global_productionf ("test innen zwei \n");
     for (ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
       /* This loop iterates through all the local elements of the forest in the current tree. */
@@ -1733,7 +1733,7 @@ ErrorSinglescale (t8_forest_t forest, int rule, const char *err_type)
        * data for this element. */
       /* Since in this example we want to compute the data based on the element in question,
        * we need to get a pointer to this element. */
-      element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       double volume = t8_forest_element_volume (forest, itree, element);
       double verts[3][3] = { 0 };
       t8_forest_element_coordinate (forest, itree, element, 0, verts[0]);
@@ -1823,7 +1823,7 @@ ErrorSinglescale_wf (t8_forest_t forest, int rule, const char *err_type)
   T8_ASSERT (t8_forest_is_committed (forest));
 
   /* Get the number of local elements of forest. */
-  num_local_elements = t8_forest_get_local_num_elements (forest);
+  num_local_elements = t8_forest_get_local_num_leaf_elements (forest);
   /* Get the number of ghost elements of forest. */
   num_ghost_elements = t8_forest_get_num_ghosts (forest);
   t8_locidx_t itree, num_local_trees;
@@ -1841,7 +1841,7 @@ ErrorSinglescale_wf (t8_forest_t forest, int rule, const char *err_type)
      * of a tree, we need to get its eclass_scheme, and in order to so we first get its eclass. */
     tree_class = t8_forest_get_tree_class (forest, itree);
     /* Get the number of elements of this tree. */
-    num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+    num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
     //t8_global_productionf ("test innen zwei \n");
     for (ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
       /* This loop iterates through all the local elements of the forest in the current tree. */
@@ -1849,7 +1849,7 @@ ErrorSinglescale_wf (t8_forest_t forest, int rule, const char *err_type)
        * data for this element. */
       /* Since in this example we want to compute the data based on the element in question,
        * we need to get a pointer to this element. */
-      element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       double volume = t8_forest_element_volume (forest, itree, element);
       double verts[3][3] = { 0 };
       t8_forest_element_coordinate (forest, itree, element, 0, verts[0]);
@@ -2150,7 +2150,7 @@ t8_create_init_mra_forest_wb_1D_func (levelgrid_map<t8_data_per_element_1d_gh> *
   t8_locidx_t num_local_elements;
   t8_locidx_t num_ghost_elements;
   /* Get the number of local elements of forest. */
-  num_local_elements = t8_forest_get_global_num_elements (forest);
+  num_local_elements = t8_forest_get_global_num_leaf_elements (forest);
   /* Get the number of ghost elements of forest. */
   num_ghost_elements = t8_forest_get_num_ghosts (forest);
   data->element_data
@@ -2191,9 +2191,9 @@ t8_create_init_mra_forest_wb_1D_func (levelgrid_map<t8_data_per_element_1d_gh> *
          * of a tree, we need to get its eclass_scheme, and in order to so we first get its eclass. */
       tree_class = t8_forest_get_tree_class (forest, itree);
       /* Get the number of elements of this tree. */
-      num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+      num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
       for (ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
-        element = t8_forest_get_element_in_tree (forest, itree, ielement);
+        element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
 
         /* We want to store the elements level and its volume as data. We compute these
            * via the eclass_scheme and the forest_element interface. */
@@ -2305,7 +2305,7 @@ t8_create_init_mra_forest_wb_1D_spline (levelgrid_map<t8_data_per_element_1d_gh>
   t8_locidx_t num_local_elements;
   t8_locidx_t num_ghost_elements;
   /* Get the number of local elements of forest. */
-  num_local_elements = t8_forest_get_global_num_elements (forest);
+  num_local_elements = t8_forest_get_global_num_leaf_elements (forest);
   /* Get the number of ghost elements of forest. */
   num_ghost_elements = t8_forest_get_num_ghosts (forest);
   data->element_data
@@ -2348,9 +2348,9 @@ t8_create_init_mra_forest_wb_1D_spline (levelgrid_map<t8_data_per_element_1d_gh>
          * of a tree, we need to get its eclass_scheme, and in order to so we first get its eclass. */
       tree_class = t8_forest_get_tree_class (forest, itree);
       /* Get the number of elements of this tree. */
-      num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+      num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
       for (ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
-        element = t8_forest_get_element_in_tree (forest, itree, ielement);
+        element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
 
         /* We want to store the elements level and its volume as data. We compute these
            * via the eclass_scheme and the forest_element interface. */
@@ -2500,7 +2500,7 @@ t8_create_init_mra_forest_wb_1D_spline (levelgrid_map<t8_data_per_element_1d_gh>
 //          * of a tree, we need to get its eclass_scheme, and in order to so we first get its eclass. */
 //         tree_class = t8_forest_get_tree_class (forest, itree);
 //         /* Get the number of elements of this tree. */
-//         num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+//         num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
 //         for (ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
 //           element = t8_forest_get_element_in_tree (forest, itree, ielement);
 //
@@ -2616,7 +2616,7 @@ t8_create_init_mra_forest_wf_1D_func (levelgrid_map<t8_data_per_element_waveletf
   t8_locidx_t num_local_elements;
   t8_locidx_t num_ghost_elements;
   /* Get the number of local elements of forest. */
-  num_local_elements = t8_forest_get_global_num_elements (forest);
+  num_local_elements = t8_forest_get_global_num_leaf_elements (forest);
   /* Get the number of ghost elements of forest. */
   num_ghost_elements = t8_forest_get_num_ghosts (forest);
   data->element_data
@@ -2657,9 +2657,9 @@ t8_create_init_mra_forest_wf_1D_func (levelgrid_map<t8_data_per_element_waveletf
          * of a tree, we need to get its eclass_scheme, and in order to so we first get its eclass. */
       tree_class = t8_forest_get_tree_class (forest, itree);
       /* Get the number of elements of this tree. */
-      num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+      num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
       for (ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
-        element = t8_forest_get_element_in_tree (forest, itree, ielement);
+        element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
 
         /* We want to store the elements level and its volume as data. We compute these
            * via the eclass_scheme and the forest_element interface. */
@@ -2772,7 +2772,7 @@ t8_create_init_mra_forest_wf_1D_spline (levelgrid_map<t8_data_per_element_wavele
   t8_locidx_t num_local_elements;
   t8_locidx_t num_ghost_elements;
   /* Get the number of local elements of forest. */
-  num_local_elements = t8_forest_get_global_num_elements (forest);
+  num_local_elements = t8_forest_get_global_num_leaf_elements (forest);
   /* Get the number of ghost elements of forest. */
   num_ghost_elements = t8_forest_get_num_ghosts (forest);
   data->element_data
@@ -2815,9 +2815,9 @@ t8_create_init_mra_forest_wf_1D_spline (levelgrid_map<t8_data_per_element_wavele
          * of a tree, we need to get its eclass_scheme, and in order to so we first get its eclass. */
       tree_class = t8_forest_get_tree_class (forest, itree);
       /* Get the number of elements of this tree. */
-      num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+      num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
       for (ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
-        element = t8_forest_get_element_in_tree (forest, itree, ielement);
+        element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
 
         /* We want to store the elements level and its volume as data. We compute these
            * via the eclass_scheme and the forest_element interface. */
@@ -2981,7 +2981,7 @@ t8_create_init_mra_forest_wf_1D_spline (levelgrid_map<t8_data_per_element_wavele
 //         tree_class = t8_forest_get_tree_class (forest, itree);
 //         eclass_scheme = t8_forest_get_scheme(forest);
 //         /* Get the number of elements of this tree. */
-//         num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+//         num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
 //         for (ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
 //           /* This loop iterates through all the local elements of the forest in the current tree. */
 //           /* We can now write to the position current_index into our array in order to store
@@ -3308,7 +3308,7 @@ t8_mra_prediction_init_callback (t8_forest_t forest, t8_forest_t forest_from, t8
 {
   const struct adapt_data_1d_wb_func *adapt_data
     = (const struct adapt_data_1d_wb_func *) t8_forest_get_user_data (forest);
-  const t8_element_t *elem = t8_forest_get_element_in_tree (forest_from, which_tree, lelement_id);
+  const t8_element_t *elem = t8_forest_get_leaf_element_in_tree (forest_from, which_tree, lelement_id);
   if (elem == NULL) {
     printf ("Error: elem is NULL\n");
     return 0;  // Or handle the error appropriately
@@ -3499,7 +3499,7 @@ t8_mra_thresholding_init_callback (t8_forest_t forest, t8_forest_t forest_from, 
 {
   const struct adapt_data_1d_wb_func *adapt_data
     = (const struct adapt_data_1d_wb_func *) t8_forest_get_user_data (forest);
-  const t8_element_t *elem = t8_forest_get_element_in_tree (forest_from, which_tree, lelement_id);
+  const t8_element_t *elem = t8_forest_get_leaf_element_in_tree (forest_from, which_tree, lelement_id);
   if (elem == NULL) {
     printf ("Error: elem is NULL\n");
     return 0;  // Or handle the error appropriately
@@ -3744,7 +3744,7 @@ t8_forest_replace_bottom_up (t8_forest_t forest_old, t8_forest_t forest_new, t8_
   /* The old element is refined, we copy the element values */
   else if (refine == 1) {
     //t8_global_productionf ("tree element count: %i.\n", (int)t8_forest_get_tree_element_count (t8_forest_get_tree (forest_old, which_tree)));
-    const t8_element_t *elem = t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing_copy);
+    const t8_element_t *elem = t8_forest_get_leaf_element_in_tree (forest_old, which_tree, first_outgoing_copy);
     int level = scheme->element_get_level (tree_class, elem);
     //t8_global_productionf ("Level: %i.\n", level);
     uint64_t parent_lmi = t8_element_get_value_wb_1D_func (adapt_data_old, first_outgoing).lmi;
@@ -3808,7 +3808,7 @@ t8_forest_replace_prediction_wf (t8_forest_t forest_old, t8_forest_t forest_new,
   /* The old element is refined, we copy the element values */
   else if (refine == 1) {
     //t8_global_productionf ("tree element count: %i.\n", (int)t8_forest_get_tree_element_count (t8_forest_get_tree (forest_old, which_tree)));
-    const t8_element_t *elem = t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing_copy);
+    const t8_element_t *elem = t8_forest_get_leaf_element_in_tree (forest_old, which_tree, first_outgoing_copy);
     int level = scheme->element_get_level (tree_class, elem);
     //t8_global_productionf ("Level: %i.\n", level);
     uint64_t parent_lmi = t8_element_get_value_wf_1D_func_predict (adapt_data_old, first_outgoing).lmi;
@@ -3885,7 +3885,7 @@ t8_forest_replace_thresholding (t8_forest_t forest_old, t8_forest_t forest_new, 
   /* The old element is refined, we copy the element values */
   else if (refine == -1) {
     //t8_global_productionf ("tree element count: %i.\n", (int)t8_forest_get_tree_element_count (t8_forest_get_tree (forest_old, which_tree)));
-    const t8_element_t *elem = t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing_copy);
+    const t8_element_t *elem = t8_forest_get_leaf_element_in_tree (forest_old, which_tree, first_outgoing_copy);
     int level = scheme->element_get_level (tree_class, elem);
     //t8_global_productionf ("Level: %i.\n", level);
     uint64_t child_lmi_0 = t8_element_get_value_wb_1D_func (adapt_data_old, first_outgoing).lmi;
@@ -3947,7 +3947,7 @@ t8_forest_replace_thresholding_spline (t8_forest_t forest_old, t8_forest_t fores
   /* The old element is refined, we copy the element values */
   else if (refine == -1) {
     //t8_global_productionf ("tree element count: %i.\n", (int)t8_forest_get_tree_element_count (t8_forest_get_tree (forest_old, which_tree)));
-    const t8_element_t *elem = t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing_copy);
+    const t8_element_t *elem = t8_forest_get_leaf_element_in_tree (forest_old, which_tree, first_outgoing_copy);
     int level = scheme->element_get_level (tree_class, elem);
     //t8_global_productionf ("Level: %i.\n", level);
     uint64_t child_lmi_0 = t8_element_get_value_wb_1D_spline (adapt_data_old, first_outgoing).lmi;
@@ -4008,7 +4008,7 @@ t8_forest_replace_thresholding_wf (t8_forest_t forest_old, t8_forest_t forest_ne
   /* The old element is refined, we copy the element values */
   else if (refine == -1) {
     //t8_global_productionf ("tree element count: %i.\n", (int)t8_forest_get_tree_element_count (t8_forest_get_tree (forest_old, which_tree)));
-    const t8_element_t *elem = t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing_copy);
+    const t8_element_t *elem = t8_forest_get_leaf_element_in_tree (forest_old, which_tree, first_outgoing_copy);
     int level = scheme->element_get_level (tree_class, elem);
     //t8_global_productionf ("Level: %i.\n", level);
     uint64_t child_lmi_0 = t8_element_get_value_wf_1D_func (adapt_data_old, first_outgoing).lmi;
@@ -4071,7 +4071,7 @@ t8_forest_replace_thresholding_wf_spline (t8_forest_t forest_old, t8_forest_t fo
   /* The old element is refined, we copy the element values */
   else if (refine == -1) {
     //t8_global_productionf ("tree element count: %i.\n", (int)t8_forest_get_tree_element_count (t8_forest_get_tree (forest_old, which_tree)));
-    const t8_element_t *elem = t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing_copy);
+    const t8_element_t *elem = t8_forest_get_leaf_element_in_tree (forest_old, which_tree, first_outgoing_copy);
     int level = scheme->element_get_level (tree_class, elem);
     //t8_global_productionf ("Level: %i.\n", level);
     uint64_t child_lmi_0 = t8_element_get_value_wf_1D_spline (adapt_data_old, first_outgoing).lmi;
@@ -4134,7 +4134,7 @@ t8_forest_replace_thresholding_wb_spline (t8_forest_t forest_old, t8_forest_t fo
   /* The old element is refined, we copy the element values */
   else if (refine == -1) {
     //t8_global_productionf ("tree element count: %i.\n", (int)t8_forest_get_tree_element_count (t8_forest_get_tree (forest_old, which_tree)));
-    const t8_element_t *elem = t8_forest_get_element_in_tree (forest_old, which_tree, first_outgoing_copy);
+    const t8_element_t *elem = t8_forest_get_leaf_element_in_tree (forest_old, which_tree, first_outgoing_copy);
     int level = scheme->element_get_level (tree_class, elem);
     //t8_global_productionf ("Level: %i.\n", level);
     uint64_t child_lmi_0 = t8_element_get_value_wb_1D_spline (adapt_data_old, first_outgoing).lmi;
@@ -5437,7 +5437,7 @@ t8_bottom_up_adapt (t8_forest_t forest)
   // int itree;
   // int ielem;
   // for (itree = 0, ielem = 0; itree < num_trees; itree++) {
-  //   const t8_locidx_t num_elem = t8_forest_get_tree_num_elements (forest, itree);
+  //   const t8_locidx_t num_elem = t8_forest_get_tree_num_leaf_elements (forest, itree);
   //   /* Inner loop: Iteration over the elements of the local tree */
   //   for (t8_locidx_t ielem_tree = 0; ielem_tree < num_elem; ielem_tree++, ielem++) {
   //     /* To calculate the distance to the centroid of an element the element is saved */
@@ -5484,7 +5484,7 @@ t8_bottom_up_adapt (t8_forest_t forest)
   //
   // /* Create user_data element for the adapted forest */
   struct adapt_data_1d_wb_func *adapt_data = T8_ALLOC (struct adapt_data_1d_wb_func, 1);
-  num_local_elements = t8_forest_get_local_num_elements (forest_adapt);
+  num_local_elements = t8_forest_get_local_num_leaf_elements (forest_adapt);
   adapt_data->element_data = sc_array_new_count (sizeof (struct t8_data_per_element_1d), num_local_elements);
 
   adapt_data->gamma = data->gamma;
@@ -5554,7 +5554,7 @@ t8_thresholding_adapt (t8_forest_t forest)
   //
   // /* Create user_data element for the adapted forest */
   struct adapt_data_1d_wb_func *adapt_data = T8_ALLOC (struct adapt_data_1d_wb_func, 1);
-  num_local_elements = t8_forest_get_local_num_elements (forest_adapt);
+  num_local_elements = t8_forest_get_local_num_leaf_elements (forest_adapt);
   adapt_data->element_data = sc_array_new_count (sizeof (struct t8_data_per_element_1d), num_local_elements);
 
   adapt_data->gamma = data->gamma;
@@ -5617,7 +5617,7 @@ t8_thresholding_adapt_spline (t8_forest_t forest)
   //
   // /* Create user_data element for the adapted forest */
   struct adapt_data_1d_wb_spline *adapt_data = T8_ALLOC (struct adapt_data_1d_wb_spline, 1);
-  num_local_elements = t8_forest_get_local_num_elements (forest_adapt);
+  num_local_elements = t8_forest_get_local_num_leaf_elements (forest_adapt);
   adapt_data->element_data = sc_array_new_count (sizeof (struct t8_data_per_element_1d), num_local_elements);
 
   adapt_data->gamma = data->gamma;
@@ -5690,7 +5690,7 @@ t8_thresholding_adapt_wf (t8_forest_t forest)
   // int itree;
   // int ielem;
   // for (itree = 0, ielem = 0; itree < num_trees; itree++) {
-  //   const t8_locidx_t num_elem = t8_forest_get_tree_num_elements (forest, itree);
+  //   const t8_locidx_t num_elem = t8_forest_get_tree_num_leaf_elements (forest, itree);
   //   /* Inner loop: Iteration over the elements of the local tree */
   //   for (t8_locidx_t ielem_tree = 0; ielem_tree < num_elem; ielem_tree++, ielem++) {
   //     /* To calculate the distance to the centroid of an element the element is saved */
@@ -5742,7 +5742,7 @@ t8_thresholding_adapt_wf (t8_forest_t forest)
   //
   // /* Create user_data element for the adapted forest */
   struct adapt_data_1d_wf_func *adapt_data = T8_ALLOC (struct adapt_data_1d_wf_func, 1);
-  num_local_elements = t8_forest_get_local_num_elements (forest_adapt);
+  num_local_elements = t8_forest_get_local_num_leaf_elements (forest_adapt);
   adapt_data->element_data = sc_array_new_count (sizeof (struct t8_data_per_element_1d), num_local_elements);
 
   adapt_data->gamma = data->gamma;
@@ -5805,7 +5805,7 @@ t8_thresholding_adapt_wf_spline (t8_forest_t forest)
   //
   // /* Create user_data element for the adapted forest */
   struct adapt_data_1d_wf_spline *adapt_data = T8_ALLOC (struct adapt_data_1d_wf_spline, 1);
-  num_local_elements = t8_forest_get_local_num_elements (forest_adapt);
+  num_local_elements = t8_forest_get_local_num_leaf_elements (forest_adapt);
   adapt_data->element_data = sc_array_new_count (sizeof (struct t8_data_per_element_1d), num_local_elements);
 
   adapt_data->gamma = data->gamma;
@@ -5882,7 +5882,7 @@ t8_prediction_adapt_wf (t8_forest_t forest)
   t8_global_productionf ("blo22.\n");
   // /* Create user_data element for the adapted forest */
   struct adapt_data_1d_wf_func *adapt_data = T8_ALLOC (struct adapt_data_1d_wf_func, 1);
-  num_local_elements = t8_forest_get_local_num_elements (forest_adapt);
+  num_local_elements = t8_forest_get_local_num_leaf_elements (forest_adapt);
   adapt_data->element_data = sc_array_new_count (sizeof (struct t8_data_per_element_1d_predict), num_local_elements);
 
   adapt_data->gamma = data->gamma;
@@ -5996,7 +5996,7 @@ t8_thresholding_adapt_wb_spline (t8_forest_t forest)
   //
   // /* Create user_data element for the adapted forest */
   struct adapt_data_1d_wb_spline *adapt_data = T8_ALLOC (struct adapt_data_1d_wb_spline, 1);
-  num_local_elements = t8_forest_get_local_num_elements (forest_adapt);
+  num_local_elements = t8_forest_get_local_num_leaf_elements (forest_adapt);
   adapt_data->element_data = sc_array_new_count (sizeof (struct t8_data_per_element_1d), num_local_elements);
 
   adapt_data->gamma = data->gamma;
@@ -6073,7 +6073,7 @@ add_old_level_element_data (t8_forest_t forest)
   data = (struct adapt_data_1d_wb_func *) t8_forest_get_user_data (forest);
   struct t8_data_per_element_1d_predict *current_elem_data;
   sc_array_t *new_element_data;
-  num_local_elements = t8_forest_get_local_num_elements (forest);
+  num_local_elements = t8_forest_get_local_num_leaf_elements (forest);
   new_element_data = sc_array_new_count (sizeof (struct t8_data_per_element_1d_predict), num_local_elements);
   current_elem_data = T8_ALLOC (struct t8_data_per_element_1d_predict, 1);
   // data->element_data
@@ -6088,7 +6088,7 @@ add_old_level_element_data (t8_forest_t forest)
      * of a tree, we need to get its eclass_scheme, and in order to so we first get its eclass. */
     tree_class = t8_forest_get_tree_class (forest, itree);
     /* Get the number of elements of this tree. */
-    num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+    num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
     for (ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
       /* This loop iterates through all the local elements of the forest in the current tree. */
 
@@ -6096,7 +6096,7 @@ add_old_level_element_data (t8_forest_t forest)
        * data for this element. */
       /* Since in this example we want to compute the data based on the element in question,
        * we need to get a pointer to this element. */
-      element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       /* We want to store the elements level and its volume as data. We compute these
        * via the eclass_scheme and the forest_element interface. */
       t8_data_per_element_1d old_data = t8_element_get_value_wb_1D_func (data, current_index);
@@ -6129,7 +6129,7 @@ add_old_level_element_data_wf (t8_forest_t forest)
   data = (struct adapt_data_1d_wf_func *) t8_forest_get_user_data (forest);
   struct t8_data_per_element_1d_predict *current_elem_data;
   sc_array_t *new_element_data;
-  num_local_elements = t8_forest_get_local_num_elements (forest);
+  num_local_elements = t8_forest_get_local_num_leaf_elements (forest);
   new_element_data = sc_array_new_count (sizeof (struct t8_data_per_element_1d_predict), num_local_elements);
   current_elem_data = T8_ALLOC (struct t8_data_per_element_1d_predict, 1);
   // data->element_data
@@ -6144,7 +6144,7 @@ add_old_level_element_data_wf (t8_forest_t forest)
      * of a tree, we need to get its eclass_scheme, and in order to so we first get its eclass. */
     tree_class = t8_forest_get_tree_class (forest, itree);
     /* Get the number of elements of this tree. */
-    num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+    num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
     for (ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
       /* This loop iterates through all the local elements of the forest in the current tree. */
 
@@ -6152,7 +6152,7 @@ add_old_level_element_data_wf (t8_forest_t forest)
        * data for this element. */
       /* Since in this example we want to compute the data based on the element in question,
        * we need to get a pointer to this element. */
-      element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       /* We want to store the elements level and its volume as data. We compute these
        * via the eclass_scheme and the forest_element interface. */
       t8_data_per_element_1d old_data = t8_element_get_value_wf_1D_func (data, current_index);
@@ -6185,7 +6185,7 @@ remove_old_level_element_data (t8_forest_t forest)
   data = (struct adapt_data_1d_wb_func *) t8_forest_get_user_data (forest);
   struct t8_data_per_element_1d_predict *current_elem_data;
   sc_array_t *new_element_data;
-  num_local_elements = t8_forest_get_local_num_elements (forest);
+  num_local_elements = t8_forest_get_local_num_leaf_elements (forest);
   new_element_data = sc_array_new_count (sizeof (struct t8_data_per_element_1d), num_local_elements);
   current_elem_data = T8_ALLOC (struct t8_data_per_element_1d_predict, 1);
   // data->element_data
@@ -6200,7 +6200,7 @@ remove_old_level_element_data (t8_forest_t forest)
      * of a tree, we need to get its eclass_scheme, and in order to so we first get its eclass. */
     tree_class = t8_forest_get_tree_class (forest, itree);
     /* Get the number of elements of this tree. */
-    num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+    num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
     for (ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
       /* This loop iterates through all the local elements of the forest in the current tree. */
 
@@ -6208,7 +6208,7 @@ remove_old_level_element_data (t8_forest_t forest)
        * data for this element. */
       /* Since in this example we want to compute the data based on the element in question,
        * we need to get a pointer to this element. */
-      element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       /* We want to store the elements level and its volume as data. We compute these
        * via the eclass_scheme and the forest_element interface. */
       t8_data_per_element_1d old_data = t8_element_get_value_wb_1D_func (data, current_index);
@@ -6270,7 +6270,7 @@ t8_mra_wb_write_vtu (t8_forest_t forest, const char *prefix)
 {
   struct adapt_data_1d_wb_func *data;
   data = (struct adapt_data_1d_wb_func *) t8_forest_get_user_data (forest);
-  const t8_locidx_t num_elements = t8_forest_get_global_num_elements (forest);
+  const t8_locidx_t num_elements = t8_forest_get_global_num_leaf_elements (forest);
   /* We need to allocate a new array to store the volumes on their own.
    * This array has one entry per local element. */
   double *element_data = T8_ALLOC (double, num_elements);
@@ -6297,7 +6297,7 @@ t8_mra_wb_write_vtu (t8_forest_t forest, const char *prefix)
      * of a tree, we need to get its eclass_scheme, and in order to so we first get its eclass. */
     tree_class = t8_forest_get_tree_class (forest, itree);
     /* Get the number of elements of this tree. */
-    num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+    num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
     for (ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
       /* This loop iterates through all the local elements of the forest in the current tree. */
 
@@ -6305,7 +6305,7 @@ t8_mra_wb_write_vtu (t8_forest_t forest, const char *prefix)
        * data for this element. */
       /* Since in this example we want to compute the data based on the element in question,
        * we need to get a pointer to this element. */
-      element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       /* We want to store the elements level and its volume as data. We compute these
        * via the eclass_scheme and the forest_element interface. */
       double A = t8_forest_element_volume (forest, itree, element);
@@ -6337,7 +6337,7 @@ t8_mra_wf_write_vtu (t8_forest_t forest, const char *prefix)
 {
   struct adapt_data_1d_wf_func *data;
   data = (struct adapt_data_1d_wf_func *) t8_forest_get_user_data (forest);
-  const t8_locidx_t num_elements = t8_forest_get_global_num_elements (forest);
+  const t8_locidx_t num_elements = t8_forest_get_global_num_leaf_elements (forest);
   /* We need to allocate a new array to store the volumes on their own.
    * This array has one entry per local element. */
   double *element_data = T8_ALLOC (double, num_elements);
@@ -6364,7 +6364,7 @@ t8_mra_wf_write_vtu (t8_forest_t forest, const char *prefix)
      * of a tree, we need to get its eclass_scheme, and in order to so we first get its eclass. */
     tree_class = t8_forest_get_tree_class (forest, itree);
     /* Get the number of elements of this tree. */
-    num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+    num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
     for (ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
       /* This loop iterates through all the local elements of the forest in the current tree. */
 
@@ -6372,7 +6372,7 @@ t8_mra_wf_write_vtu (t8_forest_t forest, const char *prefix)
        * data for this element. */
       /* Since in this example we want to compute the data based on the element in question,
        * we need to get a pointer to this element. */
-      element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       /* We want to store the elements level and its volume as data. We compute these
        * via the eclass_scheme and the forest_element interface. */
       double A = t8_forest_element_volume (forest, itree, element);
@@ -6404,7 +6404,7 @@ t8_mra_wb_write_vtu_spline (t8_forest_t forest, const char *prefix)
 {
   struct adapt_data_1d_wb_spline *data;
   data = (struct adapt_data_1d_wb_spline *) t8_forest_get_user_data (forest);
-  const t8_locidx_t num_elements = t8_forest_get_global_num_elements (forest);
+  const t8_locidx_t num_elements = t8_forest_get_global_num_leaf_elements (forest);
   /* We need to allocate a new array to store the volumes on their own.
    * This array has one entry per local element. */
   double *element_data = T8_ALLOC (double, num_elements);
@@ -6431,7 +6431,7 @@ t8_mra_wb_write_vtu_spline (t8_forest_t forest, const char *prefix)
      * of a tree, we need to get its eclass_scheme, and in order to so we first get its eclass. */
     tree_class = t8_forest_get_tree_class (forest, itree);
     /* Get the number of elements of this tree. */
-    num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+    num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
     for (ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
       /* This loop iterates through all the local elements of the forest in the current tree. */
 
@@ -6439,7 +6439,7 @@ t8_mra_wb_write_vtu_spline (t8_forest_t forest, const char *prefix)
        * data for this element. */
       /* Since in this example we want to compute the data based on the element in question,
        * we need to get a pointer to this element. */
-      element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       /* We want to store the elements level and its volume as data. We compute these
        * via the eclass_scheme and the forest_element interface. */
       double A = t8_forest_element_volume (forest, itree, element);
@@ -6471,7 +6471,7 @@ t8_mra_wf_write_vtu_spline (t8_forest_t forest, const char *prefix)
 {
   struct adapt_data_1d_wf_spline *data;
   data = (struct adapt_data_1d_wf_spline *) t8_forest_get_user_data (forest);
-  const t8_locidx_t num_elements = t8_forest_get_global_num_elements (forest);
+  const t8_locidx_t num_elements = t8_forest_get_global_num_leaf_elements (forest);
   /* We need to allocate a new array to store the volumes on their own.
    * This array has one entry per local element. */
   double *element_data = T8_ALLOC (double, num_elements);
@@ -6498,7 +6498,7 @@ t8_mra_wf_write_vtu_spline (t8_forest_t forest, const char *prefix)
      * of a tree, we need to get its eclass_scheme, and in order to so we first get its eclass. */
     tree_class = t8_forest_get_tree_class (forest, itree);
     /* Get the number of elements of this tree. */
-    num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+    num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
     for (ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
       /* This loop iterates through all the local elements of the forest in the current tree. */
 
@@ -6506,7 +6506,7 @@ t8_mra_wf_write_vtu_spline (t8_forest_t forest, const char *prefix)
        * data for this element. */
       /* Since in this example we want to compute the data based on the element in question,
        * we need to get a pointer to this element. */
-      element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       /* We want to store the elements level and its volume as data. We compute these
        * via the eclass_scheme and the forest_element interface. */
       double A = t8_forest_element_volume (forest, itree, element);
@@ -6547,7 +6547,7 @@ forest_get_min_level (t8_forest_t forest)
      * of a tree, we need to get its eclass_scheme, and in order to so we first get its eclass. */
     tree_class = t8_forest_get_tree_class (forest, itree);
     /* Get the number of elements of this tree. */
-    num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+    num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
     for (ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
       /* This loop iterates through all the local elements of the forest in the current tree. */
 
@@ -6555,7 +6555,7 @@ forest_get_min_level (t8_forest_t forest)
        * data for this element. */
       /* Since in this example we want to compute the data based on the element in question,
        * we need to get a pointer to this element. */
-      element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       /* We want to store the elements level and its volume as data. We compute these
        * via the eclass_scheme and the forest_element interface. */
       min_level = min (min_level, scheme->element_get_level (tree_class, element));
