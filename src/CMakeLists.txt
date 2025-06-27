@@ -136,9 +136,13 @@ if( T8CODE_ENABLE_MRA )
   DESTINATION include )
 
   # Add unordered_dense library https://github.com/martinus/unordered_dense
-  target_include_directories( T8 PRIVATE ${CMAKE_SOURCE_DIR}/thirdparty/unordered_dense/include )
-  add_library( unordered_dense INTERFACE ${CMAKE_SOURCE_DIR}/thirdparty/unordered_dense/include )
-  target_link_libraries( T8 PRIVATE unordered_dense )
+  set( UNORDERED_DENSE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/unordered_dense/include" )
+
+  target_include_directories(T8 PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>
+    $<BUILD_INTERFACE:${UNORDERED_DENSE_DIR}>
+    $<INSTALL_INTERFACE:include>
+  )
 
   target_sources( T8 PRIVATE
     t8_mra/t8_unordered_dense.cxx
@@ -148,6 +152,7 @@ if( T8CODE_ENABLE_MRA )
     t8_mra/dunavant.cxx
     t8_mra/mask_coefficients.cxx
   )
+
   install( FILES
     t8_mra/t8_unordered_dense.hxx
     t8_mra/t8_mra.hxx

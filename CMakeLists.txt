@@ -114,15 +114,7 @@ if( T8CODE_ENABLE_MRA )
   if(GSL_FOUND)
     message("Found GSL")
   endif(GSL_FOUND)
-
-  if(NOT DEFINED UNORDERED_DENSE_FOUND)
-    if(NOT TARGET unordered_dense::unordered_dense) 
-      set(UNORDERED_DENSE_FOUND FALSE)
-    else() 
-      set(UNORDERED_DENSE_FOUND FALSE)
-    endif()
-  endif()
-endif(T8CODE_ENABLE_MRA)
+endif( T8CODE_ENABLE_MRA )
 
 if( T8CODE_ENABLE_OCC )
     find_package( OpenCASCADE REQUIRED COMPONENTS
