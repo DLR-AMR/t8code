@@ -1,9 +1,9 @@
-#ifndef T8_UNORDERED_DENSE_HXX
-#define T8_UNORDERED_DENSE_HXX
+#pragma once
+
 #include <vector>
 #include <optional>
-#include <cstdint>    // For uint64_t
-#include <stdexcept>  // For exceptions
+#include <cstdint>
+
 #ifdef T8_ENABLE_MRA
 
 #include <ankerl/unordered_dense.h>
@@ -134,7 +134,5 @@ extern template class levelgrid_map<t8_data_per_element_1d_gh>;
 extern template class levelgrid_map<t8_data_per_element_3d_gh>;
 extern template class levelgrid_map<t8_data_per_element_waveletfree_1d_gh>;
 extern template class levelgrid_map<t8_data_per_element_waveletfree_3d_gh>;
-
-#endif
 
 #endif
