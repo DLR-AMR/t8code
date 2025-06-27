@@ -123,9 +123,10 @@ if( T8CODE_ENABLE_OCC )
 endif()
 
 if( T8CODE_ENABLE_MRA )
+  target_compile_definitions( T8 PUBLIC T8_ENABLE_MRA )
+
   # Add GSL library 
   target_link_libraries( T8 PUBLIC GSL::gsl GSL::gslcblas )
-  target_compile_definitions( T8 PUBLIC T8_ENABLE_GSL=1 )
 
   target_sources( T8 PRIVATE 
     t8_mra/t8_gsl.cxx
@@ -136,7 +137,6 @@ if( T8CODE_ENABLE_MRA )
 
   # Add unordered_dense library https://github.com/martinus/unordered_dense
   target_include_directories( T8 PRIVATE ${CMAKE_SOURCE_DIR}/thirdparty/unordered_dense/include )
-  target_compile_definitions( T8 PUBLIC T8_ENABLE_UNORDERED_DENSE=1 )
   add_library( unordered_dense INTERFACE ${CMAKE_SOURCE_DIR}/thirdparty/unordered_dense/include )
   target_link_libraries( T8 PRIVATE unordered_dense )
 

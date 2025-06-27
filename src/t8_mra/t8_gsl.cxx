@@ -1,7 +1,8 @@
 #include <iostream>
 #include <fstream>
 #include <t8.h>
-#ifdef T8_ENABLE_GSL
+
+#ifdef T8_ENABLE_MRA
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_interp2d.h>
 #include <gsl/gsl_spline2d.h>

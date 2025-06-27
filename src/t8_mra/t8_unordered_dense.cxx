@@ -1,4 +1,5 @@
-#ifdef T8_ENABLE_UNORDERED_DENSE
+#ifdef T8_ENABLE_MRA
+
 #include "t8_unordered_dense.hxx"
 #include <ankerl/unordered_dense.h>
 // Constructor to initialize the level_map vector with the appropriate number of levels
