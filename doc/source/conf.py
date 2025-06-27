@@ -66,7 +66,7 @@ exhale_args = {
     # These arguments are required
     "containmentFolder":     "./api",
     "rootFileName":          "library_root.rst",
-    "doxygenStripFromPath":  "/localdata1/knap_da/t8code/t8code",
+    #"doxygenStripFromPath":  "/localdata1/knap_da/t8code/t8code",
     # Heavily encouraged optional argument (see docs)
     "rootFileTitle":         "Library API",
     # Suggested optional arguments
