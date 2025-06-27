@@ -13,7 +13,7 @@ cd build
 cmake .. -DT8CODE_BUILD_DOCUMENTATION=ON -DT8CODE_BUILD_DOCUMENTATION_SPHINX=ON -DT8CODE_ENABLE_MPI=OFF -GNinja
 
 # Build the project with make
-ninja -j V=0
+ninja
 
 # Return to the parent directory
 cd ..
