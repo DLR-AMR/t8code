@@ -1771,6 +1771,7 @@ t8_cmesh_determine_partition (const t8_gloidx_t element_index, const t8_gloidx_t
     return num_procs - process_offset;
   }
   else {
+
     const t8_gloidx_t mirror_element_index = global_num_elements - element_index - 1;
     const int first_proc_rank
       = num_procs - 1 - t8_A_times_B_over_C_intA (num_procs, mirror_element_index, global_num_elements);
@@ -1846,10 +1847,10 @@ t8_cmesh_uniform_bounds_from_unpartioned (const t8_cmesh_t cmesh, const t8_gloid
     t8_gloidx_t current_tree_element_offset = 0;
     for (t8_gloidx_t igtree = 0; igtree < num_trees; ++igtree) {
       const t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, (t8_locidx_t) igtree);
-      const t8_gloidx_t elem_in_tree = scheme->count_leaves_from_root (tree_class, level);
+      const t8_gloidx_t num_leaf_elems_in_tree = scheme->count_leaves_from_root (tree_class, level);
 
       if (current_tree_element_offset <= first_child_next_non_empty
-          && first_child_next_non_empty < current_tree_element_offset + elem_in_tree) {
+          && first_child_next_non_empty < current_tree_element_offset + num_leaf_elems_in_tree) {
         if (child_in_tree_begin != NULL) {
           *child_in_tree_begin = first_child_next_non_empty - current_tree_element_offset;
         }
@@ -1863,7 +1864,7 @@ t8_cmesh_uniform_bounds_from_unpartioned (const t8_cmesh_t cmesh, const t8_gloid
           *first_tree_shared = current_tree_element_offset < first_child_next_non_empty ? 1 : 0;
         }
       }
-      current_tree_element_offset += elem_in_tree;
+      current_tree_element_offset += num_leaf_elems_in_tree;
     }
     return;
   }
@@ -1872,12 +1873,13 @@ t8_cmesh_uniform_bounds_from_unpartioned (const t8_cmesh_t cmesh, const t8_gloid
   // Loop over all trees to find the ones containing the first and last element of this process
   for (t8_gloidx_t igtree = 0; igtree < num_trees; ++igtree) {
     const t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, (t8_locidx_t) igtree);
-    /* TODO: We can optimize by buffering the elem_in_tree value. Thus, if 
+    /* TODO: We can optimize by buffering the num_leaf_elems_in_tree value. Thus, if 
          the computation is expensive (may be for non-morton-type schemes),
          we do it only once. */
-    const t8_gloidx_t elem_in_tree = scheme->count_leaves_from_root (tree_class, level);
+    const t8_gloidx_t num_leaf_elems_in_tree = scheme->count_leaves_from_root (tree_class, level);
     /* Check if the first element is on the current tree */
-    if (current_tree_element_offset <= first_child && first_child < current_tree_element_offset + elem_in_tree) {
+    if (current_tree_element_offset <= first_child
+        && first_child < current_tree_element_offset + num_leaf_elems_in_tree) {
       if (child_in_tree_begin != NULL) {
         *child_in_tree_begin = first_child - current_tree_element_offset;
       }
@@ -1900,7 +1902,8 @@ t8_cmesh_uniform_bounds_from_unpartioned (const t8_cmesh_t cmesh, const t8_gloid
       return;
     }
     /* Check if the last element is on the current tree */
-    if (current_tree_element_offset <= last_child && last_child < current_tree_element_offset + elem_in_tree) {
+    if (current_tree_element_offset <= last_child
+        && last_child < current_tree_element_offset + num_leaf_elems_in_tree) {
       if (child_in_tree_end != NULL) {
         *child_in_tree_end = last_child - current_tree_element_offset + 1;
       }
@@ -1913,7 +1916,7 @@ t8_cmesh_uniform_bounds_from_unpartioned (const t8_cmesh_t cmesh, const t8_gloid
       T8_ASSERT (0 <= *last_local_tree && *last_local_tree < num_trees);
       return;
     }
-    current_tree_element_offset += elem_in_tree;
+    current_tree_element_offset += num_leaf_elems_in_tree;
   }
   /* If we reach this part, we do not have any trees - the cmesh is empty */
   T8_ASSERT (num_trees == 0);
