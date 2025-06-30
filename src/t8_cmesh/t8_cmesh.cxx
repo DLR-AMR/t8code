@@ -1688,7 +1688,7 @@ t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, int level, t8_sch
   }
   else {
     /* The first global child of processor p
-     * with P total processor is (the biggest int smaller than)
+     * with P total processes is (the biggest int smaller than)
      * (total_num_children * p) / P
      * We cast to long double and double first to prevent integer overflow.
      */
