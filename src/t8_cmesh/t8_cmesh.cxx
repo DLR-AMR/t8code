@@ -2232,40 +2232,40 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
       bool send_start_message = true;
       bool send_end_message = true;
 
-      t8_locidx_t first_puretree_of_current_proc = -1;
+      t8_locidx_t first_puretree_of_iproc = -1;
       t8_locidx_t last_puretree_of_current_proc = -1;
       t8_gloidx_t first_element_in_tree_index_of_current_proc = -1;
       t8_gloidx_t last_element_in_tree_index_of_current_proc = -2;
 
       if (!proc_is_empty) {
         /* This process' partition is not empty. */
-        const t8_locidx_t possibly_first_puretree_of_current_proc = tree_offsets_partition[iproc - send_first];
+        const t8_locidx_t possibly_first_puretree_of_iproc = tree_offsets_partition[iproc - send_first];
         const t8_locidx_t possibly_first_puretree_of_next_proc = tree_offsets_partition[iproc + 1 - send_first];
-        const t8_gloidx_t first_el_index_of_first_tree = first_element_tree[possibly_first_puretree_of_current_proc];
+        const t8_gloidx_t first_el_index_of_first_tree = first_element_tree[possibly_first_puretree_of_iproc];
         if (first_element_index_of_current_proc >= first_element_tree[num_pure_local_trees]) {
           /* We do not send to this process iproc at all. Its first element is in a tree that belongs 
            * to the next process. */
           send_start_message = send_end_message = false;
-          first_puretree_of_current_proc = -1;
+          first_puretree_of_iproc = -1;
           last_puretree_of_current_proc = -1;
         }
         if (send_start_message) {
           /* Determine the first tree of this proc and whether we need to send a start message to it. */
           if (first_el_index_of_first_tree > first_element_index_of_current_proc) {
-            /* The first element of this proc does lie on possibly_first_puretree_of_current_proc - 1.
+            /* The first element of this proc does lie on possibly_first_puretree_of_iproc - 1.
              * We check whether we own this tree and if not we do not send anything. */
-            if (possibly_first_puretree_of_current_proc - 1 < 0) {
+            if (possibly_first_puretree_of_iproc - 1 < 0) {
               /* We do not send any start message to the proc. */
               send_start_message = false;
-              first_puretree_of_current_proc = -1;
+              first_puretree_of_iproc = -1;
             }
             else {
               /* The first element of this proc lies on the previous tree. */
-              first_puretree_of_current_proc = possibly_first_puretree_of_current_proc - 1;
+              first_puretree_of_iproc = possibly_first_puretree_of_iproc - 1;
             }
           }
           else {
-            first_puretree_of_current_proc = possibly_first_puretree_of_current_proc;
+            first_puretree_of_iproc = possibly_first_puretree_of_iproc;
           }
         }
         /* Compute the last tree of this proc and whether we need to send an end message to it. */
@@ -2274,7 +2274,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
          * possibly_first_puretree_of_next_proc - The tree whose first element lies on the next process.
          * 
          * 
-         * If the next process is empty, then possibly_first_puretree_of_next_proc = possibly_first_puretree_of_current_proc
+         * If the next process is empty, then possibly_first_puretree_of_next_proc = possibly_first_puretree_of_iproc
          * and this is our last tree.
          */
         if (send_end_message) {
@@ -2289,11 +2289,11 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
               /* The very last process must have our last tree as its last tree. */
               last_puretree_of_current_proc = num_pure_local_trees - 1;
             }
-            else if (possibly_first_puretree_of_next_proc == possibly_first_puretree_of_current_proc) {
+            else if (possibly_first_puretree_of_next_proc == possibly_first_puretree_of_iproc) {
               /* The next process is empty. This can only happen if
                *   each process gets 0 or 1 element.
                * Hence, the current process has only one element and it must lie on the first tree. */
-              last_puretree_of_current_proc = first_puretree_of_current_proc;
+              last_puretree_of_current_proc = first_puretree_of_iproc;
             }
             else {
               last_puretree_of_current_proc = possibly_first_puretree_of_next_proc - 1;
@@ -2303,10 +2303,10 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
 #if T8_ENABLE_DEBUG
         /* Check that the trees have valid values. */
         if (send_start_message) {
-          T8_ASSERT (0 <= first_puretree_of_current_proc && first_puretree_of_current_proc < num_pure_local_trees);
+          T8_ASSERT (0 <= first_puretree_of_iproc && first_puretree_of_iproc < num_pure_local_trees);
         }
         else {
-          T8_ASSERT (first_puretree_of_current_proc == -1);
+          T8_ASSERT (first_puretree_of_iproc == -1);
         }
 
         if (send_end_message) {
@@ -2315,13 +2315,13 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
         else {
           T8_ASSERT (last_puretree_of_current_proc == -1);
         }
-        if (first_puretree_of_current_proc != -1 && last_puretree_of_current_proc != -1) {
-          T8_ASSERT (first_puretree_of_current_proc <= last_puretree_of_current_proc);
+        if (first_puretree_of_iproc != -1 && last_puretree_of_current_proc != -1) {
+          T8_ASSERT (first_puretree_of_iproc <= last_puretree_of_current_proc);
         }
 #endif
         if (send_start_message) {
           /* Compute the index inside the tree of the first element. */
-          const t8_gloidx_t first_el_of_first_tree = first_element_tree[first_puretree_of_current_proc];
+          const t8_gloidx_t first_el_of_first_tree = first_element_tree[first_puretree_of_iproc];
           first_element_in_tree_index_of_current_proc = first_element_index_of_current_proc - first_el_of_first_tree;
         }
         if (send_end_message) {
@@ -2350,7 +2350,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
                  && first_child_next_non_empty < first_element_tree[num_pure_local_trees]);
         // Undo the last iteration's incrementation of next_non_empty_proc
         next_non_empty_proc--;
-        first_puretree_of_current_proc = tree_offsets_partition[next_non_empty_proc - send_first - 1];
+        first_puretree_of_iproc = tree_offsets_partition[next_non_empty_proc - send_first - 1];
         last_puretree_of_current_proc = -1;
         /* Check if this proc has information about the first_child on the next non empty process.
           * If not, another process will send the information */
@@ -2360,7 +2360,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
            * of this information. We have to take into account, that in the last iteration of the above do-while-loop 
            * next_non_empty_proc has been added up by one again, so this loop goes [iproc, next_non_empty_proc - 1). */
           for (t8_gloidx_t iempty_proc = iproc; iempty_proc < next_non_empty_proc; ++iempty_proc) {
-            t8_cmesh_bounds_send_start_or_end (cmesh, send_start_message, proc_is_empty, first_puretree_of_current_proc,
+            t8_cmesh_bounds_send_start_or_end (cmesh, send_start_message, proc_is_empty, first_puretree_of_iproc,
                                                first_tree_shared_shift, iempty_proc, send_requests, send_buffer,
                                                &current_pos_in_send_buffer, first_element_in_tree_index_of_current_proc,
                                                first_local_tree, first_tree_shared, child_in_tree_begin,
@@ -2386,7 +2386,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
        * and (if desired) the index of the first element in this tree. */
       if (send_start_message) {
         t8_cmesh_bounds_send_start_or_end (
-          cmesh, send_start_message, proc_is_empty, first_puretree_of_current_proc, first_tree_shared_shift, iproc,
+          cmesh, send_start_message, proc_is_empty, first_puretree_of_iproc, first_tree_shared_shift, iproc,
           send_requests, send_buffer, &current_pos_in_send_buffer, first_element_in_tree_index_of_current_proc,
           first_local_tree, first_tree_shared, child_in_tree_begin, &expect_start_message, global_num_elements, comm);
 #if T8_ENABLE_DEBUG
