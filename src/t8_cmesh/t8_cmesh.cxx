@@ -2224,13 +2224,13 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
      * and send the MPI messages. */
 
     for (t8_gloidx_t iproc = send_first; iproc <= send_last; iproc++) {
-      const t8_gloidx_t first_element_index_of_current_proc = t8_cmesh_get_first_element_of_process (
+      const t8_gloidx_t first_element_index_of_iproc = t8_cmesh_get_first_element_of_process (
         (uint32_t) iproc, (uint32_t) cmesh->mpisize, (uint64_t) global_num_elements);
       const t8_gloidx_t last_element_index_of_current_proc
         = t8_cmesh_get_first_element_of_process ((uint32_t) iproc + 1, (uint32_t) cmesh->mpisize,
                                                  (uint64_t) global_num_elements)
           - 1;
-      const bool proc_is_empty = last_element_index_of_current_proc < first_element_index_of_current_proc;
+      const bool proc_is_empty = last_element_index_of_current_proc < first_element_index_of_iproc;
       bool send_start_message = true;
       bool send_end_message = true;
 
@@ -2244,7 +2244,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
         const t8_locidx_t possibly_first_puretree_of_iproc = tree_offsets_partition[iproc - send_first];
         const t8_locidx_t possibly_first_puretree_of_next_proc = tree_offsets_partition[iproc + 1 - send_first];
         const t8_gloidx_t first_el_index_of_first_tree = first_element_tree[possibly_first_puretree_of_iproc];
-        if (first_element_index_of_current_proc >= first_element_tree[num_pure_local_trees]) {
+        if (first_element_index_of_iproc >= first_element_tree[num_pure_local_trees]) {
           /* We do not send to this process iproc at all. Its first element is in a tree that belongs 
            * to the next process. */
           send_start_message = send_end_message = false;
@@ -2253,7 +2253,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
         }
         if (send_start_message) {
           /* Determine the first tree of this proc and whether we need to send a start message to it. */
-          if (first_el_index_of_first_tree > first_element_index_of_current_proc) {
+          if (first_el_index_of_first_tree > first_element_index_of_iproc) {
             /* The first element of this proc does lie on possibly_first_puretree_of_iproc - 1.
              * We check whether we own this tree and if not we do not send anything. */
             if (possibly_first_puretree_of_iproc - 1 < 0) {
@@ -2324,7 +2324,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
         if (send_start_message) {
           /* Compute the index inside the tree of the first element. */
           const t8_gloidx_t first_el_of_first_tree_on_iproc = first_element_tree[first_puretree_of_iproc];
-          first_element_in_tree_index_of_iproc = first_element_index_of_current_proc - first_el_of_first_tree_on_iproc;
+          first_element_in_tree_index_of_iproc = first_element_index_of_iproc - first_el_of_first_tree_on_iproc;
         }
         if (send_end_message) {
           /* Compute the index inside the tree of the last element. */
