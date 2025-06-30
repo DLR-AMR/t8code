@@ -2636,7 +2636,7 @@ t8_cmesh_t
 t8_cmesh_new_pyramid_cake (sc_MPI_Comm comm, int num_of_pyra)
 {
   /*num_of_pyra pyras a 5 vertices a 3 coords */
-  /* TODO: This seems too be a lot of memory, can we also get by with only
+  /* TODO: This seems to be a lot of memory, can we also get by with only
      5 * 3 doubles? */
   int current_pyra, pyra_vertices;
   double *vertices = T8_ALLOC (double, num_of_pyra * 5 * 3);
