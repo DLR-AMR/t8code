@@ -2434,7 +2434,6 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
 
     T8_ASSERT (0 <= recv_from && recv_from < cmesh->mpisize);
 
-    /* If the loop ends without finding an exact match, set recv_from to the closest lower process. */
     recv_message (true, first_local_tree, child_in_tree_begin, first_tree_shared, &child_in_tree_begin_temp,
                   global_num_elements, cmesh, recv_from, comm);
 #if T8_ENABLE_DEBUG
