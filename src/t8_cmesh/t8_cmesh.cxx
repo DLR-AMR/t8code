@@ -1599,11 +1599,21 @@ t8_A_times_B_over_C_gloidx (const t8_gloidx_t A, const t8_gloidx_t B, const t8_g
  * We reuse the gloidx version but check before whether an int fits into
  * a t8_gloidx_t.
  * This function can also be used if B or C are ints. */
+/**
+ * \brief Computes (A*B)/C for large integers, where A is an int and B, C are t8_gloidx_t.
+ * This function is useful when A*B might not fit in a 64-bit integer.
+ * It uses the formula:
+ *  (A*B)/C = floor(floor(A/C)*B + ((A%C)/C)*B)
+ * \param [in] A The first integer.
+ * \param [in] B The second large integer.
+ * \param [in] C The divisor, a large integer.
+ * \return The result of (A*B)/C as a t8_gloidx_t.
+ */
 static inline t8_gloidx_t
-t8_A_times_B_over_C_intA (const int proc, const t8_gloidx_t elem_index, const t8_gloidx_t global_num_elem)
+t8_A_times_B_over_C_intA (const int A, const t8_gloidx_t B, const t8_gloidx_t C)
 {
   T8_ASSERT (sizeof (int) <= sizeof (t8_gloidx_t));
-  return t8_A_times_B_over_C_gloidx (proc, elem_index, global_num_elem);
+  return t8_A_times_B_over_C_gloidx (A, B, C);
 }
 
 void
