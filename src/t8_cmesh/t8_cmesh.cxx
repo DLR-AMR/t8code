@@ -2236,7 +2236,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
 
       t8_locidx_t first_puretree_of_iproc = -1;
       t8_locidx_t last_puretree_of_iproc = -1;
-      t8_gloidx_t first_element_in_tree_index_of_current_proc = -1;
+      t8_gloidx_t first_element_in_tree_index_of_iproc = -1;
       t8_gloidx_t last_element_in_tree_index_of_current_proc = -2;
 
       if (!proc_is_empty) {
@@ -2324,7 +2324,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
         if (send_start_message) {
           /* Compute the index inside the tree of the first element. */
           const t8_gloidx_t first_el_of_first_tree = first_element_tree[first_puretree_of_iproc];
-          first_element_in_tree_index_of_current_proc = first_element_index_of_current_proc - first_el_of_first_tree;
+          first_element_in_tree_index_of_iproc = first_element_index_of_current_proc - first_el_of_first_tree;
         }
         if (send_end_message) {
           /* Compute the index inside the tree of the last element. */
@@ -2364,7 +2364,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
           for (t8_gloidx_t iempty_proc = iproc; iempty_proc < next_non_empty_proc; ++iempty_proc) {
             t8_cmesh_bounds_send_start_or_end (cmesh, send_start_message, proc_is_empty, first_puretree_of_iproc,
                                                first_tree_shared_shift, iempty_proc, send_requests, send_buffer,
-                                               &current_pos_in_send_buffer, first_element_in_tree_index_of_current_proc,
+                                               &current_pos_in_send_buffer, first_element_in_tree_index_of_iproc,
                                                first_local_tree, first_tree_shared, child_in_tree_begin,
                                                &expect_start_message, global_num_elements, comm);
 #if T8_ENABLE_DEBUG
@@ -2389,14 +2389,14 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
       if (send_start_message) {
         t8_cmesh_bounds_send_start_or_end (
           cmesh, send_start_message, proc_is_empty, first_puretree_of_iproc, first_tree_shared_shift, iproc,
-          send_requests, send_buffer, &current_pos_in_send_buffer, first_element_in_tree_index_of_current_proc,
+          send_requests, send_buffer, &current_pos_in_send_buffer, first_element_in_tree_index_of_iproc,
           first_local_tree, first_tree_shared, child_in_tree_begin, &expect_start_message, global_num_elements, comm);
 #if T8_ENABLE_DEBUG
         num_message_sent += (iproc != cmesh->mpirank) ? 1 : 0;
         num_received_start_messages += (iproc != cmesh->mpirank) ? 0 : 1;
 #endif
         if (iproc == cmesh->mpirank) {
-          child_in_tree_begin_temp = first_element_in_tree_index_of_current_proc;
+          child_in_tree_begin_temp = first_element_in_tree_index_of_iproc;
         }
       } /* End sending of start message */
 
