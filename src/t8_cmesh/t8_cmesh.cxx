@@ -1927,7 +1927,7 @@ t8_cmesh_uniform_bounds_from_unpartioned (const t8_cmesh_t cmesh, const t8_gloid
  * \param[in, out] send_requests The array of send requests.
  * \param[in, out] send_buffer The buffer to send the message.
  * \param[in] current_pos_in_send_buffer The current position in the send buffer.
- * \param[in] first_or_last_element_in_tree_index_of_current_proc The tree-local id of the first/last element in the tree.
+ * \param[in] first_or_last_element_in_tree_index_of_iproc The tree-local id of the first/last element in the tree.
  * \param[in, out] first_or_last_local_tree The global id of the first/last tree of the current process.
  * \param[in, out] first_tree_shared The first tree shared flag. Only used if we send the start message. Set to NULL if not used. 
  * \param[in, out] child_in_tree_end_or_begin The tree-local id of the first/last element in the tree. Set to NULL if not used.
@@ -1942,7 +1942,7 @@ t8_cmesh_bounds_send_start_or_end (const t8_cmesh_t cmesh, const bool start_mess
                                    const t8_locidx_t first_or_last_puretree_of_iproc, const int first_tree_shared_shift,
                                    const t8_gloidx_t iproc, std::vector<sc_MPI_Request> send_requests,
                                    std::vector<t8_gloidx_t> &send_buffer, int *current_pos_in_send_buffer,
-                                   const t8_gloidx_t first_or_last_element_in_tree_index_of_current_proc,
+                                   const t8_gloidx_t first_or_last_element_in_tree_index_of_iproc,
                                    t8_gloidx_t *first_or_last_local_tree, [[maybe_unused]] int8_t *first_tree_shared,
                                    [[maybe_unused]] t8_gloidx_t *child_in_tree_end_or_begin,
                                    bool *expect_start_or_end_message,
@@ -1959,7 +1959,7 @@ t8_cmesh_bounds_send_start_or_end (const t8_cmesh_t cmesh, const bool start_mess
 
     /* Set send buffer */
     send_buffer[*current_pos_in_send_buffer] = global_id_of_first_or_last_tree;
-    send_buffer[*current_pos_in_send_buffer + 1] = first_or_last_element_in_tree_index_of_current_proc;
+    send_buffer[*current_pos_in_send_buffer + 1] = first_or_last_element_in_tree_index_of_iproc;
     t8_gloidx_t *message = &send_buffer[*current_pos_in_send_buffer];
 
     *current_pos_in_send_buffer += num_entries;
@@ -1974,7 +1974,7 @@ t8_cmesh_bounds_send_start_or_end (const t8_cmesh_t cmesh, const bool start_mess
   }
   else { /* We are the current proc, so we just copy the data. */
     (*first_or_last_local_tree) = global_id_of_first_or_last_tree;
-    if (start_message && first_or_last_element_in_tree_index_of_current_proc > 0) {
+    if (start_message && first_or_last_element_in_tree_index_of_iproc > 0) {
       if (first_tree_shared != NULL) {
         *first_tree_shared = 1;
       }
@@ -1987,7 +1987,7 @@ t8_cmesh_bounds_send_start_or_end (const t8_cmesh_t cmesh, const bool start_mess
     if (child_in_tree_end_or_begin != NULL) {
       /* If we send the last element add 1 to the id. During later processing of the cmesh we iterate 
        * as long as ielement < child_in_tree_end. Therefore we have to shift by one. */
-      *child_in_tree_end_or_begin = first_or_last_element_in_tree_index_of_current_proc + ((!start_message) ? 1 : 0);
+      *child_in_tree_end_or_begin = first_or_last_element_in_tree_index_of_iproc + ((!start_message) ? 1 : 0);
     }
     /* We do not expect this message from another proc */
     *expect_start_or_end_message = false;
@@ -2237,7 +2237,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
       t8_locidx_t first_puretree_of_iproc = -1;
       t8_locidx_t last_puretree_of_iproc = -1;
       t8_gloidx_t first_element_in_tree_index_of_iproc = -1;
-      t8_gloidx_t last_element_in_tree_index_of_current_proc = -2;
+      t8_gloidx_t last_element_in_tree_index_of_iproc = -2;
 
       if (!proc_is_empty) {
         /* This process' partition is not empty. */
@@ -2329,7 +2329,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
         if (send_end_message) {
           /* Compute the index inside the tree of the last element. */
           const t8_gloidx_t first_el_of_last_tree = first_element_tree[last_puretree_of_iproc];
-          last_element_in_tree_index_of_current_proc = last_element_index_of_current_proc - first_el_of_last_tree;
+          last_element_in_tree_index_of_iproc = last_element_index_of_current_proc - first_el_of_last_tree;
         }
       }
       else {
@@ -2405,7 +2405,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
       if (send_end_message) {
         t8_cmesh_bounds_send_start_or_end (cmesh, false, proc_is_empty, last_puretree_of_iproc, first_tree_shared_shift,
                                            iproc, send_requests, send_buffer, &current_pos_in_send_buffer,
-                                           last_element_in_tree_index_of_current_proc, last_local_tree, NULL,
+                                           last_element_in_tree_index_of_iproc, last_local_tree, NULL,
                                            child_in_tree_end, &expect_end_message, global_num_elements, comm);
 #if T8_ENABLE_DEBUG
         num_message_sent += (iproc != cmesh->mpirank) ? 1 : 0;
