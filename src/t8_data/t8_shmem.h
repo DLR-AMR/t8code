@@ -100,6 +100,8 @@ t8_shmem_array_init (t8_shmem_array_t *parray, size_t elem_size, size_t elem_cou
 
 /** Enable writing mode for a shmem array. Only some processes may be allowed
  *  to write into the array, which is indicated by the return value being non-zero.
+ *  The shared memory is managed via inter- and intranode communicators.
+ *  Only rank 0 of the intranode communicator will be allowed to write into the array.
  * \param [in,out]      array Initialized array. Writing will be enabled on certain processes.
  * \return                    True if the calling process can write into the array.
  * \note This function is MPI collective.
