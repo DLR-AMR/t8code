@@ -1543,9 +1543,15 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, const int level, const t8_scheme *sch
 
 /* #################### new for hybrid stuff starts here.  #################### */
 
-/* Helper function to set the correct return value in the case that 
- * the uniform partition is empty.
- * We set all values to -1 and first_tree_shared to 0. */
+/**
+ * \brief Helper function to set the return values of t8_cmesh_uniform_bounds_equal_element_count
+ *       to empty values.
+ * \param [in,out] first_local_tree The first local tree in the partition. Will be set to -1
+ * \param [in,out] child_in_tree_begin The first child in the tree. Will be set to -1, if it is not NULL.
+ * \param [in,out] last_local_tree The last local tree in the partition. Will be set to -1
+ * \param [in,out] child_in_tree_end The last child in the tree. Will be set to -1, if it is not NULL.
+ * \param [in,out] first_tree_shared If not NULL, will be set to 0.
+ */
 static void
 t8_cmesh_uniform_set_return_parameters_to_empty (t8_gloidx_t *first_local_tree, t8_gloidx_t *child_in_tree_begin,
                                                  t8_gloidx_t *last_local_tree, t8_gloidx_t *child_in_tree_end,
@@ -1777,8 +1783,8 @@ t8_cmesh_uniform_bounds_from_unpartioned (const t8_cmesh_t cmesh, const t8_gloid
      * We cast to long double and double to prevent overflow. */
   /* Since the full cmesh is available on each process, the computation of local_num_children equals the global number of children*/
   uint64_t global_num_children = (uint64_t) local_num_children;
-  const t8_gloidx_t first_child = t8_cmesh_get_first_element_of_process (
-    (uint32_t) cmesh->mpirank, (uint32_t) cmesh->mpisize, global_num_children);
+  const t8_gloidx_t first_child
+    = t8_cmesh_get_first_element_of_process ((uint32_t) cmesh->mpirank, (uint32_t) cmesh->mpisize, global_num_children);
   const t8_gloidx_t last_child
     = t8_cmesh_get_first_element_of_process ((uint32_t) cmesh->mpirank + 1, (uint32_t) cmesh->mpisize,
                                              (uint64_t) local_num_children)
@@ -1802,7 +1808,7 @@ t8_cmesh_uniform_bounds_from_unpartioned (const t8_cmesh_t cmesh, const t8_gloid
           - 1;
       next_non_empty++;
     } while (last_child_next_non_empty < first_child_next_non_empty && next_non_empty < cmesh->mpisize - 1);
-    
+
     if (next_non_empty >= cmesh->mpisize - 1) {
       next_non_empty = cmesh->mpisize - 1;
       first_child_next_non_empty = t8_cmesh_get_first_element_of_process (
@@ -1837,7 +1843,7 @@ t8_cmesh_uniform_bounds_from_unpartioned (const t8_cmesh_t cmesh, const t8_gloid
     }
     return;
   }
-  // This process is not emtpy.
+  // This process is not empty.
   t8_gloidx_t current_tree_element_offset = 0;
   // Loop over all trees to find the ones containing the first and last element of this process
   for (t8_gloidx_t igtree = 0; igtree < num_trees; ++igtree) {
@@ -2323,7 +2329,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
           /* check if the proc is in our send-range && the proc is empty && we have information about this process. */
         } while (next_non_empty_proc < send_last && last_child_next_non_empty < first_child_next_non_empty
                  && first_child_next_non_empty < first_element_tree[pure_local_trees]);
-        // Undo the last iteration's incrementation of next_non_empty_proc 
+        // Undo the last iteration's incrementation of next_non_empty_proc
         next_non_empty_proc--;
         first_puretree_of_current_proc = offset_partition[next_non_empty_proc - send_first - 1];
         last_puretree_of_current_proc = -1;
@@ -2334,7 +2340,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
           /* We might have detected a larger range of empty processes. We directly send to this range to avoid a recomputation
            * of this information. We have to take into account, that in the last iteration of the above do-while-loop 
            * next_non_empty_proc has been added up by one again, so this loop goes [iproc, next_non_empty_proc - 1). */
-          for (t8_gloidx_t iempty_proc = iproc; iempty_proc < next_non_empty_proc ; ++iempty_proc) {
+          for (t8_gloidx_t iempty_proc = iproc; iempty_proc < next_non_empty_proc; ++iempty_proc) {
             t8_cmesh_bounds_send_start_or_end (cmesh, send_start_message, proc_is_empty, first_puretree_of_current_proc,
                                                first_tree_shared_shift, iempty_proc, send_requests, send_buffer,
                                                &current_pos_in_send_buffer, first_element_in_tree_index_of_current_proc,
