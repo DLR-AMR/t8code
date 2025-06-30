@@ -1890,17 +1890,6 @@ t8_cmesh_uniform_bounds_from_unpartioned (const t8_cmesh_t cmesh, const t8_gloid
         *first_tree_shared = current_tree_element_offset < first_child ? 1 : 0;
       }
     }
-    if (last_child < first_child) {
-      /* This process is empty. We needed to identify the 'first_local_tree' since it is the 
-         * first local tree of the next process, which we store in this case.
-         */
-      t8_cmesh_uniform_set_return_parameters_to_empty (first_local_tree, child_in_tree_begin, last_local_tree,
-                                                       child_in_tree_end, first_tree_shared);
-      /* We set the first local tree to the first local tree of the next process. */
-      /* We set the last local tree to the first local tree - 1. */
-      *first_local_tree = 0;
-      return;
-    }
     /* Check if the last element is on the current tree */
     if (current_tree_element_offset <= last_child
         && last_child < current_tree_element_offset + num_leaf_elems_in_tree) {
