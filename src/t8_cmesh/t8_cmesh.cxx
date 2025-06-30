@@ -1651,18 +1651,18 @@ t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, int level, t8_sch
   /* Compute the number of children on level in each tree */
   global_num_children = 0;
 #if T8_ENABLE_DEBUG
-  t8_gloidx_t children_per_tree_check = 0;
+  t8_gloidx_t leaf_children_per_tree = 0;
   for (tree_class = T8_ECLASS_ZERO; tree_class < T8_ECLASS_COUNT; ++tree_class) {
     /* Get the number of children on level of the first tree class that is used*/
     if (cmesh->num_trees_per_eclass[tree_class] > 0) {
-      children_per_tree_check = tree_scheme->count_leaves_from_root ((t8_eclass_t) tree_class, level);
+      leaf_children_per_tree = tree_scheme->count_leaves_from_root ((t8_eclass_t) tree_class, level);
       break;
     }
   }
   /* Compare it to all tree classes used in the cmesh*/
   for (tree_class = T8_ECLASS_ZERO; tree_class < T8_ECLASS_COUNT; ++tree_class) {
     if (cmesh->num_trees_per_eclass[tree_class] > 0) {
-      T8_ASSERT (children_per_tree_check == tree_scheme->count_leaves_from_root ((t8_eclass_t) tree_class, level));
+      T8_ASSERT (leaf_children_per_tree == tree_scheme->count_leaves_from_root ((t8_eclass_t) tree_class, level));
     }
   }
 
