@@ -747,19 +747,19 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, const int level, const t8_scheme_c *s
                          int8_t *first_tree_shared);
 
 /**
- * Calculate the section of a uniform hybrid forest for the current rank. Need for hybrid meshes, especially 
+ * Calculate the section of a uniform hybrid forest for the current rank. Needed for hybrid meshes, especially 
  * meshes where not all elements refine into 1:2^dim manner. The section is calculated without assuming such refinement
- * and each process computes its number of elements on the given \var level communicates the number to other processes
+ * and each process computes its number of elements on the given \var level, communicates the number to other processes,
  * and the correct section is computed based on this information. 
  * 
  * \param [in] cmesh        The cmesh to be considered.
  * \param [in] level        The uniform refinement level to be created.
  * \param [in] scheme       The element scheme for which to compute the bounds.
- * \param [out]   first_local_tree  The global index of the first tree that contains elements belonging to the calling processor.
+ * \param [out]   first_local_tree  The global index of the first tree that contains elements belonging to the calling process.
  * \param [out]   child_in_tree_begin The global index of the first element belonging to the calling processor. Not computed if NULL.
- * \param [out]   last_local_tree  The global index of the last tree that contains elements belonging to the calling processor.
+ * \param [out]   last_local_tree  The global index of the last tree that contains elements belonging to the calling process.
  * \param [out]   child_in_tree_end The global index of the first element that does not belonging to
- *                                  the calling processor anymore. Not computed if NULL.
+ *                                  the calling process anymore. Not computed if NULL.
  * \param [out]   first_tree_shared If not NULL, 1 or 0 is stored here depending on whether \a first_local_tree is the
  *                                 same as \a last_local_tree on the next process.
  * \param [in] comm         The communicator 
