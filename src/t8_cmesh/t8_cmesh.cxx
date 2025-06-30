@@ -2213,8 +2213,10 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
        otherwise this index is > and the last tree of i is the tree before the first tree of i+1.
 
      */
-
-    send_buffer.resize (2 * 2 * num_procs_we_send_to);
+    constexpr int num_messages_per_proc = 2;
+    constexpr int message_size
+      = 2;  // Each message contains the global id of the first/last tree and the global id of the first/last element in the tree.
+    send_buffer.resize (num_messages_per_proc * message_size * num_procs_we_send_to);
 
     /* Iterate over tree_offsets_partition to find boundaries
      * and send the MPI messages. */
