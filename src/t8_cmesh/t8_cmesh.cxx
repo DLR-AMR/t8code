@@ -1571,18 +1571,28 @@ t8_cmesh_uniform_set_return_parameters_to_empty (t8_gloidx_t *first_local_tree, 
 
 /* Helper function to compute (A*B)/C for large integers, when A*B might not fit in a
  * 64-bit int anymore. Uses floor(floor(A/C)*B + ((A%C)/C)*B) instead. */
+/**
+ * \brief Computes (A*B)/C for large integers, where A, B, C are t8_gloidx_t.
+ * This function is useful when A*B might not fit in a 64-bit integer.
+ * It uses the formula:
+ *   (A*B)/C = floor(floor(A/C)*B + ((A%C)/C)*B)
+ * \param [in] A The first large integer.
+ * \param [in] B The second large integer.
+ * \param [in] C The divisor.
+ * \return The result of (A*B)/C as a t8_gloidx_t.
+ */
 static inline t8_gloidx_t
-t8_A_times_B_over_C_gloidx (const t8_gloidx_t proc, const t8_gloidx_t elem_index, const t8_gloidx_t global_num_elem)
+t8_A_times_B_over_C_gloidx (const t8_gloidx_t A, const t8_gloidx_t B, const t8_gloidx_t C)
 {
-  const t8_gloidx_t a_over_c = proc / global_num_elem;
-  const t8_gloidx_t a_o_c_times_b = a_over_c * elem_index;
+  const t8_gloidx_t a_over_c = A / C;
+  const t8_gloidx_t a_o_c_times_b = a_over_c * B;
 
   /* We check whether computing A/C * B will cause an overflow.
    * This can be achieved by checking if dividing the result by A/C
    * yields B again. */
-  T8_ASSERT (a_over_c == 0 || a_o_c_times_b / a_over_c == elem_index);
+  T8_ASSERT (a_over_c == 0 || a_o_c_times_b / a_over_c == B);
 
-  return (t8_gloidx_t) (a_o_c_times_b + (((long double) (proc % global_num_elem)) / global_num_elem) * elem_index);
+  return (t8_gloidx_t) (a_o_c_times_b + (((long double) (A % C)) / C) * B);
 }
 
 /* Version of t8_A_times_B_over_C where A is an integer.
