@@ -2097,7 +2097,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
 
   /* Compute number of non-shared-trees and the local index of the first non-shared-tree */
   const int first_tree_shared_shift = cmesh->first_tree_shared ? 1 : 0;
-  const t8_locidx_t pure_local_trees = cmesh->num_local_trees - first_tree_shared_shift;
+  const t8_locidx_t num_pure_local_trees = cmesh->num_local_trees - first_tree_shared_shift;
   std::vector<sc_MPI_Request> send_requests;
   /* Initialize the send buffer for all messages.
     * Since we use MPI_Isend, we need to keep the buffers alive until
@@ -2110,11 +2110,11 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
   bool expect_start_message = true;
   bool expect_end_message = true;
   t8_gloidx_t child_in_tree_begin_temp = -1;
-  if (pure_local_trees > 0) {
+  if (num_pure_local_trees > 0) {
     /* Compute which trees and elements to send to which process.
      * We skip empty processes. */
     t8_locidx_t igtree = first_tree_shared_shift;
-    std::vector<t8_gloidx_t> first_element_tree (pure_local_trees + 1);
+    std::vector<t8_gloidx_t> first_element_tree (num_pure_local_trees + 1);
 
     /* Set the first entry of first_element_tree to the global index of
      * the first element of our first pure local tree. */
@@ -2123,21 +2123,22 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
     /* Compute the first element in every pure local tree.
      * This array stores for each tree the global element index offset. 
      * Example: 2 local trees, each has 8 Elements. First element index 12: | 12 | 20 | 28 | */
-    for (t8_locidx_t itree = 0; itree < pure_local_trees; ++itree, ++igtree) {
+    for (t8_locidx_t itree = 0; itree < num_pure_local_trees; ++itree, ++igtree) {
       const t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, igtree);
       const t8_gloidx_t first_element_of_tree = first_element_tree[itree];
       first_element_tree[itree + 1] = first_element_of_tree + scheme->count_leaves_from_root (tree_class, level);
     }
 
     /* Check that the last tree + 1 stores as offset the start of the next process */
-    T8_ASSERT (first_element_tree[pure_local_trees] == t8_shmem_array_get_gloidx (offset_array, cmesh->mpirank + 1));
+    T8_ASSERT (first_element_tree[num_pure_local_trees]
+               == t8_shmem_array_get_gloidx (offset_array, cmesh->mpirank + 1));
 
     /* Compute the range of mpiranks to minimize the loop over processes */
     /* Compute the process that will own the first element of our first tree. */
     t8_gloidx_t send_first
       = (t8_gloidx_t) t8_cmesh_determine_partition (first_element_tree[0], global_num_elements, cmesh->mpisize, 0);
     /* Compute the process that may own the next element after our last tree. */
-    t8_gloidx_t send_last = (t8_gloidx_t) t8_cmesh_determine_partition (first_element_tree[pure_local_trees],
+    t8_gloidx_t send_last = (t8_gloidx_t) t8_cmesh_determine_partition (first_element_tree[num_pure_local_trees],
                                                                         global_num_elements, cmesh->mpisize, 0);
     /* t8_cmesh_determine_partition will return mpisize for send_last if we ware on the last process.
       * We need to correct by subtracting 1. */
@@ -2239,7 +2240,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
         const t8_locidx_t possibly_first_puretree_of_current_proc = offset_partition[iproc - send_first];
         const t8_locidx_t possibly_first_puretree_of_next_proc = offset_partition[iproc + 1 - send_first];
         const t8_gloidx_t first_el_index_of_first_tree = first_element_tree[possibly_first_puretree_of_current_proc];
-        if (first_element_index_of_current_proc >= first_element_tree[pure_local_trees]) {
+        if (first_element_index_of_current_proc >= first_element_tree[num_pure_local_trees]) {
           /* We do not send to this process iproc at all. Its first element is in a tree that belongs 
            * to the next process. */
           send_start_message = send_end_message = false;
@@ -2275,7 +2276,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
          * and this is our last tree.
          */
         if (send_end_message) {
-          if (first_element_tree[pure_local_trees] - 1 < last_element_index_of_current_proc) {
+          if (first_element_tree[num_pure_local_trees] - 1 < last_element_index_of_current_proc) {
             /* The last element of this proc does not lie in our partition.
              * We do not need to send any End information to this process. */
             send_end_message = false;
@@ -2284,7 +2285,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
           else {
             if (iproc == send_last) {
               /* The very last process must have our last tree as its last tree. */
-              last_puretree_of_current_proc = pure_local_trees - 1;
+              last_puretree_of_current_proc = num_pure_local_trees - 1;
             }
             else if (possibly_first_puretree_of_next_proc == possibly_first_puretree_of_current_proc) {
               /* The next process is empty. This can only happen if
@@ -2300,14 +2301,14 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
 #if T8_ENABLE_DEBUG
         /* Check that the trees have valid values. */
         if (send_start_message) {
-          T8_ASSERT (0 <= first_puretree_of_current_proc && first_puretree_of_current_proc < pure_local_trees);
+          T8_ASSERT (0 <= first_puretree_of_current_proc && first_puretree_of_current_proc < num_pure_local_trees);
         }
         else {
           T8_ASSERT (first_puretree_of_current_proc == -1);
         }
 
         if (send_end_message) {
-          T8_ASSERT (0 <= last_puretree_of_current_proc && last_puretree_of_current_proc < pure_local_trees);
+          T8_ASSERT (0 <= last_puretree_of_current_proc && last_puretree_of_current_proc < num_pure_local_trees);
         }
         else {
           T8_ASSERT (last_puretree_of_current_proc == -1);
@@ -2344,14 +2345,14 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
           next_non_empty_proc++;
           /* check if the proc is in our send-range && the proc is empty && we have information about this process. */
         } while (next_non_empty_proc < send_last && last_child_next_non_empty < first_child_next_non_empty
-                 && first_child_next_non_empty < first_element_tree[pure_local_trees]);
+                 && first_child_next_non_empty < first_element_tree[num_pure_local_trees]);
         // Undo the last iteration's incrementation of next_non_empty_proc
         next_non_empty_proc--;
         first_puretree_of_current_proc = offset_partition[next_non_empty_proc - send_first - 1];
         last_puretree_of_current_proc = -1;
         /* Check if this proc has information about the first_child on the next non empty process.
           * If not, another process will send the information */
-        send_start_message = first_child_next_non_empty < first_element_tree[pure_local_trees];
+        send_start_message = first_child_next_non_empty < first_element_tree[num_pure_local_trees];
         if (send_start_message) {
           /* We might have detected a larger range of empty processes. We directly send to this range to avoid a recomputation
            * of this information. We have to take into account, that in the last iteration of the above do-while-loop 
@@ -2409,7 +2410,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
 
       } /* End sending of end message */
     }   /* End loop over processes */
-  }     /* if (pure_local_trees > 0) */
+  }     /* if (num_pure_local_trees > 0) */
 
   if (this_proc_is_empty) {
     /* If this proc is empty, we only expect a start message.
