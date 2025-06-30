@@ -2169,11 +2169,11 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
     }
 
     const t8_gloidx_t num_procs_we_send_to = send_last - send_first + 1;
-    std::vector<size_t> offset_partition (num_procs_we_send_to + 1);
+    std::vector<size_t> tree_offsets_partition (num_procs_we_send_to + 1);
     /* For each process we send data to, we find the first tree whose first element
      * belongs to that process.
-     * These tree indices will be stored in offset_partition. */
-    vector_split (first_element_tree.begin (), first_element_tree.end (), offset_partition,
+     * These tree indices will be stored in tree_offsets_partition. */
+    vector_split (first_element_tree.begin (), first_element_tree.end (), tree_offsets_partition,
                   std::function<size_t (t8_gloidx_t, t8_gloidx_t, int, t8_gloidx_t)> (t8_cmesh_determine_partition),
                   global_num_elements, cmesh->mpisize, send_first);
 
@@ -2186,7 +2186,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
        and in which tree do they end.
        Note: If proc i ends in tree j, then proc i+1 may start in tree j or tree j+1.
 
-       offset_partition:
+       tree_offsets_partition:
        At position i for process send_first + i the first local tree whose first element
        belongs to send_first+i.
        If no such tree exists, then the index of the previous process is stored.
@@ -2208,7 +2208,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
 
        Need to identify last tree that a process has elements of.
        Compute last element of process i via ((cmesh->mpirank+1)*global_num_elements)/num_procs - 1
-       Get offset of first tree of process i+1: first_element_tree[offset_partition[i+1]]
+       Get offset of first tree of process i+1: first_element_tree[tree_offsets_partition[i+1]]
        If this index is <= to last element of process i then the last tree of i is the first tree of i+1,
        otherwise this index is > and the last tree of i is the tree before the first tree of i+1.
 
@@ -2216,7 +2216,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
 
     send_buffer.resize (2 * 2 * num_procs_we_send_to);
 
-    /* Iterate over offset_partition to find boundaries
+    /* Iterate over tree_offsets_partition to find boundaries
      * and send the MPI messages. */
 
     for (t8_gloidx_t iproc = send_first; iproc <= send_last; iproc++) {
@@ -2237,8 +2237,8 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
 
       if (!proc_is_empty) {
         /* This process' partition is not empty. */
-        const t8_locidx_t possibly_first_puretree_of_current_proc = offset_partition[iproc - send_first];
-        const t8_locidx_t possibly_first_puretree_of_next_proc = offset_partition[iproc + 1 - send_first];
+        const t8_locidx_t possibly_first_puretree_of_current_proc = tree_offsets_partition[iproc - send_first];
+        const t8_locidx_t possibly_first_puretree_of_next_proc = tree_offsets_partition[iproc + 1 - send_first];
         const t8_gloidx_t first_el_index_of_first_tree = first_element_tree[possibly_first_puretree_of_current_proc];
         if (first_element_index_of_current_proc >= first_element_tree[num_pure_local_trees]) {
           /* We do not send to this process iproc at all. Its first element is in a tree that belongs 
@@ -2348,7 +2348,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
                  && first_child_next_non_empty < first_element_tree[num_pure_local_trees]);
         // Undo the last iteration's incrementation of next_non_empty_proc
         next_non_empty_proc--;
-        first_puretree_of_current_proc = offset_partition[next_non_empty_proc - send_first - 1];
+        first_puretree_of_current_proc = tree_offsets_partition[next_non_empty_proc - send_first - 1];
         last_puretree_of_current_proc = -1;
         /* Check if this proc has information about the first_child on the next non empty process.
           * If not, another process will send the information */
