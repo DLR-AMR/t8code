@@ -125,6 +125,9 @@ TEST_P (t8_cmesh_partition_class, test_cmesh_partition_concentrate)
     cmesh_partition_new1 = cmesh_partition_new2;
     cmesh_partition_new2 = NULL;
 
+    /** We execute this block twice such that the cmesh itself and
+     * the cmesh from which it derived from are the same again.
+     */
     for (int i = 0; i < 2; i++) {
       t8_cmesh_init (&cmesh_partition_new2);
       t8_cmesh_set_derive (cmesh_partition_new2, cmesh_partition_new1);
