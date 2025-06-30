@@ -1568,8 +1568,6 @@ t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     const t8_scheme *scheme = cmesh->set_partition_scheme; /* The refinement scheme */
     /* Compute first and last tree index */
     T8_ASSERT (cmesh->tree_offsets == NULL);
-
-    scheme = cmesh->set_partition_scheme; /* The refinement scheme */
     T8_ASSERT (scheme != NULL);
     t8_cmesh_uniform_bounds_for_irregular_refinement (cmesh_from, cmesh->set_partition_level, scheme,
                                                       &cmesh->first_tree, NULL, &last_tree, NULL,
