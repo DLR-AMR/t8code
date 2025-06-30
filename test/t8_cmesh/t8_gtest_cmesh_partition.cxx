@@ -132,7 +132,7 @@ TEST_P (t8_cmesh_partition_class, test_cmesh_partition_concentrate)
       t8_cmesh_set_partition_uniform (cmesh_partition_new2, level, scheme);
       t8_cmesh_commit (cmesh_partition_new2, sc_MPI_COMM_WORLD);
       cmesh_partition_new1 = cmesh_partition_new2;
-      /* Switch the rolls of the cmeshes */
+      /* Switch the roles of the cmeshes */
       cmesh_partition_new1 = cmesh_partition_new2;
       cmesh_partition_new2 = NULL;
     }
