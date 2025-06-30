@@ -2323,8 +2323,8 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
 #endif
         if (send_start_message) {
           /* Compute the index inside the tree of the first element. */
-          const t8_gloidx_t first_el_of_first_tree = first_element_tree[first_puretree_of_iproc];
-          first_element_in_tree_index_of_iproc = first_element_index_of_current_proc - first_el_of_first_tree;
+          const t8_gloidx_t first_el_of_first_tree_on_iproc = first_element_tree[first_puretree_of_iproc];
+          first_element_in_tree_index_of_iproc = first_element_index_of_current_proc - first_el_of_first_tree_on_iproc;
         }
         if (send_end_message) {
           /* Compute the index inside the tree of the last element. */
