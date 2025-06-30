@@ -1751,14 +1751,18 @@ t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, int level, t8_sch
   }
 }
 
-/* Given an array (partition) storing the global index of the 
- * first element of each (pure) local tree and
- * a (pure) local tree index, return the first process that
- * will have elements of this tree in a uniform partition. 
- * The data pointer must point to a valid t8_cmesh_partition_query_t,
- * storing the number of processes and the global number of elements. 
+/**
+ * Determines the partition for a given element index in a uniform partitioning.
+ * This function computes the partition based on the global element index,
+ * the total number of elements, the number of processes, and the process offset.
+ * \param element_index The global index of the element.
+ * \param global_num_elements The total number of elements in the global mesh.
+ * \param num_procs The total number of processes.
+ * \param process_offset The offset of the current process in the global numbering.
+ * \return The rank of the process that will have the element in a uniform partition.
  * 
- * This function is used standalone and as callback of sc_array_split. */
+ * \note This function is used standalone and as a callback for vector splitting
+ */
 static size_t
 t8_cmesh_determine_partition (const t8_gloidx_t element_index, const t8_gloidx_t global_num_elements,
                               const int num_procs, const t8_gloidx_t process_offset)
