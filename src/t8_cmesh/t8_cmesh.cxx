@@ -1618,7 +1618,7 @@ t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, const int level, 
   }
   if (is_empty) {
     /* This process is empty */
-    /* We now set the first local tree to the first local tree on the
+    /* We now set the first local tree to the first local tree that is owned by the
      * next nonempty rank, and the last local tree to first - 1 */
     *first_local_tree = last_global_child / children_per_tree;
     if (first_global_child % children_per_tree != 0) {
