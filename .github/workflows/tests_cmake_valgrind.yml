@@ -37,8 +37,12 @@ on:
         description: 'Build type (Release/Debug)'
       TEST_LEVEL:
         required: true
-        type: string
-        description: 'Test level used for configuring (T8_TEST_LEVEL_FULL, T8_TEST_LEVEL_MEDIUM, or T8_TEST_LEVEL_BASIC)'
+        type: choice
+        options:
+          - T8_TEST_LEVEL_FULL
+          - T8_TEST_LEVEL_MEDIUM
+          - T8_TEST_LEVEL_BASIC
+        description: 'Test level used for configuring'
 
 jobs:  
   valgrind_check:
