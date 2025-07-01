@@ -33,11 +33,11 @@ struct levelmultiindex: public lmi_binary<TShape>
   [[nodiscard]] size_t
   multiindex () const noexcept;
 
-  [[nodiscard]] levelmultiindex
-  parent (const levelmultiindex<TShape>& lmi) const;
+  [[nodiscard]] static levelmultiindex
+  parent (levelmultiindex<TShape> lmi);
 
-  [[nodiscard]] std::vector<levelmultiindex>
-  children (const levelmultiindex<TShape>& lmi) const noexcept;
+  [[nodiscard]] static std::vector<levelmultiindex>
+  children (levelmultiindex<TShape> lmi) noexcept;
 
  private:
   size_t index;
