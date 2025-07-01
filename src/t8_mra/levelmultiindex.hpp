@@ -75,6 +75,38 @@ levelmultiindex<T8_ECLASS_TRIANGLE>::level () const noexcept
   return static_cast<unsigned int> ((index >> BASECELL_BITS >> LEVEL_BITS) & ((1ULL << LEVEL_BITS) - 1));
 }
 
+/**
+ * @brief Get parent of a given levelmultiindex.
+ *
+ * @param lmi Current levelmultiindex
+ * @return Parent levelmultiindex
+ */
+template <>
+[[nodiscard]] inline levelmultiindex<T8_ECLASS_TRIANGLE>
+levelmultiindex<T8_ECLASS_TRIANGLE>::parent (levelmultiindex<T8_ECLASS_TRIANGLE> lmi)
+{
+#if T8_ENABLE_DEBUG
+  if (parent.level == 0)
+    SC_ABORTF ("levelmultiindices on level 0 do not have a parent %d", lmi.index);
+#endif
+
+  // Extract basecell and remove basecell from lmi
+  const auto basecell = lmi.index & ((1ULL << BASECELL_BITS) - 1);
+  lmi.index >>= BASECELL_BITS;
+
+  // Extract level and remove level from lmi. Reduce refinement level by 1
+  const auto level = (lmi.index & ((1u << LEVEL_BITS) - 1)) - 1;
+  lmi.index >>= LEVEL_BITS;
+
+  // Remove last path segment from lmi
+  lmi.index >>= PATH_BITS;
+
+  // Re-encode lmi with same basecell, decreased level and shorten path
+  lmi.index = (lmi.index << (BASECELL_BITS + LEVEL_BITS)) | (level << BASECELL_BITS) | basecell;
+
+  return lmi;
+}
+
 }  // namespace t8_mra
 
 #endif
