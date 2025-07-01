@@ -1730,12 +1730,8 @@ t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, int level, t8_sch
     }
   }
   if (child_in_tree_end != NULL) {
-    if (*last_local_tree > 0) {
-      *child_in_tree_end = last_global_child - *last_local_tree * children_per_tree;
-    }
-    else {
-      *child_in_tree_end = last_global_child;
-    }
+    T8_ASSERT (*last_local_tree >= 0);
+    *child_in_tree_end = last_global_child - *last_local_tree * children_per_tree;
   }
   if (is_empty) {
     /* This process is empty */
