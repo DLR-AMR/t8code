@@ -41,9 +41,9 @@ on:
         required: true
         type: choice
         options:
-	          - T8_TEST_LEVEL_FULL
-	          - T8_TEST_LEVEL_MEDIUM
-	          - T8_TEST_LEVEL_BASIC
+          - T8_TEST_LEVEL_FULL
+          - T8_TEST_LEVEL_MEDIUM
+          - T8_TEST_LEVEL_BASIC
         description: 'Test level used for configuring'
     secrets:
       CODE_COV:
