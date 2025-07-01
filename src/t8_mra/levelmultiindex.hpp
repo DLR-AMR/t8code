@@ -117,6 +117,14 @@ levelmultiindex<T8_ECLASS_TRIANGLE>::parent (levelmultiindex<T8_ECLASS_TRIANGLE>
   return lmi;
 }
 
+// F R E E - F U N C T I O N S
+template <typename TLmi>
+inline TLmi
+parent_lmi (TLmi lmi)
+{
+  return TLmi::parent (lmi);
+}
+
 }  // namespace t8_mra
 
 #endif
