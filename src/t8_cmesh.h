@@ -742,10 +742,9 @@ t8_cmesh_get_partition_table (t8_cmesh_t cmesh);
  * \a cmesh must be committed before calling this function. 
  */
 void
-t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, const int level, const t8_scheme_c *tree_scheme,
-                                             t8_gloidx_t *first_local_tree, t8_gloidx_t *child_in_tree_begin,
-                                             t8_gloidx_t *last_local_tree, t8_gloidx_t *child_in_tree_end,
-                                             int8_t *first_tree_shared);
+t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, const int level, const t8_scheme_c *scheme, t8_gloidx_t *first_local_tree,
+                         t8_gloidx_t *child_in_tree_begin, t8_gloidx_t *last_local_tree, t8_gloidx_t *child_in_tree_end,
+                         int8_t *first_tree_shared);
 
 /**
  * Calculate the section of a uniform hybrid forest for the current rank. Needed for hybrid meshes, especially 
