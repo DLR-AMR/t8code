@@ -20,8 +20,12 @@ template <t8_eclass TShape>
 struct levelmultiindex: public lmi_binary<TShape>
 {
 
-  levelmultiindex () = default;
+  levelmultiindex ()
+  {
+    SC_ABORTF ("levelmultiindex has not been implemented for shape %d", TShape);
+  };
   levelmultiindex (unsigned int level, size_t index);
+  levelmultiindex (size_t index);
 
   [[nodiscard]] unsigned int
   level () const noexcept;
@@ -46,6 +50,23 @@ struct lmi_binary<T8_ECLASS_TRIANGLE>
   static constexpr int LEVEL_BITS = 5;
   static constexpr int BASECELL_BITS = 21;
 };
+
+template <>
+levelmultiindex<T8_ECLASS_TRIANGLE>::levelmultiindex ()
+{
+  /// TODO
+}
+
+template <>
+levelmultiindex<T8_ECLASS_TRIANGLE>::levelmultiindex (unsigned int level, size_t index)
+{
+  /// TODO
+}
+
+template <>
+levelmultiindex<T8_ECLASS_TRIANGLE>::levelmultiindex (size_t _index): index (_index)
+{
+}
 
 template <>
 [[nodiscard]] inline unsigned int
