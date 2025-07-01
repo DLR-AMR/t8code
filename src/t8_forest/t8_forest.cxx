@@ -1149,7 +1149,6 @@ t8_forest_populate (t8_forest_t forest, const int irregular)
   int is_empty;
 
   SC_CHECK_ABORT (forest->set_level <= forest->maxlevel, "Given refinement level exceeds the maximum.\n");
-  /* TODO: create trees and quadrants according to uniform refinement */
   if (irregular) {
     t8_cmesh_uniform_bounds_for_irregular_refinement (
       forest->cmesh, forest->set_level, forest->scheme, &forest->first_local_tree, &child_in_tree_begin,
