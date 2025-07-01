@@ -33,6 +33,7 @@
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_cmesh/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
+#include <t8_cmesh.h>
 #include <t8_forest/t8_forest_profiling.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_adapt.h>
@@ -1155,8 +1156,9 @@ t8_forest_populate (t8_forest_t forest, const int irregular)
       &forest->last_local_tree, &child_in_tree_end, NULL, forest->mpicomm);
   }
   else {
-    t8_cmesh_uniform_bounds (forest->cmesh, forest->set_level, forest->scheme, &forest->first_local_tree,
-                             &child_in_tree_begin, &forest->last_local_tree, &child_in_tree_end, NULL);
+    t8_cmesh_uniform_bounds_equal_element_count (forest->cmesh, forest->set_level, forest->scheme,
+                                                 &forest->first_local_tree, &child_in_tree_begin,
+                                                 &forest->last_local_tree, &child_in_tree_end, NULL);
   }
   /* True if the forest has no elements */
   is_empty = forest->first_local_tree > forest->last_local_tree
