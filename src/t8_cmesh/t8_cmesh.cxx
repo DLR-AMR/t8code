@@ -1961,7 +1961,7 @@ t8_cmesh_bounds_send_start_or_end (const t8_cmesh_t cmesh, const bool start_mess
     const int mpiret = sc_MPI_Isend (message, num_entries, T8_MPI_GLOIDX, iproc, tag, comm, request);
     SC_CHECK_MPI (mpiret);
     T8_ASSERT (proc_is_empty || (0 <= message[0] && message[0] < cmesh->num_trees));
-    T8_ASSERT (proc_is_empty || (0 <= message[1] && message[1] < global_num_elements));
+    T8_ASSERT (proc_is_empty || (0 <= message[1] && message[1] <= global_num_elements));
   }
   else { /* We are the current proc, so we just copy the data. */
     (*first_or_last_local_tree) = global_id_of_first_or_last_tree;
@@ -1978,7 +1978,7 @@ t8_cmesh_bounds_send_start_or_end (const t8_cmesh_t cmesh, const bool start_mess
     if (child_in_tree_end_or_begin != NULL) {
       /* If we send the last element add 1 to the id. During later processing of the cmesh we iterate 
        * as long as ielement < child_in_tree_end. Therefore we have to shift by one. */
-      *child_in_tree_end_or_begin = first_or_last_element_in_tree_index_of_iproc + ((!start_message) ? 1 : 0);
+      *child_in_tree_end_or_begin = first_or_last_element_in_tree_index_of_iproc;
     }
     /* We do not expect this message from another proc */
     *expect_start_or_end_message = false;
@@ -2017,7 +2017,7 @@ recv_message (const bool start, t8_gloidx_t *first_last_local_tree, t8_gloidx_t 
     *child_in_tree_begin_temp = message[1];
   }
   if (child_in_tree_begin_end != NULL) {
-    *child_in_tree_begin_end = message[1] + (start ? 0 : 1);
+    *child_in_tree_begin_end = message[1];
     T8_ASSERT (*child_in_tree_begin_end == -1
                || (start ? (0 <= *child_in_tree_begin_end && *child_in_tree_begin_end < global_num_elements)
                          : (0 < *child_in_tree_begin_end && *child_in_tree_begin_end <= global_num_elements)));
@@ -2079,11 +2079,9 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
 
   const t8_gloidx_t first_element = t8_cmesh_get_first_element_of_process (
     (uint32_t) cmesh->mpirank, (uint32_t) cmesh->mpisize, (uint64_t) global_num_elements);
-  const t8_gloidx_t last_element
-    = t8_cmesh_get_first_element_of_process ((uint32_t) cmesh->mpirank + 1, (uint32_t) cmesh->mpisize,
-                                             (uint64_t) global_num_elements)
-      - 1;
-  const bool this_proc_is_empty = last_element < first_element;
+  const t8_gloidx_t last_element = t8_cmesh_get_first_element_of_process (
+    (uint32_t) cmesh->mpirank + 1, (uint32_t) cmesh->mpisize, (uint64_t) global_num_elements);
+  const bool this_proc_is_empty = last_element <= first_element;
   if (cmesh->mpirank == 0) {
     *first_local_tree = 0;
   }
@@ -2147,11 +2145,9 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
       const t8_gloidx_t mid = low + (high - low) / 2;
       const t8_gloidx_t first_element_of_process = t8_cmesh_get_first_element_of_process (
         (uint32_t) mid, (uint32_t) cmesh->mpisize, (uint64_t) global_num_elements);
-      const t8_gloidx_t last_element_of_process
-        = t8_cmesh_get_first_element_of_process ((uint32_t) mid + 1, (uint32_t) cmesh->mpisize,
-                                                 (uint64_t) global_num_elements)
-          - 1;
-      if (last_element_of_process < first_element_of_process && first_element_of_process == first_element_tree[0]) {
+      const t8_gloidx_t last_element_of_process = t8_cmesh_get_first_element_of_process (
+        (uint32_t) mid + 1, (uint32_t) cmesh->mpisize, (uint64_t) global_num_elements);
+      if (last_element_of_process <= first_element_of_process && first_element_of_process == first_element_tree[0]) {
         /* This process is empty. */
         send_first = mid;
         high = mid - 1;
@@ -2217,11 +2213,9 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
     for (t8_gloidx_t iproc = send_first; iproc <= send_last; iproc++) {
       const t8_gloidx_t first_element_index_of_iproc = t8_cmesh_get_first_element_of_process (
         (uint32_t) iproc, (uint32_t) cmesh->mpisize, (uint64_t) global_num_elements);
-      const t8_gloidx_t last_element_index_of_current_proc
-        = t8_cmesh_get_first_element_of_process ((uint32_t) iproc + 1, (uint32_t) cmesh->mpisize,
-                                                 (uint64_t) global_num_elements)
-          - 1;
-      const bool proc_is_empty = last_element_index_of_current_proc < first_element_index_of_iproc;
+      const t8_gloidx_t last_element_index_of_current_proc = t8_cmesh_get_first_element_of_process (
+        (uint32_t) iproc + 1, (uint32_t) cmesh->mpisize, (uint64_t) global_num_elements);
+      const bool proc_is_empty = last_element_index_of_current_proc <= first_element_index_of_iproc;
       bool send_start_message = true;
       bool send_end_message = true;
 
@@ -2271,7 +2265,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
          * and this is our last tree.
          */
         if (send_end_message) {
-          if (first_element_tree[num_pure_local_trees] - 1 < last_element_index_of_current_proc) {
+          if (first_element_tree[num_pure_local_trees] < last_element_index_of_current_proc) {
             /* The last element of this proc does not lie in our partition.
              * We do not need to send any End information to this process. */
             send_end_message = false;
@@ -2333,13 +2327,11 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
         do {
           first_child_next_non_empty = t8_cmesh_get_first_element_of_process (
             (uint32_t) next_non_empty_proc, (uint32_t) cmesh->mpisize, (uint64_t) global_num_elements);
-          last_child_next_non_empty
-            = t8_cmesh_get_first_element_of_process ((uint32_t) next_non_empty_proc + 1, (uint32_t) cmesh->mpisize,
-                                                     (uint64_t) global_num_elements)
-              - 1;
+          last_child_next_non_empty = t8_cmesh_get_first_element_of_process (
+            (uint32_t) next_non_empty_proc + 1, (uint32_t) cmesh->mpisize, (uint64_t) global_num_elements);
           next_non_empty_proc++;
           /* check if the proc is in our send-range && the proc is empty && we have information about this process. */
-        } while (next_non_empty_proc < send_last && last_child_next_non_empty < first_child_next_non_empty
+        } while (next_non_empty_proc < send_last && last_child_next_non_empty <= first_child_next_non_empty
                  && first_child_next_non_empty < first_element_tree[num_pure_local_trees]);
         // Undo the last iteration's incrementation of next_non_empty_proc
         next_non_empty_proc--;
@@ -2439,7 +2431,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
   } /* End receiving start message */
   if (expect_end_message) {
     const int recv_from
-      = t8_shmem_array_binary_search (offset_array, last_element, cmesh->mpisize - 1, find_bounds_in_offset);
+      = t8_shmem_array_binary_search (offset_array, last_element - 1, cmesh->mpisize - 1, find_bounds_in_offset);
 
     T8_ASSERT (0 <= recv_from && recv_from < cmesh->mpisize);
     recv_message (false, last_local_tree, child_in_tree_end, NULL, NULL, global_num_elements, cmesh, recv_from, comm);
