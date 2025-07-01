@@ -1481,10 +1481,10 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, const int level, const t8_scheme *sch
      * (total_num_children * p) / P
      * We cast to long double and double first to prevent integer overflow.
      */
-    first_global_child = ((long double) global_num_children * cmesh->mpirank) / (double) cmesh->mpisize;
+    first_global_child = t8_cmesh_get_first_element_of_process (cmesh->mpirank, cmesh->mpisize, global_num_children);
   }
   if (cmesh->mpirank != cmesh->mpisize - 1) {
-    last_global_child = ((long double) global_num_children * (cmesh->mpirank + 1)) / (double) cmesh->mpisize;
+    last_global_child = t8_cmesh_get_first_element_of_process (cmesh->mpirank + 1, cmesh->mpisize, global_num_children);
   }
   else {
     last_global_child = global_num_children;
@@ -1692,10 +1692,10 @@ t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, int level, t8_sch
      * (total_num_children * p) / P
      * We cast to long double and double first to prevent integer overflow.
      */
-    first_global_child = t8_A_times_B_over_C_gloidx (global_num_children, cmesh->mpirank, cmesh->mpisize);
+    first_global_child = t8_cmesh_get_first_element_of_process (cmesh->mpirank, cmesh->mpisize, global_num_children);
   }
   if (cmesh->mpirank != cmesh->mpisize - 1) {
-    last_global_child = t8_A_times_B_over_C_gloidx (global_num_children, cmesh->mpirank + 1, cmesh->mpisize);
+    last_global_child = t8_cmesh_get_first_element_of_process (cmesh->mpirank + 1, cmesh->mpisize, global_num_children);
   }
   else {
     last_global_child = global_num_children;
