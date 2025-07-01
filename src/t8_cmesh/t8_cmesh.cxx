@@ -1806,15 +1806,13 @@ t8_cmesh_uniform_bounds_from_unpartioned (const t8_cmesh_t cmesh, const t8_gloid
   uint64_t global_num_children = (uint64_t) local_num_children;
   const t8_gloidx_t first_child
     = t8_cmesh_get_first_element_of_process ((uint32_t) cmesh->mpirank, (uint32_t) cmesh->mpisize, global_num_children);
-  const t8_gloidx_t last_child
-    = t8_cmesh_get_first_element_of_process ((uint32_t) cmesh->mpirank + 1, (uint32_t) cmesh->mpisize,
-                                             (uint64_t) local_num_children)
-      - 1;
+  const t8_gloidx_t last_child = t8_cmesh_get_first_element_of_process (
+    (uint32_t) cmesh->mpirank + 1, (uint32_t) cmesh->mpisize, (uint64_t) local_num_children);
   /* Can't we optimize this linear loop by using a binary search?
      * -> No, we cannot. Since in any case we have to compute the t8_element_count_leaves_from_root
      *    for each tree.
      */
-  if (last_child < first_child) {
+  if (last_child <= first_child) {
     /* This process is empty. */
     /* Find the next non-empty proc */
     int next_non_empty = cmesh->mpirank + 1;
@@ -1823,22 +1821,19 @@ t8_cmesh_uniform_bounds_from_unpartioned (const t8_cmesh_t cmesh, const t8_gloid
     do {
       first_child_next_non_empty = t8_cmesh_get_first_element_of_process (
         (uint32_t) next_non_empty, (uint32_t) cmesh->mpisize, (uint64_t) local_num_children);
-      last_child_next_non_empty
-        = t8_cmesh_get_first_element_of_process ((uint32_t) next_non_empty + 1, (uint32_t) cmesh->mpisize,
-                                                 (uint64_t) local_num_children)
-          - 1;
+      last_child_next_non_empty = t8_cmesh_get_first_element_of_process (
+        (uint32_t) next_non_empty + 1, (uint32_t) cmesh->mpisize, (uint64_t) local_num_children);
       next_non_empty++;
-    } while (last_child_next_non_empty < first_child_next_non_empty && next_non_empty < cmesh->mpisize - 1);
+    } while (last_child_next_non_empty <= first_child_next_non_empty && next_non_empty < cmesh->mpisize - 1);
 
     if (next_non_empty >= cmesh->mpisize - 1) {
       next_non_empty = cmesh->mpisize - 1;
       first_child_next_non_empty = t8_cmesh_get_first_element_of_process (
         (uint32_t) cmesh->mpisize - 1, (uint32_t) cmesh->mpisize, (uint64_t) local_num_children);
       last_child_next_non_empty = t8_cmesh_get_first_element_of_process (
-                                    (uint32_t) cmesh->mpisize, (uint32_t) cmesh->mpisize, (uint64_t) local_num_children)
-                                  - 1;
+        (uint32_t) cmesh->mpisize, (uint32_t) cmesh->mpisize, (uint64_t) local_num_children);
     }
-    T8_ASSERT (first_child_next_non_empty <= last_child_next_non_empty);
+    T8_ASSERT (first_child_next_non_empty < last_child_next_non_empty);
     // Loop over trees to find the one containing first_child_next_non_empty, which gives us the first and last local tree.
     t8_gloidx_t current_tree_element_offset = 0;
     for (t8_gloidx_t igtree = 0; igtree < num_trees; ++igtree) {
@@ -1887,10 +1882,10 @@ t8_cmesh_uniform_bounds_from_unpartioned (const t8_cmesh_t cmesh, const t8_gloid
       }
     }
     /* Check if the last element is on the current tree */
-    if (current_tree_element_offset <= last_child
-        && last_child < current_tree_element_offset + num_leaf_elems_in_tree) {
+    if (current_tree_element_offset < last_child
+        && last_child <= current_tree_element_offset + num_leaf_elems_in_tree) {
       if (child_in_tree_end != NULL) {
-        *child_in_tree_end = last_child - current_tree_element_offset + 1;
+        *child_in_tree_end = last_child - current_tree_element_offset;
       }
       *last_local_tree = igtree;
 
