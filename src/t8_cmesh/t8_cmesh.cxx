@@ -2137,8 +2137,8 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
       send_last = cmesh->mpisize - 1;
     }
 
-    /* If the process before us becomes empty we send this information to all non-empty processes 
-     * of lower rank until another non-empty rank comes.  */
+    /* The process before us is empty. We need to send this information to all processes
+      * that are not empty and have a lower rank than us. */
     t8_gloidx_t low = 0;
     t8_gloidx_t high = send_first - 1;
     while (low <= high) {
@@ -2168,7 +2168,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
 
     /* We know: Lowest process and highest process we need to send trees to
        Tree0 Tree1         TreeN
-       | ---- | --- | .... | --- |
+       | ---- | --- | .... | --- | Number_of_trees
        send_first                 send_last
 
        We need the information: Given a process in range, in which tree do its elements start
@@ -2181,11 +2181,15 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
        If no such tree exists, then the index of the previous process is stored.
 
        Examples: 
+       We describe the situation via
+       Proc i needs tree first local_tree_id, with i as the index in send_first + i.
+
        A                                     B                           C
-       Proc 0 needs tree 0 and 1             Proc 0 needs tree 0 and 1      Proc 0 needs tree 0 and 1
-       Proc 1 needs tree 1 and 2             Proc 1 needs tree 2            Proc 1 needs tree 1
+       3 Global Trees                        3 Global Trees              2 Global Trees
+       Proc 0 needs tree 0 and 1             Proc 0 needs tree 0 and 1   Proc 0 needs tree 0 and 1
+       Proc 1 needs tree 1 and 2             Proc 1 needs tree 2         Proc 1 needs tree 1
        Proc 2 needs tree 1 and 2
-       | 0 | 2 | 3 |                         | 0 | 2 | 3 |                  | 0 | 0 | 2 | 3 |
+       | 0 | 2 | 2 | 3 |                     | 0 | 2 | 3 |               | 0 | 0 | 2 |
 
        Need to identify the first tree we send to proc i:
        If a tree with the first element on proc i exists, then the first tree is either this tree
