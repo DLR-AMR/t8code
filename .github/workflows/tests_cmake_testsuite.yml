@@ -146,7 +146,7 @@ jobs:
       MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
       MPI: ${{ matrix.MPI }}
       BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
-      TEST_LEVEL: ${{ github.event_name == 'pull_request' && "T8_TEST_LEVEL_MEDIUM" || "T8_TEST_LEVEL_FULL" }} # Set TEST_LEVEL to medium if the event is a PR, otherwise full.
+      TEST_LEVEL: ${{ github.event_name == 'pull_request' && T8_TEST_LEVEL_MEDIUM || T8_TEST_LEVEL_FULL }} # Set TEST_LEVEL to medium if the event is a PR, otherwise full.
       
   # Run t8code linkage tests with and without MPI and in serial and debug mode
   t8code_linkage_tests:
@@ -163,7 +163,7 @@ jobs:
       MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
       MPI: ${{ matrix.MPI }}
       BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
-      TEST_LEVEL: ${{ github.event_name == 'pull_request' && "T8_TEST_LEVEL_MEDIUM" || "T8_TEST_LEVEL_FULL" }} # Set TEST_LEVEL to medium if the event is a PR, otherwise full.
+      TEST_LEVEL: ${{ github.event_name == 'pull_request' && T8_TEST_LEVEL_MEDIUM || T8_TEST_LEVEL_FULL }} # Set TEST_LEVEL to medium if the event is a PR, otherwise full.
 
   # Run t8code linkage tests with and without MPI and in serial and debug mode
   t8code_api_tests:
@@ -180,7 +180,7 @@ jobs:
       MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
       MPI: ${{ matrix.MPI }}
       BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
-      TEST_LEVEL: ${{ github.event_name == 'pull_request' && "T8_TEST_LEVEL_MEDIUM" || "T8_TEST_LEVEL_FULL" }} # Set TEST_LEVEL to medium if the event is a PR, otherwise full.
+      TEST_LEVEL: ${{ github.event_name == 'pull_request' && T8_TEST_LEVEL_MEDIUM || T8_TEST_LEVEL_FULL }} # Set TEST_LEVEL to medium if the event is a PR, otherwise full.
 
   # Run Valgrind check for every t8code test binary.
   t8code_valgrind_tests:
@@ -216,11 +216,11 @@ jobs:
       MAKEFLAGS: -j4
       MPI: ON
       BUILD_TYPE: Debug
-      TEST_LEVEL: ${{ github.event_name == 'pull_request' && "T8_TEST_LEVEL_MEDIUM" || "T8_TEST_LEVEL_FULL" }} # Set TEST_LEVEL to medium if the event is a PR, otherwise full.
+      TEST_LEVEL: ${{ github.event_name == 'pull_request' && T8_TEST_LEVEL_MEDIUM || T8_TEST_LEVEL_FULL }} # Set TEST_LEVEL to medium if the event is a PR, otherwise full.
 
   t8code_tarball:
     if: github.event.pull_request.draft == false
     uses: ./.github/workflows/build_cmake_tarball.yml
     needs: [preparation, sc_p4est_tests, t8code_tests, t8code_linkage_tests, t8code_api_tests, t8code_w_shipped_submodules_tests]
     with:
-      TEST_LEVEL: ${{ github.event_name == 'pull_request' && "T8_TEST_LEVEL_MEDIUM" || "T8_TEST_LEVEL_FULL" }} # Set TEST_LEVEL to medium if the event is a PR, otherwise full.
+      TEST_LEVEL: ${{ github.event_name == 'pull_request' && T8_TEST_LEVEL_MEDIUM || T8_TEST_LEVEL_FULL }} # Set TEST_LEVEL to medium if the event is a PR, otherwise full.
