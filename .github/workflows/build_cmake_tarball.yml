@@ -35,6 +35,7 @@ on:
       TEST_LEVEL:
         required: true
         type: choice
+        default: "T8_TEST_LEVEL_FULL"
         options:
           - T8_TEST_LEVEL_FULL
           - T8_TEST_LEVEL_MEDIUM
