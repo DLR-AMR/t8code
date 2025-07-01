@@ -1657,7 +1657,7 @@ t8_cmesh_determine_partition (const t8_gloidx_t element_index, const t8_gloidx_t
     return num_procs - process_offset;
   }
   else {
-
+    /*Use the mirror_element_index to map the whole range of [first_elem_of_iproc, last_elem_of_iproc) to first_proc*/
     const t8_gloidx_t mirror_element_index = global_num_elements - element_index - 1;
     const int first_proc_rank
       = num_procs - 1 - t8_A_times_B_over_C_intA (num_procs, mirror_element_index, global_num_elements);
