@@ -8,6 +8,10 @@
 namespace t8_mra
 {
 
+/**
+ * @brief Binary representation of each levelmultiindex. Has to be specialized
+ * for each t8_eclass
+ */
 template <t8_eclass TShape>
 struct lmi_binary
 {
@@ -16,6 +20,12 @@ struct lmi_binary
   static constexpr int BASECELL_BITS = 0;
 };
 
+/**
+ * @brief Basic representation of levelmultiindex. Describes each cell in a grid
+ * by its refinement level and path starting from a base cell.
+ * Has to be specialized for each t8_eclass.
+ * See: http://www.esaim-proc.org/10.1051/proc/201134003
+ */
 template <t8_eclass TShape>
 struct levelmultiindex: public lmi_binary<TShape>
 {
