@@ -21,6 +21,7 @@
 */
 
 #include <gtest/gtest.h>
+#include <test/t8_gtest_macros.hxx>
 #include <src/t8_vtk/t8_with_vtk/t8_vtk_reader.hxx>
 
 #define T8_VTK_TEST_NUM_PROCS 2
@@ -73,7 +74,8 @@ class vtk_reader: public testing::TestWithParam<std::tuple<int, int, int>> {
 /* All readers should fail properly with a non-existing file. */
 TEST_P (vtk_reader, vtk_to_cmesh_fail)
 {
-  t8_cmesh_t cmesh = t8_vtk_reader_cmesh (failing_files[file], 0, main_proc, sc_MPI_COMM_WORLD, file_type);
+  t8_cmesh_t cmesh = t8_vtk_reader_cmesh (failing_files[file], 0, main_proc, sc_MPI_COMM_WORLD, file_type,
+                                          t8_testsuite_get_package_id (), 0);
   EXPECT_TRUE (cmesh == NULL);
 }
 
@@ -83,7 +85,8 @@ TEST_P (vtk_reader, vtk_to_cmesh_success)
   int mpirank;
   int mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
-  t8_cmesh_t cmesh = t8_vtk_reader_cmesh (test_files[file], partition, main_proc, sc_MPI_COMM_WORLD, file_type);
+  t8_cmesh_t cmesh = t8_vtk_reader_cmesh (test_files[file], partition, main_proc, sc_MPI_COMM_WORLD, file_type,
+                                          t8_testsuite_get_package_id (), 0);
   if (file_type != VTK_FILE_ERROR) {
     EXPECT_FALSE (cmesh == NULL);
     const int test_num_trees = t8_cmesh_get_num_local_trees (cmesh);

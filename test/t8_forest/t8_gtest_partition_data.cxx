@@ -129,13 +129,13 @@ gTestCompareEQ (const T& value1, const T& value2) -> std::enable_if_t<std::is_sa
 }
 
 /**
- * \brief This function generates example data of the type \tparam T corresponding to the global 
- * element id of each element. It constructs one value per element. The data is defined according 
+ * \brief This function generates example data of the type \tparam T corresponding to the global
+ * element id of each element. It constructs one value per element. The data is defined according
  * to the partition of \a initial_forest. Afterwards a call to \see t8_forest_partition_data() is made
  * which redistributes the example data array accordingly to the partition of \a partitioned_forest.
  * Once the partitioning of the example data array is finished, we check whether each process obtained
  * the correct data entries in the proper ordering.
- * 
+ *
  * \tparam T The datatype of which example data will be generated.
  * \param initial_forest The forest before a partitioning step.
  * \param partitioned_forest The 'same' forest after a partitioning step.
@@ -234,7 +234,7 @@ class t8_test_partition_data_test: public testing::TestWithParam<std::tuple<int,
  * to a pre-set refinement level stated within the adaptation function \see t8_test_partition_data_adapt.
  * The adapted forest is partitioned thereafter.
  * Afterwards example data of different data types is generated according to the partition of the adapted
- * forest. The data is then re-partitioned by calling \see t8_forest_partition_data according to the 
+ * forest. The data is then re-partitioned by calling \see t8_forest_partition_data according to the
  * partition given by the partitioned forest.
  * At last the data is checked for compliance with the partition of the partitioned forest.
  */
@@ -268,4 +268,4 @@ TEST_P (t8_test_partition_data_test, test_partition_data)
   t8_forest_unref (&partitioned_forest);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_partititon_data, t8_test_partition_data_test, AllSchemes, print_all_schemes);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_partition_data, t8_test_partition_data_test, AllSchemes, print_all_schemes);
