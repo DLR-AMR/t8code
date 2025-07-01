@@ -733,9 +733,9 @@ t8_cmesh_get_partition_table (t8_cmesh_t cmesh);
  * \param [in]    level         The uniform refinement level to be created.
  * \param [in]    scheme            The element scheme for which to compute the bounds.
  * \param [out]   first_local_tree  The first tree that contains elements belonging to the calling processor.
- * \param [out]   child_in_tree_begin The global index of the first element belonging to the calling processor. Not computed if NULL.
+ * \param [out]   child_in_tree_begin The tree-local index of the first element belonging to the calling processor. Not computed if NULL.
  * \param [out]   last_local_tree  The last tree that contains elements belonging to the calling processor.
- * \param [out]   child_in_tree_end The global index of the first element that does not belonging to
+ * \param [out]   child_in_tree_end The tree-local index of the first element that does not belonging to
  *                                  the calling processor anymore. Not computed if NULL.
  * \param [out]   first_tree_shared If not NULL, 1 or 0 is stored here depending on whether \a first_local_tree is the
  *                                 same as \a last_local_tree on the previous process.
