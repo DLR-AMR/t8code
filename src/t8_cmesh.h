@@ -738,7 +738,7 @@ t8_cmesh_get_partition_table (t8_cmesh_t cmesh);
  * \param [out]   child_in_tree_end The global index of the first element that does not belonging to
  *                                  the calling processor anymore. Not computed if NULL.
  * \param [out]   first_tree_shared If not NULL, 1 or 0 is stored here depending on whether \a first_local_tree is the
- *                                 same as \a last_local_tree on the next process.
+ *                                 same as \a last_local_tree on the previous process.
  * \a cmesh must be committed before calling this function. 
  */
 void
