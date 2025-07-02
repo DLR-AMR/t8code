@@ -41,13 +41,8 @@ on:
         description: 'Build type (Release/Debug)'
       TEST_LEVEL:
         required: true
-        type: choice
-        description: 'Test level used for configuring'
-        default: "T8_TEST_LEVEL_FULL"
-        options:
-          - T8_TEST_LEVEL_FULL
-          - T8_TEST_LEVEL_MEDIUM
-          - T8_TEST_LEVEL_BASIC
+        type: string
+        description: 'Test level used for configuring (T8_TEST_LEVEL_FULL, T8_TEST_LEVEL_MEDIUM, or T8_TEST_LEVEL_BASIC)'
 
 jobs:  
   t8code_cmake_tests:
