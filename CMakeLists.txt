@@ -22,13 +22,13 @@ cmake_minimum_required( VERSION 3.16 )
 
 include( cmake/GitProjectVersion.cmake )
 
-project( 
+project(
     T8CODE
     DESCRIPTION "Parallel algorithms and data structures for tree-based AMR with arbitrary element shapes."
     LANGUAGES C CXX
-    VERSION "${T8CODE_VERSION_MAJOR}.${T8CODE_VERSION_MINOR}.${T8CODE_VERSION_PATCH}" 
+    VERSION "${T8CODE_VERSION_MAJOR}.${T8CODE_VERSION_MINOR}.${T8CODE_VERSION_PATCH}"
     )
-    
+
 include( GNUInstallDirs)
 include( CTest )
 include( CMakeDependentOption )
@@ -135,17 +135,17 @@ set(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT FALSE)
 set(libPath ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}) # Library directory)
 cmake_path(RELATIVE_PATH libPath
     BASE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR} # Binary directory
-    OUTPUT_VARIABLE relativeRpath 
+    OUTPUT_VARIABLE relativeRpath
 )
 set(CMAKE_INSTALL_RPATH $ORIGIN $ORIGIN/${relativeRpath})
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH true)
 
 if ( T8CODE_USE_SYSTEM_SC )
-    find_package( SC REQUIRED PATHS /path/to/system/sc )
+    find_package( SC REQUIRED )
 else()
     set( SC_BUILD_EXAMPLES ${T8CODE_BUILD_TPL_EXAMPLES} )
     set( SC_BUILD_TESTING ${T8CODE_BUILD_TPL_TESTS} )
-    
+
     # Capture the list of variables before adding the subdirectory to mark the added ones as advanced.
     get_cmake_property(_vars_before_sc VARIABLES )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/sc )
@@ -158,17 +158,17 @@ else()
             list( APPEND _new_sc_vars ${_var} )
         endif()
     endforeach()
-    
+
     # Mark the new variables as advanced
     mark_as_advanced( FORCE ${_new_sc_vars} )
 endif()
 
 if ( T8CODE_USE_SYSTEM_P4EST )
-    find_package( P4EST REQUIRED PATHS /path/to/system/p4est )
+    find_package( P4EST REQUIRED )
 else()
     set( P4EST_BUILD_EXAMPLES ${T8CODE_BUILD_TPL_EXAMPLES} )
     set( P4EST_BUILD_TESTING ${T8CODE_BUILD_TPL_TESTS} )
-    
+
     # Capture the list of variables before adding the subdirectory to mark the added ones as advanced.
     get_cmake_property( _vars_before_p4est VARIABLES )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/p4est )
@@ -181,7 +181,7 @@ else()
             list( APPEND _new_p4est_vars ${_var} )
         endif()
     endforeach()
-    
+
     # Mark the new variables as advanced
     mark_as_advanced( FORCE ${_new_p4est_vars} )
 endif()
