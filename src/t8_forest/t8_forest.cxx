@@ -1689,6 +1689,26 @@ t8_forest_leaf_face_neighbors_iterate (t8_forest_t forest, t8_locidx_t ltreeid, 
   return 1;
 }
 
+/* 
+ Set the proper return values of the leaf face neighbor computation
+ in case that no neighbors are found.
+ */
+static void
+t8_forest_leaf_face_neighbors_set_no_neighbor_return_value (t8_element_t **pneighbor_leaves[], int *dual_faces[],
+                                                            int *num_neighbors, t8_locidx_t **pelement_indices,
+                                                            t8_gloidx_t *gneigh_tree)
+{
+  *dual_faces = NULL;
+  *num_neighbors = 0;
+  *pelement_indices = NULL;
+  if (pneighbor_leaves) {
+    *pneighbor_leaves = NULL;
+  }
+  if (gneigh_tree != NULL) {
+    *gneigh_tree = -1;
+  }
+}
+
 void
 t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf_or_ghost,
                                    t8_element_t **pneighbor_leaves[], int face, int *dual_faces[], int *num_neighbors,
@@ -1709,6 +1729,9 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
    **/
 
   T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (pelement_indices != NULL);
+  T8_ASSERT (dual_faces != NULL);
+  T8_ASSERT (num_neighbors != NULL);
 
 #if T8_ENABLE_DEBUG
   const bool tree_is_local = t8_forest_tree_is_local (forest, ltreeid);
@@ -1747,19 +1770,13 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
   int same_level_neighbor_dual_face;
   const t8_gloidx_t computed_gneigh_tree = t8_forest_element_face_neighbor (
     forest, ltreeid, leaf_or_ghost, same_level_neighbor, neigh_class, face, &same_level_neighbor_dual_face);
+  t8_debugf ("Computed same level neighbor with dual face %i\n", same_level_neighbor_dual_face);
 
   if (computed_gneigh_tree < 0) {
     // There is no face neighbor across this face
     scheme->element_destroy (neigh_class, 1, &same_level_neighbor);
-    *dual_faces = NULL;
-    *num_neighbors = 0;
-    *pelement_indices = NULL;
-    if (pneighbor_leaves) {
-      *pneighbor_leaves = NULL;
-    }
-    if (gneigh_tree != NULL) {
-      *gneigh_tree = -1;
-    }
+    t8_forest_leaf_face_neighbors_set_no_neighbor_return_value (pneighbor_leaves, dual_faces, num_neighbors,
+                                                                pelement_indices, gneigh_tree);
     return;
   }
 
@@ -1972,9 +1989,20 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
     for (int ineigh = 0; ineigh < *num_neighbors; ++ineigh) {
       T8_ASSERT (scheme->element_is_valid (neigh_class, (*pneighbor_leaves)[ineigh]));
       t8_debugf ("Face neighbor %p is valid.\n", (void *) (*pneighbor_leaves)[ineigh]);
+      scheme->element_debug_print (neigh_class, (*pneighbor_leaves)[ineigh]);
     }
   }
 #endif  // T8_ENABLE_DEBUG
+  // If no neighbors are found, set the proper return values.
+  if (*num_neighbors == 0) {
+    t8_debugf ("Found no neighbors\n");
+    t8_forest_leaf_face_neighbors_set_no_neighbor_return_value (pneighbor_leaves, dual_faces, num_neighbors,
+                                                                pelement_indices, gneigh_tree);
+    T8_ASSERT (*dual_faces == NULL);
+    T8_ASSERT (*pelement_indices == NULL);
+    T8_ASSERT (pneighbor_leaves == NULL || *pneighbor_leaves == NULL);
+    T8_ASSERT (gneigh_tree == NULL || *gneigh_tree == -1);
+  }
 
   if (gneigh_tree != NULL) {
     *gneigh_tree = computed_gneigh_tree;
