@@ -117,12 +117,48 @@ levelmultiindex<T8_ECLASS_TRIANGLE>::parent (levelmultiindex<T8_ECLASS_TRIANGLE>
   return lmi;
 }
 
+template <>
+[[nodiscard]] inline std::vector<levelmultiindex<T8_ECLASS_TRIANGLE>>
+levelmultiindex<T8_ECLASS_TRIANGLE>::children (levelmultiindex<T8_ECLASS_TRIANGLE> lmi) noexcept
+{
+  const auto NUM_CHILDREN = 4;
+
+  std::vector<levelmultiindex<T8_ECLASS_TRIANGLE>> child_vec;
+  child_vec.reserve (NUM_CHILDREN);
+
+  // Gives path for the jth-child
+  auto jth_path = [&] (size_t path, size_t j) -> size_t { return (path << PATH_BITS) | j; };
+
+  // Extract basecell and remove basecell from lmi
+  const size_t basecell = lmi.index & ((1u << BASECELL_BITS) - 1);
+  lmi.index >>= BASECELL_BITS;
+
+  // Extract level and remove basecell from lmi
+  const size_t level = lmi.index & ((1u << LEVEL_BITS) - 1);
+  lmi.index >>= LEVEL_BITS;
+
+  // Construct all children: Same basecell, increase level by one, concat new
+  // childpath
+  for (size_t j = 0u; j < NUM_CHILDREN; ++j)
+    child_vec.emplace_back ((jth_path (lmi.index, j) << (LEVEL_BITS + BASECELL_BITS)) | ((level + 1) << BASECELL_BITS)
+                            | basecell);
+
+  return child_vec;
+}
+
 // F R E E - F U N C T I O N S
 template <typename TLmi>
 inline TLmi
 parent_lmi (TLmi lmi)
 {
   return TLmi::parent (lmi);
+}
+
+template <typename TLmi>
+inline std::vector<TLmi>
+children_lmi (TLmi lmi)
+{
+  return TLmi::children (lmi);
 }
 
 }  // namespace t8_mra
