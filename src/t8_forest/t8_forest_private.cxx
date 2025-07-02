@@ -157,7 +157,7 @@ t8_forest_bin_search_upper (const t8_element_array_t *elements, const t8_lineari
 */
 // TODO: Move this function to the scheme class.
 static bool
-t8_forest_element_is_ancestor (const t8_scheme *scheme, t8_eclass_t eclass, const t8_element_t *element_A,
+t8_forest_element_is_ancestor (const t8_scheme *scheme, const t8_eclass_t eclass, const t8_element_t *element_A,
                                const t8_element_t *element_B)
 {
   /* A is ancestor of B if and only if it has smaller or equal level and
