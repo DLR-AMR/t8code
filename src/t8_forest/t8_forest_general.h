@@ -113,9 +113,9 @@ typedef void (*t8_forest_replace_t) (t8_forest_t forest_old, t8_forest_t forest_
  */
 /* TODO: Do we really need the forest argument? Since the forest is not committed yet it
  *       seems dangerous to expose to the user. */
-typedef int (*t8_forest_adapt_t) (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                                  const t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme_c *scheme,
-                                  const int is_family, const int num_elements, t8_element_t *elements[]);
+typedef int (*t8_forest_adapt_t) (t8_forest_t forest_from, t8_locidx_t which_tree, const t8_eclass_t tree_class,
+                                  t8_locidx_t lelement_id, const t8_scheme_c *scheme, const int is_family,
+                                  const int num_elements, t8_element_t *elements[]);
 
 /** Create a new forest with reference count one.
  * This forest needs to be specialized with the t8_forest_set_* calls.

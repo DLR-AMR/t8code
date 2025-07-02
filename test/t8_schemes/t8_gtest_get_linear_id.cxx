@@ -59,7 +59,7 @@ class get_linear_id: public testing::TestWithParam<std::tuple<int, t8_eclass_t>>
 };
 
 static int
-t8_test_init_linear_id_refine_everything ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+t8_test_init_linear_id_refine_everything ([[maybe_unused]] t8_forest_t forest_from,
                                           [[maybe_unused]] t8_locidx_t which_tree,
                                           [[maybe_unused]] const t8_eclass_t tree_class,
                                           [[maybe_unused]] t8_locidx_t lelement_id,

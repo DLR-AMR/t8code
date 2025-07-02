@@ -34,12 +34,12 @@ T8_EXTERN_C_BEGIN ();
 /** Removes all elements of a local tree if they belong to the corresponding
  *  global trees which is given by the user_data. */
 static int
-t8_adapt_remove (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                 [[maybe_unused]] const t8_eclass_t tree_class, [[maybe_unused]] const t8_locidx_t lelement_id,
-                 [[maybe_unused]] const t8_scheme *scheme, [[maybe_unused]] const int is_family,
-                 [[maybe_unused]] const int num_elements, [[maybe_unused]] t8_element_t *elements[])
+t8_adapt_remove (t8_forest_t forest_from, t8_locidx_t which_tree, [[maybe_unused]] const t8_eclass_t tree_class,
+                 [[maybe_unused]] const t8_locidx_t lelement_id, [[maybe_unused]] const t8_scheme *scheme,
+                 [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
+                 [[maybe_unused]] t8_element_t *elements[])
 {
-  const t8_gloidx_t *tree_id = (const t8_gloidx_t *) t8_forest_get_user_data (forest);
+  const t8_gloidx_t *tree_id = (const t8_gloidx_t *) t8_forest_get_user_data (forest_from);
   const t8_gloidx_t global_tree_id = t8_forest_global_tree_id (forest_from, which_tree);
   if (global_tree_id == *tree_id) {
     return -2;

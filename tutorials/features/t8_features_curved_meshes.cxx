@@ -87,14 +87,14 @@ struct t8_naca_geometry_adapt_data
  * \param [in] elements     The element or family of elements to consider for refinement/coarsening.
  */
 int
-t8_naca_geometry_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                                 t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
-                                 const t8_scheme *scheme, [[maybe_unused]] const int is_family,
-                                 [[maybe_unused]] const int num_elements, t8_element_t *elements[])
+t8_naca_geometry_adapt_callback (t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
+                                 [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+                                 [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
+                                 t8_element_t *elements[])
 {
   /* We retrieve the adapt data */
   const struct t8_naca_geometry_adapt_data *adapt_data
-    = (const struct t8_naca_geometry_adapt_data *) t8_forest_get_user_data (forest);
+    = (const struct t8_naca_geometry_adapt_data *) t8_forest_get_user_data (forest_from);
   /* And check if it was retrieved successfully. */
   T8_ASSERT (adapt_data != NULL);
   /* Refine element to the uniform refinement level */
@@ -115,7 +115,7 @@ t8_naca_geometry_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8
        * In the 3D case, we look for linked surfaces, but in 2D, we look for linked edges. */
       const int attribute_key = element_dim == 3 ? T8_CMESH_CAD_FACE_ATTRIBUTE_KEY : T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY;
       const int *linked_geometries = (const int *) t8_cmesh_get_attribute (
-        t8_forest_get_cmesh (forest), t8_get_package_id (), attribute_key, cmesh_ltreeid);
+        t8_forest_get_cmesh (forest_from), t8_get_package_id (), attribute_key, cmesh_ltreeid);
       /* If the tree face has a linked surface and it is in the list we refine it */
       for (int igeom = 0; igeom < adapt_data->n_geometries; ++igeom) {
         if (linked_geometries[tree_face] == adapt_data->geometries[igeom]
@@ -231,9 +231,9 @@ struct t8_naca_plane_adapt_data
  * \param [in] elements     The element or family of elements to consider for refinement/coarsening.
  */
 int
-t8_naca_plane_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                              t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
-                              const int is_family, const int num_elements, t8_element_t *elements[])
+t8_naca_plane_adapt_callback (t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
+                              [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family,
+                              const int num_elements, t8_element_t *elements[])
 {
   double elem_midpoint[3];
   int elem_level;
@@ -242,7 +242,7 @@ t8_naca_plane_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_lo
   elem_level = scheme->element_get_level (tree_class, elements[0]);
   /* We retrieve the adapt data */
   const struct t8_naca_plane_adapt_data *adapt_data
-    = (const struct t8_naca_plane_adapt_data *) t8_forest_get_user_data (forest);
+    = (const struct t8_naca_plane_adapt_data *) t8_forest_get_user_data (forest_from);
   /* And check if it was retrieved successfully. */
   T8_ASSERT (adapt_data != NULL);
 

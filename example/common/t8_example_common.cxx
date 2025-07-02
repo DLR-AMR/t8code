@@ -36,10 +36,10 @@
  * The user data of forest must an integer set to the maximum refinement level.
  */
 int
-t8_common_adapt_balance (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                         const t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
-                         const t8_scheme *scheme, [[maybe_unused]] const int is_family,
-                         [[maybe_unused]] const int num_elements, t8_element_t *elements[])
+t8_common_adapt_balance (t8_forest_t forest_from, t8_locidx_t which_tree, const t8_eclass_t tree_class,
+                         [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+                         [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
+                         t8_element_t *elements[])
 {
   int level;
   int maxlevel, child_id;
@@ -47,7 +47,7 @@ t8_common_adapt_balance (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_
   level = scheme->element_get_level (tree_class, elements[0]);
 
   /* we set a maximum refinement level as forest user data */
-  maxlevel = *(int *) t8_forest_get_user_data (forest);
+  maxlevel = *(int *) t8_forest_get_user_data (forest_from);
   if (level >= maxlevel) {
     /* Do not refine after the maxlevel */
     return 0;
@@ -118,10 +118,9 @@ t8_common_within_levelset (t8_forest_t forest, const t8_locidx_t ltreeid, const 
  */
 /* TODO: Currently the band_width control is not working yet. */
 int
-t8_common_adapt_level_set (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                           const t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
-                           const t8_scheme *scheme, const int is_family, [[maybe_unused]] const int num_elements,
-                           t8_element_t *elements[])
+t8_common_adapt_level_set (t8_forest_t forest_from, t8_locidx_t which_tree, const t8_eclass_t tree_class,
+                           [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family,
+                           [[maybe_unused]] const int num_elements, t8_element_t *elements[])
 {
   t8_example_level_set_struct_t *data;
   int within_band;
@@ -129,11 +128,11 @@ t8_common_adapt_level_set (t8_forest_t forest, t8_forest_t forest_from, t8_locid
 
   T8_ASSERT (!is_family || num_elements == scheme->element_get_num_children (tree_class, elements[0]));
 
-  data = (t8_example_level_set_struct_t *) t8_forest_get_user_data (forest);
+  data = (t8_example_level_set_struct_t *) t8_forest_get_user_data (forest_from);
   level = scheme->element_get_level (tree_class, elements[0]);
 
   /* Get the minimum and maximum x-coordinate from the user data pointer of forest */
-  data = (t8_example_level_set_struct_t *) t8_forest_get_user_data (forest);
+  data = (t8_example_level_set_struct_t *) t8_forest_get_user_data (forest_from);
 
   /* If maxlevel is exceeded then coarsen */
   if (level > data->max_level && is_family) {

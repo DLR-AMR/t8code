@@ -41,10 +41,10 @@ T8_EXTERN_C_BEGIN ();
  * we pass forest_from as a parameter. But doing so is not valid anymore
  * if we refine recursively. */
 static int
-t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from, const t8_locidx_t ltree_id,
-                         const t8_eclass_t tree_class, [[maybe_unused]] const t8_locidx_t lelement_id,
-                         const t8_scheme *scheme, [[maybe_unused]] const int is_family,
-                         [[maybe_unused]] const int num_elements, t8_element_t *elements[])
+t8_forest_balance_adapt (t8_forest_t forest_from, const t8_locidx_t ltree_id, const t8_eclass_t tree_class,
+                         [[maybe_unused]] const t8_locidx_t lelement_id, const t8_scheme *scheme,
+                         [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
+                         t8_element_t *elements[])
 {
   int *pdone, iface, num_faces, num_half_neighbors, ineigh;
   t8_gloidx_t neighbor_tree;
@@ -62,7 +62,7 @@ t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from, const t8_l
   if (forest_from->maxlevel_existing <= 0
       || scheme->element_get_level (tree_class, element) <= forest_from->maxlevel_existing - 2) {
 
-    pdone = (int *) forest->t8code_data;
+    pdone = (int *) forest_from->t8code_data;
 
     num_faces = scheme->element_get_num_faces (tree_class, element);
     for (iface = 0; iface < num_faces; iface++) {
@@ -342,8 +342,7 @@ t8_forest_is_balanced (t8_forest_t forest)
       const t8_element_t *element = t8_forest_get_leaf_element_in_tree (forest, itree, ielem);
       /* Test if this element would need to be refined in the balance step.
        * If so, the forest is not balanced locally. */
-      if (t8_forest_balance_adapt (forest, forest, itree, tree_class, ielem, scheme, 0, 1,
-                                   (t8_element_t **) (&element))) {
+      if (t8_forest_balance_adapt (forest, itree, tree_class, ielem, scheme, 0, 1, (t8_element_t **) (&element))) {
         forest->set_from = forest_from;
         forest->t8code_data = data_temp;
         return 0;
