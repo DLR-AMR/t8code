@@ -610,6 +610,21 @@ struct t8_standalone_scheme
     return 1;
   }
 
+  /** Query whether element A is an ancestor of the element B.
+   * An element A is ancestor of an element B if A == B or if B can 
+   * be obtained from A via successive refinement.
+   * \param [in] scheme A scheme.
+   * \param [in] eclass An eclass.
+   * \param [in] element_A An element of class \a eclass in scheme \a scheme.
+   * \param [in] element_B An element of class \a eclass in scheme \a scheme.
+   * \return     True if and only if \a element_A is an ancestor of \a element_B.
+  */
+  static constexpr bool
+  element_is_ancestor (const t8_element_t *element_A, const t8_element_t *element_B) noexcept
+  {
+    SC_ABORT ("element_is_ancestor is currently not implemented for the standalone scheme.");
+  }
+
   /** Compute the nearest common ancestor of two elements. That is,
    * the element with highest level that still has both given elements as
    * descendants.
