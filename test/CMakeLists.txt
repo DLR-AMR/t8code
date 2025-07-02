@@ -139,7 +139,7 @@ add_t8_cpp_test( NAME t8_gtest_half_neighbors_parallel      SOURCES t8_forest/t8
 add_t8_cpp_test( NAME t8_gtest_find_owner_parallel          SOURCES t8_forest/t8_gtest_find_owner.cxx )
 add_t8_cpp_test( NAME t8_gtest_user_data_parallel           SOURCES t8_forest/t8_gtest_user_data.cxx )
 add_t8_cpp_test( NAME t8_gtest_transform_serial             SOURCES t8_forest/t8_gtest_transform.cxx )
-add_t8_cpp_test( NAME t8_gtest_face_neighbors_parallel      SOURCES t8_forest/t8_gtest_face_neighbors.cxx t8_gtest_adapt_callbacks.cxx )
+add_t8_cpp_test( NAME t8_gtest_leaf_face_neighbors_parallel SOURCES t8_forest/t8_gtest_leaf_face_neighbors.cxx t8_gtest_adapt_callbacks.cxx )
 add_t8_cpp_test( NAME t8_gtest_ghost_exchange_parallel      SOURCES t8_forest/t8_gtest_ghost_exchange.cxx )
 add_t8_cpp_test( NAME t8_gtest_ghost_delete_parallel        SOURCES t8_forest/t8_gtest_ghost_delete.cxx )
 add_t8_cpp_test( NAME t8_gtest_ghost_and_owner_parallel     SOURCES t8_forest/t8_gtest_ghost_and_owner.cxx )
