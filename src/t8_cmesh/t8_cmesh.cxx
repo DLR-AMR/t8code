@@ -1431,123 +1431,6 @@ t8_cmesh_debug_print_trees ([[maybe_unused]] const t8_cmesh_t cmesh, [[maybe_unu
 #endif /* T8_ENABLE_DEBUG */
 }
 
-void
-t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, const int level, const t8_scheme *scheme, t8_gloidx_t *first_local_tree,
-                         t8_gloidx_t *child_in_tree_begin, t8_gloidx_t *last_local_tree, t8_gloidx_t *child_in_tree_end,
-                         int8_t *first_tree_shared)
-{
-  int is_empty;
-
-  T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (cmesh->committed);
-  T8_ASSERT (level >= 0);
-  T8_ASSERT (scheme != NULL);
-
-  *first_local_tree = 0;
-  if (child_in_tree_begin != NULL) {
-    *child_in_tree_begin = 0;
-  }
-  *last_local_tree = 0;
-  if (child_in_tree_end != NULL) {
-    *child_in_tree_end = 0;
-  }
-
-  t8_gloidx_t global_num_children;
-  t8_gloidx_t first_global_child;
-  t8_gloidx_t child_in_tree_begin_temp;
-  t8_gloidx_t last_global_child;
-  t8_gloidx_t children_per_tree = 0;
-#if T8_ENABLE_DEBUG
-  t8_gloidx_t prev_last_tree = -1;
-#endif
-  int tree_class;
-
-  /* Compute the number of children on level in each tree */
-  global_num_children = 0;
-  for (tree_class = T8_ECLASS_ZERO; tree_class < T8_ECLASS_COUNT; ++tree_class) {
-    /* We iterate over each element class and get the number of children for this
-     * tree class.
-     */
-    if (cmesh->num_trees_per_eclass[tree_class] > 0) {
-      children_per_tree = scheme->count_leaves_from_root (static_cast<t8_eclass_t> (tree_class), level);
-      T8_ASSERT (children_per_tree >= 0);
-      global_num_children += cmesh->num_trees_per_eclass[tree_class] * children_per_tree;
-    }
-  }
-  T8_ASSERT (children_per_tree != 0);
-
-  if (cmesh->mpirank == 0) {
-    first_global_child = 0;
-    if (child_in_tree_begin != NULL) {
-      *child_in_tree_begin = 0;
-    }
-  }
-  else {
-    /* The first global child of processor p
-     * with P total processor is (the biggest int smaller than)
-     * (total_num_children * p) / P
-     * We cast to long double and double first to prevent integer overflow.
-     */
-    first_global_child = t8_cmesh_get_first_element_of_process (cmesh->mpirank, cmesh->mpisize, global_num_children);
-  }
-  if (cmesh->mpirank != cmesh->mpisize - 1) {
-    last_global_child = t8_cmesh_get_first_element_of_process (cmesh->mpirank + 1, cmesh->mpisize, global_num_children);
-  }
-  else {
-    last_global_child = global_num_children;
-  }
-
-  T8_ASSERT (0 <= first_global_child && first_global_child <= global_num_children);
-  T8_ASSERT (0 <= last_global_child && last_global_child <= global_num_children);
-
-  *first_local_tree = first_global_child / children_per_tree;
-  child_in_tree_begin_temp = first_global_child - *first_local_tree * children_per_tree;
-  if (child_in_tree_begin != NULL) {
-    *child_in_tree_begin = child_in_tree_begin_temp;
-  }
-
-  *last_local_tree = (last_global_child - 1) / children_per_tree;
-
-  is_empty = *first_local_tree >= *last_local_tree && first_global_child >= last_global_child;
-  if (first_tree_shared != NULL) {
-#if T8_ENABLE_DEBUG
-    prev_last_tree = (first_global_child - 1) / children_per_tree;
-    T8_ASSERT (cmesh->mpirank > 0 || prev_last_tree <= 0);
-#endif
-    if (!is_empty && cmesh->mpirank > 0 && child_in_tree_begin_temp > 0) {
-      /* We exclude empty partitions here, by def their first_tree_shared flag is zero */
-      /* We also exclude that the previous partition was empty at the beginning of the
-       * partitions array */
-      /* We also exclude the case that we have the first global element but
-       * are not rank 0. */
-      *first_tree_shared = 1;
-    }
-    else {
-      *first_tree_shared = 0;
-    }
-  }
-  if (child_in_tree_end != NULL) {
-    if (*last_local_tree > 0) {
-      *child_in_tree_end = last_global_child - *last_local_tree * children_per_tree;
-    }
-    else {
-      *child_in_tree_end = last_global_child;
-    }
-  }
-  if (is_empty) {
-    /* This process is empty */
-    /* We now set the first local tree to the first local tree on the
-     * next nonempty rank, and the last local tree to first - 1 */
-    *first_local_tree = last_global_child / children_per_tree;
-    if (first_global_child % children_per_tree != 0) {
-      /* The next nonempty process shares this tree. */
-      (*first_local_tree)++;
-    }
-
-    *last_local_tree = *first_local_tree - 1;
-  }
-}
-
 /* #################### new for hybrid stuff starts here.  #################### */
 
 /**
@@ -1624,7 +1507,7 @@ t8_A_times_B_over_C_intA (const int A, const t8_gloidx_t B, const t8_gloidx_t C)
 }
 
 void
-t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, int level, t8_scheme *tree_scheme,
+t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, const int level, const t8_scheme_c *tree_scheme,
                                              t8_gloidx_t *first_local_tree, t8_gloidx_t *child_in_tree_begin,
                                              t8_gloidx_t *last_local_tree, t8_gloidx_t *child_in_tree_end,
                                              int8_t *first_tree_shared)
@@ -1737,13 +1620,12 @@ t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, int level, t8_sch
     }
   }
   if (child_in_tree_end != NULL) {
-    T8_ASSERT (*last_local_tree >= 0);
-    *child_in_tree_end = last_global_child - *last_local_tree * children_per_tree;
+    *child_in_tree_end = (last_global_child - *last_local_tree * children_per_tree);
   }
   if (is_empty) {
     /* This process is empty */
     /* We now set the first local tree to the first local tree that is owned by the
-     * next nonempty rank, and the last local tree to first - 1 */
+      * next nonempty rank, and the last local tree to first - 1 */
     *first_local_tree = last_global_child / children_per_tree;
     if (first_global_child % children_per_tree != 0) {
       /* The next nonempty process shares this tree. */
