@@ -1910,7 +1910,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
         const t8_locidx_t leaf_count = t8_element_array_get_count (tree_leaves);
         const t8_locidx_t last_search_element_index
           = first_succ_desc_index < 0 ? leaf_count - 1 : first_succ_desc_index;
-        const size_t reduced_leaf_count = last_search_element_index - first_leaf_index;
+        const size_t reduced_leaf_count = last_search_element_index - first_leaf_index + 1;
         T8_ASSERT (reduced_leaf_count > 0);
         t8_debugf ("Starting search with element indices %i to %i (including).\n", first_leaf_index,
                    last_search_element_index);
