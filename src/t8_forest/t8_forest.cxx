@@ -1862,8 +1862,8 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
     const t8_element_t *first_descendant;
     const t8_locidx_t first_leaf_index
       = t8_forest_bin_search_first_descendant_ancenstor (tree_leaves, same_level_neighbor, &first_descendant);
-    const int neighbor_level = scheme->element_get_level (neigh_class, same_level_neighbor);
-    const int first_desc_level = scheme->element_get_level (neigh_class, first_descendant);
+    const int neighbor_level = first_leaf_index < 0 ? -1 : scheme->element_get_level (neigh_class, same_level_neighbor);
+    const int first_desc_level = first_leaf_index < 0 ? -1 : scheme->element_get_level (neigh_class, first_descendant);
     /* If the same level neighbor is coarser than the first found leaf, then
      * we iterate over the faces of the same level neighbor.
      * Otherwise, there is only one face neighbor, the first_descendant.
