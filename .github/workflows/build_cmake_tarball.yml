@@ -36,6 +36,7 @@ on:
         required: true
         type: string
         description: 'Test level used for configuring (T8_TEST_LEVEL_FULL, T8_TEST_LEVEL_MEDIUM, or T8_TEST_LEVEL_BASIC)'
+        default: 'T8_TEST_LEVEL_FULL'
 
 jobs:
   build:
