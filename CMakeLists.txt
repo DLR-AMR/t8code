@@ -76,7 +76,7 @@ elseif(T8CODE_TEST_LEVEL STREQUAL "T8_TEST_LEVEL_MEDIUM" )
 elseif(T8CODE_TEST_LEVEL STREQUAL "T8_TEST_LEVEL_FULL" )
     set(T8_TEST_LEVEL_INT 0)
 else() 
-    message( FATAL_ERROR "Invalid string for T8CODE_TEST_LEVEL. Valid options are T8_TEST_LEVEL_FULL for full tests, T8_TEST_LEVEL_MEDIUM for less thorough tests, T8_TEST_LEVEL_BASIC for minimal tests.")
+    message( FATAL_ERROR "Invalid string for T8CODE_TEST_LEVEL: ${T8CODE_TEST_LEVEL}. Valid options are T8_TEST_LEVEL_FULL, T8_TEST_LEVEL_MEDIUM, or T8_TEST_LEVEL_BASIC.")
 endif()
 
 # Set a default build type if none was specified
