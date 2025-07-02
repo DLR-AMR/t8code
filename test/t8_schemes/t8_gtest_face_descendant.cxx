@@ -35,8 +35,8 @@ t8_test_manual_first_last_face_descendant (const t8_scheme *scheme, const t8_ele
 {
   const int num_children_at_face = scheme->element_get_num_face_children (tree_class, element, iface);
 
-  int *child_indices = T8_ALLOC (int, num_children_at_face);
-  t8_element_t **children = T8_ALLOC (t8_element_t *, num_children_at_face);
+  int *child_indices = T8_TESTSUITE_ALLOC (int, num_children_at_face);
+  t8_element_t **children = T8_TESTSUITE_ALLOC (t8_element_t *, num_children_at_face);
   scheme->element_new (tree_class, num_children_at_face, children);
 
   scheme->element_copy (tree_class, element, face_desc);
@@ -54,8 +54,8 @@ t8_test_manual_first_last_face_descendant (const t8_scheme *scheme, const t8_ele
     scheme->element_get_child (tree_class, face_desc, child_id, face_desc);
   }
   scheme->element_destroy (tree_class, num_children_at_face, children);
-  T8_FREE (children);
-  T8_FREE (child_indices);
+  T8_TESTSUITE_FREE (children);
+  T8_TESTSUITE_FREE (child_indices);
 }
 
 class class_descendant: public TestDFS {

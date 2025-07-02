@@ -29,14 +29,22 @@
 #define T8_GEOMETRY_HASH_HXX
 
 #include <string>
+#include <t8_types/t8_type.hxx>
+#include <t8_types/t8_operators.hxx>
 
 T8_EXTERN_C_BEGIN ();
 
+/** Dummy tag for type trait usage of \ref t8_geometry_hash */
+struct t8_geometry_hash_tag
+{
+};
+
 /** Data type used for storing hash values of geometries. */
-using t8_geometry_hash_t = size_t;
+using t8_geometry_hash = T8Type<size_t, t8_geometry_hash_tag, Addable, Subtractable, AddAssignable, Multipliable,
+                                Dividable, EqualityComparable, Hashable>;
 
 /** Constant that we use for hashes of non-existing geometries. */
-static const t8_geometry_hash_t t8_geometry_empty_hash = std::hash<std::string> {}("");
+static const t8_geometry_hash t8_geometry_empty_hash (std::hash<std::string> {}(""));
 
 /**
  * Compute the hash value of a geometry's name.
@@ -45,23 +53,23 @@ static const t8_geometry_hash_t t8_geometry_empty_hash = std::hash<std::string> 
  * \return The hash value of \a name.
  * \note \a name being empty here is explicitly allowed and used as hash values for non-existing geometries.
  */
-inline t8_geometry_hash_t
+inline t8_geometry_hash
 t8_geometry_compute_hash (const std::string &name)
 {
-  t8_geometry_hash_t hash = std::hash<std::string> {}(name);
+  t8_geometry_hash hash (std::hash<std::string> {}(name));
   return hash;
 }
 
 /**
- * Query wheyher a given hash value corresponds to en empty string and hence
+ * Query whether a given hash value corresponds to en empty string and hence
  * a non-existing geometry.
  * 
  * \param [in] hash A hash value of a geometry.
- * \return true If \a hash corresponds to e non-existing geometry,i.e. if \a hash == \a t8_geometry_empty_hash.
+ * \return true If \a hash corresponds to a non-existing geometry,i.e. if \a hash == \a t8_geometry_empty_hash.
  * \return false If \a hash corresponds to an existing geometry.
  */
 inline bool
-t8_geometry_hash_is_null (const t8_geometry_hash_t &hash)
+t8_geometry_hash_is_null (const t8_geometry_hash &hash)
 {
   return hash == t8_geometry_empty_hash;
 }

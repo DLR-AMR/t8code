@@ -192,7 +192,7 @@ t8_forest_get_tree_leaf_element_array (t8_forest_t forest, t8_locidx_t ltreeid);
 t8_element_array_t *
 t8_forest_get_tree_leaf_element_array_mutable (const t8_forest_t forest, t8_locidx_t ltreeid);
 
-/** Search for a linear element id (at forest->maxlevel) in a sorted array of
+/** Search for a linear element id in a sorted array of
  * elements. If the element does not exist, return the largest index i
  * such that the element at position i has a smaller id than the given one.
  * If no such i exists, return -1.
