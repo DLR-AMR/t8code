@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2024 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -24,7 +24,10 @@
 #include <t8_forest/t8_forest_balance.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_private.h>
-#include <t8_forest/t8_forest_ghost.h>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_base.hxx>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_c_interface.h>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost_implementations/t8_forest_ghost_definition_face.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_profiling.h>
 #include <t8_schemes/t8_scheme.hxx>
@@ -138,6 +141,7 @@ t8_forest_balance (t8_forest_t forest, int repartition)
   int count_partition_stats = 0;
   double ada_time, ghost_time, part_time;
   sc_statinfo_t *adap_stats, *ghost_stats, *partition_stats;
+  int create_ghost_definition = 0; /* flag if create ghost_definition */
 
   t8_global_productionf ("Into t8_forest_balance with %lli global elements.\n",
                          (long long) t8_forest_get_global_num_leaf_elements (forest->set_from));
@@ -170,9 +174,42 @@ t8_forest_balance (t8_forest_t forest, int repartition)
   /* This function is reference neutral regarding forest_from */
   t8_forest_ref (forest_from);
 
+  /* if the set_from forest of the current forest has no ghost layer computed,
+   * compute a ghost layer for the set_from forest */
   if (forest->set_from->ghosts == NULL) {
-    forest->set_from->ghost_type = T8_GHOST_FACES;
+    /* If the forest does not yet have a ghost_definition or it is not supported */
+    t8_forest_ghost_definition_c *temp_ghost_definition;
+    if (forest->set_from->ghost_definition == NULL) {
+      t8_debugf ("Forest has ghosts but no ghost definition for balance.\n");
+      create_ghost_definition = 1;
+    }
+    else if (forest->set_from->ghost_definition->ghost_get_type () != T8_GHOST_FACES) {
+      t8_debugf ("Forest ghost definition of type %s not yet supported for balance.\n",
+                 t8_ghost_type_to_string[forest->set_from->ghost_definition->ghost_get_type ()]);
+      create_ghost_definition = 1;
+    }
+    else {
+      t8_forest_ghost_definition_face *ghost_definition
+        = (t8_forest_ghost_definition_face *) forest->set_from->ghost_definition;
+      if (ghost_definition->get_version () != 3) {
+        t8_debugf ("Forest ghost definition has an unsupported version for balance.\n");
+        create_ghost_definition = 1;
+      }
+    }
+    if (create_ghost_definition) {
+      t8_debugf ("Create a temporary face ghost definition of version 3.\n");
+      /* create a ghost_definition of type face with top-down-search */
+      temp_ghost_definition = forest->set_from->ghost_definition;
+      forest->set_from->ghost_definition = new t8_forest_ghost_definition_face (3);
+    }
+    /* compute ghost layer for set_from forest */
     t8_forest_ghost_create_topdown (forest->set_from);
+    if (create_ghost_definition) {
+      /* if a ghost_definition has been created, it will be deleted here */
+      delete forest->set_from->ghost_definition;
+      forest->set_from->ghost_definition = temp_ghost_definition;
+      t8_debugf ("Deleted temporary face ghost definition.\n");
+    }
   }
 
   while (!done_global) {
