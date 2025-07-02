@@ -104,6 +104,7 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
     if (t8_cmesh_get_tree_geometry (cmesh, 0) != NULL) {
       // Debug vtk output, only if cmesh has a registered geometry
       t8_forest_write_vtk (forest, "debug_face_neigh");
+      t8_debugf ("writing forest to \'debug_face_neigh\'");
     }
 #endif
     if (!forest_is_uniform) {
@@ -246,6 +247,7 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
 
             t8_debugf ("Checking neighbor element %p in (global) tree %li.\n", (void *) neighbor, gneigh_tree);
             t8_debugf ("dual face is %i, index is %i\n", dual_face, neigh_index);
+            scheme->element_debug_print (neigh_class, neighbor);
 
 #if T8_ENABLE_DEBUG
             ASSERT_TRUE (scheme->element_is_valid (neigh_class, neighbor))
@@ -302,9 +304,12 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
 
             int position_of_original_element = -1;
             bool found_original = false;
+            t8_debugf ("Checking all %i neighbors of neighbor for original element:\n", neigh_num_neighbors);
             for (int ineighneigh = 0; ineighneigh < neigh_num_neighbors && !found_original; ++ineighneigh) {
               // Check that the neighbor of the neighbor element is the original element
               const t8_element_t *neigh_of_neigh = neigh_neighbor_leaves[ineighneigh];
+              t8_debugf ("Checking neighbor of neighbor #%i:\n", ineighneigh);
+              scheme->element_debug_print (tree_class, neigh_of_neigh);
               if (scheme->element_is_equal (tree_class, element, neigh_of_neigh)) {
                 position_of_original_element = ineighneigh;
                 found_original = true;  // Stop the for loop
