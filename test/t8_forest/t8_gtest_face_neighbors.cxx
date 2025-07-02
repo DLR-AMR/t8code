@@ -157,7 +157,7 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
           if (gneigh_tree < 0) {
             // If there is no neighbor tree then there cannot be any face neighbors.
             // Note that there can also be no face neighbors computed if a neighbor tree exists, but
-            // the element is a ghost and the neighbor would is neither a local element nor ghost.
+            // the element is a ghost and the neighbor element is neither a local element nor ghost.
             ASSERT_EQ (num_neighbors, 0);
           }
           if (num_neighbors == 0) {
