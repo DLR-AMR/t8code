@@ -247,9 +247,9 @@ TEST_P (gtest_balance, balance_consistency_test)
   t8_forest_unref (&balanced_forest);
   t8_forest_unref (&already_balanced_forest);
 }
-#if T8CODE_TEST_LEVEL >= 2
+#if T8_TEST_LEVEL_INT >= 2
 const int maxlvl = 3;
-#elif T8CODE_TEST_LEVEL >= 1
+#elif T8_TEST_LEVEL_INT >= 1
 const int maxlvl = 4;
 #else
 const int maxlvl = 5;
