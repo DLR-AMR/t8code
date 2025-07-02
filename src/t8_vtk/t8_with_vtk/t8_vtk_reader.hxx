@@ -31,8 +31,6 @@
 #include <vtkDataSet.h>
 #include <vtkPointSet.h>
 
-T8_EXTERN_C_BEGIN ();
-
 /**
  * Given a pointer to a vtkDataSet a cmesh representing the vtkDataSet is
  * constructed and can be shared over the processes. The vtk data arrays will be associated with the trees.
@@ -121,7 +119,5 @@ t8_vtk_reader_pointSet (const char *filename, const int partition, const int mai
 t8_cmesh_t
 t8_vtk_reader_cmesh (const char *filename, const int partition, const int main_proc, sc_MPI_Comm comm,
                      const vtk_file_type_t vtk_file_type, const int package_id, const int starting_key);
-
-T8_EXTERN_C_END ();
 
 #endif /* T8_VTK_READER */
