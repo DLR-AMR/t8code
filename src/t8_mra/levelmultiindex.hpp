@@ -101,18 +101,18 @@ levelmultiindex<T8_ECLASS_TRIANGLE>::parent (levelmultiindex<T8_ECLASS_TRIANGLE>
 #endif
 
   // Extract basecell and remove basecell from lmi
-  const auto basecell = lmi.index & ((1ULL << BASECELL_BITS) - 1);
+  const auto basecell = lmi.index & ((1u << BASECELL_BITS) - 1);
   lmi.index >>= BASECELL_BITS;
 
   // Extract level and remove level from lmi. Reduce refinement level by 1
-  const auto level = (lmi.index & ((1u << LEVEL_BITS) - 1)) - 1;
+  const auto level = lmi.index & ((1u << LEVEL_BITS) - 1);
   lmi.index >>= LEVEL_BITS;
 
   // Remove last path segment from lmi
   lmi.index >>= PATH_BITS;
 
-  // Re-encode lmi with same basecell, decreased level and shorten path
-  lmi.index = (lmi.index << (BASECELL_BITS + LEVEL_BITS)) | (level << BASECELL_BITS) | basecell;
+  // Re-encode lmi with same basecell, decreased level by one and shorten path
+  lmi.index = (lmi.index << (BASECELL_BITS + LEVEL_BITS)) | ((level - 1) << BASECELL_BITS) | basecell;
 
   return lmi;
 }
