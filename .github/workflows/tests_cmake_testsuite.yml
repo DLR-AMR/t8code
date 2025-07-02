@@ -191,7 +191,7 @@ jobs:
       MAKEFLAGS: -j4
       MPI: ON
       BUILD_TYPE: Debug
-      TEST_LEVEL: 2 # Do Valgrind check for test level 2 for performance reasons.
+      TEST_LEVEL: T8_TEST_LEVEL_BASIC # Do Valgrind check for test level T8_TEST_LEVEL_BASIC for performance reasons.
 
   # Generate code coverage and deploy to Codecov.
   t8code_code_coverage:
@@ -202,7 +202,7 @@ jobs:
       MAKEFLAGS: -j4
       MPI: ON
       BUILD_TYPE: Debug
-      TEST_LEVEL: 2
+      TEST_LEVEL: T8_TEST_LEVEL_BASIC
     secrets:
       CODE_COV: ${{ secrets.CODE_COV }}
   
