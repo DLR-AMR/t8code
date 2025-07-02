@@ -177,7 +177,7 @@ TEST_P (forest_ghost_exchange, test_ghost_exchange)
   int min_level = t8_forest_min_nonempty_level (cmesh, scheme);
   /* we start with an empty level */
   min_level = SC_MAX (min_level - 1, 0);
-#if T8CODE_TEST_LEVEL >= 2
+#if T8_TEST_LEVEL_INT >= 2
   const int max_level = min_level + 2;
 #else
   const int max_level = min_level + 3;

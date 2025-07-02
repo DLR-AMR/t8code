@@ -40,7 +40,7 @@ class forest_iterate: public testing::TestWithParam<cmesh_example_base *> {
   void
   SetUp () override
   {
-#if T8CODE_TEST_LEVEL >= 1
+#if T8_TEST_LEVEL_INT >= 1
     constexpr int level = 2;
 #else
     constexpr int level = 3;
