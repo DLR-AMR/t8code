@@ -146,7 +146,7 @@ t8_forest_bin_search_upper (const t8_element_array_t *elements, const t8_lineari
   }
 }
 
-/** Query whether one element is an ancestor of the other.
+/** Query whether element A is an ancestor of the element B.
  * An element A is ancestor of an element B if A == B or if B can 
  * be obtained from A via successive refinement.
  * \param [in] scheme A scheme.
