@@ -39,8 +39,8 @@ if(T8CODE_BUILD_DOCUMENTATION)
 
         add_custom_command( OUTPUT ${DOXYGEN_INDEX_FILE}
                             DEPENDS ${T8_PUBLIC_HEADERS}
-                            COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYFILE_OUT} 
-                            MAIN_DEPENDENCY ${DOXYFILE_OUT} ${DOXYFILE_IN} 
+                            COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYFILE_OUT}
+                            MAIN_DEPENDENCY ${DOXYFILE_OUT} ${DOXYFILE_IN}
                             COMMENT "Generating documentation"
                             VERBATIM)
 
@@ -53,9 +53,9 @@ endif(T8CODE_BUILD_DOCUMENTATION)
 
 if (T8CODE_BUILD_DOCUMENTATION_SPHINX)
     find_package(Sphinx REQUIRED)
-    
+
     configure_file(${DOXYFILE_IN} ${DOXYFILE_OUT} @ONLY)
-    
+
     if (SPHINX_FOUND)
         set(SPHINX_SOURCE ${PROJECT_SOURCE_DIR}/doc/source)
         set(SPHINX_BUILD ${PROJECT_BINARY_DIR}/doc/sphinx)
@@ -85,7 +85,7 @@ if (T8CODE_BUILD_DOCUMENTATION_SPHINX)
                             MAIN_DEPENDENCY ${SPHINX_SOURCE}/conf.py
                             COMMENT "Generating documentation with Sphinx")
 
-        
+
         # Nice named target so we can run the job easily
         add_custom_target(Sphinx ALL DEPENDS ${SPHINX_INDEX_FILE})
     else (SPHINX_FOUND)

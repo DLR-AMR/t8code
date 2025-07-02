@@ -11,7 +11,7 @@ import subprocess, os
 project = 't8code'
 copyright = '2024, Johannes Holke, David Knapp, Sandro Elsweijer, Ioannis Lilikakis, Lukas Dreyer, Jakob Fußbroich, Carsten Burstedde, Chiara Hergl, Johannes Markert, Niklas Boeing, Florian Becker, Prasanna Ponnusamy'
 author = 'Johannes Holke, David Knapp, Sandro Elsweijer, Ioannis Lilikakis, Lukas Dreyer, Jakob Fußbroich, Carsten Burstedde, Chiara Hergl, Johannes Markert, Niklas Boeing, Florian Becker, Prasanna Ponnusamy'
-version = '@VERSION@'
+version = '4.0.0'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -32,8 +32,8 @@ def configureDoxyfile(input_dir, output_dir):
     with open('../Doxyfile.in', 'r') as file :
         filedata = file.read()
 
-    filedata = filedata.replace('@DOXYGEN_INPUT_DIR@', input_dir)
-    filedata = filedata.replace('@DOXYGEN_OUTPUT_DIR@', output_dir)
+    filedata = filedata.replace('', input_dir)
+    filedata = filedata.replace('/localdata1/knap_da/t8code/test_build/doc', output_dir)
 
     with open('../Doxyfile', 'w') as file:
         file.write(filedata)
@@ -66,7 +66,7 @@ exhale_args = {
     # These arguments are required
     "containmentFolder":     "./api",
     "rootFileName":          "library_root.rst",
-    "doxygenStripFromPath":  "@top_srcdir@",
+    "doxygenStripFromPath":  "../..",
     # Heavily encouraged optional argument (see docs)
     "rootFileTitle":         "Library API",
     # Suggested optional arguments
