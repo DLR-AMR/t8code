@@ -20,10 +20,14 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_gtest_ancestor_id.cxx
- * This test checks that the ancestor id of an element at level elem.level is the same
- * as the child id of the element. This traverses up the tree and checks if the ancestor id
- * at elem.level - 1, -2, ... is the same as the child id of the parent, grandparent and so on. 
+/** \file t8_gtest_is_ancestor.cxx
+ * This test checks the element_is_ancestor function of the scheme interface.
+ * Starting from an element we build up all its ancestor up to root level and 
+ * test whether the element_is_ancestor function returns true.
+ * We also test sone cases where the function returns false, namely when putting
+ * in an element and an ancestor in reverse order.
+ * 
+ * This test is modified from the ancestor_id test.
  */
 
 #include <gtest/gtest.h>
@@ -33,7 +37,7 @@
 #include "t8_gtest_dfs_base.hxx"
 #include <test/t8_gtest_macros.hxx>
 
-class class_ancestor_id: public TestDFS {
+class class_is_ancestor: public TestDFS {
   void
   check_element () override
   {
@@ -46,14 +50,18 @@ class class_ancestor_id: public TestDFS {
     if ancestor id corresponds with the child id of elem, parent, grandparent, ... */
     for (int levels_above_elem = 0; levels_above_elem < level; levels_above_elem++) {
       const int ancestor_level = level - levels_above_elem;
-      const int ancestor_id = scheme->element_get_ancestor_id (eclass, element, ancestor_level);
-      /* Compute elem/parent/grandparent... */
+      /* Compute the ancestor by iteratively computing the parent */
       scheme->element_copy (eclass, element, ancestor);
       for (int level_diff = 0; level_diff < levels_above_elem; level_diff++) {
         scheme->element_get_parent (eclass, ancestor, ancestor);
       }
-      const int child_id = scheme->element_get_child_id (eclass, ancestor);
-      EXPECT_EQ (ancestor_id, child_id);
+      // Check whether element_is_ancestor correctly identifies our candidate as an ancestor
+      EXPECT_TRUE (scheme->element_is_ancestor (eclass, ancestor, element));
+      // We check that element_is_ancestor properly returns false by
+      // checking that element is not an ancestor of our candidate if their levels do not agree.
+      if (ancestor_level != level) {
+        EXPECT_FALSE (scheme->element_is_ancestor (eclass, element, ancestor));
+      }
     }
     scheme->element_destroy (eclass, 1, &ancestor);
   }
@@ -73,9 +81,9 @@ class class_ancestor_id: public TestDFS {
   }
 };
 
-TEST_P (class_ancestor_id, t8_recursive_dfs_ancestor_id)
+TEST_P (class_is_ancestor, t8_recursive_dfs_is_ancestor)
 {
-#if T8_TEST_LEVEL_INT >= 1
+#if T8CODE_TEST_LEVEL >= 1
   const int maxlvl = 4;
 #else
   const int maxlvl = 6;
@@ -83,4 +91,4 @@ TEST_P (class_ancestor_id, t8_recursive_dfs_ancestor_id)
   check_recursive_dfs_to_max_lvl (maxlvl);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_ancestor_id, class_ancestor_id, AllSchemes, print_all_schemes);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_is_ancestor, class_is_ancestor, AllSchemes, print_all_schemes);

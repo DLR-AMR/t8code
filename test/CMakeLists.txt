@@ -129,6 +129,7 @@ add_t8_cpp_test( NAME t8_gtest_cmesh_vertex_conn_serial                     SOUR
 add_t8_cpp_test( NAME t8_gtest_compute_first_element_serial                 SOURCES t8_cmesh/t8_gtest_compute_first_element.cxx )
 add_t8_cpp_test( NAME t8_gtest_multiple_attributes_parallel                 SOURCES t8_cmesh/t8_gtest_multiple_attributes.cxx )
 add_t8_cpp_test( NAME t8_gtest_attribute_gloidx_array_serial                SOURCES t8_cmesh/t8_gtest_attribute_gloidx_array.cxx )
+add_t8_cpp_test( NAME t8_gtest_cmesh_bounding_box_serial                    SOURCES t8_cmesh/t8_gtest_cmesh_bounding_box.cxx )
 
 add_t8_cpp_test( NAME t8_gtest_shmem_parallel  SOURCES t8_data/t8_gtest_shmem.cxx )
 add_t8_cpp_test( NAME t8_gtest_data_pack_parallel       SOURCES t8_data/t8_gtest_data_handler.cxx t8_data/t8_data_handler_specs.cxx)
@@ -173,6 +174,7 @@ add_t8_cpp_test( NAME t8_gtest_pyra_connectivity_serial     SOURCES t8_schemes/t
 add_t8_cpp_test( NAME t8_gtest_face_neigh_serial            SOURCES t8_schemes/t8_gtest_face_neigh.cxx )
 add_t8_cpp_test( NAME t8_gtest_get_linear_id_serial         SOURCES t8_schemes/t8_gtest_get_linear_id.cxx )
 add_t8_cpp_test( NAME t8_gtest_ancestor_serial              SOURCES t8_schemes/t8_gtest_ancestor.cxx )
+add_t8_cpp_test( NAME t8_gtest_is_ancestor_serial              SOURCES t8_schemes/t8_gtest_is_ancestor.cxx )
 add_t8_cpp_test( NAME t8_gtest_ancestor_id_serial           SOURCES t8_schemes/t8_gtest_ancestor_id.cxx )
 add_t8_cpp_test( NAME t8_gtest_element_count_leaves_serial  SOURCES t8_schemes/t8_gtest_element_count_leaves.cxx )
 add_t8_cpp_test( NAME t8_gtest_element_ref_coords_serial    SOURCES t8_schemes/t8_gtest_element_ref_coords.cxx )

@@ -1861,7 +1861,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
     // TODO: Use anc/desc search here
     const t8_element_t *first_descendant;
     const t8_locidx_t first_leaf_index
-      = t8_forest_bin_search_first_descendant_ancenstor (tree_leaves, same_level_neighbor, &first_descendant);
+      = t8_forest_bin_search_first_descendant_ancestor (tree_leaves, same_level_neighbor, &first_descendant);
     const int neighbor_level = first_leaf_index < 0 ? -1 : scheme->element_get_level (neigh_class, same_level_neighbor);
     const int first_desc_level = first_leaf_index < 0 ? -1 : scheme->element_get_level (neigh_class, first_descendant);
     /* If the same level neighbor is coarser than the first found leaf, then
@@ -1905,7 +1905,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
         scheme->element_construct_successor (neigh_class, same_level_neighbor, successor);
         const t8_element_t *first_succ_desc;
         const t8_locidx_t first_succ_desc_index
-          = t8_forest_bin_search_first_descendant_ancenstor (tree_leaves, successor, &first_succ_desc);
+          = t8_forest_bin_search_first_descendant_ancestor (tree_leaves, successor, &first_succ_desc);
         scheme->element_destroy (neigh_class, 1, &successor);
         const t8_locidx_t leaf_count = t8_element_array_get_count (tree_leaves);
         const t8_locidx_t last_search_element_index

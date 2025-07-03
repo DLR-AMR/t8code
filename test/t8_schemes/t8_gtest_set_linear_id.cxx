@@ -62,7 +62,7 @@ class class_test_set_linear_id: public TestBFS {
     /* Destroy BFS test */
     bfs_test_teardown ();
   }
-#if T8CODE_TEST_LEVEL >= 1
+#if T8_TEST_LEVEL_INT >= 1
   const int maxlvl = 3;
 #else
   const int maxlvl = 5;
