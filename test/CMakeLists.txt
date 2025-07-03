@@ -173,6 +173,7 @@ add_t8_cpp_test( NAME t8_gtest_pyra_connectivity_serial     SOURCES t8_schemes/t
 add_t8_cpp_test( NAME t8_gtest_face_neigh_serial            SOURCES t8_schemes/t8_gtest_face_neigh.cxx )
 add_t8_cpp_test( NAME t8_gtest_get_linear_id_serial         SOURCES t8_schemes/t8_gtest_get_linear_id.cxx )
 add_t8_cpp_test( NAME t8_gtest_ancestor_serial              SOURCES t8_schemes/t8_gtest_ancestor.cxx )
+add_t8_cpp_test( NAME t8_gtest_is_ancestor_serial              SOURCES t8_schemes/t8_gtest_is_ancestor.cxx )
 add_t8_cpp_test( NAME t8_gtest_ancestor_id_serial           SOURCES t8_schemes/t8_gtest_ancestor_id.cxx )
 add_t8_cpp_test( NAME t8_gtest_element_count_leaves_serial  SOURCES t8_schemes/t8_gtest_element_count_leaves.cxx )
 add_t8_cpp_test( NAME t8_gtest_element_ref_coords_serial    SOURCES t8_schemes/t8_gtest_element_ref_coords.cxx )
