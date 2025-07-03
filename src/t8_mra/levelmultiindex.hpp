@@ -2,6 +2,8 @@
 
 #include <vector>
 #include "t8_eclass.h"
+#include <t8_schemes/t8_scheme.h>
+#include <t8_element.h>
 
 #ifdef T8_ENABLE_MRA
 
@@ -34,8 +36,9 @@ struct levelmultiindex: public lmi_binary<TShape>
   {
     SC_ABORTF ("levelmultiindex has not been implemented for shape %d", TShape);
   };
+  levelmultiindex (size_t _basecell);
   levelmultiindex (unsigned int level, size_t index);
-  levelmultiindex (size_t index);
+  // levelmultiindex (size_t _basecell, const t8_element_t *elem, t8_eclass_t tree_class, const t8_scheme *scheme);
 
   [[nodiscard]] unsigned int
   level () const noexcept;
@@ -43,13 +46,22 @@ struct levelmultiindex: public lmi_binary<TShape>
   [[nodiscard]] size_t
   multiindex () const noexcept;
 
+  /**
+ * @brief Get parent of a given levelmultiindex.
+ *
+ * @param lmi Current levelmultiindex
+ * @return Parent levelmultiindex
+ */
   [[nodiscard]] static levelmultiindex
   parent (levelmultiindex<TShape> lmi);
+
+  [[nodiscard]] static levelmultiindex
+  jth_child (levelmultiindex<TShape> lmi, size_t j) noexcept;
 
   [[nodiscard]] static std::vector<levelmultiindex>
   children (levelmultiindex<TShape> lmi) noexcept;
 
- private:
+  // private:
   size_t index;
 };
 
@@ -74,25 +86,27 @@ levelmultiindex<T8_ECLASS_TRIANGLE>::levelmultiindex (unsigned int level, size_t
 }
 
 template <>
-levelmultiindex<T8_ECLASS_TRIANGLE>::levelmultiindex (size_t _index): index (_index)
+inline levelmultiindex<T8_ECLASS_TRIANGLE>::levelmultiindex (size_t _basecell): index (0u)
 {
+  index = (index << (LEVEL_BITS + BASECELL_BITS)) | _basecell;
 }
 
-template <>
-[[nodiscard]] inline unsigned int
-levelmultiindex<T8_ECLASS_TRIANGLE>::level () const noexcept
-{
-  return static_cast<unsigned int> ((index >> BASECELL_BITS >> LEVEL_BITS) & ((1ULL << LEVEL_BITS) - 1));
-}
+// template <>
+// inline levelmultiindex<T8_ECLASS_TRIANGLE>::levelmultiindex (size_t _basecell, const t8_element_t *elem,
+//                                                              t8_eclass_t tree_class, const t8_scheme *scheme)
+//   : levelmultiindex<T8_ECLASS_TRIANGLE> (_basecell)
+// {
+// }
 
-/**
- * @brief Get parent of a given levelmultiindex.
- *
- * @param lmi Current levelmultiindex
- * @return Parent levelmultiindex
- */
+// template <>
+// inline unsigned int
+// levelmultiindex<T8_ECLASS_TRIANGLE>::level () const noexcept
+// {
+//   return static_cast<unsigned int> ((index >> BASECELL_BITS >> LEVEL_BITS) & ((1ULL << LEVEL_BITS) - 1));
+// }
+
 template <>
-[[nodiscard]] inline levelmultiindex<T8_ECLASS_TRIANGLE>
+inline levelmultiindex<T8_ECLASS_TRIANGLE>
 levelmultiindex<T8_ECLASS_TRIANGLE>::parent (levelmultiindex<T8_ECLASS_TRIANGLE> lmi)
 {
 #if T8_ENABLE_DEBUG
@@ -118,17 +132,9 @@ levelmultiindex<T8_ECLASS_TRIANGLE>::parent (levelmultiindex<T8_ECLASS_TRIANGLE>
 }
 
 template <>
-[[nodiscard]] inline std::vector<levelmultiindex<T8_ECLASS_TRIANGLE>>
-levelmultiindex<T8_ECLASS_TRIANGLE>::children (levelmultiindex<T8_ECLASS_TRIANGLE> lmi) noexcept
+inline levelmultiindex<T8_ECLASS_TRIANGLE>
+levelmultiindex<T8_ECLASS_TRIANGLE>::jth_child (levelmultiindex<T8_ECLASS_TRIANGLE> lmi, size_t j) noexcept
 {
-  const auto NUM_CHILDREN = 4;
-
-  std::vector<levelmultiindex<T8_ECLASS_TRIANGLE>> child_vec;
-  child_vec.reserve (NUM_CHILDREN);
-
-  // Gives path for the jth-child
-  auto jth_path = [&] (size_t path, size_t j) -> size_t { return (path << PATH_BITS) | j; };
-
   // Extract basecell and remove basecell from lmi
   const size_t basecell = lmi.index & ((1u << BASECELL_BITS) - 1);
   lmi.index >>= BASECELL_BITS;
@@ -137,11 +143,27 @@ levelmultiindex<T8_ECLASS_TRIANGLE>::children (levelmultiindex<T8_ECLASS_TRIANGL
   const size_t level = lmi.index & ((1u << LEVEL_BITS) - 1);
   lmi.index >>= LEVEL_BITS;
 
+  // Gives path for the jth-child
+  const auto jth_path = (lmi.index << PATH_BITS) | j;
+
   // Construct all children: Same basecell, increase level by one, concat new
   // childpath
+  lmi.index = (jth_path << (LEVEL_BITS + BASECELL_BITS)) | ((level + 1) << BASECELL_BITS) | basecell;
+
+  return lmi;
+}
+
+template <>
+inline std::vector<levelmultiindex<T8_ECLASS_TRIANGLE>>
+levelmultiindex<T8_ECLASS_TRIANGLE>::children (levelmultiindex<T8_ECLASS_TRIANGLE> lmi) noexcept
+{
+  const auto NUM_CHILDREN = 4;
+
+  std::vector<levelmultiindex<T8_ECLASS_TRIANGLE>> child_vec;
+  child_vec.reserve (NUM_CHILDREN);
+
   for (size_t j = 0u; j < NUM_CHILDREN; ++j)
-    child_vec.emplace_back ((jth_path (lmi.index, j) << (LEVEL_BITS + BASECELL_BITS)) | ((level + 1) << BASECELL_BITS)
-                            | basecell);
+    child_vec.emplace_back (jth_child (lmi.index, j));
 
   return child_vec;
 }
@@ -152,6 +174,13 @@ inline TLmi
 parent_lmi (TLmi lmi)
 {
   return TLmi::parent (lmi);
+}
+
+template <typename TLmi>
+inline TLmi
+jth_child (TLmi lmi, size_t j)
+{
+  return TLmi::jth_child (lmi, j);
 }
 
 template <typename TLmi>
