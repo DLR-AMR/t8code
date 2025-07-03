@@ -47,6 +47,8 @@
 #include <fstream>
 #include <time.h>
 
+#include <t8_mra/levelmultiindex.hpp>
+
 //BIT Length for bitwise level multi index
 const int PATH_BITS = 2;       // Each path segment is 2 bits
 const int LEVEL_BITS = 5;      // Level is encoded in 5 bits
@@ -1257,28 +1259,34 @@ get_correct_order_children (int type, int child_id, int first, int second, int t
 uint64_t
 get_parents_lmi_binary (uint64_t lmi)
 {
+  const auto test = t8_mra::levelmultiindex<T8_ECLASS_TRIANGLE> (lmi);
+  return t8_mra::parent_lmi (test).index;
+
   // Extract the basecell (21 bits) - the lowest bits
-  uint64_t basecell = lmi & ((1ULL << BASECELL_BITS) - 1);
-  lmi >>= BASECELL_BITS;  // Shift to remove the basecell part
-
-  // Extract the level (5 bits)
-  uint64_t level = lmi & ((1ULL << LEVEL_BITS) - 1);
-  lmi >>= LEVEL_BITS;  // Shift to remove the level part
-
-  // Extract the path (38 bits)
-  uint64_t path = lmi;  // Remaining part is the path
-
-  // Decrease the level by 1 if it is greater than 0
-  if (level > 0) {
-    level--;  // Decrease the level
-
-    // Reset the path bits for the decreased level (for this we just shift out the last 2 bits for the current level)
-    path >>= PATH_BITS;  // Shift to remove the last path bits
-
-    // Re-encode the LMI with the decreased level, reset path, and basecell
-    // Reinsert the level (shifted to its position)
-    lmi = (path << (LEVEL_BITS + BASECELL_BITS)) | (level << BASECELL_BITS) | basecell;  // Reassemble the LMI
-  }
+  // uint64_t basecell = lmi & ((1ULL << BASECELL_BITS) - 1);
+  // lmi >>= BASECELL_BITS;  // Shift to remove the basecell part
+  //
+  // // Extract the level (5 bits)
+  // uint64_t level = lmi & ((1ULL << LEVEL_BITS) - 1);
+  // lmi >>= LEVEL_BITS;  // Shift to remove the level part
+  //
+  // // Extract the path (38 bits)
+  // uint64_t path = lmi;  // Remaining part is the path
+  //
+  // // Decrease the level by 1 if it is greater than 0
+  // if (level > 0) {
+  //   level--;  // Decrease the level
+  //
+  //   // Reset the path bits for the decreased level (for this we just shift out the last 2 bits for the current level)
+  //   path >>= PATH_BITS;  // Shift to remove the last path bits
+  //
+  //   // Re-encode the LMI with the decreased level, reset path, and basecell
+  //   // Reinsert the level (shifted to its position)
+  //   lmi = (path << (LEVEL_BITS + BASECELL_BITS)) | (level << BASECELL_BITS) | basecell;  // Reassemble the LMI
+  // }
+  //
+  // printf ("after: %lu\n", lmi);
+  // printf ("after test: %lu\n", decltype (test)::parent (test).index);
 
   return lmi;
 }
@@ -1287,6 +1295,10 @@ get_parents_lmi_binary (uint64_t lmi)
 uint64_t
 get_jth_child_lmi_binary (uint64_t lmi, uint64_t j)
 {
+  const auto test = t8_mra::levelmultiindex<T8_ECLASS_TRIANGLE> (lmi);
+  // return t8_mra::children_lmi (test)[j].index;
+  return t8_mra::jth_child (test, j).index;
+
   // Extract the basecell (21 bits) from the lowest bits
   uint64_t basecell = lmi & ((1ULL << BASECELL_BITS) - 1);
   lmi >>= BASECELL_BITS;  // Remove the basecell part
