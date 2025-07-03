@@ -80,6 +80,10 @@ TEST_P (nca, nca_check_shallow)
       scheme->element_get_nca (tree_class, desc_a, desc_b, check);
       /*expect equality */
       EXPECT_ELEM_EQ (scheme, tree_class, check, correct_nca);
+      // Check agains element_is_ancestor. This adds another test layer
+      // to both element_get_nca and element_is_ancestor.
+      EXPECT_TRUE (scheme->element_is_ancestor (tree_class, check, desc_a));
+      EXPECT_TRUE (scheme->element_is_ancestor (tree_class, check, desc_b));
     }
   }
 }
@@ -124,6 +128,10 @@ TEST_P (nca, nca_check_deep)
             /* Expect equality of correct_nca and check for every other class */
             EXPECT_ELEM_EQ (scheme, tree_class, correct_nca, check);
           }
+          // Check agains element_is_ancestor. This adds another test layer
+          // to both element_get_nca and element_is_ancestor.
+          EXPECT_TRUE (scheme->element_is_ancestor (tree_class, check, desc_a));
+          EXPECT_TRUE (scheme->element_is_ancestor (tree_class, check, desc_b));
         }
       }
     }
@@ -178,6 +186,10 @@ t8_recursive_nca_check (t8_element_t *check_nca, t8_element_t *desc_a, t8_elemen
     for (j = 0; j < num_children_b; j++) {
       scheme->element_get_child (tree_class, parent_b, j, desc_b);
       scheme->element_get_nca (tree_class, desc_a, desc_b, check);
+      // Check agains element_is_ancestor. This adds another test layer
+      // to both element_get_nca and element_is_ancestor.
+      EXPECT_TRUE (scheme->element_is_ancestor (tree_class, check, desc_a));
+      EXPECT_TRUE (scheme->element_is_ancestor (tree_class, check, desc_b));
 
       if (!scheme->element_is_equal (tree_class, check_nca, check)) {
         level_a = scheme->element_get_level (tree_class, desc_a);
@@ -306,6 +318,10 @@ TEST_P (nca, recursive_check_higher_level)
             scheme->element_get_nca (tree_class, parent_a, parent_b, check);
             EXPECT_ELEM_EQ (scheme, tree_class, parent_a, check);
             EXPECT_ELEM_EQ (scheme, tree_class, parent_b, check);
+            // Check agains element_is_ancestor. This adds another test layer
+            // to both element_get_nca and element_is_ancestor.
+            EXPECT_TRUE (scheme->element_is_ancestor (tree_class, check, parent_a));
+            EXPECT_TRUE (scheme->element_is_ancestor (tree_class, check, parent_b));
           }
         }
       }
