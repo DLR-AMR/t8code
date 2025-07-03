@@ -537,8 +537,9 @@ class t8_scheme {
   element_get_nca (const t8_eclass_t tree_class, const t8_element_t *elem1, const t8_element_t *elem2,
                    t8_element_t *const nca) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_get_nca (elem1, elem2, nca); },
-                       eclass_schemes[tree_class]);
+    std::visit ([&] (auto &&scheme) { return scheme.element_get_nca (elem1, elem2, nca); }, eclass_schemes[tree_class]);
+    T8_ASSERT (element_is_ancestor (tree_class, nca, elem1));
+    T8_ASSERT (element_is_ancestor (tree_class, nca, elem2));
   };
 
   /** Compute the shape of the face of an element.
