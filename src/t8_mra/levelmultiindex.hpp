@@ -170,21 +170,21 @@ levelmultiindex<T8_ECLASS_TRIANGLE>::children (levelmultiindex<T8_ECLASS_TRIANGL
 
 // F R E E - F U N C T I O N S
 template <typename TLmi>
-inline TLmi
+[[nodiscard]] inline TLmi
 parent_lmi (TLmi lmi)
 {
   return TLmi::parent (lmi);
 }
 
 template <typename TLmi>
-inline TLmi
+[[nodiscard]] inline TLmi
 jth_child (TLmi lmi, size_t j)
 {
   return TLmi::jth_child (lmi, j);
 }
 
 template <typename TLmi>
-inline std::vector<TLmi>
+[[nodiscard]] inline std::vector<TLmi>
 children_lmi (TLmi lmi)
 {
   return TLmi::children (lmi);
