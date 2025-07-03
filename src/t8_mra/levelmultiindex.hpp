@@ -12,7 +12,7 @@ namespace t8_mra
 
 /**
  * @brief Binary representation of each levelmultiindex. Has to be specialized
- * for each t8_eclass
+ * for each t8_eclass.
  */
 template <t8_eclass TShape>
 struct lmi_binary
@@ -37,8 +37,7 @@ struct levelmultiindex: public lmi_binary<TShape>
     SC_ABORTF ("levelmultiindex has not been implemented for shape %d", TShape);
   };
   levelmultiindex (size_t _basecell);
-  levelmultiindex (unsigned int level, size_t index);
-  // levelmultiindex (size_t _basecell, const t8_element_t *elem, t8_eclass_t tree_class, const t8_scheme *scheme);
+  levelmultiindex (size_t _basecell, const t8_element_t *elem, t8_eclass_t tree_class, const t8_scheme *scheme);
 
   [[nodiscard]] unsigned int
   level () const noexcept;
@@ -74,18 +73,6 @@ struct lmi_binary<T8_ECLASS_TRIANGLE>
 };
 
 template <>
-levelmultiindex<T8_ECLASS_TRIANGLE>::levelmultiindex ()
-{
-  /// TODO
-}
-
-template <>
-levelmultiindex<T8_ECLASS_TRIANGLE>::levelmultiindex (unsigned int level, size_t index)
-{
-  /// TODO
-}
-
-template <>
 inline levelmultiindex<T8_ECLASS_TRIANGLE>::levelmultiindex (size_t _basecell): index (0u)
 {
   index = (index << (LEVEL_BITS + BASECELL_BITS)) | _basecell;
@@ -98,12 +85,12 @@ inline levelmultiindex<T8_ECLASS_TRIANGLE>::levelmultiindex (size_t _basecell): 
 // {
 // }
 
-// template <>
-// inline unsigned int
-// levelmultiindex<T8_ECLASS_TRIANGLE>::level () const noexcept
-// {
-//   return static_cast<unsigned int> ((index >> BASECELL_BITS >> LEVEL_BITS) & ((1ULL << LEVEL_BITS) - 1));
-// }
+template <>
+inline unsigned int
+levelmultiindex<T8_ECLASS_TRIANGLE>::level () const noexcept
+{
+  return static_cast<unsigned int> ((index >> BASECELL_BITS >> LEVEL_BITS) & ((1ULL << LEVEL_BITS) - 1));
+}
 
 template <>
 inline levelmultiindex<T8_ECLASS_TRIANGLE>
