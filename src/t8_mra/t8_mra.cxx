@@ -1454,25 +1454,25 @@ calculate_lmi (uint64_t basecell, const t8_element_t *elem, t8_eclass_t tree_cla
   auto bla = t8_mra::levelmultiindex<T8_ECLASS_TRIANGLE> (basecell, elem, scheme);
   return bla.index;
 
-  uint64_t lmi = initialize_lmi (basecell);
-  int first = 0;
-  int second = 1;
-  int third = 2;
-  int elem_level = t8_element_get_level (scheme, tree_class, elem);
-  for (int level = 0; level < elem_level; level++) {
-    int first_copy = first;
-    int second_copy = second;
-    int third_copy = third;
-    int ancestor_id = t8_element_get_ancestor_id (scheme, tree_class, elem, level + 1);
-    t8_dtri_type_t type = compute_type (((t8_dtri_t *) elem), level);
-
-    invert_order (&first_copy, &second_copy, &third_copy);
-    int correct_child
-      = get_correct_order_children_reference ((int) type, ancestor_id, first_copy, second_copy, third_copy);
-    lmi = get_jth_child_lmi_binary (lmi, correct_child);
-    get_point_order (&first, &second, &third, t8_dtri_type_cid_to_beyid[type][ancestor_id]);
-  }
-  return lmi;
+  // uint64_t lmi = initialize_lmi (basecell);
+  // int first = 0;
+  // int second = 1;
+  // int third = 2;
+  // int elem_level = t8_element_get_level (scheme, tree_class, elem);
+  // for (int level = 0; level < elem_level; level++) {
+  //   int first_copy = first;
+  //   int second_copy = second;
+  //   int third_copy = third;
+  //   int ancestor_id = t8_element_get_ancestor_id (scheme, tree_class, elem, level + 1);
+  //   t8_dtri_type_t type = compute_type (((t8_dtri_t *) elem), level);
+  //
+  //   invert_order (&first_copy, &second_copy, &third_copy);
+  //   int correct_child
+  //     = get_correct_order_children_reference ((int) type, ancestor_id, first_copy, second_copy, third_copy);
+  //   lmi = get_jth_child_lmi_binary (lmi, correct_child);
+  //   get_point_order (&first, &second, &third, t8_dtri_type_cid_to_beyid[type][ancestor_id]);
+  // }
+  // return lmi;
 }
 
 void
