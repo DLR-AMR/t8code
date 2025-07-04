@@ -1297,7 +1297,7 @@ get_jth_child_lmi_binary (uint64_t lmi, uint64_t j)
 {
   const auto test = t8_mra::levelmultiindex<T8_ECLASS_TRIANGLE> (lmi);
   // return t8_mra::children_lmi (test)[j].index;
-  return t8_mra::jth_child (test, j).index;
+  return t8_mra::jth_child_lmi (test, j).index;
 
   // Extract the basecell (21 bits) from the lowest bits
   uint64_t basecell = lmi & ((1ULL << BASECELL_BITS) - 1);
@@ -1450,6 +1450,10 @@ initialize_lmi (uint64_t basecell)
 uint64_t
 calculate_lmi (uint64_t basecell, const t8_element_t *elem, t8_eclass_t tree_class, const t8_scheme_c *scheme)
 {
+
+  auto bla = t8_mra::levelmultiindex<T8_ECLASS_TRIANGLE> (basecell, elem, scheme);
+  return bla.index;
+
   uint64_t lmi = initialize_lmi (basecell);
   int first = 0;
   int second = 1;
@@ -1460,8 +1464,8 @@ calculate_lmi (uint64_t basecell, const t8_element_t *elem, t8_eclass_t tree_cla
     int second_copy = second;
     int third_copy = third;
     int ancestor_id = t8_element_get_ancestor_id (scheme, tree_class, elem, level + 1);
-    //t8_global_productionf ("ancestor id :%i.\n",ancestor_id);
     t8_dtri_type_t type = compute_type (((t8_dtri_t *) elem), level);
+
     invert_order (&first_copy, &second_copy, &third_copy);
     int correct_child
       = get_correct_order_children_reference ((int) type, ancestor_id, first_copy, second_copy, third_copy);
