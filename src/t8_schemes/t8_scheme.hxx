@@ -613,6 +613,24 @@ class t8_scheme {
                        eclass_schemes[tree_class]);
   };
 
+  /** Given an element and a face of an element as well as an ancestor of the element
+   * that has a face that is an ancestor of the given face, compute the corresponding face number of the ancestor element.
+   * 
+   * \param [in] tree_class    The eclass of the current tree.
+   * \param [in]  elem    An element.
+   * \param [in]  face    Then number of a face of \a element.
+   * \param [in]  ancestor An ancestor of \a element that has a common face with \a face. (Could be \a element itself).
+   * \return              The face number \a f_a corresponding to the face of with \a face is a asubface.
+   *                      <0 on failure.
+   */
+  inline int
+  element_face_get_ancestor_face (const t8_eclass_t tree_class, const t8_element_t *elem, const int face,
+                                  const t8_element_t *ancestor) const
+  {
+    return std::visit ([&] (auto &&scheme) { return scheme.element_face_get_ancestor_face (elem, face, ancestor); },
+                       eclass_schemes[tree_class]);
+  };
+
   /** Given an element and a face of this element. If the face lies on the
    * tree boundary, return the face number of the tree face.
    * If not the return value is arbitrary.
