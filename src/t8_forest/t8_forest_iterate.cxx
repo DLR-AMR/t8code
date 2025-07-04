@@ -116,6 +116,12 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
     const t8_element_t *leaf = t8_element_array_index_locidx (leaf_elements, 0);
     T8_ASSERT (t8_forest_element_is_leaf_or_ghost (forest, leaf, local_or_ghost_tree_id, tree_is_ghost));
     T8_ASSERT (scheme->element_get_level (eclass, element) < scheme->element_get_level (eclass, leaf));
+
+    // Verify that all leafs in leaf_elements are descendants of element
+    for (t8_locidx_t ileaf_index = 0; ileaf_index < elem_count; ++ileaf_index) {
+      const t8_element_t *ileaf = t8_element_array_index_locidx (leaf_elements, ileaf_index);
+      T8_ASSERT (scheme->element_is_ancestor (eclass, element, ileaf));
+    }
   }
 #endif
 
