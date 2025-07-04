@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include <t8_mra/triangle_order.hpp>
+#include <t8_mra/data/triangle_order.hpp>
 
 #include <t8_eclass.h>
 #include <t8_element.h>

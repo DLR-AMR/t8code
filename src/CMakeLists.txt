@@ -154,14 +154,18 @@ if( T8CODE_ENABLE_MRA )
   )
 
   install( FILES
+    t8_mra/data/levelindex_map.hpp
+    t8_mra/data/cell_data.hpp
+    t8_mra/data/levelmultiindex.hpp
+    t8_mra/data/triangle_order.hpp
     t8_mra/t8_unordered_dense.hxx
     t8_mra/t8_mra.hxx
     t8_mra/vecmat.hxx
     t8_mra/basis_functions.hxx
     t8_mra/dunavant.hxx
     t8_mra/mask_coefficients.hxx
-    t8_mra/levelindex_map.hpp
-    t8_mra/cell_data.hpp
+    # t8_mra/levelindex_map.hpp
+    # t8_mra/cell_data.hpp
     DESTINATION include)
 endif()
 

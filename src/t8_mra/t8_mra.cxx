@@ -47,7 +47,7 @@
 #include <fstream>
 #include <time.h>
 
-#include <t8_mra/levelmultiindex.hpp>
+#include <t8_mra/data/levelmultiindex.hpp>
 
 //BIT Length for bitwise level multi index
 const int PATH_BITS = 2;       // Each path segment is 2 bits
