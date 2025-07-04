@@ -610,6 +610,56 @@ struct t8_standalone_scheme
     return 1;
   }
 
+  // Note to devs: element_is_ancestor currently cannot be static
+  //               since it uses the non-static function element_new
+  /** Query whether element A is an ancestor of the element B.
+   * An element A is ancestor of an element B if A == B or if B can 
+   * be obtained from A via successive refinement.
+   * \param [in] scheme A scheme.
+   * \param [in] eclass An eclass.
+   * \param [in] element_A An element of class \a eclass in scheme \a scheme.
+   * \param [in] element_B An element of class \a eclass in scheme \a scheme.
+   * \return     True if and only if \a element_A is an ancestor of \a element_B.
+  */
+  constexpr bool
+  element_is_ancestor (const t8_element_t *element_A, const t8_element_t *element_B) const noexcept
+  {
+    /* We compute whether A is an ancestor of B by
+    
+     - If level(A) > level(B) then A cannot be an ancestor.
+     - Otherwise compute the ancestor of B at level(A)
+     - Compare the computed ancestor with A.
+    */
+    T8_ASSERT (element_is_valid (element_A));
+    T8_ASSERT (element_is_valid (element_B));
+
+    const t8_standalone_element<TEclass> *el_B = (const t8_standalone_element<TEclass> *) element_B;
+
+    const int level_A = element_get_level (element_A);
+    const int level_B = element_get_level (element_B);
+
+    if (level_A > level_B) {
+      // A is finer than B and thus cannot be an ancestor.
+      return false;
+    }
+
+    // Compute the ancestor of B at level_A and compare it with A
+    t8_element_t *ancestor;
+    element_new (1, &ancestor);
+
+    t8_standalone_element<TEclass> *ancestor_casted = (t8_standalone_element<TEclass> *) ancestor;
+
+    element_get_ancestor (el_B, level_A, ancestor_casted);
+
+    const bool is_ancestor = element_is_equal (ancestor, element_A);
+
+    element_destroy (1, &ancestor);
+
+    // Return true if A == ancestor
+    // Return false if A != ancestor
+    return is_ancestor;
+  }
+
   /** Compute the nearest common ancestor of two elements. That is,
    * the element with highest level that still has both given elements as
    * descendants.
