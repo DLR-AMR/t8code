@@ -90,8 +90,9 @@ t8_test_fiterate (t8_forest_t forest)
     const t8_locidx_t num_tree_elements = is_ghost ? t8_forest_ghost_tree_num_leaf_elements (forest, ghost_tree_id)
                                                    : t8_forest_get_tree_num_leaf_elements (forest, itree);
     // Get all leaf elements
-    const t8_element_array_t *leaf_elements = !is_ghost ? t8_forest_tree_get_leaf_elements (forest, itree)
-                                                        : t8_forest_ghost_get_tree_leaf_elements (forest, ghost_tree_id);
+    const t8_element_array_t *leaf_elements = !is_ghost
+                                                ? t8_forest_tree_get_leaf_elements (forest, itree)
+                                                : t8_forest_ghost_get_tree_leaf_elements (forest, ghost_tree_id);
     // Get the first and last element
     const t8_element_t *first_el = (const t8_element_t *) t8_element_array_index_locidx (leaf_elements, 0);
     const t8_element_t *last_el
