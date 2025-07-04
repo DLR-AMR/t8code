@@ -1900,28 +1900,23 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
       else {
         /* We need to compute the first element that is not longer contained in the same_level_neighbor.
          * To do so, we compute the successor of the same_level_neighbor and do
-         * a lower search for it in the leaf array. The found element is either the successor (which we can check)
-         * or the last leaf that is a descendant of same_level_neighbor. */
+         * an upper search for it in the leaf array. 
+         * The found element (if existing) is the first leaf that is not a descendant of same_level_neighbor. */
         t8_element_t *successor;
         scheme->element_new (neigh_class, 1, &successor);
         scheme->element_construct_successor (neigh_class, same_level_neighbor, successor);
-        const t8_element_t *first_succ_desc;
-        t8_locidx_t first_index_of_non_descendant
-          = t8_forest_bin_search_first_descendant_ancestor (tree_leaves, successor, &first_succ_desc);
-        const t8_locidx_t leaf_count = t8_element_array_get_count (tree_leaves);
-        //        If the successor is not contained in the leaf_array,
-        //        we must use the index of the first element after the successor.
-        //        We can compute this index with an upper search.
-        //        Note the we could not do an upper search on same
-        // TODO REPLACE WITH lower search on successor
-        if (first_index_of_non_descendant < 0) {
-          const int successor_level = scheme->element_get_level (neigh_class, successor);
-          const t8_linearidx_t successor_id = scheme->element_get_linear_id (neigh_class, successor, successor_level);
-          first_index_of_non_descendant = t8_forest_bin_search_upper (tree_leaves, successor_id, successor_level);
-        }
+        const int successor_level = scheme->element_get_level (neigh_class, successor);
+        const t8_linearidx_t successor_id = scheme->element_get_linear_id (neigh_class, successor, successor_level);
         scheme->element_destroy (neigh_class, 1, &successor);
+        const t8_locidx_t upper_search_for_successor
+          = t8_forest_bin_search_upper (tree_leaves, successor_id, successor_level);
+        const t8_locidx_t leaf_count = t8_element_array_get_count (tree_leaves);
+        // The first index of a non descendant is the found element or the end of the array
+        // if no element was found.
+        // The last index in our search range is 1 less.
         const t8_locidx_t last_search_element_index
-          = first_index_of_non_descendant < 0 ? leaf_count - 1 : first_index_of_non_descendant - 1;
+          = upper_search_for_successor < 0 ? leaf_count - 1 : upper_search_for_successor - 1;
+
         const size_t reduced_leaf_count = last_search_element_index - first_leaf_index + 1;
         T8_ASSERT (reduced_leaf_count > 0);
         t8_debugf ("Starting search with element indices %i to %i (including).\n", first_leaf_index,
