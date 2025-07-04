@@ -82,7 +82,7 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
                          const t8_element_array_t *const leaf_elements, t8_locidx_t tree_lindex_of_first_leaf,
                          t8_forest_iterate_face_fn callback, void *user_data)
 {
-  t8_debugf ("Entering t8_forest_iterate_faces with leaf_index %i and %i total leafs.\n", tree_lindex_of_first_leaf,
+  t8_debugf ("Entering t8_forest_iterate_faces with leaf_index %i and %li total leafs.\n", tree_lindex_of_first_leaf,
              t8_element_array_get_count (leaf_elements));
   T8_ASSERT (t8_forest_is_committed (forest));
   const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
@@ -118,7 +118,7 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
     T8_ASSERT (scheme->element_get_level (eclass, element) < scheme->element_get_level (eclass, leaf));
 
     // Verify that all leafs in leaf_elements are descendants of element
-    for (t8_locidx_t ileaf_index = 0; ileaf_index < elem_count; ++ileaf_index) {
+    for (t8_locidx_t ileaf_index = 0; (size_t) ileaf_index < elem_count; ++ileaf_index) {
       const t8_element_t *ileaf = t8_element_array_index_locidx (leaf_elements, ileaf_index);
       T8_ASSERT (scheme->element_is_ancestor (eclass, element, ileaf));
     }
@@ -155,6 +155,7 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
     T8_ASSERT (child_indices[iface] < num_children + 1);
     const size_t indexa = split_offsets[child_indices[iface]];     /* first leaf of this face child */
     const size_t indexb = split_offsets[child_indices[iface] + 1]; /* first leaf of next child */
+    t8_debugf ("Computed indices for face child %i:  %zd %zd\n", iface, indexa, indexb);
     if (indexa < indexb) {
       /* There exist leaves of this face child in leaf_elements,
           * we construct an array of these leaves */
