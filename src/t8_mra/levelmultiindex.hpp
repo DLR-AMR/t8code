@@ -67,6 +67,9 @@ struct levelmultiindex: public lmi_binary<TShape>
   [[nodiscard]] static std::vector<levelmultiindex>
   children (levelmultiindex<TShape> lmi) noexcept;
 
+  static std::array<int, 3>
+  point_order_at_level (const t8_element_t *elem, const t8_scheme *scheme) noexcept;
+
   // private:
   size_t index;
 };
@@ -124,6 +127,7 @@ inline levelmultiindex<T8_ECLASS_TRIANGLE>::levelmultiindex (size_t _basecell, c
     t8_dtri_ancestor ((t8_dtri_t *) elem, l, &ancestor);
     triangle_order::invert_order (tmp);
     const auto child_id = triangle_order::get_reference_children_order (ancestor.type, ancestor_id, tmp);
+
     *this = jth_child (*this, child_id);
     triangle_order::get_point_order (order, t8_dtri_type_cid_to_beyid[ancestor.type][ancestor_id]);
   }
@@ -175,6 +179,23 @@ levelmultiindex<T8_ECLASS_TRIANGLE>::children (levelmultiindex<T8_ECLASS_TRIANGL
     child_vec.emplace_back (jth_child (lmi.index, j));
 
   return child_vec;
+}
+
+template <>
+inline std::array<int, 3>
+levelmultiindex<T8_ECLASS_TRIANGLE>::point_order_at_level (const t8_element_t *elem, const t8_scheme *scheme) noexcept
+{
+  std::array<int, 3> res = { 0, 1, 2 };
+  const auto level = scheme->element_get_level (ECLASS, elem);
+  t8_dtri_t ancestor;
+
+  for (auto l = 0; l < level; ++l) {
+    const auto ancestor_id = scheme->element_get_ancestor_id (ECLASS, elem, l + 1);
+    t8_dtri_ancestor ((t8_dtri_t *) elem, l, &ancestor);
+    triangle_order::get_point_order (res, t8_dtri_type_cid_to_beyid[ancestor.type][ancestor_id]);
+  }
+
+  return res;
 }
 
 // F R E E - F U N C T I O N S
