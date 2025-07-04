@@ -331,6 +331,27 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
   int
   element_face_get_parent_face (const t8_element_t *elem, int face) const;
 
+  /** Given an element and a face of an element as well as an ancestor of the element
+   * that has a face that is an ancestor of the given face, compute the corresponding face number of the ancestor element.
+   * 
+   * \param [in] tree_class    The eclass of the current tree.
+   * \param [in]  elem    An element.
+   * \param [in]  face    Then number of a face of \a element.
+   * \param [in]  ancestor An ancestor of \a element that has a common face with \a face. (Could be \a element itself).
+   * \return              The face number \a f_a corresponding to the face of with \a face is a asubface.
+   *                      <0 on failure.
+   */
+  inline int
+  element_face_get_ancestor_face (const t8_element_t *elem, const int face, const t8_element_t *ancestor) const
+  {
+    // For Prism elements the face number does not change when refining.
+    T8_ASSERT (element_is_valid (elem));
+    T8_ASSERT (element_is_valid (ancestor));
+    T8_ASSERT (0 <= face && face < element_get_num_face (elem));
+    T8_ASSERT (is_ancestor (ancestor, elem));
+    return face;
+  }
+
   /** Given an element and a face of this element. If the face lies on the
    *  tree boundary, return the face number of the tree face.
    *  If not the return value is arbitrary.
