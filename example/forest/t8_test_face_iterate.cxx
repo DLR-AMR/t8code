@@ -43,7 +43,8 @@ typedef struct
 
 static int
 t8_test_fiterate_callback (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int face, int is_leaf,
-                           const t8_element_array_t *leaf_elements, t8_locidx_t leaf_index, void *user_data)
+                           [[maybe_unused]] const t8_element_array_t *leaf_elements, t8_locidx_t leaf_index,
+                           void *user_data)
 {
   if (is_leaf) {
     t8_test_fiterate_udata_t *test_user_data = (t8_test_fiterate_udata_t *) user_data;
