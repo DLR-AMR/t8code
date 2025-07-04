@@ -34,9 +34,10 @@
  * This integer is the maximum refinement level.
  */
 int
-t8_test_adapt_first_child (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                           const t8_eclass_t eclass, t8_locidx_t lelement_id, const t8_scheme *scheme,
-                           const int is_family, const int num_elements, t8_element_t *elements[])
+t8_test_adapt_first_child (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                           [[maybe_unused]] t8_locidx_t which_tree, const t8_eclass_t eclass,
+                           [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family,
+                           const int num_elements, t8_element_t *elements[])
 {
   T8_ASSERT (!is_family || (is_family && num_elements == scheme->element_get_num_children (eclass, elements[0])));
 
