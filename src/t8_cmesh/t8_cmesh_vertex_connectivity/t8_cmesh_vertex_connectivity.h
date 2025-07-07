@@ -77,8 +77,10 @@ t8_cmesh_get_global_vertices_of_tree (const t8_cmesh_t cmesh, const t8_locidx_t 
 t8_gloidx_t
 t8_cmesh_get_global_vertex_of_tree (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int local_tree_vertex,
                                     const int num_vertices);
+
 /** Get the number of global trees a global vertex is connected to.
- * \param [in] global_vertex_id The global id of a vertex in the cmesh.
+ * \param [in] cmesh A committed cmesh.
+ * \param [in] global_vertex The global id of a vertex in the cmesh.
  * \note if a tree is contained multiple times it is counted as multiple entries.
  * Example: For a quad where all 4 vertices map to a single global vertex this function will return 4.
  */
