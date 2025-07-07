@@ -172,6 +172,11 @@ struct PrefixDecrementable: t8_crtp_operator<TUnderlying, PrefixDecrementable>
   }
 };
 
+/**
+ * \brief A template for printable types. Provides the << operator.
+ * 
+ * \tparam TUnderlying 
+ */
 template <typename TUnderlying>
 struct Printable: t8_crtp_operator<TUnderlying, Printable>
 {
