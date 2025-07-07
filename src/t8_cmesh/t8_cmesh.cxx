@@ -1640,10 +1640,10 @@ t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, const int level, 
  * Determines the partition for a given element index in a uniform partitioning.
  * This function computes the partition based on the global element index,
  * the total number of elements, the number of processes, and the process offset.
- * \param element_index The global index of the element.
- * \param global_num_elements The total number of elements in the global mesh.
- * \param num_procs The total number of processes.
- * \param process_offset The offset of the current process in the global numbering.
+ * \param[in] element_index The global index of the element.
+ * \param[in] global_num_elements The total number of elements in the global mesh.
+ * \param[in] num_procs The total number of processes.
+ * \param[in] process_offset The offset of the current process in the global numbering.
  * \return The rank of the process that will have the element in a uniform partition.
  * 
  * \note This function is used standalone and as a callback for vector splitting
@@ -2020,7 +2020,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
     /* Compute the process that may own the next element after our last tree. */
     t8_gloidx_t send_last = (t8_gloidx_t) t8_cmesh_determine_partition (first_element_tree[num_pure_local_trees],
                                                                         global_num_elements, cmesh->mpisize, 0);
-    /* t8_cmesh_determine_partition will return mpisize for send_last if we ware on the last process.
+    /* t8_cmesh_determine_partition will return mpisize for send_last if we are on the last process.
       * We need to correct by subtracting 1. */
     if (send_last >= cmesh->mpisize) {
       send_last = cmesh->mpisize - 1;
