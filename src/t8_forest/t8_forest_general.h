@@ -455,7 +455,9 @@ t8_forest_tree_is_local (const t8_forest_t forest, const t8_locidx_t local_tree)
  * \param [in]      forest The forest.
  * \param [in]      gtreeid The global id of a tree.
  * \return                 The tree's local id in \a forest, if it is a local tree.
- *                         A negative number if not.
+ *                         A negative number if not. Ghosts trees are not considered 
+ *                         as local. 
+ * \see t8_forest_get_local_or_ghost_id for ghost trees.
  * \see https://github.com/DLR-AMR/t8code/wiki/Tree-indexing for more details about tree indexing.
  */
 t8_locidx_t
