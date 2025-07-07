@@ -43,7 +43,11 @@ These functions write a file in the netCDF-format which represents the given 2D-
 #include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_schemes/t8_scheme.h>
 
-/** Contains all Variables used in order to work with the NetCDF-File 
+/**
+ * \struct t8_cmesh_netcdf_context_t
+ *
+ * Contains all Variables used in order to work with the NetCDF-File 
+ *
  * \var filename The name of the NetCDF-File to be read
  * \var filetitle The title of the NetCDF-File
  * \var dim The dimension of the cmesh (2D or 3D)
@@ -106,7 +110,9 @@ typedef struct
 
 } t8_cmesh_netcdf_context_t;
 
-/** Contains the Definitions for the NetCDF-dimensions/-variables/-attributes (vary whether a 2D or 3D Mesh will be outputted) 
+/**
+ * / \struct t8_cmesh_netcdf_ugrid_namespace_t
+ * Contains the Definitions for the NetCDF-dimensions/-variables/-attributes (vary whether a 2D or 3D Mesh will be outputted) 
  * \var mesh The name of the mesh
  * \var dim_nMesh_node The name of the dimension for the number of nodes in the mesh
  * \var dim_nMesh_elem The name of the dimension for the number of elements in the mesh

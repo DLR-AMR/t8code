@@ -214,6 +214,12 @@ struct t8_msh_node_hasher
   }
 };
 
+/**
+ * /struct t8_msh_node_equal
+ *
+ * Equality operator for msh file nodes.
+ * This is used to compare nodes in the hash table.
+ */
 struct t8_msh_node_equal
 {
   /**

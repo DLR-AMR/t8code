@@ -242,8 +242,10 @@ typedef struct t8_attribute_info
 } t8_attribute_info_struct_t;
 
 /**
+ * /struct t8_cmesh_trees_struct_t
+ *
  * This structure holds the trees and ghosts of a cmesh.
- * 
+ *
  */
 typedef struct t8_cmesh_trees
 {

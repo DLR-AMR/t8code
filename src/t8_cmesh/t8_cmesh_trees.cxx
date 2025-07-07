@@ -214,6 +214,8 @@ t8_cmesh_trees_start_part (const t8_cmesh_trees_t trees, const int proc, const t
 }
 
 /**
+ * /struct t8_part_ghost_id_and_num_atts
+ * 
  * Helper struct for sorting the number of ghost attributes by global id.
  * In order to sort them, we need the part ghost id to access the global id.
  * Thus, we store both the part id and the number of attributes.

@@ -38,8 +38,8 @@
 #include <t8_schemes/t8_default/t8_default_c_interface.h> /* default refinement scheme. */
 
 /**
- * \brief This function calculates an 'equal' partition for the cmesh based on the \var number of trees supplied
- *  and stores the computed partition range within the \var cmesh.
+ * \brief This function calculates an 'equal' partition for the cmesh based on the \a number_trees supplied
+ *  and stores the computed partition range within the \a cmesh.
  *
  * \param [in,out] cmesh The cmesh for which the partition will be calculated
  * \param [in] num_trees The number of trees the cmesh consists of
@@ -944,7 +944,7 @@ t8_cmesh_set_vertices_2D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
   /* Every time we change the size of the box, we keep track of it. */
   int box_quads[2] = { quads_x, quads_y };
 
-  /** The directional vector e_k between two vertices v_i and v_j, i > j
+  /* The directional vector e_k between two vertices v_i and v_j, i > j
    * of box. The length is egual to distance (v_i, v_j) / #box_quads
    * along the respective axis.
    * \note Every time, we change the size of box, we must update box_dir.
@@ -1074,7 +1074,7 @@ t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
   /* Every time we change the size of the box, we keep track of it. */
   t8_locidx_t box_hexs[3] = { hexs_x, hexs_y, hexs_z };
 
-  /** The directional vector e_k between two vertices v_i and v_j, i > j
+  /* The directional vector e_k between two vertices v_i and v_j, i > j
    * of box. The length is egual to distance (v_i, v_j) / #box_hexs
    * along the respective axis.
    * \note Every time, we change the size of box, we must update box_dir.

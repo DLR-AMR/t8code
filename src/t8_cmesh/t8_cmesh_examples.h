@@ -108,8 +108,8 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
  *                              sub-hypercubes of class \a eclass.
  * 
  * \note \a boundary must point to an array with 3*8 (3D), 3*4 (2D), 3*2 (1D), or 3 (0D) entries.
- * \note Every sub-hypercube contains different number of trees depending on \a eclass.
- * \note If \a eclass == T8_ECLASS_VERTEX, _LINE, _QUAD or _HEX every sub-hypercube contains
+ *  Every sub-hypercube contains different number of trees depending on \a eclass.
+ *  If \a eclass == T8_ECLASS_VERTEX, _LINE, _QUAD or _HEX every sub-hypercube contains
  *  one tree, if _TRIANGLE or _PRISM two trees and if _TET six trees.
  *  This is done in the same way as in \see t8_cmesh_new_hypercube.
  * Example: let eclass = T8_ECLASS_TRIANGLE
@@ -151,11 +151,11 @@ t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass, sc_MPI_Comm comm, const do
  *                              \a polygons_x * \a polygons_z * \a polygons_y many 
  *                              sub-hypercubes of class \a eclass.
  * \note \a boundary must point to an array with 3*8 (3D), 3*4 (2D), 3*2 (1D), or 3 (0D) entries.
- * \note Every sub-hypercube contains different number of trees depending on \a eclass.
- * \note If \a eclass == T8_ECLASS_VERTEX, _LINE, _QUAD or _HEX every sub-hypercube contains
+ *  Every sub-hypercube contains different number of trees depending on \a eclass.
+ *  If \a eclass == T8_ECLASS_VERTEX, _LINE, _QUAD or _HEX every sub-hypercube contains
  *  one tree, if _TRIANGLE or _PRISM two trees and if _TET six trees.
  *  This is done in the same way as in \see t8_cmesh_new_hypercube.
- * \example let eclass = T8_ECLASS_TRIANGLE
+ *  Example: let eclass = T8_ECLASS_TRIANGLE
  *              boundary coordinates = a(0,0,0), b(3,0,0), c(0,2,0), d(3,2,0)
  *              polygons_x, _y, _z = 3, 1, 0                 
  *      
