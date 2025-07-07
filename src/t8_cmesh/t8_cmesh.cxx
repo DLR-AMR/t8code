@@ -2080,7 +2080,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
        Proc 0 needs tree 0 and 1             Proc 0 needs tree 0 and 1   Proc 0 needs tree 0 and 1
        Proc 1 needs tree 1 and 2             Proc 1 needs tree 2         Proc 1 needs tree 1
        Proc 2 needs tree 1 and 2
-       | 0 | 2 | 2 | 3 |                     | 0 | 2 | 3 |               | 0 | 0 | 2 |
+       | 0 | 2 | 2 | 3 |                     | 0 | 2 | 3 |               | 0 | 2 | 2 |
 
        Need to identify the first tree we send to proc i:
        If a tree with the first element on proc i exists, then the first tree is either this tree
