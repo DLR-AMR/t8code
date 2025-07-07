@@ -1,8 +1,8 @@
-#ifndef __BASIS_FUNCTIONS_INCLUDE__
-#define __BASIS_FUNCTIONS_INCLUDE__
+#pragma once
+#ifdef T8_ENABLE_MRA
 
-#include <cmath>
-
+namespace t8_mra
+{
 double
 skalierungsfunktion (int i, double tau1, double tau2);
 
@@ -14,4 +14,6 @@ muttermultiwavelet (int p, int i, double tau1, double tau2);
 
 double
 skalierungsfunktion_nextlevel (int i, double tau1, double tau2);
+
+}  // namespace t8_mra
 #endif

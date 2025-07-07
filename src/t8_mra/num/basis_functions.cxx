@@ -1,12 +1,15 @@
+#ifdef T8_ENABLE_MRA
+
 #include <cmath>
-#include "basis_functions.hxx"
-//T8_EXTERN_C_BEGIN ();
+#include "t8_mra/num/basis_functions.hxx"
 
 /* Note from Veli Ünlü about rights: These are the basis functions from
  * the bachelor thesis in mathematics of Florian Sieglar, "Konstruktion von Multiwavelets auf Dreiecksgittern"
  * from November 2013.
  */
 
+namespace t8_mra
+{
 double
 skalierungsfunktion (int i, double tau1, double tau2)
 {
@@ -1262,4 +1265,7 @@ skalierungsfunktion_nextlevel (int i, double tau1, double tau2)
     return 0.;
   return skalierungsfunktion (i, tau1, tau2);
 }
-//T8_EXTERN_C_END ();
+
+}  // namespace t8_mra
+
+#endif
