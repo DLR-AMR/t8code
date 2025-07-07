@@ -125,7 +125,7 @@ t8_cmesh_msh_read_next_line (char **line, size_t *n, FILE *fp)
   return retval;
 }
 
-/* The nodes are stored in the .msh file in the format
+/** The nodes are stored in the .msh file in the format
  *
  * $Nodes
  * n_nodes     // The number of nodes
@@ -138,7 +138,6 @@ t8_cmesh_msh_read_next_line (char **line, size_t *n, FILE *fp)
  * We thus use a hash table to read all node indices and coordinates.
  * The hash value is the node index modulo the number of nodes.
  */
-
 struct t8_msh_file_node
 {
   /**
@@ -172,16 +171,27 @@ struct t8_msh_file_node
   {
   }
 
-  std::array<double, 2> parameters;
-  std::array<double, 3> coordinates;
-  t8_gloidx_t index;
-  bool parametric;
-  int entity_dim;
-  t8_locidx_t entity_tag;
+  std::array<double, 2> parameters;  /**< Parameters of the node in the parametric space, if applicable.
+                                           * For example, for a point on a curve, this would be the parameter on the curve. */
+  std::array<double, 3> coordinates; /**< Coordinates of the node in physical space. */
+  t8_gloidx_t index;                 /**< The index of the node in the msh file. */
+  bool parametric;                   /**< True if the node is parametric, false otherwise.
+                                           * If true, the parameters are stored in the parameters array. */
+  int entity_dim;                    /**< The dimension of the entity to which the node belongs.
+                                           * For example, for a point on a curve, this would be 1. */
+  t8_locidx_t entity_tag;            /**< The tag of the entity to which the node belongs.
+                                           * For example, for a point on a curve, this would be the tag of the curve. */
 };
 
+/**
+ * Hasher for msh file nodes.
+ */
 struct t8_msh_node_hasher
 {
+  /**
+   * The number of nodes in the msh file.
+   * This is used to compute the hash value.
+   */
   t8_locidx_t num_nodes;
 
   /**
@@ -1590,15 +1600,15 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
   return std::make_optional<t8_msh_tree_vertex_indices> (vertex_indices);
 }
 
-/* This struct stores all information associated to a tree's face.
+/** This struct stores all information associated to a tree's face.
  * We need it to find neighbor trees.
  */
 typedef struct
 {
-  t8_locidx_t ltree_id; /* The local id of the tree this face belongs to */
-  int8_t face_number;   /* The number of that face within the tree */
-  int num_vertices;     /* The number of vertices of this face. */
-  long *vertices;       /* The indices of these vertices. */
+  t8_locidx_t ltree_id; /**< The local id of the tree this face belongs to */
+  int8_t face_number;   /**< The number of that face within the tree */
+  int num_vertices;     /**< The number of vertices of this face. */
+  long *vertices;       /**< The indices of these vertices. */
 } t8_msh_file_face_t;
 
 /* Hash a face. The hash value is the sum of its vertex indices */
