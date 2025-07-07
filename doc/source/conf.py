@@ -70,7 +70,6 @@ if read_the_docs_build:
     input_dir = '../../'
     output_dir = 'build'
     configureDoxyfile(input_dir, output_dir)
-    subprocess.call('doxygen', shell=True)
     breathe_projects["T8code"] = output_dir + '/xml'
 
 html_theme = 'sphinx_rtd_theme'
