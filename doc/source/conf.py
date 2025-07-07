@@ -59,6 +59,7 @@ def configureDoxyfile(input_dir, output_dir):
 
 # Check if we're running on Read the Docs' servers
 read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
+print("Running on Read the Docs:", read_the_docs_build)
 
 
 # -- Options for HTML output -------------------------------------------------
