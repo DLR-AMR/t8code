@@ -39,8 +39,10 @@
 #include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 
-/* This macro is called to check a condition and if not fulfilled
- * close the file and exit the function */
+/**
+ * This macro is called to check a condition and if not fulfilled
+ * close the file and exit the function
+ */
 #define T8_SAVE_CHECK_CLOSE(x, fp) \
   if (!(x)) { \
     t8_errorf ("file i/o error. Condition %s not fulfilled. " \
@@ -511,6 +513,12 @@ t8_cmesh_load_header (const t8_cmesh_t cmesh, FILE *fp)
   return 1;
 }
 
+/**
+ * Save the cmesh to a file with the given fileprefix.
+ * 
+ * \param[in] cmesh The cmesh to save.
+ * \param[in] fileprefix The prefix of the file to save the cmesh to.
+ */
 int
 t8_cmesh_save (const t8_cmesh_t cmesh, const char *fileprefix)
 {
