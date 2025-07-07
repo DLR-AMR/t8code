@@ -828,9 +828,11 @@ t8_cmesh_debug_print_trees (const t8_cmesh_t cmesh, sc_MPI_Comm comm);
  * bounds[5] = z_max
  * 
  * \param [in] cmesh    The cmesh to be considered.
- * \param [out] bounds  The bounding box of the cmesh.
+ * \param [out] bounds  The bounding box of the cmesh. If the box is flat (for quads for example, z_min == z_max)
+ *
+ * \return             True if the computation was successful, false if the cmesh is empty.
  */
-void
+int
 t8_cmesh_get_local_bounding_box (const t8_cmesh_t cmesh, double bounds[6]);
 T8_EXTERN_C_END ();
 

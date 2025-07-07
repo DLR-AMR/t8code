@@ -39,8 +39,9 @@ on:
         description: 'Build type (Release/Debug)'
       TEST_LEVEL:
         required: true
-        type: number
-        description: 'Test level used for configuring (0 for full tests, 1 for less thorough tests, 2 for minimal tests)'
+        type: string
+        description: 'Test level used for configuring (T8_TEST_LEVEL_FULL, T8_TEST_LEVEL_MEDIUM, or T8_TEST_LEVEL_BASIC)'
+        default: 'T8_TEST_LEVEL_FULL'
     secrets:
       CODE_COV:
         required: true
@@ -87,7 +88,6 @@ jobs:
 #
     # Build config vars
     - name: Set test level
-      if: ${{ inputs.TEST_LEVEL != 0 }}
       run: export TEST_LEVEL_FLAG="-DT8CODE_TEST_LEVEL=${{ inputs.TEST_LEVEL }}"
            && echo TEST_LEVEL_FLAG="$TEST_LEVEL_FLAG" >> $GITHUB_ENV
     - name: build config variables

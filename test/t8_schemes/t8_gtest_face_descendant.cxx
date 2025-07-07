@@ -69,7 +69,7 @@ class class_descendant: public TestDFS {
 
     const int level = scheme->element_get_level (eclass, element);
     const int num_faces = scheme->element_get_num_faces (eclass, element);
-#if T8CODE_TEST_LEVEL == 0
+#if T8_TEST_LEVEL_INT == 0
     const int final_level = scheme->get_maxlevel (eclass);
 #else
     const int final_level = level + additional_test_lvl;
@@ -106,12 +106,12 @@ class class_descendant: public TestDFS {
     scheme->element_destroy (eclass, 1, &scheme_face_desc);
     dfs_test_teardown ();
   }
-#if T8CODE_TEST_LEVEL == 0
+#if T8_TEST_LEVEL_INT == 0
   int additional_test_lvl
     = 3;  // For level 0 additional_test_lvl is unused and we always test up to the maximum possible refinement level.
-#elif T8CODE_TEST_LEVEL == 1
+#elif T8_TEST_LEVEL_INT == 1
   int additional_test_lvl = 2;
-#elif T8CODE_TEST_LEVEL == 2
+#elif T8_TEST_LEVEL_INT == 2
   int additional_test_lvl = 1;
 #endif
   t8_element_t *manual_face_desc;
@@ -121,7 +121,7 @@ class class_descendant: public TestDFS {
 TEST_P (class_descendant, t8_check_face_desc)
 {
 
-#if T8CODE_TEST_LEVEL >= 1
+#if T8_TEST_LEVEL_INT >= 1
   const int maxlvl = 3;
 #else
   const int maxlvl = 5;

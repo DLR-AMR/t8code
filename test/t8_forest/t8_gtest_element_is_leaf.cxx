@@ -37,7 +37,7 @@
 
 /* Maximum uniform level for forest. */
 
-#if T8CODE_TEST_LEVEL >= 1
+#if T8_TEST_LEVEL_INT >= 1
 #define T8_IS_LEAF_MAX_LVL 3
 #else
 #define T8_IS_LEAF_MAX_LVL 4
