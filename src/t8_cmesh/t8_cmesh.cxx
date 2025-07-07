@@ -2057,8 +2057,10 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
 
     /* We know: Lowest process and highest process we need to send trees to
        Tree0 Tree1         TreeN
-       | ---- | --- | .... | --- | Number_of_trees
+       | ---- | --- | .... | --- |
        send_first                 send_last
+
+       This offset array is num_procs_we_send_to + 1 long. The last entry is the number of trees of the process.
 
        We need the information: Given a process in range, in which tree do its elements start
        and in which tree do they end.
