@@ -55,8 +55,7 @@ t8_boundary_node_geom_data_map::compute_geom_data_map ()
 {
   TopExp_Explorer dora;
   t8_cmesh_vertex_conn_vertex_to_tree vtt;
-  std::unordered_map<t8_gloidx_t, t8_geom_data> boundary_node_geom_data_map;
-  int tag_count = 0;
+  int tag_count = 1;
   for (dora.Init (shape, TopAbs_VERTEX); dora.More (); dora.Next ()) {
     const gp_Pnt point = BRep_Tool::Pnt (TopoDS::Vertex (dora.Current ()));
     const double cad_x_val = point.X ();
@@ -94,7 +93,7 @@ t8_boundary_node_geom_data_map::compute_geom_data_map ()
     }
   }
 
-  tag_count = 0;
+  tag_count = 1;
   for (dora.Init (shape, TopAbs_EDGE); dora.More (); dora.Next ()) {
     Standard_Real first, last;
     if (!BRep_Tool::Degenerated (TopoDS::Edge (dora.Current ()))) {
@@ -125,7 +124,7 @@ t8_boundary_node_geom_data_map::compute_geom_data_map ()
     }
   }
 
-  tag_count = 0;
+  tag_count = 1;
   for (dora.Init (shape, TopAbs_FACE); dora.More (); dora.Next ()) {
     Handle (Geom_Surface) surfer = BRep_Tool::Surface (TopoDS::Face (dora.Current ()));
     for (auto iter = boundary_node_list.begin (); iter != boundary_node_list.end (); ++iter) {
