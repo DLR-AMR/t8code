@@ -224,7 +224,7 @@ t8_recursive_nca_check (t8_element_t *check_nca, t8_element_t *desc_a, t8_elemen
  * output of element_get_nca.*/
 TEST_P (nca, recursive_check)
 {
-#if T8CODE_TEST_LEVEL >= 2
+#if T8_TEST_LEVEL_INT >= 2
   const int recursion_depth = 2;
 #else
   const int recursion_depth = 3;
@@ -259,13 +259,13 @@ TEST_P (nca, recursive_check)
  * Be careful when increasing the max_lvl, as it increases the number of test-cases exponentially. */
 TEST_P (nca, recursive_check_higher_level)
 {
-#if T8CODE_TEST_LEVEL >= 2
+#if T8_TEST_LEVEL_INT >= 2
   const int start_level = 2;
 #else
   const int start_level = 3;
 #endif
 
-#if T8CODE_TEST_LEVEL >= 1
+#if T8_TEST_LEVEL_INT >= 1
   const int max_lvl = scheme->get_maxlevel (tree_class) / 2;
 #else
   const int max_lvl = scheme->get_maxlevel (tree_class);

@@ -160,7 +160,7 @@ TEST_P (forest_search, test_search_one_query_matches_all)
 
   t8_forest_unref (&forest);
 }
-#if T8CODE_TEST_LEVEL >= 2
+#if T8_TEST_LEVEL_INT >= 2
 const int maxlvl = 5;
 #else
 const int maxlvl = 6;
