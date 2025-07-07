@@ -1807,7 +1807,7 @@ t8_cmesh_uniform_bounds_from_unpartioned (const t8_cmesh_t cmesh, const t8_gloid
  * \param[in, out] send_requests The array of send requests.
  * \param[in, out] send_buffer The buffer to send the message.
  * \param[in] current_pos_in_send_buffer The current position in the send buffer.
- * \param[in] first_or_last_element_in_tree_index_of_iproc The tree-local id of the first/last element in the tree.
+ * \param[in] first_or_last_element_in_tree_index_of_iproc The tree-local id of the first/last element in the tree. If we send an end message, this is the tree-local index of the last tree on this process.
  * \param[in, out] first_or_last_local_tree The global id of the first/last tree of the current process.
  * \param[in, out] first_tree_shared The first tree shared flag. Only used if we send the start message. Set to NULL if not used. 
  * \param[in, out] child_in_tree_end_or_begin The tree-local id of the first/last element in the tree. Set to NULL if not used.
