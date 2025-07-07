@@ -168,7 +168,7 @@ t8_dtri_ancestor (const t8_dtri_t *t, int level, t8_dtri_t *ancestor)
   t8_dtri_coord_t delta_z, diff_xz, diff_yz;
   t8_dtet_type_t possible_types[6] = { 1, 1, 1, 1, 1, 1 };
   int i;
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   int set_type = 0;
 #endif
 #endif /* T8_DTRI_TO_DTET */
@@ -273,7 +273,7 @@ t8_dtri_ancestor (const t8_dtri_t *t, int level, t8_dtri_t *ancestor)
     T8_ASSERT (possible_types[i] == 0 || possible_types[i] == 1);
     if (possible_types[i] == 1) {
       ancestor->type = i;
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
       T8_ASSERT (set_type != 1);
       set_type = 1;
 #endif
@@ -511,7 +511,7 @@ t8_dtri_compute_all_coords (const t8_dtri_t *elem, t8_dtri_coord_t coordinates[T
   coordinates[2][ei] += h;
   coordinates[2][ej] += h;
 #endif
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   /* We check whether the results are the same as with the
    * t8_dtri_compute_integer_coords function.
    */
@@ -609,7 +609,7 @@ t8_dtri_childrenpv (const t8_dtri_t *t, t8_dtri_t *c[T8_DTRI_CHILDREN])
 #endif
     c[i]->type = t8_dtri_type_of_child[t_type][Bey_cid];
     c[i]->level = level;
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
     {
       /* We check whether the child computed here equals to the child
        * computed in the t8_dtri_child function. */
@@ -794,7 +794,8 @@ t8_dtri_nearest_common_ancestor (const t8_dtri_t *t1, const t8_dtri_t *t2, t8_dt
 }
 
 void
-t8_dtri_children_at_face (const t8_dtri_t *tri, int face, t8_dtri_t *children[], int num_children, int *child_indices)
+t8_dtri_children_at_face (const t8_dtri_t *tri, int face, t8_dtri_t *children[],
+                          __attribute__ ((unused)) int num_children, int *child_indices)
 {
   int child_ids_local[T8_DTRI_FACE_CHILDREN], i, *child_ids;
 
@@ -830,7 +831,7 @@ t8_dtri_children_at_face (const t8_dtri_t *tri, int face, t8_dtri_t *children[],
 }
 
 int
-t8_dtri_tree_face (t8_dtri_t *t, int face)
+t8_dtri_tree_face (__attribute__ ((unused)) t8_dtri_t *t, int face)
 {
   T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
   /* TODO: Assert if boundary */
@@ -869,7 +870,7 @@ t8_dtri_tree_face (t8_dtri_t *t, int face)
 }
 
 int
-t8_dtri_root_face_to_face (t8_dtri_t *t, int root_face)
+t8_dtri_root_face_to_face (__attribute__ ((unused)) t8_dtri_t *t, int root_face)
 {
   T8_ASSERT (0 <= root_face && root_face < T8_DTRI_FACES);
 #ifndef T8_DTRI_TO_DTET
@@ -910,7 +911,8 @@ t8_dtri_root_face_to_face (t8_dtri_t *t, int root_face)
 }
 
 int
-t8_dtri_face_child_face (const t8_dtri_t *triangle, int face, int face_child)
+t8_dtri_face_child_face (__attribute__ ((unused)) const t8_dtri_t *triangle, int face,
+                         __attribute__ ((unused)) int face_child)
 {
   T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
   T8_ASSERT (0 <= face_child && face_child < T8_DTRI_FACE_CHILDREN);
@@ -1125,7 +1127,7 @@ t8_dtri_is_inside_root (t8_dtri_t *t)
               ((t->x == t->y && t->y == t->z) ? t->type == 0 : 1) &&
 #endif
               1;
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   /* Check if is_inside gives the same result as is_ancestor for the root element. */
   {
     t8_dtri_t root;
@@ -1456,7 +1458,7 @@ t8_dtri_init_linear_id_with_level (t8_dtri_t *t, t8_linearidx_t id, const int st
   t8_linearidx_t local_index;
   t8_dtri_cube_id_t cid;
   t8_dtri_type_t type;
-  T8_ASSERT (0 <= id && id <= ((t8_linearidx_t) 1) << (T8_DTRI_DIM * end_level));
+  T8_ASSERT (id <= ((t8_linearidx_t) 1) << (T8_DTRI_DIM * end_level));
   /*Ensure, that the function is called with a valid element */
   T8_ASSERT (t->level == start_level);
   T8_ASSERT (t8_dtri_is_valid (t));
@@ -1490,7 +1492,7 @@ t8_dtri_init_linear_id (t8_dtri_t *t, t8_linearidx_t id, int level)
   t8_linearidx_t local_index;
   t8_dtri_cube_id_t cid;
   t8_dtri_type_t type;
-  T8_ASSERT (0 <= id && id <= ((t8_linearidx_t) 1) << (T8_DTRI_DIM * level));
+  T8_ASSERT (id <= ((t8_linearidx_t) 1) << (T8_DTRI_DIM * level));
 
   t->level = level;
   t->x = 0;

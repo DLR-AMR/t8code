@@ -54,33 +54,6 @@ typedef struct
   int max_level;       /* A max level that is not refined further, see -L argument */
 } adapt_data_t;
 
-#if 0
-/* TODO: deprecated. was replaced by t8_common_midpoint. */
-static void
-t8_anchor_element (t8_forest_t forest, t8_locidx_t which_tree,
-                   const t8_scheme *scheme, t8_element_t *element,
-                   double elem_anchor_f[3])
-{
-  double             *tree_vertices;
-
-  tree_vertices = t8_cmesh_get_tree_vertices (t8_forest_get_cmesh (forest),
-                                              t8_forest_ltreeid_to_cmesh_ltreeid
-                                              (forest, which_tree));
-
-  t8_forest_element_coordinate (forest, which_tree, element, tree_vertices,
-                                0, elem_anchor_f);
-#if 0
-  /* get the element anchor node */
-  scheme->t8_element_anchor (element, elem_anchor);
-  maxlevel = scheme->t8_element_maxlevel ();
-  for (i = 0; i < 3; i++) {
-    /* Calculate the anchor coordinate in [0,1]^3 */
-    elem_anchor_f[i] = elem_anchor[i] / (1 << maxlevel);
-  }
-#endif
-}
-#endif
-
 /* refine the forest in a band, given by a plane E and two constants
  * c_min, c_max. We refine the cells in the band c_min*E, c_max*E */
 static int
@@ -103,7 +76,7 @@ t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tr
   t8_forest_element_centroid (forest_from, which_tree, elements[0], elem_midpoint.data ());
 
   /* Calculate elem_midpoint - c_min n */
-  t8_axy (elem_midpoint, normal, adapt_data->c_min);
+  t8_axpy (normal, elem_midpoint, -adapt_data->c_min);
 
   /* The purpose of the factor C*h is that the levels get smaller, the
    * closer we get to the interface. We refine a cell if it is at most
@@ -113,7 +86,7 @@ t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tr
      * check if it is to the left of c_max*E */
 
     /* set elem_midpoint to the original anchor - c_max*normal */
-    t8_axy (elem_midpoint, normal, adapt_data->c_max - adapt_data->c_min);
+    t8_axpy (normal, elem_midpoint, adapt_data->c_min - adapt_data->c_max);
     if (t8_dot (elem_midpoint, normal) <= 0) {
       if (level < max_level) {
         /* We do refine if level smaller 1+base level and the anchor is

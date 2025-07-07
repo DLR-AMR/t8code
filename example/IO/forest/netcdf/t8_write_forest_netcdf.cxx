@@ -22,7 +22,7 @@
 
 #include <t8.h>
 #include <netcdf.h>
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
 #include <netcdf_par.h>
 #else
 /* Normally defined in 'netcdf_par.h' */
@@ -139,7 +139,7 @@ t8_example_time_netcdf_writing_operation ([[maybe_unused]] t8_forest_t forest, [
                                           [[maybe_unused]] const char *title, [[maybe_unused]] int num_additional_vars,
                                           [[maybe_unused]] t8_netcdf_variable_t *ext_vars[])
 {
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   double start_time, end_time, duration, global;
   int retval;
 
@@ -202,13 +202,13 @@ t8_example_compare_performance_netcdf_var_properties (sc_MPI_Comm comm, int fore
   if (adapt_forest) {
     forest = t8_example_netcdf_adapt (forest);
   }
-  num_elements = t8_forest_get_local_num_elements (forest);
+  num_elements = t8_forest_get_local_num_leaf_elements (forest);
   t8_productionf ("Number of process-local elements: %ld\n", static_cast<long> (num_elements));
 
   /* If additional data should be written to the netCDF file, the two variables are created in the following section */
   if (with_additional_data) {
     /* Get the number of process-local elements */
-    num_elements = t8_forest_get_local_num_elements (forest);
+    num_elements = t8_forest_get_local_num_leaf_elements (forest);
     /** Create an integer netCDF variables **/
     /* Create an 64-bit Integer variable (j* MPI_Rank) which holds the rank each element lays on multiplied with j */
     var_rank = T8_ALLOC (t8_nc_int64_t, num_elements);
@@ -244,13 +244,13 @@ t8_example_compare_performance_netcdf_var_properties (sc_MPI_Comm comm, int fore
   }
 
   t8_global_productionf ("The uniformly refined forest (refinement level = %d) has %ld global elements.\n",
-                         forest_refinement_level, static_cast<long> (t8_forest_get_global_num_elements (forest)));
+                         forest_refinement_level, static_cast<long> (t8_forest_get_global_num_leaf_elements (forest)));
 
   t8_global_productionf (
     "The different netCDF variable storage patterns and mpi variable access patterns are getting tested/timed...\n");
 
   /* First Case */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   t8_global_productionf ("Variable-Storage: NC_CHUNKED, Variable-Access: NC_COLLECTIVE:\n");
 #endif
   t8_example_time_netcdf_writing_operation (forest, comm, NC_CHUNKED, NC_COLLECTIVE,
@@ -258,7 +258,7 @@ t8_example_compare_performance_netcdf_var_properties (sc_MPI_Comm comm, int fore
                                             ext_vars);
 
   /* Second Case */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   t8_global_productionf ("Variable-Storage: NC_CHUNKED, Variable-Access: NC_INDEPENDENT:\n");
 #endif
   t8_example_time_netcdf_writing_operation (forest, comm, NC_CHUNKED, NC_INDEPENDENT,
@@ -266,7 +266,7 @@ t8_example_compare_performance_netcdf_var_properties (sc_MPI_Comm comm, int fore
                                             ext_vars);
 
   /* Third Case */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   t8_global_productionf ("Variable-Storage: NC_CONTIGUOUS, Variable-Access: NC_COLLECTIVE:\n");
 #endif
   t8_example_time_netcdf_writing_operation (forest, comm, NC_CONTIGUOUS, NC_COLLECTIVE,
@@ -274,7 +274,7 @@ t8_example_compare_performance_netcdf_var_properties (sc_MPI_Comm comm, int fore
                                             ext_vars);
 
   /* Fourth Case */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   t8_global_productionf ("Variable-Storage: NC_CONTIGUOUS, Variable-Access: NC_INDEPENDENT:\n");
 #endif
   t8_example_time_netcdf_writing_operation (forest, comm, NC_CONTIGUOUS, NC_INDEPENDENT,
@@ -302,7 +302,7 @@ t8_example_compare_performance_netcdf_var_properties (sc_MPI_Comm comm, int fore
   /* Destroy the forest */
   t8_forest_unref (&forest);
 
-#if !T8_WITH_NETCDF_PAR
+#if !T8_ENABLE_NETCDF_PAR
   t8_global_productionf ("In order to execute the function 't8_example_compare_performance_netcdf_var_properties' "
                          "properly, parallel netCDF routines have to be accessible.\n");
 #endif
@@ -359,7 +359,7 @@ t8_example_netcdf_write_forest (sc_MPI_Comm comm, int forest_refinement_level, i
   }
 
   /* Print out the number of local elements of each process */
-  num_elements = t8_forest_get_local_num_elements (forest);
+  num_elements = t8_forest_get_local_num_leaf_elements (forest);
   t8_debugf ("[t8] Rank %d has %ld elements\n", mpirank, static_cast<long> (num_elements));
 
   /* *Example user-defined NetCDF variable* */

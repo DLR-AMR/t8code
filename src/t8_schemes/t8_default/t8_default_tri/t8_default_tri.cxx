@@ -158,7 +158,7 @@ t8_default_scheme_tri::element_get_children (const t8_element_t *elem, [[maybe_u
                                              t8_element_t *c[]) const
 {
   T8_ASSERT (element_is_valid (elem));
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   {
     for (int j = 0; j < length; j++) {
       T8_ASSERT (element_is_valid (c[j]));
@@ -186,7 +186,7 @@ t8_default_scheme_tri::element_get_ancestor_id (const t8_element_t *elem, int le
 int
 t8_default_scheme_tri::elements_are_family (t8_element_t *const *fam) const
 {
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   {
     for (int j = 0; j < T8_DTRI_CHILDREN; j++) {
       T8_ASSERT (element_is_valid (fam[j]));
@@ -224,7 +224,7 @@ t8_default_scheme_tri::element_get_children_at_face (const t8_element_t *elem, i
   t8_dtri_t **c = (t8_dtri_t **) children;
 
   T8_ASSERT (element_is_valid (elem));
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   {
     for (int j = 0; j < num_children; j++) {
       T8_ASSERT (element_is_valid (children[j]));
@@ -418,7 +418,7 @@ t8_default_scheme_tri::element_set_linear_id (t8_element_t *elem, int level, t8_
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (0 <= level && level <= T8_DTRI_MAXLEVEL);
-  T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << (2 * level));
+  T8_ASSERT (id < ((t8_linearidx_t) 1) << (2 * level));
 
   t8_dtri_init_linear_id ((t8_dtri_t *) elem, id, level);
 }
@@ -501,7 +501,7 @@ t8_default_scheme_tri::refines_irregular () const
   return 0;
 }
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 int
 t8_default_scheme_tri::element_is_valid (const t8_element_t *t) const
 {
@@ -525,7 +525,7 @@ t8_default_scheme_tri::element_new (int length, t8_element_t **elem) const
   t8_default_scheme_common::element_new (length, elem);
 
   /* in debug mode, set sensible default values. */
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   {
     int i;
     for (i = 0; i < length; i++) {
@@ -538,7 +538,7 @@ t8_default_scheme_tri::element_new (int length, t8_element_t **elem) const
 void
 t8_default_scheme_tri::element_init ([[maybe_unused]] int length, [[maybe_unused]] t8_element_t *elem) const
 {
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   t8_dtri_t *tris = (t8_dtri_t *) elem;
   for (int i = 0; i < length; i++) {
     t8_dtri_init (tris + i);

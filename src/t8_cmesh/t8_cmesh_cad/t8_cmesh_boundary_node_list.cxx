@@ -30,7 +30,7 @@
 #include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_cad/t8_cmesh_boundary_node_list.hxx>
-#include <t8_cmesh/t8_cmesh_vertex_connectivity.hxx>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
 
 t8_boundary_node_list::t8_boundary_node_list (t8_cmesh_t cmesh_in): cmesh (cmesh_in)
 {
@@ -49,13 +49,11 @@ t8_boundary_node_list::compute_boundary_node ()
     int num_vertices = t8_eclass_num_vertices[eclass];
 
     const t8_gloidx_t *global_vertices_of_tree
-      = cmesh->vertex_connectivity->get_global_vertices (cmesh, i_tree, num_vertices);
+      = cmesh->vertex_connectivity->get_global_vertices_of_tree (cmesh, i_tree, num_vertices);
     for (int i_face = 0; i_face < num_faces; i_face++) {
       const int vertex_per_face = t8_eclass_num_vertices[t8_eclass_face_types[eclass][i_face]];
 
       if (t8_cmesh_tree_face_is_boundary (cmesh, i_tree, i_face)) {
-        /* The tree is connected to itself at the same face.
-        * Thus this is a domain boundary */
         for (int count = 0; count < vertex_per_face; count++) {
           boundary_node_list.insert (global_vertices_of_tree[t8_face_vertex_to_tree_vertex[eclass][i_face][count]]);
         }

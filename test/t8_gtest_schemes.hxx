@@ -24,7 +24,7 @@
 #define T8_GTEST_SCHEMES_HXX
 
 #include <t8_schemes/t8_default/t8_default.hxx>
-#include <t8_schemes/t8_scheme_builder.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <gtest/gtest.h>
 
 const t8_scheme *
@@ -48,8 +48,10 @@ auto print_all_schemes = [] (const testing::TestParamInfo<std::tuple<int, t8_ecl
          + t8_eclass_to_string[std::get<1> (info.param)];
 };
 
-#define AllSchemes ::testing::Combine (::testing::Range (0, 2), ::testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT))
-#define AllSchemeCollections ::testing::Values (0)
-#define DefaultScheme ::testing::Combine (::testing::Values (0), ::testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT))
+auto print_scheme
+  = [] (const testing::TestParamInfo<int> &info) { return std::string (t8_scheme_to_string[info.param]); };
+
+#define AllSchemeCollections ::testing::Range (0, 2)
+#define AllSchemes ::testing::Combine (AllSchemeCollections, ::testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT))
 
 #endif /* T8_GTEST_SCHEMES_HXX */

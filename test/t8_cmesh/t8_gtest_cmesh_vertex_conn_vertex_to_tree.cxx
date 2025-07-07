@@ -23,7 +23,7 @@
 #include <gtest/gtest.h>
 #include <test/t8_gtest_macros.hxx>
 #include <t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
 #include <test/t8_cmesh_generator/t8_cmesh_example_sets.hxx>
 
 /* In this file we test the t8_cmesh_vertex_conn_vertex_to_tree
@@ -77,9 +77,10 @@ class t8_test_cmesh_vertex_conn_vtt: public testing::TestWithParam<cmesh_example
       /* loop over all vertices of this tree */
       for (int ivertex = 0; ivertex < num_tree_vertices; ++ivertex) {
         /* Set global id of this tree and this vertex to 1 */
+        t8_debugf ("Adding vertex %li to tree %i v %i\n", global_vertex_id, itree, ivertex);
         vtt_all_to_one.add_vertex_to_tree (cmesh, global_vertex_id, itree, ivertex);
         /* We assign a arbitrary but computable global id to this vertex.
-         * We comput the id to be (tree_index * vertex_index) mod num_local_trees + 1 */
+         * We compute the id to be (tree_index * vertex_index) mod num_local_trees + 1 */
         const t8_gloidx_t global_id = t8_compute_global_vertex_hash (itree, ivertex, num_local_trees);
         vtt.add_vertex_to_tree (cmesh, global_id, itree, ivertex);
       }

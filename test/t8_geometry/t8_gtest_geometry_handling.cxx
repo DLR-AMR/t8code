@@ -27,17 +27,20 @@
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
 #include <t8_cmesh.hxx>
+#include <t8_vtk/t8_vtk_writer.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
+#include <t8_cmesh/t8_cmesh_geometry.hxx>
 #include <t8_geometry/t8_geometry.h>
 #include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_examples.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.hxx>
-
+#if T8_ENABLE_OCC
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
+#endif
 /* In this file we collect tests for t8code's cmesh geometry module.
  * These tests are
  *  - test_geometry.test_geometry_handler_register: Tests the geometry_handler register and find interface.
@@ -57,9 +60,9 @@ TEST (test_geometry, test_geometry_handler_register)
 
   geometries.push_back (geom_handler.register_geometry<t8_geometry_linear> ());
   geometries.push_back (geom_handler.register_geometry<t8_geometry_zero> ());
-#if T8_WITH_OCC
+#if T8_ENABLE_OCC
   geometries.push_back (geom_handler.register_geometry<t8_geometry_cad> ());
-#endif /* T8_WITH_OCC */
+#endif /* T8_ENABLE_OCC */
   geometries.push_back (geom_handler.register_geometry<t8_geometry_analytic> ("analytic_geom"));
   geometries.push_back (geom_handler.register_geometry<t8_geometry_linear_axis_aligned> ());
   geometries.push_back (geom_handler.register_geometry<t8_geometry_lagrange> ());
@@ -93,11 +96,13 @@ TEST (test_geometry, test_geometry_handler_register)
   }
 
   /* Try to find a different geometry via the name. Must return nullptr. */
+  std::string random_name ("random_name34823412414");
   auto found_geom = geom_handler.get_geometry ("random_name34823412414");
   ASSERT_TRUE (found_geom == nullptr) << "Found a geometry that should not exist.";
 
   /* Try to find a different geometry via the hash. Must return nullptr. */
-  found_geom = geom_handler.get_geometry (std::hash<std::string> {}("random_name34823412414"));
+  const t8_geometry_hash random_hash (std::hash<std::string> {}(random_name));
+  found_geom = geom_handler.get_geometry (random_hash);
   ASSERT_TRUE (found_geom == nullptr) << "Found a geometry that should not exist.";
 }
 
@@ -166,5 +171,29 @@ TEST (test_geometry, cmesh_geometry_unique)
     << "Could not find cmesh tree geometry.";
 
   /* clean-up */
+  t8_cmesh_destroy (&cmesh);
+}
+
+TEST (test_geometry, cmesh_no_geometry)
+{
+  /* Build a simple 1 tree cmesh with no geometry. */
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
+  t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
+
+  // Check that the geometry type for tree 0 is invalid
+  EXPECT_EQ (t8_geometry_get_type (cmesh, 0), T8_GEOMETRY_TYPE_INVALID);
+  // Check that the geometry hash corresponds to invalid geometry
+  const t8_geometry_hash hash = t8_cmesh_get_tree_geom_hash (cmesh, 0);
+  EXPECT_TRUE (t8_geometry_hash_is_null (hash));
+  // Check that we get nullptr when querying the geometry
+  const t8_geometry_c *should_be_null = t8_cmesh_get_tree_geometry (cmesh, 0);
+  EXPECT_EQ (should_be_null, nullptr);
+  // Output to calm the nerves of people looking at the logfiles.
+  t8_global_productionf ("We expect an error message about not writing the vtk file here.\n");
+  // Try to write vtk file and expect failure
+  EXPECT_FALSE (t8_cmesh_vtk_write_file (cmesh, "cmesh_vtk_file"));
+
   t8_cmesh_destroy (&cmesh);
 }

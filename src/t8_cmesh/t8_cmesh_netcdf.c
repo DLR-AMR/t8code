@@ -34,7 +34,7 @@ These functions write a file in the netCDF-format which represents the given 2D-
     t8_global_productionf ("Error: %s\n", nc_strerror (e)); \
     exit (ERRCODE); \
   }
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
 #include <netcdf_par.h>
 #endif
 #include <t8_element_shape.h>
@@ -165,7 +165,7 @@ t8_cmesh_write_netcdf_coordinate_variables (t8_cmesh_netcdf_context_t *context,
     ERR (retval);
   }
   /* Define whether an independent or collective variable access is used */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   if ((retval = nc_var_par_access (context->ncid, context->var_node_x_id, context->netcdf_mpi_access))) {
     ERR (retval);
   }
@@ -201,7 +201,7 @@ t8_cmesh_write_netcdf_coordinate_variables (t8_cmesh_netcdf_context_t *context,
     ERR (retval);
   }
   /* Define whether an independent or collective variable access is used */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   if ((retval = nc_var_par_access (context->ncid, context->var_node_y_id, context->netcdf_mpi_access))) {
     ERR (retval);
   }
@@ -237,7 +237,7 @@ t8_cmesh_write_netcdf_coordinate_variables (t8_cmesh_netcdf_context_t *context,
     ERR (retval);
   }
   /* Define whether an independent or collective variable access is used */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   if ((retval = nc_var_par_access (context->ncid, context->var_node_z_id, context->netcdf_mpi_access))) {
     ERR (retval);
   }
@@ -358,7 +358,7 @@ t8_cmesh_write_netcdf_variables (t8_cmesh_netcdf_context_t *context,
     ERR (retval);
   }
   /* Define whether an independent or collective variable access is used */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   if ((retval = nc_var_par_access (context->ncid, context->var_elem_types_id, context->netcdf_mpi_access))) {
     ERR (retval);
   }
@@ -399,7 +399,7 @@ t8_cmesh_write_netcdf_variables (t8_cmesh_netcdf_context_t *context,
     ERR (retval);
   }
   /* Define whether an independent or collective variable access is used */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   if ((retval = nc_var_par_access (context->ncid, context->var_elem_tree_id, context->netcdf_mpi_access))) {
     ERR (retval);
   }
@@ -439,7 +439,7 @@ t8_cmesh_write_netcdf_variables (t8_cmesh_netcdf_context_t *context,
     ERR (retval);
   }
   /* Define whether an independent or collective variable access is used */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   if ((retval = nc_var_par_access (context->ncid, context->var_elem_nodes_id, context->netcdf_mpi_access))) {
     ERR (retval);
   }
@@ -471,8 +471,8 @@ t8_cmesh_write_netcdf_variables (t8_cmesh_netcdf_context_t *context,
 /* Declare the user-defined elementwise NetCDF-variables which were passed to function. */
 static void
 t8_cmesh_write_user_netcdf_vars (t8_cmesh_netcdf_context_t *context,
-                                 t8_cmesh_netcdf_ugrid_namespace_t *namespace_context, int num_extern_netcdf_vars,
-                                 t8_netcdf_variable_t *ext_variables[], sc_MPI_Comm comm)
+                                 __attribute__ ((unused)) t8_cmesh_netcdf_ugrid_namespace_t *namespace_context,
+                                 int num_extern_netcdf_vars, t8_netcdf_variable_t *ext_variables[], sc_MPI_Comm comm)
 {
   /* Check whether user-defined variables should be written */
   if (num_extern_netcdf_vars > 0 && ext_variables != NULL) {
@@ -516,7 +516,7 @@ t8_cmesh_write_user_netcdf_vars (t8_cmesh_netcdf_context_t *context,
           ERR (retval);
         }
         /* Define whether an independent or collective variable access is used */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
         if ((retval
              = nc_var_par_access (context->ncid, ext_variables[i]->var_user_dimid, context->netcdf_mpi_access))) {
           ERR (retval);
@@ -714,7 +714,7 @@ t8_cmesh_write_netcdf_data (t8_cmesh_t cmesh, t8_cmesh_netcdf_context_t *context
 /* It is only possible to write exactly one value per element per variable */
 static void
 t8_cmesh_write_user_netcdf_data (t8_cmesh_t cmesh, t8_cmesh_netcdf_context_t *context, int num_extern_netcdf_vars,
-                                 t8_netcdf_variable_t *ext_variables[], sc_MPI_Comm comm)
+                                 t8_netcdf_variable_t *ext_variables[], __attribute__ ((unused)) sc_MPI_Comm comm)
 {
   if (num_extern_netcdf_vars > 0 && ext_variables != NULL) {
     int retval, i;
@@ -776,7 +776,7 @@ t8_cmesh_write_netcdf_file (t8_cmesh_t cmesh, t8_cmesh_netcdf_context_t *context
 
   /* Create the NetCDF file, the NC_CLOBBER parameter tells netCDF to overwrite this file, if it already exists. Leaves the file in 'define-mode'. */
   /* Since NetCDF version 4.6.2 NC_MPIIO seems to be redundant/not necessary */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   if ((retval = nc_create_par (context->filename, NC_CLOBBER | NC_NETCDF4 | NC_MPIIO, comm, sc_MPI_INFO_NULL,
                                &context->ncid))) {
     ERR (retval);
@@ -894,7 +894,7 @@ t8_cmesh_write_netcdf (t8_cmesh_t cmesh, const char *file_prefix, const char *fi
   context.start_index = 0;
   context.convention = "UGRID v1.0";
   /* Set the netCDF per variable storage and mpi-access patterns (only if parallel netCDF routines are accessible) */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   context.netcdf_var_storage_mode = NC_CONTIGUOUS;
   context.netcdf_mpi_access = NC_INDEPENDENT;
 #endif

@@ -22,11 +22,11 @@
 
 #include <t8_vtk/t8_vtk_writer.hxx>
 
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
 #include <vtkUnstructuredGrid.h>
 #endif
 
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
 /**
  * \brief template specialization for forests. 
  * 
@@ -34,7 +34,7 @@
 template <>
 void
 vtk_writer<t8_forest_t>::t8_grid_tree_to_vtk_cells (
-  const t8_forest_t forest, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
+  const t8_forest_t forest, [[maybe_unused]] vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
   vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_treeid, vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_mpirank,
   vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_level, vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_element_id,
   vtkSmartPointer<vtkCellArray> cellArray, vtkSmartPointer<vtkPoints> points, int *cellTypes,
@@ -43,9 +43,9 @@ vtk_writer<t8_forest_t>::t8_grid_tree_to_vtk_cells (
 {
   /* For both ghosts and pure-local trees iterate over all elements and translate them into a vtk cell. */
   if (ghosts) {
-    const t8_locidx_t num_ghosts = t8_forest_ghost_tree_num_elements (forest, itree);
+    const t8_locidx_t num_ghosts = t8_forest_ghost_tree_num_leaf_elements (forest, itree);
     for (t8_locidx_t ielem_ghost = 0; ielem_ghost < num_ghosts; ielem_ghost++) {
-      const t8_element_t *element = t8_forest_ghost_get_element (forest, itree, ielem_ghost);
+      const t8_element_t *element = t8_forest_ghost_get_leaf_element (forest, itree, ielem_ghost);
       this->t8_grid_element_to_vtk_cell (forest, element, itree + num_local_trees, offset, true, *elem_id, point_id,
                                          cellTypes, points, cellArray, vtk_treeid, vtk_mpirank, vtk_level,
                                          vtk_element_id);
@@ -53,10 +53,10 @@ vtk_writer<t8_forest_t>::t8_grid_tree_to_vtk_cells (
     }
   }
   else {
-    const t8_locidx_t elems_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+    const t8_locidx_t elems_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
     /* We iterate over all elements in the tree */
     for (t8_locidx_t ielement = 0; ielement < elems_in_tree; ielement++) {
-      const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      const t8_element_t *element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       T8_ASSERT (element != NULL);
       this->t8_grid_element_to_vtk_cell (forest, element, itree, offset, true, *elem_id, point_id, cellTypes, points,
                                          cellArray, vtk_treeid, vtk_mpirank, vtk_level, vtk_element_id);
@@ -74,12 +74,12 @@ vtk_writer<t8_forest_t>::t8_grid_tree_to_vtk_cells (
 template <>
 void
 vtk_writer<t8_cmesh_t>::t8_grid_tree_to_vtk_cells (
-  const t8_cmesh_t cmesh, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
+  const t8_cmesh_t cmesh, [[maybe_unused]] vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
   vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_treeid, vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_mpirank,
   vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_level, vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_element_id,
   vtkSmartPointer<vtkCellArray> cellArray, vtkSmartPointer<vtkPoints> points, int *cellTypes,
-  const t8_locidx_t num_local_trees, t8_gloidx_t *elem_id, long int *point_id, const t8_gloidx_t offset,
-  const bool ghosts, const t8_locidx_t itree)
+  [[maybe_unused]] const t8_locidx_t num_local_trees, t8_gloidx_t *elem_id, long int *point_id,
+  const t8_gloidx_t offset, const bool ghosts, const t8_locidx_t itree)
 {
   /* A cmesh does not have any further elements, we can call the translator directly. */
   this->t8_grid_element_to_vtk_cell (cmesh, NULL, itree, offset, ghosts, *elem_id, point_id, cellTypes, points,
@@ -87,7 +87,7 @@ vtk_writer<t8_cmesh_t>::t8_grid_tree_to_vtk_cells (
   (*elem_id)++;
   return;
 }
-#endif /* T8_WITH_VTK */
+#endif /* T8_ENABLE_VTK */
 
 template <>
 bool
@@ -144,7 +144,7 @@ t8_cmesh_vtk_write_file (const t8_cmesh_t cmesh, const char *fileprefix)
   return writer.write_ASCII (cmesh);
 }
 
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
 void
 t8_forest_to_vtkUnstructuredGrid (const t8_forest_t forest, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
                                   const int write_treeid, const int write_mpirank, const int write_level,

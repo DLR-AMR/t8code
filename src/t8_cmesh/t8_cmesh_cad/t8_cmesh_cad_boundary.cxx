@@ -29,9 +29,9 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_cad/t8_cmesh_cad_boundary.hxx>
 #include <t8_cmesh/t8_cmesh_cad/t8_cmesh_boundary_node_list.hxx>
-#include <t8_cmesh/t8_cmesh_vertex_connectivity.hxx>
-#include <t8_cmesh/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
-#include <t8_cmesh/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
 #include <GeomAPI_ProjectPointOnCurve.hxx>
 #include <GeomAPI_ProjectPointOnSurf.hxx>
 #include <TopExp_Explorer.hxx>
