@@ -32,11 +32,30 @@ def configureDoxyfile(input_dir, output_dir):
     with open('../Doxyfile.in', 'r') as file :
         filedata = file.read()
 
-    filedata = filedata.replace('', input_dir)
-    filedata = filedata.replace('/localdata1/knap_da/t8code/test_build/doc', output_dir)
+    filedata = filedata.replace('@top_srcdir@', input_dir)
+    filedata = filedata.replace('@top_builddir@', output_dir)
+    filedata = filedata.replace('@PACKAGE_PREFIX@', 't8code')
+    filedata = filedata.replace('@PACKAGE_NAME@', 't8code')
+    filedata = filedata.replace('@VERSION@', '4.0.0')
 
     with open('../Doxyfile', 'w') as file:
         file.write(filedata)
+
+    # go to the doc directory
+    doc_dir = input_dir + '/doc'
+    os.chdir(doc_dir)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    if not os.path.exists(output_dir + '/xml'):
+        os.makedirs(output_dir + '/xml')
+    if not os.path.exists(output_dir + '/html'):
+        os.makedirs(output_dir + '/html')
+    if not os.path.exists(output_dir + '/latex'):
+        os.makedirs(output_dir + '/latex')
+    # Run doxygen
+    subprocess.call('doxygen Doxyfile', shell=True)
+
+    
 
 # Check if we're running on Read the Docs' servers
 read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
@@ -48,7 +67,7 @@ read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
 breathe_projects = {}
 
 if read_the_docs_build:
-    input_dir = '../../src'
+    input_dir = '../../'
     output_dir = 'build'
     configureDoxyfile(input_dir, output_dir)
     subprocess.call('doxygen', shell=True)
