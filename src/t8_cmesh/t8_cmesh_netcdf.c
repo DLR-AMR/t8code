@@ -43,7 +43,34 @@ These functions write a file in the netCDF-format which represents the given 2D-
 #include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_schemes/t8_scheme.h>
 
-/* Contains all Variables used in order to work with the NetCDF-File */
+/** Contains all Variables used in order to work with the NetCDF-File 
+ * \var filename The name of the NetCDF-File to be read
+ * \var filetitle The title of the NetCDF-File
+ * \var dim The dimension of the cmesh (2D or 3D)
+ * \var nMesh_elem The number of elements in the cmesh
+ * \var nMesh_node The number of nodes in the cmesh
+ * \var nMaxMesh_elem_nodes The maximum number of nodes per element in the cmesh
+ * \var nMesh_local_node The number of local nodes in the cmesh
+ * \var nMesh_elem_dimid The NetCDF-dimension id for the number of elements
+ * \var nMaxMesh_elem_nodes_dimid The NetCDF-dimension id for the maximum number of nodes per element
+ * \var nMesh_node_dimid The NetCDF-dimension id for the number of nodes
+ * \var ncid The NetCDF-file id
+ * \var var_elem_tree_id The NetCDF-variable id for the element tree id
+ * \var var_elem_types_id The NetCDF-variable id for the element types
+ * \var var_elem_nodes_id The NetCDF-variable id for the element nodes
+ * \var var_mesh_id The NetCDF-variable id for the mesh
+ * \var var_node_x_id The NetCDF-variable id for the x-coordinates of the nodes
+ * \var var_node_y_id The NetCDF-variable id for the y-coordinates of the nodes
+ * \var var_node_z_id The NetCDF-variable id for the z-coordinates of the nodes
+ * \var dimids An array containing two NetCDF-dimensions in order to declare two-dimensional NetCDF-variables
+ * \var fillvalue32 The fill value for 32-bit integer variables
+ * \var fillvalue64 The fill value for 64-bit integer variables
+ * \var start_index The start index for NetCDF-variables
+ * \var convention The NetCDF-convention used (e.g., "UGRID")
+ * \var netcdf_var_storage_mode The storage mode for NetCDF-variables (e.g., "chunked")
+ * \var netcdf_mpi_access The MPI-access mode for NetCDF (e.g., "MPI-IO")
+ * \var old_fill_mode The old NetCDF-FillMode if it gets changed
+*/
 typedef struct
 {
   char *filename;
@@ -79,7 +106,22 @@ typedef struct
 
 } t8_cmesh_netcdf_context_t;
 
-/* Contains the Definitions for the NetCDF-dimensions/-variables/-attributes (vary whether a 2D or 3D Mesh will be outputted) */
+/** Contains the Definitions for the NetCDF-dimensions/-variables/-attributes (vary whether a 2D or 3D Mesh will be outputted) 
+ * \var mesh The name of the mesh
+ * \var dim_nMesh_node The name of the dimension for the number of nodes in the mesh
+ * \var dim_nMesh_elem The name of the dimension for the number of elements in the mesh
+ * \var dim_nMaxMesh_elem_nodes The name of the dimension for the maximum number of nodes per element in the mesh
+ * \var var_Mesh_node_x The name of the variable for the x-coordinates of the nodes in the mesh
+ * \var var_Mesh_node_y The name of the variable for the y-coordinates of the nodes in the mesh
+ * \var var_Mesh_node_z The name of the variable for the z-coordinates of the nodes in the mesh
+ * \var var_Mesh_elem_types The name of the variable for the element types in the mesh
+ * \var var_Mesh_elem_tree_id The name of the variable for the element tree id in the mesh
+ * \var var_Mesh_elem_node The name of the variable for the element nodes in the mesh
+ * \var att_elem_shape_type The name of the attribute for the element shape type
+ * \var att_elem_node_connectivity The name of the attribute for the element node connectivity
+ * \var att_elem_tree_id The name of the attribute for the element tree id
+ * \var att_elem_node The name of the attribute for the element nodes
+*/
 typedef struct
 {
   const char *mesh;
