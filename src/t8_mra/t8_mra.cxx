@@ -7,7 +7,7 @@
 #include <t8_schemes/t8_default/t8_default.hxx>                           /* default refinement scheme. */
 #include <t8_forest/t8_forest_geometrical.h>                              /* geometrical information */
 #include "vecmat.hxx"
-#include "basis_functions.hxx"
+#include "t8_mra/num/basis_functions.hxx"
 #include "mask_coefficients.hxx"
 #include "t8_mra/num/dunavant.hxx"
 #include "t8_mra.hxx"
@@ -672,7 +672,7 @@ calculate_rescale_wb_1D_func (t8_forest_t forest)
       double A = t8_forest_element_volume (forest, itree, element);
       //t8_global_productionf ("A: %f\n",A);
       avg_per_dim_arr += A * t8_element_get_value_wb_1D_func (adapt_data, current_index).u_coeff[0]
-                         * sqrt (1. / (2. * A)) * skalierungsfunktion (0, 0, 0);
+                         * sqrt (1. / (2. * A)) * t8_mra::skalierungsfunktion (0, 0, 0);
       //t8_global_productionf ("avg_per_dim_arr loop: %f\n",avg_per_dim_arr);
       area += A;
       //t8_global_productionf ("area: %f\n",area);
@@ -705,7 +705,7 @@ calculate_rescale_wf_1D_func (t8_forest_t forest)
       double A = t8_forest_element_volume (forest, itree, element);
       //t8_global_productionf ("A: %f\n",A);
       avg_per_dim_arr += A * t8_element_get_value_wf_1D_func (adapt_data, current_index).u_coeff[0]
-                         * sqrt (1. / (2. * A)) * skalierungsfunktion (0, 0, 0);
+                         * sqrt (1. / (2. * A)) * t8_mra::skalierungsfunktion (0, 0, 0);
       //t8_global_productionf ("avg_per_dim_arr loop: %f\n",avg_per_dim_arr);
       area += A;
       //t8_global_productionf ("area: %f\n",area);
@@ -738,7 +738,7 @@ calculate_rescale_wb_1D_spline (t8_forest_t forest)
       double A = t8_forest_element_volume (forest, itree, element);
       //t8_global_productionf ("A: %f\n",A);
       avg_per_dim_arr += A * t8_element_get_value_wb_1D_spline (adapt_data, current_index).u_coeff[0]
-                         * sqrt (1. / (2. * A)) * skalierungsfunktion (0, 0, 0);
+                         * sqrt (1. / (2. * A)) * t8_mra::skalierungsfunktion (0, 0, 0);
       //t8_global_productionf ("avg_per_dim_arr loop: %f\n",avg_per_dim_arr);
       area += A;
       //t8_global_productionf ("area: %f\n",area);
@@ -771,7 +771,7 @@ calculate_rescale_wf_1D_spline (t8_forest_t forest)
       double A = t8_forest_element_volume (forest, itree, element);
       //t8_global_productionf ("A: %f\n",A);
       avg_per_dim_arr += A * t8_element_get_value_wf_1D_spline (adapt_data, current_index).u_coeff[0]
-                         * sqrt (1. / (2. * A)) * skalierungsfunktion (0, 0, 0);
+                         * sqrt (1. / (2. * A)) * t8_mra::skalierungsfunktion (0, 0, 0);
       //t8_global_productionf ("avg_per_dim_arr loop: %f\n",avg_per_dim_arr);
       area += A;
       //t8_global_productionf ("area: %f\n",area);
@@ -1541,7 +1541,7 @@ AuswertungSinglescale (t8_forest_t forest, const t8_scheme *scheme, double x, do
   // assert((tau(0)>=0.) && (tau(1)>=0.) && (tau(0)+tau(1)<=1.));
   double sum = 0.;
   for (int i = 0; i < M_mra; ++i) {
-    sum += element_data.u_coeff[i] * sqrt (1. / (2. * volume)) * skalierungsfunktion (i, tau (0), tau (1));
+    sum += element_data.u_coeff[i] * sqrt (1. / (2. * volume)) * t8_mra::skalierungsfunktion (i, tau (0), tau (1));
   }
   return sum;
 }
@@ -1593,7 +1593,7 @@ AuswertungSinglescale_wf (t8_forest_t forest, const t8_scheme *scheme, double x,
   // assert((tau(0)>=0.) && (tau(1)>=0.) && (tau(0)+tau(1)<=1.));
   double sum = 0.;
   for (int i = 0; i < M_mra; ++i) {
-    sum += element_data.u_coeff[i] * sqrt (1. / (2. * volume)) * skalierungsfunktion (i, tau (0), tau (1));
+    sum += element_data.u_coeff[i] * sqrt (1. / (2. * volume)) * t8_mra::skalierungsfunktion (i, tau (0), tau (1));
   }
   return sum;
 }
@@ -1645,7 +1645,7 @@ AuswertungSinglescale_wf_spline (t8_forest_t forest, const t8_scheme *scheme, do
   // assert((tau(0)>=0.) && (tau(1)>=0.) && (tau(0)+tau(1)<=1.));
   double sum = 0.;
   for (int i = 0; i < M_mra; ++i) {
-    sum += element_data.u_coeff[i] * sqrt (1. / (2. * volume)) * skalierungsfunktion (i, tau (0), tau (1));
+    sum += element_data.u_coeff[i] * sqrt (1. / (2. * volume)) * t8_mra::skalierungsfunktion (i, tau (0), tau (1));
   }
   return sum;
 }
@@ -1697,7 +1697,7 @@ AuswertungSinglescale_wb_spline (t8_forest_t forest, const t8_scheme *scheme, do
   // assert((tau(0)>=0.) && (tau(1)>=0.) && (tau(0)+tau(1)<=1.));
   double sum = 0.;
   for (int i = 0; i < M_mra; ++i) {
-    sum += element_data.u_coeff[i] * sqrt (1. / (2. * volume)) * skalierungsfunktion (i, tau (0), tau (1));
+    sum += element_data.u_coeff[i] * sqrt (1. / (2. * volume)) * t8_mra::skalierungsfunktion (i, tau (0), tau (1));
   }
   return sum;
 }
@@ -2260,8 +2260,8 @@ t8_create_init_mra_forest_wb_1D_func (levelgrid_map<t8_data_per_element_1d_gh> *
             tau (1) = y;
             tau (2) = 1.;
             A.lr_solve (A, r, tau);
-            quad
-              += wtab[order] * my_func (x, y) * sqrt (1. / (2. * volume)) * skalierungsfunktion (i, tau (0), tau (1));
+            quad += wtab[order] * my_func (x, y) * sqrt (1. / (2. * volume))
+                    * t8_mra::skalierungsfunktion (i, tau (0), tau (1));
           }
           quad *= volume;
 
@@ -2418,7 +2418,7 @@ t8_create_init_mra_forest_wb_1D_spline (levelgrid_map<t8_data_per_element_1d_gh>
             tau (2) = 1.;
             A.lr_solve (A, r, tau);
             quad += wtab[order] * EvaluateSpline (spline, x, y, xacc, yacc) * sqrt (1. / (2. * volume))
-                    * skalierungsfunktion (i, tau (0), tau (1));
+                    * t8_mra::skalierungsfunktion (i, tau (0), tau (1));
           }
           quad *= volume;
 
@@ -2726,8 +2726,8 @@ t8_create_init_mra_forest_wf_1D_func (levelgrid_map<t8_data_per_element_waveletf
             tau (1) = y;
             tau (2) = 1.;
             A.lr_solve (A, r, tau);
-            quad
-              += wtab[order] * my_func (x, y) * sqrt (1. / (2. * volume)) * skalierungsfunktion (i, tau (0), tau (1));
+            quad += wtab[order] * my_func (x, y) * sqrt (1. / (2. * volume))
+                    * t8_mra::skalierungsfunktion (i, tau (0), tau (1));
           }
           quad *= volume;
 
@@ -2886,7 +2886,7 @@ t8_create_init_mra_forest_wf_1D_spline (levelgrid_map<t8_data_per_element_wavele
             A.lr_solve (A, r, tau);
             //t8_global_productionf ("EvaluateSpline:%f.\n",gsl_spline2d_eval (spline, x, y, xacc, yacc));
             quad += wtab[order] * gsl_spline2d_eval (spline, x, y, xacc, yacc) * sqrt (1. / (2. * volume))
-                    * skalierungsfunktion (i, tau (0), tau (1));
+                    * t8_mra::skalierungsfunktion (i, tau (0), tau (1));
           }
           quad *= volume;
 
@@ -3432,7 +3432,7 @@ t8_mra_prediction_init_callback (t8_forest_t forest, t8_forest_t forest_from, t8
         tau (2) = 1.;
         A.lr_solve (A, r, tau);
         quad += wtab[order] * adapt_data->my_func (x, y) * sqrt (1. / (2. * volume))
-                * skalierungsfunktion (i, tau (0), tau (1));
+                * t8_mra::skalierungsfunktion (i, tau (0), tau (1));
       }
       quad *= volume;
       element_data_children[child_order[ichild]].first = first_copy;
@@ -3623,7 +3623,7 @@ t8_mra_thresholding_init_callback (t8_forest_t forest, t8_forest_t forest_from, 
         tau (2) = 1.;
         A.lr_solve (A, r, tau);
         quad += wtab[order] * adapt_data->my_func (x, y) * sqrt (1. / (2. * volume))
-                * skalierungsfunktion (i, tau (0), tau (1));
+                * t8_mra::skalierungsfunktion (i, tau (0), tau (1));
       }
       quad *= volume;
       element_data_children[child_order[ichild]].first = first_copy;
@@ -4451,7 +4451,7 @@ t8_mra_bottom_up_init_callback (t8_forest_t forest, t8_forest_t forest_from, t8_
         tau (2) = 1.;
         A.lr_solve (A, r, tau);
         quad += wtab[order] * adapt_data->my_func (x, y) * sqrt (1. / (2. * volume))
-                * skalierungsfunktion (i, tau (0), tau (1));
+                * t8_mra::skalierungsfunktion (i, tau (0), tau (1));
         // t8_global_productionf (" wtab[order]: %f.\n",wtab[order]);
         // t8_global_productionf (" auswertung f: %f.\n",adapt_data->my_func(x,y));
         // t8_global_productionf (" Skalierungsfunktion auswerten: %f.\n",skalierungsfunktion(i,tau(0),tau(1)));
@@ -4545,7 +4545,7 @@ t8_mra_bottom_up_init_callback (t8_forest_t forest, t8_forest_t forest_from, t8_
   double child_volume = t8_forest_element_volume (forest_from, which_tree, children[0]);  //volume*0.25;
   t8_global_productionf ("Child volume %f.\n", child_volume);
   double middle_avg_child
-    = element_data_children[0].u_coeff[0] * sqrt (1. / (2. * child_volume)) * skalierungsfunktion (0, 0, 0);
+    = element_data_children[0].u_coeff[0] * sqrt (1. / (2. * child_volume)) * t8_mra::skalierungsfunktion (0, 0, 0);
   t8_global_productionf ("middle_avg_child%f.\n", middle_avg_child);
   //t8_global_productionf ("Mittleres kind:%i für elem id: %i.\n",child_order[0],lelement_id);
   //t8_global_productionf ("elem id %i.\n",lelement_id);
@@ -4556,7 +4556,7 @@ t8_mra_bottom_up_init_callback (t8_forest_t forest, t8_forest_t forest_from, t8_
     max_diff_children
       = max (max_diff_children, abs (middle_avg_child
                                      - (element_data_children[ichild].u_coeff[0] * sqrt (1. / (2. * child_volume))
-                                        * skalierungsfunktion (0, 0, 0))));
+                                        * t8_mra::skalierungsfunktion (0, 0, 0))));
     t8_global_productionf ("Iteration max diff children %f.\n", max_diff_children);
   }  //sqrt(2.0*child_volume)*
   t8_global_productionf ("max diff children %f.\n", max_diff_children);
@@ -4618,7 +4618,7 @@ t8_mra_bottom_up_init_callback (t8_forest_t forest, t8_forest_t forest_from, t8_
       for (int face_children_ind = 0; face_children_ind < num_face_children; face_children_ind++) {
         face_children_avg[face_children_ind]
           = element_data_children[child_order[child_indices[face_children_ind]]].u_coeff[0]
-            * sqrt (1. / (2. * volume * 0.25)) * skalierungsfunktion (0, 0, 0);
+            * sqrt (1. / (2. * volume * 0.25)) * t8_mra::skalierungsfunktion (0, 0, 0);
         //t8_global_productionf ("face children avg: %f.\n",face_children_avg[face_children_ind]);
       }
       for (int i_half_neigh = 0; i_half_neigh < num_half_neighbors; i_half_neigh++) {
@@ -4653,10 +4653,10 @@ t8_mra_bottom_up_init_callback (t8_forest_t forest, t8_forest_t forest_from, t8_
           tau (2) = 1.;
           A.lr_solve (A, r, tau);
           quad += wtab[order] * adapt_data->my_func (x, y) * sqrt (1. / (2. * volume))
-                  * skalierungsfunktion (0, tau (0), tau (1));
+                  * t8_mra::skalierungsfunktion (0, tau (0), tau (1));
         }
         quad *= volume;
-        half_face_neigh_avg[i_half_neigh] = quad * sqrt (1. / (2. * volume)) * skalierungsfunktion (0, 0, 0);
+        half_face_neigh_avg[i_half_neigh] = quad * sqrt (1. / (2. * volume)) * t8_mra::skalierungsfunktion (0, 0, 0);
       }
       //t8_global_productionf (" Punkt 8.\n");
       double max_half_face = half_face_neigh_avg[0];
@@ -6326,7 +6326,7 @@ t8_mra_wb_write_vtu (t8_forest_t forest, const char *prefix)
        * via the eclass_scheme and the forest_element interface. */
       double A = t8_forest_element_volume (forest, itree, element);
       element_data[current_index] = t8_element_get_value_wb_1D_func (data, current_index).u_coeff[0]
-                                    * sqrt (1. / (2. * A)) * skalierungsfunktion (0, 0, 0);
+                                    * sqrt (1. / (2. * A)) * t8_mra::skalierungsfunktion (0, 0, 0);
     }
   }
   /* To write user-defined data, we need to extend the output function t8_forest_vtk_write_file
@@ -6393,7 +6393,7 @@ t8_mra_wf_write_vtu (t8_forest_t forest, const char *prefix)
        * via the eclass_scheme and the forest_element interface. */
       double A = t8_forest_element_volume (forest, itree, element);
       element_data[current_index] = t8_element_get_value_wf_1D_func (data, current_index).u_coeff[0]
-                                    * sqrt (1. / (2. * A)) * skalierungsfunktion (0, 0, 0);
+                                    * sqrt (1. / (2. * A)) * t8_mra::skalierungsfunktion (0, 0, 0);
     }
   }
   /* To write user-defined data, we need to extend the output function t8_forest_vtk_write_file
@@ -6460,7 +6460,7 @@ t8_mra_wb_write_vtu_spline (t8_forest_t forest, const char *prefix)
        * via the eclass_scheme and the forest_element interface. */
       double A = t8_forest_element_volume (forest, itree, element);
       element_data[current_index] = t8_element_get_value_wb_1D_spline (data, current_index).u_coeff[0]
-                                    * sqrt (1. / (2. * A)) * skalierungsfunktion (0, 0, 0);
+                                    * sqrt (1. / (2. * A)) * t8_mra::skalierungsfunktion (0, 0, 0);
     }
   }
   /* To write user-defined data, we need to extend the output function t8_forest_vtk_write_file
@@ -6527,7 +6527,7 @@ t8_mra_wf_write_vtu_spline (t8_forest_t forest, const char *prefix)
        * via the eclass_scheme and the forest_element interface. */
       double A = t8_forest_element_volume (forest, itree, element);
       element_data[current_index] = t8_element_get_value_wf_1D_spline (data, current_index).u_coeff[0]
-                                    * sqrt (1. / (2. * A)) * skalierungsfunktion (0, 0, 0);
+                                    * sqrt (1. / (2. * A)) * t8_mra::skalierungsfunktion (0, 0, 0);
     }
   }
   /* To write user-defined data, we need to extend the output function t8_forest_vtk_write_file
