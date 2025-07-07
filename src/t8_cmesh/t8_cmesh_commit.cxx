@@ -38,6 +38,12 @@
 #include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
 
+/**
+ * A struct to hold the information about a ghost facejoin.
+ * 
+ * It contains the global id of the ghost, the local id of the ghost, 
+ * and the current number of inserted ghost attributes.
+ */
 typedef struct ghost_facejoins_struct
 {
   t8_gloidx_t ghost_id; /* The id of the ghost */
@@ -506,6 +512,12 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 #endif
 }
 
+/**
+ * \brief Commit a cmesh from stash.
+ * 
+ * \param[in] cmesh The cmesh to commit.
+ * \param[in] comm The MPI communicator to use.
+ */
 void
 t8_cmesh_commit_from_stash (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {

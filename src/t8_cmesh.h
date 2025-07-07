@@ -426,6 +426,7 @@ t8_cmesh_set_tree_geometry (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const t8_geom
  * \param [in,out] cmesh        Must be created with \ref t8_cmesh_init
  *                              (TODO: or bcast) and
  *                              specialized with t8_cmesh_set_* calls first (?).
+ * \param [in]     comm         The MPI communicator to use.
  */
 void
 t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm);
