@@ -9,7 +9,7 @@
 #include "t8_mra/vecmat.hxx"
 #include "t8_mra/basis_functions.hxx"
 #include "t8_mra/mask_coefficients.hxx"
-#include "t8_mra/dunavant.hxx"
+#include "t8_mra/num/dunavant.hxx"
 #include "t8_mra/t8_gsl.hxx"
 #include "t8_mra/t8_mra.hxx"
 #include "t8_mra/t8_unordered_dense.hxx"
