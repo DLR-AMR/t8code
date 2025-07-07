@@ -237,7 +237,7 @@ t8_cmesh_set_dimension (t8_cmesh_t cmesh, int dim);
  * It is not allowed to call this function after \ref t8_cmesh_commit.
  * It is not allowed to call this function multiple times for the same tree.
  * \param [in,out] cmesh        The cmesh to be updated.
- * \param [in]     tree_id      The global number of the tree.
+ * \param [in]     gtree_id      The global number of the tree.
  * \param [in]     tree_class   The element class of this tree.
  */
 void
@@ -313,8 +313,8 @@ t8_cmesh_set_attribute_gloidx_array (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int
 
 /** Insert a face-connection between two trees in a cmesh.
  * \param [in,out] cmesh        The cmesh to be updated.
- * \param [in]     tree1        The tree id of the first of the two trees.
- * \param [in]     tree2        The tree id of the second of the two trees.
+ * \param [in]     gtree1        The tree id of the first of the two trees.
+ * \param [in]     gtree2        The tree id of the second of the two trees.
  * \param [in]     face1        The face number of the first tree.
  * \param [in]     face2        The face number of the second tree.
  * \param [in]     orientation  Specify how face1 and face2 are oriented to each other
@@ -595,7 +595,7 @@ t8_cmesh_get_tree (t8_cmesh_t cmesh, t8_locidx_t ltree_id);
 /** Return the eclass of a given local tree.
  * TODO: Should we refer to indices or consequently use ctree_t?
  * \param [in]    cmesh         The cmesh to be considered.
- * \param [in]    tree_id       The local id of the tree whose eclass will be returned.
+ * \param [in]    ltree_id       The local id of the tree whose eclass will be returned.
  * \return                      The eclass of the given tree.
  * TODO: Call tree ids ltree_id or gtree_id etc. instead of tree_id.
  * \a cmesh must be committed before calling this function.
@@ -617,7 +617,7 @@ t8_cmesh_tree_face_is_boundary (t8_cmesh_t cmesh, t8_locidx_t ltree_id, int face
 /** Return the eclass of a given local ghost.
  * TODO: Should we refer to indices or consequently use cghost_t?
  * \param [in]    cmesh         The cmesh to be considered.
- * \param [in]    ghost_id      The local id of the ghost whose eclass will be returned.
+ * \param [in]    lghost_id      The local id of the ghost whose eclass will be returned.
  *                              0 <= \a tree_id < cmesh.num_ghosts.
  * \return                      The eclass of the given ghost.
  * \a cmesh must be committed before calling this function.
@@ -692,7 +692,7 @@ t8_cmesh_get_tree_vertices (t8_cmesh_t cmesh, t8_locidx_t ltreeid);
  * \param [in]     package_id   The identifier of a valid software package. \see sc_package_register
  * \param [in]     key          A key used to identify the attribute under all
  *                              attributes of this tree with the same \a package_id.
- * \param [in]     tree_id      The local number of the tree.
+ * \param [in]     ltree_id      The local number of the tree.
  * \return         The attribute pointer of the tree \a ltree_id or NULL if the attribute is not found.
  * \note \a cmesh must be committed before calling this function.
  * \see t8_cmesh_set_attribute
@@ -718,7 +718,7 @@ t8_cmesh_get_attribute (const t8_cmesh_t cmesh, const int package_id, const int 
  */
 t8_gloidx_t *
 t8_cmesh_get_attribute_gloidx_array (const t8_cmesh_t cmesh, const int package_id, const int key,
-                                     const t8_locidx_t ltree_id, const size_t data_count);
+                                     const t8_locidx_t ltree_id, [[maybe_unused]] const size_t data_count);
 
 /** Return the shared memory array storing the partition table of
  * a partitioned cmesh.
@@ -820,9 +820,10 @@ t8_cmesh_new_translate_vertices_to_attributes (const t8_locidx_t *tvertices, con
  * Prints the vertices of each tree of each process
  * 
  * \param[in] cmesh   Source-cmesh, which trees get printed.
+ * \param[in] comm    The MPI communicator to use for printing.
  */
 void
-t8_cmesh_debug_print_trees (const t8_cmesh_t cmesh, sc_MPI_Comm comm);
+t8_cmesh_debug_print_trees ([[maybe_unused]] const t8_cmesh_t cmesh, sc_MPI_Comm comm);
 
 /**
  * Compute the process local bounding box of the cmesh.
