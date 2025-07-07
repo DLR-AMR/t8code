@@ -31,7 +31,7 @@
 #include "vecmat.hxx"
 #include "basis_functions.hxx"
 #include "mask_coefficients.hxx"
-#include "dunavant.hxx"
+#include "t8_mra/num/dunavant.hxx"
 #include <cmath>
 #include <vector>
 #include <sc_statistics.h>

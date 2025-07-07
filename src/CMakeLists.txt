@@ -149,7 +149,7 @@ if( T8CODE_ENABLE_MRA )
     t8_mra/t8_mra.cxx
     t8_mra/vecmat.cxx
     t8_mra/basis_functions.cxx
-    t8_mra/dunavant.cxx
+    t8_mra/num/dunavant.cxx
     t8_mra/mask_coefficients.cxx
   )
 
@@ -162,7 +162,7 @@ if( T8CODE_ENABLE_MRA )
     t8_mra/t8_mra.hxx
     t8_mra/vecmat.hxx
     t8_mra/basis_functions.hxx
-    t8_mra/dunavant.hxx
+    t8_mra/num/dunavant.hxx
     t8_mra/mask_coefficients.hxx
     # t8_mra/levelindex_map.hpp
     # t8_mra/cell_data.hpp

@@ -9,7 +9,7 @@
 #include "vecmat.hxx"
 #include "basis_functions.hxx"
 #include "mask_coefficients.hxx"
-#include "dunavant.hxx"
+#include "t8_mra/num/dunavant.hxx"
 #include "t8_mra.hxx"
 #include <cmath>
 #include <math.h>
@@ -1714,11 +1714,11 @@ ErrorSinglescale (t8_forest_t forest, int rule, const char *err_type)
   t8_locidx_t num_ghost_elements;
   mat A;
   vector<int> r;
-  order_num = dunavant_order_num (rule);
+  order_num = t8_mra::dunavant_order_num (rule);
   wtab = T8_ALLOC (double, order_num);
   xytab = T8_ALLOC (double, 2 * order_num);
   xytab_ref = T8_ALLOC (double, 2 * order_num);
-  dunavant_rule (rule, order_num, xytab_ref, wtab);
+  t8_mra::dunavant_rule (rule, order_num, xytab_ref, wtab);
   T8_ASSERT (t8_forest_is_committed (forest));
 
   /* Get the number of local elements of forest. */
@@ -1768,7 +1768,7 @@ ErrorSinglescale (t8_forest_t forest, int rule, const char *err_type)
       A (2, 2) = 1;
       A.lr_factors (A, r);
       double eckpunkte[6] = { verts[0][0], verts[0][1], verts[1][0], verts[1][1], verts[2][0], verts[2][1] };
-      reference_to_physical_t3 (eckpunkte, order_num, xytab_ref, xytab);
+      t8_mra::reference_to_physical_t3 (eckpunkte, order_num, xytab_ref, xytab);
       double quad = 0.;
       for (int order = 0; order < order_num; ++order) {
         double x = xytab[order * 2];
@@ -1831,11 +1831,11 @@ ErrorSinglescale_wf (t8_forest_t forest, int rule, const char *err_type)
   t8_locidx_t num_ghost_elements;
   mat A;
   vector<int> r;
-  order_num = dunavant_order_num (rule);
+  order_num = t8_mra::dunavant_order_num (rule);
   wtab = T8_ALLOC (double, order_num);
   xytab = T8_ALLOC (double, 2 * order_num);
   xytab_ref = T8_ALLOC (double, 2 * order_num);
-  dunavant_rule (rule, order_num, xytab_ref, wtab);
+  t8_mra::dunavant_rule (rule, order_num, xytab_ref, wtab);
   T8_ASSERT (t8_forest_is_committed (forest));
 
   /* Get the number of local elements of forest. */
@@ -1884,7 +1884,7 @@ ErrorSinglescale_wf (t8_forest_t forest, int rule, const char *err_type)
       A (2, 2) = 1;
       A.lr_factors (A, r);
       double eckpunkte[6] = { verts[0][0], verts[0][1], verts[1][0], verts[1][1], verts[2][0], verts[2][1] };
-      reference_to_physical_t3 (eckpunkte, order_num, xytab_ref, xytab);
+      t8_mra::reference_to_physical_t3 (eckpunkte, order_num, xytab_ref, xytab);
       double quad = 0.;
       for (int order = 0; order < order_num; ++order) {
         double x = xytab[order * 2];
@@ -2181,13 +2181,13 @@ t8_create_init_mra_forest_wb_1D_func (levelgrid_map<t8_data_per_element_1d_gh> *
   double *wtab;
   double *xytab;
   double *xytab_ref;
-  order_num = dunavant_order_num (rule);
+  order_num = t8_mra::dunavant_order_num (rule);
   wtab = T8_ALLOC (double, order_num);
   xytab = T8_ALLOC (double, 2 * order_num);
   xytab_ref = T8_ALLOC (double, 2 * order_num);
   mat A;
   vector<int> r;
-  dunavant_rule (rule, order_num, xytab_ref, wtab);
+  t8_mra::dunavant_rule (rule, order_num, xytab_ref, wtab);
 
   {
     t8_locidx_t itree, num_local_trees;
@@ -2249,7 +2249,7 @@ t8_create_init_mra_forest_wb_1D_func (levelgrid_map<t8_data_per_element_1d_gh> *
         A (2, 2) = 1;
         A.lr_factors (A, r);
         double eckpunkte[6] = { verts[0][0], verts[0][1], verts[1][0], verts[1][1], verts[2][0], verts[2][1] };
-        reference_to_physical_t3 (eckpunkte, order_num, xytab_ref, xytab);
+        t8_mra::reference_to_physical_t3 (eckpunkte, order_num, xytab_ref, xytab);
         for (int i = 0; i < M_mra; ++i) {
           double quad = 0.;
           for (int order = 0; order < order_num; ++order) {
@@ -2338,13 +2338,13 @@ t8_create_init_mra_forest_wb_1D_spline (levelgrid_map<t8_data_per_element_1d_gh>
   double *wtab;
   double *xytab;
   double *xytab_ref;
-  order_num = dunavant_order_num (rule);
+  order_num = t8_mra::dunavant_order_num (rule);
   wtab = T8_ALLOC (double, order_num);
   xytab = T8_ALLOC (double, 2 * order_num);
   xytab_ref = T8_ALLOC (double, 2 * order_num);
   mat A;
   vector<int> r;
-  dunavant_rule (rule, order_num, xytab_ref, wtab);
+  t8_mra::dunavant_rule (rule, order_num, xytab_ref, wtab);
 
   {
     t8_locidx_t itree, num_local_trees;
@@ -2406,7 +2406,7 @@ t8_create_init_mra_forest_wb_1D_spline (levelgrid_map<t8_data_per_element_1d_gh>
         A (2, 2) = 1;
         A.lr_factors (A, r);
         double eckpunkte[6] = { verts[0][0], verts[0][1], verts[1][0], verts[1][1], verts[2][0], verts[2][1] };
-        reference_to_physical_t3 (eckpunkte, order_num, xytab_ref, xytab);
+        t8_mra::reference_to_physical_t3 (eckpunkte, order_num, xytab_ref, xytab);
         for (int i = 0; i < M_mra; ++i) {
           double quad = 0.;
           for (int order = 0; order < order_num; ++order) {
@@ -2647,13 +2647,13 @@ t8_create_init_mra_forest_wf_1D_func (levelgrid_map<t8_data_per_element_waveletf
   double *wtab;
   double *xytab;
   double *xytab_ref;
-  order_num = dunavant_order_num (rule);
+  order_num = t8_mra::dunavant_order_num (rule);
   wtab = T8_ALLOC (double, order_num);
   xytab = T8_ALLOC (double, 2 * order_num);
   xytab_ref = T8_ALLOC (double, 2 * order_num);
   mat A;
   vector<int> r;
-  dunavant_rule (rule, order_num, xytab_ref, wtab);
+  t8_mra::dunavant_rule (rule, order_num, xytab_ref, wtab);
 
   {
     t8_locidx_t itree, num_local_trees;
@@ -2715,7 +2715,7 @@ t8_create_init_mra_forest_wf_1D_func (levelgrid_map<t8_data_per_element_waveletf
         A (2, 2) = 1;
         A.lr_factors (A, r);
         double eckpunkte[6] = { verts[0][0], verts[0][1], verts[1][0], verts[1][1], verts[2][0], verts[2][1] };
-        reference_to_physical_t3 (eckpunkte, order_num, xytab_ref, xytab);
+        t8_mra::reference_to_physical_t3 (eckpunkte, order_num, xytab_ref, xytab);
         for (int i = 0; i < M_mra; ++i) {
           double quad = 0.;
           for (int order = 0; order < order_num; ++order) {
@@ -2805,13 +2805,13 @@ t8_create_init_mra_forest_wf_1D_spline (levelgrid_map<t8_data_per_element_wavele
   double *wtab;
   double *xytab;
   double *xytab_ref;
-  order_num = dunavant_order_num (rule);
+  order_num = t8_mra::dunavant_order_num (rule);
   wtab = T8_ALLOC (double, order_num);
   xytab = T8_ALLOC (double, 2 * order_num);
   xytab_ref = T8_ALLOC (double, 2 * order_num);
   mat A;
   vector<int> r;
-  dunavant_rule (rule, order_num, xytab_ref, wtab);
+  t8_mra::dunavant_rule (rule, order_num, xytab_ref, wtab);
 
   {
     t8_locidx_t itree, num_local_trees;
@@ -2873,7 +2873,7 @@ t8_create_init_mra_forest_wf_1D_spline (levelgrid_map<t8_data_per_element_wavele
         A (2, 2) = 1;
         A.lr_factors (A, r);
         double eckpunkte[6] = { verts[0][0], verts[0][1], verts[1][0], verts[1][1], verts[2][0], verts[2][1] };
-        reference_to_physical_t3 (eckpunkte, order_num, xytab_ref, xytab);
+        t8_mra::reference_to_physical_t3 (eckpunkte, order_num, xytab_ref, xytab);
         for (int i = 0; i < M_mra; ++i) {
           double quad = 0.;
           for (int order = 0; order < order_num; ++order) {
@@ -3347,13 +3347,13 @@ t8_mra_prediction_init_callback (t8_forest_t forest, t8_forest_t forest_from, t8
   double *wtab;
   double *xytab;
   double *xytab_ref;
-  order_num = dunavant_order_num (rule);
+  order_num = t8_mra::dunavant_order_num (rule);
   wtab = T8_ALLOC (double, order_num);
   xytab = T8_ALLOC (double, 2 * order_num);
   xytab_ref = T8_ALLOC (double, 2 * order_num);
   mat A;
   vector<int> r;
-  dunavant_rule (rule, order_num, xytab_ref, wtab);
+  t8_mra::dunavant_rule (rule, order_num, xytab_ref, wtab);
   // adapt_data->gamma;
   // adapt_data->C_thr;
   // adapt_data->current_level;
@@ -3420,7 +3420,7 @@ t8_mra_prediction_init_callback (t8_forest_t forest, t8_forest_t forest_from, t8
     A (2, 2) = 1;
     A.lr_factors (A, r);
     double eckpunkte[6] = { verts[0][0], verts[0][1], verts[1][0], verts[1][1], verts[2][0], verts[2][1] };
-    reference_to_physical_t3 (eckpunkte, order_num, xytab_ref, xytab);
+    t8_mra::reference_to_physical_t3 (eckpunkte, order_num, xytab_ref, xytab);
     for (int i = 0; i < M_mra; ++i) {
       double quad = 0.;
       for (int order = 0; order < order_num; ++order) {
@@ -3538,13 +3538,13 @@ t8_mra_thresholding_init_callback (t8_forest_t forest, t8_forest_t forest_from, 
   double *wtab;
   double *xytab;
   double *xytab_ref;
-  order_num = dunavant_order_num (rule);
+  order_num = t8_mra::dunavant_order_num (rule);
   wtab = T8_ALLOC (double, order_num);
   xytab = T8_ALLOC (double, 2 * order_num);
   xytab_ref = T8_ALLOC (double, 2 * order_num);
   mat A;
   vector<int> r;
-  dunavant_rule (rule, order_num, xytab_ref, wtab);
+  t8_mra::dunavant_rule (rule, order_num, xytab_ref, wtab);
   // adapt_data->gamma;
   // adapt_data->C_thr;
   // adapt_data->current_level;
@@ -3611,7 +3611,7 @@ t8_mra_thresholding_init_callback (t8_forest_t forest, t8_forest_t forest_from, 
     A (2, 2) = 1;
     A.lr_factors (A, r);
     double eckpunkte[6] = { verts[0][0], verts[0][1], verts[1][0], verts[1][1], verts[2][0], verts[2][1] };
-    reference_to_physical_t3 (eckpunkte, order_num, xytab_ref, xytab);
+    t8_mra::reference_to_physical_t3 (eckpunkte, order_num, xytab_ref, xytab);
     for (int i = 0; i < M_mra; ++i) {
       double quad = 0.;
       for (int order = 0; order < order_num; ++order) {
@@ -4325,13 +4325,13 @@ t8_mra_bottom_up_init_callback (t8_forest_t forest, t8_forest_t forest_from, t8_
   double *wtab;
   double *xytab;
   double *xytab_ref;
-  order_num = dunavant_order_num (rule);
+  order_num = t8_mra::dunavant_order_num (rule);
   wtab = T8_ALLOC (double, order_num);
   xytab = T8_ALLOC (double, 2 * order_num);
   xytab_ref = T8_ALLOC (double, 2 * order_num);
   mat A;
   vector<int> r;
-  dunavant_rule (rule, order_num, xytab_ref, wtab);
+  t8_mra::dunavant_rule (rule, order_num, xytab_ref, wtab);
   int num_children = t8_element_get_num_children (scheme, tree_class, elements[0]);  // The expected number of children
   //t8_global_productionf (" num children: %i.\n",num_children);
   t8_element_t **children;
@@ -4439,7 +4439,7 @@ t8_mra_bottom_up_init_callback (t8_forest_t forest, t8_forest_t forest_from, t8_
     A (2, 2) = 1;
     A.lr_factors (A, r);
     double eckpunkte[6] = { verts[0][0], verts[0][1], verts[1][0], verts[1][1], verts[2][0], verts[2][1] };
-    reference_to_physical_t3 (eckpunkte, order_num, xytab_ref, xytab);
+    t8_mra::reference_to_physical_t3 (eckpunkte, order_num, xytab_ref, xytab);
     for (int i = 0; i < M_mra; ++i) {
       double quad = 0.;
       for (int order = 0; order < order_num; ++order) {
@@ -4642,7 +4642,7 @@ t8_mra_bottom_up_init_callback (t8_forest_t forest, t8_forest_t forest_from, t8_
         A (2, 2) = 1;
         A.lr_factors (A, r);
         double eckpunkte[6] = { verts[0][0], verts[0][1], verts[1][0], verts[1][1], verts[2][0], verts[2][1] };
-        reference_to_physical_t3 (eckpunkte, order_num, xytab_ref, xytab);
+        t8_mra::reference_to_physical_t3 (eckpunkte, order_num, xytab_ref, xytab);
         double quad = 0.;
         for (int order = 0; order < order_num; ++order) {
           double x = xytab[order * 2];
