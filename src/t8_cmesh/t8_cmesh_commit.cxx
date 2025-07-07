@@ -46,9 +46,9 @@
  */
 typedef struct ghost_facejoins_struct
 {
-  t8_gloidx_t ghost_id; /* The id of the ghost */
-  t8_locidx_t local_id; /* The local id of the ghost */
-  t8_gloidx_t attr_id;  /* The current number of inserted ghost attributes */
+  t8_gloidx_t ghost_id; /**< The id of the ghost */
+  t8_locidx_t local_id; /**< The local id of the ghost */
+  t8_gloidx_t attr_id;  /**< The current number of inserted ghost attributes */
 } t8_ghost_facejoin_t;
 
 static int
