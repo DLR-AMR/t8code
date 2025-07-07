@@ -20,6 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_cmesh_types.h
+ * We define here the datatypes needed for internal cmesh routines.
+ */
+
 #ifndef T8_CMESH_TYPES_H
 #define T8_CMESH_TYPES_H
 
@@ -31,12 +35,11 @@
 #include "t8_cmesh_stash.h"
 #include "t8_element.h"
 
-/** \file t8_cmesh_types.h
- * We define here the datatypes needed for internal cmesh routines.
- */
-
+/** Opaque pointer to a t8_part_tree */
 typedef struct t8_part_tree *t8_part_tree_t;
+/** Opaque pointer to a tree */
 typedef struct t8_cmesh_trees *t8_cmesh_trees_t;
+/** Opaque pointer to a tree */
 typedef struct t8_cprofile t8_cprofile_t; /* Defined below */
 
 /* TODO: no longer needed.
@@ -51,19 +54,26 @@ typedef struct t8_cprofile t8_cprofile_t; /* Defined below */
 
 /* Definitions for attribute identifiers that are reserved for a special purpose. 
  * T8_CMESH_NEXT_POSSIBLE_KEY is the first unused key, hence it can be repurposed for different attributes.*/
-#define T8_CMESH_VERTICES_ATTRIBUTE_KEY 0            /* Used to store vertex coordinates. */
-#define T8_CMESH_GLOBAL_VERTICES_ATTRIBUTE_KEY 1     /* Used to store global vertex ids. */
-#define T8_CMESH_GEOMETRY_ATTRIBUTE_KEY 2            /* Used to store the name of a tree's geometry. */
-#define T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY 3            /* Used to store which edge is linked to which geometry */
-#define T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY 4 /* Used to store edge parameters */
+/** Used to store vertex coordinates. */
+#define T8_CMESH_VERTICES_ATTRIBUTE_KEY 0
+/** Used to store global vertex ids. */
+#define T8_CMESH_GLOBAL_VERTICES_ATTRIBUTE_KEY 1
+/** Used to store the name of a tree's geometry. */
+#define T8_CMESH_GEOMETRY_ATTRIBUTE_KEY 2
+/** Used to store which edge is linked to which geometry */
+#define T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY 3
+/** Used to store edge parameters */
+#define T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY 4
+/** Used to store which face is linked to which surface */
 #define T8_CMESH_CAD_FACE_ATTRIBUTE_KEY \
   T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY \
-  +T8_ECLASS_MAX_EDGES /* Used to store which face is linked to which surface */
-#define T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY \
-  T8_CMESH_CAD_FACE_ATTRIBUTE_KEY + 1 /* Used to store face parameters */
+  +T8_ECLASS_MAX_EDGES
+/** Used to store face parameters */
+#define T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY T8_CMESH_CAD_FACE_ATTRIBUTE_KEY + 1
+/** Used to store parameters of lagrangian polynomials */
 #define T8_CMESH_LAGRANGE_POLY_DEGREE_KEY T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + T8_ECLASS_MAX_FACES
-#define T8_CMESH_NEXT_POSSIBLE_KEY \
-  T8_CMESH_LAGRANGE_POLY_DEGREE_KEY + 1 /* The next free value for a t8code attribute key */
+/** The next free value for a t8code attribute key */
+#define T8_CMESH_NEXT_POSSIBLE_KEY T8_CMESH_LAGRANGE_POLY_DEGREE_KEY + 1
 
 /** This structure holds the connectivity data of the coarse mesh.
  *  It can either be replicated, then each process stores a copy of the whole
@@ -158,11 +168,14 @@ typedef struct t8_cmesh
  *       2. completely replace
  */
 /* TODO: document */
+/**
+ * This structure holds the data of a coarse ghost including the information
+ */
 typedef struct t8_cghost
 {
   t8_gloidx_t treeid;  /**< The global number of this ghost. */
   t8_eclass_t eclass;  /**< The eclass of this ghost. */
-  size_t neigh_offset; /** Offset to the array of face neighbors of this ghost.
+  size_t neigh_offset; /**< Offset to the array of face neighbors of this ghost.
                                         This count has to be added to the address of the ghost to get its face neighbors. */
   size_t att_offset;   /**< Adding this offset to the address of the ghost
                                        yields the array of attribute_info entries */
@@ -228,28 +241,31 @@ typedef struct t8_attribute_info
   /**< The size in bytes of the attribute */
 } t8_attribute_info_struct_t;
 
-/* TODO: document, process is a bad naming, since it does not refer to MPI ranks here */
+/**
+ * This structure holds the trees and ghosts of a cmesh.
+ * 
+ */
 typedef struct t8_cmesh_trees
 {
-  sc_array_t *from_proc;                 /* array of t8_part_tree, one for each process */
-  int *tree_to_proc;                     /* for each tree its process */
-  int *ghost_to_proc;                    /* for each ghost its process */
-  sc_hash_t *ghost_globalid_to_local_id; /* A hash table storing the map
+  sc_array_t *from_proc;                 /**< array of t8_part_tree, one for each process */
+  int *tree_to_proc;                     /**< for each tree its process */
+  int *ghost_to_proc;                    /**< for each ghost its process */
+  sc_hash_t *ghost_globalid_to_local_id; /**< A hash table storing the map
                                                            global_id -> local_id for the ghost trees.
                                                            The local_id is the local ghost id starting at num_local_trees  */
-  sc_mempool_t *global_local_mempool;    /* Memory pool for the entries in the hash table */
+  sc_mempool_t *global_local_mempool;    /**< Memory pool for the entries in the hash table */
 } t8_cmesh_trees_struct_t;
 
 /* TODO: document */
 typedef struct t8_part_tree
 {
-  char *first_tree;           /* Stores the trees, the ghosts and the attributes.
+  char *first_tree;           /**< Stores the trees, the ghosts and the attributes.
                                            The last 2*sizeof(t8_locidx) bytes store num_trees and num_ghosts */
-  t8_locidx_t first_tree_id;  /* local tree_id of the first tree. -1 if num_trees = 0 */
-  t8_locidx_t first_ghost_id; /* TODO: document. -1 if num_ghost=0, 0 for the first part, (not num_local_trees!)
+  t8_locidx_t first_tree_id;  /**< local tree_id of the first tree. -1 if num_trees = 0 */
+  t8_locidx_t first_ghost_id; /**< TODO: document. -1 if num_ghost=0, 0 for the first part, (not num_local_trees!)
                                            0 <= first_ghost_id < num_ghosts */
-  t8_locidx_t num_trees;
-  t8_locidx_t num_ghosts;
+  t8_locidx_t num_trees;      /**< The number of trees */
+  t8_locidx_t num_ghosts;     /**< The number of ghosts */
 } t8_part_tree_struct_t;
 
 /* TODO: Extend this structure with meaningful entries.

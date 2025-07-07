@@ -431,8 +431,14 @@ t8_cmesh_set_tree_geometry (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const t8_geom
 void
 t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 
-/* TODO: Document */
-/* Currently, it is only legal to save cmeshes that use the linear geometry. */
+/**
+ * Save the cmesh to a file with the given fileprefix.
+ * 
+ * \param[in] cmesh The cmesh to save.
+ * \param[in] fileprefix The prefix of the file to save the cmesh to.
+ * 
+ * \note Currently, it is only legal to save cmeshes that use the linear geometry.
+ */
 int
 t8_cmesh_save (t8_cmesh_t cmesh, const char *fileprefix);
 

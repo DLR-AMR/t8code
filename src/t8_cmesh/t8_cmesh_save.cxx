@@ -513,12 +513,6 @@ t8_cmesh_load_header (const t8_cmesh_t cmesh, FILE *fp)
   return 1;
 }
 
-/**
- * Save the cmesh to a file with the given fileprefix.
- * 
- * \param[in] cmesh The cmesh to save.
- * \param[in] fileprefix The prefix of the file to save the cmesh to.
- */
 int
 t8_cmesh_save (const t8_cmesh_t cmesh, const char *fileprefix)
 {

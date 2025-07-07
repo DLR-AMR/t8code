@@ -31,12 +31,12 @@
 #include "t8_cmesh_stash.h"
 #include "t8_cmesh_trees.h"
 
-/* This struct is needed as a key to search
+/** This struct is needed as a key to search
  * for an argument in the arguments array of a tree */
 struct t8_key_id_pair
 {
-  int key;
-  int package_id;
+  int key;        /**< The key to search for */
+  int package_id; /**< The package id to use */
 };
 
 /* The hash function for the global to local hash table.
@@ -213,9 +213,23 @@ t8_cmesh_trees_start_part (const t8_cmesh_trees_t trees, const int proc, const t
   part->first_ghost_id = lfirst_ghost;
 }
 
-/* Helper struct for sorting the number of ghost attributes by global id.
+/**
+ * Helper struct for sorting the number of ghost attributes by global id.
  * In order to sort them, we need the part ghost id to access the global id.
- * Thus, we store both the part id and the number of attributes. */
+ * Thus, we store both the part id and the number of attributes.
+ *
+ * \var t8_part_ghost_id_and_num_atts::part_ghost_id
+ * Local identifier for the partition ghost.
+ *
+ * \var t8_part_ghost_id_and_num_atts::global_id
+ * Global identifier for the partition ghost.
+ *
+ * \var t8_part_ghost_id_and_num_atts::num_attributes
+ * Number of attributes associated with the partition ghost.
+ *
+ * \var t8_part_ghost_id_and_num_atts::attribute_offset
+ * Offset to the attributes associated with the partition ghost.
+ */
 typedef struct
 {
   t8_locidx_t part_ghost_id;
