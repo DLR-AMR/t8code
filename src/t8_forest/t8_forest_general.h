@@ -734,7 +734,9 @@ t8_forest_get_cmesh (t8_forest_t forest);
  * \param [in]      lelement_id The local id of a leaf element in \a forest.
  * \param [out]     ltreeid     If not NULL, on output the local tree id of the tree in which the
  *                              leaf element lies in.
- * \return          A pointer to the leaf element. NULL if this element does not exist.
+ * \return          A pointer to the leaf element. NULL if this element does not exist. Ghost elements are
+ *                  not considered as local.
+ * \see t8_forest_ghost_get_leaf_element to access ghost leaf elements.
  * \note This function performs a binary search. For constant access, use \ref t8_forest_get_leaf_element_in_tree
  * \a forest must be committed before calling this function.
  */
@@ -743,9 +745,10 @@ t8_forest_get_leaf_element (t8_forest_t forest, t8_locidx_t lelement_id, t8_loci
 
 /** Return a leaf element of a local tree in a forest.
  * \param [in]      forest      The forest.
- * \param [in]      ltreeid     An id of a local tree in the forest.
+ * \param [in]      ltreeid     An id of a local tree in the forest. Ghost trees are not considered local.
  * \param [in]      leid_in_tree The index of a leaf element in the tree.
  * \return          A pointer to the leaf element.
+ * \see t8_forest_ghost_get_leaf_element_in_tree to access ghost leaf elements.
  * \note If the tree id is know, this function should be preferred over \ref t8_forest_get_leaf_element.
  * \a forest must be committed before calling this function.
  */
