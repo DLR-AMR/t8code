@@ -55,8 +55,6 @@ def configureDoxyfile(input_dir, output_dir):
     # Run doxygen
     subprocess.call('doxygen Doxyfile', shell=True)
 
-    
-
 # Check if we're running on Read the Docs' servers
 read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
 print("Running on Read the Docs:", read_the_docs_build)
@@ -76,6 +74,7 @@ if read_the_docs_build:
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
 html_logo = '../../t8code_logo.png'
+html_extra_path = ['../../build/html']
 
 breathe_default_project = "T8code"
 breathe_implementation_filename_extensions = ['.c', '.cpp']
