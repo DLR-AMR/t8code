@@ -154,6 +154,7 @@ if( T8CODE_ENABLE_MRA )
   )
 
   install( FILES
+    t8_mra/t8_mra.hpp
     t8_mra/data/levelindex_map.hpp
     t8_mra/data/cell_data.hpp
     t8_mra/data/levelmultiindex.hpp
@@ -164,8 +165,6 @@ if( T8CODE_ENABLE_MRA )
     t8_mra/num/basis_functions.hxx
     t8_mra/num/dunavant.hxx
     t8_mra/mask_coefficients.hxx
-    # t8_mra/levelindex_map.hpp
-    # t8_mra/cell_data.hpp
     DESTINATION include)
 endif()
 
