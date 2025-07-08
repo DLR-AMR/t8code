@@ -731,7 +731,7 @@ t8_cmesh_get_attribute (const t8_cmesh_t cmesh, const int package_id, const int 
  */
 t8_gloidx_t *
 t8_cmesh_get_attribute_gloidx_array (const t8_cmesh_t cmesh, const int package_id, const int key,
-                                     const t8_locidx_t ltree_id, [[maybe_unused]] const size_t data_count);
+                                     const t8_locidx_t ltree_id, const size_t data_count);
 
 /** Return the shared memory array storing the partition table of
  * a partitioned cmesh.
@@ -836,7 +836,7 @@ t8_cmesh_new_translate_vertices_to_attributes (const t8_locidx_t *tvertices, con
  * \param[in] comm    The MPI communicator to use for printing.
  */
 void
-t8_cmesh_debug_print_trees ([[maybe_unused]] const t8_cmesh_t cmesh, [[maybe_unused]] sc_MPI_Comm comm);
+t8_cmesh_debug_print_trees (const t8_cmesh_t cmesh, sc_MPI_Comm comm);
 
 /**
  * Compute the process local bounding box of the cmesh.
