@@ -21,7 +21,7 @@
 */
 
 /**
- * \file This files gives a template for strong types in t8code.
+ * \file t8_type.hxx This files gives a template for strong types in t8code.
  */
 
 #ifndef T8_TYPE_HXX
