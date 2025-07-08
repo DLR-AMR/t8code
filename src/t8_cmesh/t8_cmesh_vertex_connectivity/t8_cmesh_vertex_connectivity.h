@@ -31,7 +31,7 @@
 T8_EXTERN_C_BEGIN ();
 
 /**
- * \struct t8_cmesh_vertex_connectivity
+ * t8_cmesh_vertex_connectivity_c
  * 
  * Opaque pointer to the cmesh vertex connectivity structure.
  */

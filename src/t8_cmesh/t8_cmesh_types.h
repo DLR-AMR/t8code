@@ -89,8 +89,7 @@ typedef struct t8_cprofile t8_cprofile_t; /* Defined below */
  *  store duplicated trees on different processes, if each of these processes
  *  owns elements of the same tree in the fine mesh.
  *
- *  Each tree stores information about its face-neighbours in an array of
- *  \ref t8_ctree_fneighbor. \see t8_ctree_fneighbor
+ *  Each tree stores information about its face-neighbours.
  *
  *  If partitioned the ghost trees are stored in a hash table that is backed up
  *  by an array. The hash value of a ghost tree is its tree_id modulo the number
@@ -104,12 +103,11 @@ typedef struct t8_cmesh
 
   int set_partition;  /**< If nonzero the cmesh is partitioned.
                                             If zero each process has the whole cmesh. */
-  int face_knowledge; /**< If partitioned the level of face knowledge that is expected. \ref t8_cmesh_set_partitioned;
-                            see \ref t8_cmesh_set_partition.
+  int face_knowledge; /**< If partitioned the level of face knowledge that is expected.
 */
 
   const t8_scheme_c *set_partition_scheme; /**< If the cmesh is to be partitioned according to a uniform level,
-                                                the scheme that describes the refinement pattern. See \ref t8_cmesh_set_partition. */
+                                                the scheme that describes the refinement pattern. */
   int8_t set_partition_level;  /**< Non-negative if the cmesh should be partitioned from an already existing cmesh
                                          with an assumed \a level uniform mesh underneath. */
   struct t8_cmesh *set_from;   /**< If this cmesh shall be derived from an
@@ -187,7 +185,7 @@ typedef struct t8_cghost
  * about face neighbors. For those
  * the tree_to_face index is computed as follows.
  * Let F be the maximal number of faces of any eclass of the cmesh's dimension, then
- * ttf % F is the face number and ttf / F is the orientation. (\ref t8_eclass_max_num_faces)
+ * ttf % F is the face number and ttf / F is the orientation. (\a t8_eclass_max_num_faces)
  * The orientation is determined as follows. Let my_face and other_face
  * be the two face numbers of the connecting trees.
  * We chose a main_face from them as follows: Either both trees have the same
@@ -242,10 +240,7 @@ typedef struct t8_attribute_info
 } t8_attribute_info_struct_t;
 
 /**
- * \struct t8_cmesh_trees
- *
  * This structure holds the trees and ghosts of a cmesh.
- *
  */
 typedef struct t8_cmesh_trees
 {
@@ -259,10 +254,10 @@ typedef struct t8_cmesh_trees
 } t8_cmesh_trees_struct_t;
 
 /**
- * \struct t8_part_tree_struct_t
+ * t8_part_tree
  * This structure holds the data of a trees in a partition.
  */
-typedef struct t8_part_tree
+typedef struct t8_part_tree_struct_t
 {
   char *first_tree;           /**< Stores the trees, the ghosts and the attributes.
                                            The last 2*sizeof(t8_locidx) bytes store num_trees and num_ghosts */
@@ -277,7 +272,7 @@ typedef struct t8_part_tree
  *       Maybe the number of shipped trees per process is useful?
  */
 /** 
- * \struct t8_cprofile
+ * t8_cprofile_struct_t
  * This struct is used to profile cmesh algorithms.
  * The cmesh struct stores a pointer to a profile struct, and if
  * it is nonzero, various runtimes and data measurements are stored here.

@@ -251,10 +251,10 @@ t8_compare_id_and_att_by_global_id (t8_part_ghost_id_and_num_atts &id_A, t8_part
   return id_A.global_id < id_B.global_id;
 }
 
-/* Compare function for t8_part_ghost_id_and_num_atts to compare by local id.
-*
-* Return True if local id of if_A < local id of id_B
-* Return False otherwise
+/** Compare function for t8_part_ghost_id_and_num_atts to compare by local id.
+* \param [in] id_A First t8_part_ghost_id_and_num_atts to compare.
+* \param [in] id_B Second t8_part_ghost_id_and_num_atts to compare.
+* \return True if part_ghost_id of id_A < part_ghost_id of id_B, False otherwise.
 * */
 bool
 t8_compare_id_and_att_by_part_id (t8_part_ghost_id_and_num_atts &id_A, t8_part_ghost_id_and_num_atts &id_B)
