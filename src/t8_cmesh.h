@@ -442,13 +442,26 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 int
 t8_cmesh_save (t8_cmesh_t cmesh, const char *fileprefix);
 
-/* TODO: Document */
+/**
+ * Load a cmesh from a file.
+ * 
+ * \param[in] filename The name of the file to load the cmesh from.
+ * \param[in] comm The MPI communicator to use.
+ */
 t8_cmesh_t
 t8_cmesh_load (const char *filename, sc_MPI_Comm comm);
 
-/* TODO: Document */
-/* procs_per_node is only relevant in mode==JUQUEEN.
- *  num_files = 1 => replicated cmesh is constructed */
+/**
+ * Load a cmesh from multiple files and distribute it across the processes.
+ * 
+ * \param[in] fileprefix The prefix of the files to load the cmesh from.
+ * \param[in] num_files The number of files to load.
+ * \param[in] comm The MPI communicator to use.
+ * \param[in] mode The load mode to use, see \ref t8_load_mode_t.
+ * \param[in] procs_per_node The number of processes per node, only relevant in JUQUEEN mode.
+ * 
+ * \note \a procs_per_node is only relevant in mode==JUQUEEN. If \a num_files = 1 a replicated cmesh is constructed.
+ */
 t8_cmesh_t
 t8_cmesh_load_and_distribute (const char *fileprefix, int num_files, sc_MPI_Comm comm, t8_load_mode_t mode,
                               int procs_per_node);
@@ -823,7 +836,7 @@ t8_cmesh_new_translate_vertices_to_attributes (const t8_locidx_t *tvertices, con
  * \param[in] comm    The MPI communicator to use for printing.
  */
 void
-t8_cmesh_debug_print_trees ([[maybe_unused]] const t8_cmesh_t cmesh, sc_MPI_Comm comm);
+t8_cmesh_debug_print_trees ([[maybe_unused]] const t8_cmesh_t cmesh, [[maybe_unused]] sc_MPI_Comm comm);
 
 /**
  * Compute the process local bounding box of the cmesh.

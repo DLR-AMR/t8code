@@ -163,6 +163,10 @@ struct t8_msh_file_node
    * Constructor for parametric nodes.
    * \param [in, out] id        ID of the node.
    * \param [in, out] coords    Coords of the node.
+   * \param [in, out] params    Parameters of the node in the parametric space.
+   * \param [in] parametric True if the node is parametric, false otherwise.#
+   * \param [in] entity_dim The dimension of the entity to which the node belongs.
+   * \param [in] entity_tag The tag of the entity to which the node belongs.
    */
   t8_msh_file_node (t8_gloidx_t id, std::array<double, 3> coords, std::array<double, 2> params, bool parametric,
                     int entity_dim, t8_locidx_t entity_tag)

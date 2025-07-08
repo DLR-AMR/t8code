@@ -242,7 +242,7 @@ typedef struct t8_attribute_info
 } t8_attribute_info_struct_t;
 
 /**
- * /struct t8_cmesh_trees_struct_t
+ * \struct t8_cmesh_trees_struct_t
  *
  * This structure holds the trees and ghosts of a cmesh.
  *
@@ -258,7 +258,10 @@ typedef struct t8_cmesh_trees
   sc_mempool_t *global_local_mempool;    /**< Memory pool for the entries in the hash table */
 } t8_cmesh_trees_struct_t;
 
-/* TODO: document */
+/**
+ * \struct t8_part_tree_struct_t
+ * This structure holds the data of a trees in a partition.
+ */
 typedef struct t8_part_tree
 {
   char *first_tree;           /**< Stores the trees, the ghosts and the attributes.
@@ -273,7 +276,9 @@ typedef struct t8_part_tree
 /* TODO: Extend this structure with meaningful entries.
  *       Maybe the number of shipped trees per process is useful?
  */
-/** This struct is used to profile cmesh algorithms.
+/** 
+ * \struct t8_cprofile_struct_t
+ * This struct is used to profile cmesh algorithms.
  * The cmesh struct stores a pointer to a profile struct, and if
  * it is nonzero, various runtimes and data measurements are stored here.
  * \see t8_cmesh_set_profiling and \see t8_cmesh_print_profile

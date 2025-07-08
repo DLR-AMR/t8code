@@ -214,7 +214,7 @@ t8_cmesh_trees_start_part (const t8_cmesh_trees_t trees, const int proc, const t
 }
 
 /**
- * /struct t8_part_ghost_id_and_num_atts
+ * \struct t8_part_ghost_id_and_num_atts
  * 
  * Helper struct for sorting the number of ghost attributes by global id.
  * In order to sort them, we need the part ghost id to access the global id.
@@ -240,10 +240,10 @@ typedef struct
   int attribute_offset;
 } t8_part_ghost_id_and_num_atts;
 
-/* Compare function for t8_part_ghost_id_and_num_atts to compare by global id.
-*
-* Return True if global_id of if_A < global_id of id_B
-* Return False otherwise
+/** Compare function for t8_part_ghost_id_and_num_atts to compare by global id.
+* \param [in] id_A First t8_part_ghost_id_and_num_atts to compare.
+* \param [in] id_B Second t8_part_ghost_id_and_num_atts to compare.
+* \return True if global_id of id_A < global_id of id_B, False otherwise.
 * */
 bool
 t8_compare_id_and_att_by_global_id (t8_part_ghost_id_and_num_atts &id_A, t8_part_ghost_id_and_num_atts &id_B)

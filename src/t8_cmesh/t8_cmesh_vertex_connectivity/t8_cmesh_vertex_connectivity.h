@@ -30,6 +30,11 @@
 
 T8_EXTERN_C_BEGIN ();
 
+/**
+ * \struct t8_cmesh_vertex_connectivity
+ * 
+ * Opaque pointer to the cmesh vertex connectivity structure.
+ */
 typedef struct t8_cmesh_vertex_connectivity *t8_cmesh_vertex_connectivity_c;
 
 /** Set all global vertex ids of a local tree.

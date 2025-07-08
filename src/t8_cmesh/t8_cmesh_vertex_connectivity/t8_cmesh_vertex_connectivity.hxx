@@ -53,7 +53,7 @@ struct t8_cmesh_vertex_connectivity
   /** Given a cmesh, build up the vertex_to_tree and tree_to_vertex members.
    * \param [in] cmesh A cmesh that has been initialized, but not committed.
    * \return: some error value to be specified.
-   * On error, \state will be set to ERROR. 
+   * On error, state will be set to ERROR. 
    * The cmesh must not be committed, but all tree information and neighbor information must
    * have been set. 
    * Currently, \a cmesh has to be replicated. */
