@@ -174,7 +174,7 @@ class t8_cmesh_vertex_conn_tree_to_vertex {
 
   /** Return the state of this object. */
   inline state
-  get_state ()
+  get_state () const
   {
     return current_state;
   }
