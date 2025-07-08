@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_trees.c
+/** \file t8_cmesh_trees.cxx
  *
  * TODO: document this file
  */
