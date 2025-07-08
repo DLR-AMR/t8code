@@ -28,16 +28,33 @@
 #include <t8_schemes/t8_default/t8_default.hxx> /* default refinement scheme. */
 #include <sc_options.h>                         /* CLI parser */
 
+typedef struct query_point
+{
+  double xyz[3]; /* 3D coordinates */
+  int is_local;  /* set to 1, if found in local search */
+  int rank;      /* rank assigned during partition search */
+} query_point_t;
+
 typedef struct search_partition_global
 {
-  /* forest mesh */
+  /* Forest */
   double a[3], b[3], c[3]; /* refinement centers */
   int uniform_level;       /* level of initial uniform refinement */
   int max_level;           /* maximum level of adaptive refinement */
   t8_forest_t forest;      /* the resulting forest */
 
+  /* Queries */
+  t8_locidx_t num_global_queries; /* global number of queries;
+                                                 * of type p4est_locidx_t, since
+                                                 * queries are replicated across
+                                                 * all processes */
+  int seed;                       /* seed for random query creation */
+  double clustering_exponent;     /* affects the distribution of queries */
+  sc_array_t *queries;            /* array of query points */
+
   /* MPI */
-  int mpirank; /* the processes rank */
+  sc_MPI_Comm mpicomm; /* the mpi communicator */
+  int mpirank;         /* the processes rank */
 } search_partition_global_t;
 
 /* Map coordinates from the reference coordinate system of the 2x2x2 brick
@@ -90,19 +107,18 @@ create_forest (search_partition_global_t *g)
   int mpiret;
   int il;
   t8_gloidx_t old_gnl;
-  sc_MPI_Comm comm;
   t8_cmesh_t cmesh;
   t8_forest_t forest_adapt;
 
   /* Get the MPI rank. */
-  comm = sc_MPI_COMM_WORLD;
-  mpiret = sc_MPI_Comm_rank (comm, &g->mpirank);
+  g->mpicomm = sc_MPI_COMM_WORLD;
+  mpiret = sc_MPI_Comm_rank (g->mpicomm, &g->mpirank);
   SC_CHECK_MPI (mpiret);
 
   /* Build a 2x2x2 cube cmesh. */
-  cmesh = t8_cmesh_new_brick_3d (2, 2, 2, 0, 0, 0, comm);
+  cmesh = t8_cmesh_new_brick_3d (2, 2, 2, 0, 0, 0, g->mpicomm);
   /* Build a uniform forest on it. */
-  g->forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), g->uniform_level, 0, comm);
+  g->forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), g->uniform_level, 0, g->mpicomm);
 
   /* Refine the forest around two refinement centers. */
   for (il = g->uniform_level; il < g->max_level; il++) {
@@ -125,8 +141,56 @@ create_forest (search_partition_global_t *g)
 }
 
 static void
+generate_queries (search_partition_global_t *g)
+{
+  t8_locidx_t iq, nqh;
+  int id;
+  query_point_t *p;
+  double t;
+  int mpiret;
+
+  /* generate local queries */
+  g->queries = sc_array_new_count (sizeof (query_point_t), g->num_global_queries);
+  sc_array_memset (g->queries, 0);
+  if (g->mpirank == 0) {
+    srand (g->seed);
+    nqh = g->num_global_queries / 2;
+    for (iq = 0; iq < g->num_global_queries; iq++) {
+      p = (query_point_t *) sc_array_index_int (g->queries, iq);
+      p->is_local = 0;
+      p->rank = -1;
+      for (id = 0; id < 3; id++) {
+        p->xyz[id] = rand () / (RAND_MAX + 1.);
+      }
+
+      /* move point closer to g->b or g->c depending on iq and random t */
+      t = pow (rand () / (RAND_MAX + 1.), g->clustering_exponent);
+      /* move the point to position sp->xyz * t + (1 - t) * {g->b,g->c} */
+      if (iq < nqh) {
+        p->xyz[0] = t * p->xyz[0] + (1 - t) * g->b[0];
+        p->xyz[1] = t * p->xyz[1] + (1 - t) * g->b[1];
+        p->xyz[2] = t * p->xyz[2] + (1 - t) * g->b[2];
+      }
+      else {
+        p->xyz[0] = t * p->xyz[0] + (1 - t) * g->c[0];
+        p->xyz[1] = t * p->xyz[1] + (1 - t) * g->c[1];
+        p->xyz[2] = t * p->xyz[2] + (1 - t) * g->c[2];
+      }
+    }
+  }
+
+  /* broadcast queries to all processes */
+  mpiret = sc_MPI_Bcast (g->queries->array, g->num_global_queries * sizeof (query_point_t), sc_MPI_BYTE, 0, g->mpicomm);
+  SC_CHECK_MPI (mpiret);
+  t8_global_productionf ("Created %lld global queries.\n", (unsigned long long) g->queries->elem_count);
+}
+
+static void
 cleanup (search_partition_global_t *g)
 {
+  /* Destroy the queries. */
+  sc_array_destroy (g->queries);
+
   /* Destroy the forest. */
   t8_forest_unref (&g->forest);
 }
@@ -137,6 +201,9 @@ run (search_partition_global_t *g)
   /* Create a 2x2x2 brick forest covering the unit square. */
   create_forest (g);
 
+  /* Generate search queries in the unit square. */
+  generate_queries (g);
+
   /* Fee memory. */
   cleanup (g);
 }
@@ -146,6 +213,7 @@ main (int argc, char **argv)
 {
   int mpiret;
   int first_argc, ue;
+  int ngq;
   sc_options_t *opt;
   search_partition_global_t global, *g = &global;
 
@@ -165,6 +233,9 @@ main (int argc, char **argv)
   opt = sc_options_new (argv[0]);
   sc_options_add_int (opt, 'l', "minlevel", &g->uniform_level, 3, "Level of uniform refinement");
   sc_options_add_int (opt, 'L', "maxlevel", &g->max_level, 5, "Level of maximum refinement");
+  sc_options_add_int (opt, 'q', "num-queries", &ngq, 100, "Number of queries created per process");
+  sc_options_add_int (opt, 's', "seed", &g->seed, 0, "Seed for random queries");
+  sc_options_add_double (opt, 'c', "clustering-exponent", &g->clustering_exponent, 0.5, "Clustering of queries");
 
   /* Proceed in run-once loop for clean abort. */
   ue = 0;
@@ -176,6 +247,7 @@ main (int argc, char **argv)
       ue = 1;
       break;
     }
+    g->num_global_queries = (t8_locidx_t) ngq;
 
     /* Check options for consistency. */
     if (g->uniform_level < 0 || g->uniform_level > 18) {
@@ -185,6 +257,22 @@ main (int argc, char **argv)
     }
     if (g->max_level < 0 || g->max_level > 18) {
       t8_global_errorf ("Maximum level out of bounds 0..18\n");
+      ue = 1;
+    }
+    if (g->num_global_queries < 0) {
+      P4EST_GLOBAL_LERROR ("Number of queries has to be non-negative.\n");
+      ue = 1;
+    }
+    if ((long long) g->num_global_queries * sizeof (query_point_t) > INT_MAX) {
+      P4EST_GLOBAL_LERROR ("Number of queries too large for MPI buffer.\n");
+      ue = 1;
+    }
+    if (g->seed < 0) {
+      P4EST_GLOBAL_LERROR ("Seed has to be non-negative.\n");
+      ue = 1;
+    }
+    if (g->clustering_exponent < 0.) {
+      P4EST_GLOBAL_LERROR ("Clustering exponent has to be non-negative.\n");
       ue = 1;
     }
     if (ue) {
