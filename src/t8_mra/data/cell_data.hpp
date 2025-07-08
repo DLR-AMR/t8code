@@ -1,5 +1,9 @@
 #pragma once
+
+#ifdef T8_ENABLE_MRA
+
 #include <vector>
+#include "t8_eclass.h"
 
 namespace t8_mra
 {
@@ -14,7 +18,7 @@ binom (size_t n, size_t k) noexcept
                                   : binom (n - 1, k) * n / (n - k);
 }
 
-template <typename TEclassScheme, unsigned short U, unsigned short P>
+template <t8_eclass TShape, unsigned short U, unsigned short P>
 struct data_per_element
 {
   static constexpr unsigned short DIM = 2;  /// TODO
@@ -38,3 +42,5 @@ struct data_per_element
 };
 
 }  // namespace t8_mra
+
+#endif
