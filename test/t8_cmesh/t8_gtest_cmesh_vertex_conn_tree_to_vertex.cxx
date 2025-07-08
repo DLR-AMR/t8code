@@ -50,19 +50,19 @@ Note to future developers:
     2. derive a cmesh from it
     3. Add vertices to the direved cmesh
     4. commit the derived cmesh
-  
-  This is implemented in the 
+
+  This is implemented in the
     cmesh_vertex_conn_ttv_with_core_classes
     cmesh_vertex_conn_ttv_with_cmesh_functions
   test suites.
-  
+
   However, as of now (i.e. April 2025), we cannot not add attributes (and hence vertices)
   while deriving a cmesh.
   It is only possible to add attributes when constructing a new cmesh from scratch.
   Thus, the test suites are currently disabled/commented out with #if 0 blocks.
 
   Instead, we currently create a bunch of test cmeshes ourself from scratch.
-  This is implemented in the 
+  This is implemented in the
     cmesh_vertex_conn_ttv_with_core_classes_temp
     cmesh_vertex_conn_ttv_with_cmesh_functions_temp
   test suites.
@@ -234,9 +234,9 @@ TEST_P (cmesh_vertex_conn_ttv_with_core_classes_temp, convert_to_vtt)
   t8_cmesh_vertex_conn_vertex_to_tree vtt;
   vtt.build_from_ttv (cmesh, ttv);
   /* Since global tree i is mapped to vertices:
-   *  i*T8_ECLASS_MAX_CORNERS, i*T8_ECLASS_MAX_CORNERS + 1, ... 
+   *  i*T8_ECLASS_MAX_CORNERS, i*T8_ECLASS_MAX_CORNERS + 1, ...
    *  and this mapping is unique, we know that the list for vertex j
-   *  must contain 
+   *  must contain
    *  global tree j / T8_ECLASS_MAX_CORNERS
    *  with local vertex j % T8_ECLASS_MAX_CORNERS */
   ASSERT_TRUE (vtt.is_committed ());

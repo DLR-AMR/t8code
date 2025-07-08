@@ -73,7 +73,7 @@ class t8_cmesh_vertex_conn_tree_to_vertex {
    * \param [in] cmesh_from A committed cmesh.
    * \param [in] cmesh      An initialized but not committed cmesh that is to be derived from \a cmesh_from.
    * \param [in] vtt        A committed vertex to tree connectivity for \a cmesh_from.
-   * 
+   *
    * As a result a tree to vertec connectivity for \a cmesh will be constructed.
    * \note \a cmesh_from must be committed.
    * \note \a cmesh must not be committed.

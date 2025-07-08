@@ -56,7 +56,7 @@ t8_cmesh_vertex_conn_vertex_to_tree::build_from_ttv (const t8_cmesh_t cmesh, t8_
   state = COMMITTED;
 }
 
-/* Mark as ready for commit. Meaning that all 
+/* Mark as ready for commit. Meaning that all
   * global vertex ids have been added.
   * After commit, no vertex ids can be added anymore. */
 void
@@ -128,7 +128,7 @@ t8_cmesh_vertex_conn_vertex_to_tree::sort_list_by_tree_id ()
   for (auto& [global_id, tree_vertex_list] : vertex_to_tree) {
     /* Check that the list contains at least one entry. */
     T8_ASSERT (tree_vertex_list.size () > 0);
-    /* Sort the list of local tree vertices according to their 
+    /* Sort the list of local tree vertices according to their
     * local tree id. */
     std::sort (tree_vertex_list.begin (), tree_vertex_list.end (), t8_cmesh_tree_vertex_pair_compare);
   }
@@ -137,8 +137,8 @@ t8_cmesh_vertex_conn_vertex_to_tree::sort_list_by_tree_id ()
 int
 t8_cmesh_vertex_conn_vertex_to_tree::contains_all_vertices (const t8_cmesh_t cmesh) const
 {
-  /* We need to check that each local tree/ghost and each vertex 
-   * exists exactly once in the list. 
+  /* We need to check that each local tree/ghost and each vertex
+   * exists exactly once in the list.
    * We do so by setting up an indicator array storing the
    * number of vertices for each tree and count down for each occurrence.
    * At the end the values must be zero. */
