@@ -3,6 +3,7 @@
 #ifdef T8_ENABLE_MRA
 
 #include <vector>
+#include <array>
 #include "t8_eclass.h"
 
 namespace t8_mra
@@ -18,6 +19,9 @@ binom (size_t n, size_t k) noexcept
                                   : binom (n - 1, k) * n / (n - k);
 }
 
+/// TODO Access to elment with U_DIM > 1
+/// TODO template specialization
+/// TOOD change to std::array
 template <t8_eclass TShape, unsigned short U, unsigned short P>
 struct data_per_element
 {
@@ -30,13 +34,10 @@ struct data_per_element
   std::vector<double> u_coeffs;  // Single-scale coefficients
   std::vector<double> d_coeffs;  // Detail coefficients
   bool significant;
-  unsigned int first : 2;
-  unsigned int second : 2;
-  unsigned int third : 2;
+  std::array<int, 3> order;  // Point order
 
   explicit data_per_element ()
-    : u_coeffs (U_DIM * P_DIM, {}), d_coeffs (U_DIM * W_DIM, {}), significant (false), first (0u), second (0u),
-      third (0u)
+    : u_coeffs (U_DIM * P_DIM, {}), d_coeffs (U_DIM * W_DIM, {}), significant (false), order ({})
   {
   }
 };
