@@ -34,13 +34,41 @@ typedef struct search_partition_global
   t8_forest_t forest; /* the resulting forest */
 } search_partition_global_t;
 
+static void
+create_forest (search_partition_global_t *g)
+{
+  sc_MPI_Comm comm;
+  t8_cmesh_t cmesh;
+  t8_forest_t forest;
+
+  comm = sc_MPI_COMM_WORLD;
+  /* Build a 2x2x2 cube cmesh. */
+  cmesh = t8_cmesh_new_brick_3d (2, 2, 2, 0, 0, 0, comm);
+  /* Build a uniform forest on it. */
+  g->forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), g->uniform_level, 0, comm);
+}
+
+static void
+cleanup (search_partition_global_t *g)
+{
+  /* Destroy the forest. */
+  t8_forest_unref (&g->forest);
+}
+
+static void
+run (search_partition_global_t *g)
+{
+  /* Create a 2x2x2 brick forest covering the unit square. */
+  create_forest (g);
+
+  /* Fee memory. */
+  cleanup (g);
+}
+
 int
 main (int argc, char **argv)
 {
   int mpiret;
-  sc_MPI_Comm comm;
-  t8_cmesh_t cmesh;
-  t8_forest_t forest;
   int first_argc, ue;
   sc_options_t *opt;
   search_partition_global_t global, *g = &global;
@@ -87,20 +115,13 @@ main (int argc, char **argv)
     t8_global_productionf (" [search] \n");
     t8_global_productionf (" [search] Hello, this is the partition search example of t8code.\n");
     t8_global_productionf (
-      " [search] We will search for all elements in a forest that contain randomly created particles.\n");
+      " [search] We will search for all elements in a forest that contains randomly created particles.\n");
     t8_global_productionf (" [search] \n");
 
     /*
-     *  Build forest and particles.
+     * Run example.
      */
-    comm = sc_MPI_COMM_WORLD;
-    /* Build a cube cmesh with tet, hex, and prism trees. */
-    cmesh = t8_cmesh_new_brick_3d (2, 2, 2, 0, 0, 0, comm);
-    /* Build a uniform forest on it. */
-    g->forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), g->uniform_level, 0, comm);
-
-    /* Destroy the forest. */
-    t8_forest_unref (&g->forest);
+    run (g);
   } while (0);
   if (ue) {
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
