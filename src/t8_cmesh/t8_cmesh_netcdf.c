@@ -48,65 +48,39 @@ These functions write a file in the netCDF-format which represents the given 2D-
  *
  * Contains all Variables used in order to work with the NetCDF-File 
  *
- * \var t8_cmesh_netcdf_context_t::filename The name of the NetCDF-File to be read
- * \var t8_cmesh_netcdf_context_t::filetitle The title of the NetCDF-File
- * \var t8_cmesh_netcdf_context_t::dim The dimension of the cmesh (2D or 3D)
- * \var t8_cmesh_netcdf_context_t::nMesh_elem The number of elements in the cmesh
- * \var t8_cmesh_netcdf_context_t::nMesh_node The number of nodes in the cmesh
- * \var t8_cmesh_netcdf_context_t::nMaxMesh_elem_nodes The maximum number of nodes per element in the cmesh
- * \var t8_cmesh_netcdf_context_t::nMesh_local_node The number of local nodes in the cmesh
- * \var t8_cmesh_netcdf_context_t::nMesh_elem_dimid The NetCDF-dimension id for the number of elements
- * \var t8_cmesh_netcdf_context_t::nMaxMesh_elem_nodes_dimid The NetCDF-dimension id for the maximum number of nodes per element
- * \var t8_cmesh_netcdf_context_t::nMesh_node_dimid The NetCDF-dimension id for the number of nodes
- * \var t8_cmesh_netcdf_context_t::ncid The NetCDF-file id
- * \var t8_cmesh_netcdf_context_t::var_elem_tree_id The NetCDF-variable id for the element tree id
- * \var t8_cmesh_netcdf_context_t::var_elem_types_id The NetCDF-variable id for the element types
- * \var t8_cmesh_netcdf_context_t::var_elem_nodes_id The NetCDF-variable id for the element nodes
- * \var t8_cmesh_netcdf_context_t::var_mesh_id The NetCDF-variable id for the mesh
- * \var t8_cmesh_netcdf_context_t::var_node_x_id The NetCDF-variable id for the x-coordinates of the nodes
- * \var t8_cmesh_netcdf_context_t::var_node_y_id The NetCDF-variable id for the y-coordinates of the nodes
- * \var t8_cmesh_netcdf_context_t::var_node_z_id The NetCDF-variable id for the z-coordinates of the nodes
- * \var t8_cmesh_netcdf_context_t::dimids An array containing two NetCDF-dimensions in order to declare two-dimensional NetCDF-variables
- * \var t8_cmesh_netcdf_context_t::fillvalue32 The fill value for 32-bit integer variables
- * \var t8_cmesh_netcdf_context_t::fillvalue64 The fill value for 64-bit integer variables
- * \var t8_cmesh_netcdf_context_t::start_index The start index for NetCDF-variables
- * \var t8_cmesh_netcdf_context_t::convention The NetCDF-convention used (e.g., "UGRID")
- * \var t8_cmesh_netcdf_context_t::netcdf_var_storage_mode The storage mode for NetCDF-variables (e.g., "chunked")
- * \var t8_cmesh_netcdf_context_t::netcdf_mpi_access The MPI-access mode for NetCDF (e.g., "MPI-IO")
- * \var t8_cmesh_netcdf_context_t::old_fill_mode The old NetCDF-FillMode if it gets changed
 */
 typedef struct
 {
-  char *filename;
-  const char *filetitle;
-  int dim;
-  t8_gloidx_t nMesh_elem;
-  t8_gloidx_t nMesh_node;
-  int nMaxMesh_elem_nodes;
-  t8_gloidx_t nMesh_local_node;
+  char *filename;               /**< The name of the NetCDF-File to be read */
+  const char *filetitle;        /**< The title of the NetCDF-File */
+  int dim;                      /**< The dimension of the cmesh (2D or 3D) */
+  t8_gloidx_t nMesh_elem;       /**< The number of elements in the cmesh */
+  t8_gloidx_t nMesh_node;       /**< The number of nodes in the cmesh */
+  int nMaxMesh_elem_nodes;      /**< The maximum number of nodes per element in the cmesh */
+  t8_gloidx_t nMesh_local_node; /**< The number of local nodes in the cmesh */
   /* Declaring NetCDF-dimension ids */
-  int nMesh_elem_dimid;
-  int nMaxMesh_elem_nodes_dimid;
-  int nMesh_node_dimid;
+  int nMesh_elem_dimid;          /**< The NetCDF-dimension id for the number of elements */
+  int nMaxMesh_elem_nodes_dimid; /**< The NetCDF-dimension id for the maximum number of nodes per element */
+  int nMesh_node_dimid;          /**< The NetCDF-dimension id for the number of nodes */
   /* Declaring NetCDF-variables ids */
-  int ncid;
-  int var_elem_tree_id;
-  int var_elem_types_id;
-  int var_elem_nodes_id;
-  int var_mesh_id;
-  int var_node_x_id;
-  int var_node_y_id;
-  int var_node_z_id;
-  int dimids[2]; /* contains two NetCDF-dimensions in order to declare two-dimensional NetCDF-variables */
+  int ncid;              /**< The NetCDF-file id */
+  int var_elem_tree_id;  /**< The NetCDF-variable id for the element tree id */
+  int var_elem_types_id; /**< The NetCDF-variable id for the element types */
+  int var_elem_nodes_id; /**< The NetCDF-variable id for the element nodes */
+  int var_mesh_id;       /**< The NetCDF-variable id for the mesh */
+  int var_node_x_id;     /**< The NetCDF-variable id for the x-coordinates of the nodes */
+  int var_node_y_id;     /**< The NetCDF-variable id for the y-coordinates of the nodes */
+  int var_node_z_id;     /**< The NetCDF-variable id for the z-coordinates of the nodes */
+  int dimids[2];         /**< contains two NetCDF-dimensions in order to declare two-dimensional NetCDF-variables */
   /* Variables used for default NetCDF purposes */
-  t8_nc_int32_t fillvalue32;
-  t8_nc_int64_t fillvalue64;
-  t8_nc_int32_t start_index;
-  const char *convention;
-  int netcdf_var_storage_mode;
-  int netcdf_mpi_access;
+  t8_nc_int32_t fillvalue32;   /**< The fill value for 32-bit integer variables */
+  t8_nc_int64_t fillvalue64;   /**< The fill value for 64-bit integer variables */
+  t8_nc_int32_t start_index;   /**< The start index for NetCDF-variables */
+  const char *convention;      /**< The NetCDF-convention used (e.g., "UGRID") */
+  int netcdf_var_storage_mode; /**< The storage mode for NetCDF-variables (e.g., "chunked") */
+  int netcdf_mpi_access;       /**< The MPI-access mode for NetCDF (e.g., "MPI-IO") */
   /* Stores the old NetCDF-FillMode if it gets changed */
-  int old_fill_mode;
+  int old_fill_mode; /**< The old NetCDF-FillMode if it gets changed */
 
 } t8_cmesh_netcdf_context_t;
 
