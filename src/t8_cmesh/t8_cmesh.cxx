@@ -1609,10 +1609,10 @@ t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, const int level, 
     T8_ASSERT (cmesh->mpirank > 0 || prev_last_tree <= 0);
 #endif
     if (!is_empty && cmesh->mpirank > 0 && child_in_tree_begin_temp > 0) {
-      // We exclude the following here:
-      // - empty partitions, because by def their first_tree_shared flag is zero
-      // - the case that the previous was empty at the beginning of the partitions array
-      // - the case that we have the first global element but are not rank 0.
+      /* We exclude the following here:
+       - empty partitions, because by def their first_tree_shared flag is zero
+       - the case that the previous was empty at the beginning of the partitions array
+       - the case that we have the first global element but are not rank 0. */
       *first_tree_shared = 1;
     }
     else {
