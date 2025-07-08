@@ -27,15 +27,15 @@
 #include <t8_eclass.h>
 #include <sc_functions.h>
 #include <t8_schemes/t8_standalone/t8_standalone_elements.hxx>
+#include <utility>
 
 template <t8_eclass TEclass>
 struct t8_standalone_scheme
 {
  public:
   /** Constructor
-   * \param [in] elem_size  The size of the elements this scheme holds.
   */
-  t8_standalone_scheme ()
+  t8_standalone_scheme () noexcept
     : element_size (sizeof (t8_standalone_element<TEclass>)), scheme_context (sc_mempool_new (element_size)) {};
 
  protected:
@@ -53,9 +53,8 @@ struct t8_standalone_scheme
 
   /** Move constructor */
   t8_standalone_scheme (t8_standalone_scheme &&other) noexcept
-    : element_size (other.element_size), scheme_context (other.scheme_context)
+    : element_size (other.element_size), scheme_context (std::exchange (other.scheme_context, nullptr))
   {
-    other.scheme_context = nullptr;
   }
 
   /** Move assignment operator */
@@ -474,6 +473,15 @@ struct t8_standalone_scheme
   {
     T8_ASSERT (element_is_valid (elem));
 
+    return T8_ELEMENT_NUM_CHILDREN[TEclass];
+  }
+
+  /** Return the max number of children of an eclass.
+   * \return            The max number of children of \a element.
+   */
+  static constexpr int
+  get_max_num_children () noexcept
+  {
     return T8_ELEMENT_NUM_CHILDREN[TEclass];
   }
 
@@ -1011,7 +1019,7 @@ struct t8_standalone_scheme
    *                        defined in relation to the smaller face.
    * \note \a elem1 and \a elem2 may point to the same element.
    */
-  static constexpr void
+  static inline void
   element_transform_face ([[maybe_unused]] const t8_element_t *elem1, [[maybe_unused]] t8_element_t *elem2,
                           [[maybe_unused]] const int orientation, [[maybe_unused]] const int sign,
                           [[maybe_unused]] const int is_smaller_face) noexcept
@@ -1379,15 +1387,15 @@ struct t8_standalone_scheme
    *                      On output all these pointers will point to an allocated
    *                      and initialized element.
    * \note Not every element that is created in t8code will be created by a call
-   * to this function. However, if an element is not created using \ref t8_element_new,
-   * then it is guaranteed that \ref t8_element_init is called on it.
-   * \note In debugging mode, an element that was created with \ref t8_element_new
-   * must pass \ref t8_element_is_valid.
-   * \note If an element was created by \ref t8_element_new then \ref t8_element_init
-   * may not be called for it. Thus, \ref t8_element_new should initialize an element
-   * in the same way as a call to \ref t8_element_init would.
-   * \see t8_element_init
-   * \see t8_element_is_valid
+   * to this function. However, if an element is not created using \ref element_new,
+   * then it is guaranteed that \ref element_init is called on it.
+   * \note In debugging mode, an element that was created with \ref element_new
+   * must pass \ref element_is_valid.
+   * \note If an element was created by \ref element_new then \ref element_init
+   * may not be called for it. Thus, \ref element_new should initialize an element
+   * in the same way as a call to \ref element_init would.
+   * \see element_init
+   * \see element_is_valid
    */
   /* TODO: would it be better to directly allocate an array of elements,
    *       not element pointers? */
@@ -1417,13 +1425,13 @@ struct t8_standalone_scheme
    * \param [in] length   The number of elements to be initialized.
    * \param [in,out] elems On input an array of \b length many allocated
    *                       elements.
-   * \note In debugging mode, an element that was passed to \ref t8_element_init
-   * must pass \ref t8_element_is_valid.
-   * \note If an element was created by \ref t8_element_new then \ref t8_element_init
-   * may not be called for it. Thus, \ref t8_element_new should initialize an element
-   * in the same way as a call to \ref t8_element_init would.
-   * \see t8_element_new
-   * \see t8_element_is_valid
+   * \note In debugging mode, an element that was passed to \ref element_init
+   * must pass \ref element_is_valid.
+   * \note If an element was created by \ref element_new then \ref element_init
+   * may not be called for it. Thus, \ref element_new should initialize an element
+   * in the same way as a call to \ref element_init would.
+   * \see element_new
+   * \see element_is_valid
    */
   static inline void
   element_init ([[maybe_unused]] const int length, [[maybe_unused]] t8_element_t *elem) noexcept
@@ -1443,8 +1451,8 @@ struct t8_standalone_scheme
    * \param [in,out] elems On input an array of \a length many allocated
    *                       and initialized elements, on output an array of
    *                       \a length many allocated, but not initialized elements.
-   * \note Call this function if you called t8_element_init on the element pointers.
-   * \see t8_element_init
+   * \note Call this function if you called element_init on the element pointers.
+   * \see element_init
    */
   static constexpr void
   element_deinit ([[maybe_unused]] const int length, [[maybe_unused]] t8_element_t *elem) noexcept
@@ -1478,9 +1486,9 @@ struct t8_standalone_scheme
    *  and other membervariables do have meaningful values.
    * \param [in]      elem  The element to be checked.
    * \return          True if \a elem is safe to use. False otherwise.
-   * \note            An element that is constructed with \ref t8_element_new
+   * \note            An element that is constructed with \ref element_new
    *                  must pass this test.
-   * \note            An element for which \ref t8_element_init was called must pass
+   * \note            An element for which \ref element_init was called must pass
    *                  this test.
    * \note            This function is used for debugging to catch certain errors.
    *                  These can for example occur when an element points to a region

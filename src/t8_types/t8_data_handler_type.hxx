@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2025 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,30 +20,27 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#ifndef T8_CMESH_VTK_UNSTRUCTURED_READER
-#define T8_CMESH_VTK_UNSTRUCTURED_READER
-
-/**
- * This file contains all helper-functions needed to read a vtkUnstructuredGrid
- * from a file using the vtk-library. 
+/** \file t8_data_handler_type.hxx
+ * This file provides a strong type for the data handler.
  */
 
-#include <t8.h>
-#include "t8_vtk_types.h"
-#if T8_ENABLE_VTK
-#include <vtkDataSet.h>
-#include <vtkSmartPointer.h>
+#ifndef T8_DATA_HANDLER_TYPE_HXX
+#define T8_DATA_HANDLER_TYPE_HXX
+
+#include <t8_types/t8_type.hxx>
+#include <t8_types/t8_operators.hxx>
 
 /**
- * Given a filename to a file containing an vtkUnstructured Grid, read
- * the file using the vtk-library. 
+ * Tag to identify the data handler type.
+ */
+struct t8_data_handler_tag
+{
+};
+
+/**
+ * Strong type to describe the data handler type.
  * 
- * \param[in] filename  The name of the file
- * \param[in, out] grid On input a vtkSmartPointer, that will hold the grid described in
- *                      \a filename.
- * \returns             non-zero on success, zero if the reading failed.
  */
-vtk_read_success_t
-t8_read_unstructured (const char *filename, vtkSmartPointer<vtkDataSet> grid);
-#endif
-#endif /* T8_CMESH_VTK_UNSTRUCTURED_READER */
+using t8_data_handler_type = T8Type<int, t8_data_handler_tag, EqualityComparable>;
+
+#endif /* T8_DATA_HANDLER_TYPE_HXX */

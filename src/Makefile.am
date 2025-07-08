@@ -38,13 +38,14 @@ libt8_installed_headers = \
 libt8_installed_headers_cmesh = \
   src/t8_cmesh/t8_cmesh_save.h \
   src/t8_cmesh/t8_cmesh_examples.h \
-  src/t8_cmesh/t8_cmesh_geometry.h \
+  src/t8_cmesh/t8_cmesh_geometry.hxx \
   src/t8_cmesh/t8_cmesh_helpers.h \
   src/t8_cmesh/t8_cmesh_cad.hxx \
   src/t8_cmesh/t8_cmesh_types.h \
   src/t8_cmesh/t8_cmesh_stash.h
 libt8_installed_headers_data = \
   src/t8_data/t8_shmem.h src/t8_data/t8_containers.h \
+  src/t8_data/t8_data_handler.hxx \
   src/t8_data/t8_element_array_iterator.hxx
 libt8_installed_headers_forest = \
   src/t8_forest/t8_forest.h \
@@ -98,6 +99,9 @@ libt8_internal_headers = \
   src/t8_cmesh/t8_cmesh_trees.h src/t8_cmesh/t8_cmesh_partition.h \
   src/t8_cmesh/t8_cmesh_copy.h \
   src/t8_cmesh/t8_cmesh_offset.h \
+  src/t8_cmesh/t8_cmesh_vertex_connectivity.hxx \
+  src/t8_cmesh/t8_cmesh_vertex_conn_tree_to_vertex.hxx \
+  src/t8_cmesh/t8_cmesh_vertex_conn_vertex_to_tree.hxx \
   src/t8_vtk/t8_vtk_polydata.hxx \
   src/t8_vtk/t8_vtk_unstructured.hxx \
   src/t8_vtk/t8_vtk_parallel.hxx \
@@ -119,7 +123,10 @@ libt8_compiled_sources = \
   src/t8_cmesh/t8_cmesh_save.cxx \
   src/t8_cmesh/t8_cmesh_netcdf.c \
   src/t8_cmesh/t8_cmesh_trees.cxx src/t8_cmesh/t8_cmesh_commit.cxx \
-  src/t8_cmesh/t8_cmesh_partition.cxx\
+  src/t8_cmesh/t8_cmesh_vertex_conn_tree_to_vertex.cxx \
+  src/t8_cmesh/t8_cmesh_vertex_conn_vertex_to_tree.cxx \
+  src/t8_cmesh/t8_cmesh_vertex_connectivity.cxx \
+  src/t8_cmesh/t8_cmesh_partition.cxx \
   src/t8_cmesh/t8_cmesh_copy.c src/t8_data/t8_shmem.c \
   src/t8_cmesh/t8_cmesh_geometry.cxx \
   src/t8_cmesh/t8_cmesh_examples.cxx \

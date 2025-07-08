@@ -25,7 +25,7 @@
  * linked.
  * The purpose of this test is to check whether t8code successfully links
  * against vtk.
- * If t8code was not configured with --with-vtk then this test
+ * If t8code was not configured with --enable-vtk then this test
  * does nothing and is always passed.
  */
 #include <gtest/gtest.h>

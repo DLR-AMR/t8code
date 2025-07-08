@@ -1,14 +1,35 @@
+#  This file is part of t8code.
+#  t8code is a C library to manage a collection (a forest) of multiple
+#  connected adaptive space-trees of general element types in parallel.
+#
+#  Copyright (C) 2025 the developers
+#
+#  t8code is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  t8code is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with t8code; if not, write to the Free Software Foundation, Inc.,
+#  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
 cmake_minimum_required( VERSION 3.16 )
 
 include( cmake/GitProjectVersion.cmake )
 
-project( 
+project(
     T8CODE
     DESCRIPTION "Parallel algorithms and data structures for tree-based AMR with arbitrary element shapes."
     LANGUAGES C CXX
-    VERSION "${T8CODE_VERSION_MAJOR}.${T8CODE_VERSION_MINOR}.${T8CODE_VERSION_PATCH}" 
-)
+    VERSION "${T8CODE_VERSION_MAJOR}.${T8CODE_VERSION_MINOR}.${T8CODE_VERSION_PATCH}"
+    )
 
+include( GNUInstallDirs)
 include( CTest )
 include( CMakeDependentOption )
 
@@ -20,7 +41,7 @@ option( T8CODE_BUILD_WEXTRA "Compile t8code with extra warnings as done in the G
 option( T8CODE_EXPORT_COMPILE_COMMANDS "Export the compile commands as json. Can be used by IDEs for code completion (e.g. intellisense, clangd)" OFF )
 
 option( T8CODE_BUILD_TESTS "Build t8code's automated tests" ON )
-cmake_dependent_option( T8CODE_BUILD_TPL_TESTS "Build the tests from libsc and p4est" ON "T8CODE_BUILD_TESTS" OFF )
+cmake_dependent_option( T8CODE_BUILD_TPL_TESTS "Build the tests from libsc and p4est" OFF "T8CODE_BUILD_TESTS" OFF )
 
 option( T8CODE_BUILD_EXAMPLES "Build t8code's examples" ON )
 cmake_dependent_option( T8CODE_BUILD_TPL_EXAMPLES "Build the examples from libsc and p4est" OFF "T8CODE_BUILD_EXAMPLES" OFF )
@@ -40,10 +61,23 @@ option( T8CODE_USE_SYSTEM_P4EST "Use system-installed p4est library" OFF )
 option( T8CODE_BUILD_DOCUMENTATION "Build t8code's documentation" OFF )
 cmake_dependent_option( T8CODE_BUILD_DOCUMENTATION_SPHINX "Build t8code's documentation using sphinx" OFF "T8CODE_BUILD_DOCUMENTATION" OFF )
 
-set(T8CODE_TEST_LEVEL 0 CACHE STRING "Test level: 0 for full tests, 1 for less thorough tests, 2 for minimal tests. (WARNING: Use with care.)")
-add_definitions(-DT8CODE_TEST_LEVEL=${T8CODE_TEST_LEVEL})
 set(T8CODE_CUSTOM_PARALLEL_TEST_COMMAND "" CACHE STRING "Define a custom command for parallel tests , e.g.: mpirun -np 8 (overwrites standard mpirun -np 4 if build with mpi)")
 set(T8CODE_CUSTOM_SERIAL_TEST_COMMAND "" CACHE STRING "Define a custom command for serial tests.")
+
+# Reading the option T8CODE_TEST_LEVEL: Possible choices are T8_TEST_LEVEL_FULL, T8_TEST_LEVEL_MEDIUM, or T8_TEST_LEVEL_BASIC. Default is T8_TEST_LEVEL_FULL.
+set(T8CODE_TEST_LEVEL "T8_TEST_LEVEL_FULL" CACHE STRING "Test level: T8_TEST_LEVEL_FULL for full tests, T8_TEST_LEVEL_MEDIUM for less thorough tests, T8_TEST_LEVEL_BASIC for minimal tests. (WARNING: Use with care.)")
+set_property(CACHE T8CODE_TEST_LEVEL PROPERTY STRINGS "T8_TEST_LEVEL_FULL" "T8_TEST_LEVEL_MEDIUM" "T8_TEST_LEVEL_BASIC")
+
+# Parse string T8CODE_TEST_LEVEL into integer T8_TEST_LEVEL_INT for easier usage within the code.
+if(T8CODE_TEST_LEVEL STREQUAL "T8_TEST_LEVEL_BASIC" )
+    set(T8_TEST_LEVEL_INT 2)
+elseif(T8CODE_TEST_LEVEL STREQUAL "T8_TEST_LEVEL_MEDIUM" )
+    set(T8_TEST_LEVEL_INT 1)
+elseif(T8CODE_TEST_LEVEL STREQUAL "T8_TEST_LEVEL_FULL" )
+    set(T8_TEST_LEVEL_INT 0)
+else() 
+    message( FATAL_ERROR "Invalid string for T8CODE_TEST_LEVEL: ${T8CODE_TEST_LEVEL}. Valid options are T8_TEST_LEVEL_FULL, T8_TEST_LEVEL_MEDIUM, or T8_TEST_LEVEL_BASIC.")
+endif()
 
 # Set a default build type if none was specified
 set(default_build_type "Release")
@@ -56,22 +90,6 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
     "Debug" "Release" "RelWithDebInfo")
 endif()
-
-if( NOT DEFINED CMAKE_C_STANDARD ) 
-  set( CMAKE_C_STANDARD 11 )
-elseif( CMAKE_C_STANDARD LESS 11 )
-  message( FATAL_ERROR "The CMAKE_C_STANDARD variable has been set to ${CMAKE_C_STANDARD}, but t8code requires C11" )
-endif()
-set( CMAKE_C_STANDARD_REQUIRED ON )
-set( CMAKE_C_EXTENSIONS OFF )
-
-if( NOT DEFINED CMAKE_CXX_STANDARD ) 
-  set( CMAKE_CXX_STANDARD 20 )
-elseif( CMAKE_CXX_STANDARD LESS 20 )
-  message( FATAL_ERROR "The CMAKE_CXX_STANDARD variable has been set to ${CMAKE_CXX_STANDARD}, but t8code requires C++20" )
-endif()
-set( CMAKE_CXX_STANDARD_REQUIRED ON )
-set( CMAKE_CXX_EXTENSIONS OFF )
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
@@ -127,24 +145,59 @@ set( BUILD_SHARED_LIBS ON CACHE BOOL "Build libsc as a shared library" )
 set(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT FALSE)
 
 # Rpath options necessary for shared library install to work correctly in user projects.
-set(CMAKE_INSTALL_NAME_DIR ${CMAKE_INSTALL_PREFIX}/lib)
-set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
+# Compute the relative Rpath for proper library installation
+set(libPath ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}) # Library directory)
+cmake_path(RELATIVE_PATH libPath
+    BASE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR} # Binary directory
+    OUTPUT_VARIABLE relativeRpath
+)
+set(CMAKE_INSTALL_RPATH $ORIGIN $ORIGIN/${relativeRpath})
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH true)
 
 if ( T8CODE_USE_SYSTEM_SC )
-    find_package( SC REQUIRED PATHS /path/to/system/sc )
+    find_package( SC REQUIRED )
 else()
     set( SC_BUILD_EXAMPLES ${T8CODE_BUILD_TPL_EXAMPLES} )
     set( SC_BUILD_TESTING ${T8CODE_BUILD_TPL_TESTS} )
+
+    # Capture the list of variables before adding the subdirectory to mark the added ones as advanced.
+    get_cmake_property(_vars_before_sc VARIABLES )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/sc )
+    # Capture the list of variables after adding the subdirectory
+    get_cmake_property(_vars_after_sc VARIABLES )
+    # Compute the difference (new variables added by the subdirectory)
+    set( _new_sc_vars)
+    foreach( _var IN LISTS _vars_after_sc )
+        if( NOT _var IN_LIST _vars_before_sc )
+            list( APPEND _new_sc_vars ${_var} )
+        endif()
+    endforeach()
+
+    # Mark the new variables as advanced
+    mark_as_advanced( FORCE ${_new_sc_vars} )
 endif()
 
 if ( T8CODE_USE_SYSTEM_P4EST )
-    find_package( P4EST REQUIRED PATHS /path/to/system/p4est )
+    find_package( P4EST REQUIRED )
 else()
     set( P4EST_BUILD_EXAMPLES ${T8CODE_BUILD_TPL_EXAMPLES} )
     set( P4EST_BUILD_TESTING ${T8CODE_BUILD_TPL_TESTS} )
+
+    # Capture the list of variables before adding the subdirectory to mark the added ones as advanced.
+    get_cmake_property( _vars_before_p4est VARIABLES )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/p4est )
+    # Capture the list of variables after adding the subdirectory
+    get_cmake_property( _vars_after_p4est VARIABLES )
+    # Compute the difference (new variables added by the subdirectory)
+    set( _new_p4est_vars )
+    foreach( _var IN LISTS _vars_after_p4est )
+        if( NOT _var IN_LIST _vars_before_p4est )
+            list( APPEND _new_p4est_vars ${_var} )
+        endif()
+    endforeach()
+
+    # Mark the new variables as advanced
+    mark_as_advanced( FORCE ${_new_p4est_vars} )
 endif()
 
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/src )

@@ -22,8 +22,9 @@
 
 #include <sc_statistics.h>
 #include <t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_geometry.h>
+#include <t8_cmesh/t8_cmesh_geometry.hxx>
 #include <t8_geometry/t8_geometry_handler.hxx>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
 #include <t8_schemes/t8_scheme.hxx>
@@ -32,7 +33,7 @@
 #include <t8_types/t8_vec.h>
 #include <t8_eclass.h>
 #include "t8_cmesh_types.h"
-#ifdef T8_ENABLE_METIS
+#if T8_ENABLE_METIS
 #include <metis.h>
 
 #endif
@@ -49,7 +50,7 @@ t8_cmesh_is_initialized (t8_cmesh_t cmesh)
     return 0;
   }
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   /* TODO: check conditions that must always hold after init and before commit */
   if (0) {
     return 0;
@@ -67,7 +68,7 @@ t8_cmesh_is_initialized (t8_cmesh_t cmesh)
  *
  * Returns true, if everything is fine.
  */
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 static int
 t8_cmesh_check_trees_per_eclass (t8_cmesh_t cmesh)
 {
@@ -107,7 +108,7 @@ t8_cmesh_is_committed (const t8_cmesh_t cmesh)
       return 0;
     }
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
     /* TODO: check more conditions that must always hold after commit */
     if ((!t8_cmesh_trees_is_face_consistent (cmesh, cmesh->trees)) || (!t8_cmesh_check_trees_per_eclass (cmesh))) {
       is_checking = 0;
@@ -204,6 +205,7 @@ t8_cmesh_init (t8_cmesh_t *pcmesh)
    * It will get initialized either when a geometry is registered
    * or when the cmesh gets committed. */
   cmesh->geometry_handler = NULL;
+  cmesh->vertex_connectivity = new t8_cmesh_vertex_connectivity ();
 
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 }
@@ -239,7 +241,7 @@ t8_shmem_array_t
 t8_cmesh_alloc_offsets (int mpisize, sc_MPI_Comm comm)
 {
   t8_shmem_array_t offsets;
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   int mpisize_debug, mpiret;
   mpiret = sc_MPI_Comm_size (comm, &mpisize_debug);
   SC_CHECK_MPI (mpiret);
@@ -397,6 +399,13 @@ t8_cmesh_set_attribute (t8_cmesh_t cmesh, const t8_gloidx_t gtree_id, const int 
                         void *const data, const size_t data_size, const int data_persists)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (sc_package_is_registered (package_id));
+#if T8_ENABLE_DEBUG
+  // The key for t8code attributes must be in the range of possible keys.
+  if (package_id == t8_get_package_id ()) {
+    T8_ASSERT (key < T8_CMESH_NEXT_POSSIBLE_KEY && key >= 0);
+  }
+#endif
   SC_CHECK_ABORT (cmesh->set_from == NULL, "ERROR: Cannot add attributes to cmesh when deriving from another cmesh.\n");
 
   t8_stash_add_attribute (cmesh->stash, gtree_id, package_id, key, data_size, data, !data_persists);
@@ -504,7 +513,7 @@ t8_cmesh_set_tree_class (t8_cmesh_t cmesh, const t8_gloidx_t gtree_id, const t8_
   }
 
   t8_stash_add_class (cmesh->stash, gtree_id, tree_class);
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   cmesh->inserted_trees++;
 #endif
 }
@@ -744,7 +753,7 @@ t8_cmesh_bcast (const t8_cmesh_t cmesh_in, const int root, sc_MPI_Comm comm)
     t8_gloidx_t num_trees_per_eclass[T8_ECLASS_COUNT];
     size_t stash_elem_counts[3];
     int pre_commit; /* True, if cmesh on root is not committed yet. */
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
     sc_MPI_Comm comm;
 #endif
   } meta_info;
@@ -772,7 +781,7 @@ t8_cmesh_bcast (const t8_cmesh_t cmesh_in, const int root, sc_MPI_Comm comm)
   /* At first we broadcast all meta information. */
   if (mpirank == root) {
     /* Check whether geometries are set. If so, abort.
-     * We cannot broadcast the geometries, since they are pointers to derived 
+     * We cannot broadcast the geometries, since they are pointers to derived
      * classes that we cannot know of on the receiving process.
      * Geometries must therefore be added after broadcasting. */
     if (cmesh_in->geometry_handler != NULL) {
@@ -802,7 +811,7 @@ t8_cmesh_bcast (const t8_cmesh_t cmesh_in, const int root, sc_MPI_Comm comm)
   mpiret = sc_MPI_Bcast (&meta_info, sizeof (meta_info), sc_MPI_BYTE, root, comm);
 
   SC_CHECK_MPI (mpiret);
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   mpiret = sc_MPI_Comm_dup (comm, &(meta_info.comm));
   SC_CHECK_MPI (mpiret);
 #endif
@@ -829,7 +838,7 @@ t8_cmesh_bcast (const t8_cmesh_t cmesh_in, const int root, sc_MPI_Comm comm)
       cmesh_out->num_trees_per_eclass[iclass] = meta_info.num_trees_per_eclass[iclass];
       cmesh_out->num_local_trees_per_eclass[iclass] = meta_info.num_trees_per_eclass[iclass];
     }
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
     int result;
     mpiret = sc_MPI_Comm_compare (comm, meta_info.comm, &result);
     SC_CHECK_MPI (mpiret);
@@ -853,7 +862,7 @@ t8_cmesh_bcast (const t8_cmesh_t cmesh_in, const int root, sc_MPI_Comm comm)
   cmesh_out->mpirank = mpirank;
   cmesh_out->mpisize = mpisize;
   /* Final checks */
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   mpiret = sc_MPI_Comm_free (&meta_info.comm);
   SC_CHECK_MPI (mpiret);
   if (!meta_info.pre_commit) {
@@ -864,7 +873,7 @@ t8_cmesh_bcast (const t8_cmesh_t cmesh_in, const int root, sc_MPI_Comm comm)
   return cmesh_out;
 }
 
-#ifdef T8_ENABLE_METIS
+#if T8_ENABLE_METIS
 void
 t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
@@ -1136,7 +1145,7 @@ t8_cmesh_get_face_neighbor (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid, c
     /* Get the tree */
     const t8_ctree_t tree = t8_cmesh_get_tree (cmesh, ltreeid);
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
     /* Get the eclass */
     t8_eclass_t eclass = tree->eclass;
     /* Check that face is valid */
@@ -1154,7 +1163,7 @@ t8_cmesh_get_face_neighbor (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid, c
 
     t8_gloidx_t global_face_neigh;
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
     /* Get the eclass */
     t8_eclass_t eclass = ghost->eclass;
     /* Check that face is valid */
@@ -1266,6 +1275,10 @@ t8_cmesh_reset (t8_cmesh_t *pcmesh)
     cmesh->set_partition_scheme->unref ();
   }
 
+  if (cmesh->vertex_connectivity != NULL) {
+    delete cmesh->vertex_connectivity;
+  }
+
   T8_FREE (cmesh);
   *pcmesh = NULL;
 }
@@ -1339,13 +1352,13 @@ t8_cmesh_coords_axb (const double *coords_in, double *coords_out, int num_vertic
   }
 }
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 /**
- * \warning This function is only available in debug-modus and should only 
+ * \warning This function is only available in debug-modus and should only
  * be used in debug-modus.
- * 
- * Prints the vertices of each local tree. 
- * 
+ *
+ * Prints the vertices of each local tree.
+ *
  * \param[in] cmesh   source-cmesh, which trees get printed.
  */
 static void
@@ -1372,7 +1385,7 @@ t8_cmesh_print_local_trees (const t8_cmesh_t cmesh)
 void
 t8_cmesh_debug_print_trees ([[maybe_unused]] const t8_cmesh_t cmesh, [[maybe_unused]] sc_MPI_Comm comm)
 {
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   /* This function is probably rather slow, linear in the number of processes and therefore
    * only available if the debug-modus is enabled. */
   T8_ASSERT (cmesh != NULL);
@@ -1440,7 +1453,7 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, const int level, const t8_scheme *sch
   t8_gloidx_t child_in_tree_begin_temp;
   t8_gloidx_t last_global_child;
   t8_gloidx_t children_per_tree = 0;
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   t8_gloidx_t prev_last_tree = -1;
 #endif
   int tree_class;
@@ -1493,7 +1506,7 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, const int level, const t8_scheme *sch
 
   is_empty = *first_local_tree >= *last_local_tree && first_global_child >= last_global_child;
   if (first_tree_shared != NULL) {
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
     prev_last_tree = (first_global_child - 1) / children_per_tree;
     T8_ASSERT (cmesh->mpirank > 0 || prev_last_tree <= 0);
 #endif
@@ -1529,4 +1542,49 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, const int level, const t8_scheme *sch
 
     *last_local_tree = *first_local_tree - 1;
   }
+}
+
+int
+t8_cmesh_get_local_bounding_box (const t8_cmesh_t cmesh, double bounds[6])
+{
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
+  T8_ASSERT (num_local_trees > 0);
+  double tree_bounds[6] = { 0.0 };
+  t8_geometry_handler *geom_handler = cmesh->geometry_handler;
+  if (geom_handler == NULL) {
+    t8_errorf ("Error: Trying to compute bounding box for cmesh with no geometry.\n");
+    return false;
+  }
+  const t8_gloidx_t first_tree = cmesh->first_tree;
+  bool bbox_return = geom_handler->get_tree_bounding_box (cmesh, first_tree, bounds);
+  if (!bbox_return) {
+    t8_errorf ("Error: Failed to compute the bounding box for the first tree.\n");
+    /* If the bounding box is not available, we return false */
+    return false;
+  }
+  for (t8_locidx_t itree = 1; itree < num_local_trees && bbox_return; itree++) {
+    const t8_gloidx_t gtree_id = t8_cmesh_get_global_id (cmesh, itree);
+    bbox_return = bbox_return && geom_handler->get_tree_bounding_box (cmesh, gtree_id, tree_bounds);
+
+    bounds[0] = std::min (bounds[0], tree_bounds[0]);
+    bounds[1] = std::max (bounds[1], tree_bounds[1]);
+    bounds[2] = std::min (bounds[2], tree_bounds[2]);
+    bounds[3] = std::max (bounds[3], tree_bounds[3]);
+    bounds[4] = std::min (bounds[4], tree_bounds[4]);
+    bounds[5] = std::max (bounds[5], tree_bounds[5]);
+  }
+  if (!bbox_return) {
+    /* If the bounding box is not available, we return false */
+    t8_errorf ("Error: Failed to compute the bounding box for a tree\n");
+    return false;
+  }
+#if T8_ENABLE_DEBUG
+  /* Check that the bounding box is valid */
+  for (int idim = 0; idim < 3; idim++) {
+    T8_ASSERT (bounds[2 * idim] <= bounds[2 * idim + 1]);
+  }
+#endif
+
+  return true;
 }
