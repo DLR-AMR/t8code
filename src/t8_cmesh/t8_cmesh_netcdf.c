@@ -113,37 +113,24 @@ typedef struct
 /**
  * \struct t8_cmesh_netcdf_ugrid_namespace_t
  * Contains the Definitions for the NetCDF-dimensions/-variables/-attributes (vary whether a 2D or 3D Mesh will be outputted) 
- * \var t8_cmesh_netcdf_ugrid_namespace_t::mesh The name of the mesh
- * \var t8_cmesh_netcdf_ugrid_namespace_t::dim_nMesh_node The name of the dimension for the number of nodes in the mesh
- * \var t8_cmesh_netcdf_ugrid_namespace_t::dim_nMesh_elem The name of the dimension for the number of elements in the mesh
- * \var t8_cmesh_netcdf_ugrid_namespace_t::dim_nMaxMesh_elem_nodes The name of the dimension for the maximum number of nodes per element in the mesh
- * \var t8_cmesh_netcdf_ugrid_namespace_t::var_Mesh_node_x The name of the variable for the x-coordinates of the nodes in the mesh
- * \var t8_cmesh_netcdf_ugrid_namespace_t::var_Mesh_node_y The name of the variable for the y-coordinates of the nodes in the mesh
- * \var t8_cmesh_netcdf_ugrid_namespace_t::var_Mesh_node_z The name of the variable for the z-coordinates of the nodes in the mesh
- * \var t8_cmesh_netcdf_ugrid_namespace_t::var_Mesh_elem_types The name of the variable for the element types in the mesh
- * \var t8_cmesh_netcdf_ugrid_namespace_t::var_Mesh_elem_tree_id The name of the variable for the element tree id in the mesh
- * \var t8_cmesh_netcdf_ugrid_namespace_t::var_Mesh_elem_node The name of the variable for the element nodes in the mesh
- * \var t8_cmesh_netcdf_ugrid_namespace_t::att_elem_shape_type The name of the attribute for the element shape type
- * \var t8_cmesh_netcdf_ugrid_namespace_t::att_elem_node_connectivity The name of the attribute for the element node connectivity
- * \var t8_cmesh_netcdf_ugrid_namespace_t::att_elem_tree_id The name of the attribute for the element tree id
- * \var t8_cmesh_netcdf_ugrid_namespace_t::att_elem_node The name of the attribute for the element nodes
 */
 typedef struct
 {
-  const char *mesh;
-  const char *dim_nMesh_node;
-  const char *dim_nMesh_elem;
-  const char *dim_nMaxMesh_elem_nodes;
-  const char *var_Mesh_node_x;
-  const char *var_Mesh_node_y;
-  const char *var_Mesh_node_z;
-  const char *var_Mesh_elem_types;
-  const char *var_Mesh_elem_tree_id;
-  const char *var_Mesh_elem_node;
-  const char *att_elem_shape_type;
-  const char *att_elem_node_connectivity;
-  const char *att_elem_tree_id;
-  const char *att_elem_node;
+  const char *mesh;           /**< The name of the mesh */
+  const char *dim_nMesh_node; /**< The name of the dimension for the number of nodes in the mesh*/
+  const char *dim_nMesh_elem; /**< The name of the dimension for the number of elements in the mesh */
+  const char
+    *dim_nMaxMesh_elem_nodes;  /**< The name of the dimension for the maximum number of nodes per element in the mesh */
+  const char *var_Mesh_node_x; /**< The name of the variable for the x-coordinates of the nodes in the mesh*/
+  const char *var_Mesh_node_y; /**< The name of the variable for the y-coordinates of the nodes in the mesh*/
+  const char *var_Mesh_node_z; /**< The name of the variable for the z-coordinates of the nodes in the mesh*/
+  const char *var_Mesh_elem_types;        /**< The name of the variable for the element types in the mesh */
+  const char *var_Mesh_elem_tree_id;      /**< The name of the variable for the element tree id in the mesh */
+  const char *var_Mesh_elem_node;         /**< The name of the variable for the element nodes in the mesh */
+  const char *att_elem_shape_type;        /**< The name of the attribute for the element shape type */
+  const char *att_elem_node_connectivity; /**< The name of the attribute for the element node connectivity */
+  const char *att_elem_tree_id;           /**< The name of the attribute for the element tree id */
+  const char *att_elem_node;              /**< The name of the attribute for the element nodes */
 } t8_cmesh_netcdf_ugrid_namespace_t;
 
 /* The UGRID conventions are applied for dimension and variable descriptions */

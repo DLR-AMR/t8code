@@ -242,7 +242,7 @@ typedef struct t8_attribute_info
 } t8_attribute_info_struct_t;
 
 /**
- * \struct t8_cmesh_trees_struct_t
+ * \struct t8_cmesh_trees
  *
  * This structure holds the trees and ghosts of a cmesh.
  *
@@ -277,7 +277,7 @@ typedef struct t8_part_tree
  *       Maybe the number of shipped trees per process is useful?
  */
 /** 
- * \struct t8_cprofile_struct_t
+ * \struct t8_cprofile
  * This struct is used to profile cmesh algorithms.
  * The cmesh struct stores a pointer to a profile struct, and if
  * it is nonzero, various runtimes and data measurements are stored here.
