@@ -16,15 +16,17 @@ namespace t8_mra
 {
 
 /**
- * @brief Binary representation of each levelmultiindex. Has to be specialized
+ * @brief Properties of a levelmultiindex. Has to be specialized
  * for each t8_eclass.
  */
 template <t8_eclass TShape>
-struct lmi_binary
+struct lmi_properties
 {
   static constexpr int PATH_BITS = 0;
   static constexpr int LEVEL_BITS = 0;
   static constexpr int BASECELL_BITS = 0;
+
+  static constexpr int NUM_CHILDREN = 0;
 };
 
 /**
@@ -34,7 +36,7 @@ struct lmi_binary
  * See: http://www.esaim-proc.org/10.1051/proc/201134003
  */
 template <t8_eclass TShape>
-struct levelmultiindex: public lmi_binary<TShape>
+struct levelmultiindex: public lmi_properties<TShape>
 {
 
   static constexpr auto ECLASS = TShape;
@@ -64,7 +66,7 @@ struct levelmultiindex: public lmi_binary<TShape>
   [[nodiscard]] static levelmultiindex
   jth_child (levelmultiindex<TShape> lmi, size_t j) noexcept;
 
-  [[nodiscard]] static std::vector<levelmultiindex>
+  [[nodiscard]] static std::array<levelmultiindex, lmi_properties<TShape>::NUM_CHILDREN>
   children (levelmultiindex<TShape> lmi) noexcept;
 
   static std::array<int, 3>
@@ -75,11 +77,13 @@ struct levelmultiindex: public lmi_binary<TShape>
 };
 
 template <>
-struct lmi_binary<T8_ECLASS_TRIANGLE>
+struct lmi_properties<T8_ECLASS_TRIANGLE>
 {
   static constexpr int PATH_BITS = 2;
   static constexpr int LEVEL_BITS = 5;
   static constexpr int BASECELL_BITS = 21;
+
+  static constexpr int NUM_CHILDREN = 4;
 };
 
 template <>
@@ -167,16 +171,13 @@ levelmultiindex<T8_ECLASS_TRIANGLE>::parent (levelmultiindex<T8_ECLASS_TRIANGLE>
 }
 
 template <>
-inline std::vector<levelmultiindex<T8_ECLASS_TRIANGLE>>
+inline std::array<levelmultiindex<T8_ECLASS_TRIANGLE>, levelmultiindex<T8_ECLASS_TRIANGLE>::NUM_CHILDREN>
 levelmultiindex<T8_ECLASS_TRIANGLE>::children (levelmultiindex<T8_ECLASS_TRIANGLE> lmi) noexcept
 {
-  const auto NUM_CHILDREN = 4;
-
-  std::vector<levelmultiindex<T8_ECLASS_TRIANGLE>> child_vec;
-  child_vec.reserve (NUM_CHILDREN);
+  std::array<levelmultiindex<T8_ECLASS_TRIANGLE>, levelmultiindex<T8_ECLASS_TRIANGLE>::NUM_CHILDREN> child_vec;
 
   for (size_t j = 0u; j < NUM_CHILDREN; ++j)
-    child_vec.emplace_back (jth_child (lmi.index, j));
+    child_vec[j] = jth_child (lmi.index, j);
 
   return child_vec;
 }
@@ -214,7 +215,7 @@ jth_child_lmi (TLmi lmi, size_t j)
 }
 
 template <typename TLmi>
-[[nodiscard]] inline std::vector<TLmi>
+[[nodiscard]] inline std::array<TLmi, TLmi::NUM_CHILDREN>
 children_lmi (TLmi lmi)
 {
   return TLmi::children (lmi);
