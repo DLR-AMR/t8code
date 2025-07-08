@@ -45,6 +45,19 @@ struct triangle_order
     return 0;
   }
 
+  static void
+  get_parent_order (std::array<int, 3>& order)
+  {
+    const auto idx = (order == std::array { 0, 1, 2 })   ? 0
+                     : (order == std::array { 2, 0, 1 }) ? 1
+                     : (order == std::array { 1, 2, 0 }) ? 2
+                     : (order == std::array { 0, 2, 1 }) ? 3
+                     : (order == std::array { 1, 0, 2 }) ? 4
+                                                         : 5;
+
+    order = { parent_lookup[idx][0], parent_lookup[idx][1], parent_lookup[idx][2] };
+  }
+
   static int
   get_reference_children_order (int type, int child_id, const std::array<int, 3>& order)
   {
@@ -93,6 +106,17 @@ struct triangle_order
     { 1, 3, 0, 2 },  // order = {0, 2, 1}
     { 2, 1, 0, 3 },  // order = {1, 0, 2}
     { 3, 2, 0, 1 }   // order = {2, 1, 0}
+  };
+
+  // Lookup table with the 6 possible permutations of (first, second, third)
+  // Each row corresponds to the transformed triple (first, second, third)
+  static constexpr int parent_lookup[6][3] = {
+    { 1, 0, 2 },  // (0,1,2) -> (1,0,2)
+    { 0, 2, 1 },  // (2,0,1) -> (0,2,1)
+    { 2, 1, 0 },  // (1,2,0) -> (2,1,0)
+    { 0, 1, 2 },  // (0,2,1) -> (0,1,2)
+    { 1, 2, 0 },  // (1,0,2) -> (1,2,0)
+    { 2, 0, 1 }   // (2,1,0) -> (2,0,1)
   };
 };
 
