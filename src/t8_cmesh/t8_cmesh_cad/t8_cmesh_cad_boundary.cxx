@@ -46,15 +46,19 @@ t8_boundary_node_geom_data_map::t8_boundary_node_geom_data_map (TopoDS_Shape &sh
                                                                 double tolerance)
   : shape (shape_in), cmesh (cmesh_in), tolerance (tolerance)
 {
-  boundary_node_geom_data_map = compute_geom_data_map ();
-  std::unordered_set<t8_gloidx_t> boundary_node_list = cmesh->boundary_node_list->get_boundary_node_list ();
+  T8_ASSERT (cmesh->boundary_node_list != nullptr);
+  boundary_node_list = cmesh->boundary_node_list->get_boundary_node_list ();
+  T8_ASSERT (boundary_node_list.size () != 0);
+  printf ("size = %ld\n", boundary_node_list.size ());
+  compute_geom_data_map ();
 }
 
-std::unordered_map<t8_gloidx_t, t8_geom_data>
+void
 t8_boundary_node_geom_data_map::compute_geom_data_map ()
 {
   TopExp_Explorer dora;
   t8_cmesh_vertex_conn_vertex_to_tree vtt;
+  T8_ASSERT (cmesh->vertex_connectivity->get_vertex_to_tree_state () == 1);
   int tag_count = 1;
   for (dora.Init (shape, TopAbs_VERTEX); dora.More (); dora.Next ()) {
     const gp_Pnt point = BRep_Tool::Pnt (TopoDS::Vertex (dora.Current ()));
@@ -70,9 +74,13 @@ t8_boundary_node_geom_data_map::compute_geom_data_map ()
 
     const double z_upper_bound = cad_z_val + tolerance;
     const double z_lower_bound = cad_z_val - tolerance;
-
+    printf ("vertex ");
+    printf ("size = %ld\n", boundary_node_list.size ());
     for (auto iter = boundary_node_list.begin (); iter != boundary_node_list.end (); ++iter) {
-      auto &tree_list = vtt.get_tree_list_of_vertex (*iter);
+
+      printf ("vertex 1 \n");
+      t8_debugf ("Global idx = %ld", *iter);
+      auto &tree_list = cmesh->vertex_connectivity->vertex_to_trees (*iter);
       t8_locidx_t local_tree_id = tree_list.at (0).first;
       int local_vertex_id = tree_list.at (0).second;
       double *vertices = (double *) t8_cmesh_get_tree_vertices (cmesh, local_tree_id);
@@ -92,6 +100,7 @@ t8_boundary_node_geom_data_map::compute_geom_data_map ()
       }
     }
   }
+  t8_debugf ("Vertices added\n");
 
   tag_count = 1;
   for (dora.Init (shape, TopAbs_EDGE); dora.More (); dora.Next ()) {
@@ -123,6 +132,7 @@ t8_boundary_node_geom_data_map::compute_geom_data_map ()
       }
     }
   }
+  t8_debugf ("Edges added\n");
 
   tag_count = 1;
   for (dora.Init (shape, TopAbs_FACE); dora.More (); dora.Next ()) {
@@ -154,7 +164,7 @@ t8_boundary_node_geom_data_map::compute_geom_data_map ()
       }
     }
   }
-  return boundary_node_geom_data_map;
+  t8_debugf ("Faces added\n");
 }
 
 std::unordered_map<t8_gloidx_t, t8_geom_data>

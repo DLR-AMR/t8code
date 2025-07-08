@@ -51,7 +51,7 @@ class t8_boundary_node_geom_data_map {
   get_boundary_node_geom_data_map ();
 
  private:
-  std::unordered_map<t8_gloidx_t, t8_geom_data>
+  void
   compute_geom_data_map ();
 
   TopoDS_Shape& shape;
