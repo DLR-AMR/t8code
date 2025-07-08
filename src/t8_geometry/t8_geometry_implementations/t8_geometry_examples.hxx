@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_geometry_example.hxx
+/** \file t8_geometry_examples.hxx
  * Various mappings for several cmesh examples.
  */
 
