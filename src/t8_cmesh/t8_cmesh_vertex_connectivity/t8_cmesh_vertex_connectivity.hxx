@@ -74,10 +74,6 @@ struct t8_cmesh_vertex_connectivity
     VTT_AND_TTV_VALID     /*< Ready to use with both ttv and vtt functinoality. */
   };
 
-  /** Build vertex_to_tree from existing tree_to_vertex
-   * \param [in] cmesh A 
-   */
-
   /** Function to fill vtt from a cmesh with ttv information.
    * Sets all global ids and associated tree vertices from
    * the given input cmesh.
@@ -106,8 +102,8 @@ struct t8_cmesh_vertex_connectivity
   }
 
   /** Return the number of process local global vertices of a cmesh.
- * \return The number of process local global vertices of \a cmesh.
-*/
+   * \return The number of process local global vertices of \a cmesh.
+  */
   inline t8_gloidx_t
   get_local_number_of_vertices ()
   {
