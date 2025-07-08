@@ -145,7 +145,13 @@ TEST_P (cmesh_vertex_conn_ttv_with_core_classes, DISABLED_get_global)
  *       as soon as we can enable the tests cmesh_vertex_conn_ttv.
  *       That is as soon as we can add attributes to cmeshes while deriving. */
 
+#if T8_TEST_LEVEL_INT >= 2
+#define VTT_TEST_MAX_NUM_TREES 10
+#elif T8_TEST_LEVEL_INT == 1
+#define VTT_TEST_MAX_NUM_TREES 50
+#else
 #define VTT_TEST_MAX_NUM_TREES 100
+#endif
 
 class cmesh_vertex_conn_ttv_with_core_classes_temp:
   public testing::TestWithParam<std::tuple<t8_gloidx_t, t8_eclass_t>> {
@@ -334,8 +340,6 @@ TEST_P (cmesh_vertex_conn_ttv_with_cmesh_functions, DISABLED_get_global)
 /* TODO: Remove the tests belonging to cmesh_vertex_conn_ttv_temp
  *       as soon as we can enable the tests cmesh_vertex_conn_ttv.
  *       That is as soon as we can add attributes to cmeshes while deriving. */
-
-#define VTT_TEST_MAX_NUM_TREES 100
 
 class cmesh_vertex_conn_ttv_with_cmesh_functions_temp:
   public testing::TestWithParam<std::tuple<t8_gloidx_t, t8_eclass_t>> {
