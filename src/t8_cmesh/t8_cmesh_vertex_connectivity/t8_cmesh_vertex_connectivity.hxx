@@ -47,15 +47,6 @@ struct t8_cmesh_vertex_connectivity
    */
   ~t8_cmesh_vertex_connectivity () {};
 
-  /* Given a cmesh, build up the vertex_to_tree and tree_to_vertex members.
-   * \return: some error value to be specified.
-   * On error, \state will be set to ERROR. 
-   * The cmesh must not be committed, but all tree information and neighbor information must
-   * have been set. 
-   * Currently, \a cmesh has to be replicated. */
-  void
-  build (const t8_cmesh_t cmesh);
-
   /* Setter functions */
 
   /** Set all global vertex ids of a local tree.
