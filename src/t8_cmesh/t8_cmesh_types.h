@@ -257,7 +257,7 @@ typedef struct t8_cmesh_trees
  * t8_part_tree
  * This structure holds the data of a trees in a partition.
  */
-typedef struct t8_part_tree_struct_t
+typedef struct t8_part_tree
 {
   char *first_tree;           /**< Stores the trees, the ghosts and the attributes.
                                            The last 2*sizeof(t8_locidx) bytes store num_trees and num_ghosts */
