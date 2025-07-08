@@ -587,8 +587,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
    * but only if the vertex_to_tree instance is not yet committed
    * and if the tree_to_vertex instance is not empty.
    */
-  if (cmesh->vertex_connectivity->get_vertex_to_tree_state () == 0
-      && cmesh->vertex_connectivity->get_tree_to_vertex_state () == 1) {
+  if (cmesh->vertex_connectivity->get_state () == t8_cmesh_vertex_connectivity::state::TREE_TO_VERTEX_VALID) {
     cmesh->vertex_connectivity->build_vertex_to_tree (cmesh);
   }
 

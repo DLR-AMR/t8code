@@ -127,10 +127,14 @@ TEST_F (t8_test_cmesh_vertex_conn, check_tree_to_vertex)
   ASSERT_FALSE (t8_cmesh_is_partitioned (cmesh));
 
   /* Get the vertices of the trees and check their values. */
+  int returned_num_vertices_per_tree;
   const t8_gloidx_t *check_global_vertices_tree_0
-    = t8_cmesh_get_global_vertices_of_tree (cmesh, 0, testcase_num_vertices_per_tree);
+    = t8_cmesh_get_global_vertices_of_tree (cmesh, 0, &returned_num_vertices_per_tree);
+  EXPECT_EQ (testcase_num_vertices_per_tree, returned_num_vertices_per_tree);
   const t8_gloidx_t *check_global_vertices_tree_1
-    = t8_cmesh_get_global_vertices_of_tree (cmesh, 1, testcase_num_vertices_per_tree);
+    = t8_cmesh_get_global_vertices_of_tree (cmesh, 1, &returned_num_vertices_per_tree);
+  EXPECT_EQ (testcase_num_vertices_per_tree, returned_num_vertices_per_tree);
+
   EXPECT_EQ (check_global_vertices_tree_0[0], 0);
   EXPECT_EQ (check_global_vertices_tree_0[1], 1);
   EXPECT_EQ (check_global_vertices_tree_0[2], 2);

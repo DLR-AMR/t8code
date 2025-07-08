@@ -41,15 +41,14 @@ t8_cmesh_vertex_conn_vertex_to_tree::build_from_ttv (const t8_cmesh_t cmesh, t8_
   const t8_locidx_t num_local_trees_and_ghosts = num_local_trees + num_ghosts;
 
   for (t8_locidx_t itree = 0; itree < num_local_trees_and_ghosts; ++itree) {
-    const t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, itree);
-    const int num_tree_vertices = t8_eclass_num_vertices[tree_class];
 
     /* Get the global vertex ids of this tree. */
-    const t8_gloidx_t* global_indices = ttv.get_global_vertices (cmesh, itree, num_tree_vertices);
+    auto global_indices = ttv.get_global_vertices (cmesh, itree);
 
     /* Iterate over all local tree vertices and add the global id to the list. */
-    for (int ivertex = 0; ivertex < num_tree_vertices; ++ivertex) {
-      add_vertex_to_tree (cmesh, global_indices[ivertex], itree, ivertex);
+    int ivertex = 0;
+    for (auto global_index : global_indices) {
+      add_vertex_to_tree (cmesh, global_index, itree, ivertex++);
     }
   }
 
