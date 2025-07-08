@@ -25,6 +25,14 @@
 #include <t8_cmesh.h>                           /* cmesh definition and basic interface. */
 #include <t8_cmesh/t8_cmesh_examples.h>         /* A collection of exemplary cmeshes */
 #include <t8_schemes/t8_default/t8_default.hxx> /* default refinement scheme. */
+#include <sc_options.h>                         /* CLI parser */
+
+typedef struct search_partition_global
+{
+  /* p4est mesh */
+  int uniform_level;  /* level of initial uniform refinement */
+  t8_forest_t forest; /* the resulting forest */
+} search_partition_global_t;
 
 int
 main (int argc, char **argv)
@@ -33,6 +41,9 @@ main (int argc, char **argv)
   sc_MPI_Comm comm;
   t8_cmesh_t cmesh;
   t8_forest_t forest;
+  int first_argc, ue;
+  sc_options_t *opt;
+  search_partition_global_t global, *g = &global;
 
   /*
    * Init
@@ -46,27 +57,58 @@ main (int argc, char **argv)
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_PRODUCTION);
 
-  /* Print a message on the root process. */
-  t8_global_productionf (" [search] \n");
-  t8_global_productionf (" [search] Hello, this is the partition search example of t8code.\n");
-  t8_global_productionf (
-    " [search] We will search for all elements in a forest that contain randomly created particles.\n");
-  t8_global_productionf (" [search] \n");
+  /* Define command line options of this tutorial. */
+  opt = sc_options_new (argv[0]);
+  sc_options_add_int (opt, 'l', "minlevel", &g->uniform_level, 3, "Level of uniform refinement");
 
-  /*
-   *  Build forest and particles.
-   */
-  comm = sc_MPI_COMM_WORLD;
-  /* Build a cube cmesh with tet, hex, and prism trees. */
-  cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
-  /* Build a uniform forest on it. */
-  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), 2, 0, comm);
+  /* Proceed in run-once loop for clean abort. */
+  ue = 0;
+  do {
+    /* Parse command line options */
+    first_argc = sc_options_parse (t8_get_package_id (), SC_LP_DEFAULT, opt, argc, argv);
+    if (first_argc < 0) {
+      P4EST_GLOBAL_LERROR ("Invalid option format.\n");
+      ue = 1;
+      break;
+    }
 
-  /* Destroy the forest. */
-  t8_forest_unref (&forest);
+    /* Check options for consistency. */
+    if (g->uniform_level < 0 || g->uniform_level > 18) {
+      /* compared against hard-coded maxlevel of a brick forest */
+      P4EST_GLOBAL_LERRORF ("Uniform level out of bounds 0..18\n");
+      ue = 1;
+    }
+    if (ue) {
+      break;
+    }
+    sc_options_print_summary (p4est_get_package_id (), SC_LP_ESSENTIAL, opt);
 
+    /* Print a message on the root process. */
+    t8_global_productionf (" [search] \n");
+    t8_global_productionf (" [search] Hello, this is the partition search example of t8code.\n");
+    t8_global_productionf (
+      " [search] We will search for all elements in a forest that contain randomly created particles.\n");
+    t8_global_productionf (" [search] \n");
+
+    /*
+     *  Build forest and particles.
+     */
+    comm = sc_MPI_COMM_WORLD;
+    /* Build a cube cmesh with tet, hex, and prism trees. */
+    cmesh = t8_cmesh_new_brick_3d (2, 2, 2, 0, 0, 0, comm);
+    /* Build a uniform forest on it. */
+    g->forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), g->uniform_level, 0, comm);
+
+    /* Destroy the forest. */
+    t8_forest_unref (&g->forest);
+  } while (0);
+  if (ue) {
+    sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
+  }
+
+  /* Close MPI environment. */
+  sc_options_destroy (opt);
   sc_finalize ();
-
   mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
 
