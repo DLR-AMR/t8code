@@ -28,14 +28,14 @@
 #include <t8_schemes/t8_default/t8_default.hxx> /* default refinement scheme. */
 #include <sc_options.h>                         /* CLI parser */
 
-typedef struct query_point
+typedef struct t8_tutorial_search_partition_point
 {
   double xyz[3]; /* 3D coordinates */
   int is_local;  /* set to 1, if found in local search */
   int rank;      /* rank assigned during partition search */
-} query_point_t;
+} t8_tutorial_search_partition_point_t;
 
-typedef struct search_partition_global
+typedef struct t8_tutorial_search_partition_global
 {
   /* Forest */
   double a[3], b[3], c[3]; /* refinement centers */
@@ -55,12 +55,12 @@ typedef struct search_partition_global
   /* MPI */
   sc_MPI_Comm mpicomm; /* the mpi communicator */
   int mpirank;         /* the processes rank */
-} search_partition_global_t;
+} t8_tutorial_search_partition_global_t;
 
 /* Map coordinates from the reference coordinate system of the 2x2x2 brick
  * forest to the unit cube. */
 static void
-map_coordinates (double *xyz, t8_locidx_t which_tree, double *mapped_xyz)
+t8_tutorial_search_partition_map_coordinates (double *xyz, t8_locidx_t which_tree, double *mapped_xyz)
 {
   T8_ASSERT (which_tree < 8); /* assert we have a 2x2(x2) brick */
   mapped_xyz[0] = 0.5 * xyz[0];
@@ -77,12 +77,12 @@ t8_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t whic
   double center[3], mapped_center[3];
   double dist, min_dist;
 
-  search_partition_global_t *g = (search_partition_global_t *) t8_forest_get_user_data (forest);
+  t8_tutorial_search_partition_global_t *g = (t8_tutorial_search_partition_global_t *) t8_forest_get_user_data (forest);
 
   /* Compute the element center's position in the unit cube. */
   T8_ASSERT (num_elements == 1);
   t8_forest_element_centroid (forest, which_tree, elements[0], center);
-  map_coordinates (center, which_tree, mapped_center);
+  t8_tutorial_search_partition_map_coordinates (center, which_tree, mapped_center);
 
   /* Compute distance to point a. */
   dist = (g->a[0] - mapped_center[0]) * (g->a[0] - mapped_center[0])
@@ -102,7 +102,7 @@ t8_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t whic
 }
 
 static void
-create_forest (search_partition_global_t *g)
+t8_tutorial_search_partition_create_forest (t8_tutorial_search_partition_global_t *g)
 {
   int mpiret;
   int il;
@@ -141,22 +141,22 @@ create_forest (search_partition_global_t *g)
 }
 
 static void
-generate_queries (search_partition_global_t *g)
+t8_tutorial_search_partition_generate_queries (t8_tutorial_search_partition_global_t *g)
 {
   t8_locidx_t iq, nqh;
   int id;
-  query_point_t *p;
+  t8_tutorial_search_partition_point_t *p;
   double t;
   int mpiret;
 
   /* generate local queries */
-  g->queries = sc_array_new_count (sizeof (query_point_t), g->num_global_queries);
+  g->queries = sc_array_new_count (sizeof (t8_tutorial_search_partition_point_t), g->num_global_queries);
   sc_array_memset (g->queries, 0);
   if (g->mpirank == 0) {
     srand (g->seed);
     nqh = g->num_global_queries / 2;
     for (iq = 0; iq < g->num_global_queries; iq++) {
-      p = (query_point_t *) sc_array_index_int (g->queries, iq);
+      p = (t8_tutorial_search_partition_point_t *) sc_array_index_int (g->queries, iq);
       p->is_local = 0;
       p->rank = -1;
       for (id = 0; id < 3; id++) {
@@ -180,13 +180,14 @@ generate_queries (search_partition_global_t *g)
   }
 
   /* broadcast queries to all processes */
-  mpiret = sc_MPI_Bcast (g->queries->array, g->num_global_queries * sizeof (query_point_t), sc_MPI_BYTE, 0, g->mpicomm);
+  mpiret = sc_MPI_Bcast (g->queries->array, g->num_global_queries * sizeof (t8_tutorial_search_partition_point_t),
+                         sc_MPI_BYTE, 0, g->mpicomm);
   SC_CHECK_MPI (mpiret);
   t8_global_productionf ("Created %lld global queries.\n", (unsigned long long) g->queries->elem_count);
 }
 
 static void
-cleanup (search_partition_global_t *g)
+t8_tutorial_search_partition_cleanup (t8_tutorial_search_partition_global_t *g)
 {
   /* Destroy the queries. */
   sc_array_destroy (g->queries);
@@ -196,16 +197,16 @@ cleanup (search_partition_global_t *g)
 }
 
 static void
-run (search_partition_global_t *g)
+t8_tutorial_search_partition_run (t8_tutorial_search_partition_global_t *g)
 {
   /* Create a 2x2x2 brick forest covering the unit square. */
-  create_forest (g);
+  t8_tutorial_search_partition_create_forest (g);
 
   /* Generate search queries in the unit square. */
-  generate_queries (g);
+  t8_tutorial_search_partition_generate_queries (g);
 
   /* Fee memory. */
-  cleanup (g);
+  t8_tutorial_search_partition_cleanup (g);
 }
 
 int
@@ -215,7 +216,7 @@ main (int argc, char **argv)
   int first_argc, ue;
   int ngq;
   sc_options_t *opt;
-  search_partition_global_t global, *g = &global;
+  t8_tutorial_search_partition_global_t global, *g = &global;
 
   /*
    * Init
@@ -263,7 +264,7 @@ main (int argc, char **argv)
       P4EST_GLOBAL_LERROR ("Number of queries has to be non-negative.\n");
       ue = 1;
     }
-    if ((long long) g->num_global_queries * sizeof (query_point_t) > INT_MAX) {
+    if ((long long) g->num_global_queries * sizeof (t8_tutorial_search_partition_point_t) > INT_MAX) {
       P4EST_GLOBAL_LERROR ("Number of queries too large for MPI buffer.\n");
       ue = 1;
     }
@@ -301,7 +302,7 @@ main (int argc, char **argv)
     /*
      * Run example.
      */
-    run (g);
+    t8_tutorial_search_partition_run (g);
   } while (0);
   if (ue) {
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
