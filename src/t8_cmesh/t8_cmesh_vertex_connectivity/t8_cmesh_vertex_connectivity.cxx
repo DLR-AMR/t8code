@@ -29,26 +29,6 @@
 #include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
 
-/*
-Use case
-
-initialize cmeesh
-Add trees
-Add tree to vertex information
-Start commit cmesh
-  commit cmesh internally
-  build vertex to tree information
-Finish commit cmesh
-
-Access vtt and ttv information
-
--> ttv must be added before commit
-global tree id -> vertex_list
-
--> vtt must be added after commit (not by user)
-
-*/
-
 /* Setter functions */
 
 void
