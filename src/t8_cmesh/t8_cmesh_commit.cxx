@@ -513,7 +513,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 }
 
 /**
- * \brief Commit a cmesh from stash.
+ * Commit a cmesh from stash.
  * 
  * \param[in] cmesh The cmesh to commit.
  * \param[in] comm The MPI communicator to use.

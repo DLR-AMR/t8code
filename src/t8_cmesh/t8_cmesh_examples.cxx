@@ -38,7 +38,7 @@
 #include <t8_schemes/t8_default/t8_default_c_interface.h> /* default refinement scheme. */
 
 /**
- * \brief This function calculates an 'equal' partition for the cmesh based on the \a number_trees supplied
+ * This function calculates an 'equal' partition for the cmesh based on the \a number_trees supplied
  *  and stores the computed partition range within the \a cmesh.
  *
  * \param [in,out] cmesh The cmesh for which the partition will be calculated

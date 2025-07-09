@@ -44,7 +44,6 @@ These functions write a file in the netCDF-format which represents the given 2D-
 #include <t8_schemes/t8_scheme.h>
 
 /**
- * \struct t8_cmesh_netcdf_context_t
  *
  * Contains all Variables used in order to work with the NetCDF-File 
  *
