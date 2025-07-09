@@ -37,7 +37,7 @@ vtk_writer<t8_forest_t>::t8_grid_tree_to_vtk_cells (
   const t8_forest_t forest, [[maybe_unused]] vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
   vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_treeid, vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_mpirank,
   vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_level, vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_element_id,
-  vtkSmartPointer<vtkCellArray> cellArray, vtkSmartPointer<vtkPoints> points, int *cellTypes,
+  vtkSmartPointer<vtkCellArray> cellArray, vtkSmartPointer<vtkMergePoints> points, int *cellTypes,
   const t8_locidx_t num_local_trees, t8_gloidx_t *elem_id, long int *point_id, const t8_gloidx_t offset,
   const bool ghosts, const t8_locidx_t itree)
 {
@@ -77,7 +77,7 @@ vtk_writer<t8_cmesh_t>::t8_grid_tree_to_vtk_cells (
   const t8_cmesh_t cmesh, [[maybe_unused]] vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
   vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_treeid, vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_mpirank,
   vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_level, vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_element_id,
-  vtkSmartPointer<vtkCellArray> cellArray, vtkSmartPointer<vtkPoints> points, int *cellTypes,
+  vtkSmartPointer<vtkCellArray> cellArray, vtkSmartPointer<vtkMergePoints> points, int *cellTypes,
   [[maybe_unused]] const t8_locidx_t num_local_trees, t8_gloidx_t *elem_id, long int *point_id,
   const t8_gloidx_t offset, const bool ghosts, const t8_locidx_t itree)
 {
