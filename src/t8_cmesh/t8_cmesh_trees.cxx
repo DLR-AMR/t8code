@@ -222,10 +222,10 @@ t8_cmesh_trees_start_part (const t8_cmesh_trees_t trees, const int proc, const t
  */
 typedef struct
 {
-  t8_locidx_t part_ghost_id;    /**< Local identifier for the partition ghost. */
-  t8_gloidx_t global_id;        /**< Global identifier for the partition ghost. */
-  int num_attributes;           /**< Number of attributes associated with the partition ghost. */
-  int attribute_offset;         /**< Offset to the attributes associated with the partition ghost. */
+  t8_locidx_t part_ghost_id; /**< Local identifier for the partition ghost. */
+  t8_gloidx_t global_id;     /**< Global identifier for the partition ghost. */
+  int num_attributes;        /**< Number of attributes associated with the partition ghost. */
+  int attribute_offset;      /**< Offset to the attributes associated with the partition ghost. */
 } t8_part_ghost_id_and_num_atts;
 
 /** Compare function for t8_part_ghost_id_and_num_atts to compare by global id.
