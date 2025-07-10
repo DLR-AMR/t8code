@@ -12,7 +12,8 @@ namespace t8_mra
 {
 template <t8_eclass TShape>
 void
-initialize (size_t polynomial_degree, std::vector<t8_mra::mat>& mask_coeffs, std::vector<t8_mra::mat>& inv_mask_coeffs)
+initialize_mask_coefficients (size_t order, std::vector<t8_mra::mat>& mask_coeffs,
+                              std::vector<t8_mra::mat>& inv_mask_coeffs)
 {
   throw std::out_of_range ("Element shape is not supported in "
                            "t8_mra::mask_coefficients::initialize");
@@ -20,8 +21,8 @@ initialize (size_t polynomial_degree, std::vector<t8_mra::mat>& mask_coeffs, std
 
 template <>
 void
-initialize<T8_ECLASS_TRIANGLE> (size_t polynomial_degree, std::vector<t8_mra::mat>& mask_coeffs,
-                                std::vector<t8_mra::mat>& inv_mask_coeffs);
+initialize_mask_coefficients<T8_ECLASS_TRIANGLE> (size_t order, std::vector<t8_mra::mat>& mask_coeffs,
+                                                  std::vector<t8_mra::mat>& inv_mask_coeffs);
 
 }  // namespace t8_mra
 

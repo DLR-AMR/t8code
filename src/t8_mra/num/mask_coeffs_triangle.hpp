@@ -13,10 +13,10 @@ namespace t8_mra
 
 template <>
 void
-initialize<T8_ECLASS_TRIANGLE> (size_t polynomial_degree, std::vector<t8_mra::mat>& mask_coeffs,
-                                std::vector<t8_mra::mat>& inv_mask_coeffs)
+initialize_mask_coefficients<T8_ECLASS_TRIANGLE> (size_t order, std::vector<t8_mra::mat>& mask_coeffs,
+                                                  std::vector<t8_mra::mat>& inv_mask_coeffs)
 {
-  switch (polynomial_degree) {
+  switch (order) {
   case 1:
     mask_coeffs[0] = { 1. / 2. };
     mask_coeffs[1] = { 1. / 2. };
