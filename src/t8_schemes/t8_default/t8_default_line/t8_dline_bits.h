@@ -27,7 +27,7 @@
 #ifndef T8_DLINE_BITS_H
 #define T8_DLINE_BITS_H
 
-#include <t8_element.h>
+#include <t8_element.hxx>
 #include <t8_schemes/t8_default/t8_default_line/t8_dline.h>
 #include <t8_schemes/t8_default/t8_default_vertex/t8_dvertex.h>
 

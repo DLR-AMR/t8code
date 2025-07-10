@@ -33,7 +33,7 @@
 #include <t8_geometry/t8_geometry.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx>
-#include <t8_element.h>
+#include <t8_element.hxx>
 #include <t8_types/t8_vec.hxx>
 
 class geometry_test: public testing::TestWithParam<std::tuple<int, t8_eclass>> {

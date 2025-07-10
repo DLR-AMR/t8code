@@ -20,10 +20,9 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_element.h>
+#include <t8_element.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
-T8_EXTERN_C_BEGIN ();
 
 /* clang-format off */
 const double t8_element_corner_ref_coords[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS][3] = {
@@ -49,5 +48,3 @@ const double t8_element_centroid_ref_coords[T8_ECLASS_COUNT][3] = {
   { 0.6, 0.6, 0.2 }          /* T8_ECLASS_PYRAMID */
 };
 /* clang-format on */
-
-T8_EXTERN_C_END ();

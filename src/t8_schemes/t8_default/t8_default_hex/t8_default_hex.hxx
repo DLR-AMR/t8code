@@ -27,7 +27,7 @@
 #define T8_DEFAULT_HEX_HXX
 
 #include <p8est.h>
-#include <t8_element.h>
+#include <t8_element.hxx>
 #include <t8_schemes/t8_default/t8_default_hex/t8_dhex.h>
 #include <t8_schemes/t8_default/t8_default_hex/t8_dhex_bits.h>
 #include <t8_schemes/t8_default/t8_default_quad/t8_default_quad.hxx>

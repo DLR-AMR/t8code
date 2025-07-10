@@ -27,7 +27,7 @@
 #ifndef T8_DEFAULT_C_INTERFACE_H
 #define T8_DEFAULT_C_INTERFACE_H
 
-#include <t8_element.h>
+#include <t8_element.hxx>
 
 T8_EXTERN_C_BEGIN ();
 

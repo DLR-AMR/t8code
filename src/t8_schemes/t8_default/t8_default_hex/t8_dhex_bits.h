@@ -27,7 +27,7 @@
 #ifndef T8_DHEX_BITS_H
 #define T8_DHEX_BITS_H
 
-#include <t8_element.h>
+#include <t8_element.hxx>
 #include <t8_schemes/t8_default/t8_default_hex/t8_dhex.h>
 
 T8_EXTERN_C_BEGIN ();

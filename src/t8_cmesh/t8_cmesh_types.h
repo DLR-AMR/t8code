@@ -29,7 +29,7 @@
 #include <t8_geometry/t8_geometry.h>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.h>
 #include "t8_cmesh_stash.h"
-#include "t8_element.h"
+#include "t8_element.hxx"
 
 /** \file t8_cmesh_types.h
  * We define here the datatypes needed for internal cmesh routines.

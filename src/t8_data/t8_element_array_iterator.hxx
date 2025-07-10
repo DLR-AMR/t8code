@@ -29,7 +29,7 @@
 #define T8_ELEMENT_ARRAY_ITERATOR_HXX
 
 #include <t8.h>
-#include <t8_element.h>
+#include <t8_element.hxx>
 #include <t8_data/t8_containers.h>
 
 #include <cstddef>

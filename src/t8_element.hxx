@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_element.h
+/** \file t8_element.hxx
  * This file defines the opaque element structure and provides some
  * constants for element classes.
  */
@@ -31,8 +31,6 @@
 #include <t8.h>
 #include <t8_eclass.h>
 #include <t8_element_shape.h>
-
-T8_EXTERN_C_BEGIN ();
 
 /** Opaque structure for a generic element, only used as pointer.
  * Implementations are free to cast it to their internal data structure.
@@ -50,7 +48,5 @@ extern const double t8_element_corner_ref_coords[T8_ECLASS_COUNT][T8_ECLASS_MAX_
  *  Usage: t8_element_centroid_ref_coords[eclass][dimension]
  */
 extern const double t8_element_centroid_ref_coords[T8_ECLASS_COUNT][3];
-
-T8_EXTERN_C_END ();
 
 #endif /* !T8_ELEMENT_H */

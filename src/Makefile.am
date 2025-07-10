@@ -22,7 +22,7 @@ defaultpyramidincludedir = $(schemesdefaultincludedir)/t8_default_pyramid
 libt8_generated_headers = src/t8_config.h
 libt8_installed_headers = \
   src/t8.h src/t8_eclass.h \
-  src/t8_element.hxx src/t8_element.h \
+  src/t8_element.hxx src/t8_element.hxx \
   src/t8_element_c_interface.h \
   src/t8_refcount.h src/t8_cmesh.hxx src/t8_cmesh.h src/t8_cmesh_triangle.h \
   src/t8_cmesh_tetgen.h src/t8_cmesh_readmshfile.h \

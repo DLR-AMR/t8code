@@ -29,7 +29,7 @@
 #define T8_SCHEME_H
 
 #include <t8.h>
-#include <t8_element.h>
+#include <t8_element.hxx>
 
 /** The scheme holds implementations for one or more element classes.
  *  Opaque pointer for C interface.

@@ -246,7 +246,7 @@ install( FILES
     t8_cmesh_tetgen.h
     t8_cmesh_triangle.h
     t8_eclass.h
-    t8_element.h
+    t8_element.hxx
     t8_element_shape.h
     t8_mat.h
     t8_refcount.h
