@@ -24,6 +24,7 @@
 #include <t8.h>
 #include <t8_eclass.h>
 #include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh/t8_cmesh_helpers.h>
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
@@ -45,8 +46,8 @@ test_with_cmesh (t8_cmesh_t cmesh)
   const t8_locidx_t ntrees = t8_cmesh_get_num_local_trees (cmesh);
 
   /* Arrays for the face connectivity computations via vertices. */
-  double *all_verts = T8_ALLOC (double, ntrees *T8_ECLASS_MAX_CORNERS *T8_ECLASS_MAX_DIM);
-  t8_eclass_t *all_eclasses = T8_ALLOC (t8_eclass_t, ntrees);
+  double *all_verts = T8_TESTSUITE_ALLOC (double, ntrees *T8_ECLASS_MAX_CORNERS *T8_ECLASS_MAX_DIM);
+  t8_eclass_t *all_eclasses = T8_TESTSUITE_ALLOC (t8_eclass_t, ntrees);
 
   /* Retrieve all tree vertices and element classes and store them into arrays. */
   for (t8_locidx_t itree = 0; itree < ntrees; itree++) {
@@ -141,8 +142,8 @@ test_with_cmesh (t8_cmesh_t cmesh)
   }
 
   T8_FREE (conn);
-  T8_FREE (all_verts);
-  T8_FREE (all_eclasses);
+  T8_TESTSUITE_FREE (all_verts);
+  T8_TESTSUITE_FREE (all_eclasses);
 }
 
 TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
@@ -152,85 +153,8 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
   const int do_partition = 0;
 
   /* 
-   * Tests with 2D and 3D example meshes from `t8code`.
+   * Tests from `t8code` that are not included in AllCmeshsParam.
    */
-
-  {
-    const int dim = 2;
-    t8_cmesh_t cmesh = t8_cmesh_new_periodic (comm, dim);
-    test_with_cmesh (cmesh);
-    t8_cmesh_destroy (&cmesh);
-  }
-
-  {
-    const int dim = 3;
-    t8_cmesh_t cmesh = t8_cmesh_new_periodic (comm, dim);
-    test_with_cmesh (cmesh);
-    t8_cmesh_destroy (&cmesh);
-  }
-
-  {
-    t8_cmesh_t cmesh = t8_cmesh_new_hybrid_gate (comm);
-    test_with_cmesh (cmesh);
-    t8_cmesh_destroy (&cmesh);
-  }
-
-  {
-    t8_cmesh_t cmesh = t8_cmesh_new_periodic_tri (comm);
-    test_with_cmesh (cmesh);
-    t8_cmesh_destroy (&cmesh);
-  }
-
-  {
-    t8_cmesh_t cmesh = t8_cmesh_new_periodic_hybrid (comm);
-    test_with_cmesh (cmesh);
-    t8_cmesh_destroy (&cmesh);
-  }
-
-  {
-    t8_cmesh_t cmesh = t8_cmesh_new_hybrid_gate_deformed (comm);
-    test_with_cmesh (cmesh);
-    t8_cmesh_destroy (&cmesh);
-  }
-
-  {
-    const int num_of_prisms = 5;
-    t8_cmesh_t cmesh = t8_cmesh_new_prism_cake (comm, num_of_prisms);
-    test_with_cmesh (cmesh);
-    t8_cmesh_destroy (&cmesh);
-  }
-
-  {
-    const int num_of_prisms = 28;
-    t8_cmesh_t cmesh = t8_cmesh_new_prism_cake (comm, num_of_prisms);
-    test_with_cmesh (cmesh);
-    t8_cmesh_destroy (&cmesh);
-  }
-
-  {
-    t8_cmesh_t cmesh = t8_cmesh_new_prism_geometry (comm);
-    test_with_cmesh (cmesh);
-    t8_cmesh_destroy (&cmesh);
-  }
-
-  {
-    // Note: `t8_set_join_by_vertices` finds more face connections than stored in the cmesh.
-    t8_cmesh_t cmesh = t8_cmesh_new_prism_cake_funny_oriented (comm);
-    test_with_cmesh (cmesh);
-    t8_cmesh_destroy (&cmesh);
-  }
-
-  {
-    t8_cmesh_t cmesh = t8_cmesh_new_line_zigzag (comm);
-    test_with_cmesh (cmesh);
-    t8_cmesh_destroy (&cmesh);
-  }
-
-  {
-    t8_cmesh_t cmesh = t8_cmesh_new_periodic_line_more_trees (comm);
-    test_with_cmesh (cmesh);
-    t8_cmesh_destroy (&cmesh);
-  }
 
   {
     const int periodic = 0;
@@ -239,7 +163,7 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
     t8_cmesh_destroy (&cmesh);
   }
 
-  {
+  {  // Test additionally to AllCmeshsParams with interesting boundary_coords.
     const double boundary_coords[24] = { 1, 0, 0, 4, 0, 0, 0, 6, 0, 5, 5, 0, -1, -2, 8, 9, 0, 10, 0, 8, 9, 10, 10, 10 };
 
     t8_eclass_t eclass = T8_ECLASS_HEX;
@@ -248,25 +172,6 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
     test_with_cmesh (cmesh);
     t8_cmesh_destroy (&cmesh);
   }
-
-  {
-    t8_cmesh_t cmesh = t8_cmesh_new_full_hybrid (comm);
-    test_with_cmesh (cmesh);
-    t8_cmesh_destroy (&cmesh);
-  }
-
-  /* {
-   *   // This test does not work.
-   *   // Problem: Crashes with memory error.
-   *   // Reason: There are no tree vertices set. Thus it cannot work.
-   *   int num_trees = 1;
-   *   t8_eclass_t eclass = T8_ECLASS_HEX;
-   *   t8_cmesh_t  cmesh = t8_cmesh_new_bigmesh (eclass, num_trees,
-   *                                         sc_MPI_COMM_WORLD);
-   *   test_with_cmesh(cmesh);
-   *   t8_cmesh_destroy (&cmesh);
-   * }
-   */
 
   {
     t8_cmesh_t cmesh = t8_cmesh_new_brick_2d (3, 4, 1, 1, comm);
@@ -280,66 +185,18 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
     t8_cmesh_destroy (&cmesh);
   }
 
-  {
-    const int num_x = 3;
-    const int num_y = 4;
-
-    const int periodic_x = 1;
-    const int periodic_y = 1;
-
-    const double boundary[12]
-      = { 0.0, 0.0, 0.0, (double) num_x, 0.0, 0.0, 0.0, (double) num_y, 0.0, (double) num_x, (double) num_y, 0.0 };
-
-    t8_cmesh_t cmesh = t8_cmesh_new_hypercube_pad_ext (T8_ECLASS_TRIANGLE, comm, boundary, num_x, num_y, 0, periodic_x,
-                                                       periodic_y, 0, 0, 0, 0);
-    test_with_cmesh (cmesh);
-    t8_cmesh_destroy (&cmesh);
-  }
-
-  {
-    const int num_x = 3;
-    const int num_y = 4;
-    const int num_z = 5;
-
-    const int periodic_x = 1;
-    const int periodic_y = 1;
-    const int periodic_z = 1;
-
-    const double boundary[24] = { 0.0,
-                                  0.0,
-                                  0.0,
-                                  (double) num_x,
-                                  0.0,
-                                  0.0,
-                                  0.0,
-                                  (double) num_y,
-                                  0.0,
-                                  (double) num_x,
-                                  (double) num_y,
-                                  0.0,
-                                  0.0,
-                                  0.0,
-                                  (double) num_z,
-                                  (double) num_x,
-                                  0.0,
-                                  (double) num_z,
-                                  0.0,
-                                  (double) num_y,
-                                  (double) num_z,
-                                  (double) num_x,
-                                  (double) num_y,
-                                  (double) num_z };
-
-    t8_cmesh_t cmesh = t8_cmesh_new_hypercube_pad_ext (T8_ECLASS_PRISM, comm, boundary, num_x, num_y, num_z, periodic_x,
-                                                       periodic_y, periodic_z, 0, 0, 0);
-    test_with_cmesh (cmesh);
-    t8_cmesh_destroy (&cmesh);
-
-    cmesh = t8_cmesh_new_hypercube_pad_ext (T8_ECLASS_TET, comm, boundary, num_x, num_y, num_z, periodic_x, periodic_y,
-                                            periodic_z, 0, 0, 0);
-    test_with_cmesh (cmesh);
-    t8_cmesh_destroy (&cmesh);
-  }
+  /* {
+   *   // Side note: This test does not work.
+   *   // Problem: Crashes with memory error.
+   *   // Reason: There are no tree vertices set. Thus it cannot work.
+   *   int num_trees = 1;
+   *   t8_eclass_t eclass = T8_ECLASS_HEX;
+   *   t8_cmesh_t  cmesh = t8_cmesh_new_bigmesh (eclass, num_trees,
+   *                                         sc_MPI_COMM_WORLD);
+   *   test_with_cmesh(cmesh);
+   *   t8_cmesh_destroy (&cmesh);
+   * }
+   */
 
   /* 
    * Tests with 2D and 3D example meshes from `p4est`.

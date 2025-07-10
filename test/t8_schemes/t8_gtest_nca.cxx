@@ -224,11 +224,10 @@ t8_recursive_nca_check (t8_element_t *check_nca, t8_element_t *desc_a, t8_elemen
  * output of element_get_nca.*/
 TEST_P (nca, recursive_check)
 {
-#if T8CODE_TEST_LEVEL == 1
-  const int recursion_depth = 3;
+#if T8_TEST_LEVEL_INT >= 2
+  const int recursion_depth = 2;
 #else
-  /* User lower recursion depth for pyramids, it takes to much time otherwise */
-  const int recursion_depth = 4;
+  const int recursion_depth = 3;
 #endif
   t8_element_t *parent_a, *parent_b;
   int num_children;
@@ -257,29 +256,38 @@ TEST_P (nca, recursive_check)
 
 /* Test the nca recursively for elements in the middle of the uniform refinement tree
  * up to the maximal level. 
- * Be careful when increasing the recursion_depth, as it increases the number of test-cases exponentially. */
+ * Be careful when increasing the max_lvl, as it increases the number of test-cases exponentially. */
 TEST_P (nca, recursive_check_higher_level)
 {
+#if T8_TEST_LEVEL_INT >= 2
+  const int start_level = 2;
+#else
+  const int start_level = 3;
+#endif
 
-  const int recursion_depth = 3;
+#if T8_TEST_LEVEL_INT >= 1
+  const int max_lvl = scheme->get_maxlevel (tree_class) / 2;
+#else
   const int max_lvl = scheme->get_maxlevel (tree_class);
+#endif
+
   t8_element_t *parent_a;
   t8_element_t *parent_b;
   t8_element_t *correct_nca_high_level;
   int num_children;
   int i, k, l;
   t8_gloidx_t leaves_on_level;
-  EXPECT_TRUE (max_lvl - recursion_depth >= 0);
+  EXPECT_TRUE (max_lvl - start_level >= 0);
 
   scheme->element_new (tree_class, 1, &parent_a);
   scheme->element_new (tree_class, 1, &parent_b);
   scheme->element_new (tree_class, 1, &correct_nca_high_level);
 
   /* Test on different levels around the middle of the refinement tree */
-  for (i = recursion_depth; i < max_lvl; i++) {
-    leaves_on_level = scheme->element_count_leaves (tree_class, correct_nca, i - recursion_depth);
+  for (i = start_level; i < max_lvl; i++) {
+    leaves_on_level = scheme->element_count_leaves (tree_class, correct_nca, i - start_level);
     /* middle = leaves/2 */
-    scheme->element_set_linear_id (tree_class, correct_nca_high_level, i - recursion_depth, leaves_on_level / 2);
+    scheme->element_set_linear_id (tree_class, correct_nca_high_level, i - start_level, leaves_on_level / 2);
 
     /* Initialization for recursive_nca_check */
     num_children = scheme->element_get_num_children (tree_class, correct_nca_high_level);

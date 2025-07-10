@@ -125,10 +125,22 @@ int
 t8_element_is_equal (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *elem1,
                      const t8_element_t *elem2);
 
-/** Compute the parent of a given element \b elem and store it in \b parent.
- *  \b parent needs to be an existing element. No memory is allocated by this function.
- *  \b elem and \b parent can point to the same element, then the entries of
- *  \b elem are overwritten by the ones of its parent.
+/**
+ * Indicates if an element is refinable. Possible reasons for being not refinable could be
+ * that the element has reached its max level.
+ * \param [in] scheme      The scheme of the forest.
+ * \param [in] tree_class  The eclass of tree the elements are part of.
+ * \param [in] elem        The element to check.
+ * \return                 1 if the element is refinable, 0 otherwise.
+ */
+int
+element_is_refinable (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *elem);
+
+/**
+ * Compute the parent of a given element \b elem and store it in \b parent.
+ * \b parent needs to be an existing element. No memory is allocated by this function.
+ * \b elem and \b parent can point to the same element, then the entries of
+ * \b elem are overwritten by the ones of its parent.
  * \param [in] scheme        The scheme of the forest.
  * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elem   The element whose parent will be computed.
@@ -205,6 +217,14 @@ t8_element_get_max_num_faces (const t8_scheme_c *scheme, const t8_eclass_t tree_
  */
 int
 t8_element_get_num_children (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *elem);
+
+/** Return the max number of children of an eclass.
+ * \param [in] scheme        The scheme of the forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
+ * \return            The max number of children of \a element.
+ */
+int
+t8_get_max_num_children (const t8_scheme_c *scheme, const t8_eclass_t tree_class);
 
 /** Compute the number of children of an element's face when the element is refined.
  * \param [in] scheme        The scheme of the forest.
@@ -659,7 +679,7 @@ t8_element_count_leaves (const t8_scheme_c *scheme, const t8_eclass_t tree_class
 t8_gloidx_t
 t8_element_count_leaves_from_root (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const int level);
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 /** Query whether a given element can be considered as 'valid' and it is
    *  safe to perform any of the above algorithms on it.
    *  For example this could mean that all coordinates are in valid ranges
@@ -740,7 +760,7 @@ t8_element_destroy (const t8_scheme_c *scheme, const t8_eclass_t tree_class, con
  * \param [in,out] elem   The element to be filled with root.
  */
 void
-t8_element_get_root (const t8_scheme_c *scheme, const t8_eclass_t tree_class, t8_element_t *elem);
+t8_element_set_to_root (const t8_scheme_c *scheme, const t8_eclass_t tree_class, t8_element_t *elem);
 
 /** Pack multiple elements into contiguous memory, so they can be sent via MPI.
  * \param [in] scheme        The scheme of the forest.

@@ -112,7 +112,7 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
       return;
     }
   }
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   /* Check whether element has greater level than the first leaf */
   const t8_element_t *leaf = t8_element_array_index_locidx (leaf_elements, 0);
   T8_ASSERT (t8_forest_element_is_leaf (forest, leaf, ltreeid));
@@ -298,10 +298,8 @@ t8_forest_search_tree (t8_forest_t forest, t8_locidx_t ltreeid, t8_forest_search
   /* Get the element class, scheme and leaf elements of this tree */
   const t8_eclass_t eclass = t8_forest_get_eclass (forest, ltreeid);
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
-  t8_element_array_t *leaf_elements = t8_forest_tree_get_leaves (forest, ltreeid);
+  t8_element_array_t *leaf_elements = t8_forest_tree_get_leaf_elements (forest, ltreeid);
 
-  /* assert for empty tree */
-  T8_ASSERT (t8_element_array_get_count (leaf_elements) >= 0);
   /* Get the first and last leaf of this tree */
   const t8_element_t *first_el = t8_element_array_index_locidx (leaf_elements, 0);
   const t8_element_t *last_el
@@ -359,8 +357,8 @@ t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_fo
   for (t8_locidx_t itree = 0; itree < num_local_trees; itree++) {
     /* Loop over the trees */
     /* Get the number of elements of this tree in old and new forest */
-    const t8_locidx_t elems_per_tree_new = t8_forest_get_tree_num_elements (forest_new, itree);
-    const t8_locidx_t elems_per_tree_old = t8_forest_get_tree_num_elements (forest_old, itree);
+    const t8_locidx_t elems_per_tree_new = t8_forest_get_tree_num_leaf_elements (forest_new, itree);
+    const t8_locidx_t elems_per_tree_old = t8_forest_get_tree_num_leaf_elements (forest_old, itree);
     /* Get the eclass of the tree */
     t8_eclass_t tree_class = t8_forest_get_tree_class (forest_new, itree);
     T8_ASSERT (tree_class == t8_forest_get_tree_class (forest_old, itree));
@@ -372,8 +370,8 @@ t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_fo
       T8_ASSERT (ielem_old < elems_per_tree_old);
 
       /* Get pointers to the elements */
-      const t8_element_t *elem_new = t8_forest_get_element_in_tree (forest_new, itree, ielem_new);
-      const t8_element_t *elem_old = t8_forest_get_element_in_tree (forest_old, itree, ielem_old);
+      const t8_element_t *elem_new = t8_forest_get_leaf_element_in_tree (forest_new, itree, ielem_new);
+      const t8_element_t *elem_old = t8_forest_get_leaf_element_in_tree (forest_old, itree, ielem_old);
 
       /* Get the levels of these elements */
       const int level_new = scheme->element_get_level (tree_class, elem_new);
@@ -396,7 +394,8 @@ t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_fo
             /* Check if family of new refined elements is complete */
             T8_ASSERT (ielem_new + family_size <= elems_per_tree_new);
             for (t8_locidx_t ielem = 1; ielem < family_size; ielem++) {
-              const t8_element_t *elem_new_debug = t8_forest_get_element_in_tree (forest_new, itree, ielem_new + ielem);
+              const t8_element_t *elem_new_debug
+                = t8_forest_get_leaf_element_in_tree (forest_new, itree, ielem_new + ielem);
               scheme->t8_element_parent (elem_new_debug, elem_parent);
               SC_CHECK_ABORT (scheme->element_is_equal (tree_class, elem_old, elem_parent), "Family is not complete.");
             }
@@ -428,7 +427,7 @@ t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_fo
             for (t8_locidx_t ielem = 1; ielem < scheme->element_get_num_children (tree_class, elem_new)
                                         && ielem + ielem_old < elems_per_tree_old;
                  ielem++) {
-              elem_old = t8_forest_get_element_in_tree (forest_old, itree, ielem_old + ielem);
+              elem_old = t8_forest_get_leaf_element_in_tree (forest_old, itree, ielem_old + ielem);
               scheme->element_get_parent (tree_class, elem_old, elem_parent);
               if (scheme->element_is_equal (tree_class, elem_new, elem_parent)) {
                 family_size++;
@@ -439,7 +438,8 @@ t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_fo
             /* Check whether elem_old is the first element of the family */
             for (t8_locidx_t ielem = 1;
                  ielem < scheme->element_get_num_children (tree_class, elem_old) && ielem_old - ielem >= 0; ielem++) {
-              const t8_element_t *elem_old_debug = t8_forest_get_element_in_tree (forest_old, itree, ielem_old - ielem);
+              const t8_element_t *elem_old_debug
+                = t8_forest_get_leaf_element_in_tree (forest_old, itree, ielem_old - ielem);
               scheme->element_get_parent (tree_class, elem_old_debug, elem_parent);
               SC_CHECK_ABORT (!scheme->t8_element_equal (elem_new, elem_parent),
                               "elem_old is not the first of the family.");
@@ -537,8 +537,10 @@ t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_fo
 }
 
 void
-t8_forest_search_partition (const t8_forest_t forest, t8_forest_partition_search_fn search_fn,
-                            t8_forest_partition_query_fn query_fn, sc_array_t *queries)
+t8_forest_search_partition ([[maybe_unused]] const t8_forest_t forest,
+                            [[maybe_unused]] t8_forest_partition_search_fn search_fn,
+                            [[maybe_unused]] t8_forest_partition_query_fn query_fn,
+                            [[maybe_unused]] sc_array_t *queries)
 {
   SC_ABORT ("not implemented yet");
 }

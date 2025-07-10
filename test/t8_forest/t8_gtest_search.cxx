@@ -64,8 +64,8 @@ class forest_search: public testing::TestWithParam<std::tuple<std::tuple<int, t8
  */
 bool
 t8_test_search_all_fn (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
-                       const bool is_leaf, const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index,
-                       std::vector<bool> *user_data)
+                       const bool is_leaf, [[maybe_unused]] const t8_element_array_t *leaf_elements,
+                       const t8_locidx_t tree_leaf_index, std::vector<bool> *user_data)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (user_data != nullptr);
@@ -77,7 +77,8 @@ t8_test_search_all_fn (const t8_forest_t forest, const t8_locidx_t ltreeid, cons
     (*user_data)[tree_offset + tree_leaf_index] = true;
     /* Test whether tree_leaf_index is actually the index of the element */
     t8_locidx_t test_ltreeid;
-    const t8_element_t *test_element = t8_forest_get_element (forest, tree_offset + tree_leaf_index, &test_ltreeid);
+    const t8_element_t *test_element
+      = t8_forest_get_leaf_element (forest, tree_offset + tree_leaf_index, &test_ltreeid);
 
     EXPECT_ELEM_EQ (ts, tree_class, element, test_element);
     EXPECT_EQ (ltreeid, test_ltreeid) << "Tree mismatch in search.";
@@ -87,8 +88,9 @@ t8_test_search_all_fn (const t8_forest_t forest, const t8_locidx_t ltreeid, cons
 
 inline bool
 t8_test_search_query_all_fn (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
-                             const bool is_leaf, const t8_element_array_t *leaf_elements,
-                             const t8_locidx_t tree_leaf_index, const int &querie, std::vector<bool> *user_data)
+                             const bool is_leaf, [[maybe_unused]] const t8_element_array_t *leaf_elements,
+                             const t8_locidx_t tree_leaf_index, const int &querie,
+                             [[maybe_unused]] std::vector<bool> *user_data)
 {
   /* The query is an int with value 42 (see below) */
   EXPECT_EQ (querie, 42) << "Wrong query argument passed to query callback.";
@@ -99,7 +101,8 @@ t8_test_search_query_all_fn (const t8_forest_t forest, const t8_locidx_t ltreeid
     const t8_scheme *ts = t8_forest_get_scheme (forest);
 
     const t8_locidx_t tree_offset = t8_forest_get_tree_element_offset (forest, ltreeid);
-    const t8_element_t *test_element = t8_forest_get_element (forest, tree_offset + tree_leaf_index, &test_ltreeid);
+    const t8_element_t *test_element
+      = t8_forest_get_leaf_element (forest, tree_offset + tree_leaf_index, &test_ltreeid);
     EXPECT_ELEM_EQ (ts, tree_class, element, test_element);
     EXPECT_EQ (ltreeid, test_ltreeid) << "Tree mismatch in search.";
   }
@@ -108,7 +111,7 @@ t8_test_search_query_all_fn (const t8_forest_t forest, const t8_locidx_t ltreeid
 
 TEST_P (forest_search, t8_test_search_all_fn)
 {
-  t8_locidx_t num_elements = t8_forest_get_local_num_elements (forest);
+  t8_locidx_t num_elements = t8_forest_get_local_num_leaf_elements (forest);
   /* set up an array in which we flag whether an element was matched in the
    * search */
   std::vector<bool> matched_leaves (num_elements, false);
@@ -135,7 +138,7 @@ TEST_P (forest_search, test_search_one_query_matches_all)
   /* set up a single query containing our query */
   std::vector<int> queries = { 42 };
 
-  t8_locidx_t num_elements = t8_forest_get_local_num_elements (forest);
+  t8_locidx_t num_elements = t8_forest_get_local_num_leaf_elements (forest);
   /* set up an array in which we flag whether an element was matched in the
    * search */
   std::vector<bool> matched_leaves (num_elements, false);
@@ -157,5 +160,10 @@ TEST_P (forest_search, test_search_one_query_matches_all)
 
   t8_forest_unref (&forest);
 }
+#if T8_TEST_LEVEL_INT >= 2
+const int maxlvl = 5;
+#else
+const int maxlvl = 6;
+#endif
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_search, forest_search, testing::Combine (DefaultScheme, testing::Range (0, 6)));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_search, forest_search, testing::Combine (AllSchemes, testing::Range (0, maxlvl)));

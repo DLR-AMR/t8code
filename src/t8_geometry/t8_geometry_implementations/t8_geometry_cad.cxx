@@ -26,8 +26,6 @@
 #include <t8_eclass.h>
 #include <t8_geometry/t8_geometry_helpers.h>
 
-#if T8_WITH_OCC
-
 #include <BRep_Builder.hxx>
 #include <BRep_Tool.hxx>
 #include <BRepTools.hxx>
@@ -124,24 +122,27 @@ t8_geometry_cad::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreei
   double h = 1e-9;
   double in1[3], in2[3];
   double out1[3], out2[3];
-  for (int dim = 0; dim < 3; ++dim) {
-    memcpy (in1, ref_coords, sizeof (double) * 3);
-    memcpy (in2, ref_coords, sizeof (double) * 3);
+  for (size_t icoord = 0; icoord < num_coords; icoord++) {
 
-    if (ref_coords[dim] < h) {
-      in2[dim] += ref_coords[dim] + h;
-    }
-    else if (ref_coords[dim] > 1 - h) {
-      in1[dim] -= h;
-    }
-    else {
-      in1[dim] -= 0.5 * h;
-      in2[dim] += 0.5 * h;
-    }
-    t8_geometry_cad::t8_geom_evaluate (cmesh, gtreeid, in1, 1, out1);
-    t8_geometry_cad::t8_geom_evaluate (cmesh, gtreeid, in2, 1, out2);
-    for (int dim2 = 0; dim2 < 3; ++dim2) {
-      jacobian_out[dim * 3 + dim2] = (out2[dim2] - out1[dim2]) / h;
+    for (int dim = 0; dim < 3; ++dim) {
+      memcpy (in1, ref_coords, sizeof (double) * 3);
+      memcpy (in2, ref_coords, sizeof (double) * 3);
+
+      if (ref_coords[dim] < h) {
+        in2[dim] += ref_coords[dim] + h;
+      }
+      else if (ref_coords[dim] > 1 - h) {
+        in1[dim] -= h;
+      }
+      else {
+        in1[dim] -= 0.5 * h;
+        in2[dim] += 0.5 * h;
+      }
+      t8_geometry_cad::t8_geom_evaluate (cmesh, gtreeid, in1, 1, out1);
+      t8_geometry_cad::t8_geom_evaluate (cmesh, gtreeid, in2, 1, out2);
+      for (int dim2 = 0; dim2 < 3; ++dim2) {
+        jacobian_out[9 * icoord + dim * 3 + dim2] = (out2[dim2] - out1[dim2]) / h;
+      }
     }
   }
 }
@@ -172,7 +173,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
   double displacement;
   double scaling_factor;
   double scaled_displacement;
-  /* Allocate storage for later usage. Storage depents on size of the batch. */
+  /* Allocate storage for later usage. Storage depends on size of the batch. */
   double *ref_intersection = T8_ALLOC (double, 2 * num_coords);
   double *glob_intersection = T8_ALLOC (double, 3 * num_coords);
   double interpolated_curve_parameter;
@@ -203,7 +204,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
 
   /* Check if face has a linked geometry */
   if (*faces > 0) {
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
     for (int i_edge = 0; i_edge < num_edges; i_edge++) {
       /* If face carries a surface, edges can't carry surfaces too */
       T8_ASSERT (edges[i_edge + num_edges] == 0);
@@ -538,8 +539,6 @@ t8_geometry_cad::t8_geom_evaluate_cad_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
         if (edges[i_edge] > 0) {
           /* Get curve */
           T8_ASSERT (edges[i_edge] <= cad_shape_edge_map.Size ());
-          /* Infinite indent loop */
-          /* *INDENT-OFF* */
           curve = BRep_Tool::Curve (TopoDS::Edge (cad_shape_edge_map.FindKey (edges[i_edge])), first, last);
 
           /* Check if curve are valid */
@@ -1652,5 +1651,3 @@ t8_geometry_cad_destroy (t8_geometry_cad_c **geom)
 }
 
 T8_EXTERN_C_END ();
-
-#endif /* T8_WITH_OCC */

@@ -34,8 +34,6 @@
 #include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.h>
 
-#if T8_WITH_OCC
-
 #include <TopoDS_Shape.hxx>
 #include <TopExp.hxx>
 #include <gp_Pnt.hxx>
@@ -56,7 +54,7 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
    * additional geometry information, which is extracted from a .brep file.
    * The vertices are saved via the \ref t8_cmesh_set_tree_vertices function.
    * Since the internals of this geometry are finely tuned to the .brep file
-   * it is recommended to only use it with the \ref t8_cmesh_readmshfile function.
+   * it is recommended to only use it with the \ref t8_cmesh_from_msh_file function.
    * \param [in] fileprefix Prefix of a .brep file from which to extract an cad geometry.
    * \param [in] name       The name to give this geometry.
    */
@@ -375,7 +373,5 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
   TopTools_IndexedDataMapOfShapeListOfShape
     cad_shape_edge2face_map; /**< Maps all TopoDS_Edge of shape to all its connected TopoDS_Face */
 };
-
-#endif /* T8_WITH_OCC */
 
 #endif /* !T8_GEOMETRY_CAD_HXX */

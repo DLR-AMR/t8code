@@ -34,7 +34,12 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx>
 
-#if T8CODE_TEST_LEVEL == 1
+#if T8_TEST_LEVEL_INT >= 2
+#define T8_CMESH_MAX_NUM_OF_TREES 2
+// Note: This is not the number of prisms used in the test but the number of different settings tested.
+#define T8_CMESH_MAX_NUM_OF_PRISMS 2
+#define T8_CMESH_MAX_NUM_XYZ_TREES 1
+#elif T8_TEST_LEVEL_INT >= 1
 #define T8_CMESH_MAX_NUM_OF_TREES 5
 #define T8_CMESH_MAX_NUM_OF_PRISMS 5
 #define T8_CMESH_MAX_NUM_XYZ_TREES 2

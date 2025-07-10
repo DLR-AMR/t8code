@@ -98,7 +98,7 @@ t8_cmesh_is_initialized (t8_cmesh_t cmesh);
 int
 t8_cmesh_is_committed (const t8_cmesh_t cmesh);
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 /** Check the geometry of the mesh for validity.
  * \param [in] cmesh            This cmesh is examined.
  * \return                      True if the geometry of the cmesh is valid.
@@ -237,7 +237,7 @@ t8_cmesh_set_dimension (t8_cmesh_t cmesh, int dim);
  * It is not allowed to call this function after \ref t8_cmesh_commit.
  * It is not allowed to call this function multiple times for the same tree.
  * \param [in,out] cmesh        The cmesh to be updated.
- * \param [in]     tree_id      The global number of the tree.
+ * \param [in]     gtree_id      The global number of the tree.
  * \param [in]     tree_class   The element class of this tree.
  */
 void
@@ -313,14 +313,24 @@ t8_cmesh_set_attribute_gloidx_array (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int
 
 /** Insert a face-connection between two trees in a cmesh.
  * \param [in,out] cmesh        The cmesh to be updated.
- * \param [in]     tree1        The tree id of the first of the two trees.
- * \param [in]     tree2        The tree id of the second of the two trees.
+ * \param [in]     gtree1        The tree id of the first of the two trees.
+ * \param [in]     gtree2        The tree id of the second of the two trees.
  * \param [in]     face1        The face number of the first tree.
  * \param [in]     face2        The face number of the second tree.
  * \param [in]     orientation  Specify how face1 and face2 are oriented to each other
- *                              TODO: orientation needs to be carefully defined
- *                              for all element classes.
- * TODO: document orientation
+ * 
+ * \note The orientation is defined as:
+ * Let my_face and other_face be the two face numbers of the connecting trees.
+ * We chose a main_face from them as follows: Either both trees have the same
+ * element class, then the face with the lower face number is the main_face or
+ * the trees belong to different classes in which case the face belonging to the
+ * tree with the lower class according to the ordering
+ * triangle < quad, hex < tet < prism < pyramid, is the main_face.
+ * Then face corner 0 of the main_face connects to a face
+ * corner k in the other face.  The face orientation is defined as the number k.
+ * If the classes are equal and my_face == other_face, treating
+ * either of both faces as the main_face leads to the same result.
+ * See https://arxiv.org/pdf/1611.02929.pdf for more details.
  */
 void
 t8_cmesh_set_join (t8_cmesh_t cmesh, t8_gloidx_t gtree1, t8_gloidx_t gtree2, int face1, int face2, int orientation);
@@ -381,7 +391,7 @@ t8_cmesh_is_empty (t8_cmesh_t cmesh);
 t8_cmesh_t
 t8_cmesh_bcast (t8_cmesh_t cmesh_in, int root, sc_MPI_Comm comm);
 
-#ifdef T8_WITH_METIS
+#if T8_ENABLE_METIS
 /* TODO: document this. */
 /* TODO: think about making this a pre-commit set_reorder function. */
 void
@@ -416,22 +426,42 @@ t8_cmesh_set_tree_geometry (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const t8_geom
  * \param [in,out] cmesh        Must be created with \ref t8_cmesh_init
  *                              (TODO: or bcast) and
  *                              specialized with t8_cmesh_set_* calls first (?).
+ * \param [in]     comm         The MPI communicator to use.
  */
 void
 t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 
-/* TODO: Document */
-/* Currently, it is only legal to save cmeshes that use the linear geometry. */
+/**
+ * Save the cmesh to a file with the given fileprefix.
+ * 
+ * \param[in] cmesh The cmesh to save.
+ * \param[in] fileprefix The prefix of the file to save the cmesh to.
+ * 
+ * \note Currently, it is only legal to save cmeshes that use the linear geometry.
+ */
 int
 t8_cmesh_save (t8_cmesh_t cmesh, const char *fileprefix);
 
-/* TODO: Document */
+/**
+ * Load a cmesh from a file.
+ * 
+ * \param[in] filename The name of the file to load the cmesh from.
+ * \param[in] comm The MPI communicator to use.
+ */
 t8_cmesh_t
 t8_cmesh_load (const char *filename, sc_MPI_Comm comm);
 
-/* TODO: Document */
-/* procs_per_node is only relevant in mode==JUQUEEN.
- *  num_files = 1 => replicated cmesh is constructed */
+/**
+ * Load a cmesh from multiple files and distribute it across the processes.
+ * 
+ * \param[in] fileprefix The prefix of the files to load the cmesh from.
+ * \param[in] num_files The number of files to load.
+ * \param[in] comm The MPI communicator to use.
+ * \param[in] mode The load mode to use, see \ref t8_load_mode_t.
+ * \param[in] procs_per_node The number of processes per node, only relevant in JUQUEEN mode.
+ * 
+ * \note \a procs_per_node is only relevant in mode==JUQUEEN. If \a num_files = 1 a replicated cmesh is constructed.
+ */
 t8_cmesh_t
 t8_cmesh_load_and_distribute (const char *fileprefix, int num_files, sc_MPI_Comm comm, t8_load_mode_t mode,
                               int procs_per_node);
@@ -578,7 +608,7 @@ t8_cmesh_get_tree (t8_cmesh_t cmesh, t8_locidx_t ltree_id);
 /** Return the eclass of a given local tree.
  * TODO: Should we refer to indices or consequently use ctree_t?
  * \param [in]    cmesh         The cmesh to be considered.
- * \param [in]    tree_id       The local id of the tree whose eclass will be returned.
+ * \param [in]    ltree_id       The local id of the tree whose eclass will be returned.
  * \return                      The eclass of the given tree.
  * TODO: Call tree ids ltree_id or gtree_id etc. instead of tree_id.
  * \a cmesh must be committed before calling this function.
@@ -600,7 +630,7 @@ t8_cmesh_tree_face_is_boundary (t8_cmesh_t cmesh, t8_locidx_t ltree_id, int face
 /** Return the eclass of a given local ghost.
  * TODO: Should we refer to indices or consequently use cghost_t?
  * \param [in]    cmesh         The cmesh to be considered.
- * \param [in]    ghost_id      The local id of the ghost whose eclass will be returned.
+ * \param [in]    lghost_id      The local id of the ghost whose eclass will be returned.
  *                              0 <= \a tree_id < cmesh.num_ghosts.
  * \return                      The eclass of the given ghost.
  * \a cmesh must be committed before calling this function.
@@ -675,7 +705,7 @@ t8_cmesh_get_tree_vertices (t8_cmesh_t cmesh, t8_locidx_t ltreeid);
  * \param [in]     package_id   The identifier of a valid software package. \see sc_package_register
  * \param [in]     key          A key used to identify the attribute under all
  *                              attributes of this tree with the same \a package_id.
- * \param [in]     tree_id      The local number of the tree.
+ * \param [in]     ltree_id      The local number of the tree.
  * \return         The attribute pointer of the tree \a ltree_id or NULL if the attribute is not found.
  * \note \a cmesh must be committed before calling this function.
  * \see t8_cmesh_set_attribute
@@ -803,9 +833,28 @@ t8_cmesh_new_translate_vertices_to_attributes (const t8_locidx_t *tvertices, con
  * Prints the vertices of each tree of each process
  * 
  * \param[in] cmesh   Source-cmesh, which trees get printed.
+ * \param[in] comm    The MPI communicator to use for printing.
  */
 void
 t8_cmesh_debug_print_trees (const t8_cmesh_t cmesh, sc_MPI_Comm comm);
+
+/**
+ * Compute the process local bounding box of the cmesh.
+ * The bounding box is stored in the array \a bounds in the following order:
+ * bounds[0] = x_min
+ * bounds[1] = x_max
+ * bounds[2] = y_min
+ * bounds[3] = y_max
+ * bounds[4] = z_min
+ * bounds[5] = z_max
+ * 
+ * \param [in] cmesh    The cmesh to be considered.
+ * \param [out] bounds  The bounding box of the cmesh. If the box is flat (for quads for example, z_min == z_max)
+ *
+ * \return             True if the computation was successful, false if the cmesh is empty.
+ */
+int
+t8_cmesh_get_local_bounding_box (const t8_cmesh_t cmesh, double bounds[6]);
 T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_H */

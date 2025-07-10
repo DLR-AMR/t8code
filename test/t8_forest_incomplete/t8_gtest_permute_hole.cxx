@@ -65,7 +65,7 @@ class forest_permute: public testing::TestWithParam<t8_eclass_t> {
   SetUp () override
   {
     eclass = GetParam ();
-#if T8CODE_TEST_LEVEL == 1
+#if T8_TEST_LEVEL_INT >= 2
     level = 1;
 #else
     level = eclass < 4 ? 2 : 1;
@@ -101,9 +101,10 @@ struct t8_elements
 /** Remove every element with local_id i if the i`th bit in 
  * the current permutation \a remove is 0. */
 static int
-t8_adapt_remove (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, const t8_eclass_t tree_class,
-                 t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family, const int num_elements,
-                 t8_element_t *elements[])
+t8_adapt_remove (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from, [[maybe_unused]] t8_locidx_t which_tree,
+                 [[maybe_unused]] const t8_eclass_t tree_class, t8_locidx_t lelement_id,
+                 [[maybe_unused]] const t8_scheme *scheme, [[maybe_unused]] const int is_family,
+                 [[maybe_unused]] const int num_elements, [[maybe_unused]] t8_element_t *elements[])
 {
   struct t8_elements *data = (struct t8_elements *) t8_forest_get_user_data (forest);
   if (data->remove[lelement_id] == 0) {
@@ -114,9 +115,11 @@ t8_adapt_remove (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_
 
 /** Coarse every (incomplete) family */
 static int
-t8_adapt_coarse (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, const t8_eclass_t tree_class,
-                 t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family, const int num_elements,
-                 t8_element_t *elements[])
+t8_adapt_coarse ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                 [[maybe_unused]] t8_locidx_t which_tree, [[maybe_unused]] const t8_eclass_t tree_class,
+                 [[maybe_unused]] t8_locidx_t lelement_id, [[maybe_unused]] const t8_scheme *scheme,
+                 const int is_family, [[maybe_unused]] const int num_elements,
+                 [[maybe_unused]] t8_element_t *elements[])
 {
   if (is_family) {
     return -1;
@@ -142,7 +145,7 @@ t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn, void *user
 TEST_P (forest_permute, test_permute_hole)
 {
   /* number of instances/permutations */
-  const t8_locidx_t num_elements = t8_forest_get_tree_num_elements (forest, 0);
+  const t8_locidx_t num_elements = t8_forest_get_tree_num_leaf_elements (forest, 0);
   T8_ASSERT (num_elements < MAX_NUM_ELEMENTS);
   const uint32_t num_permutation = 1 << num_elements;
 
@@ -165,14 +168,14 @@ TEST_P (forest_permute, test_permute_hole)
         element_count++;
       }
     }
-    ASSERT_TRUE (element_count == t8_forest_get_tree_num_elements (forest_adapt, 0));
+    ASSERT_TRUE (element_count == t8_forest_get_tree_num_leaf_elements (forest_adapt, 0));
 
     /* check if coarsening results in overlapping elements */
     for (int l = 0; l < level + 1; l++) {
       forest_adapt = t8_adapt_forest (forest_adapt, t8_adapt_coarse, NULL);
       ASSERT_TRUE (t8_forest_no_overlap (forest_adapt));
     }
-    ASSERT_TRUE (1 == t8_forest_get_tree_num_elements (forest_adapt, 0));
+    ASSERT_TRUE (1 == t8_forest_get_tree_num_leaf_elements (forest_adapt, 0));
 
     t8_forest_unref (&forest_adapt);
   }

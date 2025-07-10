@@ -62,8 +62,10 @@ class forest_ghost_owner: public testing::TestWithParam<std::tuple<int, cmesh_ex
 };
 
 static int
-t8_test_gao_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
-                   t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family, const int num_elements,
+t8_test_gao_adapt (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                   [[maybe_unused]] t8_locidx_t which_tree, t8_eclass_t tree_class,
+                   [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+                   [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
                    t8_element_t *elements[])
 {
   /* refine every second element up to the maximum level */
@@ -97,7 +99,7 @@ t8_test_gao_check (t8_forest_t forest)
   }
   /* loop over ghost trees */
   for (t8_locidx_t itree = 0, lelement_id = 0; itree < num_ghost_trees; itree++) {
-    t8_locidx_t num_elems_in_tree = t8_forest_ghost_tree_num_elements (forest, itree);
+    t8_locidx_t num_elems_in_tree = t8_forest_ghost_tree_num_leaf_elements (forest, itree);
     /* Get the global id and element class of this tree */
     t8_gloidx_t gtreeid = t8_forest_ghost_get_global_treeid (forest, itree);
     t8_eclass_t eclass = t8_forest_ghost_get_tree_class (forest, itree);
@@ -111,7 +113,7 @@ t8_test_gao_check (t8_forest_t forest)
         }
       }
 
-      t8_element_t *ghost_element = t8_forest_ghost_get_element (forest, itree, ielem);
+      t8_element_t *ghost_element = t8_forest_ghost_get_leaf_element (forest, itree, ielem);
       int is_owner = t8_forest_element_check_owner (forest, ghost_element, gtreeid, eclass, remote, 0);
       ASSERT_TRUE (is_owner) << "Owner check for ghost element failed.\n";
       int owner = t8_forest_element_find_owner (forest, gtreeid, ghost_element, eclass);
@@ -122,13 +124,17 @@ t8_test_gao_check (t8_forest_t forest)
 
 TEST_P (forest_ghost_owner, test_ghost_owner)
 {
-
   /* Compute the minimum level, such that the forest is nonempty */
   int min_level = t8_forest_min_nonempty_level (cmesh, scheme);
   /* start with an empty level */
   min_level = SC_MAX (0, min_level - 1);
   t8_debugf ("Testing ghost exchange with start level %i\n", min_level);
-  for (int level = min_level; level < min_level + 3; level++) {
+#if T8_TEST_LEVEL_INT >= 2
+  const int max_level = min_level + 2;
+#else
+  const int max_level = min_level + 3;
+#endif
+  for (int level = min_level; level < max_level; level++) {
     /* ref the scheme since we reuse it */
     scheme->ref ();
     /* ref the cmesh since we reuse it */

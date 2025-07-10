@@ -26,7 +26,6 @@ These functions write a file in the netCDF-format which represents the given 2D-
 */
 
 #include <t8.h>
-#if T8_WITH_NETCDF
 #include <netcdf.h>
 /* Standard netcdf error function */
 #define ERRCODE 2
@@ -35,8 +34,7 @@ These functions write a file in the netCDF-format which represents the given 2D-
     t8_global_productionf ("Error: %s\n", nc_strerror (e)); \
     exit (ERRCODE); \
   }
-#endif
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
 #include <netcdf_par.h>
 #endif
 #include <t8_element_shape.h>
@@ -45,59 +43,67 @@ These functions write a file in the netCDF-format which represents the given 2D-
 #include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_schemes/t8_scheme.h>
 
-/* Contains all Variables used in order to work with the NetCDF-File */
+/**
+ *
+ * Contains all Variables used in order to work with the NetCDF-File 
+ *
+*/
 typedef struct
 {
-  char *filename;
-  const char *filetitle;
-  int dim;
-  t8_gloidx_t nMesh_elem;
-  t8_gloidx_t nMesh_node;
-  int nMaxMesh_elem_nodes;
-  t8_gloidx_t nMesh_local_node;
+  char *filename;               /**< The name of the NetCDF-File to be read */
+  const char *filetitle;        /**< The title of the NetCDF-File */
+  int dim;                      /**< The dimension of the cmesh (2D or 3D) */
+  t8_gloidx_t nMesh_elem;       /**< The number of elements in the cmesh */
+  t8_gloidx_t nMesh_node;       /**< The number of nodes in the cmesh */
+  int nMaxMesh_elem_nodes;      /**< The maximum number of nodes per element in the cmesh */
+  t8_gloidx_t nMesh_local_node; /**< The number of local nodes in the cmesh */
   /* Declaring NetCDF-dimension ids */
-  int nMesh_elem_dimid;
-  int nMaxMesh_elem_nodes_dimid;
-  int nMesh_node_dimid;
+  int nMesh_elem_dimid;          /**< The NetCDF-dimension id for the number of elements */
+  int nMaxMesh_elem_nodes_dimid; /**< The NetCDF-dimension id for the maximum number of nodes per element */
+  int nMesh_node_dimid;          /**< The NetCDF-dimension id for the number of nodes */
   /* Declaring NetCDF-variables ids */
-  int ncid;
-  int var_elem_tree_id;
-  int var_elem_types_id;
-  int var_elem_nodes_id;
-  int var_mesh_id;
-  int var_node_x_id;
-  int var_node_y_id;
-  int var_node_z_id;
-  int dimids[2]; /* contains two NetCDF-dimensions in order to declare two-dimensional NetCDF-variables */
+  int ncid;              /**< The NetCDF-file id */
+  int var_elem_tree_id;  /**< The NetCDF-variable id for the element tree id */
+  int var_elem_types_id; /**< The NetCDF-variable id for the element types */
+  int var_elem_nodes_id; /**< The NetCDF-variable id for the element nodes */
+  int var_mesh_id;       /**< The NetCDF-variable id for the mesh */
+  int var_node_x_id;     /**< The NetCDF-variable id for the x-coordinates of the nodes */
+  int var_node_y_id;     /**< The NetCDF-variable id for the y-coordinates of the nodes */
+  int var_node_z_id;     /**< The NetCDF-variable id for the z-coordinates of the nodes */
+  int dimids[2];         /**< contains two NetCDF-dimensions in order to declare two-dimensional NetCDF-variables */
   /* Variables used for default NetCDF purposes */
-  t8_nc_int32_t fillvalue32;
-  t8_nc_int64_t fillvalue64;
-  t8_nc_int32_t start_index;
-  const char *convention;
-  int netcdf_var_storage_mode;
-  int netcdf_mpi_access;
+  t8_nc_int32_t fillvalue32;   /**< The fill value for 32-bit integer variables */
+  t8_nc_int64_t fillvalue64;   /**< The fill value for 64-bit integer variables */
+  t8_nc_int32_t start_index;   /**< The start index for NetCDF-variables */
+  const char *convention;      /**< The NetCDF-convention used (e.g., "UGRID") */
+  int netcdf_var_storage_mode; /**< The storage mode for NetCDF-variables (e.g., "chunked") */
+  int netcdf_mpi_access;       /**< The MPI-access mode for NetCDF (e.g., "MPI-IO") */
   /* Stores the old NetCDF-FillMode if it gets changed */
-  int old_fill_mode;
+  int old_fill_mode; /**< The old NetCDF-FillMode if it gets changed */
 
 } t8_cmesh_netcdf_context_t;
 
-/* Contains the Definitions for the NetCDF-dimensions/-variables/-attributes (vary whether a 2D or 3D Mesh will be outputted) */
+/**
+ * \struct t8_cmesh_netcdf_ugrid_namespace_t
+ * Contains the Definitions for the NetCDF-dimensions/-variables/-attributes (vary whether a 2D or 3D Mesh will be outputted) 
+*/
 typedef struct
 {
-  const char *mesh;
-  const char *dim_nMesh_node;
-  const char *dim_nMesh_elem;
-  const char *dim_nMaxMesh_elem_nodes;
-  const char *var_Mesh_node_x;
-  const char *var_Mesh_node_y;
-  const char *var_Mesh_node_z;
-  const char *var_Mesh_elem_types;
-  const char *var_Mesh_elem_tree_id;
-  const char *var_Mesh_elem_node;
-  const char *att_elem_shape_type;
-  const char *att_elem_node_connectivity;
-  const char *att_elem_tree_id;
-  const char *att_elem_node;
+  const char *mesh;           /**< The name of the mesh */
+  const char *dim_nMesh_node; /**< The name of the dimension for the number of nodes in the mesh*/
+  const char *dim_nMesh_elem; /**< The name of the dimension for the number of elements in the mesh */
+  const char
+    *dim_nMaxMesh_elem_nodes;  /**< The name of the dimension for the maximum number of nodes per element in the mesh */
+  const char *var_Mesh_node_x; /**< The name of the variable for the x-coordinates of the nodes in the mesh*/
+  const char *var_Mesh_node_y; /**< The name of the variable for the y-coordinates of the nodes in the mesh*/
+  const char *var_Mesh_node_z; /**< The name of the variable for the z-coordinates of the nodes in the mesh*/
+  const char *var_Mesh_elem_types;        /**< The name of the variable for the element types in the mesh */
+  const char *var_Mesh_elem_tree_id;      /**< The name of the variable for the element tree id in the mesh */
+  const char *var_Mesh_elem_node;         /**< The name of the variable for the element nodes in the mesh */
+  const char *att_elem_shape_type;        /**< The name of the attribute for the element shape type */
+  const char *att_elem_node_connectivity; /**< The name of the attribute for the element node connectivity */
+  const char *att_elem_tree_id;           /**< The name of the attribute for the element tree id */
+  const char *att_elem_node;              /**< The name of the attribute for the element nodes */
 } t8_cmesh_netcdf_ugrid_namespace_t;
 
 /* The UGRID conventions are applied for dimension and variable descriptions */
@@ -143,14 +149,12 @@ static void
 t8_cmesh_write_netcdf_coordinate_dimension (t8_cmesh_netcdf_context_t *context,
                                             t8_cmesh_netcdf_ugrid_namespace_t *namespace_context)
 {
-#if T8_WITH_NETCDF
   /* Define dimension: number of nodes */
   int retval;
   if ((retval = nc_def_dim (context->ncid, namespace_context->dim_nMesh_node, context->nMesh_node,
                             &context->nMesh_node_dimid))) {
     ERR (retval);
   }
-#endif
 }
 
 /* Define NetCDF-coordinate-variables */
@@ -158,7 +162,6 @@ static void
 t8_cmesh_write_netcdf_coordinate_variables (t8_cmesh_netcdf_context_t *context,
                                             t8_cmesh_netcdf_ugrid_namespace_t *namespace_context)
 {
-#if T8_WITH_NETCDF
   /* Define the Mesh_node_x variable. */
   int retval;
   if ((retval = nc_def_var (context->ncid, namespace_context->var_Mesh_node_x, NC_DOUBLE, 1, &context->nMesh_node_dimid,
@@ -170,7 +173,7 @@ t8_cmesh_write_netcdf_coordinate_variables (t8_cmesh_netcdf_context_t *context,
     ERR (retval);
   }
   /* Define whether an independent or collective variable access is used */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   if ((retval = nc_var_par_access (context->ncid, context->var_node_x_id, context->netcdf_mpi_access))) {
     ERR (retval);
   }
@@ -206,7 +209,7 @@ t8_cmesh_write_netcdf_coordinate_variables (t8_cmesh_netcdf_context_t *context,
     ERR (retval);
   }
   /* Define whether an independent or collective variable access is used */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   if ((retval = nc_var_par_access (context->ncid, context->var_node_y_id, context->netcdf_mpi_access))) {
     ERR (retval);
   }
@@ -242,7 +245,7 @@ t8_cmesh_write_netcdf_coordinate_variables (t8_cmesh_netcdf_context_t *context,
     ERR (retval);
   }
   /* Define whether an independent or collective variable access is used */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   if ((retval = nc_var_par_access (context->ncid, context->var_node_z_id, context->netcdf_mpi_access))) {
     ERR (retval);
   }
@@ -265,7 +268,6 @@ t8_cmesh_write_netcdf_coordinate_variables (t8_cmesh_netcdf_context_t *context,
        = nc_put_att_text (context->ncid, context->var_node_z_id, "units", strlen (units_node_z), units_node_z))) {
     ERR (retval);
   }
-#endif
 }
 
 /* Define NetCDF-dimensions */
@@ -273,7 +275,6 @@ static void
 t8_cmesh_write_netcdf_dimensions (t8_cmesh_netcdf_context_t *context,
                                   t8_cmesh_netcdf_ugrid_namespace_t *namespace_context)
 {
-#if T8_WITH_NETCDF
   /* *Define dimensions in the NetCDF file.* */
 
   /* Return value in order to check NetCDF commands */
@@ -295,7 +296,6 @@ t8_cmesh_write_netcdf_dimensions (t8_cmesh_netcdf_context_t *context,
   context->dimids[1] = context->nMaxMesh_elem_nodes_dimid;
 
   t8_debugf ("First NetCDF-dimensions were defined.\n");
-#endif
 }
 
 /* Define NetCDF-variables */
@@ -303,7 +303,6 @@ static void
 t8_cmesh_write_netcdf_variables (t8_cmesh_netcdf_context_t *context,
                                  t8_cmesh_netcdf_ugrid_namespace_t *namespace_context)
 {
-#if T8_WITH_NETCDF
   /* *Define variables in the NetCDF file.* */
 
   /* Return value in order to check NetCDF commands */
@@ -367,7 +366,7 @@ t8_cmesh_write_netcdf_variables (t8_cmesh_netcdf_context_t *context,
     ERR (retval);
   }
   /* Define whether an independent or collective variable access is used */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   if ((retval = nc_var_par_access (context->ncid, context->var_elem_types_id, context->netcdf_mpi_access))) {
     ERR (retval);
   }
@@ -408,7 +407,7 @@ t8_cmesh_write_netcdf_variables (t8_cmesh_netcdf_context_t *context,
     ERR (retval);
   }
   /* Define whether an independent or collective variable access is used */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   if ((retval = nc_var_par_access (context->ncid, context->var_elem_tree_id, context->netcdf_mpi_access))) {
     ERR (retval);
   }
@@ -448,7 +447,7 @@ t8_cmesh_write_netcdf_variables (t8_cmesh_netcdf_context_t *context,
     ERR (retval);
   }
   /* Define whether an independent or collective variable access is used */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   if ((retval = nc_var_par_access (context->ncid, context->var_elem_nodes_id, context->netcdf_mpi_access))) {
     ERR (retval);
   }
@@ -475,16 +474,14 @@ t8_cmesh_write_netcdf_variables (t8_cmesh_netcdf_context_t *context,
        = nc_put_att_int (context->ncid, context->var_elem_nodes_id, "start_index", NC_INT, 1, &context->start_index))) {
     ERR (retval);
   }
-#endif
 }
 
 /* Declare the user-defined elementwise NetCDF-variables which were passed to function. */
 static void
 t8_cmesh_write_user_netcdf_vars (t8_cmesh_netcdf_context_t *context,
-                                 t8_cmesh_netcdf_ugrid_namespace_t *namespace_context, int num_extern_netcdf_vars,
-                                 t8_netcdf_variable_t *ext_variables[], sc_MPI_Comm comm)
+                                 __attribute__ ((unused)) t8_cmesh_netcdf_ugrid_namespace_t *namespace_context,
+                                 int num_extern_netcdf_vars, t8_netcdf_variable_t *ext_variables[], sc_MPI_Comm comm)
 {
-#if T8_WITH_NETCDF
   /* Check whether user-defined variables should be written */
   if (num_extern_netcdf_vars > 0 && ext_variables != NULL) {
     int retval, i;
@@ -527,7 +524,7 @@ t8_cmesh_write_user_netcdf_vars (t8_cmesh_netcdf_context_t *context,
           ERR (retval);
         }
         /* Define whether an independent or collective variable access is used */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
         if ((retval
              = nc_var_par_access (context->ncid, ext_variables[i]->var_user_dimid, context->netcdf_mpi_access))) {
           ERR (retval);
@@ -548,14 +545,12 @@ t8_cmesh_write_user_netcdf_vars (t8_cmesh_netcdf_context_t *context,
       }
     }
   }
-#endif
 }
 
 /* Write NetCDF-coordinate data */
 static void
 t8_cmesh_write_netcdf_coordinate_data (t8_cmesh_t cmesh, t8_cmesh_netcdf_context_t *context, sc_MPI_Comm comm)
 {
-#if T8_WITH_NETCDF
   double *vertices;
   t8_eclass_t tree_class;
   t8_locidx_t num_local_trees;
@@ -658,13 +653,11 @@ t8_cmesh_write_netcdf_coordinate_data (t8_cmesh_t cmesh, t8_cmesh_netcdf_context
   T8_FREE (Mesh_node_y);
   T8_FREE (Mesh_node_z);
   T8_FREE (Mesh_elem_nodes);
-#endif
 }
 
 static void
 t8_cmesh_write_netcdf_data (t8_cmesh_t cmesh, t8_cmesh_netcdf_context_t *context, sc_MPI_Comm comm)
 {
-#if T8_WITH_NETCDF
   t8_eclass_t tree_class;
   t8_gloidx_t gtree_id;
   t8_locidx_t num_local_trees;
@@ -723,17 +716,14 @@ t8_cmesh_write_netcdf_data (t8_cmesh_t cmesh, t8_cmesh_netcdf_context_t *context
   retval = sc_MPI_Allreduce (&num, &num_nodes, 1, T8_MPI_GLOIDX, sc_MPI_SUM, comm);
   SC_CHECK_MPI (retval);
   context->nMesh_node = num_nodes;
-
-#endif
 }
 
 /* Function that writes user-defined data to user-defined variables, if some were passed */
 /* It is only possible to write exactly one value per element per variable */
 static void
 t8_cmesh_write_user_netcdf_data (t8_cmesh_t cmesh, t8_cmesh_netcdf_context_t *context, int num_extern_netcdf_vars,
-                                 t8_netcdf_variable_t *ext_variables[], sc_MPI_Comm comm)
+                                 t8_netcdf_variable_t *ext_variables[], __attribute__ ((unused)) sc_MPI_Comm comm)
 {
-#if T8_WITH_NETCDF
   if (num_extern_netcdf_vars > 0 && ext_variables != NULL) {
     int retval, i;
     size_t start_ptr;
@@ -772,7 +762,6 @@ t8_cmesh_write_user_netcdf_data (t8_cmesh_t cmesh, t8_cmesh_netcdf_context_t *co
       }
     }
   }
-#endif
 }
 
 /* Function that creates the NetCDF-File and fills it  */
@@ -781,9 +770,7 @@ t8_cmesh_write_netcdf_file (t8_cmesh_t cmesh, t8_cmesh_netcdf_context_t *context
                             t8_cmesh_netcdf_ugrid_namespace_t *namespace_context, int num_extern_netcdf_vars,
                             t8_netcdf_variable_t *ext_variables[], sc_MPI_Comm comm)
 {
-#if T8_WITH_NETCDF
   int retval;
-#endif
   t8_gloidx_t num_global_trees;
 
   /* Check if the cmesh was committed. */
@@ -797,12 +784,12 @@ t8_cmesh_write_netcdf_file (t8_cmesh_t cmesh, t8_cmesh_netcdf_context_t *context
 
   /* Create the NetCDF file, the NC_CLOBBER parameter tells netCDF to overwrite this file, if it already exists. Leaves the file in 'define-mode'. */
   /* Since NetCDF version 4.6.2 NC_MPIIO seems to be redundant/not necessary */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   if ((retval = nc_create_par (context->filename, NC_CLOBBER | NC_NETCDF4 | NC_MPIIO, comm, sc_MPI_INFO_NULL,
                                &context->ncid))) {
     ERR (retval);
   }
-#elif T8_WITH_NETCDF
+#else
   if ((retval = nc_create (context->filename, NC_CLOBBER | NC_NETCDF4, &context->ncid))) {
     ERR (retval);
   }
@@ -816,7 +803,6 @@ t8_cmesh_write_netcdf_file (t8_cmesh_t cmesh, t8_cmesh_netcdf_context_t *context
   t8_cmesh_write_netcdf_variables (context, namespace_context);
 
   /* Disable the default fill-value-mode. */
-#if T8_WITH_NETCDF
   if ((retval = nc_set_fill (context->ncid, NC_NOFILL, &context->old_fill_mode))) {
     ERR (retval);
   }
@@ -837,17 +823,14 @@ t8_cmesh_write_netcdf_file (t8_cmesh_t cmesh, t8_cmesh_netcdf_context_t *context
   if ((retval = nc_enddef (context->ncid))) {
     ERR (retval);
   }
-#endif
 
   /* Fill the already defined NetCDF-variables and calculate the 'nMesh_node' (global number of nodes) -dimension */
   t8_cmesh_write_netcdf_data (cmesh, context, comm);
 
   /* Leave the NetCDF-data-mode and re-enter the define-mode. */
-#if T8_WITH_NETCDF
   if ((retval = nc_redef (context->ncid))) {
     ERR (retval);
   }
-#endif
 
   /* Define the NetCDF-dimension 'nMesh_node' */
   t8_cmesh_write_netcdf_coordinate_dimension (context, namespace_context);
@@ -858,7 +841,6 @@ t8_cmesh_write_netcdf_file (t8_cmesh_t cmesh, t8_cmesh_netcdf_context_t *context
   /* Eventuallay declare user-defined elementwise NetCDF-variables, if some were passed */
   t8_cmesh_write_user_netcdf_vars (context, namespace_context, num_extern_netcdf_vars, ext_variables, comm);
 
-#if T8_WITH_NETCDF
   /* Disable the default fill-value-mode. */
   if ((retval = nc_set_fill (context->ncid, NC_NOFILL, &context->old_fill_mode))) {
     ERR (retval);
@@ -868,7 +850,6 @@ t8_cmesh_write_netcdf_file (t8_cmesh_t cmesh, t8_cmesh_netcdf_context_t *context
   if ((retval = nc_enddef (context->ncid))) {
     ERR (retval);
   }
-#endif
   /* Write the NetCDF-coordinate variable data */
   t8_cmesh_write_netcdf_coordinate_data (cmesh, context, comm);
 
@@ -876,14 +857,10 @@ t8_cmesh_write_netcdf_file (t8_cmesh_t cmesh, t8_cmesh_netcdf_context_t *context
   t8_cmesh_write_user_netcdf_data (cmesh, context, num_extern_netcdf_vars, ext_variables, comm);
 
   /* All data has been written to the NetCDF-file, therefore, close the file. */
-#if T8_WITH_NETCDF
   if ((retval = nc_close (context->ncid))) {
     ERR (retval);
   }
   t8_debugf ("The NetCDF-File has been written and closed.\n");
-#else
-  t8_global_errorf ("This version of t8code is not compiled with netcdf support.\n");
-#endif
 }
 
 /* Function that gets called if a cmesh should be written in NetCDF-Format */
@@ -925,7 +902,7 @@ t8_cmesh_write_netcdf (t8_cmesh_t cmesh, const char *file_prefix, const char *fi
   context.start_index = 0;
   context.convention = "UGRID v1.0";
   /* Set the netCDF per variable storage and mpi-access patterns (only if parallel netCDF routines are accessible) */
-#if T8_WITH_NETCDF_PAR
+#if T8_ENABLE_NETCDF_PAR
   context.netcdf_var_storage_mode = NC_CONTIGUOUS;
   context.netcdf_mpi_access = NC_INDEPENDENT;
 #endif

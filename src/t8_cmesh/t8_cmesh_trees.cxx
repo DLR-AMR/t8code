@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_trees.c
+/** \file t8_cmesh_trees.cxx
  *
  * TODO: document this file
  */
@@ -31,18 +31,18 @@
 #include "t8_cmesh_stash.h"
 #include "t8_cmesh_trees.h"
 
-/* This struct is needed as a key to search
+/** This struct is needed as a key to search
  * for an argument in the arguments array of a tree */
 struct t8_key_id_pair
 {
-  int key;
-  int package_id;
+  int key;        /**< The key to search for */
+  int package_id; /**< The package id to use */
 };
 
 /* The hash function for the global to local hash table.
  * We hash the global_id */
 static unsigned
-t8_cmesh_trees_glo_lo_hash_func (const void *v, const void *u)
+t8_cmesh_trees_glo_lo_hash_func (const void *v, [[maybe_unused]] const void *u)
 {
   const t8_trees_glo_lo_hash_t *entry = (const t8_trees_glo_lo_hash_t *) v;
   return (unsigned) entry->global_id;
@@ -51,7 +51,7 @@ t8_cmesh_trees_glo_lo_hash_func (const void *v, const void *u)
 /* The equality function for the global to local hash table.
  * We consider two entries equal, if their global id's match. */
 static int
-t8_cmesh_trees_glo_lo_hash_equal (const void *v1, const void *v2, const void *u)
+t8_cmesh_trees_glo_lo_hash_equal (const void *v1, const void *v2, [[maybe_unused]] const void *u)
 {
   const t8_trees_glo_lo_hash_t *entry1 = (const t8_trees_glo_lo_hash_t *) v1;
   const t8_trees_glo_lo_hash_t *entry2 = (const t8_trees_glo_lo_hash_t *) v2;
@@ -116,7 +116,7 @@ t8_cmesh_trees_add_ghost (const t8_cmesh_trees_t trees, const t8_locidx_t lghost
   t8_part_tree_t part;
   t8_cghost_t ghost;
   t8_trees_glo_lo_hash_t *hash_entry;
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   int ret;
 #endif
 
@@ -144,7 +144,7 @@ t8_cmesh_trees_add_ghost (const t8_cmesh_trees_t trees, const t8_locidx_t lghost
   hash_entry->global_id = gtree_id;
   hash_entry->local_id = lghost_index + part->first_ghost_id + num_local_trees;
   /* insert it */
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   ret =
 #endif
     sc_hash_insert_unique (trees->ghost_globalid_to_local_id, hash_entry, NULL);
@@ -152,7 +152,7 @@ t8_cmesh_trees_add_ghost (const t8_cmesh_trees_t trees, const t8_locidx_t lghost
   T8_ASSERT (ret);
 }
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 
 static int
 t8_cmesh_trees_get_num_procs (t8_cmesh_trees_t trees)
@@ -213,21 +213,25 @@ t8_cmesh_trees_start_part (const t8_cmesh_trees_t trees, const int proc, const t
   part->first_ghost_id = lfirst_ghost;
 }
 
-/* Helper struct for sorting the number of ghost attributes by global id.
+/**
+ * 
+ * Helper struct for sorting the number of ghost attributes by global id.
  * In order to sort them, we need the part ghost id to access the global id.
- * Thus, we store both the part id and the number of attributes. */
+ * Thus, we store both the part id and the number of attributes.
+ *
+ */
 typedef struct
 {
-  t8_locidx_t part_ghost_id;
-  t8_gloidx_t global_id;
-  int num_attributes;
-  int attribute_offset;
+  t8_locidx_t part_ghost_id; /**< Local identifier for the partition ghost. */
+  t8_gloidx_t global_id;     /**< Global identifier for the partition ghost. */
+  int num_attributes;        /**< Number of attributes associated with the partition ghost. */
+  int attribute_offset;      /**< Offset to the attributes associated with the partition ghost. */
 } t8_part_ghost_id_and_num_atts;
 
-/* Compare function for t8_part_ghost_id_and_num_atts to compare by global id.
-*
-* Return True if global_id of if_A < global_id of id_B
-* Return False otherwise
+/** Compare function for t8_part_ghost_id_and_num_atts to compare by global id.
+* \param [in] id_A First t8_part_ghost_id_and_num_atts to compare.
+* \param [in] id_B Second t8_part_ghost_id_and_num_atts to compare.
+* \return True if global_id of id_A < global_id of id_B, False otherwise.
 * */
 bool
 t8_compare_id_and_att_by_global_id (t8_part_ghost_id_and_num_atts &id_A, t8_part_ghost_id_and_num_atts &id_B)
@@ -235,10 +239,10 @@ t8_compare_id_and_att_by_global_id (t8_part_ghost_id_and_num_atts &id_A, t8_part
   return id_A.global_id < id_B.global_id;
 }
 
-/* Compare function for t8_part_ghost_id_and_num_atts to compare by local id.
-*
-* Return True if local id of if_A < local id of id_B
-* Return False otherwise
+/** Compare function for t8_part_ghost_id_and_num_atts to compare by local id.
+* \param [in] id_A First t8_part_ghost_id_and_num_atts to compare.
+* \param [in] id_B Second t8_part_ghost_id_and_num_atts to compare.
+* \return True if part_ghost_id of id_A < part_ghost_id of id_B, False otherwise.
 * */
 bool
 t8_compare_id_and_att_by_part_id (t8_part_ghost_id_and_num_atts &id_A, t8_part_ghost_id_and_num_atts &id_B)
@@ -939,9 +943,9 @@ t8_cmesh_tree_to_face_decode (const int dimension, const int8_t tree_to_face, in
 }
 
 void
-t8_cmesh_trees_print (const t8_cmesh_t cmesh, const t8_cmesh_trees_t trees)
+t8_cmesh_trees_print ([[maybe_unused]] const t8_cmesh_t cmesh, [[maybe_unused]] const t8_cmesh_trees_t trees)
 {
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   t8_locidx_t itree, ighost;
   t8_locidx_t *tree_neighbor;
   t8_gloidx_t tree_neighbor_global, *ghost_neighbor;
@@ -1027,7 +1031,7 @@ t8_cmesh_trees_bcast (const t8_cmesh_t cmesh_in, const int root, const sc_MPI_Co
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   /* Check if input cmesh is committed on root and initialized on other ranks */
   if (mpirank == root) {
     T8_ASSERT (t8_cmesh_is_committed (cmesh_in));
@@ -1126,7 +1130,7 @@ t8_cmesh_trees_is_face_consistent (const t8_cmesh_t cmesh, const t8_cmesh_trees_
         /* Check whether the ttf entry of neighbor is correct */
         ret = ttf2[face1] % F == iface && ttf2[face1] / F == orientation;
       }
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
       if (ret != 1) {
         t8_debugf ("Face connection mismatch at tree %i face %i\n", ltree, iface);
       }
@@ -1162,7 +1166,7 @@ t8_cmesh_trees_is_face_consistent (const t8_cmesh_t cmesh, const t8_cmesh_trees_
         /* Check whether the ttf entry of neighbor is correct */
         ret = ret && ttf2[face1] % F == iface && ttf2[face1] / F == orientation;
       }
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
       if (ret != 1) {
         t8_debugf ("Face connection mismatch at ghost %i face %i\n", lghost, iface);
       }

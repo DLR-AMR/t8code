@@ -34,15 +34,21 @@
 #include <t8_cmesh/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_partition.h>
 #include <t8_cmesh/t8_cmesh_copy.h>
-#include <t8_cmesh/t8_cmesh_geometry.h>
+#include <t8_cmesh/t8_cmesh_geometry.hxx>
 #include <t8_geometry/t8_geometry_handler.hxx>
-#include <t8_cmesh/t8_cmesh_vertex_connectivity.hxx>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
 
+/**
+ * A struct to hold the information about a ghost facejoin.
+ * 
+ * It contains the global id of the ghost, the local id of the ghost, 
+ * and the current number of inserted ghost attributes.
+ */
 typedef struct ghost_facejoins_struct
 {
-  t8_gloidx_t ghost_id; /* The id of the ghost */
-  t8_locidx_t local_id; /* The local id of the ghost */
-  t8_gloidx_t attr_id;  /* The current number of inserted ghost attributes */
+  t8_gloidx_t ghost_id; /**< The id of the ghost */
+  t8_locidx_t local_id; /**< The local id of the ghost */
+  t8_gloidx_t attr_id;  /**< The current number of inserted ghost attributes */
 } t8_ghost_facejoin_t;
 
 static int
@@ -55,7 +61,7 @@ t8_ghost_facejoins_compare (const void *fj1, const void *fj2)
 }
 
 static int
-t8_ghost_facejoin_equal (const void *v1, const void *v2, const void *u)
+t8_ghost_facejoin_equal (const void *v1, const void *v2, [[maybe_unused]] const void *u)
 {
   return t8_ghost_facejoins_compare (v1, v2) == 0;
 }
@@ -324,7 +330,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   t8_cmesh_trees_init (&cmesh->trees, 1, cmesh->num_local_trees, cmesh->num_ghosts);
   t8_cmesh_trees_start_part (cmesh->trees, 0, 0, cmesh->num_local_trees, 0, cmesh->num_ghosts, 1);
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   if (cmesh->num_local_trees == 0) {
     t8_debugf ("Empty partition.\n");
   }
@@ -506,6 +512,12 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 #endif
 }
 
+/**
+ * Commit a cmesh from stash.
+ * 
+ * \param[in] cmesh The cmesh to commit.
+ * \param[in] comm The MPI communicator to use.
+ */
 void
 t8_cmesh_commit_from_stash (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {

@@ -33,7 +33,7 @@
 #include <t8_schemes/t8_default/t8_default.hxx>
 
 static void
-t8_random_partition (int level)
+t8_random_partition ([[maybe_unused]] int level)
 {
   t8_cmesh_t cmesh, cmesh_part, cmesh_part2;
   char file[BUFSIZ];
@@ -88,7 +88,7 @@ t8_random_partition (int level)
  * will also be partitioned. Otherwise replicated.
  */
 static void
-t8_partition (int level, int partition_from)
+t8_partition (int level, [[maybe_unused]] int partition_from)
 {
   t8_cmesh_t cmesh, cmesh_part, cmesh_part2;
   char file[BUFSIZ];

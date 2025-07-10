@@ -59,7 +59,7 @@ class geometry_test: public testing::TestWithParam<std::tuple<int, t8_eclass>> {
 
     const int num_vertices = t8_eclass_num_vertices[eclass];
     t8_cmesh_set_tree_class (cmesh, 0, eclass);
-    double *vertices = T8_ALLOC_ZERO (double, num_vertices *T8_ECLASS_MAX_DIM);
+    double *vertices = T8_TESTSUITE_ALLOC_ZERO (double, num_vertices *T8_ECLASS_MAX_DIM);
     for (int i_vertex = 0; i_vertex < num_vertices; ++i_vertex) {
       for (int dim = 0; dim < T8_ECLASS_MAX_DIM; ++dim) {
         vertices[i_vertex * T8_ECLASS_MAX_DIM + dim] = t8_element_corner_ref_coords[eclass][i_vertex][dim];
@@ -85,15 +85,19 @@ class geometry_test: public testing::TestWithParam<std::tuple<int, t8_eclass>> {
     t8_cmesh_set_tree_vertices (cmesh, 0, vertices,
                                 geom_int == T8_GEOMETRY_TYPE_LINEAR ? t8_eclass_num_vertices[eclass] : 2);
     t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
-    T8_FREE (vertices);
+    T8_TESTSUITE_FREE (vertices);
   }
   void
   TearDown () override
   {
+    if (geom != nullptr) {
+      delete geom;
+      geom = nullptr;
+    }
     t8_cmesh_unref (&cmesh);
   }
   t8_eclass_t eclass;
-  t8_geometry_with_vertices *geom;
+  t8_geometry_with_vertices *geom = nullptr;
   t8_cmesh_t cmesh;
 };
 
@@ -162,7 +166,7 @@ INSTANTIATE_TEST_SUITE_P (
   ::testing::Combine (::testing::Values (T8_GEOMETRY_TYPE_LINEAR, T8_GEOMETRY_TYPE_LINEAR_AXIS_ALIGNED), AllEclasses),
   print_test);
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 TEST (test_geometry_linear, incompatible_geometry)
 {
   t8_cmesh_t cmesh;

@@ -21,7 +21,7 @@ defaultpyramidincludedir = $(schemesdefaultincludedir)/t8_default_pyramid
 
 libt8_generated_headers = src/t8_config.h
 libt8_installed_headers = \
-  src/t8.h src/t8_eclass.h src/t8_mesh.h \
+  src/t8.h src/t8_eclass.h \
   src/t8_element.hxx src/t8_element.h \
   src/t8_element_c_interface.h \
   src/t8_refcount.h src/t8_cmesh.hxx src/t8_cmesh.h src/t8_cmesh_triangle.h \
@@ -38,13 +38,14 @@ libt8_installed_headers = \
 libt8_installed_headers_cmesh = \
   src/t8_cmesh/t8_cmesh_save.h \
   src/t8_cmesh/t8_cmesh_examples.h \
-  src/t8_cmesh/t8_cmesh_geometry.h \
+  src/t8_cmesh/t8_cmesh_geometry.hxx \
   src/t8_cmesh/t8_cmesh_helpers.h \
   src/t8_cmesh/t8_cmesh_cad.hxx \
   src/t8_cmesh/t8_cmesh_types.h \
   src/t8_cmesh/t8_cmesh_stash.h
 libt8_installed_headers_data = \
   src/t8_data/t8_shmem.h src/t8_data/t8_containers.h \
+  src/t8_data/t8_data_handler.hxx \
   src/t8_data/t8_element_array_iterator.hxx
 libt8_installed_headers_forest = \
   src/t8_forest/t8_forest.h \
@@ -111,7 +112,7 @@ libt8_internal_headers = \
   src/t8_vtk/t8_vtk_writer_helper.hxx \
   src/t8_vtk/t8_vtk_write_ASCII.hxx
 libt8_compiled_sources = \
-  src/t8.c src/t8_eclass.c src/t8_mesh.c \
+  src/t8.c src/t8_eclass.c \
   src/t8_element.cxx \
   src/t8_vec.cxx \
   src/t8_element_c_interface.cxx \

@@ -33,7 +33,7 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <test/t8_gtest_macros.hxx>
 
-#if T8CODE_TEST_LEVEL == 1
+#if T8_TEST_LEVEL_INT >= 1
 #define MAX_LEVEL_REF_COORD_TEST 3
 #else
 #define MAX_LEVEL_REF_COORD_TEST 4
@@ -163,7 +163,7 @@ t8_generate_additional_info_centroid (const t8_element_shape_t shape, const doub
  * \param [in] tol    The tolerance.
  * \return True if the arrays are equal, false otherwise.
  */
-const bool
+bool
 t8_compare_arrays (const double *array1, const double *array2, const int dim, const double tol)
 {
   for (int i_dim = 0; i_dim < dim; ++i_dim) {
@@ -251,8 +251,8 @@ TEST_P (class_ref_coords, t8_check_elem_ref_coords)
   t8_locidx_t itree, ielement;
   /* Check the reference coordinates of each element in each tree */
   for (itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++) {
-    for (ielement = 0; ielement < t8_forest_get_tree_num_elements (forest, itree); ielement++) {
-      const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
+    for (ielement = 0; ielement < t8_forest_get_tree_num_leaf_elements (forest, itree); ielement++) {
+      const t8_element_t *element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       t8_test_coords (forest, itree, element);
     }
   }

@@ -146,9 +146,10 @@ struct t8_tutorial_search_user_data_t
  * looked at during the search process.
  */
 static int
-t8_tutorial_search_callback (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
-                             const int is_leaf, const t8_element_array_t *leaf_elements,
-                             const t8_locidx_t tree_leaf_index)
+t8_tutorial_search_callback (t8_forest_t forest, [[maybe_unused]] const t8_locidx_t ltreeid,
+                             [[maybe_unused]] const t8_element_t *element, [[maybe_unused]] const int is_leaf,
+                             [[maybe_unused]] const t8_element_array_t *leaf_elements,
+                             [[maybe_unused]] const t8_locidx_t tree_leaf_index)
 {
 
   /* Get a pointer to our user data and increase the counter of searched elements. */
@@ -171,7 +172,7 @@ t8_tutorial_search_callback (t8_forest_t forest, const t8_locidx_t ltreeid, cons
  */
 static void
 t8_tutorial_search_query_callback (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
-                                   const int is_leaf, const t8_element_array_t *leaf_elements,
+                                   const int is_leaf, [[maybe_unused]] const t8_element_array_t *leaf_elements,
                                    const t8_locidx_t tree_leaf_index, sc_array_t *queries, sc_array_t *query_indices,
                                    int *query_matches, const size_t num_active_queries)
 {
@@ -247,7 +248,7 @@ static void
 t8_tutorial_search_for_particles (t8_forest_t forest, sc_array *particles)
 {
   sc_array particles_per_element;
-  t8_locidx_t num_local_elements = t8_forest_get_local_num_elements (forest);
+  t8_locidx_t num_local_elements = t8_forest_get_local_num_leaf_elements (forest);
   t8_locidx_t ielement;
   t8_locidx_t global_num_searched_elements;
   t8_gloidx_t global_num_elements;
@@ -294,7 +295,7 @@ t8_tutorial_search_for_particles (t8_forest_t forest, sc_array *particles)
                  t8_forest_get_mpicomm (forest));
 
   /* Print the number of elements and number of searched elements. */
-  global_num_elements = t8_forest_get_global_num_elements (forest);
+  global_num_elements = t8_forest_get_global_num_leaf_elements (forest);
   t8_global_productionf (" [search] Searched forest with %li global elements.\n",
                          static_cast<long> (global_num_elements));
   t8_global_errorf (" [search] Looked at %i elements during search.\n", global_num_searched_elements);

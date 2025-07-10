@@ -39,7 +39,7 @@ class face_neigh: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
     scheme->element_new (eclass, 1, &element);
     scheme->element_new (eclass, 1, &child);
     scheme->element_new (eclass, 1, &neigh);
-    scheme->get_root (eclass, element);
+    scheme->set_to_root (eclass, element);
   }
 
   void
@@ -56,7 +56,7 @@ class face_neigh: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
   const t8_scheme *scheme;
   t8_eclass_t eclass;
 
-#if T8CODE_TEST_LEVEL == 1
+#if T8_TEST_LEVEL_INT >= 1
   const int maxlvl = 3;
 #else
   const int maxlvl = 4;
@@ -81,8 +81,8 @@ t8_test_face_neighbor_inside (int num_faces, t8_element_t *element, t8_element_t
 }
 
 int
-t8_test_get_middle_child (const t8_eclass_t eclass, int ilevel, t8_element_t *element, t8_element_t *child,
-                          const t8_scheme *scheme)
+t8_test_get_middle_child (const t8_eclass_t eclass, [[maybe_unused]] int ilevel, t8_element_t *element,
+                          t8_element_t *child, const t8_scheme *scheme)
 {
   /* Get the child number of the child in the middle of the element, depending of the shape of the element. */
   switch (eclass) {
@@ -140,8 +140,8 @@ TEST_P (face_neigh, check_not_inside_root)
   for (int iface = 0; iface < num_faces; iface++) {
 
     const int num_children = scheme->element_get_num_face_children (eclass, element, iface);
-    int *child_indices = T8_ALLOC (int, num_children);
-    t8_element_t **children = T8_ALLOC (t8_element_t *, num_children);
+    int *child_indices = T8_TESTSUITE_ALLOC (int, num_children);
+    t8_element_t **children = T8_TESTSUITE_ALLOC (t8_element_t *, num_children);
     scheme->element_new (eclass, num_children, children);
     scheme->element_get_children_at_face (eclass, element, iface, children, num_children, child_indices);
 
@@ -160,8 +160,8 @@ TEST_P (face_neigh, check_not_inside_root)
       ASSERT_EQ (inside, iface) << "Wrong face.";
     }
     scheme->element_destroy (eclass, num_children, children);
-    T8_FREE (children);
-    T8_FREE (child_indices);
+    T8_TESTSUITE_FREE (children);
+    T8_TESTSUITE_FREE (child_indices);
   }
 }
 
@@ -199,4 +199,4 @@ TEST_P (face_neigh, recursive_check_diff)
   t8_recursive_check_diff (child, element, neigh, scheme, eclass, maxlvl, level);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_face_neigh, face_neigh, DefaultScheme);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_face_neigh, face_neigh, AllSchemes, print_all_schemes);

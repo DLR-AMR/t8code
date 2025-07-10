@@ -32,8 +32,8 @@
 #include <t8_cmesh.h>
 #include <t8_forest/t8_forest.h>
 #include <t8_geometry/t8_geometry.h>
+#include <t8_geometry/t8_geometry_hash.hxx>
 
-#include <string>
 #include <functional>
 
 T8_EXTERN_C_BEGIN ();
@@ -48,8 +48,11 @@ struct t8_geometry
 {
  public:
   /* Basic constructor that sets the name. */
-  t8_geometry (std::string name): name (name), hash (std::hash<std::string> {}(name))
+  t8_geometry (std::string name): name (name), hash (t8_geometry_compute_hash (name))
   {
+    if (t8_geometry_hash_is_null (hash)) {
+      SC_ABORTF ("Registering geometry with invalid name\"%s\"\n.", name.c_str ());
+    }
   }
 
   /* Base constructor with no arguments. We need this since it
@@ -122,9 +125,10 @@ struct t8_geometry
  *                              due to rounding errors.
  */
   virtual void
-  t8_geom_point_batch_inside_element (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                      const double *points, const int num_points, int *is_inside,
-                                      const double tolerance) const
+  t8_geom_point_batch_inside_element ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_locidx_t ltreeid,
+                                      [[maybe_unused]] const t8_element_t *element,
+                                      [[maybe_unused]] const double *points, [[maybe_unused]] const int num_points,
+                                      [[maybe_unused]] int *is_inside, [[maybe_unused]] const double tolerance) const
   {
     SC_ABORTF ("Point batch inside element function not implemented");
   };
@@ -162,7 +166,23 @@ struct t8_geometry
     return name;
   }
 
-  inline const size_t
+  /**
+   * Compute the bounding box of the currently active tree.
+   * 
+   * \param [in]  cmesh   The cmesh.
+   * \param [out] bounds  The bounding box of the tree in the form (xmin, xmax, ymin, ymax, zmin, zmax).
+   * \return              True if the bounding box was computed successfully, false otherwise.
+   * 
+   * \note This function updates the active tree to the provided \a gtreeid.
+   */
+  virtual bool
+  get_tree_bounding_box ([[maybe_unused]] const t8_cmesh_t cmesh, [[maybe_unused]] double bounds[6]) const
+  {
+    t8_errorf ("Tree bounding box function not implemented");
+    return false;
+  }
+
+  inline t8_geometry_hash
   t8_geom_get_hash () const
   {
     return hash;
@@ -178,7 +198,7 @@ struct t8_geometry
 
  protected:
   std::string name;              /**< The name of this geometry. */
-  size_t hash;                   /**< The hash of the name of this geometry. */
+  t8_geometry_hash hash;         /**< The hash of the name of this geometry. See also \ref t8_geometry_compute_hash */
   t8_gloidx_t active_tree;       /**< The tree of which currently vertices are loaded. */
   t8_eclass_t active_tree_class; /**< The class of the currently active tree. */
 };
