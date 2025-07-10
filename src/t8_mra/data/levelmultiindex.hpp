@@ -1,7 +1,5 @@
 #pragma once
 
-#include <vector>
-
 #include <t8_mra/data/triangle_order.hpp>
 
 #include <t8_eclass.h>
