@@ -229,6 +229,9 @@ t8_vtk_iterate_cells (vtkSmartPointer<vtkDataSet> vtkGrid, t8_cmesh_t cmesh, con
   vtkCellIterator *cell_it;
   vtkSmartPointer<vtkPoints> points;
   vtkSmartPointer<vtkCellData> cell_data = vtkGrid->GetCellData ();
+  const int max_cell_points = vtkGrid->GetMaxCellSize ();
+
+  T8_ASSERT (max_cell_points >= 0);
 
   std::array<double, T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM> vertices;
   std::array<t8_gloidx_t, T8_ECLASS_MAX_CORNERS> global_vertex_indices;
