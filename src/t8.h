@@ -67,14 +67,14 @@ T8_EXTERN_C_BEGIN ();
  * since then the assertion would not trigger if sc is not configured in debugging mode.
  * However, we want it to trigger any time t8code is in debugging mode, independent of sc.
  */
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 #define T8_ASSERT(c) SC_CHECK_ABORT ((c), "Assertion '" #c "'")
 #else
 #define T8_ASSERT(c) SC_NOOP ()
 #endif
 
 /**Extended T8_ASSERT assertion with custom error message. Only active in debug-mode. */
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 #define T8_ASSERTF(c, msg) SC_CHECK_ABORT ((c), "Assertion '" #c "': " msg)
 #else
 #define T8_ASSERTF(c, msg) SC_NOOP ()
@@ -262,6 +262,14 @@ t8_errorf (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)))
 #endif
   ;
+
+/**
+ * Set a custom logging function to be used by t8code.
+ * When setting a custom logging function, the t8code internal logging function will be ignored.
+ * \param [in] log_fcn      A function pointer to a logging function
+ */
+void
+t8_set_external_log_fcn (void (*log_fcn) (int category, int priority, const char *msg));
 
 /** Register t8code with libsc and print version and variable information.
  * \param [in] log_threshold Declared in sc.h.  SC_LP_DEFAULT is fine.

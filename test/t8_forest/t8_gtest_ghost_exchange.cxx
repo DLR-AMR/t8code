@@ -67,9 +67,11 @@ class forest_ghost_exchange: public testing::TestWithParam<std::tuple<int, cmesh
 };
 
 static int
-t8_test_exchange_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                        const t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme *scheme,
-                        const int is_family, const int num_elements, t8_element_t *elements[])
+t8_test_exchange_adapt (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                        [[maybe_unused]] t8_locidx_t which_tree, const t8_eclass_t tree_class,
+                        [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+                        [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
+                        t8_element_t *elements[])
 {
   /* refine every second element up to the maximum level */
   const int level = scheme->element_get_level (tree_class, elements[0]);
@@ -93,7 +95,7 @@ t8_test_ghost_exchange_data_id (t8_forest_t forest)
   size_t array_pos = 0;
   sc_array_t element_data;
 
-  t8_locidx_t num_elements = t8_forest_get_local_num_elements (forest);
+  t8_locidx_t num_elements = t8_forest_get_local_num_leaf_elements (forest);
   t8_locidx_t num_ghosts = t8_forest_get_num_ghosts (forest);
   /* Allocate a uin64_t as data for each element and each ghost */
   sc_array_init_size (&element_data, sizeof (t8_linearidx_t), num_elements + num_ghosts);
@@ -101,9 +103,9 @@ t8_test_ghost_exchange_data_id (t8_forest_t forest)
   /* Fill the local element entries with their linear id */
   for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++) {
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
-    for (t8_locidx_t ielem = 0; ielem < t8_forest_get_tree_num_elements (forest, itree); ielem++) {
+    for (t8_locidx_t ielem = 0; ielem < t8_forest_get_tree_num_leaf_elements (forest, itree); ielem++) {
       /* Get a pointer to this element */
-      const t8_element_t *elem = t8_forest_get_element_in_tree (forest, itree, ielem);
+      const t8_element_t *elem = t8_forest_get_leaf_element_in_tree (forest, itree, ielem);
       const int level = scheme->element_get_level (tree_class, elem);
       /* Compute the linear id of this element */
       const t8_linearidx_t elem_id = scheme->element_get_linear_id (tree_class, elem, level);
@@ -120,9 +122,9 @@ t8_test_ghost_exchange_data_id (t8_forest_t forest)
    * id was received */
   for (t8_locidx_t itree = 0; itree < t8_forest_get_num_ghost_trees (forest); itree++) {
     const t8_eclass_t tree_class = t8_forest_ghost_get_tree_class (forest, itree);
-    for (t8_locidx_t ielem = 0; ielem < t8_forest_ghost_tree_num_elements (forest, itree); ielem++) {
+    for (t8_locidx_t ielem = 0; ielem < t8_forest_ghost_tree_num_leaf_elements (forest, itree); ielem++) {
       /* Get a pointer to this ghost */
-      const t8_element_t *elem = t8_forest_ghost_get_element (forest, itree, ielem);
+      const t8_element_t *elem = t8_forest_ghost_get_leaf_element (forest, itree, ielem);
       /* Compute its ghost_id */
       const t8_linearidx_t ghost_id
         = scheme->element_get_linear_id (tree_class, elem, scheme->element_get_level (tree_class, elem));
@@ -147,7 +149,7 @@ t8_test_ghost_exchange_data_int (t8_forest_t forest)
 {
   sc_array_t element_data;
 
-  t8_locidx_t num_elements = t8_forest_get_local_num_elements (forest);
+  t8_locidx_t num_elements = t8_forest_get_local_num_leaf_elements (forest);
   t8_locidx_t num_ghosts = t8_forest_get_num_ghosts (forest);
   /* Allocate an integer as data for each element and each ghost */
   sc_array_init_size (&element_data, sizeof (int), num_elements + num_ghosts);
@@ -176,7 +178,12 @@ TEST_P (forest_ghost_exchange, test_ghost_exchange)
   int min_level = t8_forest_min_nonempty_level (cmesh, scheme);
   /* we start with an empty level */
   min_level = SC_MAX (min_level - 1, 0);
-  for (int level = min_level; level < min_level + 3; level++) {
+#if T8_TEST_LEVEL_INT >= 2
+  const int max_level = min_level + 2;
+#else
+  const int max_level = min_level + 3;
+#endif
+  for (int level = min_level; level < max_level; level++) {
     /* ref the scheme since we reuse it */
     scheme->ref ();
     /* ref the cmesh since we reuse it */

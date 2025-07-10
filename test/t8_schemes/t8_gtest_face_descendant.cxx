@@ -35,8 +35,8 @@ t8_test_manual_first_last_face_descendant (const t8_scheme *scheme, const t8_ele
 {
   const int num_children_at_face = scheme->element_get_num_face_children (tree_class, element, iface);
 
-  int *child_indices = T8_ALLOC (int, num_children_at_face);
-  t8_element_t **children = T8_ALLOC (t8_element_t *, num_children_at_face);
+  int *child_indices = T8_TESTSUITE_ALLOC (int, num_children_at_face);
+  t8_element_t **children = T8_TESTSUITE_ALLOC (t8_element_t *, num_children_at_face);
   scheme->element_new (tree_class, num_children_at_face, children);
 
   scheme->element_copy (tree_class, element, face_desc);
@@ -54,8 +54,8 @@ t8_test_manual_first_last_face_descendant (const t8_scheme *scheme, const t8_ele
     scheme->element_get_child (tree_class, face_desc, child_id, face_desc);
   }
   scheme->element_destroy (tree_class, num_children_at_face, children);
-  T8_FREE (children);
-  T8_FREE (child_indices);
+  T8_TESTSUITE_FREE (children);
+  T8_TESTSUITE_FREE (child_indices);
 }
 
 class class_descendant: public TestDFS {
@@ -69,9 +69,13 @@ class class_descendant: public TestDFS {
 
     const int level = scheme->element_get_level (eclass, element);
     const int num_faces = scheme->element_get_num_faces (eclass, element);
-
+#if T8_TEST_LEVEL_INT == 0
+    const int final_level = scheme->get_maxlevel (eclass);
+#else
+    const int final_level = level + additional_test_lvl;
+#endif
     /* Testing the linear first descendant. */
-    for (int ilevel = level + 1; ilevel < max_test_lvl; ilevel++) {
+    for (int ilevel = level + 1; ilevel <= final_level; ilevel++) {
       for (int jface = 0; jface < num_faces; jface++) {
 
         t8_test_manual_first_last_face_descendant (scheme, element, eclass, jface, ilevel, 0, manual_face_desc);
@@ -92,7 +96,6 @@ class class_descendant: public TestDFS {
   SetUp () override
   {
     dfs_test_setup ();
-    max_test_lvl = scheme->get_maxlevel (eclass);
     scheme->element_new (eclass, 1, &manual_face_desc);
     scheme->element_new (eclass, 1, &scheme_face_desc);
   }
@@ -103,7 +106,14 @@ class class_descendant: public TestDFS {
     scheme->element_destroy (eclass, 1, &scheme_face_desc);
     dfs_test_teardown ();
   }
-  int max_test_lvl;
+#if T8_TEST_LEVEL_INT == 0
+  int additional_test_lvl
+    = 3;  // For level 0 additional_test_lvl is unused and we always test up to the maximum possible refinement level.
+#elif T8_TEST_LEVEL_INT == 1
+  int additional_test_lvl = 2;
+#elif T8_TEST_LEVEL_INT == 2
+  int additional_test_lvl = 1;
+#endif
   t8_element_t *manual_face_desc;
   t8_element_t *scheme_face_desc;
 };
@@ -111,7 +121,7 @@ class class_descendant: public TestDFS {
 TEST_P (class_descendant, t8_check_face_desc)
 {
 
-#if T8CODE_TEST_LEVEL == 1
+#if T8_TEST_LEVEL_INT >= 1
   const int maxlvl = 3;
 #else
   const int maxlvl = 5;
@@ -120,4 +130,4 @@ TEST_P (class_descendant, t8_check_face_desc)
   check_recursive_dfs_to_max_lvl (maxlvl);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_element_face_descendant, class_descendant, DefaultScheme);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_element_face_descendant, class_descendant, AllSchemes, print_all_schemes);

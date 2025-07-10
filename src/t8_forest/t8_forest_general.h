@@ -374,12 +374,12 @@ t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost
 void
 t8_forest_set_load (t8_forest_t forest, const char *filename);
 
-/** Compute the global number of elements in a forest as the sum
- *  of the local element counts.
+/** Compute the global number of leaf elements in a forest as the sum
+ *  of the local leaf element counts.
  *  \param [in] forest    The forest.
  */
 void
-t8_forest_comm_global_num_elements (t8_forest_t forest);
+t8_forest_comm_global_num_leaf_elements (t8_forest_t forest);
 
 /** After allocating and adding properties to a forest, commit the changes.
  * This call sets up the internal state of the forest.
@@ -403,21 +403,21 @@ t8_forest_commit (t8_forest_t forest);
 int
 t8_forest_get_maxlevel (const t8_forest_t forest);
 
-/** Return the number of process local elements in the forest.
+/** Return the number of process local leaf elements in the forest.
  * \param [in]  forest    A forest.
- * \return                The number of elements on this process in \a forest.
+ * \return                The number of leaf elements on this process in \a forest.
  * \a forest must be committed before calling this function.
  */
 t8_locidx_t
-t8_forest_get_local_num_elements (const t8_forest_t forest);
+t8_forest_get_local_num_leaf_elements (const t8_forest_t forest);
 
-/** Return the number of global elements in the forest.
+/** Return the number of global leaf elements in the forest.
  * \param [in]  forest    A forest.
- * \return                The number of elements (summed over all processes) in \a forest.
+ * \return                The number of leaf elements (summed over all processes) in \a forest.
  * \a forest must be committed before calling this function.
  */
 t8_gloidx_t
-t8_forest_get_global_num_elements (const t8_forest_t forest);
+t8_forest_get_global_num_leaf_elements (const t8_forest_t forest);
 
 /** Return the number of ghost elements of a forest.
  * \param [in]      forest      The forest.
@@ -718,7 +718,7 @@ t8_forest_get_tree_vertices (t8_forest_t forest, t8_locidx_t ltreeid);
  *                              of this tree.
  */
 t8_element_array_t *
-t8_forest_tree_get_leaves (const t8_forest_t forest, const t8_locidx_t ltree_id);
+t8_forest_tree_get_leaf_elements (const t8_forest_t forest, const t8_locidx_t ltree_id);
 
 /** Return a cmesh associated to a forest.
  * \param [in]      forest      The forest.
@@ -727,38 +727,38 @@ t8_forest_tree_get_leaves (const t8_forest_t forest, const t8_locidx_t ltree_id)
 t8_cmesh_t
 t8_forest_get_cmesh (t8_forest_t forest);
 
-/** Return an element of the forest.
+/** Return a leaf element of the forest.
  * \param [in]      forest      The forest.
- * \param [in]      lelement_id The local id of an element in \a forest.
+ * \param [in]      lelement_id The local id of a leaf element in \a forest.
  * \param [out]     ltreeid     If not NULL, on output the local tree id of the tree in which the
- *                              element lies in.
- * \return          A pointer to the element. NULL if this element does not exist.
- * \note This function performs a binary search. For constant access, use \ref t8_forest_get_element_in_tree
+ *                              leaf element lies in.
+ * \return          A pointer to the leaf element. NULL if this element does not exist.
+ * \note This function performs a binary search. For constant access, use \ref t8_forest_get_leaf_element_in_tree
  * \a forest must be committed before calling this function.
  */
 t8_element_t *
-t8_forest_get_element (t8_forest_t forest, t8_locidx_t lelement_id, t8_locidx_t *ltreeid);
+t8_forest_get_leaf_element (t8_forest_t forest, t8_locidx_t lelement_id, t8_locidx_t *ltreeid);
 
-/** Return an element of a local tree in a forest.
+/** Return a leaf element of a local tree in a forest.
  * \param [in]      forest      The forest.
  * \param [in]      ltreeid     An id of a local tree in the forest.
- * \param [in]      leid_in_tree The index of an element in the tree.
- * \return          A pointer to the element.
- * \note If the tree id is know, this function should be preferred over \ref t8_forest_get_element.
+ * \param [in]      leid_in_tree The index of a leaf element in the tree.
+ * \return          A pointer to the leaf element.
+ * \note If the tree id is know, this function should be preferred over \ref t8_forest_get_leaf_element.
  * \a forest must be committed before calling this function.
  */
 const t8_element_t *
-t8_forest_get_element_in_tree (t8_forest_t forest, t8_locidx_t ltreeid, t8_locidx_t leid_in_tree);
+t8_forest_get_leaf_element_in_tree (t8_forest_t forest, t8_locidx_t ltreeid, t8_locidx_t leid_in_tree);
 
-/** Return the number of elements of a tree.
+/** Return the number of leaf elements of a tree.
  * \param [in]      forest      The forest.
  * \param [in]      ltreeid     A local id of a tree.
- * \return                      The number of elements in the local tree \a ltreeid.
+ * \return                      The number of leaf elements in the local tree \a ltreeid.
  */
 t8_locidx_t
-t8_forest_get_tree_num_elements (t8_forest_t forest, t8_locidx_t ltreeid);
+t8_forest_get_tree_num_leaf_elements (t8_forest_t forest, t8_locidx_t ltreeid);
 
-/** Return the element offset of a local tree, that is the number of elements
+/** Return the element offset of a local tree, that is the number of leaf elements
  * in all trees with smaller local treeid.
  * \param [in]      forest      The forest.
  * \param [in]      ltreeid     A local id of a tree.
@@ -769,12 +769,12 @@ t8_forest_get_tree_num_elements (t8_forest_t forest, t8_locidx_t ltreeid);
 t8_locidx_t
 t8_forest_get_tree_element_offset (const t8_forest_t forest, const t8_locidx_t ltreeid);
 
-/** Return the number of elements of a tree.
+/** Return the number of leaf elements of a tree.
  * \param [in]      tree       A tree in a forest.
- * \return                     The number of elements of that tree.
+ * \return                     The number of leaf elements of that tree.
  */
 t8_locidx_t
-t8_forest_get_tree_element_count (t8_tree_t tree);
+t8_forest_get_tree_leaf_element_count (t8_tree_t tree);
 
 /** Return the eclass of a tree in a forest.
  * \param [in]      forest    The forest.
@@ -784,15 +784,15 @@ t8_forest_get_tree_element_count (t8_tree_t tree);
 t8_eclass_t
 t8_forest_get_tree_class (const t8_forest_t forest, const t8_locidx_t ltreeid);
 
-/** Compute the global index of the first local element of a forest.
+/** Compute the global index of the first local leaf element of a forest.
  * This function is collective.
- * \param [in]     forest       A committed forest, whose first element's index is computed.
- * \return         The global index of \a forest's first local element.
+ * \param [in]     forest       A committed forest, whose first leaf element's index is computed.
+ * \return         The global index of \a forest's first local leaf element.
  * Forest must be committed when calling this function.
  * This function is collective and must be called on each process.
  */
 t8_gloidx_t
-t8_forest_get_first_local_element_id (t8_forest_t forest);
+t8_forest_get_first_local_leaf_element_id (t8_forest_t forest);
 
 /** Return the element scheme associated to a forest.
  * \param [in]      forest.     A committed forest.
@@ -859,6 +859,22 @@ t8_forest_iterate (t8_forest_t forest);
 void
 t8_forest_element_points_inside (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
                                  const double *points, int num_points, int *is_inside, const double tolerance);
+
+/** Find the owner process of a given element.
+ * \param [in]    forest  The forest.
+ * \param [in]    gtreeid The global id of the tree in which the element lies.
+ * \param [in]    element The element to look for.
+ * \param [in]    eclass  The element class of the tree \a gtreeid.
+ * \return                The mpirank of the process that owns \a element.
+ * \note The element must not exist in the forest, but an ancestor of its first
+ *       descendant has to. If the element's owner is not unique, the owner of the element's
+ *       first descendant is returned.
+ * \note \a forest must be committed before calling this function.
+ * \see t8_forest_element_find_owner_ext
+ * \see t8_forest_element_owners_bounds
+ */
+int
+t8_forest_element_find_owner (t8_forest_t forest, t8_gloidx_t gtreeid, t8_element_t *element, t8_eclass_t eclass);
 
 /* TODO: if set level and partition/adapt/balance all give NULL, then
  * refine uniformly and partition/adapt/balance the uniform forest. */

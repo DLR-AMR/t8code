@@ -38,15 +38,18 @@
 #include <t8.h>                                 /* General t8code header, always include this. */
 #include <sc_options.h>                         /* CLI parser */
 #include <t8_cmesh.h>                           /* cmesh definition and basic interface. */
+#include <t8_cmesh/t8_cmesh_types.h>            /* For the attribute keys.  */
 #include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
 #include <t8_forest/t8_forest_io.h>             /* save forest */
 #include <t8_forest/t8_forest_geometrical.h>    /* geometrical information of the forest */
 #include <t8_schemes/t8_default/t8_default.hxx> /* default refinement scheme. */
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx> /* Linear geometry calculation of trees */
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>    /* Curved geometry calculation of trees */
-#include <t8_cmesh_readmshfile.h>                                         /* msh file reader */
-#include <string>                                                         /* std::string */
-#include <array>                                                          /* std::array */
+#if T8_ENABLE_OCC
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx> /* Curved geometry calculation of trees */
+#endif
+#include <t8_cmesh_readmshfile.h> /* msh file reader */
+#include <string>                 /* std::string */
+#include <array>                  /* std::array */
 
 /* We use this data to control to which level the elements at which 
  * geometry get refined. */
@@ -85,8 +88,9 @@ struct t8_naca_geometry_adapt_data
  */
 int
 t8_naca_geometry_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                                 t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme *scheme,
-                                 const int is_family, const int num_elements, t8_element_t *elements[])
+                                 t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
+                                 const t8_scheme *scheme, [[maybe_unused]] const int is_family,
+                                 [[maybe_unused]] const int num_elements, t8_element_t *elements[])
 {
   /* We retrieve the adapt data */
   const struct t8_naca_geometry_adapt_data *adapt_data
@@ -228,7 +232,7 @@ struct t8_naca_plane_adapt_data
  */
 int
 t8_naca_plane_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                              t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme *scheme,
+                              t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
                               const int is_family, const int num_elements, t8_element_t *elements[])
 {
   double elem_midpoint[3];
@@ -363,8 +367,8 @@ main (int argc, char **argv)
   /* long help message */
   sreturn = snprintf (
     help, BUFSIZ,
-    "Demonstrates the some of the geometry capabitlities of t8code.\n"
-    "You can read in a msh and brep file of a naca profile and refine elements touching certain geometries, \n"
+    "Demonstrates some of the geometry capabilities of t8code.\n"
+    "You can read in a msh and brep file of a NACA profile and refine elements touching certain geometries, \n"
     "or advance a refinement plane through that NACA profile mesh.\n"
     "The brep and msh have to be generated with the gmsh software, using the .geo file in this directory.\n"
     "Usage: %s\n",

@@ -27,13 +27,15 @@
 #include <t8_forest/t8_forest_io.h>
 #include <t8_geometry/t8_geometry_base.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
+#if T8_ENABLE_OCC
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
+#endif
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx>
 #include <t8_geometry/t8_geometry_helpers.h>
 #include <t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 
-#if T8_WITH_OCC
+#if T8_ENABLE_OCC
 #include <GeomAPI_PointsToBSpline.hxx>
 #include <GeomAPI_PointsToBSplineSurface.hxx>
 #include <Geom_BSplineCurve.hxx>
@@ -98,8 +100,8 @@ struct t8_geometry_sincos: public t8_geometry
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double *out_coords) const
+  t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
+                    const size_t num_coords, double *out_coords) const
   {
     for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
       const int offset_2d = 2 * i_coord;
@@ -118,18 +120,11 @@ struct t8_geometry_sincos: public t8_geometry
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                             double *jacobian) const
+  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                             [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
+                             [[maybe_unused]] double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
-  }
-
-  /* Load tree data is empty since we have no tree data.
-   * We need to provide an implementation anyways. */
-  void
-  t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
-  {
-    /* Do nothing */
   }
 
   /** Check if  the currently active tree has a negative volume. In this case return zero. */
@@ -189,8 +184,8 @@ struct t8_geometry_moebius: public t8_geometry_with_vertices
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double *out_coords) const
+  t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid, const double *ref_coords,
+                    const size_t num_coords, double *out_coords) const
   {
     double t;
     double phi;
@@ -213,8 +208,9 @@ struct t8_geometry_moebius: public t8_geometry_with_vertices
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                             double *jacobian) const
+  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                             [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
+                             [[maybe_unused]] double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -270,8 +266,8 @@ struct t8_geometry_cylinder: public t8_geometry
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double *out_coords) const
+  t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid, const double *ref_coords,
+                    const size_t num_coords, double *out_coords) const
   {
     for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
       const int offset_3d = i_coord * 3;
@@ -284,18 +280,11 @@ struct t8_geometry_cylinder: public t8_geometry
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                             double *jacobian) const
+  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                             [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
+                             [[maybe_unused]] double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
-  }
-
-  /* Load tree data is empty since we have no tree data.
-   * We need to provide an implementation anyways. */
-  void
-  t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
-  {
-    /* Do nothing */
   }
 
   /** Check if  the currently active tree has a negative volume. In this case return zero. */
@@ -357,8 +346,8 @@ struct t8_geometry_circle: public t8_geometry_with_vertices
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double *out_coords) const
+  t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid, const double *ref_coords,
+                    const size_t num_coords, double *out_coords) const
   {
     double x;
     double y;
@@ -383,8 +372,9 @@ struct t8_geometry_circle: public t8_geometry_with_vertices
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                             double *jacobian) const
+  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                             [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
+                             [[maybe_unused]] double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -420,7 +410,7 @@ struct t8_geometry_circle: public t8_geometry_with_vertices
 
 /* This geometry rotates \f$ [0,1]^2 \f$ with time around the origin.
  * The rotation direction is reversed after 2 seconds.
- * Additionally, the z coordinate is modifyied according to the
+ * Additionally, the z coordinate is modified according to the
  * sincos function and multiplied with the current time.
  * To use this, a pointer to a double variable time is added to the geometry.
  * This variable can be modified from outside.
@@ -445,8 +435,8 @@ struct t8_geometry_moving: public t8_geometry
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double *out_coords) const
+  t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid, const double *ref_coords,
+                    const size_t num_coords, double *out_coords) const
   {
     double x, y, radius_sqr, phi, rho;
     int sign;
@@ -477,18 +467,11 @@ struct t8_geometry_moving: public t8_geometry
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                             double *jacobian) const
+  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                             [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
+                             [[maybe_unused]] double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
-  }
-
-  /* Load tree data is empty since we have no tree data.
-   * We need to provide an implementation anyways. */
-  void
-  t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
-  {
-    /* Do nothing */
   }
 
   /** Check if  the currently active tree has a negative volume. In this case return zero. */
@@ -548,8 +531,8 @@ struct t8_geometry_cube_zdistorted: public t8_geometry
    * \param [out] out_coords The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    */
   void
-  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double *out_coords) const
+  t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid, const double *ref_coords,
+                    const size_t num_coords, double *out_coords) const
   {
     for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
       const int offset_3d = i_coord * 3;
@@ -563,18 +546,11 @@ struct t8_geometry_cube_zdistorted: public t8_geometry
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                             double *jacobian) const
+  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                             [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
+                             [[maybe_unused]] double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
-  }
-
-  /* Load tree data is empty since we have no tree data.
-   * We need to provide an implementation anyways. */
-  void
-  t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
-  {
-    /* Do nothing */
   }
 
   /** Check if  the currently active tree has a negative volume. In this case return zero. */
@@ -615,7 +591,8 @@ struct t8_geometry_cube_zdistorted: public t8_geometry
  * domain boundary up to a given maximum refinement level. */
 static int
 t8_geom_adapt_boundary (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t ltree_id, const t8_eclass_t tree_class,
-                        t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family, const int num_elements,
+                        [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+                        [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
                         t8_element_t *elements[])
 {
   t8_cmesh_t cmesh = t8_forest_get_cmesh (forest_from);
@@ -650,8 +627,9 @@ t8_geom_adapt_boundary (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t
 }
 
 void
-quad_to_sphere_callback (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                         double *out_coords, const void *tree_data, const void *user_data)
+quad_to_sphere_callback ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                         const double *ref_coords, const size_t num_coords, double *out_coords,
+                         [[maybe_unused]] const void *tree_data, [[maybe_unused]] const void *user_data)
 {
   for (size_t i_coord = 0; i_coord < num_coords; i_coord++) {
     const size_t offset = 3 * i_coord;
@@ -681,7 +659,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
    * and set the output file name. */
   switch (geom_type) {
   case T8_GEOM_SINCOS:
-    t8_global_productionf ("Creating uniform level %i forest with a sinus/cosinus geometry.\n", level);
+    t8_global_productionf ("Creating uniform level %i forest with a sine/cosine geometry.\n", level);
     /* Sin/cos geometry. Has two quad trees. */
     t8_cmesh_register_geometry<t8_geometry_sincos> (cmesh);
     t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
@@ -757,7 +735,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     snprintf (vtuname, BUFSIZ, "forest_quad_to_sphere");
     break;
   case T8_GEOM_CAD_TRIANGLE: {
-#if T8_WITH_OCC
+#if T8_ENABLE_OCC
     t8_global_productionf ("Creating uniform level %i forests with an cad triangle geometry.\n", level);
 
     /* Constructing a triangle with one curved edge (f1) */
@@ -803,12 +781,12 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
 
     snprintf (vtuname, BUFSIZ, "forest_cad_triangle_lvl_%i", level);
     break;
-#else  /* !T8_WITH_OCC */
+#else  /* !T8_ENABLE_OCC */
     SC_ABORTF ("OCC not linked");
-#endif /* T8_WITH_OCC */
+#endif /* T8_ENABLE_OCC */
   }
   case T8_GEOM_CAD_CURVE_CUBE: {
-#if T8_WITH_OCC
+#if T8_ENABLE_OCC
     t8_global_productionf ("Creating uniform level %i forests with cad curve geometries.\n", level);
 
     /* Create two cad bsplines which oscillate along the x-axis. 
@@ -872,12 +850,12 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
 
     snprintf (vtuname, BUFSIZ, "forest_cad_curve_cube_lvl_%i", level);
     break;
-#else  /* !T8_WITH_cad */
+#else  /* !T8_ENABLE_OCC */
     SC_ABORTF ("OCC not linked");
-#endif /* T8_WITH_cad */
+#endif /* T8_ENABLE_OCC */
   }
   case T8_GEOM_CAD_SURFACE_CUBES: {
-#if T8_WITH_OCC
+#if T8_ENABLE_OCC
     t8_global_productionf ("Creating uniform level %i forests with a cad surface geometry.\n", level);
 
     /* Create a cad bspline surface with 2D array of knots */
@@ -997,12 +975,12 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
 
     snprintf (vtuname, BUFSIZ, "forest_cad_surface_cubes_lvl_%i", level);
     break;
-#else  /* !T8_WITH_OCC */
+#else  /* !T8_ENABLE_OCC */
     SC_ABORTF ("OCC not linked");
-#endif /* T8_WITH_OCC */
+#endif /* T8_ENABLE_OCC */
   }
   case T8_GEOM_CAD_SURFACE_CYLINDER: {
-#if T8_WITH_OCC
+#if T8_ENABLE_OCC
     t8_global_productionf ("Creating uniform level %i forests with an cad cylinder geometry.\n", level);
 
     /* Create cad cylinder surfaces. We use an outer radius of 0.5 to get a diameter of 1. */
@@ -1104,9 +1082,9 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     T8_FREE (parameters);
     snprintf (vtuname, BUFSIZ, "forest_geometry_cylinder_lvl_%i", level);
     break;
-#else  /* !T8_WITH_cad */
+#else  /* !TT8_ENABLE_OCC */
     SC_ABORTF ("OCC not linked");
-#endif /* T8_WITH_cad */
+#endif /* T8_ENABLE_OCC */
   }
   default:
     SC_ABORT_NOT_REACHED ();
@@ -1212,7 +1190,7 @@ main (int argc, char **argv)
   sc_options_add_int (opt, 'l', "level", &level, 2, "The uniform refinement level of the mesh. Default: 2");
   sc_options_add_int (opt, 'g', "geometry", &geom_type, -1,
                       "Specify the geometry to use.\n"
-                      "\t\t0 - The graph of sin(x) * cos (y) with two 2D quad trees.\n"
+                      "\t\t0 - The graph of sin(x) * cos(y) with two 2D quad trees.\n"
                       "\t\t1 - A cylinder with one 2D quad tree.\n"
                       "\t\t2 - A moebius strip on a hybrid mesh with 4 triangles and 2 quads.\n"
                       "\t\t3 - A mesh of two trees with different geometries each.\n\t\t    Using the cylinder for the "

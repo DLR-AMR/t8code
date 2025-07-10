@@ -29,8 +29,12 @@
 #define T8_FOREST_VTK_QUADRATIC_ELEMENT_MAX_CORNERS 20
 /** Lookup table for number of nodes for curved eclasses. */
 const int t8_curved_eclass_num_nodes[T8_ECLASS_COUNT] = { 1, 3, 8, 6, 20, 10, 15, 13 };
+/** Lookup table for maximal number of vtk nodes for curved eclasses per dimension */
+const int t8_curved_dim_max_nodes[4] = { 1, 3, 8, 20 };
+/** Lookup table for maximal number of vtk nodes for linear eclasses per dimension */
+const int t8_dim_max_nodes[4] = { 1, 2, 4, 8 };
 
-#if T8_WITH_VTK
+#if T8_ENABLE_VTK
 /** Lookup table for vtk types of curved elements */
 const int t8_curved_eclass_vtk_type[T8_ECLASS_COUNT] = { 1, 21, 23, 22, 25, 24, 26, 27 };
 #endif
@@ -110,6 +114,17 @@ t8_forest_vtk_get_element_nodes (t8_forest_t forest, t8_locidx_t ltreeid, const 
 template <typename grid_t>
 t8_locidx_t
 grid_local_num_elements (const grid_t grid);
+
+/**
+ * Templated getter functions to get the local bounds of a forest or cmesh.
+ * 
+ * \tparam grid_t Either a cmesh or a forest.
+ * \param[in] grid The forest/cmesh to use.
+ * \param[in, out] Bounds defined by xmin, xmax, ymin, ymax, zmin, zmax.
+ */
+template <typename grid_t>
+void
+grid_get_local_bounds (const grid_t grid, double bounds[6]);
 
 /**
  * Templated getter functions to use one call to get the local number of trees  for a forest(cmesh).
@@ -224,5 +239,16 @@ grid_element_to_coords (const grid_t grid, const t8_locidx_t itree, const t8_ele
 template <typename grid_t>
 int
 grid_element_level (const grid_t grid, const t8_locidx_t itree, const t8_element_t *element);
+
+/**
+ * Get the dimension of the grid. 
+ * 
+ * \tparam grid_t 
+ * \param[in] grid A forest/cmesh.
+ * \return The dimension of the grid.
+ */
+template <typename grid_t>
+int
+grid_get_dim (const grid_t grid);
 
 #endif /* T8_VTK_WRITER_HELPER */

@@ -20,11 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <sc/src/sc_functions.h>
+#include <sc_functions.h>
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
-#include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.h>
+#include <t8_schemes/t8_scheme.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
@@ -69,11 +68,11 @@ TEST_P (class_forest_face_normal, back_and_forth)
   const t8_locidx_t local_num_trees = t8_forest_get_num_local_trees (forest);
   /* Iterate over all elements. */
   for (t8_locidx_t itree = 0; itree < local_num_trees; itree++) {
-    const t8_locidx_t tree_elements = t8_forest_get_tree_num_elements (forest, itree);
+    const t8_locidx_t tree_elements = t8_forest_get_tree_num_leaf_elements (forest, itree);
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
     ASSERT_EQ (eclass, tree_class);
     for (t8_locidx_t ielement = 0; ielement < tree_elements; ielement++) {
-      const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      const t8_element_t *element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       const int num_faces = scheme->element_get_num_faces (tree_class, element);
       for (int iface = 0; iface < num_faces; iface++) {
         /* Compute facenormal */
@@ -115,4 +114,4 @@ TEST_P (class_forest_face_normal, back_and_forth)
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_forest_face_normal, class_forest_face_normal,
-                          testing::Combine (DefaultScheme, testing::Range (0, 2)));
+                          testing::Combine (AllSchemes, testing::Range (0, 2)));

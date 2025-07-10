@@ -86,8 +86,9 @@ struct gtest_balance_adapt_data
 
 static int
 t8_gtest_balance_refine_certain_trees (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                                       const t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme *scheme,
-                                       const int is_family, const int num_elements, t8_element_t *elements[])
+                                       const t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
+                                       const t8_scheme *scheme, [[maybe_unused]] const int is_family,
+                                       [[maybe_unused]] const int num_elements, t8_element_t *elements[])
 {
   gtest_balance_adapt_data *adapt_data = static_cast<gtest_balance_adapt_data *> (t8_forest_get_user_data (forest));
 
@@ -161,14 +162,14 @@ t8_gtest_check_custom_balanced_forest (t8_forest_t balanced_forest,
   const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (balanced_forest);
 
   for (t8_locidx_t tree_id = 0; tree_id < num_local_trees; ++tree_id) {
-    const t8_locidx_t num_tree_local_elems = t8_forest_get_tree_num_elements (balanced_forest, tree_id);
+    const t8_locidx_t num_tree_local_elems = t8_forest_get_tree_num_leaf_elements (balanced_forest, tree_id);
 
     const t8_gloidx_t gtree_id = t8_forest_global_tree_id (balanced_forest, tree_id);
     const t8_eclass_t tree_class = t8_forest_get_tree_class (balanced_forest, tree_id);
     const t8_scheme *scheme = t8_forest_get_scheme (balanced_forest);
 
     for (t8_locidx_t elem_id = 0; elem_id < num_tree_local_elems; ++elem_id) {
-      const t8_element_t *element = t8_forest_get_element_in_tree (balanced_forest, tree_id, elem_id);
+      const t8_element_t *element = t8_forest_get_leaf_element_in_tree (balanced_forest, tree_id, elem_id);
 
       const int elem_level = scheme->element_get_level (tree_class, element);
 
@@ -246,12 +247,13 @@ TEST_P (gtest_balance, balance_consistency_test)
   t8_forest_unref (&balanced_forest);
   t8_forest_unref (&already_balanced_forest);
 }
-
-#if T8CODE_TEST_LEVEL == 1
+#if T8_TEST_LEVEL_INT >= 2
+const int maxlvl = 3;
+#elif T8_TEST_LEVEL_INT >= 1
 const int maxlvl = 4;
 #else
 const int maxlvl = 5;
 #endif
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_balance, gtest_balance,
-                          testing::Combine (DefaultScheme, testing::Range (0, maxlvl), testing::Range (0, 2)));
+                          testing::Combine (AllSchemes, testing::Range (0, maxlvl), testing::Range (0, 2)));

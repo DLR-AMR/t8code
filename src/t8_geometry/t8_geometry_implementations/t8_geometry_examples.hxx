@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_geometry_example.hxx
+/** \file t8_geometry_examples.hxx
  * Various mappings for several cmesh examples.
  */
 
@@ -68,8 +68,9 @@ struct t8_geometry_quadrangulated_disk: public t8_geometry_with_vertices
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                             double *jacobian) const
+  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                             [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
+                             [[maybe_unused]] double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -137,8 +138,9 @@ struct t8_geometry_triangulated_spherical_surface: public t8_geometry_with_verti
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                             double *jacobian) const
+  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                             [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
+                             [[maybe_unused]] double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -195,8 +197,9 @@ struct t8_geometry_tessellated_spherical_surface: public t8_geometry_with_vertic
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                             double *jacobian) const
+  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                             [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
+                             [[maybe_unused]] double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -255,8 +258,9 @@ struct t8_geometry_cubed_spherical_shell: public t8_geometry_with_vertices
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                             double *jacobian) const
+  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                             [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
+                             [[maybe_unused]] double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -313,8 +317,9 @@ struct t8_geometry_prismed_spherical_shell: public t8_geometry_with_vertices
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                             double *jacobian) const
+  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                             [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
+                             [[maybe_unused]] double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }
@@ -371,8 +376,9 @@ struct t8_geometry_cubed_sphere: public t8_geometry_with_vertices
 
   /* Jacobian, not implemented. */
   void
-  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                             double *jacobian) const
+  t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
+                             [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
+                             [[maybe_unused]] double *jacobian) const
   {
     SC_ABORT_NOT_REACHED ();
   }

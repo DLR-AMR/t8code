@@ -84,7 +84,7 @@ class class_test_boundary_extrude: public TestDFS {
 
 TEST_P (class_test_boundary_extrude, test_boundary_extrude_dfs)
 {
-#if T8CODE_TEST_LEVEL == 1
+#if T8_TEST_LEVEL_INT >= 1
   const int maxlvl = 4;
 #else
   const int maxlvl = 6;
@@ -92,4 +92,4 @@ TEST_P (class_test_boundary_extrude, test_boundary_extrude_dfs)
   check_recursive_dfs_to_max_lvl (maxlvl);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_boundary_extrude, DefaultScheme);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_boundary_extrude, AllSchemes, print_all_schemes);

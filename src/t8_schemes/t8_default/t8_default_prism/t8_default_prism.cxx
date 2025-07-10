@@ -43,19 +43,19 @@ t8_default_scheme_prism::element_new (int length, t8_element_t **elem) const
   t8_default_scheme_common::element_new (length, elem);
 
   /* in debug mode, set sensible default values. */
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   {
     for (int i = 0; i < length; i++) {
-      get_root (elem[i]);
+      set_to_root (elem[i]);
     }
   }
 #endif
 }
 
 void
-t8_default_scheme_prism::element_init (int length, t8_element_t *elem) const
+t8_default_scheme_prism::element_init ([[maybe_unused]] int length, [[maybe_unused]] t8_element_t *elem) const
 {
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   t8_dprism_t *prism = (t8_dprism_t *) elem;
   /* Set all values to 0 */
   for (int i = 0; i < length; i++) {
@@ -79,12 +79,12 @@ t8_default_scheme_prism::element_get_level (const t8_element_t *elem) const
 }
 
 t8_element_shape_t
-t8_default_scheme_prism::element_get_face_shape (const t8_element_t *elem, int face) const
+t8_default_scheme_prism::element_get_face_shape ([[maybe_unused]] const t8_element_t *elem, int face) const
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
 
-  return t8_dprism_face_shape ((const t8_dprism_t *) elem, face);
+  return t8_dprism_face_shape (face);
 }
 
 void
@@ -118,31 +118,32 @@ t8_default_scheme_prism::element_get_parent (const t8_element_t *elem, t8_elemen
 }
 
 int
-t8_default_scheme_prism::element_get_num_children (const t8_element_t *elem) const
+t8_default_scheme_prism::element_get_num_children ([[maybe_unused]] const t8_element_t *elem) const
 {
   T8_ASSERT (element_is_valid (elem));
   return T8_DPRISM_CHILDREN;
 }
 
 int
-t8_default_scheme_prism::element_get_num_face_children (const t8_element_t *elem, int face) const
+t8_default_scheme_prism::element_get_num_face_children ([[maybe_unused]] const t8_element_t *elem, int face) const
 {
   T8_ASSERT (element_is_valid (elem));
-  return t8_dprism_num_face_children ((const t8_dprism_t *) elem, face);
+  return t8_dprism_num_face_children (face);
 }
 
 int
-t8_default_scheme_prism::element_get_face_corner (const t8_element_t *element, int face, int corner) const
+t8_default_scheme_prism::element_get_face_corner ([[maybe_unused]] const t8_element_t *element, int face,
+                                                  int corner) const
 {
   T8_ASSERT (element_is_valid (element));
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
   T8_ASSERT (0 <= corner && corner < T8_DPRISM_CORNERS);
 
-  return t8_dprism_get_face_corner ((const t8_dprism_t *) element, face, corner);
+  return t8_dprism_get_face_corner (face, corner);
 }
 
 int
-t8_default_scheme_prism::element_get_num_faces (const t8_element_t *elem) const
+t8_default_scheme_prism::element_get_num_faces ([[maybe_unused]] const t8_element_t *elem) const
 {
   T8_ASSERT (element_is_valid (elem));
   return T8_DPRISM_FACES;
@@ -164,7 +165,7 @@ t8_default_scheme_prism::element_get_child (const t8_element_t *elem, int childi
 }
 
 int
-t8_default_scheme_prism::element_get_max_num_faces (const t8_element_t *elem) const
+t8_default_scheme_prism::element_get_max_num_faces ([[maybe_unused]] const t8_element_t *elem) const
 {
   T8_ASSERT (element_is_valid (elem));
   return T8_DPRISM_FACES;
@@ -196,7 +197,7 @@ t8_default_scheme_prism::element_get_children_at_face (const t8_element_t *elem,
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
-  T8_ASSERT (num_children == t8_dprism_num_face_children ((const t8_dprism_t *) elem, face));
+  T8_ASSERT (num_children == t8_dprism_num_face_children (face));
   t8_dprism_children_at_face ((const t8_dprism_t *) elem, face, (t8_dprism_t **) children, num_children, child_indices);
 #if T8_ENABLE_DEBUG
   for (int i = 0; i < num_children; i++) {
@@ -206,12 +207,13 @@ t8_default_scheme_prism::element_get_children_at_face (const t8_element_t *elem,
 }
 
 int
-t8_default_scheme_prism::element_face_get_child_face (const t8_element_t *elem, int face, int face_child) const
+t8_default_scheme_prism::element_face_get_child_face ([[maybe_unused]] const t8_element_t *elem, int face,
+                                                      [[maybe_unused]] int face_child) const
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
-  T8_ASSERT (face_child < t8_dprism_num_face_children ((const t8_dprism_t *) elem, face));
-  return t8_dprism_face_child_face ((const t8_dprism_t *) elem, face, face_child);
+  T8_ASSERT (face_child < t8_dprism_num_face_children (face));
+  return t8_dprism_face_child_face (face);
 }
 
 int
@@ -223,16 +225,16 @@ t8_default_scheme_prism::element_face_get_parent_face (const t8_element_t *elem,
 }
 
 int
-t8_default_scheme_prism::element_get_tree_face (const t8_element_t *elem, int face) const
+t8_default_scheme_prism::element_get_tree_face ([[maybe_unused]] const t8_element_t *elem, int face) const
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
-  return t8_dprism_tree_face ((const t8_dprism_t *) elem, face);
+  return t8_dprism_tree_face (face);
 }
 
 int
 t8_default_scheme_prism::element_extrude_face (const t8_element_t *face, t8_element_t *elem, int root_face,
-                                               const t8_scheme *scheme) const
+                                               [[maybe_unused]] const t8_scheme *scheme) const
 {
 #if T8_ENABLE_DEBUG
   const t8_eclass_t face_eclass = (t8_eclass_t) t8_eclass_face_types[T8_ECLASS_PRISM][root_face];
@@ -251,7 +253,7 @@ t8_default_scheme_prism::element_extrude_face (const t8_element_t *face, t8_elem
 int
 t8_default_scheme_prism::elements_are_family (t8_element_t *const *fam) const
 {
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
   for (int i = 0; i < T8_DPRISM_CHILDREN; i++) {
     T8_ASSERT (element_is_valid (fam[i]));
   }
@@ -274,7 +276,7 @@ t8_default_scheme_prism::element_get_nca (const t8_element_t *elem1, const t8_el
 
 void
 t8_default_scheme_prism::element_get_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
-                                                    const t8_scheme *scheme) const
+                                                    [[maybe_unused]] const t8_scheme *scheme) const
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (0 <= face && face < T8_DPRISM_FACES);
@@ -349,7 +351,7 @@ void
 t8_default_scheme_prism::element_set_linear_id (t8_element_t *elem, int level, t8_linearidx_t id) const
 {
   T8_ASSERT (0 <= level && level <= T8_DPRISM_MAXLEVEL);
-  T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << 3 * level);
+  T8_ASSERT (id < ((t8_linearidx_t) 1) << 3 * level);
 
   t8_dprism_init_linear_id ((t8_default_prism_t *) elem, level, id);
 
@@ -431,7 +433,7 @@ t8_default_scheme_prism::refines_irregular (void) const
   return 0;
 }
 
-#ifdef T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 
 int
 t8_default_scheme_prism::element_is_valid (const t8_element_t *elem) const
@@ -453,7 +455,7 @@ t8_default_scheme_prism::element_to_string (const t8_element_t *elem, char *debu
 #endif /* T8_ENABLE_DEBUG */
 
 void
-t8_default_scheme_prism::get_root (t8_element_t *elem) const
+t8_default_scheme_prism::set_to_root (t8_element_t *elem) const
 {
   t8_dprism_t *prism = (t8_dprism_t *) elem;
   prism->line.level = 0;

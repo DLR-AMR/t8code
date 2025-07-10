@@ -57,7 +57,7 @@ t8_create_element_data (t8_forest_t forest, const t8_3D_point &sphere_center, co
 
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  num_local_elements = t8_forest_get_local_num_elements (forest);
+  num_local_elements = t8_forest_get_local_num_leaf_elements (forest);
   num_ghost_elements = t8_forest_get_num_ghosts (forest);
 
   element_data = T8_ALLOC (double, num_local_elements + num_ghost_elements);
@@ -65,9 +65,9 @@ t8_create_element_data (t8_forest_t forest, const t8_3D_point &sphere_center, co
   const t8_element_t *element;
   t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
   for (t8_locidx_t itree = 0, current_index = 0; itree < num_local_trees; ++itree) {
-    t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+    t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
     for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
-      element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       t8_3D_point center;
       t8_forest_element_centroid (forest, itree, element, center.data ());
       element_data[current_index] = t8_gausss_blob (center, sphere_center, sphere_radius);
@@ -97,8 +97,9 @@ t8_output_data_to_vtu (t8_forest_t forest, double *data, const char *prefix)
 /* Refine, if element is within a given radius. */
 static int
 t8_adapt_refine (t8_forest_t forest, t8_forest_t forest_from, const t8_locidx_t which_tree,
-                 const t8_eclass_t tree_class, const t8_locidx_t lelement_id, const t8_scheme *scheme,
-                 const int is_family, const int num_elements, t8_element_t *elements[])
+                 [[maybe_unused]] const t8_eclass_t tree_class, [[maybe_unused]] const t8_locidx_t lelement_id,
+                 [[maybe_unused]] const t8_scheme *scheme, [[maybe_unused]] const int is_family,
+                 [[maybe_unused]] const int num_elements, t8_element_t *elements[])
 {
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
   T8_ASSERT (adapt_data != NULL);
@@ -116,8 +117,9 @@ t8_adapt_refine (t8_forest_t forest, t8_forest_t forest_from, const t8_locidx_t 
 /* Remove, element if it is within our outside a given radius. */
 static int
 t8_adapt_remove (t8_forest_t forest, t8_forest_t forest_from, const t8_locidx_t which_tree,
-                 const t8_eclass_t tree_class, const t8_locidx_t lelement_id, const t8_scheme *scheme,
-                 const int is_family, const int num_elements, t8_element_t *elements[])
+                 [[maybe_unused]] const t8_eclass_t tree_class, [[maybe_unused]] const t8_locidx_t lelement_id,
+                 [[maybe_unused]] const t8_scheme *scheme, [[maybe_unused]] const int is_family,
+                 [[maybe_unused]] const int num_elements, t8_element_t *elements[])
 {
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
   T8_ASSERT (adapt_data != NULL);
