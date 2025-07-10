@@ -44,24 +44,26 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
-#include <span>
 
-/* forward declaration of ttv class needed since the two class headers include each other. */
+/** forward declaration of ttv class needed since the two class headers include each other. */
 class t8_cmesh_vertex_conn_vertex_to_tree;
 
+/**
+  * A class to hold the tree to vertex connectivity of a cmesh.
+  */
 class t8_cmesh_vertex_conn_tree_to_vertex {
  public:
   /** Standard constructor. Does nothing. */
-  t8_cmesh_vertex_conn_tree_to_vertex (): current_state (state::EMPTY)
+  t8_cmesh_vertex_conn_tree_to_vertex (): state (EMPTY)
   {
   }
 
   /** Constructor from a cmesh where all the attributes are set.
-   * Currently unclear if we implement this eventually.
-   * If we do so: Should the cmesh be already committed, or in pre-commit state but attributes set?
-   *
-   * \note This function is not implemented yet.
-   */
+    * Currently unclear if we implement this eventually.
+    * If we do so: Should the cmesh be already committed, or in pre-commit state but attributes set?
+    * 
+    * \note This function is not implemented yet.
+    */
   t8_cmesh_vertex_conn_tree_to_vertex ([[maybe_unused]] const t8_cmesh_t cmesh)
   {
     // TODO: Remove the [[maybe unused]] qualifier when implemented
@@ -69,29 +71,29 @@ class t8_cmesh_vertex_conn_tree_to_vertex {
   }
 
   /** Constructor from a cmesh and a given vertex to tree connectivity.
-   *
-   * \param [in] cmesh_from A committed cmesh.
-   * \param [in] cmesh      An initialized but not committed cmesh that is to be derived from \a cmesh_from.
-   * \param [in] vtt        A committed vertex to tree connectivity for \a cmesh_from.
-   *
-   * As a result a tree to vertec connectivity for \a cmesh will be constructed.
-   * \note \a cmesh_from must be committed.
-   * \note \a cmesh must not be committed.
-   * \note \a vtt must be committed.
-   * \note This does not work until issue #923 https://github.com/DLR-AMR/t8code/issues/923 is resolved.
-   */
+    *
+    * \param [in] cmesh_from A committed cmesh.
+    * \param [in] cmesh      An initialized but not committed cmesh that is to be derived from \a cmesh_from.
+    * \param [in] vtt        A committed vertex to tree connectivity for \a cmesh_from.
+    * 
+    * As a result a tree to vertec connectivity for \a cmesh will be constructed.
+    * \note \a cmesh_from must be committed.
+    * \note \a cmesh must not be committed.
+    * \note \a vtt must be committed.
+    * \note This does not work until issue #923 https://github.com/DLR-AMR/t8code/issues/923 is resolved.
+    */
   t8_cmesh_vertex_conn_tree_to_vertex (const t8_cmesh_t cmesh_from, const t8_cmesh_t cmesh,
                                        const struct t8_cmesh_vertex_conn_vertex_to_tree &vtt);
 
   /* Setter functions */
   /** Set all global vertex ids of a local tree.
-   * \param [in] cmesh The considered cmesh
-   * \param [in] local_tree A local tree id of \a cmesh
-   * \param [in] global_vertex_id The ids of the global vertices in order of \a local_tree's vertices.
-   * \param [in] num_vertices Must match the number of vertices of \a local_tree
-   *
-   * \note \a cmesh must not be committed.
-  */
+    * \param [in] cmesh The considered cmesh
+    * \param [in] global_tree A global tree id of \a cmesh
+    * \param [in] global_tree_vertices The ids of the global vertices in order of \a local_tree's vertices.
+    * \param [in] num_vertices Must match the number of vertices of \a local_tree
+    *
+    * \note \a cmesh must not be committed.
+   */
   inline void
   set_global_vertex_ids_of_tree_vertices (const t8_cmesh_t cmesh, const t8_gloidx_t global_tree,
                                           const t8_gloidx_t *global_tree_vertices, const int num_vertices)
@@ -101,84 +103,89 @@ class t8_cmesh_vertex_conn_tree_to_vertex {
     T8_ASSERT (global_tree_vertices != NULL);
 
     /* TODO: we currently do not check whether the num_vertices argument
-    *       matches the number of vertices of the tree.
-    *       We cannot do it here, since this function call happens before commit,
-    *       thus we might not even know the eclass of the tree.
-    *       Maybe it is possible to check this during t8_cmesh_add_attributes?
-    */
+     *       matches the number of vertices of the tree.
+     *       We cannot do it here, since this function call happens before commit,
+     *       thus we might not even know the eclass of the tree.
+     *       Maybe it is possible to check this during t8_cmesh_add_attributes?
+     */
 
     /* We copy the data directly, hence set data_persiss to 0 */
     const int data_persists = 0;
+    t8_debugf ("Setting %i global vertices for global tree %li.\n", num_vertices, global_tree);
     t8_cmesh_set_attribute_gloidx_array (cmesh, global_tree, t8_get_package_id (),
                                          T8_CMESH_GLOBAL_VERTICES_ATTRIBUTE_KEY, global_tree_vertices, num_vertices,
                                          data_persists);
-    current_state = state::FILLED;
+    state = FILLED;
   }
 
   /* TODO: What if the attribute is not set? error handling */
   /** Return the global vertex indices of a local tree.
-   * \param [in] cmesh A committed cmesh.
-   * \param [in] local_tree A local tree in \a cmesh.
-   * \param [in] num_vertices The count of local vertices of \a local_tree
-   * \return An array of length \a num_vertices containing the global vertex ids of \a local_tree's vertices.
-  */
-  inline const std::span<const t8_gloidx_t>
-  get_global_vertices (const t8_cmesh_t cmesh, const t8_locidx_t local_tree) const
+    * \param [in] cmesh A committed cmesh.
+    * \param [in] local_tree A local tree in \a cmesh.
+    * \param [in] num_vertices The count of local vertices of \a local_tree
+    * \return An array of length \a num_vertices containing the global vertex ids of \a local_tree's vertices.
+   */
+  inline const t8_gloidx_t *
+  get_global_vertices (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int num_vertices) const
   {
     T8_ASSERT (t8_cmesh_is_committed (cmesh));
 
-    /* Get num tree_vertices to create a view */
+#if T8_ENABLE_DEBUG
+    /* Verify that num_vertices matches the number of tree vertices */
     const t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, local_tree);
     const int num_tree_vertices = t8_eclass_num_vertices[tree_class];
 
+    T8_ASSERT (num_vertices == num_tree_vertices);
+#endif
+
+    t8_debugf ("Getting %i global vertices for local tree %i.\n", num_vertices, local_tree);
     const t8_gloidx_t *global_vertices = t8_cmesh_get_attribute_gloidx_array (
-      cmesh, t8_get_package_id (), T8_CMESH_GLOBAL_VERTICES_ATTRIBUTE_KEY, local_tree, num_tree_vertices);
+      cmesh, t8_get_package_id (), T8_CMESH_GLOBAL_VERTICES_ATTRIBUTE_KEY, local_tree, num_vertices);
     T8_ASSERT (global_vertices != NULL);
-    const std::span<const t8_gloidx_t> view (global_vertices, num_tree_vertices);
-    return view;
+    return global_vertices;
   }
 
   /* TODO: What if the attribute is not set? error handling */
   /** Return a single global vertex id of a single local vertex.
-   *
-   *
-   * \param [in] cmesh A committed cmesh.
-   * \param [in] local_tree A local tree of \a cmesh.
-   * \param [in] local_tree_vertex A local vertex of \a local_tree
-   * \return The global id of the local vertex \a local_tree_vertex of \a local_tree.
-   */
+    * 
+    * 
+    * \param [in] cmesh A committed cmesh.
+    * \param [in] local_tree A local tree of \a cmesh.
+    * \param [in] local_tree_vertex A local vertex of \a local_tree
+    * \param [in] num_tree_vertices The count of vertices of \a local_tree
+    * \return The global id of the local vertex \a local_tree_vertex of \a local_tree. 
+    */
   t8_gloidx_t
-  get_global_vertex (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int local_tree_vertex) const
+  get_global_vertex (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int local_tree_vertex,
+                     const int num_tree_vertices) const
   {
     T8_ASSERT (t8_cmesh_is_committed (cmesh));
 
     /* Verify that local_tree_vertex is in fact a local vertex of the tree */
     /* Note: We only perform this check in debugging mode.
-    *       In non-debugging mode, using a vertex index beyond the trees index allows
-    *       for a potential attacker to gain access to memory possibly not owned by the caller.
-    *       We do not check in non-debugging mode for (obvious) performance reasons. */
+     *       In non-debugging mode, using a vertex index beyond the trees index allows
+     *       for a potential attacker to gain access to memory possibly not owned by the caller.
+     *       We do not check in non-debugging mode for (obvious) performance reasons. */
     T8_ASSERT (0 <= local_tree_vertex);
-    const std::span<const t8_gloidx_t> global_vertices = get_global_vertices (cmesh, local_tree);
-    T8_ASSERT (global_vertices.size () > static_cast<size_t> (local_tree_vertex));
-    return global_vertices[local_tree_vertex];
+    T8_ASSERT (local_tree_vertex < num_tree_vertices);
+
+    return get_global_vertices (cmesh, local_tree, num_tree_vertices)[local_tree_vertex];
   }
 
   friend struct t8_cmesh_vertex_connectivity;
 
  private:
-  enum class state {
+  enum state {
     EMPTY, /*< Is initialized but empty. */
     FILLED /*< Is filled with at least one entry. */
-  };
+  } state;
 
   /** Return the state of this object. */
-  inline state
-  get_state () const
+  inline enum state
+  get_state ()
   {
-    return current_state;
+    return state;
   }
-
-  state current_state;
 };
 
 #endif /* !T8_CMESH_VERTEX_CONN_TREE_TO_VERTEX_HXX */
