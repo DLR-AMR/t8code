@@ -36,11 +36,11 @@ void
 t8_logv (int category, int priority, const char *fmt, va_list ap)
 {
   char buffer[BUFSIZ];
-  
+
   sc_package_lock (t8_package_id);
   vsnprintf (buffer, BUFSIZ, fmt, ap);
   sc_package_unlock (t8_package_id);
-  
+
   if (external_log_fcn) {
     external_log_fcn (category, priority, buffer);
     return;
