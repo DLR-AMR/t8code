@@ -36,14 +36,11 @@ void
 t8_logv (int category, int priority, const char *fmt, va_list ap)
 {
   char buffer[BUFSIZ];
-
-#ifdef SC_ENABLE_PTHREAD
+  
   sc_package_lock (t8_package_id);
-#endif
   vsnprintf (buffer, BUFSIZ, fmt, ap);
-#ifdef SC_ENABLE_PTHREAD
   sc_package_unlock (t8_package_id);
-#endif
+  
   if (external_log_fcn) {
     external_log_fcn (category, priority, buffer);
     return;
