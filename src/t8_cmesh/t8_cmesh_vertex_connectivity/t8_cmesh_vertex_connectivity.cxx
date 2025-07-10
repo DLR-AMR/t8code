@@ -91,7 +91,7 @@ t8_cmesh_get_global_vertex_of_tree (const t8_cmesh_t cmesh, const t8_locidx_t lo
   return vertices_of_tree[local_tree_vertex];
 }
 
-const t8_cmesh_vertex_conn_vertex_to_tree::tree_vertex_list &
+const tree_vertex_list &
 t8_cmesh_get_vertex_to_tree_list (const t8_cmesh_t cmesh, const t8_gloidx_t global_vertex)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));

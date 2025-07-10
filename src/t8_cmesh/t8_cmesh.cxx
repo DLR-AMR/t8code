@@ -22,7 +22,7 @@
 
 #include <sc_statistics.h>
 #include <t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_geometry.h>
+#include <t8_cmesh/t8_cmesh_geometry.hxx>
 #include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
@@ -399,6 +399,13 @@ t8_cmesh_set_attribute (t8_cmesh_t cmesh, const t8_gloidx_t gtree_id, const int 
                         void *const data, const size_t data_size, const int data_persists)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (sc_package_is_registered (package_id));
+#if T8_ENABLE_DEBUG
+  // The key for t8code attributes must be in the range of possible keys.
+  if (package_id == t8_get_package_id ()) {
+    T8_ASSERT (key < T8_CMESH_NEXT_POSSIBLE_KEY && key >= 0);
+  }
+#endif
   SC_CHECK_ABORT (cmesh->set_from == NULL, "ERROR: Cannot add attributes to cmesh when deriving from another cmesh.\n");
 
   t8_stash_add_attribute (cmesh->stash, gtree_id, package_id, key, data_size, data, !data_persists);
@@ -774,7 +781,7 @@ t8_cmesh_bcast (const t8_cmesh_t cmesh_in, const int root, sc_MPI_Comm comm)
   /* At first we broadcast all meta information. */
   if (mpirank == root) {
     /* Check whether geometries are set. If so, abort.
-     * We cannot broadcast the geometries, since they are pointers to derived 
+     * We cannot broadcast the geometries, since they are pointers to derived
      * classes that we cannot know of on the receiving process.
      * Geometries must therefore be added after broadcasting. */
     if (cmesh_in->geometry_handler != NULL) {
@@ -1347,11 +1354,11 @@ t8_cmesh_coords_axb (const double *coords_in, double *coords_out, int num_vertic
 
 #if T8_ENABLE_DEBUG
 /**
- * \warning This function is only available in debug-modus and should only 
+ * \warning This function is only available in debug-modus and should only
  * be used in debug-modus.
- * 
- * Prints the vertices of each local tree. 
- * 
+ *
+ * Prints the vertices of each local tree.
+ *
  * \param[in] cmesh   source-cmesh, which trees get printed.
  */
 static void
@@ -1535,4 +1542,49 @@ t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, const int level, const t8_scheme *sch
 
     *last_local_tree = *first_local_tree - 1;
   }
+}
+
+int
+t8_cmesh_get_local_bounding_box (const t8_cmesh_t cmesh, double bounds[6])
+{
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
+  T8_ASSERT (num_local_trees > 0);
+  double tree_bounds[6] = { 0.0 };
+  t8_geometry_handler *geom_handler = cmesh->geometry_handler;
+  if (geom_handler == NULL) {
+    t8_errorf ("Error: Trying to compute bounding box for cmesh with no geometry.\n");
+    return false;
+  }
+  const t8_gloidx_t first_tree = cmesh->first_tree;
+  bool bbox_return = geom_handler->get_tree_bounding_box (cmesh, first_tree, bounds);
+  if (!bbox_return) {
+    t8_errorf ("Error: Failed to compute the bounding box for the first tree.\n");
+    /* If the bounding box is not available, we return false */
+    return false;
+  }
+  for (t8_locidx_t itree = 1; itree < num_local_trees && bbox_return; itree++) {
+    const t8_gloidx_t gtree_id = t8_cmesh_get_global_id (cmesh, itree);
+    bbox_return = bbox_return && geom_handler->get_tree_bounding_box (cmesh, gtree_id, tree_bounds);
+
+    bounds[0] = std::min (bounds[0], tree_bounds[0]);
+    bounds[1] = std::max (bounds[1], tree_bounds[1]);
+    bounds[2] = std::min (bounds[2], tree_bounds[2]);
+    bounds[3] = std::max (bounds[3], tree_bounds[3]);
+    bounds[4] = std::min (bounds[4], tree_bounds[4]);
+    bounds[5] = std::max (bounds[5], tree_bounds[5]);
+  }
+  if (!bbox_return) {
+    /* If the bounding box is not available, we return false */
+    t8_errorf ("Error: Failed to compute the bounding box for a tree\n");
+    return false;
+  }
+#if T8_ENABLE_DEBUG
+  /* Check that the bounding box is valid */
+  for (int idim = 0; idim < 3; idim++) {
+    T8_ASSERT (bounds[2 * idim] <= bounds[2 * idim + 1]);
+  }
+#endif
+
+  return true;
 }

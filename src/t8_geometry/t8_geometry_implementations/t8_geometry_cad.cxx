@@ -173,7 +173,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
   double displacement;
   double scaling_factor;
   double scaled_displacement;
-  /* Allocate storage for later usage. Storage depents on size of the batch. */
+  /* Allocate storage for later usage. Storage depends on size of the batch. */
   double *ref_intersection = T8_ALLOC (double, 2 * num_coords);
   double *glob_intersection = T8_ALLOC (double, 3 * num_coords);
   double interpolated_curve_parameter;
@@ -539,8 +539,6 @@ t8_geometry_cad::t8_geom_evaluate_cad_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
         if (edges[i_edge] > 0) {
           /* Get curve */
           T8_ASSERT (edges[i_edge] <= cad_shape_edge_map.Size ());
-          /* Infinite indent loop */
-          /* *INDENT-OFF* */
           curve = BRep_Tool::Curve (TopoDS::Edge (cad_shape_edge_map.FindKey (edges[i_edge])), first, last);
 
           /* Check if curve are valid */

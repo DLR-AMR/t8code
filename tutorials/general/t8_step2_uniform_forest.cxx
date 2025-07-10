@@ -153,9 +153,9 @@ main (int argc, char **argv)
   /* Build the uniform forest, it is automatically partitioned among the processes. */
   forest = t8_step2_build_uniform_forest (comm, cmesh, level);
   /* Get the local number of elements. */
-  local_num_elements = t8_forest_get_local_num_elements (forest);
+  local_num_elements = t8_forest_get_local_num_leaf_elements (forest);
   /* Get the global number of elements. */
-  global_num_elements = t8_forest_get_global_num_elements (forest);
+  global_num_elements = t8_forest_get_global_num_leaf_elements (forest);
 
   /* Print information on the forest. */
   t8_global_productionf (" [step2] Created uniform forest.\n");

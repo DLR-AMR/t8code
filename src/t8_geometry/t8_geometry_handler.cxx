@@ -23,7 +23,7 @@
 #include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_types.h>
-#include <t8_cmesh/t8_cmesh_geometry.h>
+#include <t8_cmesh/t8_cmesh_geometry.hxx>
 #include <t8_geometry/t8_geometry.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx>
@@ -60,11 +60,11 @@ t8_geometry_handler::update_tree (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
     if (num_geoms > 1) {
       /* Find and load the geometry of that tree. 
        * Only necessary if we have more than one geometry. */
-      const size_t geom_hash = t8_cmesh_get_tree_geom_hash (cmesh, gtreeid);
+      const t8_geometry_hash geom_hash = t8_cmesh_get_tree_geom_hash (cmesh, gtreeid);
       active_geometry = get_geometry (geom_hash);
       SC_CHECK_ABORTF (active_geometry != nullptr,
-                       "Could not find geometry with hash %zu or tree %ld has no registered geometry.", geom_hash,
-                       static_cast<long> (gtreeid));
+                       "Could not find geometry with hash %lu or tree %ld has no registered geometry.",
+                       static_cast<size_t> (geom_hash), static_cast<long> (gtreeid));
     }
     /* Get the user data for this geometry and this tree. */
     active_geometry->t8_geom_load_tree_data (cmesh, gtreeid);
