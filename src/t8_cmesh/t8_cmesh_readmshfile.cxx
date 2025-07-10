@@ -1886,6 +1886,9 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
    * not know its dimension on these processes. */
   t8_cmesh_set_dimension (cmesh, dim);
 
+  /* DO NOT COMMIT THIS */
+  cmesh->compute_boundary_node_list = 1;
+
   /* Register the geometries for the cmesh. */
   const int registered_geom_success
     = t8_cmesh_from_msh_file_register_geometries (cmesh, use_cad_geometry, fileprefix, &linear_geometry, &cad_geometry);

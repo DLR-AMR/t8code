@@ -41,6 +41,7 @@
 #include <Standard_Real.hxx>
 #include <unordered_map>
 #include <unordered_set>
+#include <cmath>
 
 t8_boundary_node_geom_data_map::t8_boundary_node_geom_data_map (TopoDS_Shape &shape_in, t8_cmesh_t cmesh_in,
                                                                 double tolerance)
@@ -57,8 +58,6 @@ void
 t8_boundary_node_geom_data_map::compute_geom_data_map ()
 {
   TopExp_Explorer dora;
-  t8_cmesh_vertex_conn_vertex_to_tree vtt;
-  T8_ASSERT (cmesh->vertex_connectivity->get_vertex_to_tree_state () == 1);
   int tag_count = 1;
   for (dora.Init (shape, TopAbs_VERTEX); dora.More (); dora.Next ()) {
     const gp_Pnt point = BRep_Tool::Pnt (TopoDS::Vertex (dora.Current ()));
@@ -66,21 +65,8 @@ t8_boundary_node_geom_data_map::compute_geom_data_map ()
     const double cad_y_val = point.Y ();
     const double cad_z_val = point.Z ();
 
-    const double x_upper_bound = cad_x_val + tolerance;
-    const double x_lower_bound = cad_x_val - tolerance;
-
-    const double y_upper_bound = cad_y_val + tolerance;
-    const double y_lower_bound = cad_y_val - tolerance;
-
-    const double z_upper_bound = cad_z_val + tolerance;
-    const double z_lower_bound = cad_z_val - tolerance;
-    printf ("vertex ");
-    printf ("size = %ld\n", boundary_node_list.size ());
     for (auto iter = boundary_node_list.begin (); iter != boundary_node_list.end (); ++iter) {
-
-      printf ("vertex 1 \n");
-      t8_debugf ("Global idx = %ld", *iter);
-      auto &tree_list = cmesh->vertex_connectivity->vertex_to_trees (*iter);
+      const tree_vertex_list tree_list = cmesh->vertex_connectivity->vertex_to_trees (*iter);
       t8_locidx_t local_tree_id = tree_list.at (0).first;
       int local_vertex_id = tree_list.at (0).second;
       double *vertices = (double *) t8_cmesh_get_tree_vertices (cmesh, local_tree_id);
@@ -88,14 +74,16 @@ t8_boundary_node_geom_data_map::compute_geom_data_map ()
       const double cmesh_y_coords = vertices[3 * local_vertex_id + 1];
       const double cmesh_z_coords = vertices[3 * local_vertex_id + 2];
 
-      if (x_lower_bound < cmesh_x_coords && x_upper_bound > cmesh_x_coords && y_lower_bound < cmesh_y_coords
-          && y_upper_bound > cmesh_y_coords && z_lower_bound < cmesh_z_coords && z_upper_bound > cmesh_z_coords) {
+      const double dist = abs (sqrt (pow (cmesh_x_coords, 2) + pow (cmesh_y_coords, 2) + pow (cmesh_z_coords, 2))
+                               - sqrt (pow (cad_x_val, 2) + pow (cad_y_val, 2) + pow (cad_z_val, 2)));
+
+      if (dist <= tolerance) {
         t8_geom_data temp_geom_data;
         temp_geom_data.entity_dim = 0;
         temp_geom_data.entity_tag = tag_count;
         temp_geom_data.location_on_curve = { -1, -1 };
 
-        boundary_node_geom_data_map[*iter] = temp_geom_data;
+        boundary_node_geom_data_map.try_emplace (*iter, temp_geom_data);
         tag_count += 1;
       }
     }
@@ -108,7 +96,7 @@ t8_boundary_node_geom_data_map::compute_geom_data_map ()
     if (!BRep_Tool::Degenerated (TopoDS::Edge (dora.Current ()))) {
       Handle (Geom_Curve) geomCurve = BRep_Tool::Curve (TopoDS::Edge (dora.Current ()), first, last);
       for (auto iter = boundary_node_list.begin (); iter != boundary_node_list.end (); ++iter) {
-        auto &tree_list = vtt.get_tree_list_of_vertex (*iter);
+        const tree_vertex_list tree_list = cmesh->vertex_connectivity->vertex_to_trees (*iter);
         t8_locidx_t local_tree_id = tree_list.at (0).first;
         int local_vertex_id = tree_list.at (0).second;
         double *vertices = (double *) t8_cmesh_get_tree_vertices (cmesh, local_tree_id);
@@ -119,26 +107,28 @@ t8_boundary_node_geom_data_map::compute_geom_data_map ()
         const gp_Pnt vertex (cmesh_x_coords, cmesh_y_coords, cmesh_z_coords);
 
         GeomAPI_ProjectPointOnCurve projection (vertex, geomCurve);
-        double dist = projection.LowerDistance ();
-        if ((dist - tolerance) < dist && (dist + tolerance) > dist) {
-          t8_geom_data temp_geom_data;
-          temp_geom_data.entity_dim = 1;
-          temp_geom_data.entity_tag = tag_count;
-          temp_geom_data.location_on_curve = { projection.LowerDistanceParameter (), -1 };
+        projection.Perform (vertex);
+        if (projection.NbPoints ()) {
+          double dist = projection.LowerDistance ();
+          if (dist <= tolerance) {
+            t8_geom_data temp_geom_data;
+            temp_geom_data.entity_dim = 1;
+            temp_geom_data.entity_tag = tag_count;
+            temp_geom_data.location_on_curve = { projection.LowerDistanceParameter (), -1 };
 
-          boundary_node_geom_data_map[*iter] = temp_geom_data;
-          tag_count += 1;
+            boundary_node_geom_data_map.try_emplace (*iter, temp_geom_data);
+            tag_count += 1;
+          }
         }
       }
     }
   }
-  t8_debugf ("Edges added\n");
 
   tag_count = 1;
   for (dora.Init (shape, TopAbs_FACE); dora.More (); dora.Next ()) {
     Handle (Geom_Surface) surfer = BRep_Tool::Surface (TopoDS::Face (dora.Current ()));
     for (auto iter = boundary_node_list.begin (); iter != boundary_node_list.end (); ++iter) {
-      auto &tree_list = vtt.get_tree_list_of_vertex (*iter);
+      const tree_vertex_list tree_list = cmesh->vertex_connectivity->vertex_to_trees (*iter);
       t8_locidx_t local_tree_id = tree_list.at (0).first;
       int local_vertex_id = tree_list.at (0).second;
       double *vertices = (double *) t8_cmesh_get_tree_vertices (cmesh, local_tree_id);
@@ -149,18 +139,21 @@ t8_boundary_node_geom_data_map::compute_geom_data_map ()
       const gp_Pnt vertex (cmesh_x_coords, cmesh_y_coords, cmesh_z_coords);
 
       GeomAPI_ProjectPointOnSurf projection (vertex, surfer);
-      double dist = projection.LowerDistance ();
-      if ((dist - tolerance) < dist && (dist + tolerance) > dist) {
-        double u;
-        double v;
-        projection.LowerDistanceParameters (u, v);
-        t8_geom_data temp_geom_data;
-        temp_geom_data.entity_dim = 2;
-        temp_geom_data.entity_tag = tag_count;
-        temp_geom_data.location_on_curve = { u, v };
+      projection.Perform (vertex);
+      if (projection.NbPoints ()) {
+        double dist = projection.LowerDistance ();
+        if (dist <= tolerance) {
+          double u;
+          double v;
+          projection.LowerDistanceParameters (u, v);
+          t8_geom_data temp_geom_data;
+          temp_geom_data.entity_dim = 2;
+          temp_geom_data.entity_tag = tag_count;
+          temp_geom_data.location_on_curve = { u, v };
 
-        boundary_node_geom_data_map[*iter] = temp_geom_data;
-        tag_count += 1;
+          boundary_node_geom_data_map.try_emplace (*iter, temp_geom_data);
+          tag_count += 1;
+        }
       }
     }
   }

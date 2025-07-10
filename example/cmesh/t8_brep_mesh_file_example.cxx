@@ -15,13 +15,13 @@ TopoDS_Shape
 read_brep_file (std::string fileprefix)
 {
   TopoDS_Shape cad_shape;
-  BRep_Builder builder;
+  BRep_Builder bob;
   std::string current_file (fileprefix);
   std::ifstream is (current_file + ".brep");
   if (is.is_open () == false) {
     SC_ABORTF ("Cannot find the file %s.brep.\n", fileprefix.c_str ());
   }
-  BRepTools::Read (cad_shape, is, builder);
+  BRepTools::Read (cad_shape, is, bob);
   is.close ();
   if (cad_shape.IsNull ()) {
     SC_ABORTF ("Could not read brep file or brep file contains no shape.");
@@ -46,7 +46,7 @@ main (int argc, char **argv)
   t8_cmesh_t cad_cmesh
     = t8_cmesh_from_msh_file ("/home/tui/source/t8code/test/testfiles/coladose", 0, sc_MPI_COMM_WORLD, 3, 0, 0);
   t8_debugf ("Mesh File was read\n");
-  t8_boundary_node_geom_data_map boundary_node_map = t8_boundary_node_geom_data_map (cad_shape, cad_cmesh, 1e-7);
+  t8_boundary_node_geom_data_map boundary_node_map = t8_boundary_node_geom_data_map (cad_shape, cad_cmesh, 1e-6);
   t8_debugf ("Boundary Node Map Created\n");
   std::unordered_map geom_data_map = boundary_node_map.get_boundary_node_geom_data_map ();
   t8_debugf ("Geom Data Map Created with the size %lu\n", geom_data_map.size ());

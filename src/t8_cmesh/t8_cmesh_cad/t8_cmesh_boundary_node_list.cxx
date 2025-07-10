@@ -31,6 +31,7 @@
 #include <t8_cmesh/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_cad/t8_cmesh_boundary_node_list.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
+#include <span>
 
 t8_boundary_node_list::t8_boundary_node_list (t8_cmesh_t cmesh_in): cmesh (cmesh_in)
 {
@@ -46,10 +47,10 @@ t8_boundary_node_list::compute_boundary_node ()
   for (t8_locidx_t i_tree = 0; i_tree < num_trees; i_tree++) {
     const t8_eclass_t eclass = t8_cmesh_get_tree_class (cmesh, i_tree);
     int num_faces = t8_eclass_num_faces[(int) eclass];
-    int num_vertices = t8_eclass_num_vertices[eclass];
+    //int num_vertices = t8_eclass_num_vertices[eclass];
 
-    const t8_gloidx_t *global_vertices_of_tree
-      = cmesh->vertex_connectivity->get_global_vertices_of_tree (cmesh, i_tree, num_vertices);
+    const std::span<const t8_gloidx_t> global_vertices_of_tree
+      = cmesh->vertex_connectivity->get_global_vertices_of_tree (i_tree);
     for (int i_face = 0; i_face < num_faces; i_face++) {
       const int vertex_per_face = t8_eclass_num_vertices[t8_eclass_face_types[eclass][i_face]];
 
