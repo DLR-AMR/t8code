@@ -20,19 +20,17 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8.h>                                                      /* General t8code header, always include this. */
-#include <sc_options.h>                                              /* CLI parser */
-#include <t8_cmesh.hxx>                                              /* cmesh definition and basic interface. */
-#include <t8_cmesh/t8_cmesh_examples.h>                              /* example cmeshes */
-#include <t8_forest/t8_forest_general.h>                             /* forest definition and basic interface. */
-#include <t8_schemes/t8_standalone/t8_standalone.hxx>                /* standalone refinement scheme. */
-#include <t8_schemes/t8_multilevel/t8_multilevel_implementation.hxx> /* multilevel refinement scheme. */
-#include <t8_schemes/t8_scheme_builder.hxx>                          /* scheme builder to create a multilevel scheme. */
-#include <string>                                                    /* std::string */
-#include <array>                                                     /* std::array */
+#include <t8.h>                                       /* General t8code header, always include this. */
+#include <sc_options.h>                               /* CLI parser */
+#include <t8_cmesh.hxx>                               /* cmesh definition and basic interface. */
+#include <t8_cmesh/t8_cmesh_examples.h>               /* example cmeshes */
+#include <t8_forest/t8_forest_general.h>              /* forest definition and basic interface. */
+#include <t8_schemes/t8_standalone/t8_standalone.hxx> /* standalone refinement scheme. */
+#include <string>                                     /* std::string */
+#include <array>                                      /* std::array */
 
 /* Refine a tree with quadrilateral elements.
- * At every second adaptcall (level is even) remove the central elements 
+ * At every second adaptcall (level is even) remove the central elements
  * of the mesh or leave them untouched. Refine the remaining elements.
  *
  *  |x|x|x|x|       |x|x|x|x|
@@ -57,7 +55,7 @@ t8_adapt_menger_quad ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_f
       /* ancestor_id == 0 && child_id == 3
        ancestor_id == 1 && child_id == 1
        ancestor_id == 2 && child_id == 2
-       ancestor_id == 3 && child_id == 0 
+       ancestor_id == 3 && child_id == 0
        + 2 because all ids are shifted in a multilevel scheme */
       if (ancestor_id + child_id == 5) {
         return 0;
@@ -94,21 +92,7 @@ t8_multilevel_tutorial (const t8_eclass_t eclass, const int level)
 {
   sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
   t8_cmesh_t cmesh = t8_cmesh_new_from_class (eclass, comm);
-  t8_scheme_builder builder;
-  builder.add_eclass_scheme<
-    t8_multilevel_scheme<t8_standalone_scheme<T8_ECLASS_VERTEX>, t8_standalone_element<T8_ECLASS_VERTEX>>> ();
-  builder.add_eclass_scheme<
-    t8_multilevel_scheme<t8_standalone_scheme<T8_ECLASS_LINE>, t8_standalone_element<T8_ECLASS_LINE>>> ();
-  builder.add_eclass_scheme<
-    t8_multilevel_scheme<t8_standalone_scheme<T8_ECLASS_QUAD>, t8_standalone_element<T8_ECLASS_QUAD>>> ();
-  builder.add_eclass_scheme<t8_multilevel_scheme<t8_default_scheme_tri, t8_dtri_t>> ();
-  builder.add_eclass_scheme<
-    t8_multilevel_scheme<t8_standalone_scheme<T8_ECLASS_HEX>, t8_standalone_element<T8_ECLASS_HEX>>> ();
-  builder.add_eclass_scheme<t8_multilevel_scheme<t8_default_scheme_tet, t8_dtet_t>> ();
-  builder.add_eclass_scheme<t8_multilevel_scheme<t8_default_scheme_prism, t8_dprism_t>> ();
-  builder.add_eclass_scheme<t8_multilevel_scheme<t8_default_scheme_pyramid, t8_dpyramid_t>> ();
-
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, builder.build_scheme (), 0, 0, comm);
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_standalone_multilevel (), 0, 0, comm);
   for (int i_level = 0; i_level < level; ++i_level) {
     t8_forest_t forest_new;
     t8_forest_init (&forest_new);
